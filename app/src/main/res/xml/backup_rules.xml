@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WebView local storage holds the ledger, the memory and the corrections.
+     It must be in the backup set or a phone upgrade loses everything. -->
+<full-backup-content>
+    <include domain="database" path="." />
+    <include domain="file" path="app_webview" />
+</full-backup-content>

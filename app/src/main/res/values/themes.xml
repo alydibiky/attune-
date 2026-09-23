@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The same near-black the web app uses, so there is no white flash
+         between the splash and the page loading. -->
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">#020617</item>
+        <item name="android:statusBarColor">#020617</item>
+        <item name="android:navigationBarColor">#020617</item>
+    </style>
+</resources>

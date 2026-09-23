@@ -1,0 +1,138 @@
+name: Build the APK
+
+# This is the whole point of the file: you do not install Android Studio, the
+# Android SDK, or Java. You push the repository and GitHub builds the APK on
+# its own machines, free for a public repository. The finished APK appears
+# under the run's "Artifacts", and you download it to your phone from there.
+#
+# The APK includes the on-device model engine (llama.cpp, compiled for every
+# ARM generation), so the FIRST build takes roughly 20-30 minutes. Later builds
+# reuse the compiled engine and take a few minutes.
+#
+# It also builds on every push, so if a change breaks the build you find out
+# before the evening you set aside to ship.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:        # the "Run workflow" button, for building on demand
+  release:
+    types: [published]
+
+permissions:
+  contents: write           # needed only to attach the APK to a release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    # The secrets context is not reliably available in a step-level `if`, so
+    # the presence of a signing key is resolved once here and tested as an
+    # ordinary environment variable below.
+    env:
+      HAS_KEYSTORE: ${{ secrets.ATTUNE_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # The SDK, installed for you on a throwaway machine.
+      - name: Set up the Android SDK
+        uses: android-actions/setup-android@v3
+
+      # The on-device engine is native code: it needs the NDK and CMake, in
+      # the exact versions app/build.gradle.kts asks for.
+      - name: Install the NDK and CMake
+        run: sdkmanager --install "ndk;29.0.14206865" "cmake;3.31.6" > /dev/null
+
+      # llama.cpp, pinned to the commit the engine was written and tested
+      # against. Not stored in the repository; fetched fresh for each build.
+      - name: Fetch the engine source (llama.cpp)
+        run: bash app/src/main/cpp/fetch-llama.sh
+
+      # Keep compiled engine objects between runs: the first build compiles
+      # llama.cpp for every ARM generation (~20-30 min); later ones are quick.
+      - name: Cache the native build
+        uses: actions/cache@v4
+        with:
+          path: app/.cxx
+          key: cxx-${{ hashFiles('app/src/main/cpp/fetch-llama.sh', 'app/src/main/cpp/CMakeLists.txt', 'app/src/main/cpp/*.cpp', 'app/build.gradle.kts') }}
+
+      # Gradle itself, installed and cached by the action. Using this instead
+      # of a checked-in gradle-wrapper.jar keeps a binary out of the
+      # repository and removes the commonest cause of a build that works on
+      # one machine and not another.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+          cache-read-only: false
+
+      # The app is one HTML file plus its icons. This check exists because a
+      # missing asset produces an APK that installs, opens, and shows a blank
+      # screen — the worst possible failure, since it looks like it worked.
+      - name: Check the web app is actually present
+        run: |
+          set -e
+          test -f app/src/main/assets/www/index.html || { echo "::error::app/src/main/assets/www/index.html is missing — copy the attune/ folder in"; exit 1; }
+          test -f app/src/main/assets/www/manifest.webmanifest || echo "::warning::no manifest — the app will still run"
+          bytes=$(wc -c < app/src/main/assets/www/index.html)
+          echo "index.html is $bytes bytes"
+          # A real build is over a megabyte. Anything tiny means a placeholder
+          # or a failed copy got committed.
+          test "$bytes" -gt 200000 || { echo "::error::index.html is only $bytes bytes — that is not the built app"; exit 1; }
+          grep -q "cdn.jsdelivr\|unpkg.com" app/src/main/assets/www/index.html \
+            && { echo "::error::the page still loads a library from a CDN — it will not work offline"; exit 1; } \
+            || echo "no external script sources — good"
+
+      # Signing. Without these secrets it builds a debug-signed APK, which
+      # installs fine for testing but cannot go on the Play Store.
+      - name: Write the keystore
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          echo "${{ secrets.ATTUNE_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/attune.jks"
+          echo "ATTUNE_KEYSTORE=$RUNNER_TEMP/attune.jks" >> "$GITHUB_ENV"
+
+      - name: Build
+        env:
+          ATTUNE_STORE_PASSWORD: ${{ secrets.ATTUNE_STORE_PASSWORD }}
+          ATTUNE_KEY_ALIAS: ${{ secrets.ATTUNE_KEY_ALIAS }}
+          ATTUNE_KEY_PASSWORD: ${{ secrets.ATTUNE_KEY_PASSWORD }}
+        run: gradle assembleRelease --no-daemon --stacktrace
+
+      - name: Say whether it is signed for the Play Store
+        run: |
+          if [ -n "${ATTUNE_KEYSTORE:-}" ]; then
+            echo "Signed with your release key — this APK can go on the Play Store."
+          else
+            echo "::warning::Built with the DEBUG key. Fine for installing on your own phone, NOT accepted by the Play Store. Add the signing secrets when you are ready to publish."
+          fi
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: attune-apk
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      # An AAB is what the Play Store actually wants for a new listing.
+      - name: Build the Play Store bundle
+        if: ${{ github.event_name == 'release' }}
+        env:
+          ATTUNE_STORE_PASSWORD: ${{ secrets.ATTUNE_STORE_PASSWORD }}
+          ATTUNE_KEY_ALIAS: ${{ secrets.ATTUNE_KEY_ALIAS }}
+          ATTUNE_KEY_PASSWORD: ${{ secrets.ATTUNE_KEY_PASSWORD }}
+        run: gradle bundleRelease --no-daemon
+
+      - name: Attach both to the release
+        if: ${{ github.event_name == 'release' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab

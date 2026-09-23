@@ -1,0 +1,10 @@
+# Build output and local state — never committed.
+.gradle/
+build/
+# The model engine source is fetched by app/src/main/cpp/fetch-llama.sh, not committed.
+app/src/main/cpp/llama.cpp/
+local.properties
+*.jks
+*.keystore
+*.b64
+.idea/

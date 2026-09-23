@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Attune</string>
+    <!-- Shown in the menu that appears when text is selected in another app. -->
+    <string name="process_text_label">Ask Attune</string>
+</resources>
