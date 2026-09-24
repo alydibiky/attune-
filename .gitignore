@@ -9,5 +9,7 @@ app/src/main/cpp/llama.cpp/
 local.properties
 *.jks
 *.keystore
+# ...except the fixed TEST key, which must be shared so updates install over each other.
+!app/attune-test.keystore
 *.b64
 .idea/

@@ -1,5 +1,4 @@
 @import "tailwindcss" source(none);
-@source "../attune.jsx";
-@source "../chat.jsx";
-@source "../cycle.jsx";
+@source "../*.jsx";
+@source "../*.js";
 @source "../yusr/*.js";

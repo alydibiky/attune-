@@ -52,6 +52,19 @@ class MainActivity : AppCompatActivity() {
         cb?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(res.resultCode, res.data))
     }
 
+    // Android's "Save to…" picker, for backups. The MIME type is given per call
+    // through a tiny contract subclass, because CreateDocument fixes it at registration.
+    private var saveDone: ((Uri?) -> Unit)? = null
+    private var saveMime = "application/octet-stream"
+    private val createDoc = registerForActivityResult(object : ActivityResultContracts.CreateDocument("application/octet-stream") {
+        override fun createIntent(context: android.content.Context, input: String): Intent =
+            super.createIntent(context, input).setType(saveMime)
+    }) { uri ->
+        val cb = saveDone
+        saveDone = null
+        cb?.invoke(uri)
+    }
+
     private lateinit var voice: Voice
     private val askMicPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         bridge.lastVoiceSink?.let { voice.onPermission(granted, it) }
@@ -114,6 +127,12 @@ class MainActivity : AppCompatActivity() {
         voice = Voice(this)
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
+        bridge.createDocument = { name, mime, done ->
+            saveDone?.invoke(null)
+            saveDone = done
+            saveMime = mime
+            try { createDoc.launch(name) } catch (e: Exception) { saveDone = null; done(null) }
+        }
         // This screen now hears about every engine change, including one that
         // was started by a screen that has since closed.
         Engine.onChange = { bridge.announceEngine() }

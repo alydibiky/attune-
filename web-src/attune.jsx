@@ -8,6 +8,7 @@ import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
 import { ChatHome } from "./chat.jsx";
+import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
 
 /* =========================================================================
@@ -6475,6 +6476,7 @@ export default function App() {
   const [mode, setMode] = useState("chat");
   const [drawerOpen, setDrawerOpen] = useState(false);   // chat history
   const [moreOpen, setMoreOpen] = useState(false);       // every other tool
+  const [showBackup, setShowBackup] = useState(false);   // encrypted backup / restore
   const [newChatSignal, setNewChatSignal] = useState(0);
   const [chatSeed, setChatSeed] = useState("");
   const [askQ, setAskQ] = useState("");
@@ -7726,11 +7728,12 @@ export default function App() {
 
   // In-app Back: closes the top-most open panel, otherwise returns to the Ask
   // home tab. Shown only when there is somewhere to go back to.
-  const _anyOverlay = showEngine || showProfile || showUpgrade || showMemory || showOrg || showSource || showCustom || drawerOpen || moreOpen;
+  const _anyOverlay = showBackup || showEngine || showProfile || showUpgrade || showMemory || showOrg || showSource || showCustom || drawerOpen || moreOpen;
   const canGoBack = _anyOverlay || mode !== "chat";
   const goBack = () => {
     if (drawerOpen) return setDrawerOpen(false);
     if (moreOpen) return setMoreOpen(false);
+    if (showBackup) return setShowBackup(false);
     if (showSource) return setShowSource(false);
     if (showCustom) return setShowCustom(false);
     if (showMemory) return setShowMemory(false);
@@ -9544,11 +9547,14 @@ export default function App() {
                 <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Cpu size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">Engine & privacy</span></button>
                 <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><User size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">Your profile</span></button>
                 <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Crown size={16} className="text-amber-300" /><span className="block text-[12px] text-slate-200 mt-1">{isPro(tier) ? "Pro" : "Plan"}</span><span className="block text-[10px] text-slate-500">{creditLabel}</span></button>
+                {(() => { const nb = backupNudge(); return (
+                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`rounded-xl border p-2.5 text-start ${nb.warn ? "border-amber-700/60 bg-amber-500/10" : "border-slate-800 bg-slate-950"}`}><ShieldCheck size={16} className={nb.warn ? "text-amber-300" : "text-slate-300"} /><span className="block text-[12px] text-slate-200 mt-1">Backup</span><span className={`block text-[10px] ${nb.warn ? "text-amber-300" : "text-slate-500"}`}>{nb.text}</span></button>); })()}
               </div>
             </div>
           </div>
         </div>
       ) : null}
+      {showBackup && <BackupPanel close={() => setShowBackup(false)} flash={flash} nativeCall={nativeCall} native={NATIVE} />}
       {showOnboard && <Onboard profile={profile} setProfile={setProfile} close={() => { try { localStorage.setItem("attune:onboarded", "1"); } catch (e) {} setShowOnboard(false); }} flash={flash} />}
       {showEngine && <EngineModal device={device} setRamOverride={setRamOverride} bestTier={bestTier} activeTier={activeTier} setTierId={setTierId} plan={plan}
         engineMode={engineMode} setEngineMode={setEngineMode} modelState={modelState} dlPct={dlPct}

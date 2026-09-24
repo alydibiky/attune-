@@ -259,6 +259,55 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
 
     fun release() { try { tts?.shutdown() } catch (e: Exception) {}; tts = null }
 
+    // ---- files: backups ------------------------------------------------------------
+    /** Set by MainActivity: opens Android's "Save to…" picker and returns the chosen place. */
+    var createDocument: ((name: String, mime: String, done: (android.net.Uri?) -> Unit) -> Unit)? = null
+
+    /**
+     * Save text (an encrypted backup) to a file the user picks: Downloads,
+     * Google Drive, a USB stick. arg = {name, mime, text}. Resolves {ok, name}.
+     */
+    @JavascriptInterface
+    fun saveFile(id: String, arg: String) {
+        val a = try { JSONObject(arg) } catch (e: Exception) { return reject(id, "Bad request") }
+        val name = a.optString("name", "Attune-backup.attune").replace(Regex("[\\\\/:*?\"<>|]"), "_")
+        val mime = a.optString("mime", "application/octet-stream")
+        val text = a.optString("text")
+        val open = createDocument ?: return reject(id, "Saving files is not available")
+        web.post {
+            open(name, mime) { uri ->
+                if (uri == null) { reject(id, "Cancelled"); return@open }
+                pool.execute {
+                    try {
+                        ctx.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(text.toByteArray(Charsets.UTF_8)) }
+                        val shown = try {
+                            ctx.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+                                ?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+                        } catch (e: Exception) { null }
+                        resolve(id, JSONObject().put("ok", true).put("name", shown ?: name))
+                    } catch (e: Exception) { reject(id, "Could not write the file: " + (e.message ?: "")) }
+                }
+            }
+        }
+    }
+
+    // A small private stash in the app's own storage (not shared, not backed
+    // up by Android): the phone's data just before a restore, so it can be undone.
+    private fun stashFile(name: String): java.io.File? =
+        if (Regex("^[a-z0-9][a-z0-9._-]{0,63}$").matches(name)) java.io.File(ctx.filesDir, "stash/$name") else null
+
+    @JavascriptInterface
+    fun stashPut(name: String, text: String): Boolean = try {
+        val f = stashFile(name) ?: throw IllegalArgumentException()
+        f.parentFile?.mkdirs(); f.writeText(text, Charsets.UTF_8); true
+    } catch (e: Exception) { false }
+
+    @JavascriptInterface
+    fun stashGet(name: String): String = try { stashFile(name)?.takeIf { it.exists() }?.readText(Charsets.UTF_8) ?: "" } catch (e: Exception) { "" }
+
+    @JavascriptInterface
+    fun stashDel(name: String): Boolean = try { stashFile(name)?.delete() ?: false } catch (e: Exception) { false }
+
     // ---- voice -----------------------------------------------------------------
     var voice: Voice? = null
     var askMic: (() -> Unit)? = null

@@ -114,7 +114,7 @@ jobs:
           if [ -n "${ATTUNE_KEYSTORE:-}" ]; then
             echo "Signed with your release key — this APK can go on the Play Store."
           else
-            echo "::warning::Built with the DEBUG key. Fine for installing on your own phone, NOT accepted by the Play Store. Add the signing secrets when you are ready to publish."
+            echo "::warning::Built with the fixed TEST key (app/attune-test.keystore). Updates install over each other on your phone; NOT accepted by the Play Store. Add the signing secrets when you are ready to publish."
           fi
 
       - name: Upload the APK

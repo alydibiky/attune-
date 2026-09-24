@@ -11,8 +11,8 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 35
-        versionCode = 4
-        versionName = "4.0"
+        versionCode = 5
+        versionName = "5.0"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
         // phone. Add "x86_64" only if you want to run it in the emulator — it
@@ -52,6 +52,18 @@ android {
     // Signing comes from environment variables so the keystore never enters
     // the repository. The CI workflow writes it from a secret at build time.
     signingConfigs {
+        // A FIXED key for test builds, committed on purpose (app/attune-test.keystore,
+        // passwords "attune-test"). Without it every GitHub run signs with a
+        // brand-new random debug key, Android refuses to install the new APK
+        // over the old one, and the only way forward — uninstalling — deletes
+        // every chat and the whole ledger. Not for the Play Store: that uses
+        // the ATTUNE_KEYSTORE secrets below.
+        create("test") {
+            storeFile = file("attune-test.keystore")
+            storePassword = "attune-test"
+            keyAlias = "attune-test"
+            keyPassword = "attune-test"
+        }
         create("release") {
             val ks = System.getenv("ATTUNE_KEYSTORE") ?: ""
             if (ks.isNotEmpty()) {
@@ -67,7 +79,7 @@ android {
         release {
             isMinifyEnabled = false          // the app is one HTML file; nothing to shrink
             signingConfig = if ((System.getenv("ATTUNE_KEYSTORE") ?: "").isNotEmpty())
-                signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+                signingConfigs.getByName("release") else signingConfigs.getByName("test")
         }
         debug { applicationIdSuffix = ".debug" }
     }

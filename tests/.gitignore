@@ -3,3 +3,4 @@ build-dl/
 *.gguf
 *.png
 *.log
+__pycache__/
