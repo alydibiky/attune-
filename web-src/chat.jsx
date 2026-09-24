@@ -7,6 +7,7 @@
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { tr } from "./i18n.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
   Loader2, Search, ChevronDown, CheckCircle2, Sparkles,
@@ -46,7 +47,7 @@ function inline(text, keyBase) {
     else if (tok.startsWith("`")) out.push(<code key={key} className="px-1 py-0.5 rounded bg-slate-800 text-teal-200 text-[0.9em] font-mono">{tok.slice(1, -1)}</code>);
     else if (tok.startsWith("[")) {
       const label = tok.slice(1, tok.indexOf("]("));
-      out.push(<a key={key} href={m[2]} target="_blank" rel="noreferrer" className="text-teal-300 underline decoration-dotted">{label}</a>);
+      out.push(<a key={key} href={m[2]} target="_blank" rel="noreferrer" className="text-teal-300 underline decoration-dotted">{tr(label)}</a>);
     } else out.push(<em key={key}>{tok.slice(1, -1)}</em>);
     last = m.index + tok.length;
   }
@@ -120,7 +121,7 @@ export function Md({ text }) {
           <div key={k} className="relative">
             <pre className="att-scroll bg-slate-950 border border-slate-800 rounded-xl p-3 text-[13px] font-mono text-teal-50 overflow-x-auto whitespace-pre" dir="ltr">{b.text}</pre>
             <button onClick={() => { try { navigator.clipboard.writeText(b.text); } catch (e) {} }}
-              className="absolute top-1.5 right-1.5 text-[10px] px-2 py-1 rounded-md bg-slate-800 text-slate-300">copy</button>
+              className="absolute top-1.5 end-1.5 text-[10px] px-2 py-1 rounded-md bg-slate-800 text-slate-300">copy</button>
           </div>
         );
         if (b.t === "table") return (
@@ -410,14 +411,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (NATIVE && NATIVE.speak) NATIVE.speak(plain, lang);
       else { const u = new SpeechSynthesisUtterance(plain); u.lang = lang; u.onend = () => setSpeakingId(null); window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); }
       setSpeakingId(m.id);
-    } catch (e) { api.flash("Read-aloud isn't available on this phone"); }
+    } catch (e) { api.flash(tr("Read-aloud isn't available on this phone")); }
   };
   const share = (m) => {
-    try { if (NATIVE && NATIVE.share) NATIVE.share(m.text); else if (navigator.share) navigator.share({ text: m.text }); else { navigator.clipboard.writeText(m.text); api.flash("Copied"); } } catch (e) {}
+    try { if (NATIVE && NATIVE.share) NATIVE.share(m.text); else if (navigator.share) navigator.share({ text: m.text }); else { navigator.clipboard.writeText(m.text); api.flash(tr("Copied")); } } catch (e) {}
   };
   const voice = async () => {
     if (listening) { try { NATIVE.stopListening(); } catch (e) {} return; }
-    if (!NATIVE || !NATIVE.listen) return api.flash("Voice input works in the Android app");
+    if (!NATIVE || !NATIVE.listen) return api.flash(tr("Voice input works in the Android app"));
     const before = text ? text.replace(/\s+$/, "") + " " : "";
     setListening(true);
     try {
@@ -428,7 +429,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   };
   const pickImage = (file) => {
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) return api.flash("That photo is too large");
+    if (file.size > 8 * 1024 * 1024) return api.flash(tr("That photo is too large"));
     const r = new FileReader();
     r.onload = () => { const url = String(r.result); setImage({ data: url.split(",")[1], media: file.type || "image/jpeg", url }); };
     r.readAsDataURL(file);
@@ -444,18 +445,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         <div className="fixed inset-0 z-50 flex" onClick={() => setDrawerOpen(false)}>
           <div className="w-[86%] max-w-sm h-full bg-slate-900 border-e border-slate-800 flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-3 border-b border-slate-800 flex items-center gap-2">
-              <button onClick={() => { setActiveId(null); setDrawerOpen(false); }} className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold"><Plus size={16} /> New chat</button>
+              <button onClick={() => { setActiveId(null); setDrawerOpen(false); }} className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold"><Plus size={16} /> {tr("New chat")}</button>
               <button onClick={() => setDrawerOpen(false)} className="att-icon-btn"><X size={18} /></button>
             </div>
             <div className="px-3 pt-3">
               <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3">
                 <Search size={14} className="text-slate-500" />
-                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search chats" dir="auto"
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search chats")} dir="auto"
                   className="flex-1 bg-transparent py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none" />
               </div>
             </div>
             <div className="att-scroll flex-1 overflow-y-auto p-2">
-              {shownChats.length === 0 ? <p className="text-xs text-slate-500 p-3">No chats yet.</p> : shownChats.map((c) => (
+              {shownChats.length === 0 ? <p className="text-xs text-slate-500 p-3">{tr("No chats yet.")}</p> : shownChats.map((c) => (
                 <div key={c.id} className={`group flex items-center gap-1 rounded-xl ${c.id === activeId ? "bg-slate-800" : ""}`}>
                   {renaming === c.id ? (
                     <input autoFocus defaultValue={c.title} dir="auto" onBlur={(e) => { const v = e.target.value.trim(); if (v) patchChat(c.id, (x) => ({ ...x, title: v })); setRenaming(null); }}
@@ -463,16 +464,16 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                       className="flex-1 bg-slate-950 border border-teal-700 rounded-lg px-2 py-2 text-sm text-slate-100" />
                   ) : (
                     <button onClick={() => { setActiveId(c.id); setDrawerOpen(false); }} className="flex-1 min-w-0 text-start px-3 py-2.5">
-                      <span dir="auto" className="block text-sm text-slate-200 truncate">{c.title}</span>
+                      <span dir="auto" className="block text-sm text-slate-200 truncate">{tr(c.title)}</span>
                       <span className="block text-[10px] text-slate-500">{new Date(c.updated).toLocaleDateString([], { day: "numeric", month: "short" })} · {c.messages.length} messages</span>
                     </button>
                   )}
-                  <button onClick={() => setRenaming(c.id)} className="p-2 text-slate-500" title="Rename"><PenLine size={14} /></button>
-                  <button onClick={() => { setChats((l) => l.filter((x) => x.id !== c.id)); if (activeId === c.id) setActiveId(null); }} className="p-2 text-slate-500" title="Delete"><Trash2 size={14} /></button>
+                  <button onClick={() => setRenaming(c.id)} className="p-2 text-slate-500" title={tr("Rename")}><PenLine size={14} /></button>
+                  <button onClick={() => { setChats((l) => l.filter((x) => x.id !== c.id)); if (activeId === c.id) setActiveId(null); }} className="p-2 text-slate-500" title={tr("Delete")}><Trash2 size={14} /></button>
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-slate-600 p-3 border-t border-slate-800">Chats are saved on this phone only.</p>
+            <p className="text-[10px] text-slate-600 p-3 border-t border-slate-800">{tr("Chats are saved on this phone only.")}</p>
           </div>
           <div className="flex-1 bg-black/60" />
         </div>
@@ -482,14 +483,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       {messages.length === 0 ? (
         <div className="pt-6 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-800 text-teal-300 mb-3"><Sparkles size={22} /></div>
-          <p className="text-lg text-white font-semibold">What can I help with?</p>
-          <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">Type, speak or add a photo. Runs on your phone — works with no signal.</p>
+          <p className="text-lg text-white font-semibold">{tr("What can I help with?")}</p>
+          <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">{tr("Type, speak or add a photo. Runs on your phone — works with no signal.")}</p>
           <div className="grid grid-cols-2 gap-2 mt-5 text-start">
             {STARTERS.map(([ic, label, seed]) => (
-              <button key={label} onClick={() => { setText(seed); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
+              <button key={label} onClick={() => { setText(tr(seed)); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
                 className="rounded-xl border border-slate-800 bg-slate-900 p-3 active:border-teal-600">
-                <span className="text-lg">{ic}</span>
-                <span className="block text-sm text-slate-200 mt-1">{label}</span>
+                <span className="text-lg">{tr(ic)}</span>
+                <span className="block text-sm text-slate-200 mt-1">{tr(label)}</span>
               </button>
             ))}
           </div>
@@ -502,17 +503,17 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           <div key={m.id} className="flex flex-col items-end">
             {m.image ? <img src={m.image} alt="" className="max-w-[70%] max-h-56 rounded-2xl mb-1.5 border border-slate-800 object-cover" /> : null}
             {m.text ? <div dir="auto" className="max-w-[85%] bg-teal-600/25 border border-teal-800/60 text-slate-100 rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[15px] whitespace-pre-wrap leading-relaxed">{m.text}</div> : null}
-            {!busy ? <button onClick={() => editFrom(idx)} className="mt-1 text-[11px] text-slate-500 flex items-center gap-1 px-1"><PenLine size={11} /> Edit</button> : null}
+            {!busy ? <button onClick={() => editFrom(idx)} className="mt-1 text-[11px] text-slate-500 flex items-center gap-1 px-1"><PenLine size={11} /> {tr("Edit")}</button> : null}
           </div>
         ) : m.card ? (
           <div key={m.id} className={`rounded-2xl border p-3.5 ${m.card.tone === "rose" ? "border-rose-800/70 bg-rose-500/5" : "border-emerald-800/70 bg-emerald-500/5"}`}>
-            <p dir="auto" className="text-sm font-medium text-slate-100 flex items-center gap-1.5"><CheckCircle2 size={15} className={m.card.tone === "rose" ? "text-rose-300" : "text-emerald-300"} /> {m.card.title}</p>
-            {m.card.detail ? <p dir="auto" className="text-sm text-slate-300 mt-1 whitespace-pre-wrap leading-relaxed">{m.card.detail}</p> : null}
+            <p dir="auto" className="text-sm font-medium text-slate-100 flex items-center gap-1.5"><CheckCircle2 size={15} className={m.card.tone === "rose" ? "text-rose-300" : "text-emerald-300"} /> {tr(m.card.title)}</p>
+            {m.card.detail ? <p dir="auto" className="text-sm text-slate-300 mt-1 whitespace-pre-wrap leading-relaxed">{tr(m.card.detail)}</p> : null}
             {(m.card.actions || []).length ? (
               <div className="flex gap-2 mt-2.5 flex-wrap">
                 {m.card.actions.map(([label, act], i) => (
                   <button key={act} onClick={() => cardAction(m, act)}
-                    className={`text-xs px-3 py-2 rounded-lg ${i === 0 ? "bg-teal-500 text-slate-950 font-medium" : "border border-slate-700 text-slate-300"}`}>{label}</button>
+                    className={`text-xs px-3 py-2 rounded-lg ${i === 0 ? "bg-teal-500 text-slate-950 font-medium" : "border border-slate-700 text-slate-300"}`}>{tr(label)}</button>
                 ))}
               </div>
             ) : null}
@@ -523,7 +524,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               <div className="mb-2">
                 <button onClick={() => setOpenThought((o) => ({ ...o, [m.id]: !o[m.id] }))} className="flex items-center gap-1.5 text-[12px] text-slate-400">
                   <Brain size={13} className={m.streaming && !m.text ? "text-teal-300 animate-pulse" : ""} />
-                  {m.streaming && !m.text ? "Thinking…" : "Thought" + (m.secs ? " for " + m.secs + " s" : "")}
+                  {m.streaming && !m.text ? tr("Thinking…") : "Thought" + (m.secs ? " for " + m.secs + " s" : "")}
                   <ChevronDown size={13} className={openThought[m.id] ? "rotate-180" : ""} />
                 </button>
                 {(openThought[m.id] || (m.streaming && !m.text)) ? (
@@ -533,24 +534,24 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               </div>
             ) : null}
             {m.streaming && !m.text && !m.thinking ? (
-              <div className="flex items-center gap-2 text-sm text-teal-300/90 py-1"><Loader2 size={15} className="animate-spin" /> {m.phase || "Reading…"}</div>
+              <div className="flex items-center gap-2 text-sm text-teal-300/90 py-1"><Loader2 size={15} className="animate-spin" /> {m.phase || tr("Reading…")}</div>
             ) : null}
             {m.text ? <Md text={m.text + (m.streaming ? " ▍" : "")} /> : null}
             {m.error ? <p className="text-sm text-amber-300/90 mt-1">{m.error}</p> : null}
             {m.sources && m.sources.length ? (
               <div className="mt-2 space-y-1">
-                <p className="text-[11px] text-slate-500">Sources{m.via ? " · via " + m.via : ""}</p>
-                {m.sources.map((h, i) => <a key={i} href={h.url} target="_blank" rel="noreferrer" className="block text-[12px] text-teal-300/90 truncate">[{i + 1}] {h.title}</a>)}
+                <p className="text-[11px] text-slate-500">{tr("Sources")}{m.via ? " · via " + m.via : ""}</p>
+                {m.sources.map((h, i) => <a key={i} href={h.url} target="_blank" rel="noreferrer" className="block text-[12px] text-teal-300/90 truncate">[{i + 1}] {tr(h.title)}</a>)}
               </div>
             ) : null}
             {!m.streaming && m.text ? (
               <div className="flex items-center gap-0.5 mt-1.5 -ms-2 text-slate-500">
-                <button onClick={() => { try { navigator.clipboard.writeText(m.text); } catch (e) {} api.flash("Copied"); }} className="p-2" title="Copy"><Copy size={15} /></button>
-                <button onClick={() => regenerate(idx)} className="p-2" title="Regenerate" disabled={busy}><RefreshCw size={15} /></button>
-                <button onClick={() => speak(m)} className={`p-2 ${speakingId === m.id ? "text-teal-300" : ""}`} title="Read aloud"><Volume2 size={15} /></button>
-                <button onClick={() => share(m)} className="p-2" title="Share"><Share2 size={15} /></button>
-                <button onClick={() => { api.remember({ kind: "note", title: m.text.slice(0, 60), text: m.text, output: "", tags: ["saved"] }); api.flash("Saved to Memory"); }} className="p-2" title="Save to Memory"><Save size={15} /></button>
-                {m.stats && m.stats.tps ? <span className="text-[10px] text-slate-600 ms-1">{m.stats.tps} tokens/s</span> : null}
+                <button onClick={() => { try { navigator.clipboard.writeText(m.text); } catch (e) {} api.flash(tr("Copied")); }} className="p-2" title={tr("Copy")}><Copy size={15} /></button>
+                <button onClick={() => regenerate(idx)} className="p-2" title={tr("Regenerate")} disabled={busy}><RefreshCw size={15} /></button>
+                <button onClick={() => speak(m)} className={`p-2 ${speakingId === m.id ? "text-teal-300" : ""}`} title={tr("Read aloud")}><Volume2 size={15} /></button>
+                <button onClick={() => share(m)} className="p-2" title={tr("Share")}><Share2 size={15} /></button>
+                <button onClick={() => { api.remember({ kind: "note", title: m.text.slice(0, 60), text: m.text, output: "", tags: ["saved"] }); api.flash(tr("Saved to Memory")); }} className="p-2" title={tr("Save to Memory")}><Save size={15} /></button>
+                {m.stats && m.stats.tps ? <span className="text-[10px] text-slate-600 ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}
               </div>
             ) : null}
           </div>
@@ -560,10 +561,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         {!busy && lastAi && lastAi === messages[messages.length - 1] && lastAi.text && !lastAi.error ? (
           <div className="att-chips flex gap-1.5 overflow-x-auto pb-1">
             {(() => { const u = messages[messages.length - 2]; return u && u.image ? (
-              <button onClick={() => api.photoToMoney(u.image)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-emerald-800 text-emerald-200 bg-emerald-500/10">💳 Add to Money</button>
+              <button onClick={() => api.photoToMoney(u.image)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-emerald-800 text-emerald-200 bg-emerald-500/10">{tr("💳 Add to Money")}</button>
             ) : null; })()}
             {followUps(lastAi).map(([label, prompt]) => (
-              <button key={label} onClick={() => ask(prompt)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-slate-700 text-slate-300 active:border-teal-600">{label}</button>
+              <button key={label} onClick={() => ask(prompt)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-slate-700 text-slate-300 active:border-teal-600">{tr(label)}</button>
             ))}
           </div>
         ) : null}
@@ -571,7 +572,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       </div>
 
       {/* ---- composer, pinned above the bottom bar ---- */}
-      <div className="fixed left-0 right-0 z-40 px-3 pb-2 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent" style={{ bottom: "calc(58px + env(safe-area-inset-bottom))" }}>
+      <div className="fixed start-0 end-0 z-40 px-3 pb-2 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent" style={{ bottom: "calc(58px + env(safe-area-inset-bottom))" }}>
         <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-xl">
           {image ? (
             <div className="relative inline-block mb-2 ms-1">
@@ -580,25 +581,25 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             </div>
           ) : null}
           <textarea ref={taRef} value={text} onChange={(e) => setText(e.target.value)} rows={1} dir="auto"
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && window.matchMedia && window.matchMedia("(pointer: fine)").matches) { e.preventDefault(); ask(); } }}
-            placeholder={listening ? "Listening…" : "Message Attune"}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && window.matchMedia && window.matchMedia(tr("(pointer: fine)")).matches) { e.preventDefault(); ask(); } }}
+            placeholder={listening ? tr("Listening…") : tr("Message Attune")}
             className="att-scroll w-full bg-transparent px-2 py-1.5 text-[16px] leading-relaxed text-slate-100 placeholder-slate-500 resize-none focus:outline-none max-h-[180px]" />
           <div className="flex items-center gap-1">
-            <label className="p-2 rounded-full text-slate-400 active:bg-slate-800" title="Photo">
+            <label className="p-2 rounded-full text-slate-400 active:bg-slate-800" title={tr("Photo")}>
               <ImagePlus size={19} />
               <input type="file" accept="image/*" className="hidden" onChange={(e) => { pickImage(e.target.files && e.target.files[0]); e.target.value = ""; }} />
             </label>
-            <button onClick={() => setThink((v) => !v)} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${think ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title="Think first">
-              <Brain size={14} /> Think</button>
-            <button onClick={api.toggleWeb} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${api.webOn ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title="Search the web">
-              <Globe size={14} /> Web</button>
+            <button onClick={() => setThink((v) => !v)} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${think ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Think first")}>
+              <Brain size={14} /> {tr("Think")}</button>
+            <button onClick={api.toggleWeb} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${api.webOn ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Search the web")}>
+              <Globe size={14} /> {tr("Web")}</button>
             <div className="flex-1" />
             {busy ? (
-              <button onClick={stop} className="w-10 h-10 rounded-full bg-slate-100 text-slate-950 flex items-center justify-center" title="Stop"><Square size={15} /></button>
+              <button onClick={stop} className="w-10 h-10 rounded-full bg-slate-100 text-slate-950 flex items-center justify-center" title={tr("Stop")}><Square size={15} /></button>
             ) : text.trim() || image ? (
-              <button onClick={() => ask()} className="w-10 h-10 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center" title="Send"><Send size={17} /></button>
+              <button onClick={() => ask()} className="w-10 h-10 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center" title={tr("Send")}><Send size={17} /></button>
             ) : (
-              <button onClick={voice} className={`w-10 h-10 rounded-full flex items-center justify-center ${listening ? "bg-rose-500 text-white animate-pulse" : "bg-slate-800 text-slate-200"}`} title="Speak"><Mic size={18} /></button>
+              <button onClick={voice} className={`w-10 h-10 rounded-full flex items-center justify-center ${listening ? "bg-rose-500 text-white animate-pulse" : "bg-slate-800 text-slate-200"}`} title={tr("Speak")}><Mic size={18} /></button>
             )}
           </div>
         </div>

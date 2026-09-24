@@ -8,6 +8,7 @@ import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
 import { ChatHome } from "./chat.jsx";
+import { tr, getLang, setLang, fmtNum } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
 
@@ -914,25 +915,25 @@ function recommendEngine(dev) {
   return {
     tier: best, lighter, stronger,
     headline: best.label + " · " + best.quant,
-    size: best.sizeGB.toFixed(2) + " GB to download",
+    size: tr("{s} GB to download", { s: best.sizeGB.toFixed(2) }),
     why: [
-      dev.reported ? `Your ${dev.platform === "desktop" ? "computer" : "phone"} reports ${dev.ram} GB of memory` : `Detected about ${dev.ram} GB of memory`,
-      headroom >= 4 ? "which leaves plenty of room for long conversations"
+      dev.reported ? tr(dev.platform === "desktop" ? "Your computer reports {n} GB of memory" : "Your phone reports {n} GB of memory", { n: dev.ram }) : tr("Detected about {n} GB of memory", { n: dev.ram }),
+      tr(headroom >= 4 ? "which leaves plenty of room for long conversations"
         : headroom >= 2 ? "which is comfortable for everyday use"
-        : "which is enough, with shorter conversations",
-    ].join(", ") + ".",
+        : "which is enough, with shorter conversations"),
+    ].join(tr(", ")) + ".",
     // Said plainly, because a 3 GB download on Egyptian mobile data is a real
     // decision and pretending otherwise wastes someone's money.
     caution: [
-      best.sizeGB > 2
+      tr(best.sizeGB > 2
         ? "Download it on Wi-Fi. After that it never uses your connection again."
-        : "Small enough to download on mobile data if you need to.",
+        : "Small enough to download on mobile data if you need to."),
       // Said plainly rather than discovered later. Sustained generation on a
       // phone loses roughly a third of its speed once the chassis heats up,
       // and on the biggest models that is the difference between usable and
       // not. Nobody should find this out from a one-star review.
       best.heat && dev.platform !== "desktop"
-        ? "This is a large model for a phone. It will run, and it will slow down noticeably once the phone gets warm — keep answers short, or pick the smaller one."
+        ? tr("This is a large model for a phone. It will run, and it will slow down noticeably once the phone gets warm — keep answers short, or pick the smaller one.")
         : "",
     ].filter(Boolean).join(" "),
   };
@@ -5248,11 +5249,11 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
     setErr(""); setAnswer("");
     const p = parsePayment(src, { now: Date.now() });
     setParsed(p);
-    if (!p) { setErr("Nothing to read in that."); return; }
-    if (p.declined) { setErr("That payment did not go through, so there is nothing to record."); return; }
+    if (!p) { setErr(tr("Nothing to read in that.")); return; }
+    if (p.declined) { setErr(tr("That payment did not go through, so there is nothing to record.")); return; }
     if (!p.ok) { setErr(`Couldn't be sure of the ${p.missing.join(" or ")}. Open Money and add it by hand.`); return; }
     const r = bridgeRef.current && bridgeRef.current.proposeTransaction(p);
-    if (r && r.ok) flash("Sent to Yusr — pick the account and confirm");
+    if (r && r.ok) flash(tr("Sent to Yusr — pick the account and confirm"));
     else setErr((r && r.why) || "Yusr isn't connected yet.");
   };
 
@@ -5303,8 +5304,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
 
   if (!html) return (
     <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-      <p className="text-sm text-slate-300">Money isn't bundled in this build.</p>
-      <p className="text-xs text-slate-500 mt-1">The Yusr document wasn't embedded. On the phone it loads from local assets.</p>
+      <p className="text-sm text-slate-300">{tr("Money isn't bundled in this build.")}</p>
+      <p className="text-xs text-slate-500 mt-1">{tr("The Yusr document wasn't embedded. On the phone it loads from local assets.")}</p>
     </div>
   );
 
@@ -5313,14 +5314,13 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
       <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <p className="text-sm text-slate-200 font-medium">Money &amp; Zakāt</p>
+            <p className="text-sm text-slate-200 font-medium">{tr("Money & Zakāt")}</p>
             <p className="text-xs text-slate-500 mt-1 max-w-lg">
-              Your ledger and every zakāt ruling live here, unchanged, and free forever. Attune adds memory and
-              plain language on top — it never calculates zakāt and never moves money on its own.
+              {tr("Your ledger and every zakāt ruling live here, unchanged, and free forever. Attune adds memory and plain language on top — it never calculates zakāt and never moves money on its own.")}
             </p>
           </div>
           <span className={`text-[11px] px-2 py-1 rounded-full border ${ready ? "border-teal-700 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-500"}`}>
-            {ready ? "Connected" : "Starting…"}
+            {ready ? tr("Connected") : tr("Starting…")}
           </span>
         </div>
       </div>
@@ -5330,33 +5330,31 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
           {/* Yusr is a full app, not a widget. A fixed short box put its own
               sheets and buttons out of reach, so the embed takes the height
               it can get and the whole app stays usable inside it. */}
-          <iframe ref={frameRef} srcDoc={html} title="Money" className="w-full block bg-[#0F1218]"
+          <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="w-full block bg-[#0F1218]"
                   style={{ height: "min(calc(100dvh - 190px), 900px)", minHeight: "440px", border: 0 }} />
         </div>
 
         <div className="space-y-5">
           <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-            <p className="text-sm text-slate-200 mb-1">Share a payment</p>
+            <p className="text-sm text-slate-200 mb-1">{tr("Share a payment")}</p>
             <p className="text-xs text-slate-500 mb-3">
-              An InstaPay confirmation, a bank SMS, a wallet receipt or a photo of one. Attune reads the amount and who it was,
-              then opens your own transaction sheet with it filled in. You pick the account.
+              {tr("An InstaPay confirmation, a bank SMS, a wallet receipt or a photo of one. Attune reads the amount and who it was, then opens your own transaction sheet with it filled in. You pick the account.")}
             </p>
             <textarea value={share} onChange={(e) => setShare(e.target.value)} rows={3}
-              placeholder="تم تحويل مبلغ 1,500.00 جنيه إلى AHMED MOHAMED. رقم العملية 987654321"
+              placeholder={tr("تم تحويل مبلغ 1,500.00 جنيه إلى AHMED MOHAMED. رقم العملية 987654321")}
               className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 placeholder:text-slate-600" />
             <div className="flex gap-2 mt-2">
               <button onClick={() => doShare()} disabled={!ready || !share.trim()}
                 className="px-3 py-2 rounded-lg bg-teal-500 text-slate-950 text-sm font-medium disabled:opacity-40">
-                Read it
+                {tr("Read it")}
               </button>
               <label className={`px-3 py-2 rounded-lg border border-slate-700 text-slate-200 text-sm flex items-center gap-1.5 ${reading ? "opacity-50" : ""}`}>
-                {reading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />} {reading ? "Reading…" : "From a photo"}
+                {reading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />} {reading ? tr("Reading…") : tr("From a photo")}
                 <input type="file" accept="image/*" className="hidden" disabled={reading} onChange={(e) => { fromPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} />
               </label>
             </div>
             <p className="text-[11px] text-slate-500 mt-2 leading-snug">
-              Three ways, all fine: share the SMS, WhatsApp message or screenshot to Attune from any app (it lands here by itself) ·
-              paste it above · or take/pick a photo of the receipt.</p>
+              {tr("Three ways, all fine: share the SMS, WhatsApp message or screenshot to Attune from any app (it lands here by itself) · paste it above · or take/pick a photo of the receipt.")}</p>
             {parsed && parsed.ok ? (
               <div className="mt-3 text-xs bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-1">
                 <div className="text-slate-200">
@@ -5366,46 +5364,45 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
                 {/* Every field shows the text it came from. If it read the
                     wrong number the user can see exactly where, instead of
                     hunting through the message. */}
-                <div className="text-slate-500">read from: “{parsed.amountSource}”</div>
+                <div className="text-slate-500">{tr("read from: “")}{parsed.amountSource}”</div>
                 <div className="text-slate-500">
-                  confidence: {parsed.confidence} · account: you choose, in Yusr
+                  confidence: {parsed.confidence} {tr("· account: you choose, in Yusr")}
                 </div>
               </div>
             ) : null}
-            {err ? <p className="mt-2 text-xs text-amber-400">{err}</p> : null}
+            {err ? <p className="mt-2 text-xs text-amber-400">{tr(err)}</p> : null}
           </div>
 
           <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
             <div className="flex items-start justify-between gap-2 mb-1">
-              <p className="text-sm text-slate-200">Talk to your money</p>
+              <p className="text-sm text-slate-200">{tr("Talk to your money")}</p>
               {/* The link is Yusr's decision, made where the money lives.
                   Attune shows the state; it does not offer to change it. */}
               {linked === false ? (
                 <span className="text-[10px] px-2 py-0.5 rounded-full border border-slate-700 text-slate-500 shrink-0">
-                  not saved to memory
+                  {tr("not saved to memory")}
                 </span>
               ) : linked === true ? (
                 <span className="text-[10px] px-2 py-0.5 rounded-full border border-teal-800 text-teal-400 shrink-0">
-                  saved to memory
+                  {tr("saved to memory")}
                 </span>
               ) : null}
             </div>
             <p className="text-xs text-slate-500 mb-3">
-              Answered on this device from the figures Yusr calculated. Ask follow-ups — it keeps the thread.
-              For zakāt it is handed the app's own numbers and forbidden from recomputing them: it explains, it does not rule.
+              {tr("Answered on this device from the figures Yusr calculated. Ask follow-ups — it keeps the thread. For zakāt it is handed the app's own numbers and forbidden from recomputing them: it explains, it does not rule.")}
             </p>
 
             {chat.length ? (
-              <div className="mb-3 space-y-2.5 max-h-72 overflow-auto pr-1">
+              <div className="mb-3 space-y-2.5 max-h-72 overflow-auto pe-1">
                 {chat.map((m, i) => (
-                  <div key={i} className={m.who === "you" ? "text-right" : ""}>
-                    <div className={`inline-block text-sm leading-relaxed whitespace-pre-wrap rounded-xl px-3 py-2 max-w-[92%] text-left ${
+                  <div key={i} className={m.who === "you" ? "text-end" : ""}>
+                    <div className={`inline-block text-sm leading-relaxed whitespace-pre-wrap rounded-xl px-3 py-2 max-w-[92%] text-start ${
                       m.who === "you" ? "bg-teal-500/10 text-teal-100 border border-teal-900/50"
                                       : "bg-slate-950 text-slate-200 border border-slate-800"}`}>
                       {m.text}
                     </div>
                     {m.zakat ? (
-                      <p className="text-[10px] text-slate-600 mt-1">figures from Yusr's zakāt engine, not recalculated</p>
+                      <p className="text-[10px] text-slate-600 mt-1">{tr("figures from Yusr's zakāt engine, not recalculated")}</p>
                     ) : null}
                   </div>
                 ))}
@@ -5414,16 +5411,16 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
 
             <input value={q} onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") askMoney(); }}
-              placeholder={chat.length ? "ask a follow-up…" : "هل عليّ زكاة السنة دي؟"}
+              placeholder={chat.length ? tr("ask a follow-up…") : "هل عليّ زكاة السنة دي؟"}
               className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 placeholder:text-slate-600" />
             <div className="mt-2 flex items-center gap-2 flex-wrap">
               <button onClick={askMoney} disabled={thinking || modelState !== "ready" || !q.trim()}
                 className="px-3 py-2 rounded-lg bg-teal-500 text-slate-950 text-sm font-medium disabled:opacity-40">
-                {thinking ? "Thinking…" : "Ask"}
+                {thinking ? tr("Thinking…") : tr("Ask")}
               </button>
               <button onClick={analyse} disabled={analysing || modelState !== "ready" || !snapshot}
                 className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-sm disabled:opacity-40">
-                {analysing ? "Reading…" : "What do you make of this?"}
+                {analysing ? tr("Reading…") : tr("What do you make of this?")}
               </button>
               {chat.length ? (
                 <button onClick={() => { setChat([]); setAnalysis(""); }}
@@ -5431,14 +5428,14 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
               ) : null}
             </div>
             {modelState !== "ready" ? (
-              <p className="mt-2 text-xs text-slate-500">Load a model in Engine and this answers with no signal.</p>
+              <p className="mt-2 text-xs text-slate-500">{tr("Load a model in Engine and this answers with no signal.")}</p>
             ) : null}
             {analysis ? (
               <div className="mt-3 border-t border-slate-800 pt-3">
-                <p className="text-xs text-slate-500 mb-1">What stands out</p>
+                <p className="text-xs text-slate-500 mb-1">{tr("What stands out")}</p>
                 <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">{analysis}</p>
                 <p className="text-[10px] text-slate-600 mt-1.5">
-                  Every figure here is one Yusr calculated — the model may not produce a new number.
+                  {tr("Every figure here is one Yusr calculated — the model may not produce a new number.")}
                 </p>
               </div>
             ) : null}
@@ -5446,19 +5443,19 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
 
           {zak ? (
             <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-              <p className="text-sm text-slate-200 mb-2">What the AI is allowed to see</p>
+              <p className="text-sm text-slate-200 mb-2">{tr("What the AI is allowed to see")}</p>
               {/* Shown on purpose. A privacy promise you can read is worth
                   more than one you are asked to believe. */}
-              <pre className="text-[11px] text-slate-400 whitespace-pre-wrap leading-relaxed max-h-56 overflow-auto">{zak.prompt}</pre>
+              <pre dir="ltr" data-i18n-skip className="text-[11px] text-slate-400 whitespace-pre-wrap leading-relaxed max-h-56 overflow-auto">{zak.prompt}</pre>
               {zak.sources && zak.sources.length ? (
-                <p className="text-[11px] text-slate-500 mt-2">Sources: {zak.sources.join(" · ")}</p>
+                <p className="text-[11px] text-slate-500 mt-2">{tr("Sources:")} {zak.sources.join(" · ")}</p>
               ) : null}
             </div>
           ) : null}
 
           {feed.length ? (
             <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-              <p className="text-sm text-slate-200 mb-2">Added to memory</p>
+              <p className="text-sm text-slate-200 mb-2">{tr("Added to memory")}</p>
               <div className="space-y-1.5">
                 {feed.slice(0, 6).map((d, i) => (
                   <div key={i} className="text-xs text-slate-400">
@@ -5468,7 +5465,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
                 ))}
               </div>
               <p className="text-[11px] text-slate-600 mt-2">
-                Only what you confirmed. Attune records nothing on its own.
+                {tr("Only what you confirmed. Attune records nothing on its own.")}
               </p>
             </div>
           ) : null}
@@ -6145,13 +6142,13 @@ function MapTab({ remember, flash, myLang }) {
     if (!online) {
       const local = searchSaved(st.places, term);
       setHits(local.map((p) => ({ ...p, local: true })));
-      if (!local.length) setErr("No signal, so only your saved places are searchable — nothing matched.");
+      if (!local.length) setErr(tr("No signal, so only your saved places are searchable — nothing matched."));
       setBusy(false); return;
     }
     try {
       const r = await geocode(term, { lang: myLang === "Arabic" ? "ar" : "en", limit: 6 });
       setHits(r);
-      if (!r.length) setErr("Nothing found for that.");
+      if (!r.length) setErr(tr("Nothing found for that."));
     } catch (e) {
       // navigator.onLine says "online" whenever there is ANY network
       // interface, which on a phone is most of the time even when nothing
@@ -6174,7 +6171,7 @@ function MapTab({ remember, flash, myLang }) {
     remember({ kind: "place", title: place.name.slice(0, 70),
                text: `${place.name} (${place.lat.toFixed(5)}, ${place.lon.toFixed(5)})`,
                output: "", lang: myLang, tags: ["place", "map"] });
-    flash("Saved — it works offline now");
+    flash(tr("Saved — it works offline now"));
   };
 
   // Pre-download the visible area. Deliberately slow and capped: OSM's usage
@@ -6215,7 +6212,7 @@ function MapTab({ remember, flash, myLang }) {
 
   const clearCache = async () => {
     if (!confirm("Delete every saved map tile? Your saved places are kept.")) return;
-    try { await caches.delete(TILE_STORE); flash("Map tiles cleared"); draw(); } catch (e) {}
+    try { await caches.delete(TILE_STORE); flash(tr("Map tiles cleared")); draw(); } catch (e) {}
   };
 
   const { w, h } = size();
@@ -6234,15 +6231,14 @@ function MapTab({ remember, flash, myLang }) {
       <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <p className="text-sm text-slate-200 font-medium">Maps</p>
+            <p className="text-sm text-slate-200 font-medium">{tr("Maps")}</p>
             <p className="text-xs text-slate-500 mt-1 max-w-xl leading-relaxed">
-              Every area you look at is kept, so it works again with no signal. You can also download an area
-              before you travel. Place search needs a connection; your own saved places are searchable without one.
+              {tr("Every area you look at is kept, so it works again with no signal. You can also download an area before you travel. Place search needs a connection; your own saved places are searchable without one.")}
             </p>
           </div>
           <span className={`text-[11px] px-2 py-1 rounded-full border shrink-0 ${
             online ? "border-teal-800 text-teal-400 bg-teal-500/5" : "border-amber-900 text-amber-400 bg-amber-500/5"}`}>
-            {online ? "online" : "offline — showing saved tiles"}
+            {online ? "online" : tr("offline — showing saved tiles")}
           </span>
         </div>
       </div>
@@ -6251,22 +6247,22 @@ function MapTab({ remember, flash, myLang }) {
         <div className="flex gap-2 flex-wrap">
           <input value={q} onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") doSearch(); }}
-            placeholder={online ? "Search a place — مدينة نصر، القاهرة" : "Search your saved places"}
+            placeholder={online ? tr("Search a place — مدينة نصر، القاهرة") : tr("Search your saved places")}
             className="flex-1 min-w-[12rem] bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-slate-100 placeholder:text-slate-600" />
           <button onClick={doSearch} disabled={busy || !q.trim()}
             className="px-3 py-2 rounded-lg bg-teal-500 text-slate-950 text-sm font-medium disabled:opacity-40">
-            {busy ? "…" : "Search"}
+            {busy ? "…" : tr("Search")}
           </button>
         </div>
-        {err ? <p className="mt-2 text-xs text-amber-400">{err}</p> : null}
+        {err ? <p className="mt-2 text-xs text-amber-400">{tr(err)}</p> : null}
         {hits.length ? (
           <div className="mt-2 space-y-1">
             {hits.map((r, i) => (
               <div key={i} className="flex items-center gap-2 text-xs bg-slate-950 border border-slate-800 rounded-lg p-2">
                 <button onClick={() => { setView({ lat: r.lat, lon: r.lon, z: Math.max(zNow, 15) }); setHits([]); }}
-                  className="flex-1 text-left text-slate-200 truncate">
-                  {r.name}
-                  {r.local ? <span className="text-teal-500/80 ml-1">· saved</span> : null}
+                  className="flex-1 text-start text-slate-200 truncate">
+                  {tr(r.name)}
+                  {r.local ? <span className="text-teal-500/80 ms-1">{tr("· saved")}</span> : null}
                 </button>
                 {!r.local ? (
                   <button onClick={() => savePlace(r)} className="text-teal-400 shrink-0">save</button>
@@ -6310,17 +6306,17 @@ function MapTab({ remember, flash, myLang }) {
             <div className="w-5 h-5 rounded-full border-2 border-teal-400/80" />
           </div>
 
-          <div className="absolute top-2 right-2 flex flex-col gap-1">
+          <div className="absolute top-2 end-2 flex flex-col gap-1">
             <button onClick={() => zoomBy(1)} className="w-9 h-9 rounded-lg bg-slate-950/90 border border-slate-700 text-slate-200 text-lg leading-none">+</button>
             <button onClick={() => zoomBy(-1)} className="w-9 h-9 rounded-lg bg-slate-950/90 border border-slate-700 text-slate-200 text-lg leading-none">−</button>
           </div>
 
-          <div className="absolute bottom-1 left-2 text-[10px] text-slate-400 bg-slate-950/80 px-1.5 py-0.5 rounded">
+          <div className="absolute bottom-1 start-2 text-[10px] text-slate-400 bg-slate-950/80 px-1.5 py-0.5 rounded">
             {TILE_ATTRIB}
           </div>
           {missing ? (
-            <div className="absolute bottom-1 right-2 text-[10px] text-amber-400 bg-slate-950/80 px-1.5 py-0.5 rounded">
-              {missing} tile{missing === 1 ? "" : "s"} not downloaded
+            <div className="absolute bottom-1 end-2 text-[10px] text-amber-400 bg-slate-950/80 px-1.5 py-0.5 rounded">
+              {tr(missing)} tile{missing === 1 ? "" : "s"} {tr("not downloaded")}
             </div>
           ) : null}
         </div>
@@ -6330,13 +6326,13 @@ function MapTab({ remember, flash, myLang }) {
             {view.lat.toFixed(5)}, {view.lon.toFixed(5)} · z{zNow}
           </span>
           <button onClick={() => savePlace({ name: `${view.lat.toFixed(5)}, ${view.lon.toFixed(5)}`, lat: view.lat, lon: view.lon })}
-            className="text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300">Save this spot</button>
+            className="text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300">{tr("Save this spot")}</button>
           <button onClick={downloadArea} disabled={!online || !!dl}
             className="text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300 disabled:opacity-40">
-            {dl ? `Downloading ${dl.done}/${dl.total}…` : "Download this area"}
+            {dl ? `Downloading ${dl.done}/${dl.total}…` : tr("Download this area")}
           </button>
           <button onClick={clearCache} className="text-[11px] px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-amber-400">
-            Clear saved tiles
+            {tr("Clear saved tiles")}
           </button>
         </div>
       </div>
@@ -6345,41 +6341,41 @@ function MapTab({ remember, flash, myLang }) {
         <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm text-slate-200 break-words">{sel.name}</p>
+              <p className="text-sm text-slate-200 break-words">{tr(sel.name)}</p>
               <p className="text-[11px] text-slate-500 font-mono mt-0.5">{sel.lat.toFixed(5)}, {sel.lon.toFixed(5)}</p>
               <p className="text-[11px] text-slate-500 mt-1">
-                {prettyDistance(metresBetween(sel, { lat: view.lat, lon: view.lon }))} from the centre of the map
+                {prettyDistance(metresBetween(sel, { lat: view.lat, lon: view.lon }))} {tr("from the centre of the map")}
               </p>
             </div>
             <button onClick={() => setSel(null)} className="text-slate-500 shrink-0">✕</button>
           </div>
           <div className="mt-2 flex gap-2 flex-wrap">
             <button onClick={() => setView({ lat: sel.lat, lon: sel.lon, z: Math.max(zNow, 16) })}
-              className="text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300">Centre on it</button>
+              className="text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300">{tr("Centre on it")}</button>
             {/* Handing off to a real navigation app rather than pretending to
                 do turn-by-turn, which needs routing data this app does not
                 carry and should not claim to. */}
             <a href={`geo:${sel.lat},${sel.lon}?q=${sel.lat},${sel.lon}`}
-              className="text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300">Open in your maps app</a>
+              className="text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300">{tr("Open in your maps app")}</a>
             <button onClick={() => { setSt((s) => ({ ...s, places: s.places.filter((x) => x.id !== sel.id) })); setSel(null); }}
-              className="text-[11px] px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-amber-400">Remove</button>
+              className="text-[11px] px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-amber-400">{tr("Remove")}</button>
           </div>
         </div>
       ) : null}
 
       {st.places.length ? (
         <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-          <p className="text-sm text-slate-200 mb-2">Your places <span className="text-slate-500 text-xs">({st.places.length})</span></p>
+          <p className="text-sm text-slate-200 mb-2">{tr("Your places")} <span className="text-slate-500 text-xs">({st.places.length})</span></p>
           <div className="space-y-1 max-h-56 overflow-auto">
             {st.places.map((p) => (
               <button key={p.id} onClick={() => { setView({ lat: p.lat, lon: p.lon, z: Math.max(zNow, 15) }); setSel(p); }}
-                className="w-full text-left text-xs bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-300 truncate hover:border-teal-700">
-                📍 {p.name}
+                className="w-full text-start text-xs bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-300 truncate hover:border-teal-700">
+                📍 {tr(p.name)}
               </button>
             ))}
           </div>
           <p className="text-[11px] text-slate-600 mt-2">
-            Saved places are on this device and searchable with no signal.
+            {tr("Saved places are on this device and searchable with no signal.")}
           </p>
         </div>
       ) : null}
@@ -6615,7 +6611,7 @@ export default function App() {
   // app can't know what's correct in the user's trade, but it can refuse to
   // store a rule that is structurally broken or fights an existing one.
   const teach = (entry, confirmed) => {
-    if (!entry.term.trim()) return flash("Which word?");
+    if (!entry.term.trim()) return flash(tr("Which word?"));
     const problems = lexConflicts(lexicon, entry);
     const stops = problems.filter((p) => p.level === "stop");
     if (problems.length && !confirmed) {
@@ -6623,7 +6619,7 @@ export default function App() {
       // The warning renders in Memory. If the user taught this from somewhere
       // else — the "a word is wrong" box under an answer — they would see
       // nothing happen at all, so take them to where the question is asked.
-      if (mode !== "memory") { setMode("memory"); flash("That one needs a second look"); }
+      if (mode !== "memory") { setMode("memory"); flash(tr("That one needs a second look")); }
       return;
     }
     setLexicon((l) => lexAdd(l, entry));
@@ -6633,7 +6629,7 @@ export default function App() {
   const unteach = (id) => {
     const gone = lexicon.find((e) => e.id === id);
     setLexicon((l) => l.filter((e) => e.id !== id));
-    if (gone) { setLexUndo(gone); flash("Removed"); }
+    if (gone) { setLexUndo(gone); flash(tr("Removed")); }
   };
   // Candidates only. Words the user types often that a general model is
   // unlikely to render their way — proposed, never adopted on their own.
@@ -6653,7 +6649,7 @@ export default function App() {
   // the highest-value thing you can photograph, and it is pure text.
   const photoToMemory = async (file) => {
     if (!file) return;
-    if (file.size > 4.5 * 1024 * 1024) return flash("Image too large — under 4MB please");
+    if (file.size > 4.5 * 1024 * 1024) return flash(tr("Image too large — under 4MB please"));
     if (!canUseAI()) return;
     const url = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.readAsDataURL(file); });
     const image = { data: url.split(",")[1], media: file.type || "image/jpeg" };
@@ -6663,7 +6659,7 @@ export default function App() {
       if (!text || !text.trim()) throw new Error("nothing readable in that photo");
       spendIfFree();
       const r = remember({ kind: "photo", title: file.name || "Photo", text, output: "", tags: ["photo", "kept"] });
-      flash("Photo read and kept — its text is searchable now");
+      flash(tr("Photo read and kept — its text is searchable now"));
       if (isPro(tier)) findCommitments(text, r.id, true);
     } catch (e) { console.error(e); flash(String(e && e.message || e).slice(0, 90)); }
     finally { setMemBusy(false); }
@@ -6725,7 +6721,7 @@ export default function App() {
   const forget = (id) => {
     setMemory((m) => m.filter((r) => r.id !== id));
     setCommits((c) => c.filter((x) => x.sourceId !== id));
-    setOpenRec(null); flash("Removed from memory");
+    setOpenRec(null); flash(tr("Removed from memory"));
   };
 
   // Commitment extraction. Runs on the text the user already ran through the
@@ -6765,8 +6761,8 @@ export default function App() {
       if (kept.length) {
         setCommits((c) => mergeCommitments(c, kept));
         if (!silent) flash(`${kept.length} thing${kept.length === 1 ? "" : "s"} found — confirm what's real`);
-      } else if (!silent) flash("Nothing was promised in that");
-    } catch (e) { console.error(e); if (!silent) flash("Couldn't read that for commitments"); }
+      } else if (!silent) flash(tr("Nothing was promised in that"));
+    } catch (e) { console.error(e); if (!silent) flash(tr("Couldn't read that for commitments")); }
     finally { setMemBusy(false); }
   };
   const setCommitState = (id, state) =>
@@ -6950,7 +6946,7 @@ export default function App() {
   // direct .gguf link. Real progress, resumable, cancellable.
   const installNative = async (arg, tierForUi) => {
     if (!NATIVE) return false;
-    if (airGap) { flash("Offline lock is on — turn it off below to download a model"); return false; }
+    if (airGap) { flash(tr("Offline lock is on — turn it off below to download a model")); return false; }
     if (modelState === "downloading") return false;
     setModelState("downloading"); setDlPct(0); setDlStage("Finding the files"); setDlDetail("");
     try {
@@ -6961,7 +6957,7 @@ export default function App() {
       const ok = await LocalEngine.load(tierForUi || null);
       LocalEngine.ready = !!ok;
       setModelState(ok ? "ready" : "none");
-      if (ok) { setToast("Model running on this phone"); setTimeout(() => setToast(""), 2500); }
+      if (ok) { setToast(tr("Model running on this phone")); setTimeout(() => setToast(""), 2500); }
       return ok;
     } catch (e) {
       setModelState(LocalEngine.ready ? "ready" : "none");
@@ -7002,7 +6998,7 @@ export default function App() {
         const url = String(d.image);
         setInImage({ data: url.split(",")[1], media: "image/jpeg", url }); setInResult(""); setInAction(""); setInLogged(null);
         setMode("instant");
-        setToast("Photo received — a receipt? tap “Add to Money”"); setTimeout(() => setToast(""), 3500);
+        setToast(tr("Photo received — a receipt? tap “Add to Money”")); setTimeout(() => setToast(""), 3500);
         return;
       }
       const shared = String(d.text || "").trim();
@@ -7011,11 +7007,11 @@ export default function App() {
       if (d.kind === "share") {
         const pay = parsePayment(shared, { now: Date.now() });
         if (pay && pay.ok) { setPendingPay({ text: shared, id: Date.now() }); setMode("money");
-          setToast("Payment received — pick the account and confirm"); setTimeout(() => setToast(""), 3500); return; }
+          setToast(tr("Payment received — pick the account and confirm")); setTimeout(() => setToast(""), 3500); return; }
       }
       if (d.kind === "selection") {
         setInText(shared); setInResult(""); setMode("instant");
-        setToast("Your selected text is ready — pick what to do with it"); setTimeout(() => setToast(""), 3000);
+        setToast(tr("Your selected text is ready — pick what to do with it")); setTimeout(() => setToast(""), 3000);
         return;
       }
       const r = memMake({ kind: "note", title: shared.slice(0, 60), text: shared, output: "", tags: ["shared"] });
@@ -7087,9 +7083,9 @@ export default function App() {
     // While the model is loading, a request is accepted: it waits for the
     // model and shows the loading progress where the answer will appear.
     if (!willRunLocal() && !(NATIVE && modelState === "starting")) {
-      if (modelState === "starting") { flash("The model is still loading into memory — one moment"); return false; }
-      if (modelState === "downloading") { flash("The model is still downloading — see Engine"); return false; }
-      flash("Load a model in Engine first — everything runs on this device"); setShowEngine(true); return false;
+      if (modelState === "starting") { flash(tr("The model is still loading into memory — one moment")); return false; }
+      if (modelState === "downloading") { flash(tr("The model is still downloading — see Engine")); return false; }
+      flash(tr("Load a model in Engine first — everything runs on this device")); setShowEngine(true); return false;
     }
     if (isPro(tier)) return true;
     const st = trialState(Date.now());
@@ -7122,14 +7118,14 @@ export default function App() {
       setResult({ lean: txt, detailed: txt, ai: true, reads: `Rewritten by AI to fit ${TOOLS[tool].label}.`, hint: TOOLS[tool].hint });
       setFills({}); setVariant("lean"); setCopied(false);
       setHistory((h) => [{ id: Date.now(), input: input.trim(), tool, fav: false }, ...h].slice(0, TIER_LIMITS[tier].history));
-    } catch (e) { flash("AI unavailable — showing structured version"); forge(); } finally { setLoading(false); }
+    } catch (e) { flash(tr("AI unavailable — showing structured version")); forge(); } finally { setLoading(false); }
   };
   const currentText = useMemo(() => (result ? applyFills(result[variant], fills) : ""), [result, variant, fills]);
   const placeholders = useMemo(() => (result ? findPlaceholders(result[variant]) : []), [result, variant]);
   const copy = async () => { if (!currentText) return; try { await navigator.clipboard.writeText(currentText); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch (e) {} };
   const openIn = () => { try { navigator.clipboard.writeText(currentText); } catch (e) {} const t = TOOLS[tool]; const url = t.prefill ? t.url + encodeURIComponent(currentText) : t.url; try { window.open(url, "_blank"); } catch (e) {} flash(t.prefill ? "Opening with prompt…" : "Copied — opening tool…"); };
-  const saveTemplate = () => { if (!input.trim()) return; if (templates.length >= TIER_LIMITS[tier].templates) return setShowUpgrade(true); const name = input.trim().slice(0, 28) + (input.trim().length > 28 ? "…" : ""); setTemplates((t) => [{ id: Date.now(), name, input: input.trim(), context, tool, tone, audience, lang, pack, opts }, ...t]); flash("Saved as template"); };
-  const applyTemplate = (t) => { setInput(t.input); setContext(t.context || ""); setTool(t.tool); setTone(t.tone); setAudience(t.audience); setLang(t.lang); setPack(t.pack || "none"); setOpts(t.opts); setMode("improve"); flash("Template loaded"); };
+  const saveTemplate = () => { if (!input.trim()) return; if (templates.length >= TIER_LIMITS[tier].templates) return setShowUpgrade(true); const name = input.trim().slice(0, 28) + (input.trim().length > 28 ? "…" : ""); setTemplates((t) => [{ id: Date.now(), name, input: input.trim(), context, tool, tone, audience, lang, pack, opts }, ...t]); flash(tr("Saved as template")); };
+  const applyTemplate = (t) => { setInput(t.input); setContext(t.context || ""); setTool(t.tool); setTone(t.tone); setAudience(t.audience); setLang(t.lang); setPack(t.pack || "none"); setOpts(t.opts); setMode("improve"); flash(tr("Template loaded")); };
 
   const doCompress = () => { const r = compressPrompt(cPrompt, cHistory); setCResult(r ? { ...r, kind: "compress" } : null); setCCopied(false); };
   const aiCompressAction = async () => {
@@ -7142,7 +7138,7 @@ export default function App() {
       const pct = beforeW ? Math.max(0, Math.round((1 - afterW / beforeW) * 100)) : 0;
       capture("compress", cPrompt, txt);
       setCResult({ kind: "aicompress", text: txt, beforeW, afterW, pct, removed: 0 }); setCCopied(false);
-    } catch (e) { flash("AI unavailable — showing trimmed version"); doCompress(); } finally { setLoading(false); }
+    } catch (e) { flash(tr("AI unavailable — showing trimmed version")); doCompress(); } finally { setLoading(false); }
   };
   const doPort = () => gate(() => { setCResult({ kind: "port", text: contextPort(cPrompt, cHistory, tool) }); setCCopied(false); });
   const copyC = async () => { if (!cResult) return; try { await navigator.clipboard.writeText(cResult.text); setCCopied(true); setTimeout(() => setCCopied(false), 1500); } catch (e) {} };
@@ -7173,10 +7169,10 @@ export default function App() {
     else {
       setModelState("none");
       try { localStorage.removeItem("attune:loaded"); } catch (e) {}
-      flash("No on-device runtime reachable — start LM Studio, Ollama or llama.cpp, then set its address in the bar at the top"); }
+      flash(tr("No on-device runtime reachable — start LM Studio, Ollama or llama.cpp, then set its address in the bar at the top")); }
   };
 
-  const useRecipe = (r) => { setInput(r.template); setTool(r.tool); setResult(null); setMode("improve"); flash("Recipe loaded — fill the [slots], then AI Rewrite"); };
+  const useRecipe = (r) => { setInput(r.template); setTool(r.tool); setResult(null); setMode("improve"); flash(tr("Recipe loaded — fill the [slots], then AI Rewrite")); };
   const toggleFdLang = (k) => setFdLangs((ls) => ls.includes(k) ? (ls.length > 1 ? ls.filter((x) => x !== k) : ls) : [...ls, k]);
   const doFieldDoc = async () => {
     if (!fdInput.trim() || loading || !canUseAI()) return;
@@ -7230,7 +7226,7 @@ export default function App() {
       try {
         const t = await aiTranslatePack(activePack, myLang, CPACKS);
         if (!dead && t) setPackI18n((m) => ({ ...m, [packKeyI18n]: t }));
-      } catch (e) { console.error(e); if (!dead) flash("Couldn't translate the pack — showing English"); }
+      } catch (e) { console.error(e); if (!dead) flash(tr("Couldn't translate the pack — showing English")); }
       finally { if (!dead) setTranslating(false); }
     })();
     return () => { dead = true; };
@@ -7251,7 +7247,7 @@ export default function App() {
 
   const loadImage = (file) => {
     if (!file) return;
-    if (file.size > 4.5 * 1024 * 1024) return flash("Image too large — under 4MB please");
+    if (file.size > 4.5 * 1024 * 1024) return flash(tr("Image too large — under 4MB please"));
     const r = new FileReader();
     r.onload = () => {
       const url = String(r.result);
@@ -7287,7 +7283,7 @@ export default function App() {
   const failInstant = (r, e) => {
     const msg = String((e && e.message) || e);
     if (!r.isCurrent()) return;
-    if (msg === "Stopped") { setInResult((t) => (t ? t + " …(stopped)" : "")); flash("Stopped"); return; }
+    if (msg === "Stopped") { setInResult((t) => (t ? t + " …(stopped)" : "")); flash(tr("Stopped")); return; }
     console.error(e); setCheckState(""); flash(msg.slice(0, 120));
   };
   const stopInstant = () => { inRunRef.current++; LocalEngine.abort(); setInBusy(false); setInPhase(""); };
@@ -7342,9 +7338,9 @@ export default function App() {
     finally { endInstant(r); }
   };
   const saveCustomAction = () => {
-    if (!newAct.label.trim() || !newAct.instruction.trim()) return flash("Give it a name and an instruction");
+    if (!newAct.label.trim() || !newAct.instruction.trim()) return flash(tr("Give it a name and an instruction"));
     setCustomActions((a) => [...a, { ...newAct, id: Date.now() }].slice(0, 12));
-    setNewAct({ label: "", instruction: "" }); setShowCustom(false); flash("Action saved");
+    setNewAct({ label: "", instruction: "" }); setShowCustom(false); flash(tr("Action saved"));
   };
 
   // Ask. Retrieval first — local, instant, no model call — then one generation.
@@ -7476,7 +7472,7 @@ export default function App() {
 
   // Voice: the phone's own recogniser; words appear as they are spoken.
   const startVoice = async () => {
-    if (!NATIVE || !NATIVE.listen) return flash("Voice input works in the Android app");
+    if (!NATIVE || !NATIVE.listen) return flash(tr("Voice input works in the Android app"));
     if (listening) { try { NATIVE.stopListening(); } catch (e) {} return; }
     const before = inText ? inText.replace(/\s+$/, "") + " " : "";
     const langTag = inTarget === "ar" || (detectScript(inText) || {}).guess === "ar" ? "ar-EG" : (inTarget && inTarget !== "match" ? inTarget : "");
@@ -7489,8 +7485,8 @@ export default function App() {
   };
 
   const pasteInstant = async () => {
-    try { const t = await navigator.clipboard.readText(); if (t && t.trim()) { setInText(t.trim()); setInResult(""); } else flash("Clipboard is empty"); }
-    catch (e) { flash("Allow clipboard access, or paste manually"); }
+    try { const t = await navigator.clipboard.readText(); if (t && t.trim()) { setInText(t.trim()); setInResult(""); } else flash(tr("Clipboard is empty")); }
+    catch (e) { flash(tr("Allow clipboard access, or paste manually")); }
   };
 
   const findings = useMemo(() => analyseRecords(records, Date.now()), [records]);
@@ -7517,7 +7513,7 @@ export default function App() {
     ];
     setRecords((rs) => mergeRecords(rs, incoming));
     setLastSync(Date.now());
-    flash("Received 2 records from Mahmoud's device");
+    flash(tr("Received 2 records from Mahmoud's device"));
   };
   // Warn while they're still writing, about the asset they're writing about.
   const liveAlert = useMemo(() => {
@@ -7608,7 +7604,7 @@ export default function App() {
     return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
   }, []);
   const runSync = async () => {
-    if (!isOnline()) return flash("No connection — everything still works offline");
+    if (!isOnline()) return flash(tr("No connection — everything still works offline"));
     setSyncing2(true);
     try {
       const { results } = await syncAll();
@@ -7616,7 +7612,7 @@ export default function App() {
       const ok = results.filter((r) => r.ok && !r.skipped).length;
       const failed = results.filter((r) => !r.ok);
       flash(failed.length ? `${ok} updated, ${failed.length} couldn't be reached` : `${ok} up to date`);
-    } catch (e) { console.error(e); flash("Sync failed — nothing was lost"); }
+    } catch (e) { console.error(e); flash(tr("Sync failed — nothing was lost")); }
     finally { setSyncing2(false); }
   };
   // Try once on load, quietly. Never blocks anything, never shows an error.
@@ -7680,8 +7676,8 @@ export default function App() {
     setCpPending(null); setCpPaste("");
   };
   const cpGrabClipboard = async () => {
-    try { const t = await navigator.clipboard.readText(); if (t && t.trim()) { setCpPaste(t.trim()); flash("Pasted from clipboard"); } else flash("Clipboard is empty"); }
-    catch (e) { flash("Allow clipboard access, or paste manually"); }
+    try { const t = await navigator.clipboard.readText(); if (t && t.trim()) { setCpPaste(t.trim()); flash(tr("Pasted from clipboard")); } else flash(tr("Clipboard is empty")); }
+    catch (e) { flash(tr("Allow clipboard access, or paste manually")); }
   };
   const cpReset = () => { setConvo([]); setCpPending(null); setCpIntent(""); setCpPaste(""); setCpRefine("");
                           setCpVariants([]); setCpDiag(null); setCpGoal(""); };
@@ -7690,7 +7686,7 @@ export default function App() {
   const btn = (a) => `px-3 py-1.5 rounded-lg text-sm border transition-colors ${a ? "bg-teal-500 border-teal-500 text-slate-950 font-medium" : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-600"}`;
   const strengthColor = strength.score >= 75 ? "bg-teal-500" : strength.score >= 50 ? "bg-amber-500" : "bg-rose-500";
   const creditLabel = modelState === "starting" ? "Loading the model…" : modelState === "downloading" ? "Installing a model…" : modelState !== "ready" ? "No model loaded"
-    : isPro(tier) ? "Unlimited · on-device" : `${dayLeft} free today`;
+    : isPro(tier) ? "Unlimited · on-device" : tr("{n} free today", { n: dayLeft });
 
   // Everything the Chat screen needs from the rest of the app.
   const chatApi = {
@@ -7708,7 +7704,7 @@ export default function App() {
     parsePayment: (t) => parsePayment(t, { now: Date.now() }),
     canUseAI, spend: spendIfFree, deepThink: () => ENGINE_PREFS.deepThink,
     webOn,
-    toggleWeb: () => { if (NATIVE && airGap) { flash("Offline lock is on — turn it off in Engine to search the web"); return; } setWebOn((v) => !v); },
+    toggleWeb: () => { if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to search the web")); return; } setWebOn((v) => !v); },
     webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang),
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
@@ -7764,16 +7760,16 @@ export default function App() {
             of where you are, and the few things you need from anywhere. */}
         <header className="sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900">
           {mode === "chat" ? (
-            <button onClick={() => setDrawerOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label="Chats"><Menu size={20} /></button>
+            <button onClick={() => setDrawerOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Chats")}><Menu size={20} /></button>
           ) : (
-            <button onClick={goBack} aria-label="Back" className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><span className="text-lg leading-none">←</span></button>
+            <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
           )}
-          <p className="text-base font-semibold text-white truncate">{MODE_TITLES[mode] || "Attune"}</p>
+          <p className="text-base font-semibold text-white truncate">{tr(MODE_TITLES[mode] || "Attune")}</p>
           <div className="flex-1" />
           <button onClick={() => setShowEngine(true)} className={`flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
-            <Cpu size={12} />{modelState === "ready" ? (activeTier ? activeTier.params : "Ready") : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : "No model"}</button>
-          {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="p-2 text-teal-300" aria-label="Offline lock on"><Lock size={15} /></button> : null}
-          {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); }} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label="New chat"><Plus size={20} /></button> : null}
+            <Cpu size={12} />{modelState === "ready" ? (activeTier ? activeTier.params : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : tr("No model")}</button>
+          {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="p-2 text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
+          {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); }} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("New chat")}><Plus size={20} /></button> : null}
         </header>
 
         {/* The morning line — shown on every tab, once a day, only when there
@@ -7788,7 +7784,7 @@ export default function App() {
                     b.tone === "bad" ? "text-amber-200" : b.tone === "waiting" ? "text-teal-200" : "text-slate-300"}`}>{b.text}</p>
                 ))}
                 <button onClick={() => { setMode("memory"); dismissMorning(); }}
-                  className="text-[11px] text-teal-400 hover:text-teal-300 mt-1.5">see them →</button>
+                  className="text-[11px] text-teal-400 hover:text-teal-300 mt-1.5">{tr("see them →")}</button>
               </div>
               <button onClick={dismissMorning} className="text-slate-600 hover:text-slate-400"><X size={15} /></button>
             </div>
@@ -7803,17 +7799,16 @@ export default function App() {
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
               {askTurns.length === 0 ? (
                 <div className="text-center py-6">
-                  <p className="text-sm text-slate-300">Ask it anything.</p>
+                  <p className="text-sm text-slate-300">{tr("Ask it anything.")}</p>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed max-w-lg mx-auto">
-                    It answers from this device, and it can look through everything you've asked it before —
-                    so questions about your own work have real answers, not guesses.
+                    {tr("It answers from this device, and it can look through everything you've asked it before — so questions about your own work have real answers, not guesses.")}
                   </p>
                   <div className="flex flex-wrap gap-1.5 justify-center mt-4">
                     {["What did I ask about last week?", "Explain this in simple terms: …",
                       "Write a short reply saying no, politely", "What do I still owe people?",
                       "Convert 250 kg to pounds"].map((q) => (
                       <button key={q} onClick={() => { setAskQ(q); }}
-                        className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:border-teal-600 hover:text-teal-300">{q}</button>
+                        className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:border-teal-600 hover:text-teal-300">{tr(q)}</button>
                     ))}
                   </div>
                 </div>
@@ -7834,7 +7829,7 @@ export default function App() {
                               <p className="text-[11px] text-slate-500 flex items-start gap-1.5">
                                 <Loader2 size={12} className="animate-spin shrink-0 mt-0.5" />
                                 <span className="whitespace-pre-wrap line-clamp-3">
-                                  {t.thinking ? "Thinking… " + t.thinking.slice(-220) : (t.phase || "Reading…")}
+                                  {t.thinking ? "Thinking… " + t.thinking.slice(-220) : (t.phase || tr("Reading…"))}
                                 </span>
                               </p>
                             ) : null}
@@ -7844,8 +7839,8 @@ export default function App() {
                             ) : null}
                             {t.stats && t.stats.tps && !t.streaming ? (
                               <p className="text-[10px] text-slate-600 mt-1.5">
-                                on this phone · {t.stats.tps} tokens/s · {(t.stats.ms / 1000).toFixed(1)} s
-                                {t.thought ? " · thought it through first" : ""}
+                                {tr("on this phone ·")} {t.stats.tps} {tr("tokens/s ·")} {(t.stats.ms / 1000).toFixed(1)} s
+                                {t.thought ? tr(" · thought it through first") : ""}
                               </p>
                             ) : null}
                           </>
@@ -7858,23 +7853,23 @@ export default function App() {
                         {t.audit && t.audit.fabricated && t.audit.fabricated.length ? (
                           <div className="mt-2 pt-2 border-t border-amber-900/60">
                             <p className="text-[11px] text-amber-300">
-                              Check {t.audit.fabricated.join(", ")} — {t.audit.fabricated.length === 1 ? "that figure" : "those figures"} {t.audit.fabricated.length === 1 ? "isn't" : "aren't"} in the sources below.
+                              {tr("Check")} {t.audit.fabricated.join(", ")} — {t.audit.fabricated.length === 1 ? tr("that figure") : tr("those figures")} {t.audit.fabricated.length === 1 ? tr("isn't") : tr("aren't")} {tr("in the sources below.")}
                             </p>
                           </div>
                         ) : null}
                         {t.web && t.web.length ? (
                           <div className="mt-2 pt-2 border-t border-slate-800">
                             <span className="text-[10px] text-slate-600">
-                              {t.via === "wikipedia" ? "from Wikipedia"
-                                : t.via === "duckduckgo" ? "from the web via DuckDuckGo"
-                                : t.via === "brave" ? "from the web via Brave Search"
-                                : "from the web via your own " + t.via} · answered on this device
+                              {t.via === "wikipedia" ? tr("from Wikipedia")
+                                : t.via === "duckduckgo" ? tr("from the web via DuckDuckGo")
+                                : t.via === "brave" ? tr("from the web via Brave Search")
+                                : "from the web via your own " + t.via} {tr("· answered on this device")}
                             </span>
                             <div className="mt-1.5 space-y-1">
                               {t.web.map((h, k) => (
                                 <a key={k} href={h.url} target="_blank" rel="noreferrer noopener"
                                    className="block text-[11px] text-teal-400/90 hover:text-teal-300 truncate">
-                                  [{k + 1}] {h.title}
+                                  [{k + 1}] {tr(h.title)}
                                 </a>
                               ))}
                             </div>
@@ -7890,43 +7885,43 @@ export default function App() {
                             {correcting === i ? (
                               <div className="space-y-2">
                                 <textarea value={correctDraft} onChange={(e) => setCorrectDraft(e.target.value)}
-                                  rows={3} placeholder="Write it the way you wanted it"
+                                  rows={3} placeholder={tr("Write it the way you wanted it")}
                                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100" />
                                 <input value={correctWhy} onChange={(e) => setCorrectWhy(e.target.value)}
-                                  placeholder="Why, in a few words (optional) — e.g. too formal, keep it in Egyptian"
+                                  placeholder={tr("Why, in a few words (optional) — e.g. too formal, keep it in Egyptian")}
                                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200" />
                                 <div className="flex gap-2">
                                   <button onClick={() => {
                                       const asked = (askTurns[i - 1] && askTurns[i - 1].text) || "";
                                       const kept = teachCorrection({ kind: "ask", input: asked, was: t.text,
                                                         corrected: correctDraft, note: correctWhy, lang });
-                                      if (!kept) { flash("That's the same as the answer — nothing to learn from it"); return; }
+                                      if (!kept) { flash(tr("That's the same as the answer — nothing to learn from it")); return; }
                                       setCorrecting(null); setCorrectDraft(""); setCorrectWhy("");
-                                      flash("Saved — next time it starts from your version");
+                                      flash(tr("Saved — next time it starts from your version"));
                                     }}
                                     disabled={!correctDraft.trim()}
                                     className="px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 text-xs font-medium disabled:opacity-40">
-                                    Save the correction
+                                    {tr("Save the correction")}
                                   </button>
                                   <button onClick={() => { setCorrecting(null); setCorrectDraft(""); setCorrectWhy(""); }}
-                                    className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-400 text-xs">Cancel</button>
+                                    className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-400 text-xs">{tr("Cancel")}</button>
                                 </div>
                               </div>
                             ) : (
                               <button onClick={() => { setCorrecting(i); setCorrectDraft(t.text); }}
                                 className="text-[11px] text-slate-500 hover:text-teal-300">
-                                Not how you'd put it? Correct it →
+                                {tr("Not how you'd put it? Correct it →")}
                               </button>
                             )}
                           </div>
                         ) : null}
                         {t.sources && t.sources.length ? (
                           <div className="mt-2 pt-2 border-t border-slate-800 flex flex-wrap gap-1.5">
-                            <span className="text-[10px] text-slate-600">from your own history:</span>
+                            <span className="text-[10px] text-slate-600">{tr("from your own history:")}</span>
                             {t.sources.map((r) => (
                               <button key={r.id} onClick={() => { setOpenRec(r); setMode("memory"); }}
                                 className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:border-teal-600 hover:text-teal-300 max-w-[18rem] truncate">
-                                {new Date(r.ts).toISOString().slice(0, 10)} · {r.title}
+                                {new Date(r.ts).toISOString().slice(0, 10)} · {tr(r.title)}
                               </button>
                             ))}
                           </div>
@@ -7934,18 +7929,18 @@ export default function App() {
                       </div>
                     </div>
                   ))}
-                  {askBusy ? <div className="flex items-center gap-2 text-xs text-slate-500"><Loader2 size={13} className="animate-spin" /> thinking on this device…</div> : null}
+                  {askBusy ? <div className="flex items-center gap-2 text-xs text-slate-500"><Loader2 size={13} className="animate-spin" /> {tr("thinking on this device…")}</div> : null}
                 </div>
               )}
 
               <div className="flex gap-2 items-end">
                 <textarea value={askQ} onChange={(e) => setAskQ(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); runAsk(); } }}
-                  placeholder="Ask anything — Enter to send, Shift+Enter for a new line"
+                  placeholder={tr("Ask anything — Enter to send, Shift+Enter for a new line")}
                   className="flex-1 h-14 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
                 <button onClick={() => (askBusy ? LocalEngine.abort() : runAsk())} disabled={!askQ.trim() && !askBusy}
                   className={`h-14 px-5 rounded-xl font-semibold ${askBusy ? "bg-slate-700 text-slate-100 hover:bg-slate-600" : askQ.trim() ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>
-                  {askBusy ? "Stop" : "Ask"}
+                  {askBusy ? tr("Stop") : tr("Ask")}
                 </button>
               </div>
               {/* The web toggle sits with the input, not in settings, because
@@ -7953,15 +7948,15 @@ export default function App() {
                   question goes to the internet; the answer still comes from
                   the model on this device. */}
               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <button onClick={() => { if (NATIVE && airGap) { flash("Offline lock is on — turn it off in Engine to look things up"); return; } setWebOn(!webOn); }}
+                <button onClick={() => { if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to look things up")); return; } setWebOn(!webOn); }}
                   className={`text-[11px] px-2.5 py-1.5 rounded-full border flex items-center gap-1.5 ${
                     NATIVE && airGap ? "border-slate-800 text-slate-600" :
                     webOn ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-700 text-slate-400"}`}>
-                  <Globe size={12} /> {NATIVE && airGap ? "Web lookup off (offline lock)" : webOn ? "Looking it up on the web" : "Look it up on the web"}
+                  <Globe size={12} /> {NATIVE && airGap ? tr("Web lookup off (offline lock)") : webOn ? tr("Looking it up on the web") : tr("Look it up on the web")}
                 </button>
                 <button onClick={() => setAskThink((v) => !v)}
                   className={`text-[11px] px-2.5 py-1.5 rounded-full border flex items-center gap-1.5 ${askThink ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-700 text-slate-400"}`}>
-                  <Brain size={12} /> {askThink ? "Thinking first — slower, better on hard ones" : "Think first"}
+                  <Brain size={12} /> {askThink ? tr("Thinking first — slower, better on hard ones") : tr("Think first")}
                 </button>
                 {webOn ? (
                   <span className="text-[11px] text-slate-500">
@@ -7969,14 +7964,14 @@ export default function App() {
                       ? (searchCfg.provider === "brave" && searchCfg.key ? "Brave Search" : "DuckDuckGo") + " · only the question leaves the phone; the answer is written here"
                       : searchCfg.provider && searchCfg.key
                       ? `your ${searchCfg.provider} key · the question leaves the device, the answer is still written here`
-                      : "Wikipedia · the question leaves the device, the answer is still written here"}
+                      : tr("Wikipedia · the question leaves the device, the answer is still written here")}
                   </span>
                 ) : null}
               </div>
               <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
-                <p className="text-[11px] text-teal-500/70 flex items-center gap-1.5"><ShieldCheck size={12} /> Runs on this device · no account · works with no signal</p>
+                <p className="text-[11px] text-teal-500/70 flex items-center gap-1.5"><ShieldCheck size={12} /> {tr("Runs on this device · no account · works with no signal")}</p>
                 {askTurns.length ? (
-                  <button onClick={() => setAskTurns([])} className="text-[11px] text-slate-500 hover:text-slate-300">Clear</button>
+                  <button onClick={() => setAskTurns([])} className="text-[11px] text-slate-500 hover:text-slate-300">{tr("Clear")}</button>
                 ) : null}
               </div>
             </section>
@@ -7985,35 +7980,33 @@ export default function App() {
           <div className="space-y-5 att-in">
             {shareIn ? (
               <div className="bg-slate-900 border border-teal-900/60 rounded-2xl p-4">
-                <p className="text-sm text-teal-300 font-medium mb-1">Saved from another app</p>
+                <p className="text-sm text-teal-300 font-medium mb-1">{tr("Saved from another app")}</p>
                 <p className="text-xs text-slate-400 line-clamp-2 mb-2">{shareIn.text.slice(0, 180)}{shareIn.text.length > 180 ? "…" : ""}</p>
                 <div className="flex flex-wrap gap-1.5">
                   <button onClick={() => { setInText(shareIn.text); setInResult(""); setMode("instant"); setShareIn(null); }}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold">Do something with it</button>
+                    className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold">{tr("Do something with it")}</button>
                   <button onClick={() => { findCommitments(shareIn.text, shareIn.id); setShareIn(null); }}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600">Read it for promises</button>
+                    className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600">{tr("Read it for promises")}</button>
                   <button onClick={() => setShareIn(null)}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-500">Just keep it</button>
+                    className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-500">{tr("Just keep it")}</button>
                 </div>
               </div>
             ) : null}
             {memNote ? (
               <div className="flex items-start gap-2 bg-amber-500/5 border border-amber-900/50 rounded-xl p-3">
                 <AlertTriangle size={13} className="text-amber-400 mt-0.5 shrink-0" />
-                <p className="text-xs text-amber-100/80 flex-1">{memNote}</p>
+                <p className="text-xs text-amber-100/80 flex-1">{tr(memNote)}</p>
                 <button onClick={() => setMemNote("")} className="text-amber-400/60 hover:text-amber-300"><X size={14} /></button>
               </div>
             ) : null}
 
             {!isPro(tier) ? (
               <div className="bg-slate-900 rounded-2xl border border-teal-900/50 p-5">
-                <p className="text-sm font-medium text-teal-300 flex items-center gap-1.5 mb-1"><Crown size={14} /> Memory is part of Pro</p>
+                <p className="text-sm font-medium text-teal-300 flex items-center gap-1.5 mb-1"><Crown size={14} /> {tr("Memory is part of Pro")}</p>
                 <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                  Everything you run through Attune is already kept on this device — {memory.length} item{memory.length === 1 ? "" : "s"} so far.
-                  Pro turns that into something you can search, and reads it for things you said you'd do.
-                  It never leaves the phone, so no one but you can read it — not even us.
+                  {tr("Everything you run through Attune is already kept on this device —")} {memory.length} {tr(memory.length === 1 ? "item" : "items")} {tr("so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.")}
                 </p>
-                <button onClick={() => setShowUpgrade(true)} className="text-sm px-4 py-2 rounded-xl bg-teal-500 text-slate-950 font-semibold">See Pro</button>
+                <button onClick={() => setShowUpgrade(true)} className="text-sm px-4 py-2 rounded-xl bg-teal-500 text-slate-950 font-semibold">{tr("See Pro")}</button>
               </div>
             ) : null}
 
@@ -8032,73 +8025,70 @@ export default function App() {
                 } else if (e.dataTransfer.getData("text")) {
                   const txt = e.dataTransfer.getData("text");
                   const r = remember({ kind: "note", title: txt.slice(0, 60), text: txt, output: "", tags: ["dropped"] });
-                  flash("Saved"); if (isPro(tier)) findCommitments(txt, r.id, true);
-                } else flash("Drop plain text or a .txt/.md/.csv file");
+                  flash(tr("Saved")); if (isPro(tier)) findCommitments(txt, r.id, true);
+                } else flash(tr("Drop plain text or a .txt/.md/.csv file"));
               }}>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-300">Keep anything</p>
-                <span className="text-[11px] text-slate-600">no feature needed — it just goes in</span>
+                <p className="text-sm font-medium text-slate-300">{tr("Keep anything")}</p>
+                <span className="text-[11px] text-slate-600">{tr("no feature needed — it just goes in")}</span>
               </div>
               <textarea value={memAdd} onChange={(e) => setMemAdd(e.target.value)}
-                placeholder="paste a message, a note, a WhatsApp thread, what someone told you on site…"
+                placeholder={tr("paste a message, a note, a WhatsApp thread, what someone told you on site…")}
                 className={`w-full h-20 bg-slate-950 border rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500 ${dropping ? "border-teal-500 bg-teal-500/5" : "border-slate-800"}`} />
               <div className="flex flex-wrap items-center gap-1.5 mt-2">
                 <button onClick={async () => {
-                    if (!memAdd.trim()) return flash("Nothing to keep");
+                    if (!memAdd.trim()) return flash(tr("Nothing to keep"));
                     const r = remember({ kind: "note", title: memAdd.slice(0, 60), text: memAdd, output: "", lang, tags: ["note"] });
                     const t = memAdd; setMemAdd("");
-                    flash("Kept — and read for anything you promised");
+                    flash(tr("Kept — and read for anything you promised"));
                     if (isPro(tier)) findCommitments(t, r.id, true); else setShowUpgrade(true);
                   }}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold"><Plus size={12} className="inline mr-1" />Keep it</button>
+                  className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold"><Plus size={12} className="inline me-1" />{tr("Keep it")}</button>
                 <button onClick={async () => {
-                    try { const t = await navigator.clipboard.readText(); if (t && t.trim()) setMemAdd(t.trim()); else flash("Clipboard is empty"); }
-                    catch (e) { flash("Allow clipboard access, or paste manually"); }
+                    try { const t = await navigator.clipboard.readText(); if (t && t.trim()) setMemAdd(t.trim()); else flash(tr("Clipboard is empty")); }
+                    catch (e) { flash(tr("Allow clipboard access, or paste manually")); }
                   }}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600"><ClipboardPaste size={12} className="inline mr-1" />Paste</button>
+                  className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600"><ClipboardPaste size={12} className="inline me-1" />{tr("Paste")}</button>
                 <label className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600 cursor-pointer flex items-center gap-1">
-                  {memBusy ? <Loader2 size={12} className="animate-spin" /> : <ImagePlus size={12} />} Photo
+                  {memBusy ? <Loader2 size={12} className="animate-spin" /> : <ImagePlus size={12} />} {tr("Photo")}
                   <input type="file" accept="image/*" className="hidden"
                     onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; photoToMemory(f); }} />
                 </label>
-                <span className="text-[11px] text-slate-600">or drag a file or some text onto this box</span>
+                <span className="text-[11px] text-slate-600">{tr("or drag a file or some text onto this box")}</span>
               </div>
               <p className="text-[11px] text-slate-600 mt-2">
-                A photo is read word for word and the text kept, so a whiteboard, a receipt or a handwritten site note
-                becomes searchable — and anything promised on it shows up on the right.
+                {tr("A photo is read word for word and the text kept, so a whiteboard, a receipt or a handwritten site note becomes searchable — and anything promised on it shows up on the right.")}
               </p>
             </section>
 
             {/* YOUR WORDS */}
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-sm font-medium text-slate-300 flex items-center gap-1.5"><Languages size={14} className="text-teal-400" /> Your words</p>
-                <span className="text-[11px] text-slate-600">{lexicon.length} learned</span>
+                <p className="text-sm font-medium text-slate-300 flex items-center gap-1.5"><Languages size={14} className="text-teal-400" /> {tr("Your words")}</p>
+                <span className="text-[11px] text-slate-600">{lexicon.length} {tr("learned")}</span>
               </div>
               <p className="text-xs text-slate-500 leading-relaxed mb-3">
-                The words your trade uses, that a general model gets wrong every time. Teach it once and it never gets them
-                wrong again — in answers, documents and translations alike. This is the part of the app that gets better the
-                longer you use it, and the part nobody can copy.
+                {tr("The words your trade uses, that a general model gets wrong every time. Teach it once and it never gets them wrong again — in answers, documents and translations alike. This is the part of the app that gets better the longer you use it, and the part nobody can copy.")}
               </p>
 
               <div className="flex flex-wrap gap-1.5 mb-2">
                 <input value={lexDraft.term} onChange={(e) => setLexDraft({ ...lexDraft, term: e.target.value })}
-                  placeholder="the word (سطحة, mobilisation…)"
+                  placeholder={tr("the word (سطحة, mobilisation…)")}
                   className="flex-1 min-w-[9rem] bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-                <span className="text-slate-600 self-center text-xs">→</span>
+                <span className="inline-block rtl:-scale-x-100 text-slate-600 self-center text-xs">→</span>
                 <input value={lexDraft.mine} onChange={(e) => setLexDraft({ ...lexDraft, mine: e.target.value })}
-                  placeholder="how you want it written"
+                  placeholder={tr("how you want it written")}
                   className="flex-1 min-w-[9rem] bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
                 <button onClick={() => { teach({ ...lexDraft }); setLexDraft({ term: "", mine: "", note: "" }); }}
-                  className="text-xs px-3 py-2 rounded-lg bg-teal-500 text-slate-950 font-semibold">Teach it</button>
+                  className="text-xs px-3 py-2 rounded-lg bg-teal-500 text-slate-950 font-semibold">{tr("Teach it")}</button>
               </div>
-              <button onClick={() => { if (!lexDraft.term.trim()) return flash("Write the rule in the first box"); teach({ ...lexDraft, kind: "style" }); setLexDraft({ term: "", mine: "", note: "" }); }}
-                className="text-[11px] text-slate-500 hover:text-teal-400 mb-3">or save the first box as a writing rule — “always state VAT separately”</button>
+              <button onClick={() => { if (!lexDraft.term.trim()) return flash(tr("Write the rule in the first box")); teach({ ...lexDraft, kind: "style" }); setLexDraft({ term: "", mine: "", note: "" }); }}
+                className="text-[11px] text-slate-500 hover:text-teal-400 mb-3">{tr("or save the first box as a writing rule — “always state VAT separately”")}</button>
 
               {lexWarn ? (
                 <div className="mb-3 bg-amber-500/5 border border-amber-900/60 rounded-xl p-3">
                   <p className="text-xs font-medium text-amber-300 flex items-center gap-1.5 mb-1.5">
-                    <AlertTriangle size={12} /> Before it learns “{lexWarn.entry.term}”
+                    <AlertTriangle size={12} /> {tr("Before it learns “")}{lexWarn.entry.term}”
                   </p>
                   <ul className="space-y-1 mb-2">
                     {lexWarn.problems.map((pr, i) => (
@@ -8107,41 +8097,41 @@ export default function App() {
                   </ul>
                   <div className="flex flex-wrap gap-1.5">
                     <button onClick={() => { teach(lexWarn.entry, true); setLexDraft({ term: "", mine: "", note: "" }); }}
-                      className="text-[11px] px-2.5 py-1.5 rounded-lg bg-amber-500/20 border border-amber-800 text-amber-100">Save it anyway</button>
+                      className="text-[11px] px-2.5 py-1.5 rounded-lg bg-amber-500/20 border border-amber-800 text-amber-100">{tr("Save it anyway")}</button>
                     <button onClick={() => setLexWarn(null)}
-                      className="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400">Let me change it</button>
+                      className="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400">{tr("Let me change it")}</button>
                   </div>
                 </div>
               ) : null}
 
               {lexUndo ? (
                 <div className="mb-3 flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
-                  <p className="text-[11px] text-slate-400 flex-1 truncate">Removed “{lexUndo.term}”.</p>
-                  <button onClick={() => { setLexicon((l) => lexAdd(l, lexUndo)); setLexUndo(null); flash("Put back"); }}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-teal-300 hover:border-teal-600">Undo</button>
+                  <p className="text-[11px] text-slate-400 flex-1 truncate">{tr("Removed “")}{lexUndo.term}”.</p>
+                  <button onClick={() => { setLexicon((l) => lexAdd(l, lexUndo)); setLexUndo(null); flash(tr("Put back")); }}
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-teal-300 hover:border-teal-600">{tr("Undo")}</button>
                   <button onClick={() => setLexUndo(null)} className="text-slate-600 hover:text-slate-400"><X size={13} /></button>
                 </div>
               ) : null}
 
               {lexNeedsReview.length ? (
                 <div className="mb-3 bg-slate-950 border border-slate-800 rounded-xl p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">Worth a second look</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("Worth a second look")}</p>
                   {lexNeedsReview.slice(0, 4).map((e) => (
                     <div key={e.id} className="flex items-center gap-2 py-1">
                       <p className="text-xs text-slate-400 flex-1 min-w-0 truncate">
-                        <span className="text-slate-500">{e.term}</span> → <span className="text-slate-300">{e.mine}</span>
-                        <span className="text-slate-600"> — {e.misses >= 3 ? "keeps firing but never shows up in the answer" : "never matched anything yet"}</span>
+                        <span className="text-slate-500">{e.term}</span> <span className="inline-block rtl:-scale-x-100">→</span> <span className="text-slate-300">{e.mine}</span>
+                        <span className="text-slate-600"> — {e.misses >= 3 ? tr("keeps firing but never shows up in the answer") : tr("never matched anything yet")}</span>
                       </p>
-                      <button onClick={() => unteach(e.id)} className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400 hover:border-red-800 hover:text-red-400 shrink-0">Remove</button>
+                      <button onClick={() => unteach(e.id)} className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400 hover:border-red-800 hover:text-red-400 shrink-0">{tr("Remove")}</button>
                     </div>
                   ))}
-                  <p className="text-[11px] text-slate-600 mt-1">Only flagged, never removed on its own — it's your vocabulary, not ours.</p>
+                  <p className="text-[11px] text-slate-600 mt-1">{tr("Only flagged, never removed on its own — it's your vocabulary, not ours.")}</p>
                 </div>
               ) : null}
 
               {mined.length ? (
                 <div className="mb-3">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">You keep using these — should it know them?</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("You keep using these — should it know them?")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {mined.map((m) => (
                       <button key={m.term} onClick={() => setLexDraft({ term: m.term, mine: "", note: "" })}
@@ -8150,7 +8140,7 @@ export default function App() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-[11px] text-slate-600 mt-1.5">Tap one to fill it in. Nothing is learned until you say so.</p>
+                  <p className="text-[11px] text-slate-600 mt-1.5">{tr("Tap one to fill it in. Nothing is learned until you say so.")}</p>
                 </div>
               ) : null}
 
@@ -8162,7 +8152,7 @@ export default function App() {
                         <p className="text-sm text-slate-300 flex-1 min-w-0 truncate">{e.term}</p>
                       ) : (
                         <p className="text-sm text-slate-300 flex-1 min-w-0 truncate">
-                          <span className="text-slate-500">{e.term}</span> <span className="text-slate-600">→</span> <span className="text-teal-100">{e.mine}</span>
+                          <span className="text-slate-500">{e.term}</span> <span className="inline-block rtl:-scale-x-100 text-slate-600">→</span> <span className="text-teal-100">{e.mine}</span>
                           {lexVariants(memNorm(e.term)).length > 1
                             ? <span className="text-[10px] text-slate-600"> · +{lexVariants(memNorm(e.term)).length - 1} forms</span> : null}
                         </p>
@@ -8174,7 +8164,7 @@ export default function App() {
                 </div>
               ) : (
                 <p className="text-xs text-slate-600 py-3 text-center">
-                  Nothing yet. The fastest way to start: when an answer uses the wrong word, tap “a word is wrong” under it.
+                  {tr("Nothing yet. The fastest way to start: when an answer uses the wrong word, tap “a word is wrong” under it.")}
                 </p>
               )}
 
@@ -8185,21 +8175,21 @@ export default function App() {
                   separate job done on a computer. */}
               <div className="mt-4 pt-4 border-t border-slate-800">
                 <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
-                  <p className="text-sm text-slate-200">What it has learned from your corrections</p>
-                  <span className="text-[11px] text-slate-500">{learnedStats.examples} kept</span>
+                  <p className="text-sm text-slate-200">{tr("What it has learned from your corrections")}</p>
+                  <span className="text-[11px] text-slate-500">{learnedStats.examples} {tr("kept")}</span>
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  {learnReadiness(learned).advice}
+                  {tr(learnReadiness(learned).advice)}
                 </p>
                 {learnedStats.applied >= 5 ? (
                   <p className="text-xs mt-1.5 leading-relaxed">
                     {learnedStats.working === true ? (
                       <span className="text-teal-400">
-                        Your examples were used on {learnedStats.applied} recent answers and you corrected {Math.round(learnedStats.stillCorrected * 100)}% of those again — it is holding.
+                        {tr("Your examples were used on")} {learnedStats.applied} {tr("recent answers and you corrected")} {Math.round(learnedStats.stillCorrected * 100)}{tr("% of those again — it is holding.")}
                       </span>
                     ) : learnedStats.working === false ? (
                       <span className="text-amber-400">
-                        Your examples were used on {learnedStats.applied} recent answers and you still corrected {Math.round(learnedStats.stillCorrected * 100)}% of them. They are not landing — the examples may be too varied, or the model too small for the task.
+                        {tr("Your examples were used on")} {learnedStats.applied} {tr("recent answers and you still corrected")} {Math.round(learnedStats.stillCorrected * 100)}{tr("% of them. They are not landing — the examples may be too varied, or the model too small for the task.")}
                       </span>
                     ) : null}
                   </p>
@@ -8207,17 +8197,17 @@ export default function App() {
                 <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
                   <button onClick={() => {
                       const text = learnExport(learned);
-                      if (!text) { flash("Nothing to export yet"); return; }
+                      if (!text) { flash(tr("Nothing to export yet")); return; }
                       download("attune-corrections.jsonl", text);
-                      flash("Exported — see TRAINING.md for the next step");
+                      flash(tr("Exported — see TRAINING.md for the next step"));
                     }}
                     disabled={!learned.length}
                     className="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600 disabled:opacity-40">
-                    <Download size={11} className="inline mr-1" />Export for training
+                    <Download size={11} className="inline me-1" />{tr("Export for training")}
                   </button>
                   {learned.length ? (
-                    <button onClick={() => { if (confirm("Delete every correction it has learned from?")) { setLearned([]); flash("Cleared"); } }}
-                      className="text-[11px] px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-amber-400">Forget all</button>
+                    <button onClick={() => { if (confirm(tr("Delete every correction it has learned from?"))) { setLearned([]); flash(tr("Cleared")); } }}
+                      className="text-[11px] px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-amber-400">{tr("Forget all")}</button>
                   ) : null}
                 </div>
                 {learned.length ? (
@@ -8226,7 +8216,7 @@ export default function App() {
                       <div key={e.id} className="text-[11px] bg-slate-950 border border-slate-800 rounded-lg p-2">
                         <p className="text-slate-400 truncate">{e.input}</p>
                         <p className="text-slate-200 mt-0.5">→ {e.corrected.slice(0, 140)}</p>
-                        {e.note ? <p className="text-slate-600 mt-0.5">{e.note}</p> : null}
+                        {e.note ? <p className="text-slate-600 mt-0.5">{tr(e.note)}</p> : null}
                         <button onClick={() => setLearned((l) => l.filter((x) => x.id !== e.id))}
                           className="text-slate-600 hover:text-amber-400 mt-1">remove</button>
                       </div>
@@ -8244,11 +8234,11 @@ export default function App() {
                     const a = document.createElement("a");
                     a.href = URL.createObjectURL(blob); a.download = "attune-my-words.json"; a.click();
                     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-                    flash("Saved — keep it somewhere safe");
+                    flash(tr("Saved — keep it somewhere safe"));
                   }}
-                  className="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600"><Download size={11} className="inline mr-1" />Back up my words</button>
+                  className="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600"><Download size={11} className="inline me-1" />{tr("Back up my words")}</button>
                 <label className="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600 cursor-pointer">
-                  Restore
+                  {tr("Restore")}
                   <input type="file" accept="application/json,.json" className="hidden" onChange={async (e) => {
                     const f = e.target.files && e.target.files[0]; e.target.value = "";
                     if (!f) return;
@@ -8270,57 +8260,57 @@ export default function App() {
                     } catch (err) { flash(String(err.message || err).slice(0, 80)); }
                   }} />
                 </label>
-                <span className="text-[11px] text-slate-600">a plain file — yours, readable, not locked in</span>
+                <span className="text-[11px] text-slate-600">{tr("a plain file — yours, readable, not locked in")}</span>
               </div>
             </section>
 
             <div className="grid md:grid-cols-2 gap-5">
               <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-300">Everything you've asked</p>
-                  <span className="text-[11px] text-slate-600">{memory.length} on this device</span>
+                  <p className="text-sm font-medium text-slate-300">{tr("Everything you've asked")}</p>
+                  <span className="text-[11px] text-slate-600">{memory.length} {tr("on this device")}</span>
                 </div>
                 <input value={memQ} onChange={(e) => setMemQ(e.target.value)}
-                  placeholder="search your own history — a word, a name, a price…"
+                  placeholder={tr("search your own history — a word, a name, a price…")}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-                <p className="text-[11px] text-slate-600 mt-1.5">Instant, and with no model call — so it works with the radio off and costs no battery.</p>
+                <p className="text-[11px] text-slate-600 mt-1.5">{tr("Instant, and with no model call — so it works with the radio off and costs no battery.")}</p>
 
                 <div className="mt-3 space-y-1.5 max-h-[26rem] overflow-auto">
                   {memQ.trim() && !memHits.length ? (
-                    <p className="text-xs text-slate-600 py-6 text-center">Nothing matches that yet.</p>
+                    <p className="text-xs text-slate-600 py-6 text-center">{tr("Nothing matches that yet.")}</p>
                   ) : null}
                   {(memQ.trim() ? memHits.map((h) => h.rec) : memory.slice(0, isPro(tier) ? 40 : 5)).map((r) => (
                     <button key={r.id} onClick={() => setOpenRec(r)}
-                      className="w-full text-left bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 hover:border-teal-600">
+                      className="w-full text-start bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 hover:border-teal-600">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] uppercase tracking-wider text-teal-500">{r.kind}</span>
                         <span className="text-[10px] text-slate-600">{new Date(r.ts).toISOString().slice(0, 10)}</span>
                         {r.pinned ? <Star size={10} className="text-amber-400" /> : null}
                       </div>
-                      <p className="text-sm text-slate-200 mt-0.5 truncate">{r.title}</p>
+                      <p className="text-sm text-slate-200 mt-0.5 truncate">{tr(r.title)}</p>
                       {memQ.trim() ? <p className="text-[11px] text-slate-500 mt-0.5 truncate">{memSnippet(r, memQ)}</p> : null}
                     </button>
                   ))}
                   {!memory.length ? (
                     <p className="text-xs text-slate-600 py-8 text-center leading-relaxed">
-                      Nothing yet. Use Instant, a photo or Travel and it lands here on its own —<br />you never have to save anything.
+                      {tr("Nothing yet. Use Instant, a photo or Travel and it lands here on its own —")}<br />{tr("you never have to save anything.")}
                     </p>
                   ) : null}
                   {!isPro(tier) && memory.length > 5 ? (
-                    <p className="text-[11px] text-slate-600 pt-1">+ {memory.length - 5} more, searchable on Pro.</p>
+                    <p className="text-[11px] text-slate-600 pt-1">+ {memory.length - 5} {tr("more, searchable on Pro.")}</p>
                   ) : null}
                 </div>
               </section>
 
               <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-300">Things you said you'd do</p>
+                  <p className="text-sm font-medium text-slate-300">{tr("Things you said you'd do")}</p>
                   {memBusy ? <Loader2 size={13} className="animate-spin text-teal-500" /> : null}
                 </div>
 
                 {suggested.length ? (
                   <div className="mb-3">
-                    <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">Found — is this real?</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("Found — is this real?")}</p>
                     <div className="space-y-1.5">
                       {suggested.map((c) => (
                         <div key={c.id} className="bg-slate-950 border border-teal-900/50 rounded-lg px-3 py-2">
@@ -8328,10 +8318,10 @@ export default function App() {
                           <p className="text-[11px] text-slate-500 mt-1 italic">“{c.quote}”</p>
                           <div className="flex items-center gap-1.5 mt-2">
                             <button onClick={() => setCommitState(c.id, "confirmed")}
-                              className="text-[11px] px-2.5 py-1 rounded-md bg-teal-500 text-slate-950 font-medium">Yes, keep it</button>
+                              className="text-[11px] px-2.5 py-1 rounded-md bg-teal-500 text-slate-950 font-medium">{tr("Yes, keep it")}</button>
                             <button onClick={() => setCommitState(c.id, "dismissed")}
-                              className="text-[11px] px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400">No</button>
-                            {c.whenText ? <span className="text-[11px] text-amber-300 ml-auto">{dueLabel(c, Date.now())}</span> : null}
+                              className="text-[11px] px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400">{tr("No")}</button>
+                            {c.whenText ? <span className="text-[11px] text-amber-300 ms-auto">{dueLabel(c, Date.now())}</span> : null}
                           </div>
                         </div>
                       ))}
@@ -8351,11 +8341,11 @@ export default function App() {
                             <p className="text-sm text-slate-100">{c.action}</p>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                               <span className={`text-[11px] px-1.5 rounded ${c.who === "me" ? "bg-slate-900 text-slate-400" : "bg-teal-500/10 text-teal-300"}`}>
-                                {c.who === "me" ? "you owe this" : "owed to you"}
+                                {c.who === "me" ? tr("you owe this") : tr("owed to you")}
                               </span>
                               {c.whenText ? <span className={`text-[11px] ${overdue ? "text-amber-300" : "text-slate-500"}`}>{dueLabel(c, Date.now())}</span> : null}
                               {src ? (
-                                <button onClick={() => setOpenRec(src)} className="text-[11px] text-slate-600 hover:text-teal-400 truncate">from: {src.title}</button>
+                                <button onClick={() => setOpenRec(src)} className="text-[11px] text-slate-600 hover:text-teal-400 truncate">from: {tr(src.title)}</button>
                               ) : null}
                             </div>
                             <p className="text-[11px] text-slate-600 mt-1 italic truncate">“{c.quote}”</p>
@@ -8366,8 +8356,8 @@ export default function App() {
                   })}
                   {!suggested.length && !openCommits.length ? (
                     <p className="text-xs text-slate-600 py-6 text-center leading-relaxed">
-                      Nothing outstanding.<br />
-                      <span className="text-slate-700">Paste a message or write a site note, and anything you promised in it shows up here.</span>
+                      {tr("Nothing outstanding.")}<br />
+                      <span className="text-slate-700">{tr("Paste a message or write a site note, and anything you promised in it shows up here.")}</span>
                     </p>
                   ) : null}
                 </div>
@@ -8375,13 +8365,12 @@ export default function App() {
                 <button onClick={() => (isPro(tier) ? findCommitments(inText || (openRec && openRec.text) || "", openRec && openRec.id) : setShowUpgrade(true))}
                   disabled={memBusy}
                   className="mt-3 w-full text-xs py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600">
-                  Read what's in Instant for promises
+                  {tr("Read what's in Instant for promises")}
                 </button>
                 {doneCommits.length ? <p className="text-[11px] text-slate-600 mt-2">{doneCommits.length} done</p> : null}
 
                 <p className="text-[11px] text-slate-600 mt-3 pt-3 border-t border-slate-800 leading-relaxed">
-                  Every item carries the exact words it came from. If those words aren't in what you wrote, it never gets here —
-                  the app can miss something, but it cannot make one up.
+                  {tr("Every item carries the exact words it came from. If those words aren't in what you wrote, it never gets here — the app can miss something, but it cannot make one up.")}
                 </p>
               </section>
             </div>
@@ -8392,28 +8381,28 @@ export default function App() {
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="min-w-0">
                       <p className="text-[10px] uppercase tracking-wider text-teal-500">{openRec.kind} · {new Date(openRec.ts).toLocaleString()}</p>
-                      <h3 className="text-base font-semibold text-white truncate">{openRec.title}</h3>
+                      <h3 className="text-base font-semibold text-white truncate">{tr(openRec.title)}</h3>
                     </div>
                     <button onClick={() => setOpenRec(null)} className="text-slate-500 hover:text-slate-300"><X size={18} /></button>
                   </div>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">What you gave it</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{tr("What you gave it")}</p>
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-3 max-h-40 overflow-auto">
                     <p className="text-xs text-slate-400 whitespace-pre-wrap">{openRec.text}</p>
                   </div>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">What it answered</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{tr("What it answered")}</p>
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 max-h-64 overflow-auto">
                     <p className="text-sm text-teal-50 whitespace-pre-wrap leading-relaxed">{openRec.output}</p>
                   </div>
                   <div className="flex flex-wrap gap-1.5 mt-3">
-                    <button onClick={() => { try { navigator.clipboard.writeText(openRec.output); } catch (e) {} flash("Copied"); }}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500"><Copy size={12} className="inline mr-1" />Copy</button>
+                    <button onClick={() => { try { navigator.clipboard.writeText(openRec.output); } catch (e) {} flash(tr("Copied")); }}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500"><Copy size={12} className="inline me-1" />{tr("Copy")}</button>
                     <button onClick={() => togglePin(openRec.id)}
                       className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-amber-500">
-                      <Star size={12} className="inline mr-1" />{openRec.pinned ? "Unpin" : "Pin — never auto-removed"}</button>
+                      <Star size={12} className="inline me-1" />{openRec.pinned ? tr("Unpin") : tr("Pin — never auto-removed")}</button>
                     <button onClick={() => findCommitments(openRec.text, openRec.id)} disabled={memBusy}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500">Find promises in this</button>
+                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500">{tr("Find promises in this")}</button>
                     <button onClick={() => forget(openRec.id)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-500 hover:border-red-800 hover:text-red-400 ml-auto">Forget this</button>
+                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-500 hover:border-red-800 hover:text-red-400 ms-auto">{tr("Forget this")}</button>
                   </div>
                 </div>
               </div>
@@ -8428,33 +8417,33 @@ export default function App() {
         ) : mode === "travel" ? (
           <div className="space-y-5">
             <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-              <p className="text-sm text-slate-300 mb-1">Country packs</p>
-              <p className="text-xs text-slate-500 mb-3">{Object.keys(CPACKS).length} countries. Download once on Wi-Fi — everything below then works on a plane, in a tunnel, or with roaming switched off.</p>
+              <p className="text-sm text-slate-300 mb-1">{tr("Country packs")}</p>
+              <p className="text-xs text-slate-500 mb-3">{Object.keys(CPACKS).length} {tr("countries. Download once on Wi-Fi — everything below then works on a plane, in a tunnel, or with roaming switched off.")}</p>
               <div className="flex items-center gap-2 flex-wrap mb-3 pb-3 border-b border-slate-800">
                 <span className={`w-2 h-2 rounded-full ${online ? "bg-teal-400" : "bg-slate-600"}`} />
-                <span className="text-xs text-slate-400">{online ? "Online" : "Offline — everything below still works"}</span>
+                <span className="text-xs text-slate-400">{online ? tr("Online") : tr("Offline — everything below still works")}</span>
                 <button onClick={runSync} disabled={!online || syncing2}
                   className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600 disabled:opacity-50 flex items-center gap-1">
-                  {syncing2 ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />} Update everything
+                  {syncing2 ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />} {tr("Update everything")}
                 </button>
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-950 text-slate-500">
                   packs: {packFeed.from}{packFeed.rejected ? ` · ${packFeed.rejected} rejected` : ""}
                 </span>
                 {netInfo.filter((x) => x.configured).map((x) => (
                   <span key={x.k} className={`text-[10px] px-1.5 py-0.5 rounded ${x.at ? "bg-slate-950 text-slate-500" : "bg-slate-950 text-slate-700"}`}>
-                    {x.label}: {x.at ? new Date(x.at).toLocaleDateString() : "never"}
+                    {tr(x.label)}: {x.at ? new Date(x.at).toLocaleDateString() : "never"}
                   </span>
                 ))}
               </div>
               <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-800">
                 <Languages size={13} className="text-teal-400" />
-                <span className="text-xs text-slate-400">Write my tips in</span>
+                <span className="text-xs text-slate-400">{tr("Write my tips in")}</span>
                 <select value={myLang} onChange={(e) => setMyLang(e.target.value)}
                   className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-teal-500">
-                  {LANGS.filter((l) => l.k !== "match").map((l) => <option key={l.k} value={l.k}>{l.label}</option>)}
+                  {LANGS.filter((l) => l.k !== "match").map((l) => <option key={l.k} value={l.k}>{tr(l.label)}</option>)}
                 </select>
-                {translating ? <span className="flex items-center gap-1 text-[11px] text-teal-400"><Loader2 size={11} className="animate-spin" /> translating on your phone…</span>
-                  : myLang !== "en" ? <span className="text-[11px] text-slate-600">saved — this pack now reads in {LANG_NAMES[myLang]}</span> : null}
+                {translating ? <span className="flex items-center gap-1 text-[11px] text-teal-400"><Loader2 size={11} className="animate-spin" /> {tr("translating on your phone…")}</span>
+                  : myLang !== "en" ? <span className="text-[11px] text-slate-600">{tr("saved — this pack now reads in")} {LANG_NAMES[myLang]}</span> : null}
               </div>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(CPACKS).map(([k, p]) => {
@@ -8465,7 +8454,7 @@ export default function App() {
                         active ? "bg-teal-500 border-teal-500 text-slate-950 font-medium"
                         : have ? "bg-slate-950 border-teal-900/60 text-teal-300"
                         : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-600"}`}>
-                      <span>{p.flag}</span>{p.name}
+                      <span>{p.flag}</span>{tr(p.name)}
                       <span className={`text-[10px] ${active ? "text-slate-800" : "text-slate-600"}`}>{have ? "✓" : p.size}</span>
                     </button>
                   );
@@ -8476,12 +8465,12 @@ export default function App() {
             {activePack && entry ? (
               <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
                 <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
-                  <p className="text-sm font-medium text-slate-300">Going there — what you need</p>
+                  <p className="text-sm font-medium text-slate-300">{tr("Going there — what you need")}</p>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-slate-500">Travelling on a passport from</span>
+                    <span className="text-[11px] text-slate-500">{tr("Travelling on a passport from")}</span>
                     <select value={nationality} onChange={(e) => setNationality(e.target.value)}
                       className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-teal-500">
-                      {NATIONALITIES.map((n) => <option key={n.k} value={n.k}>{n.flag} {n.label}</option>)}
+                      {NATIONALITIES.map((n) => <option key={n.k} value={n.k}>{n.flag} {tr(n.label)}</option>)}
                     </select>
                   </div>
                 </div>
@@ -8496,33 +8485,32 @@ export default function App() {
                     </span>
                     <span className={`text-base font-semibold ${
                       entry.tone === "good" ? "text-teal-300" : entry.tone === "warn" ? "text-amber-200" : "text-slate-100"}`}>
-                      {entry.label}
+                      {tr(entry.label)}
                     </span>
-                    {entry.days ? <span className="text-xs text-slate-500">· up to {entry.days} days</span> : null}
+                    {entry.days ? <span className="text-xs text-slate-500">{tr("· up to")} {entry.days} days</span> : null}
                   </div>
-                  <p className="text-xs text-slate-400 mt-1.5 leading-snug">{entry.note}</p>
+                  <p className="text-xs text-slate-400 mt-1.5 leading-snug">{tr(entry.note)}</p>
                 </div>
 
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">Papers to have with you</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("Papers to have with you")}</p>
                 <ul className="space-y-1 mb-3">
                   {entry.docs.map((d, i) => (
-                    <li key={i} className="text-xs text-slate-300 leading-snug pl-2.5 border-l border-teal-900/60">{d}</li>
+                    <li key={i} className="text-xs text-slate-300 leading-snug ps-2.5 border-l border-teal-900/60">{tr(d)}</li>
                   ))}
                 </ul>
 
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   <button onClick={() => { const txt = tripChecklist(entry, nationality);
-                      try { navigator.clipboard.writeText(txt); } catch (e) {} flash("Checklist copied"); }}
-                    className="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600"><Copy size={11} className="inline mr-1" />Copy the checklist</button>
+                      try { navigator.clipboard.writeText(txt); } catch (e) {} flash(tr("Checklist copied")); }}
+                    className="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600"><Copy size={11} className="inline me-1" />{tr("Copy the checklist")}</button>
                   <button onClick={() => { const r = remember({ kind: "note", title: "Trip to " + entry.to,
                         text: tripChecklist(entry, nationality), output: "", tags: ["trip", activePack] });
-                      flash("Saved to Memory — searchable offline"); }}
-                    className="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600">Keep it in Memory</button>
+                      flash(tr("Saved to Memory — searchable offline")); }}
+                    className="text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600">{tr("Keep it in Memory")}</button>
                 </div>
 
                 <p className="text-[11px] text-amber-300/70 leading-snug pt-2 border-t border-slate-800">
-                  Checked {entry.asOf}. Entry rules change with no notice and the cost of being wrong is a denied boarding —
-                  confirm with the embassy or the official portal before you book.
+                  {tr("Checked")} {entry.asOf}{tr(". Entry rules change with no notice and the cost of being wrong is a denied boarding — confirm with the embassy or the official portal before you book.")}
                 </p>
               </section>
             ) : null}
@@ -8531,18 +8519,18 @@ export default function App() {
               <div className="grid md:grid-cols-2 gap-5">
                 <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-slate-300">When you land</p>
-                    <span className="text-[11px] text-slate-600">first hour</span>
+                    <p className="text-sm font-medium text-slate-300">{tr("When you land")}</p>
+                    <span className="text-[11px] text-slate-600">{tr("first hour")}</span>
                   </div>
                   <ol className="space-y-1.5" dir={RTL_LANGS.has(myLang) ? "rtl" : "ltr"}>
                     {((packView && packView.arrival) || CPACKS[activePack].arrival || []).map((a, i) => (
                       <li key={i} className="flex gap-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2">
                         <span className="text-[11px] text-teal-500 font-semibold mt-0.5">{i + 1}</span>
-                        <span className="text-sm text-slate-300 leading-snug">{a}</span>
+                        <span className="text-sm text-slate-300 leading-snug">{tr(a)}</span>
                       </li>
                     ))}
                   </ol>
-                  <p className="text-[11px] text-slate-600 mt-3">The things that cost you money or hours if you get them wrong on day one.</p>
+                  <p className="text-[11px] text-slate-600 mt-3">{tr("The things that cost you money or hours if you get them wrong on day one.")}</p>
 
                   {/* The facts you need in the first hour and cannot look up
                       without a signal. Emergency number first, deliberately. */}
@@ -8556,8 +8544,8 @@ export default function App() {
                       ["💵 Tipping", CPACKS[activePack].tipping],
                       ["🤝 Haggling", CPACKS[activePack].haggle]].map(([label, val, big]) => val ? (
                       <div key={label} className={`bg-slate-950 border rounded-lg px-2.5 py-2 ${big ? "col-span-2 border-rose-900/60 bg-rose-500/5" : "border-slate-800"}`}>
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-                        <p className={`mt-0.5 leading-snug ${big ? "text-sm text-rose-200 font-medium" : "text-xs text-slate-300"}`}>{val}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500">{tr(label)}</p>
+                        <p className={`mt-0.5 leading-snug ${big ? "text-sm text-rose-200 font-medium" : "text-xs text-slate-300"}`}>{tr(val)}</p>
                       </div>
                     ) : null)}
                   </div>
@@ -8572,7 +8560,7 @@ export default function App() {
                     return (
                       <div className="mt-3 bg-slate-950 border border-slate-800 rounded-lg p-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs text-slate-500">USD</span>
+                          <span className="text-xs text-slate-500">{tr("USD")}</span>
                           <input value={convAmt} onChange={(e) => setConvAmt(e.target.value)} inputMode="decimal"
                             className="w-20 bg-slate-900 border border-slate-800 rounded-md px-2 py-1 text-sm text-slate-100" />
                           <span className="text-slate-600">=</span>
@@ -8582,11 +8570,11 @@ export default function App() {
                           {!c ? (
                             <button onClick={runSync} disabled={!online || syncing2}
                               className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400 hover:border-teal-600">
-                              {online ? "get rates once" : "needs a connection once"}
+                              {online ? tr("get rates once") : tr("needs a connection once")}
                             </button>
                           ) : null}
                         </div>
-                        {c ? <p className="text-[10px] text-slate-600 mt-1">as of {new Date(c.at).toLocaleDateString()} — works offline from here on</p> : null}
+                        {c ? <p className="text-[10px] text-slate-600 mt-1">{tr("as of")} {new Date(c.at).toLocaleDateString()} {tr("— works offline from here on")}</p> : null}
                       </div>
                     );
                   })()}
@@ -8594,8 +8582,8 @@ export default function App() {
 
                 <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-slate-300">Apps you'll need</p>
-                    <span className="text-[11px] text-slate-600">install before you fly</span>
+                    <p className="text-sm font-medium text-slate-300">{tr("Apps you'll need")}</p>
+                    <span className="text-[11px] text-slate-600">{tr("install before you fly")}</span>
                   </div>
                   <ul className="space-y-1.5" dir={RTL_LANGS.has(myLang) ? "rtl" : "ltr"}>
                     {((packView && packView.apps) || CPACKS[activePack].apps || []).map((a, i) => {
@@ -8604,13 +8592,13 @@ export default function App() {
                       const why = m ? m[2] : "";
                       return (
                         <li key={i} className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2">
-                          <p className="text-sm text-teal-50">{head}</p>
-                          {why ? <p className="text-[11px] text-slate-500 mt-0.5">{why}</p> : null}
+                          <p className="text-sm text-teal-50">{tr(head)}</p>
+                          {why ? <p className="text-[11px] text-slate-500 mt-0.5">{tr(why)}</p> : null}
                         </li>
                       );
                     })}
                   </ul>
-                  <p className="text-[11px] text-slate-600 mt-3">Some of these can't be installed or signed up for once you're in the country — do it while you still have your home connection.</p>
+                  <p className="text-[11px] text-slate-600 mt-3">{tr("Some of these can't be installed or signed up for once you're in the country — do it while you still have your home connection.")}</p>
 
                   {/* The list that saves the most money, first. */}
                   <div className="mt-3 pt-3 border-t border-slate-800 space-y-2.5">
@@ -8619,16 +8607,16 @@ export default function App() {
                       ["What's rude, what's fine", (packView && packView.etiquette) || CPACKS[activePack].etiquette, "slate"],
                       ["Staying well", (packView && packView.health) || CPACKS[activePack].health, "slate"]].map(([title, items, tone]) => items && items.length ? (
                       <div key={title}>
-                        <p className={`text-[10px] uppercase tracking-wider mb-1 ${tone === "amber" ? "text-amber-400" : "text-slate-500"}`}>{title}</p>
+                        <p className={`text-[10px] uppercase tracking-wider mb-1 ${tone === "amber" ? "text-amber-400" : "text-slate-500"}`}>{tr(title)}</p>
                         <ul className="space-y-1" dir={RTL_LANGS.has(myLang) ? "rtl" : "ltr"}>
                           {items.map((x, i) => (
-                            <li key={i} className={`text-xs leading-snug pl-2.5 border-l ${tone === "amber" ? "border-amber-900/60 text-amber-100/80" : "border-slate-800 text-slate-400"}`}>{x}</li>
+                            <li key={i} className={`text-xs leading-snug ps-2.5 border-l ${tone === "amber" ? "border-amber-900/60 text-amber-100/80" : "border-slate-800 text-slate-400"}`}>{tr(x)}</li>
                           ))}
                         </ul>
                       </div>
                     ) : null)}
                     {CPACKS[activePack].sim ? (
-                      <p className="text-[11px] text-slate-500 pt-1"><span className="text-slate-600">SIM:</span> {CPACKS[activePack].sim}</p>
+                      <p className="text-[11px] text-slate-500 pt-1"><span className="text-slate-600">{tr("SIM:")}</span> {tr(CPACKS[activePack].sim)}</p>
                     ) : null}
                   </div>
                 </section>
@@ -8638,8 +8626,8 @@ export default function App() {
                     above are what someone standing in an airport needs. */}
                 <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5 md:col-span-2">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-medium text-slate-300">Everything else about {CPACKS[activePack].name}</p>
-                    <span className="text-[11px] text-slate-600">all offline</span>
+                    <p className="text-sm font-medium text-slate-300">{tr("Everything else about")} {tr(CPACKS[activePack].name)}</p>
+                    <span className="text-[11px] text-slate-600">{tr("all offline")}</span>
                   </div>
                   <div className="grid md:grid-cols-3 gap-2">
                     {[["💸", "What things cost", (packView && packView.costs) || CPACKS[activePack].costs, "Rough ranges, for sanity-checking a price — not a price list."],
@@ -8653,23 +8641,23 @@ export default function App() {
                       .map(([icon, title, items, note]) => items && items.length ? (
                       <details key={title} className="bg-slate-950 border border-slate-800 rounded-xl group">
                         <summary className="cursor-pointer list-none px-3 py-2.5 flex items-center justify-between">
-                          <span className="text-xs text-slate-300">{icon} {title}</span>
+                          <span className="text-xs text-slate-300">{tr(icon)} {tr(title)}</span>
                           <span className="text-[10px] text-slate-600 group-open:hidden">{items.length}</span>
                         </summary>
                         <div className="px-3 pb-3">
                           <ul className="space-y-1.5">
                             {items.map((x, i) => (
-                              <li key={i} className="text-xs text-slate-400 leading-snug pl-2.5 border-l border-slate-800">{x}</li>
+                              <li key={i} className="text-xs text-slate-400 leading-snug ps-2.5 border-l border-slate-800">{tr(x)}</li>
                             ))}
                           </ul>
-                          {note ? <p className="text-[10px] text-slate-600 mt-2">{note}</p> : null}
+                          {note ? <p className="text-[10px] text-slate-600 mt-2">{tr(note)}</p> : null}
                         </div>
                       </details>
                     ) : null)}
                     {CPACKS[activePack].connectivity ? (
                       <div className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5">
-                        <p className="text-xs text-slate-300 mb-1">📶 Staying connected</p>
-                        <p className="text-xs text-slate-400 leading-snug">{CPACKS[activePack].connectivity}</p>
+                        <p className="text-xs text-slate-300 mb-1">{tr("📶 Staying connected")}</p>
+                        <p className="text-xs text-slate-400 leading-snug">{tr(CPACKS[activePack].connectivity)}</p>
                       </div>
                     ) : null}
                   </div>
@@ -8677,40 +8665,40 @@ export default function App() {
 
                 <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-slate-300">Ask anything about being here</p>
-                    <span className="text-xs text-slate-600">{CPACKS[activePack].flag} {CPACKS[activePack].name}</span>
+                    <p className="text-sm font-medium text-slate-300">{tr("Ask anything about being here")}</p>
+                    <span className="text-xs text-slate-600">{CPACKS[activePack].flag} {tr(CPACKS[activePack].name)}</span>
                   </div>
                   <textarea value={travelQ} onChange={(e) => setTravelQ(e.target.value)}
-                    placeholder="e.g. the taxi driver won't turn the meter on, what do I say? / is this price fair for a carpet? / can I drink the tap water?"
+                    placeholder={tr("e.g. the taxi driver won't turn the meter on, what do I say? / is this price fair for a carpet? / can I drink the tap water?")}
                     className="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {["Is this price fair?", "How do I get a taxi?", "What should I not do here?", "How do I ask for directions?"].map((q) => (
-                      <button key={q} onClick={() => setTravelQ(q)} className="text-xs px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400 hover:border-teal-600 hover:text-teal-400">{q}</button>
+                      <button key={q} onClick={() => setTravelQ(q)} className="text-xs px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400 hover:border-teal-600 hover:text-teal-400">{tr(q)}</button>
                     ))}
                   </div>
                   <button onClick={askTravel} disabled={!travelQ.trim() || loading}
                     className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${travelQ.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>
-                    {loading ? <Loader2 size={16} className="animate-spin" /> : <Plane size={16} />}{loading ? "…" : "Ask"}
+                    {loading ? <Loader2 size={16} className="animate-spin" /> : <Plane size={16} />}{loading ? "…" : tr("Ask")}
                   </button>
                   {travelA ? (
                     <div className="mt-3 bg-slate-950 border border-teal-900/50 rounded-xl p-3">
                       <p className="text-sm text-teal-50 whitespace-pre-wrap leading-relaxed" dir={RTL_LANGS.has(myLang) ? "rtl" : "ltr"}>{travelA}</p>
                     </div>
                   ) : null}
-                  <p className="text-[11px] text-slate-600 mt-3">It knows how things actually work here — fair prices, common overcharges, what's rude. It will tell you when something needs live data it can't have offline.</p>
+                  <p className="text-[11px] text-slate-600 mt-3">{tr("It knows how things actually work here — fair prices, common overcharges, what's rude. It will tell you when something needs live data it can't have offline.")}</p>
                 </section>
 
                 <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-slate-300">Say it now</p>
-                    <span className="text-[11px] text-slate-600">exact — never generated</span>
+                    <p className="text-sm font-medium text-slate-300">{tr("Say it now")}</p>
+                    <span className="text-[11px] text-slate-600">{tr("exact — never generated")}</span>
                   </div>
-                  <input value={phraseFilter} onChange={(e) => setPhraseFilter(e.target.value)} placeholder="search phrases…"
+                  <input value={phraseFilter} onChange={(e) => setPhraseFilter(e.target.value)} placeholder={tr("search phrases…")}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500 mb-2" />
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {[["all","All"],["emergency","🚨 Emergency"],["transport","🚕 Getting around"],["food","🍽 Eating"],["shopping","💰 Buying"],["basics","💬 Basics"]].map(([k,l]) => (
                       <button key={k} onClick={() => setPhraseTag(k)}
-                        className={`text-xs px-2 py-1 rounded-md border ${phraseTag === k ? "bg-teal-500 border-teal-500 text-slate-950 font-medium" : "bg-slate-950 border-slate-800 text-slate-400 hover:border-teal-600"}`}>{l}</button>
+                        className={`text-xs px-2 py-1 rounded-md border ${phraseTag === k ? "bg-teal-500 border-teal-500 text-slate-950 font-medium" : "bg-slate-950 border-slate-800 text-slate-400 hover:border-teal-600"}`}>{tr(l)}</button>
                     ))}
                   </div>
                   <div className="space-y-1.5 max-h-80 overflow-auto">
@@ -8719,20 +8707,20 @@ export default function App() {
                       .filter((ph) => phraseTag === "all" || ph.tag === phraseTag)
                       .filter((ph) => !phraseFilter.trim() || (ph.en + ph.mine + ph.loc).toLowerCase().includes(phraseFilter.toLowerCase()))
                       .map((ph) => (
-                      <button key={ph.en} onClick={() => { try { navigator.clipboard.writeText(ph.loc); } catch (e) {} flash("Copied — show it to them"); }}
-                        className="w-full text-left bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 hover:border-teal-600 group">
+                      <button key={ph.en} onClick={() => { try { navigator.clipboard.writeText(ph.loc); } catch (e) {} flash(tr("Copied — show it to them")); }}
+                        className="w-full text-start bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 hover:border-teal-600 group">
                         <p className="text-[11px] text-slate-500" dir={RTL_LANGS.has(myLang) ? "rtl" : "ltr"}>{ph.mine}</p>
                         <p className="text-base text-teal-50 mt-0.5" dir={RTL_LANGS.has(CPACKS[activePack].lang) ? "rtl" : "ltr"}>{ph.loc}</p>
                         <p className="text-[11px] text-slate-600 flex items-center gap-1 mt-0.5"><Volume2 size={11} /> {ph.say}</p>
                       </button>
                     ))}
                   </div>
-                  <p className="text-[11px] text-slate-600 mt-3">Tap to copy. These are written by hand, not generated — so an allergy or emergency phrase can never come out wrong.</p>
+                  <p className="text-[11px] text-slate-600 mt-3">{tr("Tap to copy. These are written by hand, not generated — so an allergy or emergency phrase can never come out wrong.")}</p>
                 </section>
               </div>
             ) : (
               <div className="bg-slate-900 rounded-2xl border border-dashed border-slate-800 p-8 text-center text-sm text-slate-600">
-                Pick a country above to download its pack.
+                {tr("Pick a country above to download its pack.")}
               </div>
             )}
           </div>
@@ -8744,53 +8732,53 @@ export default function App() {
                   <div className="relative bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
                     <img src={inImage.url} alt="" className="w-full max-h-56 object-contain" />
                     <button onClick={() => { setInImage(null); setInResult(""); setInNote(""); }}
-                      className="absolute top-2 right-2 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-slate-300"><X size={16} /></button>
+                      className="absolute top-2 end-2 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-slate-300"><X size={16} /></button>
                   </div>
-                  <input value={inNote} onChange={(e) => setInNote(e.target.value)} placeholder="Anything to add? (optional)"
+                  <input value={inNote} onChange={(e) => setInNote(e.target.value)} placeholder={tr("Anything to add? (optional)")}
                     className="w-full mt-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
                 </div>
               ) : (
                 <textarea value={inText} onChange={(e) => { setInText(e.target.value); if (!inBusy) { setInResult(""); setInLogged(null); } }}
                   dir="auto" rows={5}
-                  placeholder={"Type what you want, or paste anything.\n\n“Summarise this in Arabic: …”  ·  “لخصلي الرسالة دي”\n“I got my period 2 hours ago, it was heavy”"}
+                  placeholder={tr("Type what you want, or paste anything.\n\n“Summarise this in Arabic: …”  ·  “لخصلي الرسالة دي”\n“I got my period 2 hours ago, it was heavy”")}
                   className="att-scroll w-full min-h-[8.5rem] max-h-[45vh] bg-slate-950 border border-slate-800 rounded-xl p-3 text-[15px] leading-relaxed text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               )}
 
               {/* toolbar */}
               <div className="flex items-center gap-1.5 mt-2.5">
-                <label className="att-icon-btn" title="Photo">
+                <label className="att-icon-btn" title={tr("Photo")}>
                   <ImagePlus size={18} />
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { loadImage(e.target.files && e.target.files[0]); e.target.value = ""; }} />
                 </label>
-                <button onClick={pasteInstant} className="att-icon-btn" title="Paste"><ClipboardPaste size={18} /></button>
-                <button onClick={startVoice} className={`att-icon-btn ${listening ? "border-rose-500! text-rose-300! bg-rose-500/10" : ""}`} title="Speak">
-                  <Mic size={18} />{listening ? <span className="text-[11px] ml-1">Listening… tap to stop</span> : null}</button>
+                <button onClick={pasteInstant} className="att-icon-btn" title={tr("Paste")}><ClipboardPaste size={18} /></button>
+                <button onClick={startVoice} className={`att-icon-btn ${listening ? "border-rose-500! text-rose-300! bg-rose-500/10" : ""}`} title={tr("Speak")}>
+                  <Mic size={18} />{listening ? <span className="text-[11px] ms-1">{tr("Listening… tap to stop")}</span> : null}</button>
                 <button onClick={() => setInThink((v) => !v)}
-                  className={`att-icon-btn ${inThink ? "border-teal-500! text-teal-300! bg-teal-500/10" : ""}`} title="Think harder">
-                  <Brain size={18} /><span className="text-[11px] ml-1">{inThink ? "Think: on" : "Think"}</span></button>
+                  className={`att-icon-btn ${inThink ? "border-teal-500! text-teal-300! bg-teal-500/10" : ""}`} title={tr("Think harder")}>
+                  <Brain size={18} /><span className="text-[11px] ms-1">{inThink ? tr("Think: on") : tr("Think")}</span></button>
                 <div className="flex-1" />
                 {inBusy ? (
                   <button onClick={stopInstant} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-500/90 text-white text-sm font-semibold active:scale-95">
-                    <Square size={14} /> Stop</button>
+                    <Square size={14} /> {tr("Stop")}</button>
                 ) : (
-                  <button onClick={() => (photoMode ? runPhoto("Explain it", PHOTO_ACTIONS[3][1], "out") : runSmart())} disabled={!photoMode && !inText.trim()}
+                  <button onClick={() => (photoMode ? runPhoto(tr("Explain it"), PHOTO_ACTIONS[3][1], "out") : runSmart())} disabled={!photoMode && !inText.trim()}
                     className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold disabled:opacity-40 active:scale-95">
-                    <Send size={15} /> Go</button>
+                    <Send size={15} /> {tr("Go")}</button>
                 )}
               </div>
 
               {/* answer language */}
               <div className="flex items-center gap-2 mt-3">
-                <span className="text-xs text-slate-500 flex items-center gap-1 shrink-0"><Languages size={13} /> Answer in</span>
+                <span className="text-xs text-slate-500 flex items-center gap-1 shrink-0"><Languages size={13} /> {tr("Answer in")}</span>
                 <div className="att-chips flex gap-1.5 overflow-x-auto">
                   {[["match", "Same as text"], ["ar", "العربية"], ["en", "English"], ["tr", "Türkçe"], ["fr", "Français"]].map(([k, l]) => (
                     <button key={k} onClick={() => setInTarget(k)}
-                      className={`shrink-0 text-xs px-2.5 py-1.5 rounded-lg border ${inTarget === k ? "bg-teal-500/15 border-teal-600 text-teal-200" : "bg-slate-950 border-slate-800 text-slate-400"}`}>{l}</button>
+                      className={`shrink-0 text-xs px-2.5 py-1.5 rounded-lg border ${inTarget === k ? "bg-teal-500/15 border-teal-600 text-teal-200" : "bg-slate-950 border-slate-800 text-slate-400"}`}>{tr(l)}</button>
                   ))}
                   <select value={["match", "ar", "en", "tr", "fr"].includes(inTarget) ? "" : inTarget} onChange={(e) => e.target.value && setInTarget(e.target.value)}
                     className="shrink-0 bg-slate-950 border border-slate-800 rounded-lg text-xs px-1.5 py-1.5 text-slate-400 focus:outline-none">
-                    <option value="">More…</option>
-                    {LANGS.filter((l) => !["match", "ar", "en", "tr", "fr"].includes(l.k)).map((l) => <option key={l.k} value={l.k}>{l.label}</option>)}
+                    <option value="">{tr("More…")}</option>
+                    {LANGS.filter((l) => !["match", "ar", "en", "tr", "fr"].includes(l.k)).map((l) => <option key={l.k} value={l.k}>{tr(l.label)}</option>)}
                   </select>
                 </div>
               </div>
@@ -8798,28 +8786,28 @@ export default function App() {
               {/* suggestions for what was typed */}
               {photoMode ? (
                 <div className="mt-3">
-                  <p className="text-[11px] text-slate-500 mb-1.5">📷 Photo — tap what you want</p>
+                  <p className="text-[11px] text-slate-500 mb-1.5">{tr("📷 Photo — tap what you want")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     <button onClick={async () => {
                         if (!canUseAI()) return;
-                        const r = beginInstant("Add to Money");
+                        const r = beginInstant(tr("Add to Money"));
                         try {
-                          setInPhase("Reading the receipt…");
+                          setInPhase(tr("Reading the receipt…"));
                           const text = await aiTranscribe(inImage, { onStatus: r.onStatus });
                           if (!r.done()) return;
                           const pay = parsePayment(text, { now: Date.now() });
-                          if (pay && pay.ok) sendToMoney(text, "Receipt read — pick the account and confirm");
+                          if (pay && pay.ok) sendToMoney(text, tr("Receipt read — pick the account and confirm"));
                           else { setInResult("Couldn't find a clear amount and direction in this photo. What it says:\n\n" + text); }
                         } catch (e) { failInstant(r, e); } finally { endInstant(r); }
                       }}
-                      className="px-3 py-2 rounded-lg text-sm border border-emerald-800 bg-emerald-500/10 text-emerald-200">💳 Add to Money</button>
+                      className="px-3 py-2 rounded-lg text-sm border border-emerald-800 bg-emerald-500/10 text-emerald-200">{tr("💳 Add to Money")}</button>
                     {PHOTO_ACTIONS.map(([label, instruction, how]) => {
                       const shown = instantLabel(label.replace(/ it$/, ""), how, how === "translate" ? translateTarget(inTarget, "") : inTarget);
                       const on = inBusy && inAction === shown;
                       return (
                         <button key={label} onClick={() => runPhoto(label, instruction, how)}
                           className={`px-3 py-2 rounded-lg text-sm border ${on ? "bg-teal-500/20 border-teal-600 text-teal-200" : "bg-slate-950 border-slate-800 text-slate-200 active:border-teal-600"}`}>
-                          {on ? <Loader2 size={13} className="inline animate-spin mr-1" /> : null}{shown}</button>
+                          {on ? <Loader2 size={13} className="inline animate-spin me-1" /> : null}{tr(shown)}</button>
                       );
                     })}
                   </div>
@@ -8827,11 +8815,11 @@ export default function App() {
               ) : inKind ? (
                 <div className="mt-3">
                   <p className="text-[11px] text-slate-500 mb-1.5">
-                    {looksLikePeriodLog(inText) ? "🩸 Looks like a period log — Go files it in the tracker" : <>{inKind.icon} {inKind.label} — tap Go, or pick one</>}</p>
+                    {looksLikePeriodLog(inText) ? tr("🩸 Looks like a period log — Go files it in the tracker") : <>{inKind.icon} {tr(inKind.label)} {tr("— tap Go, or pick one")}</>}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {(() => { const pay = parsePayment(inText, { now: Date.now() }); return pay && pay.ok ? (
-                      <button onClick={() => sendToMoney(inText, "Payment read — pick the account and confirm")}
-                        className="px-3 py-2 rounded-lg text-sm border border-emerald-800 bg-emerald-500/10 text-emerald-200">💳 Add to Money · {pay.direction === "out" ? "−" : "+"}{pay.amount} {pay.currency || ""}</button>
+                      <button onClick={() => sendToMoney(inText, tr("Payment read — pick the account and confirm"))}
+                        className="px-3 py-2 rounded-lg text-sm border border-emerald-800 bg-emerald-500/10 text-emerald-200">{tr("💳 Add to Money ·")} {pay.direction === "out" ? "−" : "+"}{pay.amount} {pay.currency || ""}</button>
                     ) : null; })()}
                     {instantActions.map(([label, instruction, how]) => {
                       const shown = instantLabel(label, how, how === "translate" ? translateTarget(inTarget, inText) : inTarget);
@@ -8839,15 +8827,15 @@ export default function App() {
                       return (
                         <button key={label} onClick={() => runInstant(label, instruction, how)}
                           className={`px-3 py-2 rounded-lg text-sm border ${on ? "bg-teal-500/20 border-teal-600 text-teal-200" : "bg-slate-950 border-slate-800 text-slate-200 active:border-teal-600"}`}>
-                          {on ? <Loader2 size={13} className="inline animate-spin mr-1" /> : null}{shown}</button>
+                          {on ? <Loader2 size={13} className="inline animate-spin me-1" /> : null}{tr(shown)}</button>
                       );
                     })}
-                    <button onClick={() => setShowCustom(true)} className="px-3 py-2 rounded-lg text-sm border border-dashed border-slate-700 text-slate-500 flex items-center gap-1"><Plus size={14} /> Your own</button>
+                    <button onClick={() => setShowCustom(true)} className="px-3 py-2 rounded-lg text-sm border border-dashed border-slate-700 text-slate-500 flex items-center gap-1"><Plus size={14} /> {tr("Your own")}</button>
                   </div>
                 </div>
               ) : (
                 <div className="mt-3">
-                  <p className="text-[11px] text-slate-500 mb-1.5">Try one</p>
+                  <p className="text-[11px] text-slate-500 mb-1.5">{tr("Try one")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {[
                       ["A message", "Hi Ali,\nFollowing up on the quote we sent last week. Could you confirm the delivery date and whether the price includes installation? We need an answer by Thursday.\nBest,\nSara"],
@@ -8856,16 +8844,16 @@ export default function App() {
                       ["Period log", "My period started 2 hours ago, it's heavy with cramps"],
                     ].map(([l, v]) => (
                       <button key={l} onClick={() => { setInText(v); setInResult(""); setInLogged(null); }}
-                        className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 active:border-teal-600">{l}</button>
+                        className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 active:border-teal-600">{tr(l)}</button>
                     ))}
                   </div>
                 </div>
               )}
               {appliedNow.length ? (
                 <div className="mt-2 flex items-center gap-1.5 flex-wrap text-[11px] text-teal-500/80">
-                  <Languages size={11} /><span>using your words:</span>
+                  <Languages size={11} /><span>{tr("using your words:")}</span>
                   {appliedNow.slice(0, 6).map((e) => (
-                    <span key={e.id} className="px-1.5 rounded bg-teal-500/10 text-teal-300">{e.kind === "style" ? "your style" : e.term}</span>
+                    <span key={e.id} className="px-1.5 rounded bg-teal-500/10 text-teal-300">{e.kind === "style" ? tr("your style") : e.term}</span>
                   ))}
                 </div>
               ) : null}
@@ -8874,28 +8862,28 @@ export default function App() {
             {/* the answer */}
             {inLogged ? (
               <section className="bg-slate-900 rounded-2xl border border-teal-800/70 p-4">
-                <p className="text-sm text-teal-200 font-medium flex items-center gap-1.5"><CheckCircle2 size={15} /> {inLogged.title}</p>
-                <p className="text-sm text-slate-300 mt-1.5 leading-relaxed whitespace-pre-wrap">{inLogged.detail}</p>
+                <p className="text-sm text-teal-200 font-medium flex items-center gap-1.5"><CheckCircle2 size={15} /> {tr(inLogged.title)}</p>
+                <p className="text-sm text-slate-300 mt-1.5 leading-relaxed whitespace-pre-wrap">{tr(inLogged.detail)}</p>
                 <div className="flex gap-2 mt-3">
                   <button onClick={() => setMode(inLogged.tab)} className="text-xs px-3 py-2 rounded-lg bg-teal-500 text-slate-950 font-medium">{inLogged.open}</button>
-                  {inLogged.undo ? <button onClick={() => { inLogged.undo(); setInLogged(null); flash("Removed"); }} className="text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-300">Undo</button> : null}
+                  {inLogged.undo ? <button onClick={() => { inLogged.undo(); setInLogged(null); flash(tr("Removed")); }} className="text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-300">{tr("Undo")}</button> : null}
                 </div>
               </section>
             ) : (inResult || inBusy || inThinking) ? (
               <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
                 <div className="flex items-center justify-between mb-2 gap-2">
-                  <span className="text-sm font-medium text-slate-300 truncate">{inAction || "Answer"}</span>
-                  {inResult && !inBusy ? <button onClick={() => { try { navigator.clipboard.writeText(inResult); } catch (e) {} flash("Copied"); }} className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300"><Copy size={14} /> Copy</button> : null}
+                  <span className="text-sm font-medium text-slate-300 truncate">{inAction || tr("Answer")}</span>
+                  {inResult && !inBusy ? <button onClick={() => { try { navigator.clipboard.writeText(inResult); } catch (e) {} flash(tr("Copied")); }} className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300"><Copy size={14} /> {tr("Copy")}</button> : null}
                 </div>
                 {inBusy ? (
                   <div className="flex items-center gap-2 text-xs text-teal-300/90 mb-2">
-                    <Loader2 size={13} className="animate-spin" /><span>{checkState === "careful" && !inResult ? "This looks like it matters — reading it line by line…" : inPhase || "Working…"}</span>
+                    <Loader2 size={13} className="animate-spin" /><span>{checkState === "careful" && !inResult ? tr("This looks like it matters — reading it line by line…") : inPhase || tr("Working…")}</span>
                   </div>
                 ) : null}
                 {inThinking ? (
                   <div className="mb-2 rounded-xl border border-slate-800 bg-slate-950/60">
                     <button onClick={() => setInShowThinking((v) => !v)} className="w-full flex items-center justify-between px-3 py-2 text-[11px] text-slate-400">
-                      <span className="flex items-center gap-1.5"><Brain size={12} /> {inBusy && !inResult ? "Thinking…" : "How it thought"}</span>
+                      <span className="flex items-center gap-1.5"><Brain size={12} /> {inBusy && !inResult ? tr("Thinking…") : tr("How it thought")}</span>
                       <span>{inShowThinking ? "hide" : "show"}</span>
                     </button>
                     {(inShowThinking || (inBusy && !inResult)) ? (
@@ -8912,12 +8900,12 @@ export default function App() {
                 {inResult && !inBusy ? (
                   <>
                   {checkState === "checking" ? (
-                    <div className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500"><Loader2 size={11} className="animate-spin" /> checking this against the source…</div>
+                    <div className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500"><Loader2 size={11} className="animate-spin" /> {tr("checking this against the source…")}</div>
                   ) : checks ? (
                     checks.issues.length ? (
                       <div className="mt-2 bg-amber-500/5 border border-amber-900/50 rounded-xl p-3">
                         <p className="text-xs font-medium text-amber-300 flex items-center gap-1.5 mb-1.5">
-                          <AlertTriangle size={12} /> Check these {checks.issues.length === 1 ? "before you rely on it" : "before you rely on it"}
+                          <AlertTriangle size={12} /> {tr("Check these")} {checks.issues.length === 1 ? tr("before you rely on it") : tr("before you rely on it")}
                         </p>
                         <ul className="space-y-1">
                           {checks.issues.map((is, i) => (
@@ -8926,25 +8914,25 @@ export default function App() {
                         </ul>
                         {checks.stakes === "high" ? (
                           <p className="text-[11px] text-amber-300/70 mt-2 pt-2 border-t border-amber-900/40">
-                            This looks like medical, legal or safety content. The original document governs — this is a reading aid, not a substitute for it.
+                            {tr("This looks like medical, legal or safety content. The original document governs — this is a reading aid, not a substitute for it.")}
                           </p>
                         ) : null}
                       </div>
                     ) : (
                       <div className="mt-2 flex items-start gap-1.5 text-[11px] text-teal-500/80">
                         <CheckCircle2 size={12} className="mt-0.5 shrink-0" />
-                        <span>Re-read against the source — nothing added, nothing dropped, numbers match.{checks.stakes === "high" ? " Still: the original document governs." : ""}</span>
+                        <span>{tr("Re-read against the source — nothing added, nothing dropped, numbers match.")}{checks.stakes === "high" ? tr(" Still: the original document governs.") : ""}</span>
                       </div>
                     )
                   ) : null}
 
                   {checks && !checks.verified && checkState !== "checking" && inSource ? (
                     <button onClick={() => runChecks(inSource, inResult, inAction, { level: checks.stakes }, { structural: true })}
-                      className="mt-2 mr-3 text-[11px] text-slate-400 underline decoration-dotted">Double-check it against the text</button>
+                      className="mt-2 me-3 text-[11px] text-slate-400 underline decoration-dotted">{tr("Double-check it against the text")}</button>
                   ) : null}
                   {inSource && checks ? (
                     <button onClick={() => setShowSource((v) => !v)} className="mt-2 text-[11px] text-slate-500 hover:text-teal-400 self-start">
-                      {showSource ? "hide" : "show"} what it read
+                      {showSource ? "hide" : "show"} {tr("what it read")}
                     </button>
                   ) : null}
                   {showSource && inSource ? (
@@ -8959,29 +8947,29 @@ export default function App() {
                         permanent once given. */}
                     {fixing ? (
                       <div className="mb-3 bg-slate-950 border border-teal-900/60 rounded-xl p-3">
-                        <p className="text-xs text-teal-300 mb-2">Which word came out wrong?</p>
+                        <p className="text-xs text-teal-300 mb-2">{tr("Which word came out wrong?")}</p>
                         <div className="flex flex-wrap gap-1.5 items-center">
                           <input value={fixing.wrong} onChange={(e) => setFixing({ ...fixing, wrong: e.target.value })}
-                            placeholder="it wrote…" className="flex-1 min-w-[8rem] bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-100" />
-                          <span className="text-slate-600 text-xs">→</span>
+                            placeholder={tr("it wrote…")} className="flex-1 min-w-[8rem] bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-100" />
+                          <span className="inline-block rtl:-scale-x-100 text-slate-600 text-xs">→</span>
                           <input value={fixing.right} onChange={(e) => setFixing({ ...fixing, right: e.target.value })}
-                            placeholder="you say…" className="flex-1 min-w-[8rem] bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-100" />
+                            placeholder={tr("you say…")} className="flex-1 min-w-[8rem] bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-100" />
                           <button onClick={() => { teach({ term: fixing.wrong, mine: fixing.right, note: "corrected by you" }); setFixing(null); }}
-                            className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold">Remember it</button>
+                            className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold">{tr("Remember it")}</button>
                           <button onClick={() => setFixing(null)} className="text-xs px-2 py-1.5 text-slate-500">cancel</button>
                         </div>
-                        <p className="text-[11px] text-slate-600 mt-2">It'll use your word every time from now on — here, in documents, in translations.</p>
+                        <p className="text-[11px] text-slate-600 mt-2">{tr("It'll use your word every time from now on — here, in documents, in translations.")}</p>
                       </div>
                     ) : null}
                     <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-[10px] uppercase tracking-wider text-slate-500">Not quite right?</p>
+                      <p className="text-[10px] uppercase tracking-wider text-slate-500">{tr("Not quite right?")}</p>
                       <button onClick={() => setFixing({ wrong: "", right: "" })}
-                        className="text-[11px] text-slate-500 hover:text-teal-400 flex items-center gap-1"><PenLine size={11} /> a word is wrong</button>
+                        className="text-[11px] text-slate-500 hover:text-teal-400 flex items-center gap-1"><PenLine size={11} /> {tr("a word is wrong")}</button>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {REFINEMENTS.map(([l, ins]) => (
                         <button key={l} onClick={() => refine(l, ins)} disabled={inBusy}
-                          className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600 hover:text-teal-300">{l}</button>
+                          className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600 hover:text-teal-300">{tr(l)}</button>
                       ))}
                     </div>
                   </div>
@@ -8992,11 +8980,11 @@ export default function App() {
 
             {instantHistory.length > 0 && !inBusy ? (
               <section className="bg-slate-900 rounded-2xl border border-slate-800 p-3">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5"><History size={12} /> Recent</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5"><History size={12} /> {tr("Recent")}</p>
                 <div className="space-y-0.5">
                   {instantHistory.slice(0, 5).map((h) => (
                     <button key={h.id} onClick={() => { setInResult(h.output); setInAction(h.action); setInThinking(""); setInLogged(null); }}
-                      className="w-full text-left flex items-center gap-2 text-xs px-2 py-2 rounded-lg active:bg-slate-950">
+                      className="w-full text-start flex items-center gap-2 text-xs px-2 py-2 rounded-lg active:bg-slate-950">
                       <span className="text-teal-400 shrink-0">{h.action}</span>
                       <span className="text-slate-600 truncate">{h.input}</span>
                     </button>
@@ -9004,7 +8992,7 @@ export default function App() {
                 </div>
               </section>
             ) : null}
-            <p className="flex items-center justify-center gap-1.5 text-[11px] text-teal-500/60"><ShieldCheck size={12} /> Runs on your phone · works with no signal</p>
+            <p className="flex items-center justify-center gap-1.5 text-[11px] text-teal-500/60"><ShieldCheck size={12} /> {tr("Runs on your phone · works with no signal")}</p>
           </div>
         ) : mode === "fleet" ? (
           <div className="space-y-5">
@@ -9013,37 +9001,37 @@ export default function App() {
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-2 text-sm text-slate-300">
                   <Users size={15} className="text-teal-400" />
-                  <span>Team records</span>
-                  <span className="text-xs text-slate-500">· this device {myDevice}</span>
+                  <span>{tr("Team records")}</span>
+                  <span className="text-xs text-slate-500">{tr("· this device")} {myDevice}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {pendingSync > 0 ? <span className="text-xs px-2 py-1 rounded-md bg-amber-500/10 border border-amber-900/60 text-amber-300">{pendingSync} waiting to share</span> : null}
+                  {pendingSync > 0 ? <span className="text-xs px-2 py-1 rounded-md bg-amber-500/10 border border-amber-900/60 text-amber-300">{pendingSync} {tr("waiting to share")}</span> : null}
                   {lastSync ? <span className="text-xs text-slate-600">synced {new Date(lastSync).toLocaleTimeString()}</span> : null}
-                  <button onClick={syncNow} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600"><RefreshCw size={13} /> Share</button>
-                  <button onClick={receiveTeamRecords} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">Receive from teammate</button>
+                  <button onClick={syncNow} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600"><RefreshCw size={13} /> {tr("Share")}</button>
+                  <button onClick={receiveTeamRecords} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">{tr("Receive from teammate")}</button>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-600 mt-2">Records replicate between your team's devices whenever any connection exists — site Wi-Fi, a company hub, or when someone drives back into coverage. The AI model never syncs; only small text records do, and they stay inside your company.</p>
+              <p className="text-[11px] text-slate-600 mt-2">{tr("Records replicate between your team's devices whenever any connection exists — site Wi-Fi, a company hub, or when someone drives back into coverage. The AI model never syncs; only small text records do, and they stay inside your company.")}</p>
             </div>
 
             {/* the ROI number */}
             {health.length > 0 ? (
               <div className="grid sm:grid-cols-3 gap-3">
                 <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Assets tracked</p>
+                  <p className="text-xs uppercase tracking-wider text-slate-500">{tr("Assets tracked")}</p>
                   <p className="text-3xl font-bold text-white mt-1">{health.length}</p>
                   <p className="text-[11px] text-slate-600 mt-1">{records.length} records</p>
                 </div>
                 <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Needs attention</p>
+                  <p className="text-xs uppercase tracking-wider text-slate-500">{tr("Needs attention")}</p>
                   <p className="text-3xl font-bold text-rose-400 mt-1">{health.filter((a) => a.band !== "ok").length}</p>
-                  <p className="text-[11px] text-slate-600 mt-1">{health.reduce((n, a) => n + a.open, 0)} open actions</p>
+                  <p className="text-[11px] text-slate-600 mt-1">{health.reduce((n, a) => n + a.open, 0)} {tr("open actions")}</p>
                 </div>
                 <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Downtime logged</p>
+                  <p className="text-xs uppercase tracking-wider text-slate-500">{tr("Downtime logged")}</p>
                   <p className="text-3xl font-bold text-amber-400 mt-1">{cost.hours}h</p>
                   <p className="text-[11px] text-slate-600 mt-1">
-                    {Number(org.rate) > 0 ? `≈ ${cost.cost.toLocaleString()} ${org.currency || "EGP"}` : <button onClick={() => setShowOrg(true)} className="underline hover:text-teal-400">set hourly rate to price this</button>}
+                    {Number(org.rate) > 0 ? `≈ ${cost.cost.toLocaleString()} ${org.currency || "EGP"}` : <button onClick={() => setShowOrg(true)} className="underline hover:text-teal-400">{tr("set hourly rate to price this")}</button>}
                   </p>
                 </div>
               </div>
@@ -9051,9 +9039,9 @@ export default function App() {
 
             {/* asset health */}
             <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-              <p className="text-xs uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5"><Gauge size={13} /> Asset health</p>
+              <p className="text-xs uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5"><Gauge size={13} /> {tr("Asset health")}</p>
               {health.length === 0 ? (
-                <p className="text-sm text-slate-600">No assets yet. Create records in Field and they appear here — including records synced from your team.</p>
+                <p className="text-sm text-slate-600">{tr("No assets yet. Create records in Field and they appear here — including records synced from your team.")}</p>
               ) : (
                 <div className="space-y-2">
                   {health.map((a) => (
@@ -9071,7 +9059,7 @@ export default function App() {
                         <div className={`h-full ${a.band === "critical" ? "bg-rose-500" : a.band === "watch" ? "bg-amber-500" : "bg-teal-500"}`} style={{ width: a.score + "%" }} />
                       </div>
                       <p className="text-[11px] text-slate-500 mt-1.5">
-                        {a.records} record{a.records > 1 ? "s" : ""} · {a.open} open action{a.open === 1 ? "" : "s"}
+                        {a.records} record{a.records > 1 ? "s" : ""} · {a.open} {tr("open action")}{a.open === 1 ? "" : "s"}
                         {a.openDays > 0 ? ` (oldest ${a.openDays}d)` : ""}{a.downtime > 0 ? ` · ${a.downtime}h downtime` : ""}
                       </p>
                     </div>
@@ -9083,18 +9071,18 @@ export default function App() {
             {findings.length > 0 ? (
               <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5"><Radar size={13} /> Patterns across the team</p>
-                  <button onClick={runBrief} disabled={loading} className="text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">{loading ? "…" : "What does this mean?"}</button>
+                  <p className="text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5"><Radar size={13} /> {tr("Patterns across the team")}</p>
+                  <button onClick={runBrief} disabled={loading} className="text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">{loading ? "…" : tr("What does this mean?")}</button>
                 </div>
                 <div className="space-y-1.5">
                   {findings.map((f, i) => (
                     <div key={i} className={`text-xs rounded-lg px-2.5 py-2 border ${
                       f.severity === "high" ? "bg-rose-500/10 border-rose-900/60 text-rose-200"
                       : f.severity === "medium" ? "bg-amber-500/10 border-amber-900/60 text-amber-200"
-                      : "bg-slate-950 border-slate-800 text-slate-400"}`}>{f.summary}</div>
+                      : "bg-slate-950 border-slate-800 text-slate-400"}`}>{tr(f.summary)}</div>
                   ))}
                 </div>
-                {brief ? <div className="mt-3 bg-slate-950 border border-teal-900/50 rounded-xl p-3"><pre className="text-xs text-teal-50 whitespace-pre-wrap font-sans leading-relaxed">{brief}</pre></div> : null}
+                {brief ? <div className="mt-3 bg-slate-950 border border-teal-900/50 rounded-xl p-3"><pre className="text-xs text-teal-50 whitespace-pre-wrap font-sans leading-relaxed">{tr(brief)}</pre></div> : null}
               </div>
             ) : null}
           </div>
@@ -9102,66 +9090,66 @@ export default function App() {
           <div className="grid md:grid-cols-2 gap-5">
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-slate-300">What happened / what's needed</label>
-                <button onClick={() => flash("Voice capture runs in the installed app")} className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300"><Mic size={13} /> Dictate</button>
+                <label className="text-sm font-medium text-slate-300">{tr("What happened / what's needed")}</label>
+                <button onClick={() => flash(tr("Voice capture runs in the installed app"))} className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300"><Mic size={13} /> {tr("Dictate")}</button>
               </div>
               <textarea value={fdInput} onChange={(e) => setFdInput(e.target.value)}
-                placeholder="Speak or type it roughly, in any language. e.g. 'crane 3 hydraulic leak at north gate around 2pm, stopped work, called maintenance, no injuries'"
+                placeholder={tr("Speak or type it roughly, in any language. e.g. 'crane 3 hydraulic leak at north gate around 2pm, stopped work, called maintenance, no injuries'")}
                 className="w-full h-32 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
 
               <div className="flex items-center gap-2 mt-3">
-                <span className="text-xs text-slate-500 shrink-0">Filed by</span>
-                <input value={fdBy} onChange={(e) => setFdBy(e.target.value)} placeholder="your name (optional)"
+                <span className="text-xs text-slate-500 shrink-0">{tr("Filed by")}</span>
+                <input value={fdBy} onChange={(e) => setFdBy(e.target.value)} placeholder={tr("your name (optional)")}
                   className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-                <input value={fdDowntime} onChange={(e) => setFdDowntime(e.target.value)} placeholder="hrs lost" inputMode="decimal"
+                <input value={fdDowntime} onChange={(e) => setFdDowntime(e.target.value)} placeholder={tr("hrs lost")} inputMode="decimal"
                   className="w-20 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
               </div>
 
-              <p className="text-xs uppercase tracking-wider text-slate-500 mt-4 mb-2">Document</p>
+              <p className="text-xs uppercase tracking-wider text-slate-500 mt-4 mb-2">{tr("Document")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {Object.entries(FIELD_DOCS).map(([k, d]) => (
-                  <button key={k} onClick={() => setFdDoc(k)} className={btn(fdDoc === k)}>{d.icon} {d.label}</button>
+                  <button key={k} onClick={() => setFdDoc(k)} className={btn(fdDoc === k)}>{d.icon} {tr(d.label)}</button>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-600 mt-2">Needs: {FIELD_DOCS[fdDoc].need.join(" · ")}. Only genuinely essential gaps are flagged — today's date and your name are filled in automatically.</p>
+              <p className="text-[11px] text-slate-600 mt-2">{tr("Needs:")} {FIELD_DOCS[fdDoc].need.join(" · ")}{tr(". Only genuinely essential gaps are flagged — today's date and your name are filled in automatically.")}</p>
 
-              <p className="text-xs uppercase tracking-wider text-slate-500 mt-4 mb-2 flex items-center gap-1.5"><Languages size={13} /> Produce it in</p>
+              <p className="text-xs uppercase tracking-wider text-slate-500 mt-4 mb-2 flex items-center gap-1.5"><Languages size={13} /> {tr("Produce it in")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {["match", "en", "ar", "hi", "ur", "bn", "tr", "fr", "ru"].map((k) => (
                   <button key={k} onClick={() => toggleFdLang(k)} className={btn(fdLangs.includes(k))}>
-                    {k === "match" ? "Worker's language" : LANG_NAMES[k]}
+                    {k === "match" ? tr("Worker's language") : LANG_NAMES[k]}
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-600 mt-2">One dictation → the same record in every language your site needs. Identical facts, identical numbers.</p>
+              <p className="text-[11px] text-slate-600 mt-2">{tr("One dictation → the same record in every language your site needs. Identical facts, identical numbers.")}</p>
 
               <button onClick={() => setShowOrg(true)} className={`mt-4 w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm ${org.on ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-950 text-slate-400"}`}>
-                <span className="flex items-center gap-2"><Building2 size={15} /> {org.on && org.name ? org.name : "Company terminology"}</span>
-                <span className="text-xs">{org.on ? "on" : "set up"}</span>
+                <span className="flex items-center gap-2"><Building2 size={15} /> {org.on && org.name ? org.name : tr("Company terminology")}</span>
+                <span className="text-xs">{org.on ? "on" : tr("set up")}</span>
               </button>
 
               {liveAlert ? (
                 <div className="mt-3 flex items-start gap-2 text-xs bg-amber-500/10 border border-amber-900/60 rounded-xl p-3">
                   <AlertTriangle size={14} className="text-amber-400 mt-0.5 shrink-0" />
                   <span className="text-amber-200">
-                    <b>{liveAlert.asset}</b> already has {liveAlert.count} record{liveAlert.count > 1 ? "s" : ""}
-                    {liveAlert.open > 0 ? <> and <b>{liveAlert.open} unresolved action{liveAlert.open > 1 ? "s" : ""}</b></> : null}.
-                    <button onClick={() => setShowMemory(true)} className="underline ml-1 hover:text-amber-100">See history</button>
+                    <b>{liveAlert.asset}</b> {tr("already has")} {liveAlert.count} record{liveAlert.count > 1 ? "s" : ""}
+                    {liveAlert.open > 0 ? <> and <b>{liveAlert.open} {tr("unresolved action")}{liveAlert.open > 1 ? "s" : ""}</b></> : null}.
+                    <button onClick={() => setShowMemory(true)} className="underline ms-1 hover:text-amber-100">{tr("See history")}</button>
                   </span>
                 </div>
               ) : null}
 
               <button onClick={doFieldDoc} disabled={!fdInput.trim() || loading}
                 className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${fdInput.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>
-                {loading ? <Loader2 size={16} className="animate-spin" /> : <HardHat size={16} />}{loading ? "Writing…" : "Create document"}
+                {loading ? <Loader2 size={16} className="animate-spin" /> : <HardHat size={16} />}{loading ? tr("Writing…") : tr("Create document")}
               </button>
-              {queued > 0 ? <p className="text-[11px] text-amber-400 mt-2">{queued} queued — will process when an engine is available.</p> : null}
+              {queued > 0 ? <p className="text-[11px] text-amber-400 mt-2">{queued} {tr("queued — will process when an engine is available.")}</p> : null}
             </section>
 
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5 flex flex-col">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-slate-300">{FIELD_DOCS[fdDoc].label}{fdLangs.length > 1 ? ` · ${fdLangs.length} languages` : ""}</label>
-                {fdResult ? <button onClick={() => { try { navigator.clipboard.writeText(fdResult); } catch (e) {} flash("Copied"); }} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400"><Copy size={14} /> Copy</button> : null}
+                <label className="text-sm font-medium text-slate-300">{tr(FIELD_DOCS[fdDoc].label)}{fdLangs.length > 1 ? ` · ${fdLangs.length} languages` : ""}</label>
+                {fdResult ? <button onClick={() => { try { navigator.clipboard.writeText(fdResult); } catch (e) {} flash(tr("Copied")); }} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400"><Copy size={14} /> {tr("Copy")}</button> : null}
               </div>
               {fdResult ? (
                 <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 overflow-auto min-h-[16rem]">
@@ -9169,27 +9157,27 @@ export default function App() {
                 </div>
               ) : (
                 <div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[16rem] p-6">
-                  Rough note in, finished record out — structured, in every language the site needs, without a signal.
+                  {tr("Rough note in, finished record out — structured, in every language the site needs, without a signal.")}
                 </div>
               )}
-              <p className="text-[11px] text-slate-600 mt-3">Runs on the device. Nothing about the incident leaves the phone.</p>
+              <p className="text-[11px] text-slate-600 mt-3">{tr("Runs on the device. Nothing about the incident leaves the phone.")}</p>
 
               {records.length > 0 ? (
                 <div className="mt-4 border-t border-slate-800 pt-4">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                      <Radar size={13} /> Site memory · {records.length} record{records.length > 1 ? "s" : ""}
+                      <Radar size={13} /> {tr("Site memory ·")} {records.length} record{records.length > 1 ? "s" : ""}
                     </p>
                     {findings.length > 0 ? (
                       <button onClick={runBrief} disabled={loading}
                         className="text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">
-                        {loading ? "…" : "What does this mean?"}
+                        {loading ? "…" : tr("What does this mean?")}
                       </button>
                     ) : null}
                   </div>
 
                   {findings.length === 0 ? (
-                    <p className="text-[11px] text-slate-600">No patterns yet. Add more records and this starts connecting them.</p>
+                    <p className="text-[11px] text-slate-600">{tr("No patterns yet. Add more records and this starts connecting them.")}</p>
                   ) : (
                     <div className="space-y-1.5">
                       {findings.slice(0, 5).map((f, i) => (
@@ -9197,19 +9185,19 @@ export default function App() {
                           f.severity === "high" ? "bg-rose-500/10 border-rose-900/60 text-rose-200"
                           : f.severity === "medium" ? "bg-amber-500/10 border-amber-900/60 text-amber-200"
                           : "bg-slate-950 border-slate-800 text-slate-400"}`}>
-                          {f.summary}
+                          {tr(f.summary)}
                         </div>
                       ))}
                       <button onClick={() => setShowMemory(true)} className="text-[11px] text-teal-400 hover:text-teal-300">
-                        Open site memory →
+                        {tr("Open site memory →")}
                       </button>
                     </div>
                   )}
 
                   {brief ? (
                     <div className="mt-3 bg-slate-950 border border-teal-900/50 rounded-xl p-3">
-                      <p className="text-[10px] uppercase tracking-wider text-teal-400 mb-1.5">Reviewer's read</p>
-                      <pre className="text-xs text-teal-50 whitespace-pre-wrap font-sans leading-relaxed">{brief}</pre>
+                      <p className="text-[10px] uppercase tracking-wider text-teal-400 mb-1.5">{tr("Reviewer's read")}</p>
+                      <pre className="text-xs text-teal-50 whitespace-pre-wrap font-sans leading-relaxed">{tr(brief)}</pre>
                     </div>
                   ) : null}
                 </div>
@@ -9219,28 +9207,28 @@ export default function App() {
         ) : mode === "humanize" ? (
           <div className="grid md:grid-cols-2 gap-5">
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Text to rewrite</label>
-              <textarea value={hzText} onChange={(e) => setHzText(e.target.value)} placeholder="Paste AI-generated or stiff text — it comes back sounding like a person wrote it."
+              <label className="block text-sm font-medium text-slate-300 mb-2">{tr("Text to rewrite")}</label>
+              <textarea value={hzText} onChange={(e) => setHzText(e.target.value)} placeholder={tr("Paste AI-generated or stiff text — it comes back sounding like a person wrote it.")}
                 className="w-full h-36 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
-              <label className="block text-sm font-medium text-slate-300 mt-4 mb-2">Your writing sample <span className="text-teal-400 font-normal">(this is what makes it sound like you)</span></label>
-              <textarea value={hzSample} onChange={(e) => setHzSample(e.target.value)} placeholder="Paste a few paragraphs you wrote yourself — an email, a message, anything in your natural voice."
+              <label className="block text-sm font-medium text-slate-300 mt-4 mb-2">{tr("Your writing sample")} <span className="text-teal-400 font-normal">{tr("(this is what makes it sound like you)")}</span></label>
+              <textarea value={hzSample} onChange={(e) => setHzSample(e.target.value)} placeholder={tr("Paste a few paragraphs you wrote yourself — an email, a message, anything in your natural voice.")}
                 className="w-full h-28 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
-              <button onClick={doHumanize} disabled={!hzText.trim() || loading} className={`mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${hzText.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <PenLine size={16} />}{loading ? "Rewriting…" : "Humanize"}</button>
-              <p className="text-xs text-slate-600 mt-2">Keeps your meaning and facts exactly — changes only how it reads. The writing sample is optional but makes the biggest difference.</p>
+              <button onClick={doHumanize} disabled={!hzText.trim() || loading} className={`mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${hzText.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <PenLine size={16} />}{loading ? tr("Rewriting…") : tr("Humanize")}</button>
+              <p className="text-xs text-slate-600 mt-2">{tr("Keeps your meaning and facts exactly — changes only how it reads. The writing sample is optional but makes the biggest difference.")}</p>
             </section>
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5 flex flex-col">
-              <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">Rewritten</label>{hzResult ? <button onClick={() => { try { navigator.clipboard.writeText(hzResult); } catch (e) {} flash("Copied"); }} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400"><Copy size={14} /> Copy</button> : null}</div>
+              <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{tr("Rewritten")}</label>{hzResult ? <button onClick={() => { try { navigator.clipboard.writeText(hzResult); } catch (e) {} flash(tr("Copied")); }} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400"><Copy size={14} /> {tr("Copy")}</button> : null}</div>
               {hzResult ? <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 overflow-auto min-h-[12rem]"><p className="text-sm text-teal-50 whitespace-pre-wrap leading-relaxed">{hzResult}</p></div>
-                : <div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[14rem] p-6">Paste stiff or AI-sounding text, add a sample of your own writing, and it comes back in your voice — same meaning, human rhythm.</div>}
+                : <div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[14rem] p-6">{tr("Paste stiff or AI-sounding text, add a sample of your own writing, and it comes back in your voice — same meaning, human rhythm.")}</div>}
             </section>
           </div>
         ) : mode === "copilot" ? (
           <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
             <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-              <p className="text-sm text-slate-300">Chat through Attune — it reads the whole conversation and sharpens every next prompt.</p>
-              {convo.length > 0 ? <button onClick={cpReset} className="text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-400 hover:border-rose-500 hover:text-rose-400">Reset</button> : null}
+              <p className="text-sm text-slate-300">{tr("Chat through Attune — it reads the whole conversation and sharpens every next prompt.")}</p>
+              {convo.length > 0 ? <button onClick={cpReset} className="text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-400 hover:border-rose-500 hover:text-rose-400">{tr("Reset")}</button> : null}
             </div>
-            <div className="flex flex-wrap gap-1.5 mb-3">{["claude", "chatgpt", "gemini", "grok", "deepseek", "perplexity"].map((k) => <button key={k} onClick={() => setTool(k)} className={btn(tool === k)}>{TOOLS[k].label}</button>)}</div>
+            <div className="flex flex-wrap gap-1.5 mb-3">{["claude", "chatgpt", "gemini", "grok", "deepseek", "perplexity"].map((k) => <button key={k} onClick={() => setTool(k)} className={btn(tool === k)}>{tr(TOOLS[k].label)}</button>)}</div>
 
             {/* The outcome, stated once. Every prompt is steered toward it and
                 the gaps are measured against it. Without this the copilot is
@@ -9249,11 +9237,11 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <Radar size={14} className="text-teal-400 shrink-0" />
                 <input value={cpGoal} onChange={(e) => setCpGoal(e.target.value)}
-                  placeholder="What do you want out of this whole conversation? (optional, but it makes every prompt better)"
+                  placeholder={tr("What do you want out of this whole conversation? (optional, but it makes every prompt better)")}
                   className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
               </div>
               {cpGoal.trim() && cpDiag && cpDiag.missing && cpDiag.missing.length ? (
-                <p className="text-[11px] text-amber-300/80 mt-1.5 ml-6">Still untouched: {cpDiag.missing.join(", ")}</p>
+                <p className="text-[11px] text-amber-300/80 mt-1.5 ms-6">{tr("Still untouched:")} {cpDiag.missing.join(", ")}</p>
               ) : null}
             </div>
 
@@ -9262,7 +9250,7 @@ export default function App() {
               <div className="space-y-2 mb-4">
                 {convo.map((m, i) => (
                   <div key={i} className={`rounded-xl p-3 text-sm ${m.role === "you" ? "bg-teal-500/10 border border-teal-900/50" : "bg-slate-950 border border-slate-800"}`}>
-                    <p className={`text-[10px] uppercase tracking-wider mb-1 ${m.role === "you" ? "text-teal-400" : "text-slate-500"}`}>{m.role === "you" ? "You sent (optimized)" : TOOLS[tool].label + " replied"}</p>
+                    <p className={`text-[10px] uppercase tracking-wider mb-1 ${m.role === "you" ? "text-teal-400" : "text-slate-500"}`}>{m.role === "you" ? tr("You sent (optimized)") : TOOLS[tool].label + " replied"}</p>
                     <p className="text-slate-200 whitespace-pre-wrap font-mono text-xs">{m.text}</p>
                   </div>
                 ))}
@@ -9272,27 +9260,27 @@ export default function App() {
             {cpDiag && cpDiag.issues.length ? (
               <div className="mb-4 bg-amber-500/5 border border-amber-900/60 rounded-xl p-3">
                 <p className="text-xs font-medium text-amber-300 flex items-center gap-1.5 mb-1.5">
-                  <AlertTriangle size={12} /> About that last answer
+                  <AlertTriangle size={12} /> {tr("About that last answer")}
                 </p>
                 {cpDiag.issues.map((i) => (
                   <div key={i.id} className="mb-1.5 last:mb-0">
-                    <p className="text-[11px] text-amber-100 leading-snug">{i.why}</p>
-                    <p className="text-[11px] text-amber-100/60 leading-snug">→ {i.fix}</p>
+                    <p className="text-[11px] text-amber-100 leading-snug">{tr(i.why)}</p>
+                    <p className="text-[11px] text-amber-100/60 leading-snug">→ {tr(i.fix)}</p>
                   </div>
                 ))}
-                <p className="text-[10px] text-amber-300/50 mt-1.5">Read on your device, in the time it took to paste — no call, no cost.</p>
+                <p className="text-[10px] text-amber-300/50 mt-1.5">{tr("Read on your device, in the time it took to paste — no call, no cost.")}</p>
               </div>
             ) : null}
 
             {cpVariants.length ? (
               <div className="mb-4 att-in">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-2">Three ways to go next — pick one</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-2">{tr("Three ways to go next — pick one")}</p>
                 <div className="grid md:grid-cols-3 gap-2">
                   {cpVariants.map((v) => (
                     <button key={v.k} onClick={() => cpChoose(v)}
-                      className="text-left bg-slate-950 border border-slate-800 rounded-xl p-3 hover:border-teal-600 transition-colors flex flex-col">
-                      <span className="text-xs font-semibold text-teal-300">{v.label}</span>
-                      <span className="text-[10px] text-slate-600 mb-1.5">{v.hint}</span>
+                      className="text-start bg-slate-950 border border-slate-800 rounded-xl p-3 hover:border-teal-600 transition-colors flex flex-col">
+                      <span className="text-xs font-semibold text-teal-300">{tr(v.label)}</span>
+                      <span className="text-[10px] text-slate-600 mb-1.5">{tr(v.hint)}</span>
                       <span className="text-xs text-slate-200 font-mono leading-snug flex-1">{v.text}</span>
                     </button>
                   ))}
@@ -9302,36 +9290,36 @@ export default function App() {
 
             {cpPending ? (
               <div className="bg-slate-950 border border-teal-800 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2"><p className="text-xs uppercase tracking-wider text-teal-400">Send this to {TOOLS[tool].label}</p>
-                  <div className="flex gap-1.5"><button onClick={() => { try { navigator.clipboard.writeText(cpPending); } catch (e) {} flash("Copied"); }} className="text-xs px-2 py-1 rounded-lg border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400 flex items-center gap-1"><Copy size={13} /> Copy</button><button onClick={cpSendPending} className="text-xs px-2 py-1 rounded-lg border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400 flex items-center gap-1"><ExternalLink size={13} /> Open</button></div>
+                <div className="flex items-center justify-between mb-2"><p className="text-xs uppercase tracking-wider text-teal-400">{tr("Send this to")} {tr(TOOLS[tool].label)}</p>
+                  <div className="flex gap-1.5"><button onClick={() => { try { navigator.clipboard.writeText(cpPending); } catch (e) {} flash(tr("Copied")); }} className="text-xs px-2 py-1 rounded-lg border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400 flex items-center gap-1"><Copy size={13} /> {tr("Copy")}</button><button onClick={cpSendPending} className="text-xs px-2 py-1 rounded-lg border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400 flex items-center gap-1"><ExternalLink size={13} /> {tr("Open")}</button></div>
                 </div>
                 <pre className="text-sm font-mono text-teal-50 whitespace-pre-wrap">{cpPending}</pre>
                 {cpReturned ? (
                   <button onClick={async () => { setCpReturned(false); await cpGrabClipboard(); }}
                     className="mt-3 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-teal-500/15 border border-teal-700 text-teal-200 text-sm font-medium att-in">
-                    <ClipboardPaste size={14} /> Welcome back — paste {TOOLS[tool].label}'s reply
+                    <ClipboardPaste size={14} /> {tr("Welcome back — paste")} {tr(TOOLS[tool].label)}{tr("'s reply")}
                   </button>
                 ) : null}
                 <div className="flex items-center justify-between mt-3 mb-1">
-                  <p className="text-xs text-slate-500">Bring {TOOLS[tool].label}'s reply back:</p>
-                  <button onClick={cpGrabClipboard} className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600"><ClipboardPaste size={13} /> Paste from clipboard</button>
+                  <p className="text-xs text-slate-500">{tr("Bring")} {tr(TOOLS[tool].label)}{tr("'s reply back:")}</p>
+                  <button onClick={cpGrabClipboard} className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600"><ClipboardPaste size={13} /> {tr("Paste from clipboard")}</button>
                 </div>
-                <textarea value={cpPaste} onChange={(e) => setCpPaste(e.target.value)} placeholder="Paste the AI's answer…" className="w-full h-20 bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
+                <textarea value={cpPaste} onChange={(e) => setCpPaste(e.target.value)} placeholder={tr("Paste the AI's answer…")} className="w-full h-20 bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
                 <div className="flex gap-2 mt-2">
-                  <button onClick={cpAddReply} disabled={!cpPaste.trim()} className={`flex-1 py-2 rounded-lg text-sm font-medium ${cpPaste.trim() ? "bg-teal-500 text-slate-950" : "bg-slate-800 text-slate-600"}`}>Add reply & continue</button>
-                  <button onClick={() => cpOptimize(cpRefine || "make it better")} disabled={loading} className="px-3 py-2 rounded-lg text-sm border border-slate-800 text-slate-400 hover:border-amber-500 hover:text-amber-400">Redo this prompt</button>
+                  <button onClick={cpAddReply} disabled={!cpPaste.trim()} className={`flex-1 py-2 rounded-lg text-sm font-medium ${cpPaste.trim() ? "bg-teal-500 text-slate-950" : "bg-slate-800 text-slate-600"}`}>{tr("Add reply & continue")}</button>
+                  <button onClick={() => cpOptimize(cpRefine || "make it better")} disabled={loading} className="px-3 py-2 rounded-lg text-sm border border-slate-800 text-slate-400 hover:border-amber-500 hover:text-amber-400">{tr("Redo this prompt")}</button>
                 </div>
               </div>
             ) : (
               <div>
                 <textarea value={cpIntent} onChange={(e) => setCpIntent(e.target.value)}
                   onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); cpOptimize(); } }}
-                  placeholder={convo.length ? "What do you want to ask next?  (⌘/Ctrl + Enter)" : "What do you want to ask? Type it however you like."} className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
-                <button onClick={() => cpOptimize()} disabled={!cpIntent.trim() || loading} className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${cpIntent.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? "Thinking…" : convo.length ? "Optimize next prompt" : "Optimize my prompt"}</button>
+                  placeholder={convo.length ? tr("What do you want to ask next?  (⌘/Ctrl + Enter)") : tr("What do you want to ask? Type it however you like.")} className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
+                <button onClick={() => cpOptimize()} disabled={!cpIntent.trim() || loading} className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${cpIntent.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? tr("Thinking…") : convo.length ? tr("Optimize next prompt") : tr("Optimize my prompt")}</button>
               </div>
             )}
             <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-              <p className="text-xs text-slate-600 flex-1 min-w-[16rem]">The loop: type intent → get an optimized prompt → send it → bring the reply back → each next prompt is sharper. In the phone app, the share-sheet replaces copy-paste entirely.</p>
+              <p className="text-xs text-slate-600 flex-1 min-w-[16rem]">{tr("The loop: type intent → get an optimized prompt → send it → bring the reply back → each next prompt is sharper. In the phone app, the share-sheet replaces copy-paste entirely.")}</p>
               {convo.length > 0 ? (() => {
                 const target = COMPRESS_TARGETS.find((m) => m.k === tool);
                 const used = estTokens(convo.map((m) => m.text).join("\n"));
@@ -9339,8 +9327,8 @@ export default function App() {
                 const tight = cap && used > cap * 0.7;
                 return (
                   <span className={`text-[10px] px-2 py-1 rounded-md border ${tight ? "bg-amber-500/10 border-amber-900/60 text-amber-300" : "bg-slate-950 border-slate-800 text-slate-500"}`}>
-                    {used.toLocaleString()} tokens{cap ? ` of ${TOOLS[tool].label}'s ${cap.toLocaleString()}` : ""} · older turns compacted
-                    {tight ? " · getting tight" : ""}
+                    {used.toLocaleString()} tokens{cap ? ` of ${TOOLS[tool].label}'s ${cap.toLocaleString()}` : ""} {tr("· older turns compacted")}
+                    {tight ? tr(" · getting tight") : ""}
                   </span>
                 );
               })() : null}
@@ -9349,123 +9337,123 @@ export default function App() {
         ) : mode === "library" ? (
           <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-              <p className="text-sm text-slate-300">Ready prompt recipes — pick one, fill the blanks, then <span className="text-teal-400">AI Rewrite</span> to tailor it.</p>
-              <button onClick={checkUpdates} disabled={syncing} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-400 hover:border-teal-600 hover:text-teal-400">{syncing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} v{library.version} · check updates</button>
+              <p className="text-sm text-slate-300">{tr("Ready prompt recipes — pick one, fill the blanks, then")} <span className="text-teal-400">{tr("AI Rewrite")}</span> {tr("to tailor it.")}</p>
+              <button onClick={checkUpdates} disabled={syncing} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-400 hover:border-teal-600 hover:text-teal-400">{syncing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} v{library.version} {tr("· check updates")}</button>
             </div>
-            <div className="flex flex-wrap gap-1.5 mb-4">{CATEGORIES.map((cat) => <button key={cat.key} onClick={() => setLibCat(cat.key)} className={btn(libCat === cat.key)}>{cat.label}</button>)}</div>
+            <div className="flex flex-wrap gap-1.5 mb-4">{CATEGORIES.map((cat) => <button key={cat.key} onClick={() => setLibCat(cat.key)} className={btn(libCat === cat.key)}>{tr(cat.label)}</button>)}</div>
             <div className="grid sm:grid-cols-2 gap-3">
               {library.recipes.filter((r) => r.cat === libCat).map((r) => (
                 <div key={r.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col">
-                  <div className="flex items-center justify-between"><h3 className="text-sm font-semibold text-white">{r.title}</h3><span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">{TOOLS[r.tool].label}</span></div>
-                  <p className="text-xs text-slate-500 mt-1">{r.tip}</p>
+                  <div className="flex items-center justify-between"><h3 className="text-sm font-semibold text-white">{tr(r.title)}</h3><span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">{tr(TOOLS[r.tool].label)}</span></div>
+                  <p className="text-xs text-slate-500 mt-1">{tr(r.tip)}</p>
                   <pre className="mt-2 text-xs font-mono text-slate-400 whitespace-pre-wrap line-clamp-3 flex-1">{r.template}</pre>
-                  {r.basis ? <p className="text-[10px] text-teal-500/70 mt-2 border-l border-teal-900/60 pl-1.5">◆ {r.basis}</p> : null}
-                  <button onClick={() => useRecipe(r)} className="mt-3 py-2 rounded-lg bg-teal-500 text-slate-950 text-sm font-medium hover:bg-teal-400">Use recipe</button>
+                  {r.basis ? <p className="text-[10px] text-teal-500/70 mt-2 border-l border-teal-900/60 ps-1.5">◆ {r.basis}</p> : null}
+                  <button onClick={() => useRecipe(r)} className="mt-3 py-2 rounded-lg bg-teal-500 text-slate-950 text-sm font-medium hover:bg-teal-400">{tr("Use recipe")}</button>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-slate-600 mt-4">Recipes ship offline and refresh from your server when online — so they stay current as models change. Point <span className="text-slate-400">REMOTE_LIBRARY_URL</span> at your hosted JSON to push updates without a new APK.</p>
+            <p className="text-xs text-slate-600 mt-4">{tr("Recipes ship offline and refresh from your server when online — so they stay current as models change. Point")} <span className="text-slate-400">{tr("REMOTE_LIBRARY_URL")}</span> {tr("at your hosted JSON to push updates without a new APK.")}</p>
           </div>
         ) : mode === "improve" ? (
           <div className="grid md:grid-cols-2 gap-5">
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-              <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">Your prompt</label><button onClick={() => flash("Voice input runs in the installed app")} className="text-slate-500 hover:text-teal-400" title="Voice (app build)"><Mic size={16} /></button></div>
-              <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="e.g. i need you to like maybe compare our cranes and stuff, the top ones, for lifting" className="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
+              <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{tr("Your prompt")}</label><button onClick={() => flash(tr("Voice input runs in the installed app"))} className="text-slate-500 hover:text-teal-400" title={tr("Voice (app build)")}><Mic size={16} /></button></div>
+              <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder={tr("e.g. i need you to like maybe compare our cranes and stuff, the top ones, for lifting")} className="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               {input.trim() && (
                 <div className="mt-2">
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1"><span>Prompt strength</span><span>{strength.score}%</span></div>
+                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1"><span>{tr("Prompt strength")}</span><span>{strength.score}%</span></div>
                   <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden"><div className={`h-full ${strengthColor} transition-all`} style={{ width: `${strength.score}%` }} /></div>
-                  {strength.missing.length > 0 && <p className="text-xs text-slate-500 mt-1">Add: {strength.missing.join(", ")}</p>}
-                  <div className="flex flex-wrap gap-1.5 mt-2">{quickChips.map((c) => <button key={c.label} onClick={() => setInput((v) => v.trimEnd() + c.add)} className="text-xs px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400 hover:border-teal-600 hover:text-teal-400">+ {c.label}</button>)}</div>
+                  {strength.missing.length > 0 && <p className="text-xs text-slate-500 mt-1">{tr("Add:")} {strength.missing.join(", ")}</p>}
+                  <div className="flex flex-wrap gap-1.5 mt-2">{quickChips.map((c) => <button key={c.label} onClick={() => setInput((v) => v.trimEnd() + c.add)} className="text-xs px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400 hover:border-teal-600 hover:text-teal-400">+ {tr(c.label)}</button>)}</div>
                   {lint.length > 0 && <div className="mt-2 space-y-1">{lint.map((l, i) => <div key={i} className={`flex items-start gap-1.5 text-xs ${l.level === "warn" ? "text-amber-400" : "text-slate-500"}`}>{l.level === "warn" ? <AlertTriangle size={12} className="mt-0.5 shrink-0" /> : <Info size={12} className="mt-0.5 shrink-0" />}<span>{l.msg}</span></div>)}</div>}
                 </div>
               )}
-              <label className="block text-sm font-medium text-slate-300 mt-4 mb-2">Background <span className="text-slate-500 font-normal">(optional)</span></label>
-              <textarea value={context} onChange={(e) => setContext(e.target.value)} placeholder="Any context the tool should know first" className="w-full h-14 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
+              <label className="block text-sm font-medium text-slate-300 mt-4 mb-2">{tr("Background")} <span className="text-slate-500 font-normal">{tr("(optional)")}</span></label>
+              <textarea value={context} onChange={(e) => setContext(e.target.value)} placeholder={tr("Any context the tool should know first")} className="w-full h-14 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               <div className="mt-4">
-                <p className="text-xs uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5"><Package size={13} /> Domain pack</p>
-                <p className="text-[11px] text-slate-500 mb-2 leading-snug">Adds an expert's framing for your field to the rewritten prompt — e.g. Heavy Equipment makes it ask for load capacities, safety factors and specs. Tap one, then use a starter below.</p>
-                <div className="flex flex-wrap gap-1.5">{Object.entries(PACKS).map(([k, p]) => <button key={k} onClick={() => selectPack(k)} className={`${btn(pack === k)} flex items-center gap-1`}>{p.pro && !isPro(tier) && <Lock size={11} />}{p.label}</button>)}</div>
+                <p className="text-xs uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5"><Package size={13} /> {tr("Domain pack")}</p>
+                <p className="text-[11px] text-slate-500 mb-2 leading-snug">{tr("Adds an expert's framing for your field to the rewritten prompt — e.g. Heavy Equipment makes it ask for load capacities, safety factors and specs. Tap one, then use a starter below.")}</p>
+                <div className="flex flex-wrap gap-1.5">{Object.entries(PACKS).map(([k, p]) => <button key={k} onClick={() => selectPack(k)} className={`${btn(pack === k)} flex items-center gap-1`}>{p.pro && !isPro(tier) && <Lock size={11} />}{tr(p.label)}</button>)}</div>
                 {PACKS[pack].starters.length > 0 && <div className="flex flex-wrap gap-1.5 mt-2">{PACKS[pack].starters.map((s) => <button key={s} onClick={() => setInput(s)} className="text-xs px-2 py-1 rounded-md bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">{s.trim()}…</button>)}</div>}
               </div>
               <div className="mt-4">
-                <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Target tool</p>
-                <div className="space-y-3">{FAMILIES.map((fam) => { const Icon = fam.icon; return (<div key={fam.key}><div className="flex items-center gap-1.5 text-slate-500 text-xs mb-1.5"><Icon size={13} />{fam.label}</div><div className="flex flex-wrap gap-2">{fam.keys.map((k) => <button key={k} onClick={() => setTool(k)} className={btn(tool === k)}>{TOOLS[k].label}</button>)}</div></div>); })}</div>
-                <p className="text-xs text-slate-600 mt-2">Optimized for {TOOLS[tool].label} · {TOOLS[tool].version}</p>
+                <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Target tool")}</p>
+                <div className="space-y-3">{FAMILIES.map((fam) => { const Icon = fam.icon; return (<div key={fam.key}><div className="flex items-center gap-1.5 text-slate-500 text-xs mb-1.5"><Icon size={13} />{tr(fam.label)}</div><div className="flex flex-wrap gap-2">{fam.keys.map((k) => <button key={k} onClick={() => setTool(k)} className={btn(tool === k)}>{tr(TOOLS[k].label)}</button>)}</div></div>); })}</div>
+                <p className="text-xs text-slate-600 mt-2">{tr("Optimized for")} {tr(TOOLS[tool].label)} · {TOOLS[tool].version}</p>
               </div>
               <ToolControls tool={tool} opts={opts} setOpt={setOpt} btn={btn} />
               <div className="mt-4 grid grid-cols-1 gap-3">
-                <Row label="Task"><select value={taskOverride} onChange={(e) => setTaskOverride(e.target.value)} className="bg-slate-950 border border-slate-800 rounded-lg text-sm px-2 py-1.5 text-slate-200">{TASKS.map((t) => <option key={t} value={t}>{t === "auto" ? "Auto-detect" : cap(t)}</option>)}</select></Row>
-                <Row label="Tone"><div className="flex flex-wrap gap-1.5">{TONES.map((t) => <button key={t} onClick={() => setTone(t)} className={btn(tone === t)}>{t}</button>)}</div></Row>
-                <Row label="Audience"><div className="flex flex-wrap gap-1.5">{AUDIENCES.map((a) => <button key={a} onClick={() => setAudience(a)} className={btn(audience === a)}>{a}</button>)}</div></Row>
-                <Row label="Language">
+                <Row label={tr("Task")}><select value={taskOverride} onChange={(e) => setTaskOverride(e.target.value)} className="bg-slate-950 border border-slate-800 rounded-lg text-sm px-2 py-1.5 text-slate-200">{TASKS.map((t) => <option key={t} value={t}>{t === "auto" ? tr("Auto-detect") : cap(t)}</option>)}</select></Row>
+                <Row label={tr("Tone")}><div className="flex flex-wrap gap-1.5">{TONES.map((t) => <button key={t} onClick={() => setTone(t)} className={btn(tone === t)}>{tr(t)}</button>)}</div></Row>
+                <Row label={tr("Audience")}><div className="flex flex-wrap gap-1.5">{AUDIENCES.map((a) => <button key={a} onClick={() => setAudience(a)} className={btn(audience === a)}>{tr(a)}</button>)}</div></Row>
+                <Row label={tr("Language")}>
                   <div className="flex items-center gap-2 flex-wrap">
                     <select value={lang} onChange={(e) => setLang(e.target.value)}
                       className="bg-slate-950 border border-slate-800 rounded-lg text-sm px-2 py-1.5 text-slate-200 focus:outline-none focus:border-teal-500">
-                      {LANGS.map((l) => <option key={l.k} value={l.k}>{l.label}</option>)}
+                      {LANGS.map((l) => <option key={l.k} value={l.k}>{tr(l.label)}</option>)}
                     </select>
                     {lang === "match" && detected ? (
                       <span className="text-[11px] px-2 py-1 rounded-md bg-teal-500/10 border border-teal-900/60 text-teal-300">
-                        detected: {LANG_NAMES[detected] || "same as yours"}{RTL_LANGS.has(detected) ? " · RTL" : ""}
+                        detected: {LANG_NAMES[detected] || tr("same as yours")}{RTL_LANGS.has(detected) ? tr(" · RTL") : ""}
                       </span>
                     ) : null}
                   </div>
                 </Row>
               </div>
               <div className="flex flex-wrap gap-2 mt-4">
-                <button onClick={forge} disabled={!input.trim()} className={`flex-1 min-w-[7rem] flex items-center justify-center gap-2 py-3 rounded-xl font-medium border transition-colors ${input.trim() ? "border-slate-700 bg-slate-950 text-slate-200 hover:border-slate-600" : "border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed"}`}><Wand2 size={16} /> Structure</button>
-                <button onClick={aiRewriteAction} disabled={!input.trim() || loading} className={`flex-1 min-w-[7rem] flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-colors ${input.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600 cursor-not-allowed"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? "Thinking…" : "AI Rewrite"}</button>
-                <button onClick={saveTemplate} disabled={!input.trim()} title="Save as template" className="px-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:border-teal-600 hover:text-teal-400 disabled:opacity-40"><Save size={18} /></button>
+                <button onClick={forge} disabled={!input.trim()} className={`flex-1 min-w-[7rem] flex items-center justify-center gap-2 py-3 rounded-xl font-medium border transition-colors ${input.trim() ? "border-slate-700 bg-slate-950 text-slate-200 hover:border-slate-600" : "border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed"}`}><Wand2 size={16} /> {tr("Structure")}</button>
+                <button onClick={aiRewriteAction} disabled={!input.trim() || loading} className={`flex-1 min-w-[7rem] flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-colors ${input.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600 cursor-not-allowed"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? tr("Thinking…") : tr("AI Rewrite")}</button>
+                <button onClick={saveTemplate} disabled={!input.trim()} title={tr("Save as template")} className="px-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:border-teal-600 hover:text-teal-400 disabled:opacity-40"><Save size={18} /></button>
               </div>
-              <p className="text-xs text-slate-600 mt-2"><span className="text-slate-400">Structure</span> = instant on-device scaffolding. <span className="text-teal-400">AI Rewrite</span> = the model rethinks and rephrases your prompt.</p>
+              <p className="text-xs text-slate-600 mt-2"><span className="text-slate-400">{tr("Structure")}</span> {tr("= instant on-device scaffolding.")} <span className="text-teal-400">{tr("AI Rewrite")}</span> {tr("= the model rethinks and rephrases your prompt.")}</p>
             </section>
 
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5 flex flex-col">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-slate-300 flex items-center gap-2">Tailored for {TOOLS[tool].label}{result && result.ai && <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-300 border border-teal-900/60">{result.engine === "device" ? "ON-DEVICE" : "AI"}</span>}</label>
-                {result && <div className="flex gap-1.5"><button onClick={copy} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? "Copied" : "Copy"}</button><button onClick={openIn} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400"><ExternalLink size={14} /> Open</button></div>}
+                <label className="text-sm font-medium text-slate-300 flex items-center gap-2">{tr("Tailored for")} {tr(TOOLS[tool].label)}{result && result.ai && <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-300 border border-teal-900/60">{result.engine === "device" ? tr("ON-DEVICE") : tr("AI")}</span>}</label>
+                {result && <div className="flex gap-1.5"><button onClick={copy} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? tr("Copied") : tr("Copy")}</button><button onClick={openIn} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400"><ExternalLink size={14} /> {tr("Open")}</button></div>}
               </div>
               {result ? (<>
-                {!result.ai && <div className="flex gap-1 mb-2 bg-slate-950 border border-slate-800 rounded-lg p-1 w-fit">{["lean", "detailed"].map((v) => <button key={v} onClick={() => setVariant(v)} className={`px-3 py-1 rounded-md text-xs capitalize ${variant === v ? "bg-teal-500 text-slate-950 font-medium" : "text-slate-400"}`}>{v}</button>)}</div>}
+                {!result.ai && <div className="flex gap-1 mb-2 bg-slate-950 border border-slate-800 rounded-lg p-1 w-fit">{["lean", "detailed"].map((v) => <button key={v} onClick={() => setVariant(v)} className={`px-3 py-1 rounded-md text-xs capitalize ${variant === v ? "bg-teal-500 text-slate-950 font-medium" : "text-slate-400"}`}>{tr(v)}</button>)}</div>}
                 <pre className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-teal-50 whitespace-pre-wrap overflow-auto min-h-[8rem]">{currentText}</pre>
-                {placeholders.length > 0 && <div className="mt-3"><p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">Fill in the blanks</p><div className="grid grid-cols-2 gap-2">{placeholders.map((p) => <input key={p} placeholder={p} value={fills[p] || ""} onChange={(e) => setFills((f) => ({ ...f, [p]: e.target.value }))} className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />)}</div></div>}
-                <p className="mt-3 text-xs text-slate-500 italic border-l-2 border-teal-800 pl-2">{result.reads}</p>
-                <div className="mt-3 flex items-start gap-2 text-xs text-teal-400/90 bg-teal-500/5 border border-teal-900/50 rounded-lg p-2"><Zap size={13} className="mt-0.5 shrink-0" /><span>Tip: {result.hint}</span></div>
-              </>) : (<div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[12rem] p-6">Write a rough prompt, then hit <span className="text-teal-400 mx-1">AI Rewrite</span> to see the model rethink it — or Structure for an instant offline version.</div>)}
-              {templates.length > 0 && <div className="mt-4"><p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">Saved templates</p><div className="flex flex-wrap gap-1.5">{templates.map((t) => <span key={t.id} className="flex items-center gap-1 text-xs bg-slate-950 border border-slate-800 rounded-md pl-2 pr-1 py-1"><button onClick={() => applyTemplate(t)} className="text-slate-300 hover:text-teal-400">{t.name}</button><button onClick={() => setTemplates((x) => x.filter((y) => y.id !== t.id))} className="text-slate-600 hover:text-rose-400"><X size={12} /></button></span>)}</div></div>}
+                {placeholders.length > 0 && <div className="mt-3"><p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">{tr("Fill in the blanks")}</p><div className="grid grid-cols-2 gap-2">{placeholders.map((p) => <input key={p} placeholder={p} value={fills[p] || ""} onChange={(e) => setFills((f) => ({ ...f, [p]: e.target.value }))} className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />)}</div></div>}
+                <p className="mt-3 text-xs text-slate-500 italic border-s-2 border-teal-800 ps-2">{tr(result.reads)}</p>
+                <div className="mt-3 flex items-start gap-2 text-xs text-teal-400/90 bg-teal-500/5 border border-teal-900/50 rounded-lg p-2"><Zap size={13} className="mt-0.5 shrink-0" /><span>{tr("Tip:")} {tr(result.hint)}</span></div>
+              </>) : (<div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[12rem] p-6">{tr("Write a rough prompt, then hit")} <span className="text-teal-400 mx-1">{tr("AI Rewrite")}</span> {tr("to see the model rethink it — or Structure for an instant offline version.")}</div>)}
+              {templates.length > 0 && <div className="mt-4"><p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">{tr("Saved templates")}</p><div className="flex flex-wrap gap-1.5">{templates.map((t) => <span key={t.id} className="flex items-center gap-1 text-xs bg-slate-950 border border-slate-800 rounded-md ps-2 pe-1 py-1"><button onClick={() => applyTemplate(t)} className="text-slate-300 hover:text-teal-400">{tr(t.name)}</button><button onClick={() => setTemplates((x) => x.filter((y) => y.id !== t.id))} className="text-slate-600 hover:text-rose-400"><X size={12} /></button></span>)}</div></div>}
             </section>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-5">
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Your new prompt</label>
-              <textarea value={cPrompt} onChange={(e) => setCPrompt(e.target.value)} placeholder="Paste a long, wordy prompt — AI Compress will think and shrink it." className="w-full h-28 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
-              <label className="block text-sm font-medium text-slate-300 mt-4 mb-2">Chat history <span className="text-slate-500 font-normal">(optional)</span></label>
-              <textarea value={cHistory} onChange={(e) => setCHistory(e.target.value)} placeholder="Paste the earlier messages — anything already established gets dropped." className="w-full h-36 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
+              <label className="block text-sm font-medium text-slate-300 mb-2">{tr("Your new prompt")}</label>
+              <textarea value={cPrompt} onChange={(e) => setCPrompt(e.target.value)} placeholder={tr("Paste a long, wordy prompt — AI Compress will think and shrink it.")} className="w-full h-28 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
+              <label className="block text-sm font-medium text-slate-300 mt-4 mb-2">{tr("Chat history")} <span className="text-slate-500 font-normal">{tr("(optional)")}</span></label>
+              <textarea value={cHistory} onChange={(e) => setCHistory(e.target.value)} placeholder={tr("Paste the earlier messages — anything already established gets dropped.")} className="w-full h-36 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               <div className="mt-4">
-                <div className="flex items-center justify-between mb-2"><p className="text-xs uppercase tracking-wider text-slate-500">Compress to</p><span className="text-sm font-semibold text-teal-400">{cPct}% of original</span></div>
+                <div className="flex items-center justify-between mb-2"><p className="text-xs uppercase tracking-wider text-slate-500">{tr("Compress to")}</p><span className="text-sm font-semibold text-teal-400">{cPct}{tr("% of original")}</span></div>
                 <input type="range" min="10" max="90" step="5" value={cPct} onChange={(e) => setCPct(Number(e.target.value))} className="w-full accent-teal-500" />
-                <div className="flex justify-between text-[10px] text-slate-600"><span>10% · brutal</span><span>50% · half</span><span>90% · light</span></div>
-                <button onClick={doCompressTarget} disabled={!cPrompt.trim() || loading} className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${cPrompt.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? "Compressing…" : `Compress to ${cPct}%`}</button>
+                <div className="flex justify-between text-[10px] text-slate-600"><span>{tr("10% · brutal")}</span><span>{tr("50% · half")}</span><span>{tr("90% · light")}</span></div>
+                <button onClick={doCompressTarget} disabled={!cPrompt.trim() || loading} className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${cPrompt.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? tr("Compressing…") : `Compress to ${cPct}%`}</button>
               </div>
               {/* Which model this is being compressed FOR. A budget makes
                   compression measurable instead of a feeling. */}
               <div className="mt-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Compressing for</p>
-                  <span className="text-[11px] text-slate-600">{cmpTargetObj.note}</span>
+                  <p className="text-xs uppercase tracking-wider text-slate-500">{tr("Compressing for")}</p>
+                  <span className="text-[11px] text-slate-600">{tr(cmpTargetObj.note)}</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {COMPRESS_TARGETS.map((m) => (
                     <button key={m.k} onClick={() => setCmpTarget(m.k)}
                       className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${cmpTarget === m.k
                         ? "bg-teal-500 border-teal-500 text-slate-950 font-medium"
-                        : "bg-slate-950 border-slate-800 text-slate-300 hover:border-teal-600"}`}>{m.label}</button>
+                        : "bg-slate-950 border-slate-800 text-slate-300 hover:border-teal-600"}`}>{tr(m.label)}</button>
                   ))}
                 </div>
                 <div className="mt-2.5 bg-slate-950 border border-slate-800 rounded-xl p-3">
                   <div className="flex items-center justify-between text-[11px] mb-1.5">
-                    <span className="text-slate-500">{fitNow.tokens.toLocaleString()} tokens of {cmpTargetObj.ctx.toLocaleString()}</span>
+                    <span className="text-slate-500">{fitNow.tokens.toLocaleString()} {tr("tokens of")} {cmpTargetObj.ctx.toLocaleString()}</span>
                     <span className={fitNow.over ? "text-amber-300" : "text-teal-400"}>
                       {fitNow.over ? `${fitNow.overBy.toLocaleString()} too many — cut ~${fitNow.cutPct}%` : `fits · ${fitNow.pct}% of the window`}
                     </span>
@@ -9478,43 +9466,43 @@ export default function App() {
                     <button onClick={() => { const pct = Math.max(10, Math.min(90, 100 - fitNow.cutPct)); setCPct(pct); setTimeout(doCompressTarget, 0); }}
                       disabled={loading}
                       className="mt-2 w-full text-xs py-2 rounded-lg bg-amber-500/15 border border-amber-800/60 text-amber-200 hover:bg-amber-500/25">
-                      Compress until it fits {cmpTargetObj.label}
+                      {tr("Compress until it fits")} {tr(cmpTargetObj.label)}
                     </button>
                   ) : null}
                   <p className="text-[10px] text-slate-600 mt-1.5">
-                    A quarter of the window is held back for the answer — a prompt that exactly fills the context leaves no room to reply.
+                    {tr("A quarter of the window is held back for the answer — a prompt that exactly fills the context leaves no room to reply.")}
                   </p>
                 </div>
               </div>
-              <div className="mt-4"><p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Port context to</p><div className="flex flex-wrap gap-1.5">{["claude", "chatgpt", "gemini", "perplexity"].map((k) => <button key={k} onClick={() => setTool(k)} className={btn(tool === k)}>{TOOLS[k].label}</button>)}</div></div>
+              <div className="mt-4"><p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Port context to")}</p><div className="flex flex-wrap gap-1.5">{["claude", "chatgpt", "gemini", "perplexity"].map((k) => <button key={k} onClick={() => setTool(k)} className={btn(tool === k)}>{tr(TOOLS[k].label)}</button>)}</div></div>
               <div className="flex flex-wrap gap-2 mt-4">
-                <button onClick={doCompress} disabled={!cPrompt.trim()} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-medium border ${cPrompt.trim() ? "border-slate-700 bg-slate-950 text-slate-200 hover:border-slate-600" : "border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed"}`}><Scissors size={16} /> Trim</button>
-                <button onClick={aiCompressAction} disabled={!cPrompt.trim() || loading} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${cPrompt.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600 cursor-not-allowed"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? "Thinking…" : "AI Compress"}</button>
-                <button onClick={doPort} disabled={!cPrompt.trim()} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-medium border ${!isPro(tier) ? "border-slate-800 bg-slate-950 text-slate-400" : "border-teal-600 bg-teal-500/10 text-teal-300"}`}>{!isPro(tier) && <Lock size={13} />}<Shuffle size={15} /> Port</button>
+                <button onClick={doCompress} disabled={!cPrompt.trim()} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-medium border ${cPrompt.trim() ? "border-slate-700 bg-slate-950 text-slate-200 hover:border-slate-600" : "border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed"}`}><Scissors size={16} /> {tr("Trim")}</button>
+                <button onClick={aiCompressAction} disabled={!cPrompt.trim() || loading} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${cPrompt.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600 cursor-not-allowed"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? tr("Thinking…") : tr("AI Compress")}</button>
+                <button onClick={doPort} disabled={!cPrompt.trim()} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-medium border ${!isPro(tier) ? "border-slate-800 bg-slate-950 text-slate-400" : "border-teal-600 bg-teal-500/10 text-teal-300"}`}>{!isPro(tier) && <Lock size={13} />}<Shuffle size={15} /> {tr("Port")}</button>
               </div>
-              <p className="text-xs text-slate-600 mt-2"><span className="text-slate-400">Trim</span> = instant filler removal (offline). <span className="text-teal-400">AI Compress</span> = the model rewrites it far shorter while keeping the meaning.</p>
+              <p className="text-xs text-slate-600 mt-2"><span className="text-slate-400">{tr("Trim")}</span> {tr("= instant filler removal (offline).")} <span className="text-teal-400">{tr("AI Compress")}</span> {tr("= the model rewrites it far shorter while keeping the meaning.")}</p>
             </section>
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5 flex flex-col">
-              <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{cResult ? (cResult.kind === "port" ? "Ported context" : cResult.kind === "aicompress" ? "AI-compressed" : "Trimmed") : "Result"}</label>{cResult && <button onClick={copyC} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">{cCopied ? <Check size={14} /> : <Copy size={14} />}{cCopied ? "Copied" : "Copy"}</button>}</div>
+              <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{cResult ? (cResult.kind === "port" ? tr("Ported context") : cResult.kind === "aicompress" ? tr("AI-compressed") : tr("Trimmed")) : tr("Result")}</label>{cResult && <button onClick={copyC} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">{cCopied ? <Check size={14} /> : <Copy size={14} />}{cCopied ? tr("Copied") : tr("Copy")}</button>}</div>
               {cResult ? (<>
-                {(cResult.kind === "compress" || cResult.kind === "aicompress") && <div className="flex gap-2 mb-2 text-xs flex-wrap"><span className="px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400">{cResult.beforeW} → {cResult.afterW} words</span><span className="px-2 py-1 rounded-md bg-teal-500/10 border border-teal-900/60 text-teal-300">−{cResult.pct}%</span>{cResult.target ? <span className="px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400">target {cResult.target}%</span> : null}{cResult.removed > 0 && <span className="px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400">{cResult.removed} known line{cResult.removed > 1 ? "s" : ""} dropped</span>}</div>}
+                {(cResult.kind === "compress" || cResult.kind === "aicompress") && <div className="flex gap-2 mb-2 text-xs flex-wrap"><span className="px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400">{cResult.beforeW} → {cResult.afterW} words</span><span className="px-2 py-1 rounded-md bg-teal-500/10 border border-teal-900/60 text-teal-300">−{cResult.pct}%</span>{cResult.target ? <span className="px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400">target {cResult.target}%</span> : null}{cResult.removed > 0 && <span className="px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400">{cResult.removed} {tr("known line")}{cResult.removed > 1 ? "s" : ""} dropped</span>}</div>}
                 <pre className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-teal-50 whitespace-pre-wrap overflow-auto min-h-[10rem]">{cResult.text}</pre>
-              </>) : (<div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[12rem] p-6">Paste a wordy prompt and hit <span className="text-teal-400 mx-1">AI Compress</span> — it thinks about meaning, not just filler words.</div>)}
+              </>) : (<div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[12rem] p-6">{tr("Paste a wordy prompt and hit")} <span className="text-teal-400 mx-1">{tr("AI Compress")}</span> {tr("— it thinks about meaning, not just filler words.")}</div>)}
             </section>
           </div>
         )}
 
         {history.length > 0 && mode === "improve" && (
           <div className="mt-5 bg-slate-900 rounded-2xl border border-slate-800 p-5">
-            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5"><Clock size={13} /> History <span className="text-slate-600 normal-case">· {tier} keeps {TIER_LIMITS[tier].history}</span></p>
-            <div className="space-y-1.5">{history.map((h) => <div key={h.id} className="flex items-center gap-2 text-sm"><button onClick={() => setHistory((x) => x.map((y) => y.id === h.id ? { ...y, fav: !y.fav } : y))} className={h.fav ? "text-amber-400" : "text-slate-600 hover:text-amber-400"}><Star size={14} fill={h.fav ? "currentColor" : "none"} /></button><button onClick={() => { setInput(h.input); setTool(h.tool); }} className="flex-1 text-left truncate text-slate-400 hover:text-teal-400">{h.input}</button><span className="text-xs text-slate-600 shrink-0">{TOOLS[h.tool].label}</span></div>)}</div>
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5"><Clock size={13} /> {tr("History")} <span className="text-slate-600 normal-case">· {tier} keeps {TIER_LIMITS[tier].history}</span></p>
+            <div className="space-y-1.5">{history.map((h) => <div key={h.id} className="flex items-center gap-2 text-sm"><button onClick={() => setHistory((x) => x.map((y) => y.id === h.id ? { ...y, fav: !y.fav } : y))} className={h.fav ? "text-amber-400" : "text-slate-600 hover:text-amber-400"}><Star size={14} fill={h.fav ? "currentColor" : "none"} /></button><button onClick={() => { setInput(h.input); setTool(h.tool); }} className="flex-1 text-start truncate text-slate-400 hover:text-teal-400">{h.input}</button><span className="text-xs text-slate-600 shrink-0">{tr(TOOLS[h.tool].label)}</span></div>)}</div>
           </div>
         )}
-        <p className="text-center text-xs text-slate-600 mt-6">Attune · the AI runs on your device · no account, no sign-in · web lookup is optional and off by default</p>
+        <p className="text-center text-xs text-slate-600 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup is optional and off by default")}</p>
       </div>
       {toast && <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
-      <nav className="fixed bottom-0 left-0 right-0 z-[55] bg-slate-950 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <nav className="fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="max-w-3xl mx-auto grid grid-cols-5 h-[58px]">
           {[["chat", "Chat", MessageCircle], ["instant", "Instant", Zap], ["money", "Money", Wallet],
             cycleOn ? ["cycle", "Cycle", Droplet] : ["memory", "Memory", History], ["more", "More", LayoutGrid]].map(([id, label, Icon]) => {
@@ -9522,7 +9510,7 @@ export default function App() {
             return (
               <button key={id} onClick={() => { if (id === "more") setMoreOpen((v) => !v); else { setMoreOpen(false); setMode(id); } }}
                 className={`flex flex-col items-center justify-center gap-0.5 text-[11px] ${on ? (id === "cycle" ? "text-rose-300" : "text-teal-300") : "text-slate-500"}`}>
-                <Icon size={21} />{label}
+                <Icon size={21} />{tr(label)}
               </button>
             );
           })}
@@ -9530,25 +9518,26 @@ export default function App() {
       </nav>
       {moreOpen ? (
         <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setMoreOpen(false)}>
-          <div className="att-scroll absolute left-0 right-0 bg-slate-900 border-t border-slate-800 rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
+          <div className="att-scroll absolute start-0 end-0 bg-slate-900 border-t border-slate-800 rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
                style={{ bottom: "calc(58px + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
             <div className="max-w-3xl mx-auto">
+              <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("App language")}</span><LangSwitch /></div>
               <div className="grid grid-cols-3 gap-2">
                 {MORE_TOOLS.map(([id, label, sub, Icon]) => (
                   <button key={id} onClick={() => { if (id === "cycle") enableCycle(true); setMode(id); setMoreOpen(false); }}
                     className={`rounded-xl border p-2.5 text-start ${mode === id ? "border-teal-600 bg-teal-500/10" : "border-slate-800 bg-slate-950"}`}>
                     <Icon size={18} className="text-teal-300" />
-                    <span className="block text-[13px] text-slate-100 mt-1.5 leading-tight">{label}</span>
-                    <span className="block text-[10px] text-slate-500 leading-tight mt-0.5">{sub}</span>
+                    <span className="block text-[13px] text-slate-100 mt-1.5 leading-tight">{tr(label)}</span>
+                    <span className="block text-[10px] text-slate-500 leading-tight mt-0.5">{tr(sub)}</span>
                   </button>
                 ))}
               </div>
               <div className="grid grid-cols-3 gap-2 mt-3">
-                <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Cpu size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">Engine & privacy</span></button>
-                <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><User size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">Your profile</span></button>
-                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Crown size={16} className="text-amber-300" /><span className="block text-[12px] text-slate-200 mt-1">{isPro(tier) ? "Pro" : "Plan"}</span><span className="block text-[10px] text-slate-500">{creditLabel}</span></button>
+                <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Cpu size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">{tr("Engine & privacy")}</span></button>
+                <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><User size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">{tr("Your profile")}</span></button>
+                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Crown size={16} className="text-amber-300" /><span className="block text-[12px] text-slate-200 mt-1">{isPro(tier) ? tr("Pro") : tr("Plan")}</span><span className="block text-[10px] text-slate-500">{tr(creditLabel)}</span></button>
                 {(() => { const nb = backupNudge(); return (
-                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`rounded-xl border p-2.5 text-start ${nb.warn ? "border-amber-700/60 bg-amber-500/10" : "border-slate-800 bg-slate-950"}`}><ShieldCheck size={16} className={nb.warn ? "text-amber-300" : "text-slate-300"} /><span className="block text-[12px] text-slate-200 mt-1">Backup</span><span className={`block text-[10px] ${nb.warn ? "text-amber-300" : "text-slate-500"}`}>{nb.text}</span></button>); })()}
+                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`rounded-xl border p-2.5 text-start ${nb.warn ? "border-amber-700/60 bg-amber-500/10" : "border-slate-800 bg-slate-950"}`}><ShieldCheck size={16} className={nb.warn ? "text-amber-300" : "text-slate-300"} /><span className="block text-[12px] text-slate-200 mt-1">{tr("Backup")}</span><span className={`block text-[10px] ${nb.warn ? "text-amber-300" : "text-slate-500"}`}>{nb.text}</span></button>); })()}
               </div>
             </div>
           </div>
@@ -9566,25 +9555,25 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setShowCustom(false)}>
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-lg font-bold text-white">Your own action</h2>
+              <h2 className="text-lg font-bold text-white">{tr("Your own action")}</h2>
               <button onClick={() => setShowCustom(false)} className="text-slate-500 hover:text-slate-300"><X size={20} /></button>
             </div>
-            <p className="text-xs text-slate-500 mb-4">Make the app do the thing you do over and over — one tap, every time. Yours only, stored on this device.</p>
-            <p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">Button name</p>
+            <p className="text-xs text-slate-500 mb-4">{tr("Make the app do the thing you do over and over — one tap, every time. Yours only, stored on this device.")}</p>
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">{tr("Button name")}</p>
             <input value={newAct.label} onChange={(e) => setNewAct((a) => ({ ...a, label: e.target.value }))}
-              placeholder="e.g. Reply in Arabic" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-            <p className="text-xs uppercase tracking-wider text-slate-500 mt-3 mb-1.5">What should it do?</p>
+              placeholder={tr("e.g. Reply in Arabic")} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
+            <p className="text-xs uppercase tracking-wider text-slate-500 mt-3 mb-1.5">{tr("What should it do?")}</p>
             <textarea value={newAct.instruction} onChange={(e) => setNewAct((a) => ({ ...a, instruction: e.target.value }))} rows={3}
-              placeholder="e.g. Write a short polite reply in Egyptian Arabic, friendly but professional."
+              placeholder={tr("e.g. Write a short polite reply in Egyptian Arabic, friendly but professional.")}
               className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
-            <button onClick={saveCustomAction} className="mt-4 w-full py-2.5 rounded-lg bg-teal-500 text-slate-950 font-medium">Save action</button>
+            <button onClick={saveCustomAction} className="mt-4 w-full py-2.5 rounded-lg bg-teal-500 text-slate-950 font-medium">{tr("Save action")}</button>
             {customActions.length > 0 ? (
               <div className="mt-4">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">Your actions</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">{tr("Your actions")}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {customActions.map((c) => (
-                    <span key={c.id} className="flex items-center gap-1 text-xs bg-slate-950 border border-slate-800 rounded-md pl-2 pr-1 py-1 text-slate-300">
-                      {c.label}
+                    <span key={c.id} className="flex items-center gap-1 text-xs bg-slate-950 border border-slate-800 rounded-md ps-2 pe-1 py-1 text-slate-300">
+                      {tr(c.label)}
                       <button onClick={() => setCustomActions((a) => a.filter((x) => x.id !== c.id))} className="text-slate-600 hover:text-rose-400"><X size={12} /></button>
                     </span>
                   ))}
@@ -9602,16 +9591,16 @@ export default function App() {
   );
 }
 
-function Row({ label, children }) { return (<div className="flex items-start gap-3"><span className="text-xs text-slate-500 w-16 shrink-0 pt-2">{label}</span><div className="flex-1">{children}</div></div>); }
+function Row({ label, children }) { return (<div className="flex items-start gap-3"><span className="text-xs text-slate-500 w-16 shrink-0 pt-2">{tr(label)}</span><div className="flex-1">{children}</div></div>); }
 function ToolControls({ tool, opts, setOpt, btn }) {
-  if (tool === "perplexity") return (<Box><Row label="Sources"><div className="flex flex-wrap gap-1.5">{[["any", "Any"], ["academic", "Academic"], ["news", "News"], ["official", "Official"]].map(([k, l]) => <button key={k} onClick={() => setOpt("sources", k)} className={btn(opts.sources === k)}>{l}</button>)}</div></Row><Row label="Recency"><div className="flex flex-wrap gap-1.5">{[["any", "Any"], ["week", "Week"], ["month", "Month"], ["year", "Year"]].map(([k, l]) => <button key={k} onClick={() => setOpt("recency", k)} className={btn(opts.recency === k)}>{l}</button>)}</div></Row></Box>);
-  if (tool === "notebooklm") return (<Box><Toggle label="Cite exact passages" on={opts.cite !== false} onClick={() => setOpt("cite", !(opts.cite !== false))} /><p className="text-xs text-slate-500">Reminder: upload your sources in NotebookLM first.</p></Box>);
-  if (tool === "manus") return (<Box><input value={opts.deliverable} onChange={(e) => setOpt("deliverable", e.target.value)} placeholder="Deliverable (e.g. a 1-page PDF report)" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" /><input value={opts.deadline} onChange={(e) => setOpt("deadline", e.target.value)} placeholder="Deadline (optional)" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" /><Toggle label="Confirm plan before costly steps" on={opts.confirmPlan} onClick={() => setOpt("confirmPlan", !opts.confirmPlan)} /></Box>);
-  if (tool === "midjourney" || tool === "suno") return (<Box>{tool === "midjourney" && <Row label="Aspect"><div className="flex flex-wrap gap-1.5">{["1:1", "16:9", "9:16", "4:3"].map((a) => <button key={a} onClick={() => setOpt("aspect", a)} className={btn(opts.aspect === a)}>{a}</button>)}</div></Row>}<input value={opts.imgStyle} onChange={(e) => setOpt("imgStyle", e.target.value)} placeholder={tool === "suno" ? "Style (e.g. lo-fi, warm)" : "Style (e.g. cinematic, watercolor)"} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" /></Box>);
+  if (tool === "perplexity") return (<Box><Row label={tr("Sources")}><div className="flex flex-wrap gap-1.5">{[["any", "Any"], ["academic", "Academic"], ["news", "News"], ["official", "Official"]].map(([k, l]) => <button key={k} onClick={() => setOpt("sources", k)} className={btn(opts.sources === k)}>{tr(l)}</button>)}</div></Row><Row label={tr("Recency")}><div className="flex flex-wrap gap-1.5">{[["any", "Any"], ["week", "Week"], ["month", "Month"], ["year", "Year"]].map(([k, l]) => <button key={k} onClick={() => setOpt("recency", k)} className={btn(opts.recency === k)}>{tr(l)}</button>)}</div></Row></Box>);
+  if (tool === "notebooklm") return (<Box><Toggle label={tr("Cite exact passages")} on={opts.cite !== false} onClick={() => setOpt("cite", !(opts.cite !== false))} /><p className="text-xs text-slate-500">{tr("Reminder: upload your sources in NotebookLM first.")}</p></Box>);
+  if (tool === "manus") return (<Box><input value={opts.deliverable} onChange={(e) => setOpt("deliverable", e.target.value)} placeholder={tr("Deliverable (e.g. a 1-page PDF report)")} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" /><input value={opts.deadline} onChange={(e) => setOpt("deadline", e.target.value)} placeholder={tr("Deadline (optional)")} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" /><Toggle label={tr("Confirm plan before costly steps")} on={opts.confirmPlan} onClick={() => setOpt("confirmPlan", !opts.confirmPlan)} /></Box>);
+  if (tool === "midjourney" || tool === "suno") return (<Box>{tool === "midjourney" && <Row label={tr("Aspect")}><div className="flex flex-wrap gap-1.5">{["1:1", "16:9", "9:16", "4:3"].map((a) => <button key={a} onClick={() => setOpt("aspect", a)} className={btn(opts.aspect === a)}>{tr(a)}</button>)}</div></Row>}<input value={opts.imgStyle} onChange={(e) => setOpt("imgStyle", e.target.value)} placeholder={tool === "suno" ? "Style (e.g. lo-fi, warm)" : "Style (e.g. cinematic, watercolor)"} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" /></Box>);
   return null;
 }
 function Box({ children }) { return <div className="mt-3 space-y-2 bg-slate-950/50 border border-slate-800 rounded-xl p-3">{children}</div>; }
-function Toggle({ label, on, onClick }) { return (<button onClick={onClick} className="w-full flex items-center justify-between text-sm text-slate-300"><span>{label}</span><span className={`w-9 h-5 rounded-full p-0.5 transition-colors ${on ? "bg-teal-500" : "bg-slate-700"}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${on ? "translate-x-4" : ""}`} /></span></button>); }
+function Toggle({ label, on, onClick }) { return (<button onClick={onClick} className="w-full flex items-center justify-between text-sm text-slate-300"><span>{tr(label)}</span><span className={`w-9 h-5 rounded-full p-0.5 transition-colors ${on ? "bg-teal-500" : "bg-slate-700"}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${on ? "translate-x-4 rtl:-translate-x-4" : ""}`} /></span></button>); }
 
 function Upgrade({ tier, setTier, close, flash }) {
   const [key, setKey] = useState("");
@@ -9632,7 +9621,7 @@ function Upgrade({ tier, setTier, close, flash }) {
     const sku = SKUS[skuKey];
     if (!Store.available()) {
       if (BILLING.buyUrl) { try { window.open(BILLING.buyUrl, "_blank"); } catch (e) {} return; }
-      return flash("Purchases run through the app store — this preview has no store attached");
+      return flash(tr("Purchases run through the app store — this preview has no store attached"));
     }
     setBusy(true);
     try {
@@ -9666,21 +9655,21 @@ function Upgrade({ tier, setTier, close, flash }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-1"><h2 className="text-xl font-bold text-white flex items-center gap-2"><Crown size={18} className="text-amber-400" /> Choose your plan</h2><button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button></div>
-        <p className="text-xs text-slate-500 mb-4">Everything runs on your device, so nothing here is metered by a server. Free gives you 15 runs a day; Pro removes the limit and adds memory, commitments and your own vocabulary. Regional pricing at checkout (EGP and local currencies).</p>
+        <div className="flex items-center justify-between mb-1"><h2 className="text-xl font-bold text-white flex items-center gap-2"><Crown size={18} className="text-amber-400" /> {tr("Choose your plan")}</h2><button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button></div>
+        <p className="text-xs text-slate-500 mb-4">{tr("Everything runs on your device, so nothing here is metered by a server. Free gives you 15 runs a day; Pro removes the limit and adds memory, commitments and your own vocabulary. Regional pricing at checkout (EGP and local currencies).")}</p>
         <div className="grid sm:grid-cols-3 gap-3">
           {plans.map((p) => (
             <div key={p.k} className={`rounded-xl border p-4 flex flex-col ${tier === p.k ? "border-teal-500 bg-teal-500/5" : "border-slate-800 bg-slate-950"}`}>
-              <div className="text-sm font-semibold text-white">{p.name}</div><div className="text-2xl font-bold text-white mt-1">{p.price}</div><div className="text-xs text-slate-500 mb-3">{p.tag}</div>
-              <ul className="space-y-1.5 flex-1">{p.pts.map((pt) => <li key={pt} className="flex items-start gap-1.5 text-xs text-slate-400"><Check size={12} className="text-teal-500 mt-0.5 shrink-0" />{pt}</li>)}</ul>
-              <button onClick={() => { setTier(p.k); flash(`${p.name} plan selected`); close(); }} className={`mt-3 py-2 rounded-lg text-sm font-medium ${tier === p.k ? "bg-slate-800 text-slate-400" : "bg-teal-500 text-slate-950 hover:bg-teal-400"}`}>{tier === p.k ? "Current" : p.k === "free" ? "Downgrade" : "Choose"}</button>
+              <div className="text-sm font-semibold text-white">{tr(p.name)}</div><div className="text-2xl font-bold text-white mt-1">{p.price}</div><div className="text-xs text-slate-500 mb-3">{tr(p.tag)}</div>
+              <ul className="space-y-1.5 flex-1">{p.pts.map((pt) => <li key={pt} className="flex items-start gap-1.5 text-xs text-slate-400"><Check size={12} className="text-teal-500 mt-0.5 shrink-0" />{tr(pt)}</li>)}</ul>
+              <button onClick={() => { setTier(p.k); flash(`${p.name} plan selected`); close(); }} className={`mt-3 py-2 rounded-lg text-sm font-medium ${tier === p.k ? "bg-slate-800 text-slate-400" : "bg-teal-500 text-slate-950 hover:bg-teal-400"}`}>{tier === p.k ? tr("Current") : p.k === "free" ? tr("Downgrade") : tr("Choose")}</button>
             </div>
           ))}
         </div>
         {entLine ? (
           <div className="mt-4 flex items-center gap-2 bg-teal-500/5 border border-teal-900/60 rounded-xl px-3 py-2">
             <CheckCircle2 size={14} className="text-teal-400 shrink-0" />
-            <p className="text-xs text-teal-200 flex-1">{entLine}</p>
+            <p className="text-xs text-teal-200 flex-1">{tr(entLine)}</p>
           </div>
         ) : null}
 
@@ -9689,33 +9678,32 @@ function Upgrade({ tier, setTier, close, flash }) {
             {Object.entries(SKUS).map(([k, sku]) => (
               <button key={k} onClick={() => buy(k)} disabled={busy}
                 className="py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold text-xs hover:bg-teal-400 disabled:opacity-60">
-                {sku.label}
-                <span className="block text-[10px] font-normal text-slate-800">{sku.sub}</span>
-                <span className="block text-[10px] font-normal text-slate-700">{sku.hint}</span>
+                {tr(sku.label)}
+                <span className="block text-[10px] font-normal text-slate-800">{tr(sku.sub)}</span>
+                <span className="block text-[10px] font-normal text-slate-700">{tr(sku.hint)}</span>
               </button>
             ))}
           </div>
           <div className="flex items-center justify-between mt-2">
             <p className="text-[11px] text-slate-600">
-              Paid through {Store.available() ? Store.name() : "the app store"} — the account you already have. Nothing to sign into here.
+              {tr("Paid through")} {Store.available() ? Store.name() : tr("the app store")} {tr("— the account you already have. Nothing to sign into here.")}
             </p>
-            <button onClick={restore} disabled={busy} className="text-[11px] text-slate-400 hover:text-teal-400 shrink-0">Restore purchase</button>
+            <button onClick={restore} disabled={busy} className="text-[11px] text-slate-400 hover:text-teal-400 shrink-0">{tr("Restore purchase")}</button>
           </div>
         </div>
 
         <button onClick={() => setShowKey((v) => !v)} className="mt-3 text-[11px] text-slate-600 hover:text-slate-400">
-          {showKey ? "Hide" : "I bought directly and have a key"}
+          {showKey ? tr("Hide") : tr("I bought directly and have a key")}
         </button>
         {showKey ? (
           <>
             <div className="mt-2 flex flex-col sm:flex-row gap-2">
-              <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="ATTUNE-…"
+              <input value={key} onChange={(e) => setKey(e.target.value)} placeholder={tr("ATTUNE-…")}
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-              <button onClick={redeem} className="px-4 py-2 rounded-lg bg-slate-800 text-slate-200 text-sm hover:bg-slate-700">Activate</button>
+              <button onClick={redeem} className="px-4 py-2 rounded-lg bg-slate-800 text-slate-200 text-sm hover:bg-slate-700">{tr("Activate")}</button>
             </div>
             <p className="text-[11px] text-slate-600 mt-1.5">
-              Keys are for company and direct purchases. One works on up to {ENT_DEVICES} devices, is checked on the device
-              so it activates on a plane, and sends nothing about you — only a random install id, only when you activate.
+              {tr("Keys are for company and direct purchases. One works on up to")} {ENT_DEVICES} {tr("devices, is checked on the device so it activates on a plane, and sends nothing about you — only a random install id, only when you activate.")}
             </p>
           </>
         ) : null}
@@ -9724,10 +9712,24 @@ function Upgrade({ tier, setTier, close, flash }) {
   );
 }
 
+// English | العربية. Switching reloads the page in the other language
+// (the model stays loaded in the engine, so it takes about a second).
+function LangSwitch({ className = "" }) {
+  const cur = getLang();
+  return (
+    <div className={`inline-flex rounded-lg border border-slate-700 overflow-hidden text-[12px] ${className}`} data-testid="lang-switch" role="group" aria-label="Language / اللغة">
+      {[["en", "English"], ["ar", "العربية"]].map(([id, label]) => (
+        <button key={id} onClick={() => { if (id !== cur) setLang(id); }} lang={id} data-lang={id}
+          className={`px-2.5 py-1.5 ${id === cur ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-300"}`}>{label}</button>
+      ))}
+    </div>
+  );
+}
+
 function Onboard({ profile, setProfile, close, flash }) {
   const [step, setStep] = useState(0);
   const [p, setP] = useState({ ...EMPTY_PROFILE, ...profile, on: true });
-  const finish = () => { setProfile({ ...p, on: true }); flash("Set up — Attune now fits how you work"); close(); };
+  const finish = () => { setProfile({ ...p, on: true }); flash(tr("Set up — Attune now fits how you work")); close(); };
   // Every question takes several answers: people work in more than one field
   // and use an assistant for more than one thing.
   const steps = [
@@ -9749,35 +9751,36 @@ function Onboard({ profile, setProfile, close, flash }) {
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xl font-bold text-white">Make Attune yours</h2>
-          <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); close(); }} className="text-slate-500 text-sm px-2 py-1">Skip</button>
+          <h2 className="text-xl font-bold text-white">{tr("Make Attune yours")}</h2>
+          <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); close(); }} className="text-slate-500 text-sm px-2 py-1">{tr("Skip")}</button>
         </div>
-        <p className="text-xs text-slate-500 mb-4">A few quick questions. Stays on your phone — change it any time from your profile.</p>
+        <p className="text-xs text-slate-500 mb-3">{tr("A few quick questions. Stays on your phone — change it any time from your profile.")}</p>
+        {step === 0 ? <div className="mb-4 flex items-center gap-2"><span className="text-[11px] text-slate-500">{tr("App language")}</span><LangSwitch /></div> : null}
         <div className="flex gap-1 mb-4">{Array.from({ length: N + 1 }).map((_, i) => <div key={i} className={`h-1 flex-1 rounded-full ${i <= step ? "bg-teal-500" : "bg-slate-800"}`} />)}</div>
         {step < N ? (
           <>
-            <p className="text-sm font-medium text-slate-200">{st.q}</p>
-            <p className="text-[11px] text-slate-500 mb-3">{st.multi ? "Pick as many as you like." : "Pick one."}</p>
+            <p className="text-sm font-medium text-slate-200">{tr(st.q)}</p>
+            <p className="text-[11px] text-slate-500 mb-3">{st.multi ? tr("Pick as many as you like.") : tr("Pick one.")}</p>
             <div className="flex flex-wrap gap-2">
               {st.opts.map(([id, label]) => (
                 <button key={id} onClick={() => tap(id)}
                   className={`px-3 py-2 rounded-lg text-sm border ${isOn(id) ? "bg-teal-500 border-teal-500 text-slate-950 font-medium" : "bg-slate-950 border-slate-800 text-slate-300"}`}>
-                  {isOn(id) && st.multi ? "✓ " : ""}{label}</button>
+                  {isOn(id) && st.multi ? "✓ " : ""}{tr(label)}</button>
               ))}
             </div>
             <div className="flex items-center justify-between mt-5">
-              {step > 0 ? <button onClick={() => setStep(step - 1)} className="text-sm text-slate-400 px-2 py-2">← Back</button> : <span />}
-              {st.multi ? <button onClick={() => setStep(step + 1)} className="px-5 py-2.5 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold">Next</button> : null}
+              {step > 0 ? <button onClick={() => setStep(step - 1)} className="text-sm text-slate-400 px-2 py-2">{tr("← Back")}</button> : <span />}
+              {st.multi ? <button onClick={() => setStep(step + 1)} className="px-5 py-2.5 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold">{tr("Next")}</button> : null}
             </div>
           </>
         ) : (
           <>
-            <p className="text-sm font-medium text-slate-200 mb-2">Anything else worth knowing? (optional)</p>
-            <textarea value={p.detail} onChange={(e) => setP((x) => ({ ...x, detail: e.target.value }))} placeholder="e.g. I run a crane rental company and deal with suppliers and lift planning"
+            <p className="text-sm font-medium text-slate-200 mb-2">{tr("Anything else worth knowing? (optional)")}</p>
+            <textarea value={p.detail} onChange={(e) => setP((x) => ({ ...x, detail: e.target.value }))} placeholder={tr("e.g. I run a crane rental company and deal with suppliers and lift planning")}
               className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
             <div className="flex items-center justify-between mt-4 gap-2">
-              <button onClick={() => setStep(step - 1)} className="text-sm text-slate-400 px-2 py-2">← Back</button>
-              <button onClick={finish} className="flex-1 py-3 rounded-xl bg-teal-500 text-slate-950 font-semibold">Start using Attune</button>
+              <button onClick={() => setStep(step - 1)} className="text-sm text-slate-400 px-2 py-2">{tr("← Back")}</button>
+              <button onClick={finish} className="flex-1 py-3 rounded-xl bg-teal-500 text-slate-950 font-semibold">{tr("Start using Attune")}</button>
             </div>
           </>
         )}
@@ -9794,31 +9797,31 @@ function ProfileModal({ profile, setProfile, close, flash }) {
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2"><User size={18} className="text-teal-400" /> Your profile</h2>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2"><User size={18} className="text-teal-400" /> {tr("Your profile")}</h2>
           <button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button>
         </div>
-        <p className="text-xs text-slate-500 mb-4">Used to make every prompt specific to your work. Never leaves your device.</p>
+        <p className="text-xs text-slate-500 mb-4">{tr("Used to make every prompt specific to your work. Never leaves your device.")}</p>
         <button onClick={() => set("on", !p.on)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm mb-4 ${p.on ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-950 text-slate-400"}`}>
-          <span>Personalized prompting</span>
-          <span className={`w-9 h-5 rounded-full p-0.5 transition-colors ${p.on ? "bg-teal-500" : "bg-slate-700"}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${p.on ? "translate-x-4" : ""}`} /></span>
+          <span>{tr("Personalized prompting")}</span>
+          <span className={`w-9 h-5 rounded-full p-0.5 transition-colors ${p.on ? "bg-teal-500" : "bg-slate-700"}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${p.on ? "translate-x-4 rtl:-translate-x-4" : ""}`} /></span>
         </button>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Field</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">{FIELDS.map((f) => <button key={f} onClick={() => set("field", multiToggle(p.field, f))} className={btn(multiHas(p.field, f))}>{f}</button>)}</div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Role</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">{ROLE_LEVELS.map((r) => <button key={r} onClick={() => set("role", multiToggle(p.role, r))} className={btn(multiHas(p.role, r))}>{r}</button>)}</div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Use it for</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">{USES.map(([id, l]) => { const on = (p.uses || []).includes(id); return <button key={id} onClick={() => set("uses", on ? (p.uses || []).filter((x) => x !== id) : [...(p.uses || []), id])} className={btn(on)}>{l}</button>; })}</div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Languages</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">{SPEAKS.map((l) => { const on = (p.speaks || []).includes(l); return <button key={l} onClick={() => set("speaks", on ? (p.speaks || []).filter((x) => x !== l) : [...(p.speaks || []), l])} className={btn(on)}>{l}</button>; })}</div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">AI experience</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">{EXPERTISE.map((e) => <button key={e} onClick={() => set("expertise", e)} className={btn(p.expertise === e)}>{e}</button>)}</div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">More about your work</p>
-        <textarea value={p.detail} onChange={(e) => set("detail", e.target.value)} placeholder="e.g. I run a crane rental company; I write supplier RFQs and lift plans"
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Field")}</p>
+        <div className="flex flex-wrap gap-1.5 mb-3">{FIELDS.map((f) => <button key={f} onClick={() => set("field", multiToggle(p.field, f))} className={btn(multiHas(p.field, f))}>{tr(f)}</button>)}</div>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Role")}</p>
+        <div className="flex flex-wrap gap-1.5 mb-3">{ROLE_LEVELS.map((r) => <button key={r} onClick={() => set("role", multiToggle(p.role, r))} className={btn(multiHas(p.role, r))}>{tr(r)}</button>)}</div>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Use it for")}</p>
+        <div className="flex flex-wrap gap-1.5 mb-3">{USES.map(([id, l]) => { const on = (p.uses || []).includes(id); return <button key={id} onClick={() => set("uses", on ? (p.uses || []).filter((x) => x !== id) : [...(p.uses || []), id])} className={btn(on)}>{tr(l)}</button>; })}</div>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Languages")}</p>
+        <div className="flex flex-wrap gap-1.5 mb-3">{SPEAKS.map((l) => { const on = (p.speaks || []).includes(l); return <button key={l} onClick={() => set("speaks", on ? (p.speaks || []).filter((x) => x !== l) : [...(p.speaks || []), l])} className={btn(on)}>{tr(l)}</button>; })}</div>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("AI experience")}</p>
+        <div className="flex flex-wrap gap-1.5 mb-3">{EXPERTISE.map((e) => <button key={e} onClick={() => set("expertise", e)} className={btn(p.expertise === e)}>{tr(e)}</button>)}</div>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("More about your work")}</p>
+        <textarea value={p.detail} onChange={(e) => set("detail", e.target.value)} placeholder={tr("e.g. I run a crane rental company; I write supplier RFQs and lift plans")}
           className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
-        {p.on && profileLine(p) ? <p className="text-[11px] text-teal-500/70 mt-2 border-l border-teal-900/60 pl-2">Applied to prompts: {profileLine(p).replace("About the user (use this to make the prompt specific and domain-aware, but never mention it): ", "")}</p> : null}
+        {p.on && profileLine(p) ? <p className="text-[11px] text-teal-500/70 mt-2 border-l border-teal-900/60 ps-2">{tr("Applied to prompts:")} {profileLine(p).replace("About the user (use this to make the prompt specific and domain-aware, but never mention it): ", "")}</p> : null}
         <div className="flex gap-2 mt-4">
-          <button onClick={() => { setProfile(p); flash("Profile saved"); close(); }} className="flex-1 py-2.5 rounded-lg bg-teal-500 text-slate-950 font-medium">Save</button>
-          <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); setP({ ...EMPTY_PROFILE }); flash("Profile cleared"); }} className="px-4 py-2.5 rounded-lg border border-slate-800 text-slate-400 hover:border-rose-500 hover:text-rose-400 text-sm">Clear</button>
+          <button onClick={() => { setProfile(p); flash(tr("Profile saved")); close(); }} className="flex-1 py-2.5 rounded-lg bg-teal-500 text-slate-950 font-medium">{tr("Save")}</button>
+          <button onClick={() => { setProfile({ ...EMPTY_PROFILE }); setP({ ...EMPTY_PROFILE }); flash(tr("Profile cleared")); }} className="px-4 py-2.5 rounded-lg border border-slate-800 text-slate-400 hover:border-rose-500 hover:text-rose-400 text-sm">{tr("Clear")}</button>
         </div>
       </div>
     </div>
@@ -9851,11 +9854,11 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
   };
   const stateText = { ready: "Running", starting: "Loading the model…", error: "Stopped", idle: "Not running" }[e.state] || "Not running";
   const row = (on, onClick, label, sub) => (
-    <button onClick={onClick} className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border text-left ${on ? "border-teal-700 bg-teal-500/5" : "border-slate-800 bg-slate-900"}`}>
-      <span className="min-w-0"><span className="block text-sm text-slate-200">{label}</span>
-        {sub ? <span className="block text-[11px] text-slate-500 leading-snug">{sub}</span> : null}</span>
+    <button onClick={onClick} className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border text-start ${on ? "border-teal-700 bg-teal-500/5" : "border-slate-800 bg-slate-900"}`}>
+      <span className="min-w-0"><span className="block text-sm text-slate-200">{tr(label)}</span>
+        {sub ? <span className="block text-[11px] text-slate-500 leading-snug">{tr(sub)}</span> : null}</span>
       <span className={`shrink-0 w-9 h-5 rounded-full p-0.5 transition-colors ${on ? "bg-teal-500" : "bg-slate-700"}`}>
-        <span className={`block w-4 h-4 rounded-full bg-white transition-transform ${on ? "translate-x-4" : ""}`} /></span>
+        <span className={`block w-4 h-4 rounded-full bg-white transition-transform ${on ? "translate-x-4 rtl:-translate-x-4" : ""}`} /></span>
     </button>
   );
   const box = "bg-slate-950 border border-slate-800 rounded-xl p-3";
@@ -9866,30 +9869,29 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
     <div className="space-y-3 mb-5">
       {/* status */}
       <div className={box}>
-        <p className={head + " flex items-center gap-1.5"}><Cpu size={13} /> Engine on this phone</p>
+        <p className={head + " flex items-center gap-1.5"}><Cpu size={13} /> {tr("Engine on this phone")}</p>
         <p className={`text-sm ${e.state === "ready" ? "text-teal-300" : e.state === "error" ? "text-amber-300" : "text-slate-300"}`}>
-          {stateText}{e.modelId ? " · " + labelFor(e.modelId) : ""}
+          {tr(stateText)}{e.modelId ? " · " + labelFor(e.modelId) : ""}
         </p>
-        {e.state === "starting" ? <p className="text-[11px] text-slate-400 mt-1">{e.phase || "Starting"}{e.loadingFor ? " · " + e.loadingFor + " s" : ""} — a 3 GB model usually takes 10–40 s.</p> : null}
+        {e.state === "starting" ? <p className="text-[11px] text-slate-400 mt-1">{e.phase || tr("Starting")}{e.loadingFor ? " · " + e.loadingFor + " s" : ""} {tr("— a 3 GB model usually takes 10–40 s.")}</p> : null}
         {e.error ? <p className="text-[11px] text-amber-400/90 mt-1 leading-snug">{e.error}</p> : null}
         {e.heavy ? (
           <div className="mt-2 rounded-lg border border-amber-900/60 bg-amber-500/5 p-2">
-            <p className="text-[11px] text-amber-200 leading-snug">This model is large for this phone. It works, but answers come slowly and the phone gets warm.
-              For quick, smooth answers use Qwen 3.5 4B — same Arabic, reads photos, about 3× faster.</p>
+            <p className="text-[11px] text-amber-200 leading-snug">{tr("This model is large for this phone. It works, but answers come slowly and the phone gets warm. For quick, smooth answers use Qwen 3.5 4B — same Arabic, reads photos, about 3× faster.")}</p>
           </div>
         ) : null}
         {e.settings ? <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{e.settings}</p> : null}
         {n.device && n.device.native ? (
           <p className="text-[11px] text-slate-600 mt-1">
-            {n.device.native.model}{n.device.native.soc ? " · " + n.device.native.soc : ""} · {n.device.ram} GB · {n.device.cores} cores ({n.device.native.bigCores} fast)
-            {n.device.native.thermal >= 2 ? " · warm — running cooler" : ""}{n.device.native.powerSave ? " · battery saver" : ""}
+            {n.device.native.model}{n.device.native.soc ? " · " + n.device.native.soc : ""} · {n.device.ram} {tr("GB ·")} {n.device.cores} {tr("cores (")}{n.device.native.bigCores} {tr("fast)")}
+            {n.device.native.thermal >= 2 ? tr(" · warm — running cooler") : ""}{n.device.native.powerSave ? tr(" · battery saver") : ""}
           </p>
         ) : null}
         <div className="flex flex-wrap gap-1.5 mt-2">
           {e.modelId ? <button className={small} onClick={async () => {
-            try { await nativeCall("restart", ""); flash("Engine restarted"); } catch (err) { flash(String(err.message || err)); } }}>Restart engine</button> : null}
+            try { await nativeCall("restart", ""); flash(tr("Engine restarted")); } catch (err) { flash(String(err.message || err)); } }}>{tr("Restart engine")}</button> : null}
           <button className={small} onClick={() => { let t = ""; try { t = NATIVE.log(); } catch (err) {} setLog(log === null ? (t || "The log is empty.") : null); }}>
-            {log === null ? "Engine log" : "Hide log"}</button>
+            {log === null ? tr("Engine log") : tr("Hide log")}</button>
         </div>
         {log !== null ? <pre className="mt-2 max-h-52 overflow-auto text-[10px] text-slate-500 whitespace-pre-wrap break-all">{log}</pre> : null}
       </div>
@@ -9897,122 +9899,122 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
       {/* download in progress */}
       {busy ? (
         <div className={box}>
-          <div className="flex items-center justify-between text-xs text-slate-300 mb-2"><span>{n.dlStage || "Downloading…"}</span><span>{dlPct}%</span></div>
+          <div className="flex items-center justify-between text-xs text-slate-300 mb-2"><span>{n.dlStage || tr("Downloading…")}</span><span>{dlPct}%</span></div>
           <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-teal-500 transition-all" style={{ width: dlPct + "%" }} /></div>
           <div className="flex items-center justify-between mt-2">
             <span className="text-[11px] text-slate-500">{n.dlDetail}</span>
-            <button className={small} onClick={n.cancelInstall}>Cancel</button>
+            <button className={small} onClick={n.cancelInstall}>{tr("Cancel")}</button>
           </div>
-          <p className="text-[11px] text-slate-600 mt-1">If the connection drops, it carries on from where it stopped next time.</p>
+          <p className="text-[11px] text-slate-600 mt-1">{tr("If the connection drops, it carries on from where it stopped next time.")}</p>
         </div>
       ) : null}
 
       {/* installed */}
       <div className={box}>
-        <p className={head}>Installed models</p>
+        <p className={head}>{tr("Installed models")}</p>
         {(n.installedModels || []).length === 0 ? (
-          <p className="text-[11px] text-slate-500">None yet — install the recommended one below, or add any model.</p>
+          <p className="text-[11px] text-slate-500">{tr("None yet — install the recommended one below, or add any model.")}</p>
         ) : (n.installedModels || []).map((m) => (
           <div key={m.id} className="py-2 border-b border-slate-900 last:border-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-sm text-slate-200 truncate">{m.label}{m.vision ? " · 📷" : ""}</p>
-                <p className="text-[10px] text-slate-600 truncate">{(m.sizeBytes / 1e9).toFixed(2)} GB · {m.source}</p>
+                <p className="text-sm text-slate-200 truncate">{tr(m.label)}{m.vision ? " · 📷" : ""}</p>
+                <p className="text-[10px] text-slate-600 truncate">{(m.sizeBytes / 1e9).toFixed(2)} {tr("GB ·")} {m.source}</p>
               </div>
               <div className="flex gap-1 shrink-0">
-                {m.active ? <span className="text-[11px] px-2 py-1 rounded-md border border-teal-800 text-teal-300">In use</span>
-                  : <button disabled={busy} onClick={() => n.useInstalled(m.id)} className="text-[11px] px-2 py-1 rounded-md bg-teal-500 text-slate-950 disabled:opacity-40">Use</button>}
+                {m.active ? <span className="text-[11px] px-2 py-1 rounded-md border border-teal-800 text-teal-300">{tr("In use")}</span>
+                  : <button disabled={busy} onClick={() => n.useInstalled(m.id)} className="text-[11px] px-2 py-1 rounded-md bg-teal-500 text-slate-950 disabled:opacity-40">{tr("Use")}</button>}
                 <button className={small} onClick={async () => {
                   setHashes((h) => ({ ...h, [m.id]: "reading the file…" }));
                   try { const r = await nativeCall("hash", m.id); setHashes((h) => ({ ...h, [m.id]: r.sha256 })); }
-                  catch (err) { setHashes((h) => ({ ...h, [m.id]: String(err.message || err) })); } }}>Fingerprint</button>
+                  catch (err) { setHashes((h) => ({ ...h, [m.id]: String(err.message || err) })); } }}>{tr("Fingerprint")}</button>
                 <button className={`text-[11px] px-2 py-1 rounded-md border ${armDelete === m.id ? "border-rose-600 text-rose-300" : "border-slate-800 bg-slate-900 text-slate-500"}`}
-                  onClick={() => { if (armDelete === m.id) { n.removeInstalled(m.id); setArmDelete(null); flash("Deleted — space freed"); } else setArmDelete(m.id); }}>
-                  {armDelete === m.id ? "Tap again" : "Delete"}</button>
+                  onClick={() => { if (armDelete === m.id) { n.removeInstalled(m.id); setArmDelete(null); flash(tr("Deleted — space freed")); } else setArmDelete(m.id); }}>
+                  {armDelete === m.id ? tr("Tap again") : tr("Delete")}</button>
               </div>
             </div>
-            {hashes[m.id] ? <p className="text-[10px] text-slate-500 mt-1 break-all font-mono">SHA-256 {hashes[m.id]}</p> : null}
+            {hashes[m.id] ? <p className="text-[10px] text-slate-500 mt-1 break-all font-mono">{tr("SHA-256")} {hashes[m.id]}</p> : null}
           </div>
         ))}
-        <p className="text-[10px] text-slate-600 mt-2 leading-snug">Installed weights never update on their own, so a prompt that works today works the same way in a year. The fingerprint proves exactly which file is answering.</p>
+        <p className="text-[10px] text-slate-600 mt-2 leading-snug">{tr("Installed weights never update on their own, so a prompt that works today works the same way in a year. The fingerprint proves exactly which file is answering.")}</p>
       </div>
 
       {/* bring your own */}
       <div className={box}>
-        <p className={head}>Add any model</p>
+        <p className={head}>{tr("Add any model")}</p>
         <div className="flex gap-2">
           <input value={custom} onChange={(ev) => setCustom(ev.target.value)}
-            placeholder="unsloth/Qwen3.5-9B-GGUF:Q4_K_M   or   https://…/model.gguf"
+            placeholder={tr("unsloth/Qwen3.5-9B-GGUF:Q4_K_M   or   https://…/model.gguf")}
             className="flex-1 min-w-0 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
           <button disabled={!custom.trim() || busy || n.airGap}
             onClick={() => { const v = custom.trim(); n.installNative(v.startsWith("https://") ? { url: v } : { spec: v, vision: true }, null); }}
-            className="px-3 py-2 rounded-lg bg-teal-500 text-slate-950 text-xs font-medium disabled:opacity-40">Install</button>
+            className="px-3 py-2 rounded-lg bg-teal-500 text-slate-950 text-xs font-medium disabled:opacity-40">{tr("Install")}</button>
         </div>
-        <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">Any GGUF on Hugging Face as <span className="font-mono">owner/repo:QUANT</span>, or a direct https link. Specialist and fine-tuned models install the same way — the photo reader is fetched too when the repo has one.</p>
+        <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">{tr("Any GGUF on Hugging Face as")} <span className="font-mono">{tr("owner/repo:QUANT")}</span>{tr(", or a direct https link. Specialist and fine-tuned models install the same way — the photo reader is fetched too when the repo has one.")}</p>
       </div>
 
       {/* answers */}
       <div className={box}>
-        <p className={head}>How it answers</p>
+        <p className={head}>{tr("How it answers")}</p>
         <div className="space-y-1.5">
-          {row(p.deepThink, () => n.updateEnginePrefs({ deepThink: !p.deepThink }), "Always think before answering",
-            "The model reasons first on every question. Clearly better on hard problems, but on a phone the answer starts 30–90 s later. Off: tap “Think” on just the questions that need it.")}
-          {row(p.longAnswers, () => n.updateEnginePrefs({ longAnswers: !p.longAnswers }), "Long answers",
-            "A bigger length budget for reports, plans and analysis.")}
-          {row(p.reproducible, () => n.updateEnginePrefs({ reproducible: !p.reproducible }), "Same question, same answer",
-            "Fixed randomness, so a workflow gives identical output every time it runs.")}
+          {row(p.deepThink, () => n.updateEnginePrefs({ deepThink: !p.deepThink }), tr("Always think before answering"),
+            tr("The model reasons first on every question. Clearly better on hard problems, but on a phone the answer starts 30–90 s later. Off: tap “Think” on just the questions that need it."))}
+          {row(p.longAnswers, () => n.updateEnginePrefs({ longAnswers: !p.longAnswers }), tr("Long answers"),
+            tr("A bigger length budget for reports, plans and analysis."))}
+          {row(p.reproducible, () => n.updateEnginePrefs({ reproducible: !p.reproducible }), tr("Same question, same answer"),
+            tr("Fixed randomness, so a workflow gives identical output every time it runs."))}
         </div>
-        <p className="text-[11px] text-slate-400 mt-3 mb-1">Standing instructions for every answer</p>
+        <p className="text-[11px] text-slate-400 mt-3 mb-1">{tr("Standing instructions for every answer")}</p>
         <textarea value={sys} onChange={(ev) => setSys(ev.target.value)} onBlur={() => { n.updateEnginePrefs({ systemPrompt: sys }); }}
-          rows={3} placeholder="e.g. You work for a crane-rental company in Egypt. Answer in Egyptian Arabic unless I write in English. Give lifting capacities in tonnes."
+          rows={3} placeholder={tr("e.g. You work for a crane-rental company in Egypt. Answer in Egyptian Arabic unless I write in English. Give lifting capacities in tonnes.")}
           className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
-        <p className="text-[10px] text-slate-600 mt-1">Saved when you tap outside the box. Stays on this phone.</p>
+        <p className="text-[10px] text-slate-600 mt-1">{tr("Saved when you tap outside the box. Stays on this phone.")}</p>
       </div>
 
       {/* web lookup */}
       <div className={box}>
-        <p className={head}>Web lookup</p>
+        <p className={head}>{tr("Web lookup")}</p>
         <div className="grid grid-cols-2 gap-1.5">
           {[["duckduckgo", "DuckDuckGo", "Free · no key"], ["brave", "Brave Search", "Your API key"]].map(([id, label, sub]) => (
             <button key={id} onClick={() => n.saveSearchCfg({ ...(n.searchCfg || {}), provider: id, key: id === "brave" ? key : (n.searchCfg && n.searchCfg.key) || "" })}
-              className={`rounded-lg border px-3 py-2 text-left ${provider === id ? "border-teal-600 bg-teal-500/5" : "border-slate-800 bg-slate-900"}`}>
-              <span className="block text-sm text-slate-200">{label}</span><span className="block text-[11px] text-slate-500">{sub}</span>
+              className={`rounded-lg border px-3 py-2 text-start ${provider === id ? "border-teal-600 bg-teal-500/5" : "border-slate-800 bg-slate-900"}`}>
+              <span className="block text-sm text-slate-200">{tr(label)}</span><span className="block text-[11px] text-slate-500">{tr(sub)}</span>
             </button>
           ))}
         </div>
         {provider === "brave" ? (
           <div className="mt-2">
             <input value={key} onChange={(ev) => setKey(ev.target.value)} onBlur={() => n.saveSearchCfg({ provider: "brave", key: key.trim() })}
-              placeholder="Brave Search API key" type="password"
+              placeholder={tr("Brave Search API key")} type="password"
               className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-            <p className="text-[11px] text-slate-500 mt-1">Get one at api-dashboard.search.brave.com. Stored only on this phone. Falls back to DuckDuckGo if Brave refuses.</p>
+            <p className="text-[11px] text-slate-500 mt-1">{tr("Get one at api-dashboard.search.brave.com. Stored only on this phone. Falls back to DuckDuckGo if Brave refuses.")}</p>
           </div>
         ) : (
-          <p className="text-[11px] text-slate-500 mt-2 leading-snug">Reads DuckDuckGo's results from your phone and opens the top pages, so answers come from real passages. DuckDuckGo has no official API and can occasionally rate-limit; Brave is the dependable route.</p>
+          <p className="text-[11px] text-slate-500 mt-2 leading-snug">{tr("Reads DuckDuckGo's results from your phone and opens the top pages, so answers come from real passages. DuckDuckGo has no official API and can occasionally rate-limit; Brave is the dependable route.")}</p>
         )}
-        <p className="text-[10px] text-slate-600 mt-2">Only the question you look up and the pages opened leave the phone — never your conversation, files or memory.</p>
+        <p className="text-[10px] text-slate-600 mt-2">{tr("Only the question you look up and the pages opened leave the phone — never your conversation, files or memory.")}</p>
       </div>
 
       {/* privacy */}
       <div className={box}>
-        <p className={head}>Privacy</p>
-        {row(n.airGap, () => n.setAirGap(!n.airGap), "Offline lock",
-          "Nothing in the app can reach the internet — no web lookup, no maps, no downloads. The model and everything on the phone keep working.")}
+        <p className={head}>{tr("Privacy")}</p>
+        {row(n.airGap, () => n.setAirGap(!n.airGap), tr("Offline lock"),
+          tr("Nothing in the app can reach the internet — no web lookup, no maps, no downloads. The model and everything on the phone keep working."))}
         <div className="flex flex-wrap gap-1.5 mt-2">
-          <button className={small} onClick={() => setNet(net ? null : nativeJSON("netLog"))}>{net ? "Hide network log" : "Network log"}</button>
-          {net ? <button className={small} onClick={() => { try { NATIVE.clearNetLog(); } catch (err) {} setNet(nativeJSON("netLog")); }}>Clear</button> : null}
+          <button className={small} onClick={() => setNet(net ? null : nativeJSON("netLog"))}>{net ? tr("Hide network log") : tr("Network log")}</button>
+          {net ? <button className={small} onClick={() => { try { NATIVE.clearNetLog(); } catch (err) {} setNet(nativeJSON("netLog")); }}>{tr("Clear")}</button> : null}
         </div>
         {net ? (
           <div className="mt-2 max-h-52 overflow-auto">
-            <p className="text-[11px] text-slate-400 mb-1">{net.sent} connection{net.sent === 1 ? "" : "s"} made · {net.blocked} blocked · this session</p>
-            {(net.entries || []).length === 0 ? <p className="text-[11px] text-slate-500">Nothing has left the phone.</p> : (net.entries || []).map((x, i) => (
+            <p className="text-[11px] text-slate-400 mb-1">{net.sent} connection{net.sent === 1 ? "" : "s"} {tr("made ·")} {net.blocked} {tr("blocked · this session")}</p>
+            {(net.entries || []).length === 0 ? <p className="text-[11px] text-slate-500">{tr("Nothing has left the phone.")}</p> : (net.entries || []).map((x, i) => (
               <p key={i} className="text-[10px] font-mono text-slate-500 truncate">
-                {new Date(x.t).toLocaleTimeString()} {x.blocked ? "✕" : "→"} {x.host} <span className="text-slate-600">· {x.what}</span>
+                {new Date(x.t).toLocaleTimeString()} {x.blocked ? "✕" : "→"} {x.host} <span className="text-slate-600">· {tr(x.what)}</span>
               </p>
             ))}
           </div>
         ) : null}
-        <p className="text-[10px] text-slate-600 mt-2 leading-snug">The model itself never uses the network. The log lists every connection the app made or refused, host and reason only — the proof behind "nothing leaves this phone".</p>
+        <p className="text-[10px] text-slate-600 mt-2 leading-snug">{tr("The model itself never uses the network. The log lists every connection the app made or refused, host and reason only — the proof behind \"nothing leaves this phone\".")}</p>
       </div>
     </div>
   );
@@ -10035,42 +10037,42 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2"><Cpu size={18} className="text-teal-400" /> Engine</h2>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2"><Cpu size={18} className="text-teal-400" /> {tr("Engine")}</h2>
           <button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button>
         </div>
-        <p className="text-xs text-slate-500 mb-4">Run the AI on your own hardware. Nothing leaves the device, nothing costs per use.</p>
+        <p className="text-xs text-slate-500 mb-4">{tr("Run the AI on your own hardware. Nothing leaves the device, nothing costs per use.")}</p>
 
         {native ? <NativeEnginePanel n={{ ...native, device }} modelState={modelState} dlPct={dlPct} flash={flash} /> : null}
 
         {/* detected hardware */}
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-4">
-          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5"><HardDrive size={13} /> This device</p>
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5"><HardDrive size={13} /> {tr("This device")}</p>
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300 capitalize">{device.platform}</span>
+            <span className="px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300 capitalize">{tr(device.platform)}</span>
             <span className="px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">
-              {device.confidence === "exact" ? device.ram + " GB RAM" : "~" + device.ram + " GB RAM"}
+              {tr("{n} GB RAM", { n: (device.confidence === "exact" ? "" : "~") + device.ram })}
               {device.ramMin && device.ramMax && device.ramMin !== device.ramMax
                 ? <span className="text-slate-600"> ({device.ramMin}–{device.ramMax})</span> : null}
             </span>
-            {device.cores ? <span className="px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">{device.cores} cores</span> : null}
+            {device.cores ? <span className="px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">{tr("{n} cores", { n: device.cores })}</span> : null}
             <span className={`px-2 py-1 rounded-md border ${bestTier ? "bg-teal-500/10 border-teal-900/60 text-teal-300" : "bg-amber-500/10 border-amber-900/60 text-amber-300"}`}>
-              {bestTier ? "Can run " + bestTier.label : "Load a model to start"}
+              {bestTier ? tr("Can run {m}", { m: bestTier.label }) : tr("Load a model to start")}
             </span>
           </div>
           <p className="text-[11px] text-slate-600 mt-2">
             {device.confidence === "exact"
               ? (device.source === "this phone"
-                  ? "Read directly from this phone — exact, not estimated."
-                  : "Using the figure you gave.")
+                  ? tr("Read directly from this phone — exact, not estimated.")
+                  : tr("Using the figure you gave."))
               : "Browsers round memory down to a power of two and cap it at 8 GB, so a 6 GB machine reports 4 and a 64 GB one reports 8. This is an estimate from " + device.source + "."}
           </p>
           <div className="flex flex-wrap items-center gap-1.5 mt-2">
-            <span className="text-[11px] text-slate-500">My machine actually has</span>
+            <span className="text-[11px] text-slate-500">{tr("My machine actually has")}</span>
             {[4, 6, 8, 12, 16, 32, 64].map((g) => (
               <button key={g} onClick={() => setRamOverride(g)}
                 className={`text-[11px] px-2 py-1 rounded-md border ${device.confidence === "exact" && device.ram === g
                   ? "bg-teal-500 border-teal-500 text-slate-950 font-medium"
-                  : "bg-slate-900 border-slate-800 text-slate-400 hover:border-teal-600"}`}>{g} GB</button>
+                  : "bg-slate-900 border-slate-800 text-slate-400 hover:border-teal-600"}`}>{tr(g)} {tr("GB")}</button>
             ))}
             {device.confidence === "exact" ? (
               <button onClick={() => setRamOverride(0)} className="text-[11px] px-2 py-1 text-slate-500 hover:text-slate-300">auto</button>
@@ -10088,80 +10090,80 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
           if (!rec) return null;
           if (rec.none) return (
             <div className="rounded-xl border border-amber-900/60 bg-amber-500/5 p-4 mb-5">
-              <p className="text-sm text-amber-200">{rec.headline}</p>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">{rec.why}</p>
+              <p className="text-sm text-amber-200">{tr(rec.headline)}</p>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">{tr(rec.why)}</p>
             </div>
           );
           const already = activeTier && activeTier.id === rec.tier.id;
           return (
             <div className="rounded-xl border border-teal-700/70 bg-teal-500/5 p-4 mb-5">
-              <p className="text-[11px] uppercase tracking-wider text-teal-500/90 mb-1">Recommended for this device</p>
-              <p className="text-base text-slate-100 font-medium">{rec.headline}</p>
-              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{rec.why}</p>
-              <p className="text-xs text-slate-300 mt-2 leading-relaxed">{rec.tier.quality}</p>
+              <p className="text-[11px] uppercase tracking-wider text-teal-500/90 mb-1">{tr("Recommended for this device")}</p>
+              <p className="text-base text-slate-100 font-medium">{tr(rec.headline)}</p>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{tr(rec.why)}</p>
+              <p className="text-xs text-slate-300 mt-2 leading-relaxed">{tr(rec.tier.quality)}</p>
               <div className="mt-3 flex items-center gap-2 flex-wrap">
                 {already && modelState === "ready" ? (
-                  <span className="text-xs px-3 py-2 rounded-lg border border-teal-800 text-teal-300">Running now</span>
+                  <span className="text-xs px-3 py-2 rounded-lg border border-teal-800 text-teal-300">{tr("Running now")}</span>
                 ) : (
                   <button onClick={() => { setTierId(rec.tier.id); downloadModel(rec.tier); }}
                     disabled={modelState === "downloading"}
                     className="px-3 py-2 rounded-lg bg-teal-500 text-slate-950 text-sm font-medium disabled:opacity-40">
-                    {modelState === "downloading" ? `Installing… ${dlPct}%` : `Install · ${rec.size}`}
+                    {modelState === "downloading" ? tr("Installing… {p}%", { p: dlPct }) : tr("Install · {s}", { s: rec.size })}
                   </button>
                 )}
                 {rec.stronger ? (
                   <button onClick={() => { setTierId(rec.stronger.id); downloadModel(rec.stronger); }}
                     disabled={modelState === "downloading"}
                     className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-sm disabled:opacity-40">
-                    Stronger, slower · {rec.stronger.label} · {rec.stronger.sizeGB.toFixed(1)} GB
+                    {tr("Stronger, slower ·")} {tr(rec.stronger.label)} · {rec.stronger.sizeGB.toFixed(1)} {tr("GB")}
                   </button>
                 ) : null}
                 {rec.lighter && !rec.stronger ? (
                   <button onClick={() => { setTierId(rec.lighter.id); downloadModel(rec.lighter); }}
                     disabled={modelState === "downloading"}
                     className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-sm disabled:opacity-40">
-                    Smaller · {rec.lighter.sizeGB.toFixed(2)} GB
+                    {tr("Smaller ·")} {rec.lighter.sizeGB.toFixed(2)} {tr("GB")}
                   </button>
                 ) : null}
               </div>
-              <p className="text-[11px] text-slate-500 mt-2">{rec.caution}</p>
+              <p className="text-[11px] text-slate-500 mt-2">{tr(rec.caution)}</p>
             </div>
           );
         })()}
 
         {/* model tiers */}
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Or choose yourself</p>
-        <p className="text-[11px] text-slate-600 mb-2">{QUANT_FLOOR_NOTE}</p>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Or choose yourself")}</p>
+        <p className="text-[11px] text-slate-600 mb-2">{tr(QUANT_FLOOR_NOTE)}</p>
         <div className="space-y-2 mb-4">
           {MODEL_TIERS.map((t) => {
             const ok = fits(t); const maybe = !ok && plausible(t); const on = activeTier && activeTier.id === t.id;
             return (
               <button key={t.id} onClick={() => setTierId(t.id)}
-                className={`w-full text-left rounded-xl border p-3 transition-colors ${on ? "border-teal-500 bg-teal-500/5" : ok ? "border-slate-800 bg-slate-950 hover:border-slate-600" : maybe ? "border-amber-900/50 bg-slate-950 hover:border-amber-700" : "border-slate-900 bg-slate-950 opacity-70 hover:border-slate-700"}`}>
+                className={`w-full text-start rounded-xl border p-3 transition-colors ${on ? "border-teal-500 bg-teal-500/5" : ok ? "border-slate-800 bg-slate-950 hover:border-slate-600" : maybe ? "border-amber-900/50 bg-slate-950 hover:border-amber-700" : "border-slate-900 bg-slate-950 opacity-70 hover:border-slate-700"}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-white">{t.label}
-                    {bestTier && bestTier.id === t.id ? <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-300 border border-teal-900/60">best fit</span> : null}
-                    {maybe ? <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-900/60">may fit — try it</span> : null}
-                    {!ok && !maybe ? <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-slate-500 border border-slate-800">needs {device.platform === "desktop" ? t.needRam : (t.phoneMin || t.needRam)} GB</span> : null}
-                    {t.heat && device.platform !== "desktop" && ok ? <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-900/50">runs hot</span> : null}
+                  <span className="text-sm font-semibold text-white">{tr(t.label)}
+                    {bestTier && bestTier.id === t.id ? <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-300 border border-teal-900/60">{tr("best fit")}</span> : null}
+                    {maybe ? <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-900/60">{tr("may fit — try it")}</span> : null}
+                    {!ok && !maybe ? <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-slate-500 border border-slate-800">needs {device.platform === "desktop" ? t.needRam : (t.phoneMin || t.needRam)} {tr("GB")}</span> : null}
+                    {t.heat && device.platform !== "desktop" && ok ? <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-900/50">{tr("runs hot")}</span> : null}
                   </span>
-                  <span className="text-xs text-slate-500">{t.sizeGB} GB · {t.quant}</span>
+                  <span className="text-xs text-slate-500">{t.sizeGB} {tr("GB ·")} {t.quant}</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">{t.quality}</p>
+                <p className="text-xs text-slate-500 mt-1">{tr(t.quality)}</p>
                 <div className="flex flex-wrap gap-1 mt-1.5">
-                  {t.imatrix ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">imatrix · more quality per GB</span> : null}
-                  {t.spec ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">+{t.draft} draft · ~2× faster, lossless</span> : null}
-                  {t.moe ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">MoE · 2–3× faster decode</span> : null}
-                  {t.vision ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">📷 reads photos</span> : null}
+                  {t.imatrix ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">{tr("imatrix · more quality per GB")}</span> : null}
+                  {t.spec ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">+{t.draft} {tr("draft · ~2× faster, lossless")}</span> : null}
+                  {t.moe ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">{tr("MoE · 2–3× faster decode")}</span> : null}
+                  {t.vision ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">{tr("📷 reads photos")}</span> : null}
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {["Rewrite","Compress","Humanize","Copilot"].map((f) => {
                     const st = parityStatus(t.parity, f.toLowerCase());
-                    return <span key={f} className={`text-[10px] px-1.5 py-0.5 rounded border ${!t.good.includes(f) ? "bg-slate-950 border-slate-900 text-slate-600 line-through" : st === "passing" ? "bg-teal-500/15 border-teal-700 text-teal-300" : "bg-slate-900 border-slate-700 text-slate-400"}`}>{f}{t.good.includes(f) && st === "passing" ? " ✓" : ""}</span>;
+                    return <span key={f} className={`text-[10px] px-1.5 py-0.5 rounded border ${!t.good.includes(f) ? "bg-slate-950 border-slate-900 text-slate-600 line-through" : st === "passing" ? "bg-teal-500/15 border-teal-700 text-teal-300" : "bg-slate-900 border-slate-700 text-slate-400"}`}>{tr(f)}{t.good.includes(f) && st === "passing" ? " ✓" : ""}</span>;
                   })}
                 </div>
-                <p className="text-[10px] text-slate-600 mt-1">Parity: unverified until this tier passes its eval set — ✓ appears only after it does.</p>
-                {!ok ? <p className="text-[11px] text-amber-500/80 mt-2">Needs {t.needRam} GB RAM{t.platform === "desktop" ? " · desktop or laptop" : ""}</p> : null}
+                <p className="text-[10px] text-slate-600 mt-1">{tr("Parity: unverified until this tier passes its eval set — ✓ appears only after it does.")}</p>
+                {!ok ? <p className="text-[11px] text-amber-500/80 mt-2">{tr("Needs")} {t.needRam} {tr("GB RAM")}{t.platform === "desktop" ? tr(" · desktop or laptop") : ""}</p> : null}
               </button>
             );
           })}
@@ -10170,39 +10172,39 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
         {/* memory plan */}
         {plan && !native ? (
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-4">
-            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Working memory</p>
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Working memory")}</p>
             <div className="flex flex-wrap gap-2 text-xs">
-              <span className="px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400">weights {plan.weights} GB (mmap)</span>
-              <span className="px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400">KV {plan.kvFp16} → {plan.kvInt4} GB</span>
-              <span className="px-2 py-1 rounded-md bg-teal-500/10 border border-teal-900/60 text-teal-300">−{plan.saved}% cache</span>
-              <span className="px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">≈ {plan.working} GB total</span>
+              <span className="px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400">weights {plan.weights} {tr("GB (mmap)")}</span>
+              <span className="px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400">{tr("KV")} {plan.kvFp16} → {plan.kvInt4} {tr("GB")}</span>
+              <span className="px-2 py-1 rounded-md bg-teal-500/10 border border-teal-900/60 text-teal-300">−{plan.saved}{tr("% cache")}</span>
+              <span className="px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">≈ {plan.working} {tr("GB total")}</span>
             </div>
-            <p className="text-[11px] text-slate-600 mt-2">INT4 KV cache + sliding-window eviction, so long conversations don't grow unbounded.</p>
-            {storageAssist(activeTier) ? <p className="text-[11px] text-teal-500/70 mt-1 border-l border-teal-900/60 pl-2">Storage: {storageAssist(activeTier).note}</p> : null}
+            <p className="text-[11px] text-slate-600 mt-2">{tr("INT4 KV cache + sliding-window eviction, so long conversations don't grow unbounded.")}</p>
+            {storageAssist(activeTier) ? <p className="text-[11px] text-teal-500/70 mt-1 border-l border-teal-900/60 ps-2">{tr("Storage:")} {tr(storageAssist(activeTier).note)}</p> : null}
           </div>
         ) : null}
 
         {/* compute backends — the Android app shows the real engine settings above instead */}
         {!native ? (
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-4">
-          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Compute</p>
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Compute")}</p>
           <div className="flex flex-wrap gap-1.5">
             {detectBackends(device).map((b) => (
-              <span key={b.id} className={`text-[11px] px-2 py-1 rounded-md border ${b.id === "cpu" ? "bg-slate-900 border-slate-800 text-slate-500" : "bg-teal-500/10 border-teal-900/60 text-teal-300"}`}>{b.label} <span className="opacity-60">· {b.role}</span></span>
+              <span key={b.id} className={`text-[11px] px-2 py-1 rounded-md border ${b.id === "cpu" ? "bg-slate-900 border-slate-800 text-slate-500" : "bg-teal-500/10 border-teal-900/60 text-teal-300"}`}>{tr(b.label)} <span className="opacity-60">· {tr(b.role)}</span></span>
             ))}
           </div>
-          <p className="text-[11px] text-slate-600 mt-2">Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s.</p>
+          <p className="text-[11px] text-slate-600 mt-2">{tr("Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s.")}</p>
         </div>
         ) : null}
 
         {/* task adapters */}
         {activeTier && !native ? (
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-4">
-            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Task adapters</p>
-            <p className="text-[11px] text-slate-500 mb-2">Small fine-tunes for each job — this is what makes a phone-sized model punch above its weight. Loaded over the base model, a few MB each.</p>
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Task adapters")}</p>
+            <p className="text-[11px] text-slate-500 mb-2">{tr("Small fine-tunes for each job — this is what makes a phone-sized model punch above its weight. Loaded over the base model, a few MB each.")}</p>
             <div className="flex flex-wrap gap-1.5">
               {TASK_ADAPTERS.map((a) => (
-                <span key={a.id} className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">{a.label} <span className="text-slate-600">{a.mb} MB</span></span>
+                <span key={a.id} className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">{tr(a.label)} <span className="text-slate-600">{a.mb} {tr("MB")}</span></span>
               ))}
             </div>
           </div>
@@ -10210,42 +10212,42 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
 
         {/* training data + eval */}
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-4">
-          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Training data</p>
-          <p className="text-[11px] text-slate-500 mb-2">Each cloud answer is a worked example. Collected, they train the small adapters that bring on-device quality up to cloud level — and a slice is held back to prove it. Stored on this device only.</p>
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Training data")}</p>
+          <p className="text-[11px] text-slate-500 mb-2">{tr("Each cloud answer is a worked example. Collected, they train the small adapters that bring on-device quality up to cloud level — and a slice is held back to prove it. Stored on this device only.")}</p>
           <button onClick={() => setCollect(!collect)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-sm mb-3 ${collect ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-900 text-slate-400"}`}>
-            <span>Save my prompts as training data</span>
-            <span className={`w-9 h-5 rounded-full p-0.5 transition-colors ${collect ? "bg-teal-500" : "bg-slate-700"}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${collect ? "translate-x-4" : ""}`} /></span>
+            <span>{tr("Save my prompts as training data")}</span>
+            <span className={`w-9 h-5 rounded-full p-0.5 transition-colors ${collect ? "bg-teal-500" : "bg-slate-700"}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${collect ? "translate-x-4 rtl:-translate-x-4" : ""}`} /></span>
           </button>
           <div className="space-y-1.5">
             {readiness.map((r) => (
               <div key={r.feature}>
                 <div className="flex items-center justify-between text-[11px] mb-0.5">
-                  <span className="text-slate-400 capitalize">{r.feature}</span>
-                  <span className={r.ready ? "text-teal-400" : "text-slate-600"}>{r.total}/{EVAL_TARGET}{r.ready ? " · ready" : ""}</span>
+                  <span className="text-slate-400 capitalize">{tr(r.feature)}</span>
+                  <span className={r.ready ? "text-teal-400" : "text-slate-600"}>{r.total}/{EVAL_TARGET}{r.ready ? tr(" · ready") : ""}</span>
                 </div>
                 <div className="h-1 bg-slate-800 rounded-full overflow-hidden"><div className={`h-full ${r.ready ? "bg-teal-500" : "bg-slate-600"}`} style={{ width: r.pct + "%" }} /></div>
               </div>
             ))}
           </div>
           <div className="flex flex-wrap gap-1.5 mt-3">
-            <button onClick={() => { const t = exportJSONL(trainLog, { hold: false }); if (!t) return flash("No training pairs yet"); download("attune-train.jsonl", t); flash("Training set exported"); }}
-              className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300 hover:border-teal-600 hover:text-teal-400">Export training set</button>
-            <button onClick={() => { const t = exportJSONL(trainLog, { hold: true }); if (!t) return flash("No eval pairs yet"); download("attune-eval.jsonl", t); flash("Eval set exported"); }}
-              className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300 hover:border-teal-600 hover:text-teal-400">Export eval set</button>
-            <button onClick={() => { setTrainLog(makeTrainingLog()); flash("Training data cleared"); }}
-              className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-500 hover:border-rose-500 hover:text-rose-400">Delete all</button>
+            <button onClick={() => { const t = exportJSONL(trainLog, { hold: false }); if (!t) return flash(tr("No training pairs yet")); download("attune-train.jsonl", t); flash(tr("Training set exported")); }}
+              className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300 hover:border-teal-600 hover:text-teal-400">{tr("Export training set")}</button>
+            <button onClick={() => { const t = exportJSONL(trainLog, { hold: true }); if (!t) return flash(tr("No eval pairs yet")); download("attune-eval.jsonl", t); flash(tr("Eval set exported")); }}
+              className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300 hover:border-teal-600 hover:text-teal-400">{tr("Export eval set")}</button>
+            <button onClick={() => { setTrainLog(makeTrainingLog()); flash(tr("Training data cleared")); }}
+              className="text-[11px] px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-500 hover:border-rose-500 hover:text-rose-400">{tr("Delete all")}</button>
           </div>
-          <p className="text-[11px] text-slate-600 mt-2">{EVAL_TARGET} pairs per feature before a tier can be judged. ~{Math.round(EVAL_HOLDOUT * 100)}% is held back and never trained on, so the test stays honest.</p>
+          <p className="text-[11px] text-slate-600 mt-2">{EVAL_TARGET} {tr("pairs per feature before a tier can be judged. ~")}{Math.round(EVAL_HOLDOUT * 100)}{tr("% is held back and never trained on, so the test stays honest.")}</p>
         </div>
 
         {/* engine mode */}
         {!native ? (<>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Where it runs</p>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Where it runs")}</p>
         <div className="space-y-1.5 mb-4">
           {modes.map((m) => (
             <button key={m.k} onClick={() => setEngineMode(m.k)}
-              className={`w-full flex items-center justify-between rounded-lg border px-3 py-2 text-left ${engineMode === m.k ? "border-teal-500 bg-teal-500/5" : "border-slate-800 bg-slate-950 hover:border-slate-600"}`}>
-              <span><span className="text-sm text-slate-200">{m.label}</span><span className="block text-[11px] text-slate-500">{m.desc}</span></span>
+              className={`w-full flex items-center justify-between rounded-lg border px-3 py-2 text-start ${engineMode === m.k ? "border-teal-500 bg-teal-500/5" : "border-slate-800 bg-slate-950 hover:border-slate-600"}`}>
+              <span><span className="text-sm text-slate-200">{tr(m.label)}</span><span className="block text-[11px] text-slate-500">{tr(m.desc)}</span></span>
               {engineMode === m.k ? <Check size={15} className="text-teal-400 shrink-0" /> : null}
             </button>
           ))}
@@ -10255,24 +10257,24 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
         {/* download / status */}
         {modelState === "starting" ? (
           <div className="flex items-center gap-2 text-sm text-slate-300 bg-slate-950 border border-slate-800 rounded-xl p-3">
-            <Loader2 size={16} className="animate-spin" /> Loading the model into memory — large models take a minute
+            <Loader2 size={16} className="animate-spin" /> {tr("Loading the model into memory — large models take a minute")}
           </div>
         ) : modelState === "ready" ? (
           <div className="flex items-center gap-2 text-sm text-teal-300 bg-teal-500/10 border border-teal-900/60 rounded-xl p-3">
-            <Check size={16} /> {activeTier ? activeTier.label : "Model"} loaded — running locally
+            <Check size={16} /> {activeTier ? activeTier.label : tr("Model")} {tr("loaded — running locally")}
           </div>
         ) : modelState === "downloading" ? (
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-2"><span>Downloading model…</span><span>{dlPct}%</span></div>
+            <div className="flex items-center justify-between text-xs text-slate-400 mb-2"><span>{tr("Downloading model…")}</span><span>{dlPct}%</span></div>
             <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-teal-500 transition-all" style={{ width: dlPct + "%" }} /></div>
           </div>
         ) : (
           <button onClick={downloadModel} disabled={!activeTier}
             className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${activeTier ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600 cursor-not-allowed"}`}>
-            <Download size={16} /> {activeTier ? `Download ${activeTier.label} · ${activeTier.sizeGB} GB` : "No model fits this device"}
+            <Download size={16} /> {activeTier ? tr("Download {m} · {s} GB", { m: activeTier.label, s: activeTier.sizeGB }) : tr("No model fits this device")}
           </button>
         )}
-        <p className="text-[11px] text-slate-600 mt-3">One download, then it works offline forever. On Wi-Fi this takes a few minutes; the model stays on your device.</p>
+        <p className="text-[11px] text-slate-600 mt-3">{tr("One download, then it works offline forever. On Wi-Fi this takes a few minutes; the model stays on your device.")}</p>
       </div>
     </div>
   );
@@ -10286,56 +10288,56 @@ function OrgModal({ org, setOrg, close, flash }) {
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2"><Building2 size={18} className="text-teal-400" /> Company terminology</h2>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2"><Building2 size={18} className="text-teal-400" /> {tr("Company terminology")}</h2>
           <button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button>
         </div>
-        <p className="text-xs text-slate-500 mb-4">Your real names for your real things. Every document then uses them correctly — no invented equipment names, no wrong site spellings. Stays on your devices.</p>
+        <p className="text-xs text-slate-500 mb-4">{tr("Your real names for your real things. Every document then uses them correctly — no invented equipment names, no wrong site spellings. Stays on your devices.")}</p>
 
         <button onClick={() => set("on", !o.on)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm mb-4 ${o.on ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-950 text-slate-400"}`}>
-          <span>Use company terminology</span>
-          <span className={`w-9 h-5 rounded-full p-0.5 transition-colors ${o.on ? "bg-teal-500" : "bg-slate-700"}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${o.on ? "translate-x-4" : ""}`} /></span>
+          <span>{tr("Use company terminology")}</span>
+          <span className={`w-9 h-5 rounded-full p-0.5 transition-colors ${o.on ? "bg-teal-500" : "bg-slate-700"}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${o.on ? "translate-x-4 rtl:-translate-x-4" : ""}`} /></span>
         </button>
 
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">Company name</p>
-        <input value={o.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Adrighem & Aldibiki" className={field} />
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">{tr("Company name")}</p>
+        <input value={o.name} onChange={(e) => set("name", e.target.value)} placeholder={tr("e.g. Adrighem & Aldibiki")} className={field} />
 
-        <p className="text-xs uppercase tracking-wider text-slate-500 mt-3 mb-1.5">Sites / locations</p>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mt-3 mb-1.5">{tr("Sites / locations")}</p>
         <textarea value={o.sites} onChange={(e) => set("sites", e.target.value)} rows={2}
-          placeholder="e.g. North Gate Yard, October Depot, Site B — Sheikh Zayed" className={field + " resize-none"} />
+          placeholder={tr("e.g. North Gate Yard, October Depot, Site B — Sheikh Zayed")} className={field + " resize-none"} />
 
-        <p className="text-xs uppercase tracking-wider text-slate-500 mt-3 mb-1.5">Equipment / assets</p>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mt-3 mb-1.5">{tr("Equipment / assets")}</p>
         <textarea value={o.assets} onChange={(e) => set("assets", e.target.value)} rows={2}
-          placeholder="e.g. LTM 1200 (unit 3), Demag AC 100, XCMG QY50KA — 'Crane 3' means unit 3" className={field + " resize-none"} />
+          placeholder={tr("e.g. LTM 1200 (unit 3), Demag AC 100, XCMG QY50KA — 'Crane 3' means unit 3")} className={field + " resize-none"} />
 
-        <p className="text-xs uppercase tracking-wider text-slate-500 mt-3 mb-1.5">Internal terms & abbreviations</p>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mt-3 mb-1.5">{tr("Internal terms & abbreviations")}</p>
         <textarea value={o.terms} onChange={(e) => set("terms", e.target.value)} rows={2}
-          placeholder="e.g. PTW = permit to work, 'the yard' = North Gate, LO = lift operation" className={field + " resize-none"} />
+          placeholder={tr("e.g. PTW = permit to work, 'the yard' = North Gate, LO = lift operation")} className={field + " resize-none"} />
 
         <div className="flex gap-2 mt-3">
           <div className="flex-1">
-            <p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">Downtime cost / hour</p>
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">{tr("Downtime cost / hour")}</p>
             <input value={o.rate} onChange={(e) => set("rate", e.target.value)} placeholder="e.g. 1800" inputMode="decimal" className={field} />
           </div>
           <div className="w-24">
-            <p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">Currency</p>
-            <input value={o.currency} onChange={(e) => set("currency", e.target.value)} placeholder="EGP" className={field} />
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">{tr("Currency")}</p>
+            <input value={o.currency} onChange={(e) => set("currency", e.target.value)} placeholder={tr("EGP")} className={field} />
           </div>
         </div>
-        <p className="text-[11px] text-slate-600 mt-1">Turns logged downtime into a figure you can put in front of management.</p>
+        <p className="text-[11px] text-slate-600 mt-1">{tr("Turns logged downtime into a figure you can put in front of management.")}</p>
 
-        <p className="text-xs uppercase tracking-wider text-slate-500 mt-3 mb-1.5">Reporting rules</p>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mt-3 mb-1.5">{tr("Reporting rules")}</p>
         <textarea value={o.rules} onChange={(e) => set("rules", e.target.value)} rows={2}
-          placeholder="e.g. every incident must state whether work was stopped; always record permit number" className={field + " resize-none"} />
+          placeholder={tr("e.g. every incident must state whether work was stopped; always record permit number")} className={field + " resize-none"} />
 
         {o.on && orgLine(o) ? (
-          <p className="text-[11px] text-teal-500/70 mt-3 border-l border-teal-900/60 pl-2">
-            This is added to every field document — and it's also what your own adapter trains on, so the model learns your operation, not a generic one.
+          <p className="text-[11px] text-teal-500/70 mt-3 border-l border-teal-900/60 ps-2">
+            {tr("This is added to every field document — and it's also what your own adapter trains on, so the model learns your operation, not a generic one.")}
           </p>
         ) : null}
 
         <div className="flex gap-2 mt-4">
-          <button onClick={() => { setOrg(o); flash("Company terminology saved"); close(); }} className="flex-1 py-2.5 rounded-lg bg-teal-500 text-slate-950 font-medium">Save</button>
-          <button onClick={() => { setOrg({ ...EMPTY_ORG }); setO({ ...EMPTY_ORG }); flash("Cleared"); }} className="px-4 py-2.5 rounded-lg border border-slate-800 text-slate-400 hover:border-rose-500 hover:text-rose-400 text-sm">Clear</button>
+          <button onClick={() => { setOrg(o); flash(tr("Company terminology saved")); close(); }} className="flex-1 py-2.5 rounded-lg bg-teal-500 text-slate-950 font-medium">{tr("Save")}</button>
+          <button onClick={() => { setOrg({ ...EMPTY_ORG }); setO({ ...EMPTY_ORG }); flash(tr("Cleared")); }} className="px-4 py-2.5 rounded-lg border border-slate-800 text-slate-400 hover:border-rose-500 hover:text-rose-400 text-sm">{tr("Clear")}</button>
         </div>
       </div>
     </div>
@@ -10350,26 +10352,26 @@ function MemoryModal({ records, findings, closeFollowUp, close }) {
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2"><Radar size={18} className="text-teal-400" /> Site memory</h2>
+          <h2 className="text-xl font-bold text-white flex items-center gap-2"><Radar size={18} className="text-teal-400" /> {tr("Site memory")}</h2>
           <button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button>
         </div>
-        <p className="text-xs text-slate-500 mb-4">Every record stays on this device. The connections between them are what a single report can never show you.</p>
+        <p className="text-xs text-slate-500 mb-4">{tr("Every record stays on this device. The connections between them are what a single report can never show you.")}</p>
 
         {open.length > 0 ? (
           <div className="mb-5">
-            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Open actions · {open.length}</p>
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Open actions ·")} {open.length}</p>
             <div className="space-y-1.5">
               {open.map(({ r, f, i }, k) => {
                 const age = days(r.ts);
                 return (
                   <div key={k} className={`flex items-start gap-2 rounded-lg px-2.5 py-2 border text-xs ${
                     age >= 14 ? "bg-rose-500/10 border-rose-900/60" : age >= 7 ? "bg-amber-500/10 border-amber-900/60" : "bg-slate-950 border-slate-800"}`}>
-                    <button onClick={() => closeFollowUp(r.id, i)} title="Mark done"
+                    <button onClick={() => closeFollowUp(r.id, i)} title={tr("Mark done")}
                       className="text-slate-500 hover:text-teal-400 mt-0.5 shrink-0"><CheckCircle2 size={15} /></button>
                     <span className="flex-1 text-slate-300">
                       {f.text}
                       <span className="block text-[10px] text-slate-500 mt-0.5">
-                        {r.doc.replace("_", " ")}{r.asset ? ` · ${r.asset}` : ""} · {age === 0 ? "opened today" : age + " day" + (age === 1 ? "" : "s") + " open"}
+                        {r.doc.replace("_", " ")}{r.asset ? ` · ${r.asset}` : ""} · {age === 0 ? tr("opened today") : age + " day" + (age === 1 ? "" : "s") + " open"}
                       </span>
                     </span>
                   </div>
@@ -10381,27 +10383,27 @@ function MemoryModal({ records, findings, closeFollowUp, close }) {
 
         {findings.length > 0 ? (
           <div className="mb-5">
-            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Patterns</p>
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Patterns")}</p>
             <div className="space-y-1.5">
               {findings.map((f, i) => (
                 <div key={i} className={`text-xs rounded-lg px-2.5 py-2 border ${
                   f.severity === "high" ? "bg-rose-500/10 border-rose-900/60 text-rose-200"
                   : f.severity === "medium" ? "bg-amber-500/10 border-amber-900/60 text-amber-200"
-                  : "bg-slate-950 border-slate-800 text-slate-400"}`}>{f.summary}</div>
+                  : "bg-slate-950 border-slate-800 text-slate-400"}`}>{tr(f.summary)}</div>
               ))}
             </div>
           </div>
         ) : null}
 
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Records · {records.length}</p>
+        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Records ·")} {records.length}</p>
         <div className="space-y-1.5 max-h-56 overflow-auto">
           {[...records].reverse().map((r) => (
             <div key={r.id} className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-300 capitalize">{r.doc.replace("_", " ")}{r.asset ? ` · ${r.asset}` : ""}</span>
-                <span className="text-[10px] text-slate-600">{days(r.ts)}d ago</span>
+                <span className="text-[10px] text-slate-600">{days(r.ts)}{tr("d ago")}</span>
               </div>
-              <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{r.note}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{tr(r.note)}</p>
             </div>
           ))}
         </div>

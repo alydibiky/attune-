@@ -9,6 +9,7 @@
 // ago and it was heavy", "الدورة نزلت امبارح بالليل وكانت خفيفة" — and lands
 // on the right day of the calendar, with the flow and any symptoms.
 import React, { useState, useMemo } from "react";
+import { tr } from "./i18n.js";
 import { CalendarDays, ChevronLeft, ChevronRight, Droplet, Trash2, ShieldCheck, Plus, X } from "lucide-react";
 
 const KEY = "attune:cycle:v1";
@@ -323,41 +324,41 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
   return (
     <div className="space-y-4 max-w-xl mx-auto">
       <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-        <p className="text-xs uppercase tracking-wider text-rose-300/80 flex items-center gap-1.5"><Droplet size={13} /> Cycle</p>
+        <p className="text-xs uppercase tracking-wider text-rose-300/80 flex items-center gap-1.5"><Droplet size={13} /> {tr("Cycle")}</p>
         <p className="text-2xl text-white font-semibold mt-1">{headline.big}</p>
         <p className="text-sm text-slate-400 mt-1 leading-snug">{headline.small}</p>
         {stats.last ? (
           <div className="grid grid-cols-3 gap-2 mt-3">
-            <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">Cycle</p><p className="text-sm text-slate-100">{stats.cycleLen} days{stats.known ? "" : " (default)"}</p></div>
-            <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">Period</p><p className="text-sm text-slate-100">{stats.periodLen} days</p></div>
-            <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">Fertile window</p><p className="text-sm text-slate-100">{stats.fertile ? fromKey(stats.fertile.from).toLocaleDateString([], { day: "numeric", month: "short" }) + "–" + fromKey(stats.fertile.to).getDate() : "—"}</p></div>
+            <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">{tr("Cycle")}</p><p className="text-sm text-slate-100">{stats.cycleLen} days{stats.known ? "" : tr(" (default)")}</p></div>
+            <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">{tr("Period")}</p><p className="text-sm text-slate-100">{stats.periodLen} days</p></div>
+            <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">{tr("Fertile window")}</p><p className="text-sm text-slate-100">{stats.fertile ? fromKey(stats.fertile.from).toLocaleDateString([], { day: "numeric", month: "short" }) + "–" + fromKey(stats.fertile.to).getDate() : "—"}</p></div>
           </div>
         ) : null}
         <div className="flex flex-wrap gap-1.5 mt-3">
           {!stats.inPeriod ? (
-            <button onClick={() => { upd((c) => cycleSetDay(c, todayKey, { flow: "medium", start: true, at: Date.now() })); flash("Period started today"); }}
-              className="px-3 py-2 rounded-lg bg-rose-500 text-white text-sm font-medium active:scale-95">Period started today</button>
+            <button onClick={() => { upd((c) => cycleSetDay(c, todayKey, { flow: "medium", start: true, at: Date.now() })); flash(tr("Period started today")); }}
+              className="px-3 py-2 rounded-lg bg-rose-500 text-white text-sm font-medium active:scale-95">{tr("Period started today")}</button>
           ) : (
-            <button onClick={() => { upd((c) => cycleSetDay(c, todayKey, { flow: (c.days[todayKey] || {}).flow || "light", end: true, at: Date.now() })); flash("Marked as ended today"); }}
-              className="px-3 py-2 rounded-lg bg-slate-700 text-white text-sm font-medium active:scale-95">Period ended today</button>
+            <button onClick={() => { upd((c) => cycleSetDay(c, todayKey, { flow: (c.days[todayKey] || {}).flow || "light", end: true, at: Date.now() })); flash(tr("Marked as ended today")); }}
+              className="px-3 py-2 rounded-lg bg-slate-700 text-white text-sm font-medium active:scale-95">{tr("Period ended today")}</button>
           )}
-          <button onClick={() => setSel(todayKey)} className="px-3 py-2 rounded-lg border border-slate-700 text-slate-200 text-sm">Log today</button>
-          <button onClick={goInstant} className="px-3 py-2 rounded-lg border border-slate-700 text-slate-400 text-sm">Type it instead</button>
+          <button onClick={() => setSel(todayKey)} className="px-3 py-2 rounded-lg border border-slate-700 text-slate-200 text-sm">{tr("Log today")}</button>
+          <button onClick={goInstant} className="px-3 py-2 rounded-lg border border-slate-700 text-slate-400 text-sm">{tr("Type it instead")}</button>
         </div>
         {stats.variation != null && stats.variation > 9 ? (
-          <p className="text-[11px] text-amber-300/80 mt-3 leading-snug">Your last cycles differed by {stats.variation} days, so predictions are rough. If cycles are often very irregular, it's worth mentioning to a doctor.</p>
+          <p className="text-[11px] text-amber-300/80 mt-3 leading-snug">{tr("Your last cycles differed by")} {stats.variation} {tr("days, so predictions are rough. If cycles are often very irregular, it's worth mentioning to a doctor.")}</p>
         ) : null}
       </section>
 
       {/* calendar */}
       <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
         <div className="flex items-center justify-between mb-3">
-          <button onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))} className="att-icon-btn"><ChevronLeft size={18} /></button>
+          <button onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))} className="att-icon-btn"><ChevronLeft size={18} className="rtl:rotate-180" /></button>
           <p className="text-sm text-slate-200 font-medium">{month.toLocaleDateString([], { month: "long", year: "numeric" })}</p>
-          <button onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))} className="att-icon-btn"><ChevronRight size={18} /></button>
+          <button onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))} className="att-icon-btn"><ChevronRight size={18} className="rtl:rotate-180" /></button>
         </div>
         <div className="grid grid-cols-7 gap-1 text-center">
-          {["Sa", "Su", "Mo", "Tu", "We", "Th", "Fr"].map((d) => <span key={d} className="text-[10px] text-slate-500 py-1">{d}</span>)}
+          {["Sa", "Su", "Mo", "Tu", "We", "Th", "Fr"].map((d) => <span key={d} className="text-[10px] text-slate-500 py-1">{tr(d)}</span>)}
           {grid.map((k, i) => k ? (
             <button key={k} onClick={() => setSel(k)}
               className={`aspect-square rounded-lg text-sm flex flex-col items-center justify-center relative ${cellStyle(k)} ${k === todayKey ? "ring-2 ring-white/70" : ""} ${sel === k ? "outline outline-2 outline-teal-400" : ""}`}>
@@ -367,11 +368,11 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
           ) : <span key={"p" + i} />)}
         </div>
         <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[10px] text-slate-400">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-rose-500/70" /> Period</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border border-dashed border-rose-400" /> Expected</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-teal-500/15" /> Fertile</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-teal-500/40" /> Ovulation (est.)</span>
-          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-300" /> Symptoms</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-rose-500/70" /> {tr("Period")}</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border border-dashed border-rose-400" /> {tr("Expected")}</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-teal-500/15" /> {tr("Fertile")}</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-teal-500/40" /> {tr("Ovulation (est.)")}</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-300" /> {tr("Symptoms")}</span>
         </div>
       </section>
 
@@ -382,20 +383,20 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
             <p className="text-sm text-slate-100 font-medium">{fromKey(sel).toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" })}</p>
             <button onClick={() => setSel(null)} className="att-icon-btn"><X size={16} /></button>
           </div>
-          <p className="text-[11px] text-slate-500 mt-2 mb-1.5">Flow</p>
+          <p className="text-[11px] text-slate-500 mt-2 mb-1.5">{tr("Flow")}</p>
           <div className="grid grid-cols-4 gap-1.5">
             {FLOWS.map(([k, l]) => (
               <button key={k} onClick={() => upd((c) => cycleSetDay(c, sel, { flow: selDay.flow === k ? null : k }))}
-                className={`py-2 rounded-lg text-xs border ${selDay.flow === k ? "border-rose-400 " + FLOW_BG[k] : "border-slate-800 bg-slate-950 text-slate-300"}`}>{l}</button>
+                className={`py-2 rounded-lg text-xs border ${selDay.flow === k ? "border-rose-400 " + FLOW_BG[k] : "border-slate-800 bg-slate-950 text-slate-300"}`}>{tr(l)}</button>
             ))}
           </div>
           <div className="flex gap-1.5 mt-2">
             <button onClick={() => upd((c) => cycleSetDay(c, sel, { start: !selDay.start, flow: selDay.flow || "medium" }))}
-              className={`flex-1 py-2 rounded-lg text-xs border ${selDay.start ? "border-rose-400 text-rose-200" : "border-slate-800 text-slate-400"}`}>First day of a period</button>
+              className={`flex-1 py-2 rounded-lg text-xs border ${selDay.start ? "border-rose-400 text-rose-200" : "border-slate-800 text-slate-400"}`}>{tr("First day of a period")}</button>
             <button onClick={() => upd((c) => cycleSetDay(c, sel, { end: !selDay.end }))}
-              className={`flex-1 py-2 rounded-lg text-xs border ${selDay.end ? "border-slate-400 text-slate-100" : "border-slate-800 text-slate-400"}`}>Last day</button>
+              className={`flex-1 py-2 rounded-lg text-xs border ${selDay.end ? "border-slate-400 text-slate-100" : "border-slate-800 text-slate-400"}`}>{tr("Last day")}</button>
           </div>
-          <p className="text-[11px] text-slate-500 mt-3 mb-1.5">Symptoms</p>
+          <p className="text-[11px] text-slate-500 mt-3 mb-1.5">{tr("Symptoms")}</p>
           <div className="flex flex-wrap gap-1.5">
             {SYMPTOM_LIST.map((sy) => {
               const on = (selDay.symptoms || []).includes(sy);
@@ -404,15 +405,15 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
                   const cur = (c.days[sel] || {}).symptoms || [];
                   const days = { ...c.days, [sel]: { ...(c.days[sel] || {}), symptoms: on ? cur.filter((x) => x !== sy) : [...cur, sy] } };
                   return { ...c, days };
-                })} className={`text-xs px-2.5 py-1.5 rounded-lg border ${on ? "border-amber-400 text-amber-200 bg-amber-500/10" : "border-slate-800 text-slate-400"}`}>{sy}</button>
+                })} className={`text-xs px-2.5 py-1.5 rounded-lg border ${on ? "border-amber-400 text-amber-200 bg-amber-500/10" : "border-slate-800 text-slate-400"}`}>{tr(sy)}</button>
               );
             })}
           </div>
           <input value={selDay.note || ""} onChange={(e) => upd((c) => ({ ...c, days: { ...c.days, [sel]: { ...(c.days[sel] || {}), note: e.target.value } } }))}
-            placeholder="Note (optional)" dir="auto"
+            placeholder={tr("Note (optional)")} dir="auto"
             className="w-full mt-3 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
           {cycle.days[sel] ? (
-            <button onClick={() => { upd((c) => cycleClearDay(c, sel)); flash("Day cleared"); }} className="mt-3 text-xs text-slate-500 flex items-center gap-1"><Trash2 size={12} /> Clear this day</button>
+            <button onClick={() => { upd((c) => cycleClearDay(c, sel)); flash(tr("Day cleared")); }} className="mt-3 text-xs text-slate-500 flex items-center gap-1"><Trash2 size={12} /> {tr("Clear this day")}</button>
           ) : null}
         </section>
       ) : null}
@@ -420,7 +421,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
       {/* history */}
       {stats.periods.length ? (
         <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">History</p>
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("History")}</p>
           <div className="space-y-1">
             {stats.periods.slice().reverse().slice(0, 8).map((p, i, arr) => {
               const prev = stats.periods[stats.periods.length - 1 - i - 1];
@@ -436,7 +437,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
       ) : null}
 
       <p className="flex items-start justify-center gap-1.5 text-[11px] text-slate-500 text-center px-4 leading-snug">
-        <ShieldCheck size={12} className="mt-0.5 shrink-0" /> Stays on this phone — kept out of Memory and never sent anywhere. Predictions are estimates, not contraception or medical advice.
+        <ShieldCheck size={12} className="mt-0.5 shrink-0" /> {tr("Stays on this phone — kept out of Memory and never sent anywhere. Predictions are estimates, not contraception or medical advice.")}
       </p>
     </div>
   );

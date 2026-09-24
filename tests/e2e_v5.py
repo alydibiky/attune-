@@ -3,7 +3,7 @@ Run after tests/setup.sh and web-src/build.sh:  python3 tests/e2e_v5.py [section
 """
 import json, sys
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import Env, new_page, check, real_errors, finish, HERE
 
 SECTIONS = sys.argv[1:] or ["backup", "arabic", "actions", "speed", "crane"]
 env = Env()
@@ -20,7 +20,7 @@ if (!localStorage.getItem('seeded')) {
 """
 
 def open_more(page):
-    page.locator("nav button:has-text('More')").click(); page.wait_for_timeout(200)
+    page.locator("nav button").last.click(); page.wait_for_timeout(200)
 
 def sec_backup(br):
     ctx, page = new_page(br, env, errors, extra_init=SEED)
@@ -122,7 +122,79 @@ def sec_backup(br):
     check("not an Attune backup" in page.locator("[data-testid=bk-err]").inner_text(), "a wrong file is refused before asking for the password")
     ctx.close()
 
-SECTION_FUNCS = {"backup": sec_backup}
+
+LATIN = r"""() => { const out = []; const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = w.nextNode(); n; n = w.nextNode()) { const t = n.nodeValue.trim(); const el = n.parentElement;
+    if (!t || !el || el.closest('[data-i18n-skip],textarea,script,style')) continue; const r = el.getBoundingClientRect();
+    if (!r.width || !r.height || r.bottom < 0 || r.top > innerHeight) continue;
+    const words = (t.match(/[A-Za-z]{3,}/g) || []).filter((w) => !/^(Attune|Pro|Qwen|Gemma|GGUF|InstaPay|Yusr|ChatGPT|Claude|Gemini|English|Brave|DuckDuckGo|KV|SHA|CPU|GPU|NPU|NEON|dotprod|KleidiAI|int8|matmul|Test|Phone|SM8650|imatrix|MoE|mmap|INT4|Vulkan|EGP|USD)$/.test(w));
+    if (words.length) out.push(t.slice(0, 80)); } return out; }"""
+
+def sec_arabic(br):
+    ctx, page = new_page(br, env, errors, extra_init="if(!sessionStorage.getItem('l')){sessionStorage.setItem('l',1);localStorage.setItem('ledger.v3', JSON.stringify({lang:'en', txns:[]}));}")
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
+    check(page.evaluate("document.documentElement.dir") == "ltr", "English is the default, left-to-right")
+    open_more(page)
+    sw = page.locator("[data-testid=lang-switch]")
+    check(sw.count() == 1, "More has the English | العربية switch")
+    with page.expect_navigation(timeout=10000):
+        sw.locator("button[data-lang=ar]").click()
+    page.wait_for_selector("nav", timeout=15000); page.wait_for_timeout(300)
+    check(page.evaluate("document.documentElement.dir") == "rtl" and page.evaluate("document.documentElement.lang") == "ar", "Arabic turns the whole page right-to-left")
+    nav = page.locator("nav button")
+    labels = [nav.nth(i).inner_text().strip() for i in range(nav.count())]
+    check(labels[0] == "المحادثة" and labels[-1] == "المزيد" and "المال" in labels, "bottom bar is in Arabic: %s" % labels)
+    b0 = nav.nth(0).bounding_box(); b4 = nav.nth(nav.count() - 1).bounding_box()
+    check(b0["x"] > b4["x"], "and it reads from the right (Chat is on the right)")
+    check(page.locator("textarea[placeholder='راسل Attune']").count() == 1, "the message box says راسل Attune")
+    check(json.loads(page.evaluate("localStorage.getItem('ledger.v3')"))["lang"] == "ar", "Yusr (Money) switches to Arabic too")
+    latin = page.evaluate(LATIN)
+    check(len(latin) == 0, "no English left on the home screen: %s" % latin[:5])
+    page.screenshot(path=HERE + "/v5-ar-home.png")
+    page.locator("header button").filter(has_text="لا يوجد نموذج").first.click(); page.wait_for_timeout(300)
+    latin = page.evaluate(LATIN)
+    check(len(latin) <= 3, "Engine screen is in Arabic (only model/tech names left): %s" % latin[:6])
+    page.screenshot(path=HERE + "/v5-ar-engine.png", full_page=False)
+    rec = page.locator("text=المُوصى به لهذا الجهاز").locator("xpath=..")
+    rec.get_by_role("button", name="تثبيت").first.click()
+    page.wait_for_selector("text=يعمل الآن", timeout=10000)
+    check(True, "installing a model works in Arabic")
+    page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
+    # a chat still works
+    page.evaluate("window.__mock.fake = 'الإجمالي **171,000 جنيه**.'")
+    page.locator("textarea").last.fill("3 أوناش × 4 أيام × 12,500 + 14% ضريبة؟")
+    page.locator("button[title='إرسال']").click()
+    page.wait_for_selector("text=171,000 جنيه", timeout=20000)
+    page.wait_for_timeout(800); page.screenshot(path=HERE + "/dbg.png")
+    check(page.locator("button[title='أعِد التوليد']").count() >= 1, "chatting works in Arabic, with Arabic answer buttons")
+    page.screenshot(path=HERE + "/v5-ar-chat.png")
+    open_more(page)
+    latin = page.evaluate(LATIN)
+    check(len(latin) <= 1, "More sheet is in Arabic: %s" % latin[:5])
+    page.screenshot(path=HERE + "/v5-ar-more.png")
+    page.locator("[data-testid=more-backup]").click(); page.wait_for_timeout(200)
+    check("النسخ الاحتياطي والاسترجاع" in page.locator("[data-testid=backup-panel]").inner_text(), "Backup screen is in Arabic")
+    page.screenshot(path=HERE + "/v5-ar-backup.png")
+    page.evaluate("window.__attuneBack()")
+    for i, name in ((1, "instant"), (3, "cycle-or-memory")):
+        nav.nth(i).click(); page.wait_for_timeout(400)
+        latin = page.evaluate(LATIN)
+        check(len(latin) <= 2, "%s screen is in Arabic: %s" % (name, latin[:5]))
+    page.screenshot(path=HERE + "/v5-ar-instant.png")
+    # back to English
+    open_more(page)
+    with page.expect_navigation(timeout=10000):
+        page.locator("[data-testid=lang-switch] button[data-lang=en]").click()
+    page.wait_for_selector("nav", timeout=15000)
+    check(page.evaluate("document.documentElement.dir") == "ltr" and page.locator("nav button:has-text('Chat')").count() == 1, "switching back to English restores everything")
+    ctx.close()
+    # first run offers the language
+    ctx, page = new_page(br, env, errors, extra_init="localStorage.removeItem('attune:onboarded')")
+    page.goto(env.url); page.wait_for_timeout(1500)
+    check(page.locator("[data-testid=lang-switch]").count() >= 1, "the first-run welcome offers English | العربية")
+    ctx.close()
+
+SECTION_FUNCS = {"backup": sec_backup, "arabic": sec_arabic}
 
 with sync_playwright() as pw:
     br = pw.chromium.launch()

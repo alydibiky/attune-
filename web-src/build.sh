@@ -23,7 +23,7 @@ test -s "$TMP/app.css" || { echo "CSS build failed"; exit 1; }
 
 # 2. JS: the app, bundled.
 node_modules/.bin/esbuild build/entry.jsx --bundle --format=iife --minify \
-  --jsx=transform --jsx-factory=React.createElement --jsx-fragment=React.Fragment --target=es2018 \
+  --jsx=transform --jsx-factory=React.createElement --jsx-fragment=React.Fragment --target=es2018 --charset=utf8 \
   --alias:react="$HERE/build/react-shim.js" \
   --alias:react-dom/client="$HERE/build/reactdom-shim.js" \
   --alias:lucide-react="$HERE/build/lucide-shim.js" \
