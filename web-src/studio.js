@@ -22,6 +22,22 @@ export const PACKS = {
         url: "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/vae/flux2-vae.safetensors" },
     ],
   },
+  // The same model at 8-bit: visibly finer detail, skin, text and edges than
+  // 4-bit (image models lose more to 4-bit than chat models do). For phones
+  // with 12 GB or more — Studio picks it for them.
+  "klein-4b-hq": {
+    id: "klein-4b-hq", kind: "draw", label: "FLUX.2 klein 4B · high quality", sizeGB: 7.13, needRam: 12, license: "Apache-2.0",
+    defaults: { steps: 4 },
+    quality: "The best pictures this phone can make: the 8-bit build of FLUX.2 klein — finer detail, cleaner faces, hands and text. Also edits your photos by instruction.",
+    files: [
+      { role: "diffusion", what: "drawing model (8-bit)", name: "flux-2-klein-4b-Q8_0.gguf", size: 4300629440,
+        url: "https://huggingface.co/leejet/FLUX.2-klein-4B-GGUF/resolve/main/flux-2-klein-4b-Q8_0.gguf" },
+      { role: "llm", what: "text reader", name: "Qwen3-4B-Q4_K_M.gguf", size: 2497281312,
+        url: "https://huggingface.co/unsloth/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf" },
+      { role: "vae", what: "colour decoder", name: "flux2-vae.safetensors", size: 336211292,
+        url: "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/vae/flux2-vae.safetensors" },
+    ],
+  },
   // Real-ESRGAN ×4 (BSD-3): 1024 px → 4096 px, sharper edges and textures.
   "esrgan-x4": {
     id: "esrgan-x4", kind: "upscale", label: "Real-ESRGAN ×4", sizeGB: 0.07, license: "BSD-3-Clause",
@@ -79,6 +95,12 @@ export function cleanPrompt(s, fallback) {
 }
 
 export function packReady(info, id) { return !!(info && (info.packs || []).some((p) => p.id === id)); }
+/** The drawing pack to use: an installed one (high quality first), else the one to offer for this phone. */
+export function drawPack(info) {
+  if (packReady(info, "klein-4b-hq")) return { id: "klein-4b-hq", ready: true };
+  if (packReady(info, "klein-4b")) return { id: "klein-4b", ready: true };
+  return { id: info && info.ramGB >= 12 ? "klein-4b-hq" : "klein-4b", ready: false };
+}
 
 export function loadStudio() { try { const v = JSON.parse(localStorage.getItem(STUDIO_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
 export function saveStudio(list) { try { localStorage.setItem(STUDIO_KEY, JSON.stringify(list.slice(0, 200))); } catch (e) {} }

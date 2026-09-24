@@ -11,6 +11,8 @@ import { tr } from "./i18n.js";
 import { ActionCard } from "./actions-ui.jsx";
 import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
+import { mathToText } from "./quality.js";
+import { looksLikeMathProblem, looksLikeCodeTask } from "./verify.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
@@ -32,6 +34,12 @@ function saveChats(list) {
   }
 }
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+/** The last few lines of the model's thinking, while it thinks (no inner scroll box to get stuck in). */
+function lastLines(t, n) {
+  const lines = String(t || "").trim().split("\n").filter((l) => l.trim());
+  const tail = lines.slice(-n).join("\n");
+  return tail.length > 600 ? "…" + tail.slice(-600) : tail;
+}
 function titleFrom(text) {
   const t = String(text || "").replace(/\s+/g, " ").trim();
   return t.length > 48 ? t.slice(0, 46) + "…" : t || "New chat";
@@ -61,7 +69,7 @@ function inline(text, keyBase) {
 
 export function Md({ text, runnable = true }) {
   const blocks = useMemo(() => {
-    const lines = String(text || "").replace(/\r/g, "").split("\n");
+    const lines = mathToText(String(text || "")).replace(/\r/g, "").split("\n");
     const out = [];
     let i = 0;
     while (i < lines.length) {
@@ -169,6 +177,9 @@ How to answer:
 - Be short: most answers fit in a few lines. Only go long when asked for detail, a plan or a document.
 - Calculations: write the short working FIRST, one step per line, then the total in bold on the last line. Never state a total before you have worked it out.
 - Write the answer once. Never repeat it, and never add a "correction" of your own answer — check each step before writing it.
+- Write maths as plain text a phone can show: 1/x = 1/30, x², 3 × 4, √2. Never LaTeX, never $ signs around formulas.
+- If the question is a trick, or impossible as stated, say so plainly in the first line and explain why.
+- If the user says you were wrong, check their point on its merits: agree and fix it if they are right, explain briefly if they are not. Keep the whole conversation in mind.
 - If a photo is attached, read it carefully and base the answer on what is actually visible.
 - If something is ambiguous, make the most reasonable assumption and state it in one short line.
 - Today is ${d.toDateString()}.
@@ -216,6 +227,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const bottomRef = useRef(null);
   const taRef = useRef(null);
   const stickRef = useRef(true);
+  const [typing, setTyping] = useState(false);
+  useEffect(() => () => document.documentElement.classList.remove("att-typing"), []);
 
   const chat = chats.find((c) => c.id === activeId) || null;
   const messages = chat ? chat.messages : [];
@@ -225,16 +238,33 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   useEffect(() => { if (newChatSignal) { stop(); setActiveId(null); setText(""); setImage(null); } }, [newChatSignal]);
   useEffect(() => { if (composerSeed) { setText(composerSeed); clearComposerSeed && clearComposerSeed(); setTimeout(() => taRef.current && taRef.current.focus(), 50); } }, [composerSeed]);
 
-  // Follow the answer as it streams, unless the reader scrolled up to read.
+  // Follow the answer as it streams — but the moment the reader touches the
+  // screen or scrolls up, stop following (v5.10: before, every new word
+  // pulled the page back down while you were trying to read). Following
+  // starts again only when they are back at the bottom, or tap ↓.
+  const [following, setFollowing] = useState(true);
+  const touching = useRef(false);
+  const lastAuto = useRef(0);
+  const gapNow = () => document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
   useEffect(() => {
+    const set = (v) => { if (stickRef.current !== v) { stickRef.current = v; setFollowing(v); } };
     const onScroll = () => {
-      const gap = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
-      stickRef.current = gap < 160;
+      if (Date.now() - lastAuto.current < 120 && !touching.current) return;   // our own scroll
+      set(gapNow() < 48);
     };
+    const onDown = () => { touching.current = true; };
+    const onUp = () => { touching.current = false; set(gapNow() < 48); };
+    const onWheel = (e) => { if (e.deltaY < 0) set(false); };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("touchstart", onDown, { passive: true });
+    window.addEventListener("touchend", onUp, { passive: true });
+    window.addEventListener("touchcancel", onUp, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("touchstart", onDown);
+      window.removeEventListener("touchend", onUp); window.removeEventListener("touchcancel", onUp); window.removeEventListener("wheel", onWheel); };
   }, []);
-  useEffect(() => { if (stickRef.current && bottomRef.current) bottomRef.current.scrollIntoView({ block: "end" }); }, [messages]);
+  const toBottom = () => { lastAuto.current = Date.now(); window.scrollTo(0, document.documentElement.scrollHeight); };
+  useEffect(() => { if (stickRef.current && !touching.current) toBottom(); }, [messages]);
 
   // Grow the text box with what is typed, up to a limit.
   useEffect(() => {
@@ -362,6 +392,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (!api.canUseAI()) return;
     const cid = ensureChat(typed || "Photo");
     const history = o.history || (chat ? chat.messages : []);
+    // A follow-up about a photo sent a moment ago ("what year is it?") gets
+    // that photo again — otherwise the model answers without seeing it.
+    let carried = null;
+    if (!img && typed) {
+      const recent = history.slice(-4).filter((m) => m.role === "user");
+      const withPic = recent.reverse().find((m) => m.image);
+      if (withPic && /^data:/.test(withPic.image)) carried = { url: withPic.image, media: (withPic.image.match(/^data:([^;]+)/) || [])[1] || "image/jpeg", data: withPic.image.split(",")[1] };
+    }
     const userMsg = o.reuseUser || { id: newId(), role: "user", text: typed, image: img ? img.url : null };
     const aiId = newId();
     const run = ++runRef.current;
@@ -384,32 +422,65 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     try {
       let content = typed || "What is in this photo? Read it and tell me what matters.";
       let sources = null, via = null;
+      const pic = img || carried;
       if (api.webOn && typed) {
-        const look = await api.webLookup(typed);
+        // With a photo, LOOK first: search for what is in the picture, not
+        // for the words "what is this car".
+        let query = typed;
+        if (img) {
+          onStatus("Looking at the photo…");
+          try {
+            const seen = await api.run([{ role: "user", content: "Look at the photo. In one short line, name exactly what it shows — for a product give brand and model if you can read or recognise them (badges, logos, text). No other words." }], img, { think: false, maxTokens: 60, temperature: 0.2 });
+            if (runRef.current !== run) return;
+            const named = String(seen || "").replace(/\s+/g, " ").trim().slice(0, 140);
+            if (named) query = named + " " + typed;
+          } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+        }
+        onStatus("Searching the web…");
+        const look = await api.webLookup(query);
         if (runRef.current !== run) return;
         if (look.hits && look.hits.length) {
           sources = look.hits; via = look.via;
           onStatus("Reading " + look.hits.length + " sources…");
-          content = api.groundedPrompt(typed, look.hits);
+          content = api.groundedPrompt(typed, look.hits) + (img ? "\n\n(A photo is attached: first say what it shows, then use the passages. If the passages don't cover it, answer from the photo and say so.)" : "");
         }
       } else if (typed && api.isPersonal(typed)) {
         const found = api.memSearch(typed);
         if (found.length) content = api.withRecords(typed, found);
       }
-      let answer;
-      try {
-        answer = await api.run(buildMessages(history, content), img, { onToken, onStatus, think: useThink });
+      let answer, extra = {};
+      // Word problems and coding requests are checked by running code on the
+      // phone before the answer is shown (verify.js / code.js). If the check
+      // cannot run, the question simply goes to the model as usual below.
+      if (route && !img && !sources && api.verifyMath && looksLikeMathProblem(typed)) {
+        try {
+          const r = await api.verifyMath(typed, { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+          if (runRef.current !== run) return;
+          if (r && r.ok) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; }
+        } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      } else if (route && !img && !sources && api.codeTask && looksLikeCodeTask(typed)) {
+        try {
+          const r = await api.codeTask(typed, { onStep: (s) => onStatus(s), onToken: (tx) => onToken("```\n" + tx.split("\n").slice(-30).join("\n") + "\n```", "") });
+          if (runRef.current !== run) return;
+          if (r && r.code) {
+            answer = (r.ok ? "" : tr("I couldn't make every test pass yet — here is the closest version; tap “Test & fix in Code” to keep going.") + "\n\n") + "```" + r.lang + "\n" + r.code + "\n```";
+            extra.codeCheck = { ok: r.ok, tests: r.tests, rounds: r.rounds, lang: r.lang };
+          }
+        } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      }
+      if (answer == null) try {
+        answer = await api.run(buildMessages(history, content), pic, { onToken, onStatus, think: useThink });
       } catch (e) {
         // Still too long for the model's window: answer with no earlier turns
         // rather than fail.
         if (!/longer than this model can read|context/i.test(String(e && e.message))) throw e;
         onStatus("Long chat — answering from this message alone…");
-        answer = await api.run(buildMessages([], content, 0), img, { onToken, onStatus, think: useThink });
+        answer = await api.run(buildMessages([], content, 0), pic, { onToken, onStatus, think: useThink });
       }
       if (runRef.current !== run) return;
       if (raf) cancelAnimationFrame(raf);
       const st = api.lastStats();
-      patchMsg(cid, aiId, { text: answer, streaming: false, phase: "", sources, via, secs: Math.round((Date.now() - t0) / 1000), stats: st });
+      patchMsg(cid, aiId, { text: answer, streaming: false, phase: "", sources, via, secs: Math.round((Date.now() - t0) / 1000), stats: st, ...extra });
       api.spend();
       api.remember({ kind: "chat", title: (typed || "Photo").slice(0, 70), text: typed || "(photo)", output: answer, tags: ["chat"] });
     } catch (e) {
@@ -475,11 +546,26 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     } catch (e) { api.flash(String((e && e.message) || e).slice(0, 100)); }
     finally { setListening(false); }
   };
+  // A photo is shrunk to at most 1280 px before it is used: the model sees
+  // the same detail (it reads photos at about this size anyway), it reaches
+  // the model faster, and a chat full of photos doesn't fill the phone's storage.
   const pickImage = (file) => {
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) return api.flash(tr("That photo is too large"));
+    if (file.size > 25 * 1024 * 1024) return api.flash(tr("That photo is too large"));
     const r = new FileReader();
-    r.onload = () => { const url = String(r.result); setImage({ data: url.split(",")[1], media: file.type || "image/jpeg", url }); };
+    r.onload = () => {
+      const src = String(r.result);
+      const im = new Image();
+      im.onload = () => {
+        const k = Math.min(1, 1280 / Math.max(im.width, im.height));
+        const c = document.createElement("canvas"); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        const url = c.toDataURL("image/jpeg", 0.88);
+        setImage({ data: url.split(",")[1], media: "image/jpeg", url });
+      };
+      im.onerror = () => setImage({ data: src.split(",")[1], media: file.type || "image/jpeg", url: src });
+      im.src = src;
+    };
     r.readAsDataURL(file);
   };
 
@@ -590,8 +676,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                   <ChevronDown size={13} className={openThought[m.id] ? "rotate-180" : ""} />
                 </button>
                 {(openThought[m.id] || (m.streaming && !m.text)) ? (
-                  <p dir="auto" className="att-scroll mt-1.5 ps-3 border-s-2 border-slate-800 text-[12px] text-slate-500 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
-                    {openThought[m.id] ? m.thinking : m.thinking.slice(-500)}</p>
+                  <p dir="auto" className="mt-1.5 ps-3 border-s-2 border-slate-800 text-[12px] text-slate-500 whitespace-pre-wrap leading-relaxed" data-testid="thinking-text">
+                    {openThought[m.id] ? m.thinking : lastLines(m.thinking, 6)}</p>
                 ) : null}
               </div>
             ) : null}
@@ -606,6 +692,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                   patchChat(chat.id, (c) => ({ ...c, messages: hist })); setTimeout(() => ask(m.askText, { history: hist, noRoute: true }), 0); }}
                   className="ms-auto underline underline-offset-2">{tr("Ask the model")}</button>
               </div>
+            ) : null}
+            {m.verified ? (
+              <div className="mt-1.5 text-[11px]" data-testid="verified">
+                <button onClick={() => setOpenThought((o) => ({ ...o, ["v" + m.id]: !o["v" + m.id] }))} className="text-emerald-300 flex items-center gap-1">
+                  <CheckCircle2 size={12} />{tr("Checked by running code on this phone")} <ChevronDown size={11} className={openThought["v" + m.id] ? "rotate-180" : ""} /></button>
+                {openThought["v" + m.id] ? <Md text={"```python\n" + m.verified.code + "\n```\n\n" + tr("It printed:") + "\n```\n" + String(m.verified.output || "").trim() + "\n```"} /> : null}
+              </div>
+            ) : null}
+            {m.codeCheck ? (
+              <p className={`mt-1.5 text-[11px] flex items-center gap-1 ${m.codeCheck.ok ? "text-emerald-300" : "text-amber-300"}`} data-testid="code-check">
+                <CheckCircle2 size={12} />{m.codeCheck.ok ? (m.codeCheck.tests ? tr("Tested on this phone: {n} passed", { n: m.codeCheck.tests }) : tr("Ran on this phone")) : tr("Not passing yet")}
+                {m.codeCheck.rounds ? " · " + tr("fixed {n}×", { n: m.codeCheck.rounds }) : ""}</p>
             ) : null}
             {m.error ? <p className="text-sm text-amber-300/90 mt-1">{m.error}</p> : null}
             {m.sources && m.sources.length ? (
@@ -622,6 +720,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 <button onClick={() => share(m)} className="p-2" title={tr("Share")}><Share2 size={15} /></button>
                 <button onClick={() => { api.remember({ kind: "note", title: m.text.slice(0, 60), text: m.text, output: "", tags: ["saved"] }); api.flash(tr("Saved to Memory")); }} className="p-2" title={tr("Save to Memory")}><Save size={15} /></button>
                 {m.stats && m.stats.tps ? <span className="text-[10px] text-slate-600 ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}
+                {m.stats && m.stats.looped ? <span className="text-[10px] text-amber-400/80 ms-1" data-testid="loop-note">{tr("stopped a repeat")}</span> : null}
                 {m.stats && m.stats.tps != null && m.stats.tps < 3 && api.openSpeed ? (
                   <button onClick={api.openSpeed} className="text-[10px] text-amber-300 underline underline-offset-2 ms-1" data-testid="slow-hint">{tr("unusually slow — why?")}</button>) : null}
               </div>
@@ -643,8 +742,17 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         <div ref={bottomRef} />
       </div>
 
-      {/* ---- composer, pinned above the bottom bar ---- */}
-      <div className="fixed start-0 end-0 z-40 px-3 pb-2 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent" style={{ bottom: "calc(58px + env(safe-area-inset-bottom))" }}>
+      {/* ---- jump to the newest words ---- */}
+      {!following && messages.length ? (
+        <button onClick={() => { stickRef.current = true; setFollowing(true); toBottom(); }} data-testid="jump-bottom"
+          className="fixed z-40 end-4 w-10 h-10 rounded-full bg-slate-800 border border-slate-600 text-slate-100 shadow-lg flex items-center justify-center"
+          style={{ bottom: typing ? "calc(118px + env(safe-area-inset-bottom))" : "calc(176px + env(safe-area-inset-bottom))" }} title={tr("Newest")}><ChevronDown size={18} /></button>
+      ) : null}
+
+      {/* ---- composer, pinned above the bottom bar (or at the very bottom
+           while typing — the bottom bar steps aside for the keyboard) ---- */}
+      <div className={`fixed start-0 end-0 ${typing ? "z-[60]" : "z-40"} px-3 pb-2 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent`} data-testid="composer"
+        style={{ bottom: typing ? "env(safe-area-inset-bottom)" : "calc(58px + env(safe-area-inset-bottom))" }}>
         <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-xl">
           {image ? (
             <div className="relative inline-block mb-2 ms-1">
@@ -652,7 +760,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               <button onClick={() => setImage(null)} className="absolute -top-2 -end-2 bg-slate-800 border border-slate-600 rounded-full p-0.5 text-slate-200"><X size={13} /></button>
             </div>
           ) : null}
-          <textarea ref={taRef} value={text} onChange={(e) => setText(e.target.value)} rows={1} dir="auto"
+          <textarea ref={taRef} value={text} onChange={(e) => setText(e.target.value)} rows={1} dir="auto" data-testid="chat-input"
+            onFocus={() => { setTyping(true); document.documentElement.classList.add("att-typing"); setTimeout(() => { try { taRef.current.scrollIntoView({ block: "nearest" }); } catch (e) {} }, 250); }}
+            // (after a moment: a tap on Send closes the keyboard first, and the
+            // text box must not move away from under the finger before the tap lands)
+            onBlur={() => { setTimeout(() => { if (document.activeElement !== taRef.current) { setTyping(false); document.documentElement.classList.remove("att-typing"); } }, 300); }}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && window.matchMedia && window.matchMedia(tr("(pointer: fine)")).matches) { e.preventDefault(); ask(); } }}
             placeholder={listening ? tr("Listening…") : tr("Message Attune")}
             className="att-scroll w-full bg-transparent px-2 py-1.5 text-[16px] leading-relaxed text-slate-100 placeholder-slate-500 resize-none focus:outline-none max-h-[180px]" />

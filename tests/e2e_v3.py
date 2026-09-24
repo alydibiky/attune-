@@ -262,7 +262,7 @@ with sync_playwright() as pw:
     check(page.evaluate("window.__mock.chats") == n0, "logged on the phone without calling the model")
     check(page.locator("text=heavy flow").count() >= 1, "flow read as heavy")
     page.get_by_role("button", name="Open the calendar").click()
-    page.wait_for_selector("text=Period · day 1", timeout=5000)
+    page.wait_for_selector("text=/Period · day [12]/", timeout=5000)   # (day 2 when "2 hours ago" crosses midnight)
     check(True, "Cycle tab shows day 1 of the period")
     page.screenshot(path=HERE + "/v3-cycle.png", full_page=True)
 

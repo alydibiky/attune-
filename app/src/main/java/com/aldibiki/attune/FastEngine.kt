@@ -12,6 +12,8 @@ import com.google.ai.edge.litertlm.ExperimentalApi
 import com.google.ai.edge.litertlm.ExperimentalFlags
 import com.google.ai.edge.litertlm.Message
 import com.google.ai.edge.litertlm.MessageCallback
+import com.google.ai.edge.litertlm.NoRepeatNgramConfig
+import com.google.ai.edge.litertlm.RepetitionPenaltyConfig
 import com.google.ai.edge.litertlm.SamplerConfig
 import com.google.ai.edge.litertlm.ThinkingConfig
 import org.json.JSONArray
@@ -209,7 +211,7 @@ object FastEngine {
                 if (history.isNotEmpty() && history.last().toString().isNotBlank()) Contents.of(history.removeAt(history.size - 1).toString()) else Contents.of("")
             }
 
-            val temp = if (body.has("temperature")) body.optDouble("temperature", 0.3) else 0.3
+            val temp = if (body.has("temperature")) body.optDouble("temperature", 0.5) else 0.5
             val sampler = if (temp <= 0.0) SamplerConfig(topK = 1, topP = 1.0, temperature = 1.0, seed = body.optInt("seed", 0))
                 else SamplerConfig(topK = body.optInt("top_k", 64).coerceAtLeast(1), topP = body.optDouble("top_p", 0.95), temperature = temp, seed = body.optInt("seed", 0))
             val think = body.optJSONObject("chat_template_kwargs")?.optBoolean("enable_thinking", false) ?: false
@@ -256,8 +258,17 @@ object FastEngine {
                 override fun onDone() { done.countDown() }
                 override fun onError(throwable: Throwable) { failure = throwable; done.countDown() }
             }
+            // Against loops: a gentle repeat penalty, and a ban on repeating
+            // any long exact run of tokens (a model re-writing the same
+            // "correction" again and again). Off for strict-JSON requests.
+            val rp = body.optDouble("repeat_penalty", 1.0)
+            val ng = body.optInt("no_repeat_ngram", 0)
+            val penalty = if (!grammar && rp > 1.0) RepetitionPenaltyConfig(repetitionPenalty = rp.toFloat(), windowSize = body.optInt("repeat_last_n", 256)) else null
+            val ngram = if (!grammar && ng > 0) NoRepeatNgramConfig(noRepeatNgramSize = ng, windowSize = 2048) else null
             cv.sendMessageAsync(
                 Message.user(question), cb,
+                repetitionPenaltyConfig = penalty,
+                noRepeatNgramConfig = ngram,
                 maxOutputToken = maxOut,
                 thinkingConfig = if (think) ThinkingConfig(enableThinking = true, thinkingTokenBudget = body.optInt("thinking_budget_tokens", -1)) else null,
             )

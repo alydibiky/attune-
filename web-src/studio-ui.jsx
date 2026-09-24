@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X } from "lucide-react";
 import { tr } from "./i18n.js";
-import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, loadStudio, saveStudio } from "./studio.js";
+import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, drawPack, loadStudio, saveStudio } from "./studio.js";
 
 const STAGE = {
   start: "Starting the picture engine…", load: "Loading the picture model…", prompt: "Reading your description…",
@@ -58,7 +58,9 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   useEffect(() => { if (incoming && incoming.prompt != null) { setIdea(incoming.prompt); setMode("create"); clearIncoming && clearIncoming(); } }, [incoming]);
 
   if (!info) return <div className="p-4 text-sm text-slate-400" data-testid="studio-page">{tr("Studio works in the Android app.")}</div>;
-  const drawReady = packReady(info, "klein-4b");
+  const dp = drawPack(info);
+  const drawReady = dp.ready;
+  const P = PACKS[dp.id];
   const upReady = packReady(info, "esrgan-x4");
   const keep = (list) => { setGallery(list); saveStudio(list); };
 
@@ -97,7 +99,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       // 2. The picture.
       const sz = SIZES.find((s) => s.id === size) || SIZES[0];
       const r0 = opts.ref || ref;
-      const arg = { pack: "klein-4b", prompt: finalPrompt, width: r0 ? r0.w : sz.w, height: r0 ? r0.h : sz.h, steps: 4 };
+      const arg = { pack: dp.id, prompt: finalPrompt, width: r0 ? r0.w : sz.w, height: r0 ? r0.h : sz.h, steps: 4 };
       if (opts.seed != null) arg.seed = opts.seed;
       if (mode === "edit" || opts.ref) arg.refImage = r0.dataUrl;
       const run = nativeCall("imagine", arg, progress("draw"));
@@ -151,10 +153,10 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       {!drawReady ? (
         <div className="rounded-xl border border-violet-800/60 bg-violet-500/5 p-3" data-testid="studio-install">
           <p className="text-sm text-slate-100 font-medium flex items-center gap-1.5"><Palette size={16} className="text-violet-300" />{tr("Pictures made on your phone")}</p>
-          <p className="text-[12px] text-slate-300 mt-1 leading-relaxed">{tr(PACKS["klein-4b"].quality)}</p>
-          <p className="text-[11px] text-slate-500 mt-1">{PACKS["klein-4b"].label} · {PACKS["klein-4b"].sizeGB} {tr("GB, once")} · {tr("needs {n} GB RAM", { n: PACKS["klein-4b"].needRam })} · {PACKS["klein-4b"].license}</p>
-          {info.ramGB && info.ramGB < PACKS["klein-4b"].needRam ? <p className="text-[11px] text-amber-300 mt-1">{tr("This phone has {n} GB — it may be too little for pictures.", { n: info.ramGB })}</p> : null}
-          {dl && dl.id === "klein-4b" ? (
+          <p className="text-[12px] text-slate-300 mt-1 leading-relaxed">{tr(P.quality)}</p>
+          <p className="text-[11px] text-slate-500 mt-1">{P.label} · {P.sizeGB} {tr("GB, once")} · {tr("needs {n} GB RAM", { n: P.needRam })} · {P.license}</p>
+          {info.ramGB && info.ramGB < P.needRam ? <p className="text-[11px] text-amber-300 mt-1">{tr("This phone has {n} GB — it may be too little for pictures.", { n: info.ramGB })}</p> : null}
+          {dl && dl.id === dp.id ? (
             <div className="mt-2">
               <div className="flex justify-between text-[11px] text-slate-300"><span>{dl.stage}</span><span>{dl.pct}%</span></div>
               <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1"><div className="h-full bg-violet-500" style={{ width: dl.pct + "%" }} /></div>
@@ -162,8 +164,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
                 <button onClick={stop} className="text-[11px] text-slate-400 underline">{tr("Cancel")}</button></div>
             </div>
           ) : (
-            <button onClick={() => install("klein-4b")} disabled={!!dl || !info.built} data-testid="studio-install-go"
-              className="mt-2 px-3 py-2 rounded-lg bg-violet-500 text-white text-sm font-medium disabled:opacity-40 flex items-center gap-1.5"><Download size={14} />{tr("Install · {s} GB", { s: PACKS["klein-4b"].sizeGB })}</button>
+            <button onClick={() => install(dp.id)} disabled={!!dl || !info.built} data-testid="studio-install-go"
+              className="mt-2 px-3 py-2 rounded-lg bg-violet-500 text-white text-sm font-medium disabled:opacity-40 flex items-center gap-1.5"><Download size={14} />{tr("Install · {s} GB", { s: P.sizeGB })}</button>
           )}
           <p className="text-[11px] text-slate-500 mt-2">{tr("Download it on Wi-Fi. After that, pictures are made with no internet at all.")}</p>
         </div>

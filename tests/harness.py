@@ -48,13 +48,15 @@ V5_EXTRA = r"""
   S.doctor = { model: "Qwen3.5 4B · Q4_K_M", modelGB: 2.7, ramGB: 12, availRamGB: 6.1, cores: 8, bigCores: 8, genThreads: 4, thermal: 0,
                powerSave: false, cpu: "NEON · dotprod · int8 matmul · KleidiAI", gpu: "", settings: "context 16384 · weights in RAM", buffers: "CPU model buffer size = 2700 MiB" };
   N.doctor = () => JSON.stringify(S.doctor);
+  S.chatCancel = {};
+  const c0 = N.cancel; N.cancel = (id) => { S.chatCancel[id] = true; S.cancelled = (S.cancelled || 0) + 1; if (c0) c0(id); };
   const realChat = N.chat;
   N.chat = (id, body) => {
     const b = JSON.parse(body);
     S.bodies = (S.bodies || []).concat([b]);
     // A queue of fixed answers (the Code workbench's write → fix rounds), streamed in pieces.
-    if (S.fakeQueue && S.fakeQueue.length) { const t = S.fakeQueue.shift(); let i = 0;
-      const tick = () => { if (i < t.length) { window.__attuneNative.delta(id, t.slice(i, i + 40), ""); i += 40; setTimeout(tick, 5); }
+    if (S.fakeQueue && S.fakeQueue.length && !(b.max_tokens <= 2)) { const t = S.fakeQueue.shift(); let i = 0;
+      const tick = () => { if (i < t.length) { if (S.chatCancel && S.chatCancel[id]) return J(id, "Stopped"); window.__attuneNative.delta(id, t.slice(i, i + 40), ""); i += 40; setTimeout(tick, S.slowQueue || 5); }
         else R(id, { content: t, reasoning: "", timings: { predicted_per_second: 42.0 }, usage: {} }); };
       setTimeout(tick, 20); return; }
     if (S.fakeTps && b.stream && S.fake) { const t = S.fake; setTimeout(() => { window.__attuneNative.delta(id, t, ""); R(id, { content: t, reasoning: "", timings: { predicted_per_second: S.fakeTps }, usage: {} }); }, 30); return; }

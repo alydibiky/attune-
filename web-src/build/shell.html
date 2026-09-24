@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Attune</title>
 <meta name="theme-color" content="#020617" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -73,8 +73,23 @@
   textarea,pre,iframe,.overflow-auto,.overflow-y-auto,.overflow-x-auto,.att-scroll,.att-chips,.att-tabs{overscroll-behavior:contain}
   .overflow-x-auto,.att-chips,.att-tabs{scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .overflow-x-auto::-webkit-scrollbar,.att-chips::-webkit-scrollbar,.att-tabs::-webkit-scrollbar{display:none}
-  /* Long pages skip drawing what is far off screen. */
-  section{content-visibility:auto;contain-intrinsic-size:auto 400px}
+  /* (v5.10: content-visibility on sections was removed. In the Android
+     WebView it painted sections blank after a tab switch and made the page
+     height jump while scrolling — the "black screen" and the scroll that
+     throws you back.) */
+  /* Nothing may make the page wider than the phone: long words wrap, and
+     anything wider (tables, code) scrolls inside its own box. "clip" (not
+     "hidden") so the page itself stays the one thing that scrolls. */
+  html,body{overflow-x:clip;max-width:100%}
+  /* While typing in Chat the bottom bar steps aside, so the text box sits
+     right on top of the keyboard and what you type is always in view. */
+  html.att-typing nav.fixed{display:none}
+  body{overflow-wrap:anywhere}
+  td,th,pre,code{overflow-wrap:normal}
+  .grid>*{min-width:0}
+  input,select,textarea{min-width:0;max-width:100%}
+  img,video,canvas,iframe,svg{max-width:100%}
+  table{max-width:none}
   /* A square icon button with a proper 40px touch target. */
   .att-icon-btn{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;padding:0 10px;border-radius:12px;
     border:1px solid #1e293b;background:#020617;color:#5eead4;cursor:pointer;flex-shrink:0}

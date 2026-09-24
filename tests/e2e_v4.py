@@ -246,7 +246,7 @@ with sync_playwright() as pw:
     check(page.evaluate("window.__mock.chats") == n0, "period log handled on the phone, no model call")
     check(nav.locator("button:has-text('Cycle')").count() == 1, "Cycle joins the bottom bar")
     page.get_by_role("button", name="Open the calendar").click()
-    page.wait_for_selector("text=Period · day 1", timeout=5000)
+    page.wait_for_selector("text=/Period · day [12]/", timeout=5000)   # (day 2 when "2 hours ago" crosses midnight)
     check(True, "and it's in the calendar")
     nav.locator("button:has-text('Chat')").click(); page.wait_for_timeout(200)
 

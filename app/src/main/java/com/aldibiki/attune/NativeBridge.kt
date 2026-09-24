@@ -61,6 +61,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             .put("phase", Engine.loadPhase(ctx))
             .put("heavy", active != null && Engine.isHeavy(ctx, active))
             .put("thermal", DeviceInfo.thermalStatus(ctx))
+            .put("engine", Engine.kind)
     }
 
     private fun blockedByAirGap(id: String, what: String): Boolean {

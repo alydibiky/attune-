@@ -17,6 +17,10 @@ import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
 import { CraneToolkit } from "./crane-ui.jsx";
 import { CodeWorkbench } from "./code-ui.jsx";
 import { StudioPage } from "./studio-ui.jsx";
+import { detectLoop, trimLoop } from "./quality.js";
+import { verifyMath } from "./verify.js";
+import { workLoop, guessLang } from "./code.js";
+import { runCode, runHtml, pythonAvailable } from "./sandbox.js";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
 
 /* =========================================================================
@@ -1321,7 +1325,16 @@ const LocalEngine = {
     if (think) body.thinking_budget_tokens = thinkBudget;
     if (ENGINE_PREFS.reproducible) { body.temperature = 0; body.seed = 42; }
     else if (think) { body.temperature = 0.6; body.top_p = 0.95; body.top_k = 20; body.min_p = 0; }
-    else { body.temperature = typeof o.temperature === "number" ? o.temperature : 0.3; }
+    else { body.temperature = typeof o.temperature === "number" ? o.temperature : 0.5; body.top_p = 0.95; body.top_k = 40; }
+    // Against loops (v5.10): a gentle penalty on repeating recent tokens, and
+    // DRY, which stops long exact repeats ("(Correction: …)" × 5) without
+    // hurting code that legitimately repeats short bits. The fast engine gets
+    // the same through repeat_penalty / no_repeat_ngram (FastEngine.kt).
+    if (!o.grammar) {
+      body.repeat_penalty = 1.05; body.repeat_last_n = 256;
+      body.dry_multiplier = 0.8; body.dry_base = 1.75; body.dry_allowed_length = 4; body.dry_penalty_last_n = 1024;
+      body.no_repeat_ngram = 24;
+    }
     // In the app every answer streams, even when the caller only wants the
     // finished text: the stream is what lets Stop work at once and lets the
     // screen show that something is happening.
@@ -1355,13 +1368,38 @@ const LocalEngine = {
         const pr = nativeCall("chat", body);
         const id = nativeLastId();
         if (o.background) LocalEngine._bg.add(id); else LocalEngine._nativeId = id;
+        let looped = null, sinceCheck = 0;
         if (NATIVE_CALLS[id]) NATIVE_CALLS[id].onDelta = (c, r) => {
+          if (looped) return;
           text += c || ""; thinking += r || "";
+          // A model going round in circles is stopped at once (quality.js).
+          sinceCheck += (c || "").length + (r || "").length;
+          if (sinceCheck > 60 && !o.grammar) {   // (strict-JSON answers are bounded by their grammar)
+            sinceCheck = 0;
+            const lt = detectLoop(text), lr = !text && detectLoop(thinking);
+            if (lt.loop || (lr && lr.loop)) {
+              looped = lt.loop ? { where: "text", cut: lt.cut } : { where: "thinking", cut: lr.cut };
+              if (looped.where === "text") text = trimLoop(text, looped.cut); else thinking = trimLoop(thinking, looped.cut);
+              try { NATIVE.cancel(id); } catch (x) {}
+            }
+          }
           if (wantTokens) { try { o.onToken(text, thinking); } catch (e) {} }
         };
-        const res = await pr;
+        let res;
+        try { res = await pr; }
+        catch (e) { if (!looped) throw e; res = { content: text, reasoning: thinking }; }
         LAST_STATS = statsFrom(res, Date.now() - t0n);
-        return res.content || text;
+        if (looped) { LAST_STATS.looped = looped.where; LocalEngine.lastLooped = looped.where;
+          // Went round in circles while THINKING, before any answer: one more
+          // try without thinking usually lands.
+          if (looped.where === "thinking" && !text.trim() && !o._retried)
+            return LocalEngine.run(prompt, image, { ...o, think: false, _retried: true });
+          return text;
+        }
+        LocalEngine.lastLooped = null;
+        const full = res.content || text;
+        const lf = o.grammar ? { loop: false } : detectLoop(full);
+        return lf.loop ? trimLoop(full, lf.cut) : full;
       } catch (e) {
         const msg = String((e && e.message) || e);
         if (msg === "Stopped") throw new Error("Stopped");
@@ -5701,7 +5739,7 @@ async function webLookup(q) {
 const GROUNDED_RULES = `Answer ONLY from the passages below.
 - Every fact in your answer must be present in the passages. If it is not there, do not say it.
 - Do not add background you happen to know. Do not fill gaps. Do not guess.
-- If the passages do not answer the question, say exactly: "The sources I found don't answer that." Then stop.
+- If the passages do not answer the question, do NOT just refuse. Say plainly what they DO show, in one or two sentences, with citations — for example "I found no record of a 1983 Lunar Incident between the USSR and Canada; the closest real events are the 1978 Kosmos 954 satellite crash in Canada [3] and the 1983 Soviet false-alarm incident [1]." If the question rests on something that the passages suggest never happened, say so directly.
 - Cite the source number in square brackets after each claim, like [1].
 - Answer in the language the question was asked in. Be brief.`;
 
@@ -6977,6 +7015,9 @@ export default function App() {
   useEffect(() => {
     const st = engineInfo && engineInfo.state, id = engineInfo && engineInfo.modelId;
     if (st !== "ready" || !id || warmedRef.current === id) return;
+    // The fast engine reads a prompt in well under a second and keeps no
+    // cache between answers: a warm-up would only hold the GPU for nothing.
+    if (engineInfo.engine === "litert") return;
     warmedRef.current = id;
     const readyAt = Date.now();
     const t = setTimeout(() => {
@@ -7839,6 +7880,20 @@ export default function App() {
     },
     prefersArabic: () => ((profile && profile.speaks) || []).some((x) => /Arabic/.test(x)),
     openSpeed: () => setShowEngine(true),
+    // ---- verified answers (verify.js, code.js) ----
+    verifyMath: async (question, { onStep, onToken } = {}) => {
+      if (!(await pythonAvailable())) return { ok: false, why: "no python" };
+      const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken ? (t) => o.onToken(t) : undefined });
+      return verifyMath({ question, llm, runPy: (code) => runCode({ lang: "python", code }), onStep: (x) => onStep && onStep(tr(x)), onToken });
+    },
+    codeTask: async (task, { onStep, onToken } = {}) => {
+      const lang = guessLang(task);
+      if (lang === "python" && !(await pythonAvailable())) return null;
+      const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken });
+      const say = { write: "Writing the program and its tests…", run: "Running it on this phone…", fix: "Sending the error back — fixing…" };
+      return workLoop({ task, lang, llm, run: (l, code) => (l === "html" ? runHtml(code) : runCode({ lang: l, code })), maxRounds: 3,
+        onEvent: (e) => { if (say[e.type] && onStep) onStep(tr(say[e.type])); if ((e.type === "writing" || e.type === "fixing") && onToken) onToken(e.text || ""); } });
+    },
     // ---- reminders & phone actions (see actions.js) ----
     looksLikeAction,
     readAction: async (text) => {
@@ -8641,8 +8696,8 @@ export default function App() {
               <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
                 <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
                   <p className="text-sm font-medium text-slate-300">{tr("Going there — what you need")}</p>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-slate-500">{tr("Travelling on a passport from")}</span>
+                  <div className="flex items-center gap-1.5 min-w-0 max-w-full">
+                    <span className="text-[11px] text-slate-500 shrink-0">{tr("Travelling on a passport from")}</span>
                     <select value={nationality} onChange={(e) => setNationality(e.target.value)}
                       className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-teal-500">
                       {NATIONALITIES.map((n) => <option key={n.k} value={n.k}>{n.flag} {tr(n.label)}</option>)}

@@ -170,7 +170,7 @@ def sec_chat(br):
     install(page)
     page.evaluate("(t) => { window.__mock.fakeQueue = [t]; }", ANSWER)
     comp = page.locator("textarea[placeholder='Message Attune']")
-    comp.fill("write a python script that adds up these loads: 12.5, 7.25 and 3 t"); page.locator("button[title='Send']").click()
+    comp.fill("Show me an example snippet for summing crane loads"); page.locator("button[title='Send']").click()
     page.wait_for_selector("button[title='Regenerate']", timeout=30000)
     check(page.locator("[data-testid=run-code]").count() == 2, "finished code blocks in Chat get a Run / Preview button")
     page.locator("[data-testid=run-code]").first.click()
