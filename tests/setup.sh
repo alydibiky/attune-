@@ -13,4 +13,5 @@ cmake --build build-dl --target llama-server -j"$(nproc)" >/dev/null
 mkdir -p build-dl/bin && cp -n build-dl/bin/*.so* build-dl/bin/ 2>/dev/null || true
 pip install --quiet numpy gguf playwright 2>/dev/null || pip install --quiet --break-system-packages numpy gguf playwright
 python3 make_tiny_model.py tiny-a.gguf
+bash ../web-src/fetch-pyodide.sh   # Python for the Code sandbox (e2e_v58)
 echo "Ready. Build the page (bash ../web-src/build.sh), then: python3 e2e_v4.py && python3 e2e_v3.py"

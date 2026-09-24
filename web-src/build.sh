@@ -47,3 +47,9 @@ put('<script>__APP__</script>', f'<script type="text/plain" id="yusr-src">{b64}<
 out.write_text(shell, encoding='utf-8')
 print(f'{out}  {len(shell.encode())/1e6:.2f} MB')
 PY
+
+# 4. The code sandbox's workers are separate files (a Worker needs a URL).
+#    Python itself (www/py/) comes from fetch-pyodide.sh.
+mkdir -p "$HERE/../app/src/main/assets/www/sandbox"
+cp "$HERE"/sandbox/*.mjs "$HERE/../app/src/main/assets/www/sandbox/"
+[ -f "$HERE/../app/src/main/assets/www/py/VERSION" ] || echo "note: no Python in www/py yet — run: bash web-src/fetch-pyodide.sh"

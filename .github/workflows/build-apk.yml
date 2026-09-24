@@ -118,6 +118,21 @@ jobs:
             && { echo "::error::the page still loads a library from a CDN — it will not work offline"; exit 1; } \
             || echo "no external script sources — good"
 
+      # Python for the Code workbench's sandbox (Pyodide, MPL-2.0): fetched
+      # from its GitHub release and checked against its own checksums
+      # (web-src/fetch-pyodide.sh). If this fails the APK still builds; Code
+      # then offers JavaScript and web pages only, and says so.
+      - name: Cache Python (Pyodide)
+        uses: actions/cache@v4
+        with:
+          path: web-src/.pyodide-cache/*.tar.bz2
+          key: pyodide-${{ hashFiles('web-src/fetch-pyodide.sh') }}
+      - name: Python for the code sandbox
+        continue-on-error: true
+        run: |
+          bash web-src/fetch-pyodide.sh
+          test -f app/src/main/assets/www/sandbox/py-worker.mjs || echo "::warning::the sandbox workers are missing — run bash web-src/build.sh and commit"
+
       # Signing. Without these secrets it builds a debug-signed APK, which
       # installs fine for testing but cannot go on the Play Store.
       - name: Write the keystore

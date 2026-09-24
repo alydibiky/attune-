@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
-  Bell, Calculator, Timer,
+  Bell, Calculator, Timer, Code2,
   Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User,
   ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users,
   AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2
@@ -15,6 +15,7 @@ import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, bui
 import { RemindersPanel, whenText } from "./actions-ui.jsx";
 import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
 import { CraneToolkit } from "./crane-ui.jsx";
+import { CodeWorkbench } from "./code-ui.jsx";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
 
 /* =========================================================================
@@ -6494,9 +6495,10 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 
 const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
-  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit" };
+  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code" };
 const MORE_TOOLS = [
-  ["instant", "Instant", "Quick actions on text & photos", Zap], ["crane", "Crane toolkit", "Load charts, ground, slings, wind", Calculator],
+  ["instant", "Instant", "Quick actions on text & photos", Zap], ["code", "Code", "Programs tested on your phone", Code2],
+  ["crane", "Crane toolkit", "Load charts, ground, slings, wind", Calculator],
   ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
   ["memory", "Memory", "Everything you've saved", History],
   ["cycle", "Cycle", "Period tracker", Droplet], ["travel", "Travel", "Country packs & phrases", Plane],
@@ -7119,6 +7121,13 @@ export default function App() {
     };
     window.addEventListener("attune-share", onShare);
     return () => window.removeEventListener("attune-share", onShare);
+  }, []);
+  // "Test & fix in Code" under a code block in Chat.
+  const [codeIn, setCodeIn] = useState(null);
+  useEffect(() => {
+    const on = (e) => { setCodeIn(e.detail || null); setMode("code"); };
+    window.addEventListener("attune-code", on);
+    return () => window.removeEventListener("attune-code", on);
   }, []);
   const [trainLog, setTrainLog] = useState(() => makeTrainingLog());
   const [collect, setCollect] = useState(false);          // opt-in, off by default
@@ -8547,6 +8556,13 @@ export default function App() {
               </div>
             ) : null}
           </div>
+        ) : mode === "code" ? (
+          <CodeWorkbench flash={flash} native={NATIVE} incoming={codeIn} clearIncoming={() => setCodeIn(null)}
+            engineReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")} openEngine={() => setShowEngine(true)}
+            abortModel={() => LocalEngine.abort()}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken })}
+            saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
+            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "crane" ? (
           <CraneToolkit flash={flash} remember={remember}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />

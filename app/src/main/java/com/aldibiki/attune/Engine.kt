@@ -273,11 +273,22 @@ object Engine {
             // agrees with. The answer is exactly what the big model would
             // write alone — only faster when the guesses are good.
             a += listOf("-md", draft.modelFile.absolutePath,
-                "--spec-type", "draft-simple",     // without this, -md alone does nothing at this llama.cpp
+                // draft-simple: without it, -md alone does nothing at this llama.cpp.
+                // ngram-mod: see below — both guessers can work together.
+                "--spec-type", "draft-simple,ngram-mod",
                 "--spec-draft-n-max", "12",
                 "-td", gen.toString(),
                 "-ngld", if (useGpu) "99" else "0")
             settingsNote += " · draft: " + draft.label
+        }
+        if (draft == null) {
+            // Copy-ahead: when the answer repeats text that is already in the
+            // conversation — editing code, quoting a document, rewriting a
+            // table — the engine proposes the next stretch straight from that
+            // text and the model checks it in one pass. Free (no second
+            // model), same answer, and several times faster on such parts.
+            a += listOf("--spec-type", "ngram-mod")
+            settingsNote += " · copy-ahead"
         }
         val mm = model.mmproj
         if (mm != null && mm.exists()) {

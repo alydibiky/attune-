@@ -14,3 +14,6 @@ local.properties
 *.b64
 .idea/
 app/src/main/cpp/opencl/
+# Python for the Code sandbox: fetched by web-src/fetch-pyodide.sh (CI does it), not committed.
+app/src/main/assets/www/py/
+web-src/.pyodide-cache/

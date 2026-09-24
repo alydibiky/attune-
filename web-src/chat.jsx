@@ -10,6 +10,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { tr } from "./i18n.js";
 import { ActionCard } from "./actions-ui.jsx";
 import { looksLikeCalc, calculate } from "./calc.js";
+import { RunBlock } from "./code-ui.jsx";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
   Loader2, Search, ChevronDown, CheckCircle2, Sparkles,
@@ -57,7 +58,7 @@ function inline(text, keyBase) {
   return out;
 }
 
-export function Md({ text }) {
+export function Md({ text, runnable = true }) {
   const blocks = useMemo(() => {
     const lines = String(text || "").replace(/\r/g, "").split("\n");
     const out = [];
@@ -69,8 +70,9 @@ export function Md({ text }) {
         const body = [];
         i++;
         while (i < lines.length && !/^\s*```/.test(lines[i])) body.push(lines[i++]);
+        const closed = i < lines.length;
         i++;
-        out.push({ t: "code", lang, text: body.join("\n") });
+        out.push({ t: "code", lang, text: body.join("\n"), closed });
         continue;
       }
       if (/^\s*\|.*\|\s*$/.test(l) && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}/.test(lines[i + 1])) {   // table
@@ -124,6 +126,7 @@ export function Md({ text }) {
             <pre className="att-scroll bg-slate-950 border border-slate-800 rounded-xl p-3 text-[13px] font-mono text-teal-50 overflow-x-auto whitespace-pre" dir="ltr">{b.text}</pre>
             <button onClick={() => { try { navigator.clipboard.writeText(b.text); } catch (e) {} }}
               className="absolute top-1.5 end-1.5 text-[10px] px-2 py-1 rounded-md bg-slate-800 text-slate-300">copy</button>
+            {b.closed && runnable && /^(py|python3?|js|javascript|html?)$/i.test(b.lang.trim()) && b.text.trim() ? <RunBlock lang={b.lang.trim()} code={b.text} /> : null}
           </div>
         );
         if (b.t === "table") return (

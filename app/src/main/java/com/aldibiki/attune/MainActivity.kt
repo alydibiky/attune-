@@ -77,6 +77,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
+    /**
+     * The code sandbox loads Python as WebAssembly and its helpers as JS
+     * modules; browsers refuse both unless they arrive with the right type,
+     * which the asset loader does not always know for these extensions.
+     */
+    private fun withMime(url: android.net.Uri, r: WebResourceResponse?): WebResourceResponse? {
+        if (r == null) return null
+        val p = url.path ?: return r
+        when {
+            p.endsWith(".wasm") -> r.mimeType = "application/wasm"
+            p.endsWith(".mjs") -> r.mimeType = "text/javascript"
+            p.endsWith(".whl") || p.endsWith(".zip") -> r.mimeType = "application/zip"
+            p.endsWith(".json") -> r.mimeType = "application/json"
+        }
+        return r
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Prefs.airGap(this) // prime the lock before anything can reach the network
@@ -95,7 +112,7 @@ class MainActivity : AppCompatActivity() {
             android.webkit.ServiceWorkerController.getInstance().setServiceWorkerClient(
                 object : android.webkit.ServiceWorkerClient() {
                     override fun shouldInterceptRequest(request: WebResourceRequest): WebResourceResponse? =
-                        if (request.url.host == "appassets.androidplatform.net") loader.shouldInterceptRequest(request.url) else null
+                        if (request.url.host == "appassets.androidplatform.net") withMime(request.url, loader.shouldInterceptRequest(request.url)) else null
                 })
         } catch (e: Exception) { }
 
@@ -169,7 +186,7 @@ class MainActivity : AppCompatActivity() {
             override fun shouldInterceptRequest(v: WebView, req: WebResourceRequest): WebResourceResponse? {
                 val url = req.url
                 val host = url.host ?: ""
-                if (host == "appassets.androidplatform.net") return loader.shouldInterceptRequest(url)
+                if (host == "appassets.androidplatform.net") return withMime(url, loader.shouldInterceptRequest(url))
                 if (host == "127.0.0.1" || host == "localhost") return null   // the on-device model
                 if (url.scheme == "data" || url.scheme == "blob") return null
                 if (Prefs.airGapNow) {

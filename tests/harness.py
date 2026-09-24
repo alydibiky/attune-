@@ -52,6 +52,11 @@ V5_EXTRA = r"""
   N.chat = (id, body) => {
     const b = JSON.parse(body);
     S.bodies = (S.bodies || []).concat([b]);
+    // A queue of fixed answers (the Code workbench's write → fix rounds), streamed in pieces.
+    if (S.fakeQueue && S.fakeQueue.length) { const t = S.fakeQueue.shift(); let i = 0;
+      const tick = () => { if (i < t.length) { window.__attuneNative.delta(id, t.slice(i, i + 40), ""); i += 40; setTimeout(tick, 5); }
+        else R(id, { content: t, reasoning: "", timings: { predicted_per_second: 42.0 }, usage: {} }); };
+      setTimeout(tick, 20); return; }
     if (S.fakeTps && b.stream && S.fake) { const t = S.fake; setTimeout(() => { window.__attuneNative.delta(id, t, ""); R(id, { content: t, reasoning: "", timings: { predicted_per_second: S.fakeTps }, usage: {} }); }, 30); return; }
     if (b.grammar) { S.grammarBodies = (S.grammarBodies || []).concat([b]);
       if (S.fakeJson) { const t = JSON.stringify(S.fakeJson); setTimeout(() => { window.__attuneNative.delta(id, t, ""); R(id, { content: t }); }, 30); return; } }

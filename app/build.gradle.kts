@@ -11,8 +11,8 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 35
-        versionCode = 7
-        versionName = "5.7"
+        versionCode = 8
+        versionName = "5.8"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
         // phone. Add "x86_64" only if you want to run it in the emulator — it
@@ -99,7 +99,7 @@ android {
 
     // The .html is already minified; compressing it again in the APK only
     // slows the first load.
-    androidResources { noCompress += listOf("html") }
+    androidResources { noCompress += listOf("html", "wasm", "whl", "zip") }   // Python for the code sandbox: already compressed, read faster raw
 }
 
 // (kotlinOptions {} is an error from Kotlin 2.2 on; this is its replacement.)

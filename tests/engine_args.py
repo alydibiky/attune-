@@ -20,10 +20,10 @@ common = ["-m", HERE + "/tiny-a.gguf", "--host", "127.0.0.1", "--api-key", "k", 
           "--load-mode", "none", "--cache-reuse", "256", "--cache-ram", "0", "--jinja", "--no-ui", "--no-slots", "--threads-http", "2",
           "--cors-headers", "Authorization,Content-Type", "--cors-origins", "https://appassets.androidplatform.net"]
 sets = {
-    "CPU": ["-ngl", "0", "-fa", "on", "-ctk", "q8_0", "-ctv", "q8_0"],
-    "GPU": ["-ngl", "99", "-fa", "auto"],
+    "CPU": ["-ngl", "0", "-fa", "on", "-ctk", "q8_0", "-ctv", "q8_0", "--spec-type", "ngram-mod"],
+    "GPU": ["-ngl", "99", "-fa", "auto", "--spec-type", "ngram-mod"],
     "CPU + draft": ["-ngl", "0", "-fa", "on", "-ctk", "q8_0", "-ctv", "q8_0", "-md", HERE + "/tiny-a.gguf",
-                    "--spec-type", "draft-simple", "--spec-draft-n-max", "12", "-td", "2", "-ngld", "0"],
+                    "--spec-type", "draft-simple,ngram-mod", "--spec-draft-n-max", "12", "-td", "2", "-ngld", "0"],
 }
 fails = 0
 for i, (name, extra) in enumerate(sets.items()):
