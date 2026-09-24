@@ -1,6 +1,6 @@
 # Attune — handoff for the next session
 
-_Last updated: 24 Sep 2026 (end of the v4 session)._
+_Last updated: 24 Sep 2026 (end of the v5 session)._
 
 ## 1. The person and how to work with him
 - **Ali (Aly Aldibiki)**, Egypt (Cairo, UTC+3). Owns a crane company (Adrighem & Aldibiki: Liebherr, Demag, XCMG, Sany cranes, 20–500 t). Works on **Windows**; tests on an **Honor Magic 8 Pro** (Snapdragon, 12–16 GB RAM, MagicOS with Google services).
@@ -64,27 +64,28 @@ tests/              e2e_v4.py (38 checks), e2e_v3.py (35 checks), setup.sh, make
   - On-device routing: a period log or a payment becomes a card, with no model call.
   - A bottom bar (Chat · Instant · Money · Cycle/Memory · More), with a More sheet holding every other tool.
 
-## 6. Status right now
-- **v4 has NOT been tested on Ali's phone yet.** Ali should upload the v4 zip and build. Check first: how fast answers start and flow, whether the phone stays cool, the mic, read-aloud, and sharing a bank SMS to Attune.
-- If something breaks, ask for the Engine screen, then **Engine log**, as a screenshot or copied text.
-- Ali still has a Gemma 4 12B installed; he should install Qwen 3.5 4B from Engine.
+## 6. Status right now (after v5)
+- **GitHub `main` was still v2** at the start of the v5 session (v4 had never been uploaded). The v5 session could NOT push (the repo was not in its authorised set), so everything was delivered as `Attune-v5.x-upload.zip` for Ali to upload with **Add file → Upload files**. If `main` still shows "CI: install only platform-tools…" as the last commit, the upload hasn't happened yet.
+- **First install of v5 needs one uninstall**: earlier APKs were signed with a random per-run CI debug key. From v5 on, release builds use the fixed test key `app/attune-test.keystore`, so later updates install over each other. Ali should back up (More → Backup) before any future uninstall.
+- **Not yet tested on Ali's phone:** everything in v4 and v5. Check first: GitHub Actions log line "OpenCL SDK ready" (GPU backend built) or its absence (CPU-only APK, still fine).
+- If something breaks: Engine screen → Engine log (screenshot or copied text).
 
-## 7. The agreed next step: v5 (from the research, in priority order)
-1. **Encrypted backup/restore** of everything (chats, Yusr ledger, cycle, memory, settings) to one password-protected file. This is critical because all data lives only on the phone.
-2. **Full Arabic interface** (RTL, all strings; Yusr already has Arabic).
-3. **Reminders and actions:**
-   - Tool calling with a **GBNF grammar**: llama-server supports `grammar`/`json_schema` per request. With a small model, prompt-only JSON works only about 80–85% of the time.
-   - Actions: alarms, reminders, calendar events and WhatsApp drafts through Android intents. Found commitments become notifications.
-4. **Speed:**
-   - Build the **OpenCL (Adreno)** backend with CPU fallback. Hexagon NPU is still "experimental" in llama.cpp.
-   - **Speculative decoding** with Qwen 3.5 0.8B as the draft model (`-md`).
-   - A built-in benchmark.
-5. **Crane toolkit** (deterministic calculators, not model guesses): load charts per crane, outrigger ground pressure, sling angles, wind limits, pre-lift checklist. **Or "Ask your documents"** (on-device RAG with EmbeddingGemma 308M / AraGemma-Embedding).
+## 7. v5 — what was built (all five done, each its own commit)
+1. **Encrypted backup/restore** (`web-src/backup.js`, `backup-ui.jsx`): every localStorage key (chats, Yusr `ledger.v3`, cycle, memory, reminders, crane charts, settings) → one `.attune` file. PBKDF2-SHA-256 600k → AES-256-GCM, header authenticated, gzip. Saved via Android's Save-to picker (`NativeBridge.saveFile` → `CreateDocument`). Restore: Replace or Merge (lists joined by id; ledger never mixed), one-step Undo (`stashPut/Get` in app private files). More tile turns amber after 14 days.
+2. **Arabic interface** (`i18n.js`, `i18n-ar.js`): `tr("English")` everywhere (English text is the key; missing = English). ~1,300 entries. Switch in More and onboarding; reloads the page, sets `dir=rtl`, syncs Yusr's `db.lang`. Classes are logical (`ms-/me-/ps-/pe-/start-/end-`). **Not translated yet: Travel country-pack contents** (~1,000 content strings, lines ~718–792 and COUNTRY_PACKS). `tests/i18n_crawl.py` lists English still visible in Arabic.
+3. **Reminders & actions** (`actions.js`, `actions-ui.jsx`, `Reminders.kt`, `PhoneActions.kt`): Chat detects "remind me / صحيني / ابعت على الواتساب…" → model call with a **GBNF grammar** (`body.grammar`, NOT `json_schema`: see lessons) → `buildAction` works out the time with the deterministic `parseTime` (EN + Egyptian Arabic) → editable card → confirm. Reminders: AlarmManager + notification + BootReceiver; exact only with "Alarms & reminders" allowed (else ≤10 min window, UI says so). Alarm/timer/calendar/WhatsApp/call open the phone's own app pre-filled. More → Reminders screen. Confirmed dated promises get a 9:00 reminder.
+4. **Speed** (`speed-ui.jsx`, `Engine.kt`, `attune-engine.cpp`, CMake, workflow): optional **OpenCL/Adreno GPU** backend built only if CI's "OpenCL SDK" step succeeds (continue-on-error), renamed `libattune-gpu.so` so the CPU scan never touches the driver; loaded by `nLoadGpu` only when GPU is on. CPU mode passes `-ngl 0`. Crash guard `Prefs.gpuTrial` + automatic CPU fallback with a note. **Speculative decoding** with Qwen 3.5 0.8B draft (`-md` + `--spec-type draft-simple`), Qwen 3.5 only, only if both fit. Engine → Speed has the switches and a fixed-task speed test.
+5. **Crane toolkit** (`crane.js`, `crane-ui.jsx`): load charts per crane (pasted table), cautious lookup (min of surrounding cells, never interpolated up), % of chart with company limits, outrigger ground pressure + mat size, sling tension (3/4-leg rated as 2), wind (tip-height power law; v = v_chart·√(1.2·m/(A·cw))), 20-item pre-lift checklist. Planning aid — stated on screen.
 
-Later:
-- Whisper Egyptian-Arabic voice (`MAdel121/whisper-small-egyptian-arabic`, WER 22.7%, MIT) via whisper.cpp. Gemma 4 audio through llama-server is not supported (issue #21868 closed as not planned).
-- Hands-free voice mode; quotation/invoice PDFs, ETA-ready (threshold EGP 250k, penalties EGP 20k + 1k/day); fleet maintenance reminders.
-- Fingerprint lock for Money and Cycle; home-screen widget and quick-settings tile; Cycle reminders and doctor PDF.
+**Tests now:** `node tests/unit/run.mjs` (69: time parser + crane math), `python3 tests/e2e_v5.py [backup|arabic|actions|speed|crane]` (87), plus e2e_v4 (38) and e2e_v3 (35). `tests/harness.py` holds the v5 mock phone (reuses the v4 mock from e2e_v4.py).
+**Kotlin check without an SDK:** kotlinc 2.0.21 (GitHub release) + `android-35/android.jar` (sparse clone of github.com/Reginer/aosp-android-jar) + hand-written androidx/jsoup/R stubs.
+
+## 7b. Next (not started)
+- Translate the Travel country packs; Android-side error messages in Arabic.
+- Whisper Egyptian-Arabic voice (`MAdel121/whisper-small-egyptian-arabic`) via whisper.cpp; hands-free mode.
+- "Ask your documents" (on-device RAG, EmbeddingGemma 308M).
+- Quotation/invoice PDFs (ETA); fleet maintenance reminders (can reuse Reminders); fingerprint lock for Money/Cycle; widget/tile.
+- Crane: import charts from a photo of the printed chart (model reads, person verifies cell by cell).
 
 ## 8. Hard-won lessons (do not repeat)
 - **CORS:** `Access-Control-Allow-Headers: *` does not cover `Authorization`. All model calls go through `NativeBridge.chat`, not browser fetch.
@@ -94,3 +95,11 @@ Later:
 - **Chat history must alternate user/assistant:** only complete pairs are sent. Stopped answers and cards are excluded.
 - **Build tools:** the page must never load from a CDN (a CI check fails the build if it does). Keep esbuild pinned to 0.28.2 for byte-identical builds.
 - **Git:** commits should be authored `Claude <noreply@anthropic.com>` (a stop hook checks this).
+- **`web-src/build/` is SOURCE.** The root `.gitignore` rule `build/` once silently dropped it from an upload; it's now `/build/` + `app/build/` with `!web-src/build/`. The v5 session rebuilt it from the compiled page (byte-identical).
+- **Release APKs are signed with `app/attune-test.keystore`** (committed on purpose). Never go back to the CI debug key: every run makes a new one and updates stop installing.
+- **Grammar, not json_schema:** at this llama.cpp pin, `response_format/json_schema` grammars are pre-fed the template's generation prompt ("prefill"); user-supplied `grammar` is not. Keep strings in the grammar bounded and `max_tokens` ≥ ACTION_MAX_TOKENS so the JSON always closes.
+- **Speculative decoding:** `-md` alone does nothing at this pin — add `--spec-type draft-simple`. Check `timings.draft_n` / `draft_n_accepted`.
+- **GPU default:** llama.cpp's `-ngl` default is auto (offload to any GPU found) — always pass `-ngl 0` for CPU.
+- **i18n:** new UI text must go through `tr()` and get an `i18n-ar.js` entry; run `tests/i18n_crawl.py` to find gaps. Changing language reloads the page (module-level tables use `tr()` at load).
+- **e2e_v3 thinking step** was flaky (~1 in 3, also on the original v4 page): it now accepts either live thinking or "How it thought".
+
