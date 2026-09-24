@@ -127,7 +127,7 @@ LATIN = r"""() => { const out = []; const w = document.createTreeWalker(document
   for (let n = w.nextNode(); n; n = w.nextNode()) { const t = n.nodeValue.trim(); const el = n.parentElement;
     if (!t || !el || el.closest('[data-i18n-skip],textarea,script,style')) continue; const r = el.getBoundingClientRect();
     if (!r.width || !r.height || r.bottom < 0 || r.top > innerHeight) continue;
-    const words = (t.match(/[A-Za-z]{3,}/g) || []).filter((w) => !/^(Attune|Pro|Qwen|Gemma|GGUF|InstaPay|Yusr|ChatGPT|Claude|Gemini|English|Brave|DuckDuckGo|KV|SHA|CPU|GPU|NPU|NEON|dotprod|KleidiAI|int8|matmul|Test|Phone|SM8650|imatrix|MoE|mmap|INT4|Vulkan|EGP|USD)$/.test(w));
+    const words = (t.match(/[A-Za-z]{3,}/g) || []).filter((w) => !/^(Attune|Pro|Qwen|Gemma|GGUF|InstaPay|Yusr|ChatGPT|Claude|Gemini|English|Brave|DuckDuckGo|KV|SHA|CPU|GPU|NPU|NEON|dotprod|KleidiAI|int8|matmul|Test|Phone|SM8650|imatrix|MoE|mmap|INT4|Vulkan|EGP|USD|Adreno|OpenCL|QUALCOMM)$/.test(w));
     if (words.length) out.push(t.slice(0, 80)); } return out; }"""
 
 def sec_arabic(br):
@@ -303,7 +303,46 @@ def sec_actions(br):
     check(len(page.evaluate("window.__mock.notes")) == 1, "on start the page re-schedules its reminders on the phone")
     ctx.close()
 
-SECTION_FUNCS = {"backup": sec_backup, "arabic": sec_arabic, "actions": sec_actions}
+
+def sec_speed(br):
+    ctx, page = new_page(br, env, errors)
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
+    page.locator("header button:has-text('No model')").click()
+    page.locator("text=Recommended for this device").locator("xpath=..").get_by_role("button", name="Install").first.click()
+    page.wait_for_selector("text=Running now", timeout=10000)
+    sp = page.locator("[data-testid=speed-panel]")
+    check(sp.count() == 1, "Engine has a Speed section")
+    # CPU speed test through the real engine
+    page.locator("[data-testid=bench-run]").click()
+    page.wait_for_selector("[data-testid=bench-results]", timeout=60000)
+    body = page.evaluate("window.__mock.lastBody")
+    check(body["max_tokens"] == 128 and body["temperature"] == 0 and body["messages"][-1]["content"].startswith("["),
+          "the speed test is a fixed task (128 tokens, temperature 0, fresh prompt so nothing is cached)")
+    r0 = page.locator("[data-testid=bench-results]").inner_text()
+    check("CPU" in r0 and "writes" in r0 and "reads" in r0, "result shows reading and writing speed on CPU: " + r0.splitlines()[0])
+    # GPU on
+    sp.locator("button:has-text('Use the GPU')").click()
+    page.wait_for_selector("text=Running on QUALCOMM Adreno", timeout=5000)
+    check(page.evaluate("window.__mock.setSpeedCalls")[-1] == {"gpu": True}, "turning GPU on restarts the engine with gpu=true")
+    page.locator("[data-testid=bench-run]").click(); page.wait_for_timeout(300)
+    page.wait_for_function("document.querySelectorAll('[data-testid=bench-results] .text-\\\\[11px\\\\]').length >= 2 || document.querySelector('[data-testid=bench-results]').innerText.includes('GPU')", timeout=60000)
+    txt = page.locator("[data-testid=bench-results]").inner_text()
+    check("GPU" in txt and "CPU" in txt and "Fastest here so far" in txt, "CPU and GPU results sit side by side, with the fastest named")
+    # draft model
+    page.locator("[data-testid=draft-install]").click()
+    page.wait_for_selector("text=guesses ahead", timeout=5000)
+    di = page.evaluate("window.__mock.draftInstall")
+    check(di["draft"] is True and "0.8B" in di["repo"] and di["vision"] is False, "the draft is Qwen 3.5 0.8B, installed as a helper (not switched to)")
+    # GPU fails → back to CPU, said plainly
+    sp.locator("button:has-text('Use the GPU')").click(); page.wait_for_timeout(300)   # off
+    page.evaluate("window.__mock.gpuFails = true")
+    sp.locator("button:has-text('Use the GPU')").click()
+    page.wait_for_selector("[data-testid=gpu-note]", timeout=5000)
+    check("switched back to the CPU" in page.locator("[data-testid=gpu-note]").inner_text(), "if the GPU fails it goes back to the CPU and says why")
+    page.screenshot(path=HERE + "/v5-speed.png", full_page=True)
+    ctx.close()
+
+SECTION_FUNCS = {"backup": sec_backup, "arabic": sec_arabic, "actions": sec_actions, "speed": sec_speed}
 
 with sync_playwright() as pw:
     br = pw.chromium.launch()

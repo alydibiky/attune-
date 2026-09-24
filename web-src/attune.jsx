@@ -13,6 +13,7 @@ import { tr, getLang, setLang, fmtNum } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
 import { RemindersPanel, whenText } from "./actions-ui.jsx";
+import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
 
 /* =========================================================================
@@ -1429,6 +1430,12 @@ async function callClaude(content, meta) {
   return out.trim();
 }
 // A whole conversation, for the Chat screen.
+// Engine → Speed → Speed test: one fixed task, timed by the engine itself.
+async function runBench() {
+  await LocalEngine.run("", null, { messages: benchMessages(), maxTokens: 128, temperature: 0, think: false });
+  return { ...LAST_STATS };
+}
+
 async function callChat(messages, image, meta) {
   if (!LocalEngine.ready && !NATIVE) throw new Error("No model loaded — open Engine and load one");
   if (NATIVE) await LocalEngine.waitReady(meta && meta.onStatus);
@@ -10029,6 +10036,8 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
         </div>
         <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">{tr("Any GGUF on Hugging Face as")} <span className="font-mono">{tr("owner/repo:QUANT")}</span>{tr(", or a direct https link. Specialist and fine-tuned models install the same way — the photo reader is fetched too when the repo has one.")}</p>
       </div>
+
+      {NATIVE && NATIVE.speed ? <SpeedPanel native={NATIVE} nativeCall={nativeCall} runBench={runBench} flash={flash} box={box} head={head} row={row} engineReady={e.state === "ready"} /> : null}
 
       {/* answers */}
       <div className={box}>

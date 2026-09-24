@@ -10,6 +10,9 @@ object EngineNative {
      */
     external fun nPreload(nativeLibDir: String)
 
+    /** Loads the Adreno GPU backend (libattune-gpu.so) if present; the GPU's name, or "" if none. */
+    external fun nLoadGpu(nativeLibDir: String): String
+
     /** Active backends and CPU features (plain text, for the Engine screen). */
     external fun nSystemInfo(): String
 

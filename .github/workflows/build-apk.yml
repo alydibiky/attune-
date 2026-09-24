@@ -59,13 +59,37 @@ jobs:
       - name: Fetch the engine source (llama.cpp)
         run: bash app/src/main/cpp/fetch-llama.sh
 
+      # GPU (Adreno) support: the Khronos OpenCL headers and loader, built for
+      # Android, only to LINK the GPU backend against. If anything in this
+      # step fails, the build carries on and the APK is simply CPU-only
+      # (app/src/main/cpp/CMakeLists.txt checks for the files).
+      - name: OpenCL SDK for the GPU backend (optional)
+        continue-on-error: true
+        run: |
+          set -e
+          NDK="$ANDROID_SDK_ROOT/ndk/29.0.14206865"
+          OUT="$GITHUB_WORKSPACE/app/src/main/cpp/opencl"
+          cd "$RUNNER_TEMP"
+          git clone -q --depth 1 -b v2024.10.24 https://github.com/KhronosGroup/OpenCL-Headers
+          git clone -q --depth 1 -b v2024.10.24 https://github.com/KhronosGroup/OpenCL-ICD-Loader
+          cmake -S OpenCL-ICD-Loader -B loader -G Ninja \
+            -DCMAKE_MAKE_PROGRAM="$ANDROID_SDK_ROOT/cmake/3.31.6/bin/ninja" \
+            -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=28 \
+            -DOPENCL_ICD_LOADER_HEADERS_DIR="$RUNNER_TEMP/OpenCL-Headers" -DBUILD_TESTING=OFF > /dev/null
+          cmake --build loader > /dev/null
+          mkdir -p "$OUT/include" "$OUT/lib/arm64-v8a"
+          cp -r OpenCL-Headers/CL "$OUT/include/"
+          cp loader/libOpenCL.so "$OUT/lib/arm64-v8a/"
+          echo "OpenCL SDK ready — the APK will include the GPU backend"
+
       # Keep compiled engine objects between runs: the first build compiles
       # llama.cpp for every ARM generation (~20-30 min); later ones are quick.
       - name: Cache the native build
         uses: actions/cache@v4
         with:
           path: app/.cxx
-          key: cxx-${{ hashFiles('app/src/main/cpp/fetch-llama.sh', 'app/src/main/cpp/CMakeLists.txt', 'app/src/main/cpp/*.cpp', 'app/build.gradle.kts') }}
+          key: cxx-${{ hashFiles('app/src/main/cpp/fetch-llama.sh', 'app/src/main/cpp/CMakeLists.txt', 'app/src/main/cpp/*.cpp', 'app/build.gradle.kts') }}-${{ hashFiles('app/src/main/cpp/opencl/lib/**') != '' }}
 
       # Gradle itself, installed and cached by the action. Using this instead
       # of a checked-in gradle-wrapper.jar keeps a binary out of the

@@ -13,3 +13,4 @@ local.properties
 !app/attune-test.keystore
 *.b64
 .idea/
+app/src/main/cpp/opencl/

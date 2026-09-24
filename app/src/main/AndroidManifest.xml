@@ -75,6 +75,10 @@
             </intent-filter>
         </activity>
 
+        <!-- The phone's own GPU driver (Adreno), for Engine → Speed → GPU.
+             Optional: phones without it install and run on the CPU. -->
+        <uses-native-library android:name="libOpenCL.so" android:required="false" />
+
         <!-- Rings a reminder at its time, even with the app closed. -->
         <receiver android:name=".ReminderReceiver" android:exported="false" />
         <!-- Puts reminders back after a restart or an update (Android forgets alarms). -->

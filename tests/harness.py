@@ -51,7 +51,22 @@ V5_EXTRA = r"""
       if (S.fakeJson) { const t = JSON.stringify(S.fakeJson); setTimeout(() => { window.__attuneNative.delta(id, t, ""); R(id, { content: t }); }, 30); return; } }
     return realChat(id, body);
   };
-  // engine speed
+  // engine speed (Engine → Speed)
+  S.speed = { gpuBuilt: true, gpu: false, gpuName: "", gpuNote: "", draft: false, draftInstalled: false, draftLabel: null,
+              draftActive: false, draftFits: true, activeLabel: "Qwen3.5 4B" };
+  N.speed = () => JSON.stringify(S.speed);
+  N.setSpeed = (id, arg) => { const a = JSON.parse(arg); S.setSpeedCalls = (S.setSpeedCalls || []).concat([a]);
+    if ("gpu" in a) { if (a.gpu && S.gpuFails) { S.speed.gpu = false; S.speed.gpuName = ""; S.speed.gpuNote = "The model would not load on the GPU, so Attune switched back to the CPU."; }
+                      else { S.speed.gpu = a.gpu; S.speed.gpuName = a.gpu ? "QUALCOMM Adreno(TM) 840" : ""; S.speed.gpuNote = ""; } }
+    if ("draft" in a) S.speed.draft = a.draft;
+    S.speed.draftActive = S.speed.draft && S.speed.draftInstalled;
+    setTimeout(() => R(id, { ok: true, speed: S.speed }), 80); };
+  const realInstall = N.install;
+  N.install = (id, arg) => { const a = JSON.parse(arg);
+    if (!a.draft) return realInstall(id, arg);
+    S.draftInstall = a;
+    setTimeout(() => { window.__attuneNative.progress(id, 50, "Downloading", ""); }, 20);
+    setTimeout(() => { Object.assign(S.speed, { draftInstalled: true, draft: true, draftActive: true, draftLabel: a.label }); R(id, { ok: true }); }, 150); };
   S.accel = { gpu: "Adreno (TM) 830", opencl: true };
   N.accel = () => JSON.stringify(S.accel);
   N.bench = (id, arg) => { S.lastBench = JSON.parse(arg); setTimeout(() => R(id, { pp: 81.5, tg: 17.3, ms: 5200, backend: S.lastBench.backend || "cpu", draft: !!S.lastBench.draft }), 50); };

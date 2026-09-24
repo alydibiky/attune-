@@ -31,4 +31,23 @@ object Prefs {
 
     fun lastVersion(ctx: Context): Long = sp(ctx).getLong("last_version", -1L)
     fun setLastVersion(ctx: Context, v: Long) = sp(ctx).edit().putLong("last_version", v).apply()
+
+    // ---- speed (Engine → Speed) ------------------------------------------------
+    /** Run the model on the GPU (OpenCL/Adreno) instead of the CPU. Off by default. */
+    fun gpu(ctx: Context): Boolean = sp(ctx).getBoolean("gpu", false)
+    fun setGpu(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("gpu", on).commit()
+
+    /** Set while a GPU start is in progress; still set at the next launch = that start crashed. */
+    fun gpuTrial(ctx: Context): Boolean = sp(ctx).getBoolean("gpu_trial", false)
+    fun setGpuTrial(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("gpu_trial", on).commit()
+
+    /** Why GPU was switched off automatically, shown once on the Engine screen. */
+    fun gpuNote(ctx: Context): String = sp(ctx).getString("gpu_note", "") ?: ""
+    fun setGpuNote(ctx: Context, s: String) = sp(ctx).edit().putString("gpu_note", s).apply()
+
+    /** Speculative decoding with a small draft model (Qwen 3.5 0.8B). */
+    fun draft(ctx: Context): Boolean = sp(ctx).getBoolean("draft", false)
+    fun setDraft(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("draft", on).apply()
+    fun draftModel(ctx: Context): String? = sp(ctx).getString("draft_model", null)
+    fun setDraftModel(ctx: Context, id: String?) = sp(ctx).edit().putString("draft_model", id).apply()
 }

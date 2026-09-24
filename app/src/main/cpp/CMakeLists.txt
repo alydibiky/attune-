@@ -45,7 +45,45 @@ set(LLAMA_BUILD_APP        OFF CACHE BOOL "" FORCE)
 set(LLAMA_TOOLS_INSTALL    OFF CACHE BOOL "" FORCE)
 set(LLAMA_OPENSSL          OFF CACHE BOOL "" FORCE)  # 127.0.0.1 only; downloads are done in Kotlin
 
+# ---------------------------------------------------------------------------
+# GPU (Adreno) through OpenCL — OPTIONAL, and it can never break the build.
+#
+# CI builds the Khronos OpenCL loader for Android into ./opencl
+# (include/CL/*.h + lib/<abi>/libOpenCL.so, see .github/workflows). Only if
+# that step succeeded is the GPU backend compiled; otherwise this is a
+# CPU-only build exactly as before. The loader is used only to LINK: at run
+# time the phone's own libOpenCL.so (the Adreno driver) is used, which the
+# manifest requests with <uses-native-library>. A phone without it simply
+# never loads the GPU backend.
+#
+# The backend is renamed libattune-gpu.so so that the CPU start-up scan
+# (which looks for libggml-*.so) never touches the GPU driver: it is loaded
+# only when the person turns GPU on (attune-engine.cpp, nPreload).
+# ---------------------------------------------------------------------------
+set(ATTUNE_OPENCL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/opencl" CACHE PATH "OpenCL headers + loader for linking")
+if(NOT ATTUNE_OPENCL_LIB)
+    set(ATTUNE_OPENCL_LIB "${ATTUNE_OPENCL_DIR}/lib/${ANDROID_ABI}/libOpenCL.so")
+endif()
+if((ANDROID_ABI STREQUAL "arm64-v8a" OR ATTUNE_FORCE_OPENCL)
+        AND EXISTS "${ATTUNE_OPENCL_DIR}/include/CL/cl.h" AND EXISTS "${ATTUNE_OPENCL_LIB}")
+    message(STATUS "Attune: building the OpenCL (Adreno GPU) backend")
+    set(GGML_OPENCL                    ON  CACHE BOOL "" FORCE)
+    set(GGML_OPENCL_EMBED_KERNELS      ON  CACHE BOOL "" FORCE)  # no .cl files to ship
+    set(GGML_OPENCL_USE_ADRENO_KERNELS ON  CACHE BOOL "" FORCE)
+    set(OpenCL_INCLUDE_DIR "${ATTUNE_OPENCL_DIR}/include" CACHE PATH "" FORCE)
+    set(OpenCL_LIBRARY     "${ATTUNE_OPENCL_LIB}"          CACHE FILEPATH "" FORCE)
+    set(ATTUNE_GPU ON)
+else()
+    message(STATUS "Attune: no OpenCL SDK in ${ATTUNE_OPENCL_DIR} — CPU-only engine")
+    set(GGML_OPENCL OFF CACHE BOOL "" FORCE)
+    set(ATTUNE_GPU OFF)
+endif()
+
 add_subdirectory(llama.cpp)
+
+if(ATTUNE_GPU AND TARGET ggml-opencl)
+    set_target_properties(ggml-opencl PROPERTIES OUTPUT_NAME "attune-gpu")
+endif()
 
 # ---------------------------------------------------------------------------
 # The JNI library the app loads: System.loadLibrary("attune-engine")

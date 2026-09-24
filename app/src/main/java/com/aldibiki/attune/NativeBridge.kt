@@ -433,6 +433,20 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                     },
                     cancelled = { flag.get() })
 
+                if (a.optBoolean("draft", false)) {
+                    // The small helper model for speculative decoding: kept, not switched to.
+                    Prefs.setDraftModel(ctx, installed.id)
+                    Prefs.setDraft(ctx, true)
+                    progress(id, 99, "Loading the model", "")
+                    val m = ModelStore.active(ctx)
+                    if (m == null) { resolve(id, JSONObject().put("ok", true).put("draft", installed.toJson(false))); return@execute }
+                    Engine.start(ctx, m) { ok, err ->
+                        announceEngine()
+                        if (ok) resolve(id, JSONObject().put("ok", true).put("draft", installed.toJson(false)).put("engine", engineJson()))
+                        else reject(id, err ?: "The model could not be loaded")
+                    }
+                    return@execute
+                }
                 Prefs.setActiveModel(ctx, installed.id)
                 progress(id, 99, "Loading the model", "")
                 Engine.start(ctx, installed) { ok, err ->
@@ -459,6 +473,38 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             announceEngine()
             if (ok) resolve(id, JSONObject().put("ok", true).put("model", m.toJson(true)).put("engine", engineJson()))
             else reject(id, err ?: "The model could not be loaded")
+        }
+    }
+
+    // ---- speed: GPU, draft model --------------------------------------------------
+    /** What Engine → Speed shows. */
+    @JavascriptInterface
+    fun speed(): String {
+        val draft = Prefs.draftModel(ctx)?.let { ModelStore.get(ctx, it) }
+        val active = ModelStore.active(ctx)
+        return JSONObject()
+            .put("gpuBuilt", Engine.gpuBuilt(ctx))
+            .put("gpu", Prefs.gpu(ctx)).put("gpuName", Engine.gpuName)
+            .put("gpuNote", Prefs.gpuNote(ctx))
+            .put("draft", Prefs.draft(ctx))
+            .put("draftInstalled", draft != null).put("draftLabel", draft?.label ?: JSONObject.NULL)
+            .put("draftActive", Engine.draftId != null)
+            .put("draftFits", active != null && Engine.isQwen35(active))
+            .put("activeLabel", active?.label ?: JSONObject.NULL)
+            .toString()
+    }
+
+    /** {gpu?, draft?} → saved, then the engine restarts with them. */
+    @JavascriptInterface
+    fun setSpeed(id: String, arg: String) {
+        val a = try { JSONObject(arg) } catch (e: Exception) { return reject(id, "Bad request") }
+        if (a.has("gpu")) { Prefs.setGpu(ctx, a.optBoolean("gpu")); Prefs.setGpuNote(ctx, "") }
+        if (a.has("draft")) Prefs.setDraft(ctx, a.optBoolean("draft"))
+        val m = ModelStore.active(ctx) ?: return resolve(id, JSONObject().put("ok", true).put("speed", JSONObject(speed())))
+        Engine.start(ctx, m) { ok, err ->
+            announceEngine()
+            val out = JSONObject().put("ok", ok).put("speed", JSONObject(speed()))
+            if (ok) resolve(id, out) else reject(id, err ?: "The model could not be loaded")
         }
     }
 

@@ -75,6 +75,39 @@ Java_com_aldibiki_attune_EngineNative_nPreload(JNIEnv * env, jobject, jstring jd
     });
 }
 
+// The GPU backend (OpenCL, for Adreno), loaded only when the person turns GPU
+// on — never by the CPU start-up scan, so a phone whose graphics driver
+// misbehaves is never touched unless asked. Returns the GPU's name, or "" when
+// this build has no GPU backend or the phone has no usable OpenCL GPU (then
+// everything simply stays on the CPU).
+JNIEXPORT jstring JNICALL
+Java_com_aldibiki_attune_EngineNative_nLoadGpu(JNIEnv * env, jobject, jstring jdir) {
+    static std::mutex mu;
+    std::lock_guard<std::mutex> lock(mu);
+    std::string dir;
+    if (jdir) {
+        const char * c = env->GetStringUTFChars(jdir, nullptr);
+        if (c) { dir = c; env->ReleaseStringUTFChars(jdir, c); }
+    }
+    bool have = false;
+    for (size_t i = 0; i < ggml_backend_reg_count(); i++) {
+        if (std::string(ggml_backend_reg_name(ggml_backend_reg_get(i))) == "OpenCL") have = true;
+    }
+    if (!have) {
+        const std::string path = dir + "/libattune-gpu.so";
+        ggml_backend_reg_t reg = ggml_backend_load(path.c_str());
+        ELOG("GPU backend %s: %s", path.c_str(), reg ? "loaded" : "not available");
+    }
+    std::string name;
+    for (size_t i = 0; i < ggml_backend_dev_count(); i++) {
+        ggml_backend_dev_t d = ggml_backend_dev_get(i);
+        if (ggml_backend_dev_type(d) == GGML_BACKEND_DEVICE_TYPE_GPU) { name = ggml_backend_dev_description(d); break; }
+    }
+    std::string ascii;
+    for (char ch : name) ascii += ((unsigned char) ch < 0x80) ? ch : '?';
+    return env->NewStringUTF(ascii.c_str());
+}
+
 // Which backends and CPU features are active, e.g.
 // "CPU | NEON = 1 | ARM_FMA = 1 | FP16_VA = 1 | MATMUL_INT8 = 1 | DOTPROD = 1 | KLEIDIAI = 1 ..."
 JNIEXPORT jstring JNICALL

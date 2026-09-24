@@ -226,7 +226,9 @@ class MainActivity : AppCompatActivity() {
         web.loadUrl("https://appassets.androidplatform.net/app/www/index.html")
         handleShare(intent)
 
-        // Bring back the model that was in use last time.
+        // Bring back the model that was in use last time — on the CPU if the
+        // last GPU start crashed the app.
+        Engine.checkGpuCrash(this)
         if (Engine.state == Engine.State.IDLE) {
             ModelStore.active(this)?.let { m -> Engine.start(this, m) { _, _ -> } }
         }

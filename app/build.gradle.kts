@@ -46,7 +46,12 @@ android {
         // The engine ships one CPU library per ARM generation and picks the
         // fastest at start-up by looking in the app's library folder. That
         // folder is only filled if Android unpacks the libraries on install.
-        jniLibs { useLegacyPackaging = true }
+        jniLibs {
+            useLegacyPackaging = true
+            // The OpenCL loader is only for linking the GPU backend; on the
+            // phone the vendor's own libOpenCL.so must be used.
+            excludes += "**/libOpenCL.so"
+        }
     }
 
     // Signing comes from environment variables so the keystore never enters
