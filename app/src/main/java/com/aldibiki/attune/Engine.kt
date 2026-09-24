@@ -41,6 +41,10 @@ object Engine {
     @Volatile var draftId: String? = null
         private set
 
+    /** Which engine serves the active model: "llama" (llama.cpp, .gguf) or "litert" (the fast engine, .litertlm). */
+    @Volatile var kind: String = "llama"
+        private set
+
     /** True when this APK contains the GPU backend at all (the CI built it). */
     fun gpuBuilt(ctx: Context): Boolean = File(ctx.applicationInfo.nativeLibraryDir, "libattune-gpu.so").exists()
 
@@ -152,6 +156,7 @@ object Engine {
     }
 
     private fun stopBlocking() {
+        if (FastEngine.loaded()) FastEngine.close()
         if (EngineNative.nState() == 1) {
             waitWhileLoading(4 * 60_000L)
             Thread.sleep(700)  // upstream installs its shutdown hook right after /health turns ready
@@ -201,6 +206,7 @@ object Engine {
     /** What the engine is doing right now while it loads, from its own log. */
     fun loadPhase(ctx: Context): String {
         if (state != State.STARTING) return ""
+        if (kind == "litert") return "Preparing the fast engine (the first start on the GPU takes longest)"
         val tail = logTail(ctx, 4000).lines().filter { it.isNotBlank() }
         val joined = tail.joinToString("\n")
         return when {
@@ -284,6 +290,9 @@ object Engine {
     private fun startBlocking(ctx: Context, model: ModelStore.Installed, forceCpu: Boolean = false): Boolean {
         if (EngineNative.nState() == 1) stopBlocking()
         if (state == State.ERROR && EngineNative.nState() == 1) return false
+        if (FastEngine.isFast(model)) return startFast(ctx, model)
+        if (FastEngine.loaded()) FastEngine.close()
+        kind = "llama"
 
         try { preload(ctx) } catch (e: Throwable) {
             state = State.ERROR
@@ -362,6 +371,38 @@ object Engine {
         state = State.ERROR
         error = "The model took too long to load — the phone is probably short of memory. Close other apps, or pick a smaller model in Engine."
         return false
+    }
+
+    /**
+     * A .litertlm model: the fast engine (LiteRT-LM, GPU first). No server, no
+     * port — NativeBridge.chat talks to it directly.
+     */
+    private fun startFast(ctx: Context, model: ModelStore.Installed): Boolean {
+        if (!model.modelFile.exists()) {
+            state = State.ERROR; error = "The model file is missing. Install it again from Engine."
+            return false
+        }
+        if (model.sizeBytes > DeviceInfo.totalRamBytes(ctx) * 0.55) {
+            state = State.ERROR
+            error = "This model is too big for this phone's memory — pick Gemma 4 E2B (fast) in Engine."
+            return false
+        }
+        kind = "litert"
+        gpuName = ""; draftId = null
+        state = State.STARTING
+        loadStartedAt = System.currentTimeMillis()
+        error = null
+        modelId = model.id
+        changed()
+        val err = FastEngine.load(ctx, model)
+        loadStartedAt = 0L
+        if (err != null) {
+            state = State.ERROR; error = err; modelId = null; kind = "llama"
+            return false
+        }
+        settingsNote = FastEngine.settingsNote()
+        state = State.READY
+        return true
     }
 
     /** GPU failed: switch it off, say why, and start again on the CPU. */

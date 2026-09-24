@@ -50,4 +50,14 @@ object Prefs {
     fun setDraft(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("draft", on).apply()
     fun draftModel(ctx: Context): String? = sp(ctx).getString("draft_model", null)
     fun setDraftModel(ctx: Context, id: String?) = sp(ctx).edit().putString("draft_model", id).apply()
+
+    // ---- the fast engine (LiteRT-LM, .litertlm models) ----------------------------
+    /** Keep the fast engine on the CPU (the GPU is the default and the point of it). */
+    fun fastCpu(ctx: Context): Boolean = sp(ctx).getBoolean("fast_cpu", false)
+    fun setFastCpu(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("fast_cpu", on).commit()
+    /** Crash guard for the fast engine's GPU start, like gpu_trial. */
+    fun fastTrial(ctx: Context): Boolean = sp(ctx).getBoolean("fast_trial", false)
+    fun setFastTrial(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("fast_trial", on).commit()
+    fun fastNote(ctx: Context): String = sp(ctx).getString("fast_note", "") ?: ""
+    fun setFastNote(ctx: Context, s: String) = sp(ctx).edit().putString("fast_note", s).apply()
 }

@@ -828,6 +828,24 @@ const MODEL_TIERS = [
     quality: "The strongest sub-10B model measured anywhere, and the best of these at reading documents and photographs.",
     good: ["Ask", "Write", "Summarise", "Review", "Photos"] },
 
+  // ---- the fast engine: LiteRT-LM on the phone's GPU (Android app only) ----
+  // A .litertlm file runs on Google's LiteRT-LM instead of llama.cpp: the
+  // whole model on the Adreno GPU, the prompt read at thousands of tokens a
+  // second (first word in well under a second) and multi-token prediction
+  // for the writing. Published figures (Samsung S26 Ultra, GPU): E2B reads
+  // ~3,800 tokens/s and writes ~52/s, 66–92/s with multi-token prediction.
+  // The one file also holds the photo reader. Apache-2.0, not gated.
+  { id: "fast-e2b", engine: "litert", vision: true, label: "Gemma 4 E2B", params: "2B eff.", quant: "fast engine (GPU)", sizeGB: 2.59,
+    needRam: 6, ctx: 8192, platform: "android", fast: true,
+    url: "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm",
+    quality: "The fast one. Runs on the phone's graphics chip: the first words appear in under a second and it writes faster than you can read. Reads photos, English and Arabic. For hard reasoning, the E4B below is stronger.",
+    good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
+  { id: "fast-e4b", engine: "litert", vision: true, label: "Gemma 4 E4B", params: "4.5B eff.", quant: "fast engine (GPU)", sizeGB: 3.66,
+    needRam: 8, ctx: 8192, platform: "android", fast: true,
+    url: "https://huggingface.co/litert-community/gemma-4-E4B-it-litert-lm/resolve/main/gemma-4-E4B-it.litertlm",
+    quality: "The stronger fast one: noticeably better answers than the E2B, still on the graphics chip — first words in about a second, then roughly 20–45 words a second on a flagship.",
+    good: ["Ask", "Write", "Summarise", "Review", "Photos", "Arabic"] },
+
   // ---- the phone range, where most people will live -------------------
   { id: "md-hi", vision: true, label: "Qwen3.5 4B", params: "4B", quant: "Q5_K_M", sizeGB: 3.14,
     needRam: 8, ctx: 32768, platform: "any", recommended: true,
@@ -874,6 +892,8 @@ const QUANT_FLOOR_NOTE =
 // speed. So: one threshold for desktops, a higher one for phones.
 function tierFits(t, dev) {
   if (!dev) return false;
+  // The fast engine lives inside the Android app; a browser can't run it.
+  if (t.engine === "litert" && !NATIVE) return false;
   const floor = dev.platform === "desktop" ? t.needRam : (t.phoneMin || t.needRam);
   return dev.ram >= floor;
 }
@@ -883,7 +903,9 @@ function tierFits(t, dev) {
 // is what "the app is buggy" looks like to the person holding it. So a phone
 // is recommended the 4B (fast, reads photos, good Arabic), and the 9B is
 // offered as the stronger, slower option on phones with the memory for it.
-const PHONE_ORDER = ["md-hi", "md", "md-lo", "sm", "xs"];
+// In the Android app the fast engine comes first: speed is what makes a phone
+// assistant usable at all (tested: 0.7 words/s on the CPU path is a dead app).
+const PHONE_ORDER = ["fast-e2b", "md-hi", "md", "md-lo", "sm", "xs"];
 function pickTier(dev) {
   if (!dev) return null;
   if (dev.platform !== "desktop") {
@@ -895,7 +917,10 @@ function pickTier(dev) {
 }
 // The stronger choice on a phone: the 9B, only with 12 GB or more.
 function strongerPhoneTier(dev) {
-  if (!dev || dev.platform === "desktop" || dev.ram < 12) return null;
+  if (!dev || dev.platform === "desktop") return null;
+  const e4b = MODEL_TIERS.find((t) => t.id === "fast-e4b");
+  if (e4b && tierFits(e4b, dev)) return e4b;
+  if (dev.ram < 12) return null;
   return MODEL_TIERS.find((t) => t.id === "xl") || null;
 }
 
@@ -7218,9 +7243,10 @@ export default function App() {
   const copyC = async () => { if (!cResult) return; try { await navigator.clipboard.writeText(cResult.text); setCCopied(true); setTimeout(() => setCCopied(false), 1500); } catch (e) {} };
   const selectPack = (k) => { if (PACKS[k].pro && !isPro(tier)) return setShowUpgrade(true); setPack(k); };
   const downloadModel = async (tierArg) => {
-    const t0 = tierArg && tierArg.repo ? tierArg : activeTier;
+    const t0 = tierArg && (tierArg.repo || tierArg.url) ? tierArg : activeTier;
     if (NATIVE) {
       if (!t0) return;
+      if (t0.url) { await installNative({ id: t0.id, label: t0.label + " · " + t0.quant, url: t0.url, ctx: t0.ctx || 8192 }, t0); return; }
       await installNative({ id: t0.id, label: t0.label + " · " + t0.quant, repo: t0.repo, quant: t0.quant,
                             vision: !!t0.vision, ctx: t0.ctx || 8192 }, t0);
       return;
@@ -10018,7 +10044,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
         {e.error ? <p className="text-[11px] text-amber-400/90 mt-1 leading-snug">{e.error}</p> : null}
         {e.heavy ? (
           <div className="mt-2 rounded-lg border border-amber-900/60 bg-amber-500/5 p-2">
-            <p className="text-[11px] text-amber-200 leading-snug">{tr("This model is large for this phone. It works, but answers come slowly and the phone gets warm. For quick, smooth answers use Qwen 3.5 4B — same Arabic, reads photos, about 3× faster.")}</p>
+            <p className="text-[11px] text-amber-200 leading-snug">{tr("This model is large for this phone. It works, but answers come slowly and the phone gets warm. For quick answers use Gemma 4 E2B on the fast engine — reads photos, first words in about a second.")}</p>
           </div>
         ) : null}
         {e.settings ? <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{e.settings}</p> : null}
@@ -10094,7 +10120,9 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
         <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">{tr("Any GGUF on Hugging Face as")} <span className="font-mono">{tr("owner/repo:QUANT")}</span>{tr(", or a direct https link. Specialist and fine-tuned models install the same way — the photo reader is fetched too when the repo has one.")}</p>
       </div>
 
-      {NATIVE && NATIVE.speed ? <SpeedPanel native={NATIVE} nativeCall={nativeCall} runBench={runBench} flash={flash} box={box} head={head} row={row} engineReady={e.state === "ready"} /> : null}
+      {NATIVE && NATIVE.speed ? <SpeedPanel native={NATIVE} nativeCall={nativeCall} runBench={runBench} flash={flash} box={box} head={head} row={row} engineReady={e.state === "ready"}
+        busy={!!busy} fastTier={MODEL_TIERS.find((t) => t.id === "fast-e2b")}
+        onFast={(t) => n.installNative({ id: t.id, label: t.label + " · " + t.quant, url: t.url, ctx: t.ctx || 8192 }, t)} /> : null}
 
       {/* answers */}
       <div className={box}>
@@ -10258,7 +10286,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
                   <button onClick={() => { setTierId(rec.stronger.id); downloadModel(rec.stronger); }}
                     disabled={modelState === "downloading"}
                     className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 text-sm disabled:opacity-40">
-                    {tr("Stronger, slower ·")} {tr(rec.stronger.label)} · {rec.stronger.sizeGB.toFixed(1)} {tr("GB")}
+                    {rec.stronger.fast ? tr("Stronger ·") : tr("Stronger, slower ·")} {tr(rec.stronger.label)} · {rec.stronger.sizeGB.toFixed(1)} {tr("GB")}
                   </button>
                 ) : null}
                 {rec.lighter && !rec.stronger ? (
@@ -10294,6 +10322,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
                 </div>
                 <p className="text-xs text-slate-500 mt-1">{tr(t.quality)}</p>
                 <div className="flex flex-wrap gap-1 mt-1.5">
+                  {t.fast ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-400/15 border border-amber-700/60 text-amber-200">{tr("⚡ fast engine · first words in ~1 s")}</span> : null}
                   {t.imatrix ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">{tr("imatrix · more quality per GB")}</span> : null}
                   {t.spec ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">+{t.draft} {tr("draft · ~2× faster, lossless")}</span> : null}
                   {t.moe ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">{tr("MoE · 2–3× faster decode")}</span> : null}

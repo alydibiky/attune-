@@ -1,11 +1,11 @@
 """v5 end-to-end checks, one section per feature, in a phone-sized Chromium.
 Run after tests/setup.sh and web-src/build.sh:  python3 tests/e2e_v5.py [section ...]
 """
-import json, sys
+import re, json, sys
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish, HERE
 
-SECTIONS = sys.argv[1:] or ["backup", "arabic", "actions", "speed", "crane", "fast"]
+SECTIONS = sys.argv[1:] or ["backup", "arabic", "actions", "speed", "crane", "fast", "fastengine"]
 env = Env()
 errors = []
 
@@ -491,7 +491,57 @@ def sec_fast(br):
     check(p2.evaluate("window.__mock.textZoom") == 90, "a narrow screen (big display size) starts at 90% text")
     c2.close()
 
-SECTION_FUNCS = {"backup": sec_backup, "arabic": sec_arabic, "actions": sec_actions, "speed": sec_speed, "crane": sec_crane, "fast": sec_fast}
+def sec_fastengine(br):
+    """v5.7: the fast engine (LiteRT-LM, Gemma 4 on the GPU) — recommended first, one tap from Speed."""
+    ctx, page = new_page(br, env, errors)
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
+    page.locator("header button:has-text('No model')").click()
+    rec = page.locator("text=Recommended for this device").locator("xpath=..")
+    name = rec.locator("p.text-base").inner_text()
+    check(name == "Gemma 4 E2B · fast engine (GPU)", "the Android app recommends the fast engine first: " + name)
+    check("under a second" in rec.inner_text(), "…and says why (first words in under a second)")
+    rec.get_by_role("button", name="Install").first.click()
+    page.wait_for_selector("text=Running now", timeout=10000)
+    li = page.evaluate("window.__mock.lastInstall")
+    check(li.get("url", "").endswith("/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm") and not li.get("repo"),
+          "it installs the multimodal .litertlm file straight from its link: " + str(li.get("url")))
+    check(page.locator("text=⚡ fast engine · first words in ~1 s").count() == 2, "both fast models carry the ⚡ fast engine badge in the list")
+    # llama engine in use → Speed offers the switch
+    fi = page.locator("[data-testid=fast-install]")
+    check(fi.count() == 1 and "Switch to the fast engine" in fi.inner_text(), "on the llama.cpp engine, Speed offers “Switch to the fast engine”")
+    page.evaluate("window.__mock.lastInstall = null")
+    fi.click(); page.wait_for_timeout(900)
+    li = page.evaluate("window.__mock.lastInstall") or {}
+    check(li.get("id") == "fast-e2b" and li.get("url", "").endswith(".litertlm"), "one tap installs Gemma 4 E2B for the fast engine")
+    page.locator("[data-testid=doctor-run]").click()
+    check("biggest speed-up" in page.locator("[data-testid=doctor]").inner_text(), "the speed doctor points to the fast engine")
+    page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
+    # fast engine running → its own panel
+    page.evaluate("""Object.assign(window.__mock.speed, { engine: 'litert', fastBackend: 'GPU', fastMtp: true, fastCpu: false, fastNote: '', activeLabel: 'Gemma 4 E2B · fast engine (GPU)' });
+                     Object.assign(window.__mock.doctor, { engine: 'litert', fastBackend: 'GPU', fastMtp: true, cpu: '' })""")
+    page.locator("header button:has-text('2B eff.')").click()
+    page.wait_for_selector("[data-testid=fast-panel]", timeout=5000)
+    fp = page.locator("[data-testid=fast-panel]")
+    check("Fast engine on the graphics chip" in fp.inner_text() and "multi-token prediction on" in fp.inner_text(), "Speed says the fast engine is on the GPU with multi-token prediction")
+    sp = page.locator("[data-testid=speed-panel]")
+    check(sp.locator("[data-testid=draft-install]").count() == 0 and sp.locator("button:has-text('Use the GPU')").count() == 0,
+          "llama.cpp-only switches (draft model, OpenCL GPU) are hidden for the fast engine")
+    page.locator("[data-testid=doctor-run]").click()
+    d = page.locator("[data-testid=doctor]").inner_text()
+    check("LiteRT-LM GPU + MTP" in d and "Nothing is holding it back" in d, "the doctor reads the fast engine correctly: " + d.splitlines()[-2][:80])
+    fp.locator("button:has-text('Use the graphics chip')").click()
+    page.wait_for_selector("text=Fast engine on the CPU", timeout=5000)
+    check(page.evaluate("window.__mock.setSpeedCalls")[-1] == {"fastCpu": True}, "switching the graphics chip off restarts the fast engine on the CPU")
+    page.evaluate("Object.assign(window.__mock.doctor, { fastBackend: 'CPU' })")
+    page.locator("[data-testid=doctor-run]").click()
+    check("running on the CPU, not the graphics chip" in page.locator("[data-testid=doctor]").inner_text(), "…and the doctor flags it")
+    page.locator("[data-testid=bench-run]").click()
+    page.wait_for_selector("[data-testid=bench-results]", timeout=60000)
+    check("Fast · CPU" in page.locator("[data-testid=bench-results]").inner_text(), "speed-test results are labelled with the fast engine")
+    page.screenshot(path=HERE + "/v57-fast.png", full_page=True)
+    ctx.close()
+
+SECTION_FUNCS = {"backup": sec_backup, "arabic": sec_arabic, "actions": sec_actions, "speed": sec_speed, "crane": sec_crane, "fast": sec_fast, "fastengine": sec_fastengine}
 
 with sync_playwright() as pw:
     br = pw.chromium.launch()

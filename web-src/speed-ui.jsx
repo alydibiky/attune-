@@ -34,13 +34,16 @@ export function benchMessages() {
 export function diagnose(d, lastTps) {
   const out = [];
   if (!d) return out;
+  const fast = d.engine === "litert";
   if (d.thermal >= 2) out.push(["bad", "The phone is hot — it slows the processor down on purpose. Let it cool, take it out of its case, don't charge while asking."]);
   if (d.powerSave) out.push(["bad", "Battery saver is on — it caps the processor. Turn it off while using Attune."]);
   if (d.modelGB && d.availRamGB && d.availRamGB < d.modelGB * 0.6) out.push(["bad", "Free memory is low for this model — close other apps (games, camera, many browser tabs)."]);
-  if (/CPU_Mapped/.test(d.buffers || "") && !/in RAM/.test(d.settings || "")) out.push(["bad", "The model is read from storage instead of RAM — update to the latest Attune APK (it loads the model into RAM)."]);
-  if (d.cpu && !/dotprod/i.test(d.cpu)) out.push(["bad", "The engine is using its slowest processor path (no dotprod). Send this report."]);
-  if (d.genThreads && d.genThreads < 3 && !d.powerSave && d.thermal < 2) out.push(["warn", "Only {n} threads are used for writing.", { n: d.genThreads }]);
-  if (d.modelGB > 4) out.push(["warn", "This is a big model for a phone — Qwen 3.5 4B is about 2–3× faster."]);
+  if (!fast && /CPU_Mapped/.test(d.buffers || "") && !/in RAM/.test(d.settings || "")) out.push(["bad", "The model is read from storage instead of RAM — update to the latest Attune APK (it loads the model into RAM)."]);
+  if (!fast && d.cpu && !/dotprod/i.test(d.cpu)) out.push(["bad", "The engine is using its slowest processor path (no dotprod). Send this report."]);
+  if (fast && d.fastBackend === "CPU") out.push(["bad", "The fast engine is running on the CPU, not the graphics chip — turn on “Use the graphics chip” above. If it switched itself off, the phone's GPU driver refused it: send this report."]);
+  if (!fast && d.ramGB >= 6) out.push(["warn", "The biggest speed-up on this phone is the fast engine: Gemma 4 E2B on the graphics chip — first words in about a second. Tap “Switch to the fast engine” above."]);
+  if (!fast && d.genThreads && d.genThreads < 3 && !d.powerSave && d.thermal < 2) out.push(["warn", "Only {n} threads are used for writing.", { n: d.genThreads }]);
+  if (!fast && d.modelGB > 4) out.push(["warn", "This is a big model for a phone — Qwen 3.5 4B is about 2–3× faster."]);
   if (lastTps != null && lastTps < 3 && !out.some((x) => x[0] === "bad")) out.push(["warn", "Nothing obvious — the phone may have slowed Attune while it was in the background. The new APK keeps it at full speed while writing."]);
   if (!out.length) out.push(["ok", "Nothing is holding it back."]);
   return out;
@@ -48,7 +51,7 @@ export function diagnose(d, lastTps) {
 
 function Bar({ v, max }) { return <span className="block h-1.5 rounded-full bg-teal-500/70" style={{ width: Math.max(4, Math.round((v / (max || 1)) * 100)) + "%" }} />; }
 
-export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row, engineReady }) {
+export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row, engineReady, fastTier, onFast, busy: dlBusy }) {
   const read = () => { try { return JSON.parse(native.speed()); } catch (e) { return null; } };
   const [sp, setSp] = useState(read);
   const [busy, setBusy] = useState("");
@@ -74,7 +77,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
     try {
       const st = await runBench();
       const cur = read() || sp;
-      const entry = { at: Date.now(), model: cur.activeLabel || "", mode: cur.gpuName ? "GPU" : "CPU", gpu: cur.gpuName || "",
+      const entry = { at: Date.now(), model: cur.activeLabel || "", mode: cur.engine === "litert" ? (cur.fastBackend === "GPU" ? "Fast · GPU" : "Fast · CPU") : cur.gpuName ? "GPU" : "CPU", gpu: cur.gpuName || "",
         draft: !!cur.draftActive, promptTps: st.promptTps || 0, tps: st.tps || 0 };
       const list = [entry, ...bench];
       setBench(list); saveBench(list);
@@ -89,6 +92,23 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
       <p className={head}>{tr("Speed")}</p>
       {sp.gpuNote ? (
         <p className="text-[12px] text-amber-200 flex items-start gap-1.5 mb-2" data-testid="gpu-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.gpuNote)}</p>
+      ) : null}
+      {sp.engine === "litert" ? (
+        <div className="space-y-1.5" data-testid="fast-panel">
+          <p className="text-[12px] text-amber-200 flex items-center gap-1.5"><Zap size={13} className="shrink-0" />
+            {tr(sp.fastBackend === "GPU" ? "Fast engine on the graphics chip" : "Fast engine on the CPU")}{sp.fastMtp ? " · " + tr("multi-token prediction on") : ""}</p>
+          {sp.fastNote ? <p className="text-[12px] text-amber-200 flex items-start gap-1.5" data-testid="fast-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.fastNote)}</p> : null}
+          {row(!sp.fastCpu, () => !busy && apply({ fastCpu: !sp.fastCpu }, tr("Restarting the engine…")), "Use the graphics chip",
+            "On: the model runs on the GPU — first words in about a second. Off: the CPU, slower, only for phones whose GPU driver misbehaves.")}
+        </div>
+      ) : (<>
+      {fastTier && onFast ? (
+        <button onClick={() => !busy && !dlBusy && onFast(fastTier)} disabled={!!busy || dlBusy} data-testid="fast-install"
+          className="w-full mb-2 flex items-center gap-3 px-3 py-2.5 rounded-lg border border-amber-700/60 bg-amber-400/10 text-start disabled:opacity-50">
+          <Zap size={18} className="text-amber-300 shrink-0" />
+          <span className="min-w-0"><span className="block text-sm text-amber-100 font-medium">{tr("Switch to the fast engine")}</span>
+            <span className="block text-[11px] text-slate-400">{tr("Gemma 4 E2B on the graphics chip: first words in about a second, many times faster than this engine. {s} GB, once.", { s: fastTier.sizeGB.toFixed(1) })}</span></span>
+        </button>
       ) : null}
       <div className="space-y-1.5">
         {sp.gpuBuilt ? row(sp.gpu, () => !busy && apply({ gpu: !sp.gpu }, tr("Restarting the engine…")), "Use the GPU",
@@ -105,6 +125,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
           </button>
         )}
       </div>
+      </>)}
       {busy ? <p className="text-[12px] text-teal-300 mt-2 flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{busy}{pct ? " " + pct + "%" : ""}</p> : null}
 
       <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950 p-3" data-testid="doctor">
@@ -119,7 +140,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
               <p key={i} className={lvl === "bad" ? "text-rose-300" : lvl === "warn" ? "text-amber-200" : "text-emerald-300"} data-testid="doctor-finding">• {tr(msg, v)}</p>
             ))}
             <p className="text-[11px] text-slate-500" dir="ltr">{[doc.model, doc.modelGB ? doc.modelGB.toFixed(1) + " GB" : "", "RAM " + (doc.availRamGB || 0).toFixed(1) + "/" + doc.ramGB + " GB free",
-              doc.genThreads + " threads", doc.cpu, doc.gpu ? "GPU " + doc.gpu : "", "thermal " + doc.thermal].filter(Boolean).join(" · ")}</p>
+              doc.engine === "litert" ? "LiteRT-LM " + (doc.fastBackend || "") + (doc.fastMtp ? " + MTP" : "") : doc.genThreads + " threads", doc.engine === "litert" ? "" : doc.cpu, doc.gpu ? "GPU " + doc.gpu : "", "thermal " + doc.thermal].filter(Boolean).join(" · ")}</p>
             <button onClick={() => { const t = JSON.stringify(doc, null, 1); try { navigator.clipboard.writeText(t); } catch (e) {} if (native.share) native.share("Attune speed report\n" + t); }}
               className="text-[11px] text-teal-300 underline underline-offset-2">{tr("Send this report")}</button>
           </div>

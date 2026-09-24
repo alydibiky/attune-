@@ -11,8 +11,8 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 35
-        versionCode = 6
-        versionName = "5.6"
+        versionCode = 7
+        versionName = "5.7"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
         // phone. Add "x86_64" only if you want to run it in the emulator — it
@@ -51,6 +51,9 @@ android {
             // The OpenCL loader is only for linking the GPU backend; on the
             // phone the vendor's own libOpenCL.so must be used.
             excludes += "**/libOpenCL.so"
+            // The fast engine's library may bring its own copy of the C++
+            // runtime; one copy is enough.
+            pickFirsts += "**/libc++_shared.so"
         }
     }
 
@@ -93,16 +96,22 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
 
     // The .html is already minified; compressing it again in the APK only
     // slows the first load.
     androidResources { noCompress += listOf("html") }
 }
 
+// (kotlinOptions {} is an error from Kotlin 2.2 on; this is its replacement.)
+kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
+
 dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.webkit:webkit:1.12.1")
     // Reads DuckDuckGo results and the text of result pages for web lookup.
     implementation("org.jsoup:jsoup:1.18.3")
+    // The fast engine: Google's LiteRT-LM (Apache-2.0) runs .litertlm models
+    // such as Gemma 4 E2B/E4B on the phone's GPU, with multi-token prediction.
+    // Pinned, not "latest.release": a build must not change by itself.
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.17.1")
 }

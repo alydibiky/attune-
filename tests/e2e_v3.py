@@ -179,8 +179,9 @@ with sync_playwright() as pw:
     page.wait_for_selector("text=Engine on this phone", timeout=5000)
     rec = page.locator("text=Recommended for this device").locator("xpath=..")
     rec_name = rec.locator("p.text-base").inner_text()
-    check(rec_name.startswith("Qwen3.5 4B"), "12 GB phone is recommended the fast 4B: " + rec_name)
-    check(rec.locator("button:has-text('Stronger, slower')").count() == 1, "the 9B offered as the stronger, slower option")
+    # v5.7: in the Android app the fast engine (LiteRT-LM, GPU) comes first.
+    check(rec_name.startswith("Gemma 4 E2B") and "fast engine" in rec_name, "12 GB phone is recommended the fast engine: " + rec_name)
+    check(rec.locator("button:has-text('Stronger · Gemma 4 E4B')").count() == 1, "the E4B fast engine offered as the stronger option")
     rec.get_by_role("button", name="Install").first.click()
     page.wait_for_selector("text=Running now", timeout=10000)
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)

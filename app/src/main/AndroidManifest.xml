@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- If the fast engine's library asks for a newer Android than 9, the app
+         still installs on older phones: there the fast engine simply fails to
+         start (caught) and the llama.cpp engine is used. -->
+    <uses-sdk tools:overrideLibrary="com.google.ai.edge.litertlm" />
 
     <!-- Needed for the optional web lookup, the map tiles and downloading a
          model. The assistant itself never uses it. -->

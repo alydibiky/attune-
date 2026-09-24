@@ -239,6 +239,7 @@ class MainActivity : AppCompatActivity() {
         // Bring back the model that was in use last time — on the CPU if the
         // last GPU start crashed the app.
         Engine.checkGpuCrash(this)
+        FastEngine.checkCrash(this)
         if (Engine.state == Engine.State.IDLE) {
             ModelStore.active(this)?.let { m -> Engine.start(this, m) { _, _ -> } }
         }

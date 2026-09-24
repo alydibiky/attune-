@@ -35,7 +35,9 @@ object ModelStore {
         fun toJson(active: Boolean): JSONObject = JSONObject()
             .put("id", id).put("label", label).put("quant", quant).put("source", source)
             .put("sizeBytes", sizeBytes).put("mmprojBytes", mmprojBytes)
-            .put("vision", mmproj != null && mmproj.exists())
+            // A .litertlm Gemma 4 carries its own photo reader inside the one file.
+            .put("vision", (mmproj != null && mmproj.exists()) || modelFile.name.endsWith(".litertlm", true))
+            .put("engine", if (modelFile.name.endsWith(".litertlm", true)) "litert" else "llama")
             .put("ctx", ctx).put("sha256", sha256 ?: JSONObject.NULL)
             .put("installedAt", installedAt).put("active", active)
     }
@@ -141,7 +143,7 @@ object ModelStore {
 
     /** Bring-your-own model: a direct https link to a .gguf (and optionally its mmproj). */
     fun resolveUrl(url: String, mmprojUrl: String?): Plan {
-        require(url.startsWith("https://")) { "Use an https:// link to a .gguf file" }
+        require(url.startsWith("https://")) { "Use an https:// link to a .gguf or .litertlm file" }
         val name = url.substringAfterLast('/').substringBefore('?').ifEmpty { "model.gguf" }
         val mm = mmprojUrl?.takeIf { it.startsWith("https://") }?.let { RemoteFile("mmproj.gguf", it, contentLength(it)) }
         return Plan(listOf(RemoteFile(name, url, contentLength(url))), mm)
@@ -281,7 +283,7 @@ object ModelStore {
         m.sha256?.let { return it }
         val md = MessageDigest.getInstance("SHA-256")
         val parts = (m.dir.listFiles() ?: emptyArray())
-            .filter { it.name.endsWith(".gguf") && it.name != "mmproj.gguf" }.sortedBy { it.name }
+            .filter { (it.name.endsWith(".gguf") && it.name != "mmproj.gguf") || it.name.endsWith(".litertlm") }.sortedBy { it.name }
         val buf = ByteArray(1 shl 20)
         for (f in parts) f.inputStream().use { s -> while (true) { val n = s.read(buf); if (n < 0) break; md.update(buf, 0, n) } }
         val hex = md.digest().joinToString("") { "%02x".format(it) }

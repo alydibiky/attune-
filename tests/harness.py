@@ -65,6 +65,7 @@ V5_EXTRA = r"""
     if ("gpu" in a) { if (a.gpu && S.gpuFails) { S.speed.gpu = false; S.speed.gpuName = ""; S.speed.gpuNote = "The model would not load on the GPU, so Attune switched back to the CPU."; }
                       else { S.speed.gpu = a.gpu; S.speed.gpuName = a.gpu ? "QUALCOMM Adreno(TM) 840" : ""; S.speed.gpuNote = ""; } }
     if ("draft" in a) S.speed.draft = a.draft;
+    if ("fastCpu" in a) { S.speed.fastCpu = a.fastCpu; S.speed.fastBackend = a.fastCpu ? "CPU" : "GPU"; S.speed.fastNote = ""; }
     S.speed.draftActive = S.speed.draft && S.speed.draftInstalled;
     setTimeout(() => R(id, { ok: true, speed: S.speed }), 80); };
   const realInstall = N.install;

@@ -129,6 +129,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun cancel(id: String) {
         cancels[id]?.set(true)
+        FastEngine.cancel(id)
         conns.remove(id)?.let { c -> pool.execute { try { c.disconnect() } catch (e: Exception) {} } }
     }
 
@@ -147,6 +148,12 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             try {
                 if (Engine.state == Engine.State.STARTING) throw java.io.IOException("Still loading")
                 if (Engine.state != Engine.State.READY) throw java.io.IOException(Engine.error ?: "The model is not running yet — open Engine")
+                if (Engine.kind == "litert") {
+                    // The fast engine: no server in between, the answer streams straight here.
+                    val out = FastEngine.chat(ctx, id, JSONObject(body), flag) { c, r -> delta(id, c, r) }
+                    resolve(id, out)
+                    return@execute
+                }
                 val stream = JSONObject(body).optBoolean("stream", false)
                 conn = (java.net.URL(Engine.baseUrl + "/v1/chat/completions").openConnection() as java.net.HttpURLConnection).apply {
                     requestMethod = "POST"
@@ -502,6 +509,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             .put("genThreads", DeviceInfo.generationThreads(ctx))
             .put("thermal", DeviceInfo.thermalStatus(ctx)).put("powerSave", DeviceInfo.powerSave(ctx))
             .put("cpu", Engine.cpuFeatures).put("gpu", Engine.gpuName).put("settings", Engine.settingsNote)
+            .put("engine", Engine.kind).put("fastBackend", FastEngine.backend).put("fastMtp", FastEngine.mtp)
             .put("sysInfo", grab("system_info:[^\\n]*").take(400))
             .put("buffers", Regex("(CPU_Mapped|CPU_REPACK|CPU|OpenCL)[^\\n]*model buffer size[^\\n]*").findAll(log).map { it.value }.joinToString("\n").take(600))
             .put("mmap", !Engine.settingsNote.contains("in RAM"))
@@ -524,6 +532,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             .put("draftActive", Engine.draftId != null)
             .put("draftFits", active != null && Engine.isQwen35(active))
             .put("activeLabel", active?.label ?: JSONObject.NULL)
+            // the fast engine (LiteRT-LM)
+            .put("engine", if (FastEngine.isFast(active)) "litert" else "llama")
+            .put("fastBackend", FastEngine.backend).put("fastMtp", FastEngine.mtp).put("fastVision", FastEngine.vision)
+            .put("fastCpu", Prefs.fastCpu(ctx)).put("fastNote", Prefs.fastNote(ctx))
             .toString()
     }
 
@@ -533,6 +545,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         val a = try { JSONObject(arg) } catch (e: Exception) { return reject(id, "Bad request") }
         if (a.has("gpu")) { Prefs.setGpu(ctx, a.optBoolean("gpu")); Prefs.setGpuNote(ctx, "") }
         if (a.has("draft")) Prefs.setDraft(ctx, a.optBoolean("draft"))
+        if (a.has("fastCpu")) { Prefs.setFastCpu(ctx, a.optBoolean("fastCpu")); Prefs.setFastNote(ctx, "") }
         val m = ModelStore.active(ctx) ?: return resolve(id, JSONObject().put("ok", true).put("speed", JSONObject(speed())))
         Engine.start(ctx, m) { ok, err ->
             announceEngine()
