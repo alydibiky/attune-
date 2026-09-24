@@ -11,6 +11,7 @@ import { tr } from "./i18n.js";
 import { ActionCard } from "./actions-ui.jsx";
 import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
+import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
   Loader2, Search, ChevronDown, CheckCircle2, Sparkles,
@@ -331,6 +332,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       }
     }
 
+    // "Draw a crane at sunset": pictures are made in Studio, on the phone.
+    if (route && !img && looksLikeImageRequest(typed)) {
+      const cid = ensureChat(typed);
+      const subject = pictureSubject(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", card: { tone: "violet", title: "A picture — Studio draws it on this phone", detail: subject,
+          actions: [["Draw it in Studio", "studio"], ["Just answer", "answer"]] }, studioPrompt: subject }] }));
+      setText("");
+      return;
+    }
+
     // Something to set on the phone: a reminder, alarm, timer, calendar event,
     // WhatsApp message or call. Read into a card; nothing happens until confirmed.
     if (route && !img && api.looksLikeAction && api.looksLikeAction(typed)) {
@@ -429,6 +442,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (act === "cycle") api.openTab("cycle");
     else if (act === "undo") { m.undo && m.undo(); patchMsg(chat.id, m.id, { card: { ...m.card, title: "Removed", detail: "", actions: [] } }); }
     else if (act === "money") api.sendToMoney(m.payText);
+    else if (act === "studio") window.dispatchEvent(new CustomEvent("attune-studio", { detail: { prompt: m.studioPrompt || "" } }));
     else if (act === "answer") {
       const at = messages.findIndex((x) => x.id === m.id);
       const u = messages[at - 1];
@@ -554,8 +568,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               setTimeout(() => ask(m.askText, { history: hist, noRoute: true }), 0);
             }} />
         ) : m.card ? (
-          <div key={m.id} className={`rounded-2xl border p-3.5 ${m.card.tone === "rose" ? "border-rose-800/70 bg-rose-500/5" : "border-emerald-800/70 bg-emerald-500/5"}`}>
-            <p dir="auto" className="text-sm font-medium text-slate-100 flex items-center gap-1.5"><CheckCircle2 size={15} className={m.card.tone === "rose" ? "text-rose-300" : "text-emerald-300"} /> {tr(m.card.title)}</p>
+          <div key={m.id} data-testid={"card-" + (m.card.tone || "")} className={`rounded-2xl border p-3.5 ${m.card.tone === "rose" ? "border-rose-800/70 bg-rose-500/5" : m.card.tone === "violet" ? "border-violet-800/70 bg-violet-500/5" : "border-emerald-800/70 bg-emerald-500/5"}`}>
+            <p dir="auto" className="text-sm font-medium text-slate-100 flex items-center gap-1.5"><CheckCircle2 size={15} className={m.card.tone === "rose" ? "text-rose-300" : m.card.tone === "violet" ? "text-violet-300" : "text-emerald-300"} /> {tr(m.card.title)}</p>
             {m.card.detail ? <p dir="auto" className="text-sm text-slate-300 mt-1 whitespace-pre-wrap leading-relaxed">{tr(m.card.detail)}</p> : null}
             {(m.card.actions || []).length ? (
               <div className="flex gap-2 mt-2.5 flex-wrap">

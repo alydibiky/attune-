@@ -187,7 +187,7 @@ object ModelStore {
         return read(dir) ?: throw IOException("Install finished but the model could not be read back")
     }
 
-    private fun gb(b: Long) = "%.1f GB".format(b / 1e9)
+    internal fun gb(b: Long) = "%.1f GB".format(b / 1e9)
 
     private fun open(url: String, from: Long): HttpURLConnection {
         Prefs.requireOnline(url, "model download")
@@ -211,7 +211,7 @@ object ModelStore {
         throw IOException("Too many redirects")
     }
 
-    private fun downloadFile(
+    internal fun downloadFile(
         rf: RemoteFile, dest: File, base: Long, total: Long, stage: String,
         onProgress: (Long, Long, String) -> Unit, cancelled: () -> Boolean,
     ) {

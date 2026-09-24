@@ -24,6 +24,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     private val pool = Executors.newCachedThreadPool()
     private val cancels = ConcurrentHashMap<String, AtomicBoolean>()
     private val conns = ConcurrentHashMap<String, java.net.HttpURLConnection>()
+    private val imageJobs = ConcurrentHashMap<String, ImageRun.Job>()
 
     // ---- replies to the page -------------------------------------------------
     private fun js(code: String) { web.post { web.evaluateJavascript(code, null) } }
@@ -130,6 +131,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun cancel(id: String) {
         cancels[id]?.set(true)
         FastEngine.cancel(id)
+        imageJobs.remove(id)?.cancel()
         conns.remove(id)?.let { c -> pool.execute { try { c.disconnect() } catch (e: Exception) {} } }
     }
 
@@ -591,6 +593,102 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         pool.execute {
             try { resolve(id, JSONObject().put("id", modelId).put("sha256", ModelStore.sha256(ctx, modelId))) }
             catch (e: Exception) { reject(id, e.message ?: "Could not read the model") }
+        }
+    }
+
+    // ---- Studio: pictures drawn on the phone ------------------------------------------
+    @JavascriptInterface
+    fun imageInfo(): String = JSONObject()
+        .put("built", ImageEngine.built(ctx)).put("gpuBuilt", ImageEngine.gpuBuilt(ctx))
+        .put("cpuOnly", ImageEngine.cpuOnly(ctx)).put("note", ImageEngine.note(ctx))
+        .put("lastBackend", ImageEngine.lastBackend)
+        .put("packs", ImageEngine.packs(ctx))
+        .put("ramGB", DeviceInfo.ramGB(ctx)).put("availRamGB", DeviceInfo.availRamBytes(ctx) / 1e9)
+        .put("freeGB", DeviceInfo.freeStorageBytes(ctx) / 1e9)
+        .toString()
+
+    @JavascriptInterface
+    fun setImageCpu(on: Boolean) = ImageEngine.setCpuOnly(ctx, on)
+
+    /** {id, label, kind, files:[{role, name, url, size, what}]} */
+    @JavascriptInterface
+    fun installImagePack(id: String, arg: String) {
+        if (blockedByAirGap(id, "downloading a picture model")) return
+        val flag = AtomicBoolean(false); cancels[id] = flag
+        pool.execute {
+            try {
+                val meta = ImageEngine.install(ctx, JSONObject(arg), { done, total, stage ->
+                    val pct = if (total > 0) ((done * 100) / total).toInt().coerceIn(0, 99) else 0
+                    progress(id, pct, stage, "%.2f / %.2f GB".format(done / 1e9, total / 1e9))
+                }, { flag.get() })
+                resolve(id, JSONObject().put("ok", true).put("pack", meta))
+            } catch (e: ModelStore.Cancelled) {
+                reject(id, "Download cancelled — it will resume where it stopped if you start it again.")
+            } catch (e: Exception) { reject(id, e.message ?: "Install failed") }
+            finally { cancels.remove(id) }
+        }
+    }
+
+    @JavascriptInterface
+    fun removeImagePack(packId: String): Boolean = ImageEngine.remove(ctx, packId)
+
+    private fun imageProgress(id: String, p: ImageRun.Progress) {
+        val pct = if (p.total > 0) (p.step * 100 / p.total) else 0
+        progress(id, pct, p.stage, if (p.total > 0) "${p.step}/${p.total}" else "")
+    }
+
+    private fun imageResult(r: ImageEngine.Result): JSONObject {
+        val (w, h) = ImageEngine.size(r.file)
+        return JSONObject().put("ok", true).put("file", r.file.name).put("url", "https://appassets.androidplatform.net/studio/" + r.file.name)
+            .put("width", w).put("height", h).put("ms", r.ms).put("backend", r.backend).put("pausedChat", r.pausedChat)
+            .put("seed", if (r.seed >= 0) r.seed else JSONObject.NULL)
+    }
+
+    /** {pack, prompt, width, height, steps, seed?, refImage?} → a picture. */
+    @JavascriptInterface
+    fun imagine(id: String, arg: String) {
+        pool.execute {
+            try {
+                GenService.set(ctx.applicationContext, true)
+                val r = ImageEngine.imagine(ctx, JSONObject(arg), { imageProgress(id, it) }, { j -> if (j != null) imageJobs[id] = j else imageJobs.remove(id) })
+                resolve(id, imageResult(r))
+            } catch (e: Exception) { reject(id, e.message ?: "The picture could not be made") }
+            finally { imageJobs.remove(id); GenService.set(ctx.applicationContext, false); announceEngine() }
+        }
+    }
+
+    /** {file} → the same picture 4× bigger and sharper. */
+    @JavascriptInterface
+    fun upscaleImage(id: String, arg: String) {
+        pool.execute {
+            try {
+                GenService.set(ctx.applicationContext, true)
+                val r = ImageEngine.upscale(ctx, JSONObject(arg).getString("file"), { imageProgress(id, it) }, { j -> if (j != null) imageJobs[id] = j else imageJobs.remove(id) })
+                resolve(id, imageResult(r))
+            } catch (e: Exception) { reject(id, e.message ?: "Sharpening failed") }
+            finally { imageJobs.remove(id); GenService.set(ctx.applicationContext, false) }
+        }
+    }
+
+    @JavascriptInterface
+    fun saveImageToGallery(name: String): String = try {
+        JSONObject().put("ok", true).put("where", ImageEngine.saveToGallery(ctx, name)).toString()
+    } catch (e: Exception) { JSONObject().put("ok", false).put("error", e.message ?: "Could not save").toString() }
+
+    @JavascriptInterface
+    fun deleteImage(name: String): Boolean = ImageEngine.delete(ctx, name)
+
+    /** Share a Studio picture to another app (WhatsApp, Gmail…). */
+    @JavascriptInterface
+    fun shareImage(name: String) {
+        web.post {
+            try {
+                val f = java.io.File(ImageEngine.studioDir(ctx), java.io.File(name).name)
+                val uri = androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", f)
+                val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("image/png")
+                    .putExtra(android.content.Intent.EXTRA_STREAM, uri).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                ctx.startActivity(android.content.Intent.createChooser(send, null).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (e: Exception) {}
         }
     }
 }

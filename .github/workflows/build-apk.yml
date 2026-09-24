@@ -83,6 +83,21 @@ jobs:
           cp loader/libOpenCL.so "$OUT/lib/arm64-v8a/"
           echo "OpenCL SDK ready — the APK will include the GPU backend"
 
+      # Studio's picture engine (stable-diffusion.cpp), built as a separate
+      # program — CPU always, plus a GPU (OpenCL/Adreno) copy when the OpenCL
+      # SDK step worked. Optional: if it fails, the APK builds without Studio's
+      # drawing, and Studio says so.
+      - name: Cache the picture engine
+        uses: actions/cache@v4
+        with:
+          path: app/src/main/jniLibs
+          key: image-engine-${{ hashFiles('app/src/main/cpp/build-image-engine.sh') }}-${{ hashFiles('app/src/main/cpp/opencl/lib/**') != '' }}
+      - name: Picture engine for Studio (optional)
+        continue-on-error: true
+        run: |
+          if [ -f app/src/main/jniLibs/arm64-v8a/libattune-image.so ]; then echo "picture engine from cache"; exit 0; fi
+          NDK="$ANDROID_SDK_ROOT/ndk/29.0.14206865" NINJA="$ANDROID_SDK_ROOT/cmake/3.31.6/bin/ninja" bash app/src/main/cpp/build-image-engine.sh
+
       # Keep compiled engine objects between runs: the first build compiles
       # llama.cpp for every ARM generation (~20-30 min); later ones are quick.
       - name: Cache the native build

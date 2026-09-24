@@ -17,3 +17,10 @@ app/src/main/cpp/opencl/
 # Python for the Code sandbox: fetched by web-src/fetch-pyodide.sh (CI does it), not committed.
 app/src/main/assets/www/py/
 web-src/.pyodide-cache/
+# Studio's picture engine: built by app/src/main/cpp/build-image-engine.sh (CI does it).
+app/src/main/jniLibs/
+app/src/main/cpp/stable-diffusion.cpp/
+tests/image_run/sd
+tests/image_run/work/
+tests/image_run/*.pth
+tests/image_run/*.jar

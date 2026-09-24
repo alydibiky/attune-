@@ -105,6 +105,8 @@ class MainActivity : AppCompatActivity() {
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/app/", WebViewAssetLoader.AssetsPathHandler(this))
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            // Studio's pictures, drawn on the phone (ImageEngine).
+            .addPathHandler("/studio/", WebViewAssetLoader.InternalStoragePathHandler(this, ImageEngine.studioDir(this)))
             .build()
         // Any service-worker request for the app's own files is answered from
         // the APK, never from the network (where this address does not exist).

@@ -16,6 +16,7 @@ import { RemindersPanel, whenText } from "./actions-ui.jsx";
 import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
 import { CraneToolkit } from "./crane-ui.jsx";
 import { CodeWorkbench } from "./code-ui.jsx";
+import { StudioPage } from "./studio-ui.jsx";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
 
 /* =========================================================================
@@ -6495,9 +6496,10 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 
 const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
-  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code" };
+  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio" };
 const MORE_TOOLS = [
-  ["instant", "Instant", "Quick actions on text & photos", Zap], ["code", "Code", "Programs tested on your phone", Code2],
+  ["instant", "Instant", "Quick actions on text & photos", Zap], ["studio", "Studio", "Pictures made on your phone", Palette],
+  ["code", "Code", "Programs tested on your phone", Code2],
   ["crane", "Crane toolkit", "Load charts, ground, slings, wind", Calculator],
   ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
   ["memory", "Memory", "Everything you've saved", History],
@@ -7121,6 +7123,13 @@ export default function App() {
     };
     window.addEventListener("attune-share", onShare);
     return () => window.removeEventListener("attune-share", onShare);
+  }, []);
+  // "Draw it in Studio" from a picture request in Chat.
+  const [studioIn, setStudioIn] = useState(null);
+  useEffect(() => {
+    const on = (e) => { setStudioIn(e.detail || null); setMode("studio"); };
+    window.addEventListener("attune-studio", on);
+    return () => window.removeEventListener("attune-studio", on);
   }, []);
   // "Test & fix in Code" under a code block in Chat.
   const [codeIn, setCodeIn] = useState(null);
@@ -8556,6 +8565,12 @@ export default function App() {
               </div>
             ) : null}
           </div>
+        ) : mode === "studio" ? (
+          NATIVE && NATIVE.imageInfo ? (
+            <StudioPage native={NATIVE} nativeCall={nativeCall} nativeLastId={nativeLastId} flash={flash} incoming={studioIn} clearIncoming={() => setStudioIn(null)}
+              chatReady={modelState === "ready" || (engineInfo && engineInfo.state === "ready")}
+              llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.7, think: false })} />
+          ) : <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300" data-testid="studio-page">{tr("Studio draws pictures with the phone's own chip — it works in the Android app.")}</div>
         ) : mode === "code" ? (
           <CodeWorkbench flash={flash} native={NATIVE} incoming={codeIn} clearIncoming={() => setCodeIn(null)}
             engineReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")} openEngine={() => setShowEngine(true)}
