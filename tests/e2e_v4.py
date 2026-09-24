@@ -26,6 +26,10 @@ srv = subprocess.Popen([HERE + "/build-dl/bin/llama-server", "-m", HERE + "/tiny
     "--api-key", "testkey", "--cors-headers", "Authorization,Content-Type",
     "--cors-origins", f"http://127.0.0.1:{PAGE_PORT}", "--log-file", HERE + "/e2e-engine.log"],
     env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+# Stop the engine however this script ends (a crashed run used to leave it
+# running, eating the CPU and making the next runs time out).
+import atexit
+atexit.register(lambda: (srv.poll() is None) and srv.kill())
 
 # ---- serve the built page -----------------------------------------------
 Handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=DIST)
@@ -104,6 +108,9 @@ MOCK = r"""
           if (!r.ok) { const t = (await r.text()).slice(0, 300); state.bad = (state.bad || []).concat([{ t, roles: b.messages.map((m) => m.role), think: b.chat_template_kwargs }]); console.log("BADREQ " + JSON.stringify(state.bad)); return J(id, "HTTP " + r.status + " " + t); }
           if (!b.stream) return R(id, await r.json());
           if (state.fake) {
+            // A canned answer: cancel the real engine's reply, or it keeps
+            // generating unseen and the next real request waits behind it.
+            try { ctl.abort(); } catch (e) {}
             const parts = state.fake.match(/[\s\S]{1,12}/g);
             for (const p of parts) { if (cancels[id]) throw new Error("x"); window.__attuneNative.delta(id, p, ""); await new Promise((q) => setTimeout(q, 25)); }
             return R(id, { content: state.fake, reasoning: "", timings: { predicted_per_second: 14.2 }, usage: {} });
@@ -164,7 +171,9 @@ with sync_playwright() as pw:
     comp = page.locator("textarea[placeholder='Message Attune']")
     # 1. formatted, streamed answer
     page.evaluate("(t) => { window.__mock.fake = t; }", MD)
-    comp.fill("3 cranes × 4 days × 12,500 EGP + 14% VAT — total?")
+    # (Pure arithmetic is now answered instantly on the phone — e2e_v5 "fast" —
+    #  so this formatting check asks something the model has to write.)
+    comp.fill("Price 3 cranes for 4 days at 12,500 EGP a day, with VAT, as a table")
     page.locator("button[title='Send']").click()
     page.wait_for_selector("text=▍", timeout=10000)
     check(page.locator("button[title='Stop']").count() == 1, "Send turns into Stop while answering")
@@ -191,7 +200,9 @@ with sync_playwright() as pw:
     # 3. regenerate, read aloud, share
     n0 = page.evaluate("window.__mock.chats")
     page.locator("button[title='Regenerate']").last.click()
-    page.wait_for_timeout(1500)
+    # Wait for the regenerated answer to finish (a fixed 1.5 s wait was a race).
+    page.wait_for_function("!document.body.innerText.includes('▍') && document.body.innerText.includes('114,000')", timeout=20000)
+    page.wait_for_timeout(300)
     check(page.evaluate("window.__mock.chats") == n0 + 1, "Regenerate asks again")
     page.locator("button[title='Read aloud']").last.click()
     check(any(c.startswith("speak:") for c in page.evaluate("window.__mock.calls")), "Read aloud uses the phone's voice")

@@ -26,6 +26,10 @@ srv = subprocess.Popen([HERE + "/build-dl/bin/llama-server", "-m", HERE + "/tiny
     "--api-key", "testkey", "--cors-headers", "Authorization,Content-Type",
     "--cors-origins", f"http://127.0.0.1:{PAGE_PORT}", "--log-file", HERE + "/e2e-engine.log"],
     env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+# Stop the engine however this script ends (a crashed run used to leave it
+# running, eating the CPU and making the next runs time out).
+import atexit
+atexit.register(lambda: (srv.poll() is None) and srv.kill())
 
 # ---- serve the built page -----------------------------------------------
 Handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=DIST)
@@ -266,7 +270,10 @@ with sync_playwright() as pw:
     page.wait_for_timeout(2500)
     check(page.locator("text=Money & Zakāt").count() >= 1, "a shared bank SMS opens Money")
     check(page.locator("text=read from:").count() >= 1, "the payment is read (amount and where it came from)")
+    # v5.6: Money is a full page; its payment tools slide up from "Payment · Ask".
+    if page.locator("[data-testid=money-tools]").count(): page.locator("[data-testid=money-tools]").click(); page.wait_for_timeout(200)
     check(page.locator("text=From a photo").count() == 1, "payments can also come from a photo")
+    if page.locator("[data-testid=money-sheet]").count(): page.locator("[data-testid=money-sheet] button[aria-label='Close']").click()
     page.screenshot(path=HERE + "/v3-money.png")
 
     # 10. shared image -> Instant with Add to Money

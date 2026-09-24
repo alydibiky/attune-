@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { tr } from "./i18n.js";
 import { ActionCard } from "./actions-ui.jsx";
+import { looksLikeCalc, calculate } from "./calc.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
   Loader2, Search, ChevronDown, CheckCircle2, Sparkles,
@@ -153,7 +154,7 @@ export function Md({ text }) {
 }
 
 // ---- the system prompt: one, stable, so the phone can reuse it between turns ----
-function systemPrompt(profileText, accuracy) {
+export function systemPrompt(profileText, accuracy) {
   const d = new Date();
   return `You are Attune, a capable personal assistant. You run entirely on the user's own phone: nothing they say leaves it.
 
@@ -161,7 +162,9 @@ How to answer:
 - Answer directly. No preamble, no restating the question, no "certainly", no offer to help further at the end.
 - Match the user's language and dialect. If they write Egyptian Arabic, answer in natural Egyptian Arabic; if English, English. If they ask for another language, use it.
 - Use Markdown when it helps reading on a phone: short paragraphs, bullet or numbered lists for steps and options, a table only when comparing several things on the same points, **bold** for the key figure or conclusion. No headings on short answers.
-- Be as long as the question needs and no longer. Calculations: result first, then the working.
+- Be short: most answers fit in a few lines. Only go long when asked for detail, a plan or a document.
+- Calculations: write the short working FIRST, one step per line, then the total in bold on the last line. Never state a total before you have worked it out.
+- Write the answer once. Never repeat it, and never add a "correction" of your own answer — check each step before writing it.
 - If a photo is attached, read it carefully and base the answer on what is actually visible.
 - If something is ambiguous, make the most reasonable assumption and state it in one short line.
 - Today is ${d.toDateString()}.
@@ -310,6 +313,19 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           payText: typed }] }));
       setText("");
       return;
+    }
+
+    // Plain arithmetic: exact and instant, worked out here — no model, no wait.
+    if (route && !img && looksLikeCalc(typed)) {
+      const c = calculate(typed);
+      if (c) {
+        const cid = ensureChat(typed);
+        patchChat(cid, (ch) => ({ ...ch, updated: Date.now(), messages: [...ch.messages,
+          { id: newId(), role: "user", text: typed },
+          { id: newId(), role: "assistant", text: c.markdown, calc: true, askText: typed }] }));
+        setText("");
+        return;
+      }
     }
 
     // Something to set on the phone: a reminder, alarm, timer, calendar event,
@@ -566,6 +582,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               <div className="flex items-center gap-2 text-sm text-teal-300/90 py-1"><Loader2 size={15} className="animate-spin" /> {m.phase || tr("Reading…")}</div>
             ) : null}
             {m.text ? <Md text={m.text + (m.streaming ? " ▍" : "")} /> : null}
+            {m.calc ? (
+              <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500" data-testid="calc-note">
+                <span>⚡ {tr("Worked out on the phone — exact, instant, no model")}</span>
+                <button onClick={() => { const at = messages.findIndex((x) => x.id === m.id); const hist = messages.slice(0, Math.max(0, at - 1));
+                  patchChat(chat.id, (c) => ({ ...c, messages: hist })); setTimeout(() => ask(m.askText, { history: hist, noRoute: true }), 0); }}
+                  className="ms-auto underline underline-offset-2">{tr("Ask the model")}</button>
+              </div>
+            ) : null}
             {m.error ? <p className="text-sm text-amber-300/90 mt-1">{m.error}</p> : null}
             {m.sources && m.sources.length ? (
               <div className="mt-2 space-y-1">
@@ -581,6 +605,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 <button onClick={() => share(m)} className="p-2" title={tr("Share")}><Share2 size={15} /></button>
                 <button onClick={() => { api.remember({ kind: "note", title: m.text.slice(0, 60), text: m.text, output: "", tags: ["saved"] }); api.flash(tr("Saved to Memory")); }} className="p-2" title={tr("Save to Memory")}><Save size={15} /></button>
                 {m.stats && m.stats.tps ? <span className="text-[10px] text-slate-600 ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}
+                {m.stats && m.stats.tps != null && m.stats.tps < 3 && api.openSpeed ? (
+                  <button onClick={api.openSpeed} className="text-[10px] text-amber-300 underline underline-offset-2 ms-1" data-testid="slow-hint">{tr("unusually slow — why?")}</button>) : null}
               </div>
             ) : null}
           </div>

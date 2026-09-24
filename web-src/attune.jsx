@@ -8,7 +8,7 @@ import {
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
-import { ChatHome } from "./chat.jsx";
+import { ChatHome, systemPrompt as chatSystemPrompt } from "./chat.jsx";
 import { tr, getLang, setLang, fmtNum } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
@@ -1317,6 +1317,7 @@ const LocalEngine = {
       // moment the person asks for something: the phone runs one answer at a
       // time, and theirs comes first.
       if (!o.background) {
+        LocalEngine.lastAsked = Date.now();
         for (const bid of LocalEngine._bg) { try { NATIVE.cancel(bid); } catch (e) {} }
         LocalEngine._bg.clear();
       }
@@ -5161,6 +5162,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   const snapRef = React.useRef(null);
   const [thinking, setThinking] = React.useState(false);
   const [err, setErr] = React.useState("");
+  const [sheet, setSheet] = React.useState(false);     // payment + ask tools, over the ledger
   const frameRef = React.useRef(null);
   const bridgeRef = React.useRef(null);
   // Handlers created on mount would otherwise see the first render's
@@ -5323,31 +5325,35 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
     </div>
   );
 
+  // Yusr is a whole app, so it gets the whole screen: a fixed page between
+  // the top of the screen and the bottom bar, with nothing scrolling around
+  // it (two nested scroll areas were what made it feel glitchy). Attune's own
+  // extras — reading a payment, asking about the money — slide up over it.
   return (
-    <div className="space-y-5">
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div>
-            <p className="text-sm text-slate-200 font-medium">{tr("Money & Zakāt")}</p>
-            <p className="text-xs text-slate-500 mt-1 max-w-lg">
-              {tr("Your ledger and every zakāt ruling live here, unchanged, and free forever. Attune adds memory and plain language on top — it never calculates zakāt and never moves money on its own.")}
-            </p>
-          </div>
-          <span className={`text-[11px] px-2 py-1 rounded-full border ${ready ? "border-teal-700 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-500"}`}>
-            {ready ? tr("Connected") : tr("Starting…")}
-          </span>
-        </div>
+    <div className="fixed inset-x-0 top-0 z-[45] flex flex-col bg-[#0F1218]" data-testid="money-page"
+         style={{ bottom: "calc(58px + env(safe-area-inset-bottom))" }}>
+      <div className="shrink-0 flex items-center gap-2 px-2 h-12 bg-slate-950 border-b border-slate-800">
+        <button onClick={() => window.__attuneBack && window.__attuneBack()} aria-label={tr("Back")}
+          className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
+        <p className="flex-1 min-w-0 text-base font-semibold text-white truncate">{tr("Money & Zakāt")}</p>
+        <span className={`shrink-0 w-2 h-2 rounded-full ${ready ? "bg-teal-400" : "bg-slate-600"}`} title={ready ? tr("Connected") : tr("Starting…")} />
+        <button onClick={() => setSheet(true)} data-testid="money-tools"
+          className="shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-200">{tr("Payment · Ask")}</button>
       </div>
-
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
-          {/* Yusr is a full app, not a widget. A fixed short box put its own
-              sheets and buttons out of reach, so the embed takes the height
-              it can get and the whole app stays usable inside it. */}
-          <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="w-full block bg-[#0F1218]"
-                  style={{ height: "min(calc(100dvh - 190px), 900px)", minHeight: "440px", border: 0 }} />
-        </div>
-
+      {parsed && parsed.ok && !sheet ? (
+        <button onClick={() => setSheet(true)} className="shrink-0 text-start px-3 py-1.5 text-[11px] bg-emerald-500/10 border-b border-emerald-900/60 text-emerald-200">
+          {parsed.direction === "out" ? "−" : "+"}{parsed.amount} {parsed.currency || ""}{parsed.party ? " · " + parsed.party : ""} · {tr("read from: “")}{parsed.amountSource}”
+        </button>
+      ) : null}
+      <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={{ border: 0 }} />
+      {sheet ? (
+        <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
+          <div className="att-scroll bg-slate-950 border-t border-slate-800 rounded-t-2xl p-3 max-h-[88%] overflow-y-auto" onClick={(e) => e.stopPropagation()} data-testid="money-sheet">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-slate-200">{tr("Money tools")}</p>
+              <button onClick={() => setSheet(false)} className="p-1.5 text-slate-400" aria-label={tr("Close")}><X size={18} /></button>
+            </div>
+            <p className="text-[11px] text-slate-500 mb-3">{tr("Your ledger and every zakāt ruling live here, unchanged, and free forever. Attune adds memory and plain language on top — it never calculates zakāt and never moves money on its own.")}</p>
         <div className="space-y-5">
           <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
             <p className="text-sm text-slate-200 mb-1">{tr("Share a payment")}</p>
@@ -5484,7 +5490,9 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
             </div>
           ) : null}
         </div>
-      </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -6931,6 +6939,26 @@ export default function App() {
   const [dlDetail, setDlDetail] = useState("");
   const installIdRef = useRef(null);
   const [engineInfo, setEngineInfo] = useState(() => nativeJSON("engine"));
+  // Warm start: the moment a model is ready, have it read Chat's standing
+  // instructions once, in the background (one token, cancelled the instant
+  // the person asks something). The engine keeps that reading in its prompt
+  // cache, so the first real question only reads the question itself —
+  // the difference between the first word after ~1 s and after ~10 s.
+  const warmedRef = useRef("");
+  useEffect(() => {
+    const st = engineInfo && engineInfo.state, id = engineInfo && engineInfo.modelId;
+    if (st !== "ready" || !id || warmedRef.current === id) return;
+    warmedRef.current = id;
+    const readyAt = Date.now();
+    const t = setTimeout(() => {
+      // Pointless once the person has already asked something: their own
+      // question fills the cache, and a warm-up would only queue behind it.
+      if ((LocalEngine.lastAsked || 0) >= readyAt) return;
+      LocalEngine.run("", null, { messages: [{ role: "system", content: chatSystemPrompt(profileLine(profile), ACCURACY_RULES) }, { role: "user", content: "hi" }],
+        maxTokens: 1, temperature: 0, think: false, background: true }).catch(() => {});
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [engineInfo && engineInfo.state, engineInfo && engineInfo.modelId]);
   const [installedModels, setInstalledModels] = useState(() => ((nativeJSON("models") || {}).models || []));
   const refreshModels = () => { const m = nativeJSON("models"); setInstalledModels((m && m.models) || []); };
   const [airGap, setAirGapState] = useState(() => { const i = nativeJSON("info"); return !!(i && i.airGap); });
@@ -7766,6 +7794,7 @@ export default function App() {
       return r && r.text;
     },
     prefersArabic: () => ((profile && profile.speaks) || []).some((x) => /Arabic/.test(x)),
+    openSpeed: () => setShowEngine(true),
     // ---- reminders & phone actions (see actions.js) ----
     looksLikeAction,
     readAction: async (text) => {
@@ -9611,6 +9640,7 @@ export default function App() {
                style={{ bottom: "calc(58px + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
             <div className="max-w-3xl mx-auto">
               <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("App language")}</span><LangSwitch /></div>
+              <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("Text size")}</span><TextSize /></div>
               <div className="grid grid-cols-3 gap-2">
                 {MORE_TOOLS.map(([id, label, sub, Icon]) => (
                   <button key={id} onClick={() => { if (id === "cycle") enableCycle(true); setMode(id); setMoreOpen(false); }}
@@ -9797,6 +9827,28 @@ function Upgrade({ tier, setTier, close, flash }) {
           </>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+// Text size: the WebView's own text zoom (fonts only, layout stays sharp).
+// First launch on a narrow screen (a large "display size" in the phone's
+// settings) starts at Small so the app fits.
+const TEXT_KEY = "attune:textzoom";
+function applyTextZoom(z) { try { if (NATIVE && NATIVE.setTextZoom) NATIVE.setTextZoom(z); } catch (e) {} }
+if (typeof window !== "undefined") {
+  try {
+    if (!localStorage.getItem(TEXT_KEY) && window.innerWidth && window.innerWidth < 380) { localStorage.setItem(TEXT_KEY, "90"); applyTextZoom(90); }
+  } catch (e) {}
+}
+function TextSize() {
+  const [z, setZ] = useState(() => { try { return Number(localStorage.getItem(TEXT_KEY)) || 100; } catch (e) { return 100; } });
+  return (
+    <div className="inline-flex rounded-lg border border-slate-700 overflow-hidden text-[12px]" data-testid="text-size">
+      {[[88, "A−"], [100, "A"], [115, "A+"]].map(([v, label]) => (
+        <button key={v} onClick={() => { setZ(v); try { localStorage.setItem(TEXT_KEY, String(v)); } catch (e) {} applyTextZoom(v); }} data-zoom={v}
+          className={`px-3 py-1.5 ${Math.abs(z - v) < 6 ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-300"}`}>{label}</button>
+      ))}
     </div>
   );
 }

@@ -100,15 +100,23 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) { }
 
         web = makeWebView()
-        setContentView(web)
-
-        // targetSdk 35 draws edge-to-edge; keep the page out from under the
-        // status bar, the navigation bar and the keyboard.
-        ViewCompat.setOnApplyWindowInsetsListener(web) { v, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime())
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-            insets
+        // targetSdk 35 draws edge-to-edge, so the page must be kept out from
+        // under the status bar, the navigation bar and the keyboard. A WebView
+        // IGNORES its own padding (its page still drew under the clock and the
+        // gesture bar), so the WebView sits in a frame and the FRAME is padded.
+        val frame = android.widget.FrameLayout(this).apply {
+            setBackgroundColor(android.graphics.Color.parseColor("#020617"))
+            addView(web, android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT))
         }
+        setContentView(frame)
+        ViewCompat.setOnApplyWindowInsetsListener(frame) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        // Light status-bar icons on the dark page.
+        try { androidx.core.view.WindowCompat.getInsetsController(window, frame).isAppearanceLightStatusBars = false } catch (e: Exception) {}
 
         web.settings.apply {
             javaScriptEnabled = true
@@ -117,7 +125,9 @@ class MainActivity : AppCompatActivity() {
             mediaPlaybackRequiresUserGesture = false
             useWideViewPort = false
             loadWithOverviewMode = false
-            textZoom = 100
+            // The person's choice in More → Text size (the phone's own font
+            // size setting is ignored: it made the app too big to fit).
+            textZoom = getSharedPreferences("attune", MODE_PRIVATE).getInt("text_zoom", 100)
             allowFileAccess = false
             allowContentAccess = false
             // The page is https (appassets); the model server is http on

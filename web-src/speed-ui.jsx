@@ -30,6 +30,22 @@ export function benchMessages() {
   return [{ role: "user", content: `[${Math.random().toString(36).slice(2, 8)}]\n${text}\n\nList the five most important facts in this report as short bullet points.` }];
 }
 
+/** Plain-language reasons, from what the phone and the engine log report. */
+export function diagnose(d, lastTps) {
+  const out = [];
+  if (!d) return out;
+  if (d.thermal >= 2) out.push(["bad", "The phone is hot — it slows the processor down on purpose. Let it cool, take it out of its case, don't charge while asking."]);
+  if (d.powerSave) out.push(["bad", "Battery saver is on — it caps the processor. Turn it off while using Attune."]);
+  if (d.modelGB && d.availRamGB && d.availRamGB < d.modelGB * 0.6) out.push(["bad", "Free memory is low for this model — close other apps (games, camera, many browser tabs)."]);
+  if (/CPU_Mapped/.test(d.buffers || "") && !/in RAM/.test(d.settings || "")) out.push(["bad", "The model is read from storage instead of RAM — update to the latest Attune APK (it loads the model into RAM)."]);
+  if (d.cpu && !/dotprod/i.test(d.cpu)) out.push(["bad", "The engine is using its slowest processor path (no dotprod). Send this report."]);
+  if (d.genThreads && d.genThreads < 3 && !d.powerSave && d.thermal < 2) out.push(["warn", "Only {n} threads are used for writing.", { n: d.genThreads }]);
+  if (d.modelGB > 4) out.push(["warn", "This is a big model for a phone — Qwen 3.5 4B is about 2–3× faster."]);
+  if (lastTps != null && lastTps < 3 && !out.some((x) => x[0] === "bad")) out.push(["warn", "Nothing obvious — the phone may have slowed Attune while it was in the background. The new APK keeps it at full speed while writing."]);
+  if (!out.length) out.push(["ok", "Nothing is holding it back."]);
+  return out;
+}
+
 function Bar({ v, max }) { return <span className="block h-1.5 rounded-full bg-teal-500/70" style={{ width: Math.max(4, Math.round((v / (max || 1)) * 100)) + "%" }} />; }
 
 export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row, engineReady }) {
@@ -38,6 +54,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
   const [busy, setBusy] = useState("");
   const [pct, setPct] = useState(0);
   const [bench, setBench] = useState(loadBench);
+  const [doc, setDoc] = useState(null);
   if (!sp) return null;
 
   const apply = async (patch, msg) => {
@@ -89,6 +106,25 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
         )}
       </div>
       {busy ? <p className="text-[12px] text-teal-300 mt-2 flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{busy}{pct ? " " + pct + "%" : ""}</p> : null}
+
+      <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950 p-3" data-testid="doctor">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm text-slate-200 flex items-center gap-1.5"><AlertTriangle size={15} className="text-amber-300" />{tr("Why is it slow?")}</span>
+          <button onClick={() => { try { setDoc(JSON.parse(native.doctor())); } catch (e) { flash(tr("Not available in this build")); } }} data-testid="doctor-run"
+            className="px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-200">{tr("Check now")}</button>
+        </div>
+        {doc ? (
+          <div className="mt-2 space-y-1.5 text-[12px]">
+            {diagnose(doc, bench[0] ? bench[0].tps : null).map(([lvl, msg, v], i) => (
+              <p key={i} className={lvl === "bad" ? "text-rose-300" : lvl === "warn" ? "text-amber-200" : "text-emerald-300"} data-testid="doctor-finding">• {tr(msg, v)}</p>
+            ))}
+            <p className="text-[11px] text-slate-500" dir="ltr">{[doc.model, doc.modelGB ? doc.modelGB.toFixed(1) + " GB" : "", "RAM " + (doc.availRamGB || 0).toFixed(1) + "/" + doc.ramGB + " GB free",
+              doc.genThreads + " threads", doc.cpu, doc.gpu ? "GPU " + doc.gpu : "", "thermal " + doc.thermal].filter(Boolean).join(" · ")}</p>
+            <button onClick={() => { const t = JSON.stringify(doc, null, 1); try { navigator.clipboard.writeText(t); } catch (e) {} if (native.share) native.share("Attune speed report\n" + t); }}
+              className="text-[11px] text-teal-300 underline underline-offset-2">{tr("Send this report")}</button>
+          </div>
+        ) : <p className="text-[11px] text-slate-500 mt-1">{tr("Reads the phone's heat, battery saver, free memory and the engine's own log, and says in plain words what is slowing answers down.")}</p>}
+      </div>
 
       <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950 p-3">
         <div className="flex items-center justify-between gap-2">

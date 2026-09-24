@@ -44,9 +44,15 @@ V5_EXTRA = r"""
   N.askExact = () => { S.askedExact = true; };
   // Grammar-constrained requests (reminders & actions): recorded, and answered
   // with S.fakeJson when a test wants a fixed reading; otherwise the real engine.
+  N.setTextZoom = (z) => { S.textZoom = z; };
+  S.doctor = { model: "Qwen3.5 4B · Q4_K_M", modelGB: 2.7, ramGB: 12, availRamGB: 6.1, cores: 8, bigCores: 8, genThreads: 4, thermal: 0,
+               powerSave: false, cpu: "NEON · dotprod · int8 matmul · KleidiAI", gpu: "", settings: "context 16384 · weights in RAM", buffers: "CPU model buffer size = 2700 MiB" };
+  N.doctor = () => JSON.stringify(S.doctor);
   const realChat = N.chat;
   N.chat = (id, body) => {
     const b = JSON.parse(body);
+    S.bodies = (S.bodies || []).concat([b]);
+    if (S.fakeTps && b.stream && S.fake) { const t = S.fake; setTimeout(() => { window.__attuneNative.delta(id, t, ""); R(id, { content: t, reasoning: "", timings: { predicted_per_second: S.fakeTps }, usage: {} }); }, 30); return; }
     if (b.grammar) { S.grammarBodies = (S.grammarBodies || []).concat([b]);
       if (S.fakeJson) { const t = JSON.stringify(S.fakeJson); setTimeout(() => { window.__attuneNative.delta(id, t, ""); R(id, { content: t }); }, 30); return; } }
     return realChat(id, body);
@@ -90,6 +96,8 @@ class Env:
             try:
                 if urllib.request.urlopen(f"http://127.0.0.1:{ENGINE_PORT}/health", timeout=1).status == 200: break
             except Exception: time.sleep(0.2)
+        import atexit
+        atexit.register(lambda: (self.srv.poll() is None) and self.srv.kill())
         self.mock = _v4_mock().replace("18790", str(ENGINE_PORT)) + V5_EXTRA
         self.url = f"http://127.0.0.1:{PAGE_PORT}/index.html"
 
@@ -110,7 +118,7 @@ def new_page(br, env, errors, native=True, extra_init=None):
     return ctx, page
 
 def real_errors(errors):
-    return [e for e in errors if "favicon" not in e and "sw.js" not in e.lower() and "/v1/chat/completions" not in e and "gold" not in e]
+    return [e for e in errors if "favicon" not in e and "sw.js" not in e.lower() and "/v1/chat/completions" not in e and "gold" not in e and "ERR_TUNNEL_CONNECTION_FAILED" not in e]
 
 def finish():
     print("ALL PASSED" if not fails else "%d FAILED" % len(fails))

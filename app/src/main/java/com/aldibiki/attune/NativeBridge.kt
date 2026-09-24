@@ -79,6 +79,14 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun setAirGap(on: Boolean) { Prefs.setAirGap(ctx, on) }
 
+    /** Text size for the whole app (percent of normal), kept across launches. */
+    @JavascriptInterface
+    fun setTextZoom(pct: Int) {
+        val z = pct.coerceIn(70, 140)
+        ctx.getSharedPreferences("attune", Context.MODE_PRIVATE).edit().putInt("text_zoom", z).apply()
+        web.post { web.settings.textZoom = z }
+    }
+
     @JavascriptInterface
     fun models(): String {
         val active = Prefs.activeModel(ctx)
@@ -114,6 +122,8 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             val flag = android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
             if (on) w.addFlags(flag) else w.clearFlags(flag)
         }
+        // Full speed even if the person switches apps while it writes.
+        GenService.set(ctx.applicationContext, on)
     }
 
     @JavascriptInterface
@@ -474,6 +484,29 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             if (ok) resolve(id, JSONObject().put("ok", true).put("model", m.toJson(true)).put("engine", engineJson()))
             else reject(id, err ?: "The model could not be loaded")
         }
+    }
+
+    // ---- speed doctor ---------------------------------------------------------------
+    /** Everything that decides speed, read from the phone and the engine's own log. */
+    @JavascriptInterface
+    fun doctor(): String {
+        val log = Engine.logTail(ctx, 60000)
+        fun grab(re: String) = Regex(re).find(log)?.value ?: ""
+        val active = ModelStore.active(ctx)
+        return JSONObject()
+            .put("model", active?.label ?: JSONObject.NULL)
+            .put("modelGB", active?.let { it.sizeBytes / 1e9 } ?: 0)
+            .put("ramGB", DeviceInfo.ramGB(ctx))
+            .put("availRamGB", DeviceInfo.availRamBytes(ctx) / 1e9)
+            .put("cores", DeviceInfo.cores()).put("bigCores", DeviceInfo.bigCores())
+            .put("genThreads", DeviceInfo.generationThreads(ctx))
+            .put("thermal", DeviceInfo.thermalStatus(ctx)).put("powerSave", DeviceInfo.powerSave(ctx))
+            .put("cpu", Engine.cpuFeatures).put("gpu", Engine.gpuName).put("settings", Engine.settingsNote)
+            .put("sysInfo", grab("system_info:[^\\n]*").take(400))
+            .put("buffers", Regex("(CPU_Mapped|CPU_REPACK|CPU|OpenCL)[^\\n]*model buffer size[^\\n]*").findAll(log).map { it.value }.joinToString("\n").take(600))
+            .put("mmap", !Engine.settingsNote.contains("in RAM"))
+            .put("logTail", log.takeLast(3000))
+            .toString()
     }
 
     // ---- speed: GPU, draft model --------------------------------------------------

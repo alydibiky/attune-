@@ -217,7 +217,7 @@ object Engine {
         val gen = DeviceInfo.generationThreads(ctx)
         val batch = DeviceInfo.batchThreads(ctx)
         val ram = DeviceInfo.ramGB(ctx)
-        settingsNote = (if (useGpu) "GPU: $gpuName · context $nCtx" else "context $nCtx · $gen threads (prompt $batch) · flash attention · 8-bit KV cache") +
+        settingsNote = (if (useGpu) "GPU: $gpuName · context $nCtx" else "context $nCtx · $gen threads (prompt $batch) · flash attention · 8-bit KV cache") + " · weights in RAM" +
             (if (cpuFeatures.isNotEmpty() && !useGpu) " · CPU: $cpuFeatures" else "")
 
         val a = arrayListOf(
@@ -229,6 +229,13 @@ object Engine {
             "-t", gen.toString(),
             "-tb", batch.toString(),
             "-np", "1",                       // one user, one conversation at a time
+            // The whole model is read into RAM once instead of being mapped
+            // from storage. Mapped pages can be thrown away by the system when
+            // memory gets tight (MagicOS does this eagerly) and then EVERY word
+            // re-reads gigabytes from flash: that is how 20 words/s becomes <1.
+            // The memory guard below already refuses models that don't fit.
+            // (At this llama.cpp the switch is --load-mode; --no-mmap is gone.)
+            "--load-mode", "none",
             "--cache-reuse", "256",           // reuse the shared prompt prefix between requests
             "--cache-ram", if (ram >= 8) "256" else "0",
             "--jinja",                        // the model's own chat template, incl. thinking switch

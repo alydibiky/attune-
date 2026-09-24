@@ -4,4 +4,6 @@
     <string name="process_text_label">اسأل Attune</string>
     <string name="channel_reminders">التذكيرات</string>
     <string name="channel_reminders_desc">التذكيرات التي طلبت من Attune ضبطها</string>
+    <string name="channel_writing">كتابة إجابة</string>
+    <string name="writing_title">Attune يكتب إجابتك…</string>
 </resources>

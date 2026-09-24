@@ -5,7 +5,7 @@ import json, sys
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish, HERE
 
-SECTIONS = sys.argv[1:] or ["backup", "arabic", "actions", "speed", "crane"]
+SECTIONS = sys.argv[1:] or ["backup", "arabic", "actions", "speed", "crane", "fast"]
 env = Env()
 errors = []
 
@@ -161,10 +161,14 @@ def sec_arabic(br):
     check(True, "installing a model works in Arabic")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
     # a chat still works
-    page.evaluate("window.__mock.fake = 'الإجمالي **171,000 جنيه**.'")
-    page.locator("textarea").last.fill("3 أوناش × 4 أيام × 12,500 + 14% ضريبة؟")
+    page.locator("textarea").last.fill("3 أوناش × 4 أيام × 12,500 جنيه + 14% ضريبة، الإجمالي كام؟")
     page.locator("button[title='إرسال']").click()
-    page.wait_for_selector("text=171,000 جنيه", timeout=20000)
+    page.wait_for_selector("text=الإجمالي: 171,000 جنيه", timeout=5000)
+    check("محسوبة على الهاتف" in page.locator("[data-testid=calc-note]").inner_text(), "an Arabic sum is worked out instantly on the phone, in Arabic")
+    page.evaluate("window.__mock.fake = 'الونش المتحرك **ونش على شاسيه بعجل**.'")
+    page.locator("textarea").last.fill("اوصف الونش المتحرك في سطر")
+    page.locator("button[title='إرسال']").click()
+    page.wait_for_selector("text=ونش على شاسيه بعجل", timeout=20000)
     page.wait_for_timeout(800); page.screenshot(path=HERE + "/dbg.png")
     check(page.locator("button[title='أعِد التوليد']").count() >= 1, "chatting works in Arabic, with Arabic answer buttons")
     page.screenshot(path=HERE + "/v5-ar-chat.png")
@@ -422,7 +426,72 @@ def sec_crane(br):
     page.screenshot(path=HERE + "/v5-crane-ar.png")
     ctx.close()
 
-SECTION_FUNCS = {"backup": sec_backup, "arabic": sec_arabic, "actions": sec_actions, "speed": sec_speed, "crane": sec_crane}
+
+def sec_fast(br):
+    ctx, page = new_page(br, env, errors)
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
+    page.locator("header button:has-text('No model')").click()
+    page.locator("text=Recommended for this device").locator("xpath=..").get_by_role("button", name="Install").first.click()
+    page.wait_for_selector("text=Running now", timeout=10000)
+    page.evaluate("window.__attuneBack()")
+    page.wait_for_timeout(2500)
+    warm = [b for b in (page.evaluate("window.__mock.bodies") or []) if b.get("max_tokens") == 1]
+    check(len(warm) == 1 and warm[0]["messages"][0]["role"] == "system" and "Attune" in warm[0]["messages"][0]["content"],
+          "when the model is ready, Chat's instructions are pre-read once in the background (prompt cache warm-up)")
+    comp = page.locator("textarea[placeholder='Message Attune']")
+    n0 = len(page.evaluate("window.__mock.bodies") or [])
+    t0 = page.evaluate("Date.now()")
+    comp.fill("3 cranes × 4 days × 12,500 EGP a day + 14% VAT — total?")
+    page.locator("button[title='Send']").click()
+    page.wait_for_selector("[data-testid=calc-note]", timeout=3000)
+    ms = page.evaluate("Date.now()") - t0
+    check(page.locator(".att-md strong:has-text('Total: 171,000 EGP')").count() == 1, "Ali's question is answered: Total: 171,000 EGP")
+    check(ms < 1500, "…instantly (%d ms including typing into the box), with the working shown" % ms)
+    check(len(page.evaluate("window.__mock.bodies") or []) == n0, "…and without calling the model at all")
+    page.locator("[data-testid=calc-note] button").click()
+    page.wait_for_timeout(1500)
+    check(len(page.evaluate("window.__mock.bodies") or []) > n0, "“Ask the model” still sends it to the model if wanted")
+    bodies = page.evaluate("window.__mock.bodies")
+    sysmsg = [b for b in bodies if b.get("max_tokens", 0) > 1][-1]["messages"][0]["content"]
+    check("working FIRST" in sysmsg and "Never state a total before" in sysmsg, "the model is told to work first and give the total last (no more wrong total + 'correction')")
+    # a slow answer points to the doctor
+    page.evaluate("window.__mock.fake = 'Slow answer.'; window.__mock.fakeTps = 0.7")
+    comp.fill("Describe a mobile crane in one line.")
+    page.locator("button[title='Send']").click()
+    page.wait_for_selector("[data-testid=slow-hint]", timeout=10000)
+    page.locator("[data-testid=slow-hint]").click()
+    page.wait_for_selector("[data-testid=doctor]", timeout=5000)
+    page.evaluate("window.__mock.doctor.thermal = 3; window.__mock.doctor.powerSave = true; window.__mock.doctor.availRamGB = 1.2")
+    page.locator("[data-testid=doctor-run]").click()
+    f = page.locator("[data-testid=doctor]").inner_text()
+    check("hot" in f and "Battery saver" in f and "Free memory is low" in f, "an unusually slow answer links to “Why is it slow?”, which names the causes")
+    page.evaluate("window.__attuneBack()"); page.evaluate("window.__mock.fakeTps = null")
+    # text size
+    open_more(page)
+    page.locator("[data-testid=text-size] button[data-zoom='88']").click()
+    check(page.evaluate("window.__mock.textZoom") == 88, "More → Text size sets the app's text zoom")
+    # Money is a full page, not a box in a scrolling page
+    page.locator("nav button").nth(2).click(); page.wait_for_selector("[data-testid=money-page]", timeout=5000)
+    page.wait_for_timeout(500)
+    box = page.locator("[data-testid=money-page] iframe").bounding_box()
+    vh = page.evaluate("innerHeight")
+    check(box["height"] > vh * 0.7, "Yusr fills the screen (%d of %d px)" % (box["height"], vh))
+    scrollable = page.evaluate("document.scrollingElement.scrollHeight - innerHeight")
+    page.mouse.wheel(0, 600); page.wait_for_timeout(200)
+    check(page.evaluate("window.scrollY") == 0 or scrollable <= 2, "…and nothing scrolls around it")
+    page.locator("[data-testid=money-tools]").click()
+    check(page.locator("[data-testid=money-sheet]").count() == 1 and "Share a payment" in page.locator("[data-testid=money-sheet]").inner_text(),
+          "payment and Ask tools slide up over the ledger")
+    page.screenshot(path=HERE + "/v5-money.png")
+    ctx.close()
+    # first launch on a narrow screen starts with smaller text
+    c2 = br.new_context(viewport={"width": 360, "height": 780}, is_mobile=True, has_touch=True)
+    c2.add_init_script(env.mock); c2.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
+    p2 = c2.new_page(); p2.goto(env.url); p2.wait_for_selector("nav", timeout=15000)
+    check(p2.evaluate("window.__mock.textZoom") == 90, "a narrow screen (big display size) starts at 90% text")
+    c2.close()
+
+SECTION_FUNCS = {"backup": sec_backup, "arabic": sec_arabic, "actions": sec_actions, "speed": sec_speed, "crane": sec_crane, "fast": sec_fast}
 
 with sync_playwright() as pw:
     br = pw.chromium.launch()

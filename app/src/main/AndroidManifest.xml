@@ -15,6 +15,10 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Hand an alarm or timer to the phone's Clock app, filled in. -->
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+    <!-- Keeps the model at full speed while an answer is being written, even
+         if the person switches apps (GenService; stops when the answer ends). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <!-- Lets the app find the phone's speech recogniser (Android 11+). -->
     <queries>
@@ -78,6 +82,11 @@
         <!-- The phone's own GPU driver (Adreno), for Engine → Speed → GPU.
              Optional: phones without it install and run on the CPU. -->
         <uses-native-library android:name="libOpenCL.so" android:required="false" />
+
+        <service android:name=".GenService" android:exported="false" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="On-device AI model writing an answer the user asked for" />
+        </service>
 
         <!-- Rings a reminder at its time, even with the app closed. -->
         <receiver android:name=".ReminderReceiver" android:exported="false" />
