@@ -14,6 +14,7 @@ import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
 import { RemindersPanel, whenText } from "./actions-ui.jsx";
 import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
+import { CraneToolkit } from "./crane-ui.jsx";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
 
 /* =========================================================================
@@ -6460,9 +6461,10 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 
 const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
-  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders" };
+  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit" };
 const MORE_TOOLS = [
-  ["instant", "Instant", "Quick actions on text & photos", Zap], ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
+  ["instant", "Instant", "Quick actions on text & photos", Zap], ["crane", "Crane toolkit", "Load charts, ground, slings, wind", Calculator],
+  ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
   ["memory", "Memory", "Everything you've saved", History],
   ["cycle", "Cycle", "Period tracker", Droplet], ["travel", "Travel", "Country packs & phrases", Plane],
   ["map", "Maps", "Offline places", MapPin], ["field", "Site reports", "Incident & maintenance docs", HardHat],
@@ -8490,6 +8492,9 @@ export default function App() {
               </div>
             ) : null}
           </div>
+        ) : mode === "crane" ? (
+          <CraneToolkit flash={flash} remember={remember}
+            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "reminders" ? (
           <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} />
         ) : mode === "cycle" ? (

@@ -342,7 +342,87 @@ def sec_speed(br):
     page.screenshot(path=HERE + "/v5-speed.png", full_page=True)
     ctx.close()
 
-SECTION_FUNCS = {"backup": sec_backup, "arabic": sec_arabic, "actions": sec_actions, "speed": sec_speed}
+
+CHART = "m\t12\t20\t30\n3\t60\t45\t-\n5\t42\t38\t30\n10\t20\t19\t17\n20\t-\t6.5\t6"
+
+def sec_crane(br):
+    ctx, page = new_page(br, env, errors)
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
+    open_more(page)
+    page.locator(".rounded-t-2xl button:has-text('Crane toolkit')").click()
+    page.wait_for_selector("[data-testid=crane-toolkit]", timeout=5000)
+    check("Planning aid only" in page.locator("[data-testid=crane-toolkit]").inner_text(), "the toolkit says plainly it is a planning aid")
+    # add a chart
+    page.click("[data-testid=ctab-charts]")
+    page.fill("[data-testid=ch-name]", "Liebherr LTM 1100 · unit 3")
+    page.fill("[data-testid=ch-config]", "22 t counterweight · 7×7 m")
+    page.fill("[data-testid=ch-text]", CHART)
+    check(page.locator("[data-testid=ch-preview] tr").count() == 5, "a pasted chart is shown as a table to check against the print")
+    page.click("[data-testid=ch-add]")
+    check(page.locator("[data-testid=crane-item]").count() == 1, "the chart is saved")
+    page.locator("[data-testid=crane-item] button").first.click()
+    # lift check
+    page.fill("[data-testid=lift-radius]", "7"); page.fill("[data-testid=lift-boom]", "25")
+    ct = page.locator("[data-testid=lift-chart]").inner_text()
+    check("17 t" in ct and "lowest surrounding" in ct, "7 m / 25 m boom (between chart points) reads 17 t, the lowest around it: " + ct.splitlines()[0])
+    page.fill("[data-testid=lift-load]", "14"); page.fill("[data-testid=lift-hook]", "0.8"); page.fill("[data-testid=lift-rig]", "0.3")
+    v = page.locator("[data-testid=lift-verdict]").inner_text()
+    check("15.1 t of 17 t" in v and "88.8%" in v and "Critical lift" in v, "15.1 t on 17 t = 88.8 % → critical lift, needs a plan")
+    page.fill("[data-testid=lift-load]", "16.5")
+    check("OVER THE CHART" in page.locator("[data-testid=lift-verdict]").inner_text(), "17.6 t on 17 t → over the chart")
+    page.fill("[data-testid=lift-radius]", "25")
+    check("not permitted" in page.locator("[data-testid=lift-chart]").inner_text(), "beyond the chart's radius → not permitted")
+    page.fill("[data-testid=lift-radius]", "7")
+    # ground
+    page.click("[data-testid=ctab-ground]")
+    check(page.locator("[data-testid=g-gross]").input_value() == "17.6", "the lift's gross load carries over to Ground")
+    page.fill("[data-testid=g-mass]", "48"); page.fill("[data-testid=g-cw]", "22")
+    page.select_option("[data-testid=g-soil]", "soft_clay")
+    g = page.locator("[data-testid=g-verdict]").inner_text()
+    check("65.7 t" in g and "Estimated" in g and "Mat needed" in g, "no force given: estimated 65.7 t; on soft clay it says how big a mat is needed")
+    page.fill("[data-testid=g-force]", "40"); page.fill("[data-testid=g-custom]", "250"); page.fill("[data-testid=g-L]", "2"); page.fill("[data-testid=g-W]", "2")
+    g = page.locator("[data-testid=g-verdict]").inner_text()
+    check("98 kN/m²" in g, "40 t on a 2×2 m mat → 98 kN/m² (allowed 250)")
+    # slings
+    page.click("[data-testid=ctab-slings]")
+    page.click("[data-testid=s-legs-2]")
+    sv = page.locator("[data-testid=s-verdict]").inner_text()
+    check("10.16 t" in sv, "17.6 t on 2 legs at 30° → 10.16 t per leg")
+    page.click("[data-testid=s-legs-4]")
+    check("10.16 t" in page.locator("[data-testid=s-verdict]").inner_text() and "only 2 legs" in page.locator("[data-testid=s-verdict]").inner_text(),
+          "4 legs are rated as 2 (same 10.16 t), and it says why")
+    # wind
+    page.click("[data-testid=ctab-wind]")
+    page.fill("[data-testid=w-mass]", "5"); page.fill("[data-testid=w-area]", "20"); page.fill("[data-testid=w-vnow]", "6")
+    w = page.locator("[data-testid=w-verdict]").inner_text()
+    check("4.9 m/s" in w and "TOO WINDY" in w, "a 5 t panel of 20 m²: limit drops to 4.9 m/s, 6 m/s is too windy")
+    page.fill("[data-testid=w-vnow]", "4"); page.fill("[data-testid=w-htip]", "50")
+    check("TOO WINDY" in page.locator("[data-testid=w-verdict]").inner_text(), "4 m/s at 10 m becomes ~5 m/s at a 50 m tip — still too windy")
+    # checklist
+    page.click("[data-testid=ctab-check]")
+    page.locator("[data-testid=chk]").nth(0).check(); page.locator("[data-testid=chk]").nth(1).check()
+    check("2 of 20 checked" in page.locator("[data-testid=check-tab]").inner_text(), "checklist counts what is ticked")
+    page.click("[data-testid=chk-share]")
+    sh = page.evaluate("window.__mock.shared") or ""
+    check("☑" in sh and "☐" in sh and "Liebherr LTM 1100" in sh and "17.6 t" in sh, "Share sends the ticked list with the crane and load")
+    page.screenshot(path=HERE + "/v5-crane.png", full_page=True)
+    page.reload(); page.wait_for_selector("nav", timeout=15000)
+    check("Liebherr LTM 1100" in (page.evaluate("localStorage.getItem('attune:crane:v1')") or ""), "charts are kept (and so go into backups)")
+    # the same screens in Arabic
+    page.evaluate("localStorage.setItem('attune:ui:lang','ar')"); page.reload(); page.wait_for_selector("nav", timeout=15000)
+    open_more(page); page.locator(".rounded-t-2xl button:has-text('أدوات الأوناش')").click()
+    page.wait_for_selector("[data-testid=crane-toolkit]", timeout=5000)
+    bad = []
+    for t in ["lift", "ground", "slings", "wind", "check", "charts"]:
+        page.click("[data-testid=ctab-%s]" % t); page.wait_for_timeout(100)
+        bad += page.evaluate(LATIN)
+    bad = [b for b in bad if not any(x in b for x in ["LMI", "WLL", "Liebherr", "LTM", "PDF", "kN", "22 t counterweight"])]
+    check(len(bad) == 0, "every toolkit tab is in Arabic: %s" % bad[:4])
+    page.click("[data-testid=ctab-lift]"); page.wait_for_timeout(100)
+    page.screenshot(path=HERE + "/v5-crane-ar.png")
+    ctx.close()
+
+SECTION_FUNCS = {"backup": sec_backup, "arabic": sec_arabic, "actions": sec_actions, "speed": sec_speed, "crane": sec_crane}
 
 with sync_playwright() as pw:
     br = pw.chromium.launch()
