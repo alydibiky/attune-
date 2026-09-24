@@ -30,10 +30,20 @@
   so the phone can hold longer conversations and documents.
 - **Prompt reuse**: the fixed instructions Attune sends with every request are
   computed once and kept, so only the new part is processed.
-- **Threads**: generation uses the fast cores only; prompt reading uses all.
-  On a hot phone or in battery saver it uses fewer, to stay steady.
-- **Context** is sized from real RAM: 8K on 6 GB, 12K on 8 GB, 16K on 12 GB,
-  32K on 16 GB+ (smaller when the model itself fills most of memory).
+- **Threads**: generation uses at most 4 fast cores (more only adds heat —
+  generation is limited by memory speed); prompt reading leaves 2 cores free
+  so the app never freezes. Hot phone or battery saver → fewer.
+- **Context** is sized for comfort, not the maximum: 8K tokens (about 12
+  pages) on most phones, 16K for small models on 12 GB+, 4K when the model
+  itself fills much of memory.
+- **Memory guard**: a model bigger than ~55% of the phone's RAM is refused —
+  it would load, then swap, overheat and freeze the phone.
+- **Heat guard**: at "critical" temperature the answer stops and keeps what
+  was written.
+- **Thinking** is capped (about 1,000–1,500 tokens) so the answer always
+  starts; it is off by default and one tap ("Think") per question.
+- The model stays loaded when you leave the app (Back sends it to the
+  background), so reopening is instant.
 
 ## Quality
 
@@ -49,16 +59,15 @@
 
 Engine recommends one automatically from the phone's real memory. The list:
 
-| Phone RAM | Recommended |
-|---|---|
-| 3 GB | Qwen 3.5 2B |
-| 4 GB | Qwen 3.5 4B (IQ4_XS) |
-| 6 GB | Qwen 3.5 4B (Q4_K_M) |
-| 8 GB | Qwen 3.5 4B (Q5_K_M) or Gemma 4 E4B |
-| 12 GB | **Qwen 3.5 9B** |
-| 16 GB | Gemma 4 12B |
-| 24 GB | Gemma 4 26B-A4B (mixture of experts) — runs hot |
-| 32 GB | Qwen 3.5 35B-A3B (mixture of experts) — runs hot |
+Speed-first on phones — a model that fills half the phone runs slowly and hot.
+
+| Phone RAM | Recommended | Stronger option |
+|---|---|---|
+| 3 GB | Qwen 3.5 0.8B / 2B | — |
+| 4 GB | Qwen 3.5 4B (IQ4_XS) | — |
+| 6 GB | Qwen 3.5 4B (Q4_K_M) | — |
+| 8 GB | Qwen 3.5 4B (Q5_K_M) | — |
+| 12 GB+ | Qwen 3.5 4B (Q5_K_M) | Qwen 3.5 9B (slower, warmer) |
 
 **Add any model**: any GGUF on Hugging Face as `owner/repo:QUANT` (e.g.
 `unsloth/Qwen3.5-9B-GGUF:Q4_K_M`), or a direct `https://…/model.gguf` link.
@@ -79,7 +88,8 @@ of the file in use, as proof of exactly which model answered.
 
 ## Not done yet
 
-- Voice (speech-to-text) and live translation of speech.
+- Live translation of speech (voice input itself is done — the phone's own
+  recogniser, on-device when available).
 - Indexing large folders of your own documents for search.
 - GPU/NPU acceleration (the CPU path with KleidiAI is currently the most
   reliable on Android; Qualcomm's NPU backend is still experimental in llama.cpp).

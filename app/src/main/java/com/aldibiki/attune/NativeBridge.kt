@@ -47,12 +47,20 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         "window.dispatchEvent(new CustomEvent('attune-engine',{detail:${engineJson()}}))"
     )
 
-    private fun engineJson(): JSONObject = JSONObject()
-        .put("state", Engine.state.name.lowercase())
-        .put("modelId", Engine.modelId ?: JSONObject.NULL)
-        .put("error", Engine.error ?: JSONObject.NULL)
-        .put("settings", Engine.settingsNote)
-        .put("cpu", Engine.cpuFeatures)
+    private fun engineJson(): JSONObject {
+        val active = Engine.modelId?.let { ModelStore.get(ctx, it) }
+        val started = Engine.loadStartedAt
+        return JSONObject()
+            .put("state", Engine.state.name.lowercase())
+            .put("modelId", Engine.modelId ?: JSONObject.NULL)
+            .put("error", Engine.error ?: JSONObject.NULL)
+            .put("settings", Engine.settingsNote)
+            .put("cpu", Engine.cpuFeatures)
+            .put("loadingFor", if (started > 0) (System.currentTimeMillis() - started) / 1000 else 0)
+            .put("phase", Engine.loadPhase(ctx))
+            .put("heavy", active != null && Engine.isHeavy(ctx, active))
+            .put("thermal", DeviceInfo.thermalStatus(ctx))
+    }
 
     private fun blockedByAirGap(id: String, what: String): Boolean {
         if (!Prefs.airGap(ctx)) return false
@@ -127,7 +135,8 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         pool.execute {
             var conn: java.net.HttpURLConnection? = null
             try {
-                if (Engine.state != Engine.State.READY) throw java.io.IOException("The model is not running yet — open Engine")
+                if (Engine.state == Engine.State.STARTING) throw java.io.IOException("Still loading")
+                if (Engine.state != Engine.State.READY) throw java.io.IOException(Engine.error ?: "The model is not running yet — open Engine")
                 val stream = JSONObject(body).optBoolean("stream", false)
                 conn = (java.net.URL(Engine.baseUrl + "/v1/chat/completions").openConnection() as java.net.HttpURLConnection).apply {
                     requestMethod = "POST"
@@ -154,6 +163,8 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 val pendC = StringBuilder(); val pendR = StringBuilder()
                 var stats: JSONObject? = null
                 var lastFlush = 0L
+                var lastHeatCheck = System.currentTimeMillis()
+                var tooHot = false
                 conn.inputStream.bufferedReader(Charsets.UTF_8).use { rd ->
                     while (!flag.get()) {
                         val line = rd.readLine() ?: break
@@ -168,6 +179,12 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                         if (c.isEmpty() && r.isEmpty()) continue
                         content.append(c); reasoning.append(r); pendC.append(c); pendR.append(r)
                         val now = System.currentTimeMillis()
+                        // A phone at "critical" temperature is about to throttle
+                        // hard or shut apps down. Stop and keep what was written.
+                        if (now - lastHeatCheck > 3000) {
+                            lastHeatCheck = now
+                            if (DeviceInfo.thermalStatus(ctx) >= 4) { tooHot = true; flag.set(true) }
+                        }
                         if (now - lastFlush > 60) {           // at most ~16 updates a second
                             delta(id, pendC.toString(), pendR.toString())
                             pendC.setLength(0); pendR.setLength(0); lastFlush = now
@@ -175,6 +192,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                     }
                 }
                 if (pendC.isNotEmpty() || pendR.isNotEmpty()) delta(id, pendC.toString(), pendR.toString())
+                if (tooHot) { reject(id, "Too hot"); return@execute }
                 if (flag.get()) { reject(id, "Stopped"); return@execute }
                 val out = JSONObject().put("content", content.toString()).put("reasoning", reasoning.toString())
                 stats?.let { st ->
@@ -191,6 +209,76 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             }
         }
     }
+
+    // ---- read aloud and share -----------------------------------------------------
+    // The phone's own text-to-speech voices (offline for installed languages).
+    private var tts: android.speech.tts.TextToSpeech? = null
+    private var ttsReady = false
+    private var ttsPending: Pair<String, String>? = null
+
+    @JavascriptInterface
+    fun speak(text: String, lang: String) {
+        web.post {
+            val t = tts
+            if (t == null) {
+                ttsPending = text to lang
+                tts = android.speech.tts.TextToSpeech(ctx) { status ->
+                    ttsReady = status == android.speech.tts.TextToSpeech.SUCCESS
+                    ttsPending?.let { (x, l) -> ttsPending = null; say(x, l) }
+                }
+            } else if (ttsReady) say(text, lang) else ttsPending = text to lang
+        }
+    }
+
+    private fun say(text: String, lang: String) {
+        val t = tts ?: return
+        if (!ttsReady) return
+        val loc = if (lang.isNotBlank()) java.util.Locale.forLanguageTag(lang) else java.util.Locale.getDefault()
+        try { t.language = loc } catch (e: Exception) {}
+        // Long answers are split: one utterance has a length limit.
+        val chunks = text.chunked(3500)
+        chunks.forEachIndexed { i, c ->
+            t.speak(c, if (i == 0) android.speech.tts.TextToSpeech.QUEUE_FLUSH else android.speech.tts.TextToSpeech.QUEUE_ADD, null, "attune-$i")
+        }
+    }
+
+    @JavascriptInterface
+    fun stopSpeaking() { web.post { try { tts?.stop() } catch (e: Exception) {} } }
+
+    /** The phone's share sheet: WhatsApp, email, notes… */
+    @JavascriptInterface
+    fun share(text: String) {
+        web.post {
+            try {
+                val i = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+                    .putExtra(android.content.Intent.EXTRA_TEXT, text)
+                ctx.startActivity(android.content.Intent.createChooser(i, null).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (e: Exception) {}
+        }
+    }
+
+    fun release() { try { tts?.shutdown() } catch (e: Exception) {}; tts = null }
+
+    // ---- voice -----------------------------------------------------------------
+    var voice: Voice? = null
+    var askMic: (() -> Unit)? = null
+    var lastVoiceSink: Voice.Sink? = null
+
+    /** Speech to text. Words arrive through progress(id, 0, "partial", text). */
+    @JavascriptInterface
+    fun listen(id: String, lang: String) {
+        val v = voice ?: return reject(id, "Voice input is not available")
+        val sink = object : Voice.Sink {
+            override fun partial(text: String) = progress(id, 0, "partial", text)
+            override fun done(text: String) = resolve(id, JSONObject().put("text", text))
+            override fun failed(message: String) = reject(id, message)
+        }
+        lastVoiceSink = sink
+        v.start(lang, sink) { askMic?.invoke() }
+    }
+
+    @JavascriptInterface
+    fun stopListening() { voice?.stop() }
 
     // ---- slow calls ------------------------------------------------------------
 

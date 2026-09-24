@@ -52,6 +52,11 @@ class MainActivity : AppCompatActivity() {
         cb?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(res.resultCode, res.data))
     }
 
+    private lateinit var voice: Voice
+    private val askMicPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        bridge.lastVoiceSink?.let { voice.onPermission(granted, it) }
+    }
+
     @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,7 +80,7 @@ class MainActivity : AppCompatActivity() {
                 })
         } catch (e: Exception) { }
 
-        web = WebView(this)
+        web = makeWebView()
         setContentView(web)
 
         // targetSdk 35 draws edge-to-edge; keep the page out from under the
@@ -99,10 +104,19 @@ class MainActivity : AppCompatActivity() {
             // The page is https (appassets); the model server is http on
             // 127.0.0.1. That one request never leaves the phone.
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            // Draw the parts of the page just off screen ahead of time, so
+            // scrolling doesn't show blank strips.
+            offscreenPreRaster = true
         }
         WebView.setWebContentsDebuggingEnabled(isDebuggable)
 
         bridge = NativeBridge(this, web)
+        voice = Voice(this)
+        bridge.voice = voice
+        bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
+        // This screen now hears about every engine change, including one that
+        // was started by a screen that has since closed.
+        Engine.onChange = { bridge.announceEngine() }
         web.addJavascriptInterface(bridge, "AttuneNative")
 
         val backendJs = "window.ATTUNE_NATIVE=true;window.ATTUNE_BACKEND={localUrl:${JSONObject.quote(Engine.baseUrl)}," +
@@ -135,6 +149,14 @@ class MainActivity : AppCompatActivity() {
                 return try { startActivity(Intent(Intent.ACTION_VIEW, url)); true } catch (e: Exception) { true }
             }
 
+            // If Android reclaims the page's renderer (low memory while a big
+            // model is loaded), rebuild the page instead of letting the whole
+            // app crash — which would also throw away the loaded model.
+            override fun onRenderProcessGone(view: WebView, detail: android.webkit.RenderProcessGoneDetail): Boolean {
+                recreate()
+                return true
+            }
+
             override fun onPageFinished(v: WebView, url: String) {
                 if (!docStart) web.evaluateJavascript(backendJs, null)
                 pendingShare?.let { deliverShare(it); pendingShare = null }
@@ -164,7 +186,10 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 // The page decides first: close a panel or return to the home tab.
                 web.evaluateJavascript("(window.__attuneBack && window.__attuneBack()) ? true : false") { r ->
-                    if (r != "true") { if (web.canGoBack()) web.goBack() else finish() }
+                    // At the top level, Back sends the app to the background
+                    // (like Home) instead of closing it, so the model stays
+                    // loaded and reopening is instant.
+                    if (r != "true") { if (web.canGoBack()) web.goBack() else moveTaskToBack(true) }
                 }
             }
         })
@@ -174,7 +199,7 @@ class MainActivity : AppCompatActivity() {
 
         // Bring back the model that was in use last time.
         if (Engine.state == Engine.State.IDLE) {
-            ModelStore.active(this)?.let { m -> Engine.start(this, m) { _, _ -> bridge.announceEngine() } }
+            ModelStore.active(this)?.let { m -> Engine.start(this, m) { _, _ -> } }
         }
     }
 
@@ -185,29 +210,77 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // Leaving the app hands the model's memory (gigabytes) back to the phone.
-        if (isFinishing) Engine.stop()
+        // The model is deliberately NOT stopped here. Stopping it on every exit
+        // meant reopening the app waited for a full reload (and a reload that
+        // started while the old one was still stopping never finished). The
+        // model lives as long as the app's process; Android reclaims that
+        // memory by itself when another app needs it.
+        voice.stop()
+        bridge.release()
+        if (::web.isInitialized) { (web.parent as? android.view.ViewGroup)?.removeView(web); web.destroy() }
         super.onDestroy()
     }
 
-    /** Text shared from another app, or selected anywhere and sent with "Attune". */
+    private fun makeWebView(): WebView = WebView(this).apply {
+        // No stretch/glow at the edges: it made the whole app bounce when a
+        // list inside it was scrolled to its end.
+        overScrollMode = android.view.View.OVER_SCROLL_NEVER
+        isVerticalScrollBarEnabled = false
+        setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+    }
+
+    /**
+     * Something shared from another app: text (a bank SMS, a WhatsApp
+     * message), a photo or screenshot (a payment receipt, a menu), or text
+     * selected anywhere and sent with "Ask Attune".
+     */
     private fun handleShare(intent: Intent?) {
-        val text: String
-        val kind: String
+        val payload = JSONObject()
         when (intent?.action) {
             Intent.ACTION_SEND -> {
-                text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
-                kind = "share"
+                val type = intent.type ?: ""
+                if (type.startsWith("image/")) {
+                    @Suppress("DEPRECATION")
+                    val uri = (if (android.os.Build.VERSION.SDK_INT >= 33)
+                        intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                    else intent.getParcelableExtra(Intent.EXTRA_STREAM)) as Uri? ?: return
+                    val data = readImageForPage(uri) ?: return
+                    payload.put("kind", "image").put("image", data)
+                        .put("text", intent.getStringExtra(Intent.EXTRA_TEXT) ?: "")
+                } else {
+                    val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
+                    payload.put("kind", "share").put("text", text)
+                }
             }
             Intent.ACTION_PROCESS_TEXT -> {
-                text = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString() ?: return
-                kind = "selection"
+                val text = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString() ?: return
+                payload.put("kind", "selection").put("text", text)
             }
             else -> return
         }
-        val payload = JSONObject().put("text", text).put("kind", kind)
         if (::web.isInitialized && web.progress == 100) deliverShare(payload) else pendingShare = payload
     }
+
+    /**
+     * A shared image, scaled down to at most 1600 px on its long side and
+     * re-encoded as JPEG: a 12 MP photo would be ~5 MB of base64, far more
+     * than the model's photo reader uses anyway.
+     */
+    private fun readImageForPage(uri: Uri): String? = try {
+        val opts = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        contentResolver.openInputStream(uri)?.use { android.graphics.BitmapFactory.decodeStream(it, null, opts) }
+        var sample = 1
+        while (maxOf(opts.outWidth, opts.outHeight) / (sample * 2) >= 1600) sample *= 2
+        val bmp = contentResolver.openInputStream(uri)?.use {
+            android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = sample })
+        }
+        if (bmp == null) null else {
+            val out = java.io.ByteArrayOutputStream()
+            bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, out)
+            bmp.recycle()
+            "data:image/jpeg;base64," + android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP)
+        }
+    } catch (e: Exception) { null }
 
     private fun deliverShare(payload: JSONObject) {
         // As a JSON literal, so quotes, newlines and Arabic all survive.

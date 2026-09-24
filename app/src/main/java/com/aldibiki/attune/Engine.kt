@@ -35,6 +35,15 @@ object Engine {
 
     @Volatile private var preloaded = false
 
+    /**
+     * Whoever is showing the app right now. The engine outlives any one
+     * screen: if the app was closed and reopened while a model loaded, the
+     * screen that asked for it is gone, and the "ready" news must reach the
+     * new one — otherwise the new screen says "Loading the model…" forever.
+     */
+    @Volatile var onChange: (() -> Unit)? = null
+    private fun changed() { try { onChange?.invoke() } catch (e: Exception) {} }
+
     /** Load the fastest CPU backend for this chip. Once per process. */
     fun preload(ctx: Context) {
         if (preloaded) return
@@ -94,12 +103,13 @@ object Engine {
         appCtx = ctx.applicationContext
         exec.execute {
             val ok = startBlocking(ctx.applicationContext, model)
+            changed()
             onDone(ok, error)
         }
     }
 
     fun stop(onDone: (() -> Unit)? = null) {
-        exec.execute { stopBlocking(); onDone?.invoke() }
+        exec.execute { stopBlocking(); changed(); onDone?.invoke() }
     }
 
     private fun health(): Int = try {
@@ -122,7 +132,7 @@ object Engine {
 
     private fun stopBlocking() {
         if (EngineNative.nState() == 1) {
-            waitWhileLoading(10 * 60_000L)
+            waitWhileLoading(4 * 60_000L)
             Thread.sleep(700)  // upstream installs its shutdown hook right after /health turns ready
             EngineNative.nStop(60_000)
         } else {
@@ -137,26 +147,54 @@ object Engine {
         }
     }
 
+    /**
+     * How many tokens of conversation the model can hold. Every token of
+     * context costs memory up front, and a phone that runs short of memory
+     * does not fail cleanly: it starts swapping, heats up and freezes. So the
+     * window is sized for comfort, not for the maximum the model supports.
+     * 8K tokens is roughly 12 pages of text, which covers everything the app
+     * does on a phone.
+     */
     private fun contextFor(ctx: Context, model: ModelStore.Installed): Int {
         val ram = DeviceInfo.ramGB(ctx)
+        val share = model.sizeBytes.toDouble() / DeviceInfo.totalRamBytes(ctx).coerceAtLeast(1)
         var c = when {
-            ram >= 16 -> 32768
-            ram >= 12 -> 16384
-            ram >= 8 -> 12288
-            ram >= 6 -> 8192
+            ram >= 12 && share < 0.25 -> 16384
+            ram >= 8 -> 8192
+            ram >= 6 -> 6144
             else -> 4096
         }
-        // A model that already fills most of RAM gets a smaller window.
-        val share = model.sizeBytes.toDouble() / DeviceInfo.totalRamBytes(ctx).coerceAtLeast(1)
-        if (share > 0.55) c = (c / 2).coerceAtLeast(4096)
-        if (model.ctx in 2048 until c) c = model.ctx
+        if (share > 0.40) c = 4096
+        else if (share > 0.25) c = minOf(c, 8192)
         return c
+    }
+
+    /** True when the model is large for this phone: it works, but slowly and warmly. */
+    fun isHeavy(ctx: Context, model: ModelStore.Installed): Boolean =
+        model.sizeBytes > DeviceInfo.totalRamBytes(ctx) * 0.30
+
+    /** When loading began, for the "loading for 40 s" readout. 0 when not loading. */
+    @Volatile var loadStartedAt: Long = 0L
+        private set
+
+    /** What the engine is doing right now while it loads, from its own log. */
+    fun loadPhase(ctx: Context): String {
+        if (state != State.STARTING) return ""
+        val tail = logTail(ctx, 4000).lines().filter { it.isNotBlank() }
+        val joined = tail.joinToString("\n")
+        return when {
+            joined.contains("warming up", true) || joined.contains("warmup", true) -> "Warming up"
+            joined.contains("clip", true) || joined.contains("mmproj", true) -> "Loading the photo reader"
+            joined.contains("llama_context", true) || joined.contains("kv", true) -> "Preparing memory"
+            joined.contains("load_tensors", true) || joined.contains("loading model", true) -> "Reading the model file"
+            else -> "Starting"
+        }
     }
 
     private fun buildArgs(ctx: Context, model: ModelStore.Installed): Array<String> {
         val nCtx = contextFor(ctx, model)
         val gen = DeviceInfo.generationThreads(ctx)
-        val batch = DeviceInfo.batchThreads()
+        val batch = DeviceInfo.batchThreads(ctx)
         val ram = DeviceInfo.ramGB(ctx)
         settingsNote = "context $nCtx · $gen threads (prompt $batch) · flash attention · 8-bit KV cache" +
             (if (cpuFeatures.isNotEmpty()) " · CPU: $cpuFeatures" else "")
@@ -206,15 +244,20 @@ object Engine {
             state = State.ERROR; error = "The model file is missing. Install it again from Engine."
             return false
         }
-        if (model.sizeBytes > DeviceInfo.totalRamBytes(ctx) * 0.9) {
+        // Android keeps roughly half of a phone's memory for itself and the
+        // other apps. A model bigger than that does load — and then swaps,
+        // overheats and freezes the phone, which is worse than refusing.
+        if (model.sizeBytes > DeviceInfo.totalRamBytes(ctx) * 0.55) {
             state = State.ERROR
-            error = "This model is larger than this phone's memory. Pick a smaller one in Engine."
+            error = "This model is too big for this phone's memory — it would freeze the phone. Pick a smaller one in Engine (Qwen 3.5 4B is the fast choice)."
             return false
         }
 
         state = State.STARTING
+        loadStartedAt = System.currentTimeMillis()
         error = null
         modelId = model.id
+        changed()
         try { logFile(ctx).writeText("") } catch (e: Exception) {}
 
         if (!EngineNative.nStart(buildArgs(ctx, model))) {
@@ -222,10 +265,13 @@ object Engine {
             return false
         }
 
-        // Large models take a while to map into memory on a phone.
-        val deadline = System.currentTimeMillis() + 10 * 60_000L
+        // A model that fits loads in well under a minute from phone storage.
+        // Four minutes without an answer means something is wrong (usually
+        // memory), and saying so beats a spinner that never ends.
+        val deadline = System.currentTimeMillis() + 4 * 60_000L
         while (System.currentTimeMillis() < deadline) {
             if (EngineNative.nState() == 2) {
+                loadStartedAt = 0L
                 state = State.ERROR
                 error = "The model failed to load. " + lastErrorLine(ctx)
                 modelId = null
@@ -234,12 +280,16 @@ object Engine {
             if (health() == 200) {
                 Thread.sleep(700)
                 state = State.READY
+                loadStartedAt = 0L
                 return true
             }
             Thread.sleep(300)
         }
+        loadStartedAt = 0L
+        // Give the memory back rather than leave a half-loaded model behind.
+        try { EngineNative.nStop(5000) } catch (e: Throwable) {}
         state = State.ERROR
-        error = "The model took too long to load."
+        error = "The model took too long to load — the phone is probably short of memory. Close other apps, or pick a smaller model in Engine."
         return false
     }
 

@@ -104,21 +104,29 @@ object DeviceInfo {
     } catch (e: Exception) { -1L }
 
     /**
-     * Threads for generation, adjusted for heat and battery: on a hot or
-     * power-saving phone, fewer threads keep the speed steadier and stop the
-     * chassis from cooking itself.
+     * Threads for generation. Token generation is limited by memory speed, not
+     * by cores: past 4 threads a phone gets no faster, only hotter, and the
+     * extra threads steal the cores the screen needs to scroll smoothly.
+     * On a hot or power-saving phone it drops further to stay steady.
      */
     fun generationThreads(ctx: Context): Int {
-        var t = bigCores().coerceIn(2, 6)
+        var t = bigCores().coerceIn(2, 4)
         val thermal = thermalStatus(ctx)
-        if (thermal >= 3 /* SEVERE */) t = (t / 2).coerceAtLeast(2)
+        if (thermal >= 3 /* SEVERE */) t = 2
         else if (thermal >= 2 /* MODERATE */) t = (t - 1).coerceAtLeast(2)
         if (powerSave(ctx) && !charging(ctx)) t = (t - 1).coerceAtLeast(2)
         return t
     }
 
-    /** Prompt reading is compute-bound and does use every core. */
-    fun batchThreads(): Int = cores().coerceIn(2, 8)
+    /**
+     * Prompt reading is compute-bound and benefits from more cores, but two
+     * are always left free so the app itself never freezes while it reads.
+     */
+    fun batchThreads(ctx: Context): Int {
+        var t = (cores() - 2).coerceIn(2, 6)
+        if (thermalStatus(ctx) >= 2) t = (t - 2).coerceAtLeast(2)
+        return t
+    }
 
     fun toJson(ctx: Context): JSONObject = JSONObject()
         .put("platform", "android")
@@ -134,6 +142,7 @@ object DeviceInfo {
         .put("dotprod", hasDotprod())
         .put("i8mm", hasI8mm())
         .put("thermal", thermalStatus(ctx))
+        .put("genThreads", generationThreads(ctx))
         .put("powerSave", powerSave(ctx))
         .put("battery", batteryPct(ctx))
         .put("charging", charging(ctx))
