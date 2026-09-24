@@ -1,6 +1,9 @@
 # Build output and local state — never committed.
 .gradle/
-build/
+/build/
+app/build/
+# web-src/build/ is SOURCE (page shell, icons, shims) and must be committed.
+!web-src/build/
 # The model engine source is fetched by app/src/main/cpp/fetch-llama.sh, not committed.
 app/src/main/cpp/llama.cpp/
 local.properties

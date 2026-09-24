@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Attune</title>
+<meta name="theme-color" content="#020617" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<!-- The service worker is what makes the app open with no connection.
+     Registration is wrapped and failure is ignored: opened straight
+     from a file:// path there is no worker, and the app must still run. -->
+<script>
+  // Inside the Android app the files are already on the phone, so no worker
+  // is needed — and a cached copy would hide app updates. The app sets
+  // window.ATTUNE_NATIVE before this runs.
+  var IN_APP = !!(window.ATTUNE_NATIVE || window.AttuneNative);
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http") && !IN_APP) {
+    addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+  // Earlier builds of the Android app registered the worker by mistake, and
+  // it kept serving the old page after updates. Remove it and its cache.
+  if (IN_APP && navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+    navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }).catch(function () {});
+    if (window.caches && caches.keys) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }).catch(function () {});
+  }
+</script>
+<script>__REACT__</script>
+<script>__REACTDOM__</script>
+<script>__TAILWIND__</script>
+<style>
+  html,body{background:#020617;color:#e2e8f0;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Arabic","Noto Sans",sans-serif}
+  #boot{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+  .sp{width:26px;height:26px;border:2px solid #14b8a6;border-right-color:transparent;border-radius:50%;animation:s .8s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+  #bar{position:sticky;top:0;z-index:50;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+       padding:8px 14px;background:#0b1220;border-bottom:1px solid #1e293b;font-size:12px}
+  #bar input{background:#020617;border:1px solid #1e293b;border-radius:8px;padding:6px 8px;color:#e2e8f0;font-size:12px;min-width:0;flex:1 1 9rem}
+  @media (max-width:640px){
+    #bar{padding:6px 10px;gap:6px}
+    #bar label{width:100%;font-size:11px}
+    #bar input{font-size:16px;flex:1 1 7rem}   /* 16px stops iOS zooming on focus */
+    #bar #msg{width:100%;font-size:11px}
+  }
+  #bar button{background:#14b8a6;color:#02100e;border:0;border-radius:8px;padding:5px 12px;font-weight:600;cursor:pointer;font-size:12px}
+  /* On a phone this bar is how you point the app at llama.cpp running
+     locally — needed, but not every launch. Collapsed to one line. */
+  #bar.min > :not(#bartoggle){display:none}
+  #bar.min{padding:4px 10px}
+  #bartoggle{background:transparent;color:#64748b;font-weight:500;padding:6px 8px;margin-inline-start:auto}
+  #bar .dot{width:8px;height:8px;border-radius:50%;background:#64748b}
+  #bar .on{background:#14b8a6}
+  #bar label{color:#94a3b8}
+  /* Pop-up panels (Engine, Profile, plans…): centred when they fit, and
+     scrollable from their very top when they don't. Plain items-center on a
+     scrolling flex box cuts off the top of a panel taller than the screen and
+     makes it unreachable — on a phone that hid half of Engine. */
+  .fixed.inset-0.flex.items-center.justify-center{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .fixed.inset-0.flex.items-center.justify-center>*{margin-top:auto;margin-bottom:auto;flex-shrink:0}
+
+  /* ---- smooth on a phone ------------------------------------------------ */
+  /* No rubber-band or pull-to-refresh on the page itself, no grey flash on
+     tap, no double-tap zoom delay. */
+  html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+  button,label,select,a{touch-action:manipulation}
+  /* Anything that scrolls inside the page keeps the scroll to itself: reaching
+     the end of a list, a log or a text box no longer drags the whole page. */
+  textarea,pre,iframe,.overflow-auto,.overflow-y-auto,.overflow-x-auto,.att-scroll,.att-chips,.att-tabs{overscroll-behavior:contain}
+  .overflow-x-auto,.att-chips,.att-tabs{scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .overflow-x-auto::-webkit-scrollbar,.att-chips::-webkit-scrollbar,.att-tabs::-webkit-scrollbar{display:none}
+  /* Long pages skip drawing what is far off screen. */
+  section{content-visibility:auto;contain-intrinsic-size:auto 400px}
+  /* A square icon button with a proper 40px touch target. */
+  .att-icon-btn{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;padding:0 10px;border-radius:12px;
+    border:1px solid #1e293b;background:#020617;color:#5eead4;cursor:pointer;flex-shrink:0}
+  .att-icon-btn:active{transform:scale(.96)}
+  /* Inputs at 16px so Android never zooms the page when one is focused. */
+  @media (max-width:640px){ input,textarea,select{font-size:16px!important} }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation-duration:.01ms!important} }
+</style>
+</head>
+<body>
+<div id="bar">
+  <span class="dot" id="dot"></span>
+  <label>On-device server</label>
+  <input id="local" size="24" placeholder="http://localhost:8080" />
+  <input id="model" size="14" placeholder="model name (optional)" />
+  <button id="save">Connect</button>
+  <span id="msg" style="color:#64748b"></span>
+</div>
+<div id="boot"><div class="sp"></div><div style="color:#64748b;font-size:13px">starting Attune…</div></div>
+<div id="root"></div>
+<script>
+(function () {
+  // Inside the Android app the engine is built in and connects itself: no
+  // address to type, and the address/key the app injected must not be
+  // replaced by a desktop setting.
+  if (window.ATTUNE_NATIVE || window.AttuneNative) {
+    var b = document.getElementById("bar");
+    if (b) b.parentNode.removeChild(b);
+    return;
+  }
+  var K = "attune:backend";
+  var cfg = {};
+  try { cfg = JSON.parse(localStorage.getItem(K) || "{}"); } catch (e) {}
+  window.ATTUNE_BACKEND = cfg;
+  document.getElementById("local").value = cfg.localUrl || "";
+  document.getElementById("model").value = cfg.localModel || "";
+
+  function paint(ok, text) {
+    document.getElementById("dot").className = "dot" + (ok ? " on" : "");
+    document.getElementById("msg").textContent = text || "";
+  }
+  async function probe() {
+    var url = (window.ATTUNE_BACKEND.localUrl || "").replace(/\/$/, "");
+    if (!url) return paint(false, "no model connected — start LM Studio, Ollama or llama.cpp and press Connect");
+    try {
+      var r = await fetch(url + "/v1/models");
+      if (!r.ok) throw 0;
+      var j = await r.json();
+      var n = (j.data || []).map(function (m) { return m.id; });
+      paint(true, "on-device: " + (n[0] || "connected") + " · nothing leaves this machine");
+    } catch (e) { paint(false, "can't reach " + url + " — is llama.cpp / Ollama / LM Studio running?"); }
+  }
+  document.getElementById("save").onclick = function () {
+    var c = {
+      localUrl: document.getElementById("local").value.trim(),
+      localModel: document.getElementById("model").value.trim(),
+      cloudKey: ""
+    };
+    localStorage.setItem(K, JSON.stringify(c));
+    window.ATTUNE_BACKEND = c;
+    probe();
+  };
+  probe();
+
+  // Collapsed by default on a touch screen, and it remembers the choice.
+  var bar = document.getElementById("bar");
+  var tog = document.createElement("button");
+  tog.id = "bartoggle";
+  var KMIN = "attune:barmin";
+  function paintBar() {
+    var min = bar.classList.contains("min");
+    tog.textContent = min ? "engine \u25be" : "hide \u25b4";
+    try { localStorage.setItem(KMIN, min ? "1" : "0"); } catch (e) {}
+  }
+  tog.onclick = function () { bar.classList.toggle("min"); paintBar(); };
+  bar.appendChild(tog);
+  var saved = null;
+  try { saved = localStorage.getItem(KMIN); } catch (e) {}
+  var coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  if (saved === "1" || (saved === null && coarse)) bar.classList.add("min");
+  paintBar();
+})();
+</script>
+<script>__APP__</script>
+</body>
+</html>
