@@ -308,6 +308,60 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun stashDel(name: String): Boolean = try { stashFile(name)?.delete() ?: false } catch (e: Exception) { false }
 
+    // ---- reminders and phone actions ------------------------------------------------
+    var askNotify: (() -> Unit)? = null
+
+    /** {id, at, title, body, repeat} → rung by Reminders even when the app is closed. */
+    @JavascriptInterface
+    fun schedule(json: String): String = try {
+        val ok = Reminders.schedule(ctx, JSONObject(json))
+        JSONObject().put("ok", ok).put("exact", Reminders.canExact(ctx)).put("notify", notifyAllowed()).toString()
+    } catch (e: Exception) { JSONObject().put("ok", false).put("error", e.message ?: "").toString() }
+
+    @JavascriptInterface
+    fun unschedule(id: String): Boolean = Reminders.unschedule(ctx, id)
+
+    /** What the phone will ring, for the page to reconcile with its own list. */
+    @JavascriptInterface
+    fun scheduled(): String = Reminders.all(ctx).toString()
+
+    /** True when reminders can ring on the minute (Android 12+ "Alarms & reminders"). */
+    @JavascriptInterface
+    fun canExact(): Boolean = Reminders.canExact(ctx)
+
+    @JavascriptInterface
+    fun notifyAllowed(): Boolean =
+        android.os.Build.VERSION.SDK_INT < 33 ||
+            ctx.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    /** Ask once for permission to show notifications (Android 13+). */
+    @JavascriptInterface
+    fun askNotifications() { web.post { askNotify?.invoke() } }
+
+    /** Open Settings at "Alarms & reminders" for Attune. */
+    @JavascriptInterface
+    fun askExact() {
+        web.post {
+            try {
+                val i = if (android.os.Build.VERSION.SDK_INT >= 31)
+                    android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, android.net.Uri.parse("package:" + ctx.packageName))
+                else android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:" + ctx.packageName))
+                ctx.startActivity(i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (e: Exception) {}
+        }
+    }
+
+    /** A confirmed alarm / timer / calendar event / WhatsApp message / call, handed to its app. */
+    @JavascriptInterface
+    fun intent(json: String): String = try {
+        val a = JSONObject(json)
+        var out = JSONObject()
+        val latch = java.util.concurrent.CountDownLatch(1)
+        web.post { out = PhoneActions.open(ctx, a); latch.countDown() }
+        latch.await(3, java.util.concurrent.TimeUnit.SECONDS)
+        out.toString()
+    } catch (e: Exception) { JSONObject().put("ok", false).put("error", e.message ?: "").toString() }
+
     // ---- voice -----------------------------------------------------------------
     var voice: Voice? = null
     var askMic: (() -> Unit)? = null

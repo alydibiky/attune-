@@ -233,7 +233,10 @@ with sync_playwright() as pw:
     page.wait_for_timeout(150)
     print("DBG", page.evaluate("JSON.stringify((window.__mock.lastBody||{}).chat_template_kwargs)"), page.locator("button[title='Think harder']").inner_text())
     page.screenshot(path=HERE + "/dbg-think.png")
-    page.wait_for_selector("text=work this", timeout=10000)
+    # The mock's thinking lasts ~0.25 s; if the engine was still finishing the
+    # stopped answer above, it can be over before we look. Either the live
+    # thinking or the finished "How it thought" proves it was shown.
+    page.locator("text=work this").or_(page.locator("text=How it thought")).first.wait_for(timeout=30000)
     check(True, "the model's thinking is shown while it thinks")
     page.wait_for_selector("button:has-text('Copy')", timeout=60000)
     b = page.evaluate("window.__mock.lastBody")

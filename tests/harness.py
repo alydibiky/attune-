@@ -38,7 +38,19 @@ V5_EXTRA = r"""
   N.unschedule = (id) => { S.notes = S.notes.filter((n) => n.id !== id); return true; };
   N.scheduled = () => JSON.stringify(S.notes);
   N.intent = (json) => { const a = JSON.parse(json); S.intents.push(a); return JSON.stringify({ ok: true }); };
-  N.canExact = () => true;
+  N.canExact = () => !S.inexact;
+  N.notifyAllowed = () => true;
+  N.askNotifications = () => { S.askedNotify = true; };
+  N.askExact = () => { S.askedExact = true; };
+  // Grammar-constrained requests (reminders & actions): recorded, and answered
+  // with S.fakeJson when a test wants a fixed reading; otherwise the real engine.
+  const realChat = N.chat;
+  N.chat = (id, body) => {
+    const b = JSON.parse(body);
+    if (b.grammar) { S.grammarBodies = (S.grammarBodies || []).concat([b]);
+      if (S.fakeJson) { const t = JSON.stringify(S.fakeJson); setTimeout(() => { window.__attuneNative.delta(id, t, ""); R(id, { content: t }); }, 30); return; } }
+    return realChat(id, body);
+  };
   // engine speed
   S.accel = { gpu: "Adreno (TM) 830", opencl: true };
   N.accel = () => JSON.stringify(S.accel);

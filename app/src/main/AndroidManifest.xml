@@ -7,6 +7,14 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Voice input (asked for the first time the microphone button is used). -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Reminders: show the notification (Android 13+ asks once), ring on the
+         minute (Android 12+: "Alarms & reminders", allowed in Settings), and
+         come back after the phone restarts. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Hand an alarm or timer to the phone's Clock app, filled in. -->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
 
     <!-- Lets the app find the phone's speech recogniser (Android 11+). -->
     <queries>
@@ -16,6 +24,9 @@
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />
         </intent>
+        <!-- To open WhatsApp (or WhatsApp Business) directly for a message. -->
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
     </queries>
 
     <application
@@ -63,5 +74,16 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+
+        <!-- Rings a reminder at its time, even with the app closed. -->
+        <receiver android:name=".ReminderReceiver" android:exported="false" />
+        <!-- Puts reminders back after a restart or an update (Android forgets alarms). -->
+        <receiver android:name=".BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

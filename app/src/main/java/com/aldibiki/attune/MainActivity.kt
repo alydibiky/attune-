@@ -65,6 +65,12 @@ class MainActivity : AppCompatActivity() {
         cb?.invoke(uri)
     }
 
+    // Android 13+: showing reminder notifications needs a yes, asked once.
+    private val askNotifyPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (::web.isInitialized) web.evaluateJavascript(
+            "window.dispatchEvent(new CustomEvent('attune-notify-permission',{detail:{granted:$granted}}))", null)
+    }
+
     private lateinit var voice: Voice
     private val askMicPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         bridge.lastVoiceSink?.let { voice.onPermission(granted, it) }
@@ -127,6 +133,10 @@ class MainActivity : AppCompatActivity() {
         voice = Voice(this)
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
+        bridge.askNotify = {
+            if (android.os.Build.VERSION.SDK_INT >= 33) askNotifyPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+        Reminders.ensureChannel(this)
         bridge.createDocument = { name, mime, done ->
             saveDone?.invoke(null)
             saveDone = done
@@ -254,6 +264,12 @@ class MainActivity : AppCompatActivity() {
      * selected anywhere and sent with "Ask Attune".
      */
     private fun handleShare(intent: Intent?) {
+        // A reminder notification was tapped: the page shows it.
+        intent?.getStringExtra(Reminders.EXTRA_ID)?.let { rid ->
+            val p = JSONObject().put("kind", "reminder").put("id", rid)
+            if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p
+            return
+        }
         val payload = JSONObject()
         when (intent?.action) {
             Intent.ACTION_SEND -> {

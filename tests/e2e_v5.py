@@ -194,7 +194,116 @@ def sec_arabic(br):
     check(page.locator("[data-testid=lang-switch]").count() >= 1, "the first-run welcome offers English | العربية")
     ctx.close()
 
-SECTION_FUNCS = {"backup": sec_backup, "arabic": sec_arabic}
+
+def fake(o):
+    base = {"action": "none", "title": "", "time_text": "", "when": "", "repeat": "none", "minutes": 0, "contact": "", "phone": "", "message": "", "place": ""}
+    base.update(o); return base
+
+def sec_actions(br):
+    ctx, page = new_page(br, env, errors)
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
+    page.locator("header button:has-text('No model')").click()
+    page.locator("text=Recommended for this device").locator("xpath=..").get_by_role("button", name="Install").first.click()
+    page.wait_for_selector("text=Running now", timeout=10000)
+    page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
+    comp = page.locator("textarea[placeholder='Message Attune']")
+    def send(t):
+        comp.fill(t); page.locator("button[title='Send']").click()
+    card = lambda: page.locator("[data-testid=action-card]").last
+
+    # A. the real engine, with the grammar
+    send("remind me tomorrow at 9 to call Ahmed")
+    page.wait_for_selector("[data-testid=action-card] >> text=read by the model", timeout=60000)
+    gb = page.evaluate("window.__mock.grammarBodies")
+    check(gb and "root ::=" in gb[-1]["grammar"] and gb[-1]["chat_template_kwargs"]["enable_thinking"] is False,
+          "the request carries a GBNF grammar (and no thinking)")
+    check("read by the model" in page.locator("[data-testid=action-card]").last.inner_text(), "the real tiny model answered through the grammar and the app could read its JSON")
+    card().locator("[data-testid=act-cancel]").click()
+    check("nothing was set" in card().inner_text(), "Cancel sets nothing")
+    check(len(page.evaluate("window.__mock.notes")) == 0, "…and nothing was scheduled")
+
+    # B. a reminder, read by the model, time worked out by the app
+    page.evaluate("(o) => { window.__mock.fakeJson = o; }", fake({"action": "reminder", "title": "Call Ahmed", "time_text": "tomorrow at 9", "contact": "Ahmed"}))
+    send("remind me tomorrow at 9 to call Ahmed")
+    page.wait_for_selector("[data-testid=act-when-text]", timeout=15000)
+    wt = card().locator("[data-testid=act-when-text]").inner_text()
+    check("Tomorrow" in wt and "9:00" in wt, "the card spells out the time: " + wt)
+    check(card().locator("[data-testid=act-title]").input_value() == "Call Ahmed", "…and the title")
+    card().locator("[data-testid=act-confirm]").click()
+    page.wait_for_selector("[data-testid=action-done]", timeout=5000)
+    notes = page.evaluate("window.__mock.notes")
+    exp = page.evaluate("(() => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); return d.getTime(); })()")
+    check(len(notes) == 1 and notes[0]["at"] == exp and notes[0]["title"] == "Call Ahmed", "Set reminder hands it to the phone at exactly tomorrow 09:00")
+    check(page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1')).length") == 1, "…and it is kept in the page's list (so it's in backups)")
+
+    # C. an alarm in Egyptian Arabic → the Clock app
+    page.evaluate("(o) => { window.__mock.fakeJson = o; }", fake({"action": "alarm", "title": "صحيان", "time_text": "الساعة 6 الصبح"}))
+    send("صحيني الساعة 6 الصبح")
+    page.wait_for_selector("[data-testid=act-confirm]", timeout=15000)
+    card().locator("[data-testid=act-confirm]").click(); page.wait_for_timeout(300)
+    it = page.evaluate("window.__mock.intents")[-1]
+    check(it["kind"] == "alarm" and it["hour"] == 6 and it["minute"] == 0, "صحيني الساعة 6 الصبح → Clock app alarm at 06:00")
+
+    # D. WhatsApp with an Egyptian number
+    page.evaluate("(o) => { window.__mock.fakeJson = o; }", fake({"action": "whatsapp", "title": "Mahmoud", "contact": "محمود", "phone": "01001234567", "message": "هتأخر نص ساعة"}))
+    send("ابعت لمحمود على الواتساب 01001234567 إني هتأخر نص ساعة")
+    page.wait_for_selector("[data-testid=act-phone]", timeout=15000)
+    card().locator("[data-testid=act-confirm]").click(); page.wait_for_timeout(300)
+    it = page.evaluate("window.__mock.intents")[-1]
+    check(it["kind"] == "whatsapp" and it["phone"] == "201001234567" and it["message"] == "هتأخر نص ساعة", "WhatsApp opens for +20 100 123 4567 with the message typed")
+
+    # E. an impossible date from the model is caught
+    page.evaluate("(o) => { window.__mock.fakeJson = o; }", fake({"action": "reminder", "title": "The thing", "when": "4888-66-58T98:84"}))
+    send("remind me about the thing")
+    page.wait_for_selector("[data-testid=act-when]", timeout=15000)
+    check(card().locator("[data-testid=act-confirm]").is_disabled(), "a nonsense date from the model can't be confirmed…")
+    check("When?" in card().inner_text(), "…and the card asks when")
+    card().locator("[data-testid=act-when]").fill(page.evaluate("(() => { const d = new Date(Date.now() + 2*86400000); const p = (n) => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T10:30`; })()"))
+    check(not card().locator("[data-testid=act-confirm]").is_disabled(), "picking a date enables it")
+    card().locator("[data-testid=act-cancel]").click()
+
+    # F. a timer, and "Just answer"
+    page.evaluate("(o) => { window.__mock.fakeJson = o; }", fake({"action": "timer", "title": "Tea", "minutes": 4}))
+    send("set a timer for 4 minutes for the tea")
+    page.wait_for_selector("[data-testid=act-confirm]", timeout=15000)
+    card().locator("[data-testid=act-confirm]").click(); page.wait_for_timeout(300)
+    check(page.evaluate("window.__mock.intents")[-1]["seconds"] == 240, "timer: 4 minutes → Clock timer of 240 s")
+    page.evaluate("window.__mock.fakeJson = null; window.__mock.fake = 'An alarm clock rings at a set time.'")
+    n0 = page.evaluate("window.__mock.chats || 0")
+    send("set an alarm")
+    page.wait_for_selector("[data-testid=act-cancel]", timeout=30000)
+    card().locator("button:has-text('Just answer')").click()
+    page.wait_for_selector("text=An alarm clock rings", timeout=20000)
+    check(True, "“Just answer” turns it back into a normal chat answer")
+
+    # G. a normal question is not an action
+    k = page.locator("[data-testid=action-card]").count()
+    page.evaluate("window.__mock.fake = 'About 100 t at minimum radius.'")
+    send("What is the capacity of an LTM 1100?")
+    page.wait_for_selector("text=About 100 t", timeout=20000)
+    check(page.locator("[data-testid=action-card]").count() == k, "an ordinary question gets an answer, not an action card")
+
+    # H. the Reminders screen
+    open_more(page)
+    page.locator(".rounded-t-2xl button:has-text('Reminders')").click()
+    page.wait_for_selector("[data-testid=reminders-panel]", timeout=5000)
+    check(page.locator("[data-testid=rem-item]").count() == 1 and "Call Ahmed" in page.locator("[data-testid=rem-item]").inner_text(), "Reminders lists the one set from chat")
+    page.fill("[data-testid=rem-title]", "Pay the crane insurance")
+    page.locator("[data-testid=rem-add]").click(); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=rem-item]").count() == 2 and len(page.evaluate("window.__mock.notes")) == 2, "a reminder added by hand is scheduled on the phone")
+    page.locator("[data-testid=rem-item]").filter(has_text="insurance").locator("button").click(); page.wait_for_timeout(200)
+    check(len(page.evaluate("window.__mock.notes")) == 1, "deleting it cancels it on the phone")
+    page.evaluate("window.__mock.inexact = true"); page.evaluate("window.__attuneBack()"); open_more(page)
+    page.locator(".rounded-t-2xl button:has-text('Reminders')").click(); page.wait_for_timeout(200)
+    page.locator("[data-testid=ask-exact]").click()
+    check(page.evaluate("window.__mock.askedExact") is True, "without “Alarms & reminders” it says so and opens the setting")
+    page.screenshot(path=HERE + "/v5-reminders.png")
+    # I. after a reload (or a restore), the page re-sends its reminders to the phone
+    page.reload(); page.wait_for_selector("nav", timeout=15000); page.wait_for_timeout(500)
+    check(len(page.evaluate("window.__mock.notes")) == 1, "on start the page re-schedules its reminders on the phone")
+    ctx.close()
+
+SECTION_FUNCS = {"backup": sec_backup, "arabic": sec_arabic, "actions": sec_actions}
 
 with sync_playwright() as pw:
     br = pw.chromium.launch()

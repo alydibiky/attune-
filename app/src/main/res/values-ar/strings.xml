@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Attune</string>
+    <string name="process_text_label">اسأل Attune</string>
+    <string name="channel_reminders">التذكيرات</string>
+    <string name="channel_reminders_desc">التذكيرات التي طلبت من Attune ضبطها</string>
+</resources>

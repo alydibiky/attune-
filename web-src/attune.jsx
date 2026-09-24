@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
+  Bell, Calculator, Timer,
   Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User,
   ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users,
   AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2
@@ -10,6 +11,8 @@ import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
 import { ChatHome } from "./chat.jsx";
 import { tr, getLang, setLang, fmtNum } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
+import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
+import { RemindersPanel, whenText } from "./actions-ui.jsx";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
 
 /* =========================================================================
@@ -1283,6 +1286,9 @@ const LocalEngine = {
       max_tokens: o.maxTokens || (think ? thinkBudget + 1536 : (ENGINE_PREFS.longAnswers ? 1536 : 900)),
       chat_template_kwargs: { enable_thinking: think },
     };
+    // A GBNF grammar (reminders & actions): the engine can only write text
+    // that fits it, token by token — a guaranteed-valid JSON shape.
+    if (o.grammar) body.grammar = o.grammar;
     if (think) body.thinking_budget_tokens = thinkBudget;
     if (ENGINE_PREFS.reproducible) { body.temperature = 0; body.seed = 42; }
     else if (think) { body.temperature = 0.6; body.top_p = 0.95; body.top_k = 20; body.min_p = 0; }
@@ -6447,9 +6453,10 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 
 const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
-  field: "Site reports", humanize: "Humanize", copilot: "Copilot" };
+  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders" };
 const MORE_TOOLS = [
-  ["instant", "Instant", "Quick actions on text & photos", Zap], ["memory", "Memory", "Everything you've saved", History],
+  ["instant", "Instant", "Quick actions on text & photos", Zap], ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
+  ["memory", "Memory", "Everything you've saved", History],
   ["cycle", "Cycle", "Period tracker", Droplet], ["travel", "Travel", "Country packs & phrases", Plane],
   ["map", "Maps", "Offline places", MapPin], ["field", "Site reports", "Incident & maintenance docs", HardHat],
   ["fleet", "Fleet", "Equipment health", Gauge], ["improve", "Improve a prompt", "For ChatGPT, Claude, Gemini…", Wand2],
@@ -6473,6 +6480,35 @@ export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);   // chat history
   const [moreOpen, setMoreOpen] = useState(false);       // every other tool
   const [showBackup, setShowBackup] = useState(false);   // encrypted backup / restore
+  const [reminders, setRemindersRaw] = useState(() => loadReminders());
+  const setReminders = (list) => { setRemindersRaw(saveReminders(list)); };
+  // The phone rings reminders; the page owns the list. Re-sent at every start,
+  // so a restored backup or a reinstall gets its reminders back.
+  useEffect(() => { try { syncToPhone(NATIVE, reminders); } catch (e) {} }, []);
+  const scheduleReminder = (r) => {
+    const list = [...loadReminders().filter((x) => x.id !== r.id), r];
+    setReminders(list);
+    let res = { ok: true, exact: true, notify: true };
+    if (NATIVE && NATIVE.schedule) {
+      try { res = JSON.parse(NATIVE.schedule(JSON.stringify({ id: r.id, at: r.at, title: r.title, body: r.body || "", repeat: r.repeat || "none" }))); } catch (e) {}
+      if (res.notify === false && NATIVE.askNotifications) NATIVE.askNotifications();
+    }
+    return res;
+  };
+  // A confirmed promise with a date becomes a notification: 9:00 on the day
+  // it is due (or in an hour, if it is due today and 9:00 has passed).
+  const remindForPromise = (c, force) => {
+    if (!c || !c.due) return null;
+    const d = new Date(c.due); d.setHours(9, 0, 0, 0);
+    let at = d.getTime();
+    if (at < Date.now()) {
+      const endOfDue = new Date(c.due); endOfDue.setHours(20, 0, 0, 0);
+      if (!force && endOfDue.getTime() < Date.now()) return null;
+      at = Date.now() + 3600000;
+    }
+    scheduleReminder({ id: "p-" + c.id, at, title: c.action || tr("A promise"), body: c.quote ? "“" + c.quote + "”" : "", repeat: "none", created: Date.now(), source: "promise" });
+    return whenText(at);
+  };
   const [newChatSignal, setNewChatSignal] = useState(0);
   const [chatSeed, setChatSeed] = useState("");
   const [askQ, setAskQ] = useState("");
@@ -6992,6 +7028,7 @@ export default function App() {
   useEffect(() => {
     const onShare = (e) => {
       const d = (e && e.data) || {};
+      if (d.kind === "reminder") { setMode("reminders"); return; }
       // A photo or screenshot shared from another app (a receipt, a menu, a
       // document): it opens in Instant, ready for "Add to Money", "Translate"…
       if (d.kind === "image" && d.image) {
@@ -7720,6 +7757,42 @@ export default function App() {
       return r && r.text;
     },
     prefersArabic: () => ((profile && profile.speaks) || []).some((x) => /Arabic/.test(x)),
+    // ---- reminders & phone actions (see actions.js) ----
+    looksLikeAction,
+    readAction: async (text) => {
+      const now = Date.now();
+      const modelOn = (LocalEngine.ready || (NATIVE && engineInfo && engineInfo.state === "ready"));
+      if (modelOn) {
+        try {
+          const raw = await LocalEngine.run("", null, { messages: actionMessages(text, now), grammar: ACTION_GRAMMAR,
+            temperature: 0, maxTokens: ACTION_MAX_TOKENS, think: false });
+          const j = JSON.parse(String(raw).trim());
+          return { action: buildAction(j, text, now), via: "model" };
+        } catch (e) { /* no model answer: the phone's own reading below */ }
+      }
+      return { action: quickAction(text, now), via: "phone" };
+    },
+    doAction: async (a) => {
+      const when = a.at ? whenText(a.at) : "";
+      if (a.kind === "reminder") {
+        const r = scheduleReminder({ id: newReminderId(), at: a.at, title: a.title, body: a.message || "", repeat: a.repeat || "none", created: Date.now(), source: "chat" });
+        return { ok: true, text: tr("Reminder set · {when}", { when }) + (r.exact === false ? " — " + tr("may be up to 10 minutes late (see Reminders)") : "") };
+      }
+      if (!NATIVE || !NATIVE.intent) return { ok: false, error: tr("This opens the phone's own app — it works in the Android app.") };
+      const d = a.at ? new Date(a.at) : null;
+      const days = a.repeat === "daily" ? [1, 2, 3, 4, 5, 6, 7] : a.repeat === "weekdays" ? [1, 2, 3, 4, 5] : a.repeat === "weekly" && d ? [d.getDay() + 1] : [];
+      const payload = { kind: a.kind, title: a.title, at: a.at, allDay: a.allDay, minutes: a.minutes || 60, place: a.place || "", note: a.message || "",
+        hour: d ? d.getHours() : 0, minute: d ? d.getMinutes() : 0, days, seconds: a.durationSec || 0, phone: a.phone || "", message: a.message || "" };
+      let res = {};
+      try { res = JSON.parse(NATIVE.intent(JSON.stringify(payload))); } catch (e) { res = { ok: false, error: String(e.message || e) }; }
+      if (!res.ok) return { ok: false, error: tr(res.error || "Could not open it") };
+      const txt = { alarm: tr("Clock opened with the alarm filled in · {when} — tap Save there.", { when }),
+        timer: tr("Clock opened with the timer filled in — it starts there."),
+        calendar: tr("Calendar opened with the event filled in · {when} — tap Save there.", { when }),
+        whatsapp: tr("WhatsApp opened with the message ready — tap Send there."),
+        call: tr("The dialer opened with the number — tap Call there.") }[a.kind] || tr("Done");
+      return { ok: true, text: res.note ? txt + " " + tr(res.note) : txt };
+    },
   };
 
   // In-app Back: closes the top-most open panel, otherwise returns to the Ask
@@ -8317,7 +8390,7 @@ export default function App() {
                           <p className="text-sm text-teal-50">{c.action}</p>
                           <p className="text-[11px] text-slate-500 mt-1 italic">“{c.quote}”</p>
                           <div className="flex items-center gap-1.5 mt-2">
-                            <button onClick={() => setCommitState(c.id, "confirmed")}
+                            <button onClick={() => { setCommitState(c.id, "confirmed"); const w = remindForPromise(c); if (w) flash(tr("Kept — I'll remind you {when}", { when: w })); }}
                               className="text-[11px] px-2.5 py-1 rounded-md bg-teal-500 text-slate-950 font-medium">{tr("Yes, keep it")}</button>
                             <button onClick={() => setCommitState(c.id, "dismissed")}
                               className="text-[11px] px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-400">{tr("No")}</button>
@@ -8337,6 +8410,8 @@ export default function App() {
                       <div key={c.id} className={`bg-slate-950 border rounded-lg px-3 py-2 ${overdue ? "border-amber-900/60" : "border-slate-800"}`}>
                         <div className="flex items-start gap-2">
                           <button onClick={() => setCommitState(c.id, "done")} className="mt-0.5 text-slate-600 hover:text-teal-400"><CheckCircle2 size={15} /></button>
+                          <button onClick={() => { const w = remindForPromise(c, true); flash(w ? tr("I'll remind you {when}", { when: w }) : tr("Set a date on it first — or add a reminder in Reminders")); }}
+                            title={tr("Remind me")} aria-label={tr("Remind me")} className={`mt-0.5 ${reminders.some((r) => r.id === "p-" + c.id) ? "text-teal-400" : "text-slate-600"}`}><Bell size={14} /></button>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm text-slate-100">{c.action}</p>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -8408,6 +8483,8 @@ export default function App() {
               </div>
             ) : null}
           </div>
+        ) : mode === "reminders" ? (
+          <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} />
         ) : mode === "cycle" ? (
           <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("instant")} />
         ) : mode === "map" ? (

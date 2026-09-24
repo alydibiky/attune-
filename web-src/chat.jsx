@@ -8,6 +8,7 @@
 // shown when Think is on.
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { tr } from "./i18n.js";
+import { ActionCard } from "./actions-ui.jsx";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
   Loader2, Search, ChevronDown, CheckCircle2, Sparkles,
@@ -311,6 +312,20 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       return;
     }
 
+    // Something to set on the phone: a reminder, alarm, timer, calendar event,
+    // WhatsApp message or call. Read into a card; nothing happens until confirmed.
+    if (route && !img && api.looksLikeAction && api.looksLikeAction(typed)) {
+      const cid = ensureChat(typed);
+      const mid = newId();
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: mid, role: "assistant", actionCard: true, status: "reading", askText: typed }] }));
+      setText("");
+      const r = await api.readAction(typed);
+      patchMsg(cid, mid, { status: "ready", action: r.action, via: r.via });
+      return;
+    }
+
     // 2. The model, with the whole conversation.
     if (!api.canUseAI()) return;
     const cid = ensureChat(typed || "Photo");
@@ -436,7 +451,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   };
 
   const shownChats = chats.filter((c) => !q.trim() || (c.title + " " + c.messages.map((m) => m.text).join(" ")).toLowerCase().includes(q.toLowerCase()));
-  const lastAi = [...messages].reverse().find((m) => m.role === "assistant" && !m.card);
+  const lastAi = [...messages].reverse().find((m) => m.role === "assistant" && !m.card && !m.actionCard);
 
   return (
     <div className="pb-44">
@@ -505,6 +520,20 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             {m.text ? <div dir="auto" className="max-w-[85%] bg-teal-600/25 border border-teal-800/60 text-slate-100 rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[15px] whitespace-pre-wrap leading-relaxed">{m.text}</div> : null}
             {!busy ? <button onClick={() => editFrom(idx)} className="mt-1 text-[11px] text-slate-500 flex items-center gap-1 px-1"><PenLine size={11} /> {tr("Edit")}</button> : null}
           </div>
+        ) : m.actionCard ? (
+          <ActionCard key={m.id + ":" + (m.status || "")} msg={m}
+            onDo={async (a) => {
+              const res = await api.doAction(a);
+              if (res.ok) patchMsg(chat.id, m.id, { status: "done", action: a, doneText: res.text });
+              else api.flash(res.error || tr("Could not do that"));
+            }}
+            onCancel={() => patchMsg(chat.id, m.id, { status: "cancelled" })}
+            onAnswer={() => {
+              const at = messages.findIndex((x) => x.id === m.id);
+              const hist = messages.slice(0, Math.max(0, at - 1));
+              patchChat(chat.id, (c) => ({ ...c, messages: hist }));
+              setTimeout(() => ask(m.askText, { history: hist, noRoute: true }), 0);
+            }} />
         ) : m.card ? (
           <div key={m.id} className={`rounded-2xl border p-3.5 ${m.card.tone === "rose" ? "border-rose-800/70 bg-rose-500/5" : "border-emerald-800/70 bg-emerald-500/5"}`}>
             <p dir="auto" className="text-sm font-medium text-slate-100 flex items-center gap-1.5"><CheckCircle2 size={15} className={m.card.tone === "rose" ? "text-rose-300" : "text-emerald-300"} /> {tr(m.card.title)}</p>
