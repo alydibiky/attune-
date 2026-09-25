@@ -3,7 +3,8 @@ import {
   Bell, Calculator, Timer, Code2,
   Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User,
   ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users,
-  AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2
+  AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2,
+  Database, GraduationCap, Newspaper,
 } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -17,9 +18,11 @@ import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
 import { CraneToolkit } from "./crane-ui.jsx";
 import { CodeWorkbench } from "./code-ui.jsx";
 import { StudioPage } from "./studio-ui.jsx";
+import { BusinessPage } from "./erp-ui.jsx";
+import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { detectLoop, trimLoop } from "./quality.js";
-import { verifyMath } from "./verify.js";
-import { reasonVote, analyzeFile } from "./reason.js";
+import { verifyMath, looksLikeMathProblem } from "./verify.js";
+import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
 import { workLoop, guessLang } from "./code.js";
 import { runCode, runHtml, pythonAvailable } from "./sandbox.js";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
@@ -6535,9 +6538,12 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 
 const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
-  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio" };
+  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news" };
 const MORE_TOOLS = [
   ["instant", "Instant", "Quick actions on text & photos", Zap], ["studio", "Studio", "Pictures made on your phone", Palette],
+  ["learn", "Learn daily", "A lesson a day, with quizzes", GraduationCap],
+  ["news", "Daily news", "Topics you follow, every morning", Newspaper],
+  ["business", "Business", "Your own ERP — tables you can reshape", Database],
   ["code", "Code", "Programs tested on your phone", Code2],
   ["crane", "Crane toolkit", "Load charts, ground, slings, wind", Calculator],
   ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
@@ -6569,7 +6575,8 @@ export default function App() {
   const setReminders = (list) => { setRemindersRaw(saveReminders(list)); };
   // The phone rings reminders; the page owns the list. Re-sent at every start,
   // so a restored backup or a reinstall gets its reminders back.
-  useEffect(() => { try { syncToPhone(NATIVE, reminders); } catch (e) {} }, []);
+  useEffect(() => { try { syncToPhone(NATIVE, reminders); } catch (e) {} try { syncDaily(NATIVE); } catch (e) {} }, []);
+  const [dailyOpen, setDailyOpen] = useState(null);      // "daily-learn-…" / "daily-news-…" from a notification or the widget
   const scheduleReminder = (r) => {
     const list = [...loadReminders().filter((x) => x.id !== r.id), r];
     setReminders(list);
@@ -7136,6 +7143,8 @@ export default function App() {
   useEffect(() => {
     const onShare = (e) => {
       const d = (e && e.data) || {};
+      if (d.kind === "reminder" && /^daily-learn-/.test(d.id || "")) { setDailyOpen(d.id); setMode("learn"); return; }
+      if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); setMode("news"); return; }
       if (d.kind === "reminder") { setMode("reminders"); return; }
       // A photo or screenshot shared from another app (a receipt, a menu, a
       // document): it opens in Instant, ready for "Add to Money", "Translate"…
@@ -7884,6 +7893,14 @@ export default function App() {
     // ---- learning from corrections, in Chat ----
     learnFor: (q) => { const shots = learnFor(q, "chat"); return { n: shots.length, block: learnBlock(shots) }; },
     teach: (entry) => teachCorrection({ ...entry, kind: "chat", lang: /[؀-ۿ]/.test(entry.input || "") ? "ar" : "en" }),
+    // A correction is checked before it is learned (people can be wrong too).
+    checkCorrection: async (entry, { onStep } = {}) => {
+      const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature, think: false });
+      const mathCheck = looksLikeMathProblem(entry.input || "") && (await pythonAvailable())
+        ? (q) => verifyMath({ question: q, llm: (m, o) => callChat(m, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false }), runPy: (code) => runCode({ lang: "python", code }), explain: false })
+        : null;
+      return checkCorrection({ question: entry.input, was: entry.was, corrected: entry.corrected, note: entry.note, llm, mathCheck, onStep: (x) => onStep && onStep(tr(x)) });
+    },
     // ---- several tries + a strict check (reason.js) ----
     reasonVote: (question, history, { onStep, onToken } = {}) => {
       const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature, think: false, onToken: o.onToken });
@@ -8641,6 +8658,23 @@ export default function App() {
               chatReady={modelState === "ready" || (engineInfo && engineInfo.state === "ready")}
               llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.7, think: false })} />
           ) : <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300" data-testid="studio-page">{tr("Studio draws pictures with the phone's own chip — it works in the Android app.")}</div>
+        ) : mode === "learn" ? (
+          <LearnPage flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
+            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken })}
+            illustrate={NATIVE && NATIVE.imageInfo ? (p) => { setStudioIn({ prompt: p }); setMode("studio"); } : null} />
+        ) : mode === "news" ? (
+          <NewsPage flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
+            nativeCall={NATIVE && NATIVE.news ? nativeCall : null}
+            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, onToken: o.onToken })} />
+        ) : mode === "business" ? (
+          <BusinessPage flash={flash} openEngine={() => setShowEngine(true)}
+            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false })}
+            runPy={(code, files) => runCode({ lang: "python", code, files, timeoutMs: 60000 })}
+            saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
+            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "code" ? (
           <CodeWorkbench flash={flash} native={NATIVE} incoming={codeIn} clearIncoming={() => setCodeIn(null)}
             engineReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")} openEngine={() => setShowEngine(true)}

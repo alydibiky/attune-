@@ -1,5 +1,5 @@
 // Unit tests for web-src/reason.js — voting, the checker, and file answers.
-import { looksLikeReasoning, finalOf, normFinal, vote, reasonVote, presentable, analyzeFile, DATA_EXT } from "../../web-src/reason.js";
+import { looksLikeReasoning, finalOf, normFinal, vote, reasonVote, presentable, analyzeFile, DATA_EXT, checkCorrection, readVerdict, numbersAgree } from "../../web-src/reason.js";
 const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
 
@@ -49,6 +49,31 @@ eq(["rfq.xlsx", "data.csv", "notes.txt", "a.json", "photo.jpg"].map((n) => DATA_
   eq(asked[0][1].content.includes("SHEET 'RFQ'"), true, "…the model is shown the file's real sheets and columns first");
   eq(asked[1][asked[1].length - 1].content.includes("KeyError: 'valu'"), true, "…a wrong column name comes back as the real error and is fixed");
   eq(calls.every((c) => c.files[0] === "rfq.xlsx"), true, "…and every run gets the file");
+}
+
+// corrections are checked before they are learned
+eq(readVerdict("VERDICT: **WRONG**\nREASON: The marble falls out.\nANSWER: kitchen counter"), { verdict: "wrong", reason: "The marble falls out.", answer: "kitchen counter" }, "a verdict is read");
+eq([numbersAgree("250000 EGP", "It's 250,000"), numbersAgree("4 hours", "16 hours"), numbersAgree("impossible", "5")], [true, false, null], "computed vs corrected numbers");
+{
+  const q = ["VERDICT: WRONG\nREASON: Turned over, the marble falls out on the counter.\nANSWER: on the kitchen counter", "VERDICT: WRONG\nREASON: It falls out.\nANSWER: kitchen counter"];
+  const r = await checkCorrection({ question: "marble?", was: "on the kitchen counter", corrected: "on the coffee table", llm: async () => q.shift() });
+  eq([r.verdict, r.save, q.length], ["wrong", false, 0], "a wrong correction is NOT learned (two checks agree it is wrong)");
+}
+{
+  const q = ["VERDICT: RIGHT\nREASON: ok\nANSWER: 12", "VERDICT: WRONG\nREASON: no\nANSWER: 8", "VERDICT: RIGHT\nREASON: A cube has 12 edges.\nANSWER: 12"];
+  const r = await checkCorrection({ question: "cube edges?", was: "8", corrected: "12", llm: async () => q.shift() });
+  eq([r.verdict, r.save, r.reason], ["right", true, "ok"], "checks disagree → a third decides; a right correction is learned");
+}
+{
+  const r = await checkCorrection({ question: "what do I call it?", was: "outrigger pad", corrected: "crane mat", llm: async () => "VERDICT: PREFERENCE\nREASON: Your own naming.\nANSWER: crane mat" });
+  eq([r.verdict, r.save], ["preference", true], "the person's own wording/facts are theirs to decide");
+}
+{
+  const math = async () => ({ ok: true, answer: "40 km/h", code: "print('ANSWER: 40 km/h')" });
+  const llm = async () => { throw new Error("should not be asked"); };
+  const a = await checkCorrection({ question: "average speed?", was: "45 km/h", corrected: "40 km/h", llm, mathCheck: math });
+  const b = await checkCorrection({ question: "average speed?", was: "40 km/h", corrected: "it's 45", llm, mathCheck: math });
+  eq([a.verdict, a.how, a.save, b.verdict, b.save], ["right", "computed", true, "wrong", false], "maths corrections are checked by running a program");
 }
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 process.exit(fails.length ? 1 : 0);

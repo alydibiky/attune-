@@ -219,6 +219,26 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const [image, setImage] = useState(null);
   const [attached, setAttached] = useState(null);     // { name, b64, size, text? } — a spreadsheet or document
   const [teaching, setTeaching] = useState(null);     // { id, corrected, note } — 👎 → the right answer
+  // 👎 → a correction is checked before it is learned: people can be wrong too.
+  const saveTeach = (m, idx, corrected, note, checked) => {
+    const u = messages[idx - 1];
+    const ok = api.teach({ input: (u && u.text) || "", was: m.text, corrected, note, checked });
+    if (ok) { patchMsg(chat.id, m.id, { taught: true }); api.flash(checked === "right" ? tr("Checked — you're right. Learned for next time")
+      : checked === "preference" ? tr("Learned — Chat will answer your way on similar questions") : tr("Learned — Chat will use this on similar questions")); }
+    else api.flash(tr("That is the same as the answer — nothing to learn"));
+    setTeaching(null);
+  };
+  const checkTeach = async (m, idx) => {
+    const t = teaching; const u = messages[idx - 1];
+    const entry = { input: (u && u.text) || "", was: m.text, corrected: t.corrected.trim(), note: t.note.trim() };
+    if (!api.checkCorrection) { saveTeach(m, idx, entry.corrected, entry.note, "unchecked"); return; }
+    setTeaching({ ...t, checking: true, step: "" });
+    let r;
+    try { r = await api.checkCorrection(entry, { onStep: (x) => setTeaching((c) => (c && c.id === t.id ? { ...c, step: x } : c)) }); }
+    catch (e) { r = { verdict: "unsure", reason: tr("Could not check it: {e}", { e: String((e && e.message) || e) }), save: false }; }
+    if (r.save) { saveTeach(m, idx, entry.corrected, entry.note, r.verdict); return; }
+    setTeaching((c) => (c && c.id === t.id ? { ...c, checking: false, result: r } : c));
+  };
   const [busy, setBusy] = useState(false);
   const [think, setThink] = useState(false);
   const [listening, setListening] = useState(false);
@@ -767,19 +787,32 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             {m.error ? <p className="text-sm text-amber-300/90 mt-1">{m.error}</p> : null}
             {teaching && teaching.id === m.id ? (
               <div className="mt-2 rounded-xl border border-sky-900 bg-sky-500/5 p-3" data-testid="teach-form">
-                <p className="text-[12px] text-sky-200">{tr("What should it have said? Chat will answer this way next time you ask something like it.")}</p>
+                <p className="text-[12px] text-sky-200">{tr("What should it have said? Attune double-checks your correction first, and learns it only if it holds up.")}</p>
                 <textarea value={teaching.corrected} onChange={(e) => setTeaching({ ...teaching, corrected: e.target.value })} rows={3} dir="auto" data-testid="teach-right"
                   placeholder={tr("The right answer")} className="w-full mt-2 bg-slate-950 border border-slate-800 rounded-lg p-2 text-sm text-slate-100 placeholder-slate-600" />
                 <input value={teaching.note} onChange={(e) => setTeaching({ ...teaching, note: e.target.value })} dir="auto" data-testid="teach-why"
                   placeholder={tr("Why (optional) — e.g. “the marble falls out when the glass is turned over”")} className="w-full mt-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-[13px] text-slate-100 placeholder-slate-600" />
-                <div className="flex gap-2 mt-2">
-                  <button disabled={!teaching.corrected.trim()} data-testid="teach-save" className="px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 text-xs font-semibold disabled:opacity-40"
-                    onClick={() => { const u = messages[idx - 1];
-                      const ok = api.teach({ input: (u && u.text) || "", was: m.text, corrected: teaching.corrected.trim(), note: teaching.note.trim() });
-                      if (ok) { patchMsg(chat.id, m.id, { taught: true }); api.flash(tr("Learned — Chat will use this on similar questions")); } else api.flash(tr("That is the same as the answer — nothing to learn"));
-                      setTeaching(null); }}>{tr("Teach it")}</button>
+                {teaching.result ? (() => { const r = teaching.result; const tone = r.verdict === "wrong" ? "amber" : r.verdict === "partly" ? "sky" : "slate";
+                  const label = { wrong: "Checked — I don't think the correction is right", partly: "Checked — your correction is partly right", unsure: "Couldn't confirm your correction" }[r.verdict] || "Checked";
+                  return (
+                  <div className={`mt-2 rounded-lg border p-2.5 text-[13px] ${tone === "amber" ? "border-amber-800 bg-amber-500/10 text-amber-100" : tone === "sky" ? "border-sky-800 bg-sky-500/10 text-sky-100" : "border-slate-700 bg-slate-800/40 text-slate-200"}`} data-testid="teach-verdict">
+                    <p className="font-semibold">{tr(label)}{r.how === "computed" ? " · " + tr("computed on this phone") : ""}</p>
+                    {r.reason ? <p className="mt-1" dir="auto">{r.reason}</p> : null}
+                    {r.answer && r.verdict !== "unsure" ? <p className="mt-1" dir="auto"><span className="text-slate-400">{tr("Checked answer")}: </span><b>{r.answer}</b></p> : null}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {r.verdict === "partly" && r.answer ? <button data-testid="teach-save-checked" className="px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 text-xs font-semibold"
+                        onClick={() => saveTeach(m, idx, r.answer, r.reason, r.verdict)}>{tr("Learn the checked answer")}</button> : null}
+                      <button data-testid="teach-force" className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 text-xs"
+                        onClick={() => saveTeach(m, idx, teaching.corrected.trim(), teaching.note.trim(), "kept")}>{tr("I'm sure — learn mine anyway")}</button>
+                      <button onClick={() => setTeaching({ ...teaching, result: null })} className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 text-xs">{tr("Edit my correction")}</button>
+                    </div>
+                  </div>); })() : (
+                <div className="flex gap-2 mt-2 items-center">
+                  <button disabled={!teaching.corrected.trim() || teaching.checking} data-testid="teach-save" className="px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 text-xs font-semibold disabled:opacity-40"
+                    onClick={() => checkTeach(m, idx)}>{teaching.checking ? tr("Checking…") : tr("Check & teach")}</button>
                   <button onClick={() => setTeaching(null)} className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 text-xs">{tr("Cancel")}</button>
-                </div>
+                  {teaching.checking ? <span className="text-[11px] text-sky-300" data-testid="teach-step">{teaching.step || tr("Double-checking your correction…")}</span> : null}
+                </div>)}
               </div>
             ) : null}
             {m.sources && m.sources.length ? (

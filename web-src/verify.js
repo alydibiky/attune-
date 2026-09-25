@@ -73,7 +73,7 @@ export function programFrom(text) {
  * The verified-maths pipeline. llm(messages, {maxTokens, onToken}) → text; runPy(code) → run result.
  * → { ok, answer, code, output, text } or { ok:false, why }
  */
-export async function verifyMath({ question, llm, runPy, onStep = () => {}, onToken }) {
+export async function verifyMath({ question, llm, runPy, onStep = () => {}, onToken, explain = true }) {
   onStep("Working it out as a program…");
   let ans = await llm(solveMessages(question), { maxTokens: 900 });
   let code = programFrom(ans);
@@ -90,6 +90,7 @@ export async function verifyMath({ question, llm, runPy, onStep = () => {}, onTo
     code = next;
   }
   const answer = readAnswer(res.stdout);
+  if (!explain) return { ok: true, answer, code, output: res.stdout, text: "" };
   onStep("Checked by running code — writing the answer…");
   const text = await llm(explainMessages(question, code, res.stdout, answer), { maxTokens: 700, onToken });
   return { ok: true, answer, code, output: res.stdout, text };

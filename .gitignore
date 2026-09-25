@@ -24,3 +24,4 @@ tests/image_run/sd
 tests/image_run/work/
 tests/image_run/*.pth
 tests/image_run/*.jar
+*private-key*.json

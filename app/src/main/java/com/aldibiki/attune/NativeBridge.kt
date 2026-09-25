@@ -578,6 +578,22 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** The last day's news on a topic (Daily → News). */
+    @JavascriptInterface
+    fun news(id: String, arg: String) {
+        if (blockedByAirGap(id, "news")) return
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                resolve(id, WebTools.news(a.getString("q"), a.optString("lang") == "ar", a.optInt("pages", 3)))
+            } catch (e: Exception) { reject(id, e.message ?: "News failed") }
+        }
+    }
+
+    /** What the home-screen widget shows: today's lesson and headline. */
+    @JavascriptInterface
+    fun setWidget(json: String): Boolean = try { DailyWidget.save(ctx, json); true } catch (e: Exception) { false }
+
     /** Readable text of one page. */
     @JavascriptInterface
     fun fetchText(id: String, url: String) {

@@ -104,6 +104,13 @@
                 <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
             </intent-filter>
         </receiver>
+        <!-- Home-screen widget: today's lesson and today's headline. -->
+        <receiver android:name=".DailyWidget" android:exported="true" android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_daily_info" />
+        </receiver>
         <!-- Sharing a Studio picture with another app (read-only, one picture at a time). -->
         <provider
             android:name="androidx.core.content.FileProvider"

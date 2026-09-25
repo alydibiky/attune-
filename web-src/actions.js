@@ -365,7 +365,8 @@ export function syncToPhone(native, list) {
   }
   try {
     const onPhone = JSON.parse(native.scheduled() || "[]");
-    for (const x of onPhone) if (!wanted.has(x.id)) native.unschedule(x.id);
+    // daily-… are Learn daily / Daily news notifications, kept by daily-ui.jsx
+    for (const x of onPhone) if (!wanted.has(x.id) && !/^daily-/.test(x.id)) native.unschedule(x.id);
   } catch (e) {}
   return n;
 }

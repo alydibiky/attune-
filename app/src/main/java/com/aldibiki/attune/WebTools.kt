@@ -32,14 +32,14 @@ object WebTools {
     // ---- DuckDuckGo (keyless) -------------------------------------------------
     // DuckDuckGo has no official web-results API; this reads its HTML results
     // page. Fine for personal use; for a commercial launch prefer Brave's API.
-    fun duckduckgo(q: String, max: Int = 6): List<Hit> {
+    fun duckduckgo(q: String, max: Int = 6, recent: String = ""): List<Hit> {
         val region = if (isArabic(q)) "xa-ar" else "wt-wt"
         val lang = if (isArabic(q)) "ar,en;q=0.8" else "en,ar;q=0.8"
         val out = ArrayList<Hit>()
         Prefs.requireOnline("https://html.duckduckgo.com/html/", "web search (DuckDuckGo)")
         try {
             val doc = Jsoup.connect("https://html.duckduckgo.com/html/")
-                .data("q", q).data("kl", region)
+                .data("q", q).data("kl", region).data("df", recent)
                 .userAgent(UA).header("Accept-Language", lang)
                 .referrer("https://html.duckduckgo.com/")
                 .timeout(12_000).post()
@@ -156,5 +156,63 @@ object WebTools {
         for (h in hits) arr.put(JSONObject().put("title", h.title).put("url", h.url)
             .put("text", h.text.take(2400)).put("source", h.source))
         return JSONObject().put("hits", arr).put("via", via).put("why", why)
+    }
+
+    // ---- News: the last day's articles on a topic ------------------------------
+    /**
+     * Google News' public RSS search gives headlines WITH their time and
+     * publisher (a web search doesn't), so a digest can say what is new today.
+     * The top few recent web results are also opened and read, so the model
+     * has more than headlines to summarise. Only the topic leaves the phone.
+     */
+    fun news(q: String, arabic: Boolean, pages: Int): JSONObject {
+        val items = JSONArray()
+        var why = ""
+        try {
+            val hl = if (arabic) "hl=ar&gl=EG&ceid=EG:ar" else "hl=en-US&gl=US&ceid=US:en"
+            val u = "https://news.google.com/rss/search?q=" + URLEncoder.encode("$q when:2d", "UTF-8") + "&" + hl
+            Prefs.requireOnline(u, "news headlines (Google News)")
+            val c = URL(u).openConnection() as HttpURLConnection
+            c.connectTimeout = 10_000; c.readTimeout = 15_000
+            c.setRequestProperty("User-Agent", UA)
+            if (c.responseCode !in 200..299) throw Exception("Google News returned HTTP ${c.responseCode}")
+            val fmt = java.text.SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", java.util.Locale.US)
+            val xml = android.util.Xml.newPullParser()
+            c.inputStream.use { ins ->
+                xml.setInput(ins, "UTF-8")
+                var cur: JSONObject? = null
+                var tag = ""
+                var ev = xml.eventType
+                while (ev != org.xmlpull.v1.XmlPullParser.END_DOCUMENT && items.length() < 30) {
+                    when (ev) {
+                        org.xmlpull.v1.XmlPullParser.START_TAG -> { tag = xml.name; if (tag == "item") cur = JSONObject() }
+                        org.xmlpull.v1.XmlPullParser.TEXT -> cur?.let { o ->
+                            val t = xml.text ?: ""
+                            when (tag) {
+                                "title" -> o.put("title", o.optString("title") + t)
+                                "link" -> o.put("url", o.optString("url") + t.trim())
+                                "source" -> o.put("source", o.optString("source") + t)
+                                "pubDate" -> try { o.put("date", fmt.parse(t.trim())?.time ?: 0L) } catch (e: Exception) { }
+                                "description" -> o.put("snippet", Jsoup.parse(t).text().take(400))
+                            }
+                        }
+                        org.xmlpull.v1.XmlPullParser.END_TAG -> { if (xml.name == "item") { cur?.let { if (it.optString("title").isNotBlank()) items.put(it) }; cur = null }; tag = "" }
+                    }
+                    ev = xml.next()
+                }
+            }
+        } catch (e: Exception) { why = e.message ?: "Google News failed" }
+
+        // Recent web results, opened and read (more than a headline to go on).
+        val hits = JSONArray()
+        try {
+            val web = duckduckgo(q + if (arabic) " أخبار" else " news", 6, "d")
+            val n = pages.coerceIn(0, 4)
+            val jobs = web.take(n).map { h -> pool.submit(Callable { h to pageText(h.url, 2400) }) }
+            for (f in jobs) try { val (h, t) = f.get(12, TimeUnit.SECONDS); if (t.length > h.text.length) h.text = t } catch (e: Exception) { }
+            for (h in web) hits.put(JSONObject().put("title", h.title).put("url", h.url).put("text", h.text.take(2400)))
+        } catch (e: Exception) { if (why.isEmpty()) why = e.message ?: "search failed" }
+        if (items.length() == 0 && hits.length() == 0 && why.isEmpty()) why = "Nothing came back for that topic."
+        return JSONObject().put("items", items).put("hits", hits).put("why", why)
     }
 }

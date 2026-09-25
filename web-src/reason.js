@@ -182,3 +182,68 @@ export async function analyzeFile({ question, file, llm, runPy, onStep = () => {
   const text = await llm(dataExplainMessages(question, file.name, res.stdout, answer), { maxTokens: 700, onToken });
   return { ok: true, text, code, output: res.stdout, answer };
 }
+
+// ---- checking the person's correction before learning it --------------------------------
+/* 👎 → "the right answer is …". People can be wrong too, so a correction is
+   not saved on trust: the model works the question out again from scratch
+   (maths: as a program the phone runs) and compares. Only a correction that
+   holds up — or one that is the person's own preference or fact (what their
+   crews call a part) — is learned; otherwise the app explains why.        */
+
+const CORR_SYS = "Someone says an AI assistant's answer was wrong and gives what they think is the right answer. Trust neither side: work the question out yourself from scratch, reading every condition literally, then compare. Reply in exactly this form:\nVERDICT: RIGHT or WRONG or PARTLY or PREFERENCE\nREASON: <one or two short sentences, in the language of the question>\nANSWER: <the correct answer in a few words>\nRIGHT = the person's correction is correct. WRONG = the correction is mistaken (for example the original answer was already right). PARTLY = part of the correction is right and part is not. PREFERENCE = it is about wording, naming, format or style, or about facts only the person can know (their company, their people, their own names for things) — those are theirs to decide.";
+
+export function correctionMessages({ question, was, corrected, note }) {
+  return [
+    { role: "system", content: CORR_SYS },
+    { role: "user", content: `Question:\n${String(question || "").trim()}\n\nThe assistant answered:\n${String(was || "").trim().slice(0, 2500)}\n\nThe person says the right answer is:\n${String(corrected || "").trim()}` + (note ? `\n\nTheir reason: ${String(note).trim()}` : "") },
+  ];
+}
+
+export function readVerdict(text) {
+  const t = String(text || "");
+  const v = (t.match(/VERDICT\s*[:：]\s*\**\s*(RIGHT|WRONG|PARTLY|PREFERENCE)/i) || [])[1];
+  const reason = ((t.match(/REASON\s*[:：]\s*(.+)/i) || [])[1] || "").replace(/\*+/g, "").trim();
+  const answer = ((t.match(/ANSWER\s*[:：]\s*(.+)/i) || [])[1] || "").replace(/\*+/g, "").trim();
+  return v ? { verdict: v.toLowerCase(), reason, answer } : null;
+}
+
+const nums = (s) => (String(s || "").replace(/(\d),(?=\d{3}\b)/g, "$1").match(/-?\d+(\.\d+)?/g) || []).map(Number);
+/** Does a computed answer agree with the person's numbers? (within 0.5%) */
+export function numbersAgree(computed, corrected) {
+  const a = nums(computed), b = nums(corrected);
+  if (!a.length || !b.length) return null;
+  return b.some((x) => Math.abs(x - a[0]) <= Math.max(1e-9, Math.abs(a[0]) * 0.005));
+}
+
+/**
+ * → { verdict: "right"|"wrong"|"partly"|"preference"|"unsure", reason, answer, how: "computed"|"checked"|"none", save: bool }
+ * mathCheck(question) → { ok, answer, code } (optional: verifyMath without the explanation)
+ */
+export async function checkCorrection({ question, was, corrected, note = "", llm, mathCheck, onStep = () => {} }) {
+  if (mathCheck) {
+    onStep("Checking your correction by computing it…");
+    try {
+      const m = await mathCheck(question);
+      const agree = m && m.ok ? numbersAgree(m.answer, corrected) : null;
+      if (agree !== null) return agree
+        ? { verdict: "right", reason: `Computed on the phone: ${m.answer}.`, answer: m.answer, how: "computed", code: m.code, save: true }
+        : { verdict: "wrong", reason: `Computed on the phone: ${m.answer} — not what the correction says.`, answer: m.answer, how: "computed", code: m.code, save: false };
+    } catch (e) { /* fall through to the model's own check */ }
+  }
+  onStep("Double-checking your correction…");
+  const msgs = correctionMessages({ question, was, corrected, note });
+  const verdicts = [];
+  for (const temp of [0.2, 0.7, 0.5]) {
+    let r = null;
+    try { r = readVerdict(await llm(msgs, { maxTokens: 400, temperature: temp })); } catch (e) { if (/stopped/i.test(e.message)) throw e; }
+    if (r) verdicts.push(r);
+    if (verdicts.length === 2 && verdicts[0].verdict === verdicts[1].verdict) break;
+    if (verdicts.length === 2) onStep("The checks disagree — one more look…");
+  }
+  if (!verdicts.length) return { verdict: "unsure", reason: "Could not check it (no answer from the model).", answer: "", how: "none", save: false };
+  const count = {}; verdicts.forEach((v) => (count[v.verdict] = (count[v.verdict] || 0) + 1));
+  const top = Object.keys(count).sort((a, b) => count[b] - count[a])[0];
+  if (count[top] < 2 && verdicts.length > 1) return { verdict: "unsure", reason: "The checks did not agree: " + verdicts.map((v) => v.verdict).join(", ") + ".", answer: "", how: "checked", save: false };
+  const pick = verdicts.find((v) => v.verdict === top);
+  return { ...pick, verdict: top, how: "checked", save: top === "right" || top === "preference" };
+}

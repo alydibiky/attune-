@@ -9,7 +9,7 @@ import os, sys
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish, HERE
 
-SECTIONS = sys.argv[1:] or ["reason", "teach", "file"]
+SECTIONS = sys.argv[1:] or ["reason", "teach", "wrongfix", "file"]
 env = Env()
 errors = []
 
@@ -56,13 +56,16 @@ def sec_teach(br):
     ctx, page = new_page(br, env, errors)
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     install(page)
-    page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['Call it an outrigger pad.']; M.bodies = []; }")
+    PREF = "VERDICT: PREFERENCE\nREASON: This is how your own crews name it.\nANSWER: crane mat"
+    page.evaluate("(p) => { const M = window.__mock; M.fakeQueue = ['Call it an outrigger pad.', p, p]; M.bodies = []; }", PREF)
     send(page, "What should I call the outrigger mat in the daily site report?")
     page.wait_for_selector("button[title='Regenerate']", timeout=30000)
     page.click("[data-testid=teach]")
     page.fill("[data-testid=teach-right]", "Call it a crane mat (in Arabic: مطة), and give its size, e.g. crane mat 1.5 × 1.5 m.")
     page.fill("[data-testid=teach-why]", "that is what our crews and clients call it")
     page.click("[data-testid=teach-save]")
+    page.wait_for_selector("[data-testid=teach-form]", state="detached", timeout=30000)
+    check(any("trust neither side" in b["messages"][0]["content"].lower() for b in answers(page)), "the correction was double-checked by the model before saving")
     check(page.evaluate("JSON.parse(localStorage.getItem('attune:learned:v1')||'[]').filter(e => e.kind === 'chat').length") == 1, "👎 → the right answer is saved as a lesson")
     page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['Crane mat 1.5 × 1.5 m.']; M.bodies = []; }")
     send(page, "In the site report, what do I call the outrigger mat under each leg?")
@@ -115,7 +118,28 @@ def sec_file(br):
     page.screenshot(path=HERE + "/v511-file.png", full_page=True)
     ctx.close()
 
-FN = {"reason": sec_reason, "teach": sec_teach, "file": sec_file}
+def sec_wrongfix(br):
+    ctx, page = new_page(br, env, errors)
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
+    install(page)
+    W = "VERDICT: WRONG\nREASON: Turning the glass over makes the marble fall out onto the counter, so the first answer was right.\nANSWER: on the kitchen counter"
+    page.evaluate("(w) => { const M = window.__mock; M.fakeQueue = ['The marble is on the kitchen counter.', w, w]; M.bodies = []; }", W)
+    send(page, "Short answer only: where does the marble end up if I turn the glass over on the counter and carry the glass away?")
+    page.wait_for_selector("button[title='Regenerate']", timeout=60000)
+    page.click("[data-testid=teach]")
+    page.fill("[data-testid=teach-right]", "It is on the coffee table.")
+    page.click("[data-testid=teach-save]")
+    page.wait_for_selector("[data-testid=teach-verdict]", timeout=30000)
+    v = page.locator("[data-testid=teach-verdict]").inner_text()
+    check("don't think the correction is right" in v and "fall out" in v, "a WRONG correction is caught and the reason is shown — " + v.splitlines()[0])
+    learned = lambda: page.evaluate("JSON.parse(localStorage.getItem('attune:learned:v1')||'[]').filter(e => e.kind === 'chat').length")
+    check(learned() == 0, "…and it is NOT learned")
+    page.screenshot(path=HERE + "/v512-teach-wrong.png")
+    page.click("[data-testid=teach-force]")
+    check(learned() == 1, "'I'm sure — learn mine anyway' still lets Ali overrule it")
+    ctx.close()
+
+FN = {"reason": sec_reason, "teach": sec_teach, "wrongfix": sec_wrongfix, "file": sec_file}
 with sync_playwright() as pw:
     br = pw.chromium.launch()
     for s in SECTIONS:

@@ -6,4 +6,10 @@
     <string name="channel_reminders_desc">التذكيرات التي طلبت من Attune ضبطها</string>
     <string name="channel_writing">كتابة إجابة</string>
     <string name="writing_title">Attune يكتب إجابتك…</string>
+    <string name="widget_lesson">درس النهارده</string>
+    <string name="widget_news">أخبار النهارده</string>
+    <string name="widget_empty_lesson">ابدأ كورس يومي من Attune ← اتعلّم كل يوم</string>
+    <string name="widget_empty_news">تابع موضوع من Attune ← أخبار يومية</string>
+    <string name="widget_desc">درس النهارده وأهم خبر</string>
+    <string name="widget_name">Attune · النهارده</string>
 </resources>
