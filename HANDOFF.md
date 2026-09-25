@@ -1,131 +1,192 @@
-# Attune — handoff for the next session
+# Attune — complete handoff for the next session
 
-_Last updated: 24 Sep 2026 (end of the v5 session)._
+_Last updated: 25 Sep 2026, 14:40 Cairo (end of the v5.10–v5.12 session). Latest commit: **v5.12** (`e360fee` + this handoff)._
+
+---
+
+## 0. START HERE (read this before anything else)
+
+### 0.1 The state you are inheriting
+| Item | State |
+|---|---|
+| Last version on GitHub `main` | **v5.9** (`a779969`) — unless Ali has pushed the bundle since. Check with `git log origin/main --oneline -3`. |
+| Built but **not pushed** | **v5.10, v5.11, v5.12** (3 commits) + this handoff commit. Delivered to Ali as `attune-v5.12.bundle` (range `a779969..main`) and `Attune-v5.12-upload.zip`. |
+| Why not pushed | Every push from the last session failed: `403 — alydibiky/attune- is not in this session's authorized repository set`. If your session has the repo in its sources, **push first**. |
+| Tested on Ali's phone | v5.10 partly (fast engine worked: 68.7 words/s on GPU). **v5.11 and v5.12 are NOT tested on the phone.** |
+| Ali's latest message | **"I have a lot of problems with the app"** — he has NOT listed them yet. They are your first job. |
+| Recommended model | **Gemma 4 E4B** (fast engine, GPU). E2B = faster but weaker; Qwen 3.5 9B = strongest, slow (llama.cpp CPU). |
+
+### 0.2 Your first steps, in order
+1. **Get the code onto GitHub.** If `origin/main` is still `a779969`:
+   ```bash
+   git fetch ./attune-v5.12.bundle main:v512 && git merge --ff-only v512 && git push origin main
+   ```
+   (Or, if you are working in the repo that already has these commits, just `git push origin main`.)
+   **Never commit `*private-key*.json`** (it is git-ignored; check `git ls-files | grep -i private-key` prints nothing).
+2. **Watch the GitHub Actions run "Build the APK".** The riskiest new parts have never been through a real Android build: `DailyWidget.kt`, `res/layout/widget_daily.xml`, `res/xml/widget_daily_info.xml`, the `news()` method in `WebTools.kt` (uses `android.util.Xml`). If the build fails, fix with a targeted change.
+3. **Collect Ali's problems** with the intake template in §0.3 — one row per problem, a screenshot each. Then fix them **one by one, smallest safe change first**, with a test for each (see §6).
+4. Commit + push after each fix (or batch of small ones) so Actions builds a new APK for him.
+
+### 0.3 Problem intake template (send this to Ali)
+Ask him to answer like this for every problem (Arabic or English is fine):
+```
+Problem N:
+- Where (screen/tab): e.g. Chat / Business / Learn daily / Daily news / Studio / Engine
+- What I did (exact prompt or taps):
+- What I expected:
+- What happened instead (+ screenshot):
+- Model in use (header chip, e.g. "4B eff." / Gemma 4 E4B):
+- Happens every time? yes / sometimes
+```
+Also ask for: **Engine → Speed** screenshot, and for crashes/“not working”: **Engine → Engine log** (copy text).
+
+### 0.4 What was never verifiable in the sandbox (likely sources of phone-only bugs)
+- The **ARM/Android build** of anything native (llama.cpp engine, LiteRT-LM AAR resolve, sd-cli for Studio, OpenCL GPU paths). Only CI and the phone show these.
+- **Real speeds** on the Honor (E2B/E4B GPU, Studio drawing time).
+- **Home-screen widget** rendering (RemoteViews — only LinearLayout/FrameLayout/TextView etc. are allowed; a plain `View` breaks it; the layout was written to that rule).
+- **Google News RSS** from the phone (`news.google.com/rss/search?q=…+when:2d`), and DuckDuckGo's `df=d` (past-day) parameter.
+- **Notifications** for Learn daily / Daily news firing at the chosen time (they reuse the Reminders AlarmManager path, which is proven).
+- **LiteRT (fast engine) with the new JSON-heavy prompts** (ERP design, quizzes, correction verdicts): Gemma E2B may break JSON more often than the test mock. Parsers repair JSON (`jsonFrom` in erp.js) and retry once, but real output quality is unknown.
+- The **quality** of lessons/digests/ERP designs from a 2–4B model (tests use canned answers).
+
+---
 
 ## 1. The person and how to work with him
-- **Ali (Aly Aldibiki)**, Egypt (Cairo, UTC+3). Owns a crane company (Adrighem & Aldibiki: Liebherr, Demag, XCMG, Sany cranes, 20–500 t). Works on **Windows**; tests on an **Honor Magic 8 Pro** (Snapdragon, 12–16 GB RAM, MagicOS with Google services).
-- Speaks Arabic (Egyptian) and English. Wants **detailed, step-by-step answers**, technical terms in **English + Egyptian Arabic**, reasoning explained (not just steps), and **targeted fixes instead of full rewrites**.
-- He is **not a developer at the keyboard**: give him exact clicks. He builds the APK with **GitHub Actions**, never Android Studio.
-- He tests on his phone and reports with screenshots. Take each point literally and answer every one.
+- **Ali (Aly Aldibiki)**, Cairo, Egypt (UTC+3). Co-owns **Adrighem & Aldibiki** (cranes: Liebherr, Demag, XCMG, Sany, Grove, Terex, Zoomlion, Hitachi — 20–500 t). Works on **Windows**; tests on an **Honor Magic 8 Pro** (Snapdragon 8 Elite Gen 5, 12–16 GB RAM, MagicOS with Google services).
+- Arabic (Egyptian) + English. Wants **step-by-step explanations with technical terms in English + Egyptian Arabic**, the reasoning (not just steps), and **targeted fixes, not rewrites**.
+- **Standing rules he gave:** use a **task list** so he sees progress; **don't stop to ask questions unless something can't be undone**; commit + push after each feature so Actions builds an APK.
+- He is **not a developer at the keyboard**: give exact taps/clicks. He builds only with **GitHub Actions**. He tests on the phone and reports with screenshots — take each point literally and answer every one.
+- When pushing is impossible, give him a **bundle + zip + a paste-ready prompt** for a Claude Code session that has repo access.
+- Commits: author `Claude <noreply@anthropic.com>`, message ends with the `Co-Authored-By` / `Claude-Session` trailer lines the session gives you. A stop hook complains about unpushed commits — if push is 403, say so plainly; don't loop.
 
 ## 2. What Attune is
-An Android app (package `com.aldibiki.attune`) that is a **fully offline AI assistant**:
-- A **Kotlin WebView wrapper** hosting one self-contained page (`app/src/main/assets/www/index.html`, about 1.3 MB, React + compiled Tailwind, no CDN).
-- **llama.cpp's official server** (`llama-server`) compiled into the app (`libattune-engine.so`). It runs in-process on `127.0.0.1` on a random port with a per-launch API key.
-- Models: Qwen 3.5 / Gemma 4 GGUFs from Hugging Face (`unsloth/...`), downloaded in the app (resumable, SHA-256 fingerprint).
-- **Privacy:** there is an offline lock that blocks every network path, and a network log. Nothing connects at start-up.
-- **Repo:** `https://github.com/alydibiky/attune-` (public). **Workflow:** "Build the APK" (`.github/workflows/build-apk.yml`). The artifact `attune-apk` is signed with the debug key. Run #2 was the first green build (about 8 minutes).
+Android app `com.aldibiki.attune` — a **fully offline AI assistant**:
+- **Kotlin WebView wrapper** hosting one self-contained page `app/src/main/assets/www/index.html` (~1.7 MB; React + compiled Tailwind; **no CDN ever**) served at `https://appassets.androidplatform.net/app/www/index.html` via `WebViewAssetLoader`.
+- Bridge: `window.AttuneNative` (NativeBridge.kt). Async calls: page `nativeCall(method, arg, onProgress)` → native `resolve/reject/progress/delta` on `window.__attuneNative`.
+- **Two engines:**
+  - **llama.cpp `llama-server`** compiled into the app (`libattune-engine.so`, pin `7ab4ee7b`), in-process on `127.0.0.1:<random>` with a per-launch API key. GGUF models (Qwen 3.5, Gemma 4) from Hugging Face.
+  - **Fast engine**: `FastEngine.kt` on **LiteRT-LM 0.17.1** running `.litertlm` Gemma 4 **E2B** (2.59 GB) / **E4B** (3.66 GB) on the **GPU**. `Engine.kind` = `"llama" | "litert"`.
+- **Studio**: stable-diffusion.cpp `sd-cli` as a child process (FLUX.2 klein 4B).
+- **Code sandbox**: Pyodide 314.0.7 (Python 3.14 + numpy/pandas/sympy/openpyxl) and JS in Web Workers with the network cut.
+- **Privacy**: offline lock blocks every network path (`Prefs.requireOnline`), network log, nothing connects at start-up.
+- **Repo**: `https://github.com/alydibiky/attune-` (public). Workflow **"Build the APK"** (`.github/workflows/build-apk.yml`), artifact **`attune-apk`**, signed with the committed test key `app/attune-test.keystore` (so updates install over each other).
 
 ## 3. Where things are
 ```
 app/src/main/java/com/aldibiki/attune/
-  MainActivity.kt   WebView, asset loader (/app/www/), share intents (text + images),
-                    file chooser, Back → page first, then moveTaskToBack (keeps model loaded),
-                    renderer-crash recovery, mic permission, Engine.onChange → page
-  NativeBridge.kt   window.AttuneNative: info, models, install, use, restart, chat (SSE → delta),
-                    cancel, search, fetchText, hash, netLog, setAirGap, keepAwake,
-                    listen/stopListening (voice), speak/stopSpeaking (TTS), share
-  Engine.kt         starts llama-server: context sizing, 4-min load watchdog, memory guard (>55% RAM refused),
-                    loadPhase from log, isHeavy, onChange listener
-  DeviceInfo.kt     real RAM, cores, thermal; gen threads ≤4, batch = cores-2 (≤6)
-  ModelStore.kt, WebTools.kt (DuckDuckGo/Brave), Prefs.kt, NetLog.kt, Voice.kt (SpeechRecognizer), EngineNative.kt
-app/src/main/cpp/   CMakeLists.txt, attune-engine.cpp (JNI), fetch-llama.sh/.bat (pinned llama.cpp 7ab4ee7b…)
-web-src/            SOURCE of the page — edit here, then run `bash web-src/build.sh`
-  attune.jsx        the app (~10k lines; one big App component + tabs)
-  chat.jsx          Chat home screen (Md renderer, history, actions, routing)
-  cycle.jsx         period tracker + natural-language log parser
-  yusr/             Yusr money/zakat ledger (runs in an iframe, talks via yusr-bridge.js)
-  build/            shell.html, shims, lucide icon set (lucide-shim.js), tw.css
-  build.sh          reproducible build → app/src/main/assets/www/index.html (verified byte-identical)
-tests/              e2e_v4.py (38 checks), e2e_v3.py (35 checks), setup.sh, make_tiny_model.py
+  MainActivity.kt    WebView, asset loader (/app/www/, /studio/), withMime (.wasm/.mjs), share intents,
+                     notification/widget taps (Reminders.EXTRA_ID → page 'attune-share' {kind:'reminder', id}),
+                     file chooser, Back → page first then moveTaskToBack, renderer-crash recovery
+  NativeBridge.kt    window.AttuneNative: info, models, install, use, restart, chat (SSE→delta), cancel,
+                     search, fetchText, news (v5.12), setWidget (v5.12), hash, netLog, setAirGap, keepAwake,
+                     listen/speak, share, saveFile, stashPut/Get/Del, schedule/unschedule/scheduled,
+                     intent, doctor, speed/setSpeed, imageInfo/installImagePack/imagine/upscaleImage/…
+  Engine.kt          llama-server start: context sizing, watchdog, memory guard, flags (see §7)
+  FastEngine.kt      LiteRT-LM: GPU+vision+MTP → GPU+vision → GPU → CPU+vision → CPU; crash guard
+  ImageEngine.kt / ImageRun.kt   Studio (sd-cli child process)
+  Reminders.kt / ReminderReceiver / BootReceiver   AlarmManager + notifications (repeat none|daily|weekly|weekdays)
+  DailyWidget.kt     (v5.12) home-screen widget: today's lesson + headline
+  WebTools.kt        DuckDuckGo (+df recency) / Brave search, pageText, news() (Google News RSS + DDG past day)
+  GenService.kt, PhoneActions.kt, Voice.kt, DeviceInfo.kt, ModelStore.kt, Prefs.kt, NetLog.kt, EngineNative.kt
+app/src/main/res/    layout/widget_daily.xml, xml/widget_daily_info.xml, drawable/widget_bg.xml (v5.12),
+                     values(-ar)/strings.xml (widget_* strings), xml/file_paths.xml
+app/src/main/cpp/    CMakeLists.txt, attune-engine.cpp (JNI), fetch-llama.sh, build-image-engine.sh
+web-src/             SOURCE of the page — edit here, then `bash web-src/build.sh`
+  attune.jsx         the app (~10.7k lines: App component, tabs, engine glue, chatApi, MORE_TOOLS, MODE_TITLES)
+  chat.jsx           Chat (Md renderer, history, routing, badges, 👎 teach + check)
+  quality.js         loop detector/trim, mathToText
+  verify.js          verified maths (program → run → explain), looksLikeMathProblem/CodeTask
+  reason.js          vote + strict checker, analyzeFile (pandas on attached files), checkCorrection (v5.12)
+  code.js, code-ui.jsx, sandbox.js, sandbox/*.mjs     Code workbench + sandbox
+  studio.js, studio-ui.jsx                          Studio
+  erp.js, erp-ui.jsx                                (v5.12) Business / ERP
+  daily.js, daily-ui.jsx                            (v5.12) Learn daily + Daily news + notifications/widget sync
+  actions.js, actions-ui.jsx                        reminders & phone actions (syncToPhone spares daily-* ids)
+  backup.js, backup-ui.jsx, crane.js, crane-ui.jsx, cycle.jsx, calc.js, speed-ui.jsx, yusr/ (Money)
+  i18n.js, i18n-ar.js                               tr("English") → Arabic dictionary (~1,800 entries)
+  build/             shell.html, entry.jsx, react/reactdom shims, lucide-shim.js (icons), tw.css   ← SOURCE, not output
+  fetch-pyodide.sh   Pyodide + openpyxl/et_xmlfile into www/py/ (CI runs it; not committed)
+tools/erp-licence.mjs   (v5.12) keygen / issue ERP activation codes (Node 18+)
+tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/v511/v512(+_more).py,
+                     unit/*.test.mjs + unit/run.mjs, engine_args.py, image_run/, i18n_crawl.py, setup.sh
 ```
 
 ## 4. How to build and test
-1. Edit `web-src/*`, then run `bash web-src/build.sh` (needs Node 18+ and Python 3; it installs esbuild 0.28.2 and Tailwind 4.3.3 locally).
-2. Browser tests: run `bash tests/setup.sh` once, which builds a desktop llama-server at the same pin and a tiny model. Then run `python3 tests/e2e_v4.py && python3 tests/e2e_v3.py`. These use a phone-sized Chromium with a mock `AttuneNative` whose `chat()` hits the real llama-server.
-3. **Kotlin:** there is no Android SDK in the sandbox (dl.google.com is blocked). The previous session compile-checked the Kotlin with `kotlinc` against `android-35.jar` plus hand-written androidx stubs. Otherwise, rely on CI.
-4. **The APK:** commit and push to `main`. GitHub Actions builds it, and Ali downloads the artifact. If this session cannot push, give Ali a zip plus the GitHub web **Upload files** steps.
+1. Edit `web-src/*`, then `bash web-src/build.sh` (Node 18+, Python 3; installs esbuild 0.28.2 + Tailwind 4.3.3 locally). Output: `app/src/main/assets/www/index.html` — **commit it** (CI checks it exists).
+2. **Unit tests:** `node tests/unit/run.mjs` → 9 files, **233 checks**, all green at v5.12.
+3. **Browser end-to-end:** `bash tests/setup.sh` once (builds a desktop llama-server at the same pin + a tiny model), then from `tests/`:
+   `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py` — **all green at v5.12**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
+   Mock features (harness.py): `__mock.fakeQueue` (canned answers, streamed; skipped for warm-up requests with `max_tokens ≤ 2`), `slowQueue`, `chatCancel`, `cancelled`, `bodies` (every request body), `notes` (schedule calls — **keeps every call, not one per id**), `files` (saveFile), stash. v5.12 tests add `N.news` and `N.setWidget` mocks (`NEWS_MOCK` in e2e_v512_more.py).
+4. **Kotlin compile check without an Android SDK** (dl.google.com is blocked in the sandbox): kotlinc **2.4.0** (GitHub release) + `android-35/android.jar` (sparse clone of github.com/Reginer/aosp-android-jar) + hand-written stubs for androidx, jsoup, FileProvider, InternalStoragePathHandler, LiteRT-LM (signature-exact incl. RepetitionPenaltyConfig/NoRepeatNgramConfig) and **R** (add new `R.layout/R.id/R.drawable` entries by hand when you add resources). The stub set lived in the old session's scratchpad and is **gone** — rebuild it if you change Kotlin, or rely on CI.
+5. **APK:** push to `main` → Actions builds (~8+ min; longer when caches are cold) → Ali downloads `attune-apk`. If you can't push: bundle (`git bundle create x.bundle <origin-main-sha>..main`) + zip + paste-ready prompt.
 
-## 5. Version history (what is already done)
-- **v2** (the first working APK): the engine, downloads, web search, offline lock, back button, and assorted fixes.
-- **v3**, after Ali's phone test. Symptoms: the answer never came, the phone got hot and laggy, "Loading" went on forever after reopening. Causes: Gemma 4 12B with a 32K context filled RAM and swapped; the engine used all 8 cores; a reopen race meant the new screen never got the "ready" message. Fixes:
-  - **Speed-first model choice:** phones are recommended **Qwen 3.5 4B**; the 9B is offered as "Stronger, slower".
-  - **Engine limits:** thinking is off by default with a per-question Think button and a `thinking_budget_tokens` cap; every answer streams; there is a thermal stop.
-  - **Instant:** one box plus Go, which works out the task itself; "Answer in" language chips that relabel the buttons; Stop, and switching action mid-answer; voice input.
-  - **Cycle** period tracker, logged from natural language in English and Egyptian Arabic.
-  - **Payments:** accepted by share, paste or photo, and sent to Money.
-  - **Fixes:** all 4 madhhabs made obvious and linked to the combining (ḍamm) rule; multi-select onboarding; domain pack buttons were empty (they iterated `CPACKS` instead of `PACKS`).
-  - **Smoothness:** Tailwind compiled at build time (the old in-browser Tailwind re-scanned the whole page on every change); overscroll containment; no backdrop blur.
-- **v4**, a professional chat UI:
-  - Chat is the home screen: streaming Markdown (tables, lists, code, right-to-left aware).
-  - Multi-turn history, budgeted to the engine's context, with a retry if it overflows.
-  - Buttons on each answer: Copy, Regenerate, Edit, Read aloud (native TTS), Share (native sheet), Save to Memory.
-  - Follow-up chips; a chat history drawer with search, rename and delete.
-  - On-device routing: a period log or a payment becomes a card, with no model call.
-  - A bottom bar (Chat · Instant · Money · Cycle/Memory · More), with a More sheet holding every other tool.
+## 5. Version history
+- **v2** — first working APK: engine, downloads, web search, offline lock, back button.
+- **v3** (after Ali's first phone test — answer never came, phone hot, "Loading" forever): Qwen 3.5 4B recommended; thinking off by default with a Think button and budget; streaming; thermal stop; Instant; Cycle; payments to Money; madhhab fixes; build-time Tailwind.
+- **v4** — professional Chat home: streaming Markdown, multi-turn history budgeted to context, Copy/Regenerate/Edit/Read aloud/Share/Save, follow-ups, history drawer, on-device routing (period/payment cards), bottom bar + More sheet.
+- **v5** — (1) encrypted backup/restore (`.attune`, PBKDF2 600k → AES-256-GCM, Replace/Merge, Undo); (2) Arabic interface (`tr()`, RTL, logical classes); (3) reminders & phone actions (GBNF grammar → `parseTime` → card; AlarmManager; alarm/timer/calendar/WhatsApp/call intents); (4) speed (optional OpenCL GPU `libattune-gpu.so`, speculative decoding with Qwen 0.8B draft, Engine → Speed); (5) Crane toolkit (load charts, ground pressure, slings, wind, checklist).
+- **v5.6** — after "0.7 tokens/s": `--load-mode none`, GenService, warm-up, `calc.js` exact arithmetic, "Why is it slow?" doctor, WebView padding fix (page under status bar), Text size, Money full page.
+- **v5.7** — **fast engine** (LiteRT-LM, Gemma 4 E2B/E4B on GPU), Kotlin plugin 2.4.0.
+- **v5.8** — **Code workbench** (tests written + run + SEARCH/REPLACE fixes; Pyodide sandbox; `--spec-type ngram-mod`).
+- **v5.9** — **Studio** (FLUX.2 klein 4B via sd-cli; edit by instruction; Real-ESRGAN ×4).
+- **v5.10** — fixes after Ali's fast-engine test: scrolling/black screens (removed `content-visibility:auto`), nothing wider than the phone, follow/↓ button, keyboard/composer, anti-loop sampling + live loop guard, LaTeX → plain text, **verified maths** (program run on phone), coding requests through the workbench, photo context carried into follow-ups, web answers say what sources DO show, Studio Q8_0 on ≥12 GB.
+- **v5.11** — self-consistency vote + strict checker for reasoning; learning from 👎 corrections in Chat (few-shot, `attune:learned:v1`); 📎 files in Chat computed with pandas on the phone (openpyxl bundled).
+- **v5.12** — see §5.1.
 
-## 6. Status right now (after v5)
-- **GitHub `main` was still v2** at the start of the v5 session (v4 had never been uploaded). The v5 session could NOT push (the repo was not in its authorised set), so everything was delivered as `Attune-v5.x-upload.zip` for Ali to upload with **Add file → Upload files**. If `main` still shows "CI: install only platform-tools…" as the last commit, the upload hasn't happened yet.
-- **First install of v5 needs one uninstall**: earlier APKs were signed with a random per-run CI debug key. From v5 on, release builds use the fixed test key `app/attune-test.keystore`, so later updates install over each other. Ali should back up (More → Backup) before any future uninstall.
-- **Not yet tested on Ali's phone:** everything in v4 and v5. Check first: GitHub Actions log line "OpenCL SDK ready" (GPU backend built) or its absence (CPU-only APK, still fine).
-- If something breaks: Engine screen → Engine log (screenshot or copied text).
+### 5.1 v5.12 in detail (the part nobody has tested on the phone yet)
+- **Corrections checked before learning** (`checkCorrection`, reason.js; UI in chat.jsx `checkTeach/saveTeach`): 👎 → "Check & teach". Maths question → `verifyMath(..., explain:false)` computes the answer, compared by number (±0.5%). Otherwise 2 independent re-solves (temp 0.2 / 0.7; a 3rd at 0.5 if they disagree) returning `VERDICT: RIGHT|WRONG|PARTLY|PREFERENCE` + `REASON:` + `ANSWER:`. RIGHT/PREFERENCE → saved (`checked` field). WRONG/PARTLY/unsure → reason box (`data-testid=teach-verdict`) with "Learn the checked answer" (partly), "I'm sure — learn mine anyway" (`teach-force`), "Edit my correction".
+- **Business / ERP** (More → Business): `erp.js` (pure, unit-tested) + `erp-ui.jsx`.
+  - Storage: `attune:erp:v1` (index) + `attune:erp:v1:<systemId>` (whole system). Included in backups automatically (all `attune:*` keys).
+  - Model: system `{id, name, currency, tables[{id,name,fields[{id,name,type,options?,link?,formula?,prefix?,required?}]}], rows{tableId:[{_id,_ts,<fieldId>:value}]}, history[15 snapshots], licence}`. Everything by **id**, so renames never lose data.
+  - Field types: text, longtext, number, money, date (ISO; reads dd/mm/yyyy and Excel serials), bool, choice, link (to a record of another table; matched by any text field), phone, email, auto (prefix + 4-digit pad, e.g. `JOB-0001`), formula (Access-style `[Days] * [Daily rate]`; functions ROUND, DAYS, MIN, MAX, ABS, IFEMPTY; stored as `{fieldId}`; safe recursive-descent parser, no eval; cycles → blank).
+  - Design ops (`applyOps`): addTable, renameTable, deleteTable (links → text), addField, renameField, deleteField (refused if a formula uses it), changeType (converts values, reports how many were cleared; text→choice makes choices from existing values), setOptions, moveField, setRequired, setFormula. Every op list is dry-run first in the UI and shown before **Apply**. **Undo** restores the last snapshot.
+  - AI: `designMessages` (whole design as JSON, with an example), `changeMessages` (current design described → `{"ops":[…]}`), `recordMessages` (fill one record from a sentence). `jsonFrom` repairs trailing commas, bare keys, single quotes; `normalizeSpec` maps type synonyms.
+  - Templates: crane rental (Customers, Equipment, Jobs with Days/Total formulas, Invoices with Balance, Maintenance, Crew), shop, contracting, restaurant, blank.
+  - Data tab: search, tap-header sort, totals row + a visible totals line; record form per type; delete needs a second tap and warns about linked records. Summary: group by + sum. More: licence, import CSV/TSV/xlsx (xlsx through Pyodide pandas) as a new table (types guessed) or into the current table, CSV export (UTF-8 BOM), whole-system JSON export/import, rename/delete system.
+  - **Licence (paid per system):** trial = `FREE_ROWS = 30` records per table; design always free. Code format `ATT1.<base64url JSON {s: "ERP-…", p: plan, i: issued}>.<ECDSA P-256 SHA-256 signature>`, verified with WebCrypto against `LICENCE_PUBLIC_KEY` in erp.js. Issue codes: `node tools/erp-licence.mjs issue <private-key.json> ERP-XXXX`. **The private key is NOT in the repo** (Ali has `attune-erp-private-key.json`; git-ignored). Lose it → `keygen` again → put the new public key in erp.js → old codes stop working. `SELLER = { price: "", contact: "" }` in erp.js is still empty — Ali must fill it. If sold via Google Play, digital unlocks must use **Play Billing** — the code scheme is for direct/B2B sales.
+- **Learn daily** (More → Learn daily; `daily.js` + `daily-ui.jsx`, storage `attune:daily:courses:v1`):
+  - Course `{topic, level, lang en|ar, goal, time HH:MM, quizEvery, plan[~30 titles], lessons[], quizzes[], review[], streak}`.
+  - Plan: model returns JSON `{title, lessons[]}` (a numbered list is accepted too). Each lesson: Markdown + a final ```json block `{visual, keyPoints}`; `visual.kind` ∈ table | steps | cards (flip) | compare | bars | timeline — **drawn by the app** (`Visual` component), not by the model.
+  - After "I've read it", tomorrow's lesson is generated right away so the notification can name it. "One more today" lets him go faster.
+  - Quiz when `quizEvery` lessons are done since the last quiz: 5 MCQs JSON; invalid ones dropped; options shuffled with a seeded RNG. Missed questions → `review` → the next lessons open with a "Quick review" (spaced repetition).
+- **Daily news** (More → Daily news; storage `attune:daily:news:v1`):
+  - Topic `{query, lang, time, digests[7]}`. On open (or on notification tap) → native `news` → `WebTools.news`: Google News RSS search (`when:2d`, dated headlines + publisher) + DuckDuckGo past-day (`df=d`) with the top 3 pages read.
+  - `mergeNews`: newest first, drops > 36 h, already-seen URLs/titles from earlier days, same-story duplicates (title word overlap).
+  - `digestMessages`: only the gathered articles, neutral wording, `[n]` on every bullet, "NOTHING NEW" if none fit. `checkCitations` removes citations to non-existent sources and flags unsourced bullets.
+- **Notifications + widget**: `syncDaily` (daily-ui.jsx) schedules one repeating notification per course/topic (`daily-learn-<id>`, `daily-news-<id>`, `repeat: "daily"`), refreshing the body with the next lesson title / today's headline; `syncToPhone` (reminders) leaves `daily-*` ids alone. Tap → `attune-share {kind:'reminder', id}` → App routes to Learn/News (`dailyOpen`). Widget: `NATIVE.setWidget(json)` → `DailyWidget.save` → SharedPreferences `attune_widget` → RemoteViews; rows open the same ids.
+- New icons in lucide-shim.js: Database, ArrowUp, ArrowDown, Undo2, Upload, GraduationCap, Newspaper, KeyRound, BarChart3.
+- MORE_TOOLS order now: Instant, Studio, **Learn daily, Daily news, Business**, Code, Crane toolkit, Reminders, Memory, …
 
-## 7. v5 — what was built (all five done, each its own commit)
-1. **Encrypted backup/restore** (`web-src/backup.js`, `backup-ui.jsx`): every localStorage key (chats, Yusr `ledger.v3`, cycle, memory, reminders, crane charts, settings) → one `.attune` file. PBKDF2-SHA-256 600k → AES-256-GCM, header authenticated, gzip. Saved via Android's Save-to picker (`NativeBridge.saveFile` → `CreateDocument`). Restore: Replace or Merge (lists joined by id; ledger never mixed), one-step Undo (`stashPut/Get` in app private files). More tile turns amber after 14 days.
-2. **Arabic interface** (`i18n.js`, `i18n-ar.js`): `tr("English")` everywhere (English text is the key; missing = English). ~1,300 entries. Switch in More and onboarding; reloads the page, sets `dir=rtl`, syncs Yusr's `db.lang`. Classes are logical (`ms-/me-/ps-/pe-/start-/end-`). **Not translated yet: Travel country-pack contents** (~1,000 content strings, lines ~718–792 and COUNTRY_PACKS). `tests/i18n_crawl.py` lists English still visible in Arabic.
-3. **Reminders & actions** (`actions.js`, `actions-ui.jsx`, `Reminders.kt`, `PhoneActions.kt`): Chat detects "remind me / صحيني / ابعت على الواتساب…" → model call with a **GBNF grammar** (`body.grammar`, NOT `json_schema`: see lessons) → `buildAction` works out the time with the deterministic `parseTime` (EN + Egyptian Arabic) → editable card → confirm. Reminders: AlarmManager + notification + BootReceiver; exact only with "Alarms & reminders" allowed (else ≤10 min window, UI says so). Alarm/timer/calendar/WhatsApp/call open the phone's own app pre-filled. More → Reminders screen. Confirmed dated promises get a 9:00 reminder.
-4. **Speed** (`speed-ui.jsx`, `Engine.kt`, `attune-engine.cpp`, CMake, workflow): optional **OpenCL/Adreno GPU** backend built only if CI's "OpenCL SDK" step succeeds (continue-on-error), renamed `libattune-gpu.so` so the CPU scan never touches the driver; loaded by `nLoadGpu` only when GPU is on. CPU mode passes `-ngl 0`. Crash guard `Prefs.gpuTrial` + automatic CPU fallback with a note. **Speculative decoding** with Qwen 3.5 0.8B draft (`-md` + `--spec-type draft-simple`), Qwen 3.5 only, only if both fit. Engine → Speed has the switches and a fixed-task speed test.
-5. **Crane toolkit** (`crane.js`, `crane-ui.jsx`): load charts per crane (pasted table), cautious lookup (min of surrounding cells, never interpolated up), % of chart with company limits, outrigger ground pressure + mat size, sling tension (3/4-leg rated as 2), wind (tip-height power law; v = v_chart·√(1.2·m/(A·cw))), 20-item pre-lift checklist. Planning aid — stated on screen.
+## 6. How to fix Ali's problems well (method)
+1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
+2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
+3. Model-quality complaints: prefer code around the model (verify by running code, vote/check, better prompts, stricter parsing) over "use a bigger model". Be honest when the ceiling is the model.
+4. Keep answers to Ali bilingual for technical terms, step by step, and give him a test prompt for each fix.
 
-**Tests now:** `node tests/unit/run.mjs` (69: time parser + crane math), `python3 tests/e2e_v5.py [backup|arabic|actions|speed|crane]` (87), plus e2e_v4 (38) and e2e_v3 (35). `tests/harness.py` holds the v5 mock phone (reuses the v4 mock from e2e_v4.py).
-**Kotlin check without an SDK:** kotlinc 2.0.21 (GitHub release) + `android-35/android.jar` (sparse clone of github.com/Reginer/aosp-android-jar) + hand-written androidx/jsoup/R stubs.
+## 7. Hard-won lessons (do not repeat)
+- **CORS:** `Access-Control-Allow-Headers: *` doesn't cover `Authorization`. All model calls go through `NativeBridge.chat`, never browser fetch.
+- **Page path** `/app/www/` (escapes an old service worker). In the app, service workers are unregistered and caches deleted.
+- **Engine:** OpenMP OFF on Android; minSdk 28; `GGML_BACKEND_DL` + `GGML_CPU_ALL_VARIANTS`; `useLegacyPackaging = true`. Flags that exist at this pin: `--load-mode none` (**`--no-mmap` no longer exists**), `-ngl 0` for CPU (default is auto-offload!), `--spec-type ngram-mod` (or `draft-simple,ngram-mod` with a draft; `-md` alone does nothing). `tests/engine_args.py` checks every Engine.kt flag against the real server.
+- **Never stop the engine in `onDestroy`** (stop/start race → "Loading…" forever). Back sends the app to the background.
+- **Chat history must alternate user/assistant**; only complete pairs are sent.
+- **No CDN, ever**; esbuild pinned 0.28.2 for byte-identical builds.
+- **`web-src/build/` is SOURCE** (root .gitignore uses `/build/` + `app/build/` + `!web-src/build/`).
+- **Release signing:** always `app/attune-test.keystore`. Never the per-run CI debug key.
+- **Grammar, not json_schema,** for llama.cpp JSON (json_schema gets a prefill). LiteRT has no grammar: ask for JSON in words and repair it (`jsonFrom`).
+- **Layout:** no `content-visibility:auto` (blank sections in the Android WebView). Nothing may be wider than the phone — wide tables scroll inside `.overflow-x-auto`. Composer z-40, z-60 only while typing. Blur delayed 300 ms.
+- **Loops:** repeat_penalty 1.05 + DRY 0.8/4 + no_repeat_ngram 24; temperature 0.5 (0.3 loops more on Gemma). Loop guard is off for grammar/JSON requests.
+- **Test mock:** a canned answer must abort the real engine request; warm-up requests (`max_tokens ≤ 2`) must not consume `fakeQueue`; `__mock.notes` keeps every schedule call — dedupe by id in tests. `innerText` of a form includes `<option>` text — wait on input values, not on text.
+- **i18n:** every new UI string goes through `tr()` and gets an `i18n-ar.js` entry; the Arabic More-menu test fails if a description contains Latin letters (e.g. "ERP") — write Arabic-only descriptions. `tests/i18n_crawl.py` lists gaps.
+- **RemoteViews:** no plain `View` in widget layouts (use FrameLayout/ImageView).
+- **sd-cli:** `-M upscale` exits 0 and saves the ORIGINAL if the upscaler fails — check the output is 4× wider.
+- **Honest ceiling:** a 2–4B phone model is fast but makes reasoning/format mistakes; that is why answers are checked by code, votes and parsers. Weights never change on the phone — "learning" is few-shot examples; real fine-tuning (LoRA) needs a PC/GPU and ~200+ corrections.
+- **Pushing:** if `git push` returns 403 "not in this session's authorized repository set", no command will fix it — deliver a bundle + zip + paste-ready prompt, or ask Ali to add the repo to the session's sources.
 
-## 7b. Next (not started)
-- Translate the Travel country packs; Android-side error messages in Arabic.
-- Whisper Egyptian-Arabic voice (`MAdel121/whisper-small-egyptian-arabic`) via whisper.cpp; hands-free mode.
-- "Ask your documents" (on-device RAG, EmbeddingGemma 308M).
-- Quotation/invoice PDFs (ETA); fleet maintenance reminders (can reuse Reminders); fingerprint lock for Money/Cycle; widget/tile.
-- Crane: import charts from a photo of the printed chart (model reads, person verifies cell by cell).
-
-## 8. Hard-won lessons (do not repeat)
-- **CORS:** `Access-Control-Allow-Headers: *` does not cover `Authorization`. All model calls go through `NativeBridge.chat`, not browser fetch.
-- **The page path:** it is served under `/app/www/` (not `/assets/`) to escape an old service worker. In the app, service workers are unregistered and caches deleted.
-- **Engine threads:** OpenMP must stay OFF on Android. minSdk is 28 (posix_spawn). Use `GGML_BACKEND_DL` + `GGML_CPU_ALL_VARIANTS`, and `useLegacyPackaging = true` so the CPU variant `.so` files are unpacked.
-- **Never stop the engine in `onDestroy`:** the stop-then-start race left "Loading…" forever. Back sends the app to the background instead.
-- **Chat history must alternate user/assistant:** only complete pairs are sent. Stopped answers and cards are excluded.
-- **Build tools:** the page must never load from a CDN (a CI check fails the build if it does). Keep esbuild pinned to 0.28.2 for byte-identical builds.
-- **Git:** commits should be authored `Claude <noreply@anthropic.com>` (a stop hook checks this).
-- **`web-src/build/` is SOURCE.** The root `.gitignore` rule `build/` once silently dropped it from an upload; it's now `/build/` + `app/build/` with `!web-src/build/`. The v5 session rebuilt it from the compiled page (byte-identical).
-- **Release APKs are signed with `app/attune-test.keystore`** (committed on purpose). Never go back to the CI debug key: every run makes a new one and updates stop installing.
-- **Grammar, not json_schema:** at this llama.cpp pin, `response_format/json_schema` grammars are pre-fed the template's generation prompt ("prefill"); user-supplied `grammar` is not. Keep strings in the grammar bounded and `max_tokens` ≥ ACTION_MAX_TOKENS so the JSON always closes.
-- **Speculative decoding:** `-md` alone does nothing at this pin — add `--spec-type draft-simple`. Check `timings.draft_n` / `draft_n_accepted`.
-- **GPU default:** llama.cpp's `-ngl` default is auto (offload to any GPU found) — always pass `-ngl 0` for CPU.
-- **i18n:** new UI text must go through `tr()` and get an `i18n-ar.js` entry; run `tests/i18n_crawl.py` to find gaps. Changing language reloads the page (module-level tables use `tr()` at load).
-- **e2e_v3 thinking step** was flaky (~1 in 3, also on the original v4 page): it now accepts either live thinking or "How it thought".
-- **v5.6 (after Ali's first v5 test: 0.7 tokens/s, ~10 min for one sum, app under the status bar):** `--load-mode none` (weights read into RAM; mmap pages could be evicted and re-read per token — **`--no-mmap` no longer exists at this pin**, `tests/engine_args.py` now checks every Engine.kt flag against the real server and starts it with the CPU/GPU/draft sets); GenService foreground service while writing; warm-up of Chat's system prompt when a model becomes ready (skipped once the user has asked); instant exact arithmetic in Chat (`calc.js`); chat prompt now says "working first, total last, write it once" (the old "result first" made the model state a wrong total then 'correct' it); Engine → Speed → "Why is it slow?" doctor + a hint under slow answers; WebView inside a padded FrameLayout (WebView ignores its own padding → page drew under the status/nav bars); More → Text size (WebView textZoom; 90 % by default on narrow screens); Money is a fixed full page with its tools in a slide-up sheet.
-- **Test mock lesson:** a canned ("fake") answer must abort the real engine request, or the engine keeps generating unseen and later real requests time out (the source of the v3/v4 flakiness). Tests now also kill their engine on exit.
-- **Honest ceiling:** a 4B model on a phone CPU writes ~15–25 tokens/s when healthy; a whole long answer can't take 1–2 s. What can: exact answers without the model (calc, period, payment, reminders), first words in ~1 s (warm cache), and shorter answers.
-
-- **v5.7 — the fast engine (Ali: "make the on-device model really fast… compete with online models"):** a second engine next to llama.cpp. `FastEngine.kt` runs **.litertlm** models on Google's **LiteRT-LM** (`com.google.ai.edge.litertlm:litertlm-android:0.17.1`, pinned; Kotlin plugin bumped 2.0.21 → **2.4.0** because that AAR carries Kotlin 2.4 metadata, and `kotlinOptions{}` was replaced by `kotlin { compilerOptions { … } }`). Tries GPU+photos+multi-token prediction → GPU+photos → GPU → CPU+photos → CPU and reports what really loaded; crash guard `fast_trial`/`fast_cpu` prefs like the OpenCL one. `Engine.kind` = "llama" | "litert"; `NativeBridge.chat` sends litert requests straight to `FastEngine.chat` (same request/response shape as llama-server: `{content, reasoning, timings{prompt_per_second, predicted_per_second}}`; GBNF grammar isn't available there, so the JSON is asked for in words and trimmed to `{…}` — the page already falls back to `quickAction`). Catalogue: **Gemma 4 E2B** (`gemma-4-E2B-it.litertlm`, 2.59 GB, multimodal — NOT the `-gpu`/`-web` files, which are text-only) is now the first recommendation in the Android app, **E4B** (3.66 GB) the stronger one. Engine → Speed shows a "Switch to the fast engine" button on llama.cpp, and a fast-engine panel (GPU on/off, MTP status) when it runs. Published figures (Google, S26 Ultra GPU): E2B prefill ~3,800 t/s, decode ~52 t/s, 66–92 t/s with MTP — **unverified on the Honor**; if the GPU refuses, the note in Speed says why. Tests: `e2e_v5.py fastengine` (14 checks); Kotlin compile-checked with kotlinc 2.4.0 against signature-exact stubs of LiteRT-LM v0.17.1. **Not verifiable here:** Google Maven is blocked from the sandbox, so the first CI run is the first real Gradle resolve of the AAR — if it fails, the likely causes are (1) the AAR's minSdk (manifest has `tools:overrideLibrary="com.google.ai.edge.litertlm"`), (2) a duplicate `.so` (add a `pickFirsts`).
-- **v5.8 — Code workbench (More → Code, and ▶ Run under code in Chat):** the model writes the program *and its tests*; the phone runs them in a sandbox; the real error goes back and the model answers with SEARCH/REPLACE edits (few tokens → fast rounds), up to 4 rounds; a "fix" that deletes the tests is refused; the result is badged "Tested on this phone: N passed". Sandbox = module Web Workers with the network cut: Python 3.14 via **Pyodide 314.0.7** (numpy, pandas, sympy; ~26 MB; `web-src/fetch-pyodide.sh` copies them from the GitHub release into `www/py/` and checks every SHA-256 against Pyodide's lock file — CI runs it, not committed), JavaScript with `assert/assertEqual`, and web pages in a CSP-locked `sandbox="allow-scripts"` iframe. `MainActivity.withMime` serves `.wasm`/`.mjs` with the right MIME (Pyodide won't start otherwise). llama.cpp now always runs with `--spec-type ngram-mod` ("copy-ahead": free speculative decoding from text already in the context — big win for code edits); with the draft model it's `draft-simple,ngram-mod`. Logic in `code.js` (unit-tested with real JS runs), UI in `code-ui.jsx`, sandbox in `sandbox.js` + `sandbox/*.mjs` (copied to `www/sandbox/` by build.sh). Tests: `e2e_v58.py` (real Pyodide, offline-routed), `unit/code.test.mjs`.
-- **v5.9 — Studio (More → Studio; "draw …"/"ارسم …" in Chat opens it):** pictures on the phone with **stable-diffusion.cpp** (MIT, pinned `88411ef1`) running **FLUX.2 klein 4B** (Apache-2.0; Q4_0 GGUF from leejet + Qwen3-4B Q4_K_M text reader + FLUX.2 VAE from Comfy-Org — all ungated; 5.29 GB) at 1024 px in 4 steps, plus **photo editing by instruction** (`-r` reference image) and **Real-ESRGAN ×4** sharpening (67 MB, from its GitHub release). The engine is `sd-cli` built by `app/src/main/cpp/build-image-engine.sh` into `jniLibs/arm64-v8a/libattune-image.so` (CPU, armv8.2+dotprod+fp16) and `libattune-image-gpu.so` (OpenCL/Adreno, when the OpenCL SDK step worked) and **run as a child process** (`ImageRun.kt`, pure JVM: progress parsed from `\r` bars and log lines; Stop = kill; crash can't take the app down; memory returns on exit). GPU first with `--backend diffusion=<dev>,vae=<dev>,te=cpu` (device from `--list-devices`), automatic CPU fallback + note; `LD_LIBRARY_PATH=/vendor/lib64` for the vendor OpenCL. If free RAM < model + 1.5 GB the chat engine is paused and restarted after; also `--params-backend te=disk`. **Gotcha:** `sd-cli -M upscale` saves the ORIGINAL image and exits 0 if the upscaler fails — `ImageEngine.upscale` checks the output is really 4× wider. Before drawing, the chat model rewrites the idea (any language) into a 40–70-word English description (`studio.js enhanceMessages`). Pictures live in `filesDir/studio/`, served to the page at `https://appassets.androidplatform.net/studio/…`; Save to gallery (MediaStore, Android 10+), Share (FileProvider `${applicationId}.files`). Tests: `tests/image_run/run.sh` (desktop sd-cli, a real ESRGAN run through `ImageRun.Job`, option names checked against `sd-cli --help`), `e2e_v59.py` (screen, Chat routing, install, draw, Arabic idea, ×4, edit, phone photo, Stop, GPU note), `unit/studio.test.mjs`. **Not verifiable here:** no Android NDK in the sandbox, so the ARM build of sd-cli and the real speed are first seen in CI / on the phone. The CI step is `continue-on-error`; without it Studio says the engine isn't in this build.
-- **v5.10 — fixes from Ali's first real test of the fast engine (68.7 words/s on the GPU; the complaints were layout and answer quality):**
-  - **Scrolling/layout:** removed `section{content-visibility:auto}` (in the Android WebView it painted sections blank after tab switches and made the page height jump — the "black screens" and the scroll that threw him back); `html,body{overflow-x:clip}`, `overflow-wrap:anywhere`, `.grid>*`/inputs `min-width:0` — nothing is wider than the phone (tests/e2e_v510.py audits all 26 screens at 360 px, English and Arabic). Chat stops following a streaming answer the moment you touch/scroll up and shows a ↓ button; the thinking text no longer has its own inner scroll box; while typing, the bottom bar hides and the composer sits on the keyboard (`html.att-typing`), blur is delayed 300 ms so a tap on Send isn't lost when the keyboard closes. **Gotcha:** the composer is z-40 normally and z-60 only while typing — at z-60 it covered the More sheet.
-  - **Loops:** every request carries `repeat_penalty 1.05`, DRY (`dry_multiplier 0.8, allowed_length 4`) and `no_repeat_ngram 24` (FastEngine maps these to LiteRT's RepetitionPenaltyConfig / NoRepeatNgramConfig); `quality.js detectLoop` watches the stream (letter/digit runs ≥40, the same prose line 3×, a 20–300-char stretch repeated 3× at the end — table rows and code are exempt), cancels the engine, trims, and marks "stopped a repeat"; a loop while thinking retries once without thinking. Not applied to grammar/JSON requests. Default temperature 0.5 (0.3 made Gemma loop more).
-  - **Maths display:** `mathToText` turns LaTeX into plain text (d/30, x², ×, √(2d)) before Markdown; the system prompt now forbids LaTeX, asks to call out trick/impossible questions, and to judge user corrections on their merits.
-  - **Verified answers (verify.js):** a word problem in Chat → the model writes a Python program ending in `ANSWER: …` → the sandbox runs it (up to 2 fixes from the real error) → the model explains from the computed result; badge "Checked by running code on this phone" with the program and its output. A coding request in Chat → the Code workbench loop (tests, run, SEARCH/REPLACE fixes) → badge "Tested on this phone: N passed". Both fall back to a normal answer if Python isn't available or the check fails.
-  - **Photos:** shrunk to ≤1280 px JPEG on pick; a follow-up within the next turns re-attaches the photo; with Web on, the model first names what the photo shows and the search uses that. Web answers no longer end in a bare "sources don't answer" — they say what the sources do show (e.g. a question about an event that never happened).
-  - **Studio:** 12 GB+ phones get **FLUX.2 klein 4B Q8_0** (7.13 GB, finer detail than Q4_0); 8 GB phones keep the Q4_0 pack. Fast engine skips the pointless warm-up (`engineJson.engine`).
-- **v5.11 — the same model, stronger (reason.js):**
-  - **Self-consistency + strict checker:** questions that look like riddles/logic/physical reasoning (`looksLikeReasoning`) get 2–3 independent tries (temperature 0.3 then 0.8, each ending `FINAL: …`), a vote on the finals (numbers decide numeric answers; else word overlap ≥ 0.6), then a strict-reviewer pass that returns `CORRECT` or a corrected answer; if all tries disagree, a judge pass weighs them. Stops after 2 tries when they already agree. Badge shows "2 of 2 tries agreed · checked" / "reviewer fixed a mistake". The Think button keeps the model's own thinking instead (one call).
-  - **Learning in Chat:** 👎 under an answer → "what should it have said" + optional why → saved as a `kind: "chat"` lesson in the existing learn store (`attune:learned:v1`); later similar questions (term overlap, `learnFind`) get the lessons as a binding block before the question; badge "Used N of your corrections". Weights never change — this is few-shot, and it's honest about it.
-  - **Files in Chat (tools):** 📎 attaches .xlsx/.xls/.csv/.tsv/.json/.txt/.md. Spreadsheets: pandas profiles the real file on the phone (sheets, columns, head), the model writes a program ending in `ANSWER:`, the sandbox runs it on the file (fixes from the real error, 2×), and the model explains from the result; badge "Computed from <file> on this phone". Text files go into the prompt. The sandbox now accepts `files` (written to /work). **openpyxl + et_xmlfile** are added to the bundled Python from PyPI (pinned, sha256-checked) with lock entries, and preloaded when code mentions read_excel/xlsx.
-  - Tests: `e2e_v511.py` (marble: two wrong tries caught by the checker; teach → reuse; a real .xlsx computed by real Pyodide), `unit/reason.test.mjs`.
-- **v5.12 — checked corrections, Business (ERP), Learn daily, Daily news:**
-  - **Corrections are checked before they're learned** (`checkCorrection` in reason.js): 👎 → "Check & teach". Maths questions: the answer is computed by a program (`verifyMath(..., explain:false)`) and compared by number (±0.5%). Otherwise the model re-solves from scratch 2× (temp 0.2/0.7, a 3rd if they disagree) and returns `VERDICT: RIGHT|WRONG|PARTLY|PREFERENCE`. RIGHT and PREFERENCE (wording / the user's own facts) are saved; WRONG/PARTLY/unsure show the reason + checked answer, with "Learn the checked answer" (partly), "I'm sure — learn mine anyway", "Edit my correction".
-  - **Business** (More → Business; `erp.js` logic, `erp-ui.jsx` screens): systems of tables/fields/records stored by id (`attune:erp:v1` index + `attune:erp:v1:<id>`; in backups automatically). Field types text, longtext, number, money, date, bool, choice, link, phone, email, auto (prefix, e.g. JOB-0001), formula (Access-style `[Qty] * [Unit price]`, ROUND/DAYS/MIN/MAX/ABS/IFEMPTY; stored as `{fieldId}` so renames are safe). Design view: rename/retype (values converted, losses reported)/reorder/required/delete (blocked if a formula uses it) fields, add/rename/delete tables (links to a deleted table become text), undo (15 snapshots). The AI designs a system from a description (JSON, repaired + normalised), proposes design changes from a sentence as `ops` that are dry-run and shown before Apply, and fills a record from a sentence. Templates: crane rental, shop, contracting, restaurant, blank. Summary (group by + sum), search/sort/totals, CSV export (BOM), import CSV/xlsx (xlsx via Pyodide) as a new table with guessed types or into a table, whole-system JSON export/import.
-  - **Paid per system:** trial = `FREE_ROWS` (30) records per table; design is always free. Activation code `ATT1.<payload>.<ECDSA P-256 signature>` bound to the system's request code (`ERP-…`). The app holds only the PUBLIC key (`LICENCE_PUBLIC_KEY` in erp.js). Codes are made with `node tools/erp-licence.mjs issue <private-key.json> ERP-XXXX`. **The private key is NOT in the repo** (`*private-key*.json` is git-ignored) — Ali keeps it; losing it means `keygen` again and shipping the new public key (old codes stop working). `SELLER.price/contact` in erp.js are empty until Ali fills them. If sold through Google Play, digital unlocks must use Play Billing instead — the code system is for direct/B2B sales.
-  - **Learn daily** (`daily.js`, `daily-ui.jsx`): course = topic + level + explanation language (en/ar) + time + quiz every N. The model plans ~30 lessons beginner→expert, then writes one lesson at a time (Markdown + a JSON block with a `visual` — table/steps/cards/compare/bars/timeline, drawn by the app — and 3 key points). After "I've read it" tomorrow's lesson is prepared so the notification can name it. Quiz every N lessons (5 MCQs, validated, options shuffled with a seed); missed questions go into `review` and open the next lessons as "Quick review" (spaced repetition). Streak counter. "Draw a picture (Studio)" button.
-  - **Daily news:** follow topics (query + en/ar + time). Native `news` (WebTools.news): Google News RSS search (`when:2d`, dated headlines + publisher) + DuckDuckGo past-day results with the top 3 pages read. `mergeNews` drops >36 h old, already-seen and same-story duplicates; the digest prompt allows only the gathered articles, neutral wording, a [n] on every bullet; `checkCitations` removes citations to non-existent sources and flags unsourced lines. 7 days kept.
-  - **Notifications + widget:** one repeating notification per course/topic, ids `daily-learn-<id>` / `daily-news-<id>` (spared by `syncToPhone`), tap → opens that course/topic (news gathers automatically). **Home-screen widget** `DailyWidget.kt` (layout `widget_daily.xml`) shows today's lesson + headline; the page sets it through `setWidget(json)`; rows open the same pages.
-  - Tests: `e2e_v512.py` (+ `e2e_v512_more.py`): business (template, records, formulas, design, AI change, AI fill, summary, CSV import, licence, restart), aidesign, lessons (plan → lesson visual → next prepared → quiz 2/3 → review → notification tap), news (dedupe, citations, notification/widget), Arabic 360 px layout; `e2e_v511.py wrongfix`; `unit/erp.test.mjs`, `unit/daily.test.mjs`, more in `unit/reason.test.mjs` (233 unit checks total).
+## 8. Backlog (not started)
+- Whatever Ali reports next (§0.3) — **top priority**.
+- Fill `SELLER.price/contact` (Ali's price + WhatsApp); optional Play Billing for ERP licences.
+- ERP: printable invoice/quote PDFs from records (ETA e-invoice format), per-table forms layout, relations shown as sub-lists (e.g. a customer's jobs), multi-user sync (would need a server — discuss with Ali first).
+- Learn daily: Studio picture per lesson automatically when Studio is installed; audio pronunciation via TTS for language lessons.
+- Daily news: prefetch at the notification time (needs a WorkManager job + model in background — heavy; current design gathers on open).
+- Translate the Travel country packs; Arabic Android-side error messages.
+- Whisper Egyptian-Arabic voice; "Ask your documents" (on-device RAG); fingerprint lock for Money/Cycle; crane chart import from a photo.
