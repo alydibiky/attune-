@@ -116,37 +116,109 @@ export async function reasonVote({ question, history = [], llm, n = 3, onStep = 
 // ---- files: answers computed from the real data -----------------------------------------
 export const DATA_EXT = /\.(csv|tsv|xlsx|xlsm|xls|json|txt)$/i;
 
+/* v5.13: files as they really come. Attendance machines, banks and old
+   accounting programs save ".xls" files that are really an HTML page or a
+   tab-separated text file; real old .xls needs xlrd. This loader, put in
+   front of every program run on a file, reads all of them — and quietly
+   rescues a plain pd.read_excel() / pd.read_csv() that would have failed. */
+export const FILE_PRELUDE = `import pandas as pd, io as _io
+from html.parser import HTMLParser as _HP
+_orig_read_excel, _orig_read_csv = pd.read_excel, pd.read_csv
+def _decode(raw):
+    if raw[:2] in (b"\\xff\\xfe", b"\\xfe\\xff"): return raw.decode("utf-16", "replace")
+    for enc in ("utf-8-sig", "cp1256"):
+        try: return raw.decode(enc)
+        except Exception: pass
+    return raw.decode("latin-1", "replace")
+class _Tables(_HP):
+    def __init__(self):
+        super().__init__(); self.tables = []; self._row = None; self._cell = None
+    def handle_starttag(self, tag, a):
+        if tag == "table": self.tables.append([])
+        elif tag == "tr" and self.tables: self._row = []
+        elif tag in ("td", "th") and self._row is not None: self._cell = []
+        elif tag == "br" and self._cell is not None: self._cell.append(" ")
+    def handle_endtag(self, tag):
+        if tag in ("td", "th") and self._cell is not None and self._row is not None:
+            self._row.append(" ".join("".join(self._cell).split())); self._cell = None
+        elif tag == "tr" and self._row is not None and self.tables:
+            if any(c for c in self._row): self.tables[-1].append(self._row)
+            self._row = None
+    def handle_data(self, d):
+        if self._cell is not None: self._cell.append(d)
+def _frame(rows):
+    rows = [r for r in rows if any(str(c).strip() for c in r)]
+    if not rows: return pd.DataFrame()
+    w = max(len(r) for r in rows); rows = [r + [""] * (w - len(r)) for r in rows]
+    # the header is the first row that is mostly filled in (titles above it are skipped)
+    h = next((i for i, r in enumerate(rows[:15]) if sum(1 for c in r if str(c).strip()) >= max(2, w * 0.6)), 0)
+    head = [str(c).strip() or f"col{i+1}" for i, c in enumerate(rows[h])]
+    seen = {}
+    for i, c in enumerate(head):
+        if c in seen: seen[c] += 1; head[i] = f"{c}.{seen[c]}"
+        else: seen[c] = 0
+    df = pd.DataFrame(rows[h + 1:], columns=head)
+    for c in df.columns:
+        s = pd.to_numeric(df[c].astype(str).str.replace(",", "").str.strip(), errors="coerce")
+        if s.notna().sum() >= max(1, 0.8 * (df[c].astype(str).str.strip() != "").sum()): df[c] = s
+    return df
+def load_sheets(name):
+    """Every table in the file → {sheet name: DataFrame}. Works for xlsx, xls, csv, tsv and 'xls' files that are really HTML or text."""
+    raw = open(name, "rb").read()
+    head = raw[:600].lstrip().lower()
+    if head.startswith(b"<") or b"<table" in raw[:4000].lower():
+        p = _Tables(); p.feed(_decode(raw))
+        t = {f"Table{i+1}": _frame(r) for i, r in enumerate(p.tables) if r}
+        if t: return t
+    if raw[:4] == b"PK\\x03\\x04" or raw[:8] == b"\\xd0\\xcf\\x11\\xe0\\xa1\\xb1\\x1a\\xe1":
+        eng = "openpyxl" if raw[:4] == b"PK\\x03\\x04" else "xlrd"
+        return _orig_read_excel(name, sheet_name=None, engine=eng)
+    text = _decode(raw)
+    try: return {"Sheet1": _orig_read_csv(_io.StringIO(text), sep=None, engine="python")}
+    except Exception:
+        return {"Sheet1": _frame([l.split("\\t") for l in text.splitlines()])}
+def _read_excel(io, sheet_name=0, *a, **k):
+    try: return _orig_read_excel(io, sheet_name, *a, **k)
+    except Exception:
+        if not isinstance(io, str): raise
+        t = load_sheets(io)
+        if sheet_name is None: return t
+        if isinstance(sheet_name, int): return list(t.values())[sheet_name]
+        return t.get(sheet_name, list(t.values())[0])
+def _read_csv(f, *a, **k):
+    try: return _orig_read_csv(f, *a, **k)
+    except Exception:
+        if not isinstance(f, str): raise
+        return list(load_sheets(f).values())[0]
+pd.read_excel, pd.read_csv = _read_excel, _read_csv
+`;
+
 /** Python that describes a file so the model can write code for it. */
 export function profileCode(name) {
   const n = JSON.stringify(name);
-  return `import pandas as pd, json
+  return `import json
 name = ${n}
 low = name.lower()
-if low.endswith((".xlsx", ".xlsm", ".xls")):
-    sheets = pd.read_excel(name, sheet_name=None)
+if low.endswith((".json",)):
+    d = json.load(open(name, encoding="utf-8"))
+    print(type(d).__name__, (len(d) if hasattr(d, "__len__") else ""))
+    print(json.dumps(d, ensure_ascii=False)[:1500])
+elif low.endswith((".txt", ".md")):
+    t = open(name, encoding="utf-8", errors="replace").read()
+    print(len(t), "characters"); print(t[:1500])
+else:
+    sheets = load_sheets(name)
     for s, df in sheets.items():
         print(f"SHEET {s!r}: {df.shape[0]} rows x {df.shape[1]} columns")
         print(df.dtypes.to_string())
-        print(df.head(6).to_string(max_colwidth=40))
+        print(df.head(8).to_string(max_colwidth=40))
         print()
-elif low.endswith((".csv", ".tsv")):
-    df = pd.read_csv(name, sep=None, engine="python")
-    print(f"{df.shape[0]} rows x {df.shape[1]} columns")
-    print(df.dtypes.to_string())
-    print(df.head(6).to_string(max_colwidth=40))
-elif low.endswith(".json"):
-    d = json.load(open(name))
-    print(type(d).__name__, (len(d) if hasattr(d, "__len__") else ""))
-    print(json.dumps(d, ensure_ascii=False)[:1500])
-else:
-    t = open(name, encoding="utf-8", errors="replace").read()
-    print(len(t), "characters"); print(t[:1500])
 `;
 }
 
 export function dataMessages(question, name, profile) {
   return [
-    { role: "system", content: `You answer questions about a file by writing ONE Python 3 program that computes the answer from the file itself. The file is in the current folder as ${JSON.stringify(name)}. pandas, numpy and openpyxl are available; no internet. Use the exact column and sheet names shown in the profile. Print the key numbers or a small table (df.to_string()), and make the LAST line printed exactly 'ANSWER: <short answer>'. Reply with the code block only.` },
+    { role: "system", content: `You answer questions about a file by writing ONE Python 3 program that computes the answer from the file itself. The file is in the current folder as ${JSON.stringify(name)}. pandas and numpy are available; no internet. Read the file ONLY with \`sheets = load_sheets(${JSON.stringify(name)})\` (already defined: it returns {sheet name: DataFrame}, exactly as in the profile) and pick the sheet you need. Use the exact column and sheet names shown in the profile. Times like "08:30" are text: convert with pd.to_timedelta(col + ":00") or pd.to_datetime before adding them. Print the key numbers or a small table (df.to_string()), and make the LAST line printed exactly 'ANSWER: <short answer>'. Reply with the code block only.` },
     { role: "user", content: `File profile:\n${String(profile).slice(0, 3500)}\n\nQuestion: ${String(question).trim()}` },
   ];
 }
@@ -161,17 +233,19 @@ export function dataExplainMessages(question, name, output, answer) {
 /** Answer a question about an attached file with a program run on it. runPy(code, files) → result. */
 export async function analyzeFile({ question, file, llm, runPy, onStep = () => {}, onToken }) {
   onStep("Opening the file…");
-  const prof = await runPy(profileCode(file.name), [file]);
-  if (!prof.ok) return { ok: false, why: "Could not open the file: " + (prof.error || "").split("\n").pop() };
+  const lastLine = (e) => String(e || "").split("\n").map((l) => l.trim()).filter(Boolean).pop() || "unknown error";
+  const withPrelude = (code) => FILE_PRELUDE + "\n" + code;
+  const prof = await runPy(withPrelude(profileCode(file.name)), [file]);
+  if (!prof.ok) return { ok: false, why: "Could not open the file: " + lastLine(prof.error) };
   onStep("Writing a program to work it out from your data…");
   let code = programFrom(await llm(dataMessages(question, file.name, prof.stdout), { maxTokens: 1000 }));
-  if (!code) return { ok: false, why: "no program" };
+  if (!code) return { ok: false, why: "the model wrote no program", profile: prof.stdout };
   let res = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     onStep(attempt ? "Fixing the program and running it again…" : "Running it on your file…");
-    res = await runPy(code, [file]);
+    res = await runPy(withPrelude(code), [file]);
     if (res.ok && readAnswer(res.stdout)) break;
-    if (attempt === 2) return { ok: false, why: res.error || "no ANSWER line", code, profile: prof.stdout };
+    if (attempt === 2) return { ok: false, why: "The program couldn't finish: " + (res.error ? lastLine(res.error) : "no ANSWER line"), code, profile: prof.stdout };
     const why = res.ok ? "The program did not print a line starting with 'ANSWER:'." : res.error;
     const again = await llm([...dataMessages(question, file.name, prof.stdout), { role: "assistant", content: "```python\n" + code + "\n```" },
       { role: "user", content: "Running it failed:\n```\n" + String(why).slice(-1500) + "\n```\nSend the corrected full program, code block only." }], { maxTokens: 1000 });

@@ -172,7 +172,8 @@ with sync_playwright() as pw:
     prof = page.evaluate("JSON.parse(localStorage.getItem('attune:profile')||'{}')")
     check(prof.get("field") == "Heavy equipment / construction, Business / trading", "two fields saved: %s" % prof.get("field"))
     check(set(prof.get("uses", [])) >= {"cycle", "money", "instant"}, "uses saved")
-    check(page.locator("nav button:has-text('Cycle')").count() == 1, "choosing period tracking adds the Cycle tab")
+    # v5.13 (Ali): the period tracker is not on the home screen — it stays in More.
+    check(page.locator("nav button:has-text('Cycle')").count() == 0, "Cycle is kept off the bottom bar (it lives in More)")
 
     # 2. engine: speed-first recommendation
     page.locator("header button:has-text('No model')").click()

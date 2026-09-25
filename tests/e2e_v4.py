@@ -244,7 +244,7 @@ with sync_playwright() as pw:
     page.locator("button[title='Send']").click()
     page.wait_for_selector("text=Period logged", timeout=5000)
     check(page.evaluate("window.__mock.chats") == n0, "period log handled on the phone, no model call")
-    check(nav.locator("button:has-text('Cycle')").count() == 1, "Cycle joins the bottom bar")
+    check(nav.locator("button:has-text('Cycle')").count() == 0, "Cycle stays off the bottom bar (v5.13: in More)")
     page.get_by_role("button", name="Open the calendar").click()
     page.wait_for_selector("text=/Period · day [12]/", timeout=5000)   # (day 2 when "2 hours ago" crosses midnight)
     check(True, "and it's in the calendar")

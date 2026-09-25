@@ -615,6 +615,77 @@ Example: {"name":"Bakery","currency":"EGP","tables":[{"name":"Products","fields"
   ];
 }
 
+/* v5.13 — plan B for small models: the same design as plain lines, which a
+   2–4B model writes far more reliably than a long JSON document:
+     TABLE Customers
+     - Name: text
+     - Status: choice (New, Paid)
+     - Customer: link Customers
+     - Total: formula [Qty] * [Price]                                        */
+export function designLinesMessages(description) {
+  return [
+    { role: "system", content: `You design the database of a small business's ERP system, like an expert Microsoft Access developer. Write 4 to 7 tables. For each table write one line "TABLE <name>" and under it 4 to 9 lines "- <field name>: <type>".
+Types: text, longtext, number, money, date, bool, phone, email, auto, choice (Option 1, Option 2, …), link <other table name>, formula <expression using [Field name]>.
+The first field of each table is its name or number. Connect tables with link fields. Use the language of the description for names. Write nothing else.
+Example:
+TABLE Customers
+- Name: text
+- Phone: phone
+TABLE Orders
+- Order no: auto
+- Customer: link Customers
+- Qty: number
+- Unit price: money
+- Total: formula [Qty] * [Unit price]
+- Status: choice (New, Paid, Delivered)` },
+    { role: "user", content: String(description || "").trim().slice(0, 2000) },
+  ];
+}
+
+/** The line format above → a spec (or null). Tolerates bullets, numbering, bold and Arabic. */
+export function specFromLines(text, name = "My business") {
+  const tables = [];
+  let cur = null;
+  for (const raw of String(text || "").replace(/\r/g, "").split("\n")) {
+    const l = raw.replace(/\*\*/g, "").replace(/`/g, "").trim();
+    if (!l) continue;
+    const tm = l.match(/^(?:#+\s*)?(?:\d+[.)]\s*)?(?:TABLE|Table|table|جدول)\s*[:：-]?\s*(.+)$/);
+    if (tm) { cur = { name: tm[1].replace(/[:：]\s*$/, "").trim(), fields: [] }; tables.push(cur); continue; }
+    const fm = l.match(/^(?:[-*•]|\d+[.)])\s*(.+?)\s*[:：]\s*(.+)$/);
+    if (!fm || !cur) continue;
+    const fname = fm[1].trim(), rest = fm[2].trim();
+    const kind = (rest.match(/^[A-Za-z]+/) || [""])[0].toLowerCase();
+    const f = { name: fname, type: kind || "text" };
+    if (/^(choice|select|options?|list|enum)$/.test(kind)) {
+      f.type = "choice";
+      f.options = (rest.match(/\(([^)]*)\)/) || [, rest.replace(/^[A-Za-z]+\s*/, "")])[1].split(/[,،|/]/).map((x) => x.trim()).filter(Boolean);
+    } else if (/^(link|lookup|relation|ref|reference)$/.test(kind)) {
+      f.type = "link"; f.link = rest.replace(/^[A-Za-z]+\s*(to\s+)?/i, "").replace(/[()]/g, "").trim();
+    } else if (/^(formula|calc|calculated|computed)$/.test(kind)) {
+      f.type = "formula"; f.formula = rest.replace(/^[A-Za-z]+\s*[:=]?\s*/, "").trim();
+    } else if (/^auto/.test(kind)) {
+      f.type = "auto"; const pm = rest.match(/prefix\s*[:=]?\s*["']?([A-Za-z-]{1,6})/i); if (pm) f.prefix = pm[1];
+    }
+    cur.fields.push(f);
+  }
+  const spec = normalizeSpec({ name, tables });
+  return spec.tables.length >= 2 ? spec : null;
+}
+
+/** No usable design from the model at all: the template closest to the description. */
+export function guessTemplate(description) {
+  const t = String(description || "").toLowerCase();
+  const score = {
+    cranes: /(crane|rent|rental|hire|equipment|fleet|operator|lift|ونش|أوناش|اوناش|كرين|إيجار|ايجار|معدات)/g,
+    shop: /(shop|store|stock|inventory|product|sell|retail|supplier|محل|مخزن|بضاعة|منتج|مورد)/g,
+    services: /(contract|project|client|quote|service|consult|مقاول|مشروع|عميل|عرض سعر|خدمات)/g,
+    restaurant: /(restaurant|cafe|café|menu|kitchen|food|coffee|مطعم|كافيه|قهوة|منيو|أكل)/g,
+  };
+  let best = null, bs = 0;
+  for (const [id, re] of Object.entries(score)) { const n = (t.match(re) || []).length; if (n > bs) { bs = n; best = id; } }
+  return best ? TEMPLATES.find((x) => x.id === best) : null;
+}
+
 export function changeMessages(sys, request) {
   return [
     { role: "system", content: `You change the design of a business database, like a Microsoft Access developer. Reply with JSON only: {"ops": [ ... ]}. Each op is one of:

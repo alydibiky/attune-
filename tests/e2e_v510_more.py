@@ -86,8 +86,10 @@ def sections(env, errors):
         check(page.locator("[data-testid=loop-note]").count() == 1, "…with a small note that a repeat was stopped")
         check("t_AB = d/30 hours" in txt and "\\frac" not in txt and "$" not in txt, "maths is shown as readable text, not raw LaTeX")
         b = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2).pop()")
-        check(b.get("repeat_penalty", 1) > 1 and b.get("dry_multiplier", 0) > 0 and b.get("no_repeat_ngram", 0) > 0,
-              "every request carries anti-loop settings (repeat penalty, DRY, no-repeat n-gram)")
+        # v5.13: no plain repeat penalty (it damaged numbers: "10,0400"); loops
+        # are stopped by DRY + no-repeat n-gram + the live guard instead.
+        check(b.get("repeat_penalty", 1) == 1 and b.get("dry_multiplier", 0) > 0 and b.get("no_repeat_ngram", 0) > 0,
+              "every request carries anti-loop settings (DRY, no-repeat n-gram) and NO digit-damaging repeat penalty")
         ctx.close()
 
     def sec_verify(br):

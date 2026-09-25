@@ -54,7 +54,12 @@ self.onmessage = async (e) => {
     // numpy / pandas / sympy load on first import, from the app's own files;
     // pandas needs openpyxl for .xlsx without importing it by name.
     await py.loadPackagesFromImports(code, { messageCallback: () => {}, errorCallback: (m) => err.push(m) });
-    if (/read_excel|\.xlsx|openpyxl/.test(code)) await py.loadPackage(["openpyxl"], { messageCallback: () => {}, errorCallback: (m) => err.push(m) });
+    if (/read_excel|\.xls|openpyxl|xlrd|load_sheets/.test(code) || (files || []).some((f) => /\.xls[xm]?$/i.test(f.name))) {
+      const want = ["openpyxl"];
+      if (py.loadedPackages && !("xlrd" in py.loadedPackages)) want.push("xlrd");
+      try { await py.loadPackage(want, { messageCallback: () => {}, errorCallback: () => {} }); }
+      catch (x) { try { await py.loadPackage(["openpyxl"], { messageCallback: () => {}, errorCallback: (m) => err.push(m) }); } catch (y) {} }
+    }
     ns = py.globals.get("dict")();
     await py.runPythonAsync(code, { globals: ns, filename: "main.py" });
     self.postMessage({ id, ok: true, stdout: out.join("\n"), stderr: err.join("\n"), ms: Math.round(performance.now() - t0) });

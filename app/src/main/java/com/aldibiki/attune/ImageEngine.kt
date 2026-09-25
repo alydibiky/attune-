@@ -136,13 +136,33 @@ object ImageEngine {
         if (dev != null) {
             val job = ImageRun.Job(argsFor(bin(ctx, true).path, "diffusion=$dev,vae=$dev,upscaler=$dev,te=cpu"), env(ctx, true), ctx.cacheDir)
             register(job)
+            // v5.13 — a GPU driver that HANGS while preparing the model (no
+            // output, no error) used to leave "Loading the picture model…"
+            // up forever. If the start makes no progress for 150 s (or is
+            // still loading after 5 min), the GPU run is stopped and the
+            // picture is drawn on the CPU instead — and Studio remembers.
+            val stalled = java.util.concurrent.atomic.AtomicBoolean(false)
+            val dog = Thread {
+                try {
+                    while (true) {
+                        Thread.sleep(3000)
+                        if (job.cancelled || job.aborted) break
+                        val now = System.currentTimeMillis()
+                        val early = job.stage == "start" || job.stage == "load"
+                        if (early && (now - job.lastOutputAt > 150_000 || now - job.stageSince > 300_000)) { stalled.set(true); job.abort(); break }
+                    }
+                } catch (e: InterruptedException) {}
+            }.apply { isDaemon = true; start() }
             val code = try { job.run(onProgress) } catch (e: Exception) { -1 }
+            dog.interrupt()
             register(null)
             if (job.cancelled) throw IOException("Stopped")
             if (code == 0 && valid(out)) { lastBackend = "GPU"; return "GPU" }
             out.delete()
             setCpuOnly(ctx, true)
-            setNote(ctx, "Drawing on the GPU failed, so Attune switched Studio to the CPU. " + job.lastError())
+            setNote(ctx, if (stalled.get()) "The GPU driver stalled while loading the picture model, so Attune switched Studio to the CPU (you can try the GPU again below)."
+                else "Drawing on the GPU failed, so Attune switched Studio to the CPU. " + job.lastError())
+            onProgress(ImageRun.Progress("start"))
         }
         val job = ImageRun.Job(argsFor(bin(ctx, false).path, "cpu"), env(ctx, false), ctx.cacheDir)
         register(job)

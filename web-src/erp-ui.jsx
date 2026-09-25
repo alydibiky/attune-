@@ -77,17 +77,29 @@ function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState(null);       // a system not saved yet
   const [err, setErr] = useState("");
+  const [step, setStep] = useState("");
   const design = async () => {
-    setErr(""); setBusy(true);
+    setErr(""); setBusy(true); setStep("");
     try {
-      let spec = null;
-      for (let i = 0; i < 2 && !spec; i++) {
-        const out = await llm(E.designMessages(desc), { maxTokens: 2500, temperature: i ? 0.5 : 0.2 });
-        const j = E.jsonFrom(out); const n = j && E.normalizeSpec(j);
-        if (n && n.tables.length >= 2) spec = j;
+      // 1) the full design as JSON; 2) the same as simple lines (far easier
+      // for a phone-sized model); 3) the closest template, never a dead end.
+      let spec = null, how = "ai";
+      setStep(tr("Designing the tables…"));
+      const out = await llm(E.designMessages(desc), { maxTokens: 2500, temperature: 0.2, json: true });
+      const j = E.jsonFrom(out); const n = j && E.normalizeSpec(j);
+      if (n && n.tables.length >= 2) spec = j;
+      if (!spec) {
+        setStep(tr("Trying a simpler way…"));
+        const lines = await llm(E.designLinesMessages(desc), { maxTokens: 1500, temperature: 0.2 });
+        const sp = E.specFromLines(lines, (j && j.name) || tr("My business"));
+        if (sp) spec = sp;
       }
+      if (!spec) { const t = E.guessTemplate(desc); if (t) { spec = t.spec; how = "template"; } }
       if (!spec) setErr(tr("The model didn't produce a usable design. Try again, describe it differently, or start from a template."));
-      else setDraft(E.systemFromSpec({ ...spec, business: desc }));
+      else {
+        setDraft(E.systemFromSpec({ ...spec, business: desc }));
+        if (how === "template") flash(tr("Started from the closest template — change anything you like"));
+      }
     } catch (e) { setErr(String(e.message || e)); }
     setBusy(false);
   };
@@ -111,7 +123,7 @@ function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
       <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={4} dir="auto" className={field} data-testid="erp-desc"
         placeholder={tr("e.g. We rent mobile cranes (20–500 t) with operators in Egypt. We track customers, jobs per site, daily rates, invoices and payments, maintenance and crew licences.")} />
       {modelReady ? <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5"} disabled={busy || desc.trim().length < 15} onClick={design} data-testid="erp-design">
-        {busy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{busy ? tr("Designing your system…") : tr("Design it with AI")}</button>
+        {busy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{busy ? (step || tr("Designing your system…")) : tr("Design it with AI")}</button>
         : <button className={ghost + " w-full"} onClick={openEngine}>{tr("Load a model to design it with AI — or pick a template below")}</button>}
       {err ? <p className="text-[13px] text-amber-300">{err}</p> : null}
       <p className="text-[12px] text-slate-500 pt-2">{tr("Or start from a template")}</p>
@@ -365,7 +377,7 @@ function DesignTab({ sys, table, apply, llm, flash }) {
                   if (type === "link") { const other = sys.tables.find((x) => x.id !== table.id); if (!other) { flash(tr("Add another table first")); return; } apply([{ op: "changeType", table: table.id, field: f.id, type, link: other.id }]); }
                   else if (type === "formula") setAdding({ name: f.name, type: "formula", formula: "", replace: f.id });
                   else apply([{ op: "changeType", table: table.id, field: f.id, type }]);
-                }} className={field + " w-auto flex-1"} data-testid="erp-field-type">
+                }} className={field.replace("w-full ", "") + " w-auto flex-1"} data-testid="erp-field-type">
                 {Object.entries(E.FIELD_TYPES).map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}
               </select>
               <button onClick={() => apply([{ op: "setRequired", table: table.id, field: f.id, required: !f.required }])} className={`${btn} border ${f.required ? "border-teal-600 text-teal-200" : "border-slate-700 text-slate-500"}`}>{tr("Required")}</button>

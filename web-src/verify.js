@@ -21,8 +21,10 @@ export function looksLikeMathProblem(text) {
   if ((t.match(NUM) || []).length < 2) return false;
   if (/```|def |class |function\s*\(|=>/.test(t)) return false;
   const ask = /\b(how (long|many|much|far|fast|old)|what (speed|time|is the|was the|must|should|percentage|fraction|ratio|probability)|at what|find|solve|calculate|compute|work out|average|probability|percent|ratio|interest|rate|minimum|maximum|how would)\b|كام|كم|احسب|أوجد|اوجد|ما هو|متوسط|نسبة|احتمال/i;
-  const story = /\b(if|when|each|per|every|at a|takes?|travels?|drives?|costs?|speed|km|hours?|minutes?|workers?|shirts?|trains?|tank|pipe|price|profit|loss|discount|interest)\b|لو|إذا|اذا|كل|سرعة|ساعة|دقيقة|عامل|سعر|ربح/i;
-  return ask.test(t) && story.test(t);
+  const story = /\b(if|when|each|per|every|at a|takes?|travels?|drives?|costs?|speed|km|hours?|minutes?|workers?|shirts?|trains?|tank|pipe|price|profit|loss|discount|interest|rents?|rental|hire|days?|weeks?|months?|years?|salary|wages?|vat|tax|egp|usd|eur|sar|aed|pounds?|dollars?|fee|invoice|bill|total|tons?|kg|litres?|liters?|meters?|metres?|load)\b|%|لو|إذا|اذا|كل|سرعة|ساعة|دقيقة|عامل|سعر|ربح|إيجار|ايجار|يوم|أيام|ايام|شهر|ضريبة|جنيه|فاتورة|إجمالي|اجمالي|طن/i;
+  // "How much is the rent, and with 14% VAT?" — money sums are word problems too (v5.13).
+  const money = /\b(how much|total|with vat|incl(uding)?\.? vat|plus vat|\+ ?vat)\b|كام|الإجمالي|الاجمالي/i;
+  return (ask.test(t) || money.test(t)) && story.test(t);
 }
 
 /** "write a python function that…", "implement a class…", "اكتب كود…" */
@@ -73,9 +75,16 @@ export function programFrom(text) {
  * The verified-maths pipeline. llm(messages, {maxTokens, onToken}) → text; runPy(code) → run result.
  * → { ok, answer, code, output, text } or { ok:false, why }
  */
-export async function verifyMath({ question, llm, runPy, onStep = () => {}, onToken, explain = true }) {
+export async function verifyMath({ question, llm, runPy, warm, onStep = () => {}, onToken, explain = true }) {
   onStep("Working it out as a program…");
-  let ans = await llm(solveMessages(question), { maxTokens: 900 });
+  // Python starts while the program is being written (it takes a few
+  // seconds the first time), and the screen shows the program growing
+  // instead of one line that looks stuck.
+  try { warm && warm(); } catch (e) {}
+  let shown = 0;
+  let ans = await llm(solveMessages(question), { maxTokens: 900, onToken: (t) => {
+    if (!shown && String(t || "").length > 8) { shown = 1; onStep("Writing the program…"); }
+  } });
   let code = programFrom(ans);
   if (!code) return { ok: false, why: "no program" };
   let res = null;
@@ -94,4 +103,73 @@ export async function verifyMath({ question, llm, runPy, onStep = () => {}, onTo
   onStep("Checked by running code — writing the answer…");
   const text = await llm(explainMessages(question, code, res.stdout, answer), { maxTokens: 700, onToken });
   return { ok: true, answer, code, output: res.stdout, text };
+}
+
+// ---- arithmetic slips in an ordinary answer ----------------------------------------------
+/* "25,000 × 4 = 10,000", "10,000 × 0.04% = 40": the model wrote a sum and got
+   it wrong. Every "a op b … = c" in an answer is recomputed here; any that is
+   off means the answer is re-done the checked way (as a program).  (v5.13) */
+const NUM_RE = /-?\d{1,3}(?:,\d{3})+(?:\.\d+)?%?|-?\d+(?:\.\d+)?%?/y;
+const val = (t) => { const pct = /%$/.test(t); const n = Number(String(t).replace(/[,%]/g, "")); return pct ? n / 100 : n; };
+
+/** Tokens of one side of a sum: numbers and × ÷ + −; words (units, currencies) are skipped. */
+function sumTokens(seg) {
+  const toks = [];
+  let i = 0;
+  while (i < seg.length) {
+    const c = seg[i];
+    NUM_RE.lastIndex = i;
+    const m = NUM_RE.exec(seg);
+    if (m && !(c === "-" && toks.length && toks[toks.length - 1].n != null)) { toks.push({ n: val(m[0]), raw: m[0] }); i += m[0].length; continue; }
+    if (c === "/" && /^\s*[A-Za-z\u0600-\u06FF]/.test(seg.slice(i + 1))) { i++; continue; }   // "EGP/day": a unit, not ÷
+    if ("×*÷/+-−".includes(c)) { toks.push({ op: c === "*" ? "×" : c === "/" ? "÷" : c === "−" ? "-" : c }); i++; continue; }
+    if (c === "x" && toks.length && toks[toks.length - 1].n != null && /^\s*\d/.test(seg.slice(i + 1)) && /\s|\d/.test(seg[i - 1] || " ")) { toks.push({ op: "×" }); i++; continue; }
+    if (/[()\[\]]/.test(c)) return null;          // brackets: too clever to judge here
+    i++;
+  }
+  // numbers glued to units stay numbers; drop leading/trailing operators
+  while (toks.length && toks[0].op) toks.shift();
+  while (toks.length && toks[toks.length - 1].op) toks.pop();
+  return toks;
+}
+
+/** → [{ expr, wrote, right }] for every written sum that doesn't add up. */
+export function arithmeticSlips(text) {
+  const out = [];
+  const lines = String(text || "").replace(/\*\*/g, "").split("\n");
+  let inCode = false;
+  for (const line of lines) {
+    if (/^\s*```/.test(line)) { inCode = !inCode; continue; }
+    if (inCode || !line.includes("=")) continue;
+    const parts = line.split("=");
+    for (let k = 0; k + 1 < parts.length; k++) {
+      let left = parts[k];
+      const cut = Math.max(left.lastIndexOf(":"), left.lastIndexOf("،"), left.lastIndexOf(";"));
+      if (cut >= 0) left = left.slice(cut + 1);
+      const L = sumTokens(left);
+      if (!L || L.length < 3) continue;
+      // strict alternation number op number …
+      let okShape = true;
+      for (let j = 0; j < L.length; j++) if ((j % 2 === 0) !== (L[j].n != null)) okShape = false;
+      if (!okShape) continue;
+      const nums = L.filter((t) => t.n != null).map((t) => t.n), ops = L.filter((t) => t.op).map((t) => t.op);
+      if (ops.every((o) => o === "-") && nums.every((n) => n >= 1900 && n <= 2100)) continue;   // 2024-2025
+      const rm = /^\s*(?:[A-Za-z؀-ۿ$€£]{1,6}\.?\s*)?(-?\d{1,3}(?:,\d{3})+(?:\.\d+)?%?|-?\d+(?:\.\d+)?%?)/.exec(parts[k + 1]);
+      if (!rm) continue;
+      // × ÷ before + −
+      const n2 = [nums[0]], o2 = [];
+      ops.forEach((o, i) => {
+        if (o === "×") n2[n2.length - 1] *= nums[i + 1];
+        else if (o === "÷") n2[n2.length - 1] = nums[i + 1] ? n2[n2.length - 1] / nums[i + 1] : NaN;
+        else { o2.push(o); n2.push(nums[i + 1]); }
+      });
+      let r = n2[0]; o2.forEach((o, i) => { r = o === "+" ? r + n2[i + 1] : r - n2[i + 1]; });
+      const wrote = val(rm[1]);
+      if (!isFinite(r) || !isFinite(wrote)) continue;
+      // a rounded answer is fine (1/3 = 0.33); a wrong one is not
+      const tol = Math.max(0.011, Math.abs(r) * 0.006);
+      if (Math.abs(r - wrote) > tol) out.push({ expr: left.trim() + " = " + rm[1], wrote, right: Math.round(r * 1e6) / 1e6 });
+    }
+  }
+  return out;
 }

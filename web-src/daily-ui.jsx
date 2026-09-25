@@ -17,6 +17,9 @@ export const loadTopics = () => load(NKEY);
 const field = "w-full min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500";
 const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40";
 const primary = btn + " bg-teal-500 text-slate-950";
+// (v5.13: a field that must NOT stretch — "w-full" beat "w-28" and squeezed
+// the label next to it into one letter per line.)
+const fieldFixed = field.replace("w-full ", "");
 const ghost = btn + " border border-slate-700 text-slate-200";
 
 /** Daily notifications + the widget, from the saved courses and topics. Safe to call often. */
@@ -309,9 +312,9 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, openId, 
         {course.quizzes.length ? <p className="text-[12px] text-slate-400">{tr("Quizzes")}: {course.quizzes.map((q) => `${q.score}/${q.total}`).join(" · ")}</p> : null}
 
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
-          <div className="flex gap-2 items-center">
-            <Bell size={14} className="text-slate-400" /><span className="text-[13px] text-slate-300 flex-1 min-w-0">{tr("Daily notification")}</span>
-            <input type="time" value={course.time} onChange={(e) => e.target.value && putCourse({ ...course, time: e.target.value })} className={field + " w-28 shrink-0"} data-testid="learn-time" />
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="flex items-center gap-1.5 text-[13px] text-slate-300 basis-full sm:basis-auto sm:flex-1 whitespace-nowrap"><Bell size={14} className="text-slate-400 shrink-0" />{tr("Daily notification")}</span>
+            <input type="time" value={course.time} onChange={(e) => e.target.value && putCourse({ ...course, time: e.target.value })} className={fieldFixed + " w-32 shrink-0"} data-testid="learn-time" />
             <button onClick={() => putCourse({ ...course, notify: course.notify === false })} className={`${btn} shrink-0 whitespace-nowrap border ${course.notify !== false ? "border-teal-600 text-teal-200" : "border-slate-700 text-slate-500"}`}>{course.notify !== false ? tr("On") : tr("Off")}</button>
           </div>
           <button className={`${btn} border ${confirmDel ? "border-rose-600 bg-rose-500/15 text-rose-200" : "border-slate-700 text-slate-400"} flex items-center gap-1`}
@@ -406,9 +409,9 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
               {past === d.day ? <div className="mt-1"><Digest d={d} /></div> : null}</div>))}
         </div>) : null}
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
-        <div className="flex gap-2 items-center">
-          <Bell size={14} className="text-slate-400" /><span className="text-[13px] text-slate-300 flex-1 min-w-0">{tr("Daily notification")}</span>
-          <input type="time" value={topic.time} onChange={(e) => e.target.value && putTopic({ ...topic, time: e.target.value })} className={field + " w-28 shrink-0"} />
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="flex items-center gap-1.5 text-[13px] text-slate-300 basis-full sm:basis-auto sm:flex-1 whitespace-nowrap"><Bell size={14} className="text-slate-400 shrink-0" />{tr("Daily notification")}</span>
+          <input type="time" value={topic.time} onChange={(e) => e.target.value && putTopic({ ...topic, time: e.target.value })} className={fieldFixed + " w-32 shrink-0"} />
           <button onClick={() => putTopic({ ...topic, notify: topic.notify === false })} className={`${btn} shrink-0 whitespace-nowrap border ${topic.notify !== false ? "border-teal-600 text-teal-200" : "border-slate-700 text-slate-500"}`}>{topic.notify !== false ? tr("On") : tr("Off")}</button>
         </div>
         <button className={`${btn} border ${confirmDel ? "border-rose-600 bg-rose-500/15 text-rose-200" : "border-slate-700 text-slate-400"} flex items-center gap-1`}

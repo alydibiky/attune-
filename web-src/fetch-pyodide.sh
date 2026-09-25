@@ -47,11 +47,13 @@ lock["packages"] = {n: P[n] for n in sorted(want)}
 (out / "pyodide-lock.json").write_text(json.dumps(lock))
 for f in ["pyodide.mjs", "pyodide.asm.mjs", "pyodide.asm.wasm", "python_stdlib.zip"]:
     shutil.copy(src / f, out / f)
-# Excel files: openpyxl (MIT) and et_xmlfile are pure Python but not part of
+# Excel files: openpyxl (MIT), et_xmlfile and xlrd (BSD, old .xls) are pure Python but not part of
 # Pyodide; they come from PyPI, pinned and checksum-checked, and are added to
 # the package list so pandas.read_excel / import openpyxl just work.
 EXTRA = [("openpyxl", "3.1.5", "openpyxl-3.1.5-py2.py3-none-any.whl", "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2", ["et-xmlfile"], ["openpyxl"]),
-         ("et-xmlfile", "2.0.0", "et_xmlfile-2.0.0-py3-none-any.whl", "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa", [], ["et_xmlfile"])]
+         ("et-xmlfile", "2.0.0", "et_xmlfile-2.0.0-py3-none-any.whl", "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa", [], ["et_xmlfile"]),
+         # old Excel files (.xls, 97–2003) — v5.13; BSD licence, pure Python
+         ("xlrd", "2.0.1", "xlrd-2.0.1-py2.py3-none-any.whl", "6a33ee89877bd9abc1158129f6e94be74e2679636b8a205b43b85206c3f0bbdd", [], ["xlrd"])]
 import os, urllib.request, subprocess
 cache = src.parent
 for name, v, fn, sha, deps, imports in EXTRA:

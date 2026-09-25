@@ -74,6 +74,12 @@ object ImageRun {
         @Volatile var cancelled = false
             private set
         val tail = ArrayDeque<String>()
+        /** When the engine last printed anything, and the stage it is in (for the stall watchdog). */
+        @Volatile var lastOutputAt = System.currentTimeMillis()
+        @Volatile var stage = "start"
+        @Volatile var stageSince = System.currentTimeMillis()
+        @Volatile var aborted = false
+            private set
 
         fun run(onProgress: (Progress) -> Unit): Int {
             val pb = ProcessBuilder(cmd).directory(dir).redirectErrorStream(true)
@@ -84,14 +90,20 @@ object ImageRun {
             var prog = Progress("start")
             onProgress(prog)
             readPieces(p.inputStream) { piece ->
+                lastOutputAt = System.currentTimeMillis()
                 synchronized(tail) { tail.addLast(ANSI.replace(piece, "")); while (tail.size > 60) tail.removeFirst() }
                 val next = advance(prog, piece)
-                if (next != prog) { prog = next; onProgress(prog) }
+                if (next != prog) {
+                    if (next.stage != prog.stage) { stage = next.stage; stageSince = System.currentTimeMillis() }
+                    prog = next; onProgress(prog)
+                }
             }
             return p.waitFor()
         }
 
         fun cancel() { cancelled = true; proc?.destroyForcibly() }
+        /** Stopped by the app itself (a stalled GPU start) — not by the person. */
+        fun abort() { aborted = true; proc?.destroyForcibly() }
 
         /** The most telling line of the output, for an error message. */
         fun lastError(): String = synchronized(tail) {

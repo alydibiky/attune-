@@ -70,9 +70,28 @@
   button,label,select,a{touch-action:manipulation}
   /* Anything that scrolls inside the page keeps the scroll to itself: reaching
      the end of a list, a log or a text box no longer drags the whole page. */
-  textarea,pre,iframe,.overflow-auto,.overflow-y-auto,.overflow-x-auto,.att-scroll,.att-chips,.att-tabs{overscroll-behavior:contain}
-  .overflow-x-auto,.att-chips,.att-tabs{scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .overflow-x-auto::-webkit-scrollbar,.att-chips::-webkit-scrollbar,.att-tabs::-webkit-scrollbar{display:none}
+  textarea,iframe,.overflow-auto,.overflow-y-auto,.att-scroll{overscroll-behavior:contain}
+  /* v5.13 — THE table scroll bug. A box that scrolls sideways (a table, a
+     code box, a row of chips) is also a scroll box up/down to the browser;
+     with overscroll "contain" on it, an up/down swipe that started on a table
+     stopped dead there instead of scrolling the page — you had to reach for
+     the edge of the screen. Sideways boxes now keep only their SIDEWAYS
+     scroll to themselves; up/down always goes straight to the page. */
+  pre,.overflow-x-auto,.att-hscroll,.att-chips,.att-tabs{overscroll-behavior-x:contain;overscroll-behavior-y:auto;touch-action:pan-x pan-y pinch-zoom}
+  .overflow-x-auto.overflow-y-auto,.overflow-x-auto.att-scroll{overscroll-behavior:contain}
+  .overflow-x-auto,.att-hscroll,.att-chips,.att-tabs{scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .att-hscroll,.overflow-x-auto:not(.overflow-y-auto):not(.overflow-auto):not(.att-scroll){overflow-x:auto;overflow-y:hidden}
+  .overflow-x-auto::-webkit-scrollbar,.att-hscroll::-webkit-scrollbar,.att-chips::-webkit-scrollbar,.att-tabs::-webkit-scrollbar{display:none}
+  /* Tables in answers: a thin hint that there is more to the side. */
+  .att-md table{border-collapse:collapse}
+  .att-md td,.att-md th{min-width:4.5rem}
+  /* The composer is its own layer, painted fully every frame: no stale black
+     patches over the buttons, no text that appears only after Enter. */
+  [data-testid=composer]{transform:translateZ(0);contain:layout paint}
+  [data-testid=chat-input]{background-color:transparent!important;color-scheme:dark}
+  html{color-scheme:dark}
+  /* Coming back to the app: one clean repaint (see attune-resume). */
+  html.att-repaint body{opacity:.999}
   /* (v5.10: content-visibility on sections was removed. In the Android
      WebView it painted sections blank after a tab switch and made the page
      height jump while scrolling — the "black screen" and the scroll that
@@ -96,6 +115,15 @@
   .att-icon-btn:active{transform:scale(.96)}
   /* Inputs at 16px so Android never zooms the page when one is focused. */
   @media (max-width:640px){ input,textarea,select{font-size:16px!important} }
+  /* v5.13 — calm motion: new messages and screens fade in; nothing jumps. */
+  @keyframes attIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .att-in,.att-msg{animation:attIn .22s ease-out both}
+  html{scroll-behavior:auto}
+  /* Tables in answers: zebra rows and a header that reads as one. */
+  .att-md tbody tr:nth-child(even){background:rgba(30,41,59,.35)}
+  .att-md th{border-bottom:1px solid #334155}
+  button{transition:background-color .15s,border-color .15s,color .15s,transform .1s}
+  button:active{transform:scale(.97)}
   @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation-duration:.01ms!important} }
 </style>
 </head>

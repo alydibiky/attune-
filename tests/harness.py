@@ -57,7 +57,7 @@ V5_EXTRA = r"""
     // A queue of fixed answers (the Code workbench's write → fix rounds), streamed in pieces.
     if (S.fakeQueue && S.fakeQueue.length && !(b.max_tokens <= 2)) { const t = S.fakeQueue.shift(); let i = 0;
       const tick = () => { if (i < t.length) { if (S.chatCancel && S.chatCancel[id]) return J(id, "Stopped"); window.__attuneNative.delta(id, t.slice(i, i + 40), ""); i += 40; setTimeout(tick, S.slowQueue || 5); }
-        else R(id, { content: t, reasoning: "", timings: { predicted_per_second: 42.0 }, usage: {} }); };
+        else R(id, { content: t, reasoning: "", timings: { predicted_per_second: 42.0 }, usage: S.fakeTokens ? { completion_tokens: S.fakeTokens === "max" ? b.max_tokens : S.fakeTokens } : {} }); };
       setTimeout(tick, 20); return; }
     if (S.fakeTps && b.stream && S.fake) { const t = S.fake; setTimeout(() => { window.__attuneNative.delta(id, t, ""); R(id, { content: t, reasoning: "", timings: { predicted_per_second: S.fakeTps }, usage: {} }); }, 30); return; }
     if (b.grammar) { S.grammarBodies = (S.grammarBodies || []).concat([b]);

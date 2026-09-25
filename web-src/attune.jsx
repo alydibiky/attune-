@@ -21,10 +21,10 @@ import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { detectLoop, trimLoop } from "./quality.js";
-import { verifyMath, looksLikeMathProblem } from "./verify.js";
+import { verifyMath, looksLikeMathProblem, arithmeticSlips } from "./verify.js";
 import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
 import { workLoop, guessLang } from "./code.js";
-import { runCode, runHtml, pythonAvailable } from "./sandbox.js";
+import { runCode, runHtml, pythonAvailable, warmUp } from "./sandbox.js";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
 
 /* =========================================================================
@@ -1310,6 +1310,12 @@ const LocalEngine = {
       if (standing) messages.push({ role: "system", content: standing });
       messages.push({ role: "user", content: withImage(prompt) });
     }
+    // Strict-format answers (JSON for Business, quizzes, lessons…): the same
+    // lines legitimately repeat there ("Phone", a link to "Customers" in
+    // several tables), so the loop guard and the no-repeat rules — made for
+    // prose — are off for them (v5.13: they broke Business designs).
+    const sysText = String((messages[0] && messages[0].role === "system" && messages[0].content) || "");
+    const strict = !!(o.grammar || o.json || /\bJSON\b[^.\n]{0,40}\bonly\b|\bonly\b[^.\n]{0,20}\bJSON\b|Reply with JSON|Answer with JSON|code block only|ONE code block|edit blocks only/i.test(sysText));
     // Thinking: asked for by the caller (o.think === true forces it on for
     // one request, e.g. the Think button) or by the Engine setting.
     const think = o.think === "force" ? true : !!(o.think && ENGINE_PREFS.deepThink);
@@ -1320,7 +1326,10 @@ const LocalEngine = {
     const body = {
       model: (BACKEND() && BACKEND().localModel) || "local",
       messages,
-      max_tokens: o.maxTokens || (think ? thinkBudget + 1536 : (ENGINE_PREFS.longAnswers ? 1536 : 900)),
+      // v5.13: 900 tokens (about 600 words) cut long explanations off in the
+      // middle. Answers now get room for a full page; the model still stops
+      // by itself when it is done, and a cut answer offers "Continue".
+      max_tokens: o.maxTokens || (think ? thinkBudget + 2048 : (ENGINE_PREFS.longAnswers ? 3072 : 2048)),
       chat_template_kwargs: { enable_thinking: think },
     };
     // A GBNF grammar (reminders & actions): the engine can only write text
@@ -1334,8 +1343,13 @@ const LocalEngine = {
     // DRY, which stops long exact repeats ("(Correction: …)" × 5) without
     // hurting code that legitimately repeats short bits. The fast engine gets
     // the same through repeat_penalty / no_repeat_ngram (FastEngine.kt).
-    if (!o.grammar) {
-      body.repeat_penalty = 1.05; body.repeat_last_n = 256;
+    if (!strict) {
+      // v5.13: no plain repeat penalty any more. It punishes every token that
+      // appeared recently — and digits repeat all the time (100,000; 2025;
+      // 1200) — so it pushed small models into wrong numbers ("10,0400",
+      // "June 200005", "LTM 12000"). Loops are still stopped by DRY /
+      // no-repeat-ngram (long exact repeats only) and the live loop guard.
+      body.repeat_penalty = 1.0; body.repeat_last_n = 256;
       body.dry_multiplier = 0.8; body.dry_base = 1.75; body.dry_allowed_length = 4; body.dry_penalty_last_n = 1024;
       body.no_repeat_ngram = 24;
     }
@@ -1378,7 +1392,7 @@ const LocalEngine = {
           text += c || ""; thinking += r || "";
           // A model going round in circles is stopped at once (quality.js).
           sinceCheck += (c || "").length + (r || "").length;
-          if (sinceCheck > 60 && !o.grammar) {   // (strict-JSON answers are bounded by their grammar)
+          if (sinceCheck > 60 && !strict) {   // (strict-format answers: see above)
             sinceCheck = 0;
             const lt = detectLoop(text), lr = !text && detectLoop(thinking);
             if (lt.loop || (lr && lr.loop)) {
@@ -1393,6 +1407,9 @@ const LocalEngine = {
         try { res = await pr; }
         catch (e) { if (!looped) throw e; res = { content: text, reasoning: thinking }; }
         LAST_STATS = statsFrom(res, Date.now() - t0n);
+        // Stopped by the length limit, not because it was done: say so, so
+        // the screen can offer "Continue".
+        if (!strict && LAST_STATS.tokens && LAST_STATS.tokens >= body.max_tokens - 3) LAST_STATS.cut = true;
         if (looped) { LAST_STATS.looped = looped.where; LocalEngine.lastLooped = looped.where;
           // Went round in circles while THINKING, before any answer: one more
           // try without thinking usually lands.
@@ -1402,7 +1419,7 @@ const LocalEngine = {
         }
         LocalEngine.lastLooped = null;
         const full = res.content || text;
-        const lf = o.grammar ? { loop: false } : detectLoop(full);
+        const lf = strict ? { loop: false } : detectLoop(full);
         return lf.loop ? trimLoop(full, lf.cut) : full;
       } catch (e) {
         const msg = String((e && e.message) || e);
@@ -5745,11 +5762,14 @@ const GROUNDED_RULES = `Answer ONLY from the passages below.
 - Do not add background you happen to know. Do not fill gaps. Do not guess.
 - If the passages do not answer the question, do NOT just refuse. Say plainly what they DO show, in one or two sentences, with citations — for example "I found no record of a 1983 Lunar Incident between the USSR and Canada; the closest real events are the 1978 Kosmos 954 satellite crash in Canada [3] and the 1983 Soviet false-alarm incident [1]." If the question rests on something that the passages suggest never happened, say so directly.
 - Cite the source number in square brackets after each claim, like [1].
+- Copy every number, version and date EXACTLY as the passage writes it (never join or change digits).
+- "Latest", "newest", "current": the answer is the HIGHEST version number / MOST RECENT date the passages mention; older ones are history. Titles count as passages too.
 - Answer in the language the question was asked in. Be brief.`;
 
 function groundedPrompt(q, hits, lang) {
-  const src = hits.map((h, i) => `[${i + 1}] ${h.title} — ${h.url}\n${h.text}`).join("\n\n");
-  return [GROUNDED_RULES, "", "PASSAGES:", src, "",
+  const src = hits.map((h, i) => `[${i + 1}] ${h.title} — ${h.url}${h.date ? " (" + h.date + ")" : ""}\n${h.text}`).join("\n\n");
+  const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  return [GROUNDED_RULES, `- Today is ${today}.`, "", "PASSAGES:", src, "",
     lang ? `Answer in ${lang}.` : "", "QUESTION: " + q].filter(Boolean).join("\n");
 }
 
@@ -6568,6 +6588,13 @@ ${(f.rec.output || "").slice(0, 600)}`).join("\n\n")}`;
 
 export default function App() {
   const [mode, setMode] = useState("chat");
+  // A new screen opens at its top (Chat at its newest message) — not halfway
+  // down wherever the last screen was scrolled to. (v5.13)
+  const firstMode = useRef(true);
+  useEffect(() => {
+    if (firstMode.current) { firstMode.current = false; return; }
+    try { window.scrollTo(0, mode === "chat" ? document.documentElement.scrollHeight : 0); } catch (e) {}
+  }, [mode]);
   const [drawerOpen, setDrawerOpen] = useState(false);   // chat history
   const [moreOpen, setMoreOpen] = useState(false);       // every other tool
   const [showBackup, setShowBackup] = useState(false);   // encrypted backup / restore
@@ -7874,7 +7901,7 @@ export default function App() {
     canUseAI, spend: spendIfFree, deepThink: () => ENGINE_PREFS.deepThink,
     webOn,
     toggleWeb: () => { if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to search the web")); return; } setWebOn((v) => !v); },
-    webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang),
+    webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang), groundedAudit,
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     withRecords,
@@ -7916,7 +7943,7 @@ export default function App() {
     verifyMath: async (question, { onStep, onToken } = {}) => {
       if (!(await pythonAvailable())) return { ok: false, why: "no python" };
       const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken ? (t) => o.onToken(t) : undefined });
-      return verifyMath({ question, llm, runPy: (code) => runCode({ lang: "python", code }), onStep: (x) => onStep && onStep(tr(x)), onToken });
+      return verifyMath({ question, llm, runPy: (code) => runCode({ lang: "python", code }), warm: () => warmUp("python"), onStep: (x) => onStep && onStep(tr(x)), onToken });
     },
     codeTask: async (task, { onStep, onToken } = {}) => {
       const lang = guessLang(task);
@@ -8034,7 +8061,7 @@ export default function App() {
         ) : null}
 
         {mode === "chat" ? (
-          <ChatHome api={chatApi} drawerOpen={drawerOpen} setDrawerOpen={setDrawerOpen} newChatSignal={newChatSignal}
+          <ChatHome key="chat" api={chatApi} drawerOpen={drawerOpen} setDrawerOpen={setDrawerOpen} newChatSignal={newChatSignal}
             composerSeed={chatSeed} clearComposerSeed={() => setChatSeed("")} />
         ) : mode === "ask" ? (
           <div className="att-in">
@@ -8671,7 +8698,7 @@ export default function App() {
         ) : mode === "business" ? (
           <BusinessPage flash={flash} openEngine={() => setShowEngine(true)}
             modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
-            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false })}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json, onToken: o.onToken })}
             runPy={(code, files) => runCode({ lang: "python", code, files, timeoutMs: 60000 })}
             saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
@@ -9784,7 +9811,7 @@ export default function App() {
       <nav className="fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="max-w-3xl mx-auto grid grid-cols-5 h-[58px]">
           {[["chat", "Chat", MessageCircle], ["instant", "Instant", Zap], ["money", "Money", Wallet],
-            cycleOn ? ["cycle", "Cycle", Droplet] : ["memory", "Memory", History], ["more", "More", LayoutGrid]].map(([id, label, Icon]) => {
+            ["business", "Business", Database], ["more", "More", LayoutGrid]].map(([id, label, Icon]) => {
             const on = id === "more" ? moreOpen : (mode === id && !moreOpen);
             return (
               <button key={id} onClick={() => { if (id === "more") setMoreOpen((v) => !v); else { setMoreOpen(false); setMode(id); } }}

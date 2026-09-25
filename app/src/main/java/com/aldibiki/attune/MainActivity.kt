@@ -270,6 +270,22 @@ class MainActivity : AppCompatActivity() {
         handleShare(intent)
     }
 
+    // Back from another app: the page repaints once and hears about it (it
+    // saves the chat on the way out and refreshes what it shows on return).
+    override fun onResume() {
+        super.onResume()
+        if (::web.isInitialized) {
+            web.onResume(); web.resumeTimers()
+            web.postInvalidate()
+            web.evaluateJavascript("window.dispatchEvent(new Event('attune-resume'))", null)
+        }
+    }
+
+    override fun onPause() {
+        if (::web.isInitialized) web.evaluateJavascript("window.dispatchEvent(new Event('attune-pause'))", null)
+        super.onPause()
+    }
+
     override fun onDestroy() {
         // The model is deliberately NOT stopped here. Stopping it on every exit
         // meant reopening the app waited for a full reload (and a reload that
@@ -287,7 +303,9 @@ class MainActivity : AppCompatActivity() {
         // list inside it was scrolled to its end.
         overScrollMode = android.view.View.OVER_SCROLL_NEVER
         isVerticalScrollBarEnabled = false
-        setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+        // (v5.13: no setLayerType(HARDWARE) here. A WebView is already drawn
+        // on the GPU; forcing an extra layer on it left stale/black patches
+        // after switching apps and made typed or pasted text appear late.)
     }
 
     /**

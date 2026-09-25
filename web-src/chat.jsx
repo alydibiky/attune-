@@ -12,7 +12,7 @@ import { ActionCard } from "./actions-ui.jsx";
 import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
 import { mathToText } from "./quality.js";
-import { looksLikeMathProblem, looksLikeCodeTask } from "./verify.js";
+import { looksLikeMathProblem, looksLikeCodeTask, arithmeticSlips } from "./verify.js";
 import { looksLikeReasoning, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import {
@@ -26,14 +26,58 @@ const NATIVE = (typeof window !== "undefined" && window.AttuneNative) || null;
 
 // ---- storage -------------------------------------------------------------------
 function loadChats() {
-  try { const v = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+  try { const raw = localStorage.getItem(KEY); lastWritten = raw; const v = JSON.parse(raw || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; }
 }
+// v5.13: chats vanished when the phone's page storage was full — photos are
+// big, and one failed save used to silently keep nothing. Now a save that
+// doesn't fit first shrinks what is expendable (photos in older chats, then
+// in all chats, then the oldest chats), so the text of recent chats is always kept.
+const noPhotos = (c) => ({ ...c, messages: (c.messages || []).map((m) => (m.image ? { ...m, image: null, hadImage: true } : m)) });
+const clean = (c) => ({ ...c, messages: (c.messages || []).map((m) => (m.streaming ? { ...m, streaming: false, phase: "", text: m.text ? m.text + (m.text.endsWith("(stopped)") ? "" : " …(stopped)") : m.text } : m)) });
 function saveChats(list) {
-  try { localStorage.setItem(KEY, JSON.stringify(list.slice(0, MAX_CHATS))); } catch (e) {
-    // Full storage: drop the oldest half and try once more.
-    try { localStorage.setItem(KEY, JSON.stringify(list.slice(0, Math.floor(MAX_CHATS / 2)))); } catch (e2) {}
+  const base = list.slice(0, MAX_CHATS).map(clean);
+  const tries = [
+    () => base,
+    () => base.map((c, i) => (i < 3 ? c : noPhotos(c))),
+    () => base.map(noPhotos),
+    () => base.slice(0, 40).map(noPhotos),
+    () => base.slice(0, 15).map(noPhotos),
+  ];
+  for (const t of tries) {
+    try { const raw = JSON.stringify(t()); localStorage.setItem(KEY, raw); lastWritten = raw; return true; } catch (e) {}
   }
+  return false;
 }
+// What this page last wrote. A save on the way out is skipped if something
+// else changed the chats since (a backup restore, another screen) — never
+// write an old copy over newer ones.
+let lastWritten = null;
+function saveIfOurs(list) {
+  let cur = null; try { cur = localStorage.getItem(KEY); } catch (e) {}
+  if (lastWritten !== null && cur !== lastWritten) return false;
+  if (lastWritten === null && cur && cur !== "[]" && !list.length) return false;
+  return saveChats(list);
+}
+/**
+ * Which language to answer in — from the message itself, not the chat so far
+ * (v5.13: an English question after Arabic turns got an Arabic answer).
+ * → the one line added to what the model reads, or "" if unclear / a translation request.
+ */
+export function langHint(text) {
+  const t = String(text || "");
+  if (/\b(translate|translation|in arabic|in english|بالعربي|بالانجليزي|بالإنجليزي|ترجم)\b/i.test(t) || /ترجم|بالعربي|بالإنجليزي|بالانجليزي/.test(t)) return "";
+  const ar = (t.match(/[\u0600-\u06FF]/g) || []).length, la = (t.match(/[A-Za-z]/g) || []).length;
+  if (ar + la < 3) return "";
+  if (ar > la) return "\n\n(اكتب الرد بالعربي — بالمصري لو السؤال بالمصري.)";
+  if (la > ar * 3) return "\n\n(Write the reply in English.)";
+  return "";
+}
+
+/** "What is the maximum load at 20 m radius?", "price of X in this list" — a lookup in a table. */
+export function looksLikeTableLookup(text) {
+  return /\b(radius|boom|load chart|capacity|counterweight|outrigger|table|chart|row|column|price list|timetable|schedule|rated|lift(ing)?|tons?|at \d+(\.\d+)? ?m)\b|نصف القطر|الذراع|جدول|حمولة|قدرة الرفع|الثقل الموازن/i.test(String(text || ""));
+}
+
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 /** The last few lines of the model's thinking, while it thinks (no inner scroll box to get stuck in). */
 function lastLines(t, n) {
@@ -46,10 +90,21 @@ function titleFrom(text) {
   return t.length > 48 ? t.slice(0, 46) + "…" : t || "New chat";
 }
 
+/** Seconds since it appeared — so a long step (loading, a program running) never looks frozen. */
+function Elapsed() {
+  const [t0] = useState(() => Date.now());
+  const [, tick] = useState(0);
+  useEffect(() => { const h = setInterval(() => tick((x) => x + 1), 1000); return () => clearInterval(h); }, []);
+  const s = Math.floor((Date.now() - t0) / 1000);
+  return s >= 3 ? <span className="text-[11px] text-slate-500 tabular-nums shrink-0">· {s < 60 ? s + " s" : Math.floor(s / 60) + " min " + (s % 60) + " s"}</span> : null;
+}
+
 // ---- Markdown, drawn as real elements (never as HTML strings) -------------------
 function inline(text, keyBase) {
   const out = [];
-  const re = /(\*\*[^*\n]+\*\*|__[^_\n]+__|`[^`\n]+`|\[[^\]\n]+\]\((https?:\/\/[^)\s]+)\)|\*[^*\n]+\*|_[^_\n]+_)/g;
+  // _italic_ and __bold__ only as whole words: second_largest_distinct and
+  // file_name stay as written.
+  const re = /(\*\*[^*\n]+\*\*|(?<![\w\\])__[^_\n]+__(?![\w])|`[^`\n]+`|\[[^\]\n]+\]\((https?:\/\/[^)\s]+)\)|(?<![\w*\\])\*(?![\s*])[^*\n]+(?<!\s)\*(?![\w*])|(?<![\w\\])_(?![\s_])[^_\n]+(?<!\s)_(?![\w]))/g;
   let last = 0, m, k = 0;
   const s = String(text || "");
   while ((m = re.exec(s))) {
@@ -68,6 +123,28 @@ function inline(text, keyBase) {
   return out;
 }
 
+const LANG_LABEL = { py: "Python", python: "Python", python3: "Python", js: "JavaScript", javascript: "JavaScript", html: "HTML", htm: "HTML",
+  css: "CSS", json: "JSON", sql: "SQL", bash: "Shell", sh: "Shell", kotlin: "Kotlin", java: "Java", ts: "TypeScript", typescript: "TypeScript", xml: "XML", csv: "CSV" };
+/** A code box: the language on top, a Copy that says it copied, the code scrolling sideways inside. */
+function CodeBox({ lang, text }) {
+  const [done, setDone] = useState(false);
+  const copy = () => {
+    try { if (NATIVE && NATIVE.copy) NATIVE.copy(text); else navigator.clipboard.writeText(text); } catch (e) { try { navigator.clipboard.writeText(text); } catch (x) {} }
+    setDone(true); setTimeout(() => setDone(false), 1400);
+  };
+  const label = LANG_LABEL[String(lang || "").trim().toLowerCase()] || (lang ? String(lang).trim() : tr("Code"));
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-950 overflow-hidden" data-testid="code-box">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900/80 border-b border-slate-800">
+        <span className="text-[11px] text-slate-400 font-medium">{label}</span>
+        <button onClick={copy} className="text-[11px] px-2 py-0.5 rounded-md text-slate-300 active:bg-slate-800 flex items-center gap-1">
+          {done ? <CheckCircle2 size={12} className="text-emerald-300" /> : <Copy size={12} />}{done ? tr("Copied") : tr("Copy")}</button>
+      </div>
+      <pre className="att-hscroll p-3 text-[13px] leading-relaxed font-mono text-teal-50 overflow-x-auto whitespace-pre m-0" dir="ltr">{text}</pre>
+    </div>
+  );
+}
+
 export function Md({ text, runnable = true }) {
   const blocks = useMemo(() => {
     const lines = mathToText(String(text || "")).replace(/\r/g, "").split("\n");
@@ -76,12 +153,21 @@ export function Md({ text, runnable = true }) {
     while (i < lines.length) {
       const l = lines[i];
       if (/^\s*```/.test(l)) {                                   // code block
-        const lang = l.trim().slice(3);
+        let lang = l.trim().slice(3).trim();
         const body = [];
         i++;
-        while (i < lines.length && !/^\s*```/.test(lines[i])) body.push(lines[i++]);
+        // Only a bare ``` closes a block. A "```python" right after the
+        // opening line is the model opening it twice: that one is dropped
+        // (it used to close the block, leaving an empty box and the code
+        // spilling out below as plain text).
+        while (i < lines.length && !/^\s*```\s*$/.test(lines[i])) {
+          const f = lines[i].match(/^\s*```\s*([\w+#.-]+)\s*$/);
+          if (f && !body.some((x) => x.trim())) { lang = lang || f[1]; body.length = 0; i++; continue; }
+          body.push(lines[i++]);
+        }
         const closed = i < lines.length;
         i++;
+        if (!body.some((x) => x.trim()) && !closed) continue;
         out.push({ t: "code", lang, text: body.join("\n"), closed });
         continue;
       }
@@ -132,15 +218,13 @@ export function Md({ text, runnable = true }) {
       {blocks.map((b, bi) => {
         const k = "b" + bi;
         if (b.t === "code") return (
-          <div key={k} className="relative">
-            <pre className="att-scroll bg-slate-950 border border-slate-800 rounded-xl p-3 text-[13px] font-mono text-teal-50 overflow-x-auto whitespace-pre" dir="ltr">{b.text}</pre>
-            <button onClick={() => { try { navigator.clipboard.writeText(b.text); } catch (e) {} }}
-              className="absolute top-1.5 end-1.5 text-[10px] px-2 py-1 rounded-md bg-slate-800 text-slate-300">copy</button>
+          <div key={k}>
+            <CodeBox lang={b.lang} text={b.text} />
             {b.closed && runnable && /^(py|python3?|js|javascript|html?)$/i.test(b.lang.trim()) && b.text.trim() ? <RunBlock lang={b.lang.trim()} code={b.text} /> : null}
           </div>
         );
         if (b.t === "table") return (
-          <div key={k} className="att-scroll overflow-x-auto rounded-xl border border-slate-800">
+          <div key={k} className="att-hscroll overflow-x-auto rounded-xl border border-slate-800" data-testid="md-table">
             <table className="min-w-full text-[13px]" dir="auto">
               <thead className="bg-slate-800/70"><tr>{b.head.map((h, i) => <th key={i} className="px-3 py-2 text-start font-semibold text-slate-100 whitespace-nowrap">{inline(h, k + "h" + i)}</th>)}</tr></thead>
               <tbody>{b.rows.map((r, ri) => <tr key={ri} className="border-t border-slate-800">{r.map((c, ci) => <td key={ci} className="px-3 py-2 align-top text-slate-200">{inline(c, k + "c" + ri + ci)}</td>)}</tr>)}</tbody>
@@ -208,7 +292,7 @@ const STARTERS = [
   ["📝", "Summarise", "Summarise this in 3 bullets: "],
   ["🏗️", "Crane question", "What should I check on a mobile crane's outriggers before a 40 t lift?"],
   ["🧮", "Work it out", "3 cranes × 4 days × 12,500 EGP a day + 14% VAT — total?"],
-  ["🩸", "Log my period", "My period started this morning, medium flow"],
+  ["📚", "Explain simply", "Explain simply how outrigger pads spread a crane's load on soft ground"],
 ];
 
 // ---- the screen --------------------------------------------------------------------
@@ -257,7 +341,29 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const messages = chat ? chat.messages : [];
 
   // Persist, lightly: not on every streamed word, only when the list settles.
-  useEffect(() => { if (!busy) saveChats(chats); }, [chats, busy]);
+  useEffect(() => { if (!busy) saveIfOurs(chats); }, [chats, busy]);
+  // Leaving the app (Home, another app, the screen off) saves everything at
+  // once — even mid-answer — so nothing is lost if Android closes the page
+  // while it is in the background. Coming back repaints the screen and
+  // re-reads the text box (text pasted or dictated while away shows at once).
+  const chatsRef = useRef(chats); chatsRef.current = chats;
+  useEffect(() => {
+    const save = () => saveIfOurs(chatsRef.current);
+    const back = () => {
+      const el = taRef.current;
+      if (el && el.value !== undefined) setText((t) => (el.value !== t ? el.value : t));
+      const h = document.documentElement;
+      h.classList.add("att-repaint");
+      requestAnimationFrame(() => requestAnimationFrame(() => h.classList.remove("att-repaint")));
+    };
+    const vis = () => { if (document.hidden) save(); else back(); };
+    window.addEventListener("attune-pause", save);
+    window.addEventListener("pagehide", save);
+    window.addEventListener("attune-resume", back);
+    document.addEventListener("visibilitychange", vis);
+    return () => { window.removeEventListener("attune-pause", save); window.removeEventListener("pagehide", save);
+      window.removeEventListener("attune-resume", back); document.removeEventListener("visibilitychange", vis); };
+  }, []);
   useEffect(() => { if (newChatSignal) { stop(); setActiveId(null); setText(""); setImage(null); } }, [newChatSignal]);
   useEffect(() => { if (composerSeed) { setText(composerSeed); clearComposerSeed && clearComposerSeed(); setTimeout(() => taRef.current && taRef.current.focus(), 50); } }, [composerSeed]);
 
@@ -329,7 +435,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // 8K window), newest first, so a long chat never overflows the model's
     // memory — the oldest turns simply drop out of what it sees.
     const ctx = (api.contextTokens && api.contextTokens()) || 8192;
-    const budget = maxHistoryChars == null ? Math.max(1500, Math.min(9000, (ctx - 3000) * 2)) : maxHistoryChars;
+    const budget = maxHistoryChars == null ? Math.max(1500, Math.min(9000, (ctx - 4300) * 2)) : maxHistoryChars;   // (room left for a full-page answer)
     const kept = [];
     let used = 0;
     for (let i = pairs.length - 2; i >= 0 && kept.length < 20; i -= 2) {
@@ -483,7 +589,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const r = await api.analyzeFile(q, fileAtt, { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
           if (runRef.current !== run) return;
           if (r && r.ok) { answer = r.text; extra.computed = { code: r.code, output: r.output, file: fileAtt.name }; }
-          else if (r && r.why) extra.fileNote = r.why;
+          else if (r && r.why) {
+            extra.fileNote = r.why;
+            // v5.13: never hand the question to the model without the file —
+            // it then said "I do not have access to any records". What the
+            // phone could see of the file goes with it instead, clearly marked.
+            if (r.profile) content = `The user attached "${fileAtt.name}". Computing on it failed (${r.why}). This is what the file looks like (only the first rows):\n<<<\n${String(r.profile).slice(0, 3500)}\n>>>\nAnswer from this if you can; if the question needs every row (a total, an average), say plainly that the full calculation failed and what the user can try (for example saving the file as .xlsx).\n\n${q}`;
+            else answer = tr("I couldn't open {f} on the phone: {why}\n\nTry saving it as .xlsx or .csv and attach it again.", { f: fileAtt.name, why: String(r.why).replace(/^Could not open the file:\s*/, "") });
+          }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
       } else if (fileAtt && fileAtt.text != null) {
         content = `The user attached the file "${fileAtt.name}":\n<<<\n${fileAtt.text.slice(0, 14000)}\n>>>\n\n${q}`;
@@ -496,20 +609,30 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // cannot run, the question simply goes to the model as usual below.
       if (route && !img && !sources && api.verifyMath && looksLikeMathProblem(typed)) {
         try {
-          const r = await api.verifyMath(typed, { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+          const r = await api.verifyMath(typed + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
           if (runRef.current !== run) return;
           if (r && r.ok) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
       } else if (route && !img && !sources && api.reasonVote && !think && looksLikeReasoning(typed) && !looksLikeCodeTask(typed)) {
         // Riddles, logic, physical reasoning: several tries, a vote, a strict check.
         try {
-          const r = await api.reasonVote(typed, pairsOf(history), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+          const r = await api.reasonVote(typed + langHint(typed), pairsOf(history), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
           if (runRef.current !== run) return;
           if (r && r.text) { answer = r.text; extra.reasoned = { votes: r.votes, total: r.total, checked: r.checked }; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
       } else if (route && !img && !sources && api.codeTask && looksLikeCodeTask(typed)) {
         try {
-          const r = await api.codeTask(typed, { onStep: (s) => onStatus(s), onToken: (tx) => onToken("```\n" + tx.split("\n").slice(-30).join("\n") + "\n```", "") });
+          // While it writes: the model's own ```python fence (and anything
+          // before it) is dropped, so the preview is ONE code box — not an
+          // empty box with the code spilling out below it as plain text.
+          const livePreview = (tx) => {
+            let s = String(tx || "").replace(/\r/g, "");
+            const f = s.search(/```[^\n]*\n/);
+            if (f >= 0) s = s.slice(s.indexOf("\n", f) + 1);
+            s = s.split(/\n\s*```/)[0];
+            return "```\n" + s.split("\n").slice(-30).join("\n") + "\n```";
+          };
+          const r = await api.codeTask(typed, { onStep: (s) => onStatus(s), onToken: (tx) => onToken(livePreview(tx), "") });
           if (runRef.current !== run) return;
           if (r && r.code) {
             answer = (r.ok ? "" : tr("I couldn't make every test pass yet — here is the closest version; tap “Test & fix in Code” to keep going.") + "\n\n") + "```" + r.lang + "\n" + r.code + "\n```";
@@ -517,6 +640,15 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
       }
+      // A photo of a table (a crane load chart, a price list, a timetable):
+      // the model first copies the exact row and column it needs, then
+      // answers from what it copied — reading the whole chart "at a glance"
+      // is where small models invent numbers (v5.13).
+      if (pic && typed && looksLikeTableLookup(typed)) {
+        content += "\n\n(How to answer from the photo: 1) Name the table and its units exactly as printed. 2) Find the ROW for the value asked (e.g. radius 20 m) and COPY that whole row, cell by cell, with the column headers above each cell. 3) Answer from the copied row only — say which column (e.g. boom length) gives the maximum. 4) If the digits are too small to read with certainty, say so instead of guessing.)";
+        extra.fromPhotoTable = true;
+      }
+      content += langHint(typed);
       if (answer == null) try {
         answer = await api.run(buildMessages(history, content), pic, { onToken, onStatus, think: useThink });
       } catch (e) {
@@ -527,8 +659,41 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         answer = await api.run(buildMessages([], content, 0), pic, { onToken, onStatus, think: useThink });
       }
       if (runRef.current !== run) return;
+      // A web answer with a number no source contains ("June 200005"): asked
+      // once more, told exactly which numbers were not in the sources.
+      if (sources && api.groundedAudit && answer) {
+        const au = api.groundedAudit(answer, sources, typed);
+        if (au.fabricated.length) {
+          patchMsg(cid, aiId, { phase: tr("Checking the numbers against the sources…") });
+          try {
+            const fixMsg = content + "\n\nYOUR FIRST ANSWER WAS:\n" + answer + "\n\nThese numbers in it are NOT in the passages: " + au.fabricated.slice(0, 6).join(", ") +
+              ". Write the answer again using only numbers, versions and dates exactly as the passages write them.";
+            const again = await api.run(buildMessages([], fixMsg, 0), null, { onToken, onStatus, think: false, temperature: 0.2 });
+            if (runRef.current !== run) return;
+            const au2 = api.groundedAudit(again, sources, typed);
+            if (again && au2.fabricated.length < au.fabricated.length) answer = again;
+            if (au2.fabricated.length) extra.unsourced = au2.fabricated.slice(0, 4);
+          } catch (e) { if (String(e && e.message) === "Stopped") throw e; extra.unsourced = au.fabricated.slice(0, 4); }
+        }
+      }
+      // A sum in the answer that doesn't add up ("25,000 × 4 = 10,000"): the
+      // question is worked out again as a program the phone runs, and that
+      // answer replaces the slip. (v5.13)
+      let st = api.lastStats();
+      if (!extra.verified && !extra.computed && !extra.codeCheck && !img && !sources && typed && api.verifyMath && (typed.match(/[0-9٠-٩]/g) || []).length >= 2) {
+        const slips = arithmeticSlips(answer);
+        if (slips.length) {
+          extra.slips = slips;
+          if (raf) { cancelAnimationFrame(raf); raf = 0; } pend = null;
+          patchMsg(cid, aiId, { text: "", thinking: "", phase: tr("Found a slip in the sums — re-checking by running code…") });
+          try {
+            const r = await api.verifyMath(typed + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+            if (runRef.current !== run) return;
+            if (r && r.ok && r.text) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; extra.fixedSlip = true; st = api.lastStats(); }
+          } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+        }
+      }
       if (raf) cancelAnimationFrame(raf);
-      const st = api.lastStats();
       patchMsg(cid, aiId, { text: answer, streaming: false, phase: "", sources, via, secs: Math.round((Date.now() - t0) / 1000), stats: st, ...extra });
       api.spend();
       api.remember({ kind: "chat", title: (typed || "Photo").slice(0, 70), text: typed || "(photo)", output: answer, tags: ["chat"] });
@@ -543,6 +708,27 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     } finally {
       if (runRef.current === run) setBusy(false);
     }
+  };
+
+  // An answer cut by the length limit carries on in the SAME bubble.
+  const continueAnswer = async (aiIdx) => {
+    const m = messages[aiIdx]; if (!m || busy || !api.canUseAI()) return;
+    const cid = chat.id, run = ++runRef.current;
+    const before = String(m.text || "").replace(/ …\(stopped\)$/, "");
+    const hist = messages.slice(0, aiIdx + 1).map((x) => (x.id === m.id ? { ...x, text: before } : x));
+    const prompt = /[؀-ۿ]/.test(before.slice(0, 300)) ? "كمّل من المكان اللي وقفت عنده بالظبط. متكررش أي حاجة كتبتها، وابدأ بالكلمة اللي بعدها على طول."
+      : "Continue exactly where you stopped. Do not repeat anything you already wrote — start with the very next word.";
+    patchMsg(cid, m.id, { streaming: true, phase: "", stats: { ...(m.stats || {}), cut: false } });
+    setBusy(true); stickRef.current = true;
+    const glue = (a, b) => { const t = String(b || "").replace(/^\s+/, ""); return a + (/\s$/.test(a) || /^[,.;:!?)\]]/.test(t) ? "" : (/\n\s*$/.test(a) ? "" : " ")) + t; };
+    try {
+      const more = await api.run(buildMessages(hist, prompt), null, { onToken: (tx) => { if (runRef.current === run) patchMsg(cid, m.id, { text: glue(before, tx) }); } });
+      if (runRef.current !== run) return;
+      const st = api.lastStats();
+      patchMsg(cid, m.id, { text: glue(before, more), streaming: false, phase: "", stats: st });
+    } catch (e) {
+      if (runRef.current === run) patchMsg(cid, m.id, { streaming: false, phase: "", text: before });
+    } finally { if (runRef.current === run) setBusy(false); }
   };
 
   const regenerate = (aiIdx) => {
@@ -698,8 +884,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       {/* ---- the conversation ---- */}
       <div className="space-y-4 pt-2">
         {messages.map((m, idx) => m.role === "user" ? (
-          <div key={m.id} className="flex flex-col items-end">
+          <div key={m.id} className="att-msg flex flex-col items-end">
             {m.image ? <img src={m.image} alt="" className="max-w-[70%] max-h-56 rounded-2xl mb-1.5 border border-slate-800 object-cover" /> : null}
+            {!m.image && m.hadImage ? <span className="mb-1.5 text-[11px] text-slate-500 px-2 py-1 rounded-lg border border-slate-800">🖼 {tr("photo (removed to save space)")}</span> : null}
             {m.file ? <span className="mb-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[12px] text-slate-200"><FileText size={13} className="text-teal-300" />{m.file}</span> : null}
             {m.text ? <div dir="auto" className="max-w-[85%] bg-teal-600/25 border border-teal-800/60 text-slate-100 rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[15px] whitespace-pre-wrap leading-relaxed">{m.text}</div> : null}
             {!busy ? <button onClick={() => editFrom(idx)} className="mt-1 text-[11px] text-slate-500 flex items-center gap-1 px-1"><PenLine size={11} /> {tr("Edit")}</button> : null}
@@ -732,7 +919,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
           </div>
         ) : (
-          <div key={m.id} className="group">
+          <div key={m.id} className="group att-msg">
             {m.thinking ? (
               <div className="mb-2">
                 <button onClick={() => setOpenThought((o) => ({ ...o, [m.id]: !o[m.id] }))} className="flex items-center gap-1.5 text-[12px] text-slate-400">
@@ -747,7 +934,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               </div>
             ) : null}
             {m.streaming && !m.text && !m.thinking ? (
-              <div className="flex items-center gap-2 text-sm text-teal-300/90 py-1"><Loader2 size={15} className="animate-spin" /> {m.phase || tr("Reading…")}</div>
+              <div className="flex items-center gap-2 text-sm text-teal-300/90 py-1" data-testid="phase"><Loader2 size={15} className="animate-spin shrink-0" /> <span className="min-w-0">{m.phase || tr("Reading…")}</span> <Elapsed /></div>
             ) : null}
             {m.text ? <Md text={m.text + (m.streaming ? " ▍" : "")} /> : null}
             {m.calc ? (
@@ -765,6 +952,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 {openThought["v" + m.id] ? <Md text={"```python\n" + m.verified.code + "\n```\n\n" + tr("It printed:") + "\n```\n" + String(m.verified.output || "").trim() + "\n```"} /> : null}
               </div>
             ) : null}
+            {m.fromPhotoTable && !m.streaming ? <p className="mt-1 text-[11px] text-amber-300/90" data-testid="photo-table-note">⚠ {tr("Numbers read from a photo — check them against the chart before a lift")}</p> : null}
+            {m.unsourced ?<p className="mt-1 text-[11px] text-amber-300" data-testid="unsourced">⚠ {tr("Not found in the sources")}: {m.unsourced.join(", ")}</p> : null}
+            {m.fixedSlip ? <p className="mt-1 text-[11px] text-sky-300" data-testid="slip-fixed">{tr("The first answer had a wrong sum — re-done by running code")}</p> : null}
+            {m.slips && !m.fixedSlip ? <p className="mt-1 text-[11px] text-amber-300" data-testid="slip-note">⚠ {tr("Check this sum")}: {m.slips[0].expr} → {Number(m.slips[0].right.toFixed(4)).toLocaleString("en-US")}</p> : null}
             {m.reasoned ? (
               <p className="mt-1.5 text-[11px] text-emerald-300 flex items-center gap-1" data-testid="reasoned"><CheckCircle2 size={12} />
                 {m.reasoned.checked === "corrected" ? tr("Checked — the reviewer fixed a mistake") : m.reasoned.checked === "judged" ? tr("{n} tries disagreed — weighed and checked", { n: m.reasoned.total })
@@ -831,7 +1022,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 {api.teach ? <button onClick={() => setTeaching(teaching && teaching.id === m.id ? null : { id: m.id, corrected: "", note: "" })} data-testid="teach"
                   className={`p-2 ${m.taught ? "text-sky-300" : ""}`} title={tr("Wrong? Teach the right answer")}><ThumbsDown size={15} /></button> : null}
                 {m.stats && m.stats.tps ? <span className="text-[10px] text-slate-600 ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}
-                {m.stats && m.stats.looped ? <span className="text-[10px] text-amber-400/80 ms-1" data-testid="loop-note">{tr("stopped a repeat")}</span> : null}
+                {m.stats && m.stats.cut ? <span className="text-[10px] text-amber-300/90 ms-1" data-testid="cut-note">{tr("long answer — tap Continue")}</span> : null}
+                {m.stats && m.stats.looped ?<span className="text-[10px] text-amber-400/80 ms-1" data-testid="loop-note">{tr("stopped a repeat")}</span> : null}
                 {m.stats && m.stats.tps != null && m.stats.tps < 3 && api.openSpeed ? (
                   <button onClick={api.openSpeed} className="text-[10px] text-amber-300 underline underline-offset-2 ms-1" data-testid="slow-hint">{tr("unusually slow — why?")}</button>) : null}
               </div>
@@ -845,6 +1037,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             {(() => { const u = messages[messages.length - 2]; return u && u.image ? (
               <button onClick={() => api.photoToMoney(u.image)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-emerald-800 text-emerald-200 bg-emerald-500/10">{tr("💳 Add to Money")}</button>
             ) : null; })()}
+            {lastAi.stats && lastAi.stats.cut ? (
+              <button onClick={() => continueAnswer(messages.length - 1)} data-testid="continue"
+                className="shrink-0 text-xs px-3 py-2 rounded-full border border-teal-600 text-teal-200 bg-teal-500/10 font-medium">{tr("Continue ▸")}</button>
+            ) : null}
             {followUps(lastAi).map(([label, prompt]) => (
               <button key={label} onClick={() => ask(prompt)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-slate-700 text-slate-300 active:border-teal-600">{tr(label)}</button>
             ))}
@@ -855,7 +1051,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
 
       {/* ---- jump to the newest words ---- */}
       {!following && messages.length ? (
-        <button onClick={() => { stickRef.current = true; setFollowing(true); toBottom(); }} data-testid="jump-bottom"
+        <button onClick={() => { stickRef.current = true; setFollowing(true); lastAuto.current = Date.now() + 600; try { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" }); } catch (e) { toBottom(); } }} data-testid="jump-bottom"
           className="fixed z-40 end-4 w-10 h-10 rounded-full bg-slate-800 border border-slate-600 text-slate-100 shadow-lg flex items-center justify-center"
           style={{ bottom: typing ? "calc(118px + env(safe-area-inset-bottom))" : "calc(176px + env(safe-area-inset-bottom))" }} title={tr("Newest")}><ChevronDown size={18} /></button>
       ) : null}
@@ -878,6 +1074,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             </div>
           ) : null}
           <textarea ref={taRef} value={text} onChange={(e) => setText(e.target.value)} rows={1} dir="auto" data-testid="chat-input"
+            onInput={(e) => { const v = e.currentTarget.value; if (v !== text) setText(v); }}
+            // Pasted text: some Android keyboards paste without a normal input
+            // event — read the box again right after, so it shows at once.
+            onPaste={() => { setTimeout(() => { const el = taRef.current; if (el) setText(el.value); }, 0); setTimeout(() => { const el = taRef.current; if (el) setText(el.value); }, 120); }}
             onFocus={() => { setTyping(true); document.documentElement.classList.add("att-typing"); setTimeout(() => { try { taRef.current.scrollIntoView({ block: "nearest" }); } catch (e) {} }, 250); }}
             // (after a moment: a tap on Send closes the keyboard first, and the
             // text box must not move away from under the finger before the tap lands)

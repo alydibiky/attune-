@@ -206,7 +206,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
         ) : null}
         <div className="flex items-center gap-2 mt-3">
           {busy ? (
-            <button onClick={stop} data-testid="studio-stop" className="px-3 py-2 rounded-lg bg-rose-500/20 border border-rose-800 text-rose-200 text-sm flex items-center gap-1.5"><Square size={13} />{tr("Stop")}</button>
+            <button onClick={stop} data-testid="studio-stop" className="px-3 py-2 rounded-lg bg-rose-500/20 border border-rose-800 text-rose-200 text-sm flex items-center gap-1.5 shrink-0 whitespace-nowrap"><Square size={13} />{tr("Stop")}</button>
           ) : (
             <button onClick={() => draw()} disabled={!drawReady || !idea.trim() || !info.built} data-testid="studio-go"
               className="px-4 py-2 rounded-lg bg-violet-500 text-white text-sm font-semibold disabled:opacity-40 flex items-center gap-1.5"><Palette size={14} />{mode === "edit" ? tr("Edit it") : tr("Draw it")}</button>
