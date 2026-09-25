@@ -13,10 +13,11 @@ import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
 import { mathToText } from "./quality.js";
 import { looksLikeMathProblem, looksLikeCodeTask } from "./verify.js";
+import { looksLikeReasoning, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
-  Loader2, Search, ChevronDown, CheckCircle2, Sparkles,
+  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText,
 } from "lucide-react";
 
 const KEY = "attune:chats:v1";
@@ -216,6 +217,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const [activeId, setActiveId] = useState(() => { const c = loadChats(); return c[0] && (Date.now() - (c[0].updated || 0) < 6 * 3600e3) ? c[0].id : null; });
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
+  const [attached, setAttached] = useState(null);     // { name, b64, size, text? } — a spreadsheet or document
+  const [teaching, setTeaching] = useState(null);     // { id, corrected, note } — 👎 → the right answer
   const [busy, setBusy] = useState(false);
   const [think, setThink] = useState(false);
   const [listening, setListening] = useState(false);
@@ -291,6 +294,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
 
   // Build the conversation the model sees: the stable system prompt, the last
   // turns (text only; older photos become "[photo]"), then the new message.
+  // Earlier turns as plain user/assistant pairs (for the reasoning route).
+  const pairsOf = (history) => buildMessages(history, "x").filter((m) => m.role !== "system").slice(0, -1).slice(-6);
   const buildMessages = (history, userContent, maxHistoryChars) => {
     // Only complete exchanges (a question and its answer) are sent, so the
     // turns always alternate — a stopped answer, a logged period or a
@@ -321,9 +326,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const ask = async (raw, opts) => {
     const o = opts || {};
     const typed = String(raw != null ? raw : text).trim();
-    const route = !o.noRoute;
+    const fileAtt = o.file !== undefined ? o.file : attached;
+    const route = !o.noRoute && !fileAtt;
     const img = o.image !== undefined ? o.image : image;
-    if (!typed && !img) return;
+    if (!typed && !img && !fileAtt) return;
     if (busy) stop();
 
     // 1. Things the phone files away by itself, instantly, no model.
@@ -400,7 +406,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const withPic = recent.reverse().find((m) => m.image);
       if (withPic && /^data:/.test(withPic.image)) carried = { url: withPic.image, media: (withPic.image.match(/^data:([^;]+)/) || [])[1] || "image/jpeg", data: withPic.image.split(",")[1] };
     }
-    const userMsg = o.reuseUser || { id: newId(), role: "user", text: typed, image: img ? img.url : null };
+    const userMsg = o.reuseUser || { id: newId(), role: "user", text: typed || (fileAtt ? tr("What's in this file? Summarise what matters.") : ""), image: img ? img.url : null, file: fileAtt ? fileAtt.name : null };
     const aiId = newId();
     const run = ++runRef.current;
     const t0 = Date.now();
@@ -411,7 +417,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       return base.map((c) => (c.id === cid ? { ...c, updated: Date.now(),
         messages: [...history, userMsg, { id: aiId, role: "assistant", text: "", thinking: "", streaming: true, phase: api.webOn ? "Searching the web…" : "Reading…" }] } : c));
     });
-    setText(""); setImage(null); setBusy(true); stickRef.current = true;
+    setText(""); setImage(null); setAttached(null); setBusy(true); stickRef.current = true;
 
     let raf = 0, pend = null;
     const flush = () => { raf = 0; if (!pend || runRef.current !== run) return; const p = pend; pend = null;
@@ -420,7 +426,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     const onStatus = (s) => { if (runRef.current === run) patchMsg(cid, aiId, { phase: s }); };
 
     try {
-      let content = typed || "What is in this photo? Read it and tell me what matters.";
+      let content = typed || (fileAtt ? userMsg.text : "What is in this photo? Read it and tell me what matters.");
       let sources = null, via = null;
       const pic = img || carried;
       if (api.webOn && typed) {
@@ -449,6 +455,22 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         if (found.length) content = api.withRecords(typed, found);
       }
       let answer, extra = {};
+      const q = typed || userMsg.text;
+      // A spreadsheet/CSV: answered by a program the phone runs on the file.
+      // A text document: its text goes to the model with the question.
+      if (fileAtt && api.analyzeFile && !/\.(txt|md|json)$/i.test(fileAtt.name)) {
+        try {
+          const r = await api.analyzeFile(q, fileAtt, { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+          if (runRef.current !== run) return;
+          if (r && r.ok) { answer = r.text; extra.computed = { code: r.code, output: r.output, file: fileAtt.name }; }
+          else if (r && r.why) extra.fileNote = r.why;
+        } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      } else if (fileAtt && fileAtt.text != null) {
+        content = `The user attached the file "${fileAtt.name}":\n<<<\n${fileAtt.text.slice(0, 14000)}\n>>>\n\n${q}`;
+      }
+      // Corrections the user taught before, on questions like this one.
+      const shots = !fileAtt && api.learnFor ? api.learnFor(q) : null;
+      if (shots && shots.n) { content = shots.block + "\n\nREQUEST:\n" + content; extra.learnedUsed = shots.n; }
       // Word problems and coding requests are checked by running code on the
       // phone before the answer is shown (verify.js / code.js). If the check
       // cannot run, the question simply goes to the model as usual below.
@@ -457,6 +479,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const r = await api.verifyMath(typed, { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
           if (runRef.current !== run) return;
           if (r && r.ok) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; }
+        } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      } else if (route && !img && !sources && api.reasonVote && !think && looksLikeReasoning(typed) && !looksLikeCodeTask(typed)) {
+        // Riddles, logic, physical reasoning: several tries, a vote, a strict check.
+        try {
+          const r = await api.reasonVote(typed, pairsOf(history), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+          if (runRef.current !== run) return;
+          if (r && r.text) { answer = r.text; extra.reasoned = { votes: r.votes, total: r.total, checked: r.checked }; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
       } else if (route && !img && !sources && api.codeTask && looksLikeCodeTask(typed)) {
         try {
@@ -545,6 +574,21 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (r) setText(before + r);
     } catch (e) { api.flash(String((e && e.message) || e).slice(0, 100)); }
     finally { setListening(false); }
+  };
+  // A spreadsheet or document: kept as bytes for the Python sandbox (and as
+  // text too for a plain document).
+  const pickFile = (file) => {
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) return api.flash(tr("That file is too large (15 MB at most)"));
+    const r = new FileReader();
+    r.onload = () => {
+      const bytes = new Uint8Array(r.result);
+      let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      const att = { name: file.name, size: file.size, b64: btoa(bin) };
+      if (/\.(txt|md|json|csv|tsv)$/i.test(file.name)) { try { att.text = new TextDecoder("utf-8").decode(bytes); } catch (e) {} }
+      setAttached(att);
+    };
+    r.readAsArrayBuffer(file);
   };
   // A photo is shrunk to at most 1280 px before it is used: the model sees
   // the same detail (it reads photos at about this size anyway), it reaches
@@ -636,6 +680,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         {messages.map((m, idx) => m.role === "user" ? (
           <div key={m.id} className="flex flex-col items-end">
             {m.image ? <img src={m.image} alt="" className="max-w-[70%] max-h-56 rounded-2xl mb-1.5 border border-slate-800 object-cover" /> : null}
+            {m.file ? <span className="mb-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[12px] text-slate-200"><FileText size={13} className="text-teal-300" />{m.file}</span> : null}
             {m.text ? <div dir="auto" className="max-w-[85%] bg-teal-600/25 border border-teal-800/60 text-slate-100 rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[15px] whitespace-pre-wrap leading-relaxed">{m.text}</div> : null}
             {!busy ? <button onClick={() => editFrom(idx)} className="mt-1 text-[11px] text-slate-500 flex items-center gap-1 px-1"><PenLine size={11} /> {tr("Edit")}</button> : null}
           </div>
@@ -700,12 +745,43 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 {openThought["v" + m.id] ? <Md text={"```python\n" + m.verified.code + "\n```\n\n" + tr("It printed:") + "\n```\n" + String(m.verified.output || "").trim() + "\n```"} /> : null}
               </div>
             ) : null}
+            {m.reasoned ? (
+              <p className="mt-1.5 text-[11px] text-emerald-300 flex items-center gap-1" data-testid="reasoned"><CheckCircle2 size={12} />
+                {m.reasoned.checked === "corrected" ? tr("Checked — the reviewer fixed a mistake") : m.reasoned.checked === "judged" ? tr("{n} tries disagreed — weighed and checked", { n: m.reasoned.total })
+                  : tr("{v} of {n} tries agreed · checked", { v: m.reasoned.votes, n: m.reasoned.total })}</p>
+            ) : null}
+            {m.computed ? (
+              <div className="mt-1.5 text-[11px]" data-testid="computed">
+                <button onClick={() => setOpenThought((o) => ({ ...o, ["c" + m.id]: !o["c" + m.id] }))} className="text-emerald-300 flex items-center gap-1">
+                  <CheckCircle2 size={12} />{tr("Computed from {f} on this phone", { f: m.computed.file })} <ChevronDown size={11} className={openThought["c" + m.id] ? "rotate-180" : ""} /></button>
+                {openThought["c" + m.id] ? <Md text={"```python\n" + m.computed.code + "\n```\n\n" + tr("It printed:") + "\n```\n" + String(m.computed.output || "").trim() + "\n```"} /> : null}
+              </div>
+            ) : null}
+            {m.fileNote ? <p className="mt-1 text-[11px] text-amber-300">{tr(m.fileNote)}</p> : null}
+            {m.learnedUsed ? <p className="mt-1 text-[11px] text-sky-300" data-testid="learned-used">{tr("Used {n} of your corrections", { n: m.learnedUsed })}</p> : null}
             {m.codeCheck ? (
               <p className={`mt-1.5 text-[11px] flex items-center gap-1 ${m.codeCheck.ok ? "text-emerald-300" : "text-amber-300"}`} data-testid="code-check">
                 <CheckCircle2 size={12} />{m.codeCheck.ok ? (m.codeCheck.tests ? tr("Tested on this phone: {n} passed", { n: m.codeCheck.tests }) : tr("Ran on this phone")) : tr("Not passing yet")}
                 {m.codeCheck.rounds ? " · " + tr("fixed {n}×", { n: m.codeCheck.rounds }) : ""}</p>
             ) : null}
             {m.error ? <p className="text-sm text-amber-300/90 mt-1">{m.error}</p> : null}
+            {teaching && teaching.id === m.id ? (
+              <div className="mt-2 rounded-xl border border-sky-900 bg-sky-500/5 p-3" data-testid="teach-form">
+                <p className="text-[12px] text-sky-200">{tr("What should it have said? Chat will answer this way next time you ask something like it.")}</p>
+                <textarea value={teaching.corrected} onChange={(e) => setTeaching({ ...teaching, corrected: e.target.value })} rows={3} dir="auto" data-testid="teach-right"
+                  placeholder={tr("The right answer")} className="w-full mt-2 bg-slate-950 border border-slate-800 rounded-lg p-2 text-sm text-slate-100 placeholder-slate-600" />
+                <input value={teaching.note} onChange={(e) => setTeaching({ ...teaching, note: e.target.value })} dir="auto" data-testid="teach-why"
+                  placeholder={tr("Why (optional) — e.g. “the marble falls out when the glass is turned over”")} className="w-full mt-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-[13px] text-slate-100 placeholder-slate-600" />
+                <div className="flex gap-2 mt-2">
+                  <button disabled={!teaching.corrected.trim()} data-testid="teach-save" className="px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 text-xs font-semibold disabled:opacity-40"
+                    onClick={() => { const u = messages[idx - 1];
+                      const ok = api.teach({ input: (u && u.text) || "", was: m.text, corrected: teaching.corrected.trim(), note: teaching.note.trim() });
+                      if (ok) { patchMsg(chat.id, m.id, { taught: true }); api.flash(tr("Learned — Chat will use this on similar questions")); } else api.flash(tr("That is the same as the answer — nothing to learn"));
+                      setTeaching(null); }}>{tr("Teach it")}</button>
+                  <button onClick={() => setTeaching(null)} className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 text-xs">{tr("Cancel")}</button>
+                </div>
+              </div>
+            ) : null}
             {m.sources && m.sources.length ? (
               <div className="mt-2 space-y-1">
                 <p className="text-[11px] text-slate-500">{tr("Sources")}{m.via ? " · via " + m.via : ""}</p>
@@ -719,6 +795,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 <button onClick={() => speak(m)} className={`p-2 ${speakingId === m.id ? "text-teal-300" : ""}`} title={tr("Read aloud")}><Volume2 size={15} /></button>
                 <button onClick={() => share(m)} className="p-2" title={tr("Share")}><Share2 size={15} /></button>
                 <button onClick={() => { api.remember({ kind: "note", title: m.text.slice(0, 60), text: m.text, output: "", tags: ["saved"] }); api.flash(tr("Saved to Memory")); }} className="p-2" title={tr("Save to Memory")}><Save size={15} /></button>
+                {api.teach ? <button onClick={() => setTeaching(teaching && teaching.id === m.id ? null : { id: m.id, corrected: "", note: "" })} data-testid="teach"
+                  className={`p-2 ${m.taught ? "text-sky-300" : ""}`} title={tr("Wrong? Teach the right answer")}><ThumbsDown size={15} /></button> : null}
                 {m.stats && m.stats.tps ? <span className="text-[10px] text-slate-600 ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}
                 {m.stats && m.stats.looped ? <span className="text-[10px] text-amber-400/80 ms-1" data-testid="loop-note">{tr("stopped a repeat")}</span> : null}
                 {m.stats && m.stats.tps != null && m.stats.tps < 3 && api.openSpeed ? (
@@ -754,6 +832,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       <div className={`fixed start-0 end-0 ${typing ? "z-[60]" : "z-40"} px-3 pb-2 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent`} data-testid="composer"
         style={{ bottom: typing ? "env(safe-area-inset-bottom)" : "calc(58px + env(safe-area-inset-bottom))" }}>
         <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-xl">
+          {attached ? (
+            <div className="inline-flex items-center gap-1.5 mb-2 ms-1 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-[12px] text-slate-200" data-testid="attached">
+              <FileText size={13} className="text-teal-300" /><span className="max-w-[200px] truncate">{attached.name}</span>
+              <button onClick={() => setAttached(null)} className="text-slate-400"><X size={12} /></button>
+            </div>
+          ) : null}
           {image ? (
             <div className="relative inline-block mb-2 ms-1">
               <img src={image.url} alt="" className="h-16 rounded-lg border border-slate-700" />
@@ -772,6 +856,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             <label className="p-2 rounded-full text-slate-400 active:bg-slate-800" title={tr("Photo")}>
               <ImagePlus size={19} />
               <input type="file" accept="image/*" className="hidden" onChange={(e) => { pickImage(e.target.files && e.target.files[0]); e.target.value = ""; }} />
+            </label>
+            <label className="p-2 rounded-full text-slate-400 active:bg-slate-800" title={tr("Spreadsheet or document")}>
+              <Paperclip size={18} />
+              <input type="file" accept=".csv,.tsv,.xlsx,.xlsm,.xls,.json,.txt,.md" className="hidden" data-testid="attach-file" onChange={(e) => { pickFile(e.target.files && e.target.files[0]); e.target.value = ""; }} />
             </label>
             <button onClick={() => setThink((v) => !v)} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${think ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Think first")}>
               <Brain size={14} /> {tr("Think")}</button>

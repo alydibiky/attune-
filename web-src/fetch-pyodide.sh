@@ -47,6 +47,24 @@ lock["packages"] = {n: P[n] for n in sorted(want)}
 (out / "pyodide-lock.json").write_text(json.dumps(lock))
 for f in ["pyodide.mjs", "pyodide.asm.mjs", "pyodide.asm.wasm", "python_stdlib.zip"]:
     shutil.copy(src / f, out / f)
+# Excel files: openpyxl (MIT) and et_xmlfile are pure Python but not part of
+# Pyodide; they come from PyPI, pinned and checksum-checked, and are added to
+# the package list so pandas.read_excel / import openpyxl just work.
+EXTRA = [("openpyxl", "3.1.5", "openpyxl-3.1.5-py2.py3-none-any.whl", "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2", ["et-xmlfile"], ["openpyxl"]),
+         ("et-xmlfile", "2.0.0", "et_xmlfile-2.0.0-py3-none-any.whl", "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa", [], ["et_xmlfile"])]
+import os, urllib.request, subprocess
+cache = src.parent
+for name, v, fn, sha, deps, imports in EXTRA:
+    f = cache / fn
+    if not f.exists():
+        subprocess.run([sys.executable, "-m", "pip", "download", "--quiet", "--no-deps", "--only-binary=:all:", "-d", str(cache), f"{name.replace('-', '_')}=={v}"], check=True)
+    data = f.read_bytes()
+    if hashlib.sha256(data).hexdigest() != sha: raise SystemExit(f"checksum mismatch: {fn}")
+    (out / fn).write_bytes(data)
+    lock["packages"][name] = {"name": name, "version": v, "file_name": fn, "install_dir": "site", "sha256": sha, "package_type": "package",
+                              "imports": imports, "depends": deps, "unvendored_tests": False, "tool": {}}
+    want.add(name)
+(out / "pyodide-lock.json").write_text(json.dumps(lock))
 (out / "VERSION").write_text(ver + "\n" + " ".join(sorted(want)) + "\n")
 size = sum(p.stat().st_size for p in out.iterdir())
 print(f"Python {lock['info']['python']} (Pyodide {ver}) with {', '.join(sorted(want))}: {size/1e6:.1f} MB -> {out}")

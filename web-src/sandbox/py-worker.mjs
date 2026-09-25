@@ -37,7 +37,7 @@ ready.then((ms) => self.postMessage({ type: "ready", ms: Math.round(ms), version
            (e) => self.postMessage({ type: "ready", error: String((e && e.message) || e) }));
 
 self.onmessage = async (e) => {
-  const { id, code, stdin } = e.data || {};
+  const { id, code, stdin, files } = e.data || {};
   try { await ready; } catch (x) { self.postMessage({ id, ok: false, error: "Python could not start: " + String((x && x.message) || x) }); return; }
   out = []; err = []; size = 0;
   const lines = String(stdin || "").split("\n"); let li = 0;
@@ -45,8 +45,16 @@ self.onmessage = async (e) => {
   const t0 = performance.now();
   let ns;
   try {
-    // numpy / pandas / sympy load on first import, from the app's own files.
+    // Files the person attached (a spreadsheet, a CSV…) are put in the
+    // program's folder, so it can simply open("sales.xlsx").
+    for (const f of files || []) {
+      const bin = Uint8Array.from(atob(f.b64), (c) => c.charCodeAt(0));
+      py.FS.writeFile("/work/" + String(f.name).replace(/[\/]/g, "_"), bin);
+    }
+    // numpy / pandas / sympy load on first import, from the app's own files;
+    // pandas needs openpyxl for .xlsx without importing it by name.
     await py.loadPackagesFromImports(code, { messageCallback: () => {}, errorCallback: (m) => err.push(m) });
+    if (/read_excel|\.xlsx|openpyxl/.test(code)) await py.loadPackage(["openpyxl"], { messageCallback: () => {}, errorCallback: (m) => err.push(m) });
     ns = py.globals.get("dict")();
     await py.runPythonAsync(code, { globals: ns, filename: "main.py" });
     self.postMessage({ id, ok: true, stdout: out.join("\n"), stderr: err.join("\n"), ms: Math.round(performance.now() - t0) });

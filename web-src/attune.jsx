@@ -19,6 +19,7 @@ import { CodeWorkbench } from "./code-ui.jsx";
 import { StudioPage } from "./studio-ui.jsx";
 import { detectLoop, trimLoop } from "./quality.js";
 import { verifyMath } from "./verify.js";
+import { reasonVote, analyzeFile } from "./reason.js";
 import { workLoop, guessLang } from "./code.js";
 import { runCode, runHtml, pythonAvailable } from "./sandbox.js";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
@@ -7880,6 +7881,20 @@ export default function App() {
     },
     prefersArabic: () => ((profile && profile.speaks) || []).some((x) => /Arabic/.test(x)),
     openSpeed: () => setShowEngine(true),
+    // ---- learning from corrections, in Chat ----
+    learnFor: (q) => { const shots = learnFor(q, "chat"); return { n: shots.length, block: learnBlock(shots) }; },
+    teach: (entry) => teachCorrection({ ...entry, kind: "chat", lang: /[؀-ۿ]/.test(entry.input || "") ? "ar" : "en" }),
+    // ---- several tries + a strict check (reason.js) ----
+    reasonVote: (question, history, { onStep, onToken } = {}) => {
+      const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature, think: false, onToken: o.onToken });
+      return reasonVote({ question, history, llm, onStep: (x) => onStep && onStep(tr(x)), onToken });
+    },
+    // ---- a question about an attached spreadsheet, computed on the file ----
+    analyzeFile: async (question, file, { onStep, onToken } = {}) => {
+      if (!(await pythonAvailable())) return { ok: false, why: "Python is not in this build, so the file can't be computed on." };
+      const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken });
+      return analyzeFile({ question, file, llm, runPy: (code, files) => runCode({ lang: "python", code, files, timeoutMs: 45000 }), onStep: (x) => onStep && onStep(tr(x)), onToken });
+    },
     // ---- verified answers (verify.js, code.js) ----
     verifyMath: async (question, { onStep, onToken } = {}) => {
       if (!(await pythonAvailable())) return { ok: false, why: "no python" };

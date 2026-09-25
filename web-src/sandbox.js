@@ -71,7 +71,7 @@ export async function pythonAvailable() {
 
 export function stop(lang) { if (lang) kill(lang); else Object.keys(workers).forEach(kill); }
 
-export async function runCode({ lang, code, stdin = "", timeoutMs }) {
+export async function runCode({ lang, code, stdin = "", timeoutMs, files }) {
   lang = normLang(lang) || "python";
   if (lang === "html") return { ok: false, lang, error: "A web page is shown in the preview, not run here." };
   const limit = timeoutMs || (lang === "python" ? 20000 : 8000);
@@ -90,7 +90,7 @@ export async function runCode({ lang, code, stdin = "", timeoutMs }) {
       resolve({ ok: false, lang, timedOut: true, error: `Stopped after ${Math.round(limit / 1000)} s — the program did not finish (an endless loop?).`, ms: limit });
     }, limit);
     x.calls.set(id, (d) => { clearTimeout(timer); resolve({ ...d, lang }); });
-    x.w.postMessage({ id, code, stdin });
+    x.w.postMessage({ id, code, stdin, files: files || [] });
   });
 }
 
