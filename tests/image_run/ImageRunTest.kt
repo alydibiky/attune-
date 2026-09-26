@@ -20,6 +20,7 @@ fun main(args: Array<String>) {
         p = ImageRun.advance(p, piece)
     check(p.stage == "develop", "stages follow the log: load → prompt → draw → develop (now ${p.stage})")
     check(ImageRun.advance(ImageRun.Progress("draw"), "|=====>    | 3/4 - 9.00s/it") == ImageRun.Progress("draw", 3, 4), "drawing reports step 3 of 4")
+    check(ImageRun.advance(ImageRun.Progress("load", 700, 702), "|##################################################| 702/702 - 250MB/s").stage == "prompt", "a finished loading bar moves on to reading the description (not 'Loading… 100%' for minutes)")
     check(ImageRun.gpuDevice("CPU\tIntel Xeon\nGPUOpenCL\tQUALCOMM Adreno(TM) 840\n") == "GPUOpenCL", "the Adreno device is picked from --list-devices")
     check(ImageRun.gpuDevice("CPU\tIntel Xeon\n") == null, "no GPU → null (CPU binary used)")
     val g = ImageRun.genArgs("/bin/sd", ImageRun.Files("/m/d.gguf", "/m/q.gguf", "/m/v.st"), "a crane at dusk", "/o.png", 1024, 1024, 4, 7, 6, "diffusion=GPUOpenCL,vae=GPUOpenCL,te=cpu", "/r.png", lowMemory = true)

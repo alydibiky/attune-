@@ -106,18 +106,31 @@ object ImageEngine {
         return if (gpu) mapOf("LD_LIBRARY_PATH" to "/vendor/lib64:/system/vendor/lib64:$lib") else mapOf("LD_LIBRARY_PATH" to lib)
     }
 
-    /** The GPU device name, asked once from the GPU program itself. */
-    private fun gpuDevice(ctx: Context): String? {
+    /**
+     * The GPU device name, asked from the GPU program itself.
+     * v5.14: the first OpenCL start on a new Adreno compiles its kernels and can
+     * take well over the old 20 s — Studio then wrongly decided "the GPU driver
+     * did not answer" and drew on the CPU (minutes per picture). Now it waits up
+     * to 120 s, says what it is doing, and a timeout is NOT remembered: the next
+     * picture tries the GPU again. Only a definite "no GPU device" is kept.
+     */
+    private fun gpuDevice(ctx: Context, onProgress: (ImageRun.Progress) -> Unit): String? {
         if (gpuChecked) return gpuName
-        gpuChecked = true
-        if (!gpuBuilt(ctx)) return null
+        if (!gpuBuilt(ctx)) { gpuChecked = true; return null }
+        onProgress(ImageRun.Progress("gpu"))
+        var timedOut = false
         gpuName = try {
             val p = ProcessBuilder(bin(ctx, true).path, "--list-devices").redirectErrorStream(true)
                 .also { it.environment().putAll(env(ctx, true)) }.start()
-            val out = p.inputStream.bufferedReader().readText()
-            if (!p.waitFor(20, java.util.concurrent.TimeUnit.SECONDS)) { p.destroyForcibly(); null } else ImageRun.gpuDevice(out)
+            val sb = StringBuilder()
+            val reader = Thread { try { sb.append(p.inputStream.bufferedReader().readText()) } catch (e: Exception) {} }.apply { isDaemon = true; start() }
+            if (!p.waitFor(120, java.util.concurrent.TimeUnit.SECONDS)) { timedOut = true; p.destroyForcibly(); null }
+            else { reader.join(2000); ImageRun.gpuDevice(sb.toString()) }
         } catch (e: Exception) { null }
-        if (gpuName == null && !cpuOnly(ctx)) setNote(ctx, "This phone's GPU driver did not answer, so pictures are drawn on the CPU (slower).")
+        gpuChecked = gpuName != null || !timedOut
+        if (gpuName == null && !cpuOnly(ctx)) setNote(ctx, if (timedOut)
+            "The graphics chip took too long to start this time, so this picture is drawn on the CPU (slower). Studio will try the graphics chip again next time."
+            else "This phone's GPU driver did not answer, so pictures are drawn on the CPU (slower).")
         return gpuName
     }
 
@@ -132,7 +145,7 @@ object ImageEngine {
     private fun runWithFallback(ctx: Context, out: File, argsFor: (bin: String, backend: String?) -> List<String>,
                                 onProgress: (ImageRun.Progress) -> Unit, register: (ImageRun.Job?) -> Unit,
                                 valid: (File) -> Boolean = { it.exists() && it.length() > 0 }): String {
-        val dev = if (!cpuOnly(ctx)) gpuDevice(ctx) else null
+        val dev = if (!cpuOnly(ctx)) gpuDevice(ctx, onProgress) else null
         if (dev != null) {
             val job = ImageRun.Job(argsFor(bin(ctx, true).path, "diffusion=$dev,vae=$dev,upscaler=$dev,te=cpu"), env(ctx, true), ctx.cacheDir)
             register(job)
@@ -166,9 +179,24 @@ object ImageEngine {
         }
         val job = ImageRun.Job(argsFor(bin(ctx, false).path, "cpu"), env(ctx, false), ctx.cacheDir)
         register(job)
+        // v5.14: the CPU run had no watchdog — a run that truly stops making
+        // progress now ends with a clear message instead of spinning forever.
+        // (One CPU drawing step can take minutes, so the limit is generous.)
+        val stuck = java.util.concurrent.atomic.AtomicBoolean(false)
+        val dog = Thread {
+            try {
+                while (true) {
+                    Thread.sleep(5000)
+                    if (job.cancelled || job.aborted) break
+                    if (System.currentTimeMillis() - job.lastOutputAt > 20 * 60_000L) { stuck.set(true); job.abort(); break }
+                }
+            } catch (e: InterruptedException) {}
+        }.apply { isDaemon = true; start() }
         val code = try { job.run(onProgress) } catch (e: Exception) { -1 }
+        dog.interrupt()
         register(null)
         if (job.cancelled) throw IOException("Stopped")
+        if (stuck.get()) { out.delete(); throw IOException("The picture engine made no progress for 20 minutes on the CPU and was stopped. Try a smaller size, or close other apps and try again.") }
         if (code != 0 || !valid(out)) { out.delete(); throw IOException("The picture could not be made. " + job.lastError()) }
         lastBackend = "CPU"
         return "CPU"
@@ -205,7 +233,11 @@ object ImageEngine {
             val h = a.optInt("height", 1024).coerceIn(256, 2048) / 16 * 16
             val seed = if (a.has("seed")) a.getLong("seed") else (System.nanoTime() % 1_000_000_000L)
             val backend = runWithFallback(ctx, out, { b, be ->
-                ImageRun.genArgs(b, files, a.getString("prompt"), out.path, w, h, a.optInt("steps", 4).coerceIn(1, 50), seed,
+                // On the CPU, a picture over 768 px on its long side is drawn at
+                // 768: ~45% of the work of 1024 px, minutes instead of a quarter hour. (v5.14)
+                val k = if (be == "cpu" && maxOf(w, h) > 768) 768.0 / maxOf(w, h) else 1.0
+                val cw = ((w * k).toInt() / 16 * 16).coerceAtLeast(256); val ch = ((h * k).toInt() / 16 * 16).coerceAtLeast(256)
+                ImageRun.genArgs(b, files, a.getString("prompt"), out.path, cw, ch, a.optInt("steps", 4).coerceIn(1, 50), seed,
                     threads(), be, ref?.path, a.optDouble("cfg", 1.0), lowMem)
             }, onProgress, register)
             return Result(out, backend, System.currentTimeMillis() - t0, paused, seed)

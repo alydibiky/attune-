@@ -44,6 +44,10 @@ object ImageRun {
         if (bar != null) {
             val (n, total, kind) = bar
             return when {
+                // v5.14: a finished loading bar means the model is in memory and
+                // the engine has moved on to reading the description — say so,
+                // instead of "Loading… 100%" for the minutes that follow.
+                kind == '#' && p.stage != "upscale" && total > 0 && n >= total -> Progress("prompt")
                 kind == '#' -> if (p.stage == "upscale") p.copy(step = n, total = total) else Progress("load", n, total)
                 p.stage == "upscale" -> p.copy(step = n, total = total)
                 p.stage == "develop" -> p.copy(step = n, total = total)

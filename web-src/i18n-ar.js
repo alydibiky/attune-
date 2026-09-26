@@ -1931,4 +1931,6 @@ export const AR = {
   "Invoices, VAT, zakat, statements — worked out exactly": "فواتير وضريبة وزكاة وقوائم — محسوبة بدقة",
   "Emails, reports and posts in English or Arabic": "رسائل وتقارير ومنشورات بالعربية أو الإنجليزية",
   "Understanding the question…": "أفهم السؤال…",
+  "Waking the graphics chip (the first time can take a minute)…": "تشغيل شريحة الرسوميات (أول مرة قد تستغرق دقيقة)…",
+  "Still working — nothing is stuck. On the CPU a picture takes about 3–10 minutes (edits are slower than new pictures). Keep Attune open; Stop cancels it.": "ما زال يعمل — لا شيء متوقف. على المعالج تستغرق الصورة من 3 إلى 10 دقائق تقريبًا (التعديل أبطأ من الصورة الجديدة). اترك التطبيق مفتوحًا؛ زر الإيقاف يلغيها.",
 };

@@ -6,6 +6,7 @@ import { tr } from "./i18n.js";
 import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, drawPack, loadStudio, saveStudio } from "./studio.js";
 
 const STAGE = {
+  gpu: "Waking the graphics chip (the first time can take a minute)…",
   start: "Starting the picture engine…", load: "Loading the picture model…", prompt: "Reading your description…",
   draw: "Drawing", develop: "Developing the picture…", save: "Saving…", upscale: "Sharpening ×4",
 };
@@ -213,6 +214,10 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
           )}
           {busy ? <span className="text-[12px] text-violet-200 flex items-center gap-1.5 min-w-0" data-testid="studio-progress"><Loader2 size={13} className="animate-spin shrink-0" /><span className="truncate">{stageText}</span><span className="text-slate-500 shrink-0">· {secs(now - busy.t0)}</span></span> : null}
         </div>
+        {busy && busy.what === "draw" && now - busy.t0 > 90000 && busy.stage !== "draw" ? (
+          <p className="text-[11px] text-slate-400 mt-2 leading-relaxed" data-testid="studio-slow-note">
+            {tr("Still working — nothing is stuck. On the CPU a picture takes about 3–10 minutes (edits are slower than new pictures). Keep Attune open; Stop cancels it.")}</p>
+        ) : null}
         {busy && busy.total ? <div className="h-1 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-violet-500 transition-all" style={{ width: Math.round(busy.step * 100 / busy.total) + "%" }} /></div> : null}
         {err ? <p className="text-[12px] text-rose-300 mt-2 flex items-start gap-1.5" data-testid="studio-error"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{err}</p> : null}
         {prompt && mode === "create" ? <p className="text-[11px] text-slate-500 mt-2 leading-relaxed" dir="ltr" data-testid="studio-prompt">{prompt}</p> : null}
