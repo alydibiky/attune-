@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.23**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.24**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.23**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.23** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.24** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -257,6 +257,12 @@ Ali asked for code that makes the models stronger. Weights can't change on the p
 - **Expert + Master only**: `EXPERT_RULES` added to the system prompt (edge cases, name the standard — EN 13000, Egyptian VAT, IFRS — full calculations with units, professional deliverable structure, assumptions/risks), and Think switches itself on for reasoning/maths questions (`thinkHard`). Small models don't get these — they get confused by long instructions.
 - **Web search closer to Gemini** (Ali: "extremely detailed and accurate, close to Gemini") — `research.js` v5.23 part + chat.jsx web branch: (1) **plan**: `planMessages(question, n)` → `parsePlan` = the user's search + n−1 searches from other angles (specs, prices, reviews, latest news, comparisons), n = level's `queries` (1…5) — only for detail-hungry questions (`pagesFor` = 8); a quick question stays ONE search; (2) each search `api.webPages(q, per)`; `mergeHits` takes pages in turn from each search, no URL twice, **max 2 pages per site**, `sourceScore` moves official/brand/.gov/well-known sites up and social media/Q&A/video last; read cap = level's `readPages` (4…12); (3) gap-filling **rounds** (0…2) of `missingMessages` → new search → read; time budget `researchSecs` (120…420 s); (4) `crossCheck` marks note lines whose figure another site also gives "(also in [n])" and counts them; (5) `REPORT_ADD`: direct 2–3 line answer, `##` sections, tables, a source after every fact, "Where sources differ", "Not found in the sources"; the report gets the level's `longTokens`. Sources line: "N searches · C facts confirmed by 2+ sites". Test queues: the plan answer comes FIRST (before the page notes) when the level plans >1 search and the question is detail-hungry.
 - Version 5.23. Tests: `unit/v523.test.mjs`. e2e_v519 extended (plan, several searches, report).
+
+### 5.11 v5.24 — "make the stronger models REALLY strong"
+- Instructions alone don't make a model stronger; more work per answer does. Expert + Master levels (Harmony … Maestro, all with a 32k+ window) get, via `power.js` profiles:
+  - **Review pass** (`review: true`): after a plain model answer (not verified/computed/voted/code/web/photo/file) that `worthReview` (question ≥ 25 chars, draft ≥ 500 chars, not hi/thanks), the model gets `reviewMessages` (REVIEW_SYS: senior expert reviewer — recompute numbers, fix mistakes, add missing points/edge cases; reply `PROBLEMS:` + `FINAL ANSWER:`). `pickReviewed` keeps the draft when there is no FINAL ANSWER or the rewrite is < 60 % of the draft; Stop during the review keeps the draft. The draft stays on screen until the rewrite is half written. Badge "Reviewed by an expert pass · N improvements" (tap → the list). Status "Reviewing the answer like a senior expert…".
+  - `thinkBudget` 3072 / 4096 (was 1024–1536), `votes` 5 in reasonVote (was 3), `codeRounds` 5 / 6 (chat code tasks + Code workbench), `historyChars` 20k / 30k (buildMessages budget, still ≤ (ctx − 4300) × 2), `fileChars` 40k / 60k (capped by the window, never below the old 14k).
+- Tests: `unit/v524.test.mjs`, `e2e_v524.py` (RAM override 16 GB → install Harmony → draft + review → improved answer and badge; broken review keeps the draft; "hi" isn't reviewed). NB a test draft must not repeat one sentence — the anti-repeat guard trims it below the review threshold.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

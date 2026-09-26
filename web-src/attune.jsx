@@ -1327,7 +1327,7 @@ const LocalEngine = {
     // A phone writes maybe 10-25 words a second. An unbounded think can run
     // for minutes before the first word of the answer, which looks exactly
     // like a hang. So the reasoning gets a budget, and the answer its own.
-    const thinkBudget = o.thinkBudget || (ENGINE_PREFS.longAnswers ? 1536 : 1024);
+    const thinkBudget = o.thinkBudget || Math.max(getPower().thinkBudget || 1024, ENGINE_PREFS.longAnswers ? 1536 : 1024);   // v5.24: strong models think longer
     const body = {
       model: (BACKEND() && BACKEND().localModel) || "local",
       messages,
@@ -6555,7 +6555,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.23";
+const PAGE_VERSION = "5.24";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -7972,7 +7972,7 @@ export default function App() {
     // ---- several tries + a strict check (reason.js) ----
     reasonVote: (question, history, { onStep, onToken } = {}) => {
       const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature, think: false, onToken: o.onToken });
-      return reasonVote({ question, history, llm, onStep: (x) => onStep && onStep(tr(x)), onToken });
+      return reasonVote({ question, history, llm, n: getPower().votes || 3, onStep: (x) => onStep && onStep(tr(x)), onToken });
     },
     // ---- a question about an attached spreadsheet, computed on the file ----
     analyzeFile: async (question, file, { onStep, onToken } = {}) => {
@@ -7991,7 +7991,7 @@ export default function App() {
       if (lang === "python" && !(await pythonAvailable())) return null;
       const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken });
       const say = { write: "Writing the program and its tests…", run: "Running it on this phone…", fix: "Sending the error back — fixing…" };
-      return workLoop({ task, lang, llm, run: (l, code) => (l === "html" ? runHtml(code) : runCode({ lang: l, code })), maxRounds: 3,
+      return workLoop({ task, lang, llm, run: (l, code) => (l === "html" ? runHtml(code) : runCode({ lang: l, code })), maxRounds: getPower().codeRounds || 3,
         onEvent: (e) => { if (say[e.type] && onStep) onStep(tr(say[e.type])); if ((e.type === "writing" || e.type === "fixing") && onToken) onToken(e.text || ""); } });
     },
     // ---- reminders & phone actions (see actions.js) ----

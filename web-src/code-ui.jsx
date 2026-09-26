@@ -5,6 +5,7 @@ import { Code2, Play, Wrench, Terminal, Loader2, Copy, Save, Share2, Square, Che
 import { tr } from "./i18n.js";
 import { runCode, runHtml, htmlDoc, warmUp, pythonAvailable, stop as stopSandbox, LANGS, normLang } from "./sandbox.js";
 import { workLoop, guessLang, countTests, judge, errorSummary, loadProjects, saveProjects, PASS_MARK } from "./code.js";
+import { getPower } from "./power.js";
 
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const runAny = (lang, code) => (lang === "html" ? runHtml(code) : runCode({ lang, code }));
@@ -147,7 +148,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
     setBusy(true); setSteps([]); setRes(null); setLive(""); stopRef.current = false; setPageErrors([]);
     try {
       const out = await workLoop({ task: t || tr("Make this program work correctly."), lang, code: fresh ? "" : cur.code, change: changeText || "",
-        llm: llmOr, run: runAny, onEvent, isStopped: () => stopRef.current, maxRounds: 4 });
+        llm: llmOr, run: runAny, onEvent, isStopped: () => stopRef.current, maxRounds: Math.max(4, getPower().codeRounds || 4) });
       const p = { ...base, code: out.code, lang: out.lang, status: out.ok ? "passed" : "failing", tests: out.tests, rounds: out.rounds, at: Date.now() };
       keep(p); setRes(out.last);
       if (changeText) setChange("");

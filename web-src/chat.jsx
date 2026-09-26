@@ -17,7 +17,7 @@ import { looksLikeReasoning, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD } from "./research.js";
-import { EXPERT_RULES } from "./power.js";
+import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed } from "./power.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
   Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2,
@@ -505,7 +505,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // 8K window), newest first, so a long chat never overflows the model's
     // memory — the oldest turns simply drop out of what it sees.
     const ctx = (api.contextTokens && api.contextTokens()) || 8192;
-    const budget = maxHistoryChars == null ? Math.max(1500, Math.min(9000, (ctx - 4300) * 2)) : maxHistoryChars;   // (room left for a full-page answer)
+    const budget = maxHistoryChars == null ? Math.max(1500, Math.min((api.power && api.power().historyChars) || 9000, (ctx - 4300) * 2)) : maxHistoryChars;   // v5.24: strong models remember more   // (room left for a full-page answer)
     const kept = [];
     let used = 0;
     for (let i = pairs.length - 2; i >= 0 && kept.length < 20; i -= 2) {
@@ -783,7 +783,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
       } else if (fileAtt && fileAtt.text != null) {
-        content = `The user attached the file "${fileAtt.name}":\n<<<\n${fileAtt.text.slice(0, 14000)}\n>>>\n\n${q}`;
+        content = `The user attached the file "${fileAtt.name}":\n<<<\n${fileAtt.text.slice(0, (api.power && api.power().fileChars) || 14000)}\n>>>\n\n${q}`;
       }
       // Corrections the user taught before, on questions like this one.
       const shots = !fileAtt && api.learnFor ? api.learnFor(q) : null;
@@ -847,6 +847,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       }
       if (o.queuedDuring) content = "(I sent this while you were still writing your last answer. If it adds to or changes that answer, write the complete UPDATED answer with the change included — don't just acknowledge it. If it is a new question, simply answer it.)\n\n" + content;
       content += langHint(typed);
+      const plain = answer == null;   // written by the model directly (not checked by code / votes)
       if (answer == null) try {
         // Copying from sources, a file or project knowledge: no anti-repeat
         // penalties (they mangled copied numbers). (v5.17)
@@ -862,6 +863,26 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         answer = await api.run(buildMessages([], content, 0), pic, { onToken, onStatus, think: useThink });
       }
       if (runRef.current !== run) return;
+      // v5.24 — Expert / Master: the draft is re-read by the model as a senior reviewer,
+      // who recomputes numbers, fixes mistakes, fills gaps and writes the improved answer.
+      // Unusable review (no FINAL ANSWER, much shorter) or Stop → the draft stays. (power.js)
+      const pwA = api.power ? api.power() : null;
+      if (plain && pwA && pwA.review && !useThink && !sources && !pic && !fileAtt && answer && worthReview(typed, answer)) {
+        const draft = answer;
+        try {
+          if (raf) { clearTimeout(raf); raf = null; }
+          patchMsg(cid, aiId, { text: draft, phase: tr("Reviewing the answer like a senior expert…") });
+          const rv = await api.run(reviewMessages(typed, draft), null, { think: false, temperature: 0.3, maxTokens: pwA.longTokens, copy: true, onStatus,
+            onToken: (tx) => { const i = String(tx).search(/FINAL ANSWER\s*:?/i); if (i >= 0) { const t = String(tx).slice(i).replace(/^FINAL ANSWER\s*:?\**\s*/i, ""); if (t.length > draft.length * 0.5) onToken(t, ""); } } });
+          if (runRef.current !== run) return;
+          const got = pickReviewed(rv, draft);
+          if (got) { answer = got.text; extra.reviewed = { problems: got.problems.slice(0, 8) }; }
+          else answer = draft;
+        } catch (e) {
+          if (String(e && e.message) === "Stopped") { if (raf) clearTimeout(raf); patchMsg(cid, aiId, { text: draft, streaming: false, phase: "" }); return; }
+          answer = draft;
+        }
+      }
       // A web answer with a number no source contains ("June 200005"): asked
       // once more, told exactly which numbers were not in the sources.
       if (sources && api.groundedAudit && answer) {
@@ -1196,6 +1217,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               <p className="mt-1.5 text-[11px] text-emerald-300 flex items-center gap-1" data-testid="reasoned"><CheckCircle2 size={12} />
                 {m.reasoned.checked === "corrected" ? tr("Checked — the reviewer fixed a mistake") : m.reasoned.checked === "judged" ? tr("{n} tries disagreed — weighed and checked", { n: m.reasoned.total })
                   : tr("{v} of {n} tries agreed · checked", { v: m.reasoned.votes, n: m.reasoned.total })}</p>
+            ) : null}
+            {m.reviewed ? (
+              <div className="mt-1.5 text-[11px]" data-testid="reviewed">
+                <button onClick={() => setOpenThought((o) => ({ ...o, ["r" + m.id]: !o["r" + m.id] }))} className="text-emerald-300 flex items-center gap-1">
+                  <CheckCircle2 size={12} />{m.reviewed.problems.length ? tr("Reviewed by an expert pass · {n} improvements", { n: m.reviewed.problems.length }) : tr("Reviewed by an expert pass")}
+                  {m.reviewed.problems.length ? <ChevronDown size={11} className={openThought["r" + m.id] ? "rotate-180" : ""} /> : null}</button>
+                {openThought["r" + m.id] && m.reviewed.problems.length ? <ul className="mt-1 ms-4 list-disc text-slate-400">{m.reviewed.problems.map((x, i) => <li key={i}>{x}</li>)}</ul> : null}
+              </div>
             ) : null}
             {m.computed ? (
               <div className="mt-1.5 text-[11px]" data-testid="computed">

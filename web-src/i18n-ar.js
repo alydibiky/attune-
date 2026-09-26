@@ -2031,4 +2031,7 @@ export const AR = {
   "Searching: {q}": "ببحث عن: {q}",
   "{s} searches": "{s} عمليات بحث",
   "{c} facts confirmed by 2+ sites": "{c} معلومة متأكدة من موقعين أو أكتر",
+  "Reviewing the answer like a senior expert…": "براجع الإجابة زي خبير كبير…",
+  "Reviewed by an expert pass": "اتراجعت بمراجعة خبير",
+  "Reviewed by an expert pass · {n} improvements": "اتراجعت بمراجعة خبير · {n} تحسينات",
 };
