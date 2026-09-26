@@ -62,7 +62,10 @@ object FastEngine {
     @Volatile private var current: Conversation? = null
     @Volatile private var currentId: String? = null
 
+    // v5.30: 12 GB+ phones get a 16k window — web research fits many more pages in ONE fast
+    // GPU pass. If the driver refuses it, load() falls back to 8k by itself.
     private fun contextFor(ctx: Context): Int = when {
+        DeviceInfo.ramGB(ctx) >= 12 -> 16384
         DeviceInfo.ramGB(ctx) >= 8 -> 8192
         else -> 4096
     }
@@ -80,10 +83,11 @@ object FastEngine {
         tries += listOf(Try(false, true, false), Try(false, false, false))
         // The GPU kernels are compiled once and kept here, so later starts are quick.
         val cache = File(ctx.cacheDir, "litert").apply { mkdirs() }.absolutePath
-        val nCtx = contextFor(ctx)
+        val want = contextFor(ctx)
+        val sizes = if (want > 8192) listOf(want, 8192) else listOf(want)
         val threads = DeviceInfo.generationThreads(ctx)
         val errors = ArrayList<String>()
-        for (t in tries) {
+        for (t in tries) for (nCtx in sizes) {
             var e: LlmEngine? = null
             try {
                 ExperimentalFlags.enableBenchmark = true          // real speed numbers for every answer
@@ -115,7 +119,7 @@ object FastEngine {
                 return null
             } catch (x: Throwable) {
                 Prefs.setFastTrial(ctx, false)
-                errors += "${if (t.gpu) "GPU" else "CPU"}${if (t.vision) "+photos" else ""}${if (t.mtp == true) "+MTP" else ""}: ${x.message ?: x.javaClass.simpleName}".take(240)
+                errors += "${if (t.gpu) "GPU" else "CPU"}${if (t.vision) "+photos" else ""}${if (t.mtp == true) "+MTP" else ""} ${nCtx / 1024}k: ${x.message ?: x.javaClass.simpleName}".take(240)
                 try { e?.close() } catch (y: Throwable) {}
             }
         }

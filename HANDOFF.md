@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.29**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.30**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.29**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.29** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.30** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -299,6 +299,13 @@ All in `boost.js` (pure, `unit/v526.test.mjs`, `e2e_v526.py`):
 - **UI/UX**: the footer line hidden on Chat (it showed half behind the composer); More: tools first, "Appearance" (language, text size, colours) at the bottom; brighter tile descriptions; home status strip (model · level, "★ Pro trial · N days left" → Plan); follow-up chips fade at the end (left in RTL).
 - **Fixes**: auto-continue sizes the tail by the answer's real chars/token (dense text overflowed: 5,165 tokens in a 4,096 window) and keeps the answer if a continuation fails. Test engine now runs the 16k window the mocks report.
 - Tests: unit v529 (tips + billing incl. signed codes), e2e v529 (tips reach the model, Plan screen, no free unlock, fake code rejected).
+
+### 5.17 v5.30 — "web search as close, fast and accurate as Gemini" + "runs on the GPU"
+- **Why it took 5 minutes**: deep research (v5.20/v5.23) made the model WRITE notes for every page (≈ 700 tokens × up to 9 pages) — output is the slow part on a phone, even on the GPU. Reading is fast (the fast engine reads thousands of tokens a second).
+- **FAST research is now the default** (research.js v5.30 + chat.jsx web branch): `expandQueries(query, n)` (code, no model: the user's search + one per facet — specifications / price YEAR / trims / review / latest news / each side of "A vs B"; Arabic facets for Arabic; `topicOf` strips filler and facet words, keeps "1100-5.2") → all searches **in parallel** (`Promise.all` over `api.webPages`) → `mergeHits` (max 2 pages a site, quality first) → `api.rankAll(question, pages, { budget: fitChars(ctx, longTokens, 2600, text), perSource })` → `confirmedFigures(ranked)` (number + unit/currency on 2+ sources, shown as written, "FIGURES CONFIRMED BY 2+ SOURCES" block) → ONE model pass (`groundedPrompt + figures + FAST_REPORT_ADD` for detail questions). `groundedAudit` still re-asks for numbers not in the sources. Detail questions get ≥ 3 parallel searches on every level. Footer "read N pages · K searches · C facts confirmed".
+- **DEEP (page-by-page notes)** only when `wantsDeep(text)` ("deep research", «بحث عميق», «ابحث بعمق»…) or level ≥ 4 on a detail question with Pro/trial; model-planned searches there.
+- **GPU**: chat already runs on the GPU with Flash / Flash+ (LiteRT fast engine). FastEngine now opens a **16k window on 12 GB+ phones** (more pages in the one pass), falling back to 8k per try if the driver refuses (`for (t in tries) for (nCtx in sizes)`). Studio's GPU path is Vulkan (sd.cpp); on Ali's phone `--list-devices` found no GPU → Turbo on the CPU. Ask Ali for Engine → Engine log after a Studio try to see why.
+- Tests: unit v530; e2e_v519 rewritten (fast: ≥ 3 parallel searches, ONE model call, no notes/plan; deep: plan + notes + missing-check + report), e2e_v528 research part on the fast path.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

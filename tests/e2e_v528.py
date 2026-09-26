@@ -42,15 +42,15 @@ with sync_playwright() as p:
     page.evaluate(SEARCH)
     page.locator("button:has-text('Web')").first.click()
     NOTE = "\\n".join("- Lynk & Co 900 trim %d: 845 hp; 1,200 Nm; CNY 369,900; range 1,400 km" % i for i in range(30))
-    page.evaluate("(n) => { const M = window.__mock; M.fakeQueue = ['Lynk & Co 900 specifications\\\\nLynk & Co 900 price', ...Array(12).fill(n), 'NONE', '**Lynk & Co 900** [1]']; M.bodies = []; }", NOTE)
+    page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['**Lynk & Co 900** [1]']; M.bodies = []; }")
     send(page, "Lynk & Co 900 all trims with hp, torque, price and range")
     page.wait_for_selector("button[title='Regenerate']", timeout=120000)
     bs = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2)")
     over = [(round(est(b["messages"])), b["max_tokens"]) for b in bs if est(b["messages"]) + b["max_tokens"] > 4096 * 1.08]
-    check(len(bs) >= 3 and not over, "with a 4k window, no request (%d of them) is bigger than the window%s" % (len(bs), (": " + str(over[:3])) if over else ""))
+    check(len(bs) >= 1 and not over, "with a 4k window, no request (%d of them) is bigger than the window%s" % (len(bs), (": " + str(over[:3])) if over else ""))
     final = bs[-1]
     fin = str(final["messages"][-1]["content"])
-    check("PASSAGES" in fin and fin.count("trim ") < 12 * 30, "the report is written from the notes, cut down to what fits (%d note lines of %d)" % (fin.count("trim "), 12 * 30))
+    check("PASSAGES" in fin and len(fin) < 4096 * 3.4, "the answer is written from the passages that fit the window (%d characters)" % len(fin))
     check("Lynk & Co 900" in page.locator(".att-md").last.inner_text(), "the answer arrives")
 
     page.locator("button:has-text('Web')").first.click()   # web off

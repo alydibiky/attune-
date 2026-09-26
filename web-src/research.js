@@ -185,3 +185,73 @@ export function fitNotes(notes, maxChars) {
     return { ...n, text: lines.filter((l, j) => keep.has(j)).join("\n") };
   }).filter((n) => n.text.trim());
 }
+
+/* ---- v5.30: FAST research — as close to Gemini's speed as a phone can get ------------------
+   Ali: "as close, as fast and as accurate as Gemini". The page-by-page notes (v5.20) made the
+   model WRITE ~700 tokens per page — on a phone that is minutes even on the GPU. Gemini is
+   fast because it reads everything in one pass. So by default:
+     1. the searches are planned by code (no model call) and run AT THE SAME TIME;
+     2. code picks the relevant passages from every page (webrank.js) within the window;
+     3. code cross-checks the figures: a number+unit found on 2+ sites is listed as confirmed;
+     4. ONE model pass reads it all (reading is very fast on the GPU) and writes the answer.
+   The page-by-page deep mode remains for "deep research" / «بحث عميق» and strong models.  */
+
+const FACET_WORDS = /\b(specs?|specifications?|hp|horsepower|torque|power|capacity|range|dimensions?|prices?|costs?|trims?|versions?|variants?|models?|reviews?|pros|cons|problems?|latest|news|today|compare|comparison|vs|versus)\b|مواصفات|أسعار|اسعار|سعر|فئات|فئة|مراجعة|عيوب|مميزات|أحدث|اخبار|أخبار/gi;
+const FILLER = /\b(please|give me|tell me|show me|what (is|are)|how (much|many)|all( the)?|with|and|the|a|an|of|for|about|in|on|me|its|their|full|detailed|details|complete|list)\b/gi;
+/** The subject of a question, without filler words ("Lynk & Co 900 all trims with hp…" → "Lynk & Co 900 trims hp …"). */
+export function topicOf(q) {
+  return String(q || "").replace(/[?؟!،]+|(?<!\d)[.,]|[.,](?!\d)/g, " ").replace(FILLER, " ").replace(/\s+/g, " ").trim().slice(0, 120);
+}
+
+/**
+ * Several searches from the question, by code: the question itself, then one per facet it asks
+ * about (specifications, prices, versions/trims, reviews, latest news, each side of a comparison).
+ * → up to n different queries, the user's own first
+ */
+export function expandQueries(question, n = 3) {
+  const q = String(question || "").trim(), y = new Date().getFullYear();
+  // the bare subject ("Lynk & Co 900"): the topic without the facet words it asks about
+  const ar = /[\u0600-\u06FF]/.test(q);
+  const t = (topicOf(q).replace(FACET_WORDS, " ")
+    .replace(/(^|\s)(و|كل|ال|عن|في|من|على|إيه|ايه|ما|هي|هو|بتاع|بتاعة|عايز|اعرف)(?=\s|$)/g, " ")
+    .replace(/(^|\s)[\u0600-\u06FF](?=\s|$)/g, " ").replace(/\s+/g, " ").trim()) || topicOf(q) || q;
+  const F = ar ? { spec: "مواصفات", price: "سعر", trims: "الفئات", review: "مراجعة عيوب مميزات", news: "أحدث أخبار", official: "الموقع الرسمي" }
+    : { spec: "specifications", price: "price", trims: "trims versions", review: "review", news: "latest news", official: "official" };
+  const out = [q];
+  const add = (s) => { s = s.replace(/\s+/g, " ").trim(); if (s && !out.some((x) => x.toLowerCase() === s.toLowerCase())) out.push(s); };
+  const vs = q.split(/\s+(?:vs\.?|versus|or|ولا|مقابل|مقارنة ب)\s+/i);
+  if (vs.length === 2 && vs[0].length > 2 && vs[1].length > 2) { add(topicOf(vs[0]) + " " + F.spec + " " + F.price); add(topicOf(vs[1]) + " " + F.spec + " " + F.price); }
+  if (/spec|hp|torque|power|capacity|range|dimension|مواصفات|قوة|عزم|سعة|مدى/i.test(q)) add(t + " " + F.spec);
+  if (/price|cost|how much|سعر|أسعار|اسعار|بكام|كام/i.test(q)) add(t + " " + F.price + " " + y);
+  if (/trim|version|variant|model|فئات|فئة|نسخ|موديلات/i.test(q)) add(t + " " + F.trims);
+  if (/review|pros|cons|problem|reliab|مراجعة|عيوب|مشاكل|مميزات/i.test(q)) add(t + " " + F.review);
+  if (/latest|new|news|today|this year|release|launch|أحدث|جديد|أخبار|اخبار|نزل/i.test(q)) add(t + " " + F.news + " " + y);
+  if (out.length < n) add(t + " " + y);
+  if (out.length < n) add(t + " " + F.official);
+  return out.slice(0, Math.max(1, n));
+}
+
+const FIG = /(?:(?:EGP|USD|US\$|\$|€|£|CNY|RMB|¥|AED|SAR|EUR)\s?\d[\d,.]*(?:\s?(?:million|m|k|bn))?|\d[\d,.]*\s?(?:hp|ps|bhp|kw|nm|n·m|lb-?ft|km\/h|mph|km|kwh|kg|tons?|t\b|mm|cm|m\b|seconds?|s\b|%|l\/100 ?km|mpg|egp|usd|cny|yuan|جنيه|دولار|يوان|حصان|كم))/gi;
+const normFig = (s) => String(s).toLowerCase().replace(/\s+/g, "").replace(/(\d),(?=\d{3}\b)/g, "$1").replace(/us\$/, "$").replace(/n·m/, "nm");
+/**
+ * Figures (a number with its unit or currency) that 2+ different sources give.
+ * hits: [{text}] (the ranked passages, numbered in order) → { list: [{fig, sources:[1,3]}], block }
+ */
+export function confirmedFigures(hits, max = 25) {
+  const seen = new Map(), shown = new Map();
+  (hits || []).forEach((h, i) => {
+    const found = (String((h && h.text) || "").match(FIG) || []).filter((f) => /\d{2}|\d[.,]\d/.test(f));
+    for (const raw of found) { const f = normFig(raw); if (!seen.has(f)) { seen.set(f, new Set()); shown.set(f, raw.trim()); } seen.get(f).add(i + 1); }
+  });
+  const list = [...seen.entries()].filter(([, s]) => s.size >= 2).map(([f, s]) => ({ fig: shown.get(f), sources: [...s].sort((a, b) => a - b) }))
+    .sort((a, b) => b.sources.length - a.sources.length).slice(0, max);
+  const block = list.length ? "\n\nFIGURES CONFIRMED BY 2+ SOURCES (prefer these when sources differ):\n" + list.map((x) => "- " + x.fig + " " + x.sources.map((n) => "[" + n + "]").join("")).join("\n") : "";
+  return { list, block };
+}
+
+/** Does the person ask for the slow, thorough page-by-page research? */
+export function wantsDeep(text) {
+  return /\b(deep research|research (it )?(deeply|thoroughly|in depth)|in[- ]depth research|dig deep)\b|بحث عميق|ابحث بعمق|بحث شامل|بعمق/i.test(String(text || ""));
+}
+
+export const FAST_REPORT_ADD = "\n\n(Write a complete, accurate answer from ALL the passages, like a research assistant: a direct 2–3 line answer first, then sections with ## headings and tables for specs, prices and comparisons, covering every part of the question and every item the passages name. Cite the source number after each fact. Copy numbers exactly. Where sources give different values, show both with their sources; prefer the confirmed figures. End with what the sources did not say.)";

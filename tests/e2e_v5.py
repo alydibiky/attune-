@@ -127,7 +127,7 @@ LATIN = r"""() => { const out = []; const w = document.createTreeWalker(document
   for (let n = w.nextNode(); n; n = w.nextNode()) { const t = n.nodeValue.trim(); const el = n.parentElement;
     if (!t || !el || el.closest('[data-i18n-skip],textarea,script,style')) continue; const r = el.getBoundingClientRect();
     if (!r.width || !r.height || r.bottom < 0 || r.top > innerHeight) continue;
-    const words = (t.match(/[A-Za-z]{3,}/g) || []).filter((w) => !/^(Attune|Pro|Qwen|Gemma|GGUF|InstaPay|Yusr|ChatGPT|Claude|Gemini|English|Brave|DuckDuckGo|KV|SHA|CPU|GPU|NPU|NEON|dotprod|KleidiAI|int8|matmul|Test|Phone|SM8650|imatrix|MoE|mmap|INT4|Vulkan|EGP|USD|Adreno|OpenCL|QUALCOMM)$/.test(w));
+    const words = (t.match(/[A-Za-z]{3,}/g) || []).filter((w) => !/^(Attune|Pro|Spark|Glow|Flash|Core|Lite|Sense|Ultra|Titan|Qwen|Gemma|GGUF|InstaPay|Yusr|ChatGPT|Claude|Gemini|English|Brave|DuckDuckGo|KV|SHA|CPU|GPU|NPU|NEON|dotprod|KleidiAI|int8|matmul|Test|Phone|SM8650|imatrix|MoE|mmap|INT4|Vulkan|EGP|USD|Adreno|OpenCL|QUALCOMM)$/.test(w));
     if (words.length) out.push(t.slice(0, 80)); } return out; }"""
 
 def sec_arabic(br):

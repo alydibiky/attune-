@@ -16,7 +16,7 @@ import { looksLikeMathProblem, looksLikeCodeTask, arithmeticSlips, fixSlips } fr
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
-import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes } from "./research.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD } from "./research.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from "./power.js";
 // v5.29 UX: the follow-up chips fade out at the end, so it's clear the row scrolls (left in Arabic)
 const chipFade = () => { const side = typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "left" : "right"; const g = "linear-gradient(to " + side + ", #000 82%, transparent)"; return { WebkitMaskImage: g, maskImage: g }; };
@@ -697,26 +697,42 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const deep = pagesFor(typed) === 8;   // what the user typed ("all-terrain" or a rewritten follow-up doesn't count)
         const readCap = deep ? (pwR.readPages || pwR.pages || 8) : Math.min(pwR.readPages || 5, 5);
         // a quick question ("what is this car") stays one fast search; detail-hungry ones are planned
-        const nQ = api.webPages && deep && (!api.pro || api.pro()) ? (pwR.queries || 1) : 1;   // several searches: Pro / trial
+        const nQ = api.webPages && deep ? Math.max(3, pwR.queries || 1) : 1;   // v5.30: parallel searches cost no model time — at least 3 for detailed questions
+        // v5.30 — FAST by default (Gemini-like: searches at the same time, code picks the
+        // passages, ONE model pass); page-by-page DEEP research when asked for, or on
+        // Expert / Master models for detail-hungry questions (research.js)
+        const deepMode = !!api.webPages && (wantsDeep(typed) || ((pwR.level || 3) >= 4 && deep && (!api.pro || api.pro())));
         let queries = [query];
         if (nQ > 1) {
-          onStatus(tr("Planning the research…"));
-          try { queries = parsePlan(await api.run(planMessages(question, nQ), null, { think: false, maxTokens: 160, temperature: 0.3 }), query, nQ); }
-          catch (e) { if (String(e && e.message) === "Stopped") throw e; }
-          if (runRef.current !== run) return;
+          if (deepMode) {
+            onStatus(tr("Planning the research…"));
+            try { queries = parsePlan(await api.run(planMessages(question, nQ), null, { think: false, maxTokens: 160, temperature: 0.3 }), query, nQ); }
+            catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+            if (runRef.current !== run) return;
+          } else queries = expandQueries(query, nQ);
         }
         const per = Math.min(8, Math.ceil(readCap / queries.length) + 2);
-        const look = api.webPages ? await api.webPages(query, queries.length > 1 ? per : Math.min(pwR.pages, pagesFor(question))) : await api.webLookup(query, question);
+        onStatus(queries.length > 1 ? tr("Searching {n} ways at once…", { n: queries.length }) : tr("Searching the web…"));
+        const found = await Promise.all(queries.map((q, i) =>
+          (api.webPages ? api.webPages(q, queries.length > 1 ? per : Math.min(pwR.pages, pagesFor(question))) : (i === 0 ? api.webLookup(q, question) : Promise.resolve({ hits: [] })))
+            .catch((e) => { if (String(e && e.message) === "Stopped") throw e; return { hits: [] }; })));
         if (runRef.current !== run) return;
-        const lists = [look.hits || []];
-        for (const q of queries.slice(1)) {
-          onStatus(tr("Searching: {q}", { q }));
-          try { const r = await api.webPages(q, per); lists.push((r && r.hits) || []); }
-          catch (e) { if (String(e && e.message) === "Stopped") throw e; }
-          if (runRef.current !== run) return;
-        }
+        const look = found[0] || { hits: [] };
+        const lists = found.map((r) => (r && r.hits) || []);
         const toRead = api.webPages ? mergeHits(lists, readCap, question) : look.hits || [];
-        if (toRead.length && api.webPages) {
+        if (toRead.length && api.webPages && !deepMode) {
+          // FAST: code ranks the passages of every page into the window, cross-checks the
+          // figures across sites, and ONE model pass writes the answer
+          onStatus(tr("Reading {n} pages…", { n: toRead.length }));
+          const ctxF = (api.contextTokens && api.contextTokens()) || 8192;
+          const ansF = (api.power && api.power().longTokens) || 2048;
+          const budgetF = fitChars(ctxF, ansF, 2600, toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" "));
+          const ranked = api.rankAll(question, toRead, { budget: budgetF, perSource: Math.max(1500, Math.floor(budgetF / Math.max(1, Math.min(toRead.length, 6)) * 1.4)) });
+          const figs = confirmedFigures(ranked);
+          sources = ranked; via = look.via;
+          research = { pages: toRead.length, withFacts: ranked.length, searches: queries.length, confirmed: figs.list.length, fast: true };
+          content = api.groundedPrompt(asked, ranked) + figs.block + (deep ? FAST_REPORT_ADD : "") + photoNote;
+        } else if (toRead.length && api.webPages) {
           const notesSrc = [], tR = Date.now(), budget = (pwR.researchSecs || 170) * 1000; let read = 0;
           const seenUrls = new Set(lists.flat().map((h) => h.url));
           const readPages = async (hits, cap) => {
@@ -1422,7 +1438,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
             {m.sources && m.sources.length ? (
               <div className="mt-2 space-y-1">
-                <p className="text-[11px] text-slate-500">{tr("Sources")}{m.via ? " · via " + m.via : ""}{m.research ? " · " + tr("read {p} pages one by one, facts from {n}", { p: m.research.pages, n: m.research.withFacts }) : ""}{m.research && m.research.searches > 1 ? " · " + tr("{s} searches", { s: m.research.searches }) : ""}{m.research && m.research.confirmed ? " · " + tr("{c} facts confirmed by 2+ sites", { c: m.research.confirmed }) : ""}</p>
+                <p className="text-[11px] text-slate-500">{tr("Sources")}{m.via ? " · via " + m.via : ""}{m.research ? " · " + (m.research.fast ? tr("read {p} pages", { p: m.research.pages }) : tr("read {p} pages one by one, facts from {n}", { p: m.research.pages, n: m.research.withFacts })) : ""}{m.research && m.research.searches > 1 ? " · " + tr("{s} searches", { s: m.research.searches }) : ""}{m.research && m.research.confirmed ? " · " + tr("{c} facts confirmed by 2+ sites", { c: m.research.confirmed }) : ""}</p>
                 {m.sources.map((h, i) => <a key={i} href={h.url} target="_blank" rel="noreferrer" className="block text-[12px] text-teal-300/90 truncate">[{i + 1}] {tr(h.title)}</a>)}
               </div>
             ) : null}

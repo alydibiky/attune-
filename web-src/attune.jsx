@@ -6594,7 +6594,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.29";
+const PAGE_VERSION = "5.30";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -8003,7 +8003,7 @@ export default function App() {
     // v5.20 deep research: pages in full, and the passages of one page / of all
     webPages: NATIVE ? (q, pages) => webLookupRaw(q, pages) : null,
     rankOne: (question, h) => { const n = getPower().notesChars; const r = rankPassages(question, [h], { budget: n, perSource: n }); return r[0] ? r[0].text : ""; },
-    rankAll: (question, hits) => rankPassages(question, hits),
+    rankAll: (question, hits, o) => rankPassages(question, hits, o),
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     withRecords,

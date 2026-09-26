@@ -2142,4 +2142,7 @@ export const AR = {
   "Purchase cancelled": "الشراء اتلغى",
   "Web search needs the Android app, or your own search key in settings": "البحث على النت محتاج تطبيق أندرويد، أو مفتاح بحث خاص بيك في الإعدادات",
   "user/model-GGUF:Q4_K_M   or   https://…/model.gguf": "user/model-GGUF:Q4_K_M   أو   https://…/model.gguf",
+  "Searching {n} ways at once…": "ببحث بـ {n} طرق في نفس الوقت…",
+  "Reading {n} pages…": "بقرا {n} صفحات…",
+  "read {p} pages": "قريت {p} صفحات",
 };
