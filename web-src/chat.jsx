@@ -146,7 +146,7 @@ function CodeBox({ lang, text }) {
   );
 }
 
-export function Md({ text, runnable = true }) {
+function MdView({ text, runnable = true }) {
   const blocks = useMemo(() => {
     const lines = mathToText(String(text || "")).replace(/\r/g, "").split("\n");
     const out = [];
@@ -250,6 +250,9 @@ export function Md({ text, runnable = true }) {
     </div>
   );
 }
+// v5.16: an answer already on screen is not drawn again every time the
+// streaming one grows — on a long chat that was most of the work (and heat).
+export const Md = React.memo(MdView);
 
 // ---- the system prompt: one, stable, so the phone can reuse it between turns ----
 export function systemPrompt(profileText, accuracy) {
@@ -275,16 +278,34 @@ ${profileText ? "\n" + profileText : ""}`;
 }
 
 // What to offer after an answer, so the next step is one tap.
-function followUps(msg) {
+function followUps(msg, prevUser) {
+  // v5.16: suggestions that fit the answer just given (a comparison, steps, an
+  // email, a photo …) instead of the same three every time.
   const t = String(msg.text || "");
-  const arabic = /[؀-ۿ]/.test(t.slice(0, 400));
+  const ar = /[؀-ۿ]/.test(t.slice(0, 400));
+  const P = (en, arT, pEn, pAr) => [en, ar ? pAr : pEn];     // label: app language (tr); question: the answer's language
   const out = [];
-  if (t.length > 500) out.push(["Shorter", arabic ? "اختصرها في نقاط قليلة." : "Make that shorter — just the key points."]);
-  else out.push(["More detail", arabic ? "اشرح بتفصيل أكتر." : "Go into more detail."]);
-  out.push([arabic ? "Translate to English" : "Translate to Arabic", arabic ? "Translate your last answer into English." : "ترجم ردك الأخير للعربي (مصري)."]);
-  out.push(["Explain simply", arabic ? "اشرحها ببساطة كأني مش متخصص." : "Explain that simply, as if I have no background."]);
-  if (/\d/.test(t) && /(total|price|cost|egp|usd|جنيه|سعر|اجمالي|إجمالي)/i.test(t)) out.push(["Check the maths", arabic ? "راجع الحسابات خطوة بخطوة." : "Double-check the calculations step by step."]);
-  return out.slice(0, 4);
+  const photo = prevUser && prevUser.image;
+  if (photo) {
+    out.push(P("Exact model?", "الموديل بالظبط؟", "Which exact model and year is it most likely? Say which clues you used and how sure you are.", "إيه الموديل والسنة الأقرب بالظبط؟ قولّي استنتجت ده من إيه وقد إيه متأكد."));
+    out.push(P("Specifications", "المواصفات", "Give its main specifications in a table.", "اديني أهم مواصفاته في جدول."));
+  }
+  switch (msg.skill) {
+    case "compare": out.push(P("Which should I choose?", "أختار أنهي؟", "For my use, which one should I choose and why?", "لاستخدامي، أختار أنهي وليه؟"), P("Price difference", "فرق السعر", "What is the typical price difference between them?", "إيه فرق السعر التقريبي بينهم؟")); break;
+    case "steps": out.push(P("What can go wrong?", "إيه اللي ممكن يغلط؟", "What are the common mistakes and risks in these steps?", "إيه الأخطاء والمخاطر الشائعة في الخطوات دي؟"), P("Checklist", "قائمة مراجعة", "Turn these steps into a short checklist I can tick.", "حوّل الخطوات دي لقائمة مراجعة قصيرة.")); break;
+    case "explain": out.push(P("Real example", "مثال حقيقي", "Give me a real-world example with numbers.", "اديني مثال حقيقي بالأرقام."), P("Explain simply", "ببساطة", "Explain that simply, as if I have no background.", "اشرحها ببساطة كأني مش متخصص.")); break;
+    case "email": out.push(P("More formal", "رسمي أكتر", "Make it more formal.", "خليها رسمية أكتر."), P("Shorter", "أقصر", "Make it shorter.", "اختصرها.")); break;
+    case "list": out.push(P("More on #1", "تفاصيل الأول", "Tell me more about the first option.", "قولّي تفاصيل أكتر عن أول اختيار.")); break;
+    case "plan": out.push(P("As a checklist", "قائمة مراجعة", "Turn the plan into a checklist.", "حوّل الخطة لقائمة مراجعة.")); break;
+    case "translate": out.push(P("Translate back", "ترجم تاني للتأكد", "Translate it back so I can check the meaning.", "ترجمها تاني للغة الأصلية عشان أتأكد من المعنى.")); break;
+    default: break;
+  }
+  if (t.length > 700) out.push(P("Shorter", "أقصر", "Make that shorter — just the key points.", "اختصرها في نقاط قليلة."));
+  else if (!msg.skill || msg.skill !== "explain") out.push(P("More detail", "تفاصيل أكتر", "Go into more detail.", "اشرح بتفصيل أكتر."));
+  if (/\d/.test(t) && /(total|price|cost|egp|usd|جنيه|سعر|اجمالي|إجمالي)/i.test(t)) out.push(P("Check the maths", "راجع الحساب", "Double-check the calculations step by step.", "راجع الحسابات خطوة بخطوة."));
+  out.push([ar ? "Translate to English" : "Translate to Arabic", ar ? "Translate your last answer into English." : "ترجم ردك الأخير للعربي (مصري)."]);
+  const seen = new Set();
+  return out.filter(([l]) => !seen.has(l) && seen.add(l)).slice(0, 4);
 }
 
 const STARTERS = [
@@ -349,11 +370,23 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   }, []);
 
   const chat = chats.find((c) => c.id === activeId) || null;
+  // The answer finished (or was stopped): read what was typed meanwhile.
+  useEffect(() => {
+    if (busy || !queued.length) return;
+    const q = queued; setQueued([]);
+    const t = setTimeout(() => ask(q.map((x) => x.text).join("\n\n"), { queuedDuring: true }), 60);
+    return () => clearTimeout(t);
+  }, [busy]);
+  useEffect(() => { setQueued([]); }, [activeId]);
   const messages = chat ? chat.messages : [];
   // v5.14: the assistant (like a Gem) and/or project this chat belongs to. A
   // new chat started from Assistants/Projects waits in `pending` until its
   // first message creates it.
   const [pending, setPending] = useState(null);
+  // v5.16: messages typed WHILE an answer is being written wait here, and are
+  // read as soon as it finishes — with that answer in view, so "also add the
+  // prices" updates it instead of starting over.
+  const [queued, setQueued] = useState([]);
   const spaceIds = chat ? { assistantId: chat.assistantId || null, projectId: chat.projectId || null } : (pending || { assistantId: null, projectId: null });
   const assistant = useMemo(() => (spaceIds.assistantId ? loadAssistants().find((a) => a.id === spaceIds.assistantId) || null : null), [spaceIds.assistantId, spaceSeed]);
   const project = useMemo(() => (spaceIds.projectId ? loadProjects().find((p) => p.id === spaceIds.projectId) || null : null), [spaceIds.projectId, spaceSeed]);
@@ -493,6 +526,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     const route = !o.noRoute && !fileAtt;
     const img = o.image !== undefined ? o.image : image;
     if (!typed && !img && !fileAtt) return;
+    if (busy && raw == null && !img && !fileAtt && !o.now) {
+      setQueued((q) => [...q, { id: newId(), text: typed }]);
+      setText("");
+      return;
+    }
     if (busy) stop();
 
     // 1. Things the phone files away by itself, instantly, no model.
@@ -586,7 +624,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     let raf = 0, pend = null;
     const flush = () => { raf = 0; if (!pend || runRef.current !== run) return; const p = pend; pend = null;
       patchMsg(cid, aiId, { text: p.text, thinking: p.thinking, phase: p.text ? "" : p.thinking ? "Thinking…" : "Reading…" }); };
-    const onToken = (tx, th) => { pend = { text: tx, thinking: th }; if (!raf) raf = requestAnimationFrame(flush); };
+    // v5.16: the screen is updated about 10× a second while words stream in,
+    // not on every frame — the same text on screen, a fraction of the work
+    // (a phone that stays cool and a page that doesn't stutter).
+    let lastFlush = 0;
+    const onToken = (tx, th) => { pend = { text: tx, thinking: th };
+      if (!raf) { const wait = Math.max(0, 90 - (Date.now() - lastFlush)); raf = setTimeout(() => { lastFlush = Date.now(); flush(); }, wait); } };
     const onStatus = (s) => { if (runRef.current === run) patchMsg(cid, aiId, { phase: s }); };
 
     try {
@@ -663,9 +706,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // Word problems and coding requests are checked by running code on the
       // phone before the answer is shown (verify.js / code.js). If the check
       // cannot run, the question simply goes to the model as usual below.
-      if (route && !img && !sources && api.verifyMath && looksLikeMathProblem(typed)) {
+      // "and with 5 cranes?" after a sum: worked out WITH the earlier question,
+      // not as a question on its own. (v5.16)
+      const prevQ = [...history].reverse().find((m) => m.role === "user" && m.text);
+      const mathQ = prevQ && /[0-9٠-٩]/.test(typed) && looksLikeFollowUp(typed) && looksLikeMathProblem(prevQ.text)
+        ? prevQ.text + "\nFollow-up (answer this, using the question above): " + typed : typed;
+      if (route && !img && !sources && api.verifyMath && looksLikeMathProblem(mathQ)) {
         try {
-          const r = await api.verifyMath(typed + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+          const r = await api.verifyMath(mathQ + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
           if (runRef.current !== run) return;
           if (r && r.ok) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
@@ -712,6 +760,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const sk = api.skillFor(typed);
         if (sk) { content += sk.block; extra.skill = sk.id; }
       }
+      if (o.queuedDuring) content = "(I sent this while you were still writing your last answer. If it adds to or changes that answer, write the complete UPDATED answer with the change included — don't just acknowledge it. If it is a new question, simply answer it.)\n\n" + content;
       content += langHint(typed);
       if (answer == null) try {
         answer = await api.run(buildMessages(history, content), pic, { onToken, onStatus, think: useThink });
@@ -748,7 +797,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const slips = arithmeticSlips(answer);
         if (slips.length) {
           extra.slips = slips;
-          if (raf) { cancelAnimationFrame(raf); raf = 0; } pend = null;
+          if (raf) { clearTimeout(raf); raf = 0; } pend = null;
           patchMsg(cid, aiId, { text: "", thinking: "", phase: tr("Found a slip in the sums — re-checking by running code…") });
           try {
             const r = await api.verifyMath(typed + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
@@ -757,7 +806,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
         }
       }
-      if (raf) cancelAnimationFrame(raf);
+      if (raf) clearTimeout(raf);
       patchMsg(cid, aiId, { text: answer, streaming: false, phase: "", sources, via, secs: Math.round((Date.now() - t0) / 1000), stats: st, ...extra });
       api.spend();
       api.remember({ kind: "chat", title: (typed || "Photo").slice(0, 70), text: typed || "(photo)", output: answer, tags: ["chat"] });
@@ -786,7 +835,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     setBusy(true); stickRef.current = true;
     const glue = (a, b) => { const t = String(b || "").replace(/^\s+/, ""); return a + (/\s$/.test(a) || /^[,.;:!?)\]]/.test(t) ? "" : (/\n\s*$/.test(a) ? "" : " ")) + t; };
     try {
-      const more = await api.run(buildMessages(hist, prompt), null, { onToken: (tx) => { if (runRef.current === run) patchMsg(cid, m.id, { text: glue(before, tx) }); } });
+      let last = 0;
+      const more = await api.run(buildMessages(hist, prompt), null, { onToken: (tx) => { const t = Date.now(); if (runRef.current === run && t - last > 90) { last = t; patchMsg(cid, m.id, { text: glue(before, tx) }); } } });
       if (runRef.current !== run) return;
       const st = api.lastStats();
       patchMsg(cid, m.id, { text: glue(before, more), streaming: false, phase: "", stats: st });
@@ -1137,6 +1187,20 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         ))}
 
         {/* next step, one tap */}
+        {queued.length ? (
+          <div className="flex flex-col items-end gap-1.5" data-testid="queued">
+            {queued.map((q) => (
+              <div key={q.id} className="max-w-[85%] flex flex-col items-end">
+                <div dir="auto" className="bg-slate-800/70 border border-dashed border-slate-600 text-slate-200 rounded-2xl rounded-ee-md px-3.5 py-2 text-[15px] whitespace-pre-wrap">{q.text}</div>
+                <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
+                  <span>{tr("Waiting — read when this answer is done")}</span>
+                  <button onClick={() => { const all = queued.map((x) => x.text).join("\n\n"); setQueued([]); ask(all, { queuedDuring: true, now: true }); }} className="text-teal-300" data-testid="queued-now">{tr("Send now")}</button>
+                  <button onClick={() => setQueued((l) => l.filter((x) => x.id !== q.id))} className="p-0.5" title={tr("Remove")}><X size={12} /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
         {!busy && lastAi && lastAi === messages[messages.length - 1] && lastAi.text && !lastAi.error ? (
           <div className="att-chips flex gap-1.5 overflow-x-auto pb-1">
             {(() => { const u = messages[messages.length - 2]; return u && u.image ? (
@@ -1146,7 +1210,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               <button onClick={() => continueAnswer(messages.length - 1)} data-testid="continue"
                 className="shrink-0 text-xs px-3 py-2 rounded-full border border-teal-600 text-teal-200 bg-teal-500/10 font-medium">{tr("Continue ▸")}</button>
             ) : null}
-            {followUps(lastAi).map(([label, prompt]) => (
+            {followUps(lastAi, messages[messages.length - 2]).map(([label, prompt]) => (
               <button key={label} onClick={() => ask(prompt)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-slate-700 text-slate-300 active:border-teal-600">{tr(label)}</button>
             ))}
           </div>
@@ -1204,6 +1268,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             <button onClick={api.toggleWeb} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${api.webOn ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Search the web")}>
               <Globe size={14} /> {tr("Web")}</button>
             <div className="flex-1" />
+            {busy && text.trim() ? (
+              <button onClick={() => ask()} className="w-10 h-10 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center me-1" title={tr("Send")} data-testid="queue-send"><Send size={17} /></button>
+            ) : null}
             {busy ? (
               <button onClick={stop} className="w-10 h-10 rounded-full bg-slate-100 text-slate-950 flex items-center justify-center" title={tr("Stop")}><Square size={15} /></button>
             ) : text.trim() || image ? (

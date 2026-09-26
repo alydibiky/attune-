@@ -2,5 +2,5 @@
 // imports of "react" resolve here.
 const R = window.React;
 export const useState = R.useState, useMemo = R.useMemo, useEffect = R.useEffect, useRef = R.useRef,
-  useCallback = R.useCallback, Fragment = R.Fragment, createElement = R.createElement;
+  useCallback = R.useCallback, memo = R.memo, Fragment = R.Fragment, createElement = R.createElement;
 export default R;
