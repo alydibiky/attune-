@@ -12,7 +12,7 @@ import { ActionCard } from "./actions-ui.jsx";
 import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
 import { mathToText } from "./quality.js";
-import { looksLikeMathProblem, looksLikeCodeTask, arithmeticSlips } from "./verify.js";
+import { looksLikeMathProblem, looksLikeCodeTask, arithmeticSlips, fixSlips } from "./verify.js";
 import { looksLikeReasoning, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
@@ -709,7 +709,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // "and with 5 cranes?" after a sum: worked out WITH the earlier question,
       // not as a question on its own. (v5.16)
       const prevQ = [...history].reverse().find((m) => m.role === "user" && m.text);
-      const mathQ = prevQ && /[0-9٠-٩]/.test(typed) && looksLikeFollowUp(typed) && looksLikeMathProblem(prevQ.text)
+      const mathQ = prevQ && /[0-9٠-٩]/.test(typed) && looksLikeFollowUp(typed) && (looksLikeMathProblem(prevQ.text) || looksLikeCalc(prevQ.text))
         ? prevQ.text + "\nFollow-up (answer this, using the question above): " + typed : typed;
       if (route && !img && !sources && api.verifyMath && looksLikeMathProblem(mathQ)) {
         try {
@@ -763,7 +763,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (o.queuedDuring) content = "(I sent this while you were still writing your last answer. If it adds to or changes that answer, write the complete UPDATED answer with the change included — don't just acknowledge it. If it is a new question, simply answer it.)\n\n" + content;
       content += langHint(typed);
       if (answer == null) try {
-        answer = await api.run(buildMessages(history, content), pic, { onToken, onStatus, think: useThink });
+        // Copying from sources, a file or project knowledge: no anti-repeat
+        // penalties (they mangled copied numbers). (v5.17)
+        const copy = !!sources || !!fileAtt || !!(spaceRef.current.project && (spaceRef.current.project.knowledge || []).length);
+        answer = await api.run(buildMessages(history, content), pic, { onToken, onStatus, think: useThink, copy });
       } catch (e) {
         // Still too long for the model's window: answer with no earlier turns
         // rather than fail.
@@ -781,7 +784,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           try {
             const fixMsg = content + "\n\nYOUR FIRST ANSWER WAS:\n" + answer + "\n\nThese numbers in it are NOT in the passages: " + au.fabricated.slice(0, 6).join(", ") +
               ". Write the answer again using only numbers, versions and dates exactly as the passages write them.";
-            const again = await api.run(buildMessages([], fixMsg, 0), null, { onToken, onStatus, think: false, temperature: 0.2 });
+            const again = await api.run(buildMessages([], fixMsg, 0), null, { onToken, onStatus, think: false, temperature: 0.2, copy: true });
             if (runRef.current !== run) return;
             const au2 = api.groundedAudit(again, sources, typed);
             if (again && au2.fabricated.length < au.fabricated.length) answer = again;
@@ -793,17 +796,26 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // question is worked out again as a program the phone runs, and that
       // answer replaces the slip. (v5.13)
       let st = api.lastStats();
-      if (!extra.verified && !extra.computed && !extra.codeCheck && !img && !sources && typed && api.verifyMath && (typed.match(/[0-9٠-٩]/g) || []).length >= 2) {
+      // v5.17: checked whenever the ANSWER has sums — "And with 5 cranes" has
+      // one digit, so the old "question needs 2 digits" rule let 500,000 +
+      // 70,000 = 453,000 through.
+      if (!extra.verified && !extra.computed && !extra.codeCheck && !img && !sources && typed && api.verifyMath && /=/.test(answer || "")) {
         const slips = arithmeticSlips(answer);
         if (slips.length) {
           extra.slips = slips;
           if (raf) { clearTimeout(raf); raf = 0; } pend = null;
           patchMsg(cid, aiId, { text: "", thinking: "", phase: tr("Found a slip in the sums — re-checking by running code…") });
           try {
-            const r = await api.verifyMath(typed + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+            const r = await api.verifyMath(mathQ + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
             if (runRef.current !== run) return;
             if (r && r.ok && r.text) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; extra.fixedSlip = true; st = api.lastStats(); }
           } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+          // Re-checking could not run (no Python yet, or it failed): the wrong
+          // results are corrected in the text itself rather than shown as they are.
+          if (!extra.fixedSlip) {
+            const f = fixSlips(answer, slips);
+            if (f.fixed) { answer = f.text; extra.fixedSlip = true; }
+          }
         }
       }
       if (raf) clearTimeout(raf);

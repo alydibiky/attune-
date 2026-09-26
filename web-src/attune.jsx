@@ -1352,8 +1352,17 @@ const LocalEngine = {
       // "June 200005", "LTM 12000"). Loops are still stopped by DRY /
       // no-repeat-ngram (long exact repeats only) and the live loop guard.
       body.repeat_penalty = 1.0; body.repeat_last_n = 256;
-      body.dry_multiplier = 0.8; body.dry_base = 1.75; body.dry_allowed_length = 4; body.dry_penalty_last_n = 1024;
-      body.no_repeat_ngram = 24;
+      // v5.17: DRY looks back over the WHOLE context — the web passages, the
+      // file, the question — so copying "15,000 Pa" or "48.75" from a source
+      // counted as "repeating" and the digits came out mangled ("1,5,0000Pa",
+      // "5.75.7"). An answer that must copy (o.copy: web sources, files,
+      // project knowledge) gets no DRY / n-gram ban at all; everywhere else a
+      // repeat must be over 12 tokens before it is discouraged — numbers and
+      // names are never that long, looping sentences are.
+      if (!o.copy) {
+        body.dry_multiplier = 0.8; body.dry_base = 1.75; body.dry_allowed_length = 12; body.dry_penalty_last_n = 1024;
+        body.no_repeat_ngram = 24;
+      }
     }
     // In the app every answer streams, even when the caller only wants the
     // finished text: the stream is what lets Stop work at once and lets the
@@ -6535,7 +6544,7 @@ button:focus:not(:focus-visible) { outline: none; }
 
 /* Panels settle in rather than popping. Cheap, GPU-only, no layout cost. */
 @keyframes attIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.att-in { animation: attIn .18s ease-out both; }
+.att-in { animation: attIn .18s ease-out backwards; }   /* not "both": see shell.html (v5.17) */
 
 /* Pressed state — on a phone, hover does not exist, so this is the only
    feedback the user gets that a tap registered. */
@@ -6563,6 +6572,12 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts" };
+// v5.17: the page's own version, and the installed app's (from the page
+// address MainActivity loads). Shown at the bottom of More — if they ever
+// differ, the phone is showing an old copy of the page.
+const PAGE_VERSION = "5.17";
+const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
+
 const MORE_TOOLS = [
   ["assistants", "Assistants", "Experts that follow your instructions", Bot],
   ["projects", "Projects", "Chats, files & instructions together", Folder],
@@ -7894,6 +7909,25 @@ export default function App() {
     try { const t = await navigator.clipboard.readText(); if (t && t.trim()) { setCpPaste(t.trim()); flash(tr("Pasted from clipboard")); } else flash(tr("Clipboard is empty")); }
     catch (e) { flash(tr("Allow clipboard access, or paste manually")); }
   };
+  // v5.17: bring a whole chat (or just the latest reply) from ChatGPT / Gemini /
+  // Claude in one paste — Attune reads it and offers the next message at once.
+  const [cpImport, setCpImport] = useState("");
+  const cpImportChat = async () => {
+    const t = cpImport.trim(); if (!t || loading) return;
+    const next = [...convo.map((m) => (m.digest ? m : { ...m, digest: digest(m.text), text: m.digest || digest(m.text) })), { role: "ai", text: t, digest: digest(t), imported: true }];
+    setConvo(next); setCpImport(""); setCpPending(null);
+    const diag = analyseReply(t, (convo.filter((m) => m.role === "you").pop() || {}).text || "", convo, cpGoal);
+    setCpDiag(diag.issues.length || diag.missing.length ? diag : null);
+    remember({ kind: "copilot", title: (cpGoal || t).slice(0, 60), text: "(pasted chat)", output: t, tags: ["copilot", tool] });
+    if (!canUseAI()) return;                     // the chat is kept either way; only the suggestion needs the model
+    setLoading(true); setCpVariants([]);
+    try {
+      const vs = await copilotVariants(next, cpIntent.trim() || "reply to their last message and move the conversation toward my goal", tool, cpGoal, diag, profile);
+      if (vs.length === 1) setCpPending(vs[0].text); else if (vs.length) setCpVariants(vs);
+      spendIfFree(); setCpIntent("");
+    } catch (e) { flash(String((e && e.message) || e).slice(0, 90)); }
+    finally { setLoading(false); }
+  };
   const cpReset = () => { setConvo([]); setCpPending(null); setCpIntent(""); setCpPaste(""); setCpRefine("");
                           setCpVariants([]); setCpDiag(null); setCpGoal(""); };
 
@@ -8676,7 +8710,7 @@ export default function App() {
             </div>
 
             {openRec ? (
-              <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-auto" onClick={() => setOpenRec(null)}>
+              <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={() => setOpenRec(null)}>
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="min-w-0">
@@ -9580,12 +9614,27 @@ export default function App() {
               ) : null}
             </div>
 
+            {!cpPending ? (
+              <div className="mb-4 rounded-xl border border-slate-800 bg-slate-950 p-3" data-testid="cp-import">
+                <p className="text-xs text-slate-300 mb-1.5">{tr("Bring the chat from {t} — paste the whole conversation or just its last reply:", { t: tr(TOOLS[tool].label) })}</p>
+                <textarea value={cpImport} onChange={(e) => setCpImport(e.target.value)} placeholder={tr("Paste here…")} data-testid="cp-import-text"
+                  className="w-full h-16 bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" dir="auto" />
+                <div className="flex gap-2 mt-2">
+                  <button onClick={async () => { try { const t = await navigator.clipboard.readText(); if (t && t.trim()) setCpImport(t.trim()); else flash(tr("Clipboard is empty")); } catch (e) { flash(tr("Allow clipboard access, or paste manually")); } }}
+                    className="text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-300 flex items-center gap-1"><ClipboardPaste size={13} />{tr("Paste")}</button>
+                  <button onClick={cpImportChat} disabled={!cpImport.trim() || loading} data-testid="cp-import-go"
+                    className={`flex-1 text-xs py-2 rounded-lg font-semibold ${cpImport.trim() && !loading ? "bg-teal-500 text-slate-950" : "bg-slate-800 text-slate-600"}`}>
+                    {loading ? tr("Reading…") : tr("Read it & suggest my reply")}</button>
+                </div>
+              </div>
+            ) : null}
+
             {/* conversation thread */}
             {convo.length > 0 ? (
               <div className="space-y-2 mb-4">
                 {convo.map((m, i) => (
                   <div key={i} className={`rounded-xl p-3 text-sm ${m.role === "you" ? "bg-teal-500/10 border border-teal-900/50" : "bg-slate-950 border border-slate-800"}`}>
-                    <p className={`text-[10px] uppercase tracking-wider mb-1 ${m.role === "you" ? "text-teal-400" : "text-slate-500"}`}>{m.role === "you" ? tr("You sent (optimized)") : TOOLS[tool].label + " replied"}</p>
+                    <p className={`text-[10px] uppercase tracking-wider mb-1 ${m.role === "you" ? "text-teal-400" : "text-slate-500"}`}>{m.role === "you" ? tr("You sent (optimized)") : m.imported ? tr("Pasted from {t}", { t: TOOLS[tool].label }) : TOOLS[tool].label + " replied"}</p>
                     <p className="text-slate-200 whitespace-pre-wrap font-mono text-xs">{m.text}</p>
                   </div>
                 ))}
@@ -9629,6 +9678,8 @@ export default function App() {
                   <div className="flex gap-1.5"><button onClick={() => { try { navigator.clipboard.writeText(cpPending); } catch (e) {} flash(tr("Copied")); }} className="text-xs px-2 py-1 rounded-lg border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400 flex items-center gap-1"><Copy size={13} /> {tr("Copy")}</button><button onClick={cpSendPending} className="text-xs px-2 py-1 rounded-lg border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400 flex items-center gap-1"><ExternalLink size={13} /> {tr("Open")}</button></div>
                 </div>
                 <pre className="text-sm font-mono text-teal-50 whitespace-pre-wrap">{cpPending}</pre>
+                <button onClick={cpSendPending} data-testid="cp-send" className="mt-3 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold">
+                  <ExternalLink size={14} /> {tr("Copy & open {t}", { t: tr(TOOLS[tool].label) })}</button>
                 {cpReturned ? (
                   <button onClick={async () => { setCpReturned(false); await cpGrabClipboard(); }}
                     className="mt-3 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-teal-500/15 border border-teal-700 text-teal-200 text-sm font-medium att-in">
@@ -9838,9 +9889,10 @@ export default function App() {
       {toast && <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className="fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="max-w-3xl mx-auto grid grid-cols-5 h-[58px]">
+        <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
+          {/* v5.17: Memory in the bottom bar (Ali) */}
           {[["chat", "Chat", MessageCircle], ["instant", "Instant", Zap], ["money", "Money", Wallet],
-            ["business", "Business", Database], ["more", "More", LayoutGrid]].map(([id, label, Icon]) => {
+            ["business", "Business", Database], ["memory", "Memory", History], ["more", "More", LayoutGrid]].map(([id, label, Icon]) => {
             const on = id === "more" ? moreOpen : (mode === id && !moreOpen);
             return (
               <button key={id} onClick={() => { if (id === "more") setMoreOpen((v) => !v); else { setMoreOpen(false); setMode(id); } }}
@@ -9876,6 +9928,7 @@ export default function App() {
                 {(() => { const nb = backupNudge(); return (
                 <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`rounded-xl border p-2.5 text-start ${nb.warn ? "border-amber-700/60 bg-amber-500/10" : "border-slate-800 bg-slate-950"}`}><ShieldCheck size={16} className={nb.warn ? "text-amber-300" : "text-slate-300"} /><span className="block text-[12px] text-slate-200 mt-1">{tr("Backup")}</span><span className={`block text-[10px] ${nb.warn ? "text-amber-300" : "text-slate-500"}`}>{nb.text}</span></button>); })()}
               </div>
+              <p className="text-center text-[10px] text-slate-600 mt-3" data-testid="app-version">Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
             </div>
           </div>
         </div>
@@ -9994,7 +10047,7 @@ function Upgrade({ tier, setTier, close, flash }) {
 
   ];
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-auto" onClick={close}>
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1"><h2 className="text-xl font-bold text-white flex items-center gap-2"><Crown size={18} className="text-amber-400" /> {tr("Choose your plan")}</h2><button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button></div>
         <p className="text-xs text-slate-500 mb-4">{tr("Everything runs on your device, so nothing here is metered by a server. Free gives you 15 runs a day; Pro removes the limit and adds memory, commitments and your own vocabulary. Regional pricing at checkout (EGP and local currencies).")}</p>
@@ -10157,7 +10210,7 @@ function ProfileModal({ profile, setProfile, close, flash }) {
   const set = (k, v) => setP((x) => ({ ...x, [k]: v }));
   const btn = (a) => `px-3 py-1.5 rounded-lg text-sm border transition-colors ${a ? "bg-teal-500 border-teal-500 text-slate-950 font-medium" : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-600"}`;
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-auto" onClick={close}>
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><User size={18} className="text-teal-400" /> {tr("Your profile")}</h2>
@@ -10401,7 +10454,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
 
   ];
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-auto" onClick={close}>
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><Cpu size={18} className="text-teal-400" /> {tr("Engine")}</h2>
@@ -10653,7 +10706,7 @@ function OrgModal({ org, setOrg, close, flash }) {
   const set = (k, v) => setO((x) => ({ ...x, [k]: v }));
   const field = "w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500";
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-auto" onClick={close}>
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><Building2 size={18} className="text-teal-400" /> {tr("Company terminology")}</h2>
@@ -10717,7 +10770,7 @@ function MemoryModal({ records, findings, closeFollowUp, close }) {
   records.forEach((r) => (r.followUps || []).forEach((f, i) => { if (!f.done) open.push({ r, f, i }); }));
   const days = (ts) => Math.round((Date.now() - ts) / 86400000);
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-auto" onClick={close}>
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><Radar size={18} className="text-teal-400" /> {tr("Site memory")}</h2>

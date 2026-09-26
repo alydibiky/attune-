@@ -97,6 +97,9 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
         try { finalPrompt = cleanPrompt(await llm(enhanceMessages(text), { maxTokens: 220 }), text); } catch (e) { finalPrompt = text; }
       }
       setPrompt(finalPrompt);
+      // v5.17: the description is written — say what happens now, instead of
+      // "Writing a fuller description…" for the whole drawing.
+      setBusy((b) => (b && b.stage === "enhance" ? { ...b, stage: "start" } : b));
       // 2. The picture.
       const sz = SIZES.find((s) => s.id === size) || SIZES[0];
       const r0 = opts.ref || ref;

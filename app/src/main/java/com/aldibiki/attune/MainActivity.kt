@@ -252,7 +252,16 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        web.loadUrl("https://appassets.androidplatform.net/app/www/index.html")
+        // v5.17: an updated app must never show the previous version's page.
+        // After an update the WebView's cache is emptied once, and the page
+        // address carries the version so nothing old can be reused.
+        val ver = try { packageManager.getPackageInfo(packageName, 0).let { "${it.versionName}-${it.lastUpdateTime}" } } catch (e: Exception) { "0" }
+        val vp = getSharedPreferences("attune_app", MODE_PRIVATE)
+        if (vp.getString("page_version", "") != ver) {
+            web.clearCache(true)
+            vp.edit().putString("page_version", ver).apply()
+        }
+        web.loadUrl("https://appassets.androidplatform.net/app/www/index.html?v=" + android.net.Uri.encode(ver))
         handleShare(intent)
 
         // Bring back the model that was in use last time — on the CPU if the

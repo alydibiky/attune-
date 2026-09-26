@@ -159,7 +159,7 @@ with sync_playwright() as pw:
     page.wait_for_selector("text=What can I help with?", timeout=15000)
     check(True, "the app opens on the chat home screen")
     nav = page.locator("nav")
-    check(nav.locator("button").count() == 5, "bottom bar has 5 places")
+    check(nav.locator("button").count() == 6, "bottom bar has 6 places (v5.17: Memory added)")
 
     # install a model via Engine chip
     page.locator("header button:has-text('No model')").click()

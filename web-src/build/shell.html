@@ -118,7 +118,9 @@
   @media (max-width:640px){ input,textarea,select{font-size:16px!important} }
   /* v5.13 — calm motion: new messages and screens fade in; nothing jumps. */
   @keyframes attIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  .att-in,.att-msg{animation:attIn .22s ease-out both}
+  /* backwards, not both: a filled transform animation makes the element the containing block for
+     position:fixed children, so pop-ups (a Memory item…) opened off-screen inside the page (v5.17) */
+  .att-in,.att-msg{animation:attIn .22s ease-out backwards}
   html{scroll-behavior:auto}
   /* Tables in answers: zebra rows and a header that reads as one. */
   .att-md tbody tr:nth-child(even){background:rgba(30,41,59,.35)}

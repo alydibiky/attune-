@@ -85,7 +85,9 @@ def sections(env, errors):
         check(page.evaluate("window.__mock.cancelled") >= 1, "…and the engine is told to stop writing")
         check(page.locator("[data-testid=loop-note]").count() == 1, "…with a small note that a repeat was stopped")
         check("t_AB = d/30 hours" in txt and "\\frac" not in txt and "$" not in txt, "maths is shown as readable text, not raw LaTeX")
-        b = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2).pop()")
+        # (the main chat request — v5.17 may add a "write a program" request after
+        #  it to re-check a sum, which rightly carries no anti-loop settings)
+        b = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2 && String((x.messages[0] || {}).content).includes('You are Attune'))[0]")
         # v5.13: no plain repeat penalty (it damaged numbers: "10,0400"); loops
         # are stopped by DRY + no-repeat n-gram + the live guard instead.
         check(b.get("repeat_penalty", 1) == 1 and b.get("dry_multiplier", 0) > 0 and b.get("no_repeat_ngram", 0) > 0,

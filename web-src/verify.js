@@ -23,7 +23,8 @@ export function looksLikeMathProblem(text) {
   const ask = /\b(how (long|many|much|far|fast|old)|what (speed|time|is the|was the|must|should|percentage|fraction|ratio|probability)|at what|find|solve|calculate|compute|work out|average|probability|percent|ratio|interest|rate|minimum|maximum|how would)\b|كام|كم|احسب|أوجد|اوجد|ما هو|متوسط|نسبة|احتمال/i;
   const story = /\b(if|when|each|per|every|at a|takes?|travels?|drives?|costs?|speed|km|hours?|minutes?|workers?|shirts?|trains?|tank|pipe|price|profit|loss|discount|interest|rents?|rental|hire|days?|weeks?|months?|years?|salary|wages?|vat|tax|egp|usd|eur|sar|aed|pounds?|dollars?|fee|invoice|bill|total|tons?|kg|litres?|liters?|meters?|metres?|load)\b|%|لو|إذا|اذا|كل|سرعة|ساعة|دقيقة|عامل|سعر|ربح|إيجار|ايجار|يوم|أيام|ايام|شهر|ضريبة|جنيه|فاتورة|إجمالي|اجمالي|طن/i;
   // "How much is the rent, and with 14% VAT?" — money sums are word problems too (v5.13).
-  const money = /\b(how much|total|with vat|incl(uding)?\.? vat|plus vat|\+ ?vat)\b|كام|الإجمالي|الاجمالي/i;
+  // "3 cranes × 4 days × 25,000 EGP + 14% VAT" — a priced sum with VAT/tax is one too (v5.17).
+  const money = /\b(how much|total|with vat|incl(uding)?\.? vat|plus vat|\+ ?vat)\b|\d\s*%\s*(vat|tax)\b|كام|الإجمالي|الاجمالي|%\s*ضريبة/i;
   return (ask.test(t) || money.test(t)) && story.test(t);
 }
 
@@ -141,7 +142,8 @@ export function arithmeticSlips(text) {
   for (const line of lines) {
     if (/^\s*```/.test(line)) { inCode = !inCode; continue; }
     if (inCode || !line.includes("=")) continue;
-    const parts = line.split("=");
+    // "3. 500,000 + 70,000 = 453,000": the list number is not part of the sum (v5.17)
+    const parts = line.replace(/^\s*(?:\d{1,2}[.)]|[-*•])\s+/, "").split("=");
     for (let k = 0; k + 1 < parts.length; k++) {
       let left = parts[k];
       const cut = Math.max(left.lastIndexOf(":"), left.lastIndexOf("،"), left.lastIndexOf(";"));
@@ -173,3 +175,25 @@ export function arithmeticSlips(text) {
   }
   return out;
 }
+
+/**
+ * Correct the slips in an answer's text: each wrong result is replaced by the
+ * right one everywhere it appears (the "Total: 453,000" line at the top too),
+ * written the same way (thousands commas if the model used them). (v5.17)
+ * → { text, fixed }
+ */
+export function fixSlips(text, slips) {
+  let out = String(text || ""), fixed = 0;
+  for (const sl of slips || []) {
+    const raw = String(sl.expr).split("=").pop().trim();
+    if (!raw || /%$/.test(raw)) continue;
+    const dec = (raw.split(".")[1] || "").length;
+    const right = raw.includes(",") ? sl.right.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: Math.max(dec, 2) }) : String(dec ? sl.right.toFixed(dec) : sl.right);
+    const esc = raw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp("(^|[^\\d.,])" + esc + "(?![\\d]|[.,]\\d)", "g");
+    const next = out.replace(re, (m, pre) => pre + right);
+    if (next !== out) { out = next; fixed++; }
+  }
+  return { text: out, fixed };
+}
+

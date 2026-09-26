@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.16**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.17**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.16**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.16** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.17** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -114,9 +114,9 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 
 ## 4. How to build and test
 1. Edit `web-src/*`, then `bash web-src/build.sh` (Node 18+, Python 3; installs esbuild 0.28.2 + Tailwind 4.3.3 locally). Output: `app/src/main/assets/www/index.html` — **commit it** (CI checks it exists).
-2. **Unit tests:** `node tests/unit/run.mjs` → 12 files, all green at v5.15.
+2. **Unit tests:** `node tests/unit/run.mjs` → 13 files, all green at v5.17.
 3. **Browser end-to-end:** `bash tests/setup.sh` once (builds a desktop llama-server at the same pin + a tiny model), then from `tests/`:
-   `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py`, `e2e_v513.py`, `e2e_v514.py`, `e2e_v516.py` — **all green at v5.16**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
+   `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py`, `e2e_v513.py`, `e2e_v514.py`, `e2e_v516.py`, `e2e_v517.py` — **all green at v5.17**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
    Mock features (harness.py): `__mock.fakeQueue` (canned answers, streamed; skipped for warm-up requests with `max_tokens ≤ 2`), `slowQueue`, `chatCancel`, `cancelled`, `bodies` (every request body), `notes` (schedule calls — **keeps every call, not one per id**), `files` (saveFile), stash. v5.12 tests add `N.news` and `N.setWidget` mocks (`NEWS_MOCK` in e2e_v512_more.py).
 4. **Kotlin compile check without an Android SDK** (dl.google.com is blocked in the sandbox): kotlinc **2.4.0** (GitHub release) + `android-35/android.jar` (sparse clone of github.com/Reginer/aosp-android-jar) + hand-written stubs for androidx, jsoup, FileProvider, InternalStoragePathHandler, LiteRT-LM (signature-exact incl. RepetitionPenaltyConfig/NoRepeatNgramConfig) and **R** (add new `R.layout/R.id/R.drawable` entries by hand when you add resources). The stub set lived in the old session's scratchpad and is **gone** — rebuild it if you change Kotlin, or rely on CI.
 5. **APK:** push to `main` → Actions builds (~8+ min; longer when caches are cold) → Ali downloads `attune-apk`. If you can't push: bundle (`git bundle create x.bundle <origin-main-sha>..main`) + zip + paste-ready prompt.
@@ -137,6 +137,7 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 - **v5.14** — Ali's screenshots after v5.13 + Assistants, Projects, Artifacts, Themes — see §5.3.
 - **v5.15** — answer recipes (skills.js) — see §5.4.
 - **v5.16** — type while it answers (queue), smarter follow-ups, lighter streaming — see §5.5.
+- **v5.17** — Ali's v5.16 phone test + Business queries/forms/rename + Copilot + versioning — see §5.6.
 
 ### 5.1 v5.12 in detail (the part nobody has tested on the phone yet)
 - **Corrections checked before learning** (`checkCorrection`, reason.js; UI in chat.jsx `checkTeach/saveTeach`): 👎 → "Check & teach". Maths question → `verifyMath(..., explain:false)` computes the answer, compared by number (±0.5%). Otherwise 2 independent re-solves (temp 0.2 / 0.7; a 3rd at 0.5 if they disagree) returning `VERDICT: RIGHT|WRONG|PARTLY|PREFERENCE` + `REASON:` + `ANSWER:`. RIGHT/PREFERENCE → saved (`checked` field). WRONG/PARTLY/unsure → reason box (`data-testid=teach-verdict`) with "Learn the checked answer" (partly), "I'm sure — learn mine anyway" (`teach-force`), "Edit my correction".
@@ -208,6 +209,19 @@ Ali asked for code that makes the models stronger. Weights can't change on the p
 - **Follow-ups**: chips depend on the answer (`msg.skill` from skills.js, photo → "Exact model?"/"Specifications", compare → "Which should I choose?"/"Price difference", steps, explain, email, list, plan, translate); labels in the app language (tr), prompts in the answer's language; "Check the maths" ranks before Translate. A maths follow-up with a number ("and with 5 cranes?") after a word problem is sent to verifyMath together with the earlier question.
 - **Lighter streaming** (Ali: "don't make the device glitch"): stream updates ~10×/s (setTimeout 90 ms, not every animation frame) in `ask` and `continueAnswer`; `Md` is `React.memo` (react-shim now exports `memo`), so earlier answers aren't re-rendered on every update.
 - Tests: `e2e_v516.py`.
+
+### 5.6 v5.17 — Ali's phone test (26 Sep 2026)
+**First: his phone showed an OLD page** (More had no Assistants/Projects/Artifacts/Theme) although he installed "the update". `versionCode` had been 13 / "5.13" since v5.13, so nothing distinguished builds. Now `versionCode = 17`, `versionName = "5.17"` — **raise both on every release**. MainActivity loads `index.html?v=<versionName>-<lastUpdateTime>` and calls `web.clearCache(true)` once after each update; More shows `Attune <PAGE_VERSION>` (+ "· app X" if the app's differs) — `PAGE_VERSION` in attune.jsx must be raised too.
+- **Website preview: tapping a link reopened Attune inside the page** → in a srcdoc iframe, `#menu`, `about.html` and form submits resolve against the APP's URL. `htmlDoc` (sandbox.js) now handles unhandled clicks on `a[href]` (hash → scrollIntoView; others → logged, not followed) and unhandled `submit` (prevented), listening on window at the end of the bubble so the page's own handlers run first.
+- **"And with 5 cranes" → 500,000 + 70,000 = 453,000** → (a) the slip check needed ≥ 2 digits in the QUESTION; now it runs whenever the answer has "="; (b) `arithmeticSlips` read the list number "3." as part of the sum — list markers are stripped; (c) `fixSlips` corrects the wrong result everywhere in the text (incl. the Total line) when re-checking by code isn't possible; (d) a follow-up after an instant `calc` sum also takes the verifyMath route with the earlier question; `looksLikeMathProblem` knows "+ 14% VAT".
+- **Web answers with mangled digits ("1,5,0000Pa", dollar "5.75.7")** → DRY looks back over the whole context, so copying numbers from the passages counted as repeating. `o.copy` (web sources, files, project knowledge, the audit re-answer) turns DRY / n-gram off; elsewhere `dry_allowed_length` 4 → 12.
+- **Studio stuck on "Writing a fuller description…"** → the stage now moves to "start" as soon as the description is written (the real hang was the v5.16-fixed `--list-devices` read).
+- **Memory item wouldn't open** → TWO causes: the fade-in (`.att-in`, defined in shell.html AND in attune.jsx's injected CSS) used `animation-fill-mode: both`, which keeps a transform in effect → the page became the containing block for `position:fixed` pop-ups, which opened off-screen; now `backwards` in both places. And the pop-ups were `items-center` in an `overflow-auto` overlay, so a tall one had its top cut off unreachably; all six such overlays are now `items-start`.
+- **Memory in the bottom bar** (6 items: Chat · Instant · Money · Business · Memory · More).
+- **Business**: design names in the description's language (`designLang`: Arabic script → Arabic, else English; "never Spanish…"); `designQuality` rejects designs whose tables are only an ID (Ali's "Skittlz Cafe": Clientes/ClienteID…) and falls through to lines → template; ID-only tables get a Name. **Rename by tap**: draft preview (tap table/field), system name (tap), table (tap the selected chip again or hold any chip → sheet with Rename / Edit its columns / Delete), field (hold a column header). **Connections** card in Design (`relationships`), **linked records** under a record (`relatedRows`). **Queries** tab: a sentence → `queryMessages` JSON → `makeQuery` (names matched loosely, ops = != > >= < <= contains between empty notempty, sort, group+sum, limit) → `runQuery`; saved in `sys.queries`. **Forms** tab: a sentence → `formMessages` → `makeForm` (fields in order, defaults) → saved in `sys.forms`; Data shows "New record with:" chips; RecordForm shows only the form's fields with its defaults. Tabs are now a 3×2 grid.
+- **Copilot**: "Bring the chat from ChatGPT…" card — paste a whole conversation or the last reply → added as an imported turn, analysed, and next-message variants suggested at once (the paste is kept even when the day's free runs are used up); big "Copy & open <tool>" button under the prompt.
+- Note for Ali: he is on the FREE tier (`TRIAL_PER_DAY` runs a day, "4 free today") — some "doesn't work" reports may be the daily limit + upgrade sheet.
+- Tests: `unit/v517.test.mjs`, `e2e_v517.py`; e2e_v4 bottom bar = 6.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

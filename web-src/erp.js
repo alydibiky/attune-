@@ -97,7 +97,8 @@ export function systemFromSpec(spec, { now = Date.now() } = {}) {
   sp.tables.forEach((t, i) => {
     const table = sys.tables[i];
     for (const f of t.fields) addFieldTo(sys, table, f);
-    if (!table.fields.some((f) => f.type !== "formula")) addFieldTo(sys, table, { name: "Name", type: "text" });
+    // a table with only an ID (or formulas) gets a name to fill in (v5.17)
+    if (!table.fields.some((f) => f.type !== "formula" && f.type !== "auto")) addFieldTo(sys, table, { name: "Name", type: "text" });
   });
   // formulas last (they may name fields listed after them)
   sp.tables.forEach((t, i) => {
@@ -604,12 +605,27 @@ export function jsonFrom(text) {
 
 const TYPES_HELP = "text, longtext, number, money, date, bool, choice (give \"options\"), link (give \"link\": the other table's name), phone, email, auto (a running number; optional \"prefix\" like \"INV-\"), formula (give \"formula\" using [Field name] and + - * / ( ), ROUND(x,2), DAYS([End],[Start]))";
 
+/** The language names are written in: the description's own (Arabic script → Arabic, else English). (v5.17) */
+export function designLang(description) { return /[\u0600-\u06FF]/.test(String(description || "")) ? "Arabic" : "English"; }
+
+/**
+ * Is a design worth showing? Every table needs at least two real fields (not
+ * just an ID) — v5.16 accepted "Clientes: ClienteID" and nothing else. (v5.17)
+ */
+export function designQuality(spec) {
+  const n = normalizeSpec(spec);
+  if (n.tables.length < 2) return { ok: false, why: "too few tables" };
+  const thin = n.tables.filter((t) => t.fields.filter((f) => f.type !== "auto").length < 2);
+  if (thin.length > n.tables.length / 3) return { ok: false, why: "tables without fields: " + thin.map((t) => t.name).join(", ") };
+  return { ok: true };
+}
+
 export function designMessages(description, { currency = "EGP" } = {}) {
   return [
     { role: "system", content: `You design the database of a small business's ERP system, like an expert Microsoft Access developer. Reply with JSON only, no other text:
 {"name": "<short system name>", "currency": "${currency}", "tables": [{"name": "<table>", "fields": [{"name": "<field>", "type": "<type>", ...}]}]}
 Field types: ${TYPES_HELP}.
-Rules: 4 to 8 tables covering what this business really tracks (customers, what it sells or rents, orders or jobs, invoices and payments, stock, staff, expenses — only the ones that fit). 4 to 10 fields per table, most important first; the first field is the record's name or number. Use link fields to connect tables (an order links to its customer). Use choice for statuses with realistic options. Use formula for totals. Field and table names in the language of the description.
+Rules: 4 to 8 tables covering what this business really tracks (customers, what it sells or rents, orders or jobs, invoices and payments, stock, staff, expenses — only the ones that fit). 4 to 10 fields per table, most important first; the first field is the record's name or number. Use link fields to connect tables (an order links to its customer). Use choice for statuses with realistic options. Use formula for totals. Every table and field name in ${designLang(description)} (never Spanish or any other language unless the description is written in it).
 Example: {"name":"Bakery","currency":"EGP","tables":[{"name":"Products","fields":[{"name":"Product","type":"text"},{"name":"Price","type":"money"}]},{"name":"Orders","fields":[{"name":"Order no","type":"auto","prefix":"ORD-"},{"name":"Product","type":"link","link":"Products"},{"name":"Qty","type":"number"},{"name":"Unit price","type":"money"},{"name":"Total","type":"formula","formula":"[Qty] * [Unit price]"},{"name":"Status","type":"choice","options":["New","Paid","Delivered"]}]}]}` },
     { role: "user", content: String(description || "").trim().slice(0, 2000) },
   ];
@@ -626,7 +642,7 @@ export function designLinesMessages(description) {
   return [
     { role: "system", content: `You design the database of a small business's ERP system, like an expert Microsoft Access developer. Write 4 to 7 tables. For each table write one line "TABLE <name>" and under it 4 to 9 lines "- <field name>: <type>".
 Types: text, longtext, number, money, date, bool, phone, email, auto, choice (Option 1, Option 2, …), link <other table name>, formula <expression using [Field name]>.
-The first field of each table is its name or number. Connect tables with link fields. Use the language of the description for names. Write nothing else.
+The first field of each table is its name or number. Connect tables with link fields. Write every name in ${designLang(description)}. Write nothing else.
 Example:
 TABLE Customers
 - Name: text
@@ -783,3 +799,121 @@ export async function checkLicence(sys, code, { publicKey = LICENCE_PUBLIC_KEY, 
     return ok ? { ok: true, plan: payload.p || "full", issued: payload.i || 0, code } : { ok: false, error: "That code is not valid." };
   } catch (e) { return { ok: false, error: "That code is not valid." }; }
 }
+
+// ---- relationships (like Access's Relationships window) ---------------------------------
+/** Every link: "Jobs.Customer → Customers". */
+export function relationships(sys) {
+  const out = [];
+  for (const t of sys.tables) for (const f of t.fields) if (f.type === "link") {
+    const to = sys.tables.find((x) => x.id === f.link);
+    if (to) out.push({ from: t.id, fromName: t.name, field: f.id, fieldName: f.name, to: to.id, toName: to.name });
+  }
+  return out;
+}
+/** The records in other tables that point at this one: a customer's jobs, invoices … */
+export function relatedRows(sys, tid, rowId) {
+  const out = [];
+  for (const rel of relationships(sys)) if (rel.to === tid) {
+    const t = sys.tables.find((x) => x.id === rel.from);
+    const rows = (sys.rows[t.id] || []).filter((r) => r[rel.field] === rowId).map((r) => computeRow(t, r));
+    if (rows.length) out.push({ table: t, field: rel.fieldName, rows });
+  }
+  return out;
+}
+
+// ---- queries from a sentence (like an Access query, asked in words) --------------------
+const QOPS = ["=", "!=", ">", ">=", "<", "<=", "contains", "between", "empty", "notempty"];
+export function queryMessages(sys, request, { today = new Date().toISOString().slice(0, 10) } = {}) {
+  return [
+    { role: "system", content: `You turn a question about a business database into a query. Reply with JSON only:
+{"title": "<short title>", "table": "<table name>", "where": [{"field": "<field>", "op": "<${QOPS.join("|")}>", "value": <value or [from, to] for between>}], "sort": {"field": "<field>", "dir": "asc|desc"}, "group": {"by": "<field>", "sum": "<number field or null>"}, "limit": <number or null>}
+Leave out "where", "sort", "group" or "limit" when not needed. Use exact table and field names from the design. Dates as YYYY-MM-DD; today is ${today} ("this month" = from the 1st of this month to today).
+Design:
+${describe(sys)}` },
+    { role: "user", content: String(request || "").trim().slice(0, 600) },
+  ];
+}
+/** A query spec (names or ids) → a checked query with ids, or { error }. */
+export function makeQuery(sys, j) {
+  if (!j || typeof j !== "object") return { error: "No query came back." };
+  const table = findTable(sys, j.table); if (!table) return { error: "No table called " + (j.table || "?") };
+  const F = (n) => findField(table, n);
+  const where = [];
+  for (const w of Array.isArray(j.where) ? j.where : j.where ? [j.where] : []) {
+    const f = F(w.field); if (!f) return { error: "No field called " + w.field + " in " + table.name };
+    const op = QOPS.includes(w.op) ? w.op : w.op === "==" ? "=" : w.op === "<>" ? "!=" : "=";
+    where.push({ field: f.id, op, value: w.value });
+  }
+  const q = { id: uid("q"), title: clean(j.title || "Query", 60), table: table.id, where };
+  if (j.sort && F(j.sort.field)) q.sort = { field: F(j.sort.field).id, dir: j.sort.dir === "desc" ? "desc" : "asc" };
+  if (j.group && F(j.group.by)) q.group = { by: F(j.group.by).id, sum: j.group.sum && F(j.group.sum) ? F(j.group.sum).id : null };
+  if (Number(j.limit) > 0) q.limit = Math.min(500, Math.round(Number(j.limit)));
+  return { query: q };
+}
+function cmpVal(sys, f, v) {
+  if (v == null || v === "") return null;
+  if (NUMERIC.has(f.type) || f.type === "bool") return typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
+  if (f.type === "date") return String(v).slice(0, 10);
+  return key(f.type === "link" ? show(sys, f, v) : v);
+}
+/** Run a query → { table, fields, rows } or { table, groups } */
+export function runQuery(sys, q) {
+  const table = sys.tables.find((t) => t.id === q.table); if (!table) return { error: "That table is gone." };
+  let rows = viewRows(sys, table.id, { sort: q.sort || null });
+  for (const w of q.where || []) {
+    const f = table.fields.find((x) => x.id === w.field); if (!f) continue;
+    const want = w.op === "between" && Array.isArray(w.value) ? w.value.map((x) => cmpVal(sys, f, x)) : f.type === "link" ? key(w.value) : cmpVal(sys, f, w.value);
+    rows = rows.filter((r) => {
+      const got = cmpVal(sys, f, r[f.id]);
+      switch (w.op) {
+        case "empty": return got == null;
+        case "notempty": return got != null;
+        case "contains": return got != null && String(got).includes(key(w.value));
+        case "between": return got != null && got >= want[0] && got <= want[1];
+        case "!=": return got !== want;
+        case ">": return got != null && got > want;
+        case ">=": return got != null && got >= want;
+        case "<": return got != null && got < want;
+        case "<=": return got != null && got <= want;
+        default: return got === want || (typeof got === "string" && typeof want === "string" && got === key(want));
+      }
+    });
+  }
+  if (q.group) {
+    const g = table.fields.find((f) => f.id === q.group.by), sf = q.group.sum && table.fields.find((f) => f.id === q.group.sum);
+    const m = new Map();
+    for (const r of rows) { const k = show(sys, g, r[g.id]) || "(empty)"; const c = m.get(k) || { group: k, count: 0, sum: 0 }; c.count++; if (sf && typeof r[sf.id] === "number") c.sum += r[sf.id]; m.set(k, c); }
+    return { table, groupBy: g, sumField: sf || null, groups: [...m.values()].map((x) => ({ ...x, sum: Math.round(x.sum * 100) / 100 })).sort((a, b) => (sf ? b.sum - a.sum : b.count - a.count)) };
+  }
+  if (q.limit) rows = rows.slice(0, q.limit);
+  return { table, rows };
+}
+
+// ---- forms from a sentence (which fields, in what order, with what defaults) -----------
+export function formMessages(sys, request) {
+  return [
+    { role: "system", content: `You design a data-entry form for a business database, like an Access form. Reply with JSON only:
+{"title": "<form title>", "table": "<table name>", "fields": ["<field>", ...], "defaults": {"<field>": <value>}}
+"fields" = only the fields the user should fill, in the order they make sense on a phone. Use exact names from the design.
+Design:
+${describe(sys)}` },
+    { role: "user", content: String(request || "").trim().slice(0, 600) },
+  ];
+}
+export function makeForm(sys, j) {
+  if (!j || typeof j !== "object") return { error: "No form came back." };
+  const table = findTable(sys, j.table); if (!table) return { error: "No table called " + (j.table || "?") };
+  const fids = [];
+  for (const n of Array.isArray(j.fields) ? j.fields : []) { const f = findField(table, n); if (f && !fids.includes(f.id) && f.type !== "formula" && f.type !== "auto") fids.push(f.id); }
+  if (!fids.length) return { error: "The form has no fields from " + table.name };
+  const defaults = {};
+  for (const [k, v] of Object.entries(j.defaults || {})) { const f = findField(table, k); if (f && v != null && v !== "") defaults[f.id] = v; }
+  return { form: { id: uid("f"), title: clean(j.title || table.name, 60), table: table.id, fields: fids, defaults } };
+}
+/** Save a query or form into the system (kept with it, backed up with it). */
+export function saveSaved(sys, kind, item) {
+  const list = (sys[kind] || []).filter((x) => x.id !== item.id);
+  return { ...sys, [kind]: [item, ...list].slice(0, 30), updated: Date.now() };
+}
+export function removeSaved(sys, kind, id) { return { ...sys, [kind]: (sys[kind] || []).filter((x) => x.id !== id), updated: Date.now() }; }
+

@@ -107,7 +107,17 @@ export function htmlDoc(src, token) {
     `window.addEventListener("unhandledrejection",function(e){send("error","Unhandled promise rejection: "+(e.reason&&e.reason.message||e.reason))});` +
     `var L=console.log;console.log=function(){send("log",[].slice.call(arguments).join(" "));try{L.apply(console,arguments)}catch(e){}};` +
     `var E=console.error;console.error=function(){send("error",[].slice.call(arguments).join(" "));try{E.apply(console,arguments)}catch(e){}};` +
-    `window.alert=function(m){send("log","alert: "+m)};window.addEventListener("load",function(){setTimeout(function(){send("loaded","")},50)});})();</script>`;
+    `window.alert=function(m){send("log","alert: "+m)};window.addEventListener("load",function(){setTimeout(function(){send("loaded","")},50)});` +
+    // v5.17: a page shown in a srcdoc frame resolves "#menu", "index.html" and a
+    // form's submit against the APP's address — tapping one loaded Attune itself
+    // inside the preview ("as if I opened it for the first time"). Links and
+    // forms the page doesn't handle itself are handled here: #section scrolls
+    // there, everything else stays on the page. (Page handlers run first: these
+    // listen on window, at the end of the bubble.)
+    `window.addEventListener("click",function(e){if(e.defaultPrevented)return;var a=e.target&&e.target.closest&&e.target.closest("a[href]");if(!a)return;var h=a.getAttribute("href")||"";e.preventDefault();` +
+    `if(h.charAt(0)==="#"){var id=decodeURIComponent(h.slice(1));var el=id?(document.getElementById(id)||document.getElementsByName(id)[0]):null;if(el&&el.scrollIntoView)el.scrollIntoView({block:"start"});else if(!id)window.scrollTo(0,0);}` +
+    `else send("log","link: "+h)});` +
+    `window.addEventListener("submit",function(e){if(e.defaultPrevented)return;e.preventDefault();send("log","form submitted")});})();</script>`;
   const s = String(src || "");
   if (/<head[^>]*>/i.test(s)) return s.replace(/<head[^>]*>/i, (m) => m + hook);
   if (/<html[^>]*>/i.test(s)) return s.replace(/<html[^>]*>/i, (m) => m + "<head>" + hook + "</head>");

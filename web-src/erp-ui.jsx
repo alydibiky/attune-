@@ -7,7 +7,7 @@
    Plus import from Excel/CSV, export to CSV, undo, and a licence per system.
    The logic is in erp.js; this file is only the screens.                  */
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Plus, Trash2, Search, Database, ArrowUp, ArrowDown, Undo2, Upload, Download, KeyRound, BarChart3, Wrench, Sparkles, ChevronLeft, Check, X, Copy, Share2, Lock, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, Trash2, Search, Database, ArrowUp, ArrowDown, Undo2, Upload, Download, KeyRound, BarChart3, Wrench, Sparkles, ChevronLeft, Check, X, Copy, Share2, Lock, AlertTriangle, Loader2, PenLine, FileText } from "lucide-react";
 import { tr } from "./i18n.js";
 import * as E from "./erp.js";
 
@@ -32,6 +32,32 @@ function saveSys(sys) {
 function dropSys(id) { try { localStorage.removeItem(KEY + ":" + id); localStorage.setItem(KEY, JSON.stringify(loadIndex().filter((x) => x.id !== id))); } catch (e) {} }
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+/** v5.17: tap a name → a small sheet → type the new name → Save. */
+function RenameSheet({ title, value, onSave, onClose, extra }) {
+  const [v, setV] = useState(value || "");
+  return (
+    <div className="fixed inset-0 z-[80] bg-black/60 flex items-end" onClick={onClose}>
+      <div className="w-full bg-slate-900 border-t border-slate-700 rounded-t-2xl p-4 space-y-3" onClick={(e) => e.stopPropagation()} data-testid="erp-rename"
+        style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
+        <p className="text-sm text-slate-200 font-medium">{title}</p>
+        <input autoFocus value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && v.trim()) onSave(v.trim()); }} className={field + " text-base"} dir="auto" data-testid="erp-rename-input" />
+        <div className="flex gap-2">
+          <button className={primary + " flex-1 py-2.5"} disabled={!v.trim()} onClick={() => onSave(v.trim())} data-testid="erp-rename-save">{tr("Save")}</button>
+          <button className={ghost + " py-2.5"} onClick={onClose}>{tr("Cancel")}</button>
+        </div>
+        {extra || null}
+      </div>
+    </div>
+  );
+}
+/** A long press (or right-click) on something that also has a normal tap. */
+function useLongPress(fn, ms = 550) {
+  const t = useRef(0), fired = useRef(false);
+  const start = (...a) => { fired.current = false; clearTimeout(t.current); t.current = setTimeout(() => { fired.current = true; fn(...a); }, ms); };
+  const stop = () => clearTimeout(t.current);
+  return { start, stop, fired, bind: (...a) => ({ onTouchStart: () => start(...a), onTouchEnd: stop, onTouchMove: stop, onContextMenu: (e) => { e.preventDefault(); stop(); fired.current = true; fn(...a); } }) };
+}
 
 export function BusinessPage({ flash, llm, modelReady, openEngine, saveFile, share, runPy }) {
   const [index, setIndex] = useState(loadIndex);
@@ -86,13 +112,14 @@ function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
       let spec = null, how = "ai";
       setStep(tr("Designing the tables…"));
       const out = await llm(E.designMessages(desc), { maxTokens: 2500, temperature: 0.2, json: true });
-      const j = E.jsonFrom(out); const n = j && E.normalizeSpec(j);
-      if (n && n.tables.length >= 2) spec = j;
+      const j = E.jsonFrom(out);
+      // v5.17: a design whose tables are only an ID ("Clientes: ClienteID") is not a design.
+      if (j && E.designQuality(j).ok) spec = j;
       if (!spec) {
         setStep(tr("Trying a simpler way…"));
         const lines = await llm(E.designLinesMessages(desc), { maxTokens: 1500, temperature: 0.2 });
         const sp = E.specFromLines(lines, (j && j.name) || tr("My business"));
-        if (sp) spec = sp;
+        if (sp && E.designQuality(sp).ok) spec = sp;
       }
       if (!spec) { const t = E.guessTemplate(desc); if (t) { spec = t.spec; how = "template"; } }
       if (!spec) setErr(tr("The model didn't produce a usable design. Try again, describe it differently, or start from a template."));
@@ -103,15 +130,22 @@ function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
     } catch (e) { setErr(String(e.message || e)); }
     setBusy(false);
   };
+  const [ren, setRen] = useState(null);           // { tid, fid?, value }
+  const renameDraft = (name) => {
+    setDraft((d) => ({ ...d, tables: d.tables.map((t) => t.id !== ren.tid ? t : ren.fid
+      ? { ...t, fields: t.fields.map((f) => (f.id === ren.fid ? { ...f, name } : f)) } : { ...t, name }) }));
+    setRen(null);
+  };
   if (draft) return (
     <section className="p-4 space-y-3" data-testid="erp-draft">
+      {ren ? <RenameSheet title={ren.fid ? tr("Rename field") : tr("Rename table")} value={ren.value} onSave={renameDraft} onClose={() => setRen(null)} /> : null}
       <button onClick={() => setDraft(null)} className="text-slate-400 text-sm flex items-center gap-1"><ChevronLeft size={16} />{tr("Back")}</button>
       <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className={field + " text-base font-semibold"} dir="auto" />
-      <p className="text-[12px] text-slate-400">{tr("This is the design. You can change every table and column after creating it.")}</p>
+      <p className="text-[12px] text-slate-400">{tr("This is the design. Tap any table or field name to rename it — you can change everything else after creating it.")}</p>
       {draft.tables.map((t) => (
         <div key={t.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-          <p className="text-sm font-semibold text-slate-100" dir="auto">{t.name}</p>
-          <div className="flex flex-wrap gap-1.5 mt-1.5">{t.fields.map((f) => <span key={f.id} className="text-[11px] rounded-md bg-slate-800 text-slate-300 px-1.5 py-0.5" dir="auto">{f.name} <span className="text-slate-500">· {tr(E.FIELD_TYPES[f.type])}{f.type === "link" ? " → " + ((draft.tables.find((x) => x.id === f.link) || {}).name || "") : ""}</span></span>)}</div>
+          <button onClick={() => setRen({ tid: t.id, value: t.name })} className="text-sm font-semibold text-slate-100 flex items-center gap-1.5" dir="auto" data-testid="erp-draft-table">{t.name}<PenLine size={12} className="text-slate-500" /></button>
+          <div className="flex flex-wrap gap-1.5 mt-1.5">{t.fields.map((f) => <button key={f.id} onClick={() => setRen({ tid: t.id, fid: f.id, value: f.name })} className="text-[11px] rounded-md bg-slate-800 text-slate-300 px-1.5 py-0.5 active:bg-slate-700" dir="auto" data-testid="erp-draft-field">{f.name} <span className="text-slate-500">· {tr(E.FIELD_TYPES[f.type])}{f.type === "link" ? " → " + ((draft.tables.find((x) => x.id === f.link) || {}).name || "") : ""}</span></button>)}</div>
         </div>))}
       <button className={primary + " w-full py-2.5"} onClick={() => onCreate({ ...draft, name: draft.name.trim() || "My business" })} data-testid="erp-create">{tr("Create this system")}</button>
     </section>
@@ -140,7 +174,10 @@ function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
 // ---- one system ---------------------------------------------------------------------------
 function SystemView({ sys, setSys, llm, modelReady, flash, saveFile, share, runPy, onBack, onDelete }) {
   const [tid, setTid] = useState(sys.tables[0] && sys.tables[0].id);
-  const [tab, setTab] = useState("data");         // data | design | summary | more
+  const [tab, setTab] = useState("data");         // data | design | queries | forms | summary | more
+  const [ren, setRen] = useState(null);            // { kind: "system" | "table", tid?, value }
+  const [delAsk, setDelAsk] = useState(false);
+  const lp = useLongPress((t) => { setTid(t.id); setRen({ kind: "table", tid: t.id, value: t.name }); });
   const table = sys.tables.find((t) => t.id === tid) || sys.tables[0];
   useEffect(() => { if (!sys.tables.some((t) => t.id === tid) && sys.tables[0]) setTid(sys.tables[0].id); }, [sys]);
   const apply = (ops, label) => {
@@ -151,26 +188,39 @@ function SystemView({ sys, setSys, llm, modelReady, flash, saveFile, share, runP
   };
   return (
     <section className="p-3 space-y-3" data-testid="erp-systemview">
+      {ren ? <RenameSheet title={ren.kind === "system" ? tr("Rename system") : tr("Table “{t}”", { t: (sys.tables.find((x) => x.id === ren.tid) || {}).name || "" })} value={ren.value}
+        onClose={() => { setRen(null); setDelAsk(false); }}
+        onSave={(name) => { if (ren.kind === "system") setSys({ ...sys, name, updated: Date.now() }, tr("Renamed")); else apply([{ op: "renameTable", table: ren.tid, to: name }]); setRen(null); }}
+        extra={ren.kind === "table" ? (
+          <div className="flex gap-2 border-t border-slate-800 pt-3">
+            <button className={ghost + " flex-1 flex items-center justify-center gap-1"} onClick={() => { setTab("design"); setRen(null); }} data-testid="erp-table-design"><Wrench size={14} />{tr("Edit its columns")}</button>
+            <button className={`${btn} border flex-1 ${delAsk ? "border-rose-600 bg-rose-500/15 text-rose-200" : "border-slate-700 text-slate-300"}`}
+              onClick={() => { if (!delAsk) { setDelAsk(true); return; } apply([{ op: "deleteTable", table: ren.tid }]); setRen(null); setDelAsk(false); }}>{delAsk ? tr("Tap again to delete") : tr("Delete table")}</button>
+          </div>) : null} /> : null}
       <div className="flex items-center gap-2">
         <button onClick={onBack} className="p-1.5 -ms-1.5 text-slate-400" title={tr("Back")}><ChevronLeft size={20} /></button>
-        <h2 className="text-base font-semibold text-slate-100 truncate flex-1" dir="auto">{sys.name}</h2>
+        <button onClick={() => setRen({ kind: "system", value: sys.name })} className="text-base font-semibold text-slate-100 truncate flex-1 text-start flex items-center gap-1.5 min-w-0" dir="auto" data-testid="erp-system-name">
+          <span className="truncate">{sys.name}</span><PenLine size={13} className="text-slate-500 shrink-0" /></button>
         {sys.history && sys.history.length ? <button onClick={() => { const u = E.undo(sys); if (u) setSys(u.sys, tr("Undone: {w}", { w: u.what })); }} className="p-1.5 text-slate-300" title={tr("Undo last design change")} data-testid="erp-undo"><Undo2 size={18} /></button> : null}
         {!E.isActive(sys) ? <button onClick={() => setTab("more")} className="text-[10px] text-amber-300 border border-amber-800 rounded px-1.5 py-0.5">{tr("Trial")}</button> : null}
       </div>
       <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-3 px-3" data-testid="erp-tables">
         {sys.tables.map((t) => (
-          <button key={t.id} onClick={() => { setTid(t.id); if (tab === "more") setTab("data"); }} className={`shrink-0 px-3 py-1.5 rounded-full text-xs border ${t.id === (table && table.id) ? "bg-teal-500/15 border-teal-600 text-teal-200" : "border-slate-700 text-slate-300"}`} dir="auto">
+          <button key={t.id} {...lp.bind(t)} onClick={() => { if (lp.fired.current) return; if (t.id === (table && table.id)) { setRen({ kind: "table", tid: t.id, value: t.name }); return; } setTid(t.id); if (tab === "more") setTab("data"); }} data-testid="erp-table-chip" className={`shrink-0 px-3 py-1.5 rounded-full text-xs border ${t.id === (table && table.id) ? "bg-teal-500/15 border-teal-600 text-teal-200" : "border-slate-700 text-slate-300"}`} dir="auto">
             {t.name} <span className="text-slate-500">{(sys.rows[t.id] || []).length}</span></button>))}
         <button onClick={() => { const r = apply([{ op: "addTable", table: tr("New table"), fields: [{ name: tr("Name"), type: "text" }] }]); if (r.done.length) { setTid(r.sys.tables[r.sys.tables.length - 1].id); setTab("design"); } }}
           className="shrink-0 px-2.5 py-1.5 rounded-full text-xs border border-dashed border-slate-600 text-slate-400" title={tr("Add a table")} data-testid="erp-add-table"><Plus size={13} /></button>
       </div>
-      <div className="grid grid-cols-4 gap-1 rounded-xl bg-slate-900 p-1">
-        {[["data", "Data", Database], ["design", "Design", Wrench], ["summary", "Summary", BarChart3], ["more", "More", KeyRound]].map(([k, l, I]) => (
+      <p className="text-[10px] text-slate-600 -mt-1">{tr("Tap the selected table again (or hold any table) to rename it.")}</p>
+      <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-900 p-1">
+        {[["data", "Data", Database], ["design", "Design", Wrench], ["queries", "Queries", Search], ["forms", "Forms", FileText], ["summary", "Summary", BarChart3], ["more", "More", KeyRound]].map(([k, l, I]) => (
           <button key={k} onClick={() => setTab(k)} data-testid={"erp-tab-" + k} className={`py-1.5 rounded-lg text-[12px] flex items-center justify-center gap-1 ${tab === k ? "bg-slate-700 text-slate-100" : "text-slate-400"}`}><I size={13} />{tr(l)}</button>))}
       </div>
       {!table ? <p className="text-sm text-slate-500">{tr("No tables — add one with +.")}</p>
         : tab === "data" ? <DataTab sys={sys} table={table} setSys={setSys} llm={modelReady ? llm : null} flash={flash} goMore={() => setTab("more")} />
         : tab === "design" ? <DesignTab sys={sys} table={table} apply={apply} llm={modelReady ? llm : null} flash={flash} />
+        : tab === "queries" ? <QueriesTab sys={sys} setSys={setSys} llm={modelReady ? llm : null} flash={flash} />
+        : tab === "forms" ? <FormsTab sys={sys} setSys={setSys} llm={modelReady ? llm : null} flash={flash} goTable={(id) => { setTid(id); setTab("data"); }} />
         : tab === "summary" ? <SummaryTab sys={sys} table={table} />
         : <MoreTab sys={sys} table={table} setSys={setSys} flash={flash} saveFile={saveFile} share={share} runPy={runPy} onDelete={onDelete} setTid={setTid} />}
     </section>
@@ -179,6 +229,10 @@ function SystemView({ sys, setSys, llm, modelReady, flash, saveFile, share, runP
 
 // ---- Data -----------------------------------------------------------------------------------
 function DataTab({ sys, table, setSys, llm, flash, goMore }) {
+  const [renF, setRenF] = useState(null);          // { fid, value }
+  const lpF = useLongPress((f) => setRenF({ fid: f.id, value: f.name }));
+  const forms = (sys.forms || []).filter((x) => x.table === table.id);
+  const [formId, setFormId] = useState(null);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState(null);
   const [editing, setEditing] = useState(null);    // row id | "new"
@@ -187,9 +241,17 @@ function DataTab({ sys, table, setSys, llm, flash, goMore }) {
   const shown = table.fields.slice(0, 12);
   const full = !E.canAddRow(sys, table.id);
   const toggleSort = (fid) => setSort((s) => (!s || s.field !== fid ? { field: fid, dir: "asc" } : s.dir === "asc" ? { field: fid, dir: "desc" } : null));
-  if (editing) return <RecordForm sys={sys} table={table} rowId={editing === "new" ? null : editing} setSys={setSys} llm={llm} flash={flash} onDone={() => setEditing(null)} />;
+  if (editing) return <RecordForm sys={sys} table={table} rowId={editing === "new" ? null : editing} setSys={setSys} llm={llm} flash={flash} onDone={() => setEditing(null)}
+    form={editing === "new" ? forms.find((x) => x.id === formId) || null : null} />;
   return (
     <div className="space-y-2">
+      {renF ? <RenameSheet title={tr("Rename field")} value={renF.value} onClose={() => setRenF(null)}
+        onSave={(name) => { const r = E.applyOps(sys, [{ op: "renameField", table: table.id, field: renF.fid, to: name }], { label: "rename" }); if (r.done.length) setSys(r.sys, tr("Renamed")); else if (r.errors.length) flash(r.errors[0]); setRenF(null); }} /> : null}
+      {forms.length ? (
+        <div className="flex gap-1.5 overflow-x-auto" data-testid="erp-form-pick">
+          <span className="text-[11px] text-slate-500 self-center shrink-0">{tr("New record with:")}</span>
+          {[{ id: null, title: tr("All fields") }, ...forms].map((x) => <button key={x.id || "all"} onClick={() => setFormId(x.id)} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${formId === x.id ? "border-teal-600 text-teal-200 bg-teal-500/10" : "border-slate-700 text-slate-400"}`}>{x.title}</button>)}
+        </div>) : null}
       <div className="flex gap-2">
         <label className="relative flex-1 min-w-0"><Search size={14} className="absolute start-2.5 top-2.5 text-slate-500" />
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tr("Search {t}", { t: table.name })} className={field + " ps-8"} dir="auto" data-testid="erp-search" /></label>
@@ -199,7 +261,7 @@ function DataTab({ sys, table, setSys, llm, flash, goMore }) {
       <div className="overflow-x-auto rounded-xl border border-slate-800" data-testid="erp-grid">
         <table className="text-[12px] text-slate-200 min-w-full">
           <thead className="bg-slate-900 text-slate-400"><tr>
-            {shown.map((f) => <th key={f.id} onClick={() => toggleSort(f.id)} className="text-start font-medium px-2.5 py-2 whitespace-nowrap cursor-pointer" dir="auto">
+            {shown.map((f) => <th key={f.id} {...lpF.bind(f)} onClick={() => { if (lpF.fired.current) return; toggleSort(f.id); }} className="text-start font-medium px-2.5 py-2 whitespace-nowrap cursor-pointer select-none" dir="auto" data-testid="erp-col">
               {f.name}{sort && sort.field === f.id ? (sort.dir === "asc" ? " ▲" : " ▼") : ""}</th>)}
           </tr></thead>
           <tbody>
@@ -218,18 +280,18 @@ function DataTab({ sys, table, setSys, llm, flash, goMore }) {
       {rows.length > 1 && Object.keys(tot).length ? <p className="text-[12px] text-slate-300 flex flex-wrap gap-x-3" data-testid="erp-total-line">
         {table.fields.filter((f) => tot[f.id] != null && (f.type === "money" || f.type === "formula")).slice(-3).map((f) =>
           <span key={f.id}><span className="text-slate-500">{f.name}:</span> <b className="tabular-nums">{E.show(sys, f.type === "formula" ? { type: "number" } : f, tot[f.id])}</b></span>)}</p> : null}
-      <p className="text-[11px] text-slate-500">{tr("{n} records", { n: rows.length })}{table.fields.length > shown.length ? " · " + tr("tap a record to see all {n} fields", { n: table.fields.length }) : ""}</p>
+      <p className="text-[11px] text-slate-500">{tr("{n} records", { n: rows.length })}{table.fields.length > shown.length ? " · " + tr("tap a record to see all {n} fields", { n: table.fields.length }) : ""} · {tr("hold a column name to rename it")}</p>
     </div>
   );
 }
 
-function RecordForm({ sys, table, rowId, setSys, llm, flash, onDone }) {
+function RecordForm({ sys, table, rowId, setSys, llm, flash, onDone, form }) {
   const row = rowId ? (sys.rows[table.id] || []).find((r) => r._id === rowId) : null;
   const computed = row ? E.computeRow(table, row) : null;
   const [vals, setVals] = useState(() => {
     const v = {};
     for (const f of table.fields) {
-      const x = row ? row[f.id] : null;
+      const x = row ? row[f.id] : form && form.defaults && form.defaults[f.id] != null ? form.defaults[f.id] : null;
       v[f.id] = x == null ? (f.type === "bool" ? false : "") : f.type === "bool" ? !!x : String(x);
     }
     return v;
@@ -276,7 +338,8 @@ function RecordForm({ sys, table, rowId, setSys, llm, flash, onDone }) {
           <button className={ghost + " flex items-center gap-1"} disabled={aiBusy || aiText.trim().length < 5} onClick={fillAI} data-testid="erp-ai-fill">
             {aiBusy ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}{tr("Fill the form from this")}</button>
         </div>) : null}
-      {table.fields.map((f) => (
+      {form ? <p className="text-[12px] text-teal-200" data-testid="erp-form-title">{form.title}</p> : null}
+      {(form ? form.fields.map((id) => table.fields.find((f) => f.id === id)).filter(Boolean) : table.fields).map((f) => (
         <label key={f.id} className="block">
           <span className="block text-[11px] text-slate-400 mb-1" dir="auto">{f.name}{f.required ? " *" : ""} <span className="text-slate-600">· {tr(E.FIELD_TYPES[f.type])}</span></span>
           <FieldInput sys={sys} f={f} value={vals[f.id]} set={(v) => set(f.id, v)} computed={computed ? computed[f.id] : null} />
@@ -290,6 +353,11 @@ function RecordForm({ sys, table, rowId, setSys, llm, flash, onDone }) {
           <Trash2 size={14} />{confirmDel ? tr("Tap again to delete") : tr("Delete")}</button> : null}
       </div>
       {row && confirmDel && used ? <p className="text-[12px] text-amber-300">{tr("{n} records in other tables link to this one; they will show “(deleted)”.", { n: used })}</p> : null}
+      {row ? E.relatedRows(sys, table.id, row._id).map((g) => (
+        <div key={g.table.id + g.field} className="rounded-xl border border-slate-800 bg-slate-900/60 p-2.5" data-testid="erp-related">
+          <p className="text-[12px] text-slate-400 mb-1" dir="auto">{tr("Linked {t} ({n})", { t: g.table.name, n: g.rows.length })} <span className="text-slate-600">· {g.field}</span></p>
+          {g.rows.slice(0, 20).map((r) => <p key={r._id} className="text-[13px] text-slate-200 truncate" dir="auto">• {E.displayOf(g.table, r)}</p>)}
+        </div>)) : null}
     </div>
   );
 }
@@ -333,8 +401,14 @@ function DesignTab({ sys, table, apply, llm, flash }) {
     setBusy(false);
   };
   const twice = (k, fn) => { if (confirm !== k) { setConfirm(k); setTimeout(() => setConfirm((c) => (c === k ? "" : c)), 4000); return; } setConfirm(""); fn(); };
+  const rels = E.relationships(sys);
   return (
     <div className="space-y-3" data-testid="erp-design">
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-2.5" data-testid="erp-relationships">
+        <p className="text-[12px] text-slate-300 font-medium mb-1">{tr("Connections between tables")}</p>
+        {rels.length ? rels.map((r, i) => <p key={i} className="text-[12px] text-slate-400" dir="auto">{r.fromName} · <span className="text-slate-300">{r.fieldName}</span> → <span className="text-teal-300">{r.toName}</span></p>)
+          : <p className="text-[12px] text-slate-500">{tr("None yet — add a field of type “Link to another table”, or ask below: “connect Jobs to Customers”.")}</p>}
+      </div>
       {llm ? (
         <div className="rounded-xl border border-teal-900 bg-teal-500/5 p-2.5 space-y-2">
           <p className="text-[12px] text-teal-200 flex items-center gap-1"><Sparkles size={13} />{tr("Say the change — you'll see it before anything changes")}</p>
@@ -416,6 +490,118 @@ function DesignTab({ sys, table, apply, llm, flash }) {
           </div>
         </div>
       ) : <button className={ghost + " w-full flex items-center justify-center gap-1"} onClick={() => setAdding({ name: "", type: "text" })} data-testid="erp-add-field"><Plus size={14} />{tr("Add a field")}</button>}
+    </div>
+  );
+}
+
+// ---- Queries: ask the data in a sentence (v5.17) -------------------------------------------
+function QueryResult({ sys, res }) {
+  if (!res) return null;
+  if (res.error) return <p className="text-[12px] text-amber-300">{res.error}</p>;
+  if (res.groups) return (
+    <div className="overflow-x-auto rounded-xl border border-slate-800" data-testid="erp-query-result">
+      <table className="text-[12px] text-slate-200 min-w-full"><thead className="bg-slate-900 text-slate-400"><tr>
+        <th className="text-start px-2.5 py-2" dir="auto">{res.groupBy.name}</th><th className="text-end px-2.5 py-2">{tr("Count")}</th>{res.sumField ? <th className="text-end px-2.5 py-2" dir="auto">{res.sumField.name}</th> : null}</tr></thead>
+        <tbody>{res.groups.map((g) => <tr key={g.group} className="border-t border-slate-800/80"><td className="px-2.5 py-1.5" dir="auto">{g.group}</td><td className="px-2.5 py-1.5 text-end tabular-nums">{g.count}</td>
+          {res.sumField ? <td className="px-2.5 py-1.5 text-end tabular-nums">{E.show(sys, res.sumField.type === "formula" ? { type: "number" } : res.sumField, g.sum)}</td> : null}</tr>)}</tbody>
+      </table></div>);
+  const shown = res.table.fields.slice(0, 8), tot = E.totals(res.table, res.rows);
+  return (
+    <div className="space-y-1">
+      <div className="overflow-x-auto rounded-xl border border-slate-800" data-testid="erp-query-result">
+        <table className="text-[12px] text-slate-200 min-w-full"><thead className="bg-slate-900 text-slate-400"><tr>{shown.map((f) => <th key={f.id} className="text-start px-2.5 py-2 whitespace-nowrap" dir="auto">{f.name}</th>)}</tr></thead>
+          <tbody>{res.rows.slice(0, 200).map((r) => <tr key={r._id} className="border-t border-slate-800/80">{shown.map((f) => <td key={f.id} className="px-2.5 py-1.5 whitespace-nowrap" dir="auto">{f.type === "bool" ? (r[f.id] ? "✓" : "") : E.show(sys, f, r[f.id])}</td>)}</tr>)}
+            {!res.rows.length ? <tr><td colSpan={shown.length} className="px-3 py-4 text-center text-slate-500">{tr("No records match")}</td></tr> : null}</tbody>
+          {Object.keys(tot).length && res.rows.length > 1 ? <tfoot className="bg-slate-900/70"><tr>{shown.map((f, i) => <td key={f.id} className="px-2.5 py-1.5 text-end tabular-nums font-semibold">{tot[f.id] != null ? E.show(sys, f.type === "formula" ? { type: "number" } : f, tot[f.id]) : i === 0 ? tr("Total") : ""}</td>)}</tr></tfoot> : null}
+        </table></div>
+      <p className="text-[11px] text-slate-500">{tr("{n} records", { n: res.rows.length })}</p>
+    </div>);
+}
+
+function QueriesTab({ sys, setSys, llm, flash }) {
+  const [ask, setAsk] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [cur, setCur] = useState(null);           // { query, res, saved? }
+  const saved = sys.queries || [];
+  const make = async () => {
+    setBusy(true); setCur(null);
+    try {
+      const r = E.makeQuery(sys, E.jsonFrom(await llm(E.queryMessages(sys, ask, { today: today() }), { maxTokens: 500, temperature: 0.1, json: true })));
+      if (r.error) flash(r.error); else setCur({ query: r.query, res: E.runQuery(sys, r.query) });
+    } catch (e) { flash(String(e.message || e)); }
+    setBusy(false);
+  };
+  return (
+    <div className="space-y-3" data-testid="erp-queries">
+      {llm ? (
+        <div className="rounded-xl border border-teal-900 bg-teal-500/5 p-2.5 space-y-2">
+          <p className="text-[12px] text-teal-200 flex items-center gap-1"><Sparkles size={13} />{tr("Ask your data — like an Access query, in words")}</p>
+          <textarea value={ask} onChange={(e) => setAsk(e.target.value)} rows={2} dir="auto" className={field} data-testid="erp-query-ask"
+            placeholder={tr("e.g. unpaid invoices over 50,000 · jobs this month by customer · top 5 cranes by revenue")} />
+          <button className={primary + " flex items-center gap-1"} disabled={busy || ask.trim().length < 4} onClick={make} data-testid="erp-query-go">
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}{busy ? tr("Working it out…") : tr("Run it")}</button>
+        </div>) : <p className="text-[12px] text-slate-500">{tr("Load a model to ask your data in words.")}</p>}
+      {cur ? (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2"><p className="text-sm text-slate-100 font-medium flex-1" dir="auto">{cur.query.title}</p>
+            {!cur.saved ? <button className={ghost} onClick={() => { setSys(E.saveSaved(sys, "queries", cur.query), tr("Query saved")); setCur({ ...cur, saved: true }); }} data-testid="erp-query-save">{tr("Save query")}</button> : null}</div>
+          <QueryResult sys={sys} res={cur.res} />
+        </div>) : null}
+      {saved.length ? (
+        <div className="space-y-1.5">
+          <p className="text-[12px] text-slate-400">{tr("Saved queries")}</p>
+          {saved.map((q) => (
+            <div key={q.id} className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2" data-testid="erp-saved-query">
+              <button className="flex-1 text-start text-[13px] text-slate-200 truncate" dir="auto" onClick={() => setCur({ query: q, res: E.runQuery(sys, q), saved: true })}>{q.title}</button>
+              <button className="p-1 text-slate-500" onClick={() => setSys(E.removeSaved(sys, "queries", q.id))} title={tr("Delete")}><Trash2 size={14} /></button>
+            </div>))}
+        </div>) : null}
+    </div>
+  );
+}
+
+// ---- Forms: which fields to fill, in what order, with what defaults (v5.17) ----------------
+function FormsTab({ sys, setSys, llm, flash, goTable }) {
+  const [ask, setAsk] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [draft, setDraft] = useState(null);
+  const forms = sys.forms || [];
+  const make = async () => {
+    setBusy(true); setDraft(null);
+    try {
+      const r = E.makeForm(sys, E.jsonFrom(await llm(E.formMessages(sys, ask), { maxTokens: 500, temperature: 0.1, json: true })));
+      if (r.error) flash(r.error); else setDraft(r.form);
+    } catch (e) { flash(String(e.message || e)); }
+    setBusy(false);
+  };
+  const tname = (id) => (sys.tables.find((t) => t.id === id) || {}).name || "?";
+  const fname = (f) => { const t = sys.tables.find((x) => x.id === f.table); return (fid) => ((t && t.fields.find((x) => x.id === fid)) || {}).name || "?"; };
+  return (
+    <div className="space-y-3" data-testid="erp-forms">
+      {llm ? (
+        <div className="rounded-xl border border-teal-900 bg-teal-500/5 p-2.5 space-y-2">
+          <p className="text-[12px] text-teal-200 flex items-center gap-1"><Sparkles size={13} />{tr("Describe a form — the fields to fill, in order")}</p>
+          <textarea value={ask} onChange={(e) => setAsk(e.target.value)} rows={2} dir="auto" className={field} data-testid="erp-form-ask"
+            placeholder={tr("e.g. a quick job form for the site: customer, crane, start date, days — status New")} />
+          <button className={primary + " flex items-center gap-1"} disabled={busy || ask.trim().length < 4} onClick={make} data-testid="erp-form-go">
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}{busy ? tr("Working it out…") : tr("Make the form")}</button>
+        </div>) : <p className="text-[12px] text-slate-500">{tr("Load a model to make forms in words.")}</p>}
+      {draft ? (
+        <div className="rounded-xl border border-slate-700 bg-slate-950 p-3 space-y-1.5" data-testid="erp-form-draft">
+          <p className="text-sm text-slate-100 font-medium" dir="auto">{draft.title} <span className="text-slate-500 text-[12px]">· {tname(draft.table)}</span></p>
+          {draft.fields.map((id, i) => <p key={id} className="text-[13px] text-slate-300" dir="auto">{i + 1}. {fname(draft)(id)}{draft.defaults[id] != null ? <span className="text-slate-500"> = {String(draft.defaults[id])}</span> : null}</p>)}
+          <div className="flex gap-2 pt-1">
+            <button className={primary} onClick={() => { setSys(E.saveSaved(sys, "forms", draft), tr("Form saved — pick it above the records when you add one")); setDraft(null); setAsk(""); }} data-testid="erp-form-save">{tr("Save form")}</button>
+            <button className={ghost} onClick={() => setDraft(null)}>{tr("Cancel")}</button>
+          </div>
+        </div>) : null}
+      {forms.map((f) => (
+        <div key={f.id} className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2" data-testid="erp-saved-form">
+          <button className="flex-1 text-start min-w-0" onClick={() => goTable(f.table)}><span className="block text-[13px] text-slate-200 truncate" dir="auto">{f.title}</span>
+            <span className="block text-[11px] text-slate-500 truncate" dir="auto">{tname(f.table)} · {f.fields.map(fname(f)).join(", ")}</span></button>
+          <button className="p-1 text-slate-500" onClick={() => setSys(E.removeSaved(sys, "forms", f.id))} title={tr("Delete")}><Trash2 size={14} /></button>
+        </div>))}
+      {!forms.length && !draft ? <p className="text-[12px] text-slate-500">{tr("No forms yet. A form shows only the fields you need, in your order, with ready values — pick it when you add a record.")}</p> : null}
     </div>
   );
 }
