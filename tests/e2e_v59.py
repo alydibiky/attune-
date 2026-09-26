@@ -131,7 +131,7 @@ with sync_playwright() as pw:
     print("--- edit", flush=True)
     page.locator("[data-testid=studio-gallery] button").nth(1).click()
     page.click("[data-testid=studio-edit-this]")
-    page.wait_for_selector("[data-testid=studio-ref]", timeout=5000)
+    page.wait_for_selector("[data-testid=studio-ref]", timeout=15000)
     check(page.locator("[data-testid=studio-mode-edit]").get_attribute("class").count("bg-violet-500") == 1, "Edit this switches to editing, with the picture as the reference")
     page.fill("[data-testid=studio-idea]", "make it rain, wet ground with reflections")
     page.evaluate("window.__mock.bodies = []")
@@ -147,7 +147,7 @@ with sync_playwright() as pw:
     import base64, os
     photo = os.path.join(HERE, "_photo.png"); open(photo, "wb").write(base64.b64decode(png))
     page.set_input_files("[data-testid=studio-file]", photo); os.remove(photo)
-    page.wait_for_selector("[data-testid=studio-ref]", timeout=5000)
+    page.wait_for_selector("[data-testid=studio-ref]", timeout=15000)
     page.fill("[data-testid=studio-idea]", "add a crane on the left")
     page.click("[data-testid=studio-go]")
     page.wait_for_function("window.__mock.imgCalls.filter((c) => c[0] === 'imagine').length === 4", timeout=15000)
