@@ -24,6 +24,8 @@ function initialLang() {
 let LANG = initialLang();
 
 export function getLang() { return LANG; }
+/** v5.31: dates in the APP's language (Arabic month and day names, Western digits like the rest of the app). */
+export function dateLocale() { return LANG === "ar" ? "ar-EG-u-nu-latn" : undefined; }
 export function isRTL(l) { return (l || LANG) === "ar"; }
 
 export function applyDir() {

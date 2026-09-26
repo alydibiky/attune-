@@ -7,7 +7,7 @@
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import { ActionCard } from "./actions-ui.jsx";
 import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
@@ -1225,7 +1225,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                   ) : (
                     <button onClick={() => { setActiveId(c.id); setDrawerOpen(false); }} className="flex-1 min-w-0 text-start px-3 py-2.5">
                       <span dir="auto" className="block text-sm text-slate-200 truncate">{c.projectId || c.assistantId ? <span className="me-1" data-testid="chat-space-mark">{c.projectId ? "📁" : "✨"}</span> : null}{tr(c.title)}</span>
-                      <span className="block text-[10px] text-slate-500">{new Date(c.updated).toLocaleDateString([], { day: "numeric", month: "short" })} · {c.messages.length} messages</span>
+                      <span className="block text-[10px] text-slate-500">{new Date(c.updated).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" })} · {c.messages.length} messages</span>
                     </button>
                   )}
                   {confirmDel === c.id ? (

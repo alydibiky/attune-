@@ -138,7 +138,7 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5" onClick={(e) => e.stopPropagation()} data-testid="backup-panel">
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-lg font-bold text-white flex items-center gap-2"><ShieldCheck size={19} className="text-teal-300" />{tr("Backup & restore")}</h2>
-          <button onClick={close} className="text-slate-500" aria-label={tr("Close")}><X size={20} /></button>
+          <button onClick={close} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <p className="text-xs text-slate-500 mb-3">{tr("Everything in Attune lives only on this phone. A backup is one file, locked with your password, that you can keep anywhere.")}</p>
         <div className="flex gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1 mb-4">{tabBtn("backup", tr("Back up"))}{tabBtn("restore", tr("Restore"))}</div>

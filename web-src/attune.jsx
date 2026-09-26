@@ -11,7 +11,7 @@ import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
 import { ChatHome, systemPrompt as chatSystemPrompt } from "./chat.jsx";
-import { tr, getLang, setLang, fmtNum } from "./i18n.js";
+import { tr, getLang, setLang, fmtNum, dateLocale } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
 import { RemindersPanel, whenText } from "./actions-ui.jsx";
@@ -966,7 +966,7 @@ function recommendEngine(dev) {
   const headroom = dev.ram - best.needRam;
   return {
     tier: best, lighter, stronger,
-    headline: best.label + (best.fast ? " · ⚡ " + "fast engine" : ""),
+    headline: best.label + (best.fast ? " · ⚡ " + tr("fast engine") : ""),
     size: tr("{s} GB to download", { s: best.sizeGB.toFixed(2) }),
     why: [
       dev.reported ? tr(dev.platform === "desktop" ? "Your computer reports {n} GB of memory" : "Your phone reports {n} GB of memory", { n: dev.ram }) : tr("Detected about {n} GB of memory", { n: dev.ram }),
@@ -2011,6 +2011,16 @@ const LANGS = [
   { k: "id", label: "Indonesia" }, { k: "nl", label: "Nederlands" }, { k: "pl", label: "Polski" },
   { k: "fa", label: "فارسی" }, { k: "bn", label: "বাংলা" }, { k: "sw", label: "Kiswahili" },
 ];
+// v5.31: country and language names shown in the app's language (the phone knows them all)
+const DISPLAY_NAMES = {};
+function shownName(type, code, en) {
+  const l = getLang();
+  if (l === "en" || !code) return tr(en);
+  try { const k = type + l; DISPLAY_NAMES[k] = DISPLAY_NAMES[k] || new Intl.DisplayNames([l], { type }); return DISPLAY_NAMES[k].of(type === "region" ? code.toUpperCase() : code) || tr(en); }
+  catch (e) { return tr(en); }
+}
+const langShown = (code) => shownName("language", code, LANG_NAMES[code] || code);
+const countryShown = (code, en) => (/^[a-z]{2}$/i.test(code || "") ? shownName("region", code, en) : tr(en));
 const LANG_NAMES = { en:"English", ar:"Arabic", fr:"French", es:"Spanish", de:"German", tr:"Turkish",
   pt:"Portuguese", it:"Italian", ru:"Russian", hi:"Hindi", ur:"Urdu", zh:"Chinese", ja:"Japanese",
   ko:"Korean", id:"Indonesian", nl:"Dutch", pl:"Polish", fa:"Persian", bn:"Bengali", sw:"Swahili" };
@@ -6380,7 +6390,7 @@ function MapTab({ remember, flash, myLang }) {
           </div>
           <span className={`text-[11px] px-2 py-1 rounded-full border shrink-0 ${
             online ? "border-teal-800 text-teal-400 bg-teal-500/5" : "border-amber-900 text-amber-400 bg-amber-500/5"}`}>
-            {online ? "online" : tr("offline — showing saved tiles")}
+            {online ? tr("online") : tr("offline — showing saved tiles")}
           </span>
         </div>
       </div>
@@ -6418,7 +6428,7 @@ function MapTab({ remember, flash, myLang }) {
       <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
         <div ref={boxRef} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}
           onPointerCancel={onUp}
-          className="relative bg-[#0b1220] touch-none select-none cursor-grab active:cursor-grabbing"
+          className="relative overflow-hidden bg-[#0b1220] touch-none select-none cursor-grab active:cursor-grabbing"
           style={{ height: "min(62vh, 560px)" }}>
           {tiles.map((t) => (
             t.src ? (
@@ -6458,7 +6468,7 @@ function MapTab({ remember, flash, myLang }) {
           </div>
           {missing ? (
             <div className="absolute bottom-1 end-2 text-[10px] text-amber-400 bg-slate-950/80 px-1.5 py-0.5 rounded">
-              {tr(missing)} tile{missing === 1 ? "" : "s"} {tr("not downloaded")}
+              {tr(missing === 1 ? "{n} tile not downloaded" : "{n} tiles not downloaded", { n: missing })}
             </div>
           ) : null}
         </div>
@@ -6594,7 +6604,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.30";
+const PAGE_VERSION = "5.31";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -8186,10 +8196,10 @@ export default function App() {
                   <div className="flex flex-wrap gap-1.5 justify-center mt-4">
                     {["What did I ask about last week?", "Explain this in simple terms: …",
                       "Write a short reply saying no, politely", "What do I still owe people?",
-                      "Convert 250 kg to pounds"].map((q) => (
-                      <button key={q} onClick={() => { setAskQ(q); }}
-                        className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:border-teal-600 hover:text-teal-300">{tr(q)}</button>
-                    ))}
+                      "Convert 250 kg to pounds"].map((q0) => { const q = tr(q0); return (
+                      <button key={q0} onClick={() => { setAskQ(q); }}
+                        className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:border-teal-600 hover:text-teal-300">{q}</button>
+                    ); })}
                   </div>
                 </div>
               ) : (
@@ -8764,7 +8774,7 @@ export default function App() {
                       <p className="text-[10px] uppercase tracking-wider text-teal-500">{openRec.kind} · {new Date(openRec.ts).toLocaleString()}</p>
                       <h3 className="text-base font-semibold text-white truncate">{tr(openRec.title)}</h3>
                     </div>
-                    <button onClick={() => setOpenRec(null)} className="text-slate-500 hover:text-slate-300"><X size={18} /></button>
+                    <button onClick={() => setOpenRec(null)} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={18} /></button>
                   </div>
                   <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{tr("What you gave it")}</p>
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-3 max-h-40 overflow-auto">
@@ -8843,11 +8853,11 @@ export default function App() {
                   {syncing2 ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />} {tr("Update everything")}
                 </button>
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-950 text-slate-500">
-                  packs: {packFeed.from}{packFeed.rejected ? ` · ${packFeed.rejected} rejected` : ""}
+                  {tr("Country packs")}: {tr(packFeed.from)}{packFeed.rejected ? " · " + tr("{n} rejected", { n: packFeed.rejected }) : ""}
                 </span>
                 {netInfo.filter((x) => x.configured).map((x) => (
                   <span key={x.k} className={`text-[10px] px-1.5 py-0.5 rounded ${x.at ? "bg-slate-950 text-slate-500" : "bg-slate-950 text-slate-700"}`}>
-                    {tr(x.label)}: {x.at ? new Date(x.at).toLocaleDateString() : "never"}
+                    {tr(x.label)}: {x.at ? new Date(x.at).toLocaleDateString(dateLocale()) : tr("never")}
                   </span>
                 ))}
               </div>
@@ -8859,7 +8869,7 @@ export default function App() {
                   {LANGS.filter((l) => l.k !== "match").map((l) => <option key={l.k} value={l.k}>{tr(l.label)}</option>)}
                 </select>
                 {translating ? <span className="flex items-center gap-1 text-[11px] text-teal-400"><Loader2 size={11} className="animate-spin" /> {tr("translating on your phone…")}</span>
-                  : myLang !== "en" ? <span className="text-[11px] text-slate-600">{tr("saved — this pack now reads in")} {LANG_NAMES[myLang]}</span> : null}
+                  : myLang !== "en" ? <span className="text-[11px] text-slate-600">{tr("saved — this pack now reads in")} {langShown(myLang)}</span> : null}
               </div>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(CPACKS).map(([k, p]) => {
@@ -8870,7 +8880,7 @@ export default function App() {
                         active ? "bg-teal-500 border-teal-500 text-slate-950 font-medium"
                         : have ? "bg-slate-950 border-teal-900/60 text-teal-300"
                         : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-600"}`}>
-                      <span>{p.flag}</span>{tr(p.name)}
+                      <span>{p.flag}</span>{countryShown(k, p.name)}
                       <span className={`text-[10px] ${active ? "text-slate-800" : "text-slate-600"}`}>{have ? "✓" : p.size}</span>
                     </button>
                   );
@@ -9082,7 +9092,7 @@ export default function App() {
                 <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-slate-300">{tr("Ask anything about being here")}</p>
-                    <span className="text-xs text-slate-600">{CPACKS[activePack].flag} {tr(CPACKS[activePack].name)}</span>
+                    <span className="text-xs text-slate-600">{CPACKS[activePack].flag} {countryShown(activePack, CPACKS[activePack].name)}</span>
                   </div>
                   <textarea value={travelQ} onChange={(e) => setTravelQ(e.target.value)}
                     placeholder={tr("e.g. the taxi driver won't turn the meter on, what do I say? / is this price fair for a carpet? / can I drink the tap water?")}
@@ -9422,7 +9432,7 @@ export default function App() {
                 </div>
                 <div className="flex items-center gap-2">
                   {pendingSync > 0 ? <span className="text-xs px-2 py-1 rounded-md bg-amber-500/10 border border-amber-900/60 text-amber-300">{pendingSync} {tr("waiting to share")}</span> : null}
-                  {lastSync ? <span className="text-xs text-slate-600">synced {new Date(lastSync).toLocaleTimeString()}</span> : null}
+                  {lastSync ? <span className="text-xs text-slate-600">{tr("synced {t}", { t: new Date(lastSync).toLocaleTimeString(dateLocale()) })}</span> : null}
                   <button onClick={syncNow} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600"><RefreshCw size={13} /> {tr("Share")}</button>
                   <button onClick={receiveTeamRecords} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">{tr("Receive from teammate")}</button>
                 </div>
@@ -9527,13 +9537,13 @@ export default function App() {
                   <button key={k} onClick={() => setFdDoc(k)} className={btn(fdDoc === k)}>{d.icon} {tr(d.label)}</button>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-600 mt-2">{tr("Needs:")} {FIELD_DOCS[fdDoc].need.join(" · ")}{tr(". Only genuinely essential gaps are flagged — today's date and your name are filled in automatically.")}</p>
+              <p className="text-[11px] text-slate-600 mt-2">{tr("Needs:")} {FIELD_DOCS[fdDoc].need.map((x) => tr(x)).join(" · ")}{tr(". Only genuinely essential gaps are flagged — today's date and your name are filled in automatically.")}</p>
 
               <p className="text-xs uppercase tracking-wider text-slate-500 mt-4 mb-2 flex items-center gap-1.5"><Languages size={13} /> {tr("Produce it in")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {["match", "en", "ar", "hi", "ur", "bn", "tr", "fr", "ru"].map((k) => (
                   <button key={k} onClick={() => toggleFdLang(k)} className={btn(fdLangs.includes(k))}>
-                    {k === "match" ? tr("Worker's language") : LANG_NAMES[k]}
+                    {k === "match" ? tr("Worker's language") : langShown(k)}
                   </button>
                 ))}
               </div>
@@ -9780,7 +9790,7 @@ export default function App() {
                   <div className="flex items-center justify-between"><h3 className="text-sm font-semibold text-white">{tr(r.title)}</h3><span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">{tr(TOOLS[r.tool].label)}</span></div>
                   <p className="text-xs text-slate-500 mt-1">{tr(r.tip)}</p>
                   <pre className="mt-2 text-xs font-mono text-slate-400 whitespace-pre-wrap line-clamp-3 flex-1">{r.template}</pre>
-                  {r.basis ? <p className="text-[10px] text-teal-500/70 mt-2 border-l border-teal-900/60 ps-1.5">◆ {r.basis}</p> : null}
+                  {r.basis ? <p className="text-[10px] text-teal-500/70 mt-2 border-s border-teal-900/60 ps-1.5">◆ {tr(r.basis)}</p> : null}
                   <button onClick={() => useRecipe(r)} className="mt-3 py-2 rounded-lg bg-teal-500 text-slate-950 text-sm font-medium hover:bg-teal-400">{tr("Use recipe")}</button>
                 </div>
               ))}
@@ -9790,7 +9800,7 @@ export default function App() {
         ) : mode === "improve" ? (
           <div className="grid md:grid-cols-2 gap-5">
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-              <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{tr("Your prompt")}</label><button onClick={() => flash(tr("Voice input runs in the installed app"))} className="text-slate-500 hover:text-teal-400" title={tr("Voice (app build)")}><Mic size={16} /></button></div>
+              <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{tr("Your prompt")}</label><button onClick={() => flash(tr("Voice input runs in the installed app"))} className="-m-2 p-2 rounded-full text-slate-500 hover:text-teal-400" title={tr("Voice (app build)")} aria-label={tr("Voice (app build)")}><Mic size={16} /></button></div>
               <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder={tr("e.g. i need you to like maybe compare our cranes and stuff, the top ones, for lifting")} className="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               {input.trim() && (
                 <div className="mt-2">
@@ -9827,7 +9837,7 @@ export default function App() {
                     </select>
                     {lang === "match" && detected ? (
                       <span className="text-[11px] px-2 py-1 rounded-md bg-teal-500/10 border border-teal-900/60 text-teal-300">
-                        detected: {LANG_NAMES[detected] || tr("same as yours")}{RTL_LANGS.has(detected) ? tr(" · RTL") : ""}
+                        {tr("detected:")} {detected ? langShown(detected) : tr("same as yours")}{RTL_LANGS.has(detected) ? tr(" · RTL") : ""}
                       </span>
                     ) : null}
                   </div>
@@ -9867,7 +9877,7 @@ export default function App() {
                 <div className="flex items-center justify-between mb-2"><p className="text-xs uppercase tracking-wider text-slate-500">{tr("Compress to")}</p><span className="text-sm font-semibold text-teal-400">{cPct}{tr("% of original")}</span></div>
                 <input type="range" min="10" max="90" step="5" value={cPct} onChange={(e) => setCPct(Number(e.target.value))} className="w-full accent-teal-500" />
                 <div className="flex justify-between text-[10px] text-slate-600"><span>{tr("10% · brutal")}</span><span>{tr("50% · half")}</span><span>{tr("90% · light")}</span></div>
-                <button onClick={doCompressTarget} disabled={!cPrompt.trim() || loading} className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${cPrompt.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? tr("Compressing…") : `Compress to ${cPct}%`}</button>
+                <button onClick={doCompressTarget} disabled={!cPrompt.trim() || loading} className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${cPrompt.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? tr("Compressing…") : tr("Compress to {p}%", { p: cPct })}</button>
               </div>
               {/* Which model this is being compressed FOR. A budget makes
                   compression measurable instead of a feeling. */}
@@ -9888,7 +9898,7 @@ export default function App() {
                   <div className="flex items-center justify-between text-[11px] mb-1.5">
                     <span className="text-slate-500">{fitNow.tokens.toLocaleString()} {tr("tokens of")} {cmpTargetObj.ctx.toLocaleString()}</span>
                     <span className={fitNow.over ? "text-amber-300" : "text-teal-400"}>
-                      {fitNow.over ? `${fitNow.overBy.toLocaleString()} too many — cut ~${fitNow.cutPct}%` : `fits · ${fitNow.pct}% of the window`}
+                      {fitNow.over ? tr("{n} too many — cut ~{p}%", { n: fitNow.overBy.toLocaleString(), p: fitNow.cutPct }) : tr("fits · {p}% of the window", { p: fitNow.pct })}
                     </span>
                   </div>
                   <div className="h-1.5 rounded-full bg-slate-900 overflow-hidden">
@@ -10003,7 +10013,7 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-lg font-bold text-white">{tr("Your own action")}</h2>
-              <button onClick={() => setShowCustom(false)} className="text-slate-500 hover:text-slate-300"><X size={20} /></button>
+              <button onClick={() => setShowCustom(false)} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
             </div>
             <p className="text-xs text-slate-500 mb-4">{tr("Make the app do the thing you do over and over — one tap, every time. Yours only, stored on this device.")}</p>
             <p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">{tr("Button name")}</p>
@@ -10273,7 +10283,7 @@ function ProfileModal({ profile, setProfile, close, flash }) {
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><User size={18} className="text-teal-400" /> {tr("Your profile")}</h2>
-          <button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button>
+          <button onClick={close} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <p className="text-xs text-slate-500 mb-4">{tr("Used to make every prompt specific to your work. Never leaves your device.")}</p>
         <button onClick={() => set("on", !p.on)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm mb-4 ${p.on ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-950 text-slate-400"}`}>
@@ -10518,7 +10528,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><Cpu size={18} className="text-teal-400" /> {tr("Engine")}</h2>
-          <button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button>
+          <button onClick={close} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <p className="text-xs text-slate-500 mb-4">{tr("Run the AI on your own hardware. Nothing leaves the device, nothing costs per use.")}</p>
 
@@ -10555,7 +10565,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
                   : "bg-slate-900 border-slate-800 text-slate-400 hover:border-teal-600"}`}>{tr(g)} {tr("GB")}</button>
             ))}
             {device.confidence === "exact" ? (
-              <button onClick={() => setRamOverride(0)} className="text-[11px] px-2 py-1 text-slate-500 hover:text-slate-300">auto</button>
+              <button onClick={() => setRamOverride(0)} className="text-[11px] px-2 py-1 text-slate-500 hover:text-slate-300">{tr("auto")}</button>
             ) : null}
           </div>
         </div>
@@ -10778,7 +10788,7 @@ function OrgModal({ org, setOrg, close, flash }) {
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><Building2 size={18} className="text-teal-400" /> {tr("Company terminology")}</h2>
-          <button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button>
+          <button onClick={close} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <p className="text-xs text-slate-500 mb-4">{tr("Your real names for your real things. Every document then uses them correctly — no invented equipment names, no wrong site spellings. Stays on your devices.")}</p>
 
@@ -10842,7 +10852,7 @@ function MemoryModal({ records, findings, closeFollowUp, close }) {
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><Radar size={18} className="text-teal-400" /> {tr("Site memory")}</h2>
-          <button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button>
+          <button onClick={close} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <p className="text-xs text-slate-500 mb-4">{tr("Every record stays on this device. The connections between them are what a single report can never show you.")}</p>
 

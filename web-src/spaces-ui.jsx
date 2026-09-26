@@ -2,7 +2,7 @@
    Logic and storage: spaces.js. Chat carries assistantId / projectId on each chat.      */
 import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import { Md, loadChats } from "./chat.jsx";
 import { htmlDoc } from "./sandbox.js";
 import { fixMessages, applyFix } from "./code.js";
@@ -197,7 +197,7 @@ export function ProjectsPage({ startChat, openChat, flash }) {
         {chats.length === 0 ? <p className="text-[12px] text-slate-500 px-2 pb-2">{tr("No chats in this project yet.")}</p> : chats.map((c) => (
           <button key={c.id} onClick={() => openChat(c.id)} className="w-full text-start px-2 py-2.5 rounded-xl active:bg-slate-800" data-testid="project-chat">
             <span className="block text-sm text-slate-200 truncate" dir="auto">{c.title}</span>
-            <span className="block text-[10px] text-slate-500">{new Date(c.updated).toLocaleDateString([], { day: "numeric", month: "short" })} · {tr("{n} messages", { n: c.messages.length })}</span>
+            <span className="block text-[10px] text-slate-500">{new Date(c.updated).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" })} · {tr("{n} messages", { n: c.messages.length })}</span>
           </button>
         ))}
       </div>
@@ -335,7 +335,7 @@ export function ArtifactsPage({ open }) {
           <button onClick={() => open(a)} className="flex-1 min-w-0 flex items-center gap-3 text-start">
             <span className="w-11 h-11 shrink-0 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-xl">{a.kind === "html" ? "🌐" : a.kind === "doc" ? "📄" : "⌨️"}</span>
             <span className="min-w-0"><span className="block text-sm text-slate-100 truncate" dir="auto">{a.title}</span>
-              <span className="block text-[11px] text-slate-500">{new Date(a.updated).toLocaleDateString([], { day: "numeric", month: "short" })} · {tr("{n} versions", { n: a.versions.length })}</span></span>
+              <span className="block text-[11px] text-slate-500">{new Date(a.updated).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" })} · {tr("{n} versions", { n: a.versions.length })}</span></span>
           </button>
           <button onClick={() => { deleteArtifact(a.id); setList(loadArtifacts()); }} className="p-2 text-slate-500" title={tr("Delete")}><Trash2 size={15} /></button>
         </div>

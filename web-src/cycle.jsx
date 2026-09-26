@@ -9,7 +9,7 @@
 // ago and it was heavy", "الدورة نزلت امبارح بالليل وكانت خفيفة" — and lands
 // on the right day of the calendar, with the flow and any symptoms.
 import React, { useState, useMemo } from "react";
-import { tr } from "./i18n.js";
+import { tr, dateLocale } from "./i18n.js";
 import { CalendarDays, ChevronLeft, ChevronRight, Droplet, Trash2, ShieldCheck, Plus, X } from "lucide-react";
 
 const KEY = "attune:cycle:v1";
@@ -224,7 +224,7 @@ export function parsePeriodText(text, now) {
 export function applyPeriodLog(state, p) {
   const key = dayKey(p.at);
   const time = new Date(p.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  const dateText = new Date(p.at).toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
+  const dateText = new Date(p.at).toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" });
   let next = state, title = "", detail = "";
   const flow = p.flow || (p.event === "start" ? "medium" : null);
   const flowWord = { spotting: "spotting", light: "light flow", medium: "medium flow", heavy: "heavy flow" };
@@ -252,7 +252,7 @@ export function applyPeriodLog(state, p) {
     detail = (flowWord[flow || "medium"]) + (p.symptoms.length ? " · " + p.symptoms.join(", ") : "");
   }
   const st2 = cycleStats(next, dayKey(Date.now()));
-  if (st2.nextStart) detail += (detail ? "\n" : "") + "Next period expected around " + fromKey(st2.nextStart).toLocaleDateString([], { day: "numeric", month: "long" }) + ".";
+  if (st2.nextStart) detail += (detail ? "\n" : "") + "Next period expected around " + fromKey(st2.nextStart).toLocaleDateString(dateLocale(), { day: "numeric", month: "long" }) + ".";
   return { state: next, key, title, detail };
 }
 
@@ -299,16 +299,19 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
     return cells;
   }, [month]);
 
+  // v5.31: every headline goes through tr() with its numbers and dates as {vars} (Arabic too)
   const headline = (() => {
-    if (!stats.last) return { big: "Log your first period", small: "Tap a day below, or type it in Instant: “my period started yesterday, light”." };
+    const day = (k, o) => fromKey(k).toLocaleDateString(dateLocale(), o);
+    if (!stats.last) return { big: tr("Log your first period"), small: tr("Tap a day below, or type it in Instant: “my period started yesterday, light”.") };
     if (stats.inPeriod) {
       const d = diffDays(stats.last.start, todayKey) + 1;
-      return { big: "Period · day " + d, small: "Usually lasts about " + stats.periodLen + " days for you." };
+      return { big: tr("Period · day {d}", { d }), small: tr("Usually lasts about {n} days for you.", { n: stats.periodLen }) };
     }
-    if (stats.late > 0) return { big: stats.late + " day" + (stats.late === 1 ? "" : "s") + " late", small: "Expected " + fromKey(stats.nextStart).toLocaleDateString([], { day: "numeric", month: "long" }) + ". Cycles vary — a few days either way is common." };
+    if (stats.late > 0) return { big: tr(stats.late === 1 ? "1 day late" : "{n} days late", { n: stats.late }),
+      small: tr("Expected {d}. Cycles vary — a few days either way is common.", { d: day(stats.nextStart, { day: "numeric", month: "long" }) }) };
     const inN = diffDays(todayKey, stats.nextStart);
-    return { big: "Next period in " + inN + " day" + (inN === 1 ? "" : "s"),
-      small: fromKey(stats.nextStart).toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" }) + " · cycle day " + stats.cycleDay };
+    return { big: tr(inN === 1 ? "Next period in 1 day" : "Next period in {n} days", { n: inN }),
+      small: tr("{d} · cycle day {n}", { d: day(stats.nextStart, { weekday: "long", day: "numeric", month: "long" }), n: stats.cycleDay }) };
   })();
 
   const selDay = sel ? cycle.days[sel] || {} : null;
@@ -331,7 +334,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
           <div className="grid grid-cols-3 gap-2 mt-3">
             <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">{tr("Cycle")}</p><p className="text-sm text-slate-100">{stats.cycleLen} days{stats.known ? "" : tr(" (default)")}</p></div>
             <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">{tr("Period")}</p><p className="text-sm text-slate-100">{stats.periodLen} days</p></div>
-            <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">{tr("Fertile window")}</p><p className="text-sm text-slate-100">{stats.fertile ? fromKey(stats.fertile.from).toLocaleDateString([], { day: "numeric", month: "short" }) + "–" + fromKey(stats.fertile.to).getDate() : "—"}</p></div>
+            <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">{tr("Fertile window")}</p><p className="text-sm text-slate-100">{stats.fertile ? fromKey(stats.fertile.from).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) + "–" + fromKey(stats.fertile.to).getDate() : "—"}</p></div>
           </div>
         ) : null}
         <div className="flex flex-wrap gap-1.5 mt-3">
@@ -354,7 +357,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
       <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
         <div className="flex items-center justify-between mb-3">
           <button onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))} className="att-icon-btn"><ChevronLeft size={18} className="rtl:rotate-180" /></button>
-          <p className="text-sm text-slate-200 font-medium">{month.toLocaleDateString([], { month: "long", year: "numeric" })}</p>
+          <p className="text-sm text-slate-200 font-medium">{month.toLocaleDateString(dateLocale(), { month: "long", year: "numeric" })}</p>
           <button onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))} className="att-icon-btn"><ChevronRight size={18} className="rtl:rotate-180" /></button>
         </div>
         <div className="grid grid-cols-7 gap-1 text-center">
@@ -380,7 +383,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
       {sel ? (
         <section className="bg-slate-900 rounded-2xl border border-teal-800/60 p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-100 font-medium">{fromKey(sel).toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" })}</p>
+            <p className="text-sm text-slate-100 font-medium">{fromKey(sel).toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" })}</p>
             <button onClick={() => setSel(null)} className="att-icon-btn"><X size={16} /></button>
           </div>
           <p className="text-[11px] text-slate-500 mt-2 mb-1.5">{tr("Flow")}</p>
@@ -427,7 +430,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
               const prev = stats.periods[stats.periods.length - 1 - i - 1];
               return (
                 <div key={p.start} className="flex items-center justify-between text-sm py-1.5 border-b border-slate-800/60 last:border-0">
-                  <span className="text-slate-200">{fromKey(p.start).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" })}</span>
+                  <span className="text-slate-200">{fromKey(p.start).toLocaleDateString(dateLocale(), { day: "numeric", month: "short", year: "numeric" })}</span>
                   <span className="text-slate-400 text-xs">{p.length} day{p.length === 1 ? "" : "s"}{prev ? " · cycle " + diffDays(prev.start, p.start) + " days" : ""}</span>
                 </div>
               );
