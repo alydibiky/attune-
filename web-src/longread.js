@@ -82,8 +82,8 @@ export function fromNotes(request, notes, n, fileName) {
 }
 
 /** Messages that make the model carry on from the END of what it already wrote. */
-export function continueMessages(system, question, soFar, ar) {
-  const tail = String(soFar || "").slice(-2600);
+export function continueMessages(system, question, soFar, ar, tailChars = 2600) {
+  const tail = String(soFar || "").slice(-Math.max(300, tailChars));
   return [
     ...(system ? [{ role: "system", content: system }] : []),
     { role: "user", content: String(question || "").slice(0, 2500) },

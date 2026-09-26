@@ -7,6 +7,9 @@
 //        and OUT of git — anyone with it can make codes.
 //   node tools/erp-licence.mjs issue   <private-key-file> <ERP-request-code> [plan]
 //        prints the activation code for that one system.
+//   node tools/erp-licence.mjs pro     <private-key-file> <PRO-request-code> [month|year|life|business]
+//        prints the Pro activation code for that one phone (v5.29). month / year codes end
+//        after 31 / 366 days; life and business never end.
 //
 // Needs Node 18+. No packages.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
@@ -29,7 +32,20 @@ if (cmd === "keygen" && file) {
   const payload = "ATT1." + b64u(Buffer.from(JSON.stringify({ s: code, p: plan, i: Date.now() })));
   const sig = await subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, new TextEncoder().encode(payload));
   console.log(payload + "." + b64u(sig));
+} else if (cmd === "pro" && file && req) {
+  const code = String(req).trim().toUpperCase();
+  if (!/^PRO-[A-Z0-9]{8}$/.test(code)) { console.error("That doesn't look like a Pro request code (PRO-XXXXXXXX)."); process.exit(1); }
+  const kind = String(plan === "full" ? "year" : plan).toLowerCase();
+  const days = { month: 31, year: 366, life: 0, business: 0 }[kind];
+  if (days == null) { console.error("Plan must be month, year, life or business."); process.exit(1); }
+  const jwk = JSON.parse(readFileSync(file, "utf8"));
+  const key = await subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  const now = Date.now();
+  const payload = "PRO1." + b64u(Buffer.from(JSON.stringify({ s: code, p: kind === "business" ? "business" : "pro", e: days ? now + days * 86400000 : 0, i: now })));
+  const sig = await subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, new TextEncoder().encode(payload));
+  console.log(payload + "." + b64u(sig));
+  if (days) console.error("(ends " + new Date(now + days * 86400000).toISOString().slice(0, 10) + ")");
 } else {
-  console.log("usage:\n  node tools/erp-licence.mjs keygen <private-key-file>\n  node tools/erp-licence.mjs issue <private-key-file> <ERP-request-code> [plan]");
+  console.log("usage:\n  node tools/erp-licence.mjs keygen <private-key-file>\n  node tools/erp-licence.mjs issue <private-key-file> <ERP-request-code> [plan]\n  node tools/erp-licence.mjs pro   <private-key-file> <PRO-request-code> [month|year|life|business]");
   process.exit(cmd ? 1 : 0);
 }

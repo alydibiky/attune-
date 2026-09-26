@@ -1,5 +1,6 @@
 // Unit tests for v5.29: the tips library.
 import { tipsFor, tipsBlock, TIP_COUNT, TIP_AREAS } from "../../web-src/tips.js";
+import { region, pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS } from "../../web-src/billing.js";
 const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
 const has = (q, re, n = 3) => tipsFor(q, n).some((t) => re.test(t));
@@ -20,6 +21,32 @@ eq(tipsFor("hi there", 3).length, 1, "a greeting gets one general tip");
 eq(tipsFor("crane crane crane outrigger sling wind lift plan", 5).length, 5, "a strong model gets up to 5 tips");
 eq(tipsFor("crane outrigger sling wind lift plan", 2).length, 2, "a small model gets 2");
 eq(/^\n\n\(Expert tips for this answer:\n- /.test(tipsBlock("VAT on 1000 EGP")), true, "the tips go after the question as a short block");
+
+// ---- billing ----
+eq([region("Africa/Cairo", "en-US"), region("Europe/Berlin", "ar-EG"), region("America/New_York", "en-US")], ["EG", "EG", "US"], "Egypt gets Egyptian prices (by time zone or locale)");
+eq([pricesFor("Africa/Cairo").year, pricesFor("UTC").year], ["EGP 999", "$24.99"], "yearly: EGP 999 / $24.99");
+const rc = requestCode("device-123");
+eq([/^PRO-[A-Z0-9]{8}$/.test(rc), rc === requestCode("device-123"), rc !== requestCode("device-124")], [true, true, true], "each phone has its own stable request code (" + rc + ")");
+eq([trialDaysLeft(0), trialDaysLeft(Date.now() - 2 * 86400000), trialDaysLeft(Date.now() - 9 * 86400000)], [7, 5, 0], "the 7-day Pro trial counts down");
+eq(buyMessage("PRO-ABCD2345", "Yearly", "EGP 999").includes("PRO-ABCD2345") && /كود الطلب/.test(buyMessage("PRO-ABCD2345", "Yearly", "EGP 999")), true, "the WhatsApp message carries the request code, in English and Arabic");
+eq(PRO_BENEFITS.length >= 5, true, "Pro lists its benefits");
+{
+  const { subtle } = globalThis.crypto;
+  const kp = await subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+  const pub = await subtle.exportKey("jwk", kp.publicKey);
+  const PUB = { kty: "EC", crv: "P-256", x: pub.x, y: pub.y };
+  const b64u = (buf) => Buffer.from(buf).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const make = async (body) => { const payload = "PRO1." + b64u(Buffer.from(JSON.stringify(body))); const sig = await subtle.sign({ name: "ECDSA", hash: "SHA-256" }, kp.privateKey, new TextEncoder().encode(payload)); return payload + "." + b64u(sig); };
+  const good = await make({ s: rc, p: "pro", e: Date.now() + 86400000 * 30, i: Date.now() });
+  eq((await checkProCode(good, rc, PUB)).ok, true, "a signed code for this phone activates Pro");
+  eq((await checkProCode(good, requestCode("other-phone"), PUB)).reason, "That code was made for another phone.", "…but not on another phone");
+  eq((await checkProCode(await make({ s: rc, p: "pro", e: Date.now() - 1000, i: 1 }), rc, PUB)).ok, false, "an ended month/year code doesn't");
+  const parts = good.split("."); const forged = parts[0] + "." + b64u(Buffer.from(JSON.stringify({ s: rc, p: "pro", e: 0, i: 1 }))) + "." + parts[2];
+  eq((await checkProCode(forged, rc, PUB)).ok, false, "a code edited to 'lifetime' is rejected (signature)");
+  eq((await checkProCode("ATTUNE-xxxx-yyyy", rc, PUB)).ok, false, "a made-up key is rejected");
+  const life = await make({ s: rc, p: "pro", e: 0, i: Date.now() });
+  eq((await checkProCode(life, rc, PUB)).exp, 0, "a lifetime code never ends");
+}
 
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 if (fails.length) process.exit(1);

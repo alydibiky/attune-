@@ -694,7 +694,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const deep = pagesFor(typed) === 8;   // what the user typed ("all-terrain" or a rewritten follow-up doesn't count)
         const readCap = deep ? (pwR.readPages || pwR.pages || 8) : Math.min(pwR.readPages || 5, 5);
         // a quick question ("what is this car") stays one fast search; detail-hungry ones are planned
-        const nQ = api.webPages && deep ? (pwR.queries || 1) : 1;
+        const nQ = api.webPages && deep && (!api.pro || api.pro()) ? (pwR.queries || 1) : 1;   // several searches: Pro / trial
         let queries = [query];
         if (nQ > 1) {
           onStatus(tr("Planning the research…"));
@@ -962,7 +962,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           nC++;
           const before = answer;
           patchMsg(cid, aiId, { phase: tr("Long answer — still writing ({n})…", { n: nC }) });
-          const more = await api.run(continueMessages(sysC, askC, before, arC), null, { onStatus, copy: true, onToken: (tx) => onToken(glue(before, tx), "") });
+          // the tail it sees is sized by the answer's REAL characters-per-token (code, numbers
+          // and odd text use far more tokens per character than prose) — about 700 tokens
+          const cpt = stc.tokens ? Math.max(0.5, String(before).length / stc.tokens) : 3.6;
+          let more = "";
+          try { more = await api.run(continueMessages(sysC, askC, before, arC, Math.min(2600, Math.floor(cpt * 700))), null, { onStatus, copy: true, onToken: (tx) => onToken(glue(before, tx), "") }); }
+          catch (e) { if (String(e && e.message) === "Stopped") throw e; break; }   // a failed continuation keeps what is written
           if (runRef.current !== run) return;
           if (!String(more || "").trim()) break;
           answer = glue(before, more); stc = api.lastStats();
@@ -973,7 +978,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // who recomputes numbers, fixes mistakes, fills gaps and writes the improved answer.
       // Unusable review (no FINAL ANSWER, much shorter) or Stop → the draft stays. (power.js)
       const pwA = api.power ? api.power() : null;
-      if (plain && pwA && pwA.review && !useThink && !sources && !pic && !fileAtt && !longMsg && !extra.continued && answer && worthReview(typed, answer)) {
+      if (plain && pwA && pwA.review && (!api.pro || api.pro()) && !useThink && !sources && !pic && !fileAtt && !longMsg && !extra.continued && answer && worthReview(typed, answer)) {
         const draft = answer;
         try {
           if (raf) { clearTimeout(raf); raf = null; }

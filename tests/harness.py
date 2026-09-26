@@ -91,7 +91,7 @@ class Env:
     def __init__(self):
         env = dict(os.environ, LD_LIBRARY_PATH=HERE + "/build-dl/bin")
         self.srv = subprocess.Popen([HERE + "/build-dl/bin/llama-server", "-m", HERE + "/tiny-a.gguf",
-            "--host", "127.0.0.1", "--port", str(ENGINE_PORT), "-c", "8192", "-t", "2", "-np", "1",
+            "--host", "127.0.0.1", "--port", str(ENGINE_PORT), "-c", "16384", "-t", "2", "-np", "1",
             "--jinja", "--no-ui", "--no-slots", "--api-key", "testkey",
             "--cors-headers", "Authorization,Content-Type", "--cors-origins", f"http://127.0.0.1:{PAGE_PORT}",
             "--log-file", HERE + "/e2e5-engine.log"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

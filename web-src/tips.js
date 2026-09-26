@@ -92,7 +92,7 @@ const T = [
   ["crane", "wire rope|cable|حبل سلك|واير", "Replace wire rope for broken wires beyond the limit, kinks, bird-caging, heavy corrosion or diameter loss (per ISO 4309)."],
   ["crane", "standard|en 13000|asme|iso|مواصفة", "Mobile cranes: EN 13000 (design), ISO 4309 (wire rope), ASME B30.5 (US mobile cranes), BS 7121 (safe use)."],
   ["crane", "tower crane|برجي", "Tower cranes: check the jib's capacity at tip and the tie-in / foundation design; anemometer limits apply."],
-  ["crane", "all.?terrain|rough terrain|crawler|mobile crane|كرولر|جنزير", "All-terrain = road-legal multi-axle; rough-terrain = site only; crawler = tracks, carries loads while moving (pick-and-carry)."],
+  ["crane", "all.?terrain|rough terrain|crawler|types? of cranes?|كرولر|جنزير|أنواع الأوناش|انواع الاوناش", "All-terrain = road-legal multi-axle; rough-terrain = site only; crawler = tracks, carries loads while moving (pick-and-carry)."],
   ["crane", "hydraulic|هيدروليك", "Hydraulic faults: check oil level and temperature, filters, leaks and pressure at test points before replacing pumps or valves."],
   ["crane", "counterweight|ثقل موازن", "The chart capacity assumes the exact counterweight listed — less counterweight means a different (lower) chart."],
   ["crane", "operator|سواق ونش|مشغل", "Operators need valid certification for that crane type and must never lift over people."],
@@ -300,6 +300,9 @@ const T = [
   ["quality", "advice|نصيحة|نصايح", "Advice: concrete actions, in order, with the reason for each."],
 ];
 
+// The tips that prevent the costliest mistakes win their area when they match.
+const CRITICAL = /VAT is 14%|manufacturer's load chart|^Total load =|Every journal entry balances|Never store passwords|Medicine doses|Emergency signs|Write every step of the working/;
+
 let COMPILED = null;
 function compiled() {
   // Triggers match at the START of a word (so "if" doesn't fire inside "lift", "ai" inside
@@ -331,7 +334,7 @@ export function tipsFor(question, max = 3) {
     const m = q.match(t.re);
     if (!m) continue;
     // a longer matched word is more specific ("outrigger" beats "car")
-    hits.push({ ...t, score: Math.min(20, (m[0] || "").length) + (/crane|money|maths|code|excel/.test(t.area) ? 1 : 0) });
+    hits.push({ ...t, score: Math.min(10, (m[0] || "").length) + (/crane|money|maths|code|excel/.test(t.area) ? 1 : 0) + (CRITICAL.test(t.tip) ? 3 : 0) });
   }
   hits.sort((a, b) => b.score - a.score || a.i - b.i);
   // one tip from each matching area first (a crane-hire sum needs the maths, the VAT AND the

@@ -25,6 +25,8 @@ import { skillFor } from "./skills.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
 import { samplingFor, taskKind } from "./boost.js";
 import { estTokens as estTok } from "./longread.js";
+import { pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS } from "./billing.js";
+import { LICENCE_PUBLIC_KEY, SELLER } from "./erp.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
@@ -240,6 +242,8 @@ function estTokens(text) {
    ========================================================================= */
 
 const LIC_KEY = "attune:license";
+const PRO_CODE_KEY = "attune:pro-code";   // v5.29: a signed Pro activation code (billing.js)
+const FIRST_RUN_KEY = "attune:first-run"; // v5.29: when the 7-day Pro trial started
 const TRIAL_KEY = "attune:trial";
 const TRIAL_PER_DAY = 15;         // free on-device runs per day — see the note
 // in canUseAI: metering local runs is a product choice, not a technical need.
@@ -6704,6 +6708,11 @@ export default function App() {
     try { return localStorage.getItem("attune:tier") || "free"; } catch (e) { return "free"; }
   });
   useEffect(() => { try { localStorage.setItem("attune:tier", tier); } catch (e) {} }, [tier]);
+  // v5.29 — the 7-day Pro trial for every new install (a "reverse trial")
+  const [trialLeft] = useState(() => {
+    try { let f = Number(localStorage.getItem(FIRST_RUN_KEY)); if (!f) { f = Date.now(); localStorage.setItem(FIRST_RUN_KEY, String(f)); } return trialDaysLeft(f); } catch (e) { return 0; }
+  });
+  const proActive = isPro(tier) || trialLeft > 0;
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -7335,7 +7344,7 @@ export default function App() {
       if (modelState === "downloading") { flash(tr("The model is still downloading — see Engine")); return false; }
       flash(tr("Load a model in Engine first — everything runs on this device")); setShowEngine(true); return false;
     }
-    if (isPro(tier)) return true;
+    if (isPro(tier) || trialLeft > 0) return true;
     const st = trialState(Date.now());
     if (st.left <= 0) {
       flash(st.rolledBack ? "Today's free runs are used up — Pro removes the limit"
@@ -7819,8 +7828,19 @@ export default function App() {
     let dead = false;
     storeEntitlement().then((e) => {
       if (dead) return;
-      if (e) setTier((t) => (t === "business" ? t : "pro"));
-      else if (!entState(Date.now()).active) setTier((t) => (t === "free" ? t : "free"));
+      if (e) { setTier((t) => (t === "business" ? t : "pro")); return; }
+      // v5.29: a signed Pro code is checked again at every start (a hand-edited setting can't
+      // fake it), and a month / year code that has ended goes back to Free
+      let saved = null; try { saved = JSON.parse(localStorage.getItem(PRO_CODE_KEY) || "null"); } catch (x) {}
+      if (saved && saved.code) {
+        checkProCode(saved.code, requestCode(entDeviceId()), LICENCE_PUBLIC_KEY).then((r) => {
+          if (dead) return;
+          if (r.ok) setTier(r.plan);
+          else { try { localStorage.removeItem(PRO_CODE_KEY); } catch (x) {} setTier("free"); if (saved.exp && saved.exp < Date.now()) flash(tr("Your Pro plan has ended — renew it any time in Plan.")); }
+        });
+        return;
+      }
+      if (!entState(Date.now()).active) setTier((t) => (t === "free" ? t : "free"));
     }).catch(() => {});
     return () => { dead = true; };
   }, []);
@@ -7976,6 +7996,7 @@ export default function App() {
     webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang), groundedAudit,
     skillFor,
     power: () => getPower(),
+    pro: () => proActive,          // v5.29: Pro or the 7-day trial (expert review, deep research)
     // v5.20 deep research: pages in full, and the passages of one page / of all
     webPages: NATIVE ? (q, pages) => webLookupRaw(q, pages) : null,
     rankOne: (question, h) => { const n = getPower().notesChars; const r = rankPassages(question, [h], { budget: n, perSource: n }); return r[0] ? r[0].text : ""; },
@@ -9948,7 +9969,7 @@ export default function App() {
               <div className="grid grid-cols-3 gap-2 mt-3">
                 <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Cpu size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">{tr("Engine & privacy")}</span></button>
                 <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><User size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">{tr("Your profile")}</span></button>
-                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Crown size={16} className="text-amber-300" /><span className="block text-[12px] text-slate-200 mt-1">{isPro(tier) ? tr("Pro") : tr("Plan")}</span><span className="block text-[10px] text-slate-500">{tr(creditLabel)}</span></button>
+                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Crown size={16} className="text-amber-300" /><span className="block text-[12px] text-slate-200 mt-1">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[10px] text-slate-500">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
                 {(() => { const nb = backupNudge(); return (
                 <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`rounded-xl border p-2.5 text-start ${nb.warn ? "border-amber-700/60 bg-amber-500/10" : "border-slate-800 bg-slate-950"}`}><ShieldCheck size={16} className={nb.warn ? "text-amber-300" : "text-slate-300"} /><span className="block text-[12px] text-slate-200 mt-1">{tr("Backup")}</span><span className={`block text-[10px] ${nb.warn ? "text-amber-300" : "text-slate-500"}`}>{nb.text}</span></button>); })()}
               </div>
@@ -10004,7 +10025,7 @@ export default function App() {
       {showMemory && <MemoryModal records={records} findings={findings} closeFollowUp={closeFollowUp} close={() => setShowMemory(false)} />}
       {showOrg && <OrgModal org={org} setOrg={setOrg} close={() => setShowOrg(false)} flash={flash} />}
       {showProfile && <ProfileModal profile={profile} setProfile={setProfile} close={() => setShowProfile(false)} flash={flash} />}
-      {showUpgrade && <Upgrade tier={tier} setTier={setTier} close={() => setShowUpgrade(false)} flash={flash} />}
+      {showUpgrade && <Upgrade tier={tier} setTier={setTier} close={() => setShowUpgrade(false)} flash={flash} trialLeft={trialLeft} />}
     </div>
   );
 }
@@ -10020,111 +10041,117 @@ function ToolControls({ tool, opts, setOpt, btn }) {
 function Box({ children }) { return <div className="mt-3 space-y-2 bg-slate-950/50 border border-slate-800 rounded-xl p-3">{children}</div>; }
 function Toggle({ label, on, onClick }) { return (<button onClick={onClick} className="w-full flex items-center justify-between text-sm text-slate-300"><span>{tr(label)}</span><span className={`w-9 h-5 rounded-full p-0.5 transition-colors ${on ? "bg-teal-500" : "bg-slate-700"}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${on ? "translate-x-4 rtl:-translate-x-4" : ""}`} /></span></button>); }
 
-function Upgrade({ tier, setTier, close, flash }) {
+function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
+  // v5.29 — Ali: "choose the best way to earn money". Regional prices (EGP in Egypt), the
+  // yearly plan first, a 7-day Pro trial for new installs, and direct sales that work today:
+  // the buyer pays and sends this phone's request code; the seller sends back a signed code
+  // made for this phone only (billing.js, tools/erp-licence.mjs pro). Nothing here unlocks Pro
+  // without a purchase or a valid code.
+  const P = pricesFor((() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return ""; } })(), (typeof navigator !== "undefined" && navigator.language) || "");
+  const req = useMemo(() => requestCode(entDeviceId()), []);
+  const [plan, setPlan] = useState("year");
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [showOld, setShowOld] = useState(false);
   const [key, setKey] = useState("");
-  // Verified on the device against the vendor's public key. No account, no
-  // server call, works on a plane. See the LICENSING block for why.
-  // Activation, not a login. The key is verified on the device; if there is a
-  // connection it is also bound to this install so one key cannot circulate.
-  const redeem = async () => {
-    const r = await entActivate(key.trim(), ATTUNE_PUBLIC_KEY, BILLING.activate);
-    if (r.ok === false) return flash(r.reason);
-    setTier((r.payload && r.payload.plan) === "business" ? "business" : "pro");
-    flash(r.bound ? `Pro active — this device${r.seats ? ` (${r.used || 1} of ${r.seats})` : ""}`
-                  : "Pro active on this device");
-    close();
+  const pro = isPro(tier);
+  const planName = { month: tr("Monthly"), year: tr("Yearly"), life: tr("Lifetime") }[plan];
+  const activate = async () => {
+    setBusy(true);
+    try {
+      const r = await checkProCode(code, req, LICENCE_PUBLIC_KEY);
+      if (!r.ok) return flash(tr(r.reason));
+      try { localStorage.setItem(PRO_CODE_KEY, JSON.stringify({ code: code.trim(), exp: r.exp, plan: r.plan })); } catch (e) {}
+      setTier(r.plan);
+      flash(r.exp ? tr("Pro is active until {d} — thank you!", { d: new Date(r.exp).toISOString().slice(0, 10) }) : tr("Pro is active for good — thank you!"));
+      close();
+    } finally { setBusy(false); }
   };
-  // Two taps: the store's own sheet, then done. Nothing of ours in between.
-  const buy = async (skuKey) => {
-    const sku = SKUS[skuKey];
-    if (!Store.available()) {
-      if (BILLING.buyUrl) { try { window.open(BILLING.buyUrl, "_blank"); } catch (e) {} return; }
-      return flash(tr("Purchases run through the app store — this preview has no store attached"));
-    }
+  const redeemOld = async () => {
+    const r = await entActivate(key.trim(), ATTUNE_PUBLIC_KEY, BILLING.activate);
+    if (r.ok === false || !ATTUNE_PUBLIC_KEY) return flash(tr(r.ok === false ? r.reason : "Older keys can't be checked on this version — ask the seller for an activation code."));
+    setTier((r.payload && r.payload.plan) === "business" ? "business" : "pro"); flash(tr("Pro active on this device")); close();
+  };
+  const storeBuy = async () => {
+    const sku = SKUS[{ month: "pro_month", year: "pro_year", life: "pro_lifetime" }[plan]];
     setBusy(true);
     try {
       const r = await Store.purchase(sku.id);
-      if (!r || r.ok === false) return flash(r && r.reason === "no-bridge" ? "Store unavailable" : "Purchase cancelled");
+      if (!r || r.ok === false) return flash(tr("Purchase cancelled"));
       const e = await storeEntitlement();
-      if (e) { setTier("pro"); flash("Pro active — restored on every device signed into " + Store.name()); close(); }
+      if (e) { setTier("pro"); flash(tr("Pro active")); close(); }
     } finally { setBusy(false); }
   };
-  // Anyone reinstalling, or on a second device, gets it back without typing
-  // anything. The store already knows what they bought.
+  const price = P[plan];
+  const msg = buyMessage(req, planName, price);
+  const contact = String(SELLER.contact || "").replace(/[^\d+]/g, "").replace(/^\+/, "");
+  const buyDirect = async () => {
+    if (contact) { try { window.open("https://wa.me/" + contact + "?text=" + encodeURIComponent(msg), "_blank"); } catch (e) {} return; }
+    try { if (navigator.share) { await navigator.share({ text: msg }); return; } } catch (e) {}
+    try { await navigator.clipboard.writeText(msg); flash(tr("Copied — send it to the seller")); } catch (e) { flash(req); }
+  };
   const restore = async () => {
     setBusy(true);
-    try {
-      const e = await storeEntitlement();
-      if (e) { setTier("pro"); flash("Pro restored from " + (e.store || "the store")); close(); }
-      else flash(Store.available() ? "No purchase found on this " + Store.name() + " account" : "No store attached to this build");
-    } finally { setBusy(false); }
+    try { const e = await storeEntitlement(); if (e) { setTier("pro"); flash(tr("Pro restored")); close(); } else flash(tr("No purchase found")); }
+    finally { setBusy(false); }
   };
-  const ent = entState(Date.now());
-  const [busy, setBusy] = useState(false);
-  const [showKey, setShowKey] = useState(false);
-  const entLine = ent.active
-    ? `Active on this device${ent.bound ? ` · ${ent.used || 1} of ${ent.seats} devices` : " · not yet bound to a device"}${ent.stale ? ` · hasn't checked in for ${ent.days} days, still working` : ""}`
-    : null;
-  const plans = [
-    { k: "free", name: "Free", price: "$0", tag: "forever", pts: ["The whole assistant, on your device", "15 questions a day", "Every tool, and all 31 country packs", "No account, no sign-in, nothing uploaded", "3 templates · 5 history items"] },
-    { k: "pro", name: "Pro", price: "$14.99/mo", tag: "$99.99/yr · $299.99 once, forever", pts: ["Ask it as much as you like — no daily limit", "It remembers everything and can search it", "Finds what you promised people, from your own words", "Learns your vocabulary and writes the way you do", "Documents, fleet records, copilot, every domain pack", "Works entirely offline. No account, ever."] },
-
-  ];
+  const card = (k, title, pr, note, badge) => (
+    <button key={k} onClick={() => setPlan(k)} data-testid={"plan-" + k}
+      className={`relative rounded-xl border p-3 text-start transition-colors ${plan === k ? "border-amber-400 bg-amber-400/10" : "border-slate-800 bg-slate-950"}`}>
+      {badge ? <span className="absolute -top-2 end-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-bold">{tr(badge)}</span> : null}
+      <span className="block text-[12px] text-slate-300">{tr(title)}</span>
+      <span className="block text-lg font-bold text-white mt-0.5" dir="ltr">{pr}</span>
+      <span className="block text-[10px] text-slate-500 leading-snug">{tr(note)}</span>
+    </button>
+  );
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-1"><h2 className="text-xl font-bold text-white flex items-center gap-2"><Crown size={18} className="text-amber-400" /> {tr("Choose your plan")}</h2><button onClick={close} className="text-slate-500 hover:text-slate-300"><X size={20} /></button></div>
-        <p className="text-xs text-slate-500 mb-4">{tr("Everything runs on your device, so nothing here is metered by a server. Free gives you 15 runs a day; Pro removes the limit and adds memory, commitments and your own vocabulary. Regional pricing at checkout (EGP and local currencies).")}</p>
-        <div className="grid sm:grid-cols-3 gap-3">
-          {plans.map((p) => (
-            <div key={p.k} className={`rounded-xl border p-4 flex flex-col ${tier === p.k ? "border-teal-500 bg-teal-500/5" : "border-slate-800 bg-slate-950"}`}>
-              <div className="text-sm font-semibold text-white">{tr(p.name)}</div><div className="text-2xl font-bold text-white mt-1">{p.price}</div><div className="text-xs text-slate-500 mb-3">{tr(p.tag)}</div>
-              <ul className="space-y-1.5 flex-1">{p.pts.map((pt) => <li key={pt} className="flex items-start gap-1.5 text-xs text-slate-400"><Check size={12} className="text-teal-500 mt-0.5 shrink-0" />{tr(pt)}</li>)}</ul>
-              <button onClick={() => { setTier(p.k); flash(`${p.name} plan selected`); close(); }} className={`mt-3 py-2 rounded-lg text-sm font-medium ${tier === p.k ? "bg-slate-800 text-slate-400" : "bg-teal-500 text-slate-950 hover:bg-teal-400"}`}>{tier === p.k ? tr("Current") : p.k === "free" ? tr("Downgrade") : tr("Choose")}</button>
-            </div>
-          ))}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 my-6" onClick={(e) => e.stopPropagation()} data-testid="upgrade">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2"><Crown size={18} className="text-amber-400" /> {tr("Attune Pro")}</h2>
+          <button onClick={close} className="text-slate-500 hover:text-slate-300 p-1"><X size={18} /></button>
         </div>
-        {entLine ? (
-          <div className="mt-4 flex items-center gap-2 bg-teal-500/5 border border-teal-900/60 rounded-xl px-3 py-2">
-            <CheckCircle2 size={14} className="text-teal-400 shrink-0" />
-            <p className="text-xs text-teal-200 flex-1">{tr(entLine)}</p>
-          </div>
-        ) : null}
-
-        <div className="mt-4">
-          <div className="grid grid-cols-3 gap-2">
-            {Object.entries(SKUS).map(([k, sku]) => (
-              <button key={k} onClick={() => buy(k)} disabled={busy}
-                className="py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold text-xs hover:bg-teal-400 disabled:opacity-60">
-                {tr(sku.label)}
-                <span className="block text-[10px] font-normal text-slate-800">{tr(sku.sub)}</span>
-                <span className="block text-[10px] font-normal text-slate-700">{tr(sku.hint)}</span>
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <p className="text-[11px] text-slate-600">
-              {tr("Paid through")} {Store.available() ? Store.name() : tr("the app store")} {tr("— the account you already have. Nothing to sign into here.")}
-            </p>
-            <button onClick={restore} disabled={busy} className="text-[11px] text-slate-400 hover:text-teal-400 shrink-0">{tr("Restore purchase")}</button>
-          </div>
-        </div>
-
-        <button onClick={() => setShowKey((v) => !v)} className="mt-3 text-[11px] text-slate-600 hover:text-slate-400">
-          {showKey ? tr("Hide") : tr("I bought directly and have a key")}
-        </button>
-        {showKey ? (
+        {pro ? <p className="text-[13px] text-emerald-300 mb-3" data-testid="pro-active">{tr("Pro is active on this phone. Thank you for supporting Attune!")}</p>
+          : trialLeft > 0 ? <p className="text-[13px] text-amber-200 mb-3" data-testid="trial-banner">{tr("Your free Pro trial: {n} days left — everything is unlocked. Keep it by choosing a plan.", { n: trialLeft })}</p>
+          : <p className="text-[13px] text-slate-300 mb-3">{tr("Free gives you {n} answers a day on every model. Pro removes every limit:", { n: FREE_LIMITS.answersPerDay })}</p>}
+        <ul className="space-y-1.5 mb-4">{PRO_BENEFITS.map((b) => <li key={b} className="flex items-start gap-2 text-[13px] text-slate-200"><Check size={14} className="text-amber-400 mt-0.5 shrink-0" />{tr(b)}</li>)}</ul>
+        {!pro ? (
           <>
-            <div className="mt-2 flex flex-col sm:flex-row gap-2">
-              <input value={key} onChange={(e) => setKey(e.target.value)} placeholder={tr("ATTUNE-…")}
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-              <button onClick={redeem} className="px-4 py-2 rounded-lg bg-slate-800 text-slate-200 text-sm hover:bg-slate-700">{tr("Activate")}</button>
+            <div className="grid grid-cols-3 gap-2" data-testid="plans">
+              {card("year", "Yearly", P.year, P.yearNote, "Best value")}
+              {card("month", "Monthly", P.month, "cancel any time")}
+              {card("life", "Lifetime", P.life, P.lifeNote)}
             </div>
-            <p className="text-[11px] text-slate-600 mt-1.5">
-              {tr("Keys are for company and direct purchases. One works on up to")} {ENT_DEVICES} {tr("devices, is checked on the device so it activates on a plane, and sends nothing about you — only a random install id, only when you activate.")}
-            </p>
+            {Store.available() ? (
+              <button onClick={storeBuy} disabled={busy} className="mt-3 w-full py-3 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm disabled:opacity-60" data-testid="buy-store">{tr("Get Pro · {p}", { p: price })}</button>
+            ) : (
+              <>
+                <button onClick={buyDirect} className="mt-3 w-full py-3 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm" data-testid="buy-direct">{tr("Get Pro · {p}", { p: price })}</button>
+                <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">{tr("Pay with InstaPay, Vodafone Cash or a card, and send this code with it. You'll get your activation code back, made for this phone.")}</p>
+              </>
+            )}
+            <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
+              <span className="text-[11px] text-slate-500">{tr("Your request code")}</span>
+              <button onClick={async () => { try { await navigator.clipboard.writeText(req); flash(tr("Copied")); } catch (e) {} }} className="font-mono text-sm text-white tracking-wider" data-testid="request-code">{req}</button>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={tr("Paste your activation code (PRO1…)")} data-testid="pro-code"
+                className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400" />
+              <button onClick={activate} disabled={busy || !code.trim()} data-testid="pro-activate" className="px-4 py-2 rounded-lg bg-slate-800 text-slate-100 text-sm disabled:opacity-40">{tr("Activate")}</button>
+            </div>
+            <div className="flex items-center justify-between mt-3">
+              <button onClick={() => setShowOld((v) => !v)} className="text-[11px] text-slate-600">{tr("I have an older key")}</button>
+              {Store.available() ? <button onClick={restore} className="text-[11px] text-slate-400">{tr("Restore purchase")}</button> : null}
+            </div>
+            {showOld ? (
+              <div className="mt-2 flex gap-2">
+                <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="ATTUNE-…" className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200" />
+                <button onClick={redeemOld} className="px-3 py-2 rounded-lg bg-slate-800 text-slate-200 text-sm">{tr("Activate")}</button>
+              </div>
+            ) : null}
           </>
         ) : null}
+        <p className="text-[11px] text-slate-600 mt-4">{tr("Everything runs on your phone: no account, nothing uploaded. Your plan is checked on the phone, even offline.")}</p>
       </div>
     </div>
   );
