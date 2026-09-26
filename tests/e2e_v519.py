@@ -13,7 +13,7 @@ env = Env(); errors = []
 FILLER = "\\n".join("Our newsroom story number %d about the brand's heritage and design philosophy." % i for i in range(60))
 PAGE = FILLER + "\\n## Trims and prices\\nTrim | Power | Torque | Price\\nLynk & Co 900 Pro | 598 hp | 1,000 Nm | CNY 309,900\\nLynk & Co 900 Ultra | 845 hp | 1,200 Nm | CNY 369,900"
 SEARCH = """(() => { const N = window.AttuneNative, S = window.__mock;
-  N.search = (id, arg) => { const a = JSON.parse(arg); S.lastSearch = a;
+  N.search = (id, arg) => { const a = JSON.parse(arg); S.lastSearch = a; (S.searchLog = S.searchLog || []).push(a);
     setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ via: "duckduckgo", why: "", hits: [
       { title: "Lynk & Co 900 - specs", url: "https://example.com/900", text: "%s" },
       { title: "Unrelated", url: "https://example.com/x", text: "The weather in Cairo is sunny today and the Nile is calm. Tomorrow will be warmer, with light winds from the north in the afternoon." } ] })), 30); };
@@ -44,7 +44,7 @@ with sync_playwright() as p:
     page.evaluate(SEARCH)
     page.locator("button:has-text('Web')").first.click()
     NOTES = "- Lynk & Co 900 Pro: Power 598 hp; Torque 1,000 Nm; Price CNY 309,900\n- Lynk & Co 900 Ultra: Power 845 hp; Torque 1,200 Nm; Price CNY 369,900\n- Lynk & Co 900 Max: Price CNY 999,999"
-    page.evaluate("(n) => { const M = window.__mock; M.fakeQueue = [n, 'NONE', 'NONE', '**Two trims** [1]: Pro 598 hp, Ultra 845 hp.']; M.bodies = []; }", NOTES)
+    page.evaluate("(n) => { const M = window.__mock; M.fakeQueue = ['Lynk & Co 900 specifications\\nLynk & Co 900 price China 2025', n, 'NONE', 'NONE', '**Two trims** [1]: Pro 598 hp, Ultra 845 hp.']; M.bodies = []; M.searchLog = []; }", NOTES)
     send(page, "Lynk & Co 900 all trims with hp, torque and price")
     page.wait_for_selector("button[title='Regenerate']", timeout=30000)
     check(page.evaluate("window.__mock.lastSearch.pages") >= 5, "more pages are read (%s)" % page.evaluate("window.__mock.lastSearch.pages"))
@@ -58,7 +58,12 @@ with sync_playwright() as p:
     check(sum(1 for b in bs if b.startswith("You read ONE web page")) == 2, "each page is read on its own, into notes (%d pages)" % sum(1 for b in bs if b.startswith("You read ONE web page")))
     check(any(b.startswith("You check research notes") for b in bs), "…then it checks what is still missing")
     check("CNY 999,999" not in prompt, "a note with a number that isn't on the page is dropped")
-    check("COMPLETE, detailed answer" in prompt, "the final answer is written from all the notes, in full")
+    check("complete, expert research report" in prompt and "Where sources differ" in prompt, "the final answer is a full report from all the notes (direct answer, sections, disagreements, gaps)")
+    # v5.23 closer to Gemini: the research is planned as several searches
+    check(any(b.startswith("You plan web research") for b in bs), "the research is planned first")
+    sl = page.evaluate("window.__mock.searchLog.map(a => a.q || a.query || '')")
+    check(len(sl) >= 2 and any("price" in q for q in sl), "…and several searches are made, one per angle (%s)" % sl)
+    check(page.locator("text=searches").count() >= 1, "the answer says how many searches it made")
     check("read 2 pages one by one" in page.locator(".att-md").last.locator("xpath=..").inner_text() or page.locator("text=read 2 pages one by one").count() >= 1, "the answer says how many pages were read")
     page.locator("button:has-text('Web')").first.click()
 

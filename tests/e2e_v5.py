@@ -519,7 +519,7 @@ def sec_fastengine(br):
     # fast engine running → its own panel
     page.evaluate("""Object.assign(window.__mock.speed, { engine: 'litert', fastBackend: 'GPU', fastMtp: true, fastCpu: false, fastNote: '', activeLabel: 'Gemma 4 E2B · fast engine (GPU)' });
                      Object.assign(window.__mock.doctor, { engine: 'litert', fastBackend: 'GPU', fastMtp: true, cpu: '' })""")
-    page.locator("header button:has-text('2B eff.')").click()
+    page.locator("header button:has-text('Pulse')").click()
     page.wait_for_selector("[data-testid=fast-panel]", timeout=5000)
     fp = page.locator("[data-testid=fast-panel]")
     check("Fast engine on the graphics chip" in fp.inner_text() and "multi-token prediction on" in fp.inner_text(), "Speed says the fast engine is on the GPU with multi-token prediction")

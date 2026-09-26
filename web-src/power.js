@@ -9,7 +9,8 @@
    can handle. Each level now has a power profile the whole app reads (getPower()):
    answer length, how much of each web page deep research reads, an extra research round,
    Think switched on by itself for hard questions, bigger websites and ERP designs, and
-   expert instructions (edge cases, standards, full calculations, professional deliverables)
+   Gemini-style research (more searches, pages, gap-filling rounds and time: queries /
+   readPages / rounds / researchSecs), expert instructions (edge cases, standards, full calculations, professional deliverables)
    that a small model would only be confused by.                                          */
 
 export const LEVELS = {
@@ -55,11 +56,11 @@ export function brandOf(tier) {
 export function powerFor(level, ctx = 8192) {
   const L = Math.max(1, Math.min(5, level || 3));
   const P = {
-    1: { maxTokens: 1024, longTokens: 1536, notesChars: 3500, pages: 4, round2: 0, codeTokens: 2500, designTokens: 1800, tables: "3 to 5", expert: false, thinkHard: false },
-    2: { maxTokens: 1536, longTokens: 2048, notesChars: 4500, pages: 5, round2: 3, codeTokens: 3000, designTokens: 2200, tables: "4 to 7", expert: false, thinkHard: false },
-    3: { maxTokens: 2048, longTokens: 3072, notesChars: 5500, pages: 8, round2: 3, codeTokens: 4000, designTokens: 2500, tables: "6 to 10", expert: false, thinkHard: false },
-    4: { maxTokens: 4096, longTokens: 6144, notesChars: 9000, pages: 8, round2: 5, codeTokens: 8000, designTokens: 4000, tables: "8 to 12", expert: true, thinkHard: true },
-    5: { maxTokens: 6144, longTokens: 8192, notesChars: 12000, pages: 8, round2: 6, codeTokens: 12000, designTokens: 6000, tables: "10 to 16", expert: true, thinkHard: true },
+    1: { maxTokens: 1024, longTokens: 1536, notesChars: 3500, pages: 4, round2: 0, codeTokens: 2500, designTokens: 1800, tables: "3 to 5", expert: false, thinkHard: false, queries: 1, readPages: 4, rounds: 0, researchSecs: 120 },
+    2: { maxTokens: 1536, longTokens: 2048, notesChars: 4500, pages: 5, round2: 3, codeTokens: 3000, designTokens: 2200, tables: "4 to 7", expert: false, thinkHard: false, queries: 2, readPages: 6, rounds: 1, researchSecs: 170 },
+    3: { maxTokens: 2048, longTokens: 3072, notesChars: 5500, pages: 8, round2: 3, codeTokens: 4000, designTokens: 2500, tables: "6 to 10", expert: false, thinkHard: false, queries: 3, readPages: 8, rounds: 1, researchSecs: 210 },
+    4: { maxTokens: 4096, longTokens: 6144, notesChars: 9000, pages: 8, round2: 5, codeTokens: 8000, designTokens: 4000, tables: "8 to 12", expert: true, thinkHard: true, queries: 4, readPages: 10, rounds: 2, researchSecs: 300 },
+    5: { maxTokens: 6144, longTokens: 8192, notesChars: 12000, pages: 8, round2: 6, codeTokens: 12000, designTokens: 6000, tables: "10 to 16", expert: true, thinkHard: true, queries: 5, readPages: 12, rounds: 2, researchSecs: 420 },
   }[L];
   const cap = Math.max(1024, Math.floor((ctx || 8192) / 3));
   return { ...P, level: L, maxTokens: Math.min(P.maxTokens, cap), longTokens: Math.min(P.longTokens, cap), codeTokens: Math.min(P.codeTokens, Math.floor((ctx || 8192) / 2)), designTokens: Math.min(P.designTokens, cap) };

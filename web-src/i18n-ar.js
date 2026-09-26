@@ -2027,4 +2027,8 @@ export const AR = {
   "Professional depth: detailed reports, bigger systems, careful reasoning": "عمق احترافي: تقارير مفصلة، أنظمة أكبر، وتفكير دقيق",
   "The strongest: long expert work, full ERP systems, whole documents": "الأقوى: شغل خبراء طويل، أنظمة إدارة أعمال كاملة، ومستندات كاملة",
 
+  "Planning the research…": "بخطط للبحث…",
+  "Searching: {q}": "ببحث عن: {q}",
+  "{s} searches": "{s} عمليات بحث",
+  "{c} facts confirmed by 2+ sites": "{c} معلومة متأكدة من موقعين أو أكتر",
 };

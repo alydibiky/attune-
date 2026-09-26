@@ -16,7 +16,7 @@ import { looksLikeMathProblem, looksLikeCodeTask, arithmeticSlips, fixSlips } fr
 import { looksLikeReasoning, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
-import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD } from "./research.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD } from "./research.js";
 import { EXPERT_RULES } from "./power.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
@@ -679,21 +679,44 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // v5.20 — DEEP RESEARCH: the pages are read ONE AT A TIME, each into
         // checked notes; what's missing is searched once more; the answer is
         // written from all the notes (research.js).
-        const pwR = api.power ? api.power() : { pages: 8, round2: 3 };
-        const look = api.webPages ? await api.webPages(query, Math.min(pwR.pages, pagesFor(question))) : await api.webLookup(query, question);
+        const pwR = api.power ? api.power() : { pages: 8, round2: 3, queries: 1, readPages: 8, rounds: 1, researchSecs: 170 };
+        // v5.23 — closer to Gemini: PLAN several searches (one per angle), read the best
+        // pages across all of them, fill the gaps in extra rounds, cross-check the figures.
+        // Stronger models plan more searches, read more pages and get more time (power.js).
+        const deep = pagesFor(question) === 8;
+        const readCap = deep ? (pwR.readPages || pwR.pages || 8) : Math.min(pwR.readPages || 5, 5);
+        const nQ = api.webPages ? (deep ? (pwR.queries || 1) : Math.min(2, pwR.queries || 1)) : 1;
+        let queries = [query];
+        if (nQ > 1) {
+          onStatus(tr("Planning the research…"));
+          try { queries = parsePlan(await api.run(planMessages(question, nQ), null, { think: false, maxTokens: 160, temperature: 0.3 }), query, nQ); }
+          catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+          if (runRef.current !== run) return;
+        }
+        const per = Math.min(8, Math.ceil(readCap / queries.length) + 2);
+        const look = api.webPages ? await api.webPages(query, queries.length > 1 ? per : Math.min(pwR.pages, pagesFor(question))) : await api.webLookup(query, question);
         if (runRef.current !== run) return;
-        if (look.hits && look.hits.length && api.webPages) {
-          const notesSrc = [], tR = Date.now(); let read = 0;
+        const lists = [look.hits || []];
+        for (const q of queries.slice(1)) {
+          onStatus(tr("Searching: {q}", { q }));
+          try { const r = await api.webPages(q, per); lists.push((r && r.hits) || []); }
+          catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+          if (runRef.current !== run) return;
+        }
+        const toRead = api.webPages ? mergeHits(lists, readCap, question) : look.hits || [];
+        if (toRead.length && api.webPages) {
+          const notesSrc = [], tR = Date.now(), budget = (pwR.researchSecs || 170) * 1000; let read = 0;
+          const seenUrls = new Set(lists.flat().map((h) => h.url));
           const readPages = async (hits, cap) => {
             const list = hits.slice(0, cap);
             for (let i = 0; i < list.length; i++) {
-              if (Date.now() - tR > 170000) break;               // never more than ~3 minutes
+              if (Date.now() - tR > budget) break;
               const h = list[i];
               onStatus(tr("Reading page {i} of {n} — {t}", { i: i + 1, n: list.length, t: String(h.title || h.url).slice(0, 48) }));
               const pass = api.rankOne(question, h);
               if (!pass || pass.length < 60) continue;
               let notes = "";
-              try { notes = await api.run(notesMessages(question, { ...h, text: pass }), null, { think: false, maxTokens: 700, temperature: 0.1, copy: true }); }
+              try { notes = await api.run(notesMessages(question, { ...h, text: pass }), null, { think: false, maxTokens: pwR.expert ? 1000 : 700, temperature: 0.1, copy: true }); }
               catch (e) { if (String(e && e.message) === "Stopped") throw e; continue; }
               if (runRef.current !== run) return false;
               read++;
@@ -702,27 +725,31 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             }
             return true;
           };
-          if ((await readPages(look.hits, pagesFor(question))) === false) return;
-          if (notesSrc.length && Date.now() - tR < 150000) {
+          if ((await readPages(toRead, readCap)) === false) return;
+          // gap-filling rounds: "what is still missing?" → search just for that → read it
+          const rounds = pwR.rounds == null ? 1 : pwR.rounds;
+          for (let r = 0; r < rounds && notesSrc.length && Date.now() - tR < budget - 20000; r++) {
             try {
               onStatus(tr("Checking what is still missing…"));
               const q2 = cleanQuery(await api.run(missingMessages(question, notesSrc.map((n) => n.text).join("\n")), null, { think: false, maxTokens: 40, temperature: 0.1 }));
               if (runRef.current !== run) return;
-              if (q2) {
-                onStatus(tr("Searching again for: {q}", { q: q2 }));
-                const more = await api.webPages(q2, Math.max(4, pwR.round2));
-                if (runRef.current !== run) return;
-                const seen = new Set(look.hits.map((h) => h.url));
-                if ((await readPages((more.hits || []).filter((h) => !seen.has(h.url)), pwR.round2 || 3)) === false) return;
-              }
-            } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+              if (!q2 || queries.includes(q2)) break;
+              queries.push(q2);
+              onStatus(tr("Searching again for: {q}", { q: q2 }));
+              const more = await api.webPages(q2, Math.max(4, pwR.round2 || 3));
+              if (runRef.current !== run) return;
+              const fresh = mergeHits([((more && more.hits) || []).filter((h) => !seenUrls.has(h.url))], pwR.round2 || 3, question);
+              fresh.forEach((h) => seenUrls.add(h.url));
+              if ((await readPages(fresh, pwR.round2 || 3)) === false) return;
+            } catch (e) { if (String(e && e.message) === "Stopped") throw e; break; }
           }
           if (notesSrc.length) {
-            sources = notesSrc; via = look.via; research = { pages: read, withFacts: notesSrc.length };
+            const cc = crossCheck(notesSrc);
+            sources = cc.notes; via = look.via; research = { pages: read, withFacts: notesSrc.length, searches: queries.length, confirmed: cc.confirmed };
             onStatus(tr("Writing the full answer from {n} pages…", { n: notesSrc.length }));
-            content = api.groundedPrompt(asked, notesSrc) + FINAL_ADD + photoNote;
+            content = api.groundedPrompt(asked, cc.notes) + (queries.length > 1 || cc.confirmed ? REPORT_ADD : FINAL_ADD) + photoNote;
           } else {
-            const ranked = api.rankAll(question, look.hits);
+            const ranked = api.rankAll(question, toRead);
             sources = ranked; via = look.via;
             content = api.groundedPrompt(asked, ranked) + photoNote;
           }
@@ -823,7 +850,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // Copying from sources, a file or project knowledge: no anti-repeat
         // penalties (they mangled copied numbers). (v5.17)
         const copy = !!sources || !!fileAtt || !!(spaceRef.current.project && (spaceRef.current.project.knowledge || []).length);
-        answer = await api.run(buildMessages(history, content), pic, { onToken, onStatus, think: useThink, copy });
+        // a research report gets the level's long-answer budget (v5.23)
+        const longRep = research && !useThink && api.power ? { maxTokens: api.power().longTokens } : {};
+        answer = await api.run(buildMessages(history, content), pic, { onToken, onStatus, think: useThink, copy, ...longRep });
       } catch (e) {
         // Still too long for the model's window: answer with no earlier turns
         // rather than fail.
@@ -1232,7 +1261,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
             {m.sources && m.sources.length ? (
               <div className="mt-2 space-y-1">
-                <p className="text-[11px] text-slate-500">{tr("Sources")}{m.via ? " · via " + m.via : ""}{m.research ? " · " + tr("read {p} pages one by one, facts from {n}", { p: m.research.pages, n: m.research.withFacts }) : ""}</p>
+                <p className="text-[11px] text-slate-500">{tr("Sources")}{m.via ? " · via " + m.via : ""}{m.research ? " · " + tr("read {p} pages one by one, facts from {n}", { p: m.research.pages, n: m.research.withFacts }) : ""}{m.research && m.research.searches > 1 ? " · " + tr("{s} searches", { s: m.research.searches }) : ""}{m.research && m.research.confirmed ? " · " + tr("{c} facts confirmed by 2+ sites", { c: m.research.confirmed }) : ""}</p>
                 {m.sources.map((h, i) => <a key={i} href={h.url} target="_blank" rel="noreferrer" className="block text-[12px] text-teal-300/90 truncate">[{i + 1}] {tr(h.title)}</a>)}
               </div>
             ) : null}
