@@ -19,6 +19,7 @@ import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFoll
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes } from "./research.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed } from "./power.js";
 import { compactSystem, HONESTY_RULE, NO_CODE_RULE, codeInsteadOfAnswer, reread, partsOf, everyPart, sandwich } from "./boost.js";
+import { tipsBlock } from "./tips.js";
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
@@ -890,6 +891,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       }
       // v5.26 tricks: every part of a multi-question message gets answered; reasoning and
       // maths questions are shown twice (re-reading → fewer slips). (boost.js)
+      // v5.29 — the tips library: the few expert tips that fit THIS question (2 for small
+      // models, 3 Smart, 5 Expert/Master), added after it — never all 246 at once (tips.js)
+      if (answer == null && typed && !sources && !longMsg) {
+        const lv = (api.power && api.power().level) || 3;
+        content += tipsBlock(typed, lv <= 2 ? 2 : lv === 3 ? 3 : 5);
+      }
       if (answer == null && typed && !sources && !fileAtt) {
         content += everyPart(partsOf(typed));
         if (!useThink && (looksLikeReasoning(typed) || looksLikeMathProblem(typed))) content = reread(content, typed);
