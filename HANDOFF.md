@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.24**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.25**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.24**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.24** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.25** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -263,6 +263,11 @@ Ali asked for code that makes the models stronger. Weights can't change on the p
   - **Review pass** (`review: true`): after a plain model answer (not verified/computed/voted/code/web/photo/file) that `worthReview` (question ≥ 25 chars, draft ≥ 500 chars, not hi/thanks), the model gets `reviewMessages` (REVIEW_SYS: senior expert reviewer — recompute numbers, fix mistakes, add missing points/edge cases; reply `PROBLEMS:` + `FINAL ANSWER:`). `pickReviewed` keeps the draft when there is no FINAL ANSWER or the rewrite is < 60 % of the draft; Stop during the review keeps the draft. The draft stays on screen until the rewrite is half written. Badge "Reviewed by an expert pass · N improvements" (tap → the list). Status "Reviewing the answer like a senior expert…".
   - `thinkBudget` 3072 / 4096 (was 1024–1536), `votes` 5 in reasonVote (was 3), `codeRounds` 5 / 6 (chat code tasks + Code workbench), `historyChars` 20k / 30k (buildMessages budget, still ≤ (ctx − 4300) × 2), `fileChars` 40k / 60k (capped by the window, never below the old 14k).
 - Tests: `unit/v524.test.mjs`, `e2e_v524.py` (RAM override 16 GB → install Harmony → draft + review → improved answer and badge; broken review keeps the draft; "hi" isn't reviewed). NB a test draft must not repeat one sentence — the anti-repeat guard trims it below the review threshold.
+
+### 5.12 v5.25 — Ali's screenshot: the big models' cards looked weak
+- The Engine cards showed "Rewrite / Compress / Humanize / Copilot" **crossed out on every model** (old parity-eval chips; no tier ever had them in `good`) + "Parity: unverified…". Removed. Each card now shows `capabilitiesOf(tier)` (power.js) from the real power profile: Expert/Master abilities as violet ★ chips (expert review, senior-expert mode, thinks Nk tokens, web research N searches/pages, answers up to Nk tokens, reads files / a whole book, code rounds, ERP tables, logic tries + vote), plain chips for the rest, "Reads photos" for vision tiers.
+- **Long context unlocked**: a tier with ctx ≥ 65,536 (Maestro Long, 131k) gets `fileChars` up to 300k (≈ (ctx − longTokens − 4000) × 2.5) and `historyChars` 60k (`longContext: true`). Before, it was held to 60k characters like the 32k models.
+- Tests: e2e_v524 extended (no line-through, whole-book chip, ★ counts).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

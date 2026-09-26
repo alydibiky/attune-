@@ -21,7 +21,7 @@ import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { skillFor } from "./skills.js";
-import { brandOf, setPower, getPower, LEVELS } from "./power.js";
+import { brandOf, setPower, getPower, LEVELS, capabilitiesOf } from "./power.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
@@ -6555,7 +6555,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.24";
+const PAGE_VERSION = "5.25";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -10565,13 +10565,11 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
                   {t.moe ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">{tr("MoE · 2–3× faster decode")}</span> : null}
                   {t.vision ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">{tr("📷 reads photos")}</span> : null}
                 </div>
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {["Rewrite","Compress","Humanize","Copilot"].map((f) => {
-                    const st = parityStatus(t.parity, f.toLowerCase());
-                    return <span key={f} className={`text-[10px] px-1.5 py-0.5 rounded border ${!t.good.includes(f) ? "bg-slate-950 border-slate-900 text-slate-600 line-through" : st === "passing" ? "bg-teal-500/15 border-teal-700 text-teal-300" : "bg-slate-900 border-slate-700 text-slate-400"}`}>{tr(f)}{t.good.includes(f) && st === "passing" ? " ✓" : ""}</span>;
-                  })}
+                <div className="flex flex-wrap gap-1 mt-2" data-testid="caps">
+                  {capabilitiesOf(t).map((c, i) => (
+                    <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded border ${c.strong ? "bg-violet-500/15 border-violet-700/70 text-violet-200" : "bg-slate-900 border-slate-700 text-slate-300"}`}>{c.strong ? "★ " : ""}{tr(c.t, c.v)}</span>
+                  ))}
                 </div>
-                <p className="text-[10px] text-slate-600 mt-1">{tr("Parity: unverified until this tier passes its eval set — ✓ appears only after it does.")}</p>
                 {!ok ? <p className="text-[11px] text-amber-500/80 mt-2">{tr("Needs")} {t.needRam} {tr("GB RAM")}{t.platform === "desktop" ? tr(" · desktop or laptop") : ""}</p> : null}
               </button>
             );

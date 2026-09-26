@@ -1,5 +1,5 @@
 // Unit tests for v5.24: the stronger models do more work per answer.
-import { powerFor, worthReview, reviewMessages, pickReviewed, REVIEW_SYS } from "../../web-src/power.js";
+import { capabilitiesOf, powerFor, worthReview, reviewMessages, pickReviewed, REVIEW_SYS } from "../../web-src/power.js";
 const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
 
@@ -24,6 +24,11 @@ eq(pickReviewed("Looks good to me.", d), null, "no FINAL ANSWER → the draft st
 eq(pickReviewed("FINAL ANSWER:\nShort.", d), null, "a much shorter rewrite → the draft stays");
 eq(/recompute/i.test(REVIEW_SYS) && /edge cases/.test(REVIEW_SYS), true, "the reviewer recomputes numbers and looks for edge cases");
 eq(reviewMessages("Q?", "D")[1].content.includes("DRAFT ANSWER:\nD"), true, "the reviewer sees the question and the draft");
+
+eq([powerFor(5, 131072).fileChars > 250000, powerFor(5, 131072).longContext, powerFor(5, 32768).longContext], [true, true, undefined], "a 131k-window model reads a whole book; a 32k one doesn't claim to");
+const cx = (t) => capabilitiesOf(t).filter((c) => c.strong).length;
+eq([cx({ id: "xs", label: "a" }), cx({ id: "moe-xl", label: "b", ctx: 32768 }) >= 8], [0, true], "the strongest models list far more expert abilities than the smallest");
+eq(capabilitiesOf({ id: "moe-xl-long", label: "c", ctx: 131072 }).some((c) => /whole book/.test(c.t)), true, "Maestro Long says it reads a whole book");
 
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 if (fails.length) process.exit(1);

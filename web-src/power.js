@@ -64,7 +64,9 @@ export function powerFor(level, ctx = 8192) {
   }[L];
   const cap = Math.max(1024, Math.floor((ctx || 8192) / 3));
   return { ...P, level: L, maxTokens: Math.min(P.maxTokens, cap), longTokens: Math.min(P.longTokens, cap), codeTokens: Math.min(P.codeTokens, Math.floor((ctx || 8192) / 2)), designTokens: Math.min(P.designTokens, cap),
-    fileChars: Math.min(P.fileChars, Math.max(14000, Math.floor(((ctx || 8192) - Math.min(P.longTokens, cap) - 2500) * 2.5))) };
+    fileChars: Math.min(P.fileChars, Math.max(14000, Math.floor(((ctx || 8192) - Math.min(P.longTokens, cap) - 2500) * 2.5))),
+    // a long-context model (Maestro Long, 131k) reads a whole book / contract and a very long chat
+    ...((ctx || 0) >= 65536 ? { fileChars: Math.min(300000, Math.floor((ctx - P.longTokens - 4000) * 2.5)), historyChars: 60000, longContext: true } : {}) };
 }
 
 // The active model's profile, set by the app when the model changes.
@@ -120,4 +122,25 @@ export function pickReviewed(reply, draft) {
   const pm = /PROBLEMS\s*:?\s*\n([\s\S]*?)(?:\n\s*\**\s*FINAL ANSWER)/i.exec(r);
   const problems = pm ? pm[1].split("\n").map((l) => l.replace(/^\s*[-*•]\s*/, "").trim()).filter((l) => l && !/^none\.?$/i.test(l)) : [];
   return { text, problems };
+}
+
+/**
+ * What a model can really do, from its power profile (shown on each model card instead of
+ * the old crossed-out tool list — every tool works with every model; what differs is depth).
+ * → [{ t: template for tr(), v: values, strong: true for the Expert/Master-only abilities }]
+ */
+export function capabilitiesOf(tier) {
+  const b = brandOf(tier), p = powerFor(b.level, (tier && tier.ctx) || 8192), out = [];
+  const add = (t, v = {}, strong = false) => out.push({ t, v, strong });
+  if (p.review) add("Expert review of its own answers", {}, true);
+  if (p.expert) add("Senior-expert mode", {}, true);
+  if (p.thinkHard) add("Thinks {n}k tokens on hard problems", { n: Math.round(p.thinkBudget / 1024) }, true);
+  add(p.queries > 1 ? "Web research · {q} searches, {p} pages" : "Web search · {p} pages", { q: p.queries, p: p.readPages }, p.queries >= 4);
+  add("Answers up to {n}k tokens", { n: Math.round(p.longTokens / 1024) }, p.level >= 4);
+  add(p.longContext ? "Reads a whole book ({n}k characters)" : "Reads files up to {n}k characters", { n: Math.round(p.fileChars / 1000) }, p.fileChars >= 40000);
+  add("Code · {n} test-and-fix rounds", { n: p.codeRounds }, p.codeRounds >= 5);
+  add("Business systems · {t} tables", { t: p.tables }, p.level >= 4);
+  if (p.votes > 3) add("Logic · {n} tries + vote", { n: p.votes }, true);
+  if (tier && tier.vision) add("Reads photos");
+  return out;
 }
