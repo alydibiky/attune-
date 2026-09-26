@@ -24,20 +24,21 @@ export const LEVELS = {
 
 /** model tier id → { brand, level } */
 export const BRANDS = {
-  "xs": { brand: "Whisper", level: 1 },
-  "sm": { brand: "Echo", level: 2 },
-  "fast-e2b": { brand: "Pulse", level: 2 },
-  "md-lo": { brand: "Chord Lite", level: 3 },
-  "md": { brand: "Chord", level: 3 },
-  "md-hi": { brand: "Chord HD", level: 3 },
-  "lg": { brand: "Rhythm", level: 3 },
-  "fast-e4b": { brand: "Pulse Pro", level: 3 },
-  "xl": { brand: "Harmony", level: 4 },
-  "max": { brand: "Harmony Pro", level: 4 },
-  "moe-lg": { brand: "Symphony", level: 5 },
-  "ultra": { brand: "Symphony Max", level: 5 },
-  "moe-xl": { brand: "Maestro", level: 5 },
-  "moe-xl-long": { brand: "Maestro Long", level: 5 },
+  // v5.28 — Ali: no Qwen / Gemma anywhere, catchy names that rank clearly
+  "xs": { brand: "Spark", level: 1 },
+  "sm": { brand: "Glow", level: 2 },
+  "fast-e2b": { brand: "Flash", level: 2 },
+  "md-lo": { brand: "Core Lite", level: 3 },
+  "md": { brand: "Core", level: 3 },
+  "md-hi": { brand: "Core+", level: 3 },
+  "lg": { brand: "Sense", level: 3 },
+  "fast-e4b": { brand: "Flash+", level: 3 },
+  "xl": { brand: "Pro", level: 4 },
+  "max": { brand: "Pro+", level: 4 },
+  "moe-lg": { brand: "Ultra", level: 5 },
+  "ultra": { brand: "Ultra+", level: 5 },
+  "moe-xl": { brand: "Titan", level: 5 },
+  "moe-xl-long": { brand: "Titan XL", level: 5 },
 };
 
 /** A model tier (or null) → { brand, level, levelName, real } */
@@ -47,7 +48,7 @@ export function brandOf(tier) {
   const guess = /(\d+(?:\.\d+)?)\s*B/i.exec(String(tier.params || ""));
   const n = guess ? parseFloat(guess[1]) : 4;
   const level = b ? b.level : n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 3 : n < 20 ? 4 : 5;
-  return { brand: b ? b.brand : tier.label, level, levelName: LEVELS[level].name, real: tier.label + (tier.quant ? " · " + tier.quant : "") };
+  return { brand: b ? b.brand : tier.label, level, levelName: LEVELS[level].name, real: tier.realName || tier.label };
 }
 
 /**
@@ -143,4 +144,36 @@ export function capabilitiesOf(tier) {
   add("Business systems · {t} tables", { t: p.tables }, p.level >= 4);
   if (p.votes > 3) add("Logic · {n} tries + vote", { n: p.votes }, true);
   return out;
+}
+
+/**
+ * v5.28 — Ali: "I don't want Qwen and Gemma to appear". Text that comes back from the engine
+ * (models installed before carry labels like "Echo · Qwen3.5 2B · UD-Q4_K_XL", the running
+ * line, the speed panel) is shown through this: real names → Attune names, file / repo /
+ * quantisation jargon removed.
+ */
+const REAL = [
+  [/qwen\s?3(?:\.\d)?[\s-]*35B[-\s]?A3B\s*·?\s*long context/gi, "Titan XL"],
+  [/qwen\s?3(?:\.\d)?[\s-]*35B[-\s]?A3B/gi, "Titan"],
+  [/gemma[\s-]?4[\s-]*31B/gi, "Ultra+"],
+  [/gemma[\s-]?4[\s-]*26B[-\s]?A4B/gi, "Ultra"],
+  [/gemma[\s-]?4[\s-]*12B/gi, "Pro+"],
+  [/gemma[\s-]?4[\s-]*E4B(?:[-\s]it)?\s*·?\s*fast engine(?:\s*\((?:GPU|CPU)\))?/gi, "Flash+"],
+  [/gemma[\s-]?4[\s-]*E2B(?:[-\s]it)?\s*·?\s*fast engine(?:\s*\((?:GPU|CPU)\))?/gi, "Flash"],
+  [/gemma[\s-]?4[\s-]*E4B/gi, "Sense"],
+  [/gemma[\s-]?4[\s-]*E2B/gi, "Flash"],
+  [/qwen\s?3(?:\.\d)?[\s-]*9B/gi, "Pro"],
+  [/qwen\s?3(?:\.\d)?[\s-]*4B/gi, "Core"],
+  [/qwen\s?3(?:\.\d)?[\s-]*2B/gi, "Glow"],
+  [/qwen\s?3(?:\.\d)?[\s-]*0\.8B/gi, "Spark"],
+  [/\b(?:unsloth|litert-community|google|bartowski|Qwen|lmstudio-community)\/[\w.\-]+(?::[\w.\-]+)?/gi, ""],
+  [/\b(?:QAT\s+)?(?:UD-)?I?Q\d(?:_[A-Z0-9]+)*\b/g, ""],
+  [/\bqwen[\w.\-]*|\bgemma[\w.\-]*/gi, "Attune"],
+];
+export function publicName(s) {
+  let t = String(s || "");
+  for (const [re, to] of REAL) t = t.replace(re, to);
+  // "Echo · Core" (an old brand + the new one) → keep the new one; tidy separators
+  t = t.replace(/\b(Whisper|Echo|Pulse Pro|Pulse|Chord Lite|Chord HD|Chord|Rhythm|Harmony Pro|Harmony|Symphony Max|Symphony|Maestro Long|Maestro)\s*·\s*/g, "");
+  return t.replace(/(\s*·\s*){2,}/g, " · ").replace(/^\s*·\s*|\s*·\s*$/g, "").replace(/\s{2,}/g, " ").trim();
 }

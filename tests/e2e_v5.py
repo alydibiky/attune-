@@ -296,6 +296,8 @@ def sec_actions(br):
     page.locator("[data-testid=rem-add]").click(); page.wait_for_timeout(200)
     check(page.locator("[data-testid=rem-item]").count() == 2 and len(page.evaluate("window.__mock.notes")) == 2, "a reminder added by hand is scheduled on the phone")
     page.locator("[data-testid=rem-item]").filter(has_text="insurance").locator("button").click(); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=confirm]").count() == 1 and len(page.evaluate("window.__mock.notes")) == 2, "deleting a reminder asks first (v5.28)")
+    page.click("[data-testid=confirm-yes]"); page.wait_for_timeout(200)
     check(len(page.evaluate("window.__mock.notes")) == 1, "deleting it cancels it on the phone")
     page.evaluate("window.__mock.inexact = true"); page.evaluate("window.__attuneBack()"); open_more(page)
     page.locator(".rounded-t-2xl button:has-text('Reminders')").click(); page.wait_for_timeout(200)
@@ -498,7 +500,7 @@ def sec_fastengine(br):
     page.locator("header button:has-text('No model')").click()
     rec = page.locator("text=Recommended for this device").locator("xpath=..")
     name = rec.locator("p.text-base").inner_text()
-    check(name == "Gemma 4 E2B · fast engine (GPU)", "the Android app recommends the fast engine first: " + name)
+    check(name == "Flash · ⚡ fast engine", "the Android app recommends the fast engine first: " + name)
     check("under a second" in rec.inner_text(), "…and says why (first words in under a second)")
     rec.get_by_role("button", name="Install").first.click()
     page.wait_for_selector("text=Running now", timeout=10000)
@@ -519,7 +521,7 @@ def sec_fastengine(br):
     # fast engine running → its own panel
     page.evaluate("""Object.assign(window.__mock.speed, { engine: 'litert', fastBackend: 'GPU', fastMtp: true, fastCpu: false, fastNote: '', activeLabel: 'Gemma 4 E2B · fast engine (GPU)' });
                      Object.assign(window.__mock.doctor, { engine: 'litert', fastBackend: 'GPU', fastMtp: true, cpu: '' })""")
-    page.locator("header button:has-text('Pulse')").click()
+    page.locator("header button:has-text('Flash')").click()
     page.wait_for_selector("[data-testid=fast-panel]", timeout=5000)
     fp = page.locator("[data-testid=fast-panel]")
     check("Fast engine on the graphics chip" in fp.inner_text() and "multi-token prediction on" in fp.inner_text(), "Speed says the fast engine is on the GPU with multi-token prediction")

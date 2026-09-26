@@ -8,12 +8,13 @@
       Arabic that repeats the question). Only for Qwen 3.5 models.
    3. A speed test — the same fixed task each time, so the numbers for CPU,
       GPU and draft on/off can be compared on THIS phone.                        */
+import { publicName } from "./power.js";
 import React, { useState } from "react";
 import { Gauge, Loader2, AlertTriangle, Download, Zap } from "lucide-react";
 import { tr, fmtNum } from "./i18n.js";
 
 export const BENCH_KEY = "attune:bench:v1";
-export const DRAFT_SPEC = { id: "draft-qwen35-08b", label: "Qwen3.5 0.8B (draft)", repo: "unsloth/Qwen3.5-0.8B-GGUF", quant: "Q4_K_M", vision: false, ctx: 4096, draft: true };
+export const DRAFT_SPEC = { id: "draft-qwen35-08b", label: "Spark (helper)", repo: "unsloth/Qwen3.5-0.8B-GGUF", quant: "Q4_K_M", vision: false, ctx: 4096, draft: true };
 
 export function loadBench() { try { const v = JSON.parse(localStorage.getItem(BENCH_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
 function saveBench(list) { try { localStorage.setItem(BENCH_KEY, JSON.stringify(list.slice(0, 12))); } catch (e) {} }
@@ -41,9 +42,9 @@ export function diagnose(d, lastTps) {
   if (!fast && /CPU_Mapped/.test(d.buffers || "") && !/in RAM/.test(d.settings || "")) out.push(["bad", "The model is read from storage instead of RAM — update to the latest Attune APK (it loads the model into RAM)."]);
   if (!fast && d.cpu && !/dotprod/i.test(d.cpu)) out.push(["bad", "The engine is using its slowest processor path (no dotprod). Send this report."]);
   if (fast && d.fastBackend === "CPU") out.push(["bad", "The fast engine is running on the CPU, not the graphics chip — turn on “Use the graphics chip” above. If it switched itself off, the phone's GPU driver refused it: send this report."]);
-  if (!fast && d.ramGB >= 6) out.push(["warn", "The biggest speed-up on this phone is the fast engine: Gemma 4 E2B on the graphics chip — first words in about a second. Tap “Switch to the fast engine” above."]);
+  if (!fast && d.ramGB >= 6) out.push(["warn", "The biggest speed-up on this phone is the fast engine: Flash on the graphics chip — first words in about a second. Tap “Switch to the fast engine” above."]);
   if (!fast && d.genThreads && d.genThreads < 3 && !d.powerSave && d.thermal < 2) out.push(["warn", "Only {n} threads are used for writing.", { n: d.genThreads }]);
-  if (!fast && d.modelGB > 4) out.push(["warn", "This is a big model for a phone — Qwen 3.5 4B is about 2–3× faster."]);
+  if (!fast && d.modelGB > 4) out.push(["warn", "This is a big model for a phone — Core is about 2–3× faster."]);
   if (lastTps != null && lastTps < 3 && !out.some((x) => x[0] === "bad")) out.push(["warn", "Nothing obvious — the phone may have slowed Attune while it was in the background. The new APK keeps it at full speed while writing."]);
   if (!out.length) out.push(["ok", "Nothing is holding it back."]);
   return out;
@@ -109,7 +110,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
           className="w-full mb-2 flex items-center gap-3 px-3 py-2.5 rounded-lg border border-amber-700/60 bg-amber-400/10 text-start disabled:opacity-50">
           <Zap size={18} className="text-amber-300 shrink-0" />
           <span className="min-w-0"><span className="block text-sm text-amber-100 font-medium">{tr("Switch to the fast engine")}</span>
-            <span className="block text-[11px] text-slate-400">{tr("Gemma 4 E2B on the graphics chip: first words in about a second, many times faster than this engine. {s} GB, once.", { s: fastTier.sizeGB.toFixed(1) })}</span></span>
+            <span className="block text-[11px] text-slate-400">{tr("Flash on the graphics chip: first words in about a second, many times faster than this engine. {s} GB, once.", { s: fastTier.sizeGB.toFixed(1) })}</span></span>
         </button>
       ) : null}
       <div className="space-y-1.5">
@@ -117,13 +118,13 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
           sp.gpuName ? tr("Running on {g}.", { g: sp.gpuName }) : "Runs the model on the phone's graphics chip (Adreno). Often faster at reading long prompts; test it below. Switches itself back to the CPU if anything goes wrong.")
           : <p className="text-[11px] text-slate-500 px-1">{tr("This build has no GPU engine — it will come with the next APK built on GitHub.")}</p>}
         {sp.draftInstalled ? row(sp.draft, () => !busy && apply({ draft: !sp.draft }, tr("Restarting the engine…")), "Faster answers with a draft model",
-          sp.draftFits ? (sp.draftActive ? tr("On: {d} guesses ahead, the main model checks.", { d: sp.draftLabel }) : "Qwen 3.5 0.8B guesses a few words ahead and the main model checks them in one go. Same answers, often faster writing.")
-            : "Only works with a Qwen 3.5 model — the one in use is not.") : (
+          sp.draftFits ? (sp.draftActive ? tr("On: {d} guesses ahead, the main model checks.", { d: publicName(sp.draftLabel) }) : "Spark guesses a few words ahead and the main model checks them in one go. Same answers, often faster writing.")
+            : "Only works with Spark, Glow, Core and Pro — not with the model in use.") : (
           <button onClick={installDraft} disabled={!!busy} data-testid="draft-install"
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg border border-slate-800 text-start disabled:opacity-50">
             <Download size={16} className="text-teal-300 shrink-0" />
             <span className="min-w-0"><span className="block text-sm text-slate-200">{tr("Faster answers with a draft model")}</span>
-              <span className="block text-[11px] text-slate-500">{tr("Download Qwen 3.5 0.8B as a helper (about 0.5 GB, once). Works with Qwen 3.5 models.")}</span></span>
+              <span className="block text-[11px] text-slate-500">{tr("Download Spark as a helper (about 0.5 GB, once). Works with Glow, Core and Pro.")}</span></span>
           </button>
         )}
       </div>
@@ -161,7 +162,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
             {bench.slice(0, 6).map((b) => (
               <div key={b.at} className="text-[11px]">
                 <div className="flex justify-between gap-2 text-slate-300">
-                  <span className="truncate">{b.mode}{b.draft ? " + " + tr("draft") : ""} · {b.model}</span>
+                  <span className="truncate">{b.mode}{b.draft ? " + " + tr("draft") : ""} · {publicName(b.model)}</span>
                   <span dir="ltr" className="shrink-0">{tr("writes {w}/s · reads {r}/s", { w: fmtNum(b.tps), r: fmtNum(b.promptTps) })}</span>
                 </div>
                 <Bar v={b.tps} max={maxTps} />

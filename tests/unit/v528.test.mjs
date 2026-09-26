@@ -3,6 +3,7 @@ import { fitNotes } from "../../web-src/research.js";
 import { looksLikeDeduction, looksLikeReasoning } from "../../web-src/reason.js";
 import { looksLikeMathProblem } from "../../web-src/verify.js";
 import { codeInsteadOfAnswer, NO_CODE_RULE } from "../../web-src/boost.js";
+import { publicName, BRANDS } from "../../web-src/power.js";
 const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
 
@@ -29,6 +30,11 @@ eq(/Never answer with a function/.test(NO_CODE_RULE), true, "every model is told
 eq(codeInsteadOfAnswer("```html\n<!doctype html><html><body>Crane Simulator</body></html>\n```"), false, "a web page answer is a deliverable, not 'code instead of an answer'");
 eq(codeInsteadOfAnswer("```python\ndef f():\n    return 1\nprint(f())\n```", "write a python function that returns 1"), false, "…nor is code the user asked for");
 eq(codeInsteadOfAnswer("```tool_code\nprint(default_api.x())\n```", "write me a script"), true, "tool_code is always caught");
+
+// v5.28 names: no Qwen / Gemma on screen
+eq(Object.values(BRANDS).map((b) => b.brand).join(" "), "Spark Glow Flash Core Lite Core Core+ Sense Flash+ Pro Pro+ Ultra Ultra+ Titan Titan XL", "the new ladder of names");
+eq([publicName("Echo · Qwen3.5 2B · UD-Q4_K_XL"), publicName("Gemma 4 E2B · fast engine (GPU)"), publicName("Qwen3.5 35B-A3B · long context"), publicName("unsloth/Qwen3.5-2B-GGUF:UD-Q4_K_XL")], ["Glow", "Flash", "Titan XL", ""], "old engine labels are shown with the new names, repo jargon removed");
+eq(/qwen|gemma/i.test(publicName("Running · Pulse Pro · Gemma 4 E4B · fast engine (GPU) · Qwen stuff")), false, "no Qwen / Gemma survives");
 
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 if (fails.length) process.exit(1);

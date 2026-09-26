@@ -1,4 +1,4 @@
-"""v5.24 — the stronger models are really stronger: a Harmony (Expert) model re-reads its
+"""v5.24 — the stronger models are really stronger: a Pro (Expert) model re-reads its
 draft as a senior reviewer and writes the improved answer; small models don't.
 
   python3 tests/e2e_v524.py
@@ -29,14 +29,14 @@ with sync_playwright() as p:
     caps = page.locator("[data-testid=caps]")
     txt_all = " || ".join(caps.nth(i).inner_text() for i in range(caps.count()))
     check(page.locator(".line-through").count() == 0, "no crossed-out tools on the model cards any more")
-    check("Reads a whole book" in txt_all, "Maestro Long shows it reads a whole book")
+    check("Reads a whole book" in txt_all, "Titan XL shows it reads a whole book")
     check(txt_all.count("Expert review of its own answers") >= 6, "every Expert / Master model shows its expert abilities")
     first = caps.first.inner_text(); last = caps.last.inner_text()
     check(first.count("★") > last.count("★") + 5, "the strongest model shows far more ★ abilities than the smallest (%d vs %d)" % (first.count("★"), last.count("★")))
-    page.locator("button:has-text('Harmony')").first.click(); page.wait_for_timeout(300)
-    page.locator("button:has-text('Download Harmony')").first.click()
-    page.wait_for_selector("text=Running now", timeout=10000)
-    check(page.locator("header button:has-text('Harmony')").count() == 1, "the header shows the Attune name of the model (Harmony)")
+    page.locator("[data-testid=tier-xl]").click(); page.wait_for_timeout(300)
+    page.locator("button:has-text('Download Pro')").first.click()
+    page.wait_for_selector("text=Running · Pro", timeout=15000)
+    check(page.locator("header button:has-text('Pro'):not(:has-text('Pro+'))").count() == 1, "the header shows the Attune name of the model (Pro)")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
 
     # ---- 1. an Expert model reviews its own draft ----

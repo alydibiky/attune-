@@ -23,13 +23,13 @@ with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors)
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
-    # a small phone → a small Qwen model (Echo, level 2)
+    # a small phone → a small Qwen model (Glow, level 2)
     page.evaluate("localStorage.setItem('attune:ram', '4')"); page.reload(); page.wait_for_selector("nav", timeout=15000)
     page.locator("header button:has-text('No model')").click()
-    page.locator("button:has-text('Echo')").first.click(); page.wait_for_timeout(300)
-    page.locator("button:has-text('Download Echo')").first.click()
-    page.wait_for_selector("text=Running · Echo", timeout=15000)
-    check(page.locator("header button:has-text('Echo')").count() == 1, "Echo (a small 2B Qwen model) is running")
+    page.locator("[data-testid=tier-sm]").click(); page.wait_for_timeout(300)
+    page.locator("button:has-text('Download Glow')").first.click()
+    page.wait_for_selector("text=Running · Glow", timeout=15000)
+    check(page.locator("header button:has-text('Glow')").count() == 1, "Glow (a small 2B model) is running")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
 
     # ---- 1. a small model: short prompt with an example, honesty, tight sampling ----

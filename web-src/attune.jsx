@@ -22,7 +22,7 @@ import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { skillFor } from "./skills.js";
-import { brandOf, setPower, getPower, LEVELS, capabilitiesOf } from "./power.js";
+import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
 import { samplingFor, taskKind } from "./boost.js";
 import { estTokens as estTok } from "./longread.js";
 import { Guard } from "./guard.jsx";
@@ -815,35 +815,35 @@ function entryRequirements(fromKey, toKey, packs) {
 
 const MODEL_TIERS = [
   // ---- desktop / workstation ------------------------------------------
-  { id: "moe-xl-long", vision: false, label: "Qwen3.5 35B-A3B · long context", params: "35B-A3B", quant: "UD-Q4_K_M", sizeGB: 22.1,
+  { id: "moe-xl-long", vision: false, label: "Titan XL", realName: "Qwen3.5 35B-A3B · long context", smoothRam: 64, params: "35B-A3B", quant: "UD-Q4_K_M", sizeGB: 22.1,
     needRam: 48, ctx: 131072, phoneMin: 64, moe: true, heat: true,
     repo: "unsloth/Qwen3.6-35B-A3B-GGUF",
-    quality: "The same model as below, given the memory to hold a whole book of context at once. On a 48 GB machine the spare RAM is better spent on context than on precision — you can hand it an entire contract or a year of notes and it keeps all of it in view.",
+    quality: "Titan with a huge memory: it holds a whole book, contract or a year of notes at once. The best for very long documents. Computer-class.",
     good: ["Ask", "Write", "Summarise", "Review", "Long documents"] },
-  { id: "moe-xl", vision: false, label: "Qwen3.5 35B-A3B", params: "35B-A3B", quant: "UD-Q4_K_M", sizeGB: 22.1,
+  { id: "moe-xl", vision: false, label: "Titan", realName: "Qwen3.5 35B-A3B", smoothRam: 48, params: "35B-A3B", quant: "UD-Q4_K_M", sizeGB: 22.1,
     needRam: 32, ctx: 32768, phoneMin: 32, moe: true, heat: true,
     repo: "unsloth/Qwen3.6-35B-A3B-GGUF",
-    quality: "35B of knowledge, 3B doing the work on each token — near-frontier answers at a speed a laptop can sustain. A mixture-of-experts model keeps every expert in memory even though few run per token, so this needs the RAM of a 35B and the compute of a 3B.",
+    quality: "The most knowledgeable: a very large model that answers at the speed of a small one (mixture of experts). Near top-tier answers. Computer-class.",
     good: ["Ask", "Write", "Summarise", "Review"] },
-  { id: "ultra", vision: true, label: "Gemma 4 31B", params: "31B", quant: "QAT UD-Q4_K_XL", sizeGB: 17.3,
+  { id: "ultra", vision: true, label: "Ultra+", realName: "Gemma 4 31B", smoothRam: 48, params: "31B", quant: "QAT UD-Q4_K_XL", sizeGB: 17.3,
     needRam: 32, ctx: 32768, phoneMin: 32, qat: true, heat: true,
     repo: "unsloth/gemma-4-31B-it-GGUF",
-    quality: "The strongest dense model that still fits a 32 GB machine. Quantisation-aware trained, so 4-bit costs almost nothing in quality here.",
+    quality: "The strongest single model here: deep reasoning, expert writing, reads photos. Computer-class.",
     good: ["Ask", "Write", "Summarise", "Review"] },
-  { id: "moe-lg", vision: true, label: "Gemma 4 26B-A4B", params: "26B-A4B", quant: "QAT UD-Q4_K_XL", sizeGB: 14.2,
+  { id: "moe-lg", vision: true, label: "Ultra", realName: "Gemma 4 26B-A4B", smoothRam: 32, params: "26B-A4B", quant: "QAT UD-Q4_K_XL", sizeGB: 14.2,
     needRam: 24, ctx: 32768, phoneMin: 24, moe: true, qat: true, heat: true,
     repo: "unsloth/gemma-4-26B-A4B-it-GGUF",
-    quality: "26B-class answers with under 4B active per token. The best quality-per-second on a strong laptop.",
+    quality: "Close to Ultra+ quality at a much higher speed. Reads photos. For strong laptops.",
     good: ["Ask", "Write", "Summarise", "Review"] },
-  { id: "max", vision: true, label: "Gemma 4 12B", params: "12B", quant: "QAT UD-Q4_K_XL", sizeGB: 6.72,
+  { id: "max", vision: true, label: "Pro+", realName: "Gemma 4 12B", smoothRam: 24, params: "12B", quant: "QAT UD-Q4_K_XL", sizeGB: 6.72,
     needRam: 16, ctx: 32768, platform: "any", qat: true,
     repo: "unsloth/gemma-4-12B-it-GGUF",
-    quality: "Reads text, images and audio. Comfortable on a laptop or a 16 GB phone.",
+    quality: "Expert level, and reads text, photos and audio. Comfortable on a laptop or a 16 GB phone.",
     good: ["Ask", "Write", "Summarise", "Review", "Photos"] },
-  { id: "xl", vision: true, label: "Qwen3.5 9B", params: "9B", quant: "Q4_K_M", sizeGB: 6.0,
+  { id: "xl", vision: true, label: "Pro", realName: "Qwen3.5 9B", smoothRam: 16, params: "9B", quant: "Q4_K_M", sizeGB: 6.0,
     needRam: 12, ctx: 32768, platform: "any",
     repo: "unsloth/Qwen3.5-9B-GGUF",
-    quality: "The strongest sub-10B model measured anywhere, and the best of these at reading documents and photographs.",
+    quality: "The strongest model a 12 GB phone can run: expert answers, and the best at reading documents and photos.",
     good: ["Ask", "Write", "Summarise", "Review", "Photos"] },
 
   // ---- the fast engine: LiteRT-LM on the phone's GPU (Android app only) ----
@@ -853,47 +853,47 @@ const MODEL_TIERS = [
   // for the writing. Published figures (Samsung S26 Ultra, GPU): E2B reads
   // ~3,800 tokens/s and writes ~52/s, 66–92/s with multi-token prediction.
   // The one file also holds the photo reader. Apache-2.0, not gated.
-  { id: "fast-e2b", engine: "litert", vision: true, label: "Gemma 4 E2B", params: "2B eff.", quant: "fast engine (GPU)", sizeGB: 2.59,
+  { id: "fast-e2b", engine: "litert", vision: true, label: "Flash", realName: "Gemma 4 E2B", smoothRam: 8, params: "2B eff.", quant: "fast engine (GPU)", sizeGB: 2.59,
     needRam: 6, ctx: 8192, platform: "android", fast: true,
     url: "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm",
-    quality: "The fast one. Runs on the phone's graphics chip: the first words appear in under a second and it writes faster than you can read. Reads photos, English and Arabic. For hard reasoning, the E4B below is stronger.",
+    quality: "The fast one: runs on the phone's graphics chip — the first words appear in under a second. Reads photos, English and Arabic. For harder questions, Flash+ is stronger.",
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
-  { id: "fast-e4b", engine: "litert", vision: true, label: "Gemma 4 E4B", params: "4.5B eff.", quant: "fast engine (GPU)", sizeGB: 3.66,
+  { id: "fast-e4b", engine: "litert", vision: true, label: "Flash+", realName: "Gemma 4 E4B", smoothRam: 12, params: "4.5B eff.", quant: "fast engine (GPU)", sizeGB: 3.66,
     needRam: 8, ctx: 8192, platform: "android", fast: true,
     url: "https://huggingface.co/litert-community/gemma-4-E4B-it-litert-lm/resolve/main/gemma-4-E4B-it.litertlm",
-    quality: "The stronger fast one: noticeably better answers than the E2B, still on the graphics chip — first words in about a second, then roughly 20–45 words a second on a flagship.",
+    quality: "The stronger fast one: noticeably better answers than Flash, still on the graphics chip — first words in about a second.",
     good: ["Ask", "Write", "Summarise", "Review", "Photos", "Arabic"] },
 
   // ---- the phone range, where most people will live -------------------
-  { id: "md-hi", vision: true, label: "Qwen3.5 4B", params: "4B", quant: "Q5_K_M", sizeGB: 3.14,
+  { id: "md-hi", vision: true, label: "Core+", realName: "Qwen3.5 4B", smoothRam: 12, params: "4B", quant: "Q5_K_M", sizeGB: 3.14,
     needRam: 8, ctx: 32768, platform: "any", recommended: true,
     repo: "unsloth/Qwen3.5-4B-GGUF",
-    quality: "The one to have if your phone can hold it. Reads photographs of documents and receipts, handles Arabic and English, and a fifth bit of precision over the smaller build is a real quality difference you can feel on long answers.",
+    quality: "The best everyday choice if your phone can hold it: reads photos of documents and receipts, Arabic and English, with extra precision for long answers.",
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
-  { id: "lg", vision: true, label: "Gemma 4 E4B", params: "4.5B eff.", quant: "QAT UD-Q4_K_XL", sizeGB: 4.22,
+  { id: "lg", vision: true, label: "Sense", realName: "Gemma 4 E4B", smoothRam: 12, params: "4.5B eff.", quant: "QAT UD-Q4_K_XL", sizeGB: 4.22,
     needRam: 8, ctx: 32768, platform: "any", qat: true,
     repo: "unsloth/gemma-4-E4B-it-GGUF",
-    quality: "Text, images and audio on a flagship phone. Pick this over the Qwen if you want voice notes read back to you.",
+    quality: "Text, photos and audio on a flagship phone — pick it if you want voice notes understood.",
     good: ["Ask", "Write", "Summarise", "Photos", "Voice"] },
-  { id: "md", vision: true, label: "Qwen3.5 4B", params: "4B", quant: "Q4_K_M", sizeGB: 2.74,
+  { id: "md", vision: true, label: "Core", realName: "Qwen3.5 4B", smoothRam: 8, params: "4B", quant: "Q4_K_M", sizeGB: 2.74,
     needRam: 6, ctx: 16384, platform: "any",
     repo: "unsloth/Qwen3.5-4B-GGUF",
-    quality: "The sweet spot on an ordinary modern phone. Everything the app does, in under 3 GB.",
+    quality: "The sweet spot on an ordinary modern phone: everything the app does, in under 3 GB.",
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
-  { id: "md-lo", vision: true, label: "Qwen3.5 4B", params: "4B", quant: "IQ4_XS", sizeGB: 2.48,
+  { id: "md-lo", vision: true, label: "Core Lite", realName: "Qwen3.5 4B", smoothRam: 6, params: "4B", quant: "IQ4_XS", sizeGB: 2.48,
     needRam: 4, ctx: 8192, platform: "any", imatrix: true,
     repo: "unsloth/Qwen3.5-4B-GGUF",
-    quality: "The same 4B model squeezed 10% smaller for a 4 GB phone. Slightly slower on older chips, and worth it to get the 4B rather than dropping to the 2B.",
+    quality: "Core made 10% smaller for a 4 GB phone — worth it over Glow.",
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
-  { id: "sm", vision: true, label: "Qwen3.5 2B", params: "2B", quant: "UD-Q4_K_XL", sizeGB: 1.34,
+  { id: "sm", vision: true, label: "Glow", realName: "Qwen3.5 2B", smoothRam: 6, params: "2B", quant: "UD-Q4_K_XL", sizeGB: 1.34,
     needRam: 3, ctx: 8192, platform: "any",
     repo: "unsloth/Qwen3.5-2B-GGUF",
-    quality: "Runs on a cheap phone and still reads photographs. Short answers are good; long reasoning is where you'll notice the size.",
+    quality: "Runs on a budget phone and still reads photos. Good short answers; long reasoning shows its size.",
     good: ["Ask", "Summarise", "Photos"] },
-  { id: "xs", vision: true, label: "Qwen3.5 0.8B", params: "0.8B", quant: "Q4_K_M", sizeGB: 0.6,
+  { id: "xs", vision: true, label: "Spark", realName: "Qwen3.5 0.8B", smoothRam: 4, params: "0.8B", quant: "Q4_K_M", sizeGB: 0.6,
     needRam: 2, ctx: 8192, platform: "any",
     repo: "unsloth/Qwen3.5-0.8B-GGUF",
-    quality: "For a phone that can't hold anything else. Useful for tidying and shortening text; don't ask it to reason.",
+    quality: "For a phone that can't hold anything else: tidying and shortening text. Not for reasoning.",
     good: ["Summarise"] },
 ];
 
@@ -962,7 +962,7 @@ function recommendEngine(dev) {
   const headroom = dev.ram - best.needRam;
   return {
     tier: best, lighter, stronger,
-    headline: best.label + " · " + best.quant,
+    headline: best.label + (best.fast ? " · ⚡ " + "fast engine" : ""),
     size: tr("{s} GB to download", { s: best.sizeGB.toFixed(2) }),
     why: [
       dev.reported ? tr(dev.platform === "desktop" ? "Your computer reports {n} GB of memory" : "Your phone reports {n} GB of memory", { n: dev.ram }) : tr("Detected about {n} GB of memory", { n: dev.ram }),
@@ -7395,8 +7395,8 @@ export default function App() {
     const t0 = tierArg && (tierArg.repo || tierArg.url) ? tierArg : activeTier;
     if (NATIVE) {
       if (!t0) return;
-      if (t0.url) { await installNative({ id: t0.id, label: brandOf(t0).brand + " · " + t0.label + " · " + t0.quant, url: t0.url, ctx: t0.ctx || 8192 }, t0); return; }
-      await installNative({ id: t0.id, label: brandOf(t0).brand + " · " + t0.label + " · " + t0.quant, repo: t0.repo, quant: t0.quant,
+      if (t0.url) { await installNative({ id: t0.id, label: brandOf(t0).brand, url: t0.url, ctx: t0.ctx || 8192 }, t0); return; }
+      await installNative({ id: t0.id, label: brandOf(t0).brand, repo: t0.repo, quant: t0.quant,
                             vision: !!t0.vision, ctx: t0.ctx || 8192 }, t0);
       return;
     }
@@ -10289,8 +10289,9 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
   const labelFor = (id) => {
     const m = (n.installedModels || []).find((x) => x.id === id);
     const t = MODEL_TIERS.find((x) => x.id === id);
-    if (m) return t && !String(m.label).startsWith(brandOf(t).brand) ? brandOf(t).brand + " · " + m.label : m.label;
-    return t ? brandOf(t).brand + " · " + t.label + " · " + t.quant : id;
+    // v5.28: always the Attune name (models installed before carry "Echo · Qwen3.5 2B · …" labels)
+    if (t) return brandOf(t).brand;
+    return m ? publicName(m.label) : id;
   };
   const stateText = { ready: "Running", starting: "Loading the model…", error: "Stopped", idle: "Not running" }[e.state] || "Not running";
   const row = (on, onClick, label, sub) => (
@@ -10359,7 +10360,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-sm text-slate-200 truncate">{tr(m.label)}{m.vision ? " · 📷" : ""}</p>
-                <p className="text-[10px] text-slate-600 truncate">{(m.sizeBytes / 1e9).toFixed(2)} {tr("GB ·")} {m.source}</p>
+                <p className="text-[10px] text-slate-600 truncate">{(m.sizeBytes / 1e9).toFixed(2)} {tr("GB")}</p>
               </div>
               <div className="flex gap-1 shrink-0">
                 {m.active ? <span className="text-[11px] px-2 py-1 rounded-md border border-teal-800 text-teal-300">{tr("In use")}</span>
@@ -10384,7 +10385,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
         <p className={head}>{tr("Add any model")}</p>
         <div className="flex gap-2">
           <input value={custom} onChange={(ev) => setCustom(ev.target.value)}
-            placeholder={tr("unsloth/Qwen3.5-9B-GGUF:Q4_K_M   or   https://…/model.gguf")}
+            placeholder={tr("user/model-GGUF:Q4_K_M   or   https://…/model.gguf")}
             className="flex-1 min-w-0 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
           <button disabled={!custom.trim() || busy || n.airGap}
             onClick={() => { const v = custom.trim(); n.installNative(v.startsWith("https://") ? { url: v } : { spec: v, vision: true }, null); }}
@@ -10395,7 +10396,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
 
       {NATIVE && NATIVE.speed ? <SpeedPanel native={NATIVE} nativeCall={nativeCall} runBench={runBench} flash={flash} box={box} head={head} row={row} engineReady={e.state === "ready"}
         busy={!!busy} fastTier={MODEL_TIERS.find((t) => t.id === "fast-e2b")}
-        onFast={(t) => n.installNative({ id: t.id, label: brandOf(t).brand + " · " + t.label + " · " + t.quant, url: t.url, ctx: t.ctx || 8192 }, t)} /> : null}
+        onFast={(t) => n.installNative({ id: t.id, label: brandOf(t).brand, url: t.url, ctx: t.ctx || 8192 }, t)} /> : null}
 
       {/* answers */}
       <div className={box}>
@@ -10582,20 +10583,28 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
           {MODEL_TIERS.map((t) => {
             const ok = fits(t); const maybe = !ok && plausible(t); const on = activeTier && activeTier.id === t.id;
             return (
-              <button key={t.id} onClick={() => setTierId(t.id)}
+              <button key={t.id} onClick={() => setTierId(t.id)} data-testid={"tier-" + t.id}
                 className={`w-full text-start rounded-xl border p-3 transition-colors ${on ? "border-teal-500 bg-teal-500/5" : ok ? "border-slate-800 bg-slate-950 hover:border-slate-600" : maybe ? "border-amber-900/50 bg-slate-950 hover:border-amber-700" : "border-slate-900 bg-slate-950 opacity-70 hover:border-slate-700"}`}>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-white">{brandOf(t).brand} <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 align-middle">{tr(brandOf(t).levelName)}</span>
-                    <span className="block text-[11px] font-normal text-slate-500">{tr(t.label)} · {t.params}</span>
+                    <span className="block text-[11px] font-normal text-slate-500">{t.params}</span>
                     {bestTier && bestTier.id === t.id ? <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-300 border border-teal-900/60">{tr("best fit")}</span> : null}
                     {maybe ? <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-900/60">{tr("may fit — try it")}</span> : null}
-                    {!ok && !maybe ? <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-slate-500 border border-slate-800">needs {device.platform === "desktop" ? t.needRam : (t.phoneMin || t.needRam)} {tr("GB")}</span> : null}
                     {t.heat && device.platform !== "desktop" && ok ? <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-900/50">{tr("runs hot")}</span> : null}
                   </span>
-                  <span className="text-xs text-slate-500">{t.sizeGB} {tr("GB ·")} {t.quant}</span>
+                  <span className="text-xs text-slate-500 whitespace-nowrap">{t.sizeGB} {tr("GB")}{t.fast ? " · ⚡" : ""}</span>
                 </div>
                 <p className="text-xs text-slate-500 mt-1">{tr(t.quality)}</p>
                 <p className="text-[11px] text-teal-400/80 mt-0.5">{tr(LEVELS[brandOf(t).level].blurb)}</p>
+                {/* v5.28 — Ali: "state clearly for each model what RAM it can withstand" */}
+                {(() => { const need = device.platform === "desktop" ? t.needRam : (t.phoneMin || t.needRam); const smooth = Math.max(need, t.smoothRam || need); const have = device.ram;
+                  return (
+                    <p className="text-[11px] mt-1 flex flex-wrap items-center gap-x-1.5" data-testid="ram-line">
+                      <span className="text-slate-300 font-medium">{tr("RAM: needs {n} GB · smooth from {s} GB", { n: need, s: smooth })}</span>
+                      {have ? (have >= smooth ? <span className="text-emerald-300">✓ {tr("runs smoothly on this device ({n} GB)", { n: have })}</span>
+                        : have >= need ? <span className="text-amber-300">≈ {tr("runs on this device ({n} GB), slower", { n: have })}</span>
+                        : <span className="text-rose-300">✗ {tr("this device has {n} GB — too little", { n: have })}</span>) : null}
+                    </p>); })()}
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {t.fast ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-400/15 border border-amber-700/60 text-amber-200">{tr("⚡ fast engine · first words in ~1 s")}</span> : null}
                   {t.imatrix ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">{tr("imatrix · more quality per GB")}</span> : null}
@@ -10608,7 +10617,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
                     <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded border ${c.strong ? "bg-violet-500/15 border-violet-700/70 text-violet-200" : "bg-slate-900 border-slate-700 text-slate-300"}`}>{c.strong ? "★ " : ""}{tr(c.t, c.v)}</span>
                   ))}
                 </div>
-                {!ok ? <p className="text-[11px] text-amber-500/80 mt-2">{tr("Needs")} {t.needRam} {tr("GB RAM")}{t.platform === "desktop" ? tr(" · desktop or laptop") : ""}</p> : null}
+                {!ok && t.platform === "desktop" ? <p className="text-[11px] text-amber-500/80 mt-2">{tr(" · desktop or laptop").replace(/^ · /, "")}</p> : null}
               </button>
             );
           })}

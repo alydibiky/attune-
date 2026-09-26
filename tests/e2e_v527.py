@@ -32,9 +32,9 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     page.evaluate("localStorage.setItem('attune:ram', '4')"); page.reload(); page.wait_for_selector("nav", timeout=15000)
     page.locator("header button:has-text('No model')").click()
-    page.locator("button:has-text('Echo')").first.click(); page.wait_for_timeout(300)
-    page.locator("button:has-text('Download Echo')").first.click()
-    page.wait_for_selector("text=Running · Echo", timeout=15000)
+    page.locator("[data-testid=tier-sm]").click(); page.wait_for_timeout(300)
+    page.locator("button:has-text('Download Glow')").first.click()
+    page.wait_for_selector("text=Running · Glow", timeout=15000)
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
 
     # ---- 1. a 90,000-character message on a small model: read in parts, then answered ----
