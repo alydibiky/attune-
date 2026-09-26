@@ -23,6 +23,7 @@ import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { skillFor } from "./skills.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf } from "./power.js";
 import { samplingFor, taskKind } from "./boost.js";
+import { estTokens as estTok } from "./longread.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
@@ -1339,6 +1340,19 @@ const LocalEngine = {
       max_tokens: o.maxTokens || (think ? thinkBudget + getPower().maxTokens : (ENGINE_PREFS.longAnswers ? getPower().longTokens : getPower().maxTokens)),
       chat_template_kwargs: { enable_thinking: think },
     };
+    // v5.28 — NEVER send more than the model's window holds. llama.cpp refuses an oversized
+    // request, but the fast engine quietly writes garbage (digits dropped or doubled —
+    // "since 205", "[111]", "1,2,48 Nm" — broken tables, empty bullets). So every request
+    // is measured first: the answer budget shrinks to fit, and a prompt that can't fit at
+    // all is reported as "too long" (the chat then reads it in parts instead).
+    const ctxW = LocalEngine.ctx || (LocalEngine.tier && LocalEngine.tier.ctx) || 0;
+    if (ctxW && NATIVE) {
+      const promptTok = Math.ceil(messages.reduce((n, m) => n + 8 + (typeof m.content === "string" ? estTok(m.content)
+        : (m.content || []).reduce((k, p) => k + (p.type === "text" ? estTok(p.text) : 300), 0)), 0) * 1.12) + 64;
+      const room = ctxW - promptTok;
+      if (room < 200) throw new Error("longer than this model can read at once (context " + ctxW + ")");
+      if (body.max_tokens > room) body.max_tokens = room;
+    }
     // A GBNF grammar (reminders & actions): the engine can only write text
     // that fits it, token by token — a guaranteed-valid JSON shape.
     if (o.grammar) body.grammar = o.grammar;
@@ -7119,6 +7133,8 @@ export default function App() {
       const d = (e && e.detail) || {};
       if (dead) return;
       setEngineInfo(d);
+      // the real window the engine was started with (v5.28: every request is checked against it)
+      { const m = String(d.settings || "").match(/context (\d+)/); LocalEngine.ctx = m ? Number(m[1]) : (d.state === "ready" ? LocalEngine.ctx : 0); }
       refreshModels();
       if (d.state === "ready") {
         const t = MODEL_TIERS.find((x) => x.id === d.modelId) || null;

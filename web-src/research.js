@@ -161,3 +161,27 @@ export function crossCheck(notesSrc) {
 }
 
 export const REPORT_ADD = "\n\n(These are research NOTES from several searches, taken page by page; \"(also in [n])\" means another site gives the same figure — that figure is CONFIRMED. Write a complete, expert research report like Gemini would:\n1. Start with a direct 2–3 line answer to the question.\n2. Then sections with ## headings covering every part of the question and EVERY item the notes mention (all trims / versions / options / dates, each with all its figures). Use tables for specs, prices and comparisons.\n3. Cite the source number after each fact, e.g. [2]. Prefer confirmed figures.\n4. If sources give DIFFERENT values for the same thing, show both with their sources under \"Where sources differ\".\n5. End with \"Not found in the sources\" listing what was asked but not found. Never fill a gap from memory.)";
+
+/**
+ * v5.28 — the notes from every page, cut to fit the model's window (the fast engine has only
+ * 8k tokens; 9 pages of notes + a long answer overflowed it and it wrote garbage). Every source
+ * keeps its first lines (the most relevant); lines another site confirms are kept first.
+ * → same shape, total text ≤ maxChars
+ */
+export function fitNotes(notes, maxChars) {
+  const list = (notes || []).filter((n) => n && n.text);
+  const total = list.reduce((k, n) => k + n.text.length, 0);
+  if (total <= maxChars) return list;
+  let budget = maxChars;
+  const order = list.map((n, i) => ({ i, len: n.text.length })).sort((a, b) => a.len - b.len);
+  const allow = new Array(list.length).fill(0);
+  order.forEach((o, k) => { const share = Math.floor(budget / (order.length - k)); allow[o.i] = Math.min(o.len, share); budget -= allow[o.i]; });
+  return list.map((n, i) => {
+    const lines = n.text.split("\n");
+    const keep = new Set(); let used = 0;
+    const tryAdd = (j) => { const l = lines[j]; if (keep.has(j) || used + l.length + 1 > allow[i]) return; keep.add(j); used += l.length + 1; };
+    lines.forEach((l, j) => { if (/\(also in /.test(l)) tryAdd(j); });
+    lines.forEach((l, j) => tryAdd(j));
+    return { ...n, text: lines.filter((l, j) => keep.has(j)).join("\n") };
+  }).filter((n) => n.text.trim());
+}

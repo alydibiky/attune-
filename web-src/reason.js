@@ -17,10 +17,24 @@
 import { programFrom, readAnswer } from "./verify.js";
 
 /** Riddles, logic, physical reasoning, "explain your reasoning" questions. */
+/**
+ * A deduction puzzle ("All flurbs are glips or morps… No glip can… Can an immortal flurb
+ * exist?") — logic, even when it has a percentage in it (v5.28: it used to go to the maths
+ * route and come back as a program).
+ */
+export function looksLikeDeduction(text) {
+  const t = String(text || "");
+  const statements = (t.match(/\b(all|no|only|every|none of the|some|exactly \d+%? of)\s+[\w-]+(\s+[\w-]+)?\s+(are|is|can|cannot|can't|have|has)\b/gi) || []).length;
+  // or two+ sentences that start with a quantifier ("Some cats are black. All black things absorb heat.")
+  const quant = t.split(/[.!?؟\n]+/).filter((x) => /^\s*(all|no|only|some|every|none|exactly)\b/i.test(x) && x.trim().split(/\s+/).length >= 4).length;
+  return statements >= 2 || (quant >= 2 && /[?؟]/.test(t)) || /\b(deduction|deduce|syllogism|never both|can an? [\w\s-]{2,30} exist)\b|استنتاج|استنبط/i.test(t);
+}
+
 export function looksLikeReasoning(text) {
   const t = String(text || "");
   if (t.length < 30 || t.length > 2500) return false;
   if (/```/.test(t)) return false;
+  if (looksLikeDeduction(t)) return true;
   return /\b(explain your reasoning|step[- ]by[- ]step|walk (me )?through|reason(ing)? (it )?out|riddle|puzzle|logic(al)?|trick question|where is the|which (one|is)|who is (lying|telling)|true or false|what happens (if|when)|would it|is it possible|paradox|deduce|infer|physical steps)\b|فكّر خطوة|خطوة بخطوة|لغز|منطق|فين ال|اشرح (السبب|تفكيرك)/i.test(t);
 }
 

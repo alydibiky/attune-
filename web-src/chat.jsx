@@ -13,12 +13,12 @@ import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
 import { mathToText } from "./quality.js";
 import { looksLikeMathProblem, looksLikeCodeTask, arithmeticSlips, fixSlips } from "./verify.js";
-import { looksLikeReasoning, DATA_EXT } from "./reason.js";
+import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
-import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD } from "./research.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes } from "./research.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed } from "./power.js";
-import { compactSystem, HONESTY_RULE, reread, partsOf, everyPart, sandwich } from "./boost.js";
+import { compactSystem, HONESTY_RULE, NO_CODE_RULE, codeInsteadOfAnswer, reread, partsOf, everyPart, sandwich } from "./boost.js";
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
@@ -526,7 +526,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // gets the honesty rule for answers without web passages (boost.js)
     const small = pw && pw.level <= 2;
     const base = small ? compactSystem(new Date().toDateString()) + (api.profileText() ? "\n\n" + api.profileText() : "") : systemPrompt(api.profileText(), api.accuracy);
-    return [{ role: "system", content: base + "\n\n" + HONESTY_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") }, ...kept, { role: "user", content: userContent }];
+    return [{ role: "system", content: base + "\n\n" + HONESTY_RULE + "\n" + NO_CODE_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") }, ...kept, { role: "user", content: userContent }];
   };
 
   const ask = async (raw, opts) => {
@@ -723,7 +723,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               const pass = api.rankOne(question, h);
               if (!pass || pass.length < 60) continue;
               let notes = "";
-              try { notes = await api.run(notesMessages(question, { ...h, text: pass }), null, { think: false, maxTokens: pwR.expert ? 1000 : 700, temperature: 0.1, copy: true }); }
+              try { notes = await api.run(notesMessages(question, { ...h, text: pass }), null, { think: false, maxTokens: pwR.expert ? 1000 : (pwR.level || 3) <= 2 ? 450 : 700, temperature: 0.1, copy: true }); }
               catch (e) { if (String(e && e.message) === "Stopped") throw e; continue; }
               if (runRef.current !== run) return false;
               read++;
@@ -751,7 +751,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             } catch (e) { if (String(e && e.message) === "Stopped") throw e; break; }
           }
           if (notesSrc.length) {
-            const cc = crossCheck(notesSrc);
+            // v5.28: all the notes must fit the model's window together with the answer
+            const ansR = (api.power && api.power().longTokens) || 2048;
+            const cc0 = crossCheck(notesSrc);
+            const cc = { ...cc0, notes: fitNotes(cc0.notes, fitChars((api.contextTokens && api.contextTokens()) || 8192, ansR, 2400, cc0.notes.map((n) => n.text).join("\n"))) };
             sources = cc.notes; via = look.via; research = { pages: read, withFacts: notesSrc.length, searches: queries.length, confirmed: cc.confirmed };
             onStatus(tr("Writing the full answer from {n} pages…", { n: notesSrc.length }));
             content = api.groundedPrompt(asked, cc.notes) + (queries.length > 1 || cc.confirmed ? REPORT_ADD : FINAL_ADD) + photoNote;
@@ -835,7 +838,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const prevQ = [...history].reverse().find((m) => m.role === "user" && m.text);
       const mathQ = prevQ && /[0-9٠-٩]/.test(typed) && looksLikeFollowUp(typed) && (looksLikeMathProblem(prevQ.text) || looksLikeCalc(prevQ.text))
         ? prevQ.text + "\nFollow-up (answer this, using the question above): " + typed : typed;
-      if (route && !longMsg && !img && !sources && api.verifyMath && looksLikeMathProblem(mathQ)) {
+      if (route && !longMsg && !img && !sources && api.verifyMath && looksLikeMathProblem(mathQ) && !looksLikeDeduction(typed)) {
         try {
           const r = await api.verifyMath(mathQ + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
           if (runRef.current !== run) return;
@@ -924,6 +927,16 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         }
       }
       if (runRef.current !== run) return;
+      // A function / tool_code instead of an answer, for a question that didn't ask for code:
+      // asked once more for plain words. (v5.28)
+      if (plain && answer && !looksLikeCodeTask(typed || "") && codeInsteadOfAnswer(answer)) {
+        onStatus(tr("Writing it out in words…"));
+        try {
+          const again = await api.run(buildMessages(history, content + "\n\n(Answer in plain words with your reasoning step by step. Do NOT write code, functions or tool calls.)"), pic, { onToken, onStatus, think: false, copy: !!sources || !!fileAtt });
+          if (runRef.current !== run) return;
+          if (again && !codeInsteadOfAnswer(again)) answer = again;
+        } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      }
       // The model said nothing at all: asked once more, plainly.
       if (plain && !String(answer || "").trim()) {
         onStatus(tr("Something went wrong — trying again…"));

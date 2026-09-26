@@ -117,3 +117,16 @@ export function everyPart(parts) {
 export function sandwich(question, name, body) {
   return `QUESTION: ${question}\n\nThe user attached the file "${name}":\n<<<\n${body}\n>>>\n\nNow answer the question, using the file: ${question}`;
 }
+
+/** v5.28 — some models (Gemma especially) answer a reasoning question with a Python
+    "tool_code" function. Every model is told not to, and such an answer is re-asked. */
+export const NO_CODE_RULE = "Only write code when the user asks for code or a program. Never answer with a function, a tool call, tool_code or a code block otherwise — reason in plain words.";
+
+/** Is this answer mostly code / a tool call, for a question that didn't ask for code? */
+export function codeInsteadOfAnswer(answer) {
+  const a = String(answer || "");
+  if (/```\s*tool_code|\btool_code\b|<tool_call>|\bprint\(default_api\./i.test(a)) return true;
+  const fenced = (a.match(/```[\s\S]*?(```|$)/g) || []).join("");
+  const prose = a.replace(/```[\s\S]*?(```|$)/g, "").replace(/\s+/g, " ").trim();
+  return fenced.length > 40 && prose.length < 160;
+}

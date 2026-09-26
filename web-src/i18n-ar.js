@@ -2049,4 +2049,5 @@ export const AR = {
   "Long message — reading it in parts ({i} of {n})…": "الرسالة طويلة — بقراها على أجزاء ({i} من {n})…",
   "Something went wrong — trying again…": "حصلت مشكلة — بحاول تاني…",
   "Long answer — still writing ({n})…": "الإجابة طويلة — لسه بكتب ({n})…",
+  "Writing it out in words…": "بكتبها بالكلام…",
 };
