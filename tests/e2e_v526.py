@@ -44,10 +44,10 @@ with sync_playwright() as p:
     check(b.get("min_p", 0) >= 0.1 and b.get("top_k") == 20 and b.get("temperature", 1) <= 0.3, "…and tight settings for a fact question (temp %s, top_k %s, min_p %s)" % (b.get("temperature"), b.get("top_k"), b.get("min_p")))
 
     # ---- 2. several questions in one message: every part answered ----
-    page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['1) 100 t\\n2) about 1.2 M EUR\\n3) Germany']; M.bodies = []; }")
+    page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['NONE', '1) 100 t\\n2) about 1.2 M EUR\\n3) Germany', 'done']; M.bodies = []; }")
     send(page, "What is the capacity of an LTM 1100? How much does it cost? Where is it made?")
     done(page, 2)
-    u = str(main_bodies(page)[-1]["messages"][-1]["content"])
+    u = " || ".join(str(x["messages"][-1]["content"]) for x in main_bodies(page))
     check("This message has 3 parts" in u and "Answer EVERY one" in u, "three questions → a checklist so none is skipped")
 
     # ---- 3. a creative request is sampled looser than a fact ----
