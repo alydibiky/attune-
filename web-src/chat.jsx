@@ -685,7 +685,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // Stronger models plan more searches, read more pages and get more time (power.js).
         const deep = pagesFor(question) === 8;
         const readCap = deep ? (pwR.readPages || pwR.pages || 8) : Math.min(pwR.readPages || 5, 5);
-        const nQ = api.webPages ? (deep ? (pwR.queries || 1) : Math.min(2, pwR.queries || 1)) : 1;
+        // a quick question ("what is this car") stays one fast search; detail-hungry ones are planned
+        const nQ = api.webPages && deep ? (pwR.queries || 1) : 1;
         let queries = [query];
         if (nQ > 1) {
           onStatus(tr("Planning the research…"));
