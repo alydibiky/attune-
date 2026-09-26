@@ -6594,7 +6594,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.28";
+const PAGE_VERSION = "5.29";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -7996,6 +7996,9 @@ export default function App() {
     webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang), groundedAudit,
     skillFor,
     power: () => getPower(),
+    modelBrand: () => (activeTier ? brandOf(activeTier).brand : ""),   // v5.29: the home screen shows which model is on
+    trialDays: () => (isPro(tier) ? -1 : trialLeft),
+    openPlan: () => setShowUpgrade(true),
     pro: () => proActive,          // v5.29: Pro or the 7-day trial (expert review, deep research)
     // v5.20 deep research: pages in full, and the passages of one page / of all
     webPages: NATIVE ? (q, pages) => webLookupRaw(q, pages) : null,
@@ -9928,7 +9931,8 @@ export default function App() {
             <div className="space-y-1.5">{history.map((h) => <div key={h.id} className="flex items-center gap-2 text-sm"><button onClick={() => setHistory((x) => x.map((y) => y.id === h.id ? { ...y, fav: !y.fav } : y))} className={h.fav ? "text-amber-400" : "text-slate-600 hover:text-amber-400"}><Star size={14} fill={h.fav ? "currentColor" : "none"} /></button><button onClick={() => { setInput(h.input); setTool(h.tool); }} className="flex-1 text-start truncate text-slate-400 hover:text-teal-400">{h.input}</button><span className="text-xs text-slate-600 shrink-0">{tr(TOOLS[h.tool].label)}</span></div>)}</div>
           </div>
         )}
-        <p className="text-center text-xs text-slate-600 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup is optional and off by default")}</p>
+        {/* v5.29 UX: not on Chat — the fixed message box covered it (half-hidden text) */}
+        {mode !== "chat" ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup is optional and off by default")}</p> : null}
       </div>
       {toast && <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       <ConfirmHost />
@@ -9953,16 +9957,13 @@ export default function App() {
           <div className="att-scroll absolute start-0 end-0 bg-slate-900 border-t border-slate-800 rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
                style={{ bottom: "calc(58px + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
             <div className="max-w-3xl mx-auto">
-              <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("App language")}</span><LangSwitch /></div>
-              <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("Text size")}</span><TextSize /></div>
-              <div className="mb-3"><ThemePicker theme={theme} setTheme={setTheme} /></div>
               <div className="grid grid-cols-3 gap-2">
                 {MORE_TOOLS.map(([id, label, sub, Icon]) => (
                   <button key={id} onClick={() => { if (id === "cycle") enableCycle(true); setMode(id); setMoreOpen(false); }}
                     className={`rounded-xl border p-2.5 text-start ${mode === id ? "border-teal-600 bg-teal-500/10" : "border-slate-800 bg-slate-950"}`}>
                     <Icon size={18} className="text-teal-300" />
                     <span className="block text-[13px] text-slate-100 mt-1.5 leading-tight">{tr(label)}</span>
-                    <span className="block text-[10px] text-slate-500 leading-tight mt-0.5">{tr(sub)}</span>
+                    <span className="block text-[10px] text-slate-400 leading-tight mt-0.5">{tr(sub)}</span>
                   </button>
                 ))}
               </div>
@@ -9972,6 +9973,13 @@ export default function App() {
                 <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Crown size={16} className="text-amber-300" /><span className="block text-[12px] text-slate-200 mt-1">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[10px] text-slate-500">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
                 {(() => { const nb = backupNudge(); return (
                 <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`rounded-xl border p-2.5 text-start ${nb.warn ? "border-amber-700/60 bg-amber-500/10" : "border-slate-800 bg-slate-950"}`}><ShieldCheck size={16} className={nb.warn ? "text-amber-300" : "text-slate-300"} /><span className="block text-[12px] text-slate-200 mt-1">{tr("Backup")}</span><span className={`block text-[10px] ${nb.warn ? "text-amber-300" : "text-slate-500"}`}>{nb.text}</span></button>); })()}
+              </div>
+              {/* v5.29 UX: tools first (what people open More for); appearance settings below */}
+              <div className="mt-4 pt-3 border-t border-slate-800" data-testid="more-appearance">
+                <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("Appearance")}</p>
+                <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("App language")}</span><LangSwitch /></div>
+                <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("Text size")}</span><TextSize /></div>
+                <div className="mb-3"><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
               <p className="text-center text-[10px] text-slate-600 mt-3" data-testid="app-version">Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
             </div>

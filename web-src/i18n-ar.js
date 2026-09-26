@@ -2134,4 +2134,12 @@ export const AR = {
   "That code's signature doesn't match.": "توقيع الكود مش مطابق.",
   "Pro restored": "برو رجع",
   "No purchase found": "مفيش شراء متسجل",
+  "Appearance": "الشكل",
+  "Pro trial · {n} days left": "تجربة برو · فاضل {n} أيام",
+  "Pro": "برو",
+  "Pro active": "برو اتفعّل",
+  "Pro active on this device": "برو اتفعّل على الجهاز ده",
+  "Purchase cancelled": "الشراء اتلغى",
+  "Web search needs the Android app, or your own search key in settings": "البحث على النت محتاج تطبيق أندرويد، أو مفتاح بحث خاص بيك في الإعدادات",
+  "user/model-GGUF:Q4_K_M   or   https://…/model.gguf": "user/model-GGUF:Q4_K_M   أو   https://…/model.gguf",
 };

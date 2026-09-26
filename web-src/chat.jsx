@@ -17,7 +17,10 @@ import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes } from "./research.js";
-import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed } from "./power.js";
+import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from "./power.js";
+// v5.29 UX: the follow-up chips fade out at the end, so it's clear the row scrolls (left in Arabic)
+const chipFade = () => { const side = typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "left" : "right"; const g = "linear-gradient(to " + side + ", #000 82%, transparent)"; return { WebkitMaskImage: g, maskImage: g }; };
+const LEVEL_NAMES = Object.fromEntries(Object.entries(LEVELS).map(([k, v]) => [k, v.name]));
 import { compactSystem, HONESTY_RULE, NO_CODE_RULE, codeInsteadOfAnswer, reread, partsOf, everyPart, sandwich } from "./boost.js";
 import { tipsBlock } from "./tips.js";
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
@@ -1240,7 +1243,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         <div className="pt-6 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-800 text-teal-300 mb-3"><Sparkles size={22} /></div>
           <p className="text-lg text-white font-semibold">{tr("What can I help with?")}</p>
-          <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">{tr("Type, speak or add a photo. Runs on your phone — works with no signal.")}</p>
+          <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">{tr("Type, speak or add a photo. Runs on your phone — works with no signal.")}</p>
+          {/* v5.29 UX: where am I — the model (and its level) and the Pro trial, one tap to Plan */}
+          {api.modelBrand && api.modelBrand() ? (
+            <div className="mt-3 flex items-center justify-center gap-1.5 flex-wrap text-[11px]" data-testid="home-status">
+              <span className="px-2 py-1 rounded-full border border-slate-700 text-slate-300">{api.modelBrand()}{api.power ? " · " + tr(LEVEL_NAMES[api.power().level] || "") : ""}</span>
+              {api.trialDays && api.trialDays() > 0 ? <button onClick={() => api.openPlan && api.openPlan()} className="px-2 py-1 rounded-full border border-amber-700/70 bg-amber-400/10 text-amber-200" data-testid="home-trial">★ {tr("Pro trial · {n} days left", { n: api.trialDays() })}</button> : null}
+            </div>
+          ) : null}
           <div className="grid grid-cols-2 gap-2 mt-5 text-start">
             {STARTERS.map(([ic, label, seed]) => (
               <button key={label} onClick={() => { setText(tr(seed)); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
@@ -1451,7 +1461,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           </div>
         ) : null}
         {!busy && lastAi && lastAi === messages[messages.length - 1] && lastAi.text && !lastAi.error ? (
-          <div className="att-chips flex gap-1.5 overflow-x-auto pb-1">
+          <div className="att-chips flex gap-1.5 overflow-x-auto pb-1" style={chipFade()}>
             {(() => { const u = messages[messages.length - 2]; return u && u.image ? (
               <button onClick={() => api.photoToMoney(u.image)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-emerald-800 text-emerald-200 bg-emerald-500/10">{tr("💳 Add to Money")}</button>
             ) : null; })()}
