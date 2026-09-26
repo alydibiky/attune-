@@ -1,6 +1,7 @@
 /* ---- reminders & actions: the card in Chat and the Reminders screen -------------
    The card shows exactly what will happen — kind, title, date and time, who —
    with each part editable, and nothing happens until "Set it" is tapped.     */
+import { askConfirm } from "./confirm.jsx";
 import React, { useState } from "react";
 import { Bell, Trash2, X, Plus, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -153,7 +154,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
                   <p dir="auto" className="text-sm text-slate-100 truncate">{r.title}</p>
                   <p className="text-[11px] text-teal-300/80">{whenText(r.next)}{r.repeat && r.repeat !== "none" ? " · " + tr(REPEAT_LABEL[r.repeat]) : ""}{r.source === "promise" ? " · " + tr("from a promise") : ""}</p>
                 </div>
-                <button onClick={() => remove(r.id)} className="p-2 text-slate-500" aria-label={tr("Delete")}><Trash2 size={15} /></button>
+                <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="p-2 text-slate-500" aria-label={tr("Delete")}><Trash2 size={15} /></button>
               </div>
             ))}
           </div>
@@ -164,7 +165,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
             {past.map((r) => (
               <div key={r.id} className="flex items-center gap-2 px-1 py-1 text-[12px] text-slate-500">
                 <span className="flex-1 truncate" dir="auto">{r.title}</span><span>{new Date(r.at).toLocaleDateString(locale())}</span>
-                <button onClick={() => remove(r.id)} className="p-1" aria-label={tr("Delete")}><X size={13} /></button>
+                <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="p-1" aria-label={tr("Delete")}><X size={13} /></button>
               </div>
             ))}
           </>

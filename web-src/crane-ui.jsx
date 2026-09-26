@@ -3,6 +3,7 @@
    sling tension, wind, and a pre-lift checklist. Pure arithmetic (crane.js),
    works with no model and no signal. The gross load from "Lift" carries over
    to the other tabs so the same lift is checked end to end.                  */
+import { askConfirm } from "./confirm.jsx";
 import React, { useState } from "react";
 import { AlertTriangle, CheckCircle2, Plus, Trash2, Share2, Save, Info } from "lucide-react";
 import { tr, fmtNum } from "./i18n.js";
@@ -279,7 +280,7 @@ function ChartsTab({ data, setData, flash, onPick }) {
               <span className="block text-sm text-slate-100 truncate" dir="auto">{c.name}</span>
               <span className="block text-[11px] text-slate-500 truncate">{c.config ? c.config + " · " : ""}{tr("{r} radii × {b} boom lengths", { r: c.chart.radii.length, b: c.chart.booms.length })}</span>
             </button>
-            <button onClick={() => setData({ ...data, cranes: data.cranes.filter((x) => x.id !== c.id) })} className="p-2 text-slate-500" aria-label={tr("Delete")}><Trash2 size={15} /></button>
+            <button onClick={async () => { if (await askConfirm("Remove this crane from the fleet?")) setData({ ...data, cranes: data.cranes.filter((x) => x.id !== c.id) }); }} className="p-2 text-slate-500" aria-label={tr("Delete")}><Trash2 size={15} /></button>
           </div>
         ))}
       </div>

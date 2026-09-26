@@ -1,5 +1,6 @@
 /* ---- Code: the workbench screen, and the ▶ Run button under code in Chat ------------
    See code.js for the loop and sandbox.js for where code runs.                        */
+import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { Code2, Play, Wrench, Terminal, Loader2, Copy, Save, Share2, Square, CheckCircle2, AlertTriangle, Eye, Trash2, Plus } from "lucide-react";
 import { tr } from "./i18n.js";
@@ -266,7 +267,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
                 <span className="block text-[13px] text-slate-200 truncate" dir="auto">{p.title || tr("Untitled")}</span>
                 <span className="block text-[10px] text-slate-500">{tr((LANGS[p.lang] || LANGS.python).label)} · {p.status === "passed" ? tr("passing") : p.status === "failing" ? tr("not passing") : tr("draft")}</span>
               </button>
-              <button onClick={() => { const next = projects.filter((x) => x.id !== p.id); setProjects(next); saveProjects(next); if (cur && cur.id === p.id) setCur(null); }}
+              <button onClick={async () => { if (!(await askConfirm("Delete this project?"))) return; const next = projects.filter((x) => x.id !== p.id); setProjects(next); saveProjects(next); if (cur && cur.id === p.id) setCur(null); }}
                 className="p-1.5 text-slate-600 hover:text-rose-400" aria-label={tr("Delete")}><Trash2 size={13} /></button>
             </div>
           ))}

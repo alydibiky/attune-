@@ -1,5 +1,6 @@
 /* ---- Studio: create and edit pictures on the phone (More → Studio) -------------------
    The picture engine and its models are described in studio.js / ImageEngine.kt. */
+import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X } from "lucide-react";
 import { tr } from "./i18n.js";
@@ -277,7 +278,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
             {!cur.upscaled && cur.w <= 1216 ? <button className={btn} disabled={!!busy} data-testid="studio-upscale" onClick={sharpen}><Maximize2 size={13} />{tr("×4 sharper")}{upReady ? "" : " · 67 MB"}</button> : null}
             <button className={btn} disabled={!!busy} data-testid="studio-edit-this" onClick={editThis}><Wand2 size={13} />{tr("Edit this")}</button>
             {!cur.edit ? <button className={btn} disabled={!!busy || !drawReady} data-testid="studio-again" onClick={() => { setMode("create"); draw({ idea: cur.idea, prompt: cur.prompt }); }}><RefreshCw size={13} />{tr("Another version")}</button> : null}
-            <button className={btn + " ms-auto"} onClick={() => remove(cur)} aria-label={tr("Delete")}><Trash2 size={13} /></button>
+            <button className={btn + " ms-auto"} onClick={async () => { if (await askConfirm("Delete this picture?")) remove(cur); }} aria-label={tr("Delete")}><Trash2 size={13} /></button>
           </div>
         </div>
       ) : null}

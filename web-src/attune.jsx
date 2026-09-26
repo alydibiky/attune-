@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { askConfirm, ConfirmHost } from "./confirm.jsx";
 import {
   Bell, Calculator, Timer, Code2,
   Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User,
@@ -6494,7 +6495,7 @@ function MapTab({ remember, flash, myLang }) {
                 carry and should not claim to. */}
             <a href={`geo:${sel.lat},${sel.lon}?q=${sel.lat},${sel.lon}`}
               className="text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300">{tr("Open in your maps app")}</a>
-            <button onClick={() => { setSt((s) => ({ ...s, places: s.places.filter((x) => x.id !== sel.id) })); setSel(null); }}
+            <button onClick={async () => { if (!(await askConfirm("Delete this place?"))) return; setSt((s) => ({ ...s, places: s.places.filter((x) => x.id !== sel.id) })); setSel(null); }}
               className="text-[11px] px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-amber-400">{tr("Remove")}</button>
           </div>
         </div>
@@ -8571,7 +8572,7 @@ export default function App() {
                         <p className="text-slate-400 truncate">{e.input}</p>
                         <p className="text-slate-200 mt-0.5">→ {e.corrected.slice(0, 140)}</p>
                         {e.note ? <p className="text-slate-600 mt-0.5">{tr(e.note)}</p> : null}
-                        <button onClick={() => setLearned((l) => l.filter((x) => x.id !== e.id))}
+                        <button onClick={async () => { if (await askConfirm("Forget this correction?", { yes: "Forget" })) setLearned((l) => l.filter((x) => x.id !== e.id)); }}
                           className="text-slate-600 hover:text-amber-400 mt-1">remove</button>
                       </div>
                     ))}
@@ -9909,6 +9910,7 @@ export default function App() {
         <p className="text-center text-xs text-slate-600 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup is optional and off by default")}</p>
       </div>
       {toast && <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
+      <ConfirmHost />
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className="fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
@@ -9990,7 +9992,7 @@ export default function App() {
                   {customActions.map((c) => (
                     <span key={c.id} className="flex items-center gap-1 text-xs bg-slate-950 border border-slate-800 rounded-md ps-2 pe-1 py-1 text-slate-300">
                       {tr(c.label)}
-                      <button onClick={() => setCustomActions((a) => a.filter((x) => x.id !== c.id))} className="text-slate-600 hover:text-rose-400"><X size={12} /></button>
+                      <button onClick={async () => { if (await askConfirm("Delete this action?")) setCustomActions((a) => a.filter((x) => x.id !== c.id)); }} className="text-slate-600 hover:text-rose-400"><X size={12} /></button>
                     </span>
                   ))}
                 </div>

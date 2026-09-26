@@ -5,7 +5,7 @@ garbage when it overflowed: "since 205", "[111]", "1,2,48 Nm"); research notes a
 """
 import json
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import Env, new_page, check, real_errors, finish, HERE
 
 env = Env(); errors = []
 
@@ -67,6 +67,22 @@ with sync_playwright() as p:
     bs = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2)")
     check("Never answer with a function" in str(bs[0]["messages"][0]["content"]), "every model is told not to answer with a function")
     check(not any("You check word problems by computing them" in str(b["messages"][0]["content"]) for b in bs), "the puzzle doesn't go to the maths program")
+
+    # ---- 3. deleting a chat asks first ----
+    page.locator("header button").first.click(); page.wait_for_timeout(300)
+    n0 = page.locator("[data-testid=chat-del]").count()
+    page.locator("[data-testid=chat-del]").first.click()
+    check(page.locator("[data-testid=chat-del-confirm]").count() == 1, "tapping delete on a chat asks 'Delete this chat?' first")
+    page.click("[data-testid=chat-del-no]")
+    check(page.locator("[data-testid=chat-del]").count() == n0, "…Cancel keeps it")
+    page.locator("[data-testid=chat-del]").first.click(); page.click("[data-testid=chat-del-yes]")
+    check(page.locator("[data-testid=chat-del]").count() == n0 - 1, "…Delete removes it")
+    page.keyboard.press("Escape"); page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(200)
+
+    # ---- 4. the shared 'Are you sure?' dialog ----
+    src = open(HERE + "/../web-src/confirm.jsx", encoding="utf-8").read()
+    uses = sum(open(HERE + "/../web-src/" + f, encoding="utf-8").read().count("askConfirm(") for f in ["actions-ui.jsx", "code-ui.jsx", "crane-ui.jsx", "spaces-ui.jsx", "studio-ui.jsx", "attune.jsx"])
+    check("This can't be undone." in src and uses >= 8, "reminders, places, projects, cranes, pictures, corrections and actions all ask before deleting (%d places)" % uses)
 
     errs = real_errors(errors)
     check(not errs, "no JavaScript errors (%d)%s" % (len(errs), (": " + errs[0]) if errs else ""))

@@ -1,5 +1,6 @@
 /* ---- Spaces screens: Assistants, Projects, Artifacts, Themes (v5.14) ---------------------
    Logic and storage: spaces.js. Chat carries assistantId / projectId on each chat.      */
+import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { tr } from "./i18n.js";
 import { Md, loadChats } from "./chat.jsx";
@@ -170,7 +171,7 @@ export function ProjectsPage({ startChat, openChat, flash }) {
             <FileText size={14} className="text-teal-300 shrink-0" />
             <span className="flex-1 min-w-0 text-[13px] text-slate-200 truncate" dir="auto">{k.name}</span>
             <span className="text-[10px] text-slate-500">{Math.round(k.text.length / 1000)}k</span>
-            <button onClick={() => { upsertProject({ ...cur, knowledge: cur.knowledge.filter((x) => x.id !== k.id) }); reload(); }} className="p-1.5 text-slate-500"><Trash2 size={13} /></button>
+            <button onClick={async () => { if (!(await askConfirm("Remove this from the project?"))) return; upsertProject({ ...cur, knowledge: cur.knowledge.filter((x) => x.id !== k.id) }); reload(); }} className="p-1.5 text-slate-500"><Trash2 size={13} /></button>
           </div>
         ))}
         {note ? (

@@ -325,6 +325,7 @@ const STARTERS = [
 export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, composerSeed, clearComposerSeed, spaceSeed, clearSpaceSeed, openChatId, clearOpenChat }) {
   const [chats, setChats] = useState(() => loadChats());
   const [activeId, setActiveId] = useState(() => { const c = loadChats(); return c[0] && (Date.now() - (c[0].updated || 0) < 6 * 3600e3) ? c[0].id : null; });
+  const [confirmDel, setConfirmDel] = useState(null);   // chat id waiting for "Delete?" (v5.28)
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
   const [attached, setAttached] = useState(null);     // { name, b64, size, text? } — a spreadsheet or document
@@ -1182,8 +1183,20 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                       <span className="block text-[10px] text-slate-500">{new Date(c.updated).toLocaleDateString([], { day: "numeric", month: "short" })} · {c.messages.length} messages</span>
                     </button>
                   )}
-                  <button onClick={() => setRenaming(c.id)} className="p-2 text-slate-500" title={tr("Rename")}><PenLine size={14} /></button>
-                  <button onClick={() => { setChats((l) => l.filter((x) => x.id !== c.id)); if (activeId === c.id) setActiveId(null); }} className="p-2 text-slate-500" title={tr("Delete")}><Trash2 size={14} /></button>
+                  {confirmDel === c.id ? (
+                    // v5.28: deleting asks first — a stray tap never loses a chat
+                    <div className="flex items-center gap-1 pe-1" data-testid="chat-del-confirm">
+                      <span className="text-[11px] text-rose-200 whitespace-nowrap">{tr("Delete this chat?")}</span>
+                      <button onClick={() => { setChats((l) => l.filter((x) => x.id !== c.id)); if (activeId === c.id) setActiveId(null); setConfirmDel(null); }}
+                        data-testid="chat-del-yes" className="px-2 py-1.5 rounded-md bg-rose-600 text-white text-[11px] font-medium">{tr("Delete")}</button>
+                      <button onClick={() => setConfirmDel(null)} data-testid="chat-del-no" className="px-2 py-1.5 rounded-md border border-slate-700 text-slate-300 text-[11px]">{tr("Cancel")}</button>
+                    </div>
+                  ) : (
+                    <>
+                      <button onClick={() => setRenaming(c.id)} className="p-2 text-slate-500" title={tr("Rename")}><PenLine size={14} /></button>
+                      <button onClick={() => setConfirmDel(c.id)} data-testid="chat-del" className="p-2 text-slate-500" title={tr("Delete")}><Trash2 size={14} /></button>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
