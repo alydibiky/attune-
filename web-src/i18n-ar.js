@@ -2046,4 +2046,7 @@ export const AR = {
   "Business systems · {t} tables": "أنظمة أعمال · {t} جداول",
   "Logic · {n} tries + vote": "منطق · {n} محاولات وتصويت",
   "Reads photos": "بيقرا الصور",
+  "Long message — reading it in parts ({i} of {n})…": "الرسالة طويلة — بقراها على أجزاء ({i} من {n})…",
+  "Something went wrong — trying again…": "حصلت مشكلة — بحاول تاني…",
+  "Long answer — still writing ({n})…": "الإجابة طويلة — لسه بكتب ({n})…",
 };

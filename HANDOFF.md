@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.26**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.27**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.26**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.26** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.27** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -278,6 +278,13 @@ All in `boost.js` (pure, `unit/v526.test.mjs`, `e2e_v526.py`):
 - **Every part**: `partsOf` (2+ "?"/"؟" questions or a numbered/bulleted list) → `everyPart` checklist appended.
 - **Sandwich**: attached text files are sent with the question before and after (`sandwich`); `groundedPrompt` now has "QUESTION:" before the passages too.
 - **JSON mode**: `o.json` calls (ERP design, change, query, form) send `response_format: {type: "json_object"}`; if the engine rejects it (the desktop test llama-server does with the tiny model: "Failed to initialize samplers"), the request is re-sent without it and `LocalEngine.noJsonMode` stops asking. Verified min_p/top_k/top_p are accepted by llama-server.
+
+### 5.14 v5.27 — "nothing I send may go unanswered, however long, even on small models"
+`longread.js` (pure, `unit/v527.test.mjs`) + chat.jsx send() (`e2e_v527.py`):
+- **Read in parts**: `tooLong(text, ctx, longTokens)` (density-aware: `charsPerToken`, Arabic denser; `fitChars` leaves room for system + answer, 10 % margin). A too-long typed message (request = `requestOf`: its first + last 700 chars) or attached text file (request = the question) → `splitParts` (paragraph → line → sentence/space cuts, order kept) → one `partNotesMessages` call per part (900 tokens, copy, "NONE" skipped) → notes still too long → read the notes in parts again (≤ 4 rounds) → `fromNotes` final prompt, sent with ≤ 1,500 chars of history. Status "Long message — reading it in parts (i of n)…". Maths/logic/code routes are skipped for such messages (`longMsg`). Files are no longer silently cut at `fileChars`: full text if it fits, parts if not.
+- **Retries**: context error → no history → still too long → read in parts; any other engine error → one lighter retry (no history, no think) with "Something went wrong — trying again…"; an empty answer → asked once more.
+- **Auto-continue**: a plain answer whose stats say `cut` continues by itself up to 4× (6× Expert/Master) with `continueMessages` (system, question, the answer's LAST 2,600 chars as the assistant turn, "Continue exactly…"), joined with `glue`. The manual Continue button also uses it now (it used to show the model the START of its answer — buildMessages keeps the first 1,800 chars). The expert review is skipped for continued / read-in-parts answers.
+- e2e_v513 §4 now expects auto-continue (no Continue tap).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

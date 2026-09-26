@@ -87,18 +87,17 @@ with sync_playwright() as p:
     check(page.locator("button[title='Send']").count() == 1, "coming back to the app re-reads the text box")
     page.locator("textarea[placeholder='Message Attune']").fill("")
 
-    # ---- 4. a long answer cut by the limit: Continue carries on in the same bubble ----
-    queue(page, ["The crane has four outriggers. First, the"], tokens="max")
+    # ---- 4. a long answer cut by the limit carries on by itself in the same bubble (v5.27) ----
+    queue(page, ["The crane has four outriggers. First, the", "pads spread the load over the ground."], tokens="max")
+    page.evaluate("""() => { const N = window.AttuneNative, S = window.__mock; const prev = N.chat; let k = 0;
+      N.chat = (id, body) => { if (JSON.parse(body).max_tokens > 2) { k++; if (k === 2) S.fakeTokens = 0; } return prev(id, body); }; }""")
     send(page, "Explain crane outriggers in detail")
     done(page, 3)
-    b = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2).pop()")
-    check(b["max_tokens"] >= 2048, "answers get room for a full page (max_tokens %d, was 900)" % b["max_tokens"])
-    check(page.locator("[data-testid=continue]").count() == 1, "a cut answer offers Continue")
-    queue(page, ["pads spread the load over the ground."])
-    page.click("[data-testid=continue]")
     page.wait_for_function("() => document.body.innerText.includes('First, the pads spread the load')", timeout=15000)
-    check(page.locator("[data-testid=continue]").count() == 0, "Continue writes on in the SAME bubble, and goes away when finished")
-    last = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2).pop().messages")
+    bs = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2)")
+    check(bs[0]["max_tokens"] >= 2048, "answers get room for a full page (max_tokens %d, was 900)" % bs[0]["max_tokens"])
+    check(page.locator("[data-testid=continue]").count() == 0, "a cut answer carries on by itself in the SAME bubble — no Continue tap needed")
+    last = bs[-1]["messages"]
     check(last[-2]["role"] == "assistant" and "First, the" in last[-2]["content"] and "Continue exactly" in last[-1]["content"], "…the model sees what it wrote and is asked to carry on")
 
     # ---- 5. English question after Arabic turns → English reply requested ----

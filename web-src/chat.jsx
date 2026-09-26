@@ -19,6 +19,7 @@ import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFoll
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD } from "./research.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed } from "./power.js";
 import { compactSystem, HONESTY_RULE, reread, partsOf, everyPart, sandwich } from "./boost.js";
+import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
   Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2,
@@ -787,8 +788,41 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             else answer = tr("I couldn't open {f} on the phone: {why}\n\nTry saving it as .xlsx or .csv and attach it again.", { f: fileAtt.name, why: String(r.why).replace(/^Could not open the file:\s*/, "") });
           }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
-      } else if (fileAtt && fileAtt.text != null) {
-        content = sandwich(q, fileAtt.name, fileAtt.text.slice(0, (api.power && api.power().fileChars) || 14000));   // v5.26: question before AND after
+      }
+      // v5.27 — NOTHING GOES UNANSWERED: a message or file too big for the model's window is
+      // read in parts into notes (for the user's request), then answered from the notes.
+      // It takes longer on a small model, but it always gets an answer. (longread.js)
+      const ctxN = (api.contextTokens && api.contextTokens()) || 8192;
+      const ansTok = (api.power && api.power().longTokens) || 2048;
+      let longMsg = false;
+      const readInParts = async (body, request, fileName) => {
+        const size = Math.max(1500, Math.floor(fitChars(ctxN, 900, 600, body) * 0.85));
+        let parts = splitParts(body, size), notes = [];
+        for (let round = 0; round < 4; round++) {
+          notes = [];
+          for (let i = 0; i < parts.length; i++) {
+            onStatus(tr("Long message — reading it in parts ({i} of {n})…", { i: i + 1, n: parts.length }));
+            const nt = await api.run(partNotesMessages(request, parts[i], i + 1, parts.length), null, { think: false, maxTokens: 900, temperature: 0.1, copy: true });
+            if (runRef.current !== run) return null;
+            const t = String(nt || "").trim();
+            if (t && !/^none\.?$/i.test(t)) notes.push("— Part " + (i + 1) + " —\n" + t);
+          }
+          const joined = notes.join("\n\n");
+          if (!tooLong(joined, ctxN, ansTok)) return fromNotes(request, joined || "(nothing relevant was found)", parts.length, fileName);
+          parts = splitParts(joined, size);            // the notes are still too big: read THEM in parts
+        }
+        return fromNotes(request, notes.join("\n\n").slice(0, fitChars(ctxN, ansTok, 1400, notes.join(""))), parts.length, fileName);
+      };
+      if (answer == null && fileAtt && fileAtt.text != null && !extra.computed) {
+        if (tooLong(fileAtt.text, ctxN, ansTok)) {
+          const c = await readInParts(fileAtt.text, q, fileAtt.name);
+          if (c == null) return;
+          content = c; longMsg = true; extra.readInParts = true;
+        } else content = sandwich(q, fileAtt.name, fileAtt.text);   // v5.26: question before AND after
+      } else if (answer == null && !fileAtt && typed && !sources && tooLong(typed, ctxN, ansTok)) {
+        const c = await readInParts(typed, requestOf(typed));
+        if (c == null) return;
+        content = c; longMsg = true; extra.readInParts = true;
       }
       // Corrections the user taught before, on questions like this one.
       const shots = !fileAtt && api.learnFor ? api.learnFor(q) : null;
@@ -801,20 +835,20 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const prevQ = [...history].reverse().find((m) => m.role === "user" && m.text);
       const mathQ = prevQ && /[0-9٠-٩]/.test(typed) && looksLikeFollowUp(typed) && (looksLikeMathProblem(prevQ.text) || looksLikeCalc(prevQ.text))
         ? prevQ.text + "\nFollow-up (answer this, using the question above): " + typed : typed;
-      if (route && !img && !sources && api.verifyMath && looksLikeMathProblem(mathQ)) {
+      if (route && !longMsg && !img && !sources && api.verifyMath && looksLikeMathProblem(mathQ)) {
         try {
           const r = await api.verifyMath(mathQ + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
           if (runRef.current !== run) return;
           if (r && r.ok) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
-      } else if (route && !img && !sources && api.reasonVote && !think && !spaceRef.current.assistant && looksLikeReasoning(typed) && !looksLikeCodeTask(typed)) {
+      } else if (route && !longMsg && !img && !sources && api.reasonVote && !think && !spaceRef.current.assistant && looksLikeReasoning(typed) && !looksLikeCodeTask(typed)) {
         // Riddles, logic, physical reasoning: several tries, a vote, a strict check.
         try {
           const r = await api.reasonVote(typed + langHint(typed), pairsOf(history), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
           if (runRef.current !== run) return;
           if (r && r.text) { answer = r.text; extra.reasoned = { votes: r.votes, total: r.total, checked: r.checked }; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
-      } else if (route && !img && !sources && api.codeTask && looksLikeCodeTask(typed)) {
+      } else if (route && !longMsg && !img && !sources && api.codeTask && looksLikeCodeTask(typed)) {
         try {
           // While it writes: the model's own ```python fence (and anything
           // before it) is dropped, so the preview is ONE code box — not an
@@ -865,20 +899,60 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const copy = !!sources || !!fileAtt || !!(spaceRef.current.project && (spaceRef.current.project.knowledge || []).length);
         // a research report gets the level's long-answer budget (v5.23)
         const longRep = research && !useThink && api.power ? { maxTokens: api.power().longTokens } : {};
-        answer = await api.run(buildMessages(history, content), pic, { onToken, onStatus, think: useThink, copy, ...longRep });
+        answer = await api.run(buildMessages(history, content, longMsg ? 1500 : undefined), pic, { onToken, onStatus, think: useThink, copy, ...longRep });
       } catch (e) {
-        // Still too long for the model's window: answer with no earlier turns
-        // rather than fail.
-        if (!/longer than this model can read|context/i.test(String(e && e.message))) throw e;
-        onStatus("Long chat — answering from this message alone…");
-        answer = await api.run(buildMessages([], content, 0), pic, { onToken, onStatus, think: useThink });
+        const em = String((e && e.message) || e);
+        if (em === "Stopped" || runRef.current !== run) throw e;
+        const copy = !!sources || !!fileAtt;
+        if (/longer than this model can read|context/i.test(em)) {
+          // Too long with the earlier turns: answer from this message alone; still too long →
+          // read the message itself in parts. (v5.27: never a "too long" error.)
+          onStatus("Long chat — answering from this message alone…");
+          try { answer = await api.run(buildMessages([], content, 0), pic, { onToken, onStatus, think: false, copy }); }
+          catch (e2) {
+            if (String(e2 && e2.message) === "Stopped" || runRef.current !== run) throw e2;
+            const c = await readInParts(content, requestOf(typed || content));
+            if (c == null) return;
+            content = c; longMsg = true; extra.readInParts = true;
+            answer = await api.run(buildMessages([], content, 0), null, { onToken, onStatus, think: false, copy: true });
+          }
+        } else {
+          // Any other hiccup (the engine restarted, a thinking run that went nowhere…): one
+          // more try, lighter — no earlier turns, no thinking — before an error is shown.
+          onStatus(tr("Something went wrong — trying again…"));
+          answer = await api.run(buildMessages([], content, 0), pic, { onToken, onStatus, think: false, copy });
+        }
       }
       if (runRef.current !== run) return;
+      // The model said nothing at all: asked once more, plainly.
+      if (plain && !String(answer || "").trim()) {
+        onStatus(tr("Something went wrong — trying again…"));
+        answer = await api.run(buildMessages(longMsg ? [] : history, content, longMsg ? 0 : undefined), pic, { onToken, onStatus, think: false, copy: !!sources || !!fileAtt });
+        if (runRef.current !== run) return;
+      }
+      // v5.27 — AUTO-CONTINUE: an answer cut by the length limit carries on by itself (the
+      // model sees the END of what it wrote) until it is finished — no "Continue" tap needed.
+      if (plain && answer && String(answer).trim()) {
+        let stc = api.lastStats(), nC = 0;
+        const maxC = api.power && api.power().level >= 4 ? 6 : 4;
+        const sysC = buildMessages([], "x", 0)[0].content, arC = /[؀-ۿ]/.test(String(answer).slice(0, 300));
+        const askC = longMsg ? requestOf(typed || q) : (typeof content === "string" ? content : q);
+        while (stc && stc.cut && nC < maxC) {
+          nC++;
+          const before = answer;
+          patchMsg(cid, aiId, { phase: tr("Long answer — still writing ({n})…", { n: nC }) });
+          const more = await api.run(continueMessages(sysC, askC, before, arC), null, { onStatus, copy: true, onToken: (tx) => onToken(glue(before, tx), "") });
+          if (runRef.current !== run) return;
+          if (!String(more || "").trim()) break;
+          answer = glue(before, more); stc = api.lastStats();
+        }
+        if (nC) extra.continued = nC;
+      }
       // v5.24 — Expert / Master: the draft is re-read by the model as a senior reviewer,
       // who recomputes numbers, fixes mistakes, fills gaps and writes the improved answer.
       // Unusable review (no FINAL ANSWER, much shorter) or Stop → the draft stays. (power.js)
       const pwA = api.power ? api.power() : null;
-      if (plain && pwA && pwA.review && !useThink && !sources && !pic && !fileAtt && answer && worthReview(typed, answer)) {
+      if (plain && pwA && pwA.review && !useThink && !sources && !pic && !fileAtt && !longMsg && !extra.continued && answer && worthReview(typed, answer)) {
         const draft = answer;
         try {
           if (raf) { clearTimeout(raf); raf = null; }
@@ -959,15 +1033,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     const m = messages[aiIdx]; if (!m || busy || !api.canUseAI()) return;
     const cid = chat.id, run = ++runRef.current;
     const before = String(m.text || "").replace(/ …\(stopped\)$/, "");
-    const hist = messages.slice(0, aiIdx + 1).map((x) => (x.id === m.id ? { ...x, text: before } : x));
-    const prompt = /[؀-ۿ]/.test(before.slice(0, 300)) ? "كمّل من المكان اللي وقفت عنده بالظبط. متكررش أي حاجة كتبتها، وابدأ بالكلمة اللي بعدها على طول."
-      : "Continue exactly where you stopped. Do not repeat anything you already wrote — start with the very next word.";
+    const asked = (messages[aiIdx - 1] && messages[aiIdx - 1].role === "user" && messages[aiIdx - 1].text) || "";
     patchMsg(cid, m.id, { streaming: true, phase: "", stats: { ...(m.stats || {}), cut: false } });
     setBusy(true); stickRef.current = true;
-    const glue = (a, b) => { const t = String(b || "").replace(/^\s+/, ""); return a + (/\s$/.test(a) || /^[,.;:!?)\]]/.test(t) ? "" : (/\n\s*$/.test(a) ? "" : " ")) + t; };
     try {
       let last = 0;
-      const more = await api.run(buildMessages(hist, prompt), null, { onToken: (tx) => { const t = Date.now(); if (runRef.current === run && t - last > 90) { last = t; patchMsg(cid, m.id, { text: glue(before, tx) }); } } });
+      // v5.27: the model sees the END of its answer (it used to see only the start)
+      const more = await api.run(continueMessages(buildMessages([], "x", 0)[0].content, asked, before, /[؀-ۿ]/.test(before.slice(0, 300))), null, { copy: true, onToken: (tx) => { const t = Date.now(); if (runRef.current === run && t - last > 90) { last = t; patchMsg(cid, m.id, { text: glue(before, tx) }); } } });
       if (runRef.current !== run) return;
       const st = api.lastStats();
       patchMsg(cid, m.id, { text: glue(before, more), streaming: false, phase: "", stats: st });
