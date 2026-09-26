@@ -19,11 +19,12 @@ const m = notesMessages("all trims", { title: "T", url: "u", text: "x".repeat(90
 eq(m[1].content.length < 7000 && m[0].content.includes("copy digits exactly"), true, "one page at a time, within what the phone model can read");
 eq(missingMessages("q", "n")[0].content.includes("NONE"), true, "the missing-check can say NONE");
 
-// ---- Wikipedia is not treated as a reliable source (Ali): it comes last ----
+// ---- Ali: no information from Wikipedia at all ----
 const W = { title: "Lynk & Co 900 - Wikipedia", url: "https://en.wikipedia.org/wiki/Lynk_%26_Co_900", text: "Lynk & Co 900 Ultra has 845 hp and costs CNY 369,900. Lynk & Co 900 trims: Pro, Max, Ultra." };
 const O = { title: "Lynk & Co 900 review", url: "https://carnews.example/900", text: "The Lynk & Co 900 Ultra makes 845 hp; price CNY 369,900. Trims: Pro, Max, Ultra with specs." };
 const rr = rankPassages("Lynk & Co 900 trims price hp", [W, O]);
-eq(rr.map((h) => /wikipedia/.test(h.url)), [false, true], "a Wikipedia page is placed after the other sources");
+eq(rr.map((h) => /wikipedia/.test(h.url)), [false], "v5.22: NO information from Wikipedia — its pages are removed");
+eq(rankPassages("x", [W]).length, 0, "…even when it is the only result");
 
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 if (fails.length) process.exit(1);

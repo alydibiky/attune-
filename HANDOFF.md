@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.21**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.22**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.21**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.21** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.22** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -144,7 +144,7 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 - **v5.18** — doubled words/digits (MTP off), junk-loop guard, websites on topic, Studio never silent, Business apps exported/imported — see §5.7.
 - **v5.19** — web reads whole pages + passage ranking, Studio stray-cancel fix, connected ERP designs, screen error boundary — see §5.8.
 - **v5.20** — deep web research (page by page → checked notes → missing → full answer), every Studio failure path covered — see §5.9.
-- **v5.21** — Ali: Wikipedia is NOT a reliable source — no longer added to results or used as a fallback; Wikipedia pages from a search are read and ranked last (`isWiki` in attune.jsx, `wiki` flag in webrank.js).
+- **v5.21/v5.22** — Ali: **NO information from Wikipedia at all.** Searches are sent with `-site:wikipedia.org` (WebTools `NO_WIKI`, also Brave and Daily news), any Wikipedia URL is dropped natively (`isWiki`), again in `webLookupRaw` and in `rankPassages`; the keyless Wikipedia lookup (`wikiLookup`/`keylessLookup`) is deleted. Never add Wikipedia back as a source.
 
 ### 5.1 v5.12 in detail (the part nobody has tested on the phone yet)
 - **Corrections checked before learning** (`checkCorrection`, reason.js; UI in chat.jsx `checkTeach/saveTeach`): 👎 → "Check & teach". Maths question → `verifyMath(..., explain:false)` computes the answer, compared by number (±0.5%). Otherwise 2 independent re-solves (temp 0.2 / 0.7; a 3rd at 0.5 if they disagree) returning `VERDICT: RIGHT|WRONG|PARTLY|PREFERENCE` + `REASON:` + `ANSWER:`. RIGHT/PREFERENCE → saved (`checked` field). WRONG/PARTLY/unsure → reason box (`data-testid=teach-verdict`) with "Learn the checked answer" (partly), "I'm sure — learn mine anyway" (`teach-force`), "Edit my correction".

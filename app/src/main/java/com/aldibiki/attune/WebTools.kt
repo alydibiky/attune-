@@ -110,6 +110,11 @@ object WebTools {
         return out
     }
 
+    // v5.22 (Ali): NO information from Wikipedia — the search is told to leave it
+    // out, and any Wikipedia page that still comes back is dropped.
+    const val NO_WIKI = "-site:wikipedia.org"
+    fun isWiki(url: String): Boolean = Regex("^https?://([a-z0-9-]+\\.)*wikipedia\\.org/", RegexOption.IGNORE_CASE).containsMatchIn(url)
+
     // ---- Reading a page ---------------------------------------------------------
     /** The readable text of a page: article/main body, without menus, scripts or ads. */
     fun pageText(url: String, maxChars: Int = 2200): String {
@@ -155,10 +160,10 @@ object WebTools {
         var hits: List<Hit> = emptyList()
         var why = ""
         if (provider == "brave" && !key.isNullOrBlank()) {
-            try { hits = brave(q, key) } catch (e: Exception) { why = e.message ?: "Brave failed" }
+            try { hits = brave("$q $NO_WIKI", key).filter { !isWiki(it.url) } } catch (e: Exception) { why = e.message ?: "Brave failed" }
         }
         if (hits.isEmpty()) {
-            hits = duckduckgo(q, 10)
+            hits = duckduckgo("$q $NO_WIKI", 10).filter { !isWiki(it.url) }
             via = "duckduckgo"
             if (hits.isEmpty() && why.isEmpty()) why = "DuckDuckGo returned nothing"
         }
@@ -230,7 +235,7 @@ object WebTools {
         // Recent web results, opened and read (more than a headline to go on).
         val hits = JSONArray()
         try {
-            val web = duckduckgo(q + if (arabic) " أخبار" else " news", 6, "d")
+            val web = duckduckgo(q + (if (arabic) " أخبار" else " news") + " " + NO_WIKI, 6, "d").filter { !isWiki(it.url) }
             val n = pages.coerceIn(0, 4)
             val jobs = web.take(n).map { h -> pool.submit(Callable { h to pageText(h.url, 2400) }) }
             for (f in jobs) try { val (h, t) = f.get(12, TimeUnit.SECONDS); if (t.length > h.text.length) h.text = t } catch (e: Exception) { }

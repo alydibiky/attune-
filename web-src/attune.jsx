@@ -5621,10 +5621,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
       no terms of service, and the query goes from the user's browser with
       the user's consent rather than through anything of ours.
 
-   2. GROUND ON KEYLESS SOURCES. Wikipedia and Wikidata have open APIs, no
-      key, commercial use permitted, and a real Arabic edition. This is what
-      lets the model answer with a citation instead of from memory. It covers
-      a large slice of factual questions at genuinely zero cost.
+   2. (Removed v5.22: no Wikipedia/Wikidata — Ali wants no information from Wikipedia.)
 
    3. THE USER'S OWN KEY, IF THEY WANT ONE. Settings accept a Tavily, Brave
       or Serper key, stored on the device and called from the device. Their
@@ -5670,43 +5667,8 @@ function searchSave(cfg) {
   try { localStorage.setItem(SEARCH_KEY, JSON.stringify(cfg)); } catch (e) {}
 }
 
-/* ---- layer 2: keyless sources -------------------------------------------
-   Wikipedia's API allows cross-origin calls and asks for a descriptive
-   user agent. Arabic first for an Arabic question, then English, because the
-   Arabic edition is thinner and a miss there is common.                     */
-function wikiLang(q) {
-  return /[؀-ۿ]/.test(q) ? "ar" : "en";
-}
-async function wikiLookup(q, lang, limit) {
-  const l = lang || wikiLang(q);
-  const api = `https://${l}.wikipedia.org/w/api.php`;
-  const url = api + "?" + new URLSearchParams({
-    action: "query", format: "json", origin: "*",
-    generator: "search", gsrsearch: q, gsrlimit: String(limit || 3),
-    prop: "extracts|info", exintro: "1", explaintext: "1", inprop: "url",
-  });
-  const r = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!r.ok) throw new Error("Wikipedia returned " + r.status);
-  const j = await r.json();
-  const pages = (j.query && j.query.pages) || {};
-  return Object.values(pages).map((p) => ({
-    title: p.title, text: (p.extract || "").slice(0, 2200),
-    url: p.fullurl || `https://${l}.wikipedia.org/wiki/` + encodeURIComponent(p.title),
-    source: (l === "ar" ? "ويكيبيديا" : "Wikipedia"),
-  })).filter((x) => x.text.length > 80);
-}
-
-// An Arabic question gets the Arabic edition first, then English as a
-// fallback — the Arabic edition is much smaller and a miss is common.
-async function keylessLookup(q) {
-  const first = wikiLang(q);
-  let hits = [];
-  try { hits = await wikiLookup(q, first, 3); } catch (e) {}
-  if (hits.length < 2 && first === "ar") {
-    try { hits = hits.concat(await wikiLookup(q, "en", 2)); } catch (e) {}
-  }
-  return hits;
-}
+/* ---- layer 2 (removed v5.22): Ali wants NO information from Wikipedia, so
+   the keyless Wikipedia lookup is gone — web answers come only from the search. */
 
 /* ---- layer 3: the user's own key ---------------------------------------- */
 async function byoLookup(q, cfg) {
@@ -5761,14 +5723,15 @@ async function webLookupRaw(q, pages = 6) {
       out.via = r.via || provider;
       if (!out.hits.length) out.why = r.why || "Nothing came back for that.";
     } catch (e) { out.why = String(e.message || e); }
-    // v5.20.1 (Ali): Wikipedia is NOT treated as a reliable source — it is no
-    // longer added to results, and a Wikipedia page the search returns is read last.
-    out.hits = [...out.hits.filter((h) => !isWiki(h)), ...out.hits.filter(isWiki)];
+    // v5.22 (Ali): NO information from Wikipedia — its pages are removed (the
+    // search itself is also told to leave them out, WebTools.kt).
+    out.hits = out.hits.filter((h) => !isWiki(h));
+    if (!out.hits.length && !out.why) out.why = "Nothing came back for that (Wikipedia is left out).";
     if (out.hits.length) return out;
     if (/offline lock/i.test(out.why)) return out;   // don't try another route
   }
   if (cfg.provider && cfg.key && cfg.provider !== "duckduckgo") {
-    try { out.hits = await byoLookup(q, cfg); out.via = cfg.provider; }
+    try { out.hits = (await byoLookup(q + " -site:wikipedia.org", cfg)).filter((h) => !isWiki(h)); out.via = cfg.provider; }
     catch (e) { out.why = String(e.message || e); }
   }
   // (no Wikipedia-only fallback any more: Ali doesn't count it as a reliable source)
@@ -6590,7 +6553,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.21";
+const PAGE_VERSION = "5.22";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -8211,8 +8174,7 @@ export default function App() {
                         {t.web && t.web.length ? (
                           <div className="mt-2 pt-2 border-t border-slate-800">
                             <span className="text-[10px] text-slate-600">
-                              {t.via === "wikipedia" ? tr("from Wikipedia")
-                                : t.via === "duckduckgo" ? tr("from the web via DuckDuckGo")
+                              {t.via === "duckduckgo" ? tr("from the web via DuckDuckGo")
                                 : t.via === "brave" ? tr("from the web via Brave Search")
                                 : "from the web via your own " + t.via} {tr("· answered on this device")}
                             </span>
@@ -8315,7 +8277,7 @@ export default function App() {
                       ? (searchCfg.provider === "brave" && searchCfg.key ? "Brave Search" : "DuckDuckGo") + " · only the question leaves the phone; the answer is written here"
                       : searchCfg.provider && searchCfg.key
                       ? `your ${searchCfg.provider} key · the question leaves the device, the answer is still written here`
-                      : tr("Wikipedia · the question leaves the device, the answer is still written here")}
+                      : tr("Web search needs the Android app, or your own search key in settings")}
                   </span>
                 ) : null}
               </div>

@@ -61,7 +61,9 @@ export function scorePassage(p, words, named, wantFigures) {
  * hits [{title, url, text}] → the same hits, each text replaced by its best passages,
  * all within `budget` characters. Sources with nothing relevant are dropped (keeping at least 2).
  */
-export function rankPassages(question, hits, { budget = 7000, perSource = 2600 } = {}) {
+export function rankPassages(question, hits0, { budget = 7000, perSource = 2600 } = {}) {
+  // Ali: NO information from Wikipedia (v5.22)
+  const hits = (hits0 || []).filter((h) => !/(^|\.)wikipedia\.org\//i.test(String((h && h.url) || "").replace(/^https?:\/\//, "")));
   const words = qWords(question);
   // names (capitalised or with digits: "Lynk", "900", "LTM") matter most
   const named = new Set(qWords(String(question || "").split(/\s+/).filter((w) => /[A-Z]|\d/.test(w)).join(" ")));
@@ -97,5 +99,5 @@ export function rankPassages(question, hits, { budget = 7000, perSource = 2600 }
     const text = ch.map((p) => { const h = p.head && p.head !== lastHead ? "[" + p.head + "] " : ""; lastHead = p.head; return h + p.text; }).join("\n");
     out.push({ ...src.h, text });
   }
-  return out.length ? out : (hits || []).slice(0, 3);
+  return out.length ? out : hits.slice(0, 3);
 }
