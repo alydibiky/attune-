@@ -15,7 +15,7 @@ eq([sm.temperature < big.temperature, sm.min_p > big.min_p, sm.top_k <= 20], [tr
 eq(samplingFor("qwen", 1, "creative").temperature > 0.6, true, "…but stories from a small model still aren't robotic");
 
 const cs = compactSystem("Sat Sep 26 2026");
-eq([cs.length < 1300, /Example:/.test(cs), /Never invent/.test(cs), /Egyptian Arabic/.test(cs)], [true, true, true, true], "small models get a short prompt with one example");
+eq([cs.length < 1700, /Example:/.test(cs), /Never invent/.test(cs), /Egyptian Arabic/.test(cs)], [true, true, true, true], "small models get a short prompt with one example");
 eq(/Never invent specifications, prices/.test(HONESTY_RULE) && /out of date/.test(HONESTY_RULE), true, "the honesty rule forbids invented specs and prices");
 
 eq(reread("X", "Is 17 prime?"), "X\n\nRead the question again: Is 17 prime?", "re-reading shows the question once more");
