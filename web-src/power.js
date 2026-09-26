@@ -1,3 +1,4 @@
+import { familyOf } from "./boost.js";
 /* ---- Model names and power levels (v5.23) ------------------------------------------------
    Ali: "catchy names related to Attune's branding" and "make sure the stronger models are
    clearly much stronger and can do more expert and professional things".
@@ -71,7 +72,7 @@ export function powerFor(level, ctx = 8192) {
 
 // The active model's profile, set by the app when the model changes.
 let CURRENT = powerFor(3);
-export function setPower(tier) { const b = brandOf(tier); CURRENT = powerFor(b.level, (tier && tier.ctx) || 8192); return CURRENT; }
+export function setPower(tier) { const b = brandOf(tier); CURRENT = { ...powerFor(b.level, (tier && tier.ctx) || 8192), family: familyOf(tier) }; return CURRENT; }
 export function getPower() { return CURRENT; }
 
 /** Extra instructions only strong models get (a small model would drown in them). */
@@ -141,6 +142,5 @@ export function capabilitiesOf(tier) {
   add("Code · {n} test-and-fix rounds", { n: p.codeRounds }, p.codeRounds >= 5);
   add("Business systems · {t} tables", { t: p.tables }, p.level >= 4);
   if (p.votes > 3) add("Logic · {n} tries + vote", { n: p.votes }, true);
-  if (tier && tier.vision) add("Reads photos");
   return out;
 }

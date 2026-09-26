@@ -22,6 +22,7 @@ import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { skillFor } from "./skills.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf } from "./power.js";
+import { samplingFor, taskKind } from "./boost.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
@@ -1344,7 +1345,19 @@ const LocalEngine = {
     if (think) body.thinking_budget_tokens = thinkBudget;
     if (ENGINE_PREFS.reproducible) { body.temperature = 0; body.seed = 42; }
     else if (think) { body.temperature = 0.6; body.top_p = 0.95; body.top_k = 20; body.min_p = 0; }
-    else { body.temperature = typeof o.temperature === "number" ? o.temperature : 0.5; body.top_p = 0.95; body.top_k = 40; }
+    else {
+      // v5.26: each model family's own best settings, tuned to the task (facts / chat /
+      // creative) and tighter for small models, with min_p against junk tokens (boost.js).
+      const lastUser = [...messages].reverse().find((m) => m.role === "user");
+      const askText = lastUser ? (typeof lastUser.content === "string" ? lastUser.content : (lastUser.content.find((x) => x.type === "text") || {}).text) : "";
+      const sm = samplingFor(getPower().family, getPower().level, strict || o.copy ? "precise" : taskKind(String(askText || "").slice(-600)));
+      Object.assign(body, sm);
+      if (typeof o.temperature === "number") body.temperature = o.temperature;
+    }
+    // JSON answers (Business designs, queries, forms): the engine itself only lets valid
+    // JSON through. If an engine ever refuses the mode, the request is simply sent again
+    // without it (see the retry below) and the app remembers not to ask again.
+    if (o.json && !o._noJsonMode && !LocalEngine.noJsonMode) body.response_format = { type: "json_object" };
     // Against loops (v5.10): a gentle penalty on repeating recent tokens, and
     // DRY, which stops long exact repeats ("(Correction: …)" × 5) without
     // hurting code that legitimately repeats short bits. The fast engine gets
@@ -1427,7 +1440,13 @@ const LocalEngine = {
         };
         let res;
         try { res = await pr; }
-        catch (e) { if (!looped) throw e; res = { content: text, reasoning: thinking }; }
+        catch (e) {
+          if (body.response_format && !looped && !text && /sampler|grammar|response_format|json|400/i.test(String((e && e.message) || e))) {
+            LocalEngine.noJsonMode = true;
+            return LocalEngine.run(prompt, image, { ...o, _noJsonMode: true });
+          }
+          if (!looped) throw e; res = { content: text, reasoning: thinking };
+        }
         LAST_STATS = statsFrom(res, Date.now() - t0n);
         // Stopped by the length limit, not because it was done: say so, so
         // the screen can offer "Continue".
@@ -5761,7 +5780,8 @@ const GROUNDED_RULES = `Answer ONLY from the passages below.
 function groundedPrompt(q, hits, lang) {
   const src = hits.map((h, i) => `[${i + 1}] ${h.title} — ${h.url}${h.date ? " (" + h.date + ")" : ""}\n${h.text}`).join("\n\n");
   const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-  return [GROUNDED_RULES, `- Today is ${today}.`, "", "PASSAGES:", src, "",
+  // v5.26: the question before AND after the passages, so a small model doesn't lose it
+  return [GROUNDED_RULES, `- Today is ${today}.`, "", "QUESTION: " + q, "", "PASSAGES:", src, "",
     lang ? `Answer in ${lang}.` : "", "QUESTION: " + q].filter(Boolean).join("\n");
 }
 
@@ -6555,7 +6575,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.25";
+const PAGE_VERSION = "5.26";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [

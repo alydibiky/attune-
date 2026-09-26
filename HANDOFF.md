@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.25**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.26**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.25**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.25** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.26** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -268,6 +268,16 @@ Ali asked for code that makes the models stronger. Weights can't change on the p
 - The Engine cards showed "Rewrite / Compress / Humanize / Copilot" **crossed out on every model** (old parity-eval chips; no tier ever had them in `good`) + "Parity: unverified…". Removed. Each card now shows `capabilitiesOf(tier)` (power.js) from the real power profile: Expert/Master abilities as violet ★ chips (expert review, senior-expert mode, thinks Nk tokens, web research N searches/pages, answers up to Nk tokens, reads files / a whole book, code rounds, ERP tables, logic tries + vote), plain chips for the rest, "Reads photos" for vision tiers.
 - **Long context unlocked**: a tier with ctx ≥ 65,536 (Maestro Long, 131k) gets `fileChars` up to 300k (≈ (ctx − longTokens − 4000) × 2.5) and `historyChars` 60k (`longContext: true`). Before, it was held to 60k characters like the 32k models.
 - Tests: e2e_v524 extended (no line-through, whole-book chip, ★ counts).
+
+### 5.13 v5.26 — "tips and tricks that make them smarter; maximise the SMALL models"
+All in `boost.js` (pure, `unit/v526.test.mjs`, `e2e_v526.py`):
+- **Sampling** (`samplingFor(family, level, taskKind(lastUserText))`, applied in the model call when not thinking/reproducible; a caller's `temperature` still wins): Qwen top_p 0.8 / top_k 20, Gemma top_p 0.95 / top_k 64, min_p 0.05; precise 0.3 · chat 0.6 · creative 0.85; levels 1–2: temperature × 0.7 (× 0.9 creative), min_p 0.1, top_k ≤ 20. `getPower().family` comes from `familyOf(tier)` in `setPower`. strict/copy calls count as precise.
+- **Short system prompt** for levels 1–2 (`compactSystem`: 6 rules + one example, ~1.1k chars instead of ~3.4k) + the user profile; levels 3+ keep `systemPrompt`.
+- **HONESTY_RULE** for every model (no invented specs/prices/dates/names when there are no passages or file; mark estimates; suggest Web).
+- **Re-reading (RE2)**: reasoning/maths questions without think get "Read the question again: …" (chat) and every reasonVote try does too (`sampleMessages`).
+- **Every part**: `partsOf` (2+ "?"/"؟" questions or a numbered/bulleted list) → `everyPart` checklist appended.
+- **Sandwich**: attached text files are sent with the question before and after (`sandwich`); `groundedPrompt` now has "QUESTION:" before the passages too.
+- **JSON mode**: `o.json` calls (ERP design, change, query, form) send `response_format: {type: "json_object"}`; if the engine rejects it (the desktop test llama-server does with the tiny model: "Failed to initialize samplers"), the request is re-sent without it and `LocalEngine.noJsonMode` stops asking. Verified min_p/top_k/top_p are accepted by llama-server.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

@@ -27,7 +27,9 @@ export function looksLikeReasoning(text) {
 const SAMPLE_SYS = "Solve this carefully. Read every condition in the question literally and picture the physical situation. Reason in short numbered steps, check each step, then give the final answer on the last line exactly as: FINAL: <the answer in a few words>. Match the language of the question.";
 
 export function sampleMessages(question, history = []) {
-  return [{ role: "system", content: SAMPLE_SYS }, ...history, { role: "user", content: String(question).trim() }];
+  // re-reading (v5.26): the question once more at the end — fewer slips on logic questions
+  const q = String(question).trim();
+  return [{ role: "system", content: SAMPLE_SYS }, ...history, { role: "user", content: q.length < 1200 ? q + "\n\nRead the question again: " + q : q }];
 }
 
 export function finalOf(text) {

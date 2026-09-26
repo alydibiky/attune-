@@ -18,6 +18,7 @@ import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD } from "./research.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed } from "./power.js";
+import { compactSystem, HONESTY_RULE, reread, partsOf, everyPart, sandwich } from "./boost.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
   Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2,
@@ -520,7 +521,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     const block = sp.assistant || sp.project ? spaceBlock({ assistant: sp.assistant, project: sp.project, question: typeof userContent === "string" ? userContent.slice(0, 600) : "" }) : "";
     // v5.23: strong models (Expert / Master level) work to a professional standard
     const pw = api.power ? api.power() : null;
-    return [{ role: "system", content: systemPrompt(api.profileText(), api.accuracy) + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") }, ...kept, { role: "user", content: userContent }];
+    // v5.26: small models (levels 1–2) get the SHORT prompt with one example; every model
+    // gets the honesty rule for answers without web passages (boost.js)
+    const small = pw && pw.level <= 2;
+    const base = small ? compactSystem(new Date().toDateString()) + (api.profileText() ? "\n\n" + api.profileText() : "") : systemPrompt(api.profileText(), api.accuracy);
+    return [{ role: "system", content: base + "\n\n" + HONESTY_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") }, ...kept, { role: "user", content: userContent }];
   };
 
   const ask = async (raw, opts) => {
@@ -783,7 +788,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
       } else if (fileAtt && fileAtt.text != null) {
-        content = `The user attached the file "${fileAtt.name}":\n<<<\n${fileAtt.text.slice(0, (api.power && api.power().fileChars) || 14000)}\n>>>\n\n${q}`;
+        content = sandwich(q, fileAtt.name, fileAtt.text.slice(0, (api.power && api.power().fileChars) || 14000));   // v5.26: question before AND after
       }
       // Corrections the user taught before, on questions like this one.
       const shots = !fileAtt && api.learnFor ? api.learnFor(q) : null;
@@ -844,6 +849,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (answer == null && typed && !sources && !pic && !fileAtt && api.skillFor) {
         const sk = api.skillFor(typed);
         if (sk) { content += sk.block; extra.skill = sk.id; }
+      }
+      // v5.26 tricks: every part of a multi-question message gets answered; reasoning and
+      // maths questions are shown twice (re-reading → fewer slips). (boost.js)
+      if (answer == null && typed && !sources && !fileAtt) {
+        content += everyPart(partsOf(typed));
+        if (!useThink && (looksLikeReasoning(typed) || looksLikeMathProblem(typed))) content = reread(content, typed);
       }
       if (o.queuedDuring) content = "(I sent this while you were still writing your last answer. If it adds to or changes that answer, write the complete UPDATED answer with the change included — don't just acknowledge it. If it is a new question, simply answer it.)\n\n" + content;
       content += langHint(typed);
