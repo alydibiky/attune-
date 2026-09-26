@@ -122,10 +122,18 @@ export function sandwich(question, name, body) {
     "tool_code" function. Every model is told not to, and such an answer is re-asked. */
 export const NO_CODE_RULE = "Only write code when the user asks for code or a program. Never answer with a function, a tool call, tool_code or a code block otherwise — reason in plain words.";
 
-/** Is this answer mostly code / a tool call, for a question that didn't ask for code? */
-export function codeInsteadOfAnswer(answer) {
+/** A question where code (or a page, formula, script…) IS the answer. */
+const WANTS_CODE = /\b(code|program|script|function|python|javascript|html|css|web ?page|website|site|landing page|app|excel|formula|sql|regex|json|csv|macro|vba|power ?automate|latex|markdown|svg|diagram|mermaid)\b|كود|برنامج|موقع|صفحة|معادلة اكسل|فورمولا/i;
+
+/**
+ * Is this answer mostly code / a tool call, for a question that didn't ask for code?
+ * A web page / document block (html, css, svg, json, csv, mermaid…) is a deliverable, not this.
+ */
+export function codeInsteadOfAnswer(answer, question = "") {
   const a = String(answer || "");
   if (/```\s*tool_code|\btool_code\b|<tool_call>|\bprint\(default_api\./i.test(a)) return true;
+  if (WANTS_CODE.test(String(question || ""))) return false;
+  if (/```\s*(html?|css|svg|xml|json|csv|mermaid|markdown|md)\b|<!doctype html|<html\b/i.test(a)) return false;
   const fenced = (a.match(/```[\s\S]*?(```|$)/g) || []).join("");
   const prose = a.replace(/```[\s\S]*?(```|$)/g, "").replace(/\s+/g, " ").trim();
   return fenced.length > 40 && prose.length < 160;

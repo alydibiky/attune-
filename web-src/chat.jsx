@@ -929,7 +929,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (runRef.current !== run) return;
       // A function / tool_code instead of an answer, for a question that didn't ask for code:
       // asked once more for plain words. (v5.28)
-      if (plain && answer && !looksLikeCodeTask(typed || "") && codeInsteadOfAnswer(answer)) {
+      if (plain && answer && !looksLikeCodeTask(typed || "") && codeInsteadOfAnswer(answer, typed)) {
         onStatus(tr("Writing it out in words…"));
         try {
           const again = await api.run(buildMessages(history, content + "\n\n(Answer in plain words with your reasoning step by step. Do NOT write code, functions or tool calls.)"), pic, { onToken, onStatus, think: false, copy: !!sources || !!fileAtt });

@@ -26,5 +26,9 @@ eq(codeInsteadOfAnswer("**No immortal flurb can exist.**\n1. Every flurb is a gl
 eq(codeInsteadOfAnswer("Here is the program you asked for, with an explanation of each step and how to run it on your phone. It reads the file, groups by crane and prints the totals.\n```python\nprint(1)\n```"), false, "code with a real explanation is fine");
 eq(/Never answer with a function/.test(NO_CODE_RULE), true, "every model is told not to answer with a function");
 
+eq(codeInsteadOfAnswer("```html\n<!doctype html><html><body>Crane Simulator</body></html>\n```"), false, "a web page answer is a deliverable, not 'code instead of an answer'");
+eq(codeInsteadOfAnswer("```python\ndef f():\n    return 1\nprint(f())\n```", "write a python function that returns 1"), false, "…nor is code the user asked for");
+eq(codeInsteadOfAnswer("```tool_code\nprint(default_api.x())\n```", "write me a script"), true, "tool_code is always caught");
+
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 if (fails.length) process.exit(1);
