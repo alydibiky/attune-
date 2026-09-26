@@ -119,7 +119,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       if (msg === "Stopped" && userStop.current) { /* they asked for it */ }
       else if (msg === "Stopped") setErr(tr("The picture engine stopped before the picture was finished — Android may have closed it to free memory. Try “Quick draft”, or close other apps and try again."));
       else setErr(msg ? tr(msg) : tr("The picture could not be made. Open Engine → Engine log and send me what it says."));
-      setInfo(readInfo());
+      const inf = readInfo(); setInfo(inf);
+      if (msg === "Stopped" && !userStop.current && inf && inf.lastError) setErr(tr(inf.lastError));
     }
     finally { setBusy(null); userStop.current = false; }
   };
@@ -144,7 +145,9 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
     catch (e) { setErr(tr("Could not open that picture")); }
   };
   const userStop = useRef(false);
-  const stop = () => { userStop.current = true; try { native.cancel(callId.current); } catch (e) {} };
+  // v5.19: pictures are stopped only by this button (cancelImage), never by
+  // a cancel meant for something else.
+  const stop = () => { userStop.current = true; try { if (native.cancelImage) native.cancelImage(callId.current); else native.cancel(callId.current); } catch (e) {} };
   const remove = (it) => { try { native.deleteImage(it.file); } catch (e) {} const next = gallery.filter((x) => x.file !== it.file); keep(next); if (cur && cur.file === it.file) setCur(next[0] || null); };
 
   const stageText = busy ? (busy.stage === "enhance" ? tr("Writing a fuller description…")
@@ -230,6 +233,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
             {tr("Still working — nothing is stuck. On the CPU a picture takes about 3–10 minutes (edits are slower than new pictures). Keep Attune open; Stop cancels it.")}</p>
         ) : null}
         {busy && busy.total ? <div className="h-1 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-violet-500 transition-all" style={{ width: Math.round(busy.step * 100 / busy.total) + "%" }} /></div> : null}
+        {!err && !busy && info.lastError ? <p className="text-[11px] text-amber-300/90 mt-2" data-testid="studio-last-error">{tr("The last picture didn't finish:")} {tr(info.lastError)}</p> : null}
         {err ? <p className="text-[12px] text-rose-300 mt-2 flex items-start gap-1.5" data-testid="studio-error"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{err}</p> : null}
         {prompt && mode === "create" ? <p className="text-[11px] text-slate-500 mt-2 leading-relaxed" dir="ltr" data-testid="studio-prompt">{prompt}</p> : null}
       </div>

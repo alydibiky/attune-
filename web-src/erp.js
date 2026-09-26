@@ -625,7 +625,11 @@ export function designMessages(description, { currency = "EGP" } = {}) {
     { role: "system", content: `You design the database of a small business's ERP system, like an expert Microsoft Access developer. Reply with JSON only, no other text:
 {"name": "<short system name>", "currency": "${currency}", "tables": [{"name": "<table>", "fields": [{"name": "<field>", "type": "<type>", ...}]}]}
 Field types: ${TYPES_HELP}.
-Rules: 4 to 8 tables covering what this business really tracks (customers, what it sells or rents, orders or jobs, invoices and payments, stock, staff, expenses — only the ones that fit). 4 to 10 fields per table, most important first; the first field is the record's name or number. Use link fields to connect tables (an order links to its customer). Use choice for statuses with realistic options. Use formula for totals. Every table and field name in ${designLang(description)} (never Spanish or any other language unless the description is written in it).
+Rules (design it like a senior ERP consultant — detailed and FULLY CONNECTED):
+- 6 to 10 tables covering what this business really tracks: master data (customers, suppliers, products or equipment, staff, sites…) and the transactions that use them (orders or jobs, invoices, payments, purchases, stock moves, maintenance, expenses — only the ones that fit).
+- 5 to 12 fields per table, most important first; the first field is the record's name or its number (auto with a prefix like "INV-").
+- EVERY transaction table links to the records it is about: an invoice links to its customer (and its job), a payment links to its invoice, a purchase links to its supplier, a stock move links to its product. Use "link" fields for this — never a text field holding another table's name or ID.
+- Use choice for statuses with realistic options, date for dates, money for amounts, formula for totals, balances and durations (e.g. [Qty] * [Unit price], [Total] - [Paid], DAYS([End], [Start]) + 1). Every table and field name in ${designLang(description)} (never Spanish or any other language unless the description is written in it).
 Example: {"name":"Bakery","currency":"EGP","tables":[{"name":"Products","fields":[{"name":"Product","type":"text"},{"name":"Price","type":"money"}]},{"name":"Orders","fields":[{"name":"Order no","type":"auto","prefix":"ORD-"},{"name":"Product","type":"link","link":"Products"},{"name":"Qty","type":"number"},{"name":"Unit price","type":"money"},{"name":"Total","type":"formula","formula":"[Qty] * [Unit price]"},{"name":"Status","type":"choice","options":["New","Paid","Delivered"]}]}]}` },
     { role: "user", content: String(description || "").trim().slice(0, 2000) },
   ];
@@ -916,4 +920,53 @@ export function saveSaved(sys, kind, item) {
   return { ...sys, [kind]: [item, ...list].slice(0, 30), updated: Date.now() };
 }
 export function removeSaved(sys, kind, id) { return { ...sys, [kind]: (sys[kind] || []).filter((x) => x.id !== id), updated: Date.now() }; }
+
+// ---- connecting tables automatically (v5.19) --------------------------------------------
+/* A design where Jobs has a text field "Customer" (or "CustomerID", "Customer name",
+   "Supplier no.") while a Customers table exists is NOT connected — like Access, that
+   field should be a link. These find such fields and make them links. English and
+   common Arabic forms ("العميل" ↔ "العملاء", "المورد" ↔ "الموردين").              */
+const AR_PLURALS = { "عملاء": "عميل", "موردين": "مورد", "موردون": "مورد", "منتجات": "منتج", "موظفين": "موظف", "موظفون": "موظف", "مشاريع": "مشروع", "فواتير": "فاتوره", "طلبات": "طلب", "اصناف": "صنف", "معدات": "معده", "اوناش": "ونش", "سائقين": "سائق", "مخازن": "مخزن", "فروع": "فرع", "عقود": "عقد", "مواقع": "موقع" };
+function stem(name) {
+  let k = key(name).replace(/^ال/, "");
+  if (AR_PLURALS[k]) return AR_PLURALS[k];
+  if (/[a-z]/.test(k)) k = k.replace(/ies$/, "y").replace(/(ch|sh|x|ss)es$/, "$1").replace(/s$/, "");
+  return k;
+}
+function refBase(fieldName) {
+  // "CustomerID", "Customer no.", "customer_name", "رقم العميل" → "customer" / "عميل"
+  let k = key(fieldName).replace(/^(رقم|اسم|كود)/, "").replace(/^ال/, "");
+  k = k.replace(/(id|no|number|num|code|ref|name)$/, "");
+  return stem(k);
+}
+/** For a spec (by name): which fields should be links. → [{ table, field, to }] */
+export function findConnections(spec) {
+  const sp = normalizeSpec(spec), out = [];
+  const byStem = new Map(sp.tables.map((t) => [stem(t.name), t.name]));
+  for (const t of sp.tables) {
+    t.fields.forEach((f, i) => {
+      if (i === 0 || f.type === "link" || f.type === "formula" || f.type === "bool" || f.type === "date" || f.type === "money") return;
+      const b = refBase(f.name); if (!b || b.length < 3) return;
+      const to = byStem.get(b);
+      if (to && stem(to) !== stem(t.name)) out.push({ table: t.name, field: f.name, to });
+    });
+  }
+  return out;
+}
+/** A spec with those fields turned into links. */
+export function autoConnect(spec) {
+  const cons = findConnections(spec);
+  if (!cons.length) return { spec, added: [] };
+  const sp = normalizeSpec(spec);
+  for (const c of cons) {
+    const t = sp.tables.find((x) => x.name === c.table), f = t && t.fields.find((x) => x.name === c.field);
+    if (f) { f.type = "link"; f.link = c.to; delete f.options; delete f.prefix; }
+  }
+  return { spec: { ...spec, ...sp, tables: sp.tables }, added: cons };
+}
+/** For an existing system: the design operations that connect it (shown first, then applied). */
+export function connectOps(sys) {
+  const spec = { name: sys.name, tables: sys.tables.map((t) => ({ name: t.name, fields: t.fields.map((f) => ({ name: f.name, type: f.type, link: f.link && (sys.tables.find((x) => x.id === f.link) || {}).name })) })) };
+  return findConnections(spec).map((c) => ({ op: "changeType", table: c.table, field: c.field, type: "link", link: c.to }));
+}
 

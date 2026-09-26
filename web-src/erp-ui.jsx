@@ -138,7 +138,10 @@ function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
       if (!spec) { const t = E.guessTemplate(desc); if (t) { spec = t.spec; how = "template"; } }
       if (!spec) setErr(tr("The model didn't produce a usable design. Try again, describe it differently, or start from a template."));
       else {
-        setDraft(E.systemFromSpec({ ...spec, business: desc }));
+        // v5.19: fields that name another table become real links
+        const ac = E.autoConnect(spec);
+        setDraft(E.systemFromSpec({ ...ac.spec, business: desc }));
+        if (ac.added.length) flash(tr("Connected {n} fields to their tables", { n: ac.added.length }));
         if (how === "template") flash(tr("Started from the closest template — change anything you like"));
       }
     } catch (e) { setErr(String(e.message || e)); }
@@ -464,6 +467,11 @@ function DesignTab({ sys, table, apply, llm, flash }) {
         <p className="text-[12px] text-slate-300 font-medium mb-1">{tr("Connections between tables")}</p>
         {rels.length ? rels.map((r, i) => <p key={i} className="text-[12px] text-slate-400" dir="auto">{r.fromName} · <span className="text-slate-300">{r.fieldName}</span> → <span className="text-teal-300">{r.toName}</span></p>)
           : <p className="text-[12px] text-slate-500">{tr("None yet — add a field of type “Link to another table”, or ask below: “connect Jobs to Customers”.")}</p>}
+        {(() => { const ops = E.connectOps(sys); return ops.length ? (
+          <button className={primary + " mt-2 flex items-center gap-1"} data-testid="erp-connect" onClick={() => {
+            const r = apply(ops, tr("Connect the tables"));
+            if (r.done.length) flash(tr("Connected {n} fields — Undo (top) puts them back", { n: r.done.length }));
+          }}><Sparkles size={13} />{tr("Connect the tables for me ({n})", { n: ops.length })}</button>) : null; })()}
       </div>
       {llm ? (
         <div className="rounded-xl border border-teal-900 bg-teal-500/5 p-2.5 space-y-2">

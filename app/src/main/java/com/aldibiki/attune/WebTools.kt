@@ -25,7 +25,7 @@ object WebTools {
 
     private const val UA =
         "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36"
-    private val pool = Executors.newFixedThreadPool(4)
+    private val pool = Executors.newFixedThreadPool(6)
 
     private fun isArabic(s: String) = s.any { it in '؀'..'ۿ' }
 
@@ -120,8 +120,30 @@ object WebTools {
                 .timeout(9_000).maxBodySize(2_000_000).followRedirects(true).get()
             doc.select("script,style,noscript,nav,header,footer,aside,form,iframe,svg,button,.ad,.ads,.advert,[role=navigation]").remove()
             val main = doc.selectFirst("article") ?: doc.selectFirst("main") ?: doc.body() ?: return ""
-            main.text().replace(Regex("\\s+"), " ").trim().take(maxChars)
+            // v5.19: line by line, with TABLES KEPT AS ROWS ("Trim | hp | Nm | price") —
+            // spec sheets live in tables, and flattening them (or reading only the
+            // first 2,200 characters) is why answers missed trims and figures.
+            val s = structured(main, maxChars)
+            if (s.length >= 300) s else main.text().replace(Regex("\\s+"), " ").trim().take(maxChars)
         } catch (e: Exception) { "" }
+    }
+
+    private val BLOCKS = setOf("li", "tr", "p", "dd", "dt", "blockquote", "figcaption", "pre")
+    private fun structured(main: org.jsoup.nodes.Element, maxChars: Int): String {
+        val sb = StringBuilder()
+        for (el in main.select("h1,h2,h3,h4,h5,p,li,tr,dt,dd,blockquote,pre,figcaption,caption")) {
+            val tag = el.tagName()
+            // a <p> inside an <li> (etc.) is already part of its parent's line
+            if (tag != "tr" && el.parents().any { it.tagName() in BLOCKS }) continue
+            val line = if (tag == "tr") el.children().filter { it.tagName() == "th" || it.tagName() == "td" }
+                    .joinToString(" | ") { it.text().replace(Regex("\\s+"), " ").trim() }.trim(' ', '|')
+                else el.text().replace(Regex("\\s+"), " ").trim()
+            if (line.length < 2) continue
+            if (tag.length == 2 && tag[0] == 'h') sb.append("\n## ")
+            sb.append(line).append('\n')
+            if (sb.length >= maxChars) break
+        }
+        return sb.toString().trim().take(maxChars)
     }
 
     /**
@@ -141,20 +163,22 @@ object WebTools {
             if (hits.isEmpty() && why.isEmpty()) why = "DuckDuckGo returned nothing"
         }
 
-        val n = pages.coerceIn(0, 4)
+        // v5.19: up to 6 pages, each read in full (16,000 characters) — the page
+        // picks the passages that answer the question (webrank.js).
+        val n = pages.coerceIn(0, 6)
         if (n > 0 && hits.isNotEmpty()) {
-            val jobs = hits.take(n).map { h -> pool.submit(Callable { h to pageText(h.url) }) }
+            val jobs = hits.take(n).map { h -> pool.submit(Callable { h to pageText(h.url, 16_000) }) }
             for (f in jobs) {
                 try {
-                    val (h, text) = f.get(12, TimeUnit.SECONDS)
-                    if (text.length > h.text.length + 80) h.text = (h.text + "\n" + text).take(2400)
+                    val (h, text) = f.get(14, TimeUnit.SECONDS)
+                    if (text.length > h.text.length + 80) h.text = (h.text + "\n" + text).take(16_000)
                 } catch (e: Exception) { }
             }
         }
 
         val arr = JSONArray()
         for (h in hits) arr.put(JSONObject().put("title", h.title).put("url", h.url)
-            .put("text", h.text.take(2400)).put("source", h.source))
+            .put("text", h.text.take(16_000)).put("source", h.source))
         return JSONObject().put("hits", arr).put("via", via).put("why", why)
     }
 

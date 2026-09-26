@@ -2001,4 +2001,13 @@ export const AR = {
   "The picture could not be made. Open Engine → Engine log and send me what it says.": "الصورة متعملتش. افتح المحرك ← سجل المحرك وابعتلي اللي مكتوب فيه.",
   "Multi-token prediction (faster writing)": "التنبؤ بأكثر من كلمة (كتابة أسرع)",
   "Off by default: on some phones it doubles words and digits (“ItIt is is”, “20205”). Turn it on only if answers stay correct.": "مقفول افتراضيًا: على بعض الموبايلات بيكرر كلمات وأرقام («ItIt is is»، «20205»). شغّله بس لو الإجابات فضلت صحيحة.",
+  // ---- v5.19 ----
+  "The last picture didn't finish:": "آخر صورة ماكملتش:",
+  "Connected {n} fields to their tables": "اتربط {n} حقول بجداولها",
+  "Connect the tables for me ({n})": "اربط الجداول بنفسك ({n})",
+  "Connected {n} fields — Undo (top) puts them back": "اتربط {n} حقول — زر التراجع (فوق) يرجّعها",
+  "Connect the tables": "ربط الجداول",
+  "Something went wrong on this screen.": "حصلت مشكلة في الشاشة دي.",
+  "Your chats and data are safe. Try again — if it keeps happening, send me this message.": "محادثاتك وبياناتك في أمان. جرّب تاني — ولو اتكررت ابعتلي الرسالة دي.",
+  "Try again": "جرّب تاني",
 };

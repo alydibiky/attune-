@@ -668,7 +668,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
         }
         onStatus("Searching the web…");
-        const look = await api.webLookup(query);
+        const look = await api.webLookup(query, asked + " " + query);
         if (runRef.current !== run) return;
         if (look.hits && look.hits.length) {
           sources = look.hits; via = look.via;

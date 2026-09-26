@@ -128,11 +128,22 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         GenService.set(ctx.applicationContext, on)
     }
 
+    /** A line from the page into Engine → Engine log (screen errors). (v5.19) */
+    @JavascriptInterface
+    fun logLine(text: String) {
+        try { java.io.File(ctx.filesDir, "engine.log").appendText("\n${java.util.Date()}: ${text.take(500)}\n") } catch (e: Exception) {}
+    }
+
+    /** Studio's Stop: the only way a picture is stopped. (v5.19) */
+    @JavascriptInterface
+    fun cancelImage(id: String) { imageJobs.remove(id)?.cancel() }
+
     @JavascriptInterface
     fun cancel(id: String) {
         cancels[id]?.set(true)
         FastEngine.cancel(id)
-        imageJobs.remove(id)?.cancel()
+        // (pictures are NOT stopped here any more — only by cancelImage, from
+        //  Studio's own Stop button; a stray cancel ended pictures silently. v5.19)
         conns.remove(id)?.let { c -> pool.execute { try { c.disconnect() } catch (e: Exception) {} } }
     }
 
@@ -620,7 +631,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun imageInfo(): String = JSONObject()
         .put("built", ImageEngine.built(ctx)).put("gpuBuilt", ImageEngine.gpuBuilt(ctx))
-        .put("cpuOnly", ImageEngine.cpuOnly(ctx)).put("note", ImageEngine.note(ctx))
+        .put("cpuOnly", ImageEngine.cpuOnly(ctx)).put("note", ImageEngine.note(ctx)).put("lastError", ImageEngine.lastError(ctx))
         .put("lastBackend", ImageEngine.lastBackend)
         .put("packs", ImageEngine.packs(ctx))
         .put("ramGB", DeviceInfo.ramGB(ctx)).put("availRamGB", DeviceInfo.availRamBytes(ctx) / 1e9)
@@ -671,8 +682,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             try {
                 GenService.set(ctx.applicationContext, true)
                 val r = ImageEngine.imagine(ctx, JSONObject(arg), { imageProgress(id, it) }, { j -> if (j != null) imageJobs[id] = j else imageJobs.remove(id) })
+                ImageEngine.setLastError(ctx, "")
                 resolve(id, imageResult(r))
             } catch (e: Exception) {
+                if (e.message != "Stopped") ImageEngine.setLastError(ctx, e.message ?: e.javaClass.simpleName)
                 // v5.17: every failed picture leaves its reason in Engine → Engine log.
                 try { java.io.File(ctx.filesDir, "engine.log").appendText("\nStudio (${java.util.Date()}): ${e.javaClass.simpleName}: ${e.message}\n") } catch (x: Exception) {}
                 reject(id, e.message?.takeIf { it.isNotBlank() } ?: "The picture could not be made (${e.javaClass.simpleName})")

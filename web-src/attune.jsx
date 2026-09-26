@@ -21,6 +21,8 @@ import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { skillFor } from "./skills.js";
+import { Guard } from "./guard.jsx";
+import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
 import { detectLoop, trimLoop, detectDegenerate } from "./quality.js";
 import { verifyMath, looksLikeMathProblem, arithmeticSlips } from "./verify.js";
@@ -5737,7 +5739,13 @@ async function byoLookup(q, cfg) {
   return [];
 }
 
-async function webLookup(q) {
+async function webLookup(q, question) {
+  const out0 = await webLookupRaw(q);
+  // v5.19: whole pages come back; keep the passages that answer the question.
+  if (out0.hits && out0.hits.length) out0.hits = rankPassages(question || q, out0.hits);
+  return out0;
+}
+async function webLookupRaw(q) {
   const cfg = searchLoad();
   const out = { hits: [], via: "none", why: "" };
   // Android app: search natively. DuckDuckGo needs no key; Brave uses yours.
@@ -5746,12 +5754,22 @@ async function webLookup(q) {
   // opened leave the phone — never the conversation or memory.
   if (NATIVE) {
     const provider = cfg.provider === "brave" && cfg.key ? "brave" : "duckduckgo";
+    // v5.19: Wikipedia too — a reliable second source for names, specs and
+    // dates — added when the search didn't already have it.
     try {
-      const r = await nativeCall("search", { q, provider, key: cfg.key || "", pages: 3 });
+      const r = await nativeCall("search", { q, provider, key: cfg.key || "", pages: 6 });
       out.hits = (r.hits || []).filter((h) => h && h.url && (h.text || "").length > 40);
       out.via = r.via || provider;
       if (!out.hits.length) out.why = r.why || "Nothing came back for that.";
     } catch (e) { out.why = String(e.message || e); }
+    if (out.hits.length && !/offline lock/i.test(out.why)) {
+      try {
+        // (asked only after the search went through — never past the offline lock)
+        const wk = await Promise.race([keylessLookup(q).catch(() => []), new Promise((r) => setTimeout(() => r([]), 4000))]);
+        const have = new Set(out.hits.map((h) => String(h.url).replace(/^https?:\/\/(www\.|m\.)?/, "").toLowerCase()));
+        for (const w of wk.slice(0, 1)) if (!have.has(String(w.url).replace(/^https?:\/\/(www\.|m\.)?/, "").toLowerCase())) out.hits.push(w);
+      } catch (e) {}
+    }
     if (out.hits.length) return out;
     if (/offline lock/i.test(out.why)) return out;   // don't try another route
   }
@@ -5781,6 +5799,7 @@ const GROUNDED_RULES = `Answer ONLY from the passages below.
 - If the passages do not answer the question, do NOT just refuse. Say plainly what they DO show, in one or two sentences, with citations — for example "I found no record of a 1983 Lunar Incident between the USSR and Canada; the closest real events are the 1978 Kosmos 954 satellite crash in Canada [3] and the 1983 Soviet false-alarm incident [1]." If the question rests on something that the passages suggest never happened, say so directly.
 - Cite the source number in square brackets after each claim, like [1].
 - Copy every number, version and date EXACTLY as the passage writes it (never join or change digits).
+- Asked for ALL versions / trims / models / options: list EVERY one the passages name, each with its own figures (a table is best), and say plainly which ones or which figures the passages don't give — never fill a gap with a guess.
 - "Latest", "newest", "current": the answer is the HIGHEST version number / MOST RECENT date the passages mention; older ones are history. Titles count as passages too.
 - Answer in the language the question was asked in.
 - Shape: the direct answer first in **bold** (one line, with its citation), then the key details as short bullets. Comparing things ("is X the same as Y", "X vs Y") → verdict line, then a small table of the differences, each row cited.`;
@@ -6582,7 +6601,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.18";
+const PAGE_VERSION = "5.19";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -8121,7 +8140,7 @@ export default function App() {
           </div>
         ) : null}
 
-        {mode === "chat" ? (
+        <Guard key={"g-" + mode} name={mode}>{mode === "chat" ? (
           <ChatHome key="chat" api={chatApi} drawerOpen={drawerOpen} setDrawerOpen={setDrawerOpen} newChatSignal={newChatSignal}
             composerSeed={chatSeed} clearComposerSeed={() => setChatSeed("")}
             spaceSeed={spaceSeed} clearSpaceSeed={() => setSpaceSeed(null)} openChatId={openChatId} clearOpenChat={() => setOpenChatId(null)} />
@@ -9883,7 +9902,7 @@ export default function App() {
               </>) : (<div className="flex-1 flex items-center justify-center text-center text-slate-600 text-sm border border-dashed border-slate-800 rounded-xl min-h-[12rem] p-6">{tr("Paste a wordy prompt and hit")} <span className="text-teal-400 mx-1">{tr("AI Compress")}</span> {tr("— it thinks about meaning, not just filler words.")}</div>)}
             </section>
           </div>
-        )}
+        )}</Guard>
 
         {history.length > 0 && mode === "improve" && (
           <div className="mt-5 bg-slate-900 rounded-2xl border border-slate-800 p-5">

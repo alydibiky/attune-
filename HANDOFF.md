@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.18**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.19**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.18**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.18** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.19** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -103,6 +103,7 @@ web-src/             SOURCE of the page — edit here, then `bash web-src/build.
   spaces.js, spaces-ui.jsx                          (v5.14) Assistants, Projects, Artifacts (viewer + library), Themes
   skills.js                                         (v5.15) answer recipes per question type
   erp-app.js                                        (v5.18) Business system → standalone .html app and back
+  webrank.js, guard.jsx                             (v5.19) web passage ranking; screen error boundary
   actions.js, actions-ui.jsx                        reminders & phone actions (syncToPhone spares daily-* ids)
   backup.js, backup-ui.jsx, crane.js, crane-ui.jsx, cycle.jsx, calc.js, speed-ui.jsx, yusr/ (Money)
   i18n.js, i18n-ar.js                               tr("English") → Arabic dictionary (~1,800 entries)
@@ -115,9 +116,9 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 
 ## 4. How to build and test
 1. Edit `web-src/*`, then `bash web-src/build.sh` (Node 18+, Python 3; installs esbuild 0.28.2 + Tailwind 4.3.3 locally). Output: `app/src/main/assets/www/index.html` — **commit it** (CI checks it exists).
-2. **Unit tests:** `node tests/unit/run.mjs` → 14 files, all green at v5.18.
+2. **Unit tests:** `node tests/unit/run.mjs` → 15 files, all green at v5.19.
 3. **Browser end-to-end:** `bash tests/setup.sh` once (builds a desktop llama-server at the same pin + a tiny model), then from `tests/`:
-   `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py`, `e2e_v513.py`, `e2e_v514.py`, `e2e_v516.py`, `e2e_v517.py`, `e2e_v518.py` — **all green at v5.18**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
+   `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py`, `e2e_v513.py`, `e2e_v514.py`, `e2e_v516.py`, `e2e_v517.py`, `e2e_v518.py`, `e2e_v519.py` — **all green at v5.19**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
    Mock features (harness.py): `__mock.fakeQueue` (canned answers, streamed; skipped for warm-up requests with `max_tokens ≤ 2`), `slowQueue`, `chatCancel`, `cancelled`, `bodies` (every request body), `notes` (schedule calls — **keeps every call, not one per id**), `files` (saveFile), stash. v5.12 tests add `N.news` and `N.setWidget` mocks (`NEWS_MOCK` in e2e_v512_more.py).
 4. **Kotlin compile check without an Android SDK** (dl.google.com is blocked in the sandbox): kotlinc **2.4.0** (GitHub release) + `android-35/android.jar` (sparse clone of github.com/Reginer/aosp-android-jar) + hand-written stubs for androidx, jsoup, FileProvider, InternalStoragePathHandler, LiteRT-LM (signature-exact incl. RepetitionPenaltyConfig/NoRepeatNgramConfig) and **R** (add new `R.layout/R.id/R.drawable` entries by hand when you add resources). The stub set lived in the old session's scratchpad and is **gone** — rebuild it if you change Kotlin, or rely on CI.
 5. **APK:** push to `main` → Actions builds (~8+ min; longer when caches are cold) → Ali downloads `attune-apk`. If you can't push: bundle (`git bundle create x.bundle <origin-main-sha>..main`) + zip + paste-ready prompt.
@@ -140,6 +141,7 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 - **v5.16** — type while it answers (queue), smarter follow-ups, lighter streaming — see §5.5.
 - **v5.17** — Ali's v5.16 phone test + Business queries/forms/rename + Copilot + versioning — see §5.6.
 - **v5.18** — doubled words/digits (MTP off), junk-loop guard, websites on topic, Studio never silent, Business apps exported/imported — see §5.7.
+- **v5.19** — web reads whole pages + passage ranking, Studio stray-cancel fix, connected ERP designs, screen error boundary — see §5.8.
 
 ### 5.1 v5.12 in detail (the part nobody has tested on the phone yet)
 - **Corrections checked before learning** (`checkCorrection`, reason.js; UI in chat.jsx `checkTeach/saveTeach`): 👎 → "Check & teach". Maths question → `verifyMath(..., explain:false)` computes the answer, compared by number (±0.5%). Otherwise 2 independent re-solves (temp 0.2 / 0.7; a 3rd at 0.5 if they disagree) returning `VERDICT: RIGHT|WRONG|PARTLY|PREFERENCE` + `REASON:` + `ANSWER:`. RIGHT/PREFERENCE → saved (`checked` field). WRONG/PARTLY/unsure → reason box (`data-testid=teach-verdict`) with "Learn the checked answer" (partly), "I'm sure — learn mine anyway" (`teach-force`), "Edit my correction".
@@ -233,6 +235,13 @@ Ali asked for code that makes the models stronger. Weights can't change on the p
 - **Business**: design preview gets "+ field" per table and an AI box ("Change the design in words") using `changeMessages` + `applyOps` on the draft. **Export as an app** (`erp-app.js` `buildApp`): one .html with the system JSON in `<script type="application/json" id="attune-erp">` (JSON escapes `< > &`) and a self-contained runtime (the `runtime` function, embedded via `toString()`): tabs, search, add/edit/delete, auto numbers, formulas (own small parser), links, totals, CSV, localStorage per system, "Save a copy with my data" (re-embeds the records). Trial systems keep `freeRows` in the app. **Open an app file** on the Business home (`readApp`) replaces the same system (by id) with the file's data, keeping this phone's licence (a file can't carry an activation). **Excel workbook** of all tables via Pyodide openpyxl → base64 → `saveFile({b64})` (NativeBridge.saveFile now writes base64 when given).
 - Version 5.18 (versionCode 18, PAGE_VERSION "5.18").
 - Tests: `unit/v518.test.mjs`, `e2e_v518.py` (uses the exported app in a real tab: adds a record, formula 3 × 18,000 = 54,000, JOB-0002, reload, save a copy, re-import).
+
+### 5.8 v5.19 — "make web search accurate, FIX Studio, expert connected ERPs, stronger app" (26 Sep 2026)
+- **Web search**: the model used to see the first 2,200 characters of each page (menus + intro; spec tables never reached it). Now `WebTools.pageText` builds the text line by line with **tables as "cell | cell" rows** (h1–h5 as "## heading"), up to 16,000 chars; `search()` reads up to **6** pages (pool 6). Page side, `webrank.js` `rankPassages(question, hits)` splits into ~450-char passages with their heading, scores question words (short words as whole words, names ×2) + numbers/table rows when the question asks for figures (only on-topic passages), minus boilerplate, and packs the best within 7,000 chars per answer, sources kept in page order. `webLookup(q, question)` = `webLookupRaw` + ranking; one Wikipedia hit is added after the search succeeds (never past the offline lock). GROUNDED_RULES: "asked for ALL versions/trims … list EVERY one the passages name … say which figures the passages don't give".
+- **Studio "does nothing"**: the silent end was a rejected `imagine` with "Stopped". `NativeBridge.cancel(id)` — used by chat, downloads and the loop guard — also cancelled any image job with that id. Now only `cancelImage(id)` (Studio's Stop) can stop a picture. The chat model is ALWAYS paused while drawing on phones < 20 GB (the fast engine's GPU memory isn't in "available"). The last failure is kept (`image_last_error`, shown in Studio as "The last picture didn't finish: …"). If Ali still gets no picture, the message on screen now says why — act on that.
+- **Connected ERPs**: the design prompt asks for 6–10 tables, "FULLY CONNECTED" (every transaction table links to what it refers to), formulas for totals/balances/durations. `findConnections`/`autoConnect` (erp.js) turn fields named after another table ("SupplierID", "Customer name", "Part", Arabic "العميل"→"العملاء") into links — automatically on new designs, and via "Connect the tables for me (n)" in Design for existing ones (`connectOps`; `changeType → link` converts existing text values to record links; Undo reverts).
+- **Stability**: `guard.jsx` `Guard` error boundary wraps the page switch (keyed by mode): a crashing screen shows "Something went wrong on this screen" + Try again instead of blanking the whole app; logged via `NativeBridge.logLine` into engine.log.
+- Version 5.19. Tests: `unit/v519.test.mjs`, `e2e_v519.py`.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

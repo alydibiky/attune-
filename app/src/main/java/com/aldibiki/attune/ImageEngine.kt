@@ -40,6 +40,9 @@ object ImageEngine {
     fun setCpuOnly(ctx: Context, on: Boolean) { prefs(ctx).edit().putBoolean("image_cpu", on).putString("image_note", "").apply() }
     fun note(ctx: Context) = prefs(ctx).getString("image_note", "") ?: ""
     private fun setNote(ctx: Context, s: String) = prefs(ctx).edit().putString("image_note", s).apply()
+    /** The last picture that failed, and why — shown by Studio even if the page missed the answer. (v5.19) */
+    fun lastError(ctx: Context) = prefs(ctx).getString("image_last_error", "") ?: ""
+    fun setLastError(ctx: Context, s: String) = prefs(ctx).edit().putString("image_last_error", s).apply()
     @Volatile var lastBackend: String = ""
         private set
 
@@ -216,7 +219,10 @@ object ImageEngine {
         val files = ImageRun.Files(diffusion.path, packFile(ctx, pack, "llm")?.path, packFile(ctx, pack, "vae")?.path)
         val need = listOfNotNull(diffusion, packFile(ctx, pack, "llm"), packFile(ctx, pack, "vae")).sumOf { it.length() } + 1_500_000_000L
         var paused = false
-        if (DeviceInfo.availRamBytes(ctx) < need && Engine.state == Engine.State.READY) {
+        // v5.19: on phones under 20 GB the chat model is ALWAYS paused while
+        // drawing (the fast engine's GPU memory isn't counted in "available",
+        // so both models were squeezed in and the picture engine died).
+        if ((DeviceInfo.availRamBytes(ctx) < need || DeviceInfo.ramGB(ctx) < 20) && Engine.state == Engine.State.READY) {
             val lock = java.util.concurrent.CountDownLatch(1)
             Engine.stop { lock.countDown() }
             lock.await(90, java.util.concurrent.TimeUnit.SECONDS)
