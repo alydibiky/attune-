@@ -5739,6 +5739,7 @@ async function byoLookup(q, cfg) {
   return [];
 }
 
+const isWiki = (h) => /(^|\.)wikipedia\.org\//i.test(String((h && h.url) || "").replace(/^https?:\/\//, ""));
 async function webLookup(q, question) {
   const out0 = await webLookupRaw(q);
   // v5.19: whole pages come back; keep the passages that answer the question.
@@ -5754,22 +5755,15 @@ async function webLookupRaw(q, pages = 6) {
   // opened leave the phone — never the conversation or memory.
   if (NATIVE) {
     const provider = cfg.provider === "brave" && cfg.key ? "brave" : "duckduckgo";
-    // v5.19: Wikipedia too — a reliable second source for names, specs and
-    // dates — added when the search didn't already have it.
     try {
       const r = await nativeCall("search", { q, provider, key: cfg.key || "", pages });
       out.hits = (r.hits || []).filter((h) => h && h.url && (h.text || "").length > 40);
       out.via = r.via || provider;
       if (!out.hits.length) out.why = r.why || "Nothing came back for that.";
     } catch (e) { out.why = String(e.message || e); }
-    if (out.hits.length && !/offline lock/i.test(out.why)) {
-      try {
-        // (asked only after the search went through — never past the offline lock)
-        const wk = await Promise.race([keylessLookup(q).catch(() => []), new Promise((r) => setTimeout(() => r([]), 4000))]);
-        const have = new Set(out.hits.map((h) => String(h.url).replace(/^https?:\/\/(www\.|m\.)?/, "").toLowerCase()));
-        for (const w of wk.slice(0, 1)) if (!have.has(String(w.url).replace(/^https?:\/\/(www\.|m\.)?/, "").toLowerCase())) out.hits.push(w);
-      } catch (e) {}
-    }
+    // v5.20.1 (Ali): Wikipedia is NOT treated as a reliable source — it is no
+    // longer added to results, and a Wikipedia page the search returns is read last.
+    out.hits = [...out.hits.filter((h) => !isWiki(h)), ...out.hits.filter(isWiki)];
     if (out.hits.length) return out;
     if (/offline lock/i.test(out.why)) return out;   // don't try another route
   }
@@ -5777,12 +5771,7 @@ async function webLookupRaw(q, pages = 6) {
     try { out.hits = await byoLookup(q, cfg); out.via = cfg.provider; }
     catch (e) { out.why = String(e.message || e); }
   }
-  if (!out.hits.length) {
-    try {
-      const k = await keylessLookup(q);
-      if (k.length) { out.hits = k; out.via = "wikipedia"; }
-    } catch (e) { out.why = out.why || String(e.message || e); }
-  }
+  // (no Wikipedia-only fallback any more: Ali doesn't count it as a reliable source)
   if (!out.hits.length && !out.why) out.why = "Nothing came back for that.";
   return out;
 }
@@ -6601,7 +6590,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.20";
+const PAGE_VERSION = "5.21";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [

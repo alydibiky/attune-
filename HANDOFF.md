@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.20**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.21**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.20**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.20** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.21** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -144,6 +144,7 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 - **v5.18** — doubled words/digits (MTP off), junk-loop guard, websites on topic, Studio never silent, Business apps exported/imported — see §5.7.
 - **v5.19** — web reads whole pages + passage ranking, Studio stray-cancel fix, connected ERP designs, screen error boundary — see §5.8.
 - **v5.20** — deep web research (page by page → checked notes → missing → full answer), every Studio failure path covered — see §5.9.
+- **v5.21** — Ali: Wikipedia is NOT a reliable source — no longer added to results or used as a fallback; Wikipedia pages from a search are read and ranked last (`isWiki` in attune.jsx, `wiki` flag in webrank.js).
 
 ### 5.1 v5.12 in detail (the part nobody has tested on the phone yet)
 - **Corrections checked before learning** (`checkCorrection`, reason.js; UI in chat.jsx `checkTeach/saveTeach`): 👎 → "Check & teach". Maths question → `verifyMath(..., explain:false)` computes the answer, compared by number (±0.5%). Otherwise 2 independent re-solves (temp 0.2 / 0.7; a 3rd at 0.5 if they disagree) returning `VERDICT: RIGHT|WRONG|PARTLY|PREFERENCE` + `REASON:` + `ANSWER:`. RIGHT/PREFERENCE → saved (`checked` field). WRONG/PARTLY/unsure → reason box (`data-testid=teach-verdict`) with "Learn the checked answer" (partly), "I'm sure — learn mine anyway" (`teach-force`), "Edit my correction".
@@ -239,7 +240,7 @@ Ali asked for code that makes the models stronger. Weights can't change on the p
 - Tests: `unit/v518.test.mjs`, `e2e_v518.py` (uses the exported app in a real tab: adds a record, formula 3 × 18,000 = 54,000, JOB-0002, reload, save a copy, re-import).
 
 ### 5.8 v5.19 — "make web search accurate, FIX Studio, expert connected ERPs, stronger app" (26 Sep 2026)
-- **Web search**: the model used to see the first 2,200 characters of each page (menus + intro; spec tables never reached it). Now `WebTools.pageText` builds the text line by line with **tables as "cell | cell" rows** (h1–h5 as "## heading"), up to 16,000 chars; `search()` reads up to **6** pages (pool 6). Page side, `webrank.js` `rankPassages(question, hits)` splits into ~450-char passages with their heading, scores question words (short words as whole words, names ×2) + numbers/table rows when the question asks for figures (only on-topic passages), minus boilerplate, and packs the best within 7,000 chars per answer, sources kept in page order. `webLookup(q, question)` = `webLookupRaw` + ranking; one Wikipedia hit is added after the search succeeds (never past the offline lock). GROUNDED_RULES: "asked for ALL versions/trims … list EVERY one the passages name … say which figures the passages don't give".
+- **Web search**: the model used to see the first 2,200 characters of each page (menus + intro; spec tables never reached it). Now `WebTools.pageText` builds the text line by line with **tables as "cell | cell" rows** (h1–h5 as "## heading"), up to 16,000 chars; `search()` reads up to **6** pages (pool 6). Page side, `webrank.js` `rankPassages(question, hits)` splits into ~450-char passages with their heading, scores question words (short words as whole words, names ×2) + numbers/table rows when the question asks for figures (only on-topic passages), minus boilerplate, and packs the best within 7,000 chars per answer, sources kept in page order. `webLookup(q, question)` = `webLookupRaw` + ranking; (v5.21: Wikipedia is no longer added — Ali doesn't treat it as reliable.) GROUNDED_RULES: "asked for ALL versions/trims … list EVERY one the passages name … say which figures the passages don't give".
 - **Studio "does nothing"**: the silent end was a rejected `imagine` with "Stopped". `NativeBridge.cancel(id)` — used by chat, downloads and the loop guard — also cancelled any image job with that id. Now only `cancelImage(id)` (Studio's Stop) can stop a picture. The chat model is ALWAYS paused while drawing on phones < 20 GB (the fast engine's GPU memory isn't in "available"). The last failure is kept (`image_last_error`, shown in Studio as "The last picture didn't finish: …"). If Ali still gets no picture, the message on screen now says why — act on that.
 - **Connected ERPs**: the design prompt asks for 6–10 tables, "FULLY CONNECTED" (every transaction table links to what it refers to), formulas for totals/balances/durations. `findConnections`/`autoConnect` (erp.js) turn fields named after another table ("SupplierID", "Customer name", "Part", Arabic "العميل"→"العملاء") into links — automatically on new designs, and via "Connect the tables for me (n)" in Design for existing ones (`connectOps`; `changeType → link` converts existing text values to record links; Undo reverts).
 - **Stability**: `guard.jsx` `Guard` error boundary wraps the page switch (keyed by mode): a crashing screen shows "Something went wrong on this screen" + Try again instead of blanking the whole app; logged via `NativeBridge.logLine` into engine.log.

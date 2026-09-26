@@ -69,7 +69,9 @@ export function rankPassages(question, hits, { budget = 7000, perSource = 2600 }
   const scored = (hits || []).map((h, hi) => {
     const ps = passages(h.text).map((p, i) => { const b = scorePassage(p, words, named, wantFigures); return { ...p, i, s: b + (i < 2 && b > 0 ? 0.3 : 0) }; });
     const titleHit = words.filter((w) => norm(h.title).includes(w)).length;
-    return { h, hi, ps, best: Math.max(0, ...ps.map((p) => p.s)) + titleHit * 0.5 };
+    // Wikipedia is not treated as a reliable source (Ali): it gets the leftover budget, after the others
+    const wiki = /(^|\.)wikipedia\.org\//i.test(String(h.url || "").replace(/^https?:\/\//, ""));
+    return { h, hi, ps, wiki, best: Math.max(0, ...ps.map((p) => p.s)) + titleHit * 0.5 - (wiki ? 100 : 0) };
   });
   // share the budget: better sources first, each gets at least a little
   const order = [...scored].sort((a, b) => b.best - a.best);
@@ -87,10 +89,10 @@ export function rankPassages(question, hits, { budget = 7000, perSource = 2600 }
     if (chosen.length) { pick.set(src.hi, chosen.sort((a, b) => a.i - b.i)); left -= used; }
   }
   const out = [];
-  for (const src of scored) {
+  for (const src of [...scored.filter((x) => !x.wiki), ...scored.filter((x) => x.wiki)]) {
     const ch = pick.get(src.hi);
     if (!ch) continue;
-    if (src.best <= 0 && out.length >= 2) continue;
+    if (src.best <= 0 && out.length >= 2 && !/wikipedia\.org/i.test(String(src.h.url))) continue;
     let lastHead = null;
     const text = ch.map((p) => { const h = p.head && p.head !== lastHead ? "[" + p.head + "] " : ""; lastHead = p.head; return h + p.text; }).join("\n");
     out.push({ ...src.h, text });
