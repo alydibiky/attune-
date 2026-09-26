@@ -75,7 +75,8 @@ object ImageEngine {
         val d = packDir(ctx, id).apply { mkdirs() }
         val list = a.getJSONArray("files")
         val parts = (0 until list.length()).map { list.getJSONObject(it) }
-        val total = parts.sumOf { it.optLong("size", 0) }
+        // exact sizes when known; otherwise the approximate size, only for the progress bar (v5.28)
+        val total = parts.sumOf { it.optLong("size", 0).takeIf { n -> n > 0 } ?: it.optLong("approx", 0) }
         val have = (d.listFiles() ?: emptyArray()).sumOf { it.length() }
         val free = DeviceInfo.freeStorageBytes(ctx)
         if (total > 0 && free >= 0 && total - have + 500L * 1024 * 1024 > free)
@@ -84,9 +85,17 @@ object ImageEngine {
         val files = JSONObject()
         for ((i, p) in parts.withIndex()) {
             val name = p.getString("name")
-            val rf = ModelStore.RemoteFile(name, p.getString("url"), p.optLong("size", -1))
             val stage = "Downloading ${i + 1} of ${parts.size}: ${p.optString("what", name)}"
-            ModelStore.downloadFile(rf, File(d, name), base, total, stage, onProgress, cancelled)
+            // v5.28: a file may list several links; one that doesn't exist (404) moves on to the next
+            val links = p.optJSONArray("urls")?.let { u -> (0 until u.length()).map { u.getString(it) } } ?: listOf(p.getString("url"))
+            var lastErr: IOException? = null
+            for (link in links) {
+                try {
+                    ModelStore.downloadFile(ModelStore.RemoteFile(name, link, p.optLong("size", -1)), File(d, name), base, total, stage, onProgress, cancelled)
+                    lastErr = null; break
+                } catch (e: ModelStore.NotFound) { lastErr = e; File(d, "$name.part").delete() }
+            }
+            lastErr?.let { throw IOException("The picture model could not be downloaded: ${it.message}. Check the connection and try again.") }
             base += File(d, name).length()
             files.put(p.getString("role"), name)
         }
@@ -166,6 +175,13 @@ object ImageEngine {
     // ---- running -----------------------------------------------------------------------
     private var gpuName: String? = null
     private var gpuChecked = false
+    /** v5.28 — "gpu" (the graphics chip works), "cpu" (it doesn't, or is switched off), or "" (not tried yet). */
+    fun gpuState(ctx: Context): String = when {
+        cpuOnly(ctx) || !gpuBuilt(ctx) -> "cpu"
+        lastBackend == "GPU" || (gpuChecked && gpuName != null) -> "gpu"
+        gpuChecked || lastBackend == "CPU" -> "cpu"
+        else -> ""
+    }
 
     private fun env(ctx: Context, gpu: Boolean): Map<String, String> {
         // The GPU program uses the phone's own OpenCL driver, which lives in /vendor.
@@ -282,8 +298,10 @@ object ImageEngine {
         packProblem(ctx, pack)?.let { throw IOException(it) }
         onProgress(ImageRun.Progress("check"))
         selfTest(ctx)?.let { throw IOException(it) }
-        val diffusion = packFile(ctx, pack, "diffusion") ?: throw IOException("Install the picture model first (Studio).")
-        val files = ImageRun.Files(diffusion.path, packFile(ctx, pack, "llm")?.path, packFile(ctx, pack, "vae")?.path)
+        // v5.28: "model" = one all-in-one file (SD-Turbo); "diffusion" + "llm" + "vae" = FLUX.2 klein
+        val whole = packFile(ctx, pack, "model")
+        val diffusion = whole ?: packFile(ctx, pack, "diffusion") ?: throw IOException("Install the picture model first (Studio).")
+        val files = ImageRun.Files(diffusion.path, packFile(ctx, pack, "llm")?.path, packFile(ctx, pack, "vae")?.path, whole != null)
         val need = listOfNotNull(diffusion, packFile(ctx, pack, "llm"), packFile(ctx, pack, "vae")).sumOf { it.length() } + 1_500_000_000L
         var paused = false
         // v5.19: on phones under 20 GB the chat model is ALWAYS paused while

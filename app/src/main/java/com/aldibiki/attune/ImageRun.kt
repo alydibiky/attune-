@@ -117,19 +117,21 @@ object ImageRun {
     }
 
     /** Model files for one picture. */
-    data class Files(val diffusion: String, val llm: String?, val vae: String?)
+    data class Files(val diffusion: String, val llm: String?, val vae: String?, val allInOne: Boolean = false)
 
     /** The command for one picture. `refImage` turns it into an edit of that picture. */
     fun genArgs(
         bin: String, f: Files, prompt: String, out: String, width: Int, height: Int, steps: Int, seed: Long,
         threads: Int, backend: String?, refImage: String?, cfg: Double = 1.0, lowMemory: Boolean = false,
     ): List<String> {
-        val a = arrayListOf(bin, "--diffusion-model", f.diffusion)
+        // an all-in-one checkpoint (SD-Turbo) is loaded with -m; FLUX.2 klein comes in three files
+        val a = if (f.allInOne) arrayListOf(bin, "-m", f.diffusion) else arrayListOf(bin, "--diffusion-model", f.diffusion)
         f.llm?.let { a += listOf("--llm", it) }
         f.vae?.let { a += listOf("--vae", it) }
         a += listOf("-p", prompt, "-o", out, "-W", width.toString(), "-H", height.toString(),
-            "--steps", steps.toString(), "--cfg-scale", cfg.toString(), "--sampling-method", "euler",
-            "-s", seed.toString(), "-t", threads.toString(), "--diffusion-fa")
+            "--steps", steps.toString(), "--cfg-scale", cfg.toString(), "--sampling-method", if (f.allInOne) "euler_a" else "euler",
+            "-s", seed.toString(), "-t", threads.toString())
+        if (!f.allInOne) a += "--diffusion-fa"
         // VAE in tiles above 1 megapixel: the same picture, far less memory at the end.
         if (width * height > 1024 * 1024) a += "--vae-tiling"
         if (backend != null) a += listOf("--backend", backend)

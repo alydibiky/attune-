@@ -9,10 +9,30 @@ export const STUDIO_KEY = "attune:studio:v1";
 // 1024 px, photo-real, and it can also EDIT a photo from an instruction.
 // Its text reader is Qwen3 4B; the VAE is FLUX.2's. All three: Apache-2.0.
 export const PACKS = {
+  // v5.28 — Ali: "13 minutes on the CPU and nothing was created". The 4B picture model needs
+  // a working graphics chip; on a phone CPU one picture takes 10–20+ minutes. Turbo is a
+  // small distilled model (SD-Turbo, one file, 2 steps at 512 px): about a minute on the
+  // CPU, seconds on a graphics chip. It is used by itself whenever the graphics chip isn't
+  // working. Several links are listed: one that doesn't exist (404) moves on to the next.
+  // Licence: Stability AI Community License (free for commercial use under $1M a year).
+  "turbo": {
+    id: "turbo", kind: "draw", label: "Studio Turbo", sizeGB: 2.2, needRam: 4, license: "Stability AI Community",
+    defaults: { steps: 2, cfg: 1 }, side: 512, fast: true,
+    quality: "Fast pictures on any phone: about a minute without a graphics chip, seconds with one. 512 px — great for ideas, drafts and posts.",
+    files: [
+      { role: "model", what: "fast picture model", name: "studio-turbo.gguf", approx: 2352000000,
+        url: "https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q4_0.gguf",
+        urls: [
+          "https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q4_0.gguf",
+          "https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q8_0.gguf",
+          "https://huggingface.co/gpustack/stable-diffusion-xl-1.0-turbo-GGUF/resolve/main/stable-diffusion-xl-1.0-turbo-Q4_1.gguf",
+        ] },
+    ],
+  },
   "klein-4b": {
-    id: "klein-4b", kind: "draw", label: "FLUX.2 klein 4B", sizeGB: 5.29, needRam: 8, license: "Apache-2.0",
+    id: "klein-4b", kind: "draw", label: "Studio Pro", sizeGB: 5.29, needRam: 8, license: "Apache-2.0",
     defaults: { steps: 4 },
-    quality: "Current photo quality in 4 steps: people, places, products and text in pictures. Also edits a photo you give it (“make it night”, “remove the car”).",
+    quality: "The best photo quality: people, places, products and text in pictures, 1024 px. Also edits a photo you give it (“make it night”, “remove the car”). Needs a working graphics chip — on the CPU a picture takes 10–20 minutes.",
     files: [
       { role: "diffusion", what: "drawing model", name: "flux-2-klein-4b-Q4_0.gguf", size: 2460378560,
         url: "https://huggingface.co/leejet/FLUX.2-klein-4B-GGUF/resolve/main/flux-2-klein-4b-Q4_0.gguf" },
@@ -26,9 +46,9 @@ export const PACKS = {
   // 4-bit (image models lose more to 4-bit than chat models do). For phones
   // with 12 GB or more — Studio picks it for them.
   "klein-4b-hq": {
-    id: "klein-4b-hq", kind: "draw", label: "FLUX.2 klein 4B · high quality", sizeGB: 7.13, needRam: 12, license: "Apache-2.0",
+    id: "klein-4b-hq", kind: "draw", label: "Studio Pro HD", sizeGB: 7.13, needRam: 12, license: "Apache-2.0",
     defaults: { steps: 4 },
-    quality: "The best pictures this phone can make: the 8-bit build of FLUX.2 klein — finer detail, cleaner faces, hands and text. Also edits your photos by instruction.",
+    quality: "Studio Pro at full precision: finer detail, cleaner faces, hands and text. Also edits your photos by instruction. Needs a working graphics chip and 12 GB RAM.",
     files: [
       { role: "diffusion", what: "drawing model (8-bit)", name: "flux-2-klein-4b-Q8_0.gguf", size: 4300629440,
         url: "https://huggingface.co/leejet/FLUX.2-klein-4B-GGUF/resolve/main/flux-2-klein-4b-Q8_0.gguf" },
@@ -95,11 +115,41 @@ export function cleanPrompt(s, fallback) {
 }
 
 export function packReady(info, id) { return !!(info && (info.packs || []).some((p) => p.id === id)); }
-/** The drawing pack to use: an installed one (high quality first), else the one to offer for this phone. */
-export function drawPack(info) {
-  if (packReady(info, "klein-4b-hq")) return { id: "klein-4b-hq", ready: true };
-  if (packReady(info, "klein-4b")) return { id: "klein-4b", ready: true };
-  return { id: info && info.ramGB >= 12 ? "klein-4b-hq" : "klein-4b", ready: false };
+const GPU_KEY = "attune:studio:gpu";
+/** Does the graphics chip work for pictures? true / false / null (not known yet). Remembered between runs. */
+export function gpuWorks(info) {
+  const st = info && info.gpuState;
+  try { if (st) localStorage.setItem(GPU_KEY, st); } catch (e) {}
+  let k = st;
+  if (!k) { try { k = localStorage.getItem(GPU_KEY) || ""; } catch (e) { k = ""; } }
+  return k === "gpu" ? true : k === "cpu" ? false : null;
+}
+const PRO = ["klein-4b-hq", "klein-4b"];
+/**
+ * The drawing pack to use. `choice`: what the person picked ("turbo" | "pro" | null).
+ * Without a working graphics chip the Pro model takes 10–20 minutes a picture, so Turbo is
+ * used (or offered) unless the person chose Pro. Editing a photo needs Pro.
+ * → { id, ready, why? }
+ */
+export function drawPack(info, choice = null, mode = "create") {
+  const ready = (id) => packReady(info, id);
+  const pro = PRO.find(ready);
+  const proOffer = info && info.ramGB >= 12 ? "klein-4b-hq" : "klein-4b";
+  if (mode === "edit") return pro ? { id: pro, ready: true } : { id: proOffer, ready: false };
+  if (choice === "pro") return pro ? { id: pro, ready: true } : { id: proOffer, ready: false };
+  if (choice === "turbo") return { id: "turbo", ready: ready("turbo") };
+  const gpu = gpuWorks(info);
+  if (gpu === false) return { id: "turbo", ready: ready("turbo"), why: "cpu" };
+  if (pro) return { id: pro, ready: true };
+  if (ready("turbo")) return { id: "turbo", ready: true };
+  return { id: gpu === true ? proOffer : "turbo", ready: false };
+}
+/** The size to draw at: Turbo draws at 512 px on its long side (what it was trained for). */
+export function drawSize(packId, sz) {
+  const p = PACKS[packId];
+  if (!p || !p.side) return { w: sz.w, h: sz.h };
+  const k = p.side / Math.max(sz.w, sz.h);
+  return { w: Math.max(256, Math.round(sz.w * k / 64) * 64), h: Math.max(256, Math.round(sz.h * k / 64) * 64) };
 }
 
 export function loadStudio() { try { const v = JSON.parse(localStorage.getItem(STUDIO_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }

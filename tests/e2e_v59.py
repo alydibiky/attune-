@@ -19,7 +19,7 @@ MOCK = r"""
   const R = (id, o) => setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify(o)), 0);
   const J = (id, m) => setTimeout(() => window.__attuneNative.reject(id, m), 0);
   const P = (id, p, s, d) => window.__attuneNative.progress(id, p, s, d);
-  S.img = { built: true, gpuBuilt: true, cpuOnly: false, note: "", lastBackend: "", packs: [], ramGB: 12, availRamGB: 7.5, freeGB: 80 };
+  S.img = { built: true, gpuBuilt: true, cpuOnly: false, gpuState: "gpu", note: "", lastBackend: "", packs: [], ramGB: 12, availRamGB: 7.5, freeGB: 80 };
   S.imgCalls = []; S.imgCancel = {};
   const pic = (w, h, label) => { const c = document.createElement("canvas"); c.width = Math.min(w, 256); c.height = Math.round(c.width * h / w);
     const g = c.getContext("2d"); const gr = g.createLinearGradient(0, 0, 0, c.height); gr.addColorStop(0, "#f59e0b"); gr.addColorStop(1, "#1e3a8a");
@@ -83,7 +83,7 @@ with sync_playwright() as pw:
     print("--- install", flush=True)
     check(page.locator("[data-testid=studio-go]").is_disabled(), "drawing is off until the picture model is installed")
     ins = page.locator("[data-testid=studio-install]")
-    check("FLUX.2 klein 4B · high quality" in ins.inner_text() and "7.13" in ins.inner_text() and "Apache-2.0" in ins.inner_text(), "a 12 GB phone is offered the high-quality (8-bit) model, with its size and licence")
+    check("Studio Pro HD" in ins.inner_text() and "7.13" in ins.inner_text() and "Apache-2.0" in ins.inner_text(), "a 12 GB phone is offered the high-quality (8-bit) model, with its size and licence")
     page.click("[data-testid=studio-install-go]")
     page.wait_for_selector("[data-testid=studio-install]", state="detached", timeout=5000)
     a = page.evaluate("window.__mock.imgCalls[0][1]")
@@ -173,6 +173,29 @@ with sync_playwright() as pw:
     page.check("[data-testid=studio-gpu]")
     check(page.evaluate("window.__mock.img.cpuOnly") is False, "…and it can be switched back on")
     page.screenshot(path=HERE + "/v59-studio.png", full_page=True)
+
+    print("--- graphics chip not working → Turbo (v5.28)", flush=True)
+    page.evaluate("window.__mock.slowDraw = false")
+    page.evaluate("Object.assign(window.__mock.img, { cpuOnly: false, gpuState: 'cpu', note: \"This phone's GPU driver did not answer, so pictures are drawn on the CPU (slower).\" })")
+    page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200); open_studio(page)
+    check(page.locator("[data-testid=studio-why-turbo]").count() == 1 and "Studio Turbo" in page.locator("[data-testid=studio-install]").inner_text(),
+          "without a working graphics chip, Studio explains Pro would take 10–20 min and offers Turbo")
+    page.evaluate("window.__mock.imgCalls = []")
+    page.click("[data-testid=studio-install-go]")
+    page.wait_for_selector("[data-testid=studio-install]", state="detached", timeout=5000)
+    a = page.evaluate("window.__mock.imgCalls[0][1]")
+    check(a["id"] == "turbo" and a["files"][0]["role"] == "model" and len(a["files"][0]["urls"]) >= 2 and a["files"][0]["approx"] > 2e9,
+          "Turbo is one file, with backup links in case one is gone")
+    page.fill("[data-testid=studio-idea]", "a beachfront mansion with mountains behind")
+    page.click("[data-testid=studio-size-square]")
+    page.click("[data-testid=studio-go]")
+    page.wait_for_function("() => window.__mock.lastImagine && window.__mock.lastImagine.pack === 'turbo'", timeout=15000)
+    li = page.evaluate("window.__mock.lastImagine")
+    check([li["width"], li["height"], li["steps"], li["cfg"]] == [512, 512, 2, 1], "Turbo draws 512×512 in 2 steps (about a minute on a CPU): %s" % [li["width"], li["height"], li["steps"], li["cfg"]])
+    page.wait_for_selector("[data-testid=studio-go]", timeout=15000)
+    page.click("[data-testid=studio-use-pro]")
+    check(page.locator("[data-testid=studio-pro-slow]").count() == 1, "picking Pro on a phone without the graphics chip warns it takes 10–20 min")
+    page.click("[data-testid=studio-use-turbo]")
     ctx.close()
 
     print("--- no engine in this build", flush=True)

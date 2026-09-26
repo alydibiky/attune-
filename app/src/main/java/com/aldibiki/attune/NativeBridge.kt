@@ -633,6 +633,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         .put("built", ImageEngine.built(ctx)).put("gpuBuilt", ImageEngine.gpuBuilt(ctx))
         .put("cpuOnly", ImageEngine.cpuOnly(ctx)).put("note", ImageEngine.note(ctx)).put("lastError", ImageEngine.lastError(ctx))
         .put("lastBackend", ImageEngine.lastBackend)
+        .put("gpuState", ImageEngine.gpuState(ctx))
         .put("packs", ImageEngine.packs(ctx))
         .put("ramGB", DeviceInfo.ramGB(ctx)).put("availRamGB", DeviceInfo.availRamBytes(ctx) / 1e9)
         .put("freeGB", DeviceInfo.freeStorageBytes(ctx) / 1e9)

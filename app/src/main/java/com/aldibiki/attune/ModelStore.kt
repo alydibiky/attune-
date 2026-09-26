@@ -21,6 +21,9 @@ object ModelStore {
 
     class Cancelled : IOException("Cancelled")
 
+    /** The link does not exist (404/401/403/410): not worth retrying; another link may be tried. */
+    class NotFound(msg: String) : IOException(msg)
+
     data class RemoteFile(val name: String, val url: String, val size: Long)
     data class Plan(val parts: List<RemoteFile>, val mmproj: RemoteFile?) {
         val totalBytes: Long get() = parts.sumOf { it.size.coerceAtLeast(0) } + (mmproj?.size?.coerceAtLeast(0) ?: 0)
@@ -220,18 +223,28 @@ object ModelStore {
         }
         val part = File(dest.path + ".part")
         var attempt = 0
+        // v5.28: when the catalog doesn't know the exact size, the server's does — so a
+        // dropped connection is resumed instead of leaving a half file that looks finished.
+        var expect = rf.size
         while (true) {
             if (cancelled()) throw Cancelled()
             var have = if (part.exists()) part.length() else 0L
-            if (rf.size > 0 && have > rf.size) { part.delete(); have = 0 }
-            if (rf.size > 0 && have == rf.size) break
+            if (expect > 0 && have > expect) { part.delete(); have = 0 }
+            if (expect > 0 && have == expect) break
             try {
                 val c = open(rf.url, have)
                 val code = c.responseCode
-                if (code == 416 && rf.size > 0 && have == rf.size) { c.disconnect(); break }
+                if (code == 416 && expect > 0 && have == expect) { c.disconnect(); break }
+                // a link that doesn't exist is not retried six times (the caller may have another)
+                if (code == 404 || code == 401 || code == 403 || code == 410) { c.disconnect(); throw NotFound("Download failed (HTTP $code)") }
                 if (code !in 200..299) throw IOException("Download failed (HTTP $code)")
                 val append = code == 206 && have > 0
                 if (!append) have = 0
+                if (expect <= 0) {
+                    val whole = c.getHeaderField("Content-Range")?.substringAfter('/')?.trim()?.toLongOrNull()
+                    val len = c.contentLengthLong
+                    expect = whole ?: if (len > 0) (if (append) have + len else len) else -1L
+                }
                 c.inputStream.use { inp ->
                     FileOutputStream(part, append).use { out ->
                         val buf = ByteArray(256 * 1024)
@@ -248,8 +261,11 @@ object ModelStore {
                     }
                 }
                 c.disconnect()
+                if (expect > 0 && have < expect) throw IOException("The connection dropped")
                 break
             } catch (e: Cancelled) {
+                throw e
+            } catch (e: NotFound) {
                 throw e
             } catch (e: IOException) {
                 attempt++
@@ -257,7 +273,7 @@ object ModelStore {
                 Thread.sleep(1500L * attempt)
             }
         }
-        if (rf.size > 0 && part.length() != rf.size) throw IOException("The downloaded file is incomplete. Try again — it will resume.")
+        if (expect > 0 && part.length() != expect) throw IOException("The downloaded file is incomplete. Try again — it will resume.")
         if (!part.renameTo(dest)) throw IOException("Could not save the model file")
         onProgress(base + dest.length(), total, stage)
     }
