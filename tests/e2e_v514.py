@@ -61,7 +61,7 @@ with sync_playwright() as p:
     sys_prompt = bodies(page)[0]["messages"][0]["content"]
     check("Never stop at a generic label" in sys_prompt, "a photo question asks for type, likely make/model and facts — not just 'a mobile crane'")
     page.locator("button:has-text('Web')").first.click()
-    queue(page, ["Demag AC 100 all-terrain crane model", "The **Demag AC 100** is a 100 t all-terrain crane [1]."])
+    queue(page, ["Demag AC 100 all-terrain crane model", "NONE", "NONE", "The **Demag AC 100** is a 100 t all-terrain crane [1]."])   # (v5.20: notes per page, then the answer)
     send(page, "What model")
     done(page, 2)
     q = page.evaluate("window.__mock.lastSearch.q")

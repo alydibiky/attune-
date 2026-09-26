@@ -25,7 +25,7 @@ object WebTools {
 
     private const val UA =
         "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36"
-    private val pool = Executors.newFixedThreadPool(6)
+    private val pool = Executors.newFixedThreadPool(8)
 
     private fun isArabic(s: String) = s.any { it in '؀'..'ۿ' }
 
@@ -158,14 +158,14 @@ object WebTools {
             try { hits = brave(q, key) } catch (e: Exception) { why = e.message ?: "Brave failed" }
         }
         if (hits.isEmpty()) {
-            hits = duckduckgo(q)
+            hits = duckduckgo(q, 10)
             via = "duckduckgo"
             if (hits.isEmpty() && why.isEmpty()) why = "DuckDuckGo returned nothing"
         }
 
         // v5.19: up to 6 pages, each read in full (16,000 characters) — the page
         // picks the passages that answer the question (webrank.js).
-        val n = pages.coerceIn(0, 6)
+        val n = pages.coerceIn(0, 8)
         if (n > 0 && hits.isNotEmpty()) {
             val jobs = hits.take(n).map { h -> pool.submit(Callable { h to pageText(h.url, 16_000) }) }
             for (f in jobs) {

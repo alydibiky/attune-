@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.19**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.20**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.19**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.19** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.20** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -104,6 +104,7 @@ web-src/             SOURCE of the page — edit here, then `bash web-src/build.
   skills.js                                         (v5.15) answer recipes per question type
   erp-app.js                                        (v5.18) Business system → standalone .html app and back
   webrank.js, guard.jsx                             (v5.19) web passage ranking; screen error boundary
+  research.js                                       (v5.20) deep web research: notes per page, missing-check
   actions.js, actions-ui.jsx                        reminders & phone actions (syncToPhone spares daily-* ids)
   backup.js, backup-ui.jsx, crane.js, crane-ui.jsx, cycle.jsx, calc.js, speed-ui.jsx, yusr/ (Money)
   i18n.js, i18n-ar.js                               tr("English") → Arabic dictionary (~1,800 entries)
@@ -116,7 +117,7 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 
 ## 4. How to build and test
 1. Edit `web-src/*`, then `bash web-src/build.sh` (Node 18+, Python 3; installs esbuild 0.28.2 + Tailwind 4.3.3 locally). Output: `app/src/main/assets/www/index.html` — **commit it** (CI checks it exists).
-2. **Unit tests:** `node tests/unit/run.mjs` → 15 files, all green at v5.19.
+2. **Unit tests:** `node tests/unit/run.mjs` → 16 files, all green at v5.20.
 3. **Browser end-to-end:** `bash tests/setup.sh` once (builds a desktop llama-server at the same pin + a tiny model), then from `tests/`:
    `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py`, `e2e_v513.py`, `e2e_v514.py`, `e2e_v516.py`, `e2e_v517.py`, `e2e_v518.py`, `e2e_v519.py` — **all green at v5.19**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
    Mock features (harness.py): `__mock.fakeQueue` (canned answers, streamed; skipped for warm-up requests with `max_tokens ≤ 2`), `slowQueue`, `chatCancel`, `cancelled`, `bodies` (every request body), `notes` (schedule calls — **keeps every call, not one per id**), `files` (saveFile), stash. v5.12 tests add `N.news` and `N.setWidget` mocks (`NEWS_MOCK` in e2e_v512_more.py).
@@ -142,6 +143,7 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 - **v5.17** — Ali's v5.16 phone test + Business queries/forms/rename + Copilot + versioning — see §5.6.
 - **v5.18** — doubled words/digits (MTP off), junk-loop guard, websites on topic, Studio never silent, Business apps exported/imported — see §5.7.
 - **v5.19** — web reads whole pages + passage ranking, Studio stray-cancel fix, connected ERP designs, screen error boundary — see §5.8.
+- **v5.20** — deep web research (page by page → checked notes → missing → full answer), every Studio failure path covered — see §5.9.
 
 ### 5.1 v5.12 in detail (the part nobody has tested on the phone yet)
 - **Corrections checked before learning** (`checkCorrection`, reason.js; UI in chat.jsx `checkTeach/saveTeach`): 👎 → "Check & teach". Maths question → `verifyMath(..., explain:false)` computes the answer, compared by number (±0.5%). Otherwise 2 independent re-solves (temp 0.2 / 0.7; a 3rd at 0.5 if they disagree) returning `VERDICT: RIGHT|WRONG|PARTLY|PREFERENCE` + `REASON:` + `ANSWER:`. RIGHT/PREFERENCE → saved (`checked` field). WRONG/PARTLY/unsure → reason box (`data-testid=teach-verdict`) with "Learn the checked answer" (partly), "I'm sure — learn mine anyway" (`teach-force`), "Edit my correction".
@@ -242,6 +244,11 @@ Ali asked for code that makes the models stronger. Weights can't change on the p
 - **Connected ERPs**: the design prompt asks for 6–10 tables, "FULLY CONNECTED" (every transaction table links to what it refers to), formulas for totals/balances/durations. `findConnections`/`autoConnect` (erp.js) turn fields named after another table ("SupplierID", "Customer name", "Part", Arabic "العميل"→"العملاء") into links — automatically on new designs, and via "Connect the tables for me (n)" in Design for existing ones (`connectOps`; `changeType → link` converts existing text values to record links; Undo reverts).
 - **Stability**: `guard.jsx` `Guard` error boundary wraps the page switch (keyed by mode): a crashing screen shows "Something went wrong on this screen" + Try again instead of blanking the whole app; logged via `NativeBridge.logLine` into engine.log.
 - Version 5.19. Tests: `unit/v519.test.mjs`, `e2e_v519.py`.
+
+### 5.9 v5.20 — "web search in full detail, page by page" + "fix image creation for good"
+- **Deep research** (`research.js` + chat.jsx web branch): `api.webPages(query, pagesFor(question))` (native search, up to **8** pages in full, DuckDuckGo asked for 10) → for each page, `api.rankOne` passages (≤ 5,500 chars) → model call `notesMessages` (one fact per line, table rows kept, copy digits; `copy: true`, 700 tokens) → `checkNotes` drops every note line with a number not found on that page → `missingMessages` asks for ONE query for what's still missing → that query searched (4 pages) and its 3 new pages read the same way → final answer = `groundedPrompt(asked, notes) + FINAL_ADD` ("COMPLETE, detailed … every item … a table … what the sources did not say"). Status: "Reading page i of n — title", "Checking what is still missing…", "Searching again for: …". Hard cap ~3 min. Sources line says "read N pages one by one, facts from M". No notes at all → falls back to ranked passages. Tests queue: notes per page, "NONE" for the missing-check, then the final answer.
+- **Studio — every failure path**: (1) stray cancel (v5.19 `cancelImage`); (2) GPU hang/refusal (watchdog → CPU); (3) **out of memory** → the run is retried ONCE at 512 px with `te=disk` (`argsAt(512, true)`), note says so; (4) **half-downloaded model** → `packProblem` checks sizes saved at install (`meta.sizes`) and the GGUF magic before drawing, with "remove and install again"; (5) **engine can't start** → `selfTest` runs `--help` once per app version (cached in `image_selftest`) and reports CANNOT LINK / permission problems; (6) **page reloaded while drawing** → `imageList()` + Studio merges files it missed into the gallery on open; (7) `catch (Throwable)` in `imagine` so an OOM Error still answers the page; (8) the "fuller description" step gives up after 45 s and draws from the idea as typed. The CI build was verified to include the picture engine (restored from cache: `libattune-image.so`).
+- Version 5.20. Tests: `unit/v520.test.mjs`; e2e_v519 extended (page-by-page notes, invented number dropped, missing-check, full answer).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

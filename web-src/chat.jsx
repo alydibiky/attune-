@@ -16,6 +16,7 @@ import { looksLikeMathProblem, looksLikeCodeTask, arithmeticSlips, fixSlips } fr
 import { looksLikeReasoning, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD } from "./research.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
   Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2,
@@ -634,7 +635,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
 
     try {
       let content = typed || (fileAtt ? userMsg.text : "What is in this photo? Read it and tell me what matters.");
-      let sources = null, via = null;
+      let sources = null, via = null, research = null;
       const pic = img || carried;
       if (api.webOn && typed) {
         // With a photo, LOOK first: search for what is in the picture, not
@@ -668,18 +669,68 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
         }
         onStatus("Searching the web…");
-        const look = await api.webLookup(query, asked + " " + query);
+        const question = asked + (query !== asked ? " " + query : "");
+        const photoNote = img || carried ? "\n\n(A photo is attached: first say what it shows, then use the passages. If the passages don't cover it, answer from the photo and say so.)" : "";
+        // v5.20 — DEEP RESEARCH: the pages are read ONE AT A TIME, each into
+        // checked notes; what's missing is searched once more; the answer is
+        // written from all the notes (research.js).
+        const look = api.webPages ? await api.webPages(query, pagesFor(question)) : await api.webLookup(query, question);
         if (runRef.current !== run) return;
-        if (look.hits && look.hits.length) {
+        if (look.hits && look.hits.length && api.webPages) {
+          const notesSrc = [], tR = Date.now(); let read = 0;
+          const readPages = async (hits, cap) => {
+            const list = hits.slice(0, cap);
+            for (let i = 0; i < list.length; i++) {
+              if (Date.now() - tR > 170000) break;               // never more than ~3 minutes
+              const h = list[i];
+              onStatus(tr("Reading page {i} of {n} — {t}", { i: i + 1, n: list.length, t: String(h.title || h.url).slice(0, 48) }));
+              const pass = api.rankOne(question, h);
+              if (!pass || pass.length < 60) continue;
+              let notes = "";
+              try { notes = await api.run(notesMessages(question, { ...h, text: pass }), null, { think: false, maxTokens: 700, temperature: 0.1, copy: true }); }
+              catch (e) { if (String(e && e.message) === "Stopped") throw e; continue; }
+              if (runRef.current !== run) return false;
+              read++;
+              const ck = checkNotes(notes, h.text);
+              if (ck.kept) notesSrc.push({ title: h.title, url: h.url, text: ck.text, source: h.source });
+            }
+            return true;
+          };
+          if ((await readPages(look.hits, pagesFor(question))) === false) return;
+          if (notesSrc.length && Date.now() - tR < 150000) {
+            try {
+              onStatus(tr("Checking what is still missing…"));
+              const q2 = cleanQuery(await api.run(missingMessages(question, notesSrc.map((n) => n.text).join("\n")), null, { think: false, maxTokens: 40, temperature: 0.1 }));
+              if (runRef.current !== run) return;
+              if (q2) {
+                onStatus(tr("Searching again for: {q}", { q: q2 }));
+                const more = await api.webPages(q2, 4);
+                if (runRef.current !== run) return;
+                const seen = new Set(look.hits.map((h) => h.url));
+                if ((await readPages((more.hits || []).filter((h) => !seen.has(h.url)), 3)) === false) return;
+              }
+            } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+          }
+          if (notesSrc.length) {
+            sources = notesSrc; via = look.via; research = { pages: read, withFacts: notesSrc.length };
+            onStatus(tr("Writing the full answer from {n} pages…", { n: notesSrc.length }));
+            content = api.groundedPrompt(asked, notesSrc) + FINAL_ADD + photoNote;
+          } else {
+            const ranked = api.rankAll(question, look.hits);
+            sources = ranked; via = look.via;
+            content = api.groundedPrompt(asked, ranked) + photoNote;
+          }
+        } else if (look.hits && look.hits.length) {
           sources = look.hits; via = look.via;
           onStatus("Reading " + look.hits.length + " sources…");
-          content = api.groundedPrompt(asked, look.hits) + (img || carried ? "\n\n(A photo is attached: first say what it shows, then use the passages. If the passages don't cover it, answer from the photo and say so.)" : "");
+          content = api.groundedPrompt(asked, look.hits) + photoNote;
         }
       } else if (typed && api.isPersonal(typed)) {
         const found = api.memSearch(typed);
         if (found.length) content = api.withRecords(typed, found);
       }
       let answer, extra = {};
+      if (research) extra.research = research;
       const q = typed || userMsg.text;
       // A spreadsheet/CSV: answered by a program the phone runs on the file.
       // A text document: its text goes to the model with the question.
@@ -1175,7 +1226,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
             {m.sources && m.sources.length ? (
               <div className="mt-2 space-y-1">
-                <p className="text-[11px] text-slate-500">{tr("Sources")}{m.via ? " · via " + m.via : ""}</p>
+                <p className="text-[11px] text-slate-500">{tr("Sources")}{m.via ? " · via " + m.via : ""}{m.research ? " · " + tr("read {p} pages one by one, facts from {n}", { p: m.research.pages, n: m.research.withFacts }) : ""}</p>
                 {m.sources.map((h, i) => <a key={i} href={h.url} target="_blank" rel="noreferrer" className="block text-[12px] text-teal-300/90 truncate">[{i + 1}] {tr(h.title)}</a>)}
               </div>
             ) : null}

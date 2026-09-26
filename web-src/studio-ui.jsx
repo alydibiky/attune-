@@ -7,6 +7,7 @@ import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, drawPack, loadSt
 
 const STAGE = {
   gpu: "Waking the graphics chip (the first time can take a minute)…",
+  check: "Checking the picture engine and model files…", retry: "Short of memory — drawing it smaller (512 px)…",
   start: "Starting the picture engine…", load: "Loading the picture model…", prompt: "Reading your description…",
   draw: "Drawing", develop: "Developing the picture…", save: "Saving…", upscale: "Sharpening ×4",
 };
@@ -56,6 +57,17 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   const fileRef = useRef(null);
 
   useEffect(() => { if (!busy) return; const t = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(t); }, [busy]);
+  // v5.20: a picture finished while the page was away (reloaded, closed by
+  // Android) is still in the Studio folder — bring it into the gallery.
+  useEffect(() => {
+    if (!native || !native.imageList) return;
+    try {
+      const files = JSON.parse(native.imageList() || "[]");
+      const have = new Set(loadStudio().map((x) => x.file));
+      const missed = files.filter((f) => f && f.file && !have.has(f.file) && !/-x4\.png$/.test(f.file)).map((f) => ({ file: f.file, url: f.url, w: f.width, h: f.height, idea: "", prompt: "", at: f.at, recovered: true }));
+      if (missed.length) { const next = [...missed, ...loadStudio()].sort((a, b) => (b.at || 0) - (a.at || 0)); keep(next); setCur(next[0]); }
+    } catch (e) {}
+  }, []);
   useEffect(() => { if (incoming && incoming.prompt != null) { setIdea(incoming.prompt); setMode("create"); clearIncoming && clearIncoming(); } }, [incoming]);
 
   if (!info) return <div className="p-4 text-sm text-slate-400" data-testid="studio-page">{tr("Studio works in the Android app.")}</div>;
@@ -94,7 +106,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       let finalPrompt = opts.prompt || (mode === "create" && enhance && chatReady ? "" : text);
       if (!finalPrompt) {
         setBusy((b) => ({ ...b, stage: "enhance" }));
-        try { finalPrompt = cleanPrompt(await llm(enhanceMessages(text), { maxTokens: 220 }), text); } catch (e) { finalPrompt = text; }
+        // v5.20: never wait on the chat model for long — after 45 s the picture is drawn from the idea as typed
+        try { finalPrompt = cleanPrompt(await Promise.race([llm(enhanceMessages(text), { maxTokens: 220 }), new Promise((_, rej) => setTimeout(() => rej(new Error("slow")), 45000))]), text); } catch (e) { finalPrompt = text; }
       }
       setPrompt(finalPrompt);
       // v5.17: the description is written — say what happens now, instead of

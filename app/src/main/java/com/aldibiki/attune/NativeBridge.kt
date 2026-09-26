@@ -641,6 +641,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun setImageCpu(on: Boolean) = ImageEngine.setCpuOnly(ctx, on)
 
+    /** Every picture in the Studio folder, so Studio can show ones it missed (v5.20). */
+    @JavascriptInterface
+    fun imageList(): String = try { ImageEngine.list(ctx).toString() } catch (e: Exception) { "[]" }
+
     /** {id, label, kind, files:[{role, name, url, size, what}]} */
     @JavascriptInterface
     fun installImagePack(id: String, arg: String) {
@@ -684,7 +688,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 val r = ImageEngine.imagine(ctx, JSONObject(arg), { imageProgress(id, it) }, { j -> if (j != null) imageJobs[id] = j else imageJobs.remove(id) })
                 ImageEngine.setLastError(ctx, "")
                 resolve(id, imageResult(r))
-            } catch (e: Exception) {
+            } catch (e: Throwable) {   // v5.20: an Error (out of memory …) too — the page must always get an answer
                 if (e.message != "Stopped") ImageEngine.setLastError(ctx, e.message ?: e.javaClass.simpleName)
                 // v5.17: every failed picture leaves its reason in Engine → Engine log.
                 try { java.io.File(ctx.filesDir, "engine.log").appendText("\nStudio (${java.util.Date()}): ${e.javaClass.simpleName}: ${e.message}\n") } catch (x: Exception) {}

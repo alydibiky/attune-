@@ -90,14 +90,78 @@ object ImageEngine {
             base += File(d, name).length()
             files.put(p.getString("role"), name)
         }
+        // v5.20: the size of every file, so a half-downloaded one is caught before drawing
+        val sizes = JSONObject(); for (p in parts) sizes.put(p.getString("role"), File(d, p.getString("name")).length())
         val meta = JSONObject().put("id", id).put("label", a.optString("label", id)).put("kind", a.optString("kind", "draw"))
-            .put("files", files).put("installedAt", System.currentTimeMillis())
+            .put("files", files).put("sizes", sizes).put("installedAt", System.currentTimeMillis())
             .put("defaults", a.optJSONObject("defaults") ?: JSONObject())
         File(d, "meta.json").writeText(meta.toString())
         return meta
     }
 
     fun remove(ctx: Context, id: String): Boolean = packDir(ctx, id).deleteRecursively()
+
+    /**
+     * v5.20 — is every file of the pack whole? A download cut short (phone off,
+     * storage full) leaves a file the engine can't read, and the picture fails
+     * with a cryptic "failed to load". Checked against the saved size, and GGUF
+     * files must start with "GGUF". → null when fine, or what's wrong.
+     */
+    fun packProblem(ctx: Context, packId: String): String? {
+        val d = packDir(ctx, packId)
+        val meta = try { JSONObject(File(d, "meta.json").readText()) } catch (e: Exception) { return "The picture model isn't installed completely — install it again in Studio." }
+        val files = meta.getJSONObject("files"); val sizes = meta.optJSONObject("sizes")
+        for (role in files.keys()) {
+            val f = File(d, files.getString(role))
+            if (!f.exists() || f.length() < 1024) return "A picture model file (${f.name}) is missing — remove the model in Studio and install it again."
+            val want = sizes?.optLong(role, -1L) ?: -1L
+            if (want > 0 && f.length() != want) return "A picture model file (${f.name}) is incomplete (${f.length() / 1_000_000} of ${want / 1_000_000} MB) — remove the model in Studio and install it again."
+            if (f.name.endsWith(".gguf", true)) {
+                val magic = ByteArray(4); try { f.inputStream().use { it.read(magic) } } catch (e: Exception) {}
+                if (String(magic, Charsets.US_ASCII) != "GGUF") return "A picture model file (${f.name}) is damaged — remove the model in Studio and install it again."
+            }
+        }
+        return null
+    }
+
+    /**
+     * v5.20 — can the picture engine start at all on this phone? Runs it with
+     * --help (a second or two) once per app version: a missing library or a
+     * blocked program is then reported plainly instead of failing mid-picture.
+     */
+    @Volatile private var checkedOk = false
+    fun selfTest(ctx: Context): String? {
+        if (checkedOk) return null
+        val ver = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).lastUpdateTime.toString() } catch (e: Exception) { "?" }
+        if (prefs(ctx).getString("image_selftest", "") == ver) { checkedOk = true; return null }
+        val b = bin(ctx, false)
+        if (!b.exists()) return "This build of the app has no picture engine."
+        return try {
+            if (!b.canExecute()) b.setExecutable(true)
+            val p = ProcessBuilder(b.path, "--help").redirectErrorStream(true).also { it.environment().putAll(env(ctx, false)) }.start()
+            val sb = StringBuilder()
+            val rd = Thread { try { sb.append(p.inputStream.bufferedReader().readText()) } catch (e: Exception) {} }.apply { isDaemon = true; start() }
+            val done = p.waitFor(30, java.util.concurrent.TimeUnit.SECONDS)
+            if (!done) { p.destroyForcibly(); null }                  // slow, but it started
+            else {
+                rd.join(1000)
+                val out = sb.toString()
+                if (Regex("CANNOT LINK|not found|Permission denied|No such file|error while loading", RegexOption.IGNORE_CASE).containsMatchIn(out) || (p.exitValue() != 0 && !out.contains("usage", true) && !out.contains("--prompt")))
+                    "The picture engine can't start on this phone: " + out.lines().firstOrNull { it.isNotBlank() }.orEmpty().take(200)
+                else { prefs(ctx).edit().putString("image_selftest", ver).apply(); checkedOk = true; null }
+            }
+        } catch (e: Exception) { "The picture engine can't start on this phone: " + (e.message ?: e.javaClass.simpleName) }
+    }
+
+    /** Pictures in the Studio folder (newest first) — the page adds any it missed. (v5.20) */
+    fun list(ctx: Context): JSONArray {
+        val arr = JSONArray()
+        (studioDir(ctx).listFiles() ?: emptyArray()).filter { it.name.endsWith(".png") && it.length() > 0 }.sortedByDescending { it.lastModified() }.take(200).forEach { f ->
+            val (w, h) = size(f)
+            arr.put(JSONObject().put("file", f.name).put("url", "https://appassets.androidplatform.net/studio/" + f.name).put("width", w).put("height", h).put("at", f.lastModified()))
+        }
+        return arr
+    }
 
     // ---- running -----------------------------------------------------------------------
     private var gpuName: String? = null
@@ -215,6 +279,9 @@ object ImageEngine {
     fun imagine(ctx: Context, a: JSONObject, onProgress: (ImageRun.Progress) -> Unit, register: (ImageRun.Job?) -> Unit): Result {
         if (!built(ctx)) throw IOException("This build of the app has no picture engine yet.")
         val pack = a.getString("pack")
+        packProblem(ctx, pack)?.let { throw IOException(it) }
+        onProgress(ImageRun.Progress("check"))
+        selfTest(ctx)?.let { throw IOException(it) }
         val diffusion = packFile(ctx, pack, "diffusion") ?: throw IOException("Install the picture model first (Studio).")
         val files = ImageRun.Files(diffusion.path, packFile(ctx, pack, "llm")?.path, packFile(ctx, pack, "vae")?.path)
         val need = listOfNotNull(diffusion, packFile(ctx, pack, "llm"), packFile(ctx, pack, "vae")).sumOf { it.length() } + 1_500_000_000L
@@ -240,14 +307,26 @@ object ImageEngine {
             val w = a.optInt("width", 1024).coerceIn(256, 2048) / 16 * 16
             val h = a.optInt("height", 1024).coerceIn(256, 2048) / 16 * 16
             val seed = if (a.has("seed")) a.getLong("seed") else (System.nanoTime() % 1_000_000_000L)
-            val backend = runWithFallback(ctx, out, { b, be ->
+            fun argsAt(maxSide: Int, low: Boolean): (String, String?) -> List<String> = { b, be ->
                 // On the CPU, a picture over 768 px on its long side is drawn at
                 // 768: ~45% of the work of 1024 px, minutes instead of a quarter hour. (v5.14)
-                val k = if (be == "cpu" && maxOf(w, h) > 768) 768.0 / maxOf(w, h) else 1.0
+                val cap = if (be == "cpu") minOf(maxSide, 768) else maxSide
+                val k = if (maxOf(w, h) > cap) cap.toDouble() / maxOf(w, h) else 1.0
                 val cw = ((w * k).toInt() / 16 * 16).coerceAtLeast(256); val ch = ((h * k).toInt() / 16 * 16).coerceAtLeast(256)
                 ImageRun.genArgs(b, files, a.getString("prompt"), out.path, cw, ch, a.optInt("steps", 4).coerceIn(1, 50), seed,
-                    threads(), be, ref?.path, a.optDouble("cfg", 1.0), lowMem)
-            }, onProgress, register)
+                    threads(), be, ref?.path, a.optDouble("cfg", 1.0), low)
+            }
+            val backend = try {
+                runWithFallback(ctx, out, argsAt(2048, lowMem), onProgress, register)
+            } catch (e: IOException) {
+                // v5.20: out of memory (Android killed it, or it couldn't allocate)
+                // → once more, smaller (512 px) with the text reader kept on storage.
+                val m = e.message ?: ""
+                if (m == "Stopped" || !Regex("free memory|alloc|out of memory|memory|killed", RegexOption.IGNORE_CASE).containsMatchIn(m)) throw e
+                onProgress(ImageRun.Progress("retry"))
+                setNote(ctx, "The phone ran short of memory, so this picture was drawn smaller (512 px). Close other apps for full size.")
+                runWithFallback(ctx, out, argsAt(512, true), onProgress, register)
+            }
             return Result(out, backend, System.currentTimeMillis() - t0, paused, seed)
         } finally {
             ref?.delete()

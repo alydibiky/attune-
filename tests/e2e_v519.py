@@ -16,7 +16,7 @@ SEARCH = """(() => { const N = window.AttuneNative, S = window.__mock;
   N.search = (id, arg) => { const a = JSON.parse(arg); S.lastSearch = a;
     setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ via: "duckduckgo", why: "", hits: [
       { title: "Lynk & Co 900 - specs", url: "https://example.com/900", text: "%s" },
-      { title: "Unrelated", url: "https://example.com/x", text: "The weather in Cairo is sunny today and the Nile is calm." } ] })), 30); };
+      { title: "Unrelated", url: "https://example.com/x", text: "The weather in Cairo is sunny today and the Nile is calm. Tomorrow will be warmer, with light winds from the north in the afternoon." } ] })), 30); };
 })();""" % PAGE
 
 def install(page):
@@ -43,7 +43,8 @@ with sync_playwright() as p:
     # ---- 1. web: the spec table deep in the page reaches the model ----
     page.evaluate(SEARCH)
     page.locator("button:has-text('Web')").first.click()
-    page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['**Two trims** [1]: Pro 598 hp, Ultra 845 hp.']; M.bodies = []; }")
+    NOTES = "- Lynk & Co 900 Pro: Power 598 hp; Torque 1,000 Nm; Price CNY 309,900\n- Lynk & Co 900 Ultra: Power 845 hp; Torque 1,200 Nm; Price CNY 369,900\n- Lynk & Co 900 Max: Price CNY 999,999"
+    page.evaluate("(n) => { const M = window.__mock; M.fakeQueue = [n, 'NONE', 'NONE', '**Two trims** [1]: Pro 598 hp, Ultra 845 hp.']; M.bodies = []; }", NOTES)
     send(page, "Lynk & Co 900 all trims with hp, torque and price")
     page.wait_for_selector("button[title='Regenerate']", timeout=30000)
     check(page.evaluate("window.__mock.lastSearch.pages") >= 5, "more pages are read (%s)" % page.evaluate("window.__mock.lastSearch.pages"))
@@ -52,6 +53,13 @@ with sync_playwright() as p:
     check("845 hp" in prompt and "CNY 369,900" in prompt, "the spec table 5,000+ characters down the page reaches the model")
     check("newsroom story number 40" not in prompt, "…and the filler around it doesn't")
     check("EVERY one the passages name" in prompt, "the model is told to list every trim the sources name")
+    # v5.20 deep research: each page read on its own into notes, then the answer
+    bs = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2).map(x => String(x.messages[0].content).slice(0, 60))")
+    check(sum(1 for b in bs if b.startswith("You read ONE web page")) == 2, "each page is read on its own, into notes (%d pages)" % sum(1 for b in bs if b.startswith("You read ONE web page")))
+    check(any(b.startswith("You check research notes") for b in bs), "…then it checks what is still missing")
+    check("CNY 999,999" not in prompt, "a note with a number that isn't on the page is dropped")
+    check("COMPLETE, detailed answer" in prompt, "the final answer is written from all the notes, in full")
+    check("read 2 pages one by one" in page.locator(".att-md").last.locator("xpath=..").inner_text() or page.locator("text=read 2 pages one by one").count() >= 1, "the answer says how many pages were read")
     page.locator("button:has-text('Web')").first.click()
 
     # ---- 2. ERP: tables connected for you ----

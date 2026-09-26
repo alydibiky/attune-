@@ -136,7 +136,7 @@ def sections(env, errors):
         page.set_input_files("input[type=file][accept='image/*']", path); os.remove(path)
         page.wait_for_selector("textarea[placeholder='Message Attune'] >> xpath=../div//img", timeout=5000)
         page.locator("button:has-text('Web')").first.click()
-        page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['ECAR E5 electric SUV', 'This is an **ECAR E5** electric SUV [1].']; M.bodies = []; }")
+        page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['ECAR E5 electric SUV', 'NONE', 'NONE', 'This is an **ECAR E5** electric SUV [1].']; M.bodies = []; }")
         send(page, "what is this car")
         page.wait_for_selector("button[title='Regenerate']", timeout=30000)
         bodies = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2)")

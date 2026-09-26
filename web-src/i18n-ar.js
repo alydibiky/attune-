@@ -2010,4 +2010,12 @@ export const AR = {
   "Something went wrong on this screen.": "حصلت مشكلة في الشاشة دي.",
   "Your chats and data are safe. Try again — if it keeps happening, send me this message.": "محادثاتك وبياناتك في أمان. جرّب تاني — ولو اتكررت ابعتلي الرسالة دي.",
   "Try again": "جرّب تاني",
+  // ---- v5.20 ----
+  "Reading page {i} of {n} — {t}": "بقرا الصفحة {i} من {n} — {t}",
+  "Checking what is still missing…": "بشوف إيه اللي لسه ناقص…",
+  "Searching again for: {q}": "ببحث تاني عن: {q}",
+  "Writing the full answer from {n} pages…": "بكتب الإجابة الكاملة من {n} صفحات…",
+  "read {p} pages one by one, facts from {n}": "قريت {p} صفحات واحدة واحدة، ومعلومات من {n}",
+  "Checking the picture engine and model files…": "بتأكد من محرك الصور وملفات النموذج…",
+  "Short of memory — drawing it smaller (512 px)…": "الذاكرة مش كفاية — برسمها أصغر (512 بكسل)…",
 };

@@ -5745,7 +5745,7 @@ async function webLookup(q, question) {
   if (out0.hits && out0.hits.length) out0.hits = rankPassages(question || q, out0.hits);
   return out0;
 }
-async function webLookupRaw(q) {
+async function webLookupRaw(q, pages = 6) {
   const cfg = searchLoad();
   const out = { hits: [], via: "none", why: "" };
   // Android app: search natively. DuckDuckGo needs no key; Brave uses yours.
@@ -5757,7 +5757,7 @@ async function webLookupRaw(q) {
     // v5.19: Wikipedia too — a reliable second source for names, specs and
     // dates — added when the search didn't already have it.
     try {
-      const r = await nativeCall("search", { q, provider, key: cfg.key || "", pages: 6 });
+      const r = await nativeCall("search", { q, provider, key: cfg.key || "", pages });
       out.hits = (r.hits || []).filter((h) => h && h.url && (h.text || "").length > 40);
       out.via = r.via || provider;
       if (!out.hits.length) out.why = r.why || "Nothing came back for that.";
@@ -6601,7 +6601,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.19";
+const PAGE_VERSION = "5.20";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -7982,6 +7982,10 @@ export default function App() {
     toggleWeb: () => { if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to search the web")); return; } setWebOn((v) => !v); },
     webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang), groundedAudit,
     skillFor,
+    // v5.20 deep research: pages in full, and the passages of one page / of all
+    webPages: NATIVE ? (q, pages) => webLookupRaw(q, pages) : null,
+    rankOne: (question, h) => { const r = rankPassages(question, [h], { budget: 5500, perSource: 5500 }); return r[0] ? r[0].text : ""; },
+    rankAll: (question, hits) => rankPassages(question, hits),
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     withRecords,
