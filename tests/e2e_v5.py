@@ -127,7 +127,7 @@ LATIN = r"""() => { const out = []; const w = document.createTreeWalker(document
   for (let n = w.nextNode(); n; n = w.nextNode()) { const t = n.nodeValue.trim(); const el = n.parentElement;
     if (!t || !el || el.closest('[data-i18n-skip],textarea,script,style')) continue; const r = el.getBoundingClientRect();
     if (!r.width || !r.height || r.bottom < 0 || r.top > innerHeight) continue;
-    const words = (t.match(/[A-Za-z]{3,}/g) || []).filter((w) => !/^(Attune|Pro|Spark|Glow|Flash|Core|Lite|Sense|Ultra|Titan|Qwen|Gemma|GGUF|InstaPay|Yusr|ChatGPT|Claude|Gemini|English|Brave|DuckDuckGo|KV|SHA|CPU|GPU|NPU|NEON|dotprod|KleidiAI|int8|matmul|Test|Phone|SM8650|imatrix|MoE|mmap|INT4|Vulkan|EGP|USD|Adreno|OpenCL|QUALCOMM)$/.test(w));
+    const words = (t.match(/[A-Za-z]{3,}/g) || []).filter((w) => !/^(Attune|Pro|Spark|Glow|Blaze|Core|Lite|Sense|Zenith|Apex|Everest|Qwen|Gemma|GGUF|InstaPay|Yusr|ChatGPT|Claude|Gemini|English|Brave|DuckDuckGo|KV|SHA|CPU|GPU|NPU|NEON|dotprod|KleidiAI|int8|matmul|Test|Phone|SM8650|imatrix|MoE|mmap|INT4|Vulkan|EGP|USD|Adreno|OpenCL|QUALCOMM)$/.test(w));
     if (words.length) out.push(t.slice(0, 80)); } return out; }"""
 
 def sec_arabic(br):
@@ -500,7 +500,7 @@ def sec_fastengine(br):
     page.locator("header button:has-text('No model')").click()
     rec = page.locator("text=Recommended for this device").locator("xpath=..")
     name = rec.locator("p.text-base").inner_text()
-    check(name == "Flash · ⚡ fast engine", "the Android app recommends the fast engine first: " + name)
+    check(name == "Blaze · ⚡ fast engine", "the Android app recommends the fast engine first: " + name)
     check("under a second" in rec.inner_text(), "…and says why (first words in under a second)")
     rec.get_by_role("button", name="Install").first.click()
     page.wait_for_selector("text=Running now", timeout=10000)
@@ -521,7 +521,7 @@ def sec_fastengine(br):
     # fast engine running → its own panel
     page.evaluate("""Object.assign(window.__mock.speed, { engine: 'litert', fastBackend: 'GPU', fastMtp: true, fastCpu: false, fastNote: '', activeLabel: 'Gemma 4 E2B · fast engine (GPU)' });
                      Object.assign(window.__mock.doctor, { engine: 'litert', fastBackend: 'GPU', fastMtp: true, cpu: '' })""")
-    page.locator("header button:has-text('Flash')").click()
+    page.locator("header button:has-text('Blaze')").click()
     page.wait_for_selector("[data-testid=fast-panel]", timeout=5000)
     fp = page.locator("[data-testid=fast-panel]")
     check("Fast engine on the graphics chip" in fp.inner_text() and "multi-token prediction on" in fp.inner_text(), "Speed says the fast engine is on the GPU with multi-token prediction")

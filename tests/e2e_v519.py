@@ -60,6 +60,13 @@ with sync_playwright() as p:
     check("EVERY one the passages name" in prompt and "complete, accurate answer" in prompt, "the model is told to list every trim and write a complete, cited report")
     foot = page.locator(".att-md").last.locator("xpath=../..").inner_text()
     check("read 2 pages" in foot and "searches" in foot, "the answer says how many pages and searches it used")
+    # v5.31 — like Gemini: [1] is a tappable chip, sources show their site, and a research panel
+    cite = page.locator("[data-testid=cite]").first
+    check(page.locator("[data-testid=cite]").count() >= 1 and cite.get_attribute("href") == "https://example.com/900", "the [1] in the answer is a chip that opens source 1")
+    check("example.com" in page.locator("[data-testid=source]").first.inner_text(), "each source shows its site")
+    page.locator("[data-testid=research-log] button").last.click(); page.wait_for_timeout(200)
+    rl = page.locator("[data-testid=research-log]").last.inner_text()
+    check("Searched" in rl and "Lynk & Co 900 specifications" in rl and "Read 2 pages" in rl, "'How I researched' shows the searches and the pages read")
 
     # v5.20 DEEP research, when asked for: every page into checked notes, then the report
     NOTES = "- Lynk & Co 900 Pro: Power 598 hp; Torque 1,000 Nm; Price CNY 309,900\n- Lynk & Co 900 Ultra: Power 845 hp; Torque 1,200 Nm; Price CNY 369,900\n- Lynk & Co 900 Max: Price CNY 999,999"
@@ -76,6 +83,17 @@ with sync_playwright() as p:
     check("complete, expert research report" in prompt and "Where sources differ" in prompt, "the deep report: direct answer, sections, disagreements, gaps")
     check(page.locator("text=read 2 pages one by one").count() >= 1, "the answer says it read the pages one by one")
     page.locator("button:has-text('Web')").first.click()
+
+    # v5.31 — Web off, a question about prices: the answer offers a web search, one tap does it
+    page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['About 300,000 CNY.', '**CNY 309,900** [1]', '**CNY 309,900** [1]', '**CNY 309,900** [1]']; M.bodies = []; M.searchLog = []; }")
+    send(page, "What is the price of the Lynk & Co 900 today?")
+    page.wait_for_function("() => document.querySelectorAll(\"button[title='Regenerate']\").length >= 3", timeout=60000)
+    chip = page.locator("[data-testid=search-web-chip]")
+    check(chip.count() == 1, "Web is off and the question is about a price: the answer offers '🌐 Search the web for this'")
+    chip.click()
+    page.wait_for_function("() => document.querySelectorAll(\"button[title='Regenerate']\").length >= 4", timeout=60000)
+    check(len(page.evaluate("window.__mock.searchLog")) >= 1 and page.locator("[data-testid=cite]").count() >= 1, "…one tap searches the web for that question (Web stays off afterwards)")
+    check(page.locator("button:has-text('Web')").first.get_attribute("class").find("border-teal-600") < 0, "…and the Web switch itself stays off")
 
     # ---- 2. ERP: tables connected for you ----
     open_more(page, "Business", "business-page")

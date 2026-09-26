@@ -255,3 +255,12 @@ export function wantsDeep(text) {
 }
 
 export const FAST_REPORT_ADD = "\n\n(Write a complete, accurate answer from ALL the passages, like a research assistant: a direct 2–3 line answer first, then sections with ## headings and tables for specs, prices and comparisons, covering every part of the question and every item the passages name. Cite the source number after each fact. Copy numbers exactly. Where sources give different values, show both with their sources; prefer the confirmed figures. End with what the sources did not say.)";
+
+/** v5.31 — like Gemini's "does this need a search?": questions about things that change
+    (prices, latest models, news, today, specs of a named product) are offered a web search
+    when Web is off. */
+export function needsWeb(text) {
+  const t = String(text || "");
+  if (t.length < 8) return false;
+  return /\b(latest|newest|today|tonight|this (week|month|year)|news|current|currently|price|prices|cost|how much|release[ds]?|launch(ed)?|specs?|specifications?|trims?|who won|score|weather|exchange rate|stock|20[2-3]\d)\b|أحدث|احدث|أخبار|اخبار|النهارده|انهارده|سعر|أسعار|اسعار|بكام|مواصفات|فئات|نزل امتى|الطقس|الجو/i.test(t);
+}

@@ -24,21 +24,22 @@ export const LEVELS = {
 
 /** model tier id → { brand, level } */
 export const BRANDS = {
-  // v5.28 — Ali: no Qwen / Gemma anywhere, catchy names that rank clearly
+  // v5.28 — Ali: no Qwen / Gemma anywhere. v5.31: no clash with other AI products either
+  // (Gemini has Nano / Flash / Pro / Ultra, Amazon has Titan) — Blaze, Zenith, Apex, Everest
   "xs": { brand: "Spark", level: 1 },
   "sm": { brand: "Glow", level: 2 },
-  "fast-e2b": { brand: "Flash", level: 2 },
+  "fast-e2b": { brand: "Blaze", level: 2 },
   "md-lo": { brand: "Core Lite", level: 3 },
   "md": { brand: "Core", level: 3 },
   "md-hi": { brand: "Core+", level: 3 },
   "lg": { brand: "Sense", level: 3 },
-  "fast-e4b": { brand: "Flash+", level: 3 },
-  "xl": { brand: "Pro", level: 4 },
-  "max": { brand: "Pro+", level: 4 },
-  "moe-lg": { brand: "Ultra", level: 5 },
-  "ultra": { brand: "Ultra+", level: 5 },
-  "moe-xl": { brand: "Titan", level: 5 },
-  "moe-xl-long": { brand: "Titan XL", level: 5 },
+  "fast-e4b": { brand: "Blaze+", level: 3 },
+  "xl": { brand: "Zenith", level: 4 },
+  "max": { brand: "Zenith+", level: 4 },
+  "moe-lg": { brand: "Apex", level: 5 },
+  "ultra": { brand: "Apex+", level: 5 },
+  "moe-xl": { brand: "Everest", level: 5 },
+  "moe-xl-long": { brand: "Everest XL", level: 5 },
 };
 
 /** A model tier (or null) → { brand, level, levelName, real } */
@@ -153,16 +154,16 @@ export function capabilitiesOf(tier) {
  * quantisation jargon removed.
  */
 const REAL = [
-  [/qwen\s?3(?:\.\d)?[\s-]*35B[-\s]?A3B\s*·?\s*long context/gi, "Titan XL"],
-  [/qwen\s?3(?:\.\d)?[\s-]*35B[-\s]?A3B/gi, "Titan"],
-  [/gemma[\s-]?4[\s-]*31B/gi, "Ultra+"],
-  [/gemma[\s-]?4[\s-]*26B[-\s]?A4B/gi, "Ultra"],
-  [/gemma[\s-]?4[\s-]*12B/gi, "Pro+"],
-  [/gemma[\s-]?4[\s-]*E4B(?:[-\s]it)?\s*·?\s*fast engine(?:\s*\((?:GPU|CPU)\))?/gi, "Flash+"],
-  [/gemma[\s-]?4[\s-]*E2B(?:[-\s]it)?\s*·?\s*fast engine(?:\s*\((?:GPU|CPU)\))?/gi, "Flash"],
+  [/qwen\s?3(?:\.\d)?[\s-]*35B[-\s]?A3B\s*·?\s*long context/gi, "Everest XL"],
+  [/qwen\s?3(?:\.\d)?[\s-]*35B[-\s]?A3B/gi, "Everest"],
+  [/gemma[\s-]?4[\s-]*31B/gi, "Apex+"],
+  [/gemma[\s-]?4[\s-]*26B[-\s]?A4B/gi, "Apex"],
+  [/gemma[\s-]?4[\s-]*12B/gi, "Zenith+"],
+  [/gemma[\s-]?4[\s-]*E4B(?:[-\s]it)?\s*·?\s*fast engine(?:\s*\((?:GPU|CPU)\))?/gi, "Blaze+"],
+  [/gemma[\s-]?4[\s-]*E2B(?:[-\s]it)?\s*·?\s*fast engine(?:\s*\((?:GPU|CPU)\))?/gi, "Blaze"],
   [/gemma[\s-]?4[\s-]*E4B/gi, "Sense"],
-  [/gemma[\s-]?4[\s-]*E2B/gi, "Flash"],
-  [/qwen\s?3(?:\.\d)?[\s-]*9B/gi, "Pro"],
+  [/gemma[\s-]?4[\s-]*E2B/gi, "Blaze"],
+  [/qwen\s?3(?:\.\d)?[\s-]*9B/gi, "Zenith"],
   [/qwen\s?3(?:\.\d)?[\s-]*4B/gi, "Core"],
   [/qwen\s?3(?:\.\d)?[\s-]*2B/gi, "Glow"],
   [/qwen\s?3(?:\.\d)?[\s-]*0\.8B/gi, "Spark"],
@@ -174,6 +175,6 @@ export function publicName(s) {
   let t = String(s || "");
   for (const [re, to] of REAL) t = t.replace(re, to);
   // "Echo · Core" (an old brand + the new one) → keep the new one; tidy separators
-  t = t.replace(/\b(Whisper|Echo|Pulse Pro|Pulse|Chord Lite|Chord HD|Chord|Rhythm|Harmony Pro|Harmony|Symphony Max|Symphony|Maestro Long|Maestro)\s*·\s*/g, "");
+  t = t.replace(/\b(Whisper|Echo|Pulse Pro|Pulse|Chord Lite|Chord HD|Chord|Rhythm|Harmony Pro|Harmony|Symphony Max|Symphony|Maestro Long|Maestro|Flash\+?|Titan XL|Titan|Ultra\+?)\s*·\s*/g, "");
   return t.replace(/(\s*·\s*){2,}/g, " · ").replace(/^\s*·\s*|\s*·\s*$/g, "").replace(/\s{2,}/g, " ").trim();
 }

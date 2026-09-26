@@ -16,7 +16,7 @@ import { looksLikeMathProblem, looksLikeCodeTask, arithmeticSlips, fixSlips } fr
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
-import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD } from "./research.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb } from "./research.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from "./power.js";
 // v5.29 UX: the follow-up chips fade out at the end, so it's clear the row scrolls (left in Arabic)
 const chipFade = () => { const side = typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "left" : "right"; const g = "linear-gradient(to " + side + ", #000 82%, transparent)"; return { WebkitMaskImage: g, maskImage: g }; };
@@ -109,10 +109,22 @@ function Elapsed() {
 }
 
 // ---- Markdown, drawn as real elements (never as HTML strings) -------------------
-function inline(text, keyBase) {
+function inline(text, keyBase, sources) {
   const out = [];
   // _italic_ and __bold__ only as whole words: second_largest_distinct and
   // file_name stay as written.
+  // v5.31: with web sources, "[2]" becomes a small chip that opens source 2 (like Gemini)
+  if (sources && sources.length) {
+    const parts = String(text || "").split(/(\[\d{1,2}\](?!\())/g);
+    if (parts.length > 1) return parts.flatMap((p, pi) => {
+      const c = /^\[(\d{1,2})\]$/.exec(p);
+      const src = c && sources[+c[1] - 1];
+      if (!src) return inline(p, keyBase + "p" + pi, null);
+      let host = ""; try { host = new URL(src.url).hostname.replace(/^www\./, ""); } catch (e) {}
+      return [<a key={keyBase + "c" + pi} href={src.url} target="_blank" rel="noreferrer" title={host + " — " + (src.title || "")} data-testid="cite"
+        className="inline-flex items-center justify-center min-w-[1.25rem] h-[1.1rem] mx-0.5 px-1 rounded-full bg-teal-500/15 border border-teal-800/70 text-[10px] leading-none text-teal-200 no-underline align-[0.15em]">{c[1]}</a>];
+    });
+  }
   const re = /(\*\*[^*\n]+\*\*|(?<![\w\\])__[^_\n]+__(?![\w])|`[^`\n]+`|\[[^\]\n]+\]\((https?:\/\/[^)\s]+)\)|(?<![\w*\\])\*(?![\s*])[^*\n]+(?<!\s)\*(?![\w*])|(?<![\w\\])_(?![\s_])[^_\n]+(?<!\s)_(?![\w]))/g;
   let last = 0, m, k = 0;
   const s = String(text || "");
@@ -154,7 +166,7 @@ function CodeBox({ lang, text }) {
   );
 }
 
-function MdView({ text, runnable = true }) {
+function MdView({ text, runnable = true, sources = null }) {
   const blocks = useMemo(() => {
     const lines = mathToText(String(text || "")).replace(/\r/g, "").split("\n");
     const out = [];
@@ -235,25 +247,25 @@ function MdView({ text, runnable = true }) {
         if (b.t === "table") return (
           <div key={k} className="att-hscroll overflow-x-auto rounded-xl border border-slate-800" data-testid="md-table">
             <table className="min-w-full text-[13px]" dir="auto">
-              <thead className="bg-slate-800/70"><tr>{b.head.map((h, i) => <th key={i} className="px-3 py-2 text-start font-semibold text-slate-100 whitespace-nowrap">{inline(h, k + "h" + i)}</th>)}</tr></thead>
-              <tbody>{b.rows.map((r, ri) => <tr key={ri} className="border-t border-slate-800">{r.map((c, ci) => <td key={ci} className="px-3 py-2 align-top text-slate-200">{inline(c, k + "c" + ri + ci)}</td>)}</tr>)}</tbody>
+              <thead className="bg-slate-800/70"><tr>{b.head.map((h, i) => <th key={i} className="px-3 py-2 text-start font-semibold text-slate-100 whitespace-nowrap">{inline(h, k + "h" + i, sources)}</th>)}</tr></thead>
+              <tbody>{b.rows.map((r, ri) => <tr key={ri} className="border-t border-slate-800">{r.map((c, ci) => <td key={ci} className="px-3 py-2 align-top text-slate-200">{inline(c, k + "c" + ri + ci, sources)}</td>)}</tr>)}</tbody>
             </table>
           </div>
         );
-        if (b.t === "h") return <p key={k} dir="auto" className={`${b.level <= 2 ? "text-base" : "text-[15px]"} font-semibold text-white pt-1`}>{inline(b.text, k)}</p>;
+        if (b.t === "h") return <p key={k} dir="auto" className={`${b.level <= 2 ? "text-base" : "text-[15px]"} font-semibold text-white pt-1`}>{inline(b.text, k, sources)}</p>;
         if (b.t === "hr") return <hr key={k} className="border-slate-800" />;
-        if (b.t === "quote") return <blockquote key={k} dir="auto" className="border-s-2 border-teal-700 ps-3 text-slate-300 whitespace-pre-wrap">{inline(b.text, k)}</blockquote>;
+        if (b.t === "quote") return <blockquote key={k} dir="auto" className="border-s-2 border-teal-700 ps-3 text-slate-300 whitespace-pre-wrap">{inline(b.text, k, sources)}</blockquote>;
         if (b.t === "ul" || b.t === "ol") return (
           <div key={k} dir="auto" className="space-y-1">
             {b.items.map((it, ii) => (
               <div key={ii} className={`flex gap-2 ${it.ind ? "ms-5" : ""}`}>
                 <span className="shrink-0 text-teal-400 min-w-[1.1rem]">{b.t === "ol" ? (it.n || ii + 1) + "." : "•"}</span>
-                <span className="min-w-0">{inline(it.text, k + "i" + ii)}</span>
+                <span className="min-w-0">{inline(it.text, k + "i" + ii, sources)}</span>
               </div>
             ))}
           </div>
         );
-        return <p key={k} dir="auto" className="whitespace-pre-wrap">{inline(b.text, k)}</p>;
+        return <p key={k} dir="auto" className="whitespace-pre-wrap">{inline(b.text, k, sources)}</p>;
       })}
     </div>
   );
@@ -653,7 +665,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       let content = typed || (fileAtt ? userMsg.text : "What is in this photo? Read it and tell me what matters.");
       let sources = null, via = null, research = null;
       const pic = img || carried;
-      if (api.webOn && typed) {
+      if ((api.webOn || o.web) && typed) {
         // With a photo, LOOK first: search for what is in the picture, not
         // for the words "what is this car".
         let query = typed, asked = typed;
@@ -730,7 +742,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const ranked = api.rankAll(question, toRead, { budget: budgetF, perSource: Math.max(1500, Math.floor(budgetF / Math.max(1, Math.min(toRead.length, 6)) * 1.4)) });
           const figs = confirmedFigures(ranked);
           sources = ranked; via = look.via;
-          research = { pages: toRead.length, withFacts: ranked.length, searches: queries.length, confirmed: figs.list.length, fast: true };
+          research = { pages: toRead.length, withFacts: ranked.length, searches: queries.length, confirmed: figs.list.length, fast: true,
+            log: { queries: queries.slice(0, 6), read: toRead.slice(0, 12).map((h) => ({ title: String(h.title || "").slice(0, 90), url: h.url })) } };
           content = api.groundedPrompt(asked, ranked) + figs.block + (deep ? FAST_REPORT_ADD : "") + photoNote;
         } else if (toRead.length && api.webPages) {
           const notesSrc = [], tR = Date.now(), budget = (pwR.researchSecs || 170) * 1000; let read = 0;
@@ -776,7 +789,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             const ansR = (api.power && api.power().longTokens) || 2048;
             const cc0 = crossCheck(notesSrc);
             const cc = { ...cc0, notes: fitNotes(cc0.notes, fitChars((api.contextTokens && api.contextTokens()) || 8192, ansR, 2400, cc0.notes.map((n) => n.text).join("\n"))) };
-            sources = cc.notes; via = look.via; research = { pages: read, withFacts: notesSrc.length, searches: queries.length, confirmed: cc.confirmed };
+            sources = cc.notes; via = look.via; research = { pages: read, withFacts: notesSrc.length, searches: queries.length, confirmed: cc.confirmed,
+              log: { queries: queries.slice(0, 8), read: notesSrc.slice(0, 12).map((h) => ({ title: String(h.title || "").slice(0, 90), url: h.url })) } };
             onStatus(tr("Writing the full answer from {n} pages…", { n: notesSrc.length }));
             content = api.groundedPrompt(asked, cc.notes) + (queries.length > 1 || cc.confirmed ? REPORT_ADD : FINAL_ADD) + photoNote;
           } else {
@@ -1340,7 +1354,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             {m.streaming && !m.text && !m.thinking ? (
               <div className="flex items-center gap-2 text-sm text-teal-300/90 py-1" data-testid="phase"><Loader2 size={15} className="animate-spin shrink-0" /> <span className="min-w-0">{m.phase || tr("Reading…")}</span> <Elapsed /></div>
             ) : null}
-            {m.text ? <Md text={m.text + (m.streaming ? " ▍" : "")} /> : null}
+            {m.text ? <Md text={m.text + (m.streaming ? " ▍" : "")} sources={m.sources} /> : null}
             {m.calc ? (
               <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500" data-testid="calc-note">
                 <span>⚡ {tr("Worked out on the phone — exact, instant, no model")}</span>
@@ -1439,7 +1453,26 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             {m.sources && m.sources.length ? (
               <div className="mt-2 space-y-1">
                 <p className="text-[11px] text-slate-500">{tr("Sources")}{m.via ? " · via " + m.via : ""}{m.research ? " · " + (m.research.fast ? tr("read {p} pages", { p: m.research.pages }) : tr("read {p} pages one by one, facts from {n}", { p: m.research.pages, n: m.research.withFacts })) : ""}{m.research && m.research.searches > 1 ? " · " + tr("{s} searches", { s: m.research.searches }) : ""}{m.research && m.research.confirmed ? " · " + tr("{c} facts confirmed by 2+ sites", { c: m.research.confirmed }) : ""}</p>
-                {m.sources.map((h, i) => <a key={i} href={h.url} target="_blank" rel="noreferrer" className="block text-[12px] text-teal-300/90 truncate">[{i + 1}] {tr(h.title)}</a>)}
+                {m.sources.map((h, i) => { let host = ""; try { host = new URL(h.url).hostname.replace(/^www\./, ""); } catch (e) {}
+                  return <a key={i} href={h.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[12px] min-w-0" data-testid="source">
+                    <span className="shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-[1.1rem] px-1 rounded-full bg-teal-500/15 border border-teal-800/70 text-[10px] text-teal-200">{i + 1}</span>
+                    {host ? <span className="shrink-0 text-slate-300 font-medium">{host}</span> : null}
+                    <span className="truncate text-teal-300/80">{tr(h.title)}</span></a>; })}
+                {/* v5.31 — like Gemini's research panel: what it searched and what it read */}
+                {m.research && m.research.log ? (
+                  <div className="mt-1" data-testid="research-log">
+                    <button onClick={() => setOpenThought((o) => ({ ...o, ["rs" + m.id]: !o["rs" + m.id] }))} className="text-[11px] text-slate-400 flex items-center gap-1">
+                      <Globe size={11} />{tr("How I researched")} <ChevronDown size={11} className={openThought["rs" + m.id] ? "rotate-180" : ""} /></button>
+                    {openThought["rs" + m.id] ? (
+                      <div className="mt-1 ms-4 text-[11px] text-slate-400 space-y-1">
+                        <p className="text-slate-300">{tr("Searched")}:</p>
+                        <ul className="list-disc ms-4">{m.research.log.queries.map((q, i) => <li key={i} dir="auto">{q}</li>)}</ul>
+                        <p className="text-slate-300 pt-1">{tr("Read {n} pages", { n: m.research.log.read.length })}:</p>
+                        <ul className="list-disc ms-4">{m.research.log.read.map((r, i) => <li key={i} className="truncate" dir="auto">{r.title}</li>)}</ul>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             ) : null}
             {!m.streaming && m.text ? (
@@ -1485,6 +1518,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               <button onClick={() => continueAnswer(messages.length - 1)} data-testid="continue"
                 className="shrink-0 text-xs px-3 py-2 rounded-full border border-teal-600 text-teal-200 bg-teal-500/10 font-medium">{tr("Continue ▸")}</button>
             ) : null}
+            {(() => { const u = messages[messages.length - 2];
+              return !api.webOn && !(lastAi.sources && lastAi.sources.length) && u && u.role === "user" && needsWeb(u.text) ? (
+                <button onClick={() => ask(u.text, { web: true })} data-testid="search-web-chip"
+                  className="shrink-0 text-xs px-3 py-2 rounded-full border border-sky-700 text-sky-200 bg-sky-500/10">{tr("🌐 Search the web for this")}</button>
+              ) : null; })()}
             {followUps(lastAi, messages[messages.length - 2]).map(([label, prompt]) => (
               <button key={label} onClick={() => ask(prompt)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-slate-700 text-slate-300 active:border-teal-600">{tr(label)}</button>
             ))}

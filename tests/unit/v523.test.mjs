@@ -5,7 +5,7 @@ const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
 
 eq(brandOf({ id: "xs", label: "Qwen 0.6B", quant: "Q4" }).brand, "Spark", "the smallest model is Spark");
-eq(brandOf({ id: "moe-xl", label: "Big", quant: "Q4" }).brand, "Titan", "the biggest is Titan");
+eq(brandOf({ id: "moe-xl", label: "Big", quant: "Q4" }).brand, "Everest", "the biggest is Everest");
 eq(brandOf({ id: "md", label: "Core", realName: "Gemma 4B", quant: "Q4_K_M" }).real, "Gemma 4B", "the real model name is kept inside the app only (never shown — v5.28)");
 eq(new Set(Object.values(BRANDS).map((b) => b.brand)).size, Object.keys(BRANDS).length, "every model has its own name");
 eq([brandOf({ id: "new", label: "X", params: "1B" }).level, brandOf({ id: "new", label: "X", params: "14B" }).level, brandOf({ id: "new", label: "X", params: "30B" }).level], [1, 4, 5], "an unknown model gets a level from its size");
