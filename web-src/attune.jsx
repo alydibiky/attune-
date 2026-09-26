@@ -4,7 +4,7 @@ import {
   Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User,
   ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users,
   AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2,
-  Database, GraduationCap, Newspaper,
+  Database, GraduationCap, Newspaper, Folder, Layers,
 } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -20,6 +20,7 @@ import { CodeWorkbench } from "./code-ui.jsx";
 import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
+import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
 import { detectLoop, trimLoop } from "./quality.js";
 import { verifyMath, looksLikeMathProblem, arithmeticSlips } from "./verify.js";
 import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
@@ -5764,7 +5765,8 @@ const GROUNDED_RULES = `Answer ONLY from the passages below.
 - Cite the source number in square brackets after each claim, like [1].
 - Copy every number, version and date EXACTLY as the passage writes it (never join or change digits).
 - "Latest", "newest", "current": the answer is the HIGHEST version number / MOST RECENT date the passages mention; older ones are history. Titles count as passages too.
-- Answer in the language the question was asked in. Be brief.`;
+- Answer in the language the question was asked in.
+- Shape: the direct answer first in **bold** (one line, with its citation), then the key details as short bullets. Comparing things ("is X the same as Y", "X vs Y") → verdict line, then a small table of the differences, each row cited.`;
 
 function groundedPrompt(q, hits, lang) {
   const src = hits.map((h, i) => `[${i + 1}] ${h.title} — ${h.url}${h.date ? " (" + h.date + ")" : ""}\n${h.text}`).join("\n\n");
@@ -6558,8 +6560,12 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 
 const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
-  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news" };
+  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
+  assistants: "Assistants", projects: "Projects", artifacts: "Artifacts" };
 const MORE_TOOLS = [
+  ["assistants", "Assistants", "Experts that follow your instructions", Bot],
+  ["projects", "Projects", "Chats, files & instructions together", Folder],
+  ["artifacts", "Artifacts", "Saved pages, documents & programs", Layers],
   ["instant", "Instant", "Quick actions on text & photos", Zap], ["studio", "Studio", "Pictures made on your phone", Palette],
   ["learn", "Learn daily", "A lesson a day, with quizzes", GraduationCap],
   ["news", "Daily news", "Topics you follow, every morning", Newspaper],
@@ -6630,6 +6636,18 @@ export default function App() {
   };
   const [newChatSignal, setNewChatSignal] = useState(0);
   const [chatSeed, setChatSeed] = useState("");
+  // v5.14: Assistants / Projects / Artifacts / Themes (spaces.js, spaces-ui.jsx)
+  const [spaceSeed, setSpaceSeed] = useState(null);      // start a chat with an assistant or in a project
+  const [openChatId, setOpenChatId] = useState(null);    // open a chat from a project
+  const [artifact, setArtifact] = useState(null);        // the full-screen artifact viewer
+  const [theme, setTheme] = useState(() => loadTheme());
+  useEffect(() => { applyTheme(theme); }, []);
+  useEffect(() => {
+    const on = (e) => { if (e && e.detail) setArtifact(e.detail); };
+    window.addEventListener("attune-artifact", on);
+    return () => window.removeEventListener("attune-artifact", on);
+  }, []);
+  const startSpaceChat = (seed) => { setSpaceSeed({ ...seed, n: Date.now() }); setMoreOpen(false); setMode("chat"); };
   const [askQ, setAskQ] = useState("");
   // Off by default and per-question. Web lookup is the one thing in this
   // app that leaves the device, so it is never implicit.
@@ -8062,7 +8080,16 @@ export default function App() {
 
         {mode === "chat" ? (
           <ChatHome key="chat" api={chatApi} drawerOpen={drawerOpen} setDrawerOpen={setDrawerOpen} newChatSignal={newChatSignal}
-            composerSeed={chatSeed} clearComposerSeed={() => setChatSeed("")} />
+            composerSeed={chatSeed} clearComposerSeed={() => setChatSeed("")}
+            spaceSeed={spaceSeed} clearSpaceSeed={() => setSpaceSeed(null)} openChatId={openChatId} clearOpenChat={() => setOpenChatId(null)} />
+        ) : mode === "assistants" ? (
+          <AssistantsPage startChat={startSpaceChat} flash={flash}
+            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false })} />
+        ) : mode === "projects" ? (
+          <ProjectsPage startChat={startSpaceChat} openChat={(id) => { setOpenChatId(id); setMode("chat"); }} flash={flash} />
+        ) : mode === "artifacts" ? (
+          <ArtifactsPage open={(a) => setArtifact(a)} />
         ) : mode === "ask" ? (
           <div className="att-in">
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
@@ -9829,6 +9856,7 @@ export default function App() {
             <div className="max-w-3xl mx-auto">
               <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("App language")}</span><LangSwitch /></div>
               <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("Text size")}</span><TextSize /></div>
+              <div className="mb-3"><ThemePicker theme={theme} setTheme={setTheme} /></div>
               <div className="grid grid-cols-3 gap-2">
                 {MORE_TOOLS.map(([id, label, sub, Icon]) => (
                   <button key={id} onClick={() => { if (id === "cycle") enableCycle(true); setMode(id); setMoreOpen(false); }}
@@ -9850,6 +9878,10 @@ export default function App() {
           </div>
         </div>
       ) : null}
+      {artifact ? <ArtifactViewer key={(artifact.id || artifact.title) + ":" + (artifact.chatId || "")} artifact={artifact} close={() => { setArtifact(null); try { window.dispatchEvent(new Event("attune-artifacts-changed")); } catch (e) {} }}
+        native={NATIVE} flash={flash} modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+        llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false })}
+        saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null} /> : null}
       {showBackup && <BackupPanel close={() => setShowBackup(false)} flash={flash} nativeCall={nativeCall} native={NATIVE} />}
       {showOnboard && <Onboard profile={profile} setProfile={setProfile} close={() => { try { localStorage.setItem("attune:onboarded", "1"); } catch (e) {} setShowOnboard(false); }} flash={flash} />}
       {showEngine && <EngineModal device={device} setRamOverride={setRamOverride} bestTier={bestTier} activeTier={activeTier} setTierId={setTierId} plan={plan}

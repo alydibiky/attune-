@@ -159,11 +159,30 @@ const RULES = {
 const TESTS = {
   python: `End the code block with a line "# --- tests ---", then 3 to 6 assert statements that check the important cases, including an edge case, and finally print("${PASS_MARK}").`,
   javascript: `End the code block with a line "// --- tests ---", then 3 to 6 assert(...) or assertEqual(...) calls on the important cases, including an edge case, and finally console.log("${PASS_MARK}").`,
-  html: "Make it work without errors when the page loads.",
+  html: "Make it work without errors when the page loads, starting in its clean initial state (no demo actions on load).",
 };
 const FENCE_LANG = { python: "python", javascript: "javascript", html: "html" };
 
+// A web page is a product, not a program with a demo: v5.13 pages ran their
+// "demo" on load (a crane simulator that opened with ten "Lowered hook" lines
+// already in its log). Pages get their own brief — start clean, look finished,
+// be usable by thumb — which is most of what separates a good single-prompt
+// site from a toy on a small model. (v5.14)
+const HTML_BRIEF = `You are an expert front-end developer and product designer. Write ONE complete, self-contained HTML file (inline <style> and <script>; no external links, fonts, images or libraries — draw pictures with inline SVG or <canvas>) that works offline on a phone.
+Quality bar — it must look and feel like a finished, professional product:
+- Start with <!doctype html>, <meta name="viewport" content="width=device-width, initial-scale=1">, a <title>.
+- Design: CSS variables for a small colour palette (one accent colour), system-ui font, generous spacing, rounded cards, soft shadows, clear hierarchy (one big title, short subtitle). Mobile first: a single column that fits 360 px wide, buttons at least 44 px tall. Support dark mode with @media (prefers-color-scheme: dark).
+- Build EVERYTHING the request implies, with real content (no "Lorem ipsum", no "TODO", no placeholder links). A website → a header with navigation, a hero, the sections the topic needs, a footer. A tool/app → the working tool with inputs, results and sensible defaults. A game or simulator → a visual scene drawn with SVG or canvas that the controls actually move, plus a score/status line.
+- The page opens in its clean initial state: never click buttons, run a demo or fill logs automatically on load. Anything shown in a log/list comes from the user's own actions.
+- State kept in localStorage when the user would expect it to persist (lists, settings, scores); wrap it in try/catch.
+- No alert(), prompt() or confirm(); show messages in the page. No console errors.
+Reply with ONE \`\`\`html code block holding the whole file. No explanation before it; after it at most two short sentences.`;
+
 export function writeMessages(task, lang) {
+  if (lang === "html") return [
+    { role: "system", content: HTML_BRIEF },
+    { role: "user", content: String(task || "").trim() },
+  ];
   return [
     { role: "system", content: `You are an expert programmer. Write ${RULES[lang]}\nReply with ONE code block (\`\`\`${FENCE_LANG[lang]}) holding the complete program: first the program itself with a short demo that prints results, then its tests. ${TESTS[lang]}\nNo explanation before the code. After the code, at most two short sentences.` },
     { role: "user", content: String(task || "").trim() },
@@ -208,7 +227,7 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
 
   const write = async () => {
     onEvent({ type: "write", round });
-    const ans = await llm(writeMessages(task, lang), { maxTokens: lang === "html" ? 2600 : 2000, onToken: (t) => onEvent({ type: "writing", round, text: t }) });
+    const ans = await llm(writeMessages(task, lang), { maxTokens: lang === "html" ? 4000 : 2000, onToken: (t) => onEvent({ type: "writing", round, text: t }) });
     const p = pickProgram(ans, lang);
     if (!p) throw new Error("The model answered without any code — try asking again in other words.");
     lang = p.lang || lang; code = p.code;

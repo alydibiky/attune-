@@ -173,7 +173,9 @@ with sync_playwright() as pw:
     page.evaluate("(t) => { window.__mock.fake = t; }", MD)
     # (Pure arithmetic is now answered instantly on the phone — e2e_v5 "fast" —
     #  so this formatting check asks something the model has to write.)
-    comp.fill("Price 3 cranes for 4 days at 12,500 EGP a day, with VAT, as a table")
+    # (v5.13: money/VAT questions go through the checked route — worked out by
+    #  a program — so this formatting check asks for a comparison instead.)
+    comp.fill("Compare 3 cranes for a rooftop job as a table")
     page.locator("button[title='Send']").click()
     page.wait_for_selector("text=▍", timeout=10000)
     check(page.locator("button[title='Stop']").count() == 1, "Send turns into Stop while answering")

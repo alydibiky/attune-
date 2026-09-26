@@ -15,9 +15,10 @@ import { mathToText } from "./quality.js";
 import { looksLikeMathProblem, looksLikeCodeTask, arithmeticSlips } from "./verify.js";
 import { looksLikeReasoning, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
+import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
-  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText,
+  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2,
 } from "lucide-react";
 
 const KEY = "attune:chats:v1";
@@ -25,7 +26,7 @@ const MAX_CHATS = 100;
 const NATIVE = (typeof window !== "undefined" && window.AttuneNative) || null;
 
 // ---- storage -------------------------------------------------------------------
-function loadChats() {
+export function loadChats() {
   try { const raw = localStorage.getItem(KEY); lastWritten = raw; const v = JSON.parse(raw || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; }
 }
 // v5.13: chats vanished when the phone's page storage was full — photos are
@@ -259,13 +260,13 @@ How to answer:
 - Answer directly. No preamble, no restating the question, no "certainly", no offer to help further at the end.
 - Match the user's language and dialect. If they write Egyptian Arabic, answer in natural Egyptian Arabic; if English, English. If they ask for another language, use it.
 - Use Markdown when it helps reading on a phone: short paragraphs, bullet or numbered lists for steps and options, a table only when comparing several things on the same points, **bold** for the key figure or conclusion. No headings on short answers.
-- Be short: most answers fit in a few lines. Only go long when asked for detail, a plan or a document.
+- Shape of a good answer: the direct answer FIRST, in **bold**, in one line. Then the details that actually help — key facts, numbers, differences, what to do next — as a few bullets. Comparing two or more things ("is X the same as Y", "X vs Y", "which is better") → one line verdict, then a table of the key differences. A greeting or a yes/no fact stays one or two lines; don't pad.
 - Calculations: write the short working FIRST, one step per line, then the total in bold on the last line. Never state a total before you have worked it out.
 - Write the answer once. Never repeat it, and never add a "correction" of your own answer — check each step before writing it.
 - Write maths as plain text a phone can show: 1/x = 1/30, x², 3 × 4, √2. Never LaTeX, never $ signs around formulas.
 - If the question is a trick, or impossible as stated, say so plainly in the first line and explain why.
 - If the user says you were wrong, check their point on its merits: agree and fix it if they are right, explain briefly if they are not. Keep the whole conversation in mind.
-- If a photo is attached, read it carefully and base the answer on what is actually visible.
+- If a photo is attached, read it carefully and base the answer on what is actually visible. "What is this?" about a machine, vehicle or product: name the type, then the most likely brand and model from visible clues (colour scheme, logos, badges, cab shape, number of axles, boom type, text), how sure you are, and 3–5 useful facts about it (e.g. for a crane: capacity class, boom type, typical use). Never stop at a generic label like "a mobile crane".
 - If something is ambiguous, make the most reasonable assumption and state it in one short line.
 - Today is ${d.toDateString()}.
 
@@ -296,7 +297,7 @@ const STARTERS = [
 ];
 
 // ---- the screen --------------------------------------------------------------------
-export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, composerSeed, clearComposerSeed }) {
+export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, composerSeed, clearComposerSeed, spaceSeed, clearSpaceSeed, openChatId, clearOpenChat }) {
   const [chats, setChats] = useState(() => loadChats());
   const [activeId, setActiveId] = useState(() => { const c = loadChats(); return c[0] && (Date.now() - (c[0].updated || 0) < 6 * 3600e3) ? c[0].id : null; });
   const [text, setText] = useState("");
@@ -336,9 +337,35 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const stickRef = useRef(true);
   const [typing, setTyping] = useState(false);
   useEffect(() => () => document.documentElement.classList.remove("att-typing"), []);
+  // The space under the last answer follows the composer's REAL height (a
+  // photo or file chip makes it taller) so its buttons and follow-up chips
+  // are never hidden behind it (v5.14; was a fixed 176 px).
+  const composerRef = useRef(null);
+  const [padB, setPadB] = useState(200);
+  useEffect(() => {
+    const el = composerRef.current; if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => { const h = el.getBoundingClientRect().height; if (h) setPadB(Math.round(h + 58 + 24)); });
+    ro.observe(el); return () => ro.disconnect();
+  }, []);
 
   const chat = chats.find((c) => c.id === activeId) || null;
   const messages = chat ? chat.messages : [];
+  // v5.14: the assistant (like a Gem) and/or project this chat belongs to. A
+  // new chat started from Assistants/Projects waits in `pending` until its
+  // first message creates it.
+  const [pending, setPending] = useState(null);
+  const spaceIds = chat ? { assistantId: chat.assistantId || null, projectId: chat.projectId || null } : (pending || { assistantId: null, projectId: null });
+  const assistant = useMemo(() => (spaceIds.assistantId ? loadAssistants().find((a) => a.id === spaceIds.assistantId) || null : null), [spaceIds.assistantId, spaceSeed]);
+  const project = useMemo(() => (spaceIds.projectId ? loadProjects().find((p) => p.id === spaceIds.projectId) || null : null), [spaceIds.projectId, spaceSeed]);
+  const spaceRef = useRef({}); spaceRef.current = { assistant, project, ids: spaceIds };
+  useEffect(() => {
+    if (!spaceSeed) return;
+    stop(); setActiveId(null); setImage(null);
+    setPending({ assistantId: spaceSeed.assistantId || null, projectId: spaceSeed.projectId || null });
+    setText(spaceSeed.starter || "");
+    clearSpaceSeed && clearSpaceSeed();
+  }, [spaceSeed]);
+  useEffect(() => { if (openChatId) { stop(); setActiveId(openChatId); setPending(null); clearOpenChat && clearOpenChat(); } }, [openChatId]);
 
   // Persist, lightly: not on every streamed word, only when the list settles.
   useEffect(() => { if (!busy) saveIfOurs(chats); }, [chats, busy]);
@@ -364,7 +391,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     return () => { window.removeEventListener("attune-pause", save); window.removeEventListener("pagehide", save);
       window.removeEventListener("attune-resume", back); document.removeEventListener("visibilitychange", vis); };
   }, []);
-  useEffect(() => { if (newChatSignal) { stop(); setActiveId(null); setText(""); setImage(null); } }, [newChatSignal]);
+  useEffect(() => { if (newChatSignal) { stop(); setActiveId(null); setText(""); setImage(null); setPending(null); } }, [newChatSignal]);
   useEffect(() => { if (composerSeed) { setText(composerSeed); clearComposerSeed && clearComposerSeed(); setTimeout(() => taRef.current && taRef.current.focus(), 50); } }, [composerSeed]);
 
   // Follow the answer as it streams — but the moment the reader touches the
@@ -407,7 +434,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const ensureChat = (firstText) => {
     if (chat) return chat.id;
     const id = newId();
-    setChats((list) => [{ id, title: titleFrom(firstText), created: Date.now(), updated: Date.now(), messages: [] }, ...list]);
+    const sp = spaceRef.current.ids || {};
+    setChats((list) => [{ id, title: titleFrom(firstText), created: Date.now(), updated: Date.now(), messages: [], assistantId: sp.assistantId || undefined, projectId: sp.projectId || undefined }, ...list]);
     setActiveId(id);
     return id;
   };
@@ -446,7 +474,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       used += ut.length + at.length;
       kept.unshift({ role: "user", content: ut }, { role: "assistant", content: at });
     }
-    return [{ role: "system", content: systemPrompt(api.profileText(), api.accuracy) }, ...kept, { role: "user", content: userContent }];
+    const sp = spaceRef.current;
+    const block = sp.assistant || sp.project ? spaceBlock({ assistant: sp.assistant, project: sp.project, question: typeof userContent === "string" ? userContent.slice(0, 600) : "" }) : "";
+    return [{ role: "system", content: systemPrompt(api.profileText(), api.accuracy) + (block ? "\n\n" + block : "") }, ...kept, { role: "user", content: userContent }];
   };
 
   const ask = async (raw, opts) => {
@@ -539,7 +569,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     const useThink = think ? "force" : api.deepThink();
     setChats((list) => {
       const exists = list.some((c) => c.id === cid);
-      const base = exists ? list : [{ id: cid, title: titleFrom(typed || "Photo"), created: Date.now(), updated: Date.now(), messages: [] }, ...list];
+      const sp = spaceRef.current.ids || {};
+      const base = exists ? list : [{ id: cid, title: titleFrom(typed || "Photo"), created: Date.now(), updated: Date.now(), messages: [], assistantId: sp.assistantId || undefined, projectId: sp.projectId || undefined }, ...list];
       return base.map((c) => (c.id === cid ? { ...c, updated: Date.now(),
         messages: [...history, userMsg, { id: aiId, role: "assistant", text: "", thinking: "", streaming: true, phase: api.webOn ? "Searching the web…" : "Reading…" }] } : c));
     });
@@ -558,7 +589,25 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (api.webOn && typed) {
         // With a photo, LOOK first: search for what is in the picture, not
         // for the words "what is this car".
-        let query = typed;
+        let query = typed, asked = typed;
+        // A short follow-up ("What model", "how much?", "and in 2024?") means
+        // nothing on its own — the search engine got the literal words "What
+        // model" and returned dictionary pages. It is first rewritten into a
+        // full search from the conversation (and the photo it is about). (v5.14)
+        const prev = pairsOf(history).slice(-4);
+        if (!img && prev.length && looksLikeFollowUp(typed)) {
+          onStatus("Understanding the question…");
+          try {
+            const ctx = prev.map((m) => (m.role === "user" ? "User: " : "Assistant: ") + String(m.content || "").slice(0, 400)).join("\n");
+            const rw = await api.run([{ role: "user", content: "Conversation so far:\n" + ctx + "\n\nNew message: " + typed +
+              "\n\nRewrite the new message as ONE complete web search query that makes sense on its own: replace \"it/this/that/the model\" with the actual thing being discussed" +
+              (carried ? " (look at the photo: name the brand, model and type you can see or recognise)" : "") +
+              ". Keep the user's language. Reply with the query only, no quotes." }], carried, { think: false, maxTokens: 50, temperature: 0.1 });
+            if (runRef.current !== run) return;
+            const q2 = String(rw || "").split("\n")[0].replace(/^["'“]|["'”]$/g, "").replace(/^(query|search)\s*:\s*/i, "").trim().slice(0, 160);
+            if (q2 && q2.length > typed.length) { query = q2; asked = q2 + " — (" + typed + ")"; }
+          } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+        }
         if (img) {
           onStatus("Looking at the photo…");
           try {
@@ -574,7 +623,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         if (look.hits && look.hits.length) {
           sources = look.hits; via = look.via;
           onStatus("Reading " + look.hits.length + " sources…");
-          content = api.groundedPrompt(typed, look.hits) + (img ? "\n\n(A photo is attached: first say what it shows, then use the passages. If the passages don't cover it, answer from the photo and say so.)" : "");
+          content = api.groundedPrompt(asked, look.hits) + (img || carried ? "\n\n(A photo is attached: first say what it shows, then use the passages. If the passages don't cover it, answer from the photo and say so.)" : "");
         }
       } else if (typed && api.isPersonal(typed)) {
         const found = api.memSearch(typed);
@@ -613,7 +662,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           if (runRef.current !== run) return;
           if (r && r.ok) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
-      } else if (route && !img && !sources && api.reasonVote && !think && looksLikeReasoning(typed) && !looksLikeCodeTask(typed)) {
+      } else if (route && !img && !sources && api.reasonVote && !think && !spaceRef.current.assistant && looksLikeReasoning(typed) && !looksLikeCodeTask(typed)) {
         // Riddles, logic, physical reasoning: several tries, a vote, a strict check.
         try {
           const r = await api.reasonVote(typed + langHint(typed), pairsOf(history), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
@@ -823,7 +872,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const lastAi = [...messages].reverse().find((m) => m.role === "assistant" && !m.card && !m.actionCard);
 
   return (
-    <div className="pb-44">
+    <div className="pb-44" style={{ paddingBottom: "calc(" + padB + "px + env(safe-area-inset-bottom))" }}>
       {/* ---- history drawer ---- */}
       {drawerOpen ? (
         <div className="fixed inset-0 z-50 flex" onClick={() => setDrawerOpen(false)}>
@@ -848,7 +897,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                       className="flex-1 bg-slate-950 border border-teal-700 rounded-lg px-2 py-2 text-sm text-slate-100" />
                   ) : (
                     <button onClick={() => { setActiveId(c.id); setDrawerOpen(false); }} className="flex-1 min-w-0 text-start px-3 py-2.5">
-                      <span dir="auto" className="block text-sm text-slate-200 truncate">{tr(c.title)}</span>
+                      <span dir="auto" className="block text-sm text-slate-200 truncate">{c.projectId || c.assistantId ? <span className="me-1" data-testid="chat-space-mark">{c.projectId ? "📁" : "✨"}</span> : null}{tr(c.title)}</span>
                       <span className="block text-[10px] text-slate-500">{new Date(c.updated).toLocaleDateString([], { day: "numeric", month: "short" })} · {c.messages.length} messages</span>
                     </button>
                   )}
@@ -864,7 +913,24 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       ) : null}
 
       {/* ---- empty state ---- */}
-      {messages.length === 0 ? (
+      {messages.length === 0 && (assistant || project) ? (
+        <div className="pt-6 text-center" data-testid="space-empty">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-800 text-3xl mb-3">{(assistant || project).emoji}</div>
+          <p className="text-lg text-white font-semibold" dir="auto">{tr((assistant || project).name)}</p>
+          {assistant && project ? <p className="text-[12px] text-slate-400 mt-0.5">{tr("in")} {project.emoji} {project.name}</p> : null}
+          <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed" dir="auto">
+            {assistant ? tr(assistant.desc || "") : tr("Chats in this project share its instructions and {n} files.", { n: (project.knowledge || []).length })}</p>
+          {(assistant && assistant.starters && assistant.starters.length) ? (
+            <div className="grid gap-2 mt-5 text-start">
+              {assistant.starters.map((st) => (
+                <button key={st} onClick={() => { setText(tr(st)); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
+                  className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-slate-200 active:border-teal-600" dir="auto">{tr(st)}</button>
+              ))}
+            </div>
+          ) : null}
+          <button onClick={() => { setPending(null); setText(""); }} className="mt-4 text-[12px] text-slate-500 underline underline-offset-2">{tr("Leave — normal chat")}</button>
+        </div>
+      ) : messages.length === 0 ? (
         <div className="pt-6 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-800 text-teal-300 mb-3"><Sparkles size={22} /></div>
           <p className="text-lg text-white font-semibold">{tr("What can I help with?")}</p>
@@ -882,6 +948,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       ) : null}
 
       {/* ---- the conversation ---- */}
+      {messages.length && (assistant || project) ? (
+        <div className="flex justify-center pt-1" data-testid="space-chip">
+          <span className="text-[11px] px-2.5 py-1 rounded-full border border-slate-700 bg-slate-900 text-slate-300" dir="auto">
+            {assistant ? assistant.emoji + " " + tr(assistant.name) : ""}{assistant && project ? " · " : ""}{project ? project.emoji + " " + project.name : ""}</span>
+        </div>
+      ) : null}
       <div className="space-y-4 pt-2">
         {messages.map((m, idx) => m.role === "user" ? (
           <div key={m.id} className="att-msg flex flex-col items-end">
@@ -970,6 +1042,24 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
             {m.fileNote ? <p className="mt-1 text-[11px] text-amber-300">{tr(m.fileNote)}</p> : null}
             {m.learnedUsed ? <p className="mt-1 text-[11px] text-sky-300" data-testid="learned-used">{tr("Used {n} of your corrections", { n: m.learnedUsed })}</p> : null}
+            {(() => {
+              // v5.14: a web page, program or long document in the answer opens
+              // as an artifact — full screen, saved with versions, shared as a file.
+              const art = !m.streaming && m.text ? detectArtifact(m.text) : null;
+              if (!art) return null;
+              const kindLabel = art.kind === "html" ? tr("Web page") : art.kind === "doc" ? tr("Document") : tr("Program");
+              return (
+                <button data-testid="artifact-card" onClick={() => window.dispatchEvent(new CustomEvent("attune-artifact", { detail: { ...art, chatId: chat && chat.id } }))}
+                  className="mt-2 w-full flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 p-3 text-start active:border-teal-600">
+                  <span className="w-10 h-10 shrink-0 rounded-lg bg-teal-500/10 border border-teal-800 flex items-center justify-center text-lg">{art.kind === "html" ? "🌐" : art.kind === "doc" ? "📄" : "⌨️"}</span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm text-slate-100 truncate" dir="auto">{art.title}</span>
+                    <span className="block text-[11px] text-slate-500">{kindLabel} · {tr("tap to open full screen")}</span>
+                  </span>
+                  <Maximize2 size={16} className="text-teal-300 shrink-0" />
+                </button>
+              );
+            })()}
             {m.codeCheck ? (
               <p className={`mt-1.5 text-[11px] flex items-center gap-1 ${m.codeCheck.ok ? "text-emerald-300" : "text-amber-300"}`} data-testid="code-check">
                 <CheckCircle2 size={12} />{m.codeCheck.ok ? (m.codeCheck.tests ? tr("Tested on this phone: {n} passed", { n: m.codeCheck.tests }) : tr("Ran on this phone")) : tr("Not passing yet")}
@@ -1021,10 +1111,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 <button onClick={() => { api.remember({ kind: "note", title: m.text.slice(0, 60), text: m.text, output: "", tags: ["saved"] }); api.flash(tr("Saved to Memory")); }} className="p-2" title={tr("Save to Memory")}><Save size={15} /></button>
                 {api.teach ? <button onClick={() => setTeaching(teaching && teaching.id === m.id ? null : { id: m.id, corrected: "", note: "" })} data-testid="teach"
                   className={`p-2 ${m.taught ? "text-sky-300" : ""}`} title={tr("Wrong? Teach the right answer")}><ThumbsDown size={15} /></button> : null}
-                {m.stats && m.stats.tps ? <span className="text-[10px] text-slate-600 ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}
+                {m.stats && m.stats.tps && !(m.stats.tokens && m.stats.tokens < 16) ? <span className="text-[10px] text-slate-600 ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}
                 {m.stats && m.stats.cut ? <span className="text-[10px] text-amber-300/90 ms-1" data-testid="cut-note">{tr("long answer — tap Continue")}</span> : null}
                 {m.stats && m.stats.looped ?<span className="text-[10px] text-amber-400/80 ms-1" data-testid="loop-note">{tr("stopped a repeat")}</span> : null}
-                {m.stats && m.stats.tps != null && m.stats.tps < 3 && api.openSpeed ? (
+                {m.stats && m.stats.tps != null && m.stats.tps < 3 && !(m.stats.tokens && m.stats.tokens < 40) && !m.image && api.openSpeed ? (
                   <button onClick={api.openSpeed} className="text-[10px] text-amber-300 underline underline-offset-2 ms-1" data-testid="slow-hint">{tr("unusually slow — why?")}</button>) : null}
               </div>
             ) : null}
@@ -1053,12 +1143,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       {!following && messages.length ? (
         <button onClick={() => { stickRef.current = true; setFollowing(true); lastAuto.current = Date.now() + 600; try { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" }); } catch (e) { toBottom(); } }} data-testid="jump-bottom"
           className="fixed z-40 end-4 w-10 h-10 rounded-full bg-slate-800 border border-slate-600 text-slate-100 shadow-lg flex items-center justify-center"
-          style={{ bottom: typing ? "calc(118px + env(safe-area-inset-bottom))" : "calc(176px + env(safe-area-inset-bottom))" }} title={tr("Newest")}><ChevronDown size={18} /></button>
+          style={{ bottom: typing ? "calc(118px + env(safe-area-inset-bottom))" : "calc(" + (padB + 4) + "px + env(safe-area-inset-bottom))" }} title={tr("Newest")}><ChevronDown size={18} /></button>
       ) : null}
 
       {/* ---- composer, pinned above the bottom bar (or at the very bottom
            while typing — the bottom bar steps aside for the keyboard) ---- */}
-      <div className={`fixed start-0 end-0 ${typing ? "z-[60]" : "z-40"} px-3 pb-2 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent`} data-testid="composer"
+      <div ref={composerRef} className={`fixed start-0 end-0 ${typing ? "z-[60]" : "z-40"} px-3 pb-2 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent`} data-testid="composer"
         style={{ bottom: typing ? "env(safe-area-inset-bottom)" : "calc(58px + env(safe-area-inset-bottom))" }}>
         <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-xl">
           {attached ? (

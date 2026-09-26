@@ -34,7 +34,7 @@
 <script>__REACTDOM__</script>
 <script>__TAILWIND__</script>
 <style>
-  html,body{background:#020617;color:#e2e8f0;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Arabic","Noto Sans",sans-serif}
+  html,body{background:var(--color-slate-950,#020617);color:var(--color-slate-200,#e2e8f0);margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Arabic","Noto Sans",sans-serif}
   #boot{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
   .sp{width:26px;height:26px;border:2px solid #14b8a6;border-right-color:transparent;border-radius:50%;animation:s .8s linear infinite}
   @keyframes s{to{transform:rotate(360deg)}}
@@ -89,6 +89,7 @@
      patches over the buttons, no text that appears only after Enter. */
   [data-testid=composer]{transform:translateZ(0);contain:layout paint}
   [data-testid=chat-input]{background-color:transparent!important;color-scheme:dark}
+  html.att-light [data-testid=chat-input]{color-scheme:light}
   html{color-scheme:dark}
   /* Coming back to the app: one clean repaint (see attune-resume). */
   html.att-repaint body{opacity:.999}

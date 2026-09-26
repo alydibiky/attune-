@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 25 Sep 2026, 14:40 Cairo (end of the v5.10–v5.12 session). Latest commit: **v5.12** (`e360fee` + this handoff)._
+_Last updated: 26 Sep 2026 (v5.14 session). Latest: **v5.14**._
 
 ---
 
@@ -9,11 +9,10 @@ _Last updated: 25 Sep 2026, 14:40 Cairo (end of the v5.10–v5.12 session). Late
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.9** (`a779969`) — unless Ali has pushed the bundle since. Check with `git log origin/main --oneline -3`. |
-| Built but **not pushed** | **v5.10, v5.11, v5.12** (3 commits) + this handoff commit. Delivered to Ali as `attune-v5.12.bundle` (range `a779969..main`) and `Attune-v5.12-upload.zip`. |
-| Why not pushed | Every push from the last session failed: `403 — alydibiky/attune- is not in this session's authorized repository set`. If your session has the repo in its sources, **push first**. |
-| Tested on Ali's phone | v5.10 partly (fast engine worked: 68.7 words/s on GPU). **v5.11 and v5.12 are NOT tested on the phone.** |
-| Ali's latest message | **"I have a lot of problems with the app"** — he has NOT listed them yet. They are your first job. |
+| Last version on GitHub `main` | **v5.14** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
+| Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
+| Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
 | Recommended model | **Gemma 4 E4B** (fast engine, GPU). E2B = faster but weaker; Qwen 3.5 9B = strongest, slow (llama.cpp CPU). |
 
 ### 0.2 Your first steps, in order
@@ -101,6 +100,7 @@ web-src/             SOURCE of the page — edit here, then `bash web-src/build.
   studio.js, studio-ui.jsx                          Studio
   erp.js, erp-ui.jsx                                (v5.12) Business / ERP
   daily.js, daily-ui.jsx                            (v5.12) Learn daily + Daily news + notifications/widget sync
+  spaces.js, spaces-ui.jsx                          (v5.14) Assistants, Projects, Artifacts (viewer + library), Themes
   actions.js, actions-ui.jsx                        reminders & phone actions (syncToPhone spares daily-* ids)
   backup.js, backup-ui.jsx, crane.js, crane-ui.jsx, cycle.jsx, calc.js, speed-ui.jsx, yusr/ (Money)
   i18n.js, i18n-ar.js                               tr("English") → Arabic dictionary (~1,800 entries)
@@ -113,9 +113,9 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 
 ## 4. How to build and test
 1. Edit `web-src/*`, then `bash web-src/build.sh` (Node 18+, Python 3; installs esbuild 0.28.2 + Tailwind 4.3.3 locally). Output: `app/src/main/assets/www/index.html` — **commit it** (CI checks it exists).
-2. **Unit tests:** `node tests/unit/run.mjs` → 9 files, **233 checks**, all green at v5.12.
+2. **Unit tests:** `node tests/unit/run.mjs` → 11 files, all green at v5.14.
 3. **Browser end-to-end:** `bash tests/setup.sh` once (builds a desktop llama-server at the same pin + a tiny model), then from `tests/`:
-   `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py` — **all green at v5.12**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
+   `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py`, `e2e_v513.py`, `e2e_v514.py` — **all green at v5.14**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
    Mock features (harness.py): `__mock.fakeQueue` (canned answers, streamed; skipped for warm-up requests with `max_tokens ≤ 2`), `slowQueue`, `chatCancel`, `cancelled`, `bodies` (every request body), `notes` (schedule calls — **keeps every call, not one per id**), `files` (saveFile), stash. v5.12 tests add `N.news` and `N.setWidget` mocks (`NEWS_MOCK` in e2e_v512_more.py).
 4. **Kotlin compile check without an Android SDK** (dl.google.com is blocked in the sandbox): kotlinc **2.4.0** (GitHub release) + `android-35/android.jar` (sparse clone of github.com/Reginer/aosp-android-jar) + hand-written stubs for androidx, jsoup, FileProvider, InternalStoragePathHandler, LiteRT-LM (signature-exact incl. RepetitionPenaltyConfig/NoRepeatNgramConfig) and **R** (add new `R.layout/R.id/R.drawable` entries by hand when you add resources). The stub set lived in the old session's scratchpad and is **gone** — rebuild it if you change Kotlin, or rely on CI.
 5. **APK:** push to `main` → Actions builds (~8+ min; longer when caches are cold) → Ali downloads `attune-apk`. If you can't push: bundle (`git bundle create x.bundle <origin-main-sha>..main`) + zip + paste-ready prompt.
@@ -133,6 +133,7 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 - **v5.11** — self-consistency vote + strict checker for reasoning; learning from 👎 corrections in Chat (few-shot, `attune:learned:v1`); 📎 files in Chat computed with pandas on the phone (openpyxl bundled).
 - **v5.12** — see §5.1.
 - **v5.13** — fixes from the first v5.12 phone test — see §5.2.
+- **v5.14** — Ali's screenshots after v5.13 + Assistants, Projects, Artifacts, Themes — see §5.3.
 
 ### 5.1 v5.12 in detail (the part nobody has tested on the phone yet)
 - **Corrections checked before learning** (`checkCorrection`, reason.js; UI in chat.jsx `checkTeach/saveTeach`): 👎 → "Check & teach". Maths question → `verifyMath(..., explain:false)` computes the answer, compared by number (±0.5%). Otherwise 2 independent re-solves (temp 0.2 / 0.7; a 3rd at 0.5 if they disagree) returning `VERDICT: RIGHT|WRONG|PARTLY|PREFERENCE` + `REASON:` + `ANSWER:`. RIGHT/PREFERENCE → saved (`checked` field). WRONG/PARTLY/unsure → reason box (`data-testid=teach-verdict`) with "Learn the checked answer" (partly), "I'm sure — learn mine anyway" (`teach-force`), "Edit my correction".
@@ -178,6 +179,21 @@ Ali's report (screenshots) → cause → fix. All covered by `tests/e2e_v513.py`
 - **Chats lost / "No chats yet"** → saves failed silently when storage was full of photos. `saveChats` now degrades (drops photos from older chats, then all, then oldest chats); saves on `attune-pause`/`visibilitychange`/`pagehide`; `saveIfOurs` never overwrites storage someone else changed (backup restore).
 - **Ali: no period tracker on the home screen** → bottom bar is Chat · Instant · Money · **Business** · More; Cycle only in More; "Log my period" starter replaced.
 - UI: messages/screens fade in (`att-in`/`att-msg`, reduced-motion respected), zebra tables, smooth ↓, new screen opens at its top.
+
+### 5.3 v5.14 — Ali's screenshots after v5.13 + Assistants, Projects, Artifacts, Themes (26 Sep 2026)
+Covered by `tests/e2e_v514.py` + `tests/unit/v514.test.mjs`.
+- **Web follow-up "What model" searched the bare words** (dictionary pages) → `looksLikeFollowUp` (spaces.js): short or pointing-back messages are first rewritten by the model into one standalone search query from the last turns (+ the carried photo), and the grounded prompt gets the full question. chat.jsx `ask()`.
+- **"What is this crane" → "This is a mobile crane."** → system prompt: answers lead with a bold direct answer, then useful bullets; comparisons get a verdict + table (Gemini-like, Ali's reference screenshot). Photo of a machine/product → type, likely make/model from visible clues, confidence, 3–5 facts. Grounded (web) answers use the same shape.
+- **"1.1 tokens/s — unusually slow" on a 6-token photo answer** → speed not shown under 16 tokens; the slow hint needs ≥ 40 tokens (a tiny answer can't be measured; the image read dominates).
+- **Composer covered the last answer's buttons/chips** → the chat's bottom padding follows the composer's measured height (ResizeObserver), not a fixed 176 px; the ↓ button follows too.
+- **Crane Simulator opened with 10 "Lowered hook" log lines** → the writer told EVERY program to include "a short demo"; web pages now have their own brief (`HTML_BRIEF`, code.js): clean first state (no demo on load), finished design (palette, cards, dark mode, 44 px targets), real content, SVG/canvas for visuals, localStorage state; 4000 tokens.
+- **Assistants** (More → Assistants; like Gems): built-ins (Crane expert, Turkish tutor, Website builder, Accountant (Egypt), Writer) + your own (name, emoji, one-line description, instructions — "Write them for me" drafts them — starter questions). Storage `attune:assistants:v1` (custom only). A chat carries `assistantId`; its instructions are appended to the system prompt (`spaceBlock`). The vote route is skipped inside an assistant (it ignores the role).
+- **Projects** (More → Projects): name, emoji, instructions, knowledge (pasted notes / text files ≤ 1.5 MB), its chats. Storage `attune:projects:v1`. Chat carries `projectId`. `knowledgeFor` splits files into ~900-char passages and sends only those matching the question (word overlap, Arabic-normalised), ≤ 3,500 chars; a small project goes whole.
+- **Artifacts**: `detectArtifact` finds a web page (```html), a program (≥ 15 lines) or a long structured document (≥ 900 chars with headings/table/lists) in an answer → a card under it → full-screen `ArtifactViewer` (sandboxed iframe for pages, Preview/Code, versions, "Change it…" via SEARCH/REPLACE edits or a full rewrite, Save, Copy, Share, File). Library: More → Artifacts. Storage `attune:artifacts:v1` (≤ 60 items, 10 versions; degrades when storage is full).
+- **Themes** (More sheet): 8 accent colours × Midnight / Black (OLED) / Graphite / Warm / Light. Works by overriding Tailwind 4's `--color-*` variables on `<html>` (`themeVars`/`applyTheme`); Light flips every scale 50↔950 and swaps white/black. `attune:theme:v1`. shell.html body background follows `--color-slate-950`.
+- **Models (researched Sep 2026):** nothing phone-sized clearly beats Gemma 4 E4B / Qwen 3.5 4B for Arabic + photos. LFM2.5-8B-A1B (MoE, ~1.5B active) is fast and ≈ a 3–4B dense model, text-only — not added (huggingface.co is blocked from the sandbox, so file names could not be verified; Engine → custom install takes `repo:QUANT` if Ali wants to try it).
+- e2e_v4's formatting prompt changed (money questions now take the checked route since v5.13).
+- Sandbox note: this container's Playwright wanted chromium-1243 but /opt/pw-browsers has 1194 — run the e2e tests with a `sitecustomize.py` that sets `executable_path="/opt/pw-browsers/chromium"`, and `pip install openpyxl` for e2e_v511.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
