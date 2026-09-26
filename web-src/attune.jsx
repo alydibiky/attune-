@@ -20,6 +20,7 @@ import { CodeWorkbench } from "./code-ui.jsx";
 import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
+import { skillFor } from "./skills.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
 import { detectLoop, trimLoop } from "./quality.js";
 import { verifyMath, looksLikeMathProblem, arithmeticSlips } from "./verify.js";
@@ -7920,6 +7921,7 @@ export default function App() {
     webOn,
     toggleWeb: () => { if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to search the web")); return; } setWebOn((v) => !v); },
     webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang), groundedAudit,
+    skillFor,
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     withRecords,

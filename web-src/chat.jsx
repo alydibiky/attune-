@@ -391,7 +391,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     return () => { window.removeEventListener("attune-pause", save); window.removeEventListener("pagehide", save);
       window.removeEventListener("attune-resume", back); document.removeEventListener("visibilitychange", vis); };
   }, []);
-  useEffect(() => { if (newChatSignal) { stop(); setActiveId(null); setText(""); setImage(null); setPending(null); } }, [newChatSignal]);
+  // Only a NEW tap on "+" starts a new chat — not the screen opening again with
+  // an old signal (that wiped an assistant/project chat just picked; v5.15).
+  const seenSignal = useRef(newChatSignal);
+  useEffect(() => {
+    if (newChatSignal === seenSignal.current) return;
+    seenSignal.current = newChatSignal;
+    stop(); setActiveId(null); setText(""); setImage(null); setPending(null);
+  }, [newChatSignal]);
   useEffect(() => { if (composerSeed) { setText(composerSeed); clearComposerSeed && clearComposerSeed(); setTimeout(() => taRef.current && taRef.current.focus(), 50); } }, [composerSeed]);
 
   // Follow the answer as it streams — but the moment the reader touches the
@@ -696,6 +703,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (pic && typed && looksLikeTableLookup(typed)) {
         content += "\n\n(How to answer from the photo: 1) Name the table and its units exactly as printed. 2) Find the ROW for the value asked (e.g. radius 20 m) and COPY that whole row, cell by cell, with the column headers above each cell. 3) Answer from the copied row only — say which column (e.g. boom length) gives the maximum. 4) If the digits are too small to read with certainty, say so instead of guessing.)";
         extra.fromPhotoTable = true;
+      }
+      // v5.15: a recipe for this kind of question (compare → verdict + table,
+      // how-to → numbered steps, email → the finished text …). Only for answers
+      // the model writes directly — maths, code, web and photo questions have
+      // their own checked routes and shapes.
+      if (answer == null && typed && !sources && !pic && !fileAtt && api.skillFor) {
+        const sk = api.skillFor(typed);
+        if (sk) { content += sk.block; extra.skill = sk.id; }
       }
       content += langHint(typed);
       if (answer == null) try {

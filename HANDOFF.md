@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14 session). Latest: **v5.14**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.15**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14 session). Latest: **v5.14**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.14** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.15** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -101,6 +101,7 @@ web-src/             SOURCE of the page — edit here, then `bash web-src/build.
   erp.js, erp-ui.jsx                                (v5.12) Business / ERP
   daily.js, daily-ui.jsx                            (v5.12) Learn daily + Daily news + notifications/widget sync
   spaces.js, spaces-ui.jsx                          (v5.14) Assistants, Projects, Artifacts (viewer + library), Themes
+  skills.js                                         (v5.15) answer recipes per question type
   actions.js, actions-ui.jsx                        reminders & phone actions (syncToPhone spares daily-* ids)
   backup.js, backup-ui.jsx, crane.js, crane-ui.jsx, cycle.jsx, calc.js, speed-ui.jsx, yusr/ (Money)
   i18n.js, i18n-ar.js                               tr("English") → Arabic dictionary (~1,800 entries)
@@ -113,7 +114,7 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 
 ## 4. How to build and test
 1. Edit `web-src/*`, then `bash web-src/build.sh` (Node 18+, Python 3; installs esbuild 0.28.2 + Tailwind 4.3.3 locally). Output: `app/src/main/assets/www/index.html` — **commit it** (CI checks it exists).
-2. **Unit tests:** `node tests/unit/run.mjs` → 11 files, all green at v5.14.
+2. **Unit tests:** `node tests/unit/run.mjs` → 12 files, all green at v5.15.
 3. **Browser end-to-end:** `bash tests/setup.sh` once (builds a desktop llama-server at the same pin + a tiny model), then from `tests/`:
    `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py`, `e2e_v513.py`, `e2e_v514.py` — **all green at v5.14**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
    Mock features (harness.py): `__mock.fakeQueue` (canned answers, streamed; skipped for warm-up requests with `max_tokens ≤ 2`), `slowQueue`, `chatCancel`, `cancelled`, `bodies` (every request body), `notes` (schedule calls — **keeps every call, not one per id**), `files` (saveFile), stash. v5.12 tests add `N.news` and `N.setWidget` mocks (`NEWS_MOCK` in e2e_v512_more.py).
@@ -134,6 +135,7 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 - **v5.12** — see §5.1.
 - **v5.13** — fixes from the first v5.12 phone test — see §5.2.
 - **v5.14** — Ali's screenshots after v5.13 + Assistants, Projects, Artifacts, Themes — see §5.3.
+- **v5.15** — answer recipes (skills.js) — see §5.4.
 
 ### 5.1 v5.12 in detail (the part nobody has tested on the phone yet)
 - **Corrections checked before learning** (`checkCorrection`, reason.js; UI in chat.jsx `checkTeach/saveTeach`): 👎 → "Check & teach". Maths question → `verifyMath(..., explain:false)` computes the answer, compared by number (±0.5%). Otherwise 2 independent re-solves (temp 0.2 / 0.7; a 3rd at 0.5 if they disagree) returning `VERDICT: RIGHT|WRONG|PARTLY|PREFERENCE` + `REASON:` + `ANSWER:`. RIGHT/PREFERENCE → saved (`checked` field). WRONG/PARTLY/unsure → reason box (`data-testid=teach-verdict`) with "Learn the checked answer" (partly), "I'm sure — learn mine anyway" (`teach-force`), "Edit my correction".
@@ -195,6 +197,10 @@ Covered by `tests/e2e_v514.py` + `tests/unit/v514.test.mjs`.
 - **Studio "loading the model forever"** (Ali, v5.13): (1) `gpuDevice` read `--list-devices` output BEFORE its 20 s timer, so a hanging OpenCL driver blocked forever; now a reader thread + 120 s timeout (first Adreno kernel compile is slow), a timeout is not remembered (next picture retries the GPU), stage `gpu` shown ("Waking the graphics chip…"). (2) A finished `#` loading bar now moves the stage to `prompt` — the screen no longer sits on "Loading… 100%" while the text encoder and first step run. (3) CPU runs got a watchdog (no output 20 min → clear error) and are drawn at ≤ 768 px on the long side. (4) After 90 s Studio says it is still working and how long the CPU takes. Kotlin not compile-checked in the sandbox — CI is the check.
 - e2e_v4's formatting prompt changed (money questions now take the checked route since v5.13).
 - Sandbox note: this container's Playwright wanted chromium-1243 but /opt/pw-browsers has 1194 — run the e2e tests with a `sitecustomize.py` that sets `executable_path="/opt/pw-browsers/chromium"`, and `pip install openpyxl` for e2e_v511.
+
+### 5.4 v5.15 — answer recipes ("teach the model some lines of code")
+Ali asked for code that makes the models stronger. Weights can't change on the phone, so `skills.js` matches each question (English + Egyptian Arabic patterns; Arabic uses an explicit space/punctuation lookahead because JS `\b` ignores Arabic letters) to at most ONE short recipe — translate, email, compare (verdict + table), steps, explain (bold answer → how it works → example), list, plan, summary — appended to the USER turn (not the system prompt, so llama.cpp's prompt cache still hits). Skipped for maths/code/web/photo/file routes, which have their own checked shapes. `extra.skill` records which recipe was used. Tests: `unit/v515.test.mjs`, e2e_v514 §3b.
+- Bug found by the new test: after tapping "+" once, opening Chat again re-fired the old new-chat signal and wiped an assistant/project chat just picked. ChatHome now reacts only to a CHANGED `newChatSignal` (`seenSignal` ref).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

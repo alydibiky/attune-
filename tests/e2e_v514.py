@@ -85,10 +85,19 @@ with sync_playwright() as p:
     # ---- 3. tokens/s is not shown as "unusually slow" for a tiny answer ----
     check(page.locator("[data-testid=slow-hint]").count() == 0, "no 'unusually slow' warning on short answers")
 
+    # ---- 3b. v5.15: a comparison carries its answer recipe to the model ----
+    queue(page, ["**No — they are different.**\n\n| Point | Demag | Grove |\n|---|---|---|\n| Maker | Tadano | Manitowoc |"])
+    page.click("header button[aria-label='New chat']"); page.wait_for_timeout(200)   # (a new chat: no photo carried over)
+    send(page, "Is a Demag crane the same as a Grove crane?")
+    done(page, 1)
+    last = str(bodies(page)[-1]["messages"][-1]["content"])
+    check("How to answer well" in last and "table" in last, "a comparison question is sent with its recipe (verdict + table)")
+    check("How to answer well" not in bodies(page)[-1]["messages"][0]["content"], "…in the question, not the system prompt (the prompt cache keeps working)")
+
     # ---- 4. a web page answer opens as an artifact ----
     queue(page, [SITE])
     send(page, "Tell me about a crane simulator page")
-    done(page, 3)
+    done(page, 2)
     card = page.locator("[data-testid=artifact-card]")
     check(card.count() == 1 and "Crane Simulator" in card.inner_text(), "an answer with a web page shows an artifact card with its title")
     card.click()
