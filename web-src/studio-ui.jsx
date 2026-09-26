@@ -113,8 +113,15 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       setCur(item); keep([item, ...gallery]);
       if (r.pausedChat) flash(tr("The chat model was paused to make room, and is loading again."));
       setInfo(readInfo());
-    } catch (e) { if (e.message !== "Stopped") setErr(tr(e.message)); setInfo(readInfo()); }
-    finally { setBusy(null); }
+    } catch (e) {
+      // v5.17: never silent. "Stopped" is only quiet when the person pressed Stop.
+      const msg = String((e && e.message) || "");
+      if (msg === "Stopped" && userStop.current) { /* they asked for it */ }
+      else if (msg === "Stopped") setErr(tr("The picture engine stopped before the picture was finished — Android may have closed it to free memory. Try “Quick draft”, or close other apps and try again."));
+      else setErr(msg ? tr(msg) : tr("The picture could not be made. Open Engine → Engine log and send me what it says."));
+      setInfo(readInfo());
+    }
+    finally { setBusy(null); userStop.current = false; }
   };
 
   const sharpen = async () => {
@@ -136,7 +143,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
     try { setRef(await shrink(cur.url)); setMode("edit"); setIdea(""); }
     catch (e) { setErr(tr("Could not open that picture")); }
   };
-  const stop = () => { try { native.cancel(callId.current); } catch (e) {} };
+  const userStop = useRef(false);
+  const stop = () => { userStop.current = true; try { native.cancel(callId.current); } catch (e) {} };
   const remove = (it) => { try { native.deleteImage(it.file); } catch (e) {} const next = gallery.filter((x) => x.file !== it.file); keep(next); if (cur && cur.file === it.file) setCur(next[0] || null); };
 
   const stageText = busy ? (busy.stage === "enhance" ? tr("Writing a fuller description…")

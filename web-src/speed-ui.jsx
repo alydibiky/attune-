@@ -100,6 +100,8 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
           {sp.fastNote ? <p className="text-[12px] text-amber-200 flex items-start gap-1.5" data-testid="fast-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.fastNote)}</p> : null}
           {row(!sp.fastCpu, () => !busy && apply({ fastCpu: !sp.fastCpu }, tr("Restarting the engine…")), "Use the graphics chip",
             "On: the model runs on the GPU — first words in about a second. Off: the CPU, slower, only for phones whose GPU driver misbehaves.")}
+          {row(!!sp.fastMtpPref, () => !busy && apply({ fastMtp: !sp.fastMtpPref }, tr("Restarting the engine…")), "Multi-token prediction (faster writing)",
+            "Off by default: on some phones it doubles words and digits (“ItIt is is”, “20205”). Turn it on only if answers stay correct.")}
         </div>
       ) : (<>
       {fastTier && onFast ? (

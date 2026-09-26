@@ -55,6 +55,13 @@ object Prefs {
     /** Keep the fast engine on the CPU (the GPU is the default and the point of it). */
     fun fastCpu(ctx: Context): Boolean = sp(ctx).getBoolean("fast_cpu", false)
     fun setFastCpu(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("fast_cpu", on).commit()
+    /**
+     * Multi-token prediction (speculative decoding) in the fast engine. OFF by
+     * default since v5.17: on Ali's phone it doubled tokens — "ItIt is is",
+     * "July 20205", "Lynk & Co 9000" — faster, but wrong words and wrong numbers.
+     */
+    fun fastMtp(ctx: Context): Boolean = sp(ctx).getBoolean("fast_mtp_v2", false)
+    fun setFastMtp(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("fast_mtp_v2", on).commit()
     /** Crash guard for the fast engine's GPU start, like gpu_trial. */
     fun fastTrial(ctx: Context): Boolean = sp(ctx).getBoolean("fast_trial", false)
     fun setFastTrial(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("fast_trial", on).commit()

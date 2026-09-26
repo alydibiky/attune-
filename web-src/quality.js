@@ -120,3 +120,33 @@ export function mathToText(text) {
       .replace(/\\(frac|dfrac|times|cdot|sqrt|approx|neq|leq|geq|text)\b(\{[^}]*\})*/g, (m) => tex(m));   // stray commands outside $…$
   }).join("");
 }
+
+/**
+ * A model stuck printing filler — a column of "." lines, or the same line over
+ * and over — inside CODE or JSON, where the normal loop guard is off (it would
+ * cut legitimately repeated fields). Only unmistakable junk counts (v5.17: a
+ * website answer ended in hundreds of "." lines until the length limit).
+ * → { loop, cut } with cut = where the junk starts.
+ */
+export function detectDegenerate(text) {
+  const t = String(text || "");
+  const lines = t.split("\n");
+  if (lines.length < 30) return { loop: false };
+  const tail = lines.slice(-40);
+  const junk = (l) => /^\s*[.·…,\-_*]{1,3}\s*$/.test(l);
+  const nonEmpty = tail.filter((l) => l.trim());
+  const nJunk = nonEmpty.filter(junk).length;
+  let run = 1, best = 1;
+  for (let i = 1; i < nonEmpty.length; i++) {
+    const a = nonEmpty[i].trim(), b = nonEmpty[i - 1].trim();
+    run = a === b && a.length > 3 ? run + 1 : 1; best = Math.max(best, run);
+  }
+  if (nJunk < 20 && best < 12) return { loop: false };
+  // cut at the first line of the junk / repeated run
+  let i = lines.length - 1, seen = 0;
+  const last = nonEmpty[nonEmpty.length - 1].trim();
+  while (i > 0 && (!lines[i].trim() || junk(lines[i]) || (best >= 12 && lines[i].trim() === last))) { i--; seen++; }
+  const cut = lines.slice(0, i + 1).join("\n").length;
+  return { loop: true, cut };
+}
+

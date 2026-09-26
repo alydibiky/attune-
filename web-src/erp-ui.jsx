@@ -10,6 +10,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Plus, Trash2, Search, Database, ArrowUp, ArrowDown, Undo2, Upload, Download, KeyRound, BarChart3, Wrench, Sparkles, ChevronLeft, Check, X, Copy, Share2, Lock, AlertTriangle, Loader2, PenLine, FileText } from "lucide-react";
 import { tr } from "./i18n.js";
 import * as E from "./erp.js";
+import { buildApp, readApp } from "./erp-app.js";
 
 const KEY = "attune:erp:v1";
 const field = "w-full min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500";
@@ -85,6 +86,19 @@ export function BusinessPage({ flash, llm, modelReady, openEngine, saveFile, sha
         </div>
       </div>
       <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5"} onClick={() => setView("new")} data-testid="erp-new"><Plus size={16} />{tr("New system")}</button>
+      <label className={ghost + " w-full flex items-center justify-center gap-1.5 py-2.5 cursor-pointer"} data-testid="erp-open-app">
+        <Upload size={15} />{tr("Open an app file (made with Attune)")}
+        <input type="file" accept=".html,.htm,.json,text/html" className="hidden" data-testid="erp-open-app-file" onChange={async (e) => {
+          const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
+          const s = readApp(await f.text());
+          if (!s) { flash(tr("That file isn't an app made with Attune Business.")); return; }
+          const had = loadSys(s.id);
+          // the app comes back with its data: it replaces the copy here (same system), keeping this phone's activation
+          const next = { ...s, licence: had ? had.licence : null, updated: Date.now() };
+          setSys(next, had ? tr("Updated from the app file — {n} tables with their records", { n: next.tables.length }) : tr("Opened — {n} tables with their records", { n: next.tables.length }));
+          setView("system");
+        }} />
+      </label>
       {index.length ? index.map((x) => (
         <button key={x.id} onClick={() => open(x.id)} className="w-full text-start rounded-xl border border-slate-800 bg-slate-900/60 p-3 flex items-center gap-3" data-testid="erp-system">
           <Database size={18} className="text-slate-400 shrink-0" />
@@ -131,6 +145,22 @@ function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
     setBusy(false);
   };
   const [ren, setRen] = useState(null);           // { tid, fid?, value }
+  // v5.17: fields added to the design before it is created — by hand or by the AI
+  const [addFor, setAddFor] = useState(null);     // { tid, name, type }
+  const [dAsk, setDAsk] = useState("");
+  const [dProp, setDProp] = useState(null);       // { ops, done, errors }
+  const [dBusy, setDBusy] = useState(false);
+  const draftOps = (ops) => { const r = E.applyOps(draft, ops); if (r.errors.length) flash(r.errors[0]); if (r.done.length) setDraft({ ...r.sys, history: [] }); return r; };
+  const proposeDraft = async () => {
+    setDBusy(true); setDProp(null);
+    try {
+      const j = E.jsonFrom(await llm(E.changeMessages(draft, dAsk), { maxTokens: 1200, temperature: 0.1, json: true }));
+      const ops = j && Array.isArray(j.ops) ? j.ops : j && j.op ? [j] : [];
+      const dry = E.applyOps(draft, ops);
+      setDProp({ ops, done: dry.done, errors: dry.errors });
+    } catch (e) { flash(String(e.message || e)); }
+    setDBusy(false);
+  };
   const renameDraft = (name) => {
     setDraft((d) => ({ ...d, tables: d.tables.map((t) => t.id !== ren.tid ? t : ren.fid
       ? { ...t, fields: t.fields.map((f) => (f.id === ren.fid ? { ...f, name } : f)) } : { ...t, name }) }));
@@ -145,8 +175,34 @@ function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
       {draft.tables.map((t) => (
         <div key={t.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
           <button onClick={() => setRen({ tid: t.id, value: t.name })} className="text-sm font-semibold text-slate-100 flex items-center gap-1.5" dir="auto" data-testid="erp-draft-table">{t.name}<PenLine size={12} className="text-slate-500" /></button>
-          <div className="flex flex-wrap gap-1.5 mt-1.5">{t.fields.map((f) => <button key={f.id} onClick={() => setRen({ tid: t.id, fid: f.id, value: f.name })} className="text-[11px] rounded-md bg-slate-800 text-slate-300 px-1.5 py-0.5 active:bg-slate-700" dir="auto" data-testid="erp-draft-field">{f.name} <span className="text-slate-500">· {tr(E.FIELD_TYPES[f.type])}{f.type === "link" ? " → " + ((draft.tables.find((x) => x.id === f.link) || {}).name || "") : ""}</span></button>)}</div>
+          <div className="flex flex-wrap gap-1.5 mt-1.5">{t.fields.map((f) => <button key={f.id} onClick={() => setRen({ tid: t.id, fid: f.id, value: f.name })} className="text-[11px] rounded-md bg-slate-800 text-slate-300 px-1.5 py-0.5 active:bg-slate-700" dir="auto" data-testid="erp-draft-field">{f.name} <span className="text-slate-500">· {tr(E.FIELD_TYPES[f.type])}{f.type === "link" ? " → " + ((draft.tables.find((x) => x.id === f.link) || {}).name || "") : ""}</span></button>)}
+            {addFor && addFor.tid === t.id ? null : <button onClick={() => setAddFor({ tid: t.id, name: "", type: "text" })} className="text-[11px] rounded-md border border-dashed border-slate-600 text-slate-400 px-1.5 py-0.5" data-testid="erp-draft-add-field">+ {tr("field")}</button>}</div>
+          {addFor && addFor.tid === t.id ? (
+            <div className="flex gap-1.5 mt-2" data-testid="erp-draft-new-field">
+              <input autoFocus value={addFor.name} onChange={(e) => setAddFor({ ...addFor, name: e.target.value })} placeholder={tr("Field name")} className={field + " flex-1"} dir="auto" data-testid="erp-draft-new-field-name" />
+              <select value={addFor.type} onChange={(e) => setAddFor({ ...addFor, type: e.target.value })} className={field.replace("w-full ", "") + " w-28"}>
+                {Object.entries(E.FIELD_TYPES).filter(([k]) => k !== "link" && k !== "formula").map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}</select>
+              <button className={primary} disabled={!addFor.name.trim()} onClick={() => { const r = draftOps([{ op: "addField", table: t.id, name: addFor.name.trim(), type: addFor.type }]); if (r.done.length) setAddFor(null); }} data-testid="erp-draft-new-field-save">{tr("Add")}</button>
+              <button className={ghost} onClick={() => setAddFor(null)}><X size={14} /></button>
+            </div>) : null}
         </div>))}
+      {llm && modelReady ? (
+        <div className="rounded-xl border border-teal-900 bg-teal-500/5 p-2.5 space-y-2" data-testid="erp-draft-ai">
+          <p className="text-[12px] text-teal-200 flex items-center gap-1"><Sparkles size={13} />{tr("Change the design in words — add fields to any table, new tables, links…")}</p>
+          <textarea value={dAsk} onChange={(e) => setDAsk(e.target.value)} rows={2} dir="auto" className={field} data-testid="erp-draft-ask"
+            placeholder={tr("e.g. add Email and Tax ID to Suppliers, and a Warranty months field to Parts")} />
+          <button className={primary + " flex items-center gap-1"} disabled={dBusy || dAsk.trim().length < 4} onClick={proposeDraft} data-testid="erp-draft-ask-go">
+            {dBusy ? <Loader2 size={14} className="animate-spin" /> : <Wrench size={14} />}{dBusy ? tr("Working it out…") : tr("Show me the change")}</button>
+          {dProp ? (
+            <div className="rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-[13px] space-y-1" data-testid="erp-draft-proposal">
+              {dProp.done.length ? dProp.done.map((d, i) => <p key={i} className="text-slate-200 flex gap-1.5"><Check size={14} className="text-teal-300 shrink-0 mt-0.5" /><span dir="auto">{d}</span></p>)
+                : <p className="text-slate-400">{tr("No design change found in that.")}</p>}
+              {dProp.errors.map((d, i) => <p key={"e" + i} className="text-amber-300 flex gap-1.5"><AlertTriangle size={14} className="shrink-0 mt-0.5" /><span dir="auto">{d}</span></p>)}
+              {dProp.done.length ? <div className="flex gap-2 pt-1">
+                <button className={primary} onClick={() => { draftOps(dProp.ops); setDProp(null); setDAsk(""); }} data-testid="erp-draft-apply">{tr("Apply")}</button>
+                <button className={ghost} onClick={() => setDProp(null)}>{tr("Cancel")}</button></div> : null}
+            </div>) : null}
+        </div>) : null}
       <button className={primary + " w-full py-2.5"} onClick={() => onCreate({ ...draft, name: draft.name.trim() || "My business" })} data-testid="erp-create">{tr("Create this system")}</button>
     </section>
   );
@@ -656,6 +712,25 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
     const name = `${sys.name}.attune-erp.json`.replace(/[\\/:*?"<>|]/g, "_");
     if (saveFile) { try { await saveFile(name, text, "application/json"); flash(tr("Saved")); } catch (e) { if (String(e.message) !== "Cancelled") flash(String(e.message)); } }
   };
+  // v5.17: the whole system as an app people use in any browser, with the data inside
+  const exportApp = async () => {
+    const html = buildApp(sys, { freeRows: E.isActive(sys) ? null : E.FREE_ROWS }), name = `${sys.name}.html`.replace(/[\\/:*?"<>|]/g, "_");
+    if (saveFile) { try { await saveFile(name, html, "text/html"); flash(tr("Saved — send this file; it opens in any browser, no Attune needed")); } catch (e) { if (String(e.message) !== "Cancelled") flash(String(e.message)); } }
+    else { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([html], { type: "text/html" })); a.download = name; a.click(); }
+  };
+  // every table as one sheet of an Excel workbook (made by Python on the phone)
+  const exportExcel = async () => {
+    if (!runPy) { flash(tr("Excel files need Python, which isn't in this build — use CSV.")); return; }
+    flash(tr("Making the Excel file…"));
+    const sheets = sys.tables.map((t) => { const rows = E.viewRows(sys, t.id); return { name: t.name.slice(0, 31).replace(/[\\/*?:\[\]]/g, " "), header: t.fields.map((f) => f.name),
+      rows: rows.map((r) => t.fields.map((f) => { const v = f.type === "formula" ? r[f.id] : r[f.id]; return (f.type === "number" || f.type === "money" || f.type === "formula") && typeof v === "number" ? v : E.show(sys, f, v); })) }; });
+    const code = `import json, base64, io\nfrom openpyxl import Workbook\nfrom openpyxl.styles import Font\nS = json.loads(${JSON.stringify(JSON.stringify(sheets))})\nwb = Workbook(); wb.remove(wb.active)\nfor s in S:\n    ws = wb.create_sheet(s["name"] or "Sheet")\n    ws.append(s["header"])\n    for c in ws[1]: c.font = Font(bold=True)\n    for r in s["rows"]: ws.append(r)\n    for i, h in enumerate(s["header"], 1): ws.column_dimensions[ws.cell(1, i).column_letter].width = max(10, min(40, len(str(h)) + 4))\nb = io.BytesIO(); wb.save(b); print(base64.b64encode(b.getvalue()).decode())`;
+    const r = await runPy(code, []);
+    if (!r.ok) { flash(tr("Couldn't make the Excel file: {e}", { e: String(r.error || "").split("\n").pop() })); return; }
+    const b64 = r.stdout.trim().split("\n").pop();
+    const name = `${sys.name}.xlsx`.replace(/[\\/:*?"<>|]/g, "_");
+    try { await saveFile(name, "", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", b64); flash(tr("Saved")); } catch (e) { if (String(e.message) !== "Cancelled") flash(String(e.message)); }
+  };
   const pick = async (e) => {
     const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
     const base = f.name.replace(/\.[^.]+$/, "");
@@ -707,6 +782,13 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
           <button className={ghost + " flex items-center gap-1"} onClick={() => fileRef.current && fileRef.current.click()}><Upload size={14} />{tr("Import a sheet")}</button>
           <button className={ghost + " flex items-center gap-1"} onClick={exportCSV} data-testid="erp-export-csv"><Download size={14} />{tr("{t} as CSV", { t: table.name })}</button>
           {saveFile ? <button className={ghost + " flex items-center gap-1"} onClick={exportAll}><Download size={14} />{tr("Whole system")}</button> : null}
+        </div>
+        <div className="rounded-lg border border-teal-900 bg-teal-500/5 p-2.5 space-y-2">
+          <p className="text-[12px] text-teal-200">{tr("Give it to your team as an app: one file with all the data inside — it opens in any phone or computer browser, no Attune needed. When something needs changing, open the file here (Business → Open an app file), ask the AI, and send the new app back.")}</p>
+          <div className="flex flex-wrap gap-2">
+            <button className={primary + " flex items-center gap-1"} onClick={exportApp} data-testid="erp-export-app"><Download size={14} />{tr("Export as an app")}</button>
+            {runPy ? <button className={ghost + " flex items-center gap-1"} onClick={exportExcel} data-testid="erp-export-xlsx"><Download size={14} />{tr("Excel workbook (all tables)")}</button> : null}
+          </div>
         </div>
         {imp ? (
           <div className="rounded-lg border border-teal-800 bg-slate-950 p-2.5 space-y-2" data-testid="erp-import">

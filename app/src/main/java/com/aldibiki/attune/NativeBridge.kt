@@ -299,7 +299,9 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 if (uri == null) { reject(id, "Cancelled"); return@open }
                 pool.execute {
                     try {
-                        ctx.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(text.toByteArray(Charsets.UTF_8)) }
+                        // v5.17: binary files (an Excel workbook) come as base64
+                        val bytes = if (a.has("b64")) android.util.Base64.decode(a.optString("b64"), android.util.Base64.DEFAULT) else text.toByteArray(Charsets.UTF_8)
+                        ctx.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(bytes) }
                         val shown = try {
                             ctx.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
                                 ?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
@@ -538,7 +540,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             // the fast engine (LiteRT-LM)
             .put("engine", if (FastEngine.isFast(active)) "litert" else "llama")
             .put("fastBackend", FastEngine.backend).put("fastMtp", FastEngine.mtp).put("fastVision", FastEngine.vision)
-            .put("fastCpu", Prefs.fastCpu(ctx)).put("fastNote", Prefs.fastNote(ctx))
+            .put("fastCpu", Prefs.fastCpu(ctx)).put("fastNote", Prefs.fastNote(ctx)).put("fastMtpPref", Prefs.fastMtp(ctx))
             .toString()
     }
 
@@ -549,6 +551,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         if (a.has("gpu")) { Prefs.setGpu(ctx, a.optBoolean("gpu")); Prefs.setGpuNote(ctx, "") }
         if (a.has("draft")) Prefs.setDraft(ctx, a.optBoolean("draft"))
         if (a.has("fastCpu")) { Prefs.setFastCpu(ctx, a.optBoolean("fastCpu")); Prefs.setFastNote(ctx, "") }
+        if (a.has("fastMtp")) Prefs.setFastMtp(ctx, a.optBoolean("fastMtp"))
         val m = ModelStore.active(ctx) ?: return resolve(id, JSONObject().put("ok", true).put("speed", JSONObject(speed())))
         Engine.start(ctx, m) { ok, err ->
             announceEngine()
@@ -669,7 +672,11 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 GenService.set(ctx.applicationContext, true)
                 val r = ImageEngine.imagine(ctx, JSONObject(arg), { imageProgress(id, it) }, { j -> if (j != null) imageJobs[id] = j else imageJobs.remove(id) })
                 resolve(id, imageResult(r))
-            } catch (e: Exception) { reject(id, e.message ?: "The picture could not be made") }
+            } catch (e: Exception) {
+                // v5.17: every failed picture leaves its reason in Engine → Engine log.
+                try { java.io.File(ctx.filesDir, "engine.log").appendText("\nStudio (${java.util.Date()}): ${e.javaClass.simpleName}: ${e.message}\n") } catch (x: Exception) {}
+                reject(id, e.message?.takeIf { it.isNotBlank() } ?: "The picture could not be made (${e.javaClass.simpleName})")
+            }
             finally { imageJobs.remove(id); GenService.set(ctx.applicationContext, false); announceEngine() }
         }
     }

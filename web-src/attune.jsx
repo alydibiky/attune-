@@ -22,7 +22,7 @@ import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { skillFor } from "./skills.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
-import { detectLoop, trimLoop } from "./quality.js";
+import { detectLoop, trimLoop, detectDegenerate } from "./quality.js";
 import { verifyMath, looksLikeMathProblem, arithmeticSlips } from "./verify.js";
 import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
 import { workLoop, guessLang } from "./code.js";
@@ -1403,6 +1403,13 @@ const LocalEngine = {
           text += c || ""; thinking += r || "";
           // A model going round in circles is stopped at once (quality.js).
           sinceCheck += (c || "").length + (r || "").length;
+          // Code / JSON answers: only the junk guard (a column of "." lines, the
+          // same line again and again) — it can't cut real repeated fields. (v5.17)
+          if (sinceCheck > 60 && strict) {
+            sinceCheck = 0;
+            const dg = detectDegenerate(text);
+            if (dg.loop) { looped = { where: "text", cut: dg.cut }; text = text.slice(0, dg.cut); try { NATIVE.cancel(id); } catch (x) {} }
+          }
           if (sinceCheck > 60 && !strict) {   // (strict-format answers: see above)
             sinceCheck = 0;
             const lt = detectLoop(text), lr = !text && detectLoop(thinking);
@@ -6575,7 +6582,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.17";
+const PAGE_VERSION = "5.18";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -8763,7 +8770,7 @@ export default function App() {
             modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json, onToken: o.onToken })}
             runPy={(code, files) => runCode({ lang: "python", code, files, timeoutMs: 60000 })}
-            saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
+            saveFile={NATIVE ? (name, text, mime, b64) => nativeCall("saveFile", b64 ? { name, mime, b64 } : { name, mime, text }) : null}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "code" ? (
           <CodeWorkbench flash={flash} native={NATIVE} incoming={codeIn} clearIncoming={() => setCodeIn(null)}

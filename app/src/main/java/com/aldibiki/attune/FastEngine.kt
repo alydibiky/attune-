@@ -75,8 +75,9 @@ object FastEngine {
         close()
         val preferGpu = !Prefs.fastCpu(ctx)
         val tries = ArrayList<Try>()
-        if (preferGpu) tries += listOf(Try(true, true, true), Try(true, true, null), Try(true, false, null))
-        tries += listOf(Try(false, true, null), Try(false, false, null))
+        // MTP only when switched on in Engine → Speed (it doubled tokens and digits; v5.17).
+        if (preferGpu) tries += (if (Prefs.fastMtp(ctx)) listOf(Try(true, true, true)) else emptyList()) + listOf(Try(true, true, false), Try(true, false, false))
+        tries += listOf(Try(false, true, false), Try(false, false, false))
         // The GPU kernels are compiled once and kept here, so later starts are quick.
         val cache = File(ctx.cacheDir, "litert").apply { mkdirs() }.absolutePath
         val nCtx = contextFor(ctx)

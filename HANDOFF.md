@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.17**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.18**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.17**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.17** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.18** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -102,6 +102,7 @@ web-src/             SOURCE of the page — edit here, then `bash web-src/build.
   daily.js, daily-ui.jsx                            (v5.12) Learn daily + Daily news + notifications/widget sync
   spaces.js, spaces-ui.jsx                          (v5.14) Assistants, Projects, Artifacts (viewer + library), Themes
   skills.js                                         (v5.15) answer recipes per question type
+  erp-app.js                                        (v5.18) Business system → standalone .html app and back
   actions.js, actions-ui.jsx                        reminders & phone actions (syncToPhone spares daily-* ids)
   backup.js, backup-ui.jsx, crane.js, crane-ui.jsx, cycle.jsx, calc.js, speed-ui.jsx, yusr/ (Money)
   i18n.js, i18n-ar.js                               tr("English") → Arabic dictionary (~1,800 entries)
@@ -114,9 +115,9 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 
 ## 4. How to build and test
 1. Edit `web-src/*`, then `bash web-src/build.sh` (Node 18+, Python 3; installs esbuild 0.28.2 + Tailwind 4.3.3 locally). Output: `app/src/main/assets/www/index.html` — **commit it** (CI checks it exists).
-2. **Unit tests:** `node tests/unit/run.mjs` → 13 files, all green at v5.17.
+2. **Unit tests:** `node tests/unit/run.mjs` → 14 files, all green at v5.18.
 3. **Browser end-to-end:** `bash tests/setup.sh` once (builds a desktop llama-server at the same pin + a tiny model), then from `tests/`:
-   `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py`, `e2e_v513.py`, `e2e_v514.py`, `e2e_v516.py`, `e2e_v517.py` — **all green at v5.17**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
+   `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py`, `e2e_v513.py`, `e2e_v514.py`, `e2e_v516.py`, `e2e_v517.py`, `e2e_v518.py` — **all green at v5.18**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
    Mock features (harness.py): `__mock.fakeQueue` (canned answers, streamed; skipped for warm-up requests with `max_tokens ≤ 2`), `slowQueue`, `chatCancel`, `cancelled`, `bodies` (every request body), `notes` (schedule calls — **keeps every call, not one per id**), `files` (saveFile), stash. v5.12 tests add `N.news` and `N.setWidget` mocks (`NEWS_MOCK` in e2e_v512_more.py).
 4. **Kotlin compile check without an Android SDK** (dl.google.com is blocked in the sandbox): kotlinc **2.4.0** (GitHub release) + `android-35/android.jar` (sparse clone of github.com/Reginer/aosp-android-jar) + hand-written stubs for androidx, jsoup, FileProvider, InternalStoragePathHandler, LiteRT-LM (signature-exact incl. RepetitionPenaltyConfig/NoRepeatNgramConfig) and **R** (add new `R.layout/R.id/R.drawable` entries by hand when you add resources). The stub set lived in the old session's scratchpad and is **gone** — rebuild it if you change Kotlin, or rely on CI.
 5. **APK:** push to `main` → Actions builds (~8+ min; longer when caches are cold) → Ali downloads `attune-apk`. If you can't push: bundle (`git bundle create x.bundle <origin-main-sha>..main`) + zip + paste-ready prompt.
@@ -138,6 +139,7 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 - **v5.15** — answer recipes (skills.js) — see §5.4.
 - **v5.16** — type while it answers (queue), smarter follow-ups, lighter streaming — see §5.5.
 - **v5.17** — Ali's v5.16 phone test + Business queries/forms/rename + Copilot + versioning — see §5.6.
+- **v5.18** — doubled words/digits (MTP off), junk-loop guard, websites on topic, Studio never silent, Business apps exported/imported — see §5.7.
 
 ### 5.1 v5.12 in detail (the part nobody has tested on the phone yet)
 - **Corrections checked before learning** (`checkCorrection`, reason.js; UI in chat.jsx `checkTeach/saveTeach`): 👎 → "Check & teach". Maths question → `verifyMath(..., explain:false)` computes the answer, compared by number (±0.5%). Otherwise 2 independent re-solves (temp 0.2 / 0.7; a 3rd at 0.5 if they disagree) returning `VERDICT: RIGHT|WRONG|PARTLY|PREFERENCE` + `REASON:` + `ANSWER:`. RIGHT/PREFERENCE → saved (`checked` field). WRONG/PARTLY/unsure → reason box (`data-testid=teach-verdict`) with "Learn the checked answer" (partly), "I'm sure — learn mine anyway" (`teach-force`), "Edit my correction".
@@ -222,6 +224,15 @@ Ali asked for code that makes the models stronger. Weights can't change on the p
 - **Copilot**: "Bring the chat from ChatGPT…" card — paste a whole conversation or the last reply → added as an imported turn, analysed, and next-message variants suggested at once (the paste is kept even when the day's free runs are used up); big "Copy & open <tool>" button under the prompt.
 - Note for Ali: he is on the FREE tier (`TRIAL_PER_DAY` runs a day, "4 free today") — some "doesn't work" reports may be the daily limit + upgrade sheet.
 - Tests: `unit/v517.test.mjs`, `e2e_v517.py`; e2e_v4 bottom bar = 6.
+
+### 5.7 v5.18 — Ali's v5.17 phone test (26 Sep 2026)
+- **"July 20205", "4002 horsepower", "Lynk & Co 9000", "ItIt is is", "as as"** (web answers at ~50 tokens/s = fast engine) → tokens were DOUBLED, not wrong facts. Cause: LiteRT-LM multi-token prediction (`ExperimentalFlags.enableSpeculativeDecoding`), which the first GPU try switched on. Now **off by default** (explicit `false`, not `null`); `Prefs.fastMtp` (`fast_mtp_v2`) + Engine → Speed row "Multi-token prediction (faster writing)" turns it back on. If doubled tokens are ever reported again, suspect llama.cpp's speculative decoding (ngram-mod / draft) next.
+- **Website answer ended in hundreds of "." lines** → code/JSON (strict) answers skipped every loop guard. `detectDegenerate` (quality.js) — ≥ 20 junk lines (`.`, `…`, `-`) in the last 40, or the same line (> 3 chars) 12× in a row — now runs for strict answers too, and cuts there.
+- **"website for a clothing brand called skittlz" → "ZenFlow: Focus Timer"** → `topicWords`/`onTopic` (code.js): the page must contain the named thing (word after called/named/brand/company) or the request's key words; the request pins the name ("use the name … in the <title>, the header and the text"); an off-topic page is rewritten once with "YOUR LAST PAGE WAS ABOUT SOMETHING ELSE".
+- **Studio "Draw it" did nothing** → a rejected `imagine` with "Stopped" (or an empty message) was shown as nothing. Now only a Stop the person pressed is quiet (`userStop`); any other failure shows a reason; native `imagine` failures are appended to `engine.log`; exit 137/9 (SIGKILL) → "Android closed the picture engine to free memory…". The real cause on Ali's phone is still unknown — ask for Engine → Engine log.
+- **Business**: design preview gets "+ field" per table and an AI box ("Change the design in words") using `changeMessages` + `applyOps` on the draft. **Export as an app** (`erp-app.js` `buildApp`): one .html with the system JSON in `<script type="application/json" id="attune-erp">` (JSON escapes `< > &`) and a self-contained runtime (the `runtime` function, embedded via `toString()`): tabs, search, add/edit/delete, auto numbers, formulas (own small parser), links, totals, CSV, localStorage per system, "Save a copy with my data" (re-embeds the records). Trial systems keep `freeRows` in the app. **Open an app file** on the Business home (`readApp`) replaces the same system (by id) with the file's data, keeping this phone's licence (a file can't carry an activation). **Excel workbook** of all tables via Pyodide openpyxl → base64 → `saveFile({b64})` (NativeBridge.saveFile now writes base64 when given).
+- Version 5.18 (versionCode 18, PAGE_VERSION "5.18").
+- Tests: `unit/v518.test.mjs`, `e2e_v518.py` (uses the exported app in a real tab: adds a record, formula 3 × 18,000 = 54,000, JOB-0002, reload, save a copy, re-import).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

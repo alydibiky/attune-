@@ -178,11 +178,41 @@ Quality bar — it must look and feel like a finished, professional product:
 - No alert(), prompt() or confirm(); show messages in the page. No console errors.
 Reply with ONE \`\`\`html code block holding the whole file. No explanation before it; after it at most two short sentences.`;
 
-export function writeMessages(task, lang) {
-  if (lang === "html") return [
-    { role: "system", content: HTML_BRIEF },
-    { role: "user", content: String(task || "").trim() },
-  ];
+/**
+ * Is a web page about what was asked? v5.16 was asked for "a website for a
+ * clothing brand called skittlz" and wrote "ZenFlow: Focus Timer". The words
+ * that name the thing (a brand, a product, the business) must appear in the
+ * page. → true / false (true when the request names nothing checkable). (v5.17)
+ */
+const TOPIC_STOP = new Set("make create build write design website web site page landing single simple modern beautiful professional nice good cool full complete with that this for called named about the and a an of to in on my our your me please html app application tool using which have has some".split(" "));
+export function topicWords(task) {
+  const t = String(task || "");
+  // the word after "called / named / brand / company" is the name ("brand called skittlz")
+  const toks = t.replace(/["“”']/g, " ").split(/\s+/).filter(Boolean);
+  const named = [];
+  toks.forEach((w, i) => { if (/^(called|named|brand|company)$/i.test(w) && toks[i + 1] && /^[A-Za-z][\w&-]{2,}$/.test(toks[i + 1].replace(/[.,!?]$/, ""))) named.push(toks[i + 1].replace(/[.,!?]$/, "")); });
+  const words = t.toLowerCase().match(/[a-z][a-z'-]{3,}/g) || [];
+  const rest = words.filter((w) => !TOPIC_STOP.has(w));
+  return { named: [...new Set(named.map((x) => x.toLowerCase()).filter((w) => !TOPIC_STOP.has(w)))], words: [...new Set(rest)] };
+}
+export function onTopic(task, code) {
+  const { named, words } = topicWords(task);
+  const c = String(code || "").toLowerCase();
+  if (named.length) return named.some((w) => c.includes(w));
+  if (!words.length) return true;
+  const hits = words.filter((w) => c.includes(w.replace(/s$/, ""))).length;
+  return hits >= Math.min(2, words.length);
+}
+
+export function writeMessages(task, lang, { retry = false } = {}) {
+  if (lang === "html") {
+    const { named } = topicWords(task);
+    return [
+      { role: "system", content: HTML_BRIEF },
+      { role: "user", content: `Build exactly this: ${String(task || "").trim()}
+The page must be about THIS and nothing else${named.length ? ` — use the name "${named[0]}" in the <title>, the header and the text` : ""}.${retry ? "\nYOUR LAST PAGE WAS ABOUT SOMETHING ELSE. Start again and build what was asked." : ""}` },
+    ];
+  }
   return [
     { role: "system", content: `You are an expert programmer. Write ${RULES[lang]}\nReply with ONE code block (\`\`\`${FENCE_LANG[lang]}) holding the complete program: first the program itself with a short demo that prints results, then its tests. ${TESTS[lang]}\nNo explanation before the code. After the code, at most two short sentences.` },
     { role: "user", content: String(task || "").trim() },
@@ -228,8 +258,15 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
   const write = async () => {
     onEvent({ type: "write", round });
     const ans = await llm(writeMessages(task, lang), { maxTokens: lang === "html" ? 4000 : 2000, onToken: (t) => onEvent({ type: "writing", round, text: t }) });
-    const p = pickProgram(ans, lang);
+    let p = pickProgram(ans, lang);
     if (!p) throw new Error("The model answered without any code — try asking again in other words.");
+    // A page about something else is written again, once, with the topic pinned.
+    if ((p.lang || lang) === "html" && !onTopic(task, p.code)) {
+      onEvent({ type: "offtopic", round });
+      const again = await llm(writeMessages(task, "html", { retry: true }), { maxTokens: 4000, onToken: (t) => onEvent({ type: "writing", round, text: t }) });
+      const p2 = pickProgram(again, "html");
+      if (p2 && onTopic(task, p2.code)) p = p2;
+    }
     lang = p.lang || lang; code = p.code;
     onEvent({ type: "wrote", round, code, lang, tests: countTests(code, lang) });
   };

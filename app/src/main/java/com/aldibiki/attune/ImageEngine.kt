@@ -196,6 +196,8 @@ object ImageEngine {
         dog.interrupt()
         register(null)
         if (job.cancelled) throw IOException("Stopped")
+        // Killed by Android to free memory (SIGKILL → exit 137 / -9): say so plainly. (v5.17)
+        if ((code == 137 || code == 9 || code == -9) && !valid(out)) { out.delete(); throw IOException("Android closed the picture engine to free memory. Close other apps (or pause the chat model in Engine) and try again — “Quick draft” needs the least memory.") }
         if (stuck.get()) { out.delete(); throw IOException("The picture engine made no progress for 20 minutes on the CPU and was stopped. Try a smaller size, or close other apps and try again.") }
         if (code != 0 || !valid(out)) { out.delete(); throw IOException("The picture could not be made. " + job.lastError()) }
         lastBackend = "CPU"
