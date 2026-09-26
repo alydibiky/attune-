@@ -56,7 +56,7 @@ export function cleanQuery(ans) {
 /** How many pages a question deserves: detail-hungry questions get more. */
 export function pagesFor(question) {
   const q = String(question || "");
-  return /\b(all|every|each|full|detailed|details|compare|comparison|vs|versus|specs?|specifications?|trims?|versions?|prices?|review|pros|cons|advantages|disadvantages)\b|كل|مواصفات|مقارنة|الفرق|فئات|أسعار|اسعار|بالتفصيل|تفاصيل/i.test(q) || q.length > 80 ? 8 : 5;
+  return /\b(all|every|each|full|detailed|details|compare|comparison|vs|versus|specs?|specifications?|trims?|versions?|prices?|review|pros|cons|advantages|disadvantages)\b(?!-)|كل|مواصفات|مقارنة|الفرق|فئات|أسعار|اسعار|بالتفصيل|تفاصيل/i.test(q) || q.length > 80 ? 8 : 5;
 }
 
 export const FINAL_ADD = "\n\n(These passages are research NOTES taken page by page. Write the COMPLETE, detailed answer: cover every part of the question and every item the notes mention (all trims / versions / options, each with its figures — a table when comparing), cite the source number after each fact, and end with what the sources did not say.)";

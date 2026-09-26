@@ -1,5 +1,5 @@
 // Unit tests for v5.23: branded model names and power levels.
-import { planMessages, parsePlan, mergeHits, crossCheck, sourceScore, REPORT_ADD } from "../../web-src/research.js";
+import { pagesFor, planMessages, parsePlan, mergeHits, crossCheck, sourceScore, REPORT_ADD } from "../../web-src/research.js";
 import { brandOf, powerFor, setPower, getPower, BRANDS, LEVELS, EXPERT_RULES } from "../../web-src/power.js";
 const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
@@ -41,6 +41,8 @@ eq(cc.notes.map((n) => n.text), ["- Ultra: 845 hp, 1,200 Nm (also in [2])\n- It 
 eq(cc.confirmed, 2, "…and counted");
 eq(/Where sources differ/.test(REPORT_ADD) && /Not found in the sources/.test(REPORT_ADD) && /direct 2–3 line answer/.test(REPORT_ADD), true, "the report: direct answer, disagreements, gaps");
 eq([powerFor(1).queries, powerFor(3).queries, powerFor(5).queries, powerFor(5).readPages > powerFor(3).readPages, powerFor(5).researchSecs > powerFor(2).researchSecs], [1, 3, 5, true, true], "stronger models search more, read more pages and get more time");
+
+eq([pagesFor("Demag AC 100 all-terrain crane"), pagesFor("Demag AC 100 all trims")], [5, 8], "\"all-terrain\" is not \"all\" (a detailed question)");
 
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 if (fails.length) process.exit(1);
