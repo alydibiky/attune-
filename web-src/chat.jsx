@@ -17,6 +17,7 @@ import { looksLikeReasoning, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD } from "./research.js";
+import { EXPERT_RULES } from "./power.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
   Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2,
@@ -517,7 +518,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
     const sp = spaceRef.current;
     const block = sp.assistant || sp.project ? spaceBlock({ assistant: sp.assistant, project: sp.project, question: typeof userContent === "string" ? userContent.slice(0, 600) : "" }) : "";
-    return [{ role: "system", content: systemPrompt(api.profileText(), api.accuracy) + (block ? "\n\n" + block : "") }, ...kept, { role: "user", content: userContent }];
+    // v5.23: strong models (Expert / Master level) work to a professional standard
+    const pw = api.power ? api.power() : null;
+    return [{ role: "system", content: systemPrompt(api.profileText(), api.accuracy) + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") }, ...kept, { role: "user", content: userContent }];
   };
 
   const ask = async (raw, opts) => {
@@ -612,7 +615,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     const aiId = newId();
     const run = ++runRef.current;
     const t0 = Date.now();
-    const useThink = think ? "force" : api.deepThink();
+    // v5.23: a strong model thinks first on hard questions by itself (reasoning, maths, code)
+    const pw0 = api.power ? api.power() : null;
+    const useThink = think ? "force" : (pw0 && pw0.thinkHard && typed && (looksLikeReasoning(typed) || looksLikeMathProblem(typed)) ? "force" : api.deepThink());
     setChats((list) => {
       const exists = list.some((c) => c.id === cid);
       const sp = spaceRef.current.ids || {};
@@ -674,7 +679,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // v5.20 — DEEP RESEARCH: the pages are read ONE AT A TIME, each into
         // checked notes; what's missing is searched once more; the answer is
         // written from all the notes (research.js).
-        const look = api.webPages ? await api.webPages(query, pagesFor(question)) : await api.webLookup(query, question);
+        const pwR = api.power ? api.power() : { pages: 8, round2: 3 };
+        const look = api.webPages ? await api.webPages(query, Math.min(pwR.pages, pagesFor(question))) : await api.webLookup(query, question);
         if (runRef.current !== run) return;
         if (look.hits && look.hits.length && api.webPages) {
           const notesSrc = [], tR = Date.now(); let read = 0;
@@ -704,10 +710,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               if (runRef.current !== run) return;
               if (q2) {
                 onStatus(tr("Searching again for: {q}", { q: q2 }));
-                const more = await api.webPages(q2, 4);
+                const more = await api.webPages(q2, Math.max(4, pwR.round2));
                 if (runRef.current !== run) return;
                 const seen = new Set(look.hits.map((h) => h.url));
-                if ((await readPages((more.hits || []).filter((h) => !seen.has(h.url)), 3)) === false) return;
+                if ((await readPages((more.hits || []).filter((h) => !seen.has(h.url)), pwR.round2 || 3)) === false) return;
               }
             } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
           }

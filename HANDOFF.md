@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.22**._
+_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.23**._
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.22**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.22** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.23** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
 | Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
 | Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
 | Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
@@ -250,6 +250,12 @@ Ali asked for code that makes the models stronger. Weights can't change on the p
 - **Deep research** (`research.js` + chat.jsx web branch): `api.webPages(query, pagesFor(question))` (native search, up to **8** pages in full, DuckDuckGo asked for 10) → for each page, `api.rankOne` passages (≤ 5,500 chars) → model call `notesMessages` (one fact per line, table rows kept, copy digits; `copy: true`, 700 tokens) → `checkNotes` drops every note line with a number not found on that page → `missingMessages` asks for ONE query for what's still missing → that query searched (4 pages) and its 3 new pages read the same way → final answer = `groundedPrompt(asked, notes) + FINAL_ADD` ("COMPLETE, detailed … every item … a table … what the sources did not say"). Status: "Reading page i of n — title", "Checking what is still missing…", "Searching again for: …". Hard cap ~3 min. Sources line says "read N pages one by one, facts from M". No notes at all → falls back to ranked passages. Tests queue: notes per page, "NONE" for the missing-check, then the final answer.
 - **Studio — every failure path**: (1) stray cancel (v5.19 `cancelImage`); (2) GPU hang/refusal (watchdog → CPU); (3) **out of memory** → the run is retried ONCE at 512 px with `te=disk` (`argsAt(512, true)`), note says so; (4) **half-downloaded model** → `packProblem` checks sizes saved at install (`meta.sizes`) and the GGUF magic before drawing, with "remove and install again"; (5) **engine can't start** → `selfTest` runs `--help` once per app version (cached in `image_selftest`) and reports CANNOT LINK / permission problems; (6) **page reloaded while drawing** → `imageList()` + Studio merges files it missed into the gallery on open; (7) `catch (Throwable)` in `imagine` so an OOM Error still answers the page; (8) the "fuller description" step gives up after 45 s and draws from the idea as typed. The CI build was verified to include the picture engine (restored from cache: `libattune-image.so`).
 - Version 5.20. Tests: `unit/v520.test.mjs`; e2e_v519 extended (page-by-page notes, invented number dropped, missing-check, full answer).
+
+### 5.10 v5.23 — "catchy Attune names for the models" + "stronger models clearly much stronger"
+- **Names** (`power.js` `BRANDS`, shown via `brandOf(tier)`: header chip, Engine list, install labels, flash texts; the real model + quant stays in small text under the name): xs Whisper · sm Echo · fast-e2b Pulse · md-lo Chord Lite · md Chord · md-hi Chord HD · lg Rhythm · fast-e4b Pulse Pro · xl Harmony · max Harmony Pro · moe-lg Symphony · ultra Symphony Max · moe-xl Maestro · moe-xl-long Maestro Long. A new tier without a brand shows its label and gets a level from its params. (Note: "Whisper" is now the smallest chat model's name — call the speech model something else if it is ever added.)
+- **Levels** (`LEVELS`): 1 Basic, 2 Everyday, 3 Smart, 4 Expert, 5 Master, each with a blurb in the Engine list. **Power profile** `powerFor(level, ctx)` → `getPower()` (set by `setPower(activeTier)` in App): maxTokens/longTokens (1024 → 6144/8192), research `notesChars` per page (3.5k → 12k), second research round pages (0 → 6), website `codeTokens` (2.5k → 12k), ERP `designTokens` (1.8k → 6k) and table count ("3 to 5" → "10 to 16"). All capped by the model's context (answer ≤ ctx/3, code ≤ ctx/2).
+- **Expert + Master only**: `EXPERT_RULES` added to the system prompt (edge cases, name the standard — EN 13000, Egyptian VAT, IFRS — full calculations with units, professional deliverable structure, assumptions/risks), and Think switches itself on for reasoning/maths questions (`thinkHard`). Small models don't get these — they get confused by long instructions.
+- Version 5.23. Tests: `unit/v523.test.mjs`.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

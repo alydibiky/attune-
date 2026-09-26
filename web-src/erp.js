@@ -1,3 +1,4 @@
+import { getPower } from "./power.js";
 /* ---- Business: a small ERP that the owner can reshape, like Microsoft Access -------------
    A "system" is a set of tables (Customers, Equipment, Jobs, Invoices…). Each
    table has fields (columns) of a type, and records (rows). Everything is kept
@@ -626,7 +627,7 @@ export function designMessages(description, { currency = "EGP" } = {}) {
 {"name": "<short system name>", "currency": "${currency}", "tables": [{"name": "<table>", "fields": [{"name": "<field>", "type": "<type>", ...}]}]}
 Field types: ${TYPES_HELP}.
 Rules (design it like a senior ERP consultant — detailed and FULLY CONNECTED):
-- 6 to 10 tables covering what this business really tracks: master data (customers, suppliers, products or equipment, staff, sites…) and the transactions that use them (orders or jobs, invoices, payments, purchases, stock moves, maintenance, expenses — only the ones that fit).
+- ${getPower().tables} tables covering what this business really tracks: master data (customers, suppliers, products or equipment, staff, sites…) and the transactions that use them (orders or jobs, invoices, payments, purchases, stock moves, maintenance, expenses — only the ones that fit).
 - 5 to 12 fields per table, most important first; the first field is the record's name or its number (auto with a prefix like "INV-").
 - EVERY transaction table links to the records it is about: an invoice links to its customer (and its job), a payment links to its invoice, a purchase links to its supplier, a stock move links to its product. Use "link" fields for this — never a text field holding another table's name or ID.
 - Use choice for statuses with realistic options, date for dates, money for amounts, formula for totals, balances and durations (e.g. [Qty] * [Unit price], [Total] - [Paid], DAYS([End], [Start]) + 1). Every table and field name in ${designLang(description)} (never Spanish or any other language unless the description is written in it).

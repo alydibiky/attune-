@@ -21,6 +21,7 @@ import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { skillFor } from "./skills.js";
+import { brandOf, setPower, getPower, LEVELS } from "./power.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
@@ -1333,7 +1334,8 @@ const LocalEngine = {
       // v5.13: 900 tokens (about 600 words) cut long explanations off in the
       // middle. Answers now get room for a full page; the model still stops
       // by itself when it is done, and a cut answer offers "Continue".
-      max_tokens: o.maxTokens || (think ? thinkBudget + 2048 : (ENGINE_PREFS.longAnswers ? 3072 : 2048)),
+      // v5.23: stronger models may write longer answers (power.js)
+      max_tokens: o.maxTokens || (think ? thinkBudget + getPower().maxTokens : (ENGINE_PREFS.longAnswers ? getPower().longTokens : getPower().maxTokens)),
       chat_template_kwargs: { enable_thinking: think },
     };
     // A GBNF grammar (reminders & actions): the engine can only write text
@@ -6553,7 +6555,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.22";
+const PAGE_VERSION = "5.23";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -7265,6 +7267,8 @@ export default function App() {
   const [cCopied, setCCopied] = useState(false);
 
   const activeTier = useMemo(() => MODEL_TIERS.find((t) => t.id === tierId) || null, [tierId]);
+  // v5.23: what the active model may do (answer length, research depth, expert mode…)
+  useMemo(() => setPower(activeTier), [activeTier]);
   const bestTier = useMemo(() => pickTier(device), [device]);
   const plan = useMemo(() => memoryPlan(activeTier), [activeTier]);
 
@@ -7354,8 +7358,8 @@ export default function App() {
     const t0 = tierArg && (tierArg.repo || tierArg.url) ? tierArg : activeTier;
     if (NATIVE) {
       if (!t0) return;
-      if (t0.url) { await installNative({ id: t0.id, label: t0.label + " · " + t0.quant, url: t0.url, ctx: t0.ctx || 8192 }, t0); return; }
-      await installNative({ id: t0.id, label: t0.label + " · " + t0.quant, repo: t0.repo, quant: t0.quant,
+      if (t0.url) { await installNative({ id: t0.id, label: brandOf(t0).brand + " · " + t0.label + " · " + t0.quant, url: t0.url, ctx: t0.ctx || 8192 }, t0); return; }
+      await installNative({ id: t0.id, label: brandOf(t0).brand + " · " + t0.label + " · " + t0.quant, repo: t0.repo, quant: t0.quant,
                             vision: !!t0.vision, ctx: t0.ctx || 8192 }, t0);
       return;
     }
@@ -7371,7 +7375,7 @@ export default function App() {
     if (ok) {
       setModelState("ready");
       try { localStorage.setItem("attune:loaded", activeTier.id); } catch (e) {}
-      flash(activeTier.label + " running on-device");
+      flash(brandOf(activeTier).brand + " running on-device");
     }
     // No cloud to fall back to, by design. Say plainly what is missing.
     else {
@@ -7934,9 +7938,10 @@ export default function App() {
     toggleWeb: () => { if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to search the web")); return; } setWebOn((v) => !v); },
     webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang), groundedAudit,
     skillFor,
+    power: () => getPower(),
     // v5.20 deep research: pages in full, and the passages of one page / of all
     webPages: NATIVE ? (q, pages) => webLookupRaw(q, pages) : null,
-    rankOne: (question, h) => { const r = rankPassages(question, [h], { budget: 5500, perSource: 5500 }); return r[0] ? r[0].text : ""; },
+    rankOne: (question, h) => { const n = getPower().notesChars; const r = rankPassages(question, [h], { budget: n, perSource: n }); return r[0] ? r[0].text : ""; },
     rankAll: (question, hits) => rankPassages(question, hits),
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
@@ -8072,7 +8077,7 @@ export default function App() {
           <p className="text-base font-semibold text-white truncate">{tr(MODE_TITLES[mode] || "Attune")}</p>
           <div className="flex-1" />
           <button onClick={() => setShowEngine(true)} className={`flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
-            <Cpu size={12} />{modelState === "ready" ? (activeTier ? activeTier.params : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : tr("No model")}</button>
+            <Cpu size={12} />{modelState === "ready" ? (activeTier ? brandOf(activeTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : tr("No model")}</button>
           {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="p-2 text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
           {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); }} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("New chat")}><Plus size={20} /></button> : null}
         </header>
@@ -10245,9 +10250,9 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
 
   const labelFor = (id) => {
     const m = (n.installedModels || []).find((x) => x.id === id);
-    if (m) return m.label;
     const t = MODEL_TIERS.find((x) => x.id === id);
-    return t ? t.label + " · " + t.quant : id;
+    if (m) return t && !String(m.label).startsWith(brandOf(t).brand) ? brandOf(t).brand + " · " + m.label : m.label;
+    return t ? brandOf(t).brand + " · " + t.label + " · " + t.quant : id;
   };
   const stateText = { ready: "Running", starting: "Loading the model…", error: "Stopped", idle: "Not running" }[e.state] || "Not running";
   const row = (on, onClick, label, sub) => (
@@ -10352,7 +10357,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
 
       {NATIVE && NATIVE.speed ? <SpeedPanel native={NATIVE} nativeCall={nativeCall} runBench={runBench} flash={flash} box={box} head={head} row={row} engineReady={e.state === "ready"}
         busy={!!busy} fastTier={MODEL_TIERS.find((t) => t.id === "fast-e2b")}
-        onFast={(t) => n.installNative({ id: t.id, label: t.label + " · " + t.quant, url: t.url, ctx: t.ctx || 8192 }, t)} /> : null}
+        onFast={(t) => n.installNative({ id: t.id, label: brandOf(t).brand + " · " + t.label + " · " + t.quant, url: t.url, ctx: t.ctx || 8192 }, t)} /> : null}
 
       {/* answers */}
       <div className={box}>
@@ -10542,7 +10547,8 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
               <button key={t.id} onClick={() => setTierId(t.id)}
                 className={`w-full text-start rounded-xl border p-3 transition-colors ${on ? "border-teal-500 bg-teal-500/5" : ok ? "border-slate-800 bg-slate-950 hover:border-slate-600" : maybe ? "border-amber-900/50 bg-slate-950 hover:border-amber-700" : "border-slate-900 bg-slate-950 opacity-70 hover:border-slate-700"}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-white">{tr(t.label)}
+                  <span className="text-sm font-semibold text-white">{brandOf(t).brand} <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 align-middle">{tr(brandOf(t).levelName)}</span>
+                    <span className="block text-[11px] font-normal text-slate-500">{tr(t.label)} · {t.params}</span>
                     {bestTier && bestTier.id === t.id ? <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-300 border border-teal-900/60">{tr("best fit")}</span> : null}
                     {maybe ? <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-900/60">{tr("may fit — try it")}</span> : null}
                     {!ok && !maybe ? <span className="ms-2 text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-slate-500 border border-slate-800">needs {device.platform === "desktop" ? t.needRam : (t.phoneMin || t.needRam)} {tr("GB")}</span> : null}
@@ -10551,6 +10557,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
                   <span className="text-xs text-slate-500">{t.sizeGB} {tr("GB ·")} {t.quant}</span>
                 </div>
                 <p className="text-xs text-slate-500 mt-1">{tr(t.quality)}</p>
+                <p className="text-[11px] text-teal-400/80 mt-0.5">{tr(LEVELS[brandOf(t).level].blurb)}</p>
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {t.fast ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-400/15 border border-amber-700/60 text-amber-200">{tr("⚡ fast engine · first words in ~1 s")}</span> : null}
                   {t.imatrix ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-900/60 text-teal-300">{tr("imatrix · more quality per GB")}</span> : null}
@@ -10663,7 +10670,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
           </div>
         ) : modelState === "ready" ? (
           <div className="flex items-center gap-2 text-sm text-teal-300 bg-teal-500/10 border border-teal-900/60 rounded-xl p-3">
-            <Check size={16} /> {activeTier ? activeTier.label : tr("Model")} {tr("loaded — running locally")}
+            <Check size={16} /> {activeTier ? brandOf(activeTier).brand : tr("Model")} {tr("loaded — running locally")}
           </div>
         ) : modelState === "downloading" ? (
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-3">
@@ -10673,7 +10680,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
         ) : (
           <button onClick={downloadModel} disabled={!activeTier}
             className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${activeTier ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600 cursor-not-allowed"}`}>
-            <Download size={16} /> {activeTier ? tr("Download {m} · {s} GB", { m: activeTier.label, s: activeTier.sizeGB }) : tr("No model fits this device")}
+            <Download size={16} /> {activeTier ? tr("Download {m} · {s} GB", { m: brandOf(activeTier).brand, s: activeTier.sizeGB }) : tr("No model fits this device")}
           </button>
         )}
         <p className="text-[11px] text-slate-600 mt-3">{tr("One download, then it works offline forever. On Wi-Fi this takes a few minutes; the model stays on your device.")}</p>

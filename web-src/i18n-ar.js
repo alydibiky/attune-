@@ -2018,4 +2018,13 @@ export const AR = {
   "read {p} pages one by one, facts from {n}": "قريت {p} صفحات واحدة واحدة، ومعلومات من {n}",
   "Checking the picture engine and model files…": "بتأكد من محرك الصور وملفات النموذج…",
   "Short of memory — drawing it smaller (512 px)…": "الذاكرة مش كفاية — برسمها أصغر (512 بكسل)…",
+  "Basic": "أساسي",
+  "Smart": "ذكي",
+  "Master": "المحترف الأعلى",
+  "Quick tidy-ups, short answers": "ترتيب سريع وإجابات قصيرة",
+  "Everyday questions, messages, summaries": "أسئلة يومية، رسايل، وملخصات",
+  "Photos, documents, maths, Arabic — the everyday all-rounder": "صور، مستندات، حساب، وعربي — الشامل لكل يوم",
+  "Professional depth: detailed reports, bigger systems, careful reasoning": "عمق احترافي: تقارير مفصلة، أنظمة أكبر، وتفكير دقيق",
+  "The strongest: long expert work, full ERP systems, whole documents": "الأقوى: شغل خبراء طويل، أنظمة إدارة أعمال كاملة، ومستندات كاملة",
+
 };

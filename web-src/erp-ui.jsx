@@ -11,6 +11,7 @@ import { Plus, Trash2, Search, Database, ArrowUp, ArrowDown, Undo2, Upload, Down
 import { tr } from "./i18n.js";
 import * as E from "./erp.js";
 import { buildApp, readApp } from "./erp-app.js";
+import { getPower } from "./power.js";
 
 const KEY = "attune:erp:v1";
 const field = "w-full min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500";
@@ -125,7 +126,7 @@ function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
       // for a phone-sized model); 3) the closest template, never a dead end.
       let spec = null, how = "ai";
       setStep(tr("Designing the tables…"));
-      const out = await llm(E.designMessages(desc), { maxTokens: 2500, temperature: 0.2, json: true });
+      const out = await llm(E.designMessages(desc), { maxTokens: getPower().designTokens, temperature: 0.2, json: true });
       const j = E.jsonFrom(out);
       // v5.17: a design whose tables are only an ID ("Clientes: ClienteID") is not a design.
       if (j && E.designQuality(j).ok) spec = j;

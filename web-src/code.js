@@ -1,3 +1,4 @@
+import { getPower } from "./power.js";
 /* ---- the Code workbench: write → run → fix, until the tests pass -------------------
    A phone-sized model writes code about as well as it can guess. What makes it
    reliable is the loop around it, the way a programmer works:
@@ -257,13 +258,13 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
 
   const write = async () => {
     onEvent({ type: "write", round });
-    const ans = await llm(writeMessages(task, lang), { maxTokens: lang === "html" ? 4000 : 2000, onToken: (t) => onEvent({ type: "writing", round, text: t }) });
+    const ans = await llm(writeMessages(task, lang), { maxTokens: lang === "html" ? getPower().codeTokens : Math.max(2000, Math.floor(getPower().codeTokens / 2)), onToken: (t) => onEvent({ type: "writing", round, text: t }) });
     let p = pickProgram(ans, lang);
     if (!p) throw new Error("The model answered without any code — try asking again in other words.");
     // A page about something else is written again, once, with the topic pinned.
     if ((p.lang || lang) === "html" && !onTopic(task, p.code)) {
       onEvent({ type: "offtopic", round });
-      const again = await llm(writeMessages(task, "html", { retry: true }), { maxTokens: 4000, onToken: (t) => onEvent({ type: "writing", round, text: t }) });
+      const again = await llm(writeMessages(task, "html", { retry: true }), { maxTokens: getPower().codeTokens, onToken: (t) => onEvent({ type: "writing", round, text: t }) });
       const p2 = pickProgram(again, "html");
       if (p2 && onTopic(task, p2.code)) p = p2;
     }

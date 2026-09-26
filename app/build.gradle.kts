@@ -11,8 +11,8 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 35
-        versionCode = 22                 // raise with every release — the phone shows it in Settings → Apps
-        versionName = "5.22"
+        versionCode = 23                 // raise with every release — the phone shows it in Settings → Apps
+        versionName = "5.23"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
         // phone. Add "x86_64" only if you want to run it in the emulator — it
