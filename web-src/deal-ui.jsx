@@ -58,7 +58,12 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
   const fileRef = useRef(null);
   const fmt = (v, cur) => (v == null || !isFinite(v) ? "—" : Math.round(v).toLocaleString("en-US") + (cur ? " " + cur : ""));
 
-  const check = async () => {
+  // v5.42: "do you mean…?" — asked before judging when the reading is doubtful
+  const [ask, setAsk] = useState(null);          // { terms, plans, allText, why, reading, src }
+  const [askNo, setAskNo] = useState(false);
+  const [note, setNote] = useState("");
+  const check = async (opts = {}) => {
+    if (opts && opts.nativeEvent) opts = {};      // called straight from the button
     if (!text.trim() && !photo) return;
     if (!modelReady) { openEngine && openEngine(); return; }
     // Free: 3 checks a day; Pro: unlimited
@@ -66,21 +71,23 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
     const usedToday = hist.filter((h) => h.day === today).length;
     if (!pro && usedToday >= 3) { flash && flash(tr("Free includes 3 deal checks a day — Pro is unlimited")); openPlan && openPlan(); return; }
     const me = ++run.current;
-    setBusy(true); setErr(""); setRes(null); setStep(0);
+    setBusy(true); setErr(""); setRes(null); setStep(0); setAsk(null); setAskNo(false);
     const alive = () => run.current === me;
+    const src = opts.note ? D.withClarification(text, opts.note) : text;
     try {
+      if (opts.resume) { await judge(opts.resume.terms, opts.resume.plans, opts.resume.allText, alive, today); return; }
       // 1. the model reads the offer into fields (JSON)
       let terms = null;
-      try { terms = D.parseTerms(await llm(D.extractMessages(text.trim(), !!photo), photo, { json: true, maxTokens: 500, temperature: 0 })); }
+      try { terms = D.parseTerms(await llm(D.extractMessages(src.trim(), !!photo), photo, { json: true, maxTokens: 560, temperature: 0 })); }
       catch (e) { if (photo && /photo/i.test(String(e.message))) throw e; }
       if (!alive()) return;
-      const allText = [text, terms && terms.text, terms && terms.claims.join(". ")].filter(Boolean).join("\n");
+      const allText = [src, terms && terms.text, terms && terms.claims.join(". ")].filter(Boolean).join("\n");
       if (!terms) {       // no model reading: what code can find in the text itself
         const p = D.pricesIn(text)[0];
         terms = { item: text.trim().split("\n")[0].slice(0, 80), kind: "other", price: p ? p.value : null, currency: p ? p.cur : null, cash: null, down: null, monthly: null, months: null, fees: null, seller: null, claims: [], text: "" };
       }
       // v5.41: installment plans are read by code from the text itself (the model mixed up "X or N × M")
-      const plans = D.plansIn(text);
+      const plans = D.plansIn(opts.note ? opts.note + "\n" + text : text);
       if (plans.length) {
         const pl0 = plans[0];
         terms.monthly = pl0.monthly; terms.months = pl0.months;
@@ -89,6 +96,16 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
         else if (terms.down && terms.down === terms.cash) terms.down = 0;
       }
       if (!terms.currency) terms.currency = (D.pricesIn(allText)[0] || {}).cur || (ar ? "EGP" : null);
+      // v5.42: a doubtful reading is shown back first — "Do you mean …?" Yes goes on; No asks what is meant
+      const why = opts.note ? null : D.needsConfirm(terms, text, plans[0]);
+      if (why) { setAsk({ terms, plans, allText, why, reading: D.readingOf(terms, ar ? "ar" : "en") }); return; }
+      await judge(terms, plans, allText, alive, today);
+    } catch (e) {
+      if (alive()) setErr(tr(String((e && e.message) || e)));
+    } finally { if (alive()) { setBusy(false); setStep(-1); } }
+  };
+
+  const judge = async (terms, plans, allText, alive, today) => {
       // 2. the real cost of an installment plan — by code
       setStep(1);
       const plan = D.planCost({ cash: terms.cash || terms.price, down: terms.down || 0, monthly: terms.monthly, months: terms.months, fees: terms.fees || 0 });
@@ -119,9 +136,6 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
       const out = { id: Date.now().toString(36), day: today, at: Date.now(), terms, plan, market, sources, signs, v, qs, msg: String(msg || "").trim(), input: text.trim().slice(0, 400), photo: !!photo };
       setRes(out);
       const h2 = [out, ...hist].slice(0, 20); setHist(h2); saveH(h2);
-    } catch (e) {
-      if (alive()) setErr(tr(String((e && e.message) || e)));
-    } finally { if (alive()) { setBusy(false); setStep(-1); } }
   };
 
   const sendWhatsApp = (m) => {
@@ -167,6 +181,26 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
         ) : null}
         {err ? <p className="mt-3 text-[12.5px] text-rose-300">{err}</p> : null}
       </section>
+
+      {ask && !busy ? (
+        <section className="rounded-2xl border border-sky-700 bg-sky-500/10 p-4 space-y-3" data-testid="deal-ask">
+          <p className="text-[12px] text-sky-200/80">{L(ask.why)}</p>
+          <p className="text-[15px] text-white leading-relaxed" dir="auto" data-testid="deal-reading">{ask.reading}</p>
+          {!askNo ? (
+            <div className="flex gap-2">
+              <button onClick={() => check({ resume: ask })} className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-semibold text-sm" data-testid="deal-yes">{ar ? "أيوه، مظبوط" : "Yes, that's right"}</button>
+              <button onClick={() => setAskNo(true)} className="flex-1 py-2.5 rounded-xl border border-slate-600 text-slate-100 text-sm" data-testid="deal-no">{ar ? "لأ" : "No"}</button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} dir="auto" data-testid="deal-note"
+                placeholder={ar ? "اشرح قصدك، مثلاً: «السعر 38,000 كاش، و12,400 ده المقدم»" : "Explain what you mean, e.g. “the price is 38,000 cash; 12,400 is the down payment”"}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-[14px] text-slate-100 placeholder-slate-600" />
+              <button onClick={() => { if (note.trim()) { check({ note: note.trim() }); setNote(""); } }} disabled={!note.trim()} className="w-full py-2.5 rounded-xl bg-emerald-500 disabled:opacity-40 text-slate-950 font-semibold text-sm" data-testid="deal-note-go">{ar ? "اقرا العرض تاني بالشرح ده" : "Read the offer again with this"}</button>
+            </div>
+          )}
+        </section>
+      ) : null}
 
       {res ? (
         <section className="space-y-3" data-testid="deal-result">

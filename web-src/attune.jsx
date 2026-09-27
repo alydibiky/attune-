@@ -8138,7 +8138,7 @@ export default function App() {
       const lang = forced || guessLang(task);
       if (lang === "python" && !(await pythonAvailable())) return null;
       const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken });
-      const say = { write: "Writing the program and its tests…", run: "Running it on this phone…", fix: "Sending the error back — fixing…" };
+      const say = { write: "Writing the program and its tests…", run: "Running it on this phone…", fix: "Sending the error back — fixing…", continue: "The page was cut off — writing the rest…" };
       return workLoop({ task, lang, llm, run: (l, code) => (l === "html" ? runHtml(code) : runCode({ lang: l, code })), maxRounds: getPower().codeRounds || 3,
         onEvent: (e) => { if (say[e.type] && onStep) onStep(tr(say[e.type])); if ((e.type === "writing" || e.type === "fixing") && onToken) onToken(e.text || ""); } });
     },

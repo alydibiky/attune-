@@ -202,7 +202,7 @@ export function questionsFor(v, signs, kind) {
 export function extractMessages(offer, hasPhoto) {
   return [
     { role: "system", content: `You read an offer, listing, installment plan or seller's message and fill in its terms. Reply with ONLY a JSON object:
-{"item": "what is sold, with brand and model if written", "kind": "product|car|installment|rent|service|investment|other", "price": number or null, "currency": "EGP|USD|…" or null, "cash_price": number or null, "down_payment": number or null, "monthly": number or null, "months": number or null, "fees": number or null, "seller": "name or null", "claims": ["short claims the seller makes"], "text": "the offer's own words, copied (up to 600 characters)"}
+{"item": "what is sold, with brand and model if written", "kind": "product|car|installment|rent|service|investment|other", "price": number or null, "currency": "EGP|USD|…" or null, "cash_price": number or null, "down_payment": number or null, "monthly": number or null, "months": number or null, "fees": number or null, "seller": "name or null", "claims": ["short claims the seller makes"], "text": "the offer's own words, copied (up to 600 characters)", "unclear": "if the offer can honestly be read in two ways (which price is the real one, cash or installments, per month or in total, what is included) — ONE short question to ask the buyer; otherwise \"\""}
 Rules: copy numbers exactly as written; null when not written — never guess. "price" is the price asked (the cash price if there is one).` },
     { role: "user", content: (hasPhoto ? "The offer is in the attached screenshot/photo." + (offer ? "\nAlso:\n" : "") : "") + (offer || "") },
   ];
@@ -219,9 +219,52 @@ export function parseTerms(raw) {
     price: n(j.price), currency: j.currency ? String(j.currency).toUpperCase().slice(0, 4) : null,
     cash: n(j.cash_price), down: n(j.down_payment), monthly: n(j.monthly), months: n(j.months), fees: n(j.fees),
     seller: j.seller ? String(j.seller).slice(0, 60) : null, claims: Array.isArray(j.claims) ? j.claims.map(String).slice(0, 6) : [],
-    text: String(j.text || "").slice(0, 800),
+    text: String(j.text || "").slice(0, 800), unclear: String(j.unclear || "").trim().slice(0, 200),
   };
 }
+
+// ---- v5.42: "do you mean…?" — Ali: "if the AI doesn't understand the offer, make it ask the user
+// do you mean that? so he answers yes or no and explains what he means" ----
+const fmtN = (v) => Math.round(v).toLocaleString("en-US");
+/** Is this amount written as a deposit / down payment / fee (not a second price)? */
+function labelledPart(text, v) {
+  const d = String(Math.round(v)).split("").join("[,.\\s٬]?");
+  const w = "(deposit|down ?payment|down|advance|reserve|to hold|hold it|fee|fees|admin|عربون|مقدم|مقدّم|رسوم|تأمين|حجز)";
+  return new RegExp(w + "[^\\d]{0,30}" + d + "(?!\\d)", "i").test(text) || new RegExp("(?<!\\d)" + d + "[^\\d]{0,20}" + w, "i").test(text);
+}
+/** What was understood, in one sentence the buyer can say yes or no to. */
+export function readingOf(t, lang) {
+  const ar = lang === "ar", cur = t.currency ? " " + t.currency : "";
+  const item = t.item || (ar ? "العرض ده" : "this");
+  const cash = t.cash || t.price;
+  const parts = [];
+  if (cash) parts.push(ar ? `${item} بسعر ${fmtN(cash)}${cur} كاش` : `${item} for ${fmtN(cash)}${cur} cash`);
+  else parts.push(ar ? `${item} من غير سعر كاش واضح` : `${item}, with no clear cash price`);
+  if (t.monthly && t.months) {
+    const down = t.down ? (ar ? `مقدم ${fmtN(t.down)}${cur} + ` : `${fmtN(t.down)}${cur} down + `) : "";
+    const total = (t.down || 0) + t.monthly * t.months;
+    parts.push(ar ? `أو بالتقسيط: ${down}${t.months} × ${fmtN(t.monthly)}${cur} (المجموع ${fmtN(total)}${cur})` : `or in installments: ${down}${t.months} × ${fmtN(t.monthly)}${cur} (${fmtN(total)}${cur} in total)`);
+  } else if (t.monthly) parts.push(ar ? `وقسط ${fmtN(t.monthly)}${cur} في الشهر (عدد الشهور مش مكتوب)` : `and ${fmtN(t.monthly)}${cur} a month (the number of months isn't written)`);
+  return (ar ? "قصدك: " : "Do you mean: ") + parts.join(ar ? "، " : ", ") + (ar ? "؟" : "?");
+}
+/**
+ * Is the reading doubtful enough to ask first? → { en, ar } (why) or null.
+ * Code decides: the model said it's unclear, two very different prices, no price at all,
+ * a plan cheaper than cash, or months without an amount.
+ */
+export function needsConfirm(t, text, plan) {
+  if (!t) return null;
+  const mm = priceMismatch(text, plan);
+  const cash = t.cash || t.price;
+  if (mm && !(plan && plan.cash) && !labelledPart(text, mm.lo) && mm.lo !== t.down && mm.lo !== t.fees) return { en: `The offer has two very different prices (${fmtN(mm.hi)} and ${fmtN(mm.lo)}).`, ar: `العرض فيه سعرين مختلفين جدًا (${fmtN(mm.hi)} و ${fmtN(mm.lo)}).` };
+  if (!cash && !t.monthly) return { en: "No price was found in the offer.", ar: "ملقتش سعر في العرض." };
+  if (t.monthly && t.months && cash && (t.down || 0) + t.monthly * t.months < cash * 0.9) return { en: "The installments add up to less than the cash price — one of them was probably misread.", ar: "الأقساط مجموعها أقل من الكاش — غالبًا حاجة منهم اتقرت غلط." };
+  if (t.months && !t.monthly) return { en: "The number of months is written but not the monthly amount.", ar: "عدد الشهور مكتوب بس مبلغ القسط مش مكتوب." };
+  if (t.unclear) return { en: t.unclear, ar: t.unclear };
+  return null;
+}
+/** The offer plus the buyer's explanation, for the second reading. */
+export const withClarification = (text, note) => `${String(text || "").trim()}\n\n(The buyer explains what the offer means — trust this over the offer's wording: ${String(note || "").trim()})`;
 
 /** The web search for the market price. */
 export function marketQuery(item, lang, year = new Date().getFullYear()) {

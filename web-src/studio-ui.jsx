@@ -2,7 +2,7 @@
    The picture engine and its models are described in studio.js / ImageEngine.kt. */
 import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useRef } from "react";
-import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X } from "lucide-react";
+import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X, Zap } from "lucide-react";
 import { tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, drawPack, drawSize, gpuWorks, loadStudio, saveStudio } from "./studio.js";
@@ -100,7 +100,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       try {
         const files = JSON.parse(native.imageList() || "[]");
         const hit = pend.what === "upscale" ? files.find((f) => f.file === String(pend.file || "").replace(/\.png$/i, "") + "-x4.png")
-          : files.filter((f) => f.file && (f.at || 0) >= (pend.t0 || 0) - 2000 && !/-x4\.png$/.test(f.file)).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+          : files.filter((f) => f.file && (f.at || 0) >= (pend.t0 || 0) - 2000 && !/-x[24]\.png$/.test(f.file)).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
         if (hit) {
           const base = pend.what === "upscale" ? (loadStudio().find((x) => x.file === pend.file) || {}) : {};
           commitPic({ ...base, file: hit.file, url: hit.url, w: hit.width, h: hit.height, idea: base.idea || pend.idea || "", prompt: base.prompt || pend.prompt || "", upscaled: pend.what === "upscale", at: Date.now(), resumed: true });
@@ -125,8 +125,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       const files = JSON.parse(native.imageList() || "[]");
       const have = new Set(loadStudio().map((x) => x.file));
       // v5.41: a sharpened (-x4) picture finished while away is recovered too, with its original's idea
-      const missed = files.filter((f) => f && f.file && !have.has(f.file)).map((f) => { const src = /-x4\.png$/.test(f.file) ? loadStudio().find((x) => x.file === f.file.replace(/-x4\.png$/, ".png")) : null;
-        return { ...(src || {}), file: f.file, url: f.url, w: f.width, h: f.height, idea: (src && src.idea) || "", prompt: (src && src.prompt) || "", at: f.at, recovered: true, upscaled: !!src || /-x4\.png$/.test(f.file) }; });
+      const missed = files.filter((f) => f && f.file && !have.has(f.file)).map((f) => { const src = /-x[24]\.png$/.test(f.file) ? loadStudio().find((x) => x.file === f.file.replace(/-x[24]\.png$/, ".png")) : null;
+        return { ...(src || {}), file: f.file, url: f.url, w: f.width, h: f.height, idea: (src && src.idea) || "", prompt: (src && src.prompt) || "", at: f.at, recovered: true, upscaled: /-x2\.png$/.test(f.file) ? "x2" : !!src || /-x4\.png$/.test(f.file) }; });
       if (missed.length) { const next = [...missed, ...loadStudio()].sort((a, b) => (b.at || 0) - (a.at || 0)); keep(next); setCur(next[0]); }
     } catch (e) {}
   }, []);
@@ -199,6 +199,9 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       if (r.pausedChat) flash(tr("The chat model was paused to make room, and is loading again."));
       setInfo(readInfo());
       if (hd && item.w <= 1216 && !item.edit) autoSharpen.current = item;
+      // v5.42: without the graphics chip the ×4 AI sharpen takes ~25 s per 128-px part (10+ min
+      // for a 640-px picture — Ali saw 6 of 25 parts in 10 min), so HD is the instant ×2 there
+      autoFast.current = !onGpu(r.backend) || !upReady;
     } catch (e) {
       // v5.17: never silent. "Stopped" is only quiet when the person pressed Stop.
       const msg = String((e && e.message) || "");
@@ -212,14 +215,33 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       setBusy(null); userStop.current = false;
       // v5.34: highest resolution — sharpen ×4 straight away (after the drawing's busy state is cleared)
       const next = autoSharpen.current; autoSharpen.current = null;
-      if (next) setTimeout(() => sharpen(next, true), 50);
+      if (next) setTimeout(() => (autoFast.current && native.sharpenFast ? sharpenFast(next, true) : sharpen(next, true)), 50);
     }
   };
   const autoSharpen = useRef(null);
+  const autoFast = useRef(false);
+  const onGpu = (b) => !!b && !/cpu/i.test(String(b));
+  /** Minutes the ×4 AI sharpen needs on the processor: ~25 s for each 128-px part. */
+  const cpuMinutes = (p) => Math.max(1, Math.round(Math.ceil((p.w || 512) / 128) * Math.ceil((p.h || 512) / 128) * 25 / 60));
+
+  // v5.42: ×2 and crisper in under a second — no model, no download
+  const sharpenFast = async (target, auto) => {
+    const pic = target && target.file ? target : cur;
+    if (!pic || !native.sharpenFast) return;
+    setErr(""); setBusy({ what: "upscale", t0: Date.now(), stage: "fast" });
+    try {
+      const r = await nativeCall("sharpenFast", { file: pic.file });
+      commitPic({ ...pic, file: r.file, url: r.url, w: r.width, h: r.height, ms: (pic.ms || 0) + (r.ms || 0), backend: pic.backend, upscaled: "x2", orig: pic.file, at: Date.now() });
+    } catch (e) { setErr(auto ? tr("The picture is ready at {w} px; sharpening it failed: {e}", { w: pic.w, e: tr(e.message) }) : tr(e.message)); }
+    finally { setBusy(null); }
+  };
 
   const sharpen = async (target, auto) => {
-    const pic = target && target.file ? target : cur;
+    let pic = target && target.file ? target : cur;
     if (!pic) return;
+    if (pic.upscaled === "x2" && pic.orig) pic = { ...pic, file: pic.orig, w: Math.round(pic.w / 2), h: Math.round(pic.h / 2), upscaled: false };   // ×4 from the original, not from the ×2
+    // on the processor: say how long it really takes, before starting
+    if (!auto && !onGpu(pic.backend) && !(await askConfirm(tr("Without the graphics chip, the ×4 AI sharpen takes about {m} minutes on this phone. “×2 sharper” takes a second. Start the ×4?", { m: cpuMinutes(pic) }), { yes: "Start ×4", no: "Cancel" }))) return;
     if (!upReady && !(await install("esrgan-x4"))) return;
     setErr(""); setBusy({ what: "upscale", t0: Date.now(), stage: "upscale" });
     try {
@@ -247,7 +269,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
 
   const stageText = busy ? (busy.stage === "enhance" ? tr("Writing a fuller description…")
     : busy.stage === "draw" && busy.total ? tr("Drawing — step {n} of {t}", { n: busy.step, t: busy.total })
-    : busy.stage === "upscale" && busy.total ? tr("Sharpening ×4 — part {n} of {t}", { n: busy.step, t: busy.total })
+    : busy.stage === "fast" ? tr("Sharpening ×2…")
+    : busy.stage === "upscale" && busy.total ? tr("Sharpening ×4 — part {n} of {t}", { n: busy.step, t: busy.total }) + (busy.step > 0 && busy.step < busy.total ? " · " + tr("about {m} min left", { m: Math.max(1, Math.round((Date.now() - busy.t0) / busy.step * (busy.total - busy.step) / 60000)) }) : "")
     : busy.stage === "load" && busy.total ? tr("Loading the picture model… {p}%", { p: Math.round(busy.step * 100 / busy.total) })
     : tr(STAGE[busy.stage] || "Working…")) : "";
   const chip = (on) => `px-2.5 py-1 rounded-lg text-[12px] border ${on ? "bg-violet-500 border-violet-500 text-white font-medium" : "border-slate-700 text-slate-300"}`;
@@ -319,7 +342,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
             </label>
             <label className="flex items-center gap-2 mt-1.5 text-[12px] text-slate-300">
               <input type="checkbox" checked={hd} onChange={(e) => setHdKeep(e.target.checked)} data-testid="studio-hd" />
-              {tr("Highest resolution — sharpen every picture ×4 (2048 px; about 1–3 minutes more without a graphics chip)")}
+              {tr("Highest resolution — sharpen every picture (×4 with the graphics chip; an instant ×2 without it)")}
             </label>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {SIZES.map((s) => <button key={s.id} onClick={() => setSize(s.id)} className={chip(size === s.id)} data-testid={"studio-size-" + s.id}>{tr(s.label)}</button>)}
@@ -356,7 +379,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
           <div className="flex flex-wrap gap-1.5 mt-2 px-1 pb-1">
             <button className={btn} data-testid="studio-save" onClick={() => { try { const r = JSON.parse(native.saveImageToGallery(cur.file)); flash(r.ok ? tr("Saved to {w}", { w: r.where }) : tr(r.error)); } catch (e) { flash(tr("Could not save")); } }}><Download size={13} />{tr("Save to gallery")}</button>
             <button className={btn} data-testid="studio-share" onClick={() => { try { native.shareImage(cur.file); } catch (e) {} }}><Share2 size={13} />{tr("Share")}</button>
-            {!cur.upscaled && cur.w <= 1216 ? <button className={btn} disabled={!!busy} data-testid="studio-upscale" onClick={() => sharpen()}><Maximize2 size={13} />{tr("×4 sharper")}{upReady ? "" : " · 67 MB"}</button> : null}
+            {!cur.upscaled && cur.w <= 1216 && native.sharpenFast ? <button className={btn} disabled={!!busy} data-testid="studio-sharpen-fast" onClick={() => sharpenFast()}><Zap size={13} />{tr("×2 sharper · instant")}</button> : null}
+            {(!cur.upscaled || cur.upscaled === "x2") && cur.w <= 2432 ? <button className={btn} disabled={!!busy} data-testid="studio-upscale" onClick={() => sharpen()}><Maximize2 size={13} />{tr("×4 AI sharpen")}{upReady ? "" : " · 67 MB"}{!onGpu(cur.backend) ? " · ~" + cpuMinutes(cur.upscaled === "x2" ? { w: cur.w / 2, h: cur.h / 2 } : cur) + " min" : ""}</button> : null}
             <button className={btn} disabled={!!busy} data-testid="studio-edit-this" onClick={editThis}><Wand2 size={13} />{tr("Edit this")}</button>
             {!cur.edit ? <button className={btn} disabled={!!busy || !drawReady} data-testid="studio-again" onClick={() => { setMode("create"); draw({ idea: cur.idea, prompt: cur.prompt }); }}><RefreshCw size={13} />{tr("Another version")}</button> : null}
             <button className={btn + " ms-auto"} onClick={async () => { if (await askConfirm("Delete this picture?")) remove(cur); }} aria-label={tr("Delete")}><Trash2 size={13} /></button>

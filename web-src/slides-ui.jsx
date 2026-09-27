@@ -333,13 +333,30 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
     const src = sourceFor(hits, topic + " " + sl.title, 2400);
     const msgs = S.slideMessages({ deckTitle: d.title, topic, slide: { ...sl, kind }, i: i + 1, n: d.slides.length, others: d.slides.map((x) => x.title), lang: d.lang, source: src, audience: d.audience, detail: d.detail });
     if (extra) msgs[0].content += `\n\nALSO: ${extra}`;
-    const reply = await llm(msgs, null, { maxTokens: kind === "table" || kind === "two" ? 520 : 420, temperature: 0.5 });
+    const mt = kind === "table" || kind === "two" ? 520 : 420;
+    const reply = await llm(msgs, null, { maxTokens: mt, temperature: 0.3 });
     let s = S.fixSlide(S.parseSlide(kind, reply), sl.title);
-    const allSrc = d.source + "\n" + src;
+    const allSrc = (d.source || "") + "\n" + src;
+    const hasSrc = !!src.trim();          // web pages or the person's file (d.source alone is the prompt)
+    // v5.42: numbers the sources don't have → the slide is written once more, told exactly which
+    // (charts and number cards drop such numbers by code below; a change the person asked for is theirs — only flagged)
+    const strict = !extra && !["stats", "chart"].includes(s.kind);
+    const wrong = hasSrc && strict ? S.figureIssues(s, allSrc) : [];
+    if (wrong.length) {
+      try {
+        const again = [{ role: "user", content: msgs[0].content + "\n\n" + S.figureFixNote(wrong) }];
+        const s2 = S.fixSlide(S.parseSlide(kind, await llm(again, null, { maxTokens: mt, temperature: 0.2 })), sl.title);
+        if (S.slideText({ ...s2, title: "" }).trim() && S.figureIssues(s2, allSrc).length < wrong.length) s = s2;
+      } catch (e) {}
+    }
     const ch = S.checkFigures(s, allSrc);
     s = S.fixSlide(ch.slide, sl.title);
+    // the last check: points with numbers the sources don't have, and points repeated from earlier slides
+    const earlier = d.slides.slice(0, i).filter((x) => !x.pending).flatMap((x) => S.slideText({ ...x, title: "" }).split("\n"));
+    const td = S.tidySlide(s, hasSrc && strict ? allSrc : "", extra ? [] : earlier);
+    s = S.fixSlide(td.slide, sl.title);
     const unsure = S.unbacked(S.slideText(s), allSrc).length;
-    return { slide: { ...s, kind: s.kind, title: sl.title }, dropped: ch.dropped, unsure };
+    return { slide: { ...s, kind: s.kind, title: sl.title }, dropped: ch.dropped + td.dropped, unsure };
   };
 
   const makeDeck = async () => {
@@ -631,7 +648,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
           {busyRow}
           {err ? <p className="text-[12.5px] text-rose-300" data-testid="slides-error">{err}</p> : null}
           {!busy && (deck.dropped || deck.unsure) ? (
-            <p className="text-[12px] text-amber-200" data-testid="slides-check-note">{[deck.dropped ? tr("{n} figure(s) weren't in the sources, so they were left out of the charts.", { n: deck.dropped }) : "", deck.unsure ? tr(deck.hits.length || file ? "{n} figure(s) on the slides weren't found in the sources — check them before presenting." : "{n} figure(s) came from the AI's memory — check them before presenting.", { n: deck.unsure }) : ""].filter(Boolean).join(" ")}</p>
+            <p className="text-[12px] text-amber-200" data-testid="slides-check-note">{[deck.dropped ? tr("{n} figure(s) weren't in the sources, so they were left out.", { n: deck.dropped }) : "", deck.unsure ? tr(deck.hits.length || file ? "{n} figure(s) on the slides weren't found in the sources — check them before presenting." : "{n} figure(s) came from the AI's memory — check them before presenting.", { n: deck.unsure }) : ""].filter(Boolean).join(" ")}</p>
           ) : null}
           <div className="flex gap-1.5 overflow-x-auto att-hscroll pb-1">{Object.entries(S.THEMES).map(([k, t]) => (
             <button key={k} onClick={() => { setDeck({ ...deck, theme: k }); setTheme(k); try { localStorage.setItem("attune:slides:theme", k); } catch (e) {} }} data-testid={"deck-theme-" + k}

@@ -725,6 +725,15 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v5.42: {file} → the same picture 2× bigger and crisper, in under a second (no model). */
+    @JavascriptInterface
+    fun sharpenFast(id: String, arg: String) {
+        pool.execute {
+            try { resolve(id, imageResult(ImageEngine.sharpenFast(ctx, JSONObject(arg).getString("file")))) }
+            catch (e: Throwable) { reject(id, e.message ?: "Sharpening failed") }
+        }
+    }
+
     // ---- File Converter (v5.36): PDF text, PDF pages as pictures, and making PDFs ----------
     @JavascriptInterface
     fun pdfText(id: String, arg: String) {

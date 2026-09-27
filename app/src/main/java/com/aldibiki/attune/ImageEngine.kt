@@ -398,6 +398,49 @@ object ImageEngine {
         return Result(out, backend, System.currentTimeMillis() - t0, false)
     }
 
+    /**
+     * v5.42 (Ali: "Studio took 10 min to sharpen and only finished 6 of 25"): Real-ESRGAN on a
+     * phone's CPU needs ~25 s for each of the 25 tiles. This is the instant way: ×2 with smooth
+     * filtering, then an unsharp mask (edges made crisper) — under a second, no download.
+     */
+    fun sharpenFast(ctx: Context, name: String): Result {
+        val input = File(studioDir(ctx), File(name).name)
+        if (!input.exists()) throw IOException("That picture is gone.")
+        val t0 = System.currentTimeMillis()
+        val src = android.graphics.BitmapFactory.decodeFile(input.path) ?: throw IOException("Couldn't open that picture.")
+        val w = src.width * 2; val h = src.height * 2
+        val big = android.graphics.Bitmap.createScaledBitmap(src, w, h, true)
+        src.recycle()
+        val px = IntArray(w * h); big.getPixels(px, 0, w, 0, 0, w, h)
+        val out = IntArray(w * h)
+        val amount = 0.7f
+        for (y in 0 until h) {
+            val y0 = if (y > 0) y - 1 else y; val y1 = if (y < h - 1) y + 1 else y
+            for (x in 0 until w) {
+                val x0 = if (x > 0) x - 1 else x; val x1 = if (x < w - 1) x + 1 else x
+                val c = px[y * w + x]
+                // 3×3 blur, one channel at a time
+                var r = 0; var g = 0; var b = 0
+                var k = 0
+                while (k < 9) {
+                    val yy = when (k / 3) { 0 -> y0; 1 -> y; else -> y1 }; val xx = when (k % 3) { 0 -> x0; 1 -> x; else -> x1 }
+                    val q = px[yy * w + xx]; r += (q shr 16) and 255; g += (q shr 8) and 255; b += q and 255
+                    k++
+                }
+                val cr = (c shr 16) and 255; val cg = (c shr 8) and 255; val cb = c and 255
+                val nr = (cr + amount * (cr - r / 9f)).toInt().coerceIn(0, 255)
+                val ng = (cg + amount * (cg - g / 9f)).toInt().coerceIn(0, 255)
+                val nb = (cb + amount * (cb - b / 9f)).toInt().coerceIn(0, 255)
+                out[y * w + x] = (c and -0x1000000) or (nr shl 16) or (ng shl 8) or nb
+            }
+        }
+        big.setPixels(out, 0, w, 0, 0, w, h)
+        val file = File(studioDir(ctx), input.nameWithoutExtension + "-x2.png")
+        file.outputStream().use { big.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+        big.recycle()
+        return Result(file, "fast", System.currentTimeMillis() - t0, false)
+    }
+
     fun size(f: File): Pair<Int, Int> {
         val o = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
         android.graphics.BitmapFactory.decodeFile(f.path, o)

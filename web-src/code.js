@@ -177,6 +177,7 @@ Quality bar — it must look and feel like a finished, professional product:
 - The page opens in its clean initial state: never click buttons, run a demo or fill logs automatically on load. Anything shown in a log/list comes from the user's own actions.
 - State kept in localStorage when the user would expect it to persist (lists, settings, scores); wrap it in try/catch.
 - No alert(), prompt() or confirm(); show messages in the page. No console errors.
+Keep it compact so it fits in one answer: CSS rules short and shared (no repeated blocks), no comments.
 Reply with ONE \`\`\`html code block holding the whole file. No explanation before it; after it at most two short sentences.`;
 
 /**
@@ -247,6 +248,31 @@ export function applyFix(answer, code, lang) {
   return { code, how: "none", error: "The model answered without code." };
 }
 
+// ---- v5.42: a page cut off by the answer limit is continued, not shown half-written ----
+// Ali: "find why it didn't finish the code of the website". On a phone the engine opens a 4k window,
+// so a page may use ~2,000 tokens; a full site with its CSS needs more and stopped mid-tag.
+/** A web page that stops before </html> (the answer limit cut it). */
+export function isCutHtml(code) {
+  const c = String(code || "").trim().toLowerCase();
+  if (!/<!doctype html|<html[\s>]/.test(c)) return false;
+  return !/<\/html>\s*$/.test(c);
+}
+export function continueMessages(task, tail) {
+  return [
+    { role: "system", content: "You are finishing a single-file web page that was cut off in the middle. Output ONLY the rest of the file: start with the very next characters after the last ones shown, never repeat what is already written, no explanation, no ``` fence. Keep the same style and IDs, close every open tag, <style> and <script>, and end with </html>." },
+    { role: "user", content: `The page: ${String(task || "").trim()}\n\nThe file so far ends with:\n${tail}` },
+  ];
+}
+/** The page so far + the continuation: fences dropped, any repeated overlap removed. */
+export function joinCont(code, more) {
+  let m = String(more || "").replace(/^\s*```[a-z]*\s*\n?/i, "").replace(/\n?```[\s\S]*$/, "");
+  // a model that restarted the whole file: keep only what comes after the part already written
+  if (/^\s*(<!doctype|<html)/i.test(m)) { const tail = code.slice(-120); const k = m.indexOf(tail); m = k >= 0 ? m.slice(k + tail.length) : ""; }
+  // overlap: the continuation repeats the last characters (up to 400)
+  for (let k = Math.min(400, m.length, code.length); k >= 8; k--) if (code.endsWith(m.slice(0, k))) { m = m.slice(k); break; }
+  return code + m;
+}
+
 /**
  * The loop. llm(messages, { maxTokens, onToken }) → text; run(lang, code) → run result.
  * onEvent({ type, round, … }) reports every step for the screen.
@@ -269,6 +295,15 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
       if (p2 && onTopic(task, p2.code)) p = p2;
     }
     lang = p.lang || lang; code = p.code;
+    // cut off before </html> → continue from where it stopped (up to 3 times)
+    for (let k = 0; k < 3 && lang === "html" && isCutHtml(code); k++) {
+      stopped();
+      onEvent({ type: "continue", round, part: k + 2 });
+      const more = await llm(continueMessages(task, code.slice(-1800)), { maxTokens: getPower().codeTokens, onToken: (t) => onEvent({ type: "writing", round, text: code + t }) });
+      const next = joinCont(code, more);
+      if (next.length <= code.length + 5) break;
+      code = next;
+    }
     onEvent({ type: "wrote", round, code, lang, tests: countTests(code, lang) });
   };
   const exec = async () => {

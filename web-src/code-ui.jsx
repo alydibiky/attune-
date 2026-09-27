@@ -123,6 +123,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
       const say = (text, kind = "info") => n.push({ text, kind, round: e.round });
       if (e.type === "write") say(tr(STEP_TEXT.write));
       else if (e.type === "wrote") say(e.tests ? tr("Wrote it, with {n} tests.", { n: e.tests }) : tr("Wrote it (no tests)."));
+      else if (e.type === "continue") say(tr("The page was cut off — writing the rest…"));
       else if (e.type === "run") say(tr(STEP_TEXT.run));
       else if (e.type === "result") say(e.verdict.passed ? (e.verdict.tests ? tr("✓ Passed all {n} tests.", { n: e.verdict.tests }) : tr("✓ Ran without errors.")) : "✗ " + (String(e.res.error || e.res.stderr || "").trim().split("\n").filter(Boolean).pop() || (e.verdict.reason === "no-pass-mark" ? tr("The tests did not all run.") : tr("Failed"))), e.verdict.passed ? "ok" : "bad");
       else if (e.type === "fix") say(e.change ? tr("Making the change…") : tr("Round {r}: {t}", { r: e.round, t: tr(STEP_TEXT.fix) }));

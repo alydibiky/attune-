@@ -92,7 +92,9 @@ export function parseNum(s) {
   return m ? parseFloat(m[0].replace("٫", ".")) : null;
 }
 // numbers worth checking: 2+ digits (list numbers and "3 steps" are not facts to verify)
-const numsIn = (s) => (latinDigits(s).replace(/(\d)[,٬](?=\d{3}(?!\d))/g, "$1").match(/\d+(?:\.\d+)?/g) || []).filter((n) => n.replace(".", "").length >= 2);
+// a one-digit number counts too when it carries a scale or a unit ("2 million", "5%", "٣ مليار")
+const numsIn = (s) => [...latinDigits(s).replace(/(\d)[,٬](?=\d{3}(?!\d))/g, "$1").matchAll(/\d+(?:\.\d+)?(?=(\s*(?:%|percent|million|billion|trillion|bn\b|mn\b|مليون|مليار|ألف|الف|بالمية|في المية))?)/gi)]
+  .filter((m) => m[0].replace(".", "").length >= 2 || m[1]).map((m) => m[0]);
 const srcNorm = (s) => latinDigits(s).replace(/(\d)[,٬](?=\d{3}(?!\d))/g, "$1");
 /** Figures in `text` that appear nowhere in `source` (the prompt + web pages + the file). */
 export function unbacked(text, source) {
@@ -208,7 +210,7 @@ Write exactly this format and nothing else:
 ${fmt}
 NOTES: <2–3 sentences the presenter says on this slide>${source ? "\n\nAt the end of each point, row or number, put the number of the source it comes from in brackets, like [2] ([F] for the person's own file)." : ""}
 
-Rules: concrete and professional, short lines (a slide is not a page), no ** or # symbols; don't write about the slide design, transitions or animations. Keep the words LEFT, RIGHT, QUOTE, BY, UNIT, TAKEAWAY, NOTES in English. Write the content in ${S_LANGS[lang] || "English"}.` }];
+Rules: every sentence must be true and specific to "${slide.title}" — no filler ("plays a vital role", "in today's world"), no vague claims; if you are not sure of a fact, leave it out. Concrete and professional, short lines (a slide is not a page), no ** or # symbols; don't write about the slide design, transitions or animations. Keep the words LEFT, RIGHT, QUOTE, BY, UNIT, TAKEAWAY, NOTES in English. Write the content in ${S_LANGS[lang] || "English"}.` }];
 }
 
 const CITE = /\s*\[\s*((?:\d{1,2}|[Ff])(?:\s*[,،]\s*(?:\d{1,2}|[Ff]))*)\s*\]/g;
@@ -277,6 +279,38 @@ export function checkFigures(s, source) {
   if (s.kind === "chart" && s.bars) { const keep = s.bars.filter((x) => !unbacked(x.raw || String(x.value), source).length); dropped = s.bars.length - keep.length; s = { ...s, bars: keep }; }
   return { slide: s, dropped };
 }
+// ---- v5.42: more accurate writing (Ali: "make the PowerPoint part where it writes more accurate") ----
+/** Numbers on a slide that are not in the sources (only when there are sources). */
+export function figureIssues(s, source) {
+  if (!String(source || "").trim()) return [];
+  return unbacked(slideText({ ...s, title: "" }), source);
+}
+/** The correction sent back to the model when a slide used numbers the sources don't have. */
+export const figureFixNote = (nums) => `These numbers are NOT in the sources: ${nums.join(", ")}. Write the slide again: remove them, or use the exact numbers the sources give. Never estimate.`;
+const normLine = (t) => String(t || "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+const sameLine = (a, b) => { const A = new Set(normLine(a).split(" ")), B = new Set(normLine(b).split(" ")); if (A.size < 3 || B.size < 3) return normLine(a) === normLine(b); let k = 0; for (const w of A) if (B.has(w)) k++; return k / Math.max(A.size, B.size) >= 0.8; };
+/**
+ * The last check by code: points (bullets, steps, sides, table rows) that still carry a number the
+ * sources don't have are left out when there are sources; points repeated from earlier slides are
+ * left out always. → { slide, dropped, repeats }
+ */
+export function tidySlide(s, source, earlier = []) {
+  const hasSrc = !!String(source || "").trim();
+  const bad = (t) => hasSrc && unbacked(t, source).length > 0;
+  const seen = (t) => earlier.some((e) => sameLine(e, t));
+  let dropped = 0, repeats = 0;
+  const keepB = (list) => (list || []).filter((x) => { const t = (x.lead ? x.lead + ": " : "") + x.text; if (bad(t)) { dropped++; return false; } if (seen(t)) { repeats++; return false; } return true; });
+  const keepT = (list) => (list || []).filter((t) => { if (bad(t)) { dropped++; return false; } if (seen(t)) { repeats++; return false; } return true; });
+  const out = { ...s };
+  if (s.bullets) out.bullets = keepB(s.bullets);
+  if (s.left) out.left = { ...s.left, items: keepT(s.left.items) };
+  if (s.right) out.right = { ...s.right, items: keepT(s.right.items) };
+  if (s.rows && s.rows.length > 1) { const body = s.rows.slice(1).filter((r) => { if (bad(r.join(" "))) { dropped++; return false; } return true; }); out.rows = [s.rows[0], ...body]; }
+  // never empty a slide by checking: if everything went, the original stays (and is flagged as unsure)
+  const empty = (x) => !slideText({ ...x, title: "" }).trim();
+  return empty(out) && !empty(s) ? { slide: s, dropped: 0, repeats: 0 } : { slide: out, dropped, repeats };
+}
+
 /** All the text on a slide (for checks, previews and "copy as text"). */
 export function slideText(s) {
   return [s.title, ...(s.bullets || []).map((x) => (x.lead ? x.lead + ": " : "") + x.text), s.left && s.left.title, ...((s.left && s.left.items) || []), s.right && s.right.title, ...((s.right && s.right.items) || []),
