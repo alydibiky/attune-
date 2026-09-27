@@ -48,6 +48,8 @@ class GenService : Service() {
         private const val CHANNEL = "writing"
         private const val ID = 7301
         @Volatile private var on = false
+        /** Something is being written, drawn or downloaded right now (the notification is up). */
+        fun busy(): Boolean = on
 
         fun set(ctx: Context, running: Boolean) {
             if (running == on) return

@@ -412,6 +412,7 @@ object ImageEngine {
         val big = android.graphics.Bitmap.createScaledBitmap(src, w, h, true)
         src.recycle()
         val px = IntArray(w * h); big.getPixels(px, 0, w, 0, 0, w, h)
+        big.recycle()   // (a scaled bitmap may be immutable — the result is a new bitmap made from the pixels)
         val out = IntArray(w * h)
         val amount = 0.7f
         for (y in 0 until h) {
@@ -434,10 +435,10 @@ object ImageEngine {
                 out[y * w + x] = (c and -0x1000000) or (nr shl 16) or (ng shl 8) or nb
             }
         }
-        big.setPixels(out, 0, w, 0, 0, w, h)
+        val res = android.graphics.Bitmap.createBitmap(out, w, h, android.graphics.Bitmap.Config.ARGB_8888)
         val file = File(studioDir(ctx), input.nameWithoutExtension + "-x2.png")
-        file.outputStream().use { big.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
-        big.recycle()
+        file.outputStream().use { res.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+        res.recycle()
         return Result(file, "fast", System.currentTimeMillis() - t0, false)
     }
 

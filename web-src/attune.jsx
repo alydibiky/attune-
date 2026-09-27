@@ -5149,6 +5149,7 @@ const BUNDLED_LIBRARY = {
 };
 async function syncLibrary(currentVersion) {
   try {
+    if (/REPLACE-WITH/.test(REMOTE_LIBRARY_URL)) return undefined;   // v6.1: no server set up — no failing request on every start
     const r = await fetch(REMOTE_LIBRARY_URL);
     if (!r.ok) throw new Error("bad");
     const j = await r.json();
@@ -6632,7 +6633,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.41";
+const PAGE_VERSION = "6.1";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -9912,7 +9913,7 @@ export default function App() {
                 </div>
               ))}
             </div>
-            <p className="text-xs text-slate-600 mt-4">{tr("Recipes ship offline and refresh from your server when online — so they stay current as models change. Point")} <span className="text-slate-400">{tr("REMOTE_LIBRARY_URL")}</span> {tr("at your hosted JSON to push updates without a new APK.")}</p>
+            <p className="text-xs text-slate-600 mt-4">{tr("Recipes ship with the app and work offline.")}</p>
           </div>
         ) : mode === "improve" ? (
           <div className="grid md:grid-cols-2 gap-5">
@@ -10657,6 +10658,21 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
   const fits = (t) => tierFits(t, device);
   const plausible = (t) => (device.ramMax || device.ram) >= t.needRam &&
                            !(t.platform === "desktop" && device.platform !== "desktop");
+  // v6.1 — launch (Ali: "no bad, inaccurate or slow models"): on a phone the list shows the models
+  // worth using on THAT phone. Spark (0.8B, not for reasoning) only when nothing else fits; Glow (2B)
+  // only when no stronger model runs smoothly; models too big for the phone are hidden. Installed or
+  // chosen ones always show; "Show all models" shows everything.
+  const [showAll, setShowAll] = useState(false);
+  const instIds = new Set(((native && native.installedModels) || []).map((m) => { const t = tierOfInstalled(m); return t && t.id; }).filter(Boolean));
+  const smooth = (t) => fits(t) && device.ram >= (t.smoothRam || t.needRam);
+  const worth = (t) => {
+    if (device.platform === "desktop") return true;
+    if (t.id === "xs") return !MODEL_TIERS.some((x) => x.id !== "xs" && fits(x));
+    if (t.id === "sm") return !MODEL_TIERS.some((x) => ["md-lo", "md", "md-hi", "fast-e2b", "fast-e4b"].includes(x.id) && smooth(x));
+    return fits(t);
+  };
+  const listTiers = MODEL_TIERS.filter((t) => showAll || worth(t) || instIds.has(t.id) || (activeTier && activeTier.id === t.id));
+  const hiddenTiers = MODEL_TIERS.length - listTiers.length;
   const modes = [
     { k: "device", label: "On-device", desc: "The only mode. Nothing leaves this device." },
 
@@ -10763,7 +10779,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
         <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Or choose yourself")}</p>
         <p className="text-[11px] text-slate-600 mb-2">{tr(QUANT_FLOOR_NOTE)}</p>
         <div className="space-y-2 mb-4">
-          {MODEL_TIERS.map((t) => {
+          {listTiers.map((t) => {
             const ok = fits(t); const maybe = !ok && plausible(t); const on = activeTier && activeTier.id === t.id;
             return (
               <button key={t.id} onClick={() => setTierId(t.id)} data-testid={"tier-" + t.id}
@@ -10804,6 +10820,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
               </button>
             );
           })}
+          {hiddenTiers > 0 || showAll ? <button onClick={() => setShowAll((v) => !v)} className="w-full text-center text-[12px] text-slate-400 underline py-1" data-testid="tiers-show-all">{showAll ? tr("Show only the models worth using on this device") : tr("Show all models ({n} more — weaker, or too big for this device)", { n: hiddenTiers })}</button> : null}
         </div>
 
         {/* memory plan */}

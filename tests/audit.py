@@ -2,7 +2,7 @@ import sys, json; import os; sys.path.insert(0, os.path.dirname(os.path.abspath(
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page
 env = Env()
-TOOLS = "instant studio assistants projects artifacts code learn news slides xray convert video business crane field fleet reminders deal memory map travel cycle improve compress humanize copilot library ask".split()
+TOOLS = "instant studio assistants projects artifacts code learn news slides xray convert video business crane field fleet reminders fit deal memory map travel cycle improve compress humanize copilot library ask".split()
 PROBE = r"""() => {
   const W = innerWidth, bad = [];
   for (const el of document.querySelectorAll('body *')) {

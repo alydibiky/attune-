@@ -288,6 +288,24 @@ class MainActivity : AppCompatActivity() {
             web.postInvalidate()
             web.evaluateJavascript("window.dispatchEvent(new Event('attune-resume'))", null)
         }
+        if (freedForMemory && Engine.state == Engine.State.IDLE) {
+            freedForMemory = false
+            ModelStore.active(this)?.let { m -> Engine.start(this, m) { _, _ -> } }
+        }
+    }
+
+    // v6.1 — lighter on the phone (Ali: "reduce the load on the phone"): when Android says it is short
+    // of memory while Attune is in the background, the model (several GB) is let go — unless something
+    // is being written or drawn — and it comes back by itself when Attune is opened again.
+    private var freedForMemory = false
+    @Suppress("DEPRECATION")
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_BACKGROUND && Engine.state == Engine.State.READY && !GenService.busy()) {
+            freedForMemory = true
+            try { java.io.File(filesDir, "engine.log").appendText("\nMemory (${java.util.Date()}): Android asked for memory while Attune was in the background — the model was let go; it reloads when Attune is opened.\n") } catch (e: Exception) {}
+            Engine.stop()
+        }
     }
 
     override fun onPause() {
