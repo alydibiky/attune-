@@ -6,7 +6,7 @@ import React, { useState, useRef } from "react";
 import { ShieldCheck, ImagePlus, X, Loader2, Check, Copy, Send, AlertTriangle, Trash2, Calculator, Search } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as D from "./deal.js";
-import { useSubBack } from "./backstack.js";
+import { useSubBack, useSticky } from "./backstack.js";
 
 const HKEY = "attune:deals:v1";
 const loadH = () => { try { const v = JSON.parse(localStorage.getItem(HKEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
@@ -46,11 +46,11 @@ function readPhoto(file) {
 export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady, pro, openPlan }) {
   const ar = getLang() === "ar";
   const L = (x) => (ar ? x.ar : x.en);
-  const [text, setText] = useState("");
+  const [text, setText] = useSticky("deal:text", "");
   const [photo, setPhoto] = useState(null);
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState(-1);
-  const [res, setRes] = useState(null);
+  const [res, setRes] = useSticky("deal:res", null);
   useSubBack(!!res, () => setRes(null));   // v5.34: Back → a new check
   const [err, setErr] = useState("");
   const [hist, setHist] = useState(loadH);
@@ -79,6 +79,15 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
         const p = D.pricesIn(text)[0];
         terms = { item: text.trim().split("\n")[0].slice(0, 80), kind: "other", price: p ? p.value : null, currency: p ? p.cur : null, cash: null, down: null, monthly: null, months: null, fees: null, seller: null, claims: [], text: "" };
       }
+      // v5.41: installment plans are read by code from the text itself (the model mixed up "X or N × M")
+      const plans = D.plansIn(text);
+      if (plans.length) {
+        const pl0 = plans[0];
+        terms.monthly = pl0.monthly; terms.months = pl0.months;
+        if (pl0.cash) { terms.cash = pl0.cash; terms.down = pl0.down || 0; }
+        else if (pl0.down != null) terms.down = pl0.down;
+        else if (terms.down && terms.down === terms.cash) terms.down = 0;
+      }
       if (!terms.currency) terms.currency = (D.pricesIn(allText)[0] || {}).cur || (ar ? "EGP" : null);
       // 2. the real cost of an installment plan — by code
       setStep(1);
@@ -97,6 +106,9 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
       // 4. scam and trap signs — by code
       setStep(3);
       const signs = D.scamSigns(allText);
+      const mm = D.priceMismatch(text, plans[0]);
+      if (mm) signs.push({ id: "two-prices", weight: 2, en: `Two very different prices in one offer (${Math.round(mm.hi).toLocaleString("en-US")} and ${Math.round(mm.lo).toLocaleString("en-US")}) — ask which is real; a bait price is a common trick.`,
+        ar: `سعرين مختلفين جدًا في نفس العرض (${Math.round(mm.hi).toLocaleString("en-US")} و ${Math.round(mm.lo).toLocaleString("en-US")}) — اسأل أنهي الحقيقي؛ السعر الطُعم حيلة مشهورة.` });
       const v = D.verdict({ price: terms.cash || terms.price, cur: terms.currency, market, plan, signs, claimsZero: signs.some((s) => s.id === "zero-interest") });
       const qs = D.questionsFor(v, signs, terms.kind);
       // 5. the reply to the seller — written by the model

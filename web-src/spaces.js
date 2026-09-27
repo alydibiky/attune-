@@ -166,6 +166,10 @@ export function detectArtifact(text) {
     if (body.split("\n").length >= 15 && (!best || body.length > best.content.length)) best = { kind: "code", lang: lang || "text", title: titleOf(s, "code"), content: body };
   }
   if (best) return best;
+  // v5.41: a page whose closing ``` never came (the answer was cut) still gets its Preview
+  const open = s.match(/```html[^\n]*\n([\s\S]+)$/i);
+  if (open && /<\/(body|html)>|<\/script>|<\/style>/i.test(open[1]) && /<(body|div|main|section)[\s>]/i.test(open[1]))
+    return { kind: "html", lang: "html", title: titleOf(open[1], "html"), content: open[1].replace(/\n```\s*$/, "") };
   const plain = s.replace(FENCE_RE, "");
   const structure = (plain.match(/^#{1,3}\s/mg) || []).length * 2 + (/\n\|.+\|\n\|[\s:|-]+\|/.test(plain) ? 3 : 0) + Math.min(4, (plain.match(/^\s*(?:[-*]|\d+\.)\s/mg) || []).length / 3);
   if (plain.length >= 900 && structure >= 3) return { kind: "doc", lang: "markdown", title: titleOf(plain, "doc"), content: s.trim() };

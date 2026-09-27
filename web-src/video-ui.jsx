@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Download, Loader2, X, Check, ClipboardPaste, Play, Film, Music, Link2 } from "lucide-react";
 import { tr } from "./i18n.js";
-import { useSubBack } from "./backstack.js";
+import { useSubBack, useSticky } from "./backstack.js";
 import * as V from "./video.js";
 
 const KEY = "attune:video:v1";
@@ -16,8 +16,8 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
   const [link, setLink] = useState(initialLink || "");
   const [busy, setBusy] = useState(null);
   const [err, setErr] = useState("");
-  const [found, setFound] = useState(null);      // { title, choices, source }
-  const [sel, setSel] = useState(0);
+  const [found, setFound] = useSticky("video:found", null);      // { title, choices, source }
+  const [sel, setSel] = useSticky("video:sel", 0);
   const [list, setList] = useState(load);         // [{id, name, where, status, done, total, audio}]
   const run = useRef(0);
   useSubBack(!!found, () => setFound(null));
@@ -126,12 +126,12 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
 
       <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3">
         <div className="flex gap-2">
-          <div className="flex-1 flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3">
+          <div className="flex-1 min-w-0 flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3">
             <Link2 size={15} className="text-slate-500 shrink-0" />
             <input value={link} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") find(); }} dir="ltr" placeholder="https://…" className="flex-1 min-w-0 bg-transparent py-2.5 text-[13px] text-slate-100 outline-none" data-testid="video-link" />
             {link ? <button onClick={() => { setLink(""); setFound(null); setErr(""); }} aria-label={tr("Clear")} className="p-1 text-slate-500"><X size={14} /></button> : null}
           </div>
-          <button onClick={paste} className="px-3 rounded-xl border border-slate-700 text-slate-200 flex items-center gap-1.5 text-[13px]" data-testid="video-paste"><ClipboardPaste size={15} />{tr("Paste")}</button>
+          <button onClick={paste} className="shrink-0 whitespace-nowrap px-3 rounded-xl border border-slate-700 text-slate-200 flex items-center gap-1.5 text-[13px]" data-testid="video-paste"><ClipboardPaste size={15} />{tr("Paste")}</button>
         </div>
         {busy ? <p className="flex items-center gap-2 text-[12.5px] text-teal-200" data-testid="video-busy"><Loader2 size={14} className="animate-spin" />{busy}</p>
           : !found ? <button onClick={() => find()} disabled={!link.trim()} className="w-full py-2.5 rounded-xl bg-teal-500 disabled:opacity-40 text-slate-950 font-semibold text-sm" data-testid="video-find">{tr("Find the video")}</button> : null}

@@ -4,7 +4,7 @@
    was no way back ONE step, and the phone's Back button left the whole tool.
    Any inner page now registers itself while it is open (useSubBack); the header ← and the phone's
    Back close the newest inner page first, then the tool, then the app. */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 const STACK = [];
 
@@ -36,3 +36,14 @@ export function useSubBack(active, onBack) {
     return pushBack(() => ref.current && ref.current());
   }, [!!active]);
 }
+
+// ---- v5.41: a tool remembers where you were (Ali: Learn daily → make a picture → Back lost the lesson) ----
+// Like useState, but the value outlives the page: leave a tool and come back, and the same course,
+// lesson, table or project is open again. Kept in memory for this run of the app (not on disk).
+const MEM = new Map();
+export function useSticky(key, init) {
+  const [v, setV] = useState(() => (MEM.has(key) ? MEM.get(key) : typeof init === "function" ? init() : init));
+  const set = useCallback((x) => setV((old) => { const nv = typeof x === "function" ? x(old) : x; MEM.set(key, nv); return nv; }), [key]);
+  return [v, set];
+}
+export const forgetSticky = (prefix) => { for (const k of [...MEM.keys()]) if (k.startsWith(prefix)) MEM.delete(k); };

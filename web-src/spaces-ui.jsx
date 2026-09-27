@@ -1,7 +1,7 @@
 /* ---- Spaces screens: Assistants, Projects, Artifacts, Themes (v5.14) ---------------------
    Logic and storage: spaces.js. Chat carries assistantId / projectId on each chat.      */
 import { askConfirm } from "./confirm.jsx";
-import { useSubBack } from "./backstack.js";
+import { useSubBack, useSticky } from "./backstack.js";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { Md, loadChats } from "./chat.jsx";
@@ -110,7 +110,7 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
 /* ============================== Projects ============================== */
 export function ProjectsPage({ startChat, openChat, flash }) {
   const [list, setList] = useState(() => loadProjects());
-  const [openId, setOpenId] = useState(null);
+  const [openId, setOpenId] = useSticky("projects:open", null);
   const [edit, setEdit] = useState(null);
   const [note, setNote] = useState(null);           // { name, text } being added
   useSubBack(!!openId, () => setOpenId(null));      // v5.34: Back — project → all projects

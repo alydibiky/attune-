@@ -191,4 +191,70 @@ export function askMessages(question, msgs, me) {
   ];
 }
 
+// ---- v5.41: two questions people really ask (Ali: "what was the conversation about?", "was X mentioned?") ----
+const normAr = (s) => clean(s).toLowerCase().replace(/[\u064B-\u0652\u0640]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, " ").trim();
+/** "about" (an overview of the whole chat) | "mention" (was a word/phrase said?) | "other" */
+export function askKind(q) {
+  const t = String(q || "").trim();
+  if (mentionTerm(t)) return "mention";
+  if (/\b(what (was|is|were) (the |this |our )?(chat|conversation|group|discussion)s?( all)? about|what did (we|they) (talk|discuss|say)|summar(y|ise|ize)|overview|main topics?|gist)\b|ملخص|لخص|لخّص|بيتكلموا عن|اتكلمنا عن|اتكلموا عن|الكلام كان عن|المحادثة (كانت )?عن|الشات (كان )?عن|الموضوع (كان )?(إيه|ايه)|المواضيع/i.test(t)) return "about";
+  return "other";
+}
+/** The phrase to look for in "was “LTM 1100” mentioned?", «هل اتقال "العربون"؟», "did anyone mention the deposit" → "LTM 1100" / … */
+export function mentionTerm(q) {
+  const t = String(q || "").trim();
+  const quoted = t.match(/["“”«»'‘’]([^"“”«»'‘’]{1,60})["“”«»'‘’]/);
+  const asks = /\b(mention(ed|s)?|said|say|talk(ed)? about|brought up|come up|came up|appear(s|ed)?|written|wrote|any(one|body) (say|said|mention))\b|اتقال|اتذكر|اتكتب|ذكر|قال|قالوا|اتكلم|جه ذكر|موجود|اتجاب سيرة|سيرة/i.test(t);
+  if (quoted && asks) return quoted[1].trim();
+  if (quoted && /^\s*(was|is|did|هل)\b/i.test(t)) return quoted[1].trim();
+  if (!asks) return null;
+  let m = t.match(/\b(?:was|were|is)\s+(?:the\s+)?(.{2,50}?)\s+(?:ever\s+)?(?:mentioned|said|brought up|discussed|talked about)\b/i)
+    || t.match(/\b(?:mention(?:ed)?|say|said|talk(?:ed)? about|bring up|brought up)\s+(?:the\s+|a\s+|an\s+|any\s+)?(.{2,50}?)\s*(?:\?|$| in (?:the|this) (?:chat|group|conversation))/i)
+    || t.match(/(?:اتقال|اتذكر|اتكتب|ذكر|جه ذكر|اتجابت سيرة|سيرة)\s+(?:كلمة\s+)?(.{2,50}?)\s*(?:\?|؟|$| في)/);
+  return m ? m[1].replace(/^(anything about|about)\s+/i, "").trim() : null;
+}
+/** Every message containing the phrase (Arabic spelling variants and case ignored). */
+export function findMentions(messages, term) {
+  const n = normAr(term);
+  if (!n) return [];
+  const words = n.split(" ").filter((w) => w.length > 1);
+  const exact = messages.filter((m) => normAr(m.text).includes(n));
+  if (exact.length) return exact;
+  // Arabic: «العربون» also finds «عربون» (the article is often left out in chats)
+  const bare = n.split(" ").map((w) => w.replace(/^(ال|وال|بال|لل)(?=\S{2,})/, "")).join(" ");
+  if (bare !== n) { const b = messages.filter((m) => normAr(m.text).includes(bare)); if (b.length) return b; }
+  if (words.length < 2) return exact;
+  return messages.filter((m) => { const t = normAr(m.text); return words.every((w) => t.includes(w)); });   // all the words, in any order
+}
+/** The answer to "was X mentioned?" — written by code, instantly. */
+export function mentionAnswer(term, hits, total, ar) {
+  if (!hits.length) return ar ? `لأ — «${term}» مش موجودة في الشات (اتفحصت كل الرسائل: ${total}).` : `No — “${term}” doesn't appear anywhere in this chat (all ${total} messages checked).`;
+  const first = hits[0], last = hits[hits.length - 1];
+  const who = [...new Set(hits.map((m) => m.who))].slice(0, 4).join(ar ? "، " : ", ");
+  return ar ? `أيوه — «${term}» اتذكرت ${hits.length} مرة${hits.length > 1 ? "" : ""}، أول مرة ${fmtDate(first.t)} (${first.who})${hits.length > 1 ? ` وآخر مرة ${fmtDate(last.t)} (${last.who})` : ""}. قالها: ${who}.`
+    : `Yes — “${term}” was mentioned ${hits.length} time${hits.length > 1 ? "s" : ""}: first on ${fmtDate(first.t)} by ${first.who}${hits.length > 1 ? `, last on ${fmtDate(last.t)} by ${last.who}` : ""}. Said by: ${who}.`;
+}
+/** Messages spread over the whole chat (start → end), the longer ones first, within a budget — for an overview. */
+export function overviewSample(messages, budget = 6000) {
+  const real = messages.filter((m) => m.text && m.text.replace(/\s+/g, " ").length >= 12);
+  if (!real.length) return [];
+  const slots = 12, per = Math.max(1, Math.ceil(real.length / slots)), pick = new Set();
+  let used = 0;
+  // from each stretch of the chat, its most substantial messages
+  for (let round = 0; round < 6 && used < budget; round++) {
+    for (let k = 0; k < slots && used < budget; k++) {
+      const part = real.slice(k * per, (k + 1) * per).filter((m) => !pick.has(m.i)).sort((a, b) => b.text.length - a.text.length);
+      const m = part[0]; if (!m) continue;
+      pick.add(m.i); used += Math.min(400, m.text.length) + 30;
+    }
+  }
+  return real.filter((m) => pick.has(m.i));
+}
+export function overviewMessages(question, sample, me, total) {
+  return [
+    { role: "system", content: `You summarise a WhatsApp chat ("${me}" is the phone's owner) from messages sampled across ALL of it (${total} messages in total). Write: one sentence on what the chat is about overall, then the main topics as bullet points in time order, each with its date range and who drove it, citing message numbers like [#12]. Then any open issues (money owed, promises, unanswered questions). Only what the messages show. Answer in the language of the question.` },
+    { role: "user", content: "MESSAGES (a sample from start to end):\n" + chunksOf(sample, 100000).join("") + "\nQUESTION: " + question },
+  ];
+}
+
 export { fmtDate };

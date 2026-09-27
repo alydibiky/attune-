@@ -9,7 +9,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Plus, Trash2, Search, Database, ArrowUp, ArrowDown, Undo2, Upload, Download, KeyRound, BarChart3, Wrench, Sparkles, ChevronLeft, Check, X, Copy, Share2, Lock, AlertTriangle, Loader2, PenLine, FileText } from "lucide-react";
 import { tr } from "./i18n.js";
-import { useSubBack } from "./backstack.js";
+import { useSubBack, useSticky } from "./backstack.js";
 import * as E from "./erp.js";
 import { buildApp, readApp } from "./erp-app.js";
 import { getPower } from "./power.js";
@@ -64,8 +64,8 @@ function useLongPress(fn, ms = 550) {
 
 export function BusinessPage({ flash, llm, modelReady, openEngine, saveFile, share, runPy }) {
   const [index, setIndex] = useState(loadIndex);
-  const [sys, setSysRaw] = useState(null);
-  const [view, setView] = useState("list");            // list | new | system
+  const [sys, setSysRaw] = useSticky("erp:sys", null);
+  const [view, setView] = useSticky("erp:view", "list");            // list | new | system
   useSubBack(view !== "list", () => { setView("list"); setSysRaw(null); });   // v5.34: Back → the list of systems
   const setSys = (next, msg) => {
     if (!saveSys(next)) flash(tr("The phone's storage for Business is full — export a table to CSV and delete old records."));
@@ -237,7 +237,7 @@ function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
 // ---- one system ---------------------------------------------------------------------------
 function SystemView({ sys, setSys, llm, modelReady, flash, saveFile, share, runPy, onBack, onDelete }) {
   const [tid, setTid] = useState(sys.tables[0] && sys.tables[0].id);
-  const [tab, setTab] = useState("data");         // data | design | queries | forms | summary | more
+  const [tab, setTab] = useSticky("erp:tab", "data");         // data | design | queries | forms | summary | more
   const [ren, setRen] = useState(null);            // { kind: "system" | "table", tid?, value }
   useSubBack(!!ren, () => setRen(null));
   const [delAsk, setDelAsk] = useState(false);

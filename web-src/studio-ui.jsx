@@ -4,7 +4,7 @@ import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X } from "lucide-react";
 import { tr } from "./i18n.js";
-import { useSubBack } from "./backstack.js";
+import { useSubBack, useSticky } from "./backstack.js";
 import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, drawPack, drawSize, gpuWorks, loadStudio, saveStudio } from "./studio.js";
 
 const STAGE = {
@@ -12,6 +12,7 @@ const STAGE = {
   check: "Checking the picture engine and model files…", retry: "Short of memory — drawing it smaller (512 px)…",
   start: "Starting the picture engine…", load: "Loading the picture model…", prompt: "Reading your description…",
   draw: "Drawing", develop: "Developing the picture…", save: "Saving…", upscale: "Sharpening ×4",
+  resume: "Still working — it carried on while you were away…",
 };
 
 /** A picture (URL or data URL), shrunk to at most 1024 px in multiples of 16, as a PNG data URL. */
@@ -40,10 +41,26 @@ function readPhoto(file) {
 }
 const secs = (ms) => (ms < 60000 ? Math.round(ms / 1000) + " s" : Math.floor(ms / 60000) + " min " + Math.round((ms % 60000) / 1000) + " s");
 
+// ---- v5.41: a job outlives the screen (Ali: "I sharpen, tap out and in — it starts from the beginning") ----
+// Drawing and ×4 sharpening run natively and carry on when you leave Studio; their progress and result
+// used to live only in the open screen, so coming back showed nothing and the finished picture was never
+// added. The job now lives here (module level): a returning Studio shows it still running, and the
+// result is saved to the gallery even if no Studio screen is open. After a page reload, the job noted in
+// storage is picked up from the phone's Studio folder when its file appears.
+const LIVE = { busy: null, cur: null, hub: null, callId: "" };
+const PENDING = "attune:studio:pending";
+const notePending = (v) => { try { if (v) localStorage.setItem(PENDING, JSON.stringify(v)); else localStorage.removeItem(PENDING); } catch (e) {} };
+const readPending = () => { try { return JSON.parse(localStorage.getItem(PENDING) || "null"); } catch (e) { return null; } };
+function commitPic(item) {
+  const list = [item, ...loadStudio().filter((x) => x.file !== item.file)];
+  saveStudio(list); LIVE.cur = item;
+  if (LIVE.hub) { LIVE.hub.setGallery(list); LIVE.hub.setCur(item); }
+}
+
 export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, flash, incoming, clearIncoming }) {
   const readInfo = () => { try { return JSON.parse(native.imageInfo()); } catch (e) { return null; } };
   const [info, setInfo] = useState(readInfo);
-  const [mode, setMode] = useState("create");
+  const [mode, setMode] = useSticky("studio:mode", "create");
   useSubBack(mode === "edit", () => setMode("create"));   // v5.34: Back leaves photo editing
   const [idea, setIdea] = useState("");
   const [enhance, setEnhance] = useState(true);
@@ -52,19 +69,51 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   // is drawn. On by default; remembered.
   const [hd, setHd] = useState(() => { try { return localStorage.getItem("attune:studio:hd") !== "0"; } catch (e) { return true; } });
   const setHdKeep = (v) => { setHd(v); try { localStorage.setItem("attune:studio:hd", v ? "1" : "0"); } catch (e) {} };
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useSticky("studio:prompt", "");
   const [size, setSize] = useState("square");
   // v5.28: Turbo (fast, any phone) or Pro (best quality, needs the graphics chip) — remembered
   const [choice, setChoiceS] = useState(() => { try { return localStorage.getItem("attune:studio:choice") || null; } catch (e) { return null; } });
   const setChoice = (c) => { setChoiceS(c); try { localStorage.setItem("attune:studio:choice", c); } catch (e) {} };
   const [ref, setRef] = useState(null);           // { dataUrl, w, h }
-  const [busy, setBusy] = useState(null);         // { what, stage, step, total, t0 }
+  const [busy, setBusyL] = useState(() => LIVE.busy);         // { what, stage, step, total, t0 } — mirrored in LIVE
+  // the job's state is LIVE.busy; the screen shows it while it is open
+  const setBusy = (x) => { const nb = typeof x === "function" ? x(LIVE.busy) : x; LIVE.busy = nb; if (LIVE.hub) LIVE.hub.setBusy(nb); };
   const [now, setNow] = useState(Date.now());
   const [dl, setDl] = useState(null);             // { id, pct, stage, detail }
   const [gallery, setGallery] = useState(loadStudio);
-  const [cur, setCur] = useState(() => loadStudio()[0] || null);
-  const [err, setErr] = useState("");
-  const callId = useRef("");
+  const [cur, setCurL] = useState(() => LIVE.cur || loadStudio()[0] || null);
+  const setCur = (c) => { LIVE.cur = c; if (LIVE.hub) LIVE.hub.setCur(c); };
+  const [err, setErrL] = useState("");
+  const setErr = (e) => { if (LIVE.hub) LIVE.hub.setErr(e); };
+  const callId = useRef(LIVE.callId);
+  useEffect(() => {
+    LIVE.hub = { setBusy: setBusyL, setCur: setCurL, setErr: setErrL, setGallery: (l) => setGallery(l) };
+    return () => { LIVE.hub = null; };
+  }, []);
+  // after a reload: a job that was running is picked up when its picture appears in the Studio folder
+  useEffect(() => {
+    const pend = readPending();
+    if (!pend || LIVE.busy || !native || !native.imageList) return undefined;
+    if (Date.now() - (pend.t0 || 0) > 25 * 60000) { notePending(null); return undefined; }
+    setBusy({ what: pend.what, t0: pend.t0, stage: "resume" });
+    const look = () => {
+      try {
+        const files = JSON.parse(native.imageList() || "[]");
+        const hit = pend.what === "upscale" ? files.find((f) => f.file === String(pend.file || "").replace(/\.png$/i, "") + "-x4.png")
+          : files.filter((f) => f.file && (f.at || 0) >= (pend.t0 || 0) - 2000 && !/-x4\.png$/.test(f.file)).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+        if (hit) {
+          const base = pend.what === "upscale" ? (loadStudio().find((x) => x.file === pend.file) || {}) : {};
+          commitPic({ ...base, file: hit.file, url: hit.url, w: hit.width, h: hit.height, idea: base.idea || pend.idea || "", prompt: base.prompt || pend.prompt || "", upscaled: pend.what === "upscale", at: Date.now(), resumed: true });
+          notePending(null); setBusy(null); return true;
+        }
+      } catch (e) {}
+      if (Date.now() - (pend.t0 || 0) > 25 * 60000) { notePending(null); setBusy(null); setErr(tr("The last picture didn't finish while you were away — try again.")); return true; }
+      return false;
+    };
+    if (look()) return undefined;
+    const t = setInterval(() => { if (look()) clearInterval(t); }, 3000);
+    return () => clearInterval(t);
+  }, []);
   const fileRef = useRef(null);
 
   useEffect(() => { if (!busy) return; const t = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(t); }, [busy]);
@@ -75,7 +124,9 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
     try {
       const files = JSON.parse(native.imageList() || "[]");
       const have = new Set(loadStudio().map((x) => x.file));
-      const missed = files.filter((f) => f && f.file && !have.has(f.file) && !/-x4\.png$/.test(f.file)).map((f) => ({ file: f.file, url: f.url, w: f.width, h: f.height, idea: "", prompt: "", at: f.at, recovered: true }));
+      // v5.41: a sharpened (-x4) picture finished while away is recovered too, with its original's idea
+      const missed = files.filter((f) => f && f.file && !have.has(f.file)).map((f) => { const src = /-x4\.png$/.test(f.file) ? loadStudio().find((x) => x.file === f.file.replace(/-x4\.png$/, ".png")) : null;
+        return { ...(src || {}), file: f.file, url: f.url, w: f.width, h: f.height, idea: (src && src.idea) || "", prompt: (src && src.prompt) || "", at: f.at, recovered: true, upscaled: !!src || /-x4\.png$/.test(f.file) }; });
       if (missed.length) { const next = [...missed, ...loadStudio()].sort((a, b) => (b.at || 0) - (a.at || 0)); keep(next); setCur(next[0]); }
     } catch (e) {}
   }, []);
@@ -139,10 +190,12 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       if (opts.seed != null) arg.seed = opts.seed;
       if (mode === "edit" || opts.ref) arg.refImage = r0.dataUrl;
       const run = nativeCall("imagine", arg, progress("draw"));
-      callId.current = nativeLastId();
+      callId.current = LIVE.callId = nativeLastId();
+      notePending({ what: "draw", t0: Date.now(), idea: text, prompt: finalPrompt });
       const r = await run;
+      notePending(null);
       const item = { file: r.file, url: r.url, idea: text, prompt: finalPrompt, w: r.width, h: r.height, ms: r.ms, backend: r.backend, seed: r.seed, edit: !!arg.refImage, at: Date.now() };
-      setCur(item); keep([item, ...gallery]);
+      commitPic(item);
       if (r.pausedChat) flash(tr("The chat model was paused to make room, and is loading again."));
       setInfo(readInfo());
       if (hd && item.w <= 1216 && !item.edit) autoSharpen.current = item;
@@ -171,10 +224,12 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
     setErr(""); setBusy({ what: "upscale", t0: Date.now(), stage: "upscale" });
     try {
       const run = nativeCall("upscaleImage", { file: pic.file }, progress("upscale"));
-      callId.current = nativeLastId();
+      callId.current = LIVE.callId = nativeLastId();
+      notePending({ what: "upscale", t0: Date.now(), file: pic.file });
       const r = await run;
+      notePending(null);
       const item = { ...pic, file: r.file, url: r.url, w: r.width, h: r.height, ms: (pic.ms || 0) + (r.ms || 0), backend: r.backend, upscaled: true, at: Date.now() };
-      setCur(item); keepRef.current(item);
+      commitPic(item);
     } catch (e) { if (e.message !== "Stopped") setErr(auto ? tr("The picture is ready at {w} px; sharpening it failed: {e}", { w: pic.w, e: tr(e.message) }) : tr(e.message)); }
     finally { setBusy(null); }
   };
@@ -187,7 +242,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   const userStop = useRef(false);
   // v5.19: pictures are stopped only by this button (cancelImage), never by
   // a cancel meant for something else.
-  const stop = () => { userStop.current = true; try { if (native.cancelImage) native.cancelImage(callId.current); else native.cancel(callId.current); } catch (e) {} };
+  const stop = () => { userStop.current = true; notePending(null); const id = callId.current || LIVE.callId; if (!LIVE.busy || LIVE.busy.stage === "resume") setBusy(null); try { if (native.cancelImage) native.cancelImage(id); else native.cancel(id); } catch (e) {} };
   const remove = (it) => { try { native.deleteImage(it.file); } catch (e) {} const next = gallery.filter((x) => x.file !== it.file); keep(next); if (cur && cur.file === it.file) setCur(next[0] || null); };
 
   const stageText = busy ? (busy.stage === "enhance" ? tr("Writing a fuller description…")

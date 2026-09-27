@@ -13,8 +13,16 @@ PROBE = r"""() => {
     if (r.right > W + 2 || r.left < -2) { bad.push((el.tagName + '.' + String(el.className).split(' ').slice(0,2).join('.')).slice(0,60) + ' ' + Math.round(r.left) + '→' + Math.round(r.right) + ' "' + (el.innerText||'').trim().slice(0,30) + '"'); }
   }
   const small = [...document.querySelectorAll('button')].filter(b => { const r = b.getBoundingClientRect(); return r.width && r.height && r.top < innerHeight && r.bottom > 0 && (r.height < 26 || r.width < 26) && (b.innerText||'').trim().length < 3; }).map(b => b.outerHTML.slice(0,140));
+  // a one-word label broken over lines ("P / as / te") — the button got squeezed
+  const squeezed = [];
+  for (const b of document.querySelectorAll('button, a, span, p, label')) {
+    const r0 = b.getBoundingClientRect(); if (!r0.width || r0.bottom < 0 || r0.top > innerHeight * 3) continue;
+    for (const n of b.childNodes) { if (n.nodeType !== 3) continue; const t = n.nodeValue.trim(); if (t.length < 3 || /\s/.test(t)) continue;
+      const rg = document.createRange(); rg.selectNodeContents(n); const ys = new Set([...rg.getClientRects()].map((q) => Math.round(q.top)));
+      if (ys.size > 1) squeezed.push(t.slice(0, 20)); }
+  }
   const crash = document.body.innerText.includes('Something went wrong on this screen') || document.body.innerText.includes('حصلت مشكلة في الشاشة');
-  return { overflow: document.documentElement.scrollWidth > W + 1, bad: [...new Set(bad)].slice(0, 5), small, crash };
+  return { overflow: document.documentElement.scrollWidth > W + 1, bad: [...new Set(bad)].slice(0, 5), small, crash, squeezed: [...new Set(squeezed)].slice(0, 5) };
 }"""
 LATIN = r"""() => { const out = []; const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   for (let n = w.nextNode(); n; n = w.nextNode()) { const t = n.nodeValue.trim(); const el = n.parentElement;
@@ -25,9 +33,11 @@ LATIN = r"""() => { const out = []; const w = document.createTreeWalker(document
 errors_all = []
 with sync_playwright() as p:
     br = p.chromium.launch()
-    for lang in ["en", "ar"]:
+    # "en-narrow": a 320-px screen — text as big for the width as on a phone with a larger Text size
+    for lang in ["en", "ar", "en-narrow"]:
         errors = []
         ctx, page = new_page(br, env, errors, extra_init=("localStorage.setItem('attune:lang','ar');" if lang == "ar" else ""))
+        if lang == "en-narrow": page.set_viewport_size({"width": 320, "height": 760})
         page.goto(env.url); page.wait_for_selector("nav", timeout=15000); page.wait_for_timeout(500)
         if lang == "ar" and page.evaluate("document.documentElement.dir") != "rtl":
             page.locator("nav button").last.click(); page.wait_for_timeout(300)
@@ -41,6 +51,7 @@ with sync_playwright() as p:
             if r["crash"]: issues.append("CRASH")
             if r["overflow"] or r["bad"]: issues.append("overflow " + json.dumps(r["bad"], ensure_ascii=False))
             if r["small"]: issues.append("tiny " + json.dumps(r["small"], ensure_ascii=False))
+            if r["squeezed"]: issues.append("squeezed " + json.dumps(r["squeezed"], ensure_ascii=False))
             if lat: issues.append("english: " + json.dumps(lat, ensure_ascii=False))
             if errors: issues.append("JS: " + errors[-1][:120]); errors.clear()
             print(("%-3s %-12s " % (lang, name)) + ("OK" if not issues else " | ".join(issues)), flush=True)

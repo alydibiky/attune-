@@ -38,6 +38,74 @@ object DocTools {
     }
 
     /** {pages:[{n, text, scan}], count} */
+    /**
+     * v5.41 (Ali: "PDF → Word changed the format" — headings glued to paragraphs, tables as plain lines,
+     * numbered questions lost their numbers): while the text is read, every word's position, size and
+     * boldness is kept, so the page can rebuild headings, lists and real tables (convert.js pdfLinesToBlocks).
+     */
+    private class LayoutStripper : com.tom_roush.pdfbox.text.PDFTextStripper() {
+        val words = ArrayList<FloatArray>()   // x, xEnd, y, size, bold (1/0)
+        val texts = ArrayList<String>()
+        override fun writeString(text: String?, textPositions: MutableList<com.tom_roush.pdfbox.text.TextPosition>?) {
+            super.writeString(text, textPositions)
+            try {
+                val tp = textPositions ?: return
+                if (tp.isEmpty() || text.isNullOrBlank()) return
+                val a = tp.first(); val b = tp.last()
+                val fname = try { a.font?.name ?: "" } catch (e: Exception) { "" }
+                val bold = fname.contains("Bold", true) || fname.contains("Black", true) || fname.contains("Heavy", true) || fname.contains("Semibold", true)
+                words.add(floatArrayOf(a.xDirAdj, b.xDirAdj + b.widthDirAdj, a.yDirAdj, a.fontSizeInPt, if (bold) 1f else 0f))
+                texts.add(text)
+            } catch (e: Exception) { }
+        }
+    }
+
+    /** The kept words of one page → lines: [{y, x, s (size), b (all bold), sp: [[x, text, size]]}] (spans split at wide gaps). */
+    private fun layoutLines(st: LayoutStripper): JSONArray {
+        val out = JSONArray()
+        val n = st.words.size
+        if (n == 0) return out
+        val order = (0 until n).sortedWith(compareBy({ st.words[it][2] }, { st.words[it][0] }))
+        val groups = ArrayList<ArrayList<Int>>()
+        for (i in order) {
+            val w = st.words[i]
+            val g = groups.lastOrNull()
+            if (g != null) {
+                val f = st.words[g[0]]
+                if (Math.abs(w[2] - f[2]) <= maxOf(2f, minOf(w[3], f[3]) * 0.45f)) { g.add(i); continue }
+            }
+            groups.add(arrayListOf(i))
+        }
+        for (g in groups) {
+            g.sortBy { st.words[it][0] }
+            val sizes = g.map { st.words[it][3] }.sorted()
+            val size = sizes[sizes.size / 2]
+            val baseYs = g.filter { st.words[it][3] >= size * 0.9f }.map { st.words[it][2] }.sorted()
+            val base = if (baseYs.isEmpty()) st.words[g[0]][2] else baseYs[baseYs.size / 2]
+            val spans = JSONArray()
+            var spanX = -1f; var spanEnd = 0f; val sb = StringBuilder(); var spanSize = 0f
+            var wordsOf = JSONArray()   // each word's x and text, so a table header can be split into its columns
+            var allBold = true
+            for (i in g) {
+                val w = st.words[i]; val t = st.texts[i]
+                if (w[4] < 0.5f) allBold = false
+                if (spanX >= 0f && w[0] - spanEnd > size * 1.6f) { spans.put(JSONArray().put(spanX.toDouble()).put(sb.toString()).put(spanSize.toDouble()).put(wordsOf)); sb.setLength(0); spanX = -1f; wordsOf = JSONArray() }
+                if (spanX < 0f) { spanX = w[0]; spanSize = w[3] }
+                else {
+                    // a smaller word raised above the line is a superscript (2^−ΔΔCt)
+                    if (w[3] < size * 0.8f && w[2] < base - 0.5f) { sb.append("^(").append(t).append(")"); spanEnd = w[1]; continue }
+                    if (w[0] - spanEnd > size * 0.12f) sb.append(' ')
+                }
+                sb.append(t); spanEnd = w[1]
+                wordsOf.put(JSONArray().put(w[0].toDouble()).put(t))
+            }
+            if (spanX >= 0f) spans.put(JSONArray().put(spanX.toDouble()).put(sb.toString()).put(spanSize.toDouble()).put(wordsOf))
+            val first = st.words[g[0]]
+            out.put(JSONObject().put("y", first[2].toDouble()).put("x", st.words[g.first()][0].toDouble()).put("s", size.toDouble()).put("b", allBold).put("sp", spans))
+        }
+        return out
+    }
+
     fun pdfText(ctx: Context, bytes: ByteArray, maxPages: Int = 400): JSONObject {
         pdfBox(ctx)
         val doc = try { com.tom_roush.pdfbox.pdmodel.PDDocument.load(bytes) }
@@ -46,12 +114,18 @@ object DocTools {
             val n = minOf(d.numberOfPages, maxPages)
             val pages = JSONArray()
             // paragraphs end with a blank line, so the Word file gets real paragraphs, not one block a page
-            val strip = com.tom_roush.pdfbox.text.PDFTextStripper().apply { sortByPosition = true; setAddMoreFormatting(true); setParagraphEnd("\n") }
+            val strip = LayoutStripper().apply { sortByPosition = true; setAddMoreFormatting(true); setParagraphEnd("\n") }
             for (i in 1..n) {
                 strip.startPage = i; strip.endPage = i
+                strip.words.clear(); strip.texts.clear()
                 val t = try { strip.getText(d) } catch (e: Exception) { "" }
                 val clean = t.replace("\r", "").trim()
-                pages.put(JSONObject().put("n", i).put("text", clean).put("scan", clean.replace(Regex("\\s"), "").length < 25))
+                val page = JSONObject().put("n", i).put("text", clean).put("scan", clean.replace(Regex("\\s"), "").length < 25)
+                try {
+                    page.put("lines", layoutLines(strip))
+                    page.put("w", d.getPage(i - 1).mediaBox.width.toDouble())
+                } catch (e: Exception) { }   // no layout: the page falls back to the plain text
+                pages.put(page)
             }
             return JSONObject().put("pages", pages).put("count", d.numberOfPages)
         }
@@ -200,7 +274,7 @@ object DocTools {
                         draw(layout(text, paint(if (type == "h1") 19f else if (type == "h2") 15.5f else 13f, true), usable.toInt()), M)
                         y += 6
                     }
-                    "li" -> { draw(layout("•  $text", paint(11f, false), usable.toInt() - 12), M + 12); y += 3 }
+                    "li" -> { val num = b.optString("num", ""); draw(layout((if (num.isNotEmpty()) "$num.  " else "•  ") + text, paint(11f, false), usable.toInt() - 12), M + 12); y += 3 }
                     "title" -> { y += 150; draw(layout(text, paint(28f, true), usable.toInt()), M); y += 10 }
                     "subtitle" -> { draw(layout(text, paint(15f, false).apply { color = Color.rgb(90, 90, 90) }, usable.toInt()), M); y += 24 }
                     "caption" -> { draw(layout(text, paint(9.5f, false).apply { color = Color.rgb(90, 90, 90) }, usable.toInt()), M); y += 10 }

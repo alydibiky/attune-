@@ -29,9 +29,21 @@ export function looksLikeMathProblem(text) {
 }
 
 /** "write a python function that…", "implement a class…", "اكتب كود…" */
+/** v5.41: "A landing page for my crane company…", «اعمل موقع…» — a website / web page to build (Ali's
+ *  landing page went through plain chat, where the anti-repeat sampling mangled the HTML). */
+export function looksLikeWebsiteTask(text) {
+  const t = String(text || "").trim();
+  if (t.length < 12) return false;
+  const thing = /\b(landing ?page|website|web ?site|web ?page|webpage|home ?page|web app|one[- ]page site|portfolio site|online store page|html page|single[- ]page app)\b|موقع|صفحة (ويب|هبوط|رئيسية|انترنت|إنترنت)|لاندنج|لاندينج/i;
+  if (!thing.test(t)) return false;
+  if (/^(what|how|why|when|where|who|which|is|are|does|do|can|should|explain|tell me)\b|^(إيه|ايه|ليه|إزاي|ازاي|هل|ما هو|ما هي|كيف)/i.test(t) && !/\b(build|make|create|design|code|write)\b|اعمل|صمم|ابني/i.test(t)) return false;
+  return /\b(build|make|create|design|code|write|develop|generate|give me|need|want)\b|^(a|an|my)\s/i.test(t) || /اعمل|اعملي|صمم|صمملي|ابني|ابنيلي|عايز|محتاج|اكتب/.test(t);
+}
+
 export function looksLikeCodeTask(text) {
   const t = String(text || "");
   if (t.length < 15) return false;
+  if (looksLikeWebsiteTask(t)) return true;
   if (/\b(write|implement|create|build|make|code|program|develop|fix|debug|refactor)\b[^.?!\n]{0,80}\b(python|javascript|js|typescript|function|class|script|program|algorithm|code|api|method|snippet|html page|web page)\b/i.test(t)) return true;
   if (/\b(python|javascript)\b/i.test(t) && /\b(write|implement|solve|return|class|def)\b/i.test(t)) return true;
   return /(اكتب|اعمل|اعملي|صمم|برمج)\s*(لي\s*)?(كود|برنامج|دالة|فانكشن|سكريبت|كلاس)/.test(t);

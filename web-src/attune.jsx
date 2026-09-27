@@ -39,7 +39,7 @@ import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
 import { detectLoop, trimLoop, detectDegenerate } from "./quality.js";
-import { verifyMath, looksLikeMathProblem, arithmeticSlips } from "./verify.js";
+import { verifyMath, looksLikeMathProblem, arithmeticSlips, looksLikeCodeTask } from "./verify.js";
 import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
 import { workLoop, guessLang } from "./code.js";
 import { runCode, runHtml, pythonAvailable, warmUp } from "./sandbox.js";
@@ -1403,7 +1403,11 @@ const LocalEngine = {
       // project knowledge) gets no DRY / n-gram ban at all; everywhere else a
       // repeat must be over 12 tokens before it is discouraged — numbers and
       // names are never that long, looping sentences are.
-      if (!o.copy) {
+      // v5.41: code and web pages repeat by nature (<div class="card"> × 20) — a ban on repeats
+      // forced the model into "divclass", "</div</div>" (Ali's landing page)
+      const lu = [...messages].reverse().find((m) => m.role === "user"), luText = lu ? String(typeof lu.content === "string" ? lu.content : ((lu.content || []).find((x) => x.type === "text") || {}).text || "") : "";
+      const codeAsk = looksLikeCodeTask(luText.slice(-1500)) || /```/.test(luText.slice(-3000));
+      if (!o.copy && !codeAsk) {
         body.dry_multiplier = 0.8; body.dry_base = 1.75; body.dry_allowed_length = 12; body.dry_penalty_last_n = 1024;
         body.no_repeat_ngram = 24;
       }
@@ -5809,6 +5813,7 @@ const GROUNDED_RULES = `Answer ONLY from the passages below.
 - If the passages do not answer the question, do NOT just refuse. Say plainly what they DO show, in one or two sentences, with citations — for example "I found no record of a 1983 Lunar Incident between the USSR and Canada; the closest real events are the 1978 Kosmos 954 satellite crash in Canada [3] and the 1983 Soviet false-alarm incident [1]." If the question rests on something that the passages suggest never happened, say so directly.
 - Cite the source number in square brackets after each claim, like [1].
 - Copy every number, version and date EXACTLY as the passage writes it (never join or change digits).
+- Write the product's name exactly as the question and passages write it — every digit of a model number (e.g. "Lynk & Co 900" is not "Lynk & Co 90"). If the passages are about a different model than the one asked, say so.
 - Asked for ALL versions / trims / models / options: list EVERY one the passages name, each with its own figures (a table is best). A figure no passage gives is shown as "—" in the table — never guessed, and never a sentence about what is missing.
 - Never write sentences like "the passages / sources do not provide …" or "I couldn't find …" and never use the word "passages" — just give everything the sources DO say.
 - Each fact once: never repeat a bullet or a sentence.
@@ -6607,6 +6612,18 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 }
 `;
 
+// v5.41: which catalog tier an installed model file is (by id, download link or real name)
+function tierOfInstalled(m) {
+  if (!m) return null;
+  const byId = MODEL_TIERS.find((x) => x.id === m.id);
+  if (byId) return byId;
+  const src = String(m.source || "") + " " + String(m.id || "");
+  const byUrl = MODEL_TIERS.find((x) => x.url && src && (src.includes(x.url) || (x.repo && src.includes(x.repo))));
+  if (byUrl) return byUrl;
+  const fast = /litert/i.test(src + " " + (m.label || ""));
+  return MODEL_TIERS.find((x) => x.realName && !!x.fast === fast && String(m.label || "").toLowerCase().replace(/[\s-]+/g, "").includes(x.realName.toLowerCase().replace(/[\s-]+/g, ""))) || null;
+}
+
 const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
@@ -6614,7 +6631,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.40";
+const PAGE_VERSION = "5.41";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -6662,7 +6679,19 @@ ${(f.rec.output || "").slice(0, 600)}`).join("\n\n")}`;
 }
 
 export default function App() {
-  const [mode, setMode] = useState("chat");
+  const [mode, setModeRaw] = useState("chat");
+  // v5.41 (Ali: "when I press back I can't go to the previous page, it leaves the app"): every screen
+  // change is remembered, and Back returns to the previous screen — Studio → Learn daily → Chat.
+  const modeRef = useRef("chat"); modeRef.current = mode;
+  const modeHist = useRef([]);
+  const setMode = (m) => {
+    const cur = modeRef.current;
+    if (!m || m === cur) return;
+    if (m === "chat") modeHist.current = [];                    // Chat is home: Back from it leaves the app
+    else { modeHist.current = modeHist.current.filter((x) => x !== m); modeHist.current.push(cur); if (modeHist.current.length > 30) modeHist.current.shift(); }
+    modeRef.current = m;
+    setModeRaw(m);
+  };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -7359,7 +7388,10 @@ export default function App() {
 
   const activeTier = useMemo(() => MODEL_TIERS.find((t) => t.id === tierId) || null, [tierId]);
   // v5.23: what the active model may do (answer length, research depth, expert mode…)
-  useMemo(() => setPower(activeTier), [activeTier]);
+  // v5.41: the model that is really RUNNING drives the power profile and the header chip — tapping a
+  // card in Engine only selects it (Ali tapped Zenith: Blaze+ kept running but got Zenith's expert settings)
+  const runningTier = useMemo(() => (NATIVE ? tierOfInstalled((installedModels || []).find((m) => m.active)) || activeTier : activeTier), [installedModels, activeTier]);
+  useMemo(() => setPower(runningTier), [runningTier]);
   const bestTier = useMemo(() => pickTier(device), [device]);
   const plan = useMemo(() => memoryPlan(activeTier), [activeTier]);
 
@@ -8093,8 +8125,8 @@ export default function App() {
       const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken ? (t) => o.onToken(t) : undefined });
       return verifyMath({ question, llm, runPy: (code) => runCode({ lang: "python", code }), warm: () => warmUp("python"), onStep: (x) => onStep && onStep(tr(x)), onToken });
     },
-    codeTask: async (task, { onStep, onToken } = {}) => {
-      const lang = guessLang(task);
+    codeTask: async (task, { onStep, onToken, lang: forced } = {}) => {
+      const lang = forced || guessLang(task);
       if (lang === "python" && !(await pythonAvailable())) return null;
       const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken });
       const say = { write: "Writing the program and its tests…", run: "Running it on this phone…", fix: "Sending the error back — fixing…" };
@@ -8142,7 +8174,7 @@ export default function App() {
   // In-app Back: closes the top-most open panel, otherwise returns to the Ask
   // home tab. Shown only when there is somewhere to go back to.
   const _anyOverlay = showBackup || showEngine || showProfile || showUpgrade || showMemory || showOrg || showSource || showCustom || drawerOpen || moreOpen;
-  const canGoBack = _anyOverlay || mode !== "chat";
+  const canGoBack = _anyOverlay || mode !== "chat" || modeHist.current.length > 0;
   const goBack = () => {
     if (drawerOpen) return setDrawerOpen(false);
     if (moreOpen) return setMoreOpen(false);
@@ -8156,7 +8188,10 @@ export default function App() {
     if (showEngine) return setShowEngine(false);
     // v5.34: an inner page of a tool (open project, table, lesson, edit form…) closes first
     if (popBack()) return;
-    if (mode !== "chat") setMode("chat");
+    // v5.41: back to the screen you came from (it reopens where you were — useSticky)
+    const prev = modeHist.current.pop();
+    if (prev) { modeRef.current = prev; setModeRaw(prev); return; }
+    if (mode !== "chat") { modeRef.current = "chat"; setModeRaw("chat"); }
   };
 
   // Bridge for the phone's hardware/gesture Back. The native wrapper calls
@@ -8186,7 +8221,7 @@ export default function App() {
           <p className="text-base font-semibold text-white truncate">{tr(MODE_TITLES[mode] || "Attune")}</p>
           <div className="flex-1" />
           <button onClick={() => setShowEngine(true)} className={`flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
-            <Cpu size={12} />{modelState === "ready" ? (activeTier ? brandOf(activeTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : tr("No model")}</button>
+            <Cpu size={12} />{modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : tr("No model")}</button>
           {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="p-2 text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
           {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); }} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("New chat")}><Plus size={20} /></button> : null}
         </header>
@@ -9586,7 +9621,7 @@ export default function App() {
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-slate-300">{tr("What happened / what's needed")}</label>
-                <button onClick={() => flash(tr("Voice capture runs in the installed app"))} className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300"><Mic size={13} /> {tr("Dictate")}</button>
+                <button onClick={() => flash(tr("Voice capture runs in the installed app"))} className="shrink-0 whitespace-nowrap flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300"><Mic size={13} /> {tr("Dictate")}</button>
               </div>
               <textarea value={fdInput} onChange={(e) => setFdInput(e.target.value)}
                 placeholder={tr("Speak or type it roughly, in any language. e.g. 'crane 3 hydraulic leak at north gate around 2pm, stopped work, called maintenance, no injuries'")}
@@ -10193,7 +10228,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
       className={`relative rounded-xl border p-3 text-start transition-colors ${plan === k ? "border-amber-400 bg-amber-400/10" : "border-slate-800 bg-slate-950"}`}>
       {badge ? <span className="absolute -top-2 end-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-bold">{tr(badge)}</span> : null}
       <span className="block text-[12px] text-slate-300">{tr(title)}</span>
-      <span className="block text-lg font-bold text-white mt-0.5" dir="ltr">{pr}</span>
+      <span className="block text-[clamp(13px,4.2vw,18px)] font-bold text-white mt-0.5 whitespace-nowrap" dir="ltr">{pr}</span>
       <span className="block text-[10px] text-slate-500 leading-snug">{tr(note)}</span>
     </button>
   );
@@ -10423,11 +10458,9 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
     // v5.32: matched to the catalog by its download link / real name, so "Gemma 4 E4B" shows
     // as Blaze+ and "Qwen3.5 0.8B" as Spark — never the vendor name (Ali's Engine screenshot)
     const src = String(m.source || "") + " " + String(m.id || "");
-    const byUrl = MODEL_TIERS.find((x) => x.url && src && (src.includes(x.url) || (x.repo && src.includes(x.repo))));
-    if (byUrl) return brandOf(byUrl).brand;
+    const known = tierOfInstalled(m);
+    if (known) return brandOf(known).brand;
     const fast = /litert/i.test(src + " " + m.label);
-    const byName = MODEL_TIERS.find((x) => x.realName && !!x.fast === fast && String(m.label).toLowerCase().replace(/[\s-]+/g, "").includes(x.realName.toLowerCase().replace(/[\s-]+/g, "")));
-    if (byName) return brandOf(byName).brand;
     return publicName(m.label + (fast ? " · fast engine" : ""));
   };
   const stateText = { ready: "Running", starting: "Loading the model…", error: "Stopped", idle: "Not running" }[e.state] || "Not running";
@@ -10560,7 +10593,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
           {[["duckduckgo", "DuckDuckGo", "Free · no key"], ["brave", "Brave Search", "Your API key"]].map(([id, label, sub]) => (
             <button key={id} onClick={() => n.saveSearchCfg({ ...(n.searchCfg || {}), provider: id, key: id === "brave" ? key : (n.searchCfg && n.searchCfg.key) || "" })}
               className={`rounded-lg border px-3 py-2 text-start ${provider === id ? "border-teal-600 bg-teal-500/5" : "border-slate-800 bg-slate-900"}`}>
-              <span className="block text-sm text-slate-200">{tr(label)}</span><span className="block text-[11px] text-slate-500">{tr(sub)}</span>
+              <span className="block text-sm text-slate-200 break-all">{tr(label)}</span><span className="block text-[11px] text-slate-500">{tr(sub)}</span>
             </button>
           ))}
         </div>
@@ -10845,14 +10878,33 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
         </div>
         </>) : null}
 
-        {/* download / status */}
+        {/* download / status — v5.41: the card you tapped: running · installed (Use) · not on the phone (Download) */}
+        {(() => {
+          if (!native || !activeTier || modelState === "starting" || modelState === "downloading") return null;
+          const inst = native.installedModels || [];
+          const mine = inst.find((m) => { const t = tierOfInstalled(m); return t && t.id === activeTier.id; });
+          if (mine && mine.active) return null;
+          const running = inst.find((m) => m.active), rt = running ? tierOfInstalled(running) : null;
+          return (
+            <div className="space-y-2 mb-2" data-testid="engine-selected">
+              {rt ? <p className="text-[12px] text-slate-400">{tr("Running now: {m}. You picked {p}.", { m: brandOf(rt).brand, p: brandOf(activeTier).brand })}</p> : null}
+              {mine ? (
+                <button onClick={() => native.useInstalled(mine.id)} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold bg-teal-500 text-slate-950" data-testid="engine-use-selected">
+                  <Check size={16} /> {tr("Use {m} (already on this phone)", { m: brandOf(activeTier).brand })}</button>
+              ) : (
+                <button onClick={() => downloadModel(activeTier)} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold bg-teal-500 text-slate-950" data-testid="engine-download-selected">
+                  <Download size={16} /> {tr("Download {m} · {s} GB", { m: brandOf(activeTier).brand, s: activeTier.sizeGB })}</button>
+              )}
+            </div>
+          );
+        })()}
         {modelState === "starting" ? (
           <div className="flex items-center gap-2 text-sm text-slate-300 bg-slate-950 border border-slate-800 rounded-xl p-3">
             <Loader2 size={16} className="animate-spin" /> {tr("Loading the model into memory — large models take a minute")}
           </div>
         ) : modelState === "ready" ? (
-          <div className="flex items-center gap-2 text-sm text-teal-300 bg-teal-500/10 border border-teal-900/60 rounded-xl p-3">
-            <Check size={16} /> {activeTier ? brandOf(activeTier).brand : tr("Model")} {tr("loaded — running locally")}
+          <div className="flex items-center gap-2 text-sm text-teal-300 bg-teal-500/10 border border-teal-900/60 rounded-xl p-3" data-testid="engine-loaded">
+            <Check size={16} /> {(() => { const r = native && (native.installedModels || []).find((m) => m.active); const t = r ? tierOfInstalled(r) : activeTier; return t ? brandOf(t).brand : tr("Model"); })()} {tr("loaded — running locally")}
           </div>
         ) : modelState === "downloading" ? (
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-3">

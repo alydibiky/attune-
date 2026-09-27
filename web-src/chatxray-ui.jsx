@@ -4,7 +4,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MessageCircle, Loader2, X, Check, Wallet, Clock, AlertTriangle, Search, BarChart3, Bell, FileText, Trash2 } from "lucide-react";
 import { tr, getLang, dateLocale } from "./i18n.js";
-import { useSubBack } from "./backstack.js";
+import { useSubBack, useSticky } from "./backstack.js";
 import * as CX from "./chatxray.js";
 
 const SKEY = "attune:xray:v1";
@@ -15,14 +15,14 @@ const DAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday
 
 export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, scheduleReminder, incoming, clearIncoming }) {
   const ar = getLang() === "ar";
-  const [chat, setChat] = useState(null);           // { name, messages, people }
+  const [chat, setChat] = useSticky("xray:chat", null);           // { name, messages, people }
   const [me, setMe] = useState("");
   const [range, setRange] = useState("3m");
   const [busy, setBusy] = useState(null);           // { n, of }
-  const [res, setRes] = useState(null);             // { name, me, items, ledger, unanswered, stats, at }
-  const [tab, setTab] = useState("money");
+  const [res, setRes] = useSticky("xray:res", null);             // { name, me, items, ledger, unanswered, stats, at }
+  const [tab, setTab] = useSticky("xray:tab", "money");
   const [err, setErr] = useState("");
-  const [paste, setPaste] = useState("");
+  const [paste, setPaste] = useSticky("xray:paste", "");
   const [q, setQ] = useState(""); const [ans, setAns] = useState(null); const [asking, setAsking] = useState(false);
   const [saved, setSaved] = useState(loadSaved);
   const run = useRef(0);
@@ -69,14 +69,30 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
     } finally { if (run.current === id) setBusy(null); }
   };
 
+  const askRun = useRef(0);
   const ask = async () => {
     if (!q.trim() || !chat) return;
+    const kind = CX.askKind(q), ar = /[\u0600-\u06FF]/.test(q);
+    setErr(""); setAns(null);
+    // v5.41: "was X mentioned?" — answered by code over every message, instantly (no model needed)
+    if (kind === "mention") {
+      const term = CX.mentionTerm(q), hits = CX.findMentions(chat.messages, term);
+      setAns({ text: CX.mentionAnswer(term, hits, chat.messages.length, ar), hits: hits.slice(0, 40), kind });
+      return;
+    }
     if (!modelReady) { openEngine && openEngine(); return; }
-    setAsking(true); setAns(null);
-    const hits = CX.searchChat(chat.messages, q);
-    try { const a = await llm(CX.askMessages(q, hits, me), { maxTokens: 500, temperature: 0.2 }); setAns({ text: String(a || "").trim(), hits }); }
-    catch (e) { setErr(tr(String((e && e.message) || e))); }
-    setAsking(false);
+    const id = ++askRun.current;
+    setAsking(true);
+    const hits = kind === "about" ? CX.overviewSample(chat.messages) : CX.searchChat(chat.messages, q);
+    const msgs = kind === "about" ? CX.overviewMessages(q, hits, me, chat.messages.length) : CX.askMessages(q, hits, me);
+    try {
+      // never an endless spinner: 2½ minutes at most
+      const a = await Promise.race([llm(msgs, { maxTokens: kind === "about" ? 700 : 500, temperature: 0.2 }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("The model took too long on this question — try a shorter one, or a faster model in Engine.")), 150000))]);
+      if (askRun.current !== id) return;
+      setAns({ text: String(a || "").trim() || tr("The model gave no answer — try asking in other words."), hits, kind });
+    } catch (e) { if (askRun.current === id) setErr(tr(String((e && e.message) || e))); }
+    finally { if (askRun.current === id) setAsking(false); }
   };
 
   const remind = (it) => {
@@ -214,12 +230,18 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
               <div className="flex gap-2">
                 <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} dir="auto" data-testid="xray-q"
                   placeholder={tr("e.g. What price did we agree for the 50 t crane?")} className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-[13.5px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-                <button onClick={ask} disabled={asking || !q.trim()} className="px-4 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm disabled:opacity-40" data-testid="xray-ask">{asking ? <Loader2 size={15} className="animate-spin" /> : tr("Ask")}</button>
+                {asking ? <button onClick={() => { askRun.current++; setAsking(false); }} className="shrink-0 px-3 rounded-xl border border-rose-800 text-rose-200 text-sm flex items-center gap-1.5" data-testid="xray-ask-stop"><Loader2 size={14} className="animate-spin" />{tr("Stop")}</button>
+                  : <button onClick={ask} disabled={!q.trim()} className="shrink-0 px-4 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm disabled:opacity-40" data-testid="xray-ask">{tr("Ask")}</button>}
               </div>
+              {!ans && !asking ? (
+                <div className="flex flex-wrap gap-1.5">{[["What was this chat about?", "about"], ["Was “deposit” mentioned?", "mention"], ["What did we agree on the price?", "other"]].map(([s]) => (
+                  <button key={s} onClick={() => setQ(tr(s))} className="text-[12px] px-2.5 py-1.5 rounded-full border border-slate-700 text-slate-300">{tr(s)}</button>))}</div>
+              ) : null}
+              {asking ? <p className="text-[12px] text-teal-200">{tr(CX.askKind(q) === "about" ? "Reading messages from the whole chat and writing the main topics…" : "Reading the matching messages…")}</p> : null}
               {ans ? (
                 <div className="bg-slate-900 rounded-2xl border border-slate-800 p-3" data-testid="xray-answer">
                   <p dir="auto" className="text-[14px] text-slate-100 whitespace-pre-wrap leading-relaxed">{ans.text}</p>
-                  <details className="mt-2"><summary className="text-[12px] text-slate-400 cursor-pointer">{tr("The messages it read ({n})", { n: ans.hits.length })}</summary>
+                  <details className="mt-2" open={ans.kind === "mention" && ans.hits.length > 0 && ans.hits.length <= 8}><summary className="text-[12px] text-slate-400 cursor-pointer">{tr(ans.kind === "mention" ? "Where it was said ({n})" : "The messages it read ({n})", { n: ans.hits.length })}</summary>
                     <div className="mt-2 space-y-1.5">{ans.hits.map((m) => <p key={m.i} dir="auto" className="text-[12px] text-slate-300"><span className="text-slate-500">#{m.i} {fmtD(m.t)} {m.who}:</span> {m.text.slice(0, 200)}</p>)}</div></details>
                 </div>
               ) : null}

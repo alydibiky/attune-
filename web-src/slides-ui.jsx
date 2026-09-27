@@ -9,7 +9,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Presentation, FileText, Loader2, Download, Check, ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Trash2, Wand2, Globe, Paperclip, X, Copy, Eye, BarChart3, Play } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
-import { useSubBack } from "./backstack.js";
+import { useSubBack, useSticky } from "./backstack.js";
 import { askConfirm } from "./confirm.jsx";
 import { rankPassages } from "./webrank.js";
 import { expandQueries } from "./research.js";
@@ -256,9 +256,11 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
   const [file, setFile] = useState(null);                // { name, text, data? }
   const [busy, setBusy] = useState(null);
   const [err, setErr] = useState("");
-  const [deck, setDeck] = useState(null);                // { id, title, subtitle, lang, theme, date, slides, source, notes[] }
-  const [report, setReport] = useState(null);            // { id, title, subtitle, lang, date, kind, sections[{heading, blocks}], summary, conclusion, sources, data, notes[] }
-  const [edit, setEdit] = useState(null);                // index into deck.slides
+  const [deck, setDeck] = useSticky("slides:deck", null);                // { id, title, subtitle, lang, theme, date, slides, source, notes[] }
+  const [report, setReport] = useSticky("slides:report", null);            // { id, title, subtitle, lang, date, kind, sections[{heading, blocks}], summary, conclusion, sources, data, notes[] }
+  const [edit, setEdit] = useSticky("slides:edit", null);
+  const [cmd, setCmd] = useState("");                     // v5.41: "delete slide 5", "slide 4: shorter"…
+  const [cmdNote, setCmdNote] = useState("");                // index into deck.slides
   const [list, setList] = useState(loadList);
   const run = useRef(0);
   const hitsRef = useRef({ id: null, hits: [] });   // this session's web pages, for "Rewrite this slide"
@@ -421,6 +423,76 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
     finally { if (alive()) setBusy(null); }
   };
 
+  // ---- v5.41: change the deck by a sentence ----
+  const runCommand = async () => {
+    const text = cmd.trim();
+    if (!text || !deck) return;
+    const { ops, style } = S.parseDeckCommand(text);
+    if (!ops.length && !Object.keys(style).length) { setCmdNote(tr("I didn't understand that — try “delete slide 5”, “slide 4: shorter”, “add a slide about prices after slide 3”, or “green theme with fade transitions”.")); return; }
+    const id = ++run.current, alive = () => run.current === id;
+    const hits = hitsRef.current.id === deck.id ? hitsRef.current.hits : [];
+    let d = { ...deck, slides: [...deck.slides] };
+    const done = [];
+    const bodyAt = (n) => { const fd = S.fullDeck(d); return n >= 1 && n <= fd.length ? d.slides.indexOf(fd[n - 1]) : -1; };
+    if (style.theme) { d.theme = style.theme; setTheme(style.theme); done.push(tr("Design: {d}", { d: tr(S.THEMES[style.theme].name) })); }
+    if (style.transition) { d.transition = style.transition; done.push(tr("Transitions: {t}", { t: tr(S.TRANSITIONS[style.transition]) })); }
+    if (style.animation) { d.animation = style.animation; d.trigger = style.trigger || d.trigger || "click"; done.push(tr("Animations: {a}", { a: tr(S.ANIMATIONS[style.animation]) })); }
+    if (style.detail) d.detail = style.detail;
+    if (style.transition || style.animation) setMotionSaved({ transition: d.transition || "none", animation: d.animation || "none", trigger: d.trigger || "click" });
+    setErr(""); setCmdNote("");
+    try {
+      for (const o of ops) {
+        if (!alive()) return;
+        if (o.op === "title") { d.title = o.text; done.push(tr("New title")); continue; }
+        if (o.op === "delete") {
+          const i = bodyAt(o.at);
+          if (i < 0) { done.push(tr("Slide {n} is made by the app (cover, contents, sources or closing) — it can't be deleted", { n: o.at })); continue; }
+          d.slides.splice(i, 1); done.push(tr("Slide {n} deleted", { n: o.at })); continue;
+        }
+        if (o.op === "move") {
+          const i = bodyAt(o.at); let j = bodyAt(o.to);
+          if (i < 0) { done.push(tr("Slide {n} can't be moved", { n: o.at })); continue; }
+          if (j < 0) j = o.to <= 2 ? 0 : d.slides.length - 1;
+          if (o.swap) { const t = d.slides[i]; d.slides[i] = d.slides[j]; d.slides[j] = t; }
+          else {
+            // it ends up exactly at the number said (the cover — and the contents slide — come first)
+            const [x] = d.slides.splice(i, 1);
+            const lead = 1 + (d.agenda !== false && d.slides.length + 1 >= 4 ? 1 : 0);
+            const k = Math.max(0, Math.min(d.slides.length, o.to - 1 - lead + (o.after ? 1 : 0)));
+            d.slides.splice(k, 0, x);
+          }
+          done.push(tr("Slide {a} moved", { a: o.at })); continue;
+        }
+        if (o.op === "add") {
+          const after = o.after ? bodyAt(o.after) : d.slides.length - 1;
+          const at = after < 0 ? d.slides.length : after + 1;
+          const title = o.topic.charAt(0).toUpperCase() + o.topic.slice(1);
+          d.slides.splice(at, 0, { kind: o.kind || "bullets", title: title.slice(0, 80), bullets: [], pending: true });
+          setDeck({ ...d, slides: [...d.slides] });
+          setBusy(tr("Writing the new slide — {s}", { s: title }));
+          const r = await writeSlide(d, at, o.kind || "bullets", hits, `This is a NEW slide about: ${o.topic}.`);
+          if (!alive()) return;
+          d.slides[at] = r.slide; done.push(tr("New slide: {s}", { s: title })); setDeck({ ...d, slides: [...d.slides] }); continue;
+        }
+        if (o.op === "rewrite") {
+          const list = o.at === "all" ? d.slides.map((_, k) => k) : [bodyAt(o.at)];
+          if (list[0] < 0) { done.push(tr("Slide {n} is made by the app — change the words of slides 3 onwards", { n: o.at })); continue; }
+          for (let k = 0; k < list.length; k++) {
+            if (!alive()) return;
+            const i = list[k];
+            setBusy(list.length > 1 ? tr("Changing slide {n} of {t}…", { n: k + 1, t: list.length }) : tr("Changing the slide…"));
+            const r = await writeSlide(d, i, o.kind || d.slides[i].kind, hits, o.ask);
+            if (!alive()) return;
+            d.slides[i] = r.slide; setDeck({ ...d, slides: [...d.slides] });
+          }
+          done.push(o.at === "all" ? tr("Every slide changed") : tr("Slide {n} changed", { n: o.at }));
+        }
+      }
+      if (alive()) { setDeck({ ...d, slides: [...d.slides] }); setCmdNote(done.join(" · ")); setCmd(""); }
+    } catch (e) { if (alive()) setErr(tr(String((e && e.message) || e))); }
+    finally { if (alive()) setBusy(null); }
+  };
+
   // ---- saving ----
   const saveOut = async (name, mime, b64) => {
     try {
@@ -493,7 +565,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
               <div><p className="text-[12px] text-slate-400 mb-1.5">{tr("Slides")}</p>
                 <div className="flex flex-wrap gap-1.5">{[5, 8, 10, 12, 15].map((n) => <button key={n} onClick={() => setCount(n)} className={chip(count === n)} data-testid={"slides-n-" + n}>{n}</button>)}</div></div>
               <div><p className="text-[12px] text-slate-400 mb-1.5">{tr("Design")}</p>
-                <div className="grid grid-cols-4 gap-1.5">{Object.entries(S.THEMES).map(([k, t]) => (
+                <div className="grid grid-cols-3 min-[380px]:grid-cols-4 gap-1.5">{Object.entries(S.THEMES).map(([k, t]) => (
                   <button key={k} onClick={() => setTheme(k)} data-testid={"slides-theme-" + k} className={`rounded-xl border p-1.5 text-[11px] ${theme === k ? "border-teal-500 text-teal-200" : "border-slate-700 text-slate-400"}`}>
                     <span className="block h-7 rounded-md mb-1 relative overflow-hidden" style={{ background: "#" + t.cover }}><span className="absolute left-1.5 top-2 h-1 w-5 rounded" style={{ background: "#" + t.accent }} /><span className="absolute right-1 bottom-1 h-3 w-3 rounded-full" style={{ background: "#" + t.accent2 }} /></span>{tr(t.name)}</button>))}</div></div>
               <div><p className="text-[12px] text-slate-400 mb-1.5">{tr("Words on each point")}</p>
@@ -573,6 +645,15 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
               {Object.entries(S.ANIMATIONS).map(([k, l]) => <option key={k} value={k}>{tr("Animation")}: {tr(l)}</option>)}</select>
             <select value={deck.trigger || "click"} disabled={!deck.animation || deck.animation === "none"} onChange={(e) => { const m = { ...motion, trigger: e.target.value }; setMotionSaved(m); setDeck({ ...deck, trigger: m.trigger }); }} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[12px] text-slate-100 disabled:opacity-40" data-testid="deck-trigger">
               <option value="click">{tr("On tap")}</option><option value="auto">{tr("Automatically")}</option></select>
+          </div>
+          <div className="bg-slate-900 rounded-2xl border border-slate-800 p-3 space-y-2" data-testid="deck-cmd-box">
+            <p className="text-[12.5px] text-slate-300 flex items-center gap-1.5"><Wand2 size={14} className="text-teal-300" />{tr("Change the presentation")}</p>
+            <div className="flex gap-2">
+              <input value={cmd} onChange={(e) => setCmd(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") runCommand(); }} dir="auto" disabled={!!busy}
+                placeholder={tr("e.g. slide 4: shorter, add prices · delete slide 6 · add a slide about safety after slide 5")} className="flex-1 min-w-0 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-[13px] text-slate-100" data-testid="deck-cmd" />
+              <button onClick={runCommand} disabled={!!busy || !cmd.trim()} className="shrink-0 px-3 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm disabled:opacity-40" data-testid="deck-cmd-go">{tr("Apply")}</button>
+            </div>
+            {cmdNote ? <p className="text-[12px] text-teal-300" data-testid="deck-cmd-note">{cmdNote}</p> : null}
           </div>
           {!busy ? <button onClick={() => setPlaying(true)} className="w-full py-2.5 rounded-xl border border-teal-600 text-teal-200 text-sm font-semibold flex items-center justify-center gap-2" data-testid="slides-play"><Play size={16} />{tr("Play — see the transitions and animations")}</button> : null}
           {!busy ? (

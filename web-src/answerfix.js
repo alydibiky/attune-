@@ -77,6 +77,47 @@ function pickFigure(hay, n, unit, d, before, after, mine) {
 }
 
 /** Fix the figures (and glued words) of one answer against its sources. → { text, fixed } */
+/**
+ * v5.41 (Ali: "Lynk and co 900" → the answer said "Lynk & Co 90" — so he stopped reading): a model name
+ * whose number lost or gained digits is put back. The names come from the question and the sources
+ * ("<words> <number>"); in the answer, the same words followed by a number that is a cut-off / longer /
+ * one-digit-off version of it — and that no source writes — are corrected.
+ * → { text, fixed: [[wrong, right]] }
+ */
+export function fixModelNames(answer, question, sources) {
+  const text = String(answer || "");
+  if (!text) return { text, fixed: [] };
+  const hay = [question || "", ...(sources || []).map((h) => (h.title || "") + "\n" + (h.text || ""))].join("\n");
+  const norm = (s) => String(s).toLowerCase().replace(/\band\b/g, "&").replace(/\s+/g, " ");
+  const H = norm(hay);
+  const names = new Map();   // "lynk & co" → Set("900")
+  const modelish = new Set();   // single words written like a model prefix: all capitals (LTM) or a capital inside (iPhone)
+  for (const m of String(question || "").matchAll(/\b([A-Z]{2,6}|[a-z]+[A-Z][A-Za-z]*)\s+\d{2,5}\b/g)) modelish.add(m[1].toLowerCase());
+  const add = (words, n) => { const k = norm(words).trim(); if (k.length < 2 || /^(the|a|an|in|of|for|to|and|&|with|from|since|at|by|on|is|are|was|about|than|over|under|up|km|kw|hp|nm|mm|kg|us|usd|egp|eur|year|years|model|price|version)$/.test(k)) return; if (!names.has(k)) names.set(k, new Set()); names.get(k).add(n); };
+  const RE = /((?:[A-Za-z][\w'.-]*|&)(?:\s+(?:[A-Za-z][\w'.-]*|&)){0,2})\s+(\d{2,5}[a-z]?)(?![\d.,%])/g;
+  for (const m of String(question || "").matchAll(RE)) { const w = m[1].split(/\s+/); for (let k = 1; k <= w.length; k++) add(w.slice(-k).join(" "), m[2]); }
+  const inSrc = new Map();
+  for (const m of hay.matchAll(RE)) { const w = m[1].split(/\s+/); if (!/[A-Z&]/.test(m[1])) continue; for (let k = 2; k <= w.length; k++) { const key = norm(w.slice(-k).join(" ")) + "|" + m[2]; inSrc.set(key, (inSrc.get(key) || 0) + 1); } }
+  for (const [key, c] of inSrc) if (c >= 2) { const [w, n] = key.split("|"); add(w, n); }
+  const close = (a, b) => a !== b && (a.startsWith(b) || b.startsWith(a) || (a.length === b.length && [...a].filter((ch, i) => ch !== b[i]).length === 1));
+  const fixed = [];
+  let out = text;
+  for (const [words, nums] of names) {
+    // one ordinary word is too loose ("model 90"); one model-like word is fine: LTM, iPhone, GMK
+    if (words.split(" ").length < 2 && !/&/.test(words) && !modelish.has(words)) continue;
+    const pat = words.split(" ").map((w) => (w === "&" ? "(?:&|and)" : w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))).join("\\s+");
+    out = out.replace(new RegExp("(\\b" + pat + "\\s+)(\\d{1,6}[a-z]?)(?![\\d.,%])", "gi"), (all, pre, num) => {
+      if (nums.has(num)) return all;
+      if (new RegExp(norm(pre + num).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![\\d.,])").test(H)) return all;   // a real other model the sources name
+      const right = [...nums].find((n) => close(n, num));
+      if (!right) return all;
+      fixed.push([pre.trim() + " " + num, pre.trim() + " " + right]);
+      return pre + right;
+    });
+  }
+  return { text: out, fixed };
+}
+
 export function repairFigures(answer, sources) {
   const src = (sources || []).filter(Boolean);
   if (!answer || !src.length) return { text: answer || "", fixed: [] };

@@ -8,7 +8,7 @@
 import React, { useState, useRef } from "react";
 import { FileText, Loader2, X, Download, Check, ImagePlus, ChevronRight, Eye } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
-import { useSubBack } from "./backstack.js";
+import { useSubBack, useSticky } from "./backstack.js";
 import * as C from "./convert.js";
 
 const TARGET_LABEL = { docx: "Word (.docx)", pdf: "PDF", txt: "Text (.txt)", images: "Pictures (.zip)", csv: "CSV", xlsx: "Excel (.xlsx)",
@@ -22,6 +22,21 @@ const ROWS = ["xlsx", "ods", "csv", "json"], SUBS = ["srt", "vtt"], PDF_TOOLS = 
 const T_LANGS = { en: "English", ar: "Arabic", fr: "French", es: "Spanish", de: "German", tr: "Turkish", it: "Italian", pt: "Portuguese", ru: "Russian", zh: "Chinese (Simplified)", ja: "Japanese", ko: "Korean",
   hi: "Hindi", ur: "Urdu", fa: "Persian", id: "Indonesian", nl: "Dutch", pl: "Polish", bn: "Bengali", sw: "Swahili", el: "Greek", uk: "Ukrainian", ro: "Romanian", ms: "Malay", th: "Thai", vi: "Vietnamese" };
 const langLabel = (k) => { const l = getLang(); if (l !== "en") try { return new Intl.DisplayNames([l], { type: "language" }).of(k) || tr(T_LANGS[k]); } catch (e) {} return T_LANGS[k]; };
+// v5.41 (Ali: "give me all the options — how can I merge PDFs?"): every tool shown before a file is picked
+const QUICK = [
+  { id: "merge", label: "Merge PDFs", desc: "Several PDFs → one", accept: ".pdf,application/pdf", multiple: true, target: "merge", icon: "📑" },
+  { id: "pdf2word", label: "PDF → Word", desc: "Edit a PDF in Word", accept: ".pdf,application/pdf", target: "docx", icon: "📝" },
+  { id: "photos2pdf", label: "Photos → PDF", desc: "Pictures into one PDF", accept: "image/*", multiple: true, target: "pdf", icon: "🖼️" },
+  { id: "scan2word", label: "Scan → Word", desc: "Photo of paper → editable text", accept: "image/*", multiple: true, target: "docx", icon: "📷" },
+  { id: "translate", label: "Translate", desc: "PDF, Word, subtitles…", accept: null, target: "translate", icon: "🌍" },
+  { id: "split", label: "Split a PDF", desc: "One PDF per page", accept: ".pdf,application/pdf", target: "split", icon: "✂️" },
+  { id: "pick", label: "Keep some pages", desc: "e.g. pages 1-3, 5", accept: ".pdf,application/pdf", target: "pick", icon: "📄" },
+  { id: "rotate", label: "Rotate pages", desc: "Turn sideways pages", accept: ".pdf,application/pdf", target: "rotate", icon: "🔄" },
+  { id: "word2pdf", label: "Word → PDF", desc: "Also PowerPoint, text…", accept: ".docx,.pptx,.odt,.txt,.md,.rtf,.html,.htm,.epub", target: "pdf", icon: "📕" },
+  { id: "pdf2img", label: "PDF → pictures", desc: "Each page as a JPG", accept: ".pdf,application/pdf", target: "images", icon: "🗂️" },
+  { id: "sheets", label: "Excel ↔ CSV", desc: "Sheets, JSON, LibreOffice", accept: ".xlsx,.csv,.tsv,.ods,.json", target: null, icon: "📊" },
+  { id: "photo", label: "Photo format", desc: "JPG · PNG · WebP", accept: "image/*", target: "jpg", icon: "🎨" },
+];
 const ACCEPT = ".pdf,.docx,.pptx,.odt,.ods,.epub,.html,.htm,.xhtml,.rtf,.txt,.md,.xlsx,.csv,.tsv,.json,.srt,.vtt,image/*,application/pdf";
 // a photo → another photo format, in the page (the browser's own canvas)
 const recode = (file, fmt) => new Promise((ok, bad) => {
@@ -44,10 +59,10 @@ const readUrl = (f) => new Promise((ok, bad) => { const r = new FileReader(); r.
 const kb = (n) => (n > 1e6 ? (n / 1e6).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1e3)) + " KB");
 
 export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, canReadPhotos, openEngine, flash, pro, openPlan }) {
-  const [files, setFiles] = useState(null);       // { kind, list: File[] }
-  const [target, setTarget] = useState(null);
+  const [files, setFiles] = useSticky("convert:files", null);       // { kind, list: File[] }
+  const [target, setTarget] = useSticky("convert:target", null);
   const [busy, setBusy] = useState(null);         // text
-  const [out, setOut] = useState(null);           // { name, mime, b64?, text?, size, preview, note }
+  const [out, setOut] = useSticky("convert:out", null);           // { name, mime, b64?, text?, size, preview, note }
   const [err, setErr] = useState("");
   const [pages, setPages] = useState("");         // PDF tools: "1-3, 5"
   const [deg, setDeg] = useState(90);
@@ -55,6 +70,13 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
   const [tFmt, setTFmt] = useState("pdf");
   const run = useRef(0);
   const fileRef = useRef(null);
+  const intentRef = useRef(null);   // the tool tapped before picking (QUICK)
+  const [intent, setIntent] = useState(null);
+  const startTool = (q) => {
+    intentRef.current = q; setIntent(q); setErr("");
+    const el = fileRef.current; if (!el) return;
+    el.accept = q.accept || ACCEPT; el.multiple = !!q.multiple; el.click();
+  };
   useSubBack(!!files, () => { if (out) setOut(null); else { setFiles(null); setTarget(null); } });
 
   const pick = (list) => {
@@ -66,8 +88,10 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     const kind = arr.length > 1 ? (multi ? multi.kind : null) : kinds[0];
     if (!kind) { setErr(tr("Pick one file — or several photos (→ one PDF), or several PDFs (→ merged).")); return; }
     setErr(""); setOut(null); setPages("");
+    const q = intentRef.current; intentRef.current = null;
+    if (q && q.id === "merge" && kind !== "pdfs") { setErr(tr("To merge, pick two or more PDFs together (tap and hold to select several).")); setFiles(null); return; }
     setFiles({ kind, list: arr });
-    setTarget(targetsOf(kind)[0]);
+    setTarget(q && q.target && targetsOf(kind).includes(q.target) ? q.target : targetsOf(kind)[0]);
   };
 
   const targetsOf = (kind) => (kind === "images" ? C.MULTI.image.targets : kind === "pdfs" ? C.MULTI.pdf.targets : C.KINDS[kind].targets);
@@ -112,7 +136,11 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
             note = tr("{n} scanned page(s) were read by the AI — check names and numbers.", { n: imgs.images.length });
           }
         }
-        blocks = r.pages.flatMap((p) => C.textToBlocks(text[p.n] || ""));
+        // v5.41: pages that came with their layout are rebuilt with headings, lists and tables
+        const laid = r.pages.filter((p) => !p.scan && p.lines && p.lines.length);
+        blocks = laid.length === r.pages.filter((p) => !p.scan).length && laid.length
+          ? r.pages.flatMap((p) => (!p.scan && p.lines && p.lines.length ? C.pdfLinesToBlocks([p]) : C.textToBlocks(text[p.n] || "")))
+          : r.pages.flatMap((p) => C.textToBlocks(text[p.n] || ""));
         if (r.count > r.pages.length) note = (note ? note + " " : "") + tr("Only the first {n} pages were converted.", { n: r.pages.length });
       } else if (k === "docx") blocks = await C.docxToBlocks(new Uint8Array(await f0.arrayBuffer()));
       else if (k === "pptx") blocks = await C.pptxToBlocks(new Uint8Array(await f0.arrayBuffer()));
@@ -255,10 +283,22 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
         <input ref={fileRef} type="file" multiple accept={ACCEPT} className="hidden" data-testid="convert-file"
           onChange={(e) => { const l = e.target.files; pick(l); e.target.value = ""; }} />
         {!files ? (
-          <button onClick={() => fileRef.current && fileRef.current.click()} className="w-full py-6 rounded-xl border-2 border-dashed border-slate-700 text-slate-300 flex flex-col items-center gap-2" data-testid="convert-pick">
-            <ImagePlus size={22} className="text-teal-300" /><span className="text-[14px] font-medium">{tr("Choose a file")}</span>
-            <span className="text-[11.5px] text-slate-500">{tr("PDF · Word · PowerPoint · Excel · CSV · photos · e-books · web pages · subtitles — several photos → one PDF, several PDFs → merged")}</span>
-          </button>
+          <>
+            <p className="text-[13px] font-medium text-slate-200">{tr("What do you want to do?")}</p>
+            <div className="grid grid-cols-2 gap-2" data-testid="convert-tools">
+              {QUICK.map((q) => (
+                <button key={q.id} onClick={() => startTool(q)} data-testid={"convert-tool-" + q.id}
+                  className="rounded-xl border border-slate-800 bg-slate-950 p-3 text-start active:border-teal-600">
+                  <span className="block text-[18px] leading-none mb-1.5">{q.icon}</span>
+                  <span className="block text-[13px] font-semibold text-slate-100">{tr(q.label)}</span>
+                  <span className="block text-[11px] text-slate-500 leading-snug mt-0.5">{tr(q.desc)}</span>
+                </button>))}
+            </div>
+            <button onClick={() => { intentRef.current = null; setIntent(null); if (fileRef.current) { fileRef.current.accept = ACCEPT; fileRef.current.multiple = true; fileRef.current.click(); } }} className="w-full py-4 rounded-xl border-2 border-dashed border-slate-700 text-slate-300 flex flex-col items-center gap-1.5" data-testid="convert-pick">
+              <ImagePlus size={20} className="text-teal-300" /><span className="text-[13.5px] font-medium">{tr("Or choose any file — see everything it can become")}</span>
+              <span className="text-[11px] text-slate-500">{tr("PDF · Word · PowerPoint · Excel · CSV · photos · e-books · web pages · subtitles")}</span>
+            </button>
+          </>
         ) : (
           <>
             <div className="flex items-center justify-between gap-2">

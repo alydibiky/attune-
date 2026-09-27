@@ -802,3 +802,39 @@ export function deckFromReport(rep) {
   if (recs.length >= 2) slides.push({ kind: "steps", title: W0.conclusion, bullets: recs.slice(0, 5).map((p) => ({ lead: cut(p.lead, 40), text: cut(p.text, 150) })), notes: "" });
   return { title: rep.title, subtitle: rep.subtitle, lang: rep.lang, date: rep.date, theme: "ocean", slides: slides.filter((s) => (s.bullets ? s.bullets.length : true)) };
 }
+
+// ---- v5.41: change a finished deck by a sentence (Ali: "make me edit slides in the PowerPoint via prompt") ----
+const AR_NUM = (s) => String(s || "").replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660));
+const SLIDE_W = "(?:slides?|شريحة|الشريحة|شريحه|الشريحه|سلايد|السلايد)";
+/**
+ * One sentence → what to do. Slide numbers are the ones shown on the thumbnails (the cover is 1).
+ * → { ops: [{op: "delete"|"move"|"add"|"rewrite"|"title", at, to, topic, kind, ask}], style: {theme?, transition?, animation?, trigger?} }
+ * "rewrite" with at = "all" changes every content slide.
+ */
+export function parseDeckCommand(cmd0) {
+  const cmd = AR_NUM(cmd0).trim(), ops = [];
+  const style = styleFromPrompt(cmd);
+  const n = (re) => { const m = cmd.match(re); return m ? +m[1] : null; };
+  const kindWord = (t) => (/\b(table)\b|جدول/i.test(t) ? "table" : /\bchart|graph\b|رسم بياني|شارت/i.test(t) ? "chart" : /\b(compar|two columns|pros and cons)\w*|مقارنة/i.test(t) ? "two" : /\bsteps?|timeline|process\b|خطوات|مراحل/i.test(t) ? "steps" : /\bquote\b|اقتباس/i.test(t) ? "quote" : /\bnumbers|stats\b|أرقام|ارقام/i.test(t) ? "stats" : /\bbullets?|points\b|نقط|نقاط/i.test(t) ? "bullets" : null);
+  let m;
+  const lead = cmd.match(new RegExp("^\\s*(?:make\\s+|change\\s+|in\\s+|on\\s+|خلي\\s+|خلّي\\s+|غير\\s+|في\\s+)?(?:the\\s+)?" + SLIDE_W + "\\s*(?:number\\s*|رقم\\s*)?(\\d{1,2})\\s*[:,،-]?\\s*(.*)$", "i"));
+  if (lead && !/^(delete|remove|move|swap|امسح|احذف|انقل)/i.test(cmd)) {
+    const ask = lead[2].replace(/^(should|must|needs? to|to|be)\s+/i, "").trim();
+    ops.push({ op: "rewrite", at: +lead[1], ask, kind: kindWord(ask) });
+  }
+  else if ((m = cmd.match(new RegExp("(?:delete|remove|drop|امسح|احذف|شيل)\\s+(?:the\\s+)?" + SLIDE_W + "\\s*(?:number\\s*|رقم\\s*)?(\\d{1,2})", "i")))) ops.push({ op: "delete", at: +m[1] });
+  else if ((m = cmd.match(new RegExp("(?:move|put|انقل|حط)\\s+(?:the\\s+)?" + SLIDE_W + "\\s*(\\d{1,2})\\s*(?:to|before|after|ل|لـ|الى|إلى|مكان|قبل|بعد)\\s*(?:" + SLIDE_W + "\\s*)?(?:position\\s*)?(\\d{1,2})", "i")))) ops.push({ op: "move", at: +m[1], to: +m[2], after: /\bafter\b|بعد/i.test(m[0]) });
+  else if ((m = cmd.match(/(?:swap|بدل)\s+(?:slides?\s*|الشريحة\s*|شريحة\s*)?(\d{1,2})\s*(?:and|&|with|و|مع)\s*(?:slides?\s*|الشريحة\s*)?(\d{1,2})/i))) ops.push({ op: "move", at: +m[1], to: +m[2], swap: true });
+  else if ((m = cmd.match(new RegExp("(?:add|insert|new|ضيف|أضف|اضف|زود|زوّد)\\s+(?:a\\s+|an\\s+|one\\s+)?(?:new\\s+)?" + SLIDE_W + "?\\s*(?:about|on|for|عن|بتاعة|على)?\\s*(.+?)(?:\\s+(?:after|before|بعد|قبل)\\s+" + SLIDE_W + "?\\s*(\\d{1,2}))?\\s*$", "i"))) && m[1] && m[1].trim().length > 2) {
+    const before = /\b(before)\b|قبل/i.test(cmd) && m[2];
+    ops.push({ op: "add", topic: m[1].replace(/^(slide|شريحة)\s*/i, "").trim(), after: m[2] ? +m[2] - (before ? 1 : 0) : null, kind: kindWord(m[1]) || kindHint(m[1]) });
+  } else if ((m = cmd.match(/(?:change|set|rename)\s+(?:the\s+)?(?:deck'?s?\s+|presentation'?s?\s+|main\s+)?title\s+(?:to|into)\s+["“«]?(.+?)["”»]?\s*$/i) || cmd.match(/(?:غير|غيّر)\s+(?:العنوان|عنوان العرض)\s+(?:ل|لـ|الى|إلى)\s*["“«]?(.+?)["”»]?\s*$/))) ops.push({ op: "title", text: m[1].trim() });
+  else if ((m = cmd.match(new RegExp(SLIDE_W + "\\s*(?:number\\s*|رقم\\s*)?(\\d{1,2})\\s*[:,،-]?\\s*(.*)$", "i")))) {
+    const ask = m[2].replace(/^(should|must|needs? to|to)\s+/i, "").trim();
+    ops.push({ op: "rewrite", at: +m[1], ask, kind: kindWord(ask) });
+  } else if (!Object.keys(style).length || cmd.replace(/\b(theme|design|colou?rs?|transitions?|animations?|dark|blue|green|purple|orange|fade|push|wipe|zoom|fly|automatic|on tap)\b/gi, "").replace(/[^\p{L}]+/gu, " ").trim().split(" ").length > 4) {
+    // anything else is about the words on the slides: every content slide is rewritten with it
+    if (cmd.length > 3) ops.push({ op: "rewrite", at: "all", ask: cmd, kind: null });
+  }
+  return { ops, style };
+}

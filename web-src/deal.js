@@ -46,6 +46,43 @@ export function pricesIn(text) {
   return out;
 }
 
+/**
+ * v5.41 (Ali's iPhone: "12,400 EGP or 3 × 4,133 with valU" was read as 12,400 down + 3 × 4,133 → a total
+ * below the price and "−13,201 more than cash"). Installment plans read by CODE from the text:
+ * "3 × 4,133", "4,133 × 12", "4,133 a month for 12 months", "12 installments of 4,133", «قسط 4133 على 12 شهر»,
+ * "X or N × M" (X is the cash price of the same thing), "down payment 5,000" / «مقدم 5000».
+ * → [{ months, monthly, cash?, down? }]
+ */
+export function plansIn(text) {
+  const t = toLatin(text).replace(/(\d),(?=\d{3}(\D|$))/g, "$1"), out = [];
+  const N = "(\\d+(?:\\.\\d+)?)";
+  const add = (months, monthly, at) => {
+    months = Math.round(+months); monthly = +monthly;
+    if (!(months >= 2 && months <= 120) || !(monthly > 0) || monthly < months) return;
+    if (out.some((p) => p.months === months && p.monthly === monthly)) return;
+    const before = t.slice(Math.max(0, at - 60), at);
+    const alt = before.match(new RegExp(N + "\\s*(?:egp|le|l\\.e\\.?|جنيه|جنية|ج\\.م|\\$|usd)?\\s*[\"“”']?\\s*(?:or|أو|او|ولا|/)\\s*[\"“”']?\\s*$", "i"));
+    const dn = t.match(new RegExp("(?:down ?payment|deposit of|advance of|مقدم|دفعة أولى|دفعه اولي|اول دفعة)\\s*(?:of|:)?\\s*" + N, "i"));
+    out.push({ months, monthly, at, cash: alt ? +alt[1] : null, down: dn ? +dn[1] : null });
+  };
+  for (const m of t.matchAll(new RegExp("\\b(\\d{1,3})\\s*[×xX*]\\s*" + N, "g"))) if (+m[1] <= 120 && +m[2] > +m[1]) add(m[1], m[2], m.index);
+  for (const m of t.matchAll(new RegExp(N + "\\s*[×xX*]\\s*(\\d{1,3})\\s*(?:months?|mo\\b|monthly|شهر|شهور|أشهر|قسط|installments?)", "gi"))) add(m[2], m[1], m.index);
+  // "2,000 × 10" (amount first, no word): a big amount times a small count
+  for (const m of t.matchAll(new RegExp(N + "\\s*[×xX*]\\s*(\\d{1,2})(?![\\d.,])", "g"))) if (+m[1] >= 100 && +m[2] >= 2) add(m[2], m[1], m.index);
+  for (const m of t.matchAll(new RegExp(N + "\\s*(?:egp|le|جنيه)?\\s*(?:a|per|/|each|every)\\s*month\\s*(?:for|over|×|x)\\s*(\\d{1,3})", "gi"))) add(m[2], m[1], m.index);
+  for (const m of t.matchAll(new RegExp("(\\d{1,3})\\s*(?:monthly )?(?:installments?|payments?|months?)\\s*(?:of|at|×|x)\\s*" + N, "gi"))) add(m[1], m[2], m.index);
+  for (const m of t.matchAll(new RegExp("(?:قسط|القسط|شهري(?:ا|ًا)?)\\s*" + N + "\\s*(?:جنيه)?\\s*(?:على|لمدة|ل)\\s*(\\d{1,3})\\s*(?:شهر|شهور|أشهر)", "g"))) add(m[2], m[1], m.index);
+  return out;
+}
+
+/** Two very different prices for the same thing in one offer (38,000 and 12,400) — a bait-price sign. */
+export function priceMismatch(text, plan) {
+  const vals = [...new Set(pricesIn(text).map((p) => p.value))].filter((v) => !plan || Math.abs(v - plan.monthly) > 1);
+  if (vals.length < 2) return null;
+  const hi = Math.max(...vals), lo = Math.min(...vals);
+  return hi / lo >= 1.6 && lo >= 500 ? { hi, lo } : null;
+}
+
 /** The market from many prices: drops outliers, → { low, median, high, n } or null. */
 export function marketRange(values) {
   const v = values.filter((x) => isFinite(x) && x > 0).sort((a, b) => a - b);
@@ -67,6 +104,9 @@ export function planCost({ cash, down = 0, monthly, months, fees = 0 }) {
   if (!(monthly > 0) || !(months > 0)) return null;
   const total = down + fees + monthly * months;
   const out = { total, extra: isFinite(cash) ? total - cash : NaN, monthlyRate: null, yearlyRate: null };
+  // a plan that costs clearly LESS than the cash price means the terms were misread — never shown as a saving
+  if (isFinite(cash) && cash > 0 && total < cash * 0.97) { out.inconsistent = true; out.extra = NaN; return out; }
+  if (isFinite(out.extra) && Math.abs(out.extra) <= Math.max(5, cash * 0.002)) out.extra = 0;   // 3 × 4,133 = 12,399 vs 12,400: rounding, not a saving
   if (!(cash > 0)) return out;
   const loan = cash - down - fees;              // what you really borrow: fees paid up front shrink it
   if (loan <= 0) return out;
@@ -136,6 +176,7 @@ export function verdict(d) {
     if (pl.yearlyRate != null) say(`That is a real interest of about ${Math.round(pl.yearlyRate * 100)}% a year${d.claimsZero ? ", although it says 0%" : ""}.`, `ده فايدة حقيقية حوالي ${Math.round(pl.yearlyRate * 100)}% في السنة${d.claimsZero ? "، رغم إنه مكتوب 0%" : ""}.`);
     if (pl.yearlyRate != null && pl.yearlyRate > 0.35 && (level === "fair" || level === "good" || level === "unknown")) level = "overpriced";
   } else if (pl && pl.extra <= 0 && pl.total > 0) say("The installments add nothing over the cash price — a real 0%.", "التقسيط مش بيزوّد حاجة على الكاش — 0% بجد.");
+  if (pl && pl.inconsistent) say(`The installments add up to ${fmt(pl.total)} — less than the price, so the terms don't match; ask the seller for the exact total.`, `الأقساط مجموعها ${fmt(pl.total)} — أقل من السعر، يعني الشروط مش راكبة على بعض؛ اسأل البائع على الإجمالي بالظبط.`);
   if (risk >= 4) level = "scam";
   else if (risk >= 2 && level !== "scam") level = "risky";
   for (const s of d.signs || []) if (s.weight > 0) reasons.push({ en: s.en, ar: s.ar });

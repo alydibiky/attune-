@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { GraduationCap, Newspaper, Plus, Trash2, ChevronLeft, Check, X, Loader2, Bell, RefreshCw, Sparkles, ImageIcon, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import { tr } from "./i18n.js";
-import { useSubBack } from "./backstack.js";
+import { useSubBack, useSticky } from "./backstack.js";
 import { Md } from "./chat.jsx";
 import * as D from "./daily.js";
 
@@ -125,11 +125,11 @@ export function Visual({ v }) {
 // ================================ Learn daily ================================
 export function LearnPage({ llm, modelReady, openEngine, flash, native, openId, clearOpen, illustrate }) {
   const [courses, setCoursesRaw] = useState(loadCourses);
-  const [cur, setCur] = useState(null);                 // course id
-  const [view, setView] = useState("list");             // list | new | course | lesson | quiz | past
-  const [lessonN, setLessonN] = useState(null);
+  const [cur, setCur] = useSticky("learn:cur", null);                 // course id
+  const [view, setView] = useSticky("learn:view", "list");             // list | new | course | lesson | quiz | past
+  const [lessonN, setLessonN] = useSticky("learn:lesson", null);
   const [busy, setBusy] = useState(null);               // { what, text }
-  const [quiz, setQuiz] = useState(null);               // { lessons, questions, i, picks, shown }
+  const [quiz, setQuiz] = useSticky("learn:quiz", null);               // { lessons, questions, i, picks, shown }
   const [form, setForm] = useState({ topic: "", level: "beginner", lang: "en", time: "08:00", quizEvery: 5, goal: "" });
   const [confirmDel, setConfirmDel] = useState(false);
   const running = useRef(false);
@@ -346,11 +346,11 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, openId, 
 // ================================ Daily news ================================
 export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCall, openId, clearOpen }) {
   const [topics, setTopicsRaw] = useState(loadTopics);
-  const [cur, setCur] = useState(null);
+  const [cur, setCur] = useSticky("news:cur", null);
   const [form, setForm] = useState({ query: "", lang: "en", time: "08:30" });
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useSticky("news:adding", false);
   const [busy, setBusy] = useState(null);
-  const [past, setPast] = useState(null);
+  const [past, setPast] = useSticky("news:past", null);
   const [confirmDel, setConfirmDel] = useState(false);
   const topic = topics.find((t) => t.id === cur) || null;
   // v5.34: Back — an old digest → the topic → all topics

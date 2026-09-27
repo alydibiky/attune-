@@ -89,6 +89,96 @@ export function textToBlocks(text) {
   return out;
 }
 
+/**
+ * v5.41 — PDF pages with layout (Android sends each line's position, size, boldness and its column spans)
+ * → blocks with real structure: headings (bigger / bold short lines), paragraphs (wrapped lines joined),
+ * numbered and bulleted lists (with their wrapped lines), and tables (2+ lines whose spans line up in
+ * columns). Ali's GUC assignment came out with the title glued to the text, tables as plain lines and
+ * the question numbers lost.
+ * pages: [{ lines: [{y, x, s, b, sp: [[x, text, size]]}], text }] → blocks
+ */
+export function pdfLinesToBlocks(pages) {
+  // superscript pieces next to each other are one: ^(−ΔΔ)^(Ct) → ^(−ΔΔCt)
+  const sup = (t) => String(t).replace(/\)\^\(/g, "");
+  const all = pages.flatMap((p, pi) => (p.lines || []).map((l) => ({ ...l, page: pi, sp: l.sp.map((x) => [x[0], sup(x[1]), x[2], x[3]]), text: sup(l.sp.map((x) => x[1]).join(" ")).replace(/\s+/g, " ").trim() }))).filter((l) => l.text);
+  if (!all.length) return [];
+  // the body text size: the size most of the characters are written in
+  const bySize = new Map();
+  for (const l of all) { const k = Math.round(l.s * 2) / 2; bySize.set(k, (bySize.get(k) || 0) + l.text.length); }
+  const body = [...bySize].sort((a, b) => b[1] - a[1])[0][0];
+  const maxS = Math.max(...all.map((l) => l.s));
+  const LIST = /^\s*(?:(\d{1,2}|[a-z]|[ivx]{1,4})[.)]|[•●▪◦\-–*])\s*/i;
+  const isHead = (l) => l.text.length <= 110 && !LIST.test(l.text) && (l.s >= body * 1.18 || (l.b && l.text.length <= 90 && !/[.,;]$/.test(l.text)));
+  const cols = (l) => l.sp.length;
+  const out = [];
+  let para = null, item = null, i = 0;
+  const flush = () => { if (para) { out.push({ type: "p", text: para.text }); para = null; } item = null; };
+  while (i < all.length) {
+    const l = all[i];
+    // a table: this line and the next ones split into 2+ columns that line up
+    // (a bold header row counts too: it lines up with the rows under it)
+    if (cols(l) >= 2) {
+      const rows = [l]; let j = i + 1;
+      while (j < all.length && cols(all[j]) >= 2 && all[j].page === l.page && all[j].y - rows[rows.length - 1].y < rows[rows.length - 1].s * 3.2) {
+        const xs = rows[0].sp.map((x) => x[0]);
+        const lined = all[j].sp.filter((x) => xs.some((c) => Math.abs(c - x[0]) < 40)).length;
+        if (lined < 2) break;
+        rows.push(all[j]); j++;
+      }
+      if (rows.length >= 2) {
+        flush();
+        // columns: the starting x of every span, merged when close
+        // columns come from the body rows (a header's titles often sit a little left of the numbers under them)
+        const bodyRows = rows.length > 2 || !rows[0].b ? rows.slice(rows[0].b ? 1 : 0) : rows;
+        const mid = (x, t, sz) => x + String(t).length * (sz || body) * 0.26;   // a text's centre, from its length
+        const anchors = [], centres = [];
+        for (const r of bodyRows) for (const [x, t, sz] of r.sp) if (!anchors.some((a) => Math.abs(a - x) < 24)) { anchors.push(x); centres.push(mid(x, t, sz)); }
+        const ord = anchors.map((a, k) => k).sort((p, q) => anchors[p] - anchors[q]);
+        const A = ord.map((k) => anchors[k]), Cn = ord.map((k) => centres[k]);
+        anchors.length = 0; anchors.push(...A); centres.length = 0; centres.push(...Cn);
+        const cell = (r) => {
+          const row = anchors.map(() => "");
+          const near = (x, t, sz) => { const m = mid(x, t, sz); let k = 0, best = Infinity; centres.forEach((a, c) => { const d = Math.abs(a - m); if (d < best) { best = d; k = c; } }); return k; };
+          // a header with fewer cells than columns ("Control Stimulated" in one span): word by word
+          const split = r.sp.length < anchors.length && r.sp.some((x) => Array.isArray(x[3]) && x[3].length > 1);
+          for (const sp of r.sp) {
+            const parts = split && Array.isArray(sp[3]) && sp[3].length > 1 ? sp[3].map(([wx, wt]) => [wx, wt]) : [[sp[0], sp[1]]];
+            for (const [x, t] of parts) { const k = near(x, t, sp[2]); row[k] = row[k] ? row[k] + " " + t : t; }
+          }
+          return row;
+        };
+        out.push({ type: "table", rows: rows.map(cell) });
+        i = j; continue;
+      }
+    }
+    const prev = all[i - 1];
+    const gap = prev && prev.page === l.page ? l.y - prev.y : Infinity;
+    if (isHead(l)) {
+      flush();
+      const last = out[out.length - 1];
+      // a heading that wraps onto a second line of the same size
+      if (last && /^h/.test(last.type) && prev && gap < l.s * 1.6 && Math.abs(prev.s - l.s) < 0.6 && isHead(prev)) { last.text += " " + l.text; i++; continue; }
+      out.push({ type: l.s >= maxS - 0.5 && l.s >= body * 1.35 ? "h1" : l.s >= body * 1.18 ? "h2" : "h3", text: l.text });
+      i++; continue;
+    }
+    const m = l.text.match(LIST);
+    if (m) {
+      flush();
+      const num = m[1] && /^\d+$/.test(m[1]) ? m[1] : m[1] ? m[1] : "";
+      item = { type: "li", text: l.text.slice(m[0].length).trim(), x: l.x, ...(num ? { num } : {}) };
+      out.push(item); i++; continue;
+    }
+    // a wrapped line of the list item above (same size, close below, not starting a new item)
+    if (item && gap < l.s * 1.7 && Math.abs(l.s - body) < 1.5) { item.text += " " + l.text; i++; continue; }
+    item = null;
+    if (para && gap < l.s * 1.75 && Math.abs(l.s - para.s) < 1) { para.text += (/-$/.test(para.text) && !/\s-$/.test(para.text) ? "" : " ") + l.text; para.text = para.text.replace(/(\w)- (\w)/g, "$1-$2"); i++; continue; }
+    flush();
+    para = { text: l.text, s: l.s }; i++;
+  }
+  flush();
+  return out.map(({ x, ...b }) => b);
+}
+
 /** Blocks → plain text (Markdown-style headings and bullets). */
 export function blocksToText(blocks) {
   return blocks.map((b) => b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n")
@@ -102,10 +192,12 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
  *  and o.accent (a hex colour for the headings). */
 export function docxFromBlocks(blocks, title = "Document", o = {}) {
   const imgs = [];
-  const run = (t, bold) => {
+  const run1 = (t, bold, sup) => {
     const rtl = isAr(t);
-    return `<w:r><w:rPr>${bold ? "<w:b/>" : ""}${rtl ? "<w:rtl/>" : ""}</w:rPr>${String(t).split("\n").map((x, i) => (i ? "<w:br/>" : "") + `<w:t xml:space="preserve">${esc(x)}</w:t>`).join("")}</w:r>`;
+    return `<w:r><w:rPr>${bold ? "<w:b/>" : ""}${rtl ? "<w:rtl/>" : ""}${sup ? '<w:vertAlign w:val="superscript"/>' : ""}</w:rPr>${String(t).split("\n").map((x, i) => (i ? "<w:br/>" : "") + `<w:t xml:space="preserve">${esc(x)}</w:t>`).join("")}</w:r>`;
   };
+  // v5.41: "2^(−ΔΔCt)" (a superscript read from a PDF) is written as a real superscript
+  const run = (t, bold) => String(t).split(/\^\(([^()]{1,40})\)/).map((x, i) => (x ? run1(x, bold, i % 2 === 1) : "")).join("");
   const para = (t, style) => `<w:p><w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ""}${isAr(t) ? "<w:bidi/>" : ""}</w:pPr>${run(t)}</w:p>`;
   const body = blocks.map((b) => {
     if (b.type === "table") {
@@ -121,7 +213,7 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
     if (b.type === "title") return para(b.text, "Title");
     if (b.type === "subtitle") return para(b.text, "Subtitle");
     if (b.type === "caption") return para(b.text, "Caption");
-    if (b.type === "li") return para(b.text, "ListBullet");
+    if (b.type === "li") return para((b.num ? b.num + ".\t" : "•\t") + b.text, "ListBullet");
     if (/^h[1-3]$/.test(b.type)) return para(b.text, "Heading" + b.type[1]);
     return para(b.text);
   }).join("");

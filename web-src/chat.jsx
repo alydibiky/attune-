@@ -13,12 +13,12 @@ import { ActionCard } from "./actions-ui.jsx";
 import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
 import { mathToText } from "./quality.js";
-import { looksLikeMathProblem, looksLikeCodeTask, arithmeticSlips, fixSlips } from "./verify.js";
+import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, arithmeticSlips, fixSlips } from "./verify.js";
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf } from "./research.js";
-import { repairFigures, tidyAnswer, gapsOf } from "./answerfix.js";
+import { repairFigures, tidyAnswer, gapsOf, fixModelNames } from "./answerfix.js";
 import { rulesOf, violations, fixMessage } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from "./power.js";
@@ -897,7 +897,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           if (runRef.current !== run) return;
           if (r && r.text) { answer = r.text; extra.reasoned = { votes: r.votes, total: r.total, checked: r.checked }; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
-      } else if (route && !longMsg && !img && !sources && api.codeTask && looksLikeCodeTask(typed)) {
+      } else if (route && !longMsg && !img && !sources && api.codeTask && (looksLikeCodeTask(typed) || (spaceRef.current.assistant && spaceRef.current.assistant.id === "a-web" && !/^\s*(what|how|why|is|are|does|can|explain|إيه|ايه|ليه|إزاي|ازاي|هل)\b/i.test(typed)))) {
         try {
           // While it writes: the model's own ```python fence (and anything
           // before it) is dropped, so the preview is ONE code box — not an
@@ -909,7 +909,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             s = s.split(/\n\s*```/)[0];
             return "```\n" + s.split("\n").slice(-30).join("\n") + "\n```";
           };
-          const r = await api.codeTask(typed, { onStep: (s) => onStatus(s), onToken: (tx) => onToken(livePreview(tx), "") });
+          const web = looksLikeWebsiteTask(typed) || (spaceRef.current.assistant && spaceRef.current.assistant.id === "a-web");
+          const r = await api.codeTask(typed, { onStep: (s) => onStatus(s), onToken: (tx) => onToken(livePreview(tx), ""), lang: web ? "html" : undefined });
           if (runRef.current !== run) return;
           if (r && r.code) {
             answer = (r.ok ? "" : tr("I couldn't make every test pass yet — here is the closest version; tap “Test & fix in Code” to keep going.") + "\n\n") + "```" + r.lang + "\n" + r.code + "\n```";
@@ -1096,6 +1097,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // ("0-inch" → "10-inch", "sixseater" → "six-seater"); broken bold, repeated bullets,
       // uneven tables and "the passages do not provide…" lines tidied away. (answerfix.js)
       if (sources && answer) {
+        // v5.41: "Lynk & Co 90" when the question and the sources say 900 — the name is put back first
+        const fm = fixModelNames(answer, (webCtx && webCtx.question) || typed, sources);
+        if (fm.fixed.length) { answer = fm.text; extra.namesFixed = fm.fixed.length; }
         const rf = repairFigures(answer, sources);
         if (rf.fixed.length) extra.figuresFixed = rf.fixed.length;
         answer = tidyAnswer(rf.text);
