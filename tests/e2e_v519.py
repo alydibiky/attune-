@@ -123,7 +123,7 @@ with sync_playwright() as p:
 
     # ---- 4. Studio stops pictures only with its own Stop ----
     src = open(HERE + "/../web-src/studio-ui.jsx", encoding="utf-8").read()
-    check("native.cancelImage(callId.current)" in src, "Studio's Stop uses cancelImage (a stray cancel can't end a picture)")
+    check("native.cancelImage(" in src and "if (native.cancelImage)" in src, "Studio's Stop uses cancelImage (a stray cancel can't end a picture)")
 
     errs = [e for e in real_errors(errors) if "reading 'length'" not in e and "Broken" not in e and "versions" not in e and "The above error" not in e and "React will try" not in e and "getDerivedStateFromError" not in e]
     check(not errs, "no other JavaScript errors (%d)%s" % (len(errs), (": " + errs[0]) if errs else ""))

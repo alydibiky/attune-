@@ -27,7 +27,7 @@ import { FileConverter } from "./convert-ui.jsx";
 import { VideoDownloader } from "./video-ui.jsx";
 import { SlidesReports } from "./slides-ui.jsx";
 import { classify as videoLink, linkIn } from "./video.js";
-import { popBack, hasBack, useSubBack } from "./backstack.js";
+import { popBack, hasBack, useSubBack, forgetSticky } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { placeFor } from "./places.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
@@ -6692,6 +6692,11 @@ export default function App() {
     modeRef.current = m;
     setModeRaw(m);
   };
+  // the bottom bar, the More menu and things shared from other apps are top-level: Back from them goes home
+  // (Android's rule); being SENT from one screen to another (Learn → Studio) is what Back retraces
+  // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
+  const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", projects: "projects:", video: "video:", studio: "studio:" };
+  const navTo = (m) => { modeHist.current = []; if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -7299,39 +7304,39 @@ export default function App() {
   useEffect(() => {
     const onShare = (e) => {
       const d = (e && e.data) || {};
-      if (d.kind === "reminder" && /^daily-learn-/.test(d.id || "")) { setDailyOpen(d.id); setMode("learn"); return; }
-      if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); setMode("news"); return; }
-      if (d.kind === "reminder") { setMode("reminders"); return; }
+      if (d.kind === "reminder" && /^daily-learn-/.test(d.id || "")) { setDailyOpen(d.id); navTo("learn"); return; }
+      if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); navTo("news"); return; }
+      if (d.kind === "reminder") { navTo("reminders"); return; }
       // A photo or screenshot shared from another app (a receipt, a menu, a
       // document): it opens in Instant, ready for "Add to Money", "Translate"…
       if (d.kind === "image" && d.image) {
         const url = String(d.image);
         setInImage({ data: url.split(",")[1], media: "image/jpeg", url }); setInResult(""); setInAction(""); setInLogged(null);
-        setMode("instant");
+        navTo("instant");
         setToast(tr("Photo received — a receipt? tap “Add to Money”")); setTimeout(() => setToast(""), 3500);
         return;
       }
       // v5.35: WhatsApp → Export chat → Attune: the chat opens in Chat X-Ray
-      if (d.kind === "chatfile" && d.text) { setXrayIn({ text: String(d.text), name: String(d.name || "") }); setMode("xray"); return; }
+      if (d.kind === "chatfile" && d.text) { setXrayIn({ text: String(d.text), name: String(d.name || "") }); navTo("xray"); return; }
       const shared = String(d.text || "").trim();
       if (!shared) return;
       // A bank SMS, an InstaPay or wallet confirmation: straight to Money.
       if (d.kind === "share") {
         // v5.38: a shared video link (a direct file, archive.org, Wikimedia Commons) → Video Downloader
         const link = linkIn(shared), vk = link && videoLink(link).kind;
-        if (link && ["direct", "archive", "commons"].includes(vk) && shared.length - link.length < 120) { setVideoIn(link + "#" + Date.now()); setMode("video"); return; }
+        if (link && ["direct", "archive", "commons"].includes(vk) && shared.length - link.length < 120) { setVideoIn(link + "#" + Date.now()); navTo("video"); return; }
         const pay = parsePayment(shared, { now: Date.now() });
-        if (pay && pay.ok) { setPendingPay({ text: shared, id: Date.now() }); setMode("money");
+        if (pay && pay.ok) { setPendingPay({ text: shared, id: Date.now() }); navTo("money");
           setToast(tr("Payment received — pick the account and confirm")); setTimeout(() => setToast(""), 3500); return; }
       }
       if (d.kind === "selection") {
-        setInText(shared); setInResult(""); setMode("instant");
+        setInText(shared); setInResult(""); navTo("instant");
         setToast(tr("Your selected text is ready — pick what to do with it")); setTimeout(() => setToast(""), 3000);
         return;
       }
       const r = memMake({ kind: "note", title: shared.slice(0, 60), text: shared, output: "", tags: ["shared"] });
       setMemory((m) => (m.some((x) => x.id === r.id) ? m : memPrune([r, ...m], MEM_MAX).records));
-      setMode("memory"); setShareIn({ text: shared, id: r.id });
+      navTo("memory"); setShareIn({ text: shared, id: r.id });
     };
     window.addEventListener("attune-share", onShare);
     return () => window.removeEventListener("attune-share", onShare);
@@ -7391,7 +7396,7 @@ export default function App() {
   // v5.41: the model that is really RUNNING drives the power profile and the header chip — tapping a
   // card in Engine only selects it (Ali tapped Zenith: Blaze+ kept running but got Zenith's expert settings)
   const runningTier = useMemo(() => (NATIVE ? tierOfInstalled((installedModels || []).find((m) => m.active)) || activeTier : activeTier), [installedModels, activeTier]);
-  useMemo(() => setPower(runningTier), [runningTier]);
+  useMemo(() => setPower(runningTier, LocalEngine.ctx || 0), [runningTier, engineInfo && engineInfo.settings]);
   const bestTier = useMemo(() => pickTier(device), [device]);
   const plan = useMemo(() => memoryPlan(activeTier), [activeTier]);
 
@@ -8090,7 +8095,7 @@ export default function App() {
     openTab: (m) => setMode(m),
     sendToMoney: (t) => sendToMoney(t, "Payment read — pick the account and confirm"),
     photoToMoney: (url) => { setPendingPay({ image: url, id: Date.now() }); setMode("money"); },
-    openSlides: (prompt, tab) => { setSlidesIn({ prompt, tab, id: Date.now() }); setMode("slides"); },
+    openSlides: (prompt, tab) => { forgetSticky("slides:"); setSlidesIn({ prompt, tab, id: Date.now() }); setMode("slides"); },   // a new request starts a fresh form
     listen: async (langTag, onPartial) => {
       const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); });
       return r && r.text;
@@ -10058,7 +10063,7 @@ export default function App() {
             ["business", "Business", Database], ["memory", "Memory", History], ["more", "More", LayoutGrid]].map(([id, label, Icon]) => {
             const on = id === "more" ? moreOpen : (mode === id && !moreOpen);
             return (
-              <button key={id} onClick={() => { if (id === "more") setMoreOpen((v) => !v); else { setMoreOpen(false); setMode(id); } }}
+              <button key={id} onClick={() => { if (id === "more") setMoreOpen((v) => !v); else { setMoreOpen(false); navTo(id); } }}
                 className={`flex flex-col items-center justify-center gap-0.5 text-[11px] ${on ? (id === "cycle" ? "text-rose-300" : "text-teal-300") : "text-slate-500"}`}>
                 <Icon size={21} />{tr(label)}
               </button>
@@ -10076,7 +10081,7 @@ export default function App() {
                   <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2 px-0.5">{tr(title)}</p>
                   <div className="grid grid-cols-3 gap-2">
                     {ids.map((tid) => MORE_TOOLS.find((t) => t[0] === tid)).filter(Boolean).map(([id, label, sub, Icon]) => (
-                      <button key={id} onClick={() => { if (id === "cycle") enableCycle(true); setMode(id); setMoreOpen(false); }}
+                      <button key={id} onClick={() => { if (id === "cycle") enableCycle(true); navTo(id); setMoreOpen(false); }}
                         className={`rounded-xl border p-2.5 text-start transition-colors ${mode === id ? "border-teal-600 bg-teal-500/10" : "border-slate-800 bg-slate-950 active:bg-slate-800"}`}>
                         <Icon size={18} className="text-teal-300" />
                         <span className="block text-[13px] text-slate-100 mt-1.5 leading-tight">{tr(label)}</span>
@@ -10593,7 +10598,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
           {[["duckduckgo", "DuckDuckGo", "Free · no key"], ["brave", "Brave Search", "Your API key"]].map(([id, label, sub]) => (
             <button key={id} onClick={() => n.saveSearchCfg({ ...(n.searchCfg || {}), provider: id, key: id === "brave" ? key : (n.searchCfg && n.searchCfg.key) || "" })}
               className={`rounded-lg border px-3 py-2 text-start ${provider === id ? "border-teal-600 bg-teal-500/5" : "border-slate-800 bg-slate-900"}`}>
-              <span className="block text-sm text-slate-200 break-all">{tr(label)}</span><span className="block text-[11px] text-slate-500">{tr(sub)}</span>
+              <span className="block text-[clamp(11px,3.6vw,14px)] text-slate-200 whitespace-nowrap">{tr(label)}</span><span className="block text-[11px] text-slate-500">{tr(sub)}</span>
             </button>
           ))}
         </div>

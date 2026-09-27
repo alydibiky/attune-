@@ -36,7 +36,8 @@ with sync_playwright() as p:
     page.wait_for_selector("text=Running now", timeout=10000)
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
     # a phone under 8 GB: the fast engine runs with a 4,096-token window
-    page.evaluate("() => { const cur = JSON.parse(window.AttuneNative.engine()); window.dispatchEvent(new CustomEvent('attune-engine', { detail: { ...cur, settings: 'context 4096 · weights in RAM' } })); }")
+    # (the fake phone itself reports the 4k window too — the app also asks it every second)
+    page.evaluate("() => { const N = window.AttuneNative, e0 = N.engine; N.engine = () => { const c = JSON.parse(e0()); return JSON.stringify({ ...c, settings: 'context 4096 · weights in RAM' }); }; window.dispatchEvent(new CustomEvent('attune-engine', { detail: JSON.parse(N.engine()) })); }")
     page.wait_for_timeout(500)
 
     page.evaluate(SEARCH)

@@ -83,19 +83,24 @@ with sync_playwright() as p:
     check("teal" in (page.locator("[data-testid=convert-to-merge]").get_attribute("class") or ""), "…and “Merge into one PDF” is already chosen")
     shot(page, "02-convert")
 
-    # ---- #15 Back returns to the screen you came from, which reopens where you were ----
+    # ---- #15 Back: a screen you were SENT to returns to where you came from, which reopens where you were ----
     open_tool(page, "Learn daily", "learn-page")
     page.locator("[data-testid=learn-new-btn]").click(); page.wait_for_timeout(200)
     in_new = page.locator("[data-testid=learn-topic]").count() > 0
-    open_tool(page, "Deal Check", "deal")
+    # Learn daily → "Draw a picture for this lesson" opens Studio (the jump Ali made)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-studio', { detail: { prompt: 'a lesson picture' } }))")
+    page.wait_for_selector("[data-testid=studio-page]", timeout=5000)
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(300)
-    check(page.locator("[data-testid=learn-new]").count() + page.locator("[data-testid=learn-page]").count() == 1, "Back from Deal Check returns to Learn daily (not out of the app)")
+    check(page.locator("[data-testid=learn-new]").count() + page.locator("[data-testid=learn-page]").count() == 1, "Back from Studio returns to Learn daily (not out of the app)")
     if in_new: check(page.locator("[data-testid=learn-topic]").count() == 1, "…still on the new-course form you left")
     steps, left_early = 0, False
     while page.locator("textarea[placeholder='Message Attune']").count() == 0 and steps < 10:
         if not page.evaluate("window.__attuneBack()"): left_early = True; break
         page.wait_for_timeout(200); steps += 1
-    check(not left_early and page.locator("textarea[placeholder='Message Attune']").count() == 1, "…and Back goes back screen by screen until Chat, never leaving the app early (%d steps)" % steps)
+    check(not left_early and page.locator("textarea[placeholder='Message Attune']").count() == 1, "…and Back then goes home to Chat, never leaving the app early (%d steps)" % steps)
+    open_tool(page, "Deal Check", "deal")
+    page.evaluate("window.__attuneBack()"); page.wait_for_timeout(300)
+    check(page.locator("textarea[placeholder='Message Attune']").count() == 1, "a tool opened from the menu goes home to Chat on Back (Android's rule)")
 
     # ---- #3 sharpening carries on while you are elsewhere; the result lands in the gallery ----
     open_tool(page, "Studio", "studio-page")

@@ -74,7 +74,9 @@ export function powerFor(level, ctx = 8192) {
 
 // The active model's profile, set by the app when the model changes.
 let CURRENT = powerFor(3);
-export function setPower(tier) { const b = brandOf(tier); CURRENT = { ...powerFor(b.level, (tier && tier.ctx) || 8192), family: familyOf(tier) }; return CURRENT; }
+// v5.41: sized to the window the engine really opened when it is known (a phone under 8 GB runs the
+// fast engine with 4,096 tokens, not the model's usual 16k)
+export function setPower(tier, realCtx = 0) { const b = brandOf(tier); const c = (tier && tier.ctx) || 8192; CURRENT = { ...powerFor(b.level, realCtx > 0 ? Math.min(c, realCtx) : c), family: familyOf(tier) }; return CURRENT; }
 export function getPower() { return CURRENT; }
 
 /** Extra instructions only strong models get (a small model would drown in them). */

@@ -198,7 +198,8 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
   };
   // v5.41: "2^(−ΔΔCt)" (a superscript read from a PDF) is written as a real superscript
   const run = (t, bold) => String(t).split(/\^\(([^()]{1,40})\)/).map((x, i) => (x ? run1(x, bold, i % 2 === 1) : "")).join("");
-  const para = (t, style) => `<w:p><w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ""}${isAr(t) ? "<w:bidi/>" : ""}</w:pPr>${run(t)}</w:p>`;
+  // bullets are a real Word list (numbering.xml); numbered items keep the source's own numbers ("3.")
+  const para = (t, style, bullet) => `<w:p><w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ""}${bullet ? '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>' : ""}${isAr(t) ? "<w:bidi/>" : ""}</w:pPr>${run(t)}</w:p>`;
   const body = blocks.map((b) => {
     if (b.type === "table") {
       const w = Math.max(...b.rows.map((r) => r.length));
@@ -213,7 +214,7 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
     if (b.type === "title") return para(b.text, "Title");
     if (b.type === "subtitle") return para(b.text, "Subtitle");
     if (b.type === "caption") return para(b.text, "Caption");
-    if (b.type === "li") return para((b.num ? b.num + ".\t" : "•\t") + b.text, "ListBullet");
+    if (b.type === "li") return b.num ? para(b.num + ".\t" + b.text, "ListBullet") : para(b.text, "ListBullet", true);
     if (/^h[1-3]$/.test(b.type)) return para(b.text, "Heading" + b.type[1]);
     return para(b.text);
   }).join("");
@@ -224,11 +225,12 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
     style("ListBullet", "List Bullet", 22, false, `<w:ind w:left="720" w:hanging="360"/>`) +
     style("Title", "Title", 56, true, `<w:spacing w:before="2400" w:after="240"/>`, o.accent) + style("Subtitle", "Subtitle", 30, false, `<w:spacing w:after="480"/>`, "595959") + style("Caption", "caption", 18, false, `<w:jc w:val="center"/>`, "595959") + `<w:style w:type="table" w:styleId="TableGrid"><w:name w:val="Table Grid"/></w:style></w:styles>`;
   const files = [
-    { name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${imgs.length ? '<Default Extension="png" ContentType="image/png"/>' : ""}<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>` },
+    { name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${imgs.length ? '<Default Extension="png" ContentType="image/png"/>' : ""}<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>` },
     { name: "_rels/.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>` },
-    { name: "word/_rels/document.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${imgs.map((_, i) => `<Relationship Id="rIdImg${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/chart${i + 1}.png"/>`).join("")}</Relationships>` },
+    { name: "word/_rels/document.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>${imgs.map((_, i) => `<Relationship Id="rIdImg${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/chart${i + 1}.png"/>`).join("")}</Relationships>` },
     { name: "word/document.xml", data: doc },
     { name: "word/styles.xml", data: styles },
+    { name: "word/numbering.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="singleLevel"/><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>` },
     { name: "docProps/core.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${esc(title)}</dc:title><dc:creator>Attune</dc:creator></cp:coreProperties>` },
     ...imgs.map((b64, i) => ({ name: `word/media/chart${i + 1}.png`, data: b64ToBytes(b64) })),
   ];
