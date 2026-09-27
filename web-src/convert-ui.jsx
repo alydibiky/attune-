@@ -7,17 +7,21 @@
    AI model (a model that reads photos). Nothing is uploaded. */
 import React, { useState, useRef } from "react";
 import { FileText, Loader2, X, Download, Check, ImagePlus, ChevronRight, Eye } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, getLang } from "./i18n.js";
 import { useSubBack } from "./backstack.js";
 import * as C from "./convert.js";
 
 const TARGET_LABEL = { docx: "Word (.docx)", pdf: "PDF", txt: "Text (.txt)", images: "Pictures (.zip)", csv: "CSV", xlsx: "Excel (.xlsx)",
   html: "Web page (.html)", md: "Markdown (.md)", odt: "LibreOffice text (.odt)", ods: "LibreOffice sheet (.ods)", json: "JSON",
   jpg: "JPG photo", png: "PNG photo", webp: "WebP photo", srt: "Subtitles (.srt)", vtt: "Subtitles (.vtt)",
-  merge: "Merge into one PDF", split: "Split into pages", pick: "Keep some pages", rotate: "Rotate pages" };
+  translate: "Translate…", merge: "Merge into one PDF", split: "Split into pages", pick: "Keep some pages", rotate: "Rotate pages" };
 const KIND_LABEL = { pdf: "PDF", pdfs: "PDFs", docx: "Word document", pptx: "PowerPoint", odt: "LibreOffice text", ods: "LibreOffice sheet", epub: "E-book",
   html: "Web page", rtf: "Rich Text", image: "Photo", images: "Photos", text: "Text", xlsx: "Excel workbook", csv: "CSV sheet", json: "JSON data", srt: "Subtitles", vtt: "Subtitles" };
 const ROWS = ["xlsx", "ods", "csv", "json"], SUBS = ["srt", "vtt"], PDF_TOOLS = ["merge", "split", "pick", "rotate", "images"], PHOTO = ["jpg", "png", "webp"];
+// v5.39: languages a document can be translated into (names shown in the app's language)
+const T_LANGS = { en: "English", ar: "Arabic", fr: "French", es: "Spanish", de: "German", tr: "Turkish", it: "Italian", pt: "Portuguese", ru: "Russian", zh: "Chinese (Simplified)", ja: "Japanese", ko: "Korean",
+  hi: "Hindi", ur: "Urdu", fa: "Persian", id: "Indonesian", nl: "Dutch", pl: "Polish", bn: "Bengali", sw: "Swahili", el: "Greek", uk: "Ukrainian", ro: "Romanian", ms: "Malay", th: "Thai", vi: "Vietnamese" };
+const langLabel = (k) => { const l = getLang(); if (l !== "en") try { return new Intl.DisplayNames([l], { type: "language" }).of(k) || tr(T_LANGS[k]); } catch (e) {} return T_LANGS[k]; };
 const ACCEPT = ".pdf,.docx,.pptx,.odt,.ods,.epub,.html,.htm,.xhtml,.rtf,.txt,.md,.xlsx,.csv,.tsv,.json,.srt,.vtt,image/*,application/pdf";
 // a photo → another photo format, in the page (the browser's own canvas)
 const recode = (file, fmt) => new Promise((ok, bad) => {
@@ -47,6 +51,8 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
   const [err, setErr] = useState("");
   const [pages, setPages] = useState("");         // PDF tools: "1-3, 5"
   const [deg, setDeg] = useState(90);
+  const [tLang, setTLang] = useState(() => { try { return localStorage.getItem("attune:convert:tlang") || (getLang() === "ar" ? "en" : "ar"); } catch (e) { return "ar"; } });
+  const [tFmt, setTFmt] = useState("pdf");
   const run = useRef(0);
   const fileRef = useRef(null);
   useSubBack(!!files, () => { if (out) setOut(null); else { setFiles(null); setTarget(null); } });
@@ -65,7 +71,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
   };
 
   const targetsOf = (kind) => (kind === "images" ? C.MULTI.image.targets : kind === "pdfs" ? C.MULTI.pdf.targets : C.KINDS[kind].targets);
-  const needsNative = (k, t) => k === "pdf" || k === "pdfs" || t === "pdf";
+  const needsNative = (k, t) => k === "pdf" || k === "pdfs" || t === "pdf" || (t === "translate" && tFmt === "pdf" && !["srt", "vtt"].includes(k));
   const base = () => (files.list[0].name || "file").replace(/\.[^.]+$/, "") + (files.list.length > 1 ? "-" + files.list.length : "");
 
   // the AI reads a picture of a page (scans, photos of paper)
@@ -79,6 +85,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     const today = new Date().toISOString().slice(0, 10);
     let used = 0; try { used = JSON.parse(localStorage.getItem("attune:convert:day") || "{}")[today] || 0; } catch (e) {}
     if (!pro && used >= 5) { flash && flash(tr("Free includes 5 conversions a day — Pro is unlimited")); openPlan && openPlan(); return; }
+    if (target === "translate" && !modelReady) { setErr(tr("Translating needs an AI model — open Engine and install one.")); openEngine && openEngine(); return; }
     if (needsNative(files.kind, target) && !nativeCall) { setErr(tr("PDF files are converted by the Android app — open Attune on your phone.")); return; }
     const id = ++run.current, alive = () => run.current === id;
     setErr(""); setOut(null); setBusy(tr("Reading the file…"));
@@ -132,6 +139,35 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
       }
       if (!alive()) return;
       if (blocks && !blocks.length && !note) throw new Error("No text was found in that file.");
+      // v5.39: translate — numbered pieces go to the model in batches; code puts them back in place
+      let outTarget = target, suffix = "";
+      if (target === "translate") {
+        try { localStorage.setItem("attune:convert:tlang", tLang); } catch (e) {}
+        const cueBlocks = cues ? cues.map((c) => ({ type: "p", text: c.text })) : null;
+        const src = cueBlocks || blocks || [];
+        const units = C.translateUnits(src), batches = C.batchUnits(units);
+        const texts = Array(units.length).fill(null);
+        let missed = 0;
+        for (let bi = 0; bi < batches.length; bi++) {
+          if (!alive()) return;
+          setBusy(tr("Translating into {l} — part {n} of {t}…", { l: langLabel(tLang), n: bi + 1, t: batches.length }));
+          const idx = batches[bi];
+          const reply = await llm(C.translateMessages(idx.map((i) => units[i].text), T_LANGS[tLang]), null, { maxTokens: Math.min(3500, 300 + Math.round(idx.reduce((n, i) => n + units[i].text.length, 0) * 1.6)), temperature: 0.2 });
+          const got = C.parseTranslated(reply, idx.length);
+          for (let j = 0; j < idx.length; j++) {
+            if (got[j] == null) {   // a piece the model skipped: once more on its own
+              if (!alive()) return;
+              const one = C.parseTranslated(await llm(C.translateMessages([units[idx[j]].text], T_LANGS[tLang]), null, { maxTokens: 1500, temperature: 0.2 }), 1)[0];
+              if (one == null) missed++;
+              texts[idx[j]] = one;
+            } else texts[idx[j]] = got[j];
+          }
+        }
+        const tb = C.applyTranslations(src, units, texts);
+        if (cues) cues = cues.map((c, i) => ({ ...c, text: tb[i].text })); else blocks = tb;
+        note = (note ? note + " " : "") + (missed ? tr("{n} piece(s) couldn't be translated and were left as they were.", { n: missed }) + " " : "") + tr("Translated by the AI on your phone — check important names and numbers.");
+        outTarget = cues ? files.kind : tFmt; suffix = "-" + tLang;
+      }
       // a PDF → Excel: its tables (read as "a | b" rows), else each line split at wide gaps
       if (target === "xlsx" && blocks) {
         const t = blocks.filter((b) => b.type === "table").flatMap((b) => b.rows);
@@ -140,52 +176,52 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
       }
       // sheets → Word / web page / PDF: one table
       if (rows && ["docx", "html", "md", "odt"].includes(target)) blocks = [{ type: "h2", text: base() }, { type: "table", rows: rows.slice(0, 5000) }];
-      setBusy(tr("Making the {t} file…", { t: tr(TARGET_LABEL[target]) }));
+      setBusy(tr("Making the {t} file…", { t: tr(TARGET_LABEL[outTarget]) }));
       // 2. write the target
       let o = null;
-      const textOut = (ext, t) => ({ name: base() + "." + ext, mime: C.MIME[ext], text: t, size: new Blob([t]).size, show: t });
-      if (target === "docx") { const b = C.docxFromBlocks(blocks || [], base()); o = { name: base() + ".docx", mime: C.MIME.docx, b64: C.bytesToB64(b), size: b.length }; }
-      else if (target === "txt") o = textOut("txt", cues ? C.cuesToText(cues) : C.blocksToText(blocks || []));
-      else if (target === "html") o = textOut("html", C.blocksToHtml(blocks || [], base()));
-      else if (target === "md") o = textOut("md", C.blocksToMarkdown(blocks || []));
-      else if (target === "json") o = textOut("json", C.rowsToJson(rows || []));
-      else if (target === "srt") o = textOut("srt", C.srtFromCues(cues));
-      else if (target === "vtt") o = textOut("vtt", C.vttFromCues(cues));
-      else if (target === "odt") { const b = C.odtFromBlocks(blocks || []); o = { name: base() + ".odt", mime: C.MIME.odt, b64: C.bytesToB64(b), size: b.length }; }
-      else if (target === "ods") { const b = C.odsFromRows(rows || [], base()); o = { name: base() + ".ods", mime: C.MIME.ods, b64: C.bytesToB64(b), size: b.length }; }
-      else if (PHOTO.includes(target)) {
+      const textOut = (ext, t) => ({ name: base() + suffix + "." + ext, mime: C.MIME[ext], text: t, size: new Blob([t]).size, show: t });
+      if (outTarget === "docx") { const b = C.docxFromBlocks(blocks || [], base()); o = { name: base() + suffix + ".docx", mime: C.MIME.docx, b64: C.bytesToB64(b), size: b.length }; }
+      else if (outTarget === "txt") o = textOut("txt", cues ? C.cuesToText(cues) : C.blocksToText(blocks || []));
+      else if (outTarget === "html") o = textOut("html", C.blocksToHtml(blocks || [], base()));
+      else if (outTarget === "md") o = textOut("md", C.blocksToMarkdown(blocks || []));
+      else if (outTarget === "json") o = textOut("json", C.rowsToJson(rows || []));
+      else if (outTarget === "srt") o = textOut("srt", C.srtFromCues(cues));
+      else if (outTarget === "vtt") o = textOut("vtt", C.vttFromCues(cues));
+      else if (outTarget === "odt") { const b = C.odtFromBlocks(blocks || []); o = { name: base() + ".odt", mime: C.MIME.odt, b64: C.bytesToB64(b), size: b.length }; }
+      else if (outTarget === "ods") { const b = C.odsFromRows(rows || [], base()); o = { name: base() + ".ods", mime: C.MIME.ods, b64: C.bytesToB64(b), size: b.length }; }
+      else if (PHOTO.includes(outTarget)) {
         const done = [];
         for (let i = 0; i < files.list.length; i++) {
           if (!alive()) return;
           setBusy(tr("Converting photo {n} of {t}…", { n: i + 1, t: files.list.length }));
-          done.push({ name: files.list[i].name.replace(/\.[^.]+$/, "") + "." + target, ...(await recode(files.list[i], target)) });
+          done.push({ name: files.list[i].name.replace(/\.[^.]+$/, "") + "." + outTarget, ...(await recode(files.list[i], outTarget)) });
         }
-        if (done.length === 1) o = { name: done[0].name, mime: C.MIME[target], b64: done[0].b64, size: Math.floor(done[0].b64.length * 0.75), dims: done[0].w + "×" + done[0].h };
-        else { const z = C.zipStore(done.map((d) => ({ name: d.name, data: C.b64ToBytes(d.b64) }))); o = { name: base() + "-" + target + ".zip", mime: C.MIME.zip, b64: C.bytesToB64(z), size: z.length, count: done.length }; }
-      } else if (["merge", "split", "pick", "rotate"].includes(target)) {
-        const list = target === "pick" || (target === "rotate" && pages.trim()) ? C.pageList(pages) : [];
-        if (target === "pick" && !list.length) { setErr(tr("Type the pages to keep, like 1-3, 5")); return; }
-        const r = await nativeCall("pdfEdit", target === "merge" ? { op: "merge", files: await Promise.all(files.list.map(readB64)) } : { op: target, b64: await readB64(f0), pages: list, degrees: deg });
+        if (done.length === 1) o = { name: done[0].name, mime: C.MIME[outTarget], b64: done[0].b64, size: Math.floor(done[0].b64.length * 0.75), dims: done[0].w + "×" + done[0].h };
+        else { const z = C.zipStore(done.map((d) => ({ name: d.name, data: C.b64ToBytes(d.b64) }))); o = { name: base() + "-" + outTarget + ".zip", mime: C.MIME.zip, b64: C.bytesToB64(z), size: z.length, count: done.length }; }
+      } else if (["merge", "split", "pick", "rotate"].includes(outTarget)) {
+        const list = outTarget === "pick" || (outTarget === "rotate" && pages.trim()) ? C.pageList(pages) : [];
+        if (outTarget === "pick" && !list.length) { setErr(tr("Type the pages to keep, like 1-3, 5")); return; }
+        const r = await nativeCall("pdfEdit", outTarget === "merge" ? { op: "merge", files: await Promise.all(files.list.map(readB64)) } : { op: target, b64: await readB64(f0), pages: list, degrees: deg });
         if (!alive()) return;
-        const suffix = { merge: "-merged", pick: "-pages", rotate: "-rotated" }[target];
-        if (target === "split") {
+        const sfx = { merge: "-merged", pick: "-pages", rotate: "-rotated" }[target];
+        if (outTarget === "split") {
           const z = C.zipStore(r.files.map((f) => ({ name: base() + "-page-" + String(f.n).padStart(2, "0") + ".pdf", data: C.b64ToBytes(f.b64) })));
           o = { name: base() + "-pages.zip", mime: C.MIME.zip, b64: C.bytesToB64(z), size: z.length, count: r.files.length, countOf: "pdfs" };
-        } else o = { name: (target === "merge" ? (files.list[0].name || "file").replace(/\.[^.]+$/, "") : base()) + suffix + ".pdf", mime: C.MIME.pdf, b64: r.files[0].b64, size: Math.floor(r.files[0].b64.length * 0.75), pagesOut: r.files[0].pages };
+        } else o = { name: (outTarget === "merge" ? (files.list[0].name || "file").replace(/\.[^.]+$/, "") : base()) + sfx + ".pdf", mime: C.MIME.pdf, b64: r.files[0].b64, size: Math.floor(r.files[0].b64.length * 0.75), pagesOut: r.files[0].pages };
       }
-      else if (target === "csv") { const t = C.csvStringify(rows || []); o = { name: base() + ".csv", mime: C.MIME.csv, text: t, size: new Blob([t]).size }; }
-      else if (target === "xlsx") { const b = C.xlsxFromRows(rows || [], base()); o = { name: base() + ".xlsx", mime: C.MIME.xlsx, b64: C.bytesToB64(b), size: b.length }; }
-      else if (target === "images") {
+      else if (outTarget === "csv") { const t = C.csvStringify(rows || []); o = { name: base() + ".csv", mime: C.MIME.csv, text: t, size: new Blob([t]).size }; }
+      else if (outTarget === "xlsx") { const b = C.xlsxFromRows(rows || [], base()); o = { name: base() + ".xlsx", mime: C.MIME.xlsx, b64: C.bytesToB64(b), size: b.length }; }
+      else if (outTarget === "images") {
         const r = await nativeCall("pdfImages", { b64: await readB64(f0), width: 1600, max: 60 });
         const z = C.zipStore(r.images.map((im) => ({ name: base() + "-page-" + String(im.n).padStart(2, "0") + ".jpg", data: C.b64ToBytes(im.image.split(",")[1]) })));
         o = { name: base() + "-pages.zip", mime: C.MIME.zip, b64: C.bytesToB64(z), size: z.length, count: r.images.length };
-      } else if (target === "pdf") {
+      } else if (outTarget === "pdf") {
         let arg;
-        if (k === "image" || k === "images") arg = { images: await Promise.all(files.list.map(readUrl)) };
+        if ((k === "image" || k === "images") && target !== "translate") arg = { images: await Promise.all(files.list.map(readUrl)) };
         else if (rows) arg = { blocks: [{ type: "h2", text: base() }, { type: "table", rows: rows.slice(0, 2000) }] };
         else arg = { blocks: blocks || [] };
         const r = await nativeCall("makePdf", arg);
-        o = { name: base() + ".pdf", mime: C.MIME.pdf, b64: r.b64, size: r.bytes };
+        o = { name: base() + suffix + ".pdf", mime: C.MIME.pdf, b64: r.b64, size: r.bytes };
       }
       if (!alive()) return;
       o.preview = o.show ? o.show.slice(0, 1500) : blocks ? C.blocksToText(blocks).slice(0, 1500) : rows ? rows.slice(0, 8).map((r) => r.join(" | ")).join("\n") : "";
@@ -234,6 +270,15 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
               <div className="flex flex-wrap gap-1.5">{targets.map((t) => <button key={t} onClick={() => { setTarget(t); setOut(null); }} className={chip(target === t)} data-testid={"convert-to-" + t}>{tr(TARGET_LABEL[t])}</button>)}</div>
               {(files.kind === "image" || files.kind === "images") && target !== "pdf" ? <p className="text-[11.5px] text-slate-500 mt-1.5">{tr("The AI reads the text in the photo — Arabic too.")}</p> : null}
               {files.kind === "pdf" && !PDF_TOOLS.includes(target) ? <p className="text-[11.5px] text-slate-500 mt-1.5">{tr("Scanned pages (pictures of paper) are read by the AI.")}</p> : null}
+              {target === "translate" ? (
+                <div className="mt-2 space-y-2" data-testid="convert-translate">
+                  <select value={tLang} onChange={(e) => setTLang(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-[13px] text-slate-100" data-testid="convert-tlang">
+                    {Object.keys(T_LANGS).map((k) => <option key={k} value={k}>{langLabel(k)}</option>)}
+                  </select>
+                  {["srt", "vtt"].includes(files.kind) ? null : <div className="flex gap-1.5">{["pdf", "docx"].map((f) => <button key={f} onClick={() => setTFmt(f)} className={chip(tFmt === f)} data-testid={"convert-tfmt-" + f}>{tr(TARGET_LABEL[f])}</button>)}</div>}
+                  <p className="text-[11.5px] text-slate-500">{tr("The AI on your phone translates it piece by piece; headings, lists, tables and numbers stay in place. Long files take a few minutes.")}</p>
+                </div>
+              ) : null}
               {files.kind === "pdfs" ? <p className="text-[11.5px] text-slate-500 mt-1.5">{tr("The PDFs are joined in the order you picked them.")}</p> : null}
               {target === "pick" || target === "rotate" ? (
                 <div className="mt-2 space-y-2">

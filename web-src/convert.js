@@ -506,26 +506,77 @@ export function pageList(s, count) {
   return [...new Set(out)].filter((n) => n >= 1 && (!count || n <= count));
 }
 
+// ---- v5.39: translate a document, keeping its shape ------------------------------------------
+// Every paragraph, heading, bullet and table cell is one "unit". Units are sent to the model in
+// numbered batches ([[1]] …) and put back in place by number, so the structure never depends on the
+// model. Numbers-only cells (prices, dates, codes) are not sent at all.
+const needsWords = (t) => /[\p{L}]{2,}/u.test(String(t || ""));
+/** blocks → [{b, r?, c?, text}] — the pieces to translate, in order. */
+export function translateUnits(blocks) {
+  const u = [];
+  blocks.forEach((b, bi) => {
+    if (b.type === "table") b.rows.forEach((row, ri) => row.forEach((cell, ci) => { if (needsWords(cell)) u.push({ b: bi, r: ri, c: ci, text: String(cell) }); }));
+    else if (needsWords(b.text)) u.push({ b: bi, text: String(b.text) });
+  });
+  return u;
+}
+/** Units → batches of indexes, each under maxChars (a long paragraph goes alone). */
+export function batchUnits(units, maxChars = 1500) {
+  const out = []; let cur = [], n = 0;
+  units.forEach((x, i) => {
+    const len = x.text.length + 8;
+    if (cur.length && n + len > maxChars) { out.push(cur); cur = []; n = 0; }
+    cur.push(i); n += len;
+  });
+  if (cur.length) out.push(cur);
+  return out;
+}
+/** The prompt for one batch. Line breaks inside a unit travel as " <br> ". */
+export function translateMessages(texts, language) {
+  const body = texts.map((t, i) => `[[${i + 1}]] ${String(t).replace(/\n/g, " <br> ")}`).join("\n");
+  return [
+    { role: "system", content: `You are a professional translator. Translate into ${language}. Keep every number, date, amount, unit, code, e-mail, link and product/model name exactly as written. Keep "<br>" where it is. Translate meaning naturally (not word by word), in the tone of the original. Reply ONLY with the numbered lines, in the same order, each starting with its marker [[n]] — no notes.` },
+    { role: "user", content: body },
+  ];
+}
+/** The model's reply → n translations (null where one is missing). */
+export function parseTranslated(reply, n) {
+  const out = Array(n).fill(null);
+  const parts = String(reply || "").split(/\[\[(\d+)\]\]/);
+  for (let i = 1; i < parts.length; i += 2) {
+    const k = +parts[i] - 1, t = parts[i + 1].trim().replace(/\s*<br>\s*/gi, "\n");
+    if (k >= 0 && k < n && t && out[k] == null) out[k] = t;
+  }
+  if (n === 1 && out[0] == null && String(reply || "").trim() && !/\[\[/.test(reply)) out[0] = String(reply).trim().replace(/\s*<br>\s*/gi, "\n");
+  return out;
+}
+/** Puts the translations back → new blocks (the originals are untouched). */
+export function applyTranslations(blocks, units, texts) {
+  const nb = blocks.map((b) => (b.type === "table" ? { ...b, rows: b.rows.map((r) => [...r]) } : { ...b }));
+  units.forEach((u, i) => { const t = texts[i]; if (t == null) return; if (u.r != null) nb[u.b].rows[u.r][u.c] = t; else nb[u.b].text = t; });
+  return nb;
+}
+
 // ---- what can become what ----------------------------------------------------------------------
 export const KINDS = {
-  pdf: { ext: /\.pdf$/i, mime: /pdf/, targets: ["docx", "txt", "images", "xlsx", "html", "md", "odt", "split", "pick", "rotate"] },
-  docx: { ext: /\.docx$/i, mime: /wordprocessingml/, targets: ["pdf", "txt", "html", "md", "odt"] },
-  pptx: { ext: /\.pptx$/i, mime: /presentationml/, targets: ["pdf", "docx", "txt", "md", "html"] },
-  odt: { ext: /\.odt$/i, mime: /opendocument\.text/, targets: ["docx", "pdf", "txt", "html", "md"] },
-  epub: { ext: /\.epub$/i, mime: /epub/, targets: ["pdf", "docx", "txt", "html", "md"] },
-  html: { ext: /\.x?html?$/i, mime: /html/, targets: ["pdf", "docx", "txt", "md", "odt"] },
-  rtf: { ext: /\.rtf$/i, mime: /rtf/, targets: ["docx", "pdf", "txt", "odt"] },
-  image: { ext: /\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i, mime: /^image\//, targets: ["pdf", "jpg", "png", "webp", "docx", "txt"] },
-  text: { ext: /\.(txt|md|markdown)$/i, mime: /^text\/(plain|markdown)/, targets: ["docx", "pdf", "html", "odt", "md"] },
+  pdf: { ext: /\.pdf$/i, mime: /pdf/, targets: ["docx", "translate", "txt", "images", "xlsx", "html", "md", "odt", "split", "pick", "rotate"] },
+  docx: { ext: /\.docx$/i, mime: /wordprocessingml/, targets: ["pdf", "translate", "txt", "html", "md", "odt"] },
+  pptx: { ext: /\.pptx$/i, mime: /presentationml/, targets: ["pdf", "translate", "docx", "txt", "md", "html"] },
+  odt: { ext: /\.odt$/i, mime: /opendocument\.text/, targets: ["docx", "translate", "pdf", "txt", "html", "md"] },
+  epub: { ext: /\.epub$/i, mime: /epub/, targets: ["pdf", "translate", "docx", "txt", "html", "md"] },
+  html: { ext: /\.x?html?$/i, mime: /html/, targets: ["pdf", "translate", "docx", "txt", "md", "odt"] },
+  rtf: { ext: /\.rtf$/i, mime: /rtf/, targets: ["docx", "translate", "pdf", "txt", "odt"] },
+  image: { ext: /\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i, mime: /^image\//, targets: ["pdf", "jpg", "png", "webp", "docx", "txt", "translate"] },
+  text: { ext: /\.(txt|md|markdown)$/i, mime: /^text\/(plain|markdown)/, targets: ["docx", "translate", "pdf", "html", "odt", "md"] },
   xlsx: { ext: /\.xlsx$/i, mime: /spreadsheetml/, targets: ["csv", "pdf", "json", "ods", "docx", "html"] },
   ods: { ext: /\.ods$/i, mime: /opendocument\.spreadsheet/, targets: ["xlsx", "csv", "pdf", "json", "html"] },
   csv: { ext: /\.(csv|tsv)$/i, mime: /csv|tab-separated/, targets: ["xlsx", "pdf", "json", "ods", "docx", "html"] },
   json: { ext: /\.json$/i, mime: /json/, targets: ["xlsx", "csv", "ods", "pdf"] },
-  srt: { ext: /\.srt$/i, mime: /subrip/, targets: ["vtt", "txt"] },
-  vtt: { ext: /\.vtt$/i, mime: /vtt/, targets: ["srt", "txt"] },
+  srt: { ext: /\.srt$/i, mime: /subrip/, targets: ["vtt", "translate", "txt"] },
+  vtt: { ext: /\.vtt$/i, mime: /vtt/, targets: ["srt", "translate", "txt"] },
 };
 /** Several files picked together: photos → one PDF (or each converted), PDFs → merged. */
-export const MULTI = { image: { kind: "images", targets: ["pdf", "jpg", "png", "webp", "docx", "txt"] }, pdf: { kind: "pdfs", targets: ["merge"] } };
+export const MULTI = { image: { kind: "images", targets: ["pdf", "jpg", "png", "webp", "docx", "txt", "translate"] }, pdf: { kind: "pdfs", targets: ["merge"] } };
 export function kindOf(name, mime) {
   for (const [k, v] of Object.entries(KINDS)) if (v.ext.test(name || "")) return k;
   for (const [k, v] of Object.entries(KINDS)) if (mime && v.mime.test(mime)) return k;
