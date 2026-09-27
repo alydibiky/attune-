@@ -725,6 +725,50 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    // ---- File Converter (v5.36): PDF text, PDF pages as pictures, and making PDFs ----------
+    @JavascriptInterface
+    fun pdfText(id: String, arg: String) {
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                resolve(id, DocTools.pdfText(ctx, android.util.Base64.decode(a.getString("b64"), android.util.Base64.DEFAULT)))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read that PDF") }
+        }
+    }
+
+    @JavascriptInterface
+    fun pdfImages(id: String, arg: String) {
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                val pages = a.optJSONArray("pages")?.let { p -> (0 until p.length()).map { p.getInt(it) } } ?: emptyList()
+                val imgs = DocTools.pdfImages(ctx, android.util.Base64.decode(a.getString("b64"), android.util.Base64.DEFAULT), pages, a.optInt("width", 1240), a.optInt("max", 60))
+                resolve(id, JSONObject().put("images", imgs))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't open that PDF") }
+        }
+    }
+
+    @JavascriptInterface
+    fun makePdf(id: String, arg: String) {
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                val bytes = DocTools.makePdf(a.optJSONArray("blocks") ?: JSONArray(), a.optJSONArray("images") ?: JSONArray())
+                resolve(id, JSONObject().put("b64", android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)).put("bytes", bytes.size))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't make the PDF") }
+        }
+    }
+
+    @JavascriptInterface
+    fun pdfEdit(id: String, arg: String) {
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                resolve(id, DocTools.pdfEdit(ctx, a.getString("op"), a))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't change that PDF") }
+        }
+    }
+
     @JavascriptInterface
     fun saveImageToGallery(name: String): String = try {
         JSONObject().put("ok", true).put("where", ImageEngine.saveToGallery(ctx, name)).toString()

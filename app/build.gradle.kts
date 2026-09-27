@@ -11,8 +11,8 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 35
-        versionCode = 35                 // raise with every release — the phone shows it in Settings → Apps
-        versionName = "5.35"
+        versionCode = 37                 // raise with every release — the phone shows it in Settings → Apps
+        versionName = "5.37"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
         // phone. Add "x86_64" only if you want to run it in the emulator — it
@@ -114,4 +114,6 @@ dependencies {
     // such as Gemma 4 E2B/E4B on the phone's GPU, with multi-token prediction.
     // Pinned, not "latest.release": a build must not change by itself.
     implementation("com.google.ai.edge.litertlm:litertlm-android:0.17.1")
+    // File Converter (v5.36): the text of PDF pages, on the phone. PdfBox-Android, Apache-2.0.
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
 }

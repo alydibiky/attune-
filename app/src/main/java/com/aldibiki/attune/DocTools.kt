@@ -1,0 +1,225 @@
+package com.aldibiki.attune
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
+import android.graphics.pdf.PdfDocument
+import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextDirectionHeuristics
+import android.text.TextPaint
+import android.util.Base64
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.io.File
+
+/**
+ * v5.36 — File Converter, the PDF side (the Word / Excel side is web-src/convert.js).
+ * Everything happens on the phone; no file is uploaded anywhere.
+ *  - pdfText: the text of every page (PdfBox-Android, Apache-2.0). A page with (almost) no text is
+ *    a scan — the page reports that, and the app has the AI model read its picture instead.
+ *  - pdfImages: pages as pictures (Android's own PdfRenderer) — for "PDF → pictures" and for
+ *    reading scanned pages.
+ *  - makePdf: an A4 PDF from paragraphs / headings / bullets / tables (Android's PdfDocument;
+ *    StaticLayout shapes Arabic and lays it out right-to-left) or from photos (one per page).
+ */
+object DocTools {
+    @Volatile private var boxReady = false
+
+    private fun pdfBox(ctx: Context) {
+        if (!boxReady) { com.tom_roush.pdfbox.android.PDFBoxResourceLoader.init(ctx.applicationContext); boxReady = true }
+    }
+
+    /** {pages:[{n, text, scan}], count} */
+    fun pdfText(ctx: Context, bytes: ByteArray, maxPages: Int = 400): JSONObject {
+        pdfBox(ctx)
+        val doc = try { com.tom_roush.pdfbox.pdmodel.PDDocument.load(bytes) }
+            catch (e: com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException) { throw java.io.IOException("This PDF is locked with a password — open it, save a copy without the password, and try again.") }
+        doc.use { d ->
+            val n = minOf(d.numberOfPages, maxPages)
+            val pages = JSONArray()
+            // paragraphs end with a blank line, so the Word file gets real paragraphs, not one block a page
+            val strip = com.tom_roush.pdfbox.text.PDFTextStripper().apply { sortByPosition = true; setAddMoreFormatting(true); setParagraphEnd("\n") }
+            for (i in 1..n) {
+                strip.startPage = i; strip.endPage = i
+                val t = try { strip.getText(d) } catch (e: Exception) { "" }
+                val clean = t.replace("\r", "").trim()
+                pages.put(JSONObject().put("n", i).put("text", clean).put("scan", clean.replace(Regex("\\s"), "").length < 25))
+            }
+            return JSONObject().put("pages", pages).put("count", d.numberOfPages)
+        }
+    }
+
+    /** Pages as JPEG data URLs, `width` px wide. `pages` = 1-based page numbers (empty = all, up to `max`). */
+    fun pdfImages(ctx: Context, bytes: ByteArray, pages: List<Int>, width: Int, max: Int = 60): JSONArray {
+        val f = File(ctx.cacheDir, "convert-" + System.nanoTime() + ".pdf").apply { writeBytes(bytes) }
+        val out = JSONArray()
+        try {
+            ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_READ_ONLY).use { pfd ->
+                PdfRenderer(pfd).use { r ->
+                    val want = (if (pages.isEmpty()) (1..r.pageCount).toList() else pages).filter { it in 1..r.pageCount }.take(max)
+                    for (p in want) {
+                        r.openPage(p - 1).use { page ->
+                            val w = width.coerceIn(400, 2400)
+                            val h = (w.toLong() * page.height / page.width.coerceAtLeast(1)).toInt().coerceIn(200, 4000)
+                            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                            bmp.eraseColor(Color.WHITE)
+                            page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                            val bo = ByteArrayOutputStream()
+                            bmp.compress(Bitmap.CompressFormat.JPEG, 88, bo)
+                            bmp.recycle()
+                            out.put(JSONObject().put("n", p).put("image", "data:image/jpeg;base64," + Base64.encodeToString(bo.toByteArray(), Base64.NO_WRAP)))
+                        }
+                    }
+                }
+            }
+        } catch (e: SecurityException) {
+            throw java.io.IOException("This PDF is locked with a password — open it, save a copy without the password, and try again.")
+        } finally { f.delete() }
+        return out
+    }
+
+    /**
+     * v5.37 — PDF tools: merge several PDFs, split one into pages, keep chosen pages, rotate pages.
+     * op = merge {files:[b64]} | split {b64} | pick {b64, pages} | rotate {b64, pages (empty = all), degrees}
+     * → {files:[{n, b64, pages}]} (merge / pick / rotate give one file, split one per page).
+     */
+    fun pdfEdit(ctx: Context, op: String, a: JSONObject): JSONObject {
+        pdfBox(ctx)
+        fun load(b64: String) = try { com.tom_roush.pdfbox.pdmodel.PDDocument.load(Base64.decode(b64, Base64.DEFAULT)) }
+            catch (e: com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException) { throw java.io.IOException("This PDF is locked with a password — open it, save a copy without the password, and try again.") }
+        fun save(d: com.tom_roush.pdfbox.pdmodel.PDDocument): String { val o = ByteArrayOutputStream(); d.save(o); return Base64.encodeToString(o.toByteArray(), Base64.NO_WRAP) }
+        fun ints(k: String) = a.optJSONArray(k)?.let { p -> (0 until p.length()).map { p.getInt(it) } } ?: emptyList()
+        val files = JSONArray()
+        when (op) {
+            "merge" -> {
+                val src = a.getJSONArray("files")
+                val m = com.tom_roush.pdfbox.multipdf.PDFMergerUtility()
+                for (i in 0 until src.length()) m.addSource(java.io.ByteArrayInputStream(Base64.decode(src.getString(i), Base64.DEFAULT)))
+                val o = ByteArrayOutputStream()
+                m.destinationStream = o
+                m.mergeDocuments(com.tom_roush.pdfbox.io.MemoryUsageSetting.setupMainMemoryOnly())
+                val b = o.toByteArray()
+                val n = com.tom_roush.pdfbox.pdmodel.PDDocument.load(b).use { it.numberOfPages }
+                files.put(JSONObject().put("n", 1).put("b64", Base64.encodeToString(b, Base64.NO_WRAP)).put("pages", n))
+            }
+            "split" -> load(a.getString("b64")).use { d ->
+                val parts = com.tom_roush.pdfbox.multipdf.Splitter().split(d)
+                for ((i, p) in parts.withIndex()) { p.use { files.put(JSONObject().put("n", i + 1).put("b64", save(it)).put("pages", 1)) } }
+            }
+            "pick", "rotate" -> load(a.getString("b64")).use { d ->
+                val count = d.numberOfPages
+                val want = ints("pages").filter { it in 1..count }.toSet()
+                if (op == "pick") {
+                    if (want.isEmpty()) throw java.io.IOException("None of those page numbers are in this PDF (it has $count pages).")
+                    for (i in count downTo 1) if (i !in want) d.removePage(i - 1)
+                } else {
+                    val deg = ((a.optInt("degrees", 90) % 360) + 360) % 360
+                    for (i in 1..count) if (want.isEmpty() || i in want) { val p = d.getPage(i - 1); p.rotation = (p.rotation + deg) % 360 }
+                }
+                files.put(JSONObject().put("n", 1).put("b64", save(d)).put("pages", d.numberOfPages))
+            }
+            else -> throw java.io.IOException("Unknown PDF tool: $op")
+        }
+        return JSONObject().put("files", files)
+    }
+
+    private const val PW = 595; private const val PH = 842; private const val M = 50f
+
+    /**
+     * blocks: [{type: h1|h2|h3|p|li|table, text, rows}], images: [data URL or base64] → PDF bytes.
+     */
+    fun makePdf(blocks: JSONArray, images: JSONArray): ByteArray {
+        val pdf = PdfDocument()
+        var pageNo = 0
+        var page: PdfDocument.Page? = null
+        var y = M
+        val usable = PW - 2 * M
+        fun newPage(w: Int = PW, h: Int = PH): Canvas {
+            page?.let { pdf.finishPage(it) }
+            pageNo++
+            page = pdf.startPage(PdfDocument.PageInfo.Builder(w, h, pageNo).create())
+            y = M
+            return page!!.canvas
+        }
+        // photos: one per page, the page turned to the photo's shape
+        for (k in 0 until images.length()) {
+            val s = images.optString(k)
+            val raw = Base64.decode(s.substringAfter("base64,"), Base64.DEFAULT)
+            val bmp = BitmapFactory.decodeByteArray(raw, 0, raw.size) ?: continue
+            val land = bmp.width > bmp.height
+            val (w, h) = if (land) PH to PW else PW to PH
+            val c = newPage(w, h)
+            val k2 = minOf((w - 48f) / bmp.width, (h - 48f) / bmp.height)
+            val dw = bmp.width * k2; val dh = bmp.height * k2
+            c.drawBitmap(bmp, null, android.graphics.RectF((w - dw) / 2, (h - dh) / 2, (w + dw) / 2, (h + dh) / 2), Paint(Paint.FILTER_BITMAP_FLAG))
+            bmp.recycle()
+        }
+        if (blocks.length() > 0) {
+            var c = newPage()
+            fun paint(size: Float, bold: Boolean) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                textSize = size; color = Color.rgb(20, 20, 20); typeface = if (bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+            }
+            fun layout(text: String, p: TextPaint, width: Int): StaticLayout =
+                StaticLayout.Builder.obtain(text, 0, text.length, p, width.coerceAtLeast(20))
+                    .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                    .setTextDirection(TextDirectionHeuristics.FIRSTSTRONG_LTR)   // Arabic lines start from the right
+                    .setLineSpacing(0f, 1.15f).build()
+            // draws a layout line by line, starting a new page when one is full
+            fun draw(l: StaticLayout, x: Float) {
+                for (line in 0 until l.lineCount) {
+                    val top = l.getLineTop(line); val bottom = l.getLineBottom(line)
+                    if (y + (bottom - top) > PH - M) c = newPage()
+                    c.save(); c.translate(x, y - top); c.clipRect(0f, top.toFloat(), l.width.toFloat(), bottom.toFloat()); l.draw(c); c.restore()
+                    y += (bottom - top)
+                }
+            }
+            val grid = Paint().apply { color = Color.rgb(150, 150, 150); strokeWidth = 0.6f; style = Paint.Style.STROKE }
+            for (i in 0 until blocks.length()) {
+                val b = blocks.optJSONObject(i) ?: continue
+                val type = b.optString("type", "p")
+                val text = b.optString("text")
+                when (type) {
+                    "h1", "h2", "h3" -> {
+                        y += if (type == "h1") 10 else 6
+                        draw(layout(text, paint(if (type == "h1") 19f else if (type == "h2") 15.5f else 13f, true), usable.toInt()), M)
+                        y += 6
+                    }
+                    "li" -> { draw(layout("•  $text", paint(11f, false), usable.toInt() - 12), M + 12); y += 3 }
+                    "table" -> {
+                        val rows = b.optJSONArray("rows") ?: JSONArray()
+                        if (rows.length() == 0) continue
+                        val cols = (0 until rows.length()).maxOfOrNull { rows.optJSONArray(it)?.length() ?: 0 }?.coerceAtLeast(1) ?: 1
+                        val cw = usable / cols
+                        for (r in 0 until rows.length()) {
+                            val row = rows.optJSONArray(r) ?: continue
+                            val ls = (0 until cols).map { ci -> layout(row.optString(ci, ""), paint(10f, r == 0), (cw - 8).toInt()) }
+                            val rh = ls.maxOf { it.height } + 8f
+                            if (y + rh > PH - M) c = newPage()
+                            for ((ci, l) in ls.withIndex()) {
+                                val x = M + ci * cw
+                                c.drawRect(x, y, x + cw, y + rh, grid)
+                                c.save(); c.translate(x + 4, y + 4); l.draw(c); c.restore()
+                            }
+                            y += rh
+                        }
+                        y += 10
+                    }
+                    else -> { draw(layout(text, paint(11f, false), usable.toInt()), M); y += 7 }
+                }
+            }
+        }
+        if (page == null) newPage()
+        page?.let { pdf.finishPage(it) }
+        val out = ByteArrayOutputStream()
+        pdf.writeTo(out); pdf.close()
+        return out.toByteArray()
+    }
+}

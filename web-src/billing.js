@@ -45,6 +45,7 @@ export const PRO_BENEFITS = [
   "Unlimited answers — no daily limit",
   "Unlimited Deal Checks: the real cost, the market price and scam signs before you pay",
   "Unlimited Chat X-Rays: who owes you, promises and unanswered questions in your WhatsApp chats",
+  "Unlimited file conversions, including scanned paper → editable Word",
   "Expert review: strong models check and improve their own answers",
   "Deep web research: several searches, more pages, cross-checked facts",
   "Unlimited Studio pictures",

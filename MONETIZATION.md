@@ -94,6 +94,11 @@ A single company licence is worth as much as 50 personal subscriptions. Egyptian
 - **Hook video:** "I exported my WhatsApp with a client — Attune found 27,500 EGP he still owes me, with the messages."
 - **Free:** 1 X-ray a day. **Pro:** unlimited. Contractors, shops, brokers and freelancers live in WhatsApp — they are exactly the people who pay.
 
+## 6d. File Converter (v5.37) — the daily habit
+"PDF to Word" is one of the most searched phone tasks, and every free converter site uploads your contracts and invoices to a stranger's server, with ads and waiting. Attune does 80+ conversions (PDF, Word, PowerPoint, Excel, CSV, JSON, LibreOffice, e-books, web pages, photos, subtitles, merge/split PDFs) offline, and reads scanned paper into an editable Word file with the AI — Arabic too.
+- **Hook video:** "I photographed a paper contract — 20 seconds later it's a Word file I can edit. No internet."
+- **Free:** 5 conversions a day (the habit). **Pro:** unlimited — offices, students and accountants convert every day.
+
 ## 7. Growth (getting users cheaply)
 
 - **Short videos in Egyptian Arabic** (TikTok, Reels, Shorts): "ChatGPT on your phone WITHOUT internet", "I built my company's system in 1 minute", "It reads my crane photo and tells me the model". A demo sells this app better than an explanation.
