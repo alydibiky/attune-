@@ -16,7 +16,13 @@
 export function estTokens(text) {
   const s = String(text || "");
   const ar = (s.match(/[؀-ۿ]/g) || []).length;
-  return Math.ceil(ar / 2.2 + (s.length - ar) / 3.6);
+  // v5.32: every digit is its own token in the phone models' tokenizers, and so are most
+  // symbols ("|", ",", "-", "%") — spec pages and tables are FAR denser than prose. Counted
+  // as prose, a number-heavy web prompt overflowed the fast engine's window and the answer
+  // came out with digits missing ("0-inch", "range of 4 km").
+  const dg = (s.match(/\d/g) || []).length;
+  const sym = (s.match(/[^\p{L}\p{N}\s]/gu) || []).length;
+  return Math.ceil(ar / 2.2 + dg + sym * 0.8 + Math.max(0, s.length - ar - dg - sym) / 3.8);
 }
 
 /** Characters per token of this text (Arabic-heavy text is denser: fewer characters per token). */

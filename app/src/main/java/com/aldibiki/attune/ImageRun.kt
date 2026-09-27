@@ -11,7 +11,7 @@ import java.io.InputStream
 object ImageRun {
 
     /** What the person sees: a stage and, while drawing, step n of N. */
-    data class Progress(val stage: String, val step: Int = 0, val total: Int = 0)
+    data class Progress(val stage: String, val step: Int = 0, val total: Int = 0, val line: String = "")
 
     private val BAR = Regex("\\|([=>#\\s-]*)\\|\\s*(\\d+)/(\\d+)")
     private val ANSI = Regex("\u001B\\[[0-9;]*[A-Za-z]")
@@ -58,6 +58,9 @@ object ImageRun {
         return if (st == p.stage) p else Progress(st)
     }
 
+    /** One engine output line, short enough for a status line. */
+    fun shortLine(s: String): String = s.replace(Regex("^\\[[A-Z]+\\s*\\]\\s*[\\w./-]+:\\d+\\s*-\\s*"), "").trim().take(110)
+
     /** Output split on \n and \r (progress bars redraw with \r). */
     fun readPieces(input: InputStream, onPiece: (String) -> Unit) {
         val rd = input.bufferedReader(Charsets.UTF_8)
@@ -93,13 +96,20 @@ object ImageRun {
             if (cancelled) p.destroyForcibly()
             var prog = Progress("start")
             onProgress(prog)
+            var lastEmit = 0L
             readPieces(p.inputStream) { piece ->
-                lastOutputAt = System.currentTimeMillis()
-                synchronized(tail) { tail.addLast(ANSI.replace(piece, "")); while (tail.size > 60) tail.removeFirst() }
+                val now = System.currentTimeMillis()
+                lastOutputAt = now
+                val clean = ANSI.replace(piece, "")
+                synchronized(tail) { tail.addLast(clean); while (tail.size > 60) tail.removeFirst() }
                 val next = advance(prog, piece)
                 if (next != prog) {
-                    if (next.stage != prog.stage) { stage = next.stage; stageSince = System.currentTimeMillis() }
-                    prog = next; onProgress(prog)
+                    if (next.stage != prog.stage) { stage = next.stage; stageSince = now }
+                    prog = next; onProgress(prog.copy(line = shortLine(clean))); lastEmit = now
+                } else if (now - lastEmit > 1500) {
+                    // v5.32: what the engine is doing right now, shown under Studio's status —
+                    // never a silent "Loading…" for minutes (Ali: 4 min with no sign of life)
+                    onProgress(prog.copy(line = shortLine(clean))); lastEmit = now
                 }
             }
             return p.waitFor()
@@ -108,6 +118,9 @@ object ImageRun {
         fun cancel() { cancelled = true; proc?.destroyForcibly() }
         /** Stopped by the app itself (a stalled GPU start) — not by the person. */
         fun abort() { aborted = true; proc?.destroyForcibly() }
+
+        /** The last lines of output, for Engine → Engine log. */
+        fun tailText(n: Int = 14): String = synchronized(tail) { tail.toList().takeLast(n).joinToString("\n") { "  " + it.take(200) } }
 
         /** The most telling line of the output, for an error message. */
         fun lastError(): String = synchronized(tail) {

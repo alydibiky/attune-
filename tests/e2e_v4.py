@@ -151,6 +151,7 @@ with sync_playwright() as pw:
     ctx = br.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, is_mobile=True, has_touch=True)
     ctx.add_init_script(MOCK)
     ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
+    ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")
     page = ctx.new_page()
     page.on("pageerror", lambda e: errors.append("pageerror: " + str(e)))
     page.on("console", lambda m: print(m.text[:600]) if "BADREQ" in m.text else None)

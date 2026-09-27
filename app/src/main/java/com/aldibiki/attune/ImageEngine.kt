@@ -175,6 +175,19 @@ object ImageEngine {
     // ---- running -----------------------------------------------------------------------
     private var gpuName: String? = null
     private var gpuChecked = false
+    private var devicesOut = ""
+
+    /** v5.32: every Studio run leaves its story in Engine → Engine log (what ran, how long, the engine's last lines). */
+    fun log(ctx: Context, text: String) {
+        try {
+            val f = File(ctx.filesDir, "engine.log")
+            if (f.length() > 200_000) f.writeText(f.readText().takeLast(100_000))
+            f.appendText("\nStudio (${java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())}): $text\n")
+        } catch (e: Exception) {}
+    }
+    private fun logRun(ctx: Context, what: String, job: ImageRun.Job, code: Int, t0: Long) =
+        log(ctx, "$what finished · exit $code · ${(System.currentTimeMillis() - t0) / 1000} s · last stage: ${job.stage}" +
+            (if (job.cancelled) " · stopped by you" else "") + "\n" + job.tailText())
     /** v5.28 — "gpu" (the graphics chip works), "cpu" (it doesn't, or is switched off), or "" (not tried yet). */
     fun gpuState(ctx: Context): String = when {
         cpuOnly(ctx) || !gpuBuilt(ctx) -> "cpu"
@@ -199,7 +212,12 @@ object ImageEngine {
      */
     private fun gpuDevice(ctx: Context, onProgress: (ImageRun.Progress) -> Unit): String? {
         if (gpuChecked) return gpuName
-        if (!gpuBuilt(ctx)) { gpuChecked = true; return null }
+        if (!gpuBuilt(ctx)) {
+            gpuChecked = true
+            log(ctx, "GPU check: this build has no GPU picture engine (libattune-image-gpu.so missing)")
+            if (!cpuOnly(ctx)) setNote(ctx, "This version of Attune has no graphics-chip picture engine, so pictures are drawn on the CPU (slower). An update adds it.")
+            return null
+        }
         onProgress(ImageRun.Progress("gpu"))
         var timedOut = false
         gpuName = try {
@@ -208,8 +226,9 @@ object ImageEngine {
             val sb = StringBuilder()
             val reader = Thread { try { sb.append(p.inputStream.bufferedReader().readText()) } catch (e: Exception) {} }.apply { isDaemon = true; start() }
             if (!p.waitFor(120, java.util.concurrent.TimeUnit.SECONDS)) { timedOut = true; p.destroyForcibly(); null }
-            else { reader.join(2000); ImageRun.gpuDevice(sb.toString()) }
-        } catch (e: Exception) { null }
+            else { reader.join(2000); devicesOut = sb.toString().trim().take(600); ImageRun.gpuDevice(sb.toString()) }
+        } catch (e: Exception) { devicesOut = "could not start: " + (e.message ?: e.javaClass.simpleName); null }
+        log(ctx, "GPU check: " + (gpuName ?: (if (timedOut) "timed out after 120 s" else "no GPU device")) + "\n  " + devicesOut.replace("\n", "\n  "))
         gpuChecked = gpuName != null || !timedOut
         if (gpuName == null && !cpuOnly(ctx)) setNote(ctx, if (timedOut)
             "The graphics chip took too long to start this time, so this picture is drawn on the CPU (slower). Studio will try the graphics chip again next time."
@@ -217,7 +236,8 @@ object ImageEngine {
         return gpuName
     }
 
-    private fun threads(): Int = DeviceInfo.bigCores().coerceIn(4, 8)
+    // v5.32: one big core is left for the screen — all of them made the phone stutter ("glitching")
+    private fun threads(): Int = (DeviceInfo.bigCores() - 1).coerceIn(3, 7)
 
     class Result(val file: File, val backend: String, val ms: Long, val pausedChat: Boolean, val seed: Long = -1)
 
@@ -249,9 +269,12 @@ object ImageEngine {
                     }
                 } catch (e: InterruptedException) {}
             }.apply { isDaemon = true; start() }
+            val tg = System.currentTimeMillis()
+            log(ctx, "drawing on the GPU ($dev), ${threads()} threads")
             val code = try { job.run(onProgress) } catch (e: Exception) { -1 }
             dog.interrupt()
             register(null)
+            logRun(ctx, "GPU run", job, code, tg)
             if (job.cancelled) throw IOException("Stopped")
             if (code == 0 && valid(out)) { lastBackend = "GPU"; return "GPU" }
             out.delete()
@@ -271,17 +294,22 @@ object ImageEngine {
                 while (true) {
                     Thread.sleep(5000)
                     if (job.cancelled || job.aborted) break
-                    if (System.currentTimeMillis() - job.lastOutputAt > 20 * 60_000L) { stuck.set(true); job.abort(); break }
+                    val quiet = System.currentTimeMillis() - job.lastOutputAt
+                    // loading a picture model takes seconds; 4 silent minutes there means it hangs (v5.32)
+                    if (quiet > 20 * 60_000L || ((job.stage == "start" || job.stage == "load") && quiet > 4 * 60_000L)) { stuck.set(true); job.abort(); break }
                 }
             } catch (e: InterruptedException) {}
         }.apply { isDaemon = true; start() }
+        val tc = System.currentTimeMillis()
+        log(ctx, "drawing on the CPU, ${threads()} threads")
         val code = try { job.run(onProgress) } catch (e: Exception) { -1 }
         dog.interrupt()
         register(null)
+        logRun(ctx, "CPU run", job, code, tc)
         if (job.cancelled) throw IOException("Stopped")
         // Killed by Android to free memory (SIGKILL → exit 137 / -9): say so plainly. (v5.17)
         if ((code == 137 || code == 9 || code == -9) && !valid(out)) { out.delete(); throw IOException("Android closed the picture engine to free memory. Close other apps (or pause the chat model in Engine) and try again — “Quick draft” needs the least memory.") }
-        if (stuck.get()) { out.delete(); throw IOException("The picture engine made no progress for 20 minutes on the CPU and was stopped. Try a smaller size, or close other apps and try again.") }
+        if (stuck.get()) { out.delete(); throw IOException(if (job.stage == "start" || job.stage == "load") "The picture engine stopped responding while loading the model, so it was stopped. Engine → Engine log shows its last lines — send them to support." else "The picture engine made no progress for 20 minutes on the CPU and was stopped. Try a smaller size, or close other apps and try again.") }
         if (code != 0 || !valid(out)) { out.delete(); throw IOException("The picture could not be made. " + job.lastError()) }
         lastBackend = "CPU"
         return "CPU"
@@ -314,6 +342,8 @@ object ImageEngine {
             paused = true
         }
         val lowMem = DeviceInfo.availRamBytes(ctx) < need
+        log(ctx, "new picture · $pack · ${diffusion.name} ${diffusion.length() / 1_000_000} MB · free RAM ${DeviceInfo.availRamBytes(ctx) / 1_000_000} MB" +
+            (if (paused) " · chat model paused" else "") + (if (lowMem) " · low memory mode" else ""))
         val id = System.currentTimeMillis().toString(36)
         val out = File(studioDir(ctx), "img-$id.png")
         var ref: File? = null

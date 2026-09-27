@@ -55,6 +55,7 @@ V5_EXTRA = r"""
     const b = JSON.parse(body);
     S.bodies = (S.bodies || []).concat([b]);
     // A queue of fixed answers (the Code workbench's write → fix rounds), streamed in pieces.
+    if (S.fakeQueue && S.fakeQueue.length && S.fakeQueue[0] === "__STOPPED__" && !(b.max_tokens <= 2)) { S.fakeQueue.shift(); setTimeout(() => J(id, "Stopped"), 20); return; }
     if (S.fakeQueue && S.fakeQueue.length && !(b.max_tokens <= 2)) { const t = S.fakeQueue.shift(); let i = 0;
       const tick = () => { if (i < t.length) { if (S.chatCancel && S.chatCancel[id]) return J(id, "Stopped"); window.__attuneNative.delta(id, t.slice(i, i + 40), ""); i += 40; setTimeout(tick, S.slowQueue || 5); }
         else R(id, { content: t, reasoning: "", timings: { predicted_per_second: 42.0 }, usage: S.fakeTokens ? { completion_tokens: S.fakeTokens === "max" ? b.max_tokens : S.fakeTokens } : {} }); };
@@ -119,6 +120,7 @@ def new_page(br, env, errors, native=True, extra_init=None):
     ctx = br.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, is_mobile=True, has_touch=True)
     if native: ctx.add_init_script(env.mock)
     ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
+    ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")
     if extra_init: ctx.add_init_script(extra_init)
     page = ctx.new_page()
     page.on("pageerror", lambda e: errors.append("pageerror: " + str(e)))

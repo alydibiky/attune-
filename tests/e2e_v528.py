@@ -42,7 +42,7 @@ with sync_playwright() as p:
     page.evaluate(SEARCH)
     page.locator("button:has-text('Web')").first.click()
     NOTE = "\\n".join("- Lynk & Co 900 trim %d: 845 hp; 1,200 Nm; CNY 369,900; range 1,400 km" % i for i in range(30))
-    page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['**Lynk & Co 900** [1]']; M.bodies = []; }")
+    page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['**Lynk & Co 900** [1]', '**Lynk & Co 900**: the trims are listed by the maker [1]']; M.bodies = []; }")
     send(page, "Lynk & Co 900 all trims with hp, torque, price and range")
     page.wait_for_selector("button[title='Regenerate']", timeout=120000)
     bs = page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2)")

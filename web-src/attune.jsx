@@ -22,10 +22,11 @@ import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { skillFor } from "./skills.js";
+import { placeFor } from "./places.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
 import { samplingFor, taskKind } from "./boost.js";
 import { estTokens as estTok } from "./longread.js";
-import { pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS } from "./billing.js";
+import { pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS, TESTING_ALL_PRO, testingPro } from "./billing.js";
 import { LICENCE_PUBLIC_KEY, SELLER } from "./erp.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
@@ -5801,7 +5802,9 @@ const GROUNDED_RULES = `Answer ONLY from the passages below.
 - If the passages do not answer the question, do NOT just refuse. Say plainly what they DO show, in one or two sentences, with citations — for example "I found no record of a 1983 Lunar Incident between the USSR and Canada; the closest real events are the 1978 Kosmos 954 satellite crash in Canada [3] and the 1983 Soviet false-alarm incident [1]." If the question rests on something that the passages suggest never happened, say so directly.
 - Cite the source number in square brackets after each claim, like [1].
 - Copy every number, version and date EXACTLY as the passage writes it (never join or change digits).
-- Asked for ALL versions / trims / models / options: list EVERY one the passages name, each with its own figures (a table is best), and say plainly which ones or which figures the passages don't give — never fill a gap with a guess.
+- Asked for ALL versions / trims / models / options: list EVERY one the passages name, each with its own figures (a table is best). A figure no passage gives is shown as "—" in the table — never guessed, and never a sentence about what is missing.
+- Never write sentences like "the passages / sources do not provide …" or "I couldn't find …" and never use the word "passages" — just give everything the sources DO say.
+- Each fact once: never repeat a bullet or a sentence.
 - "Latest", "newest", "current": the answer is the HIGHEST version number / MOST RECENT date the passages mention; older ones are history. Titles count as passages too.
 - Answer in the language the question was asked in.
 - Shape: the direct answer first in **bold** (one line, with its citation), then the key details as short bullets. Comparing things ("is X the same as Y", "X vs Y") → verdict line, then a small table of the differences, each row cited.`;
@@ -6604,7 +6607,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.31";
+const PAGE_VERSION = "5.32";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -6625,6 +6628,15 @@ const MORE_TOOLS = [
   ["compress", "Compress", "Shorter prompts", Scissors], ["humanize", "Humanize", "Sound like you", PenLine],
   ["copilot", "Copilot", "Work with another AI", MessageSquare], ["library", "Library", "Prompt recipes", Package],
   ["ask", "Ask (classic)", "The earlier Ask screen", MessageSquare],
+];
+
+// v5.32 — Ali: "most features are cluttered, they must be organized": More shows its tools
+// in four named groups instead of one wall of 23 tiles.
+const MORE_GROUPS = [
+  ["Create & learn", ["instant", "studio", "assistants", "projects", "artifacts", "code", "learn", "news"]],
+  ["Work & business", ["business", "crane", "field", "fleet", "reminders"]],
+  ["Your life", ["memory", "map", "travel", "cycle"]],
+  ["Prompts for other AIs", ["improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
 
 // Records from Memory, attached to a chat message about the user's own past.
@@ -6722,7 +6734,9 @@ export default function App() {
   const [trialLeft] = useState(() => {
     try { let f = Number(localStorage.getItem(FIRST_RUN_KEY)); if (!f) { f = Date.now(); localStorage.setItem(FIRST_RUN_KEY, String(f)); } return trialDaysLeft(f); } catch (e) { return 0; }
   });
-  const proActive = isPro(tier) || trialLeft > 0;
+  // v5.32: TESTING_ALL_PRO (billing.js) unlocks everything while Ali tests; the trial
+  // now really unlocks every Pro feature (before, most gates checked the paid plan only)
+  const proActive = testingPro() || isPro(tier) || trialLeft > 0;
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -6883,7 +6897,7 @@ export default function App() {
       spendIfFree();
       const r = remember({ kind: "photo", title: file.name || "Photo", text, output: "", tags: ["photo", "kept"] });
       flash(tr("Photo read and kept — its text is searchable now"));
-      if (isPro(tier)) findCommitments(text, r.id, true);
+      if (proActive) findCommitments(text, r.id, true);
     } catch (e) { console.error(e); flash(String(e && e.message || e).slice(0, 90)); }
     finally { setMemBusy(false); }
   };
@@ -6923,7 +6937,7 @@ export default function App() {
       setMemory((m) => (m.some((x) => x.id === r.id) ? m : memPrune([r, ...m], MEM_MAX).records));
       setMode("memory"); setShareIn({ text: shared, id: r.id });
       window.history.replaceState({}, "", window.location.pathname);
-      setTimeout(() => { if (isPro(tier)) findCommitments(shared, r.id, true); }, 300);
+      setTimeout(() => { if (proActive) findCommitments(shared, r.id, true); }, 300);
     } catch (e) { /* no query string, nothing to do */ }
   }, []);
 
@@ -6985,7 +6999,7 @@ export default function App() {
         setCommits((c) => mergeCommitments(c, kept));
         if (!silent) flash(`${kept.length} thing${kept.length === 1 ? "" : "s"} found — confirm what's real`);
       } else if (!silent) flash(tr("Nothing was promised in that"));
-    } catch (e) { console.error(e); if (!silent) flash(tr("Couldn't read that for commitments")); }
+    } catch (e) { if (String(e && e.message) !== "Stopped") console.error(e); if (!silent && String(e && e.message) !== "Stopped") flash(tr("Couldn't read that for commitments")); }
     finally { setMemBusy(false); }
   };
   const setCommitState = (id, state) =>
@@ -7333,7 +7347,7 @@ export default function App() {
   const lint = useMemo(() => lintPrompt(input), [input]);
   const setOpt = (k, v) => setOpts((o) => ({ ...o, [k]: v }));
   const flash = (m) => { setToast(m); setTimeout(() => setToast(""), 2000); };
-  const gate = (fn) => (isPro(tier) ? fn() : setShowUpgrade(true));
+  const gate = (fn) => (proActive ? fn() : setShowUpgrade(true));
   // On-device inference is free to run, so it is never metered. Credits only
   // gate the cloud engine, which is the part that actually costs money.
   const willRunLocal = () => modelState === "ready";
@@ -7354,7 +7368,7 @@ export default function App() {
       if (modelState === "downloading") { flash(tr("The model is still downloading — see Engine")); return false; }
       flash(tr("Load a model in Engine first — everything runs on this device")); setShowEngine(true); return false;
     }
-    if (isPro(tier) || trialLeft > 0) return true;
+    if (proActive || trialLeft > 0) return true;
     const st = trialState(Date.now());
     if (st.left <= 0) {
       flash(st.rolledBack ? "Today's free runs are used up — Pro removes the limit"
@@ -7363,7 +7377,7 @@ export default function App() {
     }
     return true;
   };
-  const spendIfFree = () => { if (!isPro(tier)) setDayLeft(spendTrial(Date.now()).left); };
+  const spendIfFree = () => { if (!proActive) setDayLeft(spendTrial(Date.now()).left); };
   // Capture the pair that just happened, if the user opted in.
   const capture = (feature, input, output) => {
     if (!collect) return;
@@ -7409,7 +7423,7 @@ export default function App() {
   };
   const doPort = () => gate(() => { setCResult({ kind: "port", text: contextPort(cPrompt, cHistory, tool) }); setCCopied(false); });
   const copyC = async () => { if (!cResult) return; try { await navigator.clipboard.writeText(cResult.text); setCCopied(true); setTimeout(() => setCCopied(false), 1500); } catch (e) {} };
-  const selectPack = (k) => { if (PACKS[k].pro && !isPro(tier)) return setShowUpgrade(true); setPack(k); };
+  const selectPack = (k) => { if (PACKS[k].pro && !proActive) return setShowUpgrade(true); setPack(k); };
   const downloadModel = async (tierArg) => {
     const t0 = tierArg && (tierArg.repo || tierArg.url) ? tierArg : activeTier;
     if (NATIVE) {
@@ -7457,7 +7471,7 @@ export default function App() {
                               text: fdInput, output: txt, lang: fdLangs[0] || null, tags: ["field", fdDoc] });
       // Site notes are dense with commitments — "I'll call the supplier",
       // "he said he'd send the certificate". This is where the feature earns most.
-      if (isPro(tier)) findCommitments(fdInput, mrec.id, true);
+      if (proActive) findCommitments(fdInput, mrec.id, true);
     } catch (e) {
       // Surface the real reason. Silently swallowing errors here once hid a
       // genuine bug for days — a queue message must mean "no engine", nothing else.
@@ -7662,7 +7676,7 @@ export default function App() {
       spendIfFree();
       finishLive({ text: a, sources: found.map((f) => f.rec), stats: LAST_STATS, thought: think });
       const rec = remember({ kind: "ask", title: question.slice(0, 70), text: question, output: a, lang, tags: ["ask"] });
-      if (isPro(tier) && question.split(/\s+/).length >= 10) findCommitments(question, rec.id, true);
+      if (proActive && question.split(/\s+/).length >= 10) findCommitments(question, rec.id, true);
     } catch (e) {
       const msg = String(e && e.message || e);
       if (msg !== "Stopped") console.error(e);
@@ -7720,7 +7734,7 @@ export default function App() {
                            lang: inKind && inKind.kind === "foreign" ? inKind.label : lang, tags: [label] });
     // Promises in the text are found in the background, and give way the
     // moment the next request arrives.
-    if (isPro(tier) && text.trim().split(/\s+/).length >= 12 &&
+    if (proActive && text.trim().split(/\s+/).length >= 12 &&
         !(inKind && (inKind.kind === "code" || inKind.kind === "error")))
       findCommitments(text, rec.id, true);
     if (LEX_LAST.length) {
@@ -7984,7 +7998,7 @@ export default function App() {
   const btn = (a) => `px-3 py-1.5 rounded-lg text-sm border transition-colors ${a ? "bg-teal-500 border-teal-500 text-slate-950 font-medium" : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-600"}`;
   const strengthColor = strength.score >= 75 ? "bg-teal-500" : strength.score >= 50 ? "bg-amber-500" : "bg-rose-500";
   const creditLabel = modelState === "starting" ? "Loading the model…" : modelState === "downloading" ? "Installing a model…" : modelState !== "ready" ? "No model loaded"
-    : isPro(tier) ? "Unlimited · on-device" : tr("{n} free today", { n: dayLeft });
+    : proActive ? "Unlimited · on-device" : tr("{n} free today", { n: dayLeft });
 
   // Everything the Chat screen needs from the rest of the app.
   const chatApi = {
@@ -8007,7 +8021,7 @@ export default function App() {
     skillFor,
     power: () => getPower(),
     modelBrand: () => (activeTier ? brandOf(activeTier).brand : ""),   // v5.29: the home screen shows which model is on
-    trialDays: () => (isPro(tier) ? -1 : trialLeft),
+    trialDays: () => (proActive ? -1 : trialLeft),
     openPlan: () => setShowUpgrade(true),
     pro: () => proActive,          // v5.29: Pro or the 7-day trial (expert review, deep research)
     // v5.20 deep research: pages in full, and the passages of one page / of all
@@ -8155,7 +8169,7 @@ export default function App() {
 
         {/* The morning line — shown on every tab, once a day, only when there
             is something real to say. Computed, never generated. */}
-        {morning && !morningSeen && isPro(tier) ? (
+        {morning && !morningSeen && proActive ? (
           <div className="mb-5 bg-slate-900 border border-teal-900/60 rounded-2xl p-4">
             <div className="flex items-start gap-3">
               <Radar size={16} className="text-teal-400 mt-0.5 shrink-0" />
@@ -8389,7 +8403,7 @@ export default function App() {
               </div>
             ) : null}
 
-            {!isPro(tier) ? (
+            {!proActive ? (
               <div className="bg-slate-900 rounded-2xl border border-teal-900/50 p-5">
                 <p className="text-sm font-medium text-teal-300 flex items-center gap-1.5 mb-1"><Crown size={14} /> {tr("Memory is part of Pro")}</p>
                 <p className="text-xs text-slate-400 leading-relaxed mb-3">
@@ -8410,11 +8424,11 @@ export default function App() {
                 if (f && /^text|json|csv|md/.test(f.type) || (f && /\.(txt|md|csv|json|log)$/i.test(f.name))) {
                   const txt = await f.text();
                   const r = remember({ kind: "note", title: f.name, text: txt, output: "", tags: ["dropped"] });
-                  flash("Saved — " + f.name); if (isPro(tier)) findCommitments(txt, r.id, true);
+                  flash("Saved — " + f.name); if (proActive) findCommitments(txt, r.id, true);
                 } else if (e.dataTransfer.getData("text")) {
                   const txt = e.dataTransfer.getData("text");
                   const r = remember({ kind: "note", title: txt.slice(0, 60), text: txt, output: "", tags: ["dropped"] });
-                  flash(tr("Saved")); if (isPro(tier)) findCommitments(txt, r.id, true);
+                  flash(tr("Saved")); if (proActive) findCommitments(txt, r.id, true);
                 } else flash(tr("Drop plain text or a .txt/.md/.csv file"));
               }}>
               <div className="flex items-center justify-between mb-2">
@@ -8430,7 +8444,7 @@ export default function App() {
                     const r = remember({ kind: "note", title: memAdd.slice(0, 60), text: memAdd, output: "", lang, tags: ["note"] });
                     const t = memAdd; setMemAdd("");
                     flash(tr("Kept — and read for anything you promised"));
-                    if (isPro(tier)) findCommitments(t, r.id, true); else setShowUpgrade(true);
+                    if (proActive) findCommitments(t, r.id, true); else setShowUpgrade(true);
                   }}
                   className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold"><Plus size={12} className="inline me-1" />{tr("Keep it")}</button>
                 <button onClick={async () => {
@@ -8668,7 +8682,7 @@ export default function App() {
                   {memQ.trim() && !memHits.length ? (
                     <p className="text-xs text-slate-600 py-6 text-center">{tr("Nothing matches that yet.")}</p>
                   ) : null}
-                  {(memQ.trim() ? memHits.map((h) => h.rec) : memory.slice(0, isPro(tier) ? 40 : 5)).map((r) => (
+                  {(memQ.trim() ? memHits.map((h) => h.rec) : memory.slice(0, proActive ? 40 : 5)).map((r) => (
                     <button key={r.id} onClick={() => setOpenRec(r)}
                       className="w-full text-start bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 hover:border-teal-600">
                       <div className="flex items-center gap-2">
@@ -8685,7 +8699,7 @@ export default function App() {
                       {tr("Nothing yet. Use Instant, a photo or Travel and it lands here on its own —")}<br />{tr("you never have to save anything.")}
                     </p>
                   ) : null}
-                  {!isPro(tier) && memory.length > 5 ? (
+                  {!proActive && memory.length > 5 ? (
                     <p className="text-[11px] text-slate-600 pt-1">+ {memory.length - 5} {tr("more, searchable on Pro.")}</p>
                   ) : null}
                 </div>
@@ -8753,7 +8767,7 @@ export default function App() {
                   ) : null}
                 </div>
 
-                <button onClick={() => (isPro(tier) ? findCommitments(inText || (openRec && openRec.text) || "", openRec && openRec.id) : setShowUpgrade(true))}
+                <button onClick={() => (proActive ? findCommitments(inText || (openRec && openRec.text) || "", openRec && openRec.id) : setShowUpgrade(true))}
                   disabled={memBusy}
                   className="mt-3 w-full text-xs py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600">
                   {tr("Read what's in Instant for promises")}
@@ -9152,6 +9166,8 @@ export default function App() {
           </div>
         ) : mode === "instant" ? (
           <div className="space-y-4 max-w-2xl mx-auto">
+            {/* v5.32 — Ali: "I still don't know what Instant is about" */}
+            <p className="text-[12.5px] text-slate-400 leading-relaxed px-1" data-testid="instant-about">{tr("Instant does one quick job on any text or photo — answer it, rewrite it, translate it, summarise it — without starting a chat. For a conversation use Chat; for places near you, Instant hands you to the map.")}</p>
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
               {photoMode ? (
                 <div>
@@ -9317,6 +9333,12 @@ export default function App() {
                         {inShowThinking ? inThinking : inThinking.slice(-600)}</p>
                     ) : null}
                   </div>
+                ) : null}
+                {!photoMode && placeFor(inText) ? (
+                  <a href={placeFor(inText).url} target="_blank" rel="noopener noreferrer" data-testid="instant-map"
+                    className="mb-3 flex items-center gap-2 rounded-xl border border-teal-800 bg-teal-500/10 px-3 py-2.5 text-[13px] text-teal-200 hover:border-teal-500">
+                    <MapPin size={16} className="shrink-0" /><span className="min-w-0"><span className="block font-medium">{tr("Open in Google Maps")}</span><span className="block text-[11.5px] text-teal-300/80 truncate">{placeFor(inText).query}</span></span>
+                  </a>
                 ) : null}
                 {inResult ? (
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
@@ -9816,7 +9838,7 @@ export default function App() {
               <div className="mt-4">
                 <p className="text-xs uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5"><Package size={13} /> {tr("Domain pack")}</p>
                 <p className="text-[11px] text-slate-500 mb-2 leading-snug">{tr("Adds an expert's framing for your field to the rewritten prompt — e.g. Heavy Equipment makes it ask for load capacities, safety factors and specs. Tap one, then use a starter below.")}</p>
-                <div className="flex flex-wrap gap-1.5">{Object.entries(PACKS).map(([k, p]) => <button key={k} onClick={() => selectPack(k)} className={`${btn(pack === k)} flex items-center gap-1`}>{p.pro && !isPro(tier) && <Lock size={11} />}{tr(p.label)}</button>)}</div>
+                <div className="flex flex-wrap gap-1.5">{Object.entries(PACKS).map(([k, p]) => <button key={k} onClick={() => selectPack(k)} className={`${btn(pack === k)} flex items-center gap-1`}>{p.pro && !proActive && <Lock size={11} />}{tr(p.label)}</button>)}</div>
                 {PACKS[pack].starters.length > 0 && <div className="flex flex-wrap gap-1.5 mt-2">{PACKS[pack].starters.map((s) => <button key={s} onClick={() => setInput(s)} className="text-xs px-2 py-1 rounded-md bg-teal-500/10 border border-teal-900/60 text-teal-300 hover:border-teal-600">{s.trim()}…</button>)}</div>}
               </div>
               <div className="mt-4">
@@ -9921,7 +9943,7 @@ export default function App() {
               <div className="flex flex-wrap gap-2 mt-4">
                 <button onClick={doCompress} disabled={!cPrompt.trim()} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-medium border ${cPrompt.trim() ? "border-slate-700 bg-slate-950 text-slate-200 hover:border-slate-600" : "border-slate-800 bg-slate-900 text-slate-600 cursor-not-allowed"}`}><Scissors size={16} /> {tr("Trim")}</button>
                 <button onClick={aiCompressAction} disabled={!cPrompt.trim() || loading} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-semibold ${cPrompt.trim() && !loading ? "bg-teal-500 text-slate-950 hover:bg-teal-400" : "bg-slate-800 text-slate-600 cursor-not-allowed"}`}>{loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{loading ? tr("Thinking…") : tr("AI Compress")}</button>
-                <button onClick={doPort} disabled={!cPrompt.trim()} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-medium border ${!isPro(tier) ? "border-slate-800 bg-slate-950 text-slate-400" : "border-teal-600 bg-teal-500/10 text-teal-300"}`}>{!isPro(tier) && <Lock size={13} />}<Shuffle size={15} /> {tr("Port")}</button>
+                <button onClick={doPort} disabled={!cPrompt.trim()} className={`flex-1 min-w-[6rem] flex items-center justify-center gap-2 py-3 rounded-xl font-medium border ${!proActive ? "border-slate-800 bg-slate-950 text-slate-400" : "border-teal-600 bg-teal-500/10 text-teal-300"}`}>{!proActive && <Lock size={13} />}<Shuffle size={15} /> {tr("Port")}</button>
               </div>
               <p className="text-xs text-slate-600 mt-2"><span className="text-slate-400">{tr("Trim")}</span> {tr("= instant filler removal (offline).")} <span className="text-teal-400">{tr("AI Compress")}</span> {tr("= the model rewrites it far shorter while keeping the meaning.")}</p>
             </section>
@@ -9967,17 +9989,23 @@ export default function App() {
           <div className="att-scroll absolute start-0 end-0 bg-slate-900 border-t border-slate-800 rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
                style={{ bottom: "calc(58px + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
             <div className="max-w-3xl mx-auto">
-              <div className="grid grid-cols-3 gap-2">
-                {MORE_TOOLS.map(([id, label, sub, Icon]) => (
-                  <button key={id} onClick={() => { if (id === "cycle") enableCycle(true); setMode(id); setMoreOpen(false); }}
-                    className={`rounded-xl border p-2.5 text-start ${mode === id ? "border-teal-600 bg-teal-500/10" : "border-slate-800 bg-slate-950"}`}>
-                    <Icon size={18} className="text-teal-300" />
-                    <span className="block text-[13px] text-slate-100 mt-1.5 leading-tight">{tr(label)}</span>
-                    <span className="block text-[10px] text-slate-400 leading-tight mt-0.5">{tr(sub)}</span>
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-3 gap-2 mt-3">
+              {MORE_GROUPS.map(([title, ids], gi) => (
+                <div key={title} className={gi ? "mt-4" : ""} data-testid="more-group">
+                  <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2 px-0.5">{tr(title)}</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {ids.map((tid) => MORE_TOOLS.find((t) => t[0] === tid)).filter(Boolean).map(([id, label, sub, Icon]) => (
+                      <button key={id} onClick={() => { if (id === "cycle") enableCycle(true); setMode(id); setMoreOpen(false); }}
+                        className={`rounded-xl border p-2.5 text-start transition-colors ${mode === id ? "border-teal-600 bg-teal-500/10" : "border-slate-800 bg-slate-950 active:bg-slate-800"}`}>
+                        <Icon size={18} className="text-teal-300" />
+                        <span className="block text-[13px] text-slate-100 mt-1.5 leading-tight">{tr(label)}</span>
+                        <span className="block text-[10px] text-slate-400 leading-tight mt-0.5">{tr(sub)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <p className="text-[11px] uppercase tracking-wider text-slate-500 mt-4 mb-2 px-0.5">{tr("Settings")}</p>
+              <div className="grid grid-cols-3 gap-2" data-testid="more-settings">
                 <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Cpu size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">{tr("Engine & privacy")}</span></button>
                 <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><User size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">{tr("Your profile")}</span></button>
                 <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Crown size={16} className="text-amber-300" /><span className="block text-[12px] text-slate-200 mt-1">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[10px] text-slate-500">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
@@ -10129,6 +10157,14 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><Crown size={18} className="text-amber-400" /> {tr("Attune Pro")}</h2>
           <button onClick={close} className="text-slate-500 hover:text-slate-300 p-1"><X size={18} /></button>
         </div>
+        {TESTING_ALL_PRO && !pro ? (
+          <div className="text-[13px] text-sky-300 mb-3 rounded-lg border border-sky-900/60 bg-sky-500/5 p-2.5" data-testid="testing-pro">
+            <p>{testingPro() ? tr("Testing build: every Pro feature is unlocked on this phone.") : tr("Testing build: you are seeing the app as a Free user.")}</p>
+            <button data-testid="testing-toggle" className="mt-2 text-[12px] px-3 py-1.5 rounded-lg border border-sky-700 text-sky-200"
+              onClick={() => { try { localStorage.setItem("attune:testing-pro", testingPro() ? "off" : "on"); } catch (e) {} location.reload(); }}>
+              {testingPro() ? tr("See it as a Free user") : tr("Unlock everything again")}</button>
+          </div>
+        ) : null}
         {pro ? <p className="text-[13px] text-emerald-300 mb-3" data-testid="pro-active">{tr("Pro is active on this phone. Thank you for supporting Attune!")}</p>
           : trialLeft > 0 ? <p className="text-[13px] text-amber-200 mb-3" data-testid="trial-banner">{tr("Your free Pro trial: {n} days left — everything is unlocked. Keep it by choosing a plan.", { n: trialLeft })}</p>
           : <p className="text-[13px] text-slate-300 mb-3">{tr("Free gives you {n} answers a day on every model. Pro removes every limit:", { n: FREE_LIMITS.answersPerDay })}</p>}
@@ -10336,7 +10372,16 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
     const t = MODEL_TIERS.find((x) => x.id === id);
     // v5.28: always the Attune name (models installed before carry "Echo · Qwen3.5 2B · …" labels)
     if (t) return brandOf(t).brand;
-    return m ? publicName(m.label) : id;
+    if (!m) return id;
+    // v5.32: matched to the catalog by its download link / real name, so "Gemma 4 E4B" shows
+    // as Blaze+ and "Qwen3.5 0.8B" as Spark — never the vendor name (Ali's Engine screenshot)
+    const src = String(m.source || "") + " " + String(m.id || "");
+    const byUrl = MODEL_TIERS.find((x) => x.url && src && (src.includes(x.url) || (x.repo && src.includes(x.repo))));
+    if (byUrl) return brandOf(byUrl).brand;
+    const fast = /litert/i.test(src + " " + m.label);
+    const byName = MODEL_TIERS.find((x) => x.realName && !!x.fast === fast && String(m.label).toLowerCase().replace(/[\s-]+/g, "").includes(x.realName.toLowerCase().replace(/[\s-]+/g, "")));
+    if (byName) return brandOf(byName).brand;
+    return publicName(m.label + (fast ? " · fast engine" : ""));
   };
   const stateText = { ready: "Running", starting: "Loading the model…", error: "Stopped", idle: "Not running" }[e.state] || "Not running";
   const row = (on, onClick, label, sub) => (
@@ -10404,7 +10449,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
           <div key={m.id} className="py-2 border-b border-slate-900 last:border-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-sm text-slate-200 truncate">{tr(m.label)}{m.vision ? " · 📷" : ""}</p>
+                <p className="text-sm text-slate-200 truncate">{labelFor(m.id)}{m.vision ? " · 📷" : ""}</p>
                 <p className="text-[10px] text-slate-600 truncate">{(m.sizeBytes / 1e9).toFixed(2)} {tr("GB")}</p>
               </div>
               <div className="flex gap-1 shrink-0">

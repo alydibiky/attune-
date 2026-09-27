@@ -16,9 +16,21 @@
 
 export const TRIAL_DAYS = 7;
 
+/** v5.32 — Ali is testing: every Pro feature is unlocked on every phone. Set to false before
+    the public release (then the 7-day trial, Free limits and Pro codes apply again). */
+export const TESTING_ALL_PRO = true;
+/** While testing, Plan can switch the unlock off to see the app as a Free user ("attune:testing-pro" = "off"). */
+export function testingPro() {
+  if (!TESTING_ALL_PRO) return false;
+  try { return localStorage.getItem("attune:testing-pro") !== "off"; } catch (e) { return true; }
+}
+
+// v5.32 prices (MONETIZATION.md §3): the first ones were too low for what Pro gives — an
+// offline, private AI with deep research, Studio and Business systems. Still far below
+// ChatGPT Plus (≈ EGP 1,000 a month in Egypt), yearly still the obvious best value.
 export const PRICES = {
-  EG: { cur: "EGP", month: "EGP 149", year: "EGP 999", life: "EGP 2,999", yearNote: "≈ EGP 83 a month — 2 months free", lifeNote: "pay once, yours forever" },
-  US: { cur: "USD", month: "$3.99", year: "$24.99", life: "$59", yearNote: "≈ $2.08 a month — 5 months free", lifeNote: "pay once, yours forever" },
+  EG: { cur: "EGP", month: "EGP 199", year: "EGP 1,499", life: "EGP 3,999", yearNote: "≈ EGP 125 a month — save 37%", lifeNote: "pay once, yours forever" },
+  US: { cur: "USD", month: "$4.99", year: "$39.99", life: "$99", yearNote: "≈ $3.33 a month — save 33%", lifeNote: "pay once, yours forever" },
 };
 
 /** "EG" for phones set to Egypt (time zone or Arabic-Egypt locale), else "US" prices. */

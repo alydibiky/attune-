@@ -59,7 +59,7 @@ export function pagesFor(question) {
   return /\b(all|every|each|full|detailed|details|compare|comparison|vs|versus|specs?|specifications?|trims?|versions?|prices?|review|pros|cons|advantages|disadvantages)\b(?!-)|كل|مواصفات|مقارنة|الفرق|فئات|أسعار|اسعار|بالتفصيل|تفاصيل/i.test(q) || q.length > 80 ? 8 : 5;
 }
 
-export const FINAL_ADD = "\n\n(These passages are research NOTES taken page by page. Write the COMPLETE, detailed answer: cover every part of the question and every item the notes mention (all trims / versions / options, each with its figures — a table when comparing), cite the source number after each fact, and end with what the sources did not say.)";
+export const FINAL_ADD = "\n\n(These passages are research NOTES taken page by page. Write the COMPLETE, detailed answer: cover every part of the question and every item the notes mention (all trims / versions / options, each with its figures — a table when comparing), cite the source number after each fact. Each fact once; never write what the sources don't say.)";
 
 /* ---- v5.23: closer to Gemini ---------------------------------------------------------------
    Ali: "web search extremely detailed and accurate, close to Gemini". What Gemini does that
@@ -160,7 +160,7 @@ export function crossCheck(notesSrc) {
   return { notes, confirmed, lines };
 }
 
-export const REPORT_ADD = "\n\n(These are research NOTES from several searches, taken page by page; \"(also in [n])\" means another site gives the same figure — that figure is CONFIRMED. Write a complete, expert research report like Gemini would:\n1. Start with a direct 2–3 line answer to the question.\n2. Then sections with ## headings covering every part of the question and EVERY item the notes mention (all trims / versions / options / dates, each with all its figures). Use tables for specs, prices and comparisons.\n3. Cite the source number after each fact, e.g. [2]. Prefer confirmed figures.\n4. If sources give DIFFERENT values for the same thing, show both with their sources under \"Where sources differ\".\n5. End with \"Not found in the sources\" listing what was asked but not found. Never fill a gap from memory.)";
+export const REPORT_ADD = "\n\n(These are research NOTES from several searches, taken page by page; \"(also in [n])\" means another site gives the same figure — that figure is CONFIRMED. Write a complete, expert research report like Gemini would:\n1. Start with a direct 2–3 line answer to the question.\n2. Then sections with ## headings covering every part of the question and EVERY item the notes mention (all trims / versions / options / dates, each with all its figures). Use tables for specs, prices and comparisons.\n3. Cite the source number after each fact, e.g. [2]. Prefer confirmed figures.\n4. If sources give DIFFERENT values for the same thing, show both with their sources under \"Where sources differ\".\n5. Never fill a gap from memory; a figure no source gives is \"—\" in its table, never a sentence about what is missing. Each fact once.)";
 
 /**
  * v5.28 — the notes from every page, cut to fit the model's window (the fast engine has only
@@ -254,7 +254,7 @@ export function wantsDeep(text) {
   return /\b(deep research|research (it )?(deeply|thoroughly|in depth)|in[- ]depth research|dig deep)\b|بحث عميق|ابحث بعمق|بحث شامل|بعمق/i.test(String(text || ""));
 }
 
-export const FAST_REPORT_ADD = "\n\n(Write a complete, accurate answer from ALL the passages, like a research assistant: a direct 2–3 line answer first, then sections with ## headings and tables for specs, prices and comparisons, covering every part of the question and every item the passages name. Cite the source number after each fact. Copy numbers exactly. Where sources give different values, show both with their sources; prefer the confirmed figures. End with what the sources did not say.)";
+export const FAST_REPORT_ADD = "\n\n(Write a complete, accurate answer from ALL the passages, like a research assistant: a direct 2–3 line answer first, then sections with ## headings and tables for specs, prices and comparisons, covering every part of the question and every item the passages name. Cite the source number after each fact. Copy numbers exactly. Where sources give different values, show both with their sources; prefer the confirmed figures. Each fact once — no repeated bullets. Never write what the sources don't say, and never use the word \"passages\".)";
 
 /** v5.31 — like Gemini's "does this need a search?": questions about things that change
     (prices, latest models, news, today, specs of a named product) are offered a web search

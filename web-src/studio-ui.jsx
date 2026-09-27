@@ -97,8 +97,11 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   };
 
   const progress = (what) => (pct, stage, detail) => {
-    const m = /^(\d+)\/(\d+)$/.exec(detail || "");
-    setBusy((b) => ({ ...(b || { what, t0: Date.now() }), stage, step: m ? +m[1] : 0, total: m ? +m[2] : 0 }));
+    // "3/4" or "3/4 · <engine line>" or just the engine's latest line (v5.32)
+    const d = String(detail || "");
+    const m = /^(\d+)\/(\d+)(?:\s·\s(.*))?$/.exec(d);
+    const line = m ? m[3] || "" : d;
+    setBusy((b) => ({ ...(b || { what, t0: Date.now() }), stage, step: m ? +m[1] : 0, total: m ? +m[2] : 0, line: line || (b && b.stage === stage ? b.line : "") }));
   };
 
   const draw = async (opts = {}) => {
@@ -255,6 +258,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
           )}
           {busy ? <span className="text-[12px] text-violet-200 flex items-center gap-1.5 min-w-0" data-testid="studio-progress"><Loader2 size={13} className="animate-spin shrink-0" /><span className="truncate">{stageText}</span><span className="text-slate-500 shrink-0">· {secs(now - busy.t0)}</span></span> : null}
         </div>
+        {busy && busy.line ? <p className="text-[10.5px] text-slate-500 mt-1.5 font-mono truncate" dir="ltr" data-i18n-skip data-testid="studio-engine-line">{busy.line}</p> : null}
         {busy && busy.what === "draw" && now - busy.t0 > 90000 && busy.stage !== "draw" ? (
           <p className="text-[11px] text-slate-400 mt-2 leading-relaxed" data-testid="studio-slow-note">
             {dp.id === "turbo" ? tr("Still working — nothing is stuck. Turbo takes about 1–2 minutes on the CPU. Keep Attune open; Stop cancels it.")

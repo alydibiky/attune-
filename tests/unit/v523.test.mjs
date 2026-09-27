@@ -39,7 +39,7 @@ eq(mergeHits([[{ url: "https://youtube.com/w" }, { url: "https://d.com/a" }], [{
 const cc = crossCheck([{ text: "- Ultra: 845 hp, 1,200 Nm\n- It is an SUV" }, { text: "- Power 845 hp" }, { text: "- Weight 2,750 kg" }]);
 eq(cc.notes.map((n) => n.text), ["- Ultra: 845 hp, 1,200 Nm (also in [2])\n- It is an SUV", "- Power 845 hp (also in [1])", "- Weight 2,750 kg"], "a figure on two sites is marked as confirmed by the other");
 eq(cc.confirmed, 2, "…and counted");
-eq(/Where sources differ/.test(REPORT_ADD) && /Not found in the sources/.test(REPORT_ADD) && /direct 2–3 line answer/.test(REPORT_ADD), true, "the report: direct answer, disagreements, gaps");
+eq(/Where sources differ/.test(REPORT_ADD) && /never a sentence about what is missing/.test(REPORT_ADD) && /direct 2–3 line answer/.test(REPORT_ADD), true, "the report: direct answer, disagreements, gaps");
 eq([powerFor(1).queries, powerFor(3).queries, powerFor(5).queries, powerFor(5).readPages > powerFor(3).readPages, powerFor(5).researchSecs > powerFor(2).researchSecs], [1, 3, 5, true, true], "stronger models search more, read more pages and get more time");
 
 eq([pagesFor("Demag AC 100 all-terrain crane"), pagesFor("Demag AC 100 all trims")], [5, 8], "\"all-terrain\" is not \"all\" (a detailed question)");

@@ -161,8 +161,8 @@ const REAL = [
   [/gemma[\s-]?4[\s-]*12B/gi, "Zenith+"],
   [/gemma[\s-]?4[\s-]*E4B(?:[-\s]it)?\s*·?\s*fast engine(?:\s*\((?:GPU|CPU)\))?/gi, "Blaze+"],
   [/gemma[\s-]?4[\s-]*E2B(?:[-\s]it)?\s*·?\s*fast engine(?:\s*\((?:GPU|CPU)\))?/gi, "Blaze"],
-  [/gemma[\s-]?4[\s-]*E4B/gi, "Sense"],
-  [/gemma[\s-]?4[\s-]*E2B/gi, "Blaze"],
+  [/gemma[\s-]?4[\s-]*E4B(?:[-\s]it)?\b/gi, "Sense"],
+  [/gemma[\s-]?4[\s-]*E2B(?:[-\s]it)?\b/gi, "Blaze"],
   [/qwen\s?3(?:\.\d)?[\s-]*9B/gi, "Zenith"],
   [/qwen\s?3(?:\.\d)?[\s-]*4B/gi, "Core"],
   [/qwen\s?3(?:\.\d)?[\s-]*2B/gi, "Glow"],
@@ -172,7 +172,7 @@ const REAL = [
   [/\bqwen[\w.\-]*|\bgemma[\w.\-]*/gi, "Attune"],
 ];
 export function publicName(s) {
-  let t = String(s || "");
+  let t = String(s || "").replace(/\.(litertlm|gguf|task|bin)\b/gi, "");
   for (const [re, to] of REAL) t = t.replace(re, to);
   // "Echo · Core" (an old brand + the new one) → keep the new one; tidy separators
   t = t.replace(/\b(Whisper|Echo|Pulse Pro|Pulse|Chord Lite|Chord HD|Chord|Rhythm|Harmony Pro|Harmony|Symphony Max|Symphony|Maestro Long|Maestro|Flash\+?|Titan XL|Titan|Ultra\+?)\s*·\s*/g, "");

@@ -652,16 +652,29 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         if (blockedByAirGap(id, "downloading a picture model")) return
         val flag = AtomicBoolean(false); cancels[id] = flag
         pool.execute {
+            // v5.32: the download keeps the app awake (screen off used to slow or pause it — Ali:
+            // "it took forever"), and shows its speed and the time left
+            var lastT = 0L; var lastDone = -1L; var bps = 0.0
             try {
+                GenService.set(ctx.applicationContext, true)
                 val meta = ImageEngine.install(ctx, JSONObject(arg), { done, total, stage ->
                     val pct = if (total > 0) ((done * 100) / total).toInt().coerceIn(0, 99) else 0
-                    progress(id, pct, stage, "%.2f / %.2f GB".format(done / 1e9, total / 1e9))
+                    val now = System.currentTimeMillis()
+                    if (lastDone >= 0 && now > lastT && done >= lastDone) {
+                        val inst = (done - lastDone) * 1000.0 / (now - lastT)
+                        bps = if (bps <= 0) inst else bps * 0.8 + inst * 0.2
+                    }
+                    lastT = now; lastDone = done
+                    val speed = if (bps > 0) " · %.1f MB/s".format(bps / 1e6) else ""
+                    val left = if (bps > 50_000 && total > done) (total - done) / bps else -1.0
+                    val eta = when { left < 0 -> ""; left < 90 -> " · ~${left.toInt().coerceAtLeast(1)} s left"; else -> " · ~${(left / 60).toInt()} min left" }
+                    progress(id, pct, stage, "%.2f / %.2f GB".format(done / 1e9, total / 1e9) + speed + eta)
                 }, { flag.get() })
                 resolve(id, JSONObject().put("ok", true).put("pack", meta))
             } catch (e: ModelStore.Cancelled) {
                 reject(id, "Download cancelled — it will resume where it stopped if you start it again.")
             } catch (e: Exception) { reject(id, e.message ?: "Install failed") }
-            finally { cancels.remove(id) }
+            finally { cancels.remove(id); GenService.set(ctx.applicationContext, false) }
         }
     }
 
@@ -670,7 +683,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
 
     private fun imageProgress(id: String, p: ImageRun.Progress) {
         val pct = if (p.total > 0) (p.step * 100 / p.total) else 0
-        progress(id, pct, p.stage, if (p.total > 0) "${p.step}/${p.total}" else "")
+        progress(id, pct, p.stage, if (p.total > 0) "${p.step}/${p.total}" + (if (p.line.isNotEmpty()) " · " + p.line else "") else p.line)
     }
 
     private fun imageResult(r: ImageEngine.Result): JSONObject {

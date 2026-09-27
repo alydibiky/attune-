@@ -1,6 +1,6 @@
 # Attune — how it makes money
 
-_Written for Ali, v5.29 (26 Sep 2026). The app side is already built (see `web-src/billing.js`,
+_Written for Ali, v5.29 (26 Sep 2026); prices raised in v5.32. The app side is already built (see `web-src/billing.js`,
 the Plan screen, and `tools/erp-licence.mjs pro`)._
 
 ## 1. The position: why people pay for Attune
@@ -31,11 +31,15 @@ Priced for the market: Egypt pays Egyptian prices, everyone else USD. ChatGPT ch
 
 | Plan | Egypt | Rest of world | Notes |
 |---|---|---|---|
-| Monthly | EGP 149 | $3.99 | Low entry point, cancel any time |
-| **Yearly (default, "Best value")** | **EGP 999** | **$24.99** | "2 months free". Yearly buyers stay about 3× longer |
-| Lifetime | EGP 2,999 | $59 | Cash now; great for early adopters and launches |
-| Business: one ERP system | EGP 4,999 once | $149 | Unlimited records, Excel and app export |
+| Monthly | EGP 199 | $4.99 | Entry point, cancel any time |
+| **Yearly (default, "Best value")** | **EGP 1,499** | **$39.99** | "Save 37%". Yearly buyers stay about 3× longer |
+| Lifetime | EGP 3,999 | $99 | Cash now; great for early adopters and launches |
+| Business: one ERP system | EGP 9,999 once | $249 | Unlimited records, Excel and app export |
 | Business support (yearly) | 20% of the licence | 20% | Updates, changes on request, priority WhatsApp |
+
+**Why v5.32 raised the prices (Ali: "I think it's too low"):** the first prices (EGP 149 / 999 / 2,999) priced Attune like a small utility app. It is a private, offline AI with deep research, Studio and Business systems — and ChatGPT Plus costs about EGP 1,000 a *month* in Egypt. EGP 199 a month is still a fifth of that, on par with a streaming subscription; the yearly plan stays the obvious choice. Business was the most underpriced: agencies charge EGP 20,000–100,000 for a custom system, so EGP 9,999 is still an easy yes. Start here, and raise again once reviews and demo videos exist (it is easier to raise with social proof than to lower).
+
+**Testing:** while `TESTING_ALL_PRO = true` in `web-src/billing.js`, every phone has every Pro feature (Plan says so in blue). **Set it to `false` before the public release.**
 
 **Psychology used:**
 - The yearly plan is shown first and pre-selected.
@@ -61,7 +65,7 @@ Priced for the market: Egypt pays Egyptian prices, everyone else USD. ChatGPT ch
 A single company licence is worth as much as 50 personal subscriptions. Egyptian SMEs pay agencies EGP 20,000–100,000 for custom systems; Attune builds one from a sentence.
 
 - **Start with your own network:** crane rental companies, contractors, workshops, logistics firms. Your company (150 employees) is the case study. Build its real system in Attune and show the result.
-- **Offer:** "Your company system in one day — customers, equipment, jobs, invoices, payments, connected like Access, exportable to Excel. EGP 4,999, yours forever."
+- **Offer:** "Your company system in one day — customers, equipment, jobs, invoices, payments, connected like Access, exportable to Excel. EGP 9,999, yours forever."
 - **Vertical templates** (turn each into a ready system people can buy):
   - crane and equipment rental;
   - car workshop;
@@ -85,7 +89,7 @@ A single company licence is worth as much as 50 personal subscriptions. Egyptian
 - **Referral:** give a free month of Pro for each friend who buys. Your users sell for you.
 - **LinkedIn and Facebook groups** for construction, cranes, logistics and SME owners in Egypt and the Gulf.
 - **Store listing (ASO) in Arabic and English:** keywords like offline AI, Arabic AI, private AI, ERP, مساعد ذكي بدون انترنت.
-- **Launch offer:** lifetime at EGP 1,999 for the first 200 buyers. It creates urgency and early cash.
+- **Launch offer:** lifetime at EGP 2,499 for the first 200 buyers. It creates urgency and early cash.
 
 ## 8. Numbers to watch (weekly)
 
@@ -97,11 +101,12 @@ A single company licence is worth as much as 50 personal subscriptions. Egyptian
 | Monthly churn (monthly plan) | ≤ 8% |
 | Business licences per month | start with 2–5 from your network |
 
-**Rough goal:** 10,000 installs × 5% paying × EGP 999 a year ≈ **EGP 500,000 a year**, plus Business licences (10 × EGP 4,999 ≈ EGP 50,000, and support on top). Almost no server costs, because the AI runs on the users' phones.
+**Rough goal:** 10,000 installs × 5% paying × EGP 1,499 a year ≈ **EGP 750,000 a year**, plus Business licences (10 × EGP 9,999 ≈ EGP 100,000, and support on top). Almost no server costs, because the AI runs on the users' phones.
 
 ## 9. Checklist for Ali
 
 - [ ] Put your WhatsApp number in `SELLER.contact` (web-src/erp.js).
+- [ ] Before release: `TESTING_ALL_PRO = false` in web-src/billing.js.
 - [ ] Keep the private key file safe (backup + never in git). Anyone with it can make codes.
 - [ ] Prepare 3 short demo videos in Egyptian Arabic.
 - [ ] Build your crane company's system in Attune as the showcase.

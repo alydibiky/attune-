@@ -97,7 +97,7 @@ MOCK = r"""
         { title: "Crane guide", url: "https://example.com/guide", source: "web",
           text: "Mobile cranes are rated by maximum lifting capacity at minimum radius. A 100 t crane lifts far less at long radius." } ] }); },
     chat: (id, body) => { (async () => {
-        const b = JSON.parse(body); state.lastBody = b; state.chats = (state.chats || 0) + 1;
+        const b = JSON.parse(body); state.lastBody = b; (state.bodies = state.bodies || []).push(b); state.chats = (state.chats || 0) + 1;
         const ctl = new AbortController(); state.ctl[id] = ctl;
         try {
           const r = await fetch(ENGINE + "/v1/chat/completions", { method: "POST", signal: ctl.signal,
@@ -139,6 +139,7 @@ with sync_playwright() as pw:
     br = pw.chromium.launch()
     ctx = br.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, is_mobile=True, has_touch=True)
     ctx.add_init_script(MOCK)
+    ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")
     page = ctx.new_page()
     page.on("pageerror", lambda e: errors.append("pageerror: " + str(e)))
     page.on("requestfailed", lambda r: print("REQFAIL", r.url[:120]))
@@ -201,7 +202,8 @@ with sync_playwright() as pw:
        window.dispatchEvent(new CustomEvent('attune-engine', { detail: { ...m.engine } })); })()""")
     page.wait_for_selector("button:has-text('Copy')", timeout=60000)
     check(page.locator("text=Answer").count() >= 1, "then the answer arrives")
-    b = page.evaluate("window.__mock.lastBody")
+    # (v5.32: the Pro trial's background helpers may ask the model after Instant — find Instant's own request)
+    b = page.evaluate("window.__mock.bodies.filter(x => JSON.stringify(x.messages).includes('crane arrives Thursday')).shift()")
     check(b.get("stream") is True, "Instant answers stream")
     check("Work out what they want" in b["messages"][-1]["content"], "Go with no button = the model works out the task")
 
@@ -245,7 +247,7 @@ with sync_playwright() as pw:
     page.locator("text=work this").or_(page.locator("text=How it thought")).first.wait_for(timeout=30000)
     check(True, "the model's thinking is shown while it thinks")
     page.wait_for_selector("button:has-text('Copy')", timeout=60000)
-    b = page.evaluate("window.__mock.lastBody")
+    b = page.evaluate("window.__mock.bodies.filter(x => JSON.stringify(x.messages).includes('20 tonne loads') && x.chat_template_kwargs && x.chat_template_kwargs.enable_thinking).pop() || window.__mock.lastBody")
     check(b["chat_template_kwargs"]["enable_thinking"] is True and b.get("thinking_budget_tokens", 0) > 0, "Think asks for thinking with a budget (%s)" % b.get("thinking_budget_tokens"))
     check(page.locator("text=How it thought").count() == 1, "thinking can be reopened after the answer")
     page.locator("button[title='Think harder']").click()

@@ -16,7 +16,9 @@ import { looksLikeMathProblem, looksLikeCodeTask, arithmeticSlips, fixSlips } fr
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
-import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb } from "./research.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf } from "./research.js";
+import { repairFigures, tidyAnswer, gapsOf } from "./answerfix.js";
+import { rulesOf, violations, fixMessage } from "./constraints.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from "./power.js";
 // v5.29 UX: the follow-up chips fade out at the end, so it's clear the row scrolls (left in Arabic)
 const chipFade = () => { const side = typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "left" : "right"; const g = "linear-gradient(to " + side + ", #000 82%, transparent)"; return { WebkitMaskImage: g, maskImage: g }; };
@@ -663,7 +665,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
 
     try {
       let content = typed || (fileAtt ? userMsg.text : "What is in this photo? Read it and tell me what matters.");
-      let sources = null, via = null, research = null;
+      let sources = null, via = null, research = null, webCtx = null;
       const pic = img || carried;
       if ((api.webOn || o.web) && typed) {
         // With a photo, LOOK first: search for what is in the picture, not
@@ -738,13 +740,16 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           onStatus(tr("Reading {n} pages…", { n: toRead.length }));
           const ctxF = (api.contextTokens && api.contextTokens()) || 8192;
           const ansF = (api.power && api.power().longTokens) || 2048;
-          const budgetF = fitChars(ctxF, ansF, 2600, toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" "));
+          // v5.32: the passages fill at most a 12k window even on 16k phones — a small model copies
+          // figures far more reliably from a shorter prompt (and it reads faster)
+          const budgetF = fitChars(Math.min(ctxF, 12288), ansF, 2600, toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" "));
           const ranked = api.rankAll(question, toRead, { budget: budgetF, perSource: Math.max(1500, Math.floor(budgetF / Math.max(1, Math.min(toRead.length, 6)) * 1.4)) });
           const figs = confirmedFigures(ranked);
           sources = ranked; via = look.via;
           research = { pages: toRead.length, withFacts: ranked.length, searches: queries.length, confirmed: figs.list.length, fast: true,
             log: { queries: queries.slice(0, 6), read: toRead.slice(0, 12).map((h) => ({ title: String(h.title || "").slice(0, 90), url: h.url })) } };
           content = api.groundedPrompt(asked, ranked) + figs.block + (deep ? FAST_REPORT_ADD : "") + photoNote;
+          webCtx = { query, asked, question, toRead, budget: budgetF, tail: figs.block + (deep ? FAST_REPORT_ADD : "") + photoNote };
         } else if (toRead.length && api.webPages) {
           const notesSrc = [], tR = Date.now(), budget = (pwR.researchSecs || 170) * 1000; let read = 0;
           const seenUrls = new Set(lists.flat().map((h) => h.url));
@@ -946,7 +951,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         answer = await api.run(buildMessages(history, content, longMsg ? 1500 : undefined), pic, { onToken, onStatus, think: useThink, copy, ...longRep });
       } catch (e) {
         const em = String((e && e.message) || e);
-        if (em === "Stopped" || runRef.current !== run) throw e;
+        // v5.32: "Stopped" when the person did NOT press Stop (a thinking run the engine cut
+        // off — Ali's no-letter-e pitch, twice) is not the end: answered again, lighter.
+        if (runRef.current !== run) throw e;
         const copy = !!sources || !!fileAtt;
         if (/longer than this model can read|context/i.test(em)) {
           // Too long with the earlier turns: answer from this message alone; still too long →
@@ -1007,6 +1014,25 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         }
         if (nC) extra.continued = nC;
       }
+      // v5.32 — writing rules ("no letter e", "exactly eight words", "four sentences", "no
+      // numbers") are checked by the phone, and the model is told exactly what broke — up to
+      // 3 times; the try that breaks the fewest rules is kept. (constraints.js)
+      const rules = plain && typed && answer ? rulesOf(typed) : null;
+      if (rules) {
+        let best = answer, broken = violations(answer, rules), round = 0;
+        while (broken.length && round < 3) {
+          round++;
+          patchMsg(cid, aiId, { phase: tr("Checking the rules — fixing {n} problem(s)…", { n: broken.length }) });
+          let again = "";
+          try { again = await api.run(buildMessages([], fixMessage(typed, best, broken), 0), null, { onStatus, think: false, temperature: 0.4 }); }
+          catch (e) { if (String(e && e.message) === "Stopped" && runRef.current !== run) throw e; break; }
+          if (runRef.current !== run) return;
+          const v2 = violations(again, rules);
+          if (String(again || "").trim() && v2.length <= broken.length) { best = again; broken = v2; }
+        }
+        answer = best;
+        extra.rules = { checked: true, broken: broken.slice(0, 4) };
+      }
       // v5.24 — Expert / Master: the draft is re-read by the model as a senior reviewer,
       // who recomputes numbers, fixes mistakes, fills gaps and writes the improved answer.
       // Unusable review (no FINAL ANSWER, much shorter) or Stop → the draft stays. (power.js)
@@ -1027,6 +1053,44 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           answer = draft;
         }
       }
+      // v5.32 — like Gemini: what the question asked for but the answer still lacks (a price,
+      // the trims, the specs) is searched for ONCE more, and the answer written again with
+      // the new pages — instead of "the sources do not provide the price". (answerfix.js)
+      if (sources && webCtx && api.webPages && answer && String(answer).trim()) {
+        const gaps = gapsOf(typed, answer);
+        if (gaps.length) {
+          extra.gapSearch = gaps;
+          patchMsg(cid, aiId, { phase: tr("Searching again for: {what}…", { what: gaps.join(", ") }) });
+          try {
+            // the subject alone ("Winner Sky V10"), then the missing part — not "…specs price price"
+            const topic = (topicOf(webCtx.query) || webCtx.query).replace(/\b(detailed|details?|full|all|specs?|specifications?|prices?|costs?|trims?|versions?|variants?|reviews?|and|with|in|of)\b|مواصفات|سعر|أسعار|اسعار|فئات|و(?=\s)/gi, " ").replace(/\s+/g, " ").trim() || webCtx.query;
+            const more = await Promise.all(gaps.map((g) => api.webPages(topic + " " + g, 4).catch((e) => { if (String(e && e.message) === "Stopped") throw e; return { hits: [] }; })));
+            if (runRef.current !== run) return;
+            const known = new Set(webCtx.toRead.map((h) => h.url));
+            const fresh = mergeHits(more.map((r) => ((r && r.hits) || []).filter((h) => !known.has(h.url))), 4, webCtx.question);
+            if (fresh.length) {
+              const all = [...webCtx.toRead, ...fresh];
+              const ranked2 = api.rankAll(webCtx.question, all, { budget: webCtx.budget, perSource: Math.max(1200, Math.floor(webCtx.budget / Math.min(all.length, 7) * 1.4)) });
+              const content2 = api.groundedPrompt(webCtx.asked, ranked2) + confirmedFigures(ranked2).block + webCtx.tail;
+              const again = await api.run(buildMessages([], content2, 0), null, { onToken, onStatus, think: false, copy: true, ...(api.power ? { maxTokens: api.power().longTokens } : {}) });
+              if (runRef.current !== run) return;
+              if (again && String(again).trim().length > String(answer).length * 0.6 && gapsOf(typed, again).length < gaps.length + 1) {
+                answer = again; sources = ranked2; content = content2;
+                if (research) { research.pages += fresh.length; research.searches += gaps.length; research.withFacts = ranked2.length;
+                  if (research.log) research.log = { ...research.log, queries: [...research.log.queries, ...gaps.map((g) => topic + " " + g)], read: [...research.log.read, ...fresh.map((h) => ({ title: String(h.title || "").slice(0, 90), url: h.url }))].slice(0, 16) }; }
+              }
+            }
+          } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+        }
+      }
+      // v5.32 — every figure checked against the source its line cites, and fixed by code
+      // ("0-inch" → "10-inch", "sixseater" → "six-seater"); broken bold, repeated bullets,
+      // uneven tables and "the passages do not provide…" lines tidied away. (answerfix.js)
+      if (sources && answer) {
+        const rf = repairFigures(answer, sources);
+        if (rf.fixed.length) extra.figuresFixed = rf.fixed.length;
+        answer = tidyAnswer(rf.text);
+      }
       // A web answer with a number no source contains ("June 200005"): asked
       // once more, told exactly which numbers were not in the sources.
       if (sources && api.groundedAudit && answer) {
@@ -1039,7 +1103,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             const again = await api.run(buildMessages([], fixMsg, 0), null, { onToken, onStatus, think: false, temperature: 0.2, copy: true });
             if (runRef.current !== run) return;
             const au2 = api.groundedAudit(again, sources, typed);
-            if (again && au2.fabricated.length < au.fabricated.length) answer = again;
+            if (again && au2.fabricated.length < au.fabricated.length) answer = tidyAnswer(repairFigures(again, sources).text);
             if (au2.fabricated.length) extra.unsourced = au2.fabricated.slice(0, 4);
           } catch (e) { if (String(e && e.message) === "Stopped") throw e; extra.unsourced = au.fabricated.slice(0, 4); }
         }
@@ -1374,6 +1438,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             {m.unsourced ?<p className="mt-1 text-[11px] text-amber-300" data-testid="unsourced">⚠ {tr("Not found in the sources")}: {m.unsourced.join(", ")}</p> : null}
             {m.fixedSlip ? <p className="mt-1 text-[11px] text-sky-300" data-testid="slip-fixed">{tr("The first answer had a wrong sum — re-done by running code")}</p> : null}
             {m.slips && !m.fixedSlip ? <p className="mt-1 text-[11px] text-amber-300" data-testid="slip-note">⚠ {tr("Check this sum")}: {m.slips[0].expr} → {Number(m.slips[0].right.toFixed(4)).toLocaleString("en-US")}</p> : null}
+            {m.rules ? (
+              <p className={"mt-1.5 text-[11px] flex items-center gap-1 " + (m.rules.broken.length ? "text-amber-300" : "text-emerald-300")} data-testid="rules-checked"><CheckCircle2 size={12} />
+                {m.rules.broken.length ? tr("Rules checked — still off: {what}", { what: m.rules.broken[0] }) : tr("Rules checked by the phone: all followed")}</p>
+            ) : null}
             {m.reasoned ? (
               <p className="mt-1.5 text-[11px] text-emerald-300 flex items-center gap-1" data-testid="reasoned"><CheckCircle2 size={12} />
                 {m.reasoned.checked === "corrected" ? tr("Checked — the reviewer fixed a mistake") : m.reasoned.checked === "judged" ? tr("{n} tries disagreed — weighed and checked", { n: m.reasoned.total })

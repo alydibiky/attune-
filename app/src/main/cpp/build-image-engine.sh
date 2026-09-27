@@ -33,16 +33,21 @@ common=(-G Ninja -DCMAKE_MAKE_PROGRAM="$NINJA"
   -DGGML_NATIVE=OFF -DGGML_OPENMP=OFF -DGGML_CPU_ARM_ARCH=armv8.2-a+dotprod+fp16)
 
 mkdir -p "$OUT"
+if [ -f "$OUT/libattune-image.so" ]; then echo "picture engine (CPU) already built"; else
 cmake -S "$SRC" -B "$SRC/build-android-cpu" "${common[@]}" > /dev/null
 cmake --build "$SRC/build-android-cpu" --target sd-cli -j"$JOBS" > /dev/null
 cp "$SRC/build-android-cpu/bin/sd-cli" "$OUT/libattune-image.so"
 "$NDK"/toolchains/llvm/prebuilt/*/bin/llvm-strip "$OUT/libattune-image.so" || true
 echo "picture engine (CPU): $(du -h "$OUT/libattune-image.so" | cut -f1)"
+fi
 
 if [ -f "$OCL/lib/arm64-v8a/libOpenCL.so" ]; then
-  cmake -S "$SRC" -B "$SRC/build-android-gpu" "${common[@]}" -DSD_OPENCL=ON \
-    -DOpenCL_INCLUDE_DIR="$OCL/include" -DOpenCL_LIBRARY="$OCL/lib/arm64-v8a/libOpenCL.so" > /dev/null
-  cmake --build "$SRC/build-android-gpu" --target sd-cli -j"$JOBS" > /dev/null
+  # v5.32: the GPU build's output is kept, and shown if it fails (it used to vanish in /dev/null)
+  if ! { cmake -S "$SRC" -B "$SRC/build-android-gpu" "${common[@]}" -DSD_OPENCL=ON \
+      -DOpenCL_INCLUDE_DIR="$OCL/include" -DOpenCL_LIBRARY="$OCL/lib/arm64-v8a/libOpenCL.so" > /tmp/sd-gpu.log 2>&1 &&
+    cmake --build "$SRC/build-android-gpu" --target sd-cli -j"$JOBS" >> /tmp/sd-gpu.log 2>&1; }; then
+    echo "picture engine (GPU) FAILED to build:"; tail -n 60 /tmp/sd-gpu.log; exit 1
+  fi
   cp "$SRC/build-android-gpu/bin/sd-cli" "$OUT/libattune-image-gpu.so"
   "$NDK"/toolchains/llvm/prebuilt/*/bin/llvm-strip "$OUT/libattune-image-gpu.so" || true
   echo "picture engine (GPU, OpenCL): $(du -h "$OUT/libattune-image-gpu.so" | cut -f1)"
