@@ -5,7 +5,7 @@ import {
   Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User,
   ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users,
   AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2,
-  Database, GraduationCap, Newspaper, Folder, Layers, FileText,
+  Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film,
 } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -24,6 +24,8 @@ import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
 import { ChatXRay } from "./chatxray-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
+import { VideoDownloader } from "./video-ui.jsx";
+import { classify as videoLink, linkIn } from "./video.js";
 import { popBack, hasBack, useSubBack } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { placeFor } from "./places.js";
@@ -6607,17 +6609,18 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
-  assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter" };
+  assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader" };
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.37";
+const PAGE_VERSION = "5.38";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
   ["deal", "Deal Check", "Before you pay or sign", ShieldCheck],
   ["xray", "Chat X-Ray", "Money, promises & questions in a WhatsApp chat", MessageCircle],
   ["convert", "File Converter", "PDF, Word, PowerPoint, Excel, photos, e-books — 80+ conversions", FileText],
+  ["video", "Video Downloader", "Paste a video link, pick the quality, save it to your phone", Film],
   ["assistants", "Assistants", "Experts that follow your instructions", Bot],
   ["projects", "Projects", "Chats, files & instructions together", Folder],
   ["artifacts", "Artifacts", "Saved pages, documents & programs", Layers],
@@ -6641,7 +6644,7 @@ const MORE_TOOLS = [
 // in four named groups instead of one wall of 23 tiles.
 const MORE_GROUPS = [
   ["Create & learn", ["instant", "studio", "assistants", "projects", "artifacts", "code", "learn", "news"]],
-  ["Work & business", ["xray", "convert", "business", "crane", "field", "fleet", "reminders"]],
+  ["Work & business", ["xray", "convert", "video", "business", "crane", "field", "fleet", "reminders"]],
   ["Your life", ["deal", "memory", "map", "travel", "cycle"]],
   ["Prompts for other AIs", ["improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
@@ -6674,6 +6677,7 @@ export default function App() {
   // so a restored backup or a reinstall gets its reminders back.
   useEffect(() => { try { syncToPhone(NATIVE, reminders); } catch (e) {} try { syncDaily(NATIVE); } catch (e) {} }, []);
   const [dailyOpen, setDailyOpen] = useState(null);
+  const [videoIn, setVideoIn] = useState("");             // v5.38: a video link shared to Attune
   const [xrayIn, setXrayIn] = useState(null);             // v5.35: a WhatsApp chat export shared to Attune      // "daily-learn-…" / "daily-news-…" from a notification or the widget
   const scheduleReminder = (r) => {
     const list = [...loadReminders().filter((x) => x.id !== r.id), r];
@@ -7281,6 +7285,9 @@ export default function App() {
       if (!shared) return;
       // A bank SMS, an InstaPay or wallet confirmation: straight to Money.
       if (d.kind === "share") {
+        // v5.38: a shared video link (a direct file, archive.org, Wikimedia Commons) → Video Downloader
+        const link = linkIn(shared), vk = link && videoLink(link).kind;
+        if (link && ["direct", "archive", "commons"].includes(vk) && shared.length - link.length < 120) { setVideoIn(link + "#" + Date.now()); setMode("video"); return; }
         const pay = parsePayment(shared, { now: Date.now() });
         if (pay && pay.ok) { setPendingPay({ text: shared, id: Date.now() }); setMode("money");
           setToast(tr("Payment received — pick the account and confirm")); setTimeout(() => setToast(""), 3500); return; }
@@ -8842,6 +8849,8 @@ export default function App() {
             modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")} canReadPhotos={!!LocalEngine.vision}
             saveFile={NATIVE ? (name, text, mime, b64) => nativeCall("saveFile", b64 ? { name, mime, b64 } : { name, mime, text }) : null}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false })} />
+        ) : mode === "video" ? (
+          <VideoDownloader flash={flash} nativeCall={NATIVE ? nativeCall : null} pro={proActive} openPlan={() => setShowUpgrade(true)} initialLink={videoIn ? videoIn.replace(/#\d+$/, "") : ""} key={videoIn || "v"} />
         ) : mode === "xray" ? (
           <ChatXRay flash={flash} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}

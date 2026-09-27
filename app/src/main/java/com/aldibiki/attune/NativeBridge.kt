@@ -769,6 +769,70 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    // ---- Video Downloader (v5.38): read a link, save the video with DownloadManager ----------
+    @JavascriptInterface
+    fun videoProbe(id: String, arg: String) {
+        if (blockedByAirGap(id, "downloading a video")) return
+        pool.execute {
+            try { resolve(id, MediaTools.probe(JSONObject(arg).getString("url"))) }
+            catch (e: Throwable) { reject(id, "Couldn't open that link" + (e.message?.let { " ($it)" } ?: "")) }
+        }
+    }
+
+    @JavascriptInterface
+    fun videoGet(id: String, arg: String) {
+        if (blockedByAirGap(id, "downloading a video")) return
+        pool.execute {
+            try { resolve(id, MediaTools.getText(JSONObject(arg).getString("url"))) }
+            catch (e: Throwable) { reject(id, "Couldn't open that link" + (e.message?.let { " ($it)" } ?: "")) }
+        }
+    }
+
+    @JavascriptInterface
+    fun videoDownload(id: String, arg: String) {
+        if (blockedByAirGap(id, "downloading a video")) return
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                resolve(id, MediaTools.download(ctx, a.getString("url"), a.optString("name", "video.mp4"), a.optBoolean("audio"), a.optString("title")))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't start the download") }
+        }
+    }
+
+    @JavascriptInterface
+    fun videoStatus(id: String, arg: String) {
+        pool.execute {
+            try {
+                val ids = JSONObject(arg).optJSONArray("ids")?.let { p -> (0 until p.length()).map { p.getLong(it) } } ?: emptyList()
+                resolve(id, JSONObject().put("items", MediaTools.status(ctx, ids)))
+            } catch (e: Throwable) { reject(id, e.message ?: "status") }
+        }
+    }
+
+    @JavascriptInterface
+    fun videoOpen(id: String, arg: String) {
+        try { if (MediaTools.openFile(ctx, JSONObject(arg).getLong("id"))) resolve(id, JSONObject().put("ok", true)) else reject(id, "The file was moved or deleted") }
+        catch (e: Throwable) { reject(id, e.message ?: "Couldn't open the video") }
+    }
+
+    @JavascriptInterface
+    fun videoCancel(id: String, arg: String) {
+        try { resolve(id, JSONObject().put("ok", MediaTools.cancel(ctx, JSONObject(arg).getLong("id")))) }
+        catch (e: Throwable) { reject(id, e.message ?: "cancel") }
+    }
+
+    /** The text on the clipboard (the app is in front, so Android allows it). */
+    @JavascriptInterface
+    fun clipboardText(id: String, arg: String) {
+        web.post {
+            try {
+                val cm = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val t = cm.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(ctx)?.toString() ?: ""
+                resolve(id, JSONObject().put("text", t))
+            } catch (e: Throwable) { reject(id, e.message ?: "clipboard") }
+        }
+    }
+
     @JavascriptInterface
     fun saveImageToGallery(name: String): String = try {
         JSONObject().put("ok", true).put("where", ImageEngine.saveToGallery(ctx, name)).toString()

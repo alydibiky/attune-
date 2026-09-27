@@ -98,6 +98,7 @@ A single company licence is worth as much as 50 personal subscriptions. Egyptian
 "PDF to Word" is one of the most searched phone tasks, and every free converter site uploads your contracts and invoices to a stranger's server, with ads and waiting. Attune does 80+ conversions (PDF, Word, PowerPoint, Excel, CSV, JSON, LibreOffice, e-books, web pages, photos, subtitles, merge/split PDFs) offline, and reads scanned paper into an editable Word file with the AI — Arabic too.
 - **Hook video:** "I photographed a paper contract — 20 seconds later it's a Word file I can edit. No internet."
 - **Free:** 5 conversions a day (the habit). **Pro:** unlimited — offices, students and accountants convert every day.
+- **Video Downloader (v5.38)** rides along: paste a link, pick 1080p / 720p / audio, saved to the phone. Free 3 a day, Pro unlimited. Only sites that allow downloads (YouTube/TikTok/Instagram are refused) so the Play listing stays safe.
 
 ## 7. Growth (getting users cheaply)
 
