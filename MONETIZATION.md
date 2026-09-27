@@ -89,6 +89,11 @@ A single company licence is worth as much as 50 personal subscriptions. Egyptian
 - **Free:** 3 checks a day (enough to be amazed). **Pro:** unlimited — people who buy, sell or sign often (car dealers, brokers, small shops, families buying on installments) hit the limit fast.
 - **Business angle:** real-estate and car brokers can use it to show clients a fair-price report — a reason for the Business plan.
 
+## 6c. Chat X-Ray (v5.35) — the business owner's reason to pay
+"Who owes me money in this WhatsApp chat?" Export a chat → Attune: a money ledger added up by code (with the exact messages as proof), promises and dates with reminders, questions you never answered, and "ask this chat". All offline — business chats never leave the phone, which no cloud AI can promise.
+- **Hook video:** "I exported my WhatsApp with a client — Attune found 27,500 EGP he still owes me, with the messages."
+- **Free:** 1 X-ray a day. **Pro:** unlimited. Contractors, shops, brokers and freelancers live in WhatsApp — they are exactly the people who pay.
+
 ## 7. Growth (getting users cheaply)
 
 - **Short videos in Egyptian Arabic** (TikTok, Reels, Shorts): "ChatGPT on your phone WITHOUT internet", "I built my company's system in 1 minute", "It reads my crane photo and tells me the model". A demo sells this app better than an explanation.

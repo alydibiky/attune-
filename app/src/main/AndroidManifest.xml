@@ -75,6 +75,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>
+            <!-- v5.35: WhatsApp "Export chat" with media sends a .zip — read by Chat X-Ray -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/zip" />
+            </intent-filter>
 
             <!-- Select text in ANY app → "Attune" in the menu that appears.
                  The Android version of a system-wide "summarise this" hotkey. -->

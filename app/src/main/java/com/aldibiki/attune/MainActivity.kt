@@ -342,8 +342,20 @@ class MainActivity : AppCompatActivity() {
                     payload.put("kind", "image").put("image", data)
                         .put("text", intent.getStringExtra(Intent.EXTRA_TEXT) ?: "")
                 } else {
-                    val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
-                    payload.put("kind", "share").put("text", text)
+                    // v5.35: WhatsApp → Export chat shares a FILE (.txt, or .zip with media) —
+                    // the chat is read here and opened in Chat X-Ray
+                    @Suppress("DEPRECATION")
+                    val stream = (if (android.os.Build.VERSION.SDK_INT >= 33)
+                        intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                    else intent.getParcelableExtra(Intent.EXTRA_STREAM)) as Uri?
+                    val chat = stream?.let { readChatExport(it, type) }
+                    if (chat != null) {
+                        payload.put("kind", "chatfile").put("text", chat)
+                            .put("name", (intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: "").replace(Regex("^WhatsApp Chat (with|-) ", RegexOption.IGNORE_CASE), ""))
+                    } else {
+                        val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
+                        payload.put("kind", "share").put("text", text)
+                    }
                 }
             }
             Intent.ACTION_PROCESS_TEXT -> {
@@ -354,6 +366,25 @@ class MainActivity : AppCompatActivity() {
         }
         if (::web.isInitialized && web.progress == 100) deliverShare(payload) else pendingShare = payload
     }
+
+    /** An exported chat file (.txt, or the .txt inside a .zip), up to 6 MB of text; null if it isn't one. */
+    private fun readChatExport(uri: Uri, type: String): String? = try {
+        val max = 6_000_000
+        val text = contentResolver.openInputStream(uri)?.use { ins ->
+            if (type.contains("zip")) {
+                val z = java.util.zip.ZipInputStream(ins)
+                var e = z.nextEntry
+                var found: String? = null
+                while (e != null && found == null) {
+                    if (e.name.endsWith(".txt", true)) found = z.bufferedReader(Charsets.UTF_8).readText().take(max)
+                    e = z.nextEntry
+                }
+                found
+            } else ins.bufferedReader(Charsets.UTF_8).readText().take(max)
+        }
+        // a chat export starts its lines with a date and time
+        if (text != null && Regex("^[\u200e\u200f]?\\[?[\\d\u0660-\u0669]{1,4}[/.\\-]", RegexOption.MULTILINE).containsMatchIn(text.take(4000))) text else null
+    } catch (e: Exception) { null }
 
     /**
      * A shared image, scaled down to at most 1600 px on its long side and

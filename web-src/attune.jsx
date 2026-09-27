@@ -22,6 +22,7 @@ import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
+import { ChatXRay } from "./chatxray-ui.jsx";
 import { popBack, hasBack, useSubBack } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { placeFor } from "./places.js";
@@ -6605,15 +6606,16 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
-  assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check" };
+  assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray" };
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.34";
+const PAGE_VERSION = "5.35";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
   ["deal", "Deal Check", "Before you pay or sign", ShieldCheck],
+  ["xray", "Chat X-Ray", "Money, promises & questions in a WhatsApp chat", MessageCircle],
   ["assistants", "Assistants", "Experts that follow your instructions", Bot],
   ["projects", "Projects", "Chats, files & instructions together", Folder],
   ["artifacts", "Artifacts", "Saved pages, documents & programs", Layers],
@@ -6637,7 +6639,7 @@ const MORE_TOOLS = [
 // in four named groups instead of one wall of 23 tiles.
 const MORE_GROUPS = [
   ["Create & learn", ["instant", "studio", "assistants", "projects", "artifacts", "code", "learn", "news"]],
-  ["Work & business", ["business", "crane", "field", "fleet", "reminders"]],
+  ["Work & business", ["xray", "business", "crane", "field", "fleet", "reminders"]],
   ["Your life", ["deal", "memory", "map", "travel", "cycle"]],
   ["Prompts for other AIs", ["improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
@@ -6669,7 +6671,8 @@ export default function App() {
   // The phone rings reminders; the page owns the list. Re-sent at every start,
   // so a restored backup or a reinstall gets its reminders back.
   useEffect(() => { try { syncToPhone(NATIVE, reminders); } catch (e) {} try { syncDaily(NATIVE); } catch (e) {} }, []);
-  const [dailyOpen, setDailyOpen] = useState(null);      // "daily-learn-…" / "daily-news-…" from a notification or the widget
+  const [dailyOpen, setDailyOpen] = useState(null);
+  const [xrayIn, setXrayIn] = useState(null);             // v5.35: a WhatsApp chat export shared to Attune      // "daily-learn-…" / "daily-news-…" from a notification or the widget
   const scheduleReminder = (r) => {
     const list = [...loadReminders().filter((x) => x.id !== r.id), r];
     setReminders(list);
@@ -7270,6 +7273,8 @@ export default function App() {
         setToast(tr("Photo received — a receipt? tap “Add to Money”")); setTimeout(() => setToast(""), 3500);
         return;
       }
+      // v5.35: WhatsApp → Export chat → Attune: the chat opens in Chat X-Ray
+      if (d.kind === "chatfile" && d.text) { setXrayIn({ text: String(d.text), name: String(d.name || "") }); setMode("xray"); return; }
       const shared = String(d.text || "").trim();
       if (!shared) return;
       // A bank SMS, an InstaPay or wallet confirmation: straight to Money.
@@ -8830,6 +8835,11 @@ export default function App() {
             modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken })}
             illustrate={NATIVE && NATIVE.imageInfo ? (p) => { setStudioIn({ prompt: p }); setMode("studio"); } : null} />
+        ) : mode === "xray" ? (
+          <ChatXRay flash={flash} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
+            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            scheduleReminder={scheduleReminder} incoming={xrayIn} clearIncoming={() => setXrayIn(null)}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "deal" ? (
           <DealCheck flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
