@@ -72,14 +72,27 @@ function drawText(g, s) {
       const off = s.align === "c" ? (avail - lw) / 2 : (rtl ? s.align === "l" : s.align === "r") ? avail - lw : 0;
       const base = y + size * (lh - 1) / 2 + size * 0.86;
       if (p.bullet && li === 0) { g.fillStyle = "#" + (s.bulletColor || s.color); const b = size * 0.42; g.fillRect(rtl ? s.x + s.w - size * 0.3 - b : s.x + size * 0.3 - 0, base - size * 0.36 - b / 2, b, b); }
-      for (const wd of line) {
+      const put = (wd, x) => {   // x = the word's left edge
         g.font = `${s.italic ? "italic " : ""}${wd.bold ? "700" : "400"} ${size}px ${FONT}`;
         g.fillStyle = "#" + wd.color;
-        g.direction = /[؀-ۿ]/.test(wd.word) || rtl ? "rtl" : "ltr";
-        g.textAlign = "left";
-        // right-to-left: the first word sits at the right edge
-        const x = rtl ? s.x + s.w - p.ind - off - wd.x - wd.ww : s.x + p.ind + off + wd.x;
-        if (g.direction === "rtl") { g.textAlign = "right"; g.fillText(wd.word, x + wd.ww, base); } else g.fillText(wd.word, x, base);
+        const ar = /[\u0600-\u06FF]/.test(wd.word);
+        g.direction = ar ? "rtl" : "ltr"; g.textAlign = ar ? "right" : "left";
+        g.fillText(wd.word, ar ? x + wd.ww : x, base);
+      };
+      if (!rtl) for (const wd of line) put(wd, s.x + p.ind + off + wd.x);
+      else {
+        // right to left: Arabic words from the right edge; a run of English words / numbers / links
+        // keeps its own left-to-right order inside the line ("Crane market 2026", not "2026 market Crane")
+        g.font = `400 ${size}px ${FONT}`; const sp = g.measureText(" ").width;
+        let xr = s.x + s.w - p.ind - off, k = 0;
+        while (k < line.length) {
+          if (/[\u0600-\u06FF]/.test(line[k].word)) { put(line[k], xr - line[k].ww); xr -= line[k].ww + sp; k++; continue; }
+          let j = k; while (j < line.length && !/[\u0600-\u06FF]/.test(line[j].word)) j++;
+          const run = line.slice(k, j), rw = run.reduce((n, w) => n + w.ww, 0) + sp * (run.length - 1);
+          let xl = xr - rw;
+          for (const wd of run) { put(wd, xl); xl += wd.ww + sp; }
+          xr -= rw + sp; k = j;
+        }
       }
       y += size * lh;
     });
@@ -233,6 +246,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
   const [count, setCount] = useState(8);
   const [lang, setLangPick] = useState("auto");
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem("attune:slides:theme") || "midnight"; } catch (e) { return "midnight"; } });
+  const [detail, setDetail] = useState(() => { try { return localStorage.getItem("attune:slides:detail") || "short"; } catch (e) { return "short"; } });
   const [motion, setMotion] = useState(loadMotion);       // { transition, animation, trigger }
   const [playing, setPlaying] = useState(false);
   const [styleNote, setStyleNote] = useState("");         // what was taken from the request's own words
@@ -301,7 +315,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
     const pool = [...hits, ...(file ? [{ title: file.name, url: "file:" + file.name, text: file.text }] : [])];
     if (!pool.length) return "";
     const ranked = rankPassages(q, pool, { budget, perSource: Math.round(budget * 0.6) });
-    const lines = ranked.map((h) => `[${h.url.startsWith("file:") ? tr("your file") : hits.indexOf(pool.find((p) => p.url === h.url)) + 1}] ${h.title}\n${h.text}`);
+    const lines = ranked.map((h) => `[${h.url.startsWith("file:") ? "F" : hits.indexOf(pool.find((p) => p.url === h.url)) + 1}] ${h.title}\n${h.text}`);
     return (file && file.data ? "COMPUTED FROM THE FILE (exact):\n" + file.data.text + "\n\n" : "") + lines.join("\n\n");
   };
 
@@ -315,7 +329,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
   const writeSlide = async (d, i, kind, hits, extra = "") => {
     const sl = d.slides[i], topic = d.topic;
     const src = sourceFor(hits, topic + " " + sl.title, 2400);
-    const msgs = S.slideMessages({ deckTitle: d.title, topic, slide: { ...sl, kind }, i: i + 1, n: d.slides.length, others: d.slides.map((x) => x.title), lang: d.lang, source: src, audience: d.audience });
+    const msgs = S.slideMessages({ deckTitle: d.title, topic, slide: { ...sl, kind }, i: i + 1, n: d.slides.length, others: d.slides.map((x) => x.title), lang: d.lang, source: src, audience: d.audience, detail: d.detail });
     if (extra) msgs[0].content += `\n\nALSO: ${extra}`;
     const reply = await llm(msgs, null, { maxTokens: kind === "table" || kind === "two" ? 520 : 420, temperature: 0.5 });
     let s = S.fixSlide(S.parseSlide(kind, reply), sl.title);
@@ -347,7 +361,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
       if (!alive()) return;
       const did = "d" + Date.now().toString(36);
       hitsRef.current = { id: did, hits };
-      let d = { id: did, topic, audience, title: outline.title, subtitle: outline.subtitle, lang: L, theme: useTheme, ...mo, date: dateLine(L), slides: outline.slides.map((s) => ({ ...s, bullets: [], pending: true })), source, hits: hits.map((h) => ({ title: h.title, url: h.url })), dropped: 0, unsure: 0 };
+      let d = { id: did, topic, audience, detail: st.detail || detail, fileName: file ? file.name : "", title: outline.title, subtitle: outline.subtitle, lang: L, theme: useTheme, ...mo, date: dateLine(L), slides: outline.slides.map((s) => ({ ...s, bullets: [], pending: true })), source, hits: hits.map((h) => ({ title: h.title, url: h.url })), dropped: 0, unsure: 0 };
       setDeck(d);
       for (let i = 0; i < d.slides.length; i++) {
         if (!alive()) return;
@@ -378,7 +392,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
       setBusy(tr("Planning the report…"));
       const o = S.parseReportOutline(await llm(S.reportOutlineMessages({ topic, kind: rKind, n: rLen, lang: L, source: sourceFor(hits, topic, 3000) }), null, { maxTokens: 420, temperature: 0.4 }), rLen, topic);
       if (!alive()) return;
-      let rep = { id: "r" + Date.now().toString(36), topic, kind: rKind, title: o.title, subtitle: o.subtitle, lang: L, date: dateLine(L), sections: o.sections.map((h) => ({ heading: h, blocks: [], pending: true })), summary: null, conclusion: [], sources: hits.map((h) => ({ title: String(h.title || h.url).slice(0, 100), url: h.url })), data: file && file.data ? file.data : null, unsure: 0 };
+      let rep = { id: "r" + Date.now().toString(36), topic, kind: rKind, title: o.title, subtitle: o.subtitle, lang: L, date: dateLine(L), sections: o.sections.map((h) => ({ heading: h, blocks: [], pending: true })), summary: null, conclusion: [], sources: [...hits.map((h, i) => ({ n: String(i + 1), title: String(h.title || h.url).slice(0, 100), url: h.url })), ...(file ? [{ n: "F", title: file.name, url: "" }] : [])], data: file && file.data ? file.data : null, unsure: 0 };
       setReport(rep);
       const wordsPer = rLen >= 8 ? 320 : rLen <= 3 ? 380 : 300;
       for (let i = 0; i < rep.sections.length; i++) {
@@ -482,6 +496,8 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
                 <div className="grid grid-cols-4 gap-1.5">{Object.entries(S.THEMES).map(([k, t]) => (
                   <button key={k} onClick={() => setTheme(k)} data-testid={"slides-theme-" + k} className={`rounded-xl border p-1.5 text-[11px] ${theme === k ? "border-teal-500 text-teal-200" : "border-slate-700 text-slate-400"}`}>
                     <span className="block h-7 rounded-md mb-1 relative overflow-hidden" style={{ background: "#" + t.cover }}><span className="absolute left-1.5 top-2 h-1 w-5 rounded" style={{ background: "#" + t.accent }} /><span className="absolute right-1 bottom-1 h-3 w-3 rounded-full" style={{ background: "#" + t.accent2 }} /></span>{tr(t.name)}</button>))}</div></div>
+              <div><p className="text-[12px] text-slate-400 mb-1.5">{tr("Words on each point")}</p>
+                <div className="flex flex-wrap gap-1.5">{[["short", "Short points"], ["detailed", "Detailed — full sentences"]].map(([k, l]) => <button key={k} onClick={() => { setDetail(k); try { localStorage.setItem("attune:slides:detail", k); } catch (e) {} }} className={chip(detail === k)} data-testid={"slides-detail-" + k}>{tr(l)}</button>)}</div></div>
               <MotionPicker motion={motion} setMotion={setMotionSaved} chip={chip} />
               <p className="text-[11px] text-slate-500">{tr("Or just say it in your request — e.g. “dark blue theme, fade transitions, the points fly in one by one”.")}</p>
             </>
@@ -500,7 +516,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
           <div className="space-y-2">
             {webPages ? (
               <button onClick={() => setUseWeb(!useWeb)} className={chip(useWeb) + " w-full flex items-center gap-2 text-start"} data-testid="slides-web">
-                <Globe size={15} className="shrink-0" /><span className="flex-1">{tr("Research the web for facts and figures")}</span>{useWeb ? <Check size={15} /> : null}</button>
+                <Globe size={15} className="shrink-0" /><span className="flex-1">{tr("Research the web for facts and figures")}<span className="block text-[11px] text-slate-500">{tr("Each slide names its sources, and a Sources slide lists every page")}</span></span>{useWeb ? <Check size={15} /> : null}</button>
             ) : null}
             <input ref={fileRef} type="file" className="hidden" accept=".docx,.pdf,.pptx,.txt,.md,.html,.htm,.xlsx,.csv,.tsv,.ods" data-testid="slides-file" onChange={(e) => { pickFile(e.target.files[0]); e.target.value = ""; }} />
             {file ? (
@@ -587,7 +603,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
       ) : null}
 
       {report ? <ReportView report={report} busyRow={busyRow} busy={busy} err={err} saveDocx={saveDocx} saveReportPdf={saveReportPdf}
-        toDeck={() => { const d = S.deckFromReport(report); setReport(null); setDeck({ ...d, id: "d" + Date.now().toString(36), topic: report.topic, theme, ...motion, source: S.reportText(report, 20000) + (report.data ? report.data.text : ""), hits: report.sources || [], dropped: 0, unsure: 0 }); }}
+        toDeck={() => { const d = S.deckFromReport(report); setReport(null); setDeck({ ...d, id: "d" + Date.now().toString(36), topic: report.topic, theme, ...motion, source: S.reportText(report, 20000) + (report.data ? report.data.text : ""), hits: (report.sources || []).filter((x) => x.n !== "F"), fileName: ((report.sources || []).find((x) => x.n === "F") || {}).title || "", dropped: 0, unsure: 0 }); }}
         copy={() => copyText(C.blocksToText(S.reportBlocks(report).filter((b) => b.type !== "pagebreak" && b.type !== "image")))} again={() => setReport(null)} /> : null}
     </div>
   );
@@ -649,7 +665,8 @@ function SlideEditor({ deck, index, setDeck, close, busy, busyRow, rewrite, err 
   const [ask, setAsk] = useState("");
   useEffect(() => { setTitle(s.title); setBody(S.slideToText(s)); setNotes(s.notes || ""); }, [s]);
   const th = S.THEMES[deck.theme] || S.THEMES.midnight;
-  const draft = S.fixSlide({ ...S.parseSlide(s.kind, body), notes }, title || s.title);
+  const parsed = S.parseSlide(s.kind, body);
+  const draft = S.fixSlide({ ...parsed, notes, cites: parsed.cites || s.cites }, title || s.title);   // hand edits keep the slide's sources
   const k = S.fullDeck(deck).indexOf(s) + 1;
   const shapes = S.layoutSlide(draft, th, { i: k, deckTitle: deck.title, rtl: S.isRtl(deck.lang), lang: deck.lang });
   const apply = () => { setDeck({ ...deck, slides: deck.slides.map((x, j) => (j === index ? draft : x)) }); close(); };

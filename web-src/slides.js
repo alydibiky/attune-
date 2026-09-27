@@ -68,6 +68,8 @@ export function styleFromPrompt(text) {
     out.animation = /\bfl(y|ies|ying)\b|طاير|تطير|طيران|تدخل من/i.test(z) ? "fly" : /zoom|تكبير|زووم/i.test(z) ? "zoom" : "fade";
     out.trigger = /automatic|\bauto\b|by (it|them)sel(f|ves)|without click|تلقائي|لوحده|لوحدها|أوتوماتيك|اوتوماتيك/i.test(t) ? "auto" : "click";
   }
+  if (/\b(detailed|in detail|more (text|words)|full sentences|explain each)\b|مفصل|مفصّل|بالتفصيل|كلام أكتر|شرح أكتر/i.test(t)) out.detail = "detailed";
+  else if (/\b(brief|short points|few words|concise|minimal text)\b|مختصر|كلام قليل|نقط قصيرة/i.test(t)) out.detail = "short";
   return out;
 }
 
@@ -192,18 +194,24 @@ const FORMATS = {
   stats: "- <number with its unit, copied exactly from the sources> | <what it means, at most 8 words>\n(3 or 4 lines)",
   chart: "UNIT: <unit of the numbers, e.g. tons, EGP million, %>\n- <label> | <number copied exactly from the sources>\n(3 to 8 lines)\nTAKEAWAY: <one sentence: what the chart shows>",
 };
-export function slideMessages({ deckTitle, topic, slide, i, n, others, lang, source, audience }) {
+const DETAILED = {
+  bullets: "- <short bold lead, 2–4 words>: <one or two full sentences, 20–30 words, with the facts>\n(3 to 5 lines like that)",
+  steps: "- <step name, 2–4 words>: <one or two sentences, 20–30 words: what is done and why>\n(3 to 5 steps, in order)",
+};
+export function slideMessages({ deckTitle, topic, slide, i, n, others, lang, source, audience, detail }) {
+  const fmt = (detail === "detailed" && DETAILED[slide.kind]) || FORMATS[slide.kind] || FORMATS.bullets;
   return [{ role: "user", content:
 `You write ONE slide of the presentation "${deckTitle}" (topic: ${topic}).${audience ? ` Audience: ${audience}.` : ""}
 This is slide ${i} of ${n}: "${slide.title}". The other slides are: ${others.filter((t) => t !== slide.title).join("; ")} — don't repeat their content.${source ? `\n\nSOURCES — use only these facts; copy every number exactly:\n${source}` : "\n\nDon't invent statistics, prices, dates or quotes; general knowledge only."}
 
 Write exactly this format and nothing else:
-${FORMATS[slide.kind] || FORMATS.bullets}
-NOTES: <2–3 sentences the presenter says on this slide>
+${fmt}
+NOTES: <2–3 sentences the presenter says on this slide>${source ? "\n\nAt the end of each point, row or number, put the number of the source it comes from in brackets, like [2] ([F] for the person's own file)." : ""}
 
 Rules: concrete and professional, short lines (a slide is not a page), no ** or # symbols; don't write about the slide design, transitions or animations. Keep the words LEFT, RIGHT, QUOTE, BY, UNIT, TAKEAWAY, NOTES in English. Write the content in ${S_LANGS[lang] || "English"}.` }];
 }
 
+const CITE = /\s*\[\s*((?:\d{1,2}|[Ff])(?:\s*[,،]\s*(?:\d{1,2}|[Ff]))*)\s*\]/g;
 /** The model's slide text → the slide's fields (kind kept; `fixSlide` downgrades what didn't come out). */
 export function parseSlide(kind, reply) {
   const out = { kind, notes: "" };
@@ -211,8 +219,11 @@ export function parseSlide(kind, reply) {
   const items = [], rows = [];
   let side = null, notes = [];
   const left = { title: "", items: [] }, right = { title: "", items: [] };
+  const cites = [];
   for (const raw of lines) {
-    const l = raw.replace(/\*\*/g, "").trim();
+    // "[2]", "[1, 3]", "[F]" — the sources a point comes from: kept aside, taken off the text
+    const r0 = raw.replace(/\*\*/g, ""), inNotes = notes.length || /^\s*(?:NOTES?|ملاحظات|SPEAKER NOTES)\s*[:：]/i.test(r0);
+    const l = r0.replace(CITE, (_, g) => { if (!inNotes) for (const c of g.split(/[,،]/)) { const k = c.trim().toUpperCase(); if (!cites.includes(k)) cites.push(k); } return ""; }).trim();
     if (!l) continue;
     if (notes.length || /^(?:NOTES?|ملاحظات|SPEAKER NOTES)\s*[:：]/i.test(l)) { notes.push(l.replace(/^(?:NOTES?|ملاحظات|SPEAKER NOTES)\s*[:：]\s*/i, "")); continue; }
     let m;
@@ -231,6 +242,7 @@ export function parseSlide(kind, reply) {
     else if (kind === "bullets" || kind === "steps") { if (l.length > 12 && !/:\s*$/.test(l)) items.push(l); }
   }
   out.notes = cut(notes.join(" "), 700);
+  if (cites.length) out.cites = cites;
   if (kind === "two") { out.left = left; out.right = right; }
   if (kind === "table") {
     const w = Math.min(5, Math.max(0, ...rows.map((r) => r.length)));
@@ -238,7 +250,7 @@ export function parseSlide(kind, reply) {
   }
   if (kind === "stats") out.stats = items.map((x) => { const [v, ...rest] = x.split("|"); return { value: cut(v, 18), label: cut(rest.join(" "), 70) }; }).filter((s) => s.value && /\d/.test(latinDigits(s.value)) && s.label).slice(0, 4);
   if (kind === "chart") out.bars = items.map((x) => { const p = x.split("|"); return { label: cut(p[0], 28), value: parseNum(p.slice(1).join(" ")), raw: clean(p.slice(1).join(" ")) }; }).filter((b) => b.label && b.value != null && b.value >= 0).slice(0, 8);
-  if (kind === "bullets" || kind === "steps") out.bullets = items.map((x) => { const s = splitLead(x); return { lead: cut(s.lead, 40), text: cut(s.text, 150) }; }).filter((x) => x.text).slice(0, 6);
+  if (kind === "bullets" || kind === "steps") out.bullets = items.map((x) => { const s = splitLead(x); return { lead: cut(s.lead, 40), text: cut(s.text, 240) }; }).filter((x) => x.text).slice(0, 6);
   if (kind === "quote" && !out.quote && items[0]) out.quote = cut(items[0], 200);
   return out;
 }
@@ -301,13 +313,13 @@ export function fitSize(paras, w, h, max, min = 12, gap = 0.45, lh = 1.2) {
 const box = (t, x, y, w, h, o = {}) => ({ t, x, y, w, h, ...o });
 const txt = (x, y, w, h, paras, o = {}) => ({ t: "text", x, y, w, h, paras: (Array.isArray(paras) ? paras : [{ text: paras }]).map((p) => (typeof p === "string" ? { text: p } : p)), ...o });
 
-function frame(th, title, i, deckTitle, rtl) {
+function frame(th, title, i, footer, rtl) {
   const out = [box("rect", 0, 0, SW, SH, { fill: th.bg })];
   out.push(box("ellipse", SW - 230, -150, 380, 380, { fill: th.accent, alpha: 0.07 }));
   out.push(box("rect", M, 56, 56, 6, { fill: th.accent, r: 3 }));
   const size = fitSize([{ text: title }], SW - 2 * M - 120, 80, 40, 24, 0, 1.12);
   out.push(txt(M, 74, SW - 2 * M - 120, 84, [{ text: title }], { size, bold: true, color: th.text, head: true, valign: "m", lh: 1.12 }));
-  out.push(txt(M, SH - 46, 760, 24, [{ text: deckTitle }], { size: 13, color: th.sub }));
+  out.push(txt(M, SH - 46, 960, 24, [{ text: footer }], { size: fitSize([{ text: footer }], 960, 24, 13, 9, 0, 1), color: th.sub }));
   out.push(txt(SW - M - 120, SH - 46, 120, 24, [{ text: String(i) }], { size: 13, color: th.sub, align: "r" }));
   return out;
 }
@@ -333,7 +345,7 @@ export function chartShapes(bars, x, y, w, h, th, unit) {
 const fmtN = (v) => (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString("en-US") : String(Math.round(v * 100) / 100));
 
 /** One slide → shapes. deck: {title, subtitle, date}; th: a THEMES entry. */
-export function layoutSlide(s, th, { i = 1, deckTitle = "", rtl = false, lang = "en" } = {}) {
+export function layoutSlide(s, th, { i = 1, deckTitle = "", rtl = false, lang = "en", sources = null } = {}) {
   const W0 = words(lang);
   let out;
   if (s.kind === "cover" || s.kind === "closing") {
@@ -350,15 +362,20 @@ export function layoutSlide(s, th, { i = 1, deckTitle = "", rtl = false, lang = 
     return rtl ? mirror(out) : out;
   }
   // a slide still being written, or one whose content is missing, is drawn as an (empty) key-points slide
-  const ok = { two: s.left && s.right, table: s.rows && s.rows.length && s.rows[0].length, stats: s.stats && s.stats.length, chart: s.bars && s.bars.length, agenda: s.items, quote: true, bullets: true, steps: true }[s.kind];
+  const ok = { two: s.left && s.right, table: s.rows && s.rows.length && s.rows[0].length, stats: s.stats && s.stats.length, chart: s.bars && s.bars.length, agenda: s.items, sources: s.items, quote: true, bullets: true, steps: true }[s.kind];
   if (!ok) s = { ...s, kind: "bullets", bullets: s.bullets || [] };
-  out = frame(th, s.title, i, deckTitle, rtl);
+  // the footer names this slide's sources ("Sources: [1] example.com · [F] fleet.xlsx"), else the deck's title
+  const named = sources && s.cites ? s.cites.filter((c) => sources[c]).map((c) => `[${c}] ${sources[c]}`) : [];
+  out = frame(th, s.title, i, named.length ? W0.sources + ": " + named.join(" · ") : deckTitle, rtl);
   const x = M, y = CY, w = SW - 2 * M, h = CH;
   const card = (cx, cy, cw2, ch2, o = {}) => box("rect", cx, cy, cw2, ch2, { fill: th.card, r: 18, ...o });
   // animation groups: everything added since the last call appears together (a card with its text…)
   let mark = out.length;
   const grp = (g) => { for (let q = mark; q < out.length; q++) out[q].g = g; mark = out.length; };
-  if (s.kind === "agenda") {
+  if (s.kind === "sources") {
+    const paras = s.items.map((it) => ({ lead: `[${it.n}]`, text: it.title + (it.url ? " — " + it.url : ""), leadColor: th.accent }));
+    out.push(txt(x, y, w, h, paras, { size: fitSize(paras, w, h, 24, 10, 0.6, 1.2), color: th.text, leadColor: th.accent, gap: 0.6 }));
+  } else if (s.kind === "agenda") {
     const list = s.items || [], cols = list.length > 5 ? 2 : 1, per = Math.ceil(list.length / cols), rowH = Math.min(78, h / per), colW = w / cols;
     list.forEach((t, k) => {
       const cx = x + colW * Math.floor(k / per), cy = y + rowH * (k % per);
@@ -462,12 +479,26 @@ export function fullDeck(deck) {
   const body = deck.slides.filter((s) => !s.hidden);
   const list = [{ kind: "cover", title: deck.title, subtitle: deck.subtitle, date: deck.date, notes: deck.coverNotes || "" }];
   if (deck.agenda !== false && body.length >= 4) list.push({ kind: "agenda", title: W0.agenda, items: body.map((s) => s.title) });
-  list.push(...body, { kind: "closing", title: W0.thanks, notes: "" });
+  list.push(...body);
+  const src = sourcesOf(deck);
+  if (src.length) {
+    const cited = new Set(body.flatMap((s) => s.cites || []));
+    const shown = cited.size ? src.filter((x) => cited.has(x.n)) : src;
+    if (shown.length) list.push({ kind: "sources", title: W0.sources, items: shown, notes: "" });
+  }
+  list.push({ kind: "closing", title: W0.thanks, notes: "" });
   return list;
+}
+const host = (u) => String(u || "").replace(/^https?:\/\/(www\.)?/i, "").split(/[/?#]/)[0];
+/** The pages and file the deck was written from: [{n: "1" | "F", title, url, short}] */
+export function sourcesOf(deck) {
+  return [...(deck.hits || []).map((h, i) => ({ n: h.n || String(i + 1), title: String(h.title || host(h.url)).slice(0, 110), url: h.url || "", short: host(h.url) || String(h.title || "").slice(0, 30) })),
+    ...(deck.fileName ? [{ n: "F", title: deck.fileName, url: "", short: deck.fileName }] : [])];
 }
 export function deckShapes(deck) {
   const th = THEMES[deck.theme] || THEMES.midnight, rtl = isRtl(deck.lang);
-  return fullDeck(deck).map((s, k) => ({ slide: s, shapes: layoutSlide(s, th, { i: k + 1, deckTitle: deck.title, rtl, lang: deck.lang }) }));
+  const sources = Object.fromEntries(sourcesOf(deck).map((x) => [x.n, x.short]));
+  return fullDeck(deck).map((s, k) => ({ slide: s, shapes: layoutSlide(s, th, { i: k + 1, deckTitle: deck.title, rtl, lang: deck.lang, sources }) }));
 }
 
 /** The order things appear in: [[{idx, para?}], …] — groups by `g`; a list marked byPara appears point by point. */
@@ -653,7 +684,7 @@ export function sectionMessages({ title, topic, kind, heading, i, n, others, lan
 `You write ${conclusion ? "the CONCLUSIONS AND RECOMMENDATIONS" : `section ${i} of ${n}, "${heading}",`} of the ${REPORT_KINDS[kind] || "report"} "${title}" (topic: ${topic}).${conclusion ? `\nThe sections were: ${others.join("; ")}.` : ` The other sections are: ${others.filter((h) => h !== heading).join("; ")} — don't repeat them.`}${source ? `\n\nMATERIAL — use only these facts; copy every number exactly:\n${source}` : "\n\nNo sources were given: don't invent statistics, prices, dates, names or quotes; where a figure would be needed, say what should be measured."}
 
 Write about ${nWords} words in Markdown: ${conclusion ? "a short conclusion paragraph, then numbered, specific, actionable recommendations (who does what)." : "clear paragraphs; ### sub-headings if useful; bullet lists for lists; a table (rows written as cell | cell | cell, with a header row) when comparing things or giving figures."}
-Do not write the section's own heading. Professional, precise, no filler. Write in ${S_LANGS[lang] || "English"}.` }];
+${source ? "Put the number of the source after each fact in brackets, like [2] ([F] for the person's own file). " : ""}Do not write the section's own heading. Professional, precise, no filler. Write in ${S_LANGS[lang] || "English"}.` }];
 }
 export function summaryMessages({ title, lang, body }) {
   return [{ role: "user", content:
@@ -731,7 +762,7 @@ export function reportBlocks(rep, { chartImage } = {}) {
   out.push({ type: "h1", text: `${rep.sections.length + 2}. ${W0.conclusion}` });
   out.push(...(rep.conclusion || []));
   let k = rep.sections.length + 3;
-  if (rep.sources && rep.sources.length) { out.push({ type: "h1", text: `${k++}. ${W0.sources}` }); rep.sources.forEach((s, i) => out.push({ type: "li", text: `[${i + 1}] ${s.title} — ${s.url}` })); }
+  if (rep.sources && rep.sources.length) { out.push({ type: "h1", text: `${k++}. ${W0.sources}` }); rep.sources.forEach((s, i) => out.push({ type: "li", text: `[${s.n || i + 1}] ${s.title}${s.url ? " — " + s.url : ""}` })); }
   if (rep.data) { out.push({ type: "h1", text: `${k}. ${W0.data}` }); out.push({ type: "p", text: rep.data.text }); if (rep.data.table) out.push({ type: "table", rows: rep.data.table }); }
   return out;
 }

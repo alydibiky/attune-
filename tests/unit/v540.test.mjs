@@ -133,4 +133,21 @@ eq(spids.every((x) => shapeIds.has(x)), true, "every animation points at a shape
 writeFileSync(join(tmp, "m.pptx"), S.pptxFromDeck({ ...deck, transition: "fade", animation: "fly", trigger: "auto" }));
 try { eq(execFileSync("python3", ["-c", "import sys\nfrom pptx import Presentation\nprint(len(Presentation(sys.argv[1]).slides))", join(tmp, "m.pptx")]).toString().trim(), "5", "python-pptx opens the animated deck"); } catch (e) { console.log("SKIP python-pptx"); }
 
+// ---- sources on the slides ----
+const cs = S.parseSlide("bullets", "- Market: EGP 4.2 billion in 2025 [1]\n- Mobile: 61% of rentals [1, 3]\n- Fleet: 40 cranes [F]\nNOTES: say it [2]");
+eq([cs.cites, cs.bullets.map((b) => b.text)], [["1", "3", "F"], ["EGP 4.2 billion in 2025", "61% of rentals", "40 cranes"]], "[n] citations are taken off the text and kept (a source only in the notes isn't counted)");
+eq(S.parseSlide("chart", "- 60 t | 35,000 [2]\n- 200 t | 90,000 [2]").bars.map((b) => b.value), [35000, 90000], "a citation never becomes a chart number");
+const sd = { title: "D", lang: "en", theme: "ocean", hits: [{ title: "Crane market", url: "https://www.example.com/a" }, { title: "Rates", url: "https://rates.eg/x" }, { title: "Unused", url: "https://u.com" }], fileName: "fleet.xlsx",
+  slides: [{ kind: "bullets", title: "A", bullets: [{ lead: "", text: "x" }], cites: ["1", "F"] }, { kind: "bullets", title: "B", bullets: [{ lead: "", text: "y" }], cites: ["2"] }] };
+const fd = S.fullDeck(sd);
+eq([fd.map((x) => x.kind), fd[3].items.map((x) => x.n)], [["cover", "bullets", "bullets", "sources", "closing"], ["1", "2", "F"]], "a Sources slide at the end lists the pages and file the slides used");
+const sdx = S.deckShapes(sd);
+const foot = sdx[1].shapes.find((x) => x.t === "text" && /Sources:/.test(x.paras[0].text));
+eq(foot && foot.paras[0].text, "Sources: [1] example.com · [F] fleet.xlsx", "each slide's footer names its own sources");
+const sx = await C.unzip(S.pptxFromDeck(sd));
+eq(/rates\.eg\/x/.test(new TextDecoder().decode(sx.get("ppt/slides/slide4.xml"))), true, "the Sources slide is in the PowerPoint with the links");
+eq(/At the end of each point.*\[2\]/s.test(S.slideMessages({ deckTitle: "D", topic: "t", slide: { kind: "bullets", title: "A" }, i: 1, n: 1, others: ["A"], lang: "en", source: "[1] page" })[0].content), true, "with sources, the AI is asked to cite them");
+eq(/20–30 words/.test(S.slideMessages({ deckTitle: "D", topic: "t", slide: { kind: "bullets", title: "A" }, i: 1, n: 1, others: ["A"], lang: "en", source: "", detail: "detailed" })[0].content), true, "Detailed: full sentences per point");
+eq([S.styleFromPrompt("a detailed presentation with full sentences").detail, S.styleFromPrompt("عرض مختصر").detail], ["detailed", "short"], "the request can ask for detailed or short points");
+
 if (fails.length) { console.log(`\n${fails.length} FAILED`); process.exit(1); } else console.log("\nALL PASSED");

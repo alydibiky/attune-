@@ -203,9 +203,9 @@ with sync_playwright() as p:
     page.locator("[data-testid=slides-web]").click()
     queue(page, [
         "TITLE: سوق تأجير الأوناش في مصر\nSUBTITLE: فرصة استثمارية\n1. [stats] السوق بالأرقام\n2. [chart] أسعار الإيجار اليومي\n3. [bullets] محركات النمو\n4. [steps] خطة الدخول\n5. [bullets] الخلاصة",
-        "- 4.2 مليار جنيه | حجم السوق في 2025\n- 61% | نصيب الأوناش المتحركة\n- 1,350 | موقع نشط في العاصمة الإدارية\n- 99% | رضا العملاء\nNOTES: أرقام السوق.",
+        "- 4.2 مليار جنيه | حجم السوق في 2025 [1]\n- 61% | نصيب الأوناش المتحركة [2]\n- 1,350 | موقع نشط في العاصمة الإدارية\n- 99% | رضا العملاء\nNOTES: أرقام السوق.",
         "UNIT: جنيه في اليوم\n- 60 طن | 35,000\n- 200 طن | 90,000\n- 500 طن | 210,000\n- 800 طن | 400,000\nTAKEAWAY: الأوناش الكبيرة تحقق أعلى دخل يومي.\nNOTES: الأسعار.",
-        "- العاصمة الإدارية: مشروعات بناء ضخمة\n- الطاقة: مزارع رياح جديدة\n- البنية التحتية: كباري وطرق\nNOTES: النمو.",
+        "- العاصمة الإدارية: مشروعات بناء ضخمة [1]\n- الطاقة: مزارع رياح جديدة\n- البنية التحتية: كباري وطرق\nNOTES: النمو.",
         "- الدراسة: تحليل الطلب\n- الأسطول: شراء أوناش مستعملة\n- المبيعات: عقود سنوية\nNOTES: الخطة.",
         "- السوق: كبير ومتنامي\n- الفرصة: الأوناش الثقيلة\n- الخطوة التالية: اجتماع\nNOTES: الخلاصة.",
     ])
@@ -221,8 +221,11 @@ with sync_playwright() as p:
     z, xs = pptx_texts(page.evaluate("window.__mock.lastSaved.b64"))
     check('rtl="1"' in xs[0] and "سوق تأجير الأوناش في مصر" in xs[0], "Arabic slides are right-to-left")
     check("شكراً لكم" in xs[-1] and "المحتويات" in xs[1], "Arabic agenda and closing slide")
+    check("المصادر" in xs[-2] and "example.com/cranes-1" in xs[-2] and "example.com/cranes-2" in xs[-2], "the last slide before “thank you” lists the sources, with their links")
+    check("[1] example.com" in xs[2] and "[2] example.com" in xs[2], "the numbers slide names its sources in its footer")
+    check("At the end of each point" in m[1], "the AI is asked to cite a source for each point")
     check("61%" in xs[2] and "99%" not in xs[2] and "210,000" in xs[3] and "400,000" not in xs[3], "only figures found on the pages are drawn")
-    for k in (1, 2, 3, 4, 5, 6):
+    for k in range(1, 10):
         shot(page, "ar-slide-%d" % k, "[data-testid=slide-canvas-%d]" % k)
     shot(page, "06-ar-deck")
     # ---- 8. from Chat: "make a presentation…" offers Slides & Reports with the prompt ----

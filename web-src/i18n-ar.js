@@ -2610,4 +2610,8 @@ export const AR = {
   "Fly in": "دخول طاير",
   "Zoom in": "تكبير للداخل",
   "Turn your phone sideways for a bigger slide": "لف الموبايل بالعرض عشان الشريحة تكبر",
+  "Words on each point": "الكلام في كل نقطة",
+  "Short points": "نقط قصيرة",
+  "Detailed — full sentences": "مفصّل — جمل كاملة",
+  "Each slide names its sources, and a Sources slide lists every page": "كل شريحة بتكتب مصادرها، وشريحة «المصادر» فيها كل الصفحات",
 };
