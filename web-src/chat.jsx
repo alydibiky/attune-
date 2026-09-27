@@ -19,6 +19,7 @@ import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFoll
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf } from "./research.js";
 import { repairFigures, tidyAnswer, gapsOf } from "./answerfix.js";
 import { rulesOf, violations, fixMessage } from "./constraints.js";
+import { factSheet, SHEET_NOTE } from "./factsheet.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from "./power.js";
 // v5.29 UX: the follow-up chips fade out at the end, so it's clear the row scrolls (left in Arabic)
 const chipFade = () => { const side = typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "left" : "right"; const g = "linear-gradient(to " + side + ", #000 82%, transparent)"; return { WebkitMaskImage: g, maskImage: g }; };
@@ -748,8 +749,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           sources = ranked; via = look.via;
           research = { pages: toRead.length, withFacts: ranked.length, searches: queries.length, confirmed: figs.list.length, fast: true,
             log: { queries: queries.slice(0, 6), read: toRead.slice(0, 12).map((h) => ({ title: String(h.title || "").slice(0, 90), url: h.url })) } };
-          content = api.groundedPrompt(asked, ranked) + figs.block + (deep ? FAST_REPORT_ADD : "") + photoNote;
-          webCtx = { query, asked, question, toRead, budget: budgetF, tail: figs.block + (deep ? FAST_REPORT_ADD : "") + photoNote };
+          // v5.34: when code can build the facts sheet (exact figures, tables), the model writes
+          // the answer and what it means — the figures come from the sheet, not re-typed by the model
+          const sheet0 = factSheet(question, ranked, /[؀-ۿ]/.test(typed));
+          const ask0 = sheet0.md ? SHEET_NOTE : deep ? FAST_REPORT_ADD : "";
+          content = api.groundedPrompt(asked, ranked) + figs.block + ask0 + photoNote;
+          webCtx = { query, asked, question, toRead, budget: budgetF, tail: figs.block + ask0 + photoNote };
         } else if (toRead.length && api.webPages) {
           const notesSrc = [], tR = Date.now(), budget = (pwR.researchSecs || 170) * 1000; let read = 0;
           const seenUrls = new Set(lists.flat().map((h) => h.url));
@@ -1110,6 +1115,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             if (au2.fabricated.length) extra.unsourced = au2.fabricated.slice(0, 4);
           } catch (e) { if (String(e && e.message) === "Stopped") throw e; extra.unsourced = au.fabricated.slice(0, 4); }
         }
+      }
+      // v5.34 — the facts sheet: every spec / price / table from the sources, copied by code with
+      // its citations (✓ = on 2+ sites), under the answer. (factsheet.js)
+      if (sources && answer && String(answer).trim()) {
+        const fs = factSheet((webCtx && webCtx.question) || typed, sources, /[؀-ۿ]/.test(typed || ""));
+        if (fs.md) { answer = String(answer).trim() + "\n\n" + fs.md; extra.factSheet = fs.rows.length + fs.tables.length; }
       }
       // A sum in the answer that doesn't add up ("25,000 × 4 = 10,000"): the
       // question is worked out again as a program the phone runs, and that

@@ -6,6 +6,7 @@ import React, { useState, useRef } from "react";
 import { ShieldCheck, ImagePlus, X, Loader2, Check, Copy, Send, AlertTriangle, Trash2, Calculator, Search } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as D from "./deal.js";
+import { useSubBack } from "./backstack.js";
 
 const HKEY = "attune:deals:v1";
 const loadH = () => { try { const v = JSON.parse(localStorage.getItem(HKEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
@@ -50,6 +51,7 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState(-1);
   const [res, setRes] = useState(null);
+  useSubBack(!!res, () => setRes(null));   // v5.34: Back → a new check
   const [err, setErr] = useState("");
   const [hist, setHist] = useState(loadH);
   const run = useRef(0);

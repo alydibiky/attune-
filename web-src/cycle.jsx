@@ -10,6 +10,7 @@
 // on the right day of the calendar, with the flow and any symptoms.
 import React, { useState, useMemo } from "react";
 import { tr, dateLocale } from "./i18n.js";
+import { useSubBack } from "./backstack.js";
 import { CalendarDays, ChevronLeft, ChevronRight, Droplet, Trash2, ShieldCheck, Plus, X } from "lucide-react";
 
 const KEY = "attune:cycle:v1";
@@ -286,6 +287,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
   const todayKey = dayKey(Date.now());
   const [month, setMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const [sel, setSel] = useState(null);           // selected day key for editing
+  useSubBack(sel != null, () => setSel(null));   // v5.34: Back closes the day editor
   const stats = useMemo(() => cycleStats(cycle, todayKey), [cycle, todayKey]);
   const upd = (fn) => setCycle((c) => cycleSave(fn(c)));
 

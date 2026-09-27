@@ -4,6 +4,7 @@ import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X } from "lucide-react";
 import { tr } from "./i18n.js";
+import { useSubBack } from "./backstack.js";
 import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, drawPack, drawSize, gpuWorks, loadStudio, saveStudio } from "./studio.js";
 
 const STAGE = {
@@ -43,8 +44,14 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   const readInfo = () => { try { return JSON.parse(native.imageInfo()); } catch (e) { return null; } };
   const [info, setInfo] = useState(readInfo);
   const [mode, setMode] = useState("create");
+  useSubBack(mode === "edit", () => setMode("create"));   // v5.34: Back leaves photo editing
   const [idea, setIdea] = useState("");
   const [enhance, setEnhance] = useState(true);
+  // v5.34 — Ali: "needs to be highest resolution". Turbo draws at 512 px (what it was trained
+  // for — bigger gives doubled buildings), so every picture is sharpened ×4 → 2048 px after it
+  // is drawn. On by default; remembered.
+  const [hd, setHd] = useState(() => { try { return localStorage.getItem("attune:studio:hd") !== "0"; } catch (e) { return true; } });
+  const setHdKeep = (v) => { setHd(v); try { localStorage.setItem("attune:studio:hd", v ? "1" : "0"); } catch (e) {} };
   const [prompt, setPrompt] = useState("");
   const [size, setSize] = useState("square");
   // v5.28: Turbo (fast, any phone) or Pro (best quality, needs the graphics chip) — remembered
@@ -81,6 +88,9 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   const P = PACKS[dp.id];
   const upReady = packReady(info, "esrgan-x4");
   const keep = (list) => { setGallery(list); saveStudio(list); };
+  // adds one picture to the newest gallery (safe from a delayed call — v5.34 auto-sharpen)
+  const keepRef = useRef(null);
+  keepRef.current = (item) => setGallery((g) => { const l = [item, ...g]; saveStudio(l); return l; });
 
   const install = async (packId) => {
     const p = PACKS[packId];
@@ -135,6 +145,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       setCur(item); keep([item, ...gallery]);
       if (r.pausedChat) flash(tr("The chat model was paused to make room, and is loading again."));
       setInfo(readInfo());
+      if (hd && item.w <= 1216 && !item.edit) autoSharpen.current = item;
     } catch (e) {
       // v5.17: never silent. "Stopped" is only quiet when the person pressed Stop.
       const msg = String((e && e.message) || "");
@@ -144,20 +155,27 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       const inf = readInfo(); setInfo(inf);
       if (msg === "Stopped" && !userStop.current && inf && inf.lastError) setErr(tr(inf.lastError));
     }
-    finally { setBusy(null); userStop.current = false; }
+    finally {
+      setBusy(null); userStop.current = false;
+      // v5.34: highest resolution — sharpen ×4 straight away (after the drawing's busy state is cleared)
+      const next = autoSharpen.current; autoSharpen.current = null;
+      if (next) setTimeout(() => sharpen(next, true), 50);
+    }
   };
+  const autoSharpen = useRef(null);
 
-  const sharpen = async () => {
-    if (!cur) return;
+  const sharpen = async (target, auto) => {
+    const pic = target && target.file ? target : cur;
+    if (!pic) return;
     if (!upReady && !(await install("esrgan-x4"))) return;
     setErr(""); setBusy({ what: "upscale", t0: Date.now(), stage: "upscale" });
     try {
-      const run = nativeCall("upscaleImage", { file: cur.file }, progress("upscale"));
+      const run = nativeCall("upscaleImage", { file: pic.file }, progress("upscale"));
       callId.current = nativeLastId();
       const r = await run;
-      const item = { ...cur, file: r.file, url: r.url, w: r.width, h: r.height, ms: r.ms, backend: r.backend, upscaled: true, at: Date.now() };
-      setCur(item); keep([item, ...gallery]);
-    } catch (e) { if (e.message !== "Stopped") setErr(tr(e.message)); }
+      const item = { ...pic, file: r.file, url: r.url, w: r.width, h: r.height, ms: (pic.ms || 0) + (r.ms || 0), backend: r.backend, upscaled: true, at: Date.now() };
+      setCur(item); keepRef.current(item);
+    } catch (e) { if (e.message !== "Stopped") setErr(auto ? tr("The picture is ready at {w} px; sharpening it failed: {e}", { w: pic.w, e: tr(e.message) }) : tr(e.message)); }
     finally { setBusy(null); }
   };
 
@@ -244,6 +262,10 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
               <input type="checkbox" checked={enhance} onChange={(e) => setEnhance(e.target.checked)} data-testid="studio-enhance" />
               {tr("Write a fuller description first (better pictures; uses the chat model)")}
             </label>
+            <label className="flex items-center gap-2 mt-1.5 text-[12px] text-slate-300">
+              <input type="checkbox" checked={hd} onChange={(e) => setHdKeep(e.target.checked)} data-testid="studio-hd" />
+              {tr("Highest resolution — sharpen every picture ×4 (2048 px; about 1–3 minutes more without a graphics chip)")}
+            </label>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {SIZES.map((s) => <button key={s.id} onClick={() => setSize(s.id)} className={chip(size === s.id)} data-testid={"studio-size-" + s.id}>{tr(s.label)}</button>)}
             </div>
@@ -279,7 +301,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
           <div className="flex flex-wrap gap-1.5 mt-2 px-1 pb-1">
             <button className={btn} data-testid="studio-save" onClick={() => { try { const r = JSON.parse(native.saveImageToGallery(cur.file)); flash(r.ok ? tr("Saved to {w}", { w: r.where }) : tr(r.error)); } catch (e) { flash(tr("Could not save")); } }}><Download size={13} />{tr("Save to gallery")}</button>
             <button className={btn} data-testid="studio-share" onClick={() => { try { native.shareImage(cur.file); } catch (e) {} }}><Share2 size={13} />{tr("Share")}</button>
-            {!cur.upscaled && cur.w <= 1216 ? <button className={btn} disabled={!!busy} data-testid="studio-upscale" onClick={sharpen}><Maximize2 size={13} />{tr("×4 sharper")}{upReady ? "" : " · 67 MB"}</button> : null}
+            {!cur.upscaled && cur.w <= 1216 ? <button className={btn} disabled={!!busy} data-testid="studio-upscale" onClick={() => sharpen()}><Maximize2 size={13} />{tr("×4 sharper")}{upReady ? "" : " · 67 MB"}</button> : null}
             <button className={btn} disabled={!!busy} data-testid="studio-edit-this" onClick={editThis}><Wand2 size={13} />{tr("Edit this")}</button>
             {!cur.edit ? <button className={btn} disabled={!!busy || !drawReady} data-testid="studio-again" onClick={() => { setMode("create"); draw({ idea: cur.idea, prompt: cur.prompt }); }}><RefreshCw size={13} />{tr("Another version")}</button> : null}
             <button className={btn + " ms-auto"} onClick={async () => { if (await askConfirm("Delete this picture?")) remove(cur); }} aria-label={tr("Delete")}><Trash2 size={13} /></button>

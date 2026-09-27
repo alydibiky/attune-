@@ -65,7 +65,7 @@ def install_chat_model(page):
 
 with sync_playwright() as pw:
     br = pw.chromium.launch()
-    ctx, page = new_page(br, env, errors, extra_init=MOCK)
+    ctx, page = new_page(br, env, errors, extra_init=MOCK + "\ntry { if (!localStorage.getItem('attune:studio:hd')) localStorage.setItem('attune:studio:hd', '0'); } catch (e) {}")
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     install_chat_model(page)
 
@@ -188,11 +188,16 @@ with sync_playwright() as pw:
           "Turbo is one file, with backup links in case one is gone")
     page.fill("[data-testid=studio-idea]", "a beachfront mansion with mountains behind")
     page.click("[data-testid=studio-size-square]")
+    if not page.is_checked("[data-testid=studio-hd]"): page.check("[data-testid=studio-hd]")   # v5.34: highest resolution
     page.click("[data-testid=studio-go]")
     page.wait_for_function("() => window.__mock.lastImagine && window.__mock.lastImagine.pack === 'turbo'", timeout=15000)
     li = page.evaluate("window.__mock.lastImagine")
     check([li["width"], li["height"], li["steps"], li["cfg"]] == [512, 512, 4, 1], "Turbo draws 512×512 in 4 steps (about a minute on a CPU): %s" % [li["width"], li["height"], li["steps"], li["cfg"]])
-    page.wait_for_selector("[data-testid=studio-go]", timeout=15000)
+    page.wait_for_function("() => window.__mock.imgCalls.some((c) => c[0] === 'upscale')", timeout=20000)
+    check(True, "with 'Highest resolution' on, the 512 px Turbo picture is sharpened ×4 by itself")
+    page.wait_for_selector("[data-testid=studio-go]", timeout=20000)
+    page.wait_for_function("() => /sharpened on the/.test(document.body.innerText)", timeout=10000)
+    check(True, "…and the sharpened picture is the one shown")
     page.click("[data-testid=studio-use-pro]")
     check(page.locator("[data-testid=studio-pro-slow]").count() == 1, "picking Pro on a phone without the graphics chip warns it takes 10–20 min")
     page.click("[data-testid=studio-use-turbo]")

@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Plus, Trash2, Search, Database, ArrowUp, ArrowDown, Undo2, Upload, Download, KeyRound, BarChart3, Wrench, Sparkles, ChevronLeft, Check, X, Copy, Share2, Lock, AlertTriangle, Loader2, PenLine, FileText } from "lucide-react";
 import { tr } from "./i18n.js";
+import { useSubBack } from "./backstack.js";
 import * as E from "./erp.js";
 import { buildApp, readApp } from "./erp-app.js";
 import { getPower } from "./power.js";
@@ -65,6 +66,7 @@ export function BusinessPage({ flash, llm, modelReady, openEngine, saveFile, sha
   const [index, setIndex] = useState(loadIndex);
   const [sys, setSysRaw] = useState(null);
   const [view, setView] = useState("list");            // list | new | system
+  useSubBack(view !== "list", () => { setView("list"); setSysRaw(null); });   // v5.34: Back → the list of systems
   const setSys = (next, msg) => {
     if (!saveSys(next)) flash(tr("The phone's storage for Business is full — export a table to CSV and delete old records."));
     setSysRaw(next); setIndex(loadIndex());
@@ -117,6 +119,7 @@ function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
   const [desc, setDesc] = useState("");
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState(null);       // a system not saved yet
+  useSubBack(!!draft, () => setDraft(null));
   const [err, setErr] = useState("");
   const [step, setStep] = useState("");
   const design = async () => {
@@ -236,6 +239,7 @@ function SystemView({ sys, setSys, llm, modelReady, flash, saveFile, share, runP
   const [tid, setTid] = useState(sys.tables[0] && sys.tables[0].id);
   const [tab, setTab] = useState("data");         // data | design | queries | forms | summary | more
   const [ren, setRen] = useState(null);            // { kind: "system" | "table", tid?, value }
+  useSubBack(!!ren, () => setRen(null));
   const [delAsk, setDelAsk] = useState(false);
   const lp = useLongPress((t) => { setTid(t.id); setRen({ kind: "table", tid: t.id, value: t.name }); });
   const table = sys.tables.find((t) => t.id === tid) || sys.tables[0];
@@ -296,6 +300,7 @@ function DataTab({ sys, table, setSys, llm, flash, goMore }) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState(null);
   const [editing, setEditing] = useState(null);    // row id | "new"
+  useSubBack(editing != null, () => setEditing(null));   // v5.34: Back closes the record form first
   const rows = useMemo(() => E.viewRows(sys, table.id, { search, sort }), [sys, table.id, search, sort]);
   const tot = E.totals(table, rows);
   const shown = table.fields.slice(0, 12);

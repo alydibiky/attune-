@@ -74,6 +74,42 @@ object WebTools {
         return out
     }
 
+    // ---- Bing (keyless, v5.34) ------------------------------------------------
+    // A second index next to DuckDuckGo: the two are searched at the same time and their results
+    // interleaved, so a question sees more (and different) sites. Bing's HTML results page.
+    fun bing(q: String, max: Int = 8): List<Hit> {
+        val ar = isArabic(q)
+        val out = ArrayList<Hit>()
+        try {
+            Prefs.requireOnline("https://www.bing.com/search", "web search (Bing)")
+            val doc = Jsoup.connect("https://www.bing.com/search")
+                .data("q", q).data("setlang", if (ar) "ar" else "en").data("cc", if (ar) "EG" else "US")
+                .userAgent(UA).header("Accept-Language", if (ar) "ar,en;q=0.8" else "en,ar;q=0.8")
+                .timeout(12_000).get()
+            for (r in doc.select("li.b_algo")) {
+                val a = r.selectFirst("h2 a") ?: continue
+                val url = unwrapBing(a.attr("href"))
+                if (!url.startsWith("http") || url.contains("bing.com/")) continue
+                val snippet = (r.selectFirst(".b_caption p") ?: r.selectFirst("p"))?.text().orEmpty()
+                out.add(Hit(a.text(), url, snippet, "web"))
+                if (out.size >= max) break
+            }
+        } catch (e: Exception) { }
+        return out
+    }
+
+    /** Bing may wrap links as bing.com/ck/a?…&u=a1<base64url of the real address>. */
+    private fun unwrapBing(href: String): String {
+        if (!href.contains("bing.com/ck/a")) return href
+        return try {
+            val u = Regex("[?&]u=a1([^&]+)").find(href)?.groupValues?.get(1) ?: return href
+            String(android.util.Base64.decode(u, android.util.Base64.URL_SAFE or android.util.Base64.NO_PADDING or android.util.Base64.NO_WRAP), Charsets.UTF_8)
+        } catch (e: Exception) { href }
+    }
+
+    /** The same page from two engines (http/https, www, trailing slash, tracking) counts once. */
+    private fun urlKey(u: String) = u.lowercase().replace(Regex("^https?://(www\\.)?"), "").replace(Regex("[?#].*$"), "").trimEnd('/')
+
     /** DuckDuckGo wraps result links as //duckduckgo.com/l/?uddg=<real url>. */
     private fun unwrapDdg(href: String): String {
         val h = if (href.startsWith("//")) "https:$href" else href
@@ -163,9 +199,17 @@ object WebTools {
             try { hits = brave("$q $NO_WIKI", key).filter { !isWiki(it.url) } } catch (e: Exception) { why = e.message ?: "Brave failed" }
         }
         if (hits.isEmpty()) {
-            hits = duckduckgo("$q $NO_WIKI", 10).filter { !isWiki(it.url) }
-            via = "duckduckgo"
-            if (hits.isEmpty() && why.isEmpty()) why = "DuckDuckGo returned nothing"
+            // v5.34: DuckDuckGo and Bing at the same time, results interleaved (d1, b1, d2, b2 …)
+            val dj = pool.submit(Callable { try { duckduckgo("$q $NO_WIKI", 10) } catch (e: Exception) { emptyList<Hit>() } })
+            val bj = pool.submit(Callable { try { bing("$q $NO_WIKI", 8) } catch (e: Exception) { emptyList<Hit>() } })
+            val d = try { dj.get(16, TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
+            val b = try { bj.get(16, TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
+            val seen = HashSet<String>(); val merged = ArrayList<Hit>()
+            for (i in 0 until maxOf(d.size, b.size)) for (h in listOfNotNull(d.getOrNull(i), b.getOrNull(i)))
+                if (!isWiki(h.url) && seen.add(urlKey(h.url))) merged.add(h)
+            hits = merged.take(14)
+            via = listOfNotNull(if (d.isNotEmpty()) "duckduckgo" else null, if (b.isNotEmpty()) "bing" else null).joinToString(" + ").ifEmpty { "duckduckgo" }
+            if (hits.isEmpty() && why.isEmpty()) why = "DuckDuckGo and Bing returned nothing"
         }
 
         // v5.19: up to 6 pages, each read in full (16,000 characters) — the page

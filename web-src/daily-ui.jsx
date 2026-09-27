@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { GraduationCap, Newspaper, Plus, Trash2, ChevronLeft, Check, X, Loader2, Bell, RefreshCw, Sparkles, ImageIcon, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import { tr } from "./i18n.js";
+import { useSubBack } from "./backstack.js";
 import { Md } from "./chat.jsx";
 import * as D from "./daily.js";
 
@@ -133,6 +134,8 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, openId, 
   const [confirmDel, setConfirmDel] = useState(false);
   const running = useRef(false);
   const course = courses.find((c) => c.id === cur) || null;
+  // v5.34: Back — lesson / quiz / past lessons → the course → all courses
+  useSubBack(view !== "list", () => { if (["lesson", "quiz", "past"].includes(view)) { setQuiz(null); setView("course"); } else { setView("list"); setCur(null); } });
   const setCourses = (list) => { store(CKEY, list); setCoursesRaw(list); syncDaily(native, list); };
   const putCourse = (c) => setCourses([c, ...loadCourses().filter((x) => x.id !== c.id)].sort((a, b) => a.created - b.created));
 
@@ -350,6 +353,8 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
   const [past, setPast] = useState(null);
   const [confirmDel, setConfirmDel] = useState(false);
   const topic = topics.find((t) => t.id === cur) || null;
+  // v5.34: Back — an old digest → the topic → all topics
+  useSubBack(!!cur || adding || !!past, () => { if (past) setPast(null); else if (adding) setAdding(false); else setCur(null); });
   const setTopics = (list) => { store(NKEY, list); setTopicsRaw(list); syncDaily(native, loadCourses(), list); };
   const putTopic = (t) => setTopics([t, ...loadTopics().filter((x) => x.id !== t.id)].sort((a, b) => a.created - b.created));
   const todayKey = D.dayKey();

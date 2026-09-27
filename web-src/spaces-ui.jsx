@@ -1,6 +1,7 @@
 /* ---- Spaces screens: Assistants, Projects, Artifacts, Themes (v5.14) ---------------------
    Logic and storage: spaces.js. Chat carries assistantId / projectId on each chat.      */
 import { askConfirm } from "./confirm.jsx";
+import { useSubBack } from "./backstack.js";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { Md, loadChats } from "./chat.jsx";
@@ -30,6 +31,7 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
   const [edit, setEdit] = useState(null);           // assistant being edited/created
   const [drafting, setDrafting] = useState(false);
   const reload = () => setList(loadAssistants());
+  useSubBack(!!edit, () => setEdit(null));   // v5.34: Back closes the edit form first
 
   const draft = async () => {
     if (!llm || !edit.name.trim()) return;
@@ -49,6 +51,7 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
 
   if (edit) return (
     <div className="att-in space-y-3" data-testid="assistant-edit">
+      <button onClick={() => setEdit(null)} className="text-[12px] text-slate-400" data-testid="assistant-back">← {tr("All assistants")}</button>
       <div className={card + " p-4 space-y-3"}>
         <div className="flex gap-2">
           <input value={edit.emoji} onChange={(e) => setEdit({ ...edit, emoji: e.target.value })} className={input + " w-16 text-center text-lg"} aria-label={tr("Emoji")} />
@@ -110,6 +113,9 @@ export function ProjectsPage({ startChat, openChat, flash }) {
   const [openId, setOpenId] = useState(null);
   const [edit, setEdit] = useState(null);
   const [note, setNote] = useState(null);           // { name, text } being added
+  useSubBack(!!openId, () => setOpenId(null));      // v5.34: Back — project → all projects
+  useSubBack(!!edit, () => setEdit(null));          //         edit form → the project
+  useSubBack(!!note, () => setNote(null));
   const fileRef = useRef(null);
   const reload = () => setList(loadProjects());
   const cur = list.find((p) => p.id === openId) || null;
@@ -234,6 +240,7 @@ export function ArtifactViewer({ artifact, close, llm, modelReady, native, saveF
   const [draft] = useState(() => (artifact.versions ? null : artifact));   // opened from a chat answer, not saved yet
   const versions = item ? item.versions : [{ content: draft.content, ts: Date.now() }];
   const [vi, setVi] = useState(versions.length - 1);
+  useSubBack(true, close);   // v5.34: Back closes the viewer
   const [view, setView] = useState(artifact.kind === "html" ? "preview" : "preview");
   const [ask, setAsk] = useState("");
   const [busy, setBusy] = useState(false);

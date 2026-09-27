@@ -57,7 +57,9 @@ with sync_playwright() as p:
     prompt = json.dumps(prompt) if not isinstance(prompt, str) else prompt
     check("845 hp" in prompt and "CNY 369,900" in prompt, "the spec table 5,000+ characters down the page reaches the model")
     check("newsroom story number 40" not in prompt, "…and the filler around it doesn't")
-    check("EVERY one the passages name" in prompt and "complete, accurate answer" in prompt, "the model is told to list every trim and write a complete, cited report")
+    check("EVERY one the passages name" in prompt and "table of the exact figures" in prompt, "the model is told to cover every trim, and that the exact figures come in a table under its answer (v5.34)")
+    md = page.locator(".att-md").last.inner_text()
+    check("845 hp" in md and "CNY 369,900" in md and ("Key figures" in md or "Table from" in md), "the facts sheet under the answer carries the exact figures and the trims table, copied by code")
     foot = page.locator(".att-md").last.locator("xpath=../..").inner_text()
     check("read 2 pages" in foot and "searches" in foot, "the answer says how many pages and searches it used")
     # v5.31 — like Gemini: [1] is a tappable chip, sources show their site, and a research panel

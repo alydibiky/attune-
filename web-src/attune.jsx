@@ -22,6 +22,7 @@ import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
+import { popBack, hasBack, useSubBack } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { placeFor } from "./places.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
@@ -6608,7 +6609,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.33";
+const PAGE_VERSION = "5.34";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -6789,6 +6790,7 @@ export default function App() {
   const [memBusy, setMemBusy] = useState(false);
   const [memNote, setMemNote] = useState("");
   const [openRec, setOpenRec] = useState(null);
+  useSubBack(!!openRec, () => setOpenRec(null));   // v5.34: Back closes an open Memory record first
   const [memAdd, setMemAdd] = useState("");
   const [dropping, setDropping] = useState(false);
   const [shareIn, setShareIn] = useState(null);     // what arrived from another app
@@ -8134,6 +8136,8 @@ export default function App() {
     if (showUpgrade) return setShowUpgrade(false);
     if (showProfile) return setShowProfile(false);
     if (showEngine) return setShowEngine(false);
+    // v5.34: an inner page of a tool (open project, table, lesson, edit form…) closes first
+    if (popBack()) return;
     if (mode !== "chat") setMode("chat");
   };
 
@@ -8144,7 +8148,7 @@ export default function App() {
   const goBackRef = useRef(() => {}); goBackRef.current = goBack;
   useEffect(() => {
     window.__attuneBack = () => {
-      if (canGoBackRef.current) { goBackRef.current(); return true; }
+      if (canGoBackRef.current || hasBack()) { goBackRef.current(); return true; }
       return false;
     };
     return () => { try { delete window.__attuneBack; } catch (e) { window.__attuneBack = undefined; } };
