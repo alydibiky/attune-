@@ -36,6 +36,41 @@ export const THEMES = {
   sand: { name: "Desert", bg: "FAF7F0", card: "F0E8D8", text: "292524", sub: "78716C", accent: "B45309", accent2: "0F766E", cover: "44403C", coverText: "FFFBEB", onAccent: "FFFFFF" },
 };
 
+// ---- motion: slide transitions and entrance animations (v5.40 — "themes, transitions and animations if I ask") ----
+export const TRANSITIONS = { none: "None", fade: "Fade", push: "Push", wipe: "Wipe", split: "Split", cover: "Cover", zoom: "Zoom" };
+export const ANIMATIONS = { none: "None", fade: "Fade in", fly: "Fly in", zoom: "Zoom in" };
+const DESIGN_CUE = /\b(theme|design|colou?rs?|style|look|palette|background)\b|ثيم|تيم|تصميم|لون|ألوان|الوان|ستايل|شكل|خلفية/i;
+const THEME_WORDS = [
+  ["midnight", /\b(dark|night|black)\b.{0,12}\b(blue|navy)\b|أزرق غامق|ازرق غامق|كحلي غامق/i],
+  ["steel", /\b(construction|industrial|engineering|crane|yellow)\b|إنشاء|انشاء|صناعي|هندسي|أصفر|اصفر|ونش|أوناش/i],
+  ["royal", /\b(purple|violet|royal|luxury|luxurious)\b|بنفسجي|موف|ملكي|فخم/i],
+  ["emerald", /\b(green|eco|nature|emerald)\b|أخضر|اخضر|طبيع|بيئ/i],
+  ["sunset", /\b(orange|warm|sunset|red)\b|برتقالي|دافي|دافئ|غروب|أحمر|احمر/i],
+  ["sand", /\b(desert|sand|beige|brown)\b|صحراوي|صحرا|بيج|بني/i],
+  ["minimal", /\b(minimal|minimalist|simple|clean|white|black and white)\b|أبيض|ابيض|بسيط|مينيمال/i],
+  ["ocean", /\b(blue|ocean|corporate|navy|professional)\b|أزرق|ازرق|كحلي|رسمي|احترافي/i],
+  ["midnight", /\b(dark|night|black)\b|داكن|غامق|أسود|اسود|ليلي|دارك/i],
+];
+const NO = /\b(no|without|none)\s+(\w+\s+)?|بدون\s+|من غير\s+|مش عايز\s+/i;
+/** A request's own words about the look → { theme?, transition?, animation?, trigger? } (English and Egyptian Arabic). */
+export function styleFromPrompt(text) {
+  const t = String(text || ""), out = {};
+  if (DESIGN_CUE.test(t)) for (const [k, re] of THEME_WORDS) if (re.test(t)) { out.theme = k; break; }
+  const tr0 = /transition|انتقال|انتقالات|تنقل|ترانزيشن/i, an0 = /animat|انيميشن|أنيميشن|انميشن|حركات|تحريك|متحرك|one by one|واحدة واحدة|واحد واحد|واحدة ورا التانية/i;
+  if (new RegExp("(?:" + NO.source + ")(transition|انتقال|ترانزيشن)", "i").test(t)) out.transition = "none";
+  else if (tr0.test(t) || /\b(fade|push|wipe|split|zoom|morph)\b.{0,20}\bslides?\b|between (the )?slides/i.test(t)) {
+    const m = t.match(/transition.{0,40}|.{0,40}transition|انتقال.{0,30}|ترانزيشن.{0,30}/i), z = m ? m[0] : t;
+    out.transition = /push|دفع/i.test(z) ? "push" : /wipe|مسح/i.test(z) ? "wipe" : /split|انقسام|تقسيم/i.test(z) ? "split" : /cover|تغطية/i.test(z) ? "cover" : /zoom|تكبير|زووم/i.test(z) ? "zoom" : "fade";
+  }
+  if (new RegExp("(?:" + NO.source + ")(animation|انيميشن|أنيميشن|حركات)", "i").test(t)) out.animation = "none";
+  else if (an0.test(t) || /\b(fly|flies|flying) in\b|\bappear\b/i.test(t)) {
+    const m = t.match(/animat.{0,50}|.{0,40}animat|(انيميشن|أنيميشن|حركات|تحريك).{0,40}|.{0,30}(fly|flies|flying) in.{0,20}/i), z = m ? m[0] : t;
+    out.animation = /\bfl(y|ies|ying)\b|طاير|تطير|طيران|تدخل من/i.test(z) ? "fly" : /zoom|تكبير|زووم/i.test(z) ? "zoom" : "fade";
+    out.trigger = /automatic|\bauto\b|by (it|them)sel(f|ves)|without click|تلقائي|لوحده|لوحدها|أوتوماتيك|اوتوماتيك/i.test(t) ? "auto" : "click";
+  }
+  return out;
+}
+
 // ---- small text helpers ---------------------------------------------------------------------------
 const AR_DIG = /[٠-٩]/g;
 const latinDigits = (s) => String(s || "").replace(AR_DIG, (d) => String(d.charCodeAt(0) - 0x0660));
@@ -98,7 +133,7 @@ then exactly ${n} lines, one per slide:
 1. [type] <slide title, at most 7 words>
 
 Types: ${kinds.join("; ")}.
-Rules: tell a story (context → the need → the main content → what to do next); use at least 3 different types; the LAST slide is [bullets] with the key takeaways; do NOT add a title, agenda or "thank you" slide (the app adds them). Keep the words TITLE, SUBTITLE and the [type] in English. Write the titles in ${S_LANGS[lang] || "English"}.` }];
+Rules: tell a story (context → the need → the main content → what to do next); ignore any wishes about colours, design, transitions or animations (the app does those); use at least 3 different types; the LAST slide is [bullets] with the key takeaways; do NOT add a title, agenda or "thank you" slide (the app adds them). Keep the words TITLE, SUBTITLE and the [type] in English. Write the titles in ${S_LANGS[lang] || "English"}.` }];
 }
 
 const KIND_WORDS = { bullet: "bullets", bullets: "bullets", points: "bullets", two: "two", compare: "two", comparison: "two", steps: "steps", step: "steps", process: "steps", timeline: "steps",
@@ -166,7 +201,7 @@ Write exactly this format and nothing else:
 ${FORMATS[slide.kind] || FORMATS.bullets}
 NOTES: <2–3 sentences the presenter says on this slide>
 
-Rules: concrete and professional, short lines (a slide is not a page), no ** or # symbols. Keep the words LEFT, RIGHT, QUOTE, BY, UNIT, TAKEAWAY, NOTES in English. Write the content in ${S_LANGS[lang] || "English"}.` }];
+Rules: concrete and professional, short lines (a slide is not a page), no ** or # symbols; don't write about the slide design, transitions or animations. Keep the words LEFT, RIGHT, QUOTE, BY, UNIT, TAKEAWAY, NOTES in English. Write the content in ${S_LANGS[lang] || "English"}.` }];
 }
 
 /** The model's slide text → the slide's fields (kind kept; `fixSlide` downgrades what didn't come out). */
@@ -311,6 +346,7 @@ export function layoutSlide(s, th, { i = 1, deckTitle = "", rtl = false, lang = 
     out.push(txt(M, s.kind === "cover" ? 276 : 316, 780, 214, [{ text: main }], { size, bold: true, color: th.coverText, head: true, lh: 1.08 }));
     if (sub) out.push(txt(M, s.kind === "cover" ? 500 : 420, 780, 80, [{ text: sub }], { size: fitSize([{ text: sub }], 780, 80, 26, 14), color: th.coverText, alpha: 0.85 }));
     out.push(txt(M, SH - 84, 800, 28, [{ text: s.kind === "cover" ? (s.date || "") : deckTitle }], { size: 16, color: th.coverText, alpha: 0.7 }));
+    out.slice(4).forEach((x, k) => { x.g = k + 1; });   // animation order: title, subtitle, date
     return rtl ? mirror(out) : out;
   }
   // a slide still being written, or one whose content is missing, is drawn as an (empty) key-points slide
@@ -319,6 +355,9 @@ export function layoutSlide(s, th, { i = 1, deckTitle = "", rtl = false, lang = 
   out = frame(th, s.title, i, deckTitle, rtl);
   const x = M, y = CY, w = SW - 2 * M, h = CH;
   const card = (cx, cy, cw2, ch2, o = {}) => box("rect", cx, cy, cw2, ch2, { fill: th.card, r: 18, ...o });
+  // animation groups: everything added since the last call appears together (a card with its text…)
+  let mark = out.length;
+  const grp = (g) => { for (let q = mark; q < out.length; q++) out[q].g = g; mark = out.length; };
   if (s.kind === "agenda") {
     const list = s.items || [], cols = list.length > 5 ? 2 : 1, per = Math.ceil(list.length / cols), rowH = Math.min(78, h / per), colW = w / cols;
     list.forEach((t, k) => {
@@ -326,6 +365,7 @@ export function layoutSlide(s, th, { i = 1, deckTitle = "", rtl = false, lang = 
       out.push(box("ellipse", cx, cy + (rowH - 46) / 2, 46, 46, { fill: th.accent }));
       out.push(txt(cx, cy + (rowH - 46) / 2, 46, 46, [{ text: String(k + 1) }], { size: 19, bold: true, color: th.onAccent, align: "c", valign: "m" }));
       out.push(txt(cx + 66, cy, colW - 90, rowH, [{ text: t }], { size: fitSize([{ text: t }], colW - 90, rowH, 24, 14, 0), color: th.text, valign: "m" }));
+      grp(k + 1);
     });
   } else if (s.kind === "bullets" || s.kind === "steps") {
     const list = s.bullets || [];
@@ -340,6 +380,7 @@ export function layoutSlide(s, th, { i = 1, deckTitle = "", rtl = false, lang = 
         const lead = b.lead || "", ty = cyc + 90;
         if (lead) out.push(txt(x + band * k + 10, ty, band - 20, 64, [{ text: lead }], { size: fitSize([{ text: lead }], band - 20, 64, 22, 13, 0, 1.1), bold: true, color: th.accent, align: "c", lh: 1.1 }));
         out.push(txt(x + band * k + 10, ty + (lead ? 70 : 0), band - 20, h - (ty - y) - (lead ? 70 : 0), [{ text: b.text }], { size: fitSize([{ text: b.text }], band - 20, h - (ty - y) - 70, 19, 11), color: th.text, align: "c" }));
+        grp(k + 1);
       });
     } else if (cards) {
       const n = list.length, cols = n === 4 ? 2 : n, rows = n === 4 ? 2 : 1, gap = 24;
@@ -351,10 +392,12 @@ export function layoutSlide(s, th, { i = 1, deckTitle = "", rtl = false, lang = 
         const ls = fitSize([{ text: b.lead }], cwid - 48, 70, 26, 15, 0, 1.1);
         out.push(txt(cx + 24, cy + 44, cwid - 48, 72, [{ text: b.lead }], { size: ls, bold: true, color: th.text, head: true, lh: 1.1 }));
         out.push(txt(cx + 24, cy + 124, cwid - 48, chei - 144, [{ text: b.text }], { size: fitSize([{ text: b.text }], cwid - 48, chei - 144, 21, 12), color: th.text, alpha: 0.9 }));
+        grp(k + 1);
       });
     } else {
       const paras = list.map((b) => ({ lead: b.lead, text: b.text, bullet: true }));
-      out.push(txt(x, y, w, h, paras, { size: fitSize(paras, w, h, 27, 13, 0.7, 1.22), color: th.text, bulletColor: th.accent, gap: 0.7, lh: 1.22, leadColor: th.accent }));
+      out.push(txt(x, y, w, h, paras, { size: fitSize(paras, w, h, 27, 13, 0.7, 1.22), color: th.text, bulletColor: th.accent, gap: 0.7, lh: 1.22, leadColor: th.accent, byPara: true }));
+      grp(1);   // one point at a time (by paragraph)
     }
   } else if (s.kind === "two") {
     const gap = 32, cwid = (w - gap) / 2;
@@ -366,12 +409,14 @@ export function layoutSlide(s, th, { i = 1, deckTitle = "", rtl = false, lang = 
       out.push(txt(cx + 24, y, cwid - 48, 72, [{ text: side.title || "" }], { size: fitSize([{ text: side.title || "" }], cwid - 48, 64, 26, 14, 0, 1.05), bold: true, color: th.onAccent, valign: "m", head: true }));
       const paras = side.items.map((t) => ({ text: t, bullet: true }));
       out.push(txt(cx + 24, y + 96, cwid - 48, h - 116, paras, { size: fitSize(paras, cwid - 48, h - 116, 23, 12, 0.6), color: th.text, bulletColor: col, gap: 0.6 }));
+      grp(k + 1);
     });
   } else if (s.kind === "table") {
     const rows = s.rows, cols = rows[0].length;
     const size = Math.max(12, Math.min(22, Math.floor(520 / (rows.length * 1.9 + cols * 1.5))));
     const rowH = Math.min(h / rows.length, Math.max(46, size * 2.6));
     out.push({ t: "table", x, y, w, h: rowH * rows.length, rows, rowH, size, head: th.accent, onHead: th.onAccent, band: th.card, text: th.text, rtl });
+    grp(1);
   } else if (s.kind === "stats") {
     const n = s.stats.length, gap = 24, cwid = (w - gap * (n - 1)) / n, chei = Math.min(h, 330), cy = y + (h - chei) / 2;
     s.stats.forEach((st, k) => {
@@ -380,21 +425,25 @@ export function layoutSlide(s, th, { i = 1, deckTitle = "", rtl = false, lang = 
       out.push(box("rect", cx, cy, 8, chei, { fill: k % 2 ? th.accent2 : th.accent, r: 4 }));
       out.push(txt(cx + 28, cy + 36, cwid - 52, 110, [{ text: st.value }], { size: fitSize([{ text: st.value }], cwid - 52, 110, 64, 24, 0, 1), bold: true, color: k % 2 ? th.accent2 : th.accent, head: true, valign: "m", lh: 1 }));
       out.push(txt(cx + 28, cy + 160, cwid - 52, chei - 184, [{ text: st.label }], { size: fitSize([{ text: st.label }], cwid - 52, chei - 184, 22, 12), color: th.text }));
+      grp(k + 1);
     });
   } else if (s.kind === "chart") {
     const side = s.takeaway ? 360 : 0;
     out.push(...chartShapes(s.bars, x, y, w - (side ? side + 32 : 0), h, th, s.unit));
+    grp(1);
     if (side) {
       const cx = x + w - side;
       out.push(card(cx, y + 20, side, h - 40));
       out.push(box("rect", cx + 24, y + 48, 40, 6, { fill: th.accent2, r: 3 }));
       out.push(txt(cx + 24, y + 72, side - 48, h - 112, [{ text: s.takeaway }], { size: fitSize([{ text: s.takeaway }], side - 48, h - 112, 26, 13), color: th.text, bold: true }));
+      grp(2);
     }
   } else if (s.kind === "quote") {
     out.push(txt(x, y - 30, 200, 170, [{ text: "“" }], { size: 180, bold: true, color: th.accent, alpha: 0.55, lh: 1 }));
     const q = s.quote || "";
     out.push(txt(x + 90, y + 40, w - 180, h - 150, [{ text: q }], { size: fitSize([{ text: q }], w - 180, h - 150, 42, 20, 0, 1.25), italic: true, color: th.text, head: true, valign: "m", align: "c", lh: 1.25 }));
-    if (s.by) out.push(txt(x + 90, y + h - 90, w - 180, 40, [{ text: "— " + s.by }], { size: 22, color: th.accent, align: "c", bold: true }));
+    grp(1);
+    if (s.by) { out.push(txt(x + 90, y + h - 90, w - 180, 40, [{ text: "— " + s.by }], { size: 22, color: th.accent, align: "c", bold: true })); grp(2); }
   }
   return rtl ? mirror(out) : out;
 }
@@ -419,6 +468,20 @@ export function fullDeck(deck) {
 export function deckShapes(deck) {
   const th = THEMES[deck.theme] || THEMES.midnight, rtl = isRtl(deck.lang);
   return fullDeck(deck).map((s, k) => ({ slide: s, shapes: layoutSlide(s, th, { i: k + 1, deckTitle: deck.title, rtl, lang: deck.lang }) }));
+}
+
+/** The order things appear in: [[{idx, para?}], …] — groups by `g`; a list marked byPara appears point by point. */
+export function animSteps(shapes) {
+  const gs = [...new Set(shapes.filter((x) => x.g != null).map((x) => x.g))].sort((a, b) => a - b), steps = [];
+  for (const g of gs) {
+    const members = shapes.map((x, idx) => ({ x, idx })).filter((m) => m.x.g === g);
+    const plain = members.filter((m) => !(m.x.byPara && m.x.paras.length > 1)).map((m) => ({ idx: m.idx }));
+    const lists = members.filter((m) => m.x.byPara && m.x.paras.length > 1);
+    if (!lists.length) { if (plain.length) steps.push(plain); continue; }
+    const most = Math.max(...lists.map((m) => m.x.paras.length));
+    for (let p = 0; p < most; p++) steps.push([...(p === 0 ? plain : []), ...lists.filter((m) => p < m.x.paras.length).map((m) => ({ idx: m.idx, para: p }))]);
+  }
+  return steps;
 }
 
 // ---- 4. the PowerPoint file (.pptx) -----------------------------------------------------------------
@@ -458,9 +521,38 @@ function shapeXml(sh, id) {
     : sh.r ? `<a:prstGeom prst="roundRect"><a:avLst><a:gd name="adj" fmla="val ${Math.min(50000, Math.round(sh.r / Math.max(1, Math.min(sh.w, sh.h)) * 100000))}"/></a:avLst></a:prstGeom>` : '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>';
   return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="Shape ${id}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr>${xf}${geom}<a:solidFill>${clr(sh.fill, sh.alpha)}</a:solidFill><a:ln><a:noFill/></a:ln></p:spPr><p:txBody><a:bodyPr rtlCol="0" anchor="ctr"/><a:lstStyle/><a:p><a:endParaRPr lang="en-US"/></a:p></p:txBody></p:sp>`;
 }
-function slideXml(shapes) {
+const TRANS_XML = { fade: "<p:fade/>", push: '<p:push dir="u"/>', wipe: '<p:wipe dir="r"/>', split: '<p:split orient="vert" dir="out"/>', cover: '<p:cover dir="l"/>', zoom: "<p:zoom/>" };
+/** PowerPoint entrance effects (Fade 10, Fly in 2 / from bottom, Zoom 53) for the steps; on click or one after another. */
+export function timingXml(shapes, anim, trigger = "click") {
+  const steps = anim && anim !== "none" ? animSteps(shapes) : [];
+  if (!steps.length) return "";
+  let id = 2; const n = () => ++id;
+  const spid = (idx) => idx + 1;   // shape k (k ≥ 1; 0 is the background) is written with id k + 1
+  const tgt = (t) => `<p:tgtEl><p:spTgt spid="${spid(t.idx)}">${t.para != null ? `<p:txEl><p:pRg st="${t.para}" end="${t.para}"/></p:txEl>` : ""}</p:spTgt></p:tgtEl>`;
+  const [pid, sub] = { fade: [10, 0], fly: [2, 4], zoom: [53, 16] }[anim] || [10, 0];
+  const effect = (t, nodeType) => {
+    const eid = n();
+    const set = `<p:set><p:cBhvr><p:cTn id="${n()}" dur="1" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst></p:cTn>${tgt(t)}<p:attrNameLst><p:attrName>style.visibility</p:attrName></p:attrNameLst></p:cBhvr><p:to><p:strVal val="visible"/></p:to></p:set>`;
+    const av = (attr, from, to) => `<p:anim calcmode="lin" valueType="num"><p:cBhvr additive="base"><p:cTn id="${n()}" dur="500" fill="hold"/>${tgt(t)}<p:attrNameLst><p:attrName>${attr}</p:attrName></p:attrNameLst></p:cBhvr><p:tavLst><p:tav tm="0"><p:val><p:strVal val="${from}"/></p:val></p:tav><p:tav tm="100000"><p:val><p:strVal val="${to}"/></p:val></p:tav></p:tavLst></p:anim>`;
+    const fade = () => `<p:animEffect transition="in" filter="fade"><p:cBhvr><p:cTn id="${n()}" dur="500"/>${tgt(t)}</p:cBhvr></p:animEffect>`;
+    const body = anim === "fly" ? av("ppt_x", "#ppt_x", "#ppt_x") + av("ppt_y", "1+#ppt_h/2", "#ppt_y") : anim === "zoom" ? av("ppt_w", "0", "#ppt_w") + av("ppt_h", "0", "#ppt_h") + fade() : fade();
+    return `<p:par><p:cTn id="${eid}" presetID="${pid}" presetClass="entr" presetSubtype="${sub}" fill="hold" grpId="0" nodeType="${nodeType}"><p:stCondLst><p:cond delay="0"/></p:stCondLst><p:childTnLst>${set}${body}</p:childTnLst></p:cTn></p:par>`;
+  };
+  const inner = (step, delay, first) => { const pid2 = n(); return `<p:par><p:cTn id="${pid2}" fill="hold"><p:stCondLst><p:cond delay="${delay}"/></p:stCondLst><p:childTnLst>${step.map((t, k) => effect(t, k ? "withEffect" : first)).join("")}</p:childTnLst></p:cTn></p:par>`; };
+  let seq;
+  if (trigger === "auto") {
+    const oid = n();
+    seq = `<p:par><p:cTn id="${oid}" fill="hold"><p:stCondLst><p:cond delay="indefinite"/><p:cond evt="onBegin" delay="0"><p:tn val="2"/></p:cond></p:stCondLst><p:childTnLst>${steps.map((st, k) => inner(st, k * 500, "afterEffect")).join("")}</p:childTnLst></p:cTn></p:par>`;
+  } else seq = steps.map((st) => { const oid = n(); return `<p:par><p:cTn id="${oid}" fill="hold"><p:stCondLst><p:cond delay="indefinite"/></p:stCondLst><p:childTnLst>${inner(st, 0, "clickEffect")}</p:childTnLst></p:cTn></p:par>`; }).join("");
+  const used = [...new Set(steps.flat().map((t) => t.idx))].sort((a, b) => a - b);
+  const bld = used.map((idx) => shapes[idx].t === "table" ? `<p:bldGraphic spid="${spid(idx)}" grpId="0"><p:bldAsOne/></p:bldGraphic>`
+    : `<p:bldP spid="${spid(idx)}" grpId="0"${shapes[idx].byPara && shapes[idx].paras.length > 1 ? ' build="p"' : ""}${shapes[idx].t !== "text" ? ' animBg="1"' : ""}/>`).join("");
+  return `<p:timing><p:tnLst><p:par><p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot"><p:childTnLst><p:seq concurrent="1" nextAc="seek"><p:cTn id="2" dur="indefinite" nodeType="mainSeq"><p:childTnLst>${seq}</p:childTnLst></p:cTn><p:prevCondLst><p:cond evt="onPrev" delay="0"><p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:prevCondLst><p:nextCondLst><p:cond evt="onNext" delay="0"><p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:nextCondLst></p:seq></p:childTnLst></p:cTn></p:par></p:tnLst><p:bldLst>${bld}</p:bldLst></p:timing>`;
+}
+function slideXml(shapes, motion = {}) {
   const bg = shapes[0] && shapes[0].t === "rect" && shapes[0].w === SW ? shapes[0].fill : "FFFFFF";
-  return XML + `<p:sld ${NS}><p:cSld><p:bg><p:bgPr><a:solidFill>${clr(bg)}</a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree>${GRP}${shapes.slice(1).map((s, k) => shapeXml(s, k + 2)).join("")}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`;
+  const trans = TRANS_XML[motion.transition] ? `<p:transition spd="med">${TRANS_XML[motion.transition]}</p:transition>` : "";
+  return XML + `<p:sld ${NS}><p:cSld><p:bg><p:bgPr><a:solidFill>${clr(bg)}</a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree>${GRP}${shapes.slice(1).map((s, k) => shapeXml(s, k + 2)).join("")}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>${trans}${timingXml(shapes, motion.animation, motion.trigger)}</p:sld>`;
 }
 function themeXml(th, name) {
   const c = (tag, v) => `<a:${tag}><a:srgbClr val="${v}"/></a:${tag}>`;
@@ -512,7 +604,7 @@ export function pptxFromDeck(deck) {
   files.push({ name: "ppt/notesMasters/_rels/notesMaster1.xml.rels", data: rels([["rId1", "theme", "../theme/theme2.xml"]]) });
   slides.forEach(({ slide, shapes }, k0) => {
     const k = k0 + 1;
-    files.push({ name: `ppt/slides/slide${k}.xml`, data: slideXml(shapes) });
+    files.push({ name: `ppt/slides/slide${k}.xml`, data: slideXml(shapes, { transition: deck.transition, animation: deck.animation, trigger: deck.trigger }) });
     files.push({ name: `ppt/slides/_rels/slide${k}.xml.rels`, data: rels([["rId1", "slideLayout", "../slideLayouts/slideLayout1.xml"], ["rId2", "notesSlide", `../notesSlides/notesSlide${k}.xml`]]) });
     const note = slide.notes || "";
     files.push({ name: `ppt/notesSlides/notesSlide${k}.xml`, data: XML + `<p:notes ${NS}><p:cSld><p:spTree>${GRP}<p:sp><p:nvSpPr><p:cNvPr id="2" name="Slide Image Placeholder 1"/><p:cNvSpPr><a:spLocks noGrp="1" noRot="1" noChangeAspect="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldImg"/></p:nvPr></p:nvSpPr><p:spPr/></p:sp><p:sp><p:nvSpPr><p:cNvPr id="3" name="Notes Placeholder 2"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p>${note ? `<a:pPr${/[؀-ۿ]/.test(note) ? ' algn="r" rtl="1"' : ""}/><a:r><a:rPr lang="${langTag(note)}" dirty="0"/><a:t>${esc(note)}</a:t></a:r>` : '<a:endParaRPr lang="en-US"/>'}</a:p></p:txBody></p:sp></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>` });

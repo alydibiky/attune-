@@ -109,4 +109,28 @@ const rd = S.deckFromReport(rep);
 eq(rd.slides.map((s) => s.kind), ["bullets", "chart", "bullets"], "report → slides: findings, the data chart, a slide per section");
 
 eq(["Make me a PowerPoint about crane safety", "اعملي عرض تقديمي عن الأوناش", "write a report on September sales", "عايز تقرير عن الأعطال", "what is a slide rail?", "report the weather"].map(S.wantsDoc), ["deck", "deck", "report", "report", null, null], "Chat knows a request for slides or a report");
+// ---- themes, transitions and animations from the request's own words ----
+eq([["A dark blue theme with fade transitions and the points flying in one by one"], ["عرض بثيم أخضر وانتقالات دفع وأنيميشن تلقائي"], ["Presentation about crane rental in Egypt"], ["slides with animations but no transitions"], ["Make it, purple design, push transitions, zoom animations"], ["make it without animation"]].map(([t]) => S.styleFromPrompt(t)),
+  [{ theme: "midnight", transition: "fade", animation: "fly", trigger: "click" }, { theme: "emerald", transition: "push", animation: "fade", trigger: "auto" }, {}, { transition: "none", animation: "fade", trigger: "click" },
+   { theme: "royal", transition: "push", animation: "zoom", trigger: "click" }, { animation: "none" }],
+  "the request's words pick the design, transition, animation and on-tap / automatic (a topic word like 'crane' alone doesn't change the design)");
+const lsh = S.layoutSlide({ kind: "bullets", title: "L", bullets: [{ lead: "", text: "one" }, { lead: "", text: "two" }, { lead: "", text: "three" }, { lead: "", text: "four" }, { lead: "", text: "five" }] }, th, {});
+eq(S.animSteps(lsh).map((st) => st.map((t) => t.para)), [[0], [1], [2], [3], [4]], "a list appears point by point");
+const csh = S.layoutSlide({ kind: "bullets", title: "C", bullets: [{ lead: "A", text: "x" }, { lead: "B", text: "y" }, { lead: "C", text: "z" }] }, th, {});
+eq(S.animSteps(csh).map((st) => st.length), [4, 4, 4], "cards appear one by one, each with its bar and texts");
+const tx = S.timingXml(csh, "fly", "click");
+const ids = [...tx.matchAll(/<p:cTn id="(\d+)"/g)].map((m) => +m[1]);
+eq([new Set(ids).size === ids.length, (tx.match(/nodeType="clickEffect"/g) || []).length, (tx.match(/presetID="2"/g) || []).length, /ppt_y/.test(tx), (tx.match(/<p:bldP /g) || []).length],
+  [true, 3, 12, true, 12], "fly in, on tap: 3 clicks, unique ids, a build entry per shape");
+const ta = S.timingXml(lsh, "fade", "auto");
+eq([/evt="onBegin"/.test(ta), (ta.match(/afterEffect/g) || []).length, /<p:pRg st="4" end="4"\/>/.test(ta), /build="p"/.test(ta)], [true, 5, true, true], "automatic fade: after the previous one, paragraph by paragraph");
+eq(S.timingXml(csh, "none"), "", "no animation → no timing");
+const md = await C.unzip(S.pptxFromDeck({ ...deck, transition: "push", animation: "zoom", trigger: "click" }));
+const s2 = new TextDecoder().decode(md.get("ppt/slides/slide2.xml"));
+eq([/<p:clrMapOvr>.*<\/p:clrMapOvr><p:transition spd="med"><p:push dir="u"\/><\/p:transition><p:timing>/.test(s2), /presetID="53"/.test(s2)], [true, true], "the file: a push transition, then zoom animations, in PowerPoint's order");
+const spids = [...s2.matchAll(/spid="(\d+)"/g)].map((m) => m[1]), shapeIds = new Set([...s2.matchAll(/<p:cNvPr id="(\d+)"/g)].map((m) => m[1]));
+eq(spids.every((x) => shapeIds.has(x)), true, "every animation points at a shape on the slide");
+writeFileSync(join(tmp, "m.pptx"), S.pptxFromDeck({ ...deck, transition: "fade", animation: "fly", trigger: "auto" }));
+try { eq(execFileSync("python3", ["-c", "import sys\nfrom pptx import Presentation\nprint(len(Presentation(sys.argv[1]).slides))", join(tmp, "m.pptx")]).toString().trim(), "5", "python-pptx opens the animated deck"); } catch (e) { console.log("SKIP python-pptx"); }
+
 if (fails.length) { console.log(`\n${fails.length} FAILED`); process.exit(1); } else console.log("\nALL PASSED");

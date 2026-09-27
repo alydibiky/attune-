@@ -6,8 +6,8 @@
    Word or PDF, with a chart and computed facts when an Excel / CSV file is given. Facts can come
    from the web or from your own file; figures not found there are never drawn and are flagged.
    Engine + drawing: slides.js. PDFs: Android makePdf. */
-import React, { useState, useRef, useEffect } from "react";
-import { Presentation, FileText, Loader2, Download, Check, ChevronRight, ArrowUp, ArrowDown, Trash2, Wand2, Globe, Paperclip, X, Copy, Eye, BarChart3 } from "lucide-react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { Presentation, FileText, Loader2, Download, Check, ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Trash2, Wand2, Globe, Paperclip, X, Copy, Eye, BarChart3, Play } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { useSubBack } from "./backstack.js";
 import { askConfirm } from "./confirm.jsx";
@@ -59,7 +59,13 @@ function drawText(g, s) {
   let y = s.y + (s.valign === "m" ? (s.h - total) / 2 : s.valign === "b" ? s.h - total : 0);
   g.textBaseline = "alphabetic";
   const rtl = !!s.rtl;
-  for (const p of laid) {
+  for (let pi = 0; pi < laid.length; pi++) {
+    const p = laid[pi];
+    // Play mode: a list shown point by point (showParas), the newest point coming in (enter 0 → 1)
+    if (s.showParas != null && pi >= s.showParas) { y += p.lines.length * size * lh + size * gap; continue; }
+    const fresh = s.showParas != null && pi === s.showParas - 1 && s.paraEnter != null;
+    g.save();
+    if (fresh) { g.globalAlpha *= s.paraEnter; g.translate(0, (1 - s.paraEnter) * (s.enterDy || 0)); }
     p.lines.forEach((line, li) => {
       const lw = line.length ? line[line.length - 1].x + line[line.length - 1].ww : 0, avail = s.w - p.ind;
       // the gap before the line, measured from where the line starts (the left, or the right in Arabic)
@@ -77,6 +83,7 @@ function drawText(g, s) {
       }
       y += size * lh;
     });
+    g.restore();
     y += size * gap;
   }
 }
@@ -95,6 +102,11 @@ export function drawShapes(g, shapes, k) {
   g.save(); g.scale(k, k);
   for (const s of shapes) {
     g.save(); g.globalAlpha = s.alpha ?? 1;
+    if (s.enter != null) {   // Play mode: this shape is coming in (fade / fly from below / zoom)
+      g.globalAlpha *= s.enter;
+      if (s.enterDy) g.translate(0, (1 - s.enter) * s.enterDy);
+      if (s.enterZoom) { const cx = s.x + s.w / 2, cy = s.y + s.h / 2, k = 0.3 + 0.7 * s.enter; g.translate(cx, cy); g.scale(k, k); g.translate(-cx, -cy); }
+    }
     if (s.t === "rect" || s.t === "ellipse") {
       g.fillStyle = "#" + s.fill; g.beginPath();
       if (s.t === "ellipse") g.ellipse(s.x + s.w / 2, s.y + s.h / 2, s.w / 2, s.h / 2, 0, 0, Math.PI * 2);
@@ -127,6 +139,92 @@ function chartPng(chart) {
   return { b64: c.toDataURL("image/png").split(",")[1], w: 1200, h: 600 };
 }
 
+// ---- Play: the deck full screen, with its transitions and animations (what PowerPoint will show) ----
+const TRANS_CSS = "@keyframes attTfade{from{opacity:0}}@keyframes attTpush{from{transform:translateY(100%)}}@keyframes attTwipe{from{clip-path:inset(0 100% 0 0)}}@keyframes attTsplit{from{clip-path:inset(0 50% 0 50%)}}@keyframes attTcover{from{transform:translateX(100%)}}@keyframes attTzoom{from{transform:scale(.3);opacity:0}}";
+function Presenter({ deck, close }) {
+  const list = useMemo(() => S.deckShapes(deck), [deck]);
+  const anim = deck.animation && deck.animation !== "none" ? deck.animation : null;
+  const stepsOf = (k) => (anim ? S.animSteps(list[k].shapes) : []);
+  const [pos, setPos] = useState({ i: 0, step: 0 });
+  const [notes, setNotes] = useState(false);
+  const [portrait, setPortrait] = useState(() => window.innerHeight > window.innerWidth);
+  const ref = useRef(null);
+  useSubBack(true, close);
+  useEffect(() => { const f = () => setPortrait(window.innerHeight > window.innerWidth); window.addEventListener("resize", f); return () => window.removeEventListener("resize", f); }, []);
+  const steps = stepsOf(pos.i);
+  // automatic animations: the next item every half second
+  useEffect(() => {
+    if (!anim || deck.trigger !== "auto" || pos.step >= steps.length) return;
+    const t = setTimeout(() => setPos((p) => (p.i === pos.i ? { ...p, step: p.step + 1 } : p)), pos.step === 0 ? 650 : 520);
+    return () => clearTimeout(t);
+  }, [pos]);
+  useEffect(() => {
+    const c = ref.current; if (!c) return;
+    const w = Math.min(1600, Math.round((c.clientWidth || 360) * (window.devicePixelRatio || 1)));
+    c.width = w; c.height = Math.round(w * S.SH / S.SW);
+    const g = c.getContext("2d"), shapes = list[pos.i].shapes;
+    const animated = new Set(steps.flat().map((t) => t.idx)), shown = new Map();
+    steps.slice(0, pos.step).forEach((st, k) => st.forEach((t) => {
+      const m = shown.get(t.idx) || { paras: 0, fresh: false, whole: false };
+      if (t.para != null) m.paras = Math.max(m.paras, t.para + 1); else m.whole = true;
+      if (k === pos.step - 1) m.fresh = true;
+      shown.set(t.idx, m);
+    }));
+    const dy = anim === "fly" ? 90 : 0;
+    let raf, t0 = null;
+    const frame = (ts) => {
+      if (t0 == null) t0 = ts;
+      const e = Math.min(1, (ts - t0) / 450), ease = 1 - Math.pow(1 - e, 3), view = [];
+      shapes.forEach((x, idx) => {
+        if (!animated.has(idx)) { view.push(x); return; }
+        const m = shown.get(idx); if (!m) return;
+        if (!m.whole) view.push({ ...x, showParas: m.paras, paraEnter: m.fresh ? ease : null, enterDy: dy });
+        else view.push(m.fresh ? { ...x, enter: ease, enterDy: dy, enterZoom: anim === "zoom" } : x);
+      });
+      g.clearRect(0, 0, c.width, c.height); drawShapes(g, view, w / S.SW);
+      if (e < 1) raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, [pos, list, portrait]);
+  const next = () => setPos((p) => {
+    const st = stepsOf(p.i);
+    if (anim && deck.trigger !== "auto" && p.step < st.length) return { ...p, step: p.step + 1 };
+    return p.i < list.length - 1 ? { i: p.i + 1, step: 0 } : p;
+  });
+  const prev = () => setPos((p) => (p.i > 0 ? { i: p.i - 1, step: stepsOf(p.i - 1).length } : { ...p, step: 0 }));
+  const tr0 = TRANSITIONS_OK[deck.transition] ? deck.transition : null;
+  const note = list[pos.i].slide.notes;
+  return (
+    <div className="fixed inset-0 z-[70] bg-black flex flex-col" data-testid="presenter">
+      <style>{TRANS_CSS}</style>
+      <div className="flex items-center justify-between px-3 py-2 text-slate-300 text-[12.5px]">
+        <span data-testid="presenter-count">{pos.i + 1} / {list.length}{steps.length && deck.trigger !== "auto" ? " · " + tr("tap for the next item") : ""}</span>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setNotes(!notes)} className={`px-2.5 py-1.5 rounded-lg border ${notes ? "border-teal-500 text-teal-200" : "border-slate-700"}`}>{tr("Notes")}</button>
+          <button onClick={close} aria-label={tr("Close")} className="h-9 w-9 rounded-full grid place-items-center border border-slate-700" data-testid="presenter-close"><X size={16} /></button>
+        </div>
+      </div>
+      <div className="flex-1 flex items-center justify-center overflow-hidden relative">
+        <div key={pos.i} className="w-full" style={{ animation: tr0 ? `attT${tr0} .6s ease-out` : "none" }}>
+          <canvas ref={ref} className="block mx-auto" style={{ width: "min(100%, calc((100vh - 130px) * 16 / 9))", aspectRatio: "16 / 9" }} data-testid="presenter-canvas" />
+        </div>
+        <button className="absolute inset-y-0 start-0 w-1/3" aria-label={tr("Back")} onClick={prev} data-testid="presenter-prev" />
+        <button className="absolute inset-y-0 end-0 w-2/3" aria-label={tr("Next")} onClick={next} data-testid="presenter-next" />
+      </div>
+      {portrait && !notes ? <p className="text-center text-[11.5px] text-slate-500">{tr("Turn your phone sideways for a bigger slide")}</p> : null}
+      {notes ? <p className="max-h-40 overflow-auto px-4 py-3 text-[13px] text-slate-200 bg-slate-900 border-t border-slate-800" dir="auto">{note || tr("No notes on this slide.")}</p> : null}
+      <div className="flex items-center justify-center gap-6 py-3">
+        <button onClick={prev} className="h-11 w-11 rounded-full grid place-items-center border border-slate-700 text-slate-200" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>
+        <button onClick={next} className="h-11 w-11 rounded-full grid place-items-center bg-teal-500 text-slate-950" aria-label={tr("Next")}><ChevronRight size={20} className="rtl:-scale-x-100" /></button>
+      </div>
+    </div>
+  );
+}
+const TRANSITIONS_OK = { fade: 1, push: 1, wipe: 1, split: 1, cover: 1, zoom: 1 };
+const MOTION = "attune:slides:motion";
+const loadMotion = () => { try { const m = JSON.parse(localStorage.getItem(MOTION) || "{}"); return { transition: m.transition || "none", animation: m.animation || "none", trigger: m.trigger || "click" }; } catch (e) { return { transition: "none", animation: "none", trigger: "click" }; } };
+
 // ---- the page -------------------------------------------------------------------------------------
 export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, modelReady, openEngine, pro, openPlan, initialPrompt, initialTab }) {
   const [tab, setTab] = useState(initialTab || "deck");                 // deck | report
@@ -135,6 +233,9 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
   const [count, setCount] = useState(8);
   const [lang, setLangPick] = useState("auto");
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem("attune:slides:theme") || "midnight"; } catch (e) { return "midnight"; } });
+  const [motion, setMotion] = useState(loadMotion);       // { transition, animation, trigger }
+  const [playing, setPlaying] = useState(false);
+  const [styleNote, setStyleNote] = useState("");         // what was taken from the request's own words
   const [rKind, setRKind] = useState("business");
   const [rLen, setRLen] = useState(5);
   const [useWeb, setUseWeb] = useState(false);
@@ -148,7 +249,8 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
   const run = useRef(0);
   const hitsRef = useRef({ id: null, hits: [] });   // this session's web pages, for "Rewrite this slide"
   const fileRef = useRef(null);
-  useSubBack(edit != null || !!deck || !!report, () => { if (edit != null) setEdit(null); else { setDeck(null); setReport(null); } });
+  useSubBack(!playing && (edit != null || !!deck || !!report), () => { if (edit != null) setEdit(null); else { setDeck(null); setReport(null); } });
+  const setMotionSaved = (m) => { setMotion(m); try { localStorage.setItem(MOTION, JSON.stringify(m)); } catch (e) {} };
   useEffect(() => { if (initialPrompt) setPrompt(initialPrompt); }, [initialPrompt]);
 
   const remember = (item) => { const l = [item, ...loadList().filter((x) => x.id !== item.id)].slice(0, 15); saveList(l); setList(l); };
@@ -229,7 +331,12 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
     const id = ++run.current, alive = () => run.current === id;
     const L = S.langOf(lang, prompt), topic = prompt.trim();
     setErr(""); setEdit(null); setReport(null);
-    try { localStorage.setItem("attune:slides:theme", theme); } catch (e) {}
+    // "a dark blue theme, fade transitions, points flying in one by one" — the request's own words win
+    const st = S.styleFromPrompt(prompt + "\n" + audience);
+    const useTheme = st.theme || theme, mo = { transition: st.transition || motion.transition, animation: st.animation || motion.animation, trigger: st.trigger || motion.trigger };
+    setTheme(useTheme); setMotionSaved(mo);
+    setStyleNote([st.theme ? tr("Design: {d}", { d: tr(S.THEMES[st.theme].name) }) : "", st.transition ? tr("Transitions: {t}", { t: tr(S.TRANSITIONS[st.transition]) }) : "", st.animation ? tr("Animations: {a}", { a: tr(S.ANIMATIONS[st.animation]) }) + (st.animation !== "none" ? " · " + tr(mo.trigger === "auto" ? "automatic" : "on tap") : "") : ""].filter(Boolean).join(" · "));
+    try { localStorage.setItem("attune:slides:theme", useTheme); } catch (e) {}
     try {
       const hits = await gather(topic, alive);
       if (!alive()) return;
@@ -240,7 +347,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
       if (!alive()) return;
       const did = "d" + Date.now().toString(36);
       hitsRef.current = { id: did, hits };
-      let d = { id: did, topic, audience, title: outline.title, subtitle: outline.subtitle, lang: L, theme, date: dateLine(L), slides: outline.slides.map((s) => ({ ...s, bullets: [], pending: true })), source, hits: hits.map((h) => ({ title: h.title, url: h.url })), dropped: 0, unsure: 0 };
+      let d = { id: did, topic, audience, title: outline.title, subtitle: outline.subtitle, lang: L, theme: useTheme, ...mo, date: dateLine(L), slides: outline.slides.map((s) => ({ ...s, bullets: [], pending: true })), source, hits: hits.map((h) => ({ title: h.title, url: h.url })), dropped: 0, unsure: 0 };
       setDeck(d);
       for (let i = 0; i < d.slides.length; i++) {
         if (!alive()) return;
@@ -349,6 +456,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
   }
 
   const shapes = deck ? S.deckShapes(deck) : [];
+  if (deck && playing) return <Presenter deck={deck} close={() => setPlaying(false)} />;
   return (
     <div className="space-y-4 max-w-2xl mx-auto" data-testid="slides">
       <div className="px-1">
@@ -374,6 +482,8 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
                 <div className="grid grid-cols-4 gap-1.5">{Object.entries(S.THEMES).map(([k, t]) => (
                   <button key={k} onClick={() => setTheme(k)} data-testid={"slides-theme-" + k} className={`rounded-xl border p-1.5 text-[11px] ${theme === k ? "border-teal-500 text-teal-200" : "border-slate-700 text-slate-400"}`}>
                     <span className="block h-7 rounded-md mb-1 relative overflow-hidden" style={{ background: "#" + t.cover }}><span className="absolute left-1.5 top-2 h-1 w-5 rounded" style={{ background: "#" + t.accent }} /><span className="absolute right-1 bottom-1 h-3 w-3 rounded-full" style={{ background: "#" + t.accent2 }} /></span>{tr(t.name)}</button>))}</div></div>
+              <MotionPicker motion={motion} setMotion={setMotionSaved} chip={chip} />
+              <p className="text-[11px] text-slate-500">{tr("Or just say it in your request — e.g. “dark blue theme, fade transitions, the points fly in one by one”.")}</p>
             </>
           ) : (
             <>
@@ -439,6 +549,16 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
             <button key={k} onClick={() => { setDeck({ ...deck, theme: k }); setTheme(k); try { localStorage.setItem("attune:slides:theme", k); } catch (e) {} }} data-testid={"deck-theme-" + k}
               className={`shrink-0 rounded-lg border px-2 py-1 text-[11px] flex items-center gap-1.5 ${deck.theme === k ? "border-teal-500 text-teal-200" : "border-slate-700 text-slate-400"}`}>
               <span className="h-3 w-3 rounded-full" style={{ background: "#" + t.accent }} />{tr(t.name)}</button>))}</div>
+          {styleNote ? <p className="text-[11.5px] text-teal-300 px-1" data-testid="slides-style-note">{tr("From your request:")} {styleNote}</p> : null}
+          <div className="grid grid-cols-3 gap-1.5">
+            <select value={deck.transition || "none"} onChange={(e) => { const m = { ...motion, transition: e.target.value }; setMotionSaved(m); setDeck({ ...deck, transition: m.transition }); }} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[12px] text-slate-100" data-testid="deck-transition">
+              {Object.entries(S.TRANSITIONS).map(([k, l]) => <option key={k} value={k}>{tr("Transition")}: {tr(l)}</option>)}</select>
+            <select value={deck.animation || "none"} onChange={(e) => { const m = { ...motion, animation: e.target.value }; setMotionSaved(m); setDeck({ ...deck, animation: m.animation, trigger: deck.trigger || m.trigger }); }} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[12px] text-slate-100" data-testid="deck-animation">
+              {Object.entries(S.ANIMATIONS).map(([k, l]) => <option key={k} value={k}>{tr("Animation")}: {tr(l)}</option>)}</select>
+            <select value={deck.trigger || "click"} disabled={!deck.animation || deck.animation === "none"} onChange={(e) => { const m = { ...motion, trigger: e.target.value }; setMotionSaved(m); setDeck({ ...deck, trigger: m.trigger }); }} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[12px] text-slate-100 disabled:opacity-40" data-testid="deck-trigger">
+              <option value="click">{tr("On tap")}</option><option value="auto">{tr("Automatically")}</option></select>
+          </div>
+          {!busy ? <button onClick={() => setPlaying(true)} className="w-full py-2.5 rounded-xl border border-teal-600 text-teal-200 text-sm font-semibold flex items-center justify-center gap-2" data-testid="slides-play"><Play size={16} />{tr("Play — see the transitions and animations")}</button> : null}
           {!busy ? (
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
@@ -467,7 +587,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
       ) : null}
 
       {report ? <ReportView report={report} busyRow={busyRow} busy={busy} err={err} saveDocx={saveDocx} saveReportPdf={saveReportPdf}
-        toDeck={() => { const d = S.deckFromReport(report); setReport(null); setDeck({ ...d, id: "d" + Date.now().toString(36), topic: report.topic, theme, source: S.reportText(report, 20000) + (report.data ? report.data.text : ""), hits: report.sources || [], dropped: 0, unsure: 0 }); }}
+        toDeck={() => { const d = S.deckFromReport(report); setReport(null); setDeck({ ...d, id: "d" + Date.now().toString(36), topic: report.topic, theme, ...motion, source: S.reportText(report, 20000) + (report.data ? report.data.text : ""), hits: report.sources || [], dropped: 0, unsure: 0 }); }}
         copy={() => copyText(C.blocksToText(S.reportBlocks(report).filter((b) => b.type !== "pagebreak" && b.type !== "image")))} again={() => setReport(null)} /> : null}
     </div>
   );
@@ -561,6 +681,18 @@ function SlideEditor({ deck, index, setDeck, close, busy, busyRow, rewrite, err 
         <button onClick={() => move(1)} disabled={index === deck.slides.length - 1 || !!busy} className="py-2 rounded-xl border border-slate-700 text-slate-200 text-[12.5px] flex items-center justify-center gap-1 disabled:opacity-40" data-testid="slide-down"><ArrowDown size={14} />{tr("Later")}</button>
         <button disabled={!!busy || deck.slides.length <= 1} onClick={async () => { if (await askConfirm(tr("Delete this slide?"))) { setDeck({ ...deck, slides: deck.slides.filter((_, j) => j !== index) }); close(); } }} className="py-2 rounded-xl border border-rose-900 text-rose-200 text-[12.5px] flex items-center justify-center gap-1 disabled:opacity-40" data-testid="slide-delete"><Trash2 size={14} />{tr("Delete")}</button>
       </div>
+    </div>
+  );
+}
+
+function MotionPicker({ motion, setMotion, chip }) {
+  return (
+    <div className="space-y-2" data-testid="slides-motion">
+      <div><p className="text-[12px] text-slate-400 mb-1.5">{tr("Transitions between slides")}</p>
+        <div className="flex flex-wrap gap-1.5">{Object.entries(S.TRANSITIONS).map(([k, l]) => <button key={k} onClick={() => setMotion({ ...motion, transition: k })} className={chip(motion.transition === k)} data-testid={"slides-trans-" + k}>{tr(l)}</button>)}</div></div>
+      <div><p className="text-[12px] text-slate-400 mb-1.5">{tr("Animations (points, cards and charts appear)")}</p>
+        <div className="flex flex-wrap gap-1.5">{Object.entries(S.ANIMATIONS).map(([k, l]) => <button key={k} onClick={() => setMotion({ ...motion, animation: k })} className={chip(motion.animation === k)} data-testid={"slides-anim-" + k}>{tr(l)}</button>)}</div>
+        {motion.animation !== "none" ? <div className="flex gap-1.5 mt-1.5">{[["click", "On tap"], ["auto", "Automatically"]].map(([k, l]) => <button key={k} onClick={() => setMotion({ ...motion, trigger: k })} className={chip(motion.trigger === k)} data-testid={"slides-trigger-" + k}>{tr(l)}</button>)}</div> : null}</div>
     </div>
   );
 }
