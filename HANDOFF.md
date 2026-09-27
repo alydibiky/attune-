@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.30**._
+_Last updated: 27 Sep 2026. Latest: **v5.39** on `main` (commit after `043684d`), APK built green._
 
 ---
 
@@ -9,22 +9,20 @@ _Last updated: 26 Sep 2026 (v5.14–v5.15 session). Latest: **v5.30**._
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.30** — pushed; Actions builds the APK on every push (artifact `attune-apk`). |
-| Pushing | Works from a session that has `alydibiky/attune-` in its sources (v5.13 rebuild + v5.14 pushed from Claude Code on the web). |
-| Tested on Ali's phone | v5.13 (screenshots → v5.14 fixes). **v5.14 is NOT tested on the phone yet** (Assistants, Projects, Artifacts, Themes are new). |
-| Ali's latest message | Wants: fewer glitches, stronger answers, single-prompt websites, AI ERP, themes, artifacts, "gems", projects, better models. v5.14 = first round (§5.3). Next: his phone test of v5.14. |
-| Recommended model | **Gemma 4 E4B** (fast engine, GPU). E2B = faster but weaker; Qwen 3.5 9B = strongest, slow (llama.cpp CPU). |
+| Last version on GitHub `main` | **v5.39** — every push to `main` runs "Build the APK" (~8 min); last green run: https://github.com/alydibiky/attune-/actions/runs/36322528000 (artifact `attune-apk`). |
+| Pushing | Works: this session pushed v5.32 → v5.39 straight to `main` (Ali's rule: push to main, then watch the build and give him the run link). |
+| Tested on Ali's phone | Up to v5.34 (Studio drew a real picture in 44 s after the Turbo fix). **v5.35 Chat X-Ray, v5.37 File Converter, v5.38 Video Downloader and v5.39 Translate are NOT phone-tested yet** — expect his report next. |
+| Ali's latest requests (all done) | "as many file converters as you can" (§5.23), "copy a link of a video and download it in the quality I want" (§5.24 — he chose **safe sites only**, no YouTube/TikTok), "take a PDF, translate it, give me the PDF" (§5.25). |
+| Models | Engine catalog uses Attune names only (Spark · Glow · Blaze · Core… · Blaze+ · Zenith · Apex · Everest — §5.18). Blaze / Blaze+ = LiteRT fast engine on the GPU (recommended on his Honor). Vendor names (Qwen/Gemma) must never show. |
+| Billing | `web-src/billing.js`: **`TESTING_ALL_PRO = true`** (Ali asked for every Pro feature unlocked while testing; the Plan screen has a "See it as a Free user" toggle). Prices EGP 199 / 1,499 / 3,999, $4.99 / $39.99 / $99. Free limits: Deal Check 3/day, Chat X-Ray 1/day, conversions 5/day, video downloads 3/day. |
+| Open items for release | 1) `SELLER.contact` (Ali's WhatsApp) in billing.js; 2) set `TESTING_ALL_PRO = false`; 3) never commit `*private-key*.json`; 4) Play listing must not mention YouTube downloading. |
+| Ali's PC (for future model training) | Windows, RTX 3050 **8 GB**, 16 GB DDR4-2666 (Crucial CB16GU2666 laptop-type stick). Advised: add a matching stick or 2×16 GB DDR4-3200 (runs at 2666 on his board). LoRA-tuning Spark/Glow/Blaze-size models is feasible there; ~4B is tight. Plan was given in chat (§5.19); nothing started. |
 
 ### 0.2 Your first steps, in order
-1. **Get the code onto GitHub.** If `origin/main` is still `a779969`:
-   ```bash
-   git fetch ./attune-v5.12.bundle main:v512 && git merge --ff-only v512 && git push origin main
-   ```
-   (Or, if you are working in the repo that already has these commits, just `git push origin main`.)
-   **Never commit `*private-key*.json`** (it is git-ignored; check `git ls-files | grep -i private-key` prints nothing).
-2. **Watch the GitHub Actions run "Build the APK".** The riskiest new parts have never been through a real Android build: `DailyWidget.kt`, `res/layout/widget_daily.xml`, `res/xml/widget_daily_info.xml`, the `news()` method in `WebTools.kt` (uses `android.util.Xml`). If the build fails, fix with a targeted change.
-3. **Collect Ali's problems** with the intake template in §0.3 — one row per problem, a screenshot each. Then fix them **one by one, smallest safe change first**, with a test for each (see §6).
-4. Commit + push after each fix (or batch of small ones) so Actions builds a new APK for him.
+1. `git pull` and read §1 (how Ali works), §6 (method), §7 (lessons). Standing rules are in §1.
+2. Set up tests once: `bash tests/setup.sh` (desktop llama-server + tiny model), `pip install python-docx openpyxl python-pptx` (real-file checks), `cd web-src && npm i` is done by build.sh.
+3. **Run everything before any push:** `bash tests/run_all.sh` (≈25 min — run it in the background). It prints only lines that are not "ALL PASSED". Acceptable output: `e2e_v510_more.py:` and `e2e_v512_more.py:` (helper modules, print nothing). `tests/audit.txt` = every More tool in EN/AR checked for overflow, JS errors and untranslated English; known-OK leftovers: brand/format names (PDF, JSON, Movies, Midjourney…), random codes (PRO-XXXX, fleet ids), `ERR_TUNNEL_CONNECTION_FAILED` (the sandbox blocks outside hosts).
+4. Collect Ali's problems with §0.3, fix one by one (smallest safe change), add a test for each, bump the version (`app/build.gradle.kts` versionCode/versionName + `PAGE_VERSION` in attune.jsx), add a §5.x entry, commit, push to `main`, watch the run (GitHub MCP `actions_list` / `actions_get`; on failure `get_job_logs` with `failed_only`), and give Ali the run link.
 
 ### 0.3 Problem intake template (send this to Ali)
 Ask him to answer like this for every problem (Arabic or English is fine):
@@ -47,12 +45,14 @@ Also ask for: **Engine → Speed** screenshot, and for crashes/“not working”
 - **Notifications** for Learn daily / Daily news firing at the chosen time (they reuse the Reminders AlarmManager path, which is proven).
 - **LiteRT (fast engine) with the new JSON-heavy prompts** (ERP design, quizzes, correction verdicts): Gemma E2B may break JSON more often than the test mock. Parsers repair JSON (`jsonFrom` in erp.js) and retry once, but real output quality is unknown.
 - The **quality** of lessons/digests/ERP designs from a 2–4B model (tests use canned answers).
+- **v5.37–v5.39 on a real phone:** PdfBox-Android text extraction (esp. Arabic PDFs — some store letters in visual order), `makePdf` Arabic layout, `pdfEdit` merge/split on big files (all in memory — a 200 MB PDF may run out), DownloadManager saving to Movies/Attune (Android 9 falls back to the app folder), `clipboardText` on MagicOS, the WebView canvas for WebP output, and how long the phone model takes to translate a 20-page PDF (unknown; batches of ≤ 1,500 characters).
 
 ---
 
 ## 1. The person and how to work with him
 - **Ali (Aly Aldibiki)**, Cairo, Egypt (UTC+3). Co-owns **Adrighem & Aldibiki** (cranes: Liebherr, Demag, XCMG, Sany, Grove, Terex, Zoomlion, Hitachi — 20–500 t). Works on **Windows**; tests on an **Honor Magic 8 Pro** (Snapdragon 8 Elite Gen 5, 12–16 GB RAM, MagicOS with Google services).
 - Arabic (Egyptian) + English. Wants **step-by-step explanations with technical terms in English + Egyptian Arabic**, the reasoning (not just steps), and **targeted fixes, not rewrites**.
+- **Standing rules (latest, all still in force):** never commit `*private-key*.json`; never change the signing key `app/attune-test.keystore`; targeted fixes, no rewrites; explain each step simply with technical terms in English **and Egyptian Arabic**; commit as `Claude <noreply@anthropic.com>` with the session's Co-Authored-By / Claude-Session trailer lines; **run all tests before pushing**; push to `main` and give the Actions run link; no model names/identifiers in commits or code; "don't forget anything I asked for" — answer every point he raises.
 - **Standing rules he gave:** use a **task list** so he sees progress; **don't stop to ask questions unless something can't be undone**; commit + push after each feature so Actions builds an APK.
 - He is **not a developer at the keyboard**: give exact taps/clicks. He builds only with **GitHub Actions**. He tests on the phone and reports with screenshots — take each point literally and answer every one.
 - When pushing is impossible, give him a **bundle + zip + a paste-ready prompt** for a Claude Code session that has repo access.
@@ -86,6 +86,8 @@ app/src/main/java/com/aldibiki/attune/
   Reminders.kt / ReminderReceiver / BootReceiver   AlarmManager + notifications (repeat none|daily|weekly|weekdays)
   DailyWidget.kt     (v5.12) home-screen widget: today's lesson + headline
   WebTools.kt        DuckDuckGo (+df recency) / Brave search, pageText, news() (Google News RSS + DDG past day)
+  DocTools.kt        (v5.36–37) PdfBox-Android pdfText, PdfRenderer pdfImages, PdfDocument makePdf, pdfEdit (merge/split/pick/rotate)
+  MediaTools.kt      (v5.38) video link probe / getText / DownloadManager download, status, open, cancel
   GenService.kt, PhoneActions.kt, Voice.kt, DeviceInfo.kt, ModelStore.kt, Prefs.kt, NetLog.kt, EngineNative.kt
 app/src/main/res/    layout/widget_daily.xml, xml/widget_daily_info.xml, drawable/widget_bg.xml (v5.12),
                      values(-ar)/strings.xml (widget_* strings), xml/file_paths.xml
@@ -107,6 +109,18 @@ web-src/             SOURCE of the page — edit here, then `bash web-src/build.
   research.js                                       (v5.20) deep web research: notes per page, missing-check
   actions.js, actions-ui.jsx                        reminders & phone actions (syncToPhone spares daily-* ids)
   backup.js, backup-ui.jsx, crane.js, crane-ui.jsx, cycle.jsx, calc.js, speed-ui.jsx, yusr/ (Money)
+  boost.js, power.js                                (v5.23–26) sampling/tricks per model family; Attune model names (BRANDS, publicName, labelFor)
+  longread.js                                       (v5.27) any-length message/file answered in parts
+  tips.js                                           (v5.29) 200+ tips, picked per question
+  confirm.jsx                                       (v5.28) askConfirm() before deletes
+  billing.js                                        prices by region, Pro codes, trial, TESTING_ALL_PRO / testingPro(), PRO_BENEFITS
+  answerfix.js, constraints.js, factsheet.js        (v5.32–34) web-answer repair (figures, tidyAnswer), writing rules checked by code, facts sheet under web answers
+  places.js                                         (v5.32) Instant → Google Maps search link
+  backstack.js                                      (v5.34) useSubBack: inner pages close one step on Back
+  deal.js, deal-ui.jsx                              (v5.33) Deal Check (true cost, IRR, market price, scam signs)
+  chatxray.js, chatxray-ui.jsx                      (v5.35) Chat X-Ray (WhatsApp export → ledger, promises, unanswered)
+  convert.js, convert-ui.jsx                        (v5.36–39) File Converter + Translate (docx/xlsx/pptx/odt/ods/epub/html/rtf/json/srt; see §5.23, §5.25)
+  video.js, video-ui.jsx                            (v5.38) Video Downloader (link reading; see §5.24)
   i18n.js, i18n-ar.js                               tr("English") → Arabic dictionary (~1,800 entries)
   build/             shell.html, entry.jsx, react/reactdom shims, lucide-shim.js (icons), tw.css   ← SOURCE, not output
   fetch-pyodide.sh   Pyodide + openpyxl/et_xmlfile into www/py/ (CI runs it; not committed)
@@ -117,11 +131,13 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 
 ## 4. How to build and test
 1. Edit `web-src/*`, then `bash web-src/build.sh` (Node 18+, Python 3; installs esbuild 0.28.2 + Tailwind 4.3.3 locally). Output: `app/src/main/assets/www/index.html` — **commit it** (CI checks it exists).
-2. **Unit tests:** `node tests/unit/run.mjs` → 16 files, all green at v5.20.
-3. **Browser end-to-end:** `bash tests/setup.sh` once (builds a desktop llama-server at the same pin + a tiny model), then from `tests/`:
-   `python3 e2e_v3.py`, `e2e_v4.py`, `e2e_v5.py`, `e2e_v58.py`, `e2e_v59.py`, `e2e_v510.py`, `e2e_v511.py`, `e2e_v512.py`, `e2e_v513.py`, `e2e_v514.py`, `e2e_v516.py`, `e2e_v517.py`, `e2e_v518.py`, `e2e_v519.py` — **all green at v5.19**. Phone-sized Chromium with a mock `AttuneNative`; `chat()` hits the real tiny llama-server unless a test queues canned answers.
-   Mock features (harness.py): `__mock.fakeQueue` (canned answers, streamed; skipped for warm-up requests with `max_tokens ≤ 2`), `slowQueue`, `chatCancel`, `cancelled`, `bodies` (every request body), `notes` (schedule calls — **keeps every call, not one per id**), `files` (saveFile), stash. v5.12 tests add `N.news` and `N.setWidget` mocks (`NEWS_MOCK` in e2e_v512_more.py).
-4. **Kotlin compile check without an Android SDK** (dl.google.com is blocked in the sandbox): kotlinc **2.4.0** (GitHub release) + `android-35/android.jar` (sparse clone of github.com/Reginer/aosp-android-jar) + hand-written stubs for androidx, jsoup, FileProvider, InternalStoragePathHandler, LiteRT-LM (signature-exact incl. RepetitionPenaltyConfig/NoRepeatNgramConfig) and **R** (add new `R.layout/R.id/R.drawable` entries by hand when you add resources). The stub set lived in the old session's scratchpad and is **gone** — rebuild it if you change Kotlin, or rely on CI.
+2. **All tests at once:** `bash tests/run_all.sh` (unit + every e2e + screen audit, ≈25 min; results in `tests/results.txt`, audit in `tests/audit.txt`). All green at **v5.39** (unit v513…v539 + older files; e2e v3…v539).
+   - Unit only: `node tests/unit/v539.test.mjs` (plain Node 22 runs them; `node tests/unit/run.mjs` bundles with esbuild first).
+   - One e2e: `PYTHONPATH=tests/pwshim python3 tests/e2e_v539.py` (`pwshim` points Playwright at `/opt/pw-browsers/chromium` in cloud sessions).
+3. **Browser end-to-end setup:** `bash tests/setup.sh` once (desktop llama-server at the same pin + a tiny model). Phone-sized Chromium with a mock `AttuneNative` (harness.py); `chat()` hits the real tiny llama-server unless a test queues canned answers.
+   Mock features (harness.py): `__mock.fakeQueue` (canned answers, streamed; skipped for warm-up requests with `max_tokens ≤ 2`; each LLM call takes one), `slowQueue`, `chatCancel`, `cancelled`, `bodies` (every request body), `notes` (schedule calls — keeps every call), `lastSaved` (saveFile), stash. New native calls are mocked per test by assigning `window.AttuneNative.<name> = (id, arg) => …` and resolving through `window.__attuneNative.resolve(id, JSON)` (see e2e_v536/v537/v538). The harness starts with `attune:testing-pro = off` so Free limits are testable.
+   Real-file checks (unit v536/v537) need `pip install python-docx openpyxl python-pptx` (skipped if missing). LibreOffice is broken in the sandbox; odfpy doesn't install.
+4. **Kotlin compile check without an Android SDK** — in practice this session relied on CI: verify library class/method names with `javap` on the downloaded AAR's classes.jar (done for pdfbox-android 2.0.27.0), then push and read the build log; (dl.google.com is blocked in the sandbox): kotlinc **2.4.0** (GitHub release) + `android-35/android.jar` (sparse clone of github.com/Reginer/aosp-android-jar) + hand-written stubs for androidx, jsoup, FileProvider, InternalStoragePathHandler, LiteRT-LM (signature-exact incl. RepetitionPenaltyConfig/NoRepeatNgramConfig) and **R** (add new `R.layout/R.id/R.drawable` entries by hand when you add resources). The stub set lived in the old session's scratchpad and is **gone** — rebuild it if you change Kotlin, or rely on CI.
 5. **APK:** push to `main` → Actions builds (~8+ min; longer when caches are cold) → Ali downloads `attune-apk`. If you can't push: bundle (`git bundle create x.bundle <origin-main-sha>..main`) + zip + paste-ready prompt.
 
 ## 5. Version history
@@ -392,6 +408,10 @@ File Converter → **Translate…** (PDF, Word, PowerPoint, LibreOffice, e-books
 
 ## 8. Backlog (not started)
 - Whatever Ali reports next (§0.3) — **top priority**.
+- **Before release:** `TESTING_ALL_PRO = false`, `SELLER.contact`, Play listing text (offline, private; no YouTube downloading), real Play Billing if he wants it.
+- File Converter ideas not done: old binary .doc/.xls/.ppt, PDF → Word keeping pictures and layout, PowerPoint → PDF as slide pictures, compress PDF, PDF password remove/add, sign a PDF, OCR a PDF into a searchable PDF, translate Excel/CSV cells.
+- Video Downloader: HLS (.m3u8) streams would need ffmpeg (≈ +20 MB) — only for sites that allow downloads. YouTube & co. stay refused unless Ali explicitly asks for a separate non-Play APK (he declined on 27 Sep 2026).
+- Own models per RAM tier trained on Ali's PC (RTX 3050 8 GB): LoRA on the small tiers with his corrections (≥ 200 examples) — plan discussed in chat, nothing built.
 - Fill `SELLER.price/contact` (Ali's price + WhatsApp); optional Play Billing for ERP licences.
 - ERP: printable invoice/quote PDFs from records (ETA e-invoice format), per-table forms layout, relations shown as sub-lists (e.g. a customer's jobs), multi-user sync (would need a server — discuss with Ali first).
 - Learn daily: Studio picture per lesson automatically when Studio is installed; audio pronunciation via TTS for language lessons.
