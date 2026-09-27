@@ -7,6 +7,7 @@
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
 import { wantsDoc } from "./slides.js";
+import { looksLikeFoodLog } from "./fit.js";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { ActionCard } from "./actions-ui.jsx";
@@ -1614,6 +1615,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               return w ? (
                 <button onClick={() => api.openSlides(u.text, w)} data-testid="slides-chip"
                   className="shrink-0 text-xs px-3 py-2 rounded-full border border-amber-700 text-amber-200 bg-amber-500/10">{tr(w === "deck" ? "📊 Make it a PowerPoint" : "📄 Make it a Word / PDF report")}</button>
+              ) : null; })()}
+            {(() => { const u = messages[messages.length - 2];
+              return u && u.role === "user" && api.openFit && looksLikeFoodLog(u.text) ? (
+                <button onClick={() => api.openFit(u.text)} data-testid="fit-chip"
+                  className="shrink-0 text-xs px-3 py-2 rounded-full border border-emerald-700 text-emerald-200 bg-emerald-500/10">{tr("🍽 Log it in Fit & Food")}</button>
               ) : null; })()}
             {followUps(lastAi, messages[messages.length - 2]).map(([label, prompt]) => (
               <button key={label} onClick={() => ask(prompt)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-slate-700 text-slate-300 active:border-teal-600">{tr(label)}</button>

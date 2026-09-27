@@ -5,7 +5,7 @@ import {
   Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User,
   ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users,
   AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2,
-  Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation,
+  Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple,
 } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -22,6 +22,7 @@ import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
+import { FitApp } from "./fit-ui.jsx";
 import { ChatXRay } from "./chatxray-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
 import { VideoDownloader } from "./video-ui.jsx";
@@ -6627,7 +6628,7 @@ function tierOfInstalled(m) {
 const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
-  assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports" };
+  assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
@@ -6636,6 +6637,7 @@ const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.s
 
 const MORE_TOOLS = [
   ["slides", "Slides & Reports", "A designed PowerPoint or a full report from one sentence", Presentation],
+  ["fit", "Fit & Food", "Calories from a sentence or a photo, 50+ recipes, workouts", Apple],
   ["deal", "Deal Check", "Before you pay or sign", ShieldCheck],
   ["xray", "Chat X-Ray", "Money, promises & questions in a WhatsApp chat", MessageCircle],
   ["convert", "File Converter", "PDF, Word, PowerPoint, Excel, photos — 80+ conversions, and translation", FileText],
@@ -6664,7 +6666,7 @@ const MORE_TOOLS = [
 const MORE_GROUPS = [
   ["Create & learn", ["instant", "studio", "assistants", "projects", "artifacts", "code", "learn", "news"]],
   ["Work & business", ["slides", "xray", "convert", "video", "business", "crane", "field", "fleet", "reminders"]],
-  ["Your life", ["deal", "memory", "map", "travel", "cycle"]],
+  ["Your life", ["fit", "deal", "memory", "map", "travel", "cycle"]],
   ["Prompts for other AIs", ["improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
 
@@ -6695,7 +6697,7 @@ export default function App() {
   // the bottom bar, the More menu and things shared from other apps are top-level: Back from them goes home
   // (Android's rule); being SENT from one screen to another (Learn → Studio) is what Back retraces
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
-  const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", projects: "projects:", video: "video:", studio: "studio:" };
+  const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
   const navTo = (m) => { modeHist.current = []; if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
@@ -6713,6 +6715,7 @@ export default function App() {
   // so a restored backup or a reinstall gets its reminders back.
   useEffect(() => { try { syncToPhone(NATIVE, reminders); } catch (e) {} try { syncDaily(NATIVE); } catch (e) {} }, []);
   const [dailyOpen, setDailyOpen] = useState(null);
+  const [fitIn, setFitIn] = useState(null);             // v5.42: "I ate…" from a Chat chip
   const [slidesIn, setSlidesIn] = useState(null);        // v5.40: { prompt, tab } from a Chat chip
   const [videoIn, setVideoIn] = useState("");             // v5.38: a video link shared to Attune
   const [xrayIn, setXrayIn] = useState(null);             // v5.35: a WhatsApp chat export shared to Attune      // "daily-learn-…" / "daily-news-…" from a notification or the widget
@@ -8095,6 +8098,7 @@ export default function App() {
     openTab: (m) => setMode(m),
     sendToMoney: (t) => sendToMoney(t, "Payment read — pick the account and confirm"),
     photoToMoney: (url) => { setPendingPay({ image: url, id: Date.now() }); setMode("money"); },
+    openFit: (text) => { setFitIn(text); setMode("fit"); },
     openSlides: (prompt, tab) => { forgetSticky("slides:"); setSlidesIn({ prompt, tab, id: Date.now() }); setMode("slides"); },   // a new request starts a fresh form
     listen: async (langTag, onPartial) => {
       const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); });
@@ -8906,6 +8910,10 @@ export default function App() {
             modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
             scheduleReminder={scheduleReminder} incoming={xrayIn} clearIncoming={() => setXrayIn(null)}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
+        ) : mode === "fit" ? (
+          <FitApp flash={flash} openEngine={() => setShowEngine(true)} incoming={fitIn} clearIncoming={() => setFitIn(null)}
+            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "deal" ? (
           <DealCheck flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}

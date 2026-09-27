@@ -151,7 +151,8 @@ const F = [
   ["karkadeh", "Hibiscus (karkadeh), sweetened", "كركديه", 40, 0, 10, 0, 0, { glass: 250, cup: 250 }, "drinks"],
   ["water", "Water", "مية|مياه|ماء", 0, 0, 0, 0, 0, { glass: 250, cup: 250, bottle: 500 }, "drinks"],
 ];
-export const FOODS = F.map(([id, en, ar, kcal, p, c, f, fib, portions, group]) => ({ id, en: en.split("|")[0], ar: ar.split("|")[0], names: [...en.split("|"), ...ar.split("|")], kcal, p, c, f, fib, portions, group }));
+import { MORE_FOODS, MORE_RECIPES } from "./fit-foods.js";
+export const FOODS = [...F, ...MORE_FOODS].map(([id, en, ar, kcal, p, c, f, fib, portions, group]) => ({ id, en: en.split("|")[0], ar: ar.split("|")[0], names: [...en.split("|"), ...ar.split("|")], kcal, p, c, f, fib, portions, group }));
 const BY_ID = new Map(FOODS.map((x) => [x.id, x]));
 export const food = (id) => BY_ID.get(id) || null;
 
@@ -237,7 +238,7 @@ export function mealItem(name, qty, unit, est = {}) {
 /** Without a model: "2 eggs, 1 baladi bread and a plate of ful" / «٢ بيض ورغيف عيش وطبق فول» → items (table foods only). */
 export function quickParse(text) {
   const t = String(text || "").replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660));
-  const parts = t.split(/\s*(?:,|،|\+|\band\b|\bwith\b|\bplus\b|&|\n|\s و(?=\S)|\sو\s|\sمع\s|ومعاه|ومعاها)\s*/i).map((x) => x.trim()).filter(Boolean);
+  const parts = t.split(/\s*(?:,|،|\+|\band\b|\bwith\b|\bplus\b|&|\n|\s+و(?=\S)|\sو\s|\sمع\s|ومعاه|ومعاها)\s*/i).map((x) => x.trim()).filter(Boolean);
   const WORDN = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, half: 0.5, واحد: 1, واحدة: 1, اتنين: 2, اثنين: 2, تلاتة: 3, ثلاثة: 3, اربعة: 4, أربعة: 4, نص: 0.5 };
   const out = [];
   for (const p0 of parts) {
@@ -404,7 +405,7 @@ export const PLANS = [
     workout: [["squat", 3, 12, 60], ["pushup", 3, 8, 60], ["glute-bridge", 3, 12, 45], ["lunge", 3, 10, 60], ["plank", 3, "30s", 45], ["superman", 3, 12, 45]] },
   { id: "walk-fatburn", en: "Fat-burn walking", ar: "مشي لحرق الدهون", days: 5, minutes: 40, equipment: "none", level: "beginner",
     workout: [["walk", 1, "5m", 0], ["walk-brisk", 1, "30m", 0], ["walk", 1, "5m", 0]] },
-  { id: "hiit-7", en: "7-minute HIIT", ar: "هيت 7 دقايق", days: 4, minutes: 10, equipment: "none", level: "intermediate",
+  { id: "hiit-7", en: "Quick HIIT — 8 moves", ar: "هيت سريع — 8 حركات", days: 4, minutes: 10, equipment: "none", level: "intermediate",
     workout: [["jumping-jacks", 1, "30s", 10], ["squat", 1, "30s", 10], ["pushup", 1, "30s", 10], ["crunch", 1, "30s", 10], ["lunge", 1, "30s", 10], ["plank", 1, "30s", 10], ["mountain-climbers", 1, "30s", 10], ["glute-bridge", 1, "30s", 10]] },
   { id: "gym-strength", en: "Gym strength — 3 days", ar: "قوة في الجيم — 3 أيام", days: 3, minutes: 55, equipment: "gym", level: "intermediate",
     workout: [["squat", 4, 8, 120], ["bench", 4, 8, 120], ["row", 3, 10, 90], ["shoulder-press", 3, 10, 90], ["plank", 3, "45s", 60]] },
@@ -498,6 +499,7 @@ export const RECIPES = [
     items: [["milk-skim", 250], ["banana", 100], ["whey", 30], ["peanut-butter", 16]],
     steps: ["Blend everything with ice."] },
 ];
+RECIPES.push(...MORE_RECIPES);
 /** Per-serving nutrients of a recipe (from the table), plus its grams. */
 export function recipeNutrients(rc) {
   const parts = rc.items.map(([id, g]) => { const fd = food(id); return fd ? nutrients(fd, g) : { kcal: 0, p: 0, c: 0, f: 0, fib: 0 }; });
@@ -538,4 +540,50 @@ export function dayTips(tot, tg, lang) {
   if (tot.water < tg.water * 0.5 && new Date().getHours() >= 14) out.push(ar ? "المية أقل من نص هدفك — اشرب كوبايتين دلوقتي." : "Water is under half your goal — drink two glasses now.");
   if (tot.fib < tg.fibre * 0.5 && tot.kcal > tg.kcal * 0.6) out.push(ar ? "الألياف قليلة — فول، عدس، خضار أو شوفان." : "Fibre is low — ful, lentils, vegetables or oats help.");
   return out.slice(0, 2);
+}
+
+// ---- 7. search and a day's meal plan, by code ----
+/** Foods whose name (English or Arabic) contains the words typed → up to `n`, best first. */
+export function searchFoods(q, n = 30) {
+  const t = normT(q); if (!t) return [];
+  const exact = [], starts = [], has = [];
+  for (const fd of FOODS) {
+    const names = fd.names.map(normT);
+    if (names.includes(t)) exact.push(fd);
+    else if (names.some((x) => x.startsWith(t))) starts.push(fd);
+    else if (names.some((x) => x.includes(t)) || t.split(" ").every((w) => names.some((x) => x.includes(stem(w))))) has.push(fd);
+  }
+  return [...exact, ...starts, ...has].slice(0, n);
+}
+const SPLIT = { breakfast: 0.25, lunch: 0.35, dinner: 0.3, snacks: 0.1 };
+const SLOT_TAG = { breakfast: "breakfast", lunch: "lunch", dinner: "dinner", snacks: "snack" };
+/**
+ * A day of meals from the recipe book, sized to the calorie target: each meal's share of the day
+ * (25/35/30/10 %), the recipe that fits the diet, portions scaled in quarters (0.5–2×).
+ * seed changes the picks (day of the year → a different day each day). → { meals: {slot: {recipe, x, kcal, p, c, f}}, total }
+ */
+export function mealPlan(tg, { diet = "balanced", seed = 0, avoid = [] } = {}) {
+  if (!tg) return null;
+  const ok = (rc) => !avoid.includes(rc.id) && (diet !== "vegetarian" || rc.tags.includes("vegetarian")) && (diet === "keto" ? recipeNutrients(rc).c < 12 : diet !== "low-carb" || rc.tags.includes("low-carb") || recipeNutrients(rc).c < 25);
+  const meals = {}; const used = new Set();
+  MEALS.forEach((slot, si) => {
+    const want = tg.kcal * SPLIT[slot];
+    let pool = RECIPES.filter((rc) => ok(rc) && !used.has(rc.id) && (rc.tags.includes(SLOT_TAG[slot]) || (slot !== "breakfast" && slot !== "snacks" && rc.tags.some((x) => x === "lunch" || x === "dinner"))));
+    if (!pool.length) pool = RECIPES.filter((rc) => !used.has(rc.id) && rc.tags.includes(SLOT_TAG[slot]));
+    if (!pool.length) return;
+    // closest to the wanted calories after scaling, with the protein-dense ones first; seed rotates ties
+    const scored = pool.map((rc) => { const n = recipeNutrients(rc); const x = Math.min(2, Math.max(0.5, Math.round(want / Math.max(n.kcal, 1) * 4) / 4)); return { rc, n, x, err: Math.abs(n.kcal * x - want) / want - (n.p * 4 / Math.max(n.kcal, 1)) * 0.3 }; })
+      .sort((a, b) => a.err - b.err);
+    const top = scored.slice(0, Math.min(4, scored.length));
+    const pick = top[(seed + si) % top.length];
+    used.add(pick.rc.id);
+    meals[slot] = { recipe: pick.rc, x: pick.x, kcal: Math.round(pick.n.kcal * pick.x), p: r1(pick.n.p * pick.x), c: r1(pick.n.c * pick.x), f: r1(pick.n.f * pick.x) };
+  });
+  return { meals, total: sumN(Object.values(meals)) };
+}
+/** "I ate 2 eggs and…" / «كلت طبق كشري» → true: Chat offers to log it in Fit. */
+export function looksLikeFoodLog(text) {
+  const t = String(text || "");
+  if (t.length > 300 || /\?|؟/.test(t)) return false;
+  return /\b(i (just )?(ate|had)|i'?ve (eaten|had)|for (breakfast|lunch|dinner|a snack) i (ate|had))\b/i.test(t) || /(^|\s)(كلت|اكلت|أكلت|فطرت|اتغديت|اتعشيت|تغديت|تعشيت)(\s|$)/.test(t);
 }
