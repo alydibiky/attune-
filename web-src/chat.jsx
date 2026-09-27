@@ -6,6 +6,7 @@
 // needed. Everything else goes to the model with the whole conversation, and
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
+import { wantsDoc } from "./slides.js";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { ActionCard } from "./actions-ui.jsx";
@@ -1604,6 +1605,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               return !api.webOn && !(lastAi.sources && lastAi.sources.length) && u && u.role === "user" && needsWeb(u.text) ? (
                 <button onClick={() => ask(u.text, { web: true })} data-testid="search-web-chip"
                   className="shrink-0 text-xs px-3 py-2 rounded-full border border-sky-700 text-sky-200 bg-sky-500/10">{tr("🌐 Search the web for this")}</button>
+              ) : null; })()}
+            {(() => { const u = messages[messages.length - 2], w = u && u.role === "user" && api.openSlides ? wantsDoc(u.text) : null;
+              return w ? (
+                <button onClick={() => api.openSlides(u.text, w)} data-testid="slides-chip"
+                  className="shrink-0 text-xs px-3 py-2 rounded-full border border-amber-700 text-amber-200 bg-amber-500/10">{tr(w === "deck" ? "📊 Make it a PowerPoint" : "📄 Make it a Word / PDF report")}</button>
               ) : null; })()}
             {followUps(lastAi, messages[messages.length - 2]).map(([label, prompt]) => (
               <button key={label} onClick={() => ask(prompt)} className="shrink-0 text-xs px-3 py-2 rounded-full border border-slate-700 text-slate-300 active:border-teal-600">{tr(label)}</button>

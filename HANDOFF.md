@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 27 Sep 2026. Latest: **v5.39** on `main` (commit after `043684d`), APK built green._
+_Last updated: 27 Sep 2026. Latest: **v5.40** on `main` — Slides & Reports (§5.26)._
 
 ---
 
@@ -9,9 +9,9 @@ _Last updated: 27 Sep 2026. Latest: **v5.39** on `main` (commit after `043684d`)
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v5.39** — every push to `main` runs "Build the APK" (~8 min); last green run: https://github.com/alydibiky/attune-/actions/runs/36322528000 (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v5.40** (Slides & Reports) — every push to `main` runs "Build the APK" (~8 min); last green run: https://github.com/alydibiky/attune-/actions/runs/36322528000 (artifact `attune-apk`). |
 | Pushing | Works: this session pushed v5.32 → v5.39 straight to `main` (Ali's rule: push to main, then watch the build and give him the run link). |
-| Tested on Ali's phone | Up to v5.34 (Studio drew a real picture in 44 s after the Turbo fix). **v5.35 Chat X-Ray, v5.37 File Converter, v5.38 Video Downloader and v5.39 Translate are NOT phone-tested yet** — expect his report next. |
+| Tested on Ali's phone | Up to v5.34 (Studio drew a real picture in 44 s after the Turbo fix). **v5.35 Chat X-Ray, v5.37 File Converter, v5.38 Video Downloader, v5.39 Translate and v5.40 Slides & Reports are NOT phone-tested yet** — expect his report next. |
 | Ali's latest requests (all done) | "as many file converters as you can" (§5.23), "copy a link of a video and download it in the quality I want" (§5.24 — he chose **safe sites only**, no YouTube/TikTok), "take a PDF, translate it, give me the PDF" (§5.25). |
 | Models | Engine catalog uses Attune names only (Spark · Glow · Blaze · Core… · Blaze+ · Zenith · Apex · Everest — §5.18). Blaze / Blaze+ = LiteRT fast engine on the GPU (recommended on his Honor). Vendor names (Qwen/Gemma) must never show. |
 | Billing | `web-src/billing.js`: **`TESTING_ALL_PRO = true`** (Ali asked for every Pro feature unlocked while testing; the Plan screen has a "See it as a Free user" toggle). Prices EGP 199 / 1,499 / 3,999, $4.99 / $39.99 / $99. Free limits: Deal Check 3/day, Chat X-Ray 1/day, conversions 5/day, video downloads 3/day. |
@@ -121,6 +121,7 @@ web-src/             SOURCE of the page — edit here, then `bash web-src/build.
   chatxray.js, chatxray-ui.jsx                      (v5.35) Chat X-Ray (WhatsApp export → ledger, promises, unanswered)
   convert.js, convert-ui.jsx                        (v5.36–39) File Converter + Translate (docx/xlsx/pptx/odt/ods/epub/html/rtf/json/srt; see §5.23, §5.25)
   video.js, video-ui.jsx                            (v5.38) Video Downloader (link reading; see §5.24)
+  slides.js, slides-ui.jsx                          (v5.40) Slides & Reports: .pptx writer, slide layout → shapes, canvas preview, reports → Word/PDF (§5.26)
   i18n.js, i18n-ar.js                               tr("English") → Arabic dictionary (~1,800 entries)
   build/             shell.html, entry.jsx, react/reactdom shims, lucide-shim.js (icons), tw.css   ← SOURCE, not output
   fetch-pyodide.sh   Pyodide + openpyxl/et_xmlfile into www/py/ (CI runs it; not committed)
@@ -131,7 +132,7 @@ tests/               harness.py (mock phone), e2e_v3/v4/v5/v58/v59/v510(+_more)/
 
 ## 4. How to build and test
 1. Edit `web-src/*`, then `bash web-src/build.sh` (Node 18+, Python 3; installs esbuild 0.28.2 + Tailwind 4.3.3 locally). Output: `app/src/main/assets/www/index.html` — **commit it** (CI checks it exists).
-2. **All tests at once:** `bash tests/run_all.sh` (unit + every e2e + screen audit, ≈25 min; results in `tests/results.txt`, audit in `tests/audit.txt`). All green at **v5.39** (unit v513…v539 + older files; e2e v3…v539).
+2. **All tests at once:** `bash tests/run_all.sh` (unit + every e2e + screen audit, ≈25 min; results in `tests/results.txt`, audit in `tests/audit.txt`). All green at **v5.40** (unit v513…v540 + older files; e2e v3…v540).
    - Unit only: `node tests/unit/v539.test.mjs` (plain Node 22 runs them; `node tests/unit/run.mjs` bundles with esbuild first).
    - One e2e: `PYTHONPATH=tests/pwshim python3 tests/e2e_v539.py` (`pwshim` points Playwright at `/opt/pw-browsers/chromium` in cloud sessions).
 3. **Browser end-to-end setup:** `bash tests/setup.sh` once (desktop llama-server at the same pin + a tiny model). Phone-sized Chromium with a mock `AttuneNative` (harness.py); `chat()` hits the real tiny llama-server unless a test queues canned answers.
@@ -381,6 +382,17 @@ Ali chose **safe sites only** (asked 27 Sep 2026): Google Play removes apps that
 ### 5.25 v5.39 — Translate a document ("take a PDF, translate it to another language and give me the PDF")
 File Converter → **Translate…** (PDF, Word, PowerPoint, LibreOffice, e-books, web pages, RTF, text, photos of paper, SRT/VTT subtitles). Pick one of 26 languages (`T_LANGS`, names shown via `Intl.DisplayNames` in the app's language; last choice kept in `attune:convert:tlang`) and PDF or Word (subtitles stay subtitles). `convert.js`: `translateUnits` (each heading / paragraph / bullet / table cell with 2+ letters — number-only cells never go to the model), `batchUnits` (≤ 1,500 characters), `translateMessages` (numbered `[[n]]` lines, keep numbers/names/codes, line breaks as `<br>`), `parseTranslated` (by number, order and chatter don't matter), `applyTranslations` (back into the same blocks — structure is code's job). A piece the model skips is asked again alone; still missing → left in the original language and counted in the note. Output name gets `-ar` / `-fr` …; the PDF is made by `makePdf` (Arabic right-to-left). Needs a model (Engine). Tests: unit v539, e2e_v539.
 
+### 5.26 v5.40 — Slides & Reports ("make very good PowerPoint using an AI prompt, and make reports")
+More → Work & business → **Slides & Reports** (first tile; `slides.js` engine, `slides-ui.jsx` screen). Also a Chat chip "📊 Make it a PowerPoint" / "📄 Make it a Word / PDF report" when a message asks for one (`wantsDoc`), opening the tool with the request filled in.
+- **Presentation:** prompt + audience + 5/8/10/12/15 slides + 8 designs (`THEMES`: Midnight, Ocean, Emerald, Sunset, Royal, Construction, Minimal, Desert) + language (auto = the prompt's) + optional web research (3 parallel searches, `expandQueries`) + optional file (Word/PDF/PowerPoint/text; Excel/CSV → `dataSummary`: totals, averages, per-name sums, a chart — computed by code). The model writes a PLAN (`outlineMessages` → `parseOutline`: tolerant, drops agenda/thank-you, falls back to a code plan, forces variety) and then EACH slide separately in tagged lines (`slideMessages` → `parseSlide` → `fixSlide`: a slide that didn't come out in its type becomes key points, never empty). Types: bullets (cards when 2–4 short leads), two (comparison), steps (timeline), table (real PowerPoint table), quote, and — only when sources have figures (`hasFigures`) — stats and chart. **Figures:** stats/chart values not found in the prompt/pages/file are removed (`checkFigures`/`unbacked`); other unfound figures are counted and shown as "check them before presenting".
+- **Design by code:** `layoutSlide` → a list of shapes on a 1280×720 grid (rect/ellipse/text/table); the SAME shapes become the .pptx (`pptxFromDeck`: 16:9, one blank layout, theme colours, speaker notes, Arabic `rtl="1"`, mirrored layout) and the phone's preview/PDF (`drawShapes` on a canvas). Cover + agenda (≥ 4 slides) + closing ("Thank you / Questions?", 8 languages in `WORDS`) are added by code.
+- **Edit:** tap a slide → title, content as the same tagged lines (`slideToText` ↔ `parseSlide`), speaker notes; "Rewrite this slide" (+ an instruction) or "turn it into" another type (AI, that slide only, with this session's web pages); move earlier/later, delete; one tap re-themes the whole deck. Save **PowerPoint** or **PDF** (each slide a JPEG → `makePdf {images, fullPage:true}` → 16:9 pages). Last 15 decks/reports kept in `attune:slides:v1` (sources cut to 20k chars).
+- **Report:** 8 kinds × Short 3 / Standard 5 / Detailed 8 sections. Plan (`reportOutlineMessages`) → each section in Markdown (`sectionMessages`, ~300 words, tables allowed) → conclusions & recommendations → executive summary + findings written LAST from the finished text (`summaryMessages`/`parseSummary`). `reportBlocks`: cover title/subtitle/date, contents, page break, numbered chapters, the data chart (canvas PNG), sources, the data table. **Word** (`docxFromBlocks` now also takes title/subtitle/caption/pagebreak/image blocks + `accent` heading colour; plain files unchanged) or **PDF** (Kotlin `makePdf` got the same block types). "Make slides from this report" = `deckFromReport` (code, no AI).
+- Kotlin changed: `DocTools.makePdf(blocks, images, fullPage)` + `NativeBridge.makePdf` passes `fullPage` — compile-checked only by CI.
+- Free: 2 a day (`attune:slides:day`), Pro unlimited (PRO_BENEFITS line). New icon `Presentation` in lucide-shim.
+- **Verified in the sandbox:** python-pptx and python-docx open the files; all parts/relationships present (unit v540). **Not verifiable here:** opening in real PowerPoint / Google Slides / WPS on the phone (LibreOffice is broken in the sandbox) — ask Ali to open a saved .pptx; slide quality from a 2–4B model.
+- Tests: unit v540, e2e_v540 (`SHOTS=<dir>` saves screenshots of every slide).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
@@ -408,6 +420,7 @@ File Converter → **Translate…** (PDF, Word, PowerPoint, LibreOffice, e-books
 
 ## 8. Backlog (not started)
 - Whatever Ali reports next (§0.3) — **top priority**.
+- Slides & Reports ideas not done: Studio pictures on slides, charts as native (editable) PowerPoint charts, custom logo/company colours, report → Excel appendix.
 - **Before release:** `TESTING_ALL_PRO = false`, `SELLER.contact`, Play listing text (offline, private; no YouTube downloading), real Play Billing if he wants it.
 - File Converter ideas not done: old binary .doc/.xls/.ppt, PDF → Word keeping pictures and layout, PowerPoint → PDF as slide pictures, compress PDF, PDF password remove/add, sign a PDF, OCR a PDF into a searchable PDF, translate Excel/CSV cells.
 - Video Downloader: HLS (.m3u8) streams would need ffmpeg (≈ +20 MB) — only for sites that allow downloads. YouTube & co. stay refused unless Ali explicitly asks for a separate non-Play APK (he declined on 27 Sep 2026).

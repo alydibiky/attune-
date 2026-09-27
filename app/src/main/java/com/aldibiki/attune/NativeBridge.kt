@@ -753,7 +753,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         pool.execute {
             try {
                 val a = JSONObject(arg)
-                val bytes = DocTools.makePdf(a.optJSONArray("blocks") ?: JSONArray(), a.optJSONArray("images") ?: JSONArray())
+                val bytes = DocTools.makePdf(a.optJSONArray("blocks") ?: JSONArray(), a.optJSONArray("images") ?: JSONArray(), a.optBoolean("fullPage", false))
                 resolve(id, JSONObject().put("b64", android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)).put("bytes", bytes.size))
             } catch (e: Throwable) { reject(id, e.message ?: "Couldn't make the PDF") }
         }

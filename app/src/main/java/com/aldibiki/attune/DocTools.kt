@@ -136,7 +136,9 @@ object DocTools {
     /**
      * blocks: [{type: h1|h2|h3|p|li|table, text, rows}], images: [data URL or base64] → PDF bytes.
      */
-    fun makePdf(blocks: JSONArray, images: JSONArray): ByteArray {
+    // v5.40: fullPage = slides — each picture fills its own 16:9 page (no white margin);
+    // blocks may also be "title", "subtitle", "caption", "pagebreak" and "image" (a chart in a report)
+    fun makePdf(blocks: JSONArray, images: JSONArray, fullPage: Boolean = false): ByteArray {
         val pdf = PdfDocument()
         var pageNo = 0
         var page: PdfDocument.Page? = null
@@ -154,6 +156,12 @@ object DocTools {
             val s = images.optString(k)
             val raw = Base64.decode(s.substringAfter("base64,"), Base64.DEFAULT)
             val bmp = BitmapFactory.decodeByteArray(raw, 0, raw.size) ?: continue
+            if (fullPage) {
+                val w = PH; val h = (PH.toFloat() * bmp.height / bmp.width).toInt().coerceAtLeast(1)
+                newPage(w, h).drawBitmap(bmp, null, android.graphics.RectF(0f, 0f, w.toFloat(), h.toFloat()), Paint(Paint.FILTER_BITMAP_FLAG))
+                bmp.recycle()
+                continue
+            }
             val land = bmp.width > bmp.height
             val (w, h) = if (land) PH to PW else PW to PH
             val c = newPage(w, h)
@@ -193,6 +201,21 @@ object DocTools {
                         y += 6
                     }
                     "li" -> { draw(layout("•  $text", paint(11f, false), usable.toInt() - 12), M + 12); y += 3 }
+                    "title" -> { y += 150; draw(layout(text, paint(28f, true), usable.toInt()), M); y += 10 }
+                    "subtitle" -> { draw(layout(text, paint(15f, false).apply { color = Color.rgb(90, 90, 90) }, usable.toInt()), M); y += 24 }
+                    "caption" -> { draw(layout(text, paint(9.5f, false).apply { color = Color.rgb(90, 90, 90) }, usable.toInt()), M); y += 10 }
+                    "pagebreak" -> { if (y > M) c = newPage() }
+                    "image" -> {
+                        val raw = Base64.decode(b.optString("b64").substringAfter("base64,"), Base64.DEFAULT)
+                        val bmp = BitmapFactory.decodeByteArray(raw, 0, raw.size)
+                        if (bmp != null) {
+                            val dw = usable; val dh = minOf(dw * bmp.height / bmp.width, PH - 2 * M)
+                            if (y + dh > PH - M) c = newPage()
+                            c.drawBitmap(bmp, null, android.graphics.RectF(M, y, M + dh * bmp.width / bmp.height, y + dh), Paint(Paint.FILTER_BITMAP_FLAG))
+                            bmp.recycle()
+                            y += dh + 6
+                        }
+                    }
                     "table" -> {
                         val rows = b.optJSONArray("rows") ?: JSONArray()
                         if (rows.length() == 0) continue

@@ -47,6 +47,7 @@ export const PRO_BENEFITS = [
   "Unlimited Chat X-Rays: who owes you, promises and unanswered questions in your WhatsApp chats",
   "Unlimited file conversions, including scanned paper → editable Word",
   "Unlimited video downloads in the quality you choose",
+  "Unlimited presentations (PowerPoint) and reports (Word / PDF)",
   "Expert review: strong models check and improve their own answers",
   "Deep web research: several searches, more pages, cross-checked facts",
   "Unlimited Studio pictures",
