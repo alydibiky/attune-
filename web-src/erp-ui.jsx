@@ -714,6 +714,19 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
   const [confirmDel, setConfirmDel] = useState(false);
   const [imp, setImp] = useState(null);            // { name, header, rows }
   const fileRef = useRef(null);
+  const [combined, setCombined] = useState(false);
+  useSubBack(combined, () => setCombined(false));
+  // v5.44: combining databases — connections found by the phone, merge by a key, one joined view
+  const sugs = useMemo(() => E.linkSuggestions(sys), [sys]);
+  const impKey = useMemo(() => (imp ? E.keyFor(sys, table.id, imp.header, imp.rows) : null), [imp, sys, table.id]);
+  const cv = useMemo(() => (combined ? E.combinedView(sys, table.id) : null), [combined, sys, table.id]);
+  const saveCombined = async () => {
+    const esc = (v) => (/[",\n]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : v);
+    const text = "\ufeff" + [cv.header, ...cv.rows].map((r) => r.map((v) => esc(String(v ?? ""))).join(",")).join("\n");
+    const name = `${sys.name} - ${table.name} (combined).csv`.replace(/[\\/:*?"<>|]/g, "_");
+    if (saveFile) { try { await saveFile(name, text, "text/csv"); flash(tr("Saved")); } catch (e) { if (String(e.message) !== "Cancelled") flash(String(e.message)); } }
+    else { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/csv" })); a.download = name; a.click(); }
+  };
   const active = E.isActive(sys);
   const req = E.requestCode(sys);
   const exportCSV = async () => {
@@ -776,6 +789,27 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
   const requestText = tr("Attune Business — please activate my system “{name}”. Request code: {code}", { name: sys.name, code: req });
   return (
     <div className="space-y-3" data-testid="erp-more">
+      <div className="rounded-xl border border-sky-900 bg-sky-500/5 p-3 space-y-2" data-testid="erp-connect">
+        <p className="text-sm font-semibold text-slate-100">{tr("Combine your data")}</p>
+        {sugs.length ? sugs.slice(0, 4).map((g) => (
+          <div key={g.tid + g.fid} className="rounded-lg bg-slate-950 p-2.5 space-y-1.5" data-testid="erp-link-sug">
+            <p className="text-[12.5px] text-slate-200">{tr("{t} › {f} holds {to} names ({m} of {n} found).", { t: g.table, f: g.field, to: g.to, m: g.matched, n: g.total })}{g.missing.length ? " " + tr("Not in {to} yet: {x}", { to: g.to, x: g.missing.slice(0, 4).join(", ") + (g.missing.length > 4 ? "…" : "") }) : ""}</p>
+            <button className={primary + " text-[12.5px]"} data-testid="erp-link-go" onClick={() => { const r = E.linkColumn(sys, g); if (!r.done.length) { flash(r.errors[0] || tr("Couldn't link them")); return; }
+              setSys(r.sys, tr("Linked: {t} › {f} → {to}", { t: g.table, f: g.field, to: g.to }) + (r.added ? " · " + tr("{n} added to {to}", { n: r.added, to: g.to }) : "")); }}>{tr("Link them")}</button>
+          </div>)) : <p className="text-[12px] text-slate-400">{tr("When a column in one table names records of another (a job's customer, an invoice's crane), the phone finds it here and links them — no relationships to draw by hand.")}</p>}
+        {table.fields.some((f) => f.type === "link") ? (
+          <button className={ghost + " flex items-center gap-1"} onClick={() => setCombined(true)} data-testid="erp-combined"><Database size={14} />{tr("{t} with its linked tables", { t: table.name })}</button>) : null}
+        {cv ? (
+          <div className="space-y-2" data-testid="erp-combined-view">
+            <p className="text-[12px] text-slate-400">{tr("{n} records · with {l}", { n: cv.rows.length, l: cv.linked.join(", ") })}</p>
+            <div className="overflow-x-auto att-scroll rounded-lg border border-slate-800 max-h-80">
+              <table className="text-[12px] text-slate-200"><thead className="bg-slate-800 sticky top-0"><tr>{cv.header.map((h) => <th key={h} className="px-2 py-1.5 text-start whitespace-nowrap font-semibold">{h}</th>)}</tr></thead>
+                <tbody>{cv.rows.slice(0, 300).map((r, i) => <tr key={i} className="border-t border-slate-800">{r.map((v, j) => <td key={j} className="px-2 py-1 whitespace-nowrap" dir="auto">{v}</td>)}</tr>)}</tbody></table>
+            </div>
+            <div className="flex gap-2"><button className={ghost + " flex items-center gap-1"} onClick={saveCombined} data-testid="erp-combined-csv"><Download size={14} />{tr("Save as CSV")}</button><button className={ghost} onClick={() => setCombined(false)}>{tr("Close")}</button></div>
+          </div>) : null}
+      </div>
+
       <div className={`rounded-xl border p-3 space-y-2 ${active ? "border-emerald-800 bg-emerald-500/5" : "border-amber-800 bg-amber-500/5"}`} data-testid="erp-licence">
         <p className="text-sm font-semibold flex items-center gap-1.5 text-slate-100"><KeyRound size={15} />{active ? tr("Activated") : tr("Trial — {n} records per table", { n: E.FREE_ROWS })}</p>
         {active ? <p className="text-[12px] text-slate-400">{tr("This system is paid for: no limits. The design stays yours to change any time.")}</p> : <>
@@ -810,9 +844,12 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
             <div className="flex flex-wrap gap-2">
               <button className={primary} data-testid="erp-import-new" onClick={() => { const r = E.tableFromData(sys, imp.name, imp.header, imp.rows);
                 if (!r.table) { flash(r.errors[0]); return; } setSys(r.sys, tr("New table {t}: {n} records", { t: r.table.name, n: r.added }) + (r.errors.length ? " · " + r.errors[0] : "")); setTid(r.table.id); setImp(null); }}>{tr("As a new table")}</button>
+              {impKey ? (
+                <button className={primary} data-testid="erp-import-merge" onClick={() => { const r = E.mergeRows(sys, table.id, imp.header, imp.rows, impKey.col);
+                  setSys(r.sys, tr("Merged into {t}: {u} updated, {n} new", { t: table.name, u: r.updated, n: r.added }) + (r.errors.length ? " · " + r.errors[0] : "")); setImp(null); }}>{tr("Merge into {t} (same {k} = same record)", { t: table.name, k: impKey.field })}</button>) : null}
               <button className={ghost} data-testid="erp-import-into" onClick={() => { const r = E.importRows(sys, table.id, imp.header, imp.rows);
                 if (!r.matched) { flash(tr("None of the columns match {t}'s fields.", { t: table.name })); return; }
-                setSys(r.sys, tr("{n} records added to {t}", { n: r.added, t: table.name }) + (r.errors.length ? " · " + r.errors[0] : "")); setImp(null); }}>{tr("Into {t}", { t: table.name })}</button>
+                setSys(r.sys, tr("{n} records added to {t}", { n: r.added, t: table.name }) + (r.errors.length ? " · " + r.errors[0] : "")); setImp(null); }}>{tr(impKey ? "Add all to {t} as new" : "Into {t}", { t: table.name })}</button>
               <button className={ghost} onClick={() => setImp(null)}>{tr("Cancel")}</button>
             </div>
           </div>) : null}

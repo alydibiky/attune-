@@ -555,6 +555,9 @@ export function guessType(name, values) {
   const v = values.map((x) => (x == null ? "" : toLatin(String(x).trim()))).filter(Boolean);
   const n = /price|cost|amount|value|total|salary|rate|سعر|تكلفة|مبلغ|قيمة|اجمالي|إجمالي|راتب/i.test(name);
   if (!v.length) return { type: "text" };
+  // v5.44: phones and codes with a leading 0 (01001234567, 00123) are never numbers — the 0 would be lost
+  if (/phone|mobile|tel|whatsapp|هاتف|تليفون|موبايل|جوال|واتس/i.test(name) && v.every((x) => /^[+\d\s()-]{5,}$/.test(x))) return { type: "phone" };
+  if (v.every((x) => /^[+\d\s()-]+$/.test(x)) && v.some((x) => /^0\d{3,}/.test(x.replace(/\s/g, "")))) return { type: "text" };
   if (v.every((x) => /^-?[\d,]+(\.\d+)?$/.test(x))) return { type: n ? "money" : "number" };
   if (v.every((x) => /^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}/.test(x) || /^\d{1,2}[-/.]\d{1,2}[-/.]\d{4}$/.test(x))) return { type: "date" };
   if (v.every((x) => /^(yes|no|true|false|y|n|نعم|لا)$/i.test(x))) return { type: "bool" };
@@ -971,3 +974,112 @@ export function connectOps(sys) {
   return findConnections(spec).map((c) => ({ op: "changeType", table: c.table, field: c.field, type: "link", link: c.to }));
 }
 
+
+// ---- v5.44: combining databases (Ali: "better than Access / Excel at combining databases") ----
+// Access makes you draw every relationship by hand and a second import duplicates everything.
+// Here the phone finds the connections itself, merges a second sheet into the first by a key,
+// and shows one table with its linked tables' columns beside it.
+
+/** Records of a table by their shown names (and their text fields) → Map(key → row id). */
+function nameIndex(sys, target) {
+  const m = new Map();
+  // the record's own name only (its first text field, codes, phones, emails) — not other tables' names copied into it
+  const first = target.fields.find((f) => f.type === "text");
+  const texts = target.fields.filter((f) => f === first || ["auto", "phone", "email"].includes(f.type));
+  for (const r of sys.rows[target.id] || []) {
+    const k0 = key(displayOf(target, r)); if (k0 && !m.has(k0)) m.set(k0, r._id);
+    for (const f of texts) { const k = key(r[f.id]); if (k && !m.has(k)) m.set(k, r._id); }
+  }
+  return m;
+}
+/**
+ * Columns that are really references to another table: most of their values are that table's
+ * record names ("Customer: Hassan Co." when Customers has "Hassan Co."). → [{ tid, table, fid, field,
+ * toId, to, matched, total, missing: [values not found] }], best first.
+ */
+export function linkSuggestions(sys) {
+  const out = [];
+  for (const t of sys.tables) for (const f of t.fields) {
+    if (!["text", "choice"].includes(f.type)) continue;
+    const vals = (sys.rows[t.id] || []).map((r) => r[f.id]).filter((v) => v != null && String(v).trim() !== "");
+    if (vals.length < 2) continue;
+    let best = null;
+    for (const to of sys.tables) {
+      if (to.id === t.id || !(sys.rows[to.id] || []).length) continue;
+      const idx = nameIndex(sys, to);
+      const hit = vals.filter((v) => idx.has(key(v)));
+      const share = hit.length / vals.length;
+      const named = key(f.name).includes(key(to.name).replace(/s$/, "").slice(0, 5)) || key(to.name).includes(key(f.name).replace(/s$/, "").slice(0, 5));
+      if (hit.length >= 2 && (share >= 0.6 || (named && share >= 0.4)) && (!best || share > best.share)) {
+        best = { tid: t.id, table: t.name, fid: f.id, field: f.name, toId: to.id, to: to.name, matched: hit.length, total: vals.length, share,
+          missing: [...new Set(vals.filter((v) => !idx.has(key(v))).map(String))].slice(0, 20) };
+      }
+    }
+    if (best) out.push(best);
+  }
+  return out.sort((a, b) => b.share - a.share);
+}
+/** Make the column a real link; names not in the other table are added to it first (addMissing). → { sys, done, errors, added } */
+export function linkColumn(sys0, s, { addMissing = true } = {}) {
+  let sys = sys0, added = 0;
+  if (addMissing && s.missing.length) {
+    const to = sys.tables.find((t) => t.id === s.toId);
+    const nameF = to && (to.fields.find((f) => f.type === "text") || to.fields.find((f) => !["auto", "formula", "link", "bool"].includes(f.type)));
+    if (nameF) for (const v of s.missing) { const x = addRow(sys, to.id, { [nameF.id]: v }); if (!x.errors.length) { sys = x.sys; added++; } }
+  }
+  const r = applyOps(sys, [{ op: "changeType", table: s.tid, field: s.fid, type: "link", link: s.toId }], { label: `Linked ${s.table} › ${s.field} to ${s.to}` });
+  return { ...r, sys: r.done.length ? { ...r.sys, history: snapshot(sys0, `Linked ${s.table} › ${s.field} to ${s.to}`) } : sys0, added };
+}
+/** The column of an incoming sheet that identifies a record (a code, a name, a phone…): unique in the sheet and found in the table. */
+export function keyFor(sys, tid, header, rows) {
+  const table = sys.tables.find((t) => t.id === tid); if (!table) return null;
+  const have = sys.rows[tid] || [];
+  let best = null;
+  header.forEach((h, j) => {
+    const f = findField(table, h); if (!f || ["bool", "number", "money", "formula", "longtext", "date"].includes(f.type)) return;
+    const vals = rows.map((r) => key(r[j])).filter(Boolean);
+    if (vals.length < rows.length * 0.9 || new Set(vals).size !== vals.length) return;
+    const existing = new Set(have.map((r) => key(f.type === "link" ? show(sys, f, r[f.id]) : r[f.id])).filter(Boolean));
+    const found = vals.filter((v) => existing.has(v)).length;
+    const score = found + (/(^|\b)(id|code|no|number|sku|كود|رقم)(\b|$)/i.test(h) ? 0.5 : 0) + (f.type === "auto" ? 0.5 : 0);
+    if (found && (!best || score > best.score)) best = { col: j, fid: f.id, field: f.name, found, score };
+  });
+  return best;
+}
+/**
+ * A second sheet merged into a table: a record whose key matches is UPDATED (only the cells the
+ * sheet has), the rest are added — never duplicated. → { sys, added, updated, errors, matched }
+ */
+export function mergeRows(sys, tid, header, rows, keyCol) {
+  const table = sys.tables.find((t) => t.id === tid);
+  const map = header.map((h) => findField(table, h));
+  const kf = map[keyCol];
+  if (!kf) return importRows(sys, tid, header, rows);
+  const byKey = new Map((sys.rows[tid] || []).map((r) => [key(kf.type === "link" ? show(sys, kf, r[kf.id]) : r[kf.id]), r._id]));
+  let added = 0, updated = 0; const errors = [];
+  for (const [i, r] of rows.entries()) {
+    const vals = {};
+    map.forEach((f, j) => { if (f && f.type !== "formula" && String(r[j] ?? "").trim() !== "") vals[f.id] = r[j]; });
+    const id = byKey.get(key(r[keyCol]));
+    const x = id ? updateRow(sys, tid, id, vals) : addRow(sys, tid, vals);
+    if (x.errors && x.errors.length) { if (x.errors[0].limit) { errors.push(x.errors[0].error); break; } errors.push(`Row ${i + 2}: ` + x.errors.map((e) => e.error).join("; ")); continue; }
+    sys = x.sys; if (id) updated++; else { added++; const nr = (sys.rows[tid] || []).slice(-1)[0]; if (nr) byKey.set(key(r[keyCol]), nr._id); }
+  }
+  return { sys, added, updated, errors: errors.slice(0, 20), matched: map.filter(Boolean).length };
+}
+/**
+ * One table with the columns of every table it links to, side by side (like an Access query
+ * joining them) → { header, rows } of shown values, ready for the screen, CSV or Excel.
+ */
+export function combinedView(sys, tid, { maxPerLink = 6 } = {}) {
+  const t = sys.tables.find((x) => x.id === tid); if (!t) return { header: [], rows: [] };
+  const own = t.fields;
+  const links = own.filter((f) => f.type === "link").map((f) => { const to = sys.tables.find((x) => x.id === f.link);
+    return to ? { f, to, cols: to.fields.filter((g) => g.type !== "link" && g.type !== "longtext").slice(1, 1 + maxPerLink) } : null; }).filter(Boolean);
+  const header = [...own.map((f) => f.name), ...links.flatMap((l) => l.cols.map((g) => `${l.f.name} › ${g.name}`))];
+  const rows = viewRows(sys, tid).map((r) => [
+    ...own.map((f) => show(sys, f, r[f.id])),
+    ...links.flatMap((l) => { const lr = (sys.rows[l.to.id] || []).find((x) => x._id === r[l.f.id]); const c = lr ? computeRow(l.to, lr) : null; return l.cols.map((g) => (c ? show(sys, g, c[g.id]) : "")); }),
+  ]);
+  return { header, rows, linked: links.map((l) => l.to.name) };
+}
