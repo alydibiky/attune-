@@ -948,7 +948,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const copy = !!sources || !!fileAtt || !!(spaceRef.current.project && (spaceRef.current.project.knowledge || []).length);
         // a research report gets the level's long-answer budget (v5.23)
         const longRep = research && !useThink && api.power ? { maxTokens: api.power().longTokens } : {};
-        answer = await api.run(buildMessages(history, content, longMsg ? 1500 : undefined), pic, { onToken, onStatus, think: useThink, copy, ...longRep });
+        // v5.33: a web answer copies figures — near-greedy sampling (0.1) keeps a small model from
+        // picking a wrong digit or a stray token ("1.2.93", "kWkW", "a a a")
+        const webT = sources && !useThink ? { temperature: 0.1 } : {};
+        answer = await api.run(buildMessages(history, content, longMsg ? 1500 : undefined), pic, { onToken, onStatus, think: useThink, copy, ...longRep, ...webT });
       } catch (e) {
         const em = String((e && e.message) || e);
         // v5.32: "Stopped" when the person did NOT press Stop (a thinking run the engine cut
@@ -1072,7 +1075,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
               const all = [...webCtx.toRead, ...fresh];
               const ranked2 = api.rankAll(webCtx.question, all, { budget: webCtx.budget, perSource: Math.max(1200, Math.floor(webCtx.budget / Math.min(all.length, 7) * 1.4)) });
               const content2 = api.groundedPrompt(webCtx.asked, ranked2) + confirmedFigures(ranked2).block + webCtx.tail;
-              const again = await api.run(buildMessages([], content2, 0), null, { onToken, onStatus, think: false, copy: true, ...(api.power ? { maxTokens: api.power().longTokens } : {}) });
+              const again = await api.run(buildMessages([], content2, 0), null, { onToken, onStatus, think: false, copy: true, temperature: 0.1, ...(api.power ? { maxTokens: api.power().longTokens } : {}) });
               if (runRef.current !== run) return;
               if (again && String(again).trim().length > String(answer).length * 0.6 && gapsOf(typed, again).length < gaps.length + 1) {
                 answer = again; sources = ranked2; content = content2;

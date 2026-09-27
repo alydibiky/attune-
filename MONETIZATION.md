@@ -83,6 +83,12 @@ A single company licence is worth as much as 50 personal subscriptions. Egyptian
 - **Win-back:** when a plan ends, offer 20% off yearly for the first week.
 - **Streaks and badges** for Learn daily and Turkish practice (optional next step).
 
+## 6b. The feature that sells Pro: Deal Check (v5.33)
+"Before you pay or sign, ask Attune." It saves people money on the first day, which is the easiest reason to pay there is.
+- **Hook videos:** "This seller wanted a Vodafone Cash deposit — Attune said SCAM in 10 seconds." · "The shop said 0% interest. Attune: you pay 66% a year." · "Is this RAM a good deal?"
+- **Free:** 3 checks a day (enough to be amazed). **Pro:** unlimited — people who buy, sell or sign often (car dealers, brokers, small shops, families buying on installments) hit the limit fast.
+- **Business angle:** real-estate and car brokers can use it to show clients a fair-price report — a reason for the Business plan.
+
 ## 7. Growth (getting users cheaply)
 
 - **Short videos in Egyptian Arabic** (TikTok, Reels, Shorts): "ChatGPT on your phone WITHOUT internet", "I built my company's system in 1 minute", "It reads my crane photo and tells me the model". A demo sells this app better than an explanation.

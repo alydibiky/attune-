@@ -21,6 +21,7 @@ import { CodeWorkbench } from "./code-ui.jsx";
 import { StudioPage } from "./studio-ui.jsx";
 import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
+import { DealCheck } from "./deal-ui.jsx";
 import { skillFor } from "./skills.js";
 import { placeFor } from "./places.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
@@ -6603,14 +6604,15 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
-  assistants: "Assistants", projects: "Projects", artifacts: "Artifacts" };
+  assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check" };
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "5.32";
+const PAGE_VERSION = "5.33";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
+  ["deal", "Deal Check", "Before you pay or sign", ShieldCheck],
   ["assistants", "Assistants", "Experts that follow your instructions", Bot],
   ["projects", "Projects", "Chats, files & instructions together", Folder],
   ["artifacts", "Artifacts", "Saved pages, documents & programs", Layers],
@@ -6635,7 +6637,7 @@ const MORE_TOOLS = [
 const MORE_GROUPS = [
   ["Create & learn", ["instant", "studio", "assistants", "projects", "artifacts", "code", "learn", "news"]],
   ["Work & business", ["business", "crane", "field", "fleet", "reminders"]],
-  ["Your life", ["memory", "map", "travel", "cycle"]],
+  ["Your life", ["deal", "memory", "map", "travel", "cycle"]],
   ["Prompts for other AIs", ["improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
 
@@ -8824,6 +8826,11 @@ export default function App() {
             modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken })}
             illustrate={NATIVE && NATIVE.imageInfo ? (p) => { setStudioIn({ prompt: p }); setMode("studio"); } : null} />
+        ) : mode === "deal" ? (
+          <DealCheck flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
+            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            webPages={NATIVE ? (q, n) => webLookupRaw(q, n) : null}
+            llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "news" ? (
           <NewsPage flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
             nativeCall={NATIVE && NATIVE.news ? nativeCall : null}

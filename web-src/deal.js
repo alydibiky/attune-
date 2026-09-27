@@ -1,0 +1,215 @@
+/* ---- v5.33 — Deal Check: "before you pay or sign, ask Attune" --------------------------------
+   Ali asked for "a complete feature that will sell, that no one did before". Everyone in Egypt
+   meets offers every day: installment plans ("0% interest"), marketplace sellers on WhatsApp,
+   car and apartment deals, a RAM stick that turns out to be DDR5. Deal Check reads the offer
+   (text or a screenshot), and then CODE — never the model — does what decides money:
+     - the true total you pay and the real yearly interest of an installment plan (IRR);
+     - the market price, from the prices on the web pages it finds (median, range);
+     - scam and trap signs (pay-first, urgency, "you won", OTP codes, off-platform, too cheap);
+     - the verdict and the price to ask for.
+   The model only reads the offer into fields and writes the negotiation message.
+   Pure functions; tests in tests/unit/v533.test.mjs.                                            */
+
+const AR_DIGITS = /[٠-٩]/g;
+const toLatin = (s) => String(s || "").replace(AR_DIGITS, (d) => String(d.charCodeAt(0) - 0x0660)).replace(/٬/g, ",").replace(/٫/g, ".");
+
+/** "12,400", "13.550,00", "5k", "١٢٠٠٠" → a number (or NaN). */
+export function num(x) {
+  if (typeof x === "number") return x;
+  let s = toLatin(x).trim().toLowerCase().replace(/\s/g, "");
+  const k = /k$/.test(s) ? 1000 : /m$|مليون$/.test(s) ? 1e6 : /ألف$|الف$/.test(s) ? 1000 : 1;
+  s = s.replace(/[^\d.,]/g, "");
+  if (!s) return NaN;
+  if (/^\d{1,3}(\.\d{3})+(,\d{1,2})?$/.test(s)) s = s.replace(/\./g, "").replace(",", ".");   // 13.550,00
+  else s = s.replace(/,(?=\d{3}(\D|$))/g, "").replace(/,/g, ".");
+  const v = parseFloat(s);
+  return isFinite(v) ? v * k : NaN;
+}
+
+const CUR = [
+  [/(egp|le\b|l\.e|e£|جنيه|جنية|ج\.م|ج م)/i, "EGP"], [/(usd|us\$|\$|dollars?|دولار)/i, "USD"], [/(eur|€|euros?|يورو)/i, "EUR"],
+  [/(sar|riyals?|ريال)/i, "SAR"], [/(aed|dirhams?|درهم)/i, "AED"], [/(gbp|£|pounds? sterling)/i, "GBP"], [/(cny|rmb|yuan|يوان)/i, "CNY"],
+];
+export function currencyOf(s) { const t = String(s || ""); for (const [re, c] of CUR) if (re.test(t)) return c; return ""; }
+
+/** Every price written in a text: [{ value, cur, at }] (a currency must be next to the number). */
+export function pricesIn(text) {
+  const t = toLatin(text), out = [];
+  const re = /(egp|le|l\.e\.?|e£|us\$|usd|\$|€|eur|sar|aed|£|gbp|cny|rmb|جنيه|جنية|ج\.م|دولار|يورو|ريال|درهم)?\s?(\d[\d,.]*\d|\d)\s?(k\b|ألف|الف)?\s?(egp|le\b|l\.e\.?|e£|usd|\$|eur|€|sar|aed|gbp|cny|rmb|yuan|جنيه|جنية|ج\.م|دولار|يورو|ريال|درهم)?/gi;
+  for (const m of t.matchAll(re)) {
+    const cur = currencyOf(m[1] || m[4] || "");
+    if (!cur) continue;
+    const v = num(m[2] + (m[3] ? "k" : ""));
+    if (!isFinite(v) || v <= 0) continue;
+    out.push({ value: v, cur, at: m.index });
+  }
+  return out;
+}
+
+/** The market from many prices: drops outliers, → { low, median, high, n } or null. */
+export function marketRange(values) {
+  const v = values.filter((x) => isFinite(x) && x > 0).sort((a, b) => a - b);
+  if (v.length < 2) return v.length ? { low: v[0], median: v[0], high: v[0], n: 1 } : null;
+  const mid = (a) => (a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2);
+  const m0 = mid(v);
+  const kept = v.filter((x) => x >= m0 / 3 && x <= m0 * 3);
+  const q = (p) => kept[Math.min(kept.length - 1, Math.max(0, Math.round(p * (kept.length - 1))))];
+  return { low: q(0.2), median: mid(kept), high: q(0.8), n: kept.length };
+}
+
+/**
+ * An installment plan → what it really costs. cash = the price paid at once; down = paid now;
+ * monthly × months; fees = admin / purchase fees paid at the start.
+ * → { total, extra, monthlyRate, yearlyRate } (rates as 0.35 = 35 %; null when there is no loan)
+ */
+export function planCost({ cash, down = 0, monthly, months, fees = 0 }) {
+  cash = num(cash); down = num(down) || 0; monthly = num(monthly); months = Math.round(num(months)); fees = num(fees) || 0;
+  if (!(monthly > 0) || !(months > 0)) return null;
+  const total = down + fees + monthly * months;
+  const out = { total, extra: isFinite(cash) ? total - cash : NaN, monthlyRate: null, yearlyRate: null };
+  if (!(cash > 0)) return out;
+  const loan = cash - down - fees;              // what you really borrow: fees paid up front shrink it
+  if (loan <= 0) return out;
+  const pv = (r) => (r === 0 ? monthly * months : monthly * (1 - Math.pow(1 + r, -months)) / r);
+  if (pv(0) <= loan) { out.monthlyRate = 0; out.yearlyRate = 0; return out; }
+  let lo = 0, hi = 1;                            // bisection on the monthly rate
+  for (let i = 0; i < 200; i++) { const m = (lo + hi) / 2; if (pv(m) > loan) lo = m; else hi = m; }
+  out.monthlyRate = (lo + hi) / 2;
+  out.yearlyRate = Math.pow(1 + out.monthlyRate, 12) - 1;
+  return out;
+}
+
+/** Scam and trap signs, by code. → [{ id, weight, en, ar }] */
+const SIGNS = [
+  ["pay-first", 3, /(deposit|advance payment|pay (first|before|in advance)|transfer (the money|first)|send (the )?money|عربون|حو(ّ)?ل (الأول|الاول|الفلوس)|ابعت (الفلوس|المبلغ)|ادفع (الأول|الاول|مقدم)|مقدم)/i,
+    "They want money before you see or receive it.", "عايزين فلوس قبل ما تشوف أو تستلم الحاجة."],
+  ["wallet", 2, /(vodafone cash|فودافون كاش|instapay|انستا ?باي|etisalat cash|orange cash|اورانج كاش|wallet number|رقم المحفظة|western union|gift ?card|كارت (جوجل|ايتونز|آيتونز))/i,
+    "Payment to a personal wallet or gift card — very hard to get back.", "الدفع على محفظة شخصية أو كارت هدايا — صعب جدًا ترجّعه."],
+  ["code", 4, /(otp|verification code|send (me )?the code|الكود اللي (وصلك|جالك)|ابعت(لي)? الكود|كود التفعيل|رمز التحقق)/i,
+    "They ask for a code sent to your phone — that is how accounts and wallets are stolen.", "بيطلبوا كود وصلك على الموبايل — دي طريقة سرقة الحسابات والمحافظ."],
+  ["prize", 3, /(you (have )?won|congratulations.{0,30}(prize|winner|won)|claim your (prize|reward)|مبروك.{0,20}(كسبت|فزت|ربحت)|كسبت (جايزة|جائزة)|فزت ب)/i,
+    "A prize you never entered for.", "جايزة إنت ما دخلتش مسابقتها أصلًا."],
+  ["urgent", 1, /(today only|last chance|only \d+ left|hurry|limited time|expires (today|tonight|in \d+)|act now|النهاردة بس|النهارده بس|آخر فرصة|اخر فرصة|لفترة محدودة|الحق قبل|الكمية محدودة|فاضل \d+ بس)/i,
+    "Pressure to decide fast — a classic trick.", "ضغط عشان تقرر بسرعة — حركة معروفة."],
+  ["off-platform", 2, /(contact me on whatsapp|whatsapp me|message me outside|pay outside|كلمني (واتس|على الواتس)|تواصل (واتس|خاص)|برا الموقع|خارج (المنصة|الموقع))/i,
+    "They move you off the platform, where you lose buyer protection.", "بيطلعوك برا المنصة، فبتخسر حماية المشتري."],
+  ["guaranteed", 4, /(guaranteed (profit|return|income)|double your money|risk[- ]free (profit|investment)|\d+% (monthly|weekly|daily) (profit|return)|ربح مضمون|أرباح مضمونة|ارباح مضمونة|ضاعف فلوسك|عائد (شهري|يومي) \d+)/i,
+    "Guaranteed high profit — the sign of a Ponzi / investment scam.", "ربح مضمون وعالي — علامة نصب استثمار (بونزي)."],
+  ["no-warranty", 1, /(no warranty|without warranty|بدون ضمان|من غير ضمان|مفيش ضمان|no returns?|non-?refundable|لا يرد ولا يستبدل)/i,
+    "No warranty or returns.", "من غير ضمان أو استرجاع."],
+  ["copy", 2, /(high copy|first copy|mirror (quality|copy)|replica|master copy|هاي كوبي|كوبي وان|تقليد|درجة أولى)/i,
+    "It says copy / replica — not the original product.", "مكتوب كوبي/تقليد — مش الأصلي."],
+  ["generic", 1, /\bgeneric\b|بدون (ماركة|براند)/i,
+    "No real brand is named.", "مفيش ماركة حقيقية مكتوبة."],
+  ["zero-interest", 0, /(0\s?% (interest|فايدة|فائدة)|بدون (فوايد|فوائد|فايدة)|zero interest|interest[- ]free)/i,
+    "Says 0% interest — the real cost is checked below.", "مكتوب 0% فوايد — التكلفة الحقيقية محسوبة تحت."],
+  ["no-ratings", 1, /(not enough ratings|no ratings|new seller|بائع جديد|مفيش تقييمات)/i,
+    "A seller with no ratings.", "بائع من غير تقييمات."],
+];
+export function scamSigns(text) {
+  const t = toLatin(text);
+  return SIGNS.filter(([, , re]) => re.test(t)).map(([id, weight, , en, ar]) => ({ id, weight, en, ar }));
+}
+
+/**
+ * The verdict, by code. d = { price, cur, market, plan, signs, claimsZero }
+ * → { level: "scam"|"risky"|"overpriced"|"fair"|"good"|"unknown", reasons: [{en, ar}], target }
+ */
+export function verdict(d) {
+  const reasons = [];
+  const say = (en, ar) => reasons.push({ en, ar });
+  const risk = (d.signs || []).reduce((s, x) => s + x.weight, 0);
+  const fmt = (v) => Math.round(v).toLocaleString("en-US") + (d.cur ? " " + d.cur : "");
+  let level = "unknown", target = null;
+  const m = d.market, p = num(d.price);
+  if (m && p > 0) {
+    const vs = p / m.median;
+    if (p < m.low * 0.6) { say(`The price is far below the market (${fmt(m.low)}–${fmt(m.high)}) — too good to be true is a scam sign.`, `السعر أقل بكتير من السوق (${fmt(m.low)}–${fmt(m.high)}) — «رخيص زيادة عن اللزوم» علامة نصب.`); level = "risky"; }
+    else if (p > m.high * 1.08) { level = "overpriced"; say(`About ${Math.round((vs - 1) * 100)}% above the usual price (${fmt(m.median)}).`, `أغلى من السعر المعتاد (${fmt(m.median)}) بحوالي ${Math.round((vs - 1) * 100)}%.`); }
+    else if (p <= m.median * 0.95) { level = "good"; say(`Below the usual price (${fmt(m.median)}).`, `أرخص من السعر المعتاد (${fmt(m.median)}).`); }
+    else { level = "fair"; say(`In line with the market (${fmt(m.low)}–${fmt(m.high)}).`, `في حدود السوق (${fmt(m.low)}–${fmt(m.high)}).`); }
+    if (p > m.median) target = Math.round(Math.max(m.low, m.median * 0.97) / 50) * 50;
+  }
+  const pl = d.plan;
+  if (pl && isFinite(pl.extra) && pl.extra > 0) {
+    say(`With the installments you pay ${fmt(pl.total)} — ${fmt(pl.extra)} more than the cash price.`, `بالتقسيط هتدفع ${fmt(pl.total)} — يعني ${fmt(pl.extra)} زيادة عن الكاش.`);
+    if (pl.yearlyRate != null) say(`That is a real interest of about ${Math.round(pl.yearlyRate * 100)}% a year${d.claimsZero ? ", although it says 0%" : ""}.`, `ده فايدة حقيقية حوالي ${Math.round(pl.yearlyRate * 100)}% في السنة${d.claimsZero ? "، رغم إنه مكتوب 0%" : ""}.`);
+    if (pl.yearlyRate != null && pl.yearlyRate > 0.35 && (level === "fair" || level === "good" || level === "unknown")) level = "overpriced";
+  } else if (pl && pl.extra <= 0 && pl.total > 0) say("The installments add nothing over the cash price — a real 0%.", "التقسيط مش بيزوّد حاجة على الكاش — 0% بجد.");
+  if (risk >= 4) level = "scam";
+  else if (risk >= 2 && level !== "scam") level = "risky";
+  for (const s of d.signs || []) if (s.weight > 0) reasons.push({ en: s.en, ar: s.ar });
+  return { level, reasons, target, risk };
+}
+
+/** Questions to ask the seller before paying, for what was found. */
+export function questionsFor(v, signs, kind) {
+  const q = [];
+  const ids = new Set((signs || []).map((s) => s.id));
+  if (ids.has("pay-first") || ids.has("wallet")) q.push(["Can I see it and pay on delivery (cash / card on receipt)?", "ممكن أشوفها وأدفع عند الاستلام؟"]);
+  if (ids.has("copy") || ids.has("generic")) q.push(["What is the exact brand and model number? Can you send a photo of the label?", "إيه الماركة والموديل بالظبط؟ ممكن صورة الاستيكر؟"]);
+  if (ids.has("no-warranty") || kind === "product") q.push(["Is there an official warranty, and for how long? Invoice included?", "فيه ضمان رسمي؟ مدته قد إيه؟ وفيه فاتورة؟"]);
+  if (v.level === "overpriced" || v.target) q.push(["Can you do a better price? Others sell it for less.", "ممكن سعر أحسن؟ فيه أماكن بتبيعه أرخص."]);
+  if (kind === "installment") q.push(["What is the total I pay, all fees included? Is there an early-payment penalty?", "إجمالي اللي هدفعه كام بكل المصاريف؟ وفيه غرامة لو سددت بدري؟"]);
+  if (kind === "car") q.push(["Can I take it to an independent mechanic and check the papers (license, violations)?", "ممكن أكشف عليها عند ميكانيكي من برا وأشوف الرخصة والمخالفات؟"]);
+  if (kind === "rent") q.push(["Is the contract registered, and who pays the maintenance and utilities?", "العقد متوثق؟ ومين بيدفع الصيانة والمرافق؟"]);
+  if (!q.length) q.push(["Can I get everything agreed in writing?", "ممكن كل اللي اتفقنا عليه يبقى مكتوب؟"]);
+  return q.slice(0, 5).map(([en, ar]) => ({ en, ar }));
+}
+
+/** The prompt that reads the offer into fields (JSON). */
+export function extractMessages(offer, hasPhoto) {
+  return [
+    { role: "system", content: `You read an offer, listing, installment plan or seller's message and fill in its terms. Reply with ONLY a JSON object:
+{"item": "what is sold, with brand and model if written", "kind": "product|car|installment|rent|service|investment|other", "price": number or null, "currency": "EGP|USD|…" or null, "cash_price": number or null, "down_payment": number or null, "monthly": number or null, "months": number or null, "fees": number or null, "seller": "name or null", "claims": ["short claims the seller makes"], "text": "the offer's own words, copied (up to 600 characters)"}
+Rules: copy numbers exactly as written; null when not written — never guess. "price" is the price asked (the cash price if there is one).` },
+    { role: "user", content: (hasPhoto ? "The offer is in the attached screenshot/photo." + (offer ? "\nAlso:\n" : "") : "") + (offer || "") },
+  ];
+}
+
+/** Parse the model's JSON (tolerant). */
+export function parseTerms(raw) {
+  let j = null;
+  try { const s = String(raw || ""); j = JSON.parse(s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1)); } catch (e) { return null; }
+  if (!j || typeof j !== "object") return null;
+  const n = (x) => (x == null || x === "" ? null : isFinite(num(x)) ? num(x) : null);
+  return {
+    item: String(j.item || "").slice(0, 120), kind: String(j.kind || "other").toLowerCase(),
+    price: n(j.price), currency: j.currency ? String(j.currency).toUpperCase().slice(0, 4) : null,
+    cash: n(j.cash_price), down: n(j.down_payment), monthly: n(j.monthly), months: n(j.months), fees: n(j.fees),
+    seller: j.seller ? String(j.seller).slice(0, 60) : null, claims: Array.isArray(j.claims) ? j.claims.map(String).slice(0, 6) : [],
+    text: String(j.text || "").slice(0, 800),
+  };
+}
+
+/** The web search for the market price. */
+export function marketQuery(item, lang, year = new Date().getFullYear()) {
+  const it = String(item || "").replace(/\s+/g, " ").trim().slice(0, 80);
+  return lang === "ar" ? `سعر ${it} في مصر ${year}` : `${it} price Egypt ${year}`;
+}
+
+/** Market prices from web pages, in the offer's currency, near the offer's size. */
+export function marketFrom(hits, cur, price) {
+  const vals = [];
+  const used = [];
+  for (const h of hits || []) {
+    const ps = pricesIn((h.title || "") + "\n" + (h.text || "")).filter((x) => !cur || x.cur === cur)
+      .map((x) => x.value).filter((v) => !(price > 0) || (v >= price / 5 && v <= price * 5));
+    if (ps.length) { vals.push(...ps.slice(0, 4)); used.push(h); }
+  }
+  return { market: marketRange(vals), sources: used.slice(0, 6) };
+}
+
+/** The negotiation / reply message the model writes. */
+export function messageMessages(t, v, lang, questions) {
+  const ar = lang === "ar";
+  return [
+    { role: "system", content: ar
+      ? "اكتب رسالة قصيرة ومهذبة بالعامية المصرية للبائع (٣–٥ سطور)، جاهزة للإرسال على واتساب. من غير مقدمات ولا شرح — الرسالة نفسها بس."
+      : "Write a short, polite message to the seller (3–5 lines), ready to send on WhatsApp. No preamble, no explanation — only the message." },
+    { role: "user", content: `Item: ${t.item || "the item"}\nAsked price: ${t.price || "?"} ${t.currency || ""}\n` +
+      (v.target ? `Ask for about: ${v.target} ${t.currency || ""}\n` : "") +
+      `Verdict: ${v.level}\nPoints: ${v.reasons.map((r) => r.en).join(" · ")}\nQuestions to include: ${questions.map((q) => q.en).join(" · ")}` +
+      (v.level === "scam" ? "\nThis looks like a scam: write a firm, safe message that asks to meet and pay on delivery, and gives no money or codes." : "") },
+  ];
+}

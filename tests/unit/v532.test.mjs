@@ -50,4 +50,14 @@ eq(!!(pf && pf.url.startsWith("https://www.google.com/maps/search/")), true, "�
 eq((placeFor("أقرب صيدلية فين؟") || {}).query, "صيدلية قريبة", "Arabic: nearest pharmacy");
 eq(placeFor("Summarise this text about pharmacy law"), null, "no place request → no map button");
 
+// v5.33 — Ali's Lynk & Co 900 answer
+const src900 = [{ title: "Lynk & Co 900", text: "The cabin height reaches as much as 1.293 metres. The 900 accelerates 0–100 km/h in 4.6 seconds." }];
+eq(repairFigures("* It has a cabin height reaching as much as 1.2.93-metres [1].", src900).text, "* It has a cabin height reaching as much as 1.293-metres [1].", "same digits, wrong dots: 1.2.93 → 1.293");
+eq(repairFigures("* 0–1000 km/h acceleration: 4.6 seconds [1].", src900).text, "* 0–100 km/h acceleration: 4.6 seconds [1].", "a doubled digit: 0–1000 km/h → 0–100 km/h");
+eq(tidyAnswer("* A combined output of 630.kW [5]."), "* A combined output of 630 kW [5].", "630.kW → 630 kW");
+eq(tidyAnswer("* adding twi 600kWkW rear motors for a a a combined output [5]."), "* adding twi 600kW rear motors for a combined output [5].", "kWkW and 'a a a' glitches are repaired");
+eq(tidyAnswer("* the world's first one-piece-piece side panel [5]."), "* the world's first one-piece side panel [5].", "one-piece-piece → one-piece");
+eq(tidyAnswer("* It is a plug-in hybrid [3][5].\n* It is a plug-in hybrid [3 5]."), "* It is a plug-in hybrid [3][5].", "[3 5] is read as [3][5], and the repeated bullet goes");
+eq(tidyAnswer("*   **Pricing:**\n*   **Performance and Specs:**\n*   **Top speed:** 200kph [5].\n*   **Disadvantages:**\n    *   —"), "*   **Performance and Specs:**\n*   **Top speed:** 200kph [5].", "an empty heading and a lone '—' are removed");
+
 if (fails.length) { console.log(`\n${fails.length} FAILED`); process.exit(1); } else console.log("\nALL PASSED");

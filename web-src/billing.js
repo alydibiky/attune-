@@ -43,6 +43,7 @@ export function pricesFor(tz, lang) { return PRICES[region(tz, lang)]; }
 /** What Pro gives — the reasons to pay, in the order people care about. */
 export const PRO_BENEFITS = [
   "Unlimited answers — no daily limit",
+  "Unlimited Deal Checks: the real cost, the market price and scam signs before you pay",
   "Expert review: strong models check and improve their own answers",
   "Deep web research: several searches, more pages, cross-checked facts",
   "Unlimited Studio pictures",

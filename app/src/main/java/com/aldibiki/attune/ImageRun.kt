@@ -145,6 +145,10 @@ object ImageRun {
             "--steps", steps.toString(), "--cfg-scale", cfg.toString(), "--sampling-method", if (f.allInOne) "euler_a" else "euler",
             "-s", seed.toString(), "-t", threads.toString())
         if (!f.allInOne) a += "--diffusion-fa"
+        // v5.33 — Turbo (SD-Turbo, an "SD 2" model): sd-cli GUESSES eps vs v prediction for SD 2
+        // with a test run, and a quantised Turbo fools it into v — Ali's picture came out as pure
+        // coloured noise. Turbo is eps, trained on "trailing" timesteps (≈ sgm_uniform).
+        if (f.allInOne) a += listOf("--prediction", "eps", "--scheduler", "sgm_uniform")
         // VAE in tiles above 1 megapixel: the same picture, far less memory at the end.
         if (width * height > 1024 * 1024) a += "--vae-tiling"
         if (backend != null) a += listOf("--backend", backend)

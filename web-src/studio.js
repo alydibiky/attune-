@@ -17,7 +17,7 @@ export const PACKS = {
   // Licence: Stability AI Community License (free for commercial use under $1M a year).
   "turbo": {
     id: "turbo", kind: "draw", label: "Studio Turbo", sizeGB: 2.2, needRam: 4, license: "Stability AI Community",
-    defaults: { steps: 2, cfg: 1 }, side: 512, fast: true,
+    defaults: { steps: 4, cfg: 1 }, side: 512, fast: true,   // v5.33: 4 steps — sharper, still about a minute on the CPU
     quality: "Fast pictures on any phone: about a minute without a graphics chip, seconds with one. 512 px — great for ideas, drafts and posts.",
     files: [
       { role: "model", what: "fast picture model", name: "studio-turbo.gguf", approx: 2352000000,

@@ -52,7 +52,7 @@ const hasWhole = (hay, n) => new RegExp("(^|[^\\d.,])" + escRe(n) + "(?![\\d])")
 function pickFigure(hay, n, unit, d, before, after, mine) {
   // candidates: the source's figures with the same unit, or (no unit) between the same words
   let cands = [];
-  if (unit) cands = numbersWithUnit(hay).filter((x) => x.unit === unit && digitsOf(x.n) !== d);
+  if (unit) cands = numbersWithUnit(hay).filter((x) => x.unit === unit && x.n !== n);
   if (!cands.length) {
     // no unit: the words right around it ("The 0 features" → "The 90 features")
     const pw = (before.match(/([A-Za-z]{2,})\W*$/) || [])[1], nw = (after.match(/^\W*([A-Za-z]{2,})/) || [])[1];
@@ -64,9 +64,11 @@ function pickFigure(hay, n, unit, d, before, after, mine) {
   // the best: digits that fit (a dropped / doubled digit) and the same words nearby
   const scored = cands.map((c) => {
     const cd = digitsOf(c.n);
-    const fit = cd !== d && (isSub(d, cd) || isSub(cd, d));
+    // same digits, wrong dots / commas ("1.2.93" → "1.293") fit best; then a dropped / doubled digit
+    const punct = cd === d && c.n !== n;
+    const fit = punct || (cd !== d && (isSub(d, cd) || isSub(cd, d)));
     const overlap = wordsNear(hay, c.at).filter((w) => mine.has(w)).length;
-    return { to: c.n, fit, overlap, s: (fit ? 2 : 0) + overlap + (c.near ? 2 : 0) };
+    return { to: c.n, fit, overlap, s: (punct ? 4 : fit ? 2 : 0) + overlap + (c.near ? 2 : 0) };
   }).filter((c) => c.fit || c.overlap >= 2);
   const byVal = new Map();
   for (const c of scored) if (!byVal.has(c.to) || byVal.get(c.to).s < c.s) byVal.set(c.to, c);
@@ -124,9 +126,20 @@ const NOT_GIVEN = /\b(the )?(passages?|sources?|articles?|search results?|pages?
 
 /** Tidy a finished answer: bold, citations, duplicate bullets, tables, "not provided" lines. */
 export function tidyAnswer(answer) {
+  const tidy = tidyInner(answer);
+  // never tidy an answer away completely
+  return tidy.trim() ? tidy : String(answer || "");
+}
+function tidyInner(answer) {
   let t = String(answer || "");
   // citation lists "[2, 3, 5]" → [2][3][5]; empty "[]" gone; "[5][5]" → [5]
-  t = t.replace(/\[(\d{1,2}(?:\s*,\s*\d{1,2})+)\]/g, (_, l) => l.split(/\s*,\s*/).map((x) => "[" + x + "]").join(""));
+  t = t.replace(/\[(\d{1,2}(?:[\s,]+\d{1,2})+)\]/g, (_, l) => l.split(/[\s,]+/).map((x) => "[" + x + "]").join(""));
+  // v5.33 — token glitches of a small model writing fast (Ali's Lynk & Co 900 answer):
+  // "630.kW" → "630 kW", "600kWkW" → "600kW", "a a a combined" → "a combined", "one-piece-piece" → "one-piece"
+  t = t.replace(/(\d)\.\s?(?=(?:kWh|kW|km\/h|km|kg|hp|Nm|mm|cm|mph|kph|Ah|V|W|L)\b)/g, "$1 ");
+  t = t.replace(/(?<![A-Za-z])(kWh|kW|km|kg|hp|Nm|mm|cm|mph|kph)\1\b/gi, "$1");
+  t = t.replace(/\b([A-Za-z]{1,12})(?:\s+\1\b)+/gi, "$1");
+  t = t.replace(/\b([A-Za-z]{3,})-\1\b/gi, "$1");
   t = t.replace(/\[\s*\]/g, "").replace(/(\[\d{1,2}\])(\s*\1)+/g, "$1");
   // bold: "****" runs → "**"; a line with an odd number of ** loses its last one
   t = t.replace(/\*{3,}/g, "**");
@@ -148,6 +161,18 @@ export function tidyAnswer(answer) {
       seen.add(key);
     }
     out.push(l);
+  }
+  // empty parts: a bullet that is only "—", and a heading with nothing under it ("**Pricing:**"
+  // straight after another heading) — they look broken
+  const isHead = (l) => /^\s*(#{1,4}\s+.+|([-*•]\s*)?\*\*[^*\n]{1,60}\*\*:?\s*)$/.test(l) && !/\[\d+\]/.test(l);
+  const isEmptyBullet = (l) => /^\s*[-*•]\s+(\*\*[^*]{1,40}:?\*\*:?\s*)?(—|-|–|n\/a|none|not available)\.?\s*$/i.test(l);
+  for (let i = out.length - 1; i >= 0; i--) {
+    if (isEmptyBullet(out[i])) { out.splice(i, 1); continue; }
+    if (isHead(out[i])) {
+      let j = i + 1; while (j < out.length && !out[j].trim()) j++;
+      const indent = (x) => x.match(/^\s*/)[0].length;
+      if (j >= out.length || (isHead(out[j]) && indent(out[j]) <= indent(out[i]))) out.splice(i, 1);
+    }
   }
   // tables: every row as many cells as the header
   for (let i = 0; i + 1 < out.length; i++) {

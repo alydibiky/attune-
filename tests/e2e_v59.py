@@ -191,7 +191,7 @@ with sync_playwright() as pw:
     page.click("[data-testid=studio-go]")
     page.wait_for_function("() => window.__mock.lastImagine && window.__mock.lastImagine.pack === 'turbo'", timeout=15000)
     li = page.evaluate("window.__mock.lastImagine")
-    check([li["width"], li["height"], li["steps"], li["cfg"]] == [512, 512, 2, 1], "Turbo draws 512×512 in 2 steps (about a minute on a CPU): %s" % [li["width"], li["height"], li["steps"], li["cfg"]])
+    check([li["width"], li["height"], li["steps"], li["cfg"]] == [512, 512, 4, 1], "Turbo draws 512×512 in 4 steps (about a minute on a CPU): %s" % [li["width"], li["height"], li["steps"], li["cfg"]])
     page.wait_for_selector("[data-testid=studio-go]", timeout=15000)
     page.click("[data-testid=studio-use-pro]")
     check(page.locator("[data-testid=studio-pro-slow]").count() == 1, "picking Pro on a phone without the graphics chip warns it takes 10–20 min")
