@@ -183,7 +183,8 @@ with sync_playwright() as pw:
     rec_name = rec.locator("p.text-base").inner_text()
     # v5.7: in the Android app the fast engine (LiteRT-LM, GPU) comes first.
     check(rec_name.startswith("Blaze") and "fast engine" in rec_name, "12 GB phone is recommended the fast engine: " + rec_name)
-    check(rec.locator("button:has-text('Stronger · Blaze+')").count() == 1, "the E4B fast engine offered as the stronger option")
+    # v6.8 (Ali): on a 12 GB phone the stronger option is Zenith (the 9B, a smaller faster file now)
+    check(rec.locator("button:has-text('Zenith')").count() == 1, "Zenith offered as the stronger option on a 12 GB phone")
     rec.get_by_role("button", name="Install").first.click()
     page.wait_for_selector("text=Running now", timeout=10000)
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)

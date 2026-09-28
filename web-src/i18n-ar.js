@@ -3,6 +3,7 @@
    Brand and model names (Attune, Qwen, ChatGPT…) are left in Latin letters. */
 export const AR = {
   // v6.8 Mind
+  "Runs smoothly on a 12 GB phone: expert answers, and the best at reading documents and photos.": "بيشتغل بسلاسة على موبايل 12 جيجا: إجابات خبير، والأحسن في قراية المستندات والصور.",
   "Core made 10% smaller, for a 6 GB phone that is short on free memory.": "نسخة من Core أصغر بـ 10%، لموبايل 6 جيجا ذاكرته الفاضية قليلة.",
   "Fit & Food: unlimited photo meals, the week's meal plan and shopping list, the week report": "الأكل والرشاقة: وجبات بالصور من غير حد، خطة أكل الأسبوع وقائمة المشتريات، وتقرير الأسبوع",
   "≈ $5 a month — save 37%": "≈ 5 دولار في الشهر — وفّر 37%",

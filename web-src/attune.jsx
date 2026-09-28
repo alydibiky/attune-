@@ -861,10 +861,14 @@ const MODEL_TIERS = [
     repo: "unsloth/gemma-4-12B-it-GGUF",
     quality: "Expert level, and reads text, photos and audio. Comfortable on a laptop or a 16 GB phone.",
     good: ["Ask", "Write", "Summarise", "Review", "Photos"] },
-  { id: "xl", vision: true, label: "Zenith", realName: "Qwen3.5 9B", smoothRam: 16, params: "9B", quant: "Q4_K_M", sizeGB: 6.0,
+  // v6.8 (Ali: "make my 12 GB phone run Zenith smoothly — less space, same power"): IQ4_NL, measured on
+  // ARM (.github/workflows/model-bench.yml, run 36458059767): 5.37 GB instead of 5.68, writes 11 % faster
+  // (7.0 vs 6.3 t/s), reads as fast, and drifts only 0.024 (KLD, Arabic) from the 8-bit model — under
+  // what anyone notices. The 3-bit versions were both worse AND slower on ARM, so smaller isn't better.
+  { id: "xl", vision: true, label: "Zenith", realName: "Qwen3.5 9B", smoothRam: 12, params: "9B", quant: "IQ4_NL", sizeGB: 5.37,
     needRam: 12, ctx: 32768, platform: "any",
     repo: "unsloth/Qwen3.5-9B-GGUF",
-    quality: "The strongest model a 12 GB phone can run: expert answers, and the best at reading documents and photos.",
+    quality: "Runs smoothly on a 12 GB phone: expert answers, and the best at reading documents and photos.",
     good: ["Ask", "Write", "Summarise", "Review", "Photos"] },
 
   // ---- the fast engine: LiteRT-LM on the phone's GPU (Android app only) ----
@@ -957,10 +961,13 @@ function pickTier(dev) {
 // The stronger choice on a phone: the 9B, only with 12 GB or more.
 function strongerPhoneTier(dev) {
   if (!dev || dev.platform === "desktop") return null;
+  // v6.8 (Ali): on a 12 GB phone the stronger choice is Zenith — the 9B, now a smaller, faster file that
+  // runs smoothly there. Blaze+ (fast engine, 4.5B) is the step up on 8–11 GB phones.
+  const zen = MODEL_TIERS.find((t) => t.id === "xl");
+  if (dev.ram >= 12 && zen && tierFits(zen, dev)) return zen;
   const e4b = MODEL_TIERS.find((t) => t.id === "fast-e4b");
   if (e4b && tierFits(e4b, dev)) return e4b;
-  if (dev.ram < 12) return null;
-  return MODEL_TIERS.find((t) => t.id === "xl") || null;
+  return null;
 }
 
 /* ---- the first-run recommendation ---------------------------------------
