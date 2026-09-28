@@ -37,12 +37,16 @@ object WebTools {
         val lang = if (isArabic(q)) "ar,en;q=0.8" else "en,ar;q=0.8"
         val out = ArrayList<Hit>()
         Prefs.requireOnline("https://html.duckduckgo.com/html/", "web search (DuckDuckGo)")
-        try {
-            val doc = Jsoup.connect("https://html.duckduckgo.com/html/")
+        // v6.8: a GET first — DuckDuckGo answers a POST from many networks with its "anomaly" page
+        // (HTTP 202, no results; measured from GitHub's machines: POST 0 results, GET 10). POST stays
+        // as the second try.
+        for (method in listOf("get", "post")) try {
+            val con = Jsoup.connect("https://html.duckduckgo.com/html/")
                 .data("q", q).data("kl", region).data("df", recent)
                 .userAgent(UA).header("Accept-Language", lang)
                 .referrer("https://html.duckduckgo.com/")
-                .timeout(12_000).post()
+                .timeout(8_000)
+            val doc = if (method == "get") con.get() else con.post()
             for (r in doc.select("div.result")) {
                 if (r.hasClass("result--ad") || r.select(".badge--ad").isNotEmpty()) continue
                 val a = r.selectFirst("a.result__a") ?: continue
@@ -52,16 +56,17 @@ object WebTools {
                 out.add(Hit(a.text(), url, snippet, "web"))
                 if (out.size >= max) break
             }
-        } catch (e: Exception) { /* fall through to lite */ }
-        if (out.isNotEmpty()) return out
+            if (out.isNotEmpty()) return out
+        } catch (e: Exception) { /* the other method, then lite */ }
 
         // DuckDuckGo Lite: plainer markup, used when the main page refuses.
-        try {
+        for (method in listOf("get", "post")) try {
             Prefs.requireOnline("https://lite.duckduckgo.com/lite/", "web search (DuckDuckGo Lite)")
-            val doc = Jsoup.connect("https://lite.duckduckgo.com/lite/")
+            val con = Jsoup.connect("https://lite.duckduckgo.com/lite/")
                 .data("q", q).data("kl", region)
                 .userAgent(UA).header("Accept-Language", lang)
-                .timeout(12_000).post()
+                .timeout(8_000)
+            val doc = if (method == "get") con.get() else con.post()
             val links = doc.select("a.result-link")
             val snippets = doc.select("td.result-snippet")
             for ((i, a) in links.withIndex()) {
@@ -70,6 +75,7 @@ object WebTools {
                 out.add(Hit(a.text(), url, snippets.getOrNull(i)?.text().orEmpty(), "web"))
                 if (out.size >= max) break
             }
+            if (out.isNotEmpty()) return out
         } catch (e: Exception) { }
         return out
     }
@@ -86,12 +92,16 @@ object WebTools {
                 .data("q", q).data("setlang", if (ar) "ar" else "en").data("cc", if (ar) "EG" else "US")
                 .userAgent(UA).header("Accept-Language", if (ar) "ar,en;q=0.8" else "en,ar;q=0.8")
                 .timeout(12_000).get()
+            // v6.8: Bing's phone layout has no "h2 a" (the link sits in .b_algoheader / a.tilk), so the old
+            // reader found NOTHING on phones — measured: 10 results on the page, 0 read. Any layout now.
             for (r in doc.select("li.b_algo")) {
-                val a = r.selectFirst("h2 a") ?: continue
+                val a = r.selectFirst("h2 a[href]") ?: r.selectFirst(".b_algoheader a[href]") ?: r.selectFirst("a.tilk[href]")
+                    ?: r.select("a[href]").firstOrNull { it.attr("href").startsWith("http") } ?: continue
                 val url = unwrapBing(a.attr("href"))
                 if (!url.startsWith("http") || url.contains("bing.com/")) continue
-                val snippet = (r.selectFirst(".b_caption p") ?: r.selectFirst("p"))?.text().orEmpty()
-                out.add(Hit(a.text(), url, snippet, "web"))
+                val title = (r.selectFirst("h2")?.text() ?: a.text()).trim()
+                val snippet = (r.selectFirst(".b_caption p") ?: r.selectFirst("[class*=b_lineclamp]") ?: r.selectFirst("p"))?.text().orEmpty()
+                if (title.isNotEmpty()) out.add(Hit(title, url, snippet, "web"))
                 if (out.size >= max) break
             }
         } catch (e: Exception) { }

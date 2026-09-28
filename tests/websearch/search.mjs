@@ -26,8 +26,10 @@ const urlKey = (u) => u.toLowerCase().replace(/^https?:\/\/(www\.)?/, "").replac
 export async function duckduckgo(q, max = 6, recent = "") {
   const ar = isArabic(q), out = [];
   const hdr = { "User-Agent": UA, "Accept-Language": ar ? "ar,en;q=0.8" : "en,ar;q=0.8", "Content-Type": "application/x-www-form-urlencoded" };
-  try {
-    const r = await withTimeout(TIMEOUTS.search, fetch("https://html.duckduckgo.com/html/", { method: "POST", headers: { ...hdr, Referer: "https://html.duckduckgo.com/" }, body: new URLSearchParams({ q, kl: ar ? "xa-ar" : "wt-wt", df: recent }) }));
+  for (const method of ["GET", "POST"]) try {   // v6.8: GET first (a POST often gets the anomaly page)
+    const params = new URLSearchParams({ q, kl: ar ? "xa-ar" : "wt-wt", df: recent });
+    const r = await withTimeout(TIMEOUTS.search, method === "GET" ? fetch("https://html.duckduckgo.com/html/?" + params, { headers: { "User-Agent": UA, "Accept-Language": hdr["Accept-Language"], Referer: "https://html.duckduckgo.com/" } })
+      : fetch("https://html.duckduckgo.com/html/", { method: "POST", headers: { ...hdr, Referer: "https://html.duckduckgo.com/" }, body: params }));
     const $ = cheerio.load(await r.text());
     $("div.result").each((_, el) => {
       const e = $(el);
@@ -36,10 +38,11 @@ export async function duckduckgo(q, max = 6, recent = "") {
       const url = unwrapDdg(a.attr("href") || ""); if (!url.startsWith("http")) return;
       out.push({ title: a.text().trim(), url, text: e.find(".result__snippet").first().text().trim(), source: "web" });
     });
+    if (out.length) return out;
   } catch (e) {}
-  if (out.length) return out;
-  try {
-    const r = await withTimeout(TIMEOUTS.search, fetch("https://lite.duckduckgo.com/lite/", { method: "POST", headers: hdr, body: new URLSearchParams({ q, kl: ar ? "xa-ar" : "wt-wt" }) }));
+  for (const method of ["GET", "POST"]) try {
+    const params = new URLSearchParams({ q, kl: ar ? "xa-ar" : "wt-wt" });
+    const r = await withTimeout(TIMEOUTS.search, method === "GET" ? fetch("https://lite.duckduckgo.com/lite/?" + params, { headers: { "User-Agent": UA } }) : fetch("https://lite.duckduckgo.com/lite/", { method: "POST", headers: hdr, body: params }));
     const $ = cheerio.load(await r.text());
     const snips = $("td.result-snippet").toArray();
     $("a.result-link").each((i, el) => {
@@ -47,6 +50,7 @@ export async function duckduckgo(q, max = 6, recent = "") {
       const url = unwrapDdg($(el).attr("href") || ""); if (!url.startsWith("http")) return;
       out.push({ title: $(el).text().trim(), url, text: snips[i] ? $(snips[i]).text().trim() : "", source: "web" });
     });
+    if (out.length) return out;
   } catch (e) {}
   return out;
 }
@@ -57,12 +61,15 @@ export async function bing(q, max = 8) {
     const u = "https://www.bing.com/search?" + new URLSearchParams({ q, setlang: ar ? "ar" : "en", cc: ar ? "EG" : "US" });
     const r = await withTimeout(TIMEOUTS.search, fetch(u, { headers: { "User-Agent": UA, "Accept-Language": ar ? "ar,en;q=0.8" : "en,ar;q=0.8" } }));
     const $ = cheerio.load(await r.text());
-    $("li.b_algo").each((_, el) => {
+    $("li.b_algo").each((_, el) => {   // v6.8: any layout (the phone layout has no "h2 a")
       if (out.length >= max) return;
-      const a = $(el).find("h2 a").first(); if (!a.length) return;
+      const r0 = $(el);
+      let a = r0.find("h2 a[href]").first(); if (!a.length) a = r0.find(".b_algoheader a[href]").first(); if (!a.length) a = r0.find("a.tilk[href]").first();
+      if (!a.length) a = r0.find("a[href^='http']").first(); if (!a.length) return;
       const url = unwrapBing(a.attr("href") || "");
       if (!url.startsWith("http") || url.includes("bing.com/")) return;
-      out.push({ title: a.text().trim(), url, text: ($(el).find(".b_caption p").first().text() || $(el).find("p").first().text()).trim(), source: "web" });
+      const title = (r0.find("h2").first().text() || a.text()).trim(); if (!title) return;
+      out.push({ title, url, text: (r0.find(".b_caption p").first().text() || r0.find("[class*=b_lineclamp]").first().text() || r0.find("p").first().text()).trim(), source: "web" });
     });
   } catch (e) {}
   return out;
