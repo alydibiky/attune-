@@ -168,6 +168,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                     resolve(id, out)
                     return@execute
                 }
+                // v6.8: a photo, and the model started without its photo reader to save memory → load it now
+                if (body.contains("\"image_url\"") && !Engine.photosLoaded) {
+                    if (!Engine.ensurePhotos(ctx)) throw java.io.IOException("The photo reader could not be loaded — the phone may be short of memory. Close other apps and try again.")
+                }
                 val stream = JSONObject(body).optBoolean("stream", false)
                 conn = (java.net.URL(Engine.baseUrl + "/v1/chat/completions").openConnection() as java.net.HttpURLConnection).apply {
                     requestMethod = "POST"

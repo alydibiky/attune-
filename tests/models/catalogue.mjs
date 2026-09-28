@@ -47,10 +47,12 @@ for (const t of TIERS) {
     if (Math.abs(out.gb - t.sizeGB) / t.sizeGB > 0.08) out.problems.push(`catalogue says ${t.sizeGB} GB, the file is ${out.gb.toFixed(2)} GB`);
     if (!(t.needRam < t.smoothRam || t.needRam === t.smoothRam)) out.problems.push("needRam above smoothRam");
     const usable = (t.phoneMin || t.needRam) * 1e9 * 0.93;   // a "12 GB" phone reports ~11.2 GiB
-    if (!t.engine && out.gb * 1e9 > usable * 0.55) out.problems.push(`on a ${t.phoneMin || t.needRam} GB phone the engine's memory rule (55 %) refuses a ${out.gb.toFixed(2)} GB file`);
+    // v6.8 Engine.allowedBytes: always up to 55 %; up to 62 % when that memory is really free
+    if (!t.engine && out.gb * 1e9 > usable * 0.62) out.problems.push(`on a ${t.phoneMin || t.needRam} GB phone the engine's memory rule (up to 62 % when free) refuses a ${out.gb.toFixed(2)} GB file`);
+    else if (!t.engine && out.gb * 1e9 > usable * 0.55) out.note = `needs free memory on a ${t.phoneMin || t.needRam} GB phone (${Math.round(out.gb * 1e9 / usable * 100)} %)`;
   } catch (e) { out.problems.push(String(e.message || e)); }
   if (out.problems.length) bad++;
   rows.push(out);
-  console.log(`${out.problems.length ? "FAIL" : "PASS"} ${t.label.padEnd(11)} ${(out.gb || 0).toFixed(2).padStart(6)} GB  ${out.file || ""}${out.mm ? "  · photos: " + out.mm : ""}${out.problems.length ? "\n     → " + out.problems.join("\n     → ") : ""}`);
+  console.log(`${out.problems.length ? "FAIL" : "PASS"} ${t.label.padEnd(11)} ${(out.gb || 0).toFixed(2).padStart(6)} GB  ${out.file || ""}${out.mm ? "  · photos: " + out.mm : ""}${out.note ? "  · " + out.note : ""}${out.problems.length ? "\n     → " + out.problems.join("\n     → ") : ""}`);
 }
 console.log(bad ? `\n${bad} FAILED` : "\nALL PASSED");

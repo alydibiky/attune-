@@ -56,7 +56,7 @@ object Engine {
         if (!Prefs.draft(ctx)) return null
         val d = Prefs.draftModel(ctx)?.let { ModelStore.get(ctx, it) } ?: return null
         if (d.id == model.id || !d.modelFile.exists() || !isQwen35(model)) return null
-        if (model.sizeBytes + d.sizeBytes > DeviceInfo.totalRamBytes(ctx) * 0.55) return null
+        if (model.sizeBytes + d.sizeBytes > allowedBytes(ctx)) return null
         return d
     }
 
@@ -203,6 +203,46 @@ object Engine {
         return c
     }
 
+    /**
+     * v6.8 (Ali: "every model one phone size lower, same quality"): how many bytes of model this phone
+     * can take. The old fixed rule — 55 % of the memory — stays as the floor. Above it, up to 62 %, a
+     * model is allowed only when the phone REALLY has that memory free right now (Android's availMem,
+     * which already counts what it can reclaim) with 0.6 GB to spare for the context and the app.
+     * So a 12 GB phone with memory free takes the 12B Zenith+ (6.4 GB), and a busy one is protected.
+     */
+    fun allowedBytes(ctx: Context): Long {
+        val total = DeviceInfo.totalRamBytes(ctx)
+        val floor = (total * 0.55).toLong()
+        val free = DeviceInfo.availRamBytes(ctx) - 600L * 1024 * 1024
+        return maxOf(floor, minOf((total * 0.62).toLong(), free))
+    }
+
+    /**
+     * The photo reader (mmproj, 0.2–1.2 GB) is loaded with the model only when memory is comfortable.
+     * Otherwise the model starts without it, and the first photo restarts the engine with it
+     * (ensurePhotos, a few seconds once) — so the memory goes to the model until a photo needs it.
+     */
+    @Volatile var photosLoaded: Boolean = false
+        private set
+    @Volatile private var photosWantedFor: String? = null   // the model a photo asked the reader for
+    private fun photosAtStart(ctx: Context, model: ModelStore.Installed): Boolean {
+        val mm = model.mmproj ?: return false
+        if (!mm.exists()) return false
+        return photosWantedFor == model.id || model.sizeBytes + mm.length() <= (DeviceInfo.totalRamBytes(ctx) * 0.50).toLong()
+    }
+    /** Called before a request with a photo: loads the photo reader if the model started without it. */
+    fun ensurePhotos(ctx: Context): Boolean {
+        if (kind != "llama" || photosLoaded) return true
+        val m = modelId?.let { ModelStore.get(ctx, it) } ?: return false
+        val mm = m.mmproj ?: return false
+        if (!mm.exists()) return false
+        photosWantedFor = m.id
+        val done = java.util.concurrent.CountDownLatch(1); var ok = false
+        exec.execute { ok = startBlocking(ctx.applicationContext, m); changed(); done.countDown() }
+        done.await(5, java.util.concurrent.TimeUnit.MINUTES)
+        return ok && photosLoaded
+    }
+
     /** True when the model is large for this phone: it works, but slowly and warmly. */
     fun isHeavy(ctx: Context, model: ModelStore.Installed): Boolean =
         model.sizeBytes > DeviceInfo.totalRamBytes(ctx) * 0.30
@@ -299,10 +339,12 @@ object Engine {
             settingsNote += " · copy-ahead"
         }
         val mm = model.mmproj
-        if (mm != null && mm.exists()) {
+        photosLoaded = false
+        if (mm != null && mm.exists() && photosAtStart(ctx, model)) {
             a += listOf("--mmproj", mm.absolutePath)
             settingsNote += " · reads photos"
-        }
+            photosLoaded = true
+        } else if (mm != null && mm.exists()) settingsNote += " · photo reader loads with the first photo"
         return a.toTypedArray()
     }
 
@@ -325,7 +367,7 @@ object Engine {
         // Android keeps roughly half of a phone's memory for itself and the
         // other apps. A model bigger than that does load — and then swaps,
         // overheats and freezes the phone, which is worse than refusing.
-        if (model.sizeBytes > DeviceInfo.totalRamBytes(ctx) * 0.55) {  // (the draft model is only added when both fit: draftFor)
+        if (model.sizeBytes > allowedBytes(ctx)) {  // (the draft model is only added when both fit: draftFor)
             state = State.ERROR
             error = "This model is too big for this phone's memory — it would freeze the phone. Pick a smaller one in Engine (Qwen 3.5 4B is the fast choice)."
             return false
@@ -401,7 +443,7 @@ object Engine {
             state = State.ERROR; error = "The model file is missing. Install it again from Engine."
             return false
         }
-        if (model.sizeBytes > DeviceInfo.totalRamBytes(ctx) * 0.55) {
+        if (model.sizeBytes > allowedBytes(ctx)) {
             state = State.ERROR
             error = "This model is too big for this phone's memory — pick Gemma 4 E2B (fast) in Engine."
             return false
