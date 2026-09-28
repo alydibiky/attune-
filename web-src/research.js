@@ -114,9 +114,50 @@ export function sourceScore(url, question = "") {
  * angle is read), no page twice, at most `perSite` pages from one site, better sources first
  * among equals. → at most `cap` hits
  */
+/* ---- v6.8: the relevance gate ------------------------------------------------------------------
+   The web benchmark (tests/websearch) found search engines answering with pages about something else
+   entirely — "How tall is the Cairo Tower?" → dictionary pages for "tall", "Who won the 2022 FIFA World
+   Cup?" → dictionary pages for "who". A page that never names what was asked about can't answer it, so
+   it is dropped before anything reads it. The names are the question's capitalised words, model numbers
+   and figures (Cairo, Tower, Liebherr, LTM, 1100-4.2, 2022, FIFA); in Arabic, its content words.       */
+const Q_WORDS = new Set("what which who whom whose when where why how is are was were do does did can could should would will the a an of in on at to for and or with from by about tell me please give show list explain find".split(" "));
+const AR_STOP = new Set("ما ماذا من متى أين اين كيف كم هل هو هي هم في على من إلى الى عن مع ال و أو او أن ان التي الذي هذا هذه ذلك كان يكون ايه إيه امتى إمتى فين ازاي إزاي كام بكام عايز اعرف قولي قوللي".split(" "));
+const normT = (s) => String(s || "").toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+export function keyTerms(question) {
+  const q = String(question || "").replace(/[?؟!،,;:()"“”«»]/g, " ");
+  const words = q.split(/\s+/).filter(Boolean);
+  const named = [], content = [];
+  for (const w of words) {
+    const lw = normT(w).replace(/^[.'’-]+|[.'’-]+$/g, "");
+    if (!lw || lw.length < 2) continue;
+    if (/[\u0600-\u06FF]/.test(lw)) { const b = lw.replace(/^(وال|بال|فال|كال|لل|ال)/, ""); if (b.length >= 3 && !AR_STOP.has(lw) && !AR_STOP.has(b)) content.push(b); continue; }
+    if (Q_WORDS.has(lw)) continue;
+    if (/\d/.test(lw) || /^[A-Z]/.test(w)) named.push(lw); else if (lw.length >= 4) content.push(lw);
+  }
+  return { named: [...new Set(named)], content: [...new Set(content)] };
+}
+/** Does this page name what was asked about? (title, address and the first part of its text) */
+export function onTopic(hit, question) {
+  const { named, content } = keyTerms(question);
+  const hay = normT((hit.title || "") + " " + decodeURIComponentSafe(hit.url || "") + " " + String(hit.text || "").slice(0, 6000));
+  const has = (t) => hay.includes(t) || (/\d/.test(t) && hay.replace(/[\s,.-]/g, "").includes(t.replace(/[\s,.-]/g, "")));
+  if (named.length) {
+    const need = named.length <= 2 ? named.length : Math.ceil(named.length * 0.6);
+    return named.filter(has).length >= need;
+  }
+  if (content.length) return content.filter(has).length >= Math.max(1, Math.ceil(content.length * 0.5));
+  return true;
+}
+function decodeURIComponentSafe(u) { try { return decodeURIComponent(u).replace(/[-_/]+/g, " "); } catch (e) { return u; } }
+
 export function mergeHits(lists, cap, question = "", perSite = 2) {
   const seen = new Set(), per = new Map(), picked = [];
-  const queues = (lists || []).map((l) => [...(l || [])].filter((h) => h && h.url));
+  let queues = (lists || []).map((l) => [...(l || [])].filter((h) => h && h.url));
+  // v6.8: pages that never name the subject are dropped (the best two are kept if nothing passes)
+  if (question) {
+    const gated = queues.map((l) => l.filter((h) => onTopic(h, question)));
+    if (gated.some((l) => l.length)) queues = gated;
+  }
   for (let round = 0; picked.length < cap * 2 && queues.some((q) => q.length); round++) {
     for (const q of queues) {
       while (q.length) {

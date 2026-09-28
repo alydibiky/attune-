@@ -9,6 +9,7 @@ const S = await import("../../web-src/slides.js");
 const A = await import("../../web-src/actions.js");
 const PL = await import("../../web-src/places.js");
 const DL = await import("../../web-src/deal.js");
+const RS = await import("../../web-src/research.js");
 let fail = 0;
 const ok = (c, what) => { console.log((c ? "PASS " : "FAIL ") + what); if (!c) fail++; };
 
@@ -100,6 +101,16 @@ const by2 = new Map(ch2.messages.map((m) => [m.i, m]));
 const k2 = X.addMissedPayments(X.parseItems(JSON.stringify({ items: [{ type: "owes", msg: 0, from: "Mostafa", to: "Ali", amount: 5000 }, { type: "paid", msg: 2, from: "Ali", to: "Mostafa", amount: 3000 }] }), by2, ch2.people), ch2.messages, ch2.people);
 ok(X.ledgerOf(k2, "Ali")[0].net === -2000, "x-ray: «انا سلفتك 5000» — Ali owes Mostafa, 2,000 left after 3,000");
 ok(k2.some((x) => x.type === "promise" && x.msg === 1), "x-ray: «هرجعهملك أول الشهر» is a promise");
+
+// web search (the web benchmark): pages that never name the subject are dropped
+const junk = { title: "TALL Definition & Meaning - Merriam-Webster", url: "https://www.merriam-webster.com/dictionary/tall", text: "tall adjective" };
+const good = { title: "Cairo Tower", url: "https://example.com/cairo-tower", text: "The Cairo Tower is 187 m tall." };
+ok(!RS.onTopic(junk, "How tall is the Cairo Tower?") && RS.onTopic(good, "How tall is the Cairo Tower?"), "web: a dictionary page for 'tall' is not about the Cairo Tower");
+ok(RS.onTopic({ title: "LTM 1100-4.2 - Liebherr", url: "https://liebherr.com/x", text: "Max. load capacity 100 t" }, "What is the maximum lifting capacity of the Liebherr LTM 1100-4.2?") && !RS.onTopic({ title: "MAXIMUM", url: "https://merriam-webster.com/maximum", text: "maximum" }, "What is the maximum lifting capacity of the Liebherr LTM 1100-4.2?"), "web: model numbers must be on the page");
+ok(!RS.onTopic({ title: "فيديكس", url: "https://fedex.com", text: "shipping" }, "ما هو ارتفاع برج خليفة؟") && RS.onTopic({ title: "برج خليفة", url: "https://a.com", text: "يبلغ ارتفاع برج خليفة 828 متر" }, "ما هو ارتفاع برج خليفة؟"), "web: Arabic questions by their content words");
+const mh = RS.mergeHits([[junk, good]], 5, "How tall is the Cairo Tower?");
+ok(mh.length === 1 && mh[0] === good, "web: mergeHits drops the off-topic page");
+ok(RS.mergeHits([[junk]], 5, "How tall is the Cairo Tower?").length === 1, "web: if nothing passes, the pages are kept rather than none");
 
 // Maps: a place name with «و» inside a word, and "where can I park"
 ok(PL.placeFor("انا في كمبوند ايمرالد بارك وعايز أفول بنزين اعمل ايه").near === "كمبوند ايمرالد بارك", "maps: «كمبوند» is not cut at its «و»");
