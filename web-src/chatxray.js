@@ -93,6 +93,8 @@ What counts (Egyptian chats too):
 - "owes" = a bill or debt is stated: «حسابه 18000» / «عليك 5000» / «you owe me» / an invoice total → from = the one who must pay.
 - "paid" = money WAS sent or received: «حولتلك» «دفعت» «وصلت» «استلمت» «sent» «received». A transfer and its "arrived, thanks" reply are ONE payment — list it once, on the message that sends it.
 - «هحولك» «هدفع» «هبعت» «I will pay» is a "promise" (not paid yet), with its amount.
+- "from" is always the one who pays or owes, "to" the one who gets the money — NOT who wrote the message.
+  Example: #0 Ali: «حسابك 5000» → {"type":"owes","msg":0,"from":"<the other person>","to":"Ali","amount":5000}; #1 Omar: «حولتلك 5000» → {"type":"paid","msg":1,"from":"Omar","to":"Ali","amount":5000}.
 - Words: ونش = crane, حساب = bill, الباقي = the rest still owed, فاضل = still left, عربون = deposit.
 Rules: "msg" is the number of the message that says it. Copy amounts exactly as written; null when no amount. "due" only when a date or day is said (today is ${fmtDate(today.getTime())}; "tomorrow" = the day after the message's date). No item for greetings or small talk. Empty list if nothing.` },
     { role: "user", content: chunk },
@@ -110,7 +112,7 @@ export function parseItems(raw, byIndex, people) {
   const items = Array.isArray(j && j.items) ? j.items : [];
   const who = (n) => matchPerson(n, people);
   const out = [];
-  for (const it of items) {
+  for (let it of items) {
     const m = byIndex.get(Number(it.msg));
     if (!m) continue;                                              // must point at a real message
     let type = String(it.type || "").toLowerCase();
@@ -120,12 +122,41 @@ export function parseItems(raw, byIndex, people) {
     let due = /^\d{4}-\d{2}-\d{2}$/.test(String(it.due || "")) ? it.due : null;
     // "paid" on a message that only promises to pay («هحولك 10000 النهارده») is a promise — the money hasn't moved
     if (type === "paid" && FUTURE_PAY.test(m.text) && !DONE_PAY.test(m.text)) type = "promise";
+    // who owes whom, from the words: «حسابك / عليك / you owe» written by X → the other one owes X;
+    // «عليا / I owe» written by X → X owes. The model often takes the writer as the debtor.
+    if (type === "owes") {
+      const other = it.to && who(it.to) && who(it.to) !== m.who ? who(it.to) : who(it.from) && who(it.from) !== m.who ? who(it.from) : people.length === 2 ? people.find((p) => p !== m.who) : null;
+      if (other && BILL_TO_OTHER.test(m.text) && !BILL_ON_ME.test(m.text)) { it = { ...it, from: other, to: m.who }; }
+      else if (other && BILL_ON_ME.test(m.text) && !BILL_TO_OTHER.test(m.text)) { it = { ...it, from: m.who, to: other }; }
+    }
     // the same payment twice (the transfer and "arrived, thanks") counts once
     if (type === "paid" && amount != null && out.some((o) => o.type === "paid" && o.amount === amount && Math.abs(o.t - m.t) < 4 * 86400000)) continue;
     out.push({ type, msg: m.i, t: m.t, quote: m.text.slice(0, 300), author: m.who, from: who(it.from) || m.who, to: who(it.to), amount, currency: it.currency ? String(it.currency).toUpperCase().slice(0, 4) : (amount ? "EGP" : null), what: String(it.what || "").slice(0, 80), due });
   }
   return out;
 }
+
+/**
+ * The safety net under the model: a message that plainly says money WAS sent («حولتلك 10000», "sent you 500")
+ * in a chat between two people is a payment from its writer to the other one — added by code when the model
+ * left it out. Only clear cases: one amount, a past-tense payment word, no "will".
+ */
+export function addMissedPayments(items, messages, people) {
+  if (!people || people.length !== 2) return items;
+  const out = [...items];
+  for (const m of messages) {
+    if (!DONE_PAY_TO_YOU.test(m.text) || FUTURE_PAY.test(m.text)) continue;
+    const v = nums(m.text).filter((x) => x >= 10);
+    if (v.length !== 1) continue;
+    if (out.some((o) => o.msg === m.i && o.type === "paid") || out.some((o) => o.type === "paid" && o.amount === v[0] && Math.abs(o.t - m.t) < 4 * 86400000)) continue;
+    const other = people.find((p) => p !== m.who);
+    out.push({ type: "paid", msg: m.i, t: m.t, quote: m.text.slice(0, 300), author: m.who, from: m.who, to: other, amount: v[0], currency: "EGP", what: "transfer", due: null, byCode: true });
+  }
+  return out;
+}
+const BILL_TO_OTHER = /(حسابك|حسابه|حسابها|عليك|عليكي|عليكو|عليكم|مطلوب منك|you owe|your bill|your invoice|you still owe)/i;
+const BILL_ON_ME = /(عليا|عليّا|عليّ |اللي عليا|انا مديون|أنا مديون|i owe|my bill|my debt)/i;
+const DONE_PAY_TO_YOU = /(حولتلك|حولت لك|دفعتلك|دفعت لك|بعتلك \d|بعتلك فلوس|sent you|paid you|transferred (you|to you))/i;
 
 /** The closest name in the chat ("hassan" → "Hassan Ali"). */
 export function matchPerson(name, people) {

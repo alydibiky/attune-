@@ -6,6 +6,7 @@ const mem = {}; globalThis.localStorage = { getItem: (k) => mem[k] ?? null, setI
 const D = await import("../../web-src/daily.js");
 const X = await import("../../web-src/chatxray.js");
 const S = await import("../../web-src/slides.js");
+const A = await import("../../web-src/actions.js");
 let fail = 0;
 const ok = (c, what) => { console.log((c ? "PASS " : "FAIL ") + what); if (!c) fail++; };
 
@@ -39,6 +40,19 @@ ok(led.length === 1 && led[0].person === "Hassan" && led[0].net === 8000, "x-ray
 const twice = X.parseItems(JSON.stringify({ items: [{ type: "owes", msg: 0, from: "Hassan", to: "Ali", amount: 18000 }, { type: "paid", msg: 2, from: "Hassan", to: "Ali", amount: 10000 }, { type: "paid", msg: 2, from: "Hassan", to: "Ali", amount: 10000 }] }), by, ex.people);
 ok(X.ledgerOf(twice, "Ali")[0].net === 8000, "x-ray: the same transfer listed twice counts once");
 ok(/ونش = crane/.test(X.extractMessages("x", "Ali", ex.people)[0].content), "x-ray prompt: Egyptian money words explained");
+
+// the model reversed the bill («حسابه 18000» written by Ali → "Ali owes Hassan") and skipped «حولتلك 10000»
+const rev = X.addMissedPayments(X.parseItems(JSON.stringify({ items: [{ type: "owes", msg: 0, from: "Ali", to: "Hassan", amount: 18000 }, { type: "promise", msg: 1, from: "Hassan", to: "Ali", amount: 10000 }] }), by, ex.people), ex.messages, ex.people);
+ok(X.ledgerOf(rev, "Ali")[0].net === 8000 && rev.some((x) => x.byCode && x.msg === 2), "x-ray: a reversed bill is turned round; a skipped transfer is added by code");
+ok(X.addMissedPayments([], X.parseExport("12/09/2026, 10:05 - Hassan: هحولك 10000 بكرة\n12/09/2026, 10:06 - Ali: تمام").messages, ["Hassan", "Ali"]).length === 0, "x-ray: a promise to transfer is never added as paid");
+l = D.parseLesson(`# H\n\n## A\nx.\n\n${fence}json\n{"visual": {"kind": "steps", "items": ["a", "b"]}}, "keyPoints": ["k1", "k2"]}\n${fence}`);
+ok(l.visual && l.visual.kind === "steps" && l.keyPoints.join() === "k1,k2", "lesson: a closing brace too many is repaired");
+
+// Instant actions: «فكرني … اكلم» is a reminder even when the model says "call"
+const now = new Date("2026-09-28T10:00:00").getTime();
+const act = A.buildAction({ action: "call", title: "اتصال بالمهندس حسن", time_text: "بكرة الساعة 9", contact: "المهندس حسن" }, "فكرني بكرة الساعة 9 الصبح اكلم المهندس حسن", now);
+ok(act.kind === "reminder" && new Date(act.at).getHours() === 9, "action: «فكرني … اكلم» is a reminder at 9:00");
+ok(A.buildAction({ action: "call", contact: "Hassan" }, "call Hassan", now).kind === "call", "action: a plain «call Hassan» stays a call");
 
 // Slides
 const ol = S.parseOutline(JSON.stringify({ title: "Crane safety", slides: [{ title: "Why it matters", kind: "quote" }, { title: "Before the lift" }, "Signals", { title: "Wind limits" }, { title: "Checklist" }] }), 5, { topic: "Crane safety" });

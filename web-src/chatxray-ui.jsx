@@ -62,8 +62,9 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
       }
       if (run.current !== id) return;
       const recent = chat.messages.filter((m) => m.t >= since);
+      const all = CX.addMissedPayments(items, recent, chat.people);   // a clear «حولتلك 10000» the model skipped
       const out = { id: Date.now().toString(36), day: today, at: Date.now(), name: chat.name, me: me0,
-        items: items.sort((a, b) => a.t - b.t), ledger: CX.ledgerOf(items, me0), unanswered: CX.unanswered(recent, me0), stats: CX.statsOf(recent), range };
+        items: all.sort((a, b) => a.t - b.t), ledger: CX.ledgerOf(all, me0), unanswered: CX.unanswered(recent, me0), stats: CX.statsOf(recent), range };
       setRes(out); setTab("money");
       const s2 = [out, ...saved.filter((x) => x.name !== out.name)].slice(0, 6); setSaved(s2); saveSaved(s2);
     } finally { if (run.current === id) setBusy(null); }

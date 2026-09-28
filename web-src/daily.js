@@ -66,6 +66,21 @@ const VISUALS = `The visual is drawn by the app; choose the kind that teaches th
 {"kind":"bars","title":"..","unit":"..","items":[{"label":"..","value":12}]}
 {"kind":"timeline","title":"..","items":[{"when":"..","what":".."}]}`;
 
+/** «{"visual": {…}}, "keyPoints": […]}» — a closing brace too many ends the object early; drop it. */
+export function dropExtraBraces(text) {
+  let s = String(text || ""), depth = 0, inStr = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (inStr) { if (ch === "\\") i++; else if (ch === '"') inStr = false; continue; }
+    if (ch === '"') inStr = true;
+    else if (ch === "{" || ch === "[") depth++;
+    else if (ch === "}" || ch === "]") {
+      depth--;
+      if (depth === 0 && /^\s*,/.test(s.slice(i + 1))) { s = s.slice(0, i) + s.slice(i + 1); depth = 1; i--; }
+    }
+  }
+  return s;
+}
 /** A course that teaches a language (Turkish, English, لغة…) — only those get translation + pronunciation lines. */
 export function isLanguageCourse(topic) {
   return /\b(language|turkish|english|french|german|spanish|italian|arabic|japanese|chinese|korean|russian|vocabulary|grammar|speak|speaking|conversation|pronunciation)\b|لغ[ةه]|اللغة|تركي|انجليزي|إنجليزي|فرنساوي|فرنسي|ألماني|الماني|اسباني|إسباني|ايطالي|إيطالي|ياباني|صيني|كوري|روسي|مفردات|قواعد|محادثة|نطق/i.test(String(topic || ""));
@@ -116,7 +131,7 @@ export function parseLesson(text) {
   const m = t.match(/```(?:json)?\s*(\{[\s\S]*\})`*\s*(```)?\s*$/) || t.match(/```(?:json)?\s*(\{[\s\S]*?"(?:keyPoints|visual)"[\s\S]*\})`*\s*```/)
     || t.match(/\n(\{\s*"(?:visual|keyPoints)"[\s\S]*\})\s*$/);
   let body = (m ? t.slice(0, m.index) : t).trim();
-  const j = m ? jsonFrom(m[1]) : null;
+  const j = m ? jsonFrom(m[1]) || jsonFrom(dropExtraBraces(m[1])) : null;
   let keyPoints = j && Array.isArray(j.keyPoints) ? j.keyPoints.map((x) => clean(x, 160)).filter(Boolean).slice(0, 5) : [];
   if (!keyPoints.length) {       // fall back to a "Key points" list in the text
     const k = body.match(/##\s*(key points|remember|تذكر|أهم النقاط)[^\n]*\n([\s\S]*?)(\n##|$)/i);

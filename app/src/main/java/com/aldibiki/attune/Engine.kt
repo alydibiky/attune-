@@ -190,6 +190,14 @@ object Engine {
             ram >= 6 -> 6144
             else -> 4096
         }
+        if (isQwen35(model)) {
+            // Qwen 3.5 keeps a growing memory in only 1 layer of every 4 (the others hold a small
+            // fixed state), so each token of context costs ~4× less: the 9B at 8-bit KV needs about
+            // 17 KB a token — 8K of context is ~140 MB. A 12 GB phone can give Zenith 8K, not 4K.
+            if (share > 0.50) c = 4096
+            else if (share > 0.33) c = minOf(c, 8192)
+            return c
+        }
         if (share > 0.40) c = 4096
         else if (share > 0.25) c = minOf(c, 8192)
         return c

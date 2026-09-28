@@ -106,7 +106,7 @@ if (want("xray")) {
   const byIndex = new Map(msgs.map((m) => [m.i, m]));
   const chunk = X.chunksOf(X.candidates(msgs))[0] || "";
   let r = await llm(X.extractMessages(chunk, "Ali", people, new Date("2026-09-25")), { json: true, maxTokens: 700, temperature: 0 });
-  const items = X.parseItems(r.text, byIndex, people);
+  const items = X.addMissedPayments(X.parseItems(r.text, byIndex, people), msgs, people);   // as chatxray-ui.jsx does
   const led = X.ledgerOf(items, "Ali");
   section("Chat X-Ray · who owes whom (Egyptian Arabic)", "6 WhatsApp lines", r, { items: items.map((x) => [x.type, x.from, x.to, x.amount]), ledger: led.map((x) => [x.person, x.net]) },
     [[led.some((x) => x.person === "Hassan" && x.net === 8000), "Hassan still owes 8,000 (18,000 − 10,000)"], [items.some((x) => x.type === "promise" || x.type === "deadline" || x.type === "order"), "the Thursday 7 am booking is noticed"]]);
@@ -162,7 +162,7 @@ if (want("news")) {
   let r = await llm(D.digestMessages(t, items, { now: Date.parse("2026-09-28") }), { maxTokens: 700, temperature: 0.2 });
   const cc = D.checkCitations(r.text, items.length);
   section("Daily news · digest (Egypt economy)", "3 articles, one off-topic", r, cc,
-    [[/22\s?%/.test(r.text) && /48\.6/.test(r.text), "the facts from the articles"], [cc.removed === 0 && cc.unsourced === 0, "every bullet cites a real source"], [!/Salah|Liverpool/.test(r.text), "skips the football article"], [/20 November|Coming up/i.test(r.text), "the next meeting as 'Coming up'"]]);
+    [[/22\s?%/.test(r.text) && /48\.6/.test(r.text), "the facts from the articles"], [cc.removed === 0 && cc.unsourced === 0, "every bullet cites a real source"], [!/Salah|Liverpool/.test(r.text), "skips the football article"], [/20 November|November 20|Coming up/i.test(r.text), "the next meeting (20 November) is mentioned"]]);
 }
 
 // ---- File converter: translate a document's lines (numbers kept) ----
