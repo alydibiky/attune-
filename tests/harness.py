@@ -91,8 +91,11 @@ V5_EXTRA = r"""
 class Env:
     def __init__(self):
         env = dict(os.environ, LD_LIBRARY_PATH=HERE + "/build-dl/bin")
-        self.srv = subprocess.Popen([HERE + "/build-dl/bin/llama-server", "-m", HERE + "/tiny-a.gguf",
-            "--host", "127.0.0.1", "--port", str(ENGINE_PORT), "-c", "16384", "-t", "2", "-np", "1",
+        # v6.8: ATTUNE_MODEL=<path to a real .gguf> runs the same tests / trials on a real model
+        # (tests/trials/); normal runs keep the tiny random model.
+        model = os.environ.get("ATTUNE_MODEL") or HERE + "/tiny-a.gguf"
+        self.srv = subprocess.Popen([HERE + "/build-dl/bin/llama-server", "-m", model,
+            "--host", "127.0.0.1", "--port", str(ENGINE_PORT), "-c", "16384", "-t", os.environ.get("ATTUNE_THREADS", "2"), "-np", "1",
             "--jinja", "--no-ui", "--no-slots", "--api-key", "testkey",
             "--cors-headers", "Authorization,Content-Type", "--cors-origins", f"http://127.0.0.1:{PAGE_PORT}",
             "--log-file", HERE + "/e2e5-engine.log"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -101,7 +104,7 @@ class Env:
             def log_message(self, *a): pass
         self.httpd = http.server.ThreadingHTTPServer(("127.0.0.1", PAGE_PORT), functools.partial(Quiet, directory=DIST))
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
-        for _ in range(150):
+        for _ in range(150 if not os.environ.get("ATTUNE_MODEL") else 900):   # a real model takes longer to load
             try:
                 if urllib.request.urlopen(f"http://127.0.0.1:{ENGINE_PORT}/health", timeout=1).status == 200: break
             except Exception: time.sleep(0.2)
