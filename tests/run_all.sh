@@ -9,7 +9,10 @@ cd "$(dirname "$0")/.."
 OUT=tests/results.txt
 export PYTHONPATH="$PWD/tests/pwshim:$PWD/tests${PYTHONPATH:+:$PYTHONPATH}"   # pwshim: use /opt/pw-browsers/chromium in cloud sessions
 for f in tests/unit/*.test.mjs; do echo "$f: $(node "$f" 2>/dev/null | tail -1)"; done > "$OUT"
-( cd tests && for f in e2e_*.py; do echo "$f: $(timeout 900 python3 "$f" 2>&1 | tail -1)"; done ) >> "$OUT"
+# a failing file keeps its whole output in tests/fail-<name>.log (which check, and why), so an
+# intermittent failure can be read afterwards instead of guessed at
+( cd tests && rm -f fail-*.log && for f in e2e_*.py; do out=$(timeout 900 python3 "$f" 2>&1); last=$(printf '%s\n' "$out" | tail -1)
+  case "$last" in *FAILED*|*Error*|*Traceback*) printf '%s\n' "$out" > "fail-${f%.py}.log" ;; esac; echo "$f: $last"; done ) >> "$OUT"
 timeout 1500 python3 tests/audit.py > tests/audit.txt 2>&1
 echo DONE >> "$OUT"
 grep -v "ALL PASSED" "$OUT"

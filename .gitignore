@@ -27,3 +27,4 @@ tests/image_run/*.jar
 *private-key*.json
 tests/results.txt
 tests/audit.txt
+tests/fail-*.log
