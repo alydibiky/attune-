@@ -22,8 +22,8 @@ export function offSearchUrl(q, { egypt = false, size = 24 } = {}) {
     "&search_terms=" + encodeURIComponent(q) + (egypt ? "&tagtype_0=countries&tag_contains_0=contains&tag_0=egypt" : "") + "&fields=" + OFF_FIELDS;
 }
 export const offProductUrl = (code) => `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(String(code).replace(/\D/g, ""))}.json?fields=${OFF_FIELDS}`;
-export const usdaSearchUrl = (q, key = "DEMO_KEY") =>
-  `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${encodeURIComponent(key)}&pageSize=15&dataType=${encodeURIComponent("Foundation,SR Legacy,Survey (FNDDS)")}&query=${encodeURIComponent(q)}`;
+export const usdaSearchUrl = (q, key = "DEMO_KEY", { branded = false, size = 15 } = {}) =>
+  `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${encodeURIComponent(key)}&pageSize=${size}&dataType=${encodeURIComponent(branded ? "Branded" : "Foundation,SR Legacy,Survey (FNDDS)")}&query=${encodeURIComponent(q)}`;
 
 /** A barcode's check digit (EAN-13 / EAN-8 / UPC-A) is right. */
 export function validBarcode(code) {
@@ -77,7 +77,12 @@ export function fromUSDA(u) {
   const name = String(u.description || "").replace(/\s+/g, " ").trim(); if (!name) return null;
   const portions = {};
   for (const m of u.foodMeasures || []) { const g = num(m.gramWeight), t = String(m.disseminationText || m.measureUnitName || "").toLowerCase().trim(); if (g > 0 && t && t !== "quantity not specified" && Object.keys(portions).length < 4) portions[t] = Math.round(g); }
-  const food = { id: "usda:" + u.fdcId, src: "usda", en: name.charAt(0) + name.slice(1).toLowerCase(), ar: "", names: [name], kcal: Math.round(kcal), p: r1(p), c: r1(c), f: r1(f), fib: r1(get(NID.fib) || 0), portions, group: "reference" };
+  // v6.5: USDA's branded foods (~450,000 packaged products) — the brand and barcode kept; their
+  // label serving becomes a portion ("1 bar" = 40 g)
+  const brand = String(u.brandName || u.brandOwner || "").trim();
+  if (u.dataType === "Branded" && num(u.servingSize) > 0 && /^(g|grm|ml|mlt)$/i.test(String(u.servingSizeUnit || "")) && !Object.keys(portions).length)
+    portions[String(u.householdServingFullText || "serving").toLowerCase().slice(0, 30)] = Math.round(num(u.servingSize));
+  const food = { id: "usda:" + u.fdcId, src: "usda", en: name.charAt(0) + name.slice(1).toLowerCase(), ar: "", names: brand ? [name, brand + " " + name] : [name], ...(brand ? { brand } : {}), ...(u.gtinUpc ? { barcode: String(u.gtinUpc).replace(/\D/g, "") } : {}), kcal: Math.round(kcal), p: r1(p), c: r1(c), f: r1(f), fib: r1(get(NID.fib) || 0), portions, group: "reference" };
   const sug = get(NID.sug), sat = get(NID.sat), na = get(NID.na);
   if (sug != null) food.sug = r1(sug); if (sat != null) food.sat = r1(sat); if (na != null) food.salt = r1(na * 2.5 / 1000);   // sodium mg → salt g
   food.check = !consistent(food);
@@ -134,6 +139,9 @@ export async function searchAll(q, fetchJson, { usdaKey = "DEMO_KEY" } = {}) {
     enQ ? fetchJson(usdaSearchUrl(enQ, usdaKey)).then((j) => (j.foods || []).map(fromUSDA)).catch((e) => { errors.push(String(e.message || e)); return []; }) : Promise.resolve([]),
   ];
   const got = (await Promise.all(tries)).flat().filter(Boolean);
+  // v6.5: few answers → USDA's branded products too (a second USDA call only when needed: the free
+  // key allows ~30 calls an hour per phone)
+  if (enQ && got.length < 12) got.push(...(await fetchJson(usdaSearchUrl(enQ, usdaKey, { branded: true, size: 12 })).then((j) => (j.foods || []).map(fromUSDA)).catch(() => [])).filter(Boolean));
   keepFoods(got.slice(0, 60));
   return { foods: rank([...local, ...got], enQ && isArabic(q) ? q + " " + enQ : q).slice(0, 50), online: true, errors: errors.length === tries.length ? errors : [] };
 }
@@ -144,8 +152,15 @@ export async function byBarcode(code, fetchJson) {
   if (!c) return null;
   const hit = byBarcodeCached(c); if (hit) return hit;
   if (!fetchJson) return null;
-  const j = await fetchJson(offProductUrl(c));
-  const f = j && j.product ? fromOFF({ ...j.product, code: j.product.code || c }) : null;
+  let err = null;
+  const j = await fetchJson(offProductUrl(c)).catch((e) => { err = e; return null; });
+  let f = j && j.product ? fromOFF({ ...j.product, code: j.product.code || c }) : null;
+  // v6.5: not in Open Food Facts → USDA's branded foods know many products by their barcode
+  if (!f) {
+    const u = await fetchJson(usdaSearchUrl(c, "DEMO_KEY", { branded: true, size: 5 })).catch((e) => { if (err) throw err; return null; });   // both unreachable → the network error, not "unknown product"
+    const hit = u && (u.foods || []).find((x) => String(x.gtinUpc || "").replace(/\D/g, "").replace(/^0+/, "") === c.replace(/^0+/, ""));
+    f = hit ? fromUSDA(hit) : null;
+  }
   if (f) keepFoods([f]);
   return f;
 }

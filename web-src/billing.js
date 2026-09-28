@@ -89,8 +89,8 @@ export async function checkProCode(code, request, publicKey, subtle = (globalThi
 
 /** Days left of the 7-day Pro trial (0 when over). `first` = first run time. */
 export function trialDaysLeft(first, now = Date.now()) {
-  if (!first) return TRIAL_DAYS;
-  const left = TRIAL_DAYS - Math.floor((now - first) / 86400000);
+  if (!first || !isFinite(+first)) return TRIAL_DAYS;
+  const left = TRIAL_DAYS - Math.floor((now - +first) / 86400000);
   return Math.max(0, Math.min(TRIAL_DAYS, left));
 }
 

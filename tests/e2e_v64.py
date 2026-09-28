@@ -4,7 +4,7 @@ logged again from Favorites with one tap.
 
   python3 tests/e2e_v64.py
 """
-import os, json
+import os, json, re
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 
@@ -33,11 +33,11 @@ with sync_playwright() as p:
     page.locator("button:has-text('Engine log')").first.click()
     page.wait_for_selector("[data-testid=engine-log]", timeout=4000)
     log = page.locator("[data-testid=engine-log]").inner_text()
-    check(log.startswith("Attune 6.4") and "38 tok/s" in log, "the log shows the app version first, then the engine's lines")
+    check(re.match(r"Attune \d+\.\d+", log) and "38 tok/s" in log, "the log shows the app version first, then the engine's lines")
     check(page.locator("[data-testid=engine-log]").evaluate("e => getComputedStyle(e).userSelect") in ("text", "auto"), "the log text can be selected by hand too")
     page.locator("[data-testid=engine-log-copy]").click(); page.wait_for_timeout(200)
     copied = page.evaluate("window.__mock.copied || ''")
-    check(copied.startswith("Attune 6.4") and "loaded gemma" in copied, "Copy log puts the whole log, header included, on the clipboard")
+    check(re.match(r"Attune \d+\.\d+", copied) and "loaded gemma" in copied, "Copy log puts the whole log, header included, on the clipboard")
     check(page.locator("text=Log copied").count() > 0, "…and says so")
     page.locator("[data-testid=engine-log-share]").click(); page.wait_for_timeout(100)
     check("38 tok/s" in page.evaluate("window.__mock.shared || ''"), "Send log hands the same text to the phone's share sheet")

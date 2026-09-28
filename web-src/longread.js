@@ -36,7 +36,7 @@ export function charsPerToken(sample) {
  * answer (with a 10 % safety margin).
  */
 export function fitChars(ctx, answerTokens, systemTokens = 1400, sample = "") {
-  const room = Math.max(600, (ctx || 8192) - (answerTokens || 2048) - systemTokens - 300);
+  const room = Math.max(600, (+ctx || 8192) - (+answerTokens || 2048) - (+systemTokens || 1400) - 300);
   return Math.floor(room * charsPerToken(sample) * 0.9);
 }
 

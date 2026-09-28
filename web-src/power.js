@@ -57,7 +57,7 @@ export function brandOf(tier) {
  * long answer never pushes the question out of the window.
  */
 export function powerFor(level, ctx = 8192) {
-  const L = Math.max(1, Math.min(5, level || 3));
+  const L = Math.max(1, Math.min(5, Math.round(+level) || 3));   // a damaged saved level falls back to 3, never NaN
   const P = {
     1: { maxTokens: 1024, longTokens: 1536, notesChars: 3500, pages: 4, round2: 0, codeTokens: 2500, designTokens: 1800, tables: "3 to 5", expert: false, thinkHard: false, queries: 1, readPages: 4, rounds: 0, researchSecs: 100, thinkBudget: 1024, votes: 3, codeRounds: 3, historyChars: 9000, fileChars: 14000, review: false },
     2: { maxTokens: 1536, longTokens: 2048, notesChars: 4500, pages: 5, round2: 3, codeTokens: 3000, designTokens: 2200, tables: "4 to 7", expert: false, thinkHard: false, queries: 2, readPages: 5, rounds: 1, researchSecs: 140, thinkBudget: 1024, votes: 3, codeRounds: 3, historyChars: 9000, fileChars: 14000, review: false },
