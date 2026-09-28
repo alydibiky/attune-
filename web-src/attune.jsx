@@ -836,23 +836,26 @@ function entryRequirements(fromKey, toKey, packs) {
 
 const MODEL_TIERS = [
   // ---- desktop / workstation ------------------------------------------
-  { id: "moe-xl-long", vision: false, label: "Everest XL", realName: "Qwen3.5 35B-A3B · long context", smoothRam: 64, params: "35B-A3B", quant: "UD-Q4_K_M", sizeGB: 22.1,
-    needRam: 48, ctx: 131072, phoneMin: 64, moe: true, heat: true,
+  // v6.8 (Ali: "a model that runs on 32 GB should run on 24, 24 on 16…"): every model moved down a phone
+  // size where the file allows it — the big ones as IQ4_XS (large models lose the least from it), with
+  // the engine's memory rule now counting the memory that is really free (Engine.allowedBytes).
+  { id: "moe-xl-long", vision: false, label: "Everest XL", realName: "Qwen3.5 35B-A3B · long context", smoothRam: 48, params: "35B-A3B", quant: "UD-IQ4_XS", sizeGB: 17.7,
+    needRam: 32, ctx: 131072, phoneMin: 48, moe: true, heat: true,
     repo: "unsloth/Qwen3.6-35B-A3B-GGUF",
     quality: "Everest with a huge memory: it holds a whole book, contract or a year of notes at once. The best for very long documents. Computer-class.",
     good: ["Ask", "Write", "Summarise", "Review", "Long documents"] },
-  { id: "moe-xl", vision: false, label: "Everest", realName: "Qwen3.5 35B-A3B", smoothRam: 48, params: "35B-A3B", quant: "UD-Q4_K_M", sizeGB: 22.1,
-    needRam: 32, ctx: 32768, phoneMin: 48, moe: true, heat: true,
+  { id: "moe-xl", vision: false, label: "Everest", realName: "Qwen3.5 35B-A3B", smoothRam: 32, params: "35B-A3B", quant: "UD-IQ4_XS", sizeGB: 17.7,
+    needRam: 24, ctx: 32768, phoneMin: 32, moe: true, heat: true,
     repo: "unsloth/Qwen3.6-35B-A3B-GGUF",
     quality: "The most knowledgeable: a very large model that answers at the speed of a small one (mixture of experts). Near top-tier answers. Computer-class.",
     good: ["Ask", "Write", "Summarise", "Review"] },
-  { id: "ultra", vision: true, label: "Apex+", realName: "Gemma 4 31B", smoothRam: 48, params: "31B", quant: "UD-Q4_K_XL", sizeGB: 18.8,
-    needRam: 32, ctx: 32768, phoneMin: 48, heat: true,
+  { id: "ultra", vision: true, label: "Apex+", realName: "Gemma 4 31B", smoothRam: 32, params: "31B", quant: "IQ4_XS", sizeGB: 16.4,
+    needRam: 24, ctx: 32768, phoneMin: 32, heat: true,
     repo: "unsloth/gemma-4-31B-it-GGUF",
     quality: "The strongest single model here: deep reasoning, expert writing, reads photos. Computer-class.",
     good: ["Ask", "Write", "Summarise", "Review"] },
-  { id: "moe-lg", vision: true, label: "Apex", realName: "Gemma 4 26B-A4B", smoothRam: 32, params: "26B-A4B", quant: "UD-Q4_K_XL", sizeGB: 17.0,
-    needRam: 24, ctx: 32768, phoneMin: 48, moe: true, heat: true,
+  { id: "moe-lg", vision: true, label: "Apex", realName: "Gemma 4 26B-A4B", smoothRam: 24, params: "26B-A4B", quant: "UD-IQ4_XS", sizeGB: 13.6,
+    needRam: 16, ctx: 32768, phoneMin: 24, moe: true, heat: true,
     repo: "unsloth/gemma-4-26B-A4B-it-GGUF",
     quality: "Close to Apex+ quality at a much higher speed. Reads photos. For strong laptops.",
     good: ["Ask", "Write", "Summarise", "Review"] },
@@ -866,7 +869,7 @@ const MODEL_TIERS = [
   // (7.0 vs 6.3 t/s), reads as fast, and drifts only 0.024 (KLD, Arabic) from the 8-bit model — under
   // what anyone notices. The 3-bit versions were both worse AND slower on ARM, so smaller isn't better.
   { id: "xl", vision: true, label: "Zenith", realName: "Qwen3.5 9B", smoothRam: 12, params: "9B", quant: "IQ4_NL", sizeGB: 5.37,
-    needRam: 12, ctx: 32768, platform: "any",
+    needRam: 10, ctx: 32768, platform: "any",
     repo: "unsloth/Qwen3.5-9B-GGUF",
     quality: "Runs smoothly on a 12 GB phone: expert answers, and the best at reading documents and photos.",
     good: ["Ask", "Write", "Summarise", "Review", "Photos"] },
