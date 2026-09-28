@@ -3,6 +3,14 @@
    Brand and model names (Attune, Qwen, ChatGPT…) are left in Latin letters. */
 export const AR = {
   // v6.8 Mind
+  "Core made 10% smaller, for a 6 GB phone that is short on free memory.": "نسخة من Core أصغر بـ 10%، لموبايل 6 جيجا ذاكرته الفاضية قليلة.",
+  "Fit & Food: unlimited photo meals, the week's meal plan and shopping list, the week report": "الأكل والرشاقة: وجبات بالصور من غير حد، خطة أكل الأسبوع وقائمة المشتريات، وتقرير الأسبوع",
+  "≈ $5 a month — save 37%": "≈ 5 دولار في الشهر — وفّر 37%",
+  "≈ EGP 208 a month — save 30%": "≈ 208 جنيه في الشهر — وفّر 30%",
+  "per company system, once": "لكل نظام شركة، مرة واحدة",
+  "Pro is bought in the Google Play version of Attune — one tap, paid by card or from your Vodafone / Orange / Etisalat balance, and it switches on by itself.": "الاشتراك بيتشترى من نسخة Attune على جوجل بلاي — ضغطة واحدة، تدفع بالكارت أو من رصيد فودافون / أورنچ / اتصالات، وبيشتغل لوحده.",
+  "Cancel any time in Google Play → Subscriptions. The plan renews by itself; nothing to send, nobody to message.": "تقدر تلغي في أي وقت من جوجل بلاي ← الاشتراكات. الاشتراك بيتجدد لوحده؛ مفيش حاجة تبعتها ولا حد تكلمه.",
+  "I have an activation code (company deals)": "معايا كود تفعيل (اتفاقات الشركات)",
   "Tap to rename": "اضغط لتغيير الاسم",
   "Remove tag": "شيل الوسم",
   "+ tag": "+ وسم",
