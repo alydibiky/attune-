@@ -66,6 +66,10 @@ const VISUALS = `The visual is drawn by the app; choose the kind that teaches th
 {"kind":"bars","title":"..","unit":"..","items":[{"label":"..","value":12}]}
 {"kind":"timeline","title":"..","items":[{"when":"..","what":".."}]}`;
 
+/** A course that teaches a language (Turkish, English, لغة…) — only those get translation + pronunciation lines. */
+export function isLanguageCourse(topic) {
+  return /\b(language|turkish|english|french|german|spanish|italian|arabic|japanese|chinese|korean|russian|vocabulary|grammar|speak|speaking|conversation|pronunciation)\b|لغ[ةه]|اللغة|تركي|انجليزي|إنجليزي|فرنساوي|فرنسي|ألماني|الماني|اسباني|إسباني|ايطالي|إيطالي|ياباني|صيني|كوري|روسي|مفردات|قواعد|محادثة|نطق/i.test(String(topic || ""));
+}
 /** The lesson for day n (0-based) of the plan. */
 export function lessonMessages(c, n) {
   const title = c.plan[n] || `Lesson ${n + 1}`;
@@ -73,10 +77,10 @@ export function lessonMessages(c, n) {
   const review = (c.review || []).slice(0, 2);
   return [
     { role: "system", content: `You are a warm, expert teacher writing today's 5-minute lesson of a daily course on "${c.topic}" for a ${c.level} learner. ${LANG_NOTE[c.lang]}
-Write the lesson in Markdown: a one-line hook, then 2–4 short sections with ## headings, concrete examples (for a language: example sentences with translation and pronunciation), and one tiny practice task at the end under "## Try it". No LaTeX.${review.length ? " Start with a 2-line \"## Quick review\" of: " + review.join("; ") + "." : ""}
+Write the lesson in Markdown: a one-line hook, then 2–4 short sections with ## headings, concrete examples${isLanguageCourse(c.topic) ? " (example sentences with translation and pronunciation)" : " from real work and life"}, and one tiny practice task at the end under "## Try it". No LaTeX. Every fact must be technically correct — a plain true sentence beats a dramatic comparison; no exaggerated claims.${review.length ? " Start with a 2-line \"## Quick review\" of: " + review.join("; ") + "." : ""}
 Then, at the very end, a JSON block:
 \`\`\`json
-{"visual": <one visual>, "keyPoints": ["<3 short things to remember>"]}
+{"visual": <one visual>, "keyPoints": ["<3 short things to remember>"]}   (both keys are required)
 \`\`\`
 ${VISUALS}` },
     { role: "user", content: `Lesson ${n + 1}: ${title}` + (before.length ? `\n(Already covered: ${before.join("; ")} — don't repeat them.)` : "") + (c.goal ? `\nMy goal: ${c.goal}` : "") },
@@ -108,7 +112,9 @@ export function normVisual(v) {
 /** "…markdown… ```json {visual, keyPoints}```" → { body, visual, keyPoints } */
 export function parseLesson(text) {
   const t = String(text || "");
-  const m = t.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```\s*$/) || t.match(/```(?:json)?\s*(\{[\s\S]*?"keyPoints"[\s\S]*\})\s*```/);
+  // the JSON block at the end — tolerant of a stray backtick («}`»), a missing closing fence, or no fence at all
+  const m = t.match(/```(?:json)?\s*(\{[\s\S]*\})`*\s*(```)?\s*$/) || t.match(/```(?:json)?\s*(\{[\s\S]*?"(?:keyPoints|visual)"[\s\S]*\})`*\s*```/)
+    || t.match(/\n(\{\s*"(?:visual|keyPoints)"[\s\S]*\})\s*$/);
   let body = (m ? t.slice(0, m.index) : t).trim();
   const j = m ? jsonFrom(m[1]) : null;
   let keyPoints = j && Array.isArray(j.keyPoints) ? j.keyPoints.map((x) => clean(x, 160)).filter(Boolean).slice(0, 5) : [];
@@ -116,8 +122,18 @@ export function parseLesson(text) {
     const k = body.match(/##\s*(key points|remember|تذكر|أهم النقاط)[^\n]*\n([\s\S]*?)(\n##|$)/i);
     if (k) keyPoints = k[2].split("\n").map((l) => clean(l.replace(/^\s*[-*•\d.)]+\s*/, ""), 160)).filter(Boolean).slice(0, 5);
   }
+  const visual = j ? normVisual(j.visual) : null;
+  if (!keyPoints.length && visual) {   // the model left them out: the visual's cards / steps are the lesson's key facts
+    const items = visual.kind === "cards" ? visual.items.map((x) => (x.back ? `${x.front}: ${x.back}` : x.front))
+      : visual.kind === "steps" ? visual.items : visual.kind === "timeline" ? visual.items.map((x) => `${x.when}: ${x.what}`) : [];
+    keyPoints = items.map((x) => clean(x, 160)).filter(Boolean).slice(0, 3);
+  }
+  if (!keyPoints.length) {             // else the first sentence of each section
+    keyPoints = [...body.matchAll(/^##\s*([^\n]+)\n+([^\n]+)/gm)].filter((m) => !/try it|جر[ّ]?ب|quick review|مراجعة/i.test(m[1]))
+      .map((m) => clean(m[2].replace(/^\s*[-*•\d.)]+\s*/, "").replace(/\*\*/g, "").split(/(?<=[.!؟?])\s/)[0], 160)).filter(Boolean).slice(0, 3);
+  }
   body = body.replace(/\$\$?([^$\n]+)\$\$?/g, "$1");
-  return { body, visual: j ? normVisual(j.visual) : null, keyPoints };
+  return { body, visual, keyPoints };
 }
 
 export function addLesson(c, n, parsed, { now = Date.now() } = {}) {

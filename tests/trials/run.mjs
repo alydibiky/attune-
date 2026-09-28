@@ -14,6 +14,9 @@ const V = await import("../../web-src/verify.js");
 const F = await import("../../web-src/fit.js");
 const R = await import("../../web-src/fitread.js");
 const C = await import("../../web-src/code.js");
+const CV = await import("../../web-src/convert.js");
+const A = await import("../../web-src/actions.js");
+const APP = await import("./appsrc.mjs");
 const PORT = process.env.TRIAL_PORT || 8099;
 const only = process.argv[2] || "";
 
@@ -56,8 +59,8 @@ if (want("learn")) for (const lang of ["en", "ar"]) {
 // ---- Slides: the outline and one slide ----
 if (want("slides")) {
   const o = { topic: "Crane safety on construction sites — for site supervisors", n: 7, lang: "en", audience: "site supervisors" };
-  let r = await llm(S.outlineMessages(o), { json: true, maxTokens: 900 });
-  const ol = S.parseOutline(r.text, o);
+  let r = await llm(S.outlineMessages(o), { maxTokens: 520, temperature: 0.5 });   // as the app calls it
+  const ol = S.parseOutline(r.text, o.n, { topic: o.topic });
   section("Slides · outline", o.topic, r, ol, [[ol && (ol.slides || ol).length >= 5, "5+ slides planned"], [ol && JSON.stringify(ol).length > 300, "each slide has content"]]);
   const slides = ol && (ol.slides || ol);
   if (slides && slides[1]) {
@@ -97,11 +100,13 @@ if (want("xray")) {
 14/09/2026, 09:12 - Ali: وصلت شكرا، فاضل 8000
 20/09/2026, 11:30 - Hassan: ممكن الونش 50 طن يوم الخميس؟
 20/09/2026, 11:31 - Ali: تمام الخميس 7 الصبح`;
+  // exactly the app's path (chatxray-ui.jsx): parse → candidates → numbered chunk → extract → check
   const ex = X.parseExport(chat);
-  const msgs = ex.messages || ex;
-  const people = [...new Set(msgs.map((m) => m.who))];
-  let r = await llm(X.extractMessages(msgs.map((m, i) => ({ ...m, i })), "Ali", people, new Date("2026-09-25")), { json: true, maxTokens: 700 });
-  const items = X.parseItems(r.text, new Map(msgs.map((m, i) => [i, { ...m, i }])), people);
+  const msgs = ex.messages, people = ex.people;
+  const byIndex = new Map(msgs.map((m) => [m.i, m]));
+  const chunk = X.chunksOf(X.candidates(msgs))[0] || "";
+  let r = await llm(X.extractMessages(chunk, "Ali", people, new Date("2026-09-25")), { json: true, maxTokens: 700, temperature: 0 });
+  const items = X.parseItems(r.text, byIndex, people);
   const led = X.ledgerOf(items, "Ali");
   section("Chat X-Ray · who owes whom (Egyptian Arabic)", "6 WhatsApp lines", r, { items: items.map((x) => [x.type, x.from, x.to, x.amount]), ledger: led.map((x) => [x.person, x.net]) },
     [[led.some((x) => x.person === "Hassan" && x.net === 8000), "Hassan still owes 8,000 (18,000 − 10,000)"], [items.some((x) => x.type === "promise" || x.type === "deadline" || x.type === "order"), "the Thursday 7 am booking is noticed"]]);
@@ -131,6 +136,55 @@ if (want("fit")) {
   const items = R.parseMealChecked(r.text);
   section("Fit · a meal read by the model", words, r, items.map((x) => [x.id || x.name, x.grams, x.kcal]),
     [[items.length >= 2, "both dishes found"], [items.every((x) => x.grams >= 100 && x.grams <= 700), "believable portions"], [items.every((x) => x.kcal > 0), "calories for each"]]);
+}
+
+// ---- Travel: the app's own prompt + country pack (Turkey), asked like a traveller ----
+if (want("travel")) {
+  const T = APP.travel();
+  const q = "I just landed at Istanbul airport. How do I get to Taksim and how much should it cost? The taxi driver says his meter is broken.";
+  const prompt = await T.ask(q, "tr", "en", T.packs);
+  let r = await llm([{ role: "user", content: prompt }], { maxTokens: 600 });
+  section("Travel · Istanbul airport (Turkey pack)", q, r, undefined,
+    [[/M11|Havaist|metro/i.test(r.text), "points to the metro / Havaist (from the pack)"], [/meter|taksimetre|get out|another taxi/i.test(r.text), "the broken-meter trick is flagged"], [!/\+90\s?\d{3}\s?\d{3}/.test(r.text), "no invented phone numbers"]]);
+  const qa = "انا في دبي، ينفع اشرب من الحنفية؟ وبكام التاكسي تقريباً؟";
+  r = await llm([{ role: "user", content: await T.ask(qa, "ae", "ar", T.packs) }], { maxTokens: 500 });
+  section("Travel · Dubai in Arabic (UAE pack)", qa, r, undefined, [[(r.text.match(/[\u0600-\u06FF]/g) || []).length > 80, "answers in Arabic"], [/مياه|الحنفية|ماء/.test(r.text), "answers the water question"], [/تاكس|درهم|AED/.test(r.text), "answers the taxi question"]]);
+}
+
+// ---- Daily news: a digest from given articles only, with sources ----
+if (want("news")) {
+  const items = [
+    { title: "Egypt's central bank holds interest rates at 22%", source: "Reuters", date: "2026-09-27T10:00:00Z", text: "The Central Bank of Egypt kept its overnight deposit rate at 22% on Thursday, citing inflation that eased to 11.2% in August. The next meeting is on 20 November." },
+    { title: "Pound steady at 48.6 per dollar", source: "Ahram Online", date: "2026-09-27T14:00:00Z", text: "The Egyptian pound traded at 48.6 to the US dollar in official banks on Sunday, unchanged for the week." },
+    { title: "Liverpool beat Chelsea 2-1", source: "BBC", date: "2026-09-27T20:00:00Z", text: "Mohamed Salah scored the winner in the 88th minute." },
+  ];
+  const t = { query: "Egypt economy", lang: "en" };
+  let r = await llm(D.digestMessages(t, items, { now: Date.parse("2026-09-28") }), { maxTokens: 700, temperature: 0.2 });
+  const cc = D.checkCitations(r.text, items.length);
+  section("Daily news · digest (Egypt economy)", "3 articles, one off-topic", r, cc,
+    [[/22\s?%/.test(r.text) && /48\.6/.test(r.text), "the facts from the articles"], [cc.removed === 0 && cc.unsourced === 0, "every bullet cites a real source"], [!/Salah|Liverpool/.test(r.text), "skips the football article"], [/20 November|Coming up/i.test(r.text), "the next meeting as 'Coming up'"]]);
+}
+
+// ---- File converter: translate a document's lines (numbers kept) ----
+if (want("translate")) {
+  const texts = ["Invoice no. INV-2026-0142 — due 15/10/2026", "Crane rental (Liebherr LTM 1100) 3 days × 12,500 EGP = 37,500 EGP", "Payment by bank transfer to CIB account 1002003004"];
+  let r = await llm(CV.translateMessages(texts, "Arabic"), { maxTokens: 500, temperature: 0.2 });
+  const tr = CV.parseTranslated(r.text, texts.length);
+  section("File converter · translate to Arabic", texts.join(" | "), r, tr,
+    [[tr.every((x) => x && /[\u0600-\u06FF]/.test(x)), "all 3 lines translated"], [tr[0] && tr[0].includes("INV-2026-0142") && tr[1] && /12,?500/.test(tr[1]) && /37,?500/.test(tr[1]), "codes and amounts kept exactly"], [tr[1] && /LTM 1100/.test(tr[1]) && tr[2] && /1002003004/.test(tr[2]), "model names and account numbers kept"]]);
+}
+
+// ---- Instant actions: Egyptian reminders → a real phone action ----
+if (want("action")) {
+  const now = new Date("2026-09-28T10:00:00");
+  for (const [req, kind, hour] of [["فكرني بكرة الساعة 9 الصبح اكلم المهندس حسن", "reminder", 9], ["remind me on Thursday at 7 pm to send the invoice to Hassan", "reminder", 19], ["ابعت لحسن واتساب اني هتأخر نص ساعة", "whatsapp", null]]) {
+    let r = await llm(A.actionMessages(req, now), { json: true, maxTokens: 300, temperature: 0 });
+    let j = null; try { j = JSON.parse(r.text.slice(r.text.indexOf("{"), r.text.lastIndexOf("}") + 1)); } catch (e) {}
+    const a = A.buildAction(j, req, now.getTime());
+    const at = a && a.at ? new Date(a.at) : null;
+    section(`Instant action · ${kind}`, req, r, a && { kind: a.kind, title: a.title, at: at && at.toString().slice(0, 21), contact: a.contact, message: a.message },
+      [[a && a.kind === kind, `read as a ${kind}`], [hour == null || (at && at.getHours() === hour && at > now), hour == null ? "no time needed" : `at ${hour}:00, in the future`], [kind !== "whatsapp" || (a.contact && /حسن|hassan/i.test(a.contact) && a.message), "who to send to, and the message"]]);
+  }
 }
 
 const ok = checks.filter((c) => c[1]).length;

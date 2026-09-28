@@ -151,7 +151,18 @@ export function kindHint(title) {
 }
 /** The plan's text → { title, subtitle, slides: [{kind, title}] } (always usable; figures kinds only when allowed). */
 export function parseOutline(reply, n, { topic = "", figures = false } = {}) {
-  const lines = String(reply || "").replace(/\r/g, "").split("\n").map((l) => l.trim()).filter(Boolean);
+  // v6.8 (found by the real-model trials): small models often answer the outline in JSON
+  // ({"title", "subtitle", "slides": ["1. [bullets] …"]}) instead of lines — read that too, or the deck is lost
+  let text = String(reply || "");
+  try {
+    const j = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+    const list = j && (j.slides || j.outline || j.items);
+    if (Array.isArray(list) && list.length) {
+      text = [j.title ? "TITLE: " + j.title : "", j.subtitle ? "SUBTITLE: " + j.subtitle : "",
+        ...list.map((x, i) => { const t = typeof x === "string" ? x : x && (x.kind ? `[${x.kind}] ` : "") + (x.title || x.text || ""); return /^\s*\d{1,2}\s*[.):-]/.test(t) ? t : `${i + 1}. ${t}`; })].join("\n");
+    }
+  } catch (e) {}
+  const lines = text.replace(/\r/g, "").split("\n").map((l) => l.trim()).filter(Boolean);
   let title = "", subtitle = "";
   const slides = [];
   for (const l0 of lines) {

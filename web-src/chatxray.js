@@ -54,7 +54,7 @@ export function parseExport(raw) {
 }
 
 const MONEY = /(egp|le\b|جنيه|جنية|\$|usd|دولار|€|ريال|درهم|فلوس|مبلغ|حساب|تحويل|حو(ّ)?ل|دفع|ادفع|هدفع|دفعت|عليك|عليا|ليك|ليا|سلف|قرض|فاتورة|عربون|قسط|باقي|الباقي|مقدم|invoice|pay|paid|owe|owed|transfer|deposit|loan|balance|remaining|instapay|انستا|فودافون كاش|vodafone cash|\d{3,})/i;
-const PROMISE = /(ه(بعت|عمل|خلص|جيب|حول|دفع|كلم|سلم|وصل|رد)|بكر[ةه]|بعد بكر[ةه]|الأسبوع الجاي|الاسبوع الجاي|آخر الشهر|اخر الشهر|أول الشهر|اول الشهر|يوم (السبت|الأحد|الاحد|الاثنين|الإثنين|التلات|الثلاثاء|الأربع|الاربع|الخميس|الجمعة)|وعد|موعد|ميعاد|تسليم|deadline|due|promise|i will|i'll|will (send|pay|deliver|call|finish)|tomorrow|next (week|month)|by (monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|the end))/i;
+const PROMISE = /(ه(بعت|عمل|خلص|جيب|حول|دفع|كلم|سلم|وصل|رد)|بكر[ةه]|بعد بكر[ةه]|الأسبوع الجاي|الاسبوع الجاي|آخر الشهر|اخر الشهر|أول الشهر|اول الشهر|(يوم )?(السبت|الأحد|الاحد|الاثنين|الإثنين|التلات|الثلاثاء|الأربع|الاربع|الخميس|الجمعة)|الساعة \d|\d{1,2} ?(الصبح|الصباح|بالليل|العصر|المغرب|الضهر|الظهر)|وعد|موعد|ميعاد|تسليم|deadline|due|promise|i will|i'll|will (send|pay|deliver|call|finish)|tomorrow|next (week|month)|by (monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|the end))/i;
 const QUESTION = /[?؟]/;
 
 /** The messages worth reading (money, promises, dates, questions) + the one before each. */
@@ -63,6 +63,8 @@ export function candidates(messages, since = 0) {
   messages.forEach((m, k) => {
     if (m.t < since) return;
     if (MONEY.test(m.text) || PROMISE.test(m.text) || QUESTION.test(m.text)) { keep.add(k); if (k > 0) keep.add(k - 1); }
+    // the answer to a question is where a booking or a yes lives («ممكن الونش الخميس؟» → «تمام»)
+    if (QUESTION.test(m.text) && k + 1 < messages.length) keep.add(k + 1);
   });
   return [...keep].sort((a, b) => a - b).map((k) => messages[k]);
 }
@@ -87,11 +89,18 @@ export function extractMessages(chunk, me, people, today = new Date()) {
     { role: "system", content: `You read part of a WhatsApp chat. Each line starts with the message number (#12), its date and who wrote it. "${me}" is the phone's owner. People in the chat: ${people.slice(0, 12).join(", ")}.
 Find: money owed or lent ("owes"), money paid or transferred ("paid"), promises to do something ("promise"), agreed dates or deadlines ("deadline"), orders placed ("order").
 Reply with ONLY a JSON object: {"items":[{"type":"owes|paid|promise|deadline|order","msg":12,"from":"who owes / pays / promises","to":"to whom","amount":number or null,"currency":"EGP|USD|…" or null,"what":"a few words","due":"YYYY-MM-DD" or null}]}
+What counts (Egyptian chats too):
+- "owes" = a bill or debt is stated: «حسابه 18000» / «عليك 5000» / «you owe me» / an invoice total → from = the one who must pay.
+- "paid" = money WAS sent or received: «حولتلك» «دفعت» «وصلت» «استلمت» «sent» «received». A transfer and its "arrived, thanks" reply are ONE payment — list it once, on the message that sends it.
+- «هحولك» «هدفع» «هبعت» «I will pay» is a "promise" (not paid yet), with its amount.
+- Words: ونش = crane, حساب = bill, الباقي = the rest still owed, فاضل = still left, عربون = deposit.
 Rules: "msg" is the number of the message that says it. Copy amounts exactly as written; null when no amount. "due" only when a date or day is said (today is ${fmtDate(today.getTime())}; "tomorrow" = the day after the message's date). No item for greetings or small talk. Empty list if nothing.` },
     { role: "user", content: chunk },
   ];
 }
 
+const FUTURE_PAY = /(^|[\s،,.])(ه(حول|دفع|بعت|سلم|ديك|اديك)|حاضر هحول|will (pay|send|transfer)|i'll (pay|send|transfer)|gonna (pay|send))/i;
+const DONE_PAY = /(حولت|دفعت|بعتلك|بعت لك|وصلت|وصل|استلمت|اتحول|(have |has )?(paid|sent|transferred|received))/i;
 const nums = (s) => (clean(s).match(/\d[\d,.]*/g) || []).map((x) => parseFloat(x.replace(/,(?=\d{3})/g, "").replace(/,/g, "."))).filter((v) => isFinite(v));
 
 /** The model's items, checked against the messages: the quote and date come from the message. */
@@ -104,11 +113,15 @@ export function parseItems(raw, byIndex, people) {
   for (const it of items) {
     const m = byIndex.get(Number(it.msg));
     if (!m) continue;                                              // must point at a real message
-    const type = String(it.type || "").toLowerCase();
+    let type = String(it.type || "").toLowerCase();
     if (!["owes", "paid", "promise", "deadline", "order"].includes(type)) continue;
     let amount = it.amount == null ? null : Number(String(it.amount).replace(/,/g, ""));
     if (amount != null && !(amount > 0 && nums(m.text).some((v) => Math.abs(v - amount) < 0.01 || Math.abs(v * 1000 - amount) < 0.01))) amount = null;   // not in the message → not trusted
     let due = /^\d{4}-\d{2}-\d{2}$/.test(String(it.due || "")) ? it.due : null;
+    // "paid" on a message that only promises to pay («هحولك 10000 النهارده») is a promise — the money hasn't moved
+    if (type === "paid" && FUTURE_PAY.test(m.text) && !DONE_PAY.test(m.text)) type = "promise";
+    // the same payment twice (the transfer and "arrived, thanks") counts once
+    if (type === "paid" && amount != null && out.some((o) => o.type === "paid" && o.amount === amount && Math.abs(o.t - m.t) < 4 * 86400000)) continue;
     out.push({ type, msg: m.i, t: m.t, quote: m.text.slice(0, 300), author: m.who, from: who(it.from) || m.who, to: who(it.to), amount, currency: it.currency ? String(it.currency).toUpperCase().slice(0, 4) : (amount ? "EGP" : null), what: String(it.what || "").slice(0, 80), due });
   }
   return out;
