@@ -45,7 +45,7 @@ function section(name, input, r, parsed, verdicts) {
   if (parsed !== undefined) out.push(`**What the app takes from it:**\n\`\`\`json\n${JSON.stringify(parsed, null, 1).slice(0, 2500)}\n\`\`\`\n`);
   for (const [ok, what] of verdicts) { checks.push([name, ok, what]); out.push(`- ${ok ? "✅" : "❌"} ${what}`); }
   out.push("");
-  fs.writeFileSync(new URL("./report.md", import.meta.url), out.join("\n"));
+  fs.writeFileSync(new URL(process.env.TRIAL_REPORT || "./report.md", import.meta.url), out.join("\n"));
   console.log(`${name}: ${verdicts.filter((v) => v[0]).length}/${verdicts.length} · ${r.secs}s`);
 }
 const want = (k) => !only || only.split(",").includes(k);
@@ -288,5 +288,5 @@ if (want("mind")) {
 
 const ok = checks.filter((c) => c[1]).length;
 out.splice(1, 0, `**Automatic checks: ${ok}/${checks.length}.** The raw answers below are for reading.\n`);
-fs.writeFileSync(new URL("./report.md", import.meta.url), out.join("\n"));
+fs.writeFileSync(new URL(process.env.TRIAL_REPORT || "./report.md", import.meta.url), out.join("\n"));
 console.log(`\nCHECKS ${ok}/${checks.length}`);
