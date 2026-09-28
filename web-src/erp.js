@@ -147,7 +147,9 @@ export function formulaToNames(expr, table) {
 }
 
 const FUNCS = {
-  ROUND: (a, n) => (a == null ? null : Number(Math.round(Number(a + "e" + (n || 0))) + "e-" + (n || 0))),
+  // v6.6: like Excel — halves away from zero (ROUND(-2.5) = -3, ROUND(-2.345,2) = -2.35, ROUND(1.005,2) = 1.01)
+  ROUND: (a, n) => { if (a == null) return null; const d = Math.max(-10, Math.min(10, Math.round(n || 0))), k = Math.pow(10, d);
+    const x = Math.abs(a) * k, r = Math.round(x + x * Number.EPSILON * 4); return (a < 0 ? -r : r) / k; },
   DAYS: (a, b) => (a == null || b == null ? null : a - b),
   MIN: (...a) => { const v = a.filter((x) => x != null); return v.length ? Math.min(...v) : null; },
   MAX: (...a) => { const v = a.filter((x) => x != null); return v.length ? Math.max(...v) : null; },

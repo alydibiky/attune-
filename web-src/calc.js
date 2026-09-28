@@ -10,7 +10,10 @@
    numbers are ignored; the unit/currency of the answer is taken from the text. */
 
 const AR = "٠١٢٣٤٥٦٧٨٩";
-const digits = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR.indexOf(d)).replace(/٫/g, ".").replace(/٬/g, ",");
+// v6.6: Egyptian ways of saying it — «٣ في ٤» is 3 × 4, «١٤ في المية» / «١٤ بالمية» / «١٤٪» is 14 %
+const digits = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR.indexOf(d)).replace(/٫/g, ".").replace(/٬/g, ",").replace(/٪/g, "%")
+  .replace(/(\d)\s*(?:في|فى)\s*(?:الميه|المية|المائة|المئة|الماية)/g, "$1%").replace(/(\d)\s*(?:بالميه|بالمية|بالمائة|بالمئة)/g, "$1%")
+  .replace(/(\d)\s+(?:في|فى)\s+(?=\d)(?!(?:19|20)\d\d(?!\d))/g, "$1 × ");   // «في 2025» is "in 2025", not × 2025
 
 const CUR = [[/\bEGP\b|جنيه|ج\.م/i, "EGP"], [/\bUSD\b|\$|دولار/i, "USD"], [/\bSAR\b|ريال/i, "SAR"], [/\bAED\b|درهم/i, "AED"], [/\bEUR\b|€|يورو/i, "EUR"]];
 const OPS = { "×": "*", "x": "*", "X": "*", "*": "*", "·": "*", "÷": "/", "/": "/", "+": "+", "-": "-", "−": "-", "–": "-" };
@@ -46,7 +49,8 @@ export function looksLikeCalc(text) {
   if (nums < 2 || ops < 1) return false;
   // Only when it is clearly a sum: a times/plus/percent sign, or words that ask
   // for a result. "25/9" (a date) or "10-12 days" alone never trigger it.
-  const strong = /[×*÷+%]|\d\s*[xX]\s*\d/.test(digits(t));
+  // «في» alone ("5 في 6") is also a date — it counts as × only when the message asks for a result
+  const strong = /[×*÷+%٪]|\d\s*[xX]\s*\d/.test(t.replace(/[٠-٩]/g, "0")) || /(في|فى)\s*(الم|بالم)|بالمي|بالمائ/.test(t);
   const asks = /\b(total|sum|calculate|how much|equals?)\b|=|كام|احسب|حسبة|اجمالي|إجمالي|مجموع|يساوي/i.test(t);
   if (!strong && !asks) return false;
   if (/\+\s*\d[\d\s-]{7,}/.test(digits(t))) return false;      // a phone number

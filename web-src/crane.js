@@ -70,8 +70,15 @@ export function chartCapacity(chart, radius, boom) {
   if (!ri) return { cap: null, why: radius < radii[0] ? "Closer than the chart's smallest radius — check the chart." : "Beyond the chart's largest radius — not permitted." };
   const bi = bracket(booms, boom);
   if (!bi) return { cap: null, why: "This boom length is outside the chart." };
-  const cells = [];
+  let cells = [];
   for (const i of ri) for (const j of bi) cells.push({ r: radii[i], L: booms[j], v: cap[i] ? cap[i][j] : null });
+  // v6.6 — a boom between two chart columns whose SHORTER column has no rating here (it can't reach this
+  // radius): the manufacturers' rule is the NEXT LONGER boom's rating, not "not permitted"
+  let longer = false;
+  if (bi.length === 2 && cells.some((c) => c.L === booms[bi[0]] && c.v == null) && cells.filter((c) => c.L === booms[bi[1]]).every((c) => c.v != null)) {
+    cells = cells.filter((c) => c.L === booms[bi[1]]); longer = true;
+  }
+  if (longer) return { cap: Math.min(...cells.map((c) => c.v)), cells, why: "The shorter boom can't reach this radius — the next longer boom's rating is used (manufacturer rule). Check the boom reaches it." };
   if (cells.some((c) => c.v == null)) return { cap: null, cells, why: "The chart has no value there — the crane may not lift at this radius with this boom." };
   return { cap: Math.min(...cells.map((c) => c.v)), cells, why: cells.length > 1 ? "Between chart points — the lowest surrounding value is used." : "" };
 }
@@ -186,10 +193,12 @@ export function windCheck({ vChart, mass, area, cw = 1.2, vNow }) {
   return out;
 }
 
+// v6.6: the WMO table (m/s, one decimal): force n starts at LOW[n-1] — 0.3 is force 1, 1.5 still force 1,
+// 1.6 force 2 … 32.7 force 12 (the old limits put 0.3 at 0 and 1.5 at 2)
 export function beaufort(v) {
-  const t = [0.5, 1.5, 3.3, 5.5, 7.9, 10.7, 13.8, 17.1, 20.7, 24.4, 28.4, 32.6];
-  const i = t.findIndex((x) => v < x);
-  return i < 0 ? 12 : i;
+  const LOW = [0.3, 1.6, 3.4, 5.5, 8.0, 10.8, 13.9, 17.2, 20.8, 24.5, 28.5, 32.7];
+  const x = Math.round(num(v) * 10) / 10;
+  return LOW.filter((lo) => x >= lo).length;
 }
 
 // ---- 6. pre-lift checklist ------------------------------------------------------------------

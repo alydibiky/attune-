@@ -70,7 +70,7 @@ export function plansIn(text) {
   // "2,000 × 10" (amount first, no word): a big amount times a small count
   for (const m of t.matchAll(new RegExp(N + "\\s*[×xX*]\\s*(\\d{1,2})(?![\\d.,])", "g"))) if (+m[1] >= 100 && +m[2] >= 2) add(m[2], m[1], m.index);
   for (const m of t.matchAll(new RegExp(N + "\\s*(?:egp|le|جنيه)?\\s*(?:a|per|/|each|every)\\s*month\\s*(?:for|over|×|x)\\s*(\\d{1,3})", "gi"))) add(m[2], m[1], m.index);
-  for (const m of t.matchAll(new RegExp("(\\d{1,3})\\s*(?:monthly )?(?:installments?|payments?|months?)\\s*(?:of|at|×|x)\\s*" + N, "gi"))) add(m[1], m[2], m.index);
+  for (const m of t.matchAll(new RegExp("(\\d{1,3})\\s*(?:monthly )?(?:installments?|payments?|months?|قسط|أقساط|اقساط|شهر|شهور)\\s*(?:of|at|×|x|\\*|ب|بـ|كل واحد)\\s*" + N, "gi"))) add(m[1], m[2], m.index);   // v6.6: «١٢ قسط × ٣٠٠٠»
   for (const m of t.matchAll(new RegExp("(?:قسط|القسط|شهري(?:ا|ًا)?)\\s*" + N + "\\s*(?:جنيه)?\\s*(?:على|لمدة|ل)\\s*(\\d{1,3})\\s*(?:شهر|شهور|أشهر)", "g"))) add(m[2], m[1], m.index);
   return out;
 }
