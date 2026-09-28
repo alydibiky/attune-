@@ -240,3 +240,18 @@ export function toggleFav(favs, item) {
   const { t, k, chosen, learned, alts, said, from, explicit, base, readBase, conf, box, zoomed, flag, was, ...keep } = item;
   return [{ id: item.id, item: { ...keep }, at: Date.now() }, ...list].slice(0, 40);
 }
+
+// ---- v6.5 two sources for the same day (Health Connect and Huawei Health): the same steps may reach
+// both (Health Sync copies Huawei into Health Connect), so each number is the larger one — never the sum ----
+export function mergeWatch(a, b) {
+  if (!a) return b || null; if (!b) return a;
+  const mx = (k) => { const x = a[k], y = b[k]; return x == null ? (y ?? null) : y == null ? x : Math.max(x, y); };
+  const out = { ...a, ...b };
+  for (const k of ["steps", "activeKcal", "totalKcal", "distanceM", "hrMax"]) out[k] = mx(k);
+  out.hrAvg = a.hrAvg ?? b.hrAvg ?? null;
+  out.sources = [...new Set([...(a.sources || []), ...(b.sources || [])])];
+  out.workouts = (a.workouts || []).length >= (b.workouts || []).length ? a.workouts || [] : b.workouts || [];
+  return out;
+}
+const hasData = (d) => !!d && (d.steps != null || d.activeKcal != null || (d.workouts || []).length > 0);
+export { hasData as watchHasData };

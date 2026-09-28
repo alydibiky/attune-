@@ -77,6 +77,13 @@ class MainActivity : AppCompatActivity() {
             "window.dispatchEvent(new CustomEvent('attune-health-permission',{detail:{granted:${granted.size}}}))", null)
     }
 
+    // v6.5: Huawei's own sign-in + Health Kit permission screens
+    private val askHuaweiPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+        val ok = HuaweiHealth.onAuthResult(this, res.data)
+        if (::web.isInitialized) web.evaluateJavascript(
+            "window.dispatchEvent(new CustomEvent('attune-health-permission',{detail:{huawei:$ok}}))", null)
+    }
+
     private lateinit var voice: Voice
     private val askMicPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         bridge.lastVoiceSink?.let { voice.onPermission(granted, it) }
@@ -169,6 +176,11 @@ class MainActivity : AppCompatActivity() {
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
         bridge.askHealth = { runOnUiThread { try { askHealthPermission.launch(Health.PERMISSIONS) } catch (e: Exception) {} } }
+        bridge.askHuawei = { runOnUiThread {
+            try { askHuaweiPermission.launch(HuaweiHealth.authIntent(this)) }
+            catch (e: Throwable) { if (::web.isInitialized) web.evaluateJavascript(
+                "window.dispatchEvent(new CustomEvent('attune-health-permission',{detail:{huawei:false,error:${JSONObject.quote(e.message ?: "HMS Core missing")}}}))", null) }
+        } }
         bridge.askNotify = {
             if (android.os.Build.VERSION.SDK_INT >= 33) askNotifyPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }

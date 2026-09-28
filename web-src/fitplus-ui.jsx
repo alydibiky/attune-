@@ -254,6 +254,9 @@ export function HuaweiGuide({ L, health, status, onDone }) {
  */
 export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
   const [status, setStatus] = useState(() => { try { return health ? health.status() : null; } catch (e) { return null; } });
+  const hwKit = health && health.huawei;
+  const [hwS, setHwS] = useState(() => { try { return hwKit ? hwKit.status() : null; } catch (e) { return null; } });
+  const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [hw, setHw] = useState(false);   // the Huawei steps, opened by hand
   const w = ((st.days[dayKey] || {}).watch) || null;
@@ -262,24 +265,42 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
   const refresh = async () => {
     if (!health) return;
     const s = health.status(); setStatus(s);
-    if (!s || s.available !== "ready" || !s.granted) return;
+    const h = hwKit ? hwKit.status() : null; setHwS(h);
+    const hc = !!(s && s.available === "ready" && s.granted), hw = !!(h && h.configured && h.authorized);
+    if (!hc && !hw) return;
     setBusy(true);
     try {
-      const d = await health.day(dayKey);
+      // v6.5: Health Connect and Huawei Health read side by side; each number is the larger, never the sum
+      const [a, b] = await Promise.all([hc ? health.day(dayKey).catch(() => null) : null, hw ? hwKit.day(dayKey).catch(() => null) : null]);
+      const d = P.mergeWatch(P.watchHasData(a) ? a : null, P.watchHasData(b) ? b : null);
+      if (b && b.empty && !P.watchHasData(a)) setNote(L("Huawei Health sent nothing — open Huawei Health once so the watch syncs, and check Attune is still allowed in Huawei Health → Me → Privacy → Data sharing.", "Huawei Health مبعتش حاجة — افتح Huawei Health مرة عشان الساعة تعمل مزامنة، واتأكد إن Attune لسه مسموح له في Huawei Health ← أنا ← الخصوصية ← مشاركة البيانات."));
+      else setNote("");
       if (d && (d.steps != null || d.activeKcal != null || d.workouts)) upd((x) => { const day = x.days[dayKey] || { meals: {}, water: 0, workouts: [] }; return { ...x, watchOn: true, days: { ...x.days, [dayKey]: { ...day, watch: { steps: d.steps || 0, activeKcal: d.activeKcal || 0, totalKcal: d.totalKcal || 0, distanceM: d.distanceM || 0, hrAvg: d.hrAvg || null, hrMax: d.hrMax || null, workouts: d.workouts || [], sources: d.sources || [], at: Date.now() } } } }; });
     } catch (e) {} finally { setBusy(false); }
   };
-  useEffect(() => { refresh(); const on = () => refresh(); window.addEventListener("attune-resume", on); window.addEventListener("attune-health-permission", on); return () => { window.removeEventListener("attune-resume", on); window.removeEventListener("attune-health-permission", on); }; }, [dayKey]);
+  useEffect(() => { refresh(); const on = (e) => { if (e && e.detail && e.detail.huawei === false) setNote(e.detail.error ? L(`Huawei sign-in didn't open: ${e.detail.error} — install HMS Core (below) and try again.`, `تسجيل دخول هواوي مفتحش: ${e.detail.error} — نزّل HMS Core (تحت) وجرّب تاني.`) : L("Huawei Health wasn't allowed — tap Connect again and allow steps, calories, distance and heart rate.", "Huawei Health متسمحش — دوس ربط تاني ووافق على الخطوات والسعرات والمسافة والنبض.")); refresh(); }; window.addEventListener("attune-resume", on); window.addEventListener("attune-health-permission", on); return () => { window.removeEventListener("attune-resume", on); window.removeEventListener("attune-health-permission", on); }; }, [dayKey]);
   if (!health) return compact ? null : (
     <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 text-[12.5px] text-slate-400" data-testid="fit-watch">⌚ {L("Watch steps and calories work in the Android app.", "خطوات وسعرات الساعة بتشتغل في تطبيق أندرويد.")}</div>);
-  const ready = status && status.available === "ready", granted = ready && status.granted > 0;
+  const ready = status && status.available === "ready";
+  const hwDirect = !!(hwS && hwS.configured), hwOn = hwDirect && hwS.authorized;
+  const granted = (ready && status.granted > 0) || hwOn;
+  // the direct Huawei link, when Attune has its Huawei App ID and this phone has Huawei Health or HMS Core
+  const hwOffer = hwDirect && !hwOn && ((status && status.huawei) || hwS.app || hwS.hms);
+  const hwButton = hwOffer ? (
+    <div className="rounded-xl bg-rose-500/10 border border-rose-800 p-2.5 space-y-1.5" data-testid="fit-huawei-direct">
+      <div className="text-[12.5px] text-rose-100">{L("Huawei watch or band: connect Huawei Health directly — steps, calories, distance and heart rate, read only.", "ساعة أو باند هواوي: اربط Huawei Health على طول — الخطوات والسعرات والمسافة والنبض، قراءة بس.")}</div>
+      {hwS.hms ? <button onClick={() => { setNote(""); hwKit.connect(); }} className="w-full rounded-lg bg-rose-600 py-2 text-[13px] font-medium text-white" data-testid="fit-huawei-connect">{L("Connect Huawei Health", "اربط Huawei Health")}</button>
+        : <button onClick={() => health.openApp("com.huawei.hwid")} className="w-full rounded-lg bg-rose-700 py-2 text-[13px] text-white" data-testid="fit-huawei-hms">{L("First install HMS Core (Huawei's services — free)", "الأول نزّل HMS Core (خدمات هواوي — ببلاش)")}</button>}
+    </div>) : null;
+  const noteEl = note ? <div className="text-[11.5px] text-amber-200" data-testid="fit-watch-note">{note}</div> : null;
   if (!granted) {
     if (compact && st.watchSkip) return null;
     return (
       <div className="rounded-2xl border border-teal-800 bg-teal-500/10 p-3 space-y-2" data-testid="fit-watch">
         <div className="text-[13px] text-teal-100">⌚ {L("Connect your watch: steps, calories burned, workouts and heart rate go into your day automatically.", "اربط ساعتك: الخطوات والسعرات المحروقة والتمارين ونبض القلب بيدخلوا يومك لوحدهم.")}</div>
         <div className="text-[11.5px] text-teal-200/70">{L("Through Android's Health Connect — works with Samsung Health (Galaxy Watch), Fitbit / Pixel Watch, Garmin Connect, Mi Fitness, Huawei Health (through Health Sync) and others that share to it. Read only; nothing leaves the phone.", "عن طريق Health Connect بتاع أندرويد — بيشتغل مع Samsung Health (جالاكسي واتش)، Fitbit / Pixel Watch، Garmin Connect، Mi Fitness، Huawei Health (عن طريق Health Sync) وغيرهم اللي بيشاركوا فيه. قراءة بس؛ مفيش حاجة بتخرج من الموبايل.")}</div>
-        {huaweiNeeded || hw ? <HuaweiGuide {...{ L, health, status }} onDone={() => { setHw(false); if (huaweiNeeded) upd((x) => ({ ...x, huaweiHide: true })); }} />
+        {hwButton}{noteEl}
+        {hwDirect ? null : huaweiNeeded || hw ? <HuaweiGuide {...{ L, health, status }} onDone={() => { setHw(false); if (huaweiNeeded) upd((x) => ({ ...x, huaweiHide: true })); }} />
           : <button onClick={() => setHw(true)} className="text-[11.5px] text-rose-300 underline" data-testid="fit-huawei-link">{L("Huawei watch?", "ساعة هواوي؟")}</button>}
         {status && status.available === "none" ? <div className="text-[12px] text-amber-200">{L("This phone doesn't have Health Connect — install it from the Play Store (Android 9–13), or it's built into Settings on Android 14+. Phones without Google services (newer Huawei phones) can't use it.", "الموبايل ده مفيهوش Health Connect — نزّله من Play Store (أندرويد ٩–١٣)، أو هو جوه الإعدادات من أندرويد ١٤. الموبايلات اللي من غير خدمات جوجل (موبايلات هواوي الجديدة) مينفعش.")}</div> : (
           <div className="flex gap-2">
@@ -293,8 +314,10 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
     <div className="rounded-2xl bg-slate-900/60 border border-teal-900 p-3 space-y-1.5" data-testid="fit-watch">
       <div className="flex items-center justify-between"><span className="text-[13px] text-white">⌚ {L("From your watch", "من ساعتك")}</span>
         <button onClick={refresh} className="text-[11.5px] text-teal-300 underline" data-testid="fit-watch-refresh">{busy ? L("Reading…", "بقرا…") : L("Refresh", "حدّث")}</button></div>
+      {noteEl}{hwButton}
+      {w && (w.sources || []).includes(HUAWEI_HEALTH) ? <div className="text-[10.5px] text-rose-300" data-testid="fit-huawei-on">{L("Huawei Health ✓", "Huawei Health ✓")}</div> : null}
       {viaHealthSync(w) ? <div className="text-[10.5px] text-rose-300" data-testid="fit-huawei-on">{L("Huawei Health, through Health Sync ✓", "Huawei Health، عن طريق Health Sync ✓")}</div> : null}
-      {!compact && (huaweiNeeded || hw) ? <HuaweiGuide {...{ L, health, status }} onDone={() => { setHw(false); if (huaweiNeeded) upd((x) => ({ ...x, huaweiHide: true })); }} />
+      {hwDirect ? null : !compact && (huaweiNeeded || hw) ? <HuaweiGuide {...{ L, health, status }} onDone={() => { setHw(false); if (huaweiNeeded) upd((x) => ({ ...x, huaweiHide: true })); }} />
         : !compact && !viaHealthSync(w) ? <button onClick={() => setHw(true)} className="text-[11px] text-rose-300 underline" data-testid="fit-huawei-link">{L("Huawei watch?", "ساعة هواوي؟")}</button> : null}
       {w ? <>
         <div className="grid grid-cols-3 gap-2 text-center">

@@ -344,6 +344,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     // ---- reminders and phone actions ------------------------------------------------
     var askNotify: (() -> Unit)? = null
     var askHealth: (() -> Unit)? = null
+    var askHuawei: (() -> Unit)? = null
 
     // ---- v6.3 watches through Health Connect (read only) --------------------------------------
     /** "ready" | "update" | "none", and how many of Attune's health permissions are granted. */
@@ -364,10 +365,28 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         askHealth?.invoke()
     }
 
+    // ---- v6.5 Huawei Health directly, through Huawei's Health Kit (read only) ----
+    /** {configured, hms, app, authorized} */
+    @JavascriptInterface
+    fun huaweiStatus(): String = try { HuaweiHealth.status(ctx).toString() } catch (e: Throwable) { JSONObject().put("configured", false).put("error", e.message ?: "").toString() }
+
+    /** Huawei ID sign-in + Health Kit permissions; the answer comes as the 'attune-health-permission' event. */
+    @JavascriptInterface
+    fun huaweiConnect() { askHuawei?.invoke() }
+
+    /** One day from Huawei Health ({date: "yyyy-mm-dd"}), same shape as healthDay. */
+    @JavascriptInterface
+    fun huaweiDay(id: String, arg: String) {
+        pool.execute {
+            try { resolve(id, HuaweiHealth.day(ctx, JSONObject(arg).optString("date"))) }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't read Huawei Health") }
+        }
+    }
+
     /** Opens Huawei Health or Health Sync (installed), else its Play Store / AppGallery page — only these two. */
     @JavascriptInterface
     fun openHealthApp(pkg: String) {
-        if (pkg != Health.HUAWEI && pkg != Health.HEALTH_SYNC) return
+        if (pkg != Health.HUAWEI && pkg != Health.HEALTH_SYNC && pkg != HuaweiHealth.HMS_CORE) return
         val launch = if (Health.installed(ctx, pkg)) ctx.packageManager.getLaunchIntentForPackage(pkg) else null
         val intents = listOfNotNull(launch,
             android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=$pkg")),

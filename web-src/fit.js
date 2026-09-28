@@ -676,7 +676,7 @@ export function learnFix(modelName, food, gramsRatio = 1) {
   L[k] = { id: food.id, food: food.src && food.src !== "table" ? food : null, n, ratio: Math.round(ratio * 100) / 100 };
   try { localStorage.setItem(LEARN_KEY, JSON.stringify(L)); } catch (e) {}
 }
-export const learned = (modelName) => learnLoad()[normT(modelName)] || null;
+export const learned = (modelName) => { const L = learnLoad(), k = normT(modelName); return Object.prototype.hasOwnProperty.call(L, k) && L[k] && L[k].id ? L[k] : null; };   // own keys only: "constructor" is not a learned food
 
 /** One photo item: the learned choice first, then the table; its alternatives as ready choices. */
 function photoItem(it, extra = {}, plate = "dinner plate") {
@@ -749,6 +749,7 @@ export function chooseFood(item, fd) {
 }
 /** Scale an item's portion (×0.5 … ×2). */
 export function scaleItem(item, k) {
+  if (!(k > 0 && k < 100)) k = 1;   // a broken factor never zeroes or explodes an item
   const g = Math.max(1, Math.round((item.base || item.grams) * k));
   if (item.kcal == null) return { ...item, grams: g, k };
   const s = g / item.grams, q = {};

@@ -11,13 +11,16 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 35
-        versionCode = 66                 // raise with every release — the phone shows it in Settings → Apps
-        versionName = "6.4.1"
+        versionCode = 67                 // raise with every release — the phone shows it in Settings → Apps
+        versionName = "6.5"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
         // phone. Add "x86_64" only if you want to run it in the emulator — it
         // roughly doubles the build time.
         ndk { abiFilters += listOf("arm64-v8a") }
+        // Huawei Health Kit (v6.5): the App ID of Attune's AppGallery Connect app, from gradle.properties
+        // (attune.hmsAppId). Empty = the direct Huawei link is off and the app offers Health Sync instead.
+        manifestPlaceholders["hmsAppId"] = (project.findProperty("attune.hmsAppId") as String?)?.trim().orEmpty()
         externalNativeBuild {
             cmake {
                 // Always optimise the engine, even in debug builds: an
@@ -124,4 +127,7 @@ dependencies {
     // (1.1.0 final needs compileSdk 36 + AGP 8.9.1; this release builds with compileSdk 35 / AGP 8.7.2)
     implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    // Huawei watches (v6.5): Huawei Health's data through Huawei's Health Kit, read only — the way
+    // Yazio connects to Huawei Health. Version from Huawei's own Kotlin demo (HMS-Core/hms-health-demo-kotlin).
+    implementation("com.huawei.hms:health:6.11.0.303")
 }

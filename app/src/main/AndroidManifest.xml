@@ -42,6 +42,7 @@
         <!-- v6.4: is Huawei Health / Health Sync on the phone (for the Huawei watch setup) -->
         <package android:name="com.huawei.health" />
         <package android:name="nl.appyhapps.healthsync" />
+        <package android:name="com.huawei.hwid" />
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
@@ -63,6 +64,9 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:theme="@style/AppTheme"
         android:networkSecurityConfig="@xml/network_security_config">
+
+        <!-- v6.5 Huawei Health Kit: Attune's App ID (empty until the AppGallery Connect app exists) -->
+        <meta-data android:name="com.huawei.hms.client.appid" android:value="appid=${hmsAppId}" />
         <!-- Unencrypted http is allowed ONLY to 127.0.0.1, where the on-device
              model listens. Every other connection must be https. -->
 

@@ -122,12 +122,12 @@ for (const [names, id, opt] of A) for (const n of names.split("|")) ALIAS.push({
 ALIAS.sort((a, b) => b.n.length - a.n.length);
 
 // ---- numbers, units, sizes ----
-const WORDN = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twelve: 12, half: 0.5, quarter: 0.25, third: 1 / 3, couple: 2, few: 3,
-  واحد: 1, واحده: 1, اتنين: 2, اثنين: 2, تلاته: 3, ثلاثه: 3, تلات: 3, اربعه: 4, اربع: 4, خمسه: 5, خمس: 5, سته: 6, ست: 6, سبعه: 7, سبع: 7, تمنيه: 8, تمانيه: 8, تسعه: 9, عشره: 10, عشر: 10, نص: 0.5, نصف: 0.5, ربع: 0.25, تلت: 1 / 3, ثلث: 1 / 3 };
+const WORDN = Object.assign(Object.create(null), { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twelve: 12, half: 0.5, quarter: 0.25, third: 1 / 3, couple: 2, few: 3,
+  واحد: 1, واحده: 1, اتنين: 2, اثنين: 2, تلاته: 3, ثلاثه: 3, تلات: 3, اربعه: 4, اربع: 4, خمسه: 5, خمس: 5, سته: 6, ست: 6, سبعه: 7, سبع: 7, تمنيه: 8, تمانيه: 8, تسعه: 9, عشره: 10, عشر: 10, نص: 0.5, نصف: 0.5, ربع: 0.25, تلت: 1 / 3, ثلث: 1 / 3 });
 // Arabic dual (…ين / …تين) → 2 of a unit or a food
-const DUALS = { بيضتين: ["egg", 2], رغيفين: ["@loaf", 2], حتتين: ["@piece", 2], معلقتين: ["@spoon", 2], كوبايتين: ["@cup", 2], طبقين: ["@plate", 2], علبتين: ["@can", 2],
+const DUALS = Object.assign(Object.create(null), { بيضتين: ["egg", 2], رغيفين: ["@loaf", 2], حتتين: ["@piece", 2], معلقتين: ["@spoon", 2], كوبايتين: ["@cup", 2], طبقين: ["@plate", 2], علبتين: ["@can", 2],
   ساندوتشين: ["@sandwich", 2], سندوتشين: ["@sandwich", 2], شريحتين: ["@slice", 2], سيخين: ["@skewer", 2], ازازتين: ["@bottle", 2], فنجانين: ["@cup", 2], بولتين: ["@scoop", 2], كيسين: ["@bag", 2],
-  تمرتين: ["dates", 2], موزتين: ["banana", 2], تفاحتين: ["apple", 2], برتقانتين: ["orange", 2], برتقالتين: ["orange", 2], كيويتين: ["kiwi", 2], صباعين: ["@piece", 2], قطعتين: ["@piece", 2], حبتين: ["@piece", 2] };
+  تمرتين: ["dates", 2], موزتين: ["banana", 2], تفاحتين: ["apple", 2], برتقانتين: ["orange", 2], برتقالتين: ["orange", 2], كيويتين: ["kiwi", 2], صباعين: ["@piece", 2], قطعتين: ["@piece", 2], حبتين: ["@piece", 2] });
 const UNITS = [
   ["tablespoons|tablespoon|tbsp|tbs|معالق كبيره|معلقه كبيره|معلقة كبيرة", "tbsp"], ["teaspoons|teaspoon|tsp|معلقه صغيره|معالق صغيره", "tsp"],
   ["spoons|spoon|معالق|معلقه|ملعقه|ملاعق|معلقتين", "spoon"], ["cups|cup|mugs|mug|كوبايه|كوبايات|كوب|فنجان|فناجين", "cup"], ["glasses|glass|كاس|كاسات", "glass"],
