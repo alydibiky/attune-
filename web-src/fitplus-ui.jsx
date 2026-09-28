@@ -1,0 +1,212 @@
+/* ---- Fit & Food, level 2 screens (v6.2): the parts that put Fit "above Yazio by levels" ----
+   Faster logging, food quality, Ramadan mode, the day score, the weekly report, body fat, a week
+   plan with one shopping list, reminders. The numbers all come from fitplus.js (code).       */
+import React, { useState, useMemo, useEffect } from "react";
+import { Plus, Check, Copy, Share2, Star, Timer, Bell, BarChart3, X } from "lucide-react";
+import * as F from "./fit.js";
+import * as P from "./fitplus.js";
+import * as DB from "./fitdb.js";
+import { nextAt } from "./daily.js";
+
+const r0 = (v) => (v == null ? "—" : Math.round(v));
+export const RAMADAN_NAMES = { breakfast: ["Suhoor", "سحور"], lunch: ["Iftar", "فطار"], dinner: ["After Taraweeh", "بعد التراويح"], snacks: ["Snacks", "سناكس"] };
+const GRADE_CLS = { A: "bg-emerald-700", B: "bg-lime-600", C: "bg-yellow-500 text-slate-950", D: "bg-orange-500", E: "bg-rose-600" };
+
+/** Nutri-Score letter and NOVA group of a packaged product. */
+export function Grades({ x, L }) {
+  if (!x || (!x.grade && !x.nova)) return null;
+  return (
+    <span className="inline-flex items-center gap-1 ms-1 align-middle">
+      {x.grade ? <span className={"px-1 rounded text-[10px] font-bold text-white " + (GRADE_CLS[x.grade] || "bg-slate-600")} title="Nutri-Score" data-testid="fit-grade">{x.grade}</span> : null}
+      {x.nova ? <span className={"px-1 rounded text-[10px] " + (x.nova === 4 ? "bg-rose-900 text-rose-200" : "bg-slate-700 text-slate-200")} title="NOVA" data-testid="fit-nova">{L(P.NOVA[x.nova].en, P.NOVA[x.nova].ar)}</span> : null}
+    </span>
+  );
+}
+
+/** The day's score (0–100) and sugar / saturated fat / salt against their limits. */
+export function DayQuality({ L, day, tg }) {
+  const sc = P.dayScore(day, tg), q = P.qualityTotals(day), lim = P.limits(tg);
+  if (!sc) return null;
+  const bar = (label, v, max) => (
+    <div className="min-w-0">
+      <div className="flex justify-between text-[11px] text-slate-400"><span>{label}</span><span className={"tabular-nums " + (v > max ? "text-rose-300" : "")}>{r0(v)}/{max} g</span></div>
+      <div className="h-1.5 rounded-full bg-slate-800 mt-1"><div className={"h-1.5 rounded-full " + (v > max ? "bg-rose-400" : "bg-teal-400")} style={{ width: Math.min(100, (v / max) * 100) + "%" }} /></div>
+    </div>);
+  return (
+    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2" data-testid="fit-quality">
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] text-white">{L("Today's score", "درجة النهارده")}</span>
+        <span className={"text-xl font-bold tabular-nums " + (sc.score >= 80 ? "text-emerald-300" : sc.score >= 55 ? "text-amber-300" : "text-rose-300")} data-testid="fit-score">{sc.score}<span className="text-[12px] text-slate-500">/100</span></span>
+      </div>
+      <div className="grid grid-cols-3 gap-3">{bar(L("Sugar", "سكر"), q.sug, lim.sug)}{bar(L("Sat. fat", "دهون مشبعة"), q.sat, lim.sat)}{bar(L("Salt", "ملح"), q.salt, lim.salt)}</div>
+      {q.total ? <div className="text-[10.5px] text-slate-500">{L(`Sugar, fat and salt from the ${q.known} of ${q.total} foods whose labels give them.`, `السكر والدهون والملح من ${q.known} من ${q.total} أكلات ملصقها بيقول.`)}</div> : null}
+    </div>
+  );
+}
+
+/** Ramadan: Fajr and Maghrib for the city, the time to Iftar / the end of Suhoor, the calorie split, water over the night. */
+export function RamadanCard({ L, ar, tg, city }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(t); }, []);
+  const c = P.CITIES[city] || P.CITIES.cairo, d = new Date(now);
+  const tz = P.zoneOffset(d, c.tz);                     // the city's clock, not the phone's (Riyadh picked while in Cairo)
+  const t = P.fastTimes(d, c.lat, c.lon, tz), plan = P.ramadanPlan(tg, t);
+  const mins = P.cityNowMin(c.tz, d);
+  const fasting = t.fajrMin != null && mins >= t.fajrMin && mins < t.maghribMin;
+  const left = fasting ? t.maghribMin - mins : ((t.fajrMin - mins + 1440) % 1440);
+  const hm = (m) => Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0");
+  return (
+    <div className="rounded-2xl border border-violet-800 bg-violet-500/10 p-3 space-y-2" data-testid="fit-ramadan">
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] text-violet-100">🌙 {L("Ramadan", "رمضان")} · {ar ? c.ar : c.en}</span>
+        <span className="text-[12px] text-violet-200 tabular-nums" data-testid="fit-ramadan-times">{L("Fajr", "الفجر")} {t.fajr} · {L("Maghrib", "المغرب")} {t.maghrib}</span>
+      </div>
+      <div className="text-xl font-semibold text-white tabular-nums" data-testid="fit-ramadan-left">{fasting ? L(`Iftar in ${hm(left)}`, `الفطار بعد ${hm(left)}`) : L(`Suhoor ends in ${hm(left)}`, `السحور يخلص بعد ${hm(left)}`)}</div>
+      <div className="text-[12px] text-violet-100/90">{L(`Iftar ~${plan.iftar} · after Taraweeh ~${plan.snack} · Suhoor ~${plan.suhoor} kcal · a glass of water every ${plan.everyMin} min from Maghrib to Fajr (${plan.glasses} glasses)`, `الفطار ~${plan.iftar} · بعد التراويح ~${plan.snack} · السحور ~${plan.suhoor} سعر · كوباية مية كل ${plan.everyMin} دقيقة من المغرب للفجر (${plan.glasses} كوبايات)`)}</div>
+      {plan.tips.map((x, i) => <div key={i} className="text-[11.5px] text-violet-200/80">• {L(x.en, x.ar)}</div>)}
+      <div className="text-[10.5px] text-violet-300/70">{L("Times by the sun's position (Egyptian General Authority angles), ±3 min — follow your local mosque's call.", "المواعيد محسوبة من مكان الشمس (زوايا الهيئة المصرية)، ±٣ دقايق — امشي على أذان الجامع اللي جنبك.")}</div>
+    </div>
+  );
+}
+
+/** The top of the log sheet: recent foods, yesterday's same meal, my meals, and my own food. */
+export function QuickLog({ L, ar, st, upd, adding, dayKey, addToDraft, flash }) {
+  const freq = useMemo(() => P.frequentFoods(st.days, { limit: 8 }), [st.days]);
+  const y = new Date(dayKey + "T12:00:00"); y.setDate(y.getDate() - 1);
+  const yKey = F.today(y), yItems = P.copyMeal(st.days, yKey, adding);
+  const mine = st.myMeals || [];
+  const [form, setForm] = useState(null);
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const saveOwn = () => {
+    const fd = P.customFood(form);
+    if (fd.error) { flash && flash(L("Fill in the name and the numbers from the label", "اكتب الاسم والأرقام من الملصق")); return; }
+    DB.keepFoods([fd]);
+    addToDraft([F.itemFromFood(fd, 1, Object.keys(fd.portions).length ? "serving" : "g")]); setForm(null);
+  };
+  if (form) return (
+    <div className="rounded-xl bg-slate-800/60 p-2.5 space-y-2" data-testid="fit-own">
+      <div className="text-[13px] text-white">{L("My own food (from its label)", "أكلة بتاعتي (من الملصق)")}</div>
+      <input value={form.name || ""} onChange={(e) => set("name", e.target.value)} placeholder={L("Name", "الاسم")} className="w-full rounded-lg bg-slate-900 px-2 py-1.5 text-[14px] text-white" data-testid="fit-own-name" />
+      <div className="flex gap-1.5 text-[12px]">
+        {[["100g", L("per 100 g", "لكل ١٠٠ جم")], ["serving", L("per serving", "للحصة")]].map(([k, l]) => <button key={k} onClick={() => set("per", k)} className={"rounded-full px-2.5 py-1 " + ((form.per || "100g") === k ? "bg-emerald-700 text-white" : "bg-slate-900 text-slate-300")}>{l}</button>)}
+        <input type="number" value={form.serving || ""} onChange={(e) => set("serving", e.target.value)} placeholder={L("serving g", "الحصة جم")} className="w-24 rounded-lg bg-slate-900 px-2 py-1 text-white" data-testid="fit-own-serving" />
+      </div>
+      <div className="grid grid-cols-4 gap-1.5">
+        {[["kcal", "kcal"], ["p", L("protein", "بروتين")], ["c", L("carbs", "كارب")], ["f", L("fat", "دهون")], ["sug", L("sugar", "سكر")], ["sat", L("sat. fat", "مشبعة")], ["salt", L("salt", "ملح")], ["fib", L("fibre", "ألياف")]].map(([k, l]) => (
+          <label key={k} className="text-[10.5px] text-slate-400">{l}<input type="number" inputMode="decimal" value={form[k] ?? ""} onChange={(e) => set(k, e.target.value)} className="w-full rounded bg-slate-900 px-1.5 py-1 text-[13px] text-white" data-testid={"fit-own-" + k} /></label>))}
+      </div>
+      <div className="flex gap-2"><button onClick={() => setForm(null)} className="rounded-lg bg-slate-900 px-3 py-1.5 text-[12.5px] text-slate-300">{L("Cancel", "إلغاء")}</button>
+        <button onClick={saveOwn} className="flex-1 rounded-lg bg-emerald-600 py-1.5 text-[13px] text-white" data-testid="fit-own-save">{L("Save and add", "احفظ وضيف")}</button></div>
+    </div>);
+  return (
+    <div className="space-y-2" data-testid="fit-quick">
+      {freq.length ? <div className="flex gap-1.5 overflow-x-auto pb-1" data-testid="fit-recent">
+        <span className="text-[11px] text-slate-500 self-center shrink-0">{L("Recent:", "الأخيرة:")}</span>
+        {freq.map((e) => <button key={e.key} onClick={() => { const { t, ...x } = e.item; addToDraft([x]); }} className="shrink-0 rounded-full bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200" data-testid="fit-recent-item">{ar && e.item.ar ? e.item.ar : e.item.name} · {r0(e.item.kcal)}</button>)}
+      </div> : null}
+      <div className="flex flex-wrap gap-1.5">
+        {yItems.length ? <button onClick={() => addToDraft(yItems)} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200 flex items-center gap-1" data-testid="fit-copy-yesterday"><Copy size={12} />{L("Same as yesterday", "زي امبارح")} ({F.sumN(yItems.filter((x) => x.kcal != null)).kcal} kcal)</button> : null}
+        {mine.map((m) => <button key={m.id} onClick={() => addToDraft(m.items)} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-amber-200 flex items-center gap-1" data-testid="fit-mymeal"><Star size={12} />{m.name} · {m.kcal}</button>)}
+        <button onClick={() => setForm({ per: "100g" })} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-sky-300 flex items-center gap-1" data-testid="fit-own-open"><Plus size={12} />{L("My own food", "أكلة بتاعتي")}</button>
+      </div>
+    </div>
+  );
+}
+
+/** "Save as my meal" under the draft. */
+export function SaveMyMeal({ L, draft, upd, flash }) {
+  const [name, setName] = useState(null);
+  if (name == null) return <button onClick={() => setName("")} className="text-[12px] text-amber-300 underline" data-testid="fit-save-mymeal">{L("Save these as “my meal”", "احفظهم كـ «وجبتي»")}</button>;
+  return (
+    <div className="flex gap-2">
+      <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={L("e.g. My usual breakfast", "مثلاً فطاري المعتاد")} className="flex-1 min-w-0 rounded-lg bg-slate-900 px-2 py-1.5 text-[13px] text-white" data-testid="fit-mymeal-name" />
+      <button onClick={() => { if (!name.trim()) return; upd((s) => ({ ...s, myMeals: [P.myMeal(name, draft), ...(s.myMeals || [])].slice(0, 20) })); setName(null); flash && flash(L("Saved — one tap next time", "اتحفظت — ضغطة واحدة المرة الجاية")); }}
+        className="rounded-lg bg-amber-600 px-3 text-[13px] text-white" data-testid="fit-mymeal-ok"><Check size={14} /></button>
+    </div>);
+}
+
+/** A week of meals sized to the target, and one shopping list to share. */
+export function WeekPlanView({ L, ar, tg, diet, share, close, addToDay }) {
+  const week = useMemo(() => P.weekPlan(tg, { diet }), [tg, diet]);
+  const list = useMemo(() => P.shoppingList(week), [week]);
+  const text = P.shoppingText(list, ar ? "ar" : "en");
+  const names = { breakfast: L("Breakfast", "فطار"), lunch: L("Lunch", "غدا"), dinner: L("Dinner", "عشا"), snacks: L("Snack", "سناك") };
+  return (
+    <div className="space-y-3" data-testid="fit-week">
+      <div className="flex items-center justify-between"><h3 className="text-white font-semibold">{L("My week", "أسبوعي")}</h3><button onClick={close} className="text-slate-400"><X size={18} /></button></div>
+      {week.map((d) => (
+        <div key={d.day} className="rounded-xl bg-slate-900/60 border border-slate-800 p-2.5" data-testid="fit-week-day">
+          <div className="flex justify-between text-[12.5px]"><span className="text-white">{new Date(d.day + "T12:00:00").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "short" })}</span><span className="text-slate-400 tabular-nums">{d.plan.total.kcal} kcal · P {Math.round(d.plan.total.p)}</span></div>
+          {Object.entries(d.plan.meals).map(([slot, m]) => <div key={slot} className="text-[12px] text-slate-300 mt-0.5">{names[slot]}: {ar ? m.recipe.ar : m.recipe.en}{m.x !== 1 ? ` ×${m.x}` : ""} · {m.kcal}</div>)}
+        </div>))}
+      <div className="rounded-xl bg-slate-900/60 border border-emerald-900 p-3 space-y-2" data-testid="fit-shopping">
+        <div className="flex items-center justify-between"><span className="text-white font-medium">🛒 {L("Shopping list", "قايمة المشتريات")}</span>
+          <span className="flex gap-2">
+            <button onClick={() => { try { navigator.clipboard.writeText(text); } catch (e) {} }} className="text-slate-400" title={L("Copy", "انسخ")}><Copy size={16} /></button>
+            {share ? <button onClick={() => share(text)} className="text-slate-400" data-testid="fit-shopping-share" title={L("Share", "شارك")}><Share2 size={16} /></button> : null}
+          </span></div>
+        {list.map((g) => <div key={g.key}><div className="text-[12px] text-emerald-300 mt-1">{ar ? g.ar : g.en}</div>
+          {g.items.map((x) => <div key={x.id} className="flex justify-between text-[12.5px] text-slate-200"><span>{ar ? x.ar : x.en}</span><span className="text-slate-400 tabular-nums">{x.grams >= 1000 ? (x.grams / 1000).toFixed(1) + (ar ? " كجم" : " kg") : x.grams + (ar ? " جم" : " g")}</span></div>)}</div>)}
+      </div>
+    </div>
+  );
+}
+
+/** The weekly report, by code. */
+export function WeekReport({ L, st, tg }) {
+  const r = useMemo(() => P.weekReport(st.days, st.weights, tg), [st.days, st.weights, tg]);
+  if (!r.logged) return null;
+  return (
+    <div className="rounded-2xl bg-slate-900/60 border border-sky-900 p-3 space-y-1.5" data-testid="fit-week-report">
+      <div className="flex items-center justify-between"><span className="text-[13px] text-white flex items-center gap-1.5"><BarChart3 size={15} className="text-sky-300" />{L("Your week", "أسبوعك")}</span>
+        {r.score != null ? <span className="text-[13px] text-sky-200">{L("average score", "متوسط الدرجة")} <b>{r.score}</b></span> : null}</div>
+      {r.lines.map((x, i) => <div key={i} className="text-[12.5px] text-slate-300">• {L(x.en, x.ar)}</div>)}
+    </div>
+  );
+}
+
+/** Body fat from a tape measure, and its history. */
+export function BodyCard({ L, st, upd }) {
+  const pr = st.profile || {};
+  const [m, setM] = useState({ waist: "", neck: "", hip: "" });
+  const bf = P.bodyFat({ sex: pr.sex, height: pr.cm, ...m });
+  const hist = (st.body || []).slice(-6);
+  return (
+    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2" data-testid="fit-body">
+      <div className="text-[13px] text-white">{L("Body fat (tape measure)", "نسبة الدهون (بالمازورة)")}</div>
+      <div className="flex gap-2">
+        {["waist", "neck", ...(pr.sex === "f" ? ["hip"] : [])].map((k) => (
+          <label key={k} className="flex-1 text-[11px] text-slate-400">{L({ waist: "Waist cm", neck: "Neck cm", hip: "Hip cm" }[k], { waist: "الوسط سم", neck: "الرقبة سم", hip: "الأرداف سم" }[k])}
+            <input type="number" inputMode="decimal" value={m[k]} onChange={(e) => setM((x) => ({ ...x, [k]: e.target.value }))} className="w-full rounded-lg bg-slate-800 px-2 py-1.5 text-[14px] text-white" data-testid={"fit-body-" + k} /></label>))}
+      </div>
+      {bf != null ? <div className="flex items-center justify-between"><span className="text-white text-lg font-semibold" data-testid="fit-bodyfat">{bf}% <span className="text-[12px] text-slate-400">{L(P.bodyFatClass(bf, pr.sex).en, P.bodyFatClass(bf, pr.sex).ar)}</span></span>
+        <button onClick={() => { upd((s) => ({ ...s, body: [...(s.body || []).filter((x) => x.d !== F.today()), { d: F.today(), ...m, bf }] })); setM({ waist: "", neck: "", hip: "" }); }} className="rounded-lg bg-sky-600 px-3 py-1.5 text-[13px] text-white" data-testid="fit-body-save">{L("Save", "احفظ")}</button></div> : null}
+      {hist.length ? <div className="text-[12px] text-slate-400 tabular-nums">{hist.map((x) => `${x.d.slice(5)}: ${x.bf}%`).join(" · ")}</div> : null}
+      <div className="text-[10.5px] text-slate-500">{L("US Navy method: waist at the navel (women: narrowest), neck below the Adam's apple — ±3 %. The trend matters more than one number.", "طريقة البحرية الأمريكية: الوسط عند السُرّة (للستات: أضيق مكان)، الرقبة تحت تفاحة آدم — ±٣٪. الاتجاه أهم من رقم واحد.")}</div>
+    </div>
+  );
+}
+
+/** Settings added to "My plan": Ramadan mode with the city, and reminders. */
+export function FitSettings({ L, ar, st, upd, native, flash }) {
+  const rm = st.ramadan || { on: false, city: "cairo" };
+  const setReminders = (on) => {
+    upd((s) => ({ ...s, reminders: on }));
+    if (!native || !native.schedule) return;
+    const now = Date.now(), ids = [];
+    const add = (id, time, en, a) => { ids.push(id); if (on) try { native.schedule(JSON.stringify({ id, at: nextAt(time, now), title: ar ? a : en, body: ar ? "افتح الأكل والرياضة" : "Open Fit & Food", repeat: "daily" })); } catch (e) {} };
+    for (const r of P.REMINDERS) if (r.time !== "every2h") add("daily-" + r.id, r.time, r.en, r.ar);
+    for (const h of ["10:00", "12:00", "16:00", "18:00", "22:00"]) add("daily-fit-water-" + h.slice(0, 2), h, "Drink a glass of water", "اشرب كوباية مية");
+    if (!on) for (const id of ids) try { native.unschedule(id); } catch (e) {}
+    if (on && native.notifyAllowed && !native.notifyAllowed() && native.askNotifications) native.askNotifications();
+    flash && flash(on ? L("Reminders on: meals and water", "التنبيهات شغالة: الوجبات والمية") : L("Reminders off", "التنبيهات مقفولة"));
+  };
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="fit-settings">
+      <label className="flex items-center gap-2 text-[13px] text-slate-200"><input type="checkbox" checked={!!rm.on} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, on: e.target.checked } }))} data-testid="fit-ramadan-on" />🌙 {L("Ramadan mode (Suhoor, Iftar, fasting times)", "وضع رمضان (سحور، فطار، مواعيد الصيام)")}</label>
+      {rm.on ? <select value={rm.city} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, city: e.target.value } }))} className="rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" data-testid="fit-ramadan-city">
+        {Object.entries(P.CITIES).map(([k, c]) => <option key={k} value={k}>{ar ? c.ar : c.en}</option>)}</select> : null}
+      <label className="flex items-center gap-2 text-[13px] text-slate-200"><input type="checkbox" checked={!!st.reminders} onChange={(e) => setReminders(e.target.checked)} data-testid="fit-reminders" /><Bell size={14} />{L("Remind me to log meals and drink water", "فكّرني أسجّل الوجبات وأشرب مية")}</label>
+    </div>
+  );
+}

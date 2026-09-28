@@ -36,7 +36,7 @@ export function syncDaily(native, courses = loadCourses(), topics = loadTopics()
       const id = "daily-news-" + t.id, n = D.newsNotice(t); wanted.add(id);
       try { native.schedule(JSON.stringify({ id, at: D.nextAt(t.time, now), title: n.title, body: n.body, repeat: "daily" })); } catch (e) {}
     }
-    try { for (const x of JSON.parse(native.scheduled() || "[]")) if (/^daily-/.test(x.id) && !wanted.has(x.id)) native.unschedule(x.id); } catch (e) {}
+    try { for (const x of JSON.parse(native.scheduled() || "[]")) if (/^daily-(learn|news)-/.test(x.id) && !wanted.has(x.id)) native.unschedule(x.id); } catch (e) {}
   }
   if (native.setWidget) {
     const c = courses[0], t = topics[0];

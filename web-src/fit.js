@@ -590,7 +590,9 @@ export function looksLikeFoodLog(text) {
 /** v6.1: any food (the table, a packaged product, a USDA food) + an amount → a logged item. */
 export function itemFromFood(fd, qty = 1, unit = "serving") {
   const grams = Math.round(gramsOf(fd, qty, unit));
-  return { name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", brand: fd.brand || "", qty, unit: unitNorm(unit), grams, ...nutrients(fd, grams), estimate: false, check: !!fd.check };
+  const q = {}; for (const k of ["sug", "sat", "salt"]) if (fd[k] != null) q[k] = r1(fd[k] * grams / 100);   // v6.2 quality, when the label gives it
+  return { name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", brand: fd.brand || "", qty, unit: unitNorm(unit), grams, ...nutrients(fd, grams), ...q,
+    ...(fd.grade ? { grade: fd.grade } : {}), ...(fd.nova ? { nova: fd.nova } : {}), estimate: false, check: !!fd.check };
 }
 
 // ---- v6.1 photo recognition, on the phone (Ali: "an elite photo food recognition"; no cloud) ----
@@ -677,6 +679,7 @@ export function chooseFood(item, fd) {
 export function scaleItem(item, k) {
   const g = Math.max(1, Math.round((item.base || item.grams) * k));
   if (item.kcal == null) return { ...item, grams: g, k };
-  const s = g / item.grams;
-  return { ...item, grams: g, k, kcal: Math.round(item.kcal * s), p: r1(item.p * s), c: r1(item.c * s), f: r1(item.f * s), fib: r1((item.fib || 0) * s) };
+  const s = g / item.grams, q = {};
+  for (const key of ["sug", "sat", "salt"]) if (item[key] != null) q[key] = r1(item[key] * s);
+  return { ...item, ...q, grams: g, k, kcal: Math.round(item.kcal * s), p: r1(item.p * s), c: r1(item.c * s), f: r1(item.f * s), fib: r1((item.fib || 0) * s) };
 }

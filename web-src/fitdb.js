@@ -16,7 +16,7 @@ const norm = (s) => String(s || "").toLowerCase().replace(/[ً-ْـ]/g, "").repl
 const isArabic = (s) => /[؀-ۿ]/.test(String(s || ""));
 
 // ---- addresses ----
-const OFF_FIELDS = "code,product_name,product_name_ar,product_name_en,generic_name,brands,nutriments,serving_size,serving_quantity,quantity,countries_tags,image_small_url";
+const OFF_FIELDS = "code,nutriscore_grade,nova_group,product_name,product_name_ar,product_name_en,generic_name,brands,nutriments,serving_size,serving_quantity,quantity,countries_tags,image_small_url";
 export function offSearchUrl(q, { egypt = false, size = 24 } = {}) {
   return "https://world.openfoodfacts.org/cgi/search.pl?action=process&json=1&search_simple=1&sort_by=unique_scans_n&page_size=" + size +
     "&search_terms=" + encodeURIComponent(q) + (egypt ? "&tagtype_0=countries&tag_contains_0=contains&tag_0=egypt" : "") + "&fields=" + OFF_FIELDS;
@@ -57,12 +57,17 @@ export function fromOFF(p) {
   const food = { id: "off:" + p.code, src: "off", barcode: String(p.code || ""), en: brand && !norm(name).includes(norm(brand)) ? `${name} (${brand})` : name, ar: ar || name, brand,
     names: [name, ar, brand ? `${brand} ${name}` : ""].filter(Boolean), kcal: Math.round(kcal), p: r1(pr), c: r1(c), f: r1(f), fib: r1(fib),
     portions: sg ? { serving: Math.round(num(sg)) } : {}, group: "packaged", egypt: (p.countries_tags || []).includes("en:egypt"), image: p.image_small_url || "" };
+  // v6.2 food quality: sugar, saturated fat, salt (sodium × 2.5), Nutri-Score, NOVA
+  const sug = num(n.sugars_100g), sat = num(n["saturated-fat_100g"]), salt = num(n.salt_100g) ?? (num(n.sodium_100g) != null ? num(n.sodium_100g) * 2.5 : null);
+  if (sug != null) food.sug = r1(sug); if (sat != null) food.sat = r1(sat); if (salt != null) food.salt = r1(salt);
+  if (/^[a-e]$/i.test(String(p.nutriscore_grade || ""))) food.grade = String(p.nutriscore_grade).toUpperCase();
+  if ([1, 2, 3, 4].includes(+p.nova_group)) food.nova = +p.nova_group;
   food.check = !consistent(food);
   return food;
 }
 
 // ---- USDA food → a food ----
-const NID = { kcal: [1008, 2047, 2048], kj: [1062], p: [1003], c: [1005, 1050], f: [1004, 1085], fib: [1079] };
+const NID = { kcal: [1008, 2047, 2048], kj: [1062], p: [1003], c: [1005, 1050], f: [1004, 1085], fib: [1079], sug: [2000, 1063], sat: [1258], na: [1093] };
 export function fromUSDA(u) {
   if (!u || !Array.isArray(u.foodNutrients)) return null;
   const get = (ids) => { for (const id of ids) { const x = u.foodNutrients.find((n) => (n.nutrientId || (n.nutrient && n.nutrient.id)) === id); if (x) return num(x.value ?? x.amount); } return null; };
@@ -73,6 +78,8 @@ export function fromUSDA(u) {
   const portions = {};
   for (const m of u.foodMeasures || []) { const g = num(m.gramWeight), t = String(m.disseminationText || m.measureUnitName || "").toLowerCase().trim(); if (g > 0 && t && t !== "quantity not specified" && Object.keys(portions).length < 4) portions[t] = Math.round(g); }
   const food = { id: "usda:" + u.fdcId, src: "usda", en: name.charAt(0) + name.slice(1).toLowerCase(), ar: "", names: [name], kcal: Math.round(kcal), p: r1(p), c: r1(c), f: r1(f), fib: r1(get(NID.fib) || 0), portions, group: "reference" };
+  const sug = get(NID.sug), sat = get(NID.sat), na = get(NID.na);
+  if (sug != null) food.sug = r1(sug); if (sat != null) food.sat = r1(sat); if (na != null) food.salt = r1(na * 2.5 / 1000);   // sodium mg → salt g
   food.check = !consistent(food);
   return food;
 }
