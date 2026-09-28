@@ -461,7 +461,7 @@ def sec_fast(br):
     comp.fill("Describe a mobile crane in one line.")
     page.locator("button[title='Send']").click()
     page.wait_for_selector("[data-testid=slow-hint]", timeout=10000)
-    page.locator("[data-testid=slow-hint]").click()
+    page.locator("[data-testid=slow-hint]").last.click()   # under load more than one answer can be slow — the latest one
     page.wait_for_selector("[data-testid=doctor]", timeout=5000)
     page.evaluate("window.__mock.doctor.thermal = 3; window.__mock.doctor.powerSave = true; window.__mock.doctor.availRamGB = 1.2")
     page.locator("[data-testid=doctor-run]").click()
