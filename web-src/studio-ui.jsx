@@ -398,6 +398,13 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
         </div>
       ) : null}
 
+      {info.built && info.gpuBuilt && info.cpuOnly ? (
+        <div className="rounded-xl border border-amber-800 bg-amber-500/10 p-3 space-y-2" data-testid="studio-gpu-card">
+          <p className="text-[13px] text-amber-100">{tr("Studio is drawing on the processor (slow). This phone has a graphics chip — try it: pictures and ×4 sharpening are many times faster there.")}</p>
+          <button className="px-3 py-2 rounded-lg bg-amber-500 text-slate-950 text-[13px] font-semibold" data-testid="studio-gpu-on"
+            onClick={() => { native.setImageCpu(false); setInfo(readInfo()); flash(tr("The next picture uses the graphics chip")); }}>{tr("Use the graphics chip")}</button>
+        </div>
+      ) : null}
       {info.built ? (
         <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 text-[11px] text-slate-500 space-y-1">
           {info.note ? <p className="text-amber-200" data-testid="studio-note">{tr(info.note)}</p> : null}

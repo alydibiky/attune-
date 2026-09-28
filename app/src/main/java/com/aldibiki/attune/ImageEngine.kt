@@ -37,7 +37,38 @@ object ImageEngine {
 
     private val prefs = { ctx: Context -> ctx.getSharedPreferences("attune", Context.MODE_PRIVATE) }
     fun cpuOnly(ctx: Context) = prefs(ctx).getBoolean("image_cpu", false)
-    fun setCpuOnly(ctx: Context, on: Boolean) { prefs(ctx).edit().putBoolean("image_cpu", on).putString("image_note", "").apply() }
+    /** The person's own choice (Studio's switch): kept, never undone by an update. */
+    fun setCpuOnly(ctx: Context, on: Boolean) {
+        prefs(ctx).edit().putBoolean("image_cpu", on).putBoolean("image_cpu_auto", false).putInt("image_gpu_fails", 0).putString("image_note", "").apply()
+        if (!on) { gpuChecked = false; gpuName = null }   // ask the graphics chip again on the next picture
+    }
+    /**
+     * v6.1 (Ali: "a mobile has a GPU, why can't I use it for photo generation?"): ONE failed GPU run
+     * used to switch Studio to the CPU for good — and the first run on a new Adreno can fail just
+     * because it spends minutes preparing its programs, or the chat model still holds GPU memory.
+     * Now: the CPU only after 2 GPU failures in a row, a GPU success resets the count, and after an
+     * app update a GPU that was switched off automatically gets a fresh try.
+     */
+    private fun gpuFailed(ctx: Context): Boolean {
+        val n = prefs(ctx).getInt("image_gpu_fails", 0) + 1
+        val off = n >= 2
+        prefs(ctx).edit().putInt("image_gpu_fails", n).apply()
+        if (off) prefs(ctx).edit().putBoolean("image_cpu", true).putBoolean("image_cpu_auto", true).apply()
+        return off
+    }
+    private fun gpuWorked(ctx: Context) { prefs(ctx).edit().putInt("image_gpu_fails", 0).apply() }
+    private fun retryGpuAfterUpdate(ctx: Context) {
+        val p = prefs(ctx)
+        val ver = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).lastUpdateTime } catch (e: Exception) { 0L }
+        if (p.getLong("image_cpu_ver", -1L) == ver) return
+        val e = p.edit().putLong("image_cpu_ver", ver)
+        if (p.getBoolean("image_cpu", false) && p.getBoolean("image_cpu_auto", false)) {
+            e.putBoolean("image_cpu", false).putBoolean("image_cpu_auto", false).putInt("image_gpu_fails", 0).putString("image_note", "")
+            gpuChecked = false; gpuName = null
+            log(ctx, "App updated: Studio tries the graphics chip again (it had been switched off automatically).")
+        }
+        e.apply()
+    }
     fun note(ctx: Context) = prefs(ctx).getString("image_note", "") ?: ""
     private fun setNote(ctx: Context, s: String) = prefs(ctx).edit().putString("image_note", s).apply()
     /** The last picture that failed, and why — shown by Studio even if the page missed the answer. (v5.19) */
@@ -248,6 +279,7 @@ object ImageEngine {
     private fun runWithFallback(ctx: Context, out: File, argsFor: (bin: String, backend: String?) -> List<String>,
                                 onProgress: (ImageRun.Progress) -> Unit, register: (ImageRun.Job?) -> Unit,
                                 valid: (File) -> Boolean = { it.exists() && it.length() > 0 }): String {
+        retryGpuAfterUpdate(ctx)
         val dev = if (!cpuOnly(ctx)) gpuDevice(ctx, onProgress) else null
         if (dev != null) {
             val job = ImageRun.Job(argsFor(bin(ctx, true).path, "diffusion=$dev,vae=$dev,upscaler=$dev,te=cpu"), env(ctx, true), ctx.cacheDir)
@@ -276,11 +308,13 @@ object ImageEngine {
             register(null)
             logRun(ctx, "GPU run", job, code, tg)
             if (job.cancelled) throw IOException("Stopped")
-            if (code == 0 && valid(out)) { lastBackend = "GPU"; return "GPU" }
+            if (code == 0 && valid(out)) { lastBackend = "GPU"; gpuWorked(ctx); return "GPU" }
             out.delete()
-            setCpuOnly(ctx, true)
-            setNote(ctx, if (stalled.get()) "The GPU driver stalled while loading the picture model, so Attune switched Studio to the CPU (you can try the GPU again below)."
-                else "Drawing on the GPU failed, so Attune switched Studio to the CPU. " + job.lastError())
+            val off = gpuFailed(ctx)
+            log(ctx, "GPU run failed (" + (if (stalled.get()) "stalled while loading" else "exit $code") + ") — " + (if (off) "2nd time in a row: Studio switched to the CPU" else "the next picture tries the graphics chip again"))
+            setNote(ctx, if (off) (if (stalled.get()) "The GPU driver stalled twice while loading the picture model, so Attune switched Studio to the CPU (you can try the GPU again below)."
+                else "Drawing on the GPU failed twice, so Attune switched Studio to the CPU. " + job.lastError())
+                else "This picture was drawn on the CPU because the graphics chip didn't finish; the next picture tries the graphics chip again.")
             onProgress(ImageRun.Progress("start"))
         }
         val job = ImageRun.Job(argsFor(bin(ctx, false).path, "cpu"), env(ctx, false), ctx.cacheDir)

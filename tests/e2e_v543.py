@@ -76,6 +76,10 @@ with sync_playwright() as p:
     page.locator("[data-testid=confirm-no]").click(); page.wait_for_timeout(200)
     check("upscale" not in [c[0] for c in page.evaluate("window.__mock.imgCalls")], "Cancel → nothing started")
     shot(page, "studio-fast")
+    card = page.locator("[data-testid=studio-gpu-card]")
+    check(card.count() == 1 and "graphics chip" in card.inner_text(), "on the processor with a graphics chip available → a clear card offers it")
+    page.locator("[data-testid=studio-gpu-on]").click(); page.wait_for_timeout(200)
+    check(page.evaluate("window.__mock.img.cpuOnly") is False and page.locator("[data-testid=studio-gpu-card]").count() == 0, "“Use the graphics chip” turns it back on")
 
     # ---- Deal Check: "Do you mean…?" ----
     OFFER = "iPhone 15 Pro 256GB 38,000 EGP, pay 12,400 now then 3 x 4,133"
