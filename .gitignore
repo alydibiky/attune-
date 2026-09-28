@@ -30,3 +30,4 @@ tests/audit.txt
 tests/fail-*.log
 tests/trials/report.md
 tests/trials/report-*.md
+tests/trials/every-model.txt

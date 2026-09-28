@@ -22,7 +22,7 @@ corelite unsloth/Qwen3.5-4B-GGUF Qwen3.5-4B-IQ4_XS.gguf
 core-4b unsloth/Qwen3.5-4B-GGUF  Qwen3.5-4B-Q4_K_M.gguf
 coreplus unsloth/Qwen3.5-4B-GGUF Qwen3.5-4B-Q5_K_M.gguf
 sense  unsloth/gemma-4-E4B-it-GGUF gemma-4-E4B-it-UD-Q4_K_XL.gguf
-zenith unsloth/Qwen3.5-9B-GGUF   Qwen3.5-9B-Q4_K_M.gguf
+zenith unsloth/Qwen3.5-9B-GGUF   Qwen3.5-9B-IQ4_NL.gguf
 zenithplus unsloth/gemma-4-12B-it-GGUF gemma-4-12b-it-UD-Q4_K_XL.gguf
 LIST
 echo DONE >> "$SUM"
