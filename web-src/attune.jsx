@@ -34,7 +34,7 @@ import { placeFor } from "./places.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
 import { samplingFor, taskKind } from "./boost.js";
 import { estTokens as estTok } from "./longread.js";
-import { pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS, TESTING_ALL_PRO, testingPro } from "./billing.js";
+import { pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS, TESTING_ALL_PRO, testingPro, PLAY, proFromOwned } from "./billing.js";
 import { LICENCE_PUBLIC_KEY, SELLER } from "./erp.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
@@ -526,12 +526,18 @@ const Store = {
     if (!b || !b.owned) return [];
     try { return (await b.owned()) || []; } catch (e) { return []; }
   },
+  // Play's own local prices ({ id → "EGP 2,499.00" }), so the screen shows exactly what Play charges
+  async prices() {
+    const b = this.bridge;
+    if (!b || !b.products) return {};
+    try { return Object.fromEntries(((await b.products()) || []).filter((x) => x.price).map((x) => [x.id, x.price])); } catch (e) { return {}; }
+  },
 };
 
 const SKUS = {
-  pro_month:    { id: "attune_pro_monthly",  label: "$14.99",  sub: "per month",  hint: "cancel any time" },
-  pro_year:     { id: "attune_pro_yearly",   label: "$99.99",  sub: "per year",   hint: "save 44%" },
-  pro_lifetime: { id: "attune_pro_lifetime", label: "$299.99", sub: "once",       hint: "yours forever" },
+  pro_month:    { id: PLAY.month },
+  pro_year:     { id: PLAY.year },
+  pro_lifetime: { id: PLAY.life },
 };
 
 // Entitlement from the store's cache, plus any direct-sale key. Store first,
@@ -539,7 +545,7 @@ const SKUS = {
 const STORE_CACHE = "attune:store";
 async function storeEntitlement() {
   const owned = await Store.owned();
-  const pro = owned.find((x) => x && x.productId && /attune_pro/.test(x.productId) && x.purchased !== false);
+  const pro = proFromOwned(owned);
   if (pro) {
     const rec = { source: "store", productId: pro.productId, at: Date.now(),
                   expires: pro.expires || null, store: Store.name() };
@@ -763,7 +769,7 @@ const VISA_STATUS = {
   conditional: { label: "Conditional — read carefully", tone: "warn" },
   visa:        { label: "Visa required in advance", tone: "warn" },
 };
-const VISA_RULES = {"sa": {"eg": {"status": "evisa", "days": null, "note": "e-Visa is open to all Egyptian passport holders. Visa on arrival if you hold a valid Schengen, UK or US visa.", "docs": ["Umrah or Hajj needs a permit through the Nusuk app, not a tourist visa alone"]}, "gcc": {"status": "free", "days": 180, "note": "GCC citizens enter freely with a national ID.", "docs": []}, "eu": {"status": "evisa", "days": 90, "note": "e-Visa online, usually approved within minutes.", "docs": ["Mandatory health insurance is bundled into the e-Visa fee"]}, "anglo": {"status": "evisa", "days": 90, "note": "e-Visa online.", "docs": ["Mandatory health insurance is bundled into the e-Visa fee"]}, "other": {"status": "visa", "days": null, "note": "Check the Saudi e-Visa portal — eligibility is by nationality.", "docs": []}}, "ae": {"eg": {"status": "visa", "days": null, "note": "Visa required in advance. Usually arranged through the airline, a hotel or a sponsor.", "docs": ["Sponsor or hotel booking is normally required for the application"]}, "gcc": {"status": "free", "days": null, "note": "GCC citizens enter with a national ID.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free on arrival for most EU nationals.", "docs": []}, "anglo": {"status": "free", "days": 30, "note": "Visa-free on arrival, extendable.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Most nationalities need a visa arranged before travel.", "docs": []}}, "qa": {"eg": {"status": "evisa", "days": 30, "note": "Hayya / e-Visa online before travel.", "docs": []}, "gcc": {"status": "free", "days": null, "note": "GCC citizens enter with a national ID.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa waiver on arrival, 90 days in 180.", "docs": []}, "anglo": {"status": "free", "days": 30, "note": "Visa waiver on arrival.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "Apply through the Hayya portal.", "docs": []}}, "kw": {"eg": {"status": "visa", "days": null, "note": "Visa required in advance.", "docs": ["Israeli stamps or an Israeli passport mean refusal of entry"]}, "gcc": {"status": "free", "days": null, "note": "GCC citizens enter with a national ID.", "docs": []}, "eu": {"status": "evisa", "days": 90, "note": "e-Visa online for most EU nationals.", "docs": []}, "anglo": {"status": "evisa", "days": 90, "note": "e-Visa online.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for most nationalities.", "docs": []}}, "om": {"eg": {"status": "visa", "days": null, "note": "Visa required. The e-Visa route needs a valid US, Canadian, Australian, UK, Schengen or Japanese visa.", "docs": ["Without one of those visas, apply through an Omani mission"]}, "gcc": {"status": "free", "days": null, "note": "GCC citizens enter with a national ID.", "docs": []}, "eu": {"status": "evisa", "days": 30, "note": "e-Visa online, cheap and quick.", "docs": []}, "anglo": {"status": "evisa", "days": 30, "note": "e-Visa online.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "Check the Royal Oman Police e-Visa portal.", "docs": []}}, "bh": {"eg": {"status": "voa", "days": 14, "note": "e-Visa or visa on arrival, 14 days.", "docs": []}, "gcc": {"status": "free", "days": null, "note": "GCC citizens enter with a national ID.", "docs": []}, "eu": {"status": "voa", "days": 14, "note": "Visa on arrival or e-Visa.", "docs": []}, "anglo": {"status": "voa", "days": 14, "note": "Visa on arrival or e-Visa.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "e-Visa online for many nationalities.", "docs": []}}, "jo": {"eg": {"status": "free", "days": 30, "note": "No visa needed — one month.", "docs": []}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "eu": {"status": "voa", "days": 30, "note": "Visa on arrival, or free with the Jordan Pass.", "docs": ["The Jordan Pass waives the visa fee AND covers Petra — buy it before you fly"]}, "anglo": {"status": "voa", "days": 30, "note": "Visa on arrival, or free with the Jordan Pass.", "docs": ["The Jordan Pass waives the visa fee AND covers Petra — buy it before you fly"]}, "other": {"status": "voa", "days": 30, "note": "Visa on arrival for most; the Jordan Pass is usually the cheapest route.", "docs": []}}, "lb": {"eg": {"status": "conditional", "days": 30, "note": "Visa on arrival, but conditional.", "docs": ["Confirmed hotel reservation", "Around US$2,000 in cash to show", "Return ticket", "No Israeli stamps anywhere in the passport"]}, "gcc": {"status": "free", "days": 180, "note": "Visa-free, up to six months.", "docs": []}, "eu": {"status": "voa", "days": 30, "note": "Free visa on arrival, one month.", "docs": ["No Israeli stamps anywhere in the passport"]}, "anglo": {"status": "voa", "days": 30, "note": "Free visa on arrival.", "docs": ["No Israeli stamps anywhere in the passport"]}, "other": {"status": "conditional", "days": null, "note": "Conditional — check with the embassy before booking.", "docs": []}}, "tr": {"eg": {"status": "visa", "days": null, "note": "Visa required. e-Visa is available only to applicants under 20 or over 45; everyone else applies at a consulate.", "docs": ["This age rule catches people out — check it before booking"]}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days in any 180.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free for most EU nationals, 90 days in 180.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free for UK, US, Canada and Australia.", "docs": []}, "other": {"status": "evisa", "days": 90, "note": "e-Visa online for many nationalities.", "docs": []}}, "ge": {"eg": {"status": "evisa", "days": 30, "note": "e-Visa online. Visa-free if you already hold a valid EU, US, UK or GCC visa or residence permit.", "docs": []}, "gcc": {"status": "free", "days": 365, "note": "Visa-free for a full year.", "docs": []}, "eu": {"status": "free", "days": 365, "note": "Visa-free for a year.", "docs": []}, "anglo": {"status": "free", "days": 365, "note": "Visa-free for a year.", "docs": []}, "other": {"status": "evisa", "days": 30, "note": "e-Visa online for many nationalities.", "docs": []}}, "my": {"eg": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": ["The digital arrival card (MDAC) must be completed online within 3 days before arrival"]}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": ["Complete the MDAC digital arrival card online"]}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": ["Complete the MDAC digital arrival card online"]}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": ["Complete the MDAC digital arrival card online"]}, "other": {"status": "free", "days": 30, "note": "Visa-free for many nationalities; check duration.", "docs": ["Complete the MDAC digital arrival card online"]}}, "id": {"eg": {"status": "voa", "days": 30, "note": "e-VOA or visa on arrival, 30 days, extendable once.", "docs": []}, "gcc": {"status": "voa", "days": 30, "note": "e-VOA or visa on arrival, extendable once.", "docs": []}, "eu": {"status": "voa", "days": 30, "note": "e-VOA or visa on arrival, extendable once.", "docs": []}, "anglo": {"status": "voa", "days": 30, "note": "e-VOA or visa on arrival, extendable once.", "docs": []}, "other": {"status": "voa", "days": 30, "note": "e-VOA for many nationalities; check the list.", "docs": []}}, "th": {"eg": {"status": "evisa", "days": 60, "note": "e-Visa, 60 days.", "docs": []}, "gcc": {"status": "free", "days": 60, "note": "Visa exemption, 60 days.", "docs": []}, "eu": {"status": "free", "days": 60, "note": "Visa exemption, 60 days.", "docs": []}, "anglo": {"status": "free", "days": 60, "note": "Visa exemption, 60 days.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "e-Visa or exemption depending on nationality.", "docs": []}}, "vn": {"eg": {"status": "evisa", "days": 90, "note": "e-Visa online, 90 days. There is no reliable visa on arrival — apply before flying.", "docs": []}, "gcc": {"status": "evisa", "days": 90, "note": "e-Visa online, multiple entry.", "docs": []}, "eu": {"status": "evisa", "days": 90, "note": "e-Visa online; some EU nationals get a short exemption.", "docs": []}, "anglo": {"status": "evisa", "days": 90, "note": "e-Visa online, 90 days.", "docs": []}, "other": {"status": "evisa", "days": 90, "note": "e-Visa online — people are turned away at check-in without it.", "docs": []}}, "cn": {"eg": {"status": "visa", "days": null, "note": "Visa required in advance.", "docs": ["Some transit exemptions exist at major airports"]}, "gcc": {"status": "free", "days": 30, "note": "Visa-free trial for GCC citizens (announced through 2026 — reconfirm before booking).", "docs": []}, "eu": {"status": "free", "days": 30, "note": "Visa-free trial for many EU nationals (reconfirm — this is a temporary scheme).", "docs": []}, "anglo": {"status": "visa", "days": null, "note": "Visa required for UK, US, Canada and Australia.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for most nationalities.", "docs": []}}, "in": {"eg": {"status": "visa", "days": null, "note": "Visa required; apply online through the official e-Visa portal.", "docs": []}, "gcc": {"status": "evisa", "days": 30, "note": "e-Visa online.", "docs": []}, "eu": {"status": "evisa", "days": 30, "note": "e-Visa online.", "docs": []}, "anglo": {"status": "evisa", "days": 30, "note": "e-Visa online.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "e-Visa for most nationalities.", "docs": []}}, "jp": {"eg": {"status": "visa", "days": null, "note": "Visa required at a consulate. The Japanese e-Visa is not open to applicants resident in Egypt.", "docs": []}, "gcc": {"status": "evisa", "days": 90, "note": "e-Visa, 90 days.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for most nationalities.", "docs": []}}, "kr": {"eg": {"status": "visa", "days": null, "note": "Visa required; may be applied for online.", "docs": []}, "gcc": {"status": "eta", "days": 30, "note": "K-ETA travel authorisation online.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free; K-ETA may be required depending on the current scheme.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free; check whether K-ETA is currently required.", "docs": []}, "other": {"status": "eta", "days": null, "note": "K-ETA or visa depending on nationality.", "docs": []}}, "sg": {"eg": {"status": "visa", "days": null, "note": "Visa required in advance.", "docs": ["Must be applied for through an authorised agent or the ICA"]}, "gcc": {"status": "free", "days": 30, "note": "Visa-free at immigration's discretion.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for many nationalities.", "docs": []}}, "gb": {"eg": {"status": "visa", "days": null, "note": "Visa required. Apply well ahead — appointments and processing take weeks.", "docs": ["Bank statements and evidence of ties to your home country are normally required"]}, "gcc": {"status": "eta", "days": 180, "note": "Electronic Travel Authorisation online.", "docs": []}, "eu": {"status": "eta", "days": 180, "note": "Electronic Travel Authorisation online.", "docs": []}, "anglo": {"status": "eta", "days": 180, "note": "ETA for most; US, Canada and Australia included.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for many nationalities.", "docs": []}}, "de": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required. Book the appointment months ahead.", "docs": ["Travel insurance covering €30,000 of medical costs", "Bank statements and proof of employment"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required for GCC citizens (UAE nationals are exempt).", "docs": ["Travel insurance covering €30,000 of medical costs"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement — an ID card is enough.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180. ETIAS authorisation applies once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most nationalities.", "docs": []}}, "za": {"eg": {"status": "evisa", "days": null, "note": "e-Visa online — and you must arrive through OR Tambo International.", "docs": []}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for many nationalities.", "docs": []}}, "ma": {"eg": {"status": "visa", "days": null, "note": "Visa required. An e-Visa is possible if you hold a valid EU, US, UK, Canadian, Australian, Japanese or NZ visa.", "docs": []}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "e-Visa for many nationalities.", "docs": []}}, "tn": {"eg": {"status": "conditional", "days": null, "note": "Conditional. Visa on arrival applies to organised groups of 10 or more; individuals normally need a visa in advance.", "docs": ["Confirmed hotel reservation and return ticket", "Check with the embassy — this rule surprises people"]}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for many nationalities.", "docs": []}}, "eg": {"eg": {"status": "free", "days": null, "note": "You're a citizen — no visa.", "docs": []}, "gcc": {"status": "free", "days": 180, "note": "Visa-free; Saudi nationals up to six months.", "docs": []}, "eu": {"status": "voa", "days": 30, "note": "Visa on arrival, or the cheaper e-Visa online.", "docs": ["The e-Visa is cheaper and skips the airport queue"]}, "anglo": {"status": "voa", "days": 30, "note": "Visa on arrival, or e-Visa online.", "docs": ["The e-Visa is cheaper and skips the airport queue"]}, "other": {"status": "evisa", "days": 30, "note": "e-Visa online for many nationalities.", "docs": []}}, "fr": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "it": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "es": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "gr": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "pt": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "nl": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}};
+const VISA_RULES = {"sa": {"eg": {"status": "evisa", "days": null, "note": "e-Visa is open to all Egyptian passport holders. Visa on arrival if you hold a valid Schengen, UK or US visa.", "docs": ["Umrah or Hajj needs a permit through the Nusuk app, not a tourist visa alone"]}, "gcc": {"status": "free", "days": 180, "note": "GCC citizens enter freely with a national ID.", "docs": []}, "eu": {"status": "evisa", "days": 90, "note": "e-Visa online, usually approved within minutes.", "docs": ["Mandatory health insurance is bundled into the e-Visa fee"]}, "anglo": {"status": "evisa", "days": 90, "note": "e-Visa online.", "docs": ["Mandatory health insurance is bundled into the e-Visa fee"]}, "other": {"status": "visa", "days": null, "note": "Check the Saudi e-Visa portal — eligibility is by nationality.", "docs": []}}, "ae": {"eg": {"status": "visa", "days": null, "note": "Visa required in advance. Usually arranged through the airline, a hotel or a sponsor.", "docs": ["Sponsor or hotel booking is normally required for the application"]}, "gcc": {"status": "free", "days": null, "note": "GCC citizens enter with a national ID.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free on arrival for most EU nationals.", "docs": []}, "anglo": {"status": "free", "days": 30, "note": "Visa-free on arrival, extendable.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Most nationalities need a visa arranged before travel.", "docs": []}}, "qa": {"eg": {"status": "evisa", "days": 30, "note": "Hayya / e-Visa online before travel.", "docs": []}, "gcc": {"status": "free", "days": null, "note": "GCC citizens enter with a national ID.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa waiver on arrival, 90 days in 180.", "docs": []}, "anglo": {"status": "free", "days": 30, "note": "Visa waiver on arrival.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "Apply through the Hayya portal.", "docs": []}}, "kw": {"eg": {"status": "visa", "days": null, "note": "Visa required in advance.", "docs": ["Israeli stamps or an Israeli passport mean refusal of entry"]}, "gcc": {"status": "free", "days": null, "note": "GCC citizens enter with a national ID.", "docs": []}, "eu": {"status": "evisa", "days": 90, "note": "e-Visa online for most EU nationals.", "docs": []}, "anglo": {"status": "evisa", "days": 90, "note": "e-Visa online.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for most nationalities.", "docs": []}}, "om": {"eg": {"status": "visa", "days": null, "note": "Visa required. The e-Visa route needs a valid US, Canadian, Australian, UK, Schengen or Japanese visa.", "docs": ["Without one of those visas, apply through an Omani mission"]}, "gcc": {"status": "free", "days": null, "note": "GCC citizens enter with a national ID.", "docs": []}, "eu": {"status": "evisa", "days": 30, "note": "e-Visa online, cheap and quick.", "docs": []}, "anglo": {"status": "evisa", "days": 30, "note": "e-Visa online.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "Check the Royal Oman Police e-Visa portal.", "docs": []}}, "bh": {"eg": {"status": "voa", "days": 14, "note": "e-Visa or visa on arrival, 14 days.", "docs": []}, "gcc": {"status": "free", "days": null, "note": "GCC citizens enter with a national ID.", "docs": []}, "eu": {"status": "voa", "days": 14, "note": "Visa on arrival or e-Visa.", "docs": []}, "anglo": {"status": "voa", "days": 14, "note": "Visa on arrival or e-Visa.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "e-Visa online for many nationalities.", "docs": []}}, "jo": {"eg": {"status": "free", "days": 30, "note": "No visa needed — one month.", "docs": []}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "eu": {"status": "voa", "days": 30, "note": "Visa on arrival, or free with the Jordan Pass.", "docs": ["The Jordan Pass waives the visa fee AND covers Petra — buy it before you fly"]}, "anglo": {"status": "voa", "days": 30, "note": "Visa on arrival, or free with the Jordan Pass.", "docs": ["The Jordan Pass waives the visa fee AND covers Petra — buy it before you fly"]}, "other": {"status": "voa", "days": 30, "note": "Visa on arrival for most; the Jordan Pass is usually the cheapest route.", "docs": []}}, "lb": {"eg": {"status": "conditional", "days": 30, "note": "Visa on arrival, but conditional.", "docs": ["Confirmed hotel reservation", "Around US$2,000 in cash to show", "Return ticket", "No Israeli stamps anywhere in the passport"]}, "gcc": {"status": "free", "days": 180, "note": "Visa-free, up to six months.", "docs": []}, "eu": {"status": "voa", "days": 30, "note": "Free visa on arrival, one month.", "docs": ["No Israeli stamps anywhere in the passport"]}, "anglo": {"status": "voa", "days": 30, "note": "Free visa on arrival.", "docs": ["No Israeli stamps anywhere in the passport"]}, "other": {"status": "conditional", "days": null, "note": "Conditional — check with the embassy before booking.", "docs": []}}, "tr": {"eg": {"status": "visa", "days": null, "note": "Visa required. e-Visa is available only to applicants under 20 or over 45; everyone else applies at a consulate.", "docs": ["This age rule catches people out — check it before booking"]}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days in any 180.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free for most EU nationals, 90 days in 180.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free for UK, US, Canada and Australia.", "docs": []}, "other": {"status": "evisa", "days": 90, "note": "e-Visa online for many nationalities.", "docs": []}}, "ge": {"eg": {"status": "evisa", "days": 30, "note": "e-Visa online. Visa-free if you already hold a valid EU, US, UK or GCC visa or residence permit.", "docs": []}, "gcc": {"status": "free", "days": 365, "note": "Visa-free for a full year.", "docs": []}, "eu": {"status": "free", "days": 365, "note": "Visa-free for a year.", "docs": []}, "anglo": {"status": "free", "days": 365, "note": "Visa-free for a year.", "docs": []}, "other": {"status": "evisa", "days": 30, "note": "e-Visa online for many nationalities.", "docs": []}}, "my": {"eg": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": ["The digital arrival card (MDAC) must be completed online within 3 days before arrival"]}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": ["Complete the MDAC digital arrival card online"]}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": ["Complete the MDAC digital arrival card online"]}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": ["Complete the MDAC digital arrival card online"]}, "other": {"status": "free", "days": 30, "note": "Visa-free for many nationalities; check duration.", "docs": ["Complete the MDAC digital arrival card online"]}}, "id": {"eg": {"status": "voa", "days": 30, "note": "e-VOA or visa on arrival, 30 days, extendable once.", "docs": []}, "gcc": {"status": "voa", "days": 30, "note": "e-VOA or visa on arrival, extendable once.", "docs": []}, "eu": {"status": "voa", "days": 30, "note": "e-VOA or visa on arrival, extendable once.", "docs": []}, "anglo": {"status": "voa", "days": 30, "note": "e-VOA or visa on arrival, extendable once.", "docs": []}, "other": {"status": "voa", "days": 30, "note": "e-VOA for many nationalities; check the list.", "docs": []}}, "th": {"eg": {"status": "evisa", "days": 60, "note": "e-Visa, 60 days.", "docs": []}, "gcc": {"status": "free", "days": 60, "note": "Visa exemption, 60 days.", "docs": []}, "eu": {"status": "free", "days": 60, "note": "Visa exemption, 60 days.", "docs": []}, "anglo": {"status": "free", "days": 60, "note": "Visa exemption, 60 days.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "e-Visa or exemption depending on nationality.", "docs": []}}, "vn": {"eg": {"status": "evisa", "days": 90, "note": "e-Visa online, 90 days. There is no reliable visa on arrival — apply before flying.", "docs": []}, "gcc": {"status": "evisa", "days": 90, "note": "e-Visa online, multiple entry.", "docs": []}, "eu": {"status": "evisa", "days": 90, "note": "e-Visa online; some EU nationals get a short exemption.", "docs": []}, "anglo": {"status": "evisa", "days": 90, "note": "e-Visa online, 90 days.", "docs": []}, "other": {"status": "evisa", "days": 90, "note": "e-Visa online — people are turned away at check-in without it.", "docs": []}}, "cn": {"eg": {"status": "visa", "days": null, "note": "Visa required in advance.", "docs": ["Some transit exemptions exist at major airports"]}, "gcc": {"status": "free", "days": 30, "note": "Visa-free trial for GCC citizens (announced through 2026 — reconfirm before booking).", "docs": []}, "eu": {"status": "free", "days": 30, "note": "Visa-free trial for many EU nationals (reconfirm — this is a temporary scheme).", "docs": []}, "anglo": {"status": "visa", "days": null, "note": "Visa required for UK, US, Canada and Australia.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for most nationalities.", "docs": []}}, "in": {"eg": {"status": "visa", "days": null, "note": "Visa required; apply online through the official e-Visa portal.", "docs": []}, "gcc": {"status": "evisa", "days": 30, "note": "e-Visa online.", "docs": []}, "eu": {"status": "evisa", "days": 30, "note": "e-Visa online.", "docs": []}, "anglo": {"status": "evisa", "days": 30, "note": "e-Visa online.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "e-Visa for most nationalities.", "docs": []}}, "jp": {"eg": {"status": "visa", "days": null, "note": "Visa required at a consulate. The Japanese e-Visa is not open to applicants resident in Egypt.", "docs": []}, "gcc": {"status": "evisa", "days": 90, "note": "e-Visa, 90 days.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for most nationalities.", "docs": []}}, "kr": {"eg": {"status": "visa", "days": null, "note": "Visa required; may be applied for online.", "docs": []}, "gcc": {"status": "eta", "days": 30, "note": "K-ETA travel authorisation online.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free; K-ETA may be required depending on the current scheme.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free; check whether K-ETA is currently required.", "docs": []}, "other": {"status": "eta", "days": null, "note": "K-ETA or visa depending on nationality.", "docs": []}}, "sg": {"eg": {"status": "visa", "days": null, "note": "Visa required in advance.", "docs": ["Must be applied for through an authorised agent or the ICA"]}, "gcc": {"status": "free", "days": 30, "note": "Visa-free at immigration's discretion.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for many nationalities.", "docs": []}}, "gb": {"eg": {"status": "visa", "days": null, "note": "Visa required. Apply well ahead — appointments and processing take weeks.", "docs": ["Bank statements and evidence of ties to your home country are normally required"]}, "gcc": {"status": "eta", "days": 180, "note": "Electronic Travel Authorisation online.", "docs": []}, "eu": {"status": "eta", "days": 180, "note": "Electronic Travel Authorisation online.", "docs": []}, "anglo": {"status": "eta", "days": 180, "note": "ETA for most; US, Canada and Australia included.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for many nationalities.", "docs": []}}, "de": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required. Book the appointment months ahead.", "docs": ["Travel insurance covering €30,000 of medical costs", "Bank statements and proof of employment"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required for GCC citizens (UAE nationals are exempt).", "docs": ["Travel insurance covering €30,000 of medical costs"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement — an ID card is enough.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180. ETIAS authorisation applies once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most nationalities.", "docs": []}}, "za": {"eg": {"status": "evisa", "days": null, "note": "e-Visa online — and you must arrive through OR Tambo International.", "docs": []}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for many nationalities.", "docs": []}}, "ma": {"eg": {"status": "visa", "days": null, "note": "Visa required. An e-Visa is possible if you hold a valid EU, US, UK, Canadian, Australian, Japanese or NZ visa.", "docs": []}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "other": {"status": "evisa", "days": null, "note": "e-Visa for many nationalities.", "docs": []}}, "tn": {"eg": {"status": "conditional", "days": null, "note": "Conditional. Visa on arrival applies to organised groups of 10 or more; individuals normally need a visa in advance.", "docs": ["Confirmed hotel reservation and return ticket", "Check with the embassy — this rule surprises people"]}, "gcc": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "eu": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Visa required for many nationalities.", "docs": []}}, "eg": {"eg": {"status": "free", "days": null, "note": "You're a citizen — no visa.", "docs": []}, "gcc": {"status": "free", "days": 180, "note": "Visa-free; Saudi nationals up to six months.", "docs": []}, "eu": {"status": "voa", "days": 30, "note": "Visa on arrival, or the cheaper e-Visa online.", "docs": ["The e-Visa is cheaper and skips the airport queue"]}, "anglo": {"status": "voa", "days": 30, "note": "Visa on arrival, or e-Visa online.", "docs": ["The e-Visa is cheaper and skips the airport queue"]}, "other": {"status": "evisa", "days": 30, "note": "e-Visa online for many nationalities.", "docs": []}}, "fr": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "it": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "es": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "gr": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "pt": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "nl": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "gcc": {"status": "visa", "days": null, "note": "Schengen visa required (UAE nationals exempt).", "docs": ["Insurance covering €30,000"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "mv": {"other": {"status": "voa", "days": 30, "note": "Free 30-day visa on arrival for every nationality, with a confirmed booking and a return ticket.", "docs": ["Complete the IMUGA traveller declaration online within 96 hours before arrival"]}}, "ke": {"other": {"status": "eta", "days": 90, "note": "Every visitor needs an approved eTA online before flying.", "docs": []}}, "ch": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "eu": {"status": "free", "days": null, "note": "Free movement (Switzerland is in Schengen).", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180 (Schengen area); ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "at": {"eg": {"status": "visa", "days": null, "note": "Schengen visa required.", "docs": ["Insurance covering €30,000", "Bank statements and proof of ties to Egypt"]}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free 90 days in 180; ETIAS once it launches.", "docs": []}, "other": {"status": "visa", "days": null, "note": "Schengen visa required for most.", "docs": []}}, "cy": {"eg": {"status": "visa", "days": null, "note": "Cyprus visa required (Cyprus is in the EU but not in Schengen). Holders of a valid Schengen double or multiple-entry visa can often enter — confirm with the embassy.", "docs": []}, "eu": {"status": "free", "days": null, "note": "Freedom of movement.", "docs": []}, "anglo": {"status": "free", "days": 90, "note": "Visa-free, 90 days.", "docs": []}, "other": {"status": "conditional", "days": null, "note": "Depends on nationality; a valid Schengen visa often allows entry — check.", "docs": []}}, "us": {"eg": {"status": "visa", "days": null, "note": "US visa (B1/B2) required — apply early; interview waits can be long.", "docs": ["Evidence of ties to Egypt: job, property, family, bank statements"]}, "gcc": {"status": "visa", "days": null, "note": "US visa required.", "docs": []}, "eu": {"status": "eta", "days": 90, "note": "ESTA online for Visa Waiver Program countries (most EU).", "docs": ["Use the official ESTA website only"]}, "anglo": {"status": "eta", "days": 90, "note": "UK and Australia: ESTA online. Canadians need no visa or ESTA for a visit.", "docs": ["Use the official ESTA website only"]}, "other": {"status": "visa", "days": null, "note": "Visa required for most nationalities.", "docs": []}}};
 
 // Build the answer. Deterministic — no model call, so it works offline and
 // says the same thing every time, which is what you want from a rule.
@@ -1191,6 +1197,16 @@ function nativeCall(method, arg, onProgress) {
 }
 // The id of the last slow call, so a download can be cancelled.
 function nativeLastId() { return NATIVE_LAST_ID; }
+// v6.7: the Android app's Google Play Billing (Billing.kt) → window.ATTUNE_STORE.
+if (typeof window !== "undefined" && NATIVE && NATIVE.storeBuy && !window.ATTUNE_STORE) {
+  window.ATTUNE_STORE = {
+    name: "Google Play",
+    purchase: (sku) => nativeCall("storeBuy", { sku }),
+    owned: async () => ((await nativeCall("storeOwned", {})) || {}).items || [],
+    products: async () => ((await nativeCall("storeProducts", {})) || {}).items || [],
+    consume: (token) => nativeCall("storeConsume", { token }),
+  };
+}
 function nativeJSON(method) {
   if (!NATIVE) return null;
   try { return JSON.parse(NATIVE[method]()); } catch (e) { return null; }
@@ -2007,11 +2023,82 @@ const TOOLS = {
     build: (c) => { const st = c.opts.imgStyle || "acoustic, warm"; return `[Style: ${st}]\n\nWrite a song about: ${c.task}\n\nUse clear sections: [Verse], [Chorus], [Bridge]. ${c.lenAsk} ${c.style}`.trim(); } },
   v0: { label: "v0", family: "creative", version: "v0", reads: "Builds UI from a component description.", hint: "Describe the component plus every visual state.", url: "https://v0.dev", prefill: false,
     build: (c) => { let o = `Build: ${c.task}\n\n`; if (c.context) o += `Context: ${c.context}\n`; o += `Include all states (default, loading, empty, error). Use React + Tailwind. ${c.format} ${c.lenAsk} ${c.style}`; return o.trim(); } },
+  // ---- v6.7 (Ali: "all the prompts for other AIs — make it huge"): the other tools people use now,
+  // each with the prompt shape it reads best. Versions say "latest" — they change every few months.
+  copilot: { label: "Microsoft Copilot", family: "chat", version: "latest", reads: "Good with a clear ask and the context of your Office files.", hint: "In Word / Excel / Outlook, point it at the file you mean.", url: "https://copilot.microsoft.com", prefill: false,
+    build: (c) => { let o = `${c.role}\n\nTask: ${c.task}\n`; if (c.context) o += `Context: ${c.context}\n`; o += `Output: ${c.format}\n${c.lenAsk} ${c.style}`; return o.trim(); } },
+  mistral: { label: "Mistral Le Chat", family: "chat", version: "latest", reads: "Fast and direct; strong in French and European languages.", hint: "Use its web search for current facts.", url: "https://chat.mistral.ai", prefill: false,
+    build: (c) => { let o = `${c.role}\n\n`; if (c.context) o += `Context: ${c.context}\n`; o += `Task: ${c.task}\nFormat: ${c.format}\n${c.lenAsk} ${c.style}`; return o.trim(); } },
+  qwen: { label: "Qwen", family: "chat", version: "latest", reads: "Strong at code, maths and Arabic/Chinese; likes explicit steps.", hint: "Turn on Thinking for hard problems.", url: "https://chat.qwen.ai", prefill: false,
+    build: (c) => { let o = `${c.role}\n\n`; if (c.context) o += `Context: ${c.context}\n`; o += `Task: ${c.task}\nThink it through step by step, then give the final answer clearly.\n${c.format}\n${c.lenAsk} ${c.style}`; return o.trim(); } },
+  kimi: { label: "Kimi", family: "chat", version: "latest", reads: "Handles very long documents and agent-style tasks.", hint: "Paste or upload the whole document — it reads long context well.", url: "https://www.kimi.com", prefill: false,
+    build: (c) => { let o = `${c.role}\n\n`; if (c.context) o += `Material:\n${c.context}\n\n`; o += `Task: ${c.task}\n${c.format}\n${c.lenAsk} ${c.style}`; return o.trim(); } },
+  metaai: { label: "Meta AI", family: "chat", version: "latest", reads: "Conversational; works inside WhatsApp, Instagram and Messenger.", hint: "Keep it short and specific — it's tuned for chat.", url: "https://www.meta.ai", prefill: false,
+    build: (c) => `${c.task}${c.context ? "\n\nContext: " + c.context : ""}\n\n${c.lenAsk} ${c.style}`.trim() },
+  cursor: { label: "Cursor", family: "code", version: "latest", reads: "An AI code editor: works best with a goal, the files involved and how to check it's done.", hint: "Use Agent mode; @-mention the files; ask for a plan first on big changes.", url: "https://cursor.com", prefill: false,
+    build: (c) => codePrompt(c, "Before editing more than 3 files, show the plan and wait for my OK.") },
+  claudecode: { label: "Claude Code", family: "code", version: "latest", reads: "A coding agent in the terminal: give the goal, the constraints and the test that proves it works.", hint: "Put project rules in CLAUDE.md; ask it to run the tests before finishing.", url: "https://claude.ai/code", prefill: false,
+    build: (c) => codePrompt(c, "Run the project's tests and linters before you finish, and tell me exactly what you changed.") },
+  ghcopilot: { label: "GitHub Copilot", family: "code", version: "latest", reads: "Best with small, concrete tasks next to the code they touch.", hint: "Use Copilot Chat in the editor with the file open.", url: "https://github.com/copilot", prefill: false,
+    build: (c) => codePrompt(c, "Keep the change minimal and match the existing code style.") },
+  lovable: { label: "Lovable", family: "code", version: "latest", reads: "Builds full web apps from a description — describe users, pages and data.", hint: "Start small, then add features one prompt at a time.", url: "https://lovable.dev", prefill: false,
+    build: (c) => appPrompt(c) },
+  bolt: { label: "Bolt.new", family: "code", version: "latest", reads: "Builds and runs full-stack apps in the browser from a description.", hint: "Describe pages, data and the main user flow; iterate in small steps.", url: "https://bolt.new", prefill: false,
+    build: (c) => appPrompt(c) },
+  replit: { label: "Replit Agent", family: "code", version: "latest", reads: "Builds and deploys apps — say the users, features and where data is stored.", hint: "Ask it to explain the plan before it builds.", url: "https://replit.com", prefill: false,
+    build: (c) => appPrompt(c) },
+  dalle: { label: "ChatGPT Images", family: "visual", version: "latest", reads: "Understands full sentences and can put exact text into images.", hint: "Put any words that must appear in the image in quotes.", url: "https://chatgpt.com/?q=", prefill: true,
+    build: (c) => imagePrompt(c, false) },
+  ideogram: { label: "Ideogram", family: "visual", version: "latest", reads: "The best at clean text inside images — posters, logos, signs.", hint: "Put the exact text in quotes and say where it goes.", url: "https://ideogram.ai", prefill: false,
+    build: (c) => imagePrompt(c, false) },
+  leonardo: { label: "Leonardo", family: "visual", version: "latest", reads: "Stylised art and product shots; likes a style and a mood.", hint: "Pick a matching preset model, then paste the prompt.", url: "https://leonardo.ai", prefill: false,
+    build: (c) => imagePrompt(c, false) },
+  sora: { label: "Sora", family: "visual", version: "latest", reads: "Video from text: describe the shot like a film director.", hint: "One shot per prompt; say the camera move and the duration.", url: "https://sora.com", prefill: false,
+    build: (c) => videoPrompt(c) },
+  veo: { label: "Veo (Gemini)", family: "visual", version: "latest", reads: "Video with sound: describe the scene, camera and the audio you want.", hint: "Add dialogue in quotes and name the sounds.", url: "https://gemini.google.com/app", prefill: false,
+    build: (c) => videoPrompt(c, true) },
+  runway: { label: "Runway", family: "visual", version: "latest", reads: "Video from text or a still image: subject, motion, camera.", hint: "Start from a still image for the most control.", url: "https://runwayml.com", prefill: false,
+    build: (c) => videoPrompt(c) },
+  kling: { label: "Kling", family: "visual", version: "latest", reads: "Realistic motion; likes clear subject + action + camera.", hint: "Use image-to-video for consistent characters.", url: "https://klingai.com", prefill: false,
+    build: (c) => videoPrompt(c) },
+  udio: { label: "Udio", family: "audio", version: "latest", reads: "Music from a style description and lyrics.", hint: "Tag the genre, mood and instruments; keep lyrics in sections.", url: "https://www.udio.com", prefill: false,
+    build: (c) => { const st = c.opts.imgStyle || "warm acoustic pop"; return `Style: ${st}\n\nSong about: ${c.task}\n\nLyrics in sections [Verse] [Chorus] [Verse] [Chorus] [Bridge] [Chorus]. ${c.lenAsk} ${c.style}`.trim(); } },
+  elevenlabs: { label: "ElevenLabs", family: "audio", version: "latest", reads: "Turns text into natural speech; the text itself is the prompt.", hint: "Write it exactly as it should be spoken — numbers in words, short sentences.", url: "https://elevenlabs.io", prefill: false,
+    build: (c) => { const st = c.opts.imgStyle || "warm, clear, medium pace"; return `Voice: ${st}\n\nWrite a script to be read aloud about: ${c.task}\nWrite numbers and abbreviations as they are spoken, keep sentences short, and mark pauses with "…". ${c.lenAsk}`.trim(); } },
+  gamma: { label: "Gamma", family: "audio", version: "latest", reads: "Makes presentations and documents from an outline.", hint: "Give the audience and the number of slides; edit the outline before generating.", url: "https://gamma.app", prefill: false,
+    build: (c) => `Create a presentation: ${c.task}\n${c.context ? "Audience and context: " + c.context + "\n" : ""}About ${c.opts.slides || 10} slides. One idea per slide, a strong title on each, real numbers where possible, and a clear final slide with the conclusion or next step. ${c.style}`.trim() },
+  canva: { label: "Canva AI", family: "audio", version: "latest", reads: "Designs from a short brief — format, message, brand colours.", hint: "Say the format (post, story, flyer) and the exact text.", url: "https://www.canva.com", prefill: false,
+    build: (c) => `Design: ${c.task}\nFormat: ${c.opts.aspect === "9:16" ? "Instagram story (9:16)" : c.opts.aspect === "16:9" ? "presentation / YouTube thumbnail (16:9)" : "square social post (1:1)"}\n${c.context ? "Brand and details: " + c.context + "\n" : ""}Keep the text short and readable; one clear call to action.`.trim() },
 };
+// v6.7 shared prompt shapes for the new tool families
+function codePrompt(c, rule) {
+  let o = `Goal: ${c.task}\n\n`;
+  if (c.context) o += `Context (stack, files, constraints): ${c.context}\n\n`;
+  o += `Requirements:\n- Handle errors and empty states; don't break existing behaviour.\n- Add or update tests for what you change.\n- ${rule}\n\nDone when: ${c.format || "it works and the tests pass"}.`;
+  return o.trim();
+}
+function appPrompt(c) {
+  let o = `Build an app: ${c.task}\n\n`;
+  if (c.context) o += `Who uses it and details: ${c.context}\n\n`;
+  o += `Include: the main pages, the data each page stores, sign-in only if needed, and a clean mobile-friendly design.\nStart with the core flow working end to end, then stop and summarise what exists so I can ask for the next feature.`;
+  return o.trim();
+}
+function imagePrompt(c) {
+  const st = c.opts.imgStyle || "photorealistic", ar = c.opts.aspect || "1:1";
+  return `${cap(c.task)}. Style: ${st}. Composition: clear subject, balanced framing, aspect ratio ${ar}. Lighting that suits the mood. ${c.context ? "Details: " + c.context + ". " : ""}Any text that must appear goes in quotes, spelled exactly.`.trim();
+}
+function videoPrompt(c, sound) {
+  const st = c.opts.imgStyle || "cinematic, natural light", ar = c.opts.aspect || "16:9";
+  return `Shot: ${cap(c.task)}.\nCamera: a slow, steady move that follows the subject.\nStyle: ${st}. Aspect ratio ${ar}. About 8 seconds.${sound ? "\nSound: natural ambient sound that fits the scene; any spoken words in quotes." : ""}${c.context ? "\nDetails: " + c.context : ""}\nKeep the subject consistent for the whole shot; no on-screen text unless asked.`.trim();
+}
+const ASPECT_TOOLS = new Set(["midjourney", "dalle", "ideogram", "leonardo", "sora", "veo", "runway", "kling", "canva"]);
+const STYLE_TOOLS = new Set(["midjourney", "suno", "dalle", "ideogram", "leonardo", "sora", "veo", "runway", "kling", "udio", "elevenlabs"]);
 const FAMILIES = [
-  { key: "chat", label: "Chat & reasoning", icon: MessageSquare, keys: ["claude", "chatgpt", "gemini", "grok", "deepseek"] },
+  { key: "chat", label: "Chat & reasoning", icon: MessageSquare, keys: ["claude", "chatgpt", "gemini", "grok", "deepseek", "copilot", "mistral", "qwen", "kimi", "metaai"] },
   { key: "agent", label: "Agents & grounded", icon: Bot, keys: ["manus", "perplexity", "notebooklm"] },
-  { key: "creative", label: "Creative & build", icon: Palette, keys: ["midjourney", "suno", "v0"] },
+  { key: "code", label: "Code & apps", icon: Code2, keys: ["cursor", "claudecode", "ghcopilot", "v0", "lovable", "bolt", "replit"] },
+  { key: "visual", label: "Images & video", icon: Film, keys: ["midjourney", "dalle", "ideogram", "leonardo", "sora", "veo", "runway", "kling"] },
+  { key: "audio", label: "Music, voice & slides", icon: Palette, keys: ["suno", "udio", "elevenlabs", "gamma", "canva"] },
 ];
 const TONES = ["Auto", "Formal", "Casual", "Technical", "Friendly"];
 const AUDIENCES = ["General", "Beginner", "Expert", "Executive"];
@@ -4454,7 +4541,483 @@ DRIVING: excellent roads, and a car is the right way to do the Garden Route or t
 SAFARI: Kruger can be self-driven, which is much cheaper than a lodge. Book through SANParks. Malaria prophylaxis is advised for the low-veld — ask a doctor well before travelling.
 MONEY: the rand makes South Africa very good value for visitors. Tipping 10–15% is expected, and car guards who watch your parked car get a few rand.
 POWER PLUGS: the common local socket is a large three-round-pin type that almost no other country uses. Bring a universal adapter or buy one on arrival.`
-  }
+  },
+  // ---- v6.7 (Ali: "add more things, make it a huge database"): 12 more destinations Egyptians and Gulf
+  // travellers go to. Prices are rough ranges ("approx.") because they move; rules and habits are stable.
+  mv: {
+    name: "Maldives", flag: "🇲🇻", lang: "dv", langName: "Dhivehi (English widely spoken)", size: "4 KB",
+    apps: ["Your resort's app or WhatsApp for transfers", "Google Maps works for Malé and local islands", "Maldivian / Manta Air for domestic flights (resorts book them)"],
+    arrival: ["Fill in the IMUGA traveller declaration online within 96 hours before landing", "Your resort meets you at Velana airport and arranges the speedboat or seaplane", "Seaplanes fly only in daylight — a late landing means a night in Malé or Hulhumalé", "USD cash is accepted almost everywhere; small notes for tips"],
+    currency: "MVR · rufiyaa (US dollars accepted widely)",
+    emergency: "119 police · 102 ambulance · 118 fire",
+    plug: "G (UK three-pin) mostly, some D · 230V",
+    water: "Bottled or resort-filtered. Local tap water is desalinated — drink what the resort provides.",
+    tipping: "Resorts add a 10% service charge; extra tips for your room and dive staff are appreciated.",
+    haggle: "Souvenir shops in Malé yes; resorts no.",
+    visa: "Free 30-day tourist visa on arrival for every nationality, with a confirmed booking and return ticket.",
+    best: "Dec–Apr (dry season). May–Nov has rain showers but lower prices and great manta season.",
+    sim: "Dhiraagu or Ooredoo at the airport; resort wifi is usually good.",
+    money: ["Resorts price in US dollars and add 10% service + 16–17% tax — ask for 'plus plus' prices", "Local islands (guesthouses) are a fraction of resort prices", "Cards everywhere in resorts; cash on local islands"],
+    scams: ["Excursion prices from beach touts on local islands vary a lot — compare two", "'All-inclusive' can exclude drinks, water sports and transfers — read the plan"],
+    etiquette: ["Local (inhabited) islands are conservative: cover shoulders and knees away from the designated bikini beach", "Alcohol is only allowed on resorts and licensed liveaboards", "Friday prayers: shops close around midday"],
+    health: ["Sun and dehydration are the real risks — reef-safe sunscreen and water", "Decompression chamber access matters if you dive — check your dive centre's plan", "Serious medical care means Malé; insurance with evacuation cover is wise"],
+    costs: ["Seaplane transfer: approx. $500–900 per person return", "Speedboat transfer: approx. $100–300", "Guesthouse on a local island: approx. $60–150 a night", "Resort water villa: from approx. $500 a night"],
+    getAround: ["Resort transfers by speedboat or seaplane, arranged by the resort", "Public ferries between local islands are very cheap but slow and irregular", "Hulhumalé and Malé are connected by bridge — taxis are cheap"],
+    eat: ["Mas huni (tuna with coconut) for breakfast", "Garudhiya fish soup", "Local islands: halal by default, no alcohol"],
+    laws: ["Importing alcohol, pork products or religious material for others is prohibited", "Taking coral, shells or sand is illegal", "Public practice of religions other than Islam is restricted"],
+    dangers: ["Strong currents between islands — snorkel with a guide or buddy", "Sunburn on the water happens fast", "Night seaplane transfers don't exist — plan flights around daylight"],
+    holidays: ["Ramadan: local islands are quieter; resorts run as usual", "Christmas–New Year: peak prices, book early"],
+    customs: ["No alcohol, pork or drugs in your luggage — they are confiscated"],
+    connectivity: "Resort wifi is usually good; a local SIM is cheap for data.",
+    numbers: ["119 police · 102 ambulance · 118 fire", "Coast guard: 191"],
+    phrases: [
+      { en: "Help!", loc: "Help!", say: "—", tag: "emergency" },
+      { en: "I need a doctor", loc: "I need a doctor", say: "—", tag: "emergency" },
+      { en: "Thank you (Dhivehi)", loc: "Shukuriyya", say: "shoo-koo-REE-ya", tag: "basics" },
+      { en: "How much is this?", loc: "How much is this?", say: "—", tag: "shopping" },
+    ],
+    context: `MALDIVES — practical local knowledge:
+TWO WORLDS: resorts (one hotel per island, alcohol allowed, everything priced in US dollars with 10% service and about 17% tax added) and local inhabited islands (guesthouses, halal, no alcohol, modest dress, a fraction of the price). Say which one the traveller is on before advising.
+TRANSFERS: the resort arranges them. Seaplanes fly only in daylight, so a late international arrival means a night near the airport (Hulhumalé). Transfers are a large part of the cost — seaplanes several hundred dollars per person.
+ENTRY: a free 30-day visa on arrival for all nationalities, with a confirmed booking and a return ticket; the IMUGA declaration must be filled in online within 96 hours before arrival.
+RULES: no alcohol, pork or religious material for others in luggage; taking coral or shells is illegal; cover shoulders and knees on local islands away from the bikini beach.
+SAFETY: very low crime. The risks are the sea — currents, sunburn, dehydration. Serious medical care is in Malé.`,
+  },
+  lk: {
+    name: "Sri Lanka", flag: "🇱🇰", lang: "si", langName: "Sinhala / Tamil (English common)", size: "4 KB",
+    apps: ["PickMe and Uber (tuk-tuks and cars at fair fixed prices)", "Google Maps works well", "12Go / the railway's own booking for trains"],
+    arrival: ["Apply for the ETA online before flying (use the official government site only)", "Airport taxis: use the official counter or PickMe", "Buy a Dialog or Mobitel SIM at arrivals", "Change a little money at the airport, the rest at banks in town"],
+    currency: "LKR · Sri Lankan rupee",
+    emergency: "119 police · 1990 ambulance (Suwa Seriya, free) · 110 fire",
+    plug: "D and G · 230V (bring an adapter for both)",
+    water: "Bottled only.",
+    tipping: "About 10% where no service charge is added; small tips for drivers and guides.",
+    haggle: "Markets and tuk-tuks without a meter, yes.",
+    visa: "ETA online before travel for most nationalities.",
+    best: "Dec–Mar for the west and south coast; Apr–Sep for the east coast (Trincomalee, Arugam Bay).",
+    sim: "Dialog or Mobitel at the airport with your passport; data is cheap.",
+    money: ["Cash rules outside hotels — ATMs are common in towns", "Tourist-site tickets (Sigiriya, temples) are priced in dollars and much higher for foreigners"],
+    scams: ["'The temple is closed today, let me show you another' — it isn't closed", "Tuk-tuk drivers without a meter: agree the price first or use PickMe", "Gem shops with a 'special export price'"],
+    etiquette: ["Remove shoes and hats at temples; cover shoulders and knees", "Never pose with your back to a Buddha statue — it is taken seriously", "Use the right hand to give and receive"],
+    health: ["Dengue exists — repellent at dawn and dusk", "Private hospitals in Colombo are good; insurance recommended"],
+    costs: ["Rice and curry at a local place: approx. $2–4", "Tuk-tuk short ride: approx. $1–3", "Mid-range hotel: approx. $40–90", "Sigiriya ticket for foreigners: approx. $35"],
+    getAround: ["The Kandy–Ella train is one of the world's great rides — reserve seats early", "PickMe for tuk-tuks at fixed prices", "Hiring a car with driver for a few days is common and affordable"],
+    eat: ["Rice and curry — many small dishes", "Hoppers (appa) and kottu roti", "Most food is spicy — say 'less spicy' (sarak adu karanna)"],
+    laws: ["Buddha tattoos can get you refused entry or deported", "Photographing people in front of Buddha statues, backs turned, is disrespectful", "Drugs carry very severe penalties"],
+    dangers: ["Traffic and buses drive aggressively — take care crossing", "Rip currents on some southern beaches — swim where locals swim", "Wild elephants on rural roads at night"],
+    holidays: ["Poya (full moon) days every month: no alcohol sold anywhere", "Sinhala and Tamil New Year mid-April: many things close"],
+    customs: ["Declare large amounts of currency"],
+    connectivity: "Good 4G in towns and on the coast.",
+    numbers: ["119 police · 1990 ambulance · 110 fire", "Tourist police: 1912"],
+    phrases: [
+      { en: "Hello (Sinhala)", loc: "Ayubowan", say: "ah-yu-BOH-wan", tag: "basics" },
+      { en: "Thank you (Sinhala)", loc: "Istuti", say: "is-TOO-tee", tag: "basics" },
+      { en: "How much?", loc: "Kiyada?", say: "KEE-ya-da", tag: "shopping" },
+      { en: "Help!", loc: "Help!", say: "—", tag: "emergency" },
+      { en: "Less spicy, please", loc: "Sarak adu karanna", say: "SA-rak a-DU ka-ran-na", tag: "food" },
+    ],
+    context: `SRI LANKA — practical local knowledge:
+ENTRY: ETA online before flying, from the official government site (fake agent sites charge extra).
+SEASONS: two monsoons — the west and south coast are best December to March, the east coast April to September. Say which coast before recommending a beach.
+TRANSPORT: PickMe or Uber for tuk-tuks at fixed prices; otherwise agree the fare first. The hill-country train (Kandy–Nuwara Eliya–Ella) is a highlight; reserved seats sell out. A car with driver for several days is common and good value.
+RESPECT: shoes and hats off at temples, shoulders and knees covered; never turn your back to a Buddha statue for a photo; Buddha tattoos have led to deportation.
+POYA: every full-moon day is a holiday with no alcohol sold.
+HEALTH: dengue — use repellent; drink bottled water.`,
+  },
+  ke: {
+    name: "Kenya", flag: "🇰🇪", lang: "sw", langName: "Swahili / English", size: "4 KB",
+    apps: ["Uber and Bolt in Nairobi and Mombasa", "M-Pesa — mobile money used for almost everything", "Google Maps works in cities"],
+    arrival: ["An eTA must be approved online before flying — everyone needs one", "Buy a Safaricom SIM at the airport; register M-Pesa with your passport", "Use Uber/Bolt from the airport", "Keep US dollars printed after 2013 — older notes are refused"],
+    currency: "KES · Kenyan shilling",
+    emergency: "999 or 112 (police, ambulance, fire)",
+    plug: "G (UK three-pin) · 240V",
+    water: "Bottled only.",
+    tipping: "About 10% in restaurants; safari guides and drivers expect a tip (ask your operator's guideline).",
+    haggle: "Markets and curio shops, yes — start at half.",
+    visa: "Electronic Travel Authorisation (eTA) online for all visitors.",
+    best: "Jul–Oct for the Great Migration in the Masai Mara; Jan–Feb is also dry.",
+    sim: "Safaricom has the best coverage; M-Pesa makes paying easy.",
+    money: ["M-Pesa is accepted almost everywhere, even small shops", "Park fees are paid by card or M-Pesa, not cash"],
+    scams: ["Fake safari operators online — check reviews and that they are KATO members", "'Stranded student' street stories in Nairobi", "Unofficial 'guides' at park gates"],
+    etiquette: ["Greet before asking anything — 'Jambo' or 'Habari'", "Ask before photographing people, especially Maasai", "Modest dress on the Swahili coast (Lamu, Mombasa old town)"],
+    health: ["Malaria in most areas below 2,500 m — take advice on prophylaxis", "Yellow fever certificate may be asked if arriving from a risk country"],
+    costs: ["Masai Mara park fee: approx. $100–200 per day depending on season", "Mid-range safari: approx. $250–450 per person per day", "Local meal: approx. $3–8", "Uber across Nairobi: approx. $5–10"],
+    getAround: ["Uber/Bolt in cities", "The Madaraka Express train Nairobi–Mombasa is comfortable and cheap", "Safaris: in the operator's 4x4 — self-driving the Mara is not recommended"],
+    eat: ["Nyama choma (grilled meat)", "Ugali with sukuma wiki", "Swahili coast: biryani, pilau, samaki (fish) in coconut"],
+    laws: ["Plastic bags are banned — heavy fines", "Don't photograph government buildings or police", "Drones need a permit"],
+    dangers: ["Don't walk at night in Nairobi's city centre — use Uber", "Keep phones out of sight in crowds", "In parks, never leave the vehicle except at marked points"],
+    holidays: ["Jul–Oct is peak season in the Mara — book months ahead"],
+    customs: ["Plastic bags confiscated at the airport"],
+    connectivity: "Good 4G in cities and many lodges; patchy in remote parks.",
+    numbers: ["999 or 112 emergencies", "Tourist helpline: +254 20 2604767 (KTB)"],
+    phrases: [
+      { en: "Hello", loc: "Jambo / Habari", say: "JAM-bo / ha-BA-ree", tag: "basics" },
+      { en: "Thank you", loc: "Asante", say: "a-SAN-teh", tag: "basics" },
+      { en: "How much?", loc: "Bei gani?", say: "bay GA-nee", tag: "shopping" },
+      { en: "Help!", loc: "Msaada!", say: "m-sa-A-da", tag: "emergency" },
+      { en: "Slowly, please", loc: "Pole pole", say: "PO-leh PO-leh", tag: "transport" },
+    ],
+    context: `KENYA — practical local knowledge:
+ENTRY: every visitor needs an approved eTA online before flying.
+MONEY: M-Pesa mobile money is the default way to pay — register a Safaricom SIM with your passport. Park fees are paid by card or M-Pesa. US dollar notes printed before 2013 are refused.
+SAFARI: the Masai Mara is best July–October (the Great Migration). Book with a licensed operator (KATO member) and check reviews; fake operators exist online. Tip guides and drivers.
+SAFETY: use Uber or Bolt in Nairobi after dark; keep phones out of sight in crowds.
+HEALTH: malaria below 2,500 m — take advice; bottled water.
+LAW: plastic bags are banned, with heavy fines.`,
+  },
+  tz: {
+    name: "Tanzania & Zanzibar", flag: "🇹🇿", lang: "sw", langName: "Swahili / English", size: "4 KB",
+    apps: ["Uber and Bolt in Dar es Salaam", "M-Pesa / Airtel Money", "Google Maps works"],
+    arrival: ["Apply for the e-Visa before flying where eligible", "Zanzibar requires mandatory travel insurance bought through its official portal", "USD cash (post-2013 notes) for visas and some fees", "Airport taxis: agree the price first"],
+    currency: "TZS · Tanzanian shilling (US dollars widely accepted for tourism)",
+    emergency: "112 (police, ambulance, fire)",
+    plug: "D and G · 230V",
+    water: "Bottled only.",
+    tipping: "About 10% in restaurants; safari and Kilimanjaro crews expect tips — ask your operator's guideline.",
+    haggle: "Markets and Stone Town shops, yes.",
+    visa: "e-Visa online or visa on arrival for many nationalities.",
+    best: "Jun–Oct (dry) for safari and Zanzibar; Jan–Feb for Serengeti calving season.",
+    sim: "Vodacom or Airtel with your passport.",
+    money: ["Park fees are paid by card, not cash", "Many hotels and tours are priced in US dollars"],
+    scams: ["'Beach boys' in Zanzibar selling tours at inflated prices", "Fake Kilimanjaro operators with unsafe equipment — use licensed operators", "Currency changers on the street"],
+    etiquette: ["Zanzibar is conservative Muslim — cover shoulders and knees in Stone Town and villages", "Ramadan: don't eat or drink in public in Zanzibar during the day", "Greet before asking — 'Jambo' or 'Shikamoo' to elders"],
+    health: ["Malaria risk — take advice", "Altitude sickness on Kilimanjaro: choose routes of 7+ days"],
+    costs: ["Serengeti/Ngorongoro fees: approx. $70–100+ per day plus crater fees", "Mid-range safari: approx. $250–450 per person per day", "Stone Town meal: approx. $5–12"],
+    getAround: ["Ferries Dar es Salaam–Zanzibar (Azam Marine) about 2 hours", "Domestic flights to Arusha / Serengeti airstrips save long drives", "Dala-dala minibuses are cheap but crowded"],
+    eat: ["Zanzibar pizza at Forodhani night market", "Urojo (Zanzibar mix soup)", "Nyama choma and chips mayai"],
+    laws: ["Plastic bags are banned", "Drones need a permit", "Public displays of affection are frowned upon, especially in Zanzibar"],
+    dangers: ["Don't walk alone on beaches at night", "Strong tides on Zanzibar's east coast — the sea retreats far at low tide"],
+    holidays: ["Ramadan: Zanzibar slows down; many restaurants close by day"],
+    customs: ["Plastic bags confiscated"],
+    connectivity: "Good in towns and Zanzibar; patchy in parks.",
+    numbers: ["112 emergencies", "Zanzibar tourist police: in Stone Town"],
+    phrases: [
+      { en: "Hello", loc: "Jambo", say: "JAM-bo", tag: "basics" },
+      { en: "Thank you", loc: "Asante", say: "a-SAN-teh", tag: "basics" },
+      { en: "How much?", loc: "Bei gani?", say: "bay GA-nee", tag: "shopping" },
+      { en: "Help!", loc: "Msaada!", say: "m-sa-A-da", tag: "emergency" },
+      { en: "No, thank you", loc: "Hapana, asante", say: "ha-PA-na a-SAN-teh", tag: "basics" },
+    ],
+    context: `TANZANIA & ZANZIBAR — practical local knowledge:
+ZANZIBAR: a semi-autonomous, conservative Muslim island. Mandatory travel insurance is bought through Zanzibar's official portal before arrival. Cover shoulders and knees in Stone Town and villages; during Ramadan don't eat or drink in public by day. Beach touts ("beach boys") sell tours at inflated prices — book through the hotel or a reviewed operator.
+SAFARI: Serengeti, Ngorongoro and Tarangire. Park fees are high and paid by card. June–October is dry; January–February is the Serengeti calving season.
+KILIMANJARO: use licensed operators and routes of 7 days or more to acclimatise.
+MONEY: US dollars (printed after 2013) are widely accepted for tourism.
+HEALTH: malaria risk — take advice; bottled water.`,
+  },
+  az: {
+    name: "Azerbaijan", flag: "🇦🇿", lang: "az", langName: "Azerbaijani", size: "4 KB",
+    apps: ["Bolt and Uber in Baku", "BakuCard for metro and buses", "Google Maps works; Yandex Maps is also good"],
+    arrival: ["Apply for the ASAN e-Visa online before flying if you need one", "Buy a BakuCard at the airport for the Aeroexpress bus and metro", "Azercell or Bakcell SIM at the airport", "Taxis: use Bolt — street taxis overcharge"],
+    currency: "AZN · manat",
+    emergency: "112 (general) · 102 police · 103 ambulance",
+    plug: "C / F · 220V",
+    water: "Bottled recommended.",
+    tipping: "About 10% in restaurants if no service charge.",
+    haggle: "Old City souvenir shops and markets, yes.",
+    visa: "ASAN e-Visa online for many nationalities; check yours.",
+    best: "Apr–Jun and Sep–Oct. Summers are hot, Baku is windy.",
+    sim: "Azercell or Bakcell with your passport.",
+    money: ["Cards in Baku, cash in the regions", "Change money at banks — rates are regulated"],
+    scams: ["Street taxis quoting several times the Bolt price", "Friendly strangers inviting you to a bar with an inflated bill"],
+    etiquette: ["Tea is the centre of hospitality — accept it", "Modest dress in mosques and rural areas", "Avoid discussing Armenia or Nagorno-Karabakh"],
+    health: ["Good private clinics in Baku", "Insurance recommended"],
+    costs: ["Metro ride: approx. $0.30", "Bolt across Baku: approx. $3–6", "Restaurant meal: approx. $10–20", "Mid-range hotel: approx. $50–100"],
+    getAround: ["Baku metro is cheap and fast with a BakuCard", "Bolt for everything else", "Day trips: Gobustan & mud volcanoes, Gabala, Sheki (night train or bus)"],
+    eat: ["Plov (many regional kinds)", "Dolma and qutab", "Tea with jam, not sugar"],
+    laws: ["Visiting Nagorno-Karabakh without permission, or having an Armenian stamp history, can mean refusal", "Photographing government and military sites is forbidden"],
+    dangers: ["Traffic in Baku is fast — cross at underpasses", "Strong Khazri winds"],
+    holidays: ["Novruz (around 20–21 March) — a big spring festival; hotels fill up"],
+    customs: ["Carpets over a certain age need an export certificate"],
+    connectivity: "Good 4G in Baku, weaker in mountains.",
+    numbers: ["112 emergencies · 102 police · 103 ambulance"],
+    phrases: [
+      { en: "Hello", loc: "Salam", say: "sa-LAM", tag: "basics" },
+      { en: "Thank you", loc: "Təşəkkür edirəm", say: "te-shek-KOOR e-di-REM", tag: "basics" },
+      { en: "How much is it?", loc: "Nə qədərdir?", say: "ne ge-DER-dir", tag: "shopping" },
+      { en: "Help!", loc: "Kömək edin!", say: "ko-MEK e-DIN", tag: "emergency" },
+    ],
+    context: `AZERBAIJAN — practical local knowledge:
+ENTRY: the ASAN e-Visa is applied for online before flying by nationalities that need a visa.
+BAKU: a modern city with an old walled centre (İçərişəhər). Metro and buses use the BakuCard; Bolt avoids taxi overcharging.
+SENSITIVE: avoid discussing Armenia or Nagorno-Karabakh; an Armenian travel history can cause problems at entry.
+FOOD: plov, dolma, qutab; tea with jam is the hospitality ritual — accept it.
+MONEY: cards in Baku, cash in the regions; change at banks.
+DAY TRIPS: Gobustan rock art and mud volcanoes, Absheron fire temple, Sheki and Gabala in the mountains.`,
+  },
+  uz: {
+    name: "Uzbekistan", flag: "🇺🇿", lang: "uz", langName: "Uzbek / Russian", size: "4 KB",
+    apps: ["Yandex Go for taxis (the standard)", "Uzbekistan Railways app for Afrosiyob fast trains", "Yandex Maps works better than Google here"],
+    arrival: ["Check whether your nationality is visa-free or needs the e-Visa", "Keep hotel registration slips — you may be asked for them", "Beeline or Ucell SIM with your passport", "Change money at banks; cards work in big hotels, cash elsewhere"],
+    currency: "UZS · so'm",
+    emergency: "101 fire · 102 police · 103 ambulance",
+    plug: "C / F · 220V",
+    water: "Bottled.",
+    tipping: "5–10% in restaurants; often included.",
+    haggle: "Bazaars (Chorsu, Siab), yes.",
+    visa: "Visa-free or e-Visa depending on nationality.",
+    best: "Apr–Jun and Sep–Oct. Summers are very hot.",
+    sim: "Beeline or Ucell; registration takes a few minutes.",
+    money: ["Cash is king — bring clean US dollars or euros to change", "ATMs in Tashkent and Samarkand; fewer elsewhere"],
+    scams: ["Unofficial taxis at stations quoting tourist prices — use Yandex Go", "Money changers on the street"],
+    etiquette: ["Bread (non) is sacred — never put it upside down or throw it away", "Modest dress at mosques and madrasas", "Accept tea; the host fills the cup only halfway as respect"],
+    health: ["Stomach upsets are common — bottled water and hot food", "Private clinics in Tashkent"],
+    costs: ["Plov lunch: approx. $3–6", "Afrosiyob Tashkent–Samarkand: approx. $20–35", "Yandex Go ride: approx. $1–4", "Mid-range hotel: approx. $40–80"],
+    getAround: ["Afrosiyob high-speed trains Tashkent–Samarkand–Bukhara — book ahead", "Tashkent metro stations are works of art", "Shared taxis between cities"],
+    eat: ["Plov — the national dish, best at lunchtime", "Samsa from a tandoor oven", "Lagman noodles and shashlik"],
+    laws: ["Some medicines (codeine, strong painkillers) need a prescription and declaration", "Hotel registration is a legal requirement"],
+    dangers: ["Summer heat above 40 °C", "Traffic in Tashkent"],
+    holidays: ["Navruz (21 March) — celebrations everywhere"],
+    customs: ["Declare foreign currency on arrival and keep the form"],
+    connectivity: "Good 4G in cities.",
+    numbers: ["101 fire · 102 police · 103 ambulance"],
+    phrases: [
+      { en: "Hello", loc: "Assalomu alaykum", say: "as-sa-LO-mu a-LAY-kum", tag: "basics" },
+      { en: "Thank you", loc: "Rahmat", say: "rah-MAT", tag: "basics" },
+      { en: "How much is it?", loc: "Qancha turadi?", say: "KAN-cha tu-ra-DI", tag: "shopping" },
+      { en: "Help!", loc: "Yordam bering!", say: "yor-DAM be-RING", tag: "emergency" },
+    ],
+    context: `UZBEKISTAN — practical local knowledge:
+THE SILK ROAD: Samarkand (Registan), Bukhara and Khiva are the heart of a trip; Tashkent is the modern gateway. Afrosiyob high-speed trains link them — book ahead.
+ENTRY: visa-free or e-Visa depending on nationality. Hotels register you; keep the slips.
+MONEY: cash matters — bring clean dollars or euros and change at banks; card acceptance grows but is not universal.
+TRANSPORT: Yandex Go for taxis at fair prices; the Tashkent metro is beautiful and cheap.
+CUSTOMS: bread is treated with great respect; accept tea; modest dress at religious sites.
+FOOD: plov at lunch (it runs out by afternoon), samsa, lagman.`,
+  },
+  ba: {
+    name: "Bosnia and Herzegovina", flag: "🇧🇦", lang: "bs", langName: "Bosnian", size: "4 KB",
+    apps: ["Taxi apps are limited — call a registered taxi (Crveni, Samir & Sin in Sarajevo)", "Google Maps works", "Booking/hostel apps for accommodation"],
+    arrival: ["Check your visa rule; valid Schengen/US/UK multiple-entry visa holders often enter visa-free", "BH Telecom or m:tel SIM at kiosks", "Taxis: registered companies with meters"],
+    currency: "BAM · convertible mark (KM); euros accepted in many places",
+    emergency: "122 police · 124 ambulance · 123 fire · 112",
+    plug: "C / F · 230V",
+    water: "Tap water is generally safe in cities; public fountains in Sarajevo are drinkable.",
+    tipping: "Round up or about 10%.",
+    haggle: "Baščaršija souvenir shops a little.",
+    visa: "Varies by nationality; holders of valid Schengen, US or UK multi-entry visas often enter visa-free — check.",
+    best: "May–Sep; winter for skiing on Jahorina and Bjelašnica.",
+    sim: "BH Telecom or m:tel; cheap tourist bundles.",
+    money: ["Cash is widely used; cards in hotels and bigger restaurants", "Euros are accepted but change is given in KM"],
+    scams: ["Property purchase schemes targeting Gulf buyers — use a lawyer", "Unregistered taxis"],
+    etiquette: ["Bosnian coffee is a ritual — take your time", "Avoid discussing the 1990s war lightly", "Modest dress in mosques"],
+    health: ["Good pharmacies (apoteka)", "Insurance recommended"],
+    costs: ["Ćevapi portion: approx. $4–7", "Coffee: approx. $1–2", "Mid-range hotel: approx. $50–90"],
+    getAround: ["Sarajevo trams and buses", "Car hire is best for Mostar, Blagaj, Kravica waterfalls", "Train Sarajevo–Mostar is scenic"],
+    eat: ["Ćevapi in somun bread", "Burek (meat) and pita (other fillings)", "Bosnian coffee with rahat lokum"],
+    laws: ["Stay on marked paths in rural areas — landmines from the war remain in some regions", "Drones may need permission"],
+    dangers: ["Landmines: never walk into unmarked fields or ruins in the countryside", "Mountain roads in winter"],
+    holidays: ["Summer: many Gulf visitors in Sarajevo; book early"],
+    customs: ["Standard EU-like allowances"],
+    connectivity: "Good 4G.",
+    numbers: ["122 police · 124 ambulance · 123 fire"],
+    phrases: [
+      { en: "Hello", loc: "Dobar dan", say: "DOH-bar dan", tag: "basics" },
+      { en: "Thank you", loc: "Hvala", say: "HVA-la", tag: "basics" },
+      { en: "How much is it?", loc: "Koliko košta?", say: "KO-li-ko KOSH-ta", tag: "shopping" },
+      { en: "Help!", loc: "Upomoć!", say: "OO-po-moch", tag: "emergency" },
+    ],
+    context: `BOSNIA AND HERZEGOVINA — practical local knowledge:
+POPULAR WITH ARAB VISITORS: Sarajevo's old town (Baščaršija), Mostar's bridge, Blagaj, Kravica waterfalls. Halal food is everywhere in Muslim-majority areas.
+ENTRY: depends on nationality; holders of valid Schengen, US or UK multiple-entry visas are often allowed visa-free for a short stay — confirm before booking.
+LANDMINES: some rural areas still have mines from the 1990s war — stay on marked paths and never enter ruins or fields.
+MONEY: convertible mark (KM); euros accepted with change in KM; cash widely used.
+PROPERTY: schemes selling land or flats to foreigners exist — always use an independent lawyer.`,
+  },
+  al: {
+    name: "Albania", flag: "🇦🇱", lang: "sq", langName: "Albanian", size: "4 KB",
+    apps: ["Taxi apps are limited — agree fares or use hotel taxis", "Google Maps works", "Gjirafa for local info"],
+    arrival: ["Check your visa rule; valid Schengen/US/UK multiple-entry visa holders often enter visa-free", "Vodafone or One SIM at the airport", "Tirana airport bus to the centre is cheap"],
+    currency: "ALL · lek (euros often accepted)",
+    emergency: "112 · 129 police · 127 ambulance · 128 fire",
+    plug: "C / F · 230V",
+    water: "Bottled recommended.",
+    tipping: "Round up or about 10%.",
+    haggle: "Markets a little.",
+    visa: "Varies by nationality; holders of valid Schengen, US or UK multi-entry visas often enter visa-free — check.",
+    best: "May–Jun and Sep for the Riviera; Jul–Aug is crowded and hot.",
+    sim: "Vodafone or One; cheap data.",
+    money: ["Cash in small places; cards in cities and hotels", "Prices sometimes quoted in 'old lek' (×10) — ask"],
+    scams: ["Old-lek vs new-lek confusion in prices", "Unmetered taxis"],
+    etiquette: ["A head shake can mean yes and a nod no — confirm verbally", "Coffee culture is central", "Hospitality (besa) is a matter of honour"],
+    health: ["Pharmacies common", "Insurance recommended"],
+    costs: ["Byrek: approx. $1", "Seafood dinner on the Riviera: approx. $15–30", "Mid-range hotel: approx. $40–80"],
+    getAround: ["Car hire is the easiest way to see the Riviera and the south", "Furgons (minibuses) between towns", "Mountain roads are slow — plan extra time"],
+    eat: ["Tavë kosi (lamb with yoghurt)", "Byrek", "Fresh seafood in Sarandë and Vlorë"],
+    laws: ["Drones may need permission", "Driving: police checks are common — carry your licence"],
+    dangers: ["Driving habits are unpredictable; mountain roads narrow", "Strong sun on the coast"],
+    holidays: ["July–August: the Riviera is packed"],
+    customs: ["Standard allowances"],
+    connectivity: "Good 4G.",
+    numbers: ["112 · 129 police · 127 ambulance"],
+    phrases: [
+      { en: "Hello", loc: "Përshëndetje", say: "per-shen-DET-yeh", tag: "basics" },
+      { en: "Thank you", loc: "Faleminderit", say: "fa-le-min-DE-rit", tag: "basics" },
+      { en: "How much is it?", loc: "Sa kushton?", say: "sa kush-TON", tag: "shopping" },
+      { en: "Help!", loc: "Ndihmë!", say: "N-DEEH-muh", tag: "emergency" },
+    ],
+    context: `ALBANIA — practical local knowledge:
+THE RIVIERA: Ksamil, Sarandë, Himarë, Dhërmi — turquoise sea at a fraction of Greek or Italian prices; best in June and September.
+ENTRY: depends on nationality; holders of valid Schengen, US or UK multiple-entry visas are often allowed visa-free for short stays — confirm first.
+PRICES: some people still quote in "old lek" (ten times the number) — ask which one.
+BODY LANGUAGE: a head shake can mean yes — confirm with words.
+DRIVING: a car is the best way around; mountain roads are slow and police checks frequent.`,
+  },
+  cy: {
+    name: "Cyprus", flag: "🇨🇾", lang: "el", langName: "Greek (English widely spoken)", size: "4 KB",
+    apps: ["Bolt in cities", "Google Maps works", "Cyprus by Bus app for intercity buses"],
+    arrival: ["Cyprus is in the EU but not yet in Schengen — its own visa rules apply", "Holders of valid Schengen double/multiple-entry visas can often enter the Republic — confirm", "Hire cars drive on the LEFT"],
+    currency: "EUR · euro",
+    emergency: "112 or 199",
+    plug: "G (UK three-pin) · 230V",
+    water: "Tap is safe but many prefer bottled.",
+    tipping: "Service is often included; round up or 5–10%.",
+    haggle: "Not really.",
+    visa: "Cyprus national visa for many nationalities; valid Schengen visa holders can often enter — check.",
+    best: "Apr–Jun and Sep–Nov; Jul–Aug is very hot.",
+    sim: "Cyta, Epic or PrimeTel; EU roaming for EU SIMs.",
+    money: ["Cards everywhere", "Euros"],
+    scams: ["Property and 'timeshare' presentations", "Car hire damage claims — photograph the car at pickup"],
+    etiquette: ["The island is divided — crossings to the north exist but have their own rules", "Churches: modest dress"],
+    health: ["Good hospitals; EU EHIC for EU citizens", "Strong sun"],
+    costs: ["Meze dinner: approx. €20–30 per person", "Coffee: approx. €3–4", "Hire car: approx. €25–45 a day"],
+    getAround: ["Hire car (drive on the left) is the easiest", "Intercity buses are cheap", "Taxis are pricier than Bolt"],
+    eat: ["Meze — many small dishes", "Halloumi and souvlaki", "Commandaria sweet wine"],
+    laws: ["Crossing to the north: use official crossings; some rental insurance doesn't cover the north", "Drones restricted near airports and bases"],
+    dangers: ["Summer heat", "Driving on the left for visitors"],
+    holidays: ["Greek Orthodox Easter is the biggest holiday"],
+    customs: ["EU rules"],
+    connectivity: "Excellent.",
+    numbers: ["112 or 199 emergencies"],
+    phrases: [
+      { en: "Hello", loc: "Γειά σας (Yia sas)", say: "YAH sas", tag: "basics" },
+      { en: "Thank you", loc: "Ευχαριστώ (Efcharistó)", say: "ef-ha-ree-STOH", tag: "basics" },
+      { en: "How much?", loc: "Πόσο κάνει; (Póso kánei?)", say: "PO-so KA-nee", tag: "shopping" },
+      { en: "Help!", loc: "Βοήθεια! (Voítheia!)", say: "vo-EE-thee-ah", tag: "emergency" },
+    ],
+    context: `CYPRUS — practical local knowledge:
+ENTRY: an EU country but not in Schengen — it has its own visa. Holders of valid Schengen double or multiple-entry visas can often enter the Republic of Cyprus — confirm for your nationality.
+DIVIDED ISLAND: the north is administered separately; use official crossings, and check that hire-car insurance covers it.
+DRIVING: on the LEFT, UK-style plugs, English widely spoken.
+FOOD: meze (a long series of small dishes), halloumi, souvlaki.
+SEASONS: very hot July–August; spring and autumn are ideal.`,
+  },
+  ch: {
+    name: "Switzerland", flag: "🇨🇭", lang: "de", langName: "German / French / Italian", size: "4 KB",
+    apps: ["SBB Mobile — every train, bus and boat, with tickets", "Google Maps works", "MeteoSwiss for mountain weather"],
+    arrival: ["Schengen visa rules apply (not EU, but in Schengen)", "Trains from Zurich and Geneva airports run straight to the cities", "Consider a Swiss Travel Pass or Half Fare Card for several days of travel"],
+    currency: "CHF · Swiss franc",
+    emergency: "112 · 117 police · 144 ambulance · 118 fire",
+    plug: "J (and C) · 230V — Swiss sockets need their own adapter",
+    water: "Tap water is excellent, fountains too (unless marked 'kein Trinkwasser').",
+    tipping: "Service is included; round up for good service.",
+    haggle: "No.",
+    visa: "Schengen visa for nationalities that need one.",
+    best: "Jun–Sep for the mountains; Dec–Mar for skiing.",
+    sim: "Swisscom, Sunrise or Salt; EU roaming may not cover Switzerland.",
+    money: ["Very expensive — plan budgets", "Cards and TWINT everywhere"],
+    scams: ["Rare; watch for pickpockets at big stations"],
+    etiquette: ["Punctuality matters", "Quiet on Sundays — no noisy chores", "Recycling rules are strict"],
+    health: ["Excellent but expensive care — insurance essential", "Mountain weather changes fast"],
+    costs: ["Coffee: approx. CHF 4–6", "Restaurant main: approx. CHF 25–45", "Mid-range hotel: approx. CHF 180–300"],
+    getAround: ["Trains are the best in the world — the SBB app covers everything", "Swiss Travel Pass covers trains, buses, boats and many museums", "Mountain railways are extra or discounted"],
+    eat: ["Fondue and raclette", "Rösti", "Supermarkets (Coop, Migros) save a lot on lunch"],
+    laws: ["Motorway vignette required for cars", "Drones restricted in many areas"],
+    dangers: ["Mountain weather and avalanches — follow closures", "Fast rivers — never swim near dams"],
+    holidays: ["1 August (National Day)"],
+    customs: ["Strict limits on meat and dairy imports"],
+    connectivity: "Excellent.",
+    numbers: ["112 · 117 police · 144 ambulance · 1414 Rega air rescue"],
+    phrases: [
+      { en: "Hello (Swiss German)", loc: "Grüezi", say: "GREW-et-see", tag: "basics" },
+      { en: "Thank you", loc: "Danke / Merci", say: "DAN-keh / mair-SEE", tag: "basics" },
+      { en: "How much is it?", loc: "Wie viel kostet das?", say: "vee feel KOS-tet das", tag: "shopping" },
+      { en: "Help!", loc: "Hilfe!", say: "HIL-feh", tag: "emergency" },
+    ],
+    context: `SWITZERLAND — practical local knowledge:
+ENTRY: in Schengen (not the EU), so a Schengen visa covers it.
+COST: one of the world's most expensive countries — supermarkets (Coop, Migros) for lunch, and a Swiss Travel Pass or Half Fare Card if travelling several days.
+TRAINS: the SBB app covers every train, bus, boat and many mountain railways, with live platforms.
+MOUNTAINS: weather changes fast; follow trail and avalanche closures; Rega (1414) is air rescue.
+PLUGS: Swiss sockets (type J) need their own adapter; many EU two-pin plugs fit.`,
+  },
+  at: {
+    name: "Austria", flag: "🇦🇹", lang: "de", langName: "German", size: "4 KB",
+    apps: ["ÖBB app for trains", "Wiener Linien app in Vienna", "Google Maps works"],
+    arrival: ["Schengen visa rules apply", "CAT train or S-Bahn from Vienna airport", "Motorway vignette needed if you drive"],
+    currency: "EUR · euro",
+    emergency: "112 · 133 police · 144 ambulance · 122 fire",
+    plug: "C / F · 230V",
+    water: "Tap water is excellent (Alpine spring water in Vienna).",
+    tipping: "Round up or about 5–10%, said to the waiter when paying.",
+    haggle: "No.",
+    visa: "Schengen visa for nationalities that need one.",
+    best: "May–Sep for lakes and mountains; Dec for Christmas markets; Jan–Mar for skiing.",
+    sim: "A1, Magenta, Drei; EU roaming.",
+    money: ["Cards widely accepted, but some cafés are cash only", "Euros"],
+    scams: ["Rare; fake 'Mozart concert' ticket sellers in costumes in Vienna are overpriced but real"],
+    etiquette: ["Greet with 'Grüß Gott' on entering shops", "Punctuality", "Sunday: shops closed"],
+    health: ["Very good healthcare; insurance recommended"],
+    costs: ["Coffee: approx. €4–5", "Schnitzel lunch: approx. €15–25", "Mid-range hotel: approx. €110–180"],
+    getAround: ["ÖBB trains Vienna–Salzburg–Innsbruck", "Vienna public transport day passes", "Zell am See and Hallstatt popular with Gulf visitors — go early to avoid crowds"],
+    eat: ["Wiener schnitzel (veal or chicken versions easy to find)", "Sachertorte and apfelstrudel", "Halal options common in Vienna"],
+    laws: ["Motorway vignette required", "Jaywalking can be fined"],
+    dangers: ["Mountain weather", "Crowded Hallstatt in summer"],
+    holidays: ["Christmas markets late Nov–Dec"],
+    customs: ["EU rules"],
+    connectivity: "Excellent.",
+    numbers: ["112 · 133 police · 144 ambulance · 140 mountain rescue"],
+    phrases: [
+      { en: "Hello", loc: "Grüß Gott / Servus", say: "grooss GOTT / SAIR-voos", tag: "basics" },
+      { en: "Thank you", loc: "Danke", say: "DAN-keh", tag: "basics" },
+      { en: "How much is it?", loc: "Wie viel kostet das?", say: "vee feel KOS-tet das", tag: "shopping" },
+      { en: "Help!", loc: "Hilfe!", say: "HIL-feh", tag: "emergency" },
+    ],
+    context: `AUSTRIA — practical local knowledge:
+ENTRY: Schengen.
+ROUTE: Vienna (palaces, cafés), Salzburg, Hallstatt, Zell am See and the Tyrol — very popular with Gulf families in summer; go early to beat crowds.
+TRAINS: ÖBB links the main cities comfortably; a car needs the motorway vignette.
+FOOD: halal food is easy to find in Vienna; chicken schnitzel is common.
+MANNERS: greet shops with "Grüß Gott"; shops close on Sundays; tip by telling the waiter the rounded total.`,
+  },
+  us: {
+    name: "United States", flag: "🇺🇸", lang: "en", langName: "English", size: "4 KB",
+    apps: ["Uber and Lyft", "Google Maps", "Transit apps per city (e.g. Citymapper in NYC)"],
+    arrival: ["Entry needs the right visa or an approved ESTA before flying", "Immigration may ask about your plans and funds — answer simply", "Tipping and sales tax are added to most prices you see"],
+    currency: "USD · US dollar",
+    emergency: "911",
+    plug: "A / B · 120V (check that chargers accept 110–240V)",
+    water: "Tap water is safe almost everywhere.",
+    tipping: "Expected: 18–20% in restaurants, $1–2 per drink, 15–20% for taxis and rideshares.",
+    haggle: "No (except cars and some markets).",
+    visa: "Visa for most nationalities; ESTA for Visa Waiver Program countries.",
+    best: "Depends on region — spring and autumn are good almost everywhere.",
+    sim: "eSIM or T-Mobile / AT&T prepaid.",
+    money: ["Cards everywhere; contactless common", "Prices exclude sales tax — the total is higher at the till"],
+    scams: ["Fake ESTA websites charging extra — use the official site only", "Street ticket sellers for shows"],
+    etiquette: ["Tipping is part of the wage — not optional in restaurants", "Queue and wait to be seated", "Small talk is normal"],
+    health: ["Healthcare is extremely expensive — insurance is essential", "Urgent care clinics are cheaper than emergency rooms for minor issues"],
+    costs: ["Coffee: approx. $4–6", "Restaurant main: approx. $20–40 plus tax and tip", "Mid-range hotel: approx. $150–300"],
+    getAround: ["Big distances — fly between regions", "Car hire outside big cities", "Subway in NYC; Uber elsewhere"],
+    eat: ["Portions are large", "Halal carts in NYC", "Tax and tip roughly add 25–30% to menu prices"],
+    laws: ["Drinking age 21; open alcohol in public is illegal in most places", "Jaywalking fines in some cities", "Carrying fruit, meat or seeds into the US is restricted — declare food"],
+    dangers: ["Some city areas are unsafe at night — ask locally", "Extreme weather (heat, storms) by region"],
+    holidays: ["Thanksgiving (late Nov) and 4 July — travel is busy and expensive"],
+    customs: ["Declare all food; fines for undeclared items"],
+    connectivity: "Good; eSIMs are the easiest.",
+    numbers: ["911 emergencies", "988 mental-health crisis line"],
+    phrases: [
+      { en: "Help!", loc: "Help!", say: "—", tag: "emergency" },
+      { en: "Can I get the check?", loc: "Can I get the check, please?", say: "—", tag: "food" },
+      { en: "Is tip included?", loc: "Is the tip included?", say: "—", tag: "food" },
+    ],
+    context: `UNITED STATES — practical local knowledge:
+ENTRY: a visa for most nationalities (apply early — interview waits can be long); ESTA online for Visa Waiver Program countries (most of the EU, UK, Australia, Japan); Canadians need neither for a visit. Use only the official ESTA site.
+MONEY: shown prices exclude sales tax; restaurant tips of 18–20% are expected; tax plus tip adds roughly a quarter or more to a menu price.
+HEALTH: very expensive — travel insurance is essential; urgent-care clinics for minor problems.
+FOOD: declare all food at customs; fruit, meat and seeds are restricted.
+DISTANCES: huge — fly between regions, drive locally.`,
+  },
 };
 
 async function aiTravelAsk(question, packKey, lang, packs, entry) {
@@ -6633,7 +7196,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.6";
+const PAGE_VERSION = "6.7";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -8912,7 +9475,7 @@ export default function App() {
             scheduleReminder={scheduleReminder} incoming={xrayIn} clearIncoming={() => setXrayIn(null)}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "fit" ? (
-          <FitApp flash={flash} openEngine={() => setShowEngine(true)} incoming={fitIn} clearIncoming={() => setFitIn(null)}
+          <FitApp flash={flash} openEngine={() => setShowEngine(true)} incoming={fitIn} clearIncoming={() => setFitIn(null)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             fetchJson={NATIVE && NATIVE.fetchJson ? async (url) => { const r = await nativeCall("fetchJson", url); return JSON.parse((r && r.body) || "{}"); } : null}
             scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
@@ -10183,7 +10746,7 @@ function ToolControls({ tool, opts, setOpt, btn }) {
   if (tool === "perplexity") return (<Box><Row label={tr("Sources")}><div className="flex flex-wrap gap-1.5">{[["any", "Any"], ["academic", "Academic"], ["news", "News"], ["official", "Official"]].map(([k, l]) => <button key={k} onClick={() => setOpt("sources", k)} className={btn(opts.sources === k)}>{tr(l)}</button>)}</div></Row><Row label={tr("Recency")}><div className="flex flex-wrap gap-1.5">{[["any", "Any"], ["week", "Week"], ["month", "Month"], ["year", "Year"]].map(([k, l]) => <button key={k} onClick={() => setOpt("recency", k)} className={btn(opts.recency === k)}>{tr(l)}</button>)}</div></Row></Box>);
   if (tool === "notebooklm") return (<Box><Toggle label={tr("Cite exact passages")} on={opts.cite !== false} onClick={() => setOpt("cite", !(opts.cite !== false))} /><p className="text-xs text-slate-500">{tr("Reminder: upload your sources in NotebookLM first.")}</p></Box>);
   if (tool === "manus") return (<Box><input value={opts.deliverable} onChange={(e) => setOpt("deliverable", e.target.value)} placeholder={tr("Deliverable (e.g. a 1-page PDF report)")} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" /><input value={opts.deadline} onChange={(e) => setOpt("deadline", e.target.value)} placeholder={tr("Deadline (optional)")} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" /><Toggle label={tr("Confirm plan before costly steps")} on={opts.confirmPlan} onClick={() => setOpt("confirmPlan", !opts.confirmPlan)} /></Box>);
-  if (tool === "midjourney" || tool === "suno") return (<Box>{tool === "midjourney" && <Row label={tr("Aspect")}><div className="flex flex-wrap gap-1.5">{["1:1", "16:9", "9:16", "4:3"].map((a) => <button key={a} onClick={() => setOpt("aspect", a)} className={btn(opts.aspect === a)}>{tr(a)}</button>)}</div></Row>}<input value={opts.imgStyle} onChange={(e) => setOpt("imgStyle", e.target.value)} placeholder={tool === "suno" ? "Style (e.g. lo-fi, warm)" : "Style (e.g. cinematic, watercolor)"} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" /></Box>);
+  if (ASPECT_TOOLS.has(tool) || STYLE_TOOLS.has(tool)) return (<Box>{ASPECT_TOOLS.has(tool) && <Row label={tr("Aspect")}><div className="flex flex-wrap gap-1.5">{["1:1", "16:9", "9:16", "4:3"].map((a) => <button key={a} onClick={() => setOpt("aspect", a)} className={btn(opts.aspect === a)}>{tr(a)}</button>)}</div></Row>}<input value={opts.imgStyle} onChange={(e) => setOpt("imgStyle", e.target.value)} placeholder={tool === "suno" ? "Style (e.g. lo-fi, warm)" : "Style (e.g. cinematic, watercolor)"} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" /></Box>);
   return null;
 }
 function Box({ children }) { return <div className="mt-3 space-y-2 bg-slate-950/50 border border-slate-800 rounded-xl p-3">{children}</div>; }
@@ -10202,6 +10765,10 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
   const [busy, setBusy] = useState(false);
   const [showOld, setShowOld] = useState(false);
   const [key, setKey] = useState("");
+  const [haveCode, setHaveCode] = useState(false);
+  // v6.7: Google Play's own local prices when the app came from Play
+  const [playPrice, setPlayPrice] = useState({});
+  useEffect(() => { if (Store.available()) Store.prices().then((p) => setPlayPrice(p || {})); }, []);
   const pro = isPro(tier);
   const planName = { month: tr("Monthly"), year: tr("Yearly"), life: tr("Lifetime") }[plan];
   const activate = async () => {
@@ -10225,19 +10792,14 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
     setBusy(true);
     try {
       const r = await Store.purchase(sku.id);
-      if (!r || r.ok === false) return flash(tr("Purchase cancelled"));
+      if (r && r.pending) return flash(tr("Payment pending — Pro turns on by itself as soon as Google confirms it."));
+      if (!r || r.ok === false) return flash(r && r.reason && r.reason !== "cancelled" ? tr("Google Play: {e}", { e: r.reason }) : tr("Purchase cancelled"));
       const e = await storeEntitlement();
       if (e) { setTier("pro"); flash(tr("Pro active")); close(); }
     } finally { setBusy(false); }
   };
-  const price = P[plan];
-  const msg = buyMessage(req, planName, price);
-  const contact = String(SELLER.contact || "").replace(/[^\d+]/g, "").replace(/^\+/, "");
-  const buyDirect = async () => {
-    if (contact) { try { window.open("https://wa.me/" + contact + "?text=" + encodeURIComponent(msg), "_blank"); } catch (e) {} return; }
-    try { if (navigator.share) { await navigator.share({ text: msg }); return; } } catch (e) {}
-    try { await navigator.clipboard.writeText(msg); flash(tr("Copied — send it to the seller")); } catch (e) { flash(req); }
-  };
+  const shown = (k) => playPrice[PLAY[k]] || P[k];
+  const price = shown(plan);
   const restore = async () => {
     setBusy(true);
     try { const e = await storeEntitlement(); if (e) { setTier("pro"); flash(tr("Pro restored")); close(); } else flash(tr("No purchase found")); }
@@ -10274,18 +10836,18 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
         {!pro ? (
           <>
             <div className="grid grid-cols-3 gap-2" data-testid="plans">
-              {card("year", "Yearly", P.year, P.yearNote, "Best value")}
-              {card("month", "Monthly", P.month, "cancel any time")}
-              {card("life", "Lifetime", P.life, P.lifeNote)}
+              {card("year", "Yearly", shown("year"), P.yearNote, "Best value")}
+              {card("month", "Monthly", shown("month"), "cancel any time")}
+              {card("life", "Lifetime", shown("life"), P.lifeNote)}
             </div>
             {Store.available() ? (
               <button onClick={storeBuy} disabled={busy} className="mt-3 w-full py-3 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm disabled:opacity-60" data-testid="buy-store">{tr("Get Pro · {p}", { p: price })}</button>
             ) : (
-              <>
-                <button onClick={buyDirect} className="mt-3 w-full py-3 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm" data-testid="buy-direct">{tr("Get Pro · {p}", { p: price })}</button>
-                <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">{tr("Pay with InstaPay, Vodafone Cash or a card, and send this code with it. You'll get your activation code back, made for this phone.")}</p>
-              </>
+              <p className="mt-3 text-[12px] text-slate-300 leading-relaxed rounded-lg border border-slate-800 bg-slate-950 p-2.5" data-testid="buy-play-only">{tr("Pro is bought in the Google Play version of Attune — one tap, paid by card or from your Vodafone / Orange / Etisalat balance, and it switches on by itself.")}</p>
             )}
+            <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">{tr("Cancel any time in Google Play → Subscriptions. The plan renews by itself; nothing to send, nobody to message.")}</p>
+            <button onClick={() => setHaveCode((v) => !v)} className="mt-3 text-[11px] text-slate-500 underline" data-testid="have-code">{tr("I have an activation code (company deals)")}</button>
+            {haveCode ? <>
             <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
               <span className="text-[11px] text-slate-500">{tr("Your request code")}</span>
               <button onClick={async () => { try { await navigator.clipboard.writeText(req); flash(tr("Copied")); } catch (e) {} }} className="font-mono text-sm text-white tracking-wider" data-testid="request-code">{req}</button>
@@ -10295,6 +10857,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
                 className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400" />
               <button onClick={activate} disabled={busy || !code.trim()} data-testid="pro-activate" className="px-4 py-2 rounded-lg bg-slate-800 text-slate-100 text-sm disabled:opacity-40">{tr("Activate")}</button>
             </div>
+            </> : null}
             <div className="flex items-center justify-between mt-3">
               <button onClick={() => setShowOld((v) => !v)} className="text-[11px] text-slate-600">{tr("I have an older key")}</button>
               {Store.available() ? <button onClick={restore} className="text-[11px] text-slate-400">{tr("Restore purchase")}</button> : null}

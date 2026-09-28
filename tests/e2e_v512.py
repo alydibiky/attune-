@@ -119,6 +119,7 @@ def sec_business(br):
 
     # licence: trial → activation with a code signed by the seller
     page.click("[data-testid=erp-tab-more]")
+    page.click("[data-testid=erp-have-code]")   # v6.7: codes are for company deals, behind this link (Play is the normal way)
     req = page.locator("[data-testid=erp-request-code]").inner_text().strip()
     check(req.startswith("ERP-"), "the system shows its request code " + req)
     page.fill("[data-testid=erp-licence-code]", "ATT1.eyJzIjoiRVJQLVgifQ.AAAA")

@@ -29,13 +29,17 @@ Attune isn't competing with ChatGPT on raw intelligence. It wins on things cloud
 
 Priced for the market: Egypt pays Egyptian prices, everyone else USD. ChatGPT charges $20, but our buyers are price-sensitive and the model costs us nothing to run.
 
-| Plan | Egypt | Rest of world | Notes |
-|---|---|---|---|
-| Monthly | EGP 199 | $4.99 | Entry point, cancel any time |
-| **Yearly (default, "Best value")** | **EGP 1,499** | **$39.99** | "Save 37%". Yearly buyers stay about 3× longer |
-| Lifetime | EGP 3,999 | $99 | Cash now; great for early adopters and launches |
-| Business: one ERP system | EGP 9,999 once | $249 | Unlimited records, Excel and app export |
-| Business support (yearly) | 20% of the licence | 20% | Updates, changes on request, priority WhatsApp |
+**v6.7 prices** (Ali: "a bit more — I offer a lot"; Pro now also carries Fit & Food, a Yazio-class app):
+
+| Plan | Egypt | Rest of world | Google Play product id | Notes |
+|---|---|---|---|---|
+| Monthly | EGP 299 | $7.99 | `attune_pro_monthly` (subscription) | Entry point, cancel any time in Play |
+| **Yearly (default, "Best value")** | **EGP 2,499** | **$59.99** | `attune_pro_yearly` (subscription) | ≈ EGP 208 a month, "save 30%". Yearly buyers stay about 3× longer |
+| Lifetime | EGP 5,999 | $149.99 | `attune_pro_lifetime` (one-time) | Best kept as a launch offer |
+| Business: one company system | EGP 14,999 once | $299.99 | `attune_business_system` (one-time, **consumable**: bought again for each system) | Unlimited records, Excel and app export |
+| Business support (yearly) | 20% of the licence | 20% | — (invoice) | Updates and changes on request |
+
+*(Older prices, kept for the record: v5.32 EGP 199 / 1,499 / 3,999 and Business 9,999.)*
 
 **Why v5.32 raised the prices (Ali: "I think it's too low"):** the first prices (EGP 149 / 999 / 2,999) priced Attune like a small utility app. It is a private, offline AI with deep research, Studio and Business systems — and ChatGPT Plus costs about EGP 1,000 a *month* in Egypt. EGP 199 a month is still a fifth of that, on par with a streaming subscription; the yearly plan stays the obvious choice. Business was the most underpriced: agencies charge EGP 20,000–100,000 for a custom system, so EGP 9,999 is still an easy yes. Start here, and raise again once reviews and demo videos exist (it is easier to raise with social proof than to lower).
 
@@ -47,7 +51,20 @@ Priced for the market: Egypt pays Egyptian prices, everyone else USD. ChatGPT ch
 - Lifetime is a high anchor that makes yearly look reasonable.
 - Prices end in 9.
 
-## 4. How people pay (works today, no Play Store needed)
+## 4. How people pay — v6.7: Google Play, automatic (Ali: "no WhatsApp; easy, automated, no effort")
+
+Everything is bought **inside the app through Google Play Billing** (`Billing.kt`):
+- **The customer:** taps the plan → Play's own sheet → pays by card or **from the Vodafone / Orange / Etisalat balance** (carrier billing works in Egypt) → Pro (or the business system) switches on by itself. A carrier payment that is still pending says so and switches on when Google confirms. Cancelling is in Play → Subscriptions.
+- **Ali:** does nothing per sale. Google charges, renews, refunds, handles tax, and pays out monthly to the bank. Google keeps **15%** (subscriptions, and everything under $1M a year).
+- **Businesses:** "Activate this system" in Business → More → one tap in Play → unlocked. The purchase is then used up (consumed) so the company can buy the next system. A payment that went through while the app closed is offered next time ("Use your Google Play purchase on this system").
+- **Why not InstaPay:** it has no fees, but there is no automatic confirmation of a transfer for app developers — someone would have to check every payment by hand, which is exactly the effort Ali doesn't want. Signed activation codes stay only for special company deals paid by invoice (behind "I have an activation code").
+
+**What Ali does once in the Play Console:**
+1. Create a payments profile and link the bank account (Egypt is supported for payouts).
+2. Monetise → Products → create the four products with the exact ids above; prices from the table (Play converts other countries).
+3. Before release: `TESTING_ALL_PRO = false` in `web-src/billing.js`.
+
+### The old way (v5.29, no longer shown in the app)
 
 1. In **Plan**, the buyer picks a plan and taps **Get Pro**. WhatsApp opens with a ready message: plan, price and **this phone's request code** (`PRO-XXXXXXXX`).
    → Put your WhatsApp number in `web-src/erp.js` → `SELLER.contact` (for example `"+2010…"`), and the price text in `SELLER.price`.

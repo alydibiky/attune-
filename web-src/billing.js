@@ -28,10 +28,17 @@ export function testingPro() {
 // v5.32 prices (MONETIZATION.md §3): the first ones were too low for what Pro gives — an
 // offline, private AI with deep research, Studio and Business systems. Still far below
 // ChatGPT Plus (≈ EGP 1,000 a month in Egypt), yearly still the obvious best value.
+// v6.7 (Ali: "the prices a bit more — I offer a lot"): Pro now also carries Fit & Food (a Yazio-class
+// app), Deal Check, Chat X-Ray, the converter, slides and Business. Still under a third of ChatGPT Plus.
+// These are the shown fallbacks; on Google Play the phone shows Play's own local price for each product.
 export const PRICES = {
-  EG: { cur: "EGP", month: "EGP 199", year: "EGP 1,499", life: "EGP 3,999", yearNote: "≈ EGP 125 a month — save 37%", lifeNote: "pay once, yours forever" },
-  US: { cur: "USD", month: "$4.99", year: "$39.99", life: "$99", yearNote: "≈ $3.33 a month — save 33%", lifeNote: "pay once, yours forever" },
+  EG: { cur: "EGP", month: "EGP 299", year: "EGP 2,499", life: "EGP 5,999", business: "EGP 14,999", yearNote: "≈ EGP 208 a month — save 30%", lifeNote: "pay once, yours forever", businessNote: "per company system, once" },
+  US: { cur: "USD", month: "$7.99", year: "$59.99", life: "$149.99", business: "$299.99", yearNote: "≈ $5 a month — save 37%", lifeNote: "pay once, yours forever", businessNote: "per company system, once" },
 };
+/** Google Play product ids (create them with these exact ids in the Play Console). */
+export const PLAY = { month: "attune_pro_monthly", year: "attune_pro_yearly", life: "attune_pro_lifetime", business: "attune_business_system" };
+/** Which Play products make this phone Pro (a Business system activation doesn't). */
+export const proFromOwned = (items) => (items || []).find((x) => x && x.purchased !== false && [PLAY.month, PLAY.year, PLAY.life].includes(x.productId)) || null;
 
 /** "EG" for phones set to Egypt (time zone or Arabic-Egypt locale), else "US" prices. */
 export function region(tz, lang) {
@@ -51,6 +58,7 @@ export const PRO_BENEFITS = [
   "Expert review: strong models check and improve their own answers",
   "Deep web research: several searches, more pages, cross-checked facts",
   "Unlimited Studio pictures",
+  "Fit & Food: unlimited photo meals, the week's meal plan and shopping list, the week report",
   "Business systems: unlimited records and Excel / app export",
   "Memory that remembers everything and can search it",
 ];

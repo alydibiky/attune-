@@ -172,6 +172,7 @@ class MainActivity : AppCompatActivity() {
         WebView.setWebContentsDebuggingEnabled(isDebuggable)
 
         bridge = NativeBridge(this, web)
+        bridge.billing.activity = this
         voice = Voice(this)
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }

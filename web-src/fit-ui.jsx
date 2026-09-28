@@ -82,7 +82,11 @@ function Bar({ label, v, max, cls }) {
   );
 }
 
-export function FitApp({ llm, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, scanBarcode, native, share, listen, health }) {
+// v6.7 (Ali approved the billing plan): Free keeps typed / spoken logging, barcode, search, favorites,
+// the watch and 3 photo meals a day; Pro adds unlimited photo meals, the week's meal plan + shopping
+// list and the week report. `pro` defaults to on (web preview, tests); the app passes the real state.
+export const FREE_PHOTOS_PER_DAY = 3;
+export function FitApp({ llm, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, scanBarcode, native, share, listen, health, pro = true, openPlan }) {
   const ar = getLang() === "ar";
   const L = (en, a) => (ar ? a : en);
   const [st, setSt] = useState(load);
@@ -123,7 +127,13 @@ export function FitApp({ llm, modelReady, openEngine, flash, incoming, clearInco
     if (!modelReady) { if (read.items.length) { setDraft(read.items); flash && flash(L(`Not placed: “${read.unknown.join(", ")}” — load a model to read it, or search it below`, `ما عرفتش: «${read.unknown.join("، ")}» — شغّل موديل يقراها، أو دوّر عليها تحت`)); } else openEngine && openEngine(); return; }
     setBusy(true);
     try {
-      if (photo) { await readPhotoMeal(me); return; }
+      if (photo) {
+        const used = (st.photoUse && st.photoUse.d === F.today() ? st.photoUse.n : 0);
+        if (!pro && used >= FREE_PHOTOS_PER_DAY) { flash && flash(L(`${FREE_PHOTOS_PER_DAY} photo meals a day are free — Pro reads every photo. Type or say it meanwhile.`, `${FREE_PHOTOS_PER_DAY} صور وجبات في اليوم ببلاش — Pro بيقرا كل الصور. اكتبها أو قولها لحد كده.`)); setPhoto(null); openPlan && openPlan(); return; }   // the photo goes, so typing the meal works at once
+        await readPhotoMeal(me);
+        if (!pro) upd((s) => ({ ...s, photoUse: { d: F.today(), n: (s.photoUse && s.photoUse.d === F.today() ? s.photoUse.n : 0) + 1 } }));
+        return;
+      }
       const ask = read.items.length ? read.unknown.join(", ") : text.trim();
       const raw = await llm(F.mealMessages(ask, false), null, { json: true, maxTokens: 600, temperature: 0 });
       if (run.current !== me) return;
@@ -366,9 +376,9 @@ export function FitApp({ llm, modelReady, openEngine, flash, incoming, clearInco
       ) : null}
 
       {tab === "today" && !adding && <Today {...{ L, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, flash, health }} />}
-      {tab === "recipes" && !adding && <Recipes {...{ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, flash, share }} />}
+      {tab === "recipes" && !adding && <Recipes {...{ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, flash, share, pro, openPlan }} />}
       {tab === "move" && !adding && <><WatchCard {...{ L, ar, health, st, upd, dayKey }} /><Move {...{ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg: +st.profile.kg }} /></>}
-      {tab === "progress" && !adding && <Progress {...{ L, ar, st, upd, tg }} />}
+      {tab === "progress" && !adding && <Progress {...{ L, ar, st, upd, tg, pro, openPlan }} />}
     </div>
   );
 }
@@ -502,7 +512,7 @@ function Today({ L, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdd
 }
 
 const TAGS = [["all", "All", "الكل"], ["egyptian", "Egyptian", "مصري"], ["breakfast", "Breakfast", "فطار"], ["lunch", "Lunch", "غدا"], ["dinner", "Dinner", "عشا"], ["snack", "Snack", "سناك"], ["high-protein", "High protein", "بروتين عالي"], ["low-carb", "Low carb", "كارب قليل"], ["vegetarian", "Vegetarian", "نباتي"], ["fav", "★", "★"]];
-function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, flash, share }) {
+function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, flash, share, pro = true, openPlan }) {
   const [q, setQ] = useSticky("fit:rq", "");
   const [tag, setTag] = useSticky("fit:rtag", "all");
   const [open, setOpen] = useState(null);
@@ -550,7 +560,7 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
   if (week) return <WeekPlanView {...{ L, ar, tg, diet: st.profile.diet, share }} close={() => setWeek(false)} />;
   return (
     <div className="space-y-3" data-testid="fit-recipes">
-      <button onClick={() => setWeek(true)} className="w-full rounded-xl bg-emerald-700 py-2.5 text-[13.5px] font-medium text-white" data-testid="fit-week-open">📅 {L("Plan my week + shopping list", "خطط أسبوعي + قايمة المشتريات")}</button>
+      <button onClick={() => (pro ? setWeek(true) : openPlan && openPlan())} className="w-full rounded-xl bg-emerald-700 py-2.5 text-[13.5px] font-medium text-white" data-testid="fit-week-open">📅 {L("Plan my week + shopping list", "خطط أسبوعي + قايمة المشتريات")}{pro ? "" : " · Pro"}</button>
       <div className="relative"><Search size={15} className="absolute top-2.5 start-2.5 text-slate-500" />
         <input value={q} onChange={(e) => setQ(e.target.value)} data-testid="fit-recipe-search" placeholder={L(`Search ${all.length} recipes or an ingredient…`, `دوّر في ${all.length} وصفة أو مكوّن…`)} className="w-full rounded-xl bg-slate-800 py-2 ps-8 pe-2 text-[14px] text-white placeholder:text-slate-500" /></div>
       <div className="flex gap-1.5 overflow-x-auto pb-1">{TAGS.map(([k, en, a]) => <button key={k} onClick={() => setTag(k)} className={"shrink-0 rounded-full px-3 py-1 text-[12px] " + (tag === k ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300")}>{L(en, a)}</button>)}</div>
@@ -643,7 +653,7 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
   );
 }
 
-function Progress({ L, ar, st, upd, tg }) {
+function Progress({ L, ar, st, upd, tg, pro = true, openPlan }) {
   const [w, setW] = useState("");
   const tr = F.trend(st.weights);
   const wk = F.weekSummary(st.days, st.weights, tg);
@@ -654,7 +664,7 @@ function Progress({ L, ar, st, upd, tg }) {
   const X = (i) => (pts.length < 2 ? 150 : (i / (pts.length - 1)) * 290 + 5), Y = (v) => 110 - ((v - lo) / (hi - lo || 1)) * 100;
   return (
     <div className="space-y-4" data-testid="fit-progress">
-      <WeekReport {...{ L, st, tg }} />
+      {pro ? <WeekReport {...{ L, st, tg }} /> : <button onClick={() => openPlan && openPlan()} className="w-full rounded-2xl border border-amber-800 bg-amber-500/10 p-3 text-start text-[13px] text-amber-100" data-testid="fit-report-locked">📊 {L("Your week report — what went well, what to change — is in Pro.", "تقرير أسبوعك — إيه اللي ماشي كويس وإيه اللي يتغيّر — في Pro.")}</button>}
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white" data-testid="fit-streak">{strk}</div><div className="text-[11px] text-slate-400">{L("day streak", "يوم ورا بعض")}</div></div>
         <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white">{wk.avg}</div><div className="text-[11px] text-slate-400">{L("avg kcal (7 d)", "متوسط السعرات")}</div></div>

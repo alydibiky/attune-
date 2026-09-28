@@ -345,6 +345,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     var askNotify: (() -> Unit)? = null
     var askHealth: (() -> Unit)? = null
     var askHuawei: (() -> Unit)? = null
+    val billing = Billing(ctx)
 
     // ---- v6.3 watches through Health Connect (read only) --------------------------------------
     /** "ready" | "update" | "none", and how many of Attune's health permissions are granted. */
@@ -364,6 +365,12 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
         askHealth?.invoke()
     }
+
+    // ---- v6.7 Google Play Billing -------------------------------------------------------------
+    @JavascriptInterface fun storeProducts(id: String, arg: String) { billing.products { resolve(id, it) } }
+    @JavascriptInterface fun storeBuy(id: String, arg: String) { billing.buy(JSONObject(arg).optString("sku")) { resolve(id, it) } }
+    @JavascriptInterface fun storeOwned(id: String, arg: String) { billing.owned { resolve(id, it) } }
+    @JavascriptInterface fun storeConsume(id: String, arg: String) { billing.consume(JSONObject(arg).optString("token")) { resolve(id, it) } }
 
     // ---- v6.5 Huawei Health directly, through Huawei's Health Kit (read only) ----
     /** {configured, hms, app, authorized} */

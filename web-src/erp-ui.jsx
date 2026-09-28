@@ -13,6 +13,7 @@ import { useSubBack, useSticky } from "./backstack.js";
 import * as E from "./erp.js";
 import { buildApp, readApp } from "./erp-app.js";
 import { getPower } from "./power.js";
+import { PLAY, pricesFor } from "./billing.js";
 
 const KEY = "attune:erp:v1";
 const field = "w-full min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500";
@@ -711,6 +712,35 @@ function SummaryTab({ sys, table }) {
 function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, setTid }) {
   const [code, setCode] = useState("");
   const [checking, setChecking] = useState(false);
+  // v6.7: a system is activated through Google Play (Ali: "businesses pay me easier and automated") —
+  // one tap, Google charges, the system unlocks by itself; the purchase is then used up so the
+  // next system can be bought. A paid purchase not applied yet (the app closed) is offered here.
+  const store = typeof window !== "undefined" ? window.ATTUNE_STORE : null;
+  const [bizPrice, setBizPrice] = useState("");
+  const [unused, setUnused] = useState(null);
+  const [haveCode, setHaveCode] = useState(false);
+  const [buying, setBuying] = useState(false);
+  useEffect(() => {
+    if (!store || E.isActive(sys)) return;
+    store.products && store.products().then((l) => { const x = (l || []).find((p) => p.id === PLAY.business); if (x && x.price) setBizPrice(x.price); }).catch(() => {});
+    store.owned().then((l) => setUnused((l || []).find((p) => p.productId === PLAY.business && p.purchased !== false) || null)).catch(() => {});
+  }, [sys.id]);
+  const applyPlay = async (p) => {
+    setSys({ ...sys, licence: { ok: true, plan: "business", via: "google-play", order: p.orderId || "", at: Date.now() } }, tr("Activated — thank you! No limits on this system now."));
+    setUnused(null);
+    try { if (p.token) await store.consume(p.token); } catch (e) {}
+  };
+  const buyBusiness = async () => {
+    setBuying(true);
+    try {
+      const r = await store.purchase(PLAY.business);
+      if (r && r.pending) { flash(tr("Payment pending — the system unlocks by itself as soon as Google confirms it.")); return; }
+      if (r && r.ok && r.purchase) { await applyPlay(r.purchase); return; }
+      if (r && r.already) { const l = await store.owned(); const p = l.find((x) => x.productId === PLAY.business && x.purchased !== false); if (p) { await applyPlay(p); return; } }
+      flash(r && r.reason && r.reason !== "cancelled" ? tr("Google Play: {e}", { e: r.reason }) : tr("Purchase cancelled"));
+    } finally { setBuying(false); }
+  };
+  const tzP = pricesFor((() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return ""; } })(), (typeof navigator !== "undefined" && navigator.language) || "");
   const [confirmDel, setConfirmDel] = useState(false);
   const [imp, setImp] = useState(null);            // { name, header, rows }
   const fileRef = useRef(null);
@@ -813,12 +843,18 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
       <div className={`rounded-xl border p-3 space-y-2 ${active ? "border-emerald-800 bg-emerald-500/5" : "border-amber-800 bg-amber-500/5"}`} data-testid="erp-licence">
         <p className="text-sm font-semibold flex items-center gap-1.5 text-slate-100"><KeyRound size={15} />{active ? tr("Activated") : tr("Trial — {n} records per table", { n: E.FREE_ROWS })}</p>
         {active ? <p className="text-[12px] text-slate-400">{tr("This system is paid for: no limits. The design stays yours to change any time.")}</p> : <>
-          <p className="text-[12px] text-slate-300">{tr("Each system is paid for once. Designing and trying it is free; activation removes the record limit for this system.")}{E.SELLER.price ? " " + tr("Price: {p}", { p: E.SELLER.price }) : ""}</p>
+          <p className="text-[12px] text-slate-300">{tr("Each system is paid for once. Designing and trying it is free; activation removes the record limit for this system.")}</p>
+          {unused ? <button className={primary + " w-full"} onClick={() => applyPlay(unused)} data-testid="erp-use-purchase">{tr("Use your Google Play purchase on this system")}</button>
+            : store ? <button className={primary + " w-full"} disabled={buying} onClick={buyBusiness} data-testid="erp-buy-play">{buying ? tr("Opening Google Play…") : tr("Activate this system · {p}", { p: bizPrice || tzP.business })}</button>
+            : <p className="text-[12px] text-slate-400" data-testid="erp-play-only">{tr("Activation is bought in the Google Play version of Attune — one tap, and the system unlocks by itself.")}</p>}
+          <button className="text-[11px] text-slate-500 underline" onClick={() => setHaveCode((v) => !v)} data-testid="erp-have-code">{tr("I have an activation code (company deals)")}</button>
+          {haveCode ? <>
           <div className="flex gap-2 items-center"><code className="text-[13px] text-teal-200 bg-slate-950 rounded px-2 py-1 select-all" data-testid="erp-request-code">{req}</code>
             <button className="p-1.5 text-slate-400" onClick={() => { try { navigator.clipboard.writeText(req); } catch (e) {} flash(tr("Copied")); }} title={tr("Copy")}><Copy size={15} /></button>
             {share ? <button className="p-1.5 text-slate-400" onClick={() => share(requestText + (E.SELLER.contact ? "\n" + E.SELLER.contact : ""))} title={tr("Send the request")}><Share2 size={15} /></button> : null}</div>
           <textarea value={code} onChange={(e) => setCode(e.target.value)} rows={2} dir="ltr" className={field + " font-mono text-[12px]"} placeholder={tr("Paste the activation code")} data-testid="erp-licence-code" />
           <button className={primary} disabled={checking || code.trim().length < 20} onClick={activate} data-testid="erp-activate">{checking ? tr("Checking…") : tr("Activate")}</button>
+          </> : null}
         </>}
       </div>
 

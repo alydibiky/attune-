@@ -11,8 +11,8 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 35
-        versionCode = 68                 // raise with every release — the phone shows it in Settings → Apps
-        versionName = "6.6"
+        versionCode = 69                 // raise with every release — the phone shows it in Settings → Apps
+        versionName = "6.7"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
         // phone. Add "x86_64" only if you want to run it in the emulator — it
@@ -130,4 +130,7 @@ dependencies {
     // Huawei watches (v6.5): Huawei Health's data through Huawei's Health Kit, read only — the way
     // Yazio connects to Huawei Health. Version from Huawei's own Kotlin demo (HMS-Core/hms-health-demo-kotlin).
     implementation("com.huawei.hms:health:6.11.0.303")
+    // Google Play Billing (v6.7): Pro subscriptions / lifetime and Business activations — Google charges,
+    // renews, refunds and pays out; nothing to run on our side.
+    implementation("com.android.billingclient:billing-ktx:7.1.1")
 }
