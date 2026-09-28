@@ -47,10 +47,10 @@ jobs:
       - name: Run the benchmark
         run: |
           cd tests/websearch && npm i --silent --no-save cheerio@1.0.0 && node probe.mjs && cd ../..
-          if [ -z "${{ matrix.url }}" ]; then RETRIEVAL_ONLY=1 MODEL_NAME=search-only node tests/websearch/eval.mjs; exit 0; fi
+          if [ -z "${{ matrix.url }}" ]; then RETRIEVAL_ONLY=1 MODEL_NAME=search-only node tests/websearch/eval.mjs; FIXTURE=1 RETRIEVAL_ONLY=1 MODEL_NAME=fixture-pages node tests/websearch/eval.mjs; exit 0; fi
           ~/llama.cpp/build/bin/llama-server -m ~/model.gguf --host 127.0.0.1 --port 8099 -c 12288 -t "$(nproc)" -np 1 --jinja --no-ui -fa on -ctk q8_0 -ctv q8_0 > server.log 2>&1 &
           for i in $(seq 1 300); do curl -s 127.0.0.1:8099/health | grep -q ok && break; sleep 1; done
-          MODEL_NAME="${{ matrix.name }}" CTX=12288 node tests/websearch/eval.mjs ${{ github.event.inputs.only && format('--only={0}', github.event.inputs.only) || '' }}
+          FIXTURE=1 MODEL_NAME="${{ matrix.name }}" CTX=12288 node tests/websearch/eval.mjs ${{ github.event.inputs.only && format('--only={0}', github.event.inputs.only) || '' }}
       - name: Keep the reports
         if: always()
         uses: actions/upload-artifact@v4

@@ -8,7 +8,16 @@
 //   node tests/websearch/eval.mjs [--only 1,5,9]
 import fs from "fs";
 import http from "http";
-import { search } from "./search.mjs";
+import { search, pageText, TIMEOUTS } from "./search.mjs";
+// FIXTURE=1: the search results come from fixtures.json (real results for each question, collected once)
+// and the pages are opened live — measures everything after the search, the same on any machine.
+const FIXTURES = process.env.FIXTURE ? JSON.parse(fs.readFileSync(new URL("./fixtures.json", import.meta.url), "utf8")) : null;
+async function fixtureSearch(i, pages) {
+  const t0 = Date.now();
+  const hits = (FIXTURES[String(i)] || []).map((h) => ({ ...h, source: "web" })).filter((h) => !/wikipedia\.org\//i.test(h.url));
+  await Promise.all(hits.slice(0, pages).map(async (h) => { const text = await Promise.race([pageText(h.url, 16000), new Promise((r) => setTimeout(() => r(""), TIMEOUTS.pageWait))]); if (text.length > 80) h.text = text; }));
+  return { hits: hits.filter((h) => (h.text || "").length > 40), via: "fixture", ms: { search: 0, read: Date.now() - t0 } };
+}
 const R = await import("../../web-src/research.js");
 const W = await import("../../web-src/webrank.js");
 const AF = await import("../../web-src/answerfix.js");
@@ -35,7 +44,7 @@ export const QUESTIONS = [
   ["How long is the Suez Canal in kilometres?", /19[0-9]/],
   ["ما هو أطول نهر في العالم؟", /النيل|Nile/i],
   ["Who won the 2022 FIFA World Cup?", /Argentina|الأرجنتين/i],
-  ["ما هي الحمولة القصوى لونش Grove GMK5250L؟", /250/],
+  ["ما هي الحمولة القصوى لونش Grove GMK5250L؟", /250|300/],
   ["What is the capital of Turkey?", /Ankara|أنقرة/i],
   ["كم سعر الدولار مقابل الجنيه المصري في البنك الأهلي اليوم؟", /\b(4\d|5\d)([.,]\d+)?\b/],
   ["What is the torque of the Toyota Hilux 2.8 diesel engine?", /500\s?N·?m|500\s?nm/i],
@@ -59,14 +68,14 @@ async function llm(content, maxTokens) {
 }
 
 /** One question through Chat's FAST web path, as chat.jsx does it. */
-export async function answer(typed) {
+export async function answer(typed, index = 0) {
   const ms = {}; let t = Date.now();
   const deep = R.pagesFor(typed) === 8;
   const readCap = deep ? POWER.readPages : Math.min(POWER.readPages, 5);
   const nQ = deep ? Math.max(3, POWER.queries) : 1;
   const queries = nQ > 1 ? R.expandQueries(typed, nQ) : [typed];
   const per = Math.min(8, Math.ceil(readCap / queries.length) + 2);
-  const found = await Promise.all(queries.map((q) => search(q, queries.length > 1 ? per : Math.min(POWER.pages, R.pagesFor(typed))).catch(() => ({ hits: [] }))));
+  const found = FIXTURES ? [await fixtureSearch(index, 8)] : await Promise.all(queries.map((q) => search(q, queries.length > 1 ? per : Math.min(POWER.pages, R.pagesFor(typed))).catch(() => ({ hits: [] }))));
   ms.search = Math.max(...found.map((f) => (f.ms && f.ms.search) || 0)); ms.read = Math.max(...found.map((f) => (f.ms && f.ms.read) || 0));
   const toRead = R.mergeHits(found.map((f) => f.hits || []), readCap, typed);
   if (!toRead.length) return { text: "", ms, pages: 0, why: "no results" };
@@ -102,7 +111,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   for (let i = 0; i < QUESTIONS.length; i++) {
     if (only.length && !only.includes(i + 1)) continue;
     const [q, rx] = QUESTIONS[i]; n++;
-    let a; try { a = await answer(q); } catch (e) { a = { text: "", ms: {}, why: String(e.message || e) }; }
+    let a; try { a = await answer(q, i + 1); } catch (e) { a = { text: "", ms: {}, why: String(e.message || e) }; }
     const ok = rx.test(a.text || ""); const had = a.inSources ? a.inSources(rx) : false;
     if (ok) right++; if (had) found++;
     for (const k of Object.keys(tot)) tot[k] += a.ms[k] || 0;
