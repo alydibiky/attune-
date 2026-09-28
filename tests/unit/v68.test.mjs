@@ -64,6 +64,13 @@ ok(AF.wrongLanguage("يا باشمهندس، محتاجين الونش ال100 �
 ok(AF.wrongLanguage("ترجم ده للانجليزي: ازيك يا صاحبي", "How are you, my friend? I hope you are doing well today.") === null, "language: English that was asked for is fine");
 ok(AF.wrongLanguage("يا باشمهندس، محتاجين الونش", "تمام، هبعتلك السعر النهارده") === null, "language: Arabic → Arabic is fine");
 
+// Glow (2B): a course plan cut off mid-loop; «فاضل 8000» read as a payment
+const loop = '{\n "title": "هيدروليك الأوناش",\n "lessons": [\n "مفهوم الضغط", "الصمامات", "المضخة", "الأسطوانة", "الخزان", "الفلاتر", "تصميم الأحمال", "تصميم الأحمال", "تصميم الأحمال", "تصميم ال';
+const pl = D.parsePlan(loop);
+ok(pl && pl.plan.length === 7 && pl.title === "هيدروليك الأوناش", "learn: a plan cut off by a loop keeps its titles, repeats dropped");
+const glow = X.parseItems(JSON.stringify({ items: [{ type: "owes", msg: 0, from: "Hassan", to: "Ali", amount: 18000 }, { type: "paid", msg: 2, from: "Hassan", to: "Ali", amount: 10000 }, { type: "paid", msg: 3, from: "Ali", to: "Hassan", amount: 8000 }] }), by, ex.people);
+ok(X.ledgerOf(glow, "Ali")[0].net === 8000, "x-ray: «وصلت شكرا، فاضل 8000» is a balance, not a payment → Hassan owes 8,000");
+
 // Maps: a place name with «و» inside a word, and "where can I park"
 ok(PL.placeFor("انا في كمبوند ايمرالد بارك وعايز أفول بنزين اعمل ايه").near === "كمبوند ايمرالد بارك", "maps: «كمبوند» is not cut at its «و»");
 ok(PL.placeFor("انا في مدينتي و عايز صيدلية").near === "مدينتي", "maps: «و» as its own word still ends the place");

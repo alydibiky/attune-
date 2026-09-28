@@ -55,7 +55,16 @@ export function parsePlan(text) {
   if (titles.length >= 5) return { title: clean(j.title, 90), plan: [...new Set(titles)].slice(0, 60) };
   // a numbered list instead of JSON is fine too
   const lines = String(text || "").split("\n").map((l) => l.match(/^\s*\d+[.)-]\s*(.+)$/)).filter(Boolean).map((m) => clean(m[1].replace(/\*+/g, ""), 90));
-  return lines.length >= 5 ? { title: "", plan: lines.slice(0, 60) } : null;
+  if (lines.length >= 5) return { title: "", plan: [...new Set(lines)].slice(0, 60) };
+  // v6.8 (Glow 2B): the model repeated one title until the length limit, so the JSON never closed —
+  // the titles written before the cut are kept (repeats dropped)
+  const cut = String(text || "").match(/"(?:lessons|plan)"\s*:\s*\[([\s\S]*)/);
+  if (cut) {
+    const got = [...new Set([...cut[1].matchAll(/"((?:[^"\\]|\\.){3,200})"/g)].map((m) => clean(m[1], 90)).filter((x) => x.length > 2))];
+    const title = (String(text).match(/"title"\s*:\s*"([^"]{2,120})"/) || [])[1] || "";
+    if (got.length >= 5) return { title: clean(title, 90), plan: got.slice(0, 60) };
+  }
+  return null;
 }
 
 const VISUALS = `The visual is drawn by the app; choose the kind that teaches this lesson best:

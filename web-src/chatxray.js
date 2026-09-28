@@ -129,6 +129,11 @@ export function parseItems(raw, byIndex, people) {
     let amount = it.amount == null ? null : Number(String(it.amount).replace(/,/g, ""));
     if (amount != null && !(amount > 0 && nums(m.text).some((v) => Math.abs(v - amount) < 0.01 || Math.abs(v * 1000 - amount) < 0.01))) amount = null;   // not in the message → not trusted
     let due = /^\d{4}-\d{2}-\d{2}$/.test(String(it.due || "")) ? it.due : null;
+    // «وصلت شكرا، فاضل 8000» — the amount after فاضل / الباقي / remaining is what is still owed, never a payment
+    if (type === "paid" && amount != null) {
+      const bal = [...m.text.matchAll(BALANCE_RX)].map((x) => parseFloat(x[2].replace(/,(?=\d{3})/g, "")));
+      if (bal.some((v) => Math.abs(v - amount) < 0.01)) continue;
+    }
     // "paid" on a message that only promises to pay («هحولك 10000 النهارده») is a promise — the money hasn't moved
     if (type === "paid" && FUTURE_PAY.test(m.text) && !DONE_PAY.test(m.text)) type = "promise";
     // who owes whom, from the words: «حسابك / عليك / you owe» written by X → the other one owes X;
@@ -173,6 +178,7 @@ export function addMissedPayments(items, messages, people) {
 const YES = /^(تمام|ماشي|اوكي|أوكي|اوك|أكيد|اكيد|حاضر|موافق|اتفقنا|يب|ايوه|أيوه|ok|okay|sure|done|yes|deal|confirmed)(?![\p{L}])/iu;
 const BILL_TO_OTHER = /(حسابك|حسابه|حسابها|عليك|عليكي|عليكو|عليكم|مطلوب منك|you owe|your bill|your invoice|you still owe)/i;
 const BILL_ON_ME = /(عليا|عليّا|عليّ |اللي عليا|انا مديون|أنا مديون|i owe|my bill|my debt)/i;
+const BALANCE_RX = /(فاضل|فاضلة|الباقي|باقي|المتبقي|remaining|left|balance|still owes?)[^\d]{0,14}(\d[\d,.]*)/gi;
 const DONE_PAY_TO_YOU = /(حولتلك|حولت لك|دفعتلك|دفعت لك|بعتلك \d|بعتلك فلوس|sent you|paid you|transferred (you|to you))/i;
 
 /** The closest name in the chat ("hassan" → "Hassan Ali"). */
