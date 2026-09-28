@@ -1,0 +1,51 @@
+name: Web search benchmark
+
+# v6.8 — Ali: "make the web search very accurate, powerful and fast, no matter the model".
+# The app's own web pipeline (tests/websearch/eval.mjs: the phone's DuckDuckGo + Bing search ported
+# to Node, the page reader, passage ranking, figure cross-check, grounded prompt, repairs and audit)
+# on real questions with known answers, with a small and a mid model, every step timed.
+# Run by hand from the Actions tab; the results are in the run's summary.
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Question numbers to run (empty = all)"
+        default: ""
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Glow-2B
+            url: https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-UD-Q4_K_XL.gguf
+          - name: Core-4B
+            url: https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Build llama-server (the app's pinned llama.cpp)
+        run: |
+          git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
+          cd ~/llama.cpp && git checkout -q 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF > /dev/null
+          cmake --build build --target llama-server -j"$(nproc)" > /dev/null
+      - name: Model
+        run: curl -sL -o ~/model.gguf "${{ matrix.url }}" && ls -la ~/model.gguf
+      - name: Run the benchmark
+        run: |
+          cd tests/websearch && npm i --silent --no-save cheerio@1.0.0 && cd ../..
+          ~/llama.cpp/build/bin/llama-server -m ~/model.gguf --host 127.0.0.1 --port 8099 -c 12288 -t "$(nproc)" -np 1 --jinja --no-ui -fa on -ctk q8_0 -ctv q8_0 > server.log 2>&1 &
+          for i in $(seq 1 300); do curl -s 127.0.0.1:8099/health | grep -q ok && break; sleep 1; done
+          MODEL_NAME="${{ matrix.name }}" CTX=12288 node tests/websearch/eval.mjs ${{ inputs.only && format('--only={0}', inputs.only) || '' }}
+      - name: Keep the reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-bench-${{ matrix.name }}
+          path: tests/websearch/report-*.md

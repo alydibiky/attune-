@@ -53,3 +53,14 @@ export function memory() {
   ].join("\n");
   return new Function("callClaude", "detectScript", "lexRule", "learnRule", code)(async (c) => c, () => null, () => "", () => "");
 }
+
+/** The grounded web answer: GROUNDED_RULES + groundedPrompt + groundedAudit, the app's own text. */
+export function grounded() {
+  const code = [
+    block("const GROUNDED_RULES", /`;\s*$/),
+    block("function groundedPrompt", /^}/),
+    block("function groundedAudit", /^}/),
+    "return { groundedPrompt, groundedAudit };",
+  ].join("\n");
+  return new Function(code)();
+}
