@@ -349,7 +349,8 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     /** "ready" | "update" | "none", and how many of Attune's health permissions are granted. */
     @JavascriptInterface
     fun healthStatus(): String = try {
-        JSONObject().put("available", Health.availability(ctx)).put("granted", Health.granted(ctx).count { it in Health.PERMISSIONS }).put("of", Health.PERMISSIONS.size).toString()
+        JSONObject().put("available", Health.availability(ctx)).put("granted", Health.granted(ctx).count { it in Health.PERMISSIONS }).put("of", Health.PERMISSIONS.size)
+            .put("huawei", Health.installed(ctx, Health.HUAWEI)).put("healthSync", Health.installed(ctx, Health.HEALTH_SYNC)).toString()
     } catch (e: Throwable) { JSONObject().put("available", "none").put("error", e.message ?: "").toString() }
 
     /** Health Connect's permission screen (or its Play Store page when it must be installed/updated). */
@@ -361,6 +362,20 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             return
         }
         askHealth?.invoke()
+    }
+
+    /** Opens Huawei Health or Health Sync (installed), else its Play Store / AppGallery page — only these two. */
+    @JavascriptInterface
+    fun openHealthApp(pkg: String) {
+        if (pkg != Health.HUAWEI && pkg != Health.HEALTH_SYNC) return
+        val launch = if (Health.installed(ctx, pkg)) ctx.packageManager.getLaunchIntentForPackage(pkg) else null
+        val intents = listOfNotNull(launch,
+            android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=$pkg")),
+            android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("appmarket://details?id=$pkg")),   // Huawei AppGallery
+            android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/apps/details?id=$pkg")))
+        for (i in intents) {
+            try { ctx.startActivity(i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)); return } catch (e: Exception) {}
+        }
     }
 
     /** One day's steps, calories burned, distance, heart rate and workouts ({date: "yyyy-mm-dd"}). */

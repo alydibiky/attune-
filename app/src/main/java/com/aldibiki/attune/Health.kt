@@ -45,6 +45,15 @@ object Health {
         else -> "none"
     }
 
+    // v6.4 — Ali: "I want also Huawei Health connected". Huawei Health doesn't write to Health Connect
+    // itself; Health Sync (nl.appyhapps.healthsync) copies Huawei Health → Health Connect, and from
+    // there it is read like every other watch. These say which of the two are on the phone.
+    const val HUAWEI = "com.huawei.health"
+    const val HEALTH_SYNC = "nl.appyhapps.healthsync"
+    fun installed(ctx: Context, pkg: String): Boolean = try {
+        ctx.packageManager.getPackageInfo(pkg, 0); true
+    } catch (e: Exception) { false }
+
     fun granted(ctx: Context): Set<String> = if (availability(ctx) != "ready") emptySet() else try {
         runBlocking { HealthConnectClient.getOrCreate(ctx).permissionController.getGrantedPermissions() }
     } catch (e: Exception) { emptySet() }

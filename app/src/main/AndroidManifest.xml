@@ -39,6 +39,9 @@
     <!-- Lets the app find the phone's speech recogniser (Android 11+). -->
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
+        <!-- v6.4: is Huawei Health / Health Sync on the phone (for the Huawei watch setup) -->
+        <package android:name="com.huawei.health" />
+        <package android:name="nl.appyhapps.healthsync" />
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
