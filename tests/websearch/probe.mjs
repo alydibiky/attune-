@@ -40,3 +40,24 @@ for (const [name, url] of [["bing", "https://www.bing.com/search?q=" + encodeURI
     if (a0) console.log("first result's parents:", $(a0).parents().toArray().slice(0, 5).map((p) => p.tagName + "." + String($(p).attr("class") || "").split(/\s+/).slice(0, 2).join(".")).join(" < "));
   } catch (e) { console.log(name, "failed", e.message); }
 }
+
+// Bing: which way of asking gives the right pages? ("+" or "%20" for spaces, question or keywords, mobile or desktop)
+console.log("\n--- Bing variants");
+const DESK = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
+for (const qq of ["Who won the 2022 FIFA World Cup?", "How tall is the Cairo Tower?", "ما هو ارتفاع برج خليفة؟"]) {
+  for (const [label, url, ua] of [
+    ["plus  mobile", "https://www.bing.com/search?" + new URLSearchParams({ q: qq }), UA],
+    ["%20   mobile", "https://www.bing.com/search?q=" + encodeURIComponent(qq), UA],
+    ["%20   desktop", "https://www.bing.com/search?q=" + encodeURIComponent(qq), DESK],
+    ["plus  desktop", "https://www.bing.com/search?" + new URLSearchParams({ q: qq }), DESK],
+    ["%20 +lang   mob", "https://www.bing.com/search?q=" + encodeURIComponent(qq) + (/[؀-ۿ]/.test(qq) ? "&setlang=ar&cc=EG" : "&setlang=en&cc=US"), UA],
+    ["rss %20", "https://www.bing.com/search?format=rss&q=" + encodeURIComponent(qq), UA],
+  ]) {
+    try {
+      const r = await fetch(url, { headers: { "User-Agent": ua, "Accept-Language": "en,ar;q=0.8" } }); const html = await r.text(); const $ = cheerio.load(html);
+      const links = label.startsWith("rss") ? $("item link").toArray().map((e) => $(e).text()) : $("li.b_algo").toArray().map((e) => { const a = $(e).find("h2 a[href], .b_algoheader a[href], a.tilk[href]").first(); return a.attr("href") || ""; });
+      const hosts = links.slice(0, 5).map((h) => { try { const m = h.match(/[?&]u=a1([^&]+)/); const real = m ? Buffer.from(m[1].replace(/-/g, "+").replace(/_/g, "/"), "base64").toString() : h; return new URL(real).hostname.replace(/^www\./, ""); } catch (e) { return "?"; } });
+      console.log(`${qq.slice(0, 26).padEnd(27)} ${label.padEnd(16)} HTTP ${r.status} ${links.length} → ${hosts.join(", ")}`);
+    } catch (e) { console.log(qq.slice(0, 26), label, "failed", e.message); }
+  }
+}
