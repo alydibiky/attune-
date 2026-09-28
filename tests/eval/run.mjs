@@ -46,3 +46,24 @@ console.log(`HELD-OUT (unseen): ${HOLDOUT.length} meals · foods found ${Math.ro
 if (verbose) console.log(hbad.join("\n"));
 result.holdout = hp / HOLDOUT.length;
 export { result };
+// ---- the third, blind set (v6.4) ----
+const { BLIND } = await import("./blind.mjs");
+let bp = 0, bf2 = 0, bn = 0; const bbad = [];
+for (const [text, expect] of BLIND) {
+  const got = F.readMealText(text).items; const s = score(got, expect);
+  bf2 += s.found; bn += s.n;
+  if (s.gramsOk === s.n && !s.extra.length) bp++; else bbad.push(`${text}  →  ${got.map((x) => `${x.id}:${x.grams}`).join(", ") || "(nothing)"}   ✗ ${[...s.miss, ...s.extra.map((e) => "extra " + e)].join("; ")}`);
+}
+console.log(`BLIND (v6.4): ${BLIND.length} meals · foods found ${Math.round(bf2 / bn * 100)}% · fully right ${bp}/${BLIND.length} (${Math.round(bp / BLIND.length * 100)}%)`);
+if (verbose) console.log(bbad.join("\n"));
+result.blind = bp / BLIND.length;
+// ---- the fourth, fresh set (v6.4, written after the blind set was tuned) ----
+const { FRESH } = await import("./fresh.mjs");
+let fp = 0; const fbad = [];
+for (const [text, expect] of FRESH) {
+  const got = F.readMealText(text).items; const s = score(got, expect);
+  if (s.gramsOk === s.n && !s.extra.length) fp++; else fbad.push(`${text}  →  ${got.map((x) => `${x.id}:${x.grams}`).join(", ") || "(nothing)"}   ✗ ${[...s.miss, ...s.extra.map((e) => "extra " + e)].join("; ")}`);
+}
+console.log(`FRESH (v6.4): ${FRESH.length} meals · fully right ${fp}/${FRESH.length} (${Math.round(fp / FRESH.length * 100)}%)`);
+if (verbose) console.log(fbad.join("\n"));
+result.fresh = fp / FRESH.length;

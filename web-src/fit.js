@@ -737,8 +737,15 @@ export function parseHidden(raw, have) {
 }
 /** Swap an item for one of its alternatives (or any food), keeping the grams. */
 export function chooseFood(item, fd) {
-  const g = item.grams;
-  return { ...item, name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", ...nutrients(fd, g), estimate: false, unknown: false, check: !!fd.check, chosen: true };
+  let g = item.grams, more = {};
+  // v6.4: a typed item ("2 pieces", «طعمية») swapped for another food takes that food's own portion —
+  // a photo item keeps its grams (the amount on the plate doesn't change with the name)
+  if (item.from === "text" && fd.id !== item.id) {
+    const P = fd.portions || {};
+    g = Math.round(item.explicit && (item.unit === "g" || item.unit === "ml") ? item.grams : P[item.unit] != null ? (item.qty || 1) * P[item.unit] : gramsOf(fd, 1, "serving"));
+    more = { base: g, k: 1 };
+  }
+  return { ...item, ...more, grams: g, name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", ...nutrients(fd, g), estimate: false, unknown: false, check: !!fd.check, chosen: true };
 }
 /** Scale an item's portion (×0.5 … ×2). */
 export function scaleItem(item, k) {

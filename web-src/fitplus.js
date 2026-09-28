@@ -229,3 +229,14 @@ export const REMINDERS = [
 ];
 
 export { RECIPES, recipeNutrients };
+
+// ---- v6.4 favorites: foods you star, kept with the portion you starred them at ----
+export const isFav = (favs, id) => !!id && (favs || []).some((f) => f.id === id);
+/** Star or un-star a food. The item is kept as it is now (its grams are your usual portion); newest first, 40 at most. */
+export function toggleFav(favs, item) {
+  const list = favs || [];
+  if (!item || !item.id) return list;
+  if (isFav(list, item.id)) return list.filter((f) => f.id !== item.id);
+  const { t, k, chosen, learned, alts, said, from, explicit, base, readBase, conf, box, zoomed, flag, was, ...keep } = item;
+  return [{ id: item.id, item: { ...keep }, at: Date.now() }, ...list].slice(0, 40);
+}

@@ -6633,7 +6633,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.3";
+const PAGE_VERSION = "6.4";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -10523,7 +10523,24 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
           <button className={small} onClick={() => { let t = ""; try { t = NATIVE.log(); } catch (err) {} setLog(log === null ? (t || "The log is empty.") : null); }}>
             {log === null ? tr("Engine log") : tr("Hide log")}</button>
         </div>
-        {log !== null ? <pre className="mt-2 max-h-52 overflow-auto text-[10px] text-slate-500 whitespace-pre-wrap break-all">{log}</pre> : null}
+        {log !== null ? (() => {
+          // v6.4 (Ali: "make the engine log can be copied so I can send it"): Copy and Send, with the
+          // phone, the app version and the model at the top so the log says where it came from
+          const full = `Attune ${PAGE_VERSION}${APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""} · ${new Date().toISOString().slice(0, 16).replace("T", " ")}\n`
+            + (n.device && n.device.native ? `${n.device.native.model || ""} · ${n.device.native.soc || ""} · ${n.device.ram} GB\n` : "") + (e.modelId ? `model: ${e.modelId}\n` : "") + "\n" + log;
+          const copy = async () => {
+            try { await navigator.clipboard.writeText(full); flash(tr("Log copied — paste it in the chat")); return; } catch (err) {}
+            try { const ta = document.createElement("textarea"); ta.value = full; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); flash(tr("Log copied — paste it in the chat")); }
+            catch (err) { flash(tr("Couldn't copy — press and hold the log to select it")); }
+          };
+          return (<>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              <button className={small} onClick={copy} data-testid="engine-log-copy">{tr("Copy log")}</button>
+              {NATIVE && NATIVE.share ? <button className={small} onClick={() => { try { NATIVE.share(full); } catch (err) {} }} data-testid="engine-log-share">{tr("Send log")}</button> : null}
+            </div>
+            <pre className="mt-2 max-h-52 overflow-auto text-[10px] text-slate-500 whitespace-pre-wrap break-all select-text" style={{ userSelect: "text", WebkitUserSelect: "text" }} data-testid="engine-log">{full}</pre>
+          </>);
+        })() : null}
       </div>
 
       {/* download in progress */}

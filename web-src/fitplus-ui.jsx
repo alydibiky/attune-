@@ -101,8 +101,13 @@ export function QuickLog({ L, ar, st, upd, adding, dayKey, addToDraft, flash }) 
       <div className="flex gap-2"><button onClick={() => setForm(null)} className="rounded-lg bg-slate-900 px-3 py-1.5 text-[12.5px] text-slate-300">{L("Cancel", "إلغاء")}</button>
         <button onClick={saveOwn} className="flex-1 rounded-lg bg-emerald-600 py-1.5 text-[13px] text-white" data-testid="fit-own-save">{L("Save and add", "احفظ وضيف")}</button></div>
     </div>);
+  const favs = st.favFoods || [];
   return (
     <div className="space-y-2" data-testid="fit-quick">
+      {favs.length ? <div className="flex gap-1.5 overflow-x-auto pb-1" data-testid="fit-favs">
+        <span className="text-[11px] text-amber-300 self-center shrink-0 flex items-center gap-0.5"><Star size={11} />{L("Favorites:", "المفضلة:")}</span>
+        {favs.map((e) => <button key={e.id} onClick={() => addToDraft([{ ...e.item }])} className="shrink-0 rounded-full bg-amber-500/15 border border-amber-700/60 px-2.5 py-1 text-[12px] text-amber-100" data-testid="fit-fav-item">{ar && e.item.ar ? e.item.ar : e.item.name} · {r0(e.item.kcal)}</button>)}
+      </div> : null}
       {freq.length ? <div className="flex gap-1.5 overflow-x-auto pb-1" data-testid="fit-recent">
         <span className="text-[11px] text-slate-500 self-center shrink-0">{L("Recent:", "الأخيرة:")}</span>
         {freq.map((e) => <button key={e.key} onClick={() => { const { t, ...x } = e.item; addToDraft([x]); }} className="shrink-0 rounded-full bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200" data-testid="fit-recent-item">{ar && e.item.ar ? e.item.ar : e.item.name} · {r0(e.item.kcal)}</button>)}

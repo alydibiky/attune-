@@ -9,11 +9,12 @@ import { getLang } from "./i18n.js";
 import * as F from "./fit.js";
 import * as DB from "./fitdb.js";
 import * as R from "./fitread.js";
+import * as P from "./fitplus.js";
 import { WatchCard, Grades, DayQuality, RamadanCard, QuickLog, SaveMyMeal, WeekPlanView, WeekReport, BodyCard, FitSettings, RAMADAN_NAMES } from "./fitplus-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 
 const KEY = "attune:fit:v1";
-const EMPTY = { profile: null, days: {}, weights: [], fast: null, myRecipes: [], favs: [] };
+const EMPTY = { profile: null, days: {}, weights: [], fast: null, myRecipes: [], favs: [], favFoods: [] };
 const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); return v && typeof v === "object" ? { ...EMPTY, ...v } : EMPTY; } catch (e) { return EMPTY; } };
 const save = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} };
 const MEAL_NAMES0 = { breakfast: ["Breakfast", "فطار"], lunch: ["Lunch", "غدا"], dinner: ["Dinner", "عشا"], snacks: ["Snacks", "سناكس"] };
@@ -126,7 +127,10 @@ export function FitApp({ llm, modelReady, openEngine, flash, incoming, clearInco
       const ask = read.items.length ? read.unknown.join(", ") : text.trim();
       const raw = await llm(F.mealMessages(ask, false), null, { json: true, maxTokens: 600, temperature: 0 });
       if (run.current !== me) return;
-      const items = R.mergeSame([...read.items, ...R.parseMealChecked(raw)]);
+      let got = R.parseMealChecked(raw);
+      // v6.4: one unknown phrase read as one food → it can be corrected and learned like any typed food
+      if (read.unknown.length === 1 && got.length === 1) got = [R.applyLearned({ ...got[0], said: read.unknown[0], explicit: false })];
+      const items = R.mergeSame([...read.items, ...got]);
       if (!items.length) { flash && flash(L("Couldn't read that — try naming the foods, e.g. “2 eggs and a loaf of baladi bread”", "مقدرتش أقراها — اكتب الأكلات، مثلاً «٢ بيض ورغيف عيش بلدي»")); return; }
       setDraft(items);
     } catch (e) { flash && flash(L("Couldn't read that meal", "مقدرتش أقرا الوجبة")); }
@@ -219,7 +223,13 @@ export function FitApp({ llm, modelReady, openEngine, flash, incoming, clearInco
     const ok = (draft || []).filter((x) => x.grams > 0);
     if (!ok.length) return;
     // v6.1: what you corrected is remembered for the next photo (the food you chose, your usual portion)
-    for (const x of ok) if (x.said && (x.chosen || (x.base && Math.abs(x.grams - x.base) / x.base > 0.1))) {
+    // v6.4: typed meals too — the words you wrote are remembered with the food you picked and, when you
+    // didn't write the amount yourself, your usual portion ("rice" → 300 g brown rice next time)
+    for (const x of ok) if (x.said && x.from === "text") {
+      const rb = x.readBase || x.base, moved = !x.explicit && rb && Math.abs(x.grams - rb) / rb > 0.1;
+      if (!x.chosen && !moved && !x.learned) continue;
+      const fd = F.food(x.id) || DB.cachedFood(x.id); if (fd) F.learnFix("t:" + x.said, fd, x.explicit || !rb ? 1 : x.grams / rb);
+    } else if (x.said && (x.chosen || (x.base && Math.abs(x.grams - x.base) / x.base > 0.1))) {
       const fd = F.food(x.id) || DB.cachedFood(x.id); if (fd) F.learnFix(x.said, fd, x.base ? x.grams / x.base : 1);
     }
     addItems(adding, ok);
@@ -316,17 +326,19 @@ export function FitApp({ llm, modelReady, openEngine, flash, incoming, clearInco
                     </div>
                     <input type="number" inputMode="numeric" value={x.grams} onChange={(e) => setGrams(i, e.target.value)} className="w-16 rounded bg-slate-900 px-1.5 py-1 text-[13px] text-white text-end" data-testid="fit-draft-grams" />
                     <span className="text-[11px] text-slate-500">g</span>
+                    {x.id ? <button onClick={() => { const on = P.isFav(st.favFoods, x.id); upd((s) => ({ ...s, favFoods: P.toggleFav(s.favFoods, x) })); flash && flash(on ? L("Removed from favorites", "اتشالت من المفضلة") : L(`★ ${x.name} — ${x.grams} g, one tap next time`, `★ ${x.ar || x.name} — ${x.grams} جم، ضغطة واحدة المرة الجاية`)); }}
+                      className={P.isFav(st.favFoods, x.id) ? "text-amber-300" : "text-slate-500"} data-testid="fit-fav-toggle" aria-label={L("Favorite", "مفضلة")}><Star size={15} fill={P.isFav(st.favFoods, x.id) ? "currentColor" : "none"} /></button> : null}
                     <button onClick={() => setDraft((d) => d.filter((_, k) => k !== i))} className="text-slate-500"><Trash2 size={15} /></button>
                   </div>
-                  {x.alts && x.alts.length > 1 ? (
+                  {(x.alts && x.alts.length > 1) || x.from === "text" ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-alts">
                       <span className="text-[11px] text-slate-500 self-center">{L("Is it:", "هل هي:")}</span>
-                      {x.alts.map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={"rounded-full px-2 py-0.5 text-[11.5px] " + (a.food.id === x.id ? "bg-emerald-700 text-white" : "bg-slate-900 text-slate-300")} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : a.food.en}</button> : null)}
+                      {(x.alts || []).map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={"rounded-full px-2 py-0.5 text-[11.5px] " + (a.food.id === x.id ? "bg-emerald-700 text-white" : "bg-slate-900 text-slate-300")} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : a.food.en}</button> : null)}
                       <button onClick={() => { setReplaceAt(i); setDraft((d) => d); }} className="rounded-full px-2 py-0.5 text-[11.5px] bg-slate-900 text-sky-300" data-testid="fit-alt-other">{L("something else…", "حاجة تانية…")}</button>
                     </div>) : null}
                   {x.base ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-portions">
-                      {[0.5, 0.75, 1, 1.5, 2].map((k) => <button key={k} onClick={() => scaleAt(i, k)} className={"rounded px-2 py-0.5 text-[11.5px] " + ((x.k || 1) === k ? "bg-sky-700 text-white" : "bg-slate-900 text-slate-300")} data-testid={"fit-portion-" + k}>{k === 1 ? L("as seen", "زي الصورة") : "×" + k}</button>)}
+                      {[0.5, 0.75, 1, 1.5, 2].map((k) => <button key={k} onClick={() => scaleAt(i, k)} className={"rounded px-2 py-0.5 text-[11.5px] " + ((x.k || 1) === k ? "bg-sky-700 text-white" : "bg-slate-900 text-slate-300")} data-testid={"fit-portion-" + k}>{k === 1 ? (x.from === "text" ? L("as written", "زي ما كتبت") : L("as seen", "زي الصورة")) : "×" + k}</button>)}
                     </div>) : null}
                 </div>
               ))}
