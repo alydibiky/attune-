@@ -210,3 +210,57 @@ export function FitSettings({ L, ar, st, upd, native, flash }) {
     </div>
   );
 }
+
+/**
+ * v6.3 — the watch, through Health Connect (read only): connect once, then today's steps, active
+ * calories, distance, heart rate and workouts are read whenever Fit opens or the app comes back.
+ * Burned calories use the larger of the watch and the logged workouts, never both.
+ */
+export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
+  const [status, setStatus] = useState(() => { try { return health ? health.status() : null; } catch (e) { return null; } });
+  const [busy, setBusy] = useState(false);
+  const w = ((st.days[dayKey] || {}).watch) || null;
+  const refresh = async () => {
+    if (!health) return;
+    const s = health.status(); setStatus(s);
+    if (!s || s.available !== "ready" || !s.granted) return;
+    setBusy(true);
+    try {
+      const d = await health.day(dayKey);
+      if (d && (d.steps != null || d.activeKcal != null || d.workouts)) upd((x) => { const day = x.days[dayKey] || { meals: {}, water: 0, workouts: [] }; return { ...x, watchOn: true, days: { ...x.days, [dayKey]: { ...day, watch: { steps: d.steps || 0, activeKcal: d.activeKcal || 0, totalKcal: d.totalKcal || 0, distanceM: d.distanceM || 0, hrAvg: d.hrAvg || null, hrMax: d.hrMax || null, workouts: d.workouts || [], sources: d.sources || [], at: Date.now() } } } }; });
+    } catch (e) {} finally { setBusy(false); }
+  };
+  useEffect(() => { refresh(); const on = () => refresh(); window.addEventListener("attune-resume", on); window.addEventListener("attune-health-permission", on); return () => { window.removeEventListener("attune-resume", on); window.removeEventListener("attune-health-permission", on); }; }, [dayKey]);
+  if (!health) return compact ? null : (
+    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 text-[12.5px] text-slate-400" data-testid="fit-watch">⌚ {L("Watch steps and calories work in the Android app.", "خطوات وسعرات الساعة بتشتغل في تطبيق أندرويد.")}</div>);
+  const ready = status && status.available === "ready", granted = ready && status.granted > 0;
+  if (!granted) {
+    if (compact && st.watchSkip) return null;
+    return (
+      <div className="rounded-2xl border border-teal-800 bg-teal-500/10 p-3 space-y-2" data-testid="fit-watch">
+        <div className="text-[13px] text-teal-100">⌚ {L("Connect your watch: steps, calories burned, workouts and heart rate go into your day automatically.", "اربط ساعتك: الخطوات والسعرات المحروقة والتمارين ونبض القلب بيدخلوا يومك لوحدهم.")}</div>
+        <div className="text-[11.5px] text-teal-200/70">{L("Through Android's Health Connect — works with Samsung Health (Galaxy Watch), Fitbit / Pixel Watch, Garmin Connect, Mi Fitness and others that share to it. Read only; nothing leaves the phone.", "عن طريق Health Connect بتاع أندرويد — بيشتغل مع Samsung Health (جالاكسي واتش)، Fitbit / Pixel Watch، Garmin Connect، Mi Fitness وغيرهم اللي بيشاركوا فيه. قراءة بس؛ مفيش حاجة بتخرج من الموبايل.")}</div>
+        {status && status.available === "none" ? <div className="text-[12px] text-amber-200">{L("This phone doesn't have Health Connect.", "الموبايل ده مفيهوش Health Connect.")}</div> : (
+          <div className="flex gap-2">
+            <button onClick={() => { health.connect(); }} className="flex-1 rounded-lg bg-teal-600 py-2 text-[13px] font-medium text-white" data-testid="fit-watch-connect">{status && status.available === "update" ? L("Install Health Connect", "نزّل Health Connect") : L("Connect my watch", "اربط ساعتي")}</button>
+            {compact ? <button onClick={() => upd((x) => ({ ...x, watchSkip: true }))} className="rounded-lg bg-slate-800 px-3 text-[12px] text-slate-400">{L("Later", "بعدين")}</button> : null}
+          </div>)}
+      </div>);
+  }
+  const km = w && w.distanceM ? (w.distanceM / 1000).toFixed(1) : null;
+  return (
+    <div className="rounded-2xl bg-slate-900/60 border border-teal-900 p-3 space-y-1.5" data-testid="fit-watch">
+      <div className="flex items-center justify-between"><span className="text-[13px] text-white">⌚ {L("From your watch", "من ساعتك")}</span>
+        <button onClick={refresh} className="text-[11.5px] text-teal-300 underline" data-testid="fit-watch-refresh">{busy ? L("Reading…", "بقرا…") : L("Refresh", "حدّث")}</button></div>
+      {w ? <>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div><div className="text-lg font-semibold text-white tabular-nums" data-testid="fit-steps">{(w.steps || 0).toLocaleString("en-US")}</div><div className="text-[10.5px] text-slate-400">{L("steps", "خطوة")}</div></div>
+          <div><div className="text-lg font-semibold text-white tabular-nums" data-testid="fit-watch-kcal">{w.activeKcal || 0}</div><div className="text-[10.5px] text-slate-400">{L("active kcal", "سعر نشاط")}</div></div>
+          <div><div className="text-lg font-semibold text-white tabular-nums">{km ?? "—"}</div><div className="text-[10.5px] text-slate-400">km</div></div>
+        </div>
+        {w.hrAvg ? <div className="text-[11.5px] text-slate-400">❤ {L(`heart rate ${w.hrAvg} avg · ${w.hrMax} max`, `النبض ${w.hrAvg} متوسط · ${w.hrMax} أقصى`)}</div> : null}
+        {(w.workouts || []).length && !compact ? <div className="text-[12px] text-slate-300">{w.workouts.map((x, i) => <div key={i}>• {x.title || L("Workout", "تمرين")} · {x.minutes} {L("min", "د")}</div>)}</div> : null}
+        <div className="text-[10.5px] text-slate-500">{L("Burned calories count the watch or your logged workouts — whichever is more, never both.", "السعرات المحروقة بتتحسب من الساعة أو التمارين اللي سجلتها — الأكبر، مش الاتنين.")}</div>
+      </> : <div className="text-[12px] text-slate-400">{L("Nothing from the watch today yet — open its app once so it syncs.", "لسه مفيش حاجة من الساعة النهارده — افتح تطبيقها مرة عشان يعمل مزامنة.")}</div>}
+    </div>);
+}

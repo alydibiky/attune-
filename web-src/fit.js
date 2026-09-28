@@ -307,8 +307,12 @@ export const today = (d = new Date()) => d.getFullYear() + "-" + String(d.getMon
 export function dayTotals(day) {
   const items = MEALS.flatMap((m) => ((day && day.meals && day.meals[m]) || []));
   const eaten = sumN(items.filter((x) => x.kcal != null));
-  const burned = ((day && day.workouts) || []).reduce((a, w) => a + (w.kcal || 0), 0);
-  return { ...eaten, burned, water: (day && day.water) || 0, unknown: items.filter((x) => x.kcal == null).length };
+  const logged = ((day && day.workouts) || []).reduce((a, w) => a + (w.kcal || 0), 0);
+  // v6.3: the watch's active calories (Health Connect) already include any workout it recorded —
+  // so the larger of the two is used, never both added (a logged walk the watch also saw is not counted twice)
+  const watch = (day && day.watch && day.watch.activeKcal) || 0;
+  const burned = Math.max(logged, watch);
+  return { ...eaten, burned, burnedFrom: watch > logged ? "watch" : logged ? "logged" : "", steps: (day && day.watch && day.watch.steps) || 0, water: (day && day.water) || 0, unknown: items.filter((x) => x.kcal == null).length };
 }
 /** Days in a row (up to today) with food logged. */
 export function streak(days, from = new Date()) {
@@ -599,16 +603,59 @@ export function itemFromFood(fd, qty = 1, unit = "serving") {
 // The same phone model, used better: several guesses per food (you tap the right one), portions
 // judged against things of known size, a second look for hidden calories (oil, butter, sauce, sugar,
 // bread on the side), nutrition labels read exactly, and your corrections remembered.
+// v6.3: the names the model should pick from — a closed list makes a small vision model far more accurate
+export const DISH_NAMES = [...new Set(FOODS.filter((f) => !/-(raw|dry)$|^(molokhia-leaves|beef-mince-raw)$/.test(f.id)).map((f) => f.en.replace(/\s*\(.*\)$/, "")))];
 export function photoMessages(note) {
   return [
     { role: "system", content: `You are a dietitian looking at a photo of food. Reply with ONLY a JSON object:
 {"kind": "meal" or "label" (a nutrition facts table is visible) or "package" (a packaged product, no table visible),
- "items": [{"food": "generic name in English (e.g. 'koshari', 'grilled chicken breast', 'white rice', 'baladi bread', 'green salad', 'cola')",
-            "alternatives": ["second guess", "third guess"], "grams": number, "confidence": 0 to 1}],
+ "plate": "dinner plate" | "side plate" | "bowl" | "tray" | "none",
+ "items": [{"food": "name — pick from the list below when one fits", "alternatives": ["second guess", "third guess"],
+            "count": number of pieces if it is countable (eggs, falafel, bread loaves, slices, skewers, pieces of chicken, dates) else null,
+            "container": "plate" | "bowl" | "glass" | "cup" | "can" | "bottle" | "sandwich" | "hand" | "none",
+            "plate_share": 0 to 1 — how much of the plate's surface this food covers (null if not on a plate),
+            "height": "flat" | "normal" | "heaped", "grams": your estimate as eaten,
+            "confidence": 0 to 1, "box": [x, y, w, h] where it is in the photo, each 0 to 1}],
  "label": {"name": "product name", "per": "100g" or "serving", "serving_g": number or null, "kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number or null} or null}
-Rules: one item per separate food on the plate (a sandwich or a mixed dish is one item). Judge each portion against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon holds ~15 g, a can is 330 ml, a baladi loaf ~90 g, an adult palm ~100 g of meat. Estimate grams as eaten (cooked). If you are unsure what a food is, still give your best guess and lower the confidence. For a label, copy its numbers exactly.${note ? "\nThe person adds: " + note : ""}` },
+Rules: one item per separate food (a sandwich or a mixed dish like koshari is ONE item). Count what can be counted. Judge sizes against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon, a 330 ml can, a baladi loaf, a hand. If unsure, give your best guess, alternatives, and a lower confidence — never invent a food you can't see. For a label, copy its numbers exactly.
+Food names to pick from: ${DISH_NAMES.join(", ")}.${note ? "\nThe person adds: " + note : ""}` },
     { role: "user", content: "What is in this photo?" },
   ];
+}
+/** The zoomed second look at one unsure food. */
+export function zoomMessages(item) {
+  return [
+    { role: "system", content: `This is a close-up of one food from a meal photo. The first look guessed: ${[item.said || item.name, ...((item.alts || []).map((a) => a.label))].filter(Boolean).join(", ")}.
+Which food is it really? Reply with ONLY a JSON object: {"food": "name (from the list when it fits)", "alternatives": ["…", "…"], "confidence": 0 to 1}.
+Food names to pick from: ${DISH_NAMES.join(", ")}.` },
+    { role: "user", content: "What is this?" },
+  ];
+}
+// grams from what the model can judge well — the share of a 26 cm plate, how high it is, a count, a container
+const PLATE_CM2 = { "dinner plate": 531, "side plate": 314, bowl: 200, tray: 900, none: 531 };
+const HEIGHT_CM = { flat: 1, normal: 2.2, heaped: 3.8 };
+function density(fd) {
+  const id = fd.id, g = String(fd.group || "");
+  if (/salad|lettuce|rocket|spinach|cabbage|fattoush|tabbouleh/.test(id)) return 0.3;
+  if (/fries|chips|popcorn|cornflakes/.test(id)) return 0.35;
+  if (/bread|baladi|shami|toast|fino|pita|feteer|croissant/.test(id) || /bak/.test(g)) return 0.3;
+  if (/rice|koshari|biryani|kabsa|mandi|maqluba|freekeh|bulgur|couscous|mujadara|fatta/.test(id)) return 0.85;
+  if (/pasta|noodles|lasagna|bechamel|negresco/.test(id)) return 0.7;
+  if (/soup|molokhia|stew|bamia|fasolia|lentil/.test(id)) return 1.0;
+  if (/chicken|beef|kofta|kebab|lamb|veal|liver|fish|salmon|shrimp|steak|meat|shawarma/.test(id)) return 1.05;
+  if (/cake|basbousa|konafa|om-ali|baklava|kahk/.test(id)) return 0.8;
+  return 0.8;
+}
+/** The geometric estimate (g) of a photo item, or null when the model gave nothing to measure. */
+export function geoGrams(fd, it, plate = "dinner plate") {
+  if (!fd) return null;
+  const P = fd.portions || {}, n = num(it.count), c = String(it.container || "").toLowerCase();
+  if (n > 0 && n <= 40) { const per = P.piece ?? P.loaf ?? P.slice ?? P.skewer ?? P.egg ?? P.date ?? P.disc ?? P.sandwich; if (per) return n * per; }
+  if (["glass", "cup", "can", "bottle", "sandwich"].includes(c) && P[c]) return P[c] * (n > 0 && n <= 6 ? n : 1);
+  if (c === "bowl" && (P.bowl || P.plate)) return P.bowl || P.plate;
+  const share = num(it.plate_share);
+  if (share > 0 && share <= 1) { const area = (PLATE_CM2[plate] || 531) * share; return Math.round(area * (HEIGHT_CM[it.height] || 2.2) * density(fd)); }
+  return null;
 }
 /** The second look: calories people forget to log. */
 export function hiddenMessages(items) {
@@ -632,11 +679,17 @@ export function learnFix(modelName, food, gramsRatio = 1) {
 export const learned = (modelName) => learnLoad()[normT(modelName)] || null;
 
 /** One photo item: the learned choice first, then the table; its alternatives as ready choices. */
-function photoItem(it, extra = {}) {
+function photoItem(it, extra = {}, plate = "dinner plate") {
   const name = String(it.food || it.name || "").trim(); if (!name) return null;
   let grams = num(it.grams); if (!(grams > 0 && grams < 3000)) grams = null;
   const lf = learned(name);
   let fd = lf ? (food(lf.id) || lf.food) : matchFood(name);
+  // v6.3: the geometric estimate (plate share × height × density, or a count, or a container) —
+  // blended with the model's own grams; when they disagree by more than 2.5× the item is flagged
+  let portionFlag = false;
+  const geo = fd ? geoGrams(fd, it, plate) : null;
+  if (geo && grams) { if (Math.max(geo, grams) / Math.min(geo, grams) > 2.5) portionFlag = true; grams = Math.round(Math.sqrt(geo * grams)); }
+  else if (geo) grams = geo;
   if (lf && grams) grams *= lf.ratio;
   const alts = [...new Set([name, ...(Array.isArray(it.alternatives) ? it.alternatives : [])].map(String))]
     .map((a) => ({ label: a, food: matchFood(a) })).filter((a) => a.label.trim()).slice(0, 3);
@@ -644,7 +697,18 @@ function photoItem(it, extra = {}) {
   let item;
   if (fd) { const g = Math.round(grams || gramsOf(fd, 1, "serving")); item = { name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", qty: 1, unit: "g", grams: g, ...nutrients(fd, g), estimate: false }; }
   else item = { name, qty: 1, unit: "g", grams: Math.round(grams || 150), kcal: null, p: null, c: null, f: null, fib: 0, estimate: true, unknown: true };
-  return { ...item, said: name, alts, conf, learned: !!lf, base: item.grams, ...extra };
+  const box = Array.isArray(it.box) && it.box.length === 4 && it.box.every((v) => num(v) >= 0 && num(v) <= 1) ? it.box.map(num) : null;
+  return { ...item, said: name, alts, conf, learned: !!lf, base: item.grams, ...(portionFlag ? { flag: "portion" } : {}), ...(box ? { box } : {}), ...extra };
+}
+/** The zoomed look's JSON → the item with a better name (the grams stay), or the item unchanged. */
+export function applyZoom(item, raw) {
+  let j = null;
+  try { const s = String(raw || ""); j = JSON.parse(s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1)); } catch (e) { return item; }
+  const name = String((j && j.food) || "").trim(); const fd = name && matchFood(name);
+  const conf = Math.max(0, Math.min(1, num(j && j.confidence) ?? 0.5));
+  if (!fd || conf < (item.conf || 0)) return { ...item, zoomed: true };
+  const alts = [...new Set([name, ...(Array.isArray(j.alternatives) ? j.alternatives : []), item.said].map(String))].map((a) => ({ label: a, food: matchFood(a) })).filter((a) => a.food).slice(0, 3);
+  return { ...chooseFood(item, fd), chosen: false, conf, alts, zoomed: true };
 }
 /** The model's photo JSON → { kind, items, label } (label = a food made from the label's numbers). */
 export function parsePhoto(raw) {
@@ -659,7 +723,8 @@ export function parsePhoto(raw) {
       kcal: Math.round(num(L.kcal) * per), p: r1(num(L.protein) * per), c: r1(num(L.carbs) * per), f: r1(num(L.fat) * per), fib: r1((num(L.fiber) || 0) * per),
       portions: num(L.serving_g) > 0 ? { serving: Math.round(num(L.serving_g)) } : {} };
   }
-  const items = (Array.isArray(j && j.items) ? j.items : []).map((it) => photoItem(it)).filter(Boolean).slice(0, 12);
+  const plate = Object.keys(PLATE_CM2).includes(j && j.plate) ? j.plate : "dinner plate";
+  const items = (Array.isArray(j && j.items) ? j.items : []).map((it) => photoItem(it, {}, plate)).filter(Boolean).slice(0, 12);
   return { kind, items, label };
 }
 /** The second look's JSON → extra items (never one already on the list). */
