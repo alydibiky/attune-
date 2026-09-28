@@ -115,5 +115,5 @@ export async function search(q, pages = 6) {
     const text = await withTimeout(TIMEOUTS.pageWait, pageText(h.url, 16000)).catch(() => "");
     if (text.length > h.text.length + 80) h.text = (h.text + "\n" + text).slice(0, 16000);
   }));
-  return { hits: hits.filter((h) => (h.text || "").length > 40), via: [d.length && "duckduckgo", b.length && "bing"].filter(Boolean).join(" + ") || "none", ms: { search: tSearch, read: Date.now() - t0 - tSearch } };
+  return { hits: hits.filter((h) => (h.text || "").length > 40), via: `ddg ${d.length} + bing ${b.length}`, ms: { search: tSearch, read: Date.now() - t0 - tSearch } };
 }

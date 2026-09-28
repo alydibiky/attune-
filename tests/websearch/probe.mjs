@@ -13,6 +13,9 @@ const tries = [
   ["yahoo", () => fetch("https://search.yahoo.com/search?p=" + encodeURIComponent(q), { headers: { "User-Agent": UA } }), "div.algo h3 a, .compTitle a"],
   ["startpage", () => fetch("https://www.startpage.com/sp/search?query=" + encodeURIComponent(q), { headers: { "User-Agent": UA } }), "a.result-link, .w-gl__result-title"],
   ["ecosia", () => fetch("https://www.ecosia.org/search?q=" + encodeURIComponent(q), { headers: { "User-Agent": UA } }), "a.result__link, [data-test-id='result-link']"],
+  ["bing-rss", () => fetch("https://www.bing.com/search?format=rss&q=" + encodeURIComponent(q), { headers: { "User-Agent": UA } }), "item link"],
+  ["bing-rss ar", () => fetch("https://www.bing.com/search?format=rss&setlang=ar&cc=EG&q=" + encodeURIComponent("ارتفاع برج القاهرة"), { headers: { "User-Agent": UA } }), "item link"],
+  ["ddg lite GET 2", () => fetch("https://lite.duckduckgo.com/lite/?q=" + encodeURIComponent("Cairo Tower height"), { headers: { "User-Agent": UA } }), "a.result-link"],
   ["google", () => fetch("https://www.google.com/search?q=" + encodeURIComponent(q) + "&hl=en", { headers: { "User-Agent": UA } }), "a h3"],
 ];
 for (const [name, go, sel] of tries) {

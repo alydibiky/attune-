@@ -24,6 +24,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: Search-only
+            url: ""
           - name: Glow-2B
             url: https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-UD-Q4_K_XL.gguf
           - name: Core-4B
@@ -33,16 +35,19 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - name: Build llama-server (the app's pinned llama.cpp)
+        if: matrix.url != ''
         run: |
           git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
           cd ~/llama.cpp && git checkout -q 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF > /dev/null
           cmake --build build --target llama-server -j"$(nproc)" > /dev/null
       - name: Model
+        if: matrix.url != ''
         run: curl -sL -o ~/model.gguf "${{ matrix.url }}" && ls -la ~/model.gguf
       - name: Run the benchmark
         run: |
           cd tests/websearch && npm i --silent --no-save cheerio@1.0.0 && node probe.mjs && cd ../..
+          if [ -z "${{ matrix.url }}" ]; then RETRIEVAL_ONLY=1 MODEL_NAME=search-only node tests/websearch/eval.mjs; exit 0; fi
           ~/llama.cpp/build/bin/llama-server -m ~/model.gguf --host 127.0.0.1 --port 8099 -c 12288 -t "$(nproc)" -np 1 --jinja --no-ui -fa on -ctk q8_0 -ctv q8_0 > server.log 2>&1 &
           for i in $(seq 1 300); do curl -s 127.0.0.1:8099/health | grep -q ok && break; sleep 1; done
           MODEL_NAME="${{ matrix.name }}" CTX=12288 node tests/websearch/eval.mjs ${{ github.event.inputs.only && format('--only={0}', github.event.inputs.only) || '' }}
