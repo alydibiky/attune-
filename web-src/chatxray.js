@@ -54,7 +54,7 @@ export function parseExport(raw) {
 }
 
 const MONEY = /(egp|le\b|جنيه|جنية|\$|usd|دولار|€|ريال|درهم|فلوس|مبلغ|حساب|تحويل|حو(ّ)?ل|دفع|ادفع|هدفع|دفعت|عليك|عليا|ليك|ليا|سلف|قرض|فاتورة|عربون|قسط|باقي|الباقي|مقدم|invoice|pay|paid|owe|owed|transfer|deposit|loan|balance|remaining|instapay|انستا|فودافون كاش|vodafone cash|\d{3,})/i;
-const PROMISE = /(ه(بعت|عمل|خلص|جيب|حول|دفع|كلم|سلم|وصل|رد)|بكر[ةه]|بعد بكر[ةه]|الأسبوع الجاي|الاسبوع الجاي|آخر الشهر|اخر الشهر|أول الشهر|اول الشهر|(يوم )?(السبت|الأحد|الاحد|الاثنين|الإثنين|التلات|الثلاثاء|الأربع|الاربع|الخميس|الجمعة)|الساعة \d|\d{1,2} ?(الصبح|الصباح|بالليل|العصر|المغرب|الضهر|الظهر)|وعد|موعد|ميعاد|تسليم|deadline|due|promise|i will|i'll|will (send|pay|deliver|call|finish)|tomorrow|next (week|month)|by (monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|the end))/i;
+const PROMISE = /(ه(بعت|عمل|خلص|جيب|حول|دفع|كلم|سلم|وصل|رد)|بكر[ةه]|بعد بكر[ةه]|الأسبوع الجاي|الاسبوع الجاي|آخر الشهر|اخر الشهر|أول الشهر|اول الشهر|(يوم )?(السبت|الأحد|الاحد|الاثنين|الإثنين|التلات|الثلاثاء|الأربع|الاربع|الخميس|الجمعة)|الساعة \d|\d{1,2} ?(الصبح|الصباح|بالليل|العصر|المغرب|الضهر|الظهر)|وعد|موعد|ميعاد|تسليم|deadline|due|promise|i will|i'll|will (send|pay|deliver|call|finish)|tomorrow|next (week|month)|by (monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|the end)|\b(on |this |next )?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b)/i;
 const QUESTION = /[?؟]/;
 
 /** The messages worth reading (money, promises, dates, questions) + the one before each. */
@@ -101,7 +101,7 @@ Rules: "msg" is the number of the message that says it. Copy amounts exactly as 
   ];
 }
 
-const FUTURE_PAY = /(^|[\s،,.])(ه(حول|دفع|بعت|سلم|ديك|اديك)|حاضر هحول|will (pay|send|transfer)|i'll (pay|send|transfer)|gonna (pay|send))/i;
+const FUTURE_PAY = /(^|[\s،,.])(ه(حول|دفع|بعت|سلم|ديك|اديك|رجع|سدد)|حاضر هحول|will (pay|send|transfer)|i'll (pay|send|transfer)|gonna (pay|send))/i;
 const DONE_PAY = /(حولت|دفعت|بعتلك|بعت لك|وصلت|وصل|استلمت|اتحول|(have |has )?(paid|sent|transferred|received))/i;
 const nums = (s) => (clean(s).match(/\d[\d,.]*/g) || []).map((x) => parseFloat(x.replace(/,(?=\d{3})/g, "").replace(/,/g, "."))).filter((v) => isFinite(v));
 
@@ -129,6 +129,15 @@ export function parseItems(raw, byIndex, people) {
     let amount = it.amount == null ? null : Number(String(it.amount).replace(/,/g, ""));
     if (amount != null && !(amount > 0 && nums(m.text).some((v) => Math.abs(v - amount) < 0.01 || Math.abs(v * 1000 - amount) < 0.01))) amount = null;   // not in the message → not trusted
     let due = /^\d{4}-\d{2}-\d{2}$/.test(String(it.due || "")) ? it.due : null;
+    // the model took the daily rate for the bill: «9,500 a day, 3 days» → 28,500 (code multiplies)
+    if (type === "owes" && amount != null) {
+      const rm = m.text.match(RATE_RX), cm = m.text.replace(RATE_RX, " ").match(COUNT_RX);
+      if (rm && cm) {
+        let rate = parseFloat(rm[1].replace(/,(?=\d{3})/g, "")); if (/ألف|الف|k/i.test(m.text.slice(rm.index, rm.index + rm[0].length)) && rate < 1000) rate *= 1000;
+        const n = +cm[1];
+        if (Math.abs(rate - amount) < 0.01 && n >= 2 && n <= 365 && !nums(m.text).some((v) => Math.abs(v - rate * n) < 0.01)) amount = rate * n;
+      }
+    }
     // «وصلت شكرا، فاضل 8000» — the amount after فاضل / الباقي / remaining is what is still owed, never a payment
     if (type === "paid" && amount != null) {
       const bal = [...m.text.matchAll(BALANCE_RX)].map((x) => parseFloat(x[2].replace(/,(?=\d{3})/g, "")));
@@ -166,6 +175,13 @@ export function addMissedPayments(items, messages, people) {
     const other = people.find((p) => p !== m.who);
     out.push({ type: "paid", msg: m.i, t: m.t, quote: m.text.slice(0, 300), author: m.who, from: m.who, to: other, amount: v[0], currency: "EGP", what: "transfer", due: null, byCode: true });
   }
+  // a promise to pay the model left out («هبعت 20 ألف بكرة», "I'll send half now") — kept by code
+  for (const m of messages) {
+    if (!FUTURE_PAY.test(m.text) || DONE_PAY.test(m.text) || out.some((o) => o.msg === m.i)) continue;
+    const v = nums(m.text).filter((x) => x >= 10);
+    const other = people.find((p) => p !== m.who);
+    out.push({ type: "promise", msg: m.i, t: m.t, quote: m.text.slice(0, 300), author: m.who, from: m.who, to: other, amount: v.length === 1 ? v[0] : null, currency: v.length === 1 ? "EGP" : null, what: "a promise to pay", due: null, byCode: true });
+  }
   // a booking asked and agreed: «ممكن الونش 50 طن يوم الخميس؟» → «تمام الخميس 7 الصبح» (v6.8, found by Spark)
   for (let k = 0; k + 1 < messages.length; k++) {
     const q = messages[k], a = messages[k + 1];
@@ -176,8 +192,11 @@ export function addMissedPayments(items, messages, people) {
   return out;
 }
 const YES = /^(تمام|ماشي|اوكي|أوكي|اوك|أكيد|اكيد|حاضر|موافق|اتفقنا|يب|ايوه|أيوه|ok|okay|sure|done|yes|deal|confirmed)(?![\p{L}])/iu;
-const BILL_TO_OTHER = /(حسابك|حسابه|حسابها|عليك|عليكي|عليكو|عليكم|مطلوب منك|you owe|your bill|your invoice|you still owe)/i;
-const BILL_ON_ME = /(عليا|عليّا|عليّ |اللي عليا|انا مديون|أنا مديون|i owe|my bill|my debt)/i;
+const BILL_TO_OTHER = /(حسابك|حسابه|حسابها|عليك|عليكي|عليكو|عليكم|مطلوب منك|you owe|your bill|your invoice|you still owe|سلفتك|سلّفتك|اديتك|إديتك|اقرضتك|أقرضتك|i lent you|lent you)/i;
+const BILL_ON_ME = /(عليا|عليّا|عليّ |اللي عليا|انا مديون|أنا مديون|i owe|my bill|my debt|سلفني|سلّفني|استلفت منك|اقترضت منك|i borrowed|lend me)/i;
+// «9,500 a day, 3 days» / «15 ألف في اليوم لمدة 4 أيام» — a rate and how many: the bill is the product
+const RATE_RX = /(\d[\d,.]*)\s*(?:k|ألف|الف)?\s*(?:egp|le|جنيه|ج)?\s*(?:a|per|\/|each|every|في|فى|لل|لكل|كل)\s*(?:ال)?(day|يوم|hour|ساعة|ساعه|week|أسبوع|اسبوع|month|شهر)/i;
+const COUNT_RX = /(\d{1,3})\s*(days?|أيام|ايام|يوم|hours?|ساعات|weeks?|أسابيع|اسابيع|months?|شهور|أشهر)(?![\p{L}])/iu;
 const BALANCE_RX = /(فاضل|فاضلة|الباقي|باقي|المتبقي|remaining|left|balance|still owes?)[^\d]{0,14}(\d[\d,.]*)/gi;
 const DONE_PAY_TO_YOU = /(حولتلك|حولت لك|دفعتلك|دفعت لك|بعتلك \d|بعتلك فلوس|sent you|paid you|transferred (you|to you))/i;
 

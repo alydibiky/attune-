@@ -46,7 +46,8 @@ ok(/ونش = crane/.test(X.extractMessages("x", "Ali", ex.people)[0].content), "
 // the model reversed the bill («حسابه 18000» written by Ali → "Ali owes Hassan") and skipped «حولتلك 10000»
 const rev = X.addMissedPayments(X.parseItems(JSON.stringify({ items: [{ type: "owes", msg: 0, from: "Ali", to: "Hassan", amount: 18000 }, { type: "promise", msg: 1, from: "Hassan", to: "Ali", amount: 10000 }] }), by, ex.people), ex.messages, ex.people);
 ok(X.ledgerOf(rev, "Ali")[0].net === 8000 && rev.some((x) => x.byCode && x.msg === 2), "x-ray: a reversed bill is turned round; a skipped transfer is added by code");
-ok(X.addMissedPayments([], X.parseExport("12/09/2026, 10:05 - Hassan: هحولك 10000 بكرة\n12/09/2026, 10:06 - Ali: تمام").messages, ["Hassan", "Ali"]).length === 0, "x-ray: a promise to transfer is never added as paid");
+const pr = X.addMissedPayments([], X.parseExport("12/09/2026, 10:05 - Hassan: هحولك 10000 بكرة\n12/09/2026, 10:06 - Ali: تمام").messages, ["Hassan", "Ali"]);
+ok(!pr.some((x) => x.type === "paid") && pr.some((x) => x.type === "promise" && x.amount === 10000), "x-ray: a promise to transfer is never added as paid (it is kept as a promise)");
 l = D.parseLesson(`# H\n\n## A\nx.\n\n${fence}json\n{"visual": {"kind": "steps", "items": ["a", "b"]}}, "keyPoints": ["k1", "k2"]}\n${fence}`);
 ok(l.visual && l.visual.kind === "steps" && l.keyPoints.join() === "k1,k2", "lesson: a closing brace too many is repaired");
 
@@ -81,6 +82,24 @@ const al = new Date(A.buildAction({ action: "alarm" }, "صحيني الساعة 
 ok(al.getHours() === 6 && al.getMinutes() === 30 && al.getDate() === 29, "alarm: «صحيني الساعة 6 ونص» is 6:30 tomorrow morning");
 ok(new Date(A.buildAction({ action: "alarm" }, "wake me at 7", t0).at).getHours() === 7, "alarm: “wake me at 7” is 7 am");
 ok(new Date(A.buildAction({ action: "alarm" }, "alarm at 9 pm", t0).at).getHours() === 21, "alarm: “9 pm” stays 9 pm");
+
+// max trials (Glow 2B): «سلفتك 5000» read backwards; «9,500 a day, 3 days» taken as 9,500; English day names
+const ch1 = X.parseExport(`01/09/2026, 09:00 - Ali: Karim, the 25 ton crane for the Maadi job is 9,500 a day, 3 days
+01/09/2026, 09:04 - Karim: ok, I'll send half now and half after the job
+01/09/2026, 12:30 - Karim: sent 14,250 by InstaPay
+05/09/2026, 18:00 - Karim: job done, can we settle on Sunday?
+05/09/2026, 18:02 - Ali: sure, Sunday`);
+const by1 = new Map(ch1.messages.map((m) => [m.i, m]));
+const k1 = X.addMissedPayments(X.parseItems(JSON.stringify({ items: [{ type: "owes", msg: 0, from: "Karim", to: "Ali", amount: 9500 }, { type: "paid", msg: 2, from: "Karim", to: "Ali", amount: 14250 }] }), by1, ch1.people), ch1.messages, ch1.people);
+ok(X.ledgerOf(k1, "Ali")[0].net === 14250, "x-ray: «9,500 a day, 3 days» is a 28,500 bill → Karim owes 14,250");
+ok(k1.some((x) => x.type === "promise" && x.msg === 1) && k1.some((x) => x.type === "order" && x.msg === 4), "x-ray: «I'll send half now» and «settle on Sunday? — sure» are kept");
+const ch2 = X.parseExport(`10/09/2026, 10:00 - Mostafa: يا علي انا سلفتك 5000 الشهر اللي فات فاكر؟
+10/09/2026, 10:05 - Ali: ايوه طبعا، هرجعهملك أول الشهر
+02/10/2026, 11:00 - Ali: حولتلك 3000 والباقي الأسبوع الجاي`);
+const by2 = new Map(ch2.messages.map((m) => [m.i, m]));
+const k2 = X.addMissedPayments(X.parseItems(JSON.stringify({ items: [{ type: "owes", msg: 0, from: "Mostafa", to: "Ali", amount: 5000 }, { type: "paid", msg: 2, from: "Ali", to: "Mostafa", amount: 3000 }] }), by2, ch2.people), ch2.messages, ch2.people);
+ok(X.ledgerOf(k2, "Ali")[0].net === -2000, "x-ray: «انا سلفتك 5000» — Ali owes Mostafa, 2,000 left after 3,000");
+ok(k2.some((x) => x.type === "promise" && x.msg === 1), "x-ray: «هرجعهملك أول الشهر» is a promise");
 
 // Maps: a place name with «و» inside a word, and "where can I park"
 ok(PL.placeFor("انا في كمبوند ايمرالد بارك وعايز أفول بنزين اعمل ايه").near === "كمبوند ايمرالد بارك", "maps: «كمبوند» is not cut at its «و»");
