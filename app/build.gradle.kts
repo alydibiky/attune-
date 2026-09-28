@@ -121,6 +121,7 @@ dependencies {
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
     // Fit & Food (v6.3): steps, calories burned and workouts from the watch apps, through Android's
     // Health Connect (read only). Coroutines: its API is suspend functions.
-    implementation("androidx.health.connect:connect-client:1.1.0")
+    // (1.1.0 final needs compileSdk 36 + AGP 8.9.1; this release builds with compileSdk 35 / AGP 8.7.2)
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 }
