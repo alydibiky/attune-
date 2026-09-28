@@ -8,14 +8,14 @@
 //   node tests/websearch/eval.mjs [--only 1,5,9]
 import fs from "fs";
 import http from "http";
-import { search, pageText, TIMEOUTS } from "./search.mjs";
+import { search, pageText, TIMEOUTS, readPages } from "./search.mjs";
 // FIXTURE=1: the search results come from fixtures.json (real results for each question, collected once)
 // and the pages are opened live — measures everything after the search, the same on any machine.
 const FIXTURES = process.env.FIXTURE ? JSON.parse(fs.readFileSync(new URL("./fixtures.json", import.meta.url), "utf8")) : null;
 async function fixtureSearch(i, pages) {
   const t0 = Date.now();
   const hits = (FIXTURES[String(i)] || []).map((h) => ({ ...h, source: "web" })).filter((h) => !/wikipedia\.org\//i.test(h.url));
-  await Promise.all(hits.slice(0, pages).map(async (h) => { const text = await Promise.race([pageText(h.url, 16000), new Promise((r) => setTimeout(() => r(""), TIMEOUTS.pageWait))]); if (text.length > 80) h.text = text; }));
+  await readPages(hits.slice(0, pages));
   return { hits: hits.filter((h) => (h.text || "").length > 40), via: "fixture", ms: { search: 0, read: Date.now() - t0 } };
 }
 const R = await import("../../web-src/research.js");

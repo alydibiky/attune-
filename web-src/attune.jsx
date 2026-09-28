@@ -6350,7 +6350,16 @@ async function webLookup(q, question) {
   if (out0.hits && out0.hits.length) out0.hits = rankPassages(question || q, out0.hits);
   return out0;
 }
+// v6.8: the same search within 20 minutes (a follow-up, a retry, a gap search) reuses what was found
+const WEB_CACHE = new Map();
 async function webLookupRaw(q, pages = 6) {
+  const ck = String(q).trim().toLowerCase() + "|" + pages, hit0 = WEB_CACHE.get(ck);
+  if (hit0 && Date.now() - hit0.t < 20 * 60000) return { ...hit0.r, hits: hit0.r.hits.map((h) => ({ ...h })) };
+  const r0 = await webLookupRawLive(q, pages);
+  if (r0 && r0.hits && r0.hits.length) { WEB_CACHE.set(ck, { t: Date.now(), r: r0 }); if (WEB_CACHE.size > 40) WEB_CACHE.delete(WEB_CACHE.keys().next().value); }
+  return r0;
+}
+async function webLookupRawLive(q, pages = 6) {
   const cfg = searchLoad();
   const out = { hits: [], via: "none", why: "" };
   // Android app: search natively. DuckDuckGo needs no key; Brave uses yours.

@@ -246,12 +246,23 @@ object WebTools {
 
         // v5.19: up to 6 pages, each read in full (16,000 characters) — the page
         // picks the passages that answer the question (webrank.js).
+        // v6.8: never wait for the slowest site — go on once most pages are in and 4 s have passed
+        // (or all are in), and stop waiting at 9 s. One slow page used to hold every answer up to 14 s.
         val n = pages.coerceIn(0, 8)
         if (n > 0 && hits.isNotEmpty()) {
-            val jobs = hits.take(n).map { h -> pool.submit(Callable { h to pageText(h.url, 16_000) }) }
-            for (f in jobs) {
+            val cs = java.util.concurrent.ExecutorCompletionService<Pair<Hit, String>>(pool)
+            val list = hits.take(n)
+            for (h in list) cs.submit(Callable { h to pageText(h.url, 16_000) })
+            val t0 = System.currentTimeMillis(); var done = 0
+            val enough = maxOf(1, Math.ceil(list.size * 0.6).toInt())
+            while (done < list.size) {
+                val waited = System.currentTimeMillis() - t0
+                if (waited >= 9_000 || (done >= enough && waited >= 4_000)) break
+                val wait = if (done >= enough) 4_000 - waited else 9_000 - waited
+                val f = cs.poll(maxOf(1L, wait), TimeUnit.MILLISECONDS) ?: continue
+                done++
                 try {
-                    val (h, text) = f.get(14, TimeUnit.SECONDS)
+                    val (h, text) = f.get()
                     if (text.length > h.text.length + 80) h.text = (h.text + "\n" + text).take(16_000)
                 } catch (e: Exception) { }
             }

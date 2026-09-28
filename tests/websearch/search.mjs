@@ -102,6 +102,16 @@ export async function pageText(url, maxChars = 2200) {
   } catch (e) { return ""; }
 }
 
+/** WebTools.kt v6.8: pages read at once; go on when 60 % are in and 4 s passed (or all in), stop at 9 s. */
+export async function readPages(list) {
+  const t0 = Date.now(); let done = 0; const enough = Math.max(1, Math.ceil(list.length * 0.6));
+  await new Promise((finish) => {
+    if (!list.length) return finish();
+    const check = () => { const w = Date.now() - t0; if (done >= list.length || w >= 9000 || (done >= enough && w >= 4000)) { clearInterval(tick); finish(); } };
+    const tick = setInterval(check, 100);
+    for (const h of list) pageText(h.url, 16000).then((text) => { if (text.length > h.text.length + 80) h.text = (h.text + "\n" + text).slice(0, 16000); }).catch(() => {}).finally(() => { done++; check(); });
+  });
+}
 /** WebTools.search("duckduckgo", q, pages): both engines at once, interleaved, then the top pages read. */
 export async function search(q, pages = 6) {
   const t0 = Date.now();
@@ -111,9 +121,6 @@ export async function search(q, pages = 6) {
   const hits = merged.slice(0, 14);
   const tSearch = Date.now() - t0;
   const n = Math.max(0, Math.min(8, pages));
-  await Promise.all(hits.slice(0, n).map(async (h) => {
-    const text = await withTimeout(TIMEOUTS.pageWait, pageText(h.url, 16000)).catch(() => "");
-    if (text.length > h.text.length + 80) h.text = (h.text + "\n" + text).slice(0, 16000);
-  }));
+  await readPages(hits.slice(0, n));
   return { hits: hits.filter((h) => (h.text || "").length > 40), via: `ddg ${d.length} + bing ${b.length}`, ms: { search: tSearch, read: Date.now() - t0 - tSearch } };
 }
