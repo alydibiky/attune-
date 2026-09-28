@@ -55,6 +55,15 @@ const act = A.buildAction({ action: "call", title: "اتصال بالمهندس 
 ok(act.kind === "reminder" && new Date(act.at).getHours() === 9, "action: «فكرني … اكلم» is a reminder at 9:00");
 ok(A.buildAction({ action: "call", contact: "Hassan" }, "call Hassan", now).kind === "call", "action: a plain «call Hassan» stays a call");
 
+// the every-model trials (Spark 0.8B): a message number that isn't in the chat; a booking it missed
+const spark = X.addMissedPayments(X.parseItems('{"items":[{"type":"owes","msg":12,"from":"Ali","to":"Hassan","amount":18000,"currency":"EGP","what":"حسابه 18000"}]}', by, ex.people), ex.messages, ex.people);
+ok(X.ledgerOf(spark, "Ali")[0].net === 8000, "x-ray: a wrong message number is found by its amount → Hassan owes 8,000");
+ok(spark.some((x) => x.type === "order" && x.byCode && /الخميس/.test(x.quote)), "x-ray: a booking asked and answered «تمام» is kept by code");
+const AF = await import("../../web-src/answerfix.js");
+ok(AF.wrongLanguage("يا باشمهندس، محتاجين الونش ال100 طن يوم السبت", "- You need a price for 100 tons of goods on Saturday morning.") === "ar", "language: an Arabic message answered in English → ask again in Arabic");
+ok(AF.wrongLanguage("ترجم ده للانجليزي: ازيك يا صاحبي", "How are you, my friend? I hope you are doing well today.") === null, "language: English that was asked for is fine");
+ok(AF.wrongLanguage("يا باشمهندس، محتاجين الونش", "تمام، هبعتلك السعر النهارده") === null, "language: Arabic → Arabic is fine");
+
 // Maps: a place name with «و» inside a word, and "where can I park"
 ok(PL.placeFor("انا في كمبوند ايمرالد بارك وعايز أفول بنزين اعمل ايه").near === "كمبوند ايمرالد بارك", "maps: «كمبوند» is not cut at its «و»");
 ok(PL.placeFor("انا في مدينتي و عايز صيدلية").near === "مدينتي", "maps: «و» as its own word still ends the place");

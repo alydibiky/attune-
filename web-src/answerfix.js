@@ -245,3 +245,18 @@ export function gapsOf(question, answer) {
   if (/\b(specs?|specifications?|detailed)\b|مواصفات/i.test(q) && ((a.match(/\d[\d,.]*\s?(hp|kw|nm|km|kg|mm|kwh|mph|km\/h|v|ah|w|l)\b/gi) || []).length < 4)) gaps.push(/[؀-ۿ]/.test(q) ? "المواصفات" : "specifications");
   return gaps;
 }
+
+/**
+ * v6.8 — the every-model trials: a small model (Spark) answered an Egyptian message in English though
+ * nobody asked for English. → the language the answer should have been in ("ar" / "en"), or null when
+ * it is fine (or another language was asked for). Instant then asks once more, naming the language.
+ */
+export function wrongLanguage(input, output) {
+  const ar = (s) => (String(s).match(/[؀-ۿ]/g) || []).length, lat = (s) => (String(s).match(/[A-Za-z]/g) || []).length;
+  const i = String(input || ""), o = String(output || "");
+  if (/\b(in|into|to) (english|arabic|french|german|turkish|spanish)\b|بالانجليزي|بالإنجليزي|بالعربي|بالانجلش|انجليزي|ترجم|translate/i.test(i)) return null;
+  const inAr = ar(i) > lat(i) * 1.5, inEn = lat(i) > ar(i) * 3 && lat(i) > 20;
+  if (inAr && ar(o) < lat(o) * 0.25 && lat(o) > 30) return "ar";
+  if (inEn && lat(o) < ar(o) * 0.25 && ar(o) > 30) return "en";
+  return null;
+}

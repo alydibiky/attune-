@@ -113,7 +113,16 @@ export function parseItems(raw, byIndex, people) {
   const who = (n) => matchPerson(n, people);
   const out = [];
   for (let it of items) {
-    const m = byIndex.get(Number(it.msg));
+    let m = byIndex.get(Number(it.msg));
+    // a small model gave a message number that isn't in the chat (Spark said #12 of 6): the message is
+    // found by what the item quotes — its amount, or its words — when exactly one message has it
+    if (!m) {
+      const amt = it.amount == null ? null : Number(String(it.amount).replace(/,/g, ""));
+      const all = [...byIndex.values()];
+      let hits = amt > 0 ? all.filter((x) => nums(x.text).some((v) => Math.abs(v - amt) < 0.01)) : [];
+      if (hits.length !== 1 && it.what && String(it.what).trim().length >= 6) hits = all.filter((x) => x.text.includes(String(it.what).trim()));
+      if (hits.length === 1) m = hits[0];
+    }
     if (!m) continue;                                              // must point at a real message
     let type = String(it.type || "").toLowerCase();
     if (!["owes", "paid", "promise", "deadline", "order"].includes(type)) continue;
@@ -152,8 +161,16 @@ export function addMissedPayments(items, messages, people) {
     const other = people.find((p) => p !== m.who);
     out.push({ type: "paid", msg: m.i, t: m.t, quote: m.text.slice(0, 300), author: m.who, from: m.who, to: other, amount: v[0], currency: "EGP", what: "transfer", due: null, byCode: true });
   }
+  // a booking asked and agreed: «ممكن الونش 50 طن يوم الخميس؟» → «تمام الخميس 7 الصبح» (v6.8, found by Spark)
+  for (let k = 0; k + 1 < messages.length; k++) {
+    const q = messages[k], a = messages[k + 1];
+    if (!QUESTION.test(q.text) || !PROMISE.test(q.text) || a.who === q.who || !YES.test(a.text.trim())) continue;
+    if (out.some((o) => o.msg === q.i || o.msg === a.i)) continue;
+    out.push({ type: "order", msg: a.i, t: a.t, quote: q.text.slice(0, 200) + " → " + a.text.slice(0, 100), author: a.who, from: q.who, to: a.who, amount: null, currency: null, what: q.text.replace(/[?؟]/g, "").slice(0, 80), due: null, byCode: true });
+  }
   return out;
 }
+const YES = /^(تمام|ماشي|اوكي|أوكي|اوك|أكيد|اكيد|حاضر|موافق|اتفقنا|يب|ايوه|أيوه|ok|okay|sure|done|yes|deal|confirmed)(?![\p{L}])/iu;
 const BILL_TO_OTHER = /(حسابك|حسابه|حسابها|عليك|عليكي|عليكو|عليكم|مطلوب منك|you owe|your bill|your invoice|you still owe)/i;
 const BILL_ON_ME = /(عليا|عليّا|عليّ |اللي عليا|انا مديون|أنا مديون|i owe|my bill|my debt)/i;
 const DONE_PAY_TO_YOU = /(حولتلك|حولت لك|دفعتلك|دفعت لك|بعتلك \d|بعتلك فلوس|sent you|paid you|transferred (you|to you))/i;

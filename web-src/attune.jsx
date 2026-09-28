@@ -24,6 +24,7 @@ import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
 import { MindPage } from "./mind-ui.jsx";
+import { wrongLanguage } from "./answerfix.js";
 import { ChatXRay } from "./chatxray-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
 import { VideoDownloader } from "./video-ui.jsx";
@@ -7199,7 +7200,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.7";
+const PAGE_VERSION = "6.8";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -8349,7 +8350,10 @@ export default function App() {
     try {
       const kind = (inKind && inKind.kind) || "text";
       const stakes = detectStakes(text, "");
-      const t = await aiSmart(text, kind, inTarget, profile, { onToken: r.onToken, onStatus: r.onStatus, think: inThink ? "force" : false });
+      let t = await aiSmart(text, kind, inTarget, profile, { onToken: r.onToken, onStatus: r.onStatus, think: inThink ? "force" : false });
+      // a small model that answered an Arabic message in English (nobody asked) is asked once more (v6.8)
+      const should = (!inTarget || inTarget === "match") && t ? wrongLanguage(text, t) : null;
+      if (should) t = (await aiSmart(text, kind, should, profile, { onToken: r.onToken, onStatus: r.onStatus, think: false }).catch(() => null)) || t;
       if (!r.done()) return;
       if (!t) throw new Error("empty");
       finishInstantText(text, "Answer", t, stakes, "");
