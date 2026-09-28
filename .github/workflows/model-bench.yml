@@ -1,0 +1,103 @@
+name: Measure model sizes
+
+# v6.8 — Ali: "make a model like Zenith run smoothly on my phone — make the models take less space
+# with the same power". This measures, on an ARM processor (the same family as the phone's chip),
+# every compressed version of a model: its speed (reading and writing) and how much of the full
+# model's intelligence it keeps (KL divergence against the 8-bit version, on English, Arabic and
+# Egyptian Arabic text). Run by hand from the Actions tab; results appear in the run's summary.
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "Hugging Face repo with the GGUF files"
+        default: "unsloth/Qwen3.5-9B-GGUF"
+      prefix:
+        description: "File name prefix"
+        default: "Qwen3.5-9B"
+      quants:
+        description: "Versions to compare (the reference is Q8_0)"
+        default: "Q4_K_M UD-Q4_K_XL IQ4_NL Q4_0 IQ4_XS UD-Q3_K_XL Q3_K_M UD-IQ3_XXS"
+
+jobs:
+  bench:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 300
+    steps:
+      - name: Room on the disk
+        run: df -h / /mnt || true; nproc; free -g; lscpu | grep -i -E "model name|flags" | head -3
+
+      - name: Build llama.cpp (the app's pinned commit, tuned for this processor)
+        run: |
+          git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
+          cd ~/llama.cpp && git checkout -q 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF > /dev/null
+          cmake --build build --target llama-perplexity llama-bench -j"$(nproc)" > /dev/null
+          ls build/bin
+
+      - name: Test text — English, Arabic, Egyptian Arabic
+        run: |
+          pip install --quiet pyarrow
+          mkdir -p ~/w && cd ~/w
+          base=https://huggingface.co/datasets
+          curl -sL -o en.parquet  "$base/Salesforce/wikitext/resolve/main/wikitext-2-raw-v1/test-00000-of-00001.parquet"
+          curl -sL -o ar.parquet  "$base/wikimedia/wikipedia/resolve/main/20231101.ar/train-00004-of-00007.parquet"
+          curl -sL -o arz.parquet "$base/wikimedia/wikipedia/resolve/main/20231101.arz/train-00001-of-00003.parquet"
+          python3 - <<'EOF'
+          import pyarrow.parquet as pq
+          for name in ["en", "ar", "arz"]:
+              t = pq.read_table(f"{name}.parquet").column("text").to_pylist()
+              # long, real articles only (no stubs); about 14,000 characters each
+              t = [x for x in t if len(x) > 2500][40:200] if name != "en" else ["".join(t)]
+              out = ("\n\n".join(t))[:14000]
+              open(f"{name}.txt", "w").write(out)
+              print(name, len(out))
+          EOF
+          rm -f *.parquet
+
+      - name: Reference — the 8-bit model
+        run: |
+          cd ~/w
+          curl -sL -o ref.gguf "https://huggingface.co/${{ inputs.repo }}/resolve/main/${{ inputs.prefix }}-Q8_0.gguf"
+          ls -la ref.gguf
+          for t in en ar arz; do
+            ~/llama.cpp/build/bin/llama-perplexity -m ref.gguf -f $t.txt -c 512 -t "$(nproc)" --kl-divergence-base base_$t.bin 2>&1 | grep -E "Final estimate|error" | tee ppl_ref_$t.txt
+          done
+          ~/llama.cpp/build/bin/llama-bench -m ref.gguf -p 256 -n 64 -t "$(nproc)" -o md | tee bench_ref.md
+          rm -f ref.gguf; df -h ~ | tail -1
+
+      - name: Every compressed version
+        run: |
+          cd ~/w
+          echo "| Version | Size | KLD en | KLD ar | KLD Egyptian | Same top word (ar) | Read t/s | Write t/s |" > results.md
+          echo "|---|---|---|---|---|---|---|---|" >> results.md
+          for q in ${{ inputs.quants }}; do
+            f="${{ inputs.prefix }}-$q.gguf"
+            curl -sL -o m.gguf "https://huggingface.co/${{ inputs.repo }}/resolve/main/$f" || continue
+            size=$(du -BM m.gguf | cut -f1)
+            row="| $q | $size"
+            for t in en ar arz; do
+              ~/llama.cpp/build/bin/llama-perplexity -m m.gguf -c 512 -t "$(nproc)" --kl-divergence-base base_$t.bin --kl-divergence > kl_${q}_$t.txt 2>&1 || true
+              kld=$(grep -E "^Mean +KLD" kl_${q}_$t.txt | awk '{print $3}')
+              row="$row | ${kld:-?}"
+              if [ "$t" = ar ]; then top=$(grep -E "^Same top p" kl_${q}_$t.txt | awk '{print $4, $5, $6}'); fi
+            done
+            ~/llama.cpp/build/bin/llama-bench -m m.gguf -p 256 -n 64 -t "$(nproc)" -o json > bench_$q.json 2>/dev/null || true
+            pp=$(python3 -c "import json;d=json.load(open('bench_$q.json'));print(round([x for x in d if x['n_prompt']>0][0]['avg_ts'],1))" 2>/dev/null)
+            tg=$(python3 -c "import json;d=json.load(open('bench_$q.json'));print(round([x for x in d if x['n_gen']>0][0]['avg_ts'],1))" 2>/dev/null)
+            echo "$row | ${top:-?} | ${pp:-?} | ${tg:-?} |" >> results.md
+            cat results.md | tail -1
+            rm -f m.gguf
+          done
+          { echo "## ${{ inputs.repo }} on $(nproc) ARM cores"; echo; cat bench_ref.md; echo; cat results.md; echo; echo "KLD = how far the compressed model's word choices drift from the 8-bit model (lower is better; under ~0.05 is hard to notice)."; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the numbers
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-bench
+          path: |
+            ~/w/results.md
+            ~/w/kl_*.txt
+            ~/w/ppl_ref_*.txt
+            ~/w/bench_*
