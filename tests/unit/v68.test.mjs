@@ -112,6 +112,11 @@ const mh = RS.mergeHits([[junk, good]], 5, "How tall is the Cairo Tower?");
 ok(mh.length === 1 && mh[0] === good, "web: mergeHits drops the off-topic page");
 ok(RS.mergeHits([[junk]], 5, "How tall is the Cairo Tower?").length === 1, "web: if nothing passes, the pages are kept rather than none");
 
+// web search speed: a quick one-fact question reads a smaller window; comparisons and lists keep it all
+ok(RS.quickBudget("How tall is the Cairo Tower?", 9000) === 6000 && RS.quickBudget("ما هو ارتفاع برج خليفة؟", 9000) === 6000, "web: a one-fact question reads 6,000 characters");
+ok(RS.quickBudget("Compare the Hilux and the Ranger", 9000) === 9000 && RS.quickBudget("فئات تويوتا كورولا 2026 ومواصفاتها", 9000) === 9000 && RS.quickBudget("How tall is it?", 9000, true) === 9000, "web: comparisons, trims and deep research keep the full window");
+ok(RS.quickBudget("How tall is the Cairo Tower?", 4000) === 4000, "web: never more than the phone's window");
+
 // Maps: a place name with «و» inside a word, and "where can I park"
 ok(PL.placeFor("انا في كمبوند ايمرالد بارك وعايز أفول بنزين اعمل ايه").near === "كمبوند ايمرالد بارك", "maps: «كمبوند» is not cut at its «و»");
 ok(PL.placeFor("انا في مدينتي و عايز صيدلية").near === "مدينتي", "maps: «و» as its own word still ends the place");

@@ -79,9 +79,9 @@ export async function answer(typed, index = 0) {
   ms.search = Math.max(...found.map((f) => (f.ms && f.ms.search) || 0)); ms.read = Math.max(...found.map((f) => (f.ms && f.ms.read) || 0));
   const toRead = R.mergeHits(found.map((f) => f.hits || []), readCap, typed);
   if (!toRead.length) return { text: "", ms, pages: 0, why: "no results" };
-  if (process.env.RETRIEVAL_ONLY) return { text: "", ms, pages: toRead.length, sources: toRead.map((h) => h.url), via: found.map((f) => f.via).join(" / "), inSources: (rx) => rx.test(toRead.map((h) => h.title + " " + h.text).join(" ")), rankedHas: (rx) => rx.test(W.rankPassages(typed, toRead, { budget: 9000 }).map((h) => h.title + " " + h.text).join(" ")), smallHas: (rx) => rx.test(W.rankPassages(typed, toRead, { budget: 4500, perSource: 1500 }).map((h) => h.title + " " + h.text).join(" ")) };
+  if (process.env.RETRIEVAL_ONLY) return { text: "", ms, pages: toRead.length, sources: toRead.map((h) => h.url), via: found.map((f) => f.via).join(" / "), inSources: (rx) => rx.test(toRead.map((h) => h.title + " " + h.text).join(" ")), rankedHas: (rx) => rx.test(W.rankPassages(typed, toRead, { budget: 9000 }).map((h) => h.title + " " + h.text).join(" ")), smallHas: (rx) => { const b = R.quickBudget(typed, 9000, deep); return rx.test(W.rankPassages(typed, toRead, { budget: b, perSource: Math.max(1500, Math.floor(b / Math.max(1, Math.min(toRead.length, 6)) * 1.4)) }).map((h) => h.title + " " + h.text).join(" ")); } };
   t = Date.now();
-  const budget = LR.fitChars(Math.min(CTX, 12288), POWER.longTokens, 2600, toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" "));
+  const budget = R.quickBudget(typed, LR.fitChars(Math.min(CTX, 12288), POWER.longTokens, 2600, toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" ")), deep);
   const ranked = W.rankPassages(typed, toRead, { budget, perSource: Math.max(1500, Math.floor(budget / Math.max(1, Math.min(toRead.length, 6)) * 1.4)) });
   const figs = R.confirmedFigures(ranked);
   const sheet = FS.factSheet(typed, ranked, /[؀-ۿ]/.test(typed));
@@ -118,7 +118,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const secs = Object.values(a.ms).filter((v, k) => typeof v === "number").slice(0, 5).reduce((x, y) => x + y, 0) / 1000;
     rows.push(`| ${i + 1} | ${ok ? "✅" : had ? "❌ (was in the pages)" : "❌ (not found)"} | ${q.slice(0, 60)} | ${((a.ms.search || 0) / 1000).toFixed(1)} | ${((a.ms.read || 0) / 1000).toFixed(1)} | ${((a.ms.model || 0) / 1000).toFixed(1)} | ${a.pages || 0} |`);
     out.push(`## ${i + 1}. ${q}\n${ok ? "✅" : "❌"} expected ${rx} · in the pages: ${had ? "yes" : "no"} · search ${a.ms.search}ms, read ${a.ms.read}ms, model ${a.ms.model}ms${a.ms.retry ? ", retry " + a.ms.retry + "ms" : ""} · prompt ${a.ms.promptTok} tokens\n\n${(a.text || a.why || "").slice(0, 2500)}\n\nSources: ${(a.sources || []).join(" · ")}\n`);
-    console.log(`${i + 1}. ${ok ? "OK " : "BAD"} ${had ? "(in pages)" : "(not found)"}${a.rankedHas ? (a.rankedHas(rx) ? " (kept at 9000)" : " (LOST at 9000)") + (a.smallHas(rx) ? " (kept at 4500)" : " (LOST at 4500)") : ""} search ${(a.ms.search / 1000).toFixed(1)}s read ${(a.ms.read / 1000).toFixed(1)}s model ${(a.ms.model / 1000).toFixed(1)}s prompt ${a.ms.promptTok || 0} tok · via ${a.via || ""} · ${a.pages} pages · ${q.slice(0, 50)}`);
+    console.log(`${i + 1}. ${ok ? "OK " : "BAD"} ${had ? "(in pages)" : "(not found)"}${a.rankedHas ? (a.rankedHas(rx) ? " (kept at 9000)" : " (LOST at 9000)") + (a.smallHas(rx) ? " (kept quick)" : " (LOST quick)") : ""} search ${(a.ms.search / 1000).toFixed(1)}s read ${(a.ms.read / 1000).toFixed(1)}s model ${(a.ms.model / 1000).toFixed(1)}s prompt ${a.ms.promptTok || 0} tok · via ${a.via || ""} · ${a.pages} pages · ${q.slice(0, 50)}`);
     console.log("   sites: " + (a.sources || []).slice(0, 6).map((u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return u; } }).join(", "));
     if (a.text) console.log("   answer: " + a.text.replace(/\s+/g, " ").slice(0, 260));
     fs.writeFileSync(new URL(`./report-${MODEL.replace(/\W+/g, "-")}.md`, import.meta.url), out.join("\n"));

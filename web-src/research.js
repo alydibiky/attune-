@@ -305,3 +305,15 @@ export function needsWeb(text) {
   if (t.length < 8) return false;
   return /\b(latest|newest|today|tonight|this (week|month|year)|news|current|currently|price|prices|cost|how much|release[ds]?|launch(ed)?|specs?|specifications?|trims?|who won|score|weather|exchange rate|stock|20[2-3]\d)\b|أحدث|احدث|أخبار|اخبار|النهارده|انهارده|سعر|أسعار|اسعار|بكام|مواصفات|فئات|نزل امتى|الطقس|الجو/i.test(t);
 }
+
+/** v6.8 — a quick question (one fact: a figure, a name, a date) doesn't need a full window of
+    passages: the answer sits in the best few, and every extra token is read on the phone before
+    the first word appears. Measured on the web benchmark: the answer is still in the passages at
+    6,000 characters for every question, and the prompt is about a third shorter. Comparisons,
+    lists, specs and reports keep the full budget. */
+export function quickBudget(question, budget, deep = false) {
+  const q = String(question || "");
+  if (deep || q.length > 160) return budget;
+  if (/\b(compare|comparison|vs\.?|versus|difference|differences|all|every|list|trims?|versions?|specs?|specifications?|pros|cons|review|explain|how (do|does|to)|why)\b|قارن|مقارنة|الفرق|فرق|كل |جميع|فئات|مواصفات|اشرح|ليه|إزاي|ازاي|كيف|لماذا/i.test(q)) return budget;
+  return Math.min(budget, 6000);
+}

@@ -18,7 +18,7 @@ import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, arithmet
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
-import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf } from "./research.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget } from "./research.js";
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames } from "./answerfix.js";
 import { rulesOf, violations, fixMessage } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
@@ -745,7 +745,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const ansF = (api.power && api.power().longTokens) || 2048;
           // v5.32: the passages fill at most a 12k window even on 16k phones — a small model copies
           // figures far more reliably from a shorter prompt (and it reads faster)
-          const budgetF = fitChars(Math.min(ctxF, 12288), ansF, 2600, toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" "));
+          const budgetF = quickBudget(typed, fitChars(Math.min(ctxF, 12288), ansF, 2600, toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" ")), deep);   // v6.8: a quick question reads less
           const ranked = api.rankAll(question, toRead, { budget: budgetF, perSource: Math.max(1500, Math.floor(budgetF / Math.max(1, Math.min(toRead.length, 6)) * 1.4)) });
           const figs = confirmedFigures(ranked);
           sources = ranked; via = look.via;
