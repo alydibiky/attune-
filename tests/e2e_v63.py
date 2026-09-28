@@ -63,7 +63,8 @@ with sync_playwright() as p:
     # ---- change it by talking ----
     page.evaluate("() => { window.__mock.said = ['شيل البيبسي']; }")
     page.locator("[data-testid=fit-cmd-mic]").click(); page.wait_for_timeout(500)
-    check(items(page).count() == 2 and "Cola" not in page.locator("[data-testid=fit-draft]").inner_text(), "“remove the Pepsi” said to the edit box removes it")
+    rows = " | ".join(items(page).nth(i).inner_text() for i in range(items(page).count()))
+    check(items(page).count() == 2 and "Cola" not in rows and "Removed Cola" in page.locator("[data-testid=fit-cmd-note]").inner_text(), "“remove the Pepsi” said to the edit box removes it, and says so")
     page.fill("[data-testid=fit-cmd]", "rice 120 g"); page.locator("[data-testid=fit-cmd-go]").click()
     check(page.locator("[data-testid=fit-draft-grams]").nth(1).input_value() == "120" and "120 g" in page.locator("[data-testid=fit-cmd-note]").inner_text(), "“rice 120 g” sets it and says so")
     page.fill("[data-testid=fit-cmd]", "what's the weather"); page.locator("[data-testid=fit-cmd-go]").click()

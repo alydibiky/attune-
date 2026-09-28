@@ -24,22 +24,25 @@ export function Grades({ x, L }) {
 }
 
 /** The day's score (0–100) and sugar / saturated fat / salt against their limits. */
-export function DayQuality({ L, day, tg }) {
+export function DayQuality({ L, day, tg, isToday }) {
   const sc = P.dayScore(day, tg), q = P.qualityTotals(day), lim = P.limits(tg);
   if (!sc) return null;
+  // v6.3 details: "0 g sugar" when no food of the day has a label is not zero — it's unknown; and a
+  // score before the evening is a score "so far", not a verdict
+  const soFar = isToday && new Date().getHours() < 20;
   const bar = (label, v, max) => (
     <div className="min-w-0">
-      <div className="flex justify-between text-[11px] text-slate-400"><span>{label}</span><span className={"tabular-nums " + (v > max ? "text-rose-300" : "")}>{r0(v)}/{max} g</span></div>
-      <div className="h-1.5 rounded-full bg-slate-800 mt-1"><div className={"h-1.5 rounded-full " + (v > max ? "bg-rose-400" : "bg-teal-400")} style={{ width: Math.min(100, (v / max) * 100) + "%" }} /></div>
+      <div className="flex justify-between text-[11px] text-slate-400"><span>{label}</span><span className={"tabular-nums " + (q.known && v > max ? "text-rose-300" : "")}>{q.known ? `${r0(v)}/${max} g` : "—"}</span></div>
+      <div className="h-1.5 rounded-full bg-slate-800 mt-1">{q.known ? <div className={"h-1.5 rounded-full " + (v > max ? "bg-rose-400" : "bg-teal-400")} style={{ width: Math.min(100, (v / max) * 100) + "%" }} /> : null}</div>
     </div>);
   return (
     <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2" data-testid="fit-quality">
       <div className="flex items-center justify-between">
-        <span className="text-[13px] text-white">{L("Today's score", "درجة النهارده")}</span>
-        <span className={"text-xl font-bold tabular-nums " + (sc.score >= 80 ? "text-emerald-300" : sc.score >= 55 ? "text-amber-300" : "text-rose-300")} data-testid="fit-score">{sc.score}<span className="text-[12px] text-slate-500">/100</span></span>
+        <span className="text-[13px] text-white">{L("Today's score", "درجة النهارده")}{soFar ? <span className="text-[11px] text-slate-400"> · {L("so far", "لحد دلوقتي")}</span> : null}</span>
+        <span className={"text-xl font-bold tabular-nums " + (soFar ? "text-slate-200" : sc.score >= 80 ? "text-emerald-300" : sc.score >= 55 ? "text-amber-300" : "text-rose-300")} data-testid="fit-score">{sc.score}<span className="text-[12px] text-slate-500">/100</span></span>
       </div>
       <div className="grid grid-cols-3 gap-3">{bar(L("Sugar", "سكر"), q.sug, lim.sug)}{bar(L("Sat. fat", "دهون مشبعة"), q.sat, lim.sat)}{bar(L("Salt", "ملح"), q.salt, lim.salt)}</div>
-      {q.total ? <div className="text-[10.5px] text-slate-500">{L(`Sugar, fat and salt from the ${q.known} of ${q.total} foods whose labels give them.`, `السكر والدهون والملح من ${q.known} من ${q.total} أكلات ملصقها بيقول.`)}</div> : null}
+      {q.total ? <div className="text-[10.5px] text-slate-500">{q.known ? L(`Sugar, fat and salt from the ${q.known} of ${q.total} foods whose labels give them.`, `السكر والدهون والملح من ${q.known} من ${q.total} أكلات ملصقها بيقول.`) : L("No sugar / salt data for today's foods — packaged products (barcode or search) carry them.", "مفيش بيانات سكر وملح لأكل النهارده — المنتجات المعبّأة (باركود أو بحث) هي اللي فيها.")}</div> : null}
     </div>
   );
 }

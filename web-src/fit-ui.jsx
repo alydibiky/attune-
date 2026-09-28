@@ -435,7 +435,7 @@ function Today({ L, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdd
         </div>
       </div>
       {st.ramadan && st.ramadan.on && dayKey === F.today() ? <RamadanCard {...{ L, ar, tg, city: st.ramadan.city }} /> : null}
-      <DayQuality {...{ L, day, tg }} />
+      <DayQuality {...{ L, day, tg }} isToday={dayKey === F.today()} />
       <WatchCard {...{ L, ar, health, st, upd, dayKey }} compact />
       {tips.map((t, i) => <div key={i} className="rounded-xl bg-amber-500/10 border border-amber-800 px-3 py-2 text-[12.5px] text-amber-100">{t}</div>)}
 
