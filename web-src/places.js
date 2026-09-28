@@ -16,7 +16,7 @@ const KINDS = [
   [/\b(mechanic|car repair|tyre|tire shop|car wash)\b|ميكانيكي|ورشة|كاوتش|غسيل عربيات/i, "car repair", "ورشة عربيات"],
   [/\b(mosque|prayer)\b|مسجد|جامع/i, "mosque", "مسجد"],
   [/\b(ev charg\w*|charging station|charger)\b|شاحن عربيات|محطة شحن/i, "EV charging station", "محطة شحن"],
-  [/\b(parking|car park)\b|ركنة|جراج|باركينج/i, "parking", "جراج"],
+  [/\b(parking|car park|park (?:my|the) car)\b|\bwhere (?:can|do|should) i park\b|ركنة|اركن|أركن|جراج|باركينج/i, "parking", "جراج"],
 ];
 const NEARBY = /\b(near(?:est|by)?|close(?:st)?|around (?:here|me)|where (?:can|do|should) i|i am at|i'm at|i am in|i'm in|go to|find)\b|أقرب|اقرب|قريب|فين|انا في|أنا في|انا عند|أنا عند|عايز أروح|عايز اروح/i;
 
@@ -28,7 +28,7 @@ export function placeFor(text) {
   if (!k || !NEARBY.test(t)) return null;
   const ar = /[؀-ۿ]/.test(t);
   const at = t.match(/\b(?:i am at|i'm at|i am in|i'm in|near|from)\s+(?:the\s+)?([A-Za-z0-9][\w'&\- ]{2,50}?)(?=\s*(?:now|right now|and|,|\.|\?|what|so|$))/i)
-    || t.match(/(?:انا|أنا)\s+(?:في|عند)\s+([^\s،.؟?][^،.؟?\n]{2,40}?)(?=\s*(?:دلوقتي|و|،|\.|؟|\?|$))/);
+    || t.match(/(?:انا|أنا)\s+(?:في|عند)\s+([^\s،.؟?][^،.؟?\n]{2,40}?)(?=\s*(?:دلوقتي|،|\.|؟|\?|$)|\s+و)/);   // «و» only as its own word («كمبوند» has a و inside)
   const near = at ? at[1].trim() : "";
   const what = ar ? k[2] : k[1];
   const q = near ? what + (ar ? " قريب من " : " near ") + near : what + (ar ? " قريبة" : " near me");

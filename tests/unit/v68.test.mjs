@@ -7,6 +7,7 @@ const D = await import("../../web-src/daily.js");
 const X = await import("../../web-src/chatxray.js");
 const S = await import("../../web-src/slides.js");
 const A = await import("../../web-src/actions.js");
+const PL = await import("../../web-src/places.js");
 let fail = 0;
 const ok = (c, what) => { console.log((c ? "PASS " : "FAIL ") + what); if (!c) fail++; };
 
@@ -53,6 +54,11 @@ const now = new Date("2026-09-28T10:00:00").getTime();
 const act = A.buildAction({ action: "call", title: "اتصال بالمهندس حسن", time_text: "بكرة الساعة 9", contact: "المهندس حسن" }, "فكرني بكرة الساعة 9 الصبح اكلم المهندس حسن", now);
 ok(act.kind === "reminder" && new Date(act.at).getHours() === 9, "action: «فكرني … اكلم» is a reminder at 9:00");
 ok(A.buildAction({ action: "call", contact: "Hassan" }, "call Hassan", now).kind === "call", "action: a plain «call Hassan» stays a call");
+
+// Maps: a place name with «و» inside a word, and "where can I park"
+ok(PL.placeFor("انا في كمبوند ايمرالد بارك وعايز أفول بنزين اعمل ايه").near === "كمبوند ايمرالد بارك", "maps: «كمبوند» is not cut at its «و»");
+ok(PL.placeFor("انا في مدينتي و عايز صيدلية").near === "مدينتي", "maps: «و» as its own word still ends the place");
+ok((PL.placeFor("where can i park near Tahrir square") || {}).query === "parking near Tahrir square", "maps: «where can I park near …» → parking");
 
 // Slides
 const ol = S.parseOutline(JSON.stringify({ title: "Crane safety", slides: [{ title: "Why it matters", kind: "quote" }, { title: "Before the lift" }, "Signals", { title: "Wind limits" }, { title: "Checklist" }] }), 5, { topic: "Crane safety" });

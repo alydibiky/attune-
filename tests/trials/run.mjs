@@ -220,8 +220,8 @@ if (want("website")) {
   const html = (C.pickProgram ? C.pickProgram(r.text, "html") : r.text) || r.text;
   let h = typeof html === "string" ? html : (html && html.code) || r.text;
   // a page cut at the length limit is continued until </html>, as the app does (code.js continueMessages)
-  for (let k = 0; k < 2 && C.isCutHtml(h); k++) { const more = await llm(C.continueMessages(task, h.slice(-1500)), { maxTokens: 2000, temperature: 0.3 }); h = C.joinCont(h, more.text); r = { ...r, secs: r.secs + more.secs, tokens: r.tokens + more.tokens }; }
-  section("Website · page from one sentence", task, r, { chars: h.length, cut: C.isCutHtml(h) },
+  for (let k = 0; k < 3 && C.isCutHtml(h); k++) { const more = await llm(C.continueMessages(task, h.slice(-1500)), { maxTokens: 2000, temperature: 0.3 }); h = C.joinCont(h, more.text); r = { ...r, secs: r.secs + more.secs, tokens: r.tokens + more.tokens }; }
+  section("Website · page from one sentence", task, r, { chars: h.length, cut: C.isCutHtml(h), end: h.slice(-700) },
     [[/<html|<!doctype/i.test(h) && /<\/html>/i.test(h), "a complete page (<html> … </html>)"], [/Aldibiki/i.test(h), "about the company asked for"], [/<table/i.test(h), "the fleet table"], [/wa\.me|whatsapp/i.test(h), "the WhatsApp button"]]);
 }
 
@@ -244,6 +244,31 @@ if (want("assistants")) {
     let printed = ""; try { printed = (await import("child_process")).execFileSync("python3", ["-c", code], { timeout: 20000 }).toString(); } catch (e) { printed = String(e.stdout || e.message); }
     section("Assistant · Accountant (Egypt), as the chat answers it (maths checker)", qa, r, { printed: printed.trim() }, [[/ANSWER:\s*171,?000/.test(printed), "the checked total: 171,000 EGP"]]);
   }
+}
+
+// ---- Memory: answers from the person's own saved records, and "I don't have it" when they don't ----
+if (want("memory")) {
+  const M = APP.memory();
+  const rec = (ts, title, text) => ({ rec: { ts: Date.parse(ts), title, text, output: "" } });
+  const found = [rec("2026-08-03", "Liebherr LTM 1100 service", "Service done by Karim at 11,980 hours: engine oil, filters, slewing ring greased. Next oil change due at 12,500 hours. Hydraulic hose on outrigger 3 is worn — replace before October."),
+    rec("2026-09-10", "Client call — Hassan (Orascom site)", "Hassan wants the 100 t crane for 5 days from 1 October, rate agreed 13,000 EGP a day.")];
+  let r = await llm([{ role: "user", content: await M.ask("When is the next oil change on the Liebherr, and what else must be fixed on it?", found, [], "en") }], { maxTokens: 400 });
+  section("Memory · answer from my records", "next oil change + what to fix", r, undefined,
+    [[/12,?500/.test(r.text), "12,500 hours (from the record)"], [/hose|outrigger 3/i.test(r.text), "the worn hose on outrigger 3"], [/3 Aug|August 3|2026-08-03|your (note|record)|service note/i.test(r.text), "says which record it used"]]);
+  r = await llm([{ role: "user", content: await M.ask("What is Hassan's national ID number?", found, [], "en") }], { maxTokens: 200 });
+  section("Memory · something I never saved", "Hassan's national ID", r, undefined,
+    [[!/\d{14}|\d{8,}/.test(r.text), "no invented number"], [/don't have|do not have|no record|not in your|isn't in|not saved|can't find|cannot find/i.test(r.text), "says plainly it doesn't have it"]]);
+}
+
+// ---- Projects: a project's files answer the question, with the file named ----
+if (want("projects")) {
+  const project = { name: "Orascom tower job", instructions: "Answer for the site team. Be exact with numbers.", knowledge: [
+    { name: "lift-plan.txt", text: "Lift plan LP-07. Crane: Liebherr LTM 1100-4.2, 60 t counterweight, outriggers fully extended (7.3 x 7.3 m). Heaviest pick: HVAC unit 8.6 t at 22 m radius. Chart capacity at 22 m with 40.4 m boom: 13.1 t. Utilisation 66 %. Wind limit for this lift: 9 m/s." },
+    { name: "site-rules.txt", text: "Site hours 7:00-17:00. No lifts when wind exceeds the lift plan limit. Banksman: Mahmoud (radio channel 4)." }] };
+  const q = "What's the wind limit for the HVAC lift, and how close to the chart capacity are we?";
+  let r = await llm([{ role: "system", content: SP.spaceBlock({ project, question: q }) }, { role: "user", content: q }], { maxTokens: 400 });
+  section("Projects · answer from the project's files", q, r, undefined,
+    [[/9 ?m\/s/.test(r.text), "wind limit 9 m/s"], [/66 ?%|8\.6.*13\.1|13\.1/.test(r.text), "8.6 t of 13.1 t (66 %)"], [/lift-plan/i.test(r.text), "names the file it used"]]);
 }
 
 const ok = checks.filter((c) => c[1]).length;

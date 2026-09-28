@@ -40,3 +40,16 @@ export function prompts() {
   // lexRule adds the app's word list for the words it finds; detectScript guesses a language — both plain helpers
   return new Function("callClaude", "detectScript", "lexRule", "prefixKey", code)(async (c) => c, () => null, () => "", () => "");
 }
+
+/** Memory ("ask your memory"): aiAsk's own prompt over the person's saved records. */
+export function memory() {
+  const code = [
+    block("const LANG_NAMES", /;\s*$/),
+    block("function languageRule", /^}/),
+    block("const ACCURACY_RULES", /`;\s*$/),
+    block("const ASK_PROMPT", /`;\s*$/),
+    block("async function aiAsk", /^}/),
+    "return { ask: aiAsk };",
+  ].join("\n");
+  return new Function("callClaude", "detectScript", "lexRule", "learnRule", code)(async (c) => c, () => null, () => "", () => "");
+}
