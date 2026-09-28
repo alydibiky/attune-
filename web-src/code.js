@@ -174,6 +174,7 @@ Quality bar — it must look and feel like a finished, professional product:
 - Start with <!doctype html>, <meta name="viewport" content="width=device-width, initial-scale=1">, a <title>.
 - Design: CSS variables for a small colour palette (one accent colour), system-ui font, generous spacing, rounded cards, soft shadows, clear hierarchy (one big title, short subtitle). Mobile first: a single column that fits 360 px wide, buttons at least 44 px tall. Support dark mode with @media (prefers-color-scheme: dark).
 - Build EVERYTHING the request implies, with real content (no "Lorem ipsum", no "TODO", no placeholder links). A website → a header with navigation, a hero, the sections the topic needs, a footer. A tool/app → the working tool with inputs, results and sensible defaults. A game or simulator → a visual scene drawn with SVG or canvas that the controls actually move, plus a score/status line.
+- Every element the request names is there AS that element: "a table" is a real <table> (not cards), "a form" a working <form>, "a button" a real button or link.
 - The page opens in its clean initial state: never click buttons, run a demo or fill logs automatically on load. Anything shown in a log/list comes from the user's own actions.
 - State kept in localStorage when the user would expect it to persist (lists, settings, scores); wrap it in try/catch.
 - No alert(), prompt() or confirm(); show messages in the page. No console errors.

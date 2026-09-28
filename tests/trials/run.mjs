@@ -17,6 +17,7 @@ const C = await import("../../web-src/code.js");
 const CV = await import("../../web-src/convert.js");
 const A = await import("../../web-src/actions.js");
 const APP = await import("./appsrc.mjs");
+const SP = await import("../../web-src/spaces.js");
 const PORT = process.env.TRIAL_PORT || 8099;
 const only = process.argv[2] || "";
 
@@ -24,8 +25,14 @@ async function llm(messages, { maxTokens = 900, temperature = 0.3, json = false 
   const t0 = Date.now();
   const body = { messages, max_tokens: maxTokens, temperature, stream: false, ...(json ? { response_format: { type: "json_object" } } : {}),
     chat_template_kwargs: { enable_thinking: false } };
-  const r = await fetch(`http://127.0.0.1:${PORT}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-  const j = await r.json();
+  // plain http, not fetch: fetch gives up after 5 minutes without headers, and a long page on a CPU takes longer
+  const http = await import("http");
+  const j = await new Promise((ok, bad) => {
+    const req = http.request({ host: "127.0.0.1", port: PORT, path: "/v1/chat/completions", method: "POST", headers: { "content-type": "application/json" } }, (res) => {
+      let d = ""; res.setEncoding("utf8"); res.on("data", (x) => (d += x)); res.on("end", () => { try { ok(JSON.parse(d)); } catch (e) { ok({ error: d.slice(0, 300) }); } });
+    });
+    req.on("error", bad); req.setTimeout(0); req.end(JSON.stringify(body));
+  });
   const text = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || JSON.stringify(j).slice(0, 300);
   return { text, secs: Math.round((Date.now() - t0) / 100) / 10, tokens: (j.usage && j.usage.completion_tokens) || 0 };
 }
@@ -184,6 +191,58 @@ if (want("action")) {
     const at = a && a.at ? new Date(a.at) : null;
     section(`Instant action · ${kind}`, req, r, a && { kind: a.kind, title: a.title, at: at && at.toString().slice(0, 21), contact: a.contact, message: a.message },
       [[a && a.kind === kind, `read as a ${kind}`], [hour == null || (at && at.getHours() === hour && at > now), hour == null ? "no time needed" : `at ${hour}:00, in the future`], [kind !== "whatsapp" || (a.contact && /حسن|hassan/i.test(a.contact) && a.message), "who to send to, and the message"]]);
+  }
+}
+
+// ---- Prompts for other AIs: rewrite a rough idea into a prompt for ChatGPT (never answer it) ----
+if (want("prompts")) {
+  const P = APP.prompts();
+  const rough = "اكتبلي خطة تسويق لشركة تأجير ونش في مصر ميزانيتها 50 الف جنيه في الشهر";
+  let r = await llm([{ role: "user", content: await P.rewrite({ tool: "chatgpt", input: rough, lang: "match", tone: "Auto", audience: "General" }) }], { maxTokens: 600 });
+  const ar = (r.text.match(/[\u0600-\u06FF]/g) || []).length / Math.max(1, r.text.replace(/\s/g, "").length);
+  section("Prompts for other AIs · rewrite for ChatGPT", rough, r, undefined,
+    [[!/^(الخطة|خطة التسويق|## )/m.test(r.text.trim()) && !/الشهر الأول|Month 1|الأسبوع الأول/i.test(r.text), "a prompt, not the plan itself"], [/50|خمسين/.test(r.text) && /ونش|ونش|crane|رافع/i.test(r.text), "keeps the budget and the business"], [ar > 0.5, "stays in Arabic like the draft"]]);
+}
+
+// ---- Instant "Go": work out the job from pasted text ----
+if (want("instant")) {
+  const P = APP.prompts();
+  const msg = "يا باشمهندس، محتاجين الونش ال100 طن يوم السبت الساعة 6 الصبح في موقع التجمع الخامس، ياريت تأكدلي السعر النهارده عشان نحجز";
+  let r = await llm([{ role: "user", content: await P.smart(msg, "message", "match") }], { maxTokens: 500 });
+  section("Instant · Go on a pasted client message", msg, r, undefined,
+    [[/السبت/.test(r.text) && /100/.test(r.text), "what they want (100 t crane, Saturday)"], [/السعر|سعر/.test(r.text), "that they want the price today"], [(r.text.match(/[\u0600-\u06FF]/g) || []).length > 60, "in Arabic, like the message"]]);
+}
+
+// ---- Website / artifacts: a page from one sentence ----
+if (want("website")) {
+  const task = "A one-page website for Aldibiki Cranes: 25 to 500 ton mobile cranes for rent in Egypt, a fleet table, and a WhatsApp booking button";
+  let r = await llm(C.writeMessages(task, "html"), { maxTokens: 3000, temperature: 0.4 });
+  const html = (C.pickProgram ? C.pickProgram(r.text, "html") : r.text) || r.text;
+  let h = typeof html === "string" ? html : (html && html.code) || r.text;
+  // a page cut at the length limit is continued until </html>, as the app does (code.js continueMessages)
+  for (let k = 0; k < 2 && C.isCutHtml(h); k++) { const more = await llm(C.continueMessages(task, h.slice(-1500)), { maxTokens: 2000, temperature: 0.3 }); h = C.joinCont(h, more.text); r = { ...r, secs: r.secs + more.secs, tokens: r.tokens + more.tokens }; }
+  section("Website · page from one sentence", task, r, { chars: h.length, cut: C.isCutHtml(h) },
+    [[/<html|<!doctype/i.test(h) && /<\/html>/i.test(h), "a complete page (<html> … </html>)"], [/Aldibiki/i.test(h), "about the company asked for"], [/<table/i.test(h), "the fleet table"], [/wa\.me|whatsapp/i.test(h), "the WhatsApp button"]]);
+}
+
+// ---- Assistants: the built-in ones, with their own instructions ----
+if (want("assistants")) {
+  const B = SP.BUILTIN_ASSISTANTS;
+  const crane = B.find((a) => a.id === "a-crane"), acc = B.find((a) => a.id === "a-accountant");
+  let r = await llm([{ role: "system", content: SP.spaceBlock({ assistant: crane, question: "outriggers" }) }, { role: "user", content: "What do outriggers do and what must I check before a lift?" }], { maxTokens: 1000 });
+  section("Assistant · Crane expert", "outriggers + pre-lift checks", r, undefined,
+    [[/رجل|أرجل|ارجل|المثبت|التثبيت/.test(r.text), "the term in Egyptian Arabic too"], [(r.text.match(/[a-z]/gi) || []).length > (r.text.match(/[\u0600-\u06FF]/g) || []).length, "answers in English, like the question"], [/ground|soil|pad|mat|تربة|الأرض/i.test(r.text), "ground bearing / pads checked"], [/level|مستوى|ميزان/i.test(r.text), "the crane must be level"]]);
+  // the model alone (what the assistant's own words do) …
+  const qa = "فاتورة 3 ونش × 4 أيام × 12,500 جنيه، زائد ضريبة القيمة المضافة. الإجمالي كام؟";
+  r = await llm([{ role: "system", content: SP.spaceBlock({ assistant: acc, question: qa }) }, { role: "user", content: qa }], { maxTokens: 900, temperature: 0.1 });
+  section("Assistant · Accountant (Egypt), the model alone", "3 × 4 × 12,500 + 14% VAT", r, undefined,
+    [[/150[,٬]?000/.test(r.text), "subtotal 150,000"], [/21[,٬]?000/.test(r.text), "VAT 14% = 21,000"], [/171[,٬]?000/.test(r.text), "total 171,000"], [!/احتكار|monopoly/i.test(r.text), "no invented taxes"]]);
+  // … and what the chat really shows: a money sum goes through the maths checker (chat.jsx → verifyMath)
+  if (V.looksLikeMathProblem(qa)) {
+    r = await llm(V.solveMessages(qa), { maxTokens: 700 });
+    const code = (r.text.match(/```(?:python)?\n([\s\S]*?)```/) || [])[1] || "";
+    let printed = ""; try { printed = (await import("child_process")).execFileSync("python3", ["-c", code], { timeout: 20000 }).toString(); } catch (e) { printed = String(e.stdout || e.message); }
+    section("Assistant · Accountant (Egypt), as the chat answers it (maths checker)", qa, r, { printed: printed.trim() }, [[/ANSWER:\s*171,?000/.test(printed), "the checked total: 171,000 EGP"]]);
   }
 }
 

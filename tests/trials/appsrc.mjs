@@ -22,3 +22,21 @@ export function travel() {
   const detectScript = () => null;
   return new Function("callClaude", "detectScript", code)(callClaude, detectScript);
 }
+
+/** Prompts for other AIs (aiRewrite) and Instant's "Go" (aiSmart): the app's own prompt text. */
+export function prompts() {
+  const code = [
+    block("const LANG_NAMES", /;\s*$/),
+    block("function languageRule", /^}/),
+    block("function profileLine", /^}/),
+    block("const ACCURACY_RULES", /`;\s*$/),
+    block("const TOOLS = {", /^};/),
+    block("const PACKS = {", /^};/),
+    block("const SMART_DEFAULTS = {", /^};/),
+    block("async function aiRewrite", /^}/),
+    block("async function aiSmart", /^}/),
+    "return { TOOLS, rewrite: aiRewrite, smart: aiSmart };",
+  ].join("\n");
+  // lexRule adds the app's word list for the words it finds; detectScript guesses a language — both plain helpers
+  return new Function("callClaude", "detectScript", "lexRule", "prefixKey", code)(async (c) => c, () => null, () => "", () => "");
+}
