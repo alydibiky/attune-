@@ -8,6 +8,7 @@ const X = await import("../../web-src/chatxray.js");
 const S = await import("../../web-src/slides.js");
 const A = await import("../../web-src/actions.js");
 const PL = await import("../../web-src/places.js");
+const DL = await import("../../web-src/deal.js");
 let fail = 0;
 const ok = (c, what) => { console.log((c ? "PASS " : "FAIL ") + what); if (!c) fail++; };
 
@@ -70,6 +71,16 @@ const pl = D.parsePlan(loop);
 ok(pl && pl.plan.length === 7 && pl.title === "هيدروليك الأوناش", "learn: a plan cut off by a loop keeps its titles, repeats dropped");
 const glow = X.parseItems(JSON.stringify({ items: [{ type: "owes", msg: 0, from: "Hassan", to: "Ali", amount: 18000 }, { type: "paid", msg: 2, from: "Hassan", to: "Ali", amount: 10000 }, { type: "paid", msg: 3, from: "Ali", to: "Hassan", amount: 8000 }] }), by, ex.people);
 ok(X.ledgerOf(glow, "Ali")[0].net === 8000, "x-ray: «وصلت شكرا، فاضل 8000» is a balance, not a payment → Hassan owes 8,000");
+
+// max trials (Core 4B): «ألف» in an installment plan; «2 الضهر»; a wake-up alarm is in the morning
+const pl2 = DL.plansIn("هيونداي النترا 2020، 850 ألف كاش أو مقدم 200 ألف و 36 قسط 25 ألف")[0];
+ok(pl2 && pl2.months === 36 && pl2.monthly === 25000 && pl2.down === 200000 && DL.planCost({ cash: 850000, down: pl2.down, monthly: pl2.monthly, months: pl2.months }).total === 1100000, "deal: «36 قسط 25 ألف» with «مقدم 200 ألف» → 1,100,000");
+const t0 = new Date("2026-09-28T10:00:00").getTime();
+ok(new Date(A.buildAction({ action: "calendar" }, "اجتماع يوم الخميس الساعة 2 الضهر", t0).at).getHours() === 14, "time: «الساعة 2 الضهر» is 2 pm");
+const al = new Date(A.buildAction({ action: "alarm" }, "صحيني الساعة 6 ونص", t0).at);
+ok(al.getHours() === 6 && al.getMinutes() === 30 && al.getDate() === 29, "alarm: «صحيني الساعة 6 ونص» is 6:30 tomorrow morning");
+ok(new Date(A.buildAction({ action: "alarm" }, "wake me at 7", t0).at).getHours() === 7, "alarm: “wake me at 7” is 7 am");
+ok(new Date(A.buildAction({ action: "alarm" }, "alarm at 9 pm", t0).at).getHours() === 21, "alarm: “9 pm” stays 9 pm");
 
 // Maps: a place name with «و» inside a word, and "where can I park"
 ok(PL.placeFor("انا في كمبوند ايمرالد بارك وعايز أفول بنزين اعمل ايه").near === "كمبوند ايمرالد بارك", "maps: «كمبوند» is not cut at its «و»");

@@ -31,3 +31,6 @@ tests/fail-*.log
 tests/trials/report.md
 tests/trials/report-*.md
 tests/trials/every-model.txt
+tests/trials/max-*.md
+tests/trials/every-max.txt
+tests/trials/pics/

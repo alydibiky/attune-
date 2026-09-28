@@ -136,6 +136,7 @@ export function parseTime(text, nowIn) {
     else if (t.ampm === "am" && hh === 12) hh = 0;
     else if (!t.ampm) {
       if (dp && (dp.kind === "pm") && hh < 12) hh += 12;
+      else if (dp && dp.kind === "noon" && hh >= 1 && hh <= 5) hh += 12;   // «2 الضهر» = 2 pm (v6.8)
       else if (dp && dp.kind === "midnight" && hh === 12) hh = 0;
       else if (!dp && hh >= 1 && hh <= 6) hh += 12;        // "at 5" means 5 pm in everyday speech
     }
@@ -158,7 +159,7 @@ function clockIn(s) {
   if (m && +m[1] <= 23 && +m[2] <= 59) return { h: +m[1], m: +m[2], ampm: ap(m[3]) };
   m = s.match(/\b(\d{1,2})\s*(am|pm|a\.m\.|p\.m\.)\b/);
   if (m && +m[1] >= 1 && +m[1] <= 12) return { h: +m[1], m: 0, ampm: ap(m[2]) };
-  m = s.match(/(?:\bat\b|@|الساعة|الساعه|ساعة|الساعة ال|على)\s*(\d{1,2})(?:\s*(?:و\s*)?(نص|ربع|الا ربع|إلا ربع|الا تلت|تلت))?\s*(am|pm|ص|م)?/);
+  m = s.match(/(?:\bat\b|@|الساعة|الساعه|ساعة|الساعة ال|على|صحيني|صحّيني|صحيني الساعة|بكرة|بكره|tomorrow)\s*(\d{1,2})(?![\d/])(?:\s*(?:و\s*)?(نص|ربع|الا ربع|إلا ربع|الا تلت|تلت))?\s*(am|pm|ص|م)?/);
   if (m && +m[1] <= 23) {
     let h = +m[1], mi = 0;
     if (m[2]) { if (/الا ربع|إلا ربع/.test(m[2])) { h -= 1; mi = 45; } else if (/نص/.test(m[2])) mi = 30; else if (/ربع/.test(m[2])) mi = 15; else if (/تلت/.test(m[2])) mi = /الا/.test(m[2]) ? 40 : 20; }
@@ -273,6 +274,15 @@ export function buildAction(json, text, nowIn) {
   const words = [j.time_text, text].filter(Boolean);
   let t = null;
   for (const w of words) { t = parseTime(w, now); if (t) break; }
+  // «صحيني الساعة 6 ونص» — a wake-up alarm with no am/pm is in the morning, not 6:30 pm (v6.8)
+  if (kind === "alarm" && t && !/\b(pm|p\.m\.|evening|tonight|afternoon)\b|مساء|بالليل|باليل|المغرب|العصر|الضهر|الظهر|\d\s*م(?![\p{L}])|\b(1[3-9]|2[0-3])[:.]\d{2}/iu.test(String(text || ""))) {
+    const d = new Date(t.at);
+    if (d.getHours() >= 13 && d.getHours() <= 23) {
+      const m = new Date(d); m.setHours(d.getHours() - 12);
+      if (m.getTime() <= now) m.setDate(m.getDate() + 1);
+      t = { ...t, at: m.getTime() };
+    }
+  }
   if (!t && j.when && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(j.when)) {
     const [d, hm] = j.when.split("T"); const [y, mo, da] = d.split("-").map(Number); const [h, mi] = hm.split(":").map(Number);
     const dt = new Date(y, mo - 1, da, h, mi);

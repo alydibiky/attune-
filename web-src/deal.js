@@ -54,7 +54,10 @@ export function pricesIn(text) {
  * → [{ months, monthly, cash?, down? }]
  */
 export function plansIn(text) {
-  const t = toLatin(text).replace(/(\d),(?=\d{3}(\D|$))/g, "$1"), out = [];
+  // «25 ألف» / «1.2 مليون» / "25k" → the full number, so «36 قسط 25 ألف» is read (v6.8)
+  const t = toLatin(text).replace(/(\d),(?=\d{3}(\D|$))/g, "$1")
+    .replace(/(\d+(?:\.\d+)?)\s*(?:ألف|الف|آلاف|الاف|k)(?![\p{L}])/giu, (_, n) => String(Math.round(+n * 1000)))
+    .replace(/(\d+(?:\.\d+)?)\s*(?:مليون|million|m)(?![\p{L}])/giu, (_, n) => String(Math.round(+n * 1e6))), out = [];
   const N = "(\\d+(?:\\.\\d+)?)";
   const add = (months, monthly, at) => {
     months = Math.round(+months); monthly = +monthly;
@@ -71,6 +74,8 @@ export function plansIn(text) {
   for (const m of t.matchAll(new RegExp(N + "\\s*[×xX*]\\s*(\\d{1,2})(?![\\d.,])", "g"))) if (+m[1] >= 100 && +m[2] >= 2) add(m[2], m[1], m.index);
   for (const m of t.matchAll(new RegExp(N + "\\s*(?:egp|le|جنيه)?\\s*(?:a|per|/|each|every)\\s*month\\s*(?:for|over|×|x)\\s*(\\d{1,3})", "gi"))) add(m[2], m[1], m.index);
   for (const m of t.matchAll(new RegExp("(\\d{1,3})\\s*(?:monthly )?(?:installments?|payments?|months?|قسط|أقساط|اقساط|شهر|شهور)\\s*(?:of|at|×|x|\\*|ب|بـ|كل واحد)\\s*" + N, "gi"))) add(m[1], m[2], m.index);   // v6.6: «١٢ قسط × ٣٠٠٠»
+  // «36 قسط 25000» — count, the word, then the amount with nothing between (v6.8)
+  for (const m of t.matchAll(new RegExp("(\\d{1,3})\\s*(?:قسط|أقساط|اقساط|شهر|شهور)\\s+" + N + "(?![\\d.])", "g"))) if (+m[2] >= 100) add(m[1], m[2], m.index);
   for (const m of t.matchAll(new RegExp("(?:قسط|القسط|شهري(?:ا|ًا)?)\\s*" + N + "\\s*(?:جنيه)?\\s*(?:على|لمدة|ل)\\s*(\\d{1,3})\\s*(?:شهر|شهور|أشهر)", "g"))) add(m[2], m[1], m.index);
   return out;
 }
