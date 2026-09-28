@@ -23,6 +23,7 @@ import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
+import { MindPage } from "./mind-ui.jsx";
 import { ChatXRay } from "./chatxray-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
 import { VideoDownloader } from "./video-ui.jsx";
@@ -2375,7 +2376,9 @@ function memBuildIndex(records) {
   const post = new Map();            // token -> [ [idx, tf], ... ]
   const len = new Array(records.length);
   records.forEach((rec, i) => {
-    const toks = memTokens(rec.title + " \n " + rec.text + " \n " + rec.output + " " + (rec.tags || []).join(" "));
+    const mm = rec.meta || {};   // v6.8 Mind: its title, summary, tags and your note are searchable too
+    const toks = memTokens(rec.title + " \n " + rec.text + " \n " + rec.output + " " + (rec.tags || []).join(" ") +
+      " " + [mm.myTitle, mm.aiTitle, mm.summary, mm.myNote, ...(mm.aiTags || []), ...(mm.myTags || [])].filter(Boolean).join(" "));
     len[i] = toks.length || 1;
     const tf = new Map();
     for (const t of toks) tf.set(t, (tf.get(t) || 0) + 1);
@@ -7216,7 +7219,7 @@ const MORE_TOOLS = [
   ["code", "Code", "Programs tested on your phone", Code2],
   ["crane", "Crane toolkit", "Load charts, ground, slings, wind", Calculator],
   ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
-  ["memory", "Memory", "Everything you've saved", History],
+  ["memory", "Mind", "Everything you keep — it files itself", Brain],
   ["cycle", "Cycle", "Period tracker", Droplet], ["travel", "Travel", "Country packs & phrases", Plane],
   ["map", "Maps", "Offline places", MapPin], ["field", "Site reports", "Incident & maintenance docs", HardHat],
   ["fleet", "Fleet", "Equipment health", Gauge], ["improve", "Improve a prompt", "For ChatGPT, Claude, Gemini…", Wand2],
@@ -7572,6 +7575,8 @@ export default function App() {
   };
   const togglePin = (id) =>
     setMemory((m) => m.map((r) => (r.id === id ? { ...r, pinned: !r.pinned } : r)));
+  // v6.8 Mind: change one record in place (its title, tags, note, the model's filing, a reminder)
+  const updateRec = (id, fn) => setMemory((m) => m.map((r) => (r.id === id ? fn(r) : r)));
   const forget = (id) => {
     setMemory((m) => m.filter((r) => r.id !== id));
     setCommits((c) => c.filter((x) => x.sourceId !== id));
@@ -9012,8 +9017,17 @@ export default function App() {
             </section>
           </div>
         ) : mode === "memory" ? (
-          <div className="space-y-5 att-in">
-            {shareIn ? (
+          // v6.8: Memory → Mind (mind-ui.jsx). Promises and Your words are its other two tabs.
+          <MindPage records={memory} remember={remember} update={updateRec} forget={forget} togglePin={togglePin}
+            search={(q, n) => memSearch(memory, memIndex, q, { now: Date.now(), limit: n || 30 })}
+            llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })}
+            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            ask={(question, found) => aiAsk(question, found, [], lang, { think: false })}
+            findCommitments={findCommitments} scheduleReminder={scheduleReminder}
+            pro={proActive} openPlan={() => setShowUpgrade(true)} openEngine={() => setShowEngine(true)} flash={flash}
+            external={openRec} clearExternal={() => setOpenRec(null)}
+            promiseCount={suggested.length + openCommits.length}
+            shareBanner={shareIn ? (
               <div className="bg-slate-900 border border-teal-900/60 rounded-2xl p-4">
                 <p className="text-sm text-teal-300 font-medium mb-1">{tr("Saved from another app")}</p>
                 <p className="text-xs text-slate-400 line-clamp-2 mb-2">{shareIn.text.slice(0, 180)}{shareIn.text.length > 180 ? "…" : ""}</p>
@@ -9027,76 +9041,14 @@ export default function App() {
                 </div>
               </div>
             ) : null}
-            {memNote ? (
+            note={memNote ? (
               <div className="flex items-start gap-2 bg-amber-500/5 border border-amber-900/50 rounded-xl p-3">
                 <AlertTriangle size={13} className="text-amber-400 mt-0.5 shrink-0" />
                 <p className="text-xs text-amber-100/80 flex-1">{tr(memNote)}</p>
                 <button onClick={() => setMemNote("")} className="text-amber-400/60 hover:text-amber-300"><X size={14} /></button>
               </div>
             ) : null}
-
-            {!proActive ? (
-              <div className="bg-slate-900 rounded-2xl border border-teal-900/50 p-5">
-                <p className="text-sm font-medium text-teal-300 flex items-center gap-1.5 mb-1"><Crown size={14} /> {tr("Memory is part of Pro")}</p>
-                <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                  {tr("Everything you run through Attune is already kept on this device —")} {memory.length} {tr(memory.length === 1 ? "item" : "items")} {tr("so far. Pro turns that into something you can search, and reads it for things you said you'd do. It never leaves the phone, so no one but you can read it — not even us.")}
-                </p>
-                <button onClick={() => setShowUpgrade(true)} className="text-sm px-4 py-2 rounded-xl bg-teal-500 text-slate-950 font-semibold">{tr("See Pro")}</button>
-              </div>
-            ) : null}
-
-            {/* The other door. Memory is only as good as what reaches it, so
-                anything can be dropped in here without running a feature first. */}
-            <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5"
-              onDragOver={(e) => { e.preventDefault(); setDropping(true); }}
-              onDragLeave={() => setDropping(false)}
-              onDrop={async (e) => {
-                e.preventDefault(); setDropping(false);
-                const f = e.dataTransfer.files && e.dataTransfer.files[0];
-                if (f && /^text|json|csv|md/.test(f.type) || (f && /\.(txt|md|csv|json|log)$/i.test(f.name))) {
-                  const txt = await f.text();
-                  const r = remember({ kind: "note", title: f.name, text: txt, output: "", tags: ["dropped"] });
-                  flash("Saved — " + f.name); if (proActive) findCommitments(txt, r.id, true);
-                } else if (e.dataTransfer.getData("text")) {
-                  const txt = e.dataTransfer.getData("text");
-                  const r = remember({ kind: "note", title: txt.slice(0, 60), text: txt, output: "", tags: ["dropped"] });
-                  flash(tr("Saved")); if (proActive) findCommitments(txt, r.id, true);
-                } else flash(tr("Drop plain text or a .txt/.md/.csv file"));
-              }}>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-slate-300">{tr("Keep anything")}</p>
-                <span className="text-[11px] text-slate-600">{tr("no feature needed — it just goes in")}</span>
-              </div>
-              <textarea value={memAdd} onChange={(e) => setMemAdd(e.target.value)}
-                placeholder={tr("paste a message, a note, a WhatsApp thread, what someone told you on site…")}
-                className={`w-full h-20 bg-slate-950 border rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500 ${dropping ? "border-teal-500 bg-teal-500/5" : "border-slate-800"}`} />
-              <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                <button onClick={async () => {
-                    if (!memAdd.trim()) return flash(tr("Nothing to keep"));
-                    const r = remember({ kind: "note", title: memAdd.slice(0, 60), text: memAdd, output: "", lang, tags: ["note"] });
-                    const t = memAdd; setMemAdd("");
-                    flash(tr("Kept — and read for anything you promised"));
-                    if (proActive) findCommitments(t, r.id, true); else setShowUpgrade(true);
-                  }}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold"><Plus size={12} className="inline me-1" />{tr("Keep it")}</button>
-                <button onClick={async () => {
-                    try { const t = await navigator.clipboard.readText(); if (t && t.trim()) setMemAdd(t.trim()); else flash(tr("Clipboard is empty")); }
-                    catch (e) { flash(tr("Allow clipboard access, or paste manually")); }
-                  }}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600"><ClipboardPaste size={12} className="inline me-1" />{tr("Paste")}</button>
-                <label className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600 cursor-pointer flex items-center gap-1">
-                  {memBusy ? <Loader2 size={12} className="animate-spin" /> : <ImagePlus size={12} />} {tr("Photo")}
-                  <input type="file" accept="image/*" className="hidden"
-                    onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; photoToMemory(f); }} />
-                </label>
-                <span className="text-[11px] text-slate-600">{tr("or drag a file or some text onto this box")}</span>
-              </div>
-              <p className="text-[11px] text-slate-600 mt-2">
-                {tr("A photo is read word for word and the text kept, so a whiteboard, a receipt or a handwritten site note becomes searchable — and anything promised on it shows up on the right.")}
-              </p>
-            </section>
-
-            {/* YOUR WORDS */}
+            wordsPanel={
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-sm font-medium text-slate-300 flex items-center gap-1.5"><Languages size={14} className="text-teal-400" /> {tr("Your words")}</p>
@@ -9298,45 +9250,8 @@ export default function App() {
                 <span className="text-[11px] text-slate-600">{tr("a plain file — yours, readable, not locked in")}</span>
               </div>
             </section>
-
-            <div className="grid md:grid-cols-2 gap-5">
-              <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-300">{tr("Everything you've asked")}</p>
-                  <span className="text-[11px] text-slate-600">{memory.length} {tr("on this device")}</span>
-                </div>
-                <input value={memQ} onChange={(e) => setMemQ(e.target.value)}
-                  placeholder={tr("search your own history — a word, a name, a price…")}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-                <p className="text-[11px] text-slate-600 mt-1.5">{tr("Instant, and with no model call — so it works with the radio off and costs no battery.")}</p>
-
-                <div className="mt-3 space-y-1.5 max-h-[26rem] overflow-auto">
-                  {memQ.trim() && !memHits.length ? (
-                    <p className="text-xs text-slate-600 py-6 text-center">{tr("Nothing matches that yet.")}</p>
-                  ) : null}
-                  {(memQ.trim() ? memHits.map((h) => h.rec) : memory.slice(0, proActive ? 40 : 5)).map((r) => (
-                    <button key={r.id} onClick={() => setOpenRec(r)}
-                      className="w-full text-start bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 hover:border-teal-600">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase tracking-wider text-teal-500">{r.kind}</span>
-                        <span className="text-[10px] text-slate-600">{new Date(r.ts).toISOString().slice(0, 10)}</span>
-                        {r.pinned ? <Star size={10} className="text-amber-400" /> : null}
-                      </div>
-                      <p className="text-sm text-slate-200 mt-0.5 truncate">{tr(r.title)}</p>
-                      {memQ.trim() ? <p className="text-[11px] text-slate-500 mt-0.5 truncate">{memSnippet(r, memQ)}</p> : null}
-                    </button>
-                  ))}
-                  {!memory.length ? (
-                    <p className="text-xs text-slate-600 py-8 text-center leading-relaxed">
-                      {tr("Nothing yet. Use Instant, a photo or Travel and it lands here on its own —")}<br />{tr("you never have to save anything.")}
-                    </p>
-                  ) : null}
-                  {!proActive && memory.length > 5 ? (
-                    <p className="text-[11px] text-slate-600 pt-1">+ {memory.length - 5} {tr("more, searchable on Pro.")}</p>
-                  ) : null}
-                </div>
-              </section>
-
+            }
+            promisesPanel={
               <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-medium text-slate-300">{tr("Things you said you'd do")}</p>
@@ -9410,41 +9325,7 @@ export default function App() {
                   {tr("Every item carries the exact words it came from. If those words aren't in what you wrote, it never gets here — the app can miss something, but it cannot make one up.")}
                 </p>
               </section>
-            </div>
-
-            {openRec ? (
-              <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={() => setOpenRec(null)}>
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wider text-teal-500">{openRec.kind} · {new Date(openRec.ts).toLocaleString()}</p>
-                      <h3 className="text-base font-semibold text-white truncate">{tr(openRec.title)}</h3>
-                    </div>
-                    <button onClick={() => setOpenRec(null)} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={18} /></button>
-                  </div>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{tr("What you gave it")}</p>
-                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-3 max-h-40 overflow-auto">
-                    <p className="text-xs text-slate-400 whitespace-pre-wrap">{openRec.text}</p>
-                  </div>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{tr("What it answered")}</p>
-                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 max-h-64 overflow-auto">
-                    <p className="text-sm text-teal-50 whitespace-pre-wrap leading-relaxed">{openRec.output}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    <button onClick={() => { try { navigator.clipboard.writeText(openRec.output); } catch (e) {} flash(tr("Copied")); }}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500"><Copy size={12} className="inline me-1" />{tr("Copy")}</button>
-                    <button onClick={() => togglePin(openRec.id)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-amber-500">
-                      <Star size={12} className="inline me-1" />{openRec.pinned ? tr("Unpin") : tr("Pin — never auto-removed")}</button>
-                    <button onClick={() => findCommitments(openRec.text, openRec.id)} disabled={memBusy}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500">{tr("Find promises in this")}</button>
-                    <button onClick={() => forget(openRec.id)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-500 hover:border-red-800 hover:text-red-400 ms-auto">{tr("Forget this")}</button>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
+            } />
         ) : mode === "studio" ? (
           NATIVE && NATIVE.imageInfo ? (
             <StudioPage native={NATIVE} nativeCall={nativeCall} nativeLastId={nativeLastId} flash={flash} incoming={studioIn} clearIncoming={() => setStudioIn(null)}
@@ -10638,7 +10519,7 @@ export default function App() {
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
           {/* v5.17: Memory in the bottom bar (Ali) */}
           {[["chat", "Chat", MessageCircle], ["instant", "Instant", Zap], ["money", "Money", Wallet],
-            ["business", "Business", Database], ["memory", "Memory", History], ["more", "More", LayoutGrid]].map(([id, label, Icon]) => {
+            ["business", "Business", Database], ["memory", "Mind", Brain], ["more", "More", LayoutGrid]].map(([id, label, Icon]) => {
             const on = id === "more" ? moreOpen : (mode === id && !moreOpen);
             return (
               <button key={id} onClick={() => { if (id === "more") setMoreOpen((v) => !v); else { setMoreOpen(false); navTo(id); } }}

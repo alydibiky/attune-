@@ -45,7 +45,7 @@ def sec_layout(br, lang="en"):
         r = page.evaluate(WIDE)
         if r["sw"] > r["W"] + 1 or r["out"]: bad[name] = r
     audit("chat")
-    for i, tab in enumerate(["Instant", "Money", "Memory"]):
+    for i, tab in enumerate(["Instant", "Money", "Mind"]):
         page.locator("nav button").nth(i + 1).click(); audit(tab)
     page.locator("nav button").last.click(); page.wait_for_timeout(300)
     tools = page.evaluate("""() => [...document.querySelectorAll('.rounded-t-2xl .grid.grid-cols-3 > button')].map(b => (b.querySelector('span') || {}).innerText).filter(Boolean)""")

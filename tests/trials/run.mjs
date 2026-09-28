@@ -18,6 +18,7 @@ const CV = await import("../../web-src/convert.js");
 const A = await import("../../web-src/actions.js");
 const APP = await import("./appsrc.mjs");
 const SP = await import("../../web-src/spaces.js");
+const MI = await import("../../web-src/mind.js");
 const PORT = process.env.TRIAL_PORT || 8099;
 const only = process.argv[2] || "";
 
@@ -269,6 +270,20 @@ if (want("projects")) {
   let r = await llm([{ role: "system", content: SP.spaceBlock({ project, question: q }) }, { role: "user", content: q }], { maxTokens: 400 });
   section("Projects · answer from the project's files", q, r, undefined,
     [[/9 ?m\/s/.test(r.text), "wind limit 9 m/s"], [/66 ?%|8\.6.*13\.1|13\.1/.test(r.text), "8.6 t of 13.1 t (66 %)"], [/lift-plan/i.test(r.text), "names the file it used"]]);
+}
+
+// ---- Mind: the model files a kept item (title, one line, tags) in its own language ----
+if (want("mind")) {
+  for (const [text, lang, must] of [
+    ["كلمت حسن من أوراسكوم، عايز الونش ال100 طن 5 أيام من أول أكتوبر، اتفقنا على 13 ألف في اليوم", "ar", /اوراسكوم|أوراسكوم|حسن|ونش/],
+    ["https://www.liebherr.com/en/int/products/mobile-and-crawler-cranes/mobile-cranes/ltm-mobile-cranes/details/ltm1100-4.2.html", "en", /liebherr|ltm/i],
+    ["Anker 737 power bank 24,000 mAh — 3,450 EGP on Amazon, cheaper than B.Tech", "en", /anker|power bank/i]]) {
+    const r = await llm(MI.tagMessages({ text }), { json: true, maxTokens: 220, temperature: 0.2 });
+    const t = MI.parseTagReply(r.text);
+    const arOut = t && /[\u0600-\u06FF]/.test(t.title + t.tags.join(""));
+    section(`Mind · filing (${lang})`, text, r, t,
+      [[t && t.title && t.tags.length >= 3, "a title and 3+ tags"], [t && must.test(t.title + " " + t.tags.join(" ")), "tagged by what it's really about"], [t && (lang === "ar" ? arOut : !arOut), "in the item's language"], [t && t.summary && t.summary.length < 200, "one short summary line"]]);
+  }
 }
 
 const ok = checks.filter((c) => c[1]).length;

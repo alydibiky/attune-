@@ -81,8 +81,8 @@ with sync_playwright() as p:
 
     # ---- 3. Memory: in the bottom bar, and an item opens ON the screen ----
     nav = page.locator("nav").inner_text()
-    check("Memory" in nav, "Memory is in the bottom bar")
-    page.locator("nav button:has-text('Memory')").click()
+    check("Mind" in nav, "Mind (v6.8, was Memory) is in the bottom bar")
+    page.locator("nav button:has-text('Mind')").click()
     page.wait_for_timeout(400)
     item = page.locator("button:has-text('And with 5 cranes')").first
     item.scroll_into_view_if_needed(); item.click(); page.wait_for_timeout(400)
