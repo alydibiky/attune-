@@ -28,3 +28,4 @@ tests/image_run/*.jar
 tests/results.txt
 tests/audit.txt
 tests/fail-*.log
+tests/trials/report.md
