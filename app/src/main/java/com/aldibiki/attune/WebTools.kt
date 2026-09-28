@@ -146,6 +146,24 @@ object WebTools {
         return out
     }
 
+    // ---- v6.1 food databases (Fit & Food): JSON from Open Food Facts and USDA only ----------
+    private val FOOD_HOSTS = Regex("^https://([a-z0-9-]+\\.)*(openfoodfacts\\.org|api\\.nal\\.usda\\.gov)/", RegexOption.IGNORE_CASE)
+    fun foodJson(url: String): String {
+        if (!FOOD_HOSTS.containsMatchIn(url)) throw Exception("Only the food databases can be asked here")
+        Prefs.requireOnline(url, "food database")
+        val c = URL(url).openConnection() as HttpURLConnection
+        c.connectTimeout = 10_000; c.readTimeout = 20_000
+        c.setRequestProperty("Accept", "application/json")
+        c.setRequestProperty("User-Agent", "Attune/6.1 (Android; Fit & Food)")   // Open Food Facts asks apps to name themselves
+        val code = c.responseCode
+        if (code == 404) return "{\"status\":0,\"notFound\":true}"
+        if (code == 429) throw Exception("The food database is busy — try again in a minute")
+        if (code !in 200..299) throw Exception("The food database returned HTTP $code")
+        val body = c.inputStream.bufferedReader().use { r -> val sb = StringBuilder(); val buf = CharArray(8192); var n = 0
+            while (r.read(buf).also { n = it } > 0 && sb.length < 3_000_000) sb.append(buf, 0, n); sb.toString() }
+        return body
+    }
+
     // v5.22 (Ali): NO information from Wikipedia — the search is told to leave it
     // out, and any Wikipedia page that still comes back is dropped.
     const val NO_WIKI = "-site:wikipedia.org"

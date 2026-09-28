@@ -587,3 +587,96 @@ export function looksLikeFoodLog(text) {
   if (t.length > 300 || /\?|؟/.test(t)) return false;
   return /\b(i (just )?(ate|had)|i'?ve (eaten|had)|for (breakfast|lunch|dinner|a snack) i (ate|had))\b/i.test(t) || /(^|\s)(كلت|اكلت|أكلت|فطرت|اتغديت|اتعشيت|تغديت|تعشيت)(\s|$)/.test(t);
 }
+/** v6.1: any food (the table, a packaged product, a USDA food) + an amount → a logged item. */
+export function itemFromFood(fd, qty = 1, unit = "serving") {
+  const grams = Math.round(gramsOf(fd, qty, unit));
+  return { name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", brand: fd.brand || "", qty, unit: unitNorm(unit), grams, ...nutrients(fd, grams), estimate: false, check: !!fd.check };
+}
+
+// ---- v6.1 photo recognition, on the phone (Ali: "an elite photo food recognition"; no cloud) ----
+// The same phone model, used better: several guesses per food (you tap the right one), portions
+// judged against things of known size, a second look for hidden calories (oil, butter, sauce, sugar,
+// bread on the side), nutrition labels read exactly, and your corrections remembered.
+export function photoMessages(note) {
+  return [
+    { role: "system", content: `You are a dietitian looking at a photo of food. Reply with ONLY a JSON object:
+{"kind": "meal" or "label" (a nutrition facts table is visible) or "package" (a packaged product, no table visible),
+ "items": [{"food": "generic name in English (e.g. 'koshari', 'grilled chicken breast', 'white rice', 'baladi bread', 'green salad', 'cola')",
+            "alternatives": ["second guess", "third guess"], "grams": number, "confidence": 0 to 1}],
+ "label": {"name": "product name", "per": "100g" or "serving", "serving_g": number or null, "kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number or null} or null}
+Rules: one item per separate food on the plate (a sandwich or a mixed dish is one item). Judge each portion against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon holds ~15 g, a can is 330 ml, a baladi loaf ~90 g, an adult palm ~100 g of meat. Estimate grams as eaten (cooked). If you are unsure what a food is, still give your best guess and lower the confidence. For a label, copy its numbers exactly.${note ? "\nThe person adds: " + note : ""}` },
+    { role: "user", content: "What is in this photo?" },
+  ];
+}
+/** The second look: calories people forget to log. */
+export function hiddenMessages(items) {
+  return [
+    { role: "system", content: `A dietitian already found these foods in the photo: ${items.map((x) => x.name).join(", ")}.
+Look again ONLY for calories people usually miss: cooking oil or butter on or under the food, ghee, sauces, dressings, tahini, mayonnaise, sugar in a drink, a drink in the picture, bread or rice on the side. Reply with ONLY a JSON object:
+{"items": [{"food": "generic name in English", "grams": number, "confidence": 0 to 1}]} — an empty list if nothing was missed. Never repeat a food already found.` },
+    { role: "user", content: "Anything missed?" },
+  ];
+}
+const LEARN_KEY = "attune:fit:learn:v1";
+const learnLoad = () => { try { const v = JSON.parse(localStorage.getItem(LEARN_KEY) || "{}"); return v && typeof v === "object" ? v : {}; } catch (e) { return {}; } };
+/** Remember a correction: what the model said → the food the person chose, and how their portion compares. */
+export function learnFix(modelName, food, gramsRatio = 1) {
+  const k = normT(modelName); if (!k || !food) return;
+  const L = learnLoad(), old = L[k] || { n: 0, ratio: 1 };
+  const n = Math.min(old.n + 1, 20), ratio = Math.min(3, Math.max(0.33, (old.ratio * old.n + gramsRatio) / (old.n + 1)));
+  L[k] = { id: food.id, food: food.src && food.src !== "table" ? food : null, n, ratio: Math.round(ratio * 100) / 100 };
+  try { localStorage.setItem(LEARN_KEY, JSON.stringify(L)); } catch (e) {}
+}
+export const learned = (modelName) => learnLoad()[normT(modelName)] || null;
+
+/** One photo item: the learned choice first, then the table; its alternatives as ready choices. */
+function photoItem(it, extra = {}) {
+  const name = String(it.food || it.name || "").trim(); if (!name) return null;
+  let grams = num(it.grams); if (!(grams > 0 && grams < 3000)) grams = null;
+  const lf = learned(name);
+  let fd = lf ? (food(lf.id) || lf.food) : matchFood(name);
+  if (lf && grams) grams *= lf.ratio;
+  const alts = [...new Set([name, ...(Array.isArray(it.alternatives) ? it.alternatives : [])].map(String))]
+    .map((a) => ({ label: a, food: matchFood(a) })).filter((a) => a.label.trim()).slice(0, 3);
+  const conf = Math.max(0, Math.min(1, num(it.confidence) ?? 0.6));
+  let item;
+  if (fd) { const g = Math.round(grams || gramsOf(fd, 1, "serving")); item = { name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", qty: 1, unit: "g", grams: g, ...nutrients(fd, g), estimate: false }; }
+  else item = { name, qty: 1, unit: "g", grams: Math.round(grams || 150), kcal: null, p: null, c: null, f: null, fib: 0, estimate: true, unknown: true };
+  return { ...item, said: name, alts, conf, learned: !!lf, base: item.grams, ...extra };
+}
+/** The model's photo JSON → { kind, items, label } (label = a food made from the label's numbers). */
+export function parsePhoto(raw) {
+  let j = null;
+  try { const s = String(raw || ""); j = JSON.parse(s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1)); } catch (e) { return { kind: "meal", items: [], label: null }; }
+  const kind = ["meal", "label", "package"].includes(j && j.kind) ? j.kind : "meal";
+  let label = null;
+  const L = j && j.label;
+  if (L && num(L.kcal) != null && num(L.protein) != null && num(L.carbs) != null && num(L.fat) != null) {
+    const per = String(L.per || "100g").toLowerCase().includes("serv") && num(L.serving_g) > 0 ? 100 / num(L.serving_g) : 1;
+    label = { id: "label:" + Date.now().toString(36), src: "label", en: String(L.name || "Labelled product").slice(0, 80), ar: "", names: [String(L.name || "")],
+      kcal: Math.round(num(L.kcal) * per), p: r1(num(L.protein) * per), c: r1(num(L.carbs) * per), f: r1(num(L.fat) * per), fib: r1((num(L.fiber) || 0) * per),
+      portions: num(L.serving_g) > 0 ? { serving: Math.round(num(L.serving_g)) } : {} };
+  }
+  const items = (Array.isArray(j && j.items) ? j.items : []).map((it) => photoItem(it)).filter(Boolean).slice(0, 12);
+  return { kind, items, label };
+}
+/** The second look's JSON → extra items (never one already on the list). */
+export function parseHidden(raw, have) {
+  let j = null;
+  try { const s = String(raw || ""); j = JSON.parse(s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1)); } catch (e) { return []; }
+  const seen = new Set(have.flatMap((x) => [normT(x.name), normT(x.said || "")]));
+  return (Array.isArray(j && j.items) ? j.items : []).map((it) => photoItem(it, { hidden: true }))
+    .filter((x) => x && !seen.has(normT(x.name)) && !seen.has(normT(x.said)) && x.grams > 0 && x.grams <= 400).slice(0, 5);
+}
+/** Swap an item for one of its alternatives (or any food), keeping the grams. */
+export function chooseFood(item, fd) {
+  const g = item.grams;
+  return { ...item, name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", ...nutrients(fd, g), estimate: false, unknown: false, check: !!fd.check, chosen: true };
+}
+/** Scale an item's portion (×0.5 … ×2). */
+export function scaleItem(item, k) {
+  const g = Math.max(1, Math.round((item.base || item.grams) * k));
+  if (item.kcal == null) return { ...item, grams: g, k };
+  const s = g / item.grams;
+  return { ...item, grams: g, k, kcal: Math.round(item.kcal * s), p: r1(item.p * s), c: r1(item.c * s), f: r1(item.f * s), fib: r1((item.fib || 0) * s) };
+}

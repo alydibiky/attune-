@@ -11,8 +11,8 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 35
-        versionCode = 61                 // raise with every release — the phone shows it in Settings → Apps
-        versionName = "6.1"
+        versionCode = 62                 // raise with every release — the phone shows it in Settings → Apps
+        versionName = "6.1.1"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
         // phone. Add "x86_64" only if you want to run it in the emulator — it
@@ -116,4 +116,7 @@ dependencies {
     implementation("com.google.ai.edge.litertlm:litertlm-android:0.17.1")
     // File Converter (v5.36): the text of PDF pages, on the phone. PdfBox-Android, Apache-2.0.
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+    // Fit & Food (v6.1): barcodes read on the phone from a photo — ML Kit with its model bundled
+    // (works offline, nothing uploaded). Apache-2.0 SDK terms from Google.
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
 }

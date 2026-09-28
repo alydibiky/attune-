@@ -69,7 +69,8 @@ with sync_playwright() as p:
     check(num(page, "fit-left") == 2110 - eaten, "kcal left = goal − eaten")
 
     # ---- a photo read by the model, confirmed by the person ----
-    queue(page, [json.dumps({"items": [{"food": "koshari", "qty": 1, "unit": "plate", "kcal_per_100g": 150}, {"food": "cola", "qty": 1, "unit": "can", "kcal_per_100g": 42}]})])
+    queue(page, [json.dumps({"kind": "meal", "items": [{"food": "koshari", "alternatives": ["pasta with tomato sauce"], "grams": 350, "confidence": 0.8}, {"food": "cola", "grams": 330, "confidence": 0.9}], "label": None}),
+                 json.dumps({"items": []})])
     page.locator("[data-testid=fit-add-lunch]").click()
     page.locator("[data-testid=fit-photo-input]").set_input_files({"name": "plate.png", "mimeType": "image/png", "buffer": PNG})
     page.wait_for_timeout(400)

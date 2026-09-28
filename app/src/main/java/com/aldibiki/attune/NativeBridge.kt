@@ -618,6 +618,33 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v6.1: raw JSON from a food database (Open Food Facts / USDA only). */
+    @JavascriptInterface
+    fun fetchJson(id: String, url: String) {
+        if (blockedByAirGap(id, "the food database")) return
+        pool.execute {
+            try { resolve(id, JSONObject().put("url", url).put("body", WebTools.foodJson(url))) }
+            catch (e: Exception) { reject(id, e.message ?: "Couldn't reach the food database") }
+        }
+    }
+
+    /** v6.1: the barcodes in a photo ({b64}), read on the phone by ML Kit → {codes: [..]}. */
+    @JavascriptInterface
+    fun scanBarcode(id: String, arg: String) {
+        pool.execute {
+            try {
+                val bytes = android.util.Base64.decode(JSONObject(arg).getString("b64"), android.util.Base64.DEFAULT)
+                val bmp = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: throw Exception("Couldn't open that picture")
+                val client = com.google.mlkit.vision.barcode.BarcodeScanning.getClient()
+                val found = com.google.android.gms.tasks.Tasks.await(client.process(com.google.mlkit.vision.common.InputImage.fromBitmap(bmp, 0)), 20, java.util.concurrent.TimeUnit.SECONDS)
+                val codes = org.json.JSONArray()
+                for (b in found) b.rawValue?.let { if (it.isNotBlank()) codes.put(it) }
+                client.close(); bmp.recycle()
+                resolve(id, JSONObject().put("codes", codes))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read a barcode in that picture") }
+        }
+    }
+
     /** SHA-256 of the weights in use: proof that the model has not changed. */
     @JavascriptInterface
     fun hash(id: String, modelId: String) {

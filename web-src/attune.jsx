@@ -6633,7 +6633,7 @@ const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "T
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.1";
+const PAGE_VERSION = "6.1.1";
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -8913,6 +8913,8 @@ export default function App() {
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "fit" ? (
           <FitApp flash={flash} openEngine={() => setShowEngine(true)} incoming={fitIn} clearIncoming={() => setFitIn(null)}
+            fetchJson={NATIVE && NATIVE.fetchJson ? async (url) => { const r = await nativeCall("fetchJson", url); return JSON.parse((r && r.body) || "{}"); } : null}
+            scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null}
             modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "deal" ? (
