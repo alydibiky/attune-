@@ -893,8 +893,9 @@ const MODEL_TIERS = [
     good: ["Ask", "Write", "Summarise", "Review", "Photos", "Arabic"] },
 
   // ---- the phone range, where most people will live -------------------
-  { id: "md-hi", vision: true, label: "Core+", realName: "Qwen3.5 4B", smoothRam: 12, params: "4B", quant: "Q5_K_M", sizeGB: 3.14,
-    needRam: 8, ctx: 32768, platform: "any", recommended: true,
+  // v6.8: Q5_K_S — measured on ARM against the 8-bit model: drift 0.010 (Arabic) vs Q5_K_M's 0.010, writes 6 % faster, 0.12 GB smaller → a 6 GB phone
+  { id: "md-hi", vision: true, label: "Core+", realName: "Qwen3.5 4B", smoothRam: 8, params: "4B", quant: "Q5_K_S", sizeGB: 3.02,
+    needRam: 6, ctx: 32768, platform: "any", recommended: true,
     repo: "unsloth/Qwen3.5-4B-GGUF",
     quality: "The best everyday choice if your phone can hold it: reads photos of documents and receipts, Arabic and English, with extra precision for long answers.",
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
