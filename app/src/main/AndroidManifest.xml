@@ -27,9 +27,18 @@
          if the person switches apps (GenService; stops when the answer ends). -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- v6.3 Fit & Food: READ steps, calories burned, distance, heart rate and workouts from Health
+         Connect (the watch apps write them there). Nothing is written. -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
+    <uses-permission android:name="android.permission.health.READ_DISTANCE" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
 
     <!-- Lets the app find the phone's speech recogniser (Android 11+). -->
     <queries>
+        <package android:name="com.google.android.apps.healthdata" />
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
@@ -86,6 +95,10 @@
 
             <!-- Select text in ANY app → "Attune" in the menu that appears.
                  The Android version of a system-wide "summarise this" hotkey. -->
+            <!-- Health Connect shows why Attune reads health data (required to be granted access). -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
             <intent-filter android:label="@string/process_text_label">
                 <action android:name="android.intent.action.PROCESS_TEXT" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -96,6 +109,18 @@
         <!-- The phone's own GPU driver (Adreno), for Engine → Speed → GPU.
              Optional: phones without it install and run on the CPU. -->
         <uses-native-library android:name="libOpenCL.so" android:required="false" />
+
+        <!-- Android 14+: Health Connect's "why this app reads your data" link opens Attune. -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
 
         <service android:name=".GenService" android:exported="false" android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"

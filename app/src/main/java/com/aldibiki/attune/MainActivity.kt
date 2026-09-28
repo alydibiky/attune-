@@ -71,6 +71,12 @@ class MainActivity : AppCompatActivity() {
             "window.dispatchEvent(new CustomEvent('attune-notify-permission',{detail:{granted:$granted}}))", null)
     }
 
+    // v6.3: Health Connect's own permission screen (steps, calories, workouts — read only)
+    private val askHealthPermission = registerForActivityResult(androidx.health.connect.client.PermissionController.createRequestPermissionResultContract()) { granted ->
+        if (::web.isInitialized) web.evaluateJavascript(
+            "window.dispatchEvent(new CustomEvent('attune-health-permission',{detail:{granted:${granted.size}}}))", null)
+    }
+
     private lateinit var voice: Voice
     private val askMicPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         bridge.lastVoiceSink?.let { voice.onPermission(granted, it) }
@@ -162,6 +168,7 @@ class MainActivity : AppCompatActivity() {
         voice = Voice(this)
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
+        bridge.askHealth = { runOnUiThread { try { askHealthPermission.launch(Health.PERMISSIONS) } catch (e: Exception) {} } }
         bridge.askNotify = {
             if (android.os.Build.VERSION.SDK_INT >= 33) askNotifyPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }

@@ -343,6 +343,34 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
 
     // ---- reminders and phone actions ------------------------------------------------
     var askNotify: (() -> Unit)? = null
+    var askHealth: (() -> Unit)? = null
+
+    // ---- v6.3 watches through Health Connect (read only) --------------------------------------
+    /** "ready" | "update" | "none", and how many of Attune's health permissions are granted. */
+    @JavascriptInterface
+    fun healthStatus(): String = try {
+        JSONObject().put("available", Health.availability(ctx)).put("granted", Health.granted(ctx).count { it in Health.PERMISSIONS }).put("of", Health.PERMISSIONS.size).toString()
+    } catch (e: Throwable) { JSONObject().put("available", "none").put("error", e.message ?: "").toString() }
+
+    /** Health Connect's permission screen (or its Play Store page when it must be installed/updated). */
+    @JavascriptInterface
+    fun healthConnect() {
+        if (Health.availability(ctx) == "update") {
+            try { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=com.google.android.apps.healthdata&url=healthconnect%3A%2F%2Fonboarding"))
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (e: Exception) {}
+            return
+        }
+        askHealth?.invoke()
+    }
+
+    /** One day's steps, calories burned, distance, heart rate and workouts ({date: "yyyy-mm-dd"}). */
+    @JavascriptInterface
+    fun healthDay(id: String, arg: String) {
+        pool.execute {
+            try { resolve(id, Health.day(ctx, JSONObject(arg).optString("date"))) }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't read Health Connect") }
+        }
+    }
 
     /** {id, at, title, body, repeat} → rung by Reminders even when the app is closed. */
     @JavascriptInterface
