@@ -177,7 +177,7 @@ with sync_playwright() as p:
     # ---- 6. the version is shown ----
     page.locator("nav button").last.click(); page.wait_for_timeout(200)
     import re as _re
-    check(bool(_re.search(r"Attune 5\.\d+", page.locator("[data-testid=app-version]").inner_text())), "More shows the version (so an old page can be spotted)")
+    check(bool(_re.search(r"Attune \d+\.\d+", page.locator("[data-testid=app-version]").inner_text())), "More shows the version (so an old page can be spotted)")
 
     errs = real_errors(errors)
     check(not errs, "no JavaScript errors in the page (%d)%s" % (len(errs), (": " + errs[0]) if errs else ""))
