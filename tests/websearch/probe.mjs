@@ -61,3 +61,23 @@ for (const qq of ["Who won the 2022 FIFA World Cup?", "How tall is the Cairo Tow
     } catch (e) { console.log(qq.slice(0, 26), label, "failed", e.message); }
   }
 }
+
+// the same questions as keywords (research.js topicOf) — Bing HTML and Bing RSS (parsed as XML)
+console.log("\n--- Bing with keywords (topicOf) and RSS");
+const { topicOf } = await import("../../web-src/research.js");
+for (const qq of ["Who won the 2022 FIFA World Cup?", "How tall is the Cairo Tower?", "ما هو ارتفاع برج خليفة؟", "What is the standard VAT rate in Egypt?", "When did the Grand Egyptian Museum officially open?", "What is the battery capacity of the iPhone 16 Pro Max in mAh?"]) {
+  const kw = topicOf(qq);
+  for (const [label, url, rss] of [
+    ["html kw", "https://www.bing.com/search?q=" + encodeURIComponent(kw), false],
+    ["rss  q ", "https://www.bing.com/search?format=rss&q=" + encodeURIComponent(qq), true],
+    ["rss  kw", "https://www.bing.com/search?format=rss&q=" + encodeURIComponent(kw), true],
+  ]) {
+    try {
+      const r = await fetch(url, { headers: { "User-Agent": UA } }); const body = await r.text();
+      const $ = rss ? cheerio.load(body, { xmlMode: true }) : cheerio.load(body);
+      const links = rss ? $("item > link").toArray().map((e) => $(e).text()) : $("li.b_algo").toArray().map((e) => $(e).find("h2 a[href], .b_algoheader a[href], a.tilk[href]").first().attr("href") || "");
+      const hosts = links.slice(0, 5).map((h) => { try { return new URL(h).hostname.replace(/^www\./, ""); } catch (e) { return "?"; } });
+      console.log(`${qq.slice(0, 24).padEnd(25)} ${label} [${kw.slice(0, 30)}] ${links.length} → ${hosts.join(", ")}`);
+    } catch (e) { console.log(qq.slice(0, 24), label, "failed", e.message); }
+  }
+}
