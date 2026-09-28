@@ -105,7 +105,7 @@ export async function pageText(url, maxChars = 2200) {
 /** WebTools.search("duckduckgo", q, pages): both engines at once, interleaved, then the top pages read. */
 export async function search(q, pages = 6) {
   const t0 = Date.now();
-  const [d, b] = await Promise.all([duckduckgo(q + " " + NO_WIKI, 10), bing(q + " " + NO_WIKI, 8)]);
+  const [d, b] = await Promise.all([duckduckgo(q, 12), bing(q, 10)]);   // v6.8: no "-site:" operator (Bing misreads it)
   const seen = new Set(), merged = [];
   for (let i = 0; i < Math.max(d.length, b.length); i++) for (const h of [d[i], b[i]].filter(Boolean)) if (!isWiki(h.url) && !seen.has(urlKey(h.url))) { seen.add(urlKey(h.url)); merged.push(h); }
   const hits = merged.slice(0, 14);

@@ -224,12 +224,16 @@ object WebTools {
         var hits: List<Hit> = emptyList()
         var why = ""
         if (provider == "brave" && !key.isNullOrBlank()) {
-            try { hits = brave("$q $NO_WIKI", key).filter { !isWiki(it.url) } } catch (e: Exception) { why = e.message ?: "Brave failed" }
+            try { hits = brave(q, key, 10).filter { !isWiki(it.url) } } catch (e: Exception) { why = e.message ?: "Brave failed" }
         }
         if (hits.isEmpty()) {
             // v5.34: DuckDuckGo and Bing at the same time, results interleaved (d1, b1, d2, b2 …)
-            val dj = pool.submit(Callable { try { duckduckgo("$q $NO_WIKI", 10) } catch (e: Exception) { emptyList<Hit>() } })
-            val bj = pool.submit(Callable { try { bing("$q $NO_WIKI", 8) } catch (e: Exception) { emptyList<Hit>() } })
+            // v6.8: the plain question goes to the engines — NOT "-site:wikipedia.org". Bing misreads that
+            // operator and answers something else entirely (measured: "How tall is the Cairo Tower?" →
+            // ayahuasca retreats, "Egypt VAT rate" → German newspapers; the same words without it → the
+            // right pages). Wikipedia is still left out: its pages are dropped by isWiki below.
+            val dj = pool.submit(Callable { try { duckduckgo(q, 12) } catch (e: Exception) { emptyList<Hit>() } })
+            val bj = pool.submit(Callable { try { bing(q, 10) } catch (e: Exception) { emptyList<Hit>() } })
             val d = try { dj.get(16, TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
             val b = try { bj.get(16, TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
             val seen = HashSet<String>(); val merged = ArrayList<Hit>()
@@ -307,7 +311,7 @@ object WebTools {
         // Recent web results, opened and read (more than a headline to go on).
         val hits = JSONArray()
         try {
-            val web = duckduckgo(q + (if (arabic) " أخبار" else " news") + " " + NO_WIKI, 6, "d").filter { !isWiki(it.url) }
+            val web = duckduckgo(q + (if (arabic) " أخبار" else " news"), 8, "d").filter { !isWiki(it.url) }
             val n = pages.coerceIn(0, 4)
             val jobs = web.take(n).map { h -> pool.submit(Callable { h to pageText(h.url, 2400) }) }
             for (f in jobs) try { val (h, t) = f.get(12, TimeUnit.SECONDS); if (t.length > h.text.length) h.text = t } catch (e: Exception) { }
