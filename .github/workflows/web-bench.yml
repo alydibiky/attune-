@@ -7,6 +7,9 @@ name: Web search benchmark
 # Run by hand from the Actions tab; the results are in the run's summary.
 
 on:
+  push:                     # also on the working branch whenever the benchmark or the web code changes
+    branches: [claude/attune-android-continuation-4lp2wq]
+    paths: [tests/websearch/**, web-src/webrank.js, web-src/research.js, web-src/answerfix.js, web-src/factsheet.js, .github/workflows/web-bench.yml]
   workflow_dispatch:
     inputs:
       only:
@@ -42,7 +45,7 @@ jobs:
           cd tests/websearch && npm i --silent --no-save cheerio@1.0.0 && cd ../..
           ~/llama.cpp/build/bin/llama-server -m ~/model.gguf --host 127.0.0.1 --port 8099 -c 12288 -t "$(nproc)" -np 1 --jinja --no-ui -fa on -ctk q8_0 -ctv q8_0 > server.log 2>&1 &
           for i in $(seq 1 300); do curl -s 127.0.0.1:8099/health | grep -q ok && break; sleep 1; done
-          MODEL_NAME="${{ matrix.name }}" CTX=12288 node tests/websearch/eval.mjs ${{ inputs.only && format('--only={0}', inputs.only) || '' }}
+          MODEL_NAME="${{ matrix.name }}" CTX=12288 node tests/websearch/eval.mjs ${{ github.event.inputs.only && format('--only={0}', github.event.inputs.only) || '' }}
       - name: Keep the reports
         if: always()
         uses: actions/upload-artifact@v4
