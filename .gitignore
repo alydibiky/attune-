@@ -33,6 +33,8 @@ tests/trials/report-*.md
 tests/trials/every-model.txt
 tests/trials/max-*.md
 tests/trials/every-max.txt
+tests/trials/*-rest.txt
+tests/trials/*-max2.txt
 tests/trials/pics/
 tests/websearch/node_modules/
 tests/websearch/report-*.md
