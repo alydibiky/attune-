@@ -3,6 +3,7 @@
 Found by Ali on his phone (HONOR BKQ-N49, Snapdragon SM8850, Adreno 840; the Engine
 screen reports **16 GB**, not the 12 GB we planned for). Screenshots were sent in the chat.
 Ali said "there is still more": add new items at the end of this list as he sends them.
+Ali is not in a hurry for item 8 (the standing goal) — "NOT NOW" — but it stays a goal.
 
 ## Problems
 
@@ -75,4 +76,77 @@ Ali said "there is still more": add new items at the end of this list as he send
    - Ali: "don't stop until you find a way without compromising anything".
    - Measure every idea (speed, heat, RAM, answer quality) before shipping it.
 
-9. (Ali: "there is still more" — add here.)
+9. **Tabbing out and back makes the engine reload (27 s+); the app also overheats with ANY model.**
+   - The Engine log (Zenith, 29 Sep, HONOR SM8850 16 GB) shows:
+     - `ggml_backend_opencl … failed to allocate 4372.52 MiB (err=-61)`: the GPU buffer fails
+       (n_gpu_layers forced to 99), then it falls back;
+     - "flash attention not supported by OpenCL, memory usage will increase";
+     - the CLIP (photo reader) graph runs unsupported ops on OpenCL;
+     - "kleidiai: no kernel for tensor type q4_K (kernels available for Q4_0 and Q8_0)", so the ARM fast
+       kernels are NOT used by our K-quant/IQ4 files;
+     - n_threads = 4;
+     - a 0.8B draft model loaded too;
+     - "Android asked for memory while Attune was in the background — the model was let go" 4 times in 25 min.
+   - To do:
+     - keep the model alive in the background (foreground service, lower memory so Android doesn't kill it);
+     - fit the GPU buffers (lower -ngl / ubatch, or CPU only when OpenCL can't fit);
+     - measure Q4_0 files with KleidiAI (faster and cooler on ARM?);
+     - check the thread count and the draft model's cost;
+     - find what heats the phone even with small models (a busy loop? polling? the WebView?).
+10. **Reasoning answers.**
+    - Seating puzzle ("A, B, C, D around a round table facing inward; A is not opposite C; B is
+      immediately left of C; who is opposite B, who is immediately right of A?"), Blaze+ with Think.
+      - The final answer "A opposite B, D right of A" is actually RIGHT.
+      - But its explanation "C, B, A, D (moving clockwise)" is WRONG: that order puts A opposite C.
+        The right clockwise order is C, B, D, A.
+      - Ali read it as a wrong answer, so the explanation must match the answer. Check the working with code
+        (like the maths check) or drop a wrong arrangement line.
+    - Hydraulics ("valve cavitation during high-speed deceleration in an electro-hydraulic closed-loop
+      positioning system, two direct fixes without reducing velocity"): the answer was weak or wrong.
+      - It said "increase supply pressure" and "reduce valve restriction".
+      - The expected answer: the load's inertia overruns the actuator while the valve meters it out, so
+        the inlet (meter-in) side is starved and drops below vapour pressure.
+      - Fixes: anti-cavitation / make-up check valves (or a replenishing circuit) feeding that side, and
+        meter-out/back-pressure control (a counterbalance valve, a matched asymmetric spool, or tank-line
+        back-pressure).
+      - Engineering answers need to be expert-level (Ali owns a crane company).
+11. **"Output strictly as a Markdown table" was not followed.**
+    - The CAN vs Ethernet (Automotive **100BASE-T1**) question, on Blaze+:
+      - it added a sentence before the table;
+      - it compared 1000BASE-T1 instead of 100BASE-T1;
+      - it claimed "up to 100000 Mbps" (wrong);
+      - a stray "Choose CAN bus if…" line and a "📄 Document" card came after.
+    - Strict output-format requests must be obeyed, and the named standard kept.
+12. **Mind:**
+    - a saved photo (a screenshot) cannot be opened;
+    - a saved answer with a table shows raw markdown (`Feature | CAN Bus | …`, `---|---|---`) instead of a
+      rendered table.
+13. **Money: "+250 EGP from my cousin Youssef" is not recorded the way Ali wants.**
+    - It became Income · Other, with no account, no note and no person.
+    - Keep who it was from (Youssef, cousin) and pick the right type/category (a gift? a repayment? a
+      loan?). Ask when unclear, remember the person, and fill the note.
+    - Ask Ali exactly how he wants it recorded if the screenshot doesn't make it clear.
+14. **Reports and proposals are generic, with IRRELEVANT sources.**
+    - "Elevating Capital Projects: A Strategic Crane Rental Partnership" (New Capital contractors):
+      - it cites Windows camera error codes (0xA00F4244, 0x80070005) as crane "system failures" in 5 of 11
+        sections;
+      - it repeats the same two sources ([1] a sales-prospecting blog, [5] a crane business-plan page) in
+        every section;
+      - it gives filler metrics ("Safety Record: Uncompromising");
+      - it has no real fleet, prices or projects.
+    - Fixes:
+      - the web research must drop off-topic pages;
+      - the report must use Ali's own data (his fleet: XCMG, Sany, Hitachi, Liebherr, Demag, Terex, Zoomlion,
+        Grove, 20–500 t; the company Adrighem and Aldibiki, 150 employees), or ask for it;
+      - no repeated sections or filler.
+15. **Idea: use the phone's STORAGE to make the models lighter and more powerful.**
+    - Research and measure:
+      - mmap'd weights read from flash instead of "weights in RAM";
+      - streaming the experts of a mixture-of-experts model from storage ("LLM in a flash" style), so a bigger
+        MoE model runs in little RAM;
+      - a KV cache / prompt cache saved to storage so reloads are instant;
+      - big offline knowledge packs searched from storage (RAG) instead of a bigger model.
+    - Only ship what keeps quality and speed.
+16. **Rework the WHOLE app's UI and UX "like an expert with 20 years in the field".**
+    - Smoother everywhere: transitions, loading states, no reloads, fewer taps.
+17. (Ali: "there is still more" — add here.)
