@@ -268,7 +268,7 @@ if (want("mind")) {
   ];
   for (const [text, rx, ar] of items) {
     const r = await llm(MI.tagMessages({ text }), { json: true, maxTokens: 250, temperature: 0.2 });
-    const t = MI.parseTagReply(r.text);
+    const t = MI.parseTagReply(r.text, { text });
     section("Mind", text.slice(0, 30), text, r, t, [[t && t.title && t.tags.length >= 3, "a title and 3+ tags"], [t && rx.test(t.title + " " + t.tags.join(" ") + " " + t.summary), "filed by what it's about"], [t && (ar ? arShare(t.title) > 0.5 : arShare(t.title) < 0.2), "in the item's language"]]);
   }
 }

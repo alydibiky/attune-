@@ -248,7 +248,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
     const t = setTimeout(async () => {
       setFiling(next.id);
       let parsed = null;
-      try { parsed = M.parseTagReply(await llm(M.tagMessages(next), null, { json: true, maxTokens: 220, temperature: 0.2 })); } catch (e) {}
+      try { parsed = M.parseTagReply(await llm(M.tagMessages(next), null, { json: true, maxTokens: 220, temperature: 0.2 }), next); } catch (e) {}
       if (!on) return;
       update(next.id, (r) => M.fileRecord(r, parsed));
       setFiling(null);

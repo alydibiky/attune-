@@ -111,23 +111,43 @@ export function tagsOf(rec) {
 }
 
 /** The model reads one item: a title, one line of what it is, 3–5 tags, and its kind. */
+// v6.8 — the share of the letters that are Arabic (the trials: a 2–4B model filed English items in Arabic)
+const arShareOf = (s) => { const t = String(s || ""), ar = (t.match(/[\u0600-\u06FF]/g) || []).length, la = (t.match(/[A-Za-z]/g) || []).length; return ar + la ? ar / (ar + la) : 0.5; };
+/** The item's language: "ar", "en", or "" when it's mixed. */
+export function itemLang(rec) {
+  const a = arShareOf(String((rec && rec.text) || "").replace(/https?:\/\/\S+/g, ""));
+  return a >= 0.6 ? "ar" : a <= 0.25 ? "en" : "";
+}
 export function tagMessages(rec) {
   const body = String(rec.text || "").slice(0, 1500) + (rec.output ? "\n\n" + String(rec.output).slice(0, 600) : "");
+  const lang = itemLang(rec);
+  const say = lang === "en" ? "\n\n(This item is in ENGLISH: write the title, summary and tags in English.)" : lang === "ar" ? "\n\n(This item is in Arabic: write the title, summary and tags in Arabic.)" : "";
   return [
     { role: "system", content: `You file one item in someone's private notebook. Reply with ONLY JSON:
 {"title":"3-8 words naming it","summary":"one short sentence: what it is and why it may matter later","tags":["3 to 5 short topic words"],"kind":"note|link|quote|product|recipe|todo|contact|place|code"}
 Rules: write title, summary and tags in the SAME language as the item (Arabic item → Arabic; Egyptian is fine). Tags are topics a person would search by (a person's name, a company, a product, a place, a subject) — not "note" or "text". Only what the item says; never invent details. Egyptian words: ونش = crane (a crane hire, not shipping), عربية = car, فلوس = money, الموقع = the site.` },
-    { role: "user", content: body },
+    { role: "user", content: body + say },
   ];
 }
-export function parseTagReply(raw) {
+export function parseTagReply(raw, rec = null) {
   let j = null;
   try { const s = String(raw || ""); j = JSON.parse(s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1)); } catch (e) { return null; }
   if (!j || typeof j !== "object") return null;
   const clean = (x, n) => String(x || "").replace(/\s+/g, " ").trim().slice(0, n);
   const tags = (Array.isArray(j.tags) ? j.tags : String(j.tags || "").split(/[,،]/)).map(normTag).filter((t) => t && t.length >= 2 && !/^(note|text|item|ملاحظه|نص)$/.test(t)).slice(0, 5);
   const kind = KINDS[String(j.kind || "").toLowerCase()] ? String(j.kind).toLowerCase() : null;
-  const title = clean(j.title, 80), summary = clean(j.summary, 200);
+  let title = clean(j.title, 80), summary = clean(j.summary, 200);
+  // v6.8: a filing in the wrong language is not kept (an English item titled in Arabic reads as a
+  // translation, often a wrong one: "outriggers" → «جرار»). The card keeps its own first line, and
+  // only the tags that are in the item's language stay.
+  const lang = rec ? itemLang(rec) : "";
+  if (lang) {
+    const wrong = (x) => (lang === "en" ? arShareOf(x) > 0.5 : arShareOf(x) < 0.3);
+    if (title && wrong(title)) title = "";
+    if (summary && wrong(summary)) summary = "";
+    const keep = tags.filter((t) => !wrong(t) || arShareOf(t) === 0.5);
+    tags.length = 0; tags.push(...keep);
+  }
   if (!title && !summary && !tags.length) return null;
   return { title, summary, tags, kind };
 }

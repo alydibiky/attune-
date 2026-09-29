@@ -55,5 +55,13 @@ f = M.fileRecord(M.fileRecord({ id: "z", text: "a long enough note" }, null), nu
 ok(M.needsFiling([f]).length === 0, "filing: an item the model failed twice is left alone");
 ok(M.fileRecord({ id: "p", text: "iPhone 62,000 EGP" }, { title: "t", tags: [], kind: "quote" }).meta.mindKind === undefined, "filing: code's kind (a price) beats the model's");
 
+// the trials: a small model filed English items in Arabic ("outriggers" → «جرار»)
+const en = { text: "https://www.youtube.com/watch?v=abc — how to set up outriggers on a Liebherr LTM 1090" };
+ok(M.itemLang(en) === "en" && M.itemLang({ text: "وصفة كشري: رز، عدس، مكرونة" }) === "ar", "filing: the item's language is read (a link doesn't count)");
+ok(/ENGLISH/.test(M.tagMessages(en)[1].content), "filing: the model is told the item is in English");
+const wrongLang = M.parseTagReply('{"title":"تثبيت أعمدة الدعم في جرار ليبرر","summary":"دليل فيديو","tags":["جرار ليبرر","LTM 1090","تثبيت"]}', en);
+ok(wrongLang && wrongLang.title === "" && wrongLang.summary === "" && wrongLang.tags.join() === "ltm 1090", "filing: an Arabic title for an English item is not kept; the card keeps its own line");
+ok(M.parseTagReply('{"title":"Liebherr outrigger setup","tags":["liebherr","crane","outriggers"]}', en).title === "Liebherr outrigger setup", "filing: a filing in the right language is kept");
+
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASSED");
 if (fail) process.exit(1);
