@@ -147,6 +147,9 @@ export function parseTagReply(raw, rec = null) {
     if (summary && wrong(summary)) summary = "";
     const keep = tags.filter((t) => !wrong(t) || arShareOf(t) === 0.5);
     tags.length = 0; tags.push(...keep);
+    // a reply that was all in the wrong language still counts as filed (asking again gets the same
+    // answer): the item keeps its own first line and is not sent to the model again
+    if (!title && !summary && !tags.length) return { title, summary, tags, kind };
   }
   if (!title && !summary && !tags.length) return null;
   return { title, summary, tags, kind };

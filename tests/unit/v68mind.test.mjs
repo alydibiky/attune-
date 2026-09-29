@@ -61,6 +61,8 @@ ok(M.itemLang(en) === "en" && M.itemLang({ text: "وصفة كشري: رز، عد
 ok(/ENGLISH/.test(M.tagMessages(en)[1].content), "filing: the model is told the item is in English");
 const wrongLang = M.parseTagReply('{"title":"تثبيت أعمدة الدعم في جرار ليبرر","summary":"دليل فيديو","tags":["جرار ليبرر","LTM 1090","تثبيت"]}', en);
 ok(wrongLang && wrongLang.title === "" && wrongLang.summary === "" && wrongLang.tags.join() === "ltm 1090", "filing: an Arabic title for an English item is not kept; the card keeps its own line");
+const allWrong = M.parseTagReply('{"title":"Egyptian proverb about patience","summary":"A saying.","tags":["patience","proverb"]}', { text: "«الصبر مفتاح الفرج» — مثل مصري" });
+ok(allWrong && !allWrong.title && !allWrong.tags.length && M.fileRecord({ text: "x" }, allWrong).meta.aiAt, "filing: a reply all in the wrong language still counts as filed (not asked again)");
 ok(M.parseTagReply('{"title":"Liebherr outrigger setup","tags":["liebherr","crane","outriggers"]}', en).title === "Liebherr outrigger setup", "filing: a filing in the right language is kept");
 
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASSED");
