@@ -241,7 +241,7 @@ if (want("code")) {
 // ================= Translation both ways =================
 if (want("translate")) {
   const cases = [
-    [["عرض سعر: ونش 100 طن لمدة 5 أيام، 15,000 جنيه لليوم، شامل السواق والوقود", "الدفع: 50% مقدم والباقي عند التسليم"], "English", [/100 ?t/i, /15,?000/, /50 ?%/]],
+    [["عرض سعر: ونش 100 طن لمدة 5 أيام، 15,000 جنيه لليوم، شامل السواق والوقود", "الدفع: 50% مقدم والباقي عند التسليم"], "English", [/100[ -]?t/i, /15,?000/, /50 ?%/]],
     [["The crane must not operate in winds above 9.8 m/s.", "Outriggers fully extended on 1.2 m × 1.2 m mats."], "Arabic", [/9\.8/, /1\.2/]],
   ];
   for (const [texts, to, rx] of cases) {
