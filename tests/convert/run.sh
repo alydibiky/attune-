@@ -13,5 +13,16 @@ python3 make_samples.py >/dev/null
 for f in report arabic long; do
   java -Dstdout.encoding=UTF-8 -cp "$J" PdfLayout.java out/$f.pdf 2>/dev/null > out/$f.json
   node bench.mjs out/$f.json >/dev/null 2>&1
-  printf '%-8s ' "$f"; python3 compare.py out/$f.docx out/$f.out.docx --png out/$f.side.png 2>/dev/null
+  printf "%-8s pdf→word " "$f"; python3 compare.py out/$f.docx out/$f.out.docx --png out/$f.side.png 2>/dev/null
+done
+# Word → PDF: the Word file read by the app (docxRead) → the print page (blocksToPrintHtml) → printed by
+# Chromium as the phone's WebView does → read back through the PDF → Word path and compared (and the
+# PDFs side by side: out/<name>.w2p.png)
+for f in report arabic long; do
+  node bench_pdf.mjs out/$f.docx 2>/dev/null
+  python3 print_pdf.py out/$f.print.html out/$f.w2p.pdf
+  java -Dstdout.encoding=UTF-8 -cp "$J" PdfLayout.java out/$f.w2p.pdf 2>/dev/null > out/$f.w2p.json
+  node bench.mjs out/$f.w2p.json >/dev/null 2>&1
+  printf '%-8s word→pdf ' "$f"; python3 compare.py out/$f.docx out/$f.w2p.out.docx 2>/dev/null
+  python3 sidepdf.py out/$f.pdf out/$f.w2p.pdf out/$f.w2p.png 2>/dev/null
 done

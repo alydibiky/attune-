@@ -147,7 +147,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
           : r.pages.flatMap((p) => C.textToBlocks(text[p.n] || ""));
         if (allLaid) docOpts = C.pdfDocOptions(r.pages);
         if (r.count > r.pages.length) note = (note ? note + " " : "") + tr("Only the first {n} pages were converted.", { n: r.pages.length });
-      } else if (k === "docx") blocks = await C.docxToBlocks(new Uint8Array(await f0.arrayBuffer()));
+      } else if (k === "docx") { const rd = await C.docxRead(new Uint8Array(await f0.arrayBuffer())); blocks = rd.blocks; docOpts = rd.opts; }   // v6.8: with its page, fonts and spacing
       else if (k === "pptx") blocks = await C.pptxToBlocks(new Uint8Array(await f0.arrayBuffer()));
       else if (k === "odt") blocks = await C.odtToBlocks(new Uint8Array(await f0.arrayBuffer()));
       else if (k === "epub") blocks = await C.epubToBlocks(new Uint8Array(await f0.arrayBuffer()));
@@ -252,8 +252,17 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
         let arg;
         if ((k === "image" || k === "images") && target !== "translate") arg = { images: await Promise.all(files.list.map(readUrl)) };
         else if (rows) arg = { blocks: [{ type: "h2", text: base() }, { type: "table", rows: rows.slice(0, 2000) }] };
-        else arg = { blocks: blocks || [] };
-        const r = await nativeCall("makePdf", arg);
+        else arg = { blocks: (blocks || []).filter((b) => b.type !== "header" && b.type !== "footer") };
+        let r = null;
+        // v6.8: laid out and printed by the phone's own Chrome engine (the look kept: fonts, sizes, spacing,
+        // tables, pictures, header / footer, Arabic shaping); the older PDF maker if the phone refuses
+        if (arg.blocks) {
+          const wide = rows && Math.max(0, ...rows.slice(0, 50).map((x) => x.length)) > 6;
+          const po = rows ? { sheet: true, body: 9, page: wide ? { w: 841.9, h: 595.3, top: 36, bottom: 36, left: 36, right: 36 } : { w: 595.3, h: 841.9, top: 42, bottom: 42, left: 42, right: 42 } } : docOpts || {};
+          const pgs = po.page || { w: 595.3, h: 841.9 };
+          try { r = await nativeCall("htmlToPdf", { html: C.blocksToPrintHtml(rows ? arg.blocks : blocks || [], base(), po), w: pgs.w, h: pgs.h }); } catch (e) { r = null; }
+        }
+        if (!r || !r.b64) r = await nativeCall("makePdf", arg);
         o = { name: base() + suffix + ".pdf", mime: C.MIME.pdf, b64: r.b64, size: r.bytes };
       }
       if (!alive()) return;

@@ -868,6 +868,62 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /**
+     * v6.8 — a page (convert.js blocksToPrintHtml) → PDF, laid out and printed by an off-screen WebView:
+     * {html, w, h (points)} → {b64, bytes}. The page's own CSS sets the margins, header and footer.
+     * Anything going wrong (a phone that refuses silent printing, a 90 s time limit) rejects, and the
+     * page makes the PDF the older way (makePdf).
+     */
+    private val printing = java.util.Collections.synchronizedSet(HashSet<WebView>())
+    @JavascriptInterface
+    fun htmlToPdf(id: String, arg: String) {
+        val a = try { JSONObject(arg) } catch (e: Exception) { reject(id, "Couldn't make the PDF"); return }
+        val html = a.optString("html")
+        val wPt = a.optDouble("w", 595.3); val hPt = a.optDouble("h", 841.9)
+        val out = java.io.File(ctx.cacheDir, "print-" + System.nanoTime() + ".pdf")
+        val main = android.os.Handler(android.os.Looper.getMainLooper())
+        main.post {
+            var wv: WebView? = null
+            var over = false
+            fun finish(err: Throwable?) {
+                if (over) return
+                over = true
+                wv?.let { v -> printing.remove(v); main.post { try { v.destroy() } catch (e: Throwable) { } } }
+                if (err != null) { out.delete(); reject(id, err.message ?: "Couldn't print the page"); return }
+                pool.execute {
+                    try {
+                        val bytes = out.readBytes(); out.delete()
+                        if (bytes.size < 200) throw java.io.IOException("The printed PDF is empty")
+                        resolve(id, JSONObject().put("b64", android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)).put("bytes", bytes.size))
+                    } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the printed PDF") }
+                }
+            }
+            try {
+                val v = WebView(ctx)
+                wv = v; printing.add(v)
+                v.settings.javaScriptEnabled = false
+                v.settings.allowFileAccess = false
+                v.settings.blockNetworkLoads = true
+                v.webViewClient = object : android.webkit.WebViewClient() {
+                    private var started = false
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        if (started || over) return
+                        started = true
+                        try {
+                            val media = android.print.PrintAttributes.MediaSize("attune", "Page", (wPt / 72.0 * 1000).toInt().coerceAtLeast(1000), (hPt / 72.0 * 1000).toInt().coerceAtLeast(1000))
+                            val attrs = android.print.PrintAttributes.Builder().setMediaSize(if (wPt > hPt) media.asLandscape() else media)
+                                .setResolution(android.print.PrintAttributes.Resolution("pdf", "PDF", 300, 300))
+                                .setMinMargins(android.print.PrintAttributes.Margins.NO_MARGINS).build()
+                            android.print.AttunePdfPrinter.print(v.createPrintDocumentAdapter("Attune"), attrs, out) { e -> main.post { finish(e) } }
+                        } catch (e: Throwable) { finish(e) }
+                    }
+                }
+                v.loadDataWithBaseURL("about:blank", html, "text/html", "utf-8", null)
+                main.postDelayed({ finish(java.util.concurrent.TimeoutException("Printing took too long")) }, 90_000)
+            } catch (e: Throwable) { finish(e) }
+        }
+    }
+
     @JavascriptInterface
     fun pdfEdit(id: String, arg: String) {
         pool.execute {

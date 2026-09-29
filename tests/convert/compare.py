@@ -81,6 +81,7 @@ def read(path):
         out["tables"].append([list(reversed(r)) for r in rows] if rtl else rows)   # as seen: left to right
     return out
 
+WHY = "--why" in sys.argv
 def words(runs, pick):
     return [w for t, b, i, c, s, f in runs if pick(b, i, c) for w in re.findall(r"[\w%]+", t)]
 
@@ -99,6 +100,11 @@ def score(a, b):
     def frac(xs): xs = list(xs); return sum(xs) / len(xs) if xs else 1.0
     res["headings"] = frac(q is not None and q["head"] for p, q in pairs if p["head"])
     res["alignment"] = frac(q is not None and q["align"] == p["align"] for p, q in pairs)
+    if WHY:
+        for p, q in pairs:
+            if q is None: print("  MISSING", p["text"][:60])
+            elif q["align"] != p["align"]: print("  ALIGN", p["align"], "→", q["align"], p["text"][:50])
+            elif abs(q["size"] - p["size"]) > 1: print("  SIZE", p["size"], "→", q["size"], p["text"][:50])
     res["indents"] = frac(q is not None and q["indent"] for p, q in pairs if p["indent"])
     res["lists"] = frac(q is not None and q["list"] for p, q in pairs if p["list"])
     res["rtl"] = frac(q is not None and q["bidi"] for p, q in pairs if p["bidi"] or re.search(r"[؀-ۿ]", p["text"]))

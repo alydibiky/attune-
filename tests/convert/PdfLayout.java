@@ -75,7 +75,10 @@ public class PdfLayout {
             long ar = text.codePoints().filter(c -> c >= 0x0590 && c <= 0x08FF).count();
             long la = text.codePoints().filter(Character::isLetter).count() - ar;
             Integer rgb = colours.get(a);
-            words.add(new float[]{x0, x1, a.getYDirAdj(), a.getFontSizeInPt(), bold ? 1 : 0, italic ? 1 : 0, ar, la, rgb == null ? 0 : rgb});
+            // the size as drawn: getFontSizeInPt ignores the page's scaling (a Chrome / Skia PDF draws at 3/4:
+            // 11 pt came out as 14.7) — the text's y-scale includes it
+            float sz = a.getYScale() > 0.5f ? Math.round(a.getYScale() * 2) / 2f : a.getFontSizeInPt();
+            words.add(new float[]{x0, x1, a.getYDirAdj(), sz, bold ? 1 : 0, italic ? 1 : 0, ar, la, rgb == null ? 0 : rgb});
             texts.add(text); fonts.add(fname);
         }
     }

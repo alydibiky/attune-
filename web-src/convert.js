@@ -196,7 +196,15 @@ export function pdfLinesToBlocks(pages) {
     if (!pitchBy.has(key)) pitchBy.set(key, new Map());
     pitchBy.get(key).set(g, (pitchBy.get(key).get(g) || 0) + 1);
   }
-  const pitch = (s) => { const m = pitchBy.get(Math.round(s)); if (!m) return s * 1.2; const best = [...m].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0]; return Math.min(Math.max(best, s * 1.0), s * 2.6); };
+  // (the smallest gap that comes back — lines inside a paragraph are the tightest; the most common gap can
+  // be the one between paragraphs when a page is lists and one-line paragraphs, and they then ran together)
+  const pitch = (s) => {
+    const m = pitchBy.get(Math.round(s)); if (!m) return s * 1.2;
+    const g = [...m].sort((a, b) => a[0] - b[0]);
+    const rep = g.filter(([v, c]) => c >= 2 || g.some(([w, d]) => w !== v && Math.abs(w - v) <= 0.6));
+    const best = (rep.length ? rep : g)[0][0];
+    return Math.min(Math.max(best, s * 1.0), s * 2.6);
+  };
   const LIST = /^\s*(?:(\d{1,2}|[a-z]|[ivx]{1,4})[.)]|[•●▪◦\-–*])\s+/i;
   // v6.8: a numbered line in a bigger font ("1. Summary") is a heading, not a list item
   const isHead = (l) => l.text.length <= 110 && (l.s >= body * 1.18 || (l.b && !LIST.test(l.text) && l.text.length <= 90 && !/[.,;:،]$/.test(l.text)));
@@ -534,28 +542,207 @@ function paraText(p) {
 
 /** A Word document (.docx bytes) → blocks. */
 export async function docxToBlocks(bytes) {
+  return (await docxRead(bytes)).blocks;
+}
+
+/**
+ * v6.8 — a Word document read with its look (Ali: "all file converters … with formatting and spacing and
+ * everything"): each word's bold / italic / underline / colour / size / font (runs), the paragraph's
+ * alignment (as seen: a right-to-left paragraph's "left" is its start), indents, space before / after and
+ * line spacing, headings (their style's size), bullets and numbers (the real "3." or "b)" Word shows, list
+ * levels), tables (column widths, merged cells, bold cells, right-to-left), pictures at their size, page
+ * breaks, the page size and margins, the header / footer (a PAGE field kept as the page number) and the
+ * document's font and size. Empty paragraphs are not blocks — their height becomes the next one's space.
+ * → { blocks, opts } (opts as pdfDocOptions: page, body, font, exact)
+ */
+export async function docxRead(bytes) {
   const z = await unzip(bytes);
   const xml = z.get("word/document.xml");
   if (!xml) throw new Error("That file isn't a Word document.");
   const body = dec(xml);
-  const out = [];
-  // tables and paragraphs in order
-  for (const m of body.matchAll(/<w:tbl>[\s\S]*?<\/w:tbl>|<w:p[\s>][\s\S]*?<\/w:p>|<w:p\/>/g)) {
-    const x = m[0];
-    if (x.startsWith("<w:tbl>")) {
-      const rows = [...x.matchAll(/<w:tr[\s>][\s\S]*?<\/w:tr>/g)].map((r) => [...r[0].matchAll(/<w:tc[\s>][\s\S]*?<\/w:tc>/g)].map((c) => [...c[0].matchAll(/<w:p[\s>][\s\S]*?<\/w:p>/g)].map((p) => paraText(p[0])).join("\n").trim()));
-      if (rows.length) out.push({ type: "table", rows });
-      continue;
-    }
-    const text = paraText(x).trim();
-    if (!text) continue;
-    const st = (x.match(/<w:pStyle w:val="([^"]+)"/) || [])[1] || "";
-    const hl = st.match(/^(?:Heading|heading|Title)\s?(\d)?/);
-    if (hl) out.push({ type: "h" + Math.min(3, +(hl[1] || 1)), text });
-    else if (/<w:numPr>|List/i.test(x.slice(0, 400))) out.push({ type: "li", text });
-    else out.push({ type: "p", text });
+  const attr = (x, tag, a = "val") => { const m = String(x || "").match(new RegExp(`<w:${tag}\\b[^>]*?\\bw:${a}="([^"]*)"`)); return m ? m[1] : null; };
+  const has = (x, tag) => { const m = String(x || "").match(new RegExp(`<w:${tag}(?:\\s[^>]*?)?/?>`)); return m ? !/w:val="(?:0|false|none)"/.test(m[0]) : null; };
+  const inner = (x, tag) => { const m = String(x || "").match(new RegExp(`<w:${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</w:${tag}>`)); return m ? m[1] : ""; };
+  const tw = (v) => (v == null ? null : +v / 20);   // twips → points
+  // ---- styles: each style's paragraph and run look, with what it is based on ----
+  const stylesXml = z.get("word/styles.xml") ? dec(z.get("word/styles.xml")) : "";
+  // theme fonts ("+Headings" / "+Body")
+  const themeXml = [...z.keys()].filter((k) => /^word\/theme\/theme\d*\.xml$/.test(k)).map((k) => dec(z.get(k)))[0] || "";
+  const themeFont = { major: ((themeXml.match(/<a:majorFont>[\s\S]*?<a:latin typeface="([^"]*)"/) || [])[1]) || null, minor: ((themeXml.match(/<a:minorFont>[\s\S]*?<a:latin typeface="([^"]*)"/) || [])[1]) || null };
+  const rPrOf = (x) => { const r = inner(x, "rPr"); if (!r) return {}; const o = {};
+    const th = attr(r, "rFonts", "asciiTheme") || attr(r, "rFonts", "hAnsiTheme"); if (th) { const f = /^major/.test(th) ? themeFont.major : themeFont.minor; if (f) o.font = f; } const b = has(r, "b"); if (b != null) o.b = b; const i = has(r, "i"); if (i != null) o.i = i; const u = attr(r, "u"); if (u && u !== "none") o.u = true;
+    const sz = attr(r, "sz") || attr(r, "szCs"); if (sz) o.size = +sz / 2; const c = attr(r, "color"); if (c && c !== "auto" && /^[0-9A-Fa-f]{6}$/.test(c)) o.c = c.toUpperCase(); const f = attr(r, "rFonts", "ascii") || attr(r, "rFonts", "hAnsi"); if (f) o.font = f; return o; };
+  const pPrOf = (x) => { const p = inner(x, "pPr"); if (!p) return {}; const o = {}; const jc = attr(p, "jc"); if (jc) o.jc = jc; if (has(p, "bidi")) o.bidi = true;
+    const ind = (p.match(/<w:ind\b[^>]*>/) || [""])[0]; const L = attr(ind, "ind", "left") || attr(ind, "ind", "start"), R = attr(ind, "ind", "right") || attr(ind, "ind", "end"), F = attr(ind, "ind", "firstLine"), H = attr(ind, "ind", "hanging");
+    if (L) o.ind = tw(L); if (R) o.indR = tw(R); if (F) o.first = tw(F); if (H) o.first = -tw(H);
+    const sp = (p.match(/<w:spacing\b[^>]*>/) || [""])[0]; const B = attr(sp, "spacing", "before"), A = attr(sp, "spacing", "after"), Ln = attr(sp, "spacing", "line"), LR = attr(sp, "spacing", "lineRule");
+    if (B != null) o.before = tw(B); if (A != null) o.after = tw(A); if (Ln) o.lineV = +Ln, o.lineRule = LR || "auto";
+    const ol = attr(p, "outlineLvl"); if (ol != null) o.outline = +ol; if (has(p, "pageBreakBefore")) o.pageBreak = true; if (has(p, "contextualSpacing")) o.ctx = true;
+    const num = inner(p, "numPr"); if (num) { o.numId = attr(num, "numId"); o.ilvl = +(attr(num, "ilvl") || 0); } return o; };
+  const styles = new Map();
+  for (const m of stylesXml.matchAll(/<w:style\b([^>]*)>([\s\S]*?)<\/w:style>/g)) {
+    const id = (m[1].match(/w:styleId="([^"]+)"/) || [])[1]; if (!id) continue;
+    styles.set(id, { name: attr(m[2], "name") || id, based: attr(m[2], "basedOn"), p: pPrOf(m[2]), r: rPrOf(m[2]), type: (m[1].match(/w:type="([^"]+)"/) || [])[1] });
   }
-  return out;
+  const dflt = inner(stylesXml, "docDefaults");
+  const baseR = { size: 10, ...rPrOf(inner(dflt, "rPrDefault")) }, baseP = pPrOf(inner(dflt, "pPrDefault"));
+  const normal = [...styles.entries()].find(([id, s]) => s.type === "paragraph" && /^Normal$/i.test(s.name)) || [null, null];
+  const chain = (id, seen = new Set()) => { const s = id && styles.get(id); if (!s || seen.has(id)) return []; seen.add(id); return [...chain(s.based, seen), s]; };
+  const styleLook = (id) => { const c = chain(id || normal[0]); return { p: Object.assign({}, baseP, ...c.map((s) => s.p)), r: Object.assign({}, baseR, ...c.map((s) => s.r)), name: (c[c.length - 1] || {}).name || "" }; };
+  // ---- numbering: what Word shows before each item ----
+  const numXml = z.get("word/numbering.xml") ? dec(z.get("word/numbering.xml")) : "";
+  const abstract = new Map();
+  for (const m of numXml.matchAll(/<w:abstractNum\b[^>]*w:abstractNumId="(\d+)"[^>]*>([\s\S]*?)<\/w:abstractNum>/g)) {
+    const lv = new Map();
+    for (const l of m[2].matchAll(/<w:lvl\b[^>]*w:ilvl="(\d+)"[^>]*>([\s\S]*?)<\/w:lvl>/g)) lv.set(+l[1], { fmt: attr(l[2], "numFmt") || "decimal", text: attr(l[2], "lvlText") || "", start: +(attr(l[2], "start") || 1) });
+    abstract.set(m[1], lv);
+  }
+  const nums = new Map();
+  for (const m of numXml.matchAll(/<w:num\b[^>]*w:numId="(\d+)"[^>]*>([\s\S]*?)<\/w:num>/g)) nums.set(m[1], attr(m[2], "abstractNumId"));
+  const counters = new Map();
+  const roman = (n) => { const r = [[1000, "m"], [900, "cm"], [500, "d"], [400, "cd"], [100, "c"], [90, "xc"], [50, "l"], [40, "xl"], [10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]]; let s = ""; for (const [v, t] of r) while (n >= v) { s += t; n -= v; } return s; };
+  const fmtNum = (n, f) => (f === "lowerLetter" ? String.fromCharCode(96 + ((n - 1) % 26) + 1) : f === "upperLetter" ? String.fromCharCode(64 + ((n - 1) % 26) + 1) : f === "lowerRoman" ? roman(n) : f === "upperRoman" ? roman(n).toUpperCase() : f === "arabicAbjad" || f === "arabicAlpha" ? "أبجدهوزحطيكلمنسعفصقرشتثخذضظغ"[(n - 1) % 28] : String(n));
+  const marker = (numId, ilvl) => {
+    const lv = abstract.get(nums.get(numId)); const L = lv && lv.get(ilvl);
+    if (!L || L.fmt === "none") return null;
+    if (L.fmt === "bullet") return { bullet: true };
+    const key = numId + ":" + ilvl, c = counters.get(numId) || [];
+    c[ilvl] = (c[ilvl] || (L.start - 1)) + 1; for (let k = ilvl + 1; k < 9; k++) c[k] = 0; counters.set(numId, c);
+    const txt = L.text.replace(/%(\d)/g, (_, d) => { const k = +d - 1, LL = lv.get(k); return fmtNum(c[k] || (LL ? LL.start : 1), LL ? LL.fmt : "decimal"); });
+    return { num: txt.replace(/[.)]\s*$/, ""), sep: (txt.match(/[.)]\s*$/) || ["."])[0].trim() || "." };
+  };
+  // ---- pictures ----
+  const relsOf = (path) => { const r = z.get(path) ? dec(z.get(path)) : ""; const m = new Map(); for (const x of r.matchAll(/<Relationship\b[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/g)) m.set(x[1], x[2]); for (const x of r.matchAll(/<Relationship\b[^>]*Target="([^"]+)"[^>]*Id="([^"]+)"/g)) m.set(x[2], x[1]); return m; };
+  const rels = relsOf("word/_rels/document.xml.rels");
+  const picture = (dr) => {
+    const id = (dr.match(/r:embed="([^"]+)"/) || [])[1], ext = dr.match(/<wp:extent cx="(\d+)" cy="(\d+)"/);
+    const t = id && rels.get(id); if (!t) return null;
+    const file = z.get("word/" + t.replace(/^\.?\//, "").replace(/^\/word\//, ""));
+    if (!file || file.length > 8e6) return null;
+    const mime = /\.jpe?g$/i.test(t) ? "image/jpeg" : /\.png$/i.test(t) ? "image/png" : /\.gif$/i.test(t) ? "image/gif" : null;
+    if (!mime) return null;
+    return { type: "image", b64: `data:${mime};base64,` + bytesToB64(file), ...(ext ? { w: +ext[1] / 12700, h: +ext[2] / 12700 } : {}) };
+  };
+  // ---- one paragraph → a block (and the pictures in it) ----
+  const runsIn = (x, look) => {
+    const out = [], pics = []; let pageAfter = false;
+    // (a PAGE field as one element: its shown number inside it is not text)
+    for (const m of x.matchAll(/<w:fldSimple\b[^>]*w:instr="\s*PAGE\b[^"]*"[^>]*(?:\/>|>[\s\S]*?<\/w:fldSimple>)|<w:r\b[\s\S]*?<\/w:r>/g)) {
+      const r = m[0];
+      if (r.startsWith("<w:fldSimple")) { out.push({ t: "\u0000PAGE\u0000", ...look }); continue; }
+      const rs = { ...look, ...(inner(r, "rStyle") ? {} : {}), ...rPrOf(r) };
+      if (/<w:instrText[^>]*>\s*PAGE\b/.test(r)) { out.push({ t: "\u0000PAGE\u0000", ...rs, field: true }); continue; }
+      let t = "";
+      for (const k of r.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>|<w:tab\/>|<w:br\b[^>]*\/>|<w:cr\/>|<w:drawing>[\s\S]*?<\/w:drawing>/g)) {
+        if (k[1] != null) t += unxml(k[1]);
+        else if (/^<w:tab/.test(k[0])) t += "\t";
+        else if (/^<w:drawing/.test(k[0])) { const p = picture(k[0]); if (p) pics.push(p); }
+        else if (/w:type="page"/.test(k[0])) pageAfter = true;
+        else t += "\n";
+      }
+      if (t) out.push({ t, ...rs });
+    }
+    // a PAGE field written as begin / instrText / separate / result / end: its result ("1") is dropped
+    const clean = []; let skip = false;
+    for (const r of out) { if (r.field) { clean.push(r); skip = true; continue; } if (skip && /^\d+$/.test(r.t.trim())) { skip = false; continue; } skip = false; clean.push(r); }
+    return { runs: clean, pics, pageAfter };
+  };
+  const blocks = [];
+  let pendingSpace = 0, pageBreakNext = false, lastStyle = null, lastBlk = null;
+  const para = (x) => {
+    const pp = pPrOf(x), sid = attr(inner(x, "pPr"), "pStyle"), st = styleLook(sid);
+    const P = { ...st.p, ...pp }, R = st.r;
+    const { runs, pics, pageAfter } = runsIn(x, {});
+    const text = runs.map((r) => r.t).join("");
+    const rtl = !!P.bidi || /[؀-ۿ]/.test(text) && !/[A-Za-z]/.test(text);
+    const lineH = (R.size || 11) * 1.16;
+    if (!text.trim() && !pics.length) { pendingSpace += (P.before || 0) + lineH + (P.after || 0); if (pageAfter || P.pageBreak) pageBreakNext = true; return; }
+    // the look of the paragraph
+    const hn = st.name.match(/^heading (\d)$/i) || (/^Title$/i.test(st.name) ? [0, "1"] : null) || (P.outline != null && P.outline < 3 ? [0, String(P.outline + 1)] : null);
+    const jc = P.jc, align = !jc || jc === "start" || (rtl && jc === "left") ? (rtl ? "right" : "left") : jc === "end" || (rtl && jc === "right") ? (rtl ? "left" : "right") : jc === "center" ? "center" : jc === "both" || jc === "distribute" ? "justify" : !rtl && jc === "right" ? "right" : "left";
+    let type = hn ? "h" + Math.min(3, +hn[1] || 1) : "p", mk = null;
+    if (P.numId && P.numId !== "0") { mk = marker(P.numId, P.ilvl || 0); if (mk && !hn) type = "li"; }
+    else if (!hn && /List/i.test(st.name)) type = "li";
+    const blk = { type, text: text.replace(/\u0000PAGE\u0000/g, "#").replace(/^\s+|\s+$/g, "") };
+    if (mk && mk.num != null) { if (hn) blk.text = mk.num + mk.sep + " " + blk.text; else blk.num = mk.num; }
+    if (type === "li" && P.ilvl) blk.level = Math.min(2, P.ilvl);
+    // runs: each word's look over the paragraph style's
+    const rr = runs.filter((r) => r.t).map((r) => ({ t: r.t.replace(/\u0000PAGE\u0000/g, "#"), b: !!(r.b != null ? r.b : R.b), i: !!(r.i != null ? r.i : R.i), c: r.c || R.c || null, ...((r.u != null ? r.u : R.u) ? { u: true } : {}), ...(r.size && r.size !== R.size ? { size: r.size } : {}), ...(r.font && r.font !== R.font ? { font: r.font } : {}) }));
+    if (rr.length) { rr[0].t = rr[0].t.replace(/^\s+/, ""); rr[rr.length - 1].t = rr[rr.length - 1].t.replace(/\s+$/, ""); }
+    if (rr.some((r) => r.b || r.i || r.c || r.u || r.size || r.font) || (hn && rr.some((r) => !r.b))) blk.runs = rr;
+    blk.size = R.size || 11; if (R.font) blk.font = R.font;
+    blk.align = align; if (rtl) blk.rtl = true;
+    if (P.ind && type !== "li") blk.ind = rtl && P.indR && !P.ind ? P.indR : P.ind;
+    if (P.first && type !== "li") blk.first = P.first;
+    // "don't add space between paragraphs of the same style" (lists): no space between them
+    const same = P.ctx && lastBlk && lastStyle === (sid || "") && !pendingSpace;
+    if (same) delete lastBlk.after;
+    const before = (same ? 0 : P.before || 0) + pendingSpace; if (before > 0.5) blk.before = Math.round(before * 10) / 10;
+    if (P.after) blk.after = P.after;
+    lastStyle = sid || ""; lastBlk = blk;
+    if (P.lineV) blk.line = P.lineRule === "auto" ? Math.round(blk.size * 1.16 * P.lineV / 240 * 10) / 10 : Math.round(P.lineV / 20 * 10) / 10;
+    if (P.pageBreak || pageBreakNext) blk.pageBreak = true;
+    pendingSpace = 0; pageBreakNext = false;
+    if (blk.text) blocks.push(blk);
+    for (const p of pics) { p.align = align; blocks.push(p); }
+    if (pageAfter) pageBreakNext = true;
+  };
+  const table = (x) => {
+    const tblPr = inner(x, "tblPr"), grid = [...inner(x, "tblGrid").matchAll(/<w:gridCol\b[^>]*w:w="(\d+)"/g)].map((m) => +m[1] / 20);
+    const rows = [], bold = [], spans = [];
+    // (a nested table's rows are not this table's rows)
+    const rowsXml = []; { let depth = 0, start = -1; const re = /<w:tbl>|<\/w:tbl>|<w:tr\b[^>]*>|<\/w:tr>/g; let m; while ((m = re.exec(x))) { if (m[0] === "<w:tbl>") depth++; else if (m[0] === "</w:tbl>") depth--; else if (depth === 1 && m[0].startsWith("<w:tr")) start = m.index; else if (depth === 1 && m[0] === "</w:tr>" && start >= 0) { rowsXml.push(x.slice(start, m.index + 7)); start = -1; } } }
+    for (const r of rowsXml) {
+      const row = [], rb = [], rs = [];
+      for (const c of r.matchAll(/<w:tc\b[\s\S]*?<\/w:tc>/g)) {
+        const span = +(attr(inner(c[0], "tcPr"), "gridSpan") || 1), cont = /<w:vMerge\s*\/>|<w:vMerge w:val="continue"/.test(c[0]);
+        const ps = [...c[0].matchAll(/<w:p[\s>][\s\S]*?<\/w:p>/g)].map((p) => runsIn(p[0], {}).runs);
+        const t = cont ? "" : ps.map((rr) => rr.map((q) => q.t).join("")).join("\n").trim();
+        const st = styleLook(null).r;
+        const allB = ps.flat().filter((q) => q.t.trim()).length > 0 && ps.flat().filter((q) => q.t.trim()).every((q) => (q.b != null ? q.b : st.b));
+        row.push(t); rb.push(!!allB); rs.push(span);
+        for (let k = 1; k < span; k++) { row.push(""); rb.push(false); rs.push(0); }
+      }
+      rows.push(row); bold.push(rb); spans.push(rs);
+    }
+    if (!rows.length) return;
+    const blk = { type: "table", rows, bold };
+    if (spans.some((r) => r.some((s) => s !== 1))) blk.spans = spans;
+    if (grid.length === Math.max(...rows.map((r) => r.length))) blk.widths = grid.map((w) => Math.round(w));
+    if (has(tblPr, "bidiVisual")) blk.rtl = true;
+    const ti = attr(tblPr, "tblInd", "w"); if (ti && +ti > 0) blk.ind = tw(ti);
+    blk.size = styleLook(null).r.size || 11;
+    if (pendingSpace > 0.5) blk.before = Math.round(pendingSpace * 10) / 10;
+    if (pageBreakNext) blk.pageBreak = true;
+    pendingSpace = 0; pageBreakNext = false;
+    blocks.push(blk);
+  };
+  // the body in order (tables at the top level only; content controls unwrapped)
+  const b = inner(body, "body").replace(/<w:sdtContent>|<\/w:sdtContent>|<w:sdt>[\s\S]*?<w:sdtContent>|<\/w:sdt>/g, "");
+  { let i = 0; const re = /<w:tbl>|<w:p\b[^>]*\/>|<w:p[\s>]/g; let m;
+    while ((re.lastIndex = i, m = re.exec(b))) {
+      if (m[0] === "<w:tbl>") { let depth = 0, j = m.index; const t = /<w:tbl>|<\/w:tbl>/g; t.lastIndex = m.index; let q; while ((q = t.exec(b))) { depth += q[0] === "<w:tbl>" ? 1 : -1; if (!depth) { j = q.index + 8; break; } } table(b.slice(m.index, j)); i = j; }
+      else if (m[0].endsWith("/>")) { para(m[0]); i = m.index + m[0].length; }
+      else { const e = b.indexOf("</w:p>", m.index); if (e < 0) break; para(b.slice(m.index, e + 6)); i = e + 6; }
+    } }
+  // the page, from the last section
+  const sect = (body.match(/<w:sectPr\b[\s\S]*?<\/w:sectPr>/g) || []).pop() || "";
+  const pg = (sect.match(/<w:pgSz\b[^>]*>/) || [""])[0], mar = (sect.match(/<w:pgMar\b[^>]*>/) || [""])[0];
+  const opts = { body: baseR.size && styleLook(null).r.size, font: styleLook(null).r.font || null, exact: true };
+  if (pg) { const W = attr(pg, "pgSz", "w"), H = attr(pg, "pgSz", "h"); if (W && H) opts.page = { w: tw(W), h: tw(H), top: tw(attr(mar, "pgMar", "top") || 1440), bottom: tw(attr(mar, "pgMar", "bottom") || 1440), left: tw(attr(mar, "pgMar", "left") || 1440), right: tw(attr(mar, "pgMar", "right") || 1440) }; }
+  // header / footer (the default ones)
+  for (const kind of ["header", "footer"]) {
+    const id = (sect.match(new RegExp(`<w:${kind}Reference\\b[^>]*w:type="default"[^>]*r:id="([^"]+)"`)) || sect.match(new RegExp(`<w:${kind}Reference\\b[^>]*r:id="([^"]+)"`)) || [])[1];
+    const t = id && rels.get(id), hx = t && z.get("word/" + t);
+    if (!hx) continue;
+    const ps = [...dec(hx).matchAll(/<w:p[\s>][\s\S]*?<\/w:p>/g)].map((p) => ({ x: p[0], r: runsIn(p[0], {}).runs }));
+    const p = ps.find((q) => q.r.some((r) => r.t.trim()));
+    if (!p) continue;
+    const txt = p.r.map((r) => r.t).join("").trim(), look = styleLook(attr(inner(p.x, "pPr"), "pStyle")), P = { ...look.p, ...pPrOf(p.x) };
+    const rtl = !!P.bidi, jc = P.jc;
+    blocks.unshift({ type: kind, text: txt.replace(/\u0000PAGE\u0000/g, "1"), ...(/\u0000PAGE\u0000/.test(txt) ? { page: "1" } : {}), size: (p.r.find((r) => r.size) || {}).size || look.r.size || 11, align: jc === "center" ? "center" : (jc === "right" && !rtl) || (jc === "left" && rtl) ? (rtl ? "left" : "right") : rtl ? "right" : "left", ...(rtl ? { rtl: true } : {}), at: tw(attr(sect.match(/<w:pgMar\b[^>]*>/)?.[0] || "", "pgMar", kind) || 708) });
+  }
+  return { blocks, opts };
 }
 
 // ---- Excel / CSV -----------------------------------------------------------------------------
@@ -801,6 +988,83 @@ export function blocksToHtml(blocks, title = "Document") {
   }
   if (list) body += "</ul>";
   return `<!doctype html>\n<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>body{font-family:system-ui,Arial,sans-serif;max-width:820px;margin:32px auto;padding:0 16px;line-height:1.55;color:#1a1a1a}table{border-collapse:collapse;margin:12px 0}th,td{border:1px solid #999;padding:6px 10px;text-align:start}th{background:#f1f1f1}</style></head><body>\n${body}\n</body></html>\n`;
+}
+/**
+ * v6.8 — blocks → a web page laid out for printing (the phone's own Chrome engine prints it to PDF:
+ * NativeBridge.htmlToPdf). Everything the blocks carry is kept: the page size and margins (@page), the
+ * header / footer in the page margins with a live page number, each word's bold / italic / underline /
+ * colour / size / font, alignment, indents, space before / after, line spacing, bullets and numbers with
+ * their levels, tables (column widths, merged cells, bold cells, right-to-left, a bold first row repeated
+ * on every page), pictures at their size, page breaks. Arabic is shaped by the browser.
+ * o: { page: {w, h, top, right, bottom, left} (pt), body (pt), font, sheet (a spreadsheet: small, fitted) }
+ */
+const CSS_FONTS = { "times new roman": '"Times New Roman", Tinos, "Liberation Serif", "Noto Serif", serif', arial: 'Arial, Arimo, "Liberation Sans", Roboto, "Noto Sans", sans-serif',
+  calibri: 'Calibri, Carlito, "Noto Sans", Roboto, sans-serif', cambria: 'Cambria, Caladea, "Noto Serif", serif', "courier new": '"Courier New", Cousine, "Liberation Mono", monospace',
+  "liberation serif": '"Liberation Serif", "Times New Roman", Tinos, "Noto Serif", serif', "liberation sans": '"Liberation Sans", Arial, Arimo, Roboto, sans-serif', georgia: 'Georgia, "Noto Serif", serif', verdana: 'Verdana, "DejaVu Sans", sans-serif', tahoma: 'Tahoma, "DejaVu Sans", sans-serif' };
+// (single quotes: these go inside style="…" attributes)
+const cssFont = (f) => (f ? (CSS_FONTS[String(f).toLowerCase()] || `"${String(f).replace(/["'<>&]/g, "")}", sans-serif`).replace(/"/g, "'") : null);
+export function blocksToPrintHtml(blocks, title = "Document", o = {}) {
+  const pg = o.page || { w: 595.3, h: 841.9, top: 56.7, right: 56.7, bottom: 56.7, left: 56.7 };
+  const body = o.body || 11, n = (x) => Math.round(x * 100) / 100;
+  const h = (s) => esc(s).replace(/\t/g, "&emsp;").replace(/\n/g, "<br>");
+  const span = (r, base) => {
+    const st = [r.b ? "font-weight:700" : base.headingPlain ? "font-weight:400" : "", r.i ? "font-style:italic" : "", r.u ? "text-decoration:underline" : "", r.c ? `color:#${r.c}` : "", r.size ? `font-size:${r.size}pt` : "", r.font ? `font-family:${cssFont(r.font)}` : ""].filter(Boolean).join(";");
+    return st ? `<span style="${st}">${h(r.t)}</span>` : h(r.t);
+  };
+  const inner = (b) => (b.runs ? b.runs.map((r) => span(r, { headingPlain: /^h/.test(b.type) })).join("") : h(b.text || "")).replace(/\^\(([^()]{1,40})\)/g, "<sup>$1</sup>");
+  const look = (b, extra = []) => {
+    // (Word adds one paragraph's space after to the next one's space before: padding, which never collapses)
+    const st = ["margin:0", b.before ? `padding-top:${n(b.before)}pt` : "", b.after ? `padding-bottom:${n(b.after)}pt` : "", b.align && b.align !== (b.rtl ? "right" : "left") ? `text-align:${b.align}` : "",
+      b.ind ? `margin-inline-start:${n(b.ind)}pt` : "", b.first ? `text-indent:${n(b.first)}pt` : "", b.size ? `font-size:${b.size}pt` : "", b.font ? `font-family:${cssFont(b.font)}` : "",
+      b.line ? `line-height:${n(b.line)}pt` : "", b.pageBreak ? "break-before:page" : "", ...extra].filter(Boolean).join(";");
+    return ` style="${st}"${b.rtl ? ' dir="rtl"' : ' dir="auto"'}`;
+  };
+  // the header / footer: in the page's margin boxes, "#" (or the page) is the page number
+  const box = (b, where) => {
+    if (!b) return "";
+    const side = b.align === "center" ? "center" : (b.align === "right") ? "right" : "left";
+    const parts = b.page ? String(b.text).split(new RegExp("(?<!\\d)" + b.page + "(?!\\d)")) : [b.text];
+    const content = parts.map((x) => JSON.stringify(x)).join(" counter(page) ");
+    return `@${where}-${side}{content:${content};font-size:${b.size || 9}pt;${b.font ? `font-family:${cssFont(b.font)};` : ""}vertical-align:${where === "top" ? "bottom" : "top"};${b.rtl ? "direction:rtl;" : ""}}`;
+  };
+  const hd = blocks.find((b) => b.type === "header"), ft = blocks.find((b) => b.type === "footer");
+  let out = "", list = null;
+  for (const b of blocks) {
+    if (b.type === "header" || b.type === "footer") continue;
+    if (b.type === "pagebreak") { out += '<div style="break-before:page"></div>'; continue; }
+    if (b.type === "image" && b.b64) {
+      const w = b.w ? Math.min(b.w, pg.w - pg.left - pg.right) : null;
+      out += `<p${look({ ...b, size: null }, ["line-height:0"])}><img src="${esc(b.b64)}" alt="" style="${w ? `width:${n(w)}pt;height:${n(w * (b.h || 1) / (b.w || 1))}pt` : "max-width:100%"}"></p>`;
+      continue;
+    }
+    if (b.type === "table") {
+      const w = Math.max(...b.rows.map((r) => r.length)), sheet = o.sheet;
+      const num = (t) => /^[-+]?[\d,.\s]+%?$/.test(String(t).trim()) && /\d/.test(t);
+      const cols = b.widths && b.widths.length === w ? `<colgroup>${b.widths.map((x) => `<col style="width:${n(x)}pt">`).join("")}</colgroup>` : "";
+      const head = b.bold ? b.bold[0] && b.bold[0].every(Boolean) : !!sheet;
+      const cell = (r, ri, ci) => {
+        const sp = b.spans ? b.spans[ri] && b.spans[ri][ci] : 1;
+        if (sp === 0) return "";
+        const bold = b.bold ? b.bold[ri] && b.bold[ri][ci] : ri === 0;
+        const tag = ri === 0 && head ? "th" : "td";
+        return `<${tag}${sp > 1 ? ` colspan="${sp}"` : ""}${b.rtl ? "" : ' dir="auto"'} style="${bold ? "font-weight:700" : "font-weight:400"};${sheet && ri > 0 && num(r[ci] || "") ? "text-align:end" : ""}">${h(r[ci] || "")}</${tag}>`;
+      };
+      const rows = b.rows.map((r, ri) => `<tr>${Array.from({ length: w }, (_, ci) => cell(r, ri, ci)).join("")}</tr>`);
+      out += `<table${b.rtl ? ' dir="rtl"' : ""} style="border-collapse:collapse;${cols ? `table-layout:fixed;width:${n(b.widths.reduce((a, x) => a + x, 0))}pt;` : "width:100%;"}${b.ind ? `margin-inline-start:${n(b.ind)}pt;` : ""}${b.before ? `margin-top:${n(b.before)}pt;` : ""}${b.after ? `margin-bottom:${n(b.after)}pt;` : ""}${b.pageBreak ? "break-before:page;" : ""}font-size:${b.size || (sheet ? 8.5 : body)}pt">${cols}${head ? `<thead>${rows[0]}</thead><tbody>${rows.slice(1).join("")}</tbody>` : `<tbody>${rows.join("")}</tbody>`}</table>`;
+      continue;
+    }
+    if (b.type === "li") {
+      const lv = b.level || 0, mark = b.num != null ? esc(b.num) + "." : ["•", "◦", "▪"][lv] || "•";
+      out += `<p${look({ ...b, ind: null, first: null }, [`margin-inline-start:${18 * (lv + 1) + (b.ind || 0)}pt`, "text-indent:-18pt"])}><span style="display:inline-block;width:18pt;text-indent:0">${mark}</span>${inner(b)}</p>`;
+      continue;
+    }
+    const tag = /^h[1-3]$/.test(b.type) ? b.type : b.type === "title" ? "h1" : "p";
+    out += `<${tag}${look(b, tag !== "p" ? [b.runs ? "font-weight:400" : "font-weight:700", "break-after:avoid"] : [])}>${inner(b)}</${tag}>`;
+  }
+  const css = `@page{size:${n(pg.w)}pt ${n(pg.h)}pt;margin:${n(pg.top)}pt ${n(pg.right)}pt ${n(pg.bottom)}pt ${n(pg.left)}pt;${box(hd, "top")}${box(ft, "bottom")}}` +
+    `html,body{margin:0;padding:0}body{font-family:${cssFont(o.font) || 'Calibri, Carlito, "Noto Sans", Roboto, sans-serif'};font-size:${body}pt;line-height:1.16;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}` +
+    `p,h1,h2,h3{margin:0;orphans:2;widows:2}h1,h2,h3{font-size:inherit}img{display:inline-block}table{margin:0}th,td{border:0.5pt solid #7f7f7f;padding:1pt 5.4pt;vertical-align:top;text-align:start}thead{display:table-header-group}tr{break-inside:avoid}`;
+  return `<!doctype html>\n<html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${css}</style></head><body>\n${out}\n</body></html>\n`;
 }
 /** Blocks → Markdown (tables with a header rule). */
 export function blocksToMarkdown(blocks) {

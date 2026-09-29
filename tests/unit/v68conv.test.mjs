@@ -78,5 +78,25 @@ const units = C.translateUnits([find(/^Warning:/)]);
 const tr = C.applyTranslations([find(/^Warning:/)], units, ["تحذير: لا ترفع أكثر من 80% من الجدول"]);
 ok(tr[0].runs && tr[0].runs.length === 1 && tr[0].runs[0].b && tr[0].runs[0].c === "C00000", "translate: a red bold paragraph stays red and bold in the other language");
 
+// ---- Word → PDF: the Word file read with its look, laid out for printing ----
+import { execSync } from "child_process";
+let pyd = false; try { execSync(`python3 -c "import docx"`, { stdio: "ignore" }); pyd = true; } catch (e) {}
+if (pyd && fs.existsSync(new URL("../convert/out/report.docx", import.meta.url))) {
+  const rd = await C.docxRead(fs.readFileSync(new URL("../convert/out/report.docx", import.meta.url)));
+  const f2 = (rx) => rd.blocks.find((b) => rx.test(b.text || ""));
+  ok(rd.opts.page.w === 612 && rd.opts.page.left === 90 && rd.opts.body === 11, "word→pdf: the page, margins and body size are read from the Word file");
+  ok(f2(/^The Liebherr/).runs.some((r) => r.b && /Liebherr LTM 1090/.test(r.t)) && f2(/^Warning/).runs[0].c === "C00000" && f2(/^This paragraph/).align === "justify", "word→pdf: bold words, a red run and justification are read");
+  ok(rd.blocks.filter((b) => b.type === "li" && b.num).map((b) => b.num).join("") === "123" && rd.blocks.filter((b) => b.type === "li" && !b.num).length === 3, "word→pdf: Word's own numbers (1. 2. 3.) and bullets");
+  ok(f2(/^1\. Summary/).type === "h1" && f2(/^1\. Summary/).runs[0].c === "365F91" && f2(/^1\. Summary/).runs[0].b, "word→pdf: a heading with its style's colour and weight");
+  ok(rd.blocks.some((b) => b.type === "image" && Math.abs(b.w - 255) < 2), "word→pdf: the picture at its size");
+  const html = C.blocksToPrintHtml(rd.blocks, "R", rd.opts);
+  ok(/@page\{size:612pt 792pt;margin:72pt 90pt 72pt 90pt/.test(html) && /font-weight:700[^>]*>Liebherr LTM 1090/.test(html) && /text-align:justify/.test(html) && /<img src="data:image\/png/.test(html), "word→pdf: the print page keeps the page, bold words, justification and the picture");
+  ok(!/style="[^"]*"(?![\s>])/.test(html) && /font-family:'Liberation Serif'/.test(html), "word→pdf: font names don't break the page's style attributes");
+}
+const lr = await C.docxRead(C.pdfToDocx(load("long").pages, "M"));
+const pl = C.blocksToPrintHtml(lr.blocks, "M", lr.opts);
+ok(/@bottom-center\{content:"Page " counter\(page\)/.test(pl) && /@top-right\{content:"Adrighem/.test(pl), "word→pdf: header and page-number footer in the page margins");
+ok(/<thead>/.test(C.blocksToPrintHtml([{ type: "table", rows: [["Item", "Qty"], ["Sling", "4"]] }], "S", { sheet: true })) && /text-align:end">4</.test(C.blocksToPrintHtml([{ type: "table", rows: [["Item", "Qty"], ["Sling", "4"]] }], "S", { sheet: true })), "sheet→pdf: the header row repeats on each page, numbers line up on the right");
+
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASSED");
 if (fail) process.exit(1);

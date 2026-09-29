@@ -106,7 +106,10 @@ object DocTools {
             for (p in tp) { x0 = minOf(x0, p.xDirAdj); x1 = maxOf(x1, p.xDirAdj + p.widthDirAdj) }
             val ar = text.count { it.code in 0x0590..0x08FF }
             val la = text.count { it.isLetter() } - ar
-            words.add(floatArrayOf(x0, x1, a.yDirAdj, a.fontSizeInPt, if (bold) 1f else 0f, if (italic) 1f else 0f, ar.toFloat(), la.toFloat(), (colours[a] ?: 0).toFloat()))
+            // the size as drawn: fontSizeInPt ignores the page's scaling (a Chrome / Skia PDF draws at 3/4:
+            // 11 pt came out as 14.7) — the text's y-scale includes it
+            val sz = if (a.yScale > 0.5f) Math.round(a.yScale * 2) / 2f else a.fontSizeInPt
+            words.add(floatArrayOf(x0, x1, a.yDirAdj, sz, if (bold) 1f else 0f, if (italic) 1f else 0f, ar.toFloat(), la.toFloat(), (colours[a] ?: 0).toFloat()))
             texts.add(text); fonts.add(fname)
         }
     }
