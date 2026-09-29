@@ -6415,7 +6415,9 @@ function groundedPrompt(q, hits, lang) {
   const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
   // v5.26: the question before AND after the passages, so a small model doesn't lose it
   return [GROUNDED_RULES, `- Today is ${today}.`, "", "QUESTION: " + q, "", "PASSAGES:", src, "",
-    lang ? `Answer in ${lang}.` : "", "QUESTION: " + q].filter(Boolean).join("\n");
+    // v6.8: `lang` is "match" by default — that used to reach the model as "Answer in match."; the web
+    // benchmark then got an Arabic first line and an English body. The question's own language wins.
+    `Answer in ${lang && lang !== "match" && LANG_NAMES[lang] ? LANG_NAMES[lang] : /[\u0600-\u06FF]/.test(q) ? "Arabic (the question's language) — every line, headings too" : "English (the question's language)"}.`, "QUESTION: " + q].filter(Boolean).join("\n");
 }
 
 // Any number in the answer that is not in the sources is a fabrication, and

@@ -133,6 +133,10 @@ ok(RS.quickBudget("How tall is the Cairo Tower?", 9000) === 6000 && RS.quickBudg
 ok(RS.quickBudget("Compare the Hilux and the Ranger", 9000) === 9000 && RS.quickBudget("فئات تويوتا كورولا 2026 ومواصفاتها", 9000) === 9000 && RS.quickBudget("How tall is it?", 9000, true) === 9000, "web: comparisons, trims and deep research keep the full window");
 ok(RS.quickBudget("How tall is the Cairo Tower?", 4000) === 4000, "web: never more than the phone's window");
 
+// web answers (the web benchmark): the prompt said "Answer in match." — the question's language now
+const GP = (await import("../trials/appsrc.mjs")).grounded();
+ok(/Answer in Arabic/.test(GP.groundedPrompt("كم سعر الدولار في البنك الأهلي", [{ title: "t", url: "u", text: "51.66" }], "match")) && /Answer in English/.test(GP.groundedPrompt("Who won?", [], "match")) && !/Answer in match/.test(GP.groundedPrompt("Who won?", [], "match")), "web: the answer's language is the question's (never \"Answer in match\")");
+
 // Maps: a place name with «و» inside a word, and "where can I park"
 ok(PL.placeFor("انا في كمبوند ايمرالد بارك وعايز أفول بنزين اعمل ايه").near === "كمبوند ايمرالد بارك", "maps: «كمبوند» is not cut at its «و»");
 ok(PL.placeFor("انا في مدينتي و عايز صيدلية").near === "مدينتي", "maps: «و» as its own word still ends the place");
