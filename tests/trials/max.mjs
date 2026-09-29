@@ -199,7 +199,7 @@ if (want("travel")) {
 // ================= Business: 3 systems from a sentence =================
 if (want("business")) {
   const cases = [
-    ["عيادة أسنان: المرضى، المواعيد، الكشوفات والعلاجات، والفواتير والمدفوعات", [/patient|مرض/i, /appoint|موعد|مواعيد/i, /invoice|فاتور/i]],
+    ["عيادة أسنان: المرضى، المواعيد، الكشوفات والعلاجات، والفواتير والمدفوعات", [/patient|مرض/i, /appoint|موعد|مواعيد/i, /invoice|فاتور|فواتير/i]],
     ["A car workshop: customers, cars with plate numbers, repair jobs with parts used and labour hours, invoices", [/customer/i, /car|vehicle/i, /job|repair/i]],
     ["محل موبايلات: المنتجات والمخزون، البيع اليومي، الموردين، والأقساط", [/product|منتج/i, /sale|بيع|مبيع/i, /supplier|مورد/i]],
   ];

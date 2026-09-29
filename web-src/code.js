@@ -141,6 +141,29 @@ export function errorSummary(res, maxLines = 25) {
   return out.slice(0, 2500);
 }
 
+/** v6.9: a bare Python `assert f(x) == 12.0` fails with no values, and a model then works the
+ *  number out in its head (often wrongly: "10.55 × 1.14 = 11.987"). This finds the failing
+ *  `assert A == B` line and builds a program that prints what A really is, so the fix round is told
+ *  "the test expects 12.0, the program returns 12.03". → { line, want, probe } or null */
+export function assertProbe(code, res) {
+  const err = String((res && (res.error || res.stderr)) || "");
+  if (!/AssertionError/.test(err)) return null;
+  const nums = [...err.matchAll(/File "<(?:exec|string|stdin)>", line (\d+)/g)].map((m) => +m[1]);
+  const lines = String(code || "").split("\n");
+  const n = nums.length ? nums[nums.length - 1] : 0;
+  const src = n ? lines[n - 1] || "" : "";
+  const m = /^(\s*)assert\s+(.+?)\s*==\s*(.+?)\s*(?:,\s*f?["'].*)?$/.exec(src);
+  if (!m) return null;
+  // the same program with that one line swapped (a test inside a function still runs when it's called)
+  const probe = lines.slice(0, n - 1).concat([m[1] + "print('__ACTUAL__', repr(" + m[2] + ")); raise SystemExit(0)"], lines.slice(n)).join("\n");
+  return { line: src.trim(), want: m[3], got: m[2], probe };
+}
+/** The value the probe printed, or "". */
+export function probeValue(res) {
+  const m = /__ACTUAL__ (.+)/.exec(String((res && res.stdout) || ""));
+  return m ? m[1].trim().slice(0, 200) : "";
+}
+
 /** Did the run pass? { passed, reason } */
 export function judge(res, code, lang) {
   const tests = countTests(code, lang);
@@ -320,7 +343,7 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
     round++;
     const before = countTests(code, lang);
     onEvent({ type: "fix", round, error: why.error, change: why.change });
-    const ans = await llm(fixMessages({ task, lang, code, error: why.error, change: why.change }), { maxTokens: 1600, onToken: (t) => onEvent({ type: "fixing", round, text: t }) });
+    const ans = await llm(fixMessages({ task, lang, code, error: why.error, change: why.change }), { maxTokens: lang === "html" ? 1600 : Math.max(2000, Math.floor(getPower().codeTokens / 2)), onToken: (t) => onEvent({ type: "fixing", round, text: t }) });
     const r = applyFix(ans, code, lang);
     if (r.how === "none") { onEvent({ type: "fixfail", round, error: r.error }); return false; }
     const after = countTests(r.code, lang);
@@ -337,7 +360,15 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
     const reason = verdict.reason === "no-pass-mark"
       ? `The program ran but never printed "${PASS_MARK}" — the tests did not all run.\n` + errorSummary(last)
       : errorSummary(last);
-    if (!(await fix({ error: reason }))) continue;          // unusable answer: ask again (counts as a round)
+    let told = reason;
+    const pr = lang === "python" ? assertProbe(code, last) : null;
+    if (pr) {
+      stopped();
+      let v = "";
+      try { v = probeValue(await run(lang, pr.probe)); } catch (e) {}
+      if (v) told += `\n\nThe failing test: ${pr.line}\nIt expects ${pr.want}, but ${pr.got} actually returns ${v}. Work out which one is right (do the arithmetic step by step). If the program is right and the test's expected value was worked out wrong, correct that expected value; otherwise fix the program.`;
+    }
+    if (!(await fix({ error: told }))) continue;          // unusable answer: ask again (counts as a round)
     ok = await exec();
   }
   const res = { ok, code, lang, rounds: round, last, tests: countTests(code, lang), gaveUp: !ok };

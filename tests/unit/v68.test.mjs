@@ -178,5 +178,11 @@ ok(sl && sl.length === 5, "slides: an outline sent back as JSON is read");
 // Zenith+ max trial: "lifts at 75% of its chart capacity" was answered with the full chart value
 const VRF = await import("../../web-src/verify.js");
 ok(/N% of the chart value/.test(VRF.solveMessages("A 50 t crane lifts at 75% of its chart capacity.")[0].content), "maths: the program is told a crane's chart percentage is the most to plan for");
+// Zenith+ max trial: a model's own test expected a wrong number and it "fixed" it by mental maths
+const CD = await import("../../web-src/code.js");
+const vatCode = 'def vat(a, r=0.14):\n    return round(a*(1+r), 2)\n\ndef run_tests():\n    assert vat(100) == 114.0\n    assert vat(10.55, 0.14) == 12.0, "rounding"\nrun_tests()\nprint("ALL TESTS PASSED")';
+const vatProbe = CD.assertProbe(vatCode, { ok: false, error: 'Traceback (most recent call last):\n  File "<exec>", line 7, in <module>\n  File "<exec>", line 6, in run_tests\nAssertionError: rounding' });
+ok(vatProbe && vatProbe.want === "12.0" && vatProbe.got === "vat(10.55, 0.14)" && /print\('__ACTUAL__', repr\(vat\(10\.55, 0\.14\)\)\)/.test(vatProbe.probe) && /\nrun_tests\(\)/.test(vatProbe.probe), "coding: a failed assert is probed for the value the program really returns");
+ok(CD.probeValue({ stdout: "Amount 114\n__ACTUAL__ 12.03\n" }) === "12.03" && CD.assertProbe(vatCode, { ok: false, error: "NameError: x" }) === null, "coding: the probe's value is read; other errors are not probed");
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASSED");
 if (fail) process.exit(1);
