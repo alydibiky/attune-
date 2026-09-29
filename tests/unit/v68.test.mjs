@@ -147,6 +147,11 @@ ok(AFX.fixModelNames("Unlike the A350, the A380-800 carries 853.", "Airbus A380 
 const VF = await import("../../web-src/verify.js");
 ok(VF.readAnswer("x\nANSWER: 13.799999999999999 t") === "13.8 t" && VF.readAnswer("ANSWER: 0.30000000000000004") === "0.3" && VF.readAnswer("ANSWER: 171,000 EGP") === "171,000 EGP" && VF.readAnswer("ANSWER: 2.5 t") === "2.5 t", "maths: 13.799999999999999 is shown as 13.8; normal answers untouched");
 
+// language (Sense on the max test): "an email in Arabic" written in English is caught
+const AFL = await import("../../web-src/answerfix.js");
+ok(AFL.wrongLanguage("polite overdue-invoice email in Arabic", "Dear client, I hope this email finds you well. The invoice is overdue.") === "ar" && AFL.wrongLanguage("polite email in Arabic", "عزيزي العميل، نأمل أن تكونوا بخير. الفاتورة متأخرة.") === null, "language: a language the request names is the one checked");
+ok(AFL.wrongLanguage("اكتب ايميل بالإنجليزي للعميل", "عزيزي العميل، نأمل أن تكونوا بخير والفاتورة متأخرة شهرين") === "en" && AFL.wrongLanguage("translate this to French: hello", "Bonjour tout le monde, comment allez-vous") === null, "language: «بالإنجليزي» checked too; other languages left alone");
+
 // Maps: a place name with «و» inside a word, and "where can I park"
 ok(PL.placeFor("انا في كمبوند ايمرالد بارك وعايز أفول بنزين اعمل ايه").near === "كمبوند ايمرالد بارك", "maps: «كمبوند» is not cut at its «و»");
 ok(PL.placeFor("انا في مدينتي و عايز صيدلية").near === "مدينتي", "maps: «و» as its own word still ends the place");

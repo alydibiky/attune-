@@ -271,7 +271,12 @@ export function gapsOf(question, answer) {
 export function wrongLanguage(input, output) {
   const ar = (s) => (String(s).match(/[؀-ۿ]/g) || []).length, lat = (s) => (String(s).match(/[A-Za-z]/g) || []).length;
   const i = String(input || ""), o = String(output || "");
-  if (/\b(in|into|to) (english|arabic|french|german|turkish|spanish)\b|بالانجليزي|بالإنجليزي|بالعربي|بالانجلش|انجليزي|ترجم|translate/i.test(i)) return null;
+  // v6.8 (Sense, the max test): "an email in Arabic" answered in English — a language the person names
+  // is the one to check against
+  const wantAr = /\b(in|into|to) arabic\b|بالعربي|بالعربيه|بالعربية|باللغه العربيه|باللغة العربية/i.test(i), wantEn = /\b(in|into|to) english\b|بالانجليزي|بالإنجليزي|بالانجلش|بالإنجليزية|بالانجليزية|باللغة الإنجليزية/i.test(i);
+  if (wantAr && !wantEn) return ar(o) < lat(o) * 0.25 && lat(o) > 30 ? "ar" : null;
+  if (wantEn && !wantAr) return lat(o) < ar(o) * 0.25 && ar(o) > 30 ? "en" : null;
+  if (/\b(in|into|to) (english|arabic|french|german|turkish|spanish)\b|انجليزي|ترجم|translate/i.test(i)) return null;
   const inAr = ar(i) > lat(i) * 1.5, inEn = lat(i) > ar(i) * 3 && lat(i) > 20;
   if (inAr && ar(o) < lat(o) * 0.25 && lat(o) > 30) return "ar";
   if (inEn && lat(o) < ar(o) * 0.25 && ar(o) > 30) return "en";

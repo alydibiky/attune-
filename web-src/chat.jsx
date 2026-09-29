@@ -19,7 +19,7 @@ import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget } from "./research.js";
-import { repairFigures, tidyAnswer, gapsOf, fixModelNames } from "./answerfix.js";
+import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage } from "./answerfix.js";
 import { rulesOf, violations, fixMessage } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from "./power.js";
@@ -995,6 +995,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           if (runRef.current !== run) return;
           if (again && !codeInsteadOfAnswer(again)) answer = again;
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      }
+      // v6.8 — an answer in the wrong language (asked "in Arabic" and written in English, or an Arabic
+      // question answered in English) is asked once more, in that language
+      if (plain && answer && !sources) {
+        const want = wrongLanguage(typed || q, answer);
+        if (want) {
+          try {
+            const again = await api.run(buildMessages(history, content + (want === "ar" ? "\n\n(اكتب الرد كله بالعربي — Write the whole answer in Arabic.)" : "\n\n(Write the whole answer in English.)")), pic, { onToken, onStatus, think: false, copy: !!fileAtt });
+            if (runRef.current !== run) return;
+            if (again && !wrongLanguage(typed || q, again)) answer = again;
+          } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+        }
       }
       // The model said nothing at all: asked once more, plainly.
       if (plain && !String(answer || "").trim()) {
