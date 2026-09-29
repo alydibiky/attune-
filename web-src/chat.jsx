@@ -1117,7 +1117,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             const again = await api.run(buildMessages([], fixMsg, 0), null, { onToken, onStatus, think: false, temperature: 0.2, copy: true });
             if (runRef.current !== run) return;
             const au2 = api.groundedAudit(again, sources, typed);
-            if (again && au2.fabricated.length < au.fabricated.length) answer = tidyAnswer(repairFigures(again, sources).text);
+            if (again && au2.fabricated.length < au.fabricated.length) answer = tidyAnswer(repairFigures(fixModelNames(again, (webCtx && webCtx.question) || typed, sources).text, sources).text);   // v6.8: the rewrite gets the name repair too ("A380-380")
             if (au2.fabricated.length) extra.unsourced = au2.fabricated.slice(0, 4);
           } catch (e) { if (String(e && e.message) === "Stopped") throw e; extra.unsourced = au.fabricated.slice(0, 4); }
         }

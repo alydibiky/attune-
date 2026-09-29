@@ -98,7 +98,7 @@ export async function answer(typed, index = 0) {
     const again = await llm(content + "\n\nYOUR FIRST ANSWER WAS:\n" + ans + "\n\nThese numbers in it are NOT in the passages: " + au.fabricated.slice(0, 6).join(", ") + ". Write the answer again using only numbers, versions and dates exactly as the passages write them.", POWER.longTokens);
     ms.retry = Date.now() - t;
     const au2 = G.groundedAudit(again.text, ranked, typed);
-    if (again.text && au2.fabricated.length < au.fabricated.length) ans = AF.tidyAnswer(AF.repairFigures(again.text, ranked).text);
+    if (again.text && au2.fabricated.length < au.fabricated.length) ans = AF.tidyAnswer(AF.repairFigures(AF.fixModelNames(again.text, typed, ranked).text, ranked).text);
   }
   const inSources = (rx) => rx.test(ranked.map((h) => h.title + " " + h.text).join(" "));
   return { text: ans, ms, pages: toRead.length, sources: ranked.map((h) => h.url), content, inSources, sheet: sheet.md, audit: G.groundedAudit(ans, ranked, typed) };
