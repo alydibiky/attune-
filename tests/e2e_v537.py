@@ -3,7 +3,7 @@ rotate, a photo → PNG (the phone's own canvas), subtitles SRT → VTT, JSON �
 
   python3 tests/e2e_v537.py
 """
-import base64, io, json, os, zipfile
+import re, base64, io, json, os, zipfile
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish, HERE
 
@@ -105,7 +105,9 @@ with sync_playwright() as p:
     pick(page, "article.html", "<html><body><h1>Rigging</h1><p>Check every <b>sling</b>.</p><script>x()</script></body></html>".encode(), "text/html")
     page.locator("[data-testid=convert-to-docx]").click(); go(page)
     doc = zipfile.ZipFile(io.BytesIO(base64.b64decode(saved(page)["b64"]))).read("word/document.xml").decode()
-    check("Heading1" in doc and "Check every sling." in doc and "x()" not in doc, "web page → Word: the heading and text, no script")
+    plain = re.sub(r"<[^>]+>", "", doc)
+    check("Heading1" in doc and "Check every sling." in plain and "x()" not in doc, "web page → Word: the heading and text, no script")
+    check(re.search(r"<w:b/>(?:<w:bCs/>)?</w:rPr><w:t[^>]*>sling</w:t>", doc) is not None, "v6.8: web page → Word: the bold word stays bold")
 
     # ---- 8. Arabic labels ----
     page.evaluate("localStorage.setItem('attune:ui:lang','ar')"); page.reload(); page.wait_for_selector("nav", timeout=15000)

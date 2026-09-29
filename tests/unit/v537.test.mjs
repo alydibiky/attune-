@@ -21,7 +21,9 @@ eq(await C.odsToRows(lods), [["12.5", "x", "x"]], "a LibreOffice .ods: the real 
 
 // ---- web pages and e-books ----
 const html = `<html><head><title>x</title><style>p{}</style><script>var a="<p>no</p>"</script></head><body><nav>menu</nav><h1>Crane &amp; rigging</h1><p>The <b>LTM 1100</b> lifts 100&nbsp;t.<br>Second line.</p><ul><li>Hook</li><li>Boom</li></ul><table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>٢</td></tr></table><div>Plain div text</div></body></html>`;
-eq(C.htmlToBlocks(html), [{ type: "h1", text: "Crane & rigging" }, { type: "p", text: "The LTM 1100 lifts 100 t.\nSecond line." }, { type: "li", text: "Hook" }, { type: "li", text: "Boom" }, { type: "table", rows: [["A", "B"], ["1", "٢"]] }, { type: "p", text: "Plain div text" }], "a web page → headings, paragraphs, bullets, tables (scripts, styles and menus dropped)");
+// (v6.8: the blocks also carry the look — bold runs, header cells — compared here on what this test is about)
+eq(C.htmlToBlocks(html).map((b) => (b.type === "table" ? { type: b.type, rows: b.rows } : { type: b.type, text: b.text })), [{ type: "h1", text: "Crane & rigging" }, { type: "p", text: "The LTM 1100 lifts 100 t.\nSecond line." }, { type: "li", text: "Hook" }, { type: "li", text: "Boom" }, { type: "table", rows: [["A", "B"], ["1", "٢"]] }, { type: "p", text: "Plain div text" }], "a web page → headings, paragraphs, bullets, tables (scripts, styles and menus dropped)");
+eq(C.htmlToBlocks(html)[1].runs.some((r) => r.b && r.t === "LTM 1100"), true, "v6.8: …and a bold word stays bold");
 const page = C.blocksToHtml(blocks, "Offer");
 eq(C.htmlToBlocks(page).map((b) => b.type), ["h1", "p", "li", "li", "table", "h2", "p"], "our web page reads back the same");
 const epub = C.zipStore([

@@ -203,7 +203,8 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
       }
       // a PDF → Excel: its tables (read as "a | b" rows), else each line split at wide gaps
       if (target === "xlsx" && blocks) {
-        const t = blocks.filter((b) => b.type === "table").flatMap((b) => b.rows);
+        // (one table after another, a blank row between them)
+        const t = blocks.filter((b) => b.type === "table").flatMap((b, k) => (k ? [[], ...b.rows] : b.rows));
         rows = t.length ? t : blocks.flatMap((b) => (b.type === "table" ? b.rows : String(b.text || "").split("\n").map((l) => l.split(/\t|\s{2,}/).map((c) => c.trim()))));
         if (!t.length) note = (note ? note + " " : "") + tr("This PDF has no clear table, so each line became a row — check the columns.");
       }

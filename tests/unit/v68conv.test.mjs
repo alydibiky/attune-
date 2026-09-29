@@ -98,5 +98,17 @@ const pl = C.blocksToPrintHtml(lr.blocks, "M", lr.opts);
 ok(/@bottom-center\{content:"Page " counter\(page\)/.test(pl) && /@top-right\{content:"Adrighem/.test(pl), "word→pdf: header and page-number footer in the page margins");
 ok(/<thead>/.test(C.blocksToPrintHtml([{ type: "table", rows: [["Item", "Qty"], ["Sling", "4"]] }], "S", { sheet: true })) && /text-align:end">4</.test(C.blocksToPrintHtml([{ type: "table", rows: [["Item", "Qty"], ["Sling", "4"]] }], "S", { sheet: true })), "sheet→pdf: the header row repeats on each page, numbers line up on the right");
 
+// ---- sheets: numbers Excel can add up, widths, frozen header, right-to-left Arabic ----
+const xz = await C.unzip(C.xlsxFromRows([["Item", "Qty", "Price", "VAT"], ["Sling", "4", "18,000", "14%"], ["Shackle", "10", "1,250.50", "0123"]], "P")), sh = dec(xz.get("xl/worksheets/sheet1.xml"));
+ok(/<c r="C2" s="2"><v>18000<\/v>/.test(sh) && /<c r="D2" s="4"><v>0.14<\/v>/.test(sh) && /<c r="C3" s="3"><v>1250.50<\/v>/.test(sh) && /t="inlineStr"[^>]*><is><t xml:space="preserve">0123/.test(sh), "sheet: 18,000 / 1,250.50 / 14% are numbers with their format; 0123 stays text");
+ok(/state="frozen"/.test(sh) && /<col min="1" max="1" width="[\d.]+" customWidth="1"\/>/.test(sh), "sheet: the header row is frozen and the columns have widths");
+ok(JSON.stringify(await C.xlsxToRows(C.xlsxFromRows([["A", "B"], ["18,000", "14%"]]))) === JSON.stringify([["A", "B"], ["18,000", "14%"]]), "sheet: … and read back as Excel shows them");
+ok(/rightToLeft="1"/.test(dec((await C.unzip(C.xlsxFromRows([["البند", "السعر"], ["ونش", "75,000"]]))).get("xl/worksheets/sheet1.xml"))), "sheet: an Arabic sheet is right-to-left");
+// ---- Markdown and web pages keep bold / italic ----
+const mdb = C.textToBlocks("The **50 t** crane is *ready* — snake_case_name stays.");
+ok(mdb[0].text === "The 50 t crane is ready — snake_case_name stays." && mdb[0].runs.some((r) => r.b && r.t === "50 t") && mdb[0].runs.some((r) => r.i && r.t === "ready"), "text→word: **bold** and *italic* are kept as the words' look (snake_case untouched)");
+const hb = C.htmlToBlocks('<p style="text-align:center">The <b>crane</b> is <span style="color:#c00000">urgent</span></p>');
+ok(hb[0].align === "center" && hb[0].runs.some((r) => r.b && r.t === "crane") && hb[0].runs.some((r) => r.c === "C00000"), "web page→word: bold, colour and centring are kept");
+
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASSED");
 if (fail) process.exit(1);

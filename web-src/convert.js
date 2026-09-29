@@ -68,22 +68,39 @@ export async function unzip(bytes) {
 // [{ type: "h1"|"h2"|"h3"|"p"|"li"|"table", text, rows? }]
 const isAr = (s) => /[؀-ۿ]/.test(s);
 
-/** Plain text / Markdown → blocks (headings, bullets, tables as "a | b" rows, paragraphs). */
+/** v6.8: Markdown emphasis → runs: **bold** / __bold__, *italic* / _italic_ (not inside snake_case), `code`. */
+function mdRuns(line) {
+  const out = []; const re = /(\*\*|__)(?=\S)([\s\S]*?\S)\1|(?<![\w*])\*(?=\S)([^*\n]*?\S)\*(?!\w)|(?<![\w_])_(?=\S)([^_\n]*?\S)_(?![\w_])|`([^`\n]+)`/g;
+  let last = 0, m;
+  while ((m = re.exec(line))) {
+    if (m.index > last) out.push({ t: line.slice(last, m.index), b: false, i: false, c: null });
+    if (m[2] != null) { const inner = mdRuns(m[2]); (inner.runs || [{ t: inner.text, b: false, i: false, c: null }]).forEach((r) => out.push({ ...r, b: true })); }
+    else if (m[3] != null || m[4] != null) out.push({ t: m[3] != null ? m[3] : m[4], b: false, i: true, c: null });
+    else out.push({ t: m[5], b: false, i: false, c: null, font: "Courier New" });
+    last = re.lastIndex;
+  }
+  if (last < line.length) out.push({ t: line.slice(last), b: false, i: false, c: null });
+  const text = out.map((r) => r.t).join("");
+  return { text, runs: out.some((r) => r.b || r.i || r.font) ? out.filter((r) => r.t) : null };
+}
+/** Plain text / Markdown → blocks (headings, bullets, tables as "a | b" rows, paragraphs; v6.8: **bold** and
+ *  *italic* kept as the words' look, not dropped). */
 export function textToBlocks(text) {
   const out = []; let para = [], table = [];
-  const flushP = () => { if (para.length) { out.push({ type: "p", text: para.join(" ").trim() }); para = []; } };
+  const md = (blk, raw) => { const r = mdRuns(raw); blk.text = r.text.trim(); if (r.runs) { blk.runs = r.runs; blk.runs[0].t = blk.runs[0].t.replace(/^\s+/, ""); blk.runs[blk.runs.length - 1].t = blk.runs[blk.runs.length - 1].t.replace(/\s+$/, ""); } return blk; };
+  const flushP = () => { if (para.length) { out.push(md({ type: "p" }, para.join(" ").trim())); para = []; } };
   const flushT = () => { if (table.length) { out.push({ type: "table", rows: table }); table = []; } };
   for (const raw of String(text || "").replace(/\r/g, "").split("\n")) {
     const l = raw.trim();
     if (/^\|?\s*:?-{2,}/.test(l) && l.includes("-") && !/[\p{L}\d]/u.test(l.replace(/-/g, ""))) continue;   // markdown table rule
-    if (l.includes(" | ") || /^\|.*\|$/.test(l)) { flushP(); table.push(l.replace(/^\||\|$/g, "").split("|").map((c) => c.trim())); continue; }
+    if (l.includes(" | ") || /^\|.*\|$/.test(l)) { flushP(); table.push(l.replace(/^\||\|$/g, "").split("|").map((c) => c.trim().replace(/^\*\*([\s\S]*)\*\*$/, "$1"))); continue; }
     flushT();
     if (!l) { flushP(); continue; }
     const h = l.match(/^(#{1,3})\s+(.*)$/);
-    if (h) { flushP(); out.push({ type: "h" + h[1].length, text: h[2].replace(/\*\*/g, "") }); continue; }
+    if (h) { flushP(); out.push(md({ type: "h" + h[1].length }, h[2])); continue; }
     const li = l.match(/^(?:[-*•]|\d+[.)])\s+(.*)$/);
-    if (li) { flushP(); out.push({ type: "li", text: li[1].replace(/\*\*/g, "") }); continue; }
-    para.push(l.replace(/\*\*/g, ""));
+    if (li) { flushP(); out.push(md({ type: "li" }, li[1])); continue; }
+    para.push(l);
   }
   flushP(); flushT();
   return out;
@@ -749,19 +766,36 @@ export async function docxRead(bytes) {
 const colName = (i) => { let s = ""; i++; while (i > 0) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
 
 /** Rows (arrays) → an Excel workbook (.xlsx bytes), one sheet; numbers stay numbers. */
+// v6.8: "18,000" / "1,250.50" / "14%" are numbers Excel can add up, shown the same way (styles 2–5)
+export function sheetNumber(s) {
+  const t = String(s).trim();
+  if (/^-?\d+(\.\d+)?$/.test(t) && t.length < 16 && !/^-?0\d/.test(t)) return { v: t, st: 0 };
+  let m = t.match(/^(-?\d{1,3}(?:,\d{3})+)(\.\d+)?$/);
+  if (m) return { v: m[1].replace(/,/g, "") + (m[2] || ""), st: m[2] ? 3 : 2 };
+  m = t.match(/^(-?\d+(?:\.\d+)?)\s?%$/);
+  if (m) return { v: String(+(+m[1] / 100).toFixed(10)), st: /\./.test(m[1]) ? 5 : 4 };
+  return null;
+}
 export function xlsxFromRows(rows, sheet = "Sheet1") {
+  const head = rows.length > 1 && rows[0].length > 1 && rows[0].every((v) => v != null && String(v).trim() && !sheetNumber(v));
   const data = rows.map((r, ri) => `<row r="${ri + 1}">` + r.map((v, ci) => {
-    const ref = colName(ci) + (ri + 1), s = v == null ? "" : String(v);
-    if (s !== "" && /^-?\d+(\.\d+)?$/.test(s) && s.length < 16 && !/^0\d/.test(s)) return `<c r="${ref}"${ri === 0 ? ' s="1"' : ""}><v>${s}</v></c>`;
-    return `<c r="${ref}" t="inlineStr"${ri === 0 ? ' s="1"' : ""}><is><t xml:space="preserve">${esc(s)}</t></is></c>`;
+    const ref = colName(ci) + (ri + 1), s = v == null ? "" : String(v), n = s !== "" ? sheetNumber(s) : null;
+    if (n) return `<c r="${ref}"${ri === 0 && head ? ' s="1"' : n.st ? ` s="${n.st}"` : ""}><v>${n.v}</v></c>`;
+    return `<c r="${ref}" t="inlineStr"${ri === 0 && head ? ' s="1"' : ""}><is><t xml:space="preserve">${esc(s)}</t></is></c>`;
   }).join("") + `</row>`).join("");
+  // columns as wide as their text (Arabic letters a little wider), the header row frozen, an Arabic sheet right-to-left
+  const ncol = Math.max(0, ...rows.map((r) => r.length));
+  const widths = Array.from({ length: ncol }, (_, c) => Math.min(60, Math.max(8, ...rows.slice(0, 500).map((r) => String(r[c] == null ? "" : r[c]).split("\n").reduce((a, l) => Math.max(a, l.length * (isAr(l) ? 1.2 : 1.05)), 0) + 2))));
+  const ar = rows.slice(0, 200).flat().filter((v) => isAr(String(v || ""))).length * 2 > rows.slice(0, 200).flat().filter((v) => /[A-Za-z\u0600-\u06FF]/.test(String(v || ""))).length;
+  const view = `<sheetViews><sheetView workbookViewId="0"${ar ? ' rightToLeft="1"' : ""}>${head ? '<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>' : ""}</sheetView></sheetViews>`;
+  const cols = ncol ? `<cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${Math.round(w * 10) / 10}" customWidth="1"/>`).join("")}</cols>` : "";
   const files = [
     { name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>` },
     { name: "_rels/.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
     { name: "xl/workbook.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${esc(String(sheet).slice(0, 31))}" sheetId="1" r:id="rId1"/></sheets></workbook>` },
     { name: "xl/_rels/workbook.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
-    { name: "xl/styles.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="1"><fill><patternFill patternType="none"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf/><xf fontId="1" applyFont="1"/></cellXfs></styleSheet>` },
-    { name: "xl/worksheets/sheet1.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${data}</sheetData></worksheet>` },
+    { name: "xl/styles.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="1"><fill><patternFill patternType="none"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="6"><xf/><xf fontId="1" applyFont="1"/><xf numFmtId="3" applyNumberFormat="1"/><xf numFmtId="4" applyNumberFormat="1"/><xf numFmtId="9" applyNumberFormat="1"/><xf numFmtId="10" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>` },
+    { name: "xl/worksheets/sheet1.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${view}${cols}<sheetData>${data}</sheetData></worksheet>` },
   ];
   return zipStore(files);
 }
@@ -773,6 +807,10 @@ export async function xlsxToRows(bytes) {
   const shared = ssx ? [...dec(ssx).matchAll(/<si>([\s\S]*?)<\/si>/g)].map((m) => [...m[1].matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((t) => unxml(t[1])).join("")) : [];
   const sheetName = [...z.keys()].filter((k) => /^xl\/worksheets\/sheet\d+\.xml$/.test(k)).sort()[0];
   if (!sheetName) throw new Error("That file isn't an Excel workbook.");
+  // v6.8: the built-in number formats (#,##0 / #,##0.00 / 0% / 0.00%) shown as Excel shows them
+  const stx = z.get("xl/styles.xml") ? dec(z.get("xl/styles.xml")) : "";
+  const xfs = [...(stx.match(/<cellXfs\b[\s\S]*?<\/cellXfs>/) || [""])[0].matchAll(/<xf\b([^>]*)/g)].map((m) => +((m[1].match(/numFmtId="(\d+)"/) || [])[1] || 0));
+  const show = (v, s) => { const f = xfs[+s] || 0, x = +v; if (!isFinite(x) || v === "") return v; if (f === 3) return Math.round(x).toLocaleString("en-US"); if (f === 4) return x.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); if (f === 9) return Math.round(x * 100) + "%"; if (f === 10) return (x * 100).toFixed(2) + "%"; return v; };
   const rows = [];
   for (const r of dec(z.get(sheetName)).matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)) {
     const row = [];
@@ -782,7 +820,8 @@ export async function xlsxToRows(bytes) {
       const col = ref ? [...ref].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1 : row.length;
       const t = (attrs.match(/t="([^"]+)"/) || [])[1];
       const v = (inner.match(/<v>([\s\S]*?)<\/v>/) || [])[1];
-      let val = t === "s" ? shared[+v] : t === "inlineStr" ? [...inner.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((x) => unxml(x[1])).join("") : v != null ? unxml(v) : "";
+      const sId = (attrs.match(/\bs="(\d+)"/) || [])[1];
+      let val = t === "s" ? shared[+v] : t === "inlineStr" ? [...inner.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((x) => unxml(x[1])).join("") : v != null ? show(unxml(v), sId) : "";
       while (row.length < col) row.push("");
       row[col] = val == null ? "" : String(val);
     }
@@ -937,18 +976,44 @@ export function odsFromRows(rows, sheet = "Sheet1") {
 const ENT = { nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", mdash: "—", ndash: "–", hellip: "…", rsquo: "’", lsquo: "‘", rdquo: "”", ldquo: "“", copy: "©", reg: "®", deg: "°", times: "×", laquo: "«", raquo: "»", bull: "•", middot: "·", euro: "€", pound: "£" };
 const deEnt = (s) => String(s).replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => e[0] === "#" ? String.fromCodePoint(e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : +e.slice(1)) : ENT[e.toLowerCase()] ?? m);
 const inl = (s) => deEnt(String(s).replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")).replace(/[ \t ]+/g, " ").replace(/ *\n */g, "\n").trim();
-/** A web page / e-book chapter (HTML text) → blocks. */
-export function htmlToBlocks(html) {
+/** v6.8: inline HTML → runs (bold / italic / underline / colour), or null when it's all plain. */
+function inlRuns(s) {
+  const out = []; const st = [{}];
+  const colorOf = (css) => { const m = String(css || "").match(/(?:^|;)\s*color\s*:\s*#([0-9a-f]{6}|[0-9a-f]{3})\b/i); if (!m) return null; const c = m[1].length === 3 ? m[1].replace(/./g, "$&$&") : m[1]; return /^(0{6}|1{6}|2{6})$/.test(c) ? null : c.toUpperCase(); };
+  for (const m of String(s).replace(/<br\s*\/?>/gi, "\n").matchAll(/<(\/?)([a-z][a-z0-9]*)\b([^>]*)>|([^<]+)/gi)) {
+    if (m[4] != null) { const t = deEnt(m[4]).replace(/[ \t\u00a0]+/g, " "); if (t) { const f = st[st.length - 1]; const last = out[out.length - 1]; if (last && last.b === !!f.b && last.i === !!f.i && last.u === !!f.u && last.c === (f.c || null)) last.t += t; else out.push({ t, b: !!f.b, i: !!f.i, u: !!f.u, c: f.c || null }); } continue; }
+    const tag = m[2].toLowerCase(), close = !!m[1];
+    if (!/^(b|strong|i|em|u|ins|span|font|a|mark|small|sub|sup|code|q|cite)$/.test(tag)) continue;
+    if (close) { if (st.length > 1) st.pop(); continue; }
+    const f = { ...st[st.length - 1] }, css = (m[3].match(/style="([^"]*)"/i) || [])[1] || "";
+    if (/^(b|strong)$/.test(tag) || /font-weight\s*:\s*(bold|[6-9]00)/i.test(css)) f.b = true;
+    if (/^(i|em|cite)$/.test(tag) || /font-style\s*:\s*italic/i.test(css)) f.i = true;
+    if (/^(u|ins)$/.test(tag) || /text-decoration[^;]*underline/i.test(css)) f.u = true;
+    const c = colorOf(css) || (tag === "font" ? ((m[3].match(/color="#?([0-9a-f]{6})"/i) || [])[1] || "").toUpperCase() || null : null); if (c) f.c = c;
+    st.push(f);
+  }
+  const clean = out.map((r) => ({ ...r, t: r.t.replace(/ *\n */g, "\n") })).filter((r) => r.t);
+  if (clean.length) { clean[0].t = clean[0].t.replace(/^\s+/, ""); clean[clean.length - 1].t = clean[clean.length - 1].t.replace(/\s+$/, ""); }
+  return clean.some((r) => r.b || r.i || r.u || r.c) ? clean.map(({ u, ...r }) => (u ? { ...r, u } : r)) : null;
+}
+/** A web page / e-book chapter (HTML text) → blocks (v6.8: with bold / italic / colour, alignment, pictures). */
+export function htmlToBlocks(html, pictureOf = null) {
   let h = String(html || "").replace(/<!--[\s\S]*?-->/g, "").replace(/<(script|style|head|nav|noscript|svg|template)\b[\s\S]*?<\/\1>/gi, "");
   const b = h.match(/<body\b[^>]*>([\s\S]*)<\/body>/i); if (b) h = b[1];
   const out = [];
-  for (const m of h.matchAll(/<table\b[\s\S]*?<\/table>|<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>|<li\b[^>]*>([\s\S]*?)<\/li>|<(p|div|blockquote|pre|dt|dd|figcaption|td|th|caption|section|article)\b[^>]*>((?:(?!<(?:p|div|table|h[1-6]|ul|ol|li|section|article|blockquote)\b)[\s\S])*?)(?=<\/?(?:p|div|table|h[1-6]|ul|ol|li|section|article|blockquote|body)\b|$)/gi)) {
+  // the look a block element carries: alignment, direction; and the pictures inside it
+  const alignOf = (open) => { const a = (String(open).match(/text-align\s*:\s*(left|right|center|justify)/i) || String(open).match(/\balign="(left|right|center|justify)"/i) || [])[1]; return a ? a.toLowerCase() : null; };
+  const pics = (x) => [...String(x).matchAll(/<img\b[^>]*>/gi)].map((im) => { const src = (im[0].match(/\bsrc="([^"]+)"/i) || [])[1] || ""; const b64 = /^data:image\/(png|jpe?g|gif|webp);base64,/i.test(src) ? src : pictureOf ? pictureOf(src) : null; if (!b64) return null; const w = +((im[0].match(/\bwidth="(\d+)/i) || [])[1] || 0), hh = +((im[0].match(/\bheight="(\d+)/i) || [])[1] || 0); return { type: "image", b64, ...(w ? { w: w * 0.75, h: (hh || w * 0.6) * 0.75 } : {}) }; }).filter(Boolean);
+  const add = (blk, open, inner) => { const a = alignOf(open); if (a) blk.align = a; if (/\bdir="rtl"/i.test(open)) blk.rtl = true; const r = inlRuns(inner); if (r) blk.runs = r; out.push(blk); };
+  for (const m of h.matchAll(/<table\b[\s\S]*?<\/table>|<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>|<li\b[^>]*>([\s\S]*?)<\/li>|<(p|div|blockquote|pre|dt|dd|figcaption|td|th|caption|section|article|figure)\b[^>]*>((?:(?!<(?:p|div|table|h[1-6]|ul|ol|li|section|article|blockquote)\b)[\s\S])*?)(?=<\/?(?:p|div|table|h[1-6]|ul|ol|li|section|article|blockquote|body)\b|$)/gi)) {
+    const open = (m[0].match(/^<[^>]*>/) || [""])[0];
     if (/^<table/i.test(m[0])) {
-      const rows = [...m[0].matchAll(/<tr\b[\s\S]*?<\/tr>/gi)].map((r) => [...r[0].matchAll(/<t[hd]\b[^>]*>([\s\S]*?)<\/t[hd]>/gi)].map((c) => inl(c[1])));
-      if (rows.some((r) => r.length)) out.push({ type: "table", rows: rows.filter((r) => r.length) });
-    } else if (m[1]) { const t = inl(m[2]); if (t) out.push({ type: "h" + Math.min(3, +m[1]), text: t }); }
-    else if (m[3] != null) { const t = inl(m[3].replace(/<(ul|ol)\b[\s\S]*$/i, "")); if (t) out.push({ type: "li", text: t }); }
-    else { const t = inl(m[5] || ""); if (t) out.push({ type: "p", text: t }); }
+      const rows = [...m[0].matchAll(/<tr\b[\s\S]*?<\/tr>/gi)].map((r) => [...r[0].matchAll(/<t([hd])\b[^>]*>([\s\S]*?)<\/t[hd]>/gi)]);
+      const keep = rows.filter((r) => r.length);
+      if (keep.length) out.push({ type: "table", rows: keep.map((r) => r.map((c) => inl(c[2]))), bold: keep.map((r) => r.map((c) => c[1].toLowerCase() === "h" || /^\s*<(b|strong)\b[\s\S]*<\/\1>\s*$/i.test(c[2]))), ...(/\bdir="rtl"/i.test(open) ? { rtl: true } : {}) });
+    } else if (m[1]) { const t = inl(m[2]); if (t) add({ type: "h" + Math.min(3, +m[1]), text: t }, open, m[2]); }
+    else if (m[3] != null) { const inner = m[3].replace(/<(ul|ol)\b[\s\S]*$/i, ""); const t = inl(inner); if (t) add({ type: "li", text: t }, open, inner); }
+    else { const t = inl(m[5] || ""); if (t) add({ type: "p", text: t }, open, m[5] || ""); out.push(...pics(m[5] || "")); }
   }
   if (!out.length) { const t = inl(h.replace(/<\/(p|div|h\d|li|tr)>/gi, "\n\n")); return textToBlocks(t); }
   return out;
@@ -966,7 +1031,9 @@ export async function epubToBlocks(bytes) {
   const out = [];
   for (const href of order) {
     const path = (dir + decodeURIComponent(href.split("#")[0])).replace(/[^/]+\/\.\.\//g, "");
-    const f = z.get(path); if (f) out.push(...htmlToBlocks(dec(f)));
+    const base = path.replace(/[^/]+$/, "");
+    const pic = (src) => { const p = (base + decodeURIComponent(String(src).split("#")[0])).replace(/[^/]+\/\.\.\//g, ""), b = z.get(p); const mime = /\.png$/i.test(p) ? "image/png" : /\.jpe?g$/i.test(p) ? "image/jpeg" : /\.gif$/i.test(p) ? "image/gif" : null; return b && mime && b.length < 6e6 ? `data:${mime};base64,` + bytesToB64(b) : null; };
+    const f = z.get(path); if (f) out.push(...htmlToBlocks(dec(f), pic));
   }
   return out;
 }
