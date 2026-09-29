@@ -16,6 +16,7 @@ SEARCH = """(() => { const N = window.AttuneNative, S = window.__mock;
   N.search = (id, arg) => { const a = JSON.parse(arg); S.lastSearch = a; (S.searchLog = S.searchLog || []).push(a);
     setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ via: "duckduckgo", why: "", hits: [
       { title: "Lynk & Co 900 - specs", url: "https://example.com/900", text: "%s" },
+      { title: "Lynk & Co 900 review", url: "https://example.org/900-review", text: "We drove the Lynk & Co 900 for a week: a large, quiet SUV with a strong hybrid system, a roomy third row and a clear screen. It is the brand's flagship and it rides well on long trips." },
       { title: "Unrelated", url: "https://example.com/x", text: "The weather in Cairo is sunny today and the Nile is calm. Tomorrow will be warmer, with light winds from the north in the afternoon." } ] })), 30); };
 })();""" % PAGE
 
@@ -62,6 +63,7 @@ with sync_playwright() as p:
     check("845 hp" in md and "CNY 369,900" in md and ("Key figures" in md or "Table from" in md), "the facts sheet under the answer carries the exact figures and the trims table, copied by code")
     foot = page.locator(".att-md").last.locator("xpath=../..").inner_text()
     check("read 2 pages" in foot and "searches" in foot, "the answer says how many pages and searches it used")
+    check("example.com/x" not in json.dumps(page.evaluate("window.__mock.bodies.map(x => x.messages)")), "v6.8: a page that never names the subject (the weather) is not read")
     # v5.31 — like Gemini: [1] is a tappable chip, sources show their site, and a research panel
     cite = page.locator("[data-testid=cite]").first
     check(page.locator("[data-testid=cite]").count() >= 1 and cite.get_attribute("href") == "https://example.com/900", "the [1] in the answer is a chip that opens source 1")

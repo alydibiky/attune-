@@ -150,13 +150,14 @@ export function onTopic(hit, question) {
 }
 function decodeURIComponentSafe(u) { try { return decodeURIComponent(u).replace(/[-_/]+/g, " "); } catch (e) { return u; } }
 
-export function mergeHits(lists, cap, question = "", perSite = 2) {
+export function mergeHits(lists, cap, question = "", perSite = 2, strict = false) {
   const seen = new Set(), per = new Map(), picked = [];
   let queues = (lists || []).map((l) => [...(l || [])].filter((h) => h && h.url));
-  // v6.8: pages that never name the subject are dropped (the best two are kept if nothing passes)
+  // v6.8: pages that never name the subject are dropped (the best two are kept if nothing passes —
+  // unless strict: a second search for what's missing adds nothing rather than off-topic pages)
   if (question) {
     const gated = queues.map((l) => l.filter((h) => onTopic(h, question)));
-    if (gated.some((l) => l.length)) queues = gated;
+    if (strict || gated.some((l) => l.length)) queues = gated;
   }
   for (let round = 0; picked.length < cap * 2 && queues.some((q) => q.length); round++) {
     for (const q of queues) {

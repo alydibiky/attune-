@@ -1090,7 +1090,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             const more = await Promise.all(gaps.map((g) => api.webPages(topic + " " + g, 4).catch((e) => { if (String(e && e.message) === "Stopped") throw e; return { hits: [] }; })));
             if (runRef.current !== run) return;
             const known = new Set(webCtx.toRead.map((h) => h.url));
-            const fresh = mergeHits(more.map((r) => ((r && r.hits) || []).filter((h) => !known.has(h.url))), 4, webCtx.question);
+            const fresh = mergeHits(more.map((r) => ((r && r.hits) || []).filter((h) => !known.has(h.url))), 4, webCtx.question, 2, true);
             if (fresh.length) {
               const all = [...webCtx.toRead, ...fresh];
               const ranked2 = api.rankAll(webCtx.question, all, { budget: webCtx.budget, perSource: Math.max(1200, Math.floor(webCtx.budget / Math.min(all.length, 7) * 1.4)) });
