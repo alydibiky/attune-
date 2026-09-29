@@ -175,5 +175,8 @@ const ol = S.parseOutline(JSON.stringify({ title: "Crane safety", slides: [{ tit
 const sl = ol && (ol.slides || ol);
 ok(sl && sl.length === 5, "slides: an outline sent back as JSON is read");
 
+// Zenith+ max trial: "lifts at 75% of its chart capacity" was answered with the full chart value
+const VF = await import("../../web-src/verify.js");
+ok(/N% of the chart value/.test(VF.solveMessages("A 50 t crane lifts at 75% of its chart capacity.")[0].content), "maths: the program is told a crane's chart percentage is the most to plan for");
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASSED");
 if (fail) process.exit(1);

@@ -51,7 +51,7 @@ export function looksLikeCodeTask(text) {
 
 export function solveMessages(question) {
   return [
-    { role: "system", content: "You check word problems by computing them. Write ONE short Python 3 program that solves the problem exactly: define the quantities as variables, use fractions.Fraction or sympy for exact algebra, and compute the answer step by step with a comment on each step. Read the problem literally and watch for tricks (things that happen at the same time, impossible conditions, units). The LAST line printed must be exactly 'ANSWER: <the answer with units>' — or 'ANSWER: impossible — <short reason>' if no value can satisfy the problem. Reply with the code block only." },
+    { role: "system", content: "You check word problems by computing them. Write ONE short Python 3 program that solves the problem exactly: define the quantities as variables, use fractions.Fraction or sympy for exact algebra, and compute the answer step by step with a comment on each step. Read the problem literally and watch for tricks (things that happen at the same time, impossible conditions, units). Cranes: \"lifts at N% of its chart capacity\" is the safe-working rule, so the most to plan for is N% of the chart value at that radius (not the full chart value). The LAST line printed must be exactly 'ANSWER: <the answer with units>' — or 'ANSWER: impossible — <short reason>' if no value can satisfy the problem. Reply with the code block only." },
     { role: "user", content: String(question || "").trim() },
   ];
 }
