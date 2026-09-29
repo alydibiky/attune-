@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 28 Sep 2026. Latest: **v6.7** on `main` — Google Play Billing, higher prices, Fit Pro limits, 43 countries, 35 AI tools (§5.36), after v6.6 — every calculating tool checked for right answers, 89 % → 100 % (§5.35), after v6.5 — Huawei Health directly through Health Kit (needs Ali's AppGallery App ID), USDA branded foods, glitch sweep (§5.34), after v6.4.1 — Huawei watches through Health Sync (§5.33), after v6.4 — ≥ 90 % of meals right on unseen sets, correct-once-learn, favorites, copyable engine log (§5.32), after v6.3 — food input like Yazio's AI (measured), photo geometry + zoomed look, watches through Health Connect (§5.31), after v6.2 — Fit & Food level 2 "better than Yazio by levels" (§5.30), after v6.1.1 (food database + photo recognition + Studio GPU, §5.29) on top of **v6.1** — the launch build Ali asked for ("make the app v6.1 as the final build after the fixes"): Fit & Food, websites finished, fast Studio sharpening, Deal Check "Do you mean…?", more accurate slides, Business combines databases, launch model list (§5.28). Next: Ali's phone test of 6.1, then the release items in §0.1._
+_Last updated: 29 Sep 2026. Latest: **v6.9** on `main` (versionCode 71; §5.37) — Mind, every model one RAM tier lower, max tests of every model up to Zenith+, web search accuracy/speed, file converters that keep formatting, coding fix-loop probes. **Ali's open problem list after testing v6.9 on his phone is in `NEXT_SESSION.md` — start there.**_
 
 ---
 
@@ -9,7 +9,7 @@ _Last updated: 28 Sep 2026. Latest: **v6.7** on `main` — Google Play Billing, 
 ### 0.1 The state you are inheriting
 | Item | State |
 |---|---|
-| Last version on GitHub `main` | **v6.7** (versionCode 69; §5.36), after v6.6 (versionCode 68; §5.35), after v6.5 (versionCode 67; §5.34), after v6.4.1 (versionCode 66; §5.33), after v6.4 (versionCode 65; §5.32), after v6.3 (versionCode 64; §5.31), after v6.2 (versionCode 63; §5.30), after v6.1.1 (versionCode 62; §5.29) on top of the 6.1 launch build (§5.28) — every push to `main` runs "Build the APK" (~8 min); 6.1 built green: https://github.com/alydibiky/attune-/actions/runs/36383582335 (artifact `attune-apk`). |
+| Last version on GitHub `main` | **v6.9** (versionCode 71; §5.37). Last green APK build: https://github.com/alydibiky/attune-/actions/runs/36567802881 (artifact `attune-apk`). Every push to `main` runs "Build the APK" (~8 min). Older: v6.7 (§5.36), v6.6 (§5.35), v6.5 (§5.34), v6.4.1, v6.4 … the 6.1 launch build (§5.28). |
 | Pushing | Works: this session pushed v5.32 → v5.39 straight to `main` (Ali's rule: push to main, then watch the build and give him the run link). |
 | Tested on Ali's phone | Up to v5.40 (his 15-point report → v5.41). **Fit & Food, the Deal Check question, the fast ×2 sharpen (native `sharpenFast`), website continuation, Business "Combine your data" and the 6.1 model list are NOT phone-tested yet.** |
 | Ali's latest requests (all done) | "as many file converters as you can" (§5.23), "copy a link of a video and download it in the quality I want" (§5.24 — he chose **safe sites only**, no YouTube/TikTok), "take a PDF, translate it, give me the PDF" (§5.25). |
