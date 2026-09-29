@@ -95,93 +95,332 @@ export function textToBlocks(text) {
  * numbered and bulleted lists (with their wrapped lines), and tables (2+ lines whose spans line up in
  * columns). Ali's GUC assignment came out with the title glued to the text, tables as plain lines and
  * the question numbers lost.
- * pages: [{ lines: [{y, x, s, b, sp: [[x, text, size]]}], text }] → blocks
+ * v6.8 — Ali: "not just convert but with formatting and spacing and everything, like from PDF to Word".
+ * Each block now also keeps what the page showed: the words' bold / italic / colour (runs), the
+ * alignment (centred, right, justified — from where the lines sit between the margins), indents,
+ * the space before it and the line spacing, the font and its size, right-to-left lines, pictures in
+ * their place, a table's column widths, and where the PDF's pages begin. "1. Summary" in a big font
+ * is a heading, not a list item, and Word's Symbol-font bullets (private-use characters) are bullets.
+ * pages: [{ w, h, imgs?: [{x, y, w, h, b64}], lines: [{y, x, e?, s, b, i?, r?, f?, c?, sp: [[x, text, size, words?: [[x, t, b?, i?, c?]]]]}] }]
  */
+const MARK = /^(?:[•●▪◦‣∙·○■□◆◇►▶✓✔*\-–—]|[\uF000-\uF0FF])$/;
+const NUM_MARK = /^(?:\d{1,2}|[a-z]|[ivx]{1,4})[.)]$/i;
+const FONT_MAP = { liberationserif: "Times New Roman", tinos: "Times New Roman", timesnewroman: "Times New Roman", times: "Times New Roman", timesroman: "Times New Roman",
+  liberationsans: "Arial", arimo: "Arial", helvetica: "Arial", arial: "Arial", liberationmono: "Courier New", cousine: "Courier New", courier: "Courier New", couriernew: "Courier New",
+  dejavusans: "DejaVu Sans", dejavuserif: "DejaVu Serif", dejavusansmono: "DejaVu Sans Mono", symbol: null, wingdings: null, opensymbol: null };
+/** "BAAAAA+TimesNewRomanPS-BoldMT" → "Times New Roman" (null for symbol fonts). */
+export function fontFamily(name) {
+  let f = String(name || "").replace(/^[A-Z]{6}\+/, "").replace(/[-,](?:Bold|Italic|Oblique|Regular|Roman|Book|Medium|Light|Semi[Bb]old|Black|Heavy|It|Bd|BdIt|BoldIt)\w*$/i, "").replace(/(?:PSMT|PS|MT)$/, "").replace(/-$/, "");
+  const key = f.replace(/[\s_-]/g, "").toLowerCase();
+  if (key in FONT_MAP) return FONT_MAP[key];
+  return f ? f.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]/g, " ").trim() : null;
+}
+/** 0xC00000 → "C00000"; black / near-black → null. */
+const hexOf = (c) => { c = +c || 0; const r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255; return r < 64 && g < 64 && b < 64 ? null : [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("").toUpperCase(); };
+
 export function pdfLinesToBlocks(pages) {
   // superscript pieces next to each other are one: ^(−ΔΔ)^(Ct) → ^(−ΔΔCt)
   const sup = (t) => String(t).replace(/\)\^\(/g, "");
-  const all = pages.flatMap((p, pi) => (p.lines || []).map((l) => ({ ...l, page: pi, sp: l.sp.map((x) => [x[0], sup(x[1]), x[2], x[3]]), text: sup(l.sp.map((x) => x[1]).join(" ")).replace(/\s+/g, " ").trim() }))).filter((l) => l.text);
-  if (!all.length) return [];
+  const all = [];
+  pages.forEach((p, pi) => {
+    for (const l0 of p.lines || []) {
+      let sp = l0.sp.map((x) => [x[0], sup(x[1]), x[2], x[3]]);
+      // a lone bullet / number before the text is the list's marker, not a table column (v6.8)
+      let mark = null;
+      if (sp.length >= 2 && (MARK.test(sp[0][1].trim()) || NUM_MARK.test(sp[0][1].trim()))) { mark = sp[0][1].trim(); sp = sp.slice(1); }
+      else if (sp.length && /^[\uF000-\uF0FF]\s*/.test(sp[0][1])) { mark = "•"; sp = [[sp[0][0], sp[0][1].replace(/^[\uF000-\uF0FF]\s*/, ""), sp[0][2], (sp[0][3] || []).filter((w) => !/^[\uF000-\uF0FF]$/.test(w[1]))], ...sp.slice(1)]; }
+      if (mark && /^[\uF000-\uF0FF]$/.test(mark)) mark = "•";
+      // the line is measured without its marker (a right-to-left bullet sits past the right margin)
+      let lx = l0.x, le = l0.e;
+      if (mark && sp.length) { if (l0.r && le != null) le = sp[0][0]; else if (!l0.r) lx = sp[0][0]; }
+      const body = sup(sp.map((x) => x[1]).join(" ")).replace(/\s+/g, " ").trim();
+      const text = mark ? (NUM_MARK.test(mark) ? mark + " " : "• ") + body : body;
+      // the words with their look (new readers send [x, text, bold, italic, colour, xEnd]; older ones only
+      // the line's); a word touching the one before it ("2026" + "." in another font) gets no space
+      const words = sp.flatMap((x) => (Array.isArray(x[3]) && x[3].length ? x[3].map((w, k, ws) => ({ t: sup(w[1]), b: w[2] != null ? !!w[2] : !!l0.b, i: w[3] != null ? !!w[3] : !!l0.i, c: w[4] != null ? hexOf(w[4]) : hexOf(l0.c),
+        glue: k > 0 && ws[k - 1][5] != null && (l0.r ? ws[k - 1][5] - w[0] : w[0] - ws[k - 1][5]) < (x[2] || l0.s) * 0.12 })) : [{ t: x[1], b: !!l0.b, i: !!l0.i, c: hexOf(l0.c) }]))
+        .filter((w) => w.t && !/^[\uF000-\uF0FF]$/.test(w.t));
+      if (text) all.push({ ...l0, x: lx, e: le, mark, markX: mark ? (l0.r ? l0.e : l0.x) : null, page: pi, sp, text, words, top: l0.y - l0.s });
+    }
+    for (const im of p.imgs || []) if (im && im.b64) all.push({ img: true, page: pi, top: im.y, y: im.y + im.h, x: im.x, e: im.x + im.w, w: im.w, h: im.h, b64: im.b64, s: 0 });
+  });
+  if (!all.some((l) => !l.img)) return all.filter((l) => l.img).map((l) => ({ type: "image", b64: l.b64, w: l.w, h: l.h }));
+  all.sort((a, b) => a.page - b.page || a.top - b.top);
+  // v6.8: a running header / footer — the same line (its numbers aside) at the same place at the top or
+  // bottom of most pages — becomes the Word file's header / footer (its page number a live PAGE field)
+  // instead of text repeated inside the pages
+  const running = [];
+  if (pages.length >= 2 && pages.every((p) => p.h)) {
+    const zone = (l) => (l.y < pages[l.page].h * 0.1 ? "header" : l.top > pages[l.page].h * 0.9 ? "footer" : null);
+    const key = (l) => l.text.replace(/\d+/g, "#").trim();
+    // (and it stands apart: a clear gap between it and the page's text — the first line of a page's text
+    // can repeat word for word on two pages)
+    const apart = (l) => { const ls = all.filter((m) => !m.img && m.page === l.page && m !== l); const next = zone(l) === "header" ? ls.filter((m) => m.y > l.y).sort((a, b) => a.y - b.y)[0] : ls.filter((m) => m.y < l.y).sort((a, b) => b.y - a.y)[0]; return !next || Math.abs(next.y - l.y) > Math.max(l.s, next.s) * 1.9; };
+    const cand = all.filter((l) => !l.img && zone(l) && l.text.length <= 150 && apart(l));
+    for (const l of cand) {
+      if (l.run) continue;
+      const same = cand.filter((m) => zone(m) === zone(l) && key(m) === key(l) && Math.abs(m.y - l.y) < 8);
+      const onPages = new Set(same.map((m) => m.page)).size;
+      if (onPages < Math.max(2, Math.ceil(pages.length * 0.5))) continue;
+      const num = /#/.test(key(l)) && same.every((m) => (m.text.match(/\d+/g) || []).includes(String(m.page + 1)));
+      same.forEach((m) => { m.run = true; });
+      running.push({ line: l, kind: zone(l), num });
+    }
+    for (let k = all.length - 1; k >= 0; k--) if (all[k].run) all.splice(k, 1);
+  }
+  const lines = all.filter((l) => !l.img);
   // the body text size: the size most of the characters are written in
   const bySize = new Map();
-  for (const l of all) { const k = Math.round(l.s * 2) / 2; bySize.set(k, (bySize.get(k) || 0) + l.text.length); }
+  for (const l of lines) { const k = Math.round(l.s * 2) / 2; bySize.set(k, (bySize.get(k) || 0) + l.text.length); }
   const body = [...bySize].sort((a, b) => b[1] - a[1])[0][0];
-  const maxS = Math.max(...all.map((l) => l.s));
-  const LIST = /^\s*(?:(\d{1,2}|[a-z]|[ivx]{1,4})[.)]|[•●▪◦\-–*])\s*/i;
-  const isHead = (l) => l.text.length <= 110 && !LIST.test(l.text) && (l.s >= body * 1.18 || (l.b && l.text.length <= 90 && !/[.,;]$/.test(l.text)));
+  const maxS = Math.max(...lines.map((l) => l.s));
+  // the page's text area: where the lines start and end
+  const geo = pages.map((p, pi) => {
+    const ls = lines.filter((l) => l.page === pi);
+    if (!ls.length) return null;
+    const hasE = ls.every((l) => l.e != null);
+    const L = Math.min(...ls.map((l) => l.x)), R = hasE ? Math.max(...ls.map((l) => l.e)) : null;
+    // a mostly right-to-left page: its lines end on the right margin but often never reach the left one —
+    // that margin is taken as the mirror of the right one
+    const rtl = ls.filter((l) => l.r).length * 2 > ls.length;
+    return { L: rtl && R != null && p.w ? Math.min(L, p.w - R) : L, R };
+  });
+  // the usual distance between two lines of one paragraph, per text size (the most common gap)
+  const pitchBy = new Map();
+  for (let k = 1; k < lines.length; k++) {
+    const a = lines[k - 1], b = lines[k];
+    if (a.page !== b.page || Math.abs(a.s - b.s) > 0.5) continue;
+    const g = Math.round((b.y - a.y) * 2) / 2;
+    if (g <= 0 || g > b.s * 3) continue;
+    const key = Math.round(b.s);
+    if (!pitchBy.has(key)) pitchBy.set(key, new Map());
+    pitchBy.get(key).set(g, (pitchBy.get(key).get(g) || 0) + 1);
+  }
+  const pitch = (s) => { const m = pitchBy.get(Math.round(s)); if (!m) return s * 1.2; const best = [...m].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0]; return Math.min(Math.max(best, s * 1.0), s * 2.6); };
+  const LIST = /^\s*(?:(\d{1,2}|[a-z]|[ivx]{1,4})[.)]|[•●▪◦\-–*])\s+/i;
+  // v6.8: a numbered line in a bigger font ("1. Summary") is a heading, not a list item
+  const isHead = (l) => l.text.length <= 110 && (l.s >= body * 1.18 || (l.b && !LIST.test(l.text) && l.text.length <= 90 && !/[.,;:،]$/.test(l.text)));
   const cols = (l) => l.sp.length;
+  const alignOf = (l) => {
+    const g = geo[l.page];
+    if (!g || g.R == null || l.e == null) return null;
+    const left = l.x - g.L, right = g.R - l.e, width = g.R - g.L;
+    if (left > 12 && right > 12 && Math.abs(left - right) < Math.max(12, width * 0.05)) return "center";
+    if (right <= 3) return left > 24 ? "right" : "full";   // a justified line reaches both margins
+    return left < 4 || !l.r ? "left" : "full";
+  };
+  // a line's words → runs (neighbours with the same look joined)
+  const runsOf = (ws) => {
+    const out = [];
+    for (const w of ws) {
+      const last = out[out.length - 1];
+      const gap = w.glue ? "" : " ";
+      if (last && last.b === w.b && last.i === w.i && last.c === w.c) last.t += gap + w.t;
+      else out.push({ t: (last ? gap : "") + w.t, b: w.b, i: w.i, c: w.c });
+    }
+    return out;
+  };
+  const plain = (runs) => runs.every((r) => !r.b && !r.i && !r.c);
   const out = [];
-  let para = null, item = null, i = 0;
-  const flush = () => { if (para) { out.push({ type: "p", text: para.text }); para = null; } item = null; };
+  for (const r of running) {
+    const l = r.line, al = alignOf(l), runs = runsOf(l.words);
+    const blk = { type: r.kind, text: l.text, size: Math.round(l.s * 2) / 2, align: al === "full" || !al ? (l.r ? "right" : "left") : al, ...(plain(runs) ? {} : { runs }), ...(r.num ? { page: String(l.page + 1) } : {}), at: Math.round(r.kind === "header" ? l.top : pages[l.page].h - l.y - 2) };
+    const fam = fontFamily(l.f); if (fam) blk.font = fam;
+    if (l.r) blk.rtl = true;
+    out.push(blk);
+  }
+  let para = null, item = null, i = 0, lastLine = null;
+  // the block's look from its lines (alignment, indents, spacing, size, font, direction)
+  const finish = (blk, ls) => {
+    const first = ls[0], rtl = ls.filter((l) => l.r).length * 2 > ls.length;
+    const g = geo[first.page];
+    blk.size = Math.round(first.s * 2) / 2;
+    const fam = fontFamily(first.f); if (fam) blk.font = fam;
+    if (rtl) blk.rtl = true;
+    const al = ls.map(alignOf);
+    if (al[0]) {
+      if (ls.length >= 2 && al.slice(0, -1).every((a) => a === "full")) blk.align = "justify";
+      else if (ls.every((a, k) => al[k] === "center")) blk.align = "center";
+      else if (al[0] === "right" || (al[0] === "full" && rtl)) blk.align = "right";
+      else if (al[0] === "center" && ls.length === 1) blk.align = "center";
+      else blk.align = rtl ? "right" : "left";
+      // indents, from the start side
+      if (g && g.R != null && blk.align !== "center") {
+        const off = (l) => (rtl ? g.R - l.e : l.x - g.L);
+        const rest = ls.length > 1 ? Math.min(...ls.slice(1).map(off)) : off(first);
+        const ind = rest > 3 ? Math.round(rest) : 0, fl = Math.round(off(first) - ind);
+        if (ind && !(blk.align === (rtl ? "left" : "right"))) blk.ind = ind;
+        if (Math.abs(fl) > 3 && ls.length > 1) blk.first = fl;
+      }
+    }
+    if (ls.length > 1) { const gaps = ls.slice(1).map((l, k) => l.y - ls[k].y).filter((x) => x > 0).sort((a, b) => a - b); const pt = gaps[Math.floor(gaps.length / 2)]; if (pt) blk.line = Math.round(pt * 10) / 10; }
+    if (lastLine && lastLine.page === first.page) { const gap = first.y - lastLine.y - pitch(first.s); if (gap > 1.5) blk.before = Math.min(72, Math.round(gap)); }
+    else if (lastLine && lastLine.page !== first.page) blk.pageBreak = true;
+    lastLine = ls[ls.length - 1];
+    return blk;
+  };
+  const flush = () => {
+    if (para) { const r = runsOf(para.words); out.push(finish({ type: "p", text: para.text, ...(plain(r) ? {} : { runs: r }) }, para.ls)); para = null; }
+    if (item) { const r = runsOf(item.words); Object.assign(item.blk, finish(item.blk, item.ls), plain(r) ? {} : { runs: r }); item = null; }
+  };
   while (i < all.length) {
     const l = all[i];
+    if (l.img) {
+      flush();
+      const g = geo[l.page], blk = { type: "image", b64: l.b64, w: l.w, h: l.h };
+      if (g && g.R != null) { const left = l.x - g.L, right = g.R - l.e; blk.align = Math.abs(left - right) < 12 && left > 12 ? "center" : right < 6 && left > 24 ? "right" : "left"; if (blk.align === "left" && left > 6) blk.ind = Math.round(left); }
+      if (lastLine && lastLine.page !== l.page) blk.pageBreak = true;
+      else if (lastLine) { const gap = l.top - lastLine.y - 3; if (gap > 1.5) blk.before = Math.min(72, Math.round(gap)); }
+      out.push(blk); lastLine = { ...l, y: l.y, s: 0 };
+      i++; continue;
+    }
     // a table: this line and the next ones split into 2+ columns that line up
     // (a bold header row counts too: it lines up with the rows under it)
     if (cols(l) >= 2) {
       const rows = [l]; let j = i + 1;
-      while (j < all.length && cols(all[j]) >= 2 && all[j].page === l.page && all[j].y - rows[rows.length - 1].y < rows[rows.length - 1].s * 3.2) {
+      const cont = new Map();   // a row → its wrapped lines (a cell's text on 2+ lines: "Slew bearing / grease")
+      while (j < all.length && !all[j].img && all[j].page === l.page && all[j].y - rows[rows.length - 1].y < rows[rows.length - 1].s * 3.2) {
         const xs = rows[0].sp.map((x) => x[0]);
+        const lastRow = rows[rows.length - 1], lastY = cont.has(lastRow) ? cont.get(lastRow).slice(-1)[0].y : lastRow.y;
+        // a line of one or two pieces, each starting where a column starts, right under the row: wrapped cell text
+        if (rows.length >= 1 && cols(all[j]) < xs.length && all[j].sp.every((x) => xs.some((c) => Math.abs(c - x[0]) < 6)) && all[j].y - lastY < pitch(all[j].s) * 1.25 && Math.abs(all[j].s - lastRow.s) < 1) {
+          if (!cont.has(lastRow)) cont.set(lastRow, []);
+          cont.get(lastRow).push(all[j]); j++; continue;
+        }
+        if (cols(all[j]) < 2) break;
         const lined = all[j].sp.filter((x) => xs.some((c) => Math.abs(c - x[0]) < 40)).length;
         if (lined < 2) break;
         rows.push(all[j]); j++;
       }
       if (rows.length >= 2) {
         flush();
+        const rtl = rows.filter((r) => r.r).length * 2 > rows.length;
         // columns: the starting x of every span, merged when close
         // columns come from the body rows (a header's titles often sit a little left of the numbers under them)
         const bodyRows = rows.length > 2 || !rows[0].b ? rows.slice(rows[0].b ? 1 : 0) : rows;
-        const mid = (x, t, sz) => x + String(t).length * (sz || body) * 0.26;   // a text's centre, from its length
+        // a text's centre, from its length (a right-to-left span's x is its right edge)
+        const mid = (x, t, sz) => x + (rtl ? -1 : 1) * String(t).length * (sz || body) * 0.26;
         const anchors = [], centres = [];
         for (const r of bodyRows) for (const [x, t, sz] of r.sp) if (!anchors.some((a) => Math.abs(a - x) < 24)) { anchors.push(x); centres.push(mid(x, t, sz)); }
-        const ord = anchors.map((a, k) => k).sort((p, q) => anchors[p] - anchors[q]);
+        const ord = anchors.map((a, k) => k).sort((p, q) => centres[p] - centres[q]);
         const A = ord.map((k) => anchors[k]), Cn = ord.map((k) => centres[k]);
         anchors.length = 0; anchors.push(...A); centres.length = 0; centres.push(...Cn);
+        const bold = [];
         const cell = (r) => {
-          const row = anchors.map(() => "");
+          const row = anchors.map(() => ""), rb = anchors.map(() => null);
           const near = (x, t, sz) => { const m = mid(x, t, sz); let k = 0, best = Infinity; centres.forEach((a, c) => { const d = Math.abs(a - m); if (d < best) { best = d; k = c; } }); return k; };
           // a header with fewer cells than columns ("Control Stimulated" in one span): word by word
           const split = r.sp.length < anchors.length && r.sp.some((x) => Array.isArray(x[3]) && x[3].length > 1);
           for (const sp of r.sp) {
-            const parts = split && Array.isArray(sp[3]) && sp[3].length > 1 ? sp[3].map(([wx, wt]) => [wx, wt]) : [[sp[0], sp[1]]];
-            for (const [x, t] of parts) { const k = near(x, t, sp[2]); row[k] = row[k] ? row[k] + " " + t : t; }
+            const parts = split && Array.isArray(sp[3]) && sp[3].length > 1 ? sp[3].map((w) => [w[0], w[1], w[2]]) : [[sp[0], sp[1], Array.isArray(sp[3]) && sp[3].length ? sp[3].every((w) => w[2] != null ? w[2] : r.b) : r.b]];
+            for (const [x, t, b] of parts) { const k = near(x, t, sp[2]); row[k] = row[k] ? row[k] + " " + t : t; rb[k] = rb[k] == null ? !!b : rb[k] && !!b; }
           }
+          bold.push(rb.map((x) => !!x));
           return row;
         };
-        out.push({ type: "table", rows: rows.map(cell) });
+        let trows = rows.map((r) => {
+          const row = cell(r);
+          for (const c of cont.get(r) || []) { const more = cell(c); bold.pop(); more.forEach((t, k) => { if (t) row[k] = row[k] ? row[k] + " " + t : t; }); }
+          return row;
+        });
+        // left to right on the page → reading order (a right-to-left table's first column is on the right)
+        if (rtl) { trows = trows.map((x) => [...x].reverse()); bold.forEach((x) => x.reverse()); }
+        const blk = { type: "table", rows: trows, bold };
+        if (rtl) blk.rtl = true;
+        // column widths (points), from where the columns start
+        const tl = Math.min(...rows.map((r) => r.x)), tr = rows.every((r) => r.e != null) ? Math.max(...rows.map((r) => r.e)) : null;
+        if (tr != null && anchors.length >= 2) {
+          const edges = rtl ? [...anchors].sort((a, b) => b - a) : [...anchors].sort((a, b) => a - b);
+          const w = edges.map((a, k) => (rtl ? a - (k + 1 < edges.length ? edges[k + 1] : tl - 6) : (k + 1 < edges.length ? edges[k + 1] : tr + 6) - a));
+          // the last column ends where its longest text ends, not at the table's border: at least as
+          // wide as the others on average (within the page)
+          const others = w.slice(0, -1), avg = others.reduce((a, x) => a + x, 0) / others.length, g0 = geo[l.page];
+          const room = g0 && g0.R != null ? g0.R - g0.L - others.reduce((a, x) => a + x, 0) : Infinity;
+          if (w[w.length - 1] < avg) w[w.length - 1] = Math.min(avg, Math.max(w[w.length - 1], room));
+          if (w.every((x) => x > 8)) blk.widths = w.map((x) => Math.round(x));
+        }
+        const g = geo[l.page]; if (g && !rtl && tl - g.L > 12) blk.ind = Math.round(tl - g.L - 5);
+        blk.size = Math.round(bodyRows[0].s * 2) / 2;
+        if (lastLine && lastLine.page === l.page) { const gap = l.y - lastLine.y - pitch(l.s); if (gap > 1.5) blk.before = Math.min(72, Math.round(gap)); }
+        else if (lastLine) blk.pageBreak = true;
+        lastLine = cont.has(rows[rows.length - 1]) ? cont.get(rows[rows.length - 1]).slice(-1)[0] : rows[rows.length - 1];
+        out.push(blk);
         i = j; continue;
       }
     }
-    const prev = all[i - 1];
-    const gap = prev && prev.page === l.page ? l.y - prev.y : Infinity;
+    const prev = i > 0 ? all[i - 1] : null;
+    const gap = prev && !prev.img && prev.page === l.page ? l.y - prev.y : Infinity;
+    const near = gap <= pitch(l.s) * 1.3 + 0.5;
     if (isHead(l)) {
-      flush();
-      const last = out[out.length - 1];
+      const lastH = !para && !item && out[out.length - 1];
       // a heading that wraps onto a second line of the same size
-      if (last && /^h/.test(last.type) && prev && gap < l.s * 1.6 && Math.abs(prev.s - l.s) < 0.6 && isHead(prev)) { last.text += " " + l.text; i++; continue; }
-      out.push({ type: l.s >= maxS - 0.5 && l.s >= body * 1.35 ? "h1" : l.s >= body * 1.18 ? "h2" : "h3", text: l.text });
+      if (lastH && /^h/.test(lastH.type) && prev && !prev.img && near && Math.abs(prev.s - l.s) < 0.6 && isHead(prev)) { lastH.text += " " + l.text; if (lastH.runs) lastH.runs.push(...runsOf(l.words).map((r, k) => (k ? r : { ...r, t: " " + r.t.trim() }))); lastLine = l; i++; continue; }
+      flush();
+      const type = l.s >= maxS - 0.5 && l.s >= body * 1.35 ? "h1" : l.s >= body * 1.18 ? "h2" : "h3";
+      const r = runsOf(l.words);
+      out.push(finish({ type, text: l.text, ...(r.some((x) => x.i || x.c || !x.b) ? { runs: r } : {}) }, [l]));
       i++; continue;
     }
     const m = l.text.match(LIST);
     if (m) {
       flush();
-      const num = m[1] && /^\d+$/.test(m[1]) ? m[1] : m[1] ? m[1] : "";
-      item = { type: "li", text: l.text.slice(m[0].length).trim(), x: l.x, ...(num ? { num } : {}) };
-      out.push(item); i++; continue;
+      const num = m[1] || "";
+      const words = [...l.words]; if (!l.mark && words.length && LIST.test(words[0].t + " ")) words.shift();
+      const blk = { type: "li", text: l.text.slice(m[0].length).trim(), ...(num ? { num } : {}) };
+      if (l.markX != null) Object.defineProperty(blk, "markX", { value: l.markX, enumerable: false });
+      out.push(blk);
+      item = { blk, ls: [l], words, x: l.x, e: l.e };
+      i++; continue;
     }
-    // a wrapped line of the list item above (same size, close below, not starting a new item)
-    if (item && gap < l.s * 1.7 && Math.abs(l.s - body) < 1.5) { item.text += " " + l.text; i++; continue; }
-    item = null;
-    if (para && gap < l.s * 1.75 && Math.abs(l.s - para.s) < 1) { para.text += (/-$/.test(para.text) && !/\s-$/.test(para.text) ? "" : " ") + l.text; para.text = para.text.replace(/(\w)- (\w)/g, "$1-$2"); i++; continue; }
+    // a wrapped line of the list item above (same size, close below, not starting a new item, starting
+    // where the item's text starts — not back at the margin)
+    if (item && near && Math.abs(l.s - body) < 1.5 && (l.r ? l.e == null || item.e == null || l.e < item.e - 3 : l.x > item.x + 3)) {
+      item.blk.text += " " + l.text; item.words.push(...l.words); item.ls.push(l); i++; continue;
+    }
+    if (item) flush();
+    const lastPara = para && para.ls[para.ls.length - 1];
+    // the same paragraph: close below, same size, and (after its first two lines) starting where they start
+    if (para && near && Math.abs(l.s - para.s) < 1 && !(para.ls.length >= 2 && !l.r && Math.abs(l.x - lastPara.x) > 6 && alignOf(l) !== "center") && !(para.ls.length >= 2 && l.r && l.e != null && lastPara.e != null && Math.abs(l.e - lastPara.e) > 6 && alignOf(l) !== "center")) {
+      para.text += (/-$/.test(para.text) && !/\s-$/.test(para.text) ? "" : " ") + l.text; para.text = para.text.replace(/(\w)- (\w)/g, "$1-$2");
+      para.words.push(...l.words); para.ls.push(l); i++; continue;
+    }
     flush();
-    para = { text: l.text, s: l.s }; i++;
+    para = { text: l.text, s: l.s, words: [...l.words], ls: [l] }; i++;
   }
   flush();
-  return out.map(({ x, ...b }) => b);
+  // nested lists: a bullet further in than the list's first bullets is one level down (up to 3 levels)
+  for (let k = 0; k < out.length; ) {
+    if (out[k].type !== "li") { k++; continue; }
+    let e = k; while (e < out.length && out[e].type === "li") e++;
+    const xs = out.slice(k, e).map((b) => b.markX).filter((x) => x != null);
+    if (xs.length) {
+      const rtl = out[k].rtl, base = rtl ? Math.max(...xs) : Math.min(...xs);
+      for (let q = k; q < e; q++) { const b = out[q]; if (b.markX == null) continue; const lv = Math.min(2, Math.round(Math.abs(b.markX - base) / 18)); if (lv) { b.level = lv; delete b.ind; } }
+    }
+    k = e;
+  }
+  return out;
+}
+
+/** v6.8: the Word page for a PDF — its size, its margins (where the text sits) and the body font. */
+export function pdfDocOptions(pages) {
+  // the margins come from the page's own text: a running header / footer sits in the margin
+  const hfb = pdfLinesToBlocks(pages).filter((b) => b.type === "header" || b.type === "footer").map((b) => b.text.replace(/\d+/g, "#"));
+  const ls = pages.flatMap((p) => (p.lines || []).map((l) => ({ ...l, p }))).filter((l) => !hfb.includes(l.sp.map((x) => x[1]).join(" ").replace(/\s+/g, " ").trim().replace(/\d+/g, "#")));
+  const p0 = pages.find((p) => p.w && p.h);
+  if (!ls.length || !p0) return {};
+  const sizes = new Map(), fonts = new Map();
+  for (const l of ls) { const n = l.sp.reduce((a, x) => a + String(x[1]).length, 0); sizes.set(Math.round(l.s * 2) / 2, (sizes.get(Math.round(l.s * 2) / 2) || 0) + n); const f = fontFamily(l.f); if (f) fonts.set(f, (fonts.get(f) || 0) + n); }
+  const top = Math.min(...ls.map((l) => l.y - l.s)), bottom = Math.max(...ls.map((l) => l.y));
+  const left = Math.min(...ls.map((l) => l.x)), right = ls.every((l) => l.e != null) ? Math.max(...ls.map((l) => l.e)) : p0.w - left;
+  const clamp = (x, a, b) => Math.round(Math.min(b, Math.max(a, x)));
+  return { page: { w: p0.w, h: p0.h, top: clamp(top - 4, 18, 144), bottom: clamp(p0.h - bottom - 8, 18, 108), left: clamp(left, 18, 144), right: clamp(p0.w - right - 2, 18, 144) },
+    body: [...sizes].sort((a, b) => b[1] - a[1])[0][0], font: fonts.size ? [...fonts].sort((a, b) => b[1] - a[1])[0][0] : null, exact: true };
 }
 
 /** Blocks → plain text (Markdown-style headings and bullets). */
 export function blocksToText(blocks) {
-  return blocks.map((b) => b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n")
+  return blocks.filter((b) => !["header", "footer", "image", "pagebreak"].includes(b.type)).map((b) => b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n")
     : b.type === "li" ? "- " + b.text : /^h\d$/.test(b.type) ? "#".repeat(+b.type[1]) + " " + b.text : b.text).join("\n\n");
 }
 
@@ -189,52 +428,101 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 
 /** Blocks → a Word document (.docx bytes). Arabic paragraphs are right-to-left.
  *  v5.40 (reports): also "title", "subtitle", "caption", "pagebreak" and "image" ({b64 PNG, w, h}) blocks,
- *  and o.accent (a hex colour for the headings). */
+ *  and o.accent (a hex colour for the headings).
+ *  v6.8: everything a block carries from a PDF is written — runs (bold / italic / colour per word),
+ *  align, ind / first (indents, pt), before (space above, pt), line (line pitch, pt), size (pt), font,
+ *  rtl, pageBreak; tables with rtl, widths (pt) and bold cells; pictures at their size and place.
+ *  o.page {w, h, top, right, bottom, left} (pt) sets the page, o.body / o.font the normal text, and
+ *  o.exact drops Word's own paragraph spacing so the PDF's spacing is what shows.
+ *  Arabic bold / italic / size use Word's complex-script tags (bCs, iCs, szCs) — without them a bold
+ *  Arabic word shows plain. */
 export function docxFromBlocks(blocks, title = "Document", o = {}) {
   const imgs = [];
-  const run1 = (t, bold, sup) => {
+  const tw = (pt) => Math.round(pt * 20);
+  const run1 = (t, f = {}, sup) => {
     const rtl = isAr(t);
-    return `<w:r><w:rPr>${bold ? "<w:b/>" : ""}${rtl ? "<w:rtl/>" : ""}${sup ? '<w:vertAlign w:val="superscript"/>' : ""}</w:rPr>${String(t).split("\n").map((x, i) => (i ? "<w:br/>" : "") + `<w:t xml:space="preserve">${esc(x)}</w:t>`).join("")}</w:r>`;
+    const fontX = f.font ? `<w:rFonts w:ascii="${esc(f.font)}" w:hAnsi="${esc(f.font)}" w:cs="${esc(f.font)}"/>` : "";
+    const sz = f.size ? `<w:sz w:val="${Math.round(f.size * 2)}"/><w:szCs w:val="${Math.round(f.size * 2)}"/>` : "";
+    return `<w:r><w:rPr>${fontX}${f.b ? "<w:b/><w:bCs/>" : f.offB ? '<w:b w:val="0"/><w:bCs w:val="0"/>' : ""}${f.i ? "<w:i/><w:iCs/>" : ""}${f.c ? `<w:color w:val="${f.c}"/>` : ""}${sz}${rtl ? "<w:rtl/>" : ""}${sup ? '<w:vertAlign w:val="superscript"/>' : ""}</w:rPr>${String(t).split("\n").map((x, i) => (i ? "<w:br/>" : "") + `<w:t xml:space="preserve">${esc(x)}</w:t>`).join("")}</w:r>`;
   };
   // v5.41: "2^(−ΔΔCt)" (a superscript read from a PDF) is written as a real superscript
-  const run = (t, bold) => String(t).split(/\^\(([^()]{1,40})\)/).map((x, i) => (x ? run1(x, bold, i % 2 === 1) : "")).join("");
+  const run = (t, f) => String(t).split(/\^\(([^()]{1,40})\)/).map((x, i) => (x ? run1(x, f, i % 2 === 1) : "")).join("");
+  const runs = (b, base = {}) => (b.runs && b.runs.length ? b.runs.map((r) => run(r.t, { ...base, b: r.b || base.b, i: r.i || base.i, c: r.c || base.c })).join("") : run(b.text, base));
+  // paragraph properties: direction, alignment (a right-to-left paragraph's start is its right side —
+  // Word reads "left"/"right" there the other way round), indents, spacing, a new page before it
+  const pPr = (b, style, bullet, text) => {
+    const rtl = b.rtl || isAr(text || b.text || "");
+    const jc = !b.align ? "" : b.align === "center" ? "center" : b.align === "justify" ? "both" : rtl ? (b.align === "left" ? "right" : "") : (b.align === "right" ? "right" : "");
+    const jcX = jc ? `<w:jc w:val="${jc}"/>` : "";
+    // (in a right-to-left paragraph Word's "left" indent is the start side, like jc above)
+    const ind = b.ind || b.first ? `<w:ind w:left="${tw(b.ind || 0)}"${b.first > 0 ? ` w:firstLine="${tw(b.first)}"` : b.first < 0 ? ` w:hanging="${tw(-b.first)}"` : ""}/>` : "";
+    const sp = b.before != null || b.line || o.exact ? `<w:spacing w:before="${tw(b.before || 0)}" w:after="0"${b.line && b.size && b.line > b.size * 1.2 ? ` w:line="${Math.round(240 * b.line / (b.size * 1.16))}" w:lineRule="auto"` : ""}/>` : "";
+    return `<w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ""}${b.pageBreak ? "<w:pageBreakBefore/>" : ""}${bullet ? `<w:numPr><w:ilvl w:val="${b.level || 0}"/><w:numId w:val="1"/></w:numPr>` : ""}${sp}${bullet ? "" : b.level && !b.ind ? `<w:ind w:left="${720 * (b.level + 1)}" w:hanging="360"/>` : ind}${rtl ? "<w:bidi/>" : ""}${jcX}</w:pPr>`;
+  };
+  const fmt = (b) => ({ ...(b.size ? { size: b.size } : {}), ...(b.font ? { font: b.font } : {}) });
   // bullets are a real Word list (numbering.xml); numbered items keep the source's own numbers ("3.")
-  const para = (t, style, bullet) => `<w:p><w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ""}${bullet ? '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>' : ""}${isAr(t) ? "<w:bidi/>" : ""}</w:pPr>${run(t)}</w:p>`;
-  const body = blocks.map((b) => {
+  // (a heading style is bold: a heading the PDF shows plain says so)
+  const para = (t, style, bullet, b = { text: t }) => { const f = { ...fmt(b), ...(b.runs && /^(Heading|Title)/.test(style || "") ? { offB: true } : {}) }; return `<w:p>${pPr(b, style, bullet, t)}${b.runs ? runs(b, f) : run(t, f)}</w:p>`; };
+  const hf = { header: blocks.find((b) => b.type === "header"), footer: blocks.find((b) => b.type === "footer") };
+  // a header / footer paragraph; its page number is Word's PAGE field (it counts in the Word file too)
+  const hfXml = (b, tag) => {
+    const f = fmt(b), parts = b.page ? String(b.text).split(new RegExp("(?<!\\d)" + b.page + "(?!\\d)")) : [b.text];
+    const inner = parts.map((x, k) => (k ? `<w:fldSimple w:instr=" PAGE "><w:r><w:rPr>${f.size ? `<w:sz w:val="${Math.round(f.size * 2)}"/>` : ""}</w:rPr><w:t>${b.page}</w:t></w:r></w:fldSimple>` : "") + (x ? run(x, f) : "")).join("");
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:${tag} xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:p>${pPr({ ...b, before: 0 }, null, false, b.text)}${inner}</w:p></w:${tag}>`;
+  };
+  const body = blocks.filter((b) => b.type !== "header" && b.type !== "footer").map((b) => {
     if (b.type === "table") {
       const w = Math.max(...b.rows.map((r) => r.length));
-      return `<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="0" w:type="auto"/><w:tblBorders>${["top", "left", "bottom", "right", "insideH", "insideV"].map((s) => `<w:${s} w:val="single" w:sz="4" w:space="0" w:color="999999"/>`).join("")}</w:tblBorders></w:tblPr><w:tblGrid>${Array(w).fill(`<w:gridCol w:w="${Math.floor(9638 / w)}"/>`).join("")}</w:tblGrid>` +
-        b.rows.map((r, ri) => `<w:tr>${Array.from({ length: w }, (_, ci) => `<w:tc><w:p><w:pPr>${isAr(r[ci] || "") ? "<w:bidi/>" : ""}</w:pPr>${run(r[ci] || "", ri === 0)}</w:p></w:tc>`).join("")}</w:tr>`).join("") + `</w:tbl><w:p/>`;
+      const rtl = b.rtl || b.rows.some((r) => r.some((c) => isAr(c || "")));
+      const widths = b.widths && b.widths.length === w ? b.widths.map(tw) : Array(w).fill(Math.floor(9638 / w));
+      const cf = fmt(b);
+      // the space above a table (a table has none of its own): an empty paragraph exactly that tall
+      return (b.pageBreak || b.before ? `<w:p><w:pPr>${b.pageBreak ? "<w:pageBreakBefore/>" : ""}<w:spacing w:before="0" w:after="0" w:line="${Math.max(20, tw(b.before || 1))}" w:lineRule="exact"/><w:rPr><w:sz w:val="2"/></w:rPr></w:pPr></w:p>` : "") +
+        `<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/>${rtl ? "<w:bidiVisual/>" : ""}<w:tblW w:w="${b.widths ? widths.reduce((a, x) => a + x, 0) : 0}" w:type="${b.widths ? "dxa" : "auto"}"/>${b.ind ? `<w:tblInd w:w="${tw(b.ind)}" w:type="dxa"/>` : ""}<w:tblBorders>${["top", "left", "bottom", "right", "insideH", "insideV"].map((s) => `<w:${s} w:val="single" w:sz="4" w:space="0" w:color="999999"/>`).join("")}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${widths.map((x) => `<w:gridCol w:w="${x}"/>`).join("")}</w:tblGrid>` +
+        b.rows.map((r, ri) => `<w:tr>${Array.from({ length: w }, (_, ci) => `<w:tc><w:tcPr><w:tcW w:w="${widths[ci]}" w:type="dxa"/></w:tcPr><w:p><w:pPr>${o.exact ? '<w:spacing w:before="0" w:after="0"/>' : ""}${isAr(r[ci] || "") || rtl ? "<w:bidi/>" : ""}</w:pPr>${run(r[ci] || "", { ...cf, b: b.bold ? !!(b.bold[ri] && b.bold[ri][ci]) : ri === 0 })}</w:p></w:tc>`).join("")}</w:tr>`).join("") + `</w:tbl>` + (o.exact ? "" : "<w:p/>");
     }
     if (b.type === "pagebreak") return `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
     if (b.type === "image" && b.b64) {
-      const n = imgs.push(b.b64), cx = 6120000, cy = Math.round(cx * (b.h || 1) / (b.w || 1));
-      return `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${n}" name="Chart ${n}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${n}" name="chart${n}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdImg${n}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+      // v6.8: a picture keeps its size (points) and place; JPEG or PNG
+      const ext = /^data:image\/jpe?g/i.test(b.b64) ? "jpeg" : "png";
+      const n = imgs.push({ b64: b.b64, ext }), maxW = o.page ? (o.page.w - o.page.left - o.page.right) * 12700 : 6120000;
+      const cx = b.w && o.page ? Math.min(Math.round(b.w * 12700), maxW) : 6120000, cy = Math.round(cx * (b.h || 1) / (b.w || 1));
+      return `<w:p>${pPr({ ...b, align: b.align || (o.page ? "left" : "center") }, null, false, "")}<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${n}" name="Picture ${n}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${n}" name="image${n}.${ext}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdImg${n}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
     }
-    if (b.type === "title") return para(b.text, "Title");
-    if (b.type === "subtitle") return para(b.text, "Subtitle");
-    if (b.type === "caption") return para(b.text, "Caption");
-    if (b.type === "li") return b.num ? para(b.num + ".\t" + b.text, "ListBullet") : para(b.text, "ListBullet", true);
-    if (/^h[1-3]$/.test(b.type)) return para(b.text, "Heading" + b.type[1]);
-    return para(b.text);
+    if (b.type === "title") return para(b.text, "Title", false, b);
+    if (b.type === "subtitle") return para(b.text, "Subtitle", false, b);
+    if (b.type === "caption") return para(b.text, "Caption", false, b);
+    if (b.type === "li") return b.num ? para(b.num + ".\t" + b.text, "ListBullet", false, b.runs ? { ...b, runs: [{ t: b.num + ".\t" }, ...b.runs] } : { ...b, text: b.num + ".\t" + b.text }) : para(b.text, "ListBullet", true, b);
+    if (/^h[1-3]$/.test(b.type)) return para(b.text, "Heading" + b.type[1], false, b);
+    return para(b.text, null, false, b);
   }).join("");
-  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"${imgs.length ? ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"' : ""}><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>`;
-  const style = (id, name, size, bold, extra = "", color = /^Heading/.test(id) ? o.accent : null) => `<w:style w:type="paragraph" w:styleId="${id}"><w:name w:val="${name}"/><w:basedOn w:val="Normal"/><w:pPr>${extra.includes("<w:spacing") ? "" : `<w:spacing w:before="${bold ? 240 : 0}" w:after="120"/>`}${extra}</w:pPr><w:rPr>${bold ? "<w:b/>" : ""}${color ? `<w:color w:val="${color}"/>` : ""}<w:sz w:val="${size}"/><w:szCs w:val="${size}"/></w:rPr></w:style>`;
-  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Arial"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="276" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>` +
+  const hfRefs = (hf.header ? '<w:headerReference w:type="default" r:id="rIdHdr"/>' : "") + (hf.footer ? '<w:footerReference w:type="default" r:id="rIdFtr"/>' : "");
+  const pg = o.page ? `${hfRefs}<w:pgSz w:w="${tw(o.page.w)}" w:h="${tw(o.page.h)}"${o.page.w > o.page.h ? ' w:orient="landscape"' : ""}/><w:pgMar w:top="${tw(o.page.top)}" w:right="${tw(o.page.right)}" w:bottom="${tw(o.page.bottom)}" w:left="${tw(o.page.left)}" w:header="${tw(hf.header ? Math.max(12, hf.header.at || 24) : 18)}" w:footer="${tw(hf.footer ? Math.max(12, hf.footer.at || 24) : 18)}" w:gutter="0"/>`
+    : `<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/>`;
+  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"${imgs.length || hfRefs ? ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"' : ""}><w:body>${body}<w:sectPr>${pg}</w:sectPr></w:body></w:document>`;
+  const style = (id, name, size, bold, extra = "", color = /^Heading/.test(id) ? o.accent : null) => `<w:style w:type="paragraph" w:styleId="${id}"><w:name w:val="${name}"/><w:basedOn w:val="Normal"/>${/^Heading/.test(id) ? '<w:next w:val="Normal"/>' : ""}<w:pPr>${/^Heading/.test(id) ? "<w:keepNext/>" : ""}${extra.includes("<w:spacing") ? "" : o.exact ? "" : `<w:spacing w:before="${bold ? 240 : 0}" w:after="120"/>`}${extra}${/^Heading(\d)/.test(id) ? `<w:outlineLvl w:val="${+id.slice(-1) - 1}"/>` : ""}</w:pPr><w:rPr>${bold ? "<w:b/><w:bCs/>" : ""}${color ? `<w:color w:val="${color}"/>` : ""}<w:sz w:val="${size}"/><w:szCs w:val="${size}"/></w:rPr></w:style>`;
+  const bodySz = o.body ? Math.round(o.body * 2) : 22, font = o.font ? esc(o.font) : "Calibri";
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:cs="${o.font ? font : "Arial"}"/><w:sz w:val="${bodySz}"/><w:szCs w:val="${bodySz}"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr>${o.exact ? '<w:spacing w:after="0" w:line="240" w:lineRule="auto"/>' : '<w:spacing w:after="120" w:line="276" w:lineRule="auto"/>'}</w:pPr></w:pPrDefault></w:docDefaults>` +
     `<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>` + style("Heading1", "heading 1", 32, true) + style("Heading2", "heading 2", 28, true) + style("Heading3", "heading 3", 24, true) +
-    style("ListBullet", "List Bullet", 22, false, `<w:ind w:left="720" w:hanging="360"/>`) +
+    style("ListBullet", "List Bullet", bodySz, false, `<w:ind w:left="720" w:hanging="360"/>`) +
     style("Title", "Title", 56, true, `<w:spacing w:before="2400" w:after="240"/>`, o.accent) + style("Subtitle", "Subtitle", 30, false, `<w:spacing w:after="480"/>`, "595959") + style("Caption", "caption", 18, false, `<w:jc w:val="center"/>`, "595959") + `<w:style w:type="table" w:styleId="TableGrid"><w:name w:val="Table Grid"/></w:style></w:styles>`;
   const files = [
-    { name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${imgs.length ? '<Default Extension="png" ContentType="image/png"/>' : ""}<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>` },
+    { name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${imgs.some((x) => x.ext === "png") ? '<Default Extension="png" ContentType="image/png"/>' : ""}${imgs.some((x) => x.ext === "jpeg") ? '<Default Extension="jpeg" ContentType="image/jpeg"/>' : ""}<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>${hf.header ? '<Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>' : ""}${hf.footer ? '<Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>' : ""}</Types>` },
     { name: "_rels/.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>` },
-    { name: "word/_rels/document.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>${imgs.map((_, i) => `<Relationship Id="rIdImg${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/chart${i + 1}.png"/>`).join("")}</Relationships>` },
+    { name: "word/_rels/document.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>${imgs.map((x, i) => `<Relationship Id="rIdImg${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${o.page ? "image" : "chart"}${i + 1}.${x.ext}"/>`).join("")}${hf.header ? '<Relationship Id="rIdHdr" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>' : ""}${hf.footer ? '<Relationship Id="rIdFtr" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>' : ""}</Relationships>` },
     { name: "word/document.xml", data: doc },
     { name: "word/styles.xml", data: styles },
-    { name: "word/numbering.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="singleLevel"/><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>` },
+    { name: "word/numbering.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="hybridMultilevel"/>${["•", "◦", "▪"].map((c, k) => `<w:lvl w:ilvl="${k}"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="${c}"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="${720 * (k + 1)}" w:hanging="360"/></w:pPr></w:lvl>`).join("")}</w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>` },
     { name: "docProps/core.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${esc(title)}</dc:title><dc:creator>Attune</dc:creator></cp:coreProperties>` },
-    ...imgs.map((b64, i) => ({ name: `word/media/chart${i + 1}.png`, data: b64ToBytes(b64) })),
+    ...(hf.header ? [{ name: "word/header1.xml", data: hfXml(hf.header, "hdr") }] : []), ...(hf.footer ? [{ name: "word/footer1.xml", data: hfXml(hf.footer, "ftr") }] : []),
+    ...imgs.map((x, i) => ({ name: `word/media/${o.page ? "image" : "chart"}${i + 1}.${x.ext}`, data: b64ToBytes(String(x.b64).replace(/^data:[^,]*,/, "")) })),
   ];
   return zipStore(files);
+}
+
+/** v6.8: a PDF (the phone's pages with their layout) → a Word file that looks like it. */
+export function pdfToDocx(pages, title = "Document") {
+  return docxFromBlocks(pdfLinesToBlocks(pages), title, pdfDocOptions(pages));
 }
 
 const unxml = (s) => String(s).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
@@ -443,7 +731,7 @@ function odfZip(mime, content, styles = "") {
 /** Blocks → an OpenDocument text (.odt bytes). */
 export function odtFromBlocks(blocks) {
   const para = (t, st) => `<text:p${st ? ` text:style-name="${st}"` : ""}>${esc(t).replace(/\n/g, "<text:line-break/>")}</text:p>`;
-  const body = blocks.map((b) => {
+  const body = blocks.filter((b) => !["header", "footer", "image", "pagebreak"].includes(b.type)).map((b) => {
     if (b.type === "table") { const w = Math.max(...b.rows.map((r) => r.length)); return `<table:table table:name="Table"><table:table-column table:number-columns-repeated="${w}"/>${b.rows.map((r) => `<table:table-row>${Array.from({ length: w }, (_, i) => `<table:table-cell office:value-type="string">${para(r[i] || "")}</table:table-cell>`).join("")}</table:table-row>`).join("")}</table:table>`; }
     if (b.type === "li") return `<text:list><text:list-item>${para(b.text)}</text:list-item></text:list>`;
     if (/^h[1-3]$/.test(b.type)) return `<text:h text:outline-level="${b.type[1]}" text:style-name="H${b.type[1]}">${esc(b.text)}</text:h>`;
@@ -498,21 +786,25 @@ export async function epubToBlocks(bytes) {
 /** Blocks → a web page (HTML; opens in any browser; Arabic runs right-to-left). */
 export function blocksToHtml(blocks, title = "Document") {
   let body = "", list = false;
-  for (const b of blocks) {
+  for (const b of blocks.filter((x) => x.type !== "header" && x.type !== "footer")) {
     if (b.type === "li" && !list) { body += "<ul>"; list = true; }
     if (b.type !== "li" && list) { body += "</ul>"; list = false; }
-    const t = esc(b.text || "").replace(/\n/g, "<br>");
-    if (b.type === "table") body += `<table>${b.rows.map((r, i) => `<tr>${r.map((c) => `<${i ? "td" : "th"} dir="auto">${esc(c).replace(/\n/g, "<br>")}</${i ? "td" : "th"}>`).join("")}</tr>`).join("")}</table>`;
-    else if (b.type === "li") body += `<li dir="auto">${t}</li>`;
-    else if (/^h[1-3]$/.test(b.type)) body += `<${b.type} dir="auto">${t}</${b.type}>`;
-    else body += `<p dir="auto">${t}</p>`;
+    // v6.8: the words' bold / italic / colour and the paragraph's alignment, indent and picture come along
+    const t = b.runs ? b.runs.map((r) => { let h = esc(r.t).replace(/\n/g, "<br>"); if (r.b) h = `<b>${h}</b>`; if (r.i) h = `<i>${h}</i>`; if (r.c) h = `<span style="color:#${r.c}">${h}</span>`; return h; }).join("") : esc(b.text || "").replace(/\n/g, "<br>");
+    const st = [b.align && b.align !== "left" ? `text-align:${b.align}` : "", b.ind ? `margin-inline-start:${b.ind}pt` : "", b.size && b.type === "p" ? `font-size:${b.size}pt` : ""].filter(Boolean).join(";");
+    const sa = st ? ` style="${st}"` : "";
+    if (b.type === "table") body += `<table${b.rtl ? ' dir="rtl"' : ""}>${b.rows.map((r, i) => `<tr>${r.map((c, ci) => { const th = b.bold ? b.bold[i] && b.bold[i][ci] : !i; return `<${th ? "th" : "td"} dir="auto">${esc(c).replace(/\n/g, "<br>")}</${th ? "th" : "td"}>`; }).join("")}</tr>`).join("")}</table>`;
+    else if (b.type === "image" && b.b64) body += `<p${sa}><img src="${esc(b.b64)}" alt="" style="max-width:100%${b.w ? `;width:${Math.round(b.w)}pt` : ""}"></p>`;
+    else if (b.type === "li") body += `<li dir="auto"${sa}>${t}</li>`;
+    else if (/^h[1-3]$/.test(b.type)) body += `<${b.type} dir="auto"${sa}>${t}</${b.type}>`;
+    else if (b.type !== "pagebreak") body += `<p dir="auto"${sa}>${t}</p>`;
   }
   if (list) body += "</ul>";
   return `<!doctype html>\n<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>body{font-family:system-ui,Arial,sans-serif;max-width:820px;margin:32px auto;padding:0 16px;line-height:1.55;color:#1a1a1a}table{border-collapse:collapse;margin:12px 0}th,td{border:1px solid #999;padding:6px 10px;text-align:start}th{background:#f1f1f1}</style></head><body>\n${body}\n</body></html>\n`;
 }
 /** Blocks → Markdown (tables with a header rule). */
 export function blocksToMarkdown(blocks) {
-  return blocks.map((b) => b.type === "table" ? b.rows.map((r, i) => "| " + r.map((c) => String(c).replace(/\n/g, " ").replace(/\|/g, "\\|")).join(" | ") + " |" + (i === 0 ? "\n|" + r.map(() => " --- |").join("") : "")).join("\n")
+  return blocks.filter((b) => !["header", "footer", "image", "pagebreak"].includes(b.type)).map((b) => b.type === "table" ? b.rows.map((r, i) => "| " + r.map((c) => String(c).replace(/\n/g, " ").replace(/\|/g, "\\|")).join(" | ") + " |" + (i === 0 ? "\n|" + r.map(() => " --- |").join("") : "")).join("\n")
     : b.type === "li" ? "- " + b.text : /^h\d$/.test(b.type) ? "#".repeat(+b.type[1]) + " " + b.text : b.text).join("\n\n") + "\n";
 }
 
@@ -660,7 +952,9 @@ export function parseTranslated(reply, n) {
 /** Puts the translations back → new blocks (the originals are untouched). */
 export function applyTranslations(blocks, units, texts) {
   const nb = blocks.map((b) => (b.type === "table" ? { ...b, rows: b.rows.map((r) => [...r]) } : { ...b }));
-  units.forEach((u, i) => { const t = texts[i]; if (t == null) return; if (u.r != null) nb[u.b].rows[u.r][u.c] = t; else nb[u.b].text = t; });
+  // (a translated paragraph can't keep per-word bold / colour — the words move — so it keeps the
+  // paragraph's own look: bold when all of it was bold)
+  units.forEach((u, i) => { const t = texts[i]; if (t == null) return; if (u.r != null) nb[u.b].rows[u.r][u.c] = t; else { const b = nb[u.b]; b.text = t; if (b.runs) { const allB = b.runs.every((r) => r.b || !r.t.trim()), c = b.runs[0].c; b.runs = allB || (c && b.runs.every((r) => r.c === c)) ? [{ t, b: allB, i: false, c: b.runs.every((r) => r.c === c) ? c : null }] : null; if (!b.runs) delete b.runs; } if (/[\u0600-\u06FF]/.test(t) !== !!b.rtl) { delete b.rtl; if (b.align === "left" || b.align === "right") delete b.align; } } });
   return nb;
 }
 

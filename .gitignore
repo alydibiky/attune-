@@ -36,3 +36,7 @@ tests/trials/every-max.txt
 tests/trials/pics/
 tests/websearch/node_modules/
 tests/websearch/report-*.md
+
+# v6.8 file-converter bench (tests/convert/run.sh)
+tests/convert/out/
+tests/convert/.cache/

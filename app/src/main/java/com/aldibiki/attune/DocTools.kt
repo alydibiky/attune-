@@ -37,30 +37,121 @@ object DocTools {
         if (!boxReady) { com.tom_roush.pdfbox.android.PDFBoxResourceLoader.init(ctx.applicationContext); boxReady = true }
     }
 
-    /** {pages:[{n, text, scan}], count} */
+    /** {pages:[{n, text, scan, lines, w, h, imgs}], count} */
     /**
      * v5.41 (Ali: "PDF → Word changed the format" — headings glued to paragraphs, tables as plain lines,
      * numbered questions lost their numbers): while the text is read, every word's position, size and
      * boldness is kept, so the page can rebuild headings, lists and real tables (convert.js pdfLinesToBlocks).
+     * v6.8 (Ali: "not just convert but with formatting and spacing and everything"): every WORD keeps its
+     * own bold / italic / colour, each line its font, its right edge and its direction, and the pictures on
+     * the page are sent with their place. Arabic is rebuilt from its letters right to left (PDFBox's own
+     * reversal turned «لا» into «ال»: «ملاحظة» → «مالحظة»), with numbers and English words inside it kept
+     * left to right. tests/convert/PdfLayout.java is this code on desktop PDFBox — keep the two in step.
      */
     private class LayoutStripper : com.tom_roush.pdfbox.text.PDFTextStripper() {
-        val words = ArrayList<FloatArray>()   // x, xEnd, y, size, bold (1/0)
+        val words = ArrayList<FloatArray>()   // x, xEnd, y, size, bold, italic, Arabic letters, other letters, colour (rgb)
         val texts = ArrayList<String>()
+        val fonts = ArrayList<String>()
+        val colours = java.util.IdentityHashMap<com.tom_roush.pdfbox.text.TextPosition, Int>()
+        init {
+            // the text colour (PDFTextStripper doesn't follow it on its own)
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingColorSpace())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingColorSpace())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingDeviceCMYKColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingDeviceCMYKColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingDeviceRGBColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingDeviceRGBColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingDeviceGrayColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingDeviceGrayColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingColorN())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingColorN())
+        }
+        override fun processTextPosition(text: com.tom_roush.pdfbox.text.TextPosition?) {
+            try { if (text != null) rgbOf(graphicsState.nonStrokingColor)?.let { colours[text] = it } } catch (e: Exception) { }
+            super.processTextPosition(text)
+        }
         override fun writeString(text: String?, textPositions: MutableList<com.tom_roush.pdfbox.text.TextPosition>?) {
             super.writeString(text, textPositions)
             try {
                 val tp = textPositions ?: return
                 if (tp.isEmpty() || text.isNullOrBlank()) return
-                val a = tp.first(); val b = tp.last()
-                val fname = try { a.font?.name ?: "" } catch (e: Exception) { "" }
-                val bold = fname.contains("Bold", true) || fname.contains("Black", true) || fname.contains("Heavy", true) || fname.contains("Semibold", true)
-                words.add(floatArrayOf(a.xDirAdj, b.xDirAdj + b.widthDirAdj, a.yDirAdj, a.fontSizeInPt, if (bold) 1f else 0f))
-                texts.add(text)
+                // PDFBox often hands a whole line over in one piece — split it into its words (at spaces, gaps
+                // and font changes, left to right on the page) so each keeps its own bold / colour / place
+                val g = tp.sortedBy { it.xDirAdj }
+                var cur = ArrayList<com.tom_roush.pdfbox.text.TextPosition>()
+                for (p in g) {
+                    val u = p.unicode ?: ""
+                    val last = cur.lastOrNull()
+                    val gap = last != null && p.xDirAdj - (last.xDirAdj + last.widthDirAdj) > p.fontSizeInPt * 0.18f
+                    val fontChange = last != null && last.font !== p.font
+                    if (u.isBlank() || gap || fontChange) { if (cur.isNotEmpty()) addWord(cur); cur = ArrayList(); if (u.isBlank()) continue }
+                    cur.add(p)
+                }
+                if (cur.isNotEmpty()) addWord(cur)
             } catch (e: Exception) { }
+        }
+        private fun addWord(tp: List<com.tom_roush.pdfbox.text.TextPosition>) {
+            val raw = tp.joinToString("") { it.unicode ?: "" }
+            // a number in an Arabic line: "50%" is drawn «%50» — the sign goes back after the number
+            val text = if (hasRtl(raw)) rtlText(tp) else raw.replace(Regex("^([%٪])(\\d[\\d.,]*)$"), "$2$1")
+            if (text.isBlank()) return
+            val a = tp[0]
+            val fname = try { a.font?.name ?: "" } catch (e: Exception) { "" }
+            val bold = Regex("(?i)bold|black|heavy|semibold").containsMatchIn(fname)
+            val italic = Regex("(?i)italic|oblique").containsMatchIn(fname)
+            // the word's left and right edge whatever the writing direction (an Arabic word's first letter is on its right)
+            var x0 = Float.MAX_VALUE; var x1 = -Float.MAX_VALUE
+            for (p in tp) { x0 = minOf(x0, p.xDirAdj); x1 = maxOf(x1, p.xDirAdj + p.widthDirAdj) }
+            val ar = text.count { it.code in 0x0590..0x08FF }
+            val la = text.count { it.isLetter() } - ar
+            words.add(floatArrayOf(x0, x1, a.yDirAdj, a.fontSizeInPt, if (bold) 1f else 0f, if (italic) 1f else 0f, ar.toFloat(), la.toFloat(), (colours[a] ?: 0).toFloat()))
+            texts.add(text); fonts.add(fname)
         }
     }
 
-    /** The kept words of one page → lines: [{y, x, s (size), b (all bold), sp: [[x, text, size]]}] (spans split at wide gaps). */
+    /** A PDF colour → 0xRRGGBB (grey, RGB and CMYK; null for others). */
+    private fun rgbOf(c: com.tom_roush.pdfbox.pdmodel.graphics.color.PDColor?): Int? {
+        val v = c?.components ?: return null
+        fun b(x: Float) = (x.coerceIn(0f, 1f) * 255 + 0.5f).toInt()
+        return when (v.size) {
+            1 -> b(v[0]).let { (it shl 16) or (it shl 8) or it }
+            3 -> (b(v[0]) shl 16) or (b(v[1]) shl 8) or b(v[2])
+            4 -> { val k = v[3]; (b((1 - v[0]) * (1 - k)) shl 16) or (b((1 - v[1]) * (1 - k)) shl 8) or b((1 - v[2]) * (1 - k)) }
+            else -> null
+        }
+    }
+    private fun isRtlChar(c: Int) = c in 0x0590..0x08FF || c in 0xFB1D..0xFEFC
+    private fun hasRtl(t: String) = t.codePoints().anyMatch { isRtlChar(it) }
+    private fun strongLtr(u: String) = u.codePoints().anyMatch { Character.isDigit(it) || (Character.isLetter(it) && !isRtlChar(it)) }
+    private fun ltrish(t: String) = !hasRtl(t) && strongLtr(t)   // (a lone "%" is not: Arabic shows "50%" as «%50»)
+
+    /** An Arabic word rebuilt from its letters, right to left; numbers and Latin inside stay left to right. */
+    private fun rtlText(tp: List<com.tom_roush.pdfbox.text.TextPosition>): String {
+        val g = tp.sortedByDescending { it.xDirAdj + it.widthDirAdj / 2 }
+        val u = ArrayList<String>()
+        var prev: com.tom_roush.pdfbox.text.TextPosition? = null
+        for (p in g) {
+            val c = java.text.Normalizer.normalize(p.unicode ?: "", java.text.Normalizer.Form.NFKC)
+            val pv = prev
+            if (pv != null && c.isNotBlank() && !(u.isNotEmpty() && u.last().isBlank()) && pv.xDirAdj - (p.xDirAdj + p.widthDirAdj) > p.fontSizeInPt * 0.18f) u.add(" ")
+            u.add(c); prev = p
+        }
+        val out = StringBuilder()
+        var i = 0
+        while (i < u.size) {
+            // a sign stuck to a number ("50%", "$20") belongs to the number's run
+            val lead = Regex("[%\$€£+\\-]").matches(u[i]) && i + 1 < u.size && strongLtr(u[i + 1])
+            if (!strongLtr(u[i]) && !lead) { out.append(u[i]); i++; continue }
+            var j = i
+            while (j + 1 < u.size && (strongLtr(u[j + 1]) || (Regex("[.,:%/+\\-]").matches(u[j + 1]) && j + 2 < u.size && strongLtr(u[j + 2])))) j++
+            for (k in j downTo i) out.append(u[k])
+            i = j + 1
+        }
+        return out.toString().replace(Regex(" {2,}"), " ")
+    }
+
     private fun layoutLines(st: LayoutStripper): JSONArray {
         val out = JSONArray()
         val n = st.words.size
@@ -76,34 +167,100 @@ object DocTools {
             }
             groups.add(arrayListOf(i))
         }
-        for (g in groups) {
-            g.sortBy { st.words[it][0] }
+        for (g0 in groups) {
+            // a right-to-left line (more Arabic letters than others) is read from its right edge
+            val rtlLine = g0.sumOf { st.words[it][6].toDouble() } > g0.sumOf { st.words[it][7].toDouble() }
+            val g = ArrayList(g0.sortedBy { st.words[it][0] })
+            if (rtlLine) {
+                g.reverse()
+                // English words and numbers inside an Arabic line keep their own left-to-right order
+                // ("Liebherr LTM 1090") — each run put back, never across a column gap
+                var k = 0
+                while (k < g.size) {
+                    if (!ltrish(st.texts[g[k]])) { k++; continue }
+                    var m = k; var strong = false
+                    while (m < g.size && ltrish(st.texts[g[m]]) && (m == k || st.words[g[m - 1]][0] - st.words[g[m]][1] < st.words[g[m]][3] * 1.6f)) { strong = strong || strongLtr(st.texts[g[m]]); m++ }
+                    if (strong && m - k > 1) g.subList(k, m).reverse()
+                    k = m
+                }
+            }
             val sizes = g.map { st.words[it][3] }.sorted()
             val size = sizes[sizes.size / 2]
             val baseYs = g.filter { st.words[it][3] >= size * 0.9f }.map { st.words[it][2] }.sorted()
             val base = if (baseYs.isEmpty()) st.words[g[0]][2] else baseYs[baseYs.size / 2]
             val spans = JSONArray()
             var spanX = -1f; var spanEnd = 0f; val sb = StringBuilder(); var spanSize = 0f
-            var wordsOf = JSONArray()   // each word's x and text, so a table header can be split into its columns
-            var allBold = true
+            var wordsOf = JSONArray()   // each word: x, text, bold, italic, colour, xEnd
+            var allBold = true; var allItalic = true
+            var lineX0 = Float.MAX_VALUE; var lineX1 = -Float.MAX_VALUE
+            val fontVotes = HashMap<String, Int>(); val colVotes = HashMap<Int, Int>()
             for (i in g) {
                 val w = st.words[i]; val t = st.texts[i]
                 if (w[4] < 0.5f) allBold = false
-                if (spanX >= 0f && w[0] - spanEnd > size * 1.6f) { spans.put(JSONArray().put(spanX.toDouble()).put(sb.toString()).put(spanSize.toDouble()).put(wordsOf)); sb.setLength(0); spanX = -1f; wordsOf = JSONArray() }
-                if (spanX < 0f) { spanX = w[0]; spanSize = w[3] }
+                if (w[5] < 0.5f) allItalic = false
+                lineX0 = minOf(lineX0, w[0]); lineX1 = maxOf(lineX1, w[1])
+                fontVotes[st.fonts[i]] = (fontVotes[st.fonts[i]] ?: 0) + t.length
+                colVotes[w[8].toInt()] = (colVotes[w[8].toInt()] ?: 0) + t.length
+                // the gap to the previous word, measured in reading order
+                val gap = if (spanX < 0f) 0f else if (rtlLine) spanEnd - w[1] else w[0] - spanEnd
+                if (spanX >= 0f && gap > size * 1.6f) { spans.put(JSONArray().put(spanX.toDouble()).put(sb.toString()).put(spanSize.toDouble()).put(wordsOf)); sb.setLength(0); spanX = -1f; wordsOf = JSONArray() }
+                if (spanX < 0f) { spanX = if (rtlLine) w[1] else w[0]; spanSize = w[3] }
                 else {
                     // a smaller word raised above the line is a superscript (2^−ΔΔCt)
-                    if (w[3] < size * 0.8f && w[2] < base - 0.5f) { sb.append("^(").append(t).append(")"); spanEnd = w[1]; continue }
-                    if (w[0] - spanEnd > size * 0.12f) sb.append(' ')
+                    if (w[3] < size * 0.8f && w[2] < base - 0.5f) { sb.append("^(").append(t).append(")"); spanEnd = if (rtlLine) w[0] else w[1]; continue }
+                    if (gap > size * 0.12f) sb.append(' ')
                 }
-                sb.append(t); spanEnd = w[1]
-                wordsOf.put(JSONArray().put(w[0].toDouble()).put(t))
+                sb.append(t); spanEnd = if (rtlLine) w[0] else w[1]
+                wordsOf.put(JSONArray().put((if (rtlLine) w[1] else w[0]).toDouble()).put(t).put(w[4].toInt()).put(w[5].toInt()).put(w[8].toInt()).put((if (rtlLine) w[0] else w[1]).toDouble()))
             }
             if (spanX >= 0f) spans.put(JSONArray().put(spanX.toDouble()).put(sb.toString()).put(spanSize.toDouble()).put(wordsOf))
             val first = st.words[g[0]]
-            out.put(JSONObject().put("y", first[2].toDouble()).put("x", st.words[g.first()][0].toDouble()).put("s", size.toDouble()).put("b", allBold).put("sp", spans))
+            out.put(JSONObject().put("y", first[2].toDouble()).put("x", lineX0.toDouble()).put("e", lineX1.toDouble()).put("s", size.toDouble())
+                .put("b", allBold).put("i", allItalic).put("r", rtlLine)
+                .put("f", fontVotes.maxByOrNull { it.value }?.key ?: "").put("c", colVotes.maxByOrNull { it.value }?.key ?: 0)
+                .put("sp", spans))
         }
         return out
+    }
+
+    /**
+     * v6.8: the pictures on a page — where they sit (top-left, points) and how big — as JPEG / PNG data
+     * URLs (at most `budget`, each ≤ 1600 px). Pictures inside forms are found too.
+     */
+    private class ImageFinder(val pageH: Float, var budget: Int) : com.tom_roush.pdfbox.contentstream.PDFStreamEngine() {
+        val found = JSONArray()
+        init {
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.state.Concatenate())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.DrawObject())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.state.SetGraphicsStateParameters())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.state.Save())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.state.Restore())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.state.SetMatrix())
+        }
+        override fun processOperator(operator: com.tom_roush.pdfbox.contentstream.operator.Operator?, operands: MutableList<com.tom_roush.pdfbox.cos.COSBase>?) {
+            if (operator?.name == "Do" && !operands.isNullOrEmpty() && operands[0] is com.tom_roush.pdfbox.cos.COSName) {
+                val xo = try { resources.getXObject(operands[0] as com.tom_roush.pdfbox.cos.COSName) } catch (e: Exception) { null }
+                if (xo is com.tom_roush.pdfbox.pdmodel.graphics.image.PDImageXObject) {
+                    if (budget > 0) try {
+                        val m = graphicsState.currentTransformationMatrix
+                        val w = Math.abs(m.scalingFactorX); val h = Math.abs(m.scalingFactorY)
+                        if (w >= 24f && h >= 24f) {
+                            var bmp: Bitmap = xo.image
+                            val k = minOf(1.0, 1600.0 / maxOf(bmp.width, bmp.height))
+                            if (k < 1.0) bmp = Bitmap.createScaledBitmap(bmp, (bmp.width * k).toInt().coerceAtLeast(1), (bmp.height * k).toInt().coerceAtLeast(1), true)
+                            val bo = ByteArrayOutputStream()
+                            val png = bmp.hasAlpha()
+                            bmp.compress(if (png) Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG, 85, bo)
+                            found.put(JSONObject().put("x", m.translateX.toDouble()).put("y", (pageH - m.translateY - h).toDouble()).put("w", w.toDouble()).put("h", h.toDouble())
+                                .put("b64", "data:image/" + (if (png) "png" else "jpeg") + ";base64," + Base64.encodeToString(bo.toByteArray(), Base64.NO_WRAP)))
+                            budget--
+                        }
+                    } catch (e: Exception) { } catch (e: OutOfMemoryError) { budget = 0 }
+                    return
+                }
+            }
+            super.processOperator(operator, operands)
+        }
     }
 
     fun pdfText(ctx: Context, bytes: ByteArray, maxPages: Int = 400): JSONObject {
@@ -115,16 +272,24 @@ object DocTools {
             val pages = JSONArray()
             // paragraphs end with a blank line, so the Word file gets real paragraphs, not one block a page
             val strip = LayoutStripper().apply { sortByPosition = true; setAddMoreFormatting(true); setParagraphEnd("\n") }
+            var picBudget = 40   // pictures in the whole file (each page at most 12)
             for (i in 1..n) {
                 strip.startPage = i; strip.endPage = i
-                strip.words.clear(); strip.texts.clear()
+                strip.words.clear(); strip.texts.clear(); strip.fonts.clear(); strip.colours.clear()
                 val t = try { strip.getText(d) } catch (e: Exception) { "" }
                 val clean = t.replace("\r", "").trim()
                 val page = JSONObject().put("n", i).put("text", clean).put("scan", clean.replace(Regex("\\s"), "").length < 25)
                 try {
                     page.put("lines", layoutLines(strip))
-                    page.put("w", d.getPage(i - 1).mediaBox.width.toDouble())
+                    val box = d.getPage(i - 1).mediaBox
+                    page.put("w", box.width.toDouble()).put("h", box.height.toDouble())
                 } catch (e: Exception) { }   // no layout: the page falls back to the plain text
+                if (picBudget > 0) try {
+                    val f = ImageFinder(d.getPage(i - 1).mediaBox.height, minOf(12, picBudget))
+                    f.processPage(d.getPage(i - 1))
+                    picBudget -= f.found.length()
+                    page.put("imgs", f.found)
+                } catch (e: Exception) { } catch (e: OutOfMemoryError) { picBudget = 0 }
                 pages.put(page)
             }
             return JSONObject().put("pages", pages).put("count", d.numberOfPages)

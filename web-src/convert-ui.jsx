@@ -115,7 +115,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     setErr(""); setOut(null); setBusy(tr("Reading the file…"));
     try {
       const k = files.kind, f0 = files.list[0];
-      let blocks = null, rows = null, note = "";
+      let blocks = null, rows = null, note = "", docOpts = null;
       // 1. read the source into blocks (text) or rows (sheets)
       let cues = null;
       if (k === "pdf" && !PDF_TOOLS.includes(target)) {
@@ -138,9 +138,14 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
         }
         // v5.41: pages that came with their layout are rebuilt with headings, lists and tables
         const laid = r.pages.filter((p) => !p.scan && p.lines && p.lines.length);
-        blocks = laid.length === r.pages.filter((p) => !p.scan).length && laid.length
+        // v6.8: a PDF with no scanned pages is read as one document (a paragraph can go on over a page
+        // break, the body size and spacing come from all of it) and the Word file gets its page set-up
+        const allLaid = laid.length && laid.length === r.pages.length;
+        blocks = allLaid ? C.pdfLinesToBlocks(r.pages)
+          : laid.length === r.pages.filter((p) => !p.scan).length && laid.length
           ? r.pages.flatMap((p) => (!p.scan && p.lines && p.lines.length ? C.pdfLinesToBlocks([p]) : C.textToBlocks(text[p.n] || "")))
           : r.pages.flatMap((p) => C.textToBlocks(text[p.n] || ""));
+        if (allLaid) docOpts = C.pdfDocOptions(r.pages);
         if (r.count > r.pages.length) note = (note ? note + " " : "") + tr("Only the first {n} pages were converted.", { n: r.pages.length });
       } else if (k === "docx") blocks = await C.docxToBlocks(new Uint8Array(await f0.arrayBuffer()));
       else if (k === "pptx") blocks = await C.pptxToBlocks(new Uint8Array(await f0.arrayBuffer()));
@@ -208,7 +213,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
       // 2. write the target
       let o = null;
       const textOut = (ext, t) => ({ name: base() + suffix + "." + ext, mime: C.MIME[ext], text: t, size: new Blob([t]).size, show: t });
-      if (outTarget === "docx") { const b = C.docxFromBlocks(blocks || [], base()); o = { name: base() + suffix + ".docx", mime: C.MIME.docx, b64: C.bytesToB64(b), size: b.length }; }
+      if (outTarget === "docx") { const b = C.docxFromBlocks(blocks || [], base(), docOpts || {}); o = { name: base() + suffix + ".docx", mime: C.MIME.docx, b64: C.bytesToB64(b), size: b.length }; }
       else if (outTarget === "txt") o = textOut("txt", cues ? C.cuesToText(cues) : C.blocksToText(blocks || []));
       else if (outTarget === "html") o = textOut("html", C.blocksToHtml(blocks || [], base()));
       else if (outTarget === "md") o = textOut("md", C.blocksToMarkdown(blocks || []));
