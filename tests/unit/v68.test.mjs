@@ -112,6 +112,22 @@ const mh = RS.mergeHits([[junk, good]], 5, "How tall is the Cairo Tower?");
 ok(mh.length === 1 && mh[0] === good, "web: mergeHits drops the off-topic page");
 ok(RS.mergeHits([[junk]], 5, "How tall is the Cairo Tower?").length === 1, "web: if nothing passes, the pages are kept rather than none");
 
+// x-ray (Core Lite): the model left out the bill itself — code finds «9,500 a day, 3 days» when Karim pays
+const ch3 = X.parseExport(`01/09/2026, 09:00 - Ali: Karim, the 25 ton crane for the Maadi job is 9,500 a day, 3 days
+01/09/2026, 09:04 - Karim: ok, I'll send half now and half after the job
+01/09/2026, 12:30 - Karim: sent 14,250 by InstaPay`);
+const by3 = new Map(ch3.messages.map((m) => [m.i, m]));
+const k3 = X.addMissedPayments(X.parseItems('{"items":[{"type":"paid","msg":2,"from":"Karim","to":"Ali","amount":14250}]}', by3, ch3.people), ch3.messages, ch3.people);
+ok(X.ledgerOf(k3, "Ali").some((x) => x.person === "Karim" && x.net === 14250), "x-ray: a left-out bill (rate × days) is found by code — Karim still owes 14,250");
+const ch4 = X.parseExport(`01/09/2026, 09:00 - Ali: how much is the crane? 9,500 a day for 3 days?
+01/09/2026, 09:04 - Karim: yes`);
+ok(!X.addMissedPayments([], ch4.messages, ch4.people).some((x) => x.type === "owes"), "x-ray: a price only asked about is not a bill");
+
+// actions (the trials): the model called «فكرني بعد ساعتين» a timer
+const rem2 = A.buildAction({ action: "timer", title: "اشرب الدوا", time_text: "بعد ساعتين", minutes: 120 }, "فكرني بعد ساعتين اشرب الدوا", new Date("2026-09-28T10:00:00").getTime());
+ok(rem2.kind === "reminder" && new Date(rem2.at).getHours() === 12, "actions: «فكرني بعد ساعتين» is a reminder at 12:00, not a timer");
+ok(A.buildAction({ action: "timer", minutes: 10 }, "set a timer for 10 minutes to remind me", Date.now()).kind === "timer", "actions: a timer asked for by name stays a timer");
+
 // web search speed: a quick one-fact question reads a smaller window; comparisons and lists keep it all
 ok(RS.quickBudget("How tall is the Cairo Tower?", 9000) === 6000 && RS.quickBudget("ما هو ارتفاع برج خليفة؟", 9000) === 6000, "web: a one-fact question reads 6,000 characters");
 ok(RS.quickBudget("Compare the Hilux and the Ranger", 9000) === 9000 && RS.quickBudget("فئات تويوتا كورولا 2026 ومواصفاتها", 9000) === 9000 && RS.quickBudget("How tall is it?", 9000, true) === 9000, "web: comparisons, trims and deep research keep the full window");

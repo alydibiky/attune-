@@ -149,8 +149,10 @@ if (want("fit")) {
     ["نص فرخة مشوية ورز وسلطة وكوباية بيبسي", 900, 1500],
   ];
   for (const [words, lo, hi] of meals) {
-    const r = await llm(F.mealMessages(words, false), { json: true, maxTokens: 600 });
-    const items = R.parseMealChecked(r.text);
+    // as the app does (fit-ui readMeal): the offline reader first, the model only for what it can't place
+    const read = R.readMealText(words);
+    const r = read.items.length && !read.unknown.length ? { text: "(read offline, no model)", secs: 0 } : await llm(F.mealMessages(read.items.length ? read.unknown.join(", ") : words, false), { json: true, maxTokens: 600 });
+    const items = R.mergeSame([...read.items, ...(r.secs ? R.parseMealChecked(r.text) : [])]);
     const kcal = items.reduce((n, x) => n + (x.kcal || 0), 0);
     section("Fit", words, words, r, { items: items.map((x) => [x.name, x.grams, x.kcal]), kcal },
       [[items.length >= Math.min(3, words.split(/,| and | و|with/).length), "every food found"], [kcal >= lo && kcal <= hi, `a believable total (${lo}–${hi} kcal): ${kcal}`], [items.every((x) => x.grams > 0 && x.grams <= 900), "believable portions"]]);

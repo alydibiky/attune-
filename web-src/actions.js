@@ -269,7 +269,8 @@ export function buildAction(json, text, nowIn) {
   const j = json && typeof json === "object" ? json : {};
   let kind = KINDS.includes(j.action) ? j.action : guessKind(text);
   // «فكرني … اكلم حسن» / "remind me to call" is a reminder to call, not a call now (the model mixes them up)
-  if ((kind === "call" || kind === "whatsapp" || kind === "none") && /remind me|فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني/i.test(String(text || ""))) kind = "reminder";
+  // v6.8 (the trials): «فكرني بعد ساعتين اشرب الدوا» is a reminder with a message, not a bare timer
+  if ((kind === "call" || kind === "whatsapp" || kind === "none" || (kind === "timer" && !/timer|countdown|تايمر|مؤقت/i.test(String(text || "")))) && /remind me|فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني/i.test(String(text || ""))) kind = "reminder";
   const problems = [];
   const words = [j.time_text, text].filter(Boolean);
   let t = null;

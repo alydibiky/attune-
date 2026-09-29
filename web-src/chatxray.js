@@ -189,6 +189,20 @@ export function addMissedPayments(items, messages, people) {
     if (out.some((o) => o.msg === q.i || o.msg === a.i)) continue;
     out.push({ type: "order", msg: a.i, t: a.t, quote: q.text.slice(0, 200) + " → " + a.text.slice(0, 100), author: a.who, from: q.who, to: a.who, amount: null, currency: null, what: q.text.replace(/[?؟]/g, "").slice(0, 80), due: null, byCode: true });
   }
+  // a priced job the model left out: «the crane is 9,500 a day, 3 days» and then the other side
+  // pays or promises to — the bill is rate × count, owed to whoever quoted it (v6.8, found by Core Lite)
+  if (!out.some((o) => o.type === "owes")) {
+    for (const m of messages) {
+      if (QUESTION.test(m.text)) continue;
+      const rm = m.text.match(RATE_RX), cm = rm && m.text.replace(RATE_RX, " ").match(COUNT_RX);
+      if (!rm || !cm) continue;
+      let rate = parseFloat(rm[1].replace(/,(?=\d{3})/g, "")); if (/ألف|الف|k/i.test(rm[0]) && rate < 1000) rate *= 1000;
+      const n = +cm[1], other = people.find((p) => p !== m.who);
+      if (!(rate >= 10) || n < 1 || n > 365 || !out.some((o) => (o.type === "paid" || o.type === "promise") && o.from === other && o.t >= m.t)) continue;
+      out.push({ type: "owes", msg: m.i, t: m.t, quote: m.text.slice(0, 300), author: m.who, from: other, to: m.who, amount: rate * n, currency: "EGP", what: m.text.slice(0, 80), due: null, byCode: true });
+      break;
+    }
+  }
   return out;
 }
 const YES = /^(تمام|ماشي|اوكي|أوكي|اوك|أكيد|اكيد|حاضر|موافق|اتفقنا|يب|ايوه|أيوه|ok|okay|sure|done|yes|deal|confirmed)(?![\p{L}])/iu;
