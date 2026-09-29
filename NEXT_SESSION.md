@@ -129,11 +129,18 @@ matters (speed, heat/energy, RAM, answer quality), before shipping it.
      - fewer steps;
      - not unloading the chat model.
 
-10. **Fit & Food photo recognition hangs, reloads, then crashes.**
+10. **Fit & Food: photo recognition hangs, reloads, then crashes, and recognises no food; only 54 recipes.**
     - A photo of fried eggs on bread with Blaze+ stayed on "Recognising the food…" for a long time, then the
       screen reloaded and the app crashed.
     - Find the cause (memory? LiteRT vision on Blaze+? a timeout?).
     - Add a time limit with a fallback, and test on the real flow.
+    - **Ali: it does not recognise ANY food from photos.** Photo recognition must work reliably on real
+      phone photos, and must be tested with many real food photos (Egyptian dishes included), not only
+      synthetic test images.
+    - **The recipe database is far too small: only 54 recipes.** Ali wants a HUGE recipe database, with
+      Egyptian and international dishes, calories and macros per serving, and ingredients and steps,
+      searchable offline. Use large open sources, check their licences, and store them compactly on the
+      phone.
 
 11. **Mind.**
     - A saved photo (a screenshot) cannot be opened.
@@ -175,7 +182,7 @@ matters (speed, heat/energy, RAM, answer quality), before shipping it.
 Continue Attune on branch claude/attune-android-continuation-4lp2wq.
 First read HANDOFF.md and NEXT_SESSION.md, then fix EVERY item in NEXT_SESSION.md, one by
 one, with a task list. Start with section A (heat, the engine reload, the app restarting
-when I come back) and item 10 (the Fit photo crash). Measure each fix on the real flow
+when I come back) and item 10 (Fit: the photo crash, no food recognised, only 54 recipes). Measure each fix on the real flow
 and with real models (speed, heat/energy, RAM, answer quality) before shipping it.
 Research item 3 (use the phone's storage to make models lighter and stronger) and ship
 only what keeps quality and speed. Rework the whole app's UI/UX like an expert with
