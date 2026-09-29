@@ -26,3 +26,9 @@ for f in report arabic long; do
   printf '%-8s word→pdf ' "$f"; python3 compare.py out/$f.docx out/$f.w2p.out.docx 2>/dev/null
   python3 sidepdf.py out/$f.pdf out/$f.w2p.pdf out/$f.w2p.png 2>/dev/null
 done
+# PowerPoint → PDF: the slides drawn by the app (pptxToSlidesHtml), printed by Chromium, next to
+# LibreOffice's own PDF of the deck (out/deck.side.png)
+node bench_slides.mjs out/deck.pptx 2>/dev/null
+python3 print_pdf.py out/deck.slides.html out/deck.ours.pdf
+python3 sidepdf.py out/deck.pdf out/deck.ours.pdf out/deck.side.png 5 2>/dev/null
+echo "deck     slides → out/deck.side.png"

@@ -896,6 +896,238 @@ export async function pptxToBlocks(bytes) {
   return out;
 }
 
+/**
+ * v6.8 — a PowerPoint (.pptx bytes) → a print page with one page per slide that looks like the slide
+ * (NativeBridge.htmlToPdf prints it): the slide size, backgrounds (colour / gradient / picture), theme
+ * colours and fonts, every shape where it sits (placeholders take their place from the layout / master),
+ * fills, outlines, rounded / oval shapes, text with its font, size, bold / italic / underline / colour,
+ * alignment, top / middle / bottom anchoring, bullets and numbers by level, "shrink text on overflow",
+ * pictures, groups, and tables. → { html, w, h } (points)
+ */
+export async function pptxToSlidesHtml(bytes) {
+  const z = await unzip(bytes);
+  const get = (p) => (z.get(p) ? dec(z.get(p)) : "");
+  const pres = get("ppt/presentation.xml");
+  if (!pres) throw new Error("That file isn't a PowerPoint (.pptx) file.");
+  const EMU = 12700, pt = (v) => (+v || 0) / EMU;
+  const sz = pres.match(/<p:sldSz\b[^>]*cx="(\d+)"[^>]*cy="(\d+)"/) || [0, 9144000, 6858000];
+  const W = pt(sz[1]), H = pt(sz[2]);
+  const relsOf = (part) => { const p = part.replace(/([^/]+)$/, "_rels/$1.rels"); const m = new Map(); for (const x of get(p).matchAll(/<Relationship\b([^>]*)\/?>/g)) { const id = (x[1].match(/\bId="([^"]+)"/) || [])[1], t = (x[1].match(/\bTarget="([^"]+)"/) || [])[1], ty = (x[1].match(/\bType="([^"]+)"/) || [])[1] || ""; if (id && t) m.set(id, { t, type: ty.split("/").pop() }); } return m; };
+  const resolve = (from, target) => { if (target.startsWith("/")) return target.slice(1); const parts = from.split("/"); parts.pop(); for (const s of target.split("/")) { if (s === "..") parts.pop(); else if (s !== ".") parts.push(s); } return parts.join("/"); };
+  const presRels = relsOf("ppt/presentation.xml");
+  const slideParts = [...pres.matchAll(/<p:sldId\b[^>]*r:id="([^"]+)"/g)].map((m) => presRels.get(m[1])).filter(Boolean).map((r) => resolve("ppt/presentation.xml", r.t));
+  const esc2 = (s) => esc(s);
+  const media = (part, id) => { const r = relsOf(part).get(id); if (!r) return null; const p = resolve(part, r.t), b = z.get(p); if (!b || b.length > 8e6) return null; const mime = /\.png$/i.test(p) ? "image/png" : /\.jpe?g$/i.test(p) ? "image/jpeg" : /\.gif$/i.test(p) ? "image/gif" : /\.svg$/i.test(p) ? "image/svg+xml" : null; return mime ? `data:${mime};base64,` + bytesToB64(b) : null; };
+  // the first element with this tag (balanced — shapes nest)
+  const block = (x, tag, from = 0) => { const re = new RegExp(`<${tag}(?=[\\s>/])[^>]*?(/?)>`, "g"); re.lastIndex = from; const m = re.exec(x); if (!m) return null; if (m[1] === "/") return { s: m.index, e: m.index + m[0].length, x: m[0] }; const t = new RegExp(`<${tag}(?=[\\s>/])[^>]*?/?>|</${tag}>`, "g"); t.lastIndex = m.index; let depth = 0, q; while ((q = t.exec(x))) { if (q[0].startsWith("</")) depth--; else if (!q[0].endsWith("/>")) depth++; if (!depth) return { s: m.index, e: q.index + q[0].length, x: x.slice(m.index, q.index + q[0].length) }; } return null; };
+  const children = (x, tags) => { const out = []; const inner0 = x.replace(/^<[^>]*>/, ""); const re = new RegExp(`<(${tags.join("|")})(?=[\\s>/])`, "g"); let m, pos = 0; while ((re.lastIndex = pos, m = re.exec(inner0))) { const b = block(inner0, m[1], m.index); if (!b) break; out.push({ tag: m[1], x: b.x }); pos = b.e; } return out; };
+  const attr = (x, name) => { const m = String(x || "").match(new RegExp(`\\b${name}="([^"]*)"`)); return m ? m[1] : null; };
+  // ---- theme ----
+  const firstSlide = slideParts[0] || "";
+  const layoutOf = (sp) => { const r = [...relsOf(sp).values()].find((v) => v.type === "slideLayout"); return r ? resolve(sp, r.t) : null; };
+  const masterOf = (lp) => { const r = lp && [...relsOf(lp).values()].find((v) => v.type === "slideMaster"); return r ? resolve(lp, r.t) : null; };
+  const themeOf = (mp) => { const r = mp && [...relsOf(mp).values()].find((v) => v.type === "theme"); return r ? resolve(mp, r.t) : null; };
+  const themes = new Map();
+  const themeData = (mp) => {
+    const tp = themeOf(mp); if (themes.has(tp)) return themes.get(tp);
+    const tx = get(tp || ""), clr = {};
+    const scheme = (tx.match(/<a:clrScheme\b[\s\S]*?<\/a:clrScheme>/) || [""])[0];
+    for (const k of ["dk1", "lt1", "dk2", "lt2", "accent1", "accent2", "accent3", "accent4", "accent5", "accent6", "hlink", "folHlink"]) { const b = (scheme.match(new RegExp(`<a:${k}>([\\s\\S]*?)</a:${k}>`)) || [])[1] || ""; clr[k] = (b.match(/srgbClr val="([0-9A-Fa-f]{6})"/) || b.match(/lastClr="([0-9A-Fa-f]{6})"/) || [0, k === "lt1" ? "FFFFFF" : "000000"])[1].toUpperCase(); }
+    const font = { major: (tx.match(/<a:majorFont>[\s\S]*?<a:latin typeface="([^"]*)"/) || [])[1] || "Calibri Light", minor: (tx.match(/<a:minorFont>[\s\S]*?<a:latin typeface="([^"]*)"/) || [])[1] || "Calibri" };
+    const shadow = [...((tx.match(/<a:effectStyleLst>[\s\S]*?<\/a:effectStyleLst>/) || [""])[0]).matchAll(/<a:effectStyle>[\s\S]*?<\/a:effectStyle>|<a:effectStyle\/>/g)].map((m) => /<a:outerShdw\b/.test(m[0]));
+    const t = { clr, font, shadow }; themes.set(tp, t); return t;
+  };
+  // ---- colours ----
+  const mix = (hex, fn) => { const n = parseInt(hex, 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255; [r, g, b] = fn(r, g, b); return [r, g, b].map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("").toUpperCase(); };
+  const colorIn = (x, ctx) => {
+    if (!x) return null;
+    const m = x.match(/<a:(srgbClr|schemeClr|sysClr|prstClr)\b([^>]*?)(?:\/>|>([\s\S]*?)<\/a:\1>)/);
+    if (!m) return null;
+    let hex = null; const v = attr(m[2], "val");
+    if (m[1] === "srgbClr") hex = v; else if (m[1] === "sysClr") hex = attr(m[2], "lastClr") || (v === "window" ? "FFFFFF" : "000000");
+    else if (m[1] === "prstClr") hex = { black: "000000", white: "FFFFFF", red: "FF0000", blue: "0000FF", green: "008000", gray: "808080" }[v] || "000000";
+    else { const map = ctx.map || {}; const k = { bg1: map.bg1 || "lt1", tx1: map.tx1 || "dk1", bg2: map.bg2 || "lt2", tx2: map.tx2 || "dk2", phClr: ctx.ph || "accent1" }[v] || v; hex = /^[0-9A-F]{6}$/i.test(k) ? k : ctx.theme.clr[k] || "000000"; }
+    if (!hex) return null;
+    const mods = m[3] || "";
+    const lm = +(mods.match(/lumMod val="(\d+)"/) || [])[1] || 0, lo = +(mods.match(/lumOff val="(\d+)"/) || [])[1] || 0, tint = +(mods.match(/tint val="(\d+)"/) || [])[1] || 0, shade = +(mods.match(/shade val="(\d+)"/) || [])[1] || 0;
+    // as Office does it: tint / shade in linear light (black at tint 75 % is #898989), lumMod / lumOff on the HSL lightness
+    const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }, srgb = (v) => 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055);
+    if (tint) hex = mix(hex, (r, g, b) => [r, g, b].map((c) => srgb(lin(c) * tint / 1e5 + (1 - tint / 1e5))));
+    if (shade) hex = mix(hex, (r, g, b) => [r, g, b].map((c) => srgb(lin(c) * shade / 1e5)));
+    if (lm || lo) hex = mix(hex, (r, g, b) => {
+      r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, sat = 0, l = (mx + mn) / 2;
+      if (mx !== mn) { const d = mx - mn; sat = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h /= 6; }
+      l = Math.min(1, Math.max(0, l * (lm ? lm / 1e5 : 1) + lo / 1e5));
+      const q = l < 0.5 ? l * (1 + sat) : l + sat - l * sat, p2 = 2 * l - q, f = (t) => { t = (t + 1) % 1; return t < 1 / 6 ? p2 + (q - p2) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p2 + (q - p2) * (2 / 3 - t) * 6 : p2; };
+      return sat ? [f(h + 1 / 3) * 255, f(h) * 255, f(h - 1 / 3) * 255] : [l * 255, l * 255, l * 255];
+    });
+    const alpha = +(mods.match(/alpha val="(\d+)"/) || [])[1];
+    return alpha && alpha < 1e5 ? { hex: hex.toUpperCase(), a: alpha / 1e5 } : hex.toUpperCase();
+  };
+  const css = (c) => (!c ? null : typeof c === "string" ? "#" + c : `rgba(${parseInt(c.hex.slice(0, 2), 16)},${parseInt(c.hex.slice(2, 4), 16)},${parseInt(c.hex.slice(4), 16)},${c.a})`);
+  const fillOf = (spPr, ctx, part) => {
+    if (!spPr) return undefined;
+    if (/<a:noFill\/>/.test(spPr.replace(/<a:ln\b[\s\S]*?<\/a:ln>/g, ""))) return "none";
+    const s = spPr.replace(/<a:ln\b[\s\S]*?<\/a:ln>/g, "");
+    const sf = (s.match(/<a:solidFill>([\s\S]*?)<\/a:solidFill>/) || [])[1]; if (sf) return css(colorIn(sf, ctx));
+    const gf = s.match(/<a:gradFill\b[\s\S]*?<\/a:gradFill>/); if (gf) { const stops = [...gf[0].matchAll(/<a:gs pos="(\d+)">([\s\S]*?)<\/a:gs>/g)].map((g) => `${css(colorIn(g[2], ctx))} ${+g[1] / 1000}%`); const ang = +(gf[0].match(/<a:lin ang="(\d+)"/) || [])[1] || 0; if (stops.length) return `linear-gradient(${Math.round(ang / 60000) + 90}deg, ${stops.join(", ")})`; }
+    const bf = s.match(/<a:blipFill\b[\s\S]*?r:embed="([^"]+)"/); if (bf && part) { const u = media(part, bf[1]); if (u) return `url("${u}") center / cover no-repeat`; }
+    return undefined;
+  };
+  // ---- the three parts a slide inherits from ----
+  const phKey = (sp) => { const ph = (sp.match(/<p:ph\b[^>]*\/?>/) || [])[0]; if (!ph) return null; return { type: attr(ph, "type") || "body", idx: attr(ph, "idx") }; };
+  const phIndex = (part) => { const x = get(part); const tree = block(x, "p:spTree"); const out = []; if (tree) for (const c of children(tree.x, ["p:sp", "p:pic", "p:graphicFrame", "p:grpSp"])) { const k = phKey(c.x); if (k) out.push({ k, x: c.x }); } return out; };
+  const findPh = (list, k) => { const tt = (t) => (t === "ctrTitle" ? "title" : t === "subTitle" || t === "obj" ? "body" : t); return list.find((p) => k.idx != null && p.k.idx === k.idx) || list.find((p) => p.k.type === k.type) || list.find((p) => tt(p.k.type) === tt(k.type)); };
+  const xfrmOf = (x) => { const m = (x || "").match(/<(?:a|p):xfrm\b([^>]*)>[\s\S]*?<a:off x="(-?\d+)" y="(-?\d+)"\/>[\s\S]*?<a:ext cx="(\d+)" cy="(\d+)"\/>/); return m ? { x: pt(m[2]), y: pt(m[3]), w: pt(m[4]), h: pt(m[5]), rot: +(attr(m[1], "rot") || 0) / 60000, flipH: attr(m[1], "flipH") === "1" } : null; };
+  // text defaults by level: the slide's own list style, then the layout's and master's placeholder, then the master's text styles
+  const lvlProps = (lst, lvl) => { const m = (lst || "").match(new RegExp(`<a:lvl${lvl}pPr\\b([^>]*)(?:/>|>([\\s\\S]*?)</a:lvl${lvl}pPr>)`)); if (!m) return null; const inner = m[2] || "", d = (inner.match(/<a:defRPr\b([^>]*?)(?:\/>|>([\s\S]*?)<\/a:defRPr>)/) || []); return { rtl: attr(m[1], "rtl"), algn: attr(m[1], "algn"), marL: attr(m[1], "marL"), indent: attr(m[1], "indent"), sz: attr(d[1], "sz"), b: attr(d[1], "b"), i: attr(d[1], "i"), color: d[2] ? (d[2].match(/<a:solidFill>([\s\S]*?)<\/a:solidFill>/) || [])[1] : null, font: d[2] ? attr((d[2].match(/<a:latin\b[^>]*>/) || [])[0], "typeface") : null, spcBef: (inner.match(/<a:spcBef><a:spcPts val="(\d+)"/) || [])[1] ? { pts: +inner.match(/<a:spcBef><a:spcPts val="(\d+)"/)[1] } : (inner.match(/<a:spcBef><a:spcPct val="(\d+)"/) || [])[1] ? { pct: +inner.match(/<a:spcBef><a:spcPct val="(\d+)"/)[1] } : null, bu: /<a:buNone\/>/.test(inner) ? "none" : (inner.match(/<a:buChar char="([^"]*)"/) || [])[1] ? { char: inner.match(/<a:buChar char="([^"]*)"/)[1] } : /<a:buAutoNum\b/.test(inner) ? { auto: attr((inner.match(/<a:buAutoNum\b[^>]*>/) || [])[0], "type") } : null, lnSpc: +(inner.match(/<a:lnSpc><a:spcPct val="(\d+)"/) || [])[1] || null }; };
+  const slidesOut = [];
+  for (const part of slideParts) {
+    const sx = get(part); if (!sx) continue;
+    const lp = layoutOf(part), mp = masterOf(lp), theme = themeData(mp);
+    const lx = get(lp || ""), mx = get(mp || "");
+    const cm = (mx.match(/<p:clrMap\b[^>]*>/) || [""])[0], ov = (lx.match(/<a:overrideClrMapping\b[^>]*>/) || [""])[0] || cm;
+    const map = {}; for (const k of ["bg1", "tx1", "bg2", "tx2"]) map[k] = attr(ov, k) || attr(cm, k);
+    const ctx = { theme, map };
+    if (/<p:sld\b[^>]*show="0"/.test(sx)) continue;   // a hidden slide isn't printed
+    const layPh = phIndex(lp || ""), masPh = phIndex(mp || "");
+    const txStyles = { title: (mx.match(/<p:titleStyle>([\s\S]*?)<\/p:titleStyle>/) || [])[1] || "", body: (mx.match(/<p:bodyStyle>([\s\S]*?)<\/p:bodyStyle>/) || [])[1] || "", other: (mx.match(/<p:otherStyle>([\s\S]*?)<\/p:otherStyle>/) || [])[1] || "" };
+    // background: the slide's, else the layout's, else the master's
+    let bg = "#FFFFFF";
+    for (const [x, p] of [[sx, part], [lx, lp], [mx, mp]]) {
+      const b = (x.match(/<p:bg>([\s\S]*?)<\/p:bg>/) || [])[1]; if (!b) continue;
+      const bp = (b.match(/<p:bgPr>([\s\S]*?)<\/p:bgPr>/) || [])[1];
+      if (bp) { const f = fillOf("<a:x>" + bp + "</a:x>", ctx, p); if (f && f !== "none") { bg = f; break; } }
+      const br = b.match(/<p:bgRef\b[^>]*>([\s\S]*?)<\/p:bgRef>/); if (br) { const c = colorIn(br[1], ctx); if (c) { bg = css(c); break; } }
+    }
+    let html = "";
+    // shapes from the master and layout that show on every slide (not placeholders): logos, bands
+    const deco = (x, p) => { if (!x || /<p:sld\b[^>]*showMasterSp="0"/.test(sx)) return; const tree = block(x, "p:spTree"); if (!tree) return; for (const c of children(tree.x, ["p:sp", "p:pic", "p:grpSp", "p:cxnSp"])) if (!phKey(c.x)) html += shape(c, p, { dx: 0, dy: 0, sx: 1, sy: 1 }, true); };
+    function textBody(tb, kind, inh, scale, fontColor = null) {
+      const bodyPr = (tb.match(/<a:bodyPr\b[^>]*(?:\/>|>[\s\S]*?<\/a:bodyPr>)/) || [""])[0];
+      const fs = +(bodyPr.match(/<a:normAutofit fontScale="(\d+)"/) || [])[1] || 1e5, ls = +(bodyPr.match(/lnSpcReduction="(\d+)"/) || [])[1] || 0;
+      const own = (tb.match(/<a:lstStyle>([\s\S]*?)<\/a:lstStyle>/) || [])[1] || "";
+      const styles = [own, ...inh.map((x) => (x.match(/<a:lstStyle>([\s\S]*?)<\/a:lstStyle>/) || [])[1] || ""), kind === "title" ? txStyles.title : kind === "body" ? txStyles.body : txStyles.other];
+      const prop = (lvl, k) => { for (const s of styles) { const p = lvlProps(s, lvl); if (p && p[k] != null) return p[k]; } return null; };
+      let out = "", num = [];
+      for (const pm of tb.matchAll(/<a:p>[\s\S]*?<\/a:p>|<a:p\s[^>]*>[\s\S]*?<\/a:p>|<a:p\/>/g)) {
+        const p = pm[0], pPr = (p.match(/<a:pPr\b([^>]*?)(?:\/>|>([\s\S]*?)<\/a:pPr>)/) || []);
+        const lvl = +(attr(pPr[1], "lvl") || 0) + 1, pin = pPr[2] || "";
+        const algn = attr(pPr[1], "algn") || prop(lvl, "algn") || "l";
+        const marL = pt(attr(pPr[1], "marL") || prop(lvl, "marL") || 0), ind = pt(attr(pPr[1], "indent") || prop(lvl, "indent") || 0);
+        const bu = /<a:buNone\/>/.test(pin) ? "none" : (pin.match(/<a:buChar char="([^"]*)"/) || [])[1] ? { char: pin.match(/<a:buChar char="([^"]*)"/)[1] } : /<a:buAutoNum\b/.test(pin) ? { auto: attr((pin.match(/<a:buAutoNum\b[^>]*>/) || [])[0], "type") } : prop(lvl, "bu");
+        const lnSpc = +(pin.match(/<a:lnSpc><a:spcPct val="(\d+)"/) || [])[1] || prop(lvl, "lnSpc") || 1e5;
+        const sb = (pin.match(/<a:spcBef><a:spcPts val="(\d+)"/) || [])[1] ? { pts: +pin.match(/<a:spcBef><a:spcPts val="(\d+)"/)[1] } : (pin.match(/<a:spcBef><a:spcPct val="(\d+)"/) || [])[1] ? { pct: +pin.match(/<a:spcBef><a:spcPct val="(\d+)"/)[1] } : prop(lvl, "spcBef");
+        const defSz = +(prop(lvl, "sz") || (kind === "title" ? 4400 : 1800)) / 100;
+        let runs = "", text = "", first = null;
+        for (const r of p.matchAll(/<a:r>[\s\S]*?<\/a:r>|<a:fld\b[\s\S]*?<\/a:fld>|<a:br\b[^>]*\/>|<a:br>[\s\S]*?<\/a:br>/g)) {
+          if (/^<a:br/.test(r[0])) { runs += "<br>"; continue; }
+          const rPr = (r[0].match(/<a:rPr\b([^>]*?)(?:\/>|>([\s\S]*?)<\/a:rPr>)/) || []);
+          let t = [...r[0].matchAll(/<a:t>([\s\S]*?)<\/a:t>/g)].map((x) => unxml(x[1])).join("");
+          if (/type="slidenum"/.test(r[0])) t = String(slidesOut.length + 1);
+          if (!t) continue;
+          const size = (+(attr(rPr[1], "sz") || 0) / 100 || defSz) * fs / 1e5;
+          const b = attr(rPr[1], "b") != null ? attr(rPr[1], "b") === "1" : prop(lvl, "b") === "1";
+          const it = attr(rPr[1], "i") != null ? attr(rPr[1], "i") === "1" : prop(lvl, "i") === "1";
+          const u = attr(rPr[1], "u") && attr(rPr[1], "u") !== "none";
+          const fill = (rPr[2] || "").match(/<a:solidFill>([\s\S]*?)<\/a:solidFill>/);
+          const col = fill ? css(colorIn(fill[1], ctx)) : fontColor || (prop(lvl, "color") ? css(colorIn(prop(lvl, "color"), ctx)) : css(colorIn(`<a:schemeClr val="tx1"/>`, ctx)));
+          let fam = attr(((rPr[2] || "").match(/<a:latin\b[^>]*>/) || [])[0], "typeface") || prop(lvl, "font");
+          if (!fam || fam === "+mn-lt") fam = theme.font.minor; if (fam === "+mj-lt") fam = theme.font.major;
+          if (kind === "title" && !attr(((rPr[2] || "").match(/<a:latin\b[^>]*>/) || [])[0], "typeface") && !prop(lvl, "font")) fam = theme.font.major;
+          if (first == null) first = { size, col, fam, b };
+          runs += `<span style="font-size:${Math.round(size * 10) / 10}pt;color:${col};font-family:${cssFont(fam)}${b ? ";font-weight:700" : ""}${it ? ";font-style:italic" : ""}${u ? ";text-decoration:underline" : ""}">${esc2(t)}</span>`;
+          text += t;
+        }
+        const rtl = (attr(pPr[1], "rtl") || prop(lvl, "rtl")) === "1";
+        if (!text) { const es = (+(((p.match(/<a:endParaRPr\b[^>]*>/) || [])[0] || "").match(/sz="(\d+)"/) || [])[1] || 0) / 100 || defSz; out += `<p style="margin:0;font-size:${es * fs / 1e5}pt;line-height:${1.2 * lnSpc / 1e5 * (1 - ls / 1e5)}">&nbsp;</p>`; num[lvl] = 0; continue; }
+        let mark = "";
+        if (bu && bu !== "none" && kind !== "title") {
+          if (bu.char) mark = bu.char.replace(/[\uF000-\uF0FF]/, "•");
+          else if (bu.auto) { num[lvl] = (num[lvl] || 0) + 1; for (let k = lvl + 1; k < 10; k++) num[k] = 0; const n = num[lvl]; mark = /alphaLc/.test(bu.auto) ? String.fromCharCode(96 + n) : /alphaUc/.test(bu.auto) ? String.fromCharCode(64 + n) : /romanLc/.test(bu.auto) ? ["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"][n - 1] || n : String(n); mark += /ParenR/.test(bu.auto) ? ")" : "."; }
+        }
+        const f = first || { size: defSz, col: "#000" };
+        const ta = { l: "left", ctr: "center", r: "right", just: "justify", dist: "justify" }[algn] || "left";
+        const startSide = rtl ? "right" : "left";
+        const spcB = !sb || !out ? 0 : sb.pts ? sb.pts / 100 : f.size * 1.2 * sb.pct / 1e5;   // (not above the first line)
+        out += `<p dir="${rtl ? "rtl" : "ltr"}" style="margin:0;${spcB ? `padding-top:${Math.round(spcB * 10) / 10}pt;` : ""}text-align:${rtl && ta === "left" ? "right" : ta};padding-${startSide}:${Math.round(marL * 10) / 10}pt;text-indent:${Math.round(ind * 10) / 10}pt;line-height:${Math.round(1.2 * lnSpc / 1e5 * (1 - ls / 1e5) * 100) / 100}">` +
+          (mark ? `<span style="display:inline-block;min-width:${Math.max(0, -ind)}pt;padding-inline-end:0.3em;text-indent:0;font-size:${f.size}pt;color:${f.col}">${esc2(mark)}</span>` : "") + runs + "</p>";
+      }
+      return { html: out, bodyPr };
+    }
+    function shape(c, p, tf, isDeco) {
+      const x = c.x;
+      if (c.tag === "p:grpSp") {
+        const g = (x.match(/<p:grpSpPr>[\s\S]*?<\/p:grpSpPr>/) || [""])[0];
+        const m = g.match(/<a:off x="(-?\d+)" y="(-?\d+)"\/>[\s\S]*?<a:ext cx="(\d+)" cy="(\d+)"\/>[\s\S]*?<a:chOff x="(-?\d+)" y="(-?\d+)"\/>[\s\S]*?<a:chExt cx="(\d+)" cy="(\d+)"\/>/);
+        const k = m ? { sx: (+m[3] || 1) / (+m[7] || 1), sy: (+m[4] || 1) / (+m[8] || 1) } : { sx: 1, sy: 1 };
+        const inner = m ? { dx: tf.dx + tf.sx * (pt(m[1]) - pt(m[5]) * k.sx), dy: tf.dy + tf.sy * (pt(m[2]) - pt(m[6]) * k.sy), sx: tf.sx * k.sx, sy: tf.sy * k.sy } : tf;
+        return children(x, ["p:sp", "p:pic", "p:grpSp", "p:graphicFrame", "p:cxnSp"]).map((cc) => shape(cc, p, inner, isDeco)).join("");
+      }
+      const key = phKey(x);
+      const inh = key && !isDeco ? [findPh(layPh, key), findPh(masPh, key)].filter(Boolean).map((q) => q.x) : [];
+      let xf = xfrmOf((x.match(/<p:spPr\b[\s\S]*?<\/p:spPr>|<p:xfrm\b[\s\S]*?<\/p:xfrm>/) || [""])[0]);
+      for (const q of inh) if (!xf) xf = xfrmOf((q.match(/<p:spPr\b[\s\S]*?<\/p:spPr>/) || [""])[0]);
+      if (!xf) return "";
+      const L = tf.dx + xf.x * tf.sx, T = tf.dy + xf.y * tf.sy, Wd = xf.w * tf.sx, Ht = xf.h * tf.sy;
+      const box = `position:absolute;left:${n2(L)}pt;top:${n2(T)}pt;width:${n2(Wd)}pt;height:${n2(Ht)}pt;${xf.rot ? `transform:rotate(${xf.rot}deg);` : ""}`;
+      if (c.tag === "p:pic") {
+        const id = (x.match(/<a:blip\b[^>]*r:embed="([^"]+)"/) || [])[1], u = id && media(p, id);
+        return u ? `<img src="${u}" style="${box}object-fit:fill">` : "";
+      }
+      if (c.tag === "p:graphicFrame") {
+        const tbl = (x.match(/<a:tbl>[\s\S]*?<\/a:tbl>/) || [])[0];
+        if (!tbl) return "";
+        const grid = [...tbl.matchAll(/<a:gridCol w="(\d+)"/g)].map((g) => pt(g[1]) * tf.sx);
+        const tp = (tbl.match(/<a:tblPr\b[^>]*>/) || [""])[0], firstRow = attr(tp, "firstRow") === "1", band = attr(tp, "bandRow") === "1";
+        const acc = "#" + theme.clr.accent1, light = css(colorIn('<a:schemeClr val="accent1"><a:tint val="40000"/></a:schemeClr>', ctx)), lighter = css(colorIn('<a:schemeClr val="accent1"><a:tint val="20000"/></a:schemeClr>', ctx));
+        const rows = [...tbl.matchAll(/<a:tr\b([^>]*)>([\s\S]*?)<\/a:tr>/g)];
+        const trs = rows.map((r, ri) => `<tr style="height:${n2(pt(attr(r[1], "h")) * tf.sy)}pt">` + [...r[2].matchAll(/<a:tc\b([^>]*)>([\s\S]*?)<\/a:tc>|<a:tc\/>/g)].map((tc) => {
+          if (/hMerge="1"|vMerge="1"/.test(tc[1] || "")) return "";
+          const tcPr = ((tc[2] || "").match(/<a:tcPr\b[^>]*(?:\/>|>[\s\S]*?<\/a:tcPr>)/) || [""])[0];
+          const own = fillOf("<a:x>" + tcPr.replace(/<a:ln[LRTB]\b[\s\S]*?<\/a:ln[LRTB]>/g, "") + "</a:x>", ctx, p);
+          const head = firstRow && ri === 0, fill = own && own !== "none" ? own : head ? acc : band ? (ri % 2 ? light : lighter) : null;
+          const t = textBody((tc[2] || "").match(/<a:txBody>[\s\S]*?<\/a:txBody>/)?.[0] || "", "other", [], 1e5);
+          const span = attr(tc[1], "gridSpan"), rspan = attr(tc[1], "rowSpan");
+          return `<td${span ? ` colspan="${span}"` : ""}${rspan ? ` rowspan="${rspan}"` : ""} style="padding:3.6pt 7.2pt;border:1pt solid #fff;vertical-align:${{ ctr: "middle", b: "bottom" }[attr(tcPr, "anchor")] || "top"};${fill ? `background:${fill};` : ""}${head ? "color:#fff;font-weight:700;" : ""}">${head ? t.html.replace(/color:#[0-9A-F]{6}/g, "color:#FFFFFF").replace(/font-size:/g, "font-weight:700;font-size:") : t.html}</td>`;
+        }).join("") + "</tr>").join("");
+        return `<table style="position:absolute;left:${n2(L)}pt;top:${n2(T)}pt;width:${n2(grid.reduce((a, v) => a + v, 0) || Wd)}pt;border-collapse:collapse;table-layout:fixed"><colgroup>${grid.map((g) => `<col style="width:${n2(g)}pt">`).join("")}</colgroup>${trs}</table>`;
+      }
+      // a shape: its fill and outline (its own, else the theme style it points to), its form, its text
+      const spPr = (x.match(/<p:spPr\b[\s\S]*?<\/p:spPr>|<p:spPr\/>/) || [""])[0];
+      const style = (x.match(/<p:style>[\s\S]*?<\/p:style>/) || [""])[0];
+      let fill = fillOf(spPr, ctx, p);
+      if (fill === undefined) for (const q of inh) { const f = fillOf((q.match(/<p:spPr\b[\s\S]*?<\/p:spPr>/) || [""])[0], ctx, p); if (f !== undefined) { fill = f; break; } }
+      if (fill === undefined && style) { const fr = style.match(/<a:fillRef idx="(\d+)"[^>]*>([\s\S]*?)<\/a:fillRef>/); if (fr && +fr[1] > 0) fill = css(colorIn(fr[2], ctx)); }
+      const ln = (spPr.match(/<a:ln\b[^>]*(?:\/>|>[\s\S]*?<\/a:ln>)/) || [""])[0];
+      let stroke = null;
+      if (ln && !/<a:noFill\/>/.test(ln)) { const lc = (ln.match(/<a:solidFill>([\s\S]*?)<\/a:solidFill>/) || [])[1]; if (lc) stroke = `${n2(pt(attr(ln, "w") || 12700))}pt solid ${css(colorIn(lc, ctx))}`; }
+      if (!stroke && !/<a:noFill\/>/.test(ln) && style) { const lr = style.match(/<a:lnRef idx="(\d+)"[^>]*>([\s\S]*?)<\/a:lnRef>/); if (lr && +lr[1] > 0 && !key) stroke = `${lr[1] > 1 ? 2 : 1}pt solid ${css(colorIn(lr[2], ctx))}`; }
+      const geom = attr((spPr.match(/<a:prstGeom\b[^>]*>/) || [])[0], "prst") || "rect";
+      const radius = geom === "ellipse" ? "50%" : geom === "roundRect" ? `${n2(Math.min(Wd, Ht) * 0.1667)}pt` : 0;
+      if (c.tag === "p:cxnSp") return stroke ? `<div style="${box}border-top:${stroke};height:0"></div>` : "";
+      const tb = (x.match(/<p:txBody>[\s\S]*?<\/p:txBody>/) || [""])[0];
+      const kind = key ? (/title/i.test(key.type) ? "title" : /^(body|subTitle|obj)$/.test(key.type) || key.idx ? "body" : "other") : "other";
+      if (key && /^(dt|ftr|sldNum)$/.test(key.type) && !/<a:t>[^<]/.test(tb)) return "";
+      const fref = style.match(/<a:fontRef\b[^>]*>([\s\S]*?)<\/a:fontRef>/), fcol = fref ? css(colorIn(fref[1], ctx)) : null;
+      const t = tb ? textBody(tb, kind, inh.map((q) => (q.match(/<p:txBody>[\s\S]*?<\/p:txBody>/) || [""])[0]), 1e5, fcol) : { html: "", bodyPr: "" };
+      const er = style.match(/<a:effectRef idx="(\d+)"/), shadowed = !/<a:effectLst\/>/.test(spPr) && (/<a:outerShdw\b/.test(spPr) || (er && theme.shadow[+er[1] - 1]));
+      const bp = t.bodyPr + (inh.map((q) => (q.match(/<a:bodyPr\b[^>]*>/) || [""])[0]).join(""));
+      const anchor = attr(t.bodyPr, "anchor") || attr(bp, "anchor") || (kind === "title" ? "ctr" : "t");
+      const ins = (k, d) => n2(pt(attr(t.bodyPr, k) || attr(bp, k) || d));
+      const vert = attr(t.bodyPr, "vert");
+      return `<div style="${box}${fill && fill !== "none" ? `background:${fill};` : ""}${stroke ? `border:${stroke};` : ""}${radius ? `border-radius:${radius};` : ""}${shadowed && fill && fill !== "none" ? "box-shadow:1.5pt 2pt 3pt rgba(0,0,0,.35);" : ""}box-sizing:border-box;display:flex;flex-direction:column;justify-content:${{ ctr: "center", b: "flex-end" }[anchor] || "flex-start"};padding:${ins("tIns", 45720)}pt ${ins("rIns", 91440)}pt ${ins("bIns", 45720)}pt ${ins("lIns", 91440)}pt;overflow:visible;${vert === "vert" ? "writing-mode:vertical-rl;" : vert === "vert270" ? "writing-mode:vertical-rl;transform:rotate(180deg);" : ""}">${t.html}</div>`;
+    }
+    const n2 = (v) => Math.round(v * 100) / 100;
+    deco(mx, mp); deco(lx, lp);
+    const tree = block(sx, "p:spTree");
+    if (tree) for (const c of children(tree.x, ["p:sp", "p:pic", "p:grpSp", "p:graphicFrame", "p:cxnSp"])) html += shape(c, part, { dx: 0, dy: 0, sx: 1, sy: 1 }, false);
+    slidesOut.push(`<section style="position:relative;width:${Math.round(W * 100) / 100}pt;height:${Math.round(H * 100) / 100}pt;overflow:hidden;background:${bg};break-after:page">${html}</section>`);
+  }
+  const page = `@page{size:${Math.round(W * 100) / 100}pt ${Math.round(H * 100) / 100}pt;margin:0}html,body{margin:0;padding:0}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}section:last-child{break-after:auto}p{white-space:pre-wrap}`;
+  return { html: `<!doctype html>\n<html><head><meta charset="utf-8"><style>${page}</style></head><body>${slidesOut.join("\n")}</body></html>\n`, w: W, h: H, slides: slidesOut.length };
+}
+
 // OpenDocument (LibreOffice) — .odt text and .ods sheets
 function odText(x) {
   return unxml(String(x).replace(/<text:s(?:\s+text:c="(\d+)")?\s*\/>/g, (_, n) => " ".repeat(+(n || 1))).replace(/<text:tab\s*\/>/g, "\t").replace(/<text:line-break\s*\/>/g, "\n")

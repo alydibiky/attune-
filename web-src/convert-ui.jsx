@@ -255,9 +255,13 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
         else if (rows) arg = { blocks: [{ type: "h2", text: base() }, { type: "table", rows: rows.slice(0, 2000) }] };
         else arg = { blocks: (blocks || []).filter((b) => b.type !== "header" && b.type !== "footer") };
         let r = null;
+        // v6.8: a PowerPoint → one page per slide that looks like the slide (shapes, colours, pictures, tables)
+        if (k === "pptx" && target !== "translate") {
+          try { const sl = await C.pptxToSlidesHtml(new Uint8Array(await f0.arrayBuffer())); if (sl.slides) r = await nativeCall("htmlToPdf", { html: sl.html, w: sl.w, h: sl.h }); } catch (e) { r = null; }
+        }
         // v6.8: laid out and printed by the phone's own Chrome engine (the look kept: fonts, sizes, spacing,
         // tables, pictures, header / footer, Arabic shaping); the older PDF maker if the phone refuses
-        if (arg.blocks) {
+        if (arg.blocks && !(r && r.b64)) {
           const wide = rows && Math.max(0, ...rows.slice(0, 50).map((x) => x.length)) > 6;
           const po = rows ? { sheet: true, body: 9, page: wide ? { w: 841.9, h: 595.3, top: 36, bottom: 36, left: 36, right: 36 } : { w: 595.3, h: 841.9, top: 42, bottom: 42, left: 42, right: 42 } } : docOpts || {};
           const pgs = po.page || { w: 595.3, h: 841.9 };

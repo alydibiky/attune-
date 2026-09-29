@@ -146,7 +146,46 @@ def long_doc():
     for k in range(3): d.add_paragraph(body)
     d.save(os.path.join(OUT, "long.docx"))
 
-report(); arabic(); long_doc()
-for f in ["report.docx", "arabic.docx", "long.docx"]:
+
+
+def deck():
+    """A 16:9 deck: a title slide, bullets on two levels, a table, shapes + a picture + a coloured background,
+    an Arabic slide — the default template's placeholders (their places come from the layout)."""
+    from pptx import Presentation
+    from pptx.util import Pt as P, Emu, Inches
+    from pptx.dml.color import RGBColor as C
+    from pptx.enum.shapes import MSO_SHAPE
+    from pptx.enum.text import PP_ALIGN
+    prs = Presentation(); prs.slide_width = Inches(13.333); prs.slide_height = Inches(7.5)
+    s = prs.slides.add_slide(prs.slide_layouts[0]); s.shapes.title.text = "Fleet Review 2026"; s.placeholders[1].text = "Adrighem & Aldibiki — Board meeting"
+    s = prs.slides.add_slide(prs.slide_layouts[1]); s.shapes.title.text = "What we checked"
+    tf = s.placeholders[1].text_frame; tf.text = "Hydraulics on all 38 cranes"
+    for t, lv in (("Hoses and seals", 1), ("Cylinders", 1), ("Load tests at 110%", 0), ("Operator licences renewed", 0)):
+        p = tf.add_paragraph(); p.text = t; p.level = lv
+    r = tf.paragraphs[3].runs[0]; r.font.bold = True; r.font.color.rgb = C(0xC0, 0x00, 0x00)
+    s = prs.slides.add_slide(prs.slide_layouts[5]); s.shapes.title.text = "Service costs"
+    rows = [["Crane", "Hours", "Cost (EGP)"], ["LTM 1100", "1,250", "185,000"], ["GMK 5250", "980", "240,000"], ["QY 70", "1,610", "96,000"]]
+    tb = s.shapes.add_table(4, 3, Inches(1.5), Inches(2), Inches(10), Inches(3)).table
+    for i, row in enumerate(rows):
+        for j, v in enumerate(row): tb.cell(i, j).text = v
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    s.background.fill.solid(); s.background.fill.fore_color.rgb = C(0xEE, 0xF4, 0xFB)
+    b = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.8), Inches(0.8), Inches(5), Inches(1.4)); b.fill.solid(); b.fill.fore_color.rgb = C(0x1F, 0x4E, 0x79); b.line.fill.background()
+    b.text_frame.text = "38 cranes · 0 accidents"; b.text_frame.paragraphs[0].runs[0].font.size = P(26); b.text_frame.paragraphs[0].runs[0].font.bold = True; b.text_frame.paragraphs[0].runs[0].font.color.rgb = C(0xFF, 0xFF, 0xFF); b.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+    e = s.shapes.add_shape(MSO_SHAPE.OVAL, Inches(10), Inches(0.8), Inches(2.2), Inches(2.2)); e.fill.solid(); e.fill.fore_color.rgb = C(0xF5, 0xA6, 0x23)
+    e.text_frame.text = "99%"; e.text_frame.paragraphs[0].runs[0].font.size = P(32); e.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+    tx = s.shapes.add_textbox(Inches(0.8), Inches(2.6), Inches(6), Inches(1)); tx.text_frame.text = "Uptime this year, by month:"; tx.text_frame.paragraphs[0].runs[0].font.size = P(20); tx.text_frame.paragraphs[0].runs[0].font.italic = True
+    picture(os.path.join(OUT, "wide.png"), 600, 160)
+    s.shapes.add_picture(os.path.join(OUT, "wide.png"), Inches(0.8), Inches(3.6), width=Inches(11.5))
+    s = prs.slides.add_slide(prs.slide_layouts[1]); s.shapes.title.text = "ملخص العرض"
+    tf = s.placeholders[1].text_frame; tf.text = "إيجار ونش 70 طن لمدة 5 أيام"
+    for t in ("السعر شامل السواق والوقود", "الدفع 50% مقدم"):
+        p = tf.add_paragraph(); p.text = t
+    for p in tf.paragraphs: p.alignment = PP_ALIGN.RIGHT
+    s.shapes.title.text_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
+    prs.save(os.path.join(OUT, "deck.pptx"))
+
+report(); arabic(); long_doc(); deck()
+for f in ["report.docx", "arabic.docx", "long.docx", "deck.pptx"]:
     subprocess.run(["soffice", "--headless", "--norestore", "--convert-to", "pdf", "--outdir", OUT, os.path.join(OUT, f)], check=True, capture_output=True)
 print("ok", sorted(os.listdir(OUT)))

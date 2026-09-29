@@ -110,5 +110,16 @@ ok(mdb[0].text === "The 50 t crane is ready — snake_case_name stays." && mdb[0
 const hb = C.htmlToBlocks('<p style="text-align:center">The <b>crane</b> is <span style="color:#c00000">urgent</span></p>');
 ok(hb[0].align === "center" && hb[0].runs.some((r) => r.b && r.t === "crane") && hb[0].runs.some((r) => r.c === "C00000"), "web page→word: bold, colour and centring are kept");
 
+// ---- PowerPoint → PDF: one page per slide that looks like the slide ----
+if (fs.existsSync(new URL("../convert/out/deck.pptx", import.meta.url))) {
+  const sl = await C.pptxToSlidesHtml(fs.readFileSync(new URL("../convert/out/deck.pptx", import.meta.url)));
+  const pages = sl.html.split("<section").slice(1);
+  ok(sl.slides === 5 && Math.round(sl.w) === 960 && Math.round(sl.h) === 540 && /@page\{size:959\.98pt 540pt;margin:0\}/.test(sl.html), "slides→pdf: a page per slide at the slide's size (16:9)");
+  ok(/font-size:44pt[^>]*>Fleet Review 2026/.test(pages[0]) && /color:#898989[^>]*>Adrighem/.test(pages[0]), "slides→pdf: the title at 44 pt; the subtitle's grey is Office's tint (#898989)");
+  ok(/padding-left:58\.5pt;text-indent:-22\.5pt[^>]*><span[^>]*>–<\/span><span[^>]*font-size:28pt[^>]*>Hoses and seals/.test(pages[1]) && /color:#C00000;[^>]*font-weight:700[^>]*>Load tests at 110%/.test(pages[1]), "slides→pdf: bullet levels (their indent and size) and a red bold bullet");
+  ok(/<table[^>]*position:absolute/.test(pages[2]) && /background:#4F81BD;color:#fff;font-weight:700/.test(pages[2]) && />185,000</.test(pages[2]), "slides→pdf: the table where it sits, its header row in the accent colour");
+  ok(/background:#EEF4FB/.test(pages[3]) && /border-radius:50%[^>]*>[\s\S]*?color:#FFFFFF[^>]*>99%/.test(pages[3]) && /<img src="data:image\/png/.test(pages[3]) && /box-shadow/.test(pages[3]), "slides→pdf: the slide's colour, an oval with white text, a picture, the theme's shadow");
+}
+
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASSED");
 if (fail) process.exit(1);
