@@ -231,7 +231,7 @@ if (want("code")) {
     const t0 = Date.now(), answers = [];
     // (the app shows an error when the model writes no code at all — here that case fails, and the run goes on)
     let res;
-    try { res = await C.workLoop({ task, lang, run, maxRounds: 4, llm: async (m, o) => { const r = await llm(m, { maxTokens: Math.min(1600, (o && o.maxTokens) || 1000), temperature: 0.2 }); answers.push(r.text); return r.text; } }); }
+    try { res = await C.workLoop({ task, lang, run, maxRounds: 4, llm: async (m, o) => { const r = await llm(m, { maxTokens: (o && o.maxTokens) || 1000, temperature: 0.2 });  answers.push(r.text); return r.text; } }); }
     catch (e) { res = { ok: false, code: "", tests: 0, rounds: 0, error: String(e && e.message || e) }; answers.push("ERROR: " + res.error); }
     const r = { text: answers.map((a, i) => (i ? `--- round ${i} ---\n` : "") + a).join("\n\n"), secs: Math.round((Date.now() - t0) / 100) / 10 };
     section("Coding", lang + " " + task.slice(0, 30), task, r, { rounds: res.rounds, tests: res.tests, chars: res.code.length }, [[res.code.length > 80, "a program"], [res.ok && res.tests > 0, "it runs and its own tests pass (after the app's fix rounds)"]]);

@@ -1,0 +1,2 @@
+MAX 6/6 · write 0.1 t/s · read 3.3 t/s
+  Photos: 6/6

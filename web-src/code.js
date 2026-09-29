@@ -158,6 +158,22 @@ export function assertProbe(code, res) {
   const probe = lines.slice(0, n - 1).concat([m[1] + "print('__ACTUAL__', repr(" + m[2] + ")); raise SystemExit(0)"], lines.slice(n)).join("\n");
   return { line: src.trim(), want: m[3], got: m[2], probe };
 }
+/** v6.9: the source line a Python error points at (the error summary drops the "<exec>" frames, so
+ *  a model never saw WHICH line failed), plus a hint when a test trips an error the program raises on
+ *  purpose (`assert vat(-10) == 0` while vat refuses negatives). → { line, hint } or null */
+export function failingLine(code, res) {
+  const err = String((res && (res.error || res.stderr)) || "");
+  const nums = [...err.matchAll(/File "<(?:exec|string|stdin)>", line (\d+)/g)].map((m) => +m[1]);
+  if (!nums.length) return null;
+  const src = String(code || "").split("\n"), at = (n) => (src[n - 1] || "").trim();
+  const deep = at(nums[nums.length - 1]);
+  const test = nums.map(at).reverse().find((l) => /^assert\b/.test(l)) || "";
+  const line = test && test !== deep ? `${test}   (inside it: ${deep})` : deep;
+  if (!line) return null;
+  const exc = (/^(\w+(?:Error|Exception))\b/m.exec(err.split("\n").filter((l) => l.trim()).slice(-1)[0] || "") || [])[1];
+  const onPurpose = exc && exc !== "AssertionError" && test && new RegExp("raise\\s+" + exc + "\\b").test(code);
+  return { line, hint: onPurpose ? `That test calls code that raises ${exc} ON PURPOSE (the program is right to refuse). A test for a refusal must catch it: try: ... except ${exc}: pass (and fail if nothing was raised) — not compare a result.` : "" };
+}
 /** The value the probe printed, or "". */
 export function probeValue(res) {
   const m = /__ACTUAL__ (.+)/.exec(String((res && res.stdout) || ""));
@@ -304,6 +320,7 @@ export function joinCont(code, more) {
  */
 export async function workLoop({ task, lang, code: startCode = "", change = "", llm, run, onEvent = () => {}, maxRounds = 4, isStopped = () => false }) {
   let code = startCode, round = 0, last = null, verdict = null;
+  const tried = new Set();                                  // code versions that already failed
   const stopped = () => { if (isStopped()) throw new Error("Stopped"); };
 
   const write = async () => {
@@ -361,6 +378,10 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
       ? `The program ran but never printed "${PASS_MARK}" — the tests did not all run.\n` + errorSummary(last)
       : errorSummary(last);
     let told = reason;
+    if (tried.has(code)) told = "YOUR LAST CHANGE BROUGHT BACK CODE THAT ALREADY FAILED. Do something different this time.\n" + told;
+    tried.add(code);
+    const fl = lang === "python" ? failingLine(code, last) : null;
+    if (fl) told += `\n\nThe line that failed: ${fl.line}` + (fl.hint ? "\n" + fl.hint : "");
     const pr = lang === "python" ? assertProbe(code, last) : null;
     if (pr) {
       stopped();

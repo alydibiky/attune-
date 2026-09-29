@@ -184,5 +184,9 @@ const vatCode = 'def vat(a, r=0.14):\n    return round(a*(1+r), 2)\n\ndef run_te
 const vatProbe = CD.assertProbe(vatCode, { ok: false, error: 'Traceback (most recent call last):\n  File "<exec>", line 7, in <module>\n  File "<exec>", line 6, in run_tests\nAssertionError: rounding' });
 ok(vatProbe && vatProbe.want === "12.0" && vatProbe.got === "vat(10.55, 0.14)" && /print\('__ACTUAL__', repr\(vat\(10\.55, 0\.14\)\)\)/.test(vatProbe.probe) && /\nrun_tests\(\)/.test(vatProbe.probe), "coding: a failed assert is probed for the value the program really returns");
 ok(CD.probeValue({ stdout: "Amount 114\n__ACTUAL__ 12.03\n" }) === "12.03" && CD.assertProbe(vatCode, { ok: false, error: "NameError: x" }) === null, "coding: the probe's value is read; other errors are not probed");
+const negCode = 'def vat(a, r=0.14):\n    if a < 0:\n        raise ValueError("neg")\n    return round(a*(1+r), 2)\n\nassert vat(100) == 114.0\nassert vat(-10) == 0, "Negative"\nprint("ALL TESTS PASSED")';
+const fl = CD.failingLine(negCode, { ok: false, error: 'Traceback (most recent call last):\n  File "<exec>", line 7, in <module>\n  File "<exec>", line 3, in vat\nValueError: neg' });
+ok(fl && /^assert vat\(-10\) == 0/.test(fl.line) && /raise ValueError/.test(fl.line) && /ON PURPOSE/.test(fl.hint) && /except ValueError/.test(fl.hint), "coding: the fix round is shown the failing test line, and that the error is the program refusing on purpose");
+ok(CD.failingLine("x = 1\ny = x + z", { error: 'File "<exec>", line 2, in <module>\nNameError: name \'z\' is not defined' }).hint === "" && CD.failingLine("x", { error: "SyntaxError" }) === null, "coding: an ordinary error gets its line and no refusal hint");
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASSED");
 if (fail) process.exit(1);
