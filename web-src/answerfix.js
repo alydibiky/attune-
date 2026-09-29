@@ -115,6 +115,23 @@ export function fixModelNames(answer, question, sources) {
       return pre + right;
     });
   }
+  // v6.8 (web benchmark): joined codes — the question asks about "A380", the pages say "A380-800",
+  // and a small model writes "A800" or "A380-380". A code that neither the question nor the pages
+  // contain is put back to the pages' own spelling.
+  const has = (code) => new RegExp("(?<![\\w-])" + code.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![\\w-])").test(H);
+  for (const q of new Set([...String(question || "").matchAll(/\b([A-Z]{1,3})(\d{2,5})\b/g)].map((m) => m[0]))) {
+    const P = q.match(/^[A-Z]+/)[0], qn = q.slice(P.length);
+    const variants = [...new Set([...hay.matchAll(new RegExp("\\b" + q + "-(\\d{2,5})\\b", "g"))].map((m) => q + "-" + m[1]))];
+    out = out.replace(new RegExp("\\b" + P + "(\\d{2,5})(?:-(\\d{2,5}))?\\b", "g"), (all, n, suf) => {
+      if (has(all) || (!suf && n === qn)) return all;
+      let right = null;
+      if (!suf && variants.includes(q + "-" + n)) right = q + "-" + n;          // "A800" → "A380-800"
+      else if (suf && n === qn) right = variants.length === 1 ? variants[0] : q;  // "A380-380" → "A380-800" / "A380"
+      if (!right) return all;
+      fixed.push([all, right]);
+      return right;
+    });
+  }
   return { text: out, fixed };
 }
 

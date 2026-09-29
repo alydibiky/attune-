@@ -137,6 +137,12 @@ ok(RS.quickBudget("How tall is the Cairo Tower?", 4000) === 4000, "web: never mo
 const GP = (await import("../trials/appsrc.mjs")).grounded();
 ok(/Answer in Arabic/.test(GP.groundedPrompt("كم سعر الدولار في البنك الأهلي", [{ title: "t", url: "u", text: "51.66" }], "match")) && /Answer in English/.test(GP.groundedPrompt("Who won?", [], "match")) && !/Answer in match/.test(GP.groundedPrompt("Who won?", [], "match")), "web: the answer's language is the question's (never \"Answer in match\")");
 
+// web answers (Glow on the web benchmark): "A380-380" / "A800" for the A380-800
+const AFX = await import("../../web-src/answerfix.js");
+const a380 = [{ title: "A380 capacity", url: "u", text: "The A380-800 is certified for 853 passengers; the A350 seats fewer." }];
+ok(AFX.fixModelNames("The Airbus A380-380 carries 853.", "Airbus A380 max passengers?", a380).text === "The Airbus A380-800 carries 853." && AFX.fixModelNames("The Airbus A800 carries 853.", "Airbus A380 max passengers?", a380).text === "The Airbus A380-800 carries 853.", "web: a garbled joined model code is put back to the pages' spelling");
+ok(AFX.fixModelNames("Unlike the A350, the A380-800 carries 853.", "Airbus A380 max passengers?", a380).fixed.length === 0, "web: another model the pages name (A350) is left alone");
+
 // Maps: a place name with «و» inside a word, and "where can I park"
 ok(PL.placeFor("انا في كمبوند ايمرالد بارك وعايز أفول بنزين اعمل ايه").near === "كمبوند ايمرالد بارك", "maps: «كمبوند» is not cut at its «و»");
 ok(PL.placeFor("انا في مدينتي و عايز صيدلية").near === "مدينتي", "maps: «و» as its own word still ends the place");
