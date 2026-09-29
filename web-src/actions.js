@@ -270,7 +270,10 @@ export function buildAction(json, text, nowIn) {
   let kind = KINDS.includes(j.action) ? j.action : guessKind(text);
   // «فكرني … اكلم حسن» / "remind me to call" is a reminder to call, not a call now (the model mixes them up)
   // v6.8 (the trials): «فكرني بعد ساعتين اشرب الدوا» is a reminder with a message, not a bare timer
-  if ((kind === "call" || kind === "whatsapp" || kind === "none" || (kind === "timer" && !/timer|countdown|تايمر|مؤقت/i.test(String(text || "")))) && /remind me|فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني/i.test(String(text || ""))) kind = "reminder";
+  // v6.8 (Zenith): «فكرني بكرة … اكلم حسن» came back as a calendar event — "remind me" is a reminder
+  if ((kind === "call" || kind === "whatsapp" || kind === "none" || kind === "calendar" || (kind === "timer" && !/timer|countdown|تايمر|مؤقت/i.test(String(text || "")))) && /remind me|فكرني|فكّرني|ذكرني|ذكّرني|نبهني|نبّهني/i.test(String(text || ""))) kind = "reminder";
+  // «صحيني الساعة 6 ونص» / "wake me up at 6" is an alarm (Zenith made it a 6:30 pm reminder)
+  if (kind !== "alarm" && /صحيني|صحّيني|صحينى|\bwake me\b/i.test(String(text || "")) && !/remind me|فكرني|ذكرني/i.test(String(text || ""))) kind = "alarm";
   const problems = [];
   const words = [j.time_text, text].filter(Boolean);
   let t = null;

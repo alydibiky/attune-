@@ -189,6 +189,19 @@ export function addMissedPayments(items, messages, people) {
     if (out.some((o) => o.msg === q.i || o.msg === a.i)) continue;
     out.push({ type: "order", msg: a.i, t: a.t, quote: q.text.slice(0, 200) + " → " + a.text.slice(0, 100), author: a.who, from: q.who, to: a.who, amount: null, currency: null, what: q.text.replace(/[?؟]/g, "").slice(0, 80), due: null, byCode: true });
   }
+  // v6.8 (Zenith): «فاضل 22,000» read as a new debt of 22,000 — what's LEFT already has the payments before
+  // it taken off: with no bill of its own, it stands for the bill (left + those payments); with one, it goes
+  for (let k = out.length - 1; k >= 0; k--) {
+    const o = out[k];
+    if (o.type !== "owes" || o.amount == null) continue;
+    const m = messages.find((x) => x.i === o.msg); if (!m) continue;
+    const bal = [...m.text.matchAll(BALANCE_RX)].map((x) => parseFloat(x[2].replace(/,(?=\d{3})/g, "")));
+    if (!bal.some((v) => Math.abs(v - o.amount) < 0.01)) continue;
+    const bill = out.some((b) => b !== o && b.type === "owes" && b.from === o.from && b.to === o.to && b.msg < o.msg);
+    if (bill) { out.splice(k, 1); continue; }
+    const paidBefore = out.filter((b) => b.type === "paid" && b.from === o.from && b.to === o.to && b.msg < o.msg).reduce((a, b) => a + (b.amount || 0), 0);
+    if (paidBefore) out[k] = { ...o, amount: o.amount + paidBefore, what: o.what, byCode: true };
+  }
   // a priced job the model left out: «the crane is 9,500 a day, 3 days» and then the other side
   // pays or promises to — the bill is rate × count, owed to whoever quoted it (v6.8, found by Core Lite)
   if (!out.some((o) => o.type === "owes")) {

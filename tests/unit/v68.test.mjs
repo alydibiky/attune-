@@ -128,6 +128,19 @@ const rem2 = A.buildAction({ action: "timer", title: "اشرب الدوا", time
 ok(rem2.kind === "reminder" && new Date(rem2.at).getHours() === 12, "actions: «فكرني بعد ساعتين» is a reminder at 12:00, not a timer");
 ok(A.buildAction({ action: "timer", minutes: 10 }, "set a timer for 10 minutes to remind me", Date.now()).kind === "timer", "actions: a timer asked for by name stays a timer");
 
+// Zenith on the max test: «فكرني … اكلم» as a calendar event, «صحيني» as an evening reminder, «فاضل» as a new debt
+const now9 = new Date("2026-09-28T10:00:00").getTime();
+ok(A.buildAction({ action: "calendar", when: "2026-09-29T09:00" }, "فكرني بكرة الساعة 9 الصبح اكلم المهندس حسن", now9).kind === "reminder", "actions: «فكرني … اكلم» is a reminder, not a calendar event");
+const wk = A.buildAction({ action: "reminder", time_text: "الساعة 6 ونص", when: "2026-09-28T18:30" }, "صحيني الساعة 6 ونص", now9);
+ok(wk.kind === "alarm" && new Date(wk.at).getHours() === 6 && new Date(wk.at).getMinutes() === 30, "actions: «صحيني الساعة 6 ونص» is an alarm at 6:30 in the morning");
+const ch5 = X.parseExport(`15/09/2026, 08:00 - Ali: صباح الخير يا حج، الفاتورة رقم 118 بتاعة الونش 70 طن: 42,000 جنيه
+15/09/2026, 09:10 - Hag Sayed: تمام يا باشمهندس، هبعت 20 ألف بكرة
+16/09/2026, 14:00 - Hag Sayed: بعتلك 20,000 كاش مع السواق
+16/09/2026, 14:30 - Ali: وصلوا الحمد لله، فاضل 22,000`);
+const by5 = new Map(ch5.messages.map((m) => [m.i, m]));
+const k5 = X.addMissedPayments(X.parseItems('{"items":[{"type":"promise","msg":1,"from":"Hag Sayed","to":"Ali","amount":20000},{"type":"paid","msg":2,"from":"Hag Sayed","to":"Ali","amount":20000},{"type":"owes","msg":3,"from":"Hag Sayed","to":"Ali","amount":22000}]}', by5, ch5.people), ch5.messages, ch5.people);
+ok(X.ledgerOf(k5, "Ali").some((x) => x.person === "Hag Sayed" && x.net === 22000), "x-ray: «فاضل 22,000» is what's left — Hag Sayed still owes 22,000 (not 2,000)");
+
 // web search speed: a quick one-fact question reads a smaller window; comparisons and lists keep it all
 ok(RS.quickBudget("How tall is the Cairo Tower?", 9000) === 6000 && RS.quickBudget("ما هو ارتفاع برج خليفة؟", 9000) === 6000, "web: a one-fact question reads 6,000 characters");
 ok(RS.quickBudget("Compare the Hilux and the Ranger", 9000) === 9000 && RS.quickBudget("فئات تويوتا كورولا 2026 ومواصفاتها", 9000) === 9000 && RS.quickBudget("How tall is it?", 9000, true) === 9000, "web: comparisons, trims and deep research keep the full window");
