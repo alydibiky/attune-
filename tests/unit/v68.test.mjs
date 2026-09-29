@@ -182,11 +182,28 @@ ok(/N% of the chart value/.test(VRF.solveMessages("A 50 t crane lifts at 75% of 
 const CD = await import("../../web-src/code.js");
 const vatCode = 'def vat(a, r=0.14):\n    return round(a*(1+r), 2)\n\ndef run_tests():\n    assert vat(100) == 114.0\n    assert vat(10.55, 0.14) == 12.0, "rounding"\nrun_tests()\nprint("ALL TESTS PASSED")';
 const vatProbe = CD.assertProbe(vatCode, { ok: false, error: 'Traceback (most recent call last):\n  File "<exec>", line 7, in <module>\n  File "<exec>", line 6, in run_tests\nAssertionError: rounding' });
-ok(vatProbe && vatProbe.want === "12.0" && vatProbe.got === "vat(10.55, 0.14)" && /print\('__ACTUAL__', repr\(vat\(10\.55, 0\.14\)\)\)/.test(vatProbe.probe) && /\nrun_tests\(\)/.test(vatProbe.probe), "coding: a failed assert is probed for the value the program really returns");
-ok(CD.probeValue({ stdout: "Amount 114\n__ACTUAL__ 12.03\n" }) === "12.03" && CD.assertProbe(vatCode, { ok: false, error: "NameError: x" }) === null, "coding: the probe's value is read; other errors are not probed");
+ok(vatProbe && vatProbe.checks[6].want === "12.0" && vatProbe.checks[6].got === "vat(10.55, 0.14)" && /_v = vat\(10\.55, 0\.14\)/.test(vatProbe.probe) && /\nrun_tests\(\)/.test(vatProbe.probe), "coding: a failed assert is probed for the value the program really returns");
+ok(CD.assertProbe(vatCode, { ok: false, error: "NameError: x" }) === null, "coding: other errors are not probed");
+{ // every test at once, both forms, run for real
+  const { spawnSync } = await import("child_process");
+  const loan = 'def pay(p, r, n):\n    i = r / 12\n    return p / n if i == 0 else p * i / (1 - (1 + i) ** -n)\n\nassert abs(pay(1000, 0.05, 12) - 85.61) < 0.01, "a"\nassert abs(pay(1000, 0.05, 1) - 1000.00) < 0.01, "b"\nassert round(pay(1000, 0, 10), 2) == 100.0\nassert pay(1000, 0.05, 120) == 9.0\nprint("ALL TESTS PASSED")';
+  const lp = CD.assertProbe(loan, { error: 'File "<exec>", line 6, in <module>\nAssertionError: b' });
+  const r = spawnSync("python3", ["-c", lp.probe], { encoding: "utf8" });
+  const f = CD.probeFindings({ stdout: r.stdout }, lp);
+  ok(f.length === 2 && /1000\.00/.test(f[0].want) && /^1004\.16/.test(f[0].value) && f[1].want === "9.0" && /^10\.6/.test(f[1].value), "coding: every wrong test is found in one run, abs(A - B) < tol and == alike (" + f.map((x) => x.want + "→" + x.value).join(", ") + ")");
+}
 const negCode = 'def vat(a, r=0.14):\n    if a < 0:\n        raise ValueError("neg")\n    return round(a*(1+r), 2)\n\nassert vat(100) == 114.0\nassert vat(-10) == 0, "Negative"\nprint("ALL TESTS PASSED")';
 const fl = CD.failingLine(negCode, { ok: false, error: 'Traceback (most recent call last):\n  File "<exec>", line 7, in <module>\n  File "<exec>", line 3, in vat\nValueError: neg' });
 ok(fl && /^assert vat\(-10\) == 0/.test(fl.line) && /raise ValueError/.test(fl.line) && /ON PURPOSE/.test(fl.hint) && /except ValueError/.test(fl.hint), "coding: the fix round is shown the failing test line, and that the error is the program refusing on purpose");
 ok(CD.failingLine("x = 1\ny = x + z", { error: 'File "<exec>", line 2, in <module>\nNameError: name \'z\' is not defined' }).hint === "" && CD.failingLine("x", { error: "SyntaxError" }) === null, "coding: an ordinary error gets its line and no refusal hint");
+{ // the fix loop: a no-op edit is refused and named; "expected X, got Y" says the test may be the wrong part
+  const js = 'function d(a, b) { return 365; }\nassertEqual(d("2024-02-29", "2025-02-28"), 364);\nconsole.log("ALL TESTS PASSED");';
+  const noop = '<<<<<<< SEARCH\nfunction d(a, b) { return 365; }\n=======\nfunction d(a, b) { return 365; }\n>>>>>>> REPLACE';
+  const good = '<<<<<<< SEARCH\nassertEqual(d("2024-02-29", "2025-02-28"), 364);\n=======\nassertEqual(d("2024-02-29", "2025-02-28"), 365);\n>>>>>>> REPLACE';
+  const asked = []; let k = 0;
+  const run = async (lang, code) => /, 364\)/.test(code) ? { ok: false, stdout: "", stderr: "", error: "Error: AssertionError: expected 364, got 365" } : { ok: true, stdout: "ALL TESTS PASSED\n", stderr: "" };
+  const res = await CD.workLoop({ task: "days between", lang: "javascript", code: js, run, llm: async (m) => { asked.push(m[1].content); return k++ ? good : noop; } });
+  ok(res.ok && res.rounds === 2 && /changed nothing/i.test(asked[1]) && /returns 365 where a test expects 364/.test(asked[0]), "coding: a fix that changes nothing is refused and named; the model is told the test may be the wrong part");
+}
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASSED");
 if (fail) process.exit(1);

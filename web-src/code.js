@@ -142,22 +142,36 @@ export function errorSummary(res, maxLines = 25) {
 }
 
 /** v6.9: a bare Python `assert f(x) == 12.0` fails with no values, and a model then works the
- *  number out in its head (often wrongly: "10.55 × 1.14 = 11.987"). This finds the failing
- *  `assert A == B` line and builds a program that prints what A really is, so the fix round is told
- *  "the test expects 12.0, the program returns 12.03". → { line, want, probe } or null */
+ *  number out in its head (often wrongly: "10.55 × 1.14 = 11.987"), one test per round. After an
+ *  AssertionError this builds a program that runs EVERY `assert A == B` and `assert abs(A - B) < tol`
+ *  line as a print of what A really is (inside try, so the next ones still run), so the fix round is
+ *  told for each wrong test "it expects 12.0, the program returns 12.03". → { probe, checks } or null */
+const EQ_RE = /^(\s*)assert\s+(.+?)\s*==\s*(.+?)\s*(?:,\s*f?["'].*)?$/;
+const ABS_RE = /^(\s*)assert\s+abs\((.+)\s-\s(.+?)\)\s*<=?\s*([\d.eE+-]+)\s*(?:,\s*f?["'].*)?$/;
 export function assertProbe(code, res) {
   const err = String((res && (res.error || res.stderr)) || "");
   if (!/AssertionError/.test(err)) return null;
-  const nums = [...err.matchAll(/File "<(?:exec|string|stdin)>", line (\d+)/g)].map((m) => +m[1]);
-  const lines = String(code || "").split("\n");
-  const n = nums.length ? nums[nums.length - 1] : 0;
-  const src = n ? lines[n - 1] || "" : "";
-  const m = /^(\s*)assert\s+(.+?)\s*==\s*(.+?)\s*(?:,\s*f?["'].*)?$/.exec(src);
-  if (!m) return null;
-  // the same program with that one line swapped (a test inside a function still runs when it's called)
-  const probe = lines.slice(0, n - 1).concat([m[1] + "print('__ACTUAL__', repr(" + m[2] + ")); raise SystemExit(0)"], lines.slice(n)).join("\n");
-  return { line: src.trim(), want: m[3], got: m[2], probe };
+  const lines = String(code || "").split("\n"), out = [], checks = {};
+  lines.forEach((l, i) => {
+    const a = ABS_RE.exec(l), m = a || EQ_RE.exec(l);
+    if (!m) { out.push(l); return; }
+    const [ind, got, want] = [m[1], m[2], m[3]], n = i + 1;
+    const pass = a ? `abs((_v) - (${want})) < ${a[4]}` : `_v == (${want})`;
+    checks[n] = { line: l.trim(), want, got };
+    out.push(`${ind}try:`, `${ind}    _v = ${got}`, `${ind}    print('__ACTUAL__', ${n}, ${pass}, repr(_v))`, `${ind}except Exception as _e:`, `${ind}    print('__ACTUAL__', ${n}, False, 'raises ' + type(_e).__name__)`);
+  });
+  return Object.keys(checks).length ? { probe: out.join("\n"), checks } : null;
 }
+/** The wrong tests the probe found: [{ line, want, got, value }] (at most 8). */
+export function probeFindings(res, pr) {
+  const found = [];
+  for (const m of String((res && res.stdout) || "").matchAll(/^__ACTUAL__ (\d+) (True|False) (.+)$/gm)) {
+    const c = pr && pr.checks[m[1]];
+    if (c && m[2] === "False" && !found.some((f) => f.line === c.line)) found.push({ ...c, value: m[3].trim().slice(0, 200) });
+  }
+  return found.slice(0, 8);
+}
+
 /** v6.9: the source line a Python error points at (the error summary drops the "<exec>" frames, so
  *  a model never saw WHICH line failed), plus a hint when a test trips an error the program raises on
  *  purpose (`assert vat(-10) == 0` while vat refuses negatives). → { line, hint } or null */
@@ -173,11 +187,6 @@ export function failingLine(code, res) {
   const exc = (/^(\w+(?:Error|Exception))\b/m.exec(err.split("\n").filter((l) => l.trim()).slice(-1)[0] || "") || [])[1];
   const onPurpose = exc && exc !== "AssertionError" && test && new RegExp("raise\\s+" + exc + "\\b").test(code);
   return { line, hint: onPurpose ? `That test calls code that raises ${exc} ON PURPOSE (the program is right to refuse). A test for a refusal must catch it: try: ... except ${exc}: pass (and fail if nothing was raised) — not compare a result.` : "" };
-}
-/** The value the probe printed, or "". */
-export function probeValue(res) {
-  const m = /__ACTUAL__ (.+)/.exec(String((res && res.stdout) || ""));
-  return m ? m[1].trim().slice(0, 200) : "";
 }
 
 /** Did the run pass? { passed, reason } */
@@ -321,6 +330,7 @@ export function joinCont(code, more) {
 export async function workLoop({ task, lang, code: startCode = "", change = "", llm, run, onEvent = () => {}, maxRounds = 4, isStopped = () => false }) {
   let code = startCode, round = 0, last = null, verdict = null;
   const tried = new Set();                                  // code versions that already failed
+  let sameAgain = false;                                    // the last fix answer changed nothing
   const stopped = () => { if (isStopped()) throw new Error("Stopped"); };
 
   const write = async () => {
@@ -363,6 +373,7 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
     const ans = await llm(fixMessages({ task, lang, code, error: why.error, change: why.change }), { maxTokens: lang === "html" ? 1600 : Math.max(2000, Math.floor(getPower().codeTokens / 2)), onToken: (t) => onEvent({ type: "fixing", round, text: t }) });
     const r = applyFix(ans, code, lang);
     if (r.how === "none") { onEvent({ type: "fixfail", round, error: r.error }); return false; }
+    if (r.code.trim() === code.trim()) { sameAgain = true; onEvent({ type: "fixfail", round, error: "The fix changed nothing." }); return false; }
     const after = countTests(r.code, lang);
     if (before > 0 && after === 0) { onEvent({ type: "fixfail", round, error: "The fix deleted the tests — refused." }); return false; }
     code = r.code;
@@ -378,16 +389,20 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
       ? `The program ran but never printed "${PASS_MARK}" — the tests did not all run.\n` + errorSummary(last)
       : errorSummary(last);
     let told = reason;
-    if (tried.has(code)) told = "YOUR LAST CHANGE BROUGHT BACK CODE THAT ALREADY FAILED. Do something different this time.\n" + told;
+    if (sameAgain) told = "YOUR LAST ANSWER CHANGED NOTHING (its REPLACE text was the same as its SEARCH text). Change the line that actually fails.\n" + told;
+    else if (tried.has(code)) told = "YOUR LAST CHANGE BROUGHT BACK CODE THAT ALREADY FAILED. Do something different this time.\n" + told;
+    sameAgain = false;
+    const eg = /expected (.{1,80}?), got (.{1,80}?)(?: —|$)/m.exec(String(last && (last.error || last.stderr) || ""));
+    if (eg) told += `\n\nThe program returns ${eg[2]} where a test expects ${eg[1]}. Work out which one is right, step by step. If the program is right and the test's expected value is wrong, change ${eg[1]} in that test line; otherwise fix the program.`;
     tried.add(code);
     const fl = lang === "python" ? failingLine(code, last) : null;
     if (fl) told += `\n\nThe line that failed: ${fl.line}` + (fl.hint ? "\n" + fl.hint : "");
     const pr = lang === "python" ? assertProbe(code, last) : null;
     if (pr) {
       stopped();
-      let v = "";
-      try { v = probeValue(await run(lang, pr.probe)); } catch (e) {}
-      if (v) told += `\n\nThe failing test: ${pr.line}\nIt expects ${pr.want}, but ${pr.got} actually returns ${v}. Work out which one is right (do the arithmetic step by step). If the program is right and the test's expected value was worked out wrong, correct that expected value; otherwise fix the program.`;
+      let wrong = [];
+      try { wrong = probeFindings(await run(lang, pr.probe), pr); } catch (e) {}
+      if (wrong.length) told += `\n\nWhat the program REALLY returns for the failing tests (the app ran them):\n` + wrong.map((w) => `- ${w.line}\n  expects ${w.want}, but ${w.got} returns ${w.value}`).join("\n") + `\nFor each one, work out which is right (do the arithmetic step by step). If the program is right and the test's expected value was worked out wrong, correct that expected value; otherwise fix the program. Fix them ALL in this round.`;
     }
     if (!(await fix({ error: told }))) continue;          // unusable answer: ask again (counts as a round)
     ok = await exec();
