@@ -67,7 +67,8 @@ export function fixSolveMessages(question, code, error) {
 /** The answer the program printed, or null. */
 export function readAnswer(stdout) {
   const m = String(stdout || "").match(/ANSWER:\s*(.+)\s*$/m);
-  return m ? m[1].trim() : null;
+  // v6.8 (the trials): 18.4 * 0.75 prints 13.799999999999999 — a computer rounding artifact, shown as 13.8
+  return m ? m[1].trim().replace(/-?\d+\.\d{9,}/g, (n) => String(parseFloat(parseFloat(n).toPrecision(12)))) : null;
 }
 
 export function explainMessages(question, code, output, answer) {

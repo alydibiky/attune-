@@ -188,7 +188,7 @@ if (want("travel")) {
     ["sa", "ar", "انا رايح عمرة، ينفع أدخل مكة بفيزا سياحة؟ وازاي أروح من جدة لمكة؟", [/عمر|مكة/, /جدة|قطار|الحرمين|تاكس|باص/]],
     ["fr", "en", "Is tipping expected in Paris restaurants, and what's the emergency number?", [/112|15|17|18/, /service|tip|pourboire/i]],
     ["jp", "en", "I'm in Tokyo — can I pay with cash everywhere and how do I use the trains?", [/cash|yen|¥/i, /suica|pasmo|ic card|jr/i]],
-    ["tr", "ar", "بكام التاكسي من المطار لتقسيم؟ والسواق بيقول العداد بايظ", [/عداد|تاكس/, /مترو|هافاش|havaist|M11|انزل|تاكسي تاني/i]],
+    ["tr", "ar", "بكام التاكسي من المطار لتقسيم؟ والسواق بيقول العداد بايظ", [/عداد|تاكس/, /مترو|هافاش|havaist|M11|انزل|اخرج|انزلي|تاكسي تاني|اصر|أصر|BiTaksi|Uber|تطبيق/i]],
   ];
   for (const [key, lang, q, rx] of cases) {
     const r = await llm([{ role: "user", content: await T.ask(q, key, lang, T.packs) }], { maxTokens: 500 });
@@ -213,16 +213,25 @@ if (want("business")) {
 }
 
 // ================= Coding: 3 languages =================
+// v6.8: through the app's own workLoop (write → run → send the error back → fix, up to 4 rounds, as
+// code-ui does), with the sandbox's assert / assertEqual for JavaScript (sandbox/js-worker.mjs)
 if (want("code")) {
+  const { spawnSync } = await import("child_process");
+  const JS_PRELUDE = 'const __show=(x)=>typeof x==="string"?x:JSON.stringify(x);const assert=(c,m)=>{if(!c)throw new Error("AssertionError"+(m?": "+m:""))};const assertEqual=(a,b,m)=>{if(JSON.stringify(a)!==JSON.stringify(b))throw new Error("AssertionError: expected "+__show(b)+", got "+__show(a)+(m?" — "+m:""))};\n';
+  const run = async (lang, code) => {
+    const r = lang === "python" ? spawnSync("python3", ["-c", code], { timeout: 20000, encoding: "utf8" }) : spawnSync("node", ["-e", JS_PRELUDE + "(async()=>{\n" + code + "\n})().catch((e)=>{console.error(String(e&&e.stack||e));process.exit(1)})"], { timeout: 20000, encoding: "utf8" });
+    return { ok: r.status === 0, stdout: r.stdout || "", stderr: r.stderr || "", error: r.status === 0 ? "" : (r.stderr || "").split("\n").slice(-8).join("\n"), timedOut: !!(r.error && /ETIMEDOUT/.test(String(r.error.code))) };
+  };
   const cases = [
-    ["python", "A function vat(amount, rate=0.14) returning the total with VAT rounded to 2 decimals, and refusing negative amounts; with tests", (c) => { try { return !/Error|Traceback|FAIL/.test(execFileSync("python3", ["-c", c], { timeout: 20000 }).toString()); } catch (e) { return false; } }],
-    ["javascript", "A function daysBetween(a, b) that takes two 'YYYY-MM-DD' strings and returns the whole days between them; with tests using console.assert", (c) => { try { execFileSync("node", ["-e", c], { timeout: 20000 }); return true; } catch (e) { return false; } }],
-    ["python", "اكتب دالة بايثون تحسب قسط شهري لقرض: المبلغ، الفايدة السنوية، عدد الشهور، مع اختبارات", (c) => { try { return !/Error|Traceback|FAIL/.test(execFileSync("python3", ["-c", c], { timeout: 20000 }).toString()); } catch (e) { return false; } }],
+    ["python", "A function vat(amount, rate=0.14) returning the total with VAT rounded to 2 decimals, and refusing negative amounts; with tests"],
+    ["javascript", "A function daysBetween(a, b) that takes two 'YYYY-MM-DD' strings and returns the whole days between them; with tests"],
+    ["python", "اكتب دالة بايثون تحسب قسط شهري لقرض: المبلغ، الفايدة السنوية، عدد الشهور، مع اختبارات"],
   ];
-  for (const [lang, task, runs] of cases) {
-    const r = await llm(C.writeMessages(task, lang), { maxTokens: 1000 });
-    const p = C.pickProgram(r.text, lang);
-    section("Coding", lang + " " + task.slice(0, 30), task, r, { chars: p && p.code.length }, [[p && p.code.length > 80, "a program"], [p && runs(p.code), "it runs and its own tests pass"]]);
+  for (const [lang, task] of cases) {
+    const t0 = Date.now(), answers = [];
+    const res = await C.workLoop({ task, lang, run, maxRounds: 4, llm: async (m, o) => { const r = await llm(m, { maxTokens: Math.min(1600, (o && o.maxTokens) || 1000), temperature: 0.2 }); answers.push(r.text); return r.text; } });
+    const r = { text: answers.map((a, i) => (i ? `--- round ${i} ---\n` : "") + a).join("\n\n"), secs: Math.round((Date.now() - t0) / 100) / 10 };
+    section("Coding", lang + " " + task.slice(0, 30), task, r, { rounds: res.rounds, tests: res.tests, chars: res.code.length }, [[res.code.length > 80, "a program"], [res.ok && res.tests > 0, "it runs and its own tests pass (after the app's fix rounds)"]]);
   }
 }
 

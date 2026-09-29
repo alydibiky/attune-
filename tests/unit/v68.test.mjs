@@ -143,6 +143,10 @@ const a380 = [{ title: "A380 capacity", url: "u", text: "The A380-800 is certifi
 ok(AFX.fixModelNames("The Airbus A380-380 carries 853.", "Airbus A380 max passengers?", a380).text === "The Airbus A380-800 carries 853." && AFX.fixModelNames("The Airbus A800 carries 853.", "Airbus A380 max passengers?", a380).text === "The Airbus A380-800 carries 853.", "web: a garbled joined model code is put back to the pages' spelling");
 ok(AFX.fixModelNames("Unlike the A350, the A380-800 carries 853.", "Airbus A380 max passengers?", a380).fixed.length === 0, "web: another model the pages name (A350) is left alone");
 
+// maths (Core on the max test): a float artifact is not shown to the user
+const VF = await import("../../web-src/verify.js");
+ok(VF.readAnswer("x\nANSWER: 13.799999999999999 t") === "13.8 t" && VF.readAnswer("ANSWER: 0.30000000000000004") === "0.3" && VF.readAnswer("ANSWER: 171,000 EGP") === "171,000 EGP" && VF.readAnswer("ANSWER: 2.5 t") === "2.5 t", "maths: 13.799999999999999 is shown as 13.8; normal answers untouched");
+
 // Maps: a place name with «و» inside a word, and "where can I park"
 ok(PL.placeFor("انا في كمبوند ايمرالد بارك وعايز أفول بنزين اعمل ايه").near === "كمبوند ايمرالد بارك", "maps: «كمبوند» is not cut at its «و»");
 ok(PL.placeFor("انا في مدينتي و عايز صيدلية").near === "مدينتي", "maps: «و» as its own word still ends the place");
