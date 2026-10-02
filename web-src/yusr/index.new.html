@@ -1719,13 +1719,22 @@ function openGuide(){
 
 /* ============ Premium gating ============ */
 var FREE_ACCOUNTS=Infinity;   // everything is free now except invoicing
-function isPremium(){return !!(db.premium&&db.premium.active);}
+/* v6.10 — Ali is testing: every Premium feature (receipt photos, sync, PDF, projects…) is open. Set to false before the public release. */
+var TESTING_ALL_PREMIUM=true;
+var ATTUNE_PRO=false;   // set by Attune over the bridge: Attune Pro includes every Money Premium feature
+function isPremium(){return TESTING_ALL_PREMIUM||ATTUNE_PRO||!!(db.premium&&db.premium.active);}
 function requirePremium(feat){if(isPremium())return true;openPaywall(feat);return false;}
 function lockBadge(){return isPremium()?'':'<span class="lock-badge">\u2b50</span>';}
 const PRICE_TABLE={USD:{monthly:'$8',yearly:'$79',lifetime:'$199'},EGP:{monthly:'EGP 399',yearly:'EGP 3,900',lifetime:'EGP 9,900'},SAR:{monthly:'SAR 29.99',yearly:'SAR 299',lifetime:'SAR 749'},AED:{monthly:'AED 29.99',yearly:'AED 299',lifetime:'AED 749'}};
 function planPrices(){if(db._storePrices&&db._storePrices.monthly)return db._storePrices;return PRICE_TABLE[db.currency]||PRICE_TABLE.USD;}
 function setStorePrices(m,y,l){db._storePrices={monthly:m,yearly:y,lifetime:l};try{if(document.getElementById('pw-overlay').classList.contains('open'))openPaywall();}catch(e){}}
 function openPaywall(feat){const P=planPrices();const ar=db.lang==='ar';
+  if(window.__yusrEmbedded&&window.__yusrEmbedded()){   // inside Attune: Money Premium is part of Attune Pro
+    document.getElementById('pw-body').innerHTML='<div class="pw-hero"><div class="pw-star">\u2b50</div><h3>'+(ar?'ده جزء من Attune Pro':'This is part of Attune Pro')+'</h3>'
+      +'<div class="psub" style="margin-top:6px">'+(ar?'اشتراك واحد بيفتح كل حاجة في التطبيق، ومنها المال: مزامنة، حسابات، صور الإيصالات، PDF، مشاريع.':'One plan unlocks the whole app, Money included: sync, accounts, receipt photos, PDF and projects.')+'</div></div>'
+      +'<button class="btn" onclick="document.getElementById(\'pw-overlay\').classList.remove(\'open\');window.__yusrOpenPlan()">'+(ar?'شوف الخطط':'See plans')+'</button>';
+    document.getElementById('pw-overlay').classList.add('open');return;
+  }
   const rows=[['\u262a',t('p_zakatFree'),1],['\u2601',t('p_sync'),0],['\u25ae',t('p_accounts'),0],['\ud83d\udcf7',t('p_photos'),0],['\ud83d\udcc4',t('p_pdf'),0],['\ud83c\udfd7',t('p_projects'),0],['\ud83c\udfa8',t('p_themes'),0],['\u2699',t('p_filters'),0]];
   document.getElementById('pw-body').innerHTML=
     '<div class="pw-hero"><div class="pw-star">\u2b50</div><h3>'+t('unlockAll')+'</h3><div class="psub" style="color:var(--income);font-weight:700;margin-top:4px">\u262a '+(ar?'مميزات الزكاة مجانية دائمًا':'Zakat features are always free')+'</div></div>'
@@ -2041,6 +2050,8 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
   var NS='yusr-bridge', V=1;
   function host(){ try{ return (window.parent&&window.parent!==window)?window.parent:null; }catch(e){ return null; } }
   function send(type,data){ var h=host(); if(!h) return; try{ h.postMessage({ns:NS,v:V,type:type,data:data||{}},'*'); }catch(e){} }
+  window.__yusrEmbedded=function(){ return !!host(); };
+  window.__yusrOpenPlan=function(){ send('open-plan',{}); };
 
   function unitOf(a){ return isLivestock(a)?'head':(isMetal(a)?'g':'money'); }
 
@@ -2118,6 +2129,7 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
     var m=e.data;
     if(!m||typeof m!=='object'||m.ns!==NS||m.v!==V)return;
     if(m.type==='propose-txn'){ propose(m.data); return; }
+    if(m.type==='entitlement'){ ATTUNE_PRO=!!(m.data&&m.data.pro); try{refresh();}catch(e){} return; }
     if(m.type==='request'){
       if(m.data&&m.data.kind==='ready') send('ready',{app:'yusr'});
       else snapshot(m.data&&m.data.kind);

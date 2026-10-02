@@ -39,16 +39,18 @@ const BRIDGE_NS = "yusr-bridge";
 //                 sheet, prefilled. Yusr decides. Attune never writes.
 //   request       ask for a snapshot: "summary" | "zakat" | "accounts"
 //   ai-result     the answer to an ai-request, already validated by Attune
+//   entitlement   {pro: boolean} — Attune Pro includes Money, so Yusr unlocks its Premium features with it (v6.10)
 // Yusr → Attune
 //   ready         Yusr has booted and migrate() has run
 //   snapshot      the answer to a request
 //   txn-added     the user confirmed something; Attune can remember it
 //   zakat-paid    a Zakat payment was recorded (for memory, never for maths)
+//   open-plan     the person tapped a locked Money feature: Attune opens its Plans & billing page (v6.10)
 //   ai-request    Yusr asks Attune to run the on-device model for it. Yusr
 //                 holds no model and never will: inference lives in exactly
 //                 one place, so there is one prompt to audit, not two.
-const OUT_TYPES = new Set(["propose-txn", "request", "ai-result"]);
-const IN_TYPES  = new Set(["ready", "snapshot", "txn-added", "zakat-paid", "error", "ai-request"]);
+const OUT_TYPES = new Set(["propose-txn", "request", "ai-result", "entitlement"]);
+const IN_TYPES  = new Set(["ready", "snapshot", "txn-added", "zakat-paid", "error", "ai-request", "open-plan"]);
 
 // What Yusr is allowed to ask the model for. A closed list, because "run this
 // arbitrary prompt" would let a future screen quietly route a fiqh question
@@ -136,6 +138,9 @@ function validateOut(type, data) {
     // Structurally impossible to propose a Zakat payment from outside.
     if (d.type === "zakat") return { ok: false, why: "Zakat is recorded in Yusr only" };
   }
+  if (type === "entitlement") {
+    if (!data || typeof data.pro !== "boolean") return { ok: false, why: "entitlement needs pro: true or false" };
+  }
   if (type === "ai-result") {
     const d = data || {};
     if (!AI_KINDS.has(d.kind)) return { ok: false, why: "ai kind not allowed: " + d.kind };
@@ -191,6 +196,7 @@ function createBridge(post, opts) {
       });
     },
     request(kind) { return send("request", { kind }); },
+    sendEntitlement(pro) { return send("entitlement", { pro: !!pro }); },
     // Handshake, not hope. The child can finish loading and announce itself
     // before the parent has attached its listener — a race that shows up
     // exactly once in ten launches and is miserable to debug. So the parent

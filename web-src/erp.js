@@ -311,7 +311,10 @@ export function show(sys, field, v, { currency } = {}) {
 }
 
 // ---- records -----------------------------------------------------------------------------
-export function isActive(sys) { return !!(sys && sys.licence && sys.licence.ok); }
+// v6.10 — while Ali tests (billing.js TESTING_ALL_PRO) every system counts as activated; the app calls this at start.
+let testingOpen = false;
+export function setTestingOpen(on) { testingOpen = !!on; }
+export function isActive(sys) { return testingOpen || !!(sys && sys.licence && sys.licence.ok); }
 export function canAddRow(sys, tid) { return isActive(sys) || (sys.rows[tid] || []).length < FREE_ROWS; }
 
 function nextAuto(sys, table, field) {

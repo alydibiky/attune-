@@ -64,6 +64,35 @@ export const PRO_BENEFITS = [
 ];
 export const FREE_LIMITS = { answersPerDay: 15, picturesPerDay: 3 };
 
+/** v6.10 — Plans & billing page: what Pro gives, grouped by the app it belongs to (Money is included in Pro). */
+export const BILLING_GROUPS = [
+  { id: "chat", icon: "💬", title: "Chat & answers", items: [
+    "Unlimited answers — no daily limit", "Expert review: strong models check and improve their own answers",
+    "Deep web research: several searches, more pages, cross-checked facts", "Mind: remembers everything and searches it" ] },
+  { id: "tools", icon: "🧰", title: "Tools", items: [
+    "Deal Check: the real cost, the market price and scam signs before you pay", "Chat X-Ray: who owes you, promises and unanswered questions in WhatsApp chats",
+    "File converters, including scanned paper → editable Word", "Presentations (PowerPoint) and reports (Word / PDF)", "Video downloads in the quality you choose", "Studio pictures" ] },
+  { id: "fit", icon: "🥗", title: "Fit & Food", items: [
+    "Unlimited photo meals", "The week's meal plan and shopping list", "The week report" ] },
+  { id: "money", icon: "💰", title: "Money (Yusr)", items: [
+    "Receipt photos on transactions", "Sync, PDF export and projects", "Every Money Premium feature — included, no second plan" ] },
+  { id: "biz", icon: "🏗️", title: "Business systems", items: [
+    "Unlimited records while you try a system", "Excel and app export", "Activating a system for good is a separate, one-time price (below)" ] },
+];
+/** Free / Pro / Business columns for the compare table. */
+export const COMPARE_ROWS = [
+  ["Answers", "15 a day", "Unlimited", "Unlimited"],
+  ["Deal Check", "3 a day", "Unlimited", "Unlimited"],
+  ["Chat X-Ray", "1 a day", "Unlimited", "Unlimited"],
+  ["File conversions", "5 a day", "Unlimited", "Unlimited"],
+  ["Video downloads", "3 a day", "Unlimited", "Unlimited"],
+  ["Presentations & reports", "2 a day", "Unlimited", "Unlimited"],
+  ["Studio pictures", "3 a day", "Unlimited", "Unlimited"],
+  ["Fit & Food photo meals", "3 a day", "Unlimited", "Unlimited"],
+  ["Money: receipt photos, sync, PDF, projects", "—", "✓", "✓"],
+  ["Business systems", "30 records a table", "30 records a table", "Unlimited, per system"],
+];
+
 /** The phone's Pro request code, from its install id: "PRO-" + 8 letters/digits. */
 export function requestCode(deviceId) {
   let h = 2166136261 >>> 0;

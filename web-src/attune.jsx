@@ -36,8 +36,8 @@ import { placeFor } from "./places.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
 import { samplingFor, taskKind } from "./boost.js";
 import { estTokens as estTok } from "./longread.js";
-import { pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS, TESTING_ALL_PRO, testingPro, PLAY, proFromOwned } from "./billing.js";
-import { LICENCE_PUBLIC_KEY, SELLER } from "./erp.js";
+import { BILLING_GROUPS, COMPARE_ROWS, pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS, TESTING_ALL_PRO, testingPro, PLAY, proFromOwned } from "./billing.js";
+import { LICENCE_PUBLIC_KEY, SELLER, setTestingOpen } from "./erp.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
@@ -1186,6 +1186,7 @@ const BACKEND = () => (typeof window !== "undefined" && window.ATTUNE_BACKEND) |
    an id and answer through window.__attuneNative. In a browser it is absent
    and everything falls back to the web path.                               */
 const NATIVE = (typeof window !== "undefined" && window.AttuneNative) || null;
+try { setTestingOpen(testingPro()); } catch (e) {}   // testing: every Business / ERP system counts as activated (and the "See it as a Free user" switch turns that off too)
 const NATIVE_CALLS = {};
 let NATIVE_SEQ = 0;
 let NATIVE_LAST_ID = "";
@@ -5904,7 +5905,7 @@ function moneyAnalysisPrompt(snapshot, recent, lang) {
     lang ? `Answer in ${lang}.` : ""].filter(Boolean).join("\n");
 }
 
-function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIncoming }) {
+function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIncoming, openPlan }) {
   const [ready, setReady] = React.useState(false);
   const [snapshot, setSnapshot] = React.useState(null);
   const [feed, setFeed] = React.useState([]);
@@ -5928,6 +5929,12 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   const linkedRef = React.useRef(null);
   React.useEffect(() => { modelStateRef.current = modelState; }, [modelState]);
   React.useEffect(() => { linkedRef.current = linked; }, [linked]);
+  // v6.10: Attune Pro includes Money — Yusr is told whether Pro is on, and sends "open-plan" from a locked feature
+  const proNow = isPro(tier) || testingPro();
+  const proRef = React.useRef(proNow);
+  const openPlanRef = React.useRef(openPlan);
+  React.useEffect(() => { openPlanRef.current = openPlan; }, [openPlan]);
+  React.useEffect(() => { proRef.current = proNow; if (bridgeRef.current) bridgeRef.current.sendEntitlement(proNow); }, [proNow]);
   const html = React.useMemo(yusrDocumentHtml, []);
 
   React.useEffect(() => {
@@ -5938,7 +5945,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
     const onMsg = (e) => bridge.receive(e.data);
     window.addEventListener("message", onMsg);
 
-    bridge.on("ready", () => { setReady(true); bridge.request("summary"); });
+    bridge.on("ready", () => { setReady(true); bridge.request("summary"); bridge.sendEntitlement(proRef.current); });
+    bridge.on("open-plan", () => { if (openPlanRef.current) openPlanRef.current(); });
     bridge.on("snapshot", (d) => { setSnapshot(d); snapRef.current = d;
       if (d.share) setLinked(d.share === "on" ? true : d.share === "off" ? false : null); });
     bridge.on("txn-added", (d) => {
@@ -9446,7 +9454,7 @@ export default function App() {
         ) : mode === "map" ? (
           <MapTab remember={remember} flash={flash} myLang={myLang} />
         ) : mode === "money" ? (
-          <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} />
+          <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)} />
         ) : mode === "travel" ? (
           <div className="space-y-5">
             <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
@@ -10733,72 +10741,137 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
     try { const e = await storeEntitlement(); if (e) { setTier("pro"); flash(tr("Pro restored")); close(); } else flash(tr("No purchase found")); }
     finally { setBusy(false); }
   };
-  const card = (k, title, pr, note, badge) => (
-    <button key={k} onClick={() => setPlan(k)} data-testid={"plan-" + k}
-      className={`relative rounded-xl border p-3 text-start transition-colors ${plan === k ? "border-amber-400 bg-amber-400/10" : "border-slate-800 bg-slate-950"}`}>
-      {badge ? <span className="absolute -top-2 end-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-bold">{tr(badge)}</span> : null}
-      <span className="block text-[12px] text-slate-300">{tr(title)}</span>
-      <span className="block text-[clamp(13px,4.2vw,18px)] font-bold text-white mt-0.5 whitespace-nowrap" dir="ltr">{pr}</span>
-      <span className="block text-[10px] text-slate-500 leading-snug">{tr(note)}</span>
-    </button>
-  );
+  const PLAN_TEXT = { year: ["Yearly", "Best value"], month: ["Monthly", "Cancel any time"], life: ["Lifetime", "Pay once, yours forever"] };
+  const planNote = { year: P.yearNote, month: "cancel any time", life: P.lifeNote }[plan];
+  const [openGroup, setOpenGroup] = useState("");
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 my-6" onClick={(e) => e.stopPropagation()} data-testid="upgrade">
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2"><Crown size={18} className="text-amber-400" /> {tr("Attune Pro")}</h2>
-          <button onClick={close} className="text-slate-500 hover:text-slate-300 p-1"><X size={18} /></button>
+    <div className="fixed inset-0 z-50 bg-slate-950 overflow-auto" data-testid="upgrade">
+      <div className="max-w-lg mx-auto min-h-full pb-10">
+        <div className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2"><Crown size={18} className="text-amber-400" /> {tr("Plans & billing")}</h2>
+          <button onClick={close} className="text-slate-400 hover:text-slate-200 p-1" aria-label={tr("Close")}><X size={20} /></button>
         </div>
-        {TESTING_ALL_PRO && !pro ? (
-          <div className="text-[13px] text-sky-300 mb-3 rounded-lg border border-sky-900/60 bg-sky-500/5 p-2.5" data-testid="testing-pro">
-            <p>{testingPro() ? tr("Testing build: every Pro feature is unlocked on this phone.") : tr("Testing build: you are seeing the app as a Free user.")}</p>
-            <button data-testid="testing-toggle" className="mt-2 text-[12px] px-3 py-1.5 rounded-lg border border-sky-700 text-sky-200"
-              onClick={() => { try { localStorage.setItem("attune:testing-pro", testingPro() ? "off" : "on"); } catch (e) {} location.reload(); }}>
-              {testingPro() ? tr("See it as a Free user") : tr("Unlock everything again")}</button>
-          </div>
-        ) : null}
-        {pro ? <p className="text-[13px] text-emerald-300 mb-3" data-testid="pro-active">{tr("Pro is active on this phone. Thank you for supporting Attune!")}</p>
-          : trialLeft > 0 ? <p className="text-[13px] text-amber-200 mb-3" data-testid="trial-banner">{tr("Your free Pro trial: {n} days left — everything is unlocked. Keep it by choosing a plan.", { n: trialLeft })}</p>
-          : <p className="text-[13px] text-slate-300 mb-3">{tr("Free gives you {n} answers a day on every model. Pro removes every limit:", { n: FREE_LIMITS.answersPerDay })}</p>}
-        <ul className="space-y-1.5 mb-4">{PRO_BENEFITS.map((b) => <li key={b} className="flex items-start gap-2 text-[13px] text-slate-200"><Check size={14} className="text-amber-400 mt-0.5 shrink-0" />{tr(b)}</li>)}</ul>
-        {!pro ? (
-          <>
-            <div className="grid grid-cols-3 gap-2" data-testid="plans">
-              {card("year", "Yearly", shown("year"), P.yearNote, "Best value")}
-              {card("month", "Monthly", shown("month"), "cancel any time")}
-              {card("life", "Lifetime", shown("life"), P.lifeNote)}
+        <div className="px-4 pt-4 space-y-4">
+          {/* where you are now */}
+          {TESTING_ALL_PRO && !pro ? (
+            <div className="text-[13px] text-sky-300 rounded-xl border border-sky-900/60 bg-sky-500/5 p-3" data-testid="testing-pro">
+              <p>{testingPro() ? tr("Testing build: every Pro feature is unlocked on this phone.") : tr("Testing build: you are seeing the app as a Free user.")}</p>
+              <button data-testid="testing-toggle" className="mt-2 text-[12px] px-3 py-1.5 rounded-lg border border-sky-700 text-sky-200"
+                onClick={() => { try { localStorage.setItem("attune:testing-pro", testingPro() ? "off" : "on"); } catch (e) {} location.reload(); }}>
+                {testingPro() ? tr("See it as a Free user") : tr("Unlock everything again")}</button>
             </div>
-            {Store.available() ? (
-              <button onClick={storeBuy} disabled={busy} className="mt-3 w-full py-3 rounded-xl bg-amber-400 text-slate-950 font-bold text-sm disabled:opacity-60" data-testid="buy-store">{tr("Get Pro · {p}", { p: price })}</button>
-            ) : (
-              <p className="mt-3 text-[12px] text-slate-300 leading-relaxed rounded-lg border border-slate-800 bg-slate-950 p-2.5" data-testid="buy-play-only">{tr("Pro is bought in the Google Play version of Attune — one tap, paid by card or from your Vodafone / Orange / Etisalat balance, and it switches on by itself.")}</p>
-            )}
-            <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">{tr("Cancel any time in Google Play → Subscriptions. The plan renews by itself; nothing to send, nobody to message.")}</p>
-            <button onClick={() => setHaveCode((v) => !v)} className="mt-3 text-[11px] text-slate-500 underline" data-testid="have-code">{tr("I have an activation code (company deals)")}</button>
-            {haveCode ? <>
-            <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
-              <span className="text-[11px] text-slate-500">{tr("Your request code")}</span>
-              <button onClick={async () => { try { await navigator.clipboard.writeText(req); flash(tr("Copied")); } catch (e) {} }} className="font-mono text-sm text-white tracking-wider" data-testid="request-code">{req}</button>
-            </div>
-            <div className="mt-3 flex gap-2">
-              <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={tr("Paste your activation code (PRO1…)")} data-testid="pro-code"
-                className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400" />
-              <button onClick={activate} disabled={busy || !code.trim()} data-testid="pro-activate" className="px-4 py-2 rounded-lg bg-slate-800 text-slate-100 text-sm disabled:opacity-40">{tr("Activate")}</button>
-            </div>
-            </> : null}
-            <div className="flex items-center justify-between mt-3">
-              <button onClick={() => setShowOld((v) => !v)} className="text-[11px] text-slate-600">{tr("I have an older key")}</button>
-              {Store.available() ? <button onClick={restore} className="text-[11px] text-slate-400">{tr("Restore purchase")}</button> : null}
-            </div>
-            {showOld ? (
-              <div className="mt-2 flex gap-2">
-                <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="ATTUNE-…" className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200" />
-                <button onClick={redeemOld} className="px-3 py-2 rounded-lg bg-slate-800 text-slate-200 text-sm">{tr("Activate")}</button>
+          ) : null}
+          {pro ? <div className="rounded-xl border border-emerald-800/60 bg-emerald-500/5 p-3 text-[13px] text-emerald-300" data-testid="pro-active">{tr("Pro is active on this phone. Thank you for supporting Attune!")}</div>
+            : trialLeft > 0 ? <div className="rounded-xl border border-amber-800/60 bg-amber-400/5 p-3 text-[13px] text-amber-200" data-testid="trial-banner">{tr("Your free Pro trial: {n} days left — everything is unlocked. Keep it by choosing a plan.", { n: trialLeft })}</div>
+            : <div className="rounded-xl border border-slate-800 bg-slate-900 p-3 text-[13px] text-slate-300">{tr("You are on Free: {n} answers a day on every model. Pro removes every limit — and it includes Money.", { n: FREE_LIMITS.answersPerDay })}</div>}
+
+          {/* 1 · the plan (what to pay) */}
+          {!pro ? (
+            <section className="rounded-2xl border border-amber-500/30 bg-gradient-to-b from-amber-400/10 to-transparent p-4" aria-label={tr("Attune Pro")}>
+              <p className="text-[12px] uppercase tracking-wider text-amber-300/90 mb-2">{tr("Attune Pro — the whole app")}</p>
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-950 p-1" role="tablist" data-testid="plans">
+                {["month", "year", "life"].map((k) => (
+                  <button key={k} role="tab" aria-selected={plan === k} onClick={() => setPlan(k)} data-testid={"plan-" + k}
+                    className={`relative rounded-lg py-2 text-[13px] font-medium transition-colors ${plan === k ? "bg-amber-400 text-slate-950" : "text-slate-300"}`}>
+                    {tr(PLAN_TEXT[k][0])}
+                    {k === "year" ? <span className="absolute -top-2 end-1 text-[9px] px-1.5 rounded-full bg-emerald-400 text-slate-950 font-bold">{tr("Best value")}</span> : null}
+                  </button>
+                ))}
               </div>
-            ) : null}
-          </>
-        ) : null}
-        <p className="text-[11px] text-slate-600 mt-4">{tr("Everything runs on your phone: no account, nothing uploaded. Your plan is checked on the phone, even offline.")}</p>
+              <div className="text-center mt-4">
+                <p className="text-[clamp(26px,9vw,36px)] font-extrabold text-white leading-none" dir="ltr">{price}</p>
+                <p className="text-[12px] text-slate-400 mt-1.5">{tr(planNote)}</p>
+              </div>
+              <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1">
+                {["No daily limits", "Deal Check & Chat X-Ray", "Converters, slides, video", "Fit & Food Pro", "Money (Yusr) included", "Deep research & expert review"].map((b) => (
+                  <li key={b} className="flex items-start gap-1.5 text-[12px] text-slate-200"><Check size={13} className="text-amber-400 mt-0.5 shrink-0" />{tr(b)}</li>))}
+              </ul>
+              {Store.available() ? (
+                <button onClick={storeBuy} disabled={busy} className="mt-4 w-full py-3.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-[15px] disabled:opacity-60" data-testid="buy-store">{tr("Get Pro · {p}", { p: price })}</button>
+              ) : (
+                <p className="mt-4 text-[12px] text-slate-300 leading-relaxed rounded-lg border border-slate-800 bg-slate-950 p-2.5" data-testid="buy-play-only">{tr("Pro is bought in the Google Play version of Attune — one tap, paid by card or from your Vodafone / Orange / Etisalat balance, and it switches on by itself.")}</p>
+              )}
+              <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">{tr("Cancel any time in Google Play → Subscriptions. The plan renews by itself; nothing to send, nobody to message.")}</p>
+            </section>
+          ) : null}
+
+          {/* 2 · what you get, app by app */}
+          <section>
+            <h3 className="text-[13px] font-semibold text-slate-200 mb-2">{tr("What Pro gives you, app by app")}</h3>
+            <div className="space-y-2">
+              {BILLING_GROUPS.map((g) => (
+                <div key={g.id} className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+                  <button onClick={() => setOpenGroup(openGroup === g.id ? "" : g.id)} aria-expanded={openGroup === g.id} className="w-full flex items-center gap-3 px-3.5 py-3 text-start" data-testid={"group-" + g.id}>
+                    <span className="text-lg" aria-hidden="true">{g.icon}</span>
+                    <span className="flex-1 text-[14px] text-slate-100 font-medium">{tr(g.title)}</span>
+                    {g.id === "money" ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-300">{tr("Included")}</span> : null}
+                    <span className={`text-slate-500 transition-transform ${openGroup === g.id ? "rotate-90" : "rtl:rotate-180"}`}>›</span>
+                  </button>
+                  {openGroup === g.id ? <ul className="px-3.5 pb-3 space-y-1.5">{g.items.map((it) => <li key={it} className="flex items-start gap-2 text-[12.5px] text-slate-300"><Check size={13} className="text-amber-400 mt-0.5 shrink-0" />{tr(it)}</li>)}</ul> : null}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* 3 · Business systems (a separate, one-time price) */}
+          <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4" data-testid="business-card">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[14px] font-semibold text-white">🏗️ {tr("Business system")}</p>
+                <p className="text-[12px] text-slate-400 mt-0.5 leading-snug">{tr("A system built for your company (crane rental, trading, workshop…): unlimited records, Excel and app export.")}</p>
+              </div>
+              <div className="text-end shrink-0">
+                <p className="text-[15px] font-bold text-white" dir="ltr">{shown("business")}</p>
+                <p className="text-[10px] text-slate-500">{tr(P.businessNote)}</p>
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">{tr("Trying a system is free (30 records a table). You activate each system once, from its own page in Business.")}</p>
+          </section>
+
+          {/* 4 · everything side by side */}
+          <details className="rounded-2xl border border-slate-800 bg-slate-900 p-4" data-testid="compare">
+            <summary className="text-[13px] font-semibold text-slate-200 cursor-pointer select-none">{tr("Compare Free, Pro and Business")}</summary>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-[11.5px] border-separate border-spacing-y-1">
+                <thead><tr className="text-slate-400"><th className="text-start font-medium pe-2">{tr("Feature")}</th><th className="font-medium px-1">{tr("Free")}</th><th className="font-medium px-1 text-amber-300">{tr("Pro")}</th><th className="font-medium px-1">{tr("Business")}</th></tr></thead>
+                <tbody>{COMPARE_ROWS.map((r) => (
+                  <tr key={r[0]} className="text-slate-200">
+                    <td className="pe-2 py-1.5 text-slate-300">{tr(r[0])}</td>
+                    {[1, 2, 3].map((i) => <td key={i} className={`px-1 text-center ${i === 2 ? "text-amber-200" : ""}`}>{tr(r[i])}</td>)}
+                  </tr>))}</tbody>
+              </table>
+            </div>
+          </details>
+
+          {/* 5 · codes, restore */}
+          {!pro ? (
+            <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <button onClick={() => setHaveCode((v) => !v)} className="text-[12px] text-slate-300 underline" data-testid="have-code">{tr("I have an activation code (company deals)")}</button>
+              {haveCode ? <>
+                <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
+                  <span className="text-[11px] text-slate-500">{tr("Your request code")}</span>
+                  <button onClick={async () => { try { await navigator.clipboard.writeText(req); flash(tr("Copied")); } catch (e) {} }} className="font-mono text-sm text-white tracking-wider" data-testid="request-code">{req}</button>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={tr("Paste your activation code (PRO1…)")} data-testid="pro-code"
+                    className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400" />
+                  <button onClick={activate} disabled={busy || !code.trim()} data-testid="pro-activate" className="px-4 py-2 rounded-lg bg-slate-800 text-slate-100 text-sm disabled:opacity-40">{tr("Activate")}</button>
+                </div>
+              </> : null}
+              <div className="flex items-center justify-between mt-3">
+                <button onClick={() => setShowOld((v) => !v)} className="text-[11px] text-slate-500">{tr("I have an older key")}</button>
+                {Store.available() ? <button onClick={restore} className="text-[12px] text-slate-300">{tr("Restore purchase")}</button> : null}
+              </div>
+              {showOld ? (
+                <div className="mt-2 flex gap-2">
+                  <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="ATTUNE-…" className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200" />
+                  <button onClick={redeemOld} className="px-3 py-2 rounded-lg bg-slate-800 text-slate-200 text-sm">{tr("Activate")}</button>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+          <p className="text-[11px] text-slate-600 pb-2">{tr("Everything runs on your phone: no account, nothing uploaded. Your plan is checked on the phone, even offline.")}</p>
+        </div>
       </div>
     </div>
   );
