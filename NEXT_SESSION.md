@@ -342,6 +342,41 @@ and `tests/e2e_v69site.py`.
       (notes can be saved to or searched from Mind) and keeps all existing notes (put them in a first "My Notebook").
     - Do NOT start until Ali says so.
 
+## K. Added 2 Oct 2026 (fourth batch)
+
+26. **Business systems / ERP: make them professional enough that a company pays for them.** Decisions (Ali, 2 Oct):
+    - **Flagship pack: General trading & shop** (not cranes first). Then contracting, crane rental, others.
+    - **First release includes ALL of:** (1) invoices, quotes, VAT and withholding tax, PDF/Word, Arabic WhatsApp share;
+      (2) payments, overdue tracking, ageing 30/60/90, customer statements, overdue reminders; (3) stock and purchasing
+      (items, stock moves, reorder alerts, purchase orders, supplier bills, payables); (4) dashboards and reports
+      (today's numbers, profit per customer/product, cash position, monthly P&L, Excel export).
+    - **Navigation:** dashboard home (cash, overdue, low stock, big action buttons) + fixed modules (Sales, Purchases,
+      Stock, Money, Reports) + a "Custom tables" area for the existing no-code builder.
+    - **Look:** clean accounting look (light background, one brand colour, dense clear tables, documents that look like real
+      invoices); must also work in the dark theme.
+    - **Wording:** both English and Arabic. Screens follow the app language with Egyptian accounting terms (فاتورة ضريبية،
+      خصم من المنبع، أعمار الديون، مستخلص) + a plain-words tooltip; printed documents show both languages side by side.
+      (Assumption: change if Ali meant something else.)
+    - **Pricing** (still to decide with Ali): EGP 14,999 once, plus a yearly update fee for tax-rate changes was suggested.
+    - **Engine work first** (from the Opus plan): IndexedDB store (localStorage hits its limit at ~10–20k rows); new field types
+      `lines` (child rows inside a document), `rollup`, `lookup`, `attachment`, `percent`, `datetime`; formula IF/AND/OR/TODAY;
+      locked "system tables" the AI cannot redesign; money in integer piastres with a fixed rounding rule.
+    - **Documents:** draft → posted → void; gapless numbering per series per year assigned at posting; posted = immutable,
+      corrections by credit note; VAT 14% (0% / exempt codes), table tax before VAT, withholding as a customer deduction
+      that reduces cash due, rates stored as editable dated settings. ETA e-invoice: store every required field and export the
+      ETA JSON, but never claim to sign or submit (that needs a token / online step).
+    - **Also planned:** payments with allocations, ageing, statements, credit-limit warning; purchasing (PO → bill → payables);
+      inventory from stock moves with moving-average valuation; expenses with receipt photos; cash/bank accounts; ledger
+      (journal, P&L, trial balance, simple cash flow); owner + PIN + roles; hash-chained audit log; multi-currency;
+      encrypted auto-backup; company letterhead (logo, tax ID, bank details); WhatsApp share and overdue reminders.
+    - **Phase 2:** roles, multi-currency, ETA JSON export, contracting pack. **Phase 3:** payroll, bank reconciliation,
+      multi-device sync, more packs, photo-to-bill.
+    - **Tests:** golden finance-maths unit tests (rounding per line, VAT on table-tax base, withholding, ageing boundaries,
+      moving average, journal always balances), e2e flows (quote → invoice → payment → statement; backup → wipe → restore),
+      a 50k-row performance test, real-model trials (JSON validity, never inventing numbers); ask an Egyptian accountant to
+      sign off the tax examples before release.
+    - **Honest risks:** tax rates change; ETA cannot be fully offline; data loss on a single phone → scheduled backups.
+
 ---
 
 ## Prompt to start the next session
