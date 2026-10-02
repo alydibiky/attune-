@@ -327,6 +327,19 @@ and `tests/e2e_v69site.py`.
       warn ("too big for this phone", "will run hot"); refuse files the engine cannot load; label such models
       "Community"; run a 20-second self-test after install and show the result; keep it to power users.
 
+## J. Added 2 Oct 2026 (third batch) — NOT STARTED: Ali will say when to begin
+
+25. **Notes: make the Notes part work like the "Notebooks" app (reference screenshot: `tests/fixtures/reference/notebooks-app-screenshot.jpg`).**
+    - What the reference shows: a **Notebooks** home screen with a grid of notebook covers (two per row), each with a
+      cover picture and a title under it (long titles cut with "…"; Arabic titles such as «الشريعة» work); a top bar
+      with a menu, the title, a reminders (alarm) icon, search, "+" and a "⋮" menu; a round "+" button at the bottom
+      right to add a notebook; dark theme.
+    - Plan (confirm details with Ali when he says start): several notebooks, each holding its own notes; cover
+      pictures (built-in covers + a photo of his own); rename / delete / reorder / move notes between notebooks; search
+      across all notebooks; reminders on notes; Arabic and English with the right direction; works with Mind
+      (notes can be saved to or searched from Mind) and keeps all existing notes (put them in a first "My Notebook").
+    - Do NOT start until Ali says so.
+
 ---
 
 ## Prompt to start the next session
