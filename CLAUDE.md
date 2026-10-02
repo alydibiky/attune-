@@ -1,6 +1,6 @@
 # Attune — read this first (every session)
 
-1. Read **`NEXT_SESSION.md`**: Ali's full, current problem list (16 items, grouped A–G) and the prompt
+1. Read **`NEXT_SESSION.md`**: Ali's full, current problem list (19 items, grouped A–H; Ali keeps adding more) and the prompt
    for the session. Work through all of it with a task list.
 2. Read **`HANDOFF.md`** §0 ("START HERE") and the latest section (§5.37) for how the app is built and tested.
 

@@ -1,6 +1,7 @@
-# Next session — Ali's full problem list (29 Sep 2026, after v6.9)
+# Next session — Ali's full problem list (29 Sep – 2 Oct 2026, after v6.9)
 
-Everything Ali found on his phone after v6.9, in one place. The list is complete ("that's all").
+Everything Ali found on his phone after v6.9, in one place. Ali keeps adding items (latest: section H,
+2 Oct); when he sends more, add them under a new dated section at the end of the list.
 - Phone: HONOR BKQ-N49, Snapdragon SM8850, Adreno 840 GPU. The Engine screen reports **16 GB** of RAM,
   not the 12 GB we planned for.
 - Screenshots were sent in the chat.
@@ -174,6 +175,69 @@ matters (speed, heat/energy, RAM, answer quality), before shipping it.
     - Ali: "don't stop until you find a way without compromising anything" (not urgent, but always on).
     - Measure every idea before shipping it.
 
+## H. Added 2 Oct 2026
+
+17. **The file converter is still NOT top notch: a real PDF → Word lost its formatting.**
+    - Ali's real example is saved in the repo: `tests/convert/fixtures/real/`
+      - `biotech_assign_2.pdf` is the original (2 pages: a university assignment).
+      - `biotech_assign_2.app-output.docx` is what the app produced.
+      - `biotech_side_by_side_page1.png` and `..._page2.png` show original (left) and converted (right)
+        rendered through LibreOffice.
+    - What went wrong (measured on that file; our fidelity bench said 100 % because it only scored
+      synthetic documents):
+      - **The table runs off the page.** The docx has `tblInd=1800` (1.25") and `tblW=9040` on a 9360-wide
+        text area, so it starts too far right and is cut at the page edge. In the PDF it sits exactly within
+        the margins.
+      - **The table lost its look:** the grey shaded rows, the centred cell text and the light borders.
+      - **Subscripts, superscripts and italics are lost in the maths lines.** `Y_X/S = 0.60 g_X/g_S`
+        became `YX/S = 0.60 gX /gS`, `q_S` became `qS`, and `h^-1` is rendered wrongly. The original lines
+        are italic with real sub/superscripts.
+      - **A symbol is missing** on page 1 ("observed biomass yield coefficient, ." should show Y_X/S);
+        it is blank in the PDF's text layer too, so recover it (the font's ToUnicode map, or OCR on that
+        glyph).
+      - **Paragraphs are merged** that were separate in the PDF ("Product A: … Product B: …", "A student
+        concludes: …", "Answer the following:").
+      - **A wrapped line becomes a second paragraph** that is not indented ("…all cellular metabolic" /
+        "activity has stopped? Explain.").
+      - **The bold "a.", "b.", "c." labels** became a plain list with a tab and hanging indent. The
+        original has bold labels and no list indent.
+      - Line and paragraph spacing differ, and the left margin is off by a few points.
+    - Goal: open the result next to the original and not be able to tell them apart (all formats: PDF →
+      Word, Word → PDF, PowerPoint, Excel, ODT and RTF, which still copy only the text).
+    - Method: add this real file and several more real documents (an Arabic CV, an invoice, a report with
+      tables and maths) to the bench; score the table geometry (position, width, shading, alignment),
+      sub/superscripts, paragraph breaks and label formatting; compare pictures of the pages, not only the
+      text.
+
+18. **New: a complete CV / Resume page, powered by AI, with absolute customisation.**
+    - A full page of its own in the app (not a tab inside another tool).
+    - Make CVs and resumes easily:
+      - Many templates, and every part customisable: sections (add, remove, reorder by drag), fonts, sizes,
+        colours, spacing, margins, columns, photo, icons, section titles, page size (A4 / Letter) and
+        one or two pages.
+      - A live preview while editing; several CVs saved on the phone; a copy per job.
+      - Arabic and English, right-to-left and left-to-right, and mixed.
+      - Applicant-tracking-system (ATS) friendly output.
+    - AI on the phone's own model:
+      - writes and improves the summary and the bullet points (action verbs, numbers);
+      - fixes grammar, and translates between Arabic and English;
+      - tailors the CV to a pasted job description (keywords, what to emphasise);
+      - writes a matching cover letter;
+      - imports an existing CV (PDF, Word or pasted text) and keeps its content;
+      - suggests missing sections and checks for gaps and dates.
+    - Export a perfect PDF and Word file (it must reuse the converter work in item 17), and share it.
+    - Test it with real models and real CVs.
+
+19. **Pasting or attaching a file shows "No model" (the engine chip says No model) even though models are installed.**
+    - Ali pastes a file into the app (for example into Chat X-Ray, screenshot: 1,065 WhatsApp messages,
+      "X-ray this chat") and the chip says "No model".
+    - Probably Android released the model while the app was in the background (see item 2), or no
+      model is selected.
+    - Needed: when a feature needs the model, load the last-used installed model automatically (with a
+      clear progress message), or offer one tap to do it. Never leave the user on "No model" when a
+      model is installed. Check every tool that reads a file or a chat: X-Ray, the converter's translate,
+      documents, photos.
+
 ---
 
 ## Prompt to start the next session
@@ -182,7 +246,9 @@ matters (speed, heat/energy, RAM, answer quality), before shipping it.
 Continue Attune on branch claude/attune-android-continuation-4lp2wq.
 First read HANDOFF.md and NEXT_SESSION.md, then fix EVERY item in NEXT_SESSION.md, one by
 one, with a task list. Start with section A (heat, the engine reload, the app restarting
-when I come back) and item 10 (Fit: the photo crash, no food recognised, only 54 recipes). Measure each fix on the real flow
+when I come back), item 10 (Fit: the photo crash, no food recognised, only 54 recipes), item 17
+(the file converter is still not top notch: use the real file in tests/convert/fixtures/real/),
+item 19 ("No model" on paste) and item 18 (the new CV / resume page). Measure each fix on the real flow
 and with real models (speed, heat/energy, RAM, answer quality) before shipping it.
 Research item 3 (use the phone's storage to make models lighter and stronger) and ship
 only what keeps quality and speed. Rework the whole app's UI/UX like an expert with
