@@ -7,6 +7,7 @@ import { Brain, Search, Sparkles, Link2, Star, Bell, Trash2, X, Plus, ClipboardP
 import { tr, getLang } from "./i18n.js";
 import * as M from "./mind.js";
 import { useSubBack } from "./backstack.js";
+import { Md } from "./chat.jsx";
 
 /* ---- thumbnails: small JPEGs in IndexedDB (the records stay small text in localStorage) ---- */
 let dbP = null;
@@ -22,7 +23,18 @@ function db() {
 }
 async function thumbPut(id, url) { try { const d = await db(); await new Promise((ok) => { const t = d.transaction("thumbs", "readwrite"); t.objectStore("thumbs").put(url, id); t.oncomplete = ok; t.onerror = ok; }); } catch (e) {} }
 async function thumbGet(id) { try { const d = await db(); return await new Promise((ok) => { const q = d.transaction("thumbs").objectStore("thumbs").get(id); q.onsuccess = () => ok(q.result || null); q.onerror = () => ok(null); }); } catch (e) { return null; } }
-async function thumbDel(id) { try { const d = await db(); d.transaction("thumbs", "readwrite").objectStore("thumbs").delete(id); } catch (e) {} }
+async function thumbDel(id) { try { const d = await db(); const t = d.transaction("thumbs", "readwrite"); t.objectStore("thumbs").delete(id); t.objectStore("thumbs").delete(id + ":full"); } catch (e) {} }
+/** v6.10 — a photo kept from anywhere in the app (chat, Instant) keeps the PICTURE too: a small thumbnail for the
+ *  board and a 1280 px copy to open full size. image = { data (base64), media }. Never throws. */
+export async function keepPicture(id, image) {
+  try {
+    const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = "data:" + (image.media || "image/jpeg") + ";base64," + image.data; });
+    const shrink = (px, q) => { const k = Math.min(1, px / Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); return c.toDataURL("image/jpeg", q); };
+    await thumbPut(id, shrink(420, 0.72));
+    await thumbPut(id + ":full", shrink(1280, 0.85));
+    return true;
+  } catch (e) { return false; }
+}
 
 /** A picture → a small thumbnail (for the board) and a 1280 px copy (for the model to read). */
 function readPicture(file) {
@@ -107,6 +119,7 @@ function Detail({ rec, close, update, forget, togglePin, openRec, search, findPr
   const kind = M.kindOf(rec);
   const thumb = useThumb(rec);
   const [tagIn, setTagIn] = useState("");
+  const [bigUrl, setBigUrl] = useState(null);
   const [editTitle, setEditTitle] = useState(null);
   const [when, setWhen] = useState("");
   const m = rec.meta || {};
@@ -118,7 +131,13 @@ function Detail({ rec, close, update, forget, togglePin, openRec, search, findPr
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-3 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full my-6 overflow-hidden" onClick={(e) => e.stopPropagation()} data-testid="mind-detail">
-        {thumb ? <img src={thumb} alt="" className="w-full max-h-80 object-contain bg-black" /> : null}
+        {thumb ? <img src={thumb} alt={tr("Open the photo")} onClick={() => thumbGet(rec.id + ":full").then((u) => setBigUrl(u || thumb))} className="w-full max-h-80 object-contain bg-black cursor-zoom-in" data-testid="mind-photo" /> : null}
+        {bigUrl ? (
+          <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center" onClick={() => setBigUrl(null)} data-testid="mind-photo-big">
+            <img src={bigUrl} alt="" className="max-w-full max-h-full object-contain" />
+            <button className="absolute top-3 end-3 p-2 rounded-full bg-black/60 text-white" aria-label={tr("Close")}><X size={20} /></button>
+          </div>
+        ) : null}
         <div className="p-5">
           <div className="flex items-start gap-3 mb-2">
             <div className="flex-1 min-w-0">
@@ -138,14 +157,15 @@ function Detail({ rec, close, update, forget, togglePin, openRec, search, findPr
           {lp ? <a href={lp.url} target="_blank" rel="noreferrer" className="text-xs text-teal-400 flex items-center gap-1 mb-3 break-all"><ExternalLink size={12} /> {lp.url}</a> : null}
           {rec.text && !(kind === "link" && rec.text.trim() === (lp && lp.url)) ? (
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-3 max-h-64 overflow-auto">
-              <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed" dir="auto">{rec.text}</p>
+              {/\|.*\|/.test(rec.text) || /^#{1,4}\s|\*\*/m.test(rec.text) ? <div className="text-sm text-slate-200 leading-relaxed"><Md text={rec.text} runnable={false} /></div>
+                : <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed" dir="auto">{rec.text}</p>}
             </div>
           ) : null}
           {rec.output ? (
             <>
               <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{tr("What it answered")}</p>
               <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-3 max-h-64 overflow-auto">
-                <p className="text-sm text-teal-50 whitespace-pre-wrap leading-relaxed" dir="auto">{rec.output}</p>
+                <div className="text-sm text-teal-50 leading-relaxed"><Md text={rec.output} runnable={false} /></div>
               </div>
             </>
           ) : null}
@@ -280,6 +300,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
       const r = remember({ kind: "photo", title: (j && j.title) || file.name || tr("Photo"), text: text || (j && j.summary) || "", output: "", tags: [],
         meta: { thumb: true, mindKind: "photo", ...(j ? { aiTitle: String(j.title || "").slice(0, 80), summary: String(j.summary || "").slice(0, 200), aiTags: (Array.isArray(j.tags) ? j.tags : []).map(M.normTag).filter(Boolean).slice(0, 5), aiAt: Date.now() } : {}) } });
       await thumbPut(r.id, p.thumb);
+      await thumbPut(r.id + ":full", "data:image/jpeg;base64," + p.data);
       update(r.id, (x) => ({ ...x }));   // re-render with the thumbnail
       flash(j ? tr("Photo kept — and read") : tr("Photo kept (load a model to have it read)"));
       if (pro && modelReady && text.length > 20 && findCommitments) findCommitments(text, r.id, true);

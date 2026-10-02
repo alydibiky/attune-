@@ -20,7 +20,7 @@ import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget } from "./research.js";
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage } from "./answerfix.js";
-import { rulesOf, violations, fixMessage } from "./constraints.js";
+import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from "./power.js";
 // v5.29 UX: the follow-up chips fade out at the end, so it's clear the row scrolls (left in Arabic)
@@ -120,6 +120,11 @@ function inline(text, keyBase, sources) {
   // file_name stay as written.
   // v5.31: with web sources, "[2]" becomes a small chip that opens source 2 (like Gemini)
   if (sources && sources.length) {
+    // v6.10: bold that wraps a citation ("**… hybrid [5].**") used to lose its ** (the split cut it in two)
+    const bm = String(text || "").split(/(\*\*[^\n]+?\*\*)/g);
+    if (bm.length > 1) return bm.flatMap((p, bi) => (/^\*\*[^\n]+\*\*$/.test(p) && p.length > 4
+      ? [<strong key={keyBase + "b" + bi} className="font-semibold text-white">{inline(p.slice(2, -2), keyBase + "bb" + bi, sources)}</strong>]
+      : (p ? inline(p, keyBase + "s" + bi, sources) : [])));
     const parts = String(text || "").split(/(\[\d{1,2}\](?!\())/g);
     if (parts.length > 1) return parts.flatMap((p, pi) => {
       const c = /^\[(\d{1,2})\]$/.exec(p);
@@ -296,6 +301,8 @@ How to answer:
 - If the user says you were wrong, check their point on its merits: agree and fix it if they are right, explain briefly if they are not. Keep the whole conversation in mind.
 - If a photo is attached, read it carefully and base the answer on what is actually visible. "What is this?" about a machine, vehicle or product: name the type, then the most likely brand and model from visible clues (colour scheme, logos, badges, cab shape, number of axles, boom type, text), how sure you are, and 3–5 useful facts about it (e.g. for a crane: capacity class, boom type, typical use). Never stop at a generic label like "a mobile crane".
 - If something is ambiguous, make the most reasonable assumption and state it in one short line.
+- Keep every name, standard, number and model from the question exactly as written (100BASE-T1 is not 1000BASE-T1). When a strict format is asked for (only a table, only JSON, exactly N words), give exactly that and nothing around it.
+- Engineering and technical faults (hydraulics, electrics, mechanics, cranes, vehicles): name the physical mechanism first, then give fixes that act on that mechanism and say why each works. No generic advice like "increase pressure".
 - Today is ${d.toDateString()}.
 
 ${accuracy || ""}
@@ -1058,6 +1065,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // 3 times; the try that breaks the fewest rules is kept. (constraints.js)
       const rules = plain && typed && answer ? rulesOf(typed) : null;
       if (rules) {
+        if (rules.onlyTable) answer = enforce(answer, rules);   // a table-only answer: cut anything around the table first
         let best = answer, broken = violations(answer, rules), round = 0;
         while (broken.length && round < 3) {
           round++;
@@ -1069,6 +1077,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const v2 = violations(again, rules);
           if (String(again || "").trim() && v2.length <= broken.length) { best = again; broken = v2; }
         }
+        // still wrong after 3 tries and it is an exact-word rule: make it right by code
+        if (broken.length) { const fixed = enforce(best, rules); if (violations(fixed, rules).length < broken.length) { best = fixed; broken = violations(fixed, rules); } }
         answer = best;
         extra.rules = { checked: true, broken: broken.slice(0, 4) };
       }

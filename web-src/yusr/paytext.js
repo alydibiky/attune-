@@ -125,6 +125,11 @@ function payCurrency(text) {
 function payDirection(text) {
   const t = payNormalize(text);
   for (const [dir, re] of DIRECTION) if (re.test(t)) return dir;
+  // v6.10 — a plain note: "+250 EGP from my cousin", "-80 to the shop": the sign, then from / to
+  if (/(?:^|\s)\+\s*\d/.test(t)) return "in";
+  if (/(?:^|\s)[-−–]\s*\d/.test(t)) return "out";
+  if (/\bfrom\s+(?:my\s+)?[A-Za-z]/i.test(t) || /(?:^|\s)من\s+\S/.test(t)) return "in";
+  if (/\bto\s+(?:my\s+)?[A-Za-z]/i.test(t)) return "out";
   return null;
 }
 
@@ -148,6 +153,26 @@ function payDate(text, now) {
 
 // The counterparty. Patterns only — a name invented by a model and written
 // into a ledger is a lie that persists.
+// v6.10 — "from my cousin Youssef", "to my brother Ahmed", "من ابن عمي يوسف": the person is the party,
+// the relation is kept for the note (the user picks gift / repayment / loan — it is not guessed).
+const REL_EN = "cousin|brother|sister|father|dad|mother|mom|mum|uncle|aunt|friend|neighbou?r|boss|colleague|son|daughter|wife|husband|partner|client|customer";
+const REL_AR = "ابن عمي|ابن عمتي|ابن خالي|ابن خالتي|بنت عمي|بنت خالتي|اخويا|أخويا|اختي|أختي|أبويا|ابويا|امي|أمي|عمي|خالي|خالتي|عمتي|صاحبي|جاري|زميلي|صديقي|مراتي|جوزي|ابني|بنتي|عميلي";
+const REL_RE = [
+  new RegExp("(?:to|from)\\s+my\\s+(" + REL_EN + ")\\s+([A-Z][A-Za-z'’-]+(?:\\s+[A-Z][A-Za-z'’-]+)?)", "i"),
+  new RegExp("(?:إلى|الى|ل|من)\\s*(" + REL_AR + ")\\s+([ء-ي]+|[A-Z][A-Za-z'’-]+)"),
+];
+function payRelation(text) {
+  const t = payNormalize(text).replace(/\s+/g, " ");
+  for (const re of REL_RE) {
+    const m = t.match(re);
+    if (m && m[2] && m[2].length >= 2 && !PARTY_STOP.test(m[2])) {
+      const name = m[2].replace(/^[a-z]/, (c) => c.toUpperCase());
+      return { party: name, relation: m[1].toLowerCase() };
+    }
+  }
+  return null;
+}
+
 const PARTY_RE = [
   // A Latin name inside an Arabic sentence is the ordinary InstaPay case, and
   // it is followed by an Arabic word rather than punctuation — so the list of
@@ -198,7 +223,8 @@ function parsePayment(text, opts) {
   const amt = payAmount(src);
   const dir = payDirection(src);
   const cur = payCurrency(src);
-  const party = payParty(src);
+  const rel = payRelation(src);
+  const party = rel ? rel.party : payParty(src);
   const ref = payRef(src);
   const date = payDate(src, o.now);
 
@@ -217,7 +243,7 @@ function parsePayment(text, opts) {
     amount: amt ? amt.value : null,
     amountSource: amt ? amt.ctx : null,      // the text it was read from
     currency: cur, direction: dir,           // "in" adds, "out" deducts
-    party, ref, date,
+    party, relation: rel ? rel.relation : null, ref, date,
     missing, confidence,
     source: src.slice(0, 1200),
     // Deliberately absent: account. The user picks it. A guessed account is

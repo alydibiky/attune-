@@ -243,9 +243,11 @@ object Engine {
         return ok && photosLoaded
     }
 
-    /** True when the model is large for this phone: it works, but slowly and warmly. */
+    /** True when the model is large for this phone: it works, but slowly and warmly.
+     *  v6.10: 40 % of the phone's memory (was 30 %): a "16 GB" phone reports about 15–16 GB, so the old line warned about a
+     *  5.4 GB model (33 %) on a phone that runs it comfortably. A 12 GB phone still gets the warning for it (48 %). */
     fun isHeavy(ctx: Context, model: ModelStore.Installed): Boolean =
-        model.sizeBytes > DeviceInfo.totalRamBytes(ctx) * 0.30
+        model.sizeBytes > DeviceInfo.totalRamBytes(ctx) * 0.40
 
     /** When loading began, for the "loading for 40 s" readout. 0 when not loading. */
     @Volatile var loadStartedAt: Long = 0L
@@ -418,6 +420,16 @@ object Engine {
             }
             if (health() == 200) {
                 Thread.sleep(700)
+                // v6.10 — the GPU can half-fail: its buffer does not fit ("failed to allocate … err=-61"), the engine
+                // carries on with most layers on the CPU but with GPU-mode settings (no flash attention, a bigger
+                // KV cache) — slower and hotter than a plain CPU start. Say so and start on the CPU properly.
+                if (useGpu) {
+                    val lg = logTail(ctx, 60000)
+                    if (lg.contains("failed to allocate") || lg.contains("flash attention not supported")) {
+                        try { EngineNative.nStop(5000) } catch (e: Throwable) {}
+                        return gpuFallback(ctx, model, "The phone's GPU could not hold this model")
+                    }
+                }
                 if (useGpu) Prefs.setGpuTrial(ctx, false)
                 state = State.READY
                 loadStartedAt = 0L

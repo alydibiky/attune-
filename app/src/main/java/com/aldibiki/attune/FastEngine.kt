@@ -113,7 +113,9 @@ object FastEngine {
                 mtp = t.mtp == true
                 context = nCtx
                 lastError = ""
-                if (preferGpu && !t.gpu) {
+                if (t.gpu && !t.vision) {
+                    Prefs.setFastNote(ctx, "The GPU could not start the photo reader, so this model answers text quickly but cannot read photos right now. " + errors.lastOrNull().orEmpty())
+                } else if (preferGpu && !t.gpu) {
                     Prefs.setFastNote(ctx, "The GPU would not start, so the fast engine is on the CPU. " + errors.lastOrNull().orEmpty())
                 }
                 return null

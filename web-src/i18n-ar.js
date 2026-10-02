@@ -359,6 +359,8 @@ export const AR = {
   "Back": "رجوع",
   "Ready": "جاهز",
   "No model": "لا يوجد نموذج",
+  "Advanced — add a community model": "متقدّم — ضيف موديل من المجتمع",
+  "For power users. Community models are not tested by Attune: a model bigger than about 40% of this phone's memory will run slowly and hot, or be closed by Android. Check the size on its Hugging Face page first, and prefer the Q4 file.": "للمستخدمين المتقدّمين. موديلات المجتمع مش مجرّبة من Attune: أي موديل أكبر من حوالي ٤٠٪ من ذاكرة التليفون هيشتغل بطيء وسخن أو أندرويد هيقفله. بص على الحجم في صفحته على Hugging Face الأول، واختار ملف Q4.",
   "Asleep — wakes when needed": "نايم — بيصحى لما تحتاجه",
   "Waking up the model…": "بصحّي النموذج…",
   "No model is installed — open Engine and install one": "مفيش نموذج متسطّب — افتح المحرّك وسطّب واحد",

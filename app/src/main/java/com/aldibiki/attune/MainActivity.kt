@@ -231,6 +231,8 @@ class MainActivity : AppCompatActivity() {
             // model is loaded), rebuild the page instead of letting the whole
             // app crash — which would also throw away the loaded model.
             override fun onRenderProcessGone(view: WebView, detail: android.webkit.RenderProcessGoneDetail): Boolean {
+                // say so in the Engine log (crashed = Android's low-memory kill of the page, not the app)
+                try { java.io.File(filesDir, "engine.log").appendText("\nPage (${java.util.Date()}): the page's process was ${if (detail.didCrash()) "crashed" else "reclaimed by Android for memory"}; the page was rebuilt.\n") } catch (e: Exception) {}
                 recreate()
                 return true
             }

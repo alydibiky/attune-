@@ -23,7 +23,7 @@ import { BusinessPage } from "./erp-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
-import { MindPage } from "./mind-ui.jsx";
+import { MindPage, keepPicture } from "./mind-ui.jsx";
 import { wrongLanguage } from "./answerfix.js";
 import { ChatXRay } from "./chatxray-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
@@ -7545,7 +7545,8 @@ export default function App() {
       const text = await aiTranscribe(image);
       if (!text || !text.trim()) throw new Error("nothing readable in that photo");
       spendIfFree();
-      const r = remember({ kind: "photo", title: file.name || "Photo", text, output: "", tags: ["photo", "kept"] });
+      const r = remember({ kind: "photo", title: file.name || "Photo", text, output: "", tags: ["photo", "kept"], meta: { thumb: true, mindKind: "photo" } });
+      await keepPicture(r.id, image);
       flash(tr("Photo read and kept — its text is searchable now"));
       if (proActive) findCommitments(text, r.id, true);
     } catch (e) { console.error(e); flash(String(e && e.message || e).slice(0, 90)); }
@@ -8260,7 +8261,7 @@ export default function App() {
       if (!t) throw new Error("empty");
       spendIfFree(); setInResult(t); setInSource(transcript); setCheckState("");
       setInstantHistory((h) => [{ id: Date.now(), action: label, kind: "photo", input: "(photo)", output: t }, ...h].slice(0, 12));
-      remember({ kind: "photo", title: label + " — photo", text: transcript, output: t, tags: [label] });
+      { const mr = remember({ kind: "photo", title: label + " — photo", text: transcript, output: t, tags: [label], meta: { thumb: true, mindKind: "photo" } }); if (mr && mr.id && inImage) keepPicture(mr.id, inImage); }
       setChecks({ issues: auditOutput(transcript, t, { structural: true }), stakes: stakes.level, verified: false });
       if (stakes.level === "high") runChecks(transcript, t, label, stakes, { structural: true });
     } catch (e) { failInstant(r, e); }
@@ -9400,7 +9401,7 @@ export default function App() {
             scheduleReminder={scheduleReminder} incoming={xrayIn} clearIncoming={() => setXrayIn(null)}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "fit" ? (
-          <FitApp flash={flash} openEngine={() => setShowEngine(true)} incoming={fitIn} clearIncoming={() => setFitIn(null)} pro={proActive} openPlan={() => setShowUpgrade(true)}
+          <FitApp abort={() => LocalEngine.abort()} canSee={!(engineInfo && engineInfo.engine === "litert" && engineInfo.fastVision === false)} flash={flash} openEngine={() => setShowEngine(true)} incoming={fitIn} clearIncoming={() => setFitIn(null)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             fetchJson={NATIVE && NATIVE.fetchJson ? async (url) => { const r = await nativeCall("fetchJson", url); return JSON.parse((r && r.body) || "{}"); } : null}
             scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
@@ -11076,8 +11077,9 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
       </div>
 
       {/* bring your own */}
-      <div className={box}>
-        <p className={head}>{tr("Add any model")}</p>
+      <details className={box} data-testid="advanced-model">
+        <summary className={head + " cursor-pointer select-none"}>{tr("Advanced — add a community model")}</summary>
+        <p className="text-[11px] text-amber-200/90 mt-1 mb-2 leading-snug">{tr("For power users. Community models are not tested by Attune: a model bigger than about 40% of this phone's memory will run slowly and hot, or be closed by Android. Check the size on its Hugging Face page first, and prefer the Q4 file.")}</p>
         <div className="flex gap-2">
           <input value={custom} onChange={(ev) => setCustom(ev.target.value)}
             placeholder={tr("user/model-GGUF:Q4_K_M   or   https://…/model.gguf")}
@@ -11087,7 +11089,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
             className="px-3 py-2 rounded-lg bg-teal-500 text-slate-950 text-xs font-medium disabled:opacity-40">{tr("Install")}</button>
         </div>
         <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">{tr("Any GGUF on Hugging Face as")} <span className="font-mono">{tr("owner/repo:QUANT")}</span>{tr(", or a direct https link. Specialist and fine-tuned models install the same way — the photo reader is fetched too when the repo has one.")}</p>
-      </div>
+      </details>
 
       {NATIVE && NATIVE.speed ? <SpeedPanel native={NATIVE} nativeCall={nativeCall} runBench={runBench} flash={flash} box={box} head={head} row={row} engineReady={e.state === "ready"}
         busy={!!busy} fastTier={MODEL_TIERS.find((t) => t.id === "fast-e2b")}

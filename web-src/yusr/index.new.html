@@ -2105,7 +2105,7 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
     openProposal(d);
   }
   function openProposal(d){
-    var note=[d.party||'',d.ref?('#'+d.ref):''].filter(Boolean).join(' · ');
+    var note=[d.party||'',d.relation?('('+String(d.relation).slice(0,30)+')'):'',d.ref?('#'+d.ref):''].filter(Boolean).join(' · ');
     try{
       openTx(null,{type:d.direction==='out'?'expense':'income',amount:d.amount,
                    cat:d.direction==='out'?'other':'other',note:note,

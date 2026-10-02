@@ -185,7 +185,7 @@ function createBridge(post, opts) {
       // and no category guess. Yusr owns those decisions.
       return send("propose-txn", {
         amount: parsed.amount, direction: parsed.direction, currency: parsed.currency,
-        party: parsed.party, ref: parsed.ref, ts: parsed.date,
+        party: parsed.party, relation: parsed.relation || null, ref: parsed.ref, ts: parsed.date,
         source: (parsed.source || "").slice(0, 600),
         confidence: parsed.confidence,
       });

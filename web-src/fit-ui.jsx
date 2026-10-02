@@ -86,7 +86,7 @@ function Bar({ label, v, max, cls }) {
 // the watch and 3 photo meals a day; Pro adds unlimited photo meals, the week's meal plan + shopping
 // list and the week report. `pro` defaults to on (web preview, tests); the app passes the real state.
 export const FREE_PHOTOS_PER_DAY = 3;
-export function FitApp({ llm, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, scanBarcode, native, share, listen, health, pro = true, openPlan }) {
+export function FitApp({ llm, abort, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, scanBarcode, native, share, listen, health, pro = true, openPlan }) {
   const ar = getLang() === "ar";
   const L = (en, a) => (ar ? a : en);
   const [st, setSt] = useState(load);
@@ -143,11 +143,20 @@ export function FitApp({ llm, modelReady, openEngine, flash, incoming, clearInco
       const items = R.mergeSame([...read.items, ...got]);
       if (!items.length) { flash && flash(L("Couldn't read that — try naming the foods, e.g. “2 eggs and a loaf of baladi bread”", "مقدرتش أقراها — اكتب الأكلات، مثلاً «٢ بيض ورغيف عيش بلدي»")); return; }
       setDraft(items);
-    } catch (e) { flash && flash(L("Couldn't read that meal", "مقدرتش أقرا الوجبة")); }
+    } catch (e) {
+      if (e && e.message === "slow") { flash && flash(L("Reading the photo took too long — name the food instead (e.g. “2 fried eggs and baladi bread”) and I'll log it at once", "قراية الصورة خدت وقت طويل — اكتب اسم الأكل (مثلاً «٢ بيض مقلي وعيش بلدي») وهسجّلها فورًا")); setPhoto(null); }
+      else flash && flash(L("Couldn't read that meal", "مقدرتش أقرا الوجبة"));
+    }
     finally { if (run.current === me) { setBusy(false); setStage(""); } }
   };
   // v6.1 photo: a barcode in the picture → the exact product; else the plate read with guesses,
   // then a second look for hidden calories; a nutrition label → its own numbers.
+  // v6.10 — a photo read never hangs: each model call has a time limit; when it runs out the call is cancelled and
+  // the person is told to name the food (the offline reader takes it from there). Ali: "stayed on Recognising… then crashed".
+  const limit = (p, ms) => new Promise((ok, bad) => {
+    const t = setTimeout(() => { try { abort && abort(); } catch (e) {} bad(new Error("slow")); }, ms);
+    p.then((v) => { clearTimeout(t); ok(v); }, (e) => { clearTimeout(t); bad(e); });
+  });
   const readPhotoMeal = async (me) => {
     if (scanBarcode) {
       setStage(L("Looking for a barcode…", "بدوّر على باركود…"));
@@ -155,24 +164,25 @@ export function FitApp({ llm, modelReady, openEngine, flash, incoming, clearInco
         for (const c of codes || []) { const fd = await DB.byBarcode(c, fetchJson); if (fd) { setDraft([{ ...F.itemFromFood(fd, 1, Object.keys(fd.portions || {})[0] || "serving"), base: null }]); return; } }
       } catch (e) {}
     }
+    if (!canSee) { flash && flash(L("This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”", "الموديل ده مش بيقرا صور دلوقتي — اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return; }
     setStage(L("Recognising the food…", "بتعرّف على الأكل…"));
-    const r = F.parsePhoto(await llm(F.photoMessages(text.trim()), photo, { json: true, maxTokens: 900, temperature: 0 }));
+    const r = F.parsePhoto(await limit(llm(F.photoMessages(text.trim()), photo, { json: true, maxTokens: 900, temperature: 0 }), 75000));
     if (run.current !== me) return;
     if (r.label) { DB.keepFoods([r.label]); setDraft([F.itemFromFood(r.label, 1, Object.keys(r.label.portions || {})[0] || "g")]); return; }
     if (!r.items.length) { flash && flash(L("Couldn't recognise food in that photo — try closer, in good light", "مقدرتش أتعرّف على أكل في الصورة — قرّب أكتر وفي نور كويس")); return; }
     setDraft(r.items);
     // v6.3: a zoomed second look at up to 3 foods the model wasn't sure of (cropped from the photo, enlarged)
-    const unsure = r.items.map((x, i) => [x, i]).filter(([x]) => x.box && x.conf < 0.6).slice(0, 3);
+    const unsure = r.items.map((x, i) => [x, i]).filter(([x]) => x.box && x.conf < 0.6).slice(0, 1);
     for (const [x, i] of unsure) {
       setStage(L(`Looking closer at “${x.said}”…`, `ببص أقرب على «${x.said}»…`));
       try { const crop = await cropPhoto(photo.url, x.box); if (run.current !== me) return;
-        const z = F.applyZoom(x, await llm(F.zoomMessages(x), crop, { json: true, maxTokens: 250, temperature: 0 }));
+        const z = F.applyZoom(x, await limit(llm(F.zoomMessages(x), crop, { json: true, maxTokens: 250, temperature: 0 }), 30000));
         if (run.current === me) setDraft((d) => (d || []).map((y, j) => (j === i && y.said === x.said ? z : y)));
       } catch (e) {}
     }
     setStage(L("Checking for hidden calories (oil, sauce, drinks)…", "بدوّر على سعرات مستخبية (زيت، صوص، مشروبات)…"));
     try {
-      const more = F.parseHidden(await llm(F.hiddenMessages(r.items), photo, { json: true, maxTokens: 400, temperature: 0 }), r.items);
+      const more = F.parseHidden(await limit(llm(F.hiddenMessages(r.items), photo, { json: true, maxTokens: 400, temperature: 0 }), 30000), r.items);
       if (run.current === me && more.length) setDraft((d) => [...(d || []), ...more]);
     } catch (e) {}
   };
