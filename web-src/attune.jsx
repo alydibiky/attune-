@@ -1321,7 +1321,14 @@ const LocalEngine = {
         LocalEngine.ready = true; return;
       }
       if (e.state === "error") throw new Error(e.error || "The model stopped — open Engine");
-      if (e.state === "idle") throw new Error("No model is running — open Engine and install or pick one");
+      if (e.state === "idle") {
+        // A model is installed but asleep (Android freed it in the background): wake it, don't send the user to Engine.
+        let w = "none"; try { w = String(NATIVE.wake ? NATIVE.wake() : "none"); } catch (x) {}
+        if (w === "none") throw new Error("No model is installed — open Engine and install one");
+        if (typeof onStatus === "function") { try { onStatus("Waking up the model…"); } catch (x) {} }
+        await new Promise((r) => setTimeout(r, 800));
+        continue;
+      }
       if (LocalEngine._gen !== gen) throw new Error("Stopped");
       if (Date.now() - t0 > 5 * 60000) throw new Error("The model is taking too long to load — open Engine and check the log");
       if (typeof onStatus === "function") {
@@ -7792,6 +7799,9 @@ export default function App() {
     return () => clearTimeout(t);
   }, [engineInfo && engineInfo.state, engineInfo && engineInfo.modelId]);
   const [installedModels, setInstalledModels] = useState(() => ((nativeJSON("models") || {}).models || []));
+  // A model is "usable" when it is running OR installed and asleep: the engine wakes it by itself the
+  // moment a tool sends a request (LocalEngine.waitReady), so no tool should send the user to Engine.
+  const modelUsable = modelState === "ready" || (NATIVE && ((engineInfo && engineInfo.state === "ready") || (installedModels || []).length > 0));
   const refreshModels = () => { const m = nativeJSON("models"); setInstalledModels((m && m.models) || []); };
   const [airGap, setAirGapState] = useState(() => { const i = nativeJSON("info"); return !!(i && i.airGap); });
   const setAirGap = (on) => {
@@ -7840,13 +7850,21 @@ export default function App() {
     // well. If a "ready" message were ever missed, the screen would otherwise
     // say "Loading…" for ever.
     let lastState = cur && cur.state;
-    const poll = setInterval(() => {
-      const now = nativeJSON("engine");
-      if (!now) return;
-      if (now.state === "starting") setEngineInfo(now);
-      if (now.state !== lastState) { lastState = now.state; onEngine({ detail: now }); }
-    }, 1000);
-    return () => { dead = true; clearInterval(poll); window.removeEventListener("attune-engine", onEngine); };
+    // Every second only while the model loads; otherwise every 10 s, and not at all while the screen is
+    // hidden (each call is a bridge call + file read + two system calls: a small, constant drain).
+    let pollTimer = 0;
+    const tick = () => {
+      if (!dead && !document.hidden) {
+        const now = nativeJSON("engine");
+        if (now) {
+          if (now.state === "starting") setEngineInfo(now);
+          if (now.state !== lastState) { lastState = now.state; onEngine({ detail: now }); }
+        }
+      }
+      if (!dead) pollTimer = setTimeout(tick, lastState === "starting" ? 1000 : 10000);
+    };
+    pollTimer = setTimeout(tick, 1000);
+    return () => { dead = true; clearTimeout(pollTimer); window.removeEventListener("attune-engine", onEngine); };
   }, []);
 
   // Install any model: one from the list, a Hugging Face "repo:QUANT", or a
@@ -8825,7 +8843,7 @@ export default function App() {
           <p className="text-base font-semibold text-white truncate">{tr(MODE_TITLES[mode] || "Attune")}</p>
           <div className="flex-1" />
           <button onClick={() => setShowEngine(true)} className={`flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
-            <Cpu size={12} />{modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : tr("No model")}</button>
+            <Cpu size={12} />{modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : (NATIVE && (installedModels || []).length ? tr("Asleep — wakes when needed") : tr("No model"))}</button>
           {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="p-2 text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
           {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); }} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("New chat")}><Plus size={20} /></button> : null}
         </header>
@@ -8855,7 +8873,7 @@ export default function App() {
             spaceSeed={spaceSeed} clearSpaceSeed={() => setSpaceSeed(null)} openChatId={openChatId} clearOpenChat={() => setOpenChatId(null)} />
         ) : mode === "assistants" ? (
           <AssistantsPage startChat={startSpaceChat} flash={flash}
-            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false })} />
         ) : mode === "projects" ? (
           <ProjectsPage startChat={startSpaceChat} openChat={(id) => { setOpenChatId(id); setMode("chat"); }} flash={flash} />
@@ -9047,7 +9065,7 @@ export default function App() {
           <MindPage records={memory} remember={remember} update={updateRec} forget={forget} togglePin={togglePin}
             search={(q, n) => memSearch(memory, memIndex, q, { now: Date.now(), limit: n || 30 })}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })}
-            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            modelReady={modelUsable}
             ask={(question, found) => aiAsk(question, found, [], lang, { think: false })}
             findCommitments={findCommitments} scheduleReminder={scheduleReminder}
             pro={proActive} openPlan={() => setShowUpgrade(true)} openEngine={() => setShowEngine(true)} flash={flash}
@@ -9360,17 +9378,17 @@ export default function App() {
           ) : <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300" data-testid="studio-page">{tr("Studio draws pictures with the phone's own chip — it works in the Android app.")}</div>
         ) : mode === "learn" ? (
           <LearnPage flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
-            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken })}
             illustrate={NATIVE && NATIVE.imageInfo ? (p) => { setStudioIn({ prompt: p }); setMode("studio"); } : null} />
         ) : mode === "convert" ? (
           <FileConverter flash={flash} native={NATIVE} nativeCall={NATIVE ? nativeCall : null} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
-            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")} canReadPhotos={!!LocalEngine.vision}
+            modelReady={modelUsable} canReadPhotos={!!LocalEngine.vision}
             saveFile={NATIVE ? (name, text, mime, b64) => nativeCall("saveFile", b64 ? { name, mime, b64 } : { name, mime, text }) : null}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false })} />
         ) : mode === "slides" ? (
           <SlidesReports key={slidesIn ? slidesIn.id : "s"} initialPrompt={slidesIn ? slidesIn.prompt : ""} initialTab={slidesIn ? slidesIn.tab : "deck"} flash={flash} nativeCall={NATIVE ? nativeCall : null} pro={proActive} openPlan={() => setShowUpgrade(true)} openEngine={() => setShowEngine(true)}
-            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            modelReady={modelUsable}
             webPages={NATIVE ? (q, n) => webLookupRaw(q, n) : null}
             saveFile={NATIVE ? (name, text, mime, b64) => nativeCall("saveFile", b64 ? { name, mime, b64 } : { name, mime, text }) : null}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false })} />
@@ -9378,7 +9396,7 @@ export default function App() {
           <VideoDownloader flash={flash} nativeCall={NATIVE ? nativeCall : null} pro={proActive} openPlan={() => setShowUpgrade(true)} initialLink={videoIn ? videoIn.replace(/#\d+$/, "") : ""} key={videoIn || "v"} />
         ) : mode === "xray" ? (
           <ChatXRay flash={flash} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
-            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            modelReady={modelUsable}
             scheduleReminder={scheduleReminder} incoming={xrayIn} clearIncoming={() => setXrayIn(null)}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "fit" ? (
@@ -9389,21 +9407,21 @@ export default function App() {
             health={NATIVE && NATIVE.healthStatus ? { status: () => { try { return JSON.parse(NATIVE.healthStatus()); } catch (e) { return null; } }, connect: () => NATIVE.healthConnect(), openApp: (pkg) => { try { NATIVE.openHealthApp(pkg); } catch (e) {} },
               huawei: NATIVE.huaweiStatus ? { status: () => { try { return JSON.parse(NATIVE.huaweiStatus()); } catch (e) { return null; } }, connect: () => NATIVE.huaweiConnect(), day: (date) => nativeCall("huaweiDay", { date }) } : null, day: (date) => nativeCall("healthDay", { date }) } : null}
             native={NATIVE} share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }}
-            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            modelReady={modelUsable}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "deal" ? (
           <DealCheck flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
-            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            modelReady={modelUsable}
             webPages={NATIVE ? (q, n) => webLookupRaw(q, n) : null}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "news" ? (
           <NewsPage flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
             nativeCall={NATIVE && NATIVE.news ? nativeCall : null}
-            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, onToken: o.onToken })} />
         ) : mode === "business" ? (
           <BusinessPage flash={flash} openEngine={() => setShowEngine(true)}
-            modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+            modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json, onToken: o.onToken })}
             runPy={(code, files) => runCode({ lang: "python", code, files, timeoutMs: 60000 })}
             saveFile={NATIVE ? (name, text, mime, b64) => nativeCall("saveFile", b64 ? { name, mime, b64 } : { name, mime, text }) : null}
@@ -10597,7 +10615,7 @@ export default function App() {
         </div>
       ) : null}
       {artifact ? <ArtifactViewer key={(artifact.id || artifact.title) + ":" + (artifact.chatId || "")} artifact={artifact} close={() => { setArtifact(null); try { window.dispatchEvent(new Event("attune-artifacts-changed")); } catch (e) {} }}
-        native={NATIVE} flash={flash} modelReady={modelState === "ready" || (NATIVE && engineInfo && engineInfo.state === "ready")}
+        native={NATIVE} flash={flash} modelReady={modelUsable}
         llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false })}
         saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null} /> : null}
       {showBackup && <BackupPanel close={() => setShowBackup(false)} flash={flash} nativeCall={nativeCall} native={NATIVE} />}

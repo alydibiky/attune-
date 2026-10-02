@@ -321,11 +321,24 @@ class MainActivity : AppCompatActivity() {
     @Suppress("DEPRECATION")
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
-        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_BACKGROUND && Engine.state == Engine.State.READY && !GenService.busy()) {
+        // Level 40 arrives almost every time the app goes to the background, so letting the model go there
+        // made every app switch cost a 27 s reload. Only let it go when memory is really short: the
+        // system is about to kill background apps (80), or it is critically low and the phone says so.
+        val am = getSystemService(android.content.Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+        val info = android.app.ActivityManager.MemoryInfo().also { am.getMemoryInfo(it) }
+        val short = level >= android.content.ComponentCallbacks2.TRIM_MEMORY_COMPLETE || (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL && info.lowMemory)
+        if (short && Engine.state == Engine.State.READY && !GenService.busy()) {
             freedForMemory = true
-            try { java.io.File(filesDir, "engine.log").appendText("\nMemory (${java.util.Date()}): Android asked for memory while Attune was in the background — the model was let go; it reloads when Attune is opened.\n") } catch (e: Exception) {}
+            try { java.io.File(filesDir, "engine.log").appendText("\nMemory (${java.util.Date()}): Android asked for memory while Attune was in the background — the model was let go (level $level); it reloads when Attune is opened or a message is sent.\n") } catch (e: Exception) {}
             Engine.stop()
         }
+    }
+
+    // In the background the page's timers (polling, spinners, clocks) only cost battery and heat. Stop them,
+    // unless an answer / download / drawing is running: that one must keep going. onResume starts them again.
+    override fun onStop() {
+        if (::web.isInitialized && !GenService.busy()) web.pauseTimers()
+        super.onStop()
     }
 
     override fun onPause() {

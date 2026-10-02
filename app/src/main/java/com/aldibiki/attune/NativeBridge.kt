@@ -582,6 +582,20 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** Wake the engine: if it is asleep and a model is installed, load the one used last (or the newest).
+     *  Returns "ready", "starting" or "none" (no model installed). Never starts it twice. */
+    @Volatile private var wakingUntil = 0L
+    @JavascriptInterface
+    fun wake(): String {
+        if (Engine.state == Engine.State.READY) return "ready"
+        if (Engine.state == Engine.State.STARTING || System.currentTimeMillis() < wakingUntil) return "starting"
+        wakingUntil = System.currentTimeMillis() + 4000   // Engine.start runs on another thread: don't start twice
+        val m = ModelStore.active(ctx) ?: ModelStore.list(ctx).lastOrNull() ?: return "none"
+        Prefs.setActiveModel(ctx, m.id)
+        Engine.start(ctx, m) { _, _ -> announceEngine() }
+        return "starting"
+    }
+
     // ---- speed doctor ---------------------------------------------------------------
     /** Everything that decides speed, read from the phone and the engine's own log. */
     @JavascriptInterface
