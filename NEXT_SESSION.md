@@ -359,6 +359,7 @@ only what keeps quality and speed. Rework the whole app's UI/UX like an expert w
 20 years of experience.
 
 Standing rules:
+- Anything subjective (UI look, layout, colours, names, wording): show me 2–4 options with a recommendation and build the one I pick.
 - Never commit *private-key*.json; never change app/attune-test.keystore.
 - Targeted fixes, except the UI/UX rework and the Fit & Food redesign I asked for.
 - Explain every step simply, with technical terms in English AND Egyptian Arabic.

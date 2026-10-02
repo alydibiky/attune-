@@ -17,6 +17,9 @@
 
 ## Ali's standing rules
 - Never commit `*private-key*.json`; never change `app/attune-test.keystore`.
+- Subjective choices (look and feel, layout, colours, names, wording, which of several good designs): don't decide alone.
+  Show Ali 2–4 concrete options (a screenshot, mock-up or short description of each, with a recommendation) and build
+  the one he picks. Objective bugs and measurable fixes: just fix them.
 - Targeted fixes, no rewrites — except the UI/UX rework and the Fit & Food redesign he asked for.
 - Explain every step simply, with technical terms in English AND Egyptian Arabic.
 - Commit as Claude <noreply@anthropic.com>; no model names in commits or code.
