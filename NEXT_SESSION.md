@@ -238,6 +238,95 @@ matters (speed, heat/energy, RAM, answer quality), before shipping it.
       model is installed. Check every tool that reads a file or a chat: X-Ray, the converter's translate,
       documents, photos.
 
+## I. Added 2 Oct 2026 (second batch)
+
+**Done already in the 2 Oct session (needs Ali's phone check):** the website follow-up. "Okay u do me the
+frontend only for now" after a website request used to reach the model on its own and got "I cannot create a
+functional website, as I am an AI language model". Now `websiteFollowUp()` continues the earlier website request,
+and `refusesToBuild()` makes the app ask again as a code task if a model still refuses. Tests: unit v68
+and `tests/e2e_v69site.py`.
+
+20. **The engine does not load by itself: after tabbing out, sending a message gives "No model is running — open
+    Engine and install or pick one" and the chip says "No model".** (Screenshot: the riddle "What gets smaller every
+    time it takes a bath?" was typed after coming back.) Same root cause as items 2 and 19 (Android released
+    the model in the background), but this one is the most visible, so do it first:
+    - On app resume and before every send, if a model is installed and not running, load the last-used one
+      automatically, show "Waking up Zenith… 12 s", keep the typed message, and send it when ready.
+    - Never show "open Engine and install or pick one" when a model is installed.
+    - Keep the model alive in the background where Android allows it (foreground service).
+
+21. **Exact-length writing rules are not obeyed.** Screenshot (Blaze+, Think on): "Write a coherent response that
+    contains exactly 17 words. The 17th (last) word must be 'seventeen'. No preamble, notes or explanations — only
+    the text." The answers had 7 and 8 words, and "Try again" repeated the mistake.
+    - Cause: `web-src/constraints.js` only checks "each sentence has exactly N words", "N sentences", "no letter X", no
+      digits/symbols and "at most N words". It has NO rule for "exactly N words in the whole answer", "the Nth /
+      last / first word must be X", "starts / ends with X", "N paragraphs", "N bullet points", "N characters".
+    - Fix: add those rules; on a miss tell the model the exact count ("it has 7 words, it needs 17"); and
+      finish with a deterministic fallback so the final answer is always correct (e.g. have the model write
+      N−1 words, then code appends the required last word and trims or pads).
+    - Check the same path on every engine (Blaze+ / LiteRT with Think, llama.cpp models). "Try again" must run
+      the check again.
+
+22. **Ideas from Ali's posts. Verdicts (build in this order):**
+    - *From the Facebook thread on "what AI agent would you want":*
+      - **Personal business operations agent (proactive):** a daily brief that gathers what needs doing today: open
+        promises and unanswered questions found by Chat X-Ray, money owed to Ali and by him (Money debts),
+        reminders and calendar, leads and follow-ups (Business), and one-tap drafted replies in Egyptian Arabic. It
+        runs on a schedule and notifies, instead of waiting for prompts. Fits Adrighem and Aldibiki (150 employees). Email
+        access is online-only and optional; start from share-to-Attune, the phone calendar and notification
+        access (optional, off by default).
+      - **One place for all project knowledge:** extend Mind (Ask your Mind with sources) with projects/jobs: WhatsApp
+        exports, voice notes, PDFs, photos, invoices, all searchable and answerable per project.
+      - **Analyse data safely:** spreadsheet and PDF questions run as code on the phone (already partly there); extend it.
+      - **Skip for now:** an agent that operates web apps for you (prompt-injection and safety risk, weak with
+        small models).
+    - *From the Arabic AI-tool lists (Godmode, Fireflies, Tripenotes, Stockimg, My AI Front Desk, Namy,
+      Undetectable AI, Dr Tessa, Replika, AI Tree, AskYourPDF, Quillbot, Lensa, ChatGPT, Midjourney, Tome, Tabnine,
+      Durable, Murf AI, Copy AI, Character AI, Looka, Tryellie, GeneratePrompt, Notion, Katteb, Designer, Influence Me):*
+      - **Add:** CV maker with an AI HR coach (Influence Me → item 18); meeting and call notes (Fireflies): record,
+        transcribe on the phone, summary, action items, who promised what, saved to Mind; customer-reply drafts in
+        Egyptian Arabic (Tryellie / My AI Front Desk; auto-answering 24/7 needs the WhatsApp Business API, so
+        start with suggested replies); chat with a PDF or book with page citations (AskYourPDF); proofreader and
+        paraphraser, Arabic and English, with tone choices (Quillbot / Katteb / Copy AI); business name, slogan and
+        logo maker (Namy / Looka: names by the model, logos as SVG); a "Do it for me" agent that chains our tools
+        (Godmode: research → summary → report → slides); a better trip planner (Tripenotes; a Travel tool exists);
+        persona chat for practice, such as a Turkish tutor and interview practice (Character AI);
+        natural-sounding text-to-speech for voice-overs, Egyptian Arabic first (Murf).
+      - **Already have:** ChatGPT-style chat, Tome (slides), Tabnine (Code), Durable (websites), GeneratePrompt (prompts
+        for other AIs), Notion-style notes (Mind).
+      - **Later, after Studio is fixed (item 9):** Midjourney, Stockimg and Lensa-style images and avatars.
+      - **Skip:** Undetectable AI (the point is to hide AI writing from detectors; offer an honest "make it sound
+        natural / in my voice" rewrite inside the proofreader instead); Dr Tessa and Replika (mental-health
+        therapy and companionship are risky; maybe a plain wellbeing journal); AI Tree (a directory of tools).
+    - *Not an app feature:* the third Facebook screenshot (cheaper models for Claude Code, Open Router, plan limits) is
+      advice about how we develop the app, not about what the app does.
+
+23. **Plugins and Skills inside Attune (Ali asked "can I add plugins and skills?": yes).** Build in three steps, safest first:
+    - **Skills (text only, safe, cheap):** a skill is a small file: name, when to use it, instructions, an example.
+      The app already has a tips and recipes library (`tips.js`, `skillFor`); open it to the user:
+      create, import, share (file / QR / link) and switch on or off. Match by command (`/quote`) or automatically
+      by description (on-device search). Examples: a "crane quote writer", an "invoice reply in Egyptian
+      Arabic", a "Turkish tutor". Nothing runs; it only adds instructions to the prompt, so it also helps small models.
+    - **Plugins, step 1 (declarative):** a plugin is JSON: an input form, a prompt template, an output shape (text,
+      table, file). No code, so no risk.
+    - **Plugins, step 2 (code):** JavaScript in the existing sandbox (`sandbox/js-worker.mjs`, no network, no
+      storage unless allowed) with a visible permission list (network domains, files, camera, location),
+      a package format that is signed, and a kill switch. Google Play allows interpreted JavaScript in a
+      sandboxed WebView but not downloaded native code (dex/.so), so no native plugins.
+    - Optional online connectors (like MCP) later, off by default.
+    - A Plugins and Skills page with a built-in catalogue, import and an "ask the AI to write a skill for me" button.
+
+24. **"Add any model" (Engine screen): decide what to do with it.**
+    - What it is: a box to install any GGUF model from Hugging Face as `owner/repo:QUANT` (or a direct https
+      link); the photo reader is fetched too when the repo has one. Why it exists: new and specialist models
+      (coding, Arabic, medical, fine-tuned) appear every week; this lets power users install them without waiting for an
+      app update, all offline once downloaded.
+    - Problems: a too-big model overheats the phone or is killed; unknown quality; it shows the vendor and format
+      names we hide everywhere else (Ali's rule); an average user can break the engine.
+    - Proposal: move it into an "Advanced" section (collapsed); before downloading, show the size against free RAM and
+      warn ("too big for this phone", "will run hot"); refuse files the engine cannot load; label such models
+      "Community"; run a 20-second self-test after install and show the result; keep it to power users.
+
 ---
 
 ## Prompt to start the next session
@@ -248,7 +337,7 @@ First read HANDOFF.md and NEXT_SESSION.md, then fix EVERY item in NEXT_SESSION.m
 one, with a task list. Start with section A (heat, the engine reload, the app restarting
 when I come back), item 10 (Fit: the photo crash, no food recognised, only 54 recipes), item 17
 (the file converter is still not top notch: use the real file in tests/convert/fixtures/real/),
-item 19 ("No model" on paste) and item 18 (the new CV / resume page). Measure each fix on the real flow
+item 19 ("No model" on paste), item 20 (the engine must load by itself) and item 18 (the new CV / resume page); then 21 (exact-length rules), 22 (Ali's feature verdicts), 23 (plugins and skills) and 24 (Add any model). Measure each fix on the real flow
 and with real models (speed, heat/energy, RAM, answer quality) before shipping it.
 Research item 3 (use the phone's storage to make models lighter and stronger) and ship
 only what keeps quality and speed. Rework the whole app's UI/UX like an expert with

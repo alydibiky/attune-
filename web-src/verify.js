@@ -40,6 +40,29 @@ export function looksLikeWebsiteTask(text) {
   return /\b(build|make|create|design|code|write|develop|generate|give me|need|want)\b|^(a|an|my)\s/i.test(t) || /اعمل|اعملي|صمم|صمملي|ابني|ابنيلي|عايز|محتاج|اكتب/.test(t);
 }
 
+/** v6.9: "Okay u do me the frontend only for now" after a website request is not a new question — it is
+ *  the go-ahead (or a narrowing) of the website asked for a message or two before. Sent to the model on its
+ *  own it got "I cannot create a functional website… as an AI language model". → the full task, or null. */
+export function websiteFollowUp(text, history) {
+  const t = String(text || "").trim();
+  if (t.length < 3 || t.length > 160 || looksLikeWebsiteTask(t)) return null;
+  if (/^(what|how|why|when|where|who|which|is|are|does|do|can|should|explain|tell me|إيه|ايه|ليه|إزاي|ازاي|هل)\b/i.test(t) && /[?؟]\s*$/.test(t)) return null;
+  const go = /\b(do it|go ahead|go on|start|begin|build it|make it|create it|write it|front[- ]?end|html|just the (page|site|design|front)|you do|u do|yes|yeah|yep|ok(ay)?|sure|continue|proceed|please|now)\b|ابدأ|ابدا|يلا|اعمله|اعملها|كمل|ماشي|تمام|ايوه|أيوه|نعم|الواجهة|فرونت|الصفحة/i;
+  if (!go.test(t)) return null;
+  const users = (history || []).filter((m) => m && m.role === "user" && m.text).slice(-3).reverse();
+  const prev = users.find((m) => looksLikeWebsiteTask(m.text));
+  return prev ? { task: String(prev.text).trim() + "\n\nNow: " + t } : null;
+}
+
+/** v6.9: a model that says it cannot write code or a website ("I am an AI language model and cannot
+ *  create a functional website") when it was asked to. It can — the app asks again as a code task. */
+export function refusesToBuild(answer) {
+  const a = String(answer || "").slice(0, 400);
+  return /\b(I|i)\s*(cannot|can't|can not|am unable to|am not able to)\s+(create|build|make|write|develop|design|generate)[^.\n]{0,60}\b(website|web ?site|web ?page|webpage|app|application|code|program|script)\b/i.test(a)
+    || /\bas an AI (language )?model\b[^.\n]{0,120}\b(cannot|can't|do not have the capability|unable)\b[^.\n]{0,60}\b(write|host|deploy|build|create)\b/i.test(a)
+    || /لا (أستطيع|استطيع|يمكنني)\s+(إنشاء|انشاء|بناء|كتابة|عمل)\s+(موقع|تطبيق|كود)/.test(a);
+}
+
 export function looksLikeCodeTask(text) {
   const t = String(text || "");
   if (t.length < 15) return false;

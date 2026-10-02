@@ -205,5 +205,16 @@ ok(CD.failingLine("x = 1\ny = x + z", { error: 'File "<exec>", line 2, in <modul
   const res = await CD.workLoop({ task: "days between", lang: "javascript", code: js, run, llm: async (m) => { asked.push(m[1].content); return k++ ? good : noop; } });
   ok(res.ok && res.rounds === 2 && /changed nothing/i.test(asked[1]) && /returns 365 where a test expects 364/.test(asked[0]), "coding: a fix that changes nothing is refused and named; the model is told the test may be the wrong part");
 }
+{ // Ali's phone, 29 Sep: "Okay u do me the frontend only for now" after a website request got "I cannot create a functional website"
+  const V2 = await import("../../web-src/verify.js");
+  const hist = [{ role: "user", text: "I want a website where people can book workers (plumbers, electricians) with a services list and worker profiles" }, { role: "assistant", text: "Sure — do you want the backend too?" }];
+  const f = V2.websiteFollowUp("Okay u do me the frontend only for now", hist);
+  ok(f && /book workers/.test(f.task) && /frontend only/.test(f.task), "website: a go-ahead after a website request continues THAT website");
+  ok(V2.websiteFollowUp("Okay u do me the frontend only for now", [{ role: "user", text: "what is the capital of France?" }, { role: "assistant", text: "Paris" }]) === null, "website: a go-ahead after an unrelated chat is not a website task");
+  ok(V2.websiteFollowUp("what does frontend mean?", hist) === null && V2.websiteFollowUp("ok", []) === null, "website: a question, or no earlier request, is left alone");
+  ok(V2.websiteFollowUp("تمام ابدأ بالواجهة", [{ role: "user", text: "عايز موقع لحجز العمال" }, { role: "assistant", text: "تمام" }]) !== null, "website: Arabic go-ahead («تمام ابدأ») after «عايز موقع…»");
+  ok(V2.refusesToBuild("I cannot create a functional website for you, as I am an AI language model and do not have the capability to write, host, or deploy live code.") && V2.refusesToBuild("As an AI language model, I do not have the capability to write or host a website.") && V2.refusesToBuild("لا أستطيع إنشاء موقع كامل"), "website: a refusal to build is recognised");
+  ok(!V2.refusesToBuild("Here is the page you asked for:\n```html\n<html></html>\n```") && !V2.refusesToBuild("I cannot create a website without knowing the topic — which business is it for?".replace("cannot create a website","cannot tell")), "website: a normal answer is not a refusal");
+}
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASSED");
 if (fail) process.exit(1);

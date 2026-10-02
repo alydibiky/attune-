@@ -14,7 +14,7 @@ import { ActionCard } from "./actions-ui.jsx";
 import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
 import { mathToText } from "./quality.js";
-import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, arithmeticSlips, fixSlips } from "./verify.js";
+import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, websiteFollowUp, refusesToBuild, arithmeticSlips, fixSlips } from "./verify.js";
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
@@ -885,6 +885,27 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const prevQ = [...history].reverse().find((m) => m.role === "user" && m.text);
       const mathQ = prevQ && /[0-9٠-٩]/.test(typed) && looksLikeFollowUp(typed) && (looksLikeMathProblem(prevQ.text) || looksLikeCalc(prevQ.text))
         ? prevQ.text + "\nFollow-up (answer this, using the question above): " + typed : typed;
+      // v6.9: "okay you do the frontend only" after a website request continues THAT website
+      const siteFollow = route && !longMsg && !img && !sources && api.codeTask ? websiteFollowUp(typed, history) : null;
+      const buildCode = async (task, web) => {
+        // While it writes: the model's own ```python fence (and anything
+        // before it) is dropped, so the preview is ONE code box — not an
+        // empty box with the code spilling out below it as plain text.
+        const livePreview = (tx) => {
+          let s = String(tx || "").replace(/\r/g, "");
+          const f = s.search(/```[^\n]*\n/);
+          if (f >= 0) s = s.slice(s.indexOf("\n", f) + 1);
+          s = s.split(/\n\s*```/)[0];
+          return "```\n" + s.split("\n").slice(-30).join("\n") + "\n```";
+        };
+        const r = await api.codeTask(task, { onStep: (s) => onStatus(s), onToken: (tx) => onToken(livePreview(tx), ""), lang: web ? "html" : undefined });
+        if (runRef.current !== run) return false;
+        if (r && r.code) {
+          answer = (r.ok ? "" : tr("I couldn't make every test pass yet — here is the closest version; tap “Test & fix in Code” to keep going.") + "\n\n") + "```" + r.lang + "\n" + r.code + "\n```";
+          extra.codeCheck = { ok: r.ok, tests: r.tests, rounds: r.rounds, lang: r.lang };
+        }
+        return true;
+      };
       if (route && !longMsg && !img && !sources && api.verifyMath && looksLikeMathProblem(mathQ) && !looksLikeDeduction(typed)) {
         try {
           const r = await api.verifyMath(mathQ + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
@@ -898,25 +919,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           if (runRef.current !== run) return;
           if (r && r.text) { answer = r.text; extra.reasoned = { votes: r.votes, total: r.total, checked: r.checked }; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
-      } else if (route && !longMsg && !img && !sources && api.codeTask && (looksLikeCodeTask(typed) || (spaceRef.current.assistant && spaceRef.current.assistant.id === "a-web" && !/^\s*(what|how|why|is|are|does|can|explain|إيه|ايه|ليه|إزاي|ازاي|هل)\b/i.test(typed)))) {
+      } else if (route && !longMsg && !img && !sources && api.codeTask && (looksLikeCodeTask(typed) || siteFollow || (spaceRef.current.assistant && spaceRef.current.assistant.id === "a-web" && !/^\s*(what|how|why|is|are|does|can|explain|إيه|ايه|ليه|إزاي|ازاي|هل)\b/i.test(typed)))) {
         try {
-          // While it writes: the model's own ```python fence (and anything
-          // before it) is dropped, so the preview is ONE code box — not an
-          // empty box with the code spilling out below it as plain text.
-          const livePreview = (tx) => {
-            let s = String(tx || "").replace(/\r/g, "");
-            const f = s.search(/```[^\n]*\n/);
-            if (f >= 0) s = s.slice(s.indexOf("\n", f) + 1);
-            s = s.split(/\n\s*```/)[0];
-            return "```\n" + s.split("\n").slice(-30).join("\n") + "\n```";
-          };
-          const web = looksLikeWebsiteTask(typed) || (spaceRef.current.assistant && spaceRef.current.assistant.id === "a-web");
-          const r = await api.codeTask(typed, { onStep: (s) => onStatus(s), onToken: (tx) => onToken(livePreview(tx), ""), lang: web ? "html" : undefined });
-          if (runRef.current !== run) return;
-          if (r && r.code) {
-            answer = (r.ok ? "" : tr("I couldn't make every test pass yet — here is the closest version; tap “Test & fix in Code” to keep going.") + "\n\n") + "```" + r.lang + "\n" + r.code + "\n```";
-            extra.codeCheck = { ok: r.ok, tests: r.tests, rounds: r.rounds, lang: r.lang };
-          }
+          const web = looksLikeWebsiteTask(typed) || !!siteFollow || (spaceRef.current.assistant && spaceRef.current.assistant.id === "a-web");
+          if (!(await buildCode(siteFollow ? siteFollow.task : typed, web))) return;
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
       }
       // A photo of a table (a crane load chart, a price list, a timetable):
@@ -994,6 +1000,16 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const again = await api.run(buildMessages(history, content + "\n\n(Answer in plain words with your reasoning step by step. Do NOT write code, functions or tool calls.)"), pic, { onToken, onStatus, think: false, copy: !!sources || !!fileAtt });
           if (runRef.current !== run) return;
           if (again && !codeInsteadOfAnswer(again)) answer = again;
+        } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      }
+      // v6.9: "I cannot create a functional website… as an AI language model" for a build request:
+      // asked again as the code task it is (the model can write the page)
+      if (plain && answer && route && !longMsg && !img && !sources && api.codeTask && refusesToBuild(answer)) {
+        try {
+          const web = !!siteFollow || looksLikeWebsiteTask(typed) || /web ?site|web ?page|landing|موقع/i.test(answer.slice(0, 400));
+          const before = answer; answer = null; extra.refusedThenBuilt = true;
+          if (!(await buildCode(siteFollow ? siteFollow.task : typed, web))) return;
+          if (answer == null) { answer = before; delete extra.refusedThenBuilt; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
       }
       // v6.8 — an answer in the wrong language (asked "in Arabic" and written in English, or an Arabic
