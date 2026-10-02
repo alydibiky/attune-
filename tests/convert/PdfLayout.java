@@ -54,7 +54,9 @@ public class PdfLayout {
                     TextPosition last = cur.isEmpty() ? null : cur.get(cur.size() - 1);
                     boolean gap = last != null && p.getXDirAdj() - (last.getXDirAdj() + last.getWidthDirAdj()) > p.getFontSizeInPt() * 0.18f;
                     boolean fontChange = last != null && last.getFont() != p.getFont();
-                    if (u.isBlank() || gap || fontChange) { if (!cur.isEmpty()) addWord(null, cur); cur = new ArrayList<>(); if (u.isBlank()) continue; }
+                    // v6.10: a smaller or lowered / raised character starts its own word (the X of Y_X/S, the −1 of h⁻¹)
+                    boolean script = last != null && (Math.abs(p.getYDirAdj() - last.getYDirAdj()) > 0.9f || Math.min(p.getFontSizeInPt(), last.getFontSizeInPt()) < Math.max(p.getFontSizeInPt(), last.getFontSizeInPt()) * 0.85f);
+                    if (u.isBlank() || gap || fontChange || script) { if (!cur.isEmpty()) addWord(null, cur); cur = new ArrayList<>(); if (u.isBlank()) continue; }
                     cur.add(p);
                 }
                 if (!cur.isEmpty()) addWord(null, cur);
@@ -137,7 +139,8 @@ public class PdfLayout {
             List<Integer> g = groups.isEmpty() ? null : groups.get(groups.size() - 1);
             if (g != null) {
                 float[] f = st.words.get(g.get(0));
-                if (Math.abs(w[2] - f[2]) <= Math.max(2f, Math.min(w[3], f[3]) * 0.45f)) { g.add(i); continue; }
+                boolean scriptPair = Math.min(w[3], f[3]) < Math.max(w[3], f[3]) * 0.85f;   // v6.10: a sub / superscript belongs to its line
+                if (Math.abs(w[2] - f[2]) <= Math.max(2f, scriptPair ? Math.max(w[3], f[3]) * 0.55f : Math.min(w[3], f[3]) * 0.45f)) { g.add(i); continue; }
             }
             groups.add(new ArrayList<>(List.of(i)));
         }
@@ -184,13 +187,13 @@ public class PdfLayout {
                     sb.setLength(0); spanX = -1f; wordsOf = new StringBuilder("[");
                 }
                 if (spanX < 0f) { spanX = rtlLine ? w[1] : w[0]; spanSize = w[3]; spanFar = rtlLine ? w[0] : w[1]; }
-                else {
-                    if (w[3] < size * 0.8f && w[2] < base - 0.5f) { sb.append("^(").append(t).append(")"); spanEnd = rtlLine ? w[0] : w[1]; continue; }
-                    if (gap > size * 0.12f) sb.append(' ');
-                }
-                sb.append(t); spanEnd = rtlLine ? w[0] : w[1];
-                // each word: x, text, bold, italic
-                wordsOf.append(wordsOf.length() > 1 ? "," : "").append("[").append(n(rtlLine ? w[1] : w[0])).append(",").append(q(t)).append(",").append((int) w[4]).append(",").append((int) w[5]).append(",").append((int) w[8]).append(",").append(n(rtlLine ? w[0] : w[1])).append("]");
+                else if (!(w[3] < size * 0.85f && w[2] < base - 0.5f) && gap > size * 0.12f) sb.append(' ');
+                // v6.10: a smaller word raised above the line is a superscript (2^−ΔΔCt), one lowered is a subscript (Y_X/S)
+                int v = w[3] < size * 0.85f ? (w[2] < base - 0.5f ? 1 : w[2] > base + 0.5f ? -1 : 0) : 0;
+                if (v == 1 && spanX >= 0f && sb.length() > 0) sb.append("^(").append(t).append(")"); else sb.append(t);
+                spanEnd = rtlLine ? w[0] : w[1];
+                // each word: x, text, bold, italic, colour, xEnd, script (+1 super, −1 sub)
+                wordsOf.append(wordsOf.length() > 1 ? "," : "").append("[").append(n(rtlLine ? w[1] : w[0])).append(",").append(q(t)).append(",").append((int) w[4]).append(",").append((int) w[5]).append(",").append((int) w[8]).append(",").append(n(rtlLine ? w[0] : w[1])).append(",").append(v).append("]");
             }
             if (spanX >= 0f) spans.append(spans.length() > 1 ? "," : "").append("[").append(n(spanX)).append(",").append(q(sb.toString())).append(",").append(n(spanSize)).append(",").append(wordsOf).append("]]");
             spans.append("]");
@@ -235,6 +238,65 @@ public class PdfLayout {
         }
     }
 
+    /**
+     * v6.10: the page's filled rectangles and ruled lines (table shading and borders, boxes): [x, top, w, h, fill, stroke]
+     * in points, top-left origin; fill / stroke are 0xRRGGBB or -1 for none. A ruled line is a thin rectangle. At most 400 a page.
+     * Watches the drawing operators itself (re, m, l, f, S, B …) like ImageFinder watches Do — the same code runs on the phone.
+     */
+    static class PathFinder extends PDFStreamEngine {
+        final List<float[]> found = new ArrayList<>(); final float pageW, pageH;
+        private final List<float[]> rects = new ArrayList<>();     // the path being built: x0, y0, x1, y1 (page space)
+        private final List<float[]> segs = new ArrayList<>();
+        private float cx, cy;
+        PathFinder(float pageW, float pageH) {
+            this.pageW = pageW; this.pageH = pageH;
+            addOperator(new Concatenate()); addOperator(new Save()); addOperator(new Restore()); addOperator(new SetMatrix());
+            addOperator(new SetLineWidth()); addOperator(new SetGraphicsStateParameters());
+            addOperator(new SetStrokingColorSpace()); addOperator(new SetNonStrokingColorSpace());
+            addOperator(new SetStrokingDeviceCMYKColor()); addOperator(new SetNonStrokingDeviceCMYKColor());
+            addOperator(new SetNonStrokingDeviceRGBColor()); addOperator(new SetStrokingDeviceRGBColor());
+            addOperator(new SetNonStrokingDeviceGrayColor()); addOperator(new SetStrokingDeviceGrayColor());
+            addOperator(new SetStrokingColor()); addOperator(new SetStrokingColorN());
+            addOperator(new SetNonStrokingColor()); addOperator(new SetNonStrokingColorN());
+        }
+        private float[] tx(float x, float y) { Matrix m = getGraphicsState().getCurrentTransformationMatrix(); return new float[]{m.getScaleX() * x + m.getShearX() * y + m.getTranslateX(), m.getShearY() * x + m.getScaleY() * y + m.getTranslateY()}; }
+        private int rgb(boolean fill) { try { var c = fill ? getGraphicsState().getNonStrokingColor() : getGraphicsState().getStrokingColor(); return c == null ? -1 : c.toRGB() & 0xFFFFFF; } catch (Exception e) { return -1; } }
+        private void emit(float x0, float y0, float x1, float y1, int fill, int stroke) {
+            if (found.size() >= 400) return;
+            float x = Math.min(x0, x1), w = Math.abs(x1 - x0), yb = Math.min(y0, y1), h = Math.abs(y1 - y0);
+            if (w < 0.3f && h < 0.3f) return;
+            if (w >= pageW * 0.95f && h >= pageH * 0.95f && (fill == 0xFFFFFF || fill == -1)) return;   // the page background
+            found.add(new float[]{x, pageH - (yb + h), w, h, fill, stroke});
+        }
+        private void paint(boolean f, boolean s) {
+            int fc = f ? rgb(true) : -1, sc = s ? rgb(false) : -1;
+            float lw = Math.max(0.4f, getGraphicsState().getLineWidth() * Math.abs(getGraphicsState().getCurrentTransformationMatrix().getScaleX()));
+            for (float[] r : rects) emit(r[0], r[1], r[2], r[3], fc, sc);
+            if (s) for (float[] g : segs) {
+                if (Math.abs(g[1] - g[3]) < 0.5f) emit(g[0], g[1] - lw / 2, g[2], g[1] + lw / 2, sc, -1);       // a horizontal rule
+                else if (Math.abs(g[0] - g[2]) < 0.5f) emit(g[0] - lw / 2, g[1], g[0] + lw / 2, g[3], sc, -1);   // a vertical rule
+            }
+            rects.clear(); segs.clear();
+        }
+        private static float num(COSBase b) { return b instanceof org.apache.pdfbox.cos.COSNumber ? ((org.apache.pdfbox.cos.COSNumber) b).floatValue() : 0f; }
+        @Override protected void processOperator(Operator op, List<COSBase> a) throws java.io.IOException {
+            String n = op.getName();
+            switch (n) {
+                case "re": if (a.size() >= 4) { float x = num(a.get(0)), y = num(a.get(1)), w = num(a.get(2)), h = num(a.get(3)); float[] p0 = tx(x, y), p1 = tx(x + w, y + h); rects.add(new float[]{p0[0], p0[1], p1[0], p1[1]}); } return;
+                case "m": if (a.size() >= 2) { float[] p = tx(num(a.get(0)), num(a.get(1))); cx = p[0]; cy = p[1]; } return;
+                case "l": if (a.size() >= 2) { float[] p = tx(num(a.get(0)), num(a.get(1))); segs.add(new float[]{cx, cy, p[0], p[1]}); cx = p[0]; cy = p[1]; } return;
+                case "c": if (a.size() >= 6) { float[] p = tx(num(a.get(4)), num(a.get(5))); cx = p[0]; cy = p[1]; } return;
+                case "v": case "y": if (a.size() >= 4) { float[] p = tx(num(a.get(2)), num(a.get(3))); cx = p[0]; cy = p[1]; } return;
+                case "h": case "W": case "W*": return;
+                case "f": case "F": case "f*": paint(true, false); return;
+                case "S": case "s": paint(false, true); return;
+                case "B": case "B*": case "b": case "b*": paint(true, true); return;
+                case "n": rects.clear(); segs.clear(); return;
+                default: super.processOperator(op, a);
+            }
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         try (PDDocument d = PDDocument.load(new File(args[0]))) {
             int count = d.getNumberOfPages();
@@ -249,8 +311,12 @@ public class PdfLayout {
                 var box = d.getPage(i - 1).getMediaBox();
                 ImageFinder imgs = new ImageFinder(box.getHeight(), 12);
                 try { imgs.processPage(d.getPage(i - 1)); } catch (Exception e) { }
+                PathFinder paths = new PathFinder(box.getWidth(), box.getHeight());
+                try { paths.processPage(d.getPage(i - 1)); } catch (Exception e) { }
+                StringBuilder rj = new StringBuilder();
+                for (float[] r : paths.found) rj.append(rj.length() > 0 ? "," : "").append("[").append(n(r[0])).append(",").append(n(r[1])).append(",").append(n(r[2])).append(",").append(n(r[3])).append(",").append((int) r[4]).append(",").append((int) r[5]).append("]");
                 pages.append(pages.length() > 1 ? "," : "").append("{\"n\":").append(i).append(",\"text\":").append(q(t)).append(",\"scan\":").append(scan)
-                    .append(",\"lines\":").append(layoutLines(strip)).append(",\"w\":").append(n(box.getWidth())).append(",\"h\":").append(n(box.getHeight())).append(",\"imgs\":[").append(String.join(",", imgs.found)).append("]}");
+                    .append(",\"lines\":").append(layoutLines(strip)).append(",\"w\":").append(n(box.getWidth())).append(",\"h\":").append(n(box.getHeight())).append(",\"imgs\":[").append(String.join(",", imgs.found)).append("],\"rects\":[").append(rj).append("]}");
             }
             System.out.println("{\"pages\":" + pages + "],\"count\":" + count + "}");
         }

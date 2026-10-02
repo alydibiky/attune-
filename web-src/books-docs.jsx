@@ -2,6 +2,7 @@
    The page is built here as plain print-ready HTML (English and Arabic side by side, the company letterhead, the VAT
    breakdown) and printed to PDF by the phone's own Chrome engine (NativeBridge.htmlToPdf). Nothing is uploaded.     */
 import * as B from "./books.js";
+import * as C from "./convert.js";
 
 const esc = (x) => String(x ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const money = (m) => B.fmt(m || 0);
@@ -108,3 +109,45 @@ export async function sharePdf({ html, name, text, flash }) {
 }
 export const shareDocument = ({ s, doc, kind, flash }) => sharePdf({ html: documentHtml({ s, doc, kind }), name: (doc.number || kind).replace(/[^\w-]+/g, "_"), text: whatsappText({ s, doc, kind }), flash });
 export const shareStatement = ({ s, customer, statement, from, to, flash }) => sharePdf({ html: statementHtml({ s, customer, statement, from, to }), name: "statement-" + ((s.customers.find((c) => c.id === customer) || {}).name || "customer").replace(/[^\w]+/g, "_"), flash });
+
+// ---- the same document as an editable Word file ------------------------------------------------------------------------
+/** The blocks of a sales document for convert.js's Word writer: letterhead, title, customer, a ruled items table, totals, notes. */
+export function documentBlocks({ s, doc, kind }) {
+  const co = s.company, t = B.docTotals(doc, s.tax), cust = s.customers.find((c) => c.id === doc.customer) || {};
+  const [te, ta] = TITLES[kind] || TITLES.invoice;
+  const blocks = [];
+  const line = (text, o = {}) => blocks.push({ type: "p", text, size: o.size || 10, align: o.align || "left", ...(o.b ? { runs: [{ t: text, b: true }] } : {}), ...(o.rtl ? { rtl: true } : {}), before: o.before || 0 });
+  if (co.name) line(co.name, { size: 16, b: true });
+  if (co.nameAr) line(co.nameAr, { size: 14, b: true, rtl: true, align: "right" });
+  const info = [co.address, co.phone && "Tel " + co.phone, co.email, co.taxId && `Tax ID / الرقم الضريبي: ${co.taxId}`, co.regNo && `C.R. / السجل التجاري: ${co.regNo}`].filter(Boolean);
+  info.forEach((x) => line(x, { size: 9 }));
+  blocks.push({ type: "h2", text: `${te} · ${ta}   ${doc.number || "DRAFT"}`, before: 10 });
+  line(`Customer · العميل: ${cust.name || ""}${cust.taxId ? "   Tax ID: " + cust.taxId : ""}`, { b: true, before: 4 });
+  if (cust.address) line(cust.address, { size: 9 });
+  line(`Date · التاريخ: ${dmy(doc.date)}${doc.due ? "      Due · الاستحقاق: " + dmy(doc.due) : ""}${doc.against ? "      Against · بخصوص: " + doc.against : ""}`, { before: 2 });
+  const head = ["#", "Description · الوصف", "Qty · الكمية", "Unit price · السعر", "Disc.", "VAT", "Total · الإجمالي"];
+  const rows = [head, ...doc.lines.map((l, i) => { const f = B.lineFigures(l, s.tax); const it = s.items.find((x) => x.id === l.item); return [String(i + 1), l.desc || (it && it.name) || "", String(l.qty), money(l.price), l.discBp ? l.discBp / 100 + "%" : "", f.vatBp / 100 + "%", money(f.total)]; })];
+  blocks.push({ type: "table", rows, bold: rows.map((_, i) => rows[0].map(() => i === 0)), widths: [22, 160, 46, 70, 38, 38, 94], shade: rows.map((_, i) => (i === 0 ? "D9EEF0" : null)), align: ["center", "left", "right", "right", "right", "right", "right"], border: { c: "B8C4CC", sz: 4 }, size: 9.5, before: 8 });
+  const tot = [["Subtotal · الإجمالي", money(t.gross)]];
+  if (t.discount) tot.push(["Discount · الخصم", "-" + money(t.discount)]);
+  if (t.tableTax) tot.push(["Table tax · ضريبة الجدول", money(t.tableTax)]);
+  for (const [bp, v] of Object.entries(t.byVat)) if (v.base) tot.push([`VAT ${Number(bp) / 100}% on ${money(v.base)} · ضريبة`, money(v.vat)]);
+  tot.push([`Total · الإجمالي المستحق (${s.currency})`, money(t.total)]);
+  if (t.wht) { tot.push(["Withheld at source · خصم من المنبع", "-" + money(Math.abs(t.wht))]); tot.push(["Net payable · الصافي المطلوب", money(t.cashDue)]); }
+  blocks.push({ type: "table", rows: tot, bold: tot.map((_, i) => [false, false].map(() => i === tot.length - 1 - (t.wht ? 2 : 0) || (t.wht && i === tot.length - 1))), widths: [330, 138], align: ["right", "right"], border: { c: "B8C4CC", sz: 4 }, size: 10, before: 8, ind: 0 });
+  if (doc.notes) line("Notes · ملاحظات: " + doc.notes, { size: 9, before: 8 });
+  if (co.bank && kind !== "quote") line("Bank · البنك: " + co.bank, { size: 9, before: 4 });
+  if (co.footer) line(co.footer, { size: 8.5, align: "center", before: 12 });
+  return blocks;
+}
+export async function shareDocumentWord({ s, doc, kind, flash, saveFile }) {
+  try {
+    const name = (doc.number || kind).replace(/[^\w-]+/g, "_");
+    const bytes = C.docxFromBlocks(documentBlocks({ s, doc, kind }), name);
+    const call = typeof window !== "undefined" ? window.__attuneNativeCall : null;
+    if (call) { await call("shareFile", { name: name + ".docx", mime: C.MIME.docx, b64: C.bytesToB64(bytes), text: whatsappText({ s, doc, kind }) }); return true; }
+    if (saveFile) { await saveFile(name + ".docx", null, C.MIME.docx, C.bytesToB64(bytes)); return true; }
+    flash && flash("Open the Android app to share files");
+  } catch (e) { flash && flash("Could not make the Word file"); }
+  return false;
+}

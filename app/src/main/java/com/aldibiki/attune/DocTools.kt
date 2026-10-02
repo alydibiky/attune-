@@ -86,7 +86,9 @@ object DocTools {
                     val last = cur.lastOrNull()
                     val gap = last != null && p.xDirAdj - (last.xDirAdj + last.widthDirAdj) > p.fontSizeInPt * 0.18f
                     val fontChange = last != null && last.font !== p.font
-                    if (u.isBlank() || gap || fontChange) { if (cur.isNotEmpty()) addWord(cur); cur = ArrayList(); if (u.isBlank()) continue }
+                    // v6.10: a smaller or lowered / raised character starts its own word (the X of Y_X/S, the −1 of h⁻¹)
+                    val script = last != null && (Math.abs(p.yDirAdj - last.yDirAdj) > 0.9f || minOf(p.fontSizeInPt, last.fontSizeInPt) < maxOf(p.fontSizeInPt, last.fontSizeInPt) * 0.85f)
+                    if (u.isBlank() || gap || fontChange || script) { if (cur.isNotEmpty()) addWord(cur); cur = ArrayList(); if (u.isBlank()) continue }
                     cur.add(p)
                 }
                 if (cur.isNotEmpty()) addWord(cur)
@@ -166,7 +168,8 @@ object DocTools {
             val g = groups.lastOrNull()
             if (g != null) {
                 val f = st.words[g[0]]
-                if (Math.abs(w[2] - f[2]) <= maxOf(2f, minOf(w[3], f[3]) * 0.45f)) { g.add(i); continue }
+                val scriptPair = minOf(w[3], f[3]) < maxOf(w[3], f[3]) * 0.85f   // v6.10: a sub / superscript belongs to its line
+                if (Math.abs(w[2] - f[2]) <= maxOf(2f, if (scriptPair) maxOf(w[3], f[3]) * 0.55f else minOf(w[3], f[3]) * 0.45f)) { g.add(i); continue }
             }
             groups.add(arrayListOf(i))
         }
@@ -193,7 +196,7 @@ object DocTools {
             val base = if (baseYs.isEmpty()) st.words[g[0]][2] else baseYs[baseYs.size / 2]
             val spans = JSONArray()
             var spanX = -1f; var spanEnd = 0f; val sb = StringBuilder(); var spanSize = 0f
-            var wordsOf = JSONArray()   // each word: x, text, bold, italic, colour, xEnd
+            var wordsOf = JSONArray()   // each word: x, text, bold, italic, colour, xEnd, script
             var allBold = true; var allItalic = true
             var lineX0 = Float.MAX_VALUE; var lineX1 = -Float.MAX_VALUE
             val fontVotes = HashMap<String, Int>(); val colVotes = HashMap<Int, Int>()
@@ -208,13 +211,13 @@ object DocTools {
                 val gap = if (spanX < 0f) 0f else if (rtlLine) spanEnd - w[1] else w[0] - spanEnd
                 if (spanX >= 0f && gap > size * 1.6f) { spans.put(JSONArray().put(spanX.toDouble()).put(sb.toString()).put(spanSize.toDouble()).put(wordsOf)); sb.setLength(0); spanX = -1f; wordsOf = JSONArray() }
                 if (spanX < 0f) { spanX = if (rtlLine) w[1] else w[0]; spanSize = w[3] }
-                else {
-                    // a smaller word raised above the line is a superscript (2^−ΔΔCt)
-                    if (w[3] < size * 0.8f && w[2] < base - 0.5f) { sb.append("^(").append(t).append(")"); spanEnd = if (rtlLine) w[0] else w[1]; continue }
-                    if (gap > size * 0.12f) sb.append(' ')
-                }
-                sb.append(t); spanEnd = if (rtlLine) w[0] else w[1]
-                wordsOf.put(JSONArray().put((if (rtlLine) w[1] else w[0]).toDouble()).put(t).put(w[4].toInt()).put(w[5].toInt()).put(w[8].toInt()).put((if (rtlLine) w[0] else w[1]).toDouble()))
+                else if (!(w[3] < size * 0.85f && w[2] < base - 0.5f) && gap > size * 0.12f) sb.append(' ')
+                // v6.10: a smaller word raised above the line is a superscript (2^−ΔΔCt), one lowered is a subscript (Y_X/S)
+                val v = if (w[3] < size * 0.85f) (if (w[2] < base - 0.5f) 1 else if (w[2] > base + 0.5f) -1 else 0) else 0
+                if (v == 1 && spanX >= 0f && sb.isNotEmpty()) sb.append("^(").append(t).append(")") else sb.append(t)
+                spanEnd = if (rtlLine) w[0] else w[1]
+                // each word: x, text, bold, italic, colour, xEnd, script (+1 super, −1 sub)
+                wordsOf.put(JSONArray().put((if (rtlLine) w[1] else w[0]).toDouble()).put(t).put(w[4].toInt()).put(w[5].toInt()).put(w[8].toInt()).put((if (rtlLine) w[0] else w[1]).toDouble()).put(v))
             }
             if (spanX >= 0f) spans.put(JSONArray().put(spanX.toDouble()).put(sb.toString()).put(spanSize.toDouble()).put(wordsOf))
             val first = st.words[g[0]]
@@ -266,6 +269,80 @@ object DocTools {
         }
     }
 
+    /**
+     * v6.10: the page's filled rectangles and ruled lines (table shading and borders, boxes): [x, top, w, h, fill, stroke]
+     * in points, top-left origin; fill / stroke are 0xRRGGBB or -1 for none. A ruled line is a thin rectangle. At most 400 a page.
+     * Watches the drawing operators itself (re, m, l, f, S, B …) like ImageFinder watches Do. tests/convert/PdfLayout.java is
+     * this code on desktop PDFBox — keep the two in step.
+     */
+    private class PathFinder(val pageW: Float, val pageH: Float) : com.tom_roush.pdfbox.contentstream.PDFStreamEngine() {
+        val found = JSONArray()
+        private var count = 0
+        private val rects = ArrayList<FloatArray>()     // the path being built: x0, y0, x1, y1 (page space)
+        private val segs = ArrayList<FloatArray>()
+        private var cx = 0f; private var cy = 0f
+        init {
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.state.Concatenate())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.state.Save())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.state.Restore())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.state.SetMatrix())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.state.SetLineWidth())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.state.SetGraphicsStateParameters())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingColorSpace())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingColorSpace())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingDeviceCMYKColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingDeviceCMYKColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingDeviceRGBColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingDeviceRGBColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingDeviceGrayColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingDeviceGrayColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingColorN())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingColor())
+            addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetNonStrokingColorN())
+        }
+        private fun tx(x: Float, y: Float): FloatArray {
+            val m = graphicsState.currentTransformationMatrix
+            return floatArrayOf(m.scaleX * x + m.shearX * y + m.translateX, m.shearY * x + m.scaleY * y + m.translateY)
+        }
+        private fun rgb(fill: Boolean): Int = try { (rgbOf(if (fill) graphicsState.nonStrokingColor else graphicsState.strokingColor) ?: -1).let { if (it < 0) -1 else it and 0xFFFFFF } } catch (e: Exception) { -1 }
+        private fun emit(x0: Float, y0: Float, x1: Float, y1: Float, fill: Int, stroke: Int) {
+            if (count >= 400) return
+            val x = minOf(x0, x1); val w = Math.abs(x1 - x0); val yb = minOf(y0, y1); val h = Math.abs(y1 - y0)
+            if (w < 0.3f && h < 0.3f) return
+            if (w >= pageW * 0.95f && h >= pageH * 0.95f && (fill == 0xFFFFFF || fill == -1)) return   // the page background
+            found.put(JSONArray().put(x.toDouble()).put((pageH - (yb + h)).toDouble()).put(w.toDouble()).put(h.toDouble()).put(fill).put(stroke))
+            count++
+        }
+        private fun paint(f: Boolean, s: Boolean) {
+            val fc = if (f) rgb(true) else -1; val sc = if (s) rgb(false) else -1
+            val lw = maxOf(0.4f, graphicsState.lineWidth * Math.abs(graphicsState.currentTransformationMatrix.scaleX))
+            for (r in rects) emit(r[0], r[1], r[2], r[3], fc, sc)
+            if (s) for (g in segs) {
+                if (Math.abs(g[1] - g[3]) < 0.5f) emit(g[0], g[1] - lw / 2, g[2], g[1] + lw / 2, sc, -1)         // a horizontal rule
+                else if (Math.abs(g[0] - g[2]) < 0.5f) emit(g[0] - lw / 2, g[1], g[0] + lw / 2, g[3], sc, -1)    // a vertical rule
+            }
+            rects.clear(); segs.clear()
+        }
+        private fun num(b: com.tom_roush.pdfbox.cos.COSBase?): Float = (b as? com.tom_roush.pdfbox.cos.COSNumber)?.floatValue() ?: 0f
+        override fun processOperator(operator: com.tom_roush.pdfbox.contentstream.operator.Operator?, operands: MutableList<com.tom_roush.pdfbox.cos.COSBase>?) {
+            val a = operands ?: return
+            when (operator?.name) {
+                "re" -> if (a.size >= 4) { val x = num(a[0]); val y = num(a[1]); val w = num(a[2]); val h = num(a[3]); val p0 = tx(x, y); val p1 = tx(x + w, y + h); rects.add(floatArrayOf(p0[0], p0[1], p1[0], p1[1])) }
+                "m" -> if (a.size >= 2) { val p = tx(num(a[0]), num(a[1])); cx = p[0]; cy = p[1] }
+                "l" -> if (a.size >= 2) { val p = tx(num(a[0]), num(a[1])); segs.add(floatArrayOf(cx, cy, p[0], p[1])); cx = p[0]; cy = p[1] }
+                "c" -> if (a.size >= 6) { val p = tx(num(a[4]), num(a[5])); cx = p[0]; cy = p[1] }
+                "v", "y" -> if (a.size >= 4) { val p = tx(num(a[2]), num(a[3])); cx = p[0]; cy = p[1] }
+                "h", "W", "W*" -> { }
+                "f", "F", "f*" -> paint(true, false)
+                "S", "s" -> paint(false, true)
+                "B", "B*", "b", "b*" -> paint(true, true)
+                "n" -> { rects.clear(); segs.clear() }
+                else -> super.processOperator(operator, operands)
+            }
+        }
+    }
+
     fun pdfText(ctx: Context, bytes: ByteArray, maxPages: Int = 400): JSONObject {
         pdfBox(ctx)
         val doc = try { com.tom_roush.pdfbox.pdmodel.PDDocument.load(bytes) }
@@ -287,6 +364,13 @@ object DocTools {
                     val box = d.getPage(i - 1).mediaBox
                     page.put("w", box.width.toDouble()).put("h", box.height.toDouble())
                 } catch (e: Exception) { }   // no layout: the page falls back to the plain text
+                // v6.10: table borders, rules and shaded rows
+                try {
+                    val box = d.getPage(i - 1).mediaBox
+                    val pf = PathFinder(box.width, box.height)
+                    pf.processPage(d.getPage(i - 1))
+                    page.put("rects", pf.found)
+                } catch (e: Exception) { } catch (e: OutOfMemoryError) { }
                 if (picBudget > 0) try {
                     val f = ImageFinder(d.getPage(i - 1).mediaBox.height, minOf(12, picBudget))
                     f.processPage(d.getPage(i - 1))

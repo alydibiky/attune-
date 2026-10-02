@@ -155,7 +155,7 @@ export function pdfLinesToBlocks(pages) {
       // the words with their look (new readers send [x, text, bold, italic, colour, xEnd]; older ones only
       // the line's); a word touching the one before it ("2026" + "." in another font) gets no space
       const words = sp.flatMap((x) => (Array.isArray(x[3]) && x[3].length ? x[3].map((w, k, ws) => ({ t: sup(w[1]), b: w[2] != null ? !!w[2] : !!l0.b, i: w[3] != null ? !!w[3] : !!l0.i, c: w[4] != null ? hexOf(w[4]) : hexOf(l0.c),
-        glue: k > 0 && ws[k - 1][5] != null && (l0.r ? ws[k - 1][5] - w[0] : w[0] - ws[k - 1][5]) < (x[2] || l0.s) * 0.12 })) : [{ t: x[1], b: !!l0.b, i: !!l0.i, c: hexOf(l0.c) }]))
+        glue: k > 0 && ws[k - 1][5] != null && (l0.r ? ws[k - 1][5] - w[0] : w[0] - ws[k - 1][5]) < (x[2] || l0.s) * 0.12, v: w[6] === 1 || w[6] === -1 ? w[6] : 0 })) : [{ t: x[1], b: !!l0.b, i: !!l0.i, c: hexOf(l0.c) }]))
         .filter((w) => w.t && !/^[\uF000-\uF0FF]$/.test(w.t));
       if (text) all.push({ ...l0, x: lx, e: le, mark, markX: mark ? (l0.r ? l0.e : l0.x) : null, page: pi, sp, text, words, top: l0.y - l0.s });
     }
@@ -240,12 +240,12 @@ export function pdfLinesToBlocks(pages) {
     for (const w of ws) {
       const last = out[out.length - 1];
       const gap = w.glue ? "" : " ";
-      if (last && last.b === w.b && last.i === w.i && last.c === w.c) last.t += gap + w.t;
-      else out.push({ t: (last ? gap : "") + w.t, b: w.b, i: w.i, c: w.c });
+      if (last && last.b === w.b && last.i === w.i && last.c === w.c && (last.v || 0) === (w.v || 0)) last.t += gap + w.t;
+      else out.push({ t: (last ? gap : "") + w.t, b: w.b, i: w.i, c: w.c, ...(w.v ? { v: w.v } : {}) });
     }
     return out;
   };
-  const plain = (runs) => runs.every((r) => !r.b && !r.i && !r.c);
+  const plain = (runs) => runs.every((r) => !r.b && !r.i && !r.c && !r.v);
   const out = [];
   for (const r of running) {
     const l = r.line, al = alignOf(l), runs = runsOf(l.words);
@@ -331,21 +331,24 @@ export function pdfLinesToBlocks(pages) {
         const A = ord.map((k) => anchors[k]), Cn = ord.map((k) => centres[k]);
         anchors.length = 0; anchors.push(...A); centres.length = 0; centres.push(...Cn);
         const bold = [];
+        const cellGeo = [];       // per row: each cell's text start / end (for centred or right-aligned columns)
         const cell = (r) => {
-          const row = anchors.map(() => ""), rb = anchors.map(() => null);
+          const row = anchors.map(() => ""), rb = anchors.map(() => null), gx = anchors.map(() => null);
           const near = (x, t, sz) => { const m = mid(x, t, sz); let k = 0, best = Infinity; centres.forEach((a, c) => { const d = Math.abs(a - m); if (d < best) { best = d; k = c; } }); return k; };
           // a header with fewer cells than columns ("Control Stimulated" in one span): word by word
           const split = r.sp.length < anchors.length && r.sp.some((x) => Array.isArray(x[3]) && x[3].length > 1);
           for (const sp of r.sp) {
             const parts = split && Array.isArray(sp[3]) && sp[3].length > 1 ? sp[3].map((w) => [w[0], w[1], w[2]]) : [[sp[0], sp[1], Array.isArray(sp[3]) && sp[3].length ? sp[3].every((w) => w[2] != null ? w[2] : r.b) : r.b]];
-            for (const [x, t, b] of parts) { const k = near(x, t, sp[2]); row[k] = row[k] ? row[k] + " " + t : t; rb[k] = rb[k] == null ? !!b : rb[k] && !!b; }
+            const wend = Array.isArray(sp[3]) && sp[3].length && sp[3][sp[3].length - 1][5] != null ? sp[3][sp[3].length - 1][5] : sp[0] + String(sp[1]).length * (sp[2] || body) * 0.5;
+            for (const [x, t, b] of parts) { const k = near(x, t, sp[2]); row[k] = row[k] ? row[k] + " " + t : t; rb[k] = rb[k] == null ? !!b : rb[k] && !!b; gx[k] = gx[k] ? [Math.min(gx[k][0], sp[0]), Math.max(gx[k][1], wend)] : [sp[0], wend]; }
           }
           bold.push(rb.map((x) => !!x));
+          cellGeo.push(gx);
           return row;
         };
         let trows = rows.map((r) => {
           const row = cell(r);
-          for (const c of cont.get(r) || []) { const more = cell(c); bold.pop(); more.forEach((t, k) => { if (t) row[k] = row[k] ? row[k] + " " + t : t; }); }
+          for (const c of cont.get(r) || []) { const more = cell(c); bold.pop(); cellGeo.pop(); more.forEach((t, k) => { if (t) row[k] = row[k] ? row[k] + " " + t : t; }); }
           return row;
         });
         // left to right on the page → reading order (a right-to-left table's first column is on the right)
@@ -364,11 +367,46 @@ export function pdfLinesToBlocks(pages) {
           if (w[w.length - 1] < avg) w[w.length - 1] = Math.min(avg, Math.max(w[w.length - 1], room));
           if (w.every((x) => x > 8)) blk.widths = w.map((x) => Math.round(x));
         }
-        const g = geo[l.page]; if (g && !rtl && tl - g.L > 12) blk.ind = Math.round(tl - g.L - 5);
+        const g = geo[l.page];
+        const lastRowLine = cont.has(rows[rows.length - 1]) ? cont.get(rows[rows.length - 1]).slice(-1)[0] : rows[rows.length - 1];
+        const rc = (pages[l.page] && pages[l.page].rects) || [];
+        // v6.10: the table's real box, its rules and its shaded rows come from what the page draws (rectangles and lines).
+        // The table starts where its border starts — not where its (often centred) text starts — and never leaves the margins.
+        const top = rows[0].top - 8, bot = lastRowLine.y + 8;
+        const near1 = (r) => r[1] <= bot && r[1] + r[3] >= top;
+        const rules = rc.filter((r) => ((r[3] <= 1.6 && r[2] >= 30) || (r[2] <= 1.6 && r[3] >= 6)) && near1(r));
+        const hor = rules.filter((r) => r[3] <= 1.6), ver = rules.filter((r) => r[2] <= 1.6);
+        if (g && !rtl && (hor.length >= 2 || (hor.length >= 1 && ver.length >= 2))) {
+          const bx0 = Math.min(...rules.map((r) => r[0])), bx1 = Math.max(...rules.map((r) => r[0] + r[2]));
+          blk.ind = Math.max(0, Math.round(bx0 - g.L));
+          const inner = [...new Set(ver.filter((r) => r[0] > bx0 + 4 && r[0] < bx1 - 4).map((r) => Math.round(r[0] * 2) / 2))].sort((a, b) => a - b);
+          const nCols = Math.max(...trows.map((r) => r.length));
+          let edges = null;
+          if (inner.length === nCols - 1) edges = [bx0, ...inner, bx1];
+          else if (blk.widths && blk.widths.length === nCols) { const tot = blk.widths.reduce((a, x) => a + x, 0); edges = [bx0]; blk.widths.forEach((x) => edges.push(edges[edges.length - 1] + x * (bx1 - bx0) / tot)); }
+          if (edges) blk.widths = edges.slice(1).map((e, k) => Math.round(e - edges[k]));
+          const rc0 = hor[0] || ver[0];
+          blk.border = { c: ([(rc0[4] >> 16) & 255, (rc0[4] >> 8) & 255, rc0[4] & 255].map((x) => x.toString(16).padStart(2, "0")).join("").toUpperCase()), sz: Math.max(2, Math.round(Math.min(rc0[2], rc0[3]) * 8)) };
+          // each column: text centred in its cell, or against its right edge
+          if (edges) {
+            const al = edges.slice(1).map((e, k) => {
+              const a = edges[k], w = e - a, c = a + w / 2; let ce = 0, ri = 0, n = 0;
+              for (const gx of cellGeo) { const q = gx[k]; if (!q) continue; n++; const mid = (q[0] + q[1]) / 2; if (Math.abs(mid - c) < w * 0.12) ce++; else if (e - q[1] < 8 && q[0] - a > w * 0.25) ri++; }
+              return n && ce >= n * 0.6 ? "center" : n && ri >= n * 0.6 ? "right" : "left";
+            });
+            if (al.some((x) => x !== "left")) blk.align = al;
+          }
+        } else if (g && !rtl && tl - g.L > 12) blk.ind = Math.round(tl - g.L - 5);
+        // shaded rows: a filled rectangle behind a row's text, as wide as most of the table
+        const fills = rc.filter((r) => r[4] >= 0 && r[4] !== 0xFFFFFF && r[3] > 3 && r[2] > 40 && near1(r));
+        if (fills.length) {
+          const shade = rows.map((r) => { const f = fills.find((q) => q[1] <= r.y - r.s * 0.3 && q[1] + q[3] >= r.y - r.s * 0.3 && q[2] >= (blk.widths ? blk.widths.reduce((a, x) => a + x, 0) * 0.6 : 100)); return f ? [(f[4] >> 16) & 255, (f[4] >> 8) & 255, f[4] & 255].map((x) => x.toString(16).padStart(2, "0")).join("").toUpperCase() : null; });
+          if (shade.some(Boolean)) blk.shade = shade;
+        }
         blk.size = Math.round(bodyRows[0].s * 2) / 2;
         if (lastLine && lastLine.page === l.page) { const gap = l.y - lastLine.y - pitch(l.s); if (gap > 1.5) blk.before = Math.min(72, Math.round(gap)); }
         else if (lastLine) blk.pageBreak = true;
-        lastLine = cont.has(rows[rows.length - 1]) ? cont.get(rows[rows.length - 1]).slice(-1)[0] : rows[rows.length - 1];
+        lastLine = lastRowLine;
         out.push(blk);
         i = j; continue;
       }
@@ -376,7 +414,10 @@ export function pdfLinesToBlocks(pages) {
     const prev = i > 0 ? all[i - 1] : null;
     const gap = prev && !prev.img && prev.page === l.page ? l.y - prev.y : Infinity;
     const near = gap <= pitch(l.s) * 1.3 + 0.5;
-    if (isHead(l)) {
+    // v6.10: a bold line that the next line CONTINUES (same size, close below, starting in lower case) is a bold paragraph's
+    // first line, not a heading ("Substrate decreases → … → product / continues accumulating …")
+    const nx = all[i + 1], boldWraps = l.b && l.s < body * 1.18 && nx && !nx.img && nx.page === l.page && nx.y - l.y <= pitch(l.s) * 1.3 + 0.5 && Math.abs(nx.s - l.s) < 0.6 && /^\p{Ll}/u.test(nx.text);
+    if (isHead(l) && !boldWraps) {
       const lastH = !para && !item && out[out.length - 1];
       // a heading that wraps onto a second line of the same size
       if (lastH && /^h/.test(lastH.type) && prev && !prev.img && near && Math.abs(prev.s - l.s) < 0.6 && isHead(prev)) { lastH.text += " " + l.text; if (lastH.runs) lastH.runs.push(...runsOf(l.words).map((r, k) => (k ? r : { ...r, t: " " + r.t.trim() }))); lastLine = l; i++; continue; }
@@ -387,6 +428,11 @@ export function pdfLinesToBlocks(pages) {
       i++; continue;
     }
     const m = l.text.match(LIST);
+    // v6.10: a bold "a." / "1." label at the margin ("a. Calculate …") is the paragraph's own label, not a list with a
+    // tab and a hanging indent: Word shows it as written (a bold label, then the text)
+    const g0 = geo[l.page];
+    const labelled = m && m[1] && !l.mark && !/[•●▪◦\-–*]/.test(m[0]) && l.words.length && l.words[0].b && g0 && (l.r ? g0.R != null && l.e != null && g0.R - l.e < 4 : l.x - g0.L < 4);
+    if (labelled) { flush(); para = { text: l.text, s: l.s, words: [...l.words], ls: [l], label: true }; i++; continue; }
     if (m) {
       flush();
       const num = m[1] || "";
@@ -404,8 +450,18 @@ export function pdfLinesToBlocks(pages) {
     }
     if (item) flush();
     const lastPara = para && para.ls[para.ls.length - 1];
+    // v6.10: the line above ended well short of the margin — the next word would have fitted on it — so that paragraph ended
+    // there ("Product A: …" / "Product B: …" were run together)
+    const endedShort = (() => {
+      if (!para || !lastPara) return false;
+      const g = geo[lastPara.page]; if (!g || g.R == null) return false;
+      const w0 = (l.sp[0] && Array.isArray(l.sp[0][3]) && l.sp[0][3][0]) ? Math.abs((l.sp[0][3][0][5] ?? l.sp[0][3][0][0]) - l.sp[0][3][0][0]) : 0;
+      const word = Math.max(w0, Math.min(l.text.split(" ")[0].length, 14) * l.s * 0.45) + l.s * 0.5;
+      const room = lastPara.r ? lastPara.x - g.L : g.R - lastPara.e;
+      return room > word + 6 && alignOf(lastPara) !== "center" && alignOf(l) !== "center";
+    })();
     // the same paragraph: close below, same size, and (after its first two lines) starting where they start
-    if (para && near && Math.abs(l.s - para.s) < 1 && !(para.ls.length >= 2 && !l.r && Math.abs(l.x - lastPara.x) > 6 && alignOf(l) !== "center") && !(para.ls.length >= 2 && l.r && l.e != null && lastPara.e != null && Math.abs(l.e - lastPara.e) > 6 && alignOf(l) !== "center")) {
+    if (para && near && !endedShort && Math.abs(l.s - para.s) < 1 && !(para.ls.length >= 2 && !l.r && Math.abs(l.x - lastPara.x) > 6 && alignOf(l) !== "center") && !(para.ls.length >= 2 && l.r && l.e != null && lastPara.e != null && Math.abs(l.e - lastPara.e) > 6 && alignOf(l) !== "center")) {
       para.text += (/-$/.test(para.text) && !/\s-$/.test(para.text) ? "" : " ") + l.text; para.text = para.text.replace(/(\w)- (\w)/g, "$1-$2");
       para.words.push(...l.words); para.ls.push(l); i++; continue;
     }
@@ -464,15 +520,16 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 export function docxFromBlocks(blocks, title = "Document", o = {}) {
   const imgs = [];
   const tw = (pt) => Math.round(pt * 20);
-  const run1 = (t, f = {}, sup) => {
+  const run1 = (t, f = {}, sup0) => {
+    const sup = sup0 || f.v === 1, sub = f.v === -1;
     const rtl = isAr(t);
     const fontX = f.font ? `<w:rFonts w:ascii="${esc(f.font)}" w:hAnsi="${esc(f.font)}" w:cs="${esc(f.font)}"/>` : "";
     const sz = f.size ? `<w:sz w:val="${Math.round(f.size * 2)}"/><w:szCs w:val="${Math.round(f.size * 2)}"/>` : "";
-    return `<w:r><w:rPr>${fontX}${f.b ? "<w:b/><w:bCs/>" : f.offB ? '<w:b w:val="0"/><w:bCs w:val="0"/>' : ""}${f.i ? "<w:i/><w:iCs/>" : ""}${f.c ? `<w:color w:val="${f.c}"/>` : ""}${sz}${rtl ? "<w:rtl/>" : ""}${sup ? '<w:vertAlign w:val="superscript"/>' : ""}</w:rPr>${String(t).split("\n").map((x, i) => (i ? "<w:br/>" : "") + `<w:t xml:space="preserve">${esc(x)}</w:t>`).join("")}</w:r>`;
+    return `<w:r><w:rPr>${fontX}${f.b ? "<w:b/><w:bCs/>" : f.offB ? '<w:b w:val="0"/><w:bCs w:val="0"/>' : ""}${f.i ? "<w:i/><w:iCs/>" : ""}${f.c ? `<w:color w:val="${f.c}"/>` : ""}${sz}${rtl ? "<w:rtl/>" : ""}${sup ? '<w:vertAlign w:val="superscript"/>' : sub ? '<w:vertAlign w:val="subscript"/>' : ""}</w:rPr>${String(t).split("\n").map((x, i) => (i ? "<w:br/>" : "") + `<w:t xml:space="preserve">${esc(x)}</w:t>`).join("")}</w:r>`;
   };
   // v5.41: "2^(−ΔΔCt)" (a superscript read from a PDF) is written as a real superscript
   const run = (t, f) => String(t).split(/\^\(([^()]{1,40})\)/).map((x, i) => (x ? run1(x, f, i % 2 === 1) : "")).join("");
-  const runs = (b, base = {}) => (b.runs && b.runs.length ? b.runs.map((r) => run(r.t, { ...base, b: r.b || base.b, i: r.i || base.i, c: r.c || base.c })).join("") : run(b.text, base));
+  const runs = (b, base = {}) => (b.runs && b.runs.length ? b.runs.map((r) => run(r.t, { ...base, b: r.b || base.b, i: r.i || base.i, c: r.c || base.c, ...(r.v ? { v: r.v } : {}) })).join("") : run(b.text, base));
   // paragraph properties: direction, alignment (a right-to-left paragraph's start is its right side —
   // Word reads "left"/"right" there the other way round), indents, spacing, a new page before it
   const pPr = (b, style, bullet, text) => {
@@ -499,12 +556,14 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
     if (b.type === "table") {
       const w = Math.max(...b.rows.map((r) => r.length));
       const rtl = b.rtl || b.rows.some((r) => r.some((c) => isAr(c || "")));
-      const widths = b.widths && b.widths.length === w ? b.widths.map(tw) : Array(w).fill(Math.floor(9638 / w));
+      let widths = b.widths && b.widths.length === w ? b.widths.map(tw) : Array(w).fill(Math.floor(9638 / w));
+      // v6.10: a table never leaves the page: its indent plus its width fit the text area (scaled down if not)
+      { const room = (o.page ? (o.page.w - o.page.left - o.page.right) : 480) * 20 - tw(b.ind || 0), sum = widths.reduce((a, x) => a + x, 0); if (b.widths && sum > room && room > 600) widths = widths.map((x) => Math.floor(x * room / sum)); }
       const cf = fmt(b);
       // the space above a table (a table has none of its own): an empty paragraph exactly that tall
       return (b.pageBreak || b.before ? `<w:p><w:pPr>${b.pageBreak ? "<w:pageBreakBefore/>" : ""}<w:spacing w:before="0" w:after="0" w:line="${Math.max(20, tw(b.before || 1))}" w:lineRule="exact"/><w:rPr><w:sz w:val="2"/></w:rPr></w:pPr></w:p>` : "") +
-        `<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/>${rtl ? "<w:bidiVisual/>" : ""}<w:tblW w:w="${b.widths ? widths.reduce((a, x) => a + x, 0) : 0}" w:type="${b.widths ? "dxa" : "auto"}"/>${b.ind ? `<w:tblInd w:w="${tw(b.ind)}" w:type="dxa"/>` : ""}<w:tblBorders>${["top", "left", "bottom", "right", "insideH", "insideV"].map((s) => `<w:${s} w:val="single" w:sz="4" w:space="0" w:color="999999"/>`).join("")}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${widths.map((x) => `<w:gridCol w:w="${x}"/>`).join("")}</w:tblGrid>` +
-        b.rows.map((r, ri) => `<w:tr>${Array.from({ length: w }, (_, ci) => `<w:tc><w:tcPr><w:tcW w:w="${widths[ci]}" w:type="dxa"/></w:tcPr><w:p><w:pPr>${o.exact ? '<w:spacing w:before="0" w:after="0"/>' : ""}${isAr(r[ci] || "") || rtl ? "<w:bidi/>" : ""}</w:pPr>${run(r[ci] || "", { ...cf, b: b.bold ? !!(b.bold[ri] && b.bold[ri][ci]) : ri === 0 })}</w:p></w:tc>`).join("")}</w:tr>`).join("") + `</w:tbl>` + (o.exact ? "" : "<w:p/>");
+        `<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/>${rtl ? "<w:bidiVisual/>" : ""}<w:tblW w:w="${b.widths ? widths.reduce((a, x) => a + x, 0) : 0}" w:type="${b.widths ? "dxa" : "auto"}"/>${b.ind ? `<w:tblInd w:w="${tw(b.ind)}" w:type="dxa"/>` : ""}<w:tblBorders>${["top", "left", "bottom", "right", "insideH", "insideV"].map((s) => `<w:${s} w:val="single" w:sz="${b.border ? b.border.sz : 4}" w:space="0" w:color="${b.border ? b.border.c : "999999"}"/>`).join("")}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${widths.map((x) => `<w:gridCol w:w="${x}"/>`).join("")}</w:tblGrid>` +
+        b.rows.map((r, ri) => `<w:tr>${Array.from({ length: w }, (_, ci) => `<w:tc><w:tcPr><w:tcW w:w="${widths[ci]}" w:type="dxa"/>${b.shade && b.shade[ri] ? `<w:shd w:val="clear" w:color="auto" w:fill="${b.shade[ri]}"/>` : ""}</w:tcPr><w:p><w:pPr>${o.exact ? '<w:spacing w:before="0" w:after="0"/>' : ""}${isAr(r[ci] || "") || rtl ? "<w:bidi/>" : ""}${Array.isArray(b.align) && b.align[ci] && b.align[ci] !== "left" ? `<w:jc w:val="${b.align[ci]}"/>` : ""}</w:pPr>${run(r[ci] || "", { ...cf, b: b.bold ? !!(b.bold[ri] && b.bold[ri][ci]) : ri === 0 })}</w:p></w:tc>`).join("")}</w:tr>`).join("") + `</w:tbl>` + (o.exact ? "" : "<w:p/>");
     }
     if (b.type === "pagebreak") return `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
     if (b.type === "image" && b.b64) {
@@ -1308,7 +1367,8 @@ export function blocksToPrintHtml(blocks, title = "Document", o = {}) {
   const h = (s) => esc(s).replace(/\t/g, "&emsp;").replace(/\n/g, "<br>");
   const span = (r, base) => {
     const st = [r.b ? "font-weight:700" : base.headingPlain ? "font-weight:400" : "", r.i ? "font-style:italic" : "", r.u ? "text-decoration:underline" : "", r.c ? `color:#${r.c}` : "", r.size ? `font-size:${r.size}pt` : "", r.font ? `font-family:${cssFont(r.font)}` : ""].filter(Boolean).join(";");
-    return st ? `<span style="${st}">${h(r.t)}</span>` : h(r.t);
+    const t = r.v === 1 ? `<sup>${h(r.t)}</sup>` : r.v === -1 ? `<sub>${h(r.t)}</sub>` : h(r.t);
+    return st ? `<span style="${st}">${t}</span>` : t;
   };
   const inner = (b) => (b.runs ? b.runs.map((r) => span(r, { headingPlain: /^h/.test(b.type) })).join("") : h(b.text || "")).replace(/\^\(([^()]{1,40})\)/g, "<sup>$1</sup>");
   const look = (b, extra = []) => {

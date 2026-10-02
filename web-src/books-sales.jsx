@@ -5,7 +5,7 @@ import * as B from "./books.js";
 import * as O from "./books-ops.js";
 import { L, isAr, useBooks, useTheme, Card, Section, Money, Badge, Empty, Field, Input, Select, Search_, Chips, Sheet, BTN, btnPrimary, today, fmtDate, docLabel, STATUS } from "./books-kit.jsx";
 import { ReceiptForm } from "./books-money.jsx";
-import { shareDocument } from "./books-docs.jsx";
+import { shareDocument, shareDocumentWord } from "./books-docs.jsx";
 
 const num = (v) => { const n = Number(String(v).replace(/,/g, "")); return isFinite(n) ? n : 0; };
 const plainMoney = (m) => (m ? (m / 100).toFixed(2).replace(/\.00$/, "") : "");
@@ -135,7 +135,7 @@ export function PartyForm({ kind, party, onClose, onSaved }) {
 
 // ---- one document: totals and what you can do with it --------------------------------------------------------------
 function DocView({ id, onClose }) {
-  const { s, run, flash } = useBooks();
+  const { s, run, flash, saveFile } = useBooks();
   const th = useTheme();
   const d = s.docs.find((x) => x.id === id);
   const [edit, setEdit] = useState(false);
@@ -152,6 +152,7 @@ function DocView({ id, onClose }) {
       footer={<div className="flex gap-2 flex-wrap">
         {d.status === "draft" ? <><button onClick={() => setEdit(true)} className={`${btnPrimary} flex-1`} data-testid="doc-edit">{L("Edit & post", "تعديل وترحيل")}</button><button onClick={del} className={`${BTN} border ${th.line} text-red-600`}>{L("Delete", "حذف")}</button></> : null}
         {d.status === "posted" ? <button onClick={() => shareDocument({ s, doc: d, kind: d.type, flash })} className={`${btnPrimary} flex-1 flex items-center justify-center gap-1.5`} data-testid="doc-share"><Share2 size={14} />{L("Share / PDF", "مشاركة / PDF")}</button> : null}
+        {d.status === "posted" ? <button onClick={() => shareDocumentWord({ s, doc: d, kind: d.type, flash, saveFile })} className={`${BTN} border ${th.line}`} data-testid="doc-word">{L("Word", "وورد")}</button> : null}
         {open && open.open > 0 ? <button onClick={() => setPay(true)} className={`${BTN} border ${th.line} flex-1`} data-testid="doc-pay">{L("Record payment", "تسجيل دفعة")}</button> : null}
         {d.status === "posted" && d.type === "invoice" ? <button onClick={credit} className={`${BTN} border ${th.line}`} data-testid="doc-credit">{L("Credit note", "إشعار دائن")}</button> : null}
         {d.status === "posted" && d.type === "quote" ? <button onClick={toInvoice} className={`${BTN} border ${th.line} flex-1`} data-testid="doc-to-invoice">{L("Make an invoice", "حوّل لفاتورة")}</button> : null}
