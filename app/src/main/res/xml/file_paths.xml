@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Only Studio's pictures can be shared, nothing else in the app's storage. -->
+<!-- Only Studio's pictures and files the page made for sharing (an invoice PDF) can be shared, nothing else. -->
 <paths>
     <files-path name="studio" path="studio/" />
+    <files-path name="shared" path="shared/" />
 </paths>

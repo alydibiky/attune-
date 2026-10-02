@@ -1020,6 +1020,32 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun deleteImage(name: String): Boolean = ImageEngine.delete(ctx, name)
 
+    /** Share a file the page made (an invoice PDF, a statement) to WhatsApp, Gmail… arg = {name, mime, b64, text?}. */
+    @JavascriptInterface
+    fun shareFile(id: String, arg: String) {
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                val name = java.io.File(a.optString("name", "document")).name.ifBlank { "document" }
+                val dir = java.io.File(ctx.filesDir, "shared").apply { mkdirs() }
+                dir.listFiles()?.forEach { if (System.currentTimeMillis() - it.lastModified() > 3_600_000L) it.delete() }   // nothing is kept long
+                val f = java.io.File(dir, name)
+                f.writeBytes(android.util.Base64.decode(a.getString("b64"), android.util.Base64.DEFAULT))
+                web.post {
+                    try {
+                        val uri = androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", f)
+                        val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType(a.optString("mime", "application/pdf"))
+                            .putExtra(android.content.Intent.EXTRA_STREAM, uri).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        val t = a.optString("text", "")
+                        if (t.isNotEmpty()) send.putExtra(android.content.Intent.EXTRA_TEXT, t)
+                        ctx.startActivity(android.content.Intent.createChooser(send, null).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+                        resolve(id, JSONObject().put("ok", true))
+                    } catch (e: Exception) { reject(id, e.message ?: "Could not share the file") }
+                }
+            } catch (e: Exception) { reject(id, e.message ?: "Could not share the file") }
+        }
+    }
+
     /** Share a Studio picture to another app (WhatsApp, Gmail…). */
     @JavascriptInterface
     fun shareImage(name: String) {

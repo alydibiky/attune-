@@ -1209,6 +1209,7 @@ function nativeCall(method, arg, onProgress) {
     catch (e) { delete NATIVE_CALLS[id]; rej(e); }
   });
 }
+if (typeof window !== "undefined") window.__attuneNativeCall = nativeCall;   // the Business books call htmlToPdf / shareFile through it
 // The id of the last slow call, so a download can be cancelled.
 function nativeLastId() { return NATIVE_LAST_ID; }
 // v6.7: the Android app's Google Play Billing (Billing.kt) → window.ATTUNE_STORE.

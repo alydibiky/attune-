@@ -8,6 +8,7 @@ export const EMPTY = () => ({
   v: 1, seq: 1, currency: "EGP",
   company: { name: "", nameAr: "", taxId: "", regNo: "", address: "", phone: "", email: "", bank: "", logo: "", footer: "" },
   tax: B.DEFAULT_TAX, creditDays: 30,
+  security: { pin: "", salt: "" },
   customers: [], suppliers: [], items: [],
   docs: [], bills: [], payments: [], supplierPayments: [], expenses: [], stock: [], journal: [], audit: [],
 });
@@ -273,3 +274,57 @@ export function dashboard(s, today) {
     low: B.lowStock(s.items.filter((i) => i.track !== false), lv),
   };
 }
+
+// ---- sample data: a small trading shop, so a new owner (or a tester) can look around a living set of books ------------------
+/** Builds a believable shop through the real operations (so every figure, number and ledger entry is genuine). */
+export function sampleShop(base = EMPTY(), today = new Date().toISOString().slice(0, 10)) {
+  const E = (n) => Math.round(n * 100);
+  let s = clone(base);
+  const at = today + "T08:00:00.000Z";
+  const ago = (n) => addDays(today, -n);
+  s = setCompany(s, { name: "Nile Trading Co.", nameAr: "شركة النيل للتجارة", taxId: "123-456-789", regNo: "45678", address: "12 Tahrir St, Cairo · ١٢ شارع التحرير، القاهرة", phone: "+20 100 000 0000", email: "info@niletrading.example", bank: "CIB · EGP · 1000 0000 0000 · Nile Trading Co.", footer: "Thank you for your business · شكراً لتعاملكم" }, { at });
+  const add = (list, rec) => { const r = upsert(s, list, rec, { at }); s = r.state; return r.id; };
+  const bolts = add("items", { name: "Bolts box (100 pcs)", sku: "BLT-100", unit: "box", price: E(120), cost: E(70), vat: "S", reorder: 15, track: true });
+  const paint = add("items", { name: "White paint 20L", sku: "PNT-20", unit: "can", price: E(950), cost: E(700), vat: "S", reorder: 10, track: true });
+  const drill = add("items", { name: "Cordless drill", sku: "DRL-18V", unit: "pcs", price: E(2400), cost: E(1750), vat: "S", reorder: 5, track: true });
+  const deliv = add("items", { name: "Delivery service", sku: "SRV-DEL", unit: "trip", price: E(150), cost: 0, vat: "S", track: false });
+  const c1 = add("customers", { name: "Al-Amal Contracting", phone: "0100 111 2222", address: "6th of October City", taxId: "222-333-444", creditLimit: E(60000), creditDays: 15 });
+  const c2 = add("customers", { name: "Hassan Hardware Store", phone: "0122 333 4444", address: "Giza", creditDays: 20 });
+  const c3 = add("customers", { name: "Mona Interiors", phone: "0111 555 6666" });
+  const s1 = add("suppliers", { name: "Delta Industrial Supplies", phone: "02 2345 6789" });
+  const s2 = add("suppliers", { name: "Cairo Paints Factory", phone: "02 2789 0123" });
+  const step = (r) => { s = r.state; return r; };
+  // stock in (two purchases at different costs → a moving average)
+  const bill = (supplier, date, lines) => { const d = step(saveDraft(s, { type: "bill", supplier, date, lines }, { at })); return step(postBill(s, d.id, { at })); };
+  bill(s1, ago(40), [{ item: bolts, qty: 60, price: E(68), vat: "S" }, { item: drill, qty: 12, price: E(1700), vat: "S" }]);
+  bill(s2, ago(34), [{ item: paint, qty: 40, price: E(690), vat: "S" }]);
+  bill(s1, ago(12), [{ item: bolts, qty: 40, price: E(72), vat: "S" }]);
+  // sales
+  const inv = (customer, date, lines) => { const d = step(saveDraft(s, { type: "invoice", customer, date, lines }, { at })); return step(post(s, d.id, { at })); };
+  inv(c1, ago(30), [{ item: paint, qty: 12, price: E(950), vat: "S" }, { item: deliv, qty: 1, price: E(150), vat: "S" }]);
+  inv(c2, ago(26), [{ item: bolts, qty: 25, price: E(120), vat: "S" }, { item: drill, qty: 3, price: E(2400), vat: "S", discBp: 500 }]);
+  inv(c1, ago(18), [{ item: drill, qty: 4, price: E(2400), vat: "S", wht: "supplies" }]);
+  inv(c3, ago(9), [{ item: paint, qty: 6, price: E(950), vat: "S" }]);
+  inv(c2, ago(3), [{ item: bolts, qty: 30, price: E(120), vat: "S" }]);
+  // money
+  step(receive(s, { customer: c1, date: ago(20), method: "bank", amount: E(14000) }, { at }));
+  step(receive(s, { customer: c2, date: ago(15), method: "cash", amount: E(9000) }, { at }));
+  step(paySupplier(s, { supplier: s1, date: ago(25), method: "bank", amount: E(10000) }, { at }));
+  step(addExpense(s, { date: ago(28), category: "Rent", amount: E(6000), method: "bank" }, { at }));
+  step(addExpense(s, { date: ago(10), category: "Transport", amount: E(850), method: "cash", memo: "Fuel" }, { at }));
+  step(addExpense(s, { date: ago(5), category: "Electricity & water", amount: E(1200), method: "cash" }, { at }));
+  return s;
+}
+
+// ---- the owner's PIN: keeps casual eyes out on a shared phone (it is NOT encryption) ----------------------------------------
+const pinHash = (pin, salt) => hash53("pin|" + salt + "|" + pin);
+export function setPin(state, pin, { user, at } = {}) {
+  const s = clone(state);
+  if (pin === "" || pin == null) { s.security = { pin: "", salt: "" }; log(s, user, "pin removed", "-", "", at); return s; }
+  if (!/^\d{4,6}$/.test(String(pin))) fail("The PIN must be 4 to 6 digits");
+  const salt = Math.random().toString(36).slice(2, 10);
+  s.security = { pin: pinHash(String(pin), salt), salt }; log(s, user, "pin set", "-", "", at);
+  return s;
+}
+export const hasPin = (s) => !!(s.security && s.security.pin);
+export const checkPin = (s, pin) => !hasPin(s) || pinHash(String(pin), s.security.salt) === s.security.pin;

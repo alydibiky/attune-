@@ -14,6 +14,7 @@ import * as E from "./erp.js";
 import { buildApp, readApp } from "./erp-app.js";
 import { getPower } from "./power.js";
 import { PLAY, pricesFor } from "./billing.js";
+import { BooksApp } from "./books-ui.jsx";
 
 const KEY = "attune:erp:v1";
 const field = "w-full min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500";
@@ -75,6 +76,7 @@ export function BusinessPage({ flash, llm, modelReady, openEngine, saveFile, sha
   };
   const open = (id) => { const s = loadSys(id); if (s) { setSysRaw(s); setView("system"); } };
 
+  if (view === "books") return <BooksApp flash={flash} saveFile={saveFile} share={share} onBack={() => setView("list")} goCustom={() => setView("list")} />;
   if (view === "new") return <NewSystem llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash}
     onBack={() => setView("list")} onCreate={(s) => { setSys(s, tr("Created — {n} tables", { n: s.tables.length })); setView("system"); }} />;
   if (view === "system" && sys) return <SystemView sys={sys} setSys={setSys} llm={llm} modelReady={modelReady} flash={flash} saveFile={saveFile} share={share} runPy={runPy}
@@ -89,6 +91,11 @@ export function BusinessPage({ flash, llm, modelReady, openEngine, saveFile, sha
           <p className="text-[13px] text-slate-400">{tr("Your own ERP: customers, stock, jobs, invoices — whatever your business tracks. Change any table or column later, like Microsoft Access.")}</p>
         </div>
       </div>
+      <button onClick={() => setView("books")} data-testid="books-open" className="w-full text-start rounded-2xl border border-teal-700/60 bg-gradient-to-br from-teal-500/15 to-transparent p-4">
+        <span className="block text-base font-semibold text-white">🧾 {tr("Shop & trading books")}</span>
+        <span className="block text-[12.5px] text-slate-300 mt-1 leading-snug">{tr("Invoices with VAT, payments and overdue tracking, stock and purchasing, reports — your own accounting, on your phone, in English and Arabic.")}</span>
+      </button>
+      <p className="text-[12px] font-semibold text-slate-400 pt-1">{tr("Custom systems")}</p>
       <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5"} onClick={() => setView("new")} data-testid="erp-new"><Plus size={16} />{tr("New system")}</button>
       <label className={ghost + " w-full flex items-center justify-center gap-1.5 py-2.5 cursor-pointer"} data-testid="erp-open-app">
         <Upload size={15} />{tr("Open an app file (made with Attune)")}
