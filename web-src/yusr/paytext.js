@@ -126,10 +126,13 @@ function payDirection(text) {
   const t = payNormalize(text);
   for (const [dir, re] of DIRECTION) if (re.test(t)) return dir;
   // v6.10 — a plain note: "+250 EGP from my cousin", "-80 to the shop": the sign, then from / to
-  if (/(?:^|\s)\+\s*\d/.test(t)) return "in";
-  if (/(?:^|\s)[-−–]\s*\d/.test(t)) return "out";
-  if (/\bfrom\s+(?:my\s+)?[A-Za-z]/i.test(t) || /(?:^|\s)من\s+\S/.test(t)) return "in";
-  if (/\bto\s+(?:my\s+)?[A-Za-z]/i.test(t)) return "out";
+  if (/^\s*\+\d{2,}(?!\d*\s*%)/.test(t)) return "in";           // "+250 …" at the very start (not "… + 14% VAT")
+  if (/^\s*[-−–]\d{2,}(?!\d*\s*%)/.test(t) && payCurrency(text)) return "out";
+  // from / to only count when a currency is named too ("remind me at 9 to call Ahmed" is not a payment)
+  if (payCurrency(text)) {
+    if (/\bfrom\s+(?:my\s+)?[A-Za-z]/i.test(t) || /(?:^|\s)من\s+\S/.test(t)) return "in";
+    if (/\bto\s+(?:my\s+)?[A-Za-z]/i.test(t)) return "out";
+  }
   return null;
 }
 

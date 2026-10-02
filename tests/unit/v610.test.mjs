@@ -35,4 +35,10 @@ eq(violations(wrap, tq).length, 1, "text around the table is caught");
 eq(enforce(wrap, tq), "| Feature | CAN | 100BASE-T1 |\n|---|---|---|\n| Speed | 1 Mbps | 100 Mbps |", "enforce() leaves only the table");
 eq(violations(enforce(wrap, tq), tq), [], "…and it passes");
 
+eq(parsePayment("remind me tomorrow at 9 to call Ahmed").ok, false, "a reminder is not a payment ('at 9 to call')");
+eq(parsePayment("meet Ali at 5 to discuss the quote").ok, false, "'at 5 to discuss' is not a payment");
+
+eq(parsePayment("3 cranes × 4 days × 25,000 EGP + 14% VAT").ok, false, "a sum with '+ 14% VAT' is not a payment");
+eq(parsePayment("-80 EGP to the shop").direction, "out", "-80 EGP to the shop → out");
+
 if (fails.length) { console.log(`\n${fails.length} FAILED`); process.exit(1); } else console.log("\nALL PASSED");
