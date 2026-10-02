@@ -331,6 +331,7 @@ and `tests/e2e_v69site.py`.
 
 25. **Shelf (رف): rebuild the Notes part as a shelf of notebooks (layout reference only: `tests/fixtures/reference/notebooks-app-screenshot.jpg`).**
     - Name decided with Ali on 2 Oct: the feature is called **Shelf** (Arabic **رف**); each notebook on it is a "book" / «كتاب». Do not use the name "Notebooks" in the app. Check Play Store for clashes before release.
+    - Which app: the phone's built-in **Notebook** app (the stacked-papers icon on the home screen; Ali sent a screenshot of it on 2 Oct). Copy its ideas (grid of covers, easy notes), not its name, icon or cover artwork: Shelf gets its own look.
     - What the reference shows: a **Notebooks** home screen with a grid of notebook covers (two per row), each with a
       cover picture and a title under it (long titles cut with "…"; Arabic titles such as «الشريعة» work); a top bar
       with a menu, the title, a reminders (alarm) icon, search, "+" and a "⋮" menu; a round "+" button at the bottom
