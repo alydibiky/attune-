@@ -25,7 +25,7 @@ export function rulesOf(text) {
   if (mx) r.maxWords = +mx[1];
   // v6.10 — the whole answer: "exactly 17 words", "a 17-word response" (not "each sentence … 8 words")
   if (!wps) {
-    const tw = t.match(/\b(?:exactly|precisely)\s+(\d+|[a-z]+)\s+words\b/i) || t.match(/\b(\d+)[- ]words?\s+(?:response|answer|text|paragraph|message|sentence|reply)\b/i);
+    const tw = t.match(/\b(?:exactly|precisely)\s+(\d+|[a-z]+)\s+words\b/i);
     if (tw && num(tw[1]) && !/each|every/i.test(t.slice(Math.max(0, tw.index - 30), tw.index))) r.totalWords = num(tw[1]);
   }
   // "The 17th (last) word must be 'seventeen'", "the last word must be X", "the first word must be X"
@@ -40,9 +40,10 @@ export function rulesOf(text) {
   if (sw) r.startsWith = sw[1].trim().toLowerCase();
   const ew = t.match(/\bends?\s+with\s+(?:the\s+(?:word|phrase)\s+)?['"“‘]([^'"”’]{1,40})['"”’]/i);
   if (ew) r.endsWith = ew[1].trim().toLowerCase();
-  const pg = t.match(/\b(?:exactly\s+)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+paragraphs?\b/i);
+  const OUTV = "(?:write|give|produce|make|provide|return|create|answer in|reply in|respond in|respond with|in|into|as|exactly|using|with)";
+  const pg = t.match(new RegExp("\\b" + OUTV + "\\s+(?:me\\s+)?(?:exactly\\s+)?(\\d+|one|two|three|four|five|six|seven|eight|nine|ten)\\s+paragraphs?\\b", "i"));
   if (pg && num(pg[1])) r.paragraphs = num(pg[1]);
-  const bl = t.match(/\b(?:exactly\s+)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+(?:bullet(?:ed)?\s+points?|bullets)\b/i);
+  const bl = t.match(new RegExp("\\b" + OUTV + "\\s+(?:me\\s+)?(?:exactly\\s+)?(\\d+|one|two|three|four|five|six|seven|eight|nine|ten)\\s+(?:bullet(?:ed)?\\s+points?|bullets)\\b", "i"));
   if (bl && num(bl[1])) r.bullets = num(bl[1]);
   // "Output strictly as a Markdown table" / "only a table" / "respond with just a JSON object": nothing else around it
   if (/\b(?:strictly|only|just|exclusively)\s+(?:as\s+|in\s+|with\s+)?(?:a\s+|the\s+)?(?:markdown\s+)?table\b/i.test(t) || /\bmarkdown\s+table\s+only\b/i.test(t) || /\bno\s+(?:text|prose|sentences?)\s+(?:before|outside|around)\s+(?:or\s+after\s+)?the\s+table\b/i.test(t)) r.onlyTable = true;
@@ -107,6 +108,9 @@ export function enforce(answer, rules) {
   let ws = wordsOf(bodyOf(answer));
   if (!ws.length) return answer;
   const N = rules.totalWords || ws.length;
+  // never pad a long text with filler or chop it: only a short, near miss is fixed by code
+  const gap = Math.abs(N - ws.length), allowed = N <= 60 ? Math.max(3, Math.ceil(N * 0.6)) : 3;
+  if (rules.totalWords && gap > allowed) return answer;
   const last = rules.lastWord || (rules.nthWord && rules.nthWord.n === N ? rules.nthWord.word : null);
   if (last) { if (ws[ws.length - 1].toLowerCase() !== last) ws.push(last); }
   if (ws.length > N) { const tail = last ? [ws[ws.length - 1]] : []; ws = ws.slice(0, N - tail.length).concat(tail); }

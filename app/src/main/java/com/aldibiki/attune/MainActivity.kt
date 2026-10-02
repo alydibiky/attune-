@@ -339,7 +339,7 @@ class MainActivity : AppCompatActivity() {
     // In the background the page's timers (polling, spinners, clocks) only cost battery and heat. Stop them,
     // unless an answer / download / drawing is running: that one must keep going. onResume starts them again.
     override fun onStop() {
-        if (::web.isInitialized && !GenService.busy()) web.pauseTimers()
+        if (::web.isInitialized && !GenService.busy() && Engine.state != Engine.State.STARTING) web.pauseTimers()   // a model waking up for a message must finish too
         super.onStop()
     }
 

@@ -585,7 +585,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     /** Wake the engine: if it is asleep and a model is installed, load the one used last (or the newest).
      *  Returns "ready", "starting" or "none" (no model installed). Never starts it twice. */
     @Volatile private var wakingUntil = 0L
-    @JavascriptInterface
+    @JavascriptInterface @Synchronized
     fun wake(): String {
         if (Engine.state == Engine.State.READY) return "ready"
         if (Engine.state == Engine.State.STARTING || System.currentTimeMillis() < wakingUntil) return "starting"

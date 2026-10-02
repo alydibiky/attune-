@@ -41,4 +41,14 @@ eq(parsePayment("meet Ali at 5 to discuss the quote").ok, false, "'at 5 to discu
 eq(parsePayment("3 cranes × 4 days × 25,000 EGP + 14% VAT").ok, false, "a sum with '+ 14% VAT' is not a payment");
 eq(parsePayment("-80 EGP to the shop").direction, "out", "-80 EGP to the shop → out");
 
+// review fixes: no false payments, no runaway length rules
+for (const m of ["Convert 500 USD to EGP", "Translate this to Arabic: the ticket is 50 EGP", "The bus from Cairo costs 120 EGP", "+20 100 123 4567", "+201001234567 call me back"]) eq(parsePayment(m).ok, false, "not a payment: " + m);
+eq(parsePayment("+250 EGP from my cousin Youssef").ok, true, "…but '+250 EGP from my cousin' still is");
+eq(parsePayment("-80 EGP to the shop").direction, "out", "-80 EGP to the shop → out");
+eq(rulesOf("Write a 300-word paragraph about Cairo"), null, "'300-word paragraph' is not a hard rule");
+eq(rulesOf("Summarize these two paragraphs: …"), null, "'these two paragraphs' is input, not a rule");
+eq(rulesOf("Translate the 5 bullet points below"), null, "'the 5 bullet points' is input, not a rule");
+eq(rulesOf("Answer in 3 bullet points").bullets, 3, "'in 3 bullet points' is a rule");
+eq(enforce(Array(60).fill("word").join(" ") + ".", rulesOf("Write exactly 300 words.")).split(" ").length, 60, "a 60-word text is not padded to 300");
+
 if (fails.length) { console.log(`\n${fails.length} FAILED`); process.exit(1); } else console.log("\nALL PASSED");

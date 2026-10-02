@@ -125,13 +125,15 @@ function payCurrency(text) {
 function payDirection(text) {
   const t = payNormalize(text);
   for (const [dir, re] of DIRECTION) if (re.test(t)) return dir;
-  // v6.10 — a plain note: "+250 EGP from my cousin", "-80 to the shop": the sign, then from / to
-  if (/^\s*\+\d{2,}(?!\d*\s*%)/.test(t)) return "in";           // "+250 …" at the very start (not "… + 14% VAT")
-  if (/^\s*[-−–]\d{2,}(?!\d*\s*%)/.test(t) && payCurrency(text)) return "out";
-  // from / to only count when a currency is named too ("remind me at 9 to call Ahmed" is not a payment)
+  // v6.10 — a plain note: "+250 EGP from my cousin", "-80 EGP to the shop". Strict on purpose: a phone number
+  // ("+20 100 123 4567"), a sum ("… + 14% VAT"), "Convert 500 USD to EGP" or "at 9 to call Ahmed" are NOT payments.
+  if (/^\s*\+(?:\d{1,3}(?:,\d{3})+|\d{1,9})(?:\.\d+)?(?![\d%])(?!(?:\s+\d+){2,})(?!\s*%)/.test(t)) return "in";
+  if (/^\s*[-−–](?:\d{1,3}(?:,\d{3})+|\d{1,9})(?:\.\d+)?(?![\d%])(?!\s*%)/.test(t) && payCurrency(text)) return "out";
+  // from / to count only right after the amount (and a currency): "250 EGP from …", "80 جنيه إلى …"
+  const CUR_OR_LANG = "(?:[A-Z]{3}\\b|dollars?|pounds?|euros?|arabic|english|french|turkish|german|spanish)";
   if (payCurrency(text)) {
-    if (/\bfrom\s+(?:my\s+)?[A-Za-z]/i.test(t) || /(?:^|\s)من\s+\S/.test(t)) return "in";
-    if (/\bto\s+(?:my\s+)?[A-Za-z]/i.test(t)) return "out";
+    if (new RegExp("\\d[\\d,.]*\\s*(?:[A-Za-z]{3}|جنيه|دولار|ريال|درهم|[$€£])?\\s+(?:from|من)\\s+(?!" + CUR_OR_LANG + ")\\S", "i").test(t)) return "in";
+    if (new RegExp("\\d[\\d,.]*\\s*(?:[A-Za-z]{3}|جنيه|دولار|ريال|درهم|[$€£])?\\s+(?:to|إلى|الى)\\s+(?!" + CUR_OR_LANG + ")\\S", "i").test(t)) return "out";
   }
   return null;
 }
@@ -187,7 +189,7 @@ const PARTY_RE = [
 // Words that are grammar, not a counterparty. "من حسابك" means "from your
 // account" — writing "حسابك" into the ledger as the person you paid is the
 // kind of small wrongness that makes a user stop trusting the whole feature.
-const PARTY_STOP = /^(حساب|حسابك|حسابي|حسابنا|محفظة|محفظتك|محفظتي|رصيد|الرصيد|account|your account|wallet|balance|ref|reference)$/i;
+const PARTY_STOP = /^(egp|usd|eur|sar|aed|gbp|kwd|qar|arabic|english|حساب|حسابك|حسابي|حسابنا|محفظة|محفظتك|محفظتي|رصيد|الرصيد|account|your account|wallet|balance|ref|reference)$/i;
 // Trailing fragments the greedy capture can pick up.
 const PARTY_TRIM = /\s+(on|at|في|بتاريخ|ref|reference|رقم)\b[\s\S]*$/i;
 

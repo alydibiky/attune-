@@ -425,7 +425,7 @@ object Engine {
                 // KV cache) — slower and hotter than a plain CPU start. Say so and start on the CPU properly.
                 if (useGpu) {
                     val lg = logTail(ctx, 60000)
-                    if (lg.contains("failed to allocate") || lg.contains("flash attention not supported")) {
+                    if (Regex("opencl[^\\n]*failed to allocate|failed to allocate[^\\n]*err=-61", RegexOption.IGNORE_CASE).containsMatchIn(lg)) {
                         try { EngineNative.nStop(5000) } catch (e: Throwable) {}
                         return gpuFallback(ctx, model, "The phone's GPU could not hold this model")
                     }

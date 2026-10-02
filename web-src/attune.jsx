@@ -1321,6 +1321,8 @@ const LocalEngine = {
         LocalEngine.ready = true; return;
       }
       if (e.state === "error") throw new Error(e.error || "The model stopped — open Engine");
+      if (LocalEngine._gen !== gen) throw new Error("Stopped");
+      if (Date.now() - t0 > 5 * 60000) throw new Error("The model is taking too long to load — open Engine and check the log");
       if (e.state === "idle") {
         // A model is installed but asleep (Android freed it in the background): wake it, don't send the user to Engine.
         let w = "none"; try { w = String(NATIVE.wake ? NATIVE.wake() : "none"); } catch (x) {}
@@ -9401,7 +9403,7 @@ export default function App() {
             scheduleReminder={scheduleReminder} incoming={xrayIn} clearIncoming={() => setXrayIn(null)}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })} />
         ) : mode === "fit" ? (
-          <FitApp abort={() => LocalEngine.abort()} canSee={!(engineInfo && engineInfo.engine === "litert" && engineInfo.fastVision === false)} flash={flash} openEngine={() => setShowEngine(true)} incoming={fitIn} clearIncoming={() => setFitIn(null)} pro={proActive} openPlan={() => setShowUpgrade(true)}
+          <FitApp abort={() => LocalEngine.abort()} ready={() => LocalEngine.waitReady()} canSee={!(engineInfo && engineInfo.engine === "litert" && engineInfo.fastVision === false)} flash={flash} openEngine={() => setShowEngine(true)} incoming={fitIn} clearIncoming={() => setFitIn(null)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             fetchJson={NATIVE && NATIVE.fetchJson ? async (url) => { const r = await nativeCall("fetchJson", url); return JSON.parse((r && r.body) || "{}"); } : null}
             scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}

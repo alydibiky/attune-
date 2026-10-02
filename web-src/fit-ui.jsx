@@ -86,7 +86,7 @@ function Bar({ label, v, max, cls }) {
 // the watch and 3 photo meals a day; Pro adds unlimited photo meals, the week's meal plan + shopping
 // list and the week report. `pro` defaults to on (web preview, tests); the app passes the real state.
 export const FREE_PHOTOS_PER_DAY = 3;
-export function FitApp({ llm, abort, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, scanBarcode, native, share, listen, health, pro = true, openPlan }) {
+export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, scanBarcode, native, share, listen, health, pro = true, openPlan }) {
   const ar = getLang() === "ar";
   const L = (en, a) => (ar ? a : en);
   const [st, setSt] = useState(load);
@@ -165,6 +165,7 @@ export function FitApp({ llm, abort, canSee = true, modelReady, openEngine, flas
       } catch (e) {}
     }
     if (!canSee) { flash && flash(L("This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”", "الموديل ده مش بيقرا صور دلوقتي — اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return; }
+    if (ready) { setStage(L("Waking the model…", "بصحّي الموديل…")); await ready(); if (run.current !== me) return; }   // the time limit counts from here, not from the wake-up
     setStage(L("Recognising the food…", "بتعرّف على الأكل…"));
     const r = F.parsePhoto(await limit(llm(F.photoMessages(text.trim()), photo, { json: true, maxTokens: 900, temperature: 0 }), 75000));
     if (run.current !== me) return;
