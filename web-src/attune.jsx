@@ -10773,7 +10773,8 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
                 {["month", "year", "life"].map((k) => (
                   <button key={k} role="tab" aria-selected={plan === k} onClick={() => setPlan(k)} data-testid={"plan-" + k}
                     className={`relative rounded-lg py-2 text-[13px] font-medium transition-colors ${plan === k ? "bg-amber-400 text-slate-950" : "text-slate-300"}`}>
-                    {tr(PLAN_TEXT[k][0])}
+                    <span className="block">{tr(PLAN_TEXT[k][0])}</span>
+                    <span className={`block text-[10px] font-normal ${plan === k ? "text-slate-800" : "text-slate-500"}`} dir="ltr">{shown(k)}</span>
                     {k === "year" ? <span className="absolute -top-2 end-1 text-[9px] px-1.5 rounded-full bg-emerald-400 text-slate-950 font-bold">{tr("Best value")}</span> : null}
                   </button>
                 ))}

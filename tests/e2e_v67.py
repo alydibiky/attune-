@@ -103,7 +103,7 @@ with sync_playwright() as p:
     page.evaluate("() => { window.__mock.bodies = []; window.__mock.fakeQueue = []; }")
     page.locator("[data-testid=fit-read]").click(); page.wait_for_timeout(600)
     check(page.locator("[data-testid=upgrade]").count() == 1 and page.evaluate("(window.__mock.bodies || []).filter(b => b.max_tokens > 2).length") == 0 and page.locator("text=3 photo meals a day are free").count() == 1, "after 3 photo meals today, Free opens the plan instead of reading a 4th (no model call)")
-    page.locator("[data-testid=upgrade]").locator("xpath=..").click(position={"x": 5, "y": 5}); page.wait_for_timeout(200)   # tap outside closes it
+    page.locator("[data-testid=upgrade] button[aria-label=Close]").click(); page.wait_for_timeout(200)   # the plan page closes with its X
     page.locator("[data-testid=fit-log-text]").fill("2 eggs and a banana"); page.locator("[data-testid=fit-read]").click()
     page.wait_for_selector("[data-testid=fit-draft]", timeout=5000)
     check(page.locator("[data-testid=fit-draft-item]").count() == 2, "typing a meal stays free and unlimited")
