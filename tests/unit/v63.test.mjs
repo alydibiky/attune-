@@ -40,7 +40,7 @@ eq([p.flag, p.grams > 150 && p.grams < 300, p.box], ["portion", true, [0.1, 0.1,
 const z = F.applyZoom({ ...p, said: "pasta", conf: 0.4 }, JSON.stringify({ food: "koshari", alternatives: ["pasta with red sauce"], confidence: 0.8 }));
 eq([z.id, z.grams === p.grams, z.zoomed], ["koshari", true, true], "the zoomed look renames the food, keeps the grams");
 eq(F.applyZoom({ ...p, conf: 0.9 }, JSON.stringify({ food: "rice", confidence: 0.3 })).id, "koshari", "a less sure zoomed answer never overrides a surer one");
-eq(F.photoMessages().length === 2 && /Koshari/.test(F.photoMessages()[0].content) && F.DISH_NAMES.length > 300, true, "the model picks from the list of 300+ dish names");
+eq(F.photoMessages().length === 2 && /Koshari/.test(F.photoMessages()[0].content) && F.DISH_NAMES.length > 300 && F.photoMessages()[0].content.length < 3000, true, "the photo prompt is short and still names the Egyptian dishes");
 
 // ---- the watch ----
 const day = { meals: {}, workouts: [{ kcal: 200 }], watch: { steps: 9000, activeKcal: 350 } };

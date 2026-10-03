@@ -10,6 +10,7 @@ import * as F from "./fit.js";
 import { searchGenerated, getGenerated, GENERATED_COUNT } from "./fit-recipegen.js";
 import * as DB from "./fitdb.js";
 import * as R from "./fitread.js";
+import * as PH from "./fitphoto.js";
 import * as P from "./fitplus.js";
 import { WatchCard, Grades, DayQuality, RamadanCard, QuickLog, SaveMyMeal, WeekPlanView, WeekReport, BodyCard, FitSettings, RAMADAN_NAMES } from "./fitplus-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
@@ -23,7 +24,7 @@ let MEAL_NAMES = MEAL_NAMES0;   // v6.2: Ramadan mode renames the slots (Suhoor,
 const mealNow = () => { const h = new Date().getHours(); return h < 11 ? "breakfast" : h < 16 ? "lunch" : h < 21 ? "dinner" : "snacks"; };
 const r0 = (v) => (v == null ? "—" : Math.round(v));
 
-/** A photo → {media, data, url}, shrunk to 1024 px so the model reads it quickly. */
+/** A photo → {media, data, url}, shrunk to 768 px so the model reads it quickly. */
 function readPhoto(file) {
   return new Promise((ok, bad) => {
     const r = new FileReader();
@@ -31,10 +32,10 @@ function readPhoto(file) {
     r.onload = () => {
       const img = new Image();
       img.onload = () => {
-        const k = Math.min(1, 1024 / Math.max(img.width, img.height));
+        const k = Math.min(1, 768 / Math.max(img.width, img.height));   // v6.10: 768 px is enough to see food, and the model reads it far quicker
         const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-        const url = c.toDataURL("image/jpeg", 0.85);
+        const url = c.toDataURL("image/jpeg", 0.8);
         ok({ media: "image/jpeg", data: url.split(",")[1], url });
       };
       img.onerror = () => bad(new Error("photo"));
@@ -154,38 +155,55 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   // then a second look for hidden calories; a nutrition label → its own numbers.
   // v6.10 — a photo read never hangs: each model call has a time limit; when it runs out the call is cancelled and
   // the person is told to name the food (the offline reader takes it from there). Ali: "stayed on Recognising… then crashed".
-  const limit = (p, ms) => new Promise((ok, bad) => {
-    const t = setTimeout(() => { try { abort && abort(); } catch (e) {} bad(new Error("slow")); }, ms);
-    p.then((v) => { clearTimeout(t); ok(v); }, (e) => { clearTimeout(t); bad(e); });
-  });
+  // v6.10: one budget (≈60 s from the moment the model is awake) for the whole read, and a fallback chain —
+  // full look → quick "name the foods" look → the person's note → name it / search. Names the table
+  // doesn't know are matched by the offline reader and the food pack (fitphoto.js).
+  const limit = (p, ms) => PH.withLimit(p, ms, abort);
+  const giveUp = () => { flash && flash(L("Couldn't recognise the food in time — name it instead (e.g. “2 fried eggs and baladi bread”) or search it below", "مقدرتش أتعرّف على الأكل في الوقت — اكتب اسمه (مثلاً «٢ بيض مقلي وعيش بلدي») أو دوّر عليه تحت")); setPhoto(null); };
   const readPhotoMeal = async (me) => {
     if (scanBarcode) {
       setStage(L("Looking for a barcode…", "بدوّر على باركود…"));
-      try { const codes = await scanBarcode(photo.data); if (run.current !== me) return;
+      try { const codes = await PH.withLimit(scanBarcode(photo.data), 8000); if (run.current !== me) return;
         for (const c of codes || []) { const fd = await DB.byBarcode(c, fetchJson); if (fd) { setDraft([{ ...F.itemFromFood(fd, 1, Object.keys(fd.portions || {})[0] || "serving"), base: null }]); return; } }
       } catch (e) {}
     }
-    if (!canSee) { flash && flash(L("This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”", "الموديل ده مش بيقرا صور دلوقتي — اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return; }
-    if (ready) { setStage(L("Waking the model…", "بصحّي الموديل…")); await ready(); if (run.current !== me) return; }   // the time limit counts from here, not from the wake-up
+    const note = text.trim();
+    if (!canSee) {
+      const ni = PH.noteItems(note); if (ni.length) { setDraft(ni); return; }
+      flash && flash(L("This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”", "الموديل ده مش بيقرا صور دلوقتي — اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return;
+    }
+    if (ready) { setStage(L("Waking the model…", "بصحّي الموديل…")); try { await PH.withLimit(ready(), 90000); } catch (e) {} if (run.current !== me) return; }   // the time limit counts from here, not from the wake-up
+    const b = PH.budget();
     setStage(L("Recognising the food…", "بتعرّف على الأكل…"));
-    const r = F.parsePhoto(await limit(llm(F.photoMessages(text.trim()), photo, { json: true, maxTokens: 900, temperature: 0 }), 75000));
+    let r = null;
+    try { r = F.parsePhoto(await limit(llm(F.photoMessages(note), photo, { json: true, maxTokens: 700, temperature: 0 }), b.slice(42000, 14000))); } catch (e) { r = null; }
     if (run.current !== me) return;
-    if (r.label) { DB.keepFoods([r.label]); setDraft([F.itemFromFood(r.label, 1, Object.keys(r.label.portions || {})[0] || "g")]); return; }
-    if (!r.items.length) { flash && flash(L("Couldn't recognise food in that photo — try closer, in good light", "مقدرتش أتعرّف على أكل في الصورة — قرّب أكتر وفي نور كويس")); return; }
-    setDraft(r.items);
-    // v6.3: a zoomed second look at up to 3 foods the model wasn't sure of (cropped from the photo, enlarged)
-    const unsure = r.items.map((x, i) => [x, i]).filter(([x]) => x.box && x.conf < 0.6).slice(0, 1);
+    if (r && r.label) { DB.keepFoods([r.label]); setDraft([F.itemFromFood(r.label, 1, Object.keys(r.label.portions || {})[0] || "g")]); return; }
+    let items = r ? r.items : [];
+    if (!items.length && b.left() > 6000) {   // the quick look: just the names
+      setStage(L("Taking a quick look…", "ببص بصة سريعة…"));
+      try { const names = PH.parseNames(await limit(llm(PH.namesMessages(note), photo, { maxTokens: 60, temperature: 0 }), b.slice(20000, 2000))); if (run.current !== me) return; items = await PH.namesToItems(names, DB.packSearch, 3000); } catch (e) {}
+      if (run.current !== me) return;
+    }
+    if (!items.length) { const ni = PH.noteItems(note); if (ni.length) { setDraft(ni); return; } giveUp(); return; }
+    if (items.some((x) => x.unknown)) { items = await PH.resolveItems(items, DB.packSearch, 3000); if (run.current !== me) return; }
+    setDraft(items);
+    // v6.3: a zoomed second look at one food the model wasn't sure of (cropped from the photo, enlarged) — only when time is left
+    const unsure = items.map((x, i) => [x, i]).filter(([x]) => x.box && x.conf < 0.6).slice(0, 1);
     for (const [x, i] of unsure) {
+      if (b.left() < 20000) break;
       setStage(L(`Looking closer at “${x.said}”…`, `ببص أقرب على «${x.said}»…`));
       try { const crop = await cropPhoto(photo.url, x.box); if (run.current !== me) return;
-        const z = F.applyZoom(x, await limit(llm(F.zoomMessages(x), crop, { json: true, maxTokens: 250, temperature: 0 }), 30000));
+        const z = F.applyZoom(x, await limit(llm(F.zoomMessages(x), crop, { json: true, maxTokens: 200, temperature: 0 }), b.slice(20000, 8000)));
         if (run.current === me) setDraft((d) => (d || []).map((y, j) => (j === i && y.said === x.said ? z : y)));
       } catch (e) {}
     }
+    if (b.left() < 12000) return;
     setStage(L("Checking for hidden calories (oil, sauce, drinks)…", "بدوّر على سعرات مستخبية (زيت، صوص، مشروبات)…"));
     try {
-      const more = F.parseHidden(await limit(llm(F.hiddenMessages(r.items), photo, { json: true, maxTokens: 400, temperature: 0 }), 30000), r.items);
-      if (run.current === me && more.length) setDraft((d) => [...(d || []), ...more]);
+      const more = F.parseHidden(await limit(llm(F.hiddenMessages(items), photo, { json: true, maxTokens: 300, temperature: 0 }), b.slice(25000, 1000)), items);
+      const extra = more.length ? await PH.resolveItems(more, DB.packSearch, 2000) : [];
+      if (run.current === me && extra.length) setDraft((d) => [...(d || []), ...extra]);
     } catch (e) {}
   };
   // v6.3 voice and "change something" by talking

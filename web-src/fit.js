@@ -607,12 +607,16 @@ export function itemFromFood(fd, qty = 1, unit = "serving") {
 // bread on the side), nutrition labels read exactly, and your corrections remembered.
 // v6.3: the names the model should pick from — a closed list makes a small vision model far more accurate
 export const DISH_NAMES = [...new Set(FOODS.filter((f) => !/-(raw|dry)$|^(molokhia-leaves|beef-mince-raw)$/.test(f.id)).map((f) => f.en.replace(/\s*\(.*\)$/, "")))];
+// v6.10: the prompt names only the dishes a small vision model most often misses (≈40 instead of 350+ — the long list
+// was ≈1.8k tokens to read before every photo, a big part of the wait on a phone); any other name is matched in code
+// (matchFood, the offline reader, the food pack).
+export const PHOTO_HINTS = ["Koshari", "Ful medames", "Taameya (falafel)", "Baladi bread", "Fried egg", "Boiled egg", "Molokhia", "Mahshi", "Fatta", "Hawawshi", "Shawarma", "Kofta", "Grilled chicken", "Fried chicken", "White rice", "Pasta", "Macarona bechamel", "Okra stew (bamia)", "Green beans stew (fasolia)", "Lentil soup", "Feteer", "Feta cheese", "White cheese", "Foul sandwich", "Taameya sandwich", "Liver (kebda)", "Grilled fish", "Fries", "Green salad", "Tahini", "Baba ghanoush", "Pickles", "Basbousa", "Kunafa", "Om Ali", "Rice pudding", "Dates", "Tea with sugar", "Cola"];
 export function photoMessages(note) {
   return [
     { role: "system", content: `You are a dietitian looking at a photo of food. Reply with ONLY a JSON object:
 {"kind": "meal" or "label" (a nutrition facts table is visible) or "package" (a packaged product, no table visible),
  "plate": "dinner plate" | "side plate" | "bowl" | "tray" | "none",
- "items": [{"food": "name — pick from the list below when one fits", "alternatives": ["second guess", "third guess"],
+ "items": [{"food": "short common name", "alternatives": ["second guess", "third guess"],
             "count": number of pieces if it is countable (eggs, falafel, bread loaves, slices, skewers, pieces of chicken, dates) else null,
             "container": "plate" | "bowl" | "glass" | "cup" | "can" | "bottle" | "sandwich" | "hand" | "none",
             "plate_share": 0 to 1 — how much of the plate's surface this food covers (null if not on a plate),
@@ -620,7 +624,7 @@ export function photoMessages(note) {
             "confidence": 0 to 1, "box": [x, y, w, h] where it is in the photo, each 0 to 1}],
  "label": {"name": "product name", "per": "100g" or "serving", "serving_g": number or null, "kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number or null} or null}
 Rules: one item per separate food (a sandwich or a mixed dish like koshari is ONE item). Count what can be counted. Judge sizes against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon, a 330 ml can, a baladi loaf, a hand. If unsure, give your best guess, alternatives, and a lower confidence — never invent a food you can't see. For a label, copy its numbers exactly.
-Food names to pick from: ${DISH_NAMES.join(", ")}.${note ? "\nThe person adds: " + note : ""}` },
+Use short common names in English (Egyptian dishes by their usual name), e.g. ${PHOTO_HINTS.join(", ")}.${note ? "\nThe person adds: " + note : ""}` },
     { role: "user", content: "What is in this photo?" },
   ];
 }
@@ -628,8 +632,8 @@ Food names to pick from: ${DISH_NAMES.join(", ")}.${note ? "\nThe person adds: "
 export function zoomMessages(item) {
   return [
     { role: "system", content: `This is a close-up of one food from a meal photo. The first look guessed: ${[item.said || item.name, ...((item.alts || []).map((a) => a.label))].filter(Boolean).join(", ")}.
-Which food is it really? Reply with ONLY a JSON object: {"food": "name (from the list when it fits)", "alternatives": ["…", "…"], "confidence": 0 to 1}.
-Food names to pick from: ${DISH_NAMES.join(", ")}.` },
+Which food is it really? Reply with ONLY a JSON object: {"food": "short common name", "alternatives": ["…", "…"], "confidence": 0 to 1}.
+Use a short common name, e.g. ${PHOTO_HINTS.join(", ")}.` },
     { role: "user", content: "What is this?" },
   ];
 }
