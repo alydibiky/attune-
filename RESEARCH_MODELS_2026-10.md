@@ -76,4 +76,35 @@ https://unsloth.ai/docs/models/gemma-4
   (licence check), Qwen 3.6 small sizes if released with GGUF.
 
 ## Measurements in this session
-(see below)
+All on GitHub ARM runners (ubuntu-24.04-arm, 4 cores, the phone's chip family), pinned llama.cpp 7ab4ee7,
+`-c 8192 -fa on -ctk q8_0 -ctv q8_0`. The local container was shared with other agents' servers (0.3 tok/s), so
+nothing local was usable. Workflow: `.github/workflows/model-lab.yml`, `only=quant` (full test + peak RSS) and
+`only=codebench` (coding loop, hidden tests). Peak RSS = the whole llama-server process (weights + 8k KV + buffers).
+
+### Quality per GB — full test (173 cases, 15 categories), one run each
+| Model file | File GB | Peak RSS MB | Score | write tok/s |
+|---|---|---|---|---|
+| 0.8B Q4_K_M (catalogue) | 0.55 | 1302 | 134/173 (77%) | 43.8 |
+| 0.8B Q6_K | 0.66 | 1501 | 140/173 (81%) | 35.2 |
+| 0.8B Q8_0 | 0.83 | 1830 | 135/173 (78%) | 58.6 |
+| 2B UD-Q4_K_XL (catalogue) | 1.38 | 2844 | 155/173 (90%) | 20.9 |
+| 2B Q6_K | 1.63 | 3292 | 158/173 (91%) | 15.6 |
+| 2B Q8_0 | 2.08 | 4124 | 157/173 (91%) | 29.1 |
+| 4B Q4_K_M (catalogue Core) | 2.83 | 5753 | 167/173 (97%) | 10.9 |
+| 4B Q5_K_S (catalogue Core+) | 3.12 | 6292 | 165/173 (95%) | 8.8 |
+
+Reading: within one run the noise is about ±3 cases (Q8_0 of the 0.8B scored *below* Q6_K). No higher quant gives
+a clear win: the biggest gap (0.8B Q6_K +6 cases) costs +200 MB RSS and 20% speed and is not confirmed by Q8_0.
+The 4B Q5_K_S (Core+) is NOT better than Q4_K_M here (165 vs 167) while using +540 MB and writing 20% slower —
+Core+ is a candidate for removal (decision for Ali). Q8_0 writes faster than Q6_K/Q4 on ARM for small models
+(simpler dequantisation), at much more memory. **Decision: keep the catalogue quants.**
+
+### Sampling (FULL_SAMPLING), same files
+| Variant | Score |
+|---|---|
+| 4B Q4_K_M, app defaults | 167/173 |
+| 4B + presence_penalty 1.5 | 163/173 |
+| 4B + vendor non-thinking set (0.7 / 0.8 / 20 / min_p 0 / presence 1.5) | 165/173 |
+| 2B UD-Q4_K_XL, app defaults | 155/173 |
+| 2B + presence_penalty 1.5 | 154/173 |
+**Decision: keep the app's sampling (no presence penalty).**
