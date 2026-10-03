@@ -20,15 +20,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download the dump and build the shards
+      - name: USDA branded foods (public domain) — the link is read from USDA's download page; if anything fails the pack is built from Open Food Facts alone
+        run: |
+          mkdir -p usda && cd usda
+          url=$(curl -sSL --retry 3 https://fdc.nal.usda.gov/download-datasets.html | grep -o 'https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_branded_food_csv_[0-9-]*\.zip' | sort -u | tail -1 || true)
+          echo "USDA file: ${url:-none}"
+          if [ -n "$url" ] && curl -sSL --retry 5 -o branded.zip "$url" && unzip -q -o branded.zip; then
+            d=$(dirname "$(find . -name branded_food.csv | head -1)"); echo "USDA folder: $d"; echo "$d" > ../usda_dir.txt
+          else echo "USDA download failed — Open Food Facts only"; fi
+          rm -f branded.zip; df -h / | tail -1
+
+      - name: Download the Open Food Facts dump and build the shards
         run: |
           df -h / | tail -1
-          curl -sSL --retry 5 https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz | zcat | python3 tools/build_food_pack.py out | tee build.log
+          extra=""; if [ -s usda_dir.txt ]; then extra="--usda usda/$(cat usda_dir.txt)"; fi
+          curl -sSL --retry 5 https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz | zcat | python3 tools/build_food_pack.py out $extra | tee build.log
           ls -la out | head -5; du -sh out
 
       - name: Summary
         run: |
-          { echo "## Offline food pack"; echo; tail -1 build.log; echo; python3 -c "import json;m=json.load(open('out/manifest.json'));print('Products:', m['count'], '| Egyptian:', m['egypt'], '| shards:', len(m['shards']))"; } >> "$GITHUB_STEP_SUMMARY"
+          { echo "## Offline food pack"; echo; tail -1 build.log; echo; python3 -c "import json;m=json.load(open('out/manifest.json'));print('Products:', m['count'], '| from Open Food Facts:', m.get('off'), '| Egyptian:', m['egypt'], '| shards:', len(m['shards']))"; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publish the release (tag food-pack-v1, replaced each time)
         env:
