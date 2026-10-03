@@ -17,3 +17,25 @@ Branch `storage-lab-research`. Repeatable: `.github/workflows/storage-lab.yml` �
 
 ## Measurements
 (filled from CI run https://github.com/alydibiky/attune-/actions/runs/37141630061)
+
+## Storage boost — measured (branch `storage-boost`)
+
+### Knowledge pack + on-device retrieval (tests/trials/factpack.mjs, 104 code-graded questions: 40 Egypt, 35 cranes/engineering, 29 general; 20 asked in Egyptian Arabic over an English pack)
+Pack = 97 short passages, 8.7 KB. Retrieval = top 3 passages put in the system prompt. Local x86 run, 0.8B model (Q8_0, 0.53 GB).
+
+| Retriever | Extra storage | Right passage in top 3 | 0.8B answers correct | Egypt | Cranes | General | Arabic qs |
+|---|---|---|---|---|---|---|---|
+| none (model alone) | 0 | – | **31/104** | 3/40 | 15/35 | 13/29 | 2/20 |
+| word index (docqa words, BM25-style) | 0 (index ≈ pack size) | 85/104 | **84/104** | 29 | 31 | 24 | 3 |
+| small multilingual embedder (e5-small, 384-d, Q8_0, 132 MB, MIT) | 132 MB | 58/104 | not run (retrieval too weak) | | | | |
+| multilingual embedder bge-m3 (1024-d, Q4_K_M, 438 MB, MIT) | 438 MB (+~1 KB per passage at 8-bit) | **104/104** | **99/104** | 39 | 33 | 27 | 17 |
+
+Reading: a pack turns a 0.8B model from 30% to 95% right on facts the pack holds. Word matching cannot cross languages
+(Arabic question → English passage: 3/20); the embedder fixes that (17/20). The 438 MB embedder is the single best
+"GB → gain" buy for fact questions — but only for facts that are IN a pack. (Sources: bge-m3 https://huggingface.co/BAAI/bge-m3 (MIT),
+GGUF https://huggingface.co/gpustack/bge-m3-GGUF; e5-small https://huggingface.co/intfloat/multilingual-e5-small (MIT).)
+Pack content sources: Wikipedia text is CC BY-SA 4.0 (attribution + share-alike → the pack must carry the licence and credits;
+fine for a free download). en/ar.wikipedia.org are blocked from this sandbox; the HF dataset `wikimedia/wikipedia` (parquet,
+same licence) is the build source for a real pack. Egyptian laws: official texts are public-domain-like government works but
+there is no clean machine-readable source — a pack needs manual curation. Crane manuals are copyrighted by makers → only the
+person's own manuals ("my documents" pack).
