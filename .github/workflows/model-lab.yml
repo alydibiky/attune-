@@ -15,11 +15,12 @@ on:
         description: "Trial sections (comma list; max.mjs names: deal,xray,action,fit,math,travel,business,code,translate,instant,mind,assistants)"
         default: "math,code,translate,deal,business"
       only:
-        description: "Run only this candidate (qwen35-4b, ling3-tiny, minicpm5-2b); empty = all"
+        description: "Run only this candidate (codebench = the code bench, then sections = JSON list of code.js commits, head = this one; qwen35-4b, ling3-tiny, minicpm5-2b); empty = all"
         default: ""
 
 jobs:
   lab:
+    if: ${{ github.event.inputs.only != 'codebench' }}
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 350
     continue-on-error: true
@@ -94,3 +95,42 @@ jobs:
             tests/trials/max-*.md
             full-*.md
             full-*.json
+  codebench:
+    if: ${{ github.event.inputs.only == 'codebench' }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 300
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(github.event.inputs.sections) }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Build llama.cpp (pinned commit)
+        run: |
+          git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
+          cd ~/llama.cpp && git checkout -q 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF > /dev/null
+          cmake --build build --target llama-server -j"$(nproc)" > /dev/null
+          mkdir -p $GITHUB_WORKSPACE/tests/build-dl && cp -r build/bin $GITHUB_WORKSPACE/tests/build-dl/
+      - name: Model
+        run: |
+          read REPO FILE < <(python3 tests/models/resolve_hf.py "Qwen3.5-4B-MTP" "Q4_K_M" mtp 4b)
+          echo "Model: $REPO / $FILE" | tee -a "$GITHUB_STEP_SUMMARY"
+          curl -sSL --retry 5 -o ~/model.gguf "https://huggingface.co/$REPO/resolve/main/$FILE"
+      - name: Bench
+        run: |
+          if [ "${{ matrix.variant }}" != "head" ]; then git show "${{ matrix.variant }}:web-src/code.js" > web-src/code.js; fi
+          export LD_LIBRARY_PATH="$PWD/tests/build-dl/bin"
+          tests/build-dl/bin/llama-server -m ~/model.gguf --host 127.0.0.1 --port 8099 -c 8192 -t "$(nproc)" -np 1 --jinja --no-ui -fa on --cache-ram 0 --spec-type draft-mtp --spec-draft-n-max 3 > /tmp/server.log 2>&1 &
+          for i in $(seq 1 600); do curl -s 127.0.0.1:8099/health | grep -q ok && break; sleep 1; done
+          CODE_THINK="${{ '' }}" MODEL_NAME="${{ matrix.variant }}" CODE_REPORT="$PWD/codebench-${{ matrix.variant }}.json" node tests/trials/codebench.mjs | tee codebench-${{ matrix.variant }}.log
+          { echo '```'; cat codebench-${{ matrix.variant }}.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: codebench-${{ matrix.variant }}
+          path: codebench-*
