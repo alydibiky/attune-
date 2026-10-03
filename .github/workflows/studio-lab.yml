@@ -11,6 +11,9 @@ on:
       size:
         description: "Picture side in pixels"
         default: "512"
+      only:
+        description: "Comma list of entry names to draw (empty = all)"
+        default: ""
 
 jobs:
   draw:
@@ -21,11 +24,24 @@ jobs:
       matrix:
         include:
           - { name: turbo-sd21,    kind: allinone }
+          # Faster/better candidates: tiny decoder, fewer steps, smaller first pass, a bigger distilled model, a step-distilled LoRA.
+          - { name: turbo-sd21-taesd,    kind: allinone, extra: "--taesd $HOME/m/taesd.safetensors" }
+          - { name: turbo-sd21-2step,    kind: allinone, steps: 2 }
+          - { name: turbo-sd21-384,      kind: allinone, size: 384 }
+          - { name: sdxl-turbo-q4-taesd, kind: sdxl, extra: "--taesd $HOME/m/taesd.safetensors" }
+          # Cheap prompt enhancer: a fixed quality suffix (pictures are still scored against the plain prompt).
+          - { name: turbo-sd21-taesd-suffix, kind: allinone, extra: "--taesd $HOME/m/taesd.safetensors", suffix: ", highly detailed, sharp focus, professional photo, natural light" }
+          - { name: sdxl-turbo-q4-taesd-1step, kind: sdxl, steps: 1, extra: "--taesd $HOME/m/taesd.safetensors" }
+          - { name: turbo-sd21-taesd-2step, kind: allinone, steps: 2, extra: "--taesd $HOME/m/taesd.safetensors" }
+          - { name: turbo-sd21-taesd-384,   kind: allinone, size: 384, extra: "--taesd $HOME/m/taesd.safetensors" }
+          - { name: sdxl-turbo-q4-taesd-2step, kind: sdxl, steps: 2, extra: "--taesd $HOME/m/taesd.safetensors" }
+          - { name: sd15-hyper4-taesd,   kind: sd15, extra: "--taesd $HOME/m/taesd.safetensors --lora-model-dir $HOME/m" }
           - { name: klein-4b-q4,   kind: klein }
           - { name: zimage-turbo,  kind: zimage }
     steps:
       - uses: actions/checkout@v4
       - name: Build the picture engine (the app's pinned stable-diffusion.cpp)
+        if: ${{ always() && (github.event.inputs.only == '' || contains(format(',{0},', github.event.inputs.only), format(',{0},', matrix.name))) }}
         run: |
           git clone -q https://github.com/leejet/stable-diffusion.cpp ~/sd
           cd ~/sd && git fetch -q --depth 1 origin 88411ef1e0688ff2df1010aeeb5d92b2d8cea2be && git checkout -q 88411ef1e0688ff2df1010aeeb5d92b2d8cea2be && git submodule update -q --init --depth 1 ggml
@@ -33,11 +49,20 @@ jobs:
           cmake --build build --target sd-cli -j"$(nproc)" > /dev/null
           ls build/bin
       - name: Models
+        if: ${{ always() && (github.event.inputs.only == '' || contains(format(',{0},', github.event.inputs.only), format(',{0},', matrix.name))) }}
         run: |
           mkdir -p ~/m && cd ~/m
           get() { curl -sSL --retry 5 -f -o "$2" "$1" || { echo "FAILED $1"; return 1; }; ls -la "$2"; }
           case "${{ matrix.kind }}" in
-            allinone) get https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q4_0.gguf diff.gguf ;;
+            allinone) get https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q4_0.gguf diff.gguf
+              get https://huggingface.co/madebyollin/taesd/resolve/main/diffusion_pytorch_model.safetensors taesd.safetensors ;;
+            sdxl)
+              get https://huggingface.co/gpustack/stable-diffusion-xl-1.0-turbo-GGUF/resolve/main/stable-diffusion-xl-1.0-turbo-Q4_0.gguf diff.gguf
+              get https://huggingface.co/madebyollin/taesdxl/resolve/main/diffusion_pytorch_model.safetensors taesd.safetensors ;;
+            sd15)
+              get https://huggingface.co/gpustack/stable-diffusion-v1-5-GGUF/resolve/main/stable-diffusion-v1-5-Q4_0.gguf diff.gguf
+              get https://huggingface.co/ByteDance/Hyper-SD/resolve/main/Hyper-SD15-4steps-lora.safetensors hyper4.safetensors
+              get https://huggingface.co/madebyollin/taesd/resolve/main/diffusion_pytorch_model.safetensors taesd.safetensors ;;
             klein)
               get https://huggingface.co/leejet/FLUX.2-klein-4B-GGUF/resolve/main/flux-2-klein-4b-Q4_0.gguf diff.gguf
               get https://huggingface.co/unsloth/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf llm.gguf
@@ -50,8 +75,9 @@ jobs:
               get https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors vae.safetensors ;;
           esac
       - name: Draw the five prompts
+        if: ${{ always() && (github.event.inputs.only == '' || contains(format(',{0},', github.event.inputs.only), format(',{0},', matrix.name))) }}
         run: |
-          S=${{ github.event.inputs.size || '512' }}
+          S=${{ matrix.size || github.event.inputs.size || '512' }}; N=${{ matrix.steps || 4 }}; X="${{ matrix.extra }}"
           O=$GITHUB_WORKSPACE/studio-out/${{ matrix.name }}; mkdir -p $O
           cat > $GITHUB_WORKSPACE/studio-out/prompts.txt <<'EOF'
           a massive red Liebherr crane lifting a heavy steel bridge beam at a construction site, sunset
@@ -63,9 +89,11 @@ jobs:
           sed -i 's/^ *//' $GITHUB_WORKSPACE/studio-out/prompts.txt
           i=0; : > times.txt
           while read -r P; do
-            t0=$(date +%s)
+            t0=$(date +%s); P="$P${{ matrix.suffix }}"; [ "${{ matrix.kind }}" = sd15 ] && P="$P <lora:hyper4:1>"
             case "${{ matrix.kind }}" in
-              allinone) ~/sd/build/bin/sd-cli -m ~/m/diff.gguf -p "$P" -o $O/$i.png -W $S -H $S --steps 4 --cfg-scale 1 --sampling-method euler_a --prediction eps --scheduler sgm_uniform -s 7 -t "$(nproc)" > $O/log$i.txt 2>&1 || true ;;
+              allinone) ~/sd/build/bin/sd-cli -m ~/m/diff.gguf -p "$P" -o $O/$i.png -W $S -H $S --steps $N --cfg-scale 1 --sampling-method euler_a --prediction eps --scheduler sgm_uniform -s 7 -t "$(nproc)" $X > $O/log$i.txt 2>&1 || true ;;
+              sdxl)     ~/sd/build/bin/sd-cli -m ~/m/diff.gguf -p "$P" -o $O/$i.png -W $S -H $S --steps $N --cfg-scale 1 --sampling-method euler_a --scheduler sgm_uniform -s 7 -t "$(nproc)" $X > $O/log$i.txt 2>&1 || true ;;
+              sd15)     ~/sd/build/bin/sd-cli -m ~/m/diff.gguf -p "$P" -o $O/$i.png -W $S -H $S --steps $N --cfg-scale 1 --sampling-method euler --scheduler sgm_uniform -s 7 -t "$(nproc)" $X > $O/log$i.txt 2>&1 || true ;;
               klein)    ~/sd/build/bin/sd-cli --diffusion-model ~/m/diff.gguf --llm ~/m/llm.gguf --vae ~/m/vae.safetensors -p "$P" -o $O/$i.png -W $S -H $S --steps 4 --cfg-scale 1 --sampling-method euler -s 7 -t "$(nproc)" --diffusion-fa > $O/log$i.txt 2>&1 || true ;;
               zimage)   ~/sd/build/bin/sd-cli --diffusion-model ~/m/diff.gguf --llm ~/m/llm.gguf --vae ~/m/vae.safetensors -p "$P" -o $O/$i.png -W $S -H $S --steps 8 --cfg-scale 1 --sampling-method euler -s 7 -t "$(nproc)" --diffusion-fa > $O/log$i.txt 2>&1 || true ;;
             esac
@@ -73,6 +101,7 @@ jobs:
           done < $GITHUB_WORKSPACE/studio-out/prompts.txt
           python3 -c "import json;t=[int(x) for x in open('times.txt')];json.dump({'mean':round(sum(t)/len(t)),'all':t},open('$O/times.json','w'))"
       - name: Score with CLIP
+        if: ${{ always() && (github.event.inputs.only == '' || contains(format(',{0},', github.event.inputs.only), format(',{0},', matrix.name))) }}
         run: |
           pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
           pip install --quiet transformers pillow

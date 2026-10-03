@@ -16,6 +16,7 @@ eq(cleanPrompt('Here is the description: "A Liebherr crane at golden hour, lifti
 eq(cleanPrompt("ok", "a crane"), "a crane", "a useless description falls back to the idea");
 const k = PACKS["klein-4b"];
 eq([k.files.map((f) => f.role), Math.round(k.files.reduce((a, f) => a + f.size, 0) / 1e8) / 10, k.license], [["diffusion", "llm", "vae"], 5.3, "Apache-2.0"], "FLUX.2 klein 4B pack: 3 files, 5.3 GB, Apache-2.0");
+eq([PACKS.turbo.files.map((f) => f.role), PACKS.turbo.files[1].size, PACKS.turbo.files[1].url.startsWith("https://huggingface.co/madebyollin/taesd/")], [["model", "taesd"], 9793292, true], "Turbo pack: the model plus the tiny colour decoder (measured 63 s → 37 s, CLIP 31.2 → 32.1)");
 eq(PACKS["esrgan-x4"].files[0].url.startsWith("https://github.com/xinntao/Real-ESRGAN/"), true, "the sharpening model comes from its official release");
 eq(SIZES.every((s) => s.w % 16 === 0 && s.h % 16 === 0 && s.w * s.h <= 1024 * 1024 * 1.01), true, "every size is a multiple of 16 and at most ~1 megapixel");
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");

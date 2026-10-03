@@ -363,7 +363,8 @@ object ImageEngine {
         // v5.28: "model" = one all-in-one file (SD-Turbo); "diffusion" + "llm" + "vae" = FLUX.2 klein
         val whole = packFile(ctx, pack, "model")
         val diffusion = whole ?: packFile(ctx, pack, "diffusion") ?: throw IOException("Install the picture model first (Studio).")
-        val files = ImageRun.Files(diffusion.path, packFile(ctx, pack, "llm")?.path, packFile(ctx, pack, "vae")?.path, whole != null)
+        val files = ImageRun.Files(diffusion.path, packFile(ctx, pack, "llm")?.path, packFile(ctx, pack, "vae")?.path, whole != null,
+            packFile(ctx, pack, "taesd")?.path)
         val need = listOfNotNull(diffusion, packFile(ctx, pack, "llm"), packFile(ctx, pack, "vae")).sumOf { it.length() } + 1_500_000_000L
         var paused = false
         // v5.19: on phones under 20 GB the chat model is ALWAYS paused while
