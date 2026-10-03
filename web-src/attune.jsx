@@ -51,6 +51,7 @@ import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
 import { workLoop, guessLang } from "./code.js";
 import { runCode, runHtml, pythonAvailable, warmUp } from "./sandbox.js";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
+import { heatLevel } from "./heat.js";
 
 /* =========================================================================
    ATTUNE — engine
@@ -11117,7 +11118,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
         {n.device && n.device.native ? (
           <p className="text-[11px] text-slate-600 mt-1">
             {n.device.native.model}{n.device.native.soc ? " · " + n.device.native.soc : ""} · {n.device.ram} {tr("GB ·")} {n.device.cores} {tr("cores (")}{n.device.native.bigCores} {tr("fast)")}
-            {n.device.native.thermal >= 2 ? tr(" · warm — running cooler") : ""}{n.device.native.powerSave ? tr(" · battery saver") : ""}
+            {heatLevel(n.device.native) >= 2 ? tr(" · warm — running cooler") : ""}{n.device.native.powerSave ? tr(" · battery saver") : ""}
           </p>
         ) : null}
         <div className="flex flex-wrap gap-1.5 mt-2">

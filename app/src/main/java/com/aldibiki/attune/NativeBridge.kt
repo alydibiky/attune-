@@ -162,6 +162,9 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             try {
                 if (Engine.state == Engine.State.STARTING) throw java.io.IOException("Still loading")
                 if (Engine.state != Engine.State.READY) throw java.io.IOException(Engine.error ?: "The model is not running yet — open Engine")
+                // Very hot (SEVERE or worse): give the phone up to 20 s to cool before a new answer.
+                DeviceInfo.coolDown(ctx, flag)
+                if (flag.get()) throw java.io.IOException("Stopped")
                 if (Engine.kind == "litert") {
                     // The fast engine: no server in between, the answer streams straight here.
                     val out = FastEngine.chat(ctx, id, JSONObject(body), flag) { c, r -> delta(id, c, r) }
@@ -614,6 +617,8 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             .put("cores", DeviceInfo.cores()).put("bigCores", DeviceInfo.bigCores())
             .put("genThreads", DeviceInfo.generationThreads(ctx))
             .put("thermal", DeviceInfo.thermalStatus(ctx)).put("powerSave", DeviceInfo.powerSave(ctx))
+            .put("thermalHeadroom", DeviceInfo.thermalHeadroom(ctx).toDouble())
+            .put("batchThreads", DeviceInfo.batchThreads(ctx))
             .put("cpu", Engine.cpuFeatures).put("gpu", Engine.gpuName).put("settings", Engine.settingsNote)
             .put("engine", Engine.kind).put("fastBackend", FastEngine.backend).put("fastMtp", FastEngine.mtp)
             .put("sysInfo", grab("system_info:[^\\n]*").take(400))

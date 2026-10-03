@@ -53,12 +53,29 @@ object DeviceInfo {
         return out
     }
 
+    /** Kernel capacity of each core (little ~200-400, big ~700-1024). -1 where unreadable. */
+    private fun coreCapacities(): List<Long> {
+        val out = ArrayList<Long>()
+        for (i in 0 until cores()) {
+            val f = File("/sys/devices/system/cpu/cpu$i/cpu_capacity")
+            out.add(try { f.readText().trim().toLong() } catch (e: Exception) { -1L })
+        }
+        return out
+    }
+
     /**
      * Performance cores: the "prime" and "big" clusters. Token generation is
      * memory-bound and runs best on these alone; the little cores only slow
      * the others down by making them wait at every sync point.
      */
     fun bigCores(): Int {
+        // cpu_capacity (0..1024, set by the kernel's energy model) tells the
+        // clusters apart even when a "mid" cluster clocks close to the prime one.
+        val cap = coreCapacities().filter { it > 0 }
+        if (cap.size == cores() && cap.size >= 2) {
+            val top = cap.maxOrNull() ?: 0L
+            if (top > 0) return cap.count { it >= top * 0.6 }.coerceAtLeast(2)
+        }
         val f = coreMaxFreqs().filter { it > 0 }
         if (f.isEmpty()) return (cores() / 2).coerceAtLeast(2)
         val top = f.maxOrNull() ?: return 2
@@ -79,6 +96,37 @@ object DeviceInfo {
         if (Build.VERSION.SDK_INT < 29) return 0
         val pm = ctx.getSystemService(Context.POWER_SERVICE) as PowerManager
         return pm.currentThermalStatus
+    }
+
+    /**
+     * How close the phone is to throttling: 0.0 cool, 1.0 = it starts slowing
+     * down (forecast 10 s ahead). -1 when the phone cannot tell (Android < 11
+     * or no thermal HAL support).
+     */
+    fun thermalHeadroom(ctx: Context): Float {
+        if (Build.VERSION.SDK_INT < 30) return -1f
+        return try {
+            val pm = ctx.getSystemService(Context.POWER_SERVICE) as PowerManager
+            val h = pm.getThermalHeadroom(10)
+            if (h.isNaN()) -1f else h
+        } catch (e: Exception) { -1f }
+    }
+
+    /** Hot enough to run cooler: status MODERATE or worse, or headroom forecast >= 0.95. */
+    fun isHot(ctx: Context): Boolean = thermalStatus(ctx) >= 2 || thermalHeadroom(ctx) >= 0.95f
+
+    /**
+     * Between answers: at SEVERE or worse, wait (up to [maxMs]) for the phone
+     * to drop back before starting the next long generation. Starting while
+     * it is that hot only makes the governor cut the clocks harder mid-answer.
+     * Returns the milliseconds waited. [stop] ends the wait early.
+     */
+    fun coolDown(ctx: Context, stop: java.util.concurrent.atomic.AtomicBoolean, maxMs: Long = 20000): Long {
+        val t0 = System.currentTimeMillis()
+        while (!stop.get() && thermalStatus(ctx) >= 3 && System.currentTimeMillis() - t0 < maxMs) {
+            try { Thread.sleep(1000) } catch (e: InterruptedException) { break }
+        }
+        return System.currentTimeMillis() - t0
     }
 
     fun powerSave(ctx: Context): Boolean {
@@ -113,18 +161,20 @@ object DeviceInfo {
         var t = bigCores().coerceIn(2, 4)
         val thermal = thermalStatus(ctx)
         if (thermal >= 3 /* SEVERE */) t = 2
-        else if (thermal >= 2 /* MODERATE */) t = (t - 1).coerceAtLeast(2)
+        else if (thermal >= 2 /* MODERATE */ || thermalHeadroom(ctx) >= 0.95f) t = (t - 1).coerceAtLeast(2)
         if (powerSave(ctx) && !charging(ctx)) t = (t - 1).coerceAtLeast(2)
         return t
     }
 
     /**
-     * Prompt reading is compute-bound and benefits from more cores, but two
-     * are always left free so the app itself never freezes while it reads.
+     * Prompt reading is compute-bound and benefits from more cores, but only
+     * the performance cores: a little core finishes its share last and every
+     * other thread waits for it. Two cores are always left free so the app
+     * itself never freezes while it reads.
      */
     fun batchThreads(ctx: Context): Int {
-        var t = (cores() - 2).coerceIn(2, 6)
-        if (thermalStatus(ctx) >= 2) t = (t - 2).coerceAtLeast(2)
+        var t = minOf(bigCores(), cores() - 2).coerceIn(2, 6)
+        if (isHot(ctx)) t = (t - 2).coerceAtLeast(2)
         return t
     }
 
@@ -142,6 +192,7 @@ object DeviceInfo {
         .put("dotprod", hasDotprod())
         .put("i8mm", hasI8mm())
         .put("thermal", thermalStatus(ctx))
+        .put("thermalHeadroom", thermalHeadroom(ctx).toDouble())
         .put("genThreads", generationThreads(ctx))
         .put("powerSave", powerSave(ctx))
         .put("battery", batteryPct(ctx))
