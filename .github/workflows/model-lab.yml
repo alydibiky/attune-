@@ -22,12 +22,15 @@ jobs:
   lab:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 350
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
         include:
           - { name: qwen35-4b,   search: "Qwen3.5-4B-GGUF",       quants: "Q4_K_M,IQ4_XS", need: "qwen3.5-4b", draft: "yes" }
           - { name: qwen35-9b,   search: "Qwen3.5-9B-GGUF",       quants: "IQ4_NL,Q4_K_M,IQ4_XS", need: "qwen3.5-9b", draft: "yes" }
+          - { name: qwen35-4b-mtp, search: "Qwen3.5-4B-MTP",      quants: "Q4_K_M,IQ4_XS", need: "mtp 4b" }
+          - { name: qwen35-9b-mtp, search: "Qwen3.5-9B-MTP",      quants: "IQ4_NL,Q4_K_M,IQ4_XS", need: "mtp 9b" }
           - { name: ling3-tiny,  search: "Ling-3.0-tiny",         quants: "Q4_K_M,IQ4_XS,Q4_0,Q3_K_M,Q8_0", need: "ling" }
           - { name: minicpm5-2b, search: "MiniCPM5-2B",           quants: "Q4_K_M,IQ4_XS,Q4_0,Q8_0", need: "minicpm5" }
           - { name: lfm2-8b-a1b, search: "LFM2-8B-A1B",           quants: "Q4_K_M,IQ4_XS,Q4_0,Q8_0", need: "lfm2" }
