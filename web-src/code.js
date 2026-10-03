@@ -189,6 +189,22 @@ export function failingLine(code, res) {
   return { line, hint: onPurpose ? `That test calls code that raises ${exc} ON PURPOSE (the program is right to refuse). A test for a refusal must catch it: try: ... except ${exc}: pass (and fail if nothing was raised) — not compare a result.` : "" };
 }
 
+/** v6.10: a 4B model insists 2023-02-28 → 2024-02-28 is 366 days. Every line of the program that holds
+ *  two YYYY-MM-DD dates gets its real calendar distance, worked out by code, so a fix round is told the
+ *  truth instead of arguing with itself. → ["2023-02-28 → 2024-02-28 = 365 days"] (at most 6) */
+export function dateFacts(code) {
+  const out = [], seen = new Set();
+  for (const l of String(code || "").split("\n")) {
+    const d = l.match(/\b\d{4}-\d{2}-\d{2}\b/g);
+    if (!d || d.length < 2) continue;
+    const t = d.slice(0, 2).map((x) => Date.parse(x + "T00:00:00Z"));
+    if (t.some((x) => isNaN(x))) continue;
+    const f = `${d[0]} → ${d[1]} = ${Math.round((t[1] - t[0]) / 864e5)} days`;
+    if (!seen.has(f)) { seen.add(f); out.push(f); }
+  }
+  return out.slice(0, 6);
+}
+
 /** Did the run pass? { passed, reason } */
 export function judge(res, code, lang) {
   const tests = countTests(code, lang);
@@ -403,6 +419,8 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
     sameAgain = false;
     const eg = /expected (.{1,80}?), got (.{1,80}?)(?: —|$)/m.exec(String(last && (last.error || last.stderr) || ""));
     if (eg) told += `\n\nThe program returns ${eg[2]} where a test expects ${eg[1]}. Work out which one is right, step by step. If the program is right and the test's expected value is wrong, change ${eg[1]} in that test line; otherwise fix the program.`;
+    const df = dateFacts(code);
+    if (df.length) told += `\n\nCalendar facts (worked out by the app — they are right, trust them over your own count; a test that expects a different number is the wrong part):\n` + df.map((x) => "- " + x).join("\n");
     tried.add(code); history.push(errorSummary(last, 8));
     const fl = lang === "python" ? failingLine(code, last) : null;
     if (fl) told += `\n\nThe line that failed: ${fl.line}` + (fl.hint ? "\n" + fl.hint : "");
