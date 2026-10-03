@@ -51,9 +51,19 @@ object Engine {
     /** Only Qwen 3.5 models share the 0.8B draft's vocabulary. */
     fun isQwen35(m: ModelStore.Installed): Boolean = Regex("qwen\\W?3\\.?5", RegexOption.IGNORE_CASE).containsMatchIn(m.source + " " + m.label)
 
+    /** True when this file is an MTP build (it carries the model's own next-words predictor). */
+    fun hasMtp(m: ModelStore.Installed): Boolean = m.source.contains("-MTP-", ignoreCase = true) || m.modelFile.name.contains("MTP", ignoreCase = true)
+
+    /** Whether the engine should start with multi-token prediction: the model has it, the setting allows it, and it has not failed before. */
+    fun mtpFor(ctx: Context, model: ModelStore.Installed): Boolean {
+        val mode = Prefs.mtpMode(ctx)
+        return mode != "off" && hasMtp(model) && !Prefs.mtpBad(ctx, model.id)
+    }
+
     /** The draft model to use with `model`, or null (off, missing, not Qwen 3.5, or not enough memory). */
     fun draftFor(ctx: Context, model: ModelStore.Installed): ModelStore.Installed? {
         if (!Prefs.draft(ctx)) return null
+        if (mtpFor(ctx, model)) return null  // the built-in predictor is better than a helper model
         val d = Prefs.draftModel(ctx)?.let { ModelStore.get(ctx, it) } ?: return null
         if (d.id == model.id || !d.modelFile.exists() || !isQwen35(model)) return null
         if (model.sizeBytes + d.sizeBytes > allowedBytes(ctx)) return null
@@ -268,7 +278,7 @@ object Engine {
         }
     }
 
-    private fun buildArgs(ctx: Context, model: ModelStore.Installed, useGpu: Boolean, draft: ModelStore.Installed?): Array<String> {
+    private fun buildArgs(ctx: Context, model: ModelStore.Installed, useGpu: Boolean, draft: ModelStore.Installed?, mtp: Boolean): Array<String> {
         val nCtx = contextFor(ctx, model)
         val gen = DeviceInfo.generationThreads(ctx)
         val batch = DeviceInfo.batchThreads(ctx)
@@ -331,7 +341,13 @@ object Engine {
                 "-ngld", if (useGpu) "99" else "0")
             settingsNote += " · draft: " + draft.label
         }
-        if (draft == null) {
+        if (mtp && draft == null) {
+            // Multi-token prediction: the model's own built-in predictor guesses
+            // the next few words and the model checks them in one pass. Same
+            // answer, faster for code, tables, JSON, emails and summaries.
+            a += listOf("--spec-type", "draft-mtp", "--spec-draft-n-max", "3", "--spec-draft-p-min", "0.5")
+            settingsNote += " · MTP"
+        } else if (draft == null) {
             // Copy-ahead: when the answer repeats text that is already in the
             // conversation — editing code, quoting a document, rewriting a
             // table — the engine proposes the next stretch straight from that
@@ -350,7 +366,7 @@ object Engine {
         return a.toTypedArray()
     }
 
-    private fun startBlocking(ctx: Context, model: ModelStore.Installed, forceCpu: Boolean = false): Boolean {
+    private fun startBlocking(ctx: Context, model: ModelStore.Installed, forceCpu: Boolean = false, noMtp: Boolean = false): Boolean {
         if (EngineNative.nState() == 1) stopBlocking()
         if (state == State.ERROR && EngineNative.nState() == 1) return false
         if (FastEngine.isFast(model)) return startFast(ctx, model)
@@ -388,6 +404,7 @@ object Engine {
         if (!useGpu) gpuName = ""
         val draft = draftFor(ctx, model)
         draftId = draft?.id
+        val useMtp = !noMtp && mtpFor(ctx, model)
 
         state = State.STARTING
         loadStartedAt = System.currentTimeMillis()
@@ -400,7 +417,7 @@ object Engine {
         // loading, this flag is still set at the next launch, and the app
         // starts on the CPU instead (MainActivity → Engine.checkGpuCrash).
         if (useGpu) Prefs.setGpuTrial(ctx, true)
-        if (!EngineNative.nStart(buildArgs(ctx, model, useGpu, draft))) {
+        if (!EngineNative.nStart(buildArgs(ctx, model, useGpu, draft, useMtp))) {
             state = State.ERROR; error = "The engine is already running."
             return false
         }
@@ -412,6 +429,12 @@ object Engine {
         while (System.currentTimeMillis() < deadline) {
             if (EngineNative.nState() == 2) {
                 loadStartedAt = 0L
+                // Safety net: the engine quit while starting with MTP (e.g. "model doesn't contain MTP layers").
+                // Remember it for this model and start again once without MTP.
+                if (useMtp) {
+                    Prefs.setMtpBad(ctx, model.id)
+                    return startBlocking(ctx, model, forceCpu, true)
+                }
                 if (useGpu) return gpuFallback(ctx, model, "The model would not load on the GPU")
                 state = State.ERROR
                 error = "The model failed to load. " + lastErrorLine(ctx)

@@ -334,11 +334,14 @@ def sec_speed(br):
     page.wait_for_function("document.querySelectorAll('[data-testid=bench-results] .text-\\\\[11px\\\\]').length >= 2 || document.querySelector('[data-testid=bench-results]').innerText.includes('GPU')", timeout=60000)
     txt = page.locator("[data-testid=bench-results]").inner_text()
     check("GPU" in txt and "CPU" in txt and "Fastest here so far" in txt, "CPU and GPU results sit side by side, with the fastest named")
-    # draft model
-    page.locator("[data-testid=draft-install]").click()
-    page.wait_for_selector("text=guesses ahead", timeout=5000)
-    di = page.evaluate("window.__mock.draftInstall")
-    check(di["draft"] is True and "0.8B" in di["repo"] and di["vision"] is False, "the draft is Qwen 3.5 0.8B, installed as a helper (not switched to)")
+    # faster writing (MTP): Auto / On / Off, honest note, no draft-model download offered any more
+    check(sp.locator("[data-testid=draft-install]").count() == 0, "the 0.8B helper download is no longer offered")
+    mt = sp.locator("[data-testid=mtp-setting]")
+    check(mt.count() == 1 and sp.locator("[data-testid=mtp-auto]").get_attribute("aria-checked") == "true", "Faster writing (MTP) is there and defaults to Auto")
+    check("slightly slower for free-form explanations" in mt.inner_text() and "MTP is on" in mt.inner_text(), "it says honestly where it helps and where it does not")
+    sp.locator("[data-testid=mtp-off]").click(); page.wait_for_selector("[data-testid=mtp-off][aria-checked=true]", timeout=5000)
+    check(page.evaluate("window.__mock.setSpeedCalls")[-1] == {"mtp": "off"}, "choosing Off restarts the engine with mtp=off")
+    check("MTP is off" in sp.locator("[data-testid=mtp-state]").inner_text(), "and says MTP is off for this model")
     # GPU fails → back to CPU, said plainly
     sp.locator("button:has-text('Use the GPU')").click(); page.wait_for_timeout(300)   # off
     page.evaluate("window.__mock.gpuFails = true")

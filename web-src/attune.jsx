@@ -872,9 +872,9 @@ const MODEL_TIERS = [
   // ARM (.github/workflows/model-bench.yml, run 36458059767): 5.37 GB instead of 5.68, writes 11 % faster
   // (7.0 vs 6.3 t/s), reads as fast, and drifts only 0.024 (KLD, Arabic) from the 8-bit model — under
   // what anyone notices. The 3-bit versions were both worse AND slower on ARM, so smaller isn't better.
-  { id: "xl", vision: true, label: "Zenith", realName: "Qwen3.5 9B", smoothRam: 12, params: "9B", quant: "IQ4_NL", sizeGB: 5.37,
+  { id: "xl", vision: true, label: "Zenith", realName: "Qwen3.5 9B", smoothRam: 12, params: "9B", quant: "IQ4_NL", sizeGB: 5.64,
     needRam: 10, ctx: 32768, platform: "any",
-    repo: "unsloth/Qwen3.5-9B-GGUF",
+    repo: "unsloth/Qwen3.5-9B-MTP-GGUF", mtp: true,
     quality: "Runs smoothly on a 12 GB phone: expert answers, and the best at reading documents and photos.",
     good: ["Ask", "Write", "Summarise", "Review", "Photos"] },
 
@@ -898,9 +898,9 @@ const MODEL_TIERS = [
 
   // ---- the phone range, where most people will live -------------------
   // v6.8: Q5_K_S — measured on ARM against the 8-bit model: drift 0.010 (Arabic) vs Q5_K_M's 0.010, writes 6 % faster, 0.12 GB smaller → a 6 GB phone
-  { id: "md-hi", vision: true, label: "Core+", realName: "Qwen3.5 4B", smoothRam: 8, params: "4B", quant: "Q5_K_S", sizeGB: 3.02,
+  { id: "md-hi", vision: true, label: "Core+", realName: "Qwen3.5 4B", smoothRam: 8, params: "4B", quant: "Q5_K_S", sizeGB: 3.12,
     needRam: 6, ctx: 32768, platform: "any", recommended: true,
-    repo: "unsloth/Qwen3.5-4B-GGUF",
+    repo: "unsloth/Qwen3.5-4B-MTP-GGUF", mtp: true,
     quality: "The best everyday choice if your phone can hold it: reads photos of documents and receipts, Arabic and English, with extra precision for long answers.",
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
   { id: "lg", vision: true, label: "Sense", realName: "Gemma 4 E4B", smoothRam: 16, params: "4.5B eff.", quant: "UD-Q4_K_XL", sizeGB: 5.13,
@@ -908,24 +908,24 @@ const MODEL_TIERS = [
     repo: "unsloth/gemma-4-E4B-it-GGUF",
     quality: "Text, photos and audio on a flagship phone — pick it if you want voice notes understood.",
     good: ["Ask", "Write", "Summarise", "Photos", "Voice"] },
-  { id: "md", vision: true, label: "Core", realName: "Qwen3.5 4B", smoothRam: 8, params: "4B", quant: "Q4_K_M", sizeGB: 2.74,
+  { id: "md", vision: true, label: "Core", realName: "Qwen3.5 4B", smoothRam: 8, params: "4B", quant: "Q4_K_M", sizeGB: 2.84,
     needRam: 6, ctx: 16384, platform: "any",
-    repo: "unsloth/Qwen3.5-4B-GGUF",
+    repo: "unsloth/Qwen3.5-4B-MTP-GGUF", mtp: true,
     quality: "The sweet spot on an ordinary modern phone: everything the app does, in under 3 GB.",
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
-  { id: "md-lo", vision: true, label: "Core Lite", realName: "Qwen3.5 4B", smoothRam: 6, params: "4B", quant: "IQ4_XS", sizeGB: 2.48,
+  { id: "md-lo", vision: true, label: "Core Lite", realName: "Qwen3.5 4B", smoothRam: 6, params: "4B", quant: "IQ4_XS", sizeGB: 2.64,
     needRam: 6, ctx: 8192, platform: "any", imatrix: true,
-    repo: "unsloth/Qwen3.5-4B-GGUF",
+    repo: "unsloth/Qwen3.5-4B-MTP-GGUF", mtp: true,
     quality: "Core made 10% smaller, for a 6 GB phone that is short on free memory.",
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
-  { id: "sm", vision: true, label: "Glow", realName: "Qwen3.5 2B", smoothRam: 6, params: "2B", quant: "UD-Q4_K_XL", sizeGB: 1.34,
+  { id: "sm", vision: true, label: "Glow", realName: "Qwen3.5 2B", smoothRam: 6, params: "2B", quant: "UD-Q4_K_XL", sizeGB: 1.39,
     needRam: 3, ctx: 8192, platform: "any",
-    repo: "unsloth/Qwen3.5-2B-GGUF",
+    repo: "unsloth/Qwen3.5-2B-MTP-GGUF", mtp: true,
     quality: "Runs on a budget phone and still reads photos. Good short answers; long reasoning shows its size.",
     good: ["Ask", "Summarise", "Photos"] },
-  { id: "xs", vision: true, label: "Spark", realName: "Qwen3.5 0.8B", smoothRam: 4, params: "0.8B", quant: "Q4_K_M", sizeGB: 0.53,
+  { id: "xs", vision: true, label: "Spark", realName: "Qwen3.5 0.8B", smoothRam: 4, params: "0.8B", quant: "Q4_K_M", sizeGB: 0.55,
     needRam: 2, ctx: 8192, platform: "any",
-    repo: "unsloth/Qwen3.5-0.8B-GGUF",
+    repo: "unsloth/Qwen3.5-0.8B-MTP-GGUF", mtp: true,
     quality: "For a phone that can't hold anything else: tidying and shortening text. Not for reasoning.",
     good: ["Summarise"] },
 ];

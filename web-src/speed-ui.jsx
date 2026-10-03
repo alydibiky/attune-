@@ -117,16 +117,22 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
         {sp.gpuBuilt ? row(sp.gpu, () => !busy && apply({ gpu: !sp.gpu }, tr("Restarting the engine…")), "Use the GPU",
           sp.gpuName ? tr("Running on {g}.", { g: sp.gpuName }) : "Runs the model on the phone's graphics chip (Adreno). Often faster at reading long prompts; test it below. Switches itself back to the CPU if anything goes wrong.")
           : <p className="text-[11px] text-slate-500 px-1">{tr("This build has no GPU engine — it will come with the next APK built on GitHub.")}</p>}
-        {sp.draftInstalled ? row(sp.draft, () => !busy && apply({ draft: !sp.draft }, tr("Restarting the engine…")), "Faster answers with a draft model",
-          sp.draftFits ? (sp.draftActive ? tr("On: {d} guesses ahead, the main model checks.", { d: publicName(sp.draftLabel) }) : "Spark guesses a few words ahead and the main model checks them in one go. Same answers, often faster writing.")
-            : "Only works with Spark, Glow, Core and Zenith — not with the model in use.") : (
-          <button onClick={installDraft} disabled={!!busy} data-testid="draft-install"
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg border border-slate-800 text-start disabled:opacity-50">
-            <Download size={16} className="text-teal-300 shrink-0" />
-            <span className="min-w-0"><span className="block text-sm text-slate-200">{tr("Faster answers with a draft model")}</span>
-              <span className="block text-[11px] text-slate-500">{tr("Download Spark as a helper (about 0.5 GB, once). Works with Glow, Core and Zenith.")}</span></span>
-          </button>
-        )}
+        {sp.mtpMode ? (
+          <div className="rounded-lg border border-slate-800 px-3 py-2" data-testid="mtp-setting">
+            <span className="block text-sm text-slate-200">{tr("Faster writing (MTP)")}</span>
+            <div className="flex gap-1.5 mt-1.5" role="radiogroup" aria-label={tr("Faster writing (MTP)")}>
+              {[["auto", "Auto"], ["on", "On"], ["off", "Off"]].map(([v, l]) => (
+                <button key={v} role="radio" aria-checked={sp.mtpMode === v} data-testid={"mtp-" + v} disabled={!!busy}
+                  onClick={() => sp.mtpMode !== v && !busy && apply({ mtp: v }, tr("Restarting the engine…"))}
+                  className={"flex-1 px-2 py-1.5 rounded-md border text-[13px] disabled:opacity-50 " + (sp.mtpMode === v ? "border-teal-500 bg-teal-500/15 text-teal-100" : "border-slate-800 text-slate-300")}>{tr(l)}</button>
+              ))}
+            </div>
+            <span className="block text-[11px] text-slate-500 mt-1.5">{tr("Same answers, faster for code, tables, JSON, emails and summaries; roughly the same or slightly slower for free-form explanations.")}</span>
+            <span className="block text-[11px] text-slate-400 mt-0.5" data-testid="mtp-state">{sp.mtpActive ? tr("MTP is on for this model.") : sp.mtpFailed ? tr("MTP did not start on this phone, so this model runs without it.") : sp.mtpHas ? tr("MTP is off for this model.") : tr("This model has no MTP layers; install it again from the list to get them.")}</span>
+          </div>
+        ) : null}
+        {sp.draftInstalled && sp.draft ? row(sp.draft, () => !busy && apply({ draft: false }, tr("Restarting the engine…")), "Faster answers with a draft model",
+          "Not recommended: it was slower in our tests. Turn it off.") : null}
       </div>
       </>)}
       {busy ? <p className="text-[12px] text-teal-300 mt-2 flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{busy}{pct ? " " + pct + "%" : ""}</p> : null}

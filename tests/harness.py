@@ -67,12 +67,14 @@ V5_EXTRA = r"""
   };
   // engine speed (Engine → Speed)
   S.speed = { gpuBuilt: true, gpu: false, gpuName: "", gpuNote: "", draft: false, draftInstalled: false, draftLabel: null,
-              draftActive: false, draftFits: true, activeLabel: "Qwen3.5 4B" };
+              draftActive: false, draftFits: true, activeLabel: "Qwen3.5 4B",
+              mtpMode: "auto", mtpHas: true, mtpActive: true, mtpFailed: false };
   N.speed = () => JSON.stringify(S.speed);
   N.setSpeed = (id, arg) => { const a = JSON.parse(arg); S.setSpeedCalls = (S.setSpeedCalls || []).concat([a]);
     if ("gpu" in a) { if (a.gpu && S.gpuFails) { S.speed.gpu = false; S.speed.gpuName = ""; S.speed.gpuNote = "The model would not load on the GPU, so Attune switched back to the CPU."; }
                       else { S.speed.gpu = a.gpu; S.speed.gpuName = a.gpu ? "QUALCOMM Adreno(TM) 840" : ""; S.speed.gpuNote = ""; } }
     if ("draft" in a) S.speed.draft = a.draft;
+    if ("mtp" in a) { S.speed.mtpMode = a.mtp; S.speed.mtpActive = S.speed.mtpHas && a.mtp !== "off"; }
     if ("fastCpu" in a) { S.speed.fastCpu = a.fastCpu; S.speed.fastBackend = a.fastCpu ? "CPU" : "GPU"; S.speed.fastNote = ""; }
     S.speed.draftActive = S.speed.draft && S.speed.draftInstalled;
     setTimeout(() => R(id, { ok: true, speed: S.speed }), 80); };

@@ -51,6 +51,16 @@ object Prefs {
     fun draftModel(ctx: Context): String? = sp(ctx).getString("draft_model", null)
     fun setDraftModel(ctx: Context, id: String?) = sp(ctx).edit().putString("draft_model", id).apply()
 
+    /** Faster writing (multi-token prediction): "auto" (on when the model has it), "on" or "off". */
+    fun mtpMode(ctx: Context): String = sp(ctx).getString("mtp_mode", "auto") ?: "auto"
+    fun setMtpMode(ctx: Context, m: String) = sp(ctx).edit().putString("mtp_mode", if (m == "on" || m == "off") m else "auto").apply()
+    /** Models whose engine failed to start with the MTP flags: they run without them from then on. */
+    fun mtpBad(ctx: Context, id: String): Boolean = (sp(ctx).getStringSet("mtp_bad", emptySet()) ?: emptySet()).contains(id)
+    fun setMtpBad(ctx: Context, id: String) {
+        val s = HashSet(sp(ctx).getStringSet("mtp_bad", emptySet()) ?: emptySet()); s.add(id)
+        sp(ctx).edit().putStringSet("mtp_bad", s).apply()
+    }
+
     // ---- the fast engine (LiteRT-LM, .litertlm models) ----------------------------
     /** Keep the fast engine on the CPU (the GPU is the default and the point of it). */
     fun fastCpu(ctx: Context): Boolean = sp(ctx).getBoolean("fast_cpu", false)

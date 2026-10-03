@@ -526,7 +526,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                     source = url
                 } else {
                     require(repo.contains("/") && quant.isNotBlank()) { "Give a Hugging Face repo and a quantization, like unsloth/Qwen3.5-4B-GGUF:Q4_K_M" }
-                    plan = ModelStore.resolveHf(repo, quant, vision)
+                    // An MTP build that lacks this quant falls back to the standard repo.
+                    plan = try { ModelStore.resolveHf(repo, quant, vision) } catch (e: Exception) {
+                        if (repo.contains("-MTP-GGUF")) ModelStore.resolveHf(repo.replace("-MTP-GGUF", "-GGUF"), quant, vision) else throw e
+                    }
                     modelId = a.optString("id").ifBlank { "hf-" + Integer.toHexString("$repo:$quant".hashCode()) }
                     label = a.optString("label").ifBlank { repo.substringAfter('/') + " " + quant }
                     source = "$repo:$quant"
@@ -634,6 +637,9 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             .put("draftInstalled", draft != null).put("draftLabel", draft?.label ?: JSONObject.NULL)
             .put("draftActive", Engine.draftId != null)
             .put("draftFits", active != null && Engine.isQwen35(active))
+            .put("mtpMode", Prefs.mtpMode(ctx)).put("mtpHas", active != null && Engine.hasMtp(active))
+            .put("mtpActive", active != null && Engine.mtpFor(ctx, active))
+            .put("mtpFailed", active != null && Prefs.mtpBad(ctx, active.id))
             .put("activeLabel", active?.label ?: JSONObject.NULL)
             // the fast engine (LiteRT-LM)
             .put("engine", if (FastEngine.isFast(active)) "litert" else "llama")
@@ -648,6 +654,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         val a = try { JSONObject(arg) } catch (e: Exception) { return reject(id, "Bad request") }
         if (a.has("gpu")) { Prefs.setGpu(ctx, a.optBoolean("gpu")); Prefs.setGpuNote(ctx, "") }
         if (a.has("draft")) Prefs.setDraft(ctx, a.optBoolean("draft"))
+        if (a.has("mtp")) Prefs.setMtpMode(ctx, a.optString("mtp", "auto"))
         if (a.has("fastCpu")) { Prefs.setFastCpu(ctx, a.optBoolean("fastCpu")); Prefs.setFastNote(ctx, "") }
         if (a.has("fastMtp")) Prefs.setFastMtp(ctx, a.optBoolean("fastMtp"))
         val m = ModelStore.active(ctx) ?: return resolve(id, JSONObject().put("ok", true).put("speed", JSONObject(speed())))
