@@ -32,6 +32,9 @@ jobs:
           # Cheap prompt enhancer: a fixed quality suffix (pictures are still scored against the plain prompt).
           - { name: turbo-sd21-taesd-suffix, kind: allinone, extra: "--taesd $HOME/m/taesd.safetensors", suffix: ", highly detailed, sharp focus, professional photo, natural light" }
           - { name: sdxl-turbo-q4-taesd-1step, kind: sdxl, steps: 1, extra: "--taesd $HOME/m/taesd.safetensors" }
+          - { name: turbo-sd21-taesd-2step, kind: allinone, steps: 2, extra: "--taesd $HOME/m/taesd.safetensors" }
+          - { name: turbo-sd21-taesd-384,   kind: allinone, size: 384, extra: "--taesd $HOME/m/taesd.safetensors" }
+          - { name: sdxl-turbo-q4-taesd-2step, kind: sdxl, steps: 2, extra: "--taesd $HOME/m/taesd.safetensors" }
           - { name: sd15-hyper4-taesd,   kind: sd15, extra: "--taesd $HOME/m/taesd.safetensors --lora-model-dir $HOME/m" }
           - { name: klein-4b-q4,   kind: klein }
           - { name: zimage-turbo,  kind: zimage }
