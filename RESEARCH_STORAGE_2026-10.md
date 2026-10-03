@@ -15,8 +15,46 @@ Branch `storage-lab-research`. Repeatable: `.github/workflows/storage-lab.yml` �
 - KV q8_0 ≈ lossless; q4_0 adds small quality loss but halves KV again. On hybrid models only the ~1/4 full-attention layers
   hold a KV cache, so long context is cheap there.
 
-## Measurements
-(filled from CI run https://github.com/alydibiky/attune-/actions/runs/37141630061)
+## Measurements (ARM runner, 4 cores, run https://github.com/alydibiky/attune-/actions/runs/37141630061)
+
+### 1. Copied vs mapped weights under a hard memory cap (cold start, context 4k, KV q8)
+| Model (file) | Weights | Cap | RSS after load MB | Peak MB | Writing t/s | Storage reads (major faults) |
+|---|---|---|---|---|---|---|
+| Qwen3.5 4B Q4_K_M (2.74 GB) | copied | none | 3353 | 3581 | 10.33 | 126 |
+| | mapped | none | 5441 | 5669 | 10.29 | 126 |
+| | copied | 4 GB | 3353 | 3581 | 10.40 | 132 |
+| | mapped | 4 GB | 4079 | 4090 | 10.40 | 484 |
+| | copied | 3 GB | **killed** | | | |
+| | mapped | 3 GB | 3047 | 3069 | **6.52** | 14529 |
+| Gemma 4 E4B Q4_0 (4.59 GB) | copied | none | 5253 | 5393 | 11.05 | 125 |
+| | mapped | none | 7355 | 7509 | 11.09 | 125 |
+| | copied | 5 GB | **killed** | | | |
+| | mapped | 5 GB | 5106 | 5113 | **10.82** | 411 |
+| | copied / mapped | 3 GB | killed / killed | | | |
+
+Reading: "mapped" RSS looks bigger without a cap because the CPU backend repacks most weights into its own memory
+and the file pages stay cached too — but those file pages are reclaimable, so under a cap the mapped model fits
+where the copy is killed. Gemma E-models gain most (their per-layer embedding table is only looked up, so it can stay
+on storage): full speed under a cap 0.3 GB below the copied peak. Below that, speed falls (4B at 3 GB: 63 %).
+**Implemented:** Engine starts a model up to 12 % over the copy budget mapped instead of refusing it (mappedFallback).
+Copied stays the default (MagicOS drops mapped pages eagerly, which made 20 words/s fall below 1 on Ali's phone).
+
+### 2. Context length vs memory (copied, 7.4k-token prompt)
+| Model | 8k q8 | 8k q4 | 32k q8 | 32k q4 | 64k q8 | 64k q4 | 128k q8 | 128k q4 | Reading t/s q8 / q4 |
+|---|---|---|---|---|---|---|---|---|---|
+| Qwen3.5 4B (hybrid) MB | 3421 | 3357 | 3829 | 3573 | 4374 | 3862 | 5465 | 4441 | 26.3 / 25.6 |
+| Gemma 4 E4B (sliding window) MB | 5287 | 5234 | 5491 | 5342 | 5763 | 5486 | 6307 | 5774 | 27.0 / 26.1 |
+
+Reading: long input is cheap on both families: 8k→128k costs +2.0 GB (4B) / +1.0 GB (E4B) with the 8-bit cache,
++1.1 GB / +0.5 GB with the 4-bit cache, and reading speed does not change (−3 % with q4). The app's phone context
+is 4–16k, where q4 saves only 50–250 MB → not switched; a "long input" mode (64k on a 12 GB phone) should use q4.
+
+### 3. Prompt cache on storage (ARM): NO reuse after restore on either family
+| Model | Saved | Live follow-up | After restart + restore |
+|---|---|---|---|
+| Qwen3.5 4B | 183 MB | 13 tokens re-read | all 7,454 re-read (284 s), both ways |
+| Gemma 4 E4B | 76 MB | 10 tokens re-read | all 7,455 re-read (277 s), both ways |
+
 
 ## Storage boost — measured (branch `storage-boost`)
 
