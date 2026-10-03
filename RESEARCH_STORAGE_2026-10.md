@@ -39,3 +39,17 @@ fine for a free download). en/ar.wikipedia.org are blocked from this sandbox; th
 same licence) is the build source for a real pack. Egyptian laws: official texts are public-domain-like government works but
 there is no clean machine-readable source — a pack needs manual curation. Crane manuals are copyrighted by makers → only the
 person's own manuals ("my documents" pack).
+
+### Persisted prompt cache (slot save → restart → restore), local, hybrid 0.8B, 7.4k-token document
+`tests/models/prefix_cache_local.py`. Slot save/restore works with `--no-slots` (only `--slot-save-path` is needed).
+
+| Way | Saved file | Same-process follow-up (no restart) | After restart + restore |
+|---|---|---|---|
+| saved after an answer | 69 MB | re-read 13 tokens | **re-read all 7,454 tokens** (98 s) |
+| prefix only (n_predict 0) | 69 MB | re-read 13 tokens | **re-read all 7,454 tokens** (102 s) |
+
+Result: on hybrid (recurrent-state) models the pinned engine cannot reuse a restored slot at all — even the prefix-only
+trick fails, because the server always rewinds at least one token and a recurrent state cannot rewind without the
+in-memory context checkpoints that are not saved (llama.cpp #25913/#28194; fix needs an engine bump, PR #26004).
+**Not implemented.** In-process reuse (cache_prompt / --cache-reuse, already on) works: follow-ups re-read 13 tokens, not 7.4k.
+Ask-a-PDF already sends only ~1.2k tokens of retrieved excerpts per question, so it never needs a 7k-token re-read.

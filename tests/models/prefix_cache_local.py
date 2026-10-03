@@ -7,7 +7,7 @@ import sys, os, json, time, subprocess, urllib.request, tempfile
 M = sys.argv[1]
 BIN = sys.argv[2] if len(sys.argv) > 2 else "tests/build-dl/bin"
 NS = sys.argv[3] if len(sys.argv) > 3 else "--no-slots"
-PORT = 8191
+PORT = 8195
 env = dict(os.environ, LD_LIBRARY_PATH=BIN)
 S = tempfile.mkdtemp()
 
@@ -20,6 +20,7 @@ def serve():
                           "-ctk", "q8_0", "-ctv", "q8_0", "--load-mode", "none", "--cache-ram", "0", "--slot-save-path", S]
                          + ([NS] if NS else []), env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     while True:
+        if p.poll() is not None: raise RuntimeError("server exited")
         try:
             if b"ok" in urllib.request.urlopen(f"http://127.0.0.1:{PORT}/health", timeout=2).read(): return p
         except Exception: time.sleep(.5)
