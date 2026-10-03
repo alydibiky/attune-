@@ -104,6 +104,14 @@ with sync_playwright() as p:
     check("kcal" in page.locator("[data-testid=fit-recipe]").inner_text(), "a recipe shows its calories per serving")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(250)
     check(page.locator("[data-testid=fit-recipes]").count() == 1, "Back from a recipe returns to the list, not out of Fit")
+    # the 25,000-dish recipe book: a typed dish is found, opens, and shows calories
+    page.locator("[data-testid=fit-recipe-search]").fill("salmon broccoli")
+    page.wait_for_timeout(300)
+    check(page.locator("[data-testid^=fit-rc-g]").count() >= 5, "the generated recipe book finds salmon + broccoli dishes")
+    check("25," in page.locator("[data-testid=fit-recipe-search]").get_attribute("placeholder") or "٢٥" in page.locator("[data-testid=fit-recipe-search]").get_attribute("placeholder"), "the search box says how many recipes it searches")
+    page.locator("[data-testid^=fit-rc-g]").first.click(); page.wait_for_selector("[data-testid=fit-recipe]")
+    check("kcal" in page.locator("[data-testid=fit-recipe]").inner_text(), "a generated recipe shows its calories")
+    page.evaluate("window.__attuneBack()"); page.wait_for_timeout(250)
 
     # ---- move: an activity and a guided workout ----
     page.locator("[data-testid=fit-tab-move]").click()

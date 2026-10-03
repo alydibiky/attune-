@@ -7,6 +7,7 @@ import React, { useState, useRef, useMemo, useEffect } from "react";
 import { Mic, Apple, Camera, Search, Plus, Trash2, Loader2, Check, Droplet, Timer, Dumbbell, BarChart3, X, Sparkles, ChevronLeft, Play, Square, Star } from "lucide-react";
 import { getLang } from "./i18n.js";
 import * as F from "./fit.js";
+import { searchGenerated, getGenerated, GENERATED_COUNT } from "./fit-recipegen.js";
 import * as DB from "./fitdb.js";
 import * as R from "./fitread.js";
 import * as P from "./fitplus.js";
@@ -534,8 +535,14 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
   const [busy, setBusy] = useState(false);
   const all = [...st.myRecipes, ...F.RECIPES];
   const nq = q.trim().toLowerCase();
-  const list = all.filter((rc) => (tag === "all" || (tag === "fav" ? st.favs.includes(rc.id) : rc.tags.includes(tag))) &&
+  const curated = all.filter((rc) => (tag === "all" || (tag === "fav" ? st.favs.includes(rc.id) : rc.tags.includes(tag))) &&
     (!nq || (rc.en + " " + rc.ar).toLowerCase().includes(nq) || rc.items.some(([id]) => { const fd = F.food(id); return fd && fd.names.some((n) => n.toLowerCase().includes(nq)); })));
+  // the 25,000-dish recipe book: built on demand; with nothing typed it shows a varied dozen as ideas
+  const generated = useMemo(() => {
+    if (tag === "fav") return st.favs.filter((id) => /^g\d-\d+$/.test(id)).map(getGenerated).filter(Boolean);
+    return searchGenerated(nq, { tag, n: nq ? 40 : 12, ingredientNames: (id) => { const fd = F.food(id); return fd ? fd.names : []; } });
+  }, [nq, tag, st.favs]);
+  const list = [...curated, ...generated];
   const invent = async () => {
     if (!modelReady) { openEngine && openEngine(); return; }
     setBusy(true);
@@ -573,7 +580,7 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
     <div className="space-y-3" data-testid="fit-recipes">
       <button onClick={() => (pro ? setWeek(true) : openPlan && openPlan())} className="w-full rounded-xl bg-emerald-700 py-2.5 text-[13.5px] font-medium text-white" data-testid="fit-week-open">📅 {L("Plan my week + shopping list", "خطط أسبوعي + قايمة المشتريات")}{pro ? "" : " · Pro"}</button>
       <div className="relative"><Search size={15} className="absolute top-2.5 start-2.5 text-slate-500" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} data-testid="fit-recipe-search" placeholder={L(`Search ${all.length} recipes or an ingredient…`, `دوّر في ${all.length} وصفة أو مكوّن…`)} className="w-full rounded-xl bg-slate-800 py-2 ps-8 pe-2 text-[14px] text-white placeholder:text-slate-500" /></div>
+        <input value={q} onChange={(e) => setQ(e.target.value)} data-testid="fit-recipe-search" placeholder={L(`Search ${(all.length + GENERATED_COUNT).toLocaleString()} recipes or an ingredient…`, `دوّر في ${(all.length + GENERATED_COUNT).toLocaleString("en")} وصفة أو مكوّن…`)} className="w-full rounded-xl bg-slate-800 py-2 ps-8 pe-2 text-[14px] text-white placeholder:text-slate-500" /></div>
       <div className="flex gap-1.5 overflow-x-auto pb-1">{TAGS.map(([k, en, a]) => <button key={k} onClick={() => setTag(k)} className={"shrink-0 rounded-full px-3 py-1 text-[12px] " + (tag === k ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300")}>{L(en, a)}</button>)}</div>
       <div className="rounded-xl border border-slate-800 p-2.5 flex gap-2">
         <input value={have} onChange={(e) => setHave(e.target.value)} placeholder={L("What's in your fridge? AI makes a recipe", "عندك إيه في التلاجة؟ الذكاء يعمل وصفة")} className="flex-1 min-w-0 bg-transparent text-[13px] text-white placeholder:text-slate-500" data-testid="fit-invent-text" />
