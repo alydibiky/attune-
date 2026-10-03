@@ -153,6 +153,8 @@ const F = [
 ];
 import { MORE_FOODS, MORE_RECIPES } from "./fit-foods.js";
 import { EXTRA_RECIPES } from "./fit-recipes2.js";
+import * as CZ from "./fit-cuisines.js";
+export { COUNTRIES, setCountry, getCountry, defaultCountry, countryName } from "./fit-cuisines.js";
 export const FOODS = [...F, ...MORE_FOODS].map(([id, en, ar, kcal, p, c, f, fib, portions, group]) => ({ id, en: en.split("|")[0], ar: ar.split("|")[0], names: [...en.split("|"), ...ar.split("|")], kcal, p, c, f, fib, portions, group }));
 const BY_ID = new Map(FOODS.map((x) => [x.id, x]));
 export const food = (id) => BY_ID.get(id) || null;
@@ -160,12 +162,46 @@ export const food = (id) => BY_ID.get(id) || null;
 // ---- matching what someone wrote to the table ----
 const normT = (s) => String(s || "").toLowerCase().replace(/[ً-ْـ]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 const stem = (w) => w.replace(/^(ال|وال|بال)(?=\S{2,})/, "").replace(/(ies)$/, "y").replace(/(es|s)$/, "");
-/** The food in the table that best matches a name (English or Arabic) → food or null. */
-export function matchFood(name) {
+
+// ---- v6.10: the food of each country (fit-cuisines.js) joins the table ----
+// A dish that is already in the table ("same") only adds its names to that food (never a name another food already
+// has); every other dish becomes a food of its own, id "tr.menemen", one serving = the dish's typical portion.
+const BASE_N = FOODS.length;
+const NAMES0 = new Set(); for (const fd of FOODS) for (const n of fd.names) NAMES0.add(normT(n));
+const DISH_FOOD = new Map();   // dish id → food id
+for (const d of CZ.DISHES) if (!d.same) {
+  const fd = { id: d.id, en: d.en, ar: d.ar, local: d.local, names: [d.en, d.local, d.ar, ...d.aliases], kcal: d.kcal, p: d.p, c: d.c, f: d.f, fib: 0, portions: { serving: d.serving }, group: "dishes", cc: d.cc };
+  FOODS.push(fd); BY_ID.set(fd.id, fd); DISH_FOOD.set(d.id, d.id);
+}
+const DISH_BY_ID = new Map(CZ.DISHES.map((d) => [d.id, d]));
+for (const d of CZ.DISHES) if (d.same) {
+  let t = d.same, k = 0; while (DISH_BY_ID.has(t) && DISH_BY_ID.get(t).same && k++ < 5) t = DISH_BY_ID.get(t).same;
+  const fd = BY_ID.get(t); if (!fd) continue;
+  DISH_FOOD.set(d.id, fd.id);
+  if (FOODS.indexOf(fd) < BASE_N) for (const n of [d.en, d.local, d.ar, ...d.aliases]) { const k2 = normT(n); if (k2 && !NAMES0.has(k2)) { fd.names.push(n); NAMES0.add(k2); } }
+}
+/** The food-table id a country's dish is logged as ("eg.koshari" → "koshari"). */
+export const dishFoodId = (dishId) => DISH_FOOD.get(dishId) || null;
+const CC_FOODS = new Map();
+/** The food ids of one country's dishes. */
+export function countryFoodIds(cc) {
+  if (!CC_FOODS.has(cc)) CC_FOODS.set(cc, new Set(CZ.dishesOf(cc).map((d) => DISH_FOOD.get(d.id)).filter(Boolean)));
+  return CC_FOODS.get(cc);
+}
+let NAME_IX = null;
+const nameIx = () => { if (!NAME_IX) { NAME_IX = new Map(); for (const fd of FOODS) for (const n of fd.names) { const k = normT(n); if (!k) continue; const l = NAME_IX.get(k) || []; if (!l.includes(fd)) l.push(fd); NAME_IX.set(k, l); } } return NAME_IX; };
+
+/** The food in the table that best matches a name (English or Arabic) → food or null.
+ *  v6.10: a name two foods share goes to the chosen country's dish; another country's dish is found by its exact name only. */
+export function matchFood(name, cc = CZ.getCountry()) {
   const q = normT(name); if (!q) return null;
+  const exact = nameIx().get(q);
+  const mine = countryFoodIds(cc);
+  if (exact) return exact.find((fd) => fd.cc && mine.has(fd.id)) || exact.find((fd) => !fd.cc) || exact[0];
   const qw = q.split(" ").map(stem).filter((w) => w.length > 1);
   let best = null, bestS = 0;
   for (const fd of FOODS) {
+    if (fd.cc && !mine.has(fd.id)) continue;
     for (const n0 of fd.names) {
       const n = normT(n0);
       if (n === q) return fd;
@@ -550,7 +586,7 @@ export function dayTips(tot, tg, lang) {
 
 // ---- 7. search and a day's meal plan, by code ----
 /** Foods whose name (English or Arabic) contains the words typed → up to `n`, best first. */
-export function searchFoods(q, n = 30) {
+export function searchFoods(q, n = 30, cc = CZ.getCountry()) {
   const t = normT(q); if (!t) return [];
   const exact = [], starts = [], has = [];
   for (const fd of FOODS) {
@@ -559,7 +595,11 @@ export function searchFoods(q, n = 30) {
     else if (names.some((x) => x.startsWith(t))) starts.push(fd);
     else if (names.some((x) => x.includes(t)) || t.split(" ").every((w) => names.some((x) => x.includes(stem(w))))) has.push(fd);
   }
-  return [...exact, ...starts, ...has].slice(0, n);
+  // v6.10: the chosen country's dishes first (Egypt: the table's own order), then the table, other countries' dishes last
+  const mine = countryFoodIds(cc);
+  const rank = (fd) => (fd.cc && fd.cc !== cc ? 2 : cc !== "eg" && mine.has(fd.id) ? 0 : 1);
+  const byRank = (list) => [0, 1, 2].flatMap((r) => list.filter((fd) => rank(fd) === r));
+  return [...byRank(exact), ...byRank([...starts, ...has])].slice(0, n);   // the exact name wins wherever it is from
 }
 const SPLIT = { breakfast: 0.25, lunch: 0.35, dinner: 0.3, snacks: 0.1 };
 const SLOT_TAG = { breakfast: "breakfast", lunch: "lunch", dinner: "dinner", snacks: "snack" };
@@ -568,13 +608,18 @@ const SLOT_TAG = { breakfast: "breakfast", lunch: "lunch", dinner: "dinner", sna
  * (25/35/30/10 %), the recipe that fits the diet, portions scaled in quarters (0.5–2×).
  * seed changes the picks (day of the year → a different day each day). → { meals: {slot: {recipe, x, kcal, p, c, f}}, total }
  */
-export function mealPlan(tg, { diet = "balanced", seed = 0, avoid = [] } = {}) {
+export function mealPlan(tg, { diet = "balanced", seed = 0, avoid = [], country = CZ.getCountry() } = {}) {
   if (!tg) return null;
   const ok = (rc) => !avoid.includes(rc.id) && (diet !== "vegetarian" || rc.tags.includes("vegetarian")) && (diet === "keto" ? recipeNutrients(rc).c < 12 : diet !== "low-carb" || rc.tags.includes("low-carb") || recipeNutrients(rc).c < 25);
   const meals = {}; const used = new Set();
+  // v6.10: breakfast, lunch and dinner from the chosen country's own dishes; the snack (and any meal the country's
+  // list can't fill for this diet) from the recipe book's international staples. Egypt: the recipe book, as before.
+  const local = country && country !== "eg" ? countryRecipes(country).filter((rc) => !rc.tags.includes("drink")) : null;
   MEALS.forEach((slot, si) => {
     const want = tg.kcal * SPLIT[slot];
-    let pool = RECIPES.filter((rc) => ok(rc) && !used.has(rc.id) && (rc.tags.includes(SLOT_TAG[slot]) || (slot !== "breakfast" && slot !== "snacks" && rc.tags.some((x) => x === "lunch" || x === "dinner"))));
+    const fits = (rc) => ok(rc) && !used.has(rc.id) && (rc.tags.includes(SLOT_TAG[slot]) || (slot !== "breakfast" && slot !== "snacks" && rc.tags.some((x) => x === "lunch" || x === "dinner")));
+    let pool = local && local.length && slot !== "snacks" ? local.filter(fits) : [];
+    if (!pool.length) pool = RECIPES.filter(fits);
     if (!pool.length) pool = RECIPES.filter((rc) => !used.has(rc.id) && rc.tags.includes(SLOT_TAG[slot]));
     if (!pool.length) return;
     // closest to the wanted calories after scaling, with the protein-dense ones first; seed rotates ties
@@ -587,6 +632,26 @@ export function mealPlan(tg, { diet = "balanced", seed = 0, avoid = [] } = {}) {
   });
   return { meals, total: sumN(Object.values(meals)) };
 }
+const CC_RECIPES = new Map();
+/** v6.10: a country's dishes as one-serving "recipes" (id "dish:tr.menemen") for the day's plan and the Recipes list.
+ *  Tags: the meals it is eaten at, "c-tr", and vegetarian / high-protein / low-carb from its numbers. */
+export function countryRecipes(cc) {
+  if (CC_RECIPES.has(cc)) return CC_RECIPES.get(cc);
+  const out = [];
+  for (const d of CZ.dishesOf(cc)) {
+    const fid = DISH_FOOD.get(d.id), fd = fid && food(fid); if (!fd) continue;
+    const tags = [...d.meals, "c-" + cc];
+    if (d.tags.includes("veg")) tags.push("vegetarian");
+    if (d.tags.includes("drink")) tags.push("drink");
+    if (fd.p * 4 / Math.max(fd.kcal, 1) >= 0.25) tags.push("high-protein");
+    if (fd.c <= 10) tags.push("low-carb");
+    out.push({ id: "dish:" + d.id, en: d.en, ar: d.ar, local: d.local, serves: 1, mins: 0, tags, items: [[fid, d.serving]], steps: [], dish: d.id });
+  }
+  CC_RECIPES.set(cc, out);
+  return out;
+}
+/** A country dish "recipe" by its id ("dish:tr.menemen") — for favourites and the plan. */
+export const countryRecipe = (id) => { const m = /^dish:([a-z]{2})\./.exec(String(id || "")); return m ? countryRecipes(m[1]).find((rc) => rc.id === id) || null : null; };
 /** "I ate 2 eggs and…" / «كلت طبق كشري» → true: Chat offers to log it in Fit. */
 export function looksLikeFoodLog(text) {
   const t = String(text || "");
@@ -606,12 +671,17 @@ export function itemFromFood(fd, qty = 1, unit = "serving") {
 // judged against things of known size, a second look for hidden calories (oil, butter, sauce, sugar,
 // bread on the side), nutrition labels read exactly, and your corrections remembered.
 // v6.3: the names the model should pick from — a closed list makes a small vision model far more accurate
-export const DISH_NAMES = [...new Set(FOODS.filter((f) => !/-(raw|dry)$|^(molokhia-leaves|beef-mince-raw)$/.test(f.id)).map((f) => f.en.replace(/\s*\(.*\)$/, "")))];
+export const DISH_NAMES = [...new Set(FOODS.filter((f) => !f.cc && !/-(raw|dry)$|^(molokhia-leaves|beef-mince-raw)$/.test(f.id)).map((f) => f.en.replace(/\s*\(.*\)$/, "")))];
 // v6.10: the prompt names only the dishes a small vision model most often misses (≈40 instead of 350+ — the long list
 // was ≈1.8k tokens to read before every photo, a big part of the wait on a phone); any other name is matched in code
 // (matchFood, the offline reader, the food pack).
 export const PHOTO_HINTS = ["Koshari", "Ful medames", "Taameya (falafel)", "Baladi bread", "Fried egg", "Boiled egg", "Molokhia", "Mahshi", "Fatta", "Hawawshi", "Shawarma", "Kofta", "Grilled chicken", "Fried chicken", "White rice", "Pasta", "Macarona bechamel", "Okra stew (bamia)", "Green beans stew (fasolia)", "Lentil soup", "Feteer", "Feta cheese", "White cheese", "Foul sandwich", "Taameya sandwich", "Liver (kebda)", "Grilled fish", "Fries", "Green salad", "Tahini", "Baba ghanoush", "Pickles", "Basbousa", "Kunafa", "Om Ali", "Rice pudding", "Dates", "Tea with sugar", "Cola"];
-export function photoMessages(note) {
+/** v6.10: the hints for the chosen country (its own dishes + everyday staples); Egypt keeps PHOTO_HINTS. */
+export const photoHintsFor = (cc = CZ.getCountry()) => CZ.photoHints(cc) || PHOTO_HINTS;
+/** How the prompt names local dishes: "Egyptian dishes" → "dishes from Turkey". */
+const localWord = (cc) => (cc && cc !== "eg" && CZ.COUNTRIES[cc] ? "dishes from " + CZ.COUNTRIES[cc].en : "Egyptian dishes");
+export function photoMessages(note, cc = CZ.getCountry()) {
+  const eg = !cc || cc === "eg";
   return [
     { role: "system", content: `You are a dietitian looking at a photo of food. Reply with ONLY a JSON object:
 {"kind": "meal" or "label" (a nutrition facts table is visible) or "package" (a packaged product, no table visible),
@@ -623,17 +693,17 @@ export function photoMessages(note) {
             "height": "flat" | "normal" | "heaped", "grams": your estimate as eaten,
             "confidence": 0 to 1, "box": [x, y, w, h] where it is in the photo, each 0 to 1}],
  "label": {"name": "product name", "per": "100g" or "serving", "serving_g": number or null, "kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number or null} or null}
-Rules: one item per separate food (a sandwich or a mixed dish like koshari is ONE item). Count what can be counted. Judge sizes against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon, a 330 ml can, a baladi loaf, a hand. If unsure, give your best guess, alternatives, and a lower confidence — never invent a food you can't see. For a label, copy its numbers exactly.
-Use short common names in English (Egyptian dishes by their usual name), e.g. ${PHOTO_HINTS.join(", ")}.${note ? "\nThe person adds: " + note : ""}` },
+Rules: one item per separate food (a sandwich or a mixed dish like ${eg ? "koshari" : photoHintsFor(cc)[0]} is ONE item). Count what can be counted. Judge sizes against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon, a 330 ml can, ${eg ? "a baladi loaf" : "a bread loaf"}, a hand. If unsure, give your best guess, alternatives, and a lower confidence — never invent a food you can't see. For a label, copy its numbers exactly.
+Use short common names in English (${localWord(cc)} by their usual name), e.g. ${photoHintsFor(cc).join(", ")}.${note ? "\nThe person adds: " + note : ""}` },
     { role: "user", content: "What is in this photo?" },
   ];
 }
 /** The zoomed second look at one unsure food. */
-export function zoomMessages(item) {
+export function zoomMessages(item, cc = CZ.getCountry()) {
   return [
     { role: "system", content: `This is a close-up of one food from a meal photo. The first look guessed: ${[item.said || item.name, ...((item.alts || []).map((a) => a.label))].filter(Boolean).join(", ")}.
 Which food is it really? Reply with ONLY a JSON object: {"food": "short common name", "alternatives": ["…", "…"], "confidence": 0 to 1}.
-Use a short common name, e.g. ${PHOTO_HINTS.join(", ")}.` },
+Use a short common name, e.g. ${photoHintsFor(cc).join(", ")}.` },
     { role: "user", content: "What is this?" },
   ];
 }

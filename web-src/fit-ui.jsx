@@ -94,6 +94,8 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const [st, setSt] = useState(load);
   MEAL_NAMES = st.ramadan && st.ramadan.on ? RAMADAN_NAMES : MEAL_NAMES0;
   const upd = (fn) => setSt((s) => { const n = fn(s); save(n); return n; });
+  // v6.10: the food of the chosen country (Settings → «Food from»); the phone's own country until one is chosen
+  const country = F.setCountry(st.country || F.defaultCountry());
   const [tab, setTab] = useSticky("fit:tab", "today");
   const [dayKey, setDayKey] = useState(F.today());
   const day = st.days[dayKey] || { meals: {}, water: 0, workouts: [] };
@@ -475,7 +477,8 @@ function Today({ L, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdd
   const [now, setNow] = useState(Date.now());
   useEffect(() => { if (!st.fast) return; const t = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(t); }, [st.fast]);
   const fs = F.fastState(st.fast, now);
-  const plan = useMemo(() => F.mealPlan(tg, { diet: st.profile.diet, seed: Math.floor(Date.parse(dayKey) / 864e5) }), [tg, dayKey, st.profile.diet]);
+  const country = F.getCountry();
+  const plan = useMemo(() => F.mealPlan(tg, { diet: st.profile.diet, seed: Math.floor(Date.parse(dayKey) / 864e5), country }), [tg, dayKey, st.profile.diet, country]);
   const tips = F.dayTips(tot, tg, ar ? "ar" : "en");
   const hm = (ms) => { const m = Math.max(0, Math.round(ms / 60000)); return Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0"); };
   return (
@@ -563,10 +566,14 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
   useSubBack(week, () => setWeek(false));
   const [have, setHave] = useState("");
   const [busy, setBusy] = useState(false);
-  const all = [...st.myRecipes, ...F.RECIPES];
+  // v6.10: the chosen country's dishes first; its tag replaces «Egyptian» when the country isn't Egypt
+  const cc = F.getCountry();
+  const all = [...st.myRecipes, ...(cc !== "eg" ? F.countryRecipes(cc) : []), ...F.RECIPES];
+  const tags = cc === "eg" ? TAGS : TAGS.map((t) => (t[0] === "egyptian" ? ["c-" + cc, F.countryName(cc, false), F.countryName(cc, true)] : t));
+  useEffect(() => { if (tag !== "all" && tag !== "fav" && !tags.some((t) => t[0] === tag)) setTag("all"); }, [cc]);   // another country's tag left over
   const nq = q.trim().toLowerCase();
   const curated = all.filter((rc) => (tag === "all" || (tag === "fav" ? st.favs.includes(rc.id) : rc.tags.includes(tag))) &&
-    (!nq || (rc.en + " " + rc.ar).toLowerCase().includes(nq) || rc.items.some(([id]) => { const fd = F.food(id); return fd && fd.names.some((n) => n.toLowerCase().includes(nq)); })));
+    (!nq || (rc.en + " " + rc.ar + " " + (rc.local || "")).toLowerCase().includes(nq) || rc.items.some(([id]) => { const fd = F.food(id); return fd && fd.names.some((n) => n.toLowerCase().includes(nq)); })));
   // the 25,000-dish recipe book: built on demand; with nothing typed it shows a varied dozen as ideas
   const generated = useMemo(() => {
     if (tag === "fav") return st.favs.filter((id) => /^g\d-\d+$/.test(id)).map(getGenerated).filter(Boolean);
@@ -594,7 +601,7 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
           <h3 className="text-white font-semibold text-[16px]">{ar && open.ar ? open.ar : open.en}</h3>
           <button onClick={() => upd((s) => ({ ...s, favs: fav ? s.favs.filter((x) => x !== open.id) : [...s.favs, open.id] }))} className={fav ? "text-amber-300" : "text-slate-500"}><Star size={18} /></button>
         </div>
-        <div className="text-[12.5px] text-slate-400">{open.mins} {L("min", "دقيقة")} · {L("serves", "يكفي")} {open.serves} · <b className="text-white">{n.kcal} kcal</b> {L("a serving", "للفرد")} · P {n.p} · C {n.c} · F {n.f}</div>
+        <div className="text-[12.5px] text-slate-400">{open.mins ? <>{open.mins} {L("min", "دقيقة")} · </> : null}{open.dish ? <>{L("one serving", "حصة واحدة")} · </> : <>{L("serves", "يكفي")} {open.serves} · </>} <b className="text-white">{n.kcal} kcal</b> {L("a serving", "للفرد")} · P {n.p} · C {n.c} · F {n.f}</div>
         <div className="rounded-xl bg-slate-900/60 p-3 space-y-1">
           {open.items.map(([id, g], i) => { const fd = F.food(id); return <div key={i} className="flex justify-between text-[13px]"><span className="text-slate-200">{fd ? (ar ? fd.ar : fd.en) : id}</span><span className="text-slate-400 tabular-nums">{g} g</span></div>; })}
           {(open.unknown || []).map((u, i) => <div key={"u" + i} className="flex justify-between text-[13px]"><span className="text-amber-200">{u.name}</span><span className="text-slate-500">{u.grams} g · {L("not counted", "مش محسوب")}</span></div>)}
@@ -611,7 +618,7 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
       <button onClick={() => (pro ? setWeek(true) : openPlan && openPlan())} className="w-full rounded-xl bg-emerald-700 py-2.5 text-[13.5px] font-medium text-white" data-testid="fit-week-open">📅 {L("Plan my week + shopping list", "خطط أسبوعي + قايمة المشتريات")}{pro ? "" : " · Pro"}</button>
       <div className="relative"><Search size={15} className="absolute top-2.5 start-2.5 text-slate-500" />
         <input value={q} onChange={(e) => setQ(e.target.value)} data-testid="fit-recipe-search" placeholder={L(`Search ${(all.length + GENERATED_COUNT).toLocaleString()} recipes or an ingredient…`, `دوّر في ${(all.length + GENERATED_COUNT).toLocaleString("en")} وصفة أو مكوّن…`)} className="w-full rounded-xl bg-slate-800 py-2 ps-8 pe-2 text-[14px] text-white placeholder:text-slate-500" /></div>
-      <div className="flex gap-1.5 overflow-x-auto pb-1">{TAGS.map(([k, en, a]) => <button key={k} onClick={() => setTag(k)} className={"shrink-0 rounded-full px-3 py-1 text-[12px] " + (tag === k ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300")}>{L(en, a)}</button>)}</div>
+      <div className="flex gap-1.5 overflow-x-auto pb-1">{tags.map(([k, en, a]) => <button key={k} onClick={() => setTag(k)} className={"shrink-0 rounded-full px-3 py-1 text-[12px] " + (tag === k ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300")}>{L(en, a)}</button>)}</div>
       <div className="rounded-xl border border-slate-800 p-2.5 flex gap-2">
         <input value={have} onChange={(e) => setHave(e.target.value)} placeholder={L("What's in your fridge? AI makes a recipe", "عندك إيه في التلاجة؟ الذكاء يعمل وصفة")} className="flex-1 min-w-0 bg-transparent text-[13px] text-white placeholder:text-slate-500" data-testid="fit-invent-text" />
         <button onClick={invent} disabled={busy} className="shrink-0 rounded-lg bg-violet-600 px-3 py-1.5 text-[12.5px] text-white flex items-center gap-1" data-testid="fit-invent">{busy ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}{L("Create", "اعمل")}</button>
@@ -619,7 +626,7 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
       {list.map((rc) => { const n = F.recipeNutrients(rc); return (
         <button key={rc.id} onClick={() => setOpen(rc)} className="w-full text-start rounded-xl bg-slate-900/60 border border-slate-800 px-3 py-2.5" data-testid={"fit-rc-" + rc.id}>
           <div className="text-[14px] text-white">{ar && rc.ar ? rc.ar : rc.en}</div>
-          <div className="text-[12px] text-slate-400 tabular-nums">{n.kcal} kcal · P {n.p} g · {rc.mins} {L("min", "دقيقة")}</div>
+          <div className="text-[12px] text-slate-400 tabular-nums">{n.kcal} kcal · P {n.p} g{rc.mins ? <> · {rc.mins} {L("min", "دقيقة")}</> : <> · {n.grams} g</>}</div>
         </button>); })}
       {!list.length && <div className="text-center text-[13px] text-slate-500 py-6">{L("No recipe matches", "مفيش وصفة مطابقة")}</div>}
     </div>

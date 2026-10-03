@@ -32,9 +32,10 @@ export function withLimit(p, ms, onTimeout) {
 }
 
 /** The quick look: only the names, comma-separated — a handful of output tokens, so it fits in what's left. */
-export function namesMessages(note) {
+export function namesMessages(note, cc = F.getCountry()) {
+  const local = !cc || cc === "eg" ? "the Egyptian/Arabic dish name" : "the usual dish name in " + ((F.COUNTRIES[cc] || {}).en || "the country");   // v6.10: the chosen country's dishes
   return [
-    { role: "system", content: `List the foods and drinks you can see in this photo, comma-separated, most visible first. Use short common names (English, or the Egyptian/Arabic dish name). Count countable things, e.g. "2 fried eggs, baladi bread". Nothing else. If there is no food, reply: none.${note ? "\nThe person adds: " + note : ""}` },
+    { role: "system", content: `List the foods and drinks you can see in this photo, comma-separated, most visible first. Use short common names (English, or ${local}). Count countable things, e.g. "2 fried eggs, baladi bread". Nothing else. If there is no food, reply: none.${note ? "\nThe person adds: " + note : ""}` },
     { role: "user", content: "Which foods?" },
   ];
 }

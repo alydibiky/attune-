@@ -10,7 +10,8 @@
      · "X with Y" / «X بـY»: Y is its own food (honey, milk, chicken) unless X-with-Y is one dish
      · meals: "a big mac meal" → burger + fries + drink; "no sugar" / «من غير سكر» adds nothing
    Every amount then passes a plausibility check (no 500 g of oil, no 30 kg of chicken).        */
-import { FOODS, food, matchFood, gramsOf, nutrients, unitNorm, learned } from "./fit.js";
+import { FOODS, food, matchFood, gramsOf, nutrients, unitNorm, learned, dishFoodId, getCountry } from "./fit.js";
+import { dishesOf } from "./fit-cuisines.js";
 
 const r1 = (v) => Math.round(v * 10) / 10;
 export const normA = (s) => String(s || "").toLowerCase()
@@ -120,6 +121,24 @@ const A = [
 const ALIAS = [];
 for (const [names, id, opt] of A) for (const n of names.split("|")) ALIAS.push({ n: normA(n), id, opt: opt || {} });
 ALIAS.sort((a, b) => b.n.length - a.n.length);
+// v6.10: the chosen country's dish names (English, local script, Arabic, aliases) join the phrases, ahead of the
+// shared ones on a tie («خبز» in Morocco is khobz). Egypt: the list above already covers its dishes.
+const CC_ALIAS = new Map();
+function aliasesFor(cc) {
+  if (!cc || cc === "eg") return { list: ALIAS, words: null };
+  if (CC_ALIAS.has(cc)) return CC_ALIAS.get(cc);
+  const own = [], words = new Set();
+  for (const d of dishesOf(cc)) {
+    const id = dishFoodId(d.id); if (!id) continue;
+    for (const nm of [d.en, d.local, d.ar, ...d.aliases]) {
+      const n = normA(nm).replace(/[(),.]/g, " ").replace(/\s+/g, " ").trim();
+      if (n.length < 2 || own.some((a) => a.n === n)) continue;
+      own.push({ n, id, opt: {} }); for (const w of n.split(" ")) words.add(w);
+    }
+  }
+  const v = { list: [...own, ...ALIAS].sort((a, b) => b.n.length - a.n.length), words };
+  CC_ALIAS.set(cc, v); return v;
+}
 
 // ---- numbers, units, sizes ----
 const WORDN = Object.assign(Object.create(null), { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twelve: 12, half: 0.5, quarter: 0.25, third: 1 / 3, couple: 2, few: 3,
@@ -155,9 +174,9 @@ function dist(a, b, max) {
     rowMin = Math.min(rowMin, d[i][j]); } if (rowMin > max) return max + 1; }
   return d[a.length][b.length];
 }
-export function fixTypos(t) {
+export function fixTypos(t, extra = null) {
   return t.split(" ").map((w) => {
-    if (w.length < 3 || /\d/.test(w) || VOCAB.has(w) || KEEP.has(w) || WORDN[w] != null || DUALS[w]) return w;
+    if (w.length < 3 || /\d/.test(w) || VOCAB.has(w) || KEEP.has(w) || WORDN[w] != null || DUALS[w] || (extra && extra.has(w))) return w;   // a word of the chosen country's dishes is not a typo
     // «ورز», «ورغيف», «بالشعريه»: a glued «و/ب/بال/ال» before a word the reader knows is not a typo
     const bare = w.replace(/^(وبال|وال|بال|و|ب|ال)/, "");
     if (bare !== w && (WORDS.has(bare) || KEEP.has(bare) || WORDN[bare] != null || DUALS[bare])) return w;
@@ -193,12 +212,13 @@ const STEW = new Set(["bamia", "fasolia", "peas-carrots-stew", "potato-stew", "z
  * Read one sentence of eating. → { items: [logged items], unknown: ["words the code couldn't place"] }
  * Items carry: id, name, ar, qty, unit, grams, kcal, p, c, f, fib, and flag (an amount that looks wrong).
  */
-export function readMealText(text) {
+export function readMealText(text, cc = getCountry()) {
+  const CA = aliasesFor(cc);
   let t = " " + normA(text).replace(/([,،.;!?؛])/g, " $1 ") + " ";
   // shops and brands say where, not what: «من عند جاد», "from KFC" → the food is what's left
   t = t.replace(/(^|\s)(kfc|كنتاكي)(?=\s|$)/g, " fried chicken ").replace(/(^|\s)(pizza hut|بيتزا هت)(?=\s|$)/g, " pizza ").replace(/(^|\s)(mcdonalds|mcdonald's|mcdonald|ماكدونالدز|ماك|starbucks|ستاربكس|buffalo|بافلو|domino's|dominos|papa johns|hardees|هارديز|من عند|from)(?=\s|$)/g, " ")
     .replace(/(^|\s)(جاد|التحرير|ابو طارق|ابو شقره|مؤمن|كوك دور)(?=\s|$)/g, " ").replace(/\s+/g, " ");
-  t = " " + fixTypos(t.trim()) + " ";   // after the shop names: "pizza hut" must not become "pizza hot"
+  t = " " + fixTypos(t.trim(), CA.words) + " ";   // after the shop names: "pizza hut" must not become "pizza hot"
   // filler: "I (just) had / ate", "for lunch", «كلت», «فطرت» …
   t = t.replace(/\b(i|i've|ive|just|had|ate|have|eaten|drank|drink|for|my|today|breakfast|lunch|dinner|snack|supper)\b/g, " ")
     .replace(/(^|\s)(كلت|اكلت|فطرت|اتغديت|اتعشيت|شربت|النهارده|فطار|غدا|عشا|سناك|على|علي)(?=\s|$)/g, " ").replace(/:/g, " ");
@@ -219,7 +239,7 @@ export function readMealText(text) {
   t = t.replace(/(\s)(و|ب|وب)(?=(معلقتين|معلقه|معالق|كوبايه|كوبايتين|رغيف|رغيفين|طبق|طبقين|علبه|علبتين|حته|حتتين|بيضتين|ساندوتش|سندوتش|فنجان|كيس|\d)(\s|$|\d))/g, " + ");
   // aliases → markers, longest first
   const marks = [];
-  for (const a of ALIAS) {
+  for (const a of CA.list) {
     // «وبيبسي», «بالعسل», «واللبن», «الرز»: a glued «و/ب/بال/ال» before a food — «و»/«ب» start a new part
     const rx = new RegExp("(^|\\s)(وبال|وال|بال|و|ب|ال)?" + a.n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?=\\s|$)", "g");
     t = t.replace(rx, (m, pre, glued) => {

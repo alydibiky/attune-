@@ -6,7 +6,7 @@
    asked through the phone (NativeBridge.fetchJson: only these two hosts, the Offline lock and the
    Network log apply), and every food found is kept on the phone, so it works offline next time.
    Every number is read from the database and checked by code (energy vs macros); nothing guessed. */
-import { FOODS, matchFood } from "./fit.js";
+import { FOODS, matchFood, getCountry } from "./fit.js";
 import * as FP from "./foodpack.js";
 
 export const CACHE_KEY = "attune:fit:foods:v1";
@@ -110,8 +110,10 @@ function score(f, q) {
   if (list.includes(qn)) return 30 + (f.src === "table" ? 4 : 0);                 // the exact name first
   const hit = words.filter((w) => names.includes(w)).length;
   if (!hit) return -1;
-  return hit / words.length * 10 + (names.startsWith(qn) ? 3 : 0) + (f.egypt ? 2 : 0) + (f.src === "table" ? 4 : f.src === "usda" ? 1 : 0) - (f.check ? 3 : 0);
+  return hit / words.length * 10 + (names.startsWith(qn) ? 3 : 0) + (f.egypt ? 2 : 0) + (f.src === "table" ? 4 : f.src === "usda" ? 1 : 0) - (f.check ? 3 : 0) + countryBonus(f);
 }
+// v6.10: the chosen country's dishes rank higher, another country's dishes lower (Egypt: as before)
+function countryBonus(f) { if (!f.cc) return 0; const cc = getCountry(); return f.cc !== cc ? -2 : cc !== "eg" ? 3 : 0; }
 // ---- the offline food pack (v6.18): 1,000,000+ packaged foods in IndexedDB, searched by code ----
 let packStore = null;
 export const getPackStore = () => packStore || (packStore = typeof indexedDB !== "undefined" ? FP.idbStore() : null);

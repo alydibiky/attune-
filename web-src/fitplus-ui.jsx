@@ -212,6 +212,11 @@ export function FitSettings({ L, ar, st, upd, native, flash, packText }) {
   };
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="fit-settings">
+      {/* v6.10: whose food the app suggests, reads and recognises in photos */}
+      <label className="flex flex-wrap items-center gap-2 text-[13px] text-slate-200">🍽 {L("Food from", "أكل بلد")}
+        <select value={F.getCountry()} onChange={(e) => { F.setCountry(e.target.value); upd((s) => ({ ...s, country: e.target.value })); }} className="rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" data-testid="fit-country">
+          {Object.entries(F.COUNTRIES).sort((a, b) => (ar ? a[1].ar.localeCompare(b[1].ar, "ar") : a[1].en.localeCompare(b[1].en))).map(([k, c]) => <option key={k} value={k}>{c.flag} {ar ? c.ar : c.en}</option>)}</select></label>
+      <p className="text-[11.5px] text-slate-500">{L("Suggestions, food search, typed meals and photos use this country's dishes first.", "الاقتراحات والبحث والوجبات المكتوبة والصور بتبدأ بأكل البلد ده.")}</p>
       <label className="flex items-center gap-2 text-[13px] text-slate-200"><input type="checkbox" checked={!!rm.on} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, on: e.target.checked } }))} data-testid="fit-ramadan-on" />🌙 {L("Ramadan mode (Suhoor, Iftar, fasting times)", "وضع رمضان (سحور، فطار، مواعيد الصيام)")}</label>
       {rm.on ? <select value={rm.city} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, city: e.target.value } }))} className="rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" data-testid="fit-ramadan-city">
         {Object.entries(P.CITIES).map(([k, c]) => <option key={k} value={k}>{ar ? c.ar : c.en}</option>)}</select> : null}
