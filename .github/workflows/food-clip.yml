@@ -22,9 +22,12 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - name: Python packages
-        run: pip install numpy onnxruntime pyarrow pillow
+        run: pip install numpy onnxruntime tokenizers pyarrow pillow
       - name: Build the bank and fetch the model and runtime
-        run: python3 tools/build_food_clip_bank.py out | tee build.log
+        run: |
+          set -o pipefail
+          python3 tools/build_food_clip_bank.py out | tee build.log
+          test -s out/food-clip-manifest.json && test -s out/food-clip-vision.onnx
       - name: Summary
         run: |
           {
