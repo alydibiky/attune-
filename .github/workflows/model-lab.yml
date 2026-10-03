@@ -37,6 +37,9 @@ jobs:
           - { name: gemma4-e4b,  search: "gemma-4-E4B-it-GGUF",   quants: "Q4_0,Q4_K_M,IQ4_XS", need: "e4b" }
           - { name: gemma4-12b,  search: "gemma-4-12b-it-GGUF",   quants: "Q4_0,IQ4_XS,Q4_K_M", need: "12b" }
           - { name: granite42-8b, search: "granite-4.2-8b-GGUF",  quants: "IQ4_XS,Q4_K_M,Q4_0", need: "granite" }
+          - { name: gemma4-e2b,  search: "gemma-4-E2B-it-GGUF",   quants: "Q4_0,Q4_K_M,IQ4_XS", need: "e2b" }
+          - { name: lfm25-2b6,   search: "LFM2.5-2.6B-GGUF",      quants: "Q4_K_M,Q4_0,IQ4_XS", need: "lfm2.5" }
+          - { name: lfm25-1b2,   search: "LFM2.5-1.2B-Instruct-GGUF", quants: "Q4_K_M,Q4_0", need: "lfm2.5" }
           - { name: lfm2-8b-a1b, search: "LFM2-8B-A1B",           quants: "Q4_K_M,IQ4_XS,Q4_0,Q8_0", need: "lfm2" }
     steps:
       - uses: actions/checkout@v4
