@@ -78,6 +78,20 @@ with sync_playwright() as p:
     check("Haggling coach" in pv and "opening offer" in pv and "it will add this" in pv.lower(), "an imported skill is shown in full before it is kept")
     page.click("[data-testid=skill-import-save]", timeout=4000); page.wait_for_timeout(300)
     check(page.locator("[data-testid=skill-row]").count() == 2 and "imported" in page.locator("[data-testid=skills-page]").inner_text(), "it is added and marked imported")
+
+    # ---- v6.18: a skill with a checklist, facts and a program
+    open_skills(page)
+    page.click("[data-testid=skill-open-import]"); page.wait_for_selector("[data-testid=skill-import]")
+    page.fill("[data-testid=skill-import-text]", "---\nname: Quote maths\ncommand: /qm\ndescription: quotation arithmetic\n---\nWrite the quote using the computed total.\n\n## Checklist\n- VAT shown separately\n\n## Reference\nMobilisation is 4000 EGP.\n\n## Script\n```js\nconst n = INPUT.match(/\\d+/g).map(Number);\nconsole.log('days x rate = ' + n[0] * n[1]);\n```\n")
+    page.wait_for_selector("[data-testid=skill-import-preview]", timeout=3000)
+    check(page.locator("[data-testid=skill-import-script]").count() == 1, "an imported program is shown in full before it is kept")
+    page.click("[data-testid=skill-import-save]"); page.wait_for_timeout(300)
+    page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
+    if page.locator("textarea[placeholder='Message Attune']").count() == 0:
+        page.locator("nav button").first.click(); page.wait_for_timeout(300)
+    send(page, "/qm 3 days at 9000")
+    u = last_user(page)
+    check("27000" in u and "VAT shown separately" in u and "Mobilisation" in u, "the program's result, the checklist and the facts reach the model")
     check(real_errors(errors) == [], "no errors: %s" % real_errors(errors)[:3])
     ctx.close(); br.close()
 env.close()

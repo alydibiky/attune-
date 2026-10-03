@@ -951,7 +951,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const sk = api.skillFor(typed);
         if (sk) { content += sk.block; extra.skill = sk.id; }
       }
-      if (answer == null && uSk && uSk.block) { content += uSk.block; extra.userSkills = uSk.names; }
+      if (answer == null && uSk && uSk.block) {
+        let blk = uSk.block;
+        if (api.runSkillScripts && uSk.matches && uSk.matches.some((x) => x.script && x.script.code)) {
+          const res = await api.runSkillScripts(uSk.matches, uSk.stripped != null ? uSk.stripped : typed);
+          if (Object.keys(res).length) blk = api.userSkillBlock ? api.userSkillBlock(uSk.matches, uSk.stripped != null ? uSk.stripped : typed, res) : blk;
+        }
+        content += blk; extra.userSkills = uSk.names;
+      }
       // v5.26 tricks: every part of a multi-question message gets answered; reasoning and
       // maths questions are shown twice (re-reading → fewer slips). (boost.js)
       // v5.29 — the tips library: the few expert tips that fit THIS question (2 for small

@@ -6,7 +6,7 @@
    Pure logic; tests in tests/unit/v614skills.test.mjs.                                                              */
 
 const KEY = "attune:skills:v1";
-export const LIMITS = { name: 60, command: 24, when: 300, instructions: 2000, example: 600, max: 60, blockChars: 1600 };
+export const LIMITS = { name: 60, command: 24, when: 300, instructions: 6000, example: 800, reference: 12000, checklist: 1500, script: 5000, max: 60, blockChars: 3800, refChars: 1100 };
 
 export const load = () => { try { const a = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
 export const save = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list.slice(0, LIMITS.max))); return true; } catch (e) { return false; } };
@@ -26,7 +26,7 @@ export function makeSkill(o, { source = "mine" } = {}) {
   if (instructions.length < 15) throw new Error("Write what the skill should do (at least a sentence)");
   const command = normCommand(o.command);
   if (o.command && !command) throw new Error("A command is 2–20 letters, digits, - or _ (like /quote)");
-  return { id: o.id || "u" + Date.now().toString(36) + (seq++).toString(36), name, command, when: clip(o.when, LIMITS.when), instructions, example: clip(o.example, LIMITS.example), on: o.on !== false, source: o.source || source, ts: o.ts || Date.now() };
+  return { id: o.id || "u" + Date.now().toString(36) + (seq++).toString(36), name, command, when: clip(o.when, LIMITS.when), instructions, example: clip(o.example, LIMITS.example), reference: clip(o.reference, LIMITS.reference), checklist: clip(o.checklist, LIMITS.checklist), script: o.script && o.script.code ? { lang: /^(py|python)/i.test(o.script.lang || "") ? "python" : "javascript", code: clip(o.script.code, LIMITS.script) } : null, on: o.on !== false, source: o.source || source, ts: o.ts || Date.now() };
 }
 
 // ---- words: the same plain matching for English and Arabic ----------------------------------------------------------
@@ -69,20 +69,50 @@ export function matchSkills(text, skills, { max = 2 } = {}) {
 }
 
 /** The text added under the question. Short on purpose (a phone model reads every token). */
-export function skillBlock(matches) {
+/** The most relevant paragraphs of a skill's reference text for THIS question (never the whole library: a phone model reads every token). */
+export function relevantReference(s, question, maxChars = LIMITS.refChars) {
+  const ref = String(s.reference || "").trim();
+  if (!ref) return "";
+  if (ref.length <= maxChars) return ref.replace(/\n{2,}/g, "\n");
+  const q = words(question);
+  const paras = ref.split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean).map((t, i) => {
+    const w = words(t); const hit = q.filter((x) => w.some((y) => same(x, y))).length;
+    return { t, i, score: hit };
+  });
+  const pick = paras.filter((p) => p.score > 0).sort((a, b) => b.score - a.score || a.i - b.i);
+  let out = [], n = 0;
+  for (const p of pick) { if (n + p.t.length > maxChars) { if (!out.length) out.push({ i: p.i, t: p.t.slice(0, maxChars) }); continue; } out.push(p); n += p.t.length; }
+  return out.sort((a, b) => a.i - b.i).map((p) => p.t).join("\n");
+}
+/** The text added under the question: steps, the facts that fit, the checks to pass, and (if the script ran) its result. */
+export function skillBlock(matches, question = "", results = {}) {
   if (!matches || !matches.length) return "";
   let out = "";
   for (const s of matches) {
-    const part = `\n- Skill “${s.name}”: ${s.instructions.replace(/\s*\n\s*/g, " ")}${s.example ? ` Example of a good answer: ${s.example.replace(/\s*\n\s*/g, " ")}` : ""}`;
+    let part = `\n- Skill “${s.name}”: ${s.instructions.replace(/\s*\n\s*/g, " ")}`;
+    const ref = relevantReference(s, question);
+    if (ref) part += ` Facts to use: ${ref.replace(/\s*\n\s*/g, " ")}`;
+    if (results[s.id]) part += ` Computed by the skill's program (use these numbers exactly): ${String(results[s.id]).slice(0, 700).replace(/\s*\n\s*/g, " ; ")}`;
+    if (s.checklist) part += ` Before you finish, check: ${s.checklist.split("\n").map((x) => x.replace(/^[-*•\d.\s[\]xX]+/, "").trim()).filter(Boolean).join("; ")}.`;
+    if (s.example) part += ` Example of a good answer: ${s.example.replace(/\s*\n\s*/g, " ")}`;
     if ((out + part).length > LIMITS.blockChars) break;
     out += part;
   }
   return out ? "\n\n(Your saved skills — follow them for this answer:" + out + ")" : "";
 }
+/** The skills in `matches` that carry a program: [{ id, lang, code }]. */
+export const scriptsOf = (matches) => (matches || []).filter((s) => s.script && s.script.code).map((s) => ({ id: s.id, name: s.name, lang: s.script.lang, code: s.script.code }));
+/** The program gets the question as `INPUT` (a string) and prints its result. */
+export function scriptCode(sc, question) {
+  const q = JSON.stringify(String(question || ""));
+  return sc.lang === "python" ? `INPUT = ${q}\n${sc.code}` : `const INPUT = ${q};\n${sc.code}`;
+}
 
 // ---- sharing: one small text file, easy to read before it is trusted --------------------------------------------------
 export function toFile(s) {
-  return ["---", `name: ${s.name}`, s.command ? `command: ${s.command}` : null, s.when ? `when: ${s.when.replace(/\n/g, " ")}` : null, "---", s.instructions, s.example ? `\n## Example\n${s.example}` : ""].filter((x) => x !== null).join("\n").trim() + "\n";
+  const sec = (h, t) => (t ? `\n\n## ${h}\n${t}` : "");
+  const sc = s.script && s.script.code ? `\n\n## Script\n\`\`\`${s.script.lang}\n${s.script.code}\n\`\`\`` : "";
+  return ["---", `name: ${s.name}`, s.command ? `command: ${s.command}` : null, s.when ? `description: ${s.when.replace(/\n/g, " ")}` : null, "---", s.instructions + sec("Checklist", s.checklist) + sec("Reference", s.reference) + sc + sec("Example", s.example)].filter((x) => x !== null).join("\n").trim() + "\n";
 }
 /** Read a shared skill: the text format above, or JSON {name, command, when, instructions, example}. Never runs anything. */
 export function fromFile(text) {
@@ -94,10 +124,20 @@ export function fromFile(text) {
   if (!m) throw new Error("That is not a skill file (it should start with --- name: …)");
   const meta = {};
   for (const line of m[1].split("\n")) { const k = /^\s*([a-z]+)\s*:\s*(.*)$/i.exec(line); if (k) meta[k[1].toLowerCase()] = k[2].trim(); }
-  let body = m[2].trim(), example = "";
-  const ex = /\n##\s*Example\s*\n([\s\S]*)$/i.exec("\n" + body);
-  if (ex) { example = ex[1].trim(); body = body.slice(0, body.length - ex[0].length + 1).trim(); }
-  return makeSkill({ name: meta.name, command: meta.command, when: meta.when, instructions: body, example }, { source: "imported" });
+  const parts = { example: "", checklist: "", reference: "", script: "" };
+  let body = m[2].trim();
+  // ## Example / Checklist / Reference / Script sections (a Claude-style SKILL.md folder, flattened into one file)
+  const re = /\n##\s*(Example|Checklist|Reference|Script)\s*\n/gi;
+  const marks = []; let mm; const full = "\n" + body;
+  while ((mm = re.exec(full))) marks.push({ k: mm[1].toLowerCase(), at: mm.index, end: mm.index + mm[0].length });
+  if (marks.length) {
+    body = full.slice(0, marks[0].at).trim();
+    marks.forEach((mk, i) => { parts[mk.k] = full.slice(mk.end, i + 1 < marks.length ? marks[i + 1].at : undefined).trim(); });
+  }
+  let script = null;
+  const fence = /```\s*([\w+-]*)\s*\n([\s\S]*?)```/.exec(parts.script);
+  if (fence) script = { lang: fence[1] || "javascript", code: fence[2] };
+  return makeSkill({ name: meta.name, command: meta.command, when: meta.when || meta.description, instructions: body, example: parts.example, checklist: parts.checklist, reference: parts.reference, script }, { source: "imported" });
 }
 
 // ---- "write a skill for me": the phone's own model drafts it, the person reviews it before it is saved ------------------
@@ -142,3 +182,20 @@ export const CATALOGUE = [
   C("toolbox", "Safety toolbox talk", "/toolbox", "safety toolbox talk briefing lifting crane site hazards سلامة اجتماع قبل العمل",
     "Write a 5-minute toolbox talk for the work described: the task in one line, the 4–6 main hazards, the control for each (concrete: exclusion zone, signalman, outrigger mats, wind limit, tag lines), what to stop work for, and 3 questions to ask the crew to check they understood. Short sentences. English with Egyptian Arabic terms where useful."),
 ];
+
+// The ready-made skills carry a checklist too (what the answer must satisfy before it is final).
+const CHECKS = {
+  "crane-quote": "crane size and days stated\nunit rate and total shown; the total equals days × rate\nVAT 14% shown as its own line\nvalidity period and payment terms included\nnothing invented: if a rate is missing, ask for it",
+  "reply-ar": "written in Egyptian Arabic, polite and short\nanswers exactly what the customer asked\nno promise the business did not make",
+  "pay-reminder": "amount and due date quoted exactly as given\npolite, never threatening\nasks for a payment date",
+  "turkish": "every correction explained in one line\ntense errors named\nends with one new question in Turkish",
+  "cv-bullets": "starts with an action verb\nno number, tool or employer that was not given\none idea per bullet",
+  "minutes": "decisions, owners and deadlines listed separately\nnothing added that was not said",
+  "proofread": "corrected text first, changes listed after\nthe meaning is unchanged",
+  "product": "no claim the seller did not state\nkey benefits first, specifications as a short list",
+  "interview": "one question at a time\nfeedback on the answer before the next question",
+  "eli5": "no jargon without a one-line meaning\none everyday example",
+  "formal-email": "subject line, greeting, clear request, closing\nno more than 150 words unless asked",
+  "toolbox": "hazards, controls and one question for the crew\nshort sentences a crew can follow",
+};
+for (const c of CATALOGUE) if (CHECKS[c.id]) c.checklist = CHECKS[c.id];

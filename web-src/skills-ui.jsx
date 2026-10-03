@@ -1,5 +1,5 @@
 /* ---- More → Skills: your own recipes for the AI ---------------------------------------------------------------------
-   Create, import, share, switch on or off. A skill only adds its instructions under your question; nothing runs.
+   Create, import, share, switch on or off. A skill adds its instructions, the facts that fit and a checklist under your question; an optional small program runs offline in the locked sandbox.
    The logic is in userskills.js; this file is the screens.                                                          */
 import React, { useState, useEffect, useRef } from "react";
 import { Plus, Trash2, Share2, Download, Upload, Wand2, Check, X, ChevronLeft, Sparkles, Package } from "lucide-react";
@@ -67,6 +67,9 @@ function Editor({ skill, onSave, onClose, llm, modelReady, openEngine, flash }) 
           <span className="block text-[11px] text-slate-500 mt-1" dir="ltr">{s.instructions.length} / {S.LIMITS.instructions}</span></label>
         <button onClick={draft} disabled={busy} className={ghost + " w-full flex items-center justify-center gap-1.5 py-2.5"} data-testid="skill-draft"><Wand2 size={14} />{busy ? tr("Writing…") : tr("Write it for me (from “When to use it”)")}</button>
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Example of a good answer (optional)")}</span><textarea className={field + " resize-none"} rows={3} value={s.example} onChange={set("example")} /></label>
+        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Checklist: what every answer must satisfy (one per line, optional)")}</span><textarea className={field + " resize-none"} rows={3} value={s.checklist || ""} onChange={set("checklist")} data-testid="skill-checklist" /></label>
+        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Facts the AI should know (prices, rules, terms — optional)")}</span><textarea className={field + " resize-none"} rows={4} value={s.reference || ""} onChange={set("reference")} data-testid="skill-reference" />
+          <span className="block text-[11px] text-slate-500 mt-1">{tr("Separate topics with an empty line. Only the paragraphs that fit the question are used, so this can be long.")}</span></label>
       </div>
     </Sheet>
   );
@@ -113,6 +116,9 @@ function Import({ onSave, onClose, flash }) {
           {sk.when ? <p className="text-[12px] text-slate-400 mt-1">{tr("Used when")}: {sk.when}</p> : null}
           <p className="text-[11px] uppercase tracking-wide text-slate-500 mt-2">{tr("It will add this to your questions")}</p>
           <p className="text-[12.5px] text-slate-200 mt-1 whitespace-pre-wrap">{sk.instructions}</p>
+          {sk.checklist ? <><p className="text-[11px] uppercase tracking-wide text-slate-500 mt-2">{tr("Checklist")}</p><p className="text-[12.5px] text-slate-200 mt-1 whitespace-pre-wrap">{sk.checklist}</p></> : null}
+          {sk.reference ? <><p className="text-[11px] uppercase tracking-wide text-slate-500 mt-2">{tr("Facts")}</p><p className="text-[12.5px] text-slate-300 mt-1 whitespace-pre-wrap max-h-40 overflow-auto">{sk.reference}</p></> : null}
+          {sk.script ? <div className="mt-2 rounded-lg border border-amber-700 bg-amber-500/10 p-2" data-testid="skill-import-script"><p className="text-[11px] uppercase tracking-wide text-amber-300">{tr("It also runs this small program on your phone (offline, in a locked box — no internet, no files, no access to the app)")}</p><pre className="text-[11.5px] text-slate-200 mt-1 whitespace-pre-wrap max-h-48 overflow-auto" dir="ltr">{sk.script.code}</pre></div> : null}
         </div>
       ) : null}
     </Sheet>

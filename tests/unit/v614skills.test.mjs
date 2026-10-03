@@ -15,7 +15,7 @@ ok(throws(() => S.makeSkill({ name: "", instructions: "x".repeat(40) }), "name")
 ok(throws(() => S.makeSkill({ name: "A", instructions: "short" }), "sentence"), "…and real instructions");
 ok(throws(() => S.makeSkill({ name: "A", command: "/a b", instructions: "x".repeat(40) }), "command"), "a bad command is refused");
 ok(S.normCommand("/Quote") === "/quote" && S.normCommand("q") === "" && S.normCommand("quote!") === "", "commands are normalised");
-ok(S.makeSkill({ name: "N", instructions: "y".repeat(5000) }).instructions.length === S.LIMITS.instructions, "instructions are capped");
+ok(S.makeSkill({ name: "N", instructions: "y".repeat(9000) }).instructions.length === S.LIMITS.instructions, "instructions are capped");
 
 // ---- matching
 const c1 = S.matchSkills("/quote 50 t crane for 3 days at Ain Sokhna", all);
@@ -58,3 +58,46 @@ ok(new Set(S.CATALOGUE.map((c) => c.command)).size === S.CATALOGUE.length, "cata
 S.save([quote]); ok(S.load().length === 1 && S.load()[0].name === "Crane rental quote", "skills are kept on the phone");
 
 if (fail) { console.log(`\n${fail} FAILED`); process.exit(1); } else console.log("\nALL PASSED");
+
+// ---- v6.18: skills v2 — checklist, reference, script, SKILL.md ----
+{
+  const file = `---
+name: Crane quote pro
+command: /cq
+description: price offer quotation crane rental
+---
+Write a quotation with the crane, days, rate and total.
+
+## Checklist
+- the total is days x rate
+- VAT 14% shown separately
+
+## Reference
+Rates: 50 t crane costs 9000 EGP per day.
+
+Mobilisation to Ain Sokhna is 4000 EGP one way.
+
+Operators are billed 800 EGP per day.
+
+## Script
+\`\`\`python
+import re
+n = [int(x) for x in re.findall(r"\\d+", INPUT)]
+print("days x rate =", n[0] * n[1])
+\`\`\`
+
+## Example
+Quote: 3 days x 9000 = 27000.
+`;
+  const sk = S.fromFile(file);
+  ok(sk.when.includes("quotation") && sk.checklist.includes("VAT 14%") && sk.reference.includes("Mobilisation") && sk.script && sk.script.lang === "python" && sk.example.startsWith("Quote"), "a SKILL.md with description, checklist, reference, script and example imports");
+  ok(!sk.instructions.includes("## "), "the sections are cut out of the instructions");
+  const again = S.fromFile(S.toFile(sk));
+  ok(again.checklist === sk.checklist && again.reference === sk.reference && again.script.code === sk.script.code, "…and exports and imports back the same");
+  const ref = S.relevantReference({ reference: sk.reference.repeat(30) }, "how much is mobilisation to Ain Sokhna", 300);
+  ok(ref.includes("Mobilisation") && ref.length <= 300, "only the paragraphs that fit the question are used");
+  const blk = S.skillBlock([sk], "mobilisation price", { [sk.id]: "days x rate = 27000" });
+  ok(blk.includes("27000") && blk.includes("Before you finish, check") && blk.includes("VAT 14% shown separately"), "the block carries the program's result and the checklist");
+  const sc = S.scriptsOf([sk])[0];
+  ok(S.scriptCode(sc, "3 9000").startsWith('INPUT = "3 9000"'), "the program gets the question as INPUT");
+}

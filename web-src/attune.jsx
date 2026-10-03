@@ -8711,7 +8711,16 @@ export default function App() {
     webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang), groundedAudit,
     skillFor,
     // v6.10: the person's own skills (userskills.js): a /command or a description match → instructions added under the question
-    userSkills: (text) => { const m = USK.matchSkills(text, USK.load()); return m ? { block: USK.skillBlock(m.matches), stripped: m.stripped, names: m.matches.map((x) => x.name), via: m.via } : null; },
+    userSkills: (text) => { const m = USK.matchSkills(text, USK.load()); return m ? { block: USK.skillBlock(m.matches, m.stripped != null ? m.stripped : text), matches: m.matches, stripped: m.stripped, names: m.matches.map((x) => x.name), via: m.via } : null; },
+    // a skill's own program: runs offline in the sandbox (no network, no files); its printed result goes into the prompt
+    userSkillBlock: (matches, q, res) => USK.skillBlock(matches, q, res),
+    runSkillScripts: async (matches, question) => {
+      const out = {};
+      for (const sc of USK.scriptsOf(matches)) {
+        try { const r = await runCode({ lang: sc.lang, code: USK.scriptCode(sc, question), timeoutMs: 8000 }); if (r && r.ok !== false && String(r.stdout || "").trim()) out[sc.id] = String(r.stdout).trim(); } catch (e) {}
+      }
+      return out;
+    },
     power: () => getPower(),
     modelBrand: () => (activeTier ? brandOf(activeTier).brand : ""),   // v5.29: the home screen shows which model is on
     trialDays: () => (proActive ? -1 : trialLeft),
