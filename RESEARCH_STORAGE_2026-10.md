@@ -120,7 +120,7 @@ save RAM unless repacking is off for that quant. Smaller ubatch saves ~70 MB. AR
   RTX 3050 8 GB: QLoRA (4-bit base, rank 16, seq 2k) on a 2–4B model fits in 8 GB with Unsloth/PEFT; 1–3 h for
   ~5k Egyptian-Arabic chat pairs; convert with `convert_lora_to_gguf.py`. Expected gain: style/dialect (Egyptian
   Arabic 4/6 → better) — not facts (packs do facts far better per MB, see above). Measure before shipping.
-- **(b) speed packs**: the app already ships MTP heads (+17 MB on the 0.8B file, +~200 MB on 4B) and a 0.8B draft
+- **(b) speed packs**: the app already ships MTP heads (+17 MB on the 0.8B file, +~90 MB on the 4B Q4_K_M: 2.74 → 2.83 GB) and a 0.8B draft
   (0.55 GB). Measured earlier (HANDOFF): MTP/draft gains depend on acceptance; draft is auto-off below 0.6 acceptance.
 - **(f) image packs** (Studio lab, same ARM runner, see PLANS_2026-10-02.md): tiny decoder +10 MB: 63 → 37 s and
   CLIP 31.2 → 32.1 (adopted); SDXL-Turbo q4 + tiny XL decoder, 1 step: 3.94 GB, 18 s, CLIP 33.4 (Ali to decide; ~6 GB RAM).
