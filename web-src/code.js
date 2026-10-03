@@ -350,9 +350,9 @@ export function joinCont(code, more) {
  * onEvent({ type, round, … }) reports every step for the screen.
  * → { ok, code, lang, rounds, last, tests, gaveUp? }
  */
-export async function workLoop({ task, lang, code: startCode = "", change = "", llm, run, onEvent = () => {}, maxRounds = 4, restart = true, isStopped = () => false, maxMs = 480000 }) {
+export async function workLoop({ task, lang, code: startCode = "", change = "", llm, run, onEvent = () => {}, maxRounds = 4, restart = true, isStopped = () => false, maxMs = Infinity }) {
   const t0 = Date.now();
-  const overBudget = (share = 1) => Date.now() - t0 > maxMs * share;   // a model that cannot pass its tests gives up honestly after about 8 minutes, not after 20
+  const overBudget = (share = 1) => Date.now() - t0 > maxMs * share;   // off by default: the answer is to get the code right, not to stop early
   let code = startCode, round = 0, last = null, verdict = null;
   const tried = new Set();                                  // code versions that already failed
   const history = [];                                       // the errors seen, for a fresh start
