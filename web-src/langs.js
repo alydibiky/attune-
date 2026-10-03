@@ -23,10 +23,10 @@ export const LANG_CODES = Object.keys(LANGS);
 
 // words that are very common in one Latin-script language and rare in the others
 const STOP = {
-  en: "the and is are was you your with that this for what how can please have not from they will would about there their which when where why who it's i'm don't",
+  en: "the and is are was were be been being am you your yours with that this these those for what how can could please have has had not from they them will would should about there their which when where why who whom it's i'm don't doesn't a an to of in on at by as or if so up me my we us our he she him her his its do does did give make write tell show explain list name get take find use help need want know think say go see look come put set run build create send read open close start stop than then too just only also very much many some any all each more most other into over after before between through here now today tomorrow yesterday",
   es: "el la los las una un es son está están que qué cómo cuál cuándo dónde por para con sin pero muy también más tengo quiero puedes puedo hola gracias favor del al esto esta eso yo tú usted nosotros",
   fr: "le la les un une des est sont que qui quoi comment pourquoi avec pour dans sur mais très aussi plus je tu il nous vous bonjour merci s'il c'est j'ai du au ce cette ces",
-  pt: "o a os as um uma é são está estão que qual como quando onde por para com sem mas muito também mais eu você nós olá obrigado favor do da dos das não isso isto tenho quero posso",
+  pt: "o os as um uma é são está estão que qual como quando onde por para com sem mas muito também mais eu você nós olá obrigado favor do da dos das não isso isto tenho quero posso",
   de: "der die das ein eine ist sind und oder nicht ich du sie wir ihr was wie warum wann wo mit für auf aber sehr auch mehr bitte danke hallo kann können habe möchte den dem des zu von",
   id: "yang dan di ke dari ini itu dengan untuk tidak ada saya kamu anda apa bagaimana kenapa kapan dimana bisa mau tolong terima kasih halo adalah akan sudah belum juga lebih sangat atau pada",
 };
@@ -64,8 +64,10 @@ export function detectLang(text) {
     if (DIAC[k]) n += count(s.toLowerCase(), DIAC[k]) * 0.7;
     score[k] = n;
   }
-  const best = Object.entries(score).sort((a, b) => b[1] - a[1])[0];
-  return best && best[1] > 0 ? best[0] : "en";
+  // English is the default: another Latin-script language must show real evidence (two of its words, or accents) and beat English
+  const ranked = Object.entries(score).filter(([k]) => k !== "en").sort((a, b) => b[1] - a[1]);
+  const best = ranked[0];
+  return best && best[1] >= 2 && best[1] > score.en ? best[0] : "en";
 }
 
 export const langName = (code) => (LANGS[code] ? LANGS[code].name : "");
@@ -78,12 +80,38 @@ export function deviceLang(nav) {
   return LANGS[l] ? l : "";
 }
 
+// ---- "answer in French" / "responde en inglés": the language the person ASKS for beats the language they wrote in -----------------------
+const NAMES = {
+  en: "english|inglés|ingles|anglais|englisch|inglês|inglese|английском|английски|英语|英文|अंग्रेज़ी|अंग्रेजी|ইংরেজি|الإنجليزية|الانجليزية|الإنجليزي|الانجليزي|انجليزي|انگریزی|inggris",
+  es: "spanish|español|espanol|espagnol|spanisch|espanhol|spagnolo|испанском|西班牙语|स्पेनिश|স্প্যানিশ|الإسبانية|الاسبانية|اسباني|ہسپانوی|spanyol",
+  fr: "french|francés|frances|français|francais|französisch|francês|frances|французском|法语|法文|फ्रेंच|ফরাসি|الفرنسية|فرنساوي|فرنسي|فرانسیسی|prancis",
+  pt: "portuguese|portugués|portugues|portugais|portugiesisch|portoghese|португальском|葡萄牙语|पुर्तगाली|পর্তুগিজ|البرتغالية|برتغالي|پرتگالی|portugis",
+  de: "german|alemán|aleman|allemand|deutsch|alemão|alemao|tedesco|немецком|德语|जर्मन|জার্মান|الألمانية|الالمانية|الماني|جرمن|jerman",
+  ru: "russian|ruso|russe|russisch|russo|русском|俄语|रूसी|রুশ|الروسية|روسي|روسی|rusia",
+  zh: "chinese|chino|chinois|chinesisch|chinês|cinese|китайском|中文|汉语|漢語|चीनी|চীনা|الصينية|صيني|چینی|cina|mandarin",
+  hi: "hindi|hindú|हिंदी|हिन्दी|হিন্দি|الهندية|هندي|ہندی",
+  bn: "bengali|bengalí|bengali|bengalisch|bengalês|бенгальском|孟加拉语|बंगाली|বাংলা|البنغالية|بنغالي|بنگالی|benggala",
+  ar: "arabic|árabe|arabe|arabisch|арабском|阿拉伯语|अरबी|আরবি|العربية|عربي|بالعربي|عربی",
+  ur: "urdu|ourdou|урду|乌尔都语|उर्दू|উর্দু|الأردية|الاردية|أردو|اردو",
+  id: "indonesian|indonesio|indonésien|indonesisch|indonésio|indonesiano|индонезийском|印尼语|इंडोनेशियाई|ইন্দোনেশিয়ান|الإندونيسية|اندونيسي|indonesia",
+};
+const ASK = Object.entries(NAMES).map(([c, n]) => [c, new RegExp("(?:^|[\\s,:;.(\"'«])(?:in|into|en|auf|em|na|no|nel|su|на|用|में|বাংলায়|بال|باللغة|باللغه|به|dalam|bahasa|ب|à|au)\\s+(?:the\\s+|la\\s+|el\\s+|le\\s+|اللغة\\s+)?(?:" + n + ")(?![\\p{L}])", "iu")]);
+/** The language the text asks the answer to be in ("Responde en inglés" → "en"), or "". */
+export function requestedLang(text) {
+  const t = String(text || "").slice(0, 600);
+  for (const [c, rx] of ASK) if (rx.test(t)) return c;
+  if (/(?:^|\s)(?:بالعربي|بالانجليزي|بالإنجليزي|بالفرنساوي)(?!\p{L})/u.test(t)) return /عربي/.test(t) ? "ar" : /فرنساوي/.test(t) ? "fr" : "en";
+  return "";
+}
+
 /**
  * The line added to the chat's instructions for the language of the latest message. English and Arabic are already covered by the base
  * prompt (Egyptian Arabic has its own rule); for the ten others the model is told the language BY NAME — small models drift to English
  * otherwise — and to keep names, numbers, code and quoted text as written.
  */
 export function replyLanguageRule(text) {
+  const asked = requestedLang(text);
+  if (asked) return `The user asks for the answer in ${LANGS[asked].name}. Write your whole answer in ${LANGS[asked].name}, naturally. Keep names, numbers, code and quoted text exactly as written.`;
   const code = detectLang(text);
   if (!code || code === "en") return "";
   const name = LANGS[code] ? LANGS[code].name : code === "fa" ? "Persian" : code === "ja" ? "Japanese" : "Korean";
