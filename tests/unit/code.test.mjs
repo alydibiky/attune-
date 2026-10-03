@@ -88,3 +88,17 @@ const patch = "<<<<<<< SEARCH\nfunction tonnes(kg){ return kg / 100; }\n=======\
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 process.exit(fails.length ? 1 : 0);
 })();
+
+// ---- v6.18: a stuck loop restarts once with a different approach ----
+{
+  const { workLoop } = await import("../../web-src/code.js");
+  const bad = "```python\ndef f(x):\n    return x\nassert f(2) == 4, 'expected 4, got 2'\nprint('ALL TESTS PASSED')\n```";
+  const good = "```python\ndef f(x):\n    return x * 2\nassert f(2) == 4\nprint('ALL TESTS PASSED')\n```";
+  let calls = 0, restarted = false;
+  const llm = async (msgs) => { calls++; const u = msgs[msgs.length - 1].content; if (/different, simpler approach/i.test(u)) { restarted = true; return good; } return bad; };
+  const run = async (lang, code) => /x \* 2/.test(code) ? { ok: true, stdout: "ALL TESTS PASSED\n", stderr: "", exit: 0 } : { ok: false, stdout: "", stderr: "AssertionError: expected 4, got 2", exit: 1, error: "AssertionError: expected 4, got 2" };
+  const r = await workLoop({ task: "double a number", lang: "python", llm, run, maxRounds: 2 });
+  console.log(restarted && r.ok ? "PASS a stuck program is rewritten from scratch and then passes" : "FAIL restart " + JSON.stringify({ restarted, ok: r.ok, calls }));
+  const r2 = await workLoop({ task: "double a number", lang: "python", llm, run, maxRounds: 1, restart: false });
+  console.log(!r2.ok && r2.gaveUp ? "PASS restart can be switched off" : "FAIL restart off");
+}

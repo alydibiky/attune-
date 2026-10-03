@@ -270,6 +270,13 @@ The page must be about THIS and nothing else${named.length ? ` — use the name 
   ];
 }
 
+/** A second, different attempt after the fix rounds got stuck: the task again, plus what went wrong so far. */
+export function restartMessages({ task, lang, code, history }) {
+  const base = writeMessages(task, lang);
+  const notes = history.slice(-3).map((h, i) => `${i + 1}. ${String(h).slice(0, 500)}`).join("\n");
+  return [base[0], { role: "user", content: `${String(task || "").trim()}\n\nA first attempt got stuck. These are the errors it kept hitting:\n${notes}\n\nIts last version (do NOT patch it — it takes a wrong approach somewhere):\n\`\`\`\n${String(code).slice(0, 2500)}\n\`\`\`\nWrite the whole program again from scratch with a DIFFERENT, simpler approach. Think about the edge cases first, then reply with the one code block.` }];
+}
+
 export function fixMessages({ task, lang, code, error, change }) {
   const why = change
     ? `Change the program as asked: ${change}\nKeep everything else working, and update or add tests for the change.`
@@ -327,9 +334,11 @@ export function joinCont(code, more) {
  * onEvent({ type, round, … }) reports every step for the screen.
  * → { ok, code, lang, rounds, last, tests, gaveUp? }
  */
-export async function workLoop({ task, lang, code: startCode = "", change = "", llm, run, onEvent = () => {}, maxRounds = 4, isStopped = () => false }) {
+export async function workLoop({ task, lang, code: startCode = "", change = "", llm, run, onEvent = () => {}, maxRounds = 4, restart = true, isStopped = () => false }) {
   let code = startCode, round = 0, last = null, verdict = null;
   const tried = new Set();                                  // code versions that already failed
+  const history = [];                                       // the errors seen, for a fresh start
+  let restarted = false;
   let sameAgain = false;                                    // the last fix answer changed nothing
   const stopped = () => { if (isStopped()) throw new Error("Stopped"); };
 
@@ -394,7 +403,7 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
     sameAgain = false;
     const eg = /expected (.{1,80}?), got (.{1,80}?)(?: —|$)/m.exec(String(last && (last.error || last.stderr) || ""));
     if (eg) told += `\n\nThe program returns ${eg[2]} where a test expects ${eg[1]}. Work out which one is right, step by step. If the program is right and the test's expected value is wrong, change ${eg[1]} in that test line; otherwise fix the program.`;
-    tried.add(code);
+    tried.add(code); history.push(errorSummary(last, 8));
     const fl = lang === "python" ? failingLine(code, last) : null;
     if (fl) told += `\n\nThe line that failed: ${fl.line}` + (fl.hint ? "\n" + fl.hint : "");
     const pr = lang === "python" ? assertProbe(code, last) : null;
@@ -406,6 +415,25 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
     }
     if (!(await fix({ error: told }))) continue;          // unusable answer: ask again (counts as a round)
     ok = await exec();
+  }
+  // stuck: one fresh attempt with a different approach, then a few more fix rounds
+  if (!ok && restart && !restarted && lang !== "html" && history.length) {
+    restarted = true; stopped();
+    onEvent({ type: "restart", round });
+    try {
+      const ans = await llm(restartMessages({ task, lang, code, history }), { maxTokens: Math.max(2000, Math.floor(getPower().codeTokens / 2)), onToken: (t) => onEvent({ type: "writing", round, text: t }) });
+      const p = pickProgram(ans, lang);
+      if (p && p.code.trim() && p.code.trim() !== code.trim() && countTests(p.code, lang) > 0) {
+        code = p.code; onEvent({ type: "wrote", round, code, lang, tests: countTests(code, lang) });
+        ok = await exec();
+        let extra = 0;
+        while (!ok && extra < 2) {
+          extra++;
+          if (!(await fix({ error: errorSummary(last) }))) continue;
+          ok = await exec();
+        }
+      }
+    } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
   }
   const res = { ok, code, lang, rounds: round, last, tests: countTests(code, lang), gaveUp: !ok };
   onEvent({ type: "done", ...res });

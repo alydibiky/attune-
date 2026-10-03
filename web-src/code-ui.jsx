@@ -129,6 +129,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
       else if (e.type === "fix") say(e.change ? tr("Making the change…") : tr("Round {r}: {t}", { r: e.round, t: tr(STEP_TEXT.fix) }));
       else if (e.type === "fixed") say(e.how === "edits" ? tr("Changed {n} place(s) in the code.", { n: e.edits }) : tr("Rewrote the program."));
       else if (e.type === "fixfail") say(tr(e.error), "bad");
+      else if (e.type === "restart") say(tr("Stuck — starting again from scratch with a different approach"), "warn");
       return n;
     });
     if (e.code) setCur((c) => (c ? { ...c, code: e.code, lang: e.lang || c.lang } : c));

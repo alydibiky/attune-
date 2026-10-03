@@ -1953,6 +1953,7 @@ export const AR = {
   "What should it do? e.g. “A function that finds a crane's capacity at any radius from a load chart table”": "المفروض يعمل إيه؟ مثلًا «دالة تحسب حمولة الونش عند أي نصف قطر من جدول الأحمال»",
   "Writing the program and its tests…": "بيكتب البرنامج واختباراته…",
   "Wrote it (no tests).": "كتبه (من غير اختبارات).",
+  "Stuck — starting again from scratch with a different approach": "اتعلّق — هبدأ من الأول بطريقة مختلفة.",
   "Wrote it, with {n} tests.": "كتبه، ومعاه {n} اختبارات.",
   "Your programs": "برامجك",
   "not passing": "مش ناجح",
