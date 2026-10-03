@@ -152,6 +152,7 @@ const F = [
   ["water", "Water", "مية|مياه|ماء", 0, 0, 0, 0, 0, { glass: 250, cup: 250, bottle: 500 }, "drinks"],
 ];
 import { MORE_FOODS, MORE_RECIPES } from "./fit-foods.js";
+import { EXTRA_RECIPES } from "./fit-recipes2.js";
 export const FOODS = [...F, ...MORE_FOODS].map(([id, en, ar, kcal, p, c, f, fib, portions, group]) => ({ id, en: en.split("|")[0], ar: ar.split("|")[0], names: [...en.split("|"), ...ar.split("|")], kcal, p, c, f, fib, portions, group }));
 const BY_ID = new Map(FOODS.map((x) => [x.id, x]));
 export const food = (id) => BY_ID.get(id) || null;
@@ -504,6 +505,7 @@ export const RECIPES = [
     steps: ["Blend everything with ice."] },
 ];
 RECIPES.push(...MORE_RECIPES);
+RECIPES.push(...EXTRA_RECIPES.filter((r) => !RECIPES.some((x) => x.id === r.id)));
 /** Per-serving nutrients of a recipe (from the table), plus its grams. */
 export function recipeNutrients(rc) {
   const parts = rc.items.map(([id, g]) => { const fd = food(id); return fd ? nutrients(fd, g) : { kcal: 0, p: 0, c: 0, f: 0, fib: 0 }; });

@@ -32,6 +32,9 @@ import { SlidesReports } from "./slides-ui.jsx";
 import { classify as videoLink, linkIn } from "./video.js";
 import { popBack, hasBack, useSubBack, forgetSticky } from "./backstack.js";
 import { skillFor } from "./skills.js";
+import { SkillsPage } from "./skills-ui.jsx";
+import { CVPage } from "./cv-ui.jsx";
+import * as USK from "./userskills.js";
 import { placeFor } from "./places.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
 import { samplingFor, taskKind } from "./boost.js";
@@ -7233,7 +7236,7 @@ function tierOfInstalled(m) {
   return MODEL_TIERS.find((x) => x.realName && !!x.fast === fast && String(m.label || "").toLowerCase().replace(/[\s-]+/g, "").includes(x.realName.toLowerCase().replace(/[\s-]+/g, ""))) || null;
 }
 
-const MODE_TITLES = { chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const MODE_TITLES = { cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
@@ -7257,6 +7260,8 @@ const MORE_TOOLS = [
   ["learn", "Learn daily", "A lesson a day, with quizzes", GraduationCap],
   ["news", "Daily news", "Topics you follow, every morning", Newspaper],
   ["business", "Business", "Your own ERP — tables you can reshape", Database],
+  ["skills", "Skills", "Your own recipes for the AI — create, import, share", Sparkles],
+  ["cv", "CV / Resume", "Build, tailor and export a CV — English or Arabic", FileText],
   ["code", "Code", "Programs tested on your phone", Code2],
   ["crane", "Crane toolkit", "Load charts, ground, slings, wind", Calculator],
   ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
@@ -7272,8 +7277,8 @@ const MORE_TOOLS = [
 // v5.32 — Ali: "most features are cluttered, they must be organized": More shows its tools
 // in four named groups instead of one wall of 23 tiles.
 const MORE_GROUPS = [
-  ["Create & learn", ["instant", "studio", "assistants", "projects", "artifacts", "code", "learn", "news"]],
-  ["Work & business", ["slides", "xray", "convert", "video", "business", "crane", "field", "fleet", "reminders"]],
+  ["Create & learn", ["instant", "studio", "assistants", "skills", "projects", "artifacts", "code", "learn", "news"]],
+  ["Work & business", ["slides", "xray", "convert", "video", "cv", "business", "crane", "field", "fleet", "reminders"]],
   ["Your life", ["fit", "deal", "memory", "map", "travel", "cycle"]],
   ["Prompts for other AIs", ["improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
@@ -8705,6 +8710,8 @@ export default function App() {
     toggleWeb: () => { if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to search the web")); return; } setWebOn((v) => !v); },
     webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang), groundedAudit,
     skillFor,
+    // v6.10: the person's own skills (userskills.js): a /command or a description match → instructions added under the question
+    userSkills: (text) => { const m = USK.matchSkills(text, USK.load()); return m ? { block: USK.skillBlock(m.matches), stripped: m.stripped, names: m.matches.map((x) => x.name), via: m.via } : null; },
     power: () => getPower(),
     modelBrand: () => (activeTier ? brandOf(activeTier).brand : ""),   // v5.29: the home screen shows which model is on
     trialDays: () => (proActive ? -1 : trialLeft),
@@ -9431,6 +9438,16 @@ export default function App() {
             nativeCall={NATIVE && NATIVE.news ? nativeCall : null}
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, onToken: o.onToken })} />
+        ) : mode === "cv" ? (
+          <CVPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} nativeCall={NATIVE ? nativeCall : null}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.3, think: false, json: !!o.json })}
+            saveFile={NATIVE ? (name, text, mime, b64) => nativeCall("saveFile", b64 ? { name, mime, b64 } : { name, mime, text }) : null}
+            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
+        ) : mode === "skills" ? (
+          <SkillsPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.3, think: false, json: !!o.json })}
+            saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
+            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "business" ? (
           <BusinessPage flash={flash} openEngine={() => setShowEngine(true)}
             modelReady={modelUsable}

@@ -675,6 +675,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
 
     try {
       let content = typed || (fileAtt ? userMsg.text : "What is in this photo? Read it and tell me what matters.");
+      // v6.10: the person's own Skills — "/quote 50 t crane…" or a question that fits a skill's description
+      const uSk = typed && api.userSkills ? api.userSkills(typed) : null;
+      if (uSk && uSk.stripped != null) content = uSk.stripped || content;
       let sources = null, via = null, research = null, webCtx = null;
       const pic = img || carried;
       if ((api.webOn || o.web) && typed) {
@@ -944,10 +947,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // how-to → numbered steps, email → the finished text …). Only for answers
       // the model writes directly — maths, code, web and photo questions have
       // their own checked routes and shapes.
-      if (answer == null && typed && !sources && !pic && !fileAtt && api.skillFor) {
+      if (answer == null && typed && !sources && !pic && !fileAtt && api.skillFor && !(uSk && uSk.via === "command")) {
         const sk = api.skillFor(typed);
         if (sk) { content += sk.block; extra.skill = sk.id; }
       }
+      if (answer == null && uSk && uSk.block) { content += uSk.block; extra.userSkills = uSk.names; }
       // v5.26 tricks: every part of a multi-question message gets answered; reasoning and
       // maths questions are shown twice (re-reading → fewer slips). (boost.js)
       // v5.29 — the tips library: the few expert tips that fit THIS question (2 for small

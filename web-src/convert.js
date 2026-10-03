@@ -1441,6 +1441,9 @@ export function rtfToText(rtf) {
   let out = "", bytes = [], skip = false, uc = 1, pendingSkip = 0;
   const stack = [];
   const flush = () => { if (bytes.length) { out += codec.decode(new Uint8Array(bytes)); bytes = []; } };
+  // some runtimes decode windows-1252 as plain Latin-1: fix the 0x80-0x9F block (€ ‘ ’ “ ” – — …) ourselves
+  const W1252 = "€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008DŽ\u008F\u0090‘’“”•–—˜™š›œ\u009DžŸ";
+  if (cp === 1252) { const dec = codec; codec = { decode: (u) => dec.decode(u).replace(/[\u0080-\u009f]/g, (c) => W1252[c.charCodeAt(0) - 128]) }; }
   const emit = (t) => { if (skip) return; flush(); out += t; };
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
