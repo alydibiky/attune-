@@ -123,7 +123,8 @@ jobs:
           curl -sSL --retry 5 -o ~/model.gguf "https://huggingface.co/$REPO/resolve/main/$FILE"
       - name: Bench
         run: |
-          if [ "${{ matrix.variant }}" != "head" ]; then git show "${{ matrix.variant }}:web-src/code.js" > web-src/code.js; fi
+          V="${{ matrix.variant }}"; V="${V%%~*}"   # "abc123~2" = a repeat of abc123
+          if [ "$V" != "head" ]; then git show "$V:web-src/code.js" > web-src/code.js; fi
           export LD_LIBRARY_PATH="$PWD/tests/build-dl/bin"
           tests/build-dl/bin/llama-server -m ~/model.gguf --host 127.0.0.1 --port 8099 -c 8192 -t "$(nproc)" -np 1 --jinja --no-ui -fa on --cache-ram 0 --spec-type draft-mtp --spec-draft-n-max 3 > /tmp/server.log 2>&1 &
           for i in $(seq 1 600); do curl -s 127.0.0.1:8099/health | grep -q ok && break; sleep 1; done
