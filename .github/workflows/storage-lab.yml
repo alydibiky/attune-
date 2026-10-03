@@ -3,6 +3,9 @@ name: Storage lab (mapped vs copied weights under a memory cap, long context, pr
 # Ali: "less heavy on devices by a mile, take more input, use the phone's storage — prove it".
 # Each job caps memory like a small phone (cgroup v2, no swap) and runs tests/models/storage_lab.py.
 on:
+  push:
+    branches: [storage-lab-research]
+    paths: [tests/models/storage_lab.py, .github/workflows/storage-lab.yml]
   workflow_dispatch:
     inputs:
       only:
@@ -24,12 +27,12 @@ jobs:
           - { name: qwen36-35b-a3b, search: "Qwen3.6-35B-A3B-GGUF", quants: "UD-IQ4_XS,IQ4_XS,Q4_K_M", need: "35b", caps: "none,10G,8G" }
     steps:
       - uses: actions/checkout@v4
-        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        if: ${{ (github.event.inputs.only || '') == '' || github.event.inputs.only == matrix.name }}
       - name: Free disk (the 35B file is ~18 GB)
-        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        if: ${{ (github.event.inputs.only || '') == '' || github.event.inputs.only == matrix.name }}
         run: sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup || true; df -h / | tail -1
       - name: Build llama.cpp (the app's pinned commit)
-        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        if: ${{ (github.event.inputs.only || '') == '' || github.event.inputs.only == matrix.name }}
         run: |
           git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
           cd ~/llama.cpp && git checkout -q 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
@@ -37,14 +40,14 @@ jobs:
           cmake --build build --target llama-server -j"$(nproc)" > /dev/null
           ls build/bin | head
       - name: Download the model
-        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        if: ${{ (github.event.inputs.only || '') == '' || github.event.inputs.only == matrix.name }}
         run: |
           read REPO FILE < <(python3 tests/models/resolve_hf.py "${{ matrix.search }}" "${{ matrix.quants }}" ${{ matrix.need }})
           echo "Model: $REPO / $FILE" | tee -a "$GITHUB_STEP_SUMMARY"
           curl -sSL --retry 5 -o ~/model.gguf "https://huggingface.co/$REPO/resolve/main/$FILE"
           ls -la ~/model.gguf; df -h / | tail -1
       - name: Storage lab
-        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        if: ${{ (github.event.inputs.only || '') == '' || github.event.inputs.only == matrix.name }}
         run: python3 tests/models/storage_lab.py ~/model.gguf "$HOME/llama.cpp/build/bin" "${{ matrix.name }}" "${{ matrix.caps }}"
       - name: Keep the report
         if: always()
