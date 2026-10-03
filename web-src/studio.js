@@ -27,6 +27,10 @@ export const PACKS = {
           "https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q8_0.gguf",
           "https://huggingface.co/gpustack/stable-diffusion-xl-1.0-turbo-GGUF/resolve/main/stable-diffusion-xl-1.0-turbo-Q4_1.gguf",
         ] },
+      // v6.19 — tiny colour decoder: Studio lab (4-core ARM, 512 px) 63 s → 37 s a picture,
+      // prompt match (CLIP) 31.2 → 32.1. 10 MB, MIT.
+      { role: "taesd", what: "fast colour decoder", name: "taesd.safetensors", size: 9793292,
+        url: "https://huggingface.co/madebyollin/taesd/resolve/main/diffusion_pytorch_model.safetensors" },
     ],
   },
   "klein-4b": {

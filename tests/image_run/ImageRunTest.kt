@@ -25,9 +25,11 @@ fun main(args: Array<String>) {
     check(ImageRun.gpuDevice("CPU\tIntel Xeon\n") == null, "no GPU → null (CPU binary used)")
     val g = ImageRun.genArgs("/bin/sd", ImageRun.Files("/m/d.gguf", "/m/q.gguf", "/m/v.st"), "a crane at dusk", "/o.png", 1024, 1024, 4, 7, 6, "diffusion=GPUOpenCL,vae=GPUOpenCL,te=cpu", "/r.png", lowMemory = true)
     check(g.containsAll(listOf("--diffusion-model", "--llm", "--vae", "--steps", "4", "-s", "7", "-r", "/r.png", "--params-backend", "te=disk")), "generation arguments: models, 4 steps, seed, reference photo, low-memory text reader")
+    val t = ImageRun.genArgs("/bin/sd", ImageRun.Files("/m/turbo.gguf", null, null, true, "/m/taesd.st"), "a crane", "/o.png", 512, 512, 4, 7, 4, null, null)
+    check(t.containsAll(listOf("-m", "--taesd", "/m/taesd.st", "--prediction", "eps")), "Turbo with the tiny colour decoder passes --taesd")
     // the sd-cli accepts every option we pass (unknown options make it exit at once)
     val help = ProcessBuilder(sdcli, "--help").redirectErrorStream(true).start().inputStream.bufferedReader().readText()
-    val used = (g + ImageRun.upscaleArgs("x", "e", "i", "o", 2, "cpu")).filter { it.startsWith("-") }.toSet()
+    val used = (g + t + ImageRun.upscaleArgs("x", "e", "i", "o", 2, "cpu")).filter { it.startsWith("-") }.toSet()
     val unknown = used.filter { !Regex("(^|[\\s,])" + Regex.escape(it) + "([\\s,]|$)", RegexOption.MULTILINE).containsMatchIn(help) }
     check(unknown.isEmpty(), "sd-cli knows every option Attune uses ${if (unknown.isEmpty()) "" else unknown}")
     // a real run through the Job runner: upscale a small picture 4× with Real-ESRGAN
