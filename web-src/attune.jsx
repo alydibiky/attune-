@@ -40,7 +40,7 @@ import { placeFor } from "./places.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
 import { samplingFor, taskKind } from "./boost.js";
 import { estTokens as estTok } from "./longread.js";
-import { BILLING_GROUPS, COMPARE_ROWS, pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS, TESTING_ALL_PRO, testingPro, PLAY, proFromOwned } from "./billing.js";
+import { BILLING_GROUPS, COMPARE_ROWS, pricesFor, requestCode, checkProCode, trialDaysLeft, buyMessage, PRO_BENEFITS, FREE_LIMITS, TRIAL_DAYS, TESTING_ALL_PRO, testingPro, devMode, setDevMode, PLAY, proFromOwned } from "./billing.js";
 import { LICENCE_PUBLIC_KEY, SELLER, setTestingOpen } from "./erp.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
@@ -7244,7 +7244,8 @@ const MODE_TITLES = { pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills",
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.9";
+const PAGE_VERSION = "6.11";
+const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
@@ -10656,7 +10657,7 @@ export default function App() {
                 <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("Text size")}</span><TextSize /></div>
                 <div className="mb-3"><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
-              <p className="text-center text-[10px] text-slate-600 mt-3" data-testid="app-version">Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
+              <p className="text-center text-[10px] text-slate-600 mt-3 select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
             </div>
           </div>
         </div>
@@ -10789,7 +10790,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
         </div>
         <div className="px-4 pt-4 space-y-4">
           {/* where you are now */}
-          {TESTING_ALL_PRO && !pro ? (
+          {TESTING_ALL_PRO && devMode() && !pro ? (
             <div className="text-[13px] text-sky-300 rounded-xl border border-sky-900/60 bg-sky-500/5 p-3" data-testid="testing-pro">
               <p>{testingPro() ? tr("Testing build: every Pro feature is unlocked on this phone.") : tr("Testing build: you are seeing the app as a Free user.")}</p>
               <button data-testid="testing-toggle" className="mt-2 text-[12px] px-3 py-1.5 rounded-lg border border-sky-700 text-sky-200"

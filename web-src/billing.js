@@ -18,10 +18,14 @@ export const TRIAL_DAYS = 7;
 
 /** v5.32 — Ali is testing: every Pro feature is unlocked on every phone. Set to false before
     the public release (then the 7-day trial, Free limits and Pro codes apply again). */
-export const TESTING_ALL_PRO = true;
-/** While testing, Plan can switch the unlock off to see the app as a Free user ("attune:testing-pro" = "off"). */
+export const TESTING_ALL_PRO = true;     // the testing FEATURE exists; it is OFF for everyone unless developer mode is on (below)
+/** v6.11 release: developer mode is hidden — tap the version number 7 times (More, bottom). Off on every fresh install, so customers
+    always get the 7-day trial, the Free limits and Pro by purchase; Ali turns it on to test Pro features. */
+export function devMode() { try { return localStorage.getItem("attune:dev") === "1"; } catch (e) { return false; } }
+export function setDevMode(on) { try { localStorage.setItem("attune:dev", on ? "1" : "0"); localStorage.setItem("attune:testing-pro", on ? "on" : "off"); } catch (e) {} }
+/** In developer mode every Pro feature is unlocked; Plan can switch it off to see the app as a Free user ("attune:testing-pro" = "off"). */
 export function testingPro() {
-  if (!TESTING_ALL_PRO) return false;
+  if (!TESTING_ALL_PRO || !devMode()) return false;
   try { return localStorage.getItem("attune:testing-pro") !== "off"; } catch (e) { return true; }
 }
 

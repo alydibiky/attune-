@@ -1719,8 +1719,8 @@ function openGuide(){
 
 /* ============ Premium gating ============ */
 var FREE_ACCOUNTS=Infinity;   // everything is free now except invoicing
-/* v6.10 — Ali is testing: every Premium feature (receipt photos, sync, PDF, projects…) is open. Set to false before the public release. */
-var TESTING_ALL_PREMIUM=true;
+/* v6.11 release: false. Attune developer mode unlocks Premium through the bridge (entitlement). */
+var TESTING_ALL_PREMIUM=false;   // release: Premium follows Attune Pro (ATTUNE_PRO via the bridge, which includes developer mode) or its own purchase
 var ATTUNE_PRO=false;   // set by Attune over the bridge: Attune Pro includes every Money Premium feature
 function isPremium(){return TESTING_ALL_PREMIUM||ATTUNE_PRO||!!(db.premium&&db.premium.active);}
 function requirePremium(feat){if(isPremium())return true;openPaywall(feat);return false;}
