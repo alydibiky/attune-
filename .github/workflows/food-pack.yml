@@ -23,7 +23,14 @@ jobs:
       - name: USDA branded foods (public domain) — the link is read from USDA's download page; if anything fails the pack is built from Open Food Facts alone
         run: |
           mkdir -p usda && cd usda
-          url=$(curl -sSL --retry 3 https://fdc.nal.usda.gov/download-datasets.html | grep -o 'https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_branded_food_csv_[0-9-]*\.zip' | sort -u | tail -1 || true)
+          # the download page builds its links with JavaScript, so ask for the newest file by its name pattern (dated, a few times a year)
+          url=""
+          for i in $(seq 0 460); do
+            d=$(date -u -d "-$i day" +%F)
+            u="https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_branded_food_csv_$d.zip"
+            c=$(curl -s -o /dev/null -w "%{http_code}" -I -m 10 "$u" || true)
+            if [ "$c" = "200" ]; then url="$u"; break; fi
+          done
           echo "USDA file: ${url:-none}"
           if [ -n "$url" ] && curl -sSL --retry 5 -o branded.zip "$url" && unzip -q -o branded.zip; then
             d=$(dirname "$(find . -name branded_food.csv | head -1)"); echo "USDA folder: $d"; echo "$d" > ../usda_dir.txt
