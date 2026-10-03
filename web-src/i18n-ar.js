@@ -1891,7 +1891,7 @@ export const AR = {
   "The model is read from storage instead of RAM — update to the latest Attune APK (it loads the model into RAM).": "النموذج يُقرأ من التخزين بدل الذاكرة — حدّث إلى أحدث APK من Attune (يحمّل النموذج في الذاكرة).",
   "The engine is using its slowest processor path (no dotprod). Send this report.": "المحرك يستخدم أبطأ مسار للمعالج (بدون dotprod). أرسل هذا التقرير.",
   "The phone is critically hot — Attune stops an answer in progress and keeps what was written. Let it cool for a few minutes.": "الهاتف ساخن جدًا لدرجة خطرة — يوقف التطبيق الإجابة الجارية ويحتفظ بما كُتب. اتركه يبرد بضع دقائق.",
-  "The phone is very hot — Attune writes with 2 threads and waits up to 20 seconds before each new answer so it can cool.": "الهاتف ساخن جدًا — يكتب التطبيق بخيطين فقط وينتظر حتى ٢٠ ثانية قبل كل إجابة جديدة ليبرد.",
+  "The phone is very hot — Attune waits up to 20 seconds before each new answer so it can cool, and uses fewer threads the next time the model starts.": "الهاتف ساخن جدًا — ينتظر التطبيق حتى ٢٠ ثانية قبل كل إجابة جديدة ليبرد، ويستخدم خيوطًا أقل عند تشغيل النموذج في المرة القادمة.",
   "The phone is getting warm — long answers may slow down soon. Short breaks between answers keep it fast.": "الهاتف بدأ يسخن — قد تبطؤ الإجابات الطويلة قريبًا. استراحات قصيرة بين الإجابات تحافظ على سرعته.",
   "Only {n} threads are used for writing.": "يُستخدم {n} خيوط فقط للكتابة.",
   "This is a big model for a phone — Qwen 3.5 4B is about 2–3× faster.": "هذا نموذج كبير على هاتف — Qwen 3.5 4B أسرع بنحو 2–3 مرات.",

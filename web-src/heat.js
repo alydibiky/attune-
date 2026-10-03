@@ -27,7 +27,7 @@ export function heatLevel(d) {
 export function heatWarning(d) {
   const l = heatLevel(d);
   if (l >= 4) return ["bad", "The phone is critically hot — Attune stops an answer in progress and keeps what was written. Let it cool for a few minutes."];
-  if (l === 3) return ["bad", "The phone is very hot — Attune writes with 2 threads and waits up to 20 seconds before each new answer so it can cool."];
+  if (l === 3) return ["bad", "The phone is very hot — Attune waits up to 20 seconds before each new answer so it can cool, and uses fewer threads the next time the model starts."];
   if (l === 2) return ["bad", "The phone is hot — it slows the processor down on purpose. Let it cool, take it out of its case, don't charge while asking."];
   if (l === 1) return ["warn", "The phone is getting warm — long answers may slow down soon. Short breaks between answers keep it fast."];
   return null;
