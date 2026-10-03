@@ -1,0 +1,34 @@
+{
+  "name": "attune-desktop",
+  "productName": "Attune",
+  "version": "0.1.0",
+  "description": "Attune for Windows, macOS and Linux: the same app, private models on this computer.",
+  "main": "main.js",
+  "author": "Aly Aldibiki",
+  "license": "UNLICENSED",
+  "private": true,
+  "repository": "https://github.com/alydibiky/attune-",
+  "scripts": {
+    "start": "electron .",
+    "test:unit": "node test/unit.js",
+    "smoke": "node test/smoke.js",
+    "dist": "electron-builder --publish never"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "26.0.12"
+  },
+  "build": {
+    "appId": "com.aldibiki.attune.desktop",
+    "productName": "Attune",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "preload.js", "lib/**", "test/smoke-run.js"],
+    "extraResources": [
+      { "from": "../app/src/main/assets/www", "to": "www", "filter": ["**/*"] },
+      { "from": "engine", "to": "engine", "filter": ["**/*"] }
+    ],
+    "win": { "target": ["nsis", "zip"] },
+    "mac": { "target": ["dmg", "zip"], "category": "public.app-category.productivity", "identity": null },
+    "linux": { "target": ["AppImage", "tar.gz"], "category": "Office", "maintainer": "Attune <noreply@example.invalid>" }
+  }
+}

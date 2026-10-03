@@ -1,0 +1,129 @@
+name: Desktop app (Windows, macOS, Linux)
+
+# Builds the desktop app (desktop/, an Electron shell around the same web app)
+# for the three systems, with the model engine (llama.cpp at the app's pinned
+# commit) compiled for each: Vulkan + every x64 CPU generation on Windows and
+# Linux, Metal on macOS. Each build is smoke-tested on the runner (no graphics
+# chip there, so the CPU path): the packaged app starts, installs a 0.8B model,
+# and streams an answer through the same bridge the phone uses.
+# Installers are UNSIGNED for now (see DESKTOP_PLAN.md, "Signing").
+on:
+  workflow_dispatch:
+  push:
+    branches: [desktop-shell]   # the prototype branch; a run button only appears once this file is on main
+    paths: ["desktop/**", ".github/workflows/desktop.yml"]
+
+env:
+  LLAMA_COMMIT: 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
+  CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux-x64
+            variant: vulkan
+          - os: windows-latest
+            name: windows-x64
+            variant: vulkan
+          - os: macos-latest
+            name: macos-arm64
+            variant: metal
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Vulkan SDK (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libvulkan-dev glslc xvfb > /dev/null
+      - name: Vulkan SDK (Windows)
+        if: runner.os == 'Windows'
+        uses: jakoch/install-vulkan-sdk-action@v1
+        with:
+          vulkan_version: 1.4.309.0
+          install_runtime: true
+          cache: true
+          stripdown: true
+
+      - name: Cache the engine build
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: desktop/engine
+          key: engine-${{ matrix.name }}-${{ matrix.variant }}-${{ env.LLAMA_COMMIT }}-v1
+
+      - name: Build the model engine (llama.cpp, pinned)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          git clone -q https://github.com/ggml-org/llama.cpp "$RUNNER_TEMP/llama.cpp"
+          cd "$RUNNER_TEMP/llama.cpp" && git checkout -q "$LLAMA_COMMIT"
+          COMMON="-DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DBUILD_SHARED_LIBS=ON -DGGML_NATIVE=OFF"
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            cmake -S . -B build $COMMON -DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=ON -DCMAKE_INSTALL_RPATH=@loader_path -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
+          elif [ "$RUNNER_OS" = "Windows" ]; then
+            cmake -S . -B build $COMMON -DGGML_VULKAN=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -T ClangCL
+          else
+            cmake -S . -B build $COMMON -DGGML_VULKAN=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DCMAKE_INSTALL_RPATH='$ORIGIN' -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
+          fi
+          cmake --build build --config Release --target llama-server -j 4
+          OUT="$GITHUB_WORKSPACE/desktop/engine/${{ matrix.variant }}"
+          mkdir -p "$OUT"
+          if [ "$RUNNER_OS" = "Windows" ]; then cp build/bin/Release/*.exe build/bin/Release/*.dll "$OUT/"; else cp -a build/bin/. "$OUT/"; fi
+          cp LICENSE "$OUT/LICENSE-llama.cpp.txt"
+          ls -la "$OUT"
+
+      - name: Engine sees which devices
+        run: |
+          cd desktop/engine/${{ matrix.variant }}
+          export LD_LIBRARY_PATH="$PWD"
+          ./llama-server --version || true
+          ./llama-server --list-devices || true
+
+      - name: Install the shell's tools
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+
+      - name: Unit checks
+        working-directory: desktop
+        run: node test/unit.js
+
+      - name: Small model for the smoke test
+        run: curl -sSL --retry 5 -o "$RUNNER_TEMP/q08.gguf" https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B-Q4_K_M.gguf
+
+      - name: Smoke test from source (streams an answer)
+        working-directory: desktop
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a node test/smoke.js "$RUNNER_TEMP/q08.gguf"; else node test/smoke.js "$RUNNER_TEMP/q08.gguf"; fi
+
+      - name: Package (unsigned)
+        working-directory: desktop
+        run: npx electron-builder --publish never
+
+      - name: Smoke test the packaged app
+        working-directory: desktop
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then APP="$(ls -d dist/linux-unpacked)/attune-desktop"; [ -x "$APP" ] || APP="$(ls dist/linux-unpacked/* | grep -iv '\.so\|\.pak\|\.dat\|\.bin\|\.json\|\.html' | head -1)"; xvfb-run -a node test/smoke.js "$RUNNER_TEMP/q08.gguf" "$APP"
+          elif [ "$RUNNER_OS" = "Windows" ]; then node test/smoke.js "$RUNNER_TEMP/q08.gguf" "dist/win-unpacked/Attune.exe"
+          else node test/smoke.js "$RUNNER_TEMP/q08.gguf" "$(ls -d dist/mac*/Attune.app)/Contents/MacOS/Attune"; fi
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: attune-desktop-${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            desktop/dist/*.exe
+            desktop/dist/*.zip
+            desktop/dist/*.dmg
+            desktop/dist/*.AppImage
+            desktop/dist/*.tar.gz
