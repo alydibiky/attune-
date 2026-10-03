@@ -5,6 +5,8 @@ set -u
 NAME=$1 KIND=$2 N=$3 S=$4 PF=$5 POST=$6; shift 6; X="$*"
 SD=~/sd/build/bin/sd-cli; M=~/m; O=$GITHUB_WORKSPACE/studio-out/$NAME; mkdir -p "$O"
 T=$(nproc); i=0; : > "$O/times.txt"; LIMIT=${LIMIT:-999}; : > "$O/rss.txt"
+# CAP=12G: run the engine in a memory cage of that size with no swap, like a phone with that much free RAM
+[ -n "${CAP:-}" ] && SD="sudo systemd-run --quiet --scope -p MemoryMax=$CAP -p MemorySwapMax=0 --uid=$(id -u) --gid=$(id -g) $SD"
 TV="/usr/bin/time -f %M -a -o $O/rss.txt"   # peak memory (KB) of every engine run
 while read -r P; do
   [ -z "$P" ] && continue; [ $i -ge $LIMIT ] && break
