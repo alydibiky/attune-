@@ -7,7 +7,8 @@ cd "$(dirname "$0")/.."
 export ANDROID_HOME=/opt/android-sdk ANDROID_SDK_ROOT=/opt/android-sdk
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 cp app/build.gradle.kts /tmp/build.gradle.kts.orig
-if ! curl -s -o /dev/null -m 8 -w "%{http_code}" https://developer.huawei.com/repo/ | grep -q "^[23]"; then sed -i '/com.huawei.hms/d' app/build.gradle.kts; HW=1; else HW=0; fi
+CODE=$(curl -s -o /dev/null -m 8 -w "%{http_code}" https://developer.huawei.com/repo/)
+if [ "$CODE" = "000" ] || [ "$CODE" = "403" ]; then sed -i '/com.huawei.hms/d' app/build.gradle.kts; HW=1; else HW=0; fi
 OUT=$(/opt/gradle-8.11.1/bin/gradle :app:compileDebugKotlin --no-daemon -q 2>&1 | grep -v JAVA_TOOL_OPTIONS)
 cp /tmp/build.gradle.kts.orig app/build.gradle.kts
 ERR=$(echo "$OUT" | grep -E "^e: " | { [ "$HW" = 1 ] && grep -v "HuaweiHealth.kt" || cat; })
