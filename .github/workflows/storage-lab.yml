@@ -1,0 +1,54 @@
+name: Storage lab (mapped vs copied weights under a memory cap, long context, prompt cache on storage)
+
+# Ali: "less heavy on devices by a mile, take more input, use the phone's storage — prove it".
+# Each job caps memory like a small phone (cgroup v2, no swap) and runs tests/models/storage_lab.py.
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Run only this candidate (qwen35-4b, qwen35-9b, gemma4-e4b, qwen36-35b-a3b); empty = all"
+        default: ""
+
+jobs:
+  storage:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 340
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: qwen35-4b,      search: "Qwen3.5-4B-GGUF",      quants: "Q4_K_M,IQ4_XS", need: "qwen3.5-4b", caps: "none,4G,3G" }
+          - { name: qwen35-9b,      search: "Qwen3.5-9B-GGUF",      quants: "IQ4_NL,Q4_K_M,IQ4_XS", need: "qwen3.5-9b", caps: "none,6G,4G" }
+          - { name: gemma4-e4b,     search: "gemma-4-E4B-it-GGUF",  quants: "Q4_0,Q4_K_M,IQ4_XS", need: "e4b", caps: "none,5G,3G" }
+          - { name: qwen36-35b-a3b, search: "Qwen3.6-35B-A3B-GGUF", quants: "UD-IQ4_XS,IQ4_XS,Q4_K_M", need: "35b", caps: "none,10G,8G" }
+    steps:
+      - uses: actions/checkout@v4
+        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+      - name: Free disk (the 35B file is ~18 GB)
+        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        run: sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup || true; df -h / | tail -1
+      - name: Build llama.cpp (the app's pinned commit)
+        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        run: |
+          git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
+          cd ~/llama.cpp && git checkout -q 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF > /dev/null
+          cmake --build build --target llama-server -j"$(nproc)" > /dev/null
+          ls build/bin | head
+      - name: Download the model
+        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        run: |
+          read REPO FILE < <(python3 tests/models/resolve_hf.py "${{ matrix.search }}" "${{ matrix.quants }}" ${{ matrix.need }})
+          echo "Model: $REPO / $FILE" | tee -a "$GITHUB_STEP_SUMMARY"
+          curl -sSL --retry 5 -o ~/model.gguf "https://huggingface.co/$REPO/resolve/main/$FILE"
+          ls -la ~/model.gguf; df -h / | tail -1
+      - name: Storage lab
+        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        run: python3 tests/models/storage_lab.py ~/model.gguf "$HOME/llama.cpp/build/bin" "${{ matrix.name }}" "${{ matrix.caps }}"
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storage-lab-${{ matrix.name }}
+          path: storage-*.md
