@@ -168,3 +168,41 @@ function jsonOf(raw) {
   if (a < 0 || b <= a) throw new Error("The model did not return a readable answer — try again");
   try { return JSON.parse(s.slice(a, b + 1)); } catch (e) { throw new Error("The model's answer was cut off — try again"); }
 }
+
+// ---- edit with a sentence + make it professional ---------------------------------------------------------------------------------
+/** The CV's content as the same JSON shape the import reads. */
+export function cvToJson(cv) {
+  const get = (t) => ((cv.sections.find((s) => s.type === t) || {}).items) || [];
+  const b = cv.basics || {};
+  return {
+    basics: { name: b.name || "", title: b.title || "", email: b.email || "", phone: b.phone || "", city: b.city || "" },
+    summary: (get("summary")[0] || {}).text || "",
+    experience: get("experience").map((e) => ({ role: e.role, company: e.company, location: e.location, start: e.start, end: e.end, current: !!e.current, bullets: (e.bullets || []).filter(Boolean) })),
+    education: get("education").map((e) => ({ degree: e.degree, school: e.school, start: e.start, end: e.end, note: e.note })),
+    skills: [].concat(...get("skills").map((s) => s.items || [])),
+    languages: get("languages").map((l) => ({ name: l.name, level: l.level })),
+    certs: get("certs").map((c) => ({ name: c.name, issuer: c.issuer, year: c.year })),
+  };
+}
+/** instruction: what the person wants changed or added ("" = just polish). polish: also reword for a professional tone. */
+export function reviseMessages(cv, instruction, polish) {
+  const ar = cv.lang === "ar";
+  return [
+    { role: "system", content: `You edit a CV given as JSON and return the WHOLE JSON again in the same shape (basics, summary, experience, education, skills, languages, certs). Write in ${ar ? "Arabic" : "English"}. ${NO_INVENT} Apply the person's request exactly${polish ? ", and make every bullet and the summary clearer and more professional: strong action verb first, one idea per bullet, no filler, no first person, past tense for past jobs" : ", and change nothing else"}. Keep every job, school and certificate unless asked to remove it. New facts may come ONLY from the request. Reply with the JSON only.` },
+    { role: "user", content: `CV:\n${JSON.stringify(cvToJson(cv))}\n\nRequest: ${String(instruction || "").trim() || "(none — only improve the wording)"}` },
+  ];
+}
+/** → { cv, changed } or throws when the answer invents numbers or loses content. */
+export function parseRevise(raw, cv, instruction) {
+  const j = jsonOf(raw);
+  const next = applyImport(cv, JSON.stringify(j), "");
+  const src = cvText(cv) + "\n" + String(instruction || "");
+  const out = cvText(next);
+  if (!onlyKnown(out, src)) throw new Error("The AI invented a number that is not in your CV or your request — nothing was changed");
+  const before = (cv.sections.find((s) => s.type === "experience") || { items: [] }).items.length;
+  const after = (next.sections.find((s) => s.type === "experience") || { items: [] }).items.length;
+  if (after < before && !/remov|delet|drop|احذف|شيل|امسح/i.test(String(instruction))) throw new Error("The AI dropped a job — nothing was changed");
+  // applyImport rewrote contact details from text (none given): keep the originals
+  next.basics = { ...next.basics, email: next.basics.email || cv.basics.email, phone: next.basics.phone || cv.basics.phone };
+  return { cv: next, changed: out.trim() !== src.replace(String(instruction || ""), "").trim() };
+}

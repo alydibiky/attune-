@@ -215,6 +215,7 @@ function AITab({ cv, setCV, llm, modelReady, openEngine, flash, onCopyFor, onNew
   const [ad, setAd] = useState(""); const [company, setCompany] = useState("");
   const [tailor, setTailor] = useState(null); const [letter, setLetter] = useState("");
   const [sum, setSum] = useState("");
+  const [req, setReq] = useState(""); const [rev, setRev] = useState(null); const [undo, setUndo] = useState(null);
   const run = async (key, fn) => {
     if (!modelReady) { openEngine && openEngine(); return; }
     setBusy(key);
@@ -226,6 +227,17 @@ function AITab({ cv, setCV, llm, modelReady, openEngine, flash, onCopyFor, onNew
   return (
     <div className="p-3 space-y-4" data-testid="cv-ai">
       <p className="text-[12px] text-slate-400">{tr("The AI on your phone rewords — it never adds a number, date or skill you didn't write. Anything it suggests is shown first.")}</p>
+      <div className="space-y-2 rounded-xl border border-teal-800 bg-teal-500/5 p-3" data-testid="cv-ai-revise">
+        <p className="text-[13px] font-semibold text-slate-100">{tr("Edit or improve my CV")}</p>
+        <p className="text-[12px] text-slate-400">{tr("Say what to add or change («add my job at XCMG as crane supervisor, 2019–2022», «change my phone to …»), or leave it empty and just make it more professional. You see the result before it is kept.")}</p>
+        <Tx rows={3} value={req} onChange={setReq} placeholder={tr("What should be added or changed? (optional)")} data-testid="cv-revise-text" />
+        <div className="grid grid-cols-2 gap-2">
+          <Btn k="rev" testid="cv-revise-go" onClick={() => run("rev", async () => setRev({ ...A.parseRevise(await ask(A.reviseMessages(cv, req, false), 1800), cv, req), polish: false }))}>{tr("Apply my change")}</Btn>
+          <Btn k="revp" testid="cv-revise-polish" onClick={() => run("revp", async () => setRev({ ...A.parseRevise(await ask(A.reviseMessages(cv, req, true), 1800), cv, req), polish: true }))}>{tr("Change + make it professional")}</Btn>
+        </div>
+        {rev ? <div className="rounded-lg bg-slate-900 p-2.5" data-testid="cv-revise-result"><p className="text-[11px] uppercase text-slate-500 mb-1">{tr("New version")}</p><p className="text-[12.5px] text-slate-200 whitespace-pre-wrap max-h-64 overflow-auto">{V.cvText(rev.cv)}</p><div className="flex gap-2 mt-2"><button className={primary} onClick={() => { setUndo(cv); setCV(rev.cv); setRev(null); setReq(""); flash(tr("Done — you can undo it")); }} data-testid="cv-revise-apply">{tr("Use this version")}</button><button className={ghost} onClick={() => setRev(null)}>{tr("Cancel")}</button></div></div> : null}
+        {undo ? <button className={ghost + " w-full"} onClick={() => { setCV(undo); setUndo(null); }} data-testid="cv-revise-undo">{tr("Undo the last change")}</button> : null}
+      </div>
       <div className="space-y-2 rounded-xl border border-slate-800 p-3">
         <p className="text-[13px] font-semibold text-slate-100">{tr("Professional summary")}</p>
         <Btn k="sum" testid="cv-ai-summary" onClick={() => run("sum", async () => setSum(A.parseSummary(await ask(A.summaryMessages(cv), 300), cv)))}>{tr("Write my summary")}</Btn>

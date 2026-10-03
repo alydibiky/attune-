@@ -59,3 +59,17 @@ const imp = A.applyImport(V.newCV("en"), JSON.stringify({ basics: { name: "Ahmed
 ok(imp.basics.email === "ahmed@mail.com" && imp.basics.name === "Ahmed A." && imp.sections.find((s) => s.type === "experience").items[0].current === true && imp.sections.find((s) => s.type === "skills").items[0].items[0] === "Rigging", "an imported CV fills the sections; contact details come from the text itself");
 
 if (fail) { console.log(`\n${fail} FAILED`); process.exit(1); } else console.log("\nALL PASSED");
+
+// ---- v6.18: edit with a sentence / make it professional ----
+{
+  const V = await import("../../web-src/cv.js"), A = await import("../../web-src/cv-ai.js");
+  let cv = V.newCV("en", "T"); cv.basics.name = "Ali"; cv.basics.email = "a@b.com";
+  cv.sections.find((s) => s.type === "experience").items = [{ role: "Supervisor", company: "Adrighem", location: "", start: "2019", end: "2022", current: false, bullets: ["did lifts for 12 sites"] }];
+  const good = JSON.stringify({ ...A.cvToJson(cv), experience: [{ role: "Site Supervisor", company: "Adrighem", start: "2019", end: "2022", bullets: ["Led crane lifts across 12 sites"] }, { role: "Operator", company: "XCMG", start: "2016", end: "2019", bullets: ["Operated 50 t cranes"] }] });
+  const r = A.parseRevise(good, cv, "add Operator at XCMG 2016-2019 on 50 t cranes");
+  console.log(r.cv.sections.find((s) => s.type === "experience").items.length === 2 && r.cv.basics.email === "a@b.com" ? "PASS revise adds a job from the request and keeps contact details" : "FAIL revise add");
+  let threw = ""; try { A.parseRevise(JSON.stringify({ ...A.cvToJson(cv), summary: "Cut costs by 40%" }), cv, ""); } catch (e) { threw = e.message; }
+  console.log(/invented a number/.test(threw) ? "PASS revise refuses an invented number" : "FAIL revise invented");
+  threw = ""; try { A.parseRevise(JSON.stringify({ ...A.cvToJson(cv), experience: [] }), cv, "make it better"); } catch (e) { threw = e.message; }
+  console.log(/dropped a job/.test(threw) ? "PASS revise refuses to lose a job" : "FAIL revise drop");
+}

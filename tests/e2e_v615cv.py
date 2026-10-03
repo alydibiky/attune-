@@ -61,6 +61,8 @@ with sync_playwright() as p:
     page.click("[data-testid=cv-tab-preview]"); page.wait_for_timeout(1200)
     ah = page.frame_locator("[data-testid=cv-preview] iframe").locator("html").evaluate("e => e.outerHTML")
     check('dir="rtl"' in ah and "أحمد علي" in ah, "an Arabic CV is right-to-left")
+    page.click("[data-testid=cv-tab-ai]"); page.wait_for_selector("[data-testid=cv-ai-revise]", timeout=4000)
+    check(page.locator("[data-testid=cv-revise-polish]").count() == 1, "the AI tab offers Edit or improve my CV")
     check(real_errors(errors) == [], "no errors: %s" % real_errors(errors)[:3])
     ctx.close(); br.close()
 env.close()
