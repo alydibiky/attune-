@@ -864,7 +864,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         pool.execute {
             try {
                 val a = JSONObject(arg)
-                resolve(id, DocTools.pdfText(ctx, android.util.Base64.decode(a.getString("b64"), android.util.Base64.DEFAULT)))
+                resolve(id, DocTools.pdfText(ctx, android.util.Base64.decode(a.getString("b64"), android.util.Base64.DEFAULT), textOnly = a.optBoolean("textOnly", false)))
             } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read that PDF") }
         }
     }

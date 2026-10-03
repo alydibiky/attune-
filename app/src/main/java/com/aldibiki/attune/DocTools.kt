@@ -343,7 +343,7 @@ object DocTools {
         }
     }
 
-    fun pdfText(ctx: Context, bytes: ByteArray, maxPages: Int = 400): JSONObject {
+    fun pdfText(ctx: Context, bytes: ByteArray, maxPages: Int = 400, textOnly: Boolean = false): JSONObject {
         pdfBox(ctx)
         val doc = try { com.tom_roush.pdfbox.pdmodel.PDDocument.load(bytes) }
             catch (e: com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException) { throw java.io.IOException("This PDF is locked with a password — open it, save a copy without the password, and try again.") }
@@ -359,6 +359,7 @@ object DocTools {
                 val t = try { strip.getText(d) } catch (e: Exception) { "" }
                 val clean = t.replace("\r", "").trim()
                 val page = JSONObject().put("n", i).put("text", clean).put("scan", clean.replace(Regex("\\s"), "").length < 25)
+                if (textOnly) { pages.put(page); continue }   // v6.18: reading for questions needs the words, not the layout
                 try {
                     page.put("lines", layoutLines(strip))
                     val box = d.getPage(i - 1).mediaBox

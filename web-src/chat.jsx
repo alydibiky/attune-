@@ -1294,6 +1294,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   // text too for a plain document).
   const pickFile = (file) => {
     if (!file) return;
+    // v6.18: a document to read (PDF, Word, PowerPoint, e-book, web page) opens in Ask a PDF — reader + chat with page citations
+    if (api.openPdfChat && /\.(pdf|docx|pptx|odt|epub|html?|rtf)$/i.test(file.name)) return api.openPdfChat(file);
     if (file.size > 15 * 1024 * 1024) return api.flash(tr("That file is too large (15 MB at most)"));
     const r = new FileReader();
     r.onload = () => {
@@ -1721,7 +1723,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             </label>
             <label className="p-2 rounded-full text-slate-400 active:bg-slate-800" title={tr("Spreadsheet or document")}>
               <Paperclip size={18} />
-              <input type="file" accept=".csv,.tsv,.xlsx,.xlsm,.xls,.json,.txt,.md" className="hidden" data-testid="attach-file" onChange={(e) => { pickFile(e.target.files && e.target.files[0]); e.target.value = ""; }} />
+              <input type="file" accept=".csv,.tsv,.xlsx,.xlsm,.xls,.json,.txt,.md,.pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf" className="hidden" data-testid="attach-file" onChange={(e) => { pickFile(e.target.files && e.target.files[0]); e.target.value = ""; }} />
             </label>
             <button onClick={() => setThink((v) => !v)} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${think ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Think first")}>
               <Brain size={14} /> {tr("Think")}</button>

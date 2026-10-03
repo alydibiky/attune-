@@ -33,6 +33,7 @@ import { classify as videoLink, linkIn } from "./video.js";
 import { popBack, hasBack, useSubBack, forgetSticky } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
+import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { CVPage } from "./cv-ui.jsx";
 import * as USK from "./userskills.js";
 import { placeFor } from "./places.js";
@@ -7236,7 +7237,7 @@ function tierOfInstalled(m) {
   return MODEL_TIERS.find((x) => x.realName && !!x.fast === fast && String(m.label || "").toLowerCase().replace(/[\s-]+/g, "").includes(x.realName.toLowerCase().replace(/[\s-]+/g, ""))) || null;
 }
 
-const MODE_TITLES = { cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const MODE_TITLES = { pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
@@ -7261,6 +7262,7 @@ const MORE_TOOLS = [
   ["news", "Daily news", "Topics you follow, every morning", Newspaper],
   ["business", "Business", "Your own ERP — tables you can reshape", Database],
   ["skills", "Skills", "Your own recipes for the AI — create, import, share", Sparkles],
+  ["pdfchat", "Ask a PDF", "Read a PDF or book and chat with it — every answer shows its page", FileText],
   ["cv", "CV / Resume", "Build, tailor and export a CV — English or Arabic", FileText],
   ["code", "Code", "Programs tested on your phone", Code2],
   ["crane", "Crane toolkit", "Load charts, ground, slings, wind", Calculator],
@@ -7278,7 +7280,7 @@ const MORE_TOOLS = [
 // in four named groups instead of one wall of 23 tiles.
 const MORE_GROUPS = [
   ["Create & learn", ["instant", "studio", "assistants", "skills", "projects", "artifacts", "code", "learn", "news"]],
-  ["Work & business", ["slides", "xray", "convert", "video", "cv", "business", "crane", "field", "fleet", "reminders"]],
+  ["Work & business", ["slides", "xray", "convert", "pdfchat", "video", "cv", "business", "crane", "field", "fleet", "reminders"]],
   ["Your life", ["fit", "deal", "memory", "map", "travel", "cycle"]],
   ["Prompts for other AIs", ["improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
@@ -7328,6 +7330,7 @@ export default function App() {
   // so a restored backup or a reinstall gets its reminders back.
   useEffect(() => { try { syncToPhone(NATIVE, reminders); } catch (e) {} try { syncDaily(NATIVE); } catch (e) {} }, []);
   const [dailyOpen, setDailyOpen] = useState(null);
+  const [pdfIn, setPdfIn] = useState(null);             // v6.18: a document attached in Chat → Ask a PDF
   const [fitIn, setFitIn] = useState(null);             // v5.42: "I ate…" from a Chat chip
   const [slidesIn, setSlidesIn] = useState(null);        // v5.40: { prompt, tab } from a Chat chip
   const [videoIn, setVideoIn] = useState("");             // v5.38: a video link shared to Attune
@@ -8740,6 +8743,7 @@ export default function App() {
     sendToMoney: (t) => sendToMoney(t, "Payment read — pick the account and confirm"),
     photoToMoney: (url) => { setPendingPay({ image: url, id: Date.now() }); setMode("money"); },
     openFit: (text) => { setFitIn(text); setMode("fit"); },
+    openPdfChat: (file) => { setPdfIn(file); setMode("pdfchat"); },
     openSlides: (prompt, tab) => { forgetSticky("slides:"); setSlidesIn({ prompt, tab, id: Date.now() }); setMode("slides"); },   // a new request starts a fresh form
     listen: async (langTag, onPartial) => {
       const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); });
@@ -9448,6 +9452,10 @@ export default function App() {
             nativeCall={NATIVE && NATIVE.news ? nativeCall : null}
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, onToken: o.onToken })} />
+        ) : mode === "pdfchat" ? (
+          <PdfChatPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} canReadPhotos={!!LocalEngine.vision} nativeCall={NATIVE ? nativeCall : null}
+            initialFile={pdfIn} clearInitial={() => setPdfIn(null)}
+            llm={(messages, a, b) => { const image = b ? a : null, o = b || a || {}; return callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false }); }} />
         ) : mode === "cv" ? (
           <CVPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} nativeCall={NATIVE ? nativeCall : null}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.3, think: false, json: !!o.json })}
