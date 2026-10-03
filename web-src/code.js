@@ -205,6 +205,70 @@ export function dateFacts(code) {
   return out.slice(0, 6);
 }
 
+/* v6.12 TEST ARBITRATION. Measured on a 4B model: programs that were already right (hidden tests
+   pass) spent 6 fix rounds and ~1,000 s because the model's OWN test had a wrong expected value, and
+   each round it "fixed" the program instead. When the same test call fails twice, the app stops
+   asking for patches and settles it by code: a second, independent implementation of the function
+   is written (short, no tests) and both are run on the failing calls. Both agree and the test
+   disagrees → the test's expected value is rewritten to the agreed value (no extra round). They
+   disagree → the fix round is shown both computed values. A test that calls the function with input
+   its own validation refuses (and the task asks for that refusal) is turned into a "must raise" test. */
+const tests0 = (code) => { const s = String(code || ""); const i = s.indexOf("# --- tests ---"); return i >= 0 ? s.slice(0, i) : s.split("\n").filter((l) => !/^assert\b|^print\(["']ALL TESTS PASSED/.test(l)).join("\n"); };
+/** The function a test calls: "vat(100) * 2" → "vat" (null for anything else). */
+export function calledFn(expr) { const m = /^\s*([A-Za-z_]\w*)\s*\(/.exec(String(expr || "")); return m && !/^(abs|round|len|str|int|float|list|sorted|set|tuple|dict|sum|min|max)$/.test(m[1]) ? m[1] : null; }
+export function altMessages(task, fname) {
+  return [
+    { role: "system", content: `You are an expert programmer. Write ${RULES.python}\nReply with ONE \`\`\`python code block and nothing else.` },
+    { role: "user", content: `Task: ${String(task || "").trim()}\n\nWrite ONLY the function ${fname} (and any small helper it needs), using a straightforward approach. Follow the task exactly. No tests, no demo, no prints, no comments.` },
+  ];
+}
+/** The second implementation, renamed to _alt_<name> so both can run side by side. → code or null */
+export function altProgram(answer, fname) {
+  const p = pickProgram(answer, "python");
+  if (!p || !new RegExp("^def\\s+" + fname + "\\s*\\(", "m").test(p.code)) return null;
+  const body = tests0(p.code).split("\n").filter((l) => !/^(print|assert)\b/.test(l)).join("\n");
+  return body.replace(new RegExp("\\b" + fname + "\\s*\\(", "g"), "_alt_" + fname + "(");
+}
+/** A program that defines both versions and prints, for each failing call, what each returns. */
+export function arbitrationProbe(code, alt, items) {
+  const out = [tests0(code), alt, "def _arb(f):\n    try:\n        return repr(f())\n    except Exception as e:\n        return 'raises ' + type(e).__name__"];
+  items.forEach((it, i) => {
+    const f = calledFn(it.got);
+    out.push(`print('__ARB__', ${i}, _arb(lambda: ${it.got}), '|||', _arb(lambda: ${it.got.replace(new RegExp("^\\s*" + f + "\\s*\\("), "_alt_" + f + "(")}))`);
+  });
+  return out.join("\n");
+}
+const sameVal = (a, b) => { if (a === b) return true; const x = Number(a), y = Number(b); return a !== "" && b !== "" && isFinite(x) && isFinite(y) && Math.abs(x - y) <= 1e-9 * Math.max(1, Math.abs(x)); };
+const literal = (v) => !!v && !/^raises |<|^nan$|^inf$/i.test(v) && v.length <= 120;
+/** → [{ ...item, prog, alt, agree }] from the probe's output */
+export function arbitrationResults(res, items) {
+  const got = {};
+  for (const m of String((res && res.stdout) || "").matchAll(/^__ARB__ (\d+) (.*) \|\|\| (.*)$/gm)) got[m[1]] = [m[2].trim(), m[3].trim()];
+  return items.map((it, i) => got[i] ? { ...it, prog: got[i][0], alt: got[i][1], agree: sameVal(got[i][0], got[i][1]) } : null).filter(Boolean);
+}
+/** Rewrite one test line's expected value. → new code (unchanged when the line can't be rewritten safely) */
+export function rewriteExpect(code, line, value) {
+  if (!literal(value)) return code;
+  return String(code).split("\n").map((l) => {
+    if (l.trim() !== line) return l;
+    const a = ABS_RE.exec(l);
+    if (a) return /\band\b|\bor\b/.test(a[3]) ? l : `${a[1]}assert abs(${a[2]} - (${value})) < ${a[4]}`;
+    const m = EQ_RE.exec(l);
+    if (!m || /\band\b|\bor\b|==/.test(m[3]) || /\band\b|\bor\b/.test(m[2])) return l;
+    return `${m[1]}assert ${m[2]} == ${value}`;
+  }).join("\n");
+}
+/** A test that expects a value from a call the program refuses on purpose → a "must raise" test. */
+export function refusalRepair(code, line, exc) {
+  return String(code).split("\n").map((l) => {
+    if (l.trim() !== line) return l;
+    const m = ABS_RE.exec(l) || EQ_RE.exec(l);
+    if (!m) return l;
+    const ind = m[1];
+    return `${ind}try:\n${ind}    ${m[2]}\n${ind}    raise AssertionError("expected ${exc}")\n${ind}except ${exc}:\n${ind}    pass`;
+  }).join("\n");
+}
+
 /** Did the run pass? { passed, reason } */
 export function judge(res, code, lang) {
   const tests = countTests(code, lang);
@@ -406,6 +470,36 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
     return true;
   };
 
+  const failCount = new Map(), arbDone = new Set();       // test call → times it failed; calls already arbitrated
+  const arbitrate = async (items) => {
+    let next = code, note = "";
+    const rewrote = [];
+    const refusesOnPurpose = /\b(raise|raises|throw|error|invalid|reject)/i.test(task) || /يرفع|ترفع|خطأ|غلط/.test(task);
+    const valueItems = [];
+    for (const it of items) {
+      const exc = (/^raises (\w+)$/.exec(it.value) || [])[1];
+      if (exc && exc !== "AssertionError" && refusesOnPurpose && new RegExp("raise\\s+" + exc + "\\b").test(code)) {
+        next = refusalRepair(next, it.line, exc); rewrote.push(it.line);
+      } else if (!exc) valueItems.push(it);
+    }
+    for (const fname of [...new Set(valueItems.map((it) => calledFn(it.got)))]) {
+      stopped();
+      const mine = valueItems.filter((it) => calledFn(it.got) === fname);
+      let alt = null;
+      try { alt = altProgram(await llm(altMessages(task, fname), { maxTokens: 700 }), fname); } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      if (!alt) continue;
+      let found = [];
+      try { found = arbitrationResults(await run("python", arbitrationProbe(code, alt, mine)), mine); } catch (e) {}
+      for (const f of found) {
+        if (f.agree && !sameVal(f.prog, f.want) && literal(f.prog)) {
+          const after = rewriteExpect(next, f.line, f.prog);
+          if (after !== next) { next = after; rewrote.push(f.line); }
+        } else if (!f.agree) note += `\n\nA second, independent version of ${fname} was written and run by the app on a failing test:\n- ${f.line}\n  this program returns ${f.prog}, the second version returns ${f.alt}, the test expects ${f.want}.\nWork out step by step which value the task really asks for, then fix the program or the test so they agree.`;
+      }
+    }
+    return { code: next, rewrote, note };
+  };
+
   if (!code.trim()) { await write(); }
   else if (change) { await fix({ change }); }
   let ok = await exec();
@@ -429,6 +523,19 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
       stopped();
       let wrong = [];
       try { wrong = probeFindings(await run(lang, pr.probe), pr); } catch (e) {}
+      wrong.forEach((w) => failCount.set(w.got, (failCount.get(w.got) || 0) + 1));
+      const settle = wrong.filter((w) => failCount.get(w.got) >= 2 && calledFn(w.got) && !arbDone.has(w.got));
+      if (settle.length) {
+        settle.forEach((w) => arbDone.add(w.got));
+        const fixed = await arbitrate(settle);
+        if (fixed.code !== code) {                         // settled by code: run again, no fix round
+          code = fixed.code;
+          onEvent({ type: "arbitrated", round, code, rewrote: fixed.rewrote });
+          ok = await exec();
+          continue;
+        }
+        if (fixed.note) told += fixed.note;
+      }
       if (wrong.length) told += `\n\nWhat the program REALLY returns for the failing tests (the app ran them):\n` + wrong.map((w) => `- ${w.line}\n  expects ${w.want}, but ${w.got} returns ${w.value}`).join("\n") + `\nFor each one, work out which is right (do the arithmetic step by step). If the program is right and the test's expected value was worked out wrong, correct that expected value; otherwise fix the program. Fix them ALL in this round.`;
     }
     if (!(await fix({ error: told }))) continue;          // unusable answer: ask again (counts as a round)
