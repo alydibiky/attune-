@@ -432,7 +432,9 @@ object Engine {
                 // Safety net: the engine quit while starting with MTP (e.g. "model doesn't contain MTP layers").
                 // Remember it for this model and start again once without MTP.
                 if (useMtp) {
-                    Prefs.setMtpBad(ctx, model.id)
+                    // remember it only when the log really blames MTP (not for a memory kill); either way this start retries without it
+                    val blamed = try { Regex("(doesn't contain MTP|failed to create MTP)", RegexOption.IGNORE_CASE).containsMatchIn(logFile(ctx).readText()) } catch (e: Exception) { false }
+                    if (blamed) Prefs.setMtpBad(ctx, model.id)
                     return startBlocking(ctx, model, forceCpu, true)
                 }
                 if (useGpu) return gpuFallback(ctx, model, "The model would not load on the GPU")
