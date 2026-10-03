@@ -80,7 +80,7 @@ jobs:
             cmake -S . -B build $COMMON -DGGML_VULKAN=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DCMAKE_INSTALL_RPATH='$ORIGIN' -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
           fi
           set -o pipefail
-          cmake --build build --config Release --target llama-server -j 4 2>&1 | grep -vE "warning|^\s*$|In file included" | tail -60
+          cmake --build build --config Release --target llama-server -j 4 > "$RUNNER_TEMP/build.log" 2>&1 || { grep -iE "error|fatal" "$RUNNER_TEMP/build.log" | grep -v "Wunused" | head -40; tail -15 "$RUNNER_TEMP/build.log"; exit 1; }
           OUT="$GITHUB_WORKSPACE/desktop/engine/${{ matrix.variant }}"
           mkdir -p "$OUT"
           if [ "$RUNNER_OS" = "Windows" ]; then cp build/bin/Release/*.exe build/bin/Release/*.dll "$OUT/"; else cp -a build/bin/. "$OUT/"; fi
