@@ -7,6 +7,7 @@
    Network log apply), and every food found is kept on the phone, so it works offline next time.
    Every number is read from the database and checked by code (energy vs macros); nothing guessed. */
 import { FOODS, matchFood } from "./fit.js";
+import * as FP from "./foodpack.js";
 
 export const CACHE_KEY = "attune:fit:foods:v1";
 const MAX_CACHE = 4000;
@@ -111,6 +112,14 @@ function score(f, q) {
   if (!hit) return -1;
   return hit / words.length * 10 + (names.startsWith(qn) ? 3 : 0) + (f.egypt ? 2 : 0) + (f.src === "table" ? 4 : f.src === "usda" ? 1 : 0) - (f.check ? 3 : 0);
 }
+// ---- the offline food pack (v6.18): 1,000,000+ packaged foods in IndexedDB, searched by code ----
+let packStore = null;
+export const getPackStore = () => packStore || (packStore = typeof indexedDB !== "undefined" ? FP.idbStore() : null);
+if (typeof window !== "undefined") window.__attuneFoodPack = { FP, get store() { return getPackStore(); } };   // test hook: lets a browser test install a small pack
+export async function packSearch(q, n = 20) { try { const s = getPackStore(); return s ? await FP.searchPack(s, q, n) : []; } catch (e) { return []; } }
+export async function packBarcode(code) { try { const s = getPackStore(); return s ? await FP.packByBarcode(s, code) : null; } catch (e) { return null; } }
+export async function packCount() { try { const s = getPackStore(); return s ? await s.count() : 0; } catch (e) { return 0; } }
+
 /** Offline search: the built-in table + everything kept on the phone. */
 export function searchOffline(q, n = 30) {
   const all = [...FOODS.map((f) => ({ ...f, src: "table" })), ...Object.values(loadCache())];
@@ -128,8 +137,8 @@ function rank(list, q) {
  * fetchJson(url) → parsed JSON (the phone's NativeBridge.fetchJson). → { foods, online: bool, errors }
  */
 export async function searchAll(q, fetchJson, { usdaKey = "DEMO_KEY" } = {}) {
-  const local = searchOffline(q, 20);
-  if (!fetchJson || !String(q || "").trim()) return { foods: local, online: false, errors: [] };
+  const local = [...searchOffline(q, 20), ...(String(q || "").trim() ? await packSearch(q, 25) : [])];
+  if (!fetchJson || !String(q || "").trim()) return { foods: rank(local, q).slice(0, 50), online: false, errors: [] };
   const known = isArabic(q) ? matchFood(q) : null;
   const enQ = isArabic(q) ? (known ? known.en : "") : q;
   const errors = [];
@@ -150,7 +159,7 @@ export async function searchAll(q, fetchJson, { usdaKey = "DEMO_KEY" } = {}) {
 export async function byBarcode(code, fetchJson) {
   const c = String(code || "").replace(/\D/g, "");
   if (!c) return null;
-  const hit = byBarcodeCached(c); if (hit) return hit;
+  const hit = byBarcodeCached(c) || (await packBarcode(c)); if (hit) return hit;
   if (!fetchJson) return null;
   let err = null;
   const j = await fetchJson(offProductUrl(c)).catch((e) => { err = e; return null; });

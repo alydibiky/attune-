@@ -87,7 +87,7 @@ function Bar({ label, v, max, cls }) {
 // the watch and 3 photo meals a day; Pro adds unlimited photo meals, the week's meal plan + shopping
 // list and the week report. `pro` defaults to on (web preview, tests); the app passes the real state.
 export const FREE_PHOTOS_PER_DAY = 3;
-export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, scanBarcode, native, share, listen, health, pro = true, openPlan }) {
+export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, packText, scanBarcode, native, share, listen, health, pro = true, openPlan }) {
   const ar = getLang() === "ar";
   const L = (en, a) => (ar ? a : en);
   const [st, setSt] = useState(load);
@@ -211,7 +211,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const chooseAt = (i, fd) => setDraft((d) => d.map((x, j) => (j === i ? F.chooseFood(x, fd) : x)));
   // search: the table + foods kept on the phone at once; the big databases on demand
   const searchOnline = async () => {
-    const qq = q.trim(); if (!qq || !fetchJson) return;
+    const qq = q.trim(); if (!qq) return;
     if (/^\d{8,14}$/.test(qq)) { setSearching(true); try { const fd = await DB.byBarcode(qq, fetchJson); if (fd) { pickFood(fd); } else flash && flash(L("No product with that barcode yet", "مفيش منتج بالباركود ده لسه")); } catch (e) { flash && flash(String(e.message || e)); } finally { setSearching(false); } return; }
     setSearching(true);
     try { const r = await DB.searchAll(qq, fetchJson); setOnline({ q: qq, foods: r.foods }); if (!r.online || (r.errors.length && !r.foods.length)) flash && flash(L("Couldn't reach the food databases — showing what's on the phone", "مقدرتش أوصل لقواعد الأكل — دي اللي على الموبايل")); }
@@ -258,7 +258,19 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     flash && flash(L(`Added to ${MEAL_NAMES[adding][0].toLowerCase()} — ${ok.reduce((a, x) => a + (x.kcal || 0), 0)} kcal`, `اتضاف لل${MEAL_NAMES[adding][1]} — ${ok.reduce((a, x) => a + (x.kcal || 0), 0)} سعر`));
     setDraft(null); setText(""); setPhoto(null); setQ(""); setAdding(null);
   };
-  const results = useMemo(() => (q.trim().length >= 2 ? (online && online.q === q.trim() ? online.foods : DB.searchOffline(q, 12)) : []), [q, online]);
+  // the offline food pack answers while you type (when it is installed)
+  const [packHits, setPackHits] = useState([]);
+  useEffect(() => {
+    const qq = q.trim(); if (qq.length < 2) { setPackHits([]); return; }
+    let on = true; const t = setTimeout(() => { DB.packSearch(qq, 12).then((h) => on && setPackHits(h)); }, 120);
+    return () => { on = false; clearTimeout(t); };
+  }, [q]);
+  const results = useMemo(() => {
+    if (q.trim().length < 2) return [];
+    const base = online && online.q === q.trim() ? online.foods : DB.searchOffline(q, 12);
+    const seen = new Set(base.map((f) => f.barcode || f.id));
+    return [...base, ...packHits.filter((f) => !seen.has(f.barcode || f.id))];
+  }, [q, online, packHits]);
 
   // ---- profile ----
   const [pf, setPf] = useState(st.profile || { sex: "m", age: "", cm: "", kg: "", activity: "light", goal: "lose", rate: 0.5, goalKg: "", diet: "balanced" });
@@ -273,7 +285,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
 
   const Tabs = [["today", L("Today", "النهارده"), Apple], ["recipes", L("Recipes", "وصفات"), Star], ["move", L("Move", "رياضة"), Dumbbell], ["progress", L("Progress", "التقدم"), BarChart3]];
 
-  if (!st.profile || editProfile) return <ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash }} /> : null} />;
+  if (!st.profile || editProfile) return <ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText }} /> : null} />;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 space-y-4" data-testid="fit-app">

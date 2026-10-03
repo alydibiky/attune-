@@ -6,6 +6,7 @@ import { Plus, Check, Copy, Share2, Star, Timer, Bell, BarChart3, X } from "luci
 import * as F from "./fit.js";
 import * as P from "./fitplus.js";
 import * as DB from "./fitdb.js";
+import * as FP from "./foodpack.js";
 import { nextAt } from "./daily.js";
 
 const r0 = (v) => (v == null ? "—" : Math.round(v));
@@ -196,7 +197,7 @@ export function BodyCard({ L, st, upd }) {
 }
 
 /** Settings added to "My plan": Ramadan mode with the city, and reminders. */
-export function FitSettings({ L, ar, st, upd, native, flash }) {
+export function FitSettings({ L, ar, st, upd, native, flash, packText }) {
   const rm = st.ramadan || { on: false, city: "cairo" };
   const setReminders = (on) => {
     upd((s) => ({ ...s, reminders: on }));
@@ -214,7 +215,51 @@ export function FitSettings({ L, ar, st, upd, native, flash }) {
       <label className="flex items-center gap-2 text-[13px] text-slate-200"><input type="checkbox" checked={!!rm.on} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, on: e.target.checked } }))} data-testid="fit-ramadan-on" />🌙 {L("Ramadan mode (Suhoor, Iftar, fasting times)", "وضع رمضان (سحور، فطار، مواعيد الصيام)")}</label>
       {rm.on ? <select value={rm.city} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, city: e.target.value } }))} className="rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" data-testid="fit-ramadan-city">
         {Object.entries(P.CITIES).map(([k, c]) => <option key={k} value={k}>{ar ? c.ar : c.en}</option>)}</select> : null}
+      <FoodPackCard {...{ L, packText, flash }} />
       <label className="flex items-center gap-2 text-[13px] text-slate-200"><input type="checkbox" checked={!!st.reminders} onChange={(e) => setReminders(e.target.checked)} data-testid="fit-reminders" /><Bell size={14} />{L("Remind me to log meals and drink water", "فكّرني أسجّل الوجبات وأشرب مية")}</label>
+    </div>
+  );
+}
+
+/** v6.18 — the offline food pack: 1,000,000+ packaged foods searched on the phone, no signal needed. */
+export function FoodPackCard({ L, packText, flash, testPack }) {
+  const [info, setInfo] = useState({ count: 0, built: "" });
+  const [man, setMan] = useState(null);
+  const [busy, setBusy] = useState(null);
+  const stop = React.useRef(false);
+  const store = () => (testPack || DB.getPackStore());
+  const refresh = async () => { const s = store(); if (!s) return; try { const m = await s.getMeta(); setInfo({ count: await s.count(), built: m.built || "" }); } catch (e) {} };
+  useEffect(() => { refresh(); }, []);
+  const loadManifest = async () => { if (man) return man; const m = JSON.parse(await packText("manifest.json")); setMan(m); return m; };
+  const go = async (which) => {
+    if (!packText) return;
+    stop.current = false; setBusy({ shard: 0, of: 1, count: info.count });
+    try {
+      const m = await loadManifest();
+      const n = which === "starter" ? Math.min(4, m.shards.length) : m.shards.length;
+      await FP.installPack({ store: store(), manifest: m, getText: packText, shards: n, isStopped: () => stop.current, onProgress: (p) => setBusy(p) });
+      flash && flash(stop.current ? L("Stopped — what was downloaded is kept", "اتوقف — اللي نزل اتحفظ") : L("The offline food pack is ready", "باقة الأكل بدون إنترنت جاهزة"));
+    } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 160)); }
+    finally { setBusy(null); refresh(); }
+  };
+  const wipe = async () => { if (!window.confirm(L("Delete the offline food pack from this phone?", "تمسح باقة الأكل من الموبايل؟"))) return; try { await store().clear(); } catch (e) {} refresh(); };
+  if (!packText && !info.count && !testPack) return null;
+  const n = (v) => (v || 0).toLocaleString("en");
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="fit-foodpack">
+      <p className="text-[13px] font-semibold text-slate-100">{L("Offline food pack", "باقة الأكل بدون إنترنت")}</p>
+      <p className="text-[12px] text-slate-400">{info.count ? L(`${n(info.count)} packaged foods on this phone${info.built ? " · built " + info.built : ""}. Search and barcodes work without signal.`, `${n(info.count)} منتج على الموبايل${info.built ? " · بتاريخ " + info.built : ""}. البحث والباركود شغالين من غير إنترنت.`)
+        : L("Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal.", "أكتر من مليون منتج من Open Food Facts — المنتجات المصرية والعربية الأول. دوّر بالاسم أو الباركود من غير إنترنت.")}</p>
+      {busy ? (
+        <div className="space-y-1.5"><div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: Math.round((busy.shard / Math.max(1, busy.of)) * 100) + "%" }} /></div>
+          <p className="text-[12px] text-slate-400" data-testid="fit-foodpack-progress">{L(`Part ${busy.shard} of ${busy.of} · ${n(busy.count)} foods`, `جزء ${busy.shard} من ${busy.of} · ${n(busy.count)} منتج`)}</p>
+          <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-200" onClick={() => { stop.current = true; }}>{L("Stop", "وقّف")}</button></div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          <button className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[12.5px] font-medium text-white" onClick={() => go("starter")} data-testid="fit-foodpack-starter">{L("Get Egypt + most popular (~240,000, ~30 MB)", "نزّل المصري + الأشهر (~٢٤٠ ألف، ~٣٠ ميجا)")}</button>
+          <button className="rounded-lg bg-emerald-800 px-3 py-1.5 text-[12.5px] font-medium text-white" onClick={() => go("all")} data-testid="fit-foodpack-all">{L("Get everything (1,000,000+)", "نزّل الكل (+مليون)")}</button>
+          {info.count ? <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-300" onClick={wipe}>{L("Delete", "امسح")}</button> : null}
+        </div>)}
     </div>
   );
 }

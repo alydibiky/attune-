@@ -1,0 +1,38 @@
+name: Build the offline food pack
+
+# v6.18 — Ali: "the food database the app knows and recognizes no less than a million".
+# Open Food Facts publishes its whole database (open data, ODbL). This job turns it into compact shards
+# (name, brand, barcode, energy, protein, carbs, fat, fibre, sugar, saturated fat, salt, serving, Nutri-Score, NOVA —
+# only products with a COMPLETE label whose energy agrees with its macros), Egyptian and Arab-region products first,
+# and publishes them as a release the app downloads on demand (Fit → search → "Get the offline food pack").
+# Run by hand from the Actions tab. The run summary says how many products were kept.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the dump and build the shards
+        run: |
+          df -h / | tail -1
+          curl -sSL --retry 5 https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz | zcat | python3 tools/build_food_pack.py out | tee build.log
+          ls -la out | head -5; du -sh out
+
+      - name: Summary
+        run: |
+          { echo "## Offline food pack"; echo; tail -1 build.log; echo; python3 -c "import json;m=json.load(open('out/manifest.json'));print('Products:', m['count'], '| Egyptian:', m['egypt'], '| shards:', len(m['shards']))"; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish the release (tag food-pack-v1, replaced each time)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete food-pack-v1 --cleanup-tag --yes 2>/dev/null || true
+          gh release create food-pack-v1 out/* --title "Offline food pack" --notes "Open Food Facts (ODbL), built $(date -u +%F). Used by the app: Fit → search → Get the offline food pack." --prerelease

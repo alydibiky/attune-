@@ -715,6 +715,16 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v6.18: a file of the offline food pack → {text}. Only this app's own food-pack release can be asked. */
+    @JavascriptInterface
+    fun foodPackText(id: String, name: String) {
+        if (blockedByAirGap(id, "the food pack")) return
+        pool.execute {
+            try { resolve(id, JSONObject().put("name", name).put("text", WebTools.foodPackText(name))) }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't download the food pack") }
+        }
+    }
+
     /** v6.1: the barcodes in a photo ({b64}), read on the phone by ML Kit → {codes: [..]}. */
     @JavascriptInterface
     fun scanBarcode(id: String, arg: String) {

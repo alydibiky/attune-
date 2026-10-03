@@ -174,6 +174,27 @@ object WebTools {
         return body
     }
 
+    /** v6.18: one file of the offline food pack (a GitHub release of this app): manifest.json or foodpack-NNN.tsv.gz → its text. */
+    private const val PACK_URL = "https://github.com/alydibiky/attune-/releases/download/food-pack-v1/"
+    fun foodPackText(name: String): String {
+        if (!Regex("^[a-z0-9._-]{1,60}$").matches(name)) throw Exception("That is not a food pack file")
+        val url = PACK_URL + name
+        Prefs.requireOnline(url, "food pack")
+        val c = URL(url).openConnection() as HttpURLConnection
+        c.connectTimeout = 15_000; c.readTimeout = 90_000; c.instanceFollowRedirects = true
+        c.setRequestProperty("User-Agent", "Attune/6.18 (Android; offline food pack)")
+        val code = c.responseCode
+        if (code == 404) throw Exception("The food pack is not published yet — run \"Build the offline food pack\" on GitHub once")
+        if (code !in 200..299) throw Exception("The food pack download returned HTTP $code")
+        val raw = c.inputStream
+        val stream = if (name.endsWith(".gz")) java.util.zip.GZIPInputStream(raw) else raw
+        return stream.bufferedReader(Charsets.UTF_8).use { r ->
+            val sb = StringBuilder(); val buf = CharArray(65536); var n: Int
+            while (r.read(buf).also { n = it } > 0) { sb.append(buf, 0, n); if (sb.length > 40_000_000) throw Exception("The food pack file is too big") }
+            sb.toString()
+        }
+    }
+
     // v5.22 (Ali): NO information from Wikipedia — the search is told to leave it
     // out, and any Wikipedia page that still comes back is dropped.
     const val NO_WIKI = "-site:wikipedia.org"
