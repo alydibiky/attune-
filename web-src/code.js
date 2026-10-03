@@ -350,7 +350,9 @@ export function joinCont(code, more) {
  * onEvent({ type, round, … }) reports every step for the screen.
  * → { ok, code, lang, rounds, last, tests, gaveUp? }
  */
-export async function workLoop({ task, lang, code: startCode = "", change = "", llm, run, onEvent = () => {}, maxRounds = 4, restart = true, isStopped = () => false }) {
+export async function workLoop({ task, lang, code: startCode = "", change = "", llm, run, onEvent = () => {}, maxRounds = 4, restart = true, isStopped = () => false, maxMs = 480000 }) {
+  const t0 = Date.now();
+  const overBudget = (share = 1) => Date.now() - t0 > maxMs * share;   // a model that cannot pass its tests gives up honestly after about 8 minutes, not after 20
   let code = startCode, round = 0, last = null, verdict = null;
   const tried = new Set();                                  // code versions that already failed
   const history = [];                                       // the errors seen, for a fresh start
@@ -409,7 +411,7 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
   if (!code.trim()) { await write(); }
   else if (change) { await fix({ change }); }
   let ok = await exec();
-  while (!ok && round < maxRounds) {
+  while (!ok && round < maxRounds && !overBudget()) {
     const reason = verdict.reason === "no-pass-mark"
       ? `The program ran but never printed "${PASS_MARK}" — the tests did not all run.\n` + errorSummary(last)
       : errorSummary(last);
@@ -435,7 +437,7 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
     ok = await exec();
   }
   // stuck: one fresh attempt with a different approach, then a few more fix rounds
-  if (!ok && restart && !restarted && lang !== "html" && history.length) {
+  if (!ok && restart && !restarted && lang !== "html" && history.length && !overBudget(0.6)) {
     restarted = true; stopped();
     onEvent({ type: "restart", round });
     try {
@@ -445,7 +447,7 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
         code = p.code; onEvent({ type: "wrote", round, code, lang, tests: countTests(code, lang) });
         ok = await exec();
         let extra = 0;
-        while (!ok && extra < 2) {
+        while (!ok && extra < 2 && !overBudget()) {
           extra++;
           if (!(await fix({ error: errorSummary(last) }))) continue;
           ok = await exec();

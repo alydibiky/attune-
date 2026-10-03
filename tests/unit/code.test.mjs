@@ -65,6 +65,12 @@ const patch = "<<<<<<< SEARCH\nfunction tonnes(kg){ return kg / 100; }\n=======\
   eq(ev.filter((t) => !/ing$/.test(t)), ["write", "wrote", "run", "result", "fix", "fixed", "run", "result", "done"], "…and every step is reported for the screen");
 }
 {
+  // a time budget: once it is spent the loop stops asking the model for more rounds and gives up honestly
+  const q2 = [buggy, patch]; let asks = 0;
+  const r2 = await workLoop({ task: "kg to tonnes", lang: "javascript", llm: async () => { asks++; return q2.shift(); }, run: runJs, maxMs: -1 });
+  eq([r2.ok, r2.gaveUp, asks], [false, true, 1], "out of time: it writes once, runs it, and gives up honestly instead of looping");
+}
+{
   const cheat = "```javascript\nfunction tonnes(kg){ return 0; }\nconsole.log(\"ALL TESTS PASSED\");\n```";
   const q = [buggy, cheat, patch];
   const r = await workLoop({ task: "kg to tonnes", lang: "javascript", llm: async () => q.shift(), run: runJs });
