@@ -844,12 +844,12 @@ const MODEL_TIERS = [
   // v6.8 (Ali: "a model that runs on 32 GB should run on 24, 24 on 16…"): every model moved down a phone
   // size where the file allows it — the big ones as IQ4_XS (large models lose the least from it), with
   // the engine's memory rule now counting the memory that is really free (Engine.allowedBytes).
-  { id: "moe-xl-long", vision: false, label: "Everest XL", realName: "Qwen3.5 35B-A3B · long context", smoothRam: 48, params: "35B-A3B", quant: "UD-IQ4_XS", sizeGB: 17.7,
+  { id: "moe-xl-long", vision: false, label: "Everest XL", realName: "Qwen3.6 35B-A3B · long context", smoothRam: 48, params: "35B-A3B", quant: "UD-IQ4_XS", sizeGB: 18.2,
     needRam: 32, ctx: 131072, phoneMin: 48, moe: true, heat: true,
-    repo: "unsloth/Qwen3.6-35B-A3B-GGUF",
+    repo: "unsloth/Qwen3.6-35B-A3B-MTP-GGUF", mtp: true,
     quality: "Everest with a huge memory: it holds a whole book, contract or a year of notes at once. The best for very long documents. Computer-class.",
     good: ["Ask", "Write", "Summarise", "Review", "Long documents"] },
-  { id: "moe-xl", vision: false, label: "Everest", realName: "Qwen3.5 35B-A3B", smoothRam: 32, params: "35B-A3B", quant: "UD-IQ4_XS", sizeGB: 17.7,
+  { id: "moe-xl", vision: false, label: "Everest", realName: "Qwen3.6 35B-A3B", smoothRam: 32, params: "35B-A3B", quant: "UD-IQ4_XS", sizeGB: 17.7,
     needRam: 24, ctx: 32768, phoneMin: 32, moe: true, heat: true,
     repo: "unsloth/Qwen3.6-35B-A3B-GGUF",
     quality: "The most knowledgeable: a very large model that answers at the speed of a small one (mixture of experts). Near top-tier answers. Computer-class.",

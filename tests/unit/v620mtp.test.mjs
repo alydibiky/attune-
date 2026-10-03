@@ -10,10 +10,10 @@ const b = src.findIndex((l, i) => i > a && /^\];/.test(l));
 const TIERS = new Function(src.slice(a, b + 1).join("\n").replace("const MODEL_TIERS =", "return"))();
 
 const marked = TIERS.filter((t) => t.mtp);
-ok(marked.length === 6, "six Qwen 3.5 entries are MTP builds (got " + marked.length + ")");
+ok(marked.length === 7, "six Qwen 3.5 entries and Everest XL are MTP builds (got " + marked.length + ")");
 for (const t of marked) {
-  const m = /^unsloth\/Qwen3\.5-([0-9.]+B)-MTP-GGUF$/.exec(t.repo || "");
-  ok(!!m && t.realName === "Qwen3.5 " + m[1], t.label + ": repo " + t.repo + " matches " + t.realName);
+  const m = /^unsloth\/Qwen3\.([56])-([0-9.]+B(?:-A3B)?)-MTP-GGUF$/.exec(t.repo || "");
+  ok(!!m && t.realName.startsWith("Qwen3." + m[1] + " " + m[2]), t.label + ": repo " + t.repo + " matches " + t.realName);
   ok(/^(UD-)?(IQ|Q)\d/.test(t.quant) && !t.url, t.label + ": quant " + t.quant + " resolved by name in the repo");
 }
 for (const t of TIERS) if (/Qwen3\.5-/.test(t.repo || "")) ok(t.mtp === true, t.label + " (" + t.realName + ") is marked mtp");

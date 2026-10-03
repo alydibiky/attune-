@@ -1286,7 +1286,7 @@ export const AR = {
   "new on-device models and adapters": "نماذج ومحوّلات جديدة على الجهاز",
   "Licence check": "التحقق من الترخيص",
   "refunds and shared keys": "الاستردادات والمفاتيح المشتركة",
-  "Qwen3.5 35B-A3B · long context": "Qwen3.5 35B-A3B · سياق طويل",
+  "Qwen3.6 35B-A3B · long context": "Qwen3.6 35B-A3B · سياق طويل",
   "Write": "الكتابة",
   "Review": "المراجعة",
   "Long documents": "مستندات طويلة",
