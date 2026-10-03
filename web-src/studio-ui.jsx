@@ -313,8 +313,9 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
         {mode === "create" ? (
           <div className="flex flex-wrap items-center gap-1.5 mb-2" data-testid="studio-model">
             <button onClick={() => setChoice("turbo")} className={chip(dp.id === "turbo")} data-testid="studio-use-turbo">⚡ {tr("Turbo · about 1 min")}</button>
-            <button onClick={() => setChoice("pro")} className={chip(dp.id !== "turbo")} data-testid="studio-use-pro">{tr("Pro · best quality")}</button>
-            {dp.id !== "turbo" && gpuOk === false ? <span className="text-[11px] text-amber-300" data-testid="studio-pro-slow">{tr("Pro on this phone's CPU: 10–20 min a picture")}</span> : null}
+            {info.ramGB >= PACKS["turbo-xl"].needRam ? <button onClick={() => setChoice("turbo-xl")} className={chip(dp.id === "turbo-xl")} data-testid="studio-use-turbo-xl">⚡ {tr("Turbo+ · about 20 s · {s} GB", { s: PACKS["turbo-xl"].sizeGB })}</button> : null}
+            <button onClick={() => setChoice("pro")} className={chip(!PACKS[dp.id] || !PACKS[dp.id].fast)} data-testid="studio-use-pro">{tr("Pro · best quality")}</button>
+            {!(PACKS[dp.id] && PACKS[dp.id].fast) && gpuOk === false ? <span className="text-[11px] text-amber-300" data-testid="studio-pro-slow">{tr("Pro on this phone's CPU: 10–20 min a picture")}</span> : null}
           </div>
         ) : null}
         {mode === "edit" ? (
@@ -361,7 +362,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
         {busy && busy.line ? <p className="text-[10.5px] text-slate-500 mt-1.5 font-mono truncate" dir="ltr" data-i18n-skip data-testid="studio-engine-line">{busy.line}</p> : null}
         {busy && busy.what === "draw" && now - busy.t0 > 90000 && busy.stage !== "draw" ? (
           <p className="text-[11px] text-slate-400 mt-2 leading-relaxed" data-testid="studio-slow-note">
-            {dp.id === "turbo" ? tr("Still working — nothing is stuck. Turbo takes about 1–2 minutes on the CPU. Keep Attune open; Stop cancels it.")
+            {PACKS[dp.id] && PACKS[dp.id].fast ? tr("Still working — nothing is stuck. Turbo takes about 1–2 minutes on the CPU. Keep Attune open; Stop cancels it.")
               : tr("Still working — nothing is stuck. Without the graphics chip a Pro picture takes 10–20 minutes (edits take longer). For speed, pick Turbo. Keep Attune open; Stop cancels it.")}</p>
         ) : null}
         {busy && busy.total ? <div className="h-1 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-violet-500 transition-all" style={{ width: Math.round(busy.step * 100 / busy.total) + "%" }} /></div> : null}

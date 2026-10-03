@@ -1,5 +1,5 @@
 // Unit tests for web-src/studio.js — picture requests in Chat, and the prompt helpers.
-import { looksLikeImageRequest, pictureSubject, enhanceMessages, cleanPrompt, PACKS, SIZES } from "../../web-src/studio.js";
+import { looksLikeImageRequest, pictureSubject, enhanceMessages, cleanPrompt, PACKS, SIZES, drawPack } from "../../web-src/studio.js";
 const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
 
@@ -19,5 +19,13 @@ eq([k.files.map((f) => f.role), Math.round(k.files.reduce((a, f) => a + f.size, 
 eq([PACKS.turbo.files.map((f) => f.role), PACKS.turbo.files[1].size, PACKS.turbo.files[1].url.startsWith("https://huggingface.co/madebyollin/taesd/")], [["model", "taesd"], 9793292, true], "Turbo pack: the model plus the tiny colour decoder (measured 63 s → 37 s, CLIP 31.2 → 32.1)");
 eq(PACKS["esrgan-x4"].files[0].url.startsWith("https://github.com/xinntao/Real-ESRGAN/"), true, "the sharpening model comes from its official release");
 eq(SIZES.every((s) => s.w % 16 === 0 && s.h % 16 === 0 && s.w * s.h <= 1024 * 1024 * 1.01), true, "every size is a multiple of 16 and at most ~1 megapixel");
+const xl = PACKS["turbo-xl"];
+eq([xl.files.map((f) => f.role), xl.defaults.steps, xl.needRam, xl.files[1].url.includes("taesdxl")], [["model", "taesd"], 1, 8, true], "Turbo+ pack: SDXL-Turbo + tiny XL decoder, 1 step, needs 8 GB");
+const cpu = (ram, ids) => ({ ramGB: ram, gpuState: "cpu", packs: ids.map((id) => ({ id })) });
+eq(drawPack(cpu(12, ["turbo", "turbo-xl"])).id, "turbo-xl", "8 GB+ phone with Turbo+ installed draws with Turbo+");
+eq(drawPack(cpu(6, ["turbo", "turbo-xl"])).id, "turbo", "under 8 GB Turbo+ is never used");
+eq(drawPack(cpu(6, ["turbo"]), "turbo-xl").id, "turbo", "choosing Turbo+ on a 6 GB phone falls back to Turbo");
+eq(drawPack(cpu(12, ["turbo", "turbo-xl"]), "turbo").id, "turbo", "choosing Turbo keeps Turbo");
+eq(drawPack(cpu(12, ["turbo"]), "turbo-xl"), { id: "turbo-xl", ready: false }, "choosing Turbo+ before installing offers its install");
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 process.exit(fails.length ? 1 : 0);

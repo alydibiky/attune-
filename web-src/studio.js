@@ -33,6 +33,21 @@ export const PACKS = {
         url: "https://huggingface.co/madebyollin/taesd/resolve/main/diffusion_pytorch_model.safetensors" },
     ],
   },
+  // v6.19 — Ali (Option A): an optional faster AND better pack for phones with 8 GB or more.
+  // SDXL-Turbo (4-bit, one file) drawn in ONE step with the tiny SDXL colour decoder.
+  // Studio lab (4-core ARM CPU, 512 px): prompt match (CLIP) 33.4 vs Turbo's 32.1, 18 s vs 37 s.
+  // Working name "Turbo+" — the name is Ali's to choose. Licence: Stability AI Community.
+  "turbo-xl": {
+    id: "turbo-xl", kind: "draw", label: "Studio Turbo+", sizeGB: 3.95, needRam: 8, license: "Stability AI Community",
+    defaults: { steps: 1, cfg: 1 }, side: 512, fast: true,
+    quality: "Faster and sharper than Turbo, with a better match to what you ask for: about 20 seconds a picture on the CPU. 512 px. For phones with 8 GB RAM or more.",
+    files: [
+      { role: "model", what: "fast picture model (XL)", name: "studio-turbo-xl.gguf", size: 3940010720,
+        url: "https://huggingface.co/gpustack/stable-diffusion-xl-1.0-turbo-GGUF/resolve/main/stable-diffusion-xl-1.0-turbo-Q4_0.gguf" },
+      { role: "taesd", what: "fast colour decoder (XL)", name: "taesdxl.safetensors", size: 9793292,
+        url: "https://huggingface.co/madebyollin/taesdxl/resolve/main/diffusion_pytorch_model.safetensors" },
+    ],
+  },
   "klein-4b": {
     id: "klein-4b", kind: "draw", label: "Studio Pro", sizeGB: 5.29, needRam: 8, license: "Apache-2.0",
     defaults: { steps: 4 },
@@ -142,10 +157,14 @@ export function drawPack(info, choice = null, mode = "create") {
   if (mode === "edit") return pro ? { id: pro, ready: true } : { id: proOffer, ready: false };
   if (choice === "pro") return pro ? { id: pro, ready: true } : { id: proOffer, ready: false };
   if (choice === "turbo") return { id: "turbo", ready: ready("turbo") };
+  // Turbo+ only on phones with enough memory (8 GB or more); otherwise it falls back to Turbo
+  const xlOk = !!(info && info.ramGB >= PACKS["turbo-xl"].needRam);
+  if (choice === "turbo-xl" && xlOk) return { id: "turbo-xl", ready: ready("turbo-xl") };
+  const fast = xlOk && ready("turbo-xl") ? "turbo-xl" : "turbo";
   const gpu = gpuWorks(info);
-  if (gpu === false) return { id: "turbo", ready: ready("turbo"), why: "cpu" };
+  if (gpu === false) return { id: fast, ready: ready(fast), why: "cpu" };
   if (pro) return { id: pro, ready: true };
-  if (ready("turbo")) return { id: "turbo", ready: true };
+  if (ready(fast)) return { id: fast, ready: true };
   return { id: gpu === true ? proOffer : "turbo", ready: false };
 }
 /** The size to draw at: Turbo draws at 512 px on its long side (what it was trained for). */
