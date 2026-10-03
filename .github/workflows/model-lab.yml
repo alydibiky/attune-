@@ -1,0 +1,76 @@
+name: Model lab (speed, memory, prompt cache, real trials)
+
+# v6.18 — Ali: "bring models faster, stronger and more efficient, using the phone's storage to be less heavy; look at Chinese models".
+# On an ARM runner (the phone's chip family) this measures, for each candidate model:
+#   speed (reading / writing tokens a second, with flash attention and the 8-bit KV cache the phone uses, and with half the threads = less heat),
+#   memory (mapped vs copied weights), and what a saved prompt cache on storage would save after a reload (tests/models/lab.py);
+#   then the app's own real trials (tests/trials/run2.sh: Arabic, maths, code, translation, photos off) — checks by code.
+# The baseline is the Qwen3.5 4B the app ships; Ling-3.0-tiny (7.9B MoE, ~1.3B active) and MiniCPM5-2B are the Chinese-lab candidates.
+# Run by hand; results are in each job's summary and in the uploaded reports.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sections:
+        description: "Trial sections (comma list; max.mjs names: deal,xray,action,fit,math,travel,business,code,translate,instant,mind,assistants)"
+        default: "math,code,translate,deal,business"
+      only:
+        description: "Run only this candidate (qwen35-4b, ling3-tiny, minicpm5-2b); empty = all"
+        default: ""
+
+jobs:
+  lab:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: qwen35-4b,   search: "Qwen3.5-4B-GGUF",       quants: "Q4_K_M,IQ4_XS", need: "qwen3.5-4b" }
+          - { name: ling3-tiny,  search: "Ling-3.0-tiny",         quants: "Q4_K_M,IQ4_XS,Q4_0,Q3_K_M,Q8_0", need: "ling" }
+          - { name: minicpm5-2b, search: "MiniCPM5-2B",           quants: "Q4_K_M,IQ4_XS,Q4_0,Q8_0", need: "minicpm5" }
+    steps:
+      - uses: actions/checkout@v4
+        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+      - uses: actions/setup-node@v4
+        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        with: { node-version: 22 }
+      - name: Build llama.cpp (the app's pinned commit, tuned for this processor)
+        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        run: |
+          git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
+          cd ~/llama.cpp && git checkout -q 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF > /dev/null
+          cmake --build build --target llama-server llama-bench -j"$(nproc)" > /dev/null
+          mkdir -p $GITHUB_WORKSPACE/tests/build-dl && cp -r build/bin $GITHUB_WORKSPACE/tests/build-dl/
+          ls $GITHUB_WORKSPACE/tests/build-dl/bin | head
+      - name: Find and download the model
+        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        run: |
+          read REPO FILE < <(python3 tests/models/resolve_hf.py "${{ matrix.search }}" "${{ matrix.quants }}" ${{ matrix.need }})
+          echo "Model: $REPO / $FILE" | tee -a "$GITHUB_STEP_SUMMARY"
+          curl -sSL --retry 5 -o ~/model.gguf "https://huggingface.co/$REPO/resolve/main/$FILE"
+          ls -la ~/model.gguf
+      - name: Lab — speed, memory, prompt cache
+        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        run: python3 tests/models/lab.py ~/model.gguf "$GITHUB_WORKSPACE/tests/build-dl/bin" "${{ matrix.name }}"
+      - name: Real trials (the app's own prompts and checks)
+        if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
+        run: |
+          cd tests/trials
+          # run2.sh starts llama-server like the phone and then run.mjs + max.mjs; only the chosen sections of max.mjs here
+          cd ../..
+          export LD_LIBRARY_PATH="$PWD/tests/build-dl/bin"
+          tests/build-dl/bin/llama-server -m ~/model.gguf --host 127.0.0.1 --port 8099 -c 8192 -t "$(nproc)" -np 1 --jinja --no-ui -fa on -ctk q8_0 -ctv q8_0 --cache-ram 0 > /tmp/server.log 2>&1 &
+          for i in $(seq 1 600); do curl -s 127.0.0.1:8099/health | grep -q ok && break; sleep 1; done
+          export MODEL_NAME="${{ matrix.name }}"
+          TRIAL_REPORT="./max-${{ matrix.name }}.md" node tests/trials/max.mjs "${{ github.event.inputs.sections || 'math,code,translate,deal,business' }}" || true
+          { echo; echo "### Real trials: ${{ matrix.name }}"; echo; tail -40 tests/trials/max-${{ matrix.name }}.md; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-lab-${{ matrix.name }}
+          path: |
+            lab-*.md
+            tests/trials/max-*.md
