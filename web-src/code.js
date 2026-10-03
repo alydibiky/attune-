@@ -345,7 +345,7 @@ The page must be about THIS and nothing else${named.length ? ` — use the name 
     ];
   }
   return [
-    { role: "system", content: `You are an expert programmer. Write ${RULES[lang]}\nReply with ONE code block (\`\`\`${FENCE_LANG[lang]}) holding the complete program: first the program itself with a ONE-line demo that prints a result, then its tests. ${TESTS[lang]}\nBe brief: no docstrings, at most one short comment per function, no long demos. Use exactly the function names and parameters the task gives. Handle the cases the task implies (empty input, zero, negative, equal values). Work out each test's expected value by hand from the task's own rules, and never test an input your own code rejects.\nNo explanation before the code. After the code, at most two short sentences.` },
+    { role: "system", content: `You are an expert programmer. Write ${RULES[lang]}\nReply with ONE code block (\`\`\`${FENCE_LANG[lang]}) holding the complete program: first the program itself with a ONE-line demo that prints a result, then its tests. ${TESTS[lang]}\nBe brief: no docstrings, at most one short comment per function, no long demos. Use exactly the function names and parameters the task gives. Raise or throw an error ONLY for the inputs the task says to refuse; every other input (zero, empty, equal values) gets a normal result. Work out each test's expected value by hand from the task's own rules, and never test an input your own code rejects.\nNo explanation before the code. After the code, at most two short sentences.` },
     { role: "user", content: String(task || "").trim() },
   ];
 }
