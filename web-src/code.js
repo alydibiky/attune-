@@ -213,6 +213,7 @@ export function dateFacts(code) {
    disagrees → the test's expected value is rewritten to the agreed value (no extra round). They
    disagree → the fix round is shown both computed values. A test that calls the function with input
    its own validation refuses (and the task asks for that refusal) is turned into a "must raise" test. */
+const ARB_AFTER = 1;                                         // settle a failing test call the first time it fails
 const tests0 = (code) => { const s = String(code || ""); const i = s.indexOf("# --- tests ---"); return i >= 0 ? s.slice(0, i) : s.split("\n").filter((l) => !/^assert\b|^print\(["']ALL TESTS PASSED/.test(l)).join("\n"); };
 /** The function a test calls: "vat(100) * 2" → "vat" (null for anything else). */
 export function calledFn(expr) { const m = /^\s*([A-Za-z_]\w*)\s*\(/.exec(String(expr || "")); return m && !/^(abs|round|len|str|int|float|list|sorted|set|tuple|dict|sum|min|max)$/.test(m[1]) ? m[1] : null; }
@@ -543,7 +544,7 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
       try { wrong = probeFindings(await run(lang, pr.probe), pr); } catch (e) {}
       wrong.forEach((w) => failCount.set(w.got, (failCount.get(w.got) || 0) + 1));
       if (wrong.length) keepBest(100 - Math.min(wrong.length, 8));   // runs, and only these few own tests fail
-      const settle = wrong.filter((w) => failCount.get(w.got) >= 2 && calledFn(w.got) && !arbDone.has(w.got));
+      const settle = wrong.filter((w) => failCount.get(w.got) >= ARB_AFTER && calledFn(w.got) && !arbDone.has(w.got));
       if (settle.length) {
         settle.forEach((w) => arbDone.add(w.got));
         const fixed = await arbitrate(settle);
