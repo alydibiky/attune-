@@ -14,7 +14,7 @@ import sys, os, json, gzip, hashlib, time, heapq
 
 REGION = {"en:egypt", "en:saudi-arabia", "en:united-arab-emirates", "en:jordan", "en:lebanon", "en:kuwait", "en:qatar", "en:oman", "en:bahrain",
           "en:morocco", "en:tunisia", "en:algeria", "en:libya", "en:sudan", "en:iraq", "en:syria", "en:palestine", "en:yemen", "en:turkey"}
-SHARD = 60000
+SHARD = 25000
 
 
 def num(x):

@@ -132,7 +132,7 @@ export function SkillsPage({ flash, llm, modelReady, openEngine, share, saveFile
   const add = (sk) => {
     if (list.length >= S.LIMITS.max) return flash(tr("You have the maximum number of skills"));
     if (sk.command && list.some((x) => x.command === sk.command)) sk = { ...sk, command: "" };   // a command belongs to one skill
-    setList([S.makeSkill(sk, { source: sk.source || "catalogue" }), ...list]);
+    setList([S.makeSkill({ ...sk, id: undefined }, { source: sk.source || "catalogue" }), ...list]);
   };
   const upd = (id, patch) => setList(list.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   const del = (s) => { if (window.confirm(tr("Delete the skill “{n}”?", { n: s.name }))) setList(list.filter((x) => x.id !== s.id)); };
@@ -144,7 +144,7 @@ export function SkillsPage({ flash, llm, modelReady, openEngine, share, saveFile
         <Sparkles size={22} className="text-teal-300 mt-1" />
         <div className="min-w-0">
           <h2 className="text-lg font-semibold text-slate-100">{tr("Skills")}</h2>
-          <p className="text-[13px] text-slate-400">{tr("Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill only adds instructions — nothing runs.")}</p>
+          <p className="text-[13px] text-slate-400">{tr("Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill adds instructions, facts and a checklist to your question; a small program inside it (only if you keep one) runs offline in a locked box.")}</p>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2">

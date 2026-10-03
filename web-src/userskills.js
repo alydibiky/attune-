@@ -104,7 +104,7 @@ export function skillBlock(matches, question = "", results = {}) {
 export const scriptsOf = (matches) => (matches || []).filter((s) => s.script && s.script.code).map((s) => ({ id: s.id, name: s.name, lang: s.script.lang, code: s.script.code }));
 /** The program gets the question as `INPUT` (a string) and prints its result. */
 export function scriptCode(sc, question) {
-  const q = JSON.stringify(String(question || ""));
+  const q = JSON.stringify(String(question || "")).replace(/</g, "\\u003c").replace(/\u2028|\u2029/g, " ");
   return sc.lang === "python" ? `INPUT = ${q}\n${sc.code}` : `const INPUT = ${q};\n${sc.code}`;
 }
 

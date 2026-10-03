@@ -264,7 +264,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     const qq = q.trim(); if (qq.length < 2) { setPackHits([]); return; }
     let on = true; const t = setTimeout(() => { DB.packSearch(qq, 12).then((h) => on && setPackHits(h)); }, 120);
     return () => { on = false; clearTimeout(t); };
-  }, [q]);
+  }, [q, adding]);
   const results = useMemo(() => {
     if (q.trim().length < 2) return [];
     const base = online && online.q === q.trim() ? online.foods : DB.searchOffline(q, 12);

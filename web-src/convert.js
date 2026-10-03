@@ -386,7 +386,8 @@ export function pdfLinesToBlocks(pages) {
           else if (blk.widths && blk.widths.length === nCols) { const tot = blk.widths.reduce((a, x) => a + x, 0); edges = [bx0]; blk.widths.forEach((x) => edges.push(edges[edges.length - 1] + x * (bx1 - bx0) / tot)); }
           if (edges) blk.widths = edges.slice(1).map((e, k) => Math.round(e - edges[k]));
           const rc0 = hor[0] || ver[0];
-          blk.border = { c: ([(rc0[4] >> 16) & 255, (rc0[4] >> 8) & 255, rc0[4] & 255].map((x) => x.toString(16).padStart(2, "0")).join("").toUpperCase()), sz: Math.max(2, Math.round(Math.min(rc0[2], rc0[3]) * 8)) };
+          const bcol = rc0[4] >= 0 ? rc0[4] : rc0[5] >= 0 ? rc0[5] : 0xA6A6A6;     // a stroked rule keeps its colour in the stroke slot
+          blk.border = { c: ([(bcol >> 16) & 255, (bcol >> 8) & 255, bcol & 255].map((x) => x.toString(16).padStart(2, "0")).join("").toUpperCase()), sz: Math.max(2, Math.round(Math.min(rc0[2], rc0[3]) * 8)) };
           // each column: text centred in its cell, or against its right edge
           if (edges) {
             const al = edges.slice(1).map((e, k) => {

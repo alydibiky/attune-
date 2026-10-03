@@ -236,7 +236,7 @@ export function FoodPackCard({ L, packText, flash, testPack }) {
     stop.current = false; setBusy({ shard: 0, of: 1, count: info.count });
     try {
       const m = await loadManifest();
-      const n = which === "starter" ? Math.min(4, m.shards.length) : m.shards.length;
+      const n = which === "starter" ? Math.min(10, m.shards.length) : m.shards.length;
       await FP.installPack({ store: store(), manifest: m, getText: packText, shards: n, isStopped: () => stop.current, onProgress: (p) => setBusy(p) });
       flash && flash(stop.current ? L("Stopped — what was downloaded is kept", "اتوقف — اللي نزل اتحفظ") : L("The offline food pack is ready", "باقة الأكل بدون إنترنت جاهزة"));
     } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 160)); }

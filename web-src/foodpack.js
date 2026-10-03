@@ -1,6 +1,6 @@
 /* ---- the offline food pack: 1,000,000+ packaged foods on the phone (v6.18) -------------------------------------------------------
    Ali: "the food database the app knows and recognizes no less than a million".
-   The pack is built from Open Food Facts by tools/build_food_pack.py (a GitHub job) and downloaded on demand in shards of 60,000 rows,
+   The pack is built from Open Food Facts by tools/build_food_pack.py (a GitHub job) and downloaded on demand in shards of 25,000 rows,
    Egyptian / Arab-region products first, then the most scanned. It is stored in IndexedDB (a phone can hold it; localStorage cannot):
      - one record per product, keyed by barcode  → a barcode scan is one lookup, offline;
      - a multi-entry index on word starts ("coc" "cola" …) → a name search touches only the products that share a word.
@@ -85,7 +85,8 @@ export async function searchPack(store, q, n = 30) {
   if (!words.length) return [];
   // the longest word is the rarest: ask the index for it, then check the others in code
   const lead = [...words].sort((a, b) => b.length - a.length)[0];
-  const cand = await store.byToken(lead.slice(0, PREFIX), 6000);
+  const seen = new Set();
+  const cand = (await store.byToken(lead.slice(0, PREFIX), 6000)).filter((r) => (seen.has(r.code) ? false : (seen.add(r.code), true)));   // a short word can match several word starts of one product
   const qn = words.join(" ");
   const scored = [];
   for (const r of cand) {

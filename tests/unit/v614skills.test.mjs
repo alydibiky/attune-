@@ -101,3 +101,12 @@ Quote: 3 days x 9000 = 27000.
   const sc = S.scriptsOf([sk])[0];
   ok(S.scriptCode(sc, "3 9000").startsWith('INPUT = "3 9000"'), "the program gets the question as INPUT");
 }
+
+// ---- v6.18 review fixes ----
+{
+  const sc = { lang: "javascript", code: "console.log(INPUT)" };
+  const code = S.scriptCode(sc, "a </script><img src=x onerror=alert(1)> b");
+  ok(!code.includes("</script>") && !code.includes("<img"), "a question with </script> cannot break out of the program's page");
+  const a = S.makeSkill({ id: undefined, name: "A", instructions: "Do the thing properly please." }), b = S.makeSkill({ id: undefined, name: "A", instructions: "Do the thing properly please." });
+  ok(a.id !== b.id, "two skills never share an id");
+}

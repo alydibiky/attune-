@@ -45,3 +45,9 @@ for (let i = 0; i < 200000; i++) rows.push(parseLine(L(String(1000000000000 + i)
 await big.putMany(rows);
 const t1 = Date.now(); const rr = await searchPack(big, "cola olive brand1"); const dt = Date.now() - t1;
 ok(rr.length > 0 && dt < 400, `200,000 products: a 3-word search answers in ${dt} ms with ${rr.length} results`);
+{
+  const s = memoryStore();
+  await s.putMany(parseShard([L("6221000000010", "Coca Cola Light", "", "X", 1), L("6221000000011", "Cocoa drink", "", "Y", 80)].join("\n")));
+  const r = await searchPack(s, "co");
+  ok(r.length === 2 && new Set(r.map((x) => x.barcode)).size === 2, "a short word never lists one product twice");
+}

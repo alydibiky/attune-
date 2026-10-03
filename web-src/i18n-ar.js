@@ -457,7 +457,7 @@ export const AR = {
   "Text shrunk to {p}% to fit {n} page(s)": "الخط اتصغّر لـ {p}٪ عشان يتظبط في {n} صفحة",
   "Skills": "المهارات",
   "Your own recipes for the AI — create, import, share": "وصفاتك الخاصة للذكاء الاصطناعي — اعمل، استورد، شارك",
-  "Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill only adds instructions — nothing runs.": "وصفاتك الخاصة للذكاء الاصطناعي: إزاي يكتب عروض أسعارك وردودك ودروسك. ابدأ الرسالة بأمر المهارة، أو سيب التطبيق يختارها لما سؤالك يناسبها. المهارة بتضيف تعليمات بس — مفيش حاجة بتشتغل.",
+  "Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill adds instructions, facts and a checklist to your question; a small program inside it (only if you keep one) runs offline in a locked box.": "وصفاتك الخاصة للذكاء الاصطناعي: إزاي يكتب عروض أسعارك وردودك ودروسك. ابدأ الرسالة بأمر المهارة، أو سيب التطبيق يختارها لما سؤالك يناسبها. الـ skill بيضيف تعليمات ومعلومات وقايمة مراجعة لسؤالك؛ وبرنامج صغير جواه (لو انت سبته) بيشغّل بدون إنترنت في صندوق مقفول.",
   "Catalogue": "الكتالوج",
   "Import": "استيراد",
   "No skills yet": "مفيش مهارات لسه",

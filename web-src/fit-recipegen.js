@@ -231,7 +231,9 @@ export function getGenerated(id) {
   const fi = +m[1] - 1, idx = +m[2];
   if (!FAMS[fi] || idx >= SIZES[fi]) return null;
   const fm = FAMS[fi], s = decode(fm, idx), b = fm.build(s);
-  return { id, en: b.en, ar: b.ar, serves: 1, mins: b.mins, tags: fm.tags(s), items: b.items, steps: b.steps, generated: true };
+  const merged = [];                                  // the same food twice (oil in the method and in the marinade) is one line
+  for (const [fid, g] of b.items) { const m = merged.find((x) => x[0] === fid); if (m) m[1] += g; else merged.push([fid, g]); }
+  return { id, en: b.en, ar: b.ar, serves: 1, mins: b.mins, tags: fm.tags(s), items: merged, steps: b.steps, generated: true };
 }
 /** Every id, in a fixed order. */
 export const generatedId = (global) => { let fi = 0; while (global >= OFFS[fi + 1]) fi++; return `g${fi + 1}-${global - OFFS[fi]}`; };

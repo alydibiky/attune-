@@ -73,3 +73,20 @@ if (fail) { console.log(`\n${fail} FAILED`); process.exit(1); } else console.log
   threw = ""; try { A.parseRevise(JSON.stringify({ ...A.cvToJson(cv), experience: [] }), cv, "make it better"); } catch (e) { threw = e.message; }
   console.log(/dropped a job/.test(threw) ? "PASS revise refuses to lose a job" : "FAIL revise drop");
 }
+
+// ---- v6.18 review fixes ----
+{
+  const V = await import("../../web-src/cv.js"), A = await import("../../web-src/cv-ai.js");
+  let cv = V.newCV("en", "T"); cv.basics.name = "Ali";
+  cv.sections.find((s) => s.type === "skills").items = [{ name: "Technical", items: ["Crane planning", "Excel"] }, { name: "Soft", items: ["Leadership"] }];
+  cv.sections.find((s) => s.type === "education").items = [{ degree: "BSc", school: "GIU", start: "2020", end: "2024", note: "" }];
+  const j = A.cvToJson(cv);
+  const r = A.parseRevise(JSON.stringify(j), cv, "");
+  const g = r.cv.sections.find((s) => s.type === "skills").items;
+  console.log(g.length === 2 && g[0].name === "Technical" && g[1].items[0] === "Leadership" ? "PASS a revise keeps the skill groups" : "FAIL skill groups " + JSON.stringify(g));
+  let threw = ""; try { A.parseRevise(JSON.stringify({ ...j, education: [] }), cv, "polish"); } catch (e) { threw = e.message; }
+  console.log(/dropped something/.test(threw) ? "PASS a revise cannot lose a school" : "FAIL education drop");
+  cv.lang = 'x"><img src=x onerror=alert(1)>'; cv.fontSize = "9;}</style><script>alert(1)</script>"; cv.margin = "1};x{";
+  const h = V.cvHtml(cv);
+  console.log(!h.includes("onerror") && !h.includes("<script>alert") && h.includes('lang="en"') ? "PASS odd lang / numbers cannot inject into the CV page" : "FAIL cv injection");
+}

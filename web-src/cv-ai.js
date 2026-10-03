@@ -157,7 +157,10 @@ export function applyImport(cv, raw, text) {
   if (str(j.summary)) sec("summary").items = [{ text: str(j.summary) }];
   if (Array.isArray(j.experience)) sec("experience").items = j.experience.map((e) => ({ role: str(e.role), company: str(e.company), location: str(e.location), start: str(e.start), end: str(e.end), current: !!e.current, bullets: (Array.isArray(e.bullets) ? e.bullets : []).map(str).filter(Boolean) }));
   if (Array.isArray(j.education)) sec("education").items = j.education.map((e) => ({ degree: str(e.degree), school: str(e.school), start: str(e.start), end: str(e.end), note: str(e.note) }));
-  if (Array.isArray(j.skills) && j.skills.length) sec("skills").items = [{ name: "", items: j.skills.map(str).filter(Boolean) }];
+  if (Array.isArray(j.skills) && j.skills.length) {
+    if (j.skills.every((x) => x && typeof x === "object" && Array.isArray(x.items))) sec("skills").items = j.skills.map((g) => ({ name: str(g.name), items: g.items.map(str).filter(Boolean) })).filter((g) => g.items.length);   // groups kept (a revise)
+    else sec("skills").items = [{ name: "", items: j.skills.map(str).filter(Boolean) }];
+  }
   if (Array.isArray(j.languages)) sec("languages").items = j.languages.map((l) => ({ name: str(l.name), level: str(l.level) })).filter((l) => l.name);
   if (Array.isArray(j.certs)) sec("certs").items = j.certs.map((x) => ({ name: str(x.name), issuer: str(x.issuer), year: str(x.year) })).filter((x) => x.name);
   return c;
@@ -179,7 +182,7 @@ export function cvToJson(cv) {
     summary: (get("summary")[0] || {}).text || "",
     experience: get("experience").map((e) => ({ role: e.role, company: e.company, location: e.location, start: e.start, end: e.end, current: !!e.current, bullets: (e.bullets || []).filter(Boolean) })),
     education: get("education").map((e) => ({ degree: e.degree, school: e.school, start: e.start, end: e.end, note: e.note })),
-    skills: [].concat(...get("skills").map((s) => s.items || [])),
+    skills: get("skills").map((s) => ({ name: s.name || "", items: s.items || [] })),
     languages: get("languages").map((l) => ({ name: l.name, level: l.level })),
     certs: get("certs").map((c) => ({ name: c.name, issuer: c.issuer, year: c.year })),
   };
@@ -201,7 +204,12 @@ export function parseRevise(raw, cv, instruction) {
   if (!onlyKnown(out, src)) throw new Error("The AI invented a number that is not in your CV or your request — nothing was changed");
   const before = (cv.sections.find((s) => s.type === "experience") || { items: [] }).items.length;
   const after = (next.sections.find((s) => s.type === "experience") || { items: [] }).items.length;
-  if (after < before && !/remov|delet|drop|احذف|شيل|امسح/i.test(String(instruction))) throw new Error("The AI dropped a job — nothing was changed");
+  const removing = /remov|delet|drop|احذف|شيل|امسح/i.test(String(instruction));
+  if (after < before && !removing) throw new Error("The AI dropped a job — nothing was changed");
+  for (const t of ["education", "languages", "certs"]) {
+    const a = ((cv.sections.find((s) => s.type === t) || { items: [] }).items || []).length, z = ((next.sections.find((s) => s.type === t) || { items: [] }).items || []).length;
+    if (z < a && !removing) throw new Error("The AI dropped something from your CV — nothing was changed");
+  }
   // applyImport rewrote contact details from text (none given): keep the originals
   next.basics = { ...next.basics, email: next.basics.email || cv.basics.email, phone: next.basics.phone || cv.basics.phone };
   return { cv: next, changed: out.trim() !== src.replace(String(instruction || ""), "").trim() };

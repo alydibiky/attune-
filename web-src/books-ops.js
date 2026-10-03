@@ -305,12 +305,12 @@ export function sampleShop(base = EMPTY(), today = new Date().toISOString().slic
   inv(c2, ago(26), [{ item: bolts, qty: 25, price: E(120), vat: "S" }, { item: drill, qty: 3, price: E(2400), vat: "S", discBp: 500 }]);
   inv(c1, ago(18), [{ item: drill, qty: 4, price: E(2400), vat: "S", wht: "supplies" }]);
   inv(c3, ago(9), [{ item: paint, qty: 6, price: E(950), vat: "S" }]);
-  inv(c2, ago(3), [{ item: bolts, qty: 30, price: E(120), vat: "S" }]);
+  inv(c2, ago(0), [{ item: bolts, qty: 30, price: E(120), vat: "S" }]);
   // money
   step(receive(s, { customer: c1, date: ago(20), method: "bank", amount: E(14000) }, { at }));
   step(receive(s, { customer: c2, date: ago(15), method: "cash", amount: E(9000) }, { at }));
   step(paySupplier(s, { supplier: s1, date: ago(25), method: "bank", amount: E(10000) }, { at }));
-  step(addExpense(s, { date: ago(28), category: "Rent", amount: E(6000), method: "bank" }, { at }));
+  step(addExpense(s, { date: ago(28), category: "Rent", amount: E(6000), method: "cash" }, { at }));
   step(addExpense(s, { date: ago(10), category: "Transport", amount: E(850), method: "cash", memo: "Fuel" }, { at }));
   step(addExpense(s, { date: ago(5), category: "Electricity & water", amount: E(1200), method: "cash" }, { at }));
   return s;

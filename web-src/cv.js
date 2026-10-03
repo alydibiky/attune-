@@ -110,7 +110,7 @@ export function cvHtml(cv, { scale = 1 } = {}) {
   const T = THEMES[cv.theme] || THEMES.teal, F = FONTS[cv.font] || FONTS.sans, P = PAGES[cv.page] || PAGES.A4;
   const rtl = cv.lang === "ar", b = cv.basics || {}, modern = cv.layout === "modern";
   const secs = (cv.sections || []).filter(filled);
-  const sp = SP[cv.spacing] || 1, fs = (cv.fontSize || 10.5) * scale, m = cv.margin ?? 14;
+  const sp = SP[cv.spacing] || 1, fs = (+cv.fontSize || 10.5) * scale, m = Number.isFinite(+cv.margin) ? +cv.margin : 14;
   const contact = [b.email, b.phone, b.city, ...(b.links || []).map((l) => l.url || l.label)].filter(Boolean);
   const photo = cv.showPhoto && cv.photo ? `<img class="photo" src="${esc(cv.photo)}" alt="">` : "";
   const css = `
@@ -134,7 +134,7 @@ ul{margin:${(3 * sp).toFixed(1)}px 0 0;padding-${rtl ? "right" : "left"}:${(fs *
 li{margin-bottom:${(2 * sp).toFixed(1)}px}
 .photo{width:${(fs * 7).toFixed(0)}pt;height:${(fs * 7).toFixed(0)}pt;object-fit:cover;border-radius:${modern ? "50%" : "6px"}}
 ${modern ? `
-.cols{display:flex;min-height:${P.h - 2 * m}mm;margin:-${m}mm;${rtl ? "flex-direction:row-reverse" : ""}}
+.cols{display:flex;min-height:${P.h}mm;margin:-${m}mm;${rtl ? "flex-direction:row-reverse" : ""}}
 .side{width:34%;background:${T.side};color:${T.sideText};padding:${m}mm ${m * 0.7}mm}
 .main{flex:1;padding:${m}mm}
 .side h1{color:${T.sideText};font-size:${(fs * 1.7).toFixed(1)}pt}
@@ -151,7 +151,7 @@ ${modern ? `
   } else {
     inner = `<header class="row" style="align-items:center"><div><h1>${esc(b.name)}</h1>${b.title ? `<div class="title">${esc(b.title)}</div>` : ""}<div class="contact">${contact.map((c) => `<span>${esc(c)}</span>`).join("")}</div></div>${photo}</header>${secs.map((s) => sectionHtml(s, cv, false)).join("")}`;
   }
-  return `<!doctype html><html lang="${cv.lang}" dir="${rtl ? "rtl" : "ltr"}"><head><meta charset="utf-8"><title>${esc(b.name || cv.name)}</title><style>${css}</style></head><body><div class="page">${inner}</div></body></html>`;
+  return `<!doctype html><html lang="${cv.lang === "ar" ? "ar" : "en"}" dir="${rtl ? "rtl" : "ltr"}"><head><meta charset="utf-8"><title>${esc(b.name || cv.name)}</title><style>${css}</style></head><body><div class="page">${inner}</div></body></html>`;
 }
 
 // ---- plain text and Word (ATS tools read these best) ----------------------------------------------------------------------

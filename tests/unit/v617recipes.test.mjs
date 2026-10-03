@@ -24,6 +24,7 @@ import { GENERATED_COUNT, getGenerated, generatedId, searchGenerated } from "../
     for (const [i, gr] of r.items) if (!food(i)) bad.push(`${id}: unknown ${i}`); else if (!(gr > 0)) bad.push(`${id}: grams ${i}`);
     const k = recipeNutrients(r).kcal; minK = Math.min(minK, k); maxK = Math.max(maxK, k);
     if (k < 150 || k > 1300) bad.push(`${id} ${r.en}: ${k} kcal`);
+    if (new Set(r.items.map(([i]) => i)).size !== r.items.length) bad.push("repeated ingredient " + id);
     if (names.has(r.en)) bad.push("dup en " + r.en); names.add(r.en);
     if (arNames.has(r.ar)) bad.push("dup ar " + r.ar); arNames.add(r.ar);
     if (!r.steps.length || !/[؀-ۿ]/.test(r.ar) || /undefined|null|\[object/.test(r.en + r.ar + r.steps.join(" "))) bad.push("text " + id);
