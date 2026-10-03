@@ -1,0 +1,84 @@
+name: "Studio lab (image models - speed and prompt match)"
+
+# v6.18 — Ali: Studio is slow and draws what was not asked ("a red crane lifting a bridge beam at sunset" gave a crane over the sea).
+# On an ARM runner, with the app's own pinned stable-diffusion.cpp, five prompts are drawn by each candidate and scored with CLIP
+# (how well the picture matches the prompt) and timed. Candidates: the app's Turbo (SD 2.1 turbo) and Pro (FLUX.2 klein 4B), and
+# Alibaba's Z-Image-Turbo (6B, 8 steps). Pictures are uploaded as artifacts. Run by hand.
+
+on:
+  workflow_dispatch:
+    inputs:
+      size:
+        description: "Picture side in pixels"
+        default: "512"
+
+jobs:
+  draw:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: turbo-sd21,    kind: allinone }
+          - { name: klein-4b-q4,   kind: klein }
+          - { name: zimage-turbo,  kind: zimage }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the picture engine (the app's pinned stable-diffusion.cpp)
+        run: |
+          git clone -q https://github.com/leejet/stable-diffusion.cpp ~/sd
+          cd ~/sd && git fetch -q --depth 1 origin 88411ef1e0688ff2df1010aeeb5d92b2d8cea2be && git checkout -q 88411ef1e0688ff2df1010aeeb5d92b2d8cea2be && git submodule update -q --init --depth 1 ggml
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSD_BUILD_EXAMPLES=ON > /dev/null
+          cmake --build build --target sd-cli -j"$(nproc)" > /dev/null
+          ls build/bin
+      - name: Models
+        run: |
+          mkdir -p ~/m && cd ~/m
+          get() { curl -sSL --retry 5 -f -o "$2" "$1" || { echo "FAILED $1"; return 1; }; ls -la "$2"; }
+          case "${{ matrix.kind }}" in
+            allinone) get https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q4_0.gguf diff.gguf ;;
+            klein)
+              get https://huggingface.co/leejet/FLUX.2-klein-4B-GGUF/resolve/main/flux-2-klein-4b-Q4_0.gguf diff.gguf
+              get https://huggingface.co/unsloth/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf llm.gguf
+              get https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/vae/flux2-vae.safetensors vae.safetensors ;;
+            zimage)
+              read REPO FILE < <(python3 $GITHUB_WORKSPACE/tests/models/resolve_hf.py "Z-Image-Turbo" "Q4_K,Q4_0,Q3_K,Q5_K,Q8_0" z-image turbo)
+              echo "Z-Image: $REPO / $FILE"
+              get "https://huggingface.co/$REPO/resolve/main/$FILE" diff.gguf
+              get https://huggingface.co/unsloth/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf llm.gguf
+              get https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors vae.safetensors ;;
+          esac
+      - name: Draw the five prompts
+        run: |
+          S=${{ github.event.inputs.size || '512' }}
+          O=$GITHUB_WORKSPACE/studio-out/${{ matrix.name }}; mkdir -p $O
+          cat > $GITHUB_WORKSPACE/studio-out/prompts.txt <<'EOF'
+          a massive red Liebherr crane lifting a heavy steel bridge beam at a construction site, sunset
+          a plate of Egyptian koshari on a wooden table, top view, food photography
+          a modern office interior with a turquoise couch and a large window
+          a white SUV parked in front of the pyramids of Giza at golden hour
+          a product photo of a blue thermos bottle on a white background
+          EOF
+          sed -i 's/^ *//' $GITHUB_WORKSPACE/studio-out/prompts.txt
+          i=0; : > times.txt
+          while read -r P; do
+            t0=$(date +%s)
+            case "${{ matrix.kind }}" in
+              allinone) ~/sd/build/bin/sd-cli -m ~/m/diff.gguf -p "$P" -o $O/$i.png -W $S -H $S --steps 4 --cfg-scale 1 --sampling-method euler_a --prediction eps --scheduler sgm_uniform -s 7 -t "$(nproc)" > $O/log$i.txt 2>&1 || true ;;
+              klein)    ~/sd/build/bin/sd-cli --diffusion-model ~/m/diff.gguf --llm ~/m/llm.gguf --vae ~/m/vae.safetensors -p "$P" -o $O/$i.png -W $S -H $S --steps 4 --cfg-scale 1 --sampling-method euler -s 7 -t "$(nproc)" --diffusion-fa > $O/log$i.txt 2>&1 || true ;;
+              zimage)   ~/sd/build/bin/sd-cli --diffusion-model ~/m/diff.gguf --llm ~/m/llm.gguf --vae ~/m/vae.safetensors -p "$P" -o $O/$i.png -W $S -H $S --steps 8 --cfg-scale 1 --sampling-method euler -s 7 -t "$(nproc)" --diffusion-fa > $O/log$i.txt 2>&1 || true ;;
+            esac
+            echo $(( $(date +%s) - t0 )) >> times.txt; tail -2 $O/log$i.txt; i=$((i+1))
+          done < $GITHUB_WORKSPACE/studio-out/prompts.txt
+          python3 -c "import json;t=[int(x) for x in open('times.txt')];json.dump({'mean':round(sum(t)/len(t)),'all':t},open('$O/times.json','w'))"
+      - name: Score with CLIP
+        run: |
+          pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet transformers pillow
+          python3 tests/studio/clip_score.py studio-out | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: studio-${{ matrix.name }}
+          path: studio-out/
