@@ -1,5 +1,5 @@
 // Unit tests for web-src/studio.js — picture requests in Chat, and the prompt helpers.
-import { looksLikeImageRequest, pictureSubject, enhanceMessages, cleanPrompt, PACKS, SIZES, drawPack } from "../../web-src/studio.js";
+import { looksLikeImageRequest, pictureSubject, enhanceMessages, cleanPrompt, PACKS, SIZES, drawPack, recommendStudioPack } from "../../web-src/studio.js";
 const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
 
@@ -27,5 +27,20 @@ eq(drawPack(cpu(6, ["turbo", "turbo-xl"])).id, "turbo", "under 8 GB Turbo+ is ne
 eq(drawPack(cpu(6, ["turbo"]), "turbo-xl").id, "turbo", "choosing Turbo+ on a 6 GB phone falls back to Turbo");
 eq(drawPack(cpu(12, ["turbo", "turbo-xl"]), "turbo").id, "turbo", "choosing Turbo keeps Turbo");
 eq(drawPack(cpu(12, ["turbo"]), "turbo-xl"), { id: "turbo-xl", ready: false }, "choosing Turbo+ before installing offers its install");
+// per-device recommendation (Ali: "recommend the best Studio model for each device")
+const devs = [
+  ["4 GB budget phone", { ramGB: 4, cores: 8, bigCores: 2, freeGB: 20, platform: "android" }, "turbo", 384],
+  ["6 GB mid phone", { ramGB: 6, cores: 8, bigCores: 2, freeGB: 30, platform: "android" }, "turbo", 512],
+  ["8 GB Honor-class", { ramGB: 8, cores: 8, bigCores: 4, freeGB: 40, platform: "android" }, "turbo-xl", 512],
+  ["8 GB but 4 GB free", { ramGB: 8, cores: 8, bigCores: 4, freeGB: 4, platform: "android" }, "turbo", 512],
+  ["12 GB flagship", { ramGB: 12, cores: 8, bigCores: 5, freeGB: 100, platform: "android" }, "turbo-xl", 512],
+  ["16 GB laptop", { ramGB: 16, cores: 8, bigCores: 8, freeGB: 200, platform: "desktop" }, "turbo-xl", 512],
+  ["32 GB desktop", { ramGB: 32, cores: 16, bigCores: 16, freeGB: 500, platform: "desktop" }, "turbo-xl", 512],
+];
+for (const [what, d, pack, side] of devs) { const r = recommendStudioPack(d); eq([r.pack, r.side, r.estSeconds > 0], [pack, side, true], `recommendation: ${what} → ${pack} @ ${side} (${r.estSeconds} s)`); }
+eq(recommendStudioPack(devs[6][1]).alternatives.some((a) => a.pack === "klein-4b"), true, "computers with 16 GB+ are also offered the slow best-quality pack");
+eq(recommendStudioPack(devs[2][1]).alternatives.some((a) => a.pack === "klein-4b"), false, "phones are not offered the minutes-a-picture pack");
+eq(recommendStudioPack(devs[2][1]).estSeconds < recommendStudioPack(devs[1][1]).estSeconds, true, "the XL pick is estimated faster than Turbo on a slower phone");
+eq(drawPack({ ramGB: 12, cores: 8, bigCores: 5, freeGB: 100, gpuState: "cpu", packs: [] }).id, "turbo-xl", "first run on a 12 GB phone preselects the recommended pack");
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 process.exit(fails.length ? 1 : 0);

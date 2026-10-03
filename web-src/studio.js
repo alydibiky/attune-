@@ -162,16 +162,53 @@ export function drawPack(info, choice = null, mode = "create") {
   if (choice === "turbo-xl" && xlOk) return { id: "turbo-xl", ready: ready("turbo-xl") };
   const fast = xlOk && ready("turbo-xl") ? "turbo-xl" : "turbo";
   const gpu = gpuWorks(info);
-  if (gpu === false) return { id: fast, ready: ready(fast), why: "cpu" };
+  if (gpu === false) { const id = ready(fast) || ready("turbo") ? fast : recommendStudioPack(info).pack; return { id, ready: ready(id), why: "cpu" }; }
   if (pro) return { id: pro, ready: true };
   if (ready(fast)) return { id: fast, ready: true };
+  if (gpu !== true) { const rec = recommendStudioPack(info).pack; return { id: rec, ready: ready(rec) }; }
   return { id: gpu === true ? proOffer : "turbo", ready: false };
 }
+// v6.19 — seconds a picture on the Studio lab's 4-core ARM runner (512 px unless noted).
+export const LAB_SECONDS = { "turbo": 37, "turbo@384": 19, "turbo-xl": 18, "klein-4b": 464 };
+/** How fast this device's CPU is next to the lab runner (1 = same). Big cores count fully, small ones about a third;
+ *  a phone core is taken as ~0.8 of a runner core, a computer core as ~1.2. */
+export function speedFactor(d) {
+  const cores = Math.max(1, (d && d.cores) || 4), big = Math.min(cores, Math.max(0, (d && d.bigCores) || Math.ceil(cores / 2)));
+  const eff = big + 0.35 * (cores - big);
+  const per = d && d.platform && d.platform !== "android" ? 1.2 : 0.8;
+  return Math.max(0.15, Math.min(4, (eff * per) / 4));
+}
+/**
+ * v6.19 — Ali: "for each device, recommend the best Studio model". Pure: uses the device facts the app already has
+ * (ramGB, freeGB, cores, bigCores, platform; the packs already installed) and the measured lab times.
+ * → { pack, steps, side, estSeconds, why, alternatives: [{pack, why, estSeconds?}] }
+ */
+export function recommendStudioPack(d) {
+  d = d || {};
+  const ram = d.ramGB || 0, free = d.freeGB == null ? 99 : d.freeGB, f = speedFactor(d);
+  const have = (id) => (d.packs || []).some((p) => p.id === id);
+  const room = (id) => have(id) || free >= PACKS[id].sizeGB + 2;   // keep 2 GB spare after the download
+  const est = (k) => Math.round(LAB_SECONDS[k] / f);
+  const computer = !!d.platform && d.platform !== "android";
+  const alts = [];
+  let r;
+  if (ram >= 8 && f >= 0.6 && room("turbo-xl")) {
+    r = { pack: "turbo-xl", steps: 1, side: 512, estSeconds: est("turbo-xl"), why: "8 GB or more and fast cores: the sharper XL model in one step" };
+    alts.push({ pack: "turbo", why: "smaller download, a little less detail", estSeconds: est("turbo") });
+  } else if (ram >= 6) {
+    r = { pack: "turbo", steps: 4, side: 512, estSeconds: est("turbo"), why: ram >= 8 ? "not enough free storage or speed for the XL model" : "the fast model fits this phone's memory" };
+  } else {
+    r = { pack: "turbo", steps: 4, side: 384, estSeconds: est("turbo@384"), why: "little memory or slow cores: smaller pictures, still clear" };
+  }
+  if (computer && ram >= 16 && room("klein-4b")) alts.push({ pack: "klein-4b", why: "best quality, slow (minutes a picture)", estSeconds: est("klein-4b") });
+  if (!room(r.pack)) r.why = "free up storage first: " + r.why;
+  return { ...r, alternatives: alts };
+}
 /** The size to draw at: Turbo draws at 512 px on its long side (what it was trained for). */
-export function drawSize(packId, sz) {
+export function drawSize(packId, sz, sideOverride = 0) {
   const p = PACKS[packId];
   if (!p || !p.side) return { w: sz.w, h: sz.h };
-  const k = p.side / Math.max(sz.w, sz.h);
+  const k = (sideOverride || p.side) / Math.max(sz.w, sz.h);
   return { w: Math.max(256, Math.round(sz.w * k / 64) * 64), h: Math.max(256, Math.round(sz.h * k / 64) * 64) };
 }
 
