@@ -1706,7 +1706,7 @@ export const AR = {
   "Runs the model on the phone's graphics chip (Adreno). Often faster at reading long prompts; test it below. Switches itself back to the CPU if anything goes wrong.": "يشغّل النموذج على شريحة الرسوميات في الهاتف (Adreno). غالبًا أسرع في قراءة الطلبات الطويلة؛ اختبره بالأسفل. يعود وحده إلى المعالج (CPU) إن حدث أي خطأ.",
   "This build has no GPU engine — it will come with the next APK built on GitHub.": "هذه النسخة بلا محرك GPU — سيأتي مع ملف APK التالي المبني على GitHub.",
   "Faster writing (MTP)": "كتابة أسرع (توقّع عدة كلمات)",
-  "Same answers, faster for code, tables, JSON, emails and summaries; roughly the same or slightly slower for free-form explanations.": "نفس الإجابات، وأسرع في الأكواد والجداول وملفات JSON والإيميلات والملخصات؛ وتقريبًا بنفس السرعة أو أبطأ قليلًا في الشرح الحر.",
+  "Same answers, faster for code, tables, JSON, emails and summaries; roughly the same or slightly slower for free-form explanations.": "نفس الإجابات، وأسرع في الأكواد والجداول وملفات البيانات والإيميلات والملخصات؛ وتقريبًا بنفس السرعة أو أبطأ قليلًا في الشرح الحر.",
   "MTP is on for this model.": "التوقّع المتعدد مفعّل لهذا النموذج.",
   "MTP did not start on this phone, so this model runs without it.": "التوقّع المتعدد لم يعمل على هذا الهاتف، فيعمل النموذج بدونه.",
   "MTP is off for this model.": "التوقّع المتعدد متوقف لهذا النموذج.",
