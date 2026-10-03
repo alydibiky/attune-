@@ -220,6 +220,12 @@ object Engine {
      * which already counts what it can reclaim) with 0.6 GB to spare for the context and the app.
      * So a 12 GB phone with memory free takes the 12B Zenith+ (6.4 GB), and a busy one is protected.
      */
+    /** True when the weights are mapped from storage instead of copied (see start). */
+    @Volatile var mappedWeights: Boolean = false
+        private set
+    /** Over the copy budget by at most 12 % → run mapped from storage; within budget → copied (false). */
+    fun mappedFallback(size: Long, allowed: Long): Boolean = size > allowed && size <= allowed + allowed * 12 / 100
+
     fun allowedBytes(ctx: Context): Long {
         val total = DeviceInfo.totalRamBytes(ctx)
         val floor = (total * 0.55).toLong()
@@ -283,7 +289,7 @@ object Engine {
         val gen = DeviceInfo.generationThreads(ctx)
         val batch = DeviceInfo.batchThreads(ctx)
         val ram = DeviceInfo.ramGB(ctx)
-        settingsNote = (if (useGpu) "GPU: $gpuName · context $nCtx" else "context $nCtx · $gen threads (prompt $batch) · flash attention · 8-bit KV cache") + " · weights in RAM" +
+        settingsNote = (if (useGpu) "GPU: $gpuName · context $nCtx" else "context $nCtx · $gen threads (prompt $batch) · flash attention · 8-bit KV cache") + (if (mappedWeights) " · weights read from storage (memory is short)" else " · weights in RAM") +
             (if (cpuFeatures.isNotEmpty() && !useGpu) " · CPU: $cpuFeatures" else "")
 
         val a = arrayListOf(
@@ -301,7 +307,9 @@ object Engine {
             // re-reads gigabytes from flash: that is how 20 words/s becomes <1.
             // The memory guard below already refuses models that don't fit.
             // (At this llama.cpp the switch is --load-mode; --no-mmap is gone.)
-            "--load-mode", "none",
+            // Exception: a model just over the memory budget is mapped (mappedFallback) — slower
+            // than copied on some phones, but it runs instead of being refused.
+            "--load-mode", if (mappedWeights) "mmap" else "none",
             "--cache-reuse", "256",           // reuse the shared prompt prefix between requests
             "--cache-ram", if (ram >= 8) "256" else "0",
             "--jinja",                        // the model's own chat template, incl. thinking switch
@@ -385,7 +393,12 @@ object Engine {
         // Android keeps roughly half of a phone's memory for itself and the
         // other apps. A model bigger than that does load — and then swaps,
         // overheats and freezes the phone, which is worse than refusing.
-        if (model.sizeBytes > allowedBytes(ctx)) {  // (the draft model is only added when both fit: draftFor)
+        // Storage lab (Oct 2026, ARM, hard memory cap like a small phone): a model whose copy does not fit
+        // still runs when its weights stay MAPPED from storage — Gemma E4B (4.6 GB) under a 5 GB cap at the
+        // same speed (10.8 vs 11.1 words/s), Qwen 3.5 4B (2.7 GB) under 3 GB at 63 % speed, where the copy was
+        // killed. So a model up to 12 % over the budget is started mapped instead of being refused.
+        mappedWeights = mappedFallback(model.sizeBytes, allowedBytes(ctx))
+        if (model.sizeBytes > allowedBytes(ctx) && !mappedWeights) {  // (the draft model is only added when both fit: draftFor)
             state = State.ERROR
             error = "This model is too big for this phone's memory — it would freeze the phone. Pick a smaller one in Engine (Qwen 3.5 4B is the fast choice)."
             return false
