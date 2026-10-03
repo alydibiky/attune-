@@ -33,6 +33,10 @@ jobs:
           - { name: qwen35-9b-mtp, search: "Qwen3.5-9B-MTP",      quants: "IQ4_NL,Q4_K_M,IQ4_XS", need: "mtp 9b" }
           - { name: ling3-tiny,  search: "Ling-3.0-tiny",         quants: "Q4_K_M,IQ4_XS,Q4_0,Q3_K_M,Q8_0", need: "ling" }
           - { name: minicpm5-2b, search: "MiniCPM5-2B",           quants: "Q4_K_M,IQ4_XS,Q4_0,Q8_0", need: "minicpm5" }
+          - { name: mimo-9b,     search: "MiMo-V2.6-Distill-Qwen-9B-GGUF", quants: "IQ4_XS,Q4_K_M,Q4_0", need: "mimo" }
+          - { name: gemma4-e4b,  search: "gemma-4-E4B-it-GGUF",   quants: "Q4_0,Q4_K_M,IQ4_XS", need: "e4b" }
+          - { name: gemma4-12b,  search: "gemma-4-12b-it-GGUF",   quants: "Q4_0,IQ4_XS,Q4_K_M", need: "12b" }
+          - { name: granite42-8b, search: "granite-4.2-8b-GGUF",  quants: "IQ4_XS,Q4_K_M,Q4_0", need: "granite" }
           - { name: lfm2-8b-a1b, search: "LFM2-8B-A1B",           quants: "Q4_K_M,IQ4_XS,Q4_0,Q8_0", need: "lfm2" }
     steps:
       - uses: actions/checkout@v4

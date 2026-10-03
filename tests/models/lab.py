@@ -60,7 +60,7 @@ def ask(n=8, cache=True):
     return post("/v1/chat/completions", {"messages": [{"role": "system", "content": PROMPT}, {"role": "user", "content": "Say hello in one short sentence."}], "max_tokens": n, "temperature": 0, "cache_prompt": cache, "chat_template_kwargs": {"enable_thinking": False}})
 
 say("### 2. Memory (resident, MB)"); say("| File access | After loading | After a ~1,800-token prompt |"); say("|---|---|---|")
-for label, extra in [("mapped (mmap, the default)", []), ("copied into RAM (--no-mmap)", ["--no-mmap"])]:
+for label, extra in [("mapped (mmap, the default)", []), ("copied into RAM (--no-mmap)", ["--load-mode", "none"])]:
     try:
         p = serve(extra); a = rss_kb(p.pid) / 1024; ask(); b = rss_kb(p.pid) / 1024; p.terminate(); p.wait(timeout=30)
         say(f"| {label} | {a:.0f} | {b:.0f} |")
