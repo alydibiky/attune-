@@ -45,7 +45,7 @@ jobs:
 
       - name: Vulkan SDK (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq libvulkan-dev glslc xvfb > /dev/null
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libvulkan-dev glslc spirv-headers xvfb > /dev/null
       - name: Vulkan SDK (Windows)
         if: runner.os == 'Windows'
         uses: jakoch/install-vulkan-sdk-action@v1
@@ -53,7 +53,7 @@ jobs:
           vulkan_version: 1.4.309.0
           install_runtime: true
           cache: true
-          stripdown: true
+          stripdown: false
 
       - name: Cache the engine build
         id: cache
