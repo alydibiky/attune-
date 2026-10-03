@@ -35,3 +35,35 @@ Results: the "Studio image models — measured" table in PLANS_2026-10-02.md. He
 - SnapGen: https://pith.science/paper/2412.09619 ; MobileDiffusion: https://research.google/blog/mobilediffusion-rapid-text-to-image-generation-on-device/
 - Prompt extension with LLMs (strong helps, weak can hurt): https://arxiv.org/pdf/2406.05814 ; ELLA: https://arxiv.org/html/2403.05135v1
 - TAESD: https://huggingface.co/madebyollin/taesd
+
+## Qwen-Image 2.1 in plain words (Oct 2026)
+- **What it is:** an open picture model (Apache-style open weights) built from three parts: a 7-billion-parameter "drawing" network
+  (a single-stream diffusion transformer, 32 layers — text and picture pieces go through the same layers together), a
+  **Qwen3-VL 8B** language-and-vision model that reads the prompt (and reference photos), and its own colour decoder (VAE).
+  Native 2K pictures, text rendering, transparent pictures, editing with up to 10 reference images. On the chart Ali saw it
+  scores 60.3, next to GPT Image 1.5 (59.7) and Nano Banana 2.0 (59.8); GPT Image 2 is 64.7.
+- **Why it writes text well:** the prompt is read by a full 8B language model (not a small CLIP encoder) and the drawing
+  network attends to every prompt token at every layer, so spelling and layout of words survive; it was also trained on
+  lots of posters/signs, including Chinese — Arabic is untested and must be measured before promising it.
+- **What it could give the app later:** "edit my photo" by instruction, product pictures from a few photos of the item
+  (multi-reference), signs/posters/menus with real words, transparent stickers/logos.
+- **Engine support:** our pinned stable-diffusion.cpp (88411ef) already has it (docs/qwen_image_2.1.md exists at that
+  commit): `--diffusion-model qwen_image_2.1-Q4_0.gguf --llm Qwen3VL-8B-Instruct-Q4_K_M.gguf --vae qwen_image_2.1_vae_bf16.safetensors
+  --sampling-method euler --fa`, cfg 6 at ~20+ steps; 4-step accelerators exist (alibaba-pai Fun-Acc-4Step LoRA; a merged
+  4-step "viggle turbo" GGUF), cfg 1.
+- **Files:** DiT Q4_0 4.20 GB (Q4_K 4.6, Q8_0 7.6), text reader Q4_K_M 5.03 GB, VAE 0.68 GB → ~9.9 GB download.
+- **Memory plan for 12 GB devices:** the engine loads weights lazily, can memory-map them (`--mmap`) and can keep a model
+  on storage and read it when used (`--params-backend te=disk`, already used by the app in low-memory mode). The text reader
+  runs once per picture, then the DiT runs the steps, then the VAE decodes (`--vae-tiling`). So only one big part needs
+  to be in RAM at a time; the lab measures peak memory inside 12 GB and 8 GB cages with no swap.
+- **Can the app's chat model be the text reader?** No: it must be exactly the Qwen3-VL 8B the model was trained with;
+  a different Qwen3 / Qwen3.5 chat GGUF gives wrong conditioning (same family, different weights).
+- **Desktop builds:** CUDA / Vulkan / Metal builds of the engine run it in seconds-to-tens-of-seconds with 8–24 GB of
+  graphics memory (`--offload-to-cpu` and `--max-vram` let smaller cards stream weights); that is for the desktop shell.
+- Sources: github.com/leejet/stable-diffusion.cpp/blob/master/docs/qwen_image_2.1.md, huggingface.co/leejet/Qwen-Image-2.1-GGUF,
+  huggingface.co/Comfy-Org/Qwen-Image-2.1, huggingface.co/alibaba-pai/Qwen-Image-2.1-Fun-Acc-LoRAs,
+  huggingface.co/Abiray/Qwen-Image-2.1-viggle-4-steps-turbo-GGUF.
+
+## Fast preview (engine feature found)
+The pinned engine can write a preview picture during drawing: `--preview tae --preview-path p.png --preview-interval 1`
+(tiny-decoder preview of each step). The app could show it within seconds and swap in the final picture.
