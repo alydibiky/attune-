@@ -101,11 +101,24 @@ export function explainMessages(question, code, output, answer) {
   ];
 }
 
+/**
+ * A phone model often writes the result line as the answer text instead of a print: `ANSWER: {final_price} جنيه` — a SyntaxError
+ * every time (the trials: Core 4B failed an Arabic maths question twice on exactly this). The line is turned into the print it meant.
+ */
+export function repairAnswerLines(code) {
+  return String(code || "").split("\n").map((l) => {
+    const m = /^(\s*)ANSWER\s*[:：]\s*(.+?)\s*$/.exec(l);
+    if (!m || /^\s*(print|#)/.test(l)) return l;
+    const rest = m[2].replace(/\\/g, "\\\\").replace(/"""/g, "\"\"\\\"");
+    return `${m[1]}print(f"""ANSWER: ${rest}""")`;
+  }).join("\n");
+}
+
 export function programFrom(text) {
   const b = extractBlocks(text).filter((x) => x.lang === "python" || !x.lang).sort((a, c) => c.code.length - a.code.length)[0];
-  if (b) return b.code;
+  if (b) return repairAnswerLines(b.code);
   const t = String(text || "").trim();
-  return /(^|\n)(print\(|import |from |[a-z_]+\s*=)/.test(t) ? t : null;
+  return /(^|\n)(print\(|import |from |[a-z_]+\s*=)/.test(t) ? repairAnswerLines(t) : null;
 }
 
 /**

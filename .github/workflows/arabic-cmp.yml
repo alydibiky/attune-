@@ -1,0 +1,29 @@
+name: "Arabic answers compared (Ling vs Qwen)"
+
+# v6.18 — the app's trials are structured; this prints eight real open-ended Egyptian-Arabic answers from each model
+# (customer reply, explanation, summary, advice, translation, WhatsApp message, safety) so a person can judge fluency.
+on:
+  workflow_dispatch:
+
+jobs:
+  cmp:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build llama.cpp (the app's pinned commit)
+        run: |
+          git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
+          cd ~/llama.cpp && git checkout -q 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF > /dev/null
+          cmake --build build --target llama-server -j"$(nproc)" > /dev/null
+          mkdir -p $GITHUB_WORKSPACE/tests/build-dl && cp -r build/bin $GITHUB_WORKSPACE/tests/build-dl/
+      - name: Models
+        run: |
+          cd ~
+          curl -sSL --retry 5 -o ling.gguf https://huggingface.co/inclusionAI/Ling-3.0-tiny-GGUF/resolve/main/Ling-3.0-tiny-Q4_K_M.gguf
+          curl -sSL --retry 5 -o q4.gguf https://huggingface.co/unsloth/Qwen3.5-4B-MTP-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf
+          curl -sSL --retry 5 -o q9.gguf https://huggingface.co/unsloth/Qwen3.5-9B-MTP-GGUF/resolve/main/Qwen3.5-9B-IQ4_NL.gguf
+          ls -la *.gguf
+      - name: Eight Arabic questions, three models
+        run: python3 tests/models/arabic_cmp.py ling=$HOME/ling.gguf qwen4b=$HOME/q4.gguf qwen9b=$HOME/q9.gguf
