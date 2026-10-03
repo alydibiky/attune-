@@ -1,0 +1,73 @@
+name: "Studio lab 2 (clarity per second, 20 prompts)"
+
+# v6.19 — Ali: "the most clear pictures possible in the lowest time possible". Twenty everyday prompts (Egyptian food and
+# streets, cranes, interiors, products, people, animals, landscapes) drawn by each pipeline on a 4-core ARM runner with the
+# app's pinned engine; scored for prompt match (CLIP), human preference (PickScore) and clarity (Laplacian sharpness), timed,
+# with a contact sheet per pipeline in the artifacts. Run by hand.
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Comma list of entry names (empty = all)"
+        default: ""
+
+jobs:
+  draw:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: a-turbo-taesd-4s,      kind: sd21, steps: 4, side: 512, post: none }
+          - { name: b-turbo-taesd-2s,      kind: sd21, steps: 2, side: 512, post: none }
+          - { name: c-xl-taesd-1s,         kind: xl,   steps: 1, side: 512, post: none,   extra: "--taesd $HOME/m/taesdxl.safetensors" }
+          - { name: d-xl-taesd-2s,         kind: xl,   steps: 2, side: 512, post: none,   extra: "--taesd $HOME/m/taesdxl.safetensors" }
+          - { name: e-xl-fullvae-1s,       kind: xl,   steps: 1, side: 512, post: none }
+          - { name: f-xl-taesd-1s-768,     kind: xl,   steps: 1, side: 768, post: none,   extra: "--taesd $HOME/m/taesdxl.safetensors" }
+          - { name: g-xl-taesd-1s-enh,     kind: xl,   steps: 1, side: 512, post: none,   enh: 1, extra: "--taesd $HOME/m/taesdxl.safetensors" }
+          - { name: h-xl-taesd-1s-esrgan,  kind: xl,   steps: 1, side: 512, post: esrgan, extra: "--taesd $HOME/m/taesdxl.safetensors" }
+          - { name: i-xl-taesd-1s-refine,  kind: xl,   steps: 1, side: 512, post: refine, extra: "--taesd $HOME/m/taesdxl.safetensors" }
+          - { name: j-xl-taesd-1s-384,     kind: xl,   steps: 1, side: 384, post: none,   extra: "--taesd $HOME/m/taesdxl.safetensors" }
+          - { name: k-dmd2-taesd-4s,       kind: dmd2, steps: 4, side: 512, post: none,   extra: "--taesd $HOME/m/taesdxl.safetensors" }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the picture engine (the app's pinned stable-diffusion.cpp)
+        if: ${{ github.event.inputs.only == '' || contains(format(',{0},', github.event.inputs.only), format(',{0},', matrix.name)) }}
+        run: |
+          git clone -q https://github.com/leejet/stable-diffusion.cpp ~/sd
+          cd ~/sd && git fetch -q --depth 1 origin 88411ef1e0688ff2df1010aeeb5d92b2d8cea2be && git checkout -q 88411ef1e0688ff2df1010aeeb5d92b2d8cea2be && git submodule update -q --init --depth 1 ggml
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSD_BUILD_EXAMPLES=ON > /dev/null
+          cmake --build build --target sd-cli -j"$(nproc)" > /dev/null
+      - name: Models
+        if: ${{ github.event.inputs.only == '' || contains(format(',{0},', github.event.inputs.only), format(',{0},', matrix.name)) }}
+        run: |
+          mkdir -p ~/m && cd ~/m
+          get() { curl -sSL --retry 5 -f -o "$2" "$1" || { echo "FAILED $1"; return 1; }; ls -la "$2"; }
+          case "${{ matrix.kind }}" in
+            sd21) get https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q4_0.gguf sd21.gguf
+                  get https://huggingface.co/madebyollin/taesd/resolve/main/diffusion_pytorch_model.safetensors taesd.safetensors ;;
+            xl)   get https://huggingface.co/gpustack/stable-diffusion-xl-1.0-turbo-GGUF/resolve/main/stable-diffusion-xl-1.0-turbo-Q4_0.gguf xl.gguf ;;
+            dmd2) get https://huggingface.co/gpustack/stable-diffusion-xl-base-1.0-GGUF/resolve/main/stable-diffusion-xl-base-1.0-Q4_0.gguf xlbase.gguf
+                  get https://huggingface.co/tianweiy/DMD2/resolve/main/dmd2_sdxl_4step_lora_fp16.safetensors dmd2.safetensors ;;
+          esac
+          get https://huggingface.co/madebyollin/taesdxl/resolve/main/diffusion_pytorch_model.safetensors taesdxl.safetensors
+          [ "${{ matrix.post }}" = esrgan ] && get https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth esrgan.pth || true
+      - name: Draw the twenty prompts
+        if: ${{ github.event.inputs.only == '' || contains(format(',{0},', github.event.inputs.only), format(',{0},', matrix.name)) }}
+        run: |
+          mkdir -p studio-out && cp tests/studio/prompts20.txt studio-out/prompts.txt
+          PF=tests/studio/prompts20.txt; [ "${{ matrix.enh }}" = "1" ] && PF=tests/studio/prompts20-enhanced.txt
+          bash tests/studio/draw.sh ${{ matrix.name }} ${{ matrix.kind }} ${{ matrix.steps }} ${{ matrix.side }} $PF ${{ matrix.post }} ${{ matrix.extra }}
+      - name: Score (CLIP, PickScore, sharpness)
+        if: ${{ github.event.inputs.only == '' || contains(format(',{0},', github.event.inputs.only), format(',{0},', matrix.name)) }}
+        run: |
+          pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet transformers pillow numpy
+          PICK=1 python3 tests/studio/clip_score.py studio-out | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: studio2-${{ matrix.name }}
+          path: studio-out/
