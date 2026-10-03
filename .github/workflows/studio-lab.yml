@@ -21,6 +21,12 @@ jobs:
       matrix:
         include:
           - { name: turbo-sd21,    kind: allinone }
+          # Faster/better candidates: tiny decoder, fewer steps, smaller first pass, a bigger distilled model, a step-distilled LoRA.
+          - { name: turbo-sd21-taesd,    kind: allinone, extra: "--taesd $HOME/m/taesd.safetensors" }
+          - { name: turbo-sd21-2step,    kind: allinone, steps: 2 }
+          - { name: turbo-sd21-384,      kind: allinone, size: 384 }
+          - { name: sdxl-turbo-q4-taesd, kind: sdxl, extra: "--taesd $HOME/m/taesd.safetensors" }
+          - { name: sd15-hyper4-taesd,   kind: sd15, extra: "--taesd $HOME/m/taesd.safetensors --lora-model-dir $HOME/m" }
           - { name: klein-4b-q4,   kind: klein }
           - { name: zimage-turbo,  kind: zimage }
     steps:
@@ -37,7 +43,15 @@ jobs:
           mkdir -p ~/m && cd ~/m
           get() { curl -sSL --retry 5 -f -o "$2" "$1" || { echo "FAILED $1"; return 1; }; ls -la "$2"; }
           case "${{ matrix.kind }}" in
-            allinone) get https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q4_0.gguf diff.gguf ;;
+            allinone) get https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q4_0.gguf diff.gguf
+              get https://huggingface.co/madebyollin/taesd/resolve/main/diffusion_pytorch_model.safetensors taesd.safetensors ;;
+            sdxl)
+              get https://huggingface.co/gpustack/stable-diffusion-xl-1.0-turbo-GGUF/resolve/main/stable-diffusion-xl-1.0-turbo-Q4_0.gguf diff.gguf
+              get https://huggingface.co/madebyollin/taesdxl/resolve/main/diffusion_pytorch_model.safetensors taesd.safetensors ;;
+            sd15)
+              get https://huggingface.co/gpustack/stable-diffusion-v1-5-GGUF/resolve/main/stable-diffusion-v1-5-Q4_0.gguf diff.gguf
+              get https://huggingface.co/ByteDance/Hyper-SD/resolve/main/Hyper-SD15-4steps-lora.safetensors hyper4.safetensors
+              get https://huggingface.co/madebyollin/taesd/resolve/main/diffusion_pytorch_model.safetensors taesd.safetensors ;;
             klein)
               get https://huggingface.co/leejet/FLUX.2-klein-4B-GGUF/resolve/main/flux-2-klein-4b-Q4_0.gguf diff.gguf
               get https://huggingface.co/unsloth/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf llm.gguf
@@ -51,7 +65,7 @@ jobs:
           esac
       - name: Draw the five prompts
         run: |
-          S=${{ github.event.inputs.size || '512' }}
+          S=${{ matrix.size || github.event.inputs.size || '512' }}; N=${{ matrix.steps || 4 }}; X="${{ matrix.extra }}"
           O=$GITHUB_WORKSPACE/studio-out/${{ matrix.name }}; mkdir -p $O
           cat > $GITHUB_WORKSPACE/studio-out/prompts.txt <<'EOF'
           a massive red Liebherr crane lifting a heavy steel bridge beam at a construction site, sunset
@@ -63,9 +77,11 @@ jobs:
           sed -i 's/^ *//' $GITHUB_WORKSPACE/studio-out/prompts.txt
           i=0; : > times.txt
           while read -r P; do
-            t0=$(date +%s)
+            t0=$(date +%s); [ "${{ matrix.kind }}" = sd15 ] && P="$P <lora:hyper4:1>"
             case "${{ matrix.kind }}" in
-              allinone) ~/sd/build/bin/sd-cli -m ~/m/diff.gguf -p "$P" -o $O/$i.png -W $S -H $S --steps 4 --cfg-scale 1 --sampling-method euler_a --prediction eps --scheduler sgm_uniform -s 7 -t "$(nproc)" > $O/log$i.txt 2>&1 || true ;;
+              allinone) ~/sd/build/bin/sd-cli -m ~/m/diff.gguf -p "$P" -o $O/$i.png -W $S -H $S --steps $N --cfg-scale 1 --sampling-method euler_a --prediction eps --scheduler sgm_uniform -s 7 -t "$(nproc)" $X > $O/log$i.txt 2>&1 || true ;;
+              sdxl)     ~/sd/build/bin/sd-cli -m ~/m/diff.gguf -p "$P" -o $O/$i.png -W $S -H $S --steps $N --cfg-scale 1 --sampling-method euler_a --scheduler sgm_uniform -s 7 -t "$(nproc)" $X > $O/log$i.txt 2>&1 || true ;;
+              sd15)     ~/sd/build/bin/sd-cli -m ~/m/diff.gguf -p "$P" -o $O/$i.png -W $S -H $S --steps $N --cfg-scale 1 --sampling-method euler --scheduler sgm_uniform -s 7 -t "$(nproc)" $X > $O/log$i.txt 2>&1 || true ;;
               klein)    ~/sd/build/bin/sd-cli --diffusion-model ~/m/diff.gguf --llm ~/m/llm.gguf --vae ~/m/vae.safetensors -p "$P" -o $O/$i.png -W $S -H $S --steps 4 --cfg-scale 1 --sampling-method euler -s 7 -t "$(nproc)" --diffusion-fa > $O/log$i.txt 2>&1 || true ;;
               zimage)   ~/sd/build/bin/sd-cli --diffusion-model ~/m/diff.gguf --llm ~/m/llm.gguf --vae ~/m/vae.safetensors -p "$P" -o $O/$i.png -W $S -H $S --steps 8 --cfg-scale 1 --sampling-method euler -s 7 -t "$(nproc)" --diffusion-fa > $O/log$i.txt 2>&1 || true ;;
             esac
