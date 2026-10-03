@@ -26,9 +26,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: qwen35-4b,   search: "Qwen3.5-4B-GGUF",       quants: "Q4_K_M,IQ4_XS", need: "qwen3.5-4b" }
+          - { name: qwen35-4b,   search: "Qwen3.5-4B-GGUF",       quants: "Q4_K_M,IQ4_XS", need: "qwen3.5-4b", draft: "yes" }
+          - { name: qwen35-9b,   search: "Qwen3.5-9B-GGUF",       quants: "IQ4_NL,Q4_K_M,IQ4_XS", need: "qwen3.5-9b", draft: "yes" }
           - { name: ling3-tiny,  search: "Ling-3.0-tiny",         quants: "Q4_K_M,IQ4_XS,Q4_0,Q3_K_M,Q8_0", need: "ling" }
           - { name: minicpm5-2b, search: "MiniCPM5-2B",           quants: "Q4_K_M,IQ4_XS,Q4_0,Q8_0", need: "minicpm5" }
+          - { name: lfm2-8b-a1b, search: "LFM2-8B-A1B",           quants: "Q4_K_M,IQ4_XS,Q4_0,Q8_0", need: "lfm2" }
     steps:
       - uses: actions/checkout@v4
         if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
@@ -51,9 +53,12 @@ jobs:
           echo "Model: $REPO / $FILE" | tee -a "$GITHUB_STEP_SUMMARY"
           curl -sSL --retry 5 -o ~/model.gguf "https://huggingface.co/$REPO/resolve/main/$FILE"
           ls -la ~/model.gguf
-      - name: Lab — speed, memory, prompt cache
+      - name: The 0.8B draft model (same family only)
+        if: ${{ matrix.draft == 'yes' && (github.event.inputs.only == '' || github.event.inputs.only == matrix.name) }}
+        run: curl -sSL --retry 5 -o ~/draft.gguf https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B-Q4_K_M.gguf && ls -la ~/draft.gguf
+      - name: Lab — speed, memory, prompt cache, speculative decoding
         if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
-        run: python3 tests/models/lab.py ~/model.gguf "$GITHUB_WORKSPACE/tests/build-dl/bin" "${{ matrix.name }}"
+        run: DRAFT_MODEL=$HOME/draft.gguf python3 tests/models/lab.py ~/model.gguf "$GITHUB_WORKSPACE/tests/build-dl/bin" "${{ matrix.name }}"
       - name: Real trials (the app's own prompts and checks)
         if: ${{ github.event.inputs.only == '' || github.event.inputs.only == matrix.name }}
         run: |

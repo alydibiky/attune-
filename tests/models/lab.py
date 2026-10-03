@@ -90,6 +90,45 @@ except Exception as e:
 finally:
     shutil.rmtree(slots, ignore_errors=True)
     subprocess.run(["pkill", "-f", f"port {PORT}"], capture_output=True)
+# ---- 4. speculative decoding: faster writing with the SAME answers ------------------------------------------------------------------
+say(); say("### 4. Speculative decoding (the answer is identical; only the speed changes)")
+TASKS = [
+  ("code", "Write a Python function that returns the n-th Fibonacci number with memoisation, and three asserts that test it. Reply with one code block only."),
+  ("json", 'Extract the data as JSON with keys name, company, amount, date: "Ahmed Ali from Adrighem Cranes paid 18,000 EGP on 3 March 2026 for the 50 t crane rental." Reply with the JSON only.'),
+  ("arabic", "اشرح بالعربي المصري في 5 جمل إزاي الونش المتحرك بيرفع حمل تقيل بأمان."),
+  ("edit", "Rewrite this paragraph in a more formal tone, keeping every number: 'hey, the crane is coming on monday at 8, it costs 9,000 a day and we need 3 days, pls send the money before friday and tell the driver where the gate is.'"),
+]
+def spec_run(label, extra):
+    try:
+        p = serve(extra)
+    except Exception as e:
+        say(f"| {label} | not supported here: {str(e)[:60]} | | | |"); return None
+    try:
+        speeds = []; acc = []
+        for name, q in TASKS:
+            r = post("/v1/chat/completions", {"messages": [{"role": "user", "content": q}], "max_tokens": 160, "temperature": 0, "cache_prompt": False, "chat_template_kwargs": {"enable_thinking": False}})
+            t = r.get("timings", {}); speeds.append(t.get("predicted_per_second", 0))
+            dn, da = t.get("draft_n", 0), t.get("draft_n_accepted", 0)
+            acc.append((da / dn * 100) if dn else None)
+        p.terminate(); p.wait(timeout=30)
+        a = [x for x in acc if x is not None]
+        say(f"| {label} | " + " | ".join(f"{x:.1f}" for x in speeds) + f" | {sum(speeds)/len(speeds):.1f} | {('%.0f%%' % (sum(a)/len(a))) if a else '—'} |")
+        return sum(speeds) / len(speeds)
+    except Exception as e:
+        try: p.kill()
+        except Exception: pass
+        say(f"| {label} | failed: {str(e)[:70]} | | | |"); return None
+say("| Mode | code t/s | json t/s | Arabic t/s | edit t/s | Mean t/s | Guesses accepted |"); say("|---|---|---|---|---|---|---|")
+b0 = spec_run("off", [])
+b1 = spec_run("copy-ahead (ngram-mod) — the app's default", ["--spec-type", "ngram-mod"])
+b2 = spec_run("multi-token prediction (draft-mtp)", ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"])
+b3 = spec_run("n-gram map (ngram-map-k)", ["--spec-type", "ngram-map-k"])
+b4 = None
+if os.environ.get("DRAFT_MODEL") and os.path.exists(os.environ["DRAFT_MODEL"]):
+    b4 = spec_run("0.8B draft model + copy-ahead (the app's opt-in)", ["-md", os.environ["DRAFT_MODEL"], "--spec-type", "draft-simple,ngram-mod", "--spec-draft-n-max", "12", "-td", str(NPROC), "-ngld", "0"])
+if b0:
+    say(); best = max([(v, n) for v, n in [(b1, "copy-ahead"), (b2, "multi-token prediction"), (b3, "n-gram map"), (b4, "draft model")] if v], default=None)
+    if best: say(f"Best: **{best[1]}** — {100*best[0]/b0-100:+.0f}% writing speed vs off ({b0:.1f} → {best[0]:.1f} t/s).")
 if os.environ.get("GITHUB_STEP_SUMMARY"):
     open(os.environ["GITHUB_STEP_SUMMARY"], "a").write("\n".join(out) + "\n")
 open(f"lab-{NAME}.md", "w").write("\n".join(out) + "\n")
