@@ -81,6 +81,9 @@ jobs:
           export MODEL_NAME="${{ matrix.name }}"
           TRIAL_REPORT="./max-${{ matrix.name }}.md" node tests/trials/max.mjs "${{ github.event.inputs.sections || 'math,code,translate,deal,business' }}" || true
           { echo; echo "### Real trials: ${{ matrix.name }}"; echo; tail -40 tests/trials/max-${{ matrix.name }}.md; } >> "$GITHUB_STEP_SUMMARY"
+          # v6.12 the big test: ~170 cases in 15 categories (knowledge, reasoning, maths, instructions, extraction, long context, honesty, safety, common sense, memory, writing, translation, 12 languages, Egyptian Arabic, code)
+          FULL_REPORT="$PWD/full-${{ matrix.name }}.md" node tests/trials/full.mjs || true
+          { echo; echo "### Full test: ${{ matrix.name }}"; echo; head -30 "full-${{ matrix.name }}.md"; } >> "$GITHUB_STEP_SUMMARY"
       - name: Keep the reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -89,3 +92,5 @@ jobs:
           path: |
             lab-*.md
             tests/trials/max-*.md
+            full-*.md
+            full-*.json

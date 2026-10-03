@@ -15,3 +15,4 @@ for i in $(seq 1 600); do curl -s 127.0.0.1:8099/health | grep -q ok && break; s
 export MODEL_NAME="$(basename "$M")"
 if ! grep -q "Automatic checks" "tests/trials/report-$N.md" 2>/dev/null; then TRIAL_REPORT="./report-$N.md" node tests/trials/run.mjs; fi
 TRIAL_REPORT="./max-$N.md" node tests/trials/max.mjs
+FULL_REPORT="./tests/trials/full-$N.md" node tests/trials/full.mjs || true

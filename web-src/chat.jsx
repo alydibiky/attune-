@@ -7,6 +7,7 @@
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
 import { wantsDoc } from "./slides.js";
+import { detectLang, replyLanguageRule, voiceTag, deviceLang } from "./langs.js";
 import { looksLikeFoodLog } from "./fit.js";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { tr, dateLocale } from "./i18n.js";
@@ -555,7 +556,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // gets the honesty rule for answers without web passages (boost.js)
     const small = pw && pw.level <= 2;
     const base = small ? compactSystem(new Date().toDateString()) + (api.profileText() ? "\n\n" + api.profileText() : "") : systemPrompt(api.profileText(), api.accuracy);
-    return [{ role: "system", content: base + "\n\n" + HONESTY_RULE + "\n" + NO_CODE_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") }, ...kept, { role: "user", content: userContent }];
+    // v6.12: the 12 chat languages — the model is told by name which language to answer in (the language of the latest message, or of the chat so far for a short one)
+    const said = typeof userContent === "string" ? userContent : "";
+    const langRule = replyLanguageRule(said.length >= 12 ? said : said + " " + (kept.length ? kept[kept.length - 2].content : ""));
+    return [{ role: "system", content: base + (langRule ? "\n\n" + langRule : "") + "\n\n" + HONESTY_RULE + "\n" + NO_CODE_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") }, ...kept, { role: "user", content: userContent }];
   };
 
   const ask = async (raw, opts) => {
@@ -1269,7 +1273,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const speak = (m) => {
     if (speakingId === m.id) { try { NATIVE ? NATIVE.stopSpeaking() : window.speechSynthesis.cancel(); } catch (e) {} setSpeakingId(null); return; }
     const plain = String(m.text).replace(/[*_`#>|]/g, "").replace(/\n{2,}/g, "\n");
-    const lang = /[؀-ۿ]/.test(plain.slice(0, 300)) ? "ar-EG" : "en-US";
+    const lang = voiceTag(detectLang(plain.slice(0, 300)), "en-US");
     try {
       if (NATIVE && NATIVE.speak) NATIVE.speak(plain, lang);
       else { const u = new SpeechSynthesisUtterance(plain); u.lang = lang; u.onend = () => setSpeakingId(null); window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); }
@@ -1285,7 +1289,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     const before = text ? text.replace(/\s+$/, "") + " " : "";
     setListening(true);
     try {
-      const r = await api.listen(/[؀-ۿ]/.test(text) || api.prefersArabic() ? "ar-EG" : "", (p) => setText(before + p));
+      const heard = detectLang(text) || detectLang([...messages].reverse().map((m) => m.text).find((t) => detectLang(t) && detectLang(t) !== "en") || "") || (api.prefersArabic() ? "ar" : deviceLang(navigator));
+      const r = await api.listen(voiceTag(heard, ""), (p) => setText(before + p));
       if (r) setText(before + r);
     } catch (e) { api.flash(String((e && e.message) || e).slice(0, 100)); }
     finally { setListening(false); }
