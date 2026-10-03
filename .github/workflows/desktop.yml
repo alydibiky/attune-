@@ -71,7 +71,11 @@ jobs:
           if [ "$RUNNER_OS" = "macOS" ]; then
             cmake -S . -B build $COMMON -DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=ON -DCMAKE_INSTALL_RPATH=@loader_path -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
           elif [ "$RUNNER_OS" = "Windows" ]; then
-            cmake -S . -B build $COMMON -DGGML_VULKAN=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -T ClangCL
+            # this SDK has no SPIR-V headers package: build and install them first
+            git clone -q --depth 1 https://github.com/KhronosGroup/SPIRV-Headers "$RUNNER_TEMP/spirv-src"
+            cmake -S "$RUNNER_TEMP/spirv-src" -B "$RUNNER_TEMP/spirv-build" -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/spirv" -DSPIRV_HEADERS_ENABLE_TESTS=OFF > /dev/null
+            cmake --install "$RUNNER_TEMP/spirv-build" > /dev/null
+            cmake -S . -B build $COMMON -DGGML_VULKAN=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -T ClangCL -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/spirv"
           else
             cmake -S . -B build $COMMON -DGGML_VULKAN=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DCMAKE_INSTALL_RPATH='$ORIGIN' -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
           fi
