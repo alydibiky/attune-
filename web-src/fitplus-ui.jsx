@@ -197,7 +197,7 @@ export function BodyCard({ L, st, upd }) {
 }
 
 /** Settings added to "My plan": Ramadan mode with the city, and reminders. */
-export function FitSettings({ L, ar, st, upd, native, flash, packText }) {
+export function FitSettings({ L, ar, st, upd, native, flash, packText, photoClip, onClip }) {
   const rm = st.ramadan || { on: false, city: "cairo" };
   const setReminders = (on) => {
     upd((s) => ({ ...s, reminders: on }));
@@ -221,6 +221,7 @@ export function FitSettings({ L, ar, st, upd, native, flash, packText }) {
       {rm.on ? <select value={rm.city} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, city: e.target.value } }))} className="rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" data-testid="fit-ramadan-city">
         {Object.entries(P.CITIES).map(([k, c]) => <option key={k} value={k}>{ar ? c.ar : c.en}</option>)}</select> : null}
       <FoodPackCard {...{ L, packText, flash }} />
+      <FoodClipCard {...{ L, photoClip, flash }} onChange={onClip} />
       <label className="flex items-center gap-2 text-[13px] text-slate-200"><input type="checkbox" checked={!!st.reminders} onChange={(e) => setReminders(e.target.checked)} data-testid="fit-reminders" /><Bell size={14} />{L("Remind me to log meals and drink water", "فكّرني أسجّل الوجبات وأشرب مية")}</label>
     </div>
   );
@@ -264,6 +265,39 @@ export function FoodPackCard({ L, packText, flash, testPack }) {
           <button className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[12.5px] font-medium text-white" onClick={() => go("starter")} data-testid="fit-foodpack-starter">{L("Get Egypt + most popular (~240,000, ~30 MB)", "نزّل المصري + الأشهر (~٢٤٠ ألف، ~٣٠ ميجا)")}</button>
           <button className="rounded-lg bg-emerald-800 px-3 py-1.5 text-[12.5px] font-medium text-white" onClick={() => go("all")} data-testid="fit-foodpack-all">{L("Get everything (1,000,000+)", "نزّل الكل (+مليون)")}</button>
           {info.count ? <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-300" onClick={wipe}>{L("Delete", "امسح")}</button> : null}
+        </div>)}
+    </div>
+  );
+}
+
+/** v6.10 — the photo fast path's model (fitclip.js): a food photo is recognised in about a second, offline, with no chat model.
+ *  Same look as the food pack card. `photoClip` = {status, install(onProgress), stop, remove} from the Android bridge. */
+export function FoodClipCard({ L, photoClip, flash, onChange }) {
+  const [st, setSt] = useState(() => (photoClip ? photoClip.status() : { installed: false }));
+  const [busy, setBusy] = useState(null);
+  if (!photoClip) return null;
+  const refresh = () => { const s = photoClip.status(); setSt(s); onChange && onChange(!!s.installed); };
+  const go = async () => {
+    setBusy({ pct: 0, detail: "" });
+    try { await photoClip.install((pct, stage, detail) => setBusy({ pct, detail })); flash && flash(L("Photo recognition is ready — a food photo now takes about a second", "التعرّف على الصور جاهز — صورة الأكل بقت بتاخد حوالي ثانية")); }
+    catch (e) { flash && flash(String((e && e.message) || e).slice(0, 160)); }
+    finally { setBusy(null); refresh(); }
+  };
+  const wipe = () => { if (!window.confirm(L("Delete the photo recognition model from this phone?", "تمسح موديل التعرّف على الصور من الموبايل؟"))) return; try { photoClip.remove(); } catch (e) {} refresh(); };
+  const mb = Math.round((st.bytes || 0) / 1e6);
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="fit-foodclip">
+      <p className="text-[13px] font-semibold text-slate-100">{L("Fast photo recognition", "التعرّف السريع على صور الأكل")}</p>
+      <p className="text-[12px] text-slate-400">{st.installed ? L(`On this phone (${mb} MB). A food photo is named in about a second, with no chat model and no internet.`, `موجود على الموبايل (${mb} ميجا). صورة الأكل بتتعرف في حوالي ثانية، من غير موديل شات ومن غير إنترنت.`)
+        : L("A small picture model (~100 MB, once) that names the food in a photo in about a second — Egyptian dishes included — offline.", "موديل صور صغير (~١٠٠ ميجا، مرة واحدة) بيعرف الأكل اللي في الصورة في حوالي ثانية — الأكل المصري كمان — من غير إنترنت.")}</p>
+      {busy ? (
+        <div className="space-y-1.5"><div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: (busy.pct || 0) + "%" }} /></div>
+          <p className="text-[12px] text-slate-400" data-testid="fit-foodclip-progress">{(busy.pct || 0) + "%"}{busy.detail ? " · " + busy.detail.replace(" MB", L(" MB", " ميجا")) : ""}</p>
+          <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-200" onClick={() => { try { photoClip.stop(); } catch (e) {} }}>{L("Stop", "وقّف")}</button></div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {!st.installed ? <button className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[12.5px] font-medium text-white" onClick={go} data-testid="fit-foodclip-get">{L("Get it (~100 MB)", "نزّله (~١٠٠ ميجا)")}</button> : null}
+          {st.installed || st.bytes ? <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-300" onClick={wipe} data-testid="fit-foodclip-delete">{L("Delete", "امسح")}</button> : null}
         </div>)}
     </div>
   );

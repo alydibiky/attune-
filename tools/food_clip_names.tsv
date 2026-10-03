@@ -1,0 +1,412 @@
+# The photo fast path's name bank (v6.10): names the on-device image matcher compares a photo with.
+# Every food of the app's own table (web-src/fit.js FOODS) is added automatically by tools/build_food_clip_bank.py;
+# this file adds the extra visual names, dishes the table doesn't have, and things that are not food.
+# Columns (tab-separated):
+#   1. what a match means:  <id>  = that table food exactly (more names for it)
+#                           ~<id> = a dish the table doesn't have; calories estimated from that table food, shown as an estimate
+#                           -     = a dish found by name in the offline reader / food pack
+#                           !     = not food (a face, a page, a screen…) → the photo goes to the usual chain
+#   2. English names, "|"-separated; the first is the name shown (the image matcher reads English)
+#   3. Arabic name shown on Arabic screens (empty for an exact table food: the table's Arabic is used)
+# ---- Egyptian, more names for table foods -------------------------------------------------------------
+koshari	koshari, Egyptian rice lentils and pasta with tomato sauce and fried onions|kushari|koshary
+ful	ful medames, mashed fava beans with oil|foul medames|fava bean stew|bowl of foul
+ful-oil	plate of fava beans with olive oil and cumin
+taameya	taameya, Egyptian green falafel balls|falafel|fried falafel patties
+taameya-sandwich	falafel sandwich in pita bread
+molokhia	molokhia, green jute leaf soup|mulukhiyah|green molokhia stew in a bowl
+fatta	fatta, rice and bread with meat and garlic tomato sauce|fattah|Egyptian fatteh with meat
+mahshi	mahshi, stuffed vegetables with rice|stuffed zucchini and peppers
+stuffed-vine	stuffed grape leaves|warak enab|dolma|yalanji
+stuffed-cabbage	stuffed cabbage rolls|mahshi cromb
+hawawshi	hawawshi, baladi bread stuffed with spiced minced meat|meat stuffed pita
+kofta	kofta kebab, grilled minced meat skewers|kofta|kafta
+kofta-tray	baked kofta with potatoes and tomato|kafta tray with potatoes
+feteer	feteer meshaltet, flaky layered Egyptian pastry|fiteer
+om-ali	om ali, bread pudding with milk nuts and raisins|umm ali
+basbousa	basbousa, semolina cake with syrup|revani|namoura
+konafa	kunafa, shredded pastry with cream or cheese|knafeh|kanafeh|konafa
+roz-laban	rice pudding|roz bel laban
+mahalabiya	mahalabiya, milk pudding|muhallebi
+bechamel	macaroni bechamel, baked pasta with white sauce and minced meat|pastitsio
+lentil-soup	lentil soup|yellow lentil soup|shorbet ads
+shakshuka	shakshuka, eggs poached in tomato sauce
+hummus	hummus, chickpea dip with olive oil|hommos
+baba	baba ghanoush, smoky eggplant dip|mutabal
+bamia	okra stew|bamia, okra in tomato sauce with meat
+fasolia	green beans stew with tomato
+molokhia-leaves	fresh jute leaves
+baladi	Egyptian baladi bread, round brown flatbread|pita bread loaf
+shami	white pita bread|arabic flatbread
+liver-sandwich	liver sandwich, fried liver strips in bread
+kebda-iskandarani	Alexandrian fried liver with peppers|sauteed liver strips
+sogo2	sausage sandwich|sujuk
+shawarma-sandwich	chicken shawarma wrap|shawarma sandwich
+meat-shawarma	beef shawarma wrap|doner kebab wrap
+shawarma-plate	shawarma plate with rice and fries|sliced shawarma meat on a plate
+fried-eggplant	fried eggplant slices
+eggplant-salad	eggplant in tomato and vinegar|mesaqa'a
+mesaka	moussaka, baked eggplant with minced meat
+kofta-dawood	dawood basha, meatballs in tomato sauce|meatballs in tomato sauce
+chicken-panee	breaded chicken cutlet, chicken pane|chicken schnitzel|chicken escalope
+pane-sandwich	chicken schnitzel sandwich|breaded chicken sandwich
+chicken-grilled-half	grilled half chicken|roasted chicken|rotisserie chicken
+chicken-fried	fried chicken pieces|crispy fried chicken drumsticks
+chicken-shish	shish tawook, grilled chicken cubes skewers|chicken kebab
+kebab	lamb kebab skewers|shish kebab|grilled meat cubes
+fish-sayadeya	sayadeya, fish with brown rice
+fish-fried	fried fish|fried whole fish
+fish	grilled fish|grilled tilapia|whole grilled fish
+sea-bass	grilled sea bass
+feseekh	fesikh, salted fermented grey mullet
+herring	smoked herring
+calamari	fried calamari rings|fried squid
+shrimp	shrimp|grilled prawns|fried shrimp
+crab	crab|crab legs
+freekeh-pigeon	stuffed pigeon, hamam mahshi|roasted squab
+mombar	mombar, stuffed sausage casings with rice
+kawareh	trotters soup|cow feet soup
+roqaq	roqaq, layered thin pastry with minced meat
+bessara	bessara, green fava bean dip with herbs
+taro	taro stew|colocasia
+kishk	kishk, yogurt and wheat sauce
+zalabya	zalabya, small fried dough balls with syrup|luqaimat|loukoumades
+qatayef	qatayef, stuffed folded pancakes
+kahk	kahk, Eid butter cookies with powdered sugar
+ghorayeba	ghorayeba, shortbread cookies
+petit-four	petit four cookies
+meshabek	meshabek, crunchy fried syrup spirals
+baklava	baklava, layered filo pastry with nuts and syrup
+halawa	halawa, sesame halva
+sobia	sobia, white coconut milk drink
+sahlab	sahlab, hot milk drink with nuts
+karkadeh	karkadeh, red hibiscus drink
+sugarcane	sugarcane juice
+qamar-drink	qamar el din, apricot drink
+tamarind	tamarind drink
+khoshaf	khoshaf, dried fruit soaked in syrup
+turkish-coffee	Turkish coffee in a small cup
+tea	cup of tea|black tea
+mint-tea	mint tea
+laban-rayeb	ayran, yogurt drink|buttermilk
+pickles	pickled vegetables|torshi|pickled cucumbers
+tahini-salad	tahini sauce|tahini dip
+salad	green salad|Egyptian salad, tomato cucumber and onion|chopped vegetable salad
+tabbouleh	tabbouleh, parsley and bulgur salad
+fattoush	fattoush, salad with fried bread
+manakish	manakish, flatbread with zaatar|zaatar manakish
+pie-cheese	fatayer, cheese pastry|sambousek
+mujadara	mujadara, lentils and rice with fried onions
+maqluba	maqluba, upside down rice with eggplant and chicken
+kabsa	kabsa, spiced rice with chicken|machboos
+mandi	mandi, rice with roasted lamb or chicken
+biryani	biryani
+couscous	couscous
+freekeh	freekeh, green roasted wheat
+rice-vermicelli	rice with vermicelli
+rice	white rice|plain rice|steamed rice
+egg-fried	fried eggs|sunny side up eggs|fried eggs on bread
+egg	boiled eggs|hard boiled egg
+egg-scrambled	scrambled eggs
+egg-pastrami	eggs with basterma
+feta	white cheese|domiati cheese|feta cheese
+roumi	roumi cheese, yellow hard cheese slices
+mish	mish, aged cheese with oil and peppers
+qeshta	clotted cream|qeshta
+labneh	labneh with olive oil
+olives	olives|green olives|black olives
+dates	dates|dried dates
+guava	guava
+mango	mango slices|mango
+prickly-pear	prickly pears
+watermelon	watermelon slices
+melon	cantaloupe
+fruit-salad	fruit salad
+popcorn	popcorn
+-	lupini beans|termis	ترمس
+# ---- Food-101 and international dishes ----------------------------------------------------------------------
+~cake	apple pie|fruit pie|pie slice	فطيرة تفاح
+~beef	baby back ribs|pork ribs|barbecue ribs	ريش مشوية
+~beef	beef carpaccio	كارباتشيو لحمة
+~kofta	beef tartare|steak tartare	تارتار لحمة
+~salad	beet salad	سلطة بنجر
+~donut	beignets	بنييه
+~fried-rice	bibimbap, Korean rice bowl	بيبيمباب كوري
+om-ali	bread pudding
+burrito	breakfast burrito
+~toast-white	bruschetta	بروسكيتا
+caesar	caesar salad
+~cake	cannoli	كانولي
+~mozzarella	caprese salad, tomato mozzarella and basil	سلطة كابريزي
+~cake	carrot cake	كيكة جزر
+~fish	ceviche	سيفيتشي سمك
+~cake	cheesecake	تشيز كيك
+~cheddar	cheese plate|cheese board	طبق جبن
+~chicken-rice-oven	chicken curry with rice|chicken curry|chicken tikka masala|butter chicken	كاري فراخ
+~burrito	chicken quesadilla|quesadilla	كاساديا فراخ
+chicken-wings	chicken wings|buffalo wings
+~cake	chocolate cake|chocolate lava cake	كيكة شوكولاتة
+~mahalabiya	chocolate mousse	موس شوكولاتة
+~donut	churros	تشوروز
+~mushroom-soup	clam chowder|cream soup	شوربة كريمة
+club-sandwich	club sandwich
+~fish-fried	crab cakes|fish cakes	كفتة سمك
+~mahalabiya	creme brulee|custard|flan|creme caramel	كريم كراميل
+~cheese-sandwich	croque madame|croque monsieur	كروك مدام
+~muffin	cupcakes	كب كيك
+~egg	deviled eggs	بيض محشي
+donut	donuts|doughnut
+~kofta	dumplings|gyoza|momo	دامبلنج
+~peas	edamame	فول الصويا الأخضر
+~egg-sandwich	eggs benedict	بيض بنديكت
+~shrimp	escargots|snails	حلزون
+~beef	filet mignon|beef steak|steak	ستيك
+~fish-fried	fish and chips	سمك وبطاطس محمرة
+~liver	foie gras	فوا جرا
+fries	french fries|fries
+~onion	french onion soup	شوربة بصل
+~toast-white	french toast	فرنش توست
+calamari	fried calamari
+fried-rice	fried rice|chinese fried rice
+~ice-cream	frozen yogurt	زبادي مجمد
+~fino	garlic bread	عيش بالتوم
+~pasta	gnocchi	نيوكي
+greek-salad	greek salad
+~cheese-sandwich	grilled cheese sandwich|toasted cheese sandwich	ساندوتش جبنة سايحة
+salmon	grilled salmon|salmon fillet|baked salmon
+~avocado	guacamole	جواكامولي
+burger	hamburger|cheeseburger|beef burger
+~vegetable-soup	hot and sour soup	شوربة حار وحامض
+hotdog-sandwich	hot dog
+~shakshuka	huevos rancheros	بيض مكسيكي
+ice-cream	ice cream|ice cream scoops
+lasagna	lasagna
+~mushroom-soup	lobster bisque	شوربة استاكوزا
+~shrimp	lobster|lobster roll	استاكوزا
+~bechamel	macaroni and cheese|mac and cheese	مكرونة بالجبنة
+~biscuits	macarons	ماكرون
+~vegetable-soup	miso soup	شوربة ميسو
+~shrimp	mussels|oysters|scallops|clams	بلح البحر
+~chips	nachos|tortilla chips	ناتشوز
+egg-fried	omelette|omelet
+onion-rings	onion rings
+~noodles	pad thai|stir fried noodles|chow mein	نودلز مقلية
+~fish-sayadeya	paella	باييا
+pancake	pancakes|stack of pancakes
+~mahalabiya	panna cotta	بانا كوتا
+duck	peking duck|roast duck
+~chicken-soup	pho|beef noodle soup	شوربة نودلز
+pizza	pizza|margherita pizza|cheese pizza
+pizza-pepperoni	pepperoni pizza
+~beef	pork chop|lamb chops	ريش
+~fries	poutine	بوتين
+~beef	prime rib|roast beef	روستو
+~meat-shawarma	pulled meat sandwich|pulled pork sandwich	ساندوتش لحمة مفرومة
+~chicken-soup	ramen|noodle soup	رامن
+~pasta-red	ravioli|tortellini	رافيولي
+~cake	red velvet cake	كيكة ريد فيلفت
+risotto	risotto
+~pie-cheese	samosa	سمبوسة
+~sushi	sashimi|raw fish slices	ساشيمي
+~salad	seaweed salad	سلطة طحالب
+~shrimp	shrimp and grits	جمبري بالعصيدة
+pasta-meat	spaghetti bolognese|pasta with meat sauce
+pasta-white	spaghetti carbonara|fettuccine alfredo|pasta in cream sauce
+~chicken-nuggets	spring rolls|egg rolls	سبرينج رولز
+~cake	strawberry shortcake|layer cake with cream	كيكة فراولة
+sushi	sushi|maki rolls
+tacos	tacos
+~kofta	takoyaki	تاكوياكي
+~cake	tiramisu	تيراميسو
+~sushi	tuna tartare|poke bowl	تونة نية
+waffle	waffles|belgian waffle
+pasta-red	penne in tomato sauce|pasta with tomato sauce
+pasta-negresco	pasta negresco, baked pasta with chicken and cheese
+fried-rice	egg fried rice
+sweet-sour	sweet and sour chicken|orange chicken|sesame chicken
+burrito	burrito|wrap
+crepe	sweet crepe with chocolate
+crepe-savory	savory crepe
+chicken-nuggets	chicken nuggets|chicken tenders|chicken strips
+chicken-burger	crispy chicken burger|chicken sandwich
+big-burger	double cheeseburger
+coleslaw	coleslaw
+croissant	croissant
+bagel	bagel
+muffin	muffin
+cake	cake slice|sponge cake
+biscuits	cookies|biscuits
+chocolate	chocolate bar
+granola	granola|cereal with milk
+oats	oatmeal porridge
+cornflakes	cornflakes with milk
+yogurt-fruit	yogurt parfait with fruit|yogurt with berries
+greek-yogurt	greek yogurt
+smoothie	smoothie
+milkshake	milkshake
+orange-juice	orange juice
+coffee	black coffee|espresso
+cappuccino	cappuccino
+latte	latte|coffee with milk
+iced-coffee	iced coffee
+cola	cola|soft drink
+water	glass of water|bottle of water
+avocado	avocado|avocado toast
+toast-white	toast|slice of bread
+fino	baguette|bread roll
+nutella	chocolate spread
+peanut-butter	peanut butter
+honey	honey
+jam	jam
+cottage	cottage cheese
+chicken-breast	grilled chicken breast|grilled chicken salad
+beef	grilled beef
+quinoa	quinoa salad|quinoa
+~chicken-rice-oven	chicken with rice	فراخ بالرز
+~salad	mixed salad|garden salad	سلطة خضرا
+~kofta	meatballs	كرات لحمة
+~beef	beef stew|beef stroganoff	لحمة مطبوخة
+~chicken-breast	chicken stir fry|chicken with vegetables	فراخ بالخضار
+~fries	roasted potatoes|baked potatoes|mashed potatoes	بطاطس في الفرن
+~pasta	pasta salad|noodles	سلطة مكرونة
+~pizza	flatbread pizza|calzone	بيتزا
+~cheese-sandwich	sandwich|toast sandwich	ساندوتش
+~tuna-sandwich	tuna salad sandwich	ساندوتش تونة
+~turkey	roast turkey|turkey sandwich	ديك رومي
+~hotdog	sausages	سجق
+~lentil-soup	soup in a bowl	شوربة
+~mandi	rice with grilled meat	رز بلحمة مشوية
+~kabsa	pilaf|rice pilaf	أرز بسمتي
+~cake	pie|tart	تارت
+~cake	brownies	براونيز
+~ice-cream	sundae|gelato	آيس كريم
+~dates	energy balls|date balls	كرات تمر
+# ---- more Egyptian and Arab home and street food ---------------------------------------------------------------
+~rice	roz meammar, baked rice with milk and butter	رز معمر
+~rice	rice with nuts and minced meat|hashweh rice	رز بالخلطة
+~tomato	eggs with tomatoes	بيض بالطماطم
+~feta	white cheese with tomatoes	جبنة بالطماطم
+~fries	potato sandwich, fries in baladi bread	ساندوتش بطاطس
+~halawa	halawa sandwich	ساندوتش حلاوة
+~roz-laban	ashura, wheat pudding with milk and nuts|bileela	بليلة
+~liver	fried chicken livers	كبدة فراخ
+~kofta	kebab halla, beef stew with onions	كباب حلة
+~molokhia	molokhia with rabbit	ملوخية بالأرانب
+~fish-fried	fried tilapia with rice	بلطي مقلي
+~lentil-soup	vegetable soup with orzo	شوربة خضار
+~kofta	kibbeh, fried bulgur and meat croquettes	كبة
+~kofta	shish barak, meat dumplings in yogurt sauce	شيش برك
+~pie-cheese	sfiha, open meat pies|lahm bi ajeen	صفيحة
+~pie-cheese	spinach fatayer	فطاير سبانخ
+~chicken-grilled-half	musakhan, roasted chicken with onions and sumac on bread	مسخن
+~mandi	mansaf, lamb with yogurt sauce and rice	منسف
+~hummus	muhammara, red pepper and walnut dip	محمرة
+~labneh	labneh balls in oil	كرات لبنة
+~bulgur	harees, wheat and meat porridge	هريس
+~rice	saleeg, creamy chicken rice	سليق
+~lentil-soup	harira, Moroccan soup	حريرة
+~kofta-tray	tagine, Moroccan stew in a clay pot	طاجن مغربي
+~pie-cheese	pastilla	بسطيلة
+~pizza	lahmacun, Turkish flatbread with minced meat	لحم بعجين تركي
+~pizza	pide, Turkish boat shaped flatbread	بيدا تركي
+~meat-shawarma	iskender kebab	كباب إسكندر
+~pie-cheese	borek|burek	بوريك
+~shakshuka	menemen, Turkish eggs with tomato and peppers	منمن تركي
+~konafa	kunefe with cheese	كنافة بالجبنة
+~chicken-grilled-half	tandoori chicken	فراخ تندوري
+~shami	naan bread	عيش نان
+~lentil-soup	dal, Indian lentil curry	عدس هندي
+~crepe-savory	dosa	دوسا
+~chicken-rice-oven	paneer curry	كاري جبنة
+~fried-rice	nasi goreng	رز مقلي إندونيسي
+~noodles	lo mein|udon noodles	نودلز
+~chicken-burger	fish burger	برجر سمك
+~burger	veggie burger	برجر نباتي
+~pizza	pizza slice	حتة بيتزا
+~pasta-red	spaghetti with tomato sauce	سباجيتي صلصة
+~egg-scrambled	breakfast plate with eggs, beans, cheese and bread	طبق فطار
+~salad	shirazi salad|tomato and cucumber salad	سلطة طماطم وخيار
+~chicken-breast	grilled chicken with vegetables	فراخ مشوية بالخضار
+~beef	beef with vegetables|stir fried beef	لحمة بالخضار
+~chicken-shish	chicken skewers	أسياخ فراخ
+~kebab	mixed grill platter	مشويات مشكلة
+~fish-sayadeya	fish with rice	سمك بالرز
+~shrimp	shrimp with rice|seafood rice	جمبري بالرز
+~calamari	fried seafood platter	مأكولات بحرية مقلية
+~cake	cake with cream and fruit	تورتة
+~biscuits	date filled cookies|maamoul	معمول
+~ice-cream	ice cream cone	كوز آيس كريم
+~fruit-salad	fruit cocktail juice	كوكتيل فواكه
+~orange-juice	fresh juice	عصير فريش
+~smoothie	avocado smoothie	عصير أفوكادو
+~milk	glass of milk	كوباية لبن
+~yogurt	bowl of yogurt	طبق زبادي
+~oats	oatmeal with fruit	شوفان بالفاكهة
+~granola	acai bowl	أساي بول
+~cottage	ricotta toast	توست بالريكوتا
+~avocado	avocado toast with egg	توست أفوكادو وبيض
+~salmon	smoked salmon	سالمون مدخن
+~cheese-sandwich	cheese toast|toastie	توست بالجبنة
+~manakish	cheese manakish|akawi cheese flatbread	مناقيش جبنة
+~fries	potato wedges	بطاطس ودجز
+~chicken-wings	chicken drumsticks baked	دبابيس فراخ
+~hotdog-sandwich	sausage roll	ساندوتش سوسيس
+# ---- Fruit, vegetables and plain foods, as they look ---------------------------------------------------------
+apple	apple|red apple|green apple
+banana	banana|bananas
+orange	orange|oranges
+grapes	grapes|bunch of grapes
+strawberries	strawberries
+pomegranate	pomegranate seeds|pomegranate
+figs	figs
+pear	pear
+peach	peach
+kiwi	kiwi
+apricot	apricots
+plum	plums
+cherries	cherries
+pineapple	pineapple
+mandarin	tangerines|clementines
+blueberries	blueberries
+coconut	coconut
+tomato	tomatoes
+cucumber	cucumbers
+carrot	carrots
+lettuce	lettuce leaves
+pepper	bell peppers
+broccoli	broccoli
+cauliflower	cauliflower
+cauliflower-fried	fried cauliflower
+cabbage	cabbage
+eggplant	grilled eggplant
+mushrooms	mushrooms
+spinach	spinach
+corn	corn on the cob
+potato	boiled potatoes
+sweet-potato	sweet potato
+okra	okra
+green-beans	green beans
+peas	green peas
+onion	onions
+almonds	almonds
+peanuts	peanuts
+walnuts	walnuts
+mixed-nuts	mixed nuts
+pistachio	pistachios
+cashews	cashews
+sunflower-seeds	sunflower seeds
+raisins	raisins
+chips	potato chips|crisps
+# ---- not food: the photo goes to the usual chain ------------------------------------------------------------
+!	a person's face|a selfie
+!	a printed page of text|a document
+!	a screenshot of a phone screen
+!	a nutrition facts label
+!	a barcode
+!	a cat|a dog
+!	a car|a street
+!	a room|furniture
+!	a laptop|a computer keyboard
+!	an empty plate
+!	a packaged product box|a snack wrapper
+!	a landscape|the sky

@@ -1,0 +1,40 @@
+name: Build the photo fast path
+
+# v6.10 — Ali: "I want the photo recognition to be as fast as Yazio".
+# Builds the small image model + runtime + name bank (tools/build_food_clip_bank.py) and publishes them as a release
+# the app downloads on demand (Fit → My plan → "Fast photo recognition"). Run by hand from the Actions tab.
+# (Accuracy was measured by tools/eval_food_clip.py on Food-101 and Middle-Eastern photo sets; see HANDOFF.)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  clip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Python packages
+        run: pip install numpy onnxruntime pyarrow pillow
+      - name: Build the bank and fetch the model and runtime
+        run: python3 tools/build_food_clip_bank.py out | tee build.log
+      - name: Summary
+        run: |
+          {
+            echo "## Photo fast path"; echo; tail -1 build.log; echo
+            ls -la out | head -12
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish the release (tag food-clip-v1, replaced each time)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -rf out/.cache
+          gh release delete food-clip-v1 --cleanup-tag --yes 2>/dev/null || true
+          gh release create food-clip-v1 out/* --title "Photo fast path" --notes "CLIP ViT-B/32 int8 (MIT), onnxruntime-web (MIT), name bank. Built $(date -u +%F). Used by the app: Fit → My plan → Fast photo recognition." --prerelease

@@ -120,6 +120,8 @@ class MainActivity : AppCompatActivity() {
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
             // Studio's pictures, drawn on the phone (ImageEngine).
             .addPathHandler("/studio/", WebViewAssetLoader.InternalStoragePathHandler(this, ImageEngine.studioDir(this)))
+            // v6.10: the photo fast path's model, runtime and name bank (FoodClip), read by the page itself.
+            .addPathHandler("/foodclip/", WebViewAssetLoader.InternalStoragePathHandler(this, FoodClip.dir(this)))
             .build()
         // Any service-worker request for the app's own files is answered from
         // the APK, never from the network (where this address does not exist).
