@@ -12,6 +12,7 @@ import { publicName } from "./power.js";
 import React, { useState } from "react";
 import { Gauge, Loader2, AlertTriangle, Download, Zap } from "lucide-react";
 import { tr, fmtNum } from "./i18n.js";
+import { heatLevel, heatWarning } from "./heat.js";
 
 export const BENCH_KEY = "attune:bench:v1";
 export const DRAFT_SPEC = { id: "draft-qwen35-08b", label: "Spark (helper)", repo: "unsloth/Qwen3.5-0.8B-GGUF", quant: "Q4_K_M", vision: false, ctx: 4096, draft: true };
@@ -36,14 +37,15 @@ export function diagnose(d, lastTps) {
   const out = [];
   if (!d) return out;
   const fast = d.engine === "litert";
-  if (d.thermal >= 2) out.push(["bad", "The phone is hot — it slows the processor down on purpose. Let it cool, take it out of its case, don't charge while asking."]);
+  const heat = heatWarning(d);
+  if (heat) out.push(heat);
   if (d.powerSave) out.push(["bad", "Battery saver is on — it caps the processor. Turn it off while using Attune."]);
   if (d.modelGB && d.availRamGB && d.availRamGB < d.modelGB * 0.6) out.push(["bad", "Free memory is low for this model — close other apps (games, camera, many browser tabs)."]);
   if (!fast && /CPU_Mapped/.test(d.buffers || "") && !/in RAM/.test(d.settings || "")) out.push(["bad", "The model is read from storage instead of RAM — update to the latest Attune APK (it loads the model into RAM)."]);
   if (!fast && d.cpu && !/dotprod/i.test(d.cpu)) out.push(["bad", "The engine is using its slowest processor path (no dotprod). Send this report."]);
   if (fast && d.fastBackend === "CPU") out.push(["bad", "The fast engine is running on the CPU, not the graphics chip — turn on “Use the graphics chip” above. If it switched itself off, the phone's GPU driver refused it: send this report."]);
   if (!fast && d.ramGB >= 6) out.push(["warn", "The biggest speed-up on this phone is the fast engine: Blaze on the graphics chip — first words in about a second. Tap “Switch to the fast engine” above."]);
-  if (!fast && d.genThreads && d.genThreads < 3 && !d.powerSave && d.thermal < 2) out.push(["warn", "Only {n} threads are used for writing.", { n: d.genThreads }]);
+  if (!fast && d.genThreads && d.genThreads < 3 && !d.powerSave && heatLevel(d) < 2) out.push(["warn", "Only {n} threads are used for writing.", { n: d.genThreads }]);
   if (!fast && d.modelGB > 4) out.push(["warn", "This is a big model for a phone — Core is about 2–3× faster."]);
   if (lastTps != null && lastTps < 3 && !out.some((x) => x[0] === "bad")) out.push(["warn", "Nothing obvious — the phone may have slowed Attune while it was in the background. The new APK keeps it at full speed while writing."]);
   if (!out.length) out.push(["ok", "Nothing is holding it back."]);
