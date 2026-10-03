@@ -9437,6 +9437,8 @@ export default function App() {
           <FitApp abort={() => LocalEngine.abort()} ready={() => LocalEngine.waitReady()} canSee={!(engineInfo && engineInfo.engine === "litert" && engineInfo.fastVision === false)} flash={flash} openEngine={() => setShowEngine(true)} incoming={fitIn} clearIncoming={() => setFitIn(null)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             fetchJson={NATIVE && NATIVE.fetchJson ? async (url) => { const r = await nativeCall("fetchJson", url); return JSON.parse((r && r.body) || "{}"); } : null}
             packText={NATIVE && NATIVE.foodPackText ? async (name) => { const r = await nativeCall("foodPackText", name); return (r && r.text) || ""; } : null}
+            photoClip={NATIVE && NATIVE.foodClipStatus ? { base: "https://appassets.androidplatform.net/foodclip/", status: () => { try { return JSON.parse(NATIVE.foodClipStatus()); } catch (e) { return { installed: false }; } },
+              install: (onProgress) => nativeCall("foodClipInstall", {}, onProgress), stop: () => NATIVE.cancel(nativeLastId()), remove: () => NATIVE.foodClipRemove() } : null}
             scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
             health={NATIVE && NATIVE.healthStatus ? { status: () => { try { return JSON.parse(NATIVE.healthStatus()); } catch (e) { return null; } }, connect: () => NATIVE.healthConnect(), openApp: (pkg) => { try { NATIVE.openHealthApp(pkg); } catch (e) {} },

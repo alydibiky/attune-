@@ -737,6 +737,32 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v6.10: the photo fast path's files (FoodClip) — on the phone? {installed, bytes, files} */
+    @JavascriptInterface
+    fun foodClipStatus(): String = try { FoodClip.status(ctx).toString() } catch (e: Throwable) { "{\"installed\":false,\"bytes\":0}" }
+
+    /** v6.10: downloads the photo fast path's files from this app's own release, with progress; cancel(id) stops it. */
+    @JavascriptInterface
+    fun foodClipInstall(id: String, arg: String) {
+        if (blockedByAirGap(id, "downloading the photo model")) return
+        val flag = AtomicBoolean(false); cancels[id] = flag
+        pool.execute {
+            try {
+                FoodClip.install(ctx, { done, total, name ->
+                    val pct = if (total > 0) ((done * 100) / total).toInt().coerceIn(0, 99) else 0
+                    progress(id, pct, name, "%.0f / %.0f MB".format(done / 1e6, total / 1e6))
+                }, { flag.get() })
+                resolve(id, FoodClip.status(ctx))
+            } catch (e: FoodClip.Cancelled) {
+                reject(id, "Download stopped — it continues where it stopped next time.")
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't download the photo model") }
+            finally { cancels.remove(id) }
+        }
+    }
+
+    @JavascriptInterface
+    fun foodClipRemove(): Boolean = FoodClip.remove(ctx)
+
     /** v6.1: the barcodes in a photo ({b64}), read on the phone by ML Kit → {codes: [..]}. */
     @JavascriptInterface
     fun scanBarcode(id: String, arg: String) {

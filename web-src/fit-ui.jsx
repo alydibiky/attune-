@@ -11,6 +11,7 @@ import { searchGenerated, getGenerated, GENERATED_COUNT } from "./fit-recipegen.
 import * as DB from "./fitdb.js";
 import * as R from "./fitread.js";
 import * as PH from "./fitphoto.js";
+import * as CL from "./fitclip.js";
 import * as P from "./fitplus.js";
 import { WatchCard, Grades, DayQuality, RamadanCard, QuickLog, SaveMyMeal, WeekPlanView, WeekReport, BodyCard, FitSettings, RAMADAN_NAMES } from "./fitplus-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
@@ -88,7 +89,7 @@ function Bar({ label, v, max, cls }) {
 // the watch and 3 photo meals a day; Pro adds unlimited photo meals, the week's meal plan + shopping
 // list and the week report. `pro` defaults to on (web preview, tests); the app passes the real state.
 export const FREE_PHOTOS_PER_DAY = 3;
-export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, packText, scanBarcode, native, share, listen, health, pro = true, openPlan }) {
+export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, packText, scanBarcode, native, share, listen, health, pro = true, openPlan, photoClip }) {
   const ar = getLang() === "ar";
   const L = (en, a) => (ar ? a : en);
   const [st, setSt] = useState(load);
@@ -114,6 +115,9 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const [online, setOnline] = useState(null);           // { q, foods } from the big databases
   const [searching, setSearching] = useState(false);
   const [replaceAt, setReplaceAt] = useState(-1);       // a draft item being swapped for a searched food
+  // v6.10: the photo fast path (fitclip.js) is on the phone → a photo is named in about a second, no chat model needed
+  const [clipOn, setClipOn] = useState(() => { try { return !!(photoClip && photoClip.status().installed) || !!(typeof window !== "undefined" && window.__attuneClipTest); } catch (e) { return false; } });
+  useEffect(() => { if (photo && clipOn && photoClip) CL.loadClip(photoClip.base).catch(() => {}); }, [photo, clipOn]);   // warm it up while the person types a note
   const fileRef = useRef(null);
   const codeRef = useRef(null);
   const run = useRef(0);
@@ -126,7 +130,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     // what people call foods) — instant and offline; only the words it can't place go to the model
     const read = photo ? { items: [], unknown: [] } : R.readMealText(text);
     if (!photo && read.items.length && !read.unknown.length) { setDraft(read.items); return; }
-    if (!modelReady) { if (read.items.length) { setDraft(read.items); flash && flash(L(`Not placed: “${read.unknown.join(", ")}” — load a model to read it, or search it below`, `ما عرفتش: «${read.unknown.join("، ")}» — شغّل موديل يقراها، أو دوّر عليها تحت`)); } else openEngine && openEngine(); return; }
+    if (!modelReady && !(photo && clipOn)) { if (read.items.length) { setDraft(read.items); flash && flash(L(`Not placed: “${read.unknown.join(", ")}” — load a model to read it, or search it below`, `ما عرفتش: «${read.unknown.join("، ")}» — شغّل موديل يقراها، أو دوّر عليها تحت`)); } else openEngine && openEngine(); return; }
     setBusy(true);
     try {
       if (photo) {
@@ -160,7 +164,18 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   // doesn't know are matched by the offline reader and the food pack (fitphoto.js).
   const limit = (p, ms) => PH.withLimit(p, ms, abort);
   const giveUp = () => { flash && flash(L("Couldn't recognise the food in time — name it instead (e.g. “2 fried eggs and baladi bread”) or search it below", "مقدرتش أتعرّف على الأكل في الوقت — اكتب اسمه (مثلاً «٢ بيض مقلي وعيش بلدي») أو دوّر عليه تحت")); setPhoto(null); };
+  // v6.10 step 0 — the fast look (fitclip.js): no chat model, ≈ a second. Started at once, side by side with the barcode look.
+  const fastLook = async () => {
+    const clip = await PH.withLimit(CL.loadClip(photoClip ? photoClip.base : CL.CLIP_BASE), 20000);   // the first load reads ≈ 100 MB from the phone's storage
+    return CL.decide(clip.bank, await PH.withLimit(CL.classify(clip, photo.url, 5), 8000));
+  };
+  const useFast = async (fast, me) => {
+    let items = fast.items;
+    if (items.some((x) => x.unknown)) { items = await PH.resolveItems(items, DB.packSearch, 2000); if (run.current !== me) return; }
+    setDraft(items);
+  };
   const readPhotoMeal = async (me) => {
+    const fastP = clipOn ? fastLook().catch(() => null) : Promise.resolve(null);
     if (scanBarcode) {
       setStage(L("Looking for a barcode…", "بدوّر على باركود…"));
       try { const codes = await PH.withLimit(scanBarcode(photo.data), 8000); if (run.current !== me) return;
@@ -168,10 +183,21 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       } catch (e) {}
     }
     const note = text.trim();
-    if (!canSee) {
-      const ni = PH.noteItems(note); if (ni.length) { setDraft(ni); return; }
-      flash && flash(L("This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”", "الموديل ده مش بيقرا صور دلوقتي — اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return;
+    let fast = null;
+    if (clipOn) {
+      setStage(L("Recognising the food…", "بتعرّف على الأكل…"));
+      fast = await fastP; if (run.current !== me) return;
+      if (fast && fast.status === "auto") { await useFast(fast, me); return; }   // sure enough: done, the chat model is not needed
     }
+    // not sure (or no fast model): the chat model has a look when it can; the fast guess is kept for when it can't
+    if (!modelReady || !canSee) {
+      if (fast && fast.status === "guess") { await useFast(fast, me); return; }
+      const ni = PH.noteItems(note); if (ni.length) { setDraft(ni); return; }
+      if (!modelReady) { flash && flash(L("Couldn't recognise this photo — name the food instead, e.g. “2 fried eggs and baladi bread”", "مقدرتش أتعرّف على الصورة دي — اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return; }
+      flash && flash(clipOn || !photoClip ? L("This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”", "الموديل ده مش بيقرا صور دلوقتي — اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")
+        : L("This model can't read photos — get “Fast photo recognition” in My plan, or name the food, e.g. “2 fried eggs and baladi bread”", "الموديل ده مش بيقرا صور — نزّل «التعرّف السريع على صور الأكل» من خطتي، أو اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return;
+    }
+    const noFood = () => { if (fast && fast.status === "guess") return useFast(fast, me); giveUp(); };   // the chat model found nothing: the fast guess beats "name it"
     if (ready) { setStage(L("Waking the model…", "بصحّي الموديل…")); try { await PH.withLimit(ready(), 90000); } catch (e) {} if (run.current !== me) return; }   // the time limit counts from here, not from the wake-up
     const b = PH.budget();
     setStage(L("Recognising the food…", "بتعرّف على الأكل…"));
@@ -185,7 +211,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       try { const names = PH.parseNames(await limit(llm(PH.namesMessages(note), photo, { maxTokens: 60, temperature: 0 }), b.slice(20000, 2000))); if (run.current !== me) return; items = await PH.namesToItems(names, DB.packSearch, 3000); } catch (e) {}
       if (run.current !== me) return;
     }
-    if (!items.length) { const ni = PH.noteItems(note); if (ni.length) { setDraft(ni); return; } giveUp(); return; }
+    if (!items.length) { const ni = PH.noteItems(note); if (ni.length) { setDraft(ni); return; } await noFood(); return; }
     if (items.some((x) => x.unknown)) { items = await PH.resolveItems(items, DB.packSearch, 3000); if (run.current !== me) return; }
     setDraft(items);
     // v6.3: a zoomed second look at one food the model wasn't sure of (cropped from the photo, enlarged) — only when time is left
@@ -303,7 +329,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
 
   const Tabs = [["today", L("Today", "النهارده"), Apple], ["recipes", L("Recipes", "وصفات"), Star], ["move", L("Move", "رياضة"), Dumbbell], ["progress", L("Progress", "التقدم"), BarChart3]];
 
-  if (!st.profile || editProfile) return <ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText }} /> : null} />;
+  if (!st.profile || editProfile) return <ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} /> : null} />;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 space-y-4" data-testid="fit-app">
