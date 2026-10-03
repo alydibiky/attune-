@@ -23,7 +23,7 @@ Engine: stable-diffusion.cpp pinned at 88411ef (same in the app and in `.github/
 
 ## Measured on the Studio lab (ARM 4-core, 512px, 5 prompts, CLIP ViT-B/32)
 Runs: 37106087635 (baseline), 37141391984, and a second run for the suffix and 1-step entries.
-See the table in PLANS_2026-10-02.md ("Studio image models — measured"), filled from these runs.
+Results: the "Studio image models — measured" table in PLANS_2026-10-02.md. Headline: tiny decoder on Turbo 63 s → 37 s with CLIP 31.2 → 32.1 (adopted); SDXL-Turbo q4 1 step + tiny XL decoder CLIP 33.4 in 18 s (best overall; 3.9 GB, Ali to decide). The app already has an LLM prompt enhancer (studio.js enhanceMessages); a fixed suffix gave +0.4 CLIP (noise level), not adopted.
 
 ## Sources
 - stable-diffusion.cpp acceleration paper: https://arxiv.org/html/2412.05781
