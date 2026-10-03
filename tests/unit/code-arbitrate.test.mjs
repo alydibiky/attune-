@@ -35,5 +35,13 @@ eq(r.map((x) => [x.prog, x.alt, x.agree]), [["22.79", "22.79", true]], "both ver
   eq([res.ok, altCalls, ev.includes("arbitrated"), fixCalls <= 2], [true, 1, true, true], "a wrong expected value is settled by a second version, not by more fix rounds");
   eq(res.code.includes("assert vat(19.99) == 22.79"), true, "…and the test now holds the agreed value");
 }
+// out of rounds: the best version seen is returned, not a last edit that broke the syntax
+{
+  const write = "```python\ndef sq(a):\n    return a * a\n# --- tests ---\nassert sq(3) == 9\nassert sq(2) == 5\nprint('ALL TESTS PASSED')\n```";
+  const llm = async (m) => (/fixing/.test(m[0].content) ? "<<<<<<< SEARCH\n    return a * a\n=======\n    return a * a)\n>>>>>>> REPLACE" : write);
+  const ev = [];
+  const res = await workLoop({ task: "sq(a) squares a number", lang: "python", llm, run, maxRounds: 1, restart: false, onEvent: (e) => ev.push(e.type) });
+  eq([res.ok, res.code.includes("return a * a)"), ev.includes("best")], [false, false, true], "a broken last edit is dropped for the best earlier version");
+}
 console.log(fails.length ? `\n${fails.length} FAILED` : "\nall arbitration tests passed");
 process.exit(fails.length ? 1 : 0);

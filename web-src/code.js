@@ -446,11 +446,29 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
     }
     onEvent({ type: "wrote", round, code, lang, tests: countTests(code, lang) });
   };
+  // v6.12: the best version seen so far. Measured: a run that ran out of rounds returned its LAST
+  // version, which was sometimes a broken edit (a syntax error) of a version that only failed one
+  // of its own tests. Rank: passed > runs but some own tests fail (fewer is better) > other error > does not even parse.
+  let best = null;
+  const rankOf = (res, v) => {
+    if (v.passed) return 1000;
+    const e = String((res && (res.error || res.stderr)) || "");
+    if (/SyntaxError|IndentationError|TabError/.test(e)) return 0;
+    if (/AssertionError|expected .* got /.test(e) || v.reason === "no-pass-mark") return 90;
+    return 50;
+  };
+  const ranks = new Map();
+  const keepBest = (rank) => {
+    rank = Math.max(rank, ranks.get(code) || 0); ranks.set(code, rank);
+    if (best && best.code === code) { best.rank = rank; return; }
+    if (!best || rank > best.rank) best = { code, rank, last, verdict };
+  };
   const exec = async () => {
     stopped();
     onEvent({ type: "run", round, code });
     last = await run(lang, code);
     verdict = judge(last, code, lang);
+    keepBest(rankOf(last, verdict));
     onEvent({ type: "result", round, res: last, verdict });
     return verdict.passed;
   };
@@ -524,6 +542,7 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
       let wrong = [];
       try { wrong = probeFindings(await run(lang, pr.probe), pr); } catch (e) {}
       wrong.forEach((w) => failCount.set(w.got, (failCount.get(w.got) || 0) + 1));
+      if (wrong.length) keepBest(100 - Math.min(wrong.length, 8));   // runs, and only these few own tests fail
       const settle = wrong.filter((w) => failCount.get(w.got) >= 2 && calledFn(w.got) && !arbDone.has(w.got));
       if (settle.length) {
         settle.forEach((w) => arbDone.add(w.got));
@@ -560,6 +579,7 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
       }
     } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
   }
+  if (!ok && best && best.code !== code && best.rank > (ranks.get(code) || 0)) { code = best.code; last = best.last; verdict = best.verdict; onEvent({ type: "best", round, code }); }
   const res = { ok, code, lang, rounds: round, last, tests: countTests(code, lang), gaveUp: !ok };
   onEvent({ type: "done", ...res });
   return res;
