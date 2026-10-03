@@ -40,3 +40,6 @@ const ask = { "Responde en inglés: ¿qué es un volcán?": "en", "Please answer
 for (const [t, w] of Object.entries(ask)) if (t !== "Traduce al alemán") assert.strictEqual(requestedLang(t), w, t);
 assert.match(replyLanguageRule("Responde en inglés: ¿qué es un volcán?"), /English/);
 console.log("requested language ok");
+assert.strictEqual(detectLang("Ibu kota Prancis adalah Paris."), "id");
+assert.strictEqual(detectLang("Paris is the capital."), "en"); assert.strictEqual(detectLang("Quick brown fox jumping"), "en");
+console.log("short answers ok");

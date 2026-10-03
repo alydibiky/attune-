@@ -28,7 +28,7 @@ const STOP = {
   fr: "le la les un une des est sont que qui quoi comment pourquoi avec pour dans sur mais très aussi plus je tu il nous vous bonjour merci s'il c'est j'ai du au ce cette ces",
   pt: "o os as um uma é são está estão que qual como quando onde por para com sem mas muito também mais eu você nós olá obrigado favor do da dos das não isso isto tenho quero posso",
   de: "der die das ein eine ist sind und oder nicht ich du sie wir ihr was wie warum wann wo mit für auf aber sehr auch mehr bitte danke hallo kann können habe möchte den dem des zu von",
-  id: "yang dan di ke dari ini itu dengan untuk tidak ada saya kamu anda apa bagaimana kenapa kapan dimana bisa mau tolong terima kasih halo adalah akan sudah belum juga lebih sangat atau pada",
+  id: "ibu kota apa siapa berapa dimana mana bagaimana yang dan di ke dari ini itu dengan untuk tidak ada saya kamu anda apa bagaimana kenapa kapan dimana bisa mau tolong terima kasih halo adalah akan sudah belum juga lebih sangat atau pada",
 };
 const STOPSETS = Object.fromEntries(Object.entries(STOP).map(([k, v]) => [k, new Set(v.split(/\s+/))]));
 const DIAC = { es: /[ñ¿¡]/g, fr: /[àâçèêëîïôùûœ]/g, pt: /[ãõç]/g, de: /[äöüß]/g };
@@ -67,7 +67,7 @@ export function detectLang(text) {
   // English is the default: another Latin-script language must show real evidence (two of its words, or accents) and beat English
   const ranked = Object.entries(score).filter(([k]) => k !== "en").sort((a, b) => b[1] - a[1]);
   const best = ranked[0];
-  return best && best[1] >= 2 && best[1] > score.en ? best[0] : "en";
+  return best && best[1] > score.en && (best[1] >= 2 || score.en === 0) ? best[0] : "en";
 }
 
 export const langName = (code) => (LANGS[code] ? LANGS[code].name : "");
