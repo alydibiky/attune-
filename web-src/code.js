@@ -281,7 +281,7 @@ The page must be about THIS and nothing else${named.length ? ` — use the name 
     ];
   }
   return [
-    { role: "system", content: `You are an expert programmer. Write ${RULES[lang]}\nReply with ONE code block (\`\`\`${FENCE_LANG[lang]}) holding the complete program: first the program itself with a short demo that prints results, then its tests. ${TESTS[lang]}\nNo explanation before the code. After the code, at most two short sentences.` },
+    { role: "system", content: `You are an expert programmer. Write ${RULES[lang]}\nReply with ONE code block (\`\`\`${FENCE_LANG[lang]}) holding the complete program: first the program itself with a ONE-line demo that prints a result, then its tests. ${TESTS[lang]}\nBe brief: no docstrings, at most one short comment per function, no long demos. Use exactly the function names and parameters the task gives. Handle the cases the task implies (empty input, zero, negative, equal values). Work out each test's expected value by hand from the task's own rules, and never test an input your own code rejects.\nNo explanation before the code. After the code, at most two short sentences.` },
     { role: "user", content: String(task || "").trim() },
   ];
 }
@@ -298,7 +298,7 @@ export function fixMessages({ task, lang, code, error, change }) {
     ? `Change the program as asked: ${change}\nKeep everything else working, and update or add tests for the change.`
     : `It fails:\n\`\`\`\n${error}\n\`\`\`\nFix the cause with the smallest change. Do not delete or weaken the tests unless a test itself is wrong.`;
   return [
-    { role: "system", content: `You are an expert programmer fixing ${lang === "html" ? "a web page" : "a program"}. The code is ${RULES[lang]}\nAnswer with edit blocks only, each exactly like this:\n<<<<<<< SEARCH\n(lines copied exactly from the current code)\n=======\n(the new lines)\n>>>>>>> REPLACE\nUse as many blocks as needed; each SEARCH must match the current code exactly and only once. If most of the code must change, reply instead with the whole new program in one \`\`\`${FENCE_LANG[lang]} code block (with its tests).` },
+    { role: "system", content: `You are an expert programmer fixing ${lang === "html" ? "a web page" : "a program"}. The code is ${RULES[lang]}\nAnswer with edit blocks only, each exactly like this:\n<<<<<<< SEARCH\n(lines copied exactly from the current code)\n=======\n(the new lines)\n>>>>>>> REPLACE\nUse as many blocks as needed; each SEARCH must match the current code exactly and only once, and holds only the few lines that change (never a whole function). If a test's expected value is the wrong part, fix the test. If most of the code must change, reply instead with the whole new program in one \`\`\`${FENCE_LANG[lang]} code block (with its tests).` },
     { role: "user", content: `Task: ${String(task || "").trim()}\n\nCurrent code:\n\`\`\`${FENCE_LANG[lang]}\n${code}\n\`\`\`\n\n${why}` },
   ];
 }

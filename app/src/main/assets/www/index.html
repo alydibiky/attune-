@@ -826,7 +826,8 @@ Keep it compact so it fits in one answer: CSS rules short and shared (no repeate
 Reply with ONE \`\`\`html code block holding the whole file. No explanation before it; after it at most two short sentences.`,M2=new Set("make create build write design website web site page landing single simple modern beautiful professional nice good cool full complete with that this for called named about the and a an of to in on my our your me please html app application tool using which have has some".split(" "));function D2(e){let a=String(e||""),s=a.replace(/["“”']/g," ").split(/\s+/).filter(Boolean),n=[];s.forEach((i,c)=>{/^(called|named|brand|company)$/i.test(i)&&s[c+1]&&/^[A-Za-z][\w&-]{2,}$/.test(s[c+1].replace(/[.,!?]$/,""))&&n.push(s[c+1].replace(/[.,!?]$/,""))});let r=(a.toLowerCase().match(/[a-z][a-z'-]{3,}/g)||[]).filter(i=>!M2.has(i));return{named:[...new Set(n.map(i=>i.toLowerCase()).filter(i=>!M2.has(i)))],words:[...new Set(r)]}}function $2(e,a){let{named:s,words:n}=D2(e),o=String(a||"").toLowerCase();return s.length?s.some(i=>o.includes(i)):n.length?n.filter(i=>o.includes(i.replace(/s$/,""))).length>=Math.min(2,n.length):!0}function l0(e,a,{retry:s=!1}={}){if(a==="html"){let{named:n}=D2(e);return[{role:"system",content:hI},{role:"user",content:`Build exactly this: ${String(e||"").trim()}
 The page must be about THIS and nothing else${n.length?` — use the name "${n[0]}" in the <title>, the header and the text`:""}.${s?`
 YOUR LAST PAGE WAS ABOUT SOMETHING ELSE. Start again and build what was asked.`:""}`}]}return[{role:"system",content:`You are an expert programmer. Write ${I2[a]}
-Reply with ONE code block (\`\`\`${i0[a]}) holding the complete program: first the program itself with a short demo that prints results, then its tests. ${mI[a]}
+Reply with ONE code block (\`\`\`${i0[a]}) holding the complete program: first the program itself with a ONE-line demo that prints a result, then its tests. ${mI[a]}
+Be brief: no docstrings, at most one short comment per function, no long demos. Use exactly the function names and parameters the task gives. Handle the cases the task implies (empty input, zero, negative, equal values). Work out each test's expected value by hand from the task's own rules, and never test an input your own code rejects.
 No explanation before the code. After the code, at most two short sentences.`},{role:"user",content:String(e||"").trim()}]}function gI({task:e,lang:a,code:s,history:n}){let o=l0(e,a),r=n.slice(-3).map((i,c)=>`${c+1}. ${String(i).slice(0,500)}`).join(`
 `);return[o[0],{role:"user",content:`${String(e||"").trim()}
 
@@ -849,7 +850,7 @@ Answer with edit blocks only, each exactly like this:
 =======
 (the new lines)
 >>>>>>> REPLACE
-Use as many blocks as needed; each SEARCH must match the current code exactly and only once. If most of the code must change, reply instead with the whole new program in one \`\`\`${i0[a]} code block (with its tests).`},{role:"user",content:`Task: ${String(e||"").trim()}
+Use as many blocks as needed; each SEARCH must match the current code exactly and only once, and holds only the few lines that change (never a whole function). If a test's expected value is the wrong part, fix the test. If most of the code must change, reply instead with the whole new program in one \`\`\`${i0[a]} code block (with its tests).`},{role:"user",content:`Task: ${String(e||"").trim()}
 
 Current code:
 \`\`\`${i0[a]}
