@@ -2,6 +2,30 @@
    Key = the exact English text passed to tr(). Keep {placeholders} intact.
    Brand and model names (Attune, Qwen, ChatGPT…) are left in Latin letters. */
 export const AR = {
+  // v6.10 Fit & Food home ("Log bar") and the 3-question first visit
+  "Welcome to Fit & Food": "أهلاً بيك في الأكل والرياضة",
+  "What is your goal?": "هدفك إيه؟",
+  "Height, weight, age": "الطول والوزن والسن",
+  "Just a calorie target": "هدف سعرات بس",
+  "Calories a day": "سعرات في اليوم",
+  "Whose food do you eat?": "بتاكل أكل أنهي بلد؟",
+  "Start logging": "يلا نسجّل",
+  "Set up the full plan instead (activity, pace, eating style)": "اعمل الخطة الكاملة بدل كده (النشاط، السرعة، نظام الأكل)",
+  "Enter a daily target between 800 and 6000 kcal": "اكتب هدف يومي بين 800 و6000 سعر",
+  "Log a meal": "سجّل وجبة",
+  "Barcode": "باركود",
+  "One tap to add again": "ضيف تاني بلمسة",
+  "Ideas from": "أفكار من",
+  "This week": "الأسبوع ده",
+  "Calories in the last 7 days": "السعرات في آخر 7 أيام",
+  "One glass less": "كوباية أقل",
+  "Previous day": "اليوم اللي فات",
+  "Next day": "اليوم اللي بعده",
+  "Edit or delete": "عدّل أو امسح",
+  "Grams": "جرامات",
+  "Type the barcode number in search": "اكتب رقم الباركود في البحث",
+  "Recognising the food…": "بتعرّف على الأكل…",
+  "My own daily calorie target (optional)": "هدف سعرات يومي بتاعي (اختياري)",
   // v6.8 Mind
   "Code & apps": "كود وتطبيقات",
   "Runs smoothly on a 12 GB phone: expert answers, and the best at reading documents and photos.": "بيشتغل بسلاسة على موبايل 12 جيجا: إجابات خبير، والأحسن في قراية المستندات والصور.",
