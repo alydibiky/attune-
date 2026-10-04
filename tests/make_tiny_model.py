@@ -7,7 +7,7 @@ import gguf
 out = sys.argv[1] if len(sys.argv) > 1 else "tiny.gguf"
 rng = np.random.default_rng(0)
 
-n_embd, n_head, n_head_kv, n_layer, n_ff, n_ctx = 256, 4, 2, 2, 512, 4096
+n_embd, n_head, n_head_kv, n_layer, n_ff, n_ctx = 256, 4, 2, 2, 512, 16384   # v6.12: as big as the window the test engine reports (context 16384)
 head_dim = n_embd // n_head
 
 # ---- vocab (SentencePiece-style "llama" tokenizer) ----
