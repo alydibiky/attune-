@@ -102,6 +102,6 @@ export const today = () => new Date().toISOString().slice(0, 10);
 /** Today's date, month start etc. for filters. */
 export const monthStart = () => today().slice(0, 8) + "01";
 export const fmtDate = (iso) => { if (!iso) return ""; const [y, m, d] = iso.split("-"); return isAr() ? `${d}/${m}/${y}` : `${d} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m - 1]} ${y}`; };
-export const DOC_LABEL = { quote: ["Quotation", "عرض سعر"], invoice: ["Tax invoice", "فاتورة ضريبية"], credit: ["Credit note", "إشعار دائن"], bill: ["Supplier bill", "فاتورة مورد"] };
+export const DOC_LABEL = { quote: ["Quotation", "عرض سعر"], invoice: ["Tax invoice", "فاتورة ضريبية"], credit: ["Credit note", "إشعار دائن"], order: ["Sales order", "أمر بيع"], delivery: ["Delivery note", "إذن تسليم"], bill: ["Supplier bill", "فاتورة مورد"] };
 export const docLabel = (type) => L(...DOC_LABEL[type]);
 export const STATUS = { draft: ["Draft", "مسودة", "gray"], posted: ["Posted", "مرحّلة", "green"], void: ["Void", "ملغاة", "red"] };

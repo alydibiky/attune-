@@ -7,7 +7,7 @@ import * as C from "./convert.js";
 const esc = (x) => String(x ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const money = (m) => B.fmt(m || 0);
 const dmy = (iso) => (iso ? iso.split("-").reverse().join("/") : "");
-const TITLES = { invoice: ["TAX INVOICE", "فاتورة ضريبية"], quote: ["QUOTATION", "عرض سعر"], credit: ["CREDIT NOTE", "إشعار دائن"], statement: ["STATEMENT OF ACCOUNT", "كشف حساب"] };
+const TITLES = { invoice: ["TAX INVOICE", "فاتورة ضريبية"], quote: ["QUOTATION", "عرض سعر"], credit: ["CREDIT NOTE", "إشعار دائن"], statement: ["STATEMENT OF ACCOUNT", "كشف حساب"], delivery: ["DELIVERY NOTE", "إذن تسليم"], order: ["SALES ORDER", "أمر بيع"] };
 
 const CSS = `
 @page{size:A4;margin:14mm 13mm}
@@ -148,6 +148,46 @@ export async function shareDocumentWord({ s, doc, kind, flash, saveFile }) {
     if (call) { await call("shareFile", { name: name + ".docx", mime: C.MIME.docx, b64: C.bytesToB64(bytes), text: whatsappText({ s, doc, kind }) }); return true; }
     if (saveFile) { await saveFile(name + ".docx", null, C.MIME.docx, C.bytesToB64(bytes)); return true; }
     flash && flash("Open the Android app to share files");
+  } catch (e) { flash && flash("Could not make the Word file"); }
+  return false;
+}
+
+// ---- delivery notes: quantities only (no prices), with the source document and signature boxes --------------------
+export function deliveryHtml({ s, note }) {
+  const co = s.company, cust = s.customers.find((c) => c.id === note.customer) || {};
+  const rows = note.lines.map((l, i) => { const it = s.items.find((x) => x.id === l.item) || {}; return `<tr><td>${i + 1}</td><td>${esc(l.desc || it.name || "")}</td><td>${esc(it.sku || "")}</td><td class="n">${esc(l.qty)}</td><td>${esc(it.unit || "")}</td></tr>`; }).join("");
+  return `<!doctype html><html><head><meta charset="utf-8"><style>${CSS}.sig{display:flex;gap:16px;margin-top:40px}.sig div{flex:1;border-top:1px solid #94a3b8;padding-top:4px;text-align:center;font-size:9pt;color:#475569}</style></head><body>
+${letterhead(co)}
+<div class="title"><span>${TITLES.delivery[0]}</span><span>${esc(note.number)}</span><span class="ar">${TITLES.delivery[1]}</span></div>
+<div class="row"><div class="box"><b>العميل / Customer</b>${esc(cust.name || "")}<div class="muted">${[cust.address, cust.phone].filter(Boolean).map(esc).join("<br>")}</div></div>
+<div class="box"><b>التاريخ / Date</b>${dmy(note.date)}<br><b style="margin-top:4px">بخصوص / Against</b>${esc(note.source)}${note.driver ? `<br><b style="margin-top:4px">السائق / Driver</b>${esc(note.driver)}` : ""}</div></div>
+<table><thead><tr>${head2("#", "م")}${head2("Description", "الوصف")}${head2("Code", "الكود")}${head2("Qty delivered", "الكمية المسلّمة")}${head2("Unit", "الوحدة")}</tr></thead><tbody>${rows}</tbody></table>
+${note.notes ? `<div class="small"><b>Notes · ملاحظات:</b> ${esc(note.notes)}</div>` : ""}
+<div class="sig"><div>Delivered by · المُسلِّم</div><div>Received by (name & signature) · المستلم (الاسم والتوقيع)</div><div>Date · التاريخ</div></div>
+<div class="foot">${esc(co.footer || "")}</div></body></html>`;
+}
+export function deliveryBlocks({ s, note }) {
+  const co = s.company, cust = s.customers.find((c) => c.id === note.customer) || {};
+  const blocks = [];
+  const line = (text, o = {}) => blocks.push({ type: "p", text, size: o.size || 10, align: o.align || "left", ...(o.b ? { runs: [{ t: text, b: true }] } : {}), ...(o.rtl ? { rtl: true } : {}), before: o.before || 0 });
+  if (co.name) line(co.name, { size: 16, b: true });
+  if (co.nameAr) line(co.nameAr, { size: 14, b: true, rtl: true, align: "right" });
+  blocks.push({ type: "h2", text: `${TITLES.delivery[0]} · ${TITLES.delivery[1]}   ${note.number}`, before: 10 });
+  line(`Customer · العميل: ${cust.name || ""}`, { b: true, before: 4 });
+  line(`Date · التاريخ: ${dmy(note.date)}      Against · بخصوص: ${note.source}${note.driver ? "      Driver · السائق: " + note.driver : ""}`, { before: 2 });
+  const rows = [["#", "Description · الوصف", "Code · الكود", "Qty · الكمية", "Unit · الوحدة"], ...note.lines.map((l, i) => { const it = s.items.find((x) => x.id === l.item) || {}; return [String(i + 1), l.desc || it.name || "", it.sku || "", String(l.qty), it.unit || ""]; })];
+  blocks.push({ type: "table", rows, bold: rows.map((_, i) => rows[0].map(() => i === 0)), widths: [22, 220, 80, 70, 60], shade: rows.map((_, i) => (i === 0 ? "D9EEF0" : null)), align: ["center", "left", "left", "right", "left"], border: { c: "B8C4CC", sz: 4 }, size: 9.5, before: 8 });
+  if (note.notes) line("Notes · ملاحظات: " + note.notes, { size: 9, before: 8 });
+  line("Received by (name & signature) · المستلم (الاسم والتوقيع): ____________________", { before: 24 });
+  return blocks;
+}
+export const shareDelivery = ({ s, note, flash }) => sharePdf({ html: deliveryHtml({ s, note }), name: note.number.replace(/[^\w-]+/g, "_"), text: `إذن تسليم رقم ${note.number}`, flash });
+export async function shareDeliveryWord({ s, note, flash, saveFile }) {
+  try {
+    const name = note.number.replace(/[^\w-]+/g, "_"), bytes = C.docxFromBlocks(deliveryBlocks({ s, note }), name);
+    const call = typeof window !== "undefined" ? window.__attuneNativeCall : null;
+    if (call) { await call("shareFile", { name: name + ".docx", mime: C.MIME.docx, b64: C.bytesToB64(bytes), text: note.number }); return true; }
+    if (saveFile) { await saveFile(name + ".docx", null, C.MIME.docx, C.bytesToB64(bytes)); return true; }
   } catch (e) { flash && flash("Could not make the Word file"); }
   return false;
 }

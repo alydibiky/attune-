@@ -3,6 +3,7 @@ import React, { useState, useMemo } from "react";
 import { Download } from "lucide-react";
 import * as B from "./books.js";
 import * as O from "./books-ops.js";
+import { EtaReport, actorCan } from "./books-extras.jsx";
 import { L, useBooks, useTheme, Card, Section, Money, Empty, Field, Input, Chips, BTN, btnPrimary, today, fmtDate } from "./books-kit.jsx";
 
 const iso = (d) => d.toISOString().slice(0, 10);
@@ -19,7 +20,7 @@ const csv = (rows) => rows.map((r) => r.map((c) => { const t = String(c ?? ""); 
 export function ReportsModule() {
   const { s, today: td, saveFile, flash } = useBooks();
   const th = useTheme();
-  const [rep, setRep] = useState("pl");
+  const [rep, setRep] = useState(() => (actorCan("profit") ? "pl" : "cust"));
   const [per, setPer] = useState("month");
   const [from, setFrom] = useState(""); const [to, setTo] = useState("");
   const P = periods(td);
@@ -30,9 +31,10 @@ export function ReportsModule() {
   const iname = (id) => (s.items.find((c) => c.id === id) || {}).name || id;
 
   const data = useMemo(() => {
+    if (rep === "eta") return { rows: [] };
     if (rep === "pl") {
       const r = B.profitAndLoss(s.journal, f, t);
-      return { rows: [[L("Sales", "المبيعات"), r.sales], [L("Sales returns", "مردودات المبيعات"), -r.salesReturns], [L("Net revenue", "صافي الإيراد"), r.revenue, 1], [L("Cost of goods sold", "تكلفة البضاعة المباعة"), -r.cogs], [L("Gross profit", "مجمل الربح"), r.grossProfit, 1], [L("Expenses", "المصروفات"), -r.expenses], [L("Net profit", "صافي الربح"), r.netProfit, 2]] };
+      return { rows: [[L("Sales", "المبيعات"), r.sales], [L("Sales returns", "مردودات المبيعات"), -r.salesReturns], [L("Net revenue", "صافي الإيراد"), r.revenue, 1], [L("Cost of goods sold", "تكلفة البضاعة المباعة"), -r.cogs], [L("Gross profit", "مجمل الربح"), r.grossProfit, 1], [L("Expenses", "المصروفات"), -r.expenses], ...(r.fxGain ? [[L("Exchange gain / loss", "فروق تغيير العملة"), r.fxGain]] : []), [L("Net profit", "صافي الربح"), r.netProfit, 2]] };
     }
     if (rep === "cust" || rep === "item") {
       const r = B.salesBy(posted.map((d) => ({ ...d, customer: d.customer, lines: d.lines.map((l) => ({ ...l, item: l.item ? iname(l.item) : l.desc })) })), rep === "cust" ? "customer" : "item", f, t, s.tax);
@@ -52,10 +54,11 @@ export function ReportsModule() {
   }, [rep, f, t, s]);
 
   const exportCsv = () => {
+    if (!actorCan("export")) return flash(L("Your role cannot export", "دورك مش مسموح له بالتصدير"));
     const rows = data.cols ? [data.cols, ...data.rows.map((r) => r.map((c, i) => (typeof c === "number" && !(data.stock && i === 1) ? (c / 100).toFixed(2) : c)))] : data.rows.map((r) => [r[0], (r[1] / 100).toFixed(2)]);
     saveFile ? saveFile(`${rep}-${td}.csv`, "﻿" + csv(rows), "text/csv") : flash(L("Saving files works in the Android app", "حفظ الملفات شغال في تطبيق أندرويد"));
   };
-  const list = [["pl", L("Profit & loss", "الأرباح والخسائر")], ["cust", L("Sales by customer", "مبيعات بالعميل")], ["item", L("Sales by item", "مبيعات بالصنف")], ["vat", L("VAT", "الضريبة")], ["stock", L("Stock value", "قيمة المخزون")], ["tb", L("Trial balance", "ميزان المراجعة")]];
+  const list = [...(actorCan("profit") ? [["pl", L("Profit & loss", "الأرباح والخسائر")]] : []), ["cust", L("Sales by customer", "مبيعات بالعميل")], ["item", L("Sales by item", "مبيعات بالصنف")], ["vat", L("VAT", "الضريبة")], ["stock", L("Stock value", "قيمة المخزون")], ["tb", L("Trial balance", "ميزان المراجعة")], ["eta", L("E-invoices (ETA)", "الفواتير الإلكترونية")]];
   const noPeriod = rep === "stock" || rep === "tb";
   return (
     <div data-testid="books-reports">
@@ -63,6 +66,7 @@ export function ReportsModule() {
       {!noPeriod ? <div className="mb-2"><Chips value={per} onChange={setPer} options={[["month", L("This month", "الشهر ده")], ["last", L("Last month", "الشهر اللي فات")], ["quarter", L("This quarter", "الربع ده")], ["year", L("This year", "السنة دي")], ["all", L("All time", "الكل")], ["custom", L("Dates…", "تواريخ…")]]} /></div> : null}
       {per === "custom" && !noPeriod ? <div className="grid grid-cols-2 gap-2 mb-2"><Field label={L("From", "من")}><Input type="date" value={from} onChange={setFrom} /></Field><Field label={L("To", "إلى")}><Input type="date" value={to} onChange={setTo} /></Field></div> : null}
       {!noPeriod && f ? <p className={`text-[11.5px] mb-2 ${th.sub}`}>{fmtDate(f)} → {fmtDate(t)}</p> : null}
+      {rep === "eta" ? <EtaReport from={f} to={t} /> : <>
       <Card className="divide-y" testid="report-body">
         {data.cols ? <div className={`grid ${data.cols.length === 4 ? "grid-cols-4" : "grid-cols-3"} gap-2 px-3 py-2 text-[11px] font-semibold ${th.head}`}>{data.cols.map((c) => <span key={c}>{c}</span>)}</div> : null}
         {!data.rows.length ? <Empty title={L("Nothing to report for this period", "مفيش بيانات للفترة دي")} /> : data.rows.map((r, i) => data.cols ? (
@@ -74,7 +78,7 @@ export function ReportsModule() {
       </Card>
       {data.balanced != null ? <p className={`text-[12px] mt-2 ${data.balanced ? "text-emerald-600" : "text-red-600"}`}>{data.balanced ? L("The books balance.", "الدفاتر متوازنة.") : L("The books do not balance — contact support.", "الدفاتر مش متوازنة — كلّم الدعم.")}</p> : null}
       {data.note ? <p className={`text-[11.5px] mt-2 ${th.sub}`}>{data.note}</p> : null}
-      <button onClick={exportCsv} className={`${BTN} border ${th.line} mt-3 flex items-center gap-1.5`} data-testid="report-export"><Download size={14} />{L("Export to Excel (CSV)", "تصدير لإكسل (CSV)")}</button>
+      <button onClick={exportCsv} className={`${BTN} border ${th.line} mt-3 flex items-center gap-1.5`} data-testid="report-export"><Download size={14} />{L("Export to Excel (CSV)", "تصدير لإكسل (CSV)")}</button></>}
     </div>
   );
 }
