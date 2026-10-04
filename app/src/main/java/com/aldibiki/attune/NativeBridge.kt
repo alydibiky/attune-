@@ -902,7 +902,30 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         pool.execute {
             try {
                 val a = JSONObject(arg)
-                resolve(id, DocTools.pdfText(ctx, android.util.Base64.decode(a.getString("b64"), android.util.Base64.DEFAULT), textOnly = a.optBoolean("textOnly", false)))
+                resolve(id, DocTools.pdfText(ctx, android.util.Base64.decode(a.getString("b64"), android.util.Base64.DEFAULT), textOnly = a.optBoolean("textOnly", false), maxPages = a.optInt("max", 400), from = a.optInt("from", 1)))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read that PDF") }
+        }
+    }
+
+    /** v6.20 — word boxes of some pages (the reader's highlights and text selection). arg = {b64, pages} */
+    @JavascriptInterface
+    fun pdfWords(id: String, arg: String) {
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                val pages = a.optJSONArray("pages")?.let { p -> (0 until p.length()).map { p.getInt(it) } } ?: listOf(1)
+                resolve(id, DocTools.pdfWords(ctx, android.util.Base64.decode(a.getString("b64"), android.util.Base64.DEFAULT), pages))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read that PDF") }
+        }
+    }
+
+    /** v6.20 — the PDF's table of contents. arg = {b64} -> {items:[{title, page, level}]} */
+    @JavascriptInterface
+    fun pdfOutline(id: String, arg: String) {
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                resolve(id, JSONObject().put("items", DocTools.pdfOutline(ctx, android.util.Base64.decode(a.getString("b64"), android.util.Base64.DEFAULT))))
             } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read that PDF") }
         }
     }
