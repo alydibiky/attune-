@@ -18,8 +18,8 @@ if os.environ.get("PICK"):
 def pick(p, img):
     with torch.no_grad():
         x = pk[1](text=[p], images=img, return_tensors="pt", padding=True, truncation=True, max_length=77)
-        ie = pk[0].get_image_features(pixel_values=x["pixel_values"]); te = pk[0].get_text_features(input_ids=x["input_ids"], attention_mask=x["attention_mask"])
-        return torch.nn.functional.cosine_similarity(ie, te).item() * 100
+        o = pk[0](**x)   # full forward: image_embeds / text_embeds are the projected vectors in every transformers version
+        return torch.nn.functional.cosine_similarity(o.image_embeds, o.text_embeds).item() * 100
 def sharp(img):
     """Clarity: variance of the Laplacian on the grey picture resized to 512 px (fair across sizes; higher = crisper detail)."""
     import numpy as np

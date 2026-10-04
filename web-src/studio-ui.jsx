@@ -318,7 +318,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
           <div className="flex flex-wrap items-center gap-1.5 mb-2" data-testid="studio-model">
             <button onClick={() => setChoice("turbo")} className={chip(dp.id === "turbo")} data-testid="studio-use-turbo">⚡ {tr("Turbo · about 1 min")}</button>
             {info.ramGB >= PACKS["turbo-xl"].needRam ? <button onClick={() => setChoice("turbo-xl")} className={chip(dp.id === "turbo-xl")} data-testid="studio-use-turbo-xl">⚡ {tr("Turbo+ · about 20 s · {s} GB", { s: PACKS["turbo-xl"].sizeGB })}</button> : null}
-            <button onClick={() => setChoice("pro")} className={chip(!PACKS[dp.id] || !PACKS[dp.id].fast)} data-testid="studio-use-pro">{tr("Pro · best quality")}</button>
+            {info.ramGB >= PACKS["qwen-21"].needRam ? <button onClick={() => setChoice("qwen-21")} className={chip(dp.id === "qwen-21")} data-testid="studio-use-qwen">{tr("Ultra · best quality, slow · {s} GB", { s: PACKS["qwen-21"].sizeGB })}</button> : null}
+            <button onClick={() => setChoice("pro")} className={chip(!PACKS[dp.id] || (!PACKS[dp.id].fast && dp.id !== "qwen-21"))} data-testid="studio-use-pro">{tr("Pro · best quality")}</button>
             {!(PACKS[dp.id] && PACKS[dp.id].fast) && gpuOk === false ? <span className="text-[11px] text-amber-300" data-testid="studio-pro-slow">{tr("Pro on this phone's CPU: 10–20 min a picture")}</span> : null}
           </div>
         ) : null}

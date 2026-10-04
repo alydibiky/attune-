@@ -156,7 +156,9 @@ object ImageRun {
         if (backend != null) a += listOf("--backend", backend)
         // Short of memory: the text reader is used once per picture, so it can
         // be read from storage when needed instead of sitting in RAM.
-        if (lowMemory) a += listOf("--params-backend", "te=disk")
+        // v6.19: weights memory-mapped too, so the big drawing model's pages can be dropped and re-read
+        // (Studio lab: the 7B Qwen-Image pack ran inside an 8 GB no-swap cage this way at the same speed).
+        if (lowMemory) a += listOf("--params-backend", "te=disk", "--mmap")
         refImage?.let { a += listOf("-r", it) }
         return a
     }

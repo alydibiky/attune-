@@ -48,6 +48,24 @@ export const PACKS = {
         url: "https://huggingface.co/madebyollin/taesdxl/resolve/main/diffusion_pytorch_model.safetensors" },
     ],
   },
+  // v6.19 — Qwen-Image 2.1 (7B drawing model + 8B text reader), 4-step distilled build, 4-bit.
+  // Studio lab (4-core ARM CPU, 512 px): ~520 s a picture; ran inside an 8 GB no-swap cage with the weights
+  // memory-mapped and the text reader read from storage (the app does this by itself when memory is short).
+  // Best for text in pictures and complex scenes; slow on a phone CPU, fast on a computer's graphics card.
+  // Working name "Ultra" — Ali names it. Licence of this 4-step build: Qwen research licence (check before selling).
+  "qwen-21": {
+    id: "qwen-21", kind: "draw", label: "Studio Ultra", sizeGB: 9.89, needRam: 12, license: "Qwen research",
+    defaults: { steps: 4, cfg: 1 }, side: 512,
+    quality: "The most capable model: text inside pictures, busy scenes, people. Slow on a phone (about 10 minutes a picture), fast on a computer with a graphics card. Needs 12 GB RAM.",
+    files: [
+      { role: "diffusion", what: "drawing model (7B, 4-step)", name: "qwen_image_2.1_turbo_Q4_K_M.gguf", size: 4189346592,
+        url: "https://huggingface.co/Abiray/Qwen-Image-2.1-viggle-4-steps-turbo-GGUF/resolve/main/qwen_image_2.1_turbo_Q4_K_M.gguf" },
+      { role: "llm", what: "text reader (8B)", name: "Qwen3VL-8B-Instruct-Q4_K_M.gguf", size: 5027784800,
+        url: "https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct-GGUF/resolve/main/Qwen3VL-8B-Instruct-Q4_K_M.gguf" },
+      { role: "vae", what: "colour decoder", name: "qwen_image_2.1_vae_bf16.safetensors", size: 675509688,
+        url: "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/vae/qwen_image_2.1_vae_bf16.safetensors" },
+    ],
+  },
   "klein-4b": {
     id: "klein-4b", kind: "draw", label: "Studio Pro", sizeGB: 5.29, needRam: 8, license: "Apache-2.0",
     defaults: { steps: 4 },
@@ -159,6 +177,7 @@ export function drawPack(info, choice = null, mode = "create") {
   if (choice === "turbo") return { id: "turbo", ready: ready("turbo") };
   // Turbo+ only on phones with enough memory (8 GB or more); otherwise it falls back to Turbo
   const xlOk = !!(info && info.ramGB >= PACKS["turbo-xl"].needRam);
+  if (choice === "qwen-21" && info && info.ramGB >= PACKS["qwen-21"].needRam) return { id: "qwen-21", ready: ready("qwen-21") };
   if (choice === "turbo-xl" && xlOk) return { id: "turbo-xl", ready: ready("turbo-xl") };
   const fast = xlOk && ready("turbo-xl") ? "turbo-xl" : "turbo";
   const gpu = gpuWorks(info);
@@ -169,7 +188,7 @@ export function drawPack(info, choice = null, mode = "create") {
   return { id: gpu === true ? proOffer : "turbo", ready: false };
 }
 // v6.19 — seconds a picture on the Studio lab's 4-core ARM runner (512 px unless noted).
-export const LAB_SECONDS = { "turbo": 37, "turbo@384": 19, "turbo-xl": 18, "klein-4b": 464 };
+export const LAB_SECONDS = { "turbo": 37, "turbo@384": 19, "turbo-xl": 18, "klein-4b": 464, "qwen-21": 520 };
 /** How fast this device's CPU is next to the lab runner (1 = same). Big cores count fully, small ones about a third;
  *  a phone core is taken as ~0.8 of a runner core, a computer core as ~1.2. */
 export function speedFactor(d) {
@@ -200,6 +219,13 @@ export function recommendStudioPack(d) {
   } else {
     r = { pack: "turbo", steps: 4, side: 384, estSeconds: est("turbo@384"), why: "little memory or slow cores: smaller pictures, still clear" };
   }
+  // Qwen-Image 2.1: first choice on a computer with a graphics card of 8 GB+; with 12 GB+ RAM it is offered as
+  // "best quality, slow" (phones: ~10 min a picture on the CPU). GPU seconds are estimates, not measured.
+  const vram = d.gpuVramGB || 0;
+  if (computer && vram >= 8 && room("qwen-21")) {
+    alts.unshift({ pack: r.pack, why: "fastest pictures", estSeconds: r.estSeconds });
+    r = { pack: "qwen-21", steps: 4, side: 1024, estSeconds: vram >= 16 ? 10 : 25, why: "a graphics card with 8 GB or more: the most capable model" };
+  } else if (ram >= 12 && room("qwen-21")) alts.push({ pack: "qwen-21", why: "best quality, slow", estSeconds: est("qwen-21") });
   if (computer && ram >= 16 && room("klein-4b")) alts.push({ pack: "klein-4b", why: "best quality, slow (minutes a picture)", estSeconds: est("klein-4b") });
   if (!room(r.pack)) r.why = "free up storage first: " + r.why;
   return { ...r, alternatives: alts };

@@ -42,5 +42,10 @@ eq(recommendStudioPack(devs[6][1]).alternatives.some((a) => a.pack === "klein-4b
 eq(recommendStudioPack(devs[2][1]).alternatives.some((a) => a.pack === "klein-4b"), false, "phones are not offered the minutes-a-picture pack");
 eq(recommendStudioPack(devs[2][1]).estSeconds < recommendStudioPack(devs[1][1]).estSeconds, true, "the XL pick is estimated faster than Turbo on a slower phone");
 eq(drawPack({ ramGB: 12, cores: 8, bigCores: 5, freeGB: 100, gpuState: "cpu", packs: [] }).id, "turbo-xl", "first run on a 12 GB phone preselects the recommended pack");
+eq(recommendStudioPack({ ramGB: 12, cores: 8, bigCores: 5, freeGB: 100, platform: "android" }).alternatives.some((a) => a.pack === "qwen-21"), true, "12 GB phone: Qwen-Image offered as best quality, slow");
+eq(recommendStudioPack({ ramGB: 8, cores: 8, bigCores: 4, freeGB: 100, platform: "android" }).alternatives.some((a) => a.pack === "qwen-21"), false, "8 GB phone: no Qwen-Image");
+eq(recommendStudioPack({ ramGB: 32, cores: 16, bigCores: 16, freeGB: 500, platform: "desktop", gpuVramGB: 12 }).pack, "qwen-21", "desktop with a 12 GB graphics card: Qwen-Image first");
+eq(recommendStudioPack({ ramGB: 16, cores: 8, bigCores: 5, freeGB: 8, platform: "android" }).alternatives.some((a) => a.pack === "qwen-21"), false, "not enough storage: Qwen-Image not offered");
+eq(PACKS["qwen-21"].files.map((f) => f.role), ["diffusion", "llm", "vae"], "Qwen-Image pack: drawing model, text reader, colour decoder");
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 process.exit(fails.length ? 1 : 0);
