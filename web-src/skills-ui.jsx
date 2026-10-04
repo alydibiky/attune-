@@ -36,10 +36,11 @@ function Toggle({ on, onChange, label }) {
   );
 }
 
-function Editor({ skill, onSave, onClose, llm, modelReady, openEngine, flash }) {
+function Editor({ skill, all = [], onSave, onClose, llm, modelReady, openEngine, flash }) {
   const [s, setS] = useState(skill || { name: "", command: "", when: "", instructions: "", example: "" });
   const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setS((x) => ({ ...x, [k]: e.target.value }));
+  const incl = S.expandInstructions({ ...s, id: (skill && skill.id) || "new" }, all);
   const draft = async () => {
     const desc = (s.when || s.name || "").trim();
     if (desc.length < 4) { flash(tr("Say in a few words what the skill is for (the “When to use it” box)")); return; }
@@ -64,10 +65,27 @@ function Editor({ skill, onSave, onClose, llm, modelReady, openEngine, flash }) 
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("When to use it")}</span><textarea className={field + " resize-none"} rows={2} value={s.when} onChange={set("when")} data-testid="skill-when" placeholder={tr("Words that tell the app this skill fits: crane quote, price offer, rental…")} />
           <span className="block text-[11px] text-slate-500 mt-1">{tr("The app uses these words to pick the skill by itself when your question fits.")}</span></label>
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Instructions")}</span><textarea className={field + " resize-none"} rows={7} value={s.instructions} onChange={set("instructions")} data-testid="skill-instructions" placeholder={tr("What the AI should do: the structure of the answer, the tone, what to ask if something is missing…")} />
-          <span className="block text-[11px] text-slate-500 mt-1" dir="ltr">{s.instructions.length} / {S.LIMITS.instructions}</span></label>
+          <span className="block text-[11px] text-slate-500 mt-1" dir="ltr">{s.instructions.length} / {S.LIMITS.instructions}</span>
+          <span className="block text-[11px] text-slate-500 mt-1">{tr("To use another skill inside this one, write {x} with its command, for example {y}.", { x: "{{skill:…}}", y: "{{skill:quote}}" })}</span></label>
+        {incl.used.length || incl.errors.length ? (
+          <div className="text-[11px] space-y-0.5" data-testid="skill-includes">
+            {incl.used.length ? <p className="text-teal-300">{tr("Includes")}: {incl.used.join(", ")}</p> : null}
+            {incl.issues.map((e, i) => <p key={i} className="text-amber-300" data-testid="skill-include-error">{tr(e.t, { n: e.n })}</p>)}
+          </div>) : null}
         <button onClick={draft} disabled={busy} className={ghost + " w-full flex items-center justify-center gap-1.5 py-2.5"} data-testid="skill-draft"><Wand2 size={14} />{busy ? tr("Writing…") : tr("Write it for me (from “When to use it”)")}</button>
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Example of a good answer (optional)")}</span><textarea className={field + " resize-none"} rows={3} value={s.example} onChange={set("example")} /></label>
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Checklist: what every answer must satisfy (one per line, optional)")}</span><textarea className={field + " resize-none"} rows={3} value={s.checklist || ""} onChange={set("checklist")} data-testid="skill-checklist" /></label>
+        <div className="flex items-start gap-3 rounded-lg border border-slate-800 p-2.5" data-testid="skill-selfcheck-row">
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] text-slate-100">{tr("Check my answer against the checklist")}</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">{tr("After the answer, one more short model run checks each line and offers “Fix it” if one is not met. It never holds up the answer. Off by default.")}</p>
+          </div>
+          <button role="switch" aria-checked={!!s.selfCheck} aria-label={tr("Check my answer against the checklist")} data-testid="skill-selfcheck"
+            onClick={() => setS((x) => ({ ...x, selfCheck: !x.selfCheck }))}
+            className={`shrink-0 w-11 h-6 rounded-full relative transition-colors ${s.selfCheck ? "bg-teal-500" : "bg-slate-700"}`}>
+            <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${s.selfCheck ? "start-[22px]" : "start-0.5"}`} /></button>
+        </div>
+        {s.selfCheck && !String(s.checklist || "").trim() ? <p className="text-[11px] text-amber-300" data-testid="skill-selfcheck-empty">{tr("Write at least one checklist line, or there is nothing to check.")}</p> : null}
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Facts the AI should know (prices, rules, terms — optional)")}</span><textarea className={field + " resize-none"} rows={4} value={s.reference || ""} onChange={set("reference")} data-testid="skill-reference" />
           <span className="block text-[11px] text-slate-500 mt-1">{tr("Separate topics with an empty line. Only the paragraphs that fit the question are used, so this can be long.")}</span></label>
       </div>
@@ -174,7 +192,7 @@ export function SkillsPage({ flash, llm, modelReady, openEngine, share, saveFile
           </div>
         </div>
       ))}
-      {sheet && sheet.kind === "edit" ? <Editor skill={sheet.skill} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} onClose={() => setSheet(null)}
+      {sheet && sheet.kind === "edit" ? <Editor skill={sheet.skill} all={list} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} onClose={() => setSheet(null)}
         onSave={(sk) => { if (sheet.skill) { const clash = sk.command && list.some((x) => x.id !== sheet.skill.id && x.command === sk.command); if (clash) return flash(tr("Another skill already uses that command")); upd(sheet.skill.id, { ...sk, id: sheet.skill.id, ts: sheet.skill.ts }); } else { const clash = sk.command && list.some((x) => x.command === sk.command); if (clash) return flash(tr("Another skill already uses that command")); add({ ...sk, source: "mine" }); } setSheet(null); flash(tr("Saved")); }} /> : null}
       {sheet === "catalogue" ? <Catalogue have={list} onClose={() => setSheet(null)} onAdd={(c) => { add(c); flash(tr("Added — open it to change it")); }} /> : null}
       {sheet === "import" ? <Import flash={flash} onClose={() => setSheet(null)} onSave={(sk) => { add({ ...sk, source: "imported" }); setSheet(null); flash(tr("Skill added")); }} /> : null}

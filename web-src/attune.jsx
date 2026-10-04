@@ -8718,7 +8718,16 @@ export default function App() {
     webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang), groundedAudit,
     skillFor,
     // v6.10: the person's own skills (userskills.js): a /command or a description match → instructions added under the question
-    userSkills: (text) => { const m = USK.matchSkills(text, USK.load()); return m ? { block: USK.skillBlock(m.matches, m.stripped != null ? m.stripped : text), matches: m.matches, stripped: m.stripped, names: m.matches.map((x) => x.name), via: m.via } : null; },
+    userSkills: (text) => { const all = USK.load(); const m = USK.matchSkills(text, all); if (!m) return null;
+      const matches = USK.resolveSkills(m.matches, all);   // "{{skill:x}}" inside a skill pulls in that skill (2 levels, no loops)
+      return { block: USK.skillBlock(matches, m.stripped != null ? m.stripped : text), matches, stripped: m.stripped, names: m.matches.map((x) => x.name), via: m.via, check: USK.selfCheckOf(m.matches) }; },
+    // second pass (opt-in per skill): one short model call checks the answer against the checklist; "Fix it" = one revision call
+    skillCheck: async (skills, question, answer) => {
+      const lines = [...new Set(skills.flatMap(USK.checkLines))].slice(0, 10);
+      const raw = await callChat(USK.checkMessages(lines, question, answer), null, { think: false, maxTokens: 40 + lines.length * 40, temperature: 0, json: true });
+      return USK.parseCheck(raw, lines);
+    },
+    skillFix: (question, answer, failed) => callChat(USK.fixMessages(question, answer, failed), null, { think: false, maxTokens: 1200, temperature: 0.2 }),
     // a skill's own program: runs offline in the sandbox (no network, no files); its printed result goes into the prompt
     userSkillBlock: (matches, q, res) => USK.skillBlock(matches, q, res),
     runSkillScripts: async (matches, question) => {

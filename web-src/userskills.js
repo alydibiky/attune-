@@ -26,7 +26,7 @@ export function makeSkill(o, { source = "mine" } = {}) {
   if (instructions.length < 15) throw new Error("Write what the skill should do (at least a sentence)");
   const command = normCommand(o.command);
   if (o.command && !command) throw new Error("A command is 2–20 letters, digits, - or _ (like /quote)");
-  return { id: o.id || "u" + Date.now().toString(36) + (seq++).toString(36), name, command, when: clip(o.when, LIMITS.when), instructions, example: clip(o.example, LIMITS.example), reference: clip(o.reference, LIMITS.reference), checklist: clip(o.checklist, LIMITS.checklist), script: o.script && o.script.code ? { lang: /^(py|python)/i.test(o.script.lang || "") ? "python" : "javascript", code: clip(o.script.code, LIMITS.script) } : null, on: o.on !== false, source: o.source || source, ts: o.ts || Date.now() };
+  return { id: o.id || "u" + Date.now().toString(36) + (seq++).toString(36), name, command, when: clip(o.when, LIMITS.when), instructions, example: clip(o.example, LIMITS.example), reference: clip(o.reference, LIMITS.reference), checklist: clip(o.checklist, LIMITS.checklist), script: o.script && o.script.code ? { lang: /^(py|python)/i.test(o.script.lang || "") ? "python" : "javascript", code: clip(o.script.code, LIMITS.script) } : null, on: o.on !== false, selfCheck: o.selfCheck === true, source: o.source || source, ts: o.ts || Date.now() };
 }
 
 // ---- words: the same plain matching for English and Arabic ----------------------------------------------------------
@@ -112,7 +112,7 @@ export function scriptCode(sc, question) {
 export function toFile(s) {
   const sec = (h, t) => (t ? `\n\n## ${h}\n${t}` : "");
   const sc = s.script && s.script.code ? `\n\n## Script\n\`\`\`${s.script.lang}\n${s.script.code}\n\`\`\`` : "";
-  return ["---", `name: ${s.name}`, s.command ? `command: ${s.command}` : null, s.when ? `description: ${s.when.replace(/\n/g, " ")}` : null, "---", s.instructions + sec("Checklist", s.checklist) + sec("Reference", s.reference) + sc + sec("Example", s.example)].filter((x) => x !== null).join("\n").trim() + "\n";
+  return ["---", `name: ${s.name}`, s.command ? `command: ${s.command}` : null, s.when ? `description: ${s.when.replace(/\n/g, " ")}` : null, s.selfCheck ? "selfcheck: on" : null, "---", s.instructions + sec("Checklist", s.checklist) + sec("Reference", s.reference) + sc + sec("Example", s.example)].filter((x) => x !== null).join("\n").trim() + "\n";
 }
 /** Read a shared skill: the text format above, or JSON {name, command, when, instructions, example}. Never runs anything. */
 export function fromFile(text) {
@@ -137,7 +137,7 @@ export function fromFile(text) {
   let script = null;
   const fence = /```\s*([\w+-]*)\s*\n([\s\S]*?)```/.exec(parts.script);
   if (fence) script = { lang: fence[1] || "javascript", code: fence[2] };
-  return makeSkill({ name: meta.name, command: meta.command, when: meta.when || meta.description, instructions: body, example: parts.example, checklist: parts.checklist, reference: parts.reference, script }, { source: "imported" });
+  return makeSkill({ name: meta.name, command: meta.command, when: meta.when || meta.description, instructions: body, example: parts.example, checklist: parts.checklist, reference: parts.reference, script, selfCheck: /^(on|true|yes)$/i.test(meta.selfcheck || "") }, { source: "imported" });
 }
 
 // ---- "write a skill for me": the phone's own model drafts it, the person reviews it before it is saved ------------------
@@ -199,3 +199,78 @@ const CHECKS = {
   "toolbox": "hazards, controls and one question for the crew\nshort sentences a crew can follow",
 };
 for (const c of CATALOGUE) if (CHECKS[c.id]) c.checklist = CHECKS[c.id];
+
+// ---- skills calling skills: "{{skill:quote}}" or "/quote" inside the instructions pulls in that skill's instructions ----
+export const INCLUDE = { depth: 2, chars: 9000 };
+const INC_RE = /\{\{\s*skill\s*:\s*\/?([a-z0-9_-]{2,40})\s*\}\}|(^|[\s(“"'])\/([a-z0-9_-]{2,20})(?=$|[\s.,;:!?)”"'])/gi;
+const slug = (n) => String(n || "").toLowerCase().trim().replace(/[^a-z0-9؀-ۿ]+/g, "-").replace(/^-+|-+$/g, "");
+/** Find a skill by "/command", "command" or its name as a slug ("crane-rental-quote"). */
+export function findSkill(ref, all) {
+  const r = String(ref || "").toLowerCase().replace(/^\/+/, "");
+  return (all || []).find((s) => s && ((s.command && s.command === "/" + r) || slug(s.name) === r)) || null;
+}
+/** A skill's instructions with the skills it names pulled in. Depth limit 2, no loops, a size cap.
+ *  A "{{skill:x}}" that cannot be used leaves a clear error; a bare "/word" that is not one of your skills is left as it is.
+ *  → { text, errors: [string], used: [names] } */
+export function expandInstructions(skill, all, { depth = INCLUDE.depth, chars = INCLUDE.chars } = {}) {
+  const issues = [], used = [];
+  const err = (t, n) => { if (!issues.some((x) => x.t === t && x.n === n)) issues.push({ t, n }); };
+  const walk = (s, level, chain) => String(s.instructions || "").replace(INC_RE, (m, a, pre, b) => {
+    const ref = a || b, braces = !!a, lead = braces ? "" : pre;
+    const t = findSkill(ref, all);
+    if (!t) { if (braces) { err("The skill “{n}” that this skill includes was not found", ref); return lead; } return m; }
+    if (chain.includes(t.id)) { if (!braces && t.id === skill.id) return m; err("“{n}” includes itself in a loop — it was not added again", t.name); return lead; }
+    if (level >= depth) { err("“{n}” is too deep: a skill can include other skills only two levels down", t.name); return lead; }
+    if (!used.includes(t.name)) used.push(t.name);
+    return lead + "(" + walk(t, level + 1, [...chain, t.id]).trim() + ")";
+  });
+  let text = walk(skill, 0, [skill.id]);
+  if (text.length > chars) { err("The skills included make this one too long — it was cut to {n} characters", chars); text = text.slice(0, chars); }
+  return { text, issues, errors: issues.map((x) => x.t.replace("{n}", x.n)), used };
+}
+/** The matched skills with their included skills expanded (what the model will read). */
+export const resolveSkills = (matches, all) => (matches || []).map((s) => ({ ...s, instructions: expandInstructions(s, all).text }));
+
+// ---- second pass: check the answer against the skill's checklist (optional, per skill, one cheap model call) ----------
+export const checkLines = (s) => String((s && s.checklist) || "").split("\n").map((x) => x.replace(/^[-*•\d.\s[\]xX]+/, "").trim()).filter(Boolean).slice(0, 10);
+/** The skills in `matches` that asked for a second pass and have a checklist. */
+export const selfCheckOf = (matches) => (matches || []).filter((s) => s && s.selfCheck && checkLines(s).length);
+/** Short and strict on purpose: a small model must manage it. */
+export function checkMessages(lines, question, answer) {
+  const list = lines.map((l, i) => `${i + 1}. ${l}`).join("\n");
+  return [
+    { role: "system", content: "You check an answer against a checklist. For EACH numbered line decide pass or fail, judging only from the answer text. Reply with ONLY a JSON array, one object per line, in order: [{\"n\":1,\"pass\":true,\"why\":\"one short reason\"}]. No other text." },
+    { role: "user", content: `Question:\n${String(question || "").slice(0, 800)}\n\nAnswer:\n${String(answer || "").slice(0, 3500)}\n\nChecklist:\n${list}` },
+  ];
+}
+/** Read the checker's reply, forgiving the usual small-model slips (code fences, trailing commas, single quotes,
+ *  bare keys, "yes"/"no", an object instead of an array, a cut-off end). → [{ line, pass, why }] or null when unreadable. */
+export function parseCheck(raw, lines) {
+  let s = String(raw || "").replace(/```(?:json)?/gi, "").trim();
+  const a = s.search(/[[{]/); if (a < 0) return null;
+  s = s.slice(a);
+  const fix = (t) => t.replace(/,\s*([}\]])/g, "$1").replace(/'/g, '"').replace(/([{,]\s*)([a-z_]+)\s*:/gi, '$1"$2":')
+    .replace(/:\s*"?(yes|pass|passed|ok)"?(?=\s*[,}])/gi, ":true").replace(/:\s*"?(no|fail|failed)"?(?=\s*[,}])/gi, ":false");
+  const cut = (t) => { const e = t.lastIndexOf("}"); return e > 0 ? t.slice(0, e + 1) : t; };
+  let j = null;
+  for (const t of [s, fix(s), fix(cut(s)) + "]", "[" + fix(cut(s)) + "]"]) { try { j = JSON.parse(t); break; } catch (e) {} }
+  if (j && !Array.isArray(j)) j = Array.isArray(j.results) ? j.results : Array.isArray(j.checks) ? j.checks : [j];
+  if (!Array.isArray(j) || !j.length) return null;
+  const out = lines.map((line) => ({ line, pass: null, why: "" }));
+  j.forEach((r, i) => {
+    if (!r || typeof r !== "object") return;
+    const k = Number(r.n || r.line || r.i || i + 1) - 1;
+    if (!(k >= 0 && k < out.length)) return;
+    const p = r.pass ?? r.ok ?? r.passed ?? r.result;
+    out[k].pass = p === true || /^(true|yes|pass|ok)/i.test(String(p)) ? true : p === false || /^(false|no|fail)/i.test(String(p)) ? false : null;
+    out[k].why = String(r.why || r.reason || "").replace(/\s+/g, " ").trim().slice(0, 140);
+  });
+  return out.some((x) => x.pass !== null) ? out : null;
+}
+/** One revision call: keep what is right, fix only the failed lines. */
+export function fixMessages(question, answer, failed) {
+  return [
+    { role: "system", content: "Revise the answer so it meets every failed check below. Keep everything that is already right, the same language and the same format. Never invent facts, prices or dates: if something is missing, ask for it in one line. Reply with ONLY the full revised answer." },
+    { role: "user", content: `Question:\n${String(question || "").slice(0, 800)}\n\nAnswer:\n${String(answer || "").slice(0, 3500)}\n\nFailed checks:\n${failed.map((f) => "- " + f.line + (f.why ? " (" + f.why + ")" : "")).join("\n")}` },
+  ];
+}

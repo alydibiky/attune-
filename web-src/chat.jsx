@@ -1211,6 +1211,16 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       patchMsg(cid, aiId, { text: answer, streaming: false, phase: "", sources, via, secs: Math.round((Date.now() - t0) / 1000), stats: st, ...extra });
       api.spend();
       api.remember({ kind: "chat", title: (typed || "Photo").slice(0, 70), text: typed || "(photo)", output: answer, tags: ["chat"] });
+      // Skills second pass (opt-in per skill): the answer is already shown; one short model call then checks it
+      // against the checklist. It never replaces the answer and any failure is silent.
+      if (uSk && uSk.check && uSk.check.length && api.skillCheck && answer && extra.userSkills) {
+        const q = uSk.stripped != null ? uSk.stripped || typed : typed;
+        patchMsg(cid, aiId, { skillCheck: { state: "running", q } });
+        try {
+          const res = await api.skillCheck(uSk.check, q, answer);
+          if (runRef.current === run) patchMsg(cid, aiId, { skillCheck: res ? { state: "done", q, lines: res } : { state: "unreadable", q } });
+        } catch (e) { if (runRef.current === run) patchMsg(cid, aiId, { skillCheck: { state: String(e && e.message) === "Stopped" ? "stopped" : "unreadable", q } }); }
+      }
     } catch (e) {
       const msg = String((e && e.message) || e);
       if (runRef.current !== run && msg !== "Stopped") return;
@@ -1222,6 +1232,21 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     } finally {
       if (runRef.current === run) setBusy(false);
     }
+  };
+
+  // Skills second pass → "Fix it": ONE revision call that fixes only the failed checklist lines (the old answer is kept to undo).
+  const fixSkillAnswer = async (m) => {
+    const sc = m.skillCheck; if (!sc || !sc.lines || busy || !api.skillFix || !api.canUseAI()) return;
+    const failed = sc.lines.filter((x) => x.pass === false); if (!failed.length) return;
+    const cid = chat.id, run = ++runRef.current;
+    setBusy(true); patchMsg(cid, m.id, { skillCheck: { ...sc, fixing: true } });
+    try {
+      const out = await api.skillFix(sc.q, m.text, failed);
+      if (runRef.current !== run) return;
+      if (out && out.trim()) patchMsg(cid, m.id, { text: out.trim(), skillCheck: { ...sc, fixing: false, fixed: true, before: m.text } });
+      else patchMsg(cid, m.id, { skillCheck: { ...sc, fixing: false } });
+    } catch (e) { patchMsg(cid, m.id, { skillCheck: { ...sc, fixing: false } }); api.flash(String((e && e.message) || e).slice(0, 120)); }
+    finally { if (runRef.current === run) setBusy(false); }
   };
 
   // An answer cut by the length limit carries on in the SAME bubble.
@@ -1619,6 +1644,27 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 ) : null}
               </div>
             ) : null}
+            {m.skillCheck && m.skillCheck.state !== "stopped" ? (() => { const sc = m.skillCheck, ls = sc.lines || [], bad = ls.filter((x) => x.pass === false), good = ls.filter((x) => x.pass === true).length, k = "sc" + m.id;
+              return (
+              <div className="mt-2 text-[11.5px]" data-testid="skill-check">
+                {sc.state === "running" ? <span className="text-slate-400" data-testid="skill-check-running">{tr("Checking the answer against the skill's checklist…")}</span>
+                  : sc.state === "unreadable" ? <span className="text-slate-500">{tr("Could not check against the checklist this time")}</span> : (
+                  <>
+                    <button onClick={() => setOpenThought((o) => ({ ...o, [k]: !o[k] }))} data-testid="skill-check-summary"
+                      className={`flex items-center gap-1 ${bad.length && !sc.fixed ? "text-amber-300" : "text-emerald-300"}`}>
+                      {sc.fixed ? tr("Fixed to meet the checklist") : bad.length ? tr("Checklist: {f} of {n} not met", { f: bad.length, n: ls.length }) : tr("Checklist: all {n} met", { n: good })}
+                      <ChevronDown size={11} className={openThought[k] ? "rotate-180" : ""} /></button>
+                    {openThought[k] ? (
+                      <ul className="mt-1 ms-1 space-y-0.5" data-testid="skill-check-lines">
+                        {ls.map((x, i) => <li key={i} dir="auto" className={x.pass === false ? "text-amber-200" : x.pass ? "text-slate-300" : "text-slate-500"}>{x.pass === false ? "✗" : x.pass ? "✓" : "?"} {x.line}{x.why ? <span className="text-slate-500"> — {x.why}</span> : null}</li>)}
+                      </ul>) : null}
+                    {bad.length && !sc.fixed ? (
+                      <button onClick={() => fixSkillAnswer(m)} disabled={busy || sc.fixing} data-testid="skill-check-fix"
+                        className="mt-1.5 px-3 py-1.5 rounded-lg border border-amber-700 text-amber-200 text-xs disabled:opacity-40">
+                        {sc.fixing ? tr("Fixing…") : tr("Fix it")} <span className="text-[10px] text-slate-400">· {tr("one more model run")}</span></button>) : null}
+                    {sc.fixed && sc.before ? <button onClick={() => patchMsg(chat.id, m.id, { text: sc.before, skillCheck: { ...sc, fixed: false, before: null } })} className="ms-2 text-slate-400 underline" data-testid="skill-check-undo">{tr("Undo")}</button> : null}
+                  </>)}
+              </div>); })() : null}
             {!m.streaming && m.text ? (
               <div className="flex items-center gap-0.5 mt-1.5 -ms-2 text-slate-500">
                 <button onClick={() => { try { navigator.clipboard.writeText(m.text); } catch (e) {} api.flash(tr("Copied")); }} className="p-2" title={tr("Copy")}><Copy size={15} /></button>
