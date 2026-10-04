@@ -42,7 +42,10 @@ def put(marker, content):
 put('<script>__TAILWIND__</script>', '<style>' + (tmp/'app.css').read_text(encoding='utf-8') + '</style>')
 put('<script>__REACT__</script>', '<script>' + (here/'vendor/react.js').read_text(encoding='utf-8') + '</script>')
 put('<script>__REACTDOM__</script>', '<script>' + (here/'vendor/react-dom.js').read_text(encoding='utf-8') + '</script>')
-b64 = base64.b64encode((here/'yusr/index.new.html').read_bytes()).decode('ascii')
+ys = (here/'yusr/index.new.html').read_text(encoding='utf-8')
+assert ys.count('/*__V613__*/') == 1, 'Yusr v6.13 placeholder missing'
+ys = ys.replace('/*__V613__*/', (here/'yusr/yusr-v613.js').read_text(encoding='utf-8'))   # Write it, Bills (v6.13)
+b64 = base64.b64encode(ys.encode('utf-8')).decode('ascii')
 put('<script>__APP__</script>', f'<script type="text/plain" id="yusr-src">{b64}</script>\n<script>' + (tmp/'app.js').read_text(encoding='utf-8') + '</script>')
 out.write_text(shell, encoding='utf-8')
 print(f'{out}  {len(shell.encode())/1e6:.2f} MB')

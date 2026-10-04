@@ -55,7 +55,7 @@ const IN_TYPES  = new Set(["ready", "snapshot", "txn-added", "zakat-paid", "erro
 // What Yusr is allowed to ask the model for. A closed list, because "run this
 // arbitrary prompt" would let a future screen quietly route a fiqh question
 // through a model — the exact thing rule 1 exists to prevent.
-const AI_KINDS = new Set(["invoice-draft", "note-tidy"]);
+const AI_KINDS = new Set(["invoice-draft", "note-tidy", "log-text"]);   // log-text: v6.13 "write it and it logs it"
 
 const num = (v) => (typeof v === "number" && isFinite(v) ? v : null);
 const str = (v, n) => (typeof v === "string" ? v.slice(0, n || 200) : null);
@@ -75,8 +75,15 @@ function validateIn(msg) {
     if (d.text.length > 4000) return { ok: false, why: "ai-request text too long" };
     // Every other branch returns the whole message; returning a bare `data`
     // here left receive() dereferencing undefined.
+    // log-text carries his category ids and account names (names only, never balances) and today's date
+    const h = d.hints && typeof d.hints === "object" ? d.hints : {};
+    const hints = {
+      cats: Array.isArray(h.cats) ? h.cats.slice(0, 80).map((c) => ({ id: str(c && c.id, 40), name: str(c && c.name, 40) || "" })).filter((c) => c.id) : [],
+      accounts: Array.isArray(h.accounts) ? h.accounts.slice(0, 30).map((a) => str(a, 60)).filter(Boolean) : [],
+      today: /^\d{4}-\d{2}-\d{2}$/.test(String(h.today || "")) ? h.today : "",
+    };
     return { ok: true, msg: { ...msg, data: { kind: d.kind, text: d.text,
-      id: str(d.id, 40) || "", currency: str(d.currency, 8) || "" } } };
+      id: str(d.id, 40) || "", currency: str(d.currency, 8) || "", hints } } };
   }
 
   if (msg.type === "snapshot") {

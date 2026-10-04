@@ -336,6 +336,20 @@ nav button{position:relative}
 .onb .langrow{display:flex;gap:10px}
 .onb .langrow button{flex:1;padding:16px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:17px;font-weight:700;color:var(--text)}
 .onb .skip{position:absolute;top:calc(18px + var(--safe-t));inset-inline-end:22px;color:var(--muted);font-size:14px;font-weight:600;background:none}
+
+/* v6.13 — Write it (AI logging) and Bills */
+.writebox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin:0 0 14px}
+.writebox textarea{width:100%;background:transparent;border:none;color:var(--text);font-size:15.5px;resize:none;outline:none;line-height:1.45;font-family:inherit}
+.writebox .btn{margin-top:8px;padding:11px}
+.wr-row{display:flex;align-items:center;gap:10px;padding:8px 2px;border-top:1px solid var(--line);font-size:14px}
+.wr-row:first-child{border-top:none}
+.wr-row .e{font-size:18px}.wr-row .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wr-row .d{color:var(--muted);font-size:12px}
+.wr-done{margin-top:10px;border-radius:14px;background:var(--card2);padding:8px 12px}
+.wr-acts{display:flex;gap:14px;margin-top:6px;font-size:13.5px;font-weight:600}
+.wr-acts button{background:none;color:var(--accent);padding:4px 0}
+.wr-warn{color:#f0b35a;font-size:12.5px;margin-top:6px}
+.bill-day{color:var(--muted);font-size:12px;margin:12px 2px 4px;font-weight:600}
 </style></head><body>
 <div id="app">
   <!-- OVERVIEW -->
@@ -343,6 +357,11 @@ nav button{position:relative}
     <header><div><h1>Yusr — Money &amp; Zakat</h1><div class="sub" id="home-sub"></div></div>
       <div class="hbtns"><button class="icon-btn" onclick="shareCard()">⇪</button><button class="icon-btn" onclick="go('settings')">⚙︎</button></div></header>
     <div id="home-alert"></div>
+    <div class="writebox" id="write-box">
+      <textarea id="write-text" rows="2" data-ph="writePh" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();writeLog();}"></textarea>
+      <button class="btn" id="write-go" onclick="writeLog()" data-i18n="writeGo"></button>
+      <div id="write-result"></div>
+    </div>
     <div class="acct-scroll" id="acct-chips"></div>
     <div class="balance" id="balance-card">
       <div class="lbl"><span data-i18n="balance"></span> <span id="bal-acct"></span></div>
@@ -414,14 +433,22 @@ nav button{position:relative}
   <header><div style="display:flex;align-items:center;gap:10px"><button class="icon-btn" onclick="go('settings')">‹</button><div><h1 id="inv-h1">Invoices</h1><div class="sub" id="inv-sub"></div></div></div><button class="icon-btn" onclick="openInvoice()">＋</button></header>
   <div id="inv-list"></div>
 </section>
+<!-- BILLS (v6.13: recurring bills & income have their own tab, where the invoices tab was) -->
+<section class="screen" id="scr-bills">
+    <header><div><h1 data-i18n="billsTab"></h1><div class="sub" data-i18n="billsSub"></div></div>
+      <button class="icon-btn" onclick="openRecurring()">＋</button></header>
+    <div class="balance" id="bills-sum" style="padding:16px"></div>
+    <div class="sec-head"><h2 data-i18n="upcoming"></h2></div>
+    <div id="bills-upcoming"></div>
+    <div class="sec-head"><h2 data-i18n="recurring"></h2><button class="link" onclick="openRecurring()" data-i18n="addRecurring"></button></div>
+    <p class="mini-help" style="margin-top:0" data-i18n="recurringHelp"></p>
+    <div id="recurring-list"></div>
+</section>
 <section class="screen" id="scr-settings">
     <header><div><h1 data-i18n="settings"></h1><div class="sub" data-i18n="settingsSub"></div></div></header>
     <div class="field"><label data-i18n="language"></label><div class="lang-toggle" id="lang-toggle"><button data-l="en" onclick="setLang('en')">English</button><button data-l="ar" onclick="setLang('ar')">العربية</button></div></div>
     <div class="sec-head"><h2 data-i18n="premium"></h2><span id="prem-status" class="link"></span></div>
     <button class="btn" id="prem-btn" onclick="openPaywall()"></button>
-    <div class="sec-head"><h2 data-i18n="demoMode"></h2></div>
-    <p class="mini-help" style="margin-top:0" data-i18n="demoWarn"></p>
-    <button class="btn ghost" id="demo-btn" onclick="demoActive()?clearDemo():loadDemo()"></button>
     <button class="btn ghost" onclick="toggleTestPremium()" data-i18n="testPremium"></button>
     <button class="btn ghost" onclick="openGuide()" data-i18n="openGuide"></button>
     <div class="sec-head"><h2 data-i18n="customize"></h2><button class="link" onclick="resetLook()" data-i18n="resetLook"></button></div>
@@ -441,15 +468,12 @@ nav button{position:relative}
     <div id="cat-list"></div>
     <div class="sec-head"><h2 data-i18n="projects"></h2><button class="link" onclick="openProject()" data-i18n="addProject"></button></div>
     <div id="project-list"></div>
-    <div class="sec-head"><h2 data-i18n="recurring"></h2><button class="link" onclick="openRecurring()" data-i18n="addRecurring"></button></div>
-    <p class="mini-help" style="margin-top:0" data-i18n="recurringHelp"></p>
-    <div id="recurring-list"></div>
     <div class="sec-head"><h2 data-i18n="security"></h2></div>
     <button class="btn ghost" id="pin-btn" onclick="togglePin()"></button>
     <button class="btn ghost" id="lock-btn" onclick="lockNow()" data-i18n="lockNow"></button>
     <div class="sec-head"><h2 data-i18n="backup"></h2></div>
     <p class="mini-help" style="margin-top:0" data-i18n="backupHelp"></p>
-    <div class="panel" style="margin-top:14px">
+    <div class="panel" style="margin-top:14px;display:none">
       <h3 id="inv-set-title"></h3>
       <p class="mini-help" id="inv-set-sub" style="margin:4px 0 10px"></p>
       <div class="field"><label id="biz-name-lbl"></label><input id="biz-name" onchange="setBizName(this.value)"></div>
@@ -482,7 +506,7 @@ nav button{position:relative}
     <button data-scr="goals" onclick="go('goals')"><span class="ni">◎</span><span data-i18n="goals"></span></button>
     <button data-scr="notes" onclick="go('notes')"><span class="ni">☰</span><span data-i18n="notes"></span></button>
     <button data-scr="zakat" onclick="go('zakat')"><span class="nav-dot" id="zakat-dot" style="display:none"></span><span class="ni">☪</span><span data-i18n="zakat"></span></button>
-    <button data-scr="invoices" onclick="go('invoices')"><span class="ni">▤</span><span data-i18n="invoices"></span></button>
+    <button data-scr="bills" onclick="go('bills')"><span class="ni">↻</span><span data-i18n="billsTab"></span></button>
     <button data-scr="settings" onclick="go('settings')"><span class="ni">☰</span><span data-i18n="more"></span></button>
   </div></nav>
 </div>
@@ -539,7 +563,10 @@ nav button{position:relative}
   <div class="field"><input class="amount-in num" id="rec-amount" type="text" inputmode="decimal" placeholder="0.00"></div>
   <div class="field"><label data-i18n="category"></label><div class="cat-grid" id="rec-cats"></div></div>
   <div class="row2"><div class="field"><label data-i18n="account"></label><select id="rec-account"></select></div>
-    <div class="field"><label data-i18n="frequency"></label><select id="rec-freq"><option value="monthly" data-i18n-opt="monthly"></option><option value="weekly" data-i18n-opt="weekly"></option><option value="yearly" data-i18n-opt="yearly"></option></select></div></div>
+    <div class="field"><label data-i18n="frequency"></label><select id="rec-freq" onchange="recFreqChanged()"><option value="daily" data-i18n-opt="daily"></option><option value="weekly" data-i18n-opt="weekly"></option><option value="monthly" data-i18n-opt="monthly"></option><option value="yearly" data-i18n-opt="yearly"></option></select></div></div>
+  <div class="field" id="rec-range-field" style="display:none"><label class="chkrow" style="border:none;padding:0"><input type="checkbox" id="rec-range-on" onchange="recFreqChanged()"><span data-i18n="recRangeOn"></span></label>
+    <div class="row2" id="rec-range-days" style="display:none"><div class="field"><label data-i18n="fromDay"></label><select id="rec-from"></select></div><div class="field"><label data-i18n="toDay"></label><select id="rec-to"></select></div></div>
+    <div class="mini-help" data-i18n="recRangeHelp"></div></div>
   <div class="field"><label data-i18n="nextDate"></label><input id="rec-next" type="date"></div>
   <div class="field"><label data-i18n="noteOpt"></label><input id="rec-note"></div>
   <button class="btn" onclick="saveRecurring()" data-i18n="save"></button>
@@ -651,7 +678,6 @@ nav button{position:relative}
   <p id="onb2-p"></p>
   <button class="opt" onclick="onbFinish('home')"><span class="oe">💰</span><span><span class="ot" id="onb-money-t"></span><span class="os" id="onb-money-s"></span></span></button>
   <button class="opt" onclick="onbFinish('zakat')"><span class="oe">☪</span><span><span class="ot" id="onb-zakat-t"></span><span class="os" id="onb-zakat-s"></span></span></button>
-  <button class="opt" onclick="onbFinish('business')"><span class="oe">🧾</span><span><span class="ot" id="onb-biz-t"></span><span class="os" id="onb-biz-s"></span></span></button>
  </div>
 </div>
 <div class="overlay" id="ip-overlay"><div class="sheet"><div class="grab"></div>
@@ -729,9 +755,9 @@ function load(){
       if(d&&d.accounts&&d.accounts.length){const m=migrate(d);try{localStorage.setItem(KEY,JSON.stringify(m));}catch(e){}
         setTimeout(()=>{try{toast(t('recovered'));}catch(e){}},800);return m;}}catch(e){}
   }
-  return {lang:'en',premium:{active:false},theme:'midnight',ui:{accent:'',fs:'m',tabs:{trends:1,accounts:1,goals:1,notes:1,zakat:1,invoices:0},title:'Yusr',period:'month',dec:1,wk:'mon'},country:'',currency:'EGP',pin:null,accounts:[{id:uid(),name:'Cash',emoji:'💵',currency:'EGP',start:0}],txns:[],budgets:{overall:0,cats:{}},recurring:[],customCats:[],goals:[],debts:[],projects:[],notes:[],zakatPayments:[],zakatHistory:[],rates:{EGP:1},zakat:{goldPrice:0,silverPrice:0,goldGrams:0,goldKarat:24,silverGrams:0,madhhab:'jumhur',nisabBasis:'gold',goldPremium:0,jewelryGrams:0,jewelryKarat:21,jewelryZakat:false,mode:'combined',anniversary:null,includeReceivables:true,deductDebts:true,debtPolicy:null,debtYearAmount:0,nisabCarat:24,excluded:[]}};
+  return {lang:'en',premium:{active:false},theme:'midnight',ui:{accent:'',fs:'m',tabs:{trends:1,accounts:1,goals:1,notes:1,zakat:1,bills:1},title:'Yusr',period:'month',dec:1,wk:'mon'},country:'',currency:'EGP',pin:null,accounts:[{id:uid(),name:'Cash',emoji:'💵',currency:'EGP',start:0}],txns:[],budgets:{overall:0,cats:{}},recurring:[],customCats:[],goals:[],debts:[],projects:[],notes:[],zakatPayments:[],zakatHistory:[],rates:{EGP:1},zakat:{goldPrice:0,silverPrice:0,goldGrams:0,goldKarat:24,silverGrams:0,madhhab:'jumhur',nisabBasis:'gold',goldPremium:0,jewelryGrams:0,jewelryKarat:21,jewelryZakat:false,mode:'combined',anniversary:null,includeReceivables:true,deductDebts:true,debtPolicy:null,debtYearAmount:0,nisabCarat:24,excluded:[]}};
 }
-function migrate(d){d.budgets=d.budgets||{overall:0,cats:{}};d.recurring=d.recurring||[];d.customCats=d.customCats||[];d.goals=d.goals||[];d.debts=(d.debts||[]).map(x=>{x.payments=x.payments||(x.settled?[{id:'legacy',amount:x.amount,date:x.date||''}]:[]);if(x.doubtful==null)x.doubtful=false;return x;});d.projects=d.projects||[];d.invoices=d.invoices||[];d.invSeq=d.invSeq||0;d.clients=d.clients||[];d.invoices=d.invoices.map(v=>{if(!Array.isArray(v.payments)){v.payments=[];(d.txns||[]).filter(t=>t.invoiceId===v.id).forEach(t=>v.payments.push({id:t.payId||t.id,amount:t.amount,date:t.date,account:t.account}));}return v;});d.rates=d.rates||{};d.rates[d.currency]=1;d.lang=d.lang||'en';d.pin=d.pin||null;d.theme=d.theme||'midnight';d.premium=d.premium||{active:false};d.ui=d.ui||{};if(!d.ui.accent)d.ui.accent='';if(!d.ui.fs)d.ui.fs='m';if(!d.ui.tabs)d.ui.tabs={trends:1,accounts:1,goals:1,notes:1,zakat:1,invoices:0};if(d.ui.tabs.notes==null)d.ui.tabs.notes=1;if(d.ui.tabs.invoices==null)d.ui.tabs.invoices=0;if(d.onboarded==null)d.onboarded=((d.txns&&d.txns.length)||(d.accounts&&d.accounts.length>1))?true:false;{const _vt=['trends','accounts','goals','notes','zakat','invoices'];if(!Array.isArray(d.ui.tabOrder))d.ui.tabOrder=_vt.slice();d.ui.tabOrder=d.ui.tabOrder.filter(k=>_vt.includes(k));_vt.forEach(k=>{if(!d.ui.tabOrder.includes(k))d.ui.tabOrder.push(k);});}if(!d.ui.title)d.ui.title='Yusr';if(!d.ui.period)d.ui.period='month';if(d.ui.dec==null)d.ui.dec=1;if(!d.ui.wk)d.ui.wk='mon';d.country=d.country||'';if(d.zakat&&d.zakat.goldPremium==null)d.zakat.goldPremium=0;d.zakat=d.zakat||{goldPrice:0,silverPrice:0,goldGrams:0,goldKarat:24,silverGrams:0,madhhab:'jumhur',nisabBasis:'gold',goldPremium:0,jewelryGrams:0,jewelryKarat:21,jewelryZakat:false,mode:'combined',anniversary:null,includeReceivables:true,deductDebts:true,debtPolicy:null,debtYearAmount:0,nisabCarat:24,excluded:[]};if(d.zakat.goldKarat==null)d.zakat.goldKarat=24;if(!d.zakat.mode)d.zakat.mode='combined';if(!d.zakat.madhhab)d.zakat.madhhab='jumhur';if(!d.zakat.nisabBasis)d.zakat.nisabBasis='gold';if(d.zakat.jewelryGrams==null)d.zakat.jewelryGrams=0;if(d.zakat.jewelryKarat==null)d.zakat.jewelryKarat=21;if(d.zakat.jewelryZakat==null)d.zakat.jewelryZakat=false;d.zakatPayments=d.zakatPayments||[];d.zakatHistory=d.zakatHistory||[];d.notes=d.notes||[];return d;}
+function migrate(d){d.budgets=d.budgets||{overall:0,cats:{}};d.recurring=d.recurring||[];d.customCats=d.customCats||[];d.goals=d.goals||[];d.debts=(d.debts||[]).map(x=>{x.payments=x.payments||(x.settled?[{id:'legacy',amount:x.amount,date:x.date||''}]:[]);if(x.doubtful==null)x.doubtful=false;return x;});d.projects=d.projects||[];d.invoices=d.invoices||[];d.invSeq=d.invSeq||0;d.clients=d.clients||[];d.invoices=d.invoices.map(v=>{if(!Array.isArray(v.payments)){v.payments=[];(d.txns||[]).filter(t=>t.invoiceId===v.id).forEach(t=>v.payments.push({id:t.payId||t.id,amount:t.amount,date:t.date,account:t.account}));}return v;});d.rates=d.rates||{};d.rates[d.currency]=1;d.lang=d.lang||'en';d.pin=d.pin||null;d.theme=d.theme||'midnight';d.premium=d.premium||{active:false};d.ui=d.ui||{};if(!d.ui.accent)d.ui.accent='';if(!d.ui.fs)d.ui.fs='m';if(!d.ui.tabs)d.ui.tabs={trends:1,accounts:1,goals:1,notes:1,zakat:1,bills:1};if(d.ui.tabs.notes==null)d.ui.tabs.notes=1;if(d.ui.tabs.bills==null)d.ui.tabs.bills=1;if(d.onboarded==null)d.onboarded=((d.txns&&d.txns.length)||(d.accounts&&d.accounts.length>1))?true:false;{const _vt=['trends','accounts','goals','notes','zakat','bills'];if(!Array.isArray(d.ui.tabOrder))d.ui.tabOrder=_vt.slice();d.ui.tabOrder=d.ui.tabOrder.filter(k=>_vt.includes(k));_vt.forEach(k=>{if(!d.ui.tabOrder.includes(k))d.ui.tabOrder.push(k);});}if(!d.ui.title)d.ui.title='Yusr';if(!d.ui.period)d.ui.period='month';if(d.ui.dec==null)d.ui.dec=1;if(!d.ui.wk)d.ui.wk='mon';d.country=d.country||'';if(d.zakat&&d.zakat.goldPremium==null)d.zakat.goldPremium=0;d.zakat=d.zakat||{goldPrice:0,silverPrice:0,goldGrams:0,goldKarat:24,silverGrams:0,madhhab:'jumhur',nisabBasis:'gold',goldPremium:0,jewelryGrams:0,jewelryKarat:21,jewelryZakat:false,mode:'combined',anniversary:null,includeReceivables:true,deductDebts:true,debtPolicy:null,debtYearAmount:0,nisabCarat:24,excluded:[]};if(d.zakat.goldKarat==null)d.zakat.goldKarat=24;if(!d.zakat.mode)d.zakat.mode='combined';if(!d.zakat.madhhab)d.zakat.madhhab='jumhur';if(!d.zakat.nisabBasis)d.zakat.nisabBasis='gold';if(d.zakat.jewelryGrams==null)d.zakat.jewelryGrams=0;if(d.zakat.jewelryKarat==null)d.zakat.jewelryKarat=21;if(d.zakat.jewelryZakat==null)d.zakat.jewelryZakat=false;d.zakatPayments=d.zakatPayments||[];d.zakatHistory=d.zakatHistory||[];d.notes=d.notes||[];return d;}
 function save(silent){try{localStorage.setItem(KEY,JSON.stringify(db));return true;}catch(e){if(!silent)toast(db.lang==='ar'?'الذاكرة ممتلئة — صور أقل':'Storage full — use fewer photos');return false;}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 
@@ -766,14 +792,14 @@ function accountBalance(id){const a=acctById(id);if(!a)return 0;let b=a.start||0
 function monthSpendByCat(){const start=periodStart('month');const out={total:0};db.txns.forEach(x=>{if(x.type!=='expense')return;if(new Date(x.date)<start)return;const a=acctById(x.account);const val=toDefault(x.amount,a?a.currency:db.currency);out.total+=val;out[x.cat]=(out[x.cat]||0)+val;});return out;}
 
 /* ============ Recurring ============ */
-function advance(d,f){const x=new Date(d);if(f==='weekly')x.setDate(x.getDate()+7);else if(f==='yearly')x.setFullYear(x.getFullYear()+1);else x.setMonth(x.getMonth()+1);return x;}
-function processRecurring(){const today=startOfDay(new Date());let posted=0;(db.recurring||[]).forEach(r=>{if(!r.active)return;if(!acctById(r.account)){r.active=false;return;}let next=startOfDay(new Date(r.nextDate));let g=0;while(next<=today&&g<500){db.txns.push({id:uid(),created:Date.now(),type:r.type,amount:r.amount,cat:r.cat,account:r.account,date:toISODate(next),note:(r.note||'')+' ↻',recurring:true});posted++;next=advance(next,r.freq);g++;}r.nextDate=toISODate(next);});if(posted)save();return posted;}
+function advance(d,f,r){const x=new Date(d);if(f==='daily'){x.setDate(x.getDate()+1);if(r&&r.fromDay&&r.toDay){let g=0;while(!inDayRange(x.getDate(),r.fromDay,r.toDay)&&g<40){x.setDate(x.getDate()+1);g++;}}return x;}if(f==='weekly')x.setDate(x.getDate()+7);else if(f==='yearly')x.setFullYear(x.getFullYear()+1);else x.setMonth(x.getMonth()+1);return x;}
+function processRecurring(){const today=startOfDay(new Date());let posted=0;(db.recurring||[]).forEach(r=>{if(!r.active)return;if(!acctById(r.account)){r.active=false;return;}let next=startOfDay(new Date(r.nextDate));let g=0;if(r.freq==='daily'&&r.fromDay&&r.toDay){let k=0;while(!inDayRange(next.getDate(),r.fromDay,r.toDay)&&k<40){next.setDate(next.getDate()+1);k++;}}while(next<=today&&g<500){db.txns.push({id:uid(),created:Date.now(),type:r.type,amount:r.amount,cat:r.cat,account:r.account,date:toISODate(next),note:(r.note||'')+' ↻',recurring:true});posted++;next=advance(next,r.freq,r);g++;}r.nextDate=toISODate(next);});if(posted)save();return posted;}
 
 /* ============ i18n apply ============ */
 function applyI18n(){document.documentElement.lang=db.lang;document.documentElement.dir=db.lang==='ar'?'rtl':'ltr';document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));document.querySelectorAll('[data-ph]').forEach(el=>el.placeholder=t(el.dataset.ph));document.querySelectorAll('[data-i18n-opt]').forEach(el=>el.textContent=t(el.dataset.i18nOpt));document.querySelectorAll('#lang-toggle button').forEach(b=>b.classList.toggle('on',b.dataset.l===db.lang));}
 function applyUI(){const u=db.ui||{};document.documentElement.setAttribute('data-fs',u.fs||'m');
   if(u.accent)document.documentElement.style.setProperty('--accent',u.accent);else document.documentElement.style.removeProperty('--accent');
-  const _order=(u.tabOrder&&u.tabOrder.length)?u.tabOrder:['trends','accounts','goals','notes','zakat','invoices'];
+  const _order=(u.tabOrder&&u.tabOrder.length)?u.tabOrder:['trends','accounts','goals','notes','zakat','bills'];
   const _navmax=document.querySelector('nav .max');
   if(_navmax){const _more=_navmax.querySelector('button[data-scr="settings"]');_order.forEach(k=>{const b=_navmax.querySelector('button[data-scr="'+k+'"]');if(b&&_more)_navmax.insertBefore(b,_more);});}
   document.querySelectorAll('nav button[data-scr]').forEach(b=>{const k=b.dataset.scr;if(k==='home'||k==='settings')return;b.style.display=(u.tabs&&u.tabs[k]===0)?'none':'flex';});
@@ -782,7 +808,7 @@ function applyTheme(){document.documentElement.setAttribute('data-theme',db.them
 function setTheme(th){if(th!=='midnight'&&!requirePremium('themes'))return;db.theme=th;db.ui.accent='';save();applyTheme();renderSettings();}
 function setUI(k,v){db.ui[k]=v;save();applyTheme();renderSettings();if(k==='period'){state.period=v;}}
 function toggleTab(k){db.ui.tabs[k]=db.ui.tabs[k]?0:1;save();applyUI();renderSettings();}
-function resetLook(){db.theme='midnight';db.ui.accent='';db.ui.fs='m';db.ui.tabs={trends:1,accounts:1,goals:1,notes:1,zakat:1,invoices:0};db.ui.tabOrder=['trends','accounts','goals','notes','zakat','invoices'];db.ui.title='Yusr';save();applyTheme();renderSettings();toast('\u2713');}
+function resetLook(){db.theme='midnight';db.ui.accent='';db.ui.fs='m';db.ui.tabs={trends:1,accounts:1,goals:1,notes:1,zakat:1,bills:1};db.ui.tabOrder=['trends','accounts','goals','notes','zakat','bills'];db.ui.title='Yusr';save();applyTheme();renderSettings();toast('\u2713');}
 function moveTab(k,dir){const o=db.ui.tabOrder;if(!o)return;const i=o.indexOf(k);if(i<0)return;const j=i+dir;if(j<0||j>=o.length)return;const tmp=o[i];o[i]=o[j];o[j]=tmp;save();applyUI();renderSettings();}
 function setLang(l){db.lang=l;save();applyI18n();refresh();}
 
@@ -796,7 +822,7 @@ function appGoBack(){
   if(state.screen!=='home'){go('home',true);return true;}
   return false;
 }
-function go(scr,isBack){if(!isBack&&state.screen&&state.screen!==scr)navHist.push(state.screen);if(navHist.length>20)navHist.shift();state.screen=scr;document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('scr-'+scr).classList.add('active');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.scr===scr));window.scrollTo(0,0);refreshBadges();renderBackBtns();safe(()=>({home:renderHome,trends:renderTrends,accounts:renderAccounts,goals:renderGoals,notes:renderNotes,zakat:renderZakat,settings:renderSettings,invoices:renderInvoices}[scr])());}
+function go(scr,isBack){if(!isBack&&state.screen&&state.screen!==scr)navHist.push(state.screen);if(navHist.length>20)navHist.shift();state.screen=scr;document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('scr-'+scr).classList.add('active');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.scr===scr));window.scrollTo(0,0);refreshBadges();renderBackBtns();safe(()=>({home:renderHome,trends:renderTrends,accounts:renderAccounts,goals:renderGoals,notes:renderNotes,zakat:renderZakat,settings:renderSettings,invoices:renderInvoices,bills:renderBills}[scr])());}
 function safe(fn){try{return fn();}catch(e){if(window.console)console.warn('panel error',e);return null;}}
 function refresh(){rebuildCats();go(state.screen);}
 
@@ -954,7 +980,7 @@ function debtRemaining(d){return Math.max(d.amount-debtPaid(d),0);}
 function renderSettings(){
   document.getElementById('prem-status').textContent=isPremium()?('\u2b50 '+t('premiumOn')):t('freePlan');
   document.getElementById('prem-btn').textContent=isPremium()?t('premiumOn'):('\u2b50 '+t('goPremium'));
-  document.getElementById('demo-btn').textContent=demoActive()?t('clearDemo'):t('loadDemo');
+  {const _dbn=document.getElementById('demo-btn');if(_dbn)_dbn.textContent=demoActive()?t('clearDemo'):t('loadDemo');}
   document.getElementById('set-currency').innerHTML=currOptions(db.currency);document.getElementById('set-country').innerHTML=countryOptions(db.country);
   const THS=[['midnight','#12151C','#E7B24C'],['emerald','#0E1A15','#D9B65C'],['ocean','#0C141F','#59A6DC'],['pearl','#FFFFFF','#A67C13']];
   const ACC=['','#E7B24C','#4FBF8B','#5B9BD5','#B57BE0','#E8735F','#3FBFB0'];
@@ -963,7 +989,7 @@ function renderSettings(){
   document.getElementById('ui-period').value=db.ui.period||'month';
   document.getElementById('ui-wk').value=db.ui.wk||'mon';
   document.getElementById('ui-dec').checked=(db.ui.dec!==0);
-  {const _to=db.ui.tabOrder||['trends','accounts','goals','notes','zakat','invoices'];const _showTxt=db.lang==='ar'?'إظهار':'Show';document.getElementById('tabs-row').innerHTML=_to.map((k,i)=>{const shown=!(db.ui.tabs&&db.ui.tabs[k]===0);return '<div class="taborow'+(shown?'':' hidden')+'"><button class="tabmove" '+(i===0?'disabled':'')+' onclick="moveTab(\''+k+'\',-1)">▲</button><button class="tabmove" '+(i===_to.length-1?'disabled':'')+' onclick="moveTab(\''+k+'\',1)">▼</button><span class="tablabel">'+t(k)+'</span><label class="tabshow"><input type="checkbox" '+(shown?'checked':'')+' onchange="toggleTab(\''+k+'\')"><span>'+_showTxt+'</span></label></div>';}).join('');}
+  {const _to=db.ui.tabOrder||['trends','accounts','goals','notes','zakat','bills'];const _showTxt=db.lang==='ar'?'إظهار':'Show';document.getElementById('tabs-row').innerHTML=_to.map((k,i)=>{const shown=!(db.ui.tabs&&db.ui.tabs[k]===0);return '<div class="taborow'+(shown?'':' hidden')+'"><button class="tabmove" '+(i===0?'disabled':'')+' onclick="moveTab(\''+k+'\',-1)">▲</button><button class="tabmove" '+(i===_to.length-1?'disabled':'')+' onclick="moveTab(\''+k+'\',1)">▼</button><span class="tablabel">'+t(k)+'</span><label class="tabshow"><input type="checkbox" '+(shown?'checked':'')+' onchange="toggleTab(\''+k+'\')"><span>'+_showTxt+'</span></label></div>';}).join('');}
   {const _ar=db.lang==='ar';const _st=(id,tx)=>{const e=document.getElementById(id);if(e)e.textContent=tx;};_st('mv-title',_ar?'📱 نقل بياناتك لموبايل جديد':'📱 Move your data to a new phone');_st('mv-steps',_ar?'على الموبايل القديم: اضغط «إرسال نسخة» وابعتها لنفسك (واتساب / بلوتوث / Google Drive). على الموبايل الجديد: نزّل التطبيق، افتح الإعدادات هنا، واضغط «استعادة» واختر الملف.':'On your OLD phone: tap “Send a copy” and share it to yourself (WhatsApp, Bluetooth, or Google Drive). On your NEW phone: install the app, open Settings here, tap “Restore” and pick the file.');_st('mv-send',_ar?'📤 إرسال نسخة لموبايل تاني':'📤 Send a copy to another phone');_st('mv-restore',_ar?'📥 استعادة من نسخة':'📥 Restore from a backup');_st('inv-set-title',_ar?'🧾 الفواتير (بيزنس)':'🧾 Invoices (Business)');_st('inv-set-sub',_ar?'اختر مجال شغلك وابعت فواتير احترافية — والمدفوع بيتسجل دخل في حسابك تلقائيًا.':'Pick your trade and send professional invoices — paid ones post as income to your account automatically.');_st('inv-set-btn',_ar?'فتح الفواتير':'Open invoices');_st('biz-name-lbl',_ar?'اسم النشاط (يظهر على الفاتورة)':'Business name (on invoices)');const _bn=document.getElementById('biz-name');if(_bn)_bn.value=(db.ui&&db.ui.bizName)||'';const _bl=document.getElementById('biz-logo-wrap');if(_bl)_bl.innerHTML=(db.ui&&db.ui.bizLogo)?`<img src="${db.ui.bizLogo}" style="max-height:60px;border-radius:8px;margin:6px 0;display:block"><button class="mini-btn" onclick="document.getElementById('biz-logo-input').click()">${_ar?'تغيير':'Change'}</button> <button class="mini-btn" onclick="removeBizLogo()">${_ar?'حذف':'Remove'}</button>`:`<button class="btn ghost" style="margin-top:0" onclick="document.getElementById('biz-logo-input').click()">${_ar?'➕ إضافة شعار':'➕ Add logo'}</button>`;const _uw=document.getElementById('mv-undo-wrap');if(_uw)_uw.innerHTML=localStorage.getItem(KEY+'.pre-import')?'<button class="btn ghost" style="margin-top:8px;color:var(--muted)" onclick="undoRestore()">'+(_ar?'↩︎ تراجع عن آخر استعادة':'↩︎ Undo last restore')+'</button>':'';}
   document.getElementById('theme-row').innerHTML=THS.map(([k,bg,ac])=>'<button class="theme-opt'+((db.theme||'midnight')===k?' on':'')+'" onclick="setTheme(\''+k+'\')"><span class="theme-dot" style="background:linear-gradient(135deg,'+bg+' 60%,'+ac+' 60%)"></span>'+t('th'+k.charAt(0).toUpperCase()+k.slice(1))+'</button>').join('');
   document.getElementById('stat-count').textContent=db.accounts.length+'A · '+db.txns.length+'T · '+db.goals.length+'G · '+db.debts.length+'D';
@@ -974,7 +1000,7 @@ function renderSettings(){
   rl.innerHTML=used.length?used.map(c=>`<div class="bud-row"><div class="bl">1 ${c} =</div><input class="num" data-rate="${c}" type="text" inputmode="decimal" value="${db.rates[c]||''}" placeholder="0" onchange="setRate('${c}',this.value)"><div style="color:var(--muted);font-size:13px">${db.currency}</div></div>`).join(''):'<p class="mini-help" style="margin-top:0">'+(db.lang==='ar'?'كل الحسابات بنفس العملة':'All accounts use the default currency')+'</p>';
   const cl=document.getElementById('cat-list');cl.innerHTML=(db.customCats||[]).map(c=>`<div class="list-row"><div style="font-size:20px">${c.e}</div><div class="info"><div class="t1">${esc(c.en)}</div></div><button class="link" onclick="delCat('${c.id}')" style="color:var(--expense)">✕</button></div>`).join('')||'';
   const pl=document.getElementById('project-list');pl.innerHTML=(db.projects||[]).map(p=>`<div class="list-row" onclick="openProject('${p.id}')"><div style="font-size:20px">🏗️</div><div class="info"><div class="t1">${esc(p.name)}</div></div><div style="color:var(--faint)">›</div></div>`).join('')||'';
-  const recl=document.getElementById('recurring-list');recl.innerHTML=(db.recurring||[]).map(r=>{const a=acctById(r.account);const c=CATMAP[r.cat]||CATMAP.other;return `<div class="list-row" onclick="openRecurring('${r.id}')"><div style="font-size:20px">${c.e}</div><div class="info"><div class="t1">${catName(r.cat)} · <span class="num ${r.type==='income'?'up':'down'}">${r.type==='income'?'+':'-'}${fmt(r.amount,a?a.currency:db.currency)}</span></div><div class="t2">${t(r.freq)} · ${r.nextDate} · ${a?a.name:'—'}</div></div><div style="color:var(--faint)">›</div></div>`;}).join('')||'';
+  const recl=document.getElementById('recurring-list');recl.innerHTML=(db.recurring||[]).map(r=>{const a=acctById(r.account);const c=CATMAP[r.cat]||CATMAP.other;return `<div class="list-row" onclick="openRecurring('${r.id}')"><div style="font-size:20px">${c.e}</div><div class="info"><div class="t1">${catName(r.cat)} · <span class="num ${r.type==='income'?'up':'down'}">${r.type==='income'?'+':'-'}${fmt(r.amount,a?a.currency:db.currency)}</span></div><div class="t2">${recFreqLabel(r)} · ${r.nextDate} · ${a?a.name:'—'}</div></div><div style="color:var(--faint)">›</div></div>`;}).join('')||'';
 }
 function setCountry(code){db.country=code;const c=countryCurrency(code);if(c&&c!==db.currency){db.currency=c;db.rates={};db.rates[c]=1;}save();toast('\u2713');refresh();}
 function zCountryChanged(){const code=document.getElementById('z-country').value;const c=countryCurrency(code);db.country=code;if(c){document.getElementById('z-currency').innerHTML=currOptions(c);}const el=document.getElementById('z-src');if(el)el.innerHTML=goldSourceHtml();}
@@ -1048,11 +1074,11 @@ function openBudget(){const el=document.getElementById('budget-inputs');let html
 function saveBudget(){db.budgets.overall=parseFloat(document.getElementById('bud-overall').value)||0;db.budgets.cats={};document.querySelectorAll('#budget-inputs input[data-cat]').forEach(inp=>{const v=parseFloat(inp.value)||0;if(v>0)db.budgets.cats[inp.dataset.cat]=v;});save();closeSheets();toast('✓');refresh();}
 
 /* ============ Recurring ============ */
-function openRecurring(id){state.editingRec=id||null;document.getElementById('rec-title').textContent=t(id?'editRec':'newRec');document.getElementById('rec-account').innerHTML=db.accounts.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');if(id){const r=db.recurring.find(x=>x.id===id);state.recType=r.type;state.recCat=r.cat;document.getElementById('rec-amount').value=r.amount;document.getElementById('rec-account').value=r.account;document.getElementById('rec-freq').value=r.freq;document.getElementById('rec-next').value=r.nextDate;document.getElementById('rec-note').value=(r.note||'').replace(' ↻','');document.getElementById('rec-delete').style.display='block';}else{state.recType='expense';state.recCat='bills';document.getElementById('rec-amount').value='';document.getElementById('rec-note').value='';document.getElementById('rec-freq').value='monthly';document.getElementById('rec-next').value=toISODate(new Date());document.getElementById('rec-delete').style.display='none';}document.querySelectorAll('#rec-type button').forEach(b=>b.classList.toggle('on',b.dataset.t===state.recType));renderRecCats(state.recCat);document.getElementById('recurring-overlay').classList.add('open');}
+function openRecurring(id){state.editingRec=id||null;document.getElementById('rec-title').textContent=t(id?'editRec':'newRec');document.getElementById('rec-account').innerHTML=db.accounts.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');if(id){const r=db.recurring.find(x=>x.id===id);state.recType=r.type;state.recCat=r.cat;document.getElementById('rec-amount').value=r.amount;document.getElementById('rec-account').value=r.account;document.getElementById('rec-freq').value=r.freq;recRangeSet(r);document.getElementById('rec-next').value=r.nextDate;document.getElementById('rec-note').value=(r.note||'').replace(' ↻','');document.getElementById('rec-delete').style.display='block';}else{state.recType='expense';state.recCat='bills';document.getElementById('rec-amount').value='';document.getElementById('rec-note').value='';document.getElementById('rec-freq').value='monthly';recRangeSet(null);document.getElementById('rec-next').value=toISODate(new Date());document.getElementById('rec-delete').style.display='none';}document.querySelectorAll('#rec-type button').forEach(b=>b.classList.toggle('on',b.dataset.t===state.recType));renderRecCats(state.recCat);document.getElementById('recurring-overlay').classList.add('open');}
 function renderRecCats(sel){document.getElementById('rec-cats').innerHTML=allCats().map(c=>`<button class="cat-opt${c.id===sel?' on':''}" data-c="${c.id}" onclick="pickRecCat('${c.id}')"><span class="ce">${c.e}</span>${catName(c.id)}</button>`).join('')+`<button class="cat-opt" style="border-style:dashed;color:var(--accent)" onclick="openCat('rec')"><span class="ce">＋</span>${db.lang==='ar'?'جديد':'New'}</button>`;}
 function pickRecCat(id){state.recCat=id;document.querySelectorAll('#rec-cats .cat-opt').forEach(b=>b.classList.toggle('on',b.dataset.c===id));}
 document.querySelectorAll('#rec-type button').forEach(b=>b.onclick=()=>{state.recType=b.dataset.t;document.querySelectorAll('#rec-type button').forEach(x=>x.classList.toggle('on',x===b));});
-function saveRecurring(){const amt=parseFloat(document.getElementById('rec-amount').value);if(!amt||amt<=0){toast('!');return;}const obj={type:state.recType,amount:amt,cat:state.recCat,account:document.getElementById('rec-account').value,freq:document.getElementById('rec-freq').value,nextDate:document.getElementById('rec-next').value,note:document.getElementById('rec-note').value.trim(),active:true};if(state.editingRec)Object.assign(db.recurring.find(x=>x.id===state.editingRec),obj);else{obj.id=uid();db.recurring.push(obj);}save();processRecurring();closeSheets();toast('✓');refresh();}
+function saveRecurring(){const amt=parseFloat(document.getElementById('rec-amount').value);if(!amt||amt<=0){toast('!');return;}const obj={type:state.recType,amount:amt,cat:state.recCat,account:document.getElementById('rec-account').value,freq:document.getElementById('rec-freq').value,...recRangeValue(),nextDate:document.getElementById('rec-next').value,note:document.getElementById('rec-note').value.trim(),active:true};if(state.editingRec)Object.assign(db.recurring.find(x=>x.id===state.editingRec),obj);else{obj.id=uid();db.recurring.push(obj);}save();processRecurring();closeSheets();toast('✓');refresh();}
 function deleteRecurring(){if(!confirm(t('deleteRec')+'?'))return;db.recurring=db.recurring.filter(r=>r.id!==state.editingRec);save();closeSheets();toast('✓');refresh();}
 
 /* ============ Goals ============ */
@@ -1140,7 +1166,7 @@ function onbText(){const ar=db.lang==='ar';const _s=(i,t)=>{const e=document.get
  _s('onb-biz-t',ar?'أدير نشاطي التجاري':'Run my business');_s('onb-biz-s',ar?'فواتير مصمّمة لمجال شغلك':'Invoices tailored to your trade');}
 function showOnboarding(){onbText();document.getElementById('onb-1').style.display='';document.getElementById('onb-2').style.display='none';document.getElementById('onboard').classList.add('open');}
 function onbLang(l){db.lang=l;document.documentElement.setAttribute('dir',l==='ar'?'rtl':'ltr');save();try{applyI18n();}catch(e){}onbText();document.getElementById('onb-1').style.display='none';document.getElementById('onb-2').style.display='';}
-function onbFinish(goal){db.onboarded=true;if(goal==='business'){db.ui=db.ui||{};db.ui.tabs=db.ui.tabs||{};db.ui.tabs.invoices=1;}save();document.getElementById('onboard').classList.remove('open');try{applyTheme();}catch(e){}try{applyI18n();}catch(e){}refresh();if(goal==='business')go('invoices');else if(goal==='zakat')go('zakat');else go('home');}
+function onbFinish(goal){db.onboarded=true;save();document.getElementById('onboard').classList.remove('open');try{applyTheme();}catch(e){}try{applyI18n();}catch(e){}refresh();if(goal==='zakat')go('zakat');else go('home');}
 /* ===== Invoices (Business Pro) ===== */
 const TRADES=[
  {k:'clothing',en:'Clothing / Fashion',ar:'ملابس / أزياء',doc:{en:'Invoice',ar:'فاتورة'},tax:14,items:[{n:'Item',na:'صنف',p:0},{n:'Item',na:'صنف',p:0}]},
@@ -1808,7 +1834,7 @@ function clearDemo(){
   try{const b=db._backup;if(b){db=migrate(JSON.parse(b));}else{db=load();}}catch(e){db=load();}
   save();rebuildCats();applyTheme();state.acct='all';refresh();toast('\u2713 '+t('demoOff'));
 }
-function demoBanner(){return demoActive()?'<div class="alert" style="background:rgba(91,155,213,.14);border-color:rgba(91,155,213,.45);color:#a9d3f2">\u2139\ufe0f '+t('demoBanner')+'</div>':'';}
+function demoBanner(){return demoActive()?'<div class="alert" onclick="clearDemo()" style="cursor:pointer;background:rgba(91,155,213,.14);border-color:rgba(91,155,213,.45);color:#a9d3f2">\u2139\ufe0f '+t('demoBanner')+' · <b>'+t('clearDemo')+'</b></div>':'';}
 
 
 /* ============ Livestock Zakat (per account, with hawl) ============ */
@@ -2687,4 +2713,5 @@ function bizSave(){
   db.bizAddress=g('biz-address'); db.invTerms=g('inv-terms');
   save(true);                       // silent: this fires on every keystroke
 }
-</script></body></html>
+</script>
+<script id="yusr-v613">/*__V613__*/</script></body></html>

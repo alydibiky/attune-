@@ -11,6 +11,7 @@ import {
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
+import { logPrompt, parseLog } from "./yusr/logtext.js";
 import { ChatHome, Md, systemPrompt as chatSystemPrompt } from "./chat.jsx";
 import { tr, getLang, setLang, fmtNum, dateLocale } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
@@ -6004,6 +6005,18 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
     // happens for either app, so there is one prompt to audit, not two.
     bridge.on("ai-request", async (d) => {
       const reply = (result) => bridge.send("ai-result", { kind: d.kind, id: d.id, result });
+      if (d.kind === "log-text") {
+        // v6.13: "write it and it logs it". The code reading works without a model; the model (when it is
+        // loaded) only sorts and names better — every amount it gives must be in his words (logtext.js).
+        const h = d.hints || {}, today = h.today || new Date().toISOString().slice(0, 10);
+        const opts = { today, cats: h.cats || [], accounts: h.accounts || [], currency: d.currency };
+        let raw = "";
+        if (modelStateRef.current === "ready") {
+          try { raw = await callClaude(logPrompt(d.text, opts), { prefix: "money", json: true, maxTokens: 700, think: false, temperature: 0.2 }); } catch (e) { raw = ""; }
+        }
+        reply(parseLog(raw, d.text, opts));
+        return;
+      }
       if (modelStateRef.current !== "ready") {
         reply({ ok: false, why: "No model is loaded. Open Engine in Attune and load one." });
         return;
