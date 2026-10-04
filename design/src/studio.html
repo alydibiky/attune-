@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0b0f19;color:#e2e8f0;font-family:"DejaVu Sans",sans-serif;padding:32px;width:1760px}
+h1{font-size:30px}.sub{color:#94a3b8;font-size:15px;margin:6px 0 22px;line-height:1.5}
+.opt{display:flex;gap:18px;margin-bottom:34px;align-items:flex-start}
+.desc{width:300px;font-size:13px;color:#cbd5e1;line-height:1.5}.desc h2{font-size:20px;color:#fff;margin-bottom:6px}.desc b{color:#2dd4bf}
+.tag{background:#134e4a;color:#2dd4bf;border-radius:6px;padding:2px 8px;font-size:12px}
+.ph{width:320px;min-height:470px;padding-bottom:4px;background:#020617;border:1px solid #334155;border-radius:24px;overflow:hidden;font-size:13px;position:relative}
+.st{font-size:12px;color:#94a3b8;text-align:center;margin-top:6px;width:320px}
+.top{height:44px;border-bottom:1px solid #1e293b;display:flex;align-items:center;padding:0 14px;font-weight:700}
+.img{margin:12px;height:296px;border-radius:16px;position:relative;overflow:hidden;background:#0f172a;border:1px solid #1e293b}
+.scene{position:absolute;inset:0;background:linear-gradient(180deg,#f97316 0%,#fb923c 35%,#7c2d12 62%,#292524 63%,#57534e 100%)}
+.crane{position:absolute;left:38%;top:12%;width:8px;height:52%;background:#dc2626}.jib{position:absolute;left:20%;top:12%;width:62%;height:7px;background:#dc2626}
+.beam{position:absolute;left:58%;top:38%;width:30%;height:9px;background:#475569}.cable{position:absolute;left:72%;top:13%;width:2px;height:25%;background:#111}
+.sun{position:absolute;left:12%;top:30%;width:40px;height:40px;border-radius:50%;background:#fde68a}
+.blur .scene,.blur .crane,.blur .jib,.blur .beam,.blur .sun,.blur .cable{filter:blur(6px)}
+.noise .scene{filter:blur(14px) saturate(.5)}.noise .crane,.noise .jib,.noise .beam,.noise .sun,.noise .cable{filter:blur(14px);opacity:.6}
+.half .scene,.half .crane,.half .jib,.half .beam,.half .sun{filter:blur(3px)}
+.sk{position:absolute;inset:0;background:linear-gradient(100deg,#0f172a 30%,#1e293b 50%,#0f172a 70%)}
+.badge{position:absolute;left:10px;top:10px;background:#000a;border-radius:999px;padding:4px 10px;font-size:11px}
+.bar{height:6px;background:#1e293b;border-radius:3px;margin:0 12px;overflow:hidden}.bar i{display:block;height:100%;background:#14b8a6}
+.row{display:flex;justify-content:space-between;margin:8px 12px 0;font-size:12px;color:#94a3b8}
+.btns{display:flex;gap:8px;margin:10px 12px}.b{flex:1;height:44px;border-radius:12px;background:#1e293b;display:grid;place-items:center;font-size:12px}.p{background:#14b8a6;color:#042f2e;font-weight:700}
+.two{display:flex;gap:6px;margin:12px;height:296px}.two .img{margin:0;flex:1;height:100%}
+.steps{display:flex;gap:4px;margin:0 12px}.steps div{flex:1;height:40px;margin-top:8px;border-radius:6px;background:#1e293b;overflow:hidden;position:relative}
+.sel{outline:2px solid #2dd4bf}
+</style></head><body>
+<h1>Studio: how progress is shown while a picture is drawn (item 9)</h1>
+<div class="sub">Each option is shown in 4 states: queued → draft → refining → done. The sample prompt is "red crane lifting a steel beam, sunset". The frames are 320 px. The draft is drawn at 384 px in about 10 s, and the clear 768 px version swaps in later with a 300 ms cross-fade. The chat model stays loaded the whole time.</div>
+<!--OPTS-->
+</body></html>
