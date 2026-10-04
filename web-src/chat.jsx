@@ -15,6 +15,7 @@ import { ActionCard } from "./actions-ui.jsx";
 import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
 import { mathToText } from "./quality.js";
+import { looksLikeCodeReview } from "./code.js";
 import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, websiteFollowUp, refusesToBuild, arithmeticSlips, fixSlips } from "./verify.js";
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
@@ -920,7 +921,15 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         }
         return true;
       };
-      if (route && !longMsg && !img && !sources && api.verifyMath && looksLikeMathProblem(mathQ) && !looksLikeDeduction(typed)) {
+      // pasted code + "review / refactor / find bugs / explain": real issues with line numbers, the smallest fix as
+      // SEARCH/REPLACE blocks, and the fix proven by running tests in the sandbox (else labelled "possible")
+      if (route && !img && !sources && api.codeReview && typed && looksLikeCodeReview(typed)) {
+        try {
+          const r = await api.codeReview(typed, { onStep: (s) => onStatus(s) });
+          if (runRef.current !== run) return;
+          if (r && r.text) { answer = r.text; extra.codeReview = { proven: r.proven, issues: r.issues.length, lang: r.lang }; }
+        } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      } else if (route && !longMsg && !img && !sources && api.verifyMath && looksLikeMathProblem(mathQ) && !looksLikeDeduction(typed)) {
         try {
           const r = await api.verifyMath(mathQ + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
           if (runRef.current !== run) return;

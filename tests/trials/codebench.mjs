@@ -35,6 +35,15 @@ const TASKS = [
   ["javascript", "A function chunk(arr, size) that splits an array into arrays of at most `size` items; throw an Error when size is less than 1; with tests", "assertEqual(chunk([1,2,3,4,5],2),[[1,2],[3,4],[5]]);assertEqual(chunk([],3),[]);assertEqual(chunk([1,2],5),[[1,2]]);let t=false;try{chunk([1],0)}catch(e){t=true};assert(t,'size 0 must throw');"],
   ["python", "اكتب دالة بايثون اسمها median(numbers) تحسب الوسيط لقائمة أرقام (لو العدد زوجي يكون متوسط الرقمين اللي في النص) وترفع ValueError لو القائمة فاضية؛ مع اختبارات", "assert median([3,1,2])==2 and median([4,1,3,2])==2.5 and median([5])==5 and median([-1,-3])==-2\ntry:\n    median([]); raise SystemExit('no error')\nexcept ValueError: pass"],
 ];
+// v6.15 review tasks (11–16): a pasted function with a known bug → the app must find and fix it; hidden tests check the fix.
+const REVIEW = [
+  ["python", "Find the bug in this function and fix it:\n```python\ndef average(xs):\n    total = 0\n    for i in range(1, len(xs)):\n        total += xs[i]\n    return total / len(xs)\n```", "assert average([1,2,3])==2 and average([5])==5 and average([2,4])==3"],
+  ["javascript", "Review this code:\n```javascript\nfunction maxOf(arr) {\n  let m = 0;\n  for (const x of arr) if (x > m) m = x;\n  return m;\n}\n```", "assertEqual(maxOf([-3,-1,-2]),-1);assertEqual(maxOf([1,5,2]),5);assertEqual(maxOf([7]),7);"],
+  ["python", "find bugs\n```python\ndef add_item(item, items=[]):\n    items.append(item)\n    return items\n```", "assert add_item(1)==[1]\nassert add_item(2)==[2]\nassert add_item(3,[1])==[1,3]"],
+  ["python", "راجع الكود ده وصلّح الغلط\n```python\ndef is_leap(y):\n    return y % 4 == 0 and y % 100 != 0\n```", "assert is_leap(2000) and not is_leap(1900) and is_leap(2024) and not is_leap(2023)"],
+  ["javascript", "What's wrong with this binary search? Fix it.\n```javascript\nfunction binarySearch(a, t) {\n  let lo = 0, hi = a.length;\n  while (lo < hi) {\n    const mid = Math.floor((lo + hi) / 2);\n    if (a[mid] === t) return mid;\n    if (a[mid] < t) lo = mid;\n    else hi = mid;\n  }\n  return -1;\n}\n```", "assertEqual(binarySearch([1,3,5,7],7),3);assertEqual(binarySearch([1,3,5,7],1),0);assertEqual(binarySearch([1,3],4),-1);assertEqual(binarySearch([],1),-1);assertEqual(binarySearch([1,3,5],2),-1);"],
+  ["python", "Refactor this and find the bug:\n```python\ndef apply_discount(price, percent):\n    if percent > 100:\n        raise ValueError(\"bad percent\")\n    return round(price - price * percent, 2)\n```", "assert apply_discount(200,10)==180.0 and apply_discount(99.99,0)==99.99 and apply_discount(50,100)==0\ntry:\n    apply_discount(10,150); raise SystemExit('no error')\nexcept ValueError: pass"],
+];
 const rows = [];
 for (let i = 0; i < TASKS.length; i++) {
   if (pick.length && !pick.includes(i + 1)) continue;
@@ -52,6 +61,23 @@ for (let i = 0; i < TASKS.length; i++) {
   rows.push({ n: i + 1, lang, ownOk, hid, rounds, tokens, secs, err });
   console.log(`#${i + 1} ${lang} ${task.slice(0, 40)} → hidden ${hid ? "PASS" : "FAIL"} · own ${ownOk ? "ok" : "no"} · rounds ${rounds} · ${tokens} tok · ${secs}s${hid ? "" : " · " + err}`);
 }
+for (let j = 0; j < REVIEW.length && C.reviewCode; j++) {
+  const n = 11 + j;
+  if (pick.length && !pick.includes(n)) continue;
+  const [lang, text, hidden] = REVIEW[j];
+  tokens = 0; const t0 = Date.now(); let hid = false, err = "", proven = false, rounds = 0, ownOk = false;
+  try {
+    const r = await C.reviewCode({ text, run, llm: (m, o) => llm(m, (o && o.maxTokens) || 1000) });
+    proven = !!r.proven; ownOk = !!(r.ran && r.ran.after.ok); rounds = r.rounds || 0;
+    const h = await run(lang, r.fixed + "\n" + hidden);
+    hid = h.ok; if (!h.ok) err = (h.stderr || "").split("\n").slice(-3).join(" | ").slice(0, 200);
+  } catch (e) { err = String(e && e.message || e); }
+  const secs = Math.round((Date.now() - t0) / 1000);
+  rows.push({ n, lang, ownOk, hid, rounds, tokens, secs, err, review: true, proven });
+  console.log(`#${n} review ${lang} → hidden ${hid ? "PASS" : "FAIL"} · proven ${proven ? "yes" : "no"} · rounds ${rounds} · ${tokens} tok · ${secs}s${hid ? "" : " · " + err}`);
+}
 const sum = (k) => rows.reduce((a, r) => a + r[k], 0);
-console.log(`\nCODEBENCH ${process.env.MODEL_NAME || ""} hidden ${rows.filter((r) => r.hid).length}/${rows.length} · rounds ${sum("rounds")} · tokens ${sum("tokens")} · ${sum("secs")}s`);
+const W = rows.filter((r) => !r.review), RV = rows.filter((r) => r.review);
+if (RV.length) console.log(`REVIEW hidden ${RV.filter((r) => r.hid).length}/${RV.length} · proven ${RV.filter((r) => r.proven).length} · tokens ${RV.reduce((a, r) => a + r.tokens, 0)} · ${RV.reduce((a, r) => a + r.secs, 0)}s`);
+console.log(`\nCODEBENCH ${process.env.MODEL_NAME || ""} hidden ${W.filter((r) => r.hid).length}/${W.length} · rounds ${W.reduce((a, r) => a + r.rounds, 0)} · tokens ${W.reduce((a, r) => a + r.tokens, 0)} · ${W.reduce((a, r) => a + r.secs, 0)}s`);
 fs.writeFileSync(process.env.CODE_REPORT || "/tmp/codebench.json", JSON.stringify(rows, null, 1));

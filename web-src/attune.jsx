@@ -48,7 +48,7 @@ import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicke
 import { detectLoop, trimLoop, detectDegenerate } from "./quality.js";
 import { verifyMath, looksLikeMathProblem, arithmeticSlips, looksLikeCodeTask } from "./verify.js";
 import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
-import { workLoop, guessLang } from "./code.js";
+import { workLoop, guessLang, reviewCode, formatReview, extractPastedCode } from "./code.js";
 import { runCode, runHtml, pythonAvailable, warmUp } from "./sandbox.js";
 import { CycleTab, cycleLoad, cycleSave, looksLikePeriodLog, parsePeriodText, applyPeriodLog } from "./cycle.jsx";
 import { heatLevel } from "./heat.js";
@@ -8799,6 +8799,16 @@ export default function App() {
       const say = { write: "Writing the program and its tests…", run: "Running it on this phone…", fix: "Sending the error back — fixing…", continue: "The page was cut off — writing the rest…" };
       return workLoop({ task, lang, llm, run: (l, code) => (l === "html" ? runHtml(code) : runCode({ lang: l, code })), maxRounds: getPower().codeRounds || 3,
         onEvent: (e) => { if (say[e.type] && onStep) onStep(tr(say[e.type])); if ((e.type === "writing" || e.type === "fixing") && onToken) onToken(e.text || ""); } });
+    },
+    // review / refactor / find bugs / explain pasted code: issues with lines, the smallest fix, proven in the sandbox
+    codeReview: async (text, { onStep, onToken } = {}) => {
+      const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken });
+      const say = { review: "Reading your code…", run: "Running the tests on your code and on the fix…", fix: "The fix needs another try — fixing…" };
+      const canRun = async (l) => (l === "python" ? await pythonAvailable() : l === "javascript");
+      const pc = extractPastedCode(text);
+      const r = await reviewCode({ text, llm, run: pc && (await canRun(pc.lang)) ? (l, code) => runCode({ lang: l, code }) : null,
+        onEvent: (e) => { if (say[e.type] && onStep) onStep(tr(say[e.type])); } });
+      return r ? { ...r, text: formatReview(r, tr) } : null;
     },
     // ---- reminders & phone actions (see actions.js) ----
     looksLikeAction,

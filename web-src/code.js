@@ -621,6 +621,144 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
   return res;
 }
 
+// ---- review / refactor / find bugs / explain: code the person pasted -------------------------------------------------
+// The model lists real issues with line numbers and gives the smallest fix as SEARCH/REPLACE blocks plus a few tests.
+// The app runs the tests on the ORIGINAL code and on the FIXED code in the sandbox: a bug counts as shown only when a
+// test fails before and passes after; everything else is labelled "possible". Never claims what it could not show.
+const REVIEW_ASK = /\b(review|refactor|find (?:the |any )?bugs?|bugs?\b|debug|explain|what'?s wrong|what is wrong|is (?:this|it) (?:right|correct)|fix (?:this|it|the bug|my code)|improve|clean ?up)\b|راجع|مراجعة|اشرح|اشرحلي|فيه غلط|الغلط|غلطة|صلّح|صلح|صلحلي|حسّن|حسن|باج|أخطاء|اخطاء/i;
+const CODE_LINE = /^\s*(def |class |function\b|const |let |var |import |from \S+ import|for\b.*[:{]\s*$|while\b.*[:{]\s*$|if\b.*[:{]\s*$|return\b|}\s*$|[\w.[\]]+\s*=[^=]|print\(|console\.log)/;
+/** The code in a message and the request around it → { code, lang, ask } or null. */
+export function extractPastedCode(text) {
+  const t = String(text || "").replace(/\r/g, "");
+  const bl = extractBlocks(t).filter((b) => b.code.trim());
+  let code = "", lang = "", ask = t;
+  if (bl.length) { const b = bl.sort((x, y) => y.code.length - x.code.length)[0]; code = b.code; lang = b.lang; ask = t.replace(/```[\s\S]*?(```|$)/g, " ").trim(); }
+  else {
+    const lines = t.split("\n"); const k = lines.findIndex((l) => CODE_LINE.test(l));
+    if (k < 0) return null;
+    code = lines.slice(k).join("\n").replace(/\s+$/, ""); ask = lines.slice(0, k).join("\n").trim();
+  }
+  const n = code.split("\n").filter((l) => CODE_LINE.test(l)).length;
+  if (code.split("\n").length < 2 || n < 2) return null;
+  if (!["python", "javascript"].includes(lang)) {
+    lang = /^\s*def \w+\(.*\)\s*:|^\s*(elif|import|from) |print\(|:\s*$/m.test(code) ? "python" : /\bfunction\b|=>|\b(const|let|var) \w|console\.log|;\s*$/m.test(code) ? "javascript" : lang || "other";
+  }
+  return { code, lang, ask: ask.slice(0, 600) };
+}
+/** "review / find bugs / refactor / explain" + pasted code. */
+export function looksLikeCodeReview(text) {
+  const t = String(text || "");
+  if (!REVIEW_ASK.test(t.replace(/```[\s\S]*?(```|$)/g, " ").slice(0, 2000))) return false;
+  return !!extractPastedCode(t);
+}
+export const numbered = (code) => String(code).split("\n").map((l, i) => `${i + 1}| ${l}`).join("\n");
+export function reviewMessages(ask, code, lang) {
+  const runnable = lang === "python" || lang === "javascript";
+  return [
+    { role: "system", content: `You review code. The lines are numbered (the "N| " prefix is NOT part of the code). Reply in this order:
+Summary: one or two sentences on what the code does.
+Issues: at most 5 REAL problems, each on its own line as "- L<line>: <problem> — <what goes wrong>". Start an issue with "(possible)" when you are not sure it really happens. No style nitpicks. If nothing is wrong write "- none".
+Fix: the smallest change as edit blocks, each exactly:
+<<<<<<< SEARCH
+(lines copied exactly from the code, WITHOUT the "N| " numbers)
+=======
+(the new lines)
+>>>>>>> REPLACE${runnable ? `
+Tests: ONE \`\`\`${lang} block with 3 to 6 ${lang === "python" ? "assert lines" : "assert(...) or assertEqual(actual, expected) calls"} that call the code with the expected results worked out by hand from what the code is MEANT to do; they must fail on the buggy code and pass after the fix. No prints, no definitions.` : ""}
+Be brief. Same language as the request for the prose.` },
+    { role: "user", content: `${String(ask || "Review this code and fix the bugs.").trim()}\n\n\`\`\`${lang}\n${numbered(code)}\n\`\`\`` },
+  ];
+}
+/** → { summary, issues: [{ line, text, possible }], edits, tests } */
+export function parseReview(answer, code, lang) {
+  const a = String(answer || "").replace(/\r/g, "");
+  const total = String(code).split("\n").length;
+  const summary = ((/Summary:\s*([^\n]+(?:\n(?!\s*(Issues|Fix|Tests)\b)[^\n]+)?)/i.exec(a) || [])[1] || "").trim().slice(0, 400);
+  const iss = (/Issues:\s*\n?([\s\S]*?)(?=\n\s*(?:Fix|Tests)\s*:|<{5,9} ?SEARCH|```|$)/i.exec(a) || [])[1] || "";
+  const issues = [];
+  for (const l of iss.split("\n")) {
+    const m = /^\s*[-*•\d.)]+\s*(\(possible\))?\s*(?:L(?:ine)?\s*(\d+)(?:\s*[-–]\s*\d+)?\s*[:—-])?\s*(\(possible\))?\s*(.+)$/i.exec(l);
+    if (!m || /^none\b/i.test(m[4].trim())) continue;
+    const line = m[2] ? Number(m[2]) : null;
+    issues.push({ line: line && line >= 1 && line <= total ? line : null, text: m[4].trim().slice(0, 240), possible: !!(m[1] || m[3]) });
+    if (issues.length >= 5) break;
+  }
+  // edit blocks: the model sometimes copies the "N| " numbers into SEARCH — they are taken off
+  const edits = parseEdits(a).map((e) => ({ search: e.search.replace(/^\s*\d+\| ?/gm, ""), replace: e.replace.replace(/^\s*\d+\| ?/gm, "") }));
+  const tb = extractBlocks(a).filter((b) => b.code.trim() && !/SEARCH/.test(b.code));
+  const tests = tb.length ? tb[tb.length - 1].code.split("\n").filter((l) => !/^\s*(def |function |class |import |from |print\(|console\.log)/.test(l)).join("\n").trim() : "";
+  return { summary, issues, edits, tests };
+}
+const testProg = (code, tests, lang) => code.replace(/\s+$/, "") + "\n" + (lang === "python" ? "# --- tests ---\n" : "// --- tests ---\n") + tests + "\n" + (lang === "python" ? `print("${PASS_MARK}")` : `console.log("${PASS_MARK}")`);
+/** Lines of the ORIGINAL code an edit touches (1-based). */
+function editedLines(code, edits) {
+  const lines = String(code).split("\n"), out = new Set();
+  for (const e of edits) {
+    const want = e.search.replace(/^\n+|\n+$/g, "").split("\n").map((l) => l.trim());
+    if (!want.join("").trim()) continue;
+    const at = findLines(lines, want, (a, b) => a.trim() === b);
+    if (at >= 0) for (let k = 0; k < want.length; k++) out.add(at + k + 1);
+  }
+  return out;
+}
+/**
+ * Review pasted code. llm(messages, { maxTokens }) → text; run(lang, code) → { ok, stdout, stderr, error }.
+ * → { summary, issues, edits, tests, code, fixed, lang, ran, proven, rounds } or null when there is no code.
+ */
+export async function reviewCode({ text, llm, run, onEvent = () => {}, isStopped = () => false, maxRounds = 2 }) {
+  const p = extractPastedCode(text); if (!p) return null;
+  const { code, lang } = p;
+  onEvent({ type: "review" });
+  const rv = parseReview(await llm(reviewMessages(p.ask, code, lang), { maxTokens: 1200 }), code, lang);
+  let fixed = code, rounds = 0;
+  if (rv.edits.length) { const r = applyEdits(code, rv.edits); fixed = r.code; }
+  const runnable = (lang === "python" || lang === "javascript") && !!run;
+  let ran = null, proven = false;
+  if (runnable && rv.tests) {
+    if (isStopped()) throw new Error("Stopped");
+    onEvent({ type: "run" });
+    const before = await run(lang, testProg(code, rv.tests, lang));
+    const failedBefore = !judge(before, testProg(code, rv.tests, lang), lang).passed && !/SyntaxError|IndentationError|NameError|ReferenceError/.test(String(before.error || before.stderr || ""));
+    let prog = testProg(fixed, rv.tests, lang);
+    let after = await run(lang, prog);
+    let okAfter = judge(after, prog, lang).passed;
+    if (!okAfter && failedBefore && maxRounds > 0) {
+      // the fix does not pass its own tests yet: the normal fix loop, a round or two
+      onEvent({ type: "fix" });
+      const w = await workLoop({ task: (p.ask || "Fix the bugs in this code.") + "\nKnown issues: " + rv.issues.map((x) => x.text).join("; "), lang, code: prog, llm, run, maxRounds, restart: false, plan: false, isStopped });
+      rounds = w.rounds; okAfter = w.ok; after = w.last;
+      if (w.ok) { const mk = lang === "python" ? "# --- tests ---" : "// --- tests ---"; fixed = w.code.split(mk)[0].replace(/\s+$/, ""); }
+    }
+    proven = failedBefore && okAfter;
+    ran = { before: { ok: !failedBefore, error: errorSummary(before, 6) }, after: { ok: okAfter, error: okAfter ? "" : errorSummary(after || {}, 6) } };
+  }
+  // honest labels: only an issue on a line the proven fix changed is "shown"; the rest are "possible"
+  const touched = editedLines(code, rv.edits);
+  const issues = rv.issues.map((x) => ({ ...x, shown: proven && !x.possible && (x.line == null ? touched.size > 0 && rv.issues.length === 1 : touched.has(x.line)), possible: !(proven && !x.possible && (x.line == null ? touched.size > 0 && rv.issues.length === 1 : touched.has(x.line))) }));
+  onEvent({ type: "done", proven });
+  return { summary: rv.summary, issues, edits: rv.edits, tests: rv.tests, code, fixed, lang, ran, proven, rounds, runnable };
+}
+/** The review as a chat answer (t = the app's translate function). */
+export function formatReview(r, t = (s, v) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => (v[k] != null ? v[k] : m)) : s)) {
+  const out = [];
+  if (r.summary) out.push(r.summary);
+  out.push("**" + t("Issues") + "**");
+  if (!r.issues.length) out.push("- " + t("No real problems found."));
+  for (const x of r.issues) out.push(`- ${x.line ? t("Line {n}", { n: x.line }) + ": " : ""}${x.text.replace(/^\(possible\)\s*/i, "")}${x.shown ? " — " + t("shown by a test in the sandbox") : " — " + t("(possible)")}`);
+  if (r.edits.length) {
+    out.push("**" + t("The fix") + "**");
+    out.push("```diff\n" + r.edits.map((e) => "<<<<<<< SEARCH\n" + e.search.replace(/^\n+|\n+$/g, "") + "\n=======\n" + e.replace.replace(/^\n+|\n+$/g, "") + "\n>>>>>>> REPLACE").join("\n") + "\n```");
+  }
+  if (r.ran) {
+    out.push(r.proven ? "✓ " + t("Checked in the sandbox: the tests fail on your code and pass after the fix.")
+      : r.ran.before.ok ? t("Checked in the sandbox: the tests pass on your code too, so the issues above are not proven.")
+      : t("Checked in the sandbox: the fix does not pass every test yet — treat it as a suggestion."));
+    if (r.tests) out.push("```" + r.lang + "\n" + r.tests + "\n```");
+  } else if (!r.runnable) out.push(t("This code can't be run on the phone, so nothing above is proven by a test."));
+  if (r.edits.length && r.fixed !== r.code) out.push("**" + t("Fixed code") + "**\n```" + (r.lang === "other" ? "" : r.lang) + "\n" + r.fixed + "\n```");
+  return out.join("\n\n");
+}
+
 // ---- saved projects ------------------------------------------------------------------
 export function loadProjects() { try { const v = JSON.parse(localStorage.getItem(CODE_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
 export function saveProjects(list) { try { localStorage.setItem(CODE_KEY, JSON.stringify(list.slice(0, 30))); } catch (e) {} }
