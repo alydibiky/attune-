@@ -3147,4 +3147,7 @@ export const AR = {
   "I read your conversation with {f}{t} (about {n} words). Ask me anything about it — check it, summarise it, or carry on from where it stopped.": "قريت محادثتك مع {f}{t} (حوالي {n} كلمة). اسألني أي حاجة عنها — أراجعها، ألخصها، أو أكمل من مكان ما وقفت.",
   "Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch it off with the Web button": "Attune · الذكاء الاصطناعي شغال على جهازك · من غير حساب ولا تسجيل دخول · البحث على الويب بس لما السؤال يحتاجه (تلقائي) — اقفله من زرار الويب",
   "Web: Off — nothing is looked up": "الويب: مقفول — مفيش أي بحث",
+  "Search the web by itself when a question needs it": "دوّر على الويب لوحده لما السؤال يحتاج",
+  "While Web is off in Chat, questions about prices, specs, news, scores or this year are still looked up (only the search words leave the phone). Off: nothing is looked up unless you turn Web on.": "وزرار الويب مقفول في الشات، الأسئلة عن الأسعار والمواصفات والأخبار والنتايج والسنة دي بتتدوّر برضه (كلمات البحث بس هي اللي بتخرج من الموبايل). لو قفلتها: مفيش بحث خالص غير لما تفتح الويب.",
+  "Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine": "Attune · الذكاء الاصطناعي شغال على جهازك · من غير حساب ولا تسجيل دخول · البحث على الويب بس لما السؤال يحتاجه (تلقائي) — اقفل التلقائي من المحرك",
 };

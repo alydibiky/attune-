@@ -20,7 +20,8 @@ def send(page, text):
     page.wait_for_timeout(2500)
 
 def last_user(page):
-    return page.evaluate("() => { const b = (window.__mock.bodies || []).filter((x) => x.max_tokens > 2); const m = b[b.length - 1]; return m ? (m.messages.filter((x) => x.role === 'user').slice(-1)[0] || {}).content || '' : ''; }")
+    # the question's own request (not the automatic "continue where you stopped" that follows a cut answer)
+    return page.evaluate("() => { const b = (window.__mock.bodies || []).filter((x) => x.max_tokens > 2).map((m) => (m.messages.filter((x) => x.role === 'user').slice(-1)[0] || {}).content || '').filter((c) => !/^(Continue exactly where you stopped|كمّل من المكان)/.test(String(c))); return b.length ? b[b.length - 1] : ''; }")
 
 with sync_playwright() as p:
     br = p.chromium.launch()

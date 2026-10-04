@@ -78,6 +78,7 @@ with sync_playwright() as pw:
     check(page.evaluate("(window.__mock.bodies || []).length") == 0, "…and no chat model is asked (it can't draw)")
     card.get_by_role("button", name="Draw it in Studio").click()
     page.wait_for_selector("[data-testid=studio-page]", timeout=5000)
+    page.wait_for_function("() => { const e = document.querySelector('[data-testid=studio-idea]'); return e && e.value; }", timeout=5000)   # the idea arrives right after the page opens
     check(page.locator("[data-testid=studio-idea]").input_value() == "a crane lifting a bridge beam at sunset", "Studio opens with the idea filled in")
 
     print("--- install", flush=True)

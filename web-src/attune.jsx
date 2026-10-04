@@ -8769,13 +8769,11 @@ export default function App() {
     parsePayment: (t) => parsePayment(t, { now: Date.now() }),
     canUseAI, spend: spendIfFree, deepThink: () => ENGINE_PREFS.deepThink,
     webOn,
-    toggleWeb: () => {   // Off → Auto → On → Off
+    toggleWeb: () => {   // On / Off; while Off, Auto (a setting, on by default) still searches when a question needs fresh facts
       if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to search the web")); return; }
-      // Auto → Off → On → Auto
-      if (webOn) { setWebOn(false); setWebAuto(true); flash(tr("Web: Auto — it searches only when a question needs fresh facts")); }
-      else if (webAuto) { setWebAuto(false); flash(tr("Web: Off — nothing is looked up")); }
-      else setWebOn(true);
+      setWebOn((v) => !v);
     },
+    setWebAuto,
     webAuto: !webOn && webAuto && !(NATIVE && airGap),
     autoModel: () => autoModel && NATIVE && (installedModels || []).length > 1,
     setAutoModel,
@@ -10692,7 +10690,7 @@ export default function App() {
           </div>
         )}
         {/* v5.29 UX: not on Chat — the fixed message box covered it (half-hidden text) */}
-        {mode !== "chat" ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch it off with the Web button")}</p> : null}
+        {mode !== "chat" ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
       </div>
       {toast && <div className="fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       <ConfirmHost />
@@ -10762,7 +10760,7 @@ export default function App() {
         engineMode={engineMode} setEngineMode={setEngineMode} modelState={modelState} dlPct={dlPct}
         downloadModel={downloadModel} trainLog={trainLog} setTrainLog={setTrainLog} collect={collect} setCollect={setCollect}
         flash={flash} close={() => setShowEngine(false)}
-        native={NATIVE ? { engineInfo, installedModels, dlStage, dlDetail, cancelInstall, installNative, useInstalled, removeInstalled, autoModel, setAutoModel,
+        native={NATIVE ? { engineInfo, installedModels, dlStage, dlDetail, cancelInstall, installNative, useInstalled, removeInstalled, autoModel, setAutoModel, webAutoOn: webAuto, setWebAuto,
                            airGap, setAirGap, enginePrefs, updateEnginePrefs, searchCfg, saveSearchCfg } : null} />}
       {showCustom && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setShowCustom(false)}>
@@ -11302,6 +11300,8 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
       <div className={box}>
         <p className={head}>{tr("How it answers")}</p>
         <div className="space-y-1.5">
+          {n.setWebAuto ? row(n.webAutoOn, () => n.setWebAuto(!n.webAutoOn), tr("Search the web by itself when a question needs it"),
+            tr("While Web is off in Chat, questions about prices, specs, news, scores or this year are still looked up (only the search words leave the phone). Off: nothing is looked up unless you turn Web on.")) : null}
           {n.setAutoModel && (n.installedModels || []).length > 1 ? row(n.autoModel, () => n.setAutoModel(!n.autoModel), tr("Pick the best model for each question"),
             tr("With more than one model installed: quick questions use the one already running; code, maths, reasoning and long reports move to your strongest model that runs smoothly here, and photos to one that sees. A switch takes 10–30 s.")) : null}
           {row(p.deepThink, () => n.updateEnginePrefs({ deepThink: !p.deepThink }), tr("Always think before answering"),
