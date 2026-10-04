@@ -75,8 +75,8 @@ with sync_playwright() as p:
     # ---- notes
     open_book(page, "Novels links")
     write_note(page, "Ibn Khaldun", "المقدمة — a great book\n- [ ] buy it\nhttps://example.com/muqaddimah")
-    check(page.locator("[data-testid=shelf-checklist] button").count() == 1, "a checklist line becomes a tick box")
-    page.locator("[data-testid=shelf-checklist] button").first.click(); page.wait_for_timeout(600)
+    check(page.locator("[data-testid=shelf-check]").count() == 1, "a checklist line becomes a tick box")
+    page.locator("[data-testid=shelf-check]").first.click(); page.wait_for_timeout(600)
     check("- [x] buy it" in page.input_value("[data-testid=shelf-note-body]"), "ticking it writes [x]")
     # reminder
     page.click("[data-testid=shelf-note-remind]")
@@ -134,7 +134,62 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=shelf-reminder]").count() == 1 and "Ibn Khaldun" in page.locator("[data-testid=shelf-reminders]").inner_text(), "the alarm icon lists the upcoming reminder")
     back(page)
 
-    # ---- Mind link: a Shelf note is a Mind record; open it in Mind; Mind's search finds it
+    # ---- group 2: rich text, undo, colour, tags, template, trash, archive, duplicate, merge, import
+    open_book(page, "My Book")
+    write_note(page, "Trip", "plan #travel")
+    body = page.locator("[data-testid=shelf-note-body]")
+    body.evaluate("(e) => { e.focus(); e.setSelectionRange(0, 4); }")
+    page.click("[data-testid=shelf-fmt-bold]"); page.wait_for_timeout(100)
+    check(page.input_value("[data-testid=shelf-note-body]").startswith("**plan**"), "bold wraps the selection in **")
+    page.click("[data-testid=shelf-undo-text]"); page.wait_for_timeout(100)
+    check(page.input_value("[data-testid=shelf-note-body]") == "plan #travel", "undo takes the bold back")
+    page.click("[data-testid=shelf-redo-text]"); page.wait_for_timeout(100)
+    check(page.input_value("[data-testid=shelf-note-body]").startswith("**plan**"), "redo puts it back")
+    page.click("[data-testid=shelf-note-more]"); page.locator("[data-testid=shelf-color]").nth(5).click(); page.wait_for_timeout(100)
+    check("words" in page.locator("[data-testid=shelf-info]").inner_text(), "note info shows dates and word count")
+    page.click("[data-testid=shelf-star]"); back(page); page.wait_for_timeout(700); back(page)
+    write_note(page, "Groceries", "milk"); back(page)
+    check(page.locator("[data-testid=shelf-tag]").count() == 1, "a #tag shows as a filter chip")
+    page.click("[data-testid=shelf-tag]")
+    check(page.locator("[data-testid=shelf-note]").count() == 1 and "Trip" in page.locator("[data-testid=shelf-note]").first.inner_text(), "tag filter shows only tagged notes")
+    page.click("[data-testid=shelf-tag]")
+    check(page.locator("[data-testid=shelf-note]", has_text="Trip").get_attribute("style") is not None, "the note card shows its colour")
+    page.select_option("[data-testid=shelf-sort]", "title")
+    check(page.locator("[data-testid=shelf-note]").first.inner_text().startswith("Groceries"), "sort by title")
+    # delete → trash → restore
+    page.locator("[data-testid=shelf-note]", has_text="Groceries").click(); page.click("[data-testid=shelf-note-delete]"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=shelf-note]", has_text="Groceries").count() == 0, "delete moves the note to the trash")
+    back(page)
+    page.click("[data-testid=shelf-more]"); page.click("[data-testid=shelf-open-trash]")
+    check(page.locator("[data-testid=shelf-bin-note]").count() == 1, "the trash lists it")
+    page.click("[data-testid=shelf-restore]"); back(page)
+    # archive
+    open_book(page, "My Book")
+    check(page.locator("[data-testid=shelf-note]", has_text="Groceries").count() == 1, "restored from the trash")
+    page.locator("[data-testid=shelf-note]", has_text="Groceries").click()
+    page.click("[data-testid=shelf-note-more]"); page.click("[data-testid=shelf-archive]"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=shelf-note]", has_text="Groceries").count() == 0, "archive takes it out of the book")
+    # template
+    page.click("[data-testid=shelf-book-more]"); page.locator("[data-testid=shelf-template]").first.click()
+    page.wait_for_selector("[data-testid=shelf-editor]")
+    check("Agenda" in page.input_value("[data-testid=shelf-note-body]"), "a meeting template fills the note")
+    back(page)
+    # import a Markdown file
+    page.click("[data-testid=shelf-book-more]")
+    page.set_input_files("[data-testid=shelf-import-file]", files=[{"name": "notes.md", "mimeType": "text/markdown", "buffer": "## Alpha\none\n## Beta\ntwo".encode()}])
+    page.wait_for_timeout(400)
+    check(page.locator("[data-testid=shelf-note]", has_text="Alpha").count() == 1 and page.locator("[data-testid=shelf-note]", has_text="Beta").count() == 1, "import a Markdown file: each ## section becomes a note")
+    page.keyboard.press("Escape"); back(page)
+    while page.locator("[data-testid=shelf-book]").count(): back(page)
+    n_books = len(titles(page))
+    # duplicate, then merge the copy back
+    page.click("[data-testid=shelf-more]"); page.locator("[data-testid=shelf-manage]").first.click(); page.click("[data-testid=shelf-dup-book]"); page.wait_for_timeout(200)
+    check(len(titles(page)) == n_books + 1 and titles(page)[1] == "My Book (2)", "duplicate a book: %s" % titles(page))
+    page.click("[data-testid=shelf-more]"); page.locator("[data-testid=shelf-manage]").nth(1).click(); page.click("[data-testid=shelf-merge]")
+    page.locator("[data-testid=shelf-merge-sheet] [data-testid=shelf-pick]").nth(1).click(); page.click("[data-testid=confirm-yes]"); page.wait_for_timeout(200)
+    check(len(titles(page)) == n_books, "merge removes the merged book")
+
+    # ---- Mind link:a Shelf note is a Mind record; open it in Mind; Mind's search finds it
     open_book(page, "Novels"); page.locator("[data-testid=shelf-note]", has_text="Ibn Khaldun").click()
     page.click("[data-testid=shelf-note-mind]"); page.wait_for_selector("[data-testid=mind-page]", timeout=4000)
     check("Ibn Khaldun" in page.locator("[data-testid=mind-page]").inner_text(), "Open in Mind shows the same note in Mind")
@@ -143,7 +198,7 @@ with sync_playwright() as p:
     page.fill("[data-testid=mind-search]", "Khaldun"); page.wait_for_timeout(400)
     check("Ibn Khaldun" in page.locator("[data-testid=mind-page]").inner_text(), "Mind's search finds a Shelf note")
     mem = json.loads(page.evaluate("localStorage.getItem('attune:memory:v1')"))
-    check(len([r for r in mem if r["title"] == "Ibn Khaldun"]) == 1 and len(mem) == 5, "one copy only (one source of truth): %d records" % len(mem))
+    check(len([r for r in mem if r["title"] == "Ibn Khaldun"]) == 1, "one copy only (one source of truth: the note is the Mind record)")
 
 
     # ---- Arabic

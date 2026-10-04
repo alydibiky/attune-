@@ -80,5 +80,31 @@ ok(up.length === 1 && up[0].book.id === nov.id, "the alarm list shows upcoming r
 // ---- export
 const md = S.bookMarkdown(shelf.books[1], [n1]); ok(md.startsWith("# Novels") && md.includes("## Ibn Khaldun") && md.includes("المقدمة"), "export a book as Markdown");
 
+// ---- group 2: trash (30 days), archive, tags, sort, duplicate, merge, info, import, checklist reorder, format
+{
+  const DAY = 86400000;
+  let rs = S.trashNotes(records, [n1.id], now);
+  ok(S.counts(rs, shelf)[nov.id] === 0 && S.trashOf(rs).length === 1 && S.searchShelf(rs, shelf, "Khaldun").length === 1, "trash: the note leaves its book and search");
+  ok(S.counts(S.restoreNotes(rs, [n1.id]), shelf)[nov.id] === 1, "trash: restore");
+  ok(S.purgeTrash(rs, now + 29 * DAY).length === rs.length && S.purgeTrash(rs, now + 31 * DAY).length === rs.length - 1, "trash empties itself after 30 days");
+  rs = S.archiveNotes(records, [n1.id]);
+  ok(S.counts(rs, shelf)[nov.id] === 0 && S.archiveOf(rs, shelf).length === 1 && S.searchShelf(rs, shelf, "Khaldun").length === 2, "archive: out of the book, still searchable");
+  ok(JSON.stringify(S.noteTags({ text: "trip #Travel and #سفر, not a#b" })) === '["travel","سفر"]', "#tags in English and Arabic");
+  const a = { id: "x", ts: 1, title: "b", text: "", meta: { edited: 5 } }, b = { id: "y", ts: 2, title: "a", text: "", meta: { edited: 3 } };
+  ok(S.sortNotes([a, b], "title")[0].id === "y" && S.sortNotes([a, b], "created")[0].id === "y" && S.sortNotes([a, b], "edited")[0].id === "x", "sort by title / created / edited");
+  const d = S.duplicateBook(shelf, records, nov.id, now);
+  ok(d.shelf.books.length === shelf.books.length + 1 && d.shelf.books[2].id === d.book.id && S.counts(d.records, d.shelf)[d.book.id] === S.counts(records, shelf)[nov.id], "duplicate a book (next to it, with copies of its notes)");
+  const mg = S.mergeBooks(shelf, records, sh.id, S.MY_BOOK);
+  ok(mg.shelf.books.length === shelf.books.length - 1 && S.counts(mg.records, mg.shelf)[S.MY_BOOK] === S.counts(records, shelf)[S.MY_BOOK] + S.counts(records, shelf)[sh.id], "merge two books");
+  const inf = S.noteInfo({ ts: 1, text: "one two ثلاثة\n- [ ] x", meta: { edited: 9 } });
+  ok(inf.words === 4 && inf.checks === 1 && inf.edited === 9, "note info: words, checklist, edited");
+  const im = S.importText("# Book\n\n## First\nbody 1\n## Second\nbody 2", "x.md", nov.id, now);
+  ok(im.length === 2 && im[1].title === "Second" && im[1].text === "body 2" && im[0].meta.book === nov.id, "import Markdown: ## sections become notes");
+  ok(S.importText("just text", "memo.txt", nov.id)[0].title === "memo", "import a plain text file as one note");
+  ok(S.moveCheck("- [ ] a\nx\n- [ ] b", 0, 1) === "- [ ] b\nx\n- [ ] a", "reorder checklist lines");
+  ok(S.format("hello", 0, 5, "bold").text === "**hello**" && S.format("a\nb", 2, 3, "h1").text === "a\n# b", "format: bold, heading");
+  ok(S.TEMPLATES.length >= 4, "templates");
+}
+
 console.log(fail ? `${fail} FAILED` : "ALL PASSED");
 process.exit(fail ? 1 : 0);

@@ -69,12 +69,12 @@ export function bookOf(rec, shelf) {
 }
 /** A book's notes: pinned first, then newest. */
 export function notesIn(records, shelf, bookId) {
-  return records.filter((r) => isShelfNote(r) && bookOf(r, shelf) === bookId)
+  return records.filter((r) => isLive(r) && bookOf(r, shelf) === bookId)
     .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (b.meta && b.meta.edited || b.ts) - (a.meta && a.meta.edited || a.ts));
 }
 export function counts(records, shelf) {
   const n = {}; for (const b of shelf.books) n[b.id] = 0;
-  for (const r of records) if (isShelfNote(r)) { const b = bookOf(r, shelf); if (b) n[b] = (n[b] || 0) + 1; }
+  for (const r of records) if (isLive(r)) { const b = bookOf(r, shelf); if (b) n[b] = (n[b] || 0) + 1; }
   return n;
 }
 
@@ -139,7 +139,7 @@ export function searchShelf(records, shelf, q) {
   if (!words.length) return [];
   const out = [];
   for (const r of records) {
-    if (!isShelfNote(r)) continue;
+    if (!isShelfNote(r) || isTrashed(r)) continue;
     const hay = normText(`${noteTitle(r)}\n${r.text}`);
     if (words.every((w) => hay.includes(w))) { const b = bookOf(r, shelf); out.push({ rec: r, book: shelf.books.find((x) => x.id === b) || null, inTitle: words.every((w) => normText(noteTitle(r)).includes(w)) }); }
   }
@@ -160,7 +160,7 @@ export function remindNote(rec, at, schedule, now = Date.now()) {
   return { ...rec, meta: { ...(rec.meta || {}), remindAt: at } };
 }
 export function upcoming(records, shelf, now = Date.now()) {
-  return records.filter((r) => isShelfNote(r) && r.meta && r.meta.remindAt > now)
+  return records.filter((r) => isLive(r) && r.meta && r.meta.remindAt > now)
     .sort((a, b) => a.meta.remindAt - b.meta.remindAt)
     .map((r) => ({ rec: r, at: r.meta.remindAt, book: shelf.books.find((b) => b.id === bookOf(r, shelf)) || null }));
 }
@@ -168,4 +168,86 @@ export function upcoming(records, shelf, now = Date.now()) {
 /* ---- export a book as Markdown ---- */
 export function bookMarkdown(book, notes, name = book.name) {
   return `# ${name}\n\n` + notes.map((r) => `## ${noteTitle(r) || "—"}\n\n${String(r.text || "").trim()}\n`).join("\n");
+}
+
+/* ---- v6.11 group 2: trash, archive, colours, tags, sort, duplicate, merge, info, templates, import ---- */
+export const TRASH_DAYS = 30;
+const DAYMS = 86400000;
+export const isTrashed = (r) => !!(r && r.meta && r.meta.trashed);
+export const isArchived = (r) => !!(r && r.meta && r.meta.archived);
+const setM = (r, m) => ({ ...r, meta: { ...(r.meta || {}), ...m } });
+export const trashNotes = (records, ids, now = Date.now()) => { const s = new Set(ids); return records.map((r) => (s.has(r.id) ? setM(r, { trashed: now }) : r)); };
+export const restoreNotes = (records, ids) => { const s = new Set(ids); return records.map((r) => (s.has(r.id) ? setM(r, { trashed: 0 }) : r)); };
+export const archiveNotes = (records, ids, on = true) => { const s = new Set(ids); return records.map((r) => (s.has(r.id) ? setM(r, { archived: on ? 1 : 0 }) : r)); };
+/** Notes in the trash for more than 30 days are deleted for good. */
+export const purgeTrash = (records, now = Date.now()) => records.filter((r) => !(isTrashed(r) && now - r.meta.trashed > TRASH_DAYS * DAYMS));
+export const trashOf = (records) => records.filter((r) => isShelfNote(r) && isTrashed(r)).sort((a, b) => b.meta.trashed - a.meta.trashed);
+export const archiveOf = (records, shelf) => records.filter((r) => isShelfNote(r) && !isTrashed(r) && isArchived(r));
+/** What shows in a book: not in the trash, not archived. */
+export const isLive = (r) => isShelfNote(r) && !isTrashed(r) && !isArchived(r);
+
+export const NOTE_COLORS = ["", "#7f1d1d", "#78350f", "#365314", "#134e4a", "#1e3a8a", "#4c1d95", "#831843"];
+export const setColor = (rec, color) => setM(rec, { color });
+export const toggleStar = (rec) => setM(rec, { star: !(rec.meta && rec.meta.star) });
+
+/** #tags written in a note (English or Arabic). */
+export function noteTags(rec) {
+  const out = []; const rx = /(?:^|\s)#([\p{L}\p{N}_]{2,30})/gu; let m;
+  const t = String(rec && rec.text || ""); while ((m = rx.exec(t))) { const k = normText(m[1]); if (!out.includes(k)) out.push(k); }
+  return out;
+}
+export function tagsIn(notes) { const n = new Map(); for (const r of notes) for (const t of noteTags(r)) n.set(t, (n.get(t) || 0) + 1); return [...n.entries()].sort((a, b) => b[1] - a[1]).map(([tag, count]) => ({ tag, count })); }
+
+/** Sort a book's notes: pinned first, then by edited | created | title. */
+export function sortNotes(notes, by = "edited") {
+  const key = { edited: (r) => -((r.meta && r.meta.edited) || r.ts), created: (r) => -r.ts, title: (r) => noteTitle(r).toLowerCase() }[by] || ((r) => 0);
+  return notes.slice().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+}
+export const sortBooks = (books, by, counts = {}) => by === "name" ? books.slice().sort((a, b) => a.name.localeCompare(b.name)) : by === "notes" ? books.slice().sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0)) : books;
+
+export function duplicateBook(shelf, records, id, now = Date.now()) {
+  const b = shelf.books.find((x) => x.id === id); if (!b) return { shelf, records };
+  const { shelf: s2, book } = addBook(shelf, b.name + " (2)", b.cover, now);
+  const i = s2.books.findIndex((x) => x.id === book.id), books = s2.books.slice(); books.splice(i, 1); books.splice(shelf.books.indexOf(b) + 1, 0, book);
+  const copies = records.filter((r) => isLive(r) && bookOf(r, shelf) === id).map((r, k) => copyNote(r, book.id, now + k));
+  return { shelf: { ...s2, books }, records: [...copies, ...records], book };
+}
+/** Merge book `from` into `into`: its notes move, the book goes. */
+export function mergeBooks(shelf, records, from, into) {
+  if (from === into) return { shelf, records };
+  const ids = records.filter((r) => isShelfNote(r) && bookOf(r, shelf) === from).map((r) => r.id);
+  return { shelf: { ...shelf, books: shelf.books.filter((b) => b.id !== from) }, records: moveNotes(records, ids, into) };
+}
+export function noteInfo(rec) {
+  const t = String(rec.text || "");
+  return { created: rec.ts, edited: (rec.meta && rec.meta.edited) || rec.ts, words: (t.match(/[\p{L}\p{N}]+/gu) || []).length, chars: t.length, checks: (t.match(/^\s*[-*]\s*\[( |x|X)\]/gm) || []).length };
+}
+export const TEMPLATES = [
+  { id: "meeting", en: "Meeting", title: "Meeting — ", text: "Who:\nAgenda:\n- \nDecisions:\n- \nActions:\n- [ ] " },
+  { id: "todo", en: "To-do list", title: "To do", text: "- [ ] \n- [ ] \n- [ ] " },
+  { id: "journal", en: "Journal", title: "", text: "How I feel:\nWhat happened today:\nGrateful for:\n" },
+  { id: "shopping", en: "Shopping list", title: "Shopping", text: "- [ ] \n- [ ] \n- [ ] " },
+];
+/** A .txt / .md file → notes: "## heading" sections become notes; a file with none is one note. */
+export function importText(text, fileName, bookId, now = Date.now()) {
+  const t = String(text || "").replace(/\r\n/g, "\n");
+  const parts = t.split(/^##\s+/m);
+  if (parts.length > 1) return parts.slice(1).map((p, i) => { const [h, ...rest] = p.split("\n"); return makeNote({ title: h.trim(), text: rest.join("\n").trim(), book: bookId, now: now + i }); });
+  const body = t.replace(/^#\s+.*\n+/, "");
+  return body.trim() ? [makeNote({ title: String(fileName || "").replace(/\.\w+$/, ""), text: body.trim(), book: bookId, now })] : [];
+}
+/** Move the n-th checklist line up or down among the checklist lines. */
+export function moveCheck(text, n, dir) {
+  const lines = String(text).split("\n"); const idx = [];
+  lines.forEach((l, i) => { if (/^\s*[-*]\s*\[( |x|X)\]/.test(l)) idx.push(i); });
+  const a = idx[n], b = idx[n + dir]; if (a == null || b == null) return text;
+  [lines[a], lines[b]] = [lines[b], lines[a]]; return lines.join("\n");
+}
+/** Wrap the selection [s, e) of `text` in Markdown (bold, italic…) or start its line with a prefix. */
+export function format(text, s, e, kind) {
+  const W = { bold: "**", italic: "_", strike: "~~" }[kind];
+  if (W) return { text: text.slice(0, s) + W + text.slice(s, e) + W + text.slice(e), s: s + W.length, e: e + W.length };
+  const P = { h1: "# ", h2: "## ", bullet: "- ", number: "1. ", check: "- [ ] ", quote: "> " }[kind] || "";
+  const ls = text.lastIndexOf("\n", s - 1) + 1;
+  return { text: text.slice(0, ls) + P + text.slice(ls), s: s + P.length, e: e + P.length };
 }

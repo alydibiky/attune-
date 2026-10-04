@@ -7582,6 +7582,7 @@ export default function App() {
 
   // The index is derived, so a bad index is never data loss — it rebuilds.
   const memIndex = useMemo(() => memBuildIndex(memory), [memory]);
+  const memoryLive = useMemo(() => memory.filter((r) => !(r.meta && r.meta.trashed)), [memory]);   // v6.11: notes in the Shelf trash are not shown in Mind
   const memHits = useMemo(
     () => (memQ.trim() ? memSearch(memory, memIndex, memQ, { now: Date.now(), limit: 40 }) : []),
     [memQ, memory, memIndex]);
@@ -9107,7 +9108,7 @@ export default function App() {
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "memory" ? (
           // v6.8: Memory → Mind (mind-ui.jsx). Promises and Your words are its other two tabs.
-          <MindPage records={memory} remember={remember} update={updateRec} forget={forget} togglePin={togglePin}
+          <MindPage records={memoryLive} remember={remember} update={updateRec} forget={forget} togglePin={togglePin}
             search={(q, n) => memSearch(memory, memIndex, q, { now: Date.now(), limit: n || 30 })}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })}
             modelReady={modelUsable}
