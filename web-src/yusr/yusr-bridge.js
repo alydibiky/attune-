@@ -55,7 +55,7 @@ const IN_TYPES  = new Set(["ready", "snapshot", "txn-added", "zakat-paid", "erro
 // What Yusr is allowed to ask the model for. A closed list, because "run this
 // arbitrary prompt" would let a future screen quietly route a fiqh question
 // through a model — the exact thing rule 1 exists to prevent.
-const AI_KINDS = new Set(["invoice-draft", "note-tidy", "log-text"]);   // log-text: v6.13 "write it and it logs it"
+const AI_KINDS = new Set(["invoice-draft", "note-tidy", "log-text", "money-ask"]);   // log-text: v6.13 "write it and it logs it"
 
 const num = (v) => (typeof v === "number" && isFinite(v) ? v : null);
 const str = (v, n) => (typeof v === "string" ? v.slice(0, n || 200) : null);

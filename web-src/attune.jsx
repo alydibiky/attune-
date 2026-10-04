@@ -11,7 +11,7 @@ import {
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
-import { logPrompt, parseLog } from "./yusr/logtext.js";
+import { logPrompt, parseLog, isQuestion } from "./yusr/logtext.js";
 import { ChatHome, Md, systemPrompt as chatSystemPrompt } from "./chat.jsx";
 import { tr, getLang, setLang, fmtNum, dateLocale } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
@@ -40,7 +40,7 @@ import { popBack, hasBack, useSubBack, forgetSticky } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
-import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
+import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
 import { findPlaces } from "./mapsearch.js";
 import { CVPage } from "./cv-ui.jsx";
 import * as USK from "./userskills.js";
@@ -6005,6 +6005,22 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
     // happens for either app, so there is one prompt to audit, not two.
     bridge.on("ai-request", async (d) => {
       const reply = (result) => bridge.send("ai-result", { kind: d.kind, id: d.id, result });
+      // v6.13: Yusr's write-or-ask bar. Sums are added up by code from the ledger (myledger.js); the model only
+      // answers what code cannot (advice), and then only from figures code worked out.
+      const askLedger = async (q) => {
+        const ledger = loadLedger();
+        if (myMoneyIntent(q) || catAsked(q) || /\b(spend|spent|spending|earn|earned|income|expenses?|balance)\b|صرفت|مصاريف|دخل|رصيد/i.test(q))
+          return answerMyMoney(q, ledger, { short: true }).text;
+        if (modelStateRef.current === "ready" && ledger) {
+          const facts = answerMyMoney("what did I spend and earn this month", ledger, { short: false }).text;
+          try {
+            return await callClaude(`You are a careful money helper inside a budgeting app. Answer the user's question in 2–4 short sentences, in the user's language. Use ONLY the figures below (from their own records); never invent numbers.\n\n${facts}\n\nQuestion: ${q}`, { prefix: "money", maxTokens: 260, think: false, temperature: 0.3 });
+          } catch (e) { /* the plain hint below */ }
+        }
+        return /[\u0600-\u06FF]/.test(q) ? "أقدر أجاوب عن فلوسك: «صرفت كام على الأكل الأسبوع ده؟» أو «دخلي الشهر ده كام؟»" : "Ask me about your own money, e.g. “how much did I spend on food this week?” or “what did I earn this month?”";
+      };
+      if (d.kind === "money-ask") { reply({ ok: true, answer: await askLedger(d.text) }); return; }
+      if (d.kind === "log-text" && isQuestion(d.text)) { reply({ ok: true, answer: await askLedger(d.text) }); return; }
       if (d.kind === "log-text") {
         // v6.13: "write it and it logs it". The code reading works without a model; the model (when it is
         // loaded) only sorts and names better — every amount it gives must be in his words (logtext.js).

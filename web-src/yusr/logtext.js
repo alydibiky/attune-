@@ -23,16 +23,16 @@ export const normDigits = (s) => String(s || "").replace(/[٠-٩۰-۹٫٬]/g, (c
 
 // Yusr's own category ids (BASE_CATS in index.new.html) and the words that point to each.
 export const CAT_WORDS = {
-  food: /\b(lunch|dinner|breakfast|food|meal|restaurant|pizza|burger|shawarma|koshary|sandwich|snack|delivery|talabat|kfc|mcdonald'?s?)\b|غدا|غداء|عشا|عشاء|فطار|فطور|أكل|اكل|مطعم|بيتزا|برجر|شاورما|كشري|سندوتش|ساندوتش|طلبات|دليفري/i,
+  food: /\b(food|eating|lunch|dinner|breakfast|food|meal|restaurant|pizza|burger|shawarma|koshary|sandwich|snack|delivery|talabat|kfc|mcdonald'?s?)\b|غدا|غداء|عشا|عشاء|فطار|فطور|أكل|اكل|مطعم|بيتزا|برجر|شاورما|كشري|سندوتش|ساندوتش|طلبات|دليفري/i,
   groceries: /\b(groceries|grocery|supermarket|market|vegetables|fruit|milk|bread|eggs|carrefour|spinneys|hyper)\b|بقالة|سوبر ?ماركت|خضار|فاكهة|لبن|عيش|بيض|كارفور|هايبر/i,
-  transport: /\b(taxi|uber|careem|didi|indrive|bus|metro|train|fuel|petrol|gas|benzine|parking|toll|car wash|ticket)\b|تاكسي|أوبر|اوبر|كريم|ميكروباص|اتوبيس|أتوبيس|مترو|قطر|بنزين|سولار|جاز|ركنة|باركينج|كارتة|غسيل العربية|مواصلات/i,
+  transport: /\b(transport|transportation|commute|taxi|uber|careem|didi|indrive|bus|metro|train|fuel|petrol|gas|benzine|parking|toll|car wash|ticket)\b|تاكسي|أوبر|اوبر|كريم|ميكروباص|اتوبيس|أتوبيس|مترو|قطر|بنزين|سولار|جاز|ركنة|باركينج|كارتة|غسيل العربية|مواصلات/i,
   bills: /\b(bill|bills|electricity|water|internet|wifi|phone|mobile|recharge|subscription|netflix|spotify|we|vodafone|orange|etisalat|gas bill)\b|فاتورة|فواتير|كهرباء|كهربا|مية|ماء|انترنت|إنترنت|نت|رصيد|شحن|اشتراك|نتفلكس/i,
   rent: /\b(rent|landlord|lease)\b|إيجار|ايجار|الإيجار|الايجار/i,
   shopping: /\b(shopping|clothes|shirt|shoes|jeans|dress|amazon|noon|jumia|bought|watch|bag)\b|تسوق|هدوم|لبس|قميص|جزمة|كوتشي|بنطلون|فستان|أمازون|امازون|نون|جوميا|اشتريت|شنطة|ساعة/i,
-  health: /\b(pharmacy|medicine|doctor|clinic|hospital|dentist|lab|x-?ray|gym|vitamins?)\b|صيدلية|دوا|دواء|علاج|دكتور|طبيب|عيادة|مستشفى|دكتور سنان|تحاليل|أشعة|اشعة|جيم/i,
-  fun: /\b(cinema|movie|game|games|playstation|outing|trip|concert|club|fun)\b|سينما|فيلم|لعب|بلايستيشن|خروجة|فسحة|رحلة|حفلة|نادي/i,
+  health: /\b(health|medical|pharmacy|medicine|doctor|clinic|hospital|dentist|lab|x-?ray|gym|vitamins?)\b|صيدلية|دوا|دواء|علاج|دكتور|طبيب|عيادة|مستشفى|دكتور سنان|تحاليل|أشعة|اشعة|جيم/i,
+  fun: /\b(entertainment|cinema|movie|game|games|playstation|outing|trip|concert|club|fun)\b|سينما|فيلم|لعب|بلايستيشن|خروجة|فسحة|رحلة|حفلة|نادي/i,
   coffee: /\b(coffee|tea|cafe|café|starbucks|latte|cappuccino|espresso|juice)\b|قهوة|شاي|كافيه|ستاربكس|لاتيه|عصير/i,
-  gifts: /\b(gift|present|eidiya|charity|donation|sadaqa)\b|هدية|هدايا|عيدية|صدقة|تبرع/i,
+  gifts: /\b(gifts|gift|present|eidiya|charity|donation|sadaqa)\b|هدية|هدايا|عيدية|صدقة|تبرع/i,
   salary: /\b(salary|paycheck|payroll|wage|wages)\b|مرتب|راتب|المرتب|الراتب|قبضت/i,
 };
 const INCOME = /\b(salary|paycheck|got paid|received|receive|earned|income|refund(ed)?|sold|bonus|commission|someone paid me|paid me|gave me|got \d|got back)\b|قبضت|مرتب|راتب|استلمت|جالي|جاتلي|اخدت|أخدت|خدت|دخل|بعت|بيعت|ارتجعلي|رجعلي|عمولة|مكافأة|مكافاة|حد ادانى|اداني|ادّاني/i;
@@ -180,4 +180,12 @@ export function parseLog(raw, text, opts = {}) {
   items = items.map(({ src, ...x }) => x);
   return items.length ? { ok: true, items, warnings, via: j && Array.isArray(j.items) ? "model" : "code" }
     : { ok: false, items: [], warnings, why: "No amount found. Write it like: lunch 150, taxi 60, got salary 30000." };
+}
+
+/** Is this a question to answer (not something to log)? "how much on food this week?", «كام صرفت النهارده». */
+export function isQuestion(text) {
+  const t = String(text || "").trim();
+  if (/[?؟]\s*$/.test(t)) return true;
+  return /^(how|what|when|which|where|why|did|do|does|is|are|show|list|tell|compare|كام|بكام|قد ايه|قد إيه|ازاي|إزاي|ايه|إيه|امتى|إمتى|فين|هل|وريني|ورّيني|اعرض|قولي|قوللي|مين)\b/i.test(t)
+    || /^(كام|قد ايه|وريني)/.test(t);
 }

@@ -350,26 +350,62 @@ nav button{position:relative}
 .wr-acts button{background:none;color:var(--accent);padding:4px 0}
 .wr-warn{color:#f0b35a;font-size:12.5px;margin-top:6px}
 .bill-day{color:var(--muted);font-size:12px;margin:12px 2px 4px;font-weight:600}
+
+/* v6.13 — Home: cards (B) + write-or-ask bar with a conversation (C) */
+nav button{font-size:10.5px!important}
+.hero-ring{position:absolute;inset-inline-end:18px;top:18px;width:86px;height:86px;border-radius:50%;z-index:1;cursor:pointer}
+.hero-ring i{position:absolute;inset:12px;border-radius:50%;background:#1b2131;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:800;text-align:center;line-height:1.15;color:var(--text)}
+.hero-ring i small{display:block;font-size:9px;color:var(--muted);font-weight:600}
+#balance-card .big{max-width:calc(100% - 96px)}
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 6px}
+.hcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 13px;cursor:pointer;min-width:0}
+.hcard:active{background:var(--card2)}
+.hcard .k{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.hcard .v{font-size:18px;font-weight:800;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hcard .s{color:var(--muted);font-size:11.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.talk{margin-top:10px}
+.talk:empty{display:none}
+.talk-head{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 4px}
+.talk-head h2{margin:0;font-size:15px}
+.bub{max-width:84%;padding:9px 12px;border-radius:17px;font-size:14px;margin:6px 0;line-height:1.4;white-space:pre-line;word-wrap:break-word}
+.bub.me{background:rgba(231,178,76,.16);color:#f3dfb0;margin-inline-start:auto;border-end-end-radius:6px}
+.bub.bot{background:var(--card);border:1px solid var(--line);border-end-start-radius:6px}
+.bub .l{display:flex;justify-content:space-between;gap:12px;padding:2px 0;font-size:13.5px}
+.bub .acts{color:var(--muted);font-size:12px;margin-top:4px}
+.bub .acts button{background:none;color:var(--accent);font-weight:700;font-size:12px;padding:0 4px}
+.sugg{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none}
+.sugg button{white-space:nowrap;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:14px;padding:7px 11px;font-size:12.5px}
+.askbar{display:none;position:fixed;left:0;right:0;bottom:calc(58px + var(--safe-b));z-index:36;padding:6px 12px 8px;background:linear-gradient(to top,var(--bg) 70%,transparent)}
+body.on-home .askbar{display:block}
+body.on-home .fab{display:none}
+.askbar>*{max-width:496px;margin-left:auto;margin-right:auto}
+.askrow{display:flex;align-items:flex-end;gap:8px;background:var(--card);border:1px solid var(--line2);border-radius:24px;padding:6px}
+.askrow textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font:inherit;font-size:15px;resize:none;padding:8px 4px;max-height:110px;line-height:1.35;-webkit-user-select:text;user-select:text}
+.askplus{width:38px;height:38px;border-radius:50%;background:var(--card2);color:var(--text);font-size:20px;flex:0 0 auto}
+.asksend{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#1a1400;font-size:16px;font-weight:800;flex:0 0 auto}
+.asksend:disabled{opacity:.5}
+#write-result:empty{display:none}
+#write-result{margin-bottom:6px}
+#scr-home{padding-bottom:170px}
 </style></head><body>
 <div id="app">
   <!-- OVERVIEW -->
   <section class="screen active" id="scr-home">
-    <header><div><h1>Yusr — Money &amp; Zakat</h1><div class="sub" id="home-sub"></div></div>
+    <header><div><h1 data-i18n="moneyTitle">Money</h1><div class="sub" id="home-sub"></div></div>
       <div class="hbtns"><button class="icon-btn" onclick="shareCard()">⇪</button><button class="icon-btn" onclick="go('settings')">⚙︎</button></div></header>
     <div id="home-alert"></div>
-    <div class="writebox" id="write-box">
-      <textarea id="write-text" rows="2" data-ph="writePh" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();writeLog();}"></textarea>
-      <button class="btn" id="write-go" onclick="writeLog()" data-i18n="writeGo"></button>
-      <div id="write-result"></div>
-    </div>
     <div class="acct-scroll" id="acct-chips"></div>
     <div class="balance" id="balance-card">
+      <div class="hero-ring" id="home-ring" onclick="go('trends')"></div>
       <div class="lbl"><span data-i18n="balance"></span> <span id="bal-acct"></span></div>
       <div class="big num" id="bal-amount">—</div>
       <div class="row"><div><div class="k" data-i18n="inPeriod"></div><div class="v up num" id="sum-in">—</div></div>
         <div><div class="k" data-i18n="outPeriod"></div><div class="v down num" id="sum-out">—</div></div></div>
       <div class="budget-bar" id="home-budget" style="display:none"><div class="top"><span data-i18n="monthlyBudget"></span><span id="home-budget-txt"></span></div><div class="track"><div class="fill" id="home-budget-fill"></div></div></div>
     </div>
+    <div class="hgrid" id="home-grid"></div>
+    <div class="talk" id="home-talk"></div>
+    <div class="sec-head" style="margin-top:18px"><h2 data-i18n="recent"></h2></div>
     <div class="filters">
       <div class="seg" id="home-period"><button data-p="week" data-i18n="week"></button><button data-p="month" class="on" data-i18n="month"></button><button data-p="year" data-i18n="year"></button><button data-p="all" data-i18n="all"></button></div>
       <button class="mini-btn" id="filter-btn" onclick="openFilter()">⚲ <span data-i18n="filter"></span></button>
@@ -499,6 +535,14 @@ nav button{position:relative}
   </section>
 
   <button class="fab" onclick="openTx()">+</button>
+  <div class="askbar" id="write-box">
+    <div id="write-result"></div>
+    <div class="askrow">
+      <button class="askplus" onclick="openTx()" aria-label="Add by hand">＋</button>
+      <textarea id="write-text" rows="1" data-ph="writePh" oninput="askGrow(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();writeLog();}"></textarea>
+      <button class="asksend" id="write-go" onclick="writeLog()" aria-label="Send">➤</button>
+    </div>
+  </div>
   <nav><div class="max">
     <button class="on" data-scr="home" onclick="go('home')"><span class="ni">◆</span><span data-i18n="overview"></span></button>
     <button data-scr="trends" onclick="go('trends')"><span class="ni">▲</span><span data-i18n="trends"></span></button>

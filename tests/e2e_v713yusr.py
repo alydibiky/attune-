@@ -44,12 +44,27 @@ with sync_playwright() as p:
     y.click("#write-go"); y.wait_for_selector("[data-testid=write-done]", timeout=15000)
     tx = y.evaluate("db.txns.slice(-2).map(t => [t.amount, t.cat, t.date])")
     check([t[0] for t in tx] == [80, 500] and tx[1][1] == "transport", "Arabic: %s" % tx)
+    # a question is answered (by code, from the ledger), not logged
+    n1 = y.evaluate("db.txns.length")
+    y.fill("#write-text", "how much did I spend on transport this week?")
+    y.click("#write-go")
+    y.wait_for_selector("[data-testid=talk-answer]", timeout=15000)
+    ans = y.locator("[data-testid=talk-answer]").last.inner_text()
+    check("500" in ans and "Food" not in ans and y.evaluate("db.txns.length") == n1, "answered, nothing logged: %s" % ans)
+    # the home cards (B) and 5 tabs
+    check(y.locator("[data-testid=card-spent]").is_visible() and y.locator("[data-testid=card-zakat]").is_visible(), "home cards show")
+    shown = y.evaluate("[...document.querySelectorAll('nav button[data-scr]')].filter(b => getComputedStyle(b).display !== 'none').map(b => b.dataset.scr)")
+    check(shown == ["home", "trends", "bills", "zakat", "settings"], "5 tabs: %s" % shown)
+    check(y.locator("#write-box").is_visible(), "the write-or-ask bar is on Home")
     # no invoices tab, no demo data, Bills tab instead
     check(y.evaluate("!document.querySelector('nav button[data-scr=invoices]')"), "no Invoices tab")
     check(y.evaluate("!document.getElementById('demo-btn')"), "no demo data button")
     check(y.evaluate("!!document.querySelector('nav button[data-scr=bills]')"), "a Bills tab")
     y.evaluate("go('bills')"); page.wait_for_timeout(200)
     check(y.locator("#scr-bills").is_visible(), "Bills opens")
+    check(not y.locator("#write-box").is_visible(), "the bar hides off Home")
+    y.evaluate("go('settings')"); page.wait_for_timeout(200)
+    check(y.locator("#more-tiles").inner_text().lower().find("accounts") >= 0, "More opens Accounts, Goals, Notes")
     # a daily bill on days 1–10 only
     y.evaluate("openRecurring()"); page.wait_for_timeout(200)
     y.fill("#rec-amount", "40")

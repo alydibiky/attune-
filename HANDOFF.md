@@ -598,6 +598,12 @@ Ali tested 6.11 and sent 7 screenshots + a list (NEXT_SESSION.md section L). Wha
   `<script id="yusr-v613">/*__V613__*/</script>` placeholder of `index.new.html` (so edit the .js, not the html).
   Bills tab `scr-bills` (`renderBills`, `billsAhead`), recurring `freq: daily` + `fromDay/toDay` (`inDayRange`,
   `advance(d, f, r)`), invoices/demo UI removed (code kept, data kept). Tests: unit v714yusrlog, e2e_v713yusr.
+- **Yusr home (B + C mix):** `homeCards()` (ring `#home-ring`, grid `#home-grid`), `renderTalk()` (`db.talk`, last 30;
+  a logged bubble re-reads its transactions so edits/deletes show), the bar `#write-box` (fixed, `body.on-home` only).
+  `log-text` replies `{answer}` when `isQuestion(text)` (logtext.js) — Attune's `askLedger` answers by code
+  (`answerMyMoney(q, ledger, {short:true})`, category from `catAsked`), the model only for advice, from code's figures.
+  One-time `db.ui.v613` migration: tabs accounts/goals/notes hidden (tiles in More, `moreTiles()`), `db.ui.cards`
+  switches. Tests: unit v715moneyask; e2e_v713yusr covers question, cards, 5 tabs, bar on Home only.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

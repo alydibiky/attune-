@@ -458,9 +458,12 @@ touch, merge origin/main before pushing, and push your branch (not main).
    "Run my business" welcome option. Old invoice data is kept in the backup, just not shown.
 5. ✅ **Demo data removed** from Settings (a phone still showing sample data gets "Remove sample data" on the banner).
 6. ✅ **Recurring: Daily**, and **daily only from day A to day B of each month** (wraps: 25 → 5).
-7. ⬜ **Yusr look** — options A (calm list) / B (dashboard cards, recommended) / C (chat-first) sent to Ali as a picture
-   (mock-up HTML in the session scratchpad; rebuild from the description if needed). Build the one he picks; Yusr also has
-   TWO bottom bars stacked (its 8 tabs + Attune's) — every option cuts Yusr's to 4–5 tabs.
+7. ✅ **Yusr look** — Ali picked "a mix of B and C": Home = balance card with a spending ring + 4 tappable cards (spent vs
+   before, earned, bills in 7 days, Zakat) + the **Write or ask** conversation (bubbles, kept in `db.talk`) + recent list;
+   the bar is fixed at the bottom on Home (its ＋ opens the manual form; the old + button hides there). Questions
+   ("how much on food this week?") are answered by code from the ledger (`myledger.js` `short` + `catAsked`). Yusr now has
+   5 tabs (Home · Trends · Bills · Zakat · More); Accounts, Goals & debts and Notes are tiles at the top of More, with
+   "Home shows" switches (ring / cards / conversation). ⬜ Ali to check it on the phone (Arabic too).
 
 ## Prompt to start the next session
 
