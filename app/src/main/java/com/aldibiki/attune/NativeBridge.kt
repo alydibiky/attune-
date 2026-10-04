@@ -737,6 +737,16 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v6.20: a file of a Knowledge pack ({tag, name}) → {text}. Only this app's own know-* releases can be asked. */
+    @JavascriptInterface
+    fun knowPackText(id: String, arg: String) {
+        if (blockedByAirGap(id, "the knowledge pack")) return
+        pool.execute {
+            try { val a = JSONObject(arg); resolve(id, JSONObject().put("name", a.optString("name")).put("text", WebTools.knowPackText(a.optString("tag"), a.optString("name")))) }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't download the knowledge pack") }
+        }
+    }
+
     /** v6.10: the photo fast path's files (FoodClip) — on the phone? {installed, bytes, files} */
     @JavascriptInterface
     fun foodClipStatus(): String = try { FoodClip.status(ctx).toString() } catch (e: Throwable) { "{\"installed\":false,\"bytes\":0}" }
