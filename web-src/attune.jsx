@@ -7418,7 +7418,7 @@ export default function App() {
   // app that leaves the device, so it is never implicit.
   const [webOn, setWebOn] = useState(false);
   // v6.12: Web in Chat is Off / Auto / On; Auto searches only when the question needs fresh facts (router.js). Remembered.
-  const [webAuto, setWebAutoRaw] = useState(() => { try { return localStorage.getItem("attune:web:auto") === "1"; } catch (e) { return false; } });
+  const [webAuto, setWebAutoRaw] = useState(() => { try { return localStorage.getItem("attune:web:auto") !== "0"; } catch (e) { return true; } });   // Auto by default (Ali: the app decides)
   const setWebAuto = (v) => { setWebAutoRaw(v); try { localStorage.setItem("attune:web:auto", v ? "1" : "0"); } catch (e) {} };
   // v6.12: when more than one model is installed, the chat picks the model for each question (on unless switched off)
   const [autoModel, setAutoModelRaw] = useState(() => { try { return localStorage.getItem("attune:automodel") !== "0"; } catch (e) { return true; } });
@@ -8771,9 +8771,10 @@ export default function App() {
     webOn,
     toggleWeb: () => {   // Off → Auto → On → Off
       if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to search the web")); return; }
-      if (!webOn && !webAuto) { setWebAuto(true); flash(tr("Web: Auto — it searches only when a question needs fresh facts")); }
-      else if (webAuto) { setWebAuto(false); setWebOn(true); }
-      else setWebOn(false);
+      // Auto → Off → On → Auto
+      if (webOn) { setWebOn(false); setWebAuto(true); flash(tr("Web: Auto — it searches only when a question needs fresh facts")); }
+      else if (webAuto) { setWebAuto(false); flash(tr("Web: Off — nothing is looked up")); }
+      else setWebOn(true);
     },
     webAuto: !webOn && webAuto && !(NATIVE && airGap),
     autoModel: () => autoModel && NATIVE && (installedModels || []).length > 1,
@@ -10691,7 +10692,7 @@ export default function App() {
           </div>
         )}
         {/* v5.29 UX: not on Chat — the fixed message box covered it (half-hidden text) */}
-        {mode !== "chat" ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup is optional and off by default")}</p> : null}
+        {mode !== "chat" ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch it off with the Web button")}</p> : null}
       </div>
       {toast && <div className="fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       <ConfirmHost />
@@ -11386,7 +11387,9 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
     if (device.platform === "desktop") return true;
     if (t.id === "xs") return !MODEL_TIERS.some((x) => x.id !== "xs" && fits(x));
     if (t.id === "sm") return !MODEL_TIERS.some((x) => ["md-lo", "md", "md-hi", "fast-e2b", "fast-e4b"].includes(x.id) && smooth(x));
-    return fits(t);
+    // v6.12 (Ali: "where are the high-end models — they disappeared"): the big models stay listed even when this phone
+    // is short of memory for them (their card says so); only the WEAKER ones are folded away
+    return fits(t) || (device.ram >= 12 && (t.sizeGB || 0) >= 5);   // a flagship phone (12 GB+) sees the high end
   };
   const listTiers = MODEL_TIERS.filter((t) => showAll || worth(t) || instIds.has(t.id) || (activeTier && activeTier.id === t.id));
   const hiddenTiers = MODEL_TIERS.length - listTiers.length;

@@ -24,7 +24,7 @@ import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, websiteF
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
-import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget } from "./research.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, topicKind, topicSearches, answerTemplate, wantsShape } from "./research.js";
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
@@ -761,7 +761,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // v6.10: the person's own Skills — "/quote 50 t crane…" or a question that fits a skill's description
       const uSk = typed && api.userSkills ? api.userSkills(typed) : null;
       if (uSk && uSk.stripped != null) content = uSk.stripped || content;
-      let sources = null, via = null, research = null, webCtx = null, webEmpty = false; const extra0 = {};
+      let sources = null, via = null, research = null, webCtx = null, webEmpty = false, tplUsed = ""; const extra0 = {};
       const pic = img || carried;
       // v6.12: Auto — the best installed model for this kind of question (a quick one keeps the loaded model)
       if (api.autoModel && api.autoModel() && api.switchModel) {
@@ -818,7 +818,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // pages across all of them, fill the gaps in extra rounds, cross-check the figures.
         // Stronger models plan more searches, read more pages and get more time (power.js).
         const deep = pagesFor(typed) === 8;   // what the user typed ("all-terrain" or a rewritten follow-up doesn't count)
-        const readCap = deep ? (pwR.readPages || pwR.pages || 8) : Math.min(pwR.readPages || 5, 5);
+        let readCap = deep ? (pwR.readPages || pwR.pages || 8) : Math.min(pwR.readPages || 5, 5);
         // a quick question ("what is this car") stays one fast search; detail-hungry ones are planned
         const nQ = api.webPages && deep ? Math.max(3, pwR.queries || 1) : 1;   // v5.30: parallel searches cost no model time — at least 3 for detailed questions
         // v5.30 — FAST by default (Gemini-like: searches at the same time, code picks the
@@ -834,6 +834,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             if (runRef.current !== run) return;
           } else queries = expandQueries(query, nQ);
         }
+        // v6.12: a detail question about a car, a crane, a phone, a place, a company → the searches that fill every section, and
+        // the answer's shape (research.js answerTemplate) — what makes Gemini's answers complete
+        const kindT = topicKind(question), shaped = api.webPages && wantsShape(typed, kindT);
+        if (shaped) { queries = [...new Set([...queries, ...topicSearches(query, kindT)])].slice(0, 5); readCap = Math.max(readCap, pwR.readPages || pwR.pages || 8); }
         const per = Math.min(8, Math.ceil(readCap / queries.length) + 2);
         onStatus(queries.length > 1 ? tr("Searching {n} ways at once…", { n: queries.length }) : tr("Searching the web…"));
         const found = await Promise.all(queries.map((q, i) =>
@@ -862,7 +866,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const ansF = (api.power && api.power().longTokens) || 2048;
           // v5.32: the passages fill at most a 12k window even on 16k phones — a small model copies
           // figures far more reliably from a shorter prompt (and it reads faster)
-          const budgetF = quickBudget(typed, fitChars(Math.min(ctxF, 12288), ansF, 2600, toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" ")), deep);   // v6.8: a quick question reads less
+          const budgetF = quickBudget(typed, fitChars(Math.min(ctxF, 12288), ansF, 2600 + (shaped ? 350 : 0), toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" ")), deep || shaped);   // the answer's shape takes ≈350 tokens of the window   // v6.8: a quick question reads less
           const ranked = api.rankAll(question, toRead, { budget: budgetF, perSource: Math.max(1500, Math.floor(budgetF / Math.max(1, Math.min(toRead.length, 6)) * 1.4)) });
           const figs = confirmedFigures(ranked);
           sources = ranked; via = look.via;
@@ -872,7 +876,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           // the answer and what it means — the figures come from the sheet, not re-typed by the model
           const sheet0 = factSheet(question, ranked, /[؀-ۿ]/.test(typed));
           const ask0 = sheet0.md ? SHEET_NOTE : deep ? FAST_REPORT_ADD : "";
-          content = api.groundedPrompt(asked, ranked) + figs.block + ask0 + photoNote;
+          tplUsed = shaped ? answerTemplate(question, kindT) : "";
+          content = api.groundedPrompt(asked, ranked) + figs.block + ask0 + tplUsed + photoNote;
           webCtx = { query, asked, question, toRead, budget: budgetF, tail: figs.block + ask0 + photoNote };
         } else if (toRead.length && api.webPages) {
           const notesSrc = [], tR = Date.now(), budget = (pwR.researchSecs || 170) * 1000; let read = 0;
@@ -921,7 +926,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             sources = cc.notes; via = look.via; research = { pages: read, withFacts: notesSrc.length, searches: queries.length, confirmed: cc.confirmed,
               log: { queries: queries.slice(0, 8), read: notesSrc.slice(0, 12).map((h) => ({ title: String(h.title || "").slice(0, 90), url: h.url })) } };
             onStatus(tr("Writing the full answer from {n} pages…", { n: notesSrc.length }));
-            content = api.groundedPrompt(asked, cc.notes) + (queries.length > 1 || cc.confirmed ? REPORT_ADD : FINAL_ADD) + photoNote;
+            content = api.groundedPrompt(asked, cc.notes) + (queries.length > 1 || cc.confirmed ? REPORT_ADD : FINAL_ADD) + (shaped ? answerTemplate(question, kindT) : "") + photoNote;
           } else {
             const ranked = api.rankAll(question, toRead);
             sources = ranked; via = look.via;
@@ -1302,8 +1307,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         if (au.fabricated.length) {
           patchMsg(cid, aiId, { phase: tr("Checking the numbers against the sources…") });
           try {
-            const fixMsg = content + "\n\nYOUR FIRST ANSWER WAS:\n" + answer + "\n\nThese numbers in it are NOT in the passages: " + au.fabricated.slice(0, 6).join(", ") +
+            const tail = "\n\nYOUR FIRST ANSWER WAS:\n" + String(answer).slice(0, 1800) + "\n\nThese numbers in it are NOT in the passages: " + au.fabricated.slice(0, 6).join(", ") +
               ". Write the answer again using only numbers, versions and dates exactly as the passages write them.";
+            // v6.12: this pass re-sends the passages AND the first answer — it must fit the window too (it overflowed 4K windows)
+            let body0 = tplUsed ? content.replace(tplUsed, "") : content;
+            const room = fitChars((api.contextTokens && api.contextTokens()) || 8192, (api.power && api.power().longTokens) || 2048, 1700, body0) - tail.length;
+            if (body0.length > room && room > 1500) body0 = body0.slice(0, Math.floor(room * 0.35)) + "\n…\n" + body0.slice(body0.length - Math.floor(room * 0.6));
+            const fixMsg = body0 + tail;
             const again = await api.run(buildMessages([], fixMsg, 0), null, { onToken, onStatus, think: false, temperature: 0.2, copy: true });
             if (runRef.current !== run) return;
             const au2 = api.groundedAudit(again, sources, typed);

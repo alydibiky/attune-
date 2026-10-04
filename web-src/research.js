@@ -330,3 +330,56 @@ export function quickBudget(question, budget, deep = false) {
   if (/\b(compare|comparison|vs\.?|versus|difference|differences|all|every|list|trims?|versions?|specs?|specifications?|pros|cons|review|explain|how (do|does|to)|why)\b|قارن|مقارنة|الفرق|فرق|كل |جميع|فئات|مواصفات|اشرح|ليه|إزاي|ازاي|كيف|لماذا/i.test(q)) return budget;
   return Math.min(budget, 6000);
 }
+
+/* ---- v6.12: answers shaped like Gemini's, by topic ---------------------------------------------------------------------------
+   Ali: "web search better than Gemini, I don't care how" (his example: a car question, answered by Gemini with every version,
+   price and spec). What makes those answers good is their SHAPE: a direct answer, then the same sections every time for that
+   kind of subject, with tables. A small model writes far better when it is handed that shape. `topicKind` names the subject's
+   kind; `topicSearches` adds the searches that fill each section; `answerTemplate` is the shape the final answer must follow. */
+const KIND_RX = {
+  vehicle: /\b(car|cars|suv|sedan|hatchback|pickup|truck|ev|hybrid|phev|motorcycle|bike|lynk|byd|chery|geely|toyota|hyundai|kia|nissan|bmw|mercedes|audi|vw|volkswagen|skoda|peugeot|renault|mg|jetour|haval|tesla|honda|mazda|ford|chevrolet|jeep|land rover|range rover|porsche|lexus|mitsubishi|suzuki|opel|citroen|fiat|seat|cupra|zeekr|xpeng|nio|li auto|xiaomi su7|exeed|omoda|baic|changan|gac|jaecoo|proton)\b|سيارة|عربية|عربيه|فئات|موديل \d{4}/i,
+  machine: /\b(crane|excavator|loader|forklift|bulldozer|grader|telehandler|aerial|boom lift|generator|compressor|liebherr|tadano|grove|demag|terex|xcmg|sany|zoomlion|manitowoc|kobelco|komatsu|caterpillar|cat \d|jcb|hitachi|volvo ce|ltm|gmk|atf|rough terrain)\b|ونش|كرين|لودر|حفار|بلدوزر|مولد/i,
+  gadget: /\b(iphone|ipad|macbook|galaxy|pixel|xiaomi|redmi|poco|oppo|vivo|realme|honor|huawei|oneplus|nothing phone|laptop|notebook|tablet|smartwatch|watch|earbuds|headphones|airpods|camera|tv|monitor|gpu|rtx|cpu|ryzen|intel core|playstation|ps5|xbox|switch)\b|موبايل|تليفون|لابتوب|تابلت|ساعة ذكية|سماعة/i,
+  place: /\b(hotel|resort|restaurant|beach|museum|city|visit|trip|travel|things to do|tour|flight|airport)\b|فندق|مطعم|شاطئ|متحف|رحلة|سفر|أماكن/i,
+  org: /\b(company|ceo|founder|net worth|startup|brand|who is|biography|born)\b|شركة|مؤسس|مين هو|مين هي/i,
+};
+/** What kind of subject the question is about: vehicle | machine | gadget | place | org | general */
+export function topicKind(q) {
+  const t = String(q || "");
+  for (const k of ["machine", "vehicle", "gadget", "place", "org"]) if (KIND_RX[k].test(t)) return k;
+  return "general";
+}
+/** The extra searches that fill each section (on top of expandQueries). */
+export function topicSearches(q, kind = topicKind(q), n = 4) {
+  const ar = /[؀-ۿ]/.test(q), y = new Date().getFullYear();
+  const t = topicOf(q).replace(FACET_WORDS, " ").replace(/\b(in|of|for)?\s*egypt\b|في مصر|بمصر/gi, " ").replace(/\s+/g, " ").trim() || topicOf(q);
+  const F = {
+    vehicle: ar ? [`${t} الفئات والأسعار في مصر ${y}`, `${t} مواصفات المحرك القوة العزم`, `${t} عيوب ومميزات`, `${t} price specs review`] : [`${t} trims prices ${y}`, `${t} specifications horsepower torque range`, `${t} review pros cons`, `${t} price Egypt ${y}`],
+    machine: ar ? [`${t} مواصفات الحمولة طول الذراع`, `${t} load chart`, `${t} سعر`] : [`${t} specifications capacity boom length`, `${t} load chart`, `${t} engine transport dimensions`],
+    gadget: ar ? [`${t} مواصفات`, `${t} سعر في مصر ${y}`, `${t} مراجعة عيوب`] : [`${t} specifications`, `${t} price ${y}`, `${t} review pros cons`],
+    place: ar ? [`${t} أسعار مواعيد`, `${t} مراجعات`] : [`${t} prices opening hours tickets`, `${t} reviews`],
+    org: ar ? [`${t} أخبار ${y}`] : [`${t} latest news ${y}`, `${t} history founded headquarters`],
+    general: [],
+  }[kind] || [];
+  return [...new Set(F)].slice(0, n);
+}
+const TPL = {
+  vehicle: "1. **Quick answer** (2–3 lines: what it is, the price range, the one thing that stands out).\n2. ## Versions and prices — a table: | Version | Engine / motor | Power (hp) | Torque (Nm) | Range or fuel use | Price | — every version the sources name, the price with its currency and market (Egypt first when given).\n3. ## Engine and performance — a table (0–100 km/h, top speed, battery, gearbox, drive).\n4. ## Size and practicality — length × width × height, wheelbase, seats, boot.\n5. ## Key equipment by version — what each version adds.\n6. ## Pros and cons — two short lists from the reviews.\n7. ## Rivals — 2–4 competitors with their price, one line each.\n8. ## Availability in Egypt — dealer, price in EGP, warranty, if the sources say so.",
+  machine: "1. **Quick answer** (2–3 lines).\n2. ## Main specifications — a table: | Item | Value | (max capacity, at what radius, main boom length, with jib, max tip height, axles, engine, travel speed, weight / transport dimensions, counterweight).\n3. ## Load chart highlights — capacities at key radii if the sources give them.\n4. ## Versions / configurations.\n5. ## Strengths and limits for real jobs.\n6. ## Comparable models — a table with their capacity and boom.\n7. ## Price and availability (new / used), if given.",
+  gadget: "1. **Quick answer** (2–3 lines).\n2. ## Versions and prices — a table (storage / RAM / colour if relevant, price with currency and market, Egypt first when given).\n3. ## Key specifications — a table (screen, chip, cameras, battery and charging, weight).\n4. ## Pros and cons.\n5. ## Rivals — 2–4 alternatives with price.\n6. ## Verdict — who should buy it.",
+  place: "1. **Quick answer**.\n2. ## Essentials — a table: address / area, hours, ticket or price range, how to get there, best time.\n3. ## What to see / do / eat.\n4. ## Tips.\n5. ## Reviews — what people praise and complain about.",
+  org: "1. **Quick answer**.\n2. ## Key facts — a table (founded, headquarters, leaders, size, revenue if given).\n3. ## What it does.\n4. ## Latest news (with dates).\n5. ## Notes.",
+  general: "",
+};
+/** The shape the final answer follows for this kind of subject ("" for general questions). */
+export function answerTemplate(q, kind = topicKind(q)) {
+  const t = TPL[kind] || "";
+  return t ? "\n\n(Write the answer in this structure — use every section the sources can fill, skip a section only when no source says anything for it, and put \"—\" in a table cell no source gives. Cite the source number after each fact.)\n" + t : "";
+}
+/** Should the answer get the full topic shape? A detail question ("all trims", "specs", "compare") or a bare subject ("Lynk & Co 900"). */
+export function wantsShape(q, kind = topicKind(q)) {
+  if (kind === "general") return false;
+  const t = String(q || "").trim();
+  if (pagesFor(t) === 8) return true;
+  return t.split(/\s+/).length <= 6 && !/[?؟]|\b(what|who|when|where|why|how|which|is|are|does|can)\b|^(ما|مين|امتى|فين|ليه|ازاي|كام|هل)/i.test(t);
+}

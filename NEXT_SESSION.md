@@ -390,6 +390,55 @@ and `tests/e2e_v69site.py`.
 34. ✅ Instant "What are my expenses in the last 4 days" now answered from Money by code.
 35. ✅ The "…was promised to you and is late" banner from a note-to-self; Catalogue button wrapping.
 
+## M. Added 4 Oct 2026 (evening) — and the SPLIT between two accounts
+New from Ali after 6.12 work:
+36. ✅ Food photo in ~1 s (fast look shown at once, AI double-checks in the background; offer to get the fast pack).
+37. ✅ Chat Auto: picks the best installed model per question, Web Off/Auto/On (Auto by default), thinking when needed.
+38. ✅ Continue a chat shared from Gemini / ChatGPT / Claude / any AI (link or pasted text) — phone check needed: Gemini share
+    pages may load the conversation by script only; then the app asks to paste the text.
+39. ✅ High-end models "disappeared": the Engine list hid every model too big for the phone; on 12 GB+ phones they are listed again.
+40. ⬜ Web search better than Gemini — target saved in `tests/websearch/targets/README.md` (Ali's "Geely Galaxy M9 vs Lynk & Co 900").
+    Done so far: topic templates (vehicle/machine/gadget/place/org: versions & prices table, specs, pros/cons, rivals, Egypt),
+    topic searches, junk filter, 4 engines, pictures, follow-up chips. Still to do: a COMPARISON template (each car, then a
+    head-to-head table + advantages/disadvantages), per-trim spec tables, page-by-page notes for every trim, measuring with a
+    real 4B/9B model, and FIX `tests/e2e_v514.py` (a prompt overflows the test model's 4,096-token window since the templates).
+41. ⬜ Every big feature its own professional, customisable page like Business: Mind (better than the "My Mind" app), Coding
+    (better look, more power), Learn daily (attractive; real courses, e.g. "Turkish from beginner to expert in 30 small
+    lessons"), Cycle (chat that knows all period data), Yusr/Money; plus the whole-app UI/UX rework and the Maps look.
+    These are LOOK choices: show Ali 2–4 options (screenshots/mock-ups) first, then build the one he picks.
+
+### The split (two accounts work at the same time — different files, different branches)
+- **Account A — "Engine & answers"** (this branch `ccr-a0eb3595-e2c7a7` → `main`): item 40 (web search), item 15 (big-model
+  max-tests), A1/A3 (heat/storage), 4–8 (answer quality), the converter (17), Business leftovers (ETA is done; roles, multi-
+  currency, price lists), and RELEASE DUTY: full `bash tests/run_all.sh`, version bump, push `main`, watch "Build the APK".
+  Files: `web-src/chat.jsx`, `research.js`, `webrank.js`, `answerfix.js`, `factsheet.js`, `router.js`, `WebTools.kt`,
+  `convert*.js`, `books*`, engine Kotlin.
+- **Account B — "Pages & look"** (its own branch, e.g. `claude/pages-ui`): item 41 + 13/14 (UI/UX rework, Fit home redesign) +
+  Maps look + 24 (Add any model) + plugins step 2. Files: `mind-ui.jsx`/`mind.js`, `code-ui.jsx`/`code.js`, `daily-ui.jsx`/
+  `daily.js`, `cycle.jsx`, `yusr/`, `fit-ui.jsx`, `shelf-ui.jsx`, new `*-page.jsx` files. In `attune.jsx` only the lines that
+  open a page (keep those edits small: it is the file both accounts touch). Before pushing: merge `origin/main`, build, run
+  the tests of the pages touched, then push the branch; Account A merges it into `main` after the full test run.
+
+**Prompt for Account A (paste in a new session on this repo):**
+```
+Continue Attune as "Account A — Engine & answers". Read CLAUDE.md, then NEXT_SESSION.md sections L and M, and HANDOFF §5.40.
+Work on branch ccr-a0eb3595-e2c7a7. First fix tests/e2e_v514.py (a prompt overflows the 4,096-token test window since the
+answer templates), then item 40: web answers at least as deep as tests/websearch/targets/README.md (Gemini's Galaxy M9 vs
+Lynk & Co 900) — a comparison template, per-trim tables, every figure cited. Then the rest of Account A's list. Run ALL
+tests, push main, watch "Build the APK", give me the link. Merge Account B's branch when it is ready.
+```
+
+**Prompt for Account B (paste in a new session on this repo):**
+```
+Continue Attune as "Account B — Pages & look". Read CLAUDE.md, then NEXT_SESSION.md sections L and M (item 41) and
+HANDOFF §5.40. Create branch claude/pages-ui from origin/ccr-a0eb3595-e2c7a7. Make every big feature its own professional,
+customisable page like Business: Mind (better than the My Mind app), Coding (better look, more power), Learn daily
+(attractive, real courses like "Turkish from beginner to expert in 30 small lessons"), Cycle (a chat that knows all my period
+data), Yusr/Money; then the whole-app UI/UX rework and the Maps look. For every look decision show me 2–4 options with
+screenshots first and build the one I pick. Keep attune.jsx edits small (Account A also edits it). Run the tests of what you
+touch, merge origin/main before pushing, and push your branch (not main).
+```
+
 ---
 
 ## Prompt to start the next session

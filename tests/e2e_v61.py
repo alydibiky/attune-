@@ -16,7 +16,7 @@ with sync_playwright() as p:
     page.locator("header button:has-text('No model')").click(); page.wait_for_timeout(300)
     ids = page.evaluate("[...document.querySelectorAll('[data-testid^=tier-]')].map(e => e.dataset.testid)")
     check("tier-xs" not in ids and "tier-sm" not in ids, "12 GB phone: Spark (0.8B) and Glow (2B) are not offered (%s)" % ", ".join(i[5:] for i in ids))
-    check("tier-ultra" not in ids and "tier-moe-lg" not in ids, "…nor the computer-class models it can't hold")
+    check("tier-ultra" in ids and "tier-moe-lg" in ids, "v6.12: the high-end models stay listed on a flagship phone (their card says they need more memory)")
     check("tier-md" in ids and "tier-xl" in ids, "…the good ones are (Core, Zenith)")
     page.locator("[data-testid=tiers-show-all]").click(); page.wait_for_timeout(200)
     ids2 = page.evaluate("[...document.querySelectorAll('[data-testid^=tier-]')].map(e => e.dataset.testid)")

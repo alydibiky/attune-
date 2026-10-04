@@ -3145,4 +3145,6 @@ export const AR = {
   "Reading the conversation…": "بقرا المحادثة…",
   "Shared links are opened in the Android app — or paste the conversation's text here.": "الروابط المشتركة بتتفتح في تطبيق أندرويد — أو الصق نص المحادثة هنا.",
   "I read your conversation with {f}{t} (about {n} words). Ask me anything about it — check it, summarise it, or carry on from where it stopped.": "قريت محادثتك مع {f}{t} (حوالي {n} كلمة). اسألني أي حاجة عنها — أراجعها، ألخصها، أو أكمل من مكان ما وقفت.",
+  "Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch it off with the Web button": "Attune · الذكاء الاصطناعي شغال على جهازك · من غير حساب ولا تسجيل دخول · البحث على الويب بس لما السؤال يحتاجه (تلقائي) — اقفله من زرار الويب",
+  "Web: Off — nothing is looked up": "الويب: مقفول — مفيش أي بحث",
 };

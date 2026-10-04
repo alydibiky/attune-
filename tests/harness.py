@@ -129,6 +129,8 @@ def new_page(br, env, errors, native=True, extra_init=None, release=False):
     if not release: ctx.add_init_script("try{if(localStorage.getItem('attune:dev')===null)localStorage.setItem('attune:dev','1')}catch(e){}")   # tests run in developer mode (the testing box in Plan etc.); release=True = a customer's phone
     # v6.12: the app adds the engineering skill once on a first start; tests start from no skills unless they ask (seed=…)
     ctx.add_init_script("try{if(!localStorage.getItem('attune:skills:seeded:v612'))localStorage.setItem('attune:skills:seeded:v612','1')}catch(e){}")
+    # v6.12: Web starts on Auto in the app; tests start with it Off unless they set attune:web:auto themselves
+    ctx.add_init_script("try{if(localStorage.getItem('attune:web:auto')===null)localStorage.setItem('attune:web:auto','0')}catch(e){}")
     if extra_init: ctx.add_init_script(extra_init)
     page = ctx.new_page()
     page.on("pageerror", lambda e: errors.append("pageerror: " + str(e)))
