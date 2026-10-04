@@ -1,0 +1,61 @@
+name: Storage boost lab (what each extra GB buys; RAM levers; knowledge pack)
+
+# One job per (model, quant): quality on the 173-case test, speed, peak RAM for each RAM switch,
+# and the knowledge-pack fact test without / with retrieval (word index, multilingual embedder).
+on:
+  push:
+    branches: [storage-boost]
+    paths: [.github/workflows/storage-boost.yml]
+  workflow_dispatch:
+
+jobs:
+  boost:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 340
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: q35-2b-Q4_K_M, search: "Qwen3.5-2B-GGUF", quants: "Q4_K_M", need: "qwen3.5-2b" }
+          - { name: q35-4b-IQ4_XS, search: "Qwen3.5-4B-GGUF", quants: "IQ4_XS", need: "qwen3.5-4b" }
+          - { name: q35-4b-Q4_K_M, search: "Qwen3.5-4B-GGUF", quants: "Q4_K_M", need: "qwen3.5-4b" }
+          - { name: q35-4b-Q6_K,   search: "Qwen3.5-4B-GGUF", quants: "Q6_K", need: "qwen3.5-4b" }
+          - { name: q35-4b-Q8_0,   search: "Qwen3.5-4B-GGUF", quants: "Q8_0", need: "qwen3.5-4b" }
+          - { name: q35-9b-IQ3_XXS, search: "Qwen3.5-9B-GGUF", quants: "IQ3_XXS,IQ3_XS,Q3_K_S", need: "qwen3.5-9b" }
+          - { name: q35-9b-IQ4_NL, search: "Qwen3.5-9B-GGUF", quants: "IQ4_NL", need: "qwen3.5-9b" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Build llama.cpp (the app's pinned commit)
+        run: |
+          git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
+          cd ~/llama.cpp && git checkout -q 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF > /dev/null
+          cmake --build build --target llama-server -j"$(nproc)" > /dev/null
+      - name: Download the model and the embedder
+        run: |
+          read REPO FILE < <(python3 tests/models/resolve_hf.py "${{ matrix.search }}" "${{ matrix.quants }}" ${{ matrix.need }})
+          echo "Model: $REPO / $FILE" | tee -a "$GITHUB_STEP_SUMMARY"
+          curl -sSL --retry 5 -o ~/model.gguf "https://huggingface.co/$REPO/resolve/main/$FILE"
+          curl -sSL --retry 5 -o ~/emb.gguf "https://huggingface.co/gpustack/bge-m3-GGUF/resolve/main/bge-m3-Q4_K_M.gguf"
+          ls -la ~/model.gguf ~/emb.gguf
+      - name: RAM levers
+        run: python3 tests/models/ram_levers.py ~/model.gguf "$HOME/llama.cpp/build/bin" 8192 | tee ram.md; (echo "### RAM levers"; cat ram.md) >> "$GITHUB_STEP_SUMMARY"
+      - name: Quality (173 cases) and knowledge pack
+        run: |
+          export LD_LIBRARY_PATH=$HOME/llama.cpp/build/bin
+          B=$HOME/llama.cpp/build/bin/llama-server
+          $B -m ~/model.gguf --port 8120 -c 8192 -t 4 -np 1 --jinja --no-ui -fa on -ctk q8_0 -ctv q8_0 --load-mode none --cache-ram 0 > srv.log 2>&1 &
+          $B -m ~/emb.gguf --port 8131 --embedding --pooling cls -t 2 -c 1024 -b 1024 -ub 1024 > emb.log 2>&1 &
+          until curl -s localhost:8120/health | grep -q ok && curl -s localhost:8131/health | grep -q ok; do sleep 2; done
+          EMB_PREFIX=0 EMB_PORT=8131 TRIAL_PORT=8120 node tests/trials/factpack.mjs | tee pack.md
+          (echo "### Knowledge pack"; cat pack.md) >> "$GITHUB_STEP_SUMMARY"
+          TRIAL_PORT=8120 MODEL_NAME=${{ matrix.name }} FULL_REPORT=$PWD/full-${{ matrix.name }}.md node tests/trials/full.mjs > full.log 2>&1 || true
+          head -20 full-${{ matrix.name }}.md | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: boost-${{ matrix.name }}
+          path: "*.md"
