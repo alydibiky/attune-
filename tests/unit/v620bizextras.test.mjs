@@ -160,7 +160,7 @@ O.setActor(null);
 const ITER = 2000;          // the app uses 600,000; tests use fewer so they run fast — the code path is the same
 const file = await V.seal(s, "my passphrase", { iterations: ITER, now: "2026-10-01T08:00:00.000Z" });
 const head = V.header(file);
-eq([head.format, head.kdf.name, head.kdf.hash, head.kdf.iter, head.summary.docs, file.includes("Acme")], ["attune-books-vault", "PBKDF2", "SHA-256", ITER, s.docs.length, false], "the backup is encrypted: readable header, no customer names in clear");
+eq([head.format, head.kdf.name, head.kdf.hash, head.kdf.iter, head.summary.docs, file.includes("Acme"), file.includes("Nile")], ["attune-books-vault", "PBKDF2", "SHA-256", ITER, s.docs.length, false, false], "the backup is encrypted: readable header, no company or customer names in clear");
 eq(V.VAULT_ITER, 600000, "the app derives the key with 600,000 PBKDF2 iterations");
 const back = await V.open(file, "my passphrase");
 eq([JSON.stringify(back.state) === JSON.stringify({ ...O.EMPTY(), ...s }), back.check], [true, { fingerprint: true, audit: true, auditBrokenAt: null, balanced: true, ok: true }], "round trip: the same books, fingerprint, audit and balance all checked");

@@ -35,7 +35,7 @@ async function keyFrom(secret, salt, iter) {
   return subtle().deriveKey({ name: "PBKDF2", hash: "SHA-256", salt, iterations: iter }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
 }
 const aad = (h) => enc.encode(canon({ format: h.format, v: h.v, created: h.created, kdf: h.kdf, iv: h.iv, summary: h.summary, fp: h.fp }));
-export const summary = (s) => ({ docs: (s.docs || []).length, bills: (s.bills || []).length, payments: (s.payments || []).length, customers: (s.customers || []).length, items: (s.items || []).length, journal: (s.journal || []).length, audit: (s.audit || []).length, company: (s.company || {}).name || "" });
+export const summary = (s) => ({ docs: (s.docs || []).length, bills: (s.bills || []).length, payments: (s.payments || []).length, customers: (s.customers || []).length, items: (s.items || []).length, journal: (s.journal || []).length, audit: (s.audit || []).length });
 
 /** books + secret → the file text. opts: { iterations, now } (tests use fewer iterations; the app always uses VAULT_ITER). */
 export async function seal(state, secret, opts = {}) {
