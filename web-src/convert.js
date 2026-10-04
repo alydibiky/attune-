@@ -469,12 +469,37 @@ export function pdfLinesToBlocks(pages) {
               return n && ce >= n * 0.6 ? "center" : n && ri >= n * 0.6 ? "right" : "left";
             });
             if (al.some((x) => x !== "left")) blk.align = al;
+            // v6.10: with the column edges known, each WORD goes in the column it sits in ("12 | Surge protector" had
+            // become "12 Sur | ge protector"), keeping its own bold and colour
+            const wordsOf = (r) => [r, ...(cont.get(r) || [])].flatMap((q) => q.sp.flatMap((x) => (Array.isArray(x[3]) ? x[3] : [])));
+            if (rows.every((r) => wordsOf(r).length && wordsOf(r).every((w) => typeof w[0] === "number" && w[5] != null))) {
+              const colOf = (w) => { const c = (w[0] + w[5]) / 2; let k = edges.findIndex((e, j) => j > 0 && c < e) - 1; if (k < 0) k = c < edges[0] ? 0 : nCols - 1; return Math.min(k, nCols - 1); };
+              const nb = [], cols = [];
+              trows = rows.map((r) => {
+                const cells = Array.from({ length: nCols }, () => []);
+                for (const w of wordsOf(r)) cells[colOf(w)].push(w);
+                nb.push(cells.map((ws) => ws.length > 0 && ws.every((w) => (w[2] != null ? !!w[2] : !!r.b))));
+                cols.push(cells.map((ws) => { const cs = [...new Set(ws.map((w) => hexOf(w[4])))]; return cs.length === 1 ? cs[0] : null; }));
+                return cells.map((ws) => ws.map((w) => w[1]).join(" ").replace(/\)\^\(/g, ""));
+              });
+              blk.rows = trows; blk.bold = nb;
+              if (cols.some((r) => r.some(Boolean))) blk.colors = cols;
+            }
           }
         } else if (g && !rtl && tl - g.L > 12) blk.ind = Math.round(tl - g.L - 5);
+        // v6.10: a table the page draws no rules for (a letterhead's seller / invoice-number block) has no borders in Word either
+        if (!rules.length && pages[l.page] && Array.isArray(pages[l.page].rects)) blk.border = { none: true };
         // shaded rows: a filled rectangle behind a row's text, as wide as most of the table
-        const fills = rc.filter((r) => r[4] >= 0 && r[4] !== 0xFFFFFF && r[3] > 3 && r[2] > 40 && near1(r));
+        const fills = rc.filter((r) => r[4] >= 0 && r[4] !== 0xFFFFFF && r[3] > 3 && r[2] > 8 && near1(r));
         if (fills.length) {
-          const shade = rows.map((r) => { const f = fills.find((q) => q[1] <= r.y - r.s * 0.3 && q[1] + q[3] >= r.y - r.s * 0.3 && q[2] >= (blk.widths ? blk.widths.reduce((a, x) => a + x, 0) * 0.6 : 100)); return f ? [(f[4] >> 16) & 255, (f[4] >> 8) & 255, f[4] & 255].map((x) => x.toString(16).padStart(2, "0")).join("").toUpperCase() : null; });
+          // (v6.10: or several — one per cell, as a browser paints them — that together cover most of the row)
+          const tw0 = blk.widths ? blk.widths.reduce((a, x) => a + x, 0) : 100;
+          const shade = rows.map((r) => {
+            const yy = r.y - r.s * 0.3, on = fills.filter((q) => q[1] <= yy && q[1] + q[3] >= yy && q[3] < r.s * 4), by = new Map();
+            for (const q of on) by.set(q[4], (by.get(q[4]) || 0) + q[2]);
+            const best = [...by].sort((a, b) => b[1] - a[1])[0];
+            return best && best[1] >= tw0 * 0.6 ? [(best[0] >> 16) & 255, (best[0] >> 8) & 255, best[0] & 255].map((x) => x.toString(16).padStart(2, "0")).join("").toUpperCase() : null;
+          });
           if (shade.some(Boolean)) blk.shade = shade;
         }
         blk.size = Math.round(bodyRows[0].s * 2) / 2;
@@ -659,8 +684,8 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
       const cf = fmt(b);
       // the space above a table (a table has none of its own): an empty paragraph exactly that tall
       return (b.pageBreak || b.before ? `<w:p><w:pPr>${b.pageBreak ? "<w:pageBreakBefore/>" : ""}<w:spacing w:before="0" w:after="0" w:line="${Math.max(20, tw(b.before || 1))}" w:lineRule="exact"/><w:rPr><w:sz w:val="2"/></w:rPr></w:pPr></w:p>` : "") +
-        `<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/>${rtl ? "<w:bidiVisual/>" : ""}<w:tblW w:w="${b.widths ? widths.reduce((a, x) => a + x, 0) : 0}" w:type="${b.widths ? "dxa" : "auto"}"/>${b.ind ? `<w:tblInd w:w="${tw(b.ind)}" w:type="dxa"/>` : ""}<w:tblBorders>${["top", "left", "bottom", "right", "insideH", "insideV"].map((s) => `<w:${s} w:val="single" w:sz="${b.border ? b.border.sz : 4}" w:space="0" w:color="${b.border ? b.border.c : "999999"}"/>`).join("")}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${widths.map((x) => `<w:gridCol w:w="${x}"/>`).join("")}</w:tblGrid>` +
-        b.rows.map((r, ri) => `<w:tr>${b.rowH && b.rowH[ri] ? `<w:trPr><w:trHeight w:val="${tw(b.rowH[ri])}" w:hRule="atLeast"/></w:trPr>` : ""}${Array.from({ length: w }, (_, ci) => `<w:tc><w:tcPr><w:tcW w:w="${widths[ci]}" w:type="dxa"/>${b.shade && b.shade[ri] ? `<w:shd w:val="clear" w:color="auto" w:fill="${b.shade[ri]}"/>` : ""}${b.vmid ? '<w:vAlign w:val="center"/>' : ""}</w:tcPr><w:p><w:pPr>${o.exact ? '<w:spacing w:before="0" w:after="0"/>' : ""}${isAr(r[ci] || "") || rtl ? "<w:bidi/>" : ""}${Array.isArray(b.align) && b.align[ci] && b.align[ci] !== "left" ? `<w:jc w:val="${b.align[ci]}"/>` : ""}</w:pPr>${run(r[ci] || "", { ...cf, b: b.bold ? !!(b.bold[ri] && b.bold[ri][ci]) : ri === 0 })}</w:p></w:tc>`).join("")}</w:tr>`).join("") + `</w:tbl>` + (o.exact ? "" : "<w:p/>");
+        `<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/>${rtl ? "<w:bidiVisual/>" : ""}<w:tblW w:w="${b.widths ? widths.reduce((a, x) => a + x, 0) : 0}" w:type="${b.widths ? "dxa" : "auto"}"/>${b.ind ? `<w:tblInd w:w="${tw(b.ind)}" w:type="dxa"/>` : ""}<w:tblBorders>${["top", "left", "bottom", "right", "insideH", "insideV"].map((s) => (b.border && b.border.none ? `<w:${s} w:val="nil"/>` : `<w:${s} w:val="single" w:sz="${b.border ? b.border.sz : 4}" w:space="0" w:color="${b.border ? b.border.c : "999999"}"/>`)).join("")}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${widths.map((x) => `<w:gridCol w:w="${x}"/>`).join("")}</w:tblGrid>` +
+        b.rows.map((r, ri) => `<w:tr>${b.rowH && b.rowH[ri] ? `<w:trPr><w:trHeight w:val="${tw(b.rowH[ri])}" w:hRule="atLeast"/></w:trPr>` : ""}${Array.from({ length: w }, (_, ci) => `<w:tc><w:tcPr><w:tcW w:w="${widths[ci]}" w:type="dxa"/>${b.shade && b.shade[ri] ? `<w:shd w:val="clear" w:color="auto" w:fill="${b.shade[ri]}"/>` : ""}${b.vmid ? '<w:vAlign w:val="center"/>' : ""}</w:tcPr><w:p><w:pPr>${o.exact ? '<w:spacing w:before="0" w:after="0"/>' : ""}${isAr(r[ci] || "") || rtl ? "<w:bidi/>" : ""}${Array.isArray(b.align) && b.align[ci] && b.align[ci] !== "left" ? `<w:jc w:val="${b.align[ci]}"/>` : ""}</w:pPr>${run(r[ci] || "", { ...cf, b: b.bold ? !!(b.bold[ri] && b.bold[ri][ci]) : ri === 0, ...(b.colors && b.colors[ri] && b.colors[ri][ci] ? { c: b.colors[ri][ci] } : {}) })}</w:p></w:tc>`).join("")}</w:tr>`).join("") + `</w:tbl>` + (o.exact ? "" : "<w:p/>");
     }
     if (b.type === "pagebreak") return `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
     // v6.10: a PDF's columns: a continuous section break before (one column) and after (two columns), a column break between
