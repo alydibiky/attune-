@@ -498,7 +498,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
           <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-slate-800 border border-slate-700 ps-4 pe-1 py-1 shadow-xl max-w-md w-full motion-safe:animate-[fitup_.2s_ease-out]">
             <Check size={16} className="text-emerald-300 shrink-0" />
             <span className="flex-1 min-w-0 truncate text-[13.5px] text-white" data-testid="fit-undo-text">{undo.label}</span>
-            <button onClick={() => { undo.revert(); setUndo(null); }} className="min-h-[48px] px-4 rounded-xl text-[14px] font-semibold text-emerald-300 flex items-center gap-1.5" data-testid="fit-undo"><Undo2 size={16} />{t("Undo")}</button>
+            <button onClick={() => { undo.revert(); setUndo(null); }} className="min-h-[48px]! px-4 rounded-xl text-[14px] font-semibold text-emerald-300 flex items-center gap-1.5" data-testid="fit-undo"><Undo2 size={16} />{t("Undo")}</button>
           </div>
         </div>) : null}
       {tab === "recipes" && !adding && <Recipes {...{ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, flash, share, pro, openPlan }} />}
@@ -561,10 +561,10 @@ function QuickSetup({ t, L, ar, save, full }) {
   const set = (k, v) => setA((p) => ({ ...p, [k]: v }));
   const Pick = ({ k, v, children, tid }) => (
     <button onClick={() => set(k, v)} aria-pressed={a[k] === v} data-testid={tid}
-      className={"min-h-[48px] rounded-xl px-4 text-[14px] text-start transition-colors " + (a[k] === v ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-200")}>{children}</button>);
+      className={"min-h-[48px]! rounded-xl px-4 text-[14px] text-start transition-colors " + (a[k] === v ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-200")}>{children}</button>);
   const Num = (k, label) => (
     <label key={k} className="flex-1 min-w-0 text-[12px] text-slate-400">{label}
-      <input type="number" inputMode="decimal" value={a[k]} onChange={(e) => set(k, e.target.value)} data-testid={"fit-qs-" + k} className="mt-1 w-full min-h-[48px] rounded-xl bg-slate-800 px-3 text-[15px] text-white" />
+      <input type="number" inputMode="decimal" value={a[k]} onChange={(e) => set(k, e.target.value)} data-testid={"fit-qs-" + k} className="mt-1 w-full min-h-[48px]! rounded-xl bg-slate-800 px-3 text-[15px] text-white" />
     </label>);
   const can = step === 0 ? !!a.goal : step === 1 ? (a.mode === "kcal" ? +a.kcal > 0 : +a.age > 0 && +a.cm > 0 && +a.kg > 0) : true;
   const next = () => { if (step < 2) setStep(step + 1); else save(a); };
@@ -596,15 +596,15 @@ function QuickSetup({ t, L, ar, save, full }) {
       </section>) : (<section className="space-y-2" aria-labelledby="qs2">
         <h3 id="qs2" className="text-[16px] text-white font-medium">{t("Whose food do you eat?")}</h3>
         <p className="text-[12.5px] text-slate-400">{L("Suggestions, food search, typed meals and photos use this country's dishes first.", "الاقتراحات والبحث والوجبات المكتوبة والصور بتبدأ بأكل البلد ده.")}</p>
-        <select value={a.country} onChange={(e) => set("country", e.target.value)} data-testid="fit-qs-country" aria-labelledby="qs2" className="w-full min-h-[48px] rounded-xl bg-slate-800 px-3 text-[15px] text-white">
+        <select value={a.country} onChange={(e) => set("country", e.target.value)} data-testid="fit-qs-country" aria-labelledby="qs2" className="w-full min-h-[48px]! rounded-xl bg-slate-800 px-3 text-[15px] text-white">
           {countries.map(([k, c]) => <option key={k} value={k}>{c.flag} {ar ? c.ar : c.en}</option>)}
         </select>
       </section>)}
       <div className="flex gap-2 pt-1">
-        {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[48px] rounded-xl bg-slate-800 px-4 text-slate-300" data-testid="fit-qs-back">{L("Back", "رجوع")}</button> : null}
-        <button onClick={next} disabled={!can} className="flex-1 min-h-[48px] rounded-xl bg-emerald-600 disabled:opacity-40 font-medium text-white" data-testid="fit-qs-next">{step < 2 ? t("Next") : t("Start logging")}</button>
+        {step > 0 ? <button onClick={() => setStep(step - 1)} className="min-h-[48px]! rounded-xl bg-slate-800 px-4 text-slate-300" data-testid="fit-qs-back">{L("Back", "رجوع")}</button> : null}
+        <button onClick={next} disabled={!can} className="flex-1 min-h-[48px]! rounded-xl bg-emerald-600 disabled:opacity-40 font-medium text-white" data-testid="fit-qs-next">{step < 2 ? t("Next") : t("Start logging")}</button>
       </div>
-      <button onClick={full} className="w-full min-h-[48px] text-[13px] text-slate-400 underline" data-testid="fit-qs-full">{t("Set up the full plan instead (activity, pace, eating style)")}</button>
+      <button onClick={full} className="w-full min-h-[48px]! text-[13px] text-slate-400 underline" data-testid="fit-qs-full">{t("Set up the full plan instead (activity, pace, eating style)")}</button>
     </div>
   );
 }
@@ -615,7 +615,7 @@ function LogRow({ t, ar, x, onDelete, onEdit, testid }) {
   const start = useRef(null);
   const dir = ar ? 1 : -1;   // the actions sit at the end side: left in English, right in Arabic
   const onDown = (e) => { start.current = { x: e.clientX, y: e.clientY, dx: open ? dir * 112 : 0, moved: false }; };
-  const onMove = (e) => { const s = start.current; if (!s) return; const mx = e.clientX - s.x; if (!s.moved && Math.abs(mx) < 8) return; if (!s.moved && Math.abs(e.clientY - s.y) > Math.abs(mx)) { start.current = null; return; } s.moved = true; setDx(Math.max(-112, Math.min(112, s.dx + mx)) * (dir * Math.sign(s.dx + mx) >= 0 ? 1 : 0)); };
+  const onMove = (e) => { const s = start.current; if (!s) return; const mx = e.clientX - s.x; if (!s.moved && Math.abs(mx) < 8) return; if (!s.moved && Math.abs(e.clientY - s.y) > Math.abs(mx)) { start.current = null; return; } if (!s.moved) { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} } s.moved = true; setDx(Math.max(-112, Math.min(112, s.dx + mx)) * (dir * Math.sign(s.dx + mx) >= 0 ? 1 : 0)); };
   const onUp = () => { const s = start.current; start.current = null; if (!s || !s.moved) return; const o = Math.abs(dx) > 50; setOpen(o); setDx(0); };
   const tm = x.t ? new Date(x.t) : null;
   const time = tm && x.t > 1e11 ? String(tm.getHours()).padStart(2, "0") + ":" + String(tm.getMinutes()).padStart(2, "0") : "";
@@ -634,7 +634,7 @@ function LogRow({ t, ar, x, onDelete, onEdit, testid }) {
         <button tabIndex={open ? 0 : -1} onClick={() => { setOpen(false); onDelete(); }} className="w-14 bg-rose-600 text-white flex items-center justify-center" aria-label={t("Delete")} data-testid="fit-row-delete"><Trash2 size={16} /></button>
       </div>
       <div onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ transform: `translateX(${shown}px)`, touchAction: "pan-y" }}
-        className={"relative bg-slate-900 flex items-center gap-2 min-h-[48px] px-1 text-[13.5px] " + (start.current ? "" : "motion-safe:transition-transform motion-safe:duration-200")}>
+        className={"relative bg-slate-900 flex items-center gap-2 min-h-[48px]! px-1 text-[13.5px] " + (start.current ? "" : "motion-safe:transition-transform motion-safe:duration-200")}>
         <span className="w-11 shrink-0 text-[11.5px] text-slate-500 tabular-nums">{time}</span>
         <span className="flex-1 min-w-0 truncate text-slate-200">{ar && x.ar ? x.ar : x.name} <span className="text-slate-500 tabular-nums">{x.grams} {ar ? "جم" : "g"}</span></span>
         <span className="text-slate-400 tabular-nums shrink-0">{r0(x.kcal)}</span>
@@ -673,7 +673,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
   const edit = (m, i, g) => { if (!(g > 0)) return; setDay((d) => ({ ...d, meals: { ...d.meals, [m]: d.meals[m].map((x, k) => (k === i ? H.atGrams(x, g) : x)) } })); };
   const Act = ({ k, Ic, label, primary }) => (
     <button onClick={bar[k]} data-testid={"fit-lb-" + k} aria-label={label}
-      className={"min-h-[56px] rounded-2xl flex flex-col items-center justify-center gap-0.5 text-[12.5px] font-medium active:scale-[.97] motion-safe:transition-transform " + (primary ? "bg-emerald-600 text-white" : listening && k === "voice" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-100")}>
+      className={"min-h-[56px]! rounded-2xl flex flex-col items-center justify-center gap-0.5 text-[12.5px] font-medium active:scale-[.97] motion-safe:transition-transform " + (primary ? "bg-emerald-600 text-white" : listening && k === "voice" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-100")}>
       <Ic size={19} aria-hidden="true" /><span>{label}</span></button>);
   return (
     <div className="space-y-3" data-testid="fit-today">
@@ -713,7 +713,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 [scrollbar-width:none]" data-testid="fit-chips">
             {chips.map((c) => (
               <button key={c.key} onClick={() => one(nowMeal, c.item, r0(c.item.kcal))} data-testid={"fit-chip-" + c.key.replace(/[^a-z0-9]+/gi, "_")}
-                className="shrink-0 min-h-[48px] rounded-full bg-slate-800 border border-slate-700 px-3.5 text-[13px] text-slate-100 flex items-center gap-1.5 active:scale-[.97] motion-safe:transition-transform"
+                className="shrink-0 min-h-[48px]! rounded-full bg-slate-800 border border-slate-700 px-3.5 text-[13px] text-slate-100 flex items-center gap-1.5 active:scale-[.97] motion-safe:transition-transform"
                 aria-label={L(`Add ${c.item.name}, ${c.item.grams} g, ${r0(c.item.kcal)} kcal`, `ضيف ${c.item.ar || c.item.name}، ${c.item.grams} جم، ${r0(c.item.kcal)} سعر`)}>
                 <Plus size={15} className="text-emerald-300" aria-hidden="true" /><span className="max-w-[10rem] truncate">{nm(c.item)}</span><span className="text-slate-400 tabular-nums">· {r0(c.item.kcal)}</span>
               </button>))}
@@ -732,12 +732,12 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
             <div key={m} className="p-3" data-testid={"fit-meal-" + m}>
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0"><div className="text-white font-medium">{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])} <span className="text-[12px] text-slate-400 tabular-nums">{sum.kcal} kcal</span></div></div>
-                <button onClick={() => setAdding(m)} className="min-h-[48px] min-w-[48px] rounded-full bg-emerald-600/20 text-emerald-300 flex items-center justify-center shrink-0" data-testid={"fit-add-" + m} aria-label={L(`Add to ${MEAL_NAMES[m][0]}`, `ضيف لل${MEAL_NAMES[m][1]}`)}><Plus size={20} /></button>
+                <button onClick={() => setAdding(m)} className="min-h-[48px]! min-w-[48px] rounded-full bg-emerald-600/20 text-emerald-300 flex items-center justify-center shrink-0" data-testid={"fit-add-" + m} aria-label={L(`Add to ${MEAL_NAMES[m][0]}`, `ضيف لل${MEAL_NAMES[m][1]}`)}><Plus size={20} /></button>
               </div>
-              {items.map((x, i) => <LogRow key={(x.t || 0) + ":" + i} {...{ t, ar, x }} testid={"fit-row-" + m} onDelete={() => del(m, i)} onEdit={(g) => edit(m, i, g)} />)}
+              {items.map((x, i) => <LogRow key={(x.t || 0) + ":" + i} {...{ t, ar, x }} testid={"fit-item-" + m} onDelete={() => del(m, i)} onEdit={(g) => edit(m, i, g)} />)}
               {pm ? (
                 <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
-                  className="mt-1 w-full min-h-[48px] text-start rounded-lg bg-slate-800/60 px-2.5 py-2 text-[12.5px] text-slate-300" data-testid={"fit-suggest-" + m}>
+                  className="mt-1 w-full min-h-[48px]! text-start rounded-lg bg-slate-800/60 px-2.5 py-2 text-[12.5px] text-slate-300" data-testid={"fit-suggest-" + m}>
                   <span className="text-emerald-300">{L("Suggested", "مقترح")}:</span> {ar ? pm.recipe.ar : pm.recipe.en}{pm.x !== 1 ? ` ×${pm.x}` : ""} · {pm.kcal} kcal — <u>{L("I ate this", "أكلت ده")}</u>
                 </button>) : null}
             </div>);
@@ -750,7 +750,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
           <h3 id="fit-sugg-h" className="text-[11.5px] uppercase tracking-wide text-slate-500 mb-1.5">{t("Ideas from")} {F.countryName(country, ar)}</h3>
           <div className="grid grid-cols-2 gap-2" data-testid="fit-country-sugg">
             {sugg.map((s) => (
-              <button key={s.id} onClick={() => one(nowMeal, s.item, s.item.kcal)} className="min-h-[56px] rounded-xl bg-slate-900/60 border border-slate-800 px-3 py-2 text-start" data-testid={"fit-sugg-" + s.id.replace(/[^a-z0-9]+/gi, "_")}>
+              <button key={s.id} onClick={() => one(nowMeal, s.item, s.item.kcal)} className="min-h-[56px]! rounded-xl bg-slate-900/60 border border-slate-800 px-3 py-2 text-start" data-testid={"fit-sugg-" + s.id.replace(/[^a-z0-9]+/gi, "_")}>
                 <div className="text-[13px] text-white truncate">{ar ? s.ar : s.en}</div>
                 <div className="text-[11.5px] text-slate-400 tabular-nums">{s.item.kcal} kcal · {s.item.grams} {ar ? "جم" : "g"}</div>
               </button>))}
