@@ -3150,4 +3150,8 @@ export const AR = {
   "Search the web by itself when a question needs it": "دوّر على الويب لوحده لما السؤال يحتاج",
   "While Web is off in Chat, questions about prices, specs, news, scores or this year are still looked up (only the search words leave the phone). Off: nothing is looked up unless you turn Web on.": "وزرار الويب مقفول في الشات، الأسئلة عن الأسعار والمواصفات والأخبار والنتايج والسنة دي بتتدوّر برضه (كلمات البحث بس هي اللي بتخرج من الموبايل). لو قفلتها: مفيش بحث خالص غير لما تفتح الويب.",
   "Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine": "Attune · الذكاء الاصطناعي شغال على جهازك · من غير حساب ولا تسجيل دخول · البحث على الويب بس لما السؤال يحتاجه (تلقائي) — اقفل التلقائي من المحرك",
+  "The model wrote nonsense — restarting it in safe mode and asking again…": "الموديل كتب كلام ملوش معنى — بنعيد تشغيله في الوضع الآمن وبنسأل تاني…",
+  "This model writes nonsense on this phone, even in safe mode. Pick another model in Engine (Core works well) and tell us which one failed.": "الموديل ده بيكتب كلام ملوش معنى على الموبايل ده حتى في الوضع الآمن. اختار موديل تاني من المحرك (Core شغال كويس) وقولنا أنهي واحد فشل.",
+  "Safe mode is on for this model: it once wrote nonsense on this phone, so it runs without speed tricks and with full-precision memory (a little slower, same answers).": "الوضع الآمن شغال للموديل ده: كتب مرة كلام ملوش معنى على الموبايل ده، فبيشتغل من غير حيل السرعة وبذاكرة كاملة الدقة (أبطأ شوية، نفس الإجابات).",
+  "Turn safe mode off": "اقفل الوضع الآمن",
 };

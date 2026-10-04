@@ -53,7 +53,7 @@ import { LICENCE_PUBLIC_KEY, SELLER, setTestingOpen } from "./erp.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
-import { detectLoop, trimLoop, detectDegenerate } from "./quality.js";
+import { detectLoop, trimLoop, detectDegenerate, junkStart } from "./quality.js";
 import { verifyMath, looksLikeMathProblem, arithmeticSlips, looksLikeCodeTask } from "./verify.js";
 import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
 import { workLoop, guessLang } from "./code.js";
@@ -1505,6 +1505,10 @@ const LocalEngine = {
         if (NATIVE_CALLS[id]) NATIVE_CALLS[id].onDelta = (c, r) => {
           if (looped) return;
           text += c || ""; thinking += r || "";
+          // v6.13: garbage from the first words ("0000…") = the engine, not the model: stop and restart safe.
+          if ((text.length < 400 && junkStart(text)) || (!text && thinking.length < 400 && junkStart(thinking))) {
+            looped = { where: "junk", cut: 0 }; text = ""; thinking = ""; try { NATIVE.cancel(id); } catch (x) {} return;
+          }
           // A model going round in circles is stopped at once (quality.js).
           sinceCheck += (c || "").length + (r || "").length;
           // Code / JSON answers: only the junk guard (a column of "." lines, the
@@ -1538,6 +1542,16 @@ const LocalEngine = {
         // Stopped by the length limit, not because it was done: say so, so
         // the screen can offer "Continue".
         if (!strict && LAST_STATS.tokens && LAST_STATS.tokens >= body.max_tokens - 3) LAST_STATS.cut = true;
+        if (looped && looped.where === "junk") {
+          // The engine wrote nonsense from the first word. Once: restart it in safe mode (no speculation,
+          // 16-bit memory — Engine.kt) and ask again; the phone remembers safe mode for this model.
+          if (!o._safeRetry) {
+            try { o.onStatus && o.onStatus(tr("The model wrote nonsense — restarting it in safe mode and asking again…")); } catch (x) {}
+            try { await nativeCall("setSpeed", { safe: true }); } catch (x) {}
+            return LocalEngine.run(prompt, image, { ...o, _safeRetry: true });
+          }
+          throw new Error(tr("This model writes nonsense on this phone, even in safe mode. Pick another model in Engine (Core works well) and tell us which one failed."));
+        }
         if (looped) { LAST_STATS.looped = looped.where; LocalEngine.lastLooped = looped.where;
           // Went round in circles while THINKING, before any answer: one more
           // try without thinking usually lands.

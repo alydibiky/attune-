@@ -61,6 +61,14 @@ object Prefs {
         sp(ctx).edit().putStringSet("mtp_bad", s).apply()
     }
 
+    /** Models that once wrote nonsense ("0000…") on this phone: they start in safe mode (no
+     *  speculation of any kind, full-precision memory) from then on. Set by the page's nonsense guard. */
+    fun safeMode(ctx: Context, id: String): Boolean = (sp(ctx).getStringSet("safe_models", emptySet()) ?: emptySet()).contains(id)
+    fun setSafeMode(ctx: Context, id: String, on: Boolean) {
+        val s = HashSet(sp(ctx).getStringSet("safe_models", emptySet()) ?: emptySet()); if (on) s.add(id) else s.remove(id)
+        sp(ctx).edit().putStringSet("safe_models", s).apply()
+    }
+
     // ---- the fast engine (LiteRT-LM, .litertlm models) ----------------------------
     /** Keep the fast engine on the CPU (the GPU is the default and the point of it). */
     fun fastCpu(ctx: Context): Boolean = sp(ctx).getBoolean("fast_cpu", false)

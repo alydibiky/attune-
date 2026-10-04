@@ -645,6 +645,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             .put("mtpMode", Prefs.mtpMode(ctx)).put("mtpHas", active != null && Engine.hasMtp(active))
             .put("mtpActive", active != null && Engine.mtpFor(ctx, active))
             .put("mtpFailed", active != null && Prefs.mtpBad(ctx, active.id))
+            .put("safe", active != null && Prefs.safeMode(ctx, active.id))
             .put("activeLabel", active?.label ?: JSONObject.NULL)
             // the fast engine (LiteRT-LM)
             .put("engine", if (FastEngine.isFast(active)) "litert" else "llama")
@@ -662,6 +663,8 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         if (a.has("mtp")) Prefs.setMtpMode(ctx, a.optString("mtp", "auto"))
         if (a.has("fastCpu")) { Prefs.setFastCpu(ctx, a.optBoolean("fastCpu")); Prefs.setFastNote(ctx, "") }
         if (a.has("fastMtp")) Prefs.setFastMtp(ctx, a.optBoolean("fastMtp"))
+        // {safe: true|false}: the page's nonsense guard (or the Speed row) puts the loaded model in safe mode
+        if (a.has("safe")) ModelStore.active(ctx)?.let { Prefs.setSafeMode(ctx, it.id, a.optBoolean("safe")) }
         val m = ModelStore.active(ctx) ?: return resolve(id, JSONObject().put("ok", true).put("speed", JSONObject(speed())))
         Engine.start(ctx, m) { ok, err ->
             announceEngine()

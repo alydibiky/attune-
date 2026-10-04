@@ -48,6 +48,8 @@ object Engine {
     /** True when this APK contains the GPU backend at all (the CI built it). */
     fun gpuBuilt(ctx: Context): Boolean = File(ctx.applicationInfo.nativeLibraryDir, "libattune-gpu.so").exists()
 
+    private const val RETIRED_DRAFT = true
+
     /** Only Qwen 3.5 models share the 0.8B draft's vocabulary. */
     fun isQwen35(m: ModelStore.Installed): Boolean = Regex("qwen\\W?3\\.?5", RegexOption.IGNORE_CASE).containsMatchIn(m.source + " " + m.label)
 
@@ -56,12 +58,17 @@ object Engine {
 
     /** Whether the engine should start with multi-token prediction: the model has it, the setting allows it, and it has not failed before. */
     fun mtpFor(ctx: Context, model: ModelStore.Installed): Boolean {
+        if (Prefs.safeMode(ctx, model.id)) return false
         val mode = Prefs.mtpMode(ctx)
         return mode != "off" && hasMtp(model) && !Prefs.mtpBad(ctx, model.id)
     }
 
     /** The draft model to use with `model`, or null (off, missing, not Qwen 3.5, or not enough memory). */
     fun draftFor(ctx: Context, model: ModelStore.Installed): ModelStore.Installed? {
+        // v6.13: the helper model is retired. It was slower in every measurement (HANDOFF §5.39) and
+        // Ali's phone wrote "0000…" with it (Core+ + 0.8B helper, 4 Oct 2026). An old setting is cleared.
+        if (Prefs.draft(ctx)) Prefs.setDraft(ctx, false)
+        if (RETIRED_DRAFT) return null
         if (!Prefs.draft(ctx)) return null
         if (mtpFor(ctx, model)) return null  // the built-in predictor is better than a helper model
         val d = Prefs.draftModel(ctx)?.let { ModelStore.get(ctx, it) } ?: return null
@@ -286,10 +293,11 @@ object Engine {
 
     private fun buildArgs(ctx: Context, model: ModelStore.Installed, useGpu: Boolean, draft: ModelStore.Installed?, mtp: Boolean): Array<String> {
         val nCtx = contextFor(ctx, model)
+        val safe = Prefs.safeMode(ctx, model.id)
         val gen = DeviceInfo.generationThreads(ctx)
         val batch = DeviceInfo.batchThreads(ctx)
         val ram = DeviceInfo.ramGB(ctx)
-        settingsNote = (if (useGpu) "GPU: $gpuName · context $nCtx" else "context $nCtx · $gen threads (prompt $batch) · flash attention · 8-bit KV cache") + (if (mappedWeights) " · weights read from storage (memory is short)" else " · weights in RAM") +
+        settingsNote = (if (useGpu) "GPU: $gpuName · context $nCtx" else "context $nCtx · $gen threads (prompt $batch) · flash attention · " + (if (safe) "16-bit KV cache" else "8-bit KV cache")) + (if (mappedWeights) " · weights read from storage (memory is short)" else " · weights in RAM") +
             (if (cpuFeatures.isNotEmpty() && !useGpu) " · CPU: $cpuFeatures" else "")
 
         val a = arrayListOf(
@@ -331,9 +339,10 @@ object Engine {
         } else {
             // CPU only — said explicitly, because llama.cpp's default is to
             // offload to any GPU it finds.
-            a += listOf("-ngl", "0",
-                "-fa", "on",                      // flash attention: faster and less memory
-                "-ctk", "q8_0", "-ctv", "q8_0")   // 8-bit KV cache: ~half the memory of f16, same answers
+            a += listOf("-ngl", "0", "-fa", "on")   // flash attention: faster and less memory
+            // 8-bit KV cache: ~half the memory of f16, same answers — except in safe mode (a model that
+            // wrote nonsense on this phone gets the plain f16 cache).
+            if (!safe) a += listOf("-ctk", "q8_0", "-ctv", "q8_0")
         }
         if (draft != null) {
             // Speculative decoding: the 0.8B model guesses the next few words,
@@ -355,6 +364,8 @@ object Engine {
             // answer, faster for code, tables, JSON, emails and summaries.
             a += listOf("--spec-type", "draft-mtp", "--spec-draft-n-max", "3", "--spec-draft-p-min", "0.5")
             settingsNote += " · MTP"
+        } else if (draft == null && safe) {
+            settingsNote += " · safe mode"
         } else if (draft == null) {
             // Copy-ahead: when the answer repeats text that is already in the
             // conversation — editing code, quoting a document, rewriting a

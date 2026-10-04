@@ -133,6 +133,11 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
             <span className="block text-[11px] text-slate-400 mt-0.5" data-testid="mtp-state">{sp.mtpActive ? tr("MTP is on for this model.") : sp.mtpFailed ? tr("MTP did not start on this phone, so this model runs without it.") : sp.mtpHas ? tr("MTP is off for this model.") : tr("This model has no MTP layers; install it again from the list to get them.")}</span>
           </div>
         ) : null}
+        {sp.safe ? (
+          <div className="mt-2 rounded-lg border border-amber-800/60 bg-amber-500/10 p-2.5 text-[12px] text-amber-100" data-testid="safe-mode">
+            {tr("Safe mode is on for this model: it once wrote nonsense on this phone, so it runs without speed tricks and with full-precision memory (a little slower, same answers).")}
+            <button disabled={!!busy} onClick={() => !busy && apply({ safe: false }, tr("Restarting the engine…"))} className="block mt-1.5 px-2.5 py-1 rounded-md border border-amber-700 text-amber-100 disabled:opacity-50" data-testid="safe-off">{tr("Turn safe mode off")}</button>
+          </div>) : null}
         {sp.draftInstalled && sp.draft ? row(sp.draft, () => !busy && apply({ draft: false }, tr("Restarting the engine…")), "Faster answers with a draft model",
           "Not recommended: it was slower in our tests. Turn it off.") : null}
       </div>

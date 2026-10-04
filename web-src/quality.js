@@ -49,6 +49,18 @@ export function detectLoop(text) {
   }
   return { loop: false };
 }
+/**
+ * v6.13: an answer (or its thinking) that STARTS as one character over and over — "0000000…",
+ * "!!!!!!…" — is not a loop the model fell into, it is the engine computing garbage (Ali's phone,
+ * Core+, 4 Oct 2026). Seen early (48 characters), so the engine can be restarted in safe mode.
+ */
+export function junkStart(text) {
+  const s = String(text || "").replace(/\s+/g, "");
+  if (s.length < 48) return false;
+  const head = s.slice(0, 64), c = head[0];
+  let same = 0; for (const ch of head) if (ch === c) same++;
+  return same / head.length >= 0.9;
+}
 /** Cut a looping answer cleanly (at the last full sentence/line before the repeat). */
 export function trimLoop(text, cut) {
   let t = String(text || "").slice(0, cut);
