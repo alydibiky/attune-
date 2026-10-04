@@ -188,7 +188,7 @@ export function drawPack(info, choice = null, mode = "create") {
   return { id: gpu === true ? proOffer : "turbo", ready: false };
 }
 // v6.19 — seconds a picture on the Studio lab's 4-core ARM runner (512 px unless noted).
-export const LAB_SECONDS = { "turbo": 37, "turbo@384": 19, "turbo-xl": 18, "klein-4b": 464, "qwen-21": 520 };
+export const LAB_SECONDS = { "turbo": 37, "turbo@384": 19, "turbo-xl": 18, "turbo-xl@384": 11, "klein-4b": 464, "qwen-21": 520 };
 /** How fast this device's CPU is next to the lab runner (1 = same). Big cores count fully, small ones about a third;
  *  a phone core is taken as ~0.8 of a runner core, a computer core as ~1.2. */
 export function speedFactor(d) {
@@ -240,3 +240,70 @@ export function drawSize(packId, sz, sideOverride = 0) {
 
 export function loadStudio() { try { const v = JSON.parse(localStorage.getItem(STUDIO_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
 export function saveStudio(list) { try { localStorage.setItem(STUDIO_KEY, JSON.stringify(list.slice(0, 200))); } catch (e) {} }
+
+// ---- v6.20 — Studio "Draft then clear" (Ali chose option A) --------------------------------------------
+// A small draft (384 px, same prompt and seed) appears first and can be kept; the clear picture then fades in
+// on the same spot. Only for the fast packs (few steps); a picture already drawn at 384 px gets no draft.
+export const DRAFT_SIDE = 384;
+export const DRAFT_KEY = "attune:studio:draft";   // { on, best2, keepDrafts }
+export function draftPrefs() {
+  let v = {}; try { v = JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}") || {}; } catch (e) {}
+  return { on: v.on !== false, best2: !!v.best2, keepDrafts: !!v.keepDrafts };
+}
+export function setDraftPrefs(p) { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(p)); } catch (e) {} }
+/** Seconds for one pass of a pack at a side on this device (lab seconds, scaled by pixels and device speed). */
+export function passSeconds(packId, side, device) {
+  const f = speedFactor(device || {});
+  const at = LAB_SECONDS[packId + "@" + side];
+  const base = at != null ? at : (LAB_SECONDS[packId] || 60) * Math.pow((side || 512) / 512, 2);
+  return Math.max(1, Math.round(base / f));
+}
+/**
+ * The plan for one picture → { draft, best2, draftSide, finalSide, estDraft, estFinal, estTotal }.
+ * prefs: { on, best2 } (draftPrefs()); editing a photo never drafts.
+ */
+export function draftPlan(packId, finalSide, device, prefs = {}, mode = "create") {
+  const p = PACKS[packId];
+  const draft = !!(p && p.fast && mode === "create" && prefs.on !== false && finalSide > DRAFT_SIDE);
+  const estFinal = passSeconds(packId, finalSide, device);
+  const estDraft = draft ? passSeconds(packId, DRAFT_SIDE, device) : 0;
+  const best2 = draft && !!prefs.best2;
+  return { draft, best2, draftSide: DRAFT_SIDE, finalSide, estDraft, estFinal, estTotal: (best2 ? 2 : 1) * estDraft + estFinal };
+}
+const LIVE_PHASES = ["queued", "draft", "pick", "refining"];
+/**
+ * The picture's state: queued → draft → refining → done (or kept / stopped / failed). With Best of 2:
+ * queued → pick → refining → done. Pure, so it is unit-tested. Events:
+ *   {type:"start", t, plan} {type:"stage", stage} {type:"draft", pic, t} {type:"drafts", pics, t} {type:"pick", i, t}
+ *   {type:"done", pic, t} {type:"keep"} {type:"stop"} {type:"fail", error}
+ */
+export function flowStep(s, ev) {
+  s = s || { phase: "idle" };
+  const live = LIVE_PHASES.includes(s.phase);
+  switch (ev.type) {
+    case "start": return { phase: "queued", plan: ev.plan, t0: ev.t, draft: null, drafts: null, final: null };
+    case "draft": return s.phase === "queued" ? { ...s, phase: "draft", draft: ev.pic, draftAt: ev.t } : s;
+    case "drafts": return s.phase === "queued" ? { ...s, phase: "pick", drafts: ev.pics, draftAt: ev.t } : s;
+    case "pick": return s.phase === "pick" && s.drafts && s.drafts[ev.i] ? { ...s, phase: "refining", draft: s.drafts[ev.i], drafts: null, draftAt: ev.t } : s;
+    case "stage": return s.phase === "draft" && (ev.stage === "draw" || ev.stage === "develop") ? { ...s, phase: "refining" } : s;
+    case "done": return live ? { ...s, phase: "done", final: ev.pic, doneAt: ev.t } : s;
+    case "keep": return (s.phase === "draft" || s.phase === "refining") && s.draft ? { ...s, phase: "kept" } : s;
+    case "stop": return live ? { ...s, phase: "stopped" } : s;
+    case "fail": return live ? { ...s, phase: s.draft ? "kept" : "failed", error: ev.error } : s;
+    default: return s;
+  }
+}
+/** Honest seconds left (at least 1 while working; null when nothing runs). */
+export function flowSecondsLeft(s, now) {
+  if (!s || !s.plan || !LIVE_PHASES.includes(s.phase)) return null;
+  const P = s.plan;
+  if (s.phase === "queued") return Math.max(1, Math.round(P.estTotal - (now - s.t0) / 1000));
+  if (s.phase === "pick") return P.estFinal;
+  return Math.max(1, Math.round(P.estFinal - (now - (s.draftAt || s.t0)) / 1000));
+}
+/** 0–100 for the bar: the draft is the first part, the clear picture the rest. */
+export function flowPercent(s, now) {
+  if (!s || !s.plan) return 0;
+  if (s.phase === "done" || s.phase === "kept") return 100;
+  return Math.max(2, Math.min(97, Math.round(100 * ((now - s.t0) / 1000) / (s.plan.estTotal || 1))));
+}

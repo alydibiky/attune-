@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X, Zap } from "lucide-react";
 import { tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
-import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, drawPack, recommendStudioPack, drawSize, gpuWorks, loadStudio, saveStudio } from "./studio.js";
+import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, drawPack, recommendStudioPack, drawSize, gpuWorks, loadStudio, saveStudio, draftPlan, draftPrefs, setDraftPrefs, flowStep, flowSecondsLeft, flowPercent } from "./studio.js";
 
 const STAGE = {
   gpu: "Waking the graphics chip (the first time can take a minute)…",
@@ -47,7 +47,67 @@ const secs = (ms) => (ms < 60000 ? Math.round(ms / 1000) + " s" : Math.floor(ms 
 // added. The job now lives here (module level): a returning Studio shows it still running, and the
 // result is saved to the gallery even if no Studio screen is open. After a page reload, the job noted in
 // storage is picked up from the phone's Studio folder when its file appears.
-const LIVE = { busy: null, cur: null, hub: null, callId: "" };
+const LIVE = { busy: null, cur: null, hub: null, callId: "", flow: null, keep: false, pick: null };
+const STUDIO_URL = "https://appassets.androidplatform.net/studio/";
+const FLOW_LIVE = ["queued", "draft", "pick", "refining"];
+
+/** A picture that fades in over what was there (the draft) when it has loaded; reduce-motion turns the fade off. */
+function FadeImg({ src, under, alt, testid }) {
+  const [on, setOn] = useState(!under);
+  return (
+    <div className="relative">
+      {under ? <img src={under} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover rounded-lg" data-testid="studio-fade-under" /> : null}
+      <img src={src} alt={alt} onLoad={() => setOn(true)} data-testid={testid}
+        className="relative w-full rounded-lg bg-slate-950 transition-opacity duration-300 motion-reduce:transition-none" style={{ opacity: on ? 1 : 0 }} />
+    </div>
+  );
+}
+
+/** v6.20 — Studio "Draft then clear": queued → draft → refining (or pick, with Best of 2), on one spot. */
+function DraftFrame({ flow, now, onStop, onKeep, onPick }) {
+  const left = flowSecondsLeft(flow, now), pct = flowPercent(flow, now), P = flow.plan || {};
+  const d = flow.draft;
+  const badge = flow.phase === "queued" ? tr("Queued")
+    : flow.phase === "pick" ? tr("Best of 2")
+    : flow.phase === "draft" ? tr("Draft · {w} px · {s} s", { w: Math.max((d && d.w) || 0, (d && d.h) || 0), s: Math.max(1, Math.round(((d && d.ms) || 0) / 1000)) })
+    : tr("Making it clear…");
+  const line = flow.phase === "queued" ? (P.draft ? tr("Drawing a quick draft — about {s} s", { s: P.best2 ? 2 * P.estDraft : P.estDraft }) : tr("Drawing…"))
+    : flow.phase === "pick" ? tr("Tap the one you like")
+    : flow.phase === "draft" ? tr("Draft ready — you can keep it")
+    : tr("Refining to {w} px", { w: P.finalSide });
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900 p-2" data-testid="studio-flow" data-phase={flow.phase} aria-live="polite">
+      {flow.phase === "pick" ? (
+        <div className="grid grid-cols-2 gap-1.5">
+          {(flow.drafts || []).map((x, i) => (
+            <button key={x.file} onClick={() => onPick(i)} data-testid={"studio-pick-" + i}
+              className="relative rounded-lg overflow-hidden border border-slate-700 focus:border-violet-500 min-h-[48px]">
+              <img src={x.url} alt={tr("Draft {n}", { n: i + 1 })} className="w-full aspect-square object-cover" />
+              <span className="absolute top-1.5 start-1.5 px-2 py-0.5 rounded-full bg-black/60 text-white text-[11px]">{tr("Draft {n}", { n: i + 1 })}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="relative rounded-lg overflow-hidden bg-slate-950 aspect-square">
+          {d ? <img src={d.url} alt="" className="w-full h-full object-cover" data-testid="studio-draft-img" />
+            : <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 motion-safe:animate-pulse" data-testid="studio-skeleton" />}
+          <span className="absolute top-2 start-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[11px]" data-testid="studio-flow-badge">{badge}</span>
+        </div>
+      )}
+      <div className="h-1 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-violet-500 transition-all motion-reduce:transition-none" style={{ width: pct + "%" }} /></div>
+      <div className="flex justify-between text-[11px] text-slate-400 mt-1 px-0.5">
+        <span data-testid="studio-flow-line">{line}</span>
+        {left != null ? <span data-testid="studio-flow-left">{tr("~{s} s left", { s: left })}</span> : null}
+      </div>
+      <div className="flex gap-1.5 mt-2">
+        <button onClick={onStop} data-testid="studio-flow-stop" className="flex-1 min-h-[44px] rounded-lg border border-slate-700 text-slate-200 text-sm">{tr("Stop")}</button>
+        {d && (flow.phase === "draft" || flow.phase === "refining") ? (
+          <button onClick={onKeep} data-testid="studio-keep-draft" className="flex-1 min-h-[44px] rounded-lg bg-violet-500 text-white text-sm font-semibold">{tr("Keep draft")}</button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 const PENDING = "attune:studio:pending";
 const notePending = (v) => { try { if (v) localStorage.setItem(PENDING, JSON.stringify(v)); else localStorage.removeItem(PENDING); } catch (e) {} };
 const readPending = () => { try { return JSON.parse(localStorage.getItem(PENDING) || "null"); } catch (e) { return null; } };
@@ -83,11 +143,17 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   const [gallery, setGallery] = useState(loadStudio);
   const [cur, setCurL] = useState(() => LIVE.cur || loadStudio()[0] || null);
   const setCur = (c) => { LIVE.cur = c; if (LIVE.hub) LIVE.hub.setCur(c); };
+  // v6.20 — Draft then clear: the picture's state (studio.js flowStep), mirrored in LIVE like busy
+  const [flow, setFlowL] = useState(() => LIVE.flow);
+  const setFlow = (x) => { const nf = typeof x === "function" ? x(LIVE.flow) : x; LIVE.flow = nf; if (LIVE.hub) LIVE.hub.setFlow(nf); };
+  const flowEv = (ev) => setFlow((f) => flowStep(f, ev));
+  const [dprefs, setDprefsS] = useState(draftPrefs);
+  const setDprefs = (p) => { setDprefsS(p); setDraftPrefs(p); };
   const [err, setErrL] = useState("");
   const setErr = (e) => { if (LIVE.hub) LIVE.hub.setErr(e); };
   const callId = useRef(LIVE.callId);
   useEffect(() => {
-    LIVE.hub = { setBusy: setBusyL, setCur: setCurL, setErr: setErrL, setGallery: (l) => setGallery(l) };
+    LIVE.hub = { setBusy: setBusyL, setCur: setCurL, setErr: setErrL, setGallery: (l) => setGallery(l), setFlow: setFlowL };
     return () => { LIVE.hub = null; };
   }, []);
   // after a reload: a job that was running is picked up when its picture appears in the Studio folder
@@ -100,7 +166,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       try {
         const files = JSON.parse(native.imageList() || "[]");
         const hit = pend.what === "upscale" ? files.find((f) => f.file === String(pend.file || "").replace(/\.png$/i, "") + "-x4.png")
-          : files.filter((f) => f.file && (f.at || 0) >= (pend.t0 || 0) - 2000 && !/-x[24]\.png$/.test(f.file)).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+          : files.filter((f) => f.file && (f.at || 0) >= (pend.t0 || 0) - 2000 && !/-x[24]\.png$|-d\.png$/.test(f.file)).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
         if (hit) {
           const base = pend.what === "upscale" ? (loadStudio().find((x) => x.file === pend.file) || {}) : {};
           commitPic({ ...base, file: hit.file, url: hit.url, w: hit.width, h: hit.height, idea: base.idea || pend.idea || "", prompt: base.prompt || pend.prompt || "", upscaled: pend.what === "upscale", at: Date.now(), resumed: true });
@@ -125,7 +191,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       const files = JSON.parse(native.imageList() || "[]");
       const have = new Set(loadStudio().map((x) => x.file));
       // v5.41: a sharpened (-x4) picture finished while away is recovered too, with its original's idea
-      const missed = files.filter((f) => f && f.file && !have.has(f.file)).map((f) => { const src = /-x[24]\.png$/.test(f.file) ? loadStudio().find((x) => x.file === f.file.replace(/-x[24]\.png$/, ".png")) : null;
+      // (a draft, -d.png, is never recovered on its own: it is kept only when the person said so)
+      const missed = files.filter((f) => f && f.file && !have.has(f.file) && !/-d\.png$/.test(f.file)).map((f) => { const src = /-x[24]\.png$/.test(f.file) ? loadStudio().find((x) => x.file === f.file.replace(/-x[24]\.png$/, ".png")) : null;
         return { ...(src || {}), file: f.file, url: f.url, w: f.width, h: f.height, idea: (src && src.idea) || "", prompt: (src && src.prompt) || "", at: f.at, recovered: true, upscaled: /-x2\.png$/.test(f.file) ? "x2" : !!src || /-x4\.png$/.test(f.file) }; });
       if (missed.length) { const next = [...missed, ...loadStudio()].sort((a, b) => (b.at || 0) - (a.at || 0)); keep(next); setCur(next[0]); }
     } catch (e) {}
@@ -192,12 +259,49 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       const arg = { pack: dp.id, prompt: finalPrompt, width: r0 ? r0.w : ds.w, height: r0 ? r0.h : ds.h, steps: (P.defaults && P.defaults.steps) || 4, cfg: (P.defaults && P.defaults.cfg) || 1 };
       if (opts.seed != null) arg.seed = opts.seed;
       if (mode === "edit" || opts.ref) arg.refImage = r0.dataUrl;
-      const run = nativeCall("imagine", arg, progress("draw"));
-      callId.current = LIVE.callId = nativeLastId();
+      // v6.20 — Draft then clear: a 384 px draft with the SAME prompt and seed first, then the clear picture
+      const plan = draftPlan(dp.id, Math.max(arg.width, arg.height), dev, dprefs, arg.refImage ? "edit" : "create");
+      if (plan.draft && arg.seed == null) arg.seed = Math.floor(Math.random() * 1e9);
+      LIVE.keep = false;
+      setFlow(flowStep(null, { type: "start", t: Date.now(), plan }));
+      const onProg = progress("draw");
+      const prog = (pct, stage, detail) => {
+        if (stage === "draftready") {
+          const [file, w, h, ms] = String(detail || "").split("|");
+          if (file) flowEv({ type: "draft", t: Date.now(), pic: { file, url: STUDIO_URL + file, w: +w, h: +h, ms: +ms, seed: arg.seed } });
+          return;
+        }
+        flowEv({ type: "stage", stage });
+        onProg(pct, stage, detail);
+      };
+      const once = (a) => { const run = nativeCall("imagine", a, prog); callId.current = LIVE.callId = nativeLastId(); return run; };
       notePending({ what: "draw", t0: Date.now(), idea: text, prompt: finalPrompt });
-      const r = await run;
+      if (plan.best2) {
+        // Best of 2: two quick drafts one after the other (memory), the person taps one, only that one is made clear
+        const dsz = drawSize(dp.id, sz, plan.draftSide), pics = [];
+        for (const sd of [arg.seed, arg.seed + 1]) {
+          const x = await once({ ...arg, width: dsz.w, height: dsz.h, seed: sd });
+          pics.push({ file: x.file, url: x.url, w: x.width, h: x.height, ms: x.ms, seed: sd });
+        }
+        flowEv({ type: "drafts", pics, t: Date.now() });
+        const i = await new Promise((res) => { LIVE.pick = res; });
+        LIVE.pick = null;
+        if (i < 0) { pics.forEach((x) => { try { native.deleteImage(x.file); } catch (e) {} }); throw new Error("Stopped"); }
+        flowEv({ type: "pick", i, t: Date.now() });
+        pics.forEach((x, j) => { if (j !== i && !dprefs.keepDrafts) { try { native.deleteImage(x.file); } catch (e) {} } });
+        arg.seed = pics[i].seed;
+      } else if (plan.draft) arg.draftSide = plan.draftSide;
+      const r = await once(arg);
       notePending(null);
-      const item = { file: r.file, url: r.url, idea: text, prompt: finalPrompt, w: r.width, h: r.height, ms: r.ms, backend: r.backend, seed: r.seed, edit: !!arg.refImage, at: Date.now() };
+      const item = { file: r.file, url: r.url, idea: text, prompt: finalPrompt, w: r.width, h: r.height, ms: r.ms, backend: r.backend, seed: r.seed != null ? r.seed : arg.seed, edit: !!arg.refImage, at: Date.now() };
+      const dft = LIVE.flow && LIVE.flow.draft;
+      if (dft) {
+        // the gallery keeps only the clear picture, unless "keep drafts too" is on
+        if (dprefs.keepDrafts) commitPic({ ...dft, idea: text, prompt: finalPrompt, draft: true, at: Date.now() - 1 });
+        else { try { native.deleteImage(dft.file); } catch (e) {} }
+      }
+      flowEv({ type: "done", pic: item, t: Date.now() });
+      try { if (dft && navigator.vibrate) navigator.vibrate(12); } catch (e) {}
       commitPic(item);
       if (r.pausedChat) flash(tr("The chat model was paused to make room, and is loading again."));
       setInfo(readInfo());
@@ -208,7 +312,23 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
     } catch (e) {
       // v5.17: never silent. "Stopped" is only quiet when the person pressed Stop.
       const msg = String((e && e.message) || "");
-      if (msg === "Stopped" && userStop.current) { /* they asked for it */ }
+      const fl = LIVE.flow, dft = fl && fl.draft;
+      if (LIVE.keep && dft) {
+        // Keep draft: the clear pass was stopped; the draft becomes the picture
+        commitPic({ ...dft, idea: text, prompt: prompt || text, draft: true, at: Date.now() });
+        notePending(null); setFlow((f) => flowStep(f, { type: "keep" }));
+      } else if (dft && !userStop.current) {
+        // the clear pass failed, the draft is still a picture: keep it and say why
+        commitPic({ ...dft, idea: text, prompt: prompt || text, draft: true, at: Date.now() });
+        setFlow((f) => flowStep(f, { type: "fail", error: msg }));
+        setErr(tr("The clear version could not be made, so the draft was kept: {e}", { e: tr(msg) }));
+      } else {
+        if (dft) { try { native.deleteImage(dft.file); } catch (x) {} }
+        setFlow(null);
+      }
+      if (LIVE.keep && dft) { /* kept */ }
+      else if (dft && !userStop.current) { /* said above */ }
+      else if (msg === "Stopped" && userStop.current) { /* they asked for it */ }
       else if (msg === "Stopped") setErr(tr("The picture engine stopped before the picture was finished — Android may have closed it to free memory. Try “Quick draft”, or close other apps and try again."));
       else setErr(msg ? tr(msg) : tr("The picture could not be made. Open Engine → Engine log and send me what it says."));
       const inf = readInfo(); setInfo(inf);
@@ -267,7 +387,11 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   const userStop = useRef(false);
   // v5.19: pictures are stopped only by this button (cancelImage), never by
   // a cancel meant for something else.
-  const stop = () => { userStop.current = true; notePending(null); const id = callId.current || LIVE.callId; if (!LIVE.busy || LIVE.busy.stage === "resume") setBusy(null); try { if (native.cancelImage) native.cancelImage(id); else native.cancel(id); } catch (e) {} };
+  const stop = () => { userStop.current = true; notePending(null); if (LIVE.pick) { LIVE.pick(-1); return; } const id = callId.current || LIVE.callId; if (!LIVE.busy || LIVE.busy.stage === "resume") setBusy(null); try { if (native.cancelImage) native.cancelImage(id); else native.cancel(id); } catch (e) {} };
+  // Keep draft: stop the clear pass; the draft becomes the picture (draw()'s catch commits it)
+  const keepDraft = () => { if (!LIVE.flow || !LIVE.flow.draft) return; LIVE.keep = true; const id = callId.current || LIVE.callId; try { if (native.cancelImage) native.cancelImage(id); else native.cancel(id); } catch (e) {} };
+  const pickDraft = (i) => { if (LIVE.pick) LIVE.pick(i); };
+  const flowLive = !!(flow && FLOW_LIVE.includes(flow.phase));
   const remove = (it) => { try { native.deleteImage(it.file); } catch (e) {} const next = gallery.filter((x) => x.file !== it.file); keep(next); if (cur && cur.file === it.file) setCur(next[0] || null); };
 
   const stageText = busy ? (busy.stage === "enhance" ? tr("Writing a fuller description…")
@@ -350,6 +474,22 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
               <input type="checkbox" checked={hd} onChange={(e) => setHdKeep(e.target.checked)} data-testid="studio-hd" />
               {tr("Highest resolution — sharpen every picture (×4 with the graphics chip; an instant ×2 without it)")}
             </label>
+            <label className="flex items-center gap-2 mt-1.5 text-[12px] text-slate-300">
+              <input type="checkbox" checked={dprefs.on} onChange={(e) => setDprefs({ ...dprefs, on: e.target.checked })} data-testid="studio-draft-on" />
+              {tr("Show a quick draft first (about 10 s), then the clear picture")}
+            </label>
+            {dprefs.on ? (
+              <div className="ms-6 space-y-1 mt-1">
+                <label className="flex items-center gap-2 text-[12px] text-slate-400">
+                  <input type="checkbox" checked={dprefs.best2} onChange={(e) => setDprefs({ ...dprefs, best2: e.target.checked })} data-testid="studio-best2" />
+                  {tr("Best of 2 — two drafts, you pick one (a little slower)")}
+                </label>
+                <label className="flex items-center gap-2 text-[12px] text-slate-400">
+                  <input type="checkbox" checked={dprefs.keepDrafts} onChange={(e) => setDprefs({ ...dprefs, keepDrafts: e.target.checked })} data-testid="studio-keep-drafts" />
+                  {tr("Keep drafts in the gallery too")}
+                </label>
+              </div>
+            ) : null}
             <div className="flex flex-wrap gap-1.5 mt-2">
               {SIZES.map((s) => <button key={s.id} onClick={() => setSize(s.id)} className={chip(size === s.id)} data-testid={"studio-size-" + s.id}>{tr(s.label)}</button>)}
             </div>
@@ -370,17 +510,18 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
             {PACKS[dp.id] && PACKS[dp.id].fast ? tr("Still working — nothing is stuck. Turbo takes about 1–2 minutes on the CPU. Keep Attune open; Stop cancels it.")
               : tr("Still working — nothing is stuck. Without the graphics chip a Pro picture takes 10–20 minutes (edits take longer). For speed, pick Turbo. Keep Attune open; Stop cancels it.")}</p>
         ) : null}
-        {busy && busy.total ? <div className="h-1 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-violet-500 transition-all" style={{ width: Math.round(busy.step * 100 / busy.total) + "%" }} /></div> : null}
+        {busy && busy.total && !flowLive ? <div className="h-1 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-violet-500 transition-all" style={{ width: Math.round(busy.step * 100 / busy.total) + "%" }} /></div> : null}
         {!err && !busy && info.lastError ? <p className="text-[11px] text-amber-300/90 mt-2" data-testid="studio-last-error">{tr("The last picture didn't finish:")} {tr(info.lastError)}</p> : null}
         {err ? <p className="text-[12px] text-rose-300 mt-2 flex items-start gap-1.5" data-testid="studio-error"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{err}</p> : null}
         {prompt && mode === "create" ? <p className="text-[11px] text-slate-500 mt-2 leading-relaxed" dir="ltr" data-testid="studio-prompt">{prompt}</p> : null}
       </div>
 
-      {cur ? (
+      {flowLive ? <DraftFrame flow={flow} now={now} onStop={stop} onKeep={keepDraft} onPick={pickDraft} /> : cur ? (
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-2" data-testid="studio-result">
-          <img src={cur.url} alt={cur.idea} className="w-full rounded-lg bg-slate-950" />
+          <FadeImg key={cur.file} src={cur.url} alt={cur.idea} testid="studio-result-img"
+            under={flow && flow.phase === "done" && flow.draft && flow.final && flow.final.file === cur.file ? flow.draft.url : null} />
           <p className="text-[11px] text-slate-500 mt-1.5 px-1" dir="auto">
-            {cur.w}×{cur.h} · {tr(cur.upscaled ? "sharpened on the {b} in {t}" : "drawn on the {b} in {t}", { b: cur.backend || "phone", t: secs(cur.ms || 0) })}{cur.seed != null ? " · seed " + cur.seed : ""}
+            {cur.draft ? <span className="text-violet-300" data-testid="studio-is-draft">{tr("Draft")} · </span> : null}{cur.w}×{cur.h} ·{tr(cur.upscaled ? "sharpened on the {b} in {t}" : "drawn on the {b} in {t}", { b: cur.backend || "phone", t: secs(cur.ms || 0) })}{cur.seed != null ? " · seed " + cur.seed : ""}
           </p>
           <div className="flex flex-wrap gap-1.5 mt-2 px-1 pb-1">
             <button className={btn} data-testid="studio-save" onClick={() => { try { const r = JSON.parse(native.saveImageToGallery(cur.file)); flash(r.ok ? tr("Saved to {w}", { w: r.where }) : tr(r.error)); } catch (e) { flash(tr("Could not save")); } }}><Download size={13} />{tr("Save to gallery")}</button>
