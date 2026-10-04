@@ -11,6 +11,8 @@ const pick = (process.argv[2] || "").split(",").filter(Boolean).map(Number);
 const post = (body) => new Promise((ok, bad) => { const req = http.request({ host: "127.0.0.1", port: PORT, path: "/v1/chat/completions", method: "POST", headers: { "content-type": "application/json" } }, (res) => { let d = ""; res.setEncoding("utf8"); res.on("data", (x) => (d += x)); res.on("end", () => { try { ok(JSON.parse(d)); } catch (e) { ok({ error: d.slice(0, 300) }); } }); }); req.on("error", bad); req.setTimeout(0); req.end(JSON.stringify(body)); });
 let tokens = 0;
 const THINK = !!process.env.CODE_THINK;
+// CODE_PLAN=0 / 1 / auto: plan-first off, always, or the app default (only for multi-function / multi-rule requests)
+const PLAN = process.env.CODE_PLAN == null || process.env.CODE_PLAN === "" ? C.PLAN_DEFAULT : process.env.CODE_PLAN === "0" ? false : process.env.CODE_PLAN === "1" ? true : process.env.CODE_PLAN;
 async function llm(messages, maxTokens) {
   const j = await post({ messages, max_tokens: THINK ? maxTokens * 4 : maxTokens, temperature: 0.2, stream: false, chat_template_kwargs: { enable_thinking: THINK } });
   const tm = j.timings || {}; tokens += tm.predicted_n || 0;
@@ -39,7 +41,7 @@ for (let i = 0; i < TASKS.length; i++) {
   const [lang, task, hidden] = TASKS[i];
   tokens = 0; const t0 = Date.now(); let rounds = 0, ownOk = false, hid = false, err = "";
   try {
-    const res = await C.workLoop({ task, lang, run, maxRounds: 4, llm: (m, o) => llm(m, (o && o.maxTokens) || 1000) });
+    const res = await C.workLoop({ task, lang, run, maxRounds: 4, plan: PLAN, llm: (m, o) => llm(m, (o && o.maxTokens) || 1000) });
     rounds = res.rounds; ownOk = res.ok;
     const marker = lang === "python" ? "# --- tests ---" : "// --- tests ---";
     const prog = res.code.includes(marker) ? res.code.split(marker)[0] : res.code;

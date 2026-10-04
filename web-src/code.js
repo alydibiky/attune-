@@ -213,6 +213,7 @@ export function dateFacts(code) {
    disagrees → the test's expected value is rewritten to the agreed value (no extra round). They
    disagree → the fix round is shown both computed values. A test that calls the function with input
    its own validation refuses (and the task asks for that refusal) is turned into a "must raise" test. */
+export const PLAN_DEFAULT = false;                          // plan first for multi-function / multi-rule requests (see needsPlan); measured on codebench
 const ARB_AFTER = 2;                                         // settle a self-written test call after it failed twice (measured: after once = 6-7/10 hidden, twice = 8-9/10)
 const tests0 = (code) => { const s = String(code || ""); const i = s.indexOf("# --- tests ---"); return i >= 0 ? s.slice(0, i) : s.split("\n").filter((l) => !/^assert\b|^print\(["']ALL TESTS PASSED/.test(l)).join("\n"); };
 /** The function a test calls: "vat(100) * 2" → "vat" (null for anything else). */
@@ -336,7 +337,31 @@ export function onTopic(task, code) {
   return hits >= Math.min(2, words.length);
 }
 
-export function writeMessages(task, lang, { retry = false } = {}) {
+// ---- plan first (for requests with several functions or several rules) ----------------------------------------------
+/** Does this request deserve a short plan before the code? More than one function, or several requirements. */
+export function needsPlan(task, lang) {
+  if (lang === "html") return false;
+  const t = String(task || "").replace(/[;,،؛]?\s*(with|and) tests\b|مع اختبارات/gi, " ");
+  const fns = new Set((t.match(/\b[A-Za-z_]\w+(?=\s*\()/g) || []));
+  if (fns.size >= 2) return true;
+  const reqs = (t.match(/;|،|؛|\b(?:and|then|also|raise|raises|throw|throws|sort|sorted|unless|otherwise|if|when|for an?|ignore|strip|round|rounded)\b|\bلو\b|\bوإذا\b|\bإذا\b|ترفع|يرفع|تقرّب|تقرب/gi) || []).length;
+  return reqs >= 4;
+}
+/** ≤ 150 tokens: 3–6 bullets of approach + the tests to write (the exact cases, with expected values worked out by hand). */
+export function planMessages(task, lang) {
+  return [
+    { role: "system", content: `You plan a small ${lang === "python" ? "Python" : "JavaScript"} program before it is written. Reply with ONLY: "Plan:" then 3 to 6 short bullets (the approach, each rule of the task, the edge cases), then "Tests:" then 3 to 6 bullets, each one exact call with its expected result worked out by hand from the task's own rules. Under 150 tokens. No code.` },
+    { role: "user", content: String(task || "").trim() },
+  ];
+}
+/** The plan as the model wrote it, trimmed (or "" when it wrote code or nothing useful). */
+export function cleanPlan(text) {
+  let s = String(text || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/```[\s\S]*?(```|$)/g, "").trim();
+  if (!/^\s*[-*•\d]/m.test(s)) return "";
+  return s.split("\n").map((l) => l.trimEnd()).filter((l) => l.trim()).slice(0, 16).join("\n").slice(0, 900);
+}
+
+export function writeMessages(task, lang, { retry = false, plan = "" } = {}) {
   if (lang === "html") {
     const { named } = topicWords(task);
     return [
@@ -347,7 +372,7 @@ The page must be about THIS and nothing else${named.length ? ` — use the name 
   }
   return [
     { role: "system", content: `You are an expert programmer. Write ${RULES[lang]}\nReply with ONE code block (\`\`\`${FENCE_LANG[lang]}) holding the complete program: first the program itself with a ONE-line demo that prints a result, then its tests. ${TESTS[lang]}\nBe brief: no docstrings, at most one short comment per function, no long demos. Use exactly the function names and parameters the task gives. Raise or throw an error ONLY for the inputs the task says to refuse; every other input (zero, empty, equal values) gets a normal result. Work out each test's expected value by hand from the task's own rules, and never test an input your own code rejects.\nNo explanation before the code. After the code, at most two short sentences.` },
-    { role: "user", content: String(task || "").trim() },
+    { role: "user", content: String(task || "").trim() + (plan ? `\n\nFollow this plan, and write these tests (re-check each expected value against the task):\n${plan}` : "") },
   ];
 }
 
@@ -415,7 +440,7 @@ export function joinCont(code, more) {
  * onEvent({ type, round, … }) reports every step for the screen.
  * → { ok, code, lang, rounds, last, tests, gaveUp? }
  */
-export async function workLoop({ task, lang, code: startCode = "", change = "", llm, run, onEvent = () => {}, maxRounds = 4, restart = true, isStopped = () => false, maxMs = Infinity }) {
+export async function workLoop({ task, lang, code: startCode = "", change = "", llm, run, onEvent = () => {}, maxRounds = 4, restart = true, isStopped = () => false, maxMs = Infinity, plan = PLAN_DEFAULT }) {
   const t0 = Date.now();
   const overBudget = (share = 1) => Date.now() - t0 > maxMs * share;   // off by default: the answer is to get the code right, not to stop early
   let code = startCode, round = 0, last = null, verdict = null;
@@ -426,8 +451,16 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
   const stopped = () => { if (isStopped()) throw new Error("Stopped"); };
 
   const write = async () => {
+    let planText = "";
+    if (plan === true || (plan === "auto" && needsPlan(task, lang))) {
+      onEvent({ type: "plan", round });
+      try { planText = cleanPlan(await llm(planMessages(task, lang), { maxTokens: 150, onToken: (t) => onEvent({ type: "planning", round, text: t }) })); }
+      catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      if (planText) onEvent({ type: "planned", round, plan: planText });
+      stopped();
+    }
     onEvent({ type: "write", round });
-    const ans = await llm(writeMessages(task, lang), { maxTokens: lang === "html" ? getPower().codeTokens : Math.max(2000, Math.floor(getPower().codeTokens / 2)), onToken: (t) => onEvent({ type: "writing", round, text: t }) });
+    const ans = await llm(writeMessages(task, lang, { plan: planText }), { maxTokens: lang === "html" ? getPower().codeTokens : Math.max(2000, Math.floor(getPower().codeTokens / 2)), onToken: (t) => onEvent({ type: "writing", round, text: t }) });
     let p = pickProgram(ans, lang);
     if (!p) throw new Error("The model answered without any code — try asking again in other words.");
     // A page about something else is written again, once, with the topic pinned.
