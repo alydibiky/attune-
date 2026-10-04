@@ -3135,4 +3135,7 @@ export const AR = {
   "This phone can't share its location with the app.": "الموبايل ده مش بيدي مكانه للتطبيق.",
   "Location is off for Attune — allow it in the phone's settings to see where you are.": "الموقع مقفول لـ Attune — اسمح بيه من إعدادات الموبايل عشان تشوف إنت فين.",
   "Couldn't get your location — check that location is on.": "مقدرتش أعرف مكانك — اتأكد إن الموقع شغال.",
+  "“{n}” isn't kept on this phone any more — pick the file again.": "«{n}» مش محفوظ على الموبايل خلاص — اختار الملف تاني.",
+  "tap to continue": "دوس عشان تكمّل",
+  "The text and your questions are kept on this phone only. Forget removes them.": "النص وأسئلتك محفوظين على الموبايل ده بس. «انسَ» بيمسحهم.",
 };

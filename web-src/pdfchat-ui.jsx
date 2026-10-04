@@ -17,6 +17,13 @@ const ghost = btn + " border border-slate-700 text-slate-200";
 const RECENT = "attune:pdfchat:recent:v1";
 const loadRecent = () => { try { const a = JSON.parse(localStorage.getItem(RECENT) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
 const saveRecent = (a) => { try { localStorage.setItem(RECENT, JSON.stringify(a.slice(0, 8))); } catch (e) {} };
+// v6.12: documents are kept between sessions — their text, the conversation, and the PDF itself when under 8 MB (for the
+// page pictures). Only on this phone (IndexedDB), forgotten with one tap, and only the last 8.
+const idb = () => new Promise((ok, bad) => { try { const r = indexedDB.open("attune-pdfchat", 1); r.onupgradeneeded = () => r.result.createObjectStore("docs"); r.onsuccess = () => ok(r.result); r.onerror = () => bad(r.error); } catch (e) { bad(e); } });
+const idbDo = async (mode, fn) => { try { const d = await idb(); return await new Promise((ok) => { const t = d.transaction("docs", mode); const st = t.objectStore("docs"); const q = fn(st); t.oncomplete = () => ok(q && q.result); t.onerror = () => ok(null); }); } catch (e) { return null; } };
+export const keepDoc = (key, v) => idbDo("readwrite", (st) => st.put(v, key));
+export const getDoc = (key) => idbDo("readonly", (st) => st.get(key));
+export const dropDoc = (key) => idbDo("readwrite", (st) => st.delete(key));
 
 const readB64 = (f) => new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] || ""); r.onerror = () => bad(new Error("Couldn't read that file")); r.readAsDataURL(f); });
 const SECTION = 2400;
@@ -54,6 +61,17 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
   const run = useRef(0), endRef = useRef(null), imgCache = useRef(new Map());
   const [pic, setPic] = useState(null);
   useSubBack(!!doc, () => { run.current++; setDoc(null); setMsgs([]); setTab("chat"); });
+  // the conversation is kept with the document (v6.12)
+  useEffect(() => { if (doc && doc.name) { const n = doc.name; getDoc(n).then((v) => { if (v) keepDoc(n, { ...v, msgs: msgs.slice(-60), t: Date.now() }); }); } }, [msgs]);
+  const reopen = async (r) => {
+    setErr(""); const v = await getDoc(r.name);
+    if (!v || !Array.isArray(v.pages)) { setErr(tr("“{n}” isn't kept on this phone any more — pick the file again.", { n: r.name })); return; }
+    const index = Q.buildIndex(v.pages);
+    setDoc({ name: v.name, kind: v.kind, pages: v.pages, index, count: v.count, b64: v.b64 || null, scans: v.scans || null });
+    setMsgs(Array.isArray(v.msgs) ? v.msgs : []); setPage(1); setTab("chat"); setFind(""); setHits([]);
+    const rc = [{ ...r, t: Date.now() }, ...recent.filter((x) => x.name !== r.name)]; setRecent(rc); saveRecent(rc);
+  };
+  const forget = (r) => { dropDoc(r.name); const rc = recent.filter((x) => x.name !== r.name); setRecent(rc); saveRecent(rc); };
 
   // ---- open a file ---------------------------------------------------------------------------------------------------------------------
   const open = async (file) => {
@@ -107,8 +125,11 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
       const index = Q.buildIndex(pages);
       if (!index.N) throw new Error(tr("There is no readable text in this file."));
       setDoc({ name: file.name, kind, pages, index, count, b64, scans });
-      setMsgs([]); setPage(1); setTab("chat"); setFind(""); setHits([]);
-      const rc = [{ name: file.name, pages: count, t: Date.now() }, ...recent.filter((x) => x.name !== file.name)]; setRecent(rc); saveRecent(rc);
+      const old = await getDoc(file.name);   // the same file opened before: its conversation comes back
+      setMsgs(old && old.count === count && Array.isArray(old.msgs) ? old.msgs : []); setPage(1); setTab("chat"); setFind(""); setHits([]);
+      const rc = [{ name: file.name, pages: count, t: Date.now(), kept: true }, ...recent.filter((x) => x.name !== file.name)]; setRecent(rc); saveRecent(rc);
+      for (const x of rc.slice(8)) dropDoc(x.name);
+      keepDoc(file.name, { name: file.name, kind, pages, count, scans: scans || null, b64: b64 && b64.length < 11e6 ? b64 : null, msgs: old && old.count === count && Array.isArray(old.msgs) ? old.msgs : [], t: Date.now() });
     } catch (e) { setErr(String((e && e.message) || e).slice(0, 220)); }
     finally { if (run.current === id) setBusy(""); }
   };
@@ -182,7 +203,13 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
         <input type="file" accept=".pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf,.txt,.md" className="hidden" data-testid="pdfchat-file" disabled={!!busy} onChange={(e) => { open(e.target.files && e.target.files[0]); e.target.value = ""; }} /></label>
       {err ? <p className="text-[12.5px] text-amber-300" data-testid="pdfchat-err">{err}</p> : null}
       {!modelReady ? <p className="text-[12px] text-slate-500">{tr("Reading and searching work now. To chat with the file, install a model in Engine.")}</p> : null}
-      {recent.length ? <div className="space-y-1"><p className="text-[11px] uppercase tracking-wide text-slate-500">{tr("Opened before")}</p>{recent.map((r) => <p key={r.name} className="text-[12.5px] text-slate-400">{r.name} · {r.pages} {tr("pages")}</p>)}<p className="text-[11.5px] text-slate-600">{tr("Pick the file again to continue — files are not copied into the app.")}</p></div> : null}
+      {recent.length ? <div className="space-y-1.5"><p className="text-[11px] uppercase tracking-wide text-slate-500">{tr("Opened before")}</p>
+        {recent.map((r) => (
+          <div key={r.name} className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2">
+            <button className="flex-1 min-w-0 text-start" onClick={() => reopen(r)} data-testid="pdfchat-recent"><span className="block text-[13px] text-slate-200 truncate" dir="auto">{r.name}</span><span className="block text-[11px] text-slate-500">{r.pages} {tr("pages")}{r.kept ? " · " + tr("tap to continue") : ""}</span></button>
+            <button onClick={() => forget(r)} className="text-[11px] text-slate-500 px-2 py-1" data-testid="pdfchat-forget">{tr("Forget")}</button>
+          </div>))}
+        <p className="text-[11.5px] text-slate-600">{tr("The text and your questions are kept on this phone only. Forget removes them.")}</p></div> : null}
     </section>
   );
 

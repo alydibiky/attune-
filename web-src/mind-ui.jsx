@@ -399,7 +399,8 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
           {answer ? (
             <section className="bg-slate-900 border border-teal-900/60 rounded-2xl p-4" data-testid="mind-answer">
               <p className="text-[11px] text-teal-400 mb-1 flex items-center gap-1"><Brain size={12} /> {answer.q}</p>
-              <p className="text-sm text-slate-100 whitespace-pre-wrap leading-relaxed" dir="auto">{answer.text}</p>
+              {/\|.*\|/.test(answer.text) || /^#{1,4}\s|\*\*|^\s*[-*] /m.test(answer.text) ? <div className="text-sm text-slate-100 leading-relaxed"><Md text={answer.text} runnable={false} /></div>
+                : <p className="text-sm text-slate-100 whitespace-pre-wrap leading-relaxed" dir="auto">{answer.text}</p>}
               {answer.sources.length ? (
                 <>
                   <p className="text-[10px] uppercase tracking-wider text-slate-500 mt-3 mb-1.5">{tr("From these items in your Mind")}</p>
