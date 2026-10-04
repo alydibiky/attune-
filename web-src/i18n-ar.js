@@ -3141,4 +3141,8 @@ export const AR = {
   "Web · Auto": "الويب · تلقائي",
   "Web: Auto — it searches only when a question needs fresh facts": "الويب: تلقائي — بيدوّر بس لما السؤال محتاج معلومات جديدة",
   "Pick the best model for each question": "اختار أحسن موديل لكل سؤال",
+  "Reading your {f} conversation…": "بقرا محادثتك مع {f}…",
+  "Reading the conversation…": "بقرا المحادثة…",
+  "Shared links are opened in the Android app — or paste the conversation's text here.": "الروابط المشتركة بتتفتح في تطبيق أندرويد — أو الصق نص المحادثة هنا.",
+  "I read your conversation with {f}{t} (about {n} words). Ask me anything about it — check it, summarise it, or carry on from where it stopped.": "قريت محادثتك مع {f}{t} (حوالي {n} كلمة). اسألني أي حاجة عنها — أراجعها، ألخصها، أو أكمل من مكان ما وقفت.",
 };

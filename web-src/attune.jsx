@@ -28,6 +28,7 @@ import { MindPage, keepPicture } from "./mind-ui.jsx";
 import { ShelfPage } from "./shelf-ui.jsx";
 import * as SH from "./shelf.js";
 import { notesFromText } from "./shelf-import.js";
+import { shareLink } from "./ai-import.js";
 import { wrongLanguage } from "./answerfix.js";
 import { ChatXRay } from "./chatxray-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
@@ -8008,6 +8009,8 @@ export default function App() {
         if (pay && pay.ok) { setPendingPay({ text: shared, id: Date.now() }); navTo("money");
           setToast(tr("Payment received — pick the account and confirm")); setTimeout(() => setToast(""), 3500); return; }
       }
+      // v6.12: a conversation shared from Gemini / ChatGPT / Claude… (Share → Attune) opens in Chat as its context
+      if (shareLink(shared)) { setChatSeed("\u0001" + shared); navTo("chat"); return; }
       if (d.kind === "selection") {
         setInText(shared); setInResult(""); navTo("instant");
         setToast(tr("Your selected text is ready — pick what to do with it")); setTimeout(() => setToast(""), 3000);
@@ -8811,7 +8814,8 @@ export default function App() {
     photoToMoney: (url) => { setPendingPay({ image: url, id: Date.now() }); setMode("money"); },
     openFit: (text) => { setFitIn(text); setMode("fit"); },
     openPdfChat: (file) => { setPdfIn(file); setMode("pdfchat"); },
-    pdfText: NATIVE ? (b64) => nativeCall("pdfText", { b64 }) : null,   // v6.12: several PDFs read inside the chat
+    pdfText: NATIVE ? (b64) => nativeCall("pdfText", { b64 }) : null,
+    fetchShare: NATIVE && NATIVE.fetchShare ? (url) => nativeCall("fetchShare", url) : null,   // v6.12: a conversation shared from another AI   // v6.12: several PDFs read inside the chat
     openSlides: (prompt, tab) => { forgetSticky("slides:"); setSlidesIn({ prompt, tab, id: Date.now() }); setMode("slides"); },   // a new request starts a fresh form
     listen: async (langTag, onPartial) => {
       const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); });

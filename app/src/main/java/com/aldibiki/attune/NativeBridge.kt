@@ -717,6 +717,36 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /**
+     * v6.12: the raw page of a conversation shared from another AI (Gemini, ChatGPT, Claude, Perplexity, Grok, Copilot,
+     * DeepSeek, Poe, Meta AI) — the conversation sits in the page's scripts, which pageText removes. Only these hosts,
+     * redirects followed (share.gemini.google → gemini.google.com), up to 4 MB. The page reads it (ai-import.js).
+     */
+    @JavascriptInterface
+    fun fetchShare(id: String, url: String) {
+        if (blockedByAirGap(id, "reading a shared AI conversation")) return
+        pool.execute {
+            try {
+                val ok = Regex("^https://(share\\.gemini\\.google|gemini\\.google\\.com|g\\.co|chatgpt\\.com|chat\\.openai\\.com|claude\\.ai|(www\\.)?perplexity\\.ai|grok\\.com|x\\.com|copilot\\.microsoft\\.com|chat\\.deepseek\\.com|poe\\.com|(www\\.)?meta\\.ai)/", RegexOption.IGNORE_CASE)
+                if (!ok.containsMatchIn(url)) { reject(id, "Only links shared from an AI chat can be read here"); return@execute }
+                Prefs.requireOnline(url, "a shared AI conversation")
+                var u = url; var html = ""; var hops = 0
+                while (hops++ < 6) {
+                    val c = java.net.URL(u).openConnection() as java.net.HttpURLConnection
+                    c.instanceFollowRedirects = false; c.connectTimeout = 12_000; c.readTimeout = 20_000
+                    c.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36")
+                    c.setRequestProperty("Accept-Language", "en,ar;q=0.8")
+                    val code = c.responseCode
+                    if (code in 300..399) { val loc = c.getHeaderField("Location") ?: break; u = java.net.URL(java.net.URL(u), loc).toString(); if (!ok.containsMatchIn(u) && !u.startsWith("https://accounts.google.com")) break; continue }
+                    if (code !in 200..299) { reject(id, "The share page answered HTTP $code"); return@execute }
+                    html = c.inputStream.bufferedReader(Charsets.UTF_8).use { r -> val sb = StringBuilder(); val b = CharArray(65536); var n: Int; while (r.read(b).also { n = it } > 0 && sb.length < 4_000_000) sb.append(b, 0, n); sb.toString() }
+                    break
+                }
+                if (html.isEmpty()) reject(id, "Could not open that link") else resolve(id, JSONObject().put("url", u).put("html", html))
+            } catch (e: Exception) { reject(id, e.message ?: "Could not open that link") }
+        }
+    }
+
     /** v6.1: raw JSON from a food database (Open Food Facts / USDA only). */
     @JavascriptInterface
     fun fetchJson(id: String, url: String) {

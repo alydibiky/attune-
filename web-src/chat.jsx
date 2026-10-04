@@ -6,6 +6,7 @@
 // needed. Everything else goes to the model with the whole conversation, and
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
+import { shareLink, looksLikeChat, fromPage, fromText, contextBlock } from "./ai-import.js";
 import { taskOf, wantsWeb, wantsThink, pickModel, switchLine } from "./router.js";
 import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
@@ -427,6 +428,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   }, []);
 
   const chat = chats.find((c) => c.id === activeId) || null;
+  const importRef = useRef(null);
+  importRef.current = (chat && chat.imported) || null;
+  const [pendingAsk, setPendingAsk] = useState(null);
   // The answer finished (or was stopped): read what was typed meanwhile.
   useEffect(() => {
     if (busy || !queued.length) return;
@@ -489,7 +493,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     seenSignal.current = newChatSignal;
     stop(); setActiveId(null); setText(""); setImage(null); setPending(null);
   }, [newChatSignal]);
-  useEffect(() => { if (composerSeed) { setText(composerSeed); clearComposerSeed && clearComposerSeed(); setTimeout(() => taRef.current && taRef.current.focus(), 50); } }, [composerSeed]);
+  useEffect(() => { if (pendingAsk && chat && chat.imported && !busy) { const t = pendingAsk; setPendingAsk(null); ask(t, { now: true }); } }, [pendingAsk, chat, busy]);
+  useEffect(() => {
+    if (!composerSeed) return;
+    if (composerSeed.startsWith("\u0001")) { const t = composerSeed.slice(1); clearComposerSeed && clearComposerSeed(); setTimeout(() => ask(t, { now: true }), 80); return; }   // v6.12: sent at once (a shared AI conversation)
+    setText(composerSeed); clearComposerSeed && clearComposerSeed(); setTimeout(() => taRef.current && taRef.current.focus(), 50);
+  }, [composerSeed]);
 
   // Follow the answer as it streams — but the moment the reader touches the
   // screen or scrolls up, stop following (v5.10: before, every new word
@@ -582,7 +591,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     // v6.12: the 12 chat languages — the model is told by name which language to answer in (the language of the latest message, or of the chat so far for a short one)
     const said = typeof userContent === "string" ? userContent : "";
     const langRule = replyLanguageRule(said.length >= 12 ? said : said + " " + (kept.length ? kept[kept.length - 2].content : ""));
-    return [{ role: "system", content: base + (langRule ? "\n\n" + langRule : "") + "\n\n" + HONESTY_RULE + "\n" + NO_CODE_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") }, ...kept, { role: "user", content: userContent }];
+    // v6.12: a conversation imported from another AI (Gemini, ChatGPT…) is read with every question of this chat
+    const imp = importRef.current, impBlock = imp ? contextBlock(imp, Math.max(2500, Math.min(12000, (ctx - 4500) * 2))) : "";
+    return [{ role: "system", content: base + (langRule ? "\n\n" + langRule : "") + "\n\n" + HONESTY_RULE + "\n" + NO_CODE_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") + (impBlock ? "\n\n" + impBlock : "") }, ...kept, { role: "user", content: userContent }];
   };
 
   const ask = async (raw, opts) => {
@@ -621,6 +632,34 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           detail: "Add it to your ledger in Money? You'll pick the account and confirm there.", actions: [["Add to Money", "money"], ["Just answer", "answer"]] },
           payText: typed }] }));
       setText("");
+      return;
+    }
+
+    // v6.12: a conversation shared from another AI (a Gemini / ChatGPT / Claude… share link, or pasted "You said / Gemini said"
+    // text) becomes this chat's context; a question written with it is answered right after
+    const link = route && !img ? shareLink(typed) : null;
+    if (route && !img && (link || (typed.length > 300 && looksLikeChat(typed)))) {
+      const cid = ensureChat(link ? "From " + link.from : "Imported conversation");
+      const mid = newId();
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: link ? typed : typed.slice(0, 300) + (typed.length > 300 ? " …" : "") },
+        { id: mid, role: "assistant", text: "", streaming: true, phase: link ? tr("Reading your {f} conversation…", { f: link.from }) : tr("Reading the conversation…") }] }));
+      setText("");
+      try {
+        let imp;
+        if (link) {
+          if (!api.fetchShare) throw new Error(tr("Shared links are opened in the Android app — or paste the conversation's text here."));
+          const r = await api.fetchShare(link.url);
+          imp = fromPage(r.html, link);
+        } else imp = fromText(typed);
+        const words = Math.round((imp.chars || 0) / 6);
+        patchChat(cid, (c) => ({ ...c, imported: imp, title: c.messages.length <= 2 ? (imp.from + ": " + (imp.title || "conversation")).slice(0, 60) : c.title }));
+        importRef.current = imp;
+        patchMsg(cid, mid, { streaming: false, phase: "", imported: true, text: tr("I read your conversation with {f}{t} (about {n} words). Ask me anything about it — check it, summarise it, or carry on from where it stopped.", { f: imp.from, t: imp.title ? " — “" + imp.title + "”" : "", n: words.toLocaleString() }) });
+        const rest = link ? typed.replace(link.url, "").replace(/https?:\/\/\S+/g, "").trim() : "";
+        if (rest.length > 3) setPendingAsk(rest);   // asked once the chat shows the import (a fresh render, not this one's copy)
+      } catch (e) {
+        patchMsg(cid, mid, { streaming: false, phase: "", error: true, text: String((e && e.message) || e).slice(0, 240) });
+      }
       return;
     }
 
