@@ -112,6 +112,13 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const [photo, setPhoto] = useState(null);
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState(null);             // items read, waiting for the person's OK
+  // v6.12 (Ali: "28 s is a lot, Yazio takes 5 s"): the fast look's answer is shown at once and can be saved; the chat model
+  // double-checks in the background and replaces the list only if the person has not changed it (else it is offered)
+  const draftRef = useRef(null); useEffect(() => { draftRef.current = draft; }, [draft]);
+  const shownRef = useRef(null);
+  const [refining, setRefining] = useState(false);
+  const [fastDl, setFastDl] = useState("");
+  const [aiAlt, setAiAlt] = useState(null);
   const [q, setQ] = useState("");
   const [stage, setStage] = useState("");
   const [online, setOnline] = useState(null);           // { q, foods } from the big databases
@@ -174,9 +181,13 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const useFast = async (fast, me) => {
     let items = fast.items;
     if (items.some((x) => x.unknown)) { items = await PH.resolveItems(items, DB.packSearch, 2000); if (run.current !== me) return; }
-    setDraft(items);
+    shownRef.current = items; setDraft(items);
   };
-  const readPhotoMeal = async (me) => {
+  const readPhotoMeal = async (me) => { setAiAlt(null); shownRef.current = null; try { await readPhotoMeal0(me); } finally { if (run.current === me) setRefining(false); } };
+  const readPhotoMeal0 = async (me) => {
+    let instant = false;
+    // the chat model's list: in place of the instant one when it is untouched, else offered with one tap
+    const place = (items) => { if (!instant) { setDraft(items); return; } if (draftRef.current === shownRef.current) { shownRef.current = items; setDraft(items); } else setAiAlt(items); };
     const fastP = clipOn ? fastLook().catch(() => null) : Promise.resolve(null);
     if (scanBarcode) {
       setStage(L("Looking for a barcode…", "بدوّر على باركود…"));
@@ -190,6 +201,10 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       setStage(L("Recognising the food…", "بتعرّف على الأكل…"));
       fast = await fastP; if (run.current !== me) return;
       if (fast && fast.status === "auto") { await useFast(fast, me); return; }   // sure enough: done, the chat model is not needed
+      if (fast && fast.status === "guess" && fast.items.length && modelReady && canSee) {   // shown now (≈1 s); the chat model checks it meanwhile
+        await useFast(fast, me); if (run.current !== me) return;
+        instant = true; setBusy(false); setStage(""); setRefining(true);
+      }
     }
     // not sure (or no fast model): the chat model has a look when it can; the fast guess is kept for when it can't
     if (!modelReady || !canSee) {
@@ -199,7 +214,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       flash && flash(clipOn || !photoClip ? L("This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”", "الموديل ده مش بيقرا صور دلوقتي — اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")
         : L("This model can't read photos — get “Fast photo recognition” in My plan, or name the food, e.g. “2 fried eggs and baladi bread”", "الموديل ده مش بيقرا صور — نزّل «التعرّف السريع على صور الأكل» من خطتي، أو اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return;
     }
-    const noFood = () => { if (fast && fast.status === "guess") return useFast(fast, me); giveUp(); };   // the chat model found nothing: the fast guess beats "name it"
+    const noFood = () => { if (instant) return; if (fast && fast.status === "guess") return useFast(fast, me); giveUp(); };   // the chat model found nothing: the fast guess beats "name it"
     if (ready) { setStage(L("Waking the model…", "بصحّي الموديل…")); try { await PH.withLimit(ready(), 90000); } catch (e) {} if (run.current !== me) return; }   // the time limit counts from here, not from the wake-up
     const b = PH.budget();
     setStage(L("Recognising the food…", "بتعرّف على الأكل…"));
@@ -207,20 +222,21 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     const hints = fast && fast.items && fast.items[0] ? (fast.items[0].alts || []).map((a) => a.label) : [];   // v6.12: the fast look's guesses help the chat model (it said "Eggs with tomatoes"; the chat model alone said "Fried egg")
     try { r = F.parsePhoto(await limit(llm(F.photoMessages(note, undefined, hints), photo, { json: true, maxTokens: 1000, temperature: 0 }), b.slice(42000, 14000))); } catch (e) { r = null; }
     if (run.current !== me) return;
-    if (r && r.label) { DB.keepFoods([r.label]); setDraft([F.itemFromFood(r.label, 1, Object.keys(r.label.portions || {})[0] || "g")]); return; }
+    if (r && r.label) { DB.keepFoods([r.label]); place([F.itemFromFood(r.label, 1, Object.keys(r.label.portions || {})[0] || "g")]); return; }
     let items = r ? r.items : [];
     if (!items.length && b.left() > 6000) {   // the quick look: just the names
       setStage(L("Taking a quick look…", "ببص بصة سريعة…"));
       try { const names = PH.parseNames(await limit(llm(PH.namesMessages(note), photo, { maxTokens: 60, temperature: 0 }), b.slice(20000, 2000))); if (run.current !== me) return; items = await PH.namesToItems(names, DB.packSearch, 3000); } catch (e) {}
       if (run.current !== me) return;
     }
-    if (!items.length) { const ni = PH.noteItems(note); if (ni.length) { setDraft(ni); return; } await noFood(); return; }
+    if (!items.length) { const ni = PH.noteItems(note); if (ni.length) { place(ni); return; } await noFood(); return; }
     if (items.some((x) => x.unknown)) { items = await PH.resolveItems(items, DB.packSearch, 3000); if (run.current !== me) return; }
-    setDraft(items);
+    place(items);
+    if (instant && draftRef.current !== items && shownRef.current !== items) return;   // offered, not placed: no more passes
     // v6.3: a zoomed second look at one food the model wasn't sure of (cropped from the photo, enlarged) — only when time is left
     const unsure = items.map((x, i) => [x, i]).filter(([x]) => x.box && x.conf < 0.6).slice(0, 1);
     for (const [x, i] of unsure) {
-      if (b.left() < 20000) break;
+      if (instant || b.left() < 20000) break;   // in the background: no extra pass
       setStage(L(`Looking closer at “${x.said}”…`, `ببص أقرب على «${x.said}»…`));
       try { const crop = await cropPhoto(photo.url, x.box); if (run.current !== me) return;
         const z = F.applyZoom(x, await limit(llm(F.zoomMessages(x), crop, { json: true, maxTokens: 200, temperature: 0 }), b.slice(20000, 8000)));
@@ -291,6 +307,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const confirm = () => {
     const ok = (draft || []).filter((x) => x.grams > 0);
     if (!ok.length) return;
+    if (refining) { run.current++; setRefining(false); try { abort && abort(); } catch (e) {} }   // saved before the background check finished: stop it
     // v6.1: what you corrected is remembered for the next photo (the food you chose, your usual portion)
     // v6.4: typed meals too — the words you wrote are remembered with the food you picked and, when you
     // didn't write the amount yourself, your usual portion ("rice" → 300 g brown rice next time)
@@ -365,6 +382,10 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
             <div className="flex gap-2">
               <button onClick={() => speak("text")} className={"rounded-xl px-3 py-2 text-[13px] flex items-center gap-1.5 shrink-0 " + (listening === "text" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-200")} data-testid="fit-mic"><Mic size={16} />{listening === "text" ? L("Listening…", "بسمع…") : L("Say it", "قول")}</button>
               <button onClick={() => fileRef.current && fileRef.current.click()} className="rounded-xl bg-slate-800 px-3 py-2 text-[13px] text-slate-200 flex items-center gap-1.5 shrink-0" data-testid="fit-photo"><Camera size={16} />{L("Photo", "صورة")}</button>
+              {photo && !clipOn && photoClip ? <div className="w-full basis-full rounded-xl border border-sky-800 bg-sky-500/10 p-2 text-[12px] text-sky-100" data-testid="fit-fast-offer">
+                {L("Photos take 20–30 s with the chat model. Get “Fast photo recognition” (≈100 MB, once) and a photo is read in about a second.", "الصور بتاخد ٢٠–٣٠ ثانية مع موديل الشات. نزّل «التعرّف السريع على الصور» (حوالي ١٠٠ ميجا مرة واحدة) والصورة تتقري في حوالي ثانية.")}
+                <button disabled={!!fastDl} onClick={async () => { setFastDl(L("Downloading…", "بنزّل…")); try { await photoClip.install((pct) => setFastDl(Math.round(pct || 0) + "%")); setClipOn(true); flash && flash(L("Fast photo recognition is ready", "التعرّف السريع جاهز")); } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 100)); } finally { setFastDl(""); } }}
+                  className="ms-2 rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold" data-testid="fit-fast-get">{fastDl || L("Get it", "نزّله")}</button></div> : null}
               <input ref={fileRef} type="file" accept="image/*" className="hidden" data-testid="fit-photo-input" onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) { try { setPhoto(await readPhoto(f)); } catch (x) { flash && flash(L("Couldn't open that picture", "مقدرتش أفتح الصورة")); } } }} />
               <button onClick={readMeal} disabled={busy || (!text.trim() && !photo)} className="flex-1 rounded-xl bg-emerald-600 disabled:opacity-40 py-2 text-[14px] font-medium text-white flex items-center justify-center gap-1.5" data-testid="fit-read">
                 {busy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{busy ? stage || L("Reading…", "بقرا…") : L("Read it", "اقرا")}
@@ -387,6 +408,10 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
           </>) : (
             <div className="space-y-2" data-testid="fit-draft">
               <div className="text-[12.5px] text-slate-400">{L("Check the amounts — change the grams if needed, then save.", "راجع الكميات — غيّر الجرامات لو محتاج، وبعدين احفظ.")}</div>
+              {refining ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5" data-testid="fit-refining"><span className="inline-block w-2 h-2 rounded-full bg-sky-400 animate-pulse" />{L("The AI is double-checking the photo — you can save now.", "الذكاء الاصطناعي بيراجع الصورة — تقدر تحفظ دلوقتي.")}</div> : null}
+              {aiAlt && aiAlt.length ? <div className="rounded-xl bg-sky-500/10 border border-sky-800 p-2 text-[12.5px] text-sky-100" data-testid="fit-ai-alt">
+                {L("The AI sees: ", "الذكاء الاصطناعي شايف: ")}<b>{aiAlt.map((x) => (ar && x.ar) || x.name).join(" · ")}</b>
+                <div className="flex gap-2 mt-1.5"><button onClick={() => { setDraft(aiAlt); setAiAlt(null); }} className="rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold">{L("Use this", "استخدم ده")}</button><button onClick={() => setAiAlt(null)} className="rounded-lg bg-slate-800 px-2.5 py-1">{L("Keep mine", "خليني على بتاعي")}</button></div></div> : null}
               {busy && stage ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{stage}</div> : null}
               {draft.map((x, i) => (
                 <div key={i} className="rounded-lg bg-slate-800/70 px-2 py-1.5 space-y-1.5" data-testid="fit-draft-item">
