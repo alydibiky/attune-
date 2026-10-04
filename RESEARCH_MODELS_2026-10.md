@@ -81,6 +81,29 @@ All on GitHub ARM runners (ubuntu-24.04-arm, 4 cores, the phone's chip family), 
 nothing local was usable. Workflow: `.github/workflows/model-lab.yml`, `only=quant` (full test + peak RSS) and
 `only=codebench` (coding loop, hidden tests). Peak RSS = the whole llama-server process (weights + 8k KV + buffers).
 
+### Coding loop — codebench (10 tasks, hidden tests), 4B Q4_K_M MTP, 2 runs each
+| code.js | hidden passes | tokens | seconds |
+|---|---|---|---|
+| b6d864d (old prompts) | 9/10, 8/10 | 31.6k, 32.1k | 3149, 3505 |
+| 57cd5aa (short prompts, "handle zero, negative…") | 7/10 | 19.6k | 2600 |
+| 6a7fff9 (+ arbitration) | 7/10 | 30.4k | 2872 |
+| **9a85fe2** (prompt fix: refuse only what the task says + best version kept + arbitration after 2 fails) | **9/10, 8/10** | **14.2k, 12.5k** | **1466, 1417** |
+| 44486ba (arbitration after the FIRST fail) | 6/10, 7/10 | 26.3k, 10.2k | 2433, 1144 |
+Adopted 9a85fe2: same correctness as the old prompts, -58% tokens, -57% time.
+
+### Arabic candidates (Translation 22 + 12 languages 26 + Egyptian Arabic 6 = 54 cases)
+| Model | Licence | Peak RSS MB | Score | Egyptian | tok/s |
+|---|---|---|---|---|---|
+| Qwen3.5 4B Q4_K_M (Core) | Apache-2.0 | 5654 | 51/54 | 5/6 | 11.0 |
+| Qwen3.5 9B IQ4_NL (Zenith) | Apache-2.0 | 10138 | 50/54 | 5/6 | 6.8 |
+| Fanar-1 9B IQ4_XS | Apache-2.0 | 6162 | 47/54 | 6/6 | 6.6 |
+| ALLaM 7B IQ4_XS | Apache-2.0 | 5874 | 39/54 | 5/6 | 8.8 |
+Falcon-H1-Arabic: no public GGUF found on Hugging Face. None beats the current tiers overall; Fanar wins only Egyptian (6/6 vs 5/6, one case). Not adopted.
+
+### 4B IQ4_XS
+Full test 167/173 (= Q4_K_M), 11.2 tok/s, peak RSS 3984 MB vs 5753 MB with mmap (Q4_K is repacked on ARM, which
+keeps a second copy). The app loads with `--load-mode none`; a re-measure in that mode was dispatched.
+
 ### Quality per GB — full test (173 cases, 15 categories), one run each
 | Model file | File GB | Peak RSS MB | Score | write tok/s |
 |---|---|---|---|---|
