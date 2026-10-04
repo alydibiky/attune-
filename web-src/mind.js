@@ -98,6 +98,12 @@ export function codeTags(rec) {
   if (lp && lp.site) tags.push(lp.site.toLowerCase());
   return tags;
 }
+/** Text folded for search (the same folding as Memory's index): case, tashkeel, alef/yeh/teh-marbuta forms. */
+export function normText(s) {
+  return String(s || "").normalize("NFKC").toLowerCase()
+    .replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g, "")
+    .replace(/[آأإٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/ی/g, "ي").replace(/ک/g, "ك");
+}
 export function normTag(x) {
   return String(x || "").trim().toLowerCase().replace(/^#/, "").replace(/[أإآ]/g, "ا").replace(/ة$/, "ه").replace(/\s+/g, " ").slice(0, 24);
 }

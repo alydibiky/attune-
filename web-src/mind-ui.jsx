@@ -21,9 +21,9 @@ function db() {
   });
   return dbP;
 }
-async function thumbPut(id, url) { try { const d = await db(); await new Promise((ok) => { const t = d.transaction("thumbs", "readwrite"); t.objectStore("thumbs").put(url, id); t.oncomplete = ok; t.onerror = ok; }); } catch (e) {} }
-async function thumbGet(id) { try { const d = await db(); return await new Promise((ok) => { const q = d.transaction("thumbs").objectStore("thumbs").get(id); q.onsuccess = () => ok(q.result || null); q.onerror = () => ok(null); }); } catch (e) { return null; } }
-async function thumbDel(id) { try { const d = await db(); const t = d.transaction("thumbs", "readwrite"); t.objectStore("thumbs").delete(id); t.objectStore("thumbs").delete(id + ":full"); } catch (e) {} }
+export async function thumbPut(id, url) { try { const d = await db(); await new Promise((ok) => { const t = d.transaction("thumbs", "readwrite"); t.objectStore("thumbs").put(url, id); t.oncomplete = ok; t.onerror = ok; }); } catch (e) {} }
+export async function thumbGet(id) { try { const d = await db(); return await new Promise((ok) => { const q = d.transaction("thumbs").objectStore("thumbs").get(id); q.onsuccess = () => ok(q.result || null); q.onerror = () => ok(null); }); } catch (e) { return null; } }
+export async function thumbDel(id) { try { const d = await db(); const t = d.transaction("thumbs", "readwrite"); t.objectStore("thumbs").delete(id); t.objectStore("thumbs").delete(id + ":full"); } catch (e) {} }
 /** v6.10 — a photo kept from anywhere in the app (chat, Instant) keeps the PICTURE too: a small thumbnail for the
  *  board and a 1280 px copy to open full size. image = { data (base64), media }. Never throws. */
 export async function keepPicture(id, image) {

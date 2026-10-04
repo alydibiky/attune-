@@ -6,6 +6,7 @@ import {
   ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users,
   AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2,
   Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple,
+  BookOpen,
 } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -24,6 +25,7 @@ import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
 import { MindPage, keepPicture } from "./mind-ui.jsx";
+import { ShelfPage } from "./shelf-ui.jsx";
 import { wrongLanguage } from "./answerfix.js";
 import { ChatXRay } from "./chatxray-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
@@ -7271,6 +7273,7 @@ const MORE_TOOLS = [
   ["code", "Code", "Programs tested on your phone", Code2],
   ["crane", "Crane toolkit", "Load charts, ground, slings, wind", Calculator],
   ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
+  ["shelf", "Shelf", "Your notes, in books", BookOpen],
   ["memory", "Mind", "Everything you keep — it files itself", Brain],
   ["cycle", "Cycle", "Period tracker", Droplet], ["travel", "Travel", "Country packs & phrases", Plane],
   ["map", "Maps", "Offline places", MapPin], ["field", "Site reports", "Incident & maintenance docs", HardHat],
@@ -7285,7 +7288,7 @@ const MORE_TOOLS = [
 const MORE_GROUPS = [
   ["Create & learn", ["instant", "studio", "assistants", "skills", "projects", "artifacts", "code", "learn", "news"]],
   ["Work & business", ["slides", "xray", "convert", "pdfchat", "video", "cv", "business", "crane", "field", "fleet", "reminders"]],
-  ["Your life", ["fit", "deal", "memory", "map", "travel", "cycle"]],
+  ["Your life", ["fit", "deal", "shelf", "memory", "map", "travel", "cycle"]],
   ["Prompts for other AIs", ["improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
 
@@ -7306,6 +7309,7 @@ export default function App() {
   const modeRef = useRef("chat"); modeRef.current = mode;
   const modeHist = useRef([]);
   const setMode = (m) => {
+    if (m === "notes") m = "shelf";                              // v6.11: the old Notes route opens the Shelf
     const cur = modeRef.current;
     if (!m || m === cur) return;
     if (m === "chat") modeHist.current = [];                    // Chat is home: Back from it leaves the app
@@ -7317,7 +7321,7 @@ export default function App() {
   // (Android's rule); being SENT from one screen to another (Learn → Studio) is what Back retraces
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
   const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
-  const navTo = (m) => { modeHist.current = []; if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); modeRef.current = m; setModeRaw(m); };
+  const navTo = (m) => { if (m === "notes") m = "shelf"; modeHist.current = []; if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -7578,6 +7582,7 @@ export default function App() {
 
   // The index is derived, so a bad index is never data loss — it rebuilds.
   const memIndex = useMemo(() => memBuildIndex(memory), [memory]);
+  const memoryLive = useMemo(() => memory.filter((r) => !(r.meta && r.meta.trashed)), [memory]);   // v6.11: notes in the Shelf trash are not shown in Mind
   const memHits = useMemo(
     () => (memQ.trim() ? memSearch(memory, memIndex, memQ, { now: Date.now(), limit: 40 }) : []),
     [memQ, memory, memIndex]);
@@ -9096,9 +9101,15 @@ export default function App() {
               </div>
             </section>
           </div>
+        ) : mode === "shelf" ? (
+          <ShelfPage records={memory} setRecords={(fn) => setMemory(fn)} scheduleReminder={scheduleReminder} flash={flash}
+            listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
+            openInMind={(r) => { setOpenRec(r); setMode("memory"); }}
+            saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
+            share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "memory" ? (
           // v6.8: Memory → Mind (mind-ui.jsx). Promises and Your words are its other two tabs.
-          <MindPage records={memory} remember={remember} update={updateRec} forget={forget} togglePin={togglePin}
+          <MindPage records={memoryLive} remember={remember} update={updateRec} forget={forget} togglePin={togglePin}
             search={(q, n) => memSearch(memory, memIndex, q, { now: Date.now(), limit: n || 30 })}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json })}
             modelReady={modelUsable}

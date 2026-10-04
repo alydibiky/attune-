@@ -103,3 +103,10 @@ export const Presentation = mk("Presentation");
 export const Apple = mk("Apple");
 export const Dumbbell = mk("Dumbbell");
 export const Camera = mk("Camera");
+// v6.11 Shelf
+ICONS.AlarmClock = [["circle",{"cx":"12","cy":"13","r":"8"}],["path",{"d":"M12 9v4l2 2"}],["path",{"d":"M5 3 2 6"}],["path",{"d":"m22 6-3-3"}],["path",{"d":"M6.38 18.7 4 21"}],["path",{"d":"M17.64 18.67 20 21"}]];
+ICONS.MoreVertical = [["circle",{"cx":"12","cy":"12","r":"1"}],["circle",{"cx":"12","cy":"5","r":"1"}],["circle",{"cx":"12","cy":"19","r":"1"}]];
+ICONS.BookOpen = [["path",{"d":"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"}],["path",{"d":"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"}]];
+export const AlarmClock = mk("AlarmClock");
+export const MoreVertical = mk("MoreVertical");
+export const BookOpen = mk("BookOpen");
