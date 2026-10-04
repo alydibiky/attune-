@@ -1,5 +1,5 @@
 // Unit tests for web-src/studio.js — picture requests in Chat, and the prompt helpers.
-import { looksLikeImageRequest, pictureSubject, enhanceMessages, cleanPrompt, PACKS, SIZES } from "../../web-src/studio.js";
+import { looksLikeImageRequest, pictureSubject, enhanceMessages, cleanPrompt, PACKS, SIZES, drawPack, recommendStudioPack } from "../../web-src/studio.js";
 const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
 
@@ -19,5 +19,33 @@ eq([k.files.map((f) => f.role), Math.round(k.files.reduce((a, f) => a + f.size, 
 eq([PACKS.turbo.files.map((f) => f.role), PACKS.turbo.files[1].size, PACKS.turbo.files[1].url.startsWith("https://huggingface.co/madebyollin/taesd/")], [["model", "taesd"], 9793292, true], "Turbo pack: the model plus the tiny colour decoder (measured 63 s → 37 s, CLIP 31.2 → 32.1)");
 eq(PACKS["esrgan-x4"].files[0].url.startsWith("https://github.com/xinntao/Real-ESRGAN/"), true, "the sharpening model comes from its official release");
 eq(SIZES.every((s) => s.w % 16 === 0 && s.h % 16 === 0 && s.w * s.h <= 1024 * 1024 * 1.01), true, "every size is a multiple of 16 and at most ~1 megapixel");
+const xl = PACKS["turbo-xl"];
+eq([xl.files.map((f) => f.role), xl.defaults.steps, xl.needRam, xl.files[1].url.includes("taesdxl")], [["model", "taesd"], 1, 8, true], "Turbo+ pack: SDXL-Turbo + tiny XL decoder, 1 step, needs 8 GB");
+const cpu = (ram, ids) => ({ ramGB: ram, gpuState: "cpu", packs: ids.map((id) => ({ id })) });
+eq(drawPack(cpu(12, ["turbo", "turbo-xl"])).id, "turbo-xl", "8 GB+ phone with Turbo+ installed draws with Turbo+");
+eq(drawPack(cpu(6, ["turbo", "turbo-xl"])).id, "turbo", "under 8 GB Turbo+ is never used");
+eq(drawPack(cpu(6, ["turbo"]), "turbo-xl").id, "turbo", "choosing Turbo+ on a 6 GB phone falls back to Turbo");
+eq(drawPack(cpu(12, ["turbo", "turbo-xl"]), "turbo").id, "turbo", "choosing Turbo keeps Turbo");
+eq(drawPack(cpu(12, ["turbo"]), "turbo-xl"), { id: "turbo-xl", ready: false }, "choosing Turbo+ before installing offers its install");
+// per-device recommendation (Ali: "recommend the best Studio model for each device")
+const devs = [
+  ["4 GB budget phone", { ramGB: 4, cores: 8, bigCores: 2, freeGB: 20, platform: "android" }, "turbo", 384],
+  ["6 GB mid phone", { ramGB: 6, cores: 8, bigCores: 2, freeGB: 30, platform: "android" }, "turbo", 512],
+  ["8 GB Honor-class", { ramGB: 8, cores: 8, bigCores: 4, freeGB: 40, platform: "android" }, "turbo-xl", 512],
+  ["8 GB but 4 GB free", { ramGB: 8, cores: 8, bigCores: 4, freeGB: 4, platform: "android" }, "turbo", 512],
+  ["12 GB flagship", { ramGB: 12, cores: 8, bigCores: 5, freeGB: 100, platform: "android" }, "turbo-xl", 512],
+  ["16 GB laptop", { ramGB: 16, cores: 8, bigCores: 8, freeGB: 200, platform: "desktop" }, "turbo-xl", 512],
+  ["32 GB desktop", { ramGB: 32, cores: 16, bigCores: 16, freeGB: 500, platform: "desktop" }, "turbo-xl", 512],
+];
+for (const [what, d, pack, side] of devs) { const r = recommendStudioPack(d); eq([r.pack, r.side, r.estSeconds > 0], [pack, side, true], `recommendation: ${what} → ${pack} @ ${side} (${r.estSeconds} s)`); }
+eq(recommendStudioPack(devs[6][1]).alternatives.some((a) => a.pack === "klein-4b"), true, "computers with 16 GB+ are also offered the slow best-quality pack");
+eq(recommendStudioPack(devs[2][1]).alternatives.some((a) => a.pack === "klein-4b"), false, "phones are not offered the minutes-a-picture pack");
+eq(recommendStudioPack(devs[2][1]).estSeconds < recommendStudioPack(devs[1][1]).estSeconds, true, "the XL pick is estimated faster than Turbo on a slower phone");
+eq(drawPack({ ramGB: 12, cores: 8, bigCores: 5, freeGB: 100, gpuState: "cpu", packs: [] }).id, "turbo-xl", "first run on a 12 GB phone preselects the recommended pack");
+eq(recommendStudioPack({ ramGB: 12, cores: 8, bigCores: 5, freeGB: 100, platform: "android" }).alternatives.some((a) => a.pack === "qwen-21"), true, "12 GB phone: Qwen-Image offered as best quality, slow");
+eq(recommendStudioPack({ ramGB: 8, cores: 8, bigCores: 4, freeGB: 100, platform: "android" }).alternatives.some((a) => a.pack === "qwen-21"), false, "8 GB phone: no Qwen-Image");
+eq(recommendStudioPack({ ramGB: 32, cores: 16, bigCores: 16, freeGB: 500, platform: "desktop", gpuVramGB: 12 }).pack, "qwen-21", "desktop with a 12 GB graphics card: Qwen-Image first");
+eq(recommendStudioPack({ ramGB: 16, cores: 8, bigCores: 5, freeGB: 8, platform: "android" }).alternatives.some((a) => a.pack === "qwen-21"), false, "not enough storage: Qwen-Image not offered");
+eq(PACKS["qwen-21"].files.map((f) => f.role), ["diffusion", "llm", "vae"], "Qwen-Image pack: drawing model, text reader, colour decoder");
 console.log(fails.length ? fails.length + " FAILED" : "ALL PASSED");
 process.exit(fails.length ? 1 : 0);

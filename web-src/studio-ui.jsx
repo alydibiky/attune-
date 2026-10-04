@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X, Zap } from "lucide-react";
 import { tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
-import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, drawPack, drawSize, gpuWorks, loadStudio, saveStudio } from "./studio.js";
+import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, drawPack, recommendStudioPack, drawSize, gpuWorks, loadStudio, saveStudio } from "./studio.js";
 
 const STAGE = {
   gpu: "Waking the graphics chip (the first time can take a minute)…",
@@ -133,7 +133,10 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   useEffect(() => { if (incoming && incoming.prompt != null) { setIdea(incoming.prompt); setMode("create"); clearIncoming && clearIncoming(); } }, [incoming]);
 
   if (!info) return <div className="p-4 text-sm text-slate-400" data-testid="studio-page">{tr("Studio works in the Android app.")}</div>;
-  const dp = drawPack(info, choice, mode);
+  // v6.19: the device facts (cores, big cores, platform) join the picture facts for the per-device recommendation
+  let dev = info; try { dev = { ...JSON.parse(native.info()), ...info }; } catch (e) {}
+  const rec = recommendStudioPack(dev);
+  const dp = drawPack(dev, choice, mode);
   const gpuOk = gpuWorks(info);
   const drawReady = dp.ready;
   const P = PACKS[dp.id];
@@ -185,7 +188,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       // 2. The picture.
       const sz = SIZES.find((s) => s.id === size) || SIZES[0];
       const r0 = opts.ref || ref;
-      const ds = drawSize(dp.id, sz);
+      const ds = drawSize(dp.id, sz, rec.pack === dp.id && rec.side < (P.side || 9999) ? rec.side : 0);
       const arg = { pack: dp.id, prompt: finalPrompt, width: r0 ? r0.w : ds.w, height: r0 ? r0.h : ds.h, steps: (P.defaults && P.defaults.steps) || 4, cfg: (P.defaults && P.defaults.cfg) || 1 };
       if (opts.seed != null) arg.seed = opts.seed;
       if (mode === "edit" || opts.ref) arg.refImage = r0.dataUrl;
@@ -288,6 +291,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
           <p className="text-sm text-slate-100 font-medium flex items-center gap-1.5"><Palette size={16} className="text-violet-300" />{tr("Pictures made on your phone")}</p>
           {dp.why === "cpu" ? <p className="text-[12px] text-amber-200 mt-1 leading-relaxed" data-testid="studio-why-turbo">{tr("This phone's graphics chip isn't working with Studio, so the Pro model would take 10–20 minutes a picture on the CPU. Studio Turbo makes a picture in about a minute.")}</p> : null}
           <p className="text-[12px] text-slate-300 mt-1 leading-relaxed">{tr(P.quality)}</p>
+          {rec.pack === dp.id ? <p className="text-[11px] text-emerald-300 mt-1" data-testid="studio-recommended">✓ {tr("Recommended for your phone")} · {tr(rec.why)} · {tr("about {s} s a picture", { s: rec.estSeconds })}</p> : null}
           <p className="text-[11px] text-slate-500 mt-1">{P.label} · {P.sizeGB} {tr("GB, once")} · {tr("needs {n} GB RAM", { n: P.needRam })} · {P.license}</p>
           {info.ramGB && info.ramGB < P.needRam ? <p className="text-[11px] text-amber-300 mt-1">{tr("This phone has {n} GB — it may be too little for pictures.", { n: info.ramGB })}</p> : null}
           {dl && dl.id === dp.id ? (
@@ -313,8 +317,10 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
         {mode === "create" ? (
           <div className="flex flex-wrap items-center gap-1.5 mb-2" data-testid="studio-model">
             <button onClick={() => setChoice("turbo")} className={chip(dp.id === "turbo")} data-testid="studio-use-turbo">⚡ {tr("Turbo · about 1 min")}</button>
-            <button onClick={() => setChoice("pro")} className={chip(dp.id !== "turbo")} data-testid="studio-use-pro">{tr("Pro · best quality")}</button>
-            {dp.id !== "turbo" && gpuOk === false ? <span className="text-[11px] text-amber-300" data-testid="studio-pro-slow">{tr("Pro on this phone's CPU: 10–20 min a picture")}</span> : null}
+            {info.ramGB >= PACKS["turbo-xl"].needRam ? <button onClick={() => setChoice("turbo-xl")} className={chip(dp.id === "turbo-xl")} data-testid="studio-use-turbo-xl">⚡ {tr("Turbo+ · about 20 s · {s} GB", { s: PACKS["turbo-xl"].sizeGB })}</button> : null}
+            {info.ramGB >= PACKS["qwen-21"].needRam ? <button onClick={() => setChoice("qwen-21")} className={chip(dp.id === "qwen-21")} data-testid="studio-use-qwen">{tr("Ultra · best quality, slow · {s} GB", { s: PACKS["qwen-21"].sizeGB })}</button> : null}
+            <button onClick={() => setChoice("pro")} className={chip(!PACKS[dp.id] || (!PACKS[dp.id].fast && dp.id !== "qwen-21"))} data-testid="studio-use-pro">{tr("Pro · best quality")}</button>
+            {!(PACKS[dp.id] && PACKS[dp.id].fast) && gpuOk === false ? <span className="text-[11px] text-amber-300" data-testid="studio-pro-slow">{tr("Pro on this phone's CPU: 10–20 min a picture")}</span> : null}
           </div>
         ) : null}
         {mode === "edit" ? (
@@ -361,7 +367,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
         {busy && busy.line ? <p className="text-[10.5px] text-slate-500 mt-1.5 font-mono truncate" dir="ltr" data-i18n-skip data-testid="studio-engine-line">{busy.line}</p> : null}
         {busy && busy.what === "draw" && now - busy.t0 > 90000 && busy.stage !== "draw" ? (
           <p className="text-[11px] text-slate-400 mt-2 leading-relaxed" data-testid="studio-slow-note">
-            {dp.id === "turbo" ? tr("Still working — nothing is stuck. Turbo takes about 1–2 minutes on the CPU. Keep Attune open; Stop cancels it.")
+            {PACKS[dp.id] && PACKS[dp.id].fast ? tr("Still working — nothing is stuck. Turbo takes about 1–2 minutes on the CPU. Keep Attune open; Stop cancels it.")
               : tr("Still working — nothing is stuck. Without the graphics chip a Pro picture takes 10–20 minutes (edits take longer). For speed, pick Turbo. Keep Attune open; Stop cancels it.")}</p>
         ) : null}
         {busy && busy.total ? <div className="h-1 bg-slate-800 rounded-full overflow-hidden mt-2"><div className="h-full bg-violet-500 transition-all" style={{ width: Math.round(busy.step * 100 / busy.total) + "%" }} /></div> : null}
