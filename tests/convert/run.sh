@@ -25,6 +25,7 @@ for f in report arabic long; do
   node bench.mjs out/$f.w2p.json >/dev/null 2>&1
   printf '%-8s word→pdf ' "$f"; python3 compare.py out/$f.docx out/$f.w2p.out.docx 2>/dev/null
   python3 sidepdf.py out/$f.pdf out/$f.w2p.pdf out/$f.w2p.png 2>/dev/null
+  printf '%-8s word→pdf look ' "$f"; python3 realscore.py --pdfs out/$f.pdf out/$f.w2p.pdf 2>/dev/null
 done
 # PowerPoint → PDF: the slides drawn by the app (pptxToSlidesHtml), printed by Chromium, next to
 # LibreOffice's own PDF of the deck (out/deck.side.png)

@@ -72,4 +72,8 @@ def main():
     if png and os.path.exists(out_pdf):
         subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), "sidepdf.py"), pdf, out_pdf, png, str(len(pa))])
 
-main()
+if __name__ == "__main__":
+    if sys.argv[1] == "--pdfs":   # two PDFs: how alike their pages look (SSIM, 0–100)
+        a, b = pages(sys.argv[2]), pages(sys.argv[3]); s = [ssim(a[i], b[i]) if i < len(b) else 0 for i in range(len(a))]
+        print(json.dumps({"ssim": round(100 * sum(s) / max(len(s), 1), 1), "pages": cnt(len(b), len(a))}))
+    else: main()

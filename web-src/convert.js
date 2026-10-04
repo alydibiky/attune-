@@ -780,6 +780,9 @@ export async function docxRead(bytes) {
     const sp = (p.match(/<w:spacing\b[^>]*>/) || [""])[0]; const B = attr(sp, "spacing", "before"), A = attr(sp, "spacing", "after"), Ln = attr(sp, "spacing", "line"), LR = attr(sp, "spacing", "lineRule");
     if (B != null) o.before = tw(B); if (A != null) o.after = tw(A); if (Ln) o.lineV = +Ln, o.lineRule = LR || "auto";
     const ol = attr(p, "outlineLvl"); if (ol != null) o.outline = +ol; if (has(p, "pageBreakBefore")) o.pageBreak = true; if (has(p, "contextualSpacing")) o.ctx = true;
+    // v6.10: a paragraph's bottom border (a Title's rule under it)
+    const bd = inner(p, "pBdr"), bb = bd ? (bd.match(/<w:bottom\b[^>]*>/) || [""])[0] : ""; const bv = bb && attr(bb, "bottom", "val");
+    if (bv && bv !== "nil" && bv !== "none") { const c = attr(bb, "bottom", "color"); o.bdrB = { w: Math.max(0.25, (+attr(bb, "bottom", "sz") || 4) / 8), c: c && /^[0-9A-Fa-f]{6}$/.test(c) ? c.toUpperCase() : "000000", space: +attr(bb, "bottom", "space") || 0 }; }
     const num = inner(p, "numPr"); if (num) { o.numId = attr(num, "numId"); o.ilvl = +(attr(num, "ilvl") || 0); } return o; };
   const styles = new Map();
   for (const m of stylesXml.matchAll(/<w:style\b([^>]*)>([\s\S]*?)<\/w:style>/g)) {
@@ -876,6 +879,7 @@ export async function docxRead(bytes) {
     blk.align = align; if (rtl) blk.rtl = true;
     if (P.ind && type !== "li") blk.ind = rtl && P.indR && !P.ind ? P.indR : P.ind;
     if (P.first && type !== "li") blk.first = P.first;
+    if (P.bdrB) blk.bdrB = P.bdrB;
     // "don't add space between paragraphs of the same style" (lists): no space between them
     const same = P.ctx && lastBlk && lastStyle === (sid || "") && !pendingSpace;
     if (same) delete lastBlk.after;
@@ -1501,7 +1505,7 @@ export function blocksToPrintHtml(blocks, title = "Document", o = {}) {
     // (Word adds one paragraph's space after to the next one's space before: padding, which never collapses)
     const st = ["margin:0", b.before ? `padding-top:${n(b.before)}pt` : "", b.after ? `padding-bottom:${n(b.after)}pt` : "", b.align && b.align !== (b.rtl ? "right" : "left") ? `text-align:${b.align}` : "",
       b.ind ? `margin-inline-start:${n(b.ind)}pt` : "", b.first ? `text-indent:${n(b.first)}pt` : "", b.size ? `font-size:${b.size}pt` : "", b.font ? `font-family:${cssFont(b.font)}` : "",
-      b.line ? `line-height:${n(b.line)}pt` : "", b.pageBreak ? "break-before:page" : "", ...extra].filter(Boolean).join(";");
+      b.line ? `line-height:${n(b.line)}pt` : "", b.pageBreak ? "break-before:page" : "", b.bdrB ? `border-bottom:${n(b.bdrB.w)}pt solid #${b.bdrB.c};padding-bottom:${n(b.bdrB.space)}pt` : "", ...extra].filter(Boolean).join(";");
     return ` style="${st}"${b.rtl ? ' dir="rtl"' : ' dir="auto"'}`;
   };
   // the header / footer: in the page's margin boxes, "#" (or the page) is the page number
@@ -1510,7 +1514,8 @@ export function blocksToPrintHtml(blocks, title = "Document", o = {}) {
     const side = b.align === "center" ? "center" : (b.align === "right") ? "right" : "left";
     const parts = b.page ? String(b.text).split(new RegExp("(?<!\\d)" + b.page + "(?!\\d)")) : [b.text];
     const content = parts.map((x) => JSON.stringify(x)).join(" counter(page) ");
-    return `@${where}-${side}{content:${content};font-size:${b.size || 9}pt;${b.font ? `font-family:${cssFont(b.font)};` : ""}vertical-align:${where === "top" ? "bottom" : "top"};${b.rtl ? "direction:rtl;" : ""}}`;
+    // (a margin box doesn't inherit the page's font: it fell back to a serif one)
+    return `@${where}-${side}{content:${content};font-size:${b.size || 9}pt;font-family:${cssFont(b.font || o.font) || "Calibri, Carlito, sans-serif"};${b.at ? `vertical-align:${where};padding-${where}:${n(Math.max(0, b.at - (where === "top" ? 0 : (b.size || 9) * 0.3)))}pt;` : `vertical-align:${where === "top" ? "bottom" : "top"};`}${b.rtl ? "direction:rtl;" : ""}}`;
   };
   const hd = blocks.find((b) => b.type === "header"), ft = blocks.find((b) => b.type === "footer");
   let out = "", list = null;
@@ -1535,7 +1540,7 @@ export function blocksToPrintHtml(blocks, title = "Document", o = {}) {
         return `<${tag}${sp > 1 ? ` colspan="${sp}"` : ""}${b.rtl ? "" : ' dir="auto"'} style="${bold ? "font-weight:700" : "font-weight:400"};${sheet && ri > 0 && num(r[ci] || "") ? "text-align:end" : ""}">${h(r[ci] || "")}</${tag}>`;
       };
       const rows = b.rows.map((r, ri) => `<tr>${Array.from({ length: w }, (_, ci) => cell(r, ri, ci)).join("")}</tr>`);
-      out += `<table${b.rtl ? ' dir="rtl"' : ""} style="border-collapse:collapse;${cols ? `table-layout:fixed;width:${n(b.widths.reduce((a, x) => a + x, 0))}pt;` : "width:100%;"}${b.ind ? `margin-inline-start:${n(b.ind)}pt;` : ""}${b.before ? `margin-top:${n(b.before)}pt;` : ""}${b.after ? `margin-bottom:${n(b.after)}pt;` : ""}${b.pageBreak ? "break-before:page;" : ""}font-size:${b.size || (sheet ? 8.5 : body)}pt">${cols}${head ? `<thead>${rows[0]}</thead><tbody>${rows.slice(1).join("")}</tbody>` : `<tbody>${rows.join("")}</tbody>`}</table>`;
+      out += `<table${b.rtl ? ' dir="rtl"' : ""} style="border-collapse:collapse;${cols ? `table-layout:fixed;width:${n(b.widths.reduce((a, x) => a + x, 0))}pt;` : "width:100%;"}${b.ind ? `margin-inline-start:${n(b.ind)}pt;` : o.sheet ? "" : "margin-inline-start:-5.4pt;"}${b.before ? `margin-top:${n(b.before)}pt;` : ""}${b.after ? `margin-bottom:${n(b.after)}pt;` : ""}${b.pageBreak ? "break-before:page;" : ""}font-size:${b.size || (sheet ? 8.5 : body)}pt">${cols}${head ? `<thead>${rows[0]}</thead><tbody>${rows.slice(1).join("")}</tbody>` : `<tbody>${rows.join("")}</tbody>`}</table>`;
       continue;
     }
     if (b.type === "li") {
@@ -1548,7 +1553,7 @@ export function blocksToPrintHtml(blocks, title = "Document", o = {}) {
   }
   const css = `@page{size:${n(pg.w)}pt ${n(pg.h)}pt;margin:${n(pg.top)}pt ${n(pg.right)}pt ${n(pg.bottom)}pt ${n(pg.left)}pt;${box(hd, "top")}${box(ft, "bottom")}}` +
     `html,body{margin:0;padding:0}body{font-family:${cssFont(o.font) || 'Calibri, Carlito, "Noto Sans", Roboto, sans-serif'};font-size:${body}pt;line-height:1.16;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}` +
-    `p,h1,h2,h3{margin:0;orphans:2;widows:2}h1,h2,h3{font-size:inherit}img{display:inline-block}table{margin:0}th,td{border:0.5pt solid #7f7f7f;padding:1pt 5.4pt;vertical-align:top;text-align:start}thead{display:table-header-group}tr{break-inside:avoid}`;
+    `p,h1,h2,h3{margin:0;orphans:2;widows:2}h1,h2,h3{font-size:inherit}img{display:inline-block}table{margin:0}th,td{border:0.5pt solid #7f7f7f;padding:0 5.4pt;vertical-align:top;text-align:start}thead{display:table-header-group}tr{break-inside:avoid}`;
   return `<!doctype html>\n<html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${css}</style></head><body>\n${out}\n</body></html>\n`;
 }
 /** Blocks → Markdown (tables with a header rule). */
