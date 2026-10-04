@@ -140,7 +140,9 @@ const hexOf = (c) => { c = +c || 0; const r = (c >> 16) & 255, g = (c >> 8) & 25
 
 export function pdfLinesToBlocks(pages) {
   // superscript pieces next to each other are one: ^(−ΔΔ)^(Ct) → ^(−ΔΔCt)
-  const sup = (t) => String(t).replace(/\)\^\(/g, "");
+  // (v6.10: and a ligature glyph — "ﬁ" in "speciﬁc" — is written as its letters, so Word can search and spell-check it)
+  const LIG = { "\uFB00": "ff", "\uFB01": "fi", "\uFB02": "fl", "\uFB03": "ffi", "\uFB04": "ffl", "\uFB05": "st", "\uFB06": "st" };
+  const sup = (t) => String(t).replace(/\)\^\(/g, "").replace(/[\uFB00-\uFB06]/g, (c) => LIG[c]);
   const all = [];
   pages.forEach((p, pi) => {
     for (const l0 of p.lines || []) {
@@ -153,12 +155,14 @@ export function pdfLinesToBlocks(pages) {
       // the line is measured without its marker (a right-to-left bullet sits past the right margin)
       let lx = l0.x, le = l0.e;
       if (mark && sp.length) { if (l0.r && le != null) le = sp[0][0]; else if (!l0.r) lx = sp[0][0]; }
-      const body = sup(sp.map((x) => x[1]).join(" ")).replace(/\s+/g, " ").trim();
+      const body = sup(sp.map((x) => x[1]).join(" ")).replace(/\uFFFC\d+/g, "\uFFFC").replace(/\s+/g, " ").trim();
       const text = mark ? (NUM_MARK.test(mark) ? mark + " " : "• ") + body : body;
       // the words with their look (new readers send [x, text, bold, italic, colour, xEnd]; older ones only
       // the line's); a word touching the one before it ("2026" + "." in another font) gets no space
-      const words = sp.flatMap((x) => (Array.isArray(x[3]) && x[3].length ? x[3].map((w, k, ws) => ({ t: sup(w[1]), b: w[2] != null ? !!w[2] : !!l0.b, i: w[3] != null ? !!w[3] : !!l0.i, c: w[4] != null ? hexOf(w[4]) : hexOf(l0.c),
-        glue: k > 0 && ws[k - 1][5] != null && (l0.r ? ws[k - 1][5] - w[0] : w[0] - ws[k - 1][5]) < (x[2] || l0.s) * 0.12, v: w[6] === 1 || w[6] === -1 ? w[6] : 0 })) : [{ t: x[1], b: !!l0.b, i: !!l0.i, c: hexOf(l0.c) }]))
+      // (v6.10: "\uFFFC<n>" is a character the PDF had no real text for — its picture, glyphs[n], goes in its place)
+      const pic = (t) => { const m = /^\uFFFC(\d+)$/.exec(t); return m && p.glyphs && p.glyphs[+m[1]] && p.glyphs[+m[1]].b64 ? { t: "\uFFFC", pic: p.glyphs[+m[1]] } : null; };
+      const words = sp.flatMap((x, si) => (Array.isArray(x[3]) && x[3].length ? x[3].map((w, k, ws) => ({ si, t: sup(w[1]), b: w[2] != null ? !!w[2] : !!l0.b, i: w[3] != null ? !!w[3] : !!l0.i, c: w[4] != null ? hexOf(w[4]) : hexOf(l0.c),
+        glue: k > 0 && ws[k - 1][5] != null && (l0.r ? ws[k - 1][5] - w[0] : w[0] - ws[k - 1][5]) < (x[2] || l0.s) * 0.12, v: w[6] === 1 || w[6] === -1 ? w[6] : 0, ...pic(w[1]) })) : [{ si, t: x[1], b: !!l0.b, i: !!l0.i, c: hexOf(l0.c) }]))
         .filter((w) => w.t && !/^[\uF000-\uF0FF]$/.test(w.t));
       if (text) all.push({ ...l0, x: lx, e: le, mark, markX: mark ? (l0.r ? l0.e : l0.x) : null, page: pi, sp, text, words, top: l0.y - l0.s });
     }
@@ -188,7 +192,51 @@ export function pdfLinesToBlocks(pages) {
     }
     for (let k = all.length - 1; k >= 0; k--) if (all[k].run) all.splice(k, 1);
   }
-  const lines = all.filter((l) => !l.img);
+  // v6.10: two (or more) columns of text — a scientific paper — were read across, each row a two-cell table. A gutter that no
+  // line crosses, with long text on both sides for a good run of lines (a table's short cells don't count), makes a column
+  // region: its lines are split at the gutter and read left column first, then the right one; Word gets a real 2-column section.
+  for (let pi = 0; pi < pages.length; pi++) {
+    const pl = all.filter((l) => !l.img && l.page === pi && l.e != null);
+    if (pl.length < 8) continue;
+    const L = Math.min(...pl.map((l) => l.x)), R = Math.max(...pl.map((l) => l.e)), W = R - L;
+    const spans = (l) => l.sp.map((x) => { const ws = Array.isArray(x[3]) ? x[3] : []; const e = ws.length && ws[ws.length - 1][5] != null ? ws[ws.length - 1][5] : x[0] + String(x[1]).length * (x[2] || l.s) * 0.5; return [x[0], e]; });
+    const crosses = (l, g) => spans(l).some(([a, b]) => a < g - 1 && b > g + 1);
+    let best = null;
+    for (let g = L + W * 0.3; g <= L + W * 0.7; g += 2) {
+      // runs of lines (top to bottom) that don't cross g
+      let run = [];
+      const runs = [];
+      for (const l of pl) { if (crosses(l, g)) { if (run.length) runs.push(run); run = []; } else run.push(l); }
+      if (run.length) runs.push(run);
+      for (const r of runs) {
+        const left = r.flatMap((l) => spans(l).filter(([a, b]) => b <= g + 1)), right = r.flatMap((l) => spans(l).filter(([a]) => a >= g - 1));
+        const two = r.filter((l) => spans(l).some(([a, b]) => b <= g + 1) && spans(l).some(([a]) => a >= g - 1)).length;
+        if (r.length < 6 || two < 3 || left.length < 3 || right.length < 3) continue;
+        const lR = Math.max(...left.map((x) => x[1])), rL = Math.min(...right.map((x) => x[0]));
+        // (both sides mostly hold full lines of text: at least 4 long lines each, a quarter of their pieces — a column also holds
+        // headings, formulas and small tables)
+        const longL = left.filter(([a, b]) => b - a >= (lR - L) * 0.6).length, longR = right.filter(([a, b]) => b - a >= (R - rL) * 0.6).length;
+        if (rL - lR < 6 || longL < 4 || longR < 4 || longL < left.length * 0.25 || longR < right.length * 0.25) continue;
+        if (!best || two > best.two) best = { g, run: r, two, lR, rL };
+      }
+    }
+    if (!best) continue;
+    const { g, run } = best, leftLs = [], rightLs = [];
+    const part = (l, keep) => {
+      const idx = l.sp.map((x, k) => k).filter((k) => keep(spans(l)[k]));
+      if (!idx.length) return null;
+      const sp = idx.map((k) => l.sp[k]), sw = spans(l), words = l.words.filter((w) => w.si == null || idx.includes(w.si));
+      const body = sp.map((x) => x[1]).join(" ").replace(/\uFFFC\d+/g, "\uFFFC").replace(/\s+/g, " ").trim();
+      const s0 = Math.max(...sp.map((x) => x[2] || l.s));
+      return { ...l, sp, words, x: sw[idx[0]][0], e: sw[idx[idx.length - 1]][1], s: s0, top: l.y - s0, b: words.length ? words.every((w) => w.b) : l.b, i: words.length ? words.every((w) => w.i) : l.i,
+        mark: idx[0] === 0 ? l.mark : null, markX: idx[0] === 0 ? l.markX : null, text: idx[0] === 0 && l.mark ? l.text.slice(0, l.text.length - l.text.replace(/^\S+\s/, "").length) + body : body };
+    };
+    for (const l of run) { const a = part(l, ([x0, x1]) => x1 <= g + 1), b = part(l, ([x0]) => x0 >= g - 1); if (a) leftLs.push({ ...a, cg: { L, R: best.lR } }); if (b) rightLs.push({ ...b, cg: { L: best.rL, R } }); }
+    const at = all.indexOf(run[0]);
+    for (const l of run) all.splice(all.indexOf(l), 1);
+    all.splice(at, 0, { mk: true, text: "", sp: [], words: [], colStart: true, page: pi, top: run[0].top, y: run[0].y, s: 0, gap: Math.round(best.rL - best.lR) }, ...leftLs, { mk: true, text: "", sp: [], words: [], colBreak: true, page: pi, top: run[0].top, y: run[0].y, s: 0 }, ...rightLs, { mk: true, text: "", sp: [], words: [], colEnd: true, page: pi, top: run[run.length - 1].top, y: run[run.length - 1].y, s: 0 });
+  }
+  const lines = all.filter((l) => !l.img && !l.colStart && !l.colBreak && !l.colEnd);
   // the body text size: the size most of the characters are written in
   const bySize = new Map();
   for (const l of lines) { const k = Math.round(l.s * 2) / 2; bySize.set(k, (bySize.get(k) || 0) + l.text.length); }
@@ -229,8 +277,9 @@ export function pdfLinesToBlocks(pages) {
   // v6.8: a numbered line in a bigger font ("1. Summary") is a heading, not a list item
   const isHead = (l) => l.text.length <= 110 && (l.s >= body * 1.18 || (l.b && !LIST.test(l.text) && l.text.length <= 90 && !/[.,;:،]$/.test(l.text)));
   const cols = (l) => l.sp.length;
+  const geoOf = (l) => l.cg || geo[l.page];
   const alignOf = (l) => {
-    const g = geo[l.page];
+    const g = geoOf(l);
     if (!g || g.R == null || l.e == null) return null;
     const left = l.x - g.L, right = g.R - l.e, width = g.R - g.L;
     if (left > 12 && right > 12 && Math.abs(left - right) < Math.max(12, width * 0.05)) return "center";
@@ -243,12 +292,13 @@ export function pdfLinesToBlocks(pages) {
     for (const w of ws) {
       const last = out[out.length - 1];
       const gap = w.glue ? "" : " ";
-      if (last && last.b === w.b && last.i === w.i && last.c === w.c && (last.v || 0) === (w.v || 0)) last.t += gap + w.t;
+      if (w.pic) { if (last && gap) last.t += gap; out.push({ t: "\uFFFC", pic: w.pic, b: w.b, i: w.i, c: w.c }); continue; }
+      if (last && !last.pic && last.b === w.b && last.i === w.i && last.c === w.c && (last.v || 0) === (w.v || 0)) last.t += gap + w.t;
       else out.push({ t: (last ? gap : "") + w.t, b: w.b, i: w.i, c: w.c, ...(w.v ? { v: w.v } : {}) });
     }
     return out;
   };
-  const plain = (runs) => runs.every((r) => !r.b && !r.i && !r.c && !r.v);
+  const plain = (runs) => runs.every((r) => !r.b && !r.i && !r.c && !r.v && !r.pic);
   const out = [];
   for (const r of running) {
     const l = r.line, al = alignOf(l), runs = runsOf(l.words);
@@ -261,7 +311,7 @@ export function pdfLinesToBlocks(pages) {
   // the block's look from its lines (alignment, indents, spacing, size, font, direction)
   const finish = (blk, ls) => {
     const first = ls[0], rtl = ls.filter((l) => l.r).length * 2 > ls.length;
-    const g = geo[first.page];
+    const g = geoOf(first);
     blk.size = Math.round(first.s * 2) / 2;
     const fam = fontFamily(first.f); if (fam) blk.font = fam;
     if (rtl) blk.rtl = true;
@@ -280,6 +330,15 @@ export function pdfLinesToBlocks(pages) {
         if (ind && !(blk.align === (rtl ? "left" : "right"))) blk.ind = ind;
         if (Math.abs(fl) > 3 && ls.length > 1) blk.first = fl;
       }
+      // v6.10: a block indented on BOTH sides (an abstract, a quotation): its full lines all end the same distance short of
+      // the margin — a right indent, and justified (it was read as centred lines or a ragged block)
+      if (g && g.R != null && !rtl && ls.length >= 3) {
+        const offR = ls.slice(0, -1).map((l) => g.R - l.e), offL = ls.slice(1).map((l) => l.x - g.L);
+        if (offR.every((x) => x > 6 && Math.abs(x - offR[0]) < 2) && offL.every((x) => x > 6 && Math.abs(x - offL[0]) < 2)) {
+          blk.align = "justify"; blk.ind = Math.round(offL[0]); blk.indR = Math.round(offR[0]);
+          const fl = Math.round(first.x - g.L - offL[0]); if (Math.abs(fl) > 3) blk.first = fl; else delete blk.first;
+        }
+      }
     }
     if (ls.length > 1) { const gaps = ls.slice(1).map((l, k) => l.y - ls[k].y).filter((x) => x > 0).sort((a, b) => a - b); const pt = gaps[Math.floor(gaps.length / 2)]; if (pt) blk.line = Math.round(pt * 10) / 10; }
     // v6.10: a one-line paragraph keeps the page's line pitch for its size too (Word's own single spacing is
@@ -294,8 +353,16 @@ export function pdfLinesToBlocks(pages) {
     if (para) { const r = runsOf(para.words); out.push(finish({ type: "p", text: para.text, ...(plain(r) ? {} : { runs: r }) }, para.ls)); para = null; }
     if (item) { const r = runsOf(item.words); Object.assign(item.blk, finish(item.blk, item.ls), plain(r) ? {} : { runs: r }); item = null; }
   };
+  let colPrev = null;
   while (i < all.length) {
     const l = all[i];
+    if (l.colStart || l.colBreak || l.colEnd) {
+      flush();
+      if (l.colStart) { out.push({ type: "colstart", cols: 2, gap: l.gap }); colPrev = lastLine; }
+      else if (l.colBreak) { out.push({ type: "colbreak" }); lastLine = colPrev; }   // (the right column's space above: from the line above the columns)
+      else { out.push({ type: "colend" }); lastLine = all.slice(0, i).filter((m) => !m.img && m.cg && m.page === l.page).sort((a, b) => b.y - a.y)[0] || lastLine; }
+      i++; continue;
+    }
     if (l.img) {
       flush();
       const g = geo[l.page], blk = { type: "image", b64: l.b64, w: l.w, h: l.h };
@@ -310,7 +377,7 @@ export function pdfLinesToBlocks(pages) {
     if (cols(l) >= 2) {
       const rows = [l]; let j = i + 1;
       const cont = new Map();   // a row → its wrapped lines (a cell's text on 2+ lines: "Slew bearing / grease")
-      while (j < all.length && !all[j].img && all[j].page === l.page && all[j].y - rows[rows.length - 1].y < rows[rows.length - 1].s * 3.2) {
+      while (j < all.length && !all[j].img && !all[j].mk && all[j].page === l.page && all[j].y - rows[rows.length - 1].y < rows[rows.length - 1].s * 3.2) {
         const xs = rows[0].sp.map((x) => x[0]);
         const lastRow = rows[rows.length - 1], lastY = cont.has(lastRow) ? cont.get(lastRow).slice(-1)[0].y : lastRow.y;
         // a line of one or two pieces, each starting where a column starts, right under the row: wrapped cell text
@@ -368,12 +435,12 @@ export function pdfLinesToBlocks(pages) {
           const w = edges.map((a, k) => (rtl ? a - (k + 1 < edges.length ? edges[k + 1] : tl - 6) : (k + 1 < edges.length ? edges[k + 1] : tr + 6) - a));
           // the last column ends where its longest text ends, not at the table's border: at least as
           // wide as the others on average (within the page)
-          const others = w.slice(0, -1), avg = others.reduce((a, x) => a + x, 0) / others.length, g0 = geo[l.page];
+          const others = w.slice(0, -1), avg = others.reduce((a, x) => a + x, 0) / others.length, g0 = geoOf(l);
           const room = g0 && g0.R != null ? g0.R - g0.L - others.reduce((a, x) => a + x, 0) : Infinity;
           if (w[w.length - 1] < avg) w[w.length - 1] = Math.min(avg, Math.max(w[w.length - 1], room));
           if (w.every((x) => x > 8)) blk.widths = w.map((x) => Math.round(x));
         }
-        const g = geo[l.page];
+        const g = geoOf(l);   // (v6.10: a table in a column sits in that column)
         const lastRowLine = cont.has(rows[rows.length - 1]) ? cont.get(rows[rows.length - 1]).slice(-1)[0] : rows[rows.length - 1];
         const rc = (pages[l.page] && pages[l.page].rects) || [];
         // v6.10: the table's real box, its rules and its shaded rows come from what the page draws (rectangles and lines).
@@ -428,7 +495,7 @@ export function pdfLinesToBlocks(pages) {
         i = j; continue;
       }
     }
-    const prev = i > 0 ? all[i - 1] : null;
+    const prev = i > 0 && !all[i - 1].mk ? all[i - 1] : null;
     const gap = prev && !prev.img && prev.page === l.page ? l.y - prev.y : Infinity;
     const near = gap <= pitch(l.s) * 1.3 + 0.5;
     // v6.10: a bold line that the next line CONTINUES (same size, close below, starting in lower case) is a bold paragraph's
@@ -447,7 +514,7 @@ export function pdfLinesToBlocks(pages) {
     const m = l.text.match(LIST);
     // v6.10: a bold "a." / "1." label at the margin ("a. Calculate …") is the paragraph's own label, not a list with a
     // tab and a hanging indent: Word shows it as written (a bold label, then the text)
-    const g0 = geo[l.page];
+    const g0 = geoOf(l);
     const labelled = m && m[1] && !l.mark && !/[•●▪◦\-–*]/.test(m[0]) && l.words.length && l.words[0].b && g0 && (l.r ? g0.R != null && l.e != null && g0.R - l.e < 4 : l.x - g0.L < 4);
     if (labelled) { flush(); para = { text: l.text, s: l.s, words: [...l.words], ls: [l], label: true }; i++; continue; }
     if (m) {
@@ -471,7 +538,7 @@ export function pdfLinesToBlocks(pages) {
     // there ("Product A: …" / "Product B: …" were run together)
     const endedShort = (() => {
       if (!para || !lastPara) return false;
-      const g = geo[lastPara.page]; if (!g || g.R == null) return false;
+      const g = geoOf(lastPara); if (!g || g.R == null) return false;
       const w0 = (l.sp[0] && Array.isArray(l.sp[0][3]) && l.sp[0][3][0]) ? Math.abs((l.sp[0][3][0][5] ?? l.sp[0][3][0][0]) - l.sp[0][3][0][0]) : 0;
       const word = Math.max(w0, Math.min(l.text.split(" ")[0].length, 14) * l.s * 0.45) + l.s * 0.5;
       const room = lastPara.r ? lastPara.x - g.L : g.R - lastPara.e;
@@ -523,7 +590,7 @@ export function pdfDocOptions(pages) {
 
 /** Blocks → plain text (Markdown-style headings and bullets). */
 export function blocksToText(blocks) {
-  return blocks.filter((b) => !["header", "footer", "image", "pagebreak"].includes(b.type)).map((b) => b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n")
+  return blocks.filter((b) => !["header", "footer", "image", "pagebreak", "colstart", "colbreak", "colend"].includes(b.type)).map((b) => b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n")
     : b.type === "li" ? "- " + b.text : /^h\d$/.test(b.type) ? "#".repeat(+b.type[1]) + " " + b.text : b.text).join("\n\n");
 }
 
@@ -551,7 +618,10 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
   };
   // v5.41: "2^(−ΔΔCt)" (a superscript read from a PDF) is written as a real superscript
   const run = (t, f) => String(t).split(/\^\(([^()]{1,40})\)/).map((x, i) => (x ? run1(x, f, i % 2 === 1) : "")).join("");
-  const runs = (b, base = {}) => (b.runs && b.runs.length ? b.runs.map((r) => run(r.t, { ...base, b: r.b || base.b, i: r.i || base.i, c: r.c || base.c, ...(r.v ? { v: r.v } : {}) })).join("") : run(b.text, base));
+  // v6.10: a picture inside a line ({pic: {b64, w, h}}: a symbol the PDF had no real text for), at its size in points
+  const drawing = (n, cx, cy, ext) => `<w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${n}" name="Picture ${n}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${n}" name="image${n}.${ext}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdImg${n}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>`;
+  const picRun = (pc) => { const ext = /^data:image\/jpe?g/i.test(pc.b64) ? "jpeg" : "png"; const n = imgs.push({ b64: pc.b64, ext }); return `<w:r><w:rPr><w:position w:val="${-Math.round((pc.h || 0) * 0.4)}"/></w:rPr>${drawing(n, Math.round((pc.w || 8) * 12700), Math.round((pc.h || 10) * 12700), ext)}</w:r>`; };
+  const runs = (b, base = {}) => (b.runs && b.runs.length ? b.runs.map((r) => (r.pic && r.pic.b64 ? picRun(r.pic) : run(r.t, { ...base, b: r.b || base.b, i: r.i || base.i, c: r.c || base.c, ...(r.v ? { v: r.v } : {}) }))).join("") : run(b.text, base));
   // paragraph properties: direction, alignment (a right-to-left paragraph's start is its right side —
   // Word reads "left"/"right" there the other way round), indents, spacing, a new page before it
   const pPr = (b, style, bullet, text) => {
@@ -559,7 +629,7 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
     const jc = !b.align ? "" : b.align === "center" ? "center" : b.align === "justify" ? "both" : rtl ? (b.align === "left" ? "right" : "") : (b.align === "right" ? "right" : "");
     const jcX = jc ? `<w:jc w:val="${jc}"/>` : "";
     // (in a right-to-left paragraph Word's "left" indent is the start side, like jc above)
-    const ind = b.ind || b.first ? `<w:ind w:left="${tw(b.ind || 0)}"${b.first > 0 ? ` w:firstLine="${tw(b.first)}"` : b.first < 0 ? ` w:hanging="${tw(-b.first)}"` : ""}/>` : "";
+    const ind = b.ind || b.first || b.indR ? `<w:ind w:left="${tw(b.ind || 0)}"${b.indR ? ` w:right="${tw(b.indR)}"` : ""}${b.first > 0 ? ` w:firstLine="${tw(b.first)}"` : b.first < 0 ? ` w:hanging="${tw(-b.first)}"` : ""}/>` : "";
     // (v6.10: a PDF's page — o.exact — keeps its lines exactly where they were: an exact line pitch)
     const lineX = !b.line || !b.size ? "" : o.exact && b.line >= b.size * 0.95 && b.line <= b.size * 2.6 ? ` w:line="${tw(b.line)}" w:lineRule="exact"` : b.line > b.size * 1.2 ? ` w:line="${Math.round(240 * b.line / (b.size * 1.16))}" w:lineRule="auto"` : "";
     const sp = b.before != null || b.line || o.exact ? `<w:spacing w:before="${tw(b.before || 0)}" w:after="0"${lineX}/>` : "";
@@ -576,6 +646,9 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
     const inner = parts.map((x, k) => (k ? `<w:fldSimple w:instr=" PAGE "><w:r><w:rPr>${f.size ? `<w:sz w:val="${Math.round(f.size * 2)}"/>` : ""}</w:rPr><w:t>${b.page}</w:t></w:r></w:fldSimple>` : "") + (x ? run(x, f) : "")).join("");
     return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:${tag} xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:p>${pPr({ ...b, before: 0 }, null, false, b.text)}${inner}</w:p></w:${tag}>`;
   };
+  const hfRefs = (hf.header ? '<w:headerReference w:type="default" r:id="rIdHdr"/>' : "") + (hf.footer ? '<w:footerReference w:type="default" r:id="rIdFtr"/>' : "");
+  const pgCore = o.page ? `<w:pgSz w:w="${tw(o.page.w)}" w:h="${tw(o.page.h)}"${o.page.w > o.page.h ? ' w:orient="landscape"' : ""}/><w:pgMar w:top="${tw(o.page.top)}" w:right="${tw(o.page.right)}" w:bottom="${tw(o.page.bottom)}" w:left="${tw(o.page.left)}" w:header="${tw(hf.header ? Math.max(12, hf.header.at || 24) : 18)}" w:footer="${tw(hf.footer ? Math.max(12, hf.footer.at || 24) : 18)}" w:gutter="0"/>` : "";
+  let hasCols = false, lastGap = 18;
   const body = blocks.filter((b) => b.type !== "header" && b.type !== "footer").map((b) => {
     if (b.type === "table") {
       const w = Math.max(...b.rows.map((r) => r.length));
@@ -590,6 +663,11 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
         b.rows.map((r, ri) => `<w:tr>${b.rowH && b.rowH[ri] ? `<w:trPr><w:trHeight w:val="${tw(b.rowH[ri])}" w:hRule="atLeast"/></w:trPr>` : ""}${Array.from({ length: w }, (_, ci) => `<w:tc><w:tcPr><w:tcW w:w="${widths[ci]}" w:type="dxa"/>${b.shade && b.shade[ri] ? `<w:shd w:val="clear" w:color="auto" w:fill="${b.shade[ri]}"/>` : ""}${b.vmid ? '<w:vAlign w:val="center"/>' : ""}</w:tcPr><w:p><w:pPr>${o.exact ? '<w:spacing w:before="0" w:after="0"/>' : ""}${isAr(r[ci] || "") || rtl ? "<w:bidi/>" : ""}${Array.isArray(b.align) && b.align[ci] && b.align[ci] !== "left" ? `<w:jc w:val="${b.align[ci]}"/>` : ""}</w:pPr>${run(r[ci] || "", { ...cf, b: b.bold ? !!(b.bold[ri] && b.bold[ri][ci]) : ri === 0 })}</w:p></w:tc>`).join("")}</w:tr>`).join("") + `</w:tbl>` + (o.exact ? "" : "<w:p/>");
     }
     if (b.type === "pagebreak") return `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+    // v6.10: a PDF's columns: a continuous section break before (one column) and after (two columns), a column break between
+    const thin = '<w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/>';
+    if (b.type === "colstart") { if (!o.page) return ""; hasCols = true; lastGap = b.gap || 18; return `<w:p><w:pPr>${thin}<w:sectPr>${hfRefs}<w:type w:val="continuous"/>${pgCore}</w:sectPr></w:pPr></w:p>`; }
+    if (b.type === "colbreak") return o.page ? `<w:p><w:pPr>${thin}</w:pPr><w:r><w:br w:type="column"/></w:r></w:p>` : "";
+    if (b.type === "colend") return o.page ? `<w:p><w:pPr>${thin}<w:sectPr>${hfRefs}<w:type w:val="continuous"/>${pgCore}<w:cols w:num="2" w:space="${tw(lastGap)}"/></w:sectPr></w:pPr></w:p>` : "";
     if (b.type === "image" && b.b64) {
       // v6.8: a picture keeps its size (points) and place; JPEG or PNG
       const ext = /^data:image\/jpe?g/i.test(b.b64) ? "jpeg" : "png";
@@ -604,8 +682,7 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
     if (/^h[1-3]$/.test(b.type)) return para(b.text, "Heading" + b.type[1], false, b);
     return para(b.text, null, false, b);
   }).join("");
-  const hfRefs = (hf.header ? '<w:headerReference w:type="default" r:id="rIdHdr"/>' : "") + (hf.footer ? '<w:footerReference w:type="default" r:id="rIdFtr"/>' : "");
-  const pg = o.page ? `${hfRefs}<w:pgSz w:w="${tw(o.page.w)}" w:h="${tw(o.page.h)}"${o.page.w > o.page.h ? ' w:orient="landscape"' : ""}/><w:pgMar w:top="${tw(o.page.top)}" w:right="${tw(o.page.right)}" w:bottom="${tw(o.page.bottom)}" w:left="${tw(o.page.left)}" w:header="${tw(hf.header ? Math.max(12, hf.header.at || 24) : 18)}" w:footer="${tw(hf.footer ? Math.max(12, hf.footer.at || 24) : 18)}" w:gutter="0"/>`
+  const pg = o.page ? `${hfRefs}${hasCols ? '<w:type w:val="continuous"/>' : ""}${pgCore}`
     : `<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/>`;
   const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"${imgs.length || hfRefs ? ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"' : ""}><w:body>${body}<w:sectPr>${pg}</w:sectPr></w:body></w:document>`;
   const style = (id, name, size, bold, extra = "", color = /^Heading/.test(id) ? o.accent : null) => `<w:style w:type="paragraph" w:styleId="${id}"><w:name w:val="${name}"/><w:basedOn w:val="Normal"/>${/^Heading/.test(id) ? '<w:next w:val="Normal"/>' : ""}<w:pPr>${/^Heading/.test(id) ? "<w:keepNext/>" : ""}${extra.includes("<w:spacing") ? "" : o.exact ? "" : `<w:spacing w:before="${bold ? 240 : 0}" w:after="120"/>`}${extra}${/^Heading(\d)/.test(id) ? `<w:outlineLvl w:val="${+id.slice(-1) - 1}"/>` : ""}</w:pPr><w:rPr>${bold ? "<w:b/><w:bCs/>" : ""}${color ? `<w:color w:val="${color}"/>` : ""}<w:sz w:val="${size}"/><w:szCs w:val="${size}"/></w:rPr></w:style>`;
@@ -1451,7 +1528,7 @@ export function blocksToPrintHtml(blocks, title = "Document", o = {}) {
 }
 /** Blocks → Markdown (tables with a header rule). */
 export function blocksToMarkdown(blocks) {
-  return blocks.filter((b) => !["header", "footer", "image", "pagebreak"].includes(b.type)).map((b) => b.type === "table" ? b.rows.map((r, i) => "| " + r.map((c) => String(c).replace(/\n/g, " ").replace(/\|/g, "\\|")).join(" | ") + " |" + (i === 0 ? "\n|" + r.map(() => " --- |").join("") : "")).join("\n")
+  return blocks.filter((b) => !["header", "footer", "image", "pagebreak", "colstart", "colbreak", "colend"].includes(b.type)).map((b) => b.type === "table" ? b.rows.map((r, i) => "| " + r.map((c) => String(c).replace(/\n/g, " ").replace(/\|/g, "\\|")).join(" | ") + " |" + (i === 0 ? "\n|" + r.map(() => " --- |").join("") : "")).join("\n")
     : b.type === "li" ? "- " + b.text : /^h\d$/.test(b.type) ? "#".repeat(+b.type[1]) + " " + b.text : b.text).join("\n\n") + "\n";
 }
 

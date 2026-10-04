@@ -32,3 +32,11 @@ node bench_slides.mjs out/deck.pptx 2>/dev/null
 python3 print_pdf.py out/deck.slides.html out/deck.ours.pdf
 python3 sidepdf.py out/deck.pdf out/deck.ours.pdf out/deck.side.png 5 2>/dev/null
 echo "deck     slides → out/deck.side.png"
+# v6.10: REAL-style documents (fixtures/real/<name>.pdf + <name>.expect.json, counted by hand): structure, text, and
+# how alike the pages look (SSIM of the Word file printed by LibreOffice against the original pages); out/<name>.side.png
+for f in fixtures/real/*.expect.json; do
+  n=$(basename "$f" .expect.json)
+  java -Dstdout.encoding=UTF-8 -cp "$J" PdfLayout.java fixtures/real/$n.pdf 2>/dev/null > out/$n.json
+  node bench.mjs out/$n.json >/dev/null 2>&1
+  printf '%-14s real ' "${n:0:14}"; python3 realscore.py fixtures/real/$n.pdf out/$n.out.docx "$f" --png out/$n.side.png 2>/dev/null
+done

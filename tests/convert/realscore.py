@@ -7,13 +7,23 @@ Scores (0–100):
   ssim       how alike the pages look: the Word file printed by LibreOffice, each page against the original's
              page (grey, 60 dpi, 7x7 windows); a missing page scores 0
 Prints one JSON line."""
-import sys, re, json, os, difflib, subprocess, tempfile, shutil
+import sys, re, unicodedata, json, os, difflib, subprocess, tempfile, shutil
 import numpy as np
 import pypdfium2 as pdfium
 from PIL import Image
 from docx import Document
 
-def words(t): return re.findall(r"\w+|[^\w\s]", t or "", re.U)
+def words(t): return re.findall(r"\w+|[^\w\s•\u200e\u200f\u202a-\u202e\u2066-\u2069]", unicodedata.normalize("NFKC", t or ""), re.U)
+
+def body_text(d):
+    # paragraphs and tables in the document's own order
+    from docx.table import Table
+    from docx.text.paragraph import Paragraph
+    out = []
+    for el in d.element.body.iterchildren():
+        if el.tag.endswith("}p"): out.append(Paragraph(el, d).text)
+        elif el.tag.endswith("}tbl"): out.extend(c.text for r in Table(el, d).rows for c in r.cells)
+    return " ".join(out)
 
 def docx_pdf(path):
     tmp = tempfile.mkdtemp()
@@ -45,8 +55,10 @@ def main():
     pdf, dx, ex = a[0], a[1], json.load(open(a[2])) if len(a) > 2 and a[2].endswith(".json") else {}
     d = Document(dx)
     paras = [p for p in d.paragraphs if p.text.strip()]
-    body = " ".join(p.text for p in d.paragraphs) + " " + " ".join(c.text for t in d.tables for r in t.rows for c in r.cells)
-    ref = " ".join(pg.get_textpage().get_text_range() for pg in pdfium.PdfDocument(pdf))
+    body = body_text(d)
+    # (poppler's reading order: columns one after the other, Arabic in logical order — a PDF's own drawing order can put a
+    # table's header last)
+    ref = subprocess.run(["pdftotext", "-enc", "UTF-8", pdf, "-"], capture_output=True, text=True).stdout
     wa, wb = words(ref), words(body)
     sm = difflib.SequenceMatcher(None, wa, wb, autojunk=False)
     text = round(100 * sum(m.size for m in sm.get_matching_blocks()) / max(len(wa), 1))

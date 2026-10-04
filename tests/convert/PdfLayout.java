@@ -26,6 +26,7 @@ public class PdfLayout {
         final List<String> texts = new ArrayList<>();
         final List<String> fonts = new ArrayList<>();
         final Map<TextPosition, Integer> colours = new IdentityHashMap<>();
+        final List<float[]> glyphs = new ArrayList<>();   // v6.10: boxes of characters with no trustworthy text (x0, top, x1, bottom)
         LayoutStripper() throws java.io.IOException {
             super();
             // the text colour (PDFTextStripper doesn't track it on its own)
@@ -50,7 +51,7 @@ public class PdfLayout {
                 g.sort(Comparator.comparingDouble(p -> p.getXDirAdj()));
                 List<TextPosition> cur = new ArrayList<>();
                 for (TextPosition p : g) {
-                    String u = p.getUnicode() == null ? "" : p.getUnicode();
+                    String u = uni(p);
                     TextPosition last = cur.isEmpty() ? null : cur.get(cur.size() - 1);
                     boolean gap = last != null && p.getXDirAdj() - (last.getXDirAdj() + last.getWidthDirAdj()) > p.getFontSizeInPt() * 0.18f;
                     boolean fontChange = last != null && last.getFont() != p.getFont();
@@ -63,11 +64,20 @@ public class PdfLayout {
             } catch (Exception e) { }
         }
         private void addWord(String text0, List<TextPosition> tp) {
-            String text = text0 != null ? text0 : hasRtl(tp.stream().map(p -> p.getUnicode() == null ? "" : p.getUnicode()).reduce("", String::concat)) ? rtlText(tp)
+            String raw = tp.stream().map(PdfLayout::uni).reduce("", String::concat);
+            String text = text0 != null ? text0 : hasRtl(raw) ? rtlText(tp)
                 // a number in an Arabic line: "50%" is drawn «%50» — the sign goes back after the number
-                : tp.stream().map(p -> p.getUnicode() == null ? "" : p.getUnicode()).reduce("", String::concat).replaceAll("^([%٪])(\\d[\\d.,]*)$", "$2$1");
+                : raw.replaceAll("^([%٪])(\\d[\\d.,]*)$", "$2$1");
             if (text.isBlank()) return;
             TextPosition a = tp.get(0);
+            // v6.10: characters the PDF gives no real text for (no mapping, U+FFFD, private-use codes outside the symbol
+            // fonts' bullets): the word is a marker "\uFFFC<n>" and its box is drawn into a small picture (glyphs[n])
+            if (untrusted(text)) {
+                float gx0 = Float.MAX_VALUE, gx1 = -Float.MAX_VALUE, gt = Float.MAX_VALUE, gb = -Float.MAX_VALUE;
+                for (TextPosition p : tp) { gx0 = Math.min(gx0, p.getXDirAdj()); gx1 = Math.max(gx1, p.getXDirAdj() + p.getWidthDirAdj()); float s0 = Math.max(p.getFontSizeInPt(), p.getHeightDir()); gt = Math.min(gt, p.getYDirAdj() - s0 * 0.92f); gb = Math.max(gb, p.getYDirAdj() + s0 * 0.28f); }
+                glyphs.add(new float[]{gx0 - 0.5f, gt, gx1 + 0.5f, gb});
+                text = "\uFFFC" + (glyphs.size() - 1);
+            }
             String fname = a.getFont() != null && a.getFont().getName() != null ? a.getFont().getName() : "";
             boolean bold = fname.matches("(?i).*(bold|black|heavy|semibold).*");
             boolean italic = fname.matches("(?i).*(italic|oblique).*");
@@ -124,6 +134,23 @@ public class PdfLayout {
         }
         return sb.append('"').toString();
     }
+    // v6.10: the Symbol font's private-use codes (U+F020–F0FF, how Word writes Symbol characters) → real Unicode
+    static final Map<Integer, String> SYM = new HashMap<>();
+    static {
+        String g = "AΑBΒCΧDΔEΕFΦGΓHΗIΙJϑKΚLΛMΜNΝOΟPΠQΘRΡSΣTΤUΥVςWΩXΞYΨZΖaαbβcχdδeεfφgγhηiιjϕkκlλmμnνoοpπqθrρsσtτuυvϖwωxξyψzζ";
+        for (int k = 0; k < g.length(); k += 2) SYM.put((int) g.charAt(k), String.valueOf(g.charAt(k + 1)));
+        int[] c = {0x22, 0x24, 0x27, 0x2D, 0xA2, 0xA3, 0xA5, 0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xC5, 0xC7, 0xC8, 0xCE, 0xCF, 0xD1, 0xD6, 0xD7, 0xD9, 0xDA, 0xE5, 0xF2};
+        String u = "∀∃∋−′≤∞←↑→↓°±″≥×∝∂•÷≠≡≈…⊕∩∪∈∉∇√⋅∧∨∑∫";
+        for (int k = 0; k < c.length; k++) SYM.put(c[k], String.valueOf(u.charAt(k)));
+    }
+    /** A character's text: a glyph with no mapping is U+FFFD (it was dropped as if it were a space). */
+    static String uni(TextPosition p) {
+        String u = p.getUnicode();
+        if (u == null || u.isEmpty()) return p.getWidthDirAdj() > 0.5f ? "\uFFFD" : "";
+        if (u.length() == 1 && u.charAt(0) >= 0xF020 && u.charAt(0) <= 0xF0FF && p.getFont() != null && String.valueOf(p.getFont().getName()).toLowerCase().contains("symbol")) { String m = SYM.get(u.charAt(0) - 0xF000); if (m != null) return m; }
+        return u;
+    }
+    static boolean untrusted(String t) { return t.codePoints().anyMatch(c -> c == 0xFFFD || (c >= 0xE000 && c <= 0xF8FF && !(c >= 0xF000 && c <= 0xF0FF))); }
     static String n(double d) { return d == Math.rint(d) ? String.valueOf((long) d) : String.format(Locale.ROOT, "%.2f", d); }
 
     // == DocTools.layoutLines ==
@@ -297,6 +324,27 @@ public class PdfLayout {
         }
     }
 
+    /** v6.10: each untrusted glyph's box, drawn from the page at 300 dpi → ,"glyphs":[{x,y,w,h,b64}] (PNG) */
+    static String glyphPics(PDDocument d, int pi, List<float[]> boxes) {
+        if (boxes.isEmpty()) return "";
+        StringBuilder b = new StringBuilder(",\"glyphs\":[");
+        try {
+            java.awt.image.BufferedImage page = new org.apache.pdfbox.rendering.PDFRenderer(d).renderImageWithDPI(pi, 300);
+            float k = 300f / 72f;
+            for (int i = 0; i < boxes.size() && i < 60; i++) {
+                float[] r = boxes.get(i);
+                int x = Math.max(0, (int) (r[0] * k)), y = Math.max(0, (int) (r[1] * k));
+                int w = Math.min(page.getWidth() - x, (int) Math.ceil((r[2] - r[0]) * k)), h = Math.min(page.getHeight() - y, (int) Math.ceil((r[3] - r[1]) * k));
+                if (w < 1 || h < 1) { b.append(i > 0 ? "," : "").append("null"); continue; }
+                java.io.ByteArrayOutputStream o = new java.io.ByteArrayOutputStream();
+                javax.imageio.ImageIO.write(page.getSubimage(x, y, w, h), "png", o);
+                b.append(i > 0 ? "," : "").append("{\"x\":").append(n(r[0])).append(",\"y\":").append(n(r[1])).append(",\"w\":").append(n(r[2] - r[0])).append(",\"h\":").append(n(r[3] - r[1]))
+                    .append(",\"b64\":\"data:image/png;base64,").append(Base64.getEncoder().encodeToString(o.toByteArray())).append("\"}");
+            }
+        } catch (Exception e) { return ""; }
+        return b.append("]").toString();
+    }
+
     public static void main(String[] args) throws Exception {
         try (PDDocument d = PDDocument.load(new File(args[0]))) {
             int count = d.getNumberOfPages();
@@ -305,7 +353,7 @@ public class PdfLayout {
             StringBuilder pages = new StringBuilder("[");
             for (int i = 1; i <= count; i++) {
                 strip.setStartPage(i); strip.setEndPage(i);
-                strip.words.clear(); strip.texts.clear(); strip.fonts.clear(); strip.colours.clear();
+                strip.words.clear(); strip.texts.clear(); strip.fonts.clear(); strip.colours.clear(); strip.glyphs.clear();
                 String t = strip.getText(d).replace("\r", "").trim();
                 boolean scan = t.replaceAll("\\s", "").length() < 25;
                 var box = d.getPage(i - 1).getMediaBox();
@@ -316,7 +364,7 @@ public class PdfLayout {
                 StringBuilder rj = new StringBuilder();
                 for (float[] r : paths.found) rj.append(rj.length() > 0 ? "," : "").append("[").append(n(r[0])).append(",").append(n(r[1])).append(",").append(n(r[2])).append(",").append(n(r[3])).append(",").append((int) r[4]).append(",").append((int) r[5]).append("]");
                 pages.append(pages.length() > 1 ? "," : "").append("{\"n\":").append(i).append(",\"text\":").append(q(t)).append(",\"scan\":").append(scan)
-                    .append(",\"lines\":").append(layoutLines(strip)).append(",\"w\":").append(n(box.getWidth())).append(",\"h\":").append(n(box.getHeight())).append(",\"imgs\":[").append(String.join(",", imgs.found)).append("],\"rects\":[").append(rj).append("]}");
+                    .append(",\"lines\":").append(layoutLines(strip)).append(",\"w\":").append(n(box.getWidth())).append(",\"h\":").append(n(box.getHeight())).append(",\"imgs\":[").append(String.join(",", imgs.found)).append("],\"rects\":[").append(rj).append("]").append(glyphPics(d, i - 1, strip.glyphs)).append("}");
             }
             System.out.println("{\"pages\":" + pages + "],\"count\":" + count + "}");
         }

@@ -53,6 +53,7 @@ object DocTools {
         val texts = ArrayList<String>()
         val fonts = ArrayList<String>()
         val colours = java.util.IdentityHashMap<com.tom_roush.pdfbox.text.TextPosition, Int>()
+        val glyphs = ArrayList<FloatArray>()   // v6.10: boxes of characters with no trustworthy text (x0, top, x1, bottom)
         init {
             // the text colour (PDFTextStripper doesn't follow it on its own)
             addOperator(com.tom_roush.pdfbox.contentstream.operator.color.SetStrokingColorSpace())
@@ -82,7 +83,7 @@ object DocTools {
                 val g = tp.sortedBy { it.xDirAdj }
                 var cur = ArrayList<com.tom_roush.pdfbox.text.TextPosition>()
                 for (p in g) {
-                    val u = p.unicode ?: ""
+                    val u = uni(p)
                     val last = cur.lastOrNull()
                     val gap = last != null && p.xDirAdj - (last.xDirAdj + last.widthDirAdj) > p.fontSizeInPt * 0.18f
                     val fontChange = last != null && last.font !== p.font
@@ -95,11 +96,19 @@ object DocTools {
             } catch (e: Exception) { }
         }
         private fun addWord(tp: List<com.tom_roush.pdfbox.text.TextPosition>) {
-            val raw = tp.joinToString("") { it.unicode ?: "" }
+            val raw = tp.joinToString("") { uni(it) }
             // a number in an Arabic line: "50%" is drawn «%50» — the sign goes back after the number
-            val text = if (hasRtl(raw)) rtlText(tp) else raw.replace(Regex("^([%٪])(\\d[\\d.,]*)$"), "$2$1")
+            var text = if (hasRtl(raw)) rtlText(tp) else raw.replace(Regex("^([%٪])(\\d[\\d.,]*)$"), "$2$1")
             if (text.isBlank()) return
             val a = tp[0]
+            // v6.10: characters the PDF gives no real text for (no mapping, U+FFFD, private-use codes outside the symbol
+            // fonts' bullets): the word is a marker "\uFFFC<n>" and its box is drawn into a small picture (glyphs[n])
+            if (untrusted(text)) {
+                var gx0 = Float.MAX_VALUE; var gx1 = -Float.MAX_VALUE; var gt = Float.MAX_VALUE; var gb = -Float.MAX_VALUE
+                for (p in tp) { gx0 = minOf(gx0, p.xDirAdj); gx1 = maxOf(gx1, p.xDirAdj + p.widthDirAdj); val s0 = maxOf(p.fontSizeInPt, p.heightDir); gt = minOf(gt, p.yDirAdj - s0 * 0.92f); gb = maxOf(gb, p.yDirAdj + s0 * 0.28f) }
+                glyphs.add(floatArrayOf(gx0 - 0.5f, gt, gx1 + 0.5f, gb))
+                text = "\uFFFC" + (glyphs.size - 1)
+            }
             val fname = try { a.font?.name ?: "" } catch (e: Exception) { "" }
             val bold = Regex("(?i)bold|black|heavy|semibold").containsMatchIn(fname)
             val italic = Regex("(?i)italic|oblique").containsMatchIn(fname)
@@ -127,6 +136,45 @@ object DocTools {
             else -> null
         }
     }
+    // v6.10: the Symbol font's private-use codes (U+F020–F0FF, how Word writes Symbol characters) → real Unicode
+    private val SYM: Map<Int, String> by lazy {
+        val m = HashMap<Int, String>()
+        val g = "AΑBΒCΧDΔEΕFΦGΓHΗIΙJϑKΚLΛMΜNΝOΟPΠQΘRΡSΣTΤUΥVςWΩXΞYΨZΖaαbβcχdδeεfφgγhηiιjϕkκlλmμnνoοpπqθrρsσtτuυvϖwωxξyψzζ"
+        for (k in g.indices step 2) m[g[k].code] = g[k + 1].toString()
+        val c = intArrayOf(0x22, 0x24, 0x27, 0x2D, 0xA2, 0xA3, 0xA5, 0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xC5, 0xC7, 0xC8, 0xCE, 0xCF, 0xD1, 0xD6, 0xD7, 0xD9, 0xDA, 0xE5, 0xF2)
+        val u = "∀∃∋−′≤∞←↑→↓°±″≥×∝∂•÷≠≡≈…⊕∩∪∈∉∇√⋅∧∨∑∫"
+        for (k in c.indices) m[c[k]] = u[k].toString()
+        m
+    }
+    /** A character's text: a glyph with no mapping is U+FFFD (it was dropped as if it were a space). */
+    private fun uni(p: com.tom_roush.pdfbox.text.TextPosition): String {
+        val u = p.unicode
+        if (u.isNullOrEmpty()) return if (p.widthDirAdj > 0.5f) "\uFFFD" else ""
+        if (u.length == 1 && u[0].code in 0xF020..0xF0FF && (try { p.font?.name ?: "" } catch (e: Exception) { "" }).lowercase().contains("symbol")) SYM[u[0].code - 0xF000]?.let { return it }
+        return u
+    }
+    private fun untrusted(t: String) = t.codePoints().anyMatch { it == 0xFFFD || (it in 0xE000..0xF8FF && it !in 0xF000..0xF0FF) }
+
+    /** v6.10: each untrusted glyph's box, drawn from the page (≈300 dpi) → [{x, y, w, h, b64}] (PNG) */
+    private fun glyphPics(d: com.tom_roush.pdfbox.pdmodel.PDDocument, pi: Int, boxes: List<FloatArray>): JSONArray? {
+        if (boxes.isEmpty()) return null
+        val out = JSONArray()
+        val k = 300f / 72f
+        val page = try { com.tom_roush.pdfbox.rendering.PDFRenderer(d).renderImage(pi, k) } catch (e: Exception) { return null } catch (e: OutOfMemoryError) { return null }
+        try {
+            for (r in boxes.take(60)) {
+                val x = maxOf(0, (r[0] * k).toInt()); val y = maxOf(0, (r[1] * k).toInt())
+                val w = minOf(page.width - x, Math.ceil(((r[2] - r[0]) * k).toDouble()).toInt()); val h = minOf(page.height - y, Math.ceil(((r[3] - r[1]) * k).toDouble()).toInt())
+                if (w < 1 || h < 1) { out.put(JSONObject.NULL); continue }
+                val c = Bitmap.createBitmap(page, x, y, w, h)
+                val bo = ByteArrayOutputStream(); c.compress(Bitmap.CompressFormat.PNG, 100, bo); if (c !== page) c.recycle()
+                out.put(JSONObject().put("x", r[0].toDouble()).put("y", r[1].toDouble()).put("w", (r[2] - r[0]).toDouble()).put("h", (r[3] - r[1]).toDouble())
+                    .put("b64", "data:image/png;base64," + Base64.encodeToString(bo.toByteArray(), Base64.NO_WRAP)))
+            }
+        } finally { page.recycle() }
+        return out
+    }
+
     private fun isRtlChar(c: Int) = c in 0x0590..0x08FF || c in 0xFB1D..0xFEFC
     private fun hasRtl(t: String) = t.codePoints().anyMatch { isRtlChar(it) }
     private fun strongLtr(u: String) = u.codePoints().anyMatch { Character.isDigit(it) || (Character.isLetter(it) && !isRtlChar(it)) }
@@ -355,7 +403,7 @@ object DocTools {
             var picBudget = 40   // pictures in the whole file (each page at most 12)
             for (i in 1..n) {
                 strip.startPage = i; strip.endPage = i
-                strip.words.clear(); strip.texts.clear(); strip.fonts.clear(); strip.colours.clear()
+                strip.words.clear(); strip.texts.clear(); strip.fonts.clear(); strip.colours.clear(); strip.glyphs.clear()
                 val t = try { strip.getText(d) } catch (e: Exception) { "" }
                 val clean = t.replace("\r", "").trim()
                 val page = JSONObject().put("n", i).put("text", clean).put("scan", clean.replace(Regex("\\s"), "").length < 25)
@@ -364,6 +412,7 @@ object DocTools {
                     page.put("lines", layoutLines(strip))
                     val box = d.getPage(i - 1).mediaBox
                     page.put("w", box.width.toDouble()).put("h", box.height.toDouble())
+                    try { glyphPics(d, i - 1, strip.glyphs)?.let { page.put("glyphs", it) } } catch (e: Exception) { }
                 } catch (e: Exception) { }   // no layout: the page falls back to the plain text
                 // v6.10: table borders, rules and shaded rows
                 try {
