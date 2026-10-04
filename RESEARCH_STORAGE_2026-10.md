@@ -129,3 +129,38 @@ save RAM unless repacking is off for that quant. Smaller ubatch saves ~70 MB. AR
   refuse when free − size < 1.5 GB (Android slows down and may fail updates below ~1 GB free); show
   "Attune uses X GB" split by model / photo reader / packs / caches; caches (slot files, thumbnails) are deletable in
   one tap; Android's own "Clear cache" only wipes `cacheDir`, so packs/models must not live there.
+
+## Storage boost lab on ARM (run https://github.com/alydibiky/attune-/actions/runs/37144194951, 4 cores, ctx 8k, KV q8)
+
+### Quant ladder + knowledge pack (173-case full test; 104-question fact test)
+| Model / quant | File GB | Peak RAM MB (app default) | Full test | Writes t/s | Facts alone | + word index | + embedder (0.44 GB) |
+|---|---|---|---|---|---|---|---|
+| 2B Q4_K_M | 1.28 | 1899 | 154/173 (89 %) | 21.4 | 47 | 89 | **104** |
+| 4B IQ4_XS | 2.48 | 3346 | 167/173 (97 %) | 11.2 | 61 | 95 | 103 |
+| 4B Q4_K_M | 2.74 | 3605 | 168/173 (97 %) | 11.0 | 69 | 93 | **104** |
+| 4B Q6_K | 3.53 | 4354 | 166/173 (96 %) | 7.2 | 68 | 93 | 103 |
+| 4B Q8_0 | 4.48 | 5412 | 168/173 (97 %) | 12.3 | 69 | 94 | 103 |
+| 9B IQ4_NL | 6.62 | 6830 | 158/173 (91 %)* | 2.3* | 67 | 98 | **104** |
+| 9B IQ3_XXS | – | – | cancelled (runner time) | | | | |
+(*9B writing was 2.2 t/s even in the RAM-lever step on this runner, and it lost Honesty/Safety cases to time-outs/long answers — not a fair quality verdict; the 9B needs its own run.)
+
+RAM levers on ARM (peak MB, app default → lever): KV q4: −64 (all models); ubatch 128/batch 512: −51 (2B) … −90 (9B), speed ±2 % → **adopted**; ubatch 1024: +80…+130; flash-attn off: +100, reading +10 %; 32k context: +180 (2B) … +430 (4B Q8); mmap: peak +0.8…+3.8 GB (repacked copy + file pages), only wins under a hard cap (section 1); 2 threads: same RAM, half speed.
+
+### RANKED: GB spent → gain (measured)
+| # | Spend | Gain | Verdict |
+|---|---|---|---|
+| 1 | **0.44 GB multilingual embedder + ~10 KB-per-100-facts pack** | facts in the pack: 2B 47→104/104, 4B 69→104, 0.8B 31→99; Arabic questions over an English pack 5→20/20; 0.78 GB RAM while running, 0.2 s per query | **Best buy by far** (only for facts that are in a pack) |
+| 2 | 0 GB: word index over the same pack | 2B 47→89, 4B 69→93 (Arabic questions barely helped: words don't cross languages) | free; ship first |
+| 3 | +10 MB tiny image decoder (Studio agent) | 63→37 s, CLIP 31.2→32.1 | adopted already |
+| 4 | +3.9 GB SDXL-Turbo 1-step (Studio agent) | 18 s, CLIP 33.4 vs 32.1 | Ali decides; needs ~6 GB RAM |
+| 5 | +~90 MB MTP head on the 4B | faster writing when acceptance is high (earlier HANDOFF numbers) | already shipped |
+| 6 | Higher quant 4B Q4_K_M→Q6_K/Q8 (+0.8/+1.7 GB file, +0.75/+1.8 GB RAM) | **no gain**: 168→166/168 of 173, facts 69→68/69; Q6 is slower (7.2 t/s) | **do not offer** a higher-quant option for this family |
+| 7 | 4B Q4_K_M→IQ4_XS (−0.26 GB, −260 MB RAM) | −1 case (167 vs 168), facts 61 vs 69 | fine for small phones (Core Lite already) |
+| 8 | Persisted prompt cache (slot files 76–183 MB per 7k-token doc) | **zero** reuse after restart at the pinned engine (both families) | not implemented; needs engine bump (PR #26004) |
+| 9 | Mapped weights fallback (0 GB) | E4B runs under a 5 GB cap at full speed where the copy dies | **implemented** (≤12 % over budget) |
+
+### Default storage budgets (proposal for Ali)
+- Free < 8 GB: model only (Core/Core Lite) + word-index packs (free). No embedder.
+- Free 8–32 GB: + embedder 0.44 GB + Egypt / engineering / own-documents packs (≤ 200 MB); image Turbo pack.
+- Free > 32 GB: + bigger image pack (SDXL-Turbo 3.9 GB) + larger Wikipedia packs (ar+en extracts, 1–3 GB with vectors at 8-bit 1 KB/passage).
+Always keep ≥ 1.5 GB free after any download.
