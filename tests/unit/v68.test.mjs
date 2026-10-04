@@ -110,7 +110,9 @@ ok(RS.onTopic({ title: "LTM 1100-4.2 - Liebherr", url: "https://liebherr.com/x",
 ok(!RS.onTopic({ title: "فيديكس", url: "https://fedex.com", text: "shipping" }, "ما هو ارتفاع برج خليفة؟") && RS.onTopic({ title: "برج خليفة", url: "https://a.com", text: "يبلغ ارتفاع برج خليفة 828 متر" }, "ما هو ارتفاع برج خليفة؟"), "web: Arabic questions by their content words");
 const mh = RS.mergeHits([[junk, good]], 5, "How tall is the Cairo Tower?");
 ok(mh.length === 1 && mh[0] === good, "web: mergeHits drops the off-topic page");
-ok(RS.mergeHits([[junk]], 5, "How tall is the Cairo Tower?").length === 1, "web: if nothing passes, the pages are kept rather than none");
+{ const off = RS.mergeHits([[{ title: "Fedex", url: "https://fedex.com/x", text: "shipping" }]], 5, "How tall is the Cairo Tower?");
+  ok(off.length === 1 && off.offTopic === true, "web: if nothing passes, the pages are kept but marked off-topic (v6.12: the chat searches again)"); }
+ok(RS.mergeHits([[junk]], 5, "How tall is the Cairo Tower?").length === 0, "web: a dictionary page is never read (v6.12)");
 
 // x-ray (Core Lite): the model left out the bill itself — code finds «9,500 a day, 3 days» when Karim pays
 const ch3 = X.parseExport(`01/09/2026, 09:00 - Ali: Karim, the 25 ton crane for the Maadi job is 9,500 a day, 3 days

@@ -3122,4 +3122,9 @@ export const AR = {
   "Reading {i} of {n}…": "بقرا {i} من {n}…",
   "not read: {f}": "ماتقراش: {f}",
   "From the phone's Notebook app: open a note (or select several) → Share → Attune → “Save to Shelf”. Or pick exported files here: text, Word, PDF, web pages, Google Keep, Evernote, a .zip, or photos of notes.": "من تطبيق النوت بوك على الموبايل: افتح ملاحظة (أو اختار كذا واحدة) ← مشاركة ← Attune ← «احفظ في الرف». أو اختار ملفات متصدّرة من هنا: نص، Word، PDF، صفحات ويب، Google Keep، Evernote، ملف .zip، أو صور ملاحظات.",
+  "Versions & prices": "الفئات والأسعار",
+  "Pros & cons": "المميزات والعيوب",
+  "Compare with rivals": "قارنه بالمنافسين",
+  "Latest news": "آخر الأخبار",
+  "Those results were off-topic — searching another way…": "النتايج دي مش عن الموضوع — بدوّر بطريقة تانية…",
 };

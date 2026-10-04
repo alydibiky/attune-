@@ -50,7 +50,7 @@ export function loadChats() {
 // big, and one failed save used to silently keep nothing. Now a save that
 // doesn't fit first shrinks what is expendable (photos in older chats, then
 // in all chats, then the oldest chats), so the text of recent chats is always kept.
-const noPhotos = (c) => ({ ...c, messages: (c.messages || []).map((m) => (m.image || m.images ? { ...m, image: null, images: undefined, hadImage: true } : m)) });
+const noPhotos = (c) => ({ ...c, messages: (c.messages || []).map((m) => (m.image || m.images ? { ...m, image: null, images: undefined, hadImage: true } : m.webImages ? { ...m, webImages: undefined } : m)) });
 const clean = (c) => ({ ...c, messages: (c.messages || []).map((m) => (m.streaming ? { ...m, streaming: false, phase: "", text: m.text ? m.text + (m.text.endsWith("(stopped)") ? "" : " …(stopped)") : m.text } : m)) });
 function saveChats(list) {
   const base = list.slice(0, MAX_CHATS).map(clean);
@@ -325,6 +325,20 @@ function followUps(msg, prevUser) {
   if (photo) {
     out.push(P("Exact model?", "الموديل بالظبط؟", "Which exact model and year is it most likely? Say which clues you used and how sure you are.", "إيه الموديل والسنة الأقرب بالظبط؟ قولّي استنتجت ده من إيه وقد إيه متأكد."));
     out.push(P("Specifications", "المواصفات", "Give its main specifications in a table.", "اديني أهم مواصفاته في جدول."));
+  }
+  // v6.12: after a web answer, next questions about the same subject (like Gemini's suggestions)
+  if ((msg.research || (msg.sources && msg.sources.length && /^https?:/.test(String((msg.sources[0] || {}).url || "")))) && prevUser && prevUser.text) {
+    const q = String(prevUser.text), qa = /[؀-ۿ]/.test(q);
+    const subj = topicOf(q).replace(/\b(specs?|specifications?|prices?|price|cost|trims?|versions?|reviews?|news|latest|compare|comparison|vs|pros|cons|in egypt)\b|مواصفات|سعر|أسعار|اسعار|فئات|مقارنة|أخبار|اخبار|عيوب|مميزات/gi, " ").replace(/\s+/g, " ").trim().slice(0, 70);
+    if (subj && subj.split(" ").length <= 9) {
+      const thing = /\b(car|suv|crane|phone|laptop|truck|excavator|model|series|pro|max|plus|\d{2,})\b/i.test(q) || /سيارة|عربية|ونش|موبايل|تليفون|موديل/.test(q);
+      const W = (en, arL, pEn, pAr) => [en, qa ? pAr : pEn];
+      if (thing && !/price|سعر|أسعار|اسعار/i.test(q)) out.push(W("Versions & prices", "الفئات والأسعار", `${subj}: every version with its price (in Egypt if sold there) in a table`, `${subj}: كل الفئات بأسعارها (في مصر لو بيتباع هنا) في جدول`));
+      if (!/pros|cons|عيوب|مميزات/i.test(q)) out.push(W("Pros & cons", "المميزات والعيوب", `${subj}: pros and cons from owners and reviews`, `${subj}: المميزات والعيوب من الملاك والمراجعات`));
+      if (thing && !/compare|vs|مقارنة|ولا/i.test(q)) out.push(W("Compare with rivals", "قارنه بالمنافسين", `Compare ${subj} with its main rivals in a table`, `قارن ${subj} بأهم منافسيه في جدول`));
+      if (!/news|latest|أخبار|اخبار/i.test(q)) out.push(W("Latest news", "آخر الأخبار", `${subj}: latest news this month`, `${subj}: آخر الأخبار الشهر ده`));
+      return out.slice(0, 4);
+    }
   }
   switch (msg.skill) {
     case "compare": out.push(P("Which should I choose?", "أختار أنهي؟", "For my use, which one should I choose and why?", "لاستخدامي، أختار أنهي وليه؟"), P("Price difference", "فرق السعر", "What is the typical price difference between them?", "إيه فرق السعر التقريبي بينهم؟")); break;
@@ -773,7 +787,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         if (runRef.current !== run) return;
         const look = found[0] || { hits: [] };
         const lists = found.map((r) => (r && r.hits) || []);
-        const toRead = api.webPages ? mergeHits(lists, readCap, question) : look.hits || [];
+        let toRead = api.webPages ? mergeHits(lists, readCap, question) : look.hits || [];
+        // v6.12: every page found was about something else (a search engine answering the question's common
+        // words with dictionary pages): search again with the bare subject and its facets before reading anything
+        if (api.webPages && (toRead.offTopic || !toRead.length)) {
+          onStatus(tr("Those results were off-topic — searching another way…"));
+          const alt = [...new Set([topicOf(query), ...expandQueries(query, 3)].filter((x) => x && !queries.includes(x)))].slice(0, 3);
+          const again = await Promise.all(alt.map((q) => api.webPages(q, Math.min(8, readCap + 2)).catch((e) => { if (String(e && e.message) === "Stopped") throw e; return { hits: [] }; })));
+          if (runRef.current !== run) return;
+          const t2 = mergeHits(again.map((r) => (r && r.hits) || []), readCap, question);
+          if (t2.length && !t2.offTopic) { toRead = t2; queries.push(...alt); lists.push(...again.map((r) => (r && r.hits) || [])); }
+          else if (toRead.offTopic) toRead = [];   // nothing about the subject: better no pages than pages about something else
+        }
         if (toRead.length && api.webPages && !deepMode) {
           // FAST: code ranks the passages of every page into the window, cross-checks the
           // figures across sites, and ONE model pass writes the answer
@@ -847,10 +872,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             sources = ranked; via = look.via;
             content = api.groundedPrompt(asked, ranked) + photoNote;
           }
-        } else if (look.hits && look.hits.length) {
+        } else if (!api.webPages && look.hits && look.hits.length) {
           sources = look.hits; via = look.via;
           onStatus("Reading " + look.hits.length + " sources…");
           content = api.groundedPrompt(asked, look.hits) + photoNote;
+        } else if (api.webPages) {
+          // v6.12: the web gave nothing about the subject — answer from what the model knows, and say so plainly
+          extra.webEmpty = true;
+          content = content + "\n\n(A web search was made, but it found no page about this. Answer from your own knowledge, say in one short line at the start that the web search found nothing about it, and mark anything that may have changed recently as possibly out of date.)" + photoNote;
         }
       } else if (typed && api.isPersonal(typed)) {
         const found = api.memSearch(typed);
@@ -858,6 +887,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       }
       let answer, extra = {};
       if (research) extra.research = research;
+      if (sources && webCtx && webCtx.toRead) {   // v6.12: up to 4 pictures from the pages read (one per site)
+        const seenImg = new Set(), seenSite = new Set();
+        const imgs = [];
+        for (const h of webCtx.toRead) { const im = String(h.image || ""); let site = ""; try { site = new URL(h.url).hostname; } catch (e) {} if (!/^data:image\//.test(im) || seenImg.has(im) || seenSite.has(site)) continue; seenImg.add(im); seenSite.add(site); imgs.push({ image: im, url: h.url }); if (imgs.length >= 4) break; }
+        if (imgs.length >= 2 && !/\b(code|function|script|formula|calculate)\b/i.test(typed)) extra.webImages = imgs;
+      }
       const q = typed || userMsg.text;
       // v6.12: documents (one or several) are read into pages here; the text goes the usual way below (whole, or read in parts)
       const docList = fileAtt ? (fileAtt.many || [fileAtt]) : [];
@@ -1543,6 +1578,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             {m.streaming && !m.text && !m.thinking ? (
               <div className="flex items-center gap-2 text-sm text-teal-300/90 py-1" data-testid="phase"><Loader2 size={15} className="animate-spin shrink-0" /> <span className="min-w-0">{m.phase || tr("Reading…")}</span> <Elapsed /></div>
             ) : null}
+            {m.webImages && m.webImages.length && !m.streaming ? (   /* v6.12: pictures from the pages read, like Gemini — tap opens the page */
+              <div className="flex gap-1.5 overflow-x-auto mb-2 -mx-1 px-1" data-testid="web-images">
+                {m.webImages.map((w, i) => <a key={i} href={w.url} target="_blank" rel="noopener noreferrer" className="shrink-0"><img src={w.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.parentElement.style.display = "none"; }} className="h-24 w-32 object-cover rounded-xl border border-slate-800 bg-slate-900" /></a>)}
+              </div>) : null}
             {m.text ? <Md text={m.text + (m.streaming ? " ▍" : "")} sources={m.sources} /> : null}
             {m.calc ? (
               <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500" data-testid="calc-note">

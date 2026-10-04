@@ -108,6 +108,79 @@ object WebTools {
         return out
     }
 
+    // ---- v6.12: two more keyless indexes, searched at the same time ---------------------------------------
+    // Ali: "web search is still shit". Two engines were not enough when one answers a question's common words
+    // with dictionary pages (measured on the web benchmark). Brave's and Mojeek's own indexes are read too;
+    // a page several engines agree on ranks first (see search()). Any of them failing just adds nothing.
+    fun braveHtml(q: String, max: Int = 8): List<Hit> {
+        val out = ArrayList<Hit>()
+        try {
+            Prefs.requireOnline("https://search.brave.com/search", "web search (Brave)")
+            val doc = Jsoup.connect("https://search.brave.com/search").data("q", q).data("source", "web")
+                .userAgent(UA).header("Accept-Language", if (isArabic(q)) "ar,en;q=0.8" else "en,ar;q=0.8").timeout(9_000).get()
+            val blocks = doc.select("div.snippet[data-type=web], #results div[data-pos], div.snippet")
+            for (r in blocks) {
+                val a = r.select("a[href]").firstOrNull { val h = it.attr("href"); h.startsWith("http") && !h.contains("brave.com") } ?: continue
+                val url = a.attr("href")
+                val title = (r.selectFirst(".title, .snippet-title, .heading-serpresult")?.text() ?: a.text()).trim()
+                val snippet = (r.selectFirst(".snippet-description, .description, .content, .generic-snippet"))?.text().orEmpty()
+                if (title.isNotEmpty() && out.none { it.url == url }) out.add(Hit(title, url, snippet, "web"))
+                if (out.size >= max) break
+            }
+        } catch (e: Exception) { }
+        return out
+    }
+    fun mojeek(q: String, max: Int = 8): List<Hit> {
+        val out = ArrayList<Hit>()
+        try {
+            Prefs.requireOnline("https://www.mojeek.com/search", "web search (Mojeek)")
+            val doc = Jsoup.connect("https://www.mojeek.com/search").data("q", q)
+                .userAgent(UA).header("Accept-Language", if (isArabic(q)) "ar,en;q=0.8" else "en,ar;q=0.8").timeout(9_000).get()
+            for (r in doc.select("ul.results-standard > li, .results-standard li")) {
+                val a = r.selectFirst("h2 a[href]") ?: r.selectFirst("a.title[href]") ?: r.selectFirst("a.ob[href]") ?: continue
+                val url = a.attr("href")
+                if (!url.startsWith("http") || url.contains("mojeek.com")) continue
+                val title = (r.selectFirst("h2")?.text() ?: a.text()).trim()
+                if (title.isNotEmpty() && out.none { it.url == url }) out.add(Hit(title, url, r.selectFirst("p.s")?.text().orEmpty(), "web"))
+                if (out.size >= max) break
+            }
+        } catch (e: Exception) { }
+        return out
+    }
+
+    // v6.12: dictionaries and grammar sites are what a poisoned search returns for "maximum", "tall", "who" —
+    // never read unless the question is about a word (research.js has the same list)
+    private val JUNK = Regex("(^|\\.)(merriam-webster\\.com|dictionary\\.cambridge\\.org|dictionary\\.com|thefreedictionary\\.com|wordreference\\.com|collinsdictionary\\.com|vocabulary\\.com|thesaurus\\.com|oxfordlearnersdictionaries\\.com|britannicaenglish\\.com|wiktionary\\.org|yourdictionary\\.com|urbandictionary\\.com|definitions\\.net|almaany\\.com|reverso\\.net)$")
+    private val WORD_Q = Regex("\\b(mean(ing|s)?|defin(e|ition)|translat\\w*|synonyms?|spell(ing)?|pronounc\\w*)\\b|معنى|معني|ترجم|مرادف", RegexOption.IGNORE_CASE)
+    private fun hostOf(u: String) = u.lowercase().replace(Regex("^https?://"), "").substringBefore('/').substringBefore('?').removePrefix("www.")
+    fun isJunk(url: String, q: String) = !WORD_Q.containsMatchIn(q) && JUNK.containsMatchIn(hostOf(url))
+
+    /** v6.12: the main picture of the pages read (og:image), keyed by page address — shown above a web answer. */
+    private val pageImages = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    /** A picture → a small JPEG data: URL (320 px wide), or null. The page itself never loads anything from the web. */
+    private fun thumbData(src: String): String? = try {
+        Prefs.requireOnline(src, "a picture from a search result")
+        val c = URL(src).openConnection() as HttpURLConnection
+        c.connectTimeout = 3_000; c.readTimeout = 4_000; c.instanceFollowRedirects = true
+        c.setRequestProperty("User-Agent", UA)
+        if (c.responseCode !in 200..299 || (c.contentLengthLong > 3_000_000)) null else {
+            val bytes = c.inputStream.use { ins -> val o = java.io.ByteArrayOutputStream(); val b = ByteArray(16384); var n: Int; while (ins.read(b).also { n = it } > 0) { o.write(b, 0, n); if (o.size() > 3_000_000) break }; o.toByteArray() }
+            val opts = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+            if (opts.outWidth < 200 || opts.outHeight < 120) null else {
+                var sample = 1; while (opts.outWidth / (sample * 2) >= 320) sample *= 2
+                val bmp = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, android.graphics.BitmapFactory.Options().apply { inSampleSize = sample })
+                if (bmp == null) null else {
+                    val w = 320; val h = (bmp.height * w / bmp.width.toFloat()).toInt().coerceIn(80, 400)
+                    val sc = android.graphics.Bitmap.createScaledBitmap(bmp, w, h, true)
+                    val out = java.io.ByteArrayOutputStream(); sc.compress(android.graphics.Bitmap.CompressFormat.JPEG, 72, out)
+                    "data:image/jpeg;base64," + android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP)
+                }
+            }
+        }
+    } catch (e: Throwable) { null }
+
     /** Bing may wrap links as bing.com/ck/a?…&u=a1<base64url of the real address>. */
     private fun unwrapBing(href: String): String {
         if (!href.contains("bing.com/ck/a")) return href
@@ -208,6 +281,10 @@ object WebTools {
             Prefs.requireOnline(url, "reading a search result")
             val doc = Jsoup.connect(url).userAgent(UA)
                 .timeout(9_000).maxBodySize(2_000_000).followRedirects(true).get()
+            try {
+                val img = (doc.selectFirst("meta[property=og:image]") ?: doc.selectFirst("meta[name=twitter:image]") ?: doc.selectFirst("meta[property=og:image:url]"))?.absUrl("content").orEmpty()
+                if (img.startsWith("https://") && img.length < 600 && !img.contains(Regex("logo|icon|favicon|sprite|placeholder", RegexOption.IGNORE_CASE))) thumbData(img)?.let { pageImages[url] = it }
+            } catch (e: Exception) { }
             doc.select("script,style,noscript,nav,header,footer,aside,form,iframe,svg,button,.ad,.ads,.advert,[role=navigation]").remove()
             val main = doc.selectFirst("article") ?: doc.selectFirst("main") ?: doc.body() ?: return ""
             // v5.19: line by line, with TABLES KEPT AS ROWS ("Trim | hp | Nm | price") —
@@ -255,14 +332,22 @@ object WebTools {
             // right pages). Wikipedia is still left out: its pages are dropped by isWiki below.
             val dj = pool.submit(Callable { try { duckduckgo(q, 12) } catch (e: Exception) { emptyList<Hit>() } })
             val bj = pool.submit(Callable { try { bing(q, 10) } catch (e: Exception) { emptyList<Hit>() } })
+            val rj = pool.submit(Callable { try { braveHtml(q, 10) } catch (e: Exception) { emptyList<Hit>() } })
+            val mj = pool.submit(Callable { try { mojeek(q, 10) } catch (e: Exception) { emptyList<Hit>() } })
             val d = try { dj.get(16, TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
             val b = try { bj.get(16, TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
-            val seen = HashSet<String>(); val merged = ArrayList<Hit>()
-            for (i in 0 until maxOf(d.size, b.size)) for (h in listOfNotNull(d.getOrNull(i), b.getOrNull(i)))
-                if (!isWiki(h.url) && seen.add(urlKey(h.url))) merged.add(h)
-            hits = merged.take(14)
-            via = listOfNotNull(if (d.isNotEmpty()) "duckduckgo" else null, if (b.isNotEmpty()) "bing" else null).joinToString(" + ").ifEmpty { "duckduckgo" }
-            if (hits.isEmpty() && why.isEmpty()) why = "DuckDuckGo and Bing returned nothing"
+            val r = try { rj.get(maxOf(1L, 10L), TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
+            val m = try { mj.get(maxOf(1L, 6L), TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
+            // v6.12: reciprocal-rank fusion — a page found by several engines, or high on one, ranks first;
+            // an engine whose results are mostly dictionaries (a poisoned answer) counts for nothing
+            val lists = listOf(d, b, r, m).map { l -> l.filter { !isWiki(it.url) } }
+                .map { l -> if (l.isNotEmpty() && l.count { isJunk(it.url, q) } * 2 >= l.size) emptyList() else l.filter { !isJunk(it.url, q) } }
+            val score = HashMap<String, Double>(); val first = LinkedHashMap<String, Hit>()
+            for (l in lists) for ((i, h) in l.withIndex()) { val k = urlKey(h.url); score[k] = (score[k] ?: 0.0) + 1.0 / (8 + i); val had = first[k]; if (had == null) first[k] = h else if (h.text.length > had.text.length) had.text = h.text }
+            hits = first.entries.sortedByDescending { score[it.key] ?: 0.0 }.map { it.value }.take(14)
+            via = listOfNotNull(if (lists[0].isNotEmpty()) "duckduckgo" else null, if (lists[1].isNotEmpty()) "bing" else null,
+                if (lists[2].isNotEmpty()) "brave" else null, if (lists[3].isNotEmpty()) "mojeek" else null).joinToString(" + ").ifEmpty { "duckduckgo" }
+            if (hits.isEmpty() && why.isEmpty()) why = "The search engines returned nothing"
         }
 
         // v5.19: up to 6 pages, each read in full (16,000 characters) — the page
@@ -291,7 +376,7 @@ object WebTools {
 
         val arr = JSONArray()
         for (h in hits) arr.put(JSONObject().put("title", h.title).put("url", h.url)
-            .put("text", h.text.take(16_000)).put("source", h.source))
+            .put("text", h.text.take(16_000)).put("source", h.source).put("image", pageImages[h.url] ?: ""))
         return JSONObject().put("hits", arr).put("via", via).put("why", why)
     }
 

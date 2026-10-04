@@ -150,14 +150,24 @@ export function onTopic(hit, question) {
 }
 function decodeURIComponentSafe(u) { try { return decodeURIComponent(u).replace(/[-_/]+/g, " "); } catch (e) { return u; } }
 
+/* v6.12: dictionaries, thesauruses and grammar sites — what a poisoned search returns for the question's
+   common words ("maximum", "tall", "who": measured on the web benchmark). Never read, unless the question is
+   about a word's meaning or a translation. */
+const JUNK = /(^|\.)(merriam-webster\.com|dictionary\.cambridge\.org|dictionary\.com|thefreedictionary\.com|wordreference\.com|collinsdictionary\.com|vocabulary\.com|thesaurus\.com|oxfordlearnersdictionaries\.com|lexico\.com|britannicaenglish\.com|wiktionary\.org|yourdictionary\.com|grammarly\.com|macmillandictionary\.com|ldoceonline\.com|urbandictionary\.com|definitions\.net|almaany\.com|reverso\.net|lingolandedu\.com|todaysdatenow\.com|whichyr\.com)$/;
+const WORD_Q = /\b(mean(ing|s)?|defin(e|ition)|translat\w*|synonyms?|antonyms?|spell(ing)?|pronounc\w*|grammar|word for)\b|معنى|معني|ترجم|مرادف|عكس كلمة|تعريف كلمة/i;
+export const isJunk = (url, question = "") => !WORD_Q.test(question) && JUNK.test(host(url));
+
 export function mergeHits(lists, cap, question = "", perSite = 2, strict = false) {
   const seen = new Set(), per = new Map(), picked = [];
-  let queues = (lists || []).map((l) => [...(l || [])].filter((h) => h && h.url));
+  let queues = (lists || []).map((l) => [...(l || [])].filter((h) => h && h.url && !isJunk(h.url, question)));
   // v6.8: pages that never name the subject are dropped (the best two are kept if nothing passes —
   // unless strict: a second search for what's missing adds nothing rather than off-topic pages)
+  // v6.12: when nothing passes, the list says so (`offTopic`) — the chat searches again another way instead
+  // of writing the answer from pages about something else
+  let offTopic = false;
   if (question) {
     const gated = queues.map((l) => l.filter((h) => onTopic(h, question)));
-    if (strict || gated.some((l) => l.length)) queues = gated;
+    if (strict || gated.some((l) => l.length)) queues = gated; else offTopic = queues.some((l) => l.length);
   }
   for (let round = 0; picked.length < cap * 2 && queues.some((q) => q.length); round++) {
     for (const q of queues) {
@@ -173,8 +183,10 @@ export function mergeHits(lists, cap, question = "", perSite = 2, strict = false
     }
   }
   // quality moves a page up at most one round; social media / Q&A go last
-  return picked.map((p, i) => ({ ...p, k: p.round - Math.min(1, p.s / 2) + (p.s <= -2 ? 100 : 0) + i / 1000 }))
+  const out = picked.map((p, i) => ({ ...p, k: p.round - Math.min(1, p.s / 2) + (p.s <= -2 ? 100 : 0) + i / 1000 }))
     .sort((a, b) => a.k - b.k).slice(0, cap).map((p) => p.h);
+  if (offTopic) out.offTopic = true;
+  return out;
 }
 
 const bigNums = (s) => numsIn(s).filter((n) => n.replace(/\D/g, "").length >= 3 || /\d[.,]\d/.test(n));

@@ -113,14 +113,51 @@ export async function readPages(list) {
   });
 }
 /** WebTools.search("duckduckgo", q, pages): both engines at once, interleaved, then the top pages read. */
+// v6.12 — the phone also asks Brave's and Mojeek's own indexes, drops dictionary pages, and ranks by agreement
+export async function braveHtml(q, max = 8) {
+  const out = [];
+  try {
+    const r = await withTimeout(TIMEOUTS.search, fetch("https://search.brave.com/search?" + new URLSearchParams({ q, source: "web" }), { headers: { "User-Agent": UA, "Accept-Language": isArabic(q) ? "ar,en;q=0.8" : "en,ar;q=0.8" } }));
+    const $ = cheerio.load(await r.text());
+    $("div.snippet[data-type=web], #results div[data-pos], div.snippet").each((_, el) => {
+      if (out.length >= max) return;
+      const e = $(el); const a = e.find("a[href]").toArray().map((x) => $(x)).find((x) => /^http/.test(x.attr("href") || "") && !/brave\.com/.test(x.attr("href")));
+      if (!a) return; const url = a.attr("href");
+      const title = (e.find(".title, .snippet-title, .heading-serpresult").first().text() || a.text()).trim();
+      if (title && !out.some((h) => h.url === url)) out.push({ title, url, text: e.find(".snippet-description, .description, .content, .generic-snippet").first().text().trim(), source: "web" });
+    });
+  } catch (e) {}
+  return out;
+}
+export async function mojeek(q, max = 8) {
+  const out = [];
+  try {
+    const r = await withTimeout(TIMEOUTS.search, fetch("https://www.mojeek.com/search?" + new URLSearchParams({ q }), { headers: { "User-Agent": UA } }));
+    const $ = cheerio.load(await r.text());
+    $("ul.results-standard > li, .results-standard li").each((_, el) => {
+      if (out.length >= max) return;
+      const e = $(el); let a = e.find("h2 a[href]").first(); if (!a.length) a = e.find("a.title[href]").first(); if (!a.length) a = e.find("a.ob[href]").first(); if (!a.length) return;
+      const url = a.attr("href"); if (!/^http/.test(url) || /mojeek\.com/.test(url)) return;
+      const title = (e.find("h2").first().text() || a.text()).trim();
+      if (title && !out.some((h) => h.url === url)) out.push({ title, url, text: e.find("p.s").first().text().trim(), source: "web" });
+    });
+  } catch (e) {}
+  return out;
+}
+const JUNK = /(^|\.)(merriam-webster\.com|dictionary\.cambridge\.org|dictionary\.com|thefreedictionary\.com|wordreference\.com|collinsdictionary\.com|vocabulary\.com|thesaurus\.com|oxfordlearnersdictionaries\.com|britannicaenglish\.com|wiktionary\.org|yourdictionary\.com|urbandictionary\.com|definitions\.net|almaany\.com|reverso\.net)$/;
+const WORD_Q = /\b(mean(ing|s)?|defin(e|ition)|translat\w*|synonyms?|spell(ing)?|pronounc\w*)\b|معنى|معني|ترجم|مرادف/i;
+const hostOf = (u) => String(u).toLowerCase().replace(/^https?:\/\//, "").split(/[/?#]/)[0].replace(/^www\./, "");
+const isJunk = (u, q) => !WORD_Q.test(q) && JUNK.test(hostOf(u));
+
 export async function search(q, pages = 6) {
   const t0 = Date.now();
-  const [d, b] = await Promise.all([duckduckgo(q, 12), bing(q, 10)]);   // v6.8: no "-site:" operator (Bing misreads it)
-  const seen = new Set(), merged = [];
-  for (let i = 0; i < Math.max(d.length, b.length); i++) for (const h of [d[i], b[i]].filter(Boolean)) if (!isWiki(h.url) && !seen.has(urlKey(h.url))) { seen.add(urlKey(h.url)); merged.push(h); }
-  const hits = merged.slice(0, 14);
+  const [d, b, r, m] = await Promise.all([duckduckgo(q, 12), bing(q, 10), braveHtml(q, 10), mojeek(q, 10)]);
+  const lists = [d, b, r, m].map((l) => l.filter((h) => !isWiki(h.url))).map((l) => (l.length && l.filter((h) => isJunk(h.url, q)).length * 2 >= l.length ? [] : l.filter((h) => !isJunk(h.url, q))));
+  const score = new Map(), first = new Map();
+  for (const l of lists) l.forEach((h, i) => { const k = urlKey(h.url); score.set(k, (score.get(k) || 0) + 1 / (8 + i)); const had = first.get(k); if (!had) first.set(k, { ...h }); else if ((h.text || "").length > (had.text || "").length) had.text = h.text; });
+  const hits = [...first.entries()].sort((a, b2) => score.get(b2[0]) - score.get(a[0])).map(([, h]) => h).slice(0, 14);
   const tSearch = Date.now() - t0;
   const n = Math.max(0, Math.min(8, pages));
   await readPages(hits.slice(0, n));
-  return { hits: hits.filter((h) => (h.text || "").length > 40), via: `ddg ${d.length} + bing ${b.length}`, ms: { search: tSearch, read: Date.now() - t0 - tSearch } };
+  return { hits: hits.filter((h) => (h.text || "").length > 40), via: `ddg ${d.length} + bing ${b.length} + brave ${r.length} + mojeek ${m.length}`, ms: { search: tSearch, read: Date.now() - t0 - tSearch } };
 }
