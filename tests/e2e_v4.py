@@ -117,6 +117,12 @@ MOCK = r"""
           }
           if (b.chat_template_kwargs && b.chat_template_kwargs.enable_thinking) {
             for (const w of ["Let me ", "work this ", "out step ", "by step. "]) { if (cancels[id]) throw new Error("x"); window.__attuneNative.delta(id, "", w); await new Promise((q) => setTimeout(q, 60)); }
+            // The tiny test model's random "thinking" sometimes repeats one letter, which the app's loop guard rightly
+            // treats as a loop (retry without thinking) — so this step answers with a fixed text after the thinking.
+            try { ctl.abort(); } catch (e) {}
+            const ans = "16 t + 0.8 t = 16.8 t, under the 18 t chart value at 22 m, so it is enough (93%% of capacity).";
+            window.__attuneNative.delta(id, ans, "");
+            return R(id, { content: ans, reasoning: "Let me work this out step by step. ", timings: { predicted_per_second: 14.2 }, usage: {} });
           }
           const rd = r.body.getReader(); const dec = new TextDecoder();
           let buf = "", content = "", reasoning = "", stats = null, pieces = 0;
