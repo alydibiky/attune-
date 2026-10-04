@@ -391,7 +391,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   // Keep draft: stop the clear pass; the draft becomes the picture (draw()'s catch commits it)
   const keepDraft = () => { if (!LIVE.flow || !LIVE.flow.draft) return; LIVE.keep = true; const id = callId.current || LIVE.callId; try { if (native.cancelImage) native.cancelImage(id); else native.cancel(id); } catch (e) {} };
   const pickDraft = (i) => { if (LIVE.pick) LIVE.pick(i); };
-  const flowLive = !!(flow && FLOW_LIVE.includes(flow.phase));
+  const flowLive = !!(flow && flow.plan && flow.plan.draft && FLOW_LIVE.includes(flow.phase));   // the draft frame is for drafted pictures only
   const remove = (it) => { try { native.deleteImage(it.file); } catch (e) {} const next = gallery.filter((x) => x.file !== it.file); keep(next); if (cur && cur.file === it.file) setCur(next[0] || null); };
 
   const stageText = busy ? (busy.stage === "enhance" ? tr("Writing a fuller description…")
@@ -502,7 +502,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
             <button onClick={() => draw()} disabled={!drawReady || !idea.trim() || !info.built} data-testid="studio-go"
               className="px-4 py-2 rounded-lg bg-violet-500 text-white text-sm font-semibold disabled:opacity-40 flex items-center gap-1.5"><Palette size={14} />{mode === "edit" ? tr("Edit it") : tr("Draw it")}</button>
           )}
-          {busy ? <span className="text-[12px] text-violet-200 flex items-center gap-1.5 min-w-0" data-testid="studio-progress"><Loader2 size={13} className="animate-spin shrink-0" /><span className="truncate">{stageText}</span><span className="text-slate-500 shrink-0">· {secs(now - busy.t0)}</span></span> : null}
+          {busy && !flowLive ? <span className="text-[12px] text-violet-200 flex items-center gap-1.5 min-w-0" data-testid="studio-progress"><Loader2 size={13} className="animate-spin shrink-0" /><span className="truncate">{stageText}</span><span className="text-slate-500 shrink-0">· {secs(now - busy.t0)}</span></span> : null}
         </div>
         {busy && busy.line ? <p className="text-[10.5px] text-slate-500 mt-1.5 font-mono truncate" dir="ltr" data-i18n-skip data-testid="studio-engine-line">{busy.line}</p> : null}
         {busy && busy.what === "draw" && now - busy.t0 > 90000 && busy.stage !== "draw" ? (
