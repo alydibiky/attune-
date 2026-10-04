@@ -441,6 +441,27 @@ touch, merge origin/main before pushing, and push your branch (not main).
 
 ---
 
+## N. Added 4 Oct 2026 (night, after testing 6.11 on the phone) — done in v6.13 unless marked
+1. ✅ **Core+ wrote "0000…"** (bus-driver riddle, with and without Think). The phone log showed the 0.8B helper model
+   (speculative decoding) loaded next to Core+. Not reproducible on a PC with the same files and flags, so it is an
+   ARM-side engine fault. Fixed both ways: the helper is retired (`Engine.draftFor` → null, old setting cleared), and
+   the **nonsense guard** (`quality.js junkStart`) stops an answer that starts as one repeated character, restarts the
+   engine in **safe mode** (no speculation, 16-bit KV cache; `Prefs.safeMode` per model) and asks again. Engine → Speed
+   shows "Safe mode is on" with a button to turn it off. ⬜ Ask Ali: does Core+ answer now? If it needs safe mode, try
+   Core+ without safe mode once the helper is gone (the helper alone may have been the cause).
+2. ✅ **Yusr: write it and it logs it** — a box on Yusr's home: "lunch 150, taxi 60 and got my salary 30000" /
+   «فطار ٨٠ وبنزين ٥٠٠ امبارح» → each item logged at once (category, income/expense, date, account by name), with
+   Undo. Code reading first (`yusr/logtext.js`, works with no model), the model sorts/names better when loaded; every
+   amount must be in his words. Bridge kind `log-text` (hints: category ids, account names, today).
+3. ✅ **Recurring moved** to its own **Bills** tab (where Invoices was): next 30 days, totals, the list.
+4. ✅ **Invoices removed from Yusr** (Business books has them, with the ETA e-invoice) — nav tab, Settings panel and the
+   "Run my business" welcome option. Old invoice data is kept in the backup, just not shown.
+5. ✅ **Demo data removed** from Settings (a phone still showing sample data gets "Remove sample data" on the banner).
+6. ✅ **Recurring: Daily**, and **daily only from day A to day B of each month** (wraps: 25 → 5).
+7. ⬜ **Yusr look** — options A (calm list) / B (dashboard cards, recommended) / C (chat-first) sent to Ali as a picture
+   (mock-up HTML in the session scratchpad; rebuild from the description if needed). Build the one he picks; Yusr also has
+   TWO bottom bars stacked (its 8 tabs + Attune's) — every option cuts Yusr's to 4–5 tabs.
+
 ## Prompt to start the next session
 
 ```

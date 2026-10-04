@@ -585,6 +585,20 @@ Ali tested 6.11 and sent 7 screenshots + a list (NEXT_SESSION.md section L). Wha
   TEST_GUIDE §2 (knowledge packs wiring, Studio preview, desktop phase 2, Business ETA JSON / roles / multi-currency, converter
   ODT/RTF/Excel readers, skills second pass, coding review mode, big-model max tests).
 
+### 5.41 v6.13 (4 Oct 2026, night) — Core+ "0000…", Yusr write-to-log, Bills tab
+- **Engine:** the 0.8B helper (draft model) is retired (`Engine.RETIRED_DRAFT`; `draftFor` clears the old pref). New
+  per-model **safe mode** (`Prefs.safeMode`, set via `setSpeed {safe}`): no speculation (no ngram-mod / MTP), f16 KV
+  cache; settings note says "safe mode". Page: `junkStart(text)` (quality.js) — ≥ 90 % of the first 64 non-space
+  characters the same → `looped.where = "junk"` → `setSpeed {safe:true}` → the same request again once (`_safeRetry`);
+  a second junk answer → a clear error naming the way out. Tests: unit v713junk, e2e_v713junk (mock queue "0"×400).
+- **Yusr** (`web-src/yusr/`): new `logtext.js` (pure: `amountsIn` with ألف/k, `clauses`, `dateIn`, `readLocal`,
+  `logPrompt`, `parseLog` — model amounts must be in the text; items the model dropped are added back from the code
+  reading). `yusr-bridge.js` AI kind `log-text` with `hints`. Attune's `ai-request` handler answers `log-text` even with no
+  model (code reading). Yusr's new code lives in **`yusr/yusr-v613.js`**; `build.sh` pastes it into the
+  `<script id="yusr-v613">/*__V613__*/</script>` placeholder of `index.new.html` (so edit the .js, not the html).
+  Bills tab `scr-bills` (`renderBills`, `billsAhead`), recurring `freq: daily` + `fromDay/toDay` (`inDayRange`,
+  `advance(d, f, r)`), invoices/demo UI removed (code kept, data kept). Tests: unit v714yusrlog, e2e_v713yusr.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
