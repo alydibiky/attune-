@@ -213,7 +213,7 @@ export function dateFacts(code) {
    disagrees → the test's expected value is rewritten to the agreed value (no extra round). They
    disagree → the fix round is shown both computed values. A test that calls the function with input
    its own validation refuses (and the task asks for that refusal) is turned into a "must raise" test. */
-export const PLAN_DEFAULT = false;                          // plan first for multi-function / multi-rule requests (see needsPlan); measured on codebench
+export const PLAN_DEFAULT = "auto";                          // plan first for multi-function / multi-rule requests (see needsPlan); measured on codebench
 const ARB_AFTER = 2;                                         // settle a self-written test call after it failed twice (measured: after once = 6-7/10 hidden, twice = 8-9/10)
 const tests0 = (code) => { const s = String(code || ""); const i = s.indexOf("# --- tests ---"); return i >= 0 ? s.slice(0, i) : s.split("\n").filter((l) => !/^assert\b|^print\(["']ALL TESTS PASSED/.test(l)).join("\n"); };
 /** The function a test calls: "vat(100) * 2" → "vat" (null for anything else). */
