@@ -112,7 +112,7 @@ Legend: **✅ done in prototype** · 🟡 planned (phase) · ⛔ not needed on d
 
 | OS | Shipped engine | Covers | Later |
 |---|---|---|---|
-| Windows x64 | Vulkan + every x64 CPU generation (GGML_BACKEND_DL + GGML_CPU_ALL_VARIANTS, picked at run time) | NVIDIA, AMD, Intel GPUs; any CPU | optional CUDA download (~500 MB of CUDA runtime) for NVIDIA speed; Windows on ARM build |
+| Windows x64 | Vulkan + an AVX2 CPU path (any x64 CPU from 2013 on; the per-generation CPU variants fail to compile with clang-cl at the pinned commit — revisit on the next engine bump) | NVIDIA, AMD, Intel GPUs; any CPU | optional CUDA download (~500 MB of CUDA runtime) for NVIDIA speed; Windows on ARM build |
 | macOS arm64 | Metal (embedded library) | M1–M5 | Intel Macs: CPU-only x64 build if wanted |
 | Linux x64 | Vulkan + all CPU variants | most GPUs (Mesa / NVIDIA driver) | CUDA, ROCm as optional packs; arm64 build |
 Engine start order: GPU (`--fit on -fa auto`) → if it fails to start, CPU (`--device none`, 8-bit KV cache,
