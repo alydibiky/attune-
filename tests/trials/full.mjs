@@ -16,10 +16,12 @@ const post = (body) => new Promise((ok, bad) => {
   });
   req.on("error", bad); req.setTimeout(0); req.end(JSON.stringify(body));
 });
+// FULL_SAMPLING='{"top_k":20,"min_p":0.05}' adds sampler settings, to compare per-family defaults.
+const SAMPLING = process.env.FULL_SAMPLING ? JSON.parse(process.env.FULL_SAMPLING) : {};
 let genTok = 0, genMs = 0;
 async function ask(messages, max) {
   const t0 = Date.now();
-  const j = await post({ messages, max_tokens: THINK ? max * 6 : max, temperature: 0.3, stream: false, chat_template_kwargs: { enable_thinking: THINK } });
+  const j = await post({ messages, max_tokens: THINK ? max * 6 : max, temperature: 0.3, ...SAMPLING, stream: false, chat_template_kwargs: { enable_thinking: THINK } });
   const m = (j.choices && j.choices[0] && j.choices[0].message) || {};
   const tm = j.timings || {}; if (tm.predicted_n) { genTok += tm.predicted_n; genMs += tm.predicted_ms; }
   const text = String(m.content || (j.error ? "[error] " + JSON.stringify(j.error).slice(0, 200) : "")).replace(/<think>[\s\S]*?<\/think>/g, "").trim();
