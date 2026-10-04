@@ -1,0 +1,139 @@
+{
+  "issuer": {
+    "address": {
+      "branchID": "0",
+      "country": "EG",
+      "governate": "Cairo",
+      "regionCity": "Downtown",
+      "street": "Tahrir St",
+      "buildingNumber": "12"
+    },
+    "type": "B",
+    "id": "123456789",
+    "name": "Nile Trading Co."
+  },
+  "receiver": {
+    "address": {
+      "branchID": "0",
+      "country": "EG",
+      "governate": "",
+      "regionCity": "",
+      "street": "",
+      "buildingNumber": ""
+    },
+    "type": "B",
+    "id": "222333444",
+    "name": "Acme Contracting"
+  },
+  "documentType": "i",
+  "documentTypeVersion": "1.0",
+  "dateTimeIssued": "2026-09-05T10:15:30Z",
+  "taxpayerActivityCode": "4690",
+  "internalID": "INV-2026-00001",
+  "purchaseOrderReference": "",
+  "purchaseOrderDescription": "",
+  "salesOrderReference": "",
+  "salesOrderDescription": "",
+  "proformaInvoiceNumber": "",
+  "payment": {
+    "bankName": "",
+    "bankAddress": "",
+    "bankAccountNo": "",
+    "bankAccountIBAN": "",
+    "swiftCode": "",
+    "terms": "Due 2026-10-05"
+  },
+  "delivery": {
+    "approach": "",
+    "packaging": "",
+    "dateValidity": "",
+    "exportPort": "",
+    "grossWeight": 0,
+    "netWeight": 0,
+    "terms": ""
+  },
+  "invoiceLines": [
+    {
+      "description": "Bolts box",
+      "itemType": "EGS",
+      "itemCode": "EG-123456789-BLT",
+      "unitType": "BX",
+      "quantity": 10,
+      "internalCode": "BLT",
+      "salesTotal": 1000,
+      "total": 1130,
+      "valueDifference": 0,
+      "totalTaxableFees": 0,
+      "netTotal": 1000,
+      "itemsDiscount": 0,
+      "unitValue": {
+        "currencySold": "EGP",
+        "amountEGP": 100
+      },
+      "discount": {
+        "rate": 0,
+        "amount": 0
+      },
+      "taxableItems": [
+        {
+          "taxType": "T1",
+          "amount": 140,
+          "subType": "V009",
+          "rate": 14
+        },
+        {
+          "taxType": "T4",
+          "amount": 10,
+          "subType": "W002",
+          "rate": 1
+        }
+      ]
+    },
+    {
+      "description": "Nuts bag",
+      "itemType": "EGS",
+      "itemCode": "EG-123456789-NUT",
+      "unitType": "EA",
+      "quantity": 3,
+      "internalCode": "NUT",
+      "salesTotal": 9.99,
+      "total": 8.99,
+      "valueDifference": 0,
+      "totalTaxableFees": 0,
+      "netTotal": 8.99,
+      "itemsDiscount": 0,
+      "unitValue": {
+        "currencySold": "EGP",
+        "amountEGP": 3.33
+      },
+      "discount": {
+        "rate": 10,
+        "amount": 1
+      },
+      "taxableItems": [
+        {
+          "taxType": "T1",
+          "amount": 0,
+          "subType": "V001",
+          "rate": 0
+        }
+      ]
+    }
+  ],
+  "totalDiscountAmount": 1,
+  "totalSalesAmount": 1009.99,
+  "netAmount": 1008.99,
+  "taxTotals": [
+    {
+      "taxType": "T1",
+      "amount": 140
+    },
+    {
+      "taxType": "T4",
+      "amount": 10
+    }
+  ],
+  "totalAmount": 1138.99,
+  "extraDiscountAmount": 0,
+  "totalItemsDiscountAmount": 0
+}

@@ -3,6 +3,7 @@
    editing. Every change is written to a hash-chained audit log (tamper-EVIDENT on a phone, not tamper-proof).
    Storage lives elsewhere (books-store.js); screens in books-ui.jsx. Tests: tests/unit/v611books.test.mjs, v612ops.test.mjs. */
 import * as B from "./books.js";
+import { can, priceFor } from "./books-more.js";
 
 export const EMPTY = () => ({
   v: 1, seq: 1, currency: "EGP",
@@ -11,6 +12,7 @@ export const EMPTY = () => ({
   security: { pin: "", salt: "" },
   customers: [], suppliers: [], items: [],
   docs: [], bills: [], payments: [], supplierPayments: [], expenses: [], stock: [], journal: [], audit: [],
+  users: [], priceLists: [], deliveries: [], fxRates: [], eta: { activityCode: "", branchID: "0", governate: "", regionCity: "", street: "", buildingNumber: "" },
 });
 
 const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -19,7 +21,7 @@ export class BooksError extends Error {}
 const fail = (m) => { throw new BooksError(m); };
 
 /** A short stable id from the state's own counter (deterministic: tests and merges stay simple). */
-function nid(s, p) { return p + (s.seq++).toString(36); }
+export function nid(s, p) { return p + (s.seq++).toString(36); }
 
 // ---- the audit chain ---------------------------------------------------------------------------
 /** FNV-1a over a string, 53 bits: enough to SEE an edited or deleted entry, not a security boundary. */
@@ -30,9 +32,16 @@ export function hash53(str) {
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
 }
+// ---- who is working (set when someone unlocks the books; null = a single-owner book with no users) ----------------
+let actor = null;
+/** actor: { id, name, role } or null. Every audit entry carries the actor's name; operations check the role. */
+export function setActor(a) { actor = a ? { id: a.id, name: a.name, role: a.role } : null; }
+export const getActor = () => actor;
+/** Refuse an operation the current user's role does not allow. */
+export function need(perm) { if (actor && !can(actor.role, perm)) fail(`Your role (${actor.role}) is not allowed to do this`); }
 export function log(s, user, action, ref, detail = "", at = new Date().toISOString()) {
   const prev = s.audit.length ? s.audit[s.audit.length - 1].hash : "0";
-  const e = { n: s.audit.length + 1, at, user: user || "owner", action, ref, detail: String(detail).slice(0, 200), prev };
+  const e = { n: s.audit.length + 1, at, user: user || (actor && actor.name) || "owner", action, ref, detail: String(detail).slice(0, 200), prev };
   e.hash = hash53(prev + "|" + e.n + "|" + at + "|" + e.user + "|" + action + "|" + ref + "|" + e.detail);
   s.audit.push(e);
 }
@@ -100,6 +109,9 @@ export function post(state, id, { user, at, today } = {}) {
   const d = s.docs.find((x) => x.id === id);
   if (!d) fail("Document not found");
   if (d.status !== "draft") fail("This document is already posted");
+  need("post"); if (d.type === "credit") need("void");
+  if (actor && !can(actor.role, "prices") && (d.type === "invoice" || d.type === "quote" || d.type === "order"))
+    for (const l of d.lines || []) if (l.item && !d.fx) { const want = priceFor({ lists: s.priceLists || [], items: s.items, customers: s.customers }, { customer: d.customer, item: l.item, qty: l.qty, date: d.date }).price; if (Number(l.price) !== want) fail("Only the owner or the accountant can change a price"); }
   if (!d.customer || !s.customers.find((c) => c.id === d.customer)) fail("Choose a customer");
   if (!d.date) fail("Choose a date");
   checkLines(d.lines, d.type === "credit");
@@ -117,7 +129,7 @@ export function post(state, id, { user, at, today } = {}) {
     const lv = levels(s);
     for (const l of d.lines) {
       const it = l.item && s.items.find((x) => x.id === l.item);
-      if (!it || it.track === false) continue;
+      if (!it || it.track === false || l.delivered) continue;     // goods already sent on a delivery note left stock there
       const qty = Number(l.qty);
       if (d.type === "invoice") {
         const have = (lv[it.id] || { qty: 0 }).qty;
@@ -160,6 +172,7 @@ export function invoiceFromQuote(state, quoteId, date) {
 // ---- money in: receipts -----------------------------------------------------------------------------
 /** Record money received. allocations default to oldest-first; a withheld part (wht) per allocation is allowed. */
 export function receive(state, { customer, date, method = "cash", amount, allocations, ref = "" }, { user, at } = {}) {
+  need("post");
   const s = clone(state);
   if (!s.customers.find((c) => c.id === customer)) fail("Choose a customer");
   if (!(amount > 0) || !Number.isInteger(amount)) fail("Enter the amount received");
@@ -183,6 +196,7 @@ export function receive(state, { customer, date, method = "cash", amount, alloca
 // ---- purchasing: bills and supplier payments -----------------------------------------------------------
 /** Post a supplier bill: stock comes in at the bill cost (net + table tax), input VAT is recorded, the supplier is owed. */
 export function postBill(state, id, { user, at } = {}) {
+  need("post");
   const s = clone(state);
   const d = s.bills.find((x) => x.id === id);
   if (!d) fail("Bill not found");
@@ -317,8 +331,9 @@ export function sampleShop(base = EMPTY(), today = new Date().toISOString().slic
 }
 
 // ---- the owner's PIN: keeps casual eyes out on a shared phone (it is NOT encryption) ----------------------------------------
-const pinHash = (pin, salt) => hash53("pin|" + salt + "|" + pin);
+export const pinHash = (pin, salt) => hash53("pin|" + salt + "|" + pin);
 export function setPin(state, pin, { user, at } = {}) {
+  need("users");
   const s = clone(state);
   if (pin === "" || pin == null) { s.security = { pin: "", salt: "" }; log(s, user, "pin removed", "-", "", at); return s; }
   if (!/^\d{4,6}$/.test(String(pin))) fail("The PIN must be 4 to 6 digits");
