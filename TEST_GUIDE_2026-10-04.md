@@ -1,5 +1,23 @@
 # Attune — test guide and status (4 Oct 2026)
 
+# ▶ NEW: version 6.12 (later on 4 Oct) — what to test first
+Install the newest "Build the APK" run on `main` (link in the chat). Then, in this order:
+1. **CV → Import my CV**: paste your CV (or pick the PDF) → Import. It now always imports (the code reads it; the AI only tidies).
+   If anything goes wrong, the message now shows *inside* the import screen.
+2. **Ask a PDF → open your 10-slide PowerPoint** → it should say 10 pages. Go back: it's under "Opened before" — tap it, your chat is still there.
+3. **Fit & Food → photo of a full plate** (eggs on toast, koshari, ful + bread): you should see every part (eggs ×4, toast, sauce, cheese)
+   and no repeated "Is it" chips. Please try 5–10 real plates and send me the misses.
+4. **Chat → paperclip → pick 2–3 PDFs at once**, ask "compare them"; **photo button → pick several photos at once**.
+5. **Shelf → ⋮ → Import notes**: pick files or paste notes. From the Notebook app: open a note → Share → Attune → "Save to Shelf".
+6. **Instant → "What are my expenses in the last 4 days"** (after adding a few expenses in Money).
+7. **Chat with Web on**: a car ("Lynk & Co 900"), a crane ("Liebherr LTM 1100-4.2 specs"), a news topic. Look for pictures at the top,
+   next-question chips at the bottom, and no answers built from unrelated pages. Send me 2–3 that still disappoint.
+8. **Maps**: search "Address east compound" → it's found and pinned; tap ◎ for your location (Android asks once).
+9. **Chat**: "valve cavitation during high-speed deceleration… two fixes without reducing velocity" — it should explain the mechanism
+   (the meter-in side starved by the overrunning load) and give make-up/anti-cavitation valves + meter-out/counterbalance control.
+10. **Business → Shop books → a posted invoice → "E-invoice (ETA)"**: it lists what's missing (activity code, address, item codes) and saves the JSON file.
+
+
 **The build to install:** GitHub → Actions → "Build the APK" → run 90 (green) → download the APK artifact:
 https://github.com/alydibiky/attune-/actions/runs/37171215004
 (Commit `f345824` on `main`. All unit tests and all browser tests passed on this commit. Nothing in it has run on a real phone yet — that is what you are testing.)
