@@ -3,7 +3,9 @@ name: Build a knowledge pack
 # v6.20 — Knowledge: public packs the app downloads on demand (More → Knowledge → Public packs).
 # First pack: "Egypt basics" — the opening sections of Egypt-related Wikipedia articles (English + Arabic),
 # from the Hugging Face dataset wikimedia/wikipedia. Licence: CC BY-SA 3.0 / GFDL (Wikipedia contributors);
-# the manifest carries the attribution and the app shows it. Run by hand from the Actions tab.
+# the manifest carries the attribution and the app shows it.
+# DO NOT RUN until Ali decides: he has an earlier rule "NO information from Wikipedia" (WebTools.kt, v5.22).
+# It never runs by itself (manual workflow_dispatch only) and the job only runs when confirm = yes is typed.
 
 on:
   workflow_dispatch:
@@ -11,12 +13,16 @@ on:
       budget_mb:
         description: "Text budget in MB (the download is about a third of this)"
         default: "60"
+      confirm:
+        description: "Ali approved Wikipedia as the source? (type yes)"
+        default: "no"
 
 permissions:
   contents: write
 
 jobs:
   pack:
+    if: github.event.inputs.confirm == 'yes'
     runs-on: ubuntu-latest
     timeout-minutes: 300
     steps:
