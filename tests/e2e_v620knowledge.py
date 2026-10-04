@@ -33,7 +33,7 @@ def last_user(page):
     return page.evaluate("() => { const b = (window.__mock.bodies || []).filter((x) => x.max_tokens > 2); const m = b[0]; return m ? (m.messages.filter((x) => x.role === 'user').slice(-1)[0] || {}).content || '' : ''; }")
 
 def last_ai(page):
-    return page.locator("[data-testid=kn-chips]").count(), page.locator("main").inner_text()
+    return page.locator("[data-testid=kn-chips]").count(), page.locator("body").inner_text()
 
 VISIBLE = r"""() => {
   const out = new Set(), root = document.querySelector('[data-testid=knowledge]');
@@ -71,7 +71,7 @@ with sync_playwright() as p:
     check("Facts from your Knowledge" in u and "[K1] (Villa rules)" in u and "4471" in u, "the facts block with its source tag goes to the model")
     check(u.rstrip().endswith("What is the gate code for the villa?") or "Question: What is the gate code" in u, "…followed by the question")
     page.wait_for_selector("[data-testid=kn-chip]", timeout=6000)
-    main = page.locator("main").inner_text()
+    main = page.locator("body").inner_text()
     check(page.locator("[data-testid=kn-chip]").count() == 1 and "Villa rules" in page.locator("[data-testid=kn-chip]").first.inner_text(), "the answer shows one source chip: Villa rules")
     check("[K1]" not in main and "[K9]" not in main and "4471" in main, "the tags are taken out of the answer; the invented [K9] is removed")
     page.locator("[data-testid=kn-chip]").first.click(); page.wait_for_timeout(200)
