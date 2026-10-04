@@ -26,6 +26,8 @@ import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
 import { MindPage, keepPicture } from "./mind-ui.jsx";
 import { ShelfPage } from "./shelf-ui.jsx";
+import * as SH from "./shelf.js";
+import { notesFromText } from "./shelf-import.js";
 import { wrongLanguage } from "./answerfix.js";
 import { ChatXRay } from "./chatxray-ui.jsx";
 import { FileConverter } from "./convert-ui.jsx";
@@ -9118,7 +9120,7 @@ export default function App() {
             </section>
           </div>
         ) : mode === "shelf" ? (
-          <ShelfPage records={memory} setRecords={(fn) => setMemory(fn)} scheduleReminder={scheduleReminder} flash={flash}
+          <ShelfPage records={memory} setRecords={(fn) => setMemory(fn)} scheduleReminder={scheduleReminder} flash={flash} pdfText={NATIVE ? (b64) => nativeCall("pdfText", { b64 }) : null}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
             openInMind={(r) => { setOpenRec(r); setMode("memory"); }}
             saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
@@ -9141,6 +9143,14 @@ export default function App() {
                 <div className="flex flex-wrap gap-1.5">
                   <button onClick={() => { setInText(shareIn.text); setInResult(""); setMode("instant"); setShareIn(null); }}
                     className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold">{tr("Do something with it")}</button>
+                  <button data-testid="share-to-shelf" onClick={() => {   // v6.12: a note shared from the phone's Notebook app → Shelf
+                    let sh = SH.loadShelf(localStorage); let bk = sh.books.find((b) => b.imported);
+                    if (!bk) { const r = SH.addBook(sh, tr("Imported notes"), "ocean"); bk = { ...r.book, imported: true }; sh = { ...r.shelf, books: r.shelf.books.map((b) => (b.id === bk.id ? bk : b)) }; SH.saveShelf(localStorage, sh); }
+                    const got = notesFromText(shareIn.text), now = Date.now();
+                    const made = got.map((x, i) => { const n = SH.makeNote({ title: x.title, text: x.text, book: bk.id, now: now + i }); return { ...n, meta: { ...n.meta, imported: true } }; });
+                    setMemory((m) => [...made, ...m.filter((r) => r.id !== shareIn.id)]);
+                    setShareIn(null); setMode("shelf"); flash(tr("{n} notes imported", { n: made.length }));
+                  }} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-teal-700 text-teal-200">{tr("Save to Shelf")}</button>
                   <button onClick={() => { findCommitments(shareIn.text, shareIn.id); setShareIn(null); }}
                     className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-600">{tr("Read it for promises")}</button>
                   <button onClick={() => setShareIn(null)}

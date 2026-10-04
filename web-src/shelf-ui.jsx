@@ -5,6 +5,8 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Lock, Mic, PenLine, Menu, AlarmClock, Search, Plus, MoreVertical, X, Star, Bell, Trash2, Copy, Share2, Brain, ArrowUp, ArrowDown, Folder, Check, ImagePlus, Undo2, Camera, ChevronLeft, ChevronRight, Square, BookOpen, Download } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as S from "./shelf.js";
+import * as SI from "./shelf-import.js";
+import * as C from "./convert.js";
 import { thumbPut, thumbGet, thumbDel } from "./mind-ui.jsx";
 import { useSubBack } from "./backstack.js";
 import { askConfirm } from "./confirm.jsx";
@@ -274,7 +276,7 @@ function BookForm({ init, done, shelf, flash }) {
 
 
 /* ---- the screen ---- */
-export function ShelfPage({ records, setRecords, scheduleReminder, flash, openInMind, saveFile, share, listen }) {
+export function ShelfPage({ records, setRecords, scheduleReminder, flash, openInMind, saveFile, share, listen, pdfText }) {
   const [shelf, setShelfRaw] = useState(() => S.loadShelf(localStorage));
   const setShelf = (s) => setShelfRaw((old) => S.saveShelf(localStorage, typeof s === "function" ? s(old) : s));
   // once: the notes already kept move into «My Book» (a copy of the old data is kept first)
@@ -329,11 +331,45 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
     else { try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" })); a.download = name; a.click(); } catch (e) { share && share(md); } }
   };
   const fileName = (t) => (String(t || "").replace(/[^\p{L}\p{N}]+/gu, "_").replace(/^_|_$/g, "") || "note") + ".md";
-  const importFile = async (f) => {
-    if (!f || !book) return;
-    try { const t = await f.text(); const ns = S.importText(t, f.name, book.id); setRecords((rs) => [...ns, ...rs]); flash(tr("{n} notes imported", { n: ns.length })); }
-    catch (e) { flash(tr("Couldn't read that file")); }
+  // v6.12: notes from the phone's Notebook app, Google Keep, Evernote, Word, PDF, web pages, a .zip — or pasted
+  const [impText, setImpText] = useState("");
+  const [impBook, setImpBook] = useState("");
+  const [impBusy, setImpBusy] = useState("");
+  const impTarget = () => {   // the chosen book, or a new «Imported notes» book
+    if (impBook && shelf.books.some((b) => b.id === impBook)) return impBook;
+    const had = shelf.books.find((b) => b.imported); if (had) return had.id;
+    const r = S.addBook(shelf, tr("Imported notes"), S.COVERS[Math.min(3, S.COVERS.length - 1)].id); const nb = { ...r.book, imported: true };
+    setShelf({ ...r.shelf, books: r.shelf.books.map((b) => (b.id === nb.id ? nb : b)) }); return nb.id;
   };
+  const toNotes = (list, bid) => list.map((x, i) => { const n = S.makeNote({ title: x.title, text: x.text + (x.tags && x.tags.length ? "\n\n" + x.tags.map((t) => "#" + String(t).replace(/\s+/g, "_")).join(" ") : ""), book: bid, now: (x.created || Date.now()) + i }); return { ...n, meta: { ...n.meta, imported: true } }; });
+  const importFiles = async (fileList, bid0) => {
+    const files = [...(fileList || [])]; if (!files.length) return;
+    const bid = bid0 || impTarget(); let made = [], bad = [];
+    const tools = { unzip: C.unzip, docxRead: C.docxRead, blocksToText: C.blocksToText, odtToBlocks: C.odtToBlocks, rtfToText: C.rtfToText, pdfText: pdfText || null };
+    for (const [i, f] of files.entries()) {
+      setImpBusy(tr("Reading {i} of {n}…", { i: i + 1, n: files.length }));
+      try {
+        if (SI.isImage(f.name, f.type)) {   // a photo of a note: a note with the picture in it
+          const url = await new Promise((ok, no) => { const fr = new FileReader(); fr.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, 1200 / Math.max(im.width, im.height)); const c = document.createElement("canvas"); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", 0.82)); }; im.onerror = no; im.src = fr.result; }; fr.onerror = no; fr.readAsDataURL(f); });
+          const n = S.makeNote({ title: f.name.replace(/\.\w+$/, ""), text: "", book: bid, now: (f.lastModified || Date.now()) + i });
+          const key = "shelfimg:" + n.id + ":" + Date.now().toString(36); await thumbPut(key, url);
+          made.push({ ...n, meta: { ...n.meta, imported: true, photos: [key] } });
+          continue;
+        }
+        const got = await SI.notesFromFile(f.name, new Uint8Array(await f.arrayBuffer()), tools);
+        if (!got.length) bad.push(f.name); else made.push(...toNotes(got, bid));
+      } catch (e) { bad.push(f.name); }
+    }
+    setImpBusy("");
+    if (made.length) { setRecords((rs) => [...made, ...rs]); setSheet(null); setBookId(bid); }
+    flash(made.length ? tr("{n} notes imported", { n: made.length }) + (bad.length ? " · " + tr("not read: {f}", { f: bad.slice(0, 3).join(", ") }) : "") : tr("Couldn't read that file"));
+  };
+  const importPasted = () => {
+    const got = SI.notesFromText(impText); if (!got.length) return flash(tr("Paste your notes first"));
+    const bid = impTarget(); setRecords((rs) => [...toNotes(got, bid), ...rs]); setImpText(""); setSheet(null); setBookId(bid);
+    flash(tr("{n} notes imported", { n: got.length }));
+  };
+  const importFile = (f) => importFiles(f ? [f] : [], book ? book.id : null);
   const deleteBk = async (id) => {
     const b = shelf.books.find((x) => x.id === id);
     if (!(await askConfirm(tr("Delete the book «{name}» and its {n} notes?", { name: bookName(b), n: counts[id] || 0 })))) return;
@@ -502,7 +538,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
           <button className={row} data-testid="shelf-lock" onClick={() => { if (sb.locked) { setShelf(S.setLocked(shelf, sb.id, false)); setSheet(null); flash(tr("Lock removed")); } else if (!S.hasPin(shelf)) { setPinIn(""); setSheet({ kind: "setpin", id: sb.id }); } else { setShelf(S.setLocked(shelf, sb.id, true)); setUnlocked((u) => { const n = new Set(u); n.delete(sb.id); return n; }); setBookId(null); setSheet(null); flash(tr("Book locked")); } }}><Lock size={18} />{sb.locked ? tr("Remove the lock") : tr("Lock with a PIN")}</button>
           <button className={row} data-testid="shelf-dup-book" onClick={() => { const r = S.duplicateBook(shelf, records, sb.id); setShelf(r.shelf); setRecords(() => r.records); setSheet(null); setBookId(null); flash(tr("Book duplicated")); }}><Copy size={18} />{tr("Duplicate book")}</button>
           <button className={row} data-testid="shelf-merge" onClick={() => setSheet({ kind: "merge", id: sb.id })}><Folder size={18} />{tr("Merge into another book")}</button>
-          <button className={row} data-testid="shelf-import" onClick={() => { setSheet(null); setBookId(sb.id); setTimeout(() => importRef.current && importRef.current.click(), 50); }}><Download size={18} className="rotate-180" />{tr("Import a text file")}</button>
+          <button className={row} data-testid="shelf-import" onClick={() => { setImpBook(sb.id); setSheet({ kind: "import" }); }}><Download size={18} className="rotate-180" />{tr("Import notes")}</button>
           <button className={row} onClick={() => { exportBook(sb); setSheet(null); }} data-testid="shelf-export"><Download size={18} />{tr("Export as a text file")}</button>
           <button className={row + " text-red-300"} data-testid="shelf-delete-book" onClick={() => deleteBk(sb.id)}><Trash2 size={18} />{tr("Delete book")}</button>
         </Sheet>) : null}
@@ -525,9 +561,21 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
               const r = S.mergeBooks(shelf, records, sb.id, b.id); setShelf(r.shelf); setRecords(() => r.records); setSheet(null); setBookId(null); flash(tr("Books merged")); }}>
               <Cover cover={b.cover} /><span className="block text-xs text-slate-200 truncate mt-1" dir="auto">{bookName(b)}</span></button>))}</div>
         </Sheet>) : null}
-      <input ref={importRef} type="file" accept=".txt,.md,text/plain,text/markdown" className="hidden" data-testid="shelf-import-file" onChange={(e) => { importFile(e.target.files && e.target.files[0]); e.target.value = ""; }} />
+      <input ref={importRef} type="file" multiple accept={SI.IMPORT_ACCEPT} className="hidden" data-testid="shelf-import-file" onChange={(e) => { const fl = [...(e.target.files || [])]; e.target.value = ""; importFiles(fl, sheet && sheet.kind === "import" ? null : book ? book.id : null); }} />
+      {sheet && sheet.kind === "import" ? (
+        <Sheet title={tr("Import notes")} close={() => setSheet(null)} testid="shelf-import-sheet">
+          <p className="text-[12.5px] text-slate-400 mb-3">{tr("From the phone's Notebook app: open a note (or select several) → Share → Attune → “Save to Shelf”. Or pick exported files here: text, Word, PDF, web pages, Google Keep, Evernote, a .zip, or photos of notes.")}</p>
+          <label className="block text-[11.5px] text-slate-400 mb-1">{tr("Into the book")}</label>
+          <select value={impBook} onChange={(e) => setImpBook(e.target.value)} data-testid="shelf-import-book" className="w-full bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 px-2 py-2 mb-3">
+            <option value="">{tr("A new book: Imported notes")}</option>{shelf.books.map((b) => <option key={b.id} value={b.id}>{bookName(b)}</option>)}</select>
+          <button disabled={!!impBusy} onClick={() => importRef.current && importRef.current.click()} data-testid="shelf-import-pick" className="w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold flex items-center justify-center gap-2"><Download size={16} className="rotate-180" />{impBusy || tr("Pick files (several at once)")}</button>
+          <p className="text-[11.5px] text-slate-400 mt-4 mb-1">{tr("…or paste notes (separate them with a line of --- or two empty lines)")}</p>
+          <textarea value={impText} onChange={(e) => setImpText(e.target.value)} rows={6} dir="auto" data-testid="shelf-import-text" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 resize-none" />
+          <button onClick={importPasted} data-testid="shelf-import-paste" className="mt-2 w-full py-2.5 rounded-xl bg-slate-800 text-slate-100 text-sm">{tr("Add these notes")}</button>
+        </Sheet>) : null}
       {sheet && sheet.kind === "shelfmore" ? (
         <Sheet title={tr("Shelf")} close={() => setSheet(null)} testid="shelf-shelf-menu">
+          <button className={row} data-testid="shelf-import-open" onClick={() => { setImpBook(""); setSheet({ kind: "import" }); }}><Download size={18} className="rotate-180" />{tr("Import notes (Notebook, Keep, files…)")}</button>
           <button className={row} data-testid="shelf-reorder" onClick={() => { setSheet(null); setPref("bookSort", "manual"); setReorderOn(true); }}><ArrowUp size={18} />{tr("Reorder books")}</button>
           <div className={row}><span className="flex-1">{tr("Sort books")}</span>
             <select value={prefs.bookSort || "manual"} onChange={(e) => setPref("bookSort", e.target.value)} data-testid="shelf-book-sort" className="bg-slate-950 border border-slate-800 rounded-lg text-xs px-2 py-1">
