@@ -88,6 +88,13 @@ class MainActivity : AppCompatActivity() {
     private val askMicPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         bridge.lastVoiceSink?.let { voice.onPermission(granted, it) }
     }
+    // v6.12: Maps → "my location": the page asks (navigator.geolocation), Android asks the person once
+    private var geoPending: Pair<String, android.webkit.GeolocationPermissions.Callback>? = null
+    private val askLocation = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { res ->
+        val ok = res.values.any { it }
+        geoPending?.let { (origin, cb) -> cb.invoke(origin, ok, false) }
+        geoPending = null
+    }
 
     @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
     /**
@@ -162,6 +169,7 @@ class MainActivity : AppCompatActivity() {
             // The person's choice in More → Text size (the phone's own font
             // size setting is ignored: it made the app too big to fit).
             textZoom = getSharedPreferences("attune", MODE_PRIVATE).getInt("text_zoom", 100)
+            setGeolocationEnabled(true)   // v6.12: only used when Maps → "my location" is tapped
             allowFileAccess = false
             allowContentAccess = false
             // The page is https (appassets); the model server is http on
@@ -249,6 +257,16 @@ class MainActivity : AppCompatActivity() {
         // File pickers and the page's confirm() dialogs. Without a chrome
         // client both silently do nothing in a WebView.
         web.webChromeClient = object : WebChromeClient() {
+            override fun onGeolocationPermissionsShowPrompt(origin: String, callback: android.webkit.GeolocationPermissions.Callback) {
+                // only the app's own page may ask
+                if (!origin.contains("appassets.androidplatform.net")) { callback.invoke(origin, false, false); return }
+                val fine = this@MainActivity.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                val coarse = this@MainActivity.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                if (fine || coarse) { callback.invoke(origin, true, false); return }
+                geoPending = origin to callback
+                try { askLocation.launch(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION)) }
+                catch (e: Exception) { callback.invoke(origin, false, false); geoPending = null }
+            }
             override fun onShowFileChooser(
                 view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams,
             ): Boolean {

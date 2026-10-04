@@ -3127,4 +3127,12 @@ export const AR = {
   "Compare with rivals": "قارنه بالمنافسين",
   "Latest news": "آخر الأخبار",
   "Those results were off-topic — searching another way…": "النتايج دي مش عن الموضوع — بدوّر بطريقة تانية…",
+  "Nothing found for that — try the area's name too (e.g. “… New Cairo”), or move the map there and search again.": "مالقيتش حاجة — جرّب تكتب اسم المنطقة كمان (مثلاً «… التجمع الخامس»)، أو حرّك الخريطة هناك ودوّر تاني.",
+  "from the map's centre": "من نص الخريطة",
+  "saved place": "مكان محفوظ",
+  "Save this place": "احفظ المكان ده",
+  "My location": "مكاني",
+  "This phone can't share its location with the app.": "الموبايل ده مش بيدي مكانه للتطبيق.",
+  "Location is off for Attune — allow it in the phone's settings to see where you are.": "الموقع مقفول لـ Attune — اسمح بيه من إعدادات الموبايل عشان تشوف إنت فين.",
+  "Couldn't get your location — check that location is on.": "مقدرتش أعرف مكانك — اتأكد إن الموقع شغال.",
 };

@@ -39,6 +39,7 @@ import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
+import { findPlaces } from "./mapsearch.js";
 import { CVPage } from "./cv-ui.jsx";
 import * as USK from "./userskills.js";
 import { placeFor } from "./places.js";
@@ -6925,6 +6926,16 @@ function MapTab({ remember, flash, myLang }) {
     dragRef.current = null;
   };
   const zoomBy = (d) => setView((v) => ({ ...v, z: Math.max(2, Math.min(MAX_Z, Math.round(v.z) + d)) }));
+  // v6.12: where am I — the phone's location (Android asks once), shown as a blue dot; searches then rank places near it
+  const [me, setMe] = React.useState(null);
+  const [locating, setLocating] = React.useState(false);
+  const locateMe = () => {
+    if (!navigator.geolocation) { setErr(tr("This phone can't share its location with the app.")); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition((p) => { const pt = { lat: p.coords.latitude, lon: p.coords.longitude }; setMe(pt); setView((v) => ({ ...pt, z: Math.max(Math.round(v.z), 15) })); setLocating(false); },
+      (e) => { setLocating(false); setErr(e && e.code === 1 ? tr("Location is off for Attune — allow it in the phone's settings to see where you are.") : tr("Couldn't get your location — check that location is on.")); },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+  };
 
   const doSearch = async () => {
     const term = q.trim(); if (!term) return;
@@ -6938,9 +6949,14 @@ function MapTab({ remember, flash, myLang }) {
       setBusy(false); return;
     }
     try {
-      const r = await geocode(term, { lang: myLang === "Arabic" ? "ar" : "en", limit: 6 });
-      setHits(r);
-      if (!r.length) setErr(tr("Nothing found for that."));
+      // v6.12: Photon + Nominatim at once, near the map's centre first; simpler wordings and nearby named places
+      // when nothing comes back (mapsearch.js). "Address east compound" used to find nothing.
+      const inEgypt = view.lat > 21 && view.lat < 32 && view.lon > 24 && view.lon < 37;
+      const r0 = await findPlaces(term, { center: { lat: view.lat, lon: view.lon }, lang: myLang === "Arabic" || /[\u0600-\u06FF]/.test(term) ? "ar" : "en", area: inEgypt ? (Math.abs(view.lat - 30.05) < 0.5 && Math.abs(view.lon - 31.35) < 0.6 ? "Cairo" : "Egypt") : "",
+        fetchJson: async (u) => { const res = await fetch(u, { headers: { Accept: "application/json" } }); if (!res.ok) throw new Error("search " + res.status); return res.json(); } });
+      const r = r0.places, saved = searchSaved(st.places, term).map((p) => ({ ...p, local: true }));
+      setHits([...saved.slice(0, 3), ...r]);
+      if (!r.length && !saved.length) setErr(tr("Nothing found for that — try the area's name too (e.g. “… New Cairo”), or move the map there and search again."));
     } catch (e) {
       // navigator.onLine says "online" whenever there is ANY network
       // interface, which on a phone is most of the time even when nothing
@@ -7051,10 +7067,10 @@ function MapTab({ remember, flash, myLang }) {
           <div className="mt-2 space-y-1">
             {hits.map((r, i) => (
               <div key={i} className="flex items-center gap-2 text-xs bg-slate-950 border border-slate-800 rounded-lg p-2">
-                <button onClick={() => { setView({ lat: r.lat, lon: r.lon, z: Math.max(zNow, 15) }); setHits([]); }}
-                  className="flex-1 text-start text-slate-200 truncate">
-                  {tr(r.name)}
-                  {r.local ? <span className="text-teal-500/80 ms-1">{tr("· saved")}</span> : null}
+                <button onClick={() => { setView({ lat: r.lat, lon: r.lon, z: Math.max(zNow, 16) }); setHits([]); setSel(r.local ? r : { ...r, found: true }); }}
+                  className="flex-1 text-start text-slate-200 min-w-0" data-testid="map-hit">
+                  <span className="block truncate" dir="auto">{r.name}</span>
+                  <span className="block text-[10.5px] text-slate-500">{r.local ? tr("saved place") : [r.kind ? r.kind.split("/").pop().replace(/_/g, " ") : "", r.dist != null ? (r.dist < 1 ? Math.round(r.dist * 1000) + " m" : r.dist < 100 ? r.dist.toFixed(1) + " km" : Math.round(r.dist) + " km") + " " + tr("from the map's centre") : ""].filter(Boolean).join(" · ")}</span>
                 </button>
                 {!r.local ? (
                   <button onClick={() => savePlace(r)} className="text-teal-400 shrink-0">save</button>
@@ -7093,6 +7109,9 @@ function MapTab({ remember, flash, myLang }) {
             );
           })}
 
+          {sel && sel.found ? (() => { const pos = pinPos(sel); return (   /* v6.12: the search result you picked is marked */
+            <div className="absolute -translate-x-1/2 -translate-y-full pointer-events-none text-2xl leading-none drop-shadow" style={{ left: pos.left, top: pos.top }} data-testid="map-found-pin">📌</div>); })() : null}
+
           {/* the centre crosshair, so "save this spot" means something exact */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
             <div className="w-5 h-5 rounded-full border-2 border-teal-400/80" />
@@ -7101,7 +7120,9 @@ function MapTab({ remember, flash, myLang }) {
           <div className="absolute top-2 end-2 flex flex-col gap-1">
             <button onClick={() => zoomBy(1)} className="w-9 h-9 rounded-lg bg-slate-950/90 border border-slate-700 text-slate-200 text-lg leading-none">+</button>
             <button onClick={() => zoomBy(-1)} className="w-9 h-9 rounded-lg bg-slate-950/90 border border-slate-700 text-slate-200 text-lg leading-none">−</button>
+            <button onClick={locateMe} aria-label={tr("My location")} data-testid="map-locate" className="w-9 h-9 rounded-lg bg-slate-950/90 border border-slate-700 text-slate-200 text-base leading-none">{locating ? "…" : "◎"}</button>
           </div>
+          {me ? (() => { const pos = pinPos(me); return <div className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none w-4 h-4 rounded-full bg-sky-500 border-2 border-white shadow" style={{ left: pos.left, top: pos.top }} data-testid="map-me" />; })() : null}
 
           <div className="absolute bottom-1 start-2 text-[10px] text-slate-400 bg-slate-950/80 px-1.5 py-0.5 rounded">
             {TILE_ATTRIB}
@@ -7149,8 +7170,10 @@ function MapTab({ remember, flash, myLang }) {
                 carry and should not claim to. */}
             <a href={`geo:${sel.lat},${sel.lon}?q=${sel.lat},${sel.lon}`}
               className="text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300">{tr("Open in your maps app")}</a>
-            <button onClick={async () => { if (!(await askConfirm("Delete this place?"))) return; setSt((s) => ({ ...s, places: s.places.filter((x) => x.id !== sel.id) })); setSel(null); }}
-              className="text-[11px] px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-amber-400">{tr("Remove")}</button>
+            {sel.found ? <button onClick={() => { savePlace(sel); setSel(null); }} data-testid="map-save-found"
+              className="text-[11px] px-2.5 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold">{tr("Save this place")}</button>
+            : <button onClick={async () => { if (!(await askConfirm("Delete this place?"))) return; setSt((s) => ({ ...s, places: s.places.filter((x) => x.id !== sel.id) })); setSel(null); }}
+              className="text-[11px] px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-amber-400">{tr("Remove")}</button>}
           </div>
         </div>
       ) : null}
