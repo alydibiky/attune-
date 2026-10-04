@@ -181,11 +181,12 @@ with sync_playwright() as pw:
     check(page.locator("[data-testid=studio-why-turbo]").count() == 1 and "Studio Turbo" in page.locator("[data-testid=studio-install]").inner_text(),
           "without a working graphics chip, Studio explains Pro would take 10–20 min and offers Turbo")
     page.evaluate("window.__mock.imgCalls = []")
+    page.click("[data-testid=studio-use-turbo]")          # v6.12: a 12 GB phone is offered Turbo+ first; this test is about the Turbo pack
     page.click("[data-testid=studio-install-go]")
     page.wait_for_selector("[data-testid=studio-install]", state="detached", timeout=5000)
     a = page.evaluate("window.__mock.imgCalls[0][1]")
     check(a["id"] == "turbo" and a["files"][0]["role"] == "model" and len(a["files"][0]["urls"]) >= 2 and a["files"][0]["approx"] > 2e9,
-          "Turbo is one file, with backup links in case one is gone")
+          "Turbo is one file, with backup links in case one is gone: " + str([a["id"], [(f["role"], len(f.get("urls", [])), f.get("approx")) for f in a["files"]]]))
     page.fill("[data-testid=studio-idea]", "a beachfront mansion with mountains behind")
     page.click("[data-testid=studio-size-square]")
     if not page.is_checked("[data-testid=studio-hd]"): page.check("[data-testid=studio-hd]")   # v5.34: highest resolution
