@@ -8768,6 +8768,7 @@ export default function App() {
     photoToMoney: (url) => { setPendingPay({ image: url, id: Date.now() }); setMode("money"); },
     openFit: (text) => { setFitIn(text); setMode("fit"); },
     openPdfChat: (file) => { setPdfIn(file); setMode("pdfchat"); },
+    pdfText: NATIVE ? (b64) => nativeCall("pdfText", { b64 }) : null,   // v6.12: several PDFs read inside the chat
     openSlides: (prompt, tab) => { forgetSticky("slides:"); setSlidesIn({ prompt, tab, id: Date.now() }); setMode("slides"); },   // a new request starts a fresh form
     listen: async (langTag, onPartial) => {
       const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); });

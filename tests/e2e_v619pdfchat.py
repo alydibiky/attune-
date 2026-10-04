@@ -105,8 +105,10 @@ with sync_playwright() as p:
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(300)
     page.locator("nav button").first.click(); page.wait_for_timeout(400)
     page.set_input_files("[data-testid=attach-file]", files=[{"name": "second.pdf", "mimeType": "application/pdf", "buffer": b"%PDF-1.4 other"}])
+    page.wait_for_selector("[data-testid=attached-read]", timeout=8000)   # v6.12: it stays in the chat; "Read" opens it in Ask a PDF
+    page.locator("[data-testid=attached-read]").click()
     page.wait_for_selector("[data-testid=pdfchat]", timeout=8000)
-    check("second.pdf" in page.locator("[data-testid=pdf-name]").inner_text(), "a PDF attached in Chat opens in Ask a PDF")
+    check("second.pdf" in page.locator("[data-testid=pdf-name]").inner_text(), "a PDF attached in Chat opens in Ask a PDF (its Read button)")
     check(real_errors(errors) == [], "no errors: %s" % real_errors(errors)[:3])
     ctx.close(); br.close()
 env.close()

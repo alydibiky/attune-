@@ -6,6 +6,8 @@
 // needed. Everything else goes to the model with the whole conversation, and
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
+import * as MD from "./multidoc.js";
+import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import { wantsDoc } from "./slides.js";
 import { detectLang, replyLanguageRule, voiceTag, deviceLang } from "./langs.js";
@@ -48,7 +50,7 @@ export function loadChats() {
 // big, and one failed save used to silently keep nothing. Now a save that
 // doesn't fit first shrinks what is expendable (photos in older chats, then
 // in all chats, then the oldest chats), so the text of recent chats is always kept.
-const noPhotos = (c) => ({ ...c, messages: (c.messages || []).map((m) => (m.image ? { ...m, image: null, hadImage: true } : m)) });
+const noPhotos = (c) => ({ ...c, messages: (c.messages || []).map((m) => (m.image || m.images ? { ...m, image: null, images: undefined, hadImage: true } : m)) });
 const clean = (c) => ({ ...c, messages: (c.messages || []).map((m) => (m.streaming ? { ...m, streaming: false, phase: "", text: m.text ? m.text + (m.text.endsWith("(stopped)") ? "" : " …(stopped)") : m.text } : m)) });
 function saveChats(list) {
   const base = list.slice(0, MAX_CHATS).map(clean);
@@ -357,8 +359,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const [activeId, setActiveId] = useState(() => { const c = loadChats(); return c[0] && (Date.now() - (c[0].updated || 0) < 6 * 3600e3) ? c[0].id : null; });
   const [confirmDel, setConfirmDel] = useState(null);   // chat id waiting for "Delete?" (v5.28)
   const [text, setText] = useState("");
-  const [image, setImage] = useState(null);
-  const [attached, setAttached] = useState(null);     // { name, b64, size, text? } — a spreadsheet or document
+  // v6.12: several photos and files in one message (Ali: "attach more than 1 pdf or file or photo")
+  const [photos, setPhotos] = useState([]);           // [{ data, media, url }]
+  const [files, setFiles] = useState([]);             // [{ name, b64, size, text? }] — spreadsheets and documents
+  const image = photos[0] || null;
+  const setImage = (v) => setPhotos(v ? [v] : []);
+  const attached = files[0] || null;
+  const setAttached = (v) => setFiles(v ? [v] : []);
   const [teaching, setTeaching] = useState(null);     // { id, corrected, note } — 👎 → the right answer
   // 👎 → a correction is checked before it is learned: people can be wrong too.
   const saveTeach = (m, idx, corrected, note, checked) => {
@@ -566,9 +573,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const ask = async (raw, opts) => {
     const o = opts || {};
     const typed = String(raw != null ? raw : text).trim();
-    const fileAtt = o.file !== undefined ? o.file : attached;
+    const fileList = o.file !== undefined ? (o.file ? [o.file] : []) : files;
+    let fileAtt = fileList.length > 1 ? { name: tr("{n} files", { n: fileList.length }), many: fileList, size: 0 } : (fileList[0] || null);
     const route = !o.noRoute && !fileAtt;
-    const img = o.image !== undefined ? o.image : image;
+    const photoList = o.image !== undefined ? (o.image ? [o.image] : []) : photos;
+    let img = photoList[0] || null;
     if (!typed && !img && !fileAtt) return;
     if (busy && raw == null && !img && !fileAtt && !o.now) {
       setQueued((q) => [...q, { id: newId(), text: typed }]);
@@ -662,7 +671,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const withPic = recent.reverse().find((m) => m.image);
       if (withPic && /^data:/.test(withPic.image)) carried = { url: withPic.image, media: (withPic.image.match(/^data:([^;]+)/) || [])[1] || "image/jpeg", data: withPic.image.split(",")[1] };
     }
-    const userMsg = o.reuseUser || { id: newId(), role: "user", text: typed || (fileAtt ? tr("What's in this file? Summarise what matters.") : ""), image: img ? img.url : null, file: fileAtt ? fileAtt.name : null };
+    // several photos → one numbered picture for the model (each engine takes one picture per message)
+    if (photoList.length > 1) { try { const url = await MD.collage(photoList.map((p) => p.url)); img = { data: url.split(",")[1], media: "image/jpeg", url, n: photoList.length }; } catch (e) {} }
+    const userMsg = o.reuseUser || { id: newId(), role: "user", text: typed || (fileAtt ? tr(fileList.length > 1 ? "What's in these files? Summarise what matters in each." : "What's in this file? Summarise what matters.") : ""), image: img ? img.url : null, ...(photoList.length > 1 ? { images: photoList.map((p) => p.url) } : {}), file: fileAtt ? fileList.map((f) => f.name).join(", ") : null };
     const aiId = newId();
     const run = ++runRef.current;
     const t0 = Date.now();
@@ -676,7 +687,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       return base.map((c) => (c.id === cid ? { ...c, updated: Date.now(),
         messages: [...history, userMsg, { id: aiId, role: "assistant", text: "", thinking: "", streaming: true, phase: api.webOn ? "Searching the web…" : "Reading…" }] } : c));
     });
-    setText(""); setImage(null); setAttached(null); setBusy(true); stickRef.current = true;
+    setText(""); setPhotos([]); setFiles([]); setBusy(true); stickRef.current = true;
 
     let raf = 0, pend = null;
     const flush = () => { raf = 0; if (!pend || runRef.current !== run) return; const p = pend; pend = null;
@@ -848,6 +859,27 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       let answer, extra = {};
       if (research) extra.research = research;
       const q = typed || userMsg.text;
+      // v6.12: documents (one or several) are read into pages here; the text goes the usual way below (whole, or read in parts)
+      const docList = fileAtt ? (fileAtt.many || [fileAtt]) : [];
+      if (docList.length && (docList.length > 1 || (MD.isDoc(fileAtt.name) && fileAtt.text == null))) {
+        const sheets = docList.filter((f) => MD.isSheet(f.name) && !/\.(csv|tsv)$/i.test(f.name));
+        if (sheets.length && docList.length === 1) { /* a lone spreadsheet: the program path below */ }
+        else {
+          onStatus(tr("Reading {n} file(s)…", { n: docList.length }));
+          const docs = [], skipped = [];
+          for (const f of docList) {
+            if (MD.isSheet(f.name) && !/\.(csv|tsv)$/i.test(f.name)) { skipped.push(f.name); continue; }
+            try { docs.push({ name: f.name, pages: await MD.readPages(f, { pdfText: api.pdfText, C: CV }) }); }
+            catch (e) { skipped.push(f.name); }
+            if (runRef.current !== run) return;
+          }
+          if (skipped.length) extra.fileNote = tr("Not read here: {f} (attach a spreadsheet on its own to calculate on it)", { f: skipped.join(", ") });
+          const ctxChars = Math.floor(fitChars((api.contextTokens && api.contextTokens()) || 8192, 900, 600, "") * 0.8);
+          const cx = MD.docsContext(docs, q, Math.max(3000, ctxChars));
+          fileAtt = { name: docs.map((d) => d.name).join(", ") || fileAtt.name, text: cx.text, size: cx.text.length };
+          if (!docs.length) answer = tr("I couldn't read these files on the phone.");
+        }
+      }
       // A spreadsheet/CSV: answered by a program the phone runs on the file.
       // A text document: its text goes to the model with the question.
       if (fileAtt && api.analyzeFile && !/\.(txt|md|json)$/i.test(fileAtt.name)) {
@@ -900,6 +932,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         if (c == null) return;
         content = c; longMsg = true; extra.readInParts = true;
       }
+      if (img && img.n > 1) content += MD.photosNote(img.n);   // v6.12: several photos in one picture, numbered
       // Corrections the user taught before, on questions like this one.
       const shots = !fileAtt && api.learnFor ? api.learnFor(q) : null;
       if (shots && shots.n) { content = shots.block + "\n\nREQUEST:\n" + content; extra.learnedUsed = shots.n; }
@@ -1309,10 +1342,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   };
   // A spreadsheet or document: kept as bytes for the Python sandbox (and as
   // text too for a plain document).
+  const pickFiles = (list) => { const a = [...(list || [])]; const room = MD.MAX_FILES - files.length; if (a.length > room) api.flash(tr("Up to {n} files in one message", { n: MD.MAX_FILES })); a.slice(0, Math.max(0, room)).forEach(pickFile); };
   const pickFile = (file) => {
     if (!file) return;
-    // v6.18: a document to read (PDF, Word, PowerPoint, e-book, web page) opens in Ask a PDF — reader + chat with page citations
-    if (api.openPdfChat && /\.(pdf|docx|pptx|odt|epub|html?|rtf)$/i.test(file.name)) return api.openPdfChat(file);
+    // v6.12: documents stay in the chat (several can be attached); each chip has "Read" to open it in Ask a PDF
     if (file.size > 15 * 1024 * 1024) return api.flash(tr("That file is too large (15 MB at most)"));
     const r = new FileReader();
     r.onload = () => {
@@ -1320,13 +1353,16 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
       const att = { name: file.name, size: file.size, b64: btoa(bin) };
       if (/\.(txt|md|json|csv|tsv)$/i.test(file.name)) { try { att.text = new TextDecoder("utf-8").decode(bytes); } catch (e) {} }
-      setAttached(att);
+      att.file = file;
+      setFiles((fs) => (fs.length >= MD.MAX_FILES || fs.some((x) => x.name === att.name && x.size === att.size) ? fs : [...fs, att]));
     };
     r.readAsArrayBuffer(file);
   };
   // A photo is shrunk to at most 1280 px before it is used: the model sees
   // the same detail (it reads photos at about this size anyway), it reaches
   // the model faster, and a chat full of photos doesn't fill the phone's storage.
+  const addPhoto = (p) => setPhotos((ps) => (ps.length >= MD.MAX_PHOTOS ? ps : [...ps, p]));
+  const pickImages = (list) => { const a = [...(list || [])]; const room = MD.MAX_PHOTOS - photos.length; if (a.length > room) api.flash(tr("Up to {n} photos in one message", { n: MD.MAX_PHOTOS })); a.slice(0, Math.max(0, room)).forEach(pickImage); };
   const pickImage = (file) => {
     if (!file) return;
     if (file.size > 25 * 1024 * 1024) return api.flash(tr("That photo is too large"));
@@ -1339,9 +1375,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const c = document.createElement("canvas"); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
         c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
         const url = c.toDataURL("image/jpeg", 0.88);
-        setImage({ data: url.split(",")[1], media: "image/jpeg", url });
+        addPhoto({ data: url.split(",")[1], media: "image/jpeg", url });
       };
-      im.onerror = () => setImage({ data: src.split(",")[1], media: file.type || "image/jpeg", url: src });
+      im.onerror = () => addPhoto({ data: src.split(",")[1], media: file.type || "image/jpeg", url: src });
       im.src = src;
     };
     r.readAsDataURL(file);
@@ -1455,7 +1491,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       <div className="space-y-4 pt-2">
         {messages.map((m, idx) => m.role === "user" ? (
           <div key={m.id} className="att-msg flex flex-col items-end">
-            {m.image ? <img src={m.image} alt="" className="max-w-[70%] max-h-56 rounded-2xl mb-1.5 border border-slate-800 object-cover" /> : null}
+            {m.images && m.images.length > 1 ? <div className="flex flex-wrap justify-end gap-1.5 mb-1.5 max-w-[80%]">{m.images.map((u, i) => <img key={i} src={u} alt="" className="h-24 rounded-xl border border-slate-800 object-cover" />)}</div>
+              : m.image ? <img src={m.image} alt="" className="max-w-[70%] max-h-56 rounded-2xl mb-1.5 border border-slate-800 object-cover" /> : null}
             {!m.image && m.hadImage ? <span className="mb-1.5 text-[11px] text-slate-500 px-2 py-1 rounded-lg border border-slate-800">🖼 {tr("photo (removed to save space)")}</span> : null}
             {m.file ? <span className="mb-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[12px] text-slate-200"><FileText size={13} className="text-teal-300" />{m.file}</span> : null}
             {m.text ? <div dir="auto" className="max-w-[85%] bg-teal-600/25 border border-teal-800/60 text-slate-100 rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[15px] whitespace-pre-wrap leading-relaxed">{m.text}</div> : null}
@@ -1709,16 +1746,24 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       <div ref={composerRef} className={`fixed start-0 end-0 ${typing ? "z-[60]" : "z-40"} px-3 pb-2 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent`} data-testid="composer"
         style={{ bottom: typing ? "env(safe-area-inset-bottom)" : "calc(58px + env(safe-area-inset-bottom))" }}>
         <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-xl">
-          {attached ? (
-            <div className="inline-flex items-center gap-1.5 mb-2 ms-1 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-[12px] text-slate-200" data-testid="attached">
-              <FileText size={13} className="text-teal-300" /><span className="max-w-[200px] truncate">{attached.name}</span>
-              <button onClick={() => setAttached(null)} className="text-slate-400"><X size={12} /></button>
+          {files.length ? (
+            <div className="flex flex-wrap gap-1.5 mb-2 ms-1">
+              {files.map((f, i) => (
+                <div key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-[12px] text-slate-200" data-testid="attached">
+                  <FileText size={13} className="text-teal-300" /><span className="max-w-[160px] truncate">{f.name}</span>
+                  {api.openPdfChat && f.file && /\.(pdf|docx|pptx|odt|epub|html?|rtf)$/i.test(f.name) ? <button onClick={() => { const ff = f.file; setFiles((x) => x.filter((_, j) => j !== i)); api.openPdfChat(ff); }} className="text-teal-300 underline" data-testid="attached-read">{tr("Read")}</button> : null}
+                  <button onClick={() => setFiles((x) => x.filter((_, j) => j !== i))} className="text-slate-400" aria-label={tr("Remove")}><X size={12} /></button>
+                </div>))}
             </div>
           ) : null}
-          {image ? (
-            <div className="relative inline-block mb-2 ms-1">
-              <img src={image.url} alt="" className="h-16 rounded-lg border border-slate-700" />
-              <button onClick={() => setImage(null)} className="absolute -top-2 -end-2 bg-slate-800 border border-slate-600 rounded-full p-0.5 text-slate-200"><X size={13} /></button>
+          {photos.length ? (
+            <div className="flex flex-wrap gap-2 mb-2 ms-1" data-testid="attached-photos">
+              {photos.map((p, i) => (
+                <div key={i} className="relative inline-block">
+                  <img src={p.url} alt="" className="h-16 rounded-lg border border-slate-700" />
+                  {photos.length > 1 ? <span className="absolute bottom-0.5 start-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{i + 1}</span> : null}
+                  <button onClick={() => setPhotos((x) => x.filter((_, j) => j !== i))} className="absolute -top-2 -end-2 bg-slate-800 border border-slate-600 rounded-full p-0.5 text-slate-200"><X size={13} /></button>
+                </div>))}
             </div>
           ) : null}
           <textarea ref={taRef} value={text} onChange={(e) => setText(e.target.value)} rows={1} dir="auto" data-testid="chat-input"
@@ -1736,11 +1781,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           <div className="flex items-center gap-1">
             <label className="p-2 rounded-full text-slate-400 active:bg-slate-800" title={tr("Photo")}>
               <ImagePlus size={19} />
-              <input type="file" accept="image/*" className="hidden" onChange={(e) => { pickImage(e.target.files && e.target.files[0]); e.target.value = ""; }} />
+              <input type="file" accept="image/*" multiple className="hidden" data-testid="attach-photo" onChange={(e) => { pickImages(e.target.files); e.target.value = ""; }} />
             </label>
             <label className="p-2 rounded-full text-slate-400 active:bg-slate-800" title={tr("Spreadsheet or document")}>
               <Paperclip size={18} />
-              <input type="file" accept=".csv,.tsv,.xlsx,.xlsm,.xls,.json,.txt,.md,.pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf" className="hidden" data-testid="attach-file" onChange={(e) => { pickFile(e.target.files && e.target.files[0]); e.target.value = ""; }} />
+              <input type="file" accept=".csv,.tsv,.xlsx,.xlsm,.xls,.json,.txt,.md,.pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf" multiple className="hidden" data-testid="attach-file" onChange={(e) => { pickFiles(e.target.files); e.target.value = ""; }} />
             </label>
             <button onClick={() => setThink((v) => !v)} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${think ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Think first")}>
               <Brain size={14} /> {tr("Think")}</button>
@@ -1752,7 +1797,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
             {busy ? (
               <button onClick={stop} className="w-10 h-10 rounded-full bg-slate-100 text-slate-950 flex items-center justify-center" title={tr("Stop")}><Square size={15} /></button>
-            ) : text.trim() || image ? (
+            ) : text.trim() || image || files.length ? (
               <button onClick={() => ask()} className="w-10 h-10 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center" title={tr("Send")}><Send size={17} /></button>
             ) : (
               <button onClick={voice} className={`w-10 h-10 rounded-full flex items-center justify-center ${listening ? "bg-rose-500 text-white animate-pulse" : "bg-slate-800 text-slate-200"}`} title={tr("Speak")}><Mic size={18} /></button>

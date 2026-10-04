@@ -3102,4 +3102,11 @@ export const AR = {
   "The model took too long on this question — try a shorter one, or a faster model in Engine.": "النموذج أخد وقت طويل في السؤال ده — جرّب سؤال أقصر، أو نموذج أسرع من المحرك.",
   "Reading your CV… the AI is sorting it into sections": "بقرا سيرتك… الذكاء الاصطناعي بيرتّبها في أقسام",
   "Imported — check each section and fix anything": "اتستوردت — راجع كل قسم وصلّح أي حاجة",
+  "Reading {n} file(s)…": "بقرا {n} ملف…",
+  "{n} files": "{n} ملفات",
+  "Up to {n} files in one message": "لحد {n} ملفات في الرسالة الواحدة",
+  "Up to {n} photos in one message": "لحد {n} صور في الرسالة الواحدة",
+  "Not read here: {f} (attach a spreadsheet on its own to calculate on it)": "ماتقراش هنا: {f} (ابعت الشيت لوحده عشان أحسب عليه)",
+  "I couldn"t read these files on the phone.": "مقدرتش أقرا الملفات دي على الموبايل.",
+  "What"s in these files? Summarise what matters in each.": "إيه اللي في الملفات دي؟ لخّص المهم في كل واحد.",
 };
