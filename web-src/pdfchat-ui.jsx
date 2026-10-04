@@ -40,7 +40,7 @@ function Msg({ m, onPage }) {
   );
 }
 
-export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos, nativeCall, initialFile, clearInitial }) {
+export function PdfChatPage({ flash, addToKnowledge, llm, modelReady, openEngine, canReadPhotos, nativeCall, initialFile, clearInitial }) {
   const [doc, setDoc] = useState(null);                 // { name, kind, pages, index, count, b64?, scans }
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
@@ -188,6 +188,8 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
       <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-800">
         <button onClick={() => { run.current++; setDoc(null); setMsgs([]); setTab("chat"); }} className="p-1.5 -ms-1 text-slate-300" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
         <div className="min-w-0 flex-1"><p className="text-[14px] font-semibold text-white truncate" data-testid="pdf-name">{doc.name}</p><p className="text-[11.5px] text-slate-500">{doc.count} {tr("pages")}{doc.scans ? " · " + tr("{n} scanned", { n: doc.scans }) : ""}</p></div>
+        {addToKnowledge ? <button onClick={async () => { if (doc.inKnowledge) return; try { const r = await addToKnowledge({ kind: "doc", title: doc.name, pages: doc.index.pages }); setDoc((d) => ({ ...d, inKnowledge: true })); flash && flash(tr("Added to Knowledge: {n} passages", { n: r.chunks })); } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 160)); } }}
+          data-testid="pdf-add-knowledge" className="px-2 py-1.5 rounded-lg border border-slate-700 text-[12px] text-slate-200 disabled:opacity-50" disabled={!!doc.inKnowledge}>{doc.inKnowledge ? tr("In Knowledge") : tr("Add to Knowledge")}</button> : null}
         <div className="flex rounded-lg border border-slate-700 overflow-hidden">{[["chat", tr("Chat")], ["read", tr("Read")]].map(([k, l]) => <button key={k} onClick={() => setTab(k)} data-testid={"pdf-tab-" + k} className={"px-3 py-1.5 text-[12.5px] " + (tab === k ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-300")}>{l}</button>)}</div>
       </div>
       {tab === "chat" ? (
