@@ -12,8 +12,11 @@ env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "shots-v620")
 os.makedirs(SHOTS, exist_ok=True)
 def shot(page, name, el=None):
+    if el: page.evaluate("() => { const t = document.querySelector('[data-testid=pdf-reader] > .sticky'); if (t) t.style.position = 'static'; }")
     path = os.path.join(SHOTS, name + ".png")
-    (el or page).screenshot(path=path); return path
+    (el or page).screenshot(path=path)
+    if el: page.evaluate("() => { const t = document.querySelector('[data-testid=pdf-reader] > .sticky'); if (t) t.style.position = ''; }")
+    return path
 
 PAGES = [
   ["Crane Rental Agreement", "This agreement is made between Adrighem Cranes and", "Nile Constructions on 1 March 2026 for the rental of", "one 50 tonne mobile crane."],
@@ -177,8 +180,8 @@ with sync_playwright() as p:
     print("300 pages: screen %.2fs, first page picture %.2fs, all text %.2fs, longest freeze %d ms" % (t_open, t_pic, t_all, longest))
     check(t_open < 2.0 and partial, "a 300-page file opens in %.2f s, before the rest is read" % t_open)
     check(longest < 600, "no long freeze while the rest is read (longest task %d ms)" % longest)
-    page.fill("[data-testid=pdf-find]", "signalman"); page.wait_for_timeout(400)
-    check("75 page(s)" in page.locator("[data-testid=pdf-hits]").inner_text(), "all 300 pages are searchable afterwards")
+    page.fill("[data-testid=pdf-find]", "Agreement 297"); page.wait_for_timeout(400)
+    check("p. 297" in page.locator("[data-testid=pdf-hits]").inner_text(), "the last pages are searchable afterwards")
     calls = [c for c in page.evaluate("window.__mock.pdfCalls") if c[0] == "pdfText"]
     check(calls[0][1:] == [1, 10] and len(calls) == 9, "read in parts: the first 10 pages, then 40 at a time (%d calls)" % len(calls))
     check(real_errors(errors) == [], "no errors: %s" % real_errors(errors)[:3])

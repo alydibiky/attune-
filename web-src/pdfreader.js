@@ -73,7 +73,7 @@ export function sentencesOf(ordered) {
   ordered.forEach((w, k) => {
     const nx = ordered[k + 1];
     cur.push(w);
-    if (/[.!?؟۔:]$/.test(w.t) || (nx && nx.line !== w.line && nx.y - (w.y + w.h) > w.h * 0.9)) flush();   // a full stop, or a paragraph gap
+    if (/[.!?؟۔:]$/.test(w.t) || (nx && nx.line !== w.line && nx.y - (w.y + w.h) > w.h * 1.3)) flush();   // a full stop, or a paragraph gap
     else if (cur.length >= 45) flush();
   });
   flush();

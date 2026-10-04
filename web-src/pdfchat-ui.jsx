@@ -312,7 +312,7 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
     return e ? e.rects : [];
   }, [words, evid, page]);
   // scroll the evidence into view
-  useEffect(() => { if (evidRects.length && sheet.current && scroller.current) { const r = evidRects[0]; const el = sheet.current; try { scroller.current.scrollTop = Math.max(0, el.offsetTop + r.y * el.clientHeight - 120); } catch (e) {} } }, [evidRects]);
+  useEffect(() => { if (evidRects.length && sheet.current && scroller.current) { const r = evidRects[0]; const sc = scroller.current; try { const b = sheet.current.getBoundingClientRect(), o = sc.getBoundingClientRect(); sc.scrollTop = Math.max(0, sc.scrollTop + b.top + r.y * b.height - o.top - sc.clientHeight * 0.45); } catch (e) {} } }, [evidRects]);
   // the small pictures strip
   useEffect(() => {
     if (!isPdf || panel !== "thumbs") return;
