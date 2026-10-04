@@ -149,9 +149,11 @@ function detectDevice(overrideGB) {
     try {
       const n = JSON.parse(window.AttuneNative.info());
       if (n && n.ramGB) {
-        return { platform: "mobile", ram: n.ramGB, ramMin: n.ramGB, ramMax: n.ramGB,
+        // Desktop shell (desktop/): the same bridge, a computer's thresholds (needRam, not phoneMin).
+        const desk = n.platform === "desktop";
+        return { platform: desk ? "desktop" : "mobile", ram: n.ramGB, ramMin: n.ramGB, ramMax: n.ramGB,
                  cores: n.cores || cores, bigCores: n.bigCores, reportedRam: reported,
-                 source: "this phone", confidence: "exact", known: true, native: n };
+                 source: desk ? "this computer" : "this phone", confidence: "exact", known: true, native: n };
       }
     } catch (e) { /* fall through to the browser estimate */ }
   }
@@ -945,7 +947,7 @@ const QUANT_FLOOR_NOTE =
 function tierFits(t, dev) {
   if (!dev) return false;
   // The fast engine lives inside the Android app; a browser can't run it.
-  if (t.engine === "litert" && !NATIVE) return false;
+  if (t.engine === "litert" && (!NATIVE || NATIVE.desktop)) return false;
   const floor = dev.platform === "desktop" ? t.needRam : (t.phoneMin || t.needRam);
   return dev.ram >= floor;
 }
