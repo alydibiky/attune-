@@ -147,10 +147,10 @@ export function SkillsPage({ flash, llm, modelReady, openEngine, share, saveFile
           <p className="text-[13px] text-slate-400">{tr("Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill adds instructions, facts and a checklist to your question; a small program inside it (only if you keep one) runs offline in a locked box.")}</p>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-2">
-        <button className={primary + " flex items-center justify-center gap-1.5 py-2.5"} onClick={() => setSheet({ kind: "edit" })} data-testid="skill-new"><Plus size={14} />{tr("New")}</button>
-        <button className={ghost + " flex items-center justify-center gap-1.5 py-2.5"} onClick={() => setSheet("catalogue")} data-testid="skill-open-catalogue"><Package size={14} />{tr("Catalogue")}</button>
-        <button className={ghost + " flex items-center justify-center gap-1.5 py-2.5"} onClick={() => setSheet("import")} data-testid="skill-open-import"><Download size={14} />{tr("Import")}</button>
+      <div className="flex gap-2">
+        <button className={primary + " flex-1 min-w-0 whitespace-nowrap flex items-center justify-center gap-1.5 py-2.5 px-2"} onClick={() => setSheet({ kind: "edit" })} data-testid="skill-new"><Plus size={14} />{tr("New")}</button>
+        <button className={ghost + " flex-[1.4] min-w-0 whitespace-nowrap flex items-center justify-center gap-1.5 py-2.5 px-2"} onClick={() => setSheet("catalogue")} data-testid="skill-open-catalogue"><Package size={14} />{tr("Catalogue")}</button>
+        <button className={ghost + " flex-1 min-w-0 whitespace-nowrap flex items-center justify-center gap-1.5 py-2.5 px-2"} onClick={() => setSheet("import")} data-testid="skill-open-import"><Download size={14} />{tr("Import")}</button>
       </div>
       {!list.length ? (
         <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center">

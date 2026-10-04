@@ -74,8 +74,9 @@ t.cell(0,0).text='Crane'; t.cell(0,1).text='EGP/day'; t.cell(1,0).text='50 t'; t
 p.save('${dir}/deck.pptx')
 "`);
   const deck = await C.pptxToBlocks(readFileSync(dir + "/deck.pptx"));
-  eq(deck, [{ type: "h2", text: "1. Fleet review" }, { type: "p", text: "Q3 2026" }, { type: "h2", text: "2. Cranes" }, { type: "li", text: "LTM 1100 – 100 t" }, { type: "li", text: "ونش ٥٠ طن" }, { type: "p", text: "Notes: Mention the service dates" }, { type: "h2", text: "3. Prices" }, { type: "table", rows: [["Crane", "EGP/day"], ["50 t", "18,000"]] }],
+  eq(deck.map(({ slide, ...b }) => b), [{ type: "h2", text: "1. Fleet review" }, { type: "p", text: "Q3 2026" }, { type: "h2", text: "2. Cranes" }, { type: "li", text: "LTM 1100 – 100 t" }, { type: "li", text: "ونش ٥٠ طن" }, { type: "p", text: "Notes: Mention the service dates" }, { type: "h2", text: "3. Prices" }, { type: "table", rows: [["Crane", "EGP/day"], ["50 t", "18,000"]] }],
     "a real PowerPoint: a heading per slide, subtitle, bullets (Arabic), speaker notes and a table");
+  eq(deck.map((b) => b.slide).join(""), "11222233", "v6.12: every block knows its slide (Ask a PDF shows one page per slide)");
   writeFileSync(dir + "/ours.odt", C.odtFromBlocks(blocks));
   execSync(`cd ${dir} && rm -rf x && mkdir x && cd x && unzip -q ../ours.odt && python3 -c "import xml.dom.minidom as m; [m.parse(f) for f in ['content.xml','META-INF/manifest.xml']]"`);
   eq(true, true, "our .odt XML is well-formed");

@@ -330,16 +330,25 @@ export function CVPage({ flash, llm, modelReady, openEngine, share, saveFile, na
     if (/\.pdf$/.test(n) && nativeCall) { const b64 = await new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] || ""); r.onerror = bad; r.readAsDataURL(f); }); const r = await nativeCall("pdfText", { b64 }); return r.pages.map((p) => p.text).join("\n\n"); }
     throw new Error(tr("Pick a PDF, Word or text file, or paste the text"));
   };
+  const [note, setNote] = useState("");
   const doImport = async () => {
-    if (text.trim().length < 40) return flash(tr("Paste your CV text first"));
-    setBusy(true);
+    if (text.trim().length < 40) { setNote(tr("Paste your CV text first")); return; }
+    setBusy(true); setNote("");
     try {
       const lang = /[؀-ۿ]/.test(text.slice(0, 400)) ? "ar" : "en";
-      let c = V.newCV(lang, tr("Imported CV"));
-      if (modelReady) c = A.applyImport(c, await llm(A.importMessages(text), { json: true, maxTokens: 1800, temperature: 0.1 }), text);
-      else { const ex = A.extractContact(text); c.basics = { ...c.basics, ...ex }; c.sections[0].items = [{ text: text.slice(0, 600) }]; flash(tr("No model is loaded: only your contact details were read. Load a model to structure the rest.")); }
-      setList([c, ...list]); setSheet(null); setText(""); setOpenId(c.id);
-    } catch (e) { flash(String((e && e.message) || e).slice(0, 140)); } finally { setBusy(false); }
+      const codeJ = A.parseCVText(text);   // always works, keeps every line
+      let j = codeJ;
+      if (modelReady) {
+        setNote(tr("Reading your CV… the AI is sorting it into sections"));
+        try {
+          const raw = await Promise.race([llm(A.importMessages(text), { json: true, maxTokens: 4000, temperature: 0.1 }), new Promise((_, bad) => setTimeout(() => bad(new Error("timeout")), 120000))]);
+          j = A.mergeImport(codeJ, A.jsonLoose(raw), text);
+        } catch (e) { /* the code's reading is kept */ }
+      }
+      const c = A.applyImport(V.newCV(lang, tr("Imported CV")), j, text);
+      setList([c, ...list]); setSheet(null); setText(""); setNote(""); setOpenId(c.id);
+      flash(tr("Imported — check each section and fix anything"));
+    } catch (e) { setNote(String((e && e.message) || e).slice(0, 160)); } finally { setBusy(false); }
   };
   return (
     <section className="p-4 space-y-3" data-testid="cv-page">
@@ -367,7 +376,8 @@ export function CVPage({ flash, llm, modelReady, openEngine, share, saveFile, na
         <p className="text-[12.5px] text-slate-400">{tr("Pick your old CV (PDF, Word or text) or paste its text. The AI puts it into sections, keeping your own words. You can fix anything after.")}</p>
         <label className={ghost + " inline-flex items-center gap-1.5 cursor-pointer"}><Upload size={14} />{tr("Pick a file")}<input type="file" accept=".pdf,.docx,.txt,.md" className="hidden" onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return; try { setText(await fileText(f)); } catch (x) { flash(String(x.message || x)); } }} /></label>
         <Tx rows={10} value={text} onChange={setText} placeholder={tr("…or paste your CV text here")} data-testid="cv-import-text" />
-        <button className={primary + " w-full py-2.5"} disabled={busy} onClick={doImport} data-testid="cv-import-go">{busy ? tr("Reading your CV…") : tr("Import")}</button></div></Sheet> : null}
+        <button className={primary + " w-full py-2.5"} disabled={busy} onClick={doImport} data-testid="cv-import-go">{busy ? tr("Reading your CV…") : tr("Import")}</button>
+        {note ? <p className="text-[12.5px] text-amber-300" data-testid="cv-import-note">{note}</p> : null}</div></Sheet> : null}
       {cur ? <Editor key={cur.id} cv={cur} onChange={upsert} onClose={() => setOpenId(null)} onNewCV={(c) => setList([c, ...list])} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} share={share} saveFile={saveFile} /> : null}
     </section>
   );

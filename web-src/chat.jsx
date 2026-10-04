@@ -6,6 +6,7 @@
 // needed. Everything else goes to the model with the whole conversation, and
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
+import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import { wantsDoc } from "./slides.js";
 import { detectLang, replyLanguageRule, voiceTag, deviceLang } from "./langs.js";
 import { looksLikeFoodLog } from "./fit.js";
@@ -610,6 +611,17 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         setText("");
         return;
       }
+    }
+
+    // v6.12: "what did I spend this week" — summed from the Money ledger by code, never by the model.
+    if (route && !img && myMoneyIntent(typed)) {
+      const m = answerMyMoney(typed, loadLedger(), { ar: /[\u0600-\u06FF]/.test(typed) });
+      const cid = ensureChat(typed);
+      patchChat(cid, (ch) => ({ ...ch, updated: Date.now(), messages: [...ch.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", text: m.text, calc: true, askText: typed }] }));
+      setText("");
+      return;
     }
 
     // "Draw a crane at sunset": pictures are made in Studio, on the phone.

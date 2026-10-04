@@ -101,12 +101,7 @@ export function decide(bank, ranked, auto = AUTO) {
   if (!ranked || !ranked.length) return { status: "notfood", items: [] };
   const top = bank.items[ranked[0].i];
   if (top.kind === "not") return { status: "notfood", items: [], top };
-  const alts = [], seen = new Set();
-  for (const r of ranked) {
-    const fd = entryFood(bank.items[r.i]); if (!fd) continue;
-    const key = fd.id + "|" + fd.en; if (seen.has(key)) continue;
-    seen.add(key); alts.push({ label: fd.en, food: fd });
-  }
+  const alts = F.uniqAlts(ranked.map((r) => entryFood(bank.items[r.i])).filter(Boolean).map((fd) => ({ label: fd.en, food: fd })));   // v6.12: no "Fried egg · Fried egg"
   const p = ranked[0].p, conf = Math.round(Math.min(0.99, Math.max(0.3, p)) * 100) / 100;
   const status = p >= auto ? "auto" : "guess";
   const fd = entryFood(top);

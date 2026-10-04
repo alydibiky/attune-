@@ -204,7 +204,8 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     const b = PH.budget();
     setStage(L("Recognising the food…", "بتعرّف على الأكل…"));
     let r = null;
-    try { r = F.parsePhoto(await limit(llm(F.photoMessages(note), photo, { json: true, maxTokens: 700, temperature: 0 }), b.slice(42000, 14000))); } catch (e) { r = null; }
+    const hints = fast && fast.items && fast.items[0] ? (fast.items[0].alts || []).map((a) => a.label) : [];   // v6.12: the fast look's guesses help the chat model (it said "Eggs with tomatoes"; the chat model alone said "Fried egg")
+    try { r = F.parsePhoto(await limit(llm(F.photoMessages(note, undefined, hints), photo, { json: true, maxTokens: 1000, temperature: 0 }), b.slice(42000, 14000))); } catch (e) { r = null; }
     if (run.current !== me) return;
     if (r && r.label) { DB.keepFoods([r.label]); setDraft([F.itemFromFood(r.label, 1, Object.keys(r.label.portions || {})[0] || "g")]); return; }
     let items = r ? r.items : [];

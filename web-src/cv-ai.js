@@ -149,7 +149,7 @@ export function importMessages(text) {
 }
 /** The imported JSON → CV content (merged into `cv`, which keeps its look). Contact details from the text win over the model's. */
 export function applyImport(cv, raw, text) {
-  const j = jsonOf(raw), c = JSON.parse(JSON.stringify(cv)), ex = extractContact(text);
+  const j = raw && typeof raw === "object" ? raw : jsonOf(raw), c = JSON.parse(JSON.stringify(cv)), ex = extractContact(text);
   const b = j.basics || {};
   c.basics = { ...c.basics, name: String(b.name || ex.name || "").trim(), title: String(b.title || "").trim(), email: ex.email || String(b.email || "").trim(), phone: ex.phone || String(b.phone || "").trim(), city: String(b.city || "").trim() };
   const sec = (type) => c.sections.find((s) => s.type === type) || (c.sections.push({ id: "s" + Math.random().toString(36).slice(2, 8), type, title: SECTION_TYPES[type][c.lang === "ar" ? "ar" : "en"], visible: true, items: [] }), c.sections[c.sections.length - 1]);
@@ -163,6 +163,7 @@ export function applyImport(cv, raw, text) {
   }
   if (Array.isArray(j.languages)) sec("languages").items = j.languages.map((l) => ({ name: str(l.name), level: str(l.level) })).filter((l) => l.name);
   if (Array.isArray(j.certs)) sec("certs").items = j.certs.map((x) => ({ name: str(x.name), issuer: str(x.issuer), year: str(x.year) })).filter((x) => x.name);
+  if (Array.isArray(j.projects) && j.projects.length) sec("projects").items = j.projects.map((x) => ({ name: str(x.name), link: str(x.link), bullets: (Array.isArray(x.bullets) ? x.bullets : []).map(str).filter(Boolean) })).filter((x) => x.name || x.bullets.length);
   return c;
 }
 
@@ -213,4 +214,112 @@ export function parseRevise(raw, cv, instruction) {
   // applyImport rewrote contact details from text (none given): keep the originals
   next.basics = { ...next.basics, email: next.basics.email || cv.basics.email, phone: next.basics.phone || cv.basics.phone };
   return { cv: next, changed: out.trim() !== src.replace(String(instruction || ""), "").trim() };
+}
+
+// ---- v6.12: read a CV by code (always works, keeps every word) ------------------------------------------------------------------
+// The model import failed on long CVs (its JSON was cut off at the token limit) and on phones where the model was asleep, so the
+// import now starts from this reader: it finds the section headings (English and Arabic), splits jobs and schools on date lines,
+// and keeps every line. The model, when it answers in time, only improves the split (`mergeImport`).
+const HEADS = [
+  ["summary", /^(professional\s+)?(summary|profile|about( me)?|objective|career objective|personal statement|overview)$|^(نبذة|الملخص|ملخص|نبذة مهنية|الهدف( الوظيفي)?|عني)$/i],
+  ["experience", /^((work|professional|employment|relevant)\s+)?(experience|history|employment)( history)?$|^(career|internships?|work)$|^(الخبرات?( العملية| المهنية)?|الخبرة( العملية)?|الخبرات العملية|التدريب|الوظائف( السابقة)?)$/i],
+  ["education", /^(education|academic( background| qualifications)?|qualifications|studies)$|^(التعليم|المؤهلات?( الدراسية| العلمية)?|الدراسة)$/i],
+  ["skills", /^((key|core|technical|soft|hard|professional)\s+)?(skills|competenc(e|ies)|expertise|strengths)( (&|and) (tools|abilities|competencies))?$|^(المهارات|مهارات|القدرات)$/i],
+  ["languages", /^languages?$|^(اللغات|لغات)$/i],
+  ["certs", /^(certifications?|certificates?|licen[cs]es?( (&|and) certifications?)?|courses|training|awards?( (&|and) certifications?)?)$|^(الشهادات( والدورات)?|الدورات( التدريبية)?|الجوائز)$/i],
+  ["projects", /^(projects|key projects|selected projects|portfolio)$|^(المشاريع|مشاريع)$/i],
+];
+const headOf = (line) => {
+  const t = line.replace(/^[#*\-–•\s]+|[:：\s]+$/g, "").replace(/\*\*/g, "").trim();
+  if (!t || t.length > 48) return "";
+  for (const [k, re] of HEADS) if (re.test(t)) return k;
+  return "";
+};
+const DATE = /((?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+)?(19|20)\d{2}|present|current|now|حتى الآن|الآن|حاليا/i;
+const RANGE = /(((?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+)?((?:19|20)\d{2}))\s*(?:[-–—]|to|until|إلى|الى|-)\s*(((?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+)?((?:19|20)\d{2})|present|current|now|today|حتى الآن|الآن|حاليا)/i;
+const MON = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
+const ym = (mon, yr) => { const m = mon && MON[mon.trim().toLowerCase().replace(/\.$/, "").slice(0, mon.trim().toLowerCase().startsWith("sept") ? 4 : 3)]; return m ? `${yr}-${String(m).padStart(2, "0")}` : yr; };
+const BULLET = /^[•\-–*·▪●◦»]\s*/;
+/** Split a block of lines into entries: a new entry starts at a line with a date range, or a non-bullet line after bullets. */
+function entries(lines) {
+  const out = []; let cur = null;
+  for (const l of lines) {
+    const isB = BULLET.test(l), hasR = RANGE.test(l);
+    if (!cur || (hasR && cur.range) || (!isB && cur.bul.length && !hasR)) { cur = { head: [], bul: [], range: null }; out.push(cur); }
+    if (hasR && !cur.range) { const m = RANGE.exec(l); cur.range = m; const rest = l.replace(m[0], "").replace(/[|,·•()\s–-]+$/g, "").replace(/^[|,·•()\s–-]+/g, "").trim(); if (rest) cur.head.push(rest); }
+    else if (isB) cur.bul.push(l.replace(BULLET, "").trim());
+    else if (cur.bul.length === 0 && cur.head.length < 3) cur.head.push(l);
+    else cur.bul.push(l);
+  }
+  return out;
+}
+const splitHead = (h) => { const a = h.split(/\s+(?:at|@|[|–—]|-)\s+|\s*[|–—]\s*|,\s+|،\s*|\s+في\s+/).map((x) => x.trim()).filter(Boolean); return a; };
+const dates = (r) => {
+  if (!r) return { start: "", end: "", current: false };
+  const cur = /present|current|now|today|حتى الآن|الآن|حاليا/i.test(r[4] || "");
+  return { start: ym(r[2], r[3]), end: cur ? "" : ym(r[5], r[6]), current: cur };
+};
+/** The CV text → the same JSON shape the model import returns. Never throws, never drops a line. */
+export function parseCVText(text) {
+  const raw = String(text || "").replace(/\r/g, "").split("\n").map((x) => x.replace(/\s+$/, ""));
+  const lines = raw.map((x) => x.trim()).filter(Boolean);
+  const ex = extractContact(text);
+  const parts = { top: [] }; let key = "top";
+  for (const l of lines) { const h = headOf(l); if (h) { key = h; parts[key] = parts[key] || []; continue; } (parts[key] = parts[key] || []).push(l); }
+  const top = parts.top || [];
+  const contactish = (l) => EMAIL.test(l) || PHONE.test(l) || /linkedin|github|https?:|www\.|\+\d{2}/i.test(l);
+  const title = top.slice(1).find((l) => !contactish(l) && l.length <= 70 && !/[.!?]$/.test(l)) || "";
+  const cityLine = top.slice(1).find((l) => contactish(l) && /,|\|/.test(l)) || "";
+  const city = (cityLine.split(/[|•·]/).map((x) => x.trim()).find((x) => x && !EMAIL.test(x) && !PHONE.test(x) && !/https?:|www\.|linkedin|github|\d{4,}/i.test(x)) || "");
+  const restTop = top.slice(1).filter((l) => l !== title && !contactish(l));
+  const j = { basics: { name: ex.name, title, email: ex.email, phone: ex.phone, city }, summary: [...restTop, ...(parts.summary || [])].join(" ").trim(), experience: [], education: [], skills: [], languages: [], certs: [], projects: [] };
+  j.experience = entries(parts.experience || []).map((e) => { const h = splitHead(e.head[0] || ""); const second = e.head[1] || ""; return { role: h[0] || "", company: h[1] || second, location: h.slice(2).join(", ") || (h.length > 1 ? second : (e.head[2] || "")), ...dates(e.range), bullets: [...(h.length > 1 ? e.head.slice(2) : e.head.slice(3)), ...e.bul].filter(Boolean) }; });
+  j.education = entries(parts.education || []).map((e) => { const h = splitHead(e.head[0] || ""); const d = dates(e.range); return { degree: h[0] || "", school: h.slice(1).join(", ") || e.head[1] || "", start: d.start, end: d.end, note: [...e.head.slice(h.length > 1 ? 1 : 2), ...e.bul].join("; ") }; });
+  j.skills = (parts.skills || []).flatMap((l) => l.replace(BULLET, "").split(/\s*[,;•·|،]\s*/)).map((x) => x.trim()).filter(Boolean);
+  j.languages = (parts.languages || []).flatMap((l) => { const s = l.replace(BULLET, ""); const m = /^(.+?)\s*[:(–-]\s*(.+?)\)?$/.exec(s); return m && !/[,،]/.test(s) ? [{ name: m[1].trim(), level: m[2].trim() }] : s.split(/\s*[,;•·|،]\s*|\s{2,}/).flatMap((x) => (x.split(/\s+/).length > 1 && x.split(/\s+/).every((w) => /^[A-Z؀-ۿ][a-z]*$/.test(w) && !/^(Native|Fluent|Basic|Intermediate|Advanced)$/i.test(w)) ? x.split(/\s+/) : [x])).filter(Boolean).map((n) => ({ name: n.trim(), level: "" })); });
+  j.certs = (parts.certs || []).map((l) => { const s = l.replace(BULLET, ""); const y = /(19|20)\d{2}/.exec(s); return { name: s.replace(/\s*[(,–-]?\s*(19|20)\d{2}\)?\s*$/, "").trim(), issuer: "", year: y ? y[0] : "" }; }).filter((x) => x.name);
+  j.projects = entries(parts.projects || []).map((e) => ({ name: e.head[0] || "", link: "", bullets: [...e.head.slice(1), ...e.bul] }));
+  return j;
+}
+/** Words of a CV JSON (for a "did the model keep everything?" check). */
+const wordsOf = (o) => new Set(String(JSON.stringify(o) || "").toLowerCase().match(/[a-z؀-ۿ0-9]{3,}/g) || []);
+/** How much of the source text's wording the model's JSON kept (0..1). */
+export function coverage(j, text) { const w = wordsOf(j), src = [...(String(text).toLowerCase().match(/[a-z؀-ۿ0-9]{3,}/g) || [])]; if (!src.length) return 1; return src.filter((x) => w.has(x)).length / src.length; }
+/** Read the model's answer even when it was cut off (close the open strings, arrays and objects). */
+export function jsonLoose(raw) {
+  const s = String(raw || ""), a = s.indexOf("{");
+  if (a < 0) return null;
+  let t = s.slice(a), b = t.lastIndexOf("}");
+  try { return JSON.parse(t.slice(0, b + 1)); } catch (e) {}
+  // repair: walk the text, track the open brackets, cut back to the last complete value, then close everything
+  const st = []; let inS = false, esc = false, lastOk = -1;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (inS) { if (esc) esc = false; else if (c === "\\") esc = true; else if (c === '"') inS = false; continue; }
+    if (c === '"') inS = true; else if (c === "{" || c === "[") st.push(c); else if (c === "}" || c === "]") { st.pop(); lastOk = i; } else if (c === ",") lastOk = i - 1;
+  }
+  for (let cut = lastOk; cut > 0; cut--) {
+    const head = t.slice(0, cut + 1).replace(/,\s*$/, "");
+    const open = []; let s2 = false, e2 = false;
+    for (const c of head) { if (s2) { if (e2) e2 = false; else if (c === "\\") e2 = true; else if (c === '"') s2 = false; continue; } if (c === '"') s2 = true; else if (c === "{" || c === "[") open.push(c); else if (c === "}" || c === "]") open.pop(); }
+    if (s2) continue;
+    const close = open.reverse().map((c) => (c === "{" ? "}" : "]")).join("");
+    try { return JSON.parse(head + close); } catch (e) {}
+    if (lastOk - cut > 4000) break;
+  }
+  return null;
+}
+/** The model's split where it is complete, the code's split where the model dropped or cut something. */
+export function mergeImport(codeJ, modelJ, text) {
+  if (!modelJ || typeof modelJ !== "object") return codeJ;
+  const out = { ...codeJ, basics: { ...codeJ.basics } };
+  for (const k of ["name", "title", "email", "phone", "city"]) if (!out.basics[k] && modelJ.basics && modelJ.basics[k]) out.basics[k] = String(modelJ.basics[k]);
+  if (modelJ.basics && modelJ.basics.title && codeJ.basics.title && String(text).includes(modelJ.basics.title)) out.basics.title = modelJ.basics.title;
+  for (const k of ["summary", "experience", "education", "skills", "languages", "certs"]) {
+    const m = modelJ[k], c = codeJ[k];
+    const empty = (v) => (Array.isArray(v) ? v.length === 0 : !String(v || "").trim());
+    if (empty(m)) continue;
+    if (empty(c) || coverage({ x: m }, JSON.stringify(c)) >= 0.85) out[k] = m;
+  }
+  return out;
 }

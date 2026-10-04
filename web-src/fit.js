@@ -252,8 +252,7 @@ Rules: one item per food (a sandwich is one item); cooking oil, sugar or butter 
 const num = (x) => { const n = parseFloat(String(x ?? "").replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)).replace(",", ".")); return isFinite(n) ? n : null; };
 /** The model's JSON → items with grams and nutrients; table values when the food is in the table. */
 export function parseMeal(raw) {
-  let j = null;
-  try { const s = String(raw || ""); j = JSON.parse(s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1)); } catch (e) { return []; }
+  const j = jsonLoose(raw); if (!j) return [];
   const list = Array.isArray(j) ? j : Array.isArray(j && j.items) ? j.items : [];
   return list.map((it) => mealItem(String(it.food || it.name || ""), num(it.qty) ?? 1, String(it.unit || "serving"),
     { kcal: num(it.kcal_per_100g), p: num(it.protein_per_100g), c: num(it.carbs_per_100g), f: num(it.fat_per_100g) })).filter(Boolean);
@@ -680,10 +679,11 @@ export const PHOTO_HINTS = ["Koshari", "Ful medames", "Taameya (falafel)", "Bala
 export const photoHintsFor = (cc = CZ.getCountry()) => CZ.photoHints(cc) || PHOTO_HINTS;
 /** How the prompt names local dishes: "Egyptian dishes" → "dishes from Turkey". */
 const localWord = (cc) => (cc && cc !== "eg" && CZ.COUNTRIES[cc] ? "dishes from " + CZ.COUNTRIES[cc].en : "Egyptian dishes");
-export function photoMessages(note, cc = CZ.getCountry()) {
+export function photoMessages(note, cc = CZ.getCountry(), hints = []) {
   const eg = !cc || cc === "eg";
+  const seen = (Array.isArray(hints) ? hints : []).map((h) => String(h || "").trim()).filter(Boolean).slice(0, 4);
   return [
-    { role: "system", content: `You are a dietitian looking at a photo of food. Reply with ONLY a JSON object:
+    { role: "system", content: `You are a dietitian looking at a photo of food. Reply with ONLY a compact JSON object on ONE line (no line breaks, no indentation, no spaces between fields):
 {"kind": "meal" or "label" (a nutrition facts table is visible) or "package" (a packaged product, no table visible),
  "plate": "dinner plate" | "side plate" | "bowl" | "tray" | "none",
  "items": [{"food": "short common name", "alternatives": ["second guess", "third guess"],
@@ -693,8 +693,8 @@ export function photoMessages(note, cc = CZ.getCountry()) {
             "height": "flat" | "normal" | "heaped", "grams": your estimate as eaten,
             "confidence": 0 to 1, "box": [x, y, w, h] where it is in the photo, each 0 to 1}],
  "label": {"name": "product name", "per": "100g" or "serving", "serving_g": number or null, "kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number or null} or null}
-Rules: one item per separate food (a sandwich or a mixed dish like ${eg ? "koshari" : photoHintsFor(cc)[0]} is ONE item). Count what can be counted. Judge sizes against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon, a 330 ml can, ${eg ? "a baladi loaf" : "a bread loaf"}, a hand. If unsure, give your best guess, alternatives, and a lower confidence — never invent a food you can't see. For a label, copy its numbers exactly.
-Use short common names in English (${localWord(cc)} by their usual name), e.g. ${photoHintsFor(cc).join(", ")}.${note ? "\nThe person adds: " + note : ""}` },
+Rules: one item per separate food (a sandwich or a mixed dish like ${eg ? "koshari" : photoHintsFor(cc)[0]} is ONE item). Foods stacked on each other are SEPARATE items: list what is underneath (toast, bread, rice), what is on top (cheese, sauce) and the main food — e.g. eggs on toast with tomato sauce and cheese = fried egg (count them), toast (count the slices), tomato sauce, cheese. Count what can be counted: every egg, slice, piece — look at the whole photo, not one part. Judge sizes against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon, a 330 ml can, ${eg ? "a baladi loaf" : "a bread loaf"}, a hand. If unsure, give your best guess, alternatives, and a lower confidence — never invent a food you can't see. For a label, copy its numbers exactly.
+Use short common names in English (${localWord(cc)} by their usual name), e.g. ${photoHintsFor(cc).join(", ")}.${seen.length ? "\nA quick first look at the whole photo suggested: " + seen.join(", ") + " — use it only if it matches what you see, and still list each part separately." : ""}${note ? "\nThe person adds: " + note : ""}` },
     { role: "user", content: "What is in this photo?" },
   ];
 }
@@ -737,7 +737,7 @@ export function geoGrams(fd, it, plate = "dinner plate") {
 export function hiddenMessages(items) {
   return [
     { role: "system", content: `A dietitian already found these foods in the photo: ${items.map((x) => x.name).join(", ")}.
-Look again ONLY for calories people usually miss: cooking oil or butter on or under the food, ghee, sauces, dressings, tahini, mayonnaise, sugar in a drink, a drink in the picture, bread or rice on the side. Reply with ONLY a JSON object:
+Look again ONLY for calories people usually miss: cooking oil or butter on or under the food, ghee, sauces (tomato sauce, gravy), melted or grated cheese, dressings, tahini, mayonnaise, sugar in a drink, a drink in the picture, bread, toast or rice under or beside the food. Reply with ONLY a compact JSON object on one line:
 {"items": [{"food": "generic name in English", "grams": number, "confidence": 0 to 1}]} — an empty list if nothing was missed. Never repeat a food already found.` },
     { role: "user", content: "Anything missed?" },
   ];
@@ -767,8 +767,7 @@ function photoItem(it, extra = {}, plate = "dinner plate") {
   if (geo && grams) { if (Math.max(geo, grams) / Math.min(geo, grams) > 2.5) portionFlag = true; grams = Math.round(Math.sqrt(geo * grams)); }
   else if (geo) grams = geo;
   if (lf && grams) grams *= lf.ratio;
-  const alts = [...new Set([name, ...(Array.isArray(it.alternatives) ? it.alternatives : [])].map(String))]
-    .map((a) => ({ label: a, food: matchFood(a) })).filter((a) => a.label.trim()).slice(0, 3);
+  const alts = uniqAlts([name, ...(Array.isArray(it.alternatives) ? it.alternatives : [])].map((a) => ({ label: String(a || ""), food: matchFood(String(a || "")) }))).slice(0, 3);
   const conf = Math.max(0, Math.min(1, num(it.confidence) ?? 0.6));
   let item;
   if (fd) { const g = Math.round(grams || gramsOf(fd, 1, "serving")); item = { name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", qty: 1, unit: "g", grams: g, ...nutrients(fd, g), estimate: false }; }
@@ -778,18 +777,54 @@ function photoItem(it, extra = {}, plate = "dinner plate") {
 }
 /** The zoomed look's JSON → the item with a better name (the grams stay), or the item unchanged. */
 export function applyZoom(item, raw) {
-  let j = null;
-  try { const s = String(raw || ""); j = JSON.parse(s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1)); } catch (e) { return item; }
+  const j = jsonLoose(raw); if (!j) return item;
   const name = String((j && j.food) || "").trim(); const fd = name && matchFood(name);
   const conf = Math.max(0, Math.min(1, num(j && j.confidence) ?? 0.5));
   if (!fd || conf < (item.conf || 0)) return { ...item, zoomed: true };
-  const alts = [...new Set([name, ...(Array.isArray(j.alternatives) ? j.alternatives : []), item.said].map(String))].map((a) => ({ label: a, food: matchFood(a) })).filter((a) => a.food).slice(0, 3);
+  const alts = uniqAlts([name, ...(Array.isArray(j.alternatives) ? j.alternatives : []), item.said].map((a) => ({ label: String(a || ""), food: matchFood(String(a || "")) })).filter((a) => a.food)).slice(0, 3);
   return { ...chooseFood(item, fd), chosen: false, conf, alts, zoomed: true };
+}
+/** Read a JSON answer even when it was cut off: close the open strings, arrays and objects at the last complete value. */
+export function jsonLoose(raw) {
+  const s = String(raw || ""), a = s.indexOf("{");
+  if (a < 0) return null;
+  const t = s.slice(a);
+  try { return JSON.parse(t.slice(0, t.lastIndexOf("}") + 1)); } catch (e) {}
+  const cuts = []; let inS = false, esc = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (inS) { if (esc) esc = false; else if (c === "\\") esc = true; else if (c === '"') inS = false; continue; }
+    if (c === '"') inS = true; else if (c === "}" || c === "]") cuts.push(i + 1); else if (c === ",") cuts.push(i);
+  }
+  for (let k = cuts.length - 1, tries = 0; k >= 0 && tries < 400; k--, tries++) {
+    const head = t.slice(0, cuts[k]).replace(/[,:]\s*$/, "");
+    const open = []; let s2 = false, e2 = false;
+    for (const c of head) { if (s2) { if (e2) e2 = false; else if (c === "\\") e2 = true; else if (c === '"') s2 = false; continue; } if (c === '"') s2 = true; else if (c === "{" || c === "[") open.push(c); else if (c === "}" || c === "]") open.pop(); }
+    if (s2) continue;
+    try { return JSON.parse(head + open.reverse().map((c) => (c === "{" ? "}" : "]")).join("")); } catch (e) {}
+  }
+  return null;
+}
+/** v6.12: "Is it:" chips without repeats — Ali saw "Fried egg · Fried egg": two guesses ("fried egg", "Fried eggs") that are one food.
+ *  A chip is dropped when its food (or, for an unknown food, its words) is already on the list. */
+export function uniqAlts(alts) {
+  const out = [], seen = new Set();
+  for (const a of alts || []) {
+    if (!a || !String(a.label || "").trim()) continue;
+    const w = (x) => "w:" + normT(x).replace(/s\b/g, "");
+    const keys = [w(a.label), ...(a.food ? ["id:" + a.food.id + "|" + (a.food.en || ""), w(a.food.en || "")] : [])];
+    if (keys.some((k) => seen.has(k))) continue;
+    keys.forEach((k) => seen.add(k)); out.push(a);
+  }
+  return out;
 }
 /** The model's photo JSON → { kind, items, label } (label = a food made from the label's numbers). */
 export function parsePhoto(raw) {
-  let j = null;
-  try { const s = String(raw || ""); j = JSON.parse(s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1)); } catch (e) { return { kind: "meal", items: [], label: null }; }
+  // v6.12: a small model writes pretty-printed JSON and runs out of tokens half-way (measured: 900 tokens used, cut in the
+  // second item) — the whole answer was thrown away and the photo fell back to "Fried egg". A cut-off answer is now repaired
+  // and every complete item in it is kept.
+  const j = jsonLoose(raw);
+  if (!j) return { kind: "meal", items: [], label: null };
   const kind = ["meal", "label", "package"].includes(j && j.kind) ? j.kind : "meal";
   let label = null;
   const L = j && j.label;
@@ -805,8 +840,7 @@ export function parsePhoto(raw) {
 }
 /** The second look's JSON → extra items (never one already on the list). */
 export function parseHidden(raw, have) {
-  let j = null;
-  try { const s = String(raw || ""); j = JSON.parse(s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1)); } catch (e) { return []; }
+  const j = jsonLoose(raw); if (!j) return [];
   const seen = new Set(have.flatMap((x) => [normT(x.name), normT(x.said || "")]));
   return (Array.isArray(j && j.items) ? j.items : []).map((it) => photoItem(it, { hidden: true }))
     .filter((x) => x && !seen.has(normT(x.name)) && !seen.has(normT(x.said)) && x.grams > 0 && x.grams <= 400).slice(0, 5);

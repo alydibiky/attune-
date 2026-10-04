@@ -97,7 +97,11 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
         else if (kind === "html") blocks = C.htmlToBlocks(await file.text());
         else if (kind === "rtf") blocks = C.textToBlocks(C.rtfToText(await file.text()));
         else blocks = C.textToBlocks(await file.text());
-        pages = textToPages(C.blocksToText(blocks)); count = pages.length;
+        if (kind === "pptx" && blocks.some((b) => b.slide)) {   // v6.12: one page per slide (a 10-slide deck is 10 pages, not 2)
+          const by = new Map(); for (const b of blocks) { const k = b.slide || 1; if (!by.has(k)) by.set(k, []); by.get(k).push(b); }
+          pages = [...by.keys()].sort((a, b) => a - b).map((k) => ({ n: k, text: C.blocksToText(by.get(k)).trim() || `Slide ${k}` }));
+        } else pages = textToPages(C.blocksToText(blocks));
+        count = pages.length;
       }
       if (!alive()) return;
       const index = Q.buildIndex(pages);

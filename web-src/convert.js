@@ -919,8 +919,18 @@ const numOf = (k) => +((k.match(/(\d+)\.xml$/) || [])[1] || 0);
 /** A PowerPoint (.pptx bytes) → blocks: a heading per slide, its text, bullets and tables, then the speaker notes. */
 export async function pptxToBlocks(bytes) {
   const z = await unzip(bytes);
-  const slides = [...z.keys()].filter((k) => /^ppt\/slides\/slide\d+\.xml$/.test(k)).sort((a, b) => numOf(a) - numOf(b));
+  let slides = [...z.keys()].filter((k) => /^ppt\/slides\/slide\d+\.xml$/.test(k)).sort((a, b) => numOf(a) - numOf(b));
   if (!slides.length) throw new Error("That file isn't a PowerPoint (.pptx) file.");
+  // v6.12: the order the deck shows them in (presentation.xml), not the file numbers; hidden slides are kept
+  try {
+    const pres = z.get("ppt/presentation.xml") && dec(z.get("ppt/presentation.xml")), rels = z.get("ppt/_rels/presentation.xml.rels") && dec(z.get("ppt/_rels/presentation.xml.rels"));
+    if (pres && rels) {
+      const tgt = new Map([...rels.matchAll(/<Relationship\b[^>]*>/g)].map((m) => [(m[0].match(/\bId="([^"]+)"/) || [])[1], (m[0].match(/\bTarget="([^"]+)"/) || [])[1]]));
+      const order = [...pres.matchAll(/<p:sldId\b[^>]*r:id="([^"]+)"/g)].map((m) => tgt.get(m[1])).filter(Boolean).map((t) => "ppt/" + t.replace(/^\/?ppt\//, "").replace(/^\.\//, ""));
+      const known = order.filter((k) => z.has(k));
+      if (known.length) slides = [...known, ...slides.filter((k) => !known.includes(k))];
+    }
+  } catch (e) {}
   const paras = (x) => [...x.matchAll(/<a:p>[\s\S]*?<\/a:p>|<a:p\s[^>]*>[\s\S]*?<\/a:p>/g)].map((p) => [...p[0].matchAll(/<a:t>([\s\S]*?)<\/a:t>|<a:br\/>/g)].map((t) => (t[1] != null ? unxml(t[1]) : "\n")).join("").trim()).filter(Boolean);
   const out = [];
   slides.forEach((name, i) => {
@@ -942,7 +952,9 @@ export async function pptxToBlocks(bytes) {
       if (/type="(dt|ftr|sldNum)"/.test(ph)) continue;
       for (const t of ps) body.push({ type: bullets ? "li" : "p", text: t });
     }
+    const start = out.length;
     out.push({ type: "h2", text: title ? `${i + 1}. ${title}` : `Slide ${i + 1}` }, ...body);
+    if (!body.length && /<p:pic\b/.test(x)) out.push({ type: "p", text: "(This slide is a picture.)" });
     const rels = z.get(name.replace("slides/", "slides/_rels/") + ".rels");
     const nref = rels && (dec(rels).match(/Target="\.\.\/notesSlides\/(notesSlide\d+\.xml)"/) || [])[1];
     const notes = nref && z.get("ppt/notesSlides/" + nref);
@@ -952,6 +964,7 @@ export async function pptxToBlocks(bytes) {
       const t = sp ? paras(sp[0]).join("\n") : "";
       if (t) out.push({ type: "p", text: "Notes: " + t });
     }
+    for (let k = start; k < out.length; k++) out[k].slide = i + 1;   // which slide each block came from (Ask a PDF: one page per slide)
   });
   return out;
 }

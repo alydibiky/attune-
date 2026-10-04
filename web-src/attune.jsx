@@ -11,7 +11,7 @@ import {
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
-import { ChatHome, systemPrompt as chatSystemPrompt } from "./chat.jsx";
+import { ChatHome, Md, systemPrompt as chatSystemPrompt } from "./chat.jsx";
 import { tr, getLang, setLang, fmtNum, dateLocale } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
@@ -36,6 +36,7 @@ import { popBack, hasBack, useSubBack, forgetSticky } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
+import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import { CVPage } from "./cv-ui.jsx";
 import * as USK from "./userskills.js";
 import { placeFor } from "./places.js";
@@ -2639,6 +2640,10 @@ function gateCommitments(source, raw, opts) {
     if (q.length < 8) { rejected.push({ line: l, why: "quote too short to verify" }); continue; }
     if (!src.includes(q)) { rejected.push({ line: l, why: "quote is not in the source" }); continue; }
     if (!action) { rejected.push({ line: l, why: "no action" }); continue; }
+    // v6.12: a note to self is not a promise — Ali's "Save that a maid comes to clean my house" became
+    // "…was promised to you and is late" on every screen. The app's own commands are not commitments either.
+    if (/^\s*(please\s+)?(save|remember|note|keep|store|write down|add)\b(\s+(that|this|it))?/i.test(action) || /^\s*(احفظ|افتكر|سجّ?ل|خليك فاكر|فكّ?رني)/.test(action)) { rejected.push({ line: l, why: "a note to self, not a promise" }); continue; }
+    if (/^\s*(please\s+)?(save|remember|note|keep|store)\s+(that|this)\b/i.test(quote) && /them|they|him|her|client|customer/i.test(whoRaw)) { rejected.push({ line: l, why: "a saved note, not a promise from someone" }); continue; }
     // A "when" must also be quoted from the source, or it is not a due date.
     const whenOk = whenRaw && whenRaw !== "-" && src.includes(memNorm(whenRaw).replace(/\s+/g, " "));
     const key = memHash(q + "|" + memNorm(action));
@@ -2707,7 +2712,7 @@ function morningLine(commits, now) {
   if (late.length) bits.push({
     tone: "waiting",
     text: late.length === 1
-      ? `${late[0].action} was promised to you and is late.`
+      ? `Late — you were promised: ${late[0].action.replace(/[.。]+$/, "")}.`
       : `${late.length} things promised to you are late.`, items: late });
 
   // Nothing urgent is still worth saying — silence reads as broken.
@@ -7457,7 +7462,7 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem(MEM_KEY) || "[]"); } catch (e) { return []; }
   });
   const [commits, setCommits] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("attune:commits:v1") || "[]"); } catch (e) { return []; }
+    try { return JSON.parse(localStorage.getItem("attune:commits:v1") || "[]").filter((c) => !(c && /^\s*(please\s+)?(save|remember|note|keep|store)\b/i.test(String(c.action || "")))); } catch (e) { return []; }   // v6.12: notes to self saved as "promises" before the gate knew better
   });
   const [memQ, setMemQ] = useState("");
   const [memBusy, setMemBusy] = useState(false);
@@ -8414,6 +8419,13 @@ export default function App() {
     const text = inText.trim();
     if (!text) return;
     if (looksLikePeriodLog(text)) return logPeriodFromInstant(text);
+    // v6.12: "what are my expenses in the last 4 days" → summed from the Money ledger by code (no model, no "please provide the data")
+    if (!inImage && myMoneyIntent(text)) {
+      const m = answerMyMoney(text, loadLedger(), { ar: /[\u0600-\u06FF]/.test(text) || lang === "ar" });
+      const r0 = beginInstant("Answer"); endInstant(r0);
+      finishInstantText(text, "Answer", m.text, { level: "low" }, "");
+      return;
+    }
     if (!canUseAI()) return;
     const r = beginInstant("Answer");
     try {
@@ -8451,6 +8463,9 @@ export default function App() {
     // (medical, legal, safety, money); otherwise it is one tap away.
     const structural = /translat|transcri|extract|list|amount|summar/i.test(label + " " + instruction);
     const allowArithmetic = /calculat|work it out|convert|total|answer/i.test(label + " " + instruction);
+    // v6.12: a short question answered has no source to re-read — "Re-read against the source… numbers match" under
+    // "I need your expense data" was a false comfort (Ali's screenshot). The check is for text the person gave.
+    if (label === "Answer" && text.trim().split(/\s+/).length < 40) { setChecks(null); return; }
     setChecks({ issues: auditOutput(text, t, { structural, allowArithmetic }), stakes: stakes.level, verified: false });
     if (stakes.level === "high") runChecks(text, t, label, stakes, { structural });
   };
@@ -9996,7 +10011,9 @@ export default function App() {
                 ) : null}
                 {inResult ? (
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
-                    <p dir="auto" className="text-[15px] text-teal-50 whitespace-pre-wrap leading-relaxed">{inResult}{inBusy ? <span className="text-teal-400">▍</span> : null}</p>
+                    {!inBusy && /(^|\n)\s*\|.+\|\s*\n\s*\|?\s*:?-{2,}|\*\*[^*\n]+\*\*|(^|\n)#{1,3} |(^|\n)\s*[-*] /.test(inResult)
+                      ? <div className="text-[15px] text-teal-50 leading-relaxed" data-testid="instant-md"><Md text={inResult} /></div>   /* v6.12: tables and bold drawn, not shown as | and ** */
+                      : <p dir="auto" className="text-[15px] text-teal-50 whitespace-pre-wrap leading-relaxed">{inResult}{inBusy ? <span className="text-teal-400">▍</span> : null}</p>}
                   </div>
                 ) : null}
                 {inResult && !inBusy ? (
@@ -10620,7 +10637,7 @@ export default function App() {
         {/* v5.29 UX: not on Chat — the fixed message box covered it (half-hidden text) */}
         {mode !== "chat" ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup is optional and off by default")}</p> : null}
       </div>
-      {toast && <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
+      {toast && <div className="fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       <ConfirmHost />
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className="fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>

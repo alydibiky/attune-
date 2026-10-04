@@ -3100,4 +3100,6 @@ export const AR = {
   "Reading the matching messages…": "بقرا الرسايل اللي ليها علاقة…",
   "Where it was said ({n})": "اتقالت فين ({n})",
   "The model took too long on this question — try a shorter one, or a faster model in Engine.": "النموذج أخد وقت طويل في السؤال ده — جرّب سؤال أقصر، أو نموذج أسرع من المحرك.",
+  "Reading your CV… the AI is sorting it into sections": "بقرا سيرتك… الذكاء الاصطناعي بيرتّبها في أقسام",
+  "Imported — check each section and fix anything": "اتستوردت — راجع كل قسم وصلّح أي حاجة",
 };
