@@ -9,8 +9,8 @@ import os, re, sys, time, signal, subprocess, threading, functools, http.server,
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DIST = os.path.join(HERE, "..", "app", "src", "main", "assets", "www")
-ENGINE_PORT = 18791
-PAGE_PORT = 8766
+ENGINE_PORT = int(os.environ.get("ATTUNE_ENGINE_PORT", "18791"))
+PAGE_PORT = int(os.environ.get("ATTUNE_PAGE_PORT", "8766"))
 fails = []
 
 def check(ok, what):
