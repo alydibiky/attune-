@@ -6,6 +6,7 @@
 // needed. Everything else goes to the model with the whole conversation, and
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
+import { taskOf, wantsWeb, wantsThink, pickModel, switchLine } from "./router.js";
 import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
@@ -692,8 +693,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     const run = ++runRef.current;
     const t0 = Date.now();
     // v5.23: a strong model thinks first on hard questions by itself (reasoning, maths, code)
-    const pw0 = api.power ? api.power() : null;
-    const useThink = think ? "force" : (pw0 && pw0.thinkHard && typed && (looksLikeReasoning(typed) || looksLikeMathProblem(typed)) ? "force" : api.deepThink());
+    let pw0 = api.power ? api.power() : null;
+    const task = taskOf(typed, { photo: !!img, file: !!fileAtt });   // v6.12: Auto — what kind of question (router.js)
+    const autoThink = () => (pw0 && typed && ((pw0.thinkHard && (looksLikeReasoning(typed) || looksLikeMathProblem(typed))) || ((pw0.level || 3) >= 3 && wantsThink(typed, task))) ? "force" : api.deepThink());
+    let useThink = think ? "force" : autoThink();
     setChats((list) => {
       const exists = list.some((c) => c.id === cid);
       const sp = spaceRef.current.ids || {};
@@ -719,9 +722,22 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // v6.10: the person's own Skills — "/quote 50 t crane…" or a question that fits a skill's description
       const uSk = typed && api.userSkills ? api.userSkills(typed) : null;
       if (uSk && uSk.stripped != null) content = uSk.stripped || content;
-      let sources = null, via = null, research = null, webCtx = null, webEmpty = false;
+      let sources = null, via = null, research = null, webCtx = null, webEmpty = false; const extra0 = {};
       const pic = img || carried;
-      if ((api.webOn || o.web) && typed) {
+      // v6.12: Auto — the best installed model for this kind of question (a quick one keeps the loaded model)
+      if (api.autoModel && api.autoModel() && api.switchModel) {
+        try {
+          const r = api.modelsForRoute(), pk = pickModel(task, r.installed, r);
+          if (pk.switch && pk.id) {
+            const tier = (r.installed.find((m) => m.id === pk.id) || {}).tier || {};
+            onStatus(switchLine(tier.label || pk.id, pk.why, /[\u0600-\u06FF]/.test(typed)));
+            if (await api.switchModel(pk.id)) { extra0.switched = tier.label || pk.id; pw0 = api.power ? api.power() : pw0; if (!think) useThink = autoThink(); }
+            if (runRef.current !== run) return;
+          }
+        } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      }
+      const autoWeb = !api.webOn && !o.web && api.webAuto && typed && !img && !fileAtt && wantsWeb(typed, task);
+      if ((api.webOn || o.web || autoWeb) && typed) {
         // With a photo, LOOK first: search for what is in the picture, not
         // for the words "what is this car".
         let query = typed, asked = typed;
@@ -888,6 +904,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       let answer, extra = {};
       if (research) extra.research = research;
       if (webEmpty) extra.webEmpty = true;
+      Object.assign(extra, extra0);
       if (sources && webCtx && webCtx.toRead) {   // v6.12: up to 4 pictures from the pages read (one per site)
         const seenImg = new Set(), seenSite = new Set();
         const imgs = [];
@@ -1829,8 +1846,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             </label>
             <button onClick={() => setThink((v) => !v)} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${think ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Think first")}>
               <Brain size={14} /> {tr("Think")}</button>
-            <button onClick={api.toggleWeb} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${api.webOn ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Search the web")}>
-              <Globe size={14} /> {tr("Web")}</button>
+            <button onClick={api.toggleWeb} data-testid="web-toggle" className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${api.webOn ? "border-teal-600 text-teal-300 bg-teal-500/10" : api.webAuto ? "border-sky-700 text-sky-300 bg-sky-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Search the web")}>
+              <Globe size={14} /> {api.webAuto ? tr("Web · Auto") : tr("Web")}</button>
             <div className="flex-1" />
             {busy && text.trim() ? (
               <button onClick={() => ask()} className="w-10 h-10 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center me-1" title={tr("Send")} data-testid="queue-send"><Send size={17} /></button>

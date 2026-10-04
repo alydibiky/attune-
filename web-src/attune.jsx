@@ -7416,6 +7416,12 @@ export default function App() {
   // Off by default and per-question. Web lookup is the one thing in this
   // app that leaves the device, so it is never implicit.
   const [webOn, setWebOn] = useState(false);
+  // v6.12: Web in Chat is Off / Auto / On; Auto searches only when the question needs fresh facts (router.js). Remembered.
+  const [webAuto, setWebAutoRaw] = useState(() => { try { return localStorage.getItem("attune:web:auto") === "1"; } catch (e) { return false; } });
+  const setWebAuto = (v) => { setWebAutoRaw(v); try { localStorage.setItem("attune:web:auto", v ? "1" : "0"); } catch (e) {} };
+  // v6.12: when more than one model is installed, the chat picks the model for each question (on unless switched off)
+  const [autoModel, setAutoModelRaw] = useState(() => { try { return localStorage.getItem("attune:automodel") !== "0"; } catch (e) { return true; } });
+  const setAutoModel = (v) => { setAutoModelRaw(v); try { localStorage.setItem("attune:automodel", v ? "1" : "0"); } catch (e) {} };
   const [correcting, setCorrecting] = useState(null);
   const [correctDraft, setCorrectDraft] = useState("");
   const [correctWhy, setCorrectWhy] = useState("");
@@ -8760,7 +8766,18 @@ export default function App() {
     parsePayment: (t) => parsePayment(t, { now: Date.now() }),
     canUseAI, spend: spendIfFree, deepThink: () => ENGINE_PREFS.deepThink,
     webOn,
-    toggleWeb: () => { if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to search the web")); return; } setWebOn((v) => !v); },
+    toggleWeb: () => {   // Off → Auto → On → Off
+      if (NATIVE && airGap) { flash(tr("Offline lock is on — turn it off in Engine to search the web")); return; }
+      if (!webOn && !webAuto) { setWebAuto(true); flash(tr("Web: Auto — it searches only when a question needs fresh facts")); }
+      else if (webAuto) { setWebAuto(false); setWebOn(true); }
+      else setWebOn(false);
+    },
+    webAuto: !webOn && webAuto && !(NATIVE && airGap),
+    autoModel: () => autoModel && NATIVE && (installedModels || []).length > 1,
+    setAutoModel,
+    modelsForRoute: () => ({ installed: (installedModels || []).map((m) => ({ id: m.id, tier: tierOfInstalled(m) })).filter((m) => m.tier).map((m) => ({ id: m.tier.id, tier: m.tier, raw: m.id })),
+      active: (runningTier && runningTier.id) || null, ramGB: (device && device.ram) || 8 }),
+    switchModel: async (id) => { const m = (installedModels || []).find((x) => { const t = tierOfInstalled(x); return t && t.id === id; }); if (!m) return false; await useInstalled(m.id); return true; },
     webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang), groundedAudit,
     skillFor,
     // v6.10: the person's own skills (userskills.js): a /command or a description match → instructions added under the question
@@ -10740,7 +10757,7 @@ export default function App() {
         engineMode={engineMode} setEngineMode={setEngineMode} modelState={modelState} dlPct={dlPct}
         downloadModel={downloadModel} trainLog={trainLog} setTrainLog={setTrainLog} collect={collect} setCollect={setCollect}
         flash={flash} close={() => setShowEngine(false)}
-        native={NATIVE ? { engineInfo, installedModels, dlStage, dlDetail, cancelInstall, installNative, useInstalled, removeInstalled,
+        native={NATIVE ? { engineInfo, installedModels, dlStage, dlDetail, cancelInstall, installNative, useInstalled, removeInstalled, autoModel, setAutoModel,
                            airGap, setAirGap, enginePrefs, updateEnginePrefs, searchCfg, saveSearchCfg } : null} />}
       {showCustom && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setShowCustom(false)}>
@@ -11280,6 +11297,8 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
       <div className={box}>
         <p className={head}>{tr("How it answers")}</p>
         <div className="space-y-1.5">
+          {n.setAutoModel && (n.installedModels || []).length > 1 ? row(n.autoModel, () => n.setAutoModel(!n.autoModel), tr("Pick the best model for each question"),
+            tr("With more than one model installed: quick questions use the one already running; code, maths, reasoning and long reports move to your strongest model that runs smoothly here, and photos to one that sees. A switch takes 10–30 s.")) : null}
           {row(p.deepThink, () => n.updateEnginePrefs({ deepThink: !p.deepThink }), tr("Always think before answering"),
             tr("The model reasons first on every question. Clearly better on hard problems, but on a phone the answer starts 30–90 s later. Off: tap “Think” on just the questions that need it."))}
           {row(p.longAnswers, () => n.updateEnginePrefs({ longAnswers: !p.longAnswers }), tr("Long answers"),

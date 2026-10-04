@@ -3138,4 +3138,7 @@ export const AR = {
   "“{n}” isn't kept on this phone any more — pick the file again.": "«{n}» مش محفوظ على الموبايل خلاص — اختار الملف تاني.",
   "tap to continue": "دوس عشان تكمّل",
   "The text and your questions are kept on this phone only. Forget removes them.": "النص وأسئلتك محفوظين على الموبايل ده بس. «انسَ» بيمسحهم.",
+  "Web · Auto": "الويب · تلقائي",
+  "Web: Auto — it searches only when a question needs fresh facts": "الويب: تلقائي — بيدوّر بس لما السؤال محتاج معلومات جديدة",
+  "Pick the best model for each question": "اختار أحسن موديل لكل سؤال",
 };
