@@ -124,7 +124,10 @@ const MARK = /^(?:[•●▪◦‣∙·○■□◆◇►▶✓✔*\-–—]|[\u
 const NUM_MARK = /^(?:\d{1,2}|[a-z]|[ivx]{1,4})[.)]$/i;
 const FONT_MAP = { liberationserif: "Times New Roman", tinos: "Times New Roman", timesnewroman: "Times New Roman", times: "Times New Roman", timesroman: "Times New Roman",
   liberationsans: "Arial", arimo: "Arial", helvetica: "Arial", arial: "Arial", liberationmono: "Courier New", cousine: "Courier New", courier: "Courier New", couriernew: "Courier New",
-  dejavusans: "DejaVu Sans", dejavuserif: "DejaVu Serif", dejavusansmono: "DejaVu Sans Mono", symbol: null, wingdings: null, opensymbol: null };
+  dejavusans: "DejaVu Sans", dejavuserif: "DejaVu Serif", dejavusansmono: "DejaVu Sans Mono",
+  // v6.10: maths fonts drawn to match Times (a missing STIX fell back to a taller sans font); Mac fonts → their Office twins
+  stixgeneral: "Times New Roman", stix: "Times New Roman", stixtwotext: "Times New Roman", stixtwomath: "Cambria Math", stixmath: "Cambria Math", cmr10: "Times New Roman", cmmi10: "Times New Roman",
+  helveticaneue: "Arial", lucidagrande: "Arial", geneva: "Arial", menlo: "Courier New", monaco: "Courier New", calibri: "Calibri", symbol: null, wingdings: null, opensymbol: null };
 /** "BAAAAA+TimesNewRomanPS-BoldMT" → "Times New Roman" (null for symbol fonts). */
 export function fontFamily(name) {
   let f = String(name || "").replace(/^[A-Z]{6}\+/, "").replace(/[-,](?:Bold|Italic|Oblique|Regular|Roman|Book|Medium|Light|Semi[Bb]old|Black|Heavy|It|Bd|BdIt|BoldIt)\w*$/i, "").replace(/(?:PSMT|PS|MT)$/, "").replace(/-$/, "");
@@ -206,7 +209,7 @@ export function pdfLinesToBlocks(pages) {
   const pitchBy = new Map();
   for (let k = 1; k < lines.length; k++) {
     const a = lines[k - 1], b = lines[k];
-    if (a.page !== b.page || Math.abs(a.s - b.s) > 0.5) continue;
+    if (a.page !== b.page || Math.abs(a.s - b.s) > 0.25) continue;   // (v6.10: 12 and 12.5 pt lines are not one size)
     const g = Math.round((b.y - a.y) * 2) / 2;
     if (g <= 0 || g > b.s * 3) continue;
     const key = Math.round(b.s);
@@ -279,6 +282,9 @@ export function pdfLinesToBlocks(pages) {
       }
     }
     if (ls.length > 1) { const gaps = ls.slice(1).map((l, k) => l.y - ls[k].y).filter((x) => x > 0).sort((a, b) => a - b); const pt = gaps[Math.floor(gaps.length / 2)]; if (pt) blk.line = Math.round(pt * 10) / 10; }
+    // v6.10: a one-line paragraph keeps the page's line pitch for its size too (Word's own single spacing is
+    // ~1.15 of the size, and every short paragraph pulled the rest of the page up by a point or two)
+    if (!blk.line) blk.line = Math.round(pitch(first.s) * 10) / 10;
     if (lastLine && lastLine.page === first.page) { const gap = first.y - lastLine.y - pitch(first.s); if (gap > 1.5) blk.before = Math.min(72, Math.round(gap)); }
     else if (lastLine && lastLine.page !== first.page) blk.pageBreak = true;
     lastLine = ls[ls.length - 1];
@@ -405,9 +411,19 @@ export function pdfLinesToBlocks(pages) {
           if (shade.some(Boolean)) blk.shade = shade;
         }
         blk.size = Math.round(bodyRows[0].s * 2) / 2;
-        if (lastLine && lastLine.page === l.page) { const gap = l.y - lastLine.y - pitch(l.s); if (gap > 1.5) blk.before = Math.min(72, Math.round(gap)); }
+        // v6.10: each row's height — between the table's drawn rules when there is one rule per row edge, else
+        // the distance between the rows' lines — so the table is as tall as in the PDF (it was a row's text only)
+        const hy = [];
+        for (const r of hor.slice().sort((a, b) => a[1] - b[1])) if (!hy.length || r[1] - hy[hy.length - 1] > 2) hy.push(r[1]);
+        const rowTop = rows.map((r) => r.y), ruled = !!blk.border && hy.length === rows.length + 1;
+        if (ruled) { blk.rowH = hy.slice(1).map((y, k) => Math.round((y - hy[k]) * 10) / 10); blk.vmid = true; }
+        else if (rows.length >= 2 && !cont.size) { const d = rowTop.slice(1).map((y, k) => y - rowTop[k]); blk.rowH = [d[0], ...d].map((x) => Math.round(x * 10) / 10); }
+        if (blk.rowH && blk.rowH.some((x) => !(x > 0) || x > 200)) delete blk.rowH;
+        const tTop = ruled ? hy[0] : null, tBot = ruled ? hy[hy.length - 1] : null;
+        if (lastLine && lastLine.page === l.page) { const gap = tTop != null ? tTop - lastLine.y - (lastLine.s || 0) * 0.22 : l.y - lastLine.y - pitch(l.s); if (gap > 1.5) blk.before = Math.min(72, Math.round(gap)); }
         else if (lastLine) blk.pageBreak = true;
-        lastLine = lastRowLine;
+        // (the next paragraph's space above is measured from the table's bottom rule)
+        lastLine = tBot != null ? { ...lastRowLine, y: tBot - lastRowLine.s * 0.22 } : lastRowLine;
         out.push(blk);
         i = j; continue;
       }
@@ -493,7 +509,12 @@ export function pdfDocOptions(pages) {
   if (!ls.length || !p0) return {};
   const sizes = new Map(), fonts = new Map();
   for (const l of ls) { const n = l.sp.reduce((a, x) => a + String(x[1]).length, 0); sizes.set(Math.round(l.s * 2) / 2, (sizes.get(Math.round(l.s * 2) / 2) || 0) + n); const f = fontFamily(l.f); if (f) fonts.set(f, (fonts.get(f) || 0) + n); }
-  const top = Math.min(...ls.map((l) => l.y - l.s)), bottom = Math.max(...ls.map((l) => l.y));
+  let top = Math.min(...ls.map((l) => l.y - l.s));
+  const bottom = Math.max(...ls.map((l) => l.y));
+  // v6.10: with the page's exact line pitch Word / LibreOffice put a page's first baseline about 0.96 of its size below
+  // the margin: the margin is set so each page's first line lands where the PDF has it (the text sat 4–5 pt high)
+  const firstY = pages.map((p) => ls.filter((l) => l.p === p).sort((a, b) => a.y - b.y)[0]).filter(Boolean);
+  if (firstY.length) top = Math.min(...firstY.map((l) => l.y - l.s * 0.96)) + 4;
   const left = Math.min(...ls.map((l) => l.x)), right = ls.every((l) => l.e != null) ? Math.max(...ls.map((l) => l.e)) : p0.w - left;
   const clamp = (x, a, b) => Math.round(Math.min(b, Math.max(a, x)));
   return { page: { w: p0.w, h: p0.h, top: clamp(top - 4, 18, 144), bottom: clamp(p0.h - bottom - 8, 18, 108), left: clamp(left, 18, 144), right: clamp(p0.w - right - 2, 18, 144) },
@@ -539,7 +560,9 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
     const jcX = jc ? `<w:jc w:val="${jc}"/>` : "";
     // (in a right-to-left paragraph Word's "left" indent is the start side, like jc above)
     const ind = b.ind || b.first ? `<w:ind w:left="${tw(b.ind || 0)}"${b.first > 0 ? ` w:firstLine="${tw(b.first)}"` : b.first < 0 ? ` w:hanging="${tw(-b.first)}"` : ""}/>` : "";
-    const sp = b.before != null || b.line || o.exact ? `<w:spacing w:before="${tw(b.before || 0)}" w:after="0"${b.line && b.size && b.line > b.size * 1.2 ? ` w:line="${Math.round(240 * b.line / (b.size * 1.16))}" w:lineRule="auto"` : ""}/>` : "";
+    // (v6.10: a PDF's page — o.exact — keeps its lines exactly where they were: an exact line pitch)
+    const lineX = !b.line || !b.size ? "" : o.exact && b.line >= b.size * 0.95 && b.line <= b.size * 2.6 ? ` w:line="${tw(b.line)}" w:lineRule="exact"` : b.line > b.size * 1.2 ? ` w:line="${Math.round(240 * b.line / (b.size * 1.16))}" w:lineRule="auto"` : "";
+    const sp = b.before != null || b.line || o.exact ? `<w:spacing w:before="${tw(b.before || 0)}" w:after="0"${lineX}/>` : "";
     return `<w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ""}${b.pageBreak ? "<w:pageBreakBefore/>" : ""}${bullet ? `<w:numPr><w:ilvl w:val="${b.level || 0}"/><w:numId w:val="1"/></w:numPr>` : ""}${sp}${bullet ? "" : b.level && !b.ind ? `<w:ind w:left="${720 * (b.level + 1)}" w:hanging="360"/>` : ind}${rtl ? "<w:bidi/>" : ""}${jcX}</w:pPr>`;
   };
   const fmt = (b) => ({ ...(b.size ? { size: b.size } : {}), ...(b.font ? { font: b.font } : {}) });
@@ -564,7 +587,7 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
       // the space above a table (a table has none of its own): an empty paragraph exactly that tall
       return (b.pageBreak || b.before ? `<w:p><w:pPr>${b.pageBreak ? "<w:pageBreakBefore/>" : ""}<w:spacing w:before="0" w:after="0" w:line="${Math.max(20, tw(b.before || 1))}" w:lineRule="exact"/><w:rPr><w:sz w:val="2"/></w:rPr></w:pPr></w:p>` : "") +
         `<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/>${rtl ? "<w:bidiVisual/>" : ""}<w:tblW w:w="${b.widths ? widths.reduce((a, x) => a + x, 0) : 0}" w:type="${b.widths ? "dxa" : "auto"}"/>${b.ind ? `<w:tblInd w:w="${tw(b.ind)}" w:type="dxa"/>` : ""}<w:tblBorders>${["top", "left", "bottom", "right", "insideH", "insideV"].map((s) => `<w:${s} w:val="single" w:sz="${b.border ? b.border.sz : 4}" w:space="0" w:color="${b.border ? b.border.c : "999999"}"/>`).join("")}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${widths.map((x) => `<w:gridCol w:w="${x}"/>`).join("")}</w:tblGrid>` +
-        b.rows.map((r, ri) => `<w:tr>${Array.from({ length: w }, (_, ci) => `<w:tc><w:tcPr><w:tcW w:w="${widths[ci]}" w:type="dxa"/>${b.shade && b.shade[ri] ? `<w:shd w:val="clear" w:color="auto" w:fill="${b.shade[ri]}"/>` : ""}</w:tcPr><w:p><w:pPr>${o.exact ? '<w:spacing w:before="0" w:after="0"/>' : ""}${isAr(r[ci] || "") || rtl ? "<w:bidi/>" : ""}${Array.isArray(b.align) && b.align[ci] && b.align[ci] !== "left" ? `<w:jc w:val="${b.align[ci]}"/>` : ""}</w:pPr>${run(r[ci] || "", { ...cf, b: b.bold ? !!(b.bold[ri] && b.bold[ri][ci]) : ri === 0 })}</w:p></w:tc>`).join("")}</w:tr>`).join("") + `</w:tbl>` + (o.exact ? "" : "<w:p/>");
+        b.rows.map((r, ri) => `<w:tr>${b.rowH && b.rowH[ri] ? `<w:trPr><w:trHeight w:val="${tw(b.rowH[ri])}" w:hRule="atLeast"/></w:trPr>` : ""}${Array.from({ length: w }, (_, ci) => `<w:tc><w:tcPr><w:tcW w:w="${widths[ci]}" w:type="dxa"/>${b.shade && b.shade[ri] ? `<w:shd w:val="clear" w:color="auto" w:fill="${b.shade[ri]}"/>` : ""}${b.vmid ? '<w:vAlign w:val="center"/>' : ""}</w:tcPr><w:p><w:pPr>${o.exact ? '<w:spacing w:before="0" w:after="0"/>' : ""}${isAr(r[ci] || "") || rtl ? "<w:bidi/>" : ""}${Array.isArray(b.align) && b.align[ci] && b.align[ci] !== "left" ? `<w:jc w:val="${b.align[ci]}"/>` : ""}</w:pPr>${run(r[ci] || "", { ...cf, b: b.bold ? !!(b.bold[ri] && b.bold[ri][ci]) : ri === 0 })}</w:p></w:tc>`).join("")}</w:tr>`).join("") + `</w:tbl>` + (o.exact ? "" : "<w:p/>");
     }
     if (b.type === "pagebreak") return `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
     if (b.type === "image" && b.b64) {
@@ -597,7 +620,7 @@ export function docxFromBlocks(blocks, title = "Document", o = {}) {
     { name: "word/_rels/document.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>${imgs.map((x, i) => `<Relationship Id="rIdImg${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${o.page ? "image" : "chart"}${i + 1}.${x.ext}"/>`).join("")}${hf.header ? '<Relationship Id="rIdHdr" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>' : ""}${hf.footer ? '<Relationship Id="rIdFtr" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>' : ""}</Relationships>` },
     { name: "word/document.xml", data: doc },
     { name: "word/styles.xml", data: styles },
-    { name: "word/numbering.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="hybridMultilevel"/>${["•", "◦", "▪"].map((c, k) => `<w:lvl w:ilvl="${k}"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="${c}"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="${720 * (k + 1)}" w:hanging="360"/></w:pPr></w:lvl>`).join("")}</w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>` },
+    { name: "word/numbering.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="hybridMultilevel"/>${["•", "◦", "▪"].map((c, k) => `<w:lvl w:ilvl="${k}"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="${c}"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="${720 * (k + 1)}" w:hanging="360"/></w:pPr>${o.font ? `<w:rPr><w:rFonts w:ascii="${esc(o.font)}" w:hAnsi="${esc(o.font)}" w:cs="${esc(o.font)}"/></w:rPr>` : ""}</w:lvl>`).join("")}</w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>` },
     { name: "docProps/core.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${esc(title)}</dc:title><dc:creator>Attune</dc:creator></cp:coreProperties>` },
     ...(hf.header ? [{ name: "word/header1.xml", data: hfXml(hf.header, "hdr") }] : []), ...(hf.footer ? [{ name: "word/footer1.xml", data: hfXml(hf.footer, "ftr") }] : []),
     ...imgs.map((x, i) => ({ name: `word/media/${o.page ? "image" : "chart"}${i + 1}.${x.ext}`, data: b64ToBytes(String(x.b64).replace(/^data:[^,]*,/, "")) })),
