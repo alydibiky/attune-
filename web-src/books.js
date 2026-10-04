@@ -74,7 +74,7 @@ export function docTotals(doc, tax = DEFAULT_TAX) {
 }
 
 // ---- numbering: gapless per series per year, assigned at POSTING -------------------------------
-export const SERIES = { quote: "QUO", order: "SO", invoice: "INV", credit: "CN", purchase: "PO", bill: "BILL", payment: "RCT", supplierPayment: "PAY" };
+export const SERIES = { quote: "QUO", order: "SO", invoice: "INV", credit: "CN", purchase: "PO", bill: "BILL", payment: "RCT", supplierPayment: "PAY", delivery: "DN" };
 export const pad = (n, w = 5) => String(n).padStart(w, "0");
 /** The next number for a series in a year, from the documents already POSTED (drafts have no number). */
 export function nextNumber(series, year, docs = []) {
@@ -95,6 +95,7 @@ export const ACCOUNTS = [
   { id: "2200", en: "Table tax payable", ar: "ضريبة الجدول", type: "liability" }, { id: "2300", en: "Customer deposits", ar: "دفعات مقدمة من العملاء", type: "liability" },
   { id: "3000", en: "Owner's equity", ar: "حقوق الملكية", type: "equity" },
   { id: "4000", en: "Sales", ar: "المبيعات", type: "income" }, { id: "4100", en: "Sales returns", ar: "مردودات المبيعات", type: "income" },
+  { id: "4200", en: "Exchange gain / loss", ar: "فروق تغيير العملة", type: "income" },
   { id: "5000", en: "Cost of goods sold", ar: "تكلفة البضاعة المباعة", type: "expense" }, { id: "6000", en: "Expenses", ar: "المصروفات", type: "expense" },
 ];
 const acct = (id) => ACCOUNTS.find((a) => a.id === id);
@@ -162,8 +163,9 @@ export function profitAndLoss(journal, from, to) {
   const side = (id, a, c) => ((b[id] || {})[a] || 0) - ((b[id] || {})[c] || 0);
   const sales = side("4000", "credit", "debit"), salesReturns = side("4100", "debit", "credit");
   const cogs = side("5000", "debit", "credit"), expenses = side("6000", "debit", "credit");
+  const fxGain = side("4200", "credit", "debit");          // realised exchange gain (+) or loss (−) on foreign-currency receipts
   const revenue = sales - salesReturns, grossProfit = revenue - cogs;
-  return { sales, salesReturns, revenue, cogs, grossProfit, expenses, netProfit: grossProfit - expenses };
+  return { sales, salesReturns, revenue, cogs, grossProfit, expenses, fxGain, netProfit: grossProfit - expenses + fxGain };
 }
 export function cashPosition(journal, asOf) {
   const b = balances(journal.filter((e) => !asOf || e.date <= asOf));
@@ -208,7 +210,7 @@ export function statement({ customer, invoices, credits = [], payments, from, to
   const ev = [];
   for (const d of invoices) if (d.customer === customer) ev.push({ date: d.date, ref: d.number, kind: "invoice", debit: docTotals(d, tax).total, credit: 0 });
   for (const d of credits) if (d.customer === customer) ev.push({ date: d.date, ref: d.number, kind: "credit", debit: 0, credit: Math.abs(docTotals(d, tax).total) });
-  for (const p of payments) if (p.customer === customer) ev.push({ date: p.date, ref: p.number, kind: "payment", debit: 0, credit: p.amount + (p.allocations || []).reduce((s, a) => s + (a.wht || 0), 0) });
+  for (const p of payments) if (p.customer === customer) ev.push({ date: p.date, ref: p.number, kind: "payment", debit: 0, credit: p.amount - (p.fxGain || 0) + (p.allocations || []).reduce((s, a) => s + (a.wht || 0), 0) });
   ev.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.ref < b.ref ? -1 : 1));
   let bal = 0, opening = 0;
   const lines = [];
