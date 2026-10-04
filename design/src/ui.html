@@ -1,0 +1,92 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0b0f19;color:#e2e8f0;font-family:"DejaVu Sans",sans-serif;padding:32px;width:1900px;font-size:13px}
+h1{font-size:30px;margin:8px 0}h2{font-size:21px;margin:26px 0 10px;color:#fff}.sub{color:#94a3b8;font-size:15px;line-height:1.5}
+.shots{display:flex;gap:12px}.shot{width:220px}.shot img{width:220px;border-radius:14px;border:1px solid #334155}.shot div{font-size:12px;color:#94a3b8;text-align:center;margin-top:4px}
+.audit{display:grid;grid-template-columns:1fr 1fr;gap:6px 30px;margin-top:14px}.audit div{background:#111827;border-radius:10px;padding:10px 12px;line-height:1.45}.audit b{color:#fb7185}.audit i{color:#2dd4bf;font-style:normal}
+.dirs{display:flex;gap:24px}.dir{width:440px}.dir h3{font-size:18px;margin-bottom:6px}.dir p{color:#cbd5e1;line-height:1.45;margin-bottom:8px;min-height:96px}
+.tag{background:#134e4a;color:#2dd4bf;border-radius:6px;padding:2px 8px;font-size:12px}
+.pair{display:flex;gap:10px}
+.ph{width:215px;height:440px;background:#020617;border:1px solid #334155;border-radius:20px;overflow:hidden;position:relative;font-size:10px}
+.tb{height:34px;border-bottom:1px solid #1e293b;display:flex;align-items:center;padding:0 10px;font-weight:700;font-size:12px;gap:6px}
+.c{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:7px;margin:6px 8px}
+.sk{height:9px;border-radius:4px;background:linear-gradient(90deg,#1e293b,#334155,#1e293b);margin:5px 0}
+.nav{position:absolute;bottom:0;left:0;right:0;height:40px;border-top:1px solid #1e293b;display:flex;justify-content:space-around;align-items:center;color:#64748b;background:#020617}.nav .on{color:#2dd4bf}
+.in{position:absolute;bottom:46px;left:8px;right:8px;height:38px;border-radius:14px;border:1px solid #334155;background:#0f172a;display:flex;align-items:center;padding:0 10px;color:#64748b}
+.mic{margin-left:auto;width:26px;height:26px;border-radius:50%;background:#14b8a6}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:6px 8px}.g div{background:#0f172a;border:1px solid #1e293b;border-radius:10px;height:46px;padding:6px}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#0f172a;border-radius:16px 16px 0 0;border-top:1px solid #334155;padding:8px}
+.grab{width:30px;height:3px;background:#475569;border-radius:2px;margin:0 auto 6px}
+.rail{position:absolute;left:0;top:34px;bottom:0;width:44px;border-right:1px solid #1e293b;display:flex;flex-direction:column;gap:12px;align-items:center;padding-top:10px;color:#64748b}
+.dot{width:22px;height:22px;border-radius:7px;background:#1e293b}.dot.on{background:#134e4a;outline:1px solid #2dd4bf}
+.pc{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.pc div{background:#111827;border-radius:12px;padding:12px;line-height:1.5}.pc b{color:#2dd4bf}
+table{border-collapse:collapse;margin-top:8px}td,th{border:1px solid #334155;padding:6px 10px;text-align:left}th{background:#111827}
+</style></head><body>
+<h1>App-wide UI/UX rework: audit, 3 directions, rules (item 13)</h1>
+<div class="sub">Real screenshots of the current build (v6.9 web code, 390 px, taken with Playwright), the 10 biggest problems I see, then 3 directions to choose from, then the rules that apply to whichever direction is picked.</div>
+
+<h2>1 · The current app (design/current-*.png)</h2>
+<div class="shots">
+<div class="shot"><img src="../current-home.png"><div>① current-home.png (Chat)</div></div>
+<div class="shot"><img src="../current-more.png"><div>② current-more.png</div></div>
+<div class="shot"><img src="../current-fit.png"><div>③ current-fit.png</div></div>
+<div class="shot"><img src="../current-studio.png"><div>④ current-studio.png</div></div>
+<div class="shot"><img src="../current-money.png"><div>⑤ current-money.png</div></div>
+<div class="shot"><img src="../current-instant.png"><div>⑥ current-instant.png</div></div>
+<div class="shot"><img src="../current-business.png"><div>⑦ current-business.png</div></div>
+</div>
+<div class="audit">
+<div><b>1. The More sheet is a wall of 32 tiles</b> ②. There are 30+ cards with 2–4 line descriptions, so "Fit & Food" is the 21st tile, several screens down. <i>Fix: search at the top, pinned or recent apps, 1-line labels, and a 4-column icon grid.</i></div>
+<div><b>2. Fit opens on a long plan form</b> ③. Before you can log a single meal you face sex, age, height, weight, activity, goal, pace and style (about 15 controls). <i>Fix: ask 3 questions first, and make Today the home.</i></div>
+<div><b>3. Each mini-app asks for the language again</b> ⑤. The Money screen asks "English / العربية" even though the app language is already set. It also uses another background (#111 vs slate-950) and another, heavier font. <i>Fix: one theme and one language setting for the whole app.</i></div>
+<div><b>4. Six bottom tabs, and two of them are niche</b> ①. Business and Money get a permanent tab, but Fit, Studio and Converter do not. Six tabs make each target about 65 px wide with 11 px labels. <i>Fix: 4–5 tabs; the user picks the pinned apps.</i></div>
+<div><b>5. A blank dead end on the web or on unsupported phones</b> ④. Studio shows one sentence and an empty page, with no example and no next step. <i>Fix: designed empty states (an illustration, one line and 1 action).</i></div>
+<div><b>6. "No model" chip in the top bar on every screen</b> ①③④. It is a 100 px technical status that competes with the title, and it is shown even where no model is used. <i>Fix: show it only in Chat, or as a 6 px status dot.</i></div>
+<div><b>7. Spinners and full reloads instead of skeletons</b>. Code count: 19 spinners (animate-spin) in attune.jsx, and the screen reloads after a crash or memory event (item 10). <i>Fix: skeleton blocks, an optimistic UI, and restoring the state after a process kill.</i></div>
+<div><b>8. No motion system</b>. Screens swap with no transition. Bottom sheets appear without a slide or a scrim fade, and there is no drag-to-close. <i>Fix: the motion rules below.</i></div>
+<div><b>9. Typography is not on a scale</b> ①②③. Many ad-hoc sizes; in ② the tile titles look as big as the screen title. <i>Fix: a 6-step type scale.</i></div>
+<div><b>10. Chat home prompts are generic, and "Crane question" is hard-coded</b> ①. There are 6 big tiles but no recent chats, and Think / Web are 2 toggles that take room from the input. <i>Fix: recent chats and suggestions that learn; move Think and Web into a "+" menu.</i></div>
+</div>
+
+<h2>2 · Three directions</h2>
+<div class="dirs">
+<div class="dir"><h3>A · "Calm hub" <span class="tag">recommended</span></h3><p>There are 4 tabs: <b>Home · Chat · Apps · You</b>. Home is a short daily screen with today's calories, money, reminders and the pinned apps. Apps is a searchable 4-column grid. Every app shares one shell (top bar, back gesture, sheet). The colours and the dark theme stay as they are; this direction is mostly order and motion.</p>
+<div class="pair">
+<div class="ph"><div class="tb">Good morning, Ali</div><div class="c"><b>Today</b><div class="sk" style="width:70%"></div>1,240 kcal left · 3 reminders · −120 EGP</div>
+<div class="c"><b>Pinned</b><div style="display:flex;gap:6px;margin-top:5px"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+<div class="c"><b>Continue</b><br>Chat · "Liebherr load chart…"<br>Report · Site incident 3 Oct</div>
+<div class="c"><div class="sk"></div><div class="sk" style="width:60%"></div>skeleton while loading</div>
+<div class="nav"><span class="on">Home</span><span>Chat</span><span>Apps</span><span>You</span></div></div>
+<div class="ph"><div class="tb">Apps</div><div class="c" style="color:#64748b">🔍 Search 32 apps</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px;text-align:center">
+<div><div class="dot" style="margin:auto;width:34px;height:34px"></div>Fit</div><div><div class="dot" style="margin:auto;width:34px;height:34px"></div>Money</div><div><div class="dot" style="margin:auto;width:34px;height:34px"></div>Studio</div><div><div class="dot" style="margin:auto;width:34px;height:34px"></div>Mind</div>
+<div><div class="dot" style="margin:auto;width:34px;height:34px"></div>Convert</div><div><div class="dot" style="margin:auto;width:34px;height:34px"></div>Business</div><div><div class="dot" style="margin:auto;width:34px;height:34px"></div>Cranes</div><div><div class="dot" style="margin:auto;width:34px;height:34px"></div>Slides</div>
+<div><div class="dot" style="margin:auto;width:34px;height:34px"></div>PDF</div><div><div class="dot" style="margin:auto;width:34px;height:34px"></div>Reminders</div><div><div class="dot" style="margin:auto;width:34px;height:34px"></div>Travel</div><div><div class="dot" style="margin:auto;width:34px;height:34px"></div>Code</div></div>
+<div class="nav"><span>Home</span><span>Chat</span><span class="on">Apps</span><span>You</span></div></div></div></div>
+
+<div class="dir"><h3>B · "Chat is the app"</h3><p>There is a single screen with the chat input always at the bottom. Apps open as <b>full-height bottom sheets</b> on top of the chat, from a "/" command or from a chip row above the input. The shell is the fewest of any option and very modern, but heavy apps like Business, Fit and Converter feel cramped in a sheet. It also changes muscle memory the most.</p>
+<div class="pair">
+<div class="ph"><div class="tb">Attune</div><div class="c">You: log foul and bread for breakfast</div><div class="c" style="border-color:#134e4a">✓ Added to Fit · 420 kcal <span style="color:#2dd4bf">Undo</span></div>
+<div style="position:absolute;bottom:50px;left:8px;right:8px;display:flex;gap:4px"><span class="c" style="margin:0">Fit</span><span class="c" style="margin:0">Money</span><span class="c" style="margin:0">Studio</span><span class="c" style="margin:0">/ more</span></div>
+<div class="in" style="bottom:8px">Message…<span class="mic"></span></div></div>
+<div class="ph"><div class="tb" style="opacity:.3">Attune</div><div style="position:absolute;inset:0;background:#000a"></div><div class="sheet" style="top:60px"><div class="grab"></div><b>Fit &amp; Food</b><div class="c">1,240 left</div><div class="c"><div class="sk"></div><div class="sk"></div></div><div class="c"><div class="sk" style="width:50%"></div></div></div></div></div></div>
+
+<div class="dir"><h3>C · "Workspace rail"</h3><p>A slim left rail (it moves to the right in RTL) holds pinned apps, and the content gets the full height with no bottom bar. It suits big phones and foldables, and it shows the most at once. However it is unusual on Android phones, harder to reach one-handed, and costs about 44 px of width on 390 px screens.</p>
+<div class="pair">
+<div class="ph"><div class="tb">Fit &amp; Food</div><div class="rail"><div class="dot"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div style="margin-top:auto;margin-bottom:10px" class="dot"></div></div>
+<div style="margin-left:46px"><div class="c">1,240 kcal left</div><div class="c"><div class="sk"></div><div class="sk"></div></div><div class="c"><div class="sk" style="width:60%"></div></div></div></div>
+<div class="ph"><div class="tb">Chat</div><div class="rail"><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div style="margin-left:46px"><div class="c">Recent chats</div><div class="c"><div class="sk"></div></div></div><div class="in" style="left:52px">Message…<span class="mic"></span></div></div></div></div>
+</div>
+
+<h2>3 · Design principles &amp; concrete rules (apply to any direction)</h2>
+<div class="pc">
+<div><b>Principles</b><br>1. The phone does the work: never ask for what we already know (language, country, units).<br>2. Show something useful in under 300 ms: cached data or a skeleton, never a blank screen.<br>3. One primary action per screen, in teal, in the thumb zone.<br>4. Undo instead of "Are you sure?".<br>5. The same shell everywhere: every mini-app looks like one app.<br>6. Arabic is first-class: mirrored layout, Arabic digits, a proper Arabic font.<br>7. Calm: one accent colour, no emoji as icons in chrome.</div>
+<div><b>Measurable rules</b><br>• Touch targets ≥ 48×48 px (today the 11 px tab labels and chips at about 36 px fail).<br>• ≤ 2 taps from launch to the 5 common actions: chat, log a meal, add an expense, a reminder, a photo action.<br>• Skeletons instead of spinners for any wait over 150 ms, and a progress bar plus a time estimate over 3 s.<br>• No full reloads: restore the route, scroll position and draft after a process kill (state in IndexedDB).<br>• Type scale: 12 / 14 / 16 / 20 / 24 / 32 px, line height 1.4, weights 400 / 600 / 700 only.<br>• Spacing on a 4 px grid: 8 / 12 / 16 / 24 px; screen gutter 16 px; card radius 16 px; sheet radius 24 px.</div>
+<div><b>Motion &amp; haptics</b><br>• Push and pop between screens: a 220 ms slide plus fade, ease-out (cubic-bezier .2,.8,.2,1).<br>• Bottom sheets: a 260 ms spring up, a scrim fading to 60 %, drag to close, and Back closes the sheet first.<br>• Shared-element transitions: an app tile grows into the app's header, and a meal chip flies into the ring (View Transitions API, with a cross-fade fallback).<br>• Numbers count up from their old value (250 ms).<br>• Respect "reduce motion" by switching to cross-fades only.<br>• Haptics: a light tick on add or toggle, a medium one on save or done, a heavy one only on errors (Android performHapticFeedback through the bridge).</div>
+</div>
+<table><tr><th></th><th>A Calm hub</th><th>B Chat is the app</th><th>C Workspace rail</th></tr>
+<tr><td>Taps to log a meal from launch</td><td>2 (Home → chip)</td><td>1–2 (type it or use the chip)</td><td>2</td></tr>
+<tr><td>Taps to reach Fit</td><td>1 if pinned, else 2</td><td>1 (chip)</td><td>1</td></tr>
+<tr><td>Change for existing users</td><td>medium</td><td>high</td><td>high</td></tr>
+<tr><td>Effort to build (hours)</td><td>~40</td><td>~55</td><td>~45</td></tr></table>
+</body></html>
