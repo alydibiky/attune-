@@ -408,7 +408,11 @@ class MainActivity : AppCompatActivity() {
                         payload.put("kind", "chatfile").put("text", chat)
                             .put("name", (intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: "").replace(Regex("^WhatsApp Chat (with|-) ", RegexOption.IGNORE_CASE), ""))
                     } else {
-                        val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
+                        // v6.12: a note shared as a .txt FILE (the phone's Notebook app can do that) was dropped
+                        // when there was no EXTRA_TEXT — its text is read now (up to 2 MB)
+                        val text = intent.getStringExtra(Intent.EXTRA_TEXT)
+                            ?: stream?.takeIf { type.startsWith("text/") }?.let { readSharedText(it) }
+                            ?: return
                         payload.put("kind", "share").put("text", text)
                     }
                 }
@@ -421,6 +425,11 @@ class MainActivity : AppCompatActivity() {
         }
         if (::web.isInitialized && web.progress == 100) deliverShare(payload) else pendingShare = payload
     }
+
+    /** A shared text file, up to 2 MB; null if it can't be read. */
+    private fun readSharedText(uri: Uri): String? = try {
+        contentResolver.openInputStream(uri)?.use { ins -> ins.bufferedReader(Charsets.UTF_8).readText().take(2_000_000) }?.takeIf { it.isNotBlank() }
+    } catch (e: Exception) { null }
 
     /** An exported chat file (.txt, or the .txt inside a .zip), up to 6 MB of text; null if it isn't one. */
     private fun readChatExport(uri: Uri, type: String): String? = try {
