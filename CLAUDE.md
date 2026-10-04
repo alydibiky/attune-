@@ -4,7 +4,7 @@
    for the session. Work through all of it with a task list.
 2. Read **`HANDOFF.md`** §0 ("START HERE") and the latest section (§5.37) for how the app is built and tested.
 
-## Where things stand (2 Oct 2026, v6.10 in progress)
+## Where things stand (4 Oct 2026, v6.12 — HANDOFF §5.40; Ali's latest list: NEXT_SESSION.md section L)
 - Read **`PLANS_2026-10-02.md`** too: the converter / Fit / heat / Business plans and exactly what is left.
 - `main` = branch `claude/attune-android-continuation-4lp2wq` = v6.9 (versionCode 71). All 89 test files
   pass (`bash tests/run_all.sh`). Last green APK: https://github.com/alydibiky/attune-/actions/runs/36567802881

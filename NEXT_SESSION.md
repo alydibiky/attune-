@@ -377,6 +377,19 @@ and `tests/e2e_v69site.py`.
       sign off the tax examples before release.
     - **Honest risks:** tax rates change; ETA cannot be fully offline; data loss on a single phone → scheduled backups.
 
+## L. Added 4 Oct 2026 (after testing 6.11) — done in v6.12 unless marked
+27. ✅ Import CV did nothing (cut-off model JSON + invisible error toasts).
+28. ✅ A 10-slide PowerPoint showed as 2 pages in Ask a PDF.
+29. ✅ Attach more than one PDF / file / photo to a chat message.
+30. ✅ Import the phone's Notebook notes into Shelf easily (share → Save to Shelf; Import notes with many formats; paste).
+31. 🟡 Food photo recognition "still bad" (eggs on toast → one "Fried egg", duplicate chips): prompt/parse/hint fixes measured with
+    the real model on his photo (4 eggs + 4 toast). Still needs his phone check with Blaze+ and more real photos.
+32. 🟡 Web search "still bad, fix it for good": junk/off-topic pages never used, 4 engines, pictures, next-question chips.
+    Needs his phone check and 2–3 concrete questions that still disappoint.
+33. 🟡 Maps rework: search fixed (Photon + Nominatim + Overpass), pin + save, my location. The visual rework needs his look choice.
+34. ✅ Instant "What are my expenses in the last 4 days" now answered from Money by code.
+35. ✅ The "…was promised to you and is late" banner from a note-to-self; Catalogue button wrapping.
+
 ---
 
 ## Prompt to start the next session

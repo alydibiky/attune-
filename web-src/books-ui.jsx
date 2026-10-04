@@ -189,6 +189,11 @@ function Settings({ onClose, goCustom }) {
           <div className="grid grid-cols-2 gap-2">
             <Field label={L("Tax registration no.", "الرقم الضريبي")}><Input value={c.taxId} onChange={set("taxId")} inputMode="numeric" /></Field>
             <Field label={L("Commercial register", "السجل التجاري")}><Input value={c.regNo} onChange={set("regNo")} /></Field>
+            <details className="text-[12.5px]" data-testid="books-eta-settings"><summary className="cursor-pointer py-1 opacity-80">{L("E-invoice (ETA) details", "بيانات الفاتورة الإلكترونية")}</summary><div className="space-y-2 pt-2">
+              <Field label={L("Activity code (4 digits, on your tax card)", "كود النشاط (٤ أرقام، على البطاقة الضريبية)")}><Input value={(c.eta || {}).activityCode || ""} onChange={(v) => setC((x) => ({ ...x, eta: { ...(x.eta || {}), activityCode: v } }))} inputMode="numeric" /></Field>
+              {[["governate", "Governorate", "المحافظة"], ["regionCity", "City / area", "المدينة / المنطقة"], ["street", "Street", "الشارع"], ["buildingNumber", "Building no.", "رقم المبنى"], ["branchID", "Branch ID (0 = head office)", "كود الفرع (٠ = المركز الرئيسي)"]].map(([k, en, ar]) => <Field key={k} label={L(en, ar)}><Input value={((c.eta || {}).address || {})[k] || ""} onChange={(v) => setC((x) => ({ ...x, eta: { ...(x.eta || {}), address: { ...((x.eta || {}).address || {}), [k]: v } } }))} /></Field>)}
+              <p className="opacity-70">{L("The app makes the e-invoice file; signing it and sending it to the tax authority needs your company's e-signature token or an e-invoicing provider.", "التطبيق بيعمل ملف الفاتورة الإلكترونية؛ توقيعه وإرساله لمصلحة الضرائب محتاج توكن التوقيع الإلكتروني بتاع شركتك أو مزوّد فاتورة إلكترونية.")}</p>
+            </div></details>
           </div>
           <Field label={L("Address", "العنوان")}><Input value={c.address} onChange={set("address")} /></Field>
           <div className="grid grid-cols-2 gap-2">

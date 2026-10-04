@@ -719,7 +719,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // v6.10: the person's own Skills — "/quote 50 t crane…" or a question that fits a skill's description
       const uSk = typed && api.userSkills ? api.userSkills(typed) : null;
       if (uSk && uSk.stripped != null) content = uSk.stripped || content;
-      let sources = null, via = null, research = null, webCtx = null;
+      let sources = null, via = null, research = null, webCtx = null, webEmpty = false;
       const pic = img || carried;
       if ((api.webOn || o.web) && typed) {
         // With a photo, LOOK first: search for what is in the picture, not
@@ -878,7 +878,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           content = api.groundedPrompt(asked, look.hits) + photoNote;
         } else if (api.webPages) {
           // v6.12: the web gave nothing about the subject — answer from what the model knows, and say so plainly
-          extra.webEmpty = true;
+          webEmpty = true;
           content = content + "\n\n(A web search was made, but it found no page about this. Answer from your own knowledge, say in one short line at the start that the web search found nothing about it, and mark anything that may have changed recently as possibly out of date.)" + photoNote;
         }
       } else if (typed && api.isPersonal(typed)) {
@@ -887,6 +887,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       }
       let answer, extra = {};
       if (research) extra.research = research;
+      if (webEmpty) extra.webEmpty = true;
       if (sources && webCtx && webCtx.toRead) {   // v6.12: up to 4 pictures from the pages read (one per site)
         const seenImg = new Set(), seenSite = new Set();
         const imgs = [];

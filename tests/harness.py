@@ -127,6 +127,8 @@ def new_page(br, env, errors, native=True, extra_init=None, release=False):
     ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
     ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")
     if not release: ctx.add_init_script("try{if(localStorage.getItem('attune:dev')===null)localStorage.setItem('attune:dev','1')}catch(e){}")   # tests run in developer mode (the testing box in Plan etc.); release=True = a customer's phone
+    # v6.12: the app adds the engineering skill once on a first start; tests start from no skills unless they ask (seed=…)
+    ctx.add_init_script("try{if(!localStorage.getItem('attune:skills:seeded:v612'))localStorage.setItem('attune:skills:seeded:v612','1')}catch(e){}")
     if extra_init: ctx.add_init_script(extra_init)
     page = ctx.new_page()
     page.on("pageerror", lambda e: errors.append("pageerror: " + str(e)))

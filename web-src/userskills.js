@@ -9,6 +9,18 @@ const KEY = "attune:skills:v1";
 export const LIMITS = { name: 60, command: 24, when: 300, instructions: 6000, example: 800, reference: 12000, checklist: 1500, script: 5000, max: 60, blockChars: 3800, refChars: 1100 };
 
 export const load = () => { try { const a = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+// v6.12: the engineering skill is added once for everyone (switch it off or delete it in Skills; it is not added again)
+const SEED = "attune:skills:seeded:v612";
+export function seedOnce(list = load()) {
+  try {
+    if (localStorage.getItem(SEED)) return list;
+    localStorage.setItem(SEED, "1");
+    const c = CATALOGUE.find((x) => x.id === "hydraulics");
+    if (!c || list.some((x) => x.command === c.command || x.name === c.name)) return list;
+    const out = [makeSkill({ ...c, id: undefined }, { source: "catalogue" }), ...list];
+    save(out); return out;
+  } catch (e) { return list; }
+}
 export const save = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list.slice(0, LIMITS.max))); return true; } catch (e) { return false; } };
 
 /** "/Quote" → "/quote"; anything that is not 2–20 letters, digits, - or _ → "". */
@@ -181,6 +193,29 @@ export const CATALOGUE = [
     "Write a formal business email: subject line, greeting, one short paragraph with the purpose, the key details as bullets if there are 3 or more, a clear request and deadline, polite closing. Under 150 words. Same language as the request; formal Modern Standard Arabic for Arabic."),
   C("toolbox", "Safety toolbox talk", "/toolbox", "safety toolbox talk briefing lifting crane site hazards سلامة اجتماع قبل العمل",
     "Write a 5-minute toolbox talk for the work described: the task in one line, the 4–6 main hazards, the control for each (concrete: exclusion zone, signalman, outrigger mats, wind limit, tag lines), what to stop work for, and 3 questions to ask the crew to check they understood. Short sentences. English with Egyptian Arabic terms where useful."),
+  // v6.12 (NEXT_SESSION item 5): engineering answers at expert level — the instructions name the method; the reference is
+  // a small facts library (only the paragraphs that match the question are added, relevantReference)
+  { ...C("hydraulics", "Hydraulics & crane fault engineer", "/engineer", "hydraulic hydraulics cavitation counterbalance valve spool cylinder pump leak leaking drift creep overheating relief fault troubleshoot هيدروليك صمام سلندر طلمبة تسريب عطل",
+    "Answer as a senior hydraulics and crane engineer. 1) Name the physical mechanism behind the symptom in one or two sentences (what the oil, the load and the valve are doing). 2) Give the fixes that act on THAT mechanism, most effective first, each with one line on why it works and what to check before fitting it. 3) Name what to measure to confirm (pressures at which ports, temperatures, flows, times). 4) Safety: a load-holding or crane fault is a stop-work item until checked. Never give generic advice (\"increase pressure\", \"check the system\") without the mechanism. Use the reference facts where they fit; say when a fact depends on the machine's manual. Same language as the question."),
+    reference: `## Cavitation during deceleration (overrunning load)
+When a moving load or a big inertia is slowed by closing the valve's meter-out edge, the load keeps pushing the actuator: the inlet (meter-in) side is now being emptied faster than the valve feeds it, its pressure falls below the oil's vapour pressure and it cavitates (noise, shock, damaged seals and pump, loss of position control). Fixes that do not reduce velocity: (1) anti-cavitation / make-up check valves (or a replenishing circuit from a pressurised tank line or boost pump) feeding the low-pressure side; (2) meter-out / back-pressure control so the load cannot run away: a counterbalance (over-centre) valve, an asymmetric spool matched to the cylinder area ratio (meter-out edge sized for the rod side), or tank-line back-pressure of a few bar. Also ramp the valve command (longer deceleration ramps in the controller) and check the area ratio of a differential cylinder (rod side intensification).
+## Counterbalance (over-centre) valves
+Hold a load without creep and control an overrunning load: set to about 1.3 × the maximum load-induced pressure; the pilot ratio (e.g. 3:1, 4.5:1, 8:1) trades stability (low ratio) against energy loss (high ratio). Instability or "bouncing" on lowering: pilot ratio too high, orifice/damping missing, or a closed-centre valve feeding it — use an open-centre (A,B→T) spool for the counterbalance circuit.
+## Load drift / creep (boom or cylinder sinks)
+Causes in order: spool valve leakage (spool valves are not leak-free — use pilot-operated check or counterbalance valves for holding), worn piston seal (test: pressurise one side, open the other port, measure the flow), counterbalance contaminated or set too low, thermal contraction of the oil in a trapped cylinder (a cooling cylinder retracts on its own).
+## Overheating
+Heat = pressure drop × flow wasted. Typical causes: relief valve blowing over continuously (pump at relief while idle), fixed pump on a closed-centre valve, worn pump (internal leakage), undersized cooler or dirty cooler fins, oil too thin/thick, too-small tank. Keep oil below about 60 °C; above 80 °C seals and oil age fast.
+## Pressure spikes and shock
+Fast-closing valves or sudden stops of large inertia: use shock/cross-port relief valves, ramps, accumulators, and check the hose ratings (working pressure × 4 burst).
+## Pump noise
+Aeration (air drawn in at the suction: loose fittings, low oil, foaming) sounds like gravel; cavitation (suction blocked, filter clogged, oil too cold/viscous, suction line too small, pump above the tank too far). Suction vacuum should stay above about −0.2 bar.
+## Slewing / winch drift
+Slew: brake not engaging, motor leakage, holding valve. Winch: brake release pressure leaking, brake linings, counterbalance setting. Test with the load at a safe height first.
+## Outriggers sinking
+Hydraulic: pilot-operated check (lock) valve leaking or the cylinder seal. Ground: pad too small for the pressure — ground bearing pressure = outrigger load ÷ mat area; use mats sized for the ground's allowed pressure.
+## Contamination
+Most hydraulic failures start with dirty oil: target ISO 4406 cleanliness about 18/16/13 for valves, 16/14/11 for servo/proportional valves; change filters on ΔP indicator, take an oil sample.`,
+  },
 ];
 
 // The ready-made skills carry a checklist too (what the answer must satisfy before it is final).
@@ -197,5 +232,6 @@ const CHECKS = {
   "eli5": "no jargon without a one-line meaning\none everyday example",
   "formal-email": "subject line, greeting, clear request, closing\nno more than 150 words unless asked",
   "toolbox": "hazards, controls and one question for the crew\nshort sentences a crew can follow",
+  "hydraulics": "the physical mechanism is named first\nevery fix acts on that mechanism and says why\nwhat to measure to confirm is given\nno generic advice like 'increase pressure'",
 };
 for (const c of CATALOGUE) if (CHECKS[c.id]) c.checklist = CHECKS[c.id];

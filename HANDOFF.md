@@ -1,6 +1,6 @@
 # Attune — complete handoff for the next session
 
-_Last updated: 29 Sep 2026. Latest: **v6.9** on `main` (versionCode 71; §5.37) — Mind, every model one RAM tier lower, max tests of every model up to Zenith+, web search accuracy/speed, file converters that keep formatting, coding fix-loop probes. **Ali's open problem list after testing v6.9 on his phone is in `NEXT_SESSION.md` — start there.**_
+_Last updated: 4 Oct 2026 (v6.12, §5.40). Earlier: 29 Sep 2026. Latest: **v6.9** on `main` (versionCode 71; §5.37) — Mind, every model one RAM tier lower, max tests of every model up to Zenith+, web search accuracy/speed, file converters that keep formatting, coding fix-loop probes. **Ali's open problem list after testing v6.9 on his phone is in `NEXT_SESSION.md` — start there.**_
 
 ---
 
@@ -528,6 +528,62 @@ Ali: "do everything" from NEXT_SESSION; unlock all Pro (incl. Yusr); a billing p
 - **Plans & billing page** (`Upgrade` in attune.jsx): status card, Monthly/Yearly/Lifetime switch with every price, app-by-app "what Pro gives" (`BILLING_GROUPS`), Business system card, Free/Pro/Business compare table (`COMPARE_ROWS`, real limits). **Money is included in Pro**: Attune sends `entitlement {pro}` over the Yusr bridge; Yusr's paywall inside Attune says "part of Attune Pro" and sends `open-plan`.
 - **Business books** (Business tab → "Shop & trading books"): finance core `books.js` + operations `books-ops.js` (pure, golden-tested: v611books, v612ops), storage `books-store.js` (IndexedDB, one record per collection, localStorage fallback), screens `books-ui/-sales/-purchases/-stock/-money/-reports/-docs/-kit.jsx`. Money is integer piastres; documents go draft → posted (numbered per series per year, gapless, immutable; fix by credit note); VAT 14 % / table tax before VAT / withholding on the net; ledger with trial balance, P&L, VAT return; ageing 0/1–30/31–60/61–90/90+; statements; moving-average stock; hash-chained audit log; owner PIN (not encryption); bilingual PDF invoice via `htmlToPdf` + `shareFile`; sample shop; backup/restore/erase. `build/react-shim.js` now exports `createContext`/`useContext`. The books screen is `z-[60]` (above the app's bottom bar).
 - **Cloud-session test setup** (the container has none of this by default): `pip install playwright openpyxl python-pptx python-docx pdfplumber pypdfium2`, then `bash tests/setup.sh`. `tests/unit/v537.test.mjs` (RTF €) fails here only because this Node lacks full ICU — not a product bug. e2e that clicked "outside" to close the Plan screen now use its X (it is a page, not a modal).
+
+### 5.40 v6.12 (4 Oct 2026) — Ali's phone test of 6.11: CV import, PowerPoint pages, food photos, several attachments, Shelf import, web search, Maps
+Ali tested 6.11 and sent 7 screenshots + a list (NEXT_SESSION.md section L). What was wrong and what changed:
+- **Toasts were invisible behind every full-screen sheet** (the toast had no z-index; sheets are z-[70]) — every error on the CV
+  import sheet (and others) was silent, so buttons "did nothing". Toast is z-[300] now.
+- **CV import** (`cv-ai.js` `parseCVText`, `jsonLoose`, `mergeImport`; `cv-ui.jsx`): a long CV made the model's JSON stop at the
+  1,800-token cap → "cut off" → nothing imported. Now a code reader (EN/AR headings, jobs split on date lines, Present = current,
+  contact line) always works and keeps every line; the model (4,000 tokens, 120 s cap) only improves sections it covers fully;
+  a cut-off answer is repaired. Errors show inside the sheet. Tests: unit v700cvimport.
+- **Ask a PDF, PowerPoint = 2 pages instead of 10**: the text was cut into ~fixed-size "pages". Now one page per slide in the deck's
+  own order (`pptxToBlocks` tags every block with `slide`, reads `presentation.xml` order). Tests: unit v701slides, v537.
+- **Ask a PDF keeps documents** (TEST_GUIDE §2): text + conversation (+ the PDF if < 8 MB) in IndexedDB `attune-pdfchat`, last 8,
+  "Opened before" reopens with one tap, Forget removes. e2e_v619pdfchat checks it.
+- **Fit & Food photo** (Ali's eggs-on-toast: "Fried egg 138 g · Is it: Fried egg, Fried egg"). Measured with the real Gemma 4 E4B
+  GGUF + mmproj on his photo (llama-server, CPU): without thinking the model returns 4 fried eggs + 4 toast slices; the fast
+  CLIP look said "Eggs with tomatoes / Shakshuka / Croque madame" (35 %, so the chat model ran and the hint was lost).
+  Changes (`fit.js`, `fitclip.js`, `fit-ui.jsx`): the prompt lists every layer (toast under, sauce/cheese on top) and every piece,
+  asks for ONE-line compact JSON (pretty JSON burned the token cap), carries the fast look's guesses; `jsonLoose` keeps every
+  complete item of a cut-off answer (`parsePhoto`, `parseHidden`, `applyZoom`); `uniqAlts` removes duplicate chips; maxTokens
+  1000; the hidden-calories prompt names tomato sauce / cheese / toast. Note: a test run WITHOUT `enable_thinking:false`
+  made Gemma think for 1,000 tokens and return nothing — the app always sends it (LiteRT: thinking only when asked). Tests: unit v703fitphoto.
+- **Instant "What are my expenses in the last 4 days"** → "please provide the data": the ledger is in localStorage `ledger.v3`
+  (Yusr). `myledger.js`: `myMoneyIntent`, `spanOf` (last N days/weeks, today, yesterday, this/last week (Sat start), this/last
+  month, this year; Arabic words and digits), `answerMyMoney` (sums per currency, by category, each entry; gold accounts left out).
+  Instant and Chat answer by code. Instant now renders Markdown (tables/bold), and no longer shows "Re-read against the source…
+  numbers match" under a plain short question. Tests: unit v702myledger.
+- **The "…was promised to you and is late" banner** on every screen came from Ali's own "Save that a maid comes…" note read as
+  a promise. `gateCommitments` rejects notes-to-self ("save/remember/note…", «احفظ/افتكر»); stale ones are dropped on load; the
+  banner reads "Late — you were promised: …". Skills: the Catalogue button no longer wraps.
+- **Chat: several files and photos in one message** (`multidoc.js`): up to 8 files (documents read into pages labelled by file;
+  whole when they fit, else the passages matching the question with file + page; summaries go through the long-read path) and
+  up to 6 photos (sent as ONE numbered collage — both engines take one picture per message). A document no longer jumps to Ask
+  a PDF; its chip has "Read". Tests: unit v704multidoc, e2e_v700multi, e2e_v619pdfchat (Read chip).
+- **Shelf import** (`shelf-import.js`): Shelf → ⋮ → Import notes (several files: txt/md/html/Word/PDF/ODT/RTF, Google Keep
+  JSON/HTML, Evernote .enex, .zip of notes, photos of notes; or paste several notes split on ---/##/empty lines) into a chosen
+  book or «Imported notes». A text shared from the phone's Notebook app → Mind card → "Save to Shelf". Android: a note shared as
+  a .txt FILE (EXTRA_STREAM only) was dropped — now read. Tests: unit v705shelfimport, e2e_v700shelfimport.
+- **Web search** (`research.js`, `chat.jsx`, `WebTools.kt`, `tests/websearch/search.mjs`): the benchmark log showed Bing
+  answering questions with dictionary pages ("Who won the 2022 FIFA World Cup?" → dictionary.com) and the gate then KEEPING
+  them when nothing passed. Now: dictionary/thesaurus sites are never read (unless the question is about a word); an engine that
+  answers mostly with them counts for nothing; when every page is off-topic, `mergeHits` marks the list `offTopic` and the chat
+  searches again (bare subject + facets); still nothing → the model answers from its knowledge and says the web found nothing.
+  Brave's and Mojeek's own HTML results are searched next to DuckDuckGo and Bing, merged by reciprocal-rank fusion. Pictures:
+  each page's og:image is fetched natively as a 320 px data: thumbnail (the page's CSP still allows no web loads) and up to 4
+  show above a web answer. Next-question chips after a web answer (versions & prices, pros & cons, compare, latest news).
+  GitHub's machines cannot measure the new engines (Brave 429, Mojeek 403 from data centres) — phone only. Tests: unit v706webjunk, v68.
+- **Maps** (`mapsearch.js`): "Address east compound" → nothing (Nominatim only). Now Photon + Nominatim at once with the map's
+  centre (viewbox / lat-lon bias), then simpler wordings ("Address east", "… Cairo"), then Overpass named places within 40 km;
+  merged, nearest-best first, type + distance shown, saved places first; the picked result is pinned and can be saved; a
+  my-location button (WebView geolocation; Android asks for location only when tapped; manifest has COARSE/FINE). Tests: unit
+  v707mapsearch, e2e_v700maps.
+- Ask your Mind renders Markdown answers.
+- Version 6.12 (versionCode 73).
+- **Not done / needs Ali:** the Maps visual rework and the whole-app UI rework (looks: options to show him), the rest of
+  TEST_GUIDE §2 (knowledge packs wiring, Studio preview, desktop phase 2, Business ETA JSON / roles / multi-currency, converter
+  ODT/RTF/Excel readers, skills second pass, coding review mode, big-model max tests).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

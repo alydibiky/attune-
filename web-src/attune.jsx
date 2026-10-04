@@ -42,6 +42,7 @@ import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import { findPlaces } from "./mapsearch.js";
 import { CVPage } from "./cv-ui.jsx";
 import * as USK from "./userskills.js";
+try { USK.seedOnce(); } catch (e) {}   // v6.12: the engineering skill, added once (it can be switched off or deleted)
 import { placeFor } from "./places.js";
 import { brandOf, setPower, getPower, LEVELS, capabilitiesOf, publicName } from "./power.js";
 import { samplingFor, taskKind } from "./boost.js";
@@ -7279,7 +7280,7 @@ const MODE_TITLES = { pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills",
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.11";
+const PAGE_VERSION = "6.12";
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 

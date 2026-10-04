@@ -6,6 +6,7 @@ import * as O from "./books-ops.js";
 import { L, isAr, useBooks, useTheme, Card, Section, Money, Badge, Empty, Field, Input, Select, Search_, Chips, Sheet, BTN, btnPrimary, today, fmtDate, docLabel, STATUS } from "./books-kit.jsx";
 import { ReceiptForm } from "./books-money.jsx";
 import { shareDocument, shareDocumentWord } from "./books-docs.jsx";
+import * as ETA from "./books-eta.js";
 
 const num = (v) => { const n = Number(String(v).replace(/,/g, "")); return isFinite(n) ? n : 0; };
 const plainMoney = (m) => (m ? (m / 100).toFixed(2).replace(/\.00$/, "") : "");
@@ -128,6 +129,11 @@ export function PartyForm({ kind, party, onClose, onSaved }) {
         </div>
         <Field label={L("Address", "العنوان")}><Input value={p.address || ""} onChange={set("address")} /></Field>
         {kind === "customers" ? <Field label={L("Credit limit (0 = none)", "حد الائتمان (٠ = بدون)")}><Input value={limit} onChange={setLimit} inputMode="decimal" /></Field> : null}
+        {kind === "customers" ? <details className="text-[12.5px]" data-testid="party-eta"><summary className="cursor-pointer py-1 opacity-80">{L("For e-invoices (ETA)", "للفاتورة الإلكترونية")}</summary><div className="space-y-2 pt-2">
+          <Field label={L("Customer type", "نوع العميل")}><select value={(p.eta && p.eta.type) || ""} onChange={(e) => setP((x) => ({ ...x, eta: { ...(x.eta || {}), type: e.target.value } }))} className="w-full border rounded-lg px-2 py-2 bg-transparent"><option value="">{L("Automatic (company if it has a tax number)", "تلقائي (شركة لو ليها رقم ضريبي)")}</option><option value="B">{L("Company", "شركة")}</option><option value="P">{L("Person", "فرد")}</option><option value="F">{L("Foreign", "أجنبي")}</option></select></Field>
+          {[["governate", "Governorate", "المحافظة"], ["regionCity", "City / area", "المدينة / المنطقة"], ["street", "Street", "الشارع"], ["buildingNumber", "Building no.", "رقم المبنى"]].map(([k, en, ar]) => <Field key={k} label={L(en, ar)}><Input value={((p.eta || {}).address || {})[k] || ""} onChange={(v) => setP((x) => ({ ...x, eta: { ...(x.eta || {}), address: { ...((x.eta || {}).address || {}), [k]: v } } }))} /></Field>)}
+          <Field label={L("National ID (a person, invoices of 50,000 EGP or more)", "الرقم القومي (فرد، فواتير ٥٠٬٠٠٠ جنيه أو أكتر)")}><Input value={(p.eta || {}).nationalId || ""} onChange={(v) => setP((x) => ({ ...x, eta: { ...(x.eta || {}), nationalId: v } }))} inputMode="numeric" /></Field>
+        </div></details> : null}
       </div>
     </Sheet>
   );
@@ -153,6 +159,13 @@ function DocView({ id, onClose }) {
         {d.status === "draft" ? <><button onClick={() => setEdit(true)} className={`${btnPrimary} flex-1`} data-testid="doc-edit">{L("Edit & post", "تعديل وترحيل")}</button><button onClick={del} className={`${BTN} border ${th.line} text-red-600`}>{L("Delete", "حذف")}</button></> : null}
         {d.status === "posted" ? <button onClick={() => shareDocument({ s, doc: d, kind: d.type, flash })} className={`${btnPrimary} flex-1 flex items-center justify-center gap-1.5`} data-testid="doc-share"><Share2 size={14} />{L("Share / PDF", "مشاركة / PDF")}</button> : null}
         {d.status === "posted" ? <button onClick={() => shareDocumentWord({ s, doc: d, kind: d.type, flash, saveFile })} className={`${BTN} border ${th.line}`} data-testid="doc-word">{L("Word", "وورد")}</button> : null}
+        {d.status === "posted" && (d.type === "invoice" || d.type === "credit") ? <button onClick={() => {   /* v6.12: the ETA e-invoice JSON (books-eta.js); signing and sending need the company's token, done outside the app */
+          const j = ETA.etaDocument(s, d), miss = ETA.etaCheck(j);
+          if (miss.length && !window.confirm(L("Still missing for the tax authority:\n• ", "لسه ناقص لمصلحة الضرائب:\n• ") + miss.slice(0, 8).map((m) => L(m.en, m.ar)).join("\n• ") + L("\n\nSave the file anyway?", "\n\nأحفظ الملف برضه؟"))) return;
+          const text = ETA.etaJson(j);
+          if (saveFile) saveFile(`eta-${d.number || d.id}.json`, text, "application/json"); else { try { navigator.clipboard.writeText(text); } catch (e) {} }
+          flash(L("E-invoice file saved — upload it on the ETA portal or send it to your e-invoicing provider to sign", "اتحفظ ملف الفاتورة الإلكترونية — ارفعه على بوابة الضرائب أو ابعته لمزوّد الفاتورة الإلكترونية عشان يتوقّع"));
+        }} className={`${BTN} border ${th.line}`} data-testid="doc-eta">{L("E-invoice (ETA)", "فاتورة إلكترونية")}</button> : null}
         {open && open.open > 0 ? <button onClick={() => setPay(true)} className={`${BTN} border ${th.line} flex-1`} data-testid="doc-pay">{L("Record payment", "تسجيل دفعة")}</button> : null}
         {d.status === "posted" && d.type === "invoice" ? <button onClick={credit} className={`${BTN} border ${th.line}`} data-testid="doc-credit">{L("Credit note", "إشعار دائن")}</button> : null}
         {d.status === "posted" && d.type === "quote" ? <button onClick={toInvoice} className={`${BTN} border ${th.line} flex-1`} data-testid="doc-to-invoice">{L("Make an invoice", "حوّل لفاتورة")}</button> : null}
