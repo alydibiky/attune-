@@ -1,0 +1,37 @@
+name: Build a knowledge pack
+
+# v6.20 — Knowledge: public packs the app downloads on demand (More → Knowledge → Public packs).
+# First pack: "Egypt basics" — the opening sections of Egypt-related Wikipedia articles (English + Arabic),
+# from the Hugging Face dataset wikimedia/wikipedia. Licence: CC BY-SA 3.0 / GFDL (Wikipedia contributors);
+# the manifest carries the attribution and the app shows it. Run by hand from the Actions tab.
+
+on:
+  workflow_dispatch:
+    inputs:
+      budget_mb:
+        description: "Text budget in MB (the download is about a third of this)"
+        default: "60"
+
+permissions:
+  contents: write
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Egypt basics
+        run: |
+          pip install pyarrow
+          python3 tools/build_know_pack.py out --langs en,ar --budget-mb "${{ github.event.inputs.budget_mb || '60' }}" | tee build.log
+          ls -la out; du -sh out
+      - name: Summary
+        run: |
+          { echo "## Knowledge pack: Egypt basics"; echo; tail -1 build.log; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish the release (tag know-egypt-v1, replaced each time)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete know-egypt-v1 --cleanup-tag --yes 2>/dev/null || true
+          gh release create know-egypt-v1 out/* --title "Knowledge pack: Egypt basics" --notes "Text from Wikipedia (English and Arabic), CC BY-SA 3.0 / GFDL, Wikipedia contributors. Opening sections only, cut into passages; each keeps its article link. Built $(date -u +%F)." --prerelease
