@@ -152,6 +152,8 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
               <div className="flex items-center gap-2"><Globe size={15} className="text-sky-300" />
                 <p className="flex-1 text-[13px] text-slate-100">{ar ? p.name_ar : p.name}{has ? " · " + mb(mine.reduce((a, x) => a + x.bytes, 0)) : ""}</p></div>
               <p className="text-[12px] text-slate-400">{ar ? p.about_ar : p.about}</p>
+              <p className="text-[11px] text-slate-500" data-testid={"kn-pack-lic-" + p.id}>{ar ? p.size_ar : p.size} · {tr("Licence")}: {ar ? p.license_ar : p.license}</p>
+              {p.notice ? <p className="text-[11px] text-amber-300">{ar ? p.notice_ar : p.notice}</p> : null}
               {has && info ? <p className="text-[11px] text-slate-500" data-testid="kn-attrib">{tr("Licence")}: {info.license}{info.attribution ? " — " + info.attribution : ""}</p> : null}
               {b ? (
                 <div className="space-y-1"><div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-teal-500" style={{ width: Math.round((b.shard / Math.max(1, b.of)) * 100) + "%" }} /></div>

@@ -1611,6 +1611,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                   {m.kchips.map((c, i) => <button key={i} onClick={() => setOpenThought((o) => ({ ...o, ["kn" + m.id]: o["kn" + m.id] === i + 1 ? 0 : i + 1 }))} data-testid="kn-chip" dir="auto"
                     className="max-w-[14rem] truncate px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-200 text-[12px]">{c.title || tr("Note")}{c.page ? " · " + tr("p. {p}", { p: c.page }) : ""}</button>)}
                 </div>
+                {m.kchips.some((c) => c.note) ? <p className="mt-1 text-[11.5px] text-amber-300" data-testid="kn-notice">{tr(m.kchips.find((c) => c.note).note)}</p> : null}
                 {openThought["kn" + m.id] && m.kchips[openThought["kn" + m.id] - 1] ? <p className="mt-1 text-[12px] text-slate-400 border-s-2 border-teal-800 ps-2 whitespace-pre-wrap" dir="auto" data-testid="kn-passage">{m.kchips[openThought["kn" + m.id] - 1].text}</p> : null}
               </div>
             ) : null}

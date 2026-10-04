@@ -85,6 +85,18 @@ await K.installKnowPack(kp, { manifest: man, getText: async (nm) => { got++; ret
 ok(got === 2, "installing again skips shards already there (resumable)");
 await K.removeKnowPack(kp, "t");
 ok((await kp.sources()).length === 0, "a pack is removed as a whole");
-ok(K.CATALOG.some((p) => p.id === "egypt" && p.name_ar), "the catalogue has Egypt basics with an Arabic name");
+ok(K.CATALOG.map((p) => p.id).join() === "world,egy-laws" && K.CATALOG.every((p) => p.name_ar && p.license && p.license_ar && p.size), "the catalogue: World facts and Egyptian laws, each with Arabic name, size and licence");
+ok(!/wiki/i.test(JSON.stringify(K.CATALOG)), "no pack in the catalogue comes from Wikipedia (Ali's rule)");
+ok(!/[A-Za-z]/.test(K.CATALOG.map((p) => p.name_ar + p.about_ar + p.license_ar + (p.notice_ar || "") + p.size_ar).join("")), "the catalogue's Arabic text has no Latin letters");
+
+// the laws pack's warning travels with its passages, into the prompt and under the chips
+const lawMan = { id: "egy-laws", name: "Egyptian laws (Arabic)", license: "MIT", shards: [{ name: "l-000.jsonl.gz" }] };
+const kl = K.createKnowledge(K.memoryStore());
+await K.installKnowPack(kl, { manifest: lawMan, getText: async () => JSON.stringify({ t: "قانون الإيجار — مادة 5", x: "قانون الإيجار — مادة 5: مدة الإنذار بالإخلاء ثلاثة أشهر قبل نهاية العقد." }) + "\n" });
+h = await kl.find("مدة الإنذار بالإخلاء في قانون الإيجار كام؟");
+ok(h.length && h[0].chunk.note && /official gazette/.test(h[0].chunk.note), "a laws passage carries the 'not legal advice' notice");
+ok(/end the answer with this line: مش استشارة قانونية/.test(K.factsBlock(h, "مدة الإنذار كام؟")), "the facts block asks the answer to end with the notice (in Arabic for an Arabic question)");
+c = K.checkFacts("مدة الإنذار ثلاثة أشهر قبل نهاية العقد [K1].", h);
+ok(c.chips.length === 1 && /official gazette/.test(c.chips[0].note), "the chip carries the notice so Chat shows it under the answer");
 
 console.log(`knowledge: ${n} checks passed`);

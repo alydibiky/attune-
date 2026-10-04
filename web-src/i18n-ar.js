@@ -3067,4 +3067,5 @@ export const AR = {
   "Mind notes": "ملاحظات عقلي",
   "Shelf notes": "ملاحظات الرف",
   "There is no readable text in this source.": "مفيش نص يتقري في المصدر ده.",
+  "Not legal advice; may be out of date; check the official gazette.": "مش استشارة قانونية؛ ممكن تكون قديمة؛ راجع الجريدة الرسمية.",
 };
