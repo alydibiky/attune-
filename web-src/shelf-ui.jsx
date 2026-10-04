@@ -2,7 +2,7 @@
    two per row). Data and rules: shelf.js. A note IS a Mind record (one source of truth), so the
    screen gets the records and a setter from the app, like Mind does.                             */
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Menu, AlarmClock, Search, Plus, MoreVertical, X, Star, Bell, Trash2, Copy, Share2, Brain, ArrowUp, ArrowDown, Folder, Check, ImagePlus, Undo2, Camera, ChevronLeft, ChevronRight, Square, BookOpen, Download } from "lucide-react";
+import { Lock, Mic, PenLine, Menu, AlarmClock, Search, Plus, MoreVertical, X, Star, Bell, Trash2, Copy, Share2, Brain, ArrowUp, ArrowDown, Folder, Check, ImagePlus, Undo2, Camera, ChevronLeft, ChevronRight, Square, BookOpen, Download } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as S from "./shelf.js";
 import { thumbPut, thumbGet, thumbDel } from "./mind-ui.jsx";
@@ -113,7 +113,26 @@ function NotePhoto({ id, remove }) {
   ) : null;
 }
 
-function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, moveTo, copyTo, openInMind, flash, patch, archive, duplicate, exportNote }) {
+/* ---- a sketch: draw with a finger, saved into the note as a picture ---- */
+function Sketch({ done, close }) {
+  const ref = useRef(null); const drawing = useRef(false); const [color, setColor] = useState("#111827"); const [used, setUsed] = useState(false);
+  useEffect(() => { const c = ref.current; const x = c.getContext("2d"); x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width, c.height); }, []);
+  const pt = (e) => { const r = ref.current.getBoundingClientRect(); return [(e.clientX - r.left) * ref.current.width / r.width, (e.clientY - r.top) * ref.current.height / r.height]; };
+  const down = (e) => { drawing.current = true; const x = ref.current.getContext("2d"); const [a, b] = pt(e); x.beginPath(); x.moveTo(a, b); x.lineTo(a + 0.1, b + 0.1); x.strokeStyle = color; x.lineWidth = color === "#ffffff" ? 22 : 4; x.lineCap = "round"; x.lineJoin = "round"; x.stroke(); setUsed(true); try { e.target.setPointerCapture(e.pointerId); } catch (z) {} };
+  const move = (e) => { if (!drawing.current) return; const x = ref.current.getContext("2d"); const [a, b] = pt(e); x.lineTo(a, b); x.stroke(); };
+  return (
+    <Sheet title={tr("Sketch")} close={close} testid="shelf-sketch">
+      <canvas ref={ref} width={720} height={720} data-testid="shelf-sketch-canvas" className="w-full aspect-square rounded-xl bg-white touch-none"
+        onPointerDown={down} onPointerMove={move} onPointerUp={() => { drawing.current = false; }} onPointerCancel={() => { drawing.current = false; }} />
+      <div className="flex items-center gap-2 mt-3">
+        {["#111827", "#dc2626", "#2563eb", "#16a34a", "#ffffff"].map((c) => <button key={c} onClick={() => setColor(c)} aria-label={c === "#ffffff" ? tr("Eraser") : tr("Colour")} className={`w-8 h-8 rounded-full border-2 ${color === c ? "border-teal-400" : "border-slate-600"}`} style={{ background: c }} />)}
+        <button onClick={() => { const c = ref.current, x = c.getContext("2d"); x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width, c.height); setUsed(false); }} className="ms-auto text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200">{tr("Clear")}</button>
+        <button disabled={!used} data-testid="shelf-sketch-save" onClick={() => done(ref.current.toDataURL("image/jpeg", 0.85))} className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold disabled:opacity-40">{tr("Add to note")}</button>
+      </div>
+    </Sheet>);
+}
+
+function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, moveTo, copyTo, openInMind, flash, patch, archive, duplicate, exportNote, listen }) {
   const [title, setTitle] = useState(rec.title || "");
   const [text, setText] = useState(rec.text || "");
   const [sheet, setSheet] = useState(null);   // move | copy | remind
@@ -126,10 +145,19 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
   useSubBack(!!sheet, () => setSheet(null));
   const photoRef = useRef(null);
   const photos = (rec.meta && rec.meta.photos) || [];
+  const addPicture = async (url) => { const key = "shelfimg:" + rec.id + ":" + Date.now().toString(36); await thumbPut(key, url); save({ ...latest.current, photos: [...((rec.meta && rec.meta.photos) || []), key] }); };
+  const camRef = useRef(null);
+  const [hearing, setHearing] = useState(false);
+  const dictate = async () => {
+    if (!listen) return flash(tr("Voice input works in the Android app"));
+    setHearing(true);
+    try { const t = await listen(getLang() === "ar" ? "ar-EG" : "", () => {}); if (t && t.trim()) setBody((latest.current.text && !latest.current.text.endsWith("\n") ? latest.current.text + "\n" : latest.current.text) + t.trim()); }
+    catch (e) {} finally { setHearing(false); }
+  };
   const addPhoto = async (f) => {
     if (!f) return;
     try { const url = await new Promise((ok, bad) => { const fr = new FileReader(); fr.onload = () => { const i = new Image(); i.onload = () => { const k = Math.min(1, 900 / Math.max(i.width, i.height)); const c = document.createElement("canvas"); c.width = Math.round(i.width * k); c.height = Math.round(i.height * k); c.getContext("2d").drawImage(i, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", 0.8)); }; i.onerror = bad; i.src = fr.result; }; fr.onerror = bad; fr.readAsDataURL(f); });
-      const key = "shelfimg:" + rec.id + ":" + Date.now().toString(36); await thumbPut(key, url); save({ ...latest.current, photos: [...photos, key] });
+      await addPicture(url);
     } catch (e) { flash(tr("Couldn't read that picture")); }
   };
   const checks = text.split("\n").filter((l) => /^\s*[-*]\s*\[( |x|X)\]/.test(l));
@@ -188,6 +216,10 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
       <div className="flex flex-wrap gap-1.5 px-3 py-2 bg-slate-950" data-testid="shelf-editor-bar">
         <button className={btn} onClick={() => setSheet("more")} data-testid="shelf-note-more"><MoreVertical size={13} />{tr("More")}</button>
         <button className={btn} onClick={() => photoRef.current && photoRef.current.click()}><ImagePlus size={13} />{tr("Photo")}</button>
+        <button className={btn} onClick={() => camRef.current && camRef.current.click()}><Camera size={13} />{tr("Camera")}</button>
+        <button className={btn} onClick={() => setSheet("sketch")} data-testid="shelf-note-sketch"><PenLine size={13} />{tr("Sketch")}</button>
+        <button className={btn + (hearing ? " text-teal-300 border-teal-600" : "")} onClick={dictate} data-testid="shelf-note-voice"><Mic size={13} />{hearing ? tr("Listening…") : tr("Voice")}</button>
+        <input ref={camRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { addPhoto(e.target.files && e.target.files[0]); e.target.value = ""; }} />
         <button className={btn} onClick={() => setSheet("move")} data-testid="shelf-note-move"><Folder size={13} />{tr("Move")}</button>
         <button className={btn} onClick={() => setSheet("copy")}><Copy size={13} />{tr("Copy to…")}</button>
         <button className={btn} onClick={() => { save(latest.current); openInMind(); }} data-testid="shelf-note-mind"><Brain size={13} />{tr("Open in Mind")}</button>
@@ -201,6 +233,7 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
             <button key={b.id} onClick={() => { save(latest.current); (sheet === "move" ? moveTo : copyTo)(b.id); setSheet(null); }} className="text-center" data-testid="shelf-pick">
               <Cover cover={b.cover} /><span className="block text-xs text-slate-200 truncate mt-1" dir="auto">{bookName(b)}</span></button>))}</div>
         </Sheet>) : null}
+      {sheet === "sketch" ? <Sketch close={() => setSheet(null)} done={async (url) => { await addPicture(url); setSheet(null); }} /> : null}
       {sheet === "more" ? (
         <Sheet title={tr("Note")} close={() => setSheet(null)} testid="shelf-note-sheet">
           <p className="text-xs text-slate-400 mb-1.5">{tr("Colour")}</p>
@@ -241,7 +274,7 @@ function BookForm({ init, done, shelf, flash }) {
 
 
 /* ---- the screen ---- */
-export function ShelfPage({ records, setRecords, scheduleReminder, flash, openInMind, saveFile, share }) {
+export function ShelfPage({ records, setRecords, scheduleReminder, flash, openInMind, saveFile, share, listen }) {
   const [shelf, setShelfRaw] = useState(() => S.loadShelf(localStorage));
   const setShelf = (s) => setShelfRaw((old) => S.saveShelf(localStorage, typeof s === "function" ? s(old) : s));
   // once: the notes already kept move into «My Book» (a copy of the old data is kept first)
@@ -253,6 +286,9 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
   const prefs = shelf.prefs || {};
   const setPref = (k, v) => setShelf((s) => ({ ...s, prefs: { ...(s.prefs || {}), [k]: v } }));
   const [tagF, setTagF] = useState(null);
+  const [unlocked, setUnlocked] = useState(() => new Set());   // books opened with the PIN in this session
+  const [pin, setPinIn] = useState("");
+  const openBook = (id) => { const b = shelf.books.find((x) => x.id === id); if (b && b.locked && !unlocked.has(id)) { setPinIn(""); setSheet({ kind: "pin", id }); } else setBookId(id); };
   const importRef = useRef(null);
   const [bookId, setBookId] = useState(null);
   const [noteId, setNoteId] = useState(null);
@@ -278,7 +314,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
   const notes = tagF ? allNotes.filter((r) => S.noteTags(r).includes(tagF)) : allNotes;
   const books = useMemo(() => S.sortBooks(shelf.books, prefs.bookSort || "manual", counts), [shelf, prefs.bookSort, counts]);
   const rec = noteId ? records.find((r) => r.id === noteId) : null;
-  const hits = useMemo(() => (view === "search" ? S.searchShelf(records, shelf, q) : []), [view, q, records, shelf]);
+  const hits = useMemo(() => (view === "search" ? S.visibleHits(S.searchShelf(records, shelf, q), unlocked) : []), [view, q, records, shelf, unlocked]);
   const ups = useMemo(() => S.upcoming(records, shelf), [records, shelf]);
 
   const upd = (id, fn) => setRecords((rs) => rs.map((r) => (r.id === id ? fn(r) : r)));
@@ -422,9 +458,10 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
       <div className={prefs.view === "list" ? "grid grid-cols-4 gap-x-3 gap-y-4 pb-28" : "grid grid-cols-2 gap-x-8 gap-y-6 px-3 pb-28"} data-testid="shelf-grid">
         {books.map((b, i) => (
           <div key={b.id} className="min-w-0" data-testid="shelf-book-tile">
-            <button className="block w-full" onClick={() => (reorderOn ? null : setBookId(b.id))}
+            <button className="block w-full relative" onClick={() => (reorderOn ? null : openBook(b.id))}
               onContextMenu={(e) => { e.preventDefault(); setSheet({ kind: "more", id: b.id }); }}>
               <Cover cover={b.cover} testid="shelf-cover" />
+              {b.locked ? <span className="absolute bottom-2 end-2 bg-black/60 rounded-full p-1.5 text-white" data-testid="shelf-locked"><Lock size={14} /></span> : null}
             </button>
             {reorderOn ? (
               <div className="flex justify-center gap-3 mt-1">
@@ -447,7 +484,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
       {body}
       {view === "books" ? (
         <Sheet title={tr("Your books")} close={() => setView(null)} testid="shelf-books-menu">
-          {shelf.books.map((b) => <button key={b.id} className={row} onClick={() => { setView(null); setBookId(b.id); }}><div className="w-8"><Cover cover={b.cover} /></div><span className="flex-1 truncate" dir="auto">{bookName(b)}</span><span className="text-xs text-slate-500">{counts[b.id] || 0}</span></button>)}
+          {shelf.books.map((b) => <button key={b.id} className={row} onClick={() => { setView(null); openBook(b.id); }}><div className="w-8"><Cover cover={b.cover} /></div><span className="flex-1 truncate" dir="auto">{bookName(b)}</span><span className="text-xs text-slate-500">{counts[b.id] || 0}</span></button>)}
         </Sheet>) : null}
       {sheet && sheet.kind === "new" ? (
         <Sheet title={tr("New book")} close={() => setSheet(null)} testid="shelf-new-book">
@@ -462,11 +499,23 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
           <button className={row} data-testid="shelf-edit" onClick={() => setSheet({ kind: "edit", id: sb.id })}><BookOpen size={18} />{tr("Rename or change cover")}</button>
           <button className={row} onClick={() => { setSheet(null); setReorderOn(true); setBookId(null); }}><ArrowUp size={18} />{tr("Reorder books")}</button>
           {S.TEMPLATES.map((t) => <button key={t.id} className={row} data-testid="shelf-template" onClick={() => { const n = S.makeNote({ book: sb.id, title: t.title ? tr(t.title) : "", text: tr(t.text) }); setRecords((rs) => [n, ...rs]); setSheet(null); setBookId(sb.id); setNoteId(n.id); }}><Plus size={18} />{tr("New: {name}", { name: tr(t.en) })}</button>)}
+          <button className={row} data-testid="shelf-lock" onClick={() => { if (sb.locked) { setShelf(S.setLocked(shelf, sb.id, false)); setSheet(null); flash(tr("Lock removed")); } else if (!S.hasPin(shelf)) { setPinIn(""); setSheet({ kind: "setpin", id: sb.id }); } else { setShelf(S.setLocked(shelf, sb.id, true)); setUnlocked((u) => { const n = new Set(u); n.delete(sb.id); return n; }); setBookId(null); setSheet(null); flash(tr("Book locked")); } }}><Lock size={18} />{sb.locked ? tr("Remove the lock") : tr("Lock with a PIN")}</button>
           <button className={row} data-testid="shelf-dup-book" onClick={() => { const r = S.duplicateBook(shelf, records, sb.id); setShelf(r.shelf); setRecords(() => r.records); setSheet(null); setBookId(null); flash(tr("Book duplicated")); }}><Copy size={18} />{tr("Duplicate book")}</button>
           <button className={row} data-testid="shelf-merge" onClick={() => setSheet({ kind: "merge", id: sb.id })}><Folder size={18} />{tr("Merge into another book")}</button>
           <button className={row} data-testid="shelf-import" onClick={() => { setSheet(null); setBookId(sb.id); setTimeout(() => importRef.current && importRef.current.click(), 50); }}><Download size={18} className="rotate-180" />{tr("Import a text file")}</button>
           <button className={row} onClick={() => { exportBook(sb); setSheet(null); }} data-testid="shelf-export"><Download size={18} />{tr("Export as a text file")}</button>
           <button className={row + " text-red-300"} data-testid="shelf-delete-book" onClick={() => deleteBk(sb.id)}><Trash2 size={18} />{tr("Delete book")}</button>
+        </Sheet>) : null}
+      {sheet && (sheet.kind === "pin" || sheet.kind === "setpin") && sb ? (
+        <Sheet title={sheet.kind === "pin" ? tr("Enter your Shelf PIN") : tr("Choose a Shelf PIN (4 to 6 digits)")} close={() => setSheet(null)} testid="shelf-pin">
+          <input autoFocus type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPinIn(e.target.value.replace(/\D/g, ""))} data-testid="shelf-pin-input"
+            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-center tracking-[0.5em] text-lg text-slate-100" dir="ltr" />
+          <p className="text-[11px] text-slate-500 mt-2">{tr("The lock keeps others out on a shared phone. It is not encryption, and the notes still show in Mind.")}</p>
+          <button data-testid="shelf-pin-ok" onClick={() => {
+            if (sheet.kind === "setpin") { const ns = S.setPin(shelf, pin); if (!ns) return flash(tr("The PIN must be 4 to 6 digits")); setShelf(S.setLocked(ns, sb.id, true)); setBookId(null); setSheet(null); flash(tr("Book locked")); return; }
+            if (!S.checkPin(shelf, pin)) { setPinIn(""); return flash(tr("Wrong PIN")); }
+            setUnlocked((u) => new Set([...u, sb.id])); setSheet(null); setBookId(sb.id); }}
+            className="mt-3 w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold">{tr("OK")}</button>
         </Sheet>) : null}
       {sheet && sheet.kind === "merge" && sb ? (
         <Sheet title={tr("Merge «{name}» into…", { name: bookName(sb) })} close={() => setSheet(null)} testid="shelf-merge-sheet">
@@ -501,6 +550,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
           archive={() => { const on = !(rec.meta && rec.meta.archived); setRecords((rs) => S.archiveNotes(rs, [rec.id], on)); if (on) { setNoteId(null); setUndo({ text: tr("Archived"), run: () => setRecords((rs) => S.archiveNotes(rs, [rec.id], false)) }); } }}
           duplicate={() => { const c = S.copyNote(records.find((r) => r.id === rec.id) || rec, S.bookOf(rec, shelf)); setRecords((rs) => [c, ...rs]); setNoteId(c.id); flash(tr("Duplicated")); }}
           exportNote={({ title, text }) => saveText(fileName(title), `# ${title || ""}\n\n${text}\n`)}
+          listen={listen}
           openInMind={() => { setNoteId(null); openInMind(records.find((r) => r.id === rec.id) || rec); }} />
       ) : null}
       {undo ? (

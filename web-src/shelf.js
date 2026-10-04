@@ -236,6 +236,21 @@ export function importText(text, fileName, bookId, now = Date.now()) {
   const body = t.replace(/^#\s+.*\n+/, "");
   return body.trim() ? [makeNote({ title: String(fileName || "").replace(/\.\w+$/, ""), text: body.trim(), book: bookId, now })] : [];
 }
+/* ---- v6.11 group 3: a PIN lock on a book (like Business's owner PIN: keeps casual eyes out on a shared
+   phone; it is NOT encryption — the notes stay readable in the phone's storage and in Mind) ---- */
+const h53 = (str) => { let a = 0xdeadbeef, b = 0x41c6ce57; for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); a = Math.imul(a ^ c, 2654435761); b = Math.imul(b ^ c, 1597334677); } a = Math.imul(a ^ (a >>> 16), 2246822507) ^ Math.imul(b ^ (b >>> 13), 3266489909); b = Math.imul(b ^ (b >>> 16), 2246822507) ^ Math.imul(a ^ (a >>> 13), 3266489909); return (4294967296 * (2097151 & b) + (a >>> 0)).toString(36); };
+export const validPin = (pin) => /^\d{4,6}$/.test(String(pin || ""));
+export function setPin(shelf, pin) {
+  if (!validPin(pin)) return null;
+  const salt = Math.random().toString(36).slice(2, 10);
+  return { ...shelf, security: { salt, pin: h53("shelf|" + salt + "|" + pin) } };
+}
+export const hasPin = (shelf) => !!(shelf.security && shelf.security.pin);
+export const checkPin = (shelf, pin) => hasPin(shelf) && h53("shelf|" + shelf.security.salt + "|" + String(pin)) === shelf.security.pin;
+export const setLocked = (shelf, id, locked) => ({ ...shelf, books: shelf.books.map((b) => (b.id === id ? { ...b, locked: !!locked } : b)) });
+/** Search leaves out locked books unless they were unlocked in this session (`open` = Set of ids). */
+export const visibleHits = (hits, open) => hits.filter((h) => !(h.book && h.book.locked) || (open && open.has(h.book.id)));
+
 /** Move the n-th checklist line up or down among the checklist lines. */
 export function moveCheck(text, n, dir) {
   const lines = String(text).split("\n"); const idx = [];

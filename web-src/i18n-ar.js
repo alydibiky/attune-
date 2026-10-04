@@ -4,6 +4,11 @@
 export const AR = {
   // v6.11 Shelf («رف»)
   "Shelf": "رف",
+  "Add to note": "ضيفه للملاحظة", "Book locked": "الكتاب اتقفل", "Camera": "الكاميرا", "Sketch": "رسمة", "Eraser": "أستيكة",
+  "Choose a Shelf PIN (4 to 6 digits)": "اختار رقم سري للرف (من 4 لـ 6 أرقام)", "Enter your Shelf PIN": "اكتب الرقم السري للرف",
+  "Lock removed": "القفل اتشال", "Lock with a PIN": "اقفله برقم سري", "Remove the lock": "شيل القفل", "OK": "تمام",
+  "The PIN must be 4 to 6 digits": "الرقم السري لازم يكون من 4 لـ 6 أرقام", "Wrong PIN": "الرقم السري غلط",
+  "The lock keeps others out on a shared phone. It is not encryption, and the notes still show in Mind.": "القفل بيمنع غيرك يفتحه على موبايل مشترك. ده مش تشفير، والملاحظات لسه بتظهر في العقل.",
   "Archive": "الأرشيف", "Archived": "اتأرشفت", "Unarchive": "رجّعها من الأرشيف",
   "Archived notes leave their book but are still found by search.": "الملاحظات المؤرشفة بتطلع من كتابها، بس البحث لسه بيلاقيها.",
   "Big covers": "أغلفة كبيرة", "Small covers": "أغلفة صغيرة",

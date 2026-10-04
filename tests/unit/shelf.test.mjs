@@ -104,6 +104,12 @@ const md = S.bookMarkdown(shelf.books[1], [n1]); ok(md.startsWith("# Novels") &&
   ok(S.moveCheck("- [ ] a\nx\n- [ ] b", 0, 1) === "- [ ] b\nx\n- [ ] a", "reorder checklist lines");
   ok(S.format("hello", 0, 5, "bold").text === "**hello**" && S.format("a\nb", 2, 3, "h1").text === "a\n# b", "format: bold, heading");
   ok(S.TEMPLATES.length >= 4, "templates");
+  // PIN lock
+  ok(S.setPin(shelf, "12a") === null && S.setPin(shelf, "123") === null, "PIN must be 4–6 digits");
+  const ps = S.setLocked(S.setPin(shelf, "4321"), nov.id, true);
+  ok(S.hasPin(ps) && S.checkPin(ps, "4321") && !S.checkPin(ps, "1234") && !JSON.stringify(ps).includes("4321"), "PIN checked by a salted hash, never stored as is");
+  const hs = S.searchShelf(records, ps, "Khaldun");
+  ok(S.visibleHits(hs, new Set()).every((h) => h.book.id !== nov.id) && S.visibleHits(hs, new Set([nov.id])).some((h) => h.book.id === nov.id), "a locked book's notes are left out of search until it is unlocked");
 }
 
 console.log(fail ? `${fail} FAILED` : "ALL PASSED");

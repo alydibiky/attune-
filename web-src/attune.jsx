@@ -9103,6 +9103,7 @@ export default function App() {
           </div>
         ) : mode === "shelf" ? (
           <ShelfPage records={memory} setRecords={(fn) => setMemory(fn)} scheduleReminder={scheduleReminder} flash={flash}
+            listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
             openInMind={(r) => { setOpenRec(r); setMode("memory"); }}
             saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />

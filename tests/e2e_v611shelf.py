@@ -189,7 +189,32 @@ with sync_playwright() as p:
     page.locator("[data-testid=shelf-merge-sheet] [data-testid=shelf-pick]").nth(1).click(); page.click("[data-testid=confirm-yes]"); page.wait_for_timeout(200)
     check(len(titles(page)) == n_books, "merge removes the merged book")
 
-    # ---- Mind link:a Shelf note is a Mind record; open it in Mind; Mind's search finds it
+    # ---- group 3: sketch, voice (mocked dictation), PIN lock
+    page.evaluate("""(() => { const N = window.AttuneNative; N.listen = (id, arg) => setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ text: 'call the supplier tomorrow' })), 30); })()""")
+    open_book(page, "Novels"); page.locator("[data-testid=shelf-note]", has_text="Ibn Khaldun").click()
+    page.click("[data-testid=shelf-note-voice]"); page.wait_for_timeout(500)
+    check("call the supplier tomorrow" in page.input_value("[data-testid=shelf-note-body]"), "voice: dictated words are added to the note")
+    page.click("[data-testid=shelf-note-sketch]")
+    cv = page.locator("[data-testid=shelf-sketch-canvas]").bounding_box()
+    page.mouse.move(cv["x"] + 30, cv["y"] + 30); page.mouse.down(); page.mouse.move(cv["x"] + 200, cv["y"] + 150, steps=8); page.mouse.up()
+    page.click("[data-testid=shelf-sketch-save]"); page.wait_for_timeout(600)
+    check(page.locator("[data-testid=shelf-note-photo]").count() == 1, "a sketch is saved into the note as a picture")
+    back(page); back(page)
+    page.click("[data-testid=shelf-more]"); page.locator("[data-testid=shelf-manage]", has_text="Novels").click(); page.click("[data-testid=shelf-lock]")
+    page.fill("[data-testid=shelf-pin-input]", "2468"); page.click("[data-testid=shelf-pin-ok]"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=shelf-locked]").count() == 1, "the locked book shows a lock")
+    page.click("[data-testid=shelf-search-open]"); page.fill("[data-testid=shelf-search-input]", "Khaldun"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=shelf-hit]").count() == 0, "a locked book's notes are not shown in Shelf search")
+    back(page)
+    page.locator("[data-testid=shelf-book-tile]", has_text="Novels").locator("[data-testid=shelf-cover]").click(); page.wait_for_selector("[data-testid=shelf-pin]")
+    page.fill("[data-testid=shelf-pin-input]", "1111"); page.click("[data-testid=shelf-pin-ok]"); page.wait_for_timeout(150)
+    check(page.locator("[data-testid=shelf-book]").count() == 0, "a wrong PIN does not open it")
+    page.fill("[data-testid=shelf-pin-input]", "2468"); page.click("[data-testid=shelf-pin-ok]")
+    check(page.wait_for_selector("[data-testid=shelf-book]", timeout=3000) is not None, "the right PIN opens the book")
+    back(page)
+    check("2468" not in page.evaluate("localStorage.getItem('attune:shelf:v1')"), "the PIN is not stored as typed")
+
+    # ---- Mind link: a Shelf note is a Mind record; open it in Mind; Mind's search finds it
     open_book(page, "Novels"); page.locator("[data-testid=shelf-note]", has_text="Ibn Khaldun").click()
     page.click("[data-testid=shelf-note-mind]"); page.wait_for_selector("[data-testid=mind-page]", timeout=4000)
     check("Ibn Khaldun" in page.locator("[data-testid=mind-page]").inner_text(), "Open in Mind shows the same note in Mind")
