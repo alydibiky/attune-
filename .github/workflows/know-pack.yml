@@ -5,7 +5,7 @@ name: Build a knowledge pack
 #   world     CIA World Factbook (public domain)            laws      Egyptian Legal Corpus (MIT as declared)
 #   numbers   World Bank open data (CC BY 4.0)              cities    GeoNames (CC BY 4.0)
 #   science   OpenStax textbooks, CC BY only (CC BY 4.0)    health    MedlinePlus, NLM (public domain)
-#   cranes    OSHA crane rules, eCFR (public domain)        quran     Tanzil Quran text (verbatim, with credit)
+#   cranes    OSHA crane rules, govinfo CFR (public domain)        quran     Tanzil Quran text (verbatim, with credit)
 # No Wikipedia (Ali's rule). Ali approved publishing (10 Oct 2026). Rebuilt on the 1st of every month so the numbers stay
 # current; the app installs a newer build by itself.
 

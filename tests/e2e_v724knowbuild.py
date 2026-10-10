@@ -93,6 +93,14 @@ check(r and "1926.1408" in r[0][0], "'how close can a crane get to a power line'
 r = search(db, "crane inspection every shift")
 check(r and "1926.1412" in r[0][0], "'inspection every shift' finds § 1926.1412")
 
+# ---- OSHA (govinfo yearly CFR XML) ----
+GV = """<CFRDOC><PART><SECTION><SECTNO>§ 1926.1408</SECTNO><SUBJECT>Power line safety (up to 350 kV)—assembly and disassembly.</SUBJECT>
+<P>(a) Before assembling equipment, the employer must determine if any part of the equipment could get closer than 20 feet to a power line.</P></SECTION>
+<SECTION><SECTNO>§ 1926.1500</SECTNO><SUBJECT>Something else.</SUBJECT><P>Not a crane rule.</P></SECTION>
+<SECTION><SECTNO>§ 1910.179</SECTNO><SUBJECT>Overhead and gantry cranes.</SUBJECT><P>(j) Inspection. Frequent inspection daily to monthly intervals.</P></SECTION></PART></CFRDOC>""".encode()
+rows = S.govinfo_rows(GV)
+check(len(rows) == 2 and rows[0]["t"].startswith("OSHA § 1926.1408") and rows[1]["t"].startswith("OSHA § 1910.179") and not any("1926.1500" in r["t"] for r in rows), "OSHA (govinfo): only the crane, rigging and sling sections are kept")
+
 # ---- Quran (Tanzil txt-2) ----
 QT = "1|1|بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\n1|2|الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ\n2|255|اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ\n\n# Tanzil Quran Text (Simple, Version 1.1)\n# Copyright (C) 2007-2025 Tanzil Project\n"
 rows, header = S.quran_rows(QT)

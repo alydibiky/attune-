@@ -257,23 +257,45 @@ def ecfr_rows(xml_bytes):
             rows.append({"t": "OSHA " + head, "x": f"{head}: {p}", "u": f"https://www.ecfr.gov/current/title-29/section-{n}", "l": "en"})
     return rows
 
+# the sections kept: cranes and derricks in construction (1926.1400–1926.1442), rigging (1926.251), overhead and gantry
+# cranes (1910.179), crawler / locomotive / truck cranes (1910.180), slings (1910.184)
+CRANE_SECTIONS = re.compile(r"^(1926\.14(?:0\d|[1-3]\d|4[0-2])|1926\.251|1910\.179|1910\.180|1910\.184)$")
+
+def govinfo_rows(xml_bytes):
+    """The yearly CFR edition's XML (govinfo bulk data): <SECTION><SECTNO>§ n</SECTNO><SUBJECT>…</SUBJECT><P>…</P></SECTION>."""
+    root = ET.fromstring(xml_bytes)
+    rows = []
+    for sec in root.iter("SECTION"):
+        no = re.sub(r"[^\d.]", "", sec.findtext("SECTNO") or "")
+        if not CRANE_SECTIONS.match(no): continue
+        subj = re.sub(r"\s+", " ", sec.findtext("SUBJECT") or "").strip()
+        body = " ".join(re.sub(r"\s+", " ", "".join(p.itertext())).strip() for p in sec.iter() if p.tag in ("P", "FP"))
+        if not body: continue
+        head = f"§ {no} {subj}"
+        for p in _bk().chunk(body, 700):
+            rows.append({"t": "OSHA " + head, "x": f"{head}: {p}", "u": f"https://www.ecfr.gov/current/title-29/section-{no}", "l": "en"})
+    return rows
+
 def build_cranes(a):
     B = _bk()
-    titles = json.loads(B.get("https://www.ecfr.gov/api/versioner/v1/titles.json", accept="application/json"))["titles"]
-    date = next(t for t in titles if int(t["number"]) == 29)["up_to_date_as_of"]
-    rows, seen = [], set()
-    for part, q in ECFR_PARTS:
-        try: xml = B.get(f"https://www.ecfr.gov/api/versioner/v1/full/{date}/title-29.xml?part={part}&{q}", 300, accept="application/xml")
-        except SystemExit: continue
-        for r in ecfr_rows(xml):
-            if r["x"] not in seen: seen.add(r["x"]); rows.append(r)
+    rows, seen, used = [], set(), ""
+    for year in range(int(time.strftime("%Y")), int(time.strftime("%Y")) - 3, -1):
+        got = []
+        for vol in range(1, 10):
+            url = f"https://www.govinfo.gov/bulkdata/CFR/{year}/title-29/CFR-{year}-title29-vol{vol}.xml"
+            try: xml = B.get(url, 300, accept="application/xml")
+            except SystemExit: continue
+            try: got += govinfo_rows(xml)
+            except ET.ParseError as e: print("skip", url, e, file=sys.stderr)
+        if got: rows, used = got, str(year); break
+    rows = [r for r in rows if not (r["x"] in seen or seen.add(r["x"]))]
     B.write_pack(a.out, "cranes", rows, {
         "name": "Cranes & lifting rules (OSHA)", "name_ar": "قواعد الرافعات والرفع (أوشا)",
         "license": "Public domain (US government)",
-        "attribution": f"US Code of Federal Regulations, Title 29 (OSHA) — cranes and derricks in construction (1926 Subpart CC), rigging (1926.251), overhead and gantry cranes (1910.179), crawler/locomotive/truck cranes (1910.180), slings (1910.184); eCFR, up to date as of {date}.",
+        "attribution": f"US Code of Federal Regulations, Title 29 (OSHA), {used} edition from govinfo.gov — cranes and derricks in construction (1926.1400–1442), rigging (1926.251), overhead and gantry cranes (1910.179), crawler/locomotive/truck cranes (1910.180), slings (1910.184).",
         "notice": "US rules (OSHA) — for safety guidance; Egyptian law and the manufacturer's load chart come first.",
         "notice_ar": "قواعد أمريكية (أوشا) للإرشاد في السلامة؛ القانون المصري وجدول أحمال الشركة المصنّعة لهما الأولوية.",
-        "sources": [{"title": "eCFR Title 29", "url": "https://www.ecfr.gov/current/title-29", "license": "Public domain"}], "retrieved": time.strftime("%Y-%m-%d")})
+        "sources": [{"title": "Code of Federal Regulations, Title 29 (govinfo.gov)", "url": "https://www.govinfo.gov/app/collection/cfr", "license": "Public domain"}], "retrieved": time.strftime("%Y-%m-%d")})
 
 # ---- quran: Tanzil ---------------------------------------------------------------------------------------------------------------------
 SURAS = [x.replace("_", " ") for x in """الفاتحة البقرة آل_عمران النساء المائدة الأنعام الأعراف الأنفال التوبة يونس هود يوسف الرعد إبراهيم الحجر النحل الإسراء الكهف مريم طه الأنبياء الحج المؤمنون النور الفرقان الشعراء النمل القصص العنكبوت الروم لقمان السجدة الأحزاب سبأ فاطر يس الصافات ص الزمر غافر فصلت الشورى الزخرف الدخان الجاثية الأحقاف محمد الفتح الحجرات ق الذاريات الطور النجم القمر الرحمن الواقعة الحديد المجادلة الحشر الممتحنة الصف الجمعة المنافقون التغابن الطلاق التحريم الملك القلم الحاقة المعارج نوح الجن المزمل المدثر القيامة الإنسان المرسلات النبأ النازعات عبس التكوير الانفطار المطففين الانشقاق البروج الطارق الأعلى الغاشية الفجر البلد الشمس الليل الضحى الشرح التين العلق القدر البينة الزلزلة العاديات القارعة التكاثر العصر الهمزة الفيل قريش الماعون الكوثر الكافرون النصر المسد الإخلاص الفلق الناس""".split()]   # the 114 surahs in order
