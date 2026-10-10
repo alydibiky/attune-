@@ -60,7 +60,7 @@ jobs:
           pip install pyarrow
           budget="${{ github.event.inputs.budget_mb }}"; [ -z "$budget" ] && budget=25
           [ "${{ matrix.pack }}" = "laws" ] && budget=$(( budget < 20 ? budget : 20 ))
-          python3 tools/build_know_pack.py "${{ matrix.pack }}" out --budget-mb "$budget" | tee build.log
+          PYTHONUNBUFFERED=1 python3 tools/build_know_pack.py "${{ matrix.pack }}" out --budget-mb "$budget" | tee build.log   # unbuffered: progress shows live
           ls -la out
       - name: Summary
         run: |
