@@ -838,12 +838,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // v6.12: a detail question about a car, a crane, a phone, a place, a company → the searches that fill every section, and
         // the answer's shape (research.js answerTemplate) — what makes Gemini's answers complete
         const kindT = topicKind(question), shaped = api.webPages && wantsShape(typed, kindT);
-        if (shaped) { const cmpQ = compareSearches(question, kindT); queries = [...new Set([...queries, ...(cmpQ.length ? cmpQ : topicSearches(query, kindT, kindT === "vehicle" ? 5 : 4))])].slice(0, cmpQ.length ? 7 : kindT === "vehicle" ? 6 : 5); readCap = Math.max(readCap, pwR.readPages || pwR.pages || 8, cmpQ.length ? 10 : 0); }
+        if (shaped) { const cmpQ = compareSearches(question, kindT); queries = [...new Set([...queries, ...(cmpQ.length ? cmpQ : topicSearches(query, kindT, kindT === "vehicle" ? 6 : 4))])].slice(0, cmpQ.length ? 7 : kindT === "vehicle" ? 7 : 5); readCap = Math.max(readCap, pwR.readPages || pwR.pages || 8, cmpQ.length || kindT === "vehicle" ? 10 : 0); }
         // v6.16 (Ali): a car → the official test figures from the Cars pack and today's exchange rates, fetched while the web is searched
         const carP = kindT === "vehicle" ? Promise.all([
           api.carSpecs ? api.carSpecs(question).catch(() => []) : Promise.resolve([]),
           api.fxRates ? api.fxRates().catch(() => null) : Promise.resolve(null),
         ]).then(([specs, fx]) => officialSpecsNote(specs) + (fx ? fxNote(fx, question) : "")).catch(() => "") : Promise.resolve("");
+        const carTokens = (n) => kindT === "vehicle" && shaped ? Math.max(n, Math.min(6144, Math.floor(((api.contextTokens && api.contextTokens()) || 8192) * 0.4))) : n;
         const per = Math.min(8, Math.ceil(readCap / queries.length) + 2);
         onStatus(queries.length > 1 ? tr("Searching {n} ways at once…", { n: queries.length }) : tr("Searching the web…"));
         const found = await Promise.all(queries.map((q, i) =>
@@ -869,7 +870,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           // figures across sites, and ONE model pass writes the answer
           onStatus(tr("Reading {n} pages…", { n: toRead.length }));
           const ctxF = (api.contextTokens && api.contextTokens()) || 8192;
-          const ansF = (api.power && api.power().longTokens) || 2048;
+          const ansF = carTokens((api.power && api.power().longTokens) || 2048);
           // v5.32: the passages fill at most a 12k window even on 16k phones — a small model copies
           // figures far more reliably from a shorter prompt (and it reads faster)
           const budgetF = quickBudget(typed, fitChars(Math.min(ctxF, 12288), ansF, 2600 + (shaped ? (compareParts(question) ? 600 : 350) : 0), toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" ")), deep || shaped);   // the answer's shape takes ≈350 tokens of the window   // v6.8: a quick question reads less
@@ -927,7 +928,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           }
           if (notesSrc.length) {
             // v5.28: all the notes must fit the model's window together with the answer
-            const ansR = (api.power && api.power().longTokens) || 2048;
+            const ansR = carTokens((api.power && api.power().longTokens) || 2048);
             const cc0 = crossCheck(notesSrc);
             const cc = { ...cc0, notes: fitNotes(cc0.notes, fitChars((api.contextTokens && api.contextTokens()) || 8192, ansR, 2400, cc0.notes.map((n) => n.text).join("\n"))) };
             sources = cc.notes; via = look.via; research = { pages: read, withFacts: notesSrc.length, searches: queries.length, confirmed: cc.confirmed,
@@ -1151,7 +1152,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // penalties (they mangled copied numbers). (v5.17)
         const copy = !!sources || !!fileAtt || !!(knHits && knHits.length) || !!(spaceRef.current.project && (spaceRef.current.project.knowledge || []).length);
         // a research report gets the level's long-answer budget (v5.23)
-        const longRep = (research || tplUsed) && !useThink && api.power ? { maxTokens: api.power().longTokens } : {};
+        const longRep = (research || tplUsed) && !useThink && api.power ? { maxTokens: tplUsed && /expert driver/.test(tplUsed) ? Math.max(api.power().longTokens, Math.min(6144, Math.floor(((api.contextTokens && api.contextTokens()) || 8192) * 0.4))) : api.power().longTokens } : {};
         // v5.33: a web answer copies figures — near-greedy sampling (0.1) keeps a small model from
         // picking a wrong digit or a stray token ("1.2.93", "kWkW", "a a a")
         const webT = sources && !useThink ? { temperature: 0.1 } : {};
