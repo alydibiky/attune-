@@ -768,7 +768,7 @@ Ali: "Attune will charge money … find reliable free sources … full mark … 
 - **Quality**: fiqh dotted separators out (turath_text), nisab etc. in grams (`MEASURES`), «Click here to…» sentences out of
   textbooks (`LINK_OUT`), audit check «site junk». Pack builds: `timeout-minutes: 350`, `PYTHONUNBUFFERED=1`.
 - Search: filler words out, 'single-quoted' exact, `near_phrase` ×2, `verseFirst`, squared exact-name bonus.
-- Trials: q08 23 → 39/45, q4b 34 → 41/45 (+3 the grader now accepts); see tests/trials/packtrial-*.md.
+- Trials: q08 23 → 39/45; q4b 34 → **45/45** with every rebuilt pack (11 Oct); see tests/trials/packtrial-*.md.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
