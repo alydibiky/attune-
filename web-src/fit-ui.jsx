@@ -13,6 +13,7 @@ import * as R from "./fitread.js";
 import * as PH from "./fitphoto.js";
 import * as CL from "./fitclip.js";
 import * as P from "./fitplus.js";
+import * as Y from "./fityazio.js";
 import { WatchCard, Grades, DayQuality, RamadanCard, QuickLog, SaveMyMeal, WeekPlanView, WeekReport, BodyCard, FitSettings, RAMADAN_NAMES } from "./fitplus-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 
@@ -305,7 +306,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     return { ...x, ...q, grams, kcal: Math.round(x.kcal * s), p: Math.round(x.p * s * 10) / 10, c: Math.round(x.c * s * 10) / 10, f: Math.round(x.f * s * 10) / 10, fib: Math.round((x.fib || 0) * s * 10) / 10 };
   }));
   const confirm = () => {
-    const ok = (draft || []).filter((x) => x.grams > 0);
+    const ok = (draft || []).filter((x) => x.grams > 0 || x.quick);   // v6.14: a quick add has calories but no grams
     if (!ok.length) return;
     if (refining) { run.current++; setRefining(false); try { abort && abort(); } catch (e) {} }   // saved before the background check finished: stop it
     // v6.1: what you corrected is remembered for the next photo (the food you chose, your usual portion)
@@ -471,10 +472,10 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
         </div>
       ) : null}
 
-      {tab === "today" && !adding && <Today {...{ L, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, flash, health }} />}
+      {tab === "today" && !adding && <Today {...{ L, ar, st, upd, tg: tg && st.profile.cycleExtra ? { ...tg, kcal: Y.dayGoal(tg.kcal, dayKey, st.profile.cycleExtra) } : tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, flash, health }} />}
       {tab === "recipes" && !adding && <Recipes {...{ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, flash, share, pro, openPlan }} />}
       {tab === "move" && !adding && <><WatchCard {...{ L, ar, health, st, upd, dayKey }} /><Move {...{ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg: +st.profile.kg }} /></>}
-      {tab === "progress" && !adding && <Progress {...{ L, ar, st, upd, tg, pro, openPlan }} />}
+      {tab === "progress" && !adding && <Progress {...{ L, ar, st, upd, tg, pro, openPlan, share }} />}
     </div>
   );
 }
@@ -611,9 +612,10 @@ function Today({ L, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdd
           {fs ? (<>
             <div className={"text-xl font-semibold tabular-nums mt-1 " + (fs.reached ? "text-emerald-300" : "text-white")}>{hm(fs.done)} <span className="text-[12px] text-slate-400">/ {st.fast.hours}h</span></div>
             <div className="h-1.5 rounded-full bg-slate-800 mt-1"><div className="h-1.5 rounded-full bg-violet-400" style={{ width: fs.pct + "%" }} /></div>
+            {(() => { const sg = Y.fastStage(fs.done / 3600e3); return <div className="text-[11.5px] text-violet-200 mt-1.5" data-testid="fit-fast-stage">{L(sg.now[1], sg.now[2])}{sg.next ? <span className="text-slate-500"> · {L(`next in ${sg.inH} h`, `التالي بعد ${sg.inH} ساعة`)}</span> : null}</div>; })()}
             <button onClick={() => upd((s) => ({ ...s, fast: null }))} className="mt-2 w-full rounded-lg bg-slate-800 py-1.5 text-[12.5px] text-slate-200">{L("End fast", "اكسر الصيام")}</button>
           </>) : (
-            <div className="flex flex-wrap gap-1 mt-2">{Object.entries(F.FASTS).map(([k, h]) => <button key={k} onClick={() => upd((s) => ({ ...s, fast: { start: Date.now(), hours: h } }))} className="rounded-lg bg-slate-800 px-2 py-1 text-[12px] text-slate-200" data-testid={"fit-fast-" + h}>{k}</button>)}</div>
+            <div className="flex flex-wrap gap-1 mt-2">{Object.entries({ ...F.FASTS, ...Y.MORE_FASTS }).map(([k, h]) => <button key={k} onClick={() => upd((s) => ({ ...s, fast: { start: Date.now(), hours: h } }))} className="rounded-lg bg-slate-800 px-2 py-1 text-[12px] text-slate-200" data-testid={"fit-fast-" + h}>{k}</button>)}</div>
           )}
         </div>
       </div>
@@ -773,7 +775,7 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
   );
 }
 
-function Progress({ L, ar, st, upd, tg, pro = true, openPlan }) {
+function Progress({ L, ar, st, upd, tg, pro = true, openPlan, share }) {
   const [w, setW] = useState("");
   const tr = F.trend(st.weights);
   const wk = F.weekSummary(st.days, st.weights, tg);
@@ -784,6 +786,7 @@ function Progress({ L, ar, st, upd, tg, pro = true, openPlan }) {
   const X = (i) => (pts.length < 2 ? 150 : (i / (pts.length - 1)) * 290 + 5), Y = (v) => 110 - ((v - lo) / (hi - lo || 1)) * 100;
   return (
     <div className="space-y-4" data-testid="fit-progress">
+      <YazioPlus {...{ L, ar, st, upd, tg, share }} />
       {pro ? <WeekReport {...{ L, st, tg }} /> : <button onClick={() => openPlan && openPlan()} className="w-full rounded-2xl border border-amber-800 bg-amber-500/10 p-3 text-start text-[13px] text-amber-100" data-testid="fit-report-locked">📊 {L("Your week report — what went well, what to change — is in Pro.", "تقرير أسبوعك — ما يسير جيدًا وما يحتاج تغييرًا — في Pro.")}</button>}
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white" data-testid="fit-streak">{strk}</div><div className="text-[11px] text-slate-400">{L("day streak", "يوم ورا بعض")}</div></div>
@@ -841,4 +844,52 @@ function CopySheet({ L, ar, from, slot, onClose, onCopy }) {
         <button disabled={same} onClick={() => onCopy(to, toSlot)} className="w-full rounded-xl bg-emerald-600 py-2.5 text-white font-medium disabled:opacity-40" data-testid="fit-copy-go">{L("Copy", "نسخ")}</button>
       </div>
     </div>);
+}
+
+
+/* v6.14 — what Yazio has that Fit lacked: averages, measurements over time, progress photos, a goal per weekday, export. */
+const WD = [["Sun", "الأحد"], ["Mon", "الإثنين"], ["Tue", "الثلاثاء"], ["Wed", "الأربعاء"], ["Thu", "الخميس"], ["Fri", "الجمعة"], ["Sat", "السبت"]];
+function loadPhotos() { try { return JSON.parse(localStorage.getItem("attune:fit:photos") || "[]"); } catch (e) { return []; } }
+function YazioPlus({ L, ar, st, upd, tg, share }) {
+  const avg = Y.nutritionAverages(st.days, 7);
+  const [m, setM] = useState({}); const ch = Y.measureChange(st.measures || []);
+  const [photos, setPhotos] = useState(loadPhotos); const fileRef = useRef(null);
+  const extra = (st.profile && st.profile.cycleExtra) || {};
+  const savePhotos = (p) => { setPhotos(p); try { localStorage.setItem("attune:fit:photos", JSON.stringify(p)); } catch (e) { alert(L("Not enough space for more photos — delete an old one.", "لا توجد مساحة لصور أخرى — احذف صورة قديمة.")); } };
+  const addPhoto = (f) => { const r = new FileReader(); r.onload = async () => { try { const u = await Y.shrinkPhoto(String(r.result)); savePhotos([...photos, { d: F.today(), u }].slice(-24)); } catch (e) {} }; r.readAsDataURL(f); };
+  const card = "rounded-2xl bg-slate-900/60 border border-slate-800 p-3";
+  return (<>
+    {avg ? <div className={card} data-testid="fit-averages">
+      <div className="text-[13px] text-white mb-1">{L(`Average of the last ${avg.days} logged days`, `متوسط آخر ${avg.days} أيام مسجّلة`)}</div>
+      <div className="grid grid-cols-4 gap-2 text-center text-[12px]">
+        <div><div className="text-white font-semibold tabular-nums">{avg.kcal}</div><div className="text-slate-400">kcal</div></div>
+        <div><div className="text-sky-300 font-semibold tabular-nums">{avg.p} g</div><div className="text-slate-400">{L("Protein", "بروتين")} {avg.split.p}%</div></div>
+        <div><div className="text-amber-300 font-semibold tabular-nums">{avg.c} g</div><div className="text-slate-400">{L("Carbs", "كربوهيدرات")} {avg.split.c}%</div></div>
+        <div><div className="text-rose-300 font-semibold tabular-nums">{avg.f} g</div><div className="text-slate-400">{L("Fat", "دهون")} {avg.split.f}%</div></div>
+      </div></div> : null}
+    <div className={card} data-testid="fit-measures">
+      <div className="text-[13px] text-white mb-2">{L("Body measurements (cm)", "قياسات الجسم (سم)")}</div>
+      <div className="grid grid-cols-3 gap-1.5">{Y.PARTS.map(([k, en, a]) => <input key={k} inputMode="decimal" value={m[k] || ""} onChange={(e) => setM({ ...m, [k]: e.target.value })} placeholder={L(en, a)} data-testid={"fit-m-" + k}
+        className="rounded-lg bg-slate-800 border border-slate-700 px-2 py-1.5 text-[13px] text-white min-w-0" />)}</div>
+      <button onClick={() => { upd((s) => ({ ...s, measures: Y.addMeasure(s.measures || [], { ...m, d: F.today() }) })); setM({}); }} className="mt-2 w-full rounded-lg bg-emerald-600 py-1.5 text-[13px] text-white" data-testid="fit-m-save">{L("Save today's measurements", "حفظ قياسات اليوم")}</button>
+      {Object.keys(ch).length ? <div className="mt-2 space-y-0.5 text-[12.5px]" data-testid="fit-m-change">{Y.PARTS.filter(([k]) => ch[k]).map(([k, en, a]) =>
+        <div key={k} className="flex justify-between"><span className="text-slate-300">{L(en, a)}</span><span className="tabular-nums text-slate-200">{ch[k].last} cm <span className={ch[k].change < 0 ? "text-emerald-300" : ch[k].change > 0 ? "text-rose-300" : "text-slate-500"}>({ch[k].change > 0 ? "+" : ""}{ch[k].change} {L("since", "منذ")} {ch[k].since})</span></span></div>)}</div> : null}
+    </div>
+    <div className={card} data-testid="fit-photos">
+      <div className="flex items-center justify-between"><span className="text-[13px] text-white">{L("Progress photos", "صور التقدم")}</span>
+        <button onClick={() => fileRef.current && fileRef.current.click()} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-sky-300" data-testid="fit-photo-add">+ {L("Photo", "صورة")}</button></div>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) addPhoto(f); }} data-testid="fit-photo-input" />
+      {photos.length >= 2 ? <div className="grid grid-cols-2 gap-2 mt-2">{[photos[0], photos[photos.length - 1]].map((x, i) => <figure key={i}><img src={x.u} className="w-full rounded-lg aspect-[3/4] object-cover" /><figcaption className="text-[11px] text-slate-400 text-center mt-0.5">{i ? L("Now", "الآن") : L("Before", "قبل")} · {x.d}</figcaption></figure>)}</div>
+        : photos.length ? <img src={photos[0].u} className="mt-2 w-1/2 rounded-lg" /> : <div className="text-[12px] text-slate-500 mt-1">{L("Photos stay on this phone. Add one now and one in a few weeks to compare.", "تبقى الصور على هذا الهاتف. أضف صورة الآن وأخرى بعد أسابيع للمقارنة.")}</div>}
+      {photos.length ? <button onClick={() => savePhotos(photos.slice(0, -1))} className="mt-1.5 text-[11.5px] text-slate-500">{L("Delete the latest photo", "حذف أحدث صورة")}</button> : null}
+    </div>
+    {tg ? <div className={card} data-testid="fit-cycle">
+      <div className="text-[13px] text-white">{L("More calories on some days", "سعرات أكثر في أيام معيّنة")}</div>
+      <div className="text-[11.5px] text-slate-400 mb-2">{L("Pick days to eat 300 kcal more (weekends, family dinners). The other days give a little back, so your week — and your weight plan — stays the same.", "اختر أيامًا تأكل فيها 300 سعر إضافية (الإجازات، عزومات العائلة). تتنازل الأيام الأخرى عن قليل، فيبقى أسبوعك — وخطة وزنك — كما هما.")}</div>
+      <div className="flex flex-wrap gap-1.5">{WD.map(([en, a], i) => <button key={i} onClick={() => upd((s) => { const e = { ...((s.profile || {}).cycleExtra || {}) }; if (e[i]) delete e[i]; else e[i] = 300; return { ...s, profile: { ...s.profile, cycleExtra: e } }; })}
+        className={"rounded-lg px-2 py-1 text-[12px] border " + (extra[i] ? "border-emerald-500 bg-emerald-500/15 text-emerald-100" : "border-slate-700 text-slate-300")} data-testid={"fit-cyc-" + i}>{L(en, a)} {extra[i] ? Y.dayGoal(tg.kcal, (() => { const d = new Date(); d.setDate(d.getDate() + ((i - d.getDay() + 7) % 7)); return F.today(d); })(), extra) : ""}</button>)}</div>
+    </div> : null}
+    <button onClick={() => { const csv = Y.diaryCSV(st.days); if (share) share(csv); else { const a = document.createElement("a"); a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv); a.download = "fit-diary.csv"; a.click(); } }}
+      className="w-full rounded-xl border border-slate-800 bg-slate-900/40 py-2 text-[13px] text-slate-300" data-testid="fit-export">{L("Export my food diary (CSV for Excel)", "تصدير يوميات الطعام (CSV لإكسل)")}</button>
+  </>);
 }
