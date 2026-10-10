@@ -1500,4 +1500,119 @@ def build_medicines(a):
         "notice_ar": "من النشرات الرسمية الأمريكية — ليست نصيحة طبية؛ الطبيب أو الصيدلي يحدد جرعتك.",
         "sources": [{"title": "openFDA drug labels", "url": "https://open.fda.gov/apis/drug/label/", "license": "CC0 (public domain)"}], "retrieved": time.strftime("%Y-%m-%d")})
 
-BUILDERS = {"science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith, "cars": build_cars, "geography": build_geography, "coding": build_coding, "islamlib": build_islamlib, "dictionary": build_dictionary, "medicines": build_medicines, **{k: (lambda a, k=k: build_subject(a, k)) for k in SUBJECTS}}
+# ---- wikidata (Ali, 10 Oct 2026: "if B is reliable then ok"): ONLY statements Wikidata backs with an outside source ---------------------
+# A statement is kept when one of its references is a URL that is not a Wikimedia site (P854) or a «stated in» (P248) work that is
+# not a Wikipedia edition; statements sourced only «imported from Wikimedia project» (P143) are dropped. Deprecated ones too, and
+# ended ones (P582: a former capital, a past population). Each passage lists the source of every fact. CC0. Ranked under the
+# official packs in the app (knowledge.js).
+WDQS = "https://query.wikidata.org/sparql"
+WD_SETS = [   # (name, class filter (SPARQL on ?item), [(property, label, kind)], extra filter)
+    ("country", "?item wdt:P31 wd:Q3624078 .", [("P36", "capital", "item"), ("P1082", "population", "qty"), ("P2046", "area", "qty"),
+        ("P38", "currency", "item"), ("P37", "official language", "item"), ("P571", "founded", "time"), ("P610", "highest point", "item"),
+        ("P474", "calling code", "str"), ("P2131", "GDP (nominal)", "qty"), ("P1081", "Human Development Index", "qty")], ""),
+    ("big city", "?item wdt:P31/wdt:P279* wd:Q1549591 .", [("P1082", "population", "qty"), ("P17", "country", "item"), ("P2046", "area", "qty"),
+        ("P2044", "elevation", "qty")], ""),
+    ("mountain", "?item wdt:P31 wd:Q8502 ; wdt:P2044 ?e . FILTER(?e >= 3500)", [("P2044", "elevation", "qty"), ("P17", "country", "item"),
+        ("P4552", "mountain range", "item")], ""),
+    ("river", "?item wdt:P31 wd:Q4022 ; wdt:P2043 ?l . FILTER(?l >= 400)", [("P2043", "length", "qty"), ("P2225", "discharge", "qty"),
+        ("P403", "mouth", "item"), ("P17", "country", "item")], ""),
+    ("lake", "?item wdt:P31 wd:Q23397 ; wdt:P2046 ?a . FILTER(?a >= 500)", [("P2046", "area", "qty"), ("P4511", "depth", "qty"), ("P17", "country", "item")], ""),
+    ("chemical element", "?item wdt:P31 wd:Q11344 .", [("P1086", "atomic number", "qty"), ("P246", "symbol", "str"), ("P2067", "atomic mass", "qty"),
+        ("P2101", "melting point", "qty"), ("P2102", "boiling point", "qty"), ("P575", "discovered", "time"), ("P61", "discoverer", "item")], ""),
+    ("famous person", "?item wdt:P31 wd:Q5 ; wikibase:sitelinks ?sl . FILTER(?sl >= 90)", [("P569", "born", "time"), ("P570", "died", "time"),
+        ("P19", "place of birth", "item"), ("P20", "place of death", "item"), ("P27", "citizenship", "item"), ("P106", "occupation", "item")], ""),
+]
+
+def wd_query(cls, prop, kind):
+    val = {"item": f"ps:{prop} ?v . OPTIONAL {{ ?v rdfs:label ?vl FILTER(LANG(?vl) = 'en') }}",
+           "qty": f"psv:{prop} [ wikibase:quantityAmount ?v ; wikibase:quantityUnit ?u ] . OPTIONAL {{ ?u rdfs:label ?ul FILTER(LANG(?ul) = 'en') }}",
+           "time": f"psv:{prop} [ wikibase:timeValue ?v ; wikibase:timePrecision ?prec ] .",
+           "str": f"ps:{prop} ?v ."}[kind]
+    return f"""SELECT ?item ?en ?ar ?v ?vl ?ul ?prec ?when ?url ?statedL WHERE {{
+  {cls}
+  ?item p:{prop} ?st . ?st {val}
+  ?st wikibase:rank ?rank . FILTER(?rank != wikibase:DeprecatedRank)
+  FILTER NOT EXISTS {{ ?st pq:P582 ?ended }}
+  OPTIONAL {{ ?st pq:P585 ?when }}
+  ?st prov:wasDerivedFrom ?ref .
+  {{ ?ref pr:P854 ?url . FILTER(!REGEX(STR(?url), "wiki(pedia|data|media)\\.org", "i")) }}
+  UNION {{ ?ref pr:P248 ?stated . FILTER NOT EXISTS {{ ?stated wdt:P31 wd:Q10876391 }} ?stated rdfs:label ?statedL FILTER(LANG(?statedL) = 'en') }}
+  ?item rdfs:label ?en FILTER(LANG(?en) = 'en')
+  OPTIONAL {{ ?item rdfs:label ?ar FILTER(LANG(?ar) = 'ar') }}
+}}"""
+
+def wd_fmt(b, kind):
+    """One SPARQL result row → the value as people read it."""
+    g = lambda k: (b.get(k) or {}).get("value", "")
+    v = g("v")
+    if kind == "item": return g("vl") or ""
+    if kind == "qty":
+        try: x = float(v)
+        except ValueError: return ""
+        num = f"{x:,.0f}" if abs(x) >= 100 and x == int(x) else (f"{x:,.2f}".rstrip("0").rstrip(".") if abs(x) >= 1 else f"{x:.4g}")
+        u = g("ul"); u = "" if u in ("", "1") else " " + {"square kilometre": "km²", "metre": "m", "kilometre": "km", "United States dollar": "US$",
+            "cubic metre per second": "m³/s", "degree Celsius": "°C", "kelvin": "K", "dalton": "u", "gram per mole": "g/mol"}.get(u, u)
+        return num + u
+    if kind == "time":
+        y = re.match(r"^([+-]?\d+)-(\d\d)-(\d\d)", v)
+        if not y: return ""
+        yr, prec = int(y.group(1)), int(g("prec") or 9)
+        yrs = f"{abs(yr)} BC" if yr < 0 else str(yr)
+        return f"{int(y.group(3))} {['January','February','March','April','May','June','July','August','September','October','November','December'][int(y.group(2)) - 1]} {yrs}" if prec >= 11 else yrs
+    return v
+
+def wd_source(b):
+    g = lambda k: (b.get(k) or {}).get("value", "")
+    if g("statedL"): return g("statedL")
+    u = g("url")
+    m = re.match(r"https?://(?:www\.)?([^/]+)", u)
+    return m.group(1) if m else ""
+
+def wikidata_rows(results):
+    """[(set name, prop label, kind, SPARQL bindings)] → one passage per item: «Egypt — facts with their sources (Wikidata)»."""
+    items = {}
+    for set_name, label, kind, rows in results:
+        for b in rows:
+            qid = (b.get("item") or {}).get("value", "").rsplit("/", 1)[-1]
+            val = wd_fmt(b, kind)
+            if not qid or not val: continue
+            it = items.setdefault(qid, {"en": b["en"]["value"], "ar": (b.get("ar") or {}).get("value", ""), "set": set_name, "facts": {}})
+            when = ((b.get("when") or {}).get("value") or "")[:4]
+            f = it["facts"].setdefault(label, {})
+            key = val + (f" ({when})" if when else "")
+            f.setdefault(key, set()).add(wd_source(b))
+    rows = []
+    for qid, it in sorted(items.items(), key=lambda x: x[1]["en"]):
+        parts = []
+        for label, vals in it["facts"].items():
+            # several values: the most recent dated one first (a population), at most 4
+            vs = sorted(vals.items(), key=lambda kv: re.search(r"\((\d{4})\)$", kv[0]).group(1) if re.search(r"\((\d{4})\)$", kv[0]) else "", reverse=True)[:4]
+            parts.append(f"{label}: " + "; ".join(f"{v} [source: {', '.join(sorted(s for s in src if s)[:2])}]" for v, src in vs))
+        if not parts: continue
+        name = it["en"] + (f" ({it['ar']})" if it["ar"] else "")
+        rows.append({"t": f"{name} — {it['set']}, facts with their sources (Wikidata)", "x": f"{name} ({it['set']}): " + " | ".join(parts) + ".",
+                     "u": f"https://www.wikidata.org/wiki/{qid}", "l": "en"})
+    return rows
+
+def build_wikidata(a):
+    import urllib.parse
+    B = _bk(); results = []
+    for set_name, cls, props, _ in WD_SETS:
+        for prop, label, kind in props:
+            q = wd_query(cls, prop, kind)
+            try:
+                d = json.loads(B.get(WDQS + "?" + urllib.parse.urlencode({"query": q, "format": "json"}), 120, accept="application/sparql-results+json").decode("utf-8"))
+                rows = d["results"]["bindings"]
+            except BaseException as e: print(f"wikidata: {set_name} {label} failed ({e})"); rows = []
+            print(f"wikidata: {set_name} · {label}: {len(rows)} sourced statements"); results.append((set_name, label, kind, rows))
+            time.sleep(2)   # WDQS asks for a gentle pace
+    rows = wikidata_rows(results)
+    B.write_pack(a.out, "wikidata", rows, {
+        "name": "Sourced facts (Wikidata)", "name_ar": "حقائق موثّقة بمصادرها (ويكي بيانات)",
+        "license": "CC0 (Wikidata)",
+        "attribution": "Wikidata (wikidata.org), CC0 — only statements that cite an outside source (a publisher, an official site, a statistics office); statements sourced only to Wikipedia are left out. Every fact is shown with its source.",
+        "notice": "Crowd-edited data, kept only where it cites a source; for anything important, check the source named.",
+        "notice_ar": "بيانات يحررها المتطوعون، أُخذ منها ما له مصدر فقط؛ وفي الأمور المهمة راجع المصدر المذكور.",
+        "sources": [{"title": "Wikidata — sourced statements only", "url": "https://www.wikidata.org/", "license": "CC0"}], "retrieved": time.strftime("%Y-%m-%d")})
+
+BUILDERS = {"wikidata": build_wikidata, "science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith, "cars": build_cars, "geography": build_geography, "coding": build_coding, "islamlib": build_islamlib, "dictionary": build_dictionary, "medicines": build_medicines, **{k: (lambda a, k=k: build_subject(a, k)) for k in SUBJECTS}}

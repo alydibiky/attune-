@@ -10,6 +10,7 @@ name: Build a knowledge pack
 #   hadith    the main hadith books with the scholars' rulings (hadith-api, public domain)
 #   math physics chemistry biology history business economics society   OpenStax books (CC BY), formulas and worked examples kept
 #   geography Factbook geography + GeoNames physical features    coding    Python docs, MDN, Kotlin docs
+#   wikidata  Wikidata, ONLY statements citing an outside source (CC0)
 #   medicines openFDA drug labels (CC0)    dictionary Open English WordNet (CC BY) + لسان العرب، مختار الصحاح    islamlib تفسير ابن كثير آيةً آية، رياض الصالحين، بلوغ المرام
 #   cars      car specs: US EPA (public domain, 2000–now) + EEA new-car data (CC BY 4.0, 2010–now, incl. Chinese brands)
 # Attune is sold: every source must allow commercial use (no NC/ND licences, no modern copyrighted books). No Wikipedia (Ali's rule). Ali approved publishing (10 Oct 2026). Rebuilt on the 1st of every month so the numbers stay
@@ -21,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       packs:
-        description: "Packs, space-separated (world laws numbers cities health cranes quran fiqh hadith cars math physics chemistry biology history geography coding business economics society medicines dictionary islamlib), or all"
+        description: "Packs, space-separated (world laws numbers cities health cranes quran fiqh hadith cars math physics chemistry biology history geography coding business economics society medicines dictionary islamlib wikidata), or all"
         default: "all"
       budget_mb:
         description: "Text budget in MB (laws, science)"
@@ -39,13 +40,13 @@ jobs:
       - id: p
         run: |
           packs="${{ github.event.inputs.packs }}"
-          if [ -z "$packs" ] || [ "$packs" = "all" ]; then packs="world laws numbers cities health cranes quran fiqh hadith cars math physics chemistry biology history geography coding business economics society medicines dictionary islamlib"; fi
+          if [ -z "$packs" ] || [ "$packs" = "all" ]; then packs="world laws numbers cities health cranes quran fiqh hadith cars math physics chemistry biology history geography coding business economics society medicines dictionary islamlib wikidata"; fi
           echo "list=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1].split()))' "$packs")" >> $GITHUB_OUTPUT
 
   pack:
     needs: plan
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 350   # the classical dictionaries are read page by page
     strategy:
       fail-fast: false
       matrix:

@@ -30,7 +30,7 @@ from build_map_pack import normalize
 def get(url, timeout=120, accept=None):
     for i in range(5):
         try:
-            h = {"User-Agent": "attune-know-pack"}
+            h = {"User-Agent": "attune-know-pack/1.0 (https://github.com/alydibiky/attune-)"}   # Wikidata asks for a descriptive agent
             if accept: h["Accept"] = accept
             if "api.github.com" in url and os.environ.get("GITHUB_TOKEN"): h["Authorization"] = "Bearer " + os.environ["GITHUB_TOKEN"]
             req = urllib.request.Request(url, headers=h)
@@ -223,7 +223,7 @@ def build_laws(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("pack", choices=["world", "laws", "science", "health", "numbers", "cities", "cranes", "quran", "fiqh", "hadith", "cars", "math", "physics", "chemistry", "biology", "history", "geography", "coding", "business", "economics", "society", "islamlib", "dictionary", "medicines"]); ap.add_argument("out")
+    ap.add_argument("pack", choices=["world", "laws", "science", "health", "numbers", "cities", "cranes", "quran", "fiqh", "hadith", "cars", "math", "physics", "chemistry", "biology", "history", "geography", "coding", "business", "economics", "society", "islamlib", "dictionary", "medicines", "wikidata"]); ap.add_argument("out")
     ap.add_argument("--max-countries", type=int, default=0)
     ap.add_argument("--budget-mb", type=float, default=15)
     ap.add_argument("--parquet", default="")

@@ -351,6 +351,21 @@ check(len(hc) > 1 and all(x.startswith("BYD SEAL — versions sold in Europe") a
       "Cars: every piece of a long version list starts with the model name and holds versions (no tiny header-only passage)")
 mr = S.measure_rows()
 check(any("85 جرامًا" in r["x"] and "عشرون مثقالًا" in r["x"] for r in mr) and any("595 جرامًا" in r["x"] for r in mr), "Fiqh: the classical measures in grams (gold 85 g = 20 mithqal, silver 595 g = 200 dirham)")
+L = lambda v: {"value": v}
+egy = {"item": L("http://www.wikidata.org/entity/Q79"), "en": L("Egypt"), "ar": L("مصر")}
+wr2 = S.wikidata_rows([
+    ("country", "capital", "item", [dict(egy, v=L("http://www.wikidata.org/entity/Q85"), vl=L("Cairo"), statedL=L("The World Factbook"))]),
+    ("country", "population", "qty", [dict(egy, v=L("105231484"), ul=L("1"), when=L("2022-01-01T00:00:00Z"), url=L("https://data.worldbank.org/indicator/SP.POP.TOTL")),
+                                      dict(egy, v=L("94798827"), ul=L("1"), when=L("2017-01-01T00:00:00Z"), statedL=L("CAPMAS census"))]),
+    ("country", "area", "qty", [dict(egy, v=L("1010407.87"), ul=L("square kilometre"), url=L("https://www.cia.gov/the-world-factbook/countries/egypt/"))]),
+    ("chemical element", "discovered", "time", [{"item": L("http://www.wikidata.org/entity/Q1100"), "en": L("Helium"), "v": L("+1868-08-18T00:00:00Z"), "prec": L("11"), "statedL": L("Encyclopaedia Britannica")}])])
+eg = next(r for r in wr2 if r["t"].startswith("Egypt"))
+check("capital: Cairo [source: The World Factbook]" in eg["x"] and eg["x"].index("105,231,484 (2022)") < eg["x"].index("94,798,827 (2017)") and "data.worldbank.org" in eg["x"]
+      and "1,010,407.87 km²" in eg["x"] and "(مصر)" in eg["t"] and eg["u"].endswith("/Q79"), "Wikidata: each fact with its source, newest population first, units and the Arabic name: " + eg["x"][:200])
+check(any("discovered: 18 August 1868 [source: Encyclopaedia Britannica]" in r["x"] for r in wr2), "Wikidata: a dated fact at its precision, with its source")
+q = S.wd_query("?item wdt:P31 wd:Q3624078 .", "P36", "item")
+check("pr:P854" in q and "Q10876391" in q and "wiki(pedia|data|media)" in q and "pq:P582" in q and "DeprecatedRank" in q,
+      "Wikidata: only statements citing an outside source (not Wikipedia), not ended, not deprecated")
 hd = S.hadith_rows("bukhari", "صحيح البخاري", {"hadiths": [{"hadithnumber": 834, "text": "ظُلْمًا كَثِيرًا \ufffd\ufffdَلاَ يَغْفِرُ", "grades": []}]})
 check(S.hadith_rows("nawawi", "الأربعون النووية", {"hadiths": [{"hadithnumber": 6, "text": "أَلَا وَهِيَ الْقَلْبُ .<br>[رَوَاهُ الْبُخَارِيُّ]", "grades": []}]})[0]["x"].startswith("أَلَا وَهِيَ الْقَلْبُ .\n[رَوَاهُ"), "Quality: no HTML left in a hadith")
 check("\ufffd" not in hd[0]["x"] and "[…]" in hd[0]["x"] and "الدرر السنية" in hd[0]["x"], "Quality: a letter damaged in the hadith source is marked, never guessed, and the reader is sent to Dorar")

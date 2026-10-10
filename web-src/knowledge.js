@@ -299,6 +299,9 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
       if (K.liveSearch) { try { pack = ((await K.liveSearch(question)) || []).concat(pack); } catch (e) { /* offline or Dorar unreachable: the packs still answer */ } }
       if (!pack.length) return findFacts(idx, question, o);
       // passages the phone ranked (they carry its score) keep that order; any others (Dorar's live answers) are ranked here with your own
+      // v6.16c: Wikidata's sourced facts come after the official packs (0.75 of their score) — they fill gaps, never lead
+      pack = pack.map((p) => (p.pack === "wikidata" && typeof p.score === "number" ? { ...p, score: p.score * 0.75 } : p));
+      pack = pack.filter((p) => typeof p.score !== "number").concat(pack.filter((p) => typeof p.score === "number").sort((a, b) => b.score - a.score));
       pack = verseFirst(pack, question);
       const scored = pack.filter((p) => typeof p.score === "number"), loose = pack.filter((p) => typeof p.score !== "number");
       const asChunk = (p) => ({ id: p.id, src: "pack:" + p.pack, title: p.title || "", page: 0, text: p.text || "", kind: "pack", url: p.url || "", pack: p.pack,
@@ -449,6 +452,10 @@ export const CATALOG = [
   { id: "numbers", name: "Country numbers", name_ar: "أرقام الدول", size: "≈ 1 MB", size_ar: "≈ ١ ميجابايت", license: "CC BY 4.0 (World Bank)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (البنك الدولي)",
     about: "Each country's latest population, GDP, growth, inflation, unemployment, life expectancy, trade and more — World Bank open data, rebuilt every month.",
     about_ar: "أحدث أرقام كل دولة: السكان والناتج المحلي والنمو والتضخم والبطالة ومتوسط العمر والتجارة وغيرها — بيانات البنك الدولي، تُحدَّث كل شهر." },
+  { id: "wikidata", name: "Sourced facts (Wikidata)", name_ar: "حقائق موثّقة بمصادرها (ويكي بيانات)", size: "≈ 6 MB", size_ar: "≈ ٦ ميجابايت", license: "CC0 (Wikidata)", license_ar: "ملكية عامة (ويكي بيانات)",
+    about: "Countries, big cities, mountains, rivers, lakes, the chemical elements and famous people — only facts that cite an outside source (a statistics office, an encyclopaedia, an official site), each shown with its source. Facts sourced only to Wikipedia are left out, and the official packs always come first.",
+    about_ar: "الدول والمدن الكبرى والجبال والأنهار والبحيرات والعناصر الكيميائية والمشاهير — الحقائق التي لها مصدر خارجي فقط (جهة إحصاء، موسوعة، موقع رسمي)، ومع كل حقيقة مصدرها. وما مصدره ويكيبيديا وحدها مستبعد، والحزم الرسمية تأتي أولًا دائمًا.",
+    notice: "Crowd-edited data, kept only where it cites a source; for anything important, check the source named.", notice_ar: "بيانات يحررها المتطوعون، أُخذ منها ما له مصدر فقط؛ وفي الأمور المهمة راجع المصدر المذكور." },
   { id: "cities", name: "Countries & cities", name_ar: "الدول والمدن", size: "≈ 5 MB", size_ar: "≈ ٥ ميجابايت", license: "CC BY 4.0 (GeoNames)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (جيونيمز)",
     about: "Every city over 15,000 people (with Arabic names), each country's capital, currency, calling code and languages — GeoNames.",
     about_ar: "كل مدينة يزيد سكانها على ١٥ ألفًا (بأسمائها العربية)، وعاصمة كل دولة وعملتها ورمز الاتصال ولغاتها — من جيونيمز." },

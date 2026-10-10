@@ -86,7 +86,9 @@ ok(got === 2, "installing again skips shards already there (resumable)");
 await K.removeKnowPack(kp, "t");
 ok((await kp.sources()).length === 0, "a pack is removed as a whole");
 ok(["world", "egy-laws", "numbers", "cities", "business", "economics", "society", "medicines", "dictionary", "islamlib", "health", "cranes", "quran", "fiqh", "hadith", "cars", "math", "physics", "chemistry", "biology", "history", "geography", "coding"].every((id) => K.CATALOG.some((p) => p.id === id)) && K.CATALOG.every((p) => p.name_ar && p.license && p.license_ar && p.size), "the catalogue: the 23 public packs, each with Arabic name, size and licence");
-ok(!/wiki/i.test(JSON.stringify(K.CATALOG)), "no pack in the catalogue comes from Wikipedia (Ali's rule)");
+// Ali's rule (v6.16c): no Wikipedia text; Wikidata only as sourced facts ("if B is reliable then ok") — one pack, which says so
+ok(!/wiki/i.test(JSON.stringify(K.CATALOG.filter((p) => p.id !== "wikidata"))) && /only facts that cite an outside source/.test((K.CATALOG.find((p) => p.id === "wikidata") || {}).about || ""),
+  "no pack comes from Wikipedia; Wikidata is used only for facts that cite an outside source (Ali's rule)");
 ok(!/[A-Za-z]/.test(K.CATALOG.map((p) => p.name_ar + p.about_ar + p.license_ar + (p.notice_ar || "") + p.size_ar).join("")), "the catalogue's Arabic text has no Latin letters");
 
 // the laws pack's warning travels with its passages, into the prompt and under the chips
