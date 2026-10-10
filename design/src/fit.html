@@ -1,0 +1,138 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+:root{--bg:#020617;--card:#0f172a;--line:#1e293b;--muted:#94a3b8;--dim:#64748b;--txt:#e2e8f0;--teal:#14b8a6;--teal2:#2dd4bf;--amber:#f59e0b;--sky:#38bdf8;--rose:#fb7185}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0b0f19;color:var(--txt);font-family:"DejaVu Sans",system-ui,sans-serif;padding:32px;width:2120px}
+h1{font-size:30px;margin-bottom:6px}.sub{color:var(--muted);font-size:15px;margin-bottom:24px;max-width:1900px;line-height:1.5}
+.row{display:flex;gap:28px;align-items:flex-start}
+.col{width:390px}.lab{font-size:20px;font-weight:700;margin-bottom:4px}.lab b{color:var(--teal2)}.note{font-size:13px;color:var(--muted);line-height:1.45;margin:8px 0 12px;min-height:76px}
+.phone{width:390px;height:844px;background:var(--bg);border:1px solid #334155;border-radius:28px;overflow:hidden;position:relative;font-size:14px}
+.top{height:52px;display:flex;align-items:center;padding:0 16px;gap:10px;border-bottom:1px solid var(--line)}.top .t{font-weight:700;font-size:17px;flex:1}
+.pill{border:1px solid #334155;border-radius:999px;padding:5px 11px;font-size:12px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin:10px 12px}
+.ring{width:150px;height:150px;border-radius:50%;background:conic-gradient(var(--teal) 0 62%,#1e293b 62% 100%);display:grid;place-items:center}
+.ring>div{width:122px;height:122px;border-radius:50%;background:var(--card);display:grid;place-items:center;text-align:center}
+.big{font-size:26px;font-weight:700}.s{font-size:11px;color:var(--muted)}
+.bar{height:6px;border-radius:3px;background:#1e293b;overflow:hidden;margin-top:4px}.bar i{display:block;height:100%}
+.mac{flex:1;font-size:11px;color:var(--muted)}.mac b{color:var(--txt);font-size:13px}
+.flex{display:flex;gap:10px;align-items:center}
+.btn{min-height:48px;border-radius:14px;background:#1e293b;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;flex:1}
+.prim{background:var(--teal);color:#042f2e;font-weight:700}
+.chip{border:1px solid #334155;border-radius:999px;padding:8px 12px;font-size:12px;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;gap:6px}
+.chip .plus{color:var(--teal2);font-weight:700}
+.meal{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}.meal:first-child{border-top:0}
+.meal .n{flex:1}.meal .k{color:var(--muted);font-size:12px}
+.add{width:36px;height:36px;border-radius:50%;background:#134e4a;color:var(--teal2);display:grid;place-items:center;font-weight:700;font-size:20px}
+.h{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:12px 16px 4px}
+.drops span{display:inline-block;width:22px;height:28px;border-radius:6px 6px 10px 10px;background:#1e293b;margin-right:4px}.drops span.f{background:var(--sky)}
+.week{display:flex;gap:6px;justify-content:space-between}.week div{flex:1;text-align:center;font-size:10px;color:var(--muted)}.week i{display:block;margin:0 auto 4px;width:16px;border-radius:4px;background:var(--teal)}
+.fab{position:absolute;bottom:78px;right:16px;width:64px;height:64px;border-radius:20px;background:var(--teal);color:#042f2e;display:grid;place-items:center;font-size:30px;font-weight:700;box-shadow:0 8px 24px #0009}
+.nav{position:absolute;bottom:0;left:0;right:0;height:62px;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;font-size:11px;color:var(--dim);background:var(--bg)}
+.nav .on{color:var(--teal2)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#0f172a;border-top-left-radius:22px;border-top-right-radius:22px;border-top:1px solid #334155;padding:10px 14px 16px}
+.grab{width:40px;height:4px;background:#475569;border-radius:2px;margin:0 auto 10px}
+.scrim{position:absolute;inset:0;background:#000a}
+.yz{background:#111827;border:1px dashed #475569;border-radius:16px;padding:16px;font-size:13px;line-height:1.55;color:#cbd5e1;width:390px}
+.yz h3{font-size:16px;margin-bottom:8px;color:#fff}
+.tag{display:inline-block;background:#134e4a;color:var(--teal2);border-radius:6px;padding:2px 8px;font-size:12px;margin-left:6px}
+.rtl{direction:rtl}
+</style></head><body>
+<h1>Fit &amp; Food home: 3 options (item 14)</h1>
+<div class="sub">The phone frames are 390 px wide, in the app's dark tokens (slate-950 / slate-900 / teal-500). Each option makes the most common job, logging a meal, take 1–2 taps. Today the app first opens on a long plan form (see current-fit.png), and logging a meal sits further down the page. The last column sums up what Yazio does (from public store pages and reviews) and what each option does better. The Arabic RTL version of the recommended option is in the lower row.</div>
+<div class="row">
+
+<!-- A -->
+<div class="col"><div class="lab">A · "Log bar" <span class="tag">recommended</span></div>
+<div class="note">A logging bar always sits under the ring: <b>Photo · Barcode · Say it · Search</b>. Your recent and frequent meals are one-tap chips that add the food straight away and can be undone. Meals are grouped by time of day. Water: tap a glass.</div>
+<div class="phone">
+ <div class="top"><span>←</span><span class="t">Today · Sat 4 Oct</span><span class="pill">Week ▸</span></div>
+ <div class="card flex" style="gap:16px"><div class="ring"><div><div><div class="big">1,240</div><div class="s">kcal left</div></div></div></div>
+  <div style="flex:1"><div class="s">Eaten 760 · Goal 2,000</div>
+   <div class="mac" style="margin-top:10px"><b>Protein</b> 48/120 g<div class="bar"><i style="width:40%;background:var(--rose)"></i></div></div>
+   <div class="mac" style="margin-top:8px"><b>Carbs</b> 90/220 g<div class="bar"><i style="width:41%;background:var(--amber)"></i></div></div>
+   <div class="mac" style="margin-top:8px"><b>Fat</b> 22/65 g<div class="bar"><i style="width:34%;background:var(--sky)"></i></div></div></div></div>
+ <div class="flex" style="margin:0 12px;gap:8px"><div class="btn prim">📷 Photo</div><div class="btn">▥ Barcode</div><div class="btn">🎙 Say it</div><div class="btn">🔍</div></div>
+ <div class="h">One tap to add again</div>
+ <div style="display:flex;gap:6px;overflow:hidden;padding:0 12px"><span class="chip"><span class="plus">+</span>Foul &amp; bread · 420</span><span class="chip"><span class="plus">+</span>Koshari · 650</span><span class="chip"><span class="plus">+</span>Tea, sugar</span></div>
+ <div class="card"><div class="meal"><span>🌅</span><span class="n">Breakfast<div class="k">Fried eggs, baladi bread · 480 kcal</div></span><span class="add">+</span></div>
+  <div class="meal"><span>☀️</span><span class="n">Lunch<div class="k">Chicken shawarma · 280 kcal</div></span><span class="add">+</span></div>
+  <div class="meal"><span>🌙</span><span class="n">Dinner<div class="k">Suggested: Molokhia + rice · 520</div></span><span class="add">+</span></div></div>
+ <div class="card flex"><div style="flex:1"><div class="s">Water · 5 of 8</div><div class="drops" style="margin-top:6px"><span class="f"></span><span class="f"></span><span class="f"></span><span class="f"></span><span class="f"></span><span></span><span></span><span></span></div></div><div style="width:110px"><div class="s">This week</div><div class="week" style="height:40px;align-items:flex-end"><div><i style="height:22px"></i>S</div><div><i style="height:30px"></i>S</div><div><i style="height:18px"></i>M</div><div><i style="height:26px"></i>T</div><div><i style="height:12px;opacity:.5"></i>W</div></div></div></div>
+ <div class="nav"><span class="on">Today</span><span>Recipes</span><span>Workouts</span><span>Progress</span></div>
+</div></div>
+
+<!-- B -->
+<div class="col"><div class="lab">B · "Camera-first"</div>
+<div class="note">One large button opens the camera straight away. The photo is recognised and you confirm with one tap. A long-press offers barcode, voice and search. The calories are a slim bar at the top, so the list of meals stays on screen.</div>
+<div class="phone">
+ <div class="top"><span>←</span><span class="t">Fit &amp; Food</span><span class="pill">1,240 left</span></div>
+ <div style="margin:12px 16px"><div class="flex" style="justify-content:space-between"><span class="s">760 of 2,000 kcal</span><span class="s">P 48 · C 90 · F 22 g</span></div><div class="bar" style="height:10px"><i style="width:38%;background:var(--teal)"></i></div></div>
+ <div class="card" style="text-align:center;padding:22px"><div style="font-size:44px">📷</div><div style="font-weight:700;font-size:16px;margin-top:6px">Snap your plate</div><div class="s" style="margin-top:4px">Hold for barcode · voice · search</div></div>
+ <div class="h">Today</div>
+ <div class="card"><div class="meal"><span>🍳</span><span class="n">Fried eggs, baladi bread<div class="k">08:10 · 480 kcal</div></span></div><div class="meal"><span>🌯</span><span class="n">Chicken shawarma<div class="k">13:30 · 280 kcal</div></span></div></div>
+ <div class="h">Tonight, from Egypt</div>
+ <div style="display:flex;gap:8px;padding:0 12px"><div class="card" style="margin:0;flex:1"><div style="font-size:26px">🥬</div>Molokhia<div class="k s">520 kcal · 25 min</div></div><div class="card" style="margin:0;flex:1"><div style="font-size:26px">🐟</div>Grilled fish<div class="k s">430 kcal · 20 min</div></div></div>
+ <div class="card"><div class="s">Water 5/8 &nbsp; <span style="color:var(--sky)">＋ glass</span></div></div>
+ <div class="nav"><span class="on">Today</span><span>Recipes</span><span>Workouts</span><span>Progress</span></div>
+</div></div>
+
+<!-- C -->
+<div class="col"><div class="lab">C · "Timeline + FAB sheet"</div>
+<div class="note">The day is a simple timeline, and a single ＋ button opens a bottom sheet with 6 ways to log a meal and your favourites. It is the cleanest look, but every meal costs one extra tap (the sheet is shown open here).</div>
+<div class="phone">
+ <div class="top"><span>←</span><span class="t">Today</span><span class="pill">💧 5/8</span></div>
+ <div class="card flex"><div class="ring" style="width:96px;height:96px"><div style="width:76px;height:76px"><div><b>62%</b></div></div></div><div style="flex:1"><div class="big" style="font-size:20px">1,240 kcal left</div><div class="s">P 48 · C 90 · F 22 g</div></div></div>
+ <div class="card"><div class="meal"><span class="s">08:10</span><span class="n">Fried eggs, bread<div class="k">480</div></span></div><div class="meal"><span class="s">13:30</span><span class="n">Shawarma<div class="k">280</div></span></div></div>
+ <div class="scrim"></div>
+ <div class="sheet"><div class="grab"></div><div style="font-weight:700;margin-bottom:10px">Add to Dinner</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div class="btn" style="flex-direction:column;height:70px">📷<span>Photo</span></div><div class="btn" style="flex-direction:column;height:70px">▥<span>Barcode</span></div><div class="btn" style="flex-direction:column;height:70px">🎙<span>Voice</span></div><div class="btn" style="flex-direction:column;height:70px">🔍<span>Search</span></div><div class="btn" style="flex-direction:column;height:70px">⌨<span>Type it</span></div><div class="btn" style="flex-direction:column;height:70px">🍲<span>Recipe</span></div></div>
+  <div class="h" style="margin-left:0">Favourites</div><span class="chip"><span class="plus">+</span>Koshari</span> <span class="chip"><span class="plus">+</span>Foul &amp; bread</span></div>
+ <div class="fab" style="bottom:330px;display:none">＋</div>
+</div></div>
+
+<!-- Yazio -->
+<div class="col"><div class="lab">Compared with Yazio</div><div class="note">From its public store listing and reviews. None of its art is copied here.</div>
+<div class="yz"><h3>What Yazio does</h3>
+• Its "Diary" home has a calorie ring (eaten / left / burned), 3 macro bars and a water row.<br>
+• Breakfast, Lunch, Dinner and Snacks are cards, each with a ＋.<br>
+• To log: ＋ on a meal → search screen → pick the food → portion → add, so <b>4 taps or more</b>.<br>
+• Barcode scan is free; photo logging and many features are behind <b>Pro</b>.<br>
+• Fasting timer, recipes and a weekly report sit in other tabs.<br>
+• It needs a <b>sign-in and the internet</b>, and its food database comes from the cloud.<br><br>
+<h3>Where Attune can win</h3>
+• <b>1 tap</b>: recent and frequent meals add straight away (A and C).<br>
+• <b>2 taps</b>: photo → confirm, recognised on the phone and free.<br>
+• You can say a meal in Arabic or English ("2 eggs, a loaf of baladi bread and tea").<br>
+• Suggestions come from your country's own dishes (Egyptian first).<br>
+• It works offline with no account.<br>
+• Every add can be undone with a snackbar instead of a confirm dialog.<br><br>
+<h3>Taps to log one meal</h3>
+Yazio 4+ · <b>A 1–2</b> · B 2 · C 2–3</div></div>
+</div>
+
+<h1 style="margin-top:40px">Option A, Arabic (RTL)</h1>
+<div class="row">
+<div class="col rtl"><div class="phone">
+ <div class="top"><span>→</span><span class="t">اليوم · السبت ٤ أكتوبر</span><span class="pill">الأسبوع ◂</span></div>
+ <div class="card flex" style="gap:16px"><div class="ring"><div><div><div class="big">١٬٢٤٠</div><div class="s">سعرة متبقية</div></div></div></div>
+  <div style="flex:1"><div class="s">أكلت ٧٦٠ · الهدف ٢٬٠٠٠</div>
+   <div class="mac" style="margin-top:10px"><b>بروتين</b> ٤٨/١٢٠ جم<div class="bar"><i style="width:40%;background:var(--rose)"></i></div></div>
+   <div class="mac" style="margin-top:8px"><b>كربوهيدرات</b> ٩٠/٢٢٠ جم<div class="bar"><i style="width:41%;background:var(--amber)"></i></div></div>
+   <div class="mac" style="margin-top:8px"><b>دهون</b> ٢٢/٦٥ جم<div class="bar"><i style="width:34%;background:var(--sky)"></i></div></div></div></div>
+ <div class="flex" style="margin:0 12px;gap:8px"><div class="btn prim">📷 صورة</div><div class="btn">▥ باركود</div><div class="btn">🎙 قول</div><div class="btn">🔍</div></div>
+ <div class="h">ضيف تاني بلمسة</div>
+ <div style="display:flex;gap:6px;overflow:hidden;padding:0 12px"><span class="chip"><span class="plus">+</span>فول وعيش · ٤٢٠</span><span class="chip"><span class="plus">+</span>كشري · ٦٥٠</span><span class="chip"><span class="plus">+</span>شاي بسكر</span></div>
+ <div class="card"><div class="meal"><span>🌅</span><span class="n">الفطار<div class="k">بيض مقلي وعيش بلدي · ٤٨٠ سعرة</div></span><span class="add">+</span></div>
+  <div class="meal"><span>☀️</span><span class="n">الغدا<div class="k">شاورما فراخ · ٢٨٠ سعرة</div></span><span class="add">+</span></div>
+  <div class="meal"><span>🌙</span><span class="n">العشا<div class="k">اقتراح: ملوخية ورز · ٥٢٠</div></span><span class="add">+</span></div></div>
+ <div class="card flex"><div style="flex:1"><div class="s">المية · ٥ من ٨</div><div class="drops" style="margin-top:6px"><span class="f"></span><span class="f"></span><span class="f"></span><span class="f"></span><span class="f"></span><span></span><span></span><span></span></div></div></div>
+ <div class="nav"><span class="on">اليوم</span><span>الوصفات</span><span>التمارين</span><span>التقدّم</span></div>
+</div></div>
+<div class="col" style="width:900px"><div class="yz" style="width:760px"><h3>The rules behind A (they apply to every option)</h3>
+• The first time you open Fit, it asks <b>3 questions</b> (sex, age, weight and goal) and then shows Today. The rest of the plan form moves to Profile.<br>
+• Tapping a chip adds the food straight away and shows <b>"Added · Undo"</b> for 5 s, with a light haptic tick.<br>
+• A photo opens the camera <b>inside the app</b> and shows a skeleton card while the food is recognised. After 15 s you get a fallback: "Type it instead".<br>
+• The ring and the bars animate up from their old value (250 ms). The page never reloads.<br>
+• Every target is at least 48 px. The bar follows the language direction in RTL, and the numbers use Arabic digits when Arabic is chosen.<br>
+• The tabs at the bottom (Today, Recipes, Workouts, Progress) replace today's single long page.</div></div>
+</div>
+</body></html>

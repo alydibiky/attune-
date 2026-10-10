@@ -399,6 +399,24 @@ object ImageEngine {
                 ImageRun.genArgs(b, files, a.getString("prompt"), out.path, cw, ch, a.optInt("steps", 4).coerceIn(1, 50), seed,
                     threads(), be, ref?.path, a.optDouble("cfg", 1.0), low)
             }
+            // v6.20 — Studio "Draft then clear": a small draft (same prompt and seed) first, announced to the page as
+            // stage "draftready" (line = "file|w|h|ms"), then the clear picture in the same call, so the chat
+            // model stays paused once and the model files stay warm in the page cache. A failed draft is skipped.
+            val ds = a.optInt("draftSide", 0)
+            if (ds in 256 until maxOf(w, h) && ref == null) {
+                val k = ds.toDouble() / maxOf(w, h)
+                val dw = ((w * k).toInt() / 64 * 64).coerceAtLeast(256); val dh = ((h * k).toInt() / 64 * 64).coerceAtLeast(256)
+                val dOut = File(studioDir(ctx), "img-$id-d.png")
+                val td = System.currentTimeMillis()
+                try {
+                    runWithFallback(ctx, dOut, { b, be -> ImageRun.genArgs(b, files, a.getString("prompt"), dOut.path, dw, dh,
+                        a.optInt("steps", 4).coerceIn(1, 50), seed, threads(), be, null, a.optDouble("cfg", 1.0), lowMem) }, onProgress, register)
+                    onProgress(ImageRun.Progress("draftready", line = "${dOut.name}|$dw|$dh|${System.currentTimeMillis() - td}"))
+                } catch (e: IOException) {
+                    if (e.message == "Stopped") throw e
+                    dOut.delete(); log(ctx, "draft skipped: ${e.message}")
+                }
+            }
             val backend = try {
                 runWithFallback(ctx, out, argsAt(2048, lowMem), onProgress, register)
             } catch (e: IOException) {

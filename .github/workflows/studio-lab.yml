@@ -11,9 +11,60 @@ on:
       only:
         description: "Comma list of entry names (empty = all)"
         default: ""
+      preview:
+        description: "Run only the Draft-then-clear timing bench (yes/no)"
+        default: "no"
 
 jobs:
+  # Studio "Draft then clear": draft + final against final alone, per-step tiny-decoder previews, img2img from the draft
+  preview:
+    if: ${{ github.event.inputs.preview == 'yes' }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { kind: sd21, steps: 4 }
+          - { kind: xl, steps: 1 }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the picture engine
+        run: |
+          git clone -q https://github.com/leejet/stable-diffusion.cpp ~/sd
+          cd ~/sd && git fetch -q --depth 1 origin 88411ef1e0688ff2df1010aeeb5d92b2d8cea2be && git checkout -q 88411ef1e0688ff2df1010aeeb5d92b2d8cea2be && git submodule update -q --init --depth 1 ggml
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSD_BUILD_EXAMPLES=ON > /dev/null
+          cmake --build build --target sd-cli -j"$(nproc)" > /dev/null
+          ~/sd/build/bin/sd-cli --help | grep -i -A1 -E "preview|strength" || true
+      - name: Models
+        run: |
+          mkdir -p ~/m && cd ~/m
+          get() { curl -sSL --retry 5 -f -o "$2" "$1"; ls -la "$2"; }
+          if [ ${{ matrix.kind }} = sd21 ]; then
+            get https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q4_0.gguf sd21.gguf
+            get https://huggingface.co/madebyollin/taesd/resolve/main/diffusion_pytorch_model.safetensors taesd.safetensors
+          else
+            get https://huggingface.co/gpustack/stable-diffusion-xl-1.0-turbo-GGUF/resolve/main/stable-diffusion-xl-1.0-turbo-Q4_0.gguf xl.gguf
+            get https://huggingface.co/madebyollin/taesdxl/resolve/main/diffusion_pytorch_model.safetensors taesdxl.safetensors
+          fi
+      - name: Draft + final vs final alone
+        run: |
+          pip install --quiet pillow
+          bash tests/studio/preview_bench.sh ${{ matrix.kind }} ${{ matrix.steps }} tests/studio/prompts20.txt 5
+          cat studio-out/preview-${{ matrix.kind }}/times.csv >> "$GITHUB_STEP_SUMMARY"
+      - name: Similarity and prompt match
+        run: |
+          pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet transformers numpy
+          python3 tests/studio/preview_sim.py studio-out/preview-${{ matrix.kind }} tests/studio/prompts20.txt | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: studio-preview-${{ matrix.kind }}
+          path: studio-out/
+
   draw:
+    if: ${{ github.event.inputs.preview != 'yes' }}
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 340
     strategy:
