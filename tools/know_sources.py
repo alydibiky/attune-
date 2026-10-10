@@ -1181,6 +1181,45 @@ def build_coding(a):
         "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
 
 # ---- turath books in general (the fiqh pack's method): found by exact title, read whole, titled with chapter, volume and page ------------
+_TURATH_CAT = {}
+def turath_catalog(B):
+    """files.turath.io/data-v3.json: {cats, authors, books, …} — every book's id, name and author (1.8 MB). The shapes are read
+    loosely (a dict or a list of dicts / lists) and the first book is printed, so a change on their side shows in the log."""
+    if "books" in _TURATH_CAT: return _TURATH_CAT["books"]
+    books = []
+    try:
+        d = json.loads(B.get("https://files.turath.io/data-v3.json", 120).decode("utf-8"))
+        authors = d.get("authors") or {}
+        def author_name(aid):
+            a = authors.get(str(aid)) if isinstance(authors, dict) else next((x for x in authors if isinstance(x, dict) and str(x.get("id")) == str(aid)), None)
+            return (a.get("name") or a.get("n") or "") if isinstance(a, dict) else (a if isinstance(a, str) else "")
+        raw = d.get("books") or {}
+        items = raw.items() if isinstance(raw, dict) else enumerate(raw)
+        for k, b in items:
+            if isinstance(b, dict):
+                bid, name, aid = b.get("id", k), b.get("name") or b.get("n") or "", b.get("author_id", b.get("author", b.get("a")))
+            elif isinstance(b, (list, tuple)) and len(b) >= 2:
+                bid, name, aid = (b[0], b[1], b[2] if len(b) > 2 else None) if isinstance(b[0], int) else (k, b[0], b[1])
+            else: continue
+            books.append((int(bid) if str(bid).isdigit() else bid, str(name).strip(), author_name(aid) if aid is not None else ""))
+        print(f"turath catalogue: {len(books)} books; first {list(items)[:0] or (books[:2])}; raw sample {str(next(iter(raw.values() if isinstance(raw, dict) else raw), ''))[:200]}")
+    except BaseException as e: print("turath catalogue failed", e)
+    _TURATH_CAT["books"] = books
+    return books
+
+def turath_catalog_pick(B, title, avoid, author):
+    """The catalogue's book whose name is the title (or starts with it, a few words longer: «مختصر القدوري في الفقه الحنفي»),
+    not a commentary (avoid), by the author hinted; the shortest such name wins (the plain text, not «… - ت فلان مع شرح»)."""
+    norm = lambda x: re.sub(r"[\u064B-\u0652\u0640]", "", x).replace("أ", "ا").replace("إ", "ا").replace("آ", "ا").replace("ى", "ي").replace("ة", "ه").strip()
+    t = norm(title); best = None
+    for bid, name, by in turath_catalog(B):
+        n = norm(name)
+        if not n.startswith(t) or len(n) > len(t) + 30: continue
+        if avoid and avoid in name: continue
+        if author and by and author not in by: continue
+        if best is None or len(n) < len(norm(best[1])): best = (bid, name)
+    return best or (None, None)
+
 def turath_probe(B):
     """When titles aren't found: try the ways turath might look books up by title, and print what each answers (status and
     the start of the reply), so the next build uses the one that works."""
@@ -1213,7 +1252,10 @@ def turath_rows(B, specs):
     rows, used = [], []
     for titles, avoid, author, credit in specs:
         bid = name = None; title = titles.split("|")[0]
-        for t in titles.split("|"):
+        for t in titles.split("|"):              # turath's own catalogue first: exact titles, no full-text noise
+            bid, name = turath_catalog_pick(B, t, avoid, author)
+            if bid: break
+        for t in titles.split("|") if not bid else []:
             for q in (t, t + " " + author if author else t):
                 for page in (1, 2, 3):
                     r = turath_json(B, "search", q=q, page=page)
