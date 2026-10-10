@@ -42,6 +42,17 @@ def get(url, timeout=120, accept=None):
 STOP = set("the a an of in on at to for and or is are was were be by with from as that this these those it its into about what which who whom whose when where why how do does did can could will would should may might than then there their them they he she his her you your i we our not no yes".split()) | \
        set("في من على عن إلى الى هو هي ما ماذا متى أين اين كيف كم هل التي الذي الذين و او أو ثم مع كان كانت هذا هذه ذلك تلك".split())
 
+def search_key(text):
+    """The normalised words a passage is found by. v6.16b: a word written with the small raised alif (dagger alif, U+0670 — the
+    Quran's «إِلَٰهَ», «الرَّحْمَٰنِ», «ذَٰلِكَ») is also indexed without it, because that's how people type it («إله», «الرحمن», «ذلك»);
+    normalize() turns it into a full alif («الاه», «الرحمان»), which a typed question never matched."""
+    key = normalize(text)
+    if "\u0670" in text:
+        alt = [w for w in normalize(text.replace("\u0670", "")).split() if w]
+        extra = " ".join(dict.fromkeys(w for w in alt if w not in set(key.split())))
+        if extra: key += " " + extra
+    return key
+
 def write_pack(out, pid, rows, manifest):
     """Format 2: <pid>.sqlite.gz (passages + FTS4 on the normalised text) and manifest.json with its size and SHA-256."""
     if not rows: raise SystemExit(f"{pid}: no passages were built — nothing is published (the app keeps the last good pack)")
@@ -55,7 +66,7 @@ def write_pack(out, pid, rows, manifest):
     raw = 0
     for i, r in enumerate(rows, 1):
         db.execute("INSERT INTO passages VALUES (?,?,?,?,?)", (i, r.get("t", ""), r["x"], r.get("u", ""), r.get("l", "")))
-        db.execute("INSERT INTO passages_fts(rowid, key) VALUES (?,?)", (i, normalize((r.get("t", "") + " " + r["x"]))))
+        db.execute("INSERT INTO passages_fts(rowid, key) VALUES (?,?)", (i, search_key(r.get("t", "") + " " + r["x"])))
         raw += len(r["x"].encode("utf-8"))
     db.commit(); db.execute("INSERT INTO passages_fts(passages_fts) VALUES('optimize')"); db.commit(); db.execute("VACUUM"); db.close()
     gz = db_path + ".gz"

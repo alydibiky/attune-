@@ -32,6 +32,16 @@ export const QS = [
   ["What is the capital of Kazakhstan according to GeoNames?", /Astana|Nur-Sultan|Nursultan/i],
   ["What is the GDP of Egypt?", /365|389/],
   ["What currency does Turkey use?", /lira|TRY/i],
+  // the subject packs (OpenStax textbooks, coding docs)
+  ["What is the formula for the period of a simple pendulum?", /2\s?π|2\s?\\?pi/i],
+  ["What is Avogadro's number?", /6[.,]02/],
+  ["Which organelle produces most of the cell's ATP?", /mitochondri/i],
+  ["In what year did the French Revolution begin?", /1789/],
+  ["What does the law of demand say?", /inverse|price[^.]*(decreases|falls|drops)[^.]*quantity[^.]*(increases|rises)|price (rises|increases|goes up)[^.]*quantity demanded (falls|decreases)|higher price[^.]*lower quantity|quantity demanded (falls|decreases|declines)/i],
+  ["What are the four Ps of the marketing mix?", /product[\s\S]*price[\s\S]*place[\s\S]*promotion/i],
+  ["Who proposed the hierarchy of needs in psychology?", /Maslow/i],
+  ["How do you declare a read-only variable in Kotlin?", /\bval\b/],
+  ["What is the derivative of sin(x)?", /cos/i],
 ];
 const proc = spawn("python3", [SEARCH, DIR, "--serve"], { stdio: ["pipe", "pipe", "inherit"] });
 let buf = "", waiting = [];

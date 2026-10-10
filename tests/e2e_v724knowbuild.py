@@ -169,7 +169,7 @@ eg = [{"Mk": "BYD", "Cn": "SEAL", "Ft": "electric", "Fm": "E", "ec": None, "ep":
       {"Mk": "BYD", "Cn": "SEAL", "Ft": "electric", "Fm": "E", "ec": None, "ep": 390, "m": 2260, "w": 2920, "ew": 0, "er": 520, "z": 181, "n": 2100, "y0": 2023, "y1": 2024}]
 eu = S.eea_rows(eg)
 bs = [r for r in eu if "SEAL" in r["x"]][0]
-check(len(eu) == 2 and bs["t"].startswith("BYD (بي واي دي — صيني) Seal") and "(1) electric, 230 kW (308 hp)" in bs["x"] and "390 kW (523 hp)" in bs["x"] and "electric range 570 km (WLTP)" in bs["x"] and "16.5 kWh/100 km" in bs["x"],
+check(len(eu) == 2 and bs["t"].startswith("BYD (بي واي دي — صيني) Seal") and "(1) electric, 230 kW (308 hp horsepower)" in bs["x"] and "390 kW (523 hp horsepower)" in bs["x"] and "electric range 570 km (WLTP)" in bs["x"] and "16.5 kWh/100 km" in bs["x"],
       "Cars (EEA): one passage per model with all its European versions (power, range, use, weight), most sold first")
 mg = S.eea_merge([{"Mk": "BYD", "Cn": "SEAL", "Ft": "electric", "Fm": "E", "ec": None, "ep": 230, "m": 2180, "w": 2920, "ew": 0, "z": 165, "n": 1000, "y": 2023},
                    {"Mk": "BYD", "Cn": "Seal", "Ft": "Electric", "Fm": "E", "ec": None, "ep": 230, "m": 2200, "w": 2920, "ew": 0, "z": 170, "n": 3000, "y": 2024}])
@@ -179,6 +179,11 @@ r = search(db, "BYD Seal range")
 check(r and "Seal" in r[0][0], "a car question finds its specs: " + (r[0][0] if r else "nothing"))
 r = search(db, "مواصفات تويوتا كامري")
 check(r and "Camry" in r[0][0], "an Arabic brand name finds the car: " + (r[0][0] if r else "nothing"))
+
+# ---- the small raised alif (Quran spelling) is found by the typed spelling too ----
+qv = [{"t": "سورة البقرة — الآية 255 (2:255)", "x": "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ", "u": "", "l": "ar"}, {"t": "سورة الفاتحة — الآية 3 (1:3)", "x": "الرَّحْمَٰنِ الرَّحِيمِ", "u": "", "l": "ar"}]
+man, db = pack("quran", qv)
+check(search(db, "لا إله إلا هو الحي القيوم") and search(db, "الرحمن الرحيم") and search(db, "الرحمان"), "the Quran's small raised alif: «إله» and «الرحمن» (as typed) find «إِلَٰهَ» and «الرَّحْمَٰنِ»")
 
 # ---- OpenStax (CNXML) ----
 d = tempfile.mkdtemp(); os.makedirs(os.path.join(d, "modules", "m1")); os.makedirs(os.path.join(d, "collections"))

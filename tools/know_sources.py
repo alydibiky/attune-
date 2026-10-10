@@ -665,7 +665,7 @@ def eea_rows(groups):
         bits = []
         ft = (g.get("Ft") or "").strip().lower(); bits.append(FUEL.get(ft, ft) + (" hybrid" if (g.get("Fm") or "") == "H" and "electric" not in ft else ""))
         ep, ec = _f(g.get("ep")), _f(g.get("ec"))
-        if ep: bits.append(f"{ep:.0f} kW ({ep * 1.341:.0f} hp)")
+        if ep: bits.append(f"{ep:.0f} kW ({ep * 1.341:.0f} hp horsepower)")   # both words: a small model didn't see "hp" as "horsepower"
         if ec: bits.append(f"{ec:.0f} cc")
         m, w = _f(g.get("m")), _f(g.get("w"))
         if m: bits.append(f"weight {m:.0f} kg")

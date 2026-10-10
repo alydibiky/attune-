@@ -164,7 +164,10 @@ export function checkFacts(answer, hits) {
     const shared = sw.filter((w) => cw.has(w)).length;
     if ((num && shared >= 1) || shared >= Math.max(3, Math.ceil(sw.length * 0.5))) used.add(n);
   }
-  const text = kept.join(" ").replace(/ *\n */g, "\n").replace(/ +([.,!?؟،])/g, "$1").replace(/ {2,}/g, " ").trim();
+  let text = kept.join(" ").replace(/ *\n */g, "\n").replace(/ +([.,!?؟،])/g, "$1").replace(/ {2,}/g, " ").trim();
+  // v6.16b: a small model sometimes opens with "your Knowledge doesn't cover this" and then answers from the passages anyway —
+  // when the answer did use them, that false first line goes
+  if (used.size) text = text.replace(/^\s*(\*\*)?\s*(لا تحتوي معرفتك[^\n.!؟]*|your knowledge (doesn't|does not) cover[^\n.!?]*|none of the (provided )?(facts|passages)[^\n.!?]*)[.!؟]?\s*(\*\*)?\s*\n*/i, "").trim();
   const chips = [...used].sort((a, b) => a - b).map((n) => { const c = byTag.get(n).chunk; return { tag: "K" + n, title: c.title || "", src: c.src, page: c.page || 0, kind: c.kind || "", text: c.text.slice(0, 400), ...(c.note ? { note: c.note, note_ar: c.note_ar || "" } : {}) }; });
   return { text, chips, removed };
 }
@@ -277,7 +280,7 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
         ...(p.notice ? { note: p.notice, note_ar: p.notice_ar || "" } : {}) });
       const own = idx.N ? rank(idx, question, { k: 9 }).map((h) => h.chunk) : [];
       const first = loose.length ? findFacts(indexChunks(own.concat(loose.map(asChunk))), question, o) : findFacts(idx, question, { ...(o || {}), k: 2 });
-      return scored.length ? mergePackFacts(first, scored, o) : first;
+      return scored.length ? mergePackFacts(first, scored, { ...(o || {}), question }) : first;
     },
     async stats() {
       const s = await store.sources(); const rows = K.adapterRows();
@@ -292,6 +295,32 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
  * tests/trials/packtrial.mjs measured it): their order is kept here. The person's own facts come first when they fit; then the
  * best pack passages — those close to the best one and covering enough of the question — up to 3 passages and ~3,200 characters.
  */
+/**
+ * v6.16b — the part of a passage that answers the question: its best-matching sentences (and their neighbours) up to `max`
+ * characters, in order. A long textbook passage full of formulas made the small model lose the one line it needed (packtrial:
+ * "derivative of sin(x)"); a shorter, focused excerpt is also faster to read. Code is never cut.
+ */
+export function excerpt(text, question, max = 650) {
+  const t = String(text || "");
+  if (t.length <= max || /```|\n {2,}\S|\n\t/.test(t)) return t;
+  const sents = t.split(/(?<=[.!?؟;:۔])\s+|\n+/).filter((x) => x.trim());
+  if (sents.length < 2) return t.slice(0, max) + "…";
+  const qw = [...new Set(words(question))];
+  const hit = (s) => { const sw = words(s); return qw.filter((q) => sw.some((w) => w === q || (q.length >= 4 && (w.startsWith(q) || q.startsWith(w)) && w.length >= 4))).length; };
+  const sc = sents.map(hit);
+  let best = 0; for (let i = 1; i < sents.length; i++) if (sc[i] > sc[best]) best = i;
+  let a = best, b = best, len = sents[best].length;
+  while (len < max) {
+    const left = a > 0 ? sents[a - 1].length + 1 : Infinity, right = b < sents.length - 1 ? sents[b + 1].length + 1 : Infinity;
+    if (left === Infinity && right === Infinity) break;
+    // grow towards the side that matches the question better (ties: the next sentence, which usually continues the thought)
+    const goRight = right !== Infinity && (left === Infinity || sc[b + 1] >= sc[a - 1]);
+    if (len + (goRight ? right : left) > max * 1.15) break;
+    if (goRight) { b++; len += right; } else { a--; len += left; }
+  }
+  return (a > 0 ? "… " : "") + sents.slice(a, b + 1).join(" ") + (b < sents.length - 1 ? " …" : "");
+}
+
 export function mergePackFacts(own, pack, o = {}) {
   const k = (o && o.k) || 3, budget = (o && o.budget) || 3200;
   const top = pack.length ? Number(pack[0].score) || 1 : 1;
@@ -302,7 +331,7 @@ export function mergePackFacts(own, pack, o = {}) {
   let used = out.reduce((t, h) => t + String(h.chunk.text || "").length, 0);
   for (const p of keep) {
     if (out.length >= k) break;
-    const text = String(p.text || ""), room = budget - used;
+    const text = excerpt(p.text, (o && o.question) || "", 700), room = budget - used;
     if (room < 200 && out.length) break;
     const chunk = { id: p.id, src: "pack:" + p.pack, title: p.title || "", page: 0, text: text.length > room ? text.slice(0, Math.max(200, room)) + "…" : text, kind: "pack", url: p.url || "", pack: p.pack,
       ...(p.notice ? { note: p.notice, note_ar: p.notice_ar || "" } : {}) };
@@ -328,34 +357,34 @@ export const CATALOG = [
   { id: "cities", name: "Countries & cities", name_ar: "الدول والمدن", size: "≈ 6 MB", size_ar: "≈ ٦ ميجابايت", license: "CC BY 4.0 (GeoNames)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (جيونيمز)",
     about: "Every city over 15,000 people (with Arabic names), each country's capital, currency, calling code and languages — GeoNames.",
     about_ar: "كل مدينة يزيد سكانها على ١٥ ألفًا (بأسمائها العربية)، وعاصمة كل دولة وعملتها ورمز الاتصال ولغاتها — من جيونيمز." },
-  { id: "math", name: "Mathematics", name_ar: "الرياضيات", size: "≈ 12 MB", size_ar: "≈ ١٢ ميجابايت", license: "CC BY 4.0 (OpenStax)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (أوبن ستاكس)",
+  { id: "math", name: "Mathematics", name_ar: "الرياضيات", size: "≈ 14 MB", size_ar: "≈ ١٤ ميجابايت", license: "CC BY-NC-SA 4.0 (OpenStax) — non-commercial use only", license_ar: "رخصة المشاع الإبداعي غير التجارية ٤٫٠ (أوبن ستاكس) — للاستخدام غير التجاري فقط",
     about: "University and school math textbooks — calculus 1–3, algebra and trigonometry, precalculus, statistics, algebra — with every formula and worked example, so Chat can solve step by step.",
     about_ar: "كتب الرياضيات الجامعية والمدرسية — التفاضل والتكامل ١–٣، والجبر وحساب المثلثات، وما قبل التفاضل، والإحصاء — بكل الصيغ والأمثلة المحلولة، ليحل المحادثة المسائل خطوة بخطوة." },
-  { id: "physics", name: "Physics", name_ar: "الفيزياء", size: "≈ 10 MB", size_ar: "≈ ١٠ ميجابايت", license: "CC BY 4.0 (OpenStax)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (أوبن ستاكس)",
+  { id: "physics", name: "Physics", name_ar: "الفيزياء", size: "≈ 11 MB", size_ar: "≈ ١١ ميجابايت", license: "CC BY-NC-SA 4.0 (OpenStax) — non-commercial use only", license_ar: "رخصة المشاع الإبداعي غير التجارية ٤٫٠ (أوبن ستاكس) — للاستخدام غير التجاري فقط",
     about: "University Physics 1–3, College Physics, high-school Physics and Astronomy — laws, formulas and worked examples.",
     about_ar: "الفيزياء الجامعية ١–٣، وفيزياء الكلية، والفيزياء المدرسية، والفلك — القوانين والصيغ والأمثلة المحلولة." },
-  { id: "chemistry", name: "Chemistry", name_ar: "الكيمياء", size: "≈ 6 MB", size_ar: "≈ ٦ ميجابايت", license: "CC BY 4.0 (OpenStax)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (أوبن ستاكس)",
+  { id: "chemistry", name: "Chemistry", name_ar: "الكيمياء", size: "≈ 6 MB", size_ar: "≈ ٦ ميجابايت", license: "CC BY-NC-SA 4.0 (OpenStax) — non-commercial use only", license_ar: "رخصة المشاع الإبداعي غير التجارية ٤٫٠ (أوبن ستاكس) — للاستخدام غير التجاري فقط",
     about: "Chemistry 2e, Chemistry: Atoms First and Organic Chemistry — reactions, equations and worked examples.",
     about_ar: "الكيمياء، والكيمياء: الذرات أولًا، والكيمياء العضوية — التفاعلات والمعادلات والأمثلة المحلولة." },
-  { id: "biology", name: "Biology", name_ar: "الأحياء", size: "≈ 9 MB", size_ar: "≈ ٩ ميجابايت", license: "CC BY 4.0 (OpenStax)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (أوبن ستاكس)",
+  { id: "biology", name: "Biology", name_ar: "الأحياء", size: "≈ 16 MB", size_ar: "≈ ١٦ ميجابايت", license: "CC BY-NC-SA 4.0 (OpenStax) — non-commercial use only", license_ar: "رخصة المشاع الإبداعي غير التجارية ٤٫٠ (أوبن ستاكس) — للاستخدام غير التجاري فقط",
     about: "Biology 2e, Concepts of Biology, Anatomy & Physiology, Microbiology and AP Biology.",
     about_ar: "الأحياء، ومفاهيم الأحياء، والتشريح ووظائف الأعضاء، والأحياء الدقيقة، والأحياء المتقدمة." },
-  { id: "history", name: "History", name_ar: "التاريخ", size: "≈ 5 MB", size_ar: "≈ ٥ ميجابايت", license: "CC BY 4.0 (OpenStax)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (أوبن ستاكس)",
+  { id: "history", name: "History", name_ar: "التاريخ", size: "≈ 9 MB", size_ar: "≈ ٩ ميجابايت", license: "CC BY-NC-SA 4.0 (OpenStax) — non-commercial use only", license_ar: "رخصة المشاع الإبداعي غير التجارية ٤٫٠ (أوبن ستاكس) — للاستخدام غير التجاري فقط",
     about: "World History volumes 1–2 (from the first civilisations to today) and US History.",
     about_ar: "تاريخ العالم بجزأيه (من الحضارات الأولى حتى اليوم) وتاريخ الولايات المتحدة." },
-  { id: "geography", name: "Geography", name_ar: "الجغرافيا", size: "≈ 8 MB", size_ar: "≈ ٨ ميجابايت", license: "Public domain (CIA World Factbook) + CC BY 4.0 (GeoNames)", license_ar: "ملكية عامة (كتاب حقائق العالم) ورخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (جيونيمز)",
+  { id: "geography", name: "Geography", name_ar: "الجغرافيا", size: "≈ 30 MB", size_ar: "≈ ٣٠ ميجابايت", license: "Public domain (CIA World Factbook) + CC BY 4.0 (GeoNames)", license_ar: "ملكية عامة (كتاب حقائق العالم) ورخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (جيونيمز)",
     about: "Each country's geography — location, area, borders, climate, terrain, highest and lowest points, resources, hazards — and the world's well-known mountains, rivers, lakes, deserts, islands and seas with their heights and places.",
     about_ar: "جغرافيا كل دولة — الموقع والمساحة والحدود والمناخ والتضاريس وأعلى وأدنى نقطة والموارد والمخاطر — وأشهر جبال العالم وأنهاره وبحيراته وصحاريه وجزره وبحاره بارتفاعاتها وأماكنها." },
-  { id: "coding", name: "Coding", name_ar: "البرمجة", size: "≈ 12 MB", size_ar: "≈ ١٢ ميجابايت", license: "PSF (Python docs), CC BY-SA 2.5 (MDN), Apache 2.0 (Kotlin)", license_ar: "رخصة بايثون للتوثيق، ورخصة المشاع الإبداعي مع الإسناد والمشاركة بالمثل ٢٫٥ (إم دي إن)، ورخصة أباتشي ٢٫٠ (كوتلن)",
+  { id: "coding", name: "Coding", name_ar: "البرمجة", size: "≈ 33 MB", size_ar: "≈ ٣٣ ميجابايت", license: "PSF (Python docs), CC BY-SA 2.5 (MDN), Apache 2.0 (Kotlin)", license_ar: "رخصة بايثون للتوثيق، ورخصة المشاع الإبداعي مع الإسناد والمشاركة بالمثل ٢٫٥ (إم دي إن)، ورخصة أباتشي ٢٫٠ (كوتلن)",
     about: "The official Python documentation, MDN's JavaScript, HTML and CSS reference and guides, and the Kotlin docs — with their code examples line by line.",
     about_ar: "التوثيق الرسمي للغة بايثون، ومراجع وأدلة جافاسكربت وإتش تي إم إل وسي إس إس من إم دي إن، وتوثيق كوتلن — بأمثلة الكود سطرًا سطرًا." },
-  { id: "business", name: "Business", name_ar: "الأعمال", size: "≈ 10 MB", size_ar: "≈ ١٠ ميجابايت", license: "CC BY 4.0 / CC BY-NC-SA 4.0 (OpenStax)", license_ar: "رخص المشاع الإبداعي (أوبن ستاكس)",
+  { id: "business", name: "Business", name_ar: "الأعمال", size: "≈ 15 MB", size_ar: "≈ ١٥ ميجابايت", license: "CC BY-NC-SA 4.0 (OpenStax) — non-commercial use only", license_ar: "رخصة المشاع الإبداعي غير التجارية ٤٫٠ (أوبن ستاكس) — للاستخدام غير التجاري فقط",
     about: "Introduction to Business, Management, Marketing, Entrepreneurship, Organizational Behavior, Business Ethics, Financial and Managerial Accounting, Business Law, Finance — OpenStax university textbooks.",
     about_ar: "مدخل إلى الأعمال، والإدارة، والتسويق، وريادة الأعمال، والسلوك التنظيمي، وأخلاقيات الأعمال، والمحاسبة المالية والإدارية، وقانون الأعمال، والتمويل — كتب أوبن ستاكس الجامعية." },
-  { id: "economics", name: "Economics", name_ar: "الاقتصاد", size: "≈ 6 MB", size_ar: "≈ ٦ ميجابايت", license: "CC BY 4.0 / CC BY-NC-SA 4.0 (OpenStax)", license_ar: "رخص المشاع الإبداعي (أوبن ستاكس)",
+  { id: "economics", name: "Economics", name_ar: "الاقتصاد", size: "≈ 8 MB", size_ar: "≈ ٨ ميجابايت", license: "CC BY-NC-SA 4.0 (OpenStax) — non-commercial use only", license_ar: "رخصة المشاع الإبداعي غير التجارية ٤٫٠ (أوبن ستاكس) — للاستخدام غير التجاري فقط",
     about: "Principles of Economics, Microeconomics and Macroeconomics — supply and demand, markets, money, inflation, growth, trade — with their worked examples.",
     about_ar: "مبادئ الاقتصاد والاقتصاد الجزئي والكلي — العرض والطلب والأسواق والنقود والتضخم والنمو والتجارة — بالأمثلة المحلولة." },
-  { id: "society", name: "Society & people", name_ar: "المجتمع والإنسان", size: "≈ 10 MB", size_ar: "≈ ١٠ ميجابايت", license: "CC BY 4.0 / CC BY-NC-SA 4.0 (OpenStax)", license_ar: "رخص المشاع الإبداعي (أوبن ستاكس)",
+  { id: "society", name: "Society & people", name_ar: "المجتمع والإنسان", size: "≈ 21 MB", size_ar: "≈ ٢١ ميجابايت", license: "CC BY-NC-SA 4.0 (OpenStax) — non-commercial use only", license_ar: "رخصة المشاع الإبداعي غير التجارية ٤٫٠ (أوبن ستاكس) — للاستخدام غير التجاري فقط",
     about: "Sociology, Psychology, Philosophy, Political Science, Government, Anthropology and Lifespan Development — OpenStax university textbooks.",
     about_ar: "علم الاجتماع، وعلم النفس، والفلسفة، والعلوم السياسية، ونظم الحكم، والأنثروبولوجيا، والنمو عبر مراحل العمر — كتب أوبن ستاكس الجامعية." },
   { id: "health", name: "Health", name_ar: "الصحة", size: "≈ 3 MB", size_ar: "≈ ٣ ميجابايت", license: "Public domain (US National Library of Medicine)", license_ar: "ملكية عامة (المكتبة الوطنية الأمريكية للطب)",

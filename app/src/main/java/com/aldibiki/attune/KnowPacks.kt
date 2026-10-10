@@ -97,6 +97,7 @@ object KnowPacks {
 
     private fun ints(blob: ByteArray): IntArray { val b = ByteBuffer.wrap(blob).order(ByteOrder.nativeOrder()); return IntArray(blob.size / 4) { b.getInt(it * 4) } }
     private val ENDINGS = setOf("s", "es", "ed", "er", "ing")
+    private val QUOTE = Regex("«([^»]{6,200})»|“([^”]{6,200})”|\"([^\"]{6,200})\"|﴿([^﴾]{6,200})﴾")
     private fun near(x: String, w: String) = x == w || (x.startsWith(w) && x.substring(w.length) in ENDINGS)   // "seal" → "seals", not "sealion"
 
     /**
@@ -117,6 +118,9 @@ object KnowPacks {
         val only = a.optJSONArray("ids")?.let { j -> (0 until j.length()).map { j.getString(it) }.toSet() }
         val phr = words.map { it.replace("\"", "") + "*" }
         val orAll = phr.joinToString(" OR ")
+        // quoted text in the question («…», "…", ﴿…﴾ — a verse, a hadith, a saying): that exact phrase first
+        val phrases = QUOTE.findAll(a.optString("q")).mapNotNull { m -> m.groupValues.drop(1).firstOrNull { it.isNotEmpty() } }
+            .map { MapPacks.normalize(it).split(' ').filter { w -> w.isNotEmpty() }.take(12) }.filter { it.size >= 2 }.map { it.joinToString(" ") }.take(2).toList()
         data class Probe(val id: String, val man: JSONObject, val db: SQLiteDatabase, val n: Int, val df: IntArray)
         val probes = ArrayList<Probe>()
         val packs = list(ctx)
@@ -146,16 +150,24 @@ object KnowPacks {
                 if (rare.sumOf { pr.df[it] } > 6000) rare = rare.take(2)
                 val q = "(" + rare.joinToString(" OR ") { phr[it] } + ") (" + orAll + ")"
                 val nf = rare.size
+                val exact = HashSet<Long>()
+                for (ph in phrases) pr.db.rawQuery("SELECT rowid FROM passages_fts WHERE passages_fts MATCH ? LIMIT 60", arrayOf("\"" + ph.replace("\"", "") + "\"")).use { c -> while (c.moveToNext()) exact.add(c.getLong(0)) }
                 val cand = ArrayList<Triple<Long, Double, Double>>()
-                pr.db.rawQuery("SELECT rowid, matchinfo(passages_fts, 'pcnalx') FROM passages_fts WHERE passages_fts MATCH ? LIMIT 6000", arrayOf(q)).use { c ->
+                val seen = HashSet<Long>()
+                fun take(c: android.database.Cursor, n0: Int) {
                     while (c.moveToNext()) {
+                        val rowid = c.getLong(0); if (!seen.add(rowid)) continue
                         val blob = c.getBlob(1); val ii = ints(blob); val cc = ii[1]
                         var cov = 0.0
-                        for (j in words.indices) if (ii[3 + 2 * cc + 3 * ((nf + j) * cc)] > 0) cov += gidf[j]
+                        for (j in words.indices) if (ii[3 + 2 * cc + 3 * ((n0 + j) * cc)] > 0) cov += gidf[j]
                         cov /= tot
-                        cand.add(Triple(c.getLong(0), bm25(blob) * (0.3 + cov) * (0.3 + cov), cov))
+                        cand.add(Triple(rowid, bm25(blob) * (0.3 + cov) * (0.3 + cov) * (if (rowid in exact) 3.0 else 1.0), cov))
                     }
                 }
+                pr.db.rawQuery("SELECT rowid, matchinfo(passages_fts, 'pcnalx') FROM passages_fts WHERE passages_fts MATCH ? LIMIT 6000", arrayOf(q)).use { take(it, nf) }
+                val missing = exact.filter { it !in seen }
+                if (missing.isNotEmpty()) pr.db.rawQuery("SELECT rowid, matchinfo(passages_fts, 'pcnalx') FROM passages_fts WHERE passages_fts MATCH ? AND rowid IN (" + missing.joinToString(",") + ")",
+                    arrayOf("(" + orAll + ") (" + orAll + ")")).use { take(it, words.size) }
                 cand.sortByDescending { it.second }
                 for ((rowid, sc, cov) in cand.take(k * 3)) {
                     pr.db.rawQuery("SELECT title, text, url, lang FROM passages WHERE id = ?", arrayOf(rowid.toString())).use { r ->

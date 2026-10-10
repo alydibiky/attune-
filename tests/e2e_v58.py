@@ -181,7 +181,11 @@ def sec_chat(br):
     check("total: 22.75" in page.locator("[data-testid=code-output]").inner_text(), "▶ Run runs the Python right under the answer")
     page.locator("[data-testid=run-code]").nth(1).click()
     fr = page.frame_locator("[data-testid=code-preview]")
-    fr.locator("#b").click(timeout=5000)
+    # the button can exist a moment before its script has run: tap again until the page's handler is there (at most ~3 s)
+    for _ in range(10):
+        fr.locator("#b").click(timeout=5000)
+        if fr.locator("#b").inner_text() == "done": break
+        page.wait_for_timeout(300)
     check(fr.locator("#b").inner_text() == "done", "the web page answer opens as a working preview")
     page.locator("[data-testid=open-in-code]").first.click()
     page.wait_for_selector("[data-testid=code-page]", timeout=5000)

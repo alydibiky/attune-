@@ -25,6 +25,15 @@ def db(path):
     if path not in _DB: _DB[path] = sqlite3.connect(path, check_same_thread=False)
     return _DB[path]
 
+QUOTE = re.compile(r"«([^»]{6,200})»|“([^”]{6,200})”|\"([^\"]{6,200})\"|﴿([^﴾]{6,200})﴾")
+def phrases_of(q):
+    """Quoted text in the question («…», "…", ﴿…﴾) → exact phrases to look for first (a verse, a hadith, a saying)."""
+    out = []
+    for m in QUOTE.finditer(q or ""):
+        w = normalize(next(g for g in m.groups() if g)).split()
+        if len(w) >= 2: out.append(" ".join(w[:12]))
+    return out[:2]
+
 def terms_of(q):
     return list(dict.fromkeys(stem(w) for w in normalize(q).split() if len(w) >= 2 and w not in STOP))[:10]
 
@@ -36,7 +45,7 @@ def probe(con, words):
     ints = struct.unpack("%dI" % (len(r[0]) // 4), r[0]); p, c, n = ints[0], ints[1], ints[2]; x0 = 3 + 2 * c
     return n, [ints[x0 + 3 * (i * c) + 2] for i in range(p)]
 
-def pack_search(con, words, k, gidf=None, pr=None):
+def pack_search(con, words, k, gidf=None, pr=None, phrases=()):
     """One pack (v6.16b): how rare is each word → filter by the rarest ones → rank by BM25 × coverage, with a title bonus."""
     phr = [w.replace('"', "") + "*" for w in words]
     pr = pr or probe(con, words)
@@ -49,15 +58,26 @@ def pack_search(con, words, k, gidf=None, pr=None):
     if sum(df[i] for i in rare) > 6000: rare = rare[:2]
     q = "(" + " OR ".join(phr[i] for i in rare) + ") (" + " OR ".join(phr) + ")"
     rows = con.execute("SELECT rowid, matchinfo(passages_fts, 'pcnalx') FROM passages_fts WHERE passages_fts MATCH ? LIMIT 6000", (q,)).fetchall()
+    exact = set()
+    for ph in phrases:                     # the quoted phrase, word for word: those passages first (×3)
+        got = con.execute("SELECT rowid FROM passages_fts WHERE passages_fts MATCH ? LIMIT 60", ('"' + ph.replace('"', "") + '"',)).fetchall()
+        exact |= {r[0] for r in got}
+    extra = []
+    if exact:
+        have = {r[0] for r in rows}
+        missing = [r for r in exact if r not in have]
+        if missing:   # the quoted passages that hold no distinctive word: fetched too (their matchinfo offset is the word count)
+            extra = con.execute("SELECT rowid, matchinfo(passages_fts, 'pcnalx') FROM passages_fts WHERE passages_fts MATCH ? AND rowid IN (%s)" % ",".join(map(str, missing)),
+                                ("(" + " OR ".join(phr) + ") (" + " OR ".join(phr) + ")",)).fetchall()
     out = []
     nf = len(rare)   # the matchinfo phrases: the distinctive words first, then every word of the question
     idf = gidf or [math.log(1 + n / max(1, d)) for d in df]      # how telling each word is — across all the packs when known
     tot = sum(idf)
-    for rowid, blob in rows:
+    for rowid, blob, off in [(r, b, nf) for r, b in rows] + [(r, b, len(words)) for r, b in extra]:
         ii = struct.unpack("%dI" % (len(blob) // 4), blob)
-        hit = [ii[3 + 2 * ii[1] + 3 * ((nf + j) * ii[1])] > 0 for j in range(len(words))]
+        hit = [ii[3 + 2 * ii[1] + 3 * ((off + j) * ii[1])] > 0 for j in range(len(words))]
         cov = sum(w for w, h in zip(idf, hit) if h) / tot          # coverage weighted by how telling each word is
-        out.append([rowid, bm25(blob) * (0.3 + cov) ** 2, cov])
+        out.append([rowid, bm25(blob) * (0.3 + cov) ** 2 * (3 if rowid in exact else 1), cov])
     out.sort(key=lambda x: -x[1]); out = out[: k * 3]
     res = []
     for rowid, sc, cov in out:
@@ -74,7 +94,7 @@ def pack_search(con, words, k, gidf=None, pr=None):
     return res[:k]
 
 def search(packs_dir, q, k=24, ids=None):
-    words = terms_of(q)
+    words = terms_of(q); phrases = phrases_of(q)
     if not words: return []
     hits, cons = [], []
     for fn in sorted(os.listdir(packs_dir)):
@@ -87,7 +107,7 @@ def search(packs_dir, q, k=24, ids=None):
     gidf = [math.log(1 + N / max(1, d)) for d in DF]          # a word no pack has weighs as the rarest
     for pid, con, pr in cons:
         if not pr: continue
-        for h in pack_search(con, words, k, gidf, pr):
+        for h in pack_search(con, words, k, gidf, pr, phrases):
             hits.append({"pack": pid, "id": f"{pid}:{h['rowid']}", "title": h["title"], "text": h["text"], "score": h["score"], "cov": h["cov"]})
     hits.sort(key=lambda h: -h["score"])
     return hits[:k]
