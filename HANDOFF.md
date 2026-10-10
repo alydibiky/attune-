@@ -674,7 +674,7 @@ Four branches from the "Pages & look" / helper sessions had never reached `main`
 ### 5.46 (10 Oct 2026, v6.16) — general knowledge: 6 more reliable packs, searched on the phone
 - Ali: "find reliable sources and make the app better in general knowledge". New packs (tools/know_sources.py): science
   (OpenStax, CC BY only), health (MedlinePlus, public domain), numbers (World Bank, CC BY, monthly), cities (GeoNames,
-  CC BY), cranes (OSHA eCFR, public domain), quran (Tanzil, verbatim). Still no Wikipedia.
+  CC BY), cranes (OSHA 29 CFR 1926.1400–1442, 1926.251, 1910.179/180/184 from govinfo bulk CFR XML — the eCFR API answered 406; public domain), quran (Tanzil, verbatim). Still no Wikipedia.
 - Format 2: every pack is a gzipped SQLite file (passages + FTS4 on the normalised text, same normalize() as the maps,
   incl. Arabic digits, dagger alef, Quranic marks) at release know-<id>-v2. KnowPacks.kt downloads (MapPacks' resumable
   downloader + SHA-256), unpacks, searches with BM25 from matchinfo('pcnalx'), common words dropped, light English
@@ -683,6 +683,11 @@ Four branches from the "Pages & look" / helper sessions had never reached `main`
 - Chat: an Arabic question with no Knowledge hit is retried with a short English search line from the model (24 tokens).
 - know-pack.yml: all 8 packs, monthly (1st), confirm gate removed (Ali approved). Tests: e2e_v724knowbuild (parsers +
   the phone's search replicated in Python), unit v723knowauto, knowledge.test updated.
+- Published 10 Oct 2026 (passages / download): world 34,390 / 9.6 MB · egy-laws 20,235 / 11.6 MB · numbers 217 / 0.1 MB ·
+  cities 34,408 / 5 MB · science (15 OpenStax books) 32,219 / 24.1 MB · health 4,046 / 3 MB · quran 6,236 / 1.2 MB ·
+  cranes 596 / 0.45 MB. Packs over 15 MB (science) install only on Wi-Fi (N.unmetered()). write_pack refuses an empty pack.
+- Maps "all" run 38042755681: the USA was killed for memory while indexing places (12 GB pbf → 3.4 GB named). Fix:
+  build_places uses idx=sparse_file_array on disk when the pbf is over 1 GB; a USA-only rerun was queued.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
