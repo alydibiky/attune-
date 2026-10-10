@@ -495,9 +495,11 @@ touch, merge origin/main before pushing, and push your branch (not main).
    a home-screen widget (`FitWidget.kt`, calories left / eaten / protein / water, the page updates it via setFitWidget),
    and challenges checked from the diary (`fityazio.js CHALLENGES`: water week, protein week, no sugary drinks, vegetables
    every day, log every day, on target).
+9. ✅ **The other session's work merged** (v6.15): Business roles, multi-currency and price lists (so those Business
+   leftovers are DONE), delivery notes, ETA batch, encrypted snapshots, the PDF reader, the Fit home, Studio drafts,
+   converter polish, Knowledge. See HANDOFF §5.43.
 7. ⬜ **Still open from the other account's list (M)**: Mind page "better than My Mind", Coding page "visually better and more
-   powerful", the whole-app UI/UX rework and Maps look (LOOK choices — show options first); Business leftovers (roles,
-   multi-currency, price lists); big-model max-tests; measuring the comparison answers with a real 4B/9B model.
+   powerful", the whole-app UI/UX rework and Maps look (LOOK choices — show options first); ~~Business leftovers~~ (done, item 9); big-model max-tests; measuring the comparison answers with a real 4B/9B model.
 
 ## Prompt to start the next session
 

@@ -612,6 +612,26 @@ Ali tested 6.11 and sent 7 screenshots + a list (NEXT_SESSION.md section L). Wha
 - `tests/unit/jsxload.mjs` bundles a `.jsx` with React/icon stubs (`tests/unit/stubs/`) so its pure functions can be unit-tested.
 - New tests: unit v716compare, v717copyfood, v718ready, v719cyclechat; e2e_v713copyfood.
 
+### 5.43 v6.15 (10 Oct 2026) — the other session's branches merged into main
+Four branches from the "Pages & look" / helper sessions had never reached `main`. All merged (merge commits, no rebase):
+- `ccr-04b5cbe2-dr1189` (= `business-extras` + `fit-home` + `pdf-reader`): Business roles (owner / accountant / cashier /
+  viewer, `actorCan`), multi-currency documents (`books-more.js fxView`), price lists by customer group with quantity breaks,
+  sales orders + delivery notes (`books-ops2.js`), ETA batch export + validator, encrypted automatic snapshots
+  (`books-vault.js`); the Ask-a-PDF reader (word boxes, highlights, notes, bookmarks, outline, library of kept documents with
+  their chats, `pdfreader.js`); the Fit home (log bar, one-tap chips, country ideas, swipe rows, 3-question first visit,
+  `fithome.js`).
+- `studio-preview`: draft-then-clear pictures. `converter-polish`: Word/PDF fidelity. `knowpack-wire`: Knowledge (your own
+  sources with citations in Chat; World Factbook + Egyptian laws packs), under More → Your life.
+- Conflict decisions: `books-eta.js` = the merged (fuller) builder; it ALSO reads the fields the v6.12 screens saved
+  (`company.eta`, `customer.eta.{type,address,nationalId}`, `item.eta.{itemCode,itemType}`) via `etaSettings()` — one ETA
+  button (`EtaButton`), one settings section (`EtaSettings`); `etaCheck/etaJson` kept as thin wrappers. Fit home = theirs, with
+  v6.13/6.14 put back in (copy meal/day, vitamins panel, fasting stages + 23:1/36 h, weekday goal, fast-photo offer). The
+  reader keeps one page per PowerPoint slide. Knowledge button in the reader = `addToKnowledge` (the one attune.jsx passes).
+- All their Arabic was rewritten into simple formal Arabic (≈180 strings).
+- Workspace tile in Arabic = «مساحة العمل» (it was «الأعمال», the same as Business).
+- Known flaky: `e2e_v59` (Studio "edit this" wait) failed 2 of 16 runs, not reproduced under load; `e2e_v620pdfreader`
+  selection-bar read now waits for its text.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
