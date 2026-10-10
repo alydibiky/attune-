@@ -632,6 +632,29 @@ Four branches from the "Pages & look" / helper sessions had never reached `main`
 - Known flaky: `e2e_v59` (Studio "edit this" wait) failed 2 of 16 runs, not reproduced under load; `e2e_v620pdfreader`
   selection-bar read now waits for its text.
 
+### 5.44 v6.16 (10 Oct 2026) — Ali's look picks: Mind C, Coding B, Maps A + whole-country offline maps
+- Options were shown as a design canvas (claude.ai artifact "Attune page looks"); Ali chose Mind C, Coding B ("make sure
+  the preview page is good"), Maps A ("download a whole country at once … always up to date").
+- Mind (mind-ui.jsx): smart-space tiles (kinds, auto tags, saved spaces, Promises), one "From your past" card (Keep /
+  Not now), Keep-something sheet from a + button (`mind-new`), a tile opens its items with a back button (`mind-all`).
+- Coding (code-ui.jsx): programs row, task card, Steps / Code / Preview tabs (`code-view-*`; the editor stays in the DOM),
+  Change-it bar, New (`code-new`). Preview: phone/tablet/desktop widths laid out at that width and scaled (iframes need
+  `maxWidth: none` — the app's CSS caps them at 100%), reload, full screen, console (log + errors). sandbox.js gives a
+  locked preview a private in-memory localStorage.
+- Maps (map-ui.jsx + offlinemap.js + MapPacks.kt): MapLibre 5.24 (www/vendor/, loaded only on Maps), pmtiles 4.5,
+  @protomaps/basemaps 5.7 (dark flavor, Arabic names). A country pack = <code>.pmtiles (Protomaps' daily OSM build cut
+  to the Geofabrik outline) + <code>-places.sqlite (FTS4 search of every named place/street/shop) + manifest (date,
+  sizes, SHA-256), published weekly by .github/workflows/map-pack.yml (tools/build_map_pack.py) as release map-<code>;
+  fonts/icons once as map-assets. The phone downloads with resume, verifies SHA-256, swaps an update in only when
+  complete; the page reads the file through N.mapRead (sync, base64) — no HTTP Range needed. Updates: checked once a day
+  (and on the Offline maps tab), banner + Update button. Without a pack: online OSM tiles through the old tile cache
+  (osmc:// protocol). No WebGL → the old MapTab. Normalisation (Arabic letters/digits, Turkish, accents) is identical in
+  offlinemap.js, MapPacks.kt and build_map_pack.py — tests/unit/v722maps checks JS = Python.
+- Tests: e2e_v722maps (a real tiny vector map, tests/fixtures/cairo-mini.pmtiles, from make_map_fixture.py),
+  e2e_v722mapbuilder, unit v722maps; e2e_v58, e2e_v68, e2e_v700maps updated for the new layouts.
+- NOT YET RUN: the map-pack workflow (first run publishes map-assets and map-eg; ~1–2 h). Knowledge packs
+  (know-pack.yml) were never published either — waiting for Ali's go-ahead (confirm=yes).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

@@ -810,6 +810,51 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun foodClipRemove(): Boolean = FoodClip.remove(ctx)
 
+    /* ---- v6.15: whole-country offline maps (MapPacks) ---- */
+    /** The packs on the phone → {packs: [...], assets: bool} */
+    @JavascriptInterface
+    fun mapPacks(): String = try { JSONObject().put("packs", MapPacks.list(ctx)).put("assets", MapPacks.assetsInstalled(ctx)).toString() } catch (e: Throwable) { "{\"packs\":[]}" }
+
+    /** The published manifest of a country ({code}) — to offer a download or an update. */
+    @JavascriptInterface
+    fun mapRemote(id: String, arg: String) {
+        if (blockedByAirGap(id, "checking for map updates")) return
+        pool.execute { try { resolve(id, MapPacks.remote(JSONObject(arg).getString("code"))) } catch (e: Throwable) { reject(id, e.message ?: "Couldn't check the map") } }
+    }
+
+    /** Downloads or updates a country ({code}), with progress; cancel(id) stops it (it continues next time). */
+    @JavascriptInterface
+    fun mapInstall(id: String, arg: String) {
+        if (blockedByAirGap(id, "downloading a map")) return
+        val flag = AtomicBoolean(false); cancels[id] = flag
+        pool.execute {
+            try {
+                val code = JSONObject(arg).getString("code")
+                val man = MapPacks.install(ctx, code, { done, total, name ->
+                    val pct = if (total > 0) ((done * 100) / total).toInt().coerceIn(0, 99) else 0
+                    progress(id, pct, name, "%.0f / %.0f MB".format(done / 1e6, total / 1e6))
+                }, { flag.get() })
+                resolve(id, man)
+            } catch (e: MapPacks.Cancelled) {
+                reject(id, "Download paused — it continues where it stopped next time.")
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't download the map") }
+            finally { cancels.remove(id) }
+        }
+    }
+
+    @JavascriptInterface
+    fun mapRemove(code: String): Boolean = MapPacks.remove(ctx, code)
+
+    /** Bytes of a map file for the page ({path, offset, length}) → base64 ("" when missing). Called often: kept synchronous. */
+    @JavascriptInterface
+    fun mapRead(arg: String): String = try { MapPacks.read(ctx, arg) } catch (e: Throwable) { "" }
+
+    /** Offline place search in the installed packs ({q, limit, lat, lon}) → {places: [...]} */
+    @JavascriptInterface
+    fun mapSearch(id: String, arg: String) {
+        pool.execute { try { resolve(id, JSONObject().put("places", MapPacks.search(ctx, arg))) } catch (e: Throwable) { reject(id, e.message ?: "Couldn't search the map") } }
+    }
+
     /** v6.1: the barcodes in a photo ({b64}), read on the phone by ML Kit → {codes: [..]}. */
     @JavascriptInterface
     fun scanBarcode(id: String, arg: String) {

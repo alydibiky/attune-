@@ -42,6 +42,7 @@ import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
 import { findPlaces } from "./mapsearch.js";
+import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
 import * as KNOW from "./knowledge.js";
 import { kindOf as mindKindOf } from "./mind.js";
@@ -7327,7 +7328,7 @@ const MODE_TITLES = { knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Re
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.15";
+const PAGE_VERSION = "6.16";
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9639,7 +9640,8 @@ export default function App() {
         ) : mode === "cycle" ? (
           <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("instant")} />
         ) : mode === "map" ? (
-          <MapTab remember={remember} flash={flash} myLang={myLang} />
+          <MapPage N={NATIVE} nativeCall={NATIVE ? nativeCall : null} lastNativeId={nativeLastId} getTile={getTile} findPlaces={findPlaces} searchSaved={searchSaved}
+            load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />} />
         ) : mode === "money" ? (
           <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)} />
         ) : mode === "travel" ? (

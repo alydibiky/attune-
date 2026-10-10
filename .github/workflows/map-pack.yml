@@ -1,0 +1,133 @@
+name: Build a country map
+
+# v6.15 — whole-country offline maps for Attune (Maps → Offline maps). For each country:
+#   map-<code>/<code>.pmtiles         the vector map: cut from the newest daily OpenStreetMap build by Protomaps
+#   map-<code>/<code>-places.sqlite   offline search: every named place, street, shop (Geofabrik's daily extract)
+#   map-<code>/<code>-manifest.json   date, sizes, SHA-256 — the app compares the date to offer an update
+# and once, map-assets/ (the map's fonts and icons). Runs every Friday so the maps stay up to date; run it by hand
+# for another country. Data © OpenStreetMap contributors (ODbL).
+
+on:
+  schedule:
+    - cron: "17 2 * * 5"
+  workflow_dispatch:
+    inputs:
+      countries:
+        description: "Country codes, space-separated: eg gcc tr jo lb iq ly sd tn ma"
+        default: "eg"
+      maxzoom:
+        description: "Most detailed zoom (15 = every building and path)"
+        default: "15"
+      assets:
+        description: "Rebuild the fonts and icons too? (yes/no)"
+        default: "no"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: map-pack
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      list: ${{ steps.p.outputs.list }}
+    steps:
+      - id: p
+        run: |
+          codes="${{ github.event.inputs.countries }}"; [ -z "$codes" ] && codes="eg"
+          echo "list=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1].split()))' "$codes")" >> $GITHUB_OUTPUT
+
+  assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fonts and icons (only when missing, or asked)
+        run: |
+          if gh release view map-assets >/dev/null 2>&1 && [ "${{ github.event.inputs.assets }}" != "yes" ]; then echo "map-assets already published"; exit 0; fi
+          A=https://protomaps.github.io/basemaps-assets
+          mkdir -p fonts sprites/v4 out
+          for font in "Noto Sans Regular" "Noto Sans Medium" "Noto Sans Italic"; do
+            mkdir -p "fonts/$font"
+            # Latin (with Turkish), Greek, Cyrillic, Arabic + supplements, punctuation, Arabic presentation forms
+            for s in 0 256 512 768 1024 1280 1536 1792 2048 7680 7936 8192 8448 8704 64256 64512 64768 65024 65280; do
+              r="$s-$((s+255))"
+              curl -sfL "$A/fonts/${font// /%20}/$r.pbf" -o "fonts/$font/$r.pbf" || rm -f "fonts/$font/$r.pbf"
+            done
+          done
+          for s in dark light; do for v in "" "@2x"; do for e in json png; do
+            curl -sfL "$A/sprites/v4/$s$v.$e" -o "sprites/v4/$s$v.$e"
+          done; done; done
+          du -sh fonts sprites
+          python3 tools/build_map_pack.py assets fonts sprites out
+          gh release view map-assets >/dev/null 2>&1 || gh release create map-assets --title "Offline maps: fonts and icons" --notes "Fonts (Noto Sans, SIL OFL) and icons for Attune's offline maps (Protomaps basemaps-assets)."
+          gh release upload map-assets out/map-assets.zip out/assets-manifest.json --clobber
+
+  country:
+    needs: [plan, assets]
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        code: ${{ fromJSON(needs.plan.outputs.list) }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Which country
+        id: c
+        run: |
+          case "${{ matrix.code }}" in
+            eg) echo "gf=africa/egypt" >> $GITHUB_OUTPUT; echo "name=Egypt" >> $GITHUB_OUTPUT;;
+            gcc) echo "gf=asia/gcc-states" >> $GITHUB_OUTPUT; echo "name=Gulf states" >> $GITHUB_OUTPUT;;
+            tr) echo "gf=europe/turkey" >> $GITHUB_OUTPUT; echo "name=Turkey" >> $GITHUB_OUTPUT;;
+            jo) echo "gf=asia/jordan" >> $GITHUB_OUTPUT; echo "name=Jordan" >> $GITHUB_OUTPUT;;
+            lb) echo "gf=asia/lebanon" >> $GITHUB_OUTPUT; echo "name=Lebanon" >> $GITHUB_OUTPUT;;
+            iq) echo "gf=asia/iraq" >> $GITHUB_OUTPUT; echo "name=Iraq" >> $GITHUB_OUTPUT;;
+            ly) echo "gf=africa/libya" >> $GITHUB_OUTPUT; echo "name=Libya" >> $GITHUB_OUTPUT;;
+            sd) echo "gf=africa/sudan" >> $GITHUB_OUTPUT; echo "name=Sudan" >> $GITHUB_OUTPUT;;
+            tn) echo "gf=africa/tunisia" >> $GITHUB_OUTPUT; echo "name=Tunisia" >> $GITHUB_OUTPUT;;
+            ma) echo "gf=africa/morocco" >> $GITHUB_OUTPUT; echo "name=Morocco" >> $GITHUB_OUTPUT;;
+            *) echo "Unknown country ${{ matrix.code }}"; exit 1;;
+          esac
+      - name: Tools
+        run: |
+          pip install osmium
+          gh release download -R protomaps/go-pmtiles -p "go-pmtiles_*_Linux_x86_64.tar.gz" -O pm.tgz
+          tar xzf pm.tgz pmtiles && sudo mv pmtiles /usr/local/bin/ && pmtiles version
+      - name: The newest OpenStreetMap build
+        id: b
+        run: |
+          for i in $(seq 0 14); do
+            d=$(date -u -d "-$i day" +%Y%m%d)
+            if curl -sfI "https://build.protomaps.com/$d.pmtiles" >/dev/null; then echo "date=$d" >> $GITHUB_OUTPUT; echo "build $d"; exit 0; fi
+          done
+          echo "No Protomaps build found in the last 2 weeks"; exit 1
+      - name: The map (vector tiles, cut to the country)
+        run: |
+          mkdir -p out
+          curl -sfL "https://download.geofabrik.de/${{ steps.c.outputs.gf }}.poly" -o region.poly
+          python3 tools/build_map_pack.py region region.poly region.geojson
+          pmtiles extract "https://build.protomaps.com/${{ steps.b.outputs.date }}.pmtiles" "out/${{ matrix.code }}.pmtiles" \
+            --region=region.geojson --maxzoom="${{ github.event.inputs.maxzoom || '15' }}" --download-threads=8
+          ls -la out
+      - name: The search index (every named place, street and shop)
+        run: |
+          curl -sfL "https://download.geofabrik.de/${{ steps.c.outputs.gf }}-latest.osm.pbf" -o country.osm.pbf
+          python3 tools/build_map_pack.py places country.osm.pbf "out/${{ matrix.code }}-places.sqlite"
+          ls -la out
+      - name: Publish (the app offers it as an update)
+        run: |
+          d="${{ steps.b.outputs.date }}"; date="${d:0:4}-${d:4:2}-${d:6:2}"
+          python3 tools/build_map_pack.py manifest "${{ matrix.code }}" "${{ steps.c.outputs.name }}" "$date" out "${{ matrix.code }}.pmtiles" "${{ matrix.code }}-places.sqlite"
+          for f in out/*; do s=$(stat -c %s "$f"); if [ "$s" -gt 2000000000 ]; then echo "$f is over 2 GB (GitHub's limit) — run again with maxzoom 14"; exit 1; fi; done
+          tag="map-${{ matrix.code }}"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "Offline map: ${{ steps.c.outputs.name }}" --notes "Attune offline map of ${{ steps.c.outputs.name }}. Data © OpenStreetMap contributors (ODbL). Rebuilt every week."
+          gh release upload "$tag" "out/${{ matrix.code }}.pmtiles" "out/${{ matrix.code }}-places.sqlite" "out/${{ matrix.code }}-manifest.json" --clobber
+          { echo "### ${{ steps.c.outputs.name }} — data of $date"; ls -la out | sed 's/^/    /'; } >> $GITHUB_STEP_SUMMARY

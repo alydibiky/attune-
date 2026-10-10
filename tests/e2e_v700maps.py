@@ -27,7 +27,7 @@ with sync_playwright() as p:
     page.locator(".rounded-t-2xl button:has-text('Maps')").first.click()
     page.wait_for_selector("input[placeholder^='Search a place']", timeout=5000)
     page.fill("input[placeholder^='Search a place']", "Address east compound")
-    page.locator("button:has-text('Search')").first.click()
+    page.press("input[placeholder^='Search a place']", "Enter")      # v6.15: the floating search runs on Enter
     page.wait_for_selector("[data-testid=map-hit]", timeout=15000)
     hit = page.locator("[data-testid=map-hit]").first.inner_text()
     check("Address East" in hit, "Ali's search finds the compound: %s" % hit.replace("\n", " · "))
@@ -36,7 +36,8 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=map-found-pin]", timeout=3000)
     check(page.locator("[data-testid=map-found-pin]").count() == 1, "the result is pinned on the map")
     page.click("[data-testid=map-save-found]"); page.wait_for_timeout(300)
-    check(page.locator("text=Your places").count() >= 1, "and it can be saved")
+    page.locator("[data-testid=map-place] button[aria-label=Close]").click(); page.wait_for_timeout(200)
+    check(page.locator("text=Your places").count() >= 1 and "Address East" in page.locator("[data-testid=map-sheet]").inner_text(), "and it can be saved (it is under Your places)")
     ctx.grant_permissions(["geolocation"]); ctx.set_geolocation({"latitude": 30.0205, "longitude": 31.4995})
     page.click("[data-testid=map-locate]")
     page.wait_for_selector("[data-testid=map-me]", timeout=8000)

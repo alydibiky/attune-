@@ -4,9 +4,9 @@
    for the session. Work through all of it with a task list.
 2. Read **`HANDOFF.md`** §0 ("START HERE") and the latest section (§5.37) for how the app is built and tested.
 
-## Where things stand (10 Oct 2026, v6.15 — HANDOFF §5.43; Ali's latest lists: NEXT_SESSION.md sections M, N and O)
+## Where things stand (10 Oct 2026, v6.16 — HANDOFF §5.44; Ali's latest lists: NEXT_SESSION.md sections M, N and O)
 - Read **`PLANS_2026-10-02.md`** too: the converter / Fit / heat / Business plans and exactly what is left.
-- `main` = branch `ccr-a0eb3595-e2c7a7` = v6.15 (versionCode 76). All test files pass (`bash tests/run_all.sh`).
+- `main` = branch `ccr-a0eb3595-e2c7a7` = v6.16 (versionCode 77). All test files pass (`bash tests/run_all.sh`).
 - Every other branch (business-extras, fit-home, pdf-reader, studio-preview, converter-polish, knowpack-wire) is merged.
 - Arabic UI = simple formal Arabic (Ali's choice, 4 Oct 2026); Egyptian only where code reads what people type.
 - Web app: edit `web-src/`, then `bash web-src/build.sh` → `app/src/main/assets/www/index.html` (commit both).

@@ -17,6 +17,17 @@ if [ ! -x node_modules/.bin/esbuild ] || [ ! -x node_modules/.bin/tailwindcss ];
   npm i --no-save --silent esbuild@0.28.2 @tailwindcss/cli@4.3.3 tailwindcss@4.3.3
 fi
 
+# v6.15 Maps: the offline vector map (pinned). MapLibre and the Arabic-text plugin are copied next to the page
+# (www/vendor/) and loaded only when Maps opens; pmtiles and the map style are bundled into the app.
+if [ ! -f node_modules/maplibre-gl/dist/maplibre-gl.js ] || ! grep -q '"version": "5.24.0"' node_modules/maplibre-gl/package.json \
+   || [ ! -d node_modules/pmtiles ] || [ ! -d node_modules/@protomaps/basemaps ] || [ ! -d node_modules/@mapbox/mapbox-gl-rtl-text ]; then
+  npm i --no-save --silent esbuild@0.28.2 @tailwindcss/cli@4.3.3 tailwindcss@4.3.3 maplibre-gl@5.24.0 pmtiles@4.5.0 @protomaps/basemaps@5.7.2 @mapbox/mapbox-gl-rtl-text@0.3.0
+fi
+VENDOR="$HERE/../app/src/main/assets/www/vendor"
+mkdir -p "$VENDOR"
+cp node_modules/maplibre-gl/dist/maplibre-gl.js node_modules/maplibre-gl/dist/maplibre-gl.css node_modules/@mapbox/mapbox-gl-rtl-text/dist/mapbox-gl-rtl-text.js "$VENDOR/"
+cp node_modules/maplibre-gl/LICENSE.txt "$VENDOR/maplibre-gl-LICENSE.txt"
+
 # 1. CSS: Tailwind compiled from the classes the app actually uses.
 node_modules/.bin/tailwindcss -i build/tw.css -o "$TMP/app.css" --minify >/dev/null 2>&1
 test -s "$TMP/app.css" || { echo "CSS build failed"; exit 1; }
