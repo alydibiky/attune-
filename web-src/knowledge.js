@@ -304,9 +304,13 @@ export const CATALOG = [
     about: "Articles of Egyptian laws and codes (civil, procedure, penal, labour, commercial, tax, rent, personal status…), each passage titled with its law and article.",
     about_ar: "مواد القوانين المصرية (المدني، المرافعات، العقوبات، العمل، التجاري، الضرائب، الإيجارات، الأحوال الشخصية…)، ومع كل فقرة اسم القانون ورقم المادة.",
     notice: "Not legal advice; may be out of date; check the official gazette.", notice_ar: "ليست استشارة قانونية؛ قد تكون قديمة؛ راجع الجريدة الرسمية." },
-  { id: "quran", name: "The Quran (Arabic text)", name_ar: "القرآن الكريم", size: "≈ 2 MB", size_ar: "≈ ٢ ميجابايت", license: "Tanzil Project — verbatim, with credit", license_ar: "مشروع تنزيل — النص كما هو مع ذكر المصدر",
-    about: "The full Arabic text, verse by verse, from the verified Tanzil text — so a verse is quoted exactly, with its surah and number.",
-    about_ar: "النص العربي كاملًا، آيةً آية، من نص تنزيل الموثَّق — فتُنقل الآية كما هي مع اسم السورة ورقمها." },
+  { id: "quran", name: "The Quran + Tafsir al-Muyassar", name_ar: "القرآن الكريم مع التفسير الميسر", size: "≈ 4 MB", size_ar: "≈ ٤ ميجابايت", license: "Tanzil Project (verbatim) + King Fahd Complex, with credit", license_ar: "مشروع تنزيل (النص كما هو) ومجمع الملك فهد، مع ذكر المصدر",
+    about: "The full Arabic text, verse by verse, from the verified Tanzil text — and al-Tafsir al-Muyassar (King Fahd Complex) for every verse, with each surah's introduction.",
+    about_ar: "النص العربي كاملًا، آيةً آية، من نص تنزيل الموثَّق — ومعه التفسير الميسر (مجمع الملك فهد) لكل آية، ومقدمة كل سورة." },
+  { id: "fiqh", name: "Islamic jurisprudence (al-Fiqh al-Muyassar)", name_ar: "الفقه الميسر", size: "≈ 10 MB", size_ar: "≈ ١٠ ميجابايت", license: "The publishers' texts via the Shamela library, with credit", license_ar: "نصوص الناشرين عبر المكتبة الشاملة، مع ذكر المصدر",
+    about: "The full al-Fiqh al-Muyassar (al-Tayyar, al-Mutlaq, al-Musa — 13 volumes) and al-Fiqh al-Muyassar in the light of the Quran and Sunnah (King Fahd Complex): purification, prayer, zakat, fasting, hajj, transactions, family, inheritance and more — each passage with its book, chapter, volume and page.",
+    about_ar: "الفقه الميسر كاملًا (الطيار والمطلق والموسى — ١٣ جزءًا) والفقه الميسر في ضوء الكتاب والسنة (مجمع الملك فهد): الطهارة والصلاة والزكاة والصيام والحج والمعاملات والأسرة والمواريث وغيرها — ومع كل فقرة اسم الكتاب والباب والجزء والصفحة.",
+    notice: "For learning; for a ruling on your own case, ask a qualified scholar or Dar al-Ifta.", notice_ar: "للتعلّم؛ وفي مسألتك الخاصة اسأل عالمًا موثوقًا أو دار الإفتاء." },
 ];
 export const parsePackShard = (text) => String(text || "").split("\n").map((l) => { try { return l.trim() ? JSON.parse(l) : null; } catch (e) { return null; } }).filter((r) => r && r.x);
 

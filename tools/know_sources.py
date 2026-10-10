@@ -4,6 +4,7 @@ standard verified Quran text) and openly licensed; still no Wikipedia (Ali's rul
 Each builder returns nothing: it writes out/<id>.sqlite.gz + out/manifest.json through build_know_pack.write_pack.
 Parsers are tested on small samples in tests/e2e_v724knowbuild.py.
 """
+import html as htmlmod
 import csv, io, json, os, re, subprocess, sys, tempfile, time, zipfile
 import xml.etree.ElementTree as ET
 
@@ -312,15 +313,110 @@ def quran_rows(txt):
         rows.append({"t": f"سورة {name} — الآية {v} ({s}:{v})", "x": t, "u": f"https://tanzil.net/#{s}:{v}", "l": "ar"})
     return rows, header
 
+# التفسير الميسر (King Fahd Complex), as published in Quran.com's library (QUL tafsir 38), one JSON file per surah:
+# [{surah, ayah, text}]. A surah's first verse also carries the surah's introduction (تسمية السورة، مقاصد السورة) before
+# "[التفسير]" — kept as its own passage. Every word is kept as published.
+MUYASSAR = "https://raw.githubusercontent.com/spa5k/tafsir_api/main/tafsir/ar-tafsir-muyassar/{}.json"
+
+def split_intro(t):
+    """The surah introduction (تسمية السورة / من مقاصد السورة and their • points) from the tafsir that follows it."""
+    if "[التفسير]" in t: return tuple(x.strip() for x in t.split("[التفسير]", 1))
+    if not t.startswith("تسمية السورة"): return "", t
+    paras = [p.strip() for p in re.split(r"\n\s*\n", t) if p.strip()]
+    k = 0
+    while k < len(paras) and (paras[k].startswith("•") or paras[k] in ("تسمية السورة", "من مقاصد السورة")): k += 1
+    return "\n\n".join(paras[:k]), "\n\n".join(paras[k:])
+
+def tafsir_rows(s, items, verses):
+    """One surah's تفسير ميسر → passages: the surah's introduction once, then the tafsir with its verse(s). When the tafsir
+    explains several verses together the source repeats it on each; those become one passage (الآيات ١–٦)."""
+    rows, name, intro_done, groups = [], SURAS[s - 1], False, []
+    for it in sorted(items, key=lambda i: int(i["ayah"])):
+        v = int(it["ayah"])
+        intro, t = split_intro((it.get("text") or "").strip())
+        if intro and not intro_done:
+            rows.append({"t": f"التفسير الميسر — مقدمة سورة {name}", "x": intro, "u": f"https://quran.com/{s}", "l": "ar"}); intro_done = True
+        if not t: continue
+        if groups and groups[-1][1] == t and groups[-1][0][-1] == v - 1: groups[-1][0].append(v)
+        else: groups.append(([v], t))
+    for vs, t in groups:
+        a, b = vs[0], vs[-1]
+        quote = " ".join(f"﴿{verses[(s, v)]}﴾ ({v})" for v in vs if verses.get((s, v)))
+        label = f"الآية {a} ({s}:{a})" if a == b else f"الآيات {a}–{b} ({s}:{a}-{b})"
+        rows.append({"t": f"التفسير الميسر — سورة {name}، {label}", "x": (quote + " " if quote else "") + t,
+                     "u": f"https://quran.com/{s}:{a}/tafsirs/ar-tafsir-muyassar", "l": "ar", "_n": len(vs)})
+    return rows
+
 def build_quran(a):
     B = _bk()
     txt = B.get("https://tanzil.net/pub/download/index.php?quranType=simple&outType=txt-2&agree=true", 300).decode("utf-8")
     rows, header = quran_rows(txt)
     if len(rows) != 6236: raise SystemExit(f"Quran text: expected 6236 verses, got {len(rows)}")
-    B.write_pack(a.out, "quran", rows, {
-        "name": "The Quran (Arabic text)", "name_ar": "القرآن الكريم (النص العربي)",
-        "license": "Tanzil Project — verbatim copies with credit (the text is not changed)",
-        "attribution": "Quran text from the Tanzil Project (tanzil.net), verbatim, one passage per verse. " + " ".join(h for h in header if h)[:600],
-        "sources": [{"title": "Tanzil Project", "url": "https://tanzil.net/", "license": "Verbatim copies with credit"}], "retrieved": time.strftime("%Y-%m-%d")})
+    verses = {}
+    for line in txt.splitlines():
+        f = line.split("|")
+        if len(f) == 3 and f[0].isdigit(): verses[(int(f[0]), int(f[1]))] = f[2].strip()
+    tafsir = []
+    for s in range(1, 115):
+        tafsir += tafsir_rows(s, json.loads(B.get(MUYASSAR.format(s), 120).decode("utf-8")), verses)
+    n = sum(r.pop("_n", 0) for r in tafsir)
+    if n != 6236: raise SystemExit(f"Tafsir al-Muyassar: expected 6236 verses, got {n}")
+    print(f"quran: {len(rows)} verses + {len(tafsir)} tafsir passages")
+    B.write_pack(a.out, "quran", rows + tafsir, {
+        "name": "The Quran + Tafsir al-Muyassar", "name_ar": "القرآن الكريم مع التفسير الميسر",
+        "license": "Quran text: Tanzil Project, verbatim with credit. Tafsir: King Fahd Complex, free to share, with credit",
+        "attribution": "Quran text from the Tanzil Project (tanzil.net), verbatim, one passage per verse. " + " ".join(h for h in header if h)[:600]
+                       + " — التفسير الميسر: نخبة من العلماء، مجمع الملك فهد لطباعة المصحف الشريف، كما نشرته مكتبة Quran.com (QUL).",
+        "sources": [{"title": "Tanzil Project", "url": "https://tanzil.net/", "license": "Verbatim copies with credit"},
+                    {"title": "التفسير الميسر — مجمع الملك فهد (Quran.com QUL, tafsir 38)", "url": "https://qul.tarteel.ai/resources/tafsir/38", "license": "Free to share, with credit"}],
+        "retrieved": time.strftime("%Y-%m-%d")})
 
-BUILDERS = {"science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran}
+# ---- fiqh: الفقه الميسر, the full books from turath.io (the Shamela library's texts) -----------------------------------------------
+# files.turath.io/books/<id>.json → {meta: {name, …}, indexes: {headings: [{title, level, page}], …}, pages: [{text, vol, page}]}
+FIQH_BOOKS = [
+    (5913, "الفقه الميسر", "عبد الله الطيار، عبد الله المطلق، محمد الموسى (مدار الوطن، ١٣ جزءًا)"),
+    (22726, "الفقه الميسر في ضوء الكتاب والسنة", "نخبة من العلماء، مجمع الملك فهد لطباعة المصحف الشريف"),
+]
+
+def turath_text(html):
+    """A turath page → plain text: tags out, entities decoded; every word kept (footnotes too)."""
+    t = re.sub(r"<br\s*/?>|</p>", "\n", html or "")
+    t = re.sub(r"<[^>]+>", "", t)
+    return htmlmod.unescape(t).replace("\u200f", "").strip()
+
+def fiqh_rows(book, title, by):
+    """A turath book → passages titled with the book, the chapter path and the printed volume/page."""
+    pages = book.get("pages") or []
+    heads = sorted(((h.get("page") or 0, h.get("level") or 1, (h.get("title") or "").strip()) for h in (book.get("indexes") or {}).get("headings") or []), key=lambda h: h[0])
+    rows, path, hi = [], {}, 0
+    for i, pg in enumerate(pages, 1):
+        while hi < len(heads) and heads[hi][0] <= i:
+            _, lvl, t = heads[hi]; hi += 1
+            path = {k: v for k, v in path.items() if k < lvl}; path[lvl] = t
+        text = turath_text(pg.get("text"))
+        if not text: continue
+        where = " › ".join(path[k] for k in sorted(path))[-160:]
+        ref = f"ج{pg.get('vol')} ص{pg.get('page')}" if pg.get("vol") else f"ص{pg.get('page', i)}"
+        for j, piece in enumerate(_bk().chunk(text, 900)):
+            rows.append({"t": f"{title} — {where} ({ref})" if where else f"{title} ({ref})", "x": piece, "u": f"https://shamela.ws/book/{book['_id']}/{i}", "l": "ar"})
+    return rows
+
+def build_fiqh(a):
+    B = _bk(); rows, used = [], []
+    for bid, title, by in FIQH_BOOKS:
+        try: book = json.loads(B.get(f"https://files.turath.io/books/{bid}.json", 300).decode("utf-8"))
+        except Exception as e: print(f"fiqh: book {bid} not available ({e})"); continue
+        name = ((book.get("meta") or {}).get("name") or "").strip()
+        if "الفقه الميسر" not in name: print(f"fiqh: book {bid} is «{name}», not {title} — skipped"); continue
+        book["_id"] = bid; r = fiqh_rows(book, title, by)
+        print(f"fiqh: {bid} «{name}»: {len(book.get('pages') or [])} pages → {len(r)} passages")
+        rows += r; used.append({"title": f"{title} — {by}", "url": f"https://shamela.ws/book/{bid}", "license": "Shared freely for learning, with credit"})
+    B.write_pack(a.out, "fiqh", rows, {
+        "name": "Islamic jurisprudence (al-Fiqh al-Muyassar)", "name_ar": "الفقه الميسر",
+        "license": "The publishers' texts as shared by the Shamela library (turath.io), for learning, with credit",
+        "attribution": "الفقه الميسر — النص كاملًا كما في المكتبة الشاملة (turath.io)، مع اسم الكتاب والباب والجزء والصفحة لكل فقرة.",
+        "notice": "For learning; for a ruling on your own case, ask a qualified scholar or Dar al-Ifta.",
+        "notice_ar": "للتعلّم؛ وفي مسألتك الخاصة اسأل عالمًا موثوقًا أو دار الإفتاء.",
+        "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
+
+BUILDERS = {"science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh}

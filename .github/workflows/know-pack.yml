@@ -5,7 +5,8 @@ name: Build a knowledge pack
 #   world     CIA World Factbook (public domain)            laws      Egyptian Legal Corpus (MIT as declared)
 #   numbers   World Bank open data (CC BY 4.0)              cities    GeoNames (CC BY 4.0)
 #   science   OpenStax textbooks, CC BY only (CC BY 4.0)    health    MedlinePlus, NLM (public domain)
-#   cranes    OSHA crane rules, govinfo CFR (public domain)        quran     Tanzil Quran text (verbatim, with credit)
+#   cranes    OSHA crane rules, govinfo CFR (public domain)        quran     Tanzil Quran text + التفسير الميسر (King Fahd Complex)
+#   fiqh      الفقه الميسر, the full books (Shamela texts via turath.io)
 # No Wikipedia (Ali's rule). Ali approved publishing (10 Oct 2026). Rebuilt on the 1st of every month so the numbers stay
 # current; the app installs a newer build by itself.
 
@@ -15,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       packs:
-        description: "Packs, space-separated (world laws numbers cities science health cranes quran), or all"
+        description: "Packs, space-separated (world laws numbers cities science health cranes quran fiqh), or all"
         default: "all"
       budget_mb:
         description: "Text budget in MB (laws, science)"
@@ -33,7 +34,7 @@ jobs:
       - id: p
         run: |
           packs="${{ github.event.inputs.packs }}"
-          if [ -z "$packs" ] || [ "$packs" = "all" ]; then packs="world laws numbers cities science health cranes quran"; fi
+          if [ -z "$packs" ] || [ "$packs" = "all" ]; then packs="world laws numbers cities science health cranes quran fiqh"; fi
           echo "list=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1].split()))' "$packs")" >> $GITHUB_OUTPUT
 
   pack:

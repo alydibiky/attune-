@@ -109,6 +109,33 @@ man, db = pack("quran", rows)
 r = search(db, "لا تأخذه سنة ولا نوم")
 check(r and "2:255" in r[0][0], "a verse is found from its words without diacritics (آية الكرسي)")
 
+# ---- التفسير الميسر (QUL tafsir 38) ----
+INTRO = "تسمية السورة\n\n• سميت الذاريات؛ لتفردها وافتتاحها بقَسَم الله بالذاريات.\n\nمن مقاصد السورة\n\n• تأكيدُ وقوعِ البعث والجزاء."
+T16 = "أقسم الله تعالى بالرياح المثيرات للتراب، فالسحب الحاملات ثِقْلًا عظيمًا من الماء."
+items = [{"surah": "51", "ayah": str(v), "text": INTRO + "\n\n[التفسير]\n\n" + T16} for v in range(1, 7)] + [{"surah": "51", "ayah": "7", "text": "وأقسم الله بالسماء ذات الطرق الحسنة."}]
+tr = S.tafsir_rows(51, items, {(51, 1): "وَالذَّارِيَاتِ ذَرْوًا", (51, 7): "وَالسَّمَاءِ ذَاتِ الْحُبُكِ"})
+check(len(tr) == 3 and tr[0]["t"] == "التفسير الميسر — مقدمة سورة الذاريات" and tr[0]["x"] == INTRO, "Tafsir: the surah's introduction once, word for word, though the source repeats it")
+check(tr[1]["t"].endswith("الآيات 1–6 (51:1-6)") and tr[1]["_n"] == 6 and tr[1]["x"].endswith(T16) and "﴿وَالذَّارِيَاتِ ذَرْوًا﴾ (1)" in tr[1]["x"], "Tafsir: verses explained together are one passage, with the verse text quoted")
+check(tr[2]["t"].endswith("الآية 7 (51:7)") and tr[2]["x"].startswith("﴿وَالسَّمَاءِ ذَاتِ الْحُبُكِ﴾"), "Tafsir: a single verse with its own explanation")
+i5, t5 = S.split_intro("تسمية السورة\n\n• سميت المائدة.\n\nمن مقاصد السورة\n\n• بيان العقود.\n\nيا أيها الذين صدَّقوا الله ورسوله، أتِمُّوا عهود الله.")
+check(i5.endswith("• بيان العقود.") and t5.startswith("يا أيها الذين"), "Tafsir: an introduction without the [التفسير] mark is still separated (al-Ma'idah)")
+man, db = pack("quran", rows + [{k: v for k, v in r.items() if k != "_n"} for r in tr])
+r = search(db, "ما معنى الذاريات")
+check(r and "الذاريات" in r[0][0], "a question about a surah finds its tafsir: " + (r[0][0] if r else "nothing"))
+
+# ---- الفقه الميسر (turath.io book JSON) ----
+BOOK = {"_id": 5913, "meta": {"name": "الفقه الميسر"}, "indexes": {"headings": [
+    {"title": "كتاب الطهارة", "level": 1, "page": 1}, {"title": "باب المياه", "level": 2, "page": 1},
+    {"title": "كتاب الصلاة", "level": 1, "page": 2}, {"title": "باب شروط الصلاة", "level": 2, "page": 2}]},
+  "pages": [{"vol": "1", "page": 15, "text": "<span data-type=\"title\">باب المياه</span><br>الماء الطهور هو الباقي على خلقته. &quot;قال تعالى&quot;"},
+            {"vol": "2", "page": 7, "text": "<p>من شروط الصلاة: دخول الوقت، والطهارة من الحدث.</p>"}]}
+fr = S.fiqh_rows(BOOK, "الفقه الميسر", "")
+check(len(fr) == 2 and fr[0]["t"] == "الفقه الميسر — كتاب الطهارة › باب المياه (ج1 ص15)" and "الماء الطهور هو الباقي على خلقته" in fr[0]["x"] and '"قال تعالى"' in fr[0]["x"] and "<" not in fr[0]["x"], "Fiqh: tags out, every word kept, titled with book, chapter path, volume and page")
+check(fr[1]["t"] == "الفقه الميسر — كتاب الصلاة › باب شروط الصلاة (ج2 ص7)", "Fiqh: a new chapter replaces the old path")
+man, db = pack("fiqh", fr)
+r = search(db, "ما هي شروط الصلاة؟")
+check(r and "شروط الصلاة" in r[0][0], "a fiqh question finds its chapter: " + (r[0][0] if r else "nothing"))
+
 # ---- OpenStax (CNXML) ----
 d = tempfile.mkdtemp(); os.makedirs(os.path.join(d, "modules", "m1")); os.makedirs(os.path.join(d, "collections"))
 open(os.path.join(d, "collections", "biology-2e.collection.xml"), "w").write("""<col:collection xmlns:col="http://cnx.rice.edu/collxml" xmlns:md="http://cnx.rice.edu/mdml"><col:metadata><md:title>Biology 2e</md:title><md:license url="http://creativecommons.org/licenses/by/4.0/"/></col:metadata>
