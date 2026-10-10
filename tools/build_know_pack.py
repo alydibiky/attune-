@@ -27,10 +27,11 @@ import argparse, gzip, hashlib, io, json, os, re, shutil, sqlite3, subprocess, s
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_map_pack import normalize
 
-def get(url, timeout=120):
+def get(url, timeout=120, accept=None):
     for i in range(5):
         try:
             h = {"User-Agent": "attune-know-pack"}
+            if accept: h["Accept"] = accept
             if "api.github.com" in url and os.environ.get("GITHUB_TOKEN"): h["Authorization"] = "Bearer " + os.environ["GITHUB_TOKEN"]
             req = urllib.request.Request(url, headers=h)
             with urllib.request.urlopen(req, timeout=timeout) as r: return r.read()
@@ -43,6 +44,7 @@ STOP = set("the a an of in on at to for and or is are was were be by with from a
 
 def write_pack(out, pid, rows, manifest):
     """Format 2: <pid>.sqlite.gz (passages + FTS4 on the normalised text) and manifest.json with its size and SHA-256."""
+    if not rows: raise SystemExit(f"{pid}: no passages were built — nothing is published (the app keeps the last good pack)")
     os.makedirs(out, exist_ok=True)
     db_path = os.path.join(out, pid + ".sqlite")
     if os.path.exists(db_path): os.remove(db_path)

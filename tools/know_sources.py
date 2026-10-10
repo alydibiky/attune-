@@ -259,11 +259,11 @@ def ecfr_rows(xml_bytes):
 
 def build_cranes(a):
     B = _bk()
-    titles = json.loads(B.get("https://www.ecfr.gov/api/versioner/v1/titles.json"))["titles"]
+    titles = json.loads(B.get("https://www.ecfr.gov/api/versioner/v1/titles.json", accept="application/json"))["titles"]
     date = next(t for t in titles if int(t["number"]) == 29)["up_to_date_as_of"]
     rows, seen = [], set()
     for part, q in ECFR_PARTS:
-        try: xml = B.get(f"https://www.ecfr.gov/api/versioner/v1/full/{date}/title-29.xml?part={part}&{q}", 300)
+        try: xml = B.get(f"https://www.ecfr.gov/api/versioner/v1/full/{date}/title-29.xml?part={part}&{q}", 300, accept="application/xml")
         except SystemExit: continue
         for r in ecfr_rows(xml):
             if r["x"] not in seen: seen.add(r["x"]); rows.append(r)
