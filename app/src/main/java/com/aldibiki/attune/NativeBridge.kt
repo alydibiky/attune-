@@ -841,10 +841,12 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
 
     /** v6.16: on Wi-Fi (or another unmetered network)? Big downloads wait for it. */
     @JavascriptInterface
-    fun unmetered(): Boolean = try {
-        val cm = ctx.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
-        !cm.isActiveNetworkMetered
-    } catch (e: Throwable) { false }
+    fun unmetered(): Boolean {
+        return try {
+            val cm = ctx.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+            cm.isActiveNetworkMetered.not()
+        } catch (e: Throwable) { false }
+    }
 
     /** Search the installed packs ({q, k}) → {passages: [...]} — fast (SQLite FTS), so Chat calls it on every lookup. */
     @JavascriptInterface
