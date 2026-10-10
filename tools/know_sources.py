@@ -479,7 +479,7 @@ TURATH_API = "https://api.turath.io/"
 
 def turath_json(B, path, **q):
     from urllib.parse import urlencode
-    time.sleep(1.2)   # turath answers 429 (too many requests) when asked faster
+    if path == "search": time.sleep(1.2)   # turath answers 429 (too many requests) to fast searches; pages keep their 0.15 s
     try: return json.loads(B.get(TURATH_API + path + "?" + urlencode({**q, "ver": 3}), 120).decode("utf-8"))
     except BaseException as e: print(f"turath: {path} {q} failed ({e})"); return None
 
