@@ -211,7 +211,7 @@ def build_laws(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("pack", choices=["world", "laws", "science", "health", "numbers", "cities", "cranes", "quran", "fiqh"]); ap.add_argument("out")
+    ap.add_argument("pack", choices=["world", "laws", "science", "health", "numbers", "cities", "cranes", "quran", "fiqh", "hadith"]); ap.add_argument("out")
     ap.add_argument("--max-countries", type=int, default=0)
     ap.add_argument("--budget-mb", type=float, default=15)
     ap.add_argument("--parquet", default="")

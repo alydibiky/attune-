@@ -7554,6 +7554,7 @@ export default function App() {
   }, []);
   knowledge.adapters.forEach((a) => { a.enabled = knPrefs.adapters[a.id] !== false; });
   if (NATIVE && NATIVE.knowSearch) knowledge.packSearch = KNOW.phonePackSearch(nativeCall);   // v6.16: the public packs, searched on the phone
+  if (NATIVE && NATIVE.dorarSearch) knowledge.liveSearch = KNOW.dorarSearch(nativeCall, () => typeof navigator === "undefined" || navigator.onLine !== false);   // v6.16: hadith questions also ask Dorar (الدرر السنية) when online
   const [commits, setCommits] = useState(() => {
     try { return JSON.parse(localStorage.getItem("attune:commits:v1") || "[]").filter((c) => !(c && /^\s*(please\s+)?(save|remember|note|keep|store)\b/i.test(String(c.action || "")))); } catch (e) { return []; }   // v6.12: notes to self saved as "promises" before the gate knew better
   });

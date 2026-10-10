@@ -373,10 +373,41 @@ def build_quran(a):
 
 # ---- fiqh: الفقه الميسر, the full books from turath.io (the Shamela library's texts) -----------------------------------------------
 # files.turath.io/books/<id>.json → {meta: {name, …}, indexes: {headings: [{title, level, page}], …}, pages: [{text, vol, page}]}
-FIQH_BOOKS = [
-    (5913, "الفقه الميسر", "عبد الله الطيار، عبد الله المطلق، محمد الموسى (مدار الوطن، ١٣ جزءًا)"),
-    (22726, "الفقه الميسر في ضوء الكتاب والسنة", "نخبة من العلماء، مجمع الملك فهد لطباعة المصحف الشريف"),
+FIQH_BOOKS = [   # (exact book title on turath, a word that must NOT be in it, author hint, credit)
+    ("الفقه الميسر", "ضوء", "الطيار", "عبد الله الطيار، عبد الله المطلق، محمد الموسى (مدار الوطن، ١٣ جزءًا)"),
+    ("الفقه الميسر في ضوء الكتاب والسنة", "", "", "نخبة من العلماء، مجمع الملك فهد لطباعة المصحف الشريف"),
 ]
+TURATH_API = "https://api.turath.io/"
+
+def turath_json(B, path, **q):
+    from urllib.parse import urlencode
+    try: return json.loads(B.get(TURATH_API + path + "?" + urlencode({**q, "ver": 3}), 120).decode("utf-8"))
+    except BaseException as e: print(f"turath: {path} {q} failed ({e})"); return None
+
+def turath_pick(hits, title, avoid, author):
+    """Search hits → the book whose name is the title (not a longer book that only mentions it)."""
+    for h in hits or []:
+        m = h.get("meta"); m = json.loads(m) if isinstance(m, str) else (m or {})
+        name, by = (m.get("book_name") or "").strip(), (m.get("author_name") or "")
+        if name.startswith(title) and len(name) <= len(title) + 12 and not (avoid and avoid in name) and (not author or author in by):
+            return h.get("book_id"), name
+    return None, None
+
+def turath_book(B, bid):
+    """The whole book: the ready file if turath has one, else page by page through its API."""
+    try: return json.loads(B.get(f"https://files.turath.io/books/{bid}.json", 300).decode("utf-8"))
+    except BaseException as e: print(f"turath: no book file for {bid} ({e}); reading it page by page")
+    info = turath_json(B, "book", id=bid, include="indexes") or {}
+    idx = info.get("indexes") or {}
+    n = len(idx.get("page_map") or [])
+    if not n: return None
+    pages = []
+    for pg in range(1, n + 1):
+        r = turath_json(B, "page", book_id=bid, pg=pg) or {}
+        m = r.get("meta"); m = json.loads(m) if isinstance(m, str) else (m or {})
+        pages.append({"text": r.get("text") or "", "vol": m.get("vol"), "page": m.get("page")})
+        time.sleep(0.15)   # gently
+    return {"meta": info.get("meta") or {}, "indexes": {"headings": idx.get("headings") or []}, "pages": pages}
 
 def turath_text(html):
     """A turath page → plain text: tags out, entities decoded; every word kept (footnotes too)."""
@@ -398,19 +429,25 @@ def fiqh_rows(book, title, by):
         where = " › ".join(path[k] for k in sorted(path))[-160:]
         ref = f"ج{pg.get('vol')} ص{pg.get('page')}" if pg.get("vol") else f"ص{pg.get('page', i)}"
         for j, piece in enumerate(_bk().chunk(text, 900)):
-            rows.append({"t": f"{title} — {where} ({ref})" if where else f"{title} ({ref})", "x": piece, "u": f"https://shamela.ws/book/{book['_id']}/{i}", "l": "ar"})
+            rows.append({"t": f"{title} — {where} ({ref})" if where else f"{title} ({ref})", "x": piece, "u": f"https://app.turath.io/book/{book['_id']}?page={i}", "l": "ar"})
     return rows
 
 def build_fiqh(a):
     B = _bk(); rows, used = [], []
-    for bid, title, by in FIQH_BOOKS:
-        try: book = json.loads(B.get(f"https://files.turath.io/books/{bid}.json", 300).decode("utf-8"))
-        except Exception as e: print(f"fiqh: book {bid} not available ({e})"); continue
-        name = ((book.get("meta") or {}).get("name") or "").strip()
-        if "الفقه الميسر" not in name: print(f"fiqh: book {bid} is «{name}», not {title} — skipped"); continue
-        book["_id"] = bid; r = fiqh_rows(book, title, by)
-        print(f"fiqh: {bid} «{name}»: {len(book.get('pages') or [])} pages → {len(r)} passages")
-        rows += r; used.append({"title": f"{title} — {by}", "url": f"https://shamela.ws/book/{bid}", "license": "Shared freely for learning, with credit"})
+    for title, avoid, author, credit in FIQH_BOOKS:
+        bid = name = None
+        for q in (title, title + " " + author if author else title):
+            for page in (1, 2, 3):
+                r = turath_json(B, "search", q=q, page=page)
+                bid, name = turath_pick((r or {}).get("data"), title, avoid, author)
+                if bid: break
+            if bid: break
+        if not bid: print(f"fiqh: «{title}» was not found on turath"); continue
+        book = turath_book(B, bid)
+        if not book or not book.get("pages"): print(f"fiqh: «{name}» ({bid}) could not be read"); continue
+        book["_id"] = bid; r = fiqh_rows(book, title, credit)
+        print(f"fiqh: {bid} «{name}»: {len(book['pages'])} pages → {len(r)} passages")
+        rows += r; used.append({"title": f"{title} — {credit}", "url": f"https://app.turath.io/book/{bid}", "license": "Shared freely for learning, with credit"})
     B.write_pack(a.out, "fiqh", rows, {
         "name": "Islamic jurisprudence (al-Fiqh al-Muyassar)", "name_ar": "الفقه الميسر",
         "license": "The publishers' texts as shared by the Shamela library (turath.io), for learning, with credit",
@@ -419,4 +456,57 @@ def build_fiqh(a):
         "notice_ar": "للتعلّم؛ وفي مسألتك الخاصة اسأل عالمًا موثوقًا أو دار الإفتاء.",
         "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
 
-BUILDERS = {"science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh}
+# ---- hadith: the main books with the scholars' rulings (fawazahmed0/hadith-api, public domain / Unlicense) -----------------------------
+HADITH_API = "https://raw.githubusercontent.com/fawazahmed0/hadith-api/1/editions/ara-{}.json"
+HADITH_BOOKS = [("bukhari", "صحيح البخاري"), ("muslim", "صحيح مسلم"), ("abudawud", "سنن أبي داود"), ("tirmidhi", "جامع الترمذي"),
+                ("nasai", "سنن النسائي"), ("ibnmajah", "سنن ابن ماجه"), ("malik", "موطأ مالك"), ("nawawi", "الأربعون النووية"),
+                ("qudsi", "الأربعون القدسية"), ("dehlawi", "أربعون الشاه ولي الله الدهلوي")]
+SCHOLARS = {"Al-Albani": "الألباني", "Zubair Ali Zai": "زبير علي زئي", "Shuaib Al Arnaut": "شعيب الأرناؤوط", "Abu Ghuddah": "عبد الفتاح أبو غدة",
+            "Muhammad Muhyi Al-Din Abdul Hamid": "محمد محيي الدين عبد الحميد", "Muhammad Fouad Abd al-Baqi": "محمد فؤاد عبد الباقي",
+            "Ahmad Muhammad Shakir": "أحمد شاكر", "Bashar Awad Maarouf": "بشار عواد معروف", "Salim al-Hilali": "سليم الهلالي"}
+# longest first; what is not listed stays as written
+GRADE_WORDS = [("Sahih - Bukhari And Muslim", "صحيح — رواه البخاري ومسلم"), ("Sahih - Agreed Upon", "صحيح — متفق عليه"), ("Agreed Upon", "متفق عليه"),
+    ("Sahih Bukhari", "صحيح البخاري"), ("Sahih Muslim", "صحيح مسلم"), ("Bukhari And Muslim", "البخاري ومسلم"), ("Very Daif", "ضعيف جدًا"),
+    ("Isnaad Sahih", "إسناده صحيح"), ("Isnaad Hasan", "إسناده حسن"), ("Sahih Isnaad", "صحيح الإسناد"), ("Daif Isnaad", "ضعيف الإسناد"),
+    ("Hasan Isnaad", "حسن الإسناد"), ("Sanad Daif", "سنده ضعيف"), ("Sahih Hadith", "حديث صحيح"), ("Sahih Matn", "صحيح المتن"),
+    ("Lighairihi", "لغيره"), ("Mutawatir", "متواتر"), ("Hasan", "حسن"), ("Sahih", "صحيح"), ("Daif", "ضعيف"), ("Mauquf", "موقوف"), ("Muquf", "موقوف"),
+    ("Maqtu", "مقطوع"), ("Shadh", "شاذ"), ("Munkar", "منكر"), ("Mawdu", "موضوع"), ("Mursal", "مرسل"), ("Batil", "باطل"), ("Isnaad", "الإسناد")]
+
+def grade_ar(g):
+    """'Isnaad Sahih' → 'إسناده صحيح', 'Sahih Muslim (1480)' → 'صحيح مسلم (1480)'; an unknown wording stays as written."""
+    g = (g or "").strip()
+    if g in ("", "-"): return ""
+    out = g
+    for en, ar in GRADE_WORDS: out = re.sub(r"\b" + re.escape(en) + r"\b", ar, out)
+    return out if not re.search(r"[A-Za-z]", out) else f"{out} ({g})"
+
+def hadith_rows(key, title, data):
+    """One book → a passage per hadith: the Arabic text exactly as published, then each scholar's ruling."""
+    rows = []
+    for h in data.get("hadiths") or []:
+        t = (h.get("text") or "").strip()
+        if not t: continue
+        n = h.get("hadithnumber")
+        rulings = [f"{SCHOLARS.get(g.get('name'), g.get('name'))}: {grade_ar(g.get('grade'))}" for g in h.get("grades") or [] if grade_ar(g.get("grade"))]
+        if not rulings and key in ("bukhari", "muslim"): rulings = [f"صحيح — من {title}"]
+        x = t + ("\nالحكم: " + "؛ ".join(rulings) if rulings else "")
+        rows.append({"t": f"{title} — الحديث {n:g}" if isinstance(n, (int, float)) else f"{title} — الحديث {n}", "x": x,
+                     "u": f"https://sunnah.com/{key if key != 'abudawud' else 'abudawud'}:{n:g}" if isinstance(n, (int, float)) else "", "l": "ar"})
+    return rows
+
+def build_hadith(a):
+    B = _bk(); rows = []
+    for key, title in HADITH_BOOKS:
+        r = hadith_rows(key, title, json.loads(B.get(HADITH_API.format(key), 300).decode("utf-8")))
+        print(f"hadith: {title}: {len(r)}"); rows += r
+    if len(rows) < 30000: raise SystemExit(f"hadith: only {len(rows)} hadiths — something is missing")
+    B.write_pack(a.out, "hadith", rows, {
+        "name": "Hadith (the main books, with rulings)", "name_ar": "الحديث النبوي (الكتب الأساسية مع الأحكام)",
+        "license": "Public domain (Unlicense) — fawazahmed0/hadith-api",
+        "attribution": "نصوص صحيح البخاري ومسلم والسنن الأربع وموطأ مالك والأربعين، مع أحكام الألباني وزبير علي زئي وشعيب الأرناؤوط وأحمد شاكر وغيرهم كما وردت في hadith-api (ملكية عامة).",
+        "notice": "Rulings are quoted from the scholars named; for a doubtful hadith, check Dorar (dorar.net).",
+        "notice_ar": "الأحكام منقولة عن العلماء المذكورين؛ وللتحقق من حديث مشكوك فيه راجع الدرر السنية.",
+        "sources": [{"title": "hadith-api (fawazahmed0)", "url": "https://github.com/fawazahmed0/hadith-api", "license": "Unlicense (public domain)"}],
+        "retrieved": time.strftime("%Y-%m-%d")})
+
+BUILDERS = {"science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith}

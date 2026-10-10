@@ -252,12 +252,15 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
     },
     /** v6.16: the public packs searched on the phone (set by the app): async question → passages. */
     packSearch: null,
+    /** v6.16: live sources asked only when online (Dorar for hadith questions): async question → passages, or null. */
+    liveSearch: null,
     /** The facts for a question (empty when it isn't a lookup or nothing fits): your own sources and the packs, ranked together. */
     async find(question, o) {
       if (!wantsFacts(question)) return [];
       const idx = await K.ensure();
       let pack = [];
       if (K.packSearch) { try { pack = (await K.packSearch(question)) || []; } catch (e) { pack = []; } }
+      if (K.liveSearch) { try { pack = ((await K.liveSearch(question)) || []).concat(pack); } catch (e) { /* offline or Dorar unreachable: the packs still answer */ } }
       if (!pack.length) return findFacts(idx, question, o);
       const own = idx.N ? rank(idx, question, { k: 9 }).map((h) => h.chunk) : [];
       const cands = own.concat(pack.map((p) => ({ id: p.id, src: "pack:" + p.pack, title: p.title || "", page: 0, text: p.text || "", kind: "pack", url: p.url || "", pack: p.pack,
@@ -307,6 +310,10 @@ export const CATALOG = [
   { id: "quran", name: "The Quran + Tafsir al-Muyassar", name_ar: "القرآن الكريم مع التفسير الميسر", size: "≈ 4 MB", size_ar: "≈ ٤ ميجابايت", license: "Tanzil Project (verbatim) + King Fahd Complex, with credit", license_ar: "مشروع تنزيل (النص كما هو) ومجمع الملك فهد، مع ذكر المصدر",
     about: "The full Arabic text, verse by verse, from the verified Tanzil text — and al-Tafsir al-Muyassar (King Fahd Complex) for every verse, with each surah's introduction.",
     about_ar: "النص العربي كاملًا، آيةً آية، من نص تنزيل الموثَّق — ومعه التفسير الميسر (مجمع الملك فهد) لكل آية، ومقدمة كل سورة." },
+  { id: "hadith", name: "Hadith (main books, with rulings)", name_ar: "الحديث النبوي مع الأحكام", size: "≈ 20 MB", size_ar: "≈ ٢٠ ميجابايت", license: "Public domain (hadith-api)", license_ar: "ملكية عامة",
+    about: "About 36,000 hadiths: Sahih al-Bukhari, Sahih Muslim, the four Sunan, the Muwatta and the Forties — each with the rulings of al-Albani, Shu'ayb al-Arna'ut, Ahmad Shakir and others. Online, hadith questions also search Dorar (dorar.net).",
+    about_ar: "نحو ٣٦ ألف حديث: صحيح البخاري وصحيح مسلم والسنن الأربع والموطأ والأربعينات — ومع كل حديث أحكام الألباني وشعيب الأرناؤوط وأحمد شاكر وغيرهم. ومع الاتصال بالإنترنت يُبحث في الدرر السنية أيضًا.",
+    notice: "Rulings are quoted from the scholars named; for a doubtful hadith, check Dorar (dorar.net).", notice_ar: "الأحكام منقولة عن العلماء المذكورين؛ وللتحقق من حديث مشكوك فيه راجع الدرر السنية." },
   { id: "fiqh", name: "Islamic jurisprudence (al-Fiqh al-Muyassar)", name_ar: "الفقه الميسر", size: "≈ 10 MB", size_ar: "≈ ١٠ ميجابايت", license: "The publishers' texts via the Shamela library, with credit", license_ar: "نصوص الناشرين عبر المكتبة الشاملة، مع ذكر المصدر",
     about: "The full al-Fiqh al-Muyassar (al-Tayyar, al-Mutlaq, al-Musa — 13 volumes) and al-Fiqh al-Muyassar in the light of the Quran and Sunnah (King Fahd Complex): purification, prayer, zakat, fasting, hajj, transactions, family, inheritance and more — each passage with its book, chapter, volume and page.",
     about_ar: "الفقه الميسر كاملًا (الطيار والمطلق والموسى — ١٣ جزءًا) والفقه الميسر في ضوء الكتاب والسنة (مجمع الملك فهد): الطهارة والصلاة والزكاة والصيام والحج والمعاملات والأسرة والمواريث وغيرها — ومع كل فقرة اسم الكتاب والباب والجزء والصفحة.",
@@ -360,6 +367,44 @@ export async function autoInstallPacks(K, native, { ids = CATALOG.map((c) => c.i
     if (cat.legacy && (await K.sources()).some((s) => s.pack === id)) await removeKnowPack(K, id);
   }
   return done;
+}
+
+// ---- الدرر السنية (Dorar): hadith with the scholars' rulings, asked live -----------------------------------------------------------
+const HADITH_Q = /حديث|أحاديث|احاديث|الحديث|رواه|يروى|صحيح|ضعيف|موضوع|سند|إسناد|اسناد|قال رسول|قال النبي|النبي ﷺ|صلى الله عليه وسلم|الرسول|\bhadith|\bsunnah|\bnarrat/i;
+/** Is this a question Dorar can help with (a hadith, its wording or its ruling)? */
+export const isHadithQuestion = (q) => HADITH_Q.test(String(q || ""));
+const DORAR_DROP = new Set("هل ما ماذا كيف من في على عن حديث أحاديث احاديث الحديث صحيح صحة ضعيف درجة حكم ما حكم هذا هذه رواه قال النبي الرسول رسول الله صلى عليه وسلم ﷺ يقول ورد أريد اريد ابحث عن نص".split(" "));
+/** The words of the hadith itself: question words, "صحيح؟", "حديث" and the salawat removed. */
+export function dorarQuery(q) {
+  const w = String(q || "").replace(/[«»"“”'؟?!.,،:؛()\[\]﴿﴾]/g, " ").split(/\s+/).filter((x) => x && !DORAR_DROP.has(x));
+  return w.join(" ").trim();
+}
+const stripTags = (h) => String(h || "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&quot;/g, '"').replace(/&#039;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/[ \t]+/g, " ").trim();
+/** Dorar's API answer ({ahadith: {result: HTML}}) → passages: the hadith, then الراوي، المحدث، المصدر، الرقم and خلاصة حكم المحدث. */
+export function parseDorar(body, q) {
+  let html = "";
+  try { const j = typeof body === "string" ? JSON.parse(body) : body; html = (j && j.ahadith && j.ahadith.result) || ""; } catch (e) { return []; }
+  const out = []; const re = /<div class="hadith"[^>]*>([\s\S]*?)<\/div>\s*<div class="hadith-info">([\s\S]*?)<\/div>/g; let m;
+  while ((m = re.exec(html))) {
+    const text = stripTags(m[1]).replace(/^\d+\s*-\s*/, "").trim();
+    const info = {}; const parts = m[2].split(/<span class="info-subtitle">/).slice(1);
+    for (const p of parts) { const i = p.indexOf("</span>"); if (i < 0) continue; const label = stripTags(p.slice(0, i)).replace(/:$/, "").trim(); info[label] = stripTags(p.slice(i + 7)); }
+    if (!text) continue;
+    const lines = ["الراوي", "المحدث", "المصدر", "الصفحة أو الرقم", "خلاصة حكم المحدث"].filter((k) => info[k]).map((k) => k + ": " + info[k]);
+    out.push({ id: "dorar:" + out.length, pack: "dorar", title: "الدرر السنية — " + [info["المصدر"], info["الصفحة أو الرقم"]].filter(Boolean).join(" ") + (info["المحدث"] ? " (" + info["المحدث"] + ")" : ""),
+      text: text + "\n" + lines.join("\n"), url: "https://dorar.net/hadith/search?q=" + encodeURIComponent(q || ""),
+      notice: "Ruling as given by the scholar named (Dorar, dorar.net).", notice_ar: "الحكم كما ذكره المحدّث المسمّى (الدرر السنية)." });
+  }
+  return out.slice(0, 15);
+}
+/** For createKnowledge.liveSearch: asks Dorar only for hadith questions, through the phone (native dorarSearch). */
+export function dorarSearch(nativeCall, isOnline = () => true) {
+  return async (question) => {
+    if (!isHadithQuestion(question) || !isOnline()) return [];
+    const q = dorarQuery(question); if (q.length < 3) return [];
+    const r = await nativeCall("dorarSearch", q);
+    return parseDorar(r && r.body, q);
+  };
 }
 
 /** The phone's pack search for createKnowledge: question → [{ id, pack, title, text, url, notice, notice_ar }]. */

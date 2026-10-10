@@ -132,9 +132,26 @@ BOOK = {"_id": 5913, "meta": {"name": "الفقه الميسر"}, "indexes": {"h
 fr = S.fiqh_rows(BOOK, "الفقه الميسر", "")
 check(len(fr) == 2 and fr[0]["t"] == "الفقه الميسر — كتاب الطهارة › باب المياه (ج1 ص15)" and "الماء الطهور هو الباقي على خلقته" in fr[0]["x"] and '"قال تعالى"' in fr[0]["x"] and "<" not in fr[0]["x"], "Fiqh: tags out, every word kept, titled with book, chapter path, volume and page")
 check(fr[1]["t"] == "الفقه الميسر — كتاب الصلاة › باب شروط الصلاة (ج2 ص7)", "Fiqh: a new chapter replaces the old path")
+hits = [{"book_id": 1, "meta": json.dumps({"book_name": "الفقه الميسر في ضوء الكتاب والسنة", "author_name": "مجمع الملك فهد"})},
+        {"book_id": 2, "meta": json.dumps({"book_name": "شرح الفقه الميسر وأدلته من الكتاب والسنة المطهرة", "author_name": "x"})},
+        {"book_id": 3, "meta": {"book_name": "الفقه الميسر", "author_name": "عبد الله بن محمد الطيار وآخرون"}}]
+check(S.turath_pick(hits, "الفقه الميسر", "ضوء", "الطيار") == (3, "الفقه الميسر") and S.turath_pick(hits, "الفقه الميسر في ضوء الكتاب والسنة", "", "")[0] == 1,
+      "Fiqh: each book is found on turath by its exact title (not a longer book that mentions it)")
 man, db = pack("fiqh", fr)
 r = search(db, "ما هي شروط الصلاة؟")
 check(r and "شروط الصلاة" in r[0][0], "a fiqh question finds its chapter: " + (r[0][0] if r else "nothing"))
+
+# ---- hadith (hadith-api, with rulings) ----
+check(S.grade_ar("Isnaad Sahih") == "إسناده صحيح" and S.grade_ar("Very Daif") == "ضعيف جدًا" and S.grade_ar("Sahih - Agreed Upon") == "صحيح — متفق عليه"
+      and S.grade_ar("Sahih Muslim (1480)") == "صحيح مسلم (1480)" and S.grade_ar("-") == "" and S.grade_ar("Odd wording") == "Odd wording (Odd wording)", "Hadith: rulings in Arabic terms; an unknown wording keeps the original")
+HB = {"hadiths": [{"hadithnumber": 6, "text": "عَنْ رَسُولِ اللَّهِ صلى الله عليه وسلم قَالَ إِنَّ هَذِهِ الْحُشُوشَ مُحْتَضَرَةٌ فَإِذَا أَتَى أَحَدُكُمُ الْخَلاَءَ فَلْيَقُلْ أَعُوذُ بِاللَّهِ مِنَ الْخُبُثِ وَالْخَبَائِثِ",
+                   "grades": [{"name": "Al-Albani", "grade": "Sahih"}, {"name": "Zubair Ali Zai", "grade": "Isnaad Sahih"}]}, {"hadithnumber": 7, "text": " ", "grades": []}]}
+hr = S.hadith_rows("abudawud", "سنن أبي داود", HB)
+check(len(hr) == 1 and hr[0]["t"] == "سنن أبي داود — الحديث 6" and hr[0]["x"].endswith("الحكم: الألباني: صحيح؛ زبير علي زئي: إسناده صحيح") and hr[0]["x"].startswith("عَنْ رَسُولِ اللَّهِ"), "Hadith: text exactly as published, then each scholar's ruling; empty entries skipped")
+check(S.hadith_rows("bukhari", "صحيح البخاري", {"hadiths": [{"hadithnumber": 1, "text": "إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ", "grades": []}]})[0]["x"].endswith("الحكم: صحيح — من صحيح البخاري"), "Hadith: al-Bukhari and Muslim are marked sahih by their book")
+man, db = pack("hadith", hr)
+r = search(db, "ماذا اقول عند دخول الخلاء")
+check(r and "6" in r[0][0], "a hadith is found from plain words without diacritics: " + (r[0][0] if r else "nothing"))
 
 # ---- OpenStax (CNXML) ----
 d = tempfile.mkdtemp(); os.makedirs(os.path.join(d, "modules", "m1")); os.makedirs(os.path.join(d, "collections"))
