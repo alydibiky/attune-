@@ -102,6 +102,43 @@ export function cycleStats(state, todayKey) {
   return { periods, cycleLen, periodLen, variation, lens: recent, last, nextStart, ovulation, fertile, cycleDay, inPeriod, late, known: lens.length };
 }
 
+/* v6.13 — "make Cycle chattable with all the period info": questions answered by code from the logged days
+   (nothing leaves the phone, no model needed). → { text } or null when the question isn't about the cycle. */
+export function cycleAnswer(q, state, todayKey, ar = /[\u0600-\u06FF]/.test(q)) {
+  const t = String(q || "").toLowerCase(), st = cycleStats(state, todayKey);
+  const L = (en, a) => (ar ? a : en);
+  const fd = (k) => fromKey(k).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const has = (re) => re.test(t);
+  if (!st.last) return { text: L("Nothing is logged yet. Log your first period (tap the day on the calendar) and I can answer from your own data.", "لا يوجد شيء مسجّل بعد. سجّلي أول دورة (اضغطي على اليوم في التقويم) لأتمكن من الإجابة من بياناتك.") };
+  const sinceNext = diffDays(st.nextStart, todayKey);
+  if (has(/late|delay|overdue|متأخر|تأخر|اتأخرت|متاخر/)) {
+    return { text: st.late > 0 ? L(`Yes — ${st.late} day(s) late. It was expected on ${fd(st.nextStart)} (your cycle averages ${st.cycleLen} days${st.variation != null ? `, varying by ${st.variation}` : ""}). A few days either way is common; if you are more than a week late and could be pregnant, a test is the way to know.`, `نعم — متأخرة ${st.late} يوم. كانت متوقعة في ${fd(st.nextStart)} (متوسط دورتك ${st.cycleLen} يومًا${st.variation != null ? `، ويختلف بمقدار ${st.variation}` : ""}). التقدم أو التأخر بضعة أيام أمر شائع؛ وإذا تأخرت أكثر من أسبوع واحتمال الحمل قائم، فالاختبار هو الطريقة للتأكد.`)
+      : L(`No — it is expected on ${fd(st.nextStart)}, in ${-sinceNext} day(s).`, `لا — موعدها المتوقع ${fd(st.nextStart)}، بعد ${-sinceNext} يوم.`) };
+  }
+  if (has(/ovulat|التبويض|تبويض/)) return { text: L(`Estimated ovulation: ${fd(st.ovulation)} (14 days before the next expected period). It is an estimate from your dates, not a test.`, `التبويض التقديري: ${fd(st.ovulation)} (قبل الدورة المتوقعة بـ14 يومًا). هذا تقدير من تواريخك، وليس فحصًا.`) };
+  if (has(/fertil|pregnan|خصوب|حمل|الحمل/)) {
+    const inF = diffDays(st.fertile.from, todayKey) >= 0 && diffDays(todayKey, st.fertile.to) >= 0;
+    return { text: L(`Fertile window: ${fd(st.fertile.from)} – ${fd(st.fertile.to)}. Today is ${inF ? "inside" : "outside"} it. Predictions are estimates — never use them as contraception.`, `فترة الخصوبة: ${fd(st.fertile.from)} – ${fd(st.fertile.to)}. اليوم ${inF ? "داخلها" : "خارجها"}. التوقعات تقديرية — لا تعتمدي عليها أبدًا كوسيلة لمنع الحمل.`) };
+  }
+  if (has(/how long|length|average|cycle day|طول|متوسط|كم يوم|كام يوم/)) {
+    if (has(/period|bleed|الدورة تستمر|الدورة بتقعد|مدة الدورة|بتقعد|تستمر/)) return { text: L(`Your periods last about ${st.periodLen} days (from your last ${Math.min(6, st.periods.length)}).`, `تستمر دورتك نحو ${st.periodLen} أيام (من آخر ${Math.min(6, st.periods.length)} دورات).`) };
+    return { text: L(`Your cycle averages ${st.cycleLen} days${st.known ? ` (last ${st.lens.length}: ${st.lens.join(", ")})` : " (default — log two periods to learn yours)"}. Today is cycle day ${st.cycleDay}.`, `متوسط دورتك ${st.cycleLen} يومًا${st.known ? ` (آخر ${st.lens.length}: ${st.lens.join("، ")})` : " (افتراضي — سجّلي دورتين لمعرفة متوسطك)"}. اليوم هو اليوم ${st.cycleDay} من الدورة.`) };
+  }
+  if (has(/history|last \d|previous|list|all my|السابقة|آخر الدورات|سجل|كل الدورات/)) {
+    const rows = st.periods.slice(-6).reverse().map((p) => `- ${fd(p.start)} · ${p.length} ${L("days", "أيام")}`).join("\n");
+    return { text: L("Your last periods:\n", "آخر دوراتك:\n") + rows };
+  }
+  if (has(/symptom|cramp|headache|pain|mood|أعراض|اعراض|مغص|صداع|ألم|الم|مزاج/)) {
+    const c = {}; for (const d of Object.values(state.days)) for (const x of d.symptoms || []) c[x] = (c[x] || 0) + 1;
+    const top = Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    return { text: top.length ? L("Most logged symptoms: ", "أكثر الأعراض تسجيلًا: ") + top.map(([k, n]) => `${tr(k)} (${n})`).join(ar ? "، " : ", ") : L("No symptoms logged yet.", "لا توجد أعراض مسجّلة بعد.") };
+  }
+  if (has(/last period|when did|started|آخر دورة|اخر دورة|بدأت|نزلت امتى|نزلت إمتى/)) return { text: L(`Your last period started on ${fd(st.last.start)} and lasted ${st.last.length} day(s).`, `بدأت آخر دورة في ${fd(st.last.start)} واستمرت ${st.last.length} يوم.`) };
+  if (has(/next|when|expected|due|الجاية|القادمة|امتى|إمتى|متى|موعد/)) return { text: st.inPeriod ? L(`You are on day ${st.cycleDay} of your period now. The next one is expected around ${fd(addDays(st.last.start, st.cycleLen))}.`, `أنتِ الآن في اليوم ${st.cycleDay} من الدورة. والدورة القادمة متوقعة نحو ${fd(addDays(st.last.start, st.cycleLen))}.`)
+    : L(`Next period: about ${fd(st.nextStart)}${sinceNext <= 0 ? ` (in ${-sinceNext} day(s))` : ` — ${st.late} day(s) late`}.`, `الدورة القادمة: نحو ${fd(st.nextStart)}${sinceNext <= 0 ? ` (بعد ${-sinceNext} يوم)` : ` — متأخرة ${st.late} يوم`}.`) };
+  return null;
+}
+
 // What each calendar day should look like.
 export function dayKind(state, stats, key, todayKey) {
   const d = state.days[key];
@@ -339,6 +376,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
             <div className="bg-slate-950 rounded-xl p-2.5"><p className="text-[10px] text-slate-500">{tr("Fertile window")}</p><p className="text-sm text-slate-100">{stats.fertile ? fromKey(stats.fertile.from).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) + "–" + fromKey(stats.fertile.to).getDate() : "—"}</p></div>
           </div>
         ) : null}
+        <CycleChat cycle={cycle} todayKey={todayKey} />
         <div className="flex flex-wrap gap-1.5 mt-3">
           {!stats.inPeriod ? (
             <button onClick={() => { upd((c) => cycleSetDay(c, todayKey, { flow: "medium", start: true, at: Date.now() })); flash(tr("Period started today")); }}
@@ -446,4 +484,27 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
       </p>
     </div>
   );
+}
+
+/* v6.13 — ask about your cycle; answered from your own data, on the phone. */
+function CycleChat({ cycle, todayKey }) {
+  const [q, setQ] = useState(""), [log, setLog] = useState([]);
+  const ask = (text) => {
+    const x = String(text || q).trim(); if (!x) return;
+    const a = cycleAnswer(x, cycle, todayKey);
+    setLog((l) => [...l, { me: x }, { a: a ? a.text : tr("I can answer about your next period, being late, ovulation, the fertile window, cycle and period length, your history and symptoms.") }].slice(-8));
+    setQ("");
+  };
+  return (
+    <div className="mt-3 rounded-xl bg-slate-950 border border-slate-800 p-2.5" data-testid="cycle-chat">
+      {log.map((m, i) => m.me ? <p key={i} className="text-[13px] text-rose-100 bg-rose-500/15 rounded-lg px-2.5 py-1.5 my-1 ms-auto w-fit max-w-[85%]">{m.me}</p>
+        : <p key={i} className="text-[13px] text-slate-200 bg-slate-900 rounded-lg px-2.5 py-1.5 my-1 w-fit max-w-[90%] whitespace-pre-line" data-testid="cycle-answer">{m.a}</p>)}
+      {!log.length ? <div className="flex flex-wrap gap-1.5 mb-1.5">{[tr("When is my next period?"), tr("Am I late?"), tr("When do I ovulate?")].map((x) =>
+        <button key={x} onClick={() => ask(x)} className="text-[11.5px] rounded-full border border-slate-700 text-slate-300 px-2.5 py-1">{x}</button>)}</div> : null}
+      <div className="flex gap-1.5">
+        <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} dir="auto" placeholder={tr("Ask about your cycle…")} data-testid="cycle-ask"
+          className="flex-1 min-w-0 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[13px] text-slate-100" />
+        <button onClick={() => ask()} className="px-3 rounded-lg bg-rose-500 text-white text-[13px]" data-testid="cycle-ask-go">{tr("Ask")}</button>
+      </div>
+    </div>);
 }

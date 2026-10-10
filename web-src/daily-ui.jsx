@@ -4,7 +4,7 @@
    "daily-learn-…" / "daily-news-…") and the home-screen widget's text.    */
 import React, { useState, useEffect, useRef } from "react";
 import { GraduationCap, Newspaper, Plus, Trash2, ChevronLeft, Check, X, Loader2, Bell, RefreshCw, Sparkles, ImageIcon, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
-import { tr } from "./i18n.js";
+import { getLang, tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import { Md } from "./chat.jsx";
 import * as D from "./daily.js";
@@ -168,6 +168,13 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, openId, 
     finally { running.current = false; }
   };
 
+  // v6.13: a ready course starts at once — its plan is built in
+  const startReady = async (id) => {
+    const c = D.readyCourse(id, { lang: getLang() === "ar" ? "ar" : "en", time: form.time || "08:00" });
+    if (!c) return;
+    putCourse(c); setCur(c.id); setView("course");
+    await makeLesson(c, 0);
+  };
   const create = async () => {
     let c = D.newCourse(form);
     try {
@@ -190,7 +197,17 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, openId, 
   if (view === "new") return (
     <section className="p-4 space-y-3" data-testid="learn-new">
       <Back onClick={() => setView("list")} />
-      <h2 className="text-base font-semibold text-slate-100">{tr("What do you want to learn?")}</h2>
+      <h2 className="text-base font-semibold text-slate-100">{tr("Ready courses")}</h2>
+      <div className="grid gap-2" data-testid="learn-ready">
+        {D.READY_COURSES.map((r) => (
+          <button key={r.id} onClick={() => startReady(r.id)} disabled={!modelReady} data-testid={"learn-ready-" + r.id}
+            className="text-start rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-3 flex items-center gap-3 disabled:opacity-50">
+            <span className="text-3xl">{r.emoji}</span>
+            <span className="min-w-0"><span className="block text-[14px] font-semibold text-slate-100">{r.title[getLang() === "ar" ? 1 : 0]}</span>
+              <span className="block text-[12px] text-slate-400 truncate">{r.plan.slice(0, 3).map((p) => p[getLang() === "ar" ? 1 : 0]).join(" · ")}…</span></span>
+          </button>))}
+      </div>
+      <h2 className="text-base font-semibold text-slate-100 pt-2">{tr("Or any topic you like")}</h2>
       <input value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })} className={field} dir="auto" placeholder={tr("A language, a skill, a subject…")} data-testid="learn-topic" />
       <div className="flex flex-wrap gap-1.5">{["Turkish", "English", "Crane hydraulics", "Excel & Power Automate", "Java", "Economics", "Tajweed"].map((x) =>
         <button key={x} onClick={() => setForm({ ...form, topic: tr(x) })} className="text-[12px] rounded-full border border-slate-700 text-slate-300 px-2.5 py-1">{tr(x)}</button>)}</div>

@@ -3180,4 +3180,11 @@ export const AR = {
   "This model writes nonsense on this phone, even in safe mode. Pick another model in Engine (Core works well) and tell us which one failed.": "هذا النموذج يكتب كلامًا بلا معنى على هذا الهاتف حتى في الوضع الآمن. اختر نموذجًا آخر من «المحرك» (Core يعمل جيدًا) وأخبرنا أيّها فشل.",
   "Safe mode is on for this model: it once wrote nonsense on this phone, so it runs without speed tricks and with full-precision memory (a little slower, same answers).": "الوضع الآمن مفعّل لهذا النموذج: كتب مرة كلامًا بلا معنى على هذا الهاتف، فهو يعمل الآن دون تقنيات التسريع وبذاكرة كاملة الدقة (أبطأ قليلًا، والإجابات نفسها).",
   "Turn safe mode off": "إيقاف الوضع الآمن",
+  "Ready courses": "دورات جاهزة",
+  "Or any topic you like": "أو أي موضوع تريده",
+  "When is my next period?": "متى دورتي القادمة؟",
+  "Am I late?": "هل أنا متأخرة؟",
+  "When do I ovulate?": "متى التبويض؟",
+  "Ask about your cycle…": "اسألي عن دورتك…",
+  "I can answer about your next period, being late, ovulation, the fertile window, cycle and period length, your history and symptoms.": "يمكنني الإجابة عن موعد دورتك القادمة، والتأخر، والتبويض، وفترة الخصوبة، وطول الدورة ومدتها، وسجلك، والأعراض.",
 };

@@ -39,7 +39,57 @@ export function newCourse({ topic, level = "beginner", lang = "en", time = "08:0
     plan: [], lessons: [], quizzes: [], review: [], streak: 0, lastDay: "", notify: true };
 }
 
-const LANG_NOTE = { en: "Write in clear, simple English.", ar: "اكتب بالعربية البسيطة (مصري مفهوم)، واترك المصطلحات التقنية بالإنجليزية بين قوسين." };
+/* v6.13 — ready courses: a fixed, well-ordered plan, so a course starts at once and never depends on the
+   model planning it (Ali: "Turkish from beginner to expert in 30 small lessons"). Lessons are still written
+   on the phone, one a day, from these titles. */
+export const READY_COURSES = [
+  { id: "turkish", emoji: "🇹🇷", topic: "Turkish", level: "beginner", quizEvery: 5,
+    title: ["Turkish: beginner to expert in 30 lessons", "التركية: من المبتدئ إلى المتقدم في 30 درسًا"],
+    plan: [["The Turkish alphabet and sounds (ç, ş, ğ, ı, ö, ü)", "الأبجدية التركية وأصواتها (ç، ş، ğ، ı، ö، ü)"], ["Greetings and introducing yourself", "التحية وتقديم نفسك"],
+      ["Vowel harmony — the key rule of Turkish", "انسجام الحروف المتحركة — القاعدة الأساسية في التركية"], ["Numbers, prices and telling the time", "الأرقام والأسعار ومعرفة الوقت"],
+      ["\"To be\": -im, -sin, -dir", "فعل الكينونة: ‎-im، ‎-sin، ‎-dir"], ["Plurals with -ler / -lar", "الجمع بـ ‎-ler / ‎-lar"],
+      ["This, that, here, there", "هذا وذاك وهنا وهناك"], ["Possession: my, your, his (-im, -in, -i)", "الملكية: ‎-im، ‎-in، ‎-i"],
+      ["Var / yok — there is, there isn't", "var / yok — يوجد ولا يوجد"], ["Present continuous: -iyor", "المضارع المستمر: ‎-iyor"],
+      ["Cases 1: -e / -a (to) and -de / -da (at)", "الحالات 1: ‎-e/-a (إلى) و‎-de/-da (في)"], ["Cases 2: -den / -dan (from) and the object -i", "الحالات 2: ‎-den/-dan (من) والمفعول ‎-i"],
+      ["Questions with mi and question words", "الأسئلة بـ mi وأدوات الاستفهام"], ["Shopping and bargaining at the bazaar", "التسوق والمساومة في السوق"],
+      ["Simple past: -di", "الماضي البسيط: ‎-di"], ["Food, ordering and the restaurant", "الطعام والطلب في المطعم"],
+      ["Future: -ecek / -acak", "المستقبل: ‎-ecek / ‎-acak"], ["Directions, transport and travel", "الاتجاهات والمواصلات والسفر"],
+      ["The aorist: habits and offers (-ir, -er)", "المضارع العام: العادات والعروض (‎-ir، ‎-er)"], ["Can / can't: -ebil, -eme", "القدرة وعدمها: ‎-ebil، ‎-eme"],
+      ["Must and should: -meli, lazım, gerek", "الوجوب والنصيحة: ‎-meli، lazım، gerek"], ["Comparing: daha, en, gibi", "المقارنة: daha، en، gibi"],
+      ["Reported past: -miş", "الماضي المنقول: ‎-miş"], ["Conditionals: -se / -sa", "الشرط: ‎-se / ‎-sa"],
+      ["Verb nouns: -mek, -me, -diği", "المصادر وصيغ الوصل: ‎-mek، ‎-me، ‎-diği"], ["Relative clauses: -en / -an, -dik", "صيغ الصلة: ‎-en/-an، ‎-dik"],
+      ["Linking sentences: -ip, -ince, -ken, -erek", "ربط الجمل: ‎-ip، ‎-ince، ‎-ken، ‎-erek"], ["Polite and formal Turkish at work", "التركية المهذبة والرسمية في العمل"],
+      ["Idioms and everyday expressions", "التعابير الاصطلاحية والعبارات اليومية"], ["Speaking like a native: rhythm, fillers and slang", "التحدث كأهل اللغة: الإيقاع والكلمات الرابطة والعامية"]] },
+  { id: "english", emoji: "🇬🇧", topic: "English", level: "intermediate", quizEvery: 5,
+    title: ["English for work: 30 lessons", "الإنجليزية للعمل: 30 درسًا"],
+    plan: [["Present simple vs continuous", "المضارع البسيط والمستمر"], ["Past simple and past continuous", "الماضي البسيط والمستمر"], ["Present perfect: experience and results", "المضارع التام: الخبرة والنتائج"],
+      ["Future forms: will, going to, present continuous", "صيغ المستقبل"], ["Articles: a, an, the, no article", "أدوات التعريف والتنكير"], ["Prepositions of time and place", "حروف الجر للزمان والمكان"],
+      ["Countable and uncountable nouns", "الأسماء المعدودة وغير المعدودة"], ["Comparatives and superlatives", "صيغ المقارنة والتفضيل"], ["Modal verbs: can, must, should, might", "الأفعال الناقصة"],
+      ["Conditionals 0, 1 and 2", "الجمل الشرطية 0 و1 و2"], ["Passive voice in reports", "المبني للمجهول في التقارير"], ["Reported speech", "الكلام المنقول"],
+      ["Phrasal verbs for work", "الأفعال المركبة في العمل"], ["Writing a clear email", "كتابة بريد إلكتروني واضح"], ["Polite requests and replies", "الطلبات والردود المهذبة"],
+      ["Talking about numbers, prices and dates", "التحدث عن الأرقام والأسعار والتواريخ"], ["Meetings: agreeing and disagreeing", "الاجتماعات: الموافقة والاعتراض"], ["Phone and video calls", "المكالمات الهاتفية والمرئية"],
+      ["Describing problems and solutions", "وصف المشكلات والحلول"], ["Negotiating", "التفاوض"], ["Presenting your company", "تقديم شركتك"],
+      ["Writing a report", "كتابة تقرير"], ["Linking words: however, therefore, although", "أدوات الربط"], ["Relative clauses: who, which, that", "جمل الصلة"],
+      ["Conditionals 3 and mixed", "الشرط الثالث والمختلط"], ["Formal vs informal English", "الإنجليزية الرسمية وغير الرسمية"], ["Common mistakes Arabic speakers make", "أخطاء شائعة لدى متحدثي العربية"],
+      ["Pronunciation: stress and linking", "النطق: النبر والوصل"], ["Idioms used at work", "تعابير اصطلاحية في العمل"], ["Job interviews in English", "مقابلات العمل بالإنجليزية"]] },
+  { id: "hydraulics", emoji: "🏗️", topic: "Crane hydraulics", level: "beginner", quizEvery: 4,
+    title: ["Crane hydraulics: 20 lessons", "هيدروليك الرافعات: 20 درسًا"],
+    plan: [["Pressure, flow and force — Pascal's law", "الضغط والتدفق والقوة — قانون باسكال"], ["Hydraulic oil: grades, heat and contamination", "زيت الهيدروليك: الدرجات والحرارة والتلوث"], ["Pumps: gear, vane and piston", "المضخات: التروس والريش والمكابس"],
+      ["Variable displacement and load sensing", "الإزاحة المتغيرة واستشعار الحمل"], ["Directional control valves and spools", "صمامات التحكم الاتجاهي والبكرات"], ["Relief and pressure-reducing valves", "صمامات التنفيس وخفض الضغط"],
+      ["Counterbalance and holding valves", "صمامات الموازنة والتثبيت"], ["Cylinders: lift, telescope, outriggers", "الأسطوانات: الرفع والتلسكوب وأرجل التثبيت"], ["Hydraulic motors: hoist and slew", "المحركات الهيدروليكية: الونش والدوران"],
+      ["Accumulators and filters", "المراكم والمرشحات"], ["Hoses, fittings and seals", "الخراطيم والوصلات والحشوات"], ["Reading a hydraulic circuit diagram", "قراءة مخطط الدائرة الهيدروليكية"],
+      ["Proportional and electro-hydraulic control", "التحكم التناسبي والكهروهيدروليكي"], ["The LMI and hydraulic pressure sensors", "جهاز LMI وحساسات الضغط"], ["Drift and creep: finding internal leaks", "الانزلاق والزحف: اكتشاف التسريب الداخلي"],
+      ["Cavitation and aeration", "التكهف ودخول الهواء"], ["Overheating: causes and fixes", "ارتفاع الحرارة: الأسباب والحلول"], ["Troubleshooting step by step", "تشخيص الأعطال خطوة بخطوة"],
+      ["Maintenance schedule and oil analysis", "جدول الصيانة وتحليل الزيت"], ["Safety: stored energy and lock-out", "السلامة: الطاقة المخزنة والعزل"]] },
+];
+/** A ready course → a course with its plan in the chosen language (no model call). */
+export function readyCourse(id, { lang = "en", time = "08:00" } = {}) {
+  const r = READY_COURSES.find((x) => x.id === id); if (!r) return null;
+  const i = lang === "ar" ? 1 : 0;
+  return { ...newCourse({ topic: r.topic, level: r.level, lang, time, quizEvery: r.quizEvery }), title: r.title[i], plan: r.plan.map((p) => p[i]), ready: r.id };
+}
+
+const LANG_NOTE = { en: "Write in clear, simple English.", ar: "اكتب بالعربية الفصحى المبسطة، واذكر المصطلحات التقنية بالإنجليزية بين قوسين." };
 
 export function planMessages(c) {
   return [
