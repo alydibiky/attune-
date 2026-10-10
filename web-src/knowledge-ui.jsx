@@ -6,6 +6,7 @@ import { Upload, ClipboardPaste, Trash2, RefreshCw, Download, Brain, FileText, G
 import { tr, getLang } from "./i18n.js";
 import * as K from "./knowledge.js";
 import * as C from "./convert.js";
+import { MyPacks } from "./teach-ui.jsx";
 
 const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 inline-flex items-center gap-1.5";
 const primary = btn + " bg-teal-500 text-slate-950";
@@ -86,7 +87,7 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
 
   // packs are shown once (not one row per shard)
   const packIds = new Set(rows.filter((r) => r.pack).map((r) => r.pack));
-  const own = rows.filter((r) => !r.pack);
+  const own = rows.filter((r) => !r.pack && !r.collection);   // sources in one of "My packs" are shown there
   const live = knowledge.adapterRows();
   const packInfo = (id) => { try { return JSON.parse(localStorage.getItem("attune:knowledge:pack:" + id) || "null"); } catch (e) { return null; } };
 
@@ -105,6 +106,9 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
         <p className="text-[12.5px] text-slate-300" data-testid="kn-stats">{tr("{mb} — {c} passages from {s} sources", { mb: mb(stats.bytes), c: stats.chunks, s: stats.sources })}</p>
         <p className="text-[11.5px] text-slate-500">{tr("What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a second and nothing leaves the phone.")}</p>
       </div>
+
+      <MyPacks knowledge={knowledge} flash={flash} readOther={(f) => readSourceFile(f, nativeCall)}
+        saveFile={nativeCall && typeof window !== "undefined" && window.AttuneNative ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null} />
 
       <div className={card + " space-y-2"}>
         <p className="text-[13px] font-semibold text-slate-100">{tr("Add a source")}</p>

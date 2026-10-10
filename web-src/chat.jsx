@@ -38,7 +38,7 @@ import { factsBlock, checkFacts } from "./knowledge.js";
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
-  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2,
+  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2, GraduationCap,
 } from "lucide-react";
 
 const KEY = "attune:chats:v1";
@@ -384,6 +384,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const attached = files[0] || null;
   const setAttached = (v) => setFiles(v ? [v] : []);
   const [teaching, setTeaching] = useState(null);     // { id, corrected, note } — 👎 → the right answer
+  const [toPack, setToPack] = useState(null);         // v6.16 «علّم هذا لنموذجي»: { id, packs: [names], name }
   // 👎 → a correction is checked before it is learned: people can be wrong too.
   const saveTeach = (m, idx, corrected, note, checked) => {
     const u = messages[idx - 1];
@@ -1770,6 +1771,20 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 {m.codeCheck.rounds ? " · " + tr("fixed {n}×", { n: m.codeCheck.rounds }) : ""}</p>
             ) : null}
             {m.error ? <p className="text-sm text-amber-300/90 mt-1">{m.error}</p> : null}
+            {toPack && toPack.id === m.id ? (
+              <div className="mt-2 rounded-xl border border-slate-700 bg-slate-900 p-3 space-y-2" data-testid="teach-to-pack-sheet">
+                <p className="text-[13px] font-semibold text-slate-100">{tr("Save this chat in a pack")}</p>
+                <p className="text-[11.5px] text-slate-400">{tr("The model will read it when it answers — your questions and its answers, kept together.")}</p>
+                {toPack.packs.map((p) => (
+                  <button key={p.name} className="w-full text-start px-3 min-h-[44px] rounded-lg border border-slate-700 text-[13px] text-slate-200" dir="auto" data-testid="teach-to-pack-pick"
+                    onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const r = await api.knowledge.teachChat(c, p.name); setToPack(null); api.flash(tr("Saved in “{n}” ({p} passages)", { n: p.name, p: r.passages })); }}>{p.name}</button>))}
+                <div className="flex gap-2">
+                  <input value={toPack.name} onChange={(e) => setToPack({ ...toPack, name: e.target.value })} placeholder={tr("New pack…")} dir="auto" data-testid="teach-to-pack-new"
+                    className="flex-1 rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-[13px] text-slate-100" />
+                  <button className="px-3 rounded-lg bg-teal-500 text-slate-950 text-xs font-semibold disabled:opacity-40" disabled={!toPack.name.trim()} data-testid="teach-to-pack-save"
+                    onClick={async () => { const c = chats.find((x) => x.id === activeId); if (!c) return; const n = toPack.name.trim(); const r = await api.knowledge.teachChat(c, n); setToPack(null); api.flash(tr("Saved in “{n}” ({p} passages)", { n, p: r.passages })); }}>{tr("Save")}</button>
+                </div>
+              </div>) : null}
             {teaching && teaching.id === m.id ? (
               <div className="mt-2 rounded-xl border border-sky-900 bg-sky-500/5 p-3" data-testid="teach-form">
                 <p className="text-[12px] text-sky-200">{tr("What should it have said? Attune double-checks your correction first, and learns it only if it holds up.")}</p>
@@ -1843,6 +1858,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 <button onClick={() => speak(m)} className={`p-2 ${speakingId === m.id ? "text-teal-300" : ""}`} title={tr("Read aloud")}><Volume2 size={15} /></button>
                 <button onClick={() => share(m)} className="p-2" title={tr("Share")}><Share2 size={15} /></button>
                 <button onClick={() => { api.remember({ kind: "note", title: m.text.slice(0, 60), text: m.text, output: "", tags: ["saved"] }); api.flash(tr("Saved to Memory")); }} className="p-2" title={tr("Save to Memory")}><Save size={15} /></button>
+                {api.knowledge && api.knowledge.teachChat ? <button data-testid="teach-to-pack" className="p-2" title={tr("Teach this to my model")} aria-label={tr("Teach this to my model")}
+                  onClick={async () => setToPack(toPack && toPack.id === m.id ? null : { id: m.id, packs: await api.knowledge.myPacks(), name: "" })}><GraduationCap size={15} /></button> : null}
                 {api.teach ? <button onClick={() => setTeaching(teaching && teaching.id === m.id ? null : { id: m.id, corrected: "", note: "" })} data-testid="teach"
                   className={`p-2 ${m.taught ? "text-sky-300" : ""}`} title={tr("Wrong? Teach the right answer")}><ThumbsDown size={15} /></button> : null}
                 {m.stats && m.stats.tps && !(m.stats.tokens && m.stats.tokens < 16) ? <span className="text-[10px] text-slate-600 ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}

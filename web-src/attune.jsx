@@ -44,6 +44,8 @@ import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.j
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
+import { loadOffPacks, teachChat } from "./teach-ui.jsx";
+import * as TEACH from "./teach.js";
 import * as KNOW from "./knowledge.js";
 import { kindOf as mindKindOf } from "./mind.js";
 import { CVPage } from "./cv-ui.jsx";
@@ -7550,7 +7552,9 @@ export default function App() {
   const saveKn = (p) => { setKnPrefs(p); try { localStorage.setItem(KN_KEY, JSON.stringify(p)); } catch (e) {} };
   const knowledge = useMemo(() => {
     let store; try { store = typeof indexedDB !== "undefined" ? KNOW.idbStore() : KNOW.memoryStore(); } catch (e) { store = KNOW.memoryStore(); }
-    return KNOW.createKnowledge(store, { adapters: [KNOW.mindAdapter(() => memRef.current, mindKindOf)] });
+    const k0 = KNOW.createKnowledge(store, { adapters: [KNOW.mindAdapter(() => memRef.current, mindKindOf)] });
+    k0.offPacks = loadOffPacks();   // v6.16: "My packs" switched off stay off
+    return k0;
   }, []);
   knowledge.adapters.forEach((a) => { a.enabled = knPrefs.adapters[a.id] !== false; });
   if (NATIVE && NATIVE.knowSearch) knowledge.packSearch = KNOW.phonePackSearch(nativeCall);   // v6.16: the public packs, searched on the phone
@@ -8894,7 +8898,8 @@ export default function App() {
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     withRecords,
-    knowledge: { on: () => !!knPrefs.on, find: (q, o) => knowledge.find(q, o), packs: () => !!knowledge.packSearch },   // v6.20 Knowledge (+ v6.16 phone packs)
+    knowledge: { on: () => !!knPrefs.on, find: (q, o) => knowledge.find(q, o), packs: () => !!knowledge.packSearch,
+      myPacks: () => TEACH.myPacks(knowledge), teachChat: (chat, name) => teachChat(knowledge, chat, name) },   // v6.16 «علّم نموذجك»   // v6.20 Knowledge (+ v6.16 phone packs)
     lastStats: () => LAST_STATS,
     contextTokens: () => { const m = String((engineInfo && engineInfo.settings) || "").match(/context (\d+)/); return m ? Number(m[1]) : 0; },
     remember, flash,
