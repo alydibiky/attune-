@@ -96,6 +96,8 @@ with sync_playwright() as p:
     # ---- (3) annotations: select → highlight, note, bookmark
     page.fill("[data-testid=pdf-page-input]", "2"); page.wait_for_selector("[data-testid=pdf-textlayer] [data-w='8']", timeout=4000)
     select_words(page, 3, 8)        # "client shall pay a daily rate"
+    try: page.wait_for_function("() => (document.querySelector('[data-testid=pdf-sel-bar]') || {}).innerText.includes('client shall pay a daily rate')", timeout=2000)
+    except Exception: pass
     check("client shall pay a daily rate" in page.locator("[data-testid=pdf-sel-bar]").inner_text(), "selecting words on the page picture gives their text")
     page.click("[data-testid=pdf-hl-green]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=pdf-user-hl]").count() == 1, "a green highlight is drawn on the page")

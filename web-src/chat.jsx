@@ -34,6 +34,7 @@ const chipFade = () => { const side = typeof document !== "undefined" && documen
 const LEVEL_NAMES = Object.fromEntries(Object.entries(LEVELS).map(([k, v]) => [k, v.name]));
 import { compactSystem, HONESTY_RULE, NO_CODE_RULE, codeInsteadOfAnswer, reread, partsOf, everyPart, sandwich } from "./boost.js";
 import { tipsBlock } from "./tips.js";
+import { factsBlock, checkFacts } from "./knowledge.js";
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
@@ -1118,12 +1119,19 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         if (!useThink && (looksLikeReasoning(typed) || looksLikeMathProblem(typed))) content = reread(content, typed);
       }
       if (o.queuedDuring) content = "(I sent this while you were still writing your last answer. If it adds to or changes that answer, write the complete UPDATED answer with the change included — don't just acknowledge it. If it is a new question, simply answer it.)\n\n" + content;
+      // v6.20 Knowledge: a lookup question gets the person's own facts that fit it (word index, < 100 ms), with tags to cite
+      let knHits = null;
+      if (answer == null && typed && !sources && !fileAtt && !pic && !longMsg && api.knowledge && api.knowledge.on() && !looksLikeCodeTask(typed) && !looksLikeMathProblem(typed)) {
+        try { knHits = await api.knowledge.find(typed); } catch (e) { knHits = null; }
+        if (runRef.current !== run) return;
+        if (knHits && knHits.length) { content = factsBlock(knHits, typed) + content; extra.knowledgeUsed = knHits.length; }
+      }
       content += langHint(typed);
       const plain = answer == null;   // written by the model directly (not checked by code / votes)
       if (answer == null) try {
         // Copying from sources, a file or project knowledge: no anti-repeat
         // penalties (they mangled copied numbers). (v5.17)
-        const copy = !!sources || !!fileAtt || !!(spaceRef.current.project && (spaceRef.current.project.knowledge || []).length);
+        const copy = !!sources || !!fileAtt || !!(knHits && knHits.length) || !!(spaceRef.current.project && (spaceRef.current.project.knowledge || []).length);
         // a research report gets the level's long-answer budget (v5.23)
         const longRep = (research || tplUsed) && !useThink && api.power ? { maxTokens: api.power().longTokens } : {};
         // v5.33: a web answer copies figures — near-greedy sampling (0.1) keeps a small model from
@@ -1354,6 +1362,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           }
         }
       }
+      // v6.20 Knowledge: the [K1] tags become chips — only for passages the answer really uses (knowledge.js checkFacts)
+      if (knHits && knHits.length && answer) { const kc = checkFacts(answer, knHits); answer = kc.text; extra.kchips = kc.chips; }
       if (raf) clearTimeout(raf);
       patchMsg(cid, aiId, { text: answer, streaming: false, phase: "", sources, via, secs: Math.round((Date.now() - t0) / 1000), stats: st, ...extra });
       api.spend();
@@ -1747,6 +1757,17 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                   <button onClick={() => setTeaching(null)} className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 text-xs">{tr("Cancel")}</button>
                   {teaching.checking ? <span className="text-[11px] text-sky-300" data-testid="teach-step">{teaching.step || tr("Double-checking your correction…")}</span> : null}
                 </div>)}
+              </div>
+            ) : null}
+            {m.kchips && m.kchips.length ? (
+              <div className="mt-2" data-testid="kn-chips">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] text-slate-500">{tr("From your Knowledge")}:</span>
+                  {m.kchips.map((c, i) => <button key={i} onClick={() => setOpenThought((o) => ({ ...o, ["kn" + m.id]: o["kn" + m.id] === i + 1 ? 0 : i + 1 }))} data-testid="kn-chip" dir="auto"
+                    className="max-w-[14rem] truncate px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-200 text-[12px]">{c.title || tr("Note")}{c.page ? " · " + tr("p. {p}", { p: c.page }) : ""}</button>)}
+                </div>
+                {m.kchips.some((c) => c.note) ? <p className="mt-1 text-[11.5px] text-amber-300" data-testid="kn-notice">{tr(m.kchips.find((c) => c.note).note)}</p> : null}
+                {openThought["kn" + m.id] && m.kchips[openThought["kn" + m.id] - 1] ? <p className="mt-1 text-[12px] text-slate-400 border-s-2 border-teal-800 ps-2 whitespace-pre-wrap" dir="auto" data-testid="kn-passage">{m.kchips[openThought["kn" + m.id] - 1].text}</p> : null}
               </div>
             ) : null}
             {m.sources && m.sources.length ? (

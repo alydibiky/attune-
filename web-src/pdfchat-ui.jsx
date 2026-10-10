@@ -55,7 +55,7 @@ const Boxes = ({ rects, fill, testid, ring }) => (rects || []).map((r, i) => <di
 let LIB = null;
 const lib = () => LIB || (LIB = R.library(R.idbKV("attune-reader")));
 
-export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos, nativeCall, initialFile, clearInitial, onAddToKnowledge }) {
+export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos, nativeCall, initialFile, clearInitial, addToKnowledge }) {
   const [doc, setDoc] = useState(null);                 // { id, name, kind, pages, index, count, b64?, scans, loaded }
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
@@ -435,7 +435,8 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
       <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-800">
         <button onClick={close} className="p-1.5 -ms-1 text-slate-300" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
         <div className="min-w-0 flex-1"><p className="text-[14px] font-semibold text-white truncate" data-testid="pdf-name">{doc.name}</p><p className="text-[11.5px] text-slate-500">{doc.count} {tr("pages")}{doc.scans ? " · " + tr("{n} scanned", { n: doc.scans }) : ""}{partial ? <span data-testid="pdf-loading"> · {tr("reading {a} of {n}…", { a: doc.loaded, n: doc.count })}</span> : null}</p></div>
-        {onAddToKnowledge ? <button onClick={() => onAddToKnowledge({ id: doc.id, name: doc.name, kind: doc.kind, count: doc.count, pages: doc.pages })} className={tool} aria-label={tr("Add to Knowledge")} title={tr("Add to Knowledge")} data-testid="pdf-add-knowledge"><Brain size={14} /></button> : null}
+        {addToKnowledge ? <button onClick={async () => { if (doc.inKnowledge) return; try { const r = await addToKnowledge({ kind: "doc", title: doc.name, pages: doc.index.pages }); setDoc((d) => ({ ...d, inKnowledge: true })); flash && flash(tr("Added to Knowledge: {n} passages", { n: r.chunks })); } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 160)); } }}
+          data-testid="pdf-add-knowledge" className="px-2 py-1.5 rounded-lg border border-slate-700 text-[12px] text-slate-200 disabled:opacity-50" disabled={!!doc.inKnowledge}>{doc.inKnowledge ? tr("In Knowledge") : tr("Add to Knowledge")}</button> : null}
         <div className="flex rounded-lg border border-slate-700 overflow-hidden">{[["chat", tr("Chat")], ["read", tr("Read")]].map(([k, l]) => <button key={k} onClick={() => setTab(k)} data-testid={"pdf-tab-" + k} className={"px-3 py-1.5 text-[12.5px] " + (tab === k ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-300")}>{l}</button>)}</div>
       </div>
       {err ? <p className="px-3 py-1.5 text-[12px] text-amber-300 border-b border-slate-800" data-testid="pdfchat-err">{err}</p> : null}

@@ -1,0 +1,49 @@
+name: Build a knowledge pack
+
+# v6.20 — Knowledge: public packs the app downloads on demand (More → Knowledge → Public packs). Built by tools/build_know_pack.py.
+#   world     "World facts"            CIA World Factbook (public domain)                → release know-world-v1
+#   egy-laws  "Egyptian laws (Arabic)" dataflare/egypt-legal-corpus (MIT, as declared)   → release know-egy-laws-v1
+# No encyclopedia text (Ali's rule). DO NOT RUN until the lead / Ali says so: it never runs by itself (manual
+# workflow_dispatch only) and the job only runs when confirm = yes is typed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      pack:
+        description: "Which pack: world or laws"
+        default: "world"
+      budget_mb:
+        description: "laws: text budget in MB"
+        default: "15"
+      confirm:
+        description: "Approved to publish? (type yes)"
+        default: "no"
+
+permissions:
+  contents: write
+
+jobs:
+  pack:
+    if: github.event.inputs.confirm == 'yes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          pip install pyarrow
+          python3 tools/build_know_pack.py "${{ github.event.inputs.pack }}" out --budget-mb "${{ github.event.inputs.budget_mb }}" | tee build.log
+          ls -la out; du -sh out
+      - name: Summary
+        run: |
+          { echo "## Knowledge pack: ${{ github.event.inputs.pack }}"; echo; tail -1 build.log; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish the release (replaced each time)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event.inputs.pack }}" = "world" ]; then tag=know-world-v1; title="World facts"; notes="CIA World Factbook (public domain), via github.com/factbook/factbook.json."
+          else tag=know-egy-laws-v1; title="Egyptian laws (Arabic)"; notes="Egyptian Legal Corpus by Dataflare (huggingface.co/datasets/dataflare/egypt-legal-corpus), MIT as declared. Not legal advice; may be out of date; check the official gazette."; fi
+          gh release delete "$tag" --cleanup-tag --yes 2>/dev/null || true
+          gh release create "$tag" out/* --title "Knowledge pack: $title" --notes "$notes Built $(date -u +%F)." --prerelease

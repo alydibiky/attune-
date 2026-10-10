@@ -42,6 +42,9 @@ import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
 import { findPlaces } from "./mapsearch.js";
+import { KnowledgePage } from "./knowledge-ui.jsx";
+import * as KNOW from "./knowledge.js";
+import { kindOf as mindKindOf } from "./mind.js";
 import { CVPage } from "./cv-ui.jsx";
 import * as USK from "./userskills.js";
 try { USK.seedOnce(); } catch (e) {}   // v6.12: the engineering skill, added once (it can be switched off or deleted)
@@ -7317,7 +7320,7 @@ function tierOfInstalled(m) {
   return MODEL_TIERS.find((x) => x.realName && !!x.fast === fast && String(m.label || "").toLowerCase().replace(/[\s-]+/g, "").includes(x.realName.toLowerCase().replace(/[\s-]+/g, ""))) || null;
 }
 
-const MODE_TITLES = { pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const MODE_TITLES = { knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Memory", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
@@ -7350,6 +7353,7 @@ const MORE_TOOLS = [
   ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
   ["shelf", "Shelf", "Your notes, in books", BookOpen],
   ["memory", "Mind", "Everything you keep — it files itself", Brain],
+  ["knowledge", "Knowledge", "Your facts — Chat looks them up before it answers", Database],
   ["cycle", "Cycle", "Period tracker", Droplet], ["travel", "Travel", "Country packs & phrases", Plane],
   ["map", "Maps", "Offline places", MapPin], ["field", "Site reports", "Incident & maintenance docs", HardHat],
   ["fleet", "Fleet", "Equipment health", Gauge], ["improve", "Improve a prompt", "For ChatGPT, Claude, Gemini…", Wand2],
@@ -7363,7 +7367,7 @@ const MORE_TOOLS = [
 const MORE_GROUPS = [
   ["Create & learn", ["instant", "studio", "assistants", "skills", "projects", "artifacts", "code", "learn", "news"]],
   ["Work & business", ["slides", "xray", "convert", "pdfchat", "video", "cv", "business", "crane", "field", "fleet", "reminders"]],
-  ["Your life", ["fit", "deal", "shelf", "memory", "map", "travel", "cycle"]],
+  ["Your life", ["fit", "deal", "shelf", "memory", "knowledge", "map", "travel", "cycle"]],
   ["Prompts for other AIs", ["improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
 
@@ -7537,6 +7541,17 @@ export default function App() {
   const [memory, setMemory] = useState(() => {
     try { return JSON.parse(localStorage.getItem(MEM_KEY) || "[]"); } catch (e) { return []; }
   });
+  // v6.20 Knowledge (knowledge.js): stored sources in IndexedDB + live adapters (Mind notes now; Shelf notes plug in the same way:
+  // an adapter { id, label, version(), items() } added to this list)
+  const memRef = useRef(memory); memRef.current = memory;
+  const KN_KEY = "attune:knowledge:v1";
+  const [knPrefs, setKnPrefs] = useState(() => { try { return { on: true, adapters: {}, ...JSON.parse(localStorage.getItem(KN_KEY) || "{}") }; } catch (e) { return { on: true, adapters: {} }; } });
+  const saveKn = (p) => { setKnPrefs(p); try { localStorage.setItem(KN_KEY, JSON.stringify(p)); } catch (e) {} };
+  const knowledge = useMemo(() => {
+    let store; try { store = typeof indexedDB !== "undefined" ? KNOW.idbStore() : KNOW.memoryStore(); } catch (e) { store = KNOW.memoryStore(); }
+    return KNOW.createKnowledge(store, { adapters: [KNOW.mindAdapter(() => memRef.current, mindKindOf)] });
+  }, []);
+  knowledge.adapters.forEach((a) => { a.enabled = knPrefs.adapters[a.id] !== false; });
   const [commits, setCommits] = useState(() => {
     try { return JSON.parse(localStorage.getItem("attune:commits:v1") || "[]").filter((c) => !(c && /^\s*(please\s+)?(save|remember|note|keep|store)\b/i.test(String(c.action || "")))); } catch (e) { return []; }   // v6.12: notes to self saved as "promises" before the gate knew better
   });
@@ -8849,6 +8864,7 @@ export default function App() {
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     withRecords,
+    knowledge: { on: () => !!knPrefs.on, find: (q) => knowledge.find(q) },   // v6.20 Knowledge
     lastStats: () => LAST_STATS,
     contextTokens: () => { const m = String((engineInfo && engineInfo.settings) || "").match(/context (\d+)/); return m ? Number(m[1]) : 0; },
     remember, flash,
@@ -9583,8 +9599,12 @@ export default function App() {
             nativeCall={NATIVE && NATIVE.news ? nativeCall : null}
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, onToken: o.onToken })} />
+        ) : mode === "knowledge" ? (
+          <KnowledgePage knowledge={knowledge} on={!!knPrefs.on} setOn={(v) => saveKn({ ...knPrefs, on: v })} flash={flash} nativeCall={NATIVE ? nativeCall : null}
+            adapterOn={knPrefs.adapters} setAdapterOn={(id, v) => { saveKn({ ...knPrefs, adapters: { ...knPrefs.adapters, [id]: v } }); }}
+            packText={NATIVE && NATIVE.knowPackText ? async (tag, name) => { const r = await nativeCall("knowPackText", { tag, name }); return (r && r.text) || ""; } : null} />
         ) : mode === "pdfchat" ? (
-          <PdfChatPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} canReadPhotos={!!LocalEngine.vision} nativeCall={NATIVE ? nativeCall : null}
+          <PdfChatPage flash={flash} addToKnowledge={async (d) => { const r = await knowledge.add(d); return r; }} openEngine={() => setShowEngine(true)} modelReady={modelUsable} canReadPhotos={!!LocalEngine.vision} nativeCall={NATIVE ? nativeCall : null}
             initialFile={pdfIn} clearInitial={() => setPdfIn(null)}
             llm={(messages, a, b) => { const image = b ? a : null, o = b || a || {}; return callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false }); }} />
         ) : mode === "cv" ? (
