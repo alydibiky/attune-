@@ -1182,18 +1182,30 @@ def build_coding(a):
 
 # ---- turath books in general (the fiqh pack's method): found by exact title, read whole, titled with chapter, volume and page ------------
 def turath_probe(B):
-    """When titles aren't found: print where turath's web app gets its list of books (its script's turath URLs and API paths),
-    so the next build can look titles up in that list instead of the full-text search."""
+    """When titles aren't found: try the ways turath might look books up by title, and print what each answers (status and
+    the start of the reply), so the next build uses the one that works."""
+    import urllib.request, urllib.parse
+    q = urllib.parse.quote("عمدة الفقه")
+    tries = [f"https://api.turath.io/search?q={q}&ver=3", f"https://api.turath.io/search?q=%22{q}%22&ver=3&precision=1",
+             f"https://api.turath.io/book_search?q={q}", f"https://api.turath.io/books?q={q}", f"https://api.turath.io/search?q={q}&type=book&ver=3",
+             f"https://api.turath.io/titles?q={q}", "https://files.turath.io/data-v3.json", "https://files.turath.io/data.json",
+             "https://files.turath.io/books.json", "https://api.turath.io/book?id=151&include=info&ver=3", "https://app.turath.io/"]
+    for u in tries:
+        try:
+            with urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "attune-know-pack"}), timeout=60) as r:
+                body = r.read(); txt = body[:600].decode("utf-8", "replace")
+                keys = ""
+                try: j = json.loads(body); keys = list(j)[:12] if isinstance(j, dict) else f"list[{len(j)}]"
+                except Exception: pass
+                print(f"turath probe {u} → {r.status}, {len(body)} bytes, keys {keys}: {txt!r}")
+        except Exception as e: print(f"turath probe {u} → {e}")
+        time.sleep(1.5)
     try:
         html = B.get("https://app.turath.io/", 60).decode("utf-8", "replace")
-        srcs = re.findall(r'(?:src|href)="([^"]+\.js)"', html)
-        print("turath probe: scripts", srcs[:10])
-        seen = set()
-        for src in srcs[:6]:
-            js = B.get(src if src.startswith("http") else "https://app.turath.io" + ("" if src.startswith("/") else "/") + src, 60).decode("utf-8", "replace")
-            for u in re.findall(r'https?://[a-z0-9.-]*turath\.io[^"\'`\s)]*', js) + re.findall(r'["\'`](/(?:api/)?[a-z_]+(?:/[a-z_]+)?)\?', js):
-                if u not in seen: seen.add(u)
-        print("turath probe: URLs and paths:", sorted(seen)[:80])
+        for src in re.findall(r'(?:src|href)="([^"]+\.js)"', html)[:3]:
+            js = B.get(src, 60).decode("utf-8", "replace")
+            print("turath probe js", src, len(js), sorted(set(re.findall(r'[a-z0-9.-]*(?:turath|nuqayah)[a-z0-9./_-]*', js)))[:40],
+                  sorted(set(re.findall(r'["\'`]/[a-z_]{3,20}["\'`?]', js)))[:60], [js[m.start() - 80:m.end() + 80] for m in re.finditer(r"search|book", js)][:6])
     except BaseException as e: print("turath probe failed", e)
 
 def turath_rows(B, specs):
