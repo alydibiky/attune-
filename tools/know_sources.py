@@ -1637,7 +1637,7 @@ def wd_query(cls, prop, kind):
   FILTER NOT EXISTS {{ ?st pq:P582 ?ended }}
   OPTIONAL {{ ?st pq:P585 ?when }}
   ?st prov:wasDerivedFrom ?ref .
-  {{ ?ref pr:P854 ?url . FILTER(!REGEX(STR(?url), "wiki(pedia|data|media)\\.org", "i")) }}
+  {{ ?ref pr:P854 ?url . FILTER(!CONTAINS(LCASE(STR(?url)), "wikipedia.org") && !CONTAINS(LCASE(STR(?url)), "wikidata.org") && !CONTAINS(LCASE(STR(?url)), "wikimedia.org")) }}
   UNION {{ ?ref pr:P248 ?stated . FILTER NOT EXISTS {{ ?stated wdt:P31 wd:Q10876391 }} ?stated rdfs:label ?statedL FILTER(LANG(?statedL) = 'en') }}
   ?item rdfs:label ?en FILTER(LANG(?en) = 'en')
   OPTIONAL {{ ?item rdfs:label ?ar FILTER(LANG(?ar) = 'ar') }}

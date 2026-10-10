@@ -374,6 +374,18 @@ check(lt_t == "7.2: Derivatives of Sine and Cosine" and "\\frac{d}{dx}\\sin(x) =
 check(S.libretexts_links(lt, S.LIBRETEXTS[0][1]) == ["https://math.libretexts.org/Bookshelves/Calculus/Applied_Calculus_(Calaway_Hoffman_and_Lippman)/07:_Trig/7.03:_More"], "Calculus (LibreTexts): only the book's own pages are followed")
 pb = S.pressbooks_text('<h2>2.3 Derivatives of Trigonometric Functions</h2><p>We have <img class="ql-img-inline-formula" src="x.png" alt="\\frac{d}{dx}\\sin(x) = \\cos(x)" /> for every x.</p><script>bad()</script>')
 check("\\(\\frac{d}{dx}\\sin(x) = \\cos(x)\\)" in pb and "bad()" not in pb and pb.startswith("2.3 Derivatives"), "Calculus (Pressbooks): a formula picture becomes its LaTeX: " + pb[:90])
+try:
+    from rdflib.plugins.sparql import prepareQuery
+    PFX = ("PREFIX wd: <http://www.wikidata.org/entity/> PREFIX wdt: <http://www.wikidata.org/prop/direct/> PREFIX p: <http://www.wikidata.org/prop/> "
+           "PREFIX ps: <http://www.wikidata.org/prop/statement/> PREFIX psv: <http://www.wikidata.org/prop/statement/value/> PREFIX pq: <http://www.wikidata.org/prop/qualifier/> "
+           "PREFIX pr: <http://www.wikidata.org/prop/reference/> PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX wikibase: <http://wikiba.se/ontology#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> ")
+    badq = []
+    for nm, cls, props, _ in S.WD_SETS:
+        for prop, label, kind in props:
+            try: prepareQuery(PFX + S.wd_query(cls, prop, kind))
+            except Exception as e: badq.append(f"{nm} {label}: {e}")
+    check(not badq, "Wikidata: every query is valid SPARQL (a bad escape had made all of them fail): " + "; ".join(badq)[:300])
+except ImportError: print("(rdflib not installed — the SPARQL syntax check is skipped)")
 hd = S.hadith_rows("bukhari", "صحيح البخاري", {"hadiths": [{"hadithnumber": 834, "text": "ظُلْمًا كَثِيرًا \ufffd\ufffdَلاَ يَغْفِرُ", "grades": []}]})
 check(S.hadith_rows("nawawi", "الأربعون النووية", {"hadiths": [{"hadithnumber": 6, "text": "أَلَا وَهِيَ الْقَلْبُ .<br>[رَوَاهُ الْبُخَارِيُّ]", "grades": []}]})[0]["x"].startswith("أَلَا وَهِيَ الْقَلْبُ .\n[رَوَاهُ"), "Quality: no HTML left in a hadith")
 check("\ufffd" not in hd[0]["x"] and "[…]" in hd[0]["x"] and "الدرر السنية" in hd[0]["x"], "Quality: a letter damaged in the hadith source is marked, never guessed, and the reader is sent to Dorar")
