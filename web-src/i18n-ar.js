@@ -2536,7 +2536,7 @@ export const AR = {
   "tap to open full screen": "اضغط للفتح بملء الشاشة",
   "Assistants": "المساعدون",
   "Projects": "المشاريع",
-  "Artifacts": "الأعمال",
+  "Artifacts": "مساحة العمل",
   "Experts that follow your instructions": "خبراء يتّبعون تعليماتك",
   "Chats, files & instructions together": "محادثات وملفات وتعليمات معًا",
   "Saved pages, documents & programs": "صفحات ومستندات وبرامج محفوظة",

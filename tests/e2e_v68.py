@@ -136,7 +136,7 @@ with sync_playwright() as p:
     page.locator("nav button:has-text('عقلي')").click()
     page.wait_for_selector("[data-testid=mind-page]", timeout=5000)
     t = page.locator("[data-testid=mind-page]").inner_text()
-    check("عقلي" in t and "احفظ" in t, "Mind is in Arabic")
+    check("عقلي" in t and "حفظ" in t, "Mind is in Arabic")
     check(not real_errors(errors), "no errors in Arabic (%s)" % real_errors(errors)[:2])
     ctx.close()
     br.close()
