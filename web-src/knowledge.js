@@ -271,7 +271,8 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
       if (!(o && o.solve) && !wantsFacts(question)) return [];
       const idx = await K.ensure();
       let pack = [];
-      if (K.packSearch) { try { pack = (await K.packSearch(question)) || []; } catch (e) { pack = []; } }
+      const searched = withEnglishPlaces(question);
+      if (K.packSearch) { try { pack = (await K.packSearch(searched)) || []; } catch (e) { pack = []; } }
       if (K.liveSearch) { try { pack = ((await K.liveSearch(question)) || []).concat(pack); } catch (e) { /* offline or Dorar unreachable: the packs still answer */ } }
       if (!pack.length) return findFacts(idx, question, o);
       // passages the phone ranked (they carry its score) keep that order; any others (Dorar's live answers) are ranked here with your own
@@ -280,7 +281,7 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
         ...(p.notice ? { note: p.notice, note_ar: p.notice_ar || "" } : {}) });
       const own = idx.N ? rank(idx, question, { k: 9 }).map((h) => h.chunk) : [];
       const first = loose.length ? findFacts(indexChunks(own.concat(loose.map(asChunk))), question, o) : findFacts(idx, question, { ...(o || {}), k: 2 });
-      return scored.length ? mergePackFacts(first, scored, { ...(o || {}), question }) : first;
+      return scored.length ? mergePackFacts(first, scored, { ...(o || {}), question: searched }) : first;
     },
     async stats() {
       const s = await store.sources(); const rows = K.adapterRows();
@@ -321,6 +322,48 @@ export function excerpt(text, question, max = 650) {
   return (a > 0 ? "… " : "") + sents.slice(a, b + 1).join(" ") + (b < sents.length - 1 ? " …" : "");
 }
 
+/* v6.16c: the place and data packs are in English, so an Arabic question about a country («ما هي عاصمة كازاخستان؟») found
+   nothing. Country names in Arabic come from the phone's own list (Intl.DisplayNames, every ISO country); when one is in the
+   question, its English name and the English for the geography words asked about are added to the words searched. */
+let AR_COUNTRIES = null;
+const normAr = (s) => String(s || "").replace(/[\u064B-\u0652\u0670\u0640]/g, "").replace(/[إأآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه");
+function arCountries() {
+  if (AR_COUNTRIES) return AR_COUNTRIES;
+  AR_COUNTRIES = [];
+  try {
+    const ar = new Intl.DisplayNames(["ar"], { type: "region" }), en = new Intl.DisplayNames(["en"], { type: "region" });
+    const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (const a of A) for (const b of A) {
+      const c = a + b; let n, e;
+      try { n = ar.of(c); e = en.of(c); } catch (x) { continue; }
+      if (!n || n === c || !e || e === c || /[A-Za-z]/.test(n)) continue;
+      AR_COUNTRIES.push([normAr(n).replace(/^ال/, ""), e]);
+    }
+    // the short names people actually type
+    for (const [n, e] of [["امارات", "United Arab Emirates"], ["سعوديه", "Saudi Arabia"], ["امريكا", "United States"], ["الولايات المتحده", "United States"],
+      ["بريطانيا", "United Kingdom"], ["انجلترا", "United Kingdom"], ["كوريا", "South Korea"], ["هولندا", "Netherlands"], ["التشيك", "Czechia"], ["فلسطين", "Palestinian Territories"]])
+      AR_COUNTRIES.push([normAr(n).replace(/^ال/, ""), e]);
+    AR_COUNTRIES.sort((x, y) => y[0].length - x[0].length);
+  } catch (x) { /* no Intl region names: the question is searched as typed */ }
+  return AR_COUNTRIES;
+}
+const GEO_AR = [[/عاصم/, "capital"], [/عمل[هة]/, "currency"], [/سكان/, "population"], [/مساح/, "area"], [/(اعلي|أعلى) (قم|نقط|جبل)/, "highest point"],
+  [/(ادني|أدنى|اخفض|أخفض) نقط/, "lowest point"], [/مناخ/, "climate"], [/لغ[هة]/, "languages"], [/مفتاح|كود الاتصال|رمز الاتصال/, "calling code"],
+  [/ناتج|اقتصاد/, "GDP"], [/تضخم/, "inflation"], [/حدود|جيران|يجاور/, "neighbours"]];
+const AR_NOT_PLACE = new Set(["مغرب"]);   // «صلاة المغرب» is the sunset prayer, not Morocco
+export function withEnglishPlaces(q) {
+  if (!/[\u0600-\u06FF]/.test(q || "")) return q;
+  const nq = normAr(q), add = [];
+  const words = " " + nq.replace(/[^\u0621-\u064A ]+/g, " ").replace(/\s+/g, " ") + " ";
+  for (const [n, e] of arCountries()) {
+    if (n.length < 3 || AR_NOT_PLACE.has(n) || add.includes(e)) continue;
+    if (new RegExp(" (ال|وال|بال|لل|و|ب|ل|ف)?" + n + " ").test(words)) add.push(e);   // whole words: «اليمين» is not «اليمن»
+  }
+  if (!add.length) return q;
+  for (const [rx, e] of GEO_AR) if (rx.test(nq) || rx.test(q)) add.push(e);
+  return q + " (" + add.join(" ") + ")";
+}
+
 export function mergePackFacts(own, pack, o = {}) {
   const k = (o && o.k) || 3, budget = (o && o.budget) || 3200;
   const top = pack.length ? Number(pack[0].score) || 1 : 1;
@@ -329,8 +372,13 @@ export function mergePackFacts(own, pack, o = {}) {
   const keep = pack.filter((p, i) => i === 0 || ((Number(p.score) || 0) >= top * 0.45 && (p.cov == null || topCov == null || p.cov >= Math.max(0.5, topCov * 0.8))));
   const out = (own || []).map((h) => ({ chunk: h.chunk, score: h.score }));
   let used = out.reduce((t, h) => t + String(h.chunk.text || "").length, 0);
+  const per = {};
   for (const p of keep) {
     if (out.length >= k) break;
+    // v6.16c: one dictionary entry is enough — «Newton's second law», «second law of motion»… filled every slot and pushed the
+    // physics textbook out
+    if (p.pack === "dictionary" && per.dictionary) continue;
+    per[p.pack] = (per[p.pack] || 0) + 1;
     const text = excerpt(p.text, (o && o.question) || "", 700), room = budget - used;
     if (room < 200 && out.length) break;
     const chunk = { id: p.id, src: "pack:" + p.pack, title: p.title || "", page: 0, text: text.length > room ? text.slice(0, Math.max(200, room)) + "…" : text, kind: "pack", url: p.url || "", pack: p.pack,
@@ -358,8 +406,8 @@ export const CATALOG = [
     about: "Every city over 15,000 people (with Arabic names), each country's capital, currency, calling code and languages — GeoNames.",
     about_ar: "كل مدينة يزيد سكانها على ١٥ ألفًا (بأسمائها العربية)، وعاصمة كل دولة وعملتها ورمز الاتصال ولغاتها — من جيونيمز." },
   { id: "math", name: "Mathematics", name_ar: "الرياضيات", size: "≈ 14 MB", size_ar: "≈ ١٤ ميجابايت", license: "CC BY 4.0 (OpenStax, each book at its last CC BY edition) — commercial use allowed", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (أوبن ستاكس، كل كتاب بآخر إصدار بهذه الرخصة) — يُسمح بالاستخدام التجاري",
-    about: "University and school math textbooks — calculus 1–3, algebra and trigonometry, precalculus, statistics, algebra — with every formula and worked example, so Chat can solve step by step.",
-    about_ar: "كتب الرياضيات الجامعية والمدرسية — التفاضل والتكامل ١–٣، والجبر وحساب المثلثات، وما قبل التفاضل، والإحصاء — بكل الصيغ والأمثلة المحلولة، ليحل المحادثة المسائل خطوة بخطوة." },
+    about: "University and school math textbooks — algebra and trigonometry, precalculus, college algebra, statistics, prealgebra to intermediate algebra — with every formula and worked example, so Chat can solve step by step.",
+    about_ar: "كتب الرياضيات الجامعية والمدرسية — الجبر وحساب المثلثات، وما قبل التفاضل، والجبر الجامعي، والإحصاء، والجبر من التمهيدي إلى المتوسط — بكل الصيغ والأمثلة المحلولة، ليحل المحادثة المسائل خطوة بخطوة." },
   { id: "physics", name: "Physics", name_ar: "الفيزياء", size: "≈ 11 MB", size_ar: "≈ ١١ ميجابايت", license: "CC BY 4.0 (OpenStax, each book at its last CC BY edition) — commercial use allowed", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (أوبن ستاكس، كل كتاب بآخر إصدار بهذه الرخصة) — يُسمح بالاستخدام التجاري",
     about: "University Physics 1–3, College Physics, high-school Physics and Astronomy — laws, formulas and worked examples.",
     about_ar: "الفيزياء الجامعية ١–٣، وفيزياء الكلية، والفيزياء المدرسية، والفلك — القوانين والصيغ والأمثلة المحلولة." },

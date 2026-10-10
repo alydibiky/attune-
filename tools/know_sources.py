@@ -682,6 +682,17 @@ def epa_rows(csv_text):
 FUEL = {"petrol": "petrol", "diesel": "diesel", "electric": "electric", "petrol/electric": "plug-in hybrid (petrol)", "diesel/electric": "plug-in hybrid (diesel)",
         "lpg": "LPG", "ng": "natural gas", "e85": "E85", "hydrogen": "hydrogen"}
 
+def clean_model(cn):
+    """EEA model names as registered: «SEAL U SEAL U», «SEAL- SEAL- HALO 1-HALO 2-» → «SEAL U», «SEAL HALO 1 HALO 2» (a name
+    written twice made its passage outrank the plain «SEAL»)."""
+    w = re.sub(r"\s+", " ", re.sub(r"(?<=\w)-(?=\s|$)|-(?=\s)", " ", cn or "")).strip().split(" ")
+    n = len(w)
+    if n % 2 == 0 and n and w[:n // 2] == w[n // 2:]: w = w[:n // 2]
+    out = []
+    for x in w:
+        if not out or out[-1] != x: out.append(x)
+    return " ".join(out)
+
 def eea_rows(groups):
     """EEA groups [{Mk, Cn, Ft, Fm, ec, ep, m, ew, er, z, w, n, y0, y1}] → one passage per (make, model) with its versions."""
     models = {}
@@ -689,6 +700,7 @@ def eea_rows(groups):
         mk = make_key(fix_mojibake(g.get("Mk"))); cn = re.sub(r"\s+", " ", fix_mojibake(g.get("Cn") or "").strip().upper())
         for pre in (mk + " ", re.sub(r"\s+", " ", (g.get("Mk") or "").strip().upper()) + " "):
             if cn.startswith(pre) and len(cn) > len(pre): cn = cn[len(pre):]
+        cn = clean_model(cn)
         if not mk or not cn or cn in ("?", "-"): continue
         bits = []
         ft = (g.get("Ft") or "").strip().lower(); bits.append(FUEL.get(ft, ft) + (" hybrid" if (g.get("Fm") or "") == "H" and "electric" not in ft else ""))
@@ -806,10 +818,12 @@ def complaint_rows(lines, fields, from_year=2000, min_n=5):
 def nhtsa_safety(B):
     rows = []
     try:
-        z = zipfile.ZipFile(io.BytesIO(B.get(NHTSA + "rcl/FLAT_RCL.zip", 600)))
+        path = os.path.join(tempfile.mkdtemp(), "rcl.zip")   # curl: NHTSA's server drops Python's long downloads
+        subprocess.run(["curl", "-sfL", "--retry", "4", "-o", path, NHTSA + "rcl/FLAT_RCL.zip"], check=True, timeout=3600)
         f = nhtsa_fields(B.get(NHTSA + "rcl/RCL.txt", 60).decode("latin-1"))
-        with z.open(z.namelist()[0]) as fh:
+        with zipfile.ZipFile(path) as z, z.open(z.namelist()[0]) as fh:
             r = recall_rows(io.TextIOWrapper(fh, encoding="latin-1"), f)
+        os.remove(path)
         print(f"cars: NHTSA recalls {len(r)} passages (fields {f[:6]}…)"); rows += r
     except BaseException as e: print("cars: recalls failed", e)
     try:
