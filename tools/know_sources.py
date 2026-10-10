@@ -772,7 +772,12 @@ def nhtsa_fields(doc):
         if m and int(m.group(1)) not in f: f[int(m.group(1))] = m.group(2)
     return [f.get(i, f"F{i}") for i in range(1, max(f) + 1)] if f else []   # a missing number keeps its place (no shifted columns)
 
-def recall_rows(lines, fields, from_year=2000):
+def short(t, n):
+    """At most n characters, cut at a word, with … when cut."""
+    t = re.sub(r"\s+", " ", t or "").strip()
+    return t if len(t) <= n else t[:n].rsplit(" ", 1)[0] + "…"
+
+def recall_rows(lines, fields, from_year=2000, makes=None):
     ix = {n: i for i, n in enumerate(fields)}
     g = lambda r, n: (r[ix[n]].strip() if n in ix and ix[n] < len(r) else "")
     by = {}
@@ -782,12 +787,13 @@ def recall_rows(lines, fields, from_year=2000):
         y = g(r, "YEARTXT")
         if not y.isdigit() or int(y) < from_year: continue
         key = (g(r, "MAKETXT").upper(), g(r, "MODELTXT").upper(), y)
+        if makes and make_key(key[0]) not in makes and (make_key(key[0]).split(" ") or [""])[0] not in makes: continue
         camp = g(r, "CAMPNO")
         lst = by.setdefault(key, {})
         if camp in lst: continue
         d = g(r, "RCDATE") or g(r, "ODATE")
-        lst[camp] = (f"{camp}" + (f" ({d[:4]}-{d[4:6]})" if len(d) >= 6 else "") + f" — {g(r, 'COMPNAME').title()}: " + g(r, "DESC_DEFECT")[:320]
-                     + (" Risk: " + g(r, "CONEQUENCE_DEFECT")[:200] if g(r, "CONEQUENCE_DEFECT") else "") + (" Fix: " + g(r, "CORRECTIVE_ACTION")[:160] if g(r, "CORRECTIVE_ACTION") else ""))
+        lst[camp] = (f"{camp}" + (f" ({d[:4]}-{d[4:6]})" if len(d) >= 6 else "") + f" — {g(r, 'COMPNAME').title()}: " + short(g(r, "DESC_DEFECT"), 240)
+                     + (" Risk: " + short(g(r, "CONEQUENCE_DEFECT"), 140) if g(r, "CONEQUENCE_DEFECT") else ""))
     rows = []
     for (mk, mo, y), lst in sorted(by.items()):
         text = f"{mk.title()} {mo.title()} {y} — {len(lst)} safety recall(s) in the US (NHTSA): " + " | ".join(lst.values())
@@ -795,7 +801,7 @@ def recall_rows(lines, fields, from_year=2000):
             rows.append({"t": f"{make_label(mk)} {mo.title()} {y} — recalls (NHTSA)", "x": piece, "u": f"https://www.nhtsa.gov/vehicle/{y}/{mk}/{mo}".replace(" ", "%20"), "l": "en"})
     return rows
 
-def complaint_rows(lines, fields, from_year=2000, min_n=5):
+def complaint_rows(lines, fields, from_year=2000, min_n=5, makes=None):
     ix = {n: i for i, n in enumerate(fields)}
     g = lambda r, n: (r[ix[n]].strip() if n in ix and ix[n] < len(r) else "")
     agg = {}
@@ -804,6 +810,7 @@ def complaint_rows(lines, fields, from_year=2000, min_n=5):
         y = g(r, "YEARTXT")
         if not y.isdigit() or int(y) < from_year: continue
         key = (g(r, "MAKETXT").upper(), g(r, "MODELTXT").upper(), y)
+        if makes and make_key(key[0]) not in makes and (make_key(key[0]).split(" ") or [""])[0] not in makes: continue
         a = agg.setdefault(key, {"n": 0, "crash": 0, "fire": 0, "inj": 0, "dead": 0, "comp": {}})
         a["n"] += 1; a["crash"] += g(r, "CRASH") == "Y"; a["fire"] += g(r, "FIRE") == "Y"
         try: a["inj"] += int(g(r, "INJURED") or 0); a["dead"] += int(g(r, "DEATHS") or 0)
@@ -820,7 +827,7 @@ def complaint_rows(lines, fields, from_year=2000, min_n=5):
                           + ", ".join(f"{c} ({n})" for c, n in top) + ".", "u": "https://www.nhtsa.gov/recalls", "l": "en"})
     return rows
 
-def nhtsa_safety(B):
+def nhtsa_safety(B, makes=None):
     rows = []
     try:
         # NHTSA has moved and split this file before: every known place is tried; one big file or the pre/post-2010 halves
@@ -846,7 +853,7 @@ def nhtsa_safety(B):
                 for n in z.namelist():
                     with z.open(n) as fh: lines += io.TextIOWrapper(fh, encoding="latin-1").readlines()
             os.remove(path)
-        r = recall_rows(lines, f)
+        r = recall_rows(lines, f, makes=makes)
         print(f"cars: NHTSA recalls {len(r)} passages (fields {f[:6]}…)"); rows += r
     except BaseException as e: print("cars: recalls failed", e)
     try:
@@ -854,7 +861,7 @@ def nhtsa_safety(B):
         subprocess.run(["curl", "-sfL", "--retry", "4", "-o", path, NHTSA + "cmpl/FLAT_CMPL.zip"], check=True, timeout=3600)
         f = nhtsa_fields(B.get(NHTSA + "cmpl/CMPL.txt", 60).decode("latin-1"))
         with zipfile.ZipFile(path) as z, z.open(z.namelist()[0]) as fh:
-            r = complaint_rows(io.TextIOWrapper(fh, encoding="latin-1"), f)
+            r = complaint_rows(io.TextIOWrapper(fh, encoding="latin-1"), f, makes=makes)
         os.remove(path)
         print(f"cars: NHTSA complaints {len(r)} model-years (fields {f[:6]}…)"); rows += r
     except BaseException as e: print("cars: complaints failed", e)
@@ -906,7 +913,9 @@ def build_cars(a):
         groups = eea_merge(parts)
         r = eea_rows(groups); print(f"cars: EEA {len(groups)} versions → {len(r)} passages"); rows += r
     except BaseException as e: print(f"cars: EEA failed ({e})")
-    rows += nhtsa_safety(B)
+    # recalls and complaints only for the car makes in the specs (NHTSA's files also cover motorcycles, trailers, RVs, buses…)
+    makes = {make_key(r["t"].split(" (")[0] if " (" in r["t"] else r["t"].split(" ")[0]) for r in rows}
+    rows += nhtsa_safety(B, makes)
     B.write_pack(a.out, "cars", rows, {
         "name": "Cars — specs (US & Europe, incl. Chinese brands)", "name_ar": "السيارات — المواصفات (أمريكا وأوروبا، ومنها الصينية)",
         "license": "US EPA data: public domain. EEA data: CC BY 4.0",

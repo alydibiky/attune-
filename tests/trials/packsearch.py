@@ -89,7 +89,7 @@ def pack_search(con, words, k, gidf=None, pr=None, phrases=()):
         tcov = sum(w for w, h in zip(idf, inT) if h) / tot
         head = set(normalize(re.sub(r"\([^)]*\)", " ", t[0]).split(" — ")[0]).split())    # the name the passage is about ("BYD Seal")
         tprec = sum(1 for x in head if any(near(x, w) for w in words)) / max(1, len(head))   # "BYD Seal" beats "BYD Seal U" for "BYD Seal"
-        res.append({"title": t[0], "text": t[1], "score": sc * (1 + tcov) * (1 + tprec), "cov": round(cov, 3), "rowid": rowid})
+        res.append({"title": t[0], "text": t[1], "score": sc * (1 + tcov) * (1 + tprec) ** 2, "cov": round(cov, 3), "rowid": rowid})
     res.sort(key=lambda h: -h["score"])
     return res[:k]
 

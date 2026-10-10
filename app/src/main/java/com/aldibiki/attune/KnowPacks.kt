@@ -178,7 +178,8 @@ object KnowPacks {
                         tcov /= tot
                         val head = MapPacks.normalize(title.replace(Regex("\\([^)]*\\)"), " ").split(" — ")[0]).split(' ').filter { it.isNotEmpty() }.toSet()
                         val tprec = if (head.isEmpty()) 0.0 else head.count { x -> words.any { near(x, it) } }.toDouble() / head.size
-                        val score = sc * (1 + tcov) * (1 + tprec)
+                        // v6.16c: squared — a long passage listing every version of «BYD Seal» still beats the shorter «Seal U»
+                        val score = sc * (1 + tcov) * (1 + tprec) * (1 + tprec)
                         hits.add(Hit(JSONObject().put("pack", pr.id).put("id", "${pr.id}:$rowid").put("title", title).put("text", r.getString(1) ?: "")
                             .put("url", r.getString(2) ?: "").put("lang", r.getString(3) ?: "").put("score", score).put("cov", Math.round(cov * 1000) / 1000.0)
                             .put("notice", pr.man.optString("notice")).put("notice_ar", pr.man.optString("notice_ar")), score))
