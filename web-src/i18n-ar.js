@@ -3323,4 +3323,15 @@ export const AR = {
   "Everything, newest first": "كل شيء، الأحدث أولًا",
   "Search for anything, then tap “Save as a Space”": "ابحث عن أي شيء، ثم اضغط «احفظ كمساحة»",
   "Pinned": "مُثبَّت",
+  // v6.15 Code look B
+  "Tablet": "جهاز لوحي",
+  "Desktop": "كمبيوتر",
+  "Reload": "إعادة التحميل",
+  "Console": "وحدة التحكم",
+  "errors": "أخطاء",
+  "Full screen": "ملء الشاشة",
+  "Nothing printed yet": "لم يُطبع شيء بعد",
+  "Your task": "مهمتك",
+  "No steps yet — Run it, or write a change below.": "لا توجد خطوات بعد — شغّله، أو اكتب تعديلًا بالأسفل.",
+  "Preview width": "عرض المعاينة",
 };

@@ -36,8 +36,10 @@ def sec_sandbox(br):
     # Run pasted code through the editor (a program from chat arrives like this).
     def load(lang, code):
         page.evaluate("([l, c]) => window.dispatchEvent(new CustomEvent('attune-code', { detail: { lang: l, code: c } }))", [lang, code])
-        page.wait_for_selector("[data-testid=code-editor]", timeout=5000)
+        page.wait_for_selector("[data-testid=code-view-code]", timeout=5000)
+        page.click("[data-testid=code-view-code]")      # v6.15: the editor is the Code tab
         page.fill("[data-testid=code-editor]", code)
+        if lang == "html": page.click("[data-testid=code-view-preview]")
     def run_and_read():
         page.click("[data-testid=code-run]")
         page.wait_for_selector("[data-testid=code-output]", timeout=90000)
@@ -143,6 +145,7 @@ print("at 4 m:", capacity_at(chart, 4))
     check("at 4 m: 42.0" in page.locator("[data-testid=code-output]").inner_text(), "“Change it” edits the program and re-runs the tests")
     # gives up honestly
     page.evaluate("() => { window.__mock.fakeQueue = ['```python\\nassert 1 == 2\\nprint(\"ALL TESTS PASSED\")\\n```', 'no idea', 'still no idea', 'sorry', 'nope']; }")
+    page.click("[data-testid=code-new]")      # v6.15: a second task starts from New
     page.fill("[data-testid=code-task]", "something impossible")
     page.click("[data-testid=code-build]")
     page.wait_for_selector("[data-testid=code-badge]:has-text('Not passing yet')", timeout=120000)

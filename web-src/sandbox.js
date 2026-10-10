@@ -103,6 +103,10 @@ export function htmlDoc(src, token) {
   const csp = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:";
   const hook = `<meta http-equiv="Content-Security-Policy" content="${csp}"><script>(function(){var T=${JSON.stringify(String(token))};` +
     `function send(k,t){try{parent.postMessage({attuneSandbox:T,kind:k,text:String(t).slice(0,2000)},"*")}catch(e){}}` +
+    // v6.15: a locked preview has no storage of its own (no same-origin), and pages the model writes often save
+    // to localStorage — give them a private in-memory one so they work (nothing reaches the app's storage)
+    `(function(){function M(){var d={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[k]=String(v)},removeItem:function(k){delete d[k]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}` +
+    `["localStorage","sessionStorage"].forEach(function(n){var ok=false;try{ok=!!window[n]}catch(e){}if(!ok)try{Object.defineProperty(window,n,{value:M(),configurable:true})}catch(e){}})})();` +
     `window.addEventListener("error",function(e){send("error",(e.message||"Error")+(e.lineno?" (line "+e.lineno+")":""))});` +
     `window.addEventListener("unhandledrejection",function(e){send("error","Unhandled promise rejection: "+(e.reason&&e.reason.message||e.reason))});` +
     `var L=console.log;console.log=function(){send("log",[].slice.call(arguments).join(" "));try{L.apply(console,arguments)}catch(e){}};` +
