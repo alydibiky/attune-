@@ -366,6 +366,12 @@ check(any("discovered: 18 August 1868 [source: Encyclopaedia Britannica]" in r["
 q = S.wd_query("?item wdt:P31 wd:Q3624078 .", "P36", "item")
 check("pr:P854" in q and "Q10876391" in q and "wiki(pedia|data|media)" in q and "pq:P582" in q and "DeprecatedRank" in q,
       "Wikidata: only statements citing an outside source (not Wikipedia), not ended, not deprecated")
+lt = """<html><head><title>7.2: Derivatives of Sine and Cosine - Mathematics LibreTexts</title></head><body><nav>menu</nav>
+<section class="mt-content-container"><h2>Rule</h2><p>\\( \\frac{d}{dx}\\sin(x) = \\cos(x) \\) &amp; more.</p><script>x()</script>
+<a href="/Bookshelves/Calculus/Applied_Calculus_%28Calaway_Hoffman_and_Lippman%29/07%3A_Trig/7.03%3A_More">next</a><a href="/Bookshelves/Other">x</a></section></body></html>"""
+lt_t, lt_x = S.libretexts_page(lt)
+check(lt_t == "7.2: Derivatives of Sine and Cosine" and "\\frac{d}{dx}\\sin(x) = \\cos(x)" in lt_x and "x()" not in lt_x and "menu" not in lt_x, "Calculus (LibreTexts): the article only, formulas kept as LaTeX: " + lt_x[:80])
+check(S.libretexts_links(lt, S.LIBRETEXTS[0][1]) == ["https://math.libretexts.org/Bookshelves/Calculus/Applied_Calculus_(Calaway_Hoffman_and_Lippman)/07:_Trig/7.03:_More"], "Calculus (LibreTexts): only the book's own pages are followed")
 hd = S.hadith_rows("bukhari", "صحيح البخاري", {"hadiths": [{"hadithnumber": 834, "text": "ظُلْمًا كَثِيرًا \ufffd\ufffdَلاَ يَغْفِرُ", "grades": []}]})
 check(S.hadith_rows("nawawi", "الأربعون النووية", {"hadiths": [{"hadithnumber": 6, "text": "أَلَا وَهِيَ الْقَلْبُ .<br>[رَوَاهُ الْبُخَارِيُّ]", "grades": []}]})[0]["x"].startswith("أَلَا وَهِيَ الْقَلْبُ .\n[رَوَاهُ"), "Quality: no HTML left in a hadith")
 check("\ufffd" not in hd[0]["x"] and "[…]" in hd[0]["x"] and "الدرر السنية" in hd[0]["x"], "Quality: a letter damaged in the hadith source is marked, never guessed, and the reader is sent to Dorar")

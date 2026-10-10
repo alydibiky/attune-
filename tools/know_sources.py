@@ -1032,6 +1032,51 @@ def fix_mojibake(t):
         except (UnicodeEncodeError, UnicodeDecodeError): pass
     return t
 
+# Extra CC BY textbooks from LibreTexts (OpenStax's calculus was never CC BY): (pack, book url, title, licence). Formulas stay as their
+# LaTeX (\( … \)), which models read exactly.
+LIBRETEXTS = [("math", "https://math.libretexts.org/Bookshelves/Calculus/Applied_Calculus_(Calaway_Hoffman_and_Lippman)",
+               "Applied Calculus (Calaway, Hoffman & Lippman)", "CC BY 3.0")]
+
+def libretexts_page(html):
+    """A LibreTexts page → (title, text): the article body only, headings and paragraphs kept, LaTeX kept, the rest out."""
+    t = re.search(r"<title>(.*?)</title>", html, re.S)
+    title = htmlmod.unescape(re.sub(r"\s*-\s*Mathematics LibreTexts.*$", "", (t.group(1) if t else "").strip()))
+    m = re.search(r'<section class="mt-content-container"[^>]*>(.*?)</section>', html, re.S) or re.search(r'<div class="mt-content-container"[^>]*>(.*)', html, re.S)
+    body = m.group(1) if m else ""
+    body = re.sub(r"<(script|style|nav|footer|figure)\b.*?</\1>", " ", body, flags=re.S | re.I)
+    body = re.sub(r"<(?:h[1-6]|p|li|tr|br|div)\b[^>]*>", "\n", body, flags=re.I)
+    body = re.sub(r"<[^>]+>", " ", body)
+    body = htmlmod.unescape(body)
+    lines = [re.sub(r"[ \t]+", " ", l).strip() for l in body.split("\n")]
+    return title, "\n".join(l for l in lines if l)
+
+def libretexts_links(html, base):
+    """The book's own sub-pages linked from a page (chapters, then sections), in page order (relative or encoded links too)."""
+    from urllib.parse import unquote, urljoin
+    b = unquote(base); out = []
+    for h in re.findall(r'href="([^"#?]+)"', html):
+        full = unquote(urljoin(base + "/", htmlmod.unescape(h)))
+        if full.startswith(b + "/") and full not in out: out.append(full)
+    return out
+
+def libretexts_rows(B, url, title, max_pages=400):
+    """Walk a LibreTexts book (its contents page → chapters → sections) and make «Book — Section» passages."""
+    seen, queue, rows = set(), [url], []
+    while queue and len(seen) < max_pages:
+        u = queue.pop(0)
+        if u in seen: continue
+        seen.add(u)
+        try: html = B.get(u, 60).decode("utf-8", "replace")
+        except BaseException as e: print(f"libretexts: {u} failed ({e})"); continue
+        queue += [l for l in libretexts_links(html, url) if l not in seen]
+        name, text = libretexts_page(html)
+        if u != url and len(re.sub(r"\W+", "", text)) > 200:
+            for piece in _bk().chunk(text, 900):
+                rows.append({"t": f"{title} — {name}", "x": piece, "u": u, "l": "en"})
+        time.sleep(1)   # gently
+    print(f"libretexts: {title}: {len(seen)} pages → {len(rows)} passages")
+    return rows
+
 def subject_rows(title, url, mods):
     """A book's sections → passages titled «Book — Chapter — Section»."""
     rows = []
@@ -1067,6 +1112,10 @@ def build_subject(a, pid):
         if not r or used + b > budget: print("over budget", slug, b, file=sys.stderr); continue
         rows += r; used += b; books.append({"title": title, "url": url, "license": lic, "version": commit})
         print(f"{pid}: {title}: {len(r)} passages", file=sys.stderr)
+    for lpid, lurl, ltitle, llic in LIBRETEXTS:
+        if lpid != pid: continue
+        r = unique_rows(libretexts_rows(B, lurl, ltitle), seen)
+        if r: rows += r; books.append({"title": ltitle + " (LibreTexts)", "url": lurl, "license": llic})
     B.write_pack(a.out, pid, rows, {
         "name": f"{name} (OpenStax textbooks)", "name_ar": f"{name_ar} (كتب أوبن ستاكس الجامعية)",
         "license": "CC BY 4.0 (each book at its last CC BY version; commercial use allowed)",
