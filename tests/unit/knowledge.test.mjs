@@ -95,7 +95,7 @@ const kl = K.createKnowledge(K.memoryStore());
 await K.installKnowPack(kl, { manifest: lawMan, getText: async () => JSON.stringify({ t: "قانون الإيجار — مادة 5", x: "قانون الإيجار — مادة 5: مدة الإنذار بالإخلاء ثلاثة أشهر قبل نهاية العقد." }) + "\n" });
 h = await kl.find("مدة الإنذار بالإخلاء في قانون الإيجار كام؟");
 ok(h.length && h[0].chunk.note && /official gazette/.test(h[0].chunk.note), "a laws passage carries the 'not legal advice' notice");
-ok(/end the answer with this line: مش استشارة قانونية/.test(K.factsBlock(h, "مدة الإنذار كام؟")), "the facts block asks the answer to end with the notice (in Arabic for an Arabic question)");
+ok(/end the answer with this line: ليست استشارة قانونية/.test(K.factsBlock(h, "مدة الإنذار كام؟")), "the facts block asks the answer to end with the notice (in Arabic for an Arabic question)");
 c = K.checkFacts("مدة الإنذار ثلاثة أشهر قبل نهاية العقد [K1].", h);
 ok(c.chips.length === 1 && /official gazette/.test(c.chips[0].note), "the chip carries the notice so Chat shows it under the answer");
 

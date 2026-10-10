@@ -162,7 +162,7 @@ with sync_playwright() as p:
     x_photo = page.locator("[data-testid=fit-lb-photo]").bounding_box()["x"]; x_search = page.locator("[data-testid=fit-lb-search]").bounding_box()["x"]
     check(x_photo > x_search, "in Arabic the bar runs right to left (Photo first, on the right)")
     page.locator("[data-testid^=fit-chip-]").first.click(); page.wait_for_timeout(200)
-    u = undo_text(page); check("اتضاف" in u, "the Arabic undo bar: " + u)
+    u = undo_text(page); check("أُضيف" in u, "the Arabic undo bar: " + u)
     page.screenshot(path=os.path.join(HERE, "fithome-ar.png"))
     ctx.close()
     br.close()

@@ -133,7 +133,7 @@ with sync_playwright() as pw:
     start(page, "ونش أحمر وقت الغروب")
     page.wait_for_function("() => document.querySelector('[data-testid=studio-flow]')?.dataset.phase === 'draft'", timeout=8000)
     frame = page.locator("[data-testid=studio-flow]").inner_text()
-    check("مسودة" in frame and "خلّي المسودة" in frame and "فاضل" in frame, "the draft frame speaks Arabic: " + frame.replace("\n", " | "))
+    check("مسودة" in frame and "احتفظ بالمسودة" in frame and "متبقٍ" in frame, "the draft frame speaks Arabic: " + frame.replace("\n", " | "))
     check(not re.search(r"[A-Za-z]", frame), "…with no Latin letters")
     page.screenshot(path=os.path.join(SHOTS, "studio-draft-ar.png"))
     page.evaluate("window.__mock.release = true")
