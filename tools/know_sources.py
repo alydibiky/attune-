@@ -509,8 +509,9 @@ def build_hadith(a):
         "sources": [{"title": "hadith-api (fawazahmed0)", "url": "https://github.com/fawazahmed0/hadith-api", "license": "Unlicense (public domain)"}],
         "retrieved": time.strftime("%Y-%m-%d")})
 
-# ---- cars: specs of every car sold in the US (EPA, 1984–now) and in Europe (EEA, incl. the Chinese brands sold there) ----------------
+# ---- cars: specs of every car sold in the US (EPA, 2000–now) and in Europe (EEA, 2010–now, incl. the Chinese brands sold there) ----------------
 EPA_CARS = "https://www.fueleconomy.gov/feg/epadata/vehicles.csv.zip"
+CARS_FROM = 2000   # Ali: cars from 2000 to today (the EU's records start in 2010)
 EEA_SQL = "https://discodata.eea.europa.eu/sql"
 MAKES_AR = {"TOYOTA": "تويوتا", "LEXUS": "لكزس", "HONDA": "هوندا", "NISSAN": "نيسان", "MAZDA": "مازدا", "MITSUBISHI": "ميتسوبيشي", "SUZUKI": "سوزوكي",
     "SUBARU": "سوبارو", "HYUNDAI": "هيونداي", "KIA": "كيا", "GENESIS": "جينيسيس", "CHEVROLET": "شيفروليه", "FORD": "فورد", "JEEP": "جيب",
@@ -574,7 +575,7 @@ def epa_rows(csv_text):
     groups = {}
     for r in csv.DictReader(io.StringIO(csv_text)):
         mk, mo, yr = (r.get("make") or "").strip(), (r.get("model") or "").strip(), (r.get("year") or "").strip()
-        if not (mk and mo and yr): continue
+        if not (mk and mo and yr) or not yr.isdigit() or int(yr) < CARS_FROM: continue
         line = epa_line(r)
         if line: groups.setdefault((mk, mo, yr), []).append(line)
     rows = []
@@ -667,7 +668,7 @@ def build_cars(a):
         have = {}
         for r in years:
             y = int(_f(r.get("y")) or 0)
-            if y >= 2019 and (r.get("s") == "F" or y not in have): have[y] = (T, r.get("s"))
+            if y >= max(CARS_FROM, 2010) and (r.get("s") == "F" or y not in have): have[y] = (T, r.get("s"))
         # newer years are published as their own tables (co2cars_2024Fv29, co2cars_2025Pv31…); the list of tables can't be read, so the
         # likely names are tried, newest version first: the final table of a year, else its newest provisional one
         best = {}
@@ -700,7 +701,7 @@ def build_cars(a):
     B.write_pack(a.out, "cars", rows, {
         "name": "Cars — specs (US & Europe, incl. Chinese brands)", "name_ar": "السيارات — المواصفات (أمريكا وأوروبا، ومنها الصينية)",
         "license": "US EPA data: public domain. EEA data: CC BY 4.0",
-        "attribution": "US: fueleconomy.gov (US EPA / Department of Energy), every model sold in the US since 1984. Europe: CO2 monitoring data of new passenger cars, European Environment Agency (EEA), CC BY 4.0 — every version registered in the EU since 2019, Chinese brands included.",
+        "attribution": "US: fueleconomy.gov (US EPA / Department of Energy), every model sold in the US since 2000. Europe: CO2 monitoring data of new passenger cars, European Environment Agency (EEA), CC BY 4.0 — every version registered in the EU since 2010, Chinese brands included.",
         "notice": "Official test figures (EPA / WLTP); prices are not in these sources — ask online for today's price.",
         "notice_ar": "أرقام الاختبارات الرسمية (EPA / WLTP)؛ الأسعار ليست في هذه المصادر — اسأل عبر الإنترنت عن السعر الحالي.",
         "sources": [{"title": "fueleconomy.gov (US EPA)", "url": "https://www.fueleconomy.gov/feg/download.shtml", "license": "Public domain"},

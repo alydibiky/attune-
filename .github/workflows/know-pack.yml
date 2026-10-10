@@ -8,7 +8,7 @@ name: Build a knowledge pack
 #   cranes    OSHA crane rules, govinfo CFR (public domain)        quran     Tanzil Quran text + التفسير الميسر (King Fahd Complex)
 #   fiqh      الفقه الميسر, the full books (Shamela texts via turath.io)
 #   hadith    the main hadith books with the scholars' rulings (hadith-api, public domain)
-#   cars      car specs: US EPA (public domain, 1984–now) + EEA new-car data (CC BY 4.0, incl. Chinese brands)
+#   cars      car specs: US EPA (public domain, 2000–now) + EEA new-car data (CC BY 4.0, 2010–now, incl. Chinese brands)
 # No Wikipedia (Ali's rule). Ali approved publishing (10 Oct 2026). Rebuilt on the 1st of every month so the numbers stay
 # current; the app installs a newer build by itself.
 
