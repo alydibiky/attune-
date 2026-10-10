@@ -152,7 +152,15 @@ def build_places(pbf, out):
                 mid = pts[len(pts) // 2] if "highway" in w.tags else (sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts))
                 idx.add(dict(w.tags), mid[0], mid[1])
 
-    H().apply_file(pbf, locations=True, idx="flex_mem")
+    # big countries (the USA's named extract is 3.4 GB) keep the node positions in a file, not in memory: the runner's
+    # 16 GB was not enough and it was shut down
+    nodes = out + ".nodes"
+    big = os.path.getsize(pbf) > 1_000_000_000
+    try:
+        H().apply_file(pbf, locations=True, idx=("sparse_file_array," + nodes) if big else "flex_mem")
+    finally:
+        if os.path.exists(nodes):
+            os.remove(nodes)
     return idx.close()
 
 
