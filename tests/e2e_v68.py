@@ -55,7 +55,7 @@ with sync_playwright() as p:
     # ---- 2. keep anything: the kind is read by code ----
     for text in ["https://www.amazon.eg/dp/B0CRANE-toy-liebherr", "iPhone 16 Pro 256GB — 62,000 EGP at B.Tech",
                  "«الصبر مفتاح الفرج» — مثل مصري", "- [ ] call Karim about the hose\n- [ ] pay the Orascom invoice"]:
-        page.fill("[data-testid=mind-add]", text); page.click("[data-testid=mind-keep]"); page.wait_for_timeout(150)
+        page.click("[data-testid=mind-new]"); page.fill("[data-testid=mind-add]", text); page.click("[data-testid=mind-keep]"); page.wait_for_timeout(150)
     ks = kinds(page)
     check(all(k in ks for k in ("link", "product", "quote", "todo")), "a link, a price, a quote and a to-do list are each filed as what they are (%s)" % ks)
     pt, lt = page.locator("[data-kind=product]").first.inner_text(), page.locator("[data-kind=link]").first.inner_text()
@@ -80,7 +80,7 @@ with sync_playwright() as p:
     page.fill("[data-testid=mind-search]", ""); page.wait_for_timeout(200)
     page.click("[data-testid=mind-kind-quote]"); page.wait_for_timeout(200)
     check(kinds(page) == ["quote"], "the Quotes chip shows only quotes")
-    page.click("text=All"); page.wait_for_timeout(200)
+    page.click("[data-testid=mind-all]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=mind-spaces]").count() == 1, "Spaces appear from the tags")
 
     # ---- 5. From your past ----

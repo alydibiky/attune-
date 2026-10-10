@@ -3,7 +3,7 @@
    you keep; it files itself (mind.js). The two parts of the old Memory screen that are not "things
    you kept" — promises found in them, and Your words — are its other two tabs, unchanged.        */
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Brain, Search, Sparkles, Link2, Star, Bell, Trash2, X, Plus, ClipboardPaste, Copy, ExternalLink, Share2, Loader2, Shuffle, Folder, ImagePlus, Send, Check, Camera } from "lucide-react";
+import { Brain, Search, Sparkles, Link2, Star, Bell, Trash2, X, Plus, ClipboardPaste, Copy, ExternalLink, Share2, Loader2, Shuffle, Folder, ImagePlus, Send, Check, Camera, ChevronLeft } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as M from "./mind.js";
 import { useSubBack } from "./backstack.js";
@@ -222,6 +222,8 @@ function Detail({ rec, close, update, forget, togglePin, openRec, search, findPr
 }
 
 const SPACES_KEY = "attune:mind:spaces:v1";
+// v6.15 look C: each space tile has its own calm colour (text stays ≥ 4.5:1 on it)
+const TILE = ["bg-violet-950 text-violet-100", "bg-cyan-950 text-cyan-100", "bg-orange-950 text-orange-100", "bg-emerald-950 text-emerald-100", "bg-amber-950 text-amber-100", "bg-rose-950 text-rose-100", "bg-sky-950 text-sky-100", "bg-lime-950 text-lime-100"];
 const loadSpaces = () => { try { const v = JSON.parse(localStorage.getItem(SPACES_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
 const saveSpaces = (v) => { try { localStorage.setItem(SPACES_KEY, JSON.stringify(v.slice(0, 30))); } catch (e) {} };
 
@@ -244,6 +246,8 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   const [spaces, setSpaces] = useState(loadSpaces);
   const [filing, setFiling] = useState(null);
   const [dropping, setDropping] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [hidePast, setHidePast] = useState(false);
   const fileRef = useRef(null);
   const recsRef = useRef(records); recsRef.current = records;
 
@@ -256,6 +260,13 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   const counts = useMemo(() => M.kindCounts(records), [records]);
   const auto = useMemo(() => M.autoSpaces(records), [records]);
   const past = useMemo(() => (q || tag || kind ? [] : M.resurface(records, now, 3)), [records.length, q, tag, kind, Math.floor(now / 86400000)]);
+  const filterOn = !!(kind || tag || q.trim());
+  const tiles = [
+    ...spaces.map((sp) => ({ key: "s:" + sp.id, label: sp.name, sub: tr("your space"), go: () => { setQ(sp.q || ""); setTag(sp.tag || null); setKind(null); }, remove: () => removeSpace(sp.id) })),
+    ...counts.map((c) => ({ key: "k:" + c.kind, testid: "mind-kind-" + c.kind, label: kindLabel(c.kind), sub: c.count + " " + tr(c.count === 1 ? "item" : "items"), go: () => { setKind(c.kind); setTag(null); } })),
+    ...auto.map((a) => ({ key: "t:" + a.tag, label: "#" + a.tag, sub: a.count + " " + tr(a.count === 1 ? "item" : "items"), go: () => { setTag(a.tag); setKind(null); } })),
+    ...(promiseCount ? [{ key: "p", label: tr("Promises"), sub: promiseCount + " " + tr("open"), go: () => setTab("promises") }] : []),
+  ];
   const looksLikeQuestion = /\?|؟|^(what|when|where|who|how|which|did|do|is|was|how much|كام|امتى|فين|مين|ايه|إيه|هل|ازاي|إزاي)\b/i.test(q.trim());
 
   // ---- the background filer: while this screen is open and the model is loaded, it reads one new
@@ -328,7 +339,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   const chip = (on) => `text-xs px-3 py-1.5 rounded-full border whitespace-nowrap ${on ? "bg-teal-500 text-slate-950 border-teal-500 font-semibold" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-teal-600"}`;
 
   return (
-    <div className="space-y-4 att-in" data-testid="mind-page">
+    <div className="space-y-4 att-in pb-20" data-testid="mind-page">
       <div className="flex items-center gap-2">
         <Brain size={20} className="text-teal-400" />
         <h2 className="text-lg font-semibold text-white">{tr("Mind")}</h2>
@@ -344,8 +355,9 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
 
       {tab === "promises" ? promisesPanel : tab === "words" ? wordsPanel : (
         <>
-          {/* keep anything */}
-          <section className={`bg-slate-900 rounded-2xl border p-3 ${dropping ? "border-teal-500" : "border-slate-800"}`}
+          {/* keep anything — v6.15 (look C): a sheet from the + button */}
+          {adding ? <div className="fixed inset-0 z-[60] bg-black/60 flex items-end" onClick={() => setAdding(false)}>
+          <section onClick={(e) => e.stopPropagation()} className={`w-full bg-slate-900 rounded-t-2xl border-t p-4 pb-6 space-y-2 ${dropping ? "border-teal-500" : "border-slate-700"}`} data-testid="mind-add-sheet"
             onDragOver={(e) => { e.preventDefault(); setDropping(true); }} onDragLeave={() => setDropping(false)}
             onDrop={async (e) => {
               e.preventDefault(); setDropping(false);
@@ -354,19 +366,22 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
               if (f && (/^text|json|csv|md/.test(f.type) || /\.(txt|md|csv|json|log)$/i.test(f.name))) return keep(await f.text(), { title: f.name });
               const t = e.dataTransfer.getData("text"); if (t) keep(t);
             }}>
-            <textarea value={add} onChange={(e) => setAdd(e.target.value)} rows={2} dir="auto" data-testid="mind-add"
+            <p className="text-sm font-semibold text-white">{tr("Keep something")}</p>
+            <textarea autoFocus value={add} onChange={(e) => setAdd(e.target.value)} rows={3} dir="auto" data-testid="mind-add"
               placeholder={tr("Keep anything — a note, a link, a quote, a price, a number, an idea…")}
               className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 resize-none focus:outline-none" />
             <div className="flex items-center gap-1.5">
-              <button onClick={() => { if (keep(add)) setAdd(""); }} data-testid="mind-keep" className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold"><Plus size={12} className="inline me-1" />{tr("Keep")}</button>
+              <button onClick={() => { if (keep(add)) { setAdd(""); setAdding(false); } }} data-testid="mind-keep" className="text-xs px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold"><Plus size={12} className="inline me-1" />{tr("Keep")}</button>
               <button onClick={async () => { try { const t = await navigator.clipboard.readText(); if (t && t.trim()) setAdd(t.trim()); else flash(tr("Clipboard is empty")); } catch (e) { flash(tr("Allow clipboard access, or paste manually")); } }}
                 className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300"><ClipboardPaste size={12} className="inline me-1" />{tr("Paste")}</button>
               <button onClick={() => fileRef.current && fileRef.current.click()} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300"><Camera size={12} className="inline me-1" />{tr("Photo")}</button>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" data-testid="mind-photo" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; keepPhoto(f); }} />
-              {busy ? <span className="text-[11px] text-teal-400 flex items-center gap-1 ms-auto"><Loader2 size={12} className="animate-spin" />{busy}</span>
-                : filing ? <span className="text-[11px] text-slate-500 flex items-center gap-1 ms-auto"><Sparkles size={11} />{tr("filing…")}</span> : null}
             </div>
-          </section>
+          </section></div> : null}
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" data-testid="mind-photo" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; setAdding(false); keepPhoto(f); }} />
+          {busy ? <p className="text-[11px] text-teal-400 flex items-center gap-1"><Loader2 size={12} className="animate-spin" />{busy}</p>
+            : filing ? <p className="text-[11px] text-slate-500 flex items-center gap-1"><Sparkles size={11} />{tr("filing…")}</p> : null}
+          <button onClick={() => setAdding(true)} aria-label={tr("Keep something")} data-testid="mind-new"
+            className="fixed z-40 end-5 bottom-24 w-14 h-14 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center shadow-xl shadow-black/40"><Plus size={26} /></button>
 
           {!pro ? (
             <p className="text-[11px] text-slate-500 bg-slate-900 border border-slate-800 rounded-xl p-2.5">
@@ -417,41 +432,50 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
             </section>
           ) : null}
 
-          {/* kinds, then Spaces */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
-            <button onClick={() => { setKind(null); setTag(null); }} className={chip(!kind && !tag)}>{tr("All")}</button>
-            {counts.map((c) => (
-              <button key={c.kind} onClick={() => { setKind(kind === c.kind ? null : c.kind); setTag(null); }} data-testid={"mind-kind-" + c.kind} className={chip(kind === c.kind)}>
-                {M.KINDS[c.kind].icon} {kindLabel(c.kind)} <span className="opacity-60">{c.count}</span></button>
-            ))}
-          </div>
-          {auto.length || spaces.length ? (
-            <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" data-testid="mind-spaces">
-              {spaces.map((s) => (
-                <span key={s.id} className="flex items-center">
-                  <button onClick={() => { setQ(s.q || ""); setTag(s.tag || null); setKind(null); }} className={chip(q === s.q && tag === s.tag)}><Folder size={11} className="inline me-1" />{s.name}</button>
-                  <button onClick={() => removeSpace(s.id)} className="text-slate-600 hover:text-red-400 -ms-1 px-1" aria-label={tr("Remove")}><X size={11} /></button>
-                </span>
-              ))}
-              {auto.map((s) => (
-                <button key={s.tag} onClick={() => { setTag(tag === s.tag ? null : s.tag); setKind(null); }} className={chip(tag === s.tag)}>#{s.tag} <span className="opacity-60">{s.count}</span></button>
-              ))}
-            </div>
-          ) : null}
+          {/* v6.15 (look C): one card back from your past, then your spaces as tiles */}
+          {past.length && !hidePast ? (() => { const { rec, why } = past[0]; return (
+            <section className="rounded-2xl bg-indigo-950/60 border border-indigo-900/60 p-3 flex gap-3 items-center" data-testid="mind-past">
+              <button onClick={() => setOpenId(rec.id)} className="flex-1 min-w-0 text-start">
+                <p className="text-[10.5px] uppercase tracking-wider text-indigo-300 flex items-center gap-1"><Shuffle size={11} /> {tr("From your past")}</p>
+                <p className="text-sm text-slate-100 font-medium line-clamp-2 mt-0.5" dir="auto">{M.titleOf(rec)}</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">{/past/i.test(why) ? "" : tr(why) + " · "}{dateText(rec.ts)}</p>
+              </button>
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="text-xs px-3 py-2 rounded-lg bg-indigo-500/25 text-indigo-100">{tr("Keep")}</button>
+                <button onClick={() => setHidePast(true)} className="text-xs px-3 py-2 rounded-lg text-slate-400">{tr("Not now")}</button>
+              </div>
+            </section>); })() : null}
 
-          {past.length ? (
-            <section>
-              <p className="text-[11px] text-slate-500 mb-1.5 flex items-center gap-1"><Shuffle size={12} /> {tr("From your past")}</p>
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {past.map(({ rec, why }) => (
-                  <button key={rec.id} onClick={() => setOpenId(rec.id)} className="shrink-0 w-48 text-start bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-3 hover:border-teal-600">
-                    <p className="text-[10px] text-amber-300">{tr(why)} · {dateText(rec.ts)}</p>
-                    <p className="text-sm text-slate-100 line-clamp-3 mt-1" dir="auto">{M.titleOf(rec)}</p>
-                  </button>
+          {filterOn ? (
+            <div className="flex items-center gap-2">
+              <button onClick={() => { setKind(null); setTag(null); setQ(""); setAnswer(null); }} data-testid="mind-all" className="text-xs px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 flex items-center gap-1"><ChevronLeft size={13} className="rtl:rotate-180" />{tr("All")}</button>
+              <span className="text-sm font-semibold text-white truncate">{kind ? kindLabel(kind) : tag ? "#" + tag : q}</span>
+              <span className="text-[11px] text-slate-500">{items.length}</span>
+            </div>
+          ) : (
+            <section data-testid="mind-spaces">
+              <div className="flex items-baseline justify-between mb-2">
+                <h3 className="text-sm font-semibold text-white">{tr("Your spaces")}</h3>
+                <span className="text-[11px] text-slate-500">{tr("filed by themselves")}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {tiles.map((t, i) => (
+                  <span key={t.key} className="relative">
+                    <button onClick={t.go} data-testid={t.testid} className={`w-full h-24 rounded-2xl text-start p-3 flex flex-col justify-between ${TILE[i % TILE.length]}`}>
+                      <span className="text-[14.5px] font-semibold leading-tight line-clamp-2" dir="auto">{t.label}</span>
+                      <span className="text-[11.5px] opacity-80">{t.sub}</span>
+                    </button>
+                    {t.remove ? <button onClick={t.remove} className="absolute top-1.5 end-1.5 p-1 text-white/60" aria-label={tr("Remove")}><X size={12} /></button> : null}
+                  </span>
                 ))}
+                <button onClick={() => { setAdding(false); const el = document.querySelector("[data-testid=mind-search]"); if (el) el.focus(); flash(tr("Search for anything, then tap “Save as a Space”")); }}
+                  className="h-24 rounded-2xl border border-dashed border-slate-700 text-start p-3 flex flex-col justify-between text-slate-400">
+                  <span className="text-[14.5px] font-semibold text-slate-200">+ {tr("New space")}</span><span className="text-[11.5px]">{tr("from any search")}</span></button>
               </div>
             </section>
-          ) : null}
+          )}
+
+          {!filterOn && items.length ? <h3 className="text-sm font-semibold text-white pt-1">{tr("Everything, newest first")}</h3> : null}
 
           {/* the board */}
           {items.length ? (

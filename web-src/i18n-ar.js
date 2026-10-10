@@ -3311,4 +3311,16 @@ export const AR = {
   "Shelf notes": "ملاحظات الرف",
   "There is no readable text in this source.": "لا يوجد نص مقروء في هذا المصدر.",
   "Not legal advice; may be out of date; check the official gazette.": "ليست استشارة قانونية؛ قد تكون قديمة؛ راجع الجريدة الرسمية.",
+  // v6.15 Mind look C
+  "Keep something": "احفظ شيئًا",
+  "Not now": "ليس الآن",
+  "Your spaces": "مساحاتك",
+  "filed by themselves": "تُرتَّب تلقائيًا",
+  "your space": "مساحتك",
+  "open": "مفتوحة",
+  "New space": "مساحة جديدة",
+  "from any search": "من أي بحث",
+  "Everything, newest first": "كل شيء، الأحدث أولًا",
+  "Search for anything, then tap “Save as a Space”": "ابحث عن أي شيء، ثم اضغط «احفظ كمساحة»",
+  "Pinned": "مُثبَّت",
 };
