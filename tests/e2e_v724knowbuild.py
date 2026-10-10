@@ -325,5 +325,26 @@ mk = lambda comp, crash="N": "\t".join({"CMPLID": "1", "ODINO": "2", "MFR_NAME":
 cr = S.complaint_rows([mk("AIR BAGS")] * 3 + [mk("ENGINE", "Y")] * 4, cf)
 check(len(cr) == 1 and "7 complaints" in cr[0]["x"] and "4 crashes" in cr[0]["x"] and "Engine (4), Air Bags (3)" in cr[0]["x"], "Cars: owner complaints per model-year with the most reported problems (reliability)")
 
+# ---- a book later moved to non-commercial terms is read at its last CC BY version (Attune is sold) ----
+import subprocess as _sp
+gd = tempfile.mkdtemp(); os.makedirs(os.path.join(gd, "collections")); os.makedirs(os.path.join(gd, "modules", "m9"))
+col = lambda lic: f"""<col:collection xmlns:col="http://cnx.rice.edu/collxml" xmlns:md="http://cnx.rice.edu/mdml"><col:metadata><md:title>Biology 2e</md:title><md:language>en</md:language><md:license url="{lic}"/></col:metadata><col:content><col:module document="m9"/></col:content></col:collection>"""
+mod = lambda t: f"""<document xmlns="http://cnx.rice.edu/cnxml"><title>Cells</title><content><para id="p">{t}</para></content></document>"""
+git = lambda *a: _sp.run(["git", "-C", gd, "-c", "user.name=t", "-c", "user.email=t@t", *a], check=True, capture_output=True)
+git("init", "-q")
+open(os.path.join(gd, "collections", "biology-2e.collection.xml"), "w").write(col("http://creativecommons.org/licenses/by/4.0/"))
+open(os.path.join(gd, "modules", "m9", "index.cnxml"), "w").write(mod("The CC BY text: mitochondria make most of the cell's ATP."))
+git("add", "-A"); git("commit", "-qm", "cc by")
+open(os.path.join(gd, "collections", "biology-2e.collection.xml"), "w").write(col("http://creativecommons.org/licenses/by-nc-sa/4.0/"))
+open(os.path.join(gd, "modules", "m9", "index.cnxml"), "w").write(mod("The NC text that must not be used."))
+git("add", "-A"); git("commit", "-qm", "nc")
+cur = S.openstax_book(gd, os.path.join(gd, "collections", "biology-2e.collection.xml"))
+v = S.cc_by_version(gd, os.path.join(gd, "collections", "biology-2e.collection.xml"))
+old = S.openstax_book(v[0], v[1]) if v else ("", "", [])
+check(not S.commercial_ok(cur[1]) and v and S.commercial_ok(old[1]) and "CC BY text" in old[2][0][2] and "must not" not in old[2][0][2],
+      "Licences: a book now non-commercial is read at its last CC BY version (commercial use allowed)")
+check(S.commercial_ok("https://creativecommons.org/licenses/by-sa/4.0/") and not S.commercial_ok("https://creativecommons.org/licenses/by-nc/4.0/") and not S.commercial_ok("https://creativecommons.org/licenses/by-nd/4.0/"),
+      "Licences: CC BY and BY-SA allow selling the app; NC and ND don't")
+
 print("ALL PASSED" if not fails else f"{fails} FAILED")
 sys.exit(1 if fails else 0)

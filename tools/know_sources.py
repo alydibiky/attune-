@@ -883,14 +883,39 @@ def openstax_collections():
     for repo in sorted(set(repos)):
         d = os.path.join(work, repo)
         try:
-            subprocess.run(["git", "clone", "-q", "--depth", "1", "--filter=blob:none", "--sparse", f"https://github.com/openstax/{repo}.git", d], check=True, timeout=600)
-            subprocess.run(["git", "-C", d, "sparse-checkout", "set", "--no-cone", "/collections/*", "/modules/*/index.cnxml", "/META-INF/*"], check=True, timeout=1200)
+            # full history (blobs on demand): a book later moved to non-commercial terms is read at its last CC BY version
+            subprocess.run(["git", "clone", "-q", "--filter=blob:none", "--sparse", f"https://github.com/openstax/{repo}.git", d], check=True, timeout=900)
+            subprocess.run(["git", "-C", d, "sparse-checkout", "set", "--no-cone", "/collections/*", "/modules/*/index.cnxml", "/META-INF/*"], check=True, timeout=1800)
         except Exception as e:
             print("skip", repo, e, file=sys.stderr); continue
         cdir = os.path.join(d, "collections")
         for fn in sorted(os.listdir(cdir)) if os.path.isdir(cdir) else []:
             if fn.endswith(".collection.xml"): found[fn.replace(".collection.xml", "")] = (d, os.path.join(cdir, fn))
     return found
+
+def license_of(xml_text):
+    m = re.search(r'license[^>]*url="([^"]+)"', xml_text or "") or re.search(r"<md:license[^>]*>([^<]+)<", xml_text or "")
+    return m.group(1) if m else ""
+
+def commercial_ok(lic):
+    """Attune is sold: only licences that allow commercial use (CC BY, CC BY-SA, CC0, public domain)."""
+    l = (lic or "").lower()
+    return ("/by/" in l or "/by-sa/" in l or "publicdomain" in l or "/zero/" in l) and "-nc" not in l and "-nd" not in l
+
+def cc_by_version(repo_dir, collection_path):
+    """The newest commit at which this book was still published under a licence that allows commercial use → a checkout of it
+    (Creative Commons licences can't be withdrawn: a version released under CC BY stays CC BY). → (dir, collection file, commit) or None."""
+    rel = os.path.relpath(collection_path, repo_dir)
+    log = subprocess.run(["git", "-C", repo_dir, "log", "--format=%H", "--", rel], capture_output=True, text=True, timeout=600).stdout.split()
+    for h in log:
+        xml = subprocess.run(["git", "-C", repo_dir, "show", f"{h}:{rel}"], capture_output=True, text=True, timeout=600).stdout
+        if commercial_ok(license_of(xml)):
+            wt = tempfile.mkdtemp(); os.rmdir(wt)
+            subprocess.run(["git", "-C", repo_dir, "worktree", "add", "-q", "--detach", "--no-checkout", wt, h], check=True, timeout=600)
+            subprocess.run(["git", "-C", wt, "sparse-checkout", "set", "--no-cone", "/collections/*", "/modules/*/index.cnxml"], check=True, timeout=600)
+            subprocess.run(["git", "-C", wt, "checkout", "-q"], check=True, timeout=3600)
+            return wt, os.path.join(wt, rel), h
+    return None
 
 def subject_rows(title, url, mods):
     """A book's sections → passages titled «Book — Chapter — Section»."""
@@ -909,21 +934,28 @@ def build_subject(a, pid):
         if slug not in found: print("not found", slug, file=sys.stderr); continue
         d, path = found[slug]
         if openstax_lang(path) != "en": continue
-        try: title, lic, mods = openstax_book(d, path, keep_math=True)
+        commit = "current"
+        try:
+            title, lic, mods = openstax_book(d, path, keep_math=True)
+            if not commercial_ok(lic):           # moved to non-commercial terms: its last CC BY version instead
+                old = cc_by_version(d, path)
+                if not old: print("license", slug, lic, "— no CC BY version in its history", file=sys.stderr); continue
+                d2, path2, commit = old
+                title, lic, mods = openstax_book(d2, path2, keep_math=True)
+                print(f"{slug}: CC BY version {commit[:10]} ({lic})", file=sys.stderr)
         except Exception as e: print("skip", slug, e, file=sys.stderr); continue
-        nc = "-nc" in lic
-        if "-nd" in lic or ("/by" not in lic) or (nc and not getattr(a, "allow_nc", False)): print("license", slug, lic, file=sys.stderr); continue
+        nc = not commercial_ok(lic)
+        if nc: print("license", slug, lic, file=sys.stderr); continue
         url = f"https://openstax.org/details/books/{slug}"
         r = subject_rows(title, url, mods)
         b = sum(len(x["x"].encode()) for x in r)
         if not r or used + b > budget: print("over budget", slug, b, file=sys.stderr); continue
-        rows += r; used += b; books.append({"title": title, "url": url, "license": "CC BY-NC-SA 4.0" if nc else "CC BY 4.0"})
+        rows += r; used += b; books.append({"title": title, "url": url, "license": lic, "version": commit})
         print(f"{pid}: {title}: {len(r)} passages", file=sys.stderr)
-    anync = any(b["license"] != "CC BY 4.0" for b in books)
     B.write_pack(a.out, pid, rows, {
         "name": f"{name} (OpenStax textbooks)", "name_ar": f"{name_ar} (كتب أوبن ستاكس الجامعية)",
-        "license": "CC BY-NC-SA 4.0 — non-commercial use only" if anync else "CC BY 4.0", **({"noncommercial": True} if anync else {}),
-        "attribution": "OpenStax (Rice University), openstax.org — peer-reviewed open textbooks, CC BY 4.0. Text with its formulas (as plain text) and worked examples; end-of-chapter exercises left out.",
+        "license": "CC BY 4.0 (each book at its last CC BY version; commercial use allowed)",
+        "attribution": "OpenStax (Rice University), openstax.org — peer-reviewed open textbooks, each at its last version released under CC BY 4.0 (Creative Commons licences are irrevocable). Text with its formulas (as plain text) and worked examples; end-of-chapter exercises left out.",
         "sources": books, "retrieved": time.strftime("%Y-%m-%d"), "books": len(books)})
 
 # ---- geography (Ali): each country's geography (CIA Factbook, public domain) + the world's well-known physical features (GeoNames, CC BY)
