@@ -24,7 +24,9 @@ def sent(page):
 def open_fit(page):
     page.locator("nav button").last.click(); page.wait_for_timeout(250)
     page.locator(".rounded-t-2xl button:has-text('Fit & Food')").first.click()
-    page.wait_for_selector("[data-testid=fit-profile], [data-testid=fit-app]", timeout=6000)
+    page.wait_for_selector("[data-testid=fit-profile], [data-testid=fit-app], [data-testid=fit-qs]", timeout=6000)
+    # v6.10: the first visit asks 3 questions; this test sets up the full plan form, one tap away
+    if page.locator("[data-testid=fit-qs]").count(): page.locator("[data-testid=fit-qs-full]").click()
 
 def num(page, tid):
     return int(re.sub(r"[^\d]", "", page.locator(f"[data-testid={tid}]").inner_text()) or 0)

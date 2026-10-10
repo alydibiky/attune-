@@ -343,17 +343,19 @@ object DocTools {
         }
     }
 
-    fun pdfText(ctx: Context, bytes: ByteArray, maxPages: Int = 400, textOnly: Boolean = false): JSONObject {
+    fun pdfText(ctx: Context, bytes: ByteArray, maxPages: Int = 400, textOnly: Boolean = false, from: Int = 1): JSONObject {
         pdfBox(ctx)
         val doc = try { com.tom_roush.pdfbox.pdmodel.PDDocument.load(bytes) }
             catch (e: com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException) { throw java.io.IOException("This PDF is locked with a password — open it, save a copy without the password, and try again.") }
         doc.use { d ->
-            val n = minOf(d.numberOfPages, maxPages)
+            // v6.20: `from` lets the reader read a long file in parts (the first pages show at once, the rest follow)
+            val first = from.coerceAtLeast(1)
+            val n = minOf(d.numberOfPages, first + maxPages - 1)
             val pages = JSONArray()
             // paragraphs end with a blank line, so the Word file gets real paragraphs, not one block a page
             val strip = LayoutStripper().apply { sortByPosition = true; setAddMoreFormatting(true); setParagraphEnd("\n") }
             var picBudget = 40   // pictures in the whole file (each page at most 12)
-            for (i in 1..n) {
+            for (i in first..n) {
                 strip.startPage = i; strip.endPage = i
                 strip.words.clear(); strip.texts.clear(); strip.fonts.clear(); strip.colours.clear()
                 val t = try { strip.getText(d) } catch (e: Exception) { "" }
@@ -382,6 +384,59 @@ object DocTools {
             }
             return JSONObject().put("pages", pages).put("count", d.numberOfPages)
         }
+    }
+
+    /**
+     * v6.20 — the reader's text layer: every word of the asked pages with its box on the page, as fractions of the page
+     * (0..1, top-left origin) so the app can draw highlights over the page picture at any zoom.
+     * → {pages:[{n, ar (width / height), words:[[x, y, w, h, "text"], …]}]}
+     */
+    fun pdfWords(ctx: Context, bytes: ByteArray, pages: List<Int>): JSONObject {
+        pdfBox(ctx)
+        val doc = try { com.tom_roush.pdfbox.pdmodel.PDDocument.load(bytes) }
+            catch (e: com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException) { throw java.io.IOException("This PDF is locked with a password — open it, save a copy without the password, and try again.") }
+        doc.use { d ->
+            val out = JSONArray()
+            val strip = LayoutStripper().apply { sortByPosition = true }
+            fun r4(v: Float) = Math.round(v * 10000f) / 10000.0
+            for (p in pages.filter { it in 1..d.numberOfPages }.distinct().take(40)) {
+                strip.startPage = p; strip.endPage = p
+                strip.words.clear(); strip.texts.clear(); strip.fonts.clear(); strip.colours.clear()
+                try { strip.getText(d) } catch (e: Exception) { }
+                val pg = d.getPage(p - 1); val box = pg.cropBox
+                val turned = pg.rotation % 180 != 0
+                val pw = (if (turned) box.height else box.width).coerceAtLeast(1f); val ph = (if (turned) box.width else box.height).coerceAtLeast(1f)
+                val ws = JSONArray()
+                for (i in strip.words.indices) {
+                    val w = strip.words[i]; val sz = w[3].coerceAtLeast(1f)
+                    ws.put(JSONArray().put(r4(w[0] / pw)).put(r4((w[2] - sz * 0.82f) / ph)).put(r4((w[1] - w[0]) / pw)).put(r4(sz * 1.08f / ph)).put(strip.texts[i]))
+                }
+                out.put(JSONObject().put("n", p).put("ar", r4(pw / ph)).put("words", ws))
+            }
+            return JSONObject().put("pages", out)
+        }
+    }
+
+    /** v6.20 — the PDF's own table of contents (bookmarks): [{title, page, level}]. Empty when it has none. */
+    fun pdfOutline(ctx: Context, bytes: ByteArray): JSONArray {
+        pdfBox(ctx)
+        val out = JSONArray()
+        try {
+            com.tom_roush.pdfbox.pdmodel.PDDocument.load(bytes).use { d ->
+                val root = d.documentCatalog.documentOutline ?: return out
+                fun walk(item: com.tom_roush.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem?, level: Int) {
+                    var it = item
+                    while (it != null && out.length() < 500) {
+                        val page = try { it.findDestinationPage(d)?.let { pg -> d.pages.indexOf(pg) + 1 } ?: 0 } catch (e: Exception) { 0 }
+                        out.put(JSONObject().put("title", (it.title ?: "").trim()).put("page", page).put("level", level))
+                        if (level < 4) walk(it.firstChild, level + 1)
+                        it = it.nextSibling
+                    }
+                }
+                walk(root.firstChild, 0)
+            }
+        } catch (e: Exception) { }
+        return out
     }
 
     /** Pages as JPEG data URLs, `width` px wide. `pages` = 1-based page numbers (empty = all, up to `max`). */
@@ -450,6 +505,43 @@ object DocTools {
                 } else {
                     val deg = ((a.optInt("degrees", 90) % 360) + 360) % 360
                     for (i in 1..count) if (want.isEmpty() || i in want) { val p = d.getPage(i - 1); p.rotation = (p.rotation + deg) % 360 }
+                }
+                files.put(JSONObject().put("n", 1).put("b64", save(d)).put("pages", d.numberOfPages))
+            }
+            // v6.20 — the reader's highlights and notes written into the PDF itself (flattened: highlights are drawn on the page,
+            // so every viewer shows them; a note is a small marker plus a standard PDF comment holding its text).
+            // anns = [{page, kind: "highlight", rects: [[x, y, w, h] as page fractions], color: "#rrggbb"} | {page, kind: "note", x, y, text}]
+            "annotate" -> load(a.getString("b64")).use { d ->
+                val anns = a.optJSONArray("anns") ?: JSONArray()
+                for (i in 0 until anns.length()) {
+                    val an = anns.getJSONObject(i); val pn = an.optInt("page", 0)
+                    if (pn !in 1..d.numberOfPages) continue
+                    val pg = d.getPage(pn - 1); val box = pg.cropBox
+                    val pw = box.width; val ph = box.height; val x0 = box.lowerLeftX; val top = box.upperRightY
+                    val c = try { Color.parseColor(an.optString("color", "#ffd54a")) } catch (e: Exception) { Color.YELLOW }
+                    val r = Color.red(c) / 255f; val g = Color.green(c) / 255f; val b = Color.blue(c) / 255f
+                    val isNote = an.optString("kind") == "note"
+                    com.tom_roush.pdfbox.pdmodel.PDPageContentStream(d, pg, com.tom_roush.pdfbox.pdmodel.PDPageContentStream.AppendMode.APPEND, true, true).use { cs ->
+                        val gs = com.tom_roush.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState()
+                        gs.nonStrokingAlphaConstant = if (isNote) 0.9f else 0.38f
+                        cs.setGraphicsStateParameters(gs)
+                        cs.setNonStrokingColor(r, g, b)
+                        if (isNote) {
+                            val nx = x0 + an.optDouble("x", 0.02).toFloat() * pw; val ny = top - an.optDouble("y", 0.02).toFloat() * ph - 14f
+                            cs.addRect(nx, ny, 14f, 14f); cs.fill()
+                            val note = com.tom_roush.pdfbox.pdmodel.interactive.annotation.PDAnnotationText()
+                            note.contents = an.optString("text", ""); note.rectangle = com.tom_roush.pdfbox.pdmodel.common.PDRectangle(nx, ny, 14f, 14f)
+                            pg.annotations.add(note)
+                        } else {
+                            val rects = an.optJSONArray("rects") ?: JSONArray()
+                            for (k in 0 until rects.length()) {
+                                val q = rects.getJSONArray(k)
+                                val rx = q.getDouble(0).toFloat(); val ry = q.getDouble(1).toFloat(); val rw = q.getDouble(2).toFloat(); val rh = q.getDouble(3).toFloat()
+                                cs.addRect(x0 + rx * pw, top - (ry + rh) * ph, rw * pw, rh * ph)
+                            }
+                            if (rects.length() > 0) cs.fill()
+                        }
+                    }
                 }
                 files.put(JSONObject().put("n", 1).put("b64", save(d)).put("pages", d.numberOfPages))
             }

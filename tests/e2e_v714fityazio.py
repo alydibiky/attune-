@@ -38,7 +38,7 @@ with sync_playwright() as p:
     check("450" in page.locator("[data-testid=fit-averages]").inner_text(), "average of the logged days")
     page.fill("[data-testid=fit-m-waist]", "98"); page.locator("[data-testid=fit-m-save]").click(); page.wait_for_timeout(150)
     check("98 cm" in page.locator("[data-testid=fit-m-change]").inner_text(), "measurements are kept")
-    page.locator("[data-testid=fit-photo-input]").set_input_files({"name": "me.png", "mimeType": "image/png", "buffer": PNG}); page.wait_for_timeout(600)
+    page.locator("[data-testid=fit-progress-photo-input]").set_input_files({"name": "me.png", "mimeType": "image/png", "buffer": PNG}); page.wait_for_timeout(600)
     check(page.locator("[data-testid=fit-photos] img").count() == 1, "a progress photo is kept")
     import datetime
     wd = (datetime.date.today().isoweekday()) % 7

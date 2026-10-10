@@ -100,11 +100,12 @@ with sync_playwright() as p:
     check("crane rental agreement" in last.lower() and page.locator("[data-testid=pdf-msg-ai]").last.locator("[data-testid=pdf-cite]").count() >= 2, "a summary is built from notes and keeps its page references")
     shot(page, "5-summary")
 
-    # ---- v6.12: the document and its conversation are kept: back, then tap it under "Opened before"
+    # ---- v6.12: the document and its conversation are kept: back, then tap it under "Recent documents"
     n_before = page.locator("[data-testid=pdf-msg-ai]").count()
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(400)
-    page.wait_for_selector("[data-testid=pdfchat-recent]", timeout=5000)
-    page.locator("[data-testid=pdfchat-recent]").first.click()
+    page.wait_for_selector("[data-testid=pdf-recent-item]", timeout=5000)
+    page.locator("[data-testid=pdf-recent-item] button").first.click()
+    page.wait_for_selector("[data-testid=pdf-tab-chat]", timeout=8000); page.click("[data-testid=pdf-tab-chat]")
     page.wait_for_function("(n) => document.querySelectorAll('[data-testid=pdf-msg-ai]').length === n", arg=n_before, timeout=8000)
     check(page.locator("[data-testid=pdf-msg-ai]").count() == n_before, "a file opened before reopens with one tap, with its conversation (%d answers)" % n_before)
 
