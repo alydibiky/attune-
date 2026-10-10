@@ -299,6 +299,7 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
       if (K.liveSearch) { try { pack = ((await K.liveSearch(question)) || []).concat(pack); } catch (e) { /* offline or Dorar unreachable: the packs still answer */ } }
       if (!pack.length) return findFacts(idx, question, o);
       // passages the phone ranked (they carry its score) keep that order; any others (Dorar's live answers) are ranked here with your own
+      pack = verseFirst(pack, question);
       const scored = pack.filter((p) => typeof p.score === "number"), loose = pack.filter((p) => typeof p.score !== "number");
       const asChunk = (p) => ({ id: p.id, src: "pack:" + p.pack, title: p.title || "", page: 0, text: p.text || "", kind: "pack", url: p.url || "", pack: p.pack,
         ...(p.notice ? { note: p.notice, note_ar: p.notice_ar || "" } : {}) });
@@ -385,6 +386,26 @@ export function withEnglishPlaces(q) {
   if (!add.length) return q;
   for (const [rx, e] of GEO_AR) if (rx.test(nq) || rx.test(q)) add.push(e);
   return q + " (" + add.join(" ") + ")";
+}
+
+/* v6.16c: «ماذا قال ابن كثير في تفسير «الحمد لله رب العالمين»؟» — tafsir passages of OTHER verses that quote the phrase scored as
+   high as the verse's own. A tafsir passage that STARTS with the quoted phrase as its verse (﴿…﴾, how the packs write a verse's first
+   part) names the verse (1:2); every part of that verse's tafsir then comes first, in the phone's order. */
+export function verseFirst(pack, question) {
+  const quotes = [...String(question || "").matchAll(/«([^»]{6,200})»|﴿([^﴾]{6,200})﴾|"([^"]{6,200})"/g)].map((m) => normAr(m[1] || m[2] || m[3]).replace(/\s+/g, " ").trim());
+  if (!quotes.length || !pack || !pack.length) return pack;
+  // the verse that IS the quoted phrase (1:2) before one that only ends with it (39:75 «…وقيل الحمد لله رب العالمين»)
+  const exact = new Set(), within = new Set();
+  for (const p of pack) {
+    const m = /^\s*﴿([^﴾]+)﴾/.exec(p.text || ""), r = /\((\d+:\d+(?:-\d+)?)\)/.exec(p.title || "");
+    if (!m || !r) continue;
+    const v = normAr(m[1]).replace(/\s+/g, " ").trim();
+    if (quotes.some((q) => v === q)) exact.add(r[1]); else if (quotes.some((q) => v.includes(q))) within.add(r[1]);
+  }
+  const refs = exact.size ? exact : within;
+  if (!refs.size) return pack;
+  const mine = (p) => { const r = /\((\d+:\d+(?:-\d+)?)\)/.exec(p.title || ""); return !!(r && refs.has(r[1])); };
+  return pack.filter(mine).concat(pack.filter((p) => !mine(p)));
 }
 
 export function mergePackFacts(own, pack, o = {}) {

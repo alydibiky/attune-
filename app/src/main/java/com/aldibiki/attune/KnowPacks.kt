@@ -76,7 +76,7 @@ object KnowPacks {
 
     private val STOP = ("the a an of in on at to for and or is are was were be by with from as that this these those it its into about what which who whom " +
         "whose when where why how do does did can could will would should may might than then there their them they he she his her you your i we our not no " +
-        "tell me please explain في من على عن الى هو هي ما ماذا متى اين كيف كم هل التي الذي الذين او ثم مع كان كانت هذا هذه ذلك تلك").split(' ').toSet()
+        "tell me please explain word words mean means meaning say says said define روي قال يقول في من على عن الى هو هي ما ماذا متى اين كيف كم هل التي الذي الذين او ثم مع كان كانت هذا هذه ذلك تلك").split(' ').toSet()
 
     /** Light English stemming for the search key: "currencies" → "currenc", "cranes" → "crane" (then a prefix match). */
     private fun stem(w: String): String {
@@ -97,7 +97,8 @@ object KnowPacks {
 
     private fun ints(blob: ByteArray): IntArray { val b = ByteBuffer.wrap(blob).order(ByteOrder.nativeOrder()); return IntArray(blob.size / 4) { b.getInt(it * 4) } }
     private val ENDINGS = setOf("s", "es", "ed", "er", "ing")
-    private val QUOTE = Regex("«([^»]{6,200})»|“([^”]{6,200})”|\"([^\"]{6,200})\"|﴿([^﴾]{6,200})﴾")
+    // v6.16c: 'single quotes' too (What does the word 'ubiquitous' mean?), not an apostrophe inside a word (Newton's)
+    private val QUOTE = Regex("«([^»]{6,200})»|“([^”]{6,200})”|\"([^\"]{6,200})\"|﴿([^﴾]{6,200})﴾|(?<![A-Za-z])'([^']{3,60})'(?![A-Za-z])")
     private fun near(x: String, w: String) = x == w || (x.startsWith(w) && x.substring(w.length) in ENDINGS)   // "seal" → "seals", not "sealion"
 
     /**
@@ -120,7 +121,12 @@ object KnowPacks {
         val orAll = phr.joinToString(" OR ")
         // quoted text in the question («…», "…", ﴿…﴾ — a verse, a hadith, a saying): that exact phrase first
         val phrases = QUOTE.findAll(a.optString("q")).mapNotNull { m -> m.groupValues.drop(1).firstOrNull { it.isNotEmpty() } }
-            .map { MapPacks.normalize(it).split(' ').filter { w -> w.isNotEmpty() }.take(12) }.filter { it.size >= 2 }.map { it.joinToString(" ") }.take(2).toList()
+            .map { MapPacks.normalize(it).split(' ').filter { w -> w.isNotEmpty() }.take(12) }.filter { it.size >= 2 || (it.size == 1 && it[0].length >= 5) }.map { it.joinToString(" ") }.take(2).toList()
+        // v6.16c: no quotes → the question's own run from its first to its last search word, when 2–4 words long («law of demand»):
+        // passages holding it word for word get ×2
+        val qt = MapPacks.normalize(a.optString("q")).split(' ').filter { it.isNotEmpty() }
+        val ci = qt.indices.filter { qt[it].length >= 2 && qt[it] !in STOP }
+        val soft = if (phrases.isEmpty() && ci.size >= 2 && ci.last() - ci.first() <= 3) qt.subList(ci.first(), ci.last() + 1).joinToString(" ") else null
         data class Probe(val id: String, val man: JSONObject, val db: SQLiteDatabase, val n: Int, val df: IntArray)
         val probes = ArrayList<Probe>()
         val packs = list(ctx)
@@ -152,6 +158,8 @@ object KnowPacks {
                 val nf = rare.size
                 val exact = HashSet<Long>()
                 for (ph in phrases) pr.db.rawQuery("SELECT rowid FROM passages_fts WHERE passages_fts MATCH ? LIMIT 60", arrayOf("\"" + ph.replace("\"", "") + "\"")).use { c -> while (c.moveToNext()) exact.add(c.getLong(0)) }
+                val loose = HashSet<Long>()
+                if (soft != null) pr.db.rawQuery("SELECT rowid FROM passages_fts WHERE passages_fts MATCH ? LIMIT 200", arrayOf("\"" + soft.replace("\"", "") + "\"")).use { c -> while (c.moveToNext()) loose.add(c.getLong(0)) }
                 val cand = ArrayList<Triple<Long, Double, Double>>()
                 val seen = HashSet<Long>()
                 fun take(c: android.database.Cursor, n0: Int) {
@@ -161,7 +169,7 @@ object KnowPacks {
                         var cov = 0.0
                         for (j in words.indices) if (ii[3 + 2 * cc + 3 * ((n0 + j) * cc)] > 0) cov += gidf[j]
                         cov /= tot
-                        cand.add(Triple(rowid, bm25(blob) * (0.3 + cov) * (0.3 + cov) * (if (rowid in exact) 3.0 else 1.0), cov))
+                        cand.add(Triple(rowid, bm25(blob) * (0.3 + cov) * (0.3 + cov) * (if (rowid in exact) 3.0 else if (rowid in loose) 2.0 else 1.0), cov))
                     }
                 }
                 pr.db.rawQuery("SELECT rowid, matchinfo(passages_fts, 'pcnalx') FROM passages_fts WHERE passages_fts MATCH ? LIMIT 6000", arrayOf(q)).use { take(it, nf) }

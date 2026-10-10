@@ -15,6 +15,12 @@ const m2 = K.mergePackFacts([], [{ id: 1, pack: "dictionary", title: "Dictionary
   { id: 3, pack: "physics", title: "College Physics — Newton's Second Law of Motion", text: "Fnet = ma: the acceleration is proportional to the net force.", score: 74, cov: 1 },
   { id: 4, pack: "physics", title: "University Physics — Newton's Second Law", text: "F = ma for constant mass.", score: 70, cov: 1 }], { question: "Newton's second law" });
 ok(m2.map((h) => h.chunk.pack).join() === "dictionary,physics,physics", "a high-scoring dictionary entry doesn't set the bar: the textbook passages still come");
+const tf = [{ id: "a", pack: "islamlib", title: "تفسير ابن كثير — سورة الزمر، الآية 75 (39:75)", text: "﴿وَتَرَى الْمَلَائِكَةَ … وَقِيلَ الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ﴾ (75) …", score: 9 },
+  { id: "b", pack: "islamlib", title: "تفسير ابن كثير — سورة الفاتحة، الآية 2 (1:2) — 3/11", text: "وقال ابن جرير: الحمد لله ثناء أثنى به على نفسه", score: 8 },
+  { id: "c", pack: "islamlib", title: "تفسير ابن كثير — سورة الفاتحة، الآية 2 (1:2) — 1/11", text: "﴿الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ﴾ (2) القراء السبعة على ضم الدال", score: 7 }];
+const vf = K.verseFirst(tf, "ماذا قال ابن كثير في تفسير «الحمد لله رب العالمين»؟");
+ok(vf.map((p) => p.id).join() === "b,c,a", "a quoted verse brings its own tafsir first (Al-Fatiha 1:2, every part), not another verse that ends with the same words");
+ok(K.verseFirst(tf, "ما معنى الحمد؟") === tf, "no quote: the phone's order stays");
 const kn = K.createKnowledge(K.memoryStore()); let asked = "";
 kn.packSearch = async (q) => { asked = q; return [{ id: "c:1", pack: "cities", title: "Kazakhstan — country facts (GeoNames)", text: "Kazakhstan: capital Astana; currency Tenge (KZT).", score: 5, cov: 1 }]; };
 const h = await kn.find("ما هي عاصمة كازاخستان؟");

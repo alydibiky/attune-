@@ -5,7 +5,7 @@ import json, math, os, re, sqlite3, struct, sys, time
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tools"))
 from build_map_pack import normalize
 
-STOP = set("the a an of in on at to for and or is are was were be by with from as that this these those it its into about what which who whom whose when where why how do does did can could will would should may might than then there their them they he she his her you your i we our not no tell me please explain في من على عن الى هو هي ما ماذا متى اين كيف كم هل التي الذي الذين او ثم مع كان كانت هذا هذه ذلك تلك".split())
+STOP = set("the a an of in on at to for and or is are was were be by with from as that this these those it its into about what which who whom whose when where why how do does did can could will would should may might than then there their them they he she his her you your i we our not no tell me please explain word words mean means meaning say says said define روي قال يقول في من على عن الى هو هي ما ماذا متى اين كيف كم هل التي الذي الذين او ثم مع كان كانت هذا هذه ذلك تلك".split())
 def stem(w):
     if len(w) <= 4 or not w.isascii() or not w.isalpha(): return w
     for suf in ("ies", "ing", "ed", "es", "s"):
@@ -25,13 +25,13 @@ def db(path):
     if path not in _DB: _DB[path] = sqlite3.connect(path, check_same_thread=False)
     return _DB[path]
 
-QUOTE = re.compile(r"«([^»]{6,200})»|“([^”]{6,200})”|\"([^\"]{6,200})\"|﴿([^﴾]{6,200})﴾")
+QUOTE = re.compile(r"«([^»]{6,200})»|“([^”]{6,200})”|\"([^\"]{6,200})\"|﴿([^﴾]{6,200})﴾|(?<![A-Za-z])'([^']{3,60})'(?![A-Za-z])")
 def phrases_of(q):
     """Quoted text in the question («…», "…", ﴿…﴾) → exact phrases to look for first (a verse, a hadith, a saying)."""
     out = []
     for m in QUOTE.finditer(q or ""):
         w = normalize(next(g for g in m.groups() if g)).split()
-        if len(w) >= 2: out.append(" ".join(w[:12]))
+        if len(w) >= 2 or (len(w) == 1 and len(w[0]) >= 5): out.append(" ".join(w[:12]))   # one quoted word: 'ubiquitous'
     return out[:2]
 
 def terms_of(q):
@@ -45,7 +45,16 @@ def probe(con, words):
     ints = struct.unpack("%dI" % (len(r[0]) // 4), r[0]); p, c, n = ints[0], ints[1], ints[2]; x0 = 3 + 2 * c
     return n, [ints[x0 + 3 * (i * c) + 2] for i in range(p)]
 
-def pack_search(con, words, k, gidf=None, pr=None, phrases=()):
+def near_phrase(q):
+    """v6.16c: no quotes → the question's own run of words from its first to its last search word, when that is 2–4 words long
+    («law of demand», «Newton's second law») — passages holding it word for word get ×2 («law» and «demand» alone are everywhere
+    in an economics book)."""
+    t = normalize(q).split()
+    idx = [i for i, w in enumerate(t) if len(w) >= 2 and w not in STOP]
+    if len(idx) < 2 or idx[-1] - idx[0] > 3: return None
+    return " ".join(t[idx[0]:idx[-1] + 1])
+
+def pack_search(con, words, k, gidf=None, pr=None, phrases=(), soft=None):
     """One pack (v6.16b): how rare is each word → filter by the rarest ones → rank by BM25 × coverage, with a title bonus."""
     phr = [w.replace('"', "") + "*" for w in words]
     pr = pr or probe(con, words)
@@ -62,6 +71,9 @@ def pack_search(con, words, k, gidf=None, pr=None, phrases=()):
     for ph in phrases:                     # the quoted phrase, word for word: those passages first (×3)
         got = con.execute("SELECT rowid FROM passages_fts WHERE passages_fts MATCH ? LIMIT 60", ('"' + ph.replace('"', "") + '"',)).fetchall()
         exact |= {r[0] for r in got}
+    loose = set()
+    if soft and not phrases:
+        loose = {r[0] for r in con.execute("SELECT rowid FROM passages_fts WHERE passages_fts MATCH ? LIMIT 200", ('"' + soft.replace('"', "") + '"',)).fetchall()}
     extra = []
     if exact:
         have = {r[0] for r in rows}
@@ -77,7 +89,7 @@ def pack_search(con, words, k, gidf=None, pr=None, phrases=()):
         ii = struct.unpack("%dI" % (len(blob) // 4), blob)
         hit = [ii[3 + 2 * ii[1] + 3 * ((off + j) * ii[1])] > 0 for j in range(len(words))]
         cov = sum(w for w, h in zip(idf, hit) if h) / tot          # coverage weighted by how telling each word is
-        out.append([rowid, bm25(blob) * (0.3 + cov) ** 2 * (3 if rowid in exact else 1), cov])
+        out.append([rowid, bm25(blob) * (0.3 + cov) ** 2 * (3 if rowid in exact else 2 if rowid in loose else 1), cov])
     out.sort(key=lambda x: -x[1]); out = out[: k * 3]
     res = []
     for rowid, sc, cov in out:
@@ -94,7 +106,7 @@ def pack_search(con, words, k, gidf=None, pr=None, phrases=()):
     return res[:k]
 
 def search(packs_dir, q, k=24, ids=None):
-    words = terms_of(q); phrases = phrases_of(q)
+    words = terms_of(q); phrases = phrases_of(q); soft = near_phrase(q)
     if not words: return []
     hits, cons = [], []
     for fn in sorted(os.listdir(packs_dir)):
@@ -107,7 +119,7 @@ def search(packs_dir, q, k=24, ids=None):
     gidf = [math.log(1 + N / max(1, d)) for d in DF]          # a word no pack has weighs as the rarest
     for pid, con, pr in cons:
         if not pr: continue
-        for h in pack_search(con, words, k, gidf, pr, phrases):
+        for h in pack_search(con, words, k, gidf, pr, phrases, soft):
             hits.append({"pack": pid, "id": f"{pid}:{h['rowid']}", "title": h["title"], "text": h["text"], "score": h["score"], "cov": h["cov"]})
     hits.sort(key=lambda h: -h["score"])
     return hits[:k]
