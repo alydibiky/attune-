@@ -657,6 +657,20 @@ Four branches from the "Pages & look" / helper sessions had never reached `main`
   with countries="tr gcc …" (add them to the schedule's list in the plan step if Ali wants them weekly).
   Knowledge packs (know-pack.yml) were never published — waiting for Ali's go-ahead (confirm=yes).
 
+### 5.45 (10 Oct 2026, still v6.16) — 44 country maps, Knowledge packs that install themselves
+- Ali: "Build the most 40 famous countries". tools/map_countries.json (44 packs, ~50 countries; GCC and
+  Malaysia+Singapore+Brunei come grouped from Geofabrik) is the one list for the app (imported by offlinemap.js) and the
+  workflow (build_map_pack.py country/all). The weekly run rebuilds all, 4 at a time. The biggest keep maxzoom 13 (us,
+  ca, br, ru, cn, in, au) or 14 (mx, ar, gb, fr, de, it, es, pl, jp, id). Files over 1.9 GB → <name>.001… parts;
+  MapPacks.fetchInto appends each part to one .part file (resumable across parts), SHA-256 of the whole. The builder
+  pre-filters named features with osmium-tool (the USA's 11 GB → memory-sized). First "all" run started 10 Oct from
+  this branch.
+- Ali on Knowledge: "integrate them so the model has this knowledge and Chat answers me". Chat already adds matching
+  passages (factsBlock, cited) to lookup questions when Knowledge is on (default). New: knowledge.js autoInstallPacks —
+  the public packs install by themselves (8 s after start, ≤ every 6 h, online, not with the offline lock), and a
+  newer published build replaces the old one. The packs were published on 10 Oct (know-pack.yml, confirm=yes).
+  Still no Wikipedia (Ali's rule, v5.22). Test: unit v723knowauto.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

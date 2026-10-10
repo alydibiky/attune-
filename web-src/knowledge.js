@@ -303,3 +303,27 @@ export async function installKnowPack(K, { manifest, getText, onProgress = () =>
   return done;
 }
 export async function removeKnowPack(K, packId) { for (const s of await K.sources()) if (s.pack === packId) await K.remove(s.id); }
+
+/**
+ * v6.16 (Ali: "I want them integrated so the model has this knowledge and Chat answers me") — the public packs are
+ * installed by themselves: missing ones are fetched, and a pack whose published build is newer is refreshed.
+ * packText(tag, name) reads a file of a release (the phone's downloader). → the names of the packs installed now.
+ */
+export async function autoInstallPacks(K, packText, { ids = CATALOG.map((c) => c.id), isStopped = () => false } = {}) {
+  const done = [];
+  for (const id of ids) {
+    if (isStopped()) break;
+    const cat = CATALOG.find((c) => c.id === id); if (!cat) continue;
+    let man;
+    try { man = JSON.parse(await packText(cat.tag, "manifest.json")); } catch (e) { continue; }   // not published yet, or no signal
+    let had = null; try { had = JSON.parse(localStorage.getItem("attune:knowledge:pack:" + id) || "null"); } catch (e) {}
+    const have = (await K.sources()).filter((s) => s.pack === id).length;
+    const fresh = had && had.built === man.built && have >= (man.shards || []).length;
+    if (fresh) continue;
+    if (had && had.built !== man.built) await removeKnowPack(K, id);          // a newer build: replace it
+    await installKnowPack(K, { manifest: man, getText: (name) => packText(cat.tag, name), isStopped });
+    try { localStorage.setItem("attune:knowledge:pack:" + id, JSON.stringify({ license: man.license, attribution: man.attribution, sources: man.sources, built: man.built })); } catch (e) {}
+    done.push(cat);
+  }
+  return done;
+}

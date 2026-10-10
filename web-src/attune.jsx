@@ -7930,6 +7930,22 @@ export default function App() {
   const modelUsable = modelState === "ready" || (NATIVE && ((engineInfo && engineInfo.state === "ready") || (installedModels || []).length > 0));
   const refreshModels = () => { const m = nativeJSON("models"); setInstalledModels((m && m.models) || []); };
   const [airGap, setAirGapState] = useState(() => { const i = nativeJSON("info"); return !!(i && i.airGap); });
+  // v6.16: the public Knowledge packs (world facts, Egyptian laws) are fetched by themselves so Chat can answer from
+  // them — quietly, a few seconds after start, at most every 6 h, never with the offline lock on
+  useEffect(() => {
+    if (!NATIVE || !NATIVE.knowPackText || airGap || !knPrefs.on) return;
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+    let last = 0; try { last = +localStorage.getItem("attune:knowledge:auto") || 0; } catch (e) {}
+    if (Date.now() - last < 6 * 3600e3) return;
+    const t = setTimeout(async () => {
+      try { localStorage.setItem("attune:knowledge:auto", String(Date.now())); } catch (e) {}
+      try {
+        const got = await KNOW.autoInstallPacks(knowledge, async (tag, name) => { const r = await nativeCall("knowPackText", { tag, name }); return (r && r.text) || ""; });
+        if (got.length) flash(tr("Chat now knows: {n}", { n: got.map((c) => (getLang() === "ar" ? c.name_ar : c.name)).join(getLang() === "ar" ? "، " : ", ") }));
+      } catch (e) {}
+    }, 8000);
+    return () => clearTimeout(t);
+  }, [airGap, knPrefs.on]);
   const setAirGap = (on) => {
     if (!NATIVE) return;
     try { NATIVE.setAirGap(!!on); } catch (e) {}

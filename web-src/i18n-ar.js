@@ -3370,4 +3370,5 @@ export const AR = {
   "The map file is missing — download the country again": "ملف الخريطة غير موجود — نزّل الدولة مرة أخرى",
   "Find a country": "ابحث عن دولة",
   "Find a country — {n} available": "ابحث عن دولة — {n} متاحة",
+  "Chat now knows: {n}": "أصبحت المحادثة تعرف: {n}",
 };
