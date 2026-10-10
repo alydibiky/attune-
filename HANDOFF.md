@@ -714,6 +714,10 @@ Four branches from the "Pages & look" / helper sessions had never reached `main`
   advantages → disadvantages → rivals → Egypt. 7 searches, 10 pages, ≈40% of the window for the answer. Today's rates via
   native fxRates (open.er-api.com, cached 6 h) → fxNote; the Cars pack's figures → officialSpecsNote (api.carSpecs).
 - Bridge methods always get (id, arg): a method with only (id) is not found from JS — fxRates takes an unused arg.
+- Published by the end of 10 Oct: fiqh 5,820 passages / 6.5 MB (5,118 الطيار 13 vols + 702 مجمع الملك فهد); cars 55,170 /
+  10.2 MB (EPA 20,720 for 2000–2027, EEA 34,455 for 2010–2025, 691 marked Chinese); hadith 36,104 / 23 MB; quran 11,390 / 4.5 MB.
+- Maps: all 44 packs published (data 10 Oct 2026). The USA rerun (38046680530, sparse_file_array) is green: 6.1 GB in parts;
+  also in parts: ca, fr, de, se, no, ru. Main APK for 35aee65 (run 38047936952) green; branch runs 106/107 compile dorarSearch/fxRates.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
