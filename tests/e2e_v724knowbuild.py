@@ -192,5 +192,106 @@ open(os.path.join(d, "modules", "m1", "index.cnxml"), "w").write("""<document xm
 title, lic, mods = S.openstax_book(d, os.path.join(d, "collections", "biology-2e.collection.xml"))
 check(title == "Biology 2e" and "/by/4.0" in lic and mods and mods[0][1] == "Mitochondria" and "powerhouses" in mods[0][2] and "exercise is left out" not in mods[0][2], "OpenStax: the book, its licence, each section's text without exercises or formulas")
 
+# ---- subject packs: formulas as text, worked examples kept, end-of-chapter exercises left out ----
+d2 = tempfile.mkdtemp(); os.makedirs(os.path.join(d2, "modules", "m2")); os.makedirs(os.path.join(d2, "collections"))
+open(os.path.join(d2, "collections", "university-physics-volume-1.collection.xml"), "w").write("""<col:collection xmlns:col="http://cnx.rice.edu/collxml" xmlns:md="http://cnx.rice.edu/mdml"><col:metadata><md:title>University Physics Volume 1</md:title><md:license url="http://creativecommons.org/licenses/by/4.0/"/></col:metadata>
+<col:content><col:subcollection><md:title>Motion Along a Straight Line</md:title><col:content><col:module document="m2"/></col:content></col:subcollection></col:content></col:collection>""")
+open(os.path.join(d2, "modules", "m2", "index.cnxml"), "w").write("""<document xmlns="http://cnx.rice.edu/cnxml" xmlns:m="http://www.w3.org/1998/Math/MathML"><title>Motion with Constant Acceleration</title><content>
+<para id="p1">For constant acceleration the final velocity is <m:math><m:mrow><m:msub><m:mi>v</m:mi><m:mi>f</m:mi></m:msub><m:mo>=</m:mo><m:msub><m:mi>v</m:mi><m:mn>0</m:mn></m:msub><m:mo>+</m:mo><m:mi>a</m:mi><m:mi>t</m:mi></m:mrow></m:math> where t is the elapsed time.</para>
+<equation id="e1"><m:math><m:mrow><m:mi>x</m:mi><m:mo>=</m:mo><m:msub><m:mi>x</m:mi><m:mn>0</m:mn></m:msub><m:mo>+</m:mo><m:msub><m:mi>v</m:mi><m:mn>0</m:mn></m:msub><m:mi>t</m:mi><m:mo>+</m:mo><m:mfrac><m:mn>1</m:mn><m:mn>2</m:mn></m:mfrac><m:mi>a</m:mi><m:msup><m:mi>t</m:mi><m:mn>2</m:mn></m:msup></m:mrow></m:math></equation>
+<example id="ex1"><title>Calculating Displacement of an Accelerating Car</title><exercise><problem><para>A car starts from rest and accelerates at 2.0 m/s² for 5.0 s. How far does it travel?</para></problem>
+<solution><para>Use x = ½ a t² = 0.5 × 2.0 × 25 = 25 m. The car travels 25 meters.</para></solution></exercise></example>
+<exercise id="q1"><problem><para>End of chapter: a bus accelerates for 10 s, find its speed.</para></problem></exercise></content></document>""")
+title2, lic2, mods2 = S.openstax_book(d2, os.path.join(d2, "collections", "university-physics-volume-1.collection.xml"), keep_math=True)
+t2 = mods2[0][2] if mods2 else ""
+check("v_f = v_0 + a t" in t2 and "x = x_0 + v_0 t + 1/2 a t^2" in t2, "Subject packs: formulas kept as plain text: " + t2[:160])
+check("Example: Calculating Displacement" in t2 and "The car travels 25 meters" in t2 and "accelerates at 2.0" in t2, "Subject packs: a worked example (question and solution) is kept")
+check("End of chapter" not in t2, "Subject packs: end-of-chapter exercises (no answers) are left out")
+sr = S.subject_rows(title2, "https://openstax.org/details/books/university-physics-volume-1", mods2)
+check(sr and sr[0]["t"] == "University Physics Volume 1 — Motion Along a Straight Line — Motion with Constant Acceleration", "Subject packs: passages titled book — chapter — section")
+man, db = pack("physics", sr)
+r = search(db, "how far does a car travel accelerating from rest")
+check(r and "Constant Acceleration" in r[0][0], "a physics question finds the worked example")
+
+# ---- geography (Factbook geography + GeoNames physical features) ----
+G = ["\t".join(["360713", "Nile", "Nile", "Nil,Nilo,Nile River,Le Nil,Nilen,Nijl,Neilos,ナイル川,نهر النيل", "30.1", "31.2", "H", "STM", "EG", "", "11", "", "", "", "0", "", "15", "Africa/Cairo", "2020-01-01"]),
+     "\t".join(["1283416", "Mount Everest", "Mount Everest", "Chomolungma,Sagarmatha,エベレスト", "27.988", "86.925", "T", "PK", "NP", "", "01", "", "", "", "0", "8848", "8812", "Asia/Kathmandu", "2020-01-01"]),
+     "\t".join(["999", "Small Creek", "Small Creek", "", "40.0", "-75.0", "H", "STM", "US", "", "PA", "", "", "", "0", "", "50", "America/New_York", "2020-01-01"]),
+     "\t".join(["361058", "Cairo", "Cairo", "القاهرة", "30.04", "31.24", "P", "PPLC", "EG", "", "11", "", "", "", "9000000", "", "23", "Africa/Cairo", "2020-01-01"])]
+gr = S.geo_feature_rows(G, {"EG": "Egypt", "NP": "Nepal", "US": "United States"}, {"EG.11": "Cairo Governorate"})
+check(len(gr) == 2 and gr[0]["t"] == "Nile (نهر النيل) — river, Egypt" and "Mount Everest — peak, Nepal" == gr[1]["t"] and "elevation 8,848 m" in gr[1]["x"],
+      "Geography: well-known features (Arabic name, many languages, high peaks) with elevation; small creeks and cities left out")
+gname, grows = B.country_rows("africa", "eg", {"Geography": {"Area": {"total": {"text": "1,001,450 sq km"}}, "Climate": {"text": "desert; hot, dry summers with moderate winters"}}})
+check(any("Climate" in r["t"] and "desert" in r["x"] for r in grows), "Geography: each country's geography from the Factbook")
+man, db = pack("geography", gr + grows)
+r = search(db, "how high is mount everest")
+check(r and "Everest" in r[0][0], "a geography question finds the feature")
+r = search(db, "نهر النيل")
+check(r and "Nile" in r[0][0], "an Arabic name finds it too")
+
+# ---- coding (Python reST, MDN / Kotlin Markdown): code blocks kept whole, with their lines ----
+MD = """---
+title: Array.prototype.map()
+slug: Web/JavaScript/Reference/Global_Objects/Array/map
+---
+
+{{JSRef}}
+
+The **`map()`** method of {{jsxref("Array")}} instances creates a new array populated with the results of calling a provided function on every element.
+
+## Syntax
+
+```js
+map(callbackFn)
+map(callbackFn, thisArg)
+```
+
+## Examples
+
+### Mapping an array of numbers to square roots
+
+```js
+const numbers = [1, 4, 9];
+const roots = numbers.map((num) => Math.sqrt(num));
+// roots is now     [1, 2, 3]
+```
+"""
+ms = S.md_sections(MD)
+check([p for p, _ in ms] == ["", "Syntax", "Examples › Mapping an array of numbers to square roots"], "Coding: Markdown sections with their heading path: " + str([p for p, _ in ms]))
+allb = "\n".join(b for _, b in ms)
+check("of Array instances" in allb and "{{" not in allb and "slug:" not in allb, "Coding: MDN macros and front matter cleaned")
+dr = S.doc_rows("MDN JavaScript — Array.prototype.map()", ms, "https://developer.mozilla.org/x")
+code = [r for r in dr if "Math.sqrt" in r["x"]][0]
+check("const numbers = [1, 4, 9];\nconst roots" in code["x"] and "// roots is now     [1, 2, 3]" in code["x"], "Coding: code keeps its lines and spacing")
+RST = """Data Structures
+***************
+
+More on Lists
+=============
+
+The list data type has some more methods. Here are all of the methods of list objects:
+
+.. method:: list.append(x)
+   :noindex:
+
+   Add an item to the end of the list.  Similar to ``a[len(a):] = [x]``.
+
+An example that uses most of the list methods::
+
+   >>> fruits = ['orange', 'apple', 'pear']
+   >>> fruits.count('apple')
+   1
+
+See :func:`sorted` and :ref:`the tutorial <tut-sort>`.
+"""
+rs = S.rst_sections(RST)
+check(rs and rs[-1][0] == "Data Structures › More on Lists" and "method: list.append(x)" in rs[-1][1] and "See sorted and the tutorial." in rs[-1][1] and ">>> fruits.count('apple')" in rs[-1][1],
+      "Coding: Python reST headings, roles and examples read: " + (rs[-1][0] if rs else "nothing"))
+man, db = pack("coding", dr + S.doc_rows("Python docs", rs, "https://docs.python.org/3/tutorial/datastructures.html"))
+r = search(db, "how to add an item to the end of a python list")
+check(r and "Python docs" in r[0][0], "a coding question finds the docs: " + (r[0][0] if r else "nothing"))
+txt = db.execute("SELECT text FROM passages WHERE text LIKE '%Math.sqrt%'").fetchone()[0]
+check("\nconst roots" in txt, "the pack keeps the code's line breaks for the phone")
+
 print("ALL PASSED" if not fails else f"{fails} FAILED")
 sys.exit(1 if fails else 0)

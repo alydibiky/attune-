@@ -8,6 +8,8 @@ name: Build a knowledge pack
 #   cranes    OSHA crane rules, govinfo CFR (public domain)        quran     Tanzil Quran text + التفسير الميسر (King Fahd Complex)
 #   fiqh      الفقه الميسر, the full books (Shamela texts via turath.io)
 #   hadith    the main hadith books with the scholars' rulings (hadith-api, public domain)
+#   math physics chemistry biology history   OpenStax books (CC BY), formulas and worked examples kept
+#   geography Factbook geography + GeoNames physical features    coding    Python docs, MDN, Kotlin docs
 #   cars      car specs: US EPA (public domain, 2000–now) + EEA new-car data (CC BY 4.0, 2010–now, incl. Chinese brands)
 # No Wikipedia (Ali's rule). Ali approved publishing (10 Oct 2026). Rebuilt on the 1st of every month so the numbers stay
 # current; the app installs a newer build by itself.
@@ -18,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       packs:
-        description: "Packs, space-separated (world laws numbers cities science health cranes quran fiqh hadith cars), or all"
+        description: "Packs, space-separated (world laws numbers cities science health cranes quran fiqh hadith cars math physics chemistry biology history geography coding), or all"
         default: "all"
       budget_mb:
         description: "Text budget in MB (laws, science)"
@@ -36,7 +38,7 @@ jobs:
       - id: p
         run: |
           packs="${{ github.event.inputs.packs }}"
-          if [ -z "$packs" ] || [ "$packs" = "all" ]; then packs="world laws numbers cities science health cranes quran fiqh hadith cars"; fi
+          if [ -z "$packs" ] || [ "$packs" = "all" ]; then packs="world laws numbers cities science health cranes quran fiqh hadith cars math physics chemistry biology history geography coding"; fi
           echo "list=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1].split()))' "$packs")" >> $GITHUB_OUTPUT
 
   pack:

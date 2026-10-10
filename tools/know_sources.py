@@ -5,7 +5,7 @@ Each builder returns nothing: it writes out/<id>.sqlite.gz + out/manifest.json t
 Parsers are tested on small samples in tests/e2e_v724knowbuild.py.
 """
 import html as htmlmod
-import csv, io, json, os, re, subprocess, sys, tempfile, time, zipfile
+import csv, glob, io, json, os, re, subprocess, sys, tempfile, time, zipfile
 import xml.etree.ElementTree as ET
 
 def _bk():
@@ -37,8 +37,55 @@ OPENSTAX_FIRST = ["biology-2e", "chemistry-2e", "college-physics-2e", "anatomy-a
 TEXT_TAGS = ("para", "item", "meaning")
 SKIP_TAGS = ("exercise", "solution", "problem", "media", "figure", "math", "image")
 
-def openstax_book(repo_dir, collection_path):
-    """One OpenStax book (a collection file) → (title, license url, [(chapter title, module title, text)])."""
+# ---- formulas as plain text (MathML → "x^2 + 1", "(a)/(b)", "√(x)") so the subject packs keep every equation -------------------------
+MO = {"\u2212": "-", "\u2061": "", "\u2062": "", "\u2063": ",", "\u00a0": " "}
+def mathml_text(el):
+    t = el.tag
+    kids = [c for c in el if c.tag not in ("annotation", "annotation-xml")]
+    if t in ("mi", "mn", "mtext", "ms"): return (el.text or "").strip()
+    if t == "mo":
+        o = (el.text or "").strip(); return MO.get(o, o)
+    if t == "mspace": return " "
+    g = lambda c: mathml_text(c)
+    def grp(x):
+        x = x.strip()
+        return x if re.fullmatch(r"[\w.]+|\(.*\)", x) and (len(x) <= 1 or not re.search(r"[+\-*/=<> ]", x) or (x.startswith("(") and x.endswith(")"))) else f"({x})"
+    if t == "semantics": return g(kids[0]) if kids else ""
+    if t == "msup" and len(kids) >= 2: return grp(g(kids[0])) + "^" + grp(g(kids[1]))
+    if t == "msub" and len(kids) >= 2: return g(kids[0]) + "_" + grp(g(kids[1]))
+    if t == "msubsup" and len(kids) >= 3: return g(kids[0]) + "_" + grp(g(kids[1])) + "^" + grp(g(kids[2]))
+    if t == "mfrac" and len(kids) >= 2: return grp(g(kids[0])) + "/" + grp(g(kids[1]))
+    if t == "msqrt": return "√" + grp(" ".join(g(c) for c in kids))
+    if t == "mroot" and len(kids) >= 2: return grp(g(kids[0])) + "^(1/" + g(kids[1]) + ")"
+    if t in ("munder", "mover", "munderover") and kids:
+        base = g(kids[0]); low = g(kids[1]) if len(kids) > 1 else ""; high = g(kids[2]) if len(kids) > 2 else ""
+        if t == "mover": return base + (low if low in ("\u00af", "\u2192", "^", "\u02d9") else "^" + grp(low))
+        return base + ("_" + grp(low) if low else "") + ("^" + grp(high) if high else "")
+    if t == "mfenced":
+        return el.get("open", "(") + el.get("separators", ",")[:1].join(g(c) for c in kids) + el.get("close", ")")
+    if t == "mtable": return "; ".join(g(r) for r in kids)
+    if t in ("mtr", "mlabeledtr"): return "  ".join(g(c) for c in kids)
+    out = ""
+    for c in kids:
+        x = g(c)
+        if not x: continue
+        out += ("" if not out or out.endswith(("(", "[", "{", "^", "_")) or x.startswith((")", "]", "}", ",", ".", "!", "'")) else " ") + x
+    return out.strip()
+
+def text_keep(el, in_example=False):
+    """Text of an element keeping formulas (as plain text) and the worked examples; end-of-chapter exercises are left out."""
+    if el.tag == "math": return " " + mathml_text(el) + " "
+    if el.tag in ("media", "figure", "image"): return ""
+    if el.tag in ("exercise", "problem", "solution") and not in_example: return ""
+    ex = in_example or el.tag == "example"
+    parts = [el.text or ""]
+    for c in el:
+        parts.append(text_keep(c, ex)); parts.append(c.tail or "")
+    return "".join(parts)
+
+def openstax_book(repo_dir, collection_path, keep_math=False):
+    """One OpenStax book (a collection file) → (title, license url, [(chapter title, module title, text)]).
+    keep_math (the subject packs): formulas written as plain text, equations and worked examples kept."""
     col = strip_ns(ET.parse(collection_path).getroot())
     title = (col.findtext(".//metadata/title") or col.findtext(".//title") or "").strip()
     lic = ""
@@ -67,7 +114,18 @@ def openstax_book(repo_dir, collection_path):
                         if len(t) > 25: paras.append(t)
                         return
                     for c in el: blocks(c)
-                blocks(body)
+                KEEP_TAGS = ("para", "item", "meaning", "equation", "title")
+                def blocks_keep(el, ex=False):
+                    # the subject packs: every text block with its formulas, worked examples ("Example 3.2 … Solution …") included
+                    if el.tag in ("media", "figure", "image", "glossary"): return
+                    if el.tag in ("exercise", "problem", "solution") and not ex: return
+                    ex2 = ex or el.tag == "example"
+                    if el.tag in KEEP_TAGS and not any(c.tag in KEEP_TAGS for c in el.iter() if c is not el):
+                        t = re.sub(r"\s+", " ", text_keep(el, ex2)).strip()
+                        if len(t) > (3 if el.tag == "equation" else 25): paras.append(("Example: " if el.tag == "title" and ex2 else "") + t)
+                        return
+                    for c in el: blocks_keep(c, ex2)
+                (blocks_keep if keep_math else blocks)(body)
                 out.append((chapter, mt, " ".join(dict.fromkeys(paras))))
             elif c.tag == "content":
                 walk(c, chapter)
@@ -98,7 +156,9 @@ def build_science(a):
             pri = OPENSTAX_FIRST.index(slug) if slug in OPENSTAX_FIRST else len(OPENSTAX_FIRST)
             cols.append((pri, slug, d, os.path.join(cdir, fn)))
     cols.sort()
+    in_subjects = {x for _, _, l in SUBJECTS.values() for x in l}   # math, physics, chemistry, biology and history have their own packs
     for pri, slug, d, path in cols:
+        if slug in in_subjects: continue
         try: title, lic, mods = openstax_book(d, path)
         except Exception as e: print("skip", slug, e, file=sys.stderr); continue
         if "/by/" not in lic or "-nc" in lic or "-nd" in lic:       # only books anyone may reuse (CC BY), so the app may be sold
@@ -114,7 +174,7 @@ def build_science(a):
         rows += r; used += b; books.append({"title": title, "url": url, "license": "CC BY 4.0"})
         print("book", title, len(r), file=sys.stderr)
     B.write_pack(a.out, "science", rows, {
-        "name": "Science & study (OpenStax textbooks)", "name_ar": "العلوم والدراسة (كتب أوبن ستاكس)",
+        "name": "Society, economics & business (OpenStax textbooks)", "name_ar": "المجتمع والاقتصاد والأعمال (كتب أوبن ستاكس)",
         "license": "CC BY 4.0",
         "attribution": "OpenStax (Rice University), openstax.org — peer-reviewed open textbooks, CC BY 4.0. Text only, cut into passages; exercises and formulas left out.",
         "sources": books, "retrieved": time.strftime("%Y-%m-%d"), "books": len(books)})
@@ -708,4 +768,239 @@ def build_cars(a):
                     {"title": "EEA — CO2 emissions from new passenger cars", "url": "https://www.eea.europa.eu/en/datahub", "license": "CC BY 4.0"}],
         "retrieved": time.strftime("%Y-%m-%d")})
 
-BUILDERS = {"science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith, "cars": build_cars}
+# ---- subject packs (Ali): math, physics, chemistry, biology, history — OpenStax CC BY books, formulas and worked examples kept ----------
+SUBJECTS = {
+    "math": ("Mathematics", "الرياضيات", ["calculus-volume-1", "calculus-volume-2", "calculus-volume-3", "algebra-and-trigonometry-2e", "precalculus-2e",
+             "college-algebra-2e", "introductory-statistics-2e", "prealgebra-2e", "elementary-algebra-2e", "intermediate-algebra-2e",
+             "contemporary-mathematics", "statistics", "introductory-business-statistics-2e"]),
+    "physics": ("Physics", "الفيزياء", ["university-physics-volume-1", "university-physics-volume-2", "university-physics-volume-3", "college-physics-2e",
+                "physics", "astronomy-2e"]),
+    "chemistry": ("Chemistry", "الكيمياء", ["chemistry-2e", "chemistry-atoms-first-2e", "organic-chemistry"]),
+    "biology": ("Biology", "الأحياء", ["biology-2e", "concepts-biology", "anatomy-and-physiology-2e", "microbiology", "biology-ap-courses"]),
+    "history": ("History", "التاريخ", ["world-history-volume-1", "world-history-volume-2", "us-history"]),
+}
+
+def openstax_collections():
+    """Every OpenStax book on GitHub (sparse clones: the collection files and the module texts) → {slug: (repo dir, collection file)}."""
+    B = _bk(); repos = []
+    for page in range(1, 6):
+        js = json.loads(B.get(f"https://api.github.com/orgs/openstax/repos?per_page=100&page={page}"))
+        if not js: break
+        repos += [r["name"] for r in js if r["name"].startswith("osbooks-") and not r.get("archived")]
+    work, found = tempfile.mkdtemp(), {}
+    for repo in sorted(set(repos)):
+        d = os.path.join(work, repo)
+        try:
+            subprocess.run(["git", "clone", "-q", "--depth", "1", "--filter=blob:none", "--sparse", f"https://github.com/openstax/{repo}.git", d], check=True, timeout=600)
+            subprocess.run(["git", "-C", d, "sparse-checkout", "set", "--no-cone", "/collections/*", "/modules/*/index.cnxml", "/META-INF/*"], check=True, timeout=1200)
+        except Exception as e:
+            print("skip", repo, e, file=sys.stderr); continue
+        cdir = os.path.join(d, "collections")
+        for fn in sorted(os.listdir(cdir)) if os.path.isdir(cdir) else []:
+            if fn.endswith(".collection.xml"): found[fn.replace(".collection.xml", "")] = (d, os.path.join(cdir, fn))
+    return found
+
+def subject_rows(title, url, mods):
+    """A book's sections → passages titled «Book — Chapter — Section»."""
+    rows = []
+    for chap, mt, text in mods:
+        head = " — ".join(x for x in (title, chap, mt) if x)
+        for p in _bk().chunk(text, 900):
+            rows.append({"t": head, "x": p, "u": url, "l": "en"})
+    return rows
+
+def build_subject(a, pid):
+    B = _bk(); name, name_ar, slugs = SUBJECTS[pid]
+    found = openstax_collections()
+    budget, used, rows, books = int(a.budget_mb * 1e6), 0, [], []
+    for slug in slugs:
+        if slug not in found: print("not found", slug, file=sys.stderr); continue
+        d, path = found[slug]
+        try: title, lic, mods = openstax_book(d, path, keep_math=True)
+        except Exception as e: print("skip", slug, e, file=sys.stderr); continue
+        if "/by/" not in lic or "-nc" in lic or "-nd" in lic: print("license", slug, lic, file=sys.stderr); continue
+        url = f"https://openstax.org/details/books/{slug}"
+        r = subject_rows(title, url, mods)
+        b = sum(len(x["x"].encode()) for x in r)
+        if not r or used + b > budget: print("over budget", slug, b, file=sys.stderr); continue
+        rows += r; used += b; books.append({"title": title, "url": url, "license": "CC BY 4.0"})
+        print(f"{pid}: {title}: {len(r)} passages", file=sys.stderr)
+    B.write_pack(a.out, pid, rows, {
+        "name": f"{name} (OpenStax textbooks)", "name_ar": f"{name_ar} (كتب أوبن ستاكس الجامعية)", "license": "CC BY 4.0",
+        "attribution": "OpenStax (Rice University), openstax.org — peer-reviewed open textbooks, CC BY 4.0. Text with its formulas (as plain text) and worked examples; end-of-chapter exercises left out.",
+        "sources": books, "retrieved": time.strftime("%Y-%m-%d"), "books": len(books)})
+
+# ---- geography (Ali): each country's geography (CIA Factbook, public domain) + the world's well-known physical features (GeoNames, CC BY)
+GEO_KINDS = {"MT": "mountain", "PK": "peak", "MTS": "mountain range", "VLC": "volcano", "HLL": "hill", "PLAT": "plateau", "PLN": "plain",
+    "VAL": "valley", "CNYN": "canyon", "DSRT": "desert", "OAS": "oasis", "LK": "lake", "LKS": "lakes", "LKSL": "salt lake", "RSV": "reservoir",
+    "STM": "river", "STMS": "rivers", "WAD": "wadi", "FLLS": "waterfall", "GLCR": "glacier", "ISL": "island", "ISLS": "islands", "ATOL": "atoll",
+    "PEN": "peninsula", "CAPE": "cape", "SEA": "sea", "OCN": "ocean", "GULF": "gulf", "BAY": "bay", "STRT": "strait", "CHN": "channel",
+    "DLTA": "delta", "BSNU": "basin", "MESA": "mesa", "SPNG": "spring", "CRTR": "crater", "PASS": "mountain pass", "DPR": "depression"}
+GEO_FB = ("Geography", "Environment")
+
+def geo_feature_rows(lines, countries, admin, min_names=8):
+    """GeoNames allCountries lines → the well-known physical features (an Arabic name, or names in many languages, or a peak over 4,000 m)."""
+    rows = []
+    for line in lines:
+        f = line.rstrip("\n").split("\t")
+        if len(f) < 19 or f[7] not in GEO_KINDS: continue
+        alts = [x for x in f[3].split(",") if x]
+        ar = next((x for x in alts if AR.search(x)), "")
+        elev = f[15] or f[16]
+        try: e = int(float(elev)) if elev not in ("", "-9999") else None
+        except ValueError: e = None
+        if not (ar or len(alts) >= min_names or (e and e >= 4000 and f[7] in ("PK", "MT", "VLC"))): continue
+        cc = f[8]; country = countries.get(cc, cc); region = admin.get(f"{cc}.{f[10]}", "")
+        kind = GEO_KINDS[f[7]]
+        bits = [f"{f[1]}" + (f" ({ar})" if ar else "") + f" is a {kind}" + (f" in {region}, {country}" if region and country else f" in {country}" if country else "")]
+        if e is not None: bits.append(f"elevation {e:,} m")
+        bits.append(f"coordinates {float(f[4]):.3f}, {float(f[5]):.3f}")
+        rows.append({"t": f"{f[1]}" + (f" ({ar})" if ar else "") + f" — {kind}" + (f", {country}" if country else ""), "x": "; ".join(bits) + ".",
+                     "u": f"https://www.geonames.org/{f[0]}", "l": "en"})
+    return rows
+
+def build_geography(a):
+    import build_know_pack as BK
+    B = _bk(); rows = []
+    tree = json.loads(B.get("https://api.github.com/repos/factbook/factbook.json/git/trees/master?recursive=1"))
+    files = [x["path"] for x in tree["tree"] if re.match(r"^[a-z-]+/[a-z]{2}\.json$", x["path"]) and not x["path"].startswith("meta/")]
+    for p in sorted(files):
+        region, code = p[:-5].split("/")
+        try: js = json.loads(B.get(BK.FB + p))
+        except BaseException as e: print("skip", p, e, file=sys.stderr); continue
+        name, r = BK.country_rows(region, code, {k: v for k, v in js.items() if k in GEO_FB})
+        rows += [dict(x, t=x["t"].replace(" — ", " — geography — ", 1)) for x in r]
+    print(f"geography: Factbook {len(rows)} passages", file=sys.stderr)
+    countries, admin = {}, {}
+    for line in B.get("https://download.geonames.org/export/dump/countryInfo.txt").decode("utf-8").splitlines():
+        f = line.split("\t")
+        if len(f) > 4 and not line.startswith("#"): countries[f[0]] = f[4]
+    for line in B.get("https://download.geonames.org/export/dump/admin1CodesASCII.txt").decode("utf-8").splitlines():
+        f = line.split("\t")
+        if len(f) >= 2: admin[f[0]] = f[1]
+    path = os.path.join(tempfile.mkdtemp(), "allCountries.zip")
+    subprocess.run(["curl", "-sfL", "--retry", "4", "-o", path, "https://download.geonames.org/export/dump/allCountries.zip"], check=True, timeout=3600)
+    with zipfile.ZipFile(path) as z, z.open("allCountries.txt") as fh:
+        feats = geo_feature_rows(io.TextIOWrapper(fh, encoding="utf-8"), countries, admin)
+    os.remove(path)
+    print(f"geography: GeoNames {len(feats)} features", file=sys.stderr)
+    B.write_pack(a.out, "geography", rows + feats, {
+        "name": "Geography", "name_ar": "الجغرافيا", "license": "Public domain (CIA World Factbook) + CC BY 4.0 (GeoNames)",
+        "attribution": "Each country's geography and environment from the CIA World Factbook (public domain, via factbook/factbook.json); the world's well-known mountains, rivers, lakes, deserts, islands, seas and more from GeoNames (geonames.org, CC BY 4.0), with Arabic names where known.",
+        "sources": [{"title": "CIA World Factbook", "url": "https://www.cia.gov/the-world-factbook/", "license": "Public domain"},
+                    {"title": "GeoNames", "url": "https://www.geonames.org/", "license": "CC BY 4.0"}], "retrieved": time.strftime("%Y-%m-%d")})
+
+# ---- coding (Ali): official docs — Python (PSF licence), MDN JavaScript / HTML / CSS (CC BY-SA 2.5), Kotlin (Apache 2.0) ---------------
+def doc_chunks(body, size=1400):
+    """Section text → pieces of about `size` characters at paragraph breaks; a code block is never cut and keeps its lines."""
+    paras, cur, fence = [], [], False
+    for line in body.split("\n"):
+        if line.strip().startswith(("```", "~~~")): fence = not fence
+        if not line.strip() and not fence:
+            if cur: paras.append("\n".join(cur)); cur = []
+        else: cur.append(line.rstrip())
+    if cur: paras.append("\n".join(cur))
+    out, acc = [], ""
+    for p in paras:
+        if acc and len(acc) + len(p) > size: out.append(acc); acc = p
+        else: acc = (acc + "\n\n" + p) if acc else p
+    if acc: out.append(acc)
+    return [x.strip() for x in out if len(x.strip()) > 30]
+
+def md_sections(text):
+    """Markdown → [(heading path, body)]; front matter and MDN macros ({{jsxref("Array")}} → Array) cleaned, code blocks kept."""
+    text = re.sub(r"\A---\n.*?\n---\n", "", text, flags=re.S)
+    text = re.sub(r"\{\{\s*[\w-]+\(\s*\"([^\"]+)\"(?:\s*,\s*\"([^\"]*)\")?[^}]*\)\s*\}\}", lambda m: m.group(2) or m.group(1), text)
+    text = re.sub(r"\{\{[^}]*\}\}", "", text)
+    text = re.sub(r"\[([^\]]+)\]\((?:[^)]+)\)", r"\1", text)
+    out, path, buf, fence = [], [], [], False
+    for line in text.split("\n"):
+        if line.strip().startswith(("```", "~~~")): fence = not fence
+        m = None if fence else re.match(r"^(#{1,4})\s+(.+?)\s*#*\s*$", line)
+        if m:
+            if "".join(buf).strip(): out.append((" › ".join(t for _, t in path), "\n".join(buf)))
+            lvl = len(m.group(1)); path = [x for x in path if x[0] < lvl] + [(lvl, m.group(2).strip())]; buf = []
+        else: buf.append(line)
+    if "".join(buf).strip(): out.append((" › ".join(t for _, t in path), "\n".join(buf)))
+    return out
+
+def rst_sections(text):
+    """reStructuredText (the Python docs) → [(heading path, body)]: headings from their underlines, directives tidied, code kept."""
+    lines = text.split("\n"); out, path, buf, marks = [], [], [], []
+    i = 0
+    while i < len(lines):
+        ln = lines[i]
+        if i + 1 < len(lines) and ln.strip() and re.fullmatch(r"([=\-~^\"'`#*+])\1{2,}", lines[i + 1].strip()) and len(lines[i + 1].strip()) >= len(ln.strip()) - 2 and not ln.startswith(" "):
+            ch = lines[i + 1].strip()[0]
+            if ch not in marks: marks.append(ch)
+            lvl = marks.index(ch)
+            if "".join(buf).strip(): out.append((" › ".join(path), "\n".join(buf)))
+            path = path[:lvl] + [ln.strip()]; buf = []; i += 2; continue
+        if re.fullmatch(r"([=\-~^\"'`#*+])\1{2,}", ln.strip()): i += 1; continue
+        ln = re.sub(r":(?:func|class|meth|mod|attr|data|exc|const|keyword|ref|term|pep|samp|file|envvar|option|program|token|dfn|abbr)?:`!?~?([^`<]+?)(?:\s*<[^>]+>)?`", r"\1", ln)
+        ln = re.sub(r"^\.\. (?:index|highlight|testsetup|testcleanup|seealso|versionadded|versionchanged|deprecated|_[\w-]+)::?.*$", "", ln)
+        ln = re.sub(r"^\.\. (function|class|method|attribute|data|exception|module|decorator)::\s*", lambda m: m.group(1) + ": ", ln)
+        ln = ln.replace("``", "`")
+        buf.append(ln); i += 1
+    if "".join(buf).strip(): out.append((" › ".join(path), "\n".join(buf)))
+    return out
+
+def doc_rows(name, sections, url, size=1400):
+    rows = []
+    for path, body in sections:
+        for piece in doc_chunks(body, size):
+            rows.append({"t": f"{name} — {path}" if path else name, "x": piece, "u": url, "l": "en"})
+    return rows
+
+def sparse(repo, paths, branch=None):
+    d = tempfile.mkdtemp()
+    subprocess.run(["git", "clone", "-q", "--depth", "1", "--filter=blob:none", "--sparse"] + (["-b", branch] if branch else []) + [f"https://github.com/{repo}.git", d], check=True, timeout=900)
+    subprocess.run(["git", "-C", d, "sparse-checkout", "set", "--no-cone"] + paths, check=True, timeout=1800)
+    return d
+
+def build_coding(a):
+    B = _bk(); rows, used = [], []
+    try:
+        d = sparse("python/cpython", ["/Doc/tutorial/*", "/Doc/library/*", "/Doc/reference/*", "/Doc/howto/*", "/Doc/faq/*"])
+        n0 = len(rows)
+        for sub in ("tutorial", "reference", "howto", "faq", "library"):
+            for fn in sorted(glob.glob(os.path.join(d, "Doc", sub, "*.rst"))):
+                page = os.path.basename(fn)[:-4]
+                rows += doc_rows("Python docs", rst_sections(open(fn, encoding="utf-8").read()), f"https://docs.python.org/3/{sub}/{page}.html")
+        print(f"coding: Python {len(rows) - n0}", file=sys.stderr)
+        used.append({"title": "Python documentation (python.org)", "url": "https://docs.python.org/3/", "license": "PSF Documentation Licence"})
+    except BaseException as e: print("coding: Python failed", e, file=sys.stderr)
+    try:
+        d = sparse("mdn/content", ["/files/en-us/web/javascript/*", "/files/en-us/web/html/*", "/files/en-us/web/css/*", "/files/en-us/learn_web_development/*"])
+        n0 = len(rows)
+        for fn in sorted(glob.glob(os.path.join(d, "files", "en-us", "**", "index.md"), recursive=True)):
+            rel = os.path.relpath(os.path.dirname(fn), os.path.join(d, "files", "en-us"))
+            text = open(fn, encoding="utf-8").read()
+            t = re.search(r"^title:\s*(.+)$", text, re.M)
+            area = rel.split(os.sep)[1] if rel.startswith("web" + os.sep) and len(rel.split(os.sep)) > 1 else rel.split(os.sep)[0]
+            name = f"MDN {area.upper() if area in ('css', 'html') else area.title()} — " + (t.group(1).strip().strip("'\"") if t else rel)
+            rows += doc_rows(name, md_sections(text), "https://developer.mozilla.org/en-US/docs/" + rel.replace(os.sep, "/"))
+        print(f"coding: MDN {len(rows) - n0}", file=sys.stderr)
+        used.append({"title": "MDN Web Docs (Mozilla)", "url": "https://developer.mozilla.org/", "license": "CC BY-SA 2.5"})
+    except BaseException as e: print("coding: MDN failed", e, file=sys.stderr)
+    try:
+        d = sparse("JetBrains/kotlin-web-site", ["/docs/topics/*"])
+        n0 = len(rows)
+        for fn in sorted(glob.glob(os.path.join(d, "docs", "topics", "**", "*.md"), recursive=True)):
+            page = os.path.basename(fn)[:-3]
+            rows += doc_rows("Kotlin docs", md_sections(open(fn, encoding="utf-8").read()), f"https://kotlinlang.org/docs/{page}.html")
+        print(f"coding: Kotlin {len(rows) - n0}", file=sys.stderr)
+        used.append({"title": "Kotlin documentation (JetBrains)", "url": "https://kotlinlang.org/docs/", "license": "Apache 2.0"})
+    except BaseException as e: print("coding: Kotlin failed", e, file=sys.stderr)
+    budget = int(a.budget_mb * 1e6); kept, b = [], 0
+    for r in rows:
+        n = len(r["x"].encode())
+        if b + n > budget: break
+        kept.append(r); b += n
+    B.write_pack(a.out, "coding", kept, {
+        "name": "Coding (official docs)", "name_ar": "البرمجة (التوثيق الرسمي)",
+        "license": "Python docs: PSF Documentation Licence; MDN: CC BY-SA 2.5 (Mozilla contributors); Kotlin docs: Apache 2.0",
+        "attribution": "The official Python documentation (python.org), MDN Web Docs for JavaScript, HTML and CSS (by Mozilla Contributors, CC BY-SA 2.5) and the Kotlin documentation (JetBrains, Apache 2.0) — code examples kept with their lines.",
+        "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
+
+BUILDERS = {"science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith, "cars": build_cars, "geography": build_geography, "coding": build_coding, **{k: (lambda a, k=k: build_subject(a, k)) for k in SUBJECTS}}
