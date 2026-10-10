@@ -64,13 +64,14 @@ const rows = [];
 for (const [q, rx] of QS) {
   const row = { q };
   for (const m of MODES) {
-    let user = q, look = 0, found = null;
+    let user = q, look = 0, found = null, hits = [];
     if (m !== "none") {
-      const t = Date.now(); const hits = await kn.find(q); look = Date.now() - t;
+      const t = Date.now(); hits = await kn.find(q); look = Date.now() - t;
       const blk = K.factsBlock(hits, q); found = rx.test(toLatin(blk)) || rx.test(blk); user = blk + q;
       if (found) S[m].found++;
     }
     const a = await ask(user);
+    if (hits.length) a.text = K.checkFacts(a.text, hits).text;   // what the app shows (tags removed, a false "not covered" opening removed)
     const good = rx.test(a.text) || rx.test(toLatin(a.text));
     Object.assign(S[m], { ok: S[m].ok + (good ? 1 : 0), ms: S[m].ms + a.ms + look, prompt: S[m].prompt + a.prompt, look: S[m].look + look });
     row[m] = { good, found, look, search: searchMs, ms: a.ms, prompt: a.prompt, text: a.text.replace(/\s+/g, " ").slice(0, 160) };
