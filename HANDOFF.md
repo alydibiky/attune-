@@ -652,8 +652,10 @@ Four branches from the "Pages & look" / helper sessions had never reached `main`
   offlinemap.js, MapPacks.kt and build_map_pack.py — tests/unit/v722maps checks JS = Python.
 - Tests: e2e_v722maps (a real tiny vector map, tests/fixtures/cairo-mini.pmtiles, from make_map_fixture.py),
   e2e_v722mapbuilder, unit v722maps; e2e_v58, e2e_v68, e2e_v700maps updated for the new layouts.
-- NOT YET RUN: the map-pack workflow (first run publishes map-assets and map-eg; ~1–2 h). Knowledge packs
-  (know-pack.yml) were never published either — waiting for Ali's go-ahead (confirm=yes).
+- First run (10 Oct, run 38041401209, 2 min): map-assets (2.4 MB) and map-eg — eg.pmtiles 269 MB (z0–15, data of
+  2026-10-10), eg-places.sqlite 83 MB (249,190 places). Egypt rebuilds every Friday; other countries: run the workflow
+  with countries="tr gcc …" (add them to the schedule's list in the plan step if Ali wants them weekly).
+  Knowledge packs (know-pack.yml) were never published — waiting for Ali's go-ahead (confirm=yes).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
