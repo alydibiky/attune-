@@ -1625,8 +1625,7 @@ WD_SETS = [   # (name, class filter (SPARQL on ?item), [(property, label, kind)]
     ("lake", "?item wdt:P31 wd:Q23397 ; wdt:P2046 ?a . FILTER(?a >= 500)", [("P2046", "area", "qty"), ("P4511", "depth", "qty"), ("P17", "country", "item")], ""),
     ("chemical element", "?item wdt:P31 wd:Q11344 .", [("P1086", "atomic number", "qty"), ("P246", "symbol", "str"), ("P2067", "atomic mass", "qty"),
         ("P2101", "melting point", "qty"), ("P2102", "boiling point", "qty"), ("P575", "discovered", "time"), ("P61", "discoverer", "item")], ""),
-    ("famous person", "?item wdt:P31 wd:Q5 ; wikibase:sitelinks ?sl . FILTER(?sl >= 90)", [("P569", "born", "time"), ("P570", "died", "time"),
-        ("P19", "place of birth", "item"), ("P20", "place of death", "item"), ("P27", "citizenship", "item"), ("P106", "occupation", "item")], ""),
+    # (famous people were tried: scanning every human for their fame is over Wikidata's 60-second limit — left out)
 ]
 
 def wd_query(cls, prop, kind):
@@ -1634,7 +1633,7 @@ def wd_query(cls, prop, kind):
            "qty": f"psv:{prop} [ wikibase:quantityAmount ?v ; wikibase:quantityUnit ?u ] . OPTIONAL {{ ?u rdfs:label ?ul FILTER(LANG(?ul) = 'en') }}",
            "time": f"psv:{prop} [ wikibase:timeValue ?v ; wikibase:timePrecision ?prec ] .",
            "str": f"ps:{prop} ?v ."}[kind]
-    return f"""SELECT ?item ?en ?ar ?v ?vl ?ul ?prec ?when ?url ?statedL WHERE {{
+    return f"""SELECT ?item ?en ?ar ?v ?vl ?ul ?prec ?when ?url ?statedL ?rank WHERE {{
   {cls}
   ?item p:{prop} ?st . ?st {val}
   ?st wikibase:rank ?rank . FILTER(?rank != wikibase:DeprecatedRank)
@@ -1687,10 +1686,14 @@ def wikidata_rows(results):
             f = it["facts"].setdefault(label, {})
             key = val + (f" ({when})" if when else "")
             f.setdefault(key, set()).add(wd_source(b))
+            if (b.get("rank") or {}).get("value", "").endswith("PreferredRank"): it.setdefault("preferred", {}).setdefault(label, set()).add(key)
     rows = []
     for qid, it in sorted(items.items(), key=lambda x: x[1]["en"]):
         parts = []
         for label, vals in it["facts"].items():
+            # Wikidata marks the current value «preferred» (Everest 8,848.86 m, not the 2005 survey): then only that one
+            pref = (it.get("preferred") or {}).get(label)
+            if pref: vals = {k: v for k, v in vals.items() if k in pref}
             # several values: the most recent dated one first (a population), at most 4
             vs = sorted(vals.items(), key=lambda kv: re.search(r"\((\d{4})\)$", kv[0]).group(1) if re.search(r"\((\d{4})\)$", kv[0]) else "", reverse=True)[:4]
             parts.append(f"{label}: " + "; ".join(f"{v} [source: {', '.join(sorted(s for s in src if s)[:2])}]" for v, src in vs))

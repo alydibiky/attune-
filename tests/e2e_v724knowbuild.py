@@ -363,6 +363,10 @@ eg = next(r for r in wr2 if r["t"].startswith("Egypt"))
 check("capital: Cairo [source: The World Factbook]" in eg["x"] and eg["x"].index("105,231,484 (2022)") < eg["x"].index("94,798,827 (2017)") and "data.worldbank.org" in eg["x"]
       and "1,010,407.87 km²" in eg["x"] and "(مصر)" in eg["t"] and eg["u"].endswith("/Q79"), "Wikidata: each fact with its source, newest population first, units and the Arabic name: " + eg["x"][:200])
 check(any("discovered: 18 August 1868 [source: Encyclopaedia Britannica]" in r["x"] for r in wr2), "Wikidata: a dated fact at its precision, with its source")
+ev = {"item": L("http://www.wikidata.org/entity/Q513"), "en": L("Mount Everest"), "ar": L("جبل إفرست")}
+wr3 = S.wikidata_rows([("mountain", "elevation", "qty", [dict(ev, v=L("8844.43"), ul=L("metre"), url=L("http://news.xinhuanet.com/x"), rank=L("http://wikiba.se/ontology#NormalRank")),
+    dict(ev, v=L("8848.86"), ul=L("metre"), url=L("https://www.bbc.com/news/x"), rank=L("http://wikiba.se/ontology#PreferredRank"))])])
+check("8,848.86 m" in wr3[0]["x"] and "8,844.43" not in wr3[0]["x"], "Wikidata: when one value is marked current (preferred), the old ones are left out: " + wr3[0]["x"])
 q = S.wd_query("?item wdt:P31 wd:Q3624078 .", "P36", "item")
 check("pr:P854" in q and "Q10876391" in q and "wikipedia.org" in q and "wikimedia.org" in q and "pq:P582" in q and "DeprecatedRank" in q,
       "Wikidata: only statements citing an outside source (not Wikipedia), not ended, not deprecated")
