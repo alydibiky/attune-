@@ -8,7 +8,10 @@ const root = new URL("../../", import.meta.url).pathname;
 const src = fs.readFileSync(root + "tools/build_know_pack.py", "utf8"), wf = fs.readFileSync(root + ".github/workflows/know-pack.yml", "utf8");
 ok(!/wikipedia|wikimedia/i.test(src.replace(/^.*No Wikipedia.*$/gim, "")), "the builder reads no Wikipedia source");
 ok(!/wikipedia|wikimedia/i.test(wf.replace(/^#.*$/gm, "")), "the workflow has no Wikipedia source");
-ok(/confirm == 'yes'/.test(wf) && /workflow_dispatch/.test(wf) && !/\bschedule:|\bpush:/.test(wf), "the workflow only runs by hand with confirm = yes");
+// Ali approved publishing (10 Oct 2026): by hand, and monthly so the numbers stay current — never on a push
+ok(/workflow_dispatch/.test(wf) && /schedule:\s*\n\s*- cron: "\d+ \d+ 1 \* \*"/.test(wf) && !/\bpush:/.test(wf), "the workflow runs by hand and monthly, never on a push");
+const src2 = fs.readFileSync(root + "tools/know_sources.py", "utf8");
+ok(!/wikipedia|wikimedia/i.test(src2.replace(/^.*no Wikipedia.*$/gim, "")), "the new sources read no Wikipedia either");
 
 const py = `
 import json, sys; sys.path.insert(0, "${root}tools"); import build_know_pack as B

@@ -340,7 +340,7 @@ export async function removeKnowPack(K, packId) { for (const s of await K.source
  * first two packs (stored passages, heavy in memory) are removed once the phone has them.
  * native: { list() → [{id, built}], remote(id) → manifest, install(id) → manifest }. → the catalogue entries installed now.
  */
-export async function autoInstallPacks(K, native, { ids = CATALOG.map((c) => c.id), isStopped = () => false } = {}) {
+export async function autoInstallPacks(K, native, { ids = CATALOG.map((c) => c.id), isStopped = () => false, bigOk = true, big = 15e6 } = {}) {
   const done = [];
   const have = new Map(((await native.list()) || []).map((p) => [p.id, p]));
   for (const id of ids) {
@@ -348,6 +348,8 @@ export async function autoInstallPacks(K, native, { ids = CATALOG.map((c) => c.i
     const cat = CATALOG.find((c) => c.id === id); if (!cat) continue;
     let man; try { man = await native.remote(id); } catch (e) { continue; }       // not published yet, or no signal
     const mine = have.get(id);
+    const bytes = ((man.files || []).reduce((t, f) => t + (Number(f.bytes) || 0), 0));
+    if (!bigOk && bytes > big) continue;                                          // a big pack waits for Wi-Fi
     if (!mine || String(man.built || "") > String(mine.built || "")) {
       try { await native.install(id); done.push(cat); } catch (e) { continue; }
     }

@@ -22,6 +22,14 @@ ok(got.length === 0 && installs.length === 0, "an up-to-date pack is not downloa
 published.numbers = "2026-11-10"; got = await K.autoInstallPacks(kn, native);
 ok(installs.join() === "numbers", "a newer monthly build replaces the old one");
 
+// on mobile data a big pack waits for Wi-Fi
+published.science = "2026-10-10"; const rem0 = native.remote;
+native.remote = async (id) => (id === "science" ? { id, built: "2026-10-10", files: [{ bytes: 24e6 }] } : rem0(id));
+installs = []; await K.autoInstallPacks(kn, native, { bigOk: false });
+ok(!installs.includes("science"), "on mobile data the 24 MB science pack waits for Wi-Fi");
+installs = []; await K.autoInstallPacks(kn, native, { bigOk: true });
+ok(installs.includes("science"), "on Wi-Fi it is fetched");
+
 // asking: your own note and the packs together
 await kn.add({ kind: "text", title: "My crane notes", text: "Our Liebherr LTM 1100 needs its hook block inspected every month. The oil change is at 12,500 hours." });
 let asked = [];
