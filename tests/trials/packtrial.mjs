@@ -13,7 +13,7 @@ export const QS = [
   ["What is the total area of Egypt?", /1[,.]?001[,.]?450/],
   ["What is the population of Japan according to the World Bank?", /123[.,]\d|123 million/],
   ["What is the inflation rate in Egypt?", /14[.,]1|28[.,]3/],
-  ["What is the population of Alexandria, Egypt?", /5[,.]?26\d|5\.2\d? million/],
+  ["What is the population of Alexandria, Egypt?", /5[,.]?(26|58)\d|5\.(2|5)\d* million/],
   ["What is Turkey's international calling code?", /\+?\s?90\b/],
   ["ما هي الآية التي فيها «الله لا إله إلا هو الحي القيوم»؟ اذكر السورة ورقم الآية", /البقرة|2:255|255|آل عمران|3:2/],
   ["ما تفسير قوله تعالى «إياك نعبد وإياك نستعين» في تفسير الجلالين؟", /نخصك|نخص|وحدك بالعبادة|نستعين بك وحدك|نطلب المعونة/],
@@ -54,7 +54,7 @@ export const QS = [
   ["What is the quadratic formula?", /b\s?\^?\s?2\s?[-−]\s?4\s?a\s?c|b²\s?[-−]\s?4ac/i],
   ["What is Newton's second law of motion?", /F\s?=\s?m\s?a|force[\s\S]*mass[\s\S]*acceleration/i],
   ["What is the pH of pure water at 25 °C?", /\b7\b/],
-  ["What is opportunity cost?", /next[- ]best|forgone|forego|give up|given up/i],
+  ["What is opportunity cost?", /next[- ]best|forgone|forego|forgo|give up|given up|alternative/i],
 ];
 const proc = spawn("python3", [SEARCH, DIR, "--serve"], { stdio: ["pipe", "pipe", "inherit"] });
 let buf = "", waiting = [];

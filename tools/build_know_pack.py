@@ -48,9 +48,10 @@ def search_key(text):
     normalize() turns it into a full alif («الاه», «الرحمان»), which a typed question never matched."""
     key = normalize(text)
     if "\u0670" in text:
-        alt = [w for w in normalize(text.replace("\u0670", "")).split() if w]
-        extra = " ".join(dict.fromkeys(w for w in alt if w not in set(key.split())))
-        if extra: key += " " + extra
+        # v6.16c: the whole text again in the typed spelling, in order — a quoted phrase («لا إله إلا هو الحي القيوم») is matched
+        # word for word, which the loose extra words alone could not do
+        alt = normalize(text.replace("\u0670", ""))
+        if alt != key: key += " " + alt
     return key
 
 def write_pack(out, pid, rows, manifest):

@@ -104,6 +104,27 @@ export function findFacts(index, question, { k = 3, cover = 0.34, rel = 0.45, bu
 
 /** The block added to the request: the passages with their tags and sources, and how to use them. */
 const SOLVE = /\b(solve|calculate|compute|find the|derive|prove|simplify|integrate|differentiate|evaluate|how (much|many|long|far|fast)|write (a|an|the|me)?\s*(code|program|function|script|class|query)|fix (this|my)|debug|implement|explain how|step by step)\b|احسب|حل |أوجد|اوجد|اثبت|أثبت|بسّط|بسط|اشتق|كامل|اكتب (كود|برنامج|دالة)|صحح الكود|خطوة بخطوة|كيف أحسب|اشرح كيف/i;
+/* v6.16c: the clause (not the whole sentence) that matches the question best, put first — a small model given «1,000 mg every
+   6 hours… a maximum single-dose of 1,000 mg… a maximum daily dose of 4,000 mg per day» answered 1,000 mg for "maximum daily
+   dose"; pointed at «a maximum daily dose of acetaminophen of 4,000 mg per day» it copies the right number. Only a clause holding
+   most of the question's words (at least 3) counts; nothing is shown otherwise. */
+export function keyLine(hits, question) {
+  const qw = [...new Set(words(question))];
+  if (qw.length < 3) return null;
+  const qty = /\b(how (many|much|high|tall|long|far|big|old)|dose|maximum|minimum|max|min|population|area|elevation|height|when|year|price|range|power|hp|torque|speed)\b|كم|متى|ارتفاع|مساحة|سكان|جرعة|سعر/i.test(question);
+  let best = null;
+  for (const h of hits || []) {
+    for (const c of String(h.chunk.text || "").split(/(?<=[.;!?؟])\s+|,\s+|\s+\(\s*\d[\d.]*\s*\)\s*/)) {
+      const t = c.trim(); if (t.length < 15 || t.length > 320) continue;
+      const cw = new Set(words(t)); let m = 0; for (const w of qw) if (cw.has(w)) m++;
+      // a "how much" question is answered by a clause with a measured number («4,000 mg», «5,895 m», «308 hp»), not «Tables 1 to 3»
+      const n = m + (qty && /\d[\d,.]*\s?(mg|mcg|g|kg|ml|l|km|m|cm|mm|%|hp|kw|nm|mph|km\/h|°|years?|people|million|billion|جرام|غرام|متر|كم)\b|\d{1,3},\d{3}/i.test(t) ? 0.5 : 0);
+      if (m >= 3 && m / qw.length >= 0.6 && (!best || n > best.n || (n === best.n && t.length < best.t.length))) best = { n, t, tag: h.tag };
+    }
+  }
+  return best && { text: best.t, tag: best.tag };
+}
+
 export function factsBlock(hits, question = "") {
   if (!hits || !hits.length) return "";
   const ar = hasArabic(question);
@@ -113,7 +134,9 @@ export function factsBlock(hits, question = "") {
   // a pack with a warning (the laws pack): the answer must repeat it when it uses those facts
   const notes = [...new Set(hits.filter((h) => h.chunk.note).map((h) => (ar && h.chunk.note_ar) || h.chunk.note))];
   const solve = SOLVE.test(question);
+  const key = solve ? null : keyLine(hits, question);
   return "Facts from your Knowledge (the person's own saved sources and the reference packs on this phone):\n" + lines.join("\n") +
+    (key ? `\n\nThe line that answers the question most directly [${key.tag}]: «${key.text}»` : "") +
     (notes.length ? "\n\nIf you use these facts, end the answer with this line: " + notes.join(" ") : "") +
     "\n\nHow to use them: these facts were found for this question — answer from them only, copying their numbers, names and dates exactly, and put the tag, like [K1], after each sentence that uses one. " +
     (solve ? "This question asks you to solve, calculate, write code or explain: use the passages' definitions, formulas, rules, code and worked examples as your method, then work it out yourself step by step — show each step, do the arithmetic carefully, and adapt the code to the person's case; put the tag after the step whose method comes from a passage. " : "") +
@@ -366,10 +389,13 @@ export function withEnglishPlaces(q) {
 
 export function mergePackFacts(own, pack, o = {}) {
   const k = (o && o.k) || 3, budget = (o && o.budget) || 3200;
-  const top = pack.length ? Number(pack[0].score) || 1 : 1;
-  const topCov = pack.length && pack[0].cov != null ? Number(pack[0].cov) : null;
-  // the rest must be close to the best one in score AND cover nearly as much of the question (no "West Bank" for "World Bank")
-  const keep = pack.filter((p, i) => i === 0 || ((Number(p.score) || 0) >= top * 0.45 && (p.cov == null || topCov == null || p.cov >= Math.max(0.5, topCov * 0.8))));
+  // the rest must be close to the best one in score AND cover nearly as much of the question (no "West Bank" for "World Bank").
+  // v6.16c: a dictionary entry on top (short, so it scores high) doesn't set the bar — the best passage from another pack does,
+  // so the physics textbook still comes with «Newton's second law» from the dictionary
+  const lead = pack.find((p) => p.pack !== "dictionary") || pack[0];
+  const top = lead ? Number(lead.score) || 1 : 1;
+  const topCov = lead && lead.cov != null ? Number(lead.cov) : null;
+  const keep = pack.filter((p, i) => i === 0 || p === lead || ((Number(p.score) || 0) >= top * 0.45 && (p.cov == null || topCov == null || p.cov >= Math.max(0.5, topCov * 0.8))));
   const out = (own || []).map((h) => ({ chunk: h.chunk, score: h.score }));
   let used = out.reduce((t, h) => t + String(h.chunk.text || "").length, 0);
   const per = {};
