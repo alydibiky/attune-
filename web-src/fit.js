@@ -306,16 +306,16 @@ export function targets(pr) {
   const tdee = Math.round(bmr * (ACTIVITY[pr.activity] || 1.375));
   const bmi = r1(kg / Math.pow(cm / 100, 2));
   let goal = pr.goal || "maintain", rate = Math.min(Math.max(+pr.rate || 0.5, 0.1), 1);
-  if (goal === "lose" && (age < 18 || pr.pregnant)) { goal = "maintain"; notes.push({ en: age < 18 ? "Under 18: the plan keeps your weight steady — growing bodies need their energy. Talk to a doctor before dieting." : "Pregnant or breastfeeding: no calorie deficit — ask your doctor what is right for you.", ar: age < 18 ? "أقل من 18 سنة: الخطة بتثبّت الوزن — الجسم اللي بينمو محتاج طاقته. كلّم دكتور قبل أي رجيم." : "حامل أو بترضعي: مفيش عجز سعرات — اسألي دكتورك إيه المناسب ليكي." }); }
-  if (goal === "lose" && bmi < 18.5) { goal = "maintain"; notes.push({ en: "Your BMI is already under 18.5 — losing more isn't healthy, so the plan keeps your weight.", ar: "مؤشر كتلة جسمك أقل من 18.5 — التخسيس أكتر مش صحي، فالخطة بتثبّت وزنك." }); }
+  if (goal === "lose" && (age < 18 || pr.pregnant)) { goal = "maintain"; notes.push({ en: age < 18 ? "Under 18: the plan keeps your weight steady — growing bodies need their energy. Talk to a doctor before dieting." : "Pregnant or breastfeeding: no calorie deficit — ask your doctor what is right for you.", ar: age < 18 ? "أقل من 18 سنة: تُثبّت الخطة الوزن — فالجسم في مرحلة النمو يحتاج طاقته. استشر طبيبًا قبل أي حمية." : "حامل أو مُرضِع: لا يوجد عجز في السعرات — اسألي طبيبك عمّا يناسبك." }); }
+  if (goal === "lose" && bmi < 18.5) { goal = "maintain"; notes.push({ en: "Your BMI is already under 18.5 — losing more isn't healthy, so the plan keeps your weight.", ar: "مؤشر كتلة جسمك أقل من 18.5 — إنقاص الوزن أكثر غير صحي، لذا تُثبّت الخطة وزنك." }); }
   let kcal = tdee;
   if (goal === "lose") {
     let def = Math.round(rate * 7700 / 7);
-    if (def > tdee * 0.25) { def = Math.round(tdee * 0.25); notes.push({ en: "The pace was capped at a quarter of your daily energy — faster loss mostly costs muscle.", ar: "السرعة اتحددت بربع طاقتك اليومية — التخسيس الأسرع بيضيّع عضل." }); }
+    if (def > tdee * 0.25) { def = Math.round(tdee * 0.25); notes.push({ en: "The pace was capped at a quarter of your daily energy — faster loss mostly costs muscle.", ar: "حُدّدت السرعة بربع طاقتك اليومية — فإنقاص الوزن الأسرع يُفقدك العضلات." }); }
     kcal = tdee - def;
   } else if (goal === "gain") kcal = tdee + Math.min(500, Math.round(rate * 7700 / 7));
   const floor = male ? 1500 : 1200;
-  if (kcal < floor) { kcal = floor; notes.push({ en: `Never below ${floor} kcal a day without a doctor.`, ar: `مش أقل من ${floor} سعر في اليوم من غير دكتور.` }); }
+  if (kcal < floor) { kcal = floor; notes.push({ en: `Never below ${floor} kcal a day without a doctor.`, ar: `لا تقل عن ${floor} سعر يوميًا دون استشارة طبيب.` }); }
   kcal = Math.round(kcal / 10) * 10;
   // protein by body weight (the goal weight when there's a lot to lose), then fat, then carbs
   const refKg = bmi > 30 && pr.goalKg ? Math.max(+pr.goalKg, kg * 0.75) : kg;
@@ -445,7 +445,7 @@ export const PLANS = [
     workout: [["squat", 3, 12, 60], ["pushup", 3, 8, 60], ["glute-bridge", 3, 12, 45], ["lunge", 3, 10, 60], ["plank", 3, "30s", 45], ["superman", 3, 12, 45]] },
   { id: "walk-fatburn", en: "Fat-burn walking", ar: "مشي لحرق الدهون", days: 5, minutes: 40, equipment: "none", level: "beginner",
     workout: [["walk", 1, "5m", 0], ["walk-brisk", 1, "30m", 0], ["walk", 1, "5m", 0]] },
-  { id: "hiit-7", en: "Quick HIIT — 8 moves", ar: "هيت سريع — 8 حركات", days: 4, minutes: 10, equipment: "none", level: "intermediate",
+  { id: "hiit-7", en: "Quick HIIT — 8 moves", ar: "تمرين HIIT سريع — 8 حركات", days: 4, minutes: 10, equipment: "none", level: "intermediate",
     workout: [["jumping-jacks", 1, "30s", 10], ["squat", 1, "30s", 10], ["pushup", 1, "30s", 10], ["crunch", 1, "30s", 10], ["lunge", 1, "30s", 10], ["plank", 1, "30s", 10], ["mountain-climbers", 1, "30s", 10], ["glute-bridge", 1, "30s", 10]] },
   { id: "gym-strength", en: "Gym strength — 3 days", ar: "قوة في الجيم — 3 أيام", days: 3, minutes: 55, equipment: "gym", level: "intermediate",
     workout: [["squat", 4, 8, 120], ["bench", 4, 8, 120], ["row", 3, 10, 90], ["shoulder-press", 3, 10, 90], ["plank", 3, "45s", 60]] },
@@ -576,9 +576,9 @@ export function dayTips(tot, tg, lang) {
   if (!tg) return [];
   const ar = lang === "ar", out = [];
   const left = tg.kcal - tot.kcal + (tot.burned || 0);
-  if (tot.kcal > 0 && tot.p < tg.protein * 0.6 && new Date().getHours() >= 15) out.push(ar ? `البروتين لسه ${Math.round(tot.p)} من ${tg.protein} جم — ضيف فراخ أو بيض أو زبادي يوناني.` : `Protein is at ${Math.round(tot.p)} of ${tg.protein} g — add chicken, eggs or Greek yogurt.`);
+  if (tot.kcal > 0 && tot.p < tg.protein * 0.6 && new Date().getHours() >= 15) out.push(ar ? `البروتين حتى الآن ${Math.round(tot.p)} من ${tg.protein} جم — أضف دجاجًا أو بيضًا أو زبادي يونانيًا.` : `Protein is at ${Math.round(tot.p)} of ${tg.protein} g — add chicken, eggs or Greek yogurt.`);
   if (left < -200) out.push(ar ? `عديت هدفك بـ ${-left} سعر — مشي 30 دقيقة بيحرق حوالي ${burned(4.3, tg.kg || 70, 30)}.` : `You're ${-left} kcal over — a 30-minute brisk walk burns about ${burned(4.3, tg.kg || 70, 30)}.`);
-  if (tot.water < tg.water * 0.5 && new Date().getHours() >= 14) out.push(ar ? "المية أقل من نص هدفك — اشرب كوبايتين دلوقتي." : "Water is under half your goal — drink two glasses now.");
+  if (tot.water < tg.water * 0.5 && new Date().getHours() >= 14) out.push(ar ? "الماء أقل من نصف هدفك — اشرب كوبين الآن." : "Water is under half your goal — drink two glasses now.");
   if (tot.fib < tg.fibre * 0.5 && tot.kcal > tg.kcal * 0.6) out.push(ar ? "الألياف قليلة — فول، عدس، خضار أو شوفان." : "Fibre is low — ful, lentils, vegetables or oats help.");
   return out.slice(0, 2);
 }

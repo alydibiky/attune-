@@ -183,7 +183,7 @@ def sections(env, errors, install, open_more, queue):
             if (!r.width || e.closest('.overflow-x-auto')) return false; return r.right > W + 1 || r.left < -1; }).slice(0, 3).map(e => e.tagName + '.' + (e.className || '').toString().slice(0, 40));
             return { sw: document.documentElement.scrollWidth, W, out }; }"""
         page.locator("nav button").last.click(); page.wait_for_timeout(250)
-        page.locator(".rounded-t-2xl .grid button").filter(has_text="أعمالي").first.click()
+        page.locator(".rounded-t-2xl .grid button").filter(has_text="الأعمال").first.click()
         page.wait_for_selector("[data-testid=business-page]", timeout=5000)
         page.click("[data-testid=erp-new]"); page.click("[data-testid=erp-tpl-cranes]"); page.click("[data-testid=erp-create]")
         page.wait_for_selector("[data-testid=erp-systemview]")

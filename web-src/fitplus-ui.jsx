@@ -39,11 +39,11 @@ export function DayQuality({ L, day, tg, isToday }) {
   return (
     <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2" data-testid="fit-quality">
       <div className="flex items-center justify-between">
-        <span className="text-[13px] text-white">{L("Today's score", "درجة النهارده")}{soFar ? <span className="text-[11px] text-slate-400"> · {L("so far", "لحد دلوقتي")}</span> : null}</span>
+        <span className="text-[13px] text-white">{L("Today's score", "درجة اليوم")}{soFar ? <span className="text-[11px] text-slate-400"> · {L("so far", "حتى الآن")}</span> : null}</span>
         <span className={"text-xl font-bold tabular-nums " + (soFar ? "text-slate-200" : sc.score >= 80 ? "text-emerald-300" : sc.score >= 55 ? "text-amber-300" : "text-rose-300")} data-testid="fit-score">{sc.score}<span className="text-[12px] text-slate-500">/100</span></span>
       </div>
       <div className="grid grid-cols-3 gap-3">{bar(L("Sugar", "سكر"), q.sug, lim.sug)}{bar(L("Sat. fat", "دهون مشبعة"), q.sat, lim.sat)}{bar(L("Salt", "ملح"), q.salt, lim.salt)}</div>
-      {q.total ? <div className="text-[10.5px] text-slate-500">{q.known ? L(`Sugar, fat and salt from the ${q.known} of ${q.total} foods whose labels give them.`, `السكر والدهون والملح من ${q.known} من ${q.total} أكلات ملصقها بيقول.`) : L("No sugar / salt data for today's foods — packaged products (barcode or search) carry them.", "مفيش بيانات سكر وملح لأكل النهارده — المنتجات المعبّأة (باركود أو بحث) هي اللي فيها.")}</div> : null}
+      {q.total ? <div className="text-[10.5px] text-slate-500">{q.known ? L(`Sugar, fat and salt from the ${q.known} of ${q.total} foods whose labels give them.`, `السكر والدهون والملح من ${q.known} من ${q.total} أطعمة تذكرها ملصقاتها.`) : L("No sugar / salt data for today's foods — packaged products (barcode or search) carry them.", "لا توجد بيانات سكر وملح لطعام اليوم — تتوفر في المنتجات المعبّأة (بالباركود أو البحث).")}</div> : null}
     </div>
   );
 }
@@ -68,7 +68,7 @@ export function RamadanCard({ L, ar, tg, city }) {
       <div className="text-xl font-semibold text-white tabular-nums" data-testid="fit-ramadan-left">{fasting ? L(`Iftar in ${hm(left)}`, `الفطار بعد ${hm(left)}`) : L(`Suhoor ends in ${hm(left)}`, `السحور يخلص بعد ${hm(left)}`)}</div>
       <div className="text-[12px] text-violet-100/90">{L(`Iftar ~${plan.iftar} · after Taraweeh ~${plan.snack} · Suhoor ~${plan.suhoor} kcal · a glass of water every ${plan.everyMin} min from Maghrib to Fajr (${plan.glasses} glasses)`, `الفطار ~${plan.iftar} · بعد التراويح ~${plan.snack} · السحور ~${plan.suhoor} سعر · كوباية مية كل ${plan.everyMin} دقيقة من المغرب للفجر (${plan.glasses} كوبايات)`)}</div>
       {plan.tips.map((x, i) => <div key={i} className="text-[11.5px] text-violet-200/80">• {L(x.en, x.ar)}</div>)}
-      <div className="text-[10.5px] text-violet-300/70">{L("Times by the sun's position (Egyptian General Authority angles), ±3 min — follow your local mosque's call.", "المواعيد محسوبة من مكان الشمس (زوايا الهيئة المصرية)، ±٣ دقايق — امشي على أذان الجامع اللي جنبك.")}</div>
+      <div className="text-[10.5px] text-violet-300/70">{L("Times by the sun's position (Egyptian General Authority angles), ±3 min — follow your local mosque's call.", "المواقيت محسوبة من موقع الشمس (زوايا الهيئة المصرية)، ±3 دقائق — اتّبع أذان المسجد القريب منك.")}</div>
     </div>
   );
 }
@@ -89,7 +89,7 @@ export function QuickLog({ L, ar, st, upd, adding, dayKey, addToDraft, flash }) 
   };
   if (form) return (
     <div className="rounded-xl bg-slate-800/60 p-2.5 space-y-2" data-testid="fit-own">
-      <div className="text-[13px] text-white">{L("My own food (from its label)", "أكلة بتاعتي (من الملصق)")}</div>
+      <div className="text-[13px] text-white">{L("My own food (from its label)", "طعامي الخاص (من الملصق)")}</div>
       <input value={form.name || ""} onChange={(e) => set("name", e.target.value)} placeholder={L("Name", "الاسم")} className="w-full rounded-lg bg-slate-900 px-2 py-1.5 text-[14px] text-white" data-testid="fit-own-name" />
       <div className="flex gap-1.5 text-[12px]">
         {[["100g", L("per 100 g", "لكل ١٠٠ جم")], ["serving", L("per serving", "للحصة")]].map(([k, l]) => <button key={k} onClick={() => set("per", k)} className={"rounded-full px-2.5 py-1 " + ((form.per || "100g") === k ? "bg-emerald-700 text-white" : "bg-slate-900 text-slate-300")}>{l}</button>)}
@@ -114,9 +114,9 @@ export function QuickLog({ L, ar, st, upd, adding, dayKey, addToDraft, flash }) 
         {freq.map((e) => <button key={e.key} onClick={() => { const { t, ...x } = e.item; addToDraft([x]); }} className="shrink-0 rounded-full bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200" data-testid="fit-recent-item">{ar && e.item.ar ? e.item.ar : e.item.name} · {r0(e.item.kcal)}</button>)}
       </div> : null}
       <div className="flex flex-wrap gap-1.5">
-        {yItems.length ? <button onClick={() => addToDraft(yItems)} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200 flex items-center gap-1" data-testid="fit-copy-yesterday"><Copy size={12} />{L("Same as yesterday", "زي امبارح")} ({F.sumN(yItems.filter((x) => x.kcal != null)).kcal} kcal)</button> : null}
+        {yItems.length ? <button onClick={() => addToDraft(yItems)} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200 flex items-center gap-1" data-testid="fit-copy-yesterday"><Copy size={12} />{L("Same as yesterday", "مثل أمس")} ({F.sumN(yItems.filter((x) => x.kcal != null)).kcal} kcal)</button> : null}
         {mine.map((m) => <button key={m.id} onClick={() => addToDraft(m.items)} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-amber-200 flex items-center gap-1" data-testid="fit-mymeal"><Star size={12} />{m.name} · {m.kcal}</button>)}
-        <button onClick={() => setForm({ per: "100g" })} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-sky-300 flex items-center gap-1" data-testid="fit-own-open"><Plus size={12} />{L("My own food", "أكلة بتاعتي")}</button>
+        <button onClick={() => setForm({ per: "100g" })} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-sky-300 flex items-center gap-1" data-testid="fit-own-open"><Plus size={12} />{L("My own food", "طعامي الخاص")}</button>
       </div>
     </div>
   );
@@ -129,7 +129,7 @@ export function SaveMyMeal({ L, draft, upd, flash }) {
   return (
     <div className="flex gap-2">
       <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={L("e.g. My usual breakfast", "مثلاً فطاري المعتاد")} className="flex-1 min-w-0 rounded-lg bg-slate-900 px-2 py-1.5 text-[13px] text-white" data-testid="fit-mymeal-name" />
-      <button onClick={() => { if (!name.trim()) return; upd((s) => ({ ...s, myMeals: [P.myMeal(name, draft), ...(s.myMeals || [])].slice(0, 20) })); setName(null); flash && flash(L("Saved — one tap next time", "اتحفظت — ضغطة واحدة المرة الجاية")); }}
+      <button onClick={() => { if (!name.trim()) return; upd((s) => ({ ...s, myMeals: [P.myMeal(name, draft), ...(s.myMeals || [])].slice(0, 20) })); setName(null); flash && flash(L("Saved — one tap next time", "حُفظت — بضغطة واحدة في المرة القادمة")); }}
         className="rounded-lg bg-amber-600 px-3 text-[13px] text-white" data-testid="fit-mymeal-ok"><Check size={14} /></button>
     </div>);
 }
@@ -216,7 +216,7 @@ export function FitSettings({ L, ar, st, upd, native, flash, packText, photoClip
       <label className="flex flex-wrap items-center gap-2 text-[13px] text-slate-200">🍽 {L("Food from", "أكل بلد")}
         <select value={F.getCountry()} onChange={(e) => { F.setCountry(e.target.value); upd((s) => ({ ...s, country: e.target.value })); }} className="rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" data-testid="fit-country">
           {Object.entries(F.COUNTRIES).sort((a, b) => (ar ? a[1].ar.localeCompare(b[1].ar, "ar") : a[1].en.localeCompare(b[1].en))).map(([k, c]) => <option key={k} value={k}>{c.flag} {ar ? c.ar : c.en}</option>)}</select></label>
-      <p className="text-[11.5px] text-slate-500">{L("Suggestions, food search, typed meals and photos use this country's dishes first.", "الاقتراحات والبحث والوجبات المكتوبة والصور بتبدأ بأكل البلد ده.")}</p>
+      <p className="text-[11.5px] text-slate-500">{L("Suggestions, food search, typed meals and photos use this country's dishes first.", "تبدأ الاقتراحات والبحث والوجبات المكتوبة والصور بأطعمة هذا البلد.")}</p>
       <label className="flex items-center gap-2 text-[13px] text-slate-200"><input type="checkbox" checked={!!rm.on} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, on: e.target.checked } }))} data-testid="fit-ramadan-on" />🌙 {L("Ramadan mode (Suhoor, Iftar, fasting times)", "وضع رمضان (سحور، فطار، مواعيد الصيام)")}</label>
       {rm.on ? <select value={rm.city} onChange={(e) => upd((s) => ({ ...s, ramadan: { ...rm, city: e.target.value } }))} className="rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" data-testid="fit-ramadan-city">
         {Object.entries(P.CITIES).map(([k, c]) => <option key={k} value={k}>{ar ? c.ar : c.en}</option>)}</select> : null}
@@ -244,7 +244,7 @@ export function FoodPackCard({ L, packText, flash, testPack }) {
       const m = await loadManifest();
       const n = which === "starter" ? Math.min(10, m.shards.length) : m.shards.length;
       await FP.installPack({ store: store(), manifest: m, getText: packText, shards: n, isStopped: () => stop.current, onProgress: (p) => setBusy(p) });
-      flash && flash(stop.current ? L("Stopped — what was downloaded is kept", "اتوقف — اللي نزل اتحفظ") : L("The offline food pack is ready", "باقة الأكل بدون إنترنت جاهزة"));
+      flash && flash(stop.current ? L("Stopped — what was downloaded is kept", "توقف — وحُفظ ما تم تنزيله") : L("The offline food pack is ready", "باقة الأكل بدون إنترنت جاهزة"));
     } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 160)); }
     finally { setBusy(null); refresh(); }
   };
@@ -255,7 +255,7 @@ export function FoodPackCard({ L, packText, flash, testPack }) {
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="fit-foodpack">
       <p className="text-[13px] font-semibold text-slate-100">{L("Offline food pack", "باقة الأكل بدون إنترنت")}</p>
       <p className="text-[12px] text-slate-400">{info.count ? L(`${n(info.count)} packaged foods on this phone${info.built ? " · built " + info.built : ""}. Search and barcodes work without signal.`, `${n(info.count)} منتج على الموبايل${info.built ? " · بتاريخ " + info.built : ""}. البحث والباركود شغالين من غير إنترنت.`)
-        : L("Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal.", "أكتر من مليون منتج من Open Food Facts — المنتجات المصرية والعربية الأول. دوّر بالاسم أو الباركود من غير إنترنت.")}</p>
+        : L("Over a million packaged foods from Open Food Facts — Egyptian and Arab products first. Search by name or barcode with no signal.", "أكثر من مليون منتج من Open Food Facts — المنتجات المصرية والعربية أولًا. ابحث بالاسم أو الباركود دون إنترنت.")}</p>
       {busy ? (
         <div className="space-y-1.5"><div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: Math.round((busy.shard / Math.max(1, busy.of)) * 100) + "%" }} /></div>
           <p className="text-[12px] text-slate-400" data-testid="fit-foodpack-progress">{L(`Part ${busy.shard} of ${busy.of} · ${n(busy.count)} foods`, `جزء ${busy.shard} من ${busy.of} · ${n(busy.count)} منتج`)}</p>
@@ -279,7 +279,7 @@ export function FoodClipCard({ L, photoClip, flash, onChange }) {
   const refresh = () => { const s = photoClip.status(); setSt(s); onChange && onChange(!!s.installed); };
   const go = async () => {
     setBusy({ pct: 0, detail: "" });
-    try { await photoClip.install((pct, stage, detail) => setBusy({ pct, detail })); flash && flash(L("Photo recognition is ready — a food photo now takes about a second", "التعرّف على الصور جاهز — صورة الأكل بقت بتاخد حوالي ثانية")); }
+    try { await photoClip.install((pct, stage, detail) => setBusy({ pct, detail })); flash && flash(L("Photo recognition is ready — a food photo now takes about a second", "التعرّف على الصور جاهز — أصبحت صورة الطعام تستغرق نحو ثانية")); }
     catch (e) { flash && flash(String((e && e.message) || e).slice(0, 160)); }
     finally { setBusy(null); refresh(); }
   };
@@ -288,8 +288,8 @@ export function FoodClipCard({ L, photoClip, flash, onChange }) {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="fit-foodclip">
       <p className="text-[13px] font-semibold text-slate-100">{L("Fast photo recognition", "التعرّف السريع على صور الأكل")}</p>
-      <p className="text-[12px] text-slate-400">{st.installed ? L(`On this phone (${mb} MB). A food photo is named in about a second, with no chat model and no internet.`, `موجود على الموبايل (${mb} ميجا). صورة الأكل بتتعرف في حوالي ثانية، من غير موديل شات ومن غير إنترنت.`)
-        : L("A small picture model (~100 MB, once) that names the food in a photo in about a second — Egyptian dishes included — offline.", "موديل صور صغير (~١٠٠ ميجا، مرة واحدة) بيعرف الأكل اللي في الصورة في حوالي ثانية — الأكل المصري كمان — من غير إنترنت.")}</p>
+      <p className="text-[12px] text-slate-400">{st.installed ? L(`On this phone (${mb} MB). A food photo is named in about a second, with no chat model and no internet.`, `موجود على الهاتف (${mb} ميجابايت). يُتعرّف على صورة الطعام في نحو ثانية، دون نموذج محادثة ودون إنترنت.`)
+        : L("A small picture model (~100 MB, once) that names the food in a photo in about a second — Egyptian dishes included — offline.", "نموذج صور صغير (~100 ميجابايت، مرة واحدة) يتعرّف على الطعام في الصورة في نحو ثانية — بما فيه الطعام المصري — دون إنترنت.")}</p>
       {busy ? (
         <div className="space-y-1.5"><div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: (busy.pct || 0) + "%" }} /></div>
           <p className="text-[12px] text-slate-400" data-testid="fit-foodclip-progress">{(busy.pct || 0) + "%"}{busy.detail ? " · " + busy.detail.replace(" MB", L(" MB", " ميجا")) : ""}</p>
@@ -313,14 +313,14 @@ export const viaHealthSync = (w) => !!(w && (w.sources || []).includes(HEALTH_SY
 export function HuaweiGuide({ L, health, status, onDone }) {
   const hs = status && status.healthSync;
   const steps = [
-    [hs ? L("Health Sync is installed ✓", "Health Sync متسطّب ✓") : L("Install Health Sync (free trial, then a small one-time payment to its maker — not to us).", "نزّل Health Sync (تجربة مجانية، وبعدين مبلغ صغير مرة واحدة لصاحبه — مش لينا)."), HEALTH_SYNC, hs ? L("Open Health Sync", "افتح Health Sync") : L("Get Health Sync", "نزّل Health Sync")],
+    [hs ? L("Health Sync is installed ✓", "Health Sync متسطّب ✓") : L("Install Health Sync (free trial, then a small one-time payment to its maker — not to us).", "نزّل Health Sync (تجربة مجانية، ثم مبلغ صغير مرة واحدة لمطوّره — وليس لنا)."), HEALTH_SYNC, hs ? L("Open Health Sync", "افتح Health Sync") : L("Get Health Sync", "نزّل Health Sync")],
     [L("In Health Sync: source = Huawei Health → sign in with your Huawei ID and allow it.", "في Health Sync: المصدر = Huawei Health ← ادخل بحساب Huawei ID ووافق."), null],
     [L("Destination = Health Connect → allow steps, calories, distance, heart rate and exercise.", "الوجهة = Health Connect ← وافق على الخطوات والسعرات والمسافة والنبض والتمارين."), null],
-    [L("Back here: “Connect my watch”, then Refresh. The first sync can take a few minutes.", "ارجع هنا: «اربط ساعتي»، وبعدين حدّث. أول مزامنة ممكن تاخد كام دقيقة."), null],
+    [L("Back here: “Connect my watch”, then Refresh. The first sync can take a few minutes.", "عُد إلى هنا: «ربط ساعتي»، ثم حدّث. قد تستغرق المزامنة الأولى بضع دقائق."), null],
   ];
   return (
     <div className="rounded-xl bg-slate-900/70 border border-rose-900/60 p-2.5 space-y-1.5" data-testid="fit-huawei">
-      <div className="text-[12.5px] text-rose-100">{L("Huawei watch: Huawei Health doesn't share with Android's Health Connect by itself — the app Health Sync copies it across (once, then automatically).", "ساعة هواوي: Huawei Health مش بيشارك بياناته مع Health Connect بتاع أندرويد لوحده — تطبيق Health Sync بينقلها (مرة تظبطها، وبعدين لوحدها).")}</div>
+      <div className="text-[12.5px] text-rose-100">{L("Huawei watch: Huawei Health doesn't share with Android's Health Connect by itself — the app Health Sync copies it across (once, then automatically).", "ساعة هواوي: لا يشارك Huawei Health بياناته مع Health Connect في أندرويد تلقائيًا — ينقلها تطبيق Health Sync (تضبطه مرة، ثم يعمل تلقائيًا).")}</div>
       {steps.map(([t, pkg, btn], i) => (
         <div key={i} className="flex items-start gap-2 text-[12px] text-slate-300">
           <span className="shrink-0 w-5 h-5 rounded-full bg-rose-900/70 text-rose-100 text-[11px] flex items-center justify-center">{i + 1}</span>
@@ -357,14 +357,14 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
       // v6.5: Health Connect and Huawei Health read side by side; each number is the larger, never the sum
       const [a, b] = await Promise.all([hc ? health.day(dayKey).catch(() => null) : null, hw ? hwKit.day(dayKey).catch(() => null) : null]);
       const d = P.mergeWatch(P.watchHasData(a) ? a : null, P.watchHasData(b) ? b : null);
-      if (b && b.empty && !P.watchHasData(a)) setNote(L("Huawei Health sent nothing — open Huawei Health once so the watch syncs, and check Attune is still allowed in Huawei Health → Me → Privacy → Data sharing.", "Huawei Health مبعتش حاجة — افتح Huawei Health مرة عشان الساعة تعمل مزامنة، واتأكد إن Attune لسه مسموح له في Huawei Health ← أنا ← الخصوصية ← مشاركة البيانات."));
+      if (b && b.empty && !P.watchHasData(a)) setNote(L("Huawei Health sent nothing — open Huawei Health once so the watch syncs, and check Attune is still allowed in Huawei Health → Me → Privacy → Data sharing.", "لم يُرسل Huawei Health شيئًا — افتح Huawei Health مرة لتتزامن الساعة، وتأكد أن Attune ما زال مسموحًا له في Huawei Health ← أنا ← الخصوصية ← مشاركة البيانات."));
       else setNote("");
       if (d && (d.steps != null || d.activeKcal != null || d.workouts)) upd((x) => { const day = x.days[dayKey] || { meals: {}, water: 0, workouts: [] }; return { ...x, watchOn: true, days: { ...x.days, [dayKey]: { ...day, watch: { steps: d.steps || 0, activeKcal: d.activeKcal || 0, totalKcal: d.totalKcal || 0, distanceM: d.distanceM || 0, hrAvg: d.hrAvg || null, hrMax: d.hrMax || null, workouts: d.workouts || [], sources: d.sources || [], at: Date.now() } } } }; });
     } catch (e) {} finally { setBusy(false); }
   };
-  useEffect(() => { refresh(); const on = (e) => { if (e && e.detail && e.detail.huawei === false) setNote(e.detail.error ? L(`Huawei sign-in didn't open: ${e.detail.error} — install HMS Core (below) and try again.`, `تسجيل دخول هواوي مفتحش: ${e.detail.error} — نزّل HMS Core (تحت) وجرّب تاني.`) : L("Huawei Health wasn't allowed — tap Connect again and allow steps, calories, distance and heart rate.", "Huawei Health متسمحش — دوس ربط تاني ووافق على الخطوات والسعرات والمسافة والنبض.")); refresh(); }; window.addEventListener("attune-resume", on); window.addEventListener("attune-health-permission", on); return () => { window.removeEventListener("attune-resume", on); window.removeEventListener("attune-health-permission", on); }; }, [dayKey]);
+  useEffect(() => { refresh(); const on = (e) => { if (e && e.detail && e.detail.huawei === false) setNote(e.detail.error ? L(`Huawei sign-in didn't open: ${e.detail.error} — install HMS Core (below) and try again.`, `لم يُفتح تسجيل الدخول إلى هواوي: ${e.detail.error} — نزّل HMS Core (بالأسفل) وحاول مرة أخرى.`) : L("Huawei Health wasn't allowed — tap Connect again and allow steps, calories, distance and heart rate.", "لم يمنح Huawei Health الإذن — اضغط «ربط» مرة أخرى ووافق على الخطوات والسعرات والمسافة والنبض.")); refresh(); }; window.addEventListener("attune-resume", on); window.addEventListener("attune-health-permission", on); return () => { window.removeEventListener("attune-resume", on); window.removeEventListener("attune-health-permission", on); }; }, [dayKey]);
   if (!health) return compact ? null : (
-    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 text-[12.5px] text-slate-400" data-testid="fit-watch">⌚ {L("Watch steps and calories work in the Android app.", "خطوات وسعرات الساعة بتشتغل في تطبيق أندرويد.")}</div>);
+    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 text-[12.5px] text-slate-400" data-testid="fit-watch">⌚ {L("Watch steps and calories work in the Android app.", "تعمل خطوات الساعة وسعراتها في تطبيق أندرويد.")}</div>);
   const ready = status && status.available === "ready";
   const hwDirect = !!(hwS && hwS.configured), hwOn = hwDirect && hwS.authorized;
   const granted = (ready && status.granted > 0) || hwOn;
@@ -381,12 +381,12 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
     if (compact && st.watchSkip) return null;
     return (
       <div className="rounded-2xl border border-teal-800 bg-teal-500/10 p-3 space-y-2" data-testid="fit-watch">
-        <div className="text-[13px] text-teal-100">⌚ {L("Connect your watch: steps, calories burned, workouts and heart rate go into your day automatically.", "اربط ساعتك: الخطوات والسعرات المحروقة والتمارين ونبض القلب بيدخلوا يومك لوحدهم.")}</div>
-        <div className="text-[11.5px] text-teal-200/70">{L("Through Android's Health Connect — works with Samsung Health (Galaxy Watch), Fitbit / Pixel Watch, Garmin Connect, Mi Fitness, Huawei Health (through Health Sync) and others that share to it. Read only; nothing leaves the phone.", "عن طريق Health Connect بتاع أندرويد — بيشتغل مع Samsung Health (جالاكسي واتش)، Fitbit / Pixel Watch، Garmin Connect، Mi Fitness، Huawei Health (عن طريق Health Sync) وغيرهم اللي بيشاركوا فيه. قراءة بس؛ مفيش حاجة بتخرج من الموبايل.")}</div>
+        <div className="text-[13px] text-teal-100">⌚ {L("Connect your watch: steps, calories burned, workouts and heart rate go into your day automatically.", "اربط ساعتك: تُضاف الخطوات والسعرات المحروقة والتمارين ونبض القلب إلى يومك تلقائيًا.")}</div>
+        <div className="text-[11.5px] text-teal-200/70">{L("Through Android's Health Connect — works with Samsung Health (Galaxy Watch), Fitbit / Pixel Watch, Garmin Connect, Mi Fitness, Huawei Health (through Health Sync) and others that share to it. Read only; nothing leaves the phone.", "عبر Health Connect في أندرويد — يعمل مع Samsung Health (Galaxy Watch)، وFitbit / Pixel Watch، وGarmin Connect، وMi Fitness، وHuawei Health (عبر Health Sync) وغيرها من التطبيقات المشاركة فيه. قراءة فقط؛ ولا يغادر الهاتفَ أي شيء.")}</div>
         {hwButton}{noteEl}
         {hwDirect ? null : huaweiNeeded || hw ? <HuaweiGuide {...{ L, health, status }} onDone={() => { setHw(false); if (huaweiNeeded) upd((x) => ({ ...x, huaweiHide: true })); }} />
           : <button onClick={() => setHw(true)} className="text-[11.5px] text-rose-300 underline" data-testid="fit-huawei-link">{L("Huawei watch?", "ساعة هواوي؟")}</button>}
-        {status && status.available === "none" ? <div className="text-[12px] text-amber-200">{L("This phone doesn't have Health Connect — install it from the Play Store (Android 9–13), or it's built into Settings on Android 14+. Phones without Google services (newer Huawei phones) can't use it.", "الموبايل ده مفيهوش Health Connect — نزّله من Play Store (أندرويد ٩–١٣)، أو هو جوه الإعدادات من أندرويد ١٤. الموبايلات اللي من غير خدمات جوجل (موبايلات هواوي الجديدة) مينفعش.")}</div> : (
+        {status && status.available === "none" ? <div className="text-[12px] text-amber-200">{L("This phone doesn't have Health Connect — install it from the Play Store (Android 9–13), or it's built into Settings on Android 14+. Phones without Google services (newer Huawei phones) can't use it.", "لا يحتوي هذا الهاتف على Health Connect — نزّله من Play Store (أندرويد 9–13)، أو تجده في الإعدادات بدءًا من أندرويد 14. ولا يعمل على الهواتف التي بلا خدمات Google (هواتف هواوي الحديثة).")}</div> : (
           <div className="flex gap-2">
             <button onClick={() => { health.connect(); }} className="flex-1 rounded-lg bg-teal-600 py-2 text-[13px] font-medium text-white" data-testid="fit-watch-connect">{status && status.available === "update" ? L("Install Health Connect", "نزّل Health Connect") : L("Connect my watch", "اربط ساعتي")}</button>
             {compact ? <button onClick={() => upd((x) => ({ ...x, watchSkip: true }))} className="rounded-lg bg-slate-800 px-3 text-[12px] text-slate-400">{L("Later", "بعدين")}</button> : null}
@@ -411,7 +411,7 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
         </div>
         {w.hrAvg ? <div className="text-[11.5px] text-slate-400">❤ {L(`heart rate ${w.hrAvg} avg · ${w.hrMax} max`, `النبض ${w.hrAvg} متوسط · ${w.hrMax} أقصى`)}</div> : null}
         {(w.workouts || []).length && !compact ? <div className="text-[12px] text-slate-300">{w.workouts.map((x, i) => <div key={i}>• {x.title || L("Workout", "تمرين")} · {x.minutes} {L("min", "د")}</div>)}</div> : null}
-        <div className="text-[10.5px] text-slate-500">{L("Burned calories count the watch or your logged workouts — whichever is more, never both.", "السعرات المحروقة بتتحسب من الساعة أو التمارين اللي سجلتها — الأكبر، مش الاتنين.")}</div>
-      </> : <div className="text-[12px] text-slate-400">{L("Nothing from the watch today yet — open its app once so it syncs.", "لسه مفيش حاجة من الساعة النهارده — افتح تطبيقها مرة عشان يعمل مزامنة.")}</div>}
+        <div className="text-[10.5px] text-slate-500">{L("Burned calories count the watch or your logged workouts — whichever is more, never both.", "تُحسب السعرات المحروقة من الساعة أو من التمارين التي سجّلتها — الأكبر منهما، لا كلاهما.")}</div>
+      </> : <div className="text-[12px] text-slate-400">{L("Nothing from the watch today yet — open its app once so it syncs.", "لم يصل شيء من الساعة اليوم بعد — افتح تطبيقها مرة لتتم المزامنة.")}</div>}
     </div>);
 }

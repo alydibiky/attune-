@@ -341,7 +341,7 @@ export function findMentions(messages, term) {
 }
 /** The answer to "was X mentioned?" — written by code, instantly. */
 export function mentionAnswer(term, hits, total, ar) {
-  if (!hits.length) return ar ? `لأ — «${term}» مش موجودة في الشات (اتفحصت كل الرسائل: ${total}).` : `No — “${term}” doesn't appear anywhere in this chat (all ${total} messages checked).`;
+  if (!hits.length) return ar ? `لا — «${term}» غير موجودة في المحادثة (فُحصت كل الرسائل: ${total}).` : `No — “${term}” doesn't appear anywhere in this chat (all ${total} messages checked).`;
   const first = hits[0], last = hits[hits.length - 1];
   const who = [...new Set(hits.map((m) => m.who))].slice(0, 4).join(ar ? "، " : ", ");
   return ar ? `أيوه — «${term}» اتذكرت ${hits.length} مرة${hits.length > 1 ? "" : ""}، أول مرة ${fmtDate(first.t)} (${first.who})${hits.length > 1 ? ` وآخر مرة ${fmtDate(last.t)} (${last.who})` : ""}. قالها: ${who}.`

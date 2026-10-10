@@ -131,21 +131,21 @@ const SIGNS = [
   ["wallet", 2, /(vodafone cash|فودافون كاش|instapay|انستا ?باي|etisalat cash|orange cash|اورانج كاش|wallet number|رقم المحفظة|western union|gift ?card|كارت (جوجل|ايتونز|آيتونز))/i,
     "Payment to a personal wallet or gift card — very hard to get back.", "الدفع على محفظة شخصية أو كارت هدايا — صعب جدًا ترجّعه."],
   ["code", 4, /(otp|verification code|send (me )?the code|الكود اللي (وصلك|جالك)|ابعت(لي)? الكود|كود التفعيل|رمز التحقق)/i,
-    "They ask for a code sent to your phone — that is how accounts and wallets are stolen.", "بيطلبوا كود وصلك على الموبايل — دي طريقة سرقة الحسابات والمحافظ."],
+    "They ask for a code sent to your phone — that is how accounts and wallets are stolen.", "يطلبون رمزًا وصلك على الهاتف — وهذه طريقة لسرقة الحسابات والمحافظ."],
   ["prize", 3, /(you (have )?won|congratulations.{0,30}(prize|winner|won)|claim your (prize|reward)|مبروك.{0,20}(كسبت|فزت|ربحت)|كسبت (جايزة|جائزة)|فزت ب)/i,
     "A prize you never entered for.", "جايزة إنت ما دخلتش مسابقتها أصلًا."],
   ["urgent", 1, /(today only|last chance|only \d+ left|hurry|limited time|expires (today|tonight|in \d+)|act now|النهاردة بس|النهارده بس|آخر فرصة|اخر فرصة|لفترة محدودة|الحق قبل|الكمية محدودة|فاضل \d+ بس)/i,
-    "Pressure to decide fast — a classic trick.", "ضغط عشان تقرر بسرعة — حركة معروفة."],
+    "Pressure to decide fast — a classic trick.", "ضغط لتتخذ قرارك بسرعة — أسلوب معروف."],
   ["off-platform", 2, /(contact me on whatsapp|whatsapp me|message me outside|pay outside|كلمني (واتس|على الواتس)|تواصل (واتس|خاص)|برا الموقع|خارج (المنصة|الموقع))/i,
-    "They move you off the platform, where you lose buyer protection.", "بيطلعوك برا المنصة، فبتخسر حماية المشتري."],
+    "They move you off the platform, where you lose buyer protection.", "يُخرجونك من المنصة، فتفقد حماية المشتري."],
   ["guaranteed", 4, /(guaranteed (profit|return|income)|double your money|risk[- ]free (profit|investment)|\d+% (monthly|weekly|daily) (profit|return)|ربح مضمون|أرباح مضمونة|ارباح مضمونة|ضاعف فلوسك|عائد (شهري|يومي) \d+)/i,
     "Guaranteed high profit — the sign of a Ponzi / investment scam.", "ربح مضمون وعالي — علامة نصب استثمار (بونزي)."],
   ["no-warranty", 1, /(no warranty|without warranty|بدون ضمان|من غير ضمان|مفيش ضمان|no returns?|non-?refundable|لا يرد ولا يستبدل)/i,
     "No warranty or returns.", "من غير ضمان أو استرجاع."],
   ["copy", 2, /(high copy|first copy|mirror (quality|copy)|replica|master copy|هاي كوبي|كوبي وان|تقليد|درجة أولى)/i,
-    "It says copy / replica — not the original product.", "مكتوب كوبي/تقليد — مش الأصلي."],
+    "It says copy / replica — not the original product.", "مكتوب «كوبي/تقليد» — ليس أصليًا."],
   ["generic", 1, /\bgeneric\b|بدون (ماركة|براند)/i,
-    "No real brand is named.", "مفيش ماركة حقيقية مكتوبة."],
+    "No real brand is named.", "لا توجد علامة تجارية حقيقية مكتوبة."],
   ["zero-interest", 0, /(0\s?% (interest|فايدة|فائدة)|بدون (فوايد|فوائد|فايدة)|zero interest|interest[- ]free)/i,
     "Says 0% interest — the real cost is checked below.", "مكتوب 0% فوايد — التكلفة الحقيقية محسوبة تحت."],
   ["no-ratings", 1, /(not enough ratings|no ratings|new seller|بائع جديد|مفيش تقييمات)/i,
@@ -180,8 +180,8 @@ export function verdict(d) {
     say(`With the installments you pay ${fmt(pl.total)} — ${fmt(pl.extra)} more than the cash price.`, `بالتقسيط هتدفع ${fmt(pl.total)} — يعني ${fmt(pl.extra)} زيادة عن الكاش.`);
     if (pl.yearlyRate != null) say(`That is a real interest of about ${Math.round(pl.yearlyRate * 100)}% a year${d.claimsZero ? ", although it says 0%" : ""}.`, `ده فايدة حقيقية حوالي ${Math.round(pl.yearlyRate * 100)}% في السنة${d.claimsZero ? "، رغم إنه مكتوب 0%" : ""}.`);
     if (pl.yearlyRate != null && pl.yearlyRate > 0.35 && (level === "fair" || level === "good" || level === "unknown")) level = "overpriced";
-  } else if (pl && pl.extra <= 0 && pl.total > 0) say("The installments add nothing over the cash price — a real 0%.", "التقسيط مش بيزوّد حاجة على الكاش — 0% بجد.");
-  if (pl && pl.inconsistent) say(`The installments add up to ${fmt(pl.total)} — less than the price, so the terms don't match; ask the seller for the exact total.`, `الأقساط مجموعها ${fmt(pl.total)} — أقل من السعر، يعني الشروط مش راكبة على بعض؛ اسأل البائع على الإجمالي بالظبط.`);
+  } else if (pl && pl.extra <= 0 && pl.total > 0) say("The installments add nothing over the cash price — a real 0%.", "التقسيط لا يضيف شيئًا على السعر النقدي — 0% فعلًا.");
+  if (pl && pl.inconsistent) say(`The installments add up to ${fmt(pl.total)} — less than the price, so the terms don't match; ask the seller for the exact total.`, `مجموع الأقساط ${fmt(pl.total)} — أقل من السعر، أي أن الشروط غير متسقة؛ اسأل البائع عن الإجمالي بالتحديد.`);
   if (risk >= 4) level = "scam";
   else if (risk >= 2 && level !== "scam") level = "risky";
   for (const s of d.signs || []) if (s.weight > 0) reasons.push({ en: s.en, ar: s.ar });
@@ -193,13 +193,13 @@ export function questionsFor(v, signs, kind) {
   const q = [];
   const ids = new Set((signs || []).map((s) => s.id));
   if (ids.has("pay-first") || ids.has("wallet")) q.push(["Can I see it and pay on delivery (cash / card on receipt)?", "ممكن أشوفها وأدفع عند الاستلام؟"]);
-  if (ids.has("copy") || ids.has("generic")) q.push(["What is the exact brand and model number? Can you send a photo of the label?", "إيه الماركة والموديل بالظبط؟ ممكن صورة الاستيكر؟"]);
+  if (ids.has("copy") || ids.has("generic")) q.push(["What is the exact brand and model number? Can you send a photo of the label?", "ما العلامة التجارية والطراز بالتحديد؟ هل يمكن إرسال صورة الملصق؟"]);
   if (ids.has("no-warranty") || kind === "product") q.push(["Is there an official warranty, and for how long? Invoice included?", "فيه ضمان رسمي؟ مدته قد إيه؟ وفيه فاتورة؟"]);
-  if (v.level === "overpriced" || v.target) q.push(["Can you do a better price? Others sell it for less.", "ممكن سعر أحسن؟ فيه أماكن بتبيعه أرخص."]);
-  if (kind === "installment") q.push(["What is the total I pay, all fees included? Is there an early-payment penalty?", "إجمالي اللي هدفعه كام بكل المصاريف؟ وفيه غرامة لو سددت بدري؟"]);
+  if (v.level === "overpriced" || v.target) q.push(["Can you do a better price? Others sell it for less.", "هل يمكن سعر أفضل؟ هناك أماكن تبيعه بسعر أقل."]);
+  if (kind === "installment") q.push(["What is the total I pay, all fees included? Is there an early-payment penalty?", "كم إجمالي ما سأدفعه بكل الرسوم؟ وهل توجد غرامة على السداد المبكر؟"]);
   if (kind === "car") q.push(["Can I take it to an independent mechanic and check the papers (license, violations)?", "ممكن أكشف عليها عند ميكانيكي من برا وأشوف الرخصة والمخالفات؟"]);
-  if (kind === "rent") q.push(["Is the contract registered, and who pays the maintenance and utilities?", "العقد متوثق؟ ومين بيدفع الصيانة والمرافق؟"]);
-  if (!q.length) q.push(["Can I get everything agreed in writing?", "ممكن كل اللي اتفقنا عليه يبقى مكتوب؟"]);
+  if (kind === "rent") q.push(["Is the contract registered, and who pays the maintenance and utilities?", "هل العقد موثّق؟ ومن يدفع الصيانة والمرافق؟"]);
+  if (!q.length) q.push(["Can I get everything agreed in writing?", "هل يمكن أن يُكتب كل ما اتفقنا عليه؟"]);
   return q.slice(0, 5).map(([en, ar]) => ({ en, ar }));
 }
 
@@ -240,7 +240,7 @@ function labelledPart(text, v) {
 /** What was understood, in one sentence the buyer can say yes or no to. */
 export function readingOf(t, lang) {
   const ar = lang === "ar", cur = t.currency ? " " + t.currency : "";
-  const item = t.item || (ar ? "العرض ده" : "this");
+  const item = t.item || (ar ? "هذا العرض" : "this");
   const cash = t.cash || t.price;
   const parts = [];
   if (cash) parts.push(ar ? `${item} بسعر ${fmtN(cash)}${cur} كاش` : `${item} for ${fmtN(cash)}${cur} cash`);
@@ -249,7 +249,7 @@ export function readingOf(t, lang) {
     const down = t.down ? (ar ? `مقدم ${fmtN(t.down)}${cur} + ` : `${fmtN(t.down)}${cur} down + `) : "";
     const total = (t.down || 0) + t.monthly * t.months;
     parts.push(ar ? `أو بالتقسيط: ${down}${t.months} × ${fmtN(t.monthly)}${cur} (المجموع ${fmtN(total)}${cur})` : `or in installments: ${down}${t.months} × ${fmtN(t.monthly)}${cur} (${fmtN(total)}${cur} in total)`);
-  } else if (t.monthly) parts.push(ar ? `وقسط ${fmtN(t.monthly)}${cur} في الشهر (عدد الشهور مش مكتوب)` : `and ${fmtN(t.monthly)}${cur} a month (the number of months isn't written)`);
+  } else if (t.monthly) parts.push(ar ? `وقسط ${fmtN(t.monthly)}${cur} شهريًا (عدد الأشهر غير مذكور)` : `and ${fmtN(t.monthly)}${cur} a month (the number of months isn't written)`);
   return (ar ? "قصدك: " : "Do you mean: ") + parts.join(ar ? "، " : ", ") + (ar ? "؟" : "?");
 }
 /**
@@ -263,8 +263,8 @@ export function needsConfirm(t, text, plan) {
   const cash = t.cash || t.price;
   if (mm && !(plan && plan.cash) && !labelledPart(text, mm.lo) && mm.lo !== t.down && mm.lo !== t.fees) return { en: `The offer has two very different prices (${fmtN(mm.hi)} and ${fmtN(mm.lo)}).`, ar: `العرض فيه سعرين مختلفين جدًا (${fmtN(mm.hi)} و ${fmtN(mm.lo)}).` };
   if (!cash && !t.monthly) return { en: "No price was found in the offer.", ar: "ملقتش سعر في العرض." };
-  if (t.monthly && t.months && cash && (t.down || 0) + t.monthly * t.months < cash * 0.9) return { en: "The installments add up to less than the cash price — one of them was probably misread.", ar: "الأقساط مجموعها أقل من الكاش — غالبًا حاجة منهم اتقرت غلط." };
-  if (t.months && !t.monthly) return { en: "The number of months is written but not the monthly amount.", ar: "عدد الشهور مكتوب بس مبلغ القسط مش مكتوب." };
+  if (t.monthly && t.months && cash && (t.down || 0) + t.monthly * t.months < cash * 0.9) return { en: "The installments add up to less than the cash price — one of them was probably misread.", ar: "مجموع الأقساط أقل من السعر النقدي — غالبًا قُرئ أحد الأرقام خطأً." };
+  if (t.months && !t.monthly) return { en: "The number of months is written but not the monthly amount.", ar: "عدد الأشهر مذكور لكن مبلغ القسط غير مذكور." };
   if (t.unclear) return { en: t.unclear, ar: t.unclear };
   return null;
 }

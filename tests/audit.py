@@ -21,7 +21,7 @@ PROBE = r"""() => {
       const rg = document.createRange(); rg.selectNodeContents(n); const ys = new Set([...rg.getClientRects()].map((q) => Math.round(q.top)));
       if (ys.size > 1) squeezed.push(t.slice(0, 20)); }
   }
-  const crash = document.body.innerText.includes('Something went wrong on this screen') || document.body.innerText.includes('حصلت مشكلة في الشاشة');
+  const crash = document.body.innerText.includes('Something went wrong on this screen') || document.body.innerText.includes('حدثت مشكلة في هذه الشاشة');
   return { overflow: document.documentElement.scrollWidth > W + 1, bad: [...new Set(bad)].slice(0, 5), small, crash, squeezed: [...new Set(squeezed)].slice(0, 5) };
 }"""
 LATIN = r"""() => { const out = []; const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);

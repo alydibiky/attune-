@@ -33,7 +33,7 @@ export function ReceiptForm({ customer: c0, onClose }) {
     return { rows, onAccount: left };
   }, [open, cash, wht]);
   const save = async () => {
-    const r = await run((st) => O.receive(st, { customer, date, method, amount: cash, allocations: plan.rows }), L("Receipt recorded", "اتسجّل القبض"));
+    const r = await run((st) => O.receive(st, { customer, date, method, amount: cash, allocations: plan.rows }), L("Receipt recorded", "تم تسجيل التحصيل"));
     if (r) onClose();
   };
   return (
@@ -46,15 +46,15 @@ export function ReceiptForm({ customer: c0, onClose }) {
         </div>
         <Field label={L("How was it paid", "طريقة الدفع")}><Select value={method} onChange={setMethod}>{methodOpts()}</Select></Field>
         {customer ? (open.length ? (
-          <Section title={L("Settles these invoices (oldest first)", "بتسدد الفواتير دي (الأقدم أولًا)")}>
+          <Section title={L("Settles these invoices (oldest first)", "تُسدِّد هذه الفواتير (الأقدم أولًا)")}>
             <Card className="divide-y" testid="receipt-plan">{open.map((o) => { const row = plan.rows.find((r) => r.doc === o.number); return (
               <div key={o.number} className="px-3 py-2 text-[13px]">
                 <div className="flex justify-between"><span>{o.number}</span><span className={th.sub}>{L("open", "متبقي")} <Money v={o.open} /></span></div>
-                <div className="flex items-center gap-2 mt-1"><span className={`text-[11px] ${th.sub} flex-1`}>{row ? <>{L("pays", "بيسدد")} <Money v={row.amount} />{row.wht ? <> + {L("withheld", "منبع")} <Money v={row.wht} /></> : null}</> : L("not covered", "مش مغطّاة")}</span>
-                  <input value={wht[o.number] || ""} onChange={(e) => setWht({ ...wht, [o.number]: e.target.value })} placeholder={L("withheld by customer", "اللي اتخصم من المنبع")} inputMode="decimal" className={`w-36 rounded border px-2 py-1 text-[12px] ${th.input}`} /></div>
+                <div className="flex items-center gap-2 mt-1"><span className={`text-[11px] ${th.sub} flex-1`}>{row ? <>{L("pays", "يسدّد")} <Money v={row.amount} />{row.wht ? <> + {L("withheld", "منبع")} <Money v={row.wht} /></> : null}</> : L("not covered", "غير مغطّاة")}</span>
+                  <input value={wht[o.number] || ""} onChange={(e) => setWht({ ...wht, [o.number]: e.target.value })} placeholder={L("withheld by customer", "المخصوم من المنبع")} inputMode="decimal" className={`w-36 rounded border px-2 py-1 text-[12px] ${th.input}`} /></div>
               </div>); })}</Card>
             {plan.onAccount > 0 ? <p className={`text-[12px] mt-1.5 ${th.sub}`}>{L("Left on account (customer deposit):", "المتبقي كدفعة مقدمة:")} <Money v={plan.onAccount} bold /></p> : null}
-          </Section>) : <p className={`text-[12px] ${th.sub}`}>{L("This customer has no open invoices — the money will be kept on account.", "العميل ده معندوش فواتير مفتوحة — المبلغ هيتسجل كدفعة مقدمة.")}</p>) : null}
+          </Section>) : <p className={`text-[12px] ${th.sub}`}>{L("This customer has no open invoices — the money will be kept on account.", "ليس لهذا العميل فواتير مفتوحة — سيُسجَّل المبلغ كدفعة مقدمة.")}</p>) : null}
       </div>
     </Sheet>
   );
@@ -68,14 +68,14 @@ export function SupplierPayForm({ supplier: s0, onClose }) {
   const [method, setMethod] = useState("cash");
   const [date, setDate] = useState(td);
   const open = O.billsOpen(s).filter((b) => b.supplier === supplier && b.open > 0);
-  const save = async () => { const r = await run((st) => O.paySupplier(st, { supplier, date, method, amount: B.toMinor(amount) || 0 }), L("Payment recorded", "اتسجّل الدفع")); if (r) onClose(); };
+  const save = async () => { const r = await run((st) => O.paySupplier(st, { supplier, date, method, amount: B.toMinor(amount) || 0 }), L("Payment recorded", "تم تسجيل الدفع")); if (r) onClose(); };
   return (
     <Sheet title={L("Pay a supplier", "سداد لمورد")} onClose={onClose} testid="supplier-pay-form" footer={<button onClick={save} className={`${btnPrimary} w-full`} disabled={!supplier || !B.toMinor(amount)} data-testid="supplier-pay-save">{L("Save payment", "حفظ السداد")}</button>}>
       <div className="space-y-3">
         <Field label={L("Supplier", "المورد")}><Select value={supplier} onChange={setSupplier}><option value="">{L("— choose —", "— اختار —")}</option>{s.suppliers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field>
         <div className="grid grid-cols-2 gap-2"><Field label={L("Amount paid", "المبلغ المدفوع")}><Input value={amount} onChange={setAmount} inputMode="decimal" data-testid="supplier-pay-amount" /></Field><Field label={L("Date", "التاريخ")}><Input type="date" value={date} onChange={setDate} /></Field></div>
         <Field label={L("How was it paid", "طريقة الدفع")}><Select value={method} onChange={setMethod}>{methodOpts()}</Select></Field>
-        {supplier ? <Card className="divide-y">{open.length ? open.map((o) => <div key={o.number} className="flex justify-between px-3 py-2 text-[13px]"><span>{o.number} · {fmtDate(o.due)}</span><Money v={o.open} /></div>) : <p className="p-3 text-[12px]">{L("Nothing owed to this supplier.", "مفيش مستحقات للمورد ده.")}</p>}</Card> : null}
+        {supplier ? <Card className="divide-y">{open.length ? open.map((o) => <div key={o.number} className="flex justify-between px-3 py-2 text-[13px]"><span>{o.number} · {fmtDate(o.due)}</span><Money v={o.open} /></div>) : <p className="p-3 text-[12px]">{L("Nothing owed to this supplier.", "لا توجد مستحقات لهذا المورد.")}</p>}</Card> : null}
       </div>
     </Sheet>
   );
@@ -94,13 +94,13 @@ export function ExpenseForm({ onClose }) {
     fr.onload = () => { const img = new Image(); img.onload = () => { const k = Math.min(1, 1200 / Math.max(img.width, img.height)); const cv = document.createElement("canvas"); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k); cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height); setPhoto(cv.toDataURL("image/jpeg", 0.7)); }; img.src = String(fr.result); };
     fr.readAsDataURL(file);
   };
-  const save = async () => { const r = await run((st) => O.addExpense(st, { date, category: cat, amount: B.toMinor(amount) || 0, method, memo, photo }), L("Expense recorded", "اتسجّل المصروف")); if (r) onClose(); };
+  const save = async () => { const r = await run((st) => O.addExpense(st, { date, category: cat, amount: B.toMinor(amount) || 0, method, memo, photo }), L("Expense recorded", "تم تسجيل المصروف")); if (r) onClose(); };
   return (
     <Sheet title={L("New expense", "مصروف جديد")} onClose={onClose} testid="expense-form" footer={<button onClick={save} className={`${btnPrimary} w-full`} disabled={!B.toMinor(amount)} data-testid="expense-save">{L("Save expense", "حفظ المصروف")}</button>}>
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-2"><Field label={L("Amount", "المبلغ")}><Input value={amount} onChange={setAmount} inputMode="decimal" data-testid="expense-amount" /></Field><Field label={L("Date", "التاريخ")}><Input type="date" value={date} onChange={setDate} /></Field></div>
         <Field label={L("Category", "النوع")}><Select value={cat} onChange={setCat}>{CATS.map(([en, ar]) => <option key={en} value={en}>{L(en, ar)}</option>)}</Select></Field>
-        <Field label={L("Paid from", "اتدفع من")}><Select value={method} onChange={setMethod}>{methodOpts()}</Select></Field>
+        <Field label={L("Paid from", "دُفع من")}><Select value={method} onChange={setMethod}>{methodOpts()}</Select></Field>
         <Field label={L("Note", "ملاحظة")}><Input value={memo} onChange={setMemo} /></Field>
         <div className="flex items-center gap-3">{photo ? <img src={photo} alt="" className="h-16 rounded border" /> : null}<button onClick={() => fileRef.current && fileRef.current.click()} className={`${BTN} border ${th.line} flex items-center gap-1.5`}><Camera size={14} />{photo ? L("Change photo", "غيّر الصورة") : L("Photo of the receipt", "صورة الإيصال")}</button><input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => pick(e.target.files && e.target.files[0])} /></div>
       </div>
@@ -118,14 +118,14 @@ export function AgeingView() {
   const remind = (id, owed) => {
     const oldest = open.filter((o) => o.customer === id && o.open > 0 && B.bucketOf(o.due, td) !== "notDue").map((o) => o.date).sort()[0];
     const text = reminderText({ s, customer: id, owed, oldest });
-    if (share) share(text); else { try { navigator.clipboard.writeText(text); flash(L("Reminder copied", "اتنسخ التذكير")); } catch (e) {} }
+    if (share) share(text); else { try { navigator.clipboard.writeText(text); flash(L("Reminder copied", "نُسخ التذكير")); } catch (e) {} }
   };
   const rows = Object.entries(age.byCustomer).map(([id, z]) => ({ id, name: (s.customers.find((c) => c.id === id) || {}).name || id, z, tot: B.AGE_BUCKETS.reduce((a, k) => a + z[k], 0) })).sort((a, b) => b.tot - a.tot);
   return (
     <div data-testid="ageing">
       <Card className="p-3 mb-3"><div className="grid grid-cols-5 gap-1 text-center">{B.AGE_BUCKETS.map((k) => <div key={k}><p className={`text-[10px] ${th.sub}`}>{L(...AGE_LABELS[k])}</p><p className={`text-[12px] font-semibold ${k !== "notDue" && age.total[k] ? "text-red-600" : ""}`} dir="ltr">{B.fmt(age.total[k])}</p></div>)}</div>
         <div className={`flex justify-between border-t mt-2 pt-2 text-[13px] ${th.line}`}><span>{L("Total owed to you", "إجمالي المستحق لك")}</span><Money v={age.grand} bold /></div></Card>
-      {!rows.length ? <Empty title={L("Nobody owes you anything", "مفيش حد عليه لك حاجة")} /> : <Card className="divide-y">{rows.map((r) => (
+      {!rows.length ? <Empty title={L("Nobody owes you anything", "لا توجد مستحقات لك على أحد")} /> : <Card className="divide-y">{rows.map((r) => (
         <div key={r.id} className="relative"><button onClick={() => setStmt(r.id)} className="w-full px-3 py-2.5 text-start" data-testid="ageing-row"><div className="flex justify-between text-[13.5px] font-medium"><span>{r.name}</span><Money v={r.tot} bold /></div>
           <div className={`flex gap-3 text-[11px] mt-0.5 ${th.sub}`}>{B.AGE_BUCKETS.filter((k) => r.z[k]).map((k) => <span key={k} className={k !== "notDue" ? "text-red-600" : ""}>{L(...AGE_LABELS[k])}: {B.fmt(r.z[k])}</span>)}</div></button>
           {B.AGE_BUCKETS.slice(1).some((k) => r.z[k]) ? <button onClick={() => remind(r.id, B.AGE_BUCKETS.slice(1).reduce((a, k) => a + r.z[k], 0))} className="absolute bottom-2 end-3 text-[11px] px-2 py-1 rounded-md bg-emerald-600 text-white" data-testid="remind">{L("Remind", "ذكّره")}</button> : null}</div>))}</Card>}
@@ -173,7 +173,7 @@ export function MoneyModule() {
         <button onClick={() => setForm("expense")} className={btnPrimary} data-testid="money-new-expense">{L("+ Expense", "+ مصروف")}</button>
       </div>
       <div className="mb-2"><Chips value={view} onChange={setView} options={[["in", L("Received", "تحصيلات")], ["out", L("Paid to suppliers", "سداد موردين")], ["exp", L("Expenses", "مصروفات")], ["age", L("Who owes you", "المديونيات")]]} /></div>
-      {view === "age" ? <AgeingView /> : !items.length ? <Empty title={L("Nothing here yet", "مفيش حاجة لسه")} /> : (
+      {view === "age" ? <AgeingView /> : !items.length ? <Empty title={L("Nothing here yet", "لا يوجد شيء بعد")} /> : (
         <Card className="divide-y" testid="money-list">{items.map((x) => <div key={x.k} className="flex items-center gap-3 px-3 py-2.5"><div className="min-w-0 flex-1"><p className="text-[13.5px] font-medium truncate">{x.who}</p><p className={`text-[11.5px] ${th.sub}`}>{x.ref} · {fmtDate(x.date)}</p></div>{x.photo ? <img src={x.photo} alt="" className="h-9 w-9 rounded object-cover border" /> : null}<span className={x.sign > 0 ? "text-emerald-600 font-semibold" : "font-semibold"}><Money v={x.sign > 0 ? x.amt : -x.amt} /></span></div>)}</Card>)}
       {form === "receipt" ? <ReceiptForm onClose={() => setForm(null)} /> : form === "pay" ? <SupplierPayForm onClose={() => setForm(null)} /> : form === "expense" ? <ExpenseForm onClose={() => setForm(null)} /> : null}
     </div>

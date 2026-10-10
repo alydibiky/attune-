@@ -201,11 +201,11 @@ export function checkCV(cv) {
   const out = [], b = cv.basics || {}, secs = cv.sections || [];
   const add = (level, where, en, ar) => out.push({ level, where, en, ar });
   if (!b.name) add("warn", "basics", "Add your name", "ضيف اسمك");
-  if (!b.email && !b.phone) add("warn", "basics", "Add an email or a phone number so employers can reach you", "ضيف إيميل أو رقم تليفون عشان أصحاب الشغل يوصلولك");
+  if (!b.email && !b.phone) add("warn", "basics", "Add an email or a phone number so employers can reach you", "أضف بريدًا إلكترونيًا أو رقم هاتف ليتمكن أصحاب العمل من التواصل معك");
   const get = (t) => secs.filter((s) => s.type === t && s.visible !== false);
-  if (!get("summary").some((s) => (s.items[0] || {}).text)) add("tip", "summary", "A 2–3 line summary at the top helps a recruiter decide quickly", "نبذة من ٢–٣ سطور فوق بتساعد المسؤول يقرر بسرعة");
+  if (!get("summary").some((s) => (s.items[0] || {}).text)) add("tip", "summary", "A 2–3 line summary at the top helps a recruiter decide quickly", "نبذة من 2–3 أسطر في الأعلى تساعد مسؤول التوظيف على القرار بسرعة");
   const exp = get("experience").flatMap((s) => s.items).filter((it) => it.role || it.company);
-  if (!exp.length) add("warn", "experience", "No experience yet — add your jobs, or projects if you are starting out", "مفيش خبرات لسه — ضيف شغلك، أو مشاريع لو لسه بتبدأ");
+  if (!exp.length) add("warn", "experience", "No experience yet — add your jobs, or projects if you are starting out", "لا توجد خبرات بعد — أضف عملك، أو مشاريعك إن كنت في البداية");
   const spans = [];
   for (const it of exp) {
     const where = (it.role || it.company || "experience");
@@ -220,7 +220,7 @@ export function checkCV(cv) {
       if (WEAK_START.test(x)) add("tip", where, `“${where}”: start bullet ${i + 1} with an action verb (Led, Reduced, Built…), not “${x.split(" ")[0]}”`, `«${where}»: ابدأ النقطة ${i + 1} بفعل إنجاز مش «${x.split(" ")[0]}»`);
       if (x.split(/\s+/).length > 28) add("tip", where, `“${where}”: bullet ${i + 1} is long — keep it under about 25 words`, `«${where}»: النقطة ${i + 1} طويلة — خليها أقل من ٢٥ كلمة تقريبًا`);
     });
-    if (bl.length && !bl.some((x) => HAS_NUMBER.test(x))) add("tip", where, `“${where}”: add a number (how many, how much, how fast)`, `«${where}»: ضيف رقم (كام، قد إيه، بسرعة قد إيه)`);
+    if (bl.length && !bl.some((x) => HAS_NUMBER.test(x))) add("tip", where, `“${where}”: add a number (how many, how much, how fast)`, `«${where}»: أضف رقمًا (كم، وما المقدار، وما السرعة)`);
   }
   // gaps between jobs longer than 6 months, and overlaps
   spans.sort((x, y) => x.a - y.a);
@@ -230,9 +230,9 @@ export function checkCV(cv) {
   }
   const edu = get("education").flatMap((s) => s.items).filter((it) => it.degree || it.school);
   if (!edu.length) add("tip", "education", "Add your education or training", "ضيف تعليمك أو تدريبك");
-  if (!get("skills").some((s) => s.items.some((it) => (it.items || []).length))) add("tip", "skills", "List 6–10 skills that match the jobs you want", "اكتب ٦–١٠ مهارات مناسبة للشغل اللي عايزه");
+  if (!get("skills").some((s) => s.items.some((it) => (it.items || []).length))) add("tip", "skills", "List 6–10 skills that match the jobs you want", "اكتب 6–10 مهارات مناسبة للوظيفة التي تريدها");
   const words = cvText(cv).split(/\s+/).length;
-  if (words > 750) add("tip", "length", `About ${words} words: more than two pages. Keep the best 10–15 years.`, `حوالي ${words} كلمة: أكتر من صفحتين. خليك في أحسن ١٠–١٥ سنة.`);
+  if (words > 750) add("tip", "length", `About ${words} words: more than two pages. Keep the best 10–15 years.`, `نحو ${words} كلمة: أكثر من صفحتين. ركّز على أفضل 10–15 سنة.`);
   return out;
 }
 

@@ -6,20 +6,21 @@
    build.sh pastes this file into index.new.html's <script id="yusr-v613">
    placeholder, so the Yusr that ships is still one file.
    ========================================================================== */
-Object.assign(I18N.en,{billsTab:"Bills",billsSub:"Recurring bills & income",upcoming:"Next 30 days",daily:"Daily",recRangeOn:"Only on some days of each month",fromDay:"From day",toDay:"To day",
+Object.assign(I18N.en,{pWeek:"this week",pMonth:"this month",pYear:"this year",pAll:"all time",billsTab:"Bills",billsSub:"Recurring bills & income",upcoming:"Next 30 days",daily:"Daily",recRangeOn:"Only on some days of each month",fromDay:"From day",toDay:"To day",
   recRangeHelp:"Example: daily from day 1 to day 10 logs it every day in that part of the month only.",daysRange:"days {a}–{b}",noBills:"No recurring bills yet. Tap ＋ to add rent, internet, a daily allowance…",
   billsOut:"Going out in 30 days",billsIn:"Coming in",writePh:"Write what you spent or got… e.g. lunch 150, taxi 60, got salary 30000",writeGo:"Log it",writing:"Reading…",
   writeDone:"Logged {n}",undo:"Undo",undone:"Removed",writeNone:"No amount found. Write it like: lunch 150, taxi 60, got salary 30000.",writeNoAcct:"Add an account first.",writeOffline:"Open Yusr from Attune's Money tab to log by writing.",
   moneyTitle:"Money",recent:"Recent",talkTitle:"Write or ask",sugg1:"lunch 150, taxi 60",sugg2:"How much did I spend on food this week?",sugg3:"What did I earn this month?",tapToEdit:"tap a line to edit",
   outShort:"spent",otherCats:"Other",zakatSetup:"Set up in Zakat",zakatBelow:"Below niṣāb",zakatBelowS:"nothing due now",vsBefore:"vs before",topCat:"Most on",next7:"7 days",nDue:"{n} due",nothingDue:"Nothing due",
   homeCards:"Home shows",cardRing:"Spending ring",cardGrid:"The 4 cards",cardTalk:"Write or ask",clearTalk:"Clear",writePh:"Write or ask… lunch 150, taxi 60"});
-Object.assign(I18N.ar,{billsTab:"الفواتير الثابتة",billsSub:"مصاريف ودخل بيتكرروا",upcoming:"الـ ٣٠ يوم الجايين",daily:"يومي",recRangeOn:"في أيام معيّنة بس من كل شهر",fromDay:"من يوم",toDay:"لحد يوم",
-  recRangeHelp:"مثال: يومي من يوم ١ لحد يوم ١٠ يتسجّل كل يوم في الجزء ده من الشهر بس.",daysRange:"أيام {a}–{b}",noBills:"مفيش فواتير متكررة لسه. دوس ＋ وضيف الإيجار أو النت أو مصروف يومي…",
-  billsOut:"هيخرج في ٣٠ يوم",billsIn:"هيدخل",writePh:"اكتب صرفت إيه أو جالك إيه… مثلاً: غدا ١٥٠، تاكسي ٦٠، وقبضت المرتب ٣٠٠٠٠",writeGo:"سجّل",writing:"بقرا…",
-  writeDone:"اتسجّل {n}",undo:"تراجع",undone:"اتشال",writeNone:"مش لاقي مبلغ. اكتبها كده: غدا ١٥٠، تاكسي ٦٠، قبضت المرتب ٣٠٠٠٠",writeNoAcct:"ضيف حساب الأول.",writeOffline:"افتح يُسر من تبويب الفلوس في Attune عشان تسجّل بالكتابة.",
-  moneyTitle:"الفلوس",recent:"آخر العمليات",talkTitle:"اكتب أو اسأل",sugg1:"غدا ١٥٠، تاكسي ٦٠",sugg2:"صرفت كام على الأكل الأسبوع ده؟",sugg3:"دخلي كام الشهر ده؟",tapToEdit:"دوس على سطر تعدّله",
-  outShort:"مصروف",otherCats:"أخرى",zakatSetup:"اضبطها من الزكاة",zakatBelow:"أقل من النصاب",zakatBelowS:"مفيش مستحق دلوقتي",vsBefore:"عن اللي قبله",topCat:"الأكتر",next7:"٧ أيام",nDue:"{n} مستحقة",nothingDue:"مفيش مستحق",
-  homeCards:"الرئيسية تعرض",cardRing:"دايرة المصاريف",cardGrid:"الـ ٤ كروت",cardTalk:"اكتب أو اسأل",clearTalk:"امسح",writePh:"اكتب أو اسأل… غدا ١٥٠، تاكسي ٦٠"});
+Object.assign(I18N.ar,{billsTab:"الفواتير الثابتة",billsSub:"مصروفات ودخل متكرر",upcoming:"الأيام الثلاثون القادمة",daily:"يومي",recRangeOn:"في أيام محددة من كل شهر فقط",fromDay:"من اليوم",toDay:"إلى اليوم",
+  recRangeHelp:"مثال: «يومي من اليوم 1 إلى اليوم 10» يُسجَّل كل يوم في هذا الجزء من الشهر فقط.",daysRange:"الأيام {a}–{b}",noBills:"لا توجد فواتير متكررة بعد. اضغط ＋ وأضف الإيجار أو الإنترنت أو مصروفًا يوميًا…",
+  billsOut:"المصروف خلال 30 يومًا",billsIn:"الوارد",writeGo:"تسجيل",writing:"جارٍ القراءة…",
+  writeDone:"سُجّلت {n}",undo:"تراجع",undone:"أُزيل",writeNone:"لم يُعثر على مبلغ. اكتبها هكذا: غداء 150، تاكسي 60، الراتب 30000",writeNoAcct:"أضف حسابًا أولًا.",writeOffline:"افتح يُسر من تبويب «المال» في Attune لتسجّل بالكتابة.",
+  moneyTitle:"المال",recent:"آخر المعاملات",talkTitle:"اكتب أو اسأل",sugg1:"غداء 150، تاكسي 60",sugg2:"كم أنفقت على الطعام هذا الأسبوع؟",sugg3:"كم دخلي هذا الشهر؟",tapToEdit:"اضغط على سطر لتعديله",
+  outShort:"مصروف",otherCats:"أخرى",zakatSetup:"اضبطها من «الزكاة»",zakatBelow:"أقل من النصاب",zakatBelowS:"لا شيء مستحق الآن",vsBefore:"مقارنة بالفترة السابقة",topCat:"الأعلى",next7:"7 أيام",nDue:"مستحقة: {n}",nothingDue:"لا شيء مستحق",
+  homeCards:"ما يظهر في الرئيسية",cardRing:"دائرة المصروفات",cardGrid:"البطاقات الأربع",cardTalk:"اكتب أو اسأل",clearTalk:"مسح",writePh:"اكتب أو اسأل… غداء 150، تاكسي 60",
+  pWeek:"هذا الأسبوع",pMonth:"هذا الشهر",pYear:"هذه السنة",pAll:"الكل"});
 function tf(k,v){var x=t(k);Object.keys(v||{}).forEach(function(n){x=x.replace('{'+n+'}',v[n]);});return x;}
 
 /* ---- daily bills on some days of the month ---- */
@@ -156,8 +157,8 @@ function homeCards(){
   var top=null;try{var by2={};list.forEach(function(x){if(x.type==='expense')by2[x.cat]=(by2[x.cat]||0)+inView(x);});var k=Object.keys(by2).sort(function(a,b){return by2[b]-by2[a];})[0];if(k)top=catName(k)+' '+Math.round(by2[k]/(outS||1)*100)+'%';}catch(e){}
   var card=function(k,v,s,cls,on,tid){return '<div class="hcard" onclick="'+on+'" data-testid="'+tid+'"><div class="k">'+k+'</div><div class="v '+(cls||'')+' num">'+v+'</div><div class="s">'+(s||'&nbsp;')+'</div></div>';};
   grid.innerHTML=
-    card(t('spent')+' · '+t(state.period),fmt(outS,cur),vs==null?(top||''):(vs<=0?'↓ ':'↑ ')+Math.abs(vs)+'% '+t('vsBefore'),'down',"go('trends')",'card-spent')
-   +card(t('earned')+' · '+t(state.period),fmt(inS,cur),top&&vs!=null?t('topCat')+': '+top:'','up',"go('trends')",'card-earned')
+    card(t('spent')+' · '+t('p'+state.period[0].toUpperCase()+state.period.slice(1)),fmt(outS,cur),vs==null?(top||''):(vs<=0?'↓ ':'↑ ')+Math.abs(vs)+'% '+t('vsBefore'),'down',"go('trends')",'card-spent')
+   +card(t('earned')+' · '+t('p'+state.period[0].toUpperCase()+state.period.slice(1)),fmt(inS,cur),top&&vs!=null?t('topCat')+': '+top:'','up',"go('trends')",'card-earned')
    +card(t('billsTab')+' · '+t('next7'),billsN?tf('nDue',{n:billsN}):t('nothingDue'),firstBill?esc((firstBill.r.note||'').replace(' ↻','')||catName(firstBill.r.cat))+' · '+firstBill.date.slice(5):'','',"go('bills')",'card-bills')
    +card(t('zakat'),zv[0],zv[1],'gold',"go('zakat')",'card-zakat');
 }

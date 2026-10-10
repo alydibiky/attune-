@@ -48,13 +48,13 @@ export function spanOf(q, now = Date.now()) {
     if (n > 0 && n < 400) { const days = n * unit; return { from: iso(back(days)), to: iso(today), label: [`the last ${n} ${unit === 7 ? "week" : unit === 30 ? "month" : "day"}${n > 1 ? "s" : ""}`, `آخر ${n} ${unit === 7 ? "أسبوع" : unit === 30 ? "شهر" : n > 2 && n < 11 ? "أيام" : "يوم"}`] };
     }
   }
-  if (/\btoday\b|النهار ?ده|النهارده|اليوم/.test(t)) return { from: iso(today), to: iso(today), label: ["today", "النهارده"] };
-  if (/\byesterday\b|امبارح|أمس|البارحة/.test(t)) { const y = back(2); return { from: iso(y), to: iso(y), label: ["yesterday", "امبارح"] }; }
-  if (/\bthis week\b|الأسبوع ده|الاسبوع ده|هذا الأسبوع/.test(t)) { const f = new Date(today); f.setDate(f.getDate() - ((f.getDay() + 1) % 7)); return { from: iso(f), to: iso(today), label: ["this week", "الأسبوع ده"] }; }   // the week starts Saturday in Egypt
-  if (/\blast week\b|الأسبوع اللي فات|الاسبوع اللي فات|الأسبوع الماضي/.test(t)) { const e = new Date(today); e.setDate(e.getDate() - ((e.getDay() + 1) % 7) - 1); const f = new Date(e); f.setDate(f.getDate() - 6); return { from: iso(f), to: iso(e), label: ["last week", "الأسبوع اللي فات"] }; }
-  if (/\blast month\b|الشهر اللي فات|الشهر الماضي/.test(t)) { const f = new Date(today.getFullYear(), today.getMonth() - 1, 1), e = new Date(today.getFullYear(), today.getMonth(), 0); return { from: iso(f), to: iso(e), label: ["last month", "الشهر اللي فات"] }; }
-  if (/\bthis year\b|السنة دي|هذا العام|السنه دي/.test(t)) return { from: `${today.getFullYear()}-01-01`, to: iso(today), label: ["this year", "السنة دي"] };
-  return { from: iso(new Date(today.getFullYear(), today.getMonth(), 1)), to: iso(today), label: ["this month", "الشهر ده"] };
+  if (/\btoday\b|النهار ?ده|النهارده|اليوم/.test(t)) return { from: iso(today), to: iso(today), label: ["today", "اليوم"] };
+  if (/\byesterday\b|امبارح|أمس|البارحة/.test(t)) { const y = back(2); return { from: iso(y), to: iso(y), label: ["yesterday", "أمس"] }; }
+  if (/\bthis week\b|الأسبوع ده|الاسبوع ده|هذا الأسبوع/.test(t)) { const f = new Date(today); f.setDate(f.getDate() - ((f.getDay() + 1) % 7)); return { from: iso(f), to: iso(today), label: ["this week", "هذا الأسبوع"] }; }   // the week starts Saturday in Egypt
+  if (/\blast week\b|الأسبوع اللي فات|الاسبوع اللي فات|الأسبوع الماضي/.test(t)) { const e = new Date(today); e.setDate(e.getDate() - ((e.getDay() + 1) % 7) - 1); const f = new Date(e); f.setDate(f.getDate() - 6); return { from: iso(f), to: iso(e), label: ["last week", "الأسبوع الماضي"] }; }
+  if (/\blast month\b|الشهر اللي فات|الشهر الماضي/.test(t)) { const f = new Date(today.getFullYear(), today.getMonth() - 1, 1), e = new Date(today.getFullYear(), today.getMonth(), 0); return { from: iso(f), to: iso(e), label: ["last month", "الشهر الماضي"] }; }
+  if (/\bthis year\b|السنة دي|هذا العام|السنه دي/.test(t)) return { from: `${today.getFullYear()}-01-01`, to: iso(today), label: ["this year", "هذه السنة"] };
+  return { from: iso(new Date(today.getFullYear(), today.getMonth(), 1)), to: iso(today), label: ["this month", "هذا الشهر"] };
 }
 
 /** The Money ledger as the Money tab saved it, or null. */
@@ -73,7 +73,7 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
   const onlyCat = catAsked(question);   // v6.13: "how much on food this week?" counts food only
   const span = spanOf(question, now);
   const L = (en, a) => (ar ? a : en);
-  if (!ledger) return { noLedger: true, text: L("Nothing is recorded in **Money** yet. Add your expenses there (or share a bank SMS to Attune) and ask again.", "مفيش حاجة متسجلة في **الفلوس** لسه. سجّل مصاريفك هناك (أو شارك رسالة البنك مع Attune) واسأل تاني.") };
+  if (!ledger) return { noLedger: true, text: L("Nothing is recorded in **Money** yet. Add your expenses there (or share a bank SMS to Attune) and ask again.", "لا يوجد شيء مسجّل في **المال** بعد. سجّل مصروفاتك هناك (أو شارك رسالة البنك مع Attune) واسأل مرة أخرى.") };
   const acct = new Map((ledger.accounts || []).map((a) => [a.id, a]));
   const cur = (tx) => ((acct.get(tx.account) || {}).currency || ledger.currency || "EGP");
   const custom = new Map((ledger.customCats || []).map((c) => [c.id, [c.en || c.name || c.id, c.ar || c.en || c.id]]));
@@ -88,7 +88,7 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
     const curs = [...new Set(rows.map(cur))];
     const head = type === "expense" ? L("You spent", "صرفت") : L("You received", "دخلك");
     if (short) {   // v6.13: a chat-sized answer for Yusr's write-or-ask bar
-      if (!rows.length) { out.push(type === "expense" ? L(`Nothing spent${onlyCat ? " on " + catName(onlyCat) : ""} in ${span.label[0]}.`, `مفيش مصاريف${onlyCat ? " على " + catName(onlyCat) : ""} في ${span.label[1]}.`) : L(`No income in ${span.label[0]}.`, `مفيش دخل في ${span.label[1]}.`)); return; }
+      if (!rows.length) { out.push(type === "expense" ? L(`Nothing spent${onlyCat ? " on " + catName(onlyCat) : ""} in ${span.label[0]}.`, `مفيش مصاريف${onlyCat ? " على " + catName(onlyCat) : ""} في ${span.label[1]}.`) : L(`No income in ${span.label[0]}.`, `لا يوجد دخل في ${span.label[1]}.`)); return; }
       const top = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => { const [c, cat] = k.split("|"); return `${catName(cat)} ${money(v, c)}`; });
       const big = rows.reduce((m, x) => (+x.amount > +m.amount ? x : m), rows[0]);
       out.push(`**${head} ${curs.map((c) => money(sums[type + "|" + c], c)).join(" + ")}**${onlyCat && type === "expense" ? L(" on " + catName(onlyCat), " على " + catName(onlyCat)) : ""} ${L(`in ${span.label[0]}`, `في ${span.label[1]}`)} · ${rows.length} ${L(rows.length === 1 ? "entry" : "entries", "عملية")}.`
@@ -96,7 +96,7 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
         + (rows.length > 1 ? "\n" + L("Biggest: ", "الأكبر: ") + (big.note ? String(big.note).slice(0, 40) + " " : catName(big.cat) + " ") + money(+big.amount, cur(big)) + " · " + big.date : ""));
       return;
     }
-    if (!rows.length) { out.push(type === "expense" ? L(`No expenses are recorded for ${span.label[0]} (${span.from} → ${span.to}).`, `مفيش مصاريف متسجلة في ${span.label[1]} (${span.from} → ${span.to}).`) : L(`No income is recorded for ${span.label[0]}.`, `مفيش دخل متسجل في ${span.label[1]}.`)); return; }
+    if (!rows.length) { out.push(type === "expense" ? L(`No expenses are recorded for ${span.label[0]} (${span.from} → ${span.to}).`, `لا توجد مصروفات مسجّلة في ${span.label[1]} (${span.from} → ${span.to}).`) : L(`No income is recorded for ${span.label[0]}.`, `لا يوجد دخل مسجّل في ${span.label[1]}.`)); return; }
     out.push(`**${head} ${curs.map((c) => money(sums[type + "|" + c], c)).join(" + ")}** ${L(`in ${span.label[0]}`, `في ${span.label[1]}`)} (${span.from} → ${span.to}) · ${rows.length} ${L(rows.length === 1 ? "entry" : "entries", "عملية")}`);
     out.push("", `| ${L("Category", "البند")} | ${L("Amount", "المبلغ")} |`, "|---|---:|");
     for (const [k, v] of Object.entries(by).sort((a, b) => b[1] - a[1])) { const [c, cat] = k.split("|"); out.push(`| ${catName(cat)} | ${money(v, c)} |`); }
@@ -108,6 +108,6 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
   if (kind === "expense" || kind === "both") part("expense");
   if (kind === "income" || kind === "both") part("income");
   const total = Object.entries(sums).filter(([k]) => k.startsWith(kind === "income" ? "income" : "expense")).reduce((a, [, v]) => a + v, 0);
-  if (!short) out.push(L("_Added up from your Money records on this phone._", "_اتجمعت من سجلات الفلوس على موبايلك._"));
+  if (!short) out.push(L("_Added up from your Money records on this phone._", "_جُمعت من سجلات المال على هاتفك._"));
   return { text: out.join("\n").trim(), total, count: inSpan.length, empty: !inSpan.length, span };
 }

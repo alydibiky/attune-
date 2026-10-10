@@ -94,7 +94,7 @@ with sync_playwright() as p:
     # ---- Arabic ----
     page.evaluate("localStorage.setItem('attune:ui:lang', 'ar')"); page.reload(); page.wait_for_selector("nav", timeout=15000)
     page.locator("nav button").last.click(); page.wait_for_timeout(250)
-    page.locator(".rounded-t-2xl button:has-text('الأكل والرياضة')").first.click()
+    page.locator(".rounded-t-2xl button:has-text('الغذاء واللياقة')").first.click()
     page.wait_for_selector("[data-testid=fit-today]", timeout=6000)
     t = page.locator("[data-testid=fit-today]").inner_text()
     check("الفجر" in t and "سحور" in t and "درجة النهارده" in t, "Ramadan card, meal names and the score in Arabic — " + t.replace("\n", " ")[:300])

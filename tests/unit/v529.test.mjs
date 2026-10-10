@@ -28,7 +28,7 @@ eq([pricesFor("Africa/Cairo").year, pricesFor("UTC").year], ["EGP 2,499", "$59.9
 const rc = requestCode("device-123");
 eq([/^PRO-[A-Z0-9]{8}$/.test(rc), rc === requestCode("device-123"), rc !== requestCode("device-124")], [true, true, true], "each phone has its own stable request code (" + rc + ")");
 eq([trialDaysLeft(0), trialDaysLeft(Date.now() - 2 * 86400000), trialDaysLeft(Date.now() - 9 * 86400000)], [7, 5, 0], "the 7-day Pro trial counts down");
-eq(buyMessage("PRO-ABCD2345", "Yearly", "EGP 999").includes("PRO-ABCD2345") && /كود الطلب/.test(buyMessage("PRO-ABCD2345", "Yearly", "EGP 999")), true, "the WhatsApp message carries the request code, in English and Arabic");
+eq(buyMessage("PRO-ABCD2345", "Yearly", "EGP 999").includes("PRO-ABCD2345") && /رمز الطلب/.test(buyMessage("PRO-ABCD2345", "Yearly", "EGP 999")), true, "the WhatsApp message carries the request code, in English and Arabic");
 eq(PRO_BENEFITS.length >= 5, true, "Pro lists its benefits");
 {
   const { subtle } = globalThis.crypto;

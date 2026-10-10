@@ -137,5 +137,5 @@ export function trialDaysLeft(first, now = Date.now()) {
 
 /** The message to send the seller for a purchase. */
 export function buyMessage(req, plan, price) {
-  return `Hello, I'd like Attune Pro (${plan}, ${price}).\nMy request code: ${req}\n\nمرحبا، عايز أتيون برو (${plan}، ${price}).\nكود الطلب: ${req}`;
+  return `Hello, I'd like Attune Pro (${plan}, ${price}).\nMy request code: ${req}\n\nمرحبًا، أريد الاشتراك في Attune Pro (${plan}، ${price}).\nرمز الطلب: ${req}`;
 }

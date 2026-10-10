@@ -99,7 +99,7 @@ with sync_playwright() as p:
     page.evaluate(NATIVE + "(%s, %s)" % (json.dumps(PAGE), json.dumps(META)))
     open_tool(page, "تنزيل الفيديوهات")
     find(page, "https://www.tiktok.com/@a/video/1")
-    check("مش بيسمح" in page.locator("[data-testid=video-error]").inner_text(), "the refusal in Arabic")
+    check("لا يسمح" in page.locator("[data-testid=video-error]").inner_text(), "the refusal in Arabic")
     check(len(page.locator("[data-testid=video-item]").all()) >= 2, "the downloads list is kept")
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])
     ctx.close(); br.close()

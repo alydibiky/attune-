@@ -80,14 +80,14 @@ export function etaDocument(state, doc, { issued = null } = {}) {
 export function etaCheck(d) {
   const miss = [];
   const need = (ok, en, ar) => { if (!ok) miss.push({ en, ar }); };
-  need(/^\d{9}$/.test(d.issuer.id), "Your tax registration number (9 digits) — Settings", "رقم التسجيل الضريبي بتاعك (٩ أرقام) — الإعدادات");
+  need(/^\d{9}$/.test(d.issuer.id), "Your tax registration number (9 digits) — Settings", "رقم تسجيلك الضريبي (9 أرقام) — الإعدادات");
   need(/^\d{4}$/.test(d.taxpayerActivityCode), "Your activity code (4 digits, from your tax card) — Settings", "كود النشاط (٤ أرقام من البطاقة الضريبية) — الإعدادات");
   for (const k of ["governate", "regionCity", "street", "buildingNumber"]) need(d.issuer.address[k], `Your address: ${k} — Settings`, `عنوانك: ${{ governate: "المحافظة", regionCity: "المدينة", street: "الشارع", buildingNumber: "رقم المبنى" }[k]} — الإعدادات`);
   need(d.receiver.name, "The customer's name", "اسم العميل");
   if (d.receiver.type === "B") {
     need(/^\d{9}$/.test(d.receiver.id), "The customer's tax number (9 digits)", "الرقم الضريبي للعميل (٩ أرقام)");
     for (const k of ["governate", "regionCity", "street", "buildingNumber"]) need(d.receiver.address[k], `The customer's address: ${k}`, `عنوان العميل: ${{ governate: "المحافظة", regionCity: "المدينة", street: "الشارع", buildingNumber: "رقم المبنى" }[k]}`);
-  } else if (d.totalAmount >= 50000) need(/^\d{14}$/.test(d.receiver.id), "The customer's national ID (14 digits): needed for a person when the invoice is 50,000 EGP or more", "الرقم القومي للعميل (١٤ رقم): لازم لفرد لو الفاتورة ٥٠٬٠٠٠ جنيه أو أكتر");
+  } else if (d.totalAmount >= 50000) need(/^\d{14}$/.test(d.receiver.id), "The customer's national ID (14 digits): needed for a person when the invoice is 50,000 EGP or more", "الرقم القومي للعميل (14 رقمًا): مطلوب للأفراد إذا كانت الفاتورة 50,000 جنيه أو أكثر");
   d.invoiceLines.forEach((l, i) => need(l.itemCode, `Line ${i + 1} (${l.description.slice(0, 30)}): the item's EGS or GS1 code — on the item`, `سطر ${i + 1} (${l.description.slice(0, 30)}): كود الصنف EGS أو GS1 — على الصنف`));
   return miss;
 }

@@ -117,7 +117,7 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=convert]", timeout=5000)
     pick(page, "manual.pdf", b"%PDF-1 m", "application/pdf")
     labels = page.locator("[data-testid=convert]").inner_text()
-    check("ادمجهم" not in labels and "قسّمه لصفحات" in labels and "خلّي صفحات معيّنة" in labels and "لفّ الصفحات" in labels, "the PDF tools are in Arabic")
+    check("ادمجهم" not in labels and "التقسيم إلى صفحات" in labels and "الاحتفاظ بصفحات محددة" in labels and "تدوير الصفحات" in labels, "the PDF tools are in Arabic")
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])
     ctx.close(); br.close()
 env.close()

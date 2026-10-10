@@ -325,7 +325,7 @@ function followUps(msg, prevUser) {
   const out = [];
   const photo = prevUser && prevUser.image;
   if (photo) {
-    out.push(P("Exact model?", "الموديل بالظبط؟", "Which exact model and year is it most likely? Say which clues you used and how sure you are.", "إيه الموديل والسنة الأقرب بالظبط؟ قولّي استنتجت ده من إيه وقد إيه متأكد."));
+    out.push(P("Exact model?", "الموديل بالظبط؟", "Which exact model and year is it most likely? Say which clues you used and how sure you are.", "ما الطراز والسنة الأقرب بالتحديد؟ وضّح من أين استنتجت ذلك ومدى تأكدك."));
     out.push(P("Specifications", "المواصفات", "Give its main specifications in a table.", "اديني أهم مواصفاته في جدول."));
   }
   // v6.12: after a web answer, next questions about the same subject (like Gemini's suggestions)
@@ -335,25 +335,25 @@ function followUps(msg, prevUser) {
     if (subj && subj.split(" ").length <= 9) {
       const thing = /\b(car|suv|crane|phone|laptop|truck|excavator|model|series|pro|max|plus|\d{2,})\b/i.test(q) || /سيارة|عربية|ونش|موبايل|تليفون|موديل/.test(q);
       const W = (en, arL, pEn, pAr) => [en, qa ? pAr : pEn];
-      if (thing && !/price|سعر|أسعار|اسعار/i.test(q)) out.push(W("Versions & prices", "الفئات والأسعار", `${subj}: every version with its price (in Egypt if sold there) in a table`, `${subj}: كل الفئات بأسعارها (في مصر لو بيتباع هنا) في جدول`));
+      if (thing && !/price|سعر|أسعار|اسعار/i.test(q)) out.push(W("Versions & prices", "الفئات والأسعار", `${subj}: every version with its price (in Egypt if sold there) in a table`, `${subj}: كل الفئات بأسعارها (في مصر إن كان يُباع هنا) في جدول`));
       if (!/pros|cons|عيوب|مميزات/i.test(q)) out.push(W("Pros & cons", "المميزات والعيوب", `${subj}: pros and cons from owners and reviews`, `${subj}: المميزات والعيوب من الملاك والمراجعات`));
       if (thing && !/compare|vs|مقارنة|ولا/i.test(q)) out.push(W("Compare with rivals", "قارنه بالمنافسين", `Compare ${subj} with its main rivals in a table`, `قارن ${subj} بأهم منافسيه في جدول`));
-      if (!/news|latest|أخبار|اخبار/i.test(q)) out.push(W("Latest news", "آخر الأخبار", `${subj}: latest news this month`, `${subj}: آخر الأخبار الشهر ده`));
+      if (!/news|latest|أخبار|اخبار/i.test(q)) out.push(W("Latest news", "آخر الأخبار", `${subj}: latest news this month`, `${subj}: آخر الأخبار هذا الشهر`));
       return out.slice(0, 4);
     }
   }
   switch (msg.skill) {
-    case "compare": out.push(P("Which should I choose?", "أختار أنهي؟", "For my use, which one should I choose and why?", "لاستخدامي، أختار أنهي وليه؟"), P("Price difference", "فرق السعر", "What is the typical price difference between them?", "إيه فرق السعر التقريبي بينهم؟")); break;
-    case "steps": out.push(P("What can go wrong?", "إيه اللي ممكن يغلط؟", "What are the common mistakes and risks in these steps?", "إيه الأخطاء والمخاطر الشائعة في الخطوات دي؟"), P("Checklist", "قائمة مراجعة", "Turn these steps into a short checklist I can tick.", "حوّل الخطوات دي لقائمة مراجعة قصيرة.")); break;
-    case "explain": out.push(P("Real example", "مثال حقيقي", "Give me a real-world example with numbers.", "اديني مثال حقيقي بالأرقام."), P("Explain simply", "ببساطة", "Explain that simply, as if I have no background.", "اشرحها ببساطة كأني مش متخصص.")); break;
-    case "email": out.push(P("More formal", "رسمي أكتر", "Make it more formal.", "خليها رسمية أكتر."), P("Shorter", "أقصر", "Make it shorter.", "اختصرها.")); break;
-    case "list": out.push(P("More on #1", "تفاصيل الأول", "Tell me more about the first option.", "قولّي تفاصيل أكتر عن أول اختيار.")); break;
+    case "compare": out.push(P("Which should I choose?", "أختار أنهي؟", "For my use, which one should I choose and why?", "لاستخدامي، أختار أنهي وليه؟"), P("Price difference", "فرق السعر", "What is the typical price difference between them?", "ما فرق السعر التقريبي بينهما؟")); break;
+    case "steps": out.push(P("What can go wrong?", "ما الذي قد يحدث خطأ؟", "What are the common mistakes and risks in these steps?", "ما الأخطاء والمخاطر الشائعة في هذه الخطوات؟"), P("Checklist", "قائمة مراجعة", "Turn these steps into a short checklist I can tick.", "حوّل هذه الخطوات إلى قائمة مراجعة قصيرة.")); break;
+    case "explain": out.push(P("Real example", "مثال حقيقي", "Give me a real-world example with numbers.", "اديني مثال حقيقي بالأرقام."), P("Explain simply", "ببساطة", "Explain that simply, as if I have no background.", "اشرحها ببساطة كأنني غير متخصص.")); break;
+    case "email": out.push(P("More formal", "أكثر رسمية", "Make it more formal.", "اجعلها أكثر رسمية."), P("Shorter", "أقصر", "Make it shorter.", "اختصرها.")); break;
+    case "list": out.push(P("More on #1", "تفاصيل الأول", "Tell me more about the first option.", "أعطني تفاصيل أكثر عن الخيار الأول.")); break;
     case "plan": out.push(P("As a checklist", "قائمة مراجعة", "Turn the plan into a checklist.", "حوّل الخطة لقائمة مراجعة.")); break;
-    case "translate": out.push(P("Translate back", "ترجم تاني للتأكد", "Translate it back so I can check the meaning.", "ترجمها تاني للغة الأصلية عشان أتأكد من المعنى.")); break;
+    case "translate": out.push(P("Translate back", "الترجمة العكسية للتحقق", "Translate it back so I can check the meaning.", "ترجمها مرة أخرى إلى اللغة الأصلية لأتأكد من المعنى.")); break;
     default: break;
   }
   if (t.length > 700) out.push(P("Shorter", "أقصر", "Make that shorter — just the key points.", "اختصرها في نقاط قليلة."));
-  else if (!msg.skill || msg.skill !== "explain") out.push(P("More detail", "تفاصيل أكتر", "Go into more detail.", "اشرح بتفصيل أكتر."));
+  else if (!msg.skill || msg.skill !== "explain") out.push(P("More detail", "تفاصيل أكثر", "Go into more detail.", "اشرح بتفصيل أكثر."));
   if (/\d/.test(t) && /(total|price|cost|egp|usd|جنيه|سعر|اجمالي|إجمالي)/i.test(t)) out.push(P("Check the maths", "راجع الحساب", "Double-check the calculations step by step.", "راجع الحسابات خطوة بخطوة."));
   out.push([ar ? "Translate to English" : "Translate to Arabic", ar ? "Translate your last answer into English." : "ترجم ردك الأخير للعربي (مصري)."]);
   const seen = new Set();

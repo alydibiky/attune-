@@ -195,7 +195,7 @@ export function searchPages(index, query, { max = 40 } = {}) {
 export function suggestions(index, ar = false) {
   const text = index.pages.slice(0, 3).map((p) => p.text).join(" ");
   const money = /\b(EGP|USD|SAR|AED|EUR|LE|جنيه|ريال|دولار)\b|[$€£]\s?\d/.test(text), dates = /\b(19|20)\d\d\b/.test(text);
-  const base = ar ? ["لخّص الملف", "إيه النقاط الرئيسية؟", "اعمل فهرس بالمحتويات"] : ["Summarise this document", "What are the key points?", "Make an outline with page numbers"];
+  const base = ar ? ["لخّص الملف", "ما النقاط الرئيسية؟", "أنشئ فهرسًا للمحتويات"] : ["Summarise this document", "What are the key points?", "Make an outline with page numbers"];
   if (money) base.push(ar ? "اذكر كل المبالغ والأرقام المهمة" : "List every amount and important figure");
   if (dates) base.push(ar ? "اذكر كل التواريخ والمواعيد" : "List all dates and deadlines");
   return base.slice(0, 5);

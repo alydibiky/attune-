@@ -170,7 +170,7 @@ def sec_arabic(br):
     page.locator("button[title='إرسال']").click()
     page.wait_for_selector("text=ونش على شاسيه بعجل", timeout=20000)
     page.wait_for_timeout(800); page.screenshot(path=HERE + "/dbg.png")
-    check(page.locator("button[title='أعِد التوليد']").count() >= 1, "chatting works in Arabic, with Arabic answer buttons")
+    check(page.locator("button[title='إعادة التوليد']").count() >= 1, "chatting works in Arabic, with Arabic answer buttons")
     page.screenshot(path=HERE + "/v5-ar-chat.png")
     open_more(page)
     latin = page.evaluate(LATIN)
@@ -419,7 +419,7 @@ def sec_crane(br):
     check("Liebherr LTM 1100" in (page.evaluate("localStorage.getItem('attune:crane:v1')") or ""), "charts are kept (and so go into backups)")
     # the same screens in Arabic
     page.evaluate("localStorage.setItem('attune:ui:lang','ar')"); page.reload(); page.wait_for_selector("nav", timeout=15000)
-    open_more(page); page.locator(".rounded-t-2xl button:has-text('أدوات الأوناش')").click()
+    open_more(page); page.locator(".rounded-t-2xl button:has-text('أدوات الرافعات')").click()
     page.wait_for_selector("[data-testid=crane-toolkit]", timeout=5000)
     bad = []
     for t in ["lift", "ground", "slings", "wind", "check", "charts"]:

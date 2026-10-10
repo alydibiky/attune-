@@ -228,7 +228,7 @@ export function lessonNotice(c) {
   const next = c.lessons.find((l) => !l.done);
   const n = next ? next.n : nextIndex(c);
   const title = next ? next.title : c.plan[n] || "";
-  return { title: `${c.topic} · ${c.lang === "ar" ? "الدرس" : "Lesson"} ${n + 1}`, body: title ? title + (quizDue(c) ? (c.lang === "ar" ? " — ومعاه اختبار قصير" : " — and a short quiz") : "") : (c.lang === "ar" ? "درس النهارده جاهز" : "Today's lesson is waiting") };
+  return { title: `${c.topic} · ${c.lang === "ar" ? "الدرس" : "Lesson"} ${n + 1}`, body: title ? title + (quizDue(c) ? (c.lang === "ar" ? " — ومعاه اختبار قصير" : " — and a short quiz") : "") : (c.lang === "ar" ? "درس اليوم جاهز" : "Today's lesson is waiting") };
 }
 
 // ---- news -------------------------------------------------------------------------------------
@@ -278,5 +278,5 @@ export function addDigest(t, d) {
 export function newsNotice(t) {
   const d = t.digests[0];
   const head = d && d.text ? clean(String(d.text).split("\n")[0].replace(/\*+/g, ""), 140) : "";
-  return { title: `${t.query} · ${t.lang === "ar" ? "أخبار اليوم" : "today's news"}`, body: head && d.day === dayKey() ? head : (t.lang === "ar" ? "افتح عشان تجمّع أخبار آخر 24 ساعة" : "Tap to gather the last 24 hours") };
+  return { title: `${t.query} · ${t.lang === "ar" ? "أخبار اليوم" : "today's news"}`, body: head && d.day === dayKey() ? head : (t.lang === "ar" ? "افتح لجمع أخبار آخر 24 ساعة" : "Tap to gather the last 24 hours") };
 }

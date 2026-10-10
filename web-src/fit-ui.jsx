@@ -144,7 +144,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     try {
       if (photo) {
         const used = (st.photoUse && st.photoUse.d === F.today() ? st.photoUse.n : 0);
-        if (!pro && used >= FREE_PHOTOS_PER_DAY) { flash && flash(L(`${FREE_PHOTOS_PER_DAY} photo meals a day are free — Pro reads every photo. Type or say it meanwhile.`, `${FREE_PHOTOS_PER_DAY} صور وجبات في اليوم ببلاش — Pro بيقرا كل الصور. اكتبها أو قولها لحد كده.`)); setPhoto(null); openPlan && openPlan(); return; }   // the photo goes, so typing the meal works at once
+        if (!pro && used >= FREE_PHOTOS_PER_DAY) { flash && flash(L(`${FREE_PHOTOS_PER_DAY} photo meals a day are free — Pro reads every photo. Type or say it meanwhile.`, `${FREE_PHOTOS_PER_DAY} صور وجبات يوميًا مجانًا — ويقرأ Pro كل الصور. اكتبها أو قلها حتى ذلك الحين.`)); setPhoto(null); openPlan && openPlan(); return; }   // the photo goes, so typing the meal works at once
         await readPhotoMeal(me);
         if (!pro) upd((s) => ({ ...s, photoUse: { d: F.today(), n: (s.photoUse && s.photoUse.d === F.today() ? s.photoUse.n : 0) + 1 } }));
         return;
@@ -198,7 +198,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     const note = text.trim();
     let fast = null;
     if (clipOn) {
-      setStage(L("Recognising the food…", "بتعرّف على الأكل…"));
+      setStage(L("Recognising the food…", "جارٍ التعرّف على الطعام…"));
       fast = await fastP; if (run.current !== me) return;
       if (fast && fast.status === "auto") { await useFast(fast, me); return; }   // sure enough: done, the chat model is not needed
       if (fast && fast.status === "guess" && fast.items.length && modelReady && canSee) {   // shown now (≈1 s); the chat model checks it meanwhile
@@ -210,14 +210,14 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     if (!modelReady || !canSee) {
       if (fast && fast.status === "guess") { await useFast(fast, me); return; }
       const ni = PH.noteItems(note); if (ni.length) { setDraft(ni); return; }
-      if (!modelReady) { flash && flash(L("Couldn't recognise this photo — name the food instead, e.g. “2 fried eggs and baladi bread”", "مقدرتش أتعرّف على الصورة دي — اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return; }
-      flash && flash(clipOn || !photoClip ? L("This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”", "الموديل ده مش بيقرا صور دلوقتي — اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")
-        : L("This model can't read photos — get “Fast photo recognition” in My plan, or name the food, e.g. “2 fried eggs and baladi bread”", "الموديل ده مش بيقرا صور — نزّل «التعرّف السريع على صور الأكل» من خطتي، أو اكتب اسم الأكل، مثلاً «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return;
+      if (!modelReady) { flash && flash(L("Couldn't recognise this photo — name the food instead, e.g. “2 fried eggs and baladi bread”", "تعذّر التعرّف على هذه الصورة — اكتب اسم الطعام، مثلًا «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return; }
+      flash && flash(clipOn || !photoClip ? L("This model can't read photos right now — name the food instead, e.g. “2 fried eggs and baladi bread”", "هذا النموذج لا يقرأ الصور الآن — اكتب اسم الطعام، مثلًا «٢ بيض مقلي وعيش بلدي»")
+        : L("This model can't read photos — get “Fast photo recognition” in My plan, or name the food, e.g. “2 fried eggs and baladi bread”", "هذا النموذج لا يقرأ الصور — نزّل «التعرّف السريع على صور الطعام» من «خطتي»، أو اكتب اسم الطعام، مثلًا «٢ بيض مقلي وعيش بلدي»")); setPhoto(null); return;
     }
     const noFood = () => { if (instant) return; if (fast && fast.status === "guess") return useFast(fast, me); giveUp(); };   // the chat model found nothing: the fast guess beats "name it"
     if (ready) { setStage(L("Waking the model…", "بصحّي الموديل…")); try { await PH.withLimit(ready(), 90000); } catch (e) {} if (run.current !== me) return; }   // the time limit counts from here, not from the wake-up
     const b = PH.budget();
-    setStage(L("Recognising the food…", "بتعرّف على الأكل…"));
+    setStage(L("Recognising the food…", "جارٍ التعرّف على الطعام…"));
     let r = null;
     const hints = fast && fast.items && fast.items[0] ? (fast.items[0].alts || []).map((a) => a.label) : [];   // v6.12: the fast look's guesses help the chat model (it said "Eggs with tomatoes"; the chat model alone said "Fried egg")
     try { r = F.parsePhoto(await limit(llm(F.photoMessages(note, undefined, hints), photo, { json: true, maxTokens: 1000, temperature: 0 }), b.slice(42000, 14000))); } catch (e) { r = null; }
@@ -275,9 +275,9 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   // search: the table + foods kept on the phone at once; the big databases on demand
   const searchOnline = async () => {
     const qq = q.trim(); if (!qq) return;
-    if (/^\d{8,14}$/.test(qq)) { setSearching(true); try { const fd = await DB.byBarcode(qq, fetchJson); if (fd) { pickFood(fd); } else flash && flash(L("No product with that barcode yet", "مفيش منتج بالباركود ده لسه")); } catch (e) { flash && flash(String(e.message || e)); } finally { setSearching(false); } return; }
+    if (/^\d{8,14}$/.test(qq)) { setSearching(true); try { const fd = await DB.byBarcode(qq, fetchJson); if (fd) { pickFood(fd); } else flash && flash(L("No product with that barcode yet", "لا يوجد منتج بهذا الباركود بعد")); } catch (e) { flash && flash(String(e.message || e)); } finally { setSearching(false); } return; }
     setSearching(true);
-    try { const r = await DB.searchAll(qq, fetchJson); setOnline({ q: qq, foods: r.foods }); if (!r.online || (r.errors.length && !r.foods.length)) flash && flash(L("Couldn't reach the food databases — showing what's on the phone", "مقدرتش أوصل لقواعد الأكل — دي اللي على الموبايل")); }
+    try { const r = await DB.searchAll(qq, fetchJson); setOnline({ q: qq, foods: r.foods }); if (!r.online || (r.errors.length && !r.foods.length)) flash && flash(L("Couldn't reach the food databases — showing what's on the phone", "تعذّر الوصول إلى قواعد بيانات الطعام — هذه النتائج من الهاتف")); }
     catch (e) { flash && flash(String(e.message || e)); } finally { setSearching(false); }
   };
   const pickFood = (fd) => {
@@ -293,7 +293,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     try { const ph = await readPhoto(file); setSearching(true); const codes = await scanBarcode(ph.data);
       if (!codes || !codes.length) { flash && flash(L("No barcode found — hold the phone closer, straight on", "ملقتش باركود — قرّب الموبايل وخليه مستقيم")); return; }
       const fd = await DB.byBarcode(codes[0], fetchJson);
-      if (fd) pickFood(fd); else { setQ(codes[0]); flash && flash(L("This product isn't in the databases yet — log it by name", "المنتج ده مش في قواعد البيانات لسه — سجّله بالاسم")); }
+      if (fd) pickFood(fd); else { setQ(codes[0]); flash && flash(L("This product isn't in the databases yet — log it by name", "هذا المنتج غير موجود في قواعد البيانات بعد — سجّله بالاسم")); }
     } catch (e) { flash && flash(String(e.message || e)); } finally { setSearching(false); }
   };
   const setGrams = (i, g) => setDraft((d) => d.map((x, k) => {
@@ -347,7 +347,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     setEditProfile(false);
   };
 
-  const Tabs = [["today", L("Today", "النهارده"), Apple], ["recipes", L("Recipes", "وصفات"), Star], ["move", L("Move", "رياضة"), Dumbbell], ["progress", L("Progress", "التقدم"), BarChart3]];
+  const Tabs = [["today", L("Today", "اليوم"), Apple], ["recipes", L("Recipes", "وصفات"), Star], ["move", L("Move", "رياضة"), Dumbbell], ["progress", L("Progress", "التقدم"), BarChart3]];
 
   if (!st.profile || editProfile) return <ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} /> : null} />;
 
@@ -383,7 +383,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               <button onClick={() => speak("text")} className={"rounded-xl px-3 py-2 text-[13px] flex items-center gap-1.5 shrink-0 " + (listening === "text" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-200")} data-testid="fit-mic"><Mic size={16} />{listening === "text" ? L("Listening…", "بسمع…") : L("Say it", "قول")}</button>
               <button onClick={() => fileRef.current && fileRef.current.click()} className="rounded-xl bg-slate-800 px-3 py-2 text-[13px] text-slate-200 flex items-center gap-1.5 shrink-0" data-testid="fit-photo"><Camera size={16} />{L("Photo", "صورة")}</button>
               {photo && !clipOn && photoClip ? <div className="w-full basis-full rounded-xl border border-sky-800 bg-sky-500/10 p-2 text-[12px] text-sky-100" data-testid="fit-fast-offer">
-                {L("Photos take 20–30 s with the chat model. Get “Fast photo recognition” (≈100 MB, once) and a photo is read in about a second.", "الصور بتاخد ٢٠–٣٠ ثانية مع موديل الشات. نزّل «التعرّف السريع على الصور» (حوالي ١٠٠ ميجا مرة واحدة) والصورة تتقري في حوالي ثانية.")}
+                {L("Photos take 20–30 s with the chat model. Get “Fast photo recognition” (≈100 MB, once) and a photo is read in about a second.", "تستغرق الصور 20–30 ثانية مع نموذج المحادثة. نزّل «التعرّف السريع على الصور» (نحو 100 ميجابايت مرة واحدة) لتُقرأ الصورة في نحو ثانية.")}
                 <button disabled={!!fastDl} onClick={async () => { setFastDl(L("Downloading…", "بنزّل…")); try { await photoClip.install((pct) => setFastDl(Math.round(pct || 0) + "%")); setClipOn(true); flash && flash(L("Fast photo recognition is ready", "التعرّف السريع جاهز")); } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 100)); } finally { setFastDl(""); } }}
                   className="ms-2 rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold" data-testid="fit-fast-get">{fastDl || L("Get it", "نزّله")}</button></div> : null}
               <input ref={fileRef} type="file" accept="image/*" className="hidden" data-testid="fit-photo-input" onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) { try { setPhoto(await readPhoto(f)); } catch (x) { flash && flash(L("Couldn't open that picture", "مقدرتش أفتح الصورة")); } } }} />
@@ -408,23 +408,23 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
           </>) : (
             <div className="space-y-2" data-testid="fit-draft">
               <div className="text-[12.5px] text-slate-400">{L("Check the amounts — change the grams if needed, then save.", "راجع الكميات — غيّر الجرامات لو محتاج، وبعدين احفظ.")}</div>
-              {refining ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5" data-testid="fit-refining"><span className="inline-block w-2 h-2 rounded-full bg-sky-400 animate-pulse" />{L("The AI is double-checking the photo — you can save now.", "الذكاء الاصطناعي بيراجع الصورة — تقدر تحفظ دلوقتي.")}</div> : null}
+              {refining ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5" data-testid="fit-refining"><span className="inline-block w-2 h-2 rounded-full bg-sky-400 animate-pulse" />{L("The AI is double-checking the photo — you can save now.", "يراجع الذكاء الاصطناعي الصورة — يمكنك الحفظ الآن.")}</div> : null}
               {aiAlt && aiAlt.length ? <div className="rounded-xl bg-sky-500/10 border border-sky-800 p-2 text-[12.5px] text-sky-100" data-testid="fit-ai-alt">
                 {L("The AI sees: ", "الذكاء الاصطناعي شايف: ")}<b>{aiAlt.map((x) => (ar && x.ar) || x.name).join(" · ")}</b>
-                <div className="flex gap-2 mt-1.5"><button onClick={() => { setDraft(aiAlt); setAiAlt(null); }} className="rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold">{L("Use this", "استخدم ده")}</button><button onClick={() => setAiAlt(null)} className="rounded-lg bg-slate-800 px-2.5 py-1">{L("Keep mine", "خليني على بتاعي")}</button></div></div> : null}
+                <div className="flex gap-2 mt-1.5"><button onClick={() => { setDraft(aiAlt); setAiAlt(null); }} className="rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold">{L("Use this", "استخدام هذا")}</button><button onClick={() => setAiAlt(null)} className="rounded-lg bg-slate-800 px-2.5 py-1">{L("Keep mine", "الإبقاء على اختياري")}</button></div></div> : null}
               {busy && stage ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{stage}</div> : null}
               {draft.map((x, i) => (
                 <div key={i} className="rounded-lg bg-slate-800/70 px-2 py-1.5 space-y-1.5" data-testid="fit-draft-item">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="text-[13.5px] text-white truncate">
-                        {x.conf != null ? <span className={"inline-block w-2 h-2 rounded-full me-1.5 " + (x.conf >= 0.75 ? "bg-emerald-400" : x.conf >= 0.5 ? "bg-amber-400" : "bg-rose-400")} title={L("how sure", "متأكد قد إيه")} /> : null}
+                        {x.conf != null ? <span className={"inline-block w-2 h-2 rounded-full me-1.5 " + (x.conf >= 0.75 ? "bg-emerald-400" : x.conf >= 0.5 ? "bg-amber-400" : "bg-rose-400")} title={L("how sure", "درجة التأكد")} /> : null}
                         {ar && x.ar ? x.ar : x.name}
                         {x.hidden ? <span className="ms-1 text-[10.5px] text-sky-300" data-testid="fit-hidden">{L("easy to miss", "سهل يتنسي")}</span> : null}
                         {x.learned ? <span className="ms-1 text-[10.5px] text-violet-300">{L("as you corrected it", "زي ما صححته")}</span> : null}
                         {x.flag ? <span className="ms-1 text-[10.5px] text-amber-300" data-testid="fit-flag">{x.flag === "amount" ? L(`check the amount (${x.was} g written)`, `راجع الكمية (اتكتب ${x.was} جم)`) : L("check the portion", "راجع الكمية")}</span> : null}
                         {x.zoomed ? <span className="ms-1 text-[10.5px] text-sky-300">{L("looked closer", "اتبص عليها أقرب")}</span> : null}
-                        {x.estimate && <span className="ms-1 text-[10.5px] text-amber-300">{x.unknown ? L("unknown", "مش معروف") : L("estimate", "تقدير")}</span>}
+                        {x.estimate && <span className="ms-1 text-[10.5px] text-amber-300">{x.unknown ? L("unknown", "غير معروف") : L("estimate", "تقدير")}</span>}
                         {x.check ? <span className="ms-1 text-[10.5px] text-amber-300">{L("label may be wrong", "الملصق ممكن يكون غلط")}</span> : null}
                         <Grades x={x} L={L} />
                       </div>
@@ -432,15 +432,15 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                     </div>
                     <input type="number" inputMode="numeric" value={x.grams} onChange={(e) => setGrams(i, e.target.value)} className="w-16 rounded bg-slate-900 px-1.5 py-1 text-[13px] text-white text-end" data-testid="fit-draft-grams" />
                     <span className="text-[11px] text-slate-500">g</span>
-                    {x.id ? <button onClick={() => { const on = P.isFav(st.favFoods, x.id); upd((s) => ({ ...s, favFoods: P.toggleFav(s.favFoods, x) })); flash && flash(on ? L("Removed from favorites", "اتشالت من المفضلة") : L(`★ ${x.name} — ${x.grams} g, one tap next time`, `★ ${x.ar || x.name} — ${x.grams} جم، ضغطة واحدة المرة الجاية`)); }}
+                    {x.id ? <button onClick={() => { const on = P.isFav(st.favFoods, x.id); upd((s) => ({ ...s, favFoods: P.toggleFav(s.favFoods, x) })); flash && flash(on ? L("Removed from favorites", "أُزيلت من المفضلة") : L(`★ ${x.name} — ${x.grams} g, one tap next time`, `★ ${x.ar || x.name} — ${x.grams} جم، ضغطة واحدة المرة الجاية`)); }}
                       className={P.isFav(st.favFoods, x.id) ? "text-amber-300" : "text-slate-500"} data-testid="fit-fav-toggle" aria-label={L("Favorite", "مفضلة")}><Star size={15} fill={P.isFav(st.favFoods, x.id) ? "currentColor" : "none"} /></button> : null}
                     <button onClick={() => setDraft((d) => d.filter((_, k) => k !== i))} className="text-slate-500"><Trash2 size={15} /></button>
                   </div>
                   {(x.alts && x.alts.length > 1) || x.from === "text" ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-alts">
-                      <span className="text-[11px] text-slate-500 self-center">{L("Is it:", "هل هي:")}</span>
+                      <span className="text-[11px] text-slate-500 self-center">{L("Is it:", "هل هو:")}</span>
                       {(x.alts || []).map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={"rounded-full px-2 py-0.5 text-[11.5px] " + (a.food.id === x.id ? "bg-emerald-700 text-white" : "bg-slate-900 text-slate-300")} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : a.food.en}</button> : null)}
-                      <button onClick={() => { setReplaceAt(i); setDraft((d) => d); }} className="rounded-full px-2 py-0.5 text-[11.5px] bg-slate-900 text-sky-300" data-testid="fit-alt-other">{L("something else…", "حاجة تانية…")}</button>
+                      <button onClick={() => { setReplaceAt(i); setDraft((d) => d); }} className="rounded-full px-2 py-0.5 text-[11.5px] bg-slate-900 text-sky-300" data-testid="fit-alt-other">{L("something else…", "شيء آخر…")}</button>
                     </div>) : null}
                   {x.base ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-portions">
@@ -451,7 +451,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               {replaceAt >= 0 ? (
                 <div className="space-y-1" data-testid="fit-replace">
                   <div className="relative"><Search size={15} className="absolute top-2.5 start-2.5 text-slate-500" />
-                    <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchOnline(); }} placeholder={L("What is it really?", "هي إيه بالظبط؟")} className="w-full rounded-xl bg-slate-900 py-2 ps-8 pe-2 text-[14px] text-white placeholder:text-slate-500" data-testid="fit-replace-q" /></div>
+                    <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchOnline(); }} placeholder={L("What is it really?", "ما هو بالتحديد؟")} className="w-full rounded-xl bg-slate-900 py-2 ps-8 pe-2 text-[14px] text-white placeholder:text-slate-500" data-testid="fit-replace-q" /></div>
                   {results.map((fd) => <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex justify-between gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-slate-800" data-testid={"fit-food-" + fd.id}><span className="text-[13px] text-slate-200 truncate">{ar && fd.ar ? fd.ar : fd.en}</span><span className="text-[11.5px] text-slate-500 shrink-0">{fd.kcal} kcal/100g</span></button>)}
                 </div>) : null}
               <div className="flex gap-2" data-testid="fit-cmd-row">
@@ -493,7 +493,7 @@ function ProfileForm({ pf, setPf, save, L, cancel, extra }) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 space-y-4" data-testid="fit-profile">
       <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Apple size={19} className="text-emerald-300" />{L("Your plan", "خطتك")}</h2>
-      <p className="text-[12.5px] text-slate-400">{L("Your daily calories and protein are worked out by the Mifflin-St Jeor formula — the one dietitians use. Everything stays on your phone.", "السعرات والبروتين بيتحسبوا بمعادلة ميفلين-سان جيور — اللي أخصائيين التغذية بيستخدموها. كل حاجة بتفضل على موبايلك.")}</p>
+      <p className="text-[12.5px] text-slate-400">{L("Your daily calories and protein are worked out by the Mifflin-St Jeor formula — the one dietitians use. Everything stays on your phone.", "تُحسب السعرات والبروتين بمعادلة ميفلين-سان جيور التي يستخدمها أخصائيو التغذية. ويبقى كل شيء على هاتفك.")}</p>
       {Sel("sex", [["m", L("Male", "ذكر")], ["f", L("Female", "أنثى")]])}
       <div className="flex gap-2">{Num("age", L("Age", "السن"))}{Num("cm", L("Height (cm)", "الطول (سم)"))}{Num("kg", L("Weight (kg)", "الوزن (كجم)"))}</div>
       <div className="text-[12px] text-slate-400">{L("How active are you?", "نشاطك قد إيه؟")}</div>
@@ -506,11 +506,11 @@ function ProfileForm({ pf, setPf, save, L, cancel, extra }) {
         </label></div>}
       <div className="text-[12px] text-slate-400">{L("Eating style", "نظام الأكل")}</div>
       {Sel("diet", Object.entries(F.DIETS).map(([k, en]) => [k, L(en, { balanced: "متوازن", "high-protein": "بروتين عالي", "low-carb": "كارب قليل", keto: "كيتو", vegetarian: "نباتي" }[k])]))}
-      {pf.sex === "f" && <label className="flex items-center gap-2 text-[13px] text-slate-300"><input type="checkbox" checked={!!pf.pregnant} onChange={(e) => set("pregnant", e.target.checked)} />{L("Pregnant or breastfeeding", "حامل أو بترضعي")}</label>}
+      {pf.sex === "f" && <label className="flex items-center gap-2 text-[13px] text-slate-300"><input type="checkbox" checked={!!pf.pregnant} onChange={(e) => set("pregnant", e.target.checked)} />{L("Pregnant or breastfeeding", "حامل أو مُرضِع")}</label>}
       {tg && (
         <div className="rounded-xl border border-emerald-800 bg-emerald-500/10 p-3 text-[13px] text-emerald-100 space-y-1" data-testid="fit-pf-result">
           <div className="text-[15px] font-semibold">{tg.kcal} kcal · {L("protein", "بروتين")} {tg.protein} g · {L("water", "مية")} {(tg.water / 1000).toFixed(1)} L</div>
-          <div className="text-emerald-200/80">BMI {tg.bmi} · {L("burns", "بتحرق")} ~{tg.tdee} kcal/{L("day", "يوم")}{tg.weeks ? ` · ${L("goal in", "الهدف خلال")} ~${tg.weeks} ${L("weeks", "أسبوع")}` : ""}</div>
+          <div className="text-emerald-200/80">BMI {tg.bmi} · {L("burns", "تحرق")} ~{tg.tdee} kcal/{L("day", "يوم")}{tg.weeks ? ` · ${L("goal in", "الهدف خلال")} ~${tg.weeks} ${L("weeks", "أسبوع")}` : ""}</div>
           {tg.notes.map((n, i) => <div key={i} className="text-amber-200">• {L(n.en, n.ar)}</div>)}
         </div>
       )}
@@ -537,7 +537,7 @@ function Today({ L, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdd
     <div className="space-y-4" data-testid="fit-today">
       <div className="flex items-center justify-center gap-3 text-[13px] text-slate-300">
         <button onClick={() => shift(-1)} className="p-1"><ChevronLeft size={16} className="rtl:rotate-180" /></button>
-        <span data-testid="fit-day">{dayKey === F.today() ? L("Today", "النهارده") : dayKey}</span>
+        <span data-testid="fit-day">{dayKey === F.today() ? L("Today", "اليوم") : dayKey}</span>
         <button onClick={() => shift(1)} className="p-1" disabled={dayKey === F.today()}><ChevronLeft size={16} className="rotate-180 rtl:rotate-0" /></button>
       </div>
       <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-4 flex items-center gap-4">
@@ -575,9 +575,9 @@ function Today({ L, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdd
               </div>
             ))}
             {!items.length && plan && plan.meals[m] && dayKey === F.today() && (
-              <button onClick={() => { const pm = plan.meals[m]; addItems(m, [{ name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }]); flash && flash(L("Logged", "اتسجل")); }}
+              <button onClick={() => { const pm = plan.meals[m]; addItems(m, [{ name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }]); flash && flash(L("Logged", "سُجّل")); }}
                 className="mt-2 w-full text-start rounded-lg bg-slate-800/60 px-2.5 py-2 text-[12.5px] text-slate-300" data-testid={"fit-suggest-" + m}>
-                <span className="text-emerald-300">{L("Suggested", "مقترح")}:</span> {ar ? plan.meals[m].recipe.ar : plan.meals[m].recipe.en}{plan.meals[m].x !== 1 ? ` ×${plan.meals[m].x}` : ""} · {plan.meals[m].kcal} kcal — <u>{L("I ate this", "أكلت ده")}</u>
+                <span className="text-emerald-300">{L("Suggested", "مقترح")}:</span> {ar ? plan.meals[m].recipe.ar : plan.meals[m].recipe.en}{plan.meals[m].x !== 1 ? ` ×${plan.meals[m].x}` : ""} · {plan.meals[m].kcal} kcal — <u>{L("I ate this", "أكلت هذا")}</u>
               </button>
             )}
           </div>
@@ -637,7 +637,7 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
     setBusy(true);
     try {
       const rc = F.parseRecipe(await llm(F.recipeMessages(have.trim(), "", ar ? "ar" : "en", tg ? Math.round(tg.kcal * 0.33) : 0), null, { json: true, maxTokens: 800, temperature: 0.5 }));
-      if (!rc) { flash && flash(L("Couldn't make a recipe from that — try listing a few ingredients", "مقدرتش أعمل وصفة — اكتب كام مكوّن")); return; }
+      if (!rc) { flash && flash(L("Couldn't make a recipe from that — try listing a few ingredients", "تعذّر إنشاء وصفة — اكتب بعض المكونات")); return; }
       upd((s) => ({ ...s, myRecipes: [rc, ...s.myRecipes].slice(0, 40) }));
       setOpen(rc); setHave("");
     } catch (e) { flash && flash(L("Couldn't make a recipe", "مقدرتش أعمل وصفة")); }
@@ -656,10 +656,10 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
         <div className="text-[12.5px] text-slate-400">{open.mins ? <>{open.mins} {L("min", "دقيقة")} · </> : null}{open.dish ? <>{L("one serving", "حصة واحدة")} · </> : <>{L("serves", "يكفي")} {open.serves} · </>} <b className="text-white">{n.kcal} kcal</b> {L("a serving", "للفرد")} · P {n.p} · C {n.c} · F {n.f}</div>
         <div className="rounded-xl bg-slate-900/60 p-3 space-y-1">
           {open.items.map(([id, g], i) => { const fd = F.food(id); return <div key={i} className="flex justify-between text-[13px]"><span className="text-slate-200">{fd ? (ar ? fd.ar : fd.en) : id}</span><span className="text-slate-400 tabular-nums">{g} g</span></div>; })}
-          {(open.unknown || []).map((u, i) => <div key={"u" + i} className="flex justify-between text-[13px]"><span className="text-amber-200">{u.name}</span><span className="text-slate-500">{u.grams} g · {L("not counted", "مش محسوب")}</span></div>)}
+          {(open.unknown || []).map((u, i) => <div key={"u" + i} className="flex justify-between text-[13px]"><span className="text-amber-200">{u.name}</span><span className="text-slate-500">{u.grams} g · {L("not counted", "غير محسوب")}</span></div>)}
         </div>
         <ol className="list-decimal ps-5 space-y-1 text-[13.5px] text-slate-200">{open.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
-        <button onClick={() => { addItems(mealNow(), [{ name: open.en, ar: open.ar, grams: n.grams, kcal: n.kcal, p: n.p, c: n.c, f: n.f, fib: n.fib, recipe: open.id }]); flash && flash(L("Logged one serving", "اتسجلت حصة")); }}
+        <button onClick={() => { addItems(mealNow(), [{ name: open.en, ar: open.ar, grams: n.grams, kcal: n.kcal, p: n.p, c: n.c, f: n.f, fib: n.fib, recipe: open.id }]); flash && flash(L("Logged one serving", "سُجّلت حصة")); }}
           className="w-full rounded-xl bg-emerald-600 py-2.5 font-medium text-white" data-testid="fit-recipe-log">{L("I ate one serving", "أكلت حصة")}</button>
       </div>
     );
@@ -672,7 +672,7 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
         <input value={q} onChange={(e) => setQ(e.target.value)} data-testid="fit-recipe-search" placeholder={L(`Search ${(all.length + GENERATED_COUNT).toLocaleString()} recipes or an ingredient…`, `دوّر في ${(all.length + GENERATED_COUNT).toLocaleString("en")} وصفة أو مكوّن…`)} className="w-full rounded-xl bg-slate-800 py-2 ps-8 pe-2 text-[14px] text-white placeholder:text-slate-500" /></div>
       <div className="flex gap-1.5 overflow-x-auto pb-1">{tags.map(([k, en, a]) => <button key={k} onClick={() => setTag(k)} className={"shrink-0 rounded-full px-3 py-1 text-[12px] " + (tag === k ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300")}>{L(en, a)}</button>)}</div>
       <div className="rounded-xl border border-slate-800 p-2.5 flex gap-2">
-        <input value={have} onChange={(e) => setHave(e.target.value)} placeholder={L("What's in your fridge? AI makes a recipe", "عندك إيه في التلاجة؟ الذكاء يعمل وصفة")} className="flex-1 min-w-0 bg-transparent text-[13px] text-white placeholder:text-slate-500" data-testid="fit-invent-text" />
+        <input value={have} onChange={(e) => setHave(e.target.value)} placeholder={L("What's in your fridge? AI makes a recipe", "ماذا لديك في الثلاجة؟ يُعدّ لك الذكاء الاصطناعي وصفة")} className="flex-1 min-w-0 bg-transparent text-[13px] text-white placeholder:text-slate-500" data-testid="fit-invent-text" />
         <button onClick={invent} disabled={busy} className="shrink-0 rounded-lg bg-violet-600 px-3 py-1.5 text-[12.5px] text-white flex items-center gap-1" data-testid="fit-invent">{busy ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}{L("Create", "اعمل")}</button>
       </div>
       {list.map((rc) => { const n = F.recipeNutrients(rc); return (
@@ -680,7 +680,7 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
           <div className="text-[14px] text-white">{ar && rc.ar ? rc.ar : rc.en}</div>
           <div className="text-[12px] text-slate-400 tabular-nums">{n.kcal} kcal · P {n.p} g{rc.mins ? <> · {rc.mins} {L("min", "دقيقة")}</> : <> · {n.grams} g</>}</div>
         </button>); })}
-      {!list.length && <div className="text-center text-[13px] text-slate-500 py-6">{L("No recipe matches", "مفيش وصفة مطابقة")}</div>}
+      {!list.length && <div className="text-center text-[13px] text-slate-500 py-6">{L("No recipe matches", "لا توجد وصفة مطابقة")}</div>}
     </div>
   );
 }
@@ -693,7 +693,7 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
   const [aiPlan, setAiPlan] = useSticky("fit:aiplan", null);
   const [busy, setBusy] = useState(false);
   const ex = F.matchExercise(what);
-  const logIt = (name, minutes, kcal) => { setDay((d) => ({ ...d, workouts: [...(d.workouts || []), { name, min: minutes, kcal, t: Date.now() }] })); flash && flash(L(`Logged — ${kcal} kcal burned`, `اتسجل — حرقت ${kcal} سعر`)); };
+  const logIt = (name, minutes, kcal) => { setDay((d) => ({ ...d, workouts: [...(d.workouts || []), { name, min: minutes, kcal, t: Date.now() }] })); flash && flash(L(`Logged — ${kcal} kcal burned`, `سُجّل — حرقت ${kcal} سعرًا`)); };
   useEffect(() => {
     if (!sess || !sess.running) return;
     const t = setInterval(() => setSess((s) => {
@@ -724,7 +724,7 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
         {sess.left > 0 && <div className="text-5xl font-bold tabular-nums text-emerald-300">{Math.floor(sess.left / 60)}:{String(sess.left % 60).padStart(2, "0")}</div>}
         <div className="flex gap-2">
           <button onClick={() => setSess(null)} className="rounded-xl bg-slate-800 px-4 py-2.5 text-slate-300"><Square size={16} /></button>
-          <button onClick={() => setSess((s) => next(s))} className="flex-1 rounded-xl bg-emerald-600 py-2.5 font-medium text-white" data-testid="fit-session-next">{sess.left > 0 ? L("Skip", "تخطّي") : L("Done — next", "خلصت — اللي بعده")}</button>
+          <button onClick={() => setSess((s) => next(s))} className="flex-1 rounded-xl bg-emerald-600 py-2.5 font-medium text-white" data-testid="fit-session-next">{sess.left > 0 ? L("Skip", "تخطّي") : L("Done — next", "انتهيت — التالي")}</button>
         </div>
       </div>
     );
@@ -741,9 +741,9 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
         </div>
         {ex && <button onClick={() => { logIt(ar ? ex.ar : ex.en, mins, F.burned(ex.met, kg, mins)); setWhat(""); }} className="w-full rounded-lg bg-emerald-600 py-2 text-[13px] text-white" data-testid="fit-act-log">
           {ar ? ex.ar : ex.en} · {mins} {L("min", "د")} ≈ {F.burned(ex.met, kg, mins)} kcal — {L("log it", "سجّل")}</button>}
-        {what.trim().length > 2 && !ex && <div className="text-[12px] text-slate-500">{L("Not in the list yet — try a simpler name", "مش في القايمة — جرّب اسم أبسط")}</div>}
+        {what.trim().length > 2 && !ex && <div className="text-[12px] text-slate-500">{L("Not in the list yet — try a simpler name", "غير موجود في القائمة — جرّب اسمًا أبسط")}</div>}
       </div>
-      <div className="text-[13px] text-slate-400">{L("Guided workouts — the timer walks you through", "تمارين بمدرب — التايمر بيمشي معاك")}</div>
+      <div className="text-[13px] text-slate-400">{L("Guided workouts — the timer walks you through", "تمارين مع مدرب — المؤقّت يرافقك")}</div>
       {planList.map((p) => { const c = F.planCost(p.workout, kg); return (
         <div key={p.id} className="rounded-xl bg-slate-900/60 border border-slate-800 px-3 py-2.5 flex items-center gap-3">
           <div className="flex-1 min-w-0"><div className="text-[14px] text-white truncate">{ar ? p.ar : p.en}</div><div className="text-[12px] text-slate-400">~{c.minutes} {L("min", "دقيقة")} · ~{c.kcal} kcal</div></div>
@@ -752,7 +752,7 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
       <button disabled={busy} onClick={async () => {
         if (!modelReady) { openEngine && openEngine(); return; }
         setBusy(true);
-        try { const p = F.parseWorkout(await llm(F.workoutMessages({ goal: tg.goal === "lose" ? "lose fat" : tg.goal === "gain" ? "build muscle" : "stay fit", level: "beginner", equipment: "none", minutes: 30, days: 3, lang: ar ? "ar" : "en" }), null, { json: true, maxTokens: 900, temperature: 0.3 })); if (p) setAiPlan(p); else flash && flash(L("Couldn't make a plan — try again", "مقدرتش أعمل خطة — جرّب تاني")); }
+        try { const p = F.parseWorkout(await llm(F.workoutMessages({ goal: tg.goal === "lose" ? "lose fat" : tg.goal === "gain" ? "build muscle" : "stay fit", level: "beginner", equipment: "none", minutes: 30, days: 3, lang: ar ? "ar" : "en" }), null, { json: true, maxTokens: 900, temperature: 0.3 })); if (p) setAiPlan(p); else flash && flash(L("Couldn't make a plan — try again", "تعذّر إعداد خطة — حاول مرة أخرى")); }
         catch (e) { flash && flash(L("Couldn't make a plan", "مقدرتش أعمل خطة")); } finally { setBusy(false); }
       }} className="w-full rounded-xl bg-violet-600 py-2.5 text-[13.5px] text-white flex items-center justify-center gap-1.5" data-testid="fit-ai-plan">{busy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}{L("Make me a weekly plan", "اعملّي خطة أسبوعية")}</button>
       {aiPlan && aiPlan.tips.map((t, i) => <div key={i} className="text-[12.5px] text-slate-400">• {t}</div>)}
@@ -771,11 +771,11 @@ function Progress({ L, ar, st, upd, tg, pro = true, openPlan }) {
   const X = (i) => (pts.length < 2 ? 150 : (i / (pts.length - 1)) * 290 + 5), Y = (v) => 110 - ((v - lo) / (hi - lo || 1)) * 100;
   return (
     <div className="space-y-4" data-testid="fit-progress">
-      {pro ? <WeekReport {...{ L, st, tg }} /> : <button onClick={() => openPlan && openPlan()} className="w-full rounded-2xl border border-amber-800 bg-amber-500/10 p-3 text-start text-[13px] text-amber-100" data-testid="fit-report-locked">📊 {L("Your week report — what went well, what to change — is in Pro.", "تقرير أسبوعك — إيه اللي ماشي كويس وإيه اللي يتغيّر — في Pro.")}</button>}
+      {pro ? <WeekReport {...{ L, st, tg }} /> : <button onClick={() => openPlan && openPlan()} className="w-full rounded-2xl border border-amber-800 bg-amber-500/10 p-3 text-start text-[13px] text-amber-100" data-testid="fit-report-locked">📊 {L("Your week report — what went well, what to change — is in Pro.", "تقرير أسبوعك — ما يسير جيدًا وما يحتاج تغييرًا — في Pro.")}</button>}
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white" data-testid="fit-streak">{strk}</div><div className="text-[11px] text-slate-400">{L("day streak", "يوم ورا بعض")}</div></div>
         <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white">{wk.avg}</div><div className="text-[11px] text-slate-400">{L("avg kcal (7 d)", "متوسط السعرات")}</div></div>
-        <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white">{wk.change == null ? "—" : (wk.change > 0 ? "+" : "") + wk.change}</div><div className="text-[11px] text-slate-400">{L("kg this week", "كجم الأسبوع ده")}</div></div>
+        <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white">{wk.change == null ? "—" : (wk.change > 0 ? "+" : "") + wk.change}</div><div className="text-[11px] text-slate-400">{L("kg this week", "كجم هذا الأسبوع")}</div></div>
       </div>
       <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3">
         <div className="text-[13px] text-white mb-2">{L("Last 7 days", "آخر 7 أيام")} <span className="text-slate-400">· {L("on target", "في الهدف")} {wk.onTarget}/{wk.logged}</span></div>
@@ -795,10 +795,10 @@ function Progress({ L, ar, st, upd, tg, pro = true, openPlan }) {
           </svg>
         )}
         <div className="flex gap-2">
-          <input type="number" inputMode="decimal" value={w} onChange={(e) => setW(e.target.value)} placeholder={L("Today's weight (kg)", "وزن النهارده (كجم)")} className="flex-1 min-w-0 rounded-lg bg-slate-800 px-2 py-2 text-[14px] text-white" data-testid="fit-weight" />
+          <input type="number" inputMode="decimal" value={w} onChange={(e) => setW(e.target.value)} placeholder={L("Today's weight (kg)", "وزن اليوم (كجم)")} className="flex-1 min-w-0 rounded-lg bg-slate-800 px-2 py-2 text-[14px] text-white" data-testid="fit-weight" />
           <button onClick={() => { const kg = parseFloat(w); if (!(kg > 25 && kg < 400)) return; upd((s) => ({ ...s, weights: [...s.weights.filter((x) => x.d !== F.today()), { d: F.today(), kg }], profile: { ...s.profile, kg } })); setW(""); }} className="shrink-0 rounded-lg bg-sky-600 px-4 text-white" data-testid="fit-weight-save">{L("Save", "احفظ")}</button>
         </div>
-        <div className="text-[11.5px] text-slate-500">{L("The blue line is the 7-entry average — daily weight jumps with water and salt; the average is the truth.", "الخط الأزرق هو المتوسط — الوزن اليومي بيتغير بالمية والملح؛ المتوسط هو الحقيقة.")}</div>
+        <div className="text-[11.5px] text-slate-500">{L("The blue line is the 7-entry average — daily weight jumps with water and salt; the average is the truth.", "الخط الأزرق هو المتوسط — يتغيّر الوزن اليومي بالماء والملح؛ والمتوسط هو المؤشر الحقيقي.")}</div>
       </div>
       <BodyCard {...{ L, st, upd }} />
     </div>

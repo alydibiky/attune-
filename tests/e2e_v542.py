@@ -154,10 +154,10 @@ with sync_playwright() as p:
     # ---- Arabic ----
     page.evaluate("localStorage.setItem('attune:ui:lang', 'ar')"); page.reload(); page.wait_for_selector("nav", timeout=15000)
     page.locator("nav button").last.click(); page.wait_for_timeout(250)
-    page.locator(".rounded-t-2xl button:has-text('الأكل والرياضة')").first.click()
+    page.locator(".rounded-t-2xl button:has-text('الغذاء واللياقة')").first.click()
     page.wait_for_selector("[data-testid=fit-app]", timeout=6000)
     t = page.locator("[data-testid=fit-app]").inner_text()
-    check("النهارده" in t and "فطار" in t and "كشري" in t, "the Fit screen in Arabic, foods by their Arabic names")
+    check("اليوم" in t and "فطار" in t and "كشري" in t, "the Fit screen in Arabic, foods by their Arabic names")
     shot(page, "fit-ar")
 
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])

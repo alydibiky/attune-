@@ -129,8 +129,8 @@ export function ramadanPlan(tg, times) {
   const nightMin = times && times.fajrMin != null && times.maghribMin != null ? 1440 - (times.maghribMin - times.fajrMin) : 600;
   return { iftar: Math.round(kcal * 0.45), snack: Math.round(kcal * 0.2), suhoor: Math.round(kcal * 0.35), glasses,
     everyMin: Math.max(20, Math.floor(nightMin / Math.max(1, glasses))), tips: [
-      { en: "Break the fast with water and 2–3 dates, then pray before the main meal — the stomach settles.", ar: "افطر على مية و٢–٣ تمرات، وصلّي قبل الأكل الرئيسي — المعدة بتهدى." },
-      { en: "Suhoor: slow food (ful, eggs, oats, yogurt) and water; little salt and sugar so you're less thirsty.", ar: "السحور: أكل بطيء الهضم (فول، بيض، شوفان، زبادي) ومية؛ ملح وسكر قليل عشان متعطشش." },
+      { en: "Break the fast with water and 2–3 dates, then pray before the main meal — the stomach settles.", ar: "افطر على الماء و2–3 تمرات، وصلِّ قبل الوجبة الرئيسية — لتهدأ المعدة." },
+      { en: "Suhoor: slow food (ful, eggs, oats, yogurt) and water; little salt and sugar so you're less thirsty.", ar: "السحور: طعام بطيء الهضم (فول، بيض، شوفان، زبادي) وماء؛ وقلّل الملح والسكر حتى لا تعطش." },
       { en: "Keep fried food and konafa/qatayef for once or twice a week.", ar: "المقليات والكنافة والقطايف مرة أو مرتين في الأسبوع." },
     ] };
 }
@@ -213,8 +213,8 @@ export function weekReport(days, weights, tg, from = new Date()) {
   const change = w.length >= 2 ? r1(w[w.length - 1].kg - w[0].kg) : null;
   const lines = [];
   lines.push({ en: `You logged ${logged.length} of 7 days; average ${avg} kcal (goal ${tg.kcal}).`, ar: `سجّلت ${logged.length} من ٧ أيام؛ المتوسط ${avg} سعر (الهدف ${tg.kcal}).` });
-  lines.push({ en: `On target ${onTarget} day(s); protein reached on ${proteinDays}.`, ar: `في الهدف ${onTarget} يوم؛ البروتين اتحقق ${proteinDays} يوم.` });
-  if (change != null) lines.push({ en: `Weight ${change > 0 ? "+" : ""}${change} kg this week${tg.goal === "lose" ? (change < 0 ? " — right direction." : " — look at the days over target.") : "."}`, ar: `الوزن ${change > 0 ? "+" : ""}${change} كجم الأسبوع ده${tg.goal === "lose" ? (change < 0 ? " — ماشي صح." : " — بص على الأيام اللي عديت فيها الهدف.") : "."}` });
+  lines.push({ en: `On target ${onTarget} day(s); protein reached on ${proteinDays}.`, ar: `ضمن الهدف ${onTarget} يوم؛ وتحقق هدف البروتين ${proteinDays} يوم.` });
+  if (change != null) lines.push({ en: `Weight ${change > 0 ? "+" : ""}${change} kg this week${tg.goal === "lose" ? (change < 0 ? " — right direction." : " — look at the days over target.") : "."}`, ar: `الوزن ${change > 0 ? "+" : ""}${change} كجم الأسبوع ده${tg.goal === "lose" ? (change < 0 ? " — ماشي صح." : " — راجع الأيام التي تجاوزت فيها الهدف.") : "."}` });
   if (proteinDays < logged.length / 2) lines.push({ en: "Next week: protein at every meal (eggs, chicken, fish, Greek yogurt, lentils).", ar: "الأسبوع الجاي: بروتين في كل وجبة (بيض، فراخ، سمك، زبادي يوناني، عدس)." });
   if (logged.length < 5) lines.push({ en: "Log at least 5 days — a week's picture needs them.", ar: "سجّل ٥ أيام على الأقل — صورة الأسبوع محتاجاهم." });
   return { logged: logged.length, avg, onTarget, proteinDays, best: best ? best.day : null, score, change, lines };

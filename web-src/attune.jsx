@@ -6017,7 +6017,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
             return await callClaude(`You are a careful money helper inside a budgeting app. Answer the user's question in 2–4 short sentences, in the user's language. Use ONLY the figures below (from their own records); never invent numbers.\n\n${facts}\n\nQuestion: ${q}`, { prefix: "money", maxTokens: 260, think: false, temperature: 0.3 });
           } catch (e) { /* the plain hint below */ }
         }
-        return /[\u0600-\u06FF]/.test(q) ? "أقدر أجاوب عن فلوسك: «صرفت كام على الأكل الأسبوع ده؟» أو «دخلي الشهر ده كام؟»" : "Ask me about your own money, e.g. “how much did I spend on food this week?” or “what did I earn this month?”";
+        return /[\u0600-\u06FF]/.test(q) ? "يمكنني الإجابة عن أموالك: «كم أنفقت على الطعام هذا الأسبوع؟» أو «كم دخلي هذا الشهر؟»" : "Ask me about your own money, e.g. “how much did I spend on food this week?” or “what did I earn this month?”";
       };
       if (d.kind === "money-ask") { reply({ ok: true, answer: await askLedger(d.text) }); return; }
       if (d.kind === "log-text" && isQuestion(d.text)) { reply({ ok: true, answer: await askLedger(d.text) }); return; }

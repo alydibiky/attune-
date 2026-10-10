@@ -104,8 +104,8 @@ export function DocEditor({ type, doc, onClose, onSaved }) {
         </div>
         <Section title={L("Lines", "البنود")}><LinesEditor lines={d.lines} setLines={(l) => set("lines")(l)} items={s.items} /></Section>
         <Totals doc={d} />
-        <Field label={L("Notes (printed on the document)", "ملاحظات (بتتطبع على المستند)")}><Input value={d.notes || ""} onChange={set("notes")} /></Field>
-        {type === "invoice" ? <p className={`text-[11px] ${th.sub}`}>{L("Posting gives the invoice its number and locks it. A mistake after that is fixed with a credit note.", "الترحيل بيدي الفاتورة رقمها وبيقفلها. أي غلط بعد كده بيتصلّح بإشعار دائن.")}</p> : null}
+        <Field label={L("Notes (printed on the document)", "ملاحظات (تُطبع على المستند)")}><Input value={d.notes || ""} onChange={set("notes")} /></Field>
+        {type === "invoice" ? <p className={`text-[11px] ${th.sub}`}>{L("Posting gives the invoice its number and locks it. A mistake after that is fixed with a credit note.", "الترحيل يمنح الفاتورة رقمها ويقفلها. وأي خطأ بعد ذلك يُصحَّح بإشعار دائن.")}</p> : null}
       </div>
       {newCust ? <PartyForm kind="customers" onClose={() => setNewCust(false)} onSaved={(id) => { set("customer")(id); setNewCust(false); }} /> : null}
     </Sheet>
@@ -132,7 +132,7 @@ export function PartyForm({ kind, party, onClose, onSaved }) {
         {kind === "customers" ? <details className="text-[12.5px]" data-testid="party-eta"><summary className="cursor-pointer py-1 opacity-80">{L("For e-invoices (ETA)", "للفاتورة الإلكترونية")}</summary><div className="space-y-2 pt-2">
           <Field label={L("Customer type", "نوع العميل")}><select value={(p.eta && p.eta.type) || ""} onChange={(e) => setP((x) => ({ ...x, eta: { ...(x.eta || {}), type: e.target.value } }))} className="w-full border rounded-lg px-2 py-2 bg-transparent"><option value="">{L("Automatic (company if it has a tax number)", "تلقائي (شركة لو ليها رقم ضريبي)")}</option><option value="B">{L("Company", "شركة")}</option><option value="P">{L("Person", "فرد")}</option><option value="F">{L("Foreign", "أجنبي")}</option></select></Field>
           {[["governate", "Governorate", "المحافظة"], ["regionCity", "City / area", "المدينة / المنطقة"], ["street", "Street", "الشارع"], ["buildingNumber", "Building no.", "رقم المبنى"]].map(([k, en, ar]) => <Field key={k} label={L(en, ar)}><Input value={((p.eta || {}).address || {})[k] || ""} onChange={(v) => setP((x) => ({ ...x, eta: { ...(x.eta || {}), address: { ...((x.eta || {}).address || {}), [k]: v } } }))} /></Field>)}
-          <Field label={L("National ID (a person, invoices of 50,000 EGP or more)", "الرقم القومي (فرد، فواتير ٥٠٬٠٠٠ جنيه أو أكتر)")}><Input value={(p.eta || {}).nationalId || ""} onChange={(v) => setP((x) => ({ ...x, eta: { ...(x.eta || {}), nationalId: v } }))} inputMode="numeric" /></Field>
+          <Field label={L("National ID (a person, invoices of 50,000 EGP or more)", "الرقم القومي (للأفراد، للفواتير من 50,000 جنيه فأكثر)")}><Input value={(p.eta || {}).nationalId || ""} onChange={(v) => setP((x) => ({ ...x, eta: { ...(x.eta || {}), nationalId: v } }))} inputMode="numeric" /></Field>
         </div></details> : null}
       </div>
     </Sheet>
@@ -150,8 +150,8 @@ function DocView({ id, onClose }) {
   const cust = s.customers.find((c) => c.id === d.customer);
   const t = B.docTotals(d, s.tax);
   const open = d.type === "invoice" && d.status === "posted" ? O.openInvoices(s, today()).find((o) => o.number === d.number) : null;
-  const credit = async () => { const r = await run((st) => ({ state: st, draft: O.creditNoteFor(st, d.id, { restock: true, date: today(), reason: L("Credit note for ", "إشعار دائن عن ") + d.number }) })); if (r) { const rr = await run((st) => O.saveDraft(st, r.draft)); if (rr) flash(L("Credit note drafted — review and post it", "اتعملت مسودة إشعار دائن — راجعها ورحّلها")); onClose(); } };
-  const toInvoice = async () => { const r = await run((st) => ({ state: st, draft: O.invoiceFromQuote(st, d.id, today()) })); if (r) { const rr = await run((st) => O.saveDraft(st, r.draft)); if (rr) flash(L("Invoice drafted from the quote", "اتعملت مسودة فاتورة من العرض")); onClose(); } };
+  const credit = async () => { const r = await run((st) => ({ state: st, draft: O.creditNoteFor(st, d.id, { restock: true, date: today(), reason: L("Credit note for ", "إشعار دائن عن ") + d.number }) })); if (r) { const rr = await run((st) => O.saveDraft(st, r.draft)); if (rr) flash(L("Credit note drafted — review and post it", "أُنشئت مسودة إشعار دائن — راجعها ثم رحّلها")); onClose(); } };
+  const toInvoice = async () => { const r = await run((st) => ({ state: st, draft: O.invoiceFromQuote(st, d.id, today()) })); if (r) { const rr = await run((st) => O.saveDraft(st, r.draft)); if (rr) flash(L("Invoice drafted from the quote", "أُنشئت مسودة فاتورة من عرض السعر")); onClose(); } };
   const del = async () => { if (!window.confirm(L("Delete this draft?", "تمسح المسودة دي؟"))) return; const r = await run((st) => O.deleteDraft(st, d.id)); if (r) onClose(); };
   return (
     <Sheet title={d.number || docLabel(d.type)} onClose={onClose} testid="doc-view"
@@ -161,10 +161,10 @@ function DocView({ id, onClose }) {
         {d.status === "posted" ? <button onClick={() => shareDocumentWord({ s, doc: d, kind: d.type, flash, saveFile })} className={`${BTN} border ${th.line}`} data-testid="doc-word">{L("Word", "وورد")}</button> : null}
         {d.status === "posted" && (d.type === "invoice" || d.type === "credit") ? <button onClick={() => {   /* v6.12: the ETA e-invoice JSON (books-eta.js); signing and sending need the company's token, done outside the app */
           const j = ETA.etaDocument(s, d), miss = ETA.etaCheck(j);
-          if (miss.length && !window.confirm(L("Still missing for the tax authority:\n• ", "لسه ناقص لمصلحة الضرائب:\n• ") + miss.slice(0, 8).map((m) => L(m.en, m.ar)).join("\n• ") + L("\n\nSave the file anyway?", "\n\nأحفظ الملف برضه؟"))) return;
+          if (miss.length && !window.confirm(L("Still missing for the tax authority:\n• ", "ما زال ناقصًا لمصلحة الضرائب:\n• ") + miss.slice(0, 8).map((m) => L(m.en, m.ar)).join("\n• ") + L("\n\nSave the file anyway?", "\n\nأحفظ الملف برضه؟"))) return;
           const text = ETA.etaJson(j);
           if (saveFile) saveFile(`eta-${d.number || d.id}.json`, text, "application/json"); else { try { navigator.clipboard.writeText(text); } catch (e) {} }
-          flash(L("E-invoice file saved — upload it on the ETA portal or send it to your e-invoicing provider to sign", "اتحفظ ملف الفاتورة الإلكترونية — ارفعه على بوابة الضرائب أو ابعته لمزوّد الفاتورة الإلكترونية عشان يتوقّع"));
+          flash(L("E-invoice file saved — upload it on the ETA portal or send it to your e-invoicing provider to sign", "حُفظ ملف الفاتورة الإلكترونية — ارفعه على بوابة الضرائب أو أرسله إلى مزوّد الفاتورة الإلكترونية لتوقيعه"));
         }} className={`${BTN} border ${th.line}`} data-testid="doc-eta">{L("E-invoice (ETA)", "فاتورة إلكترونية")}</button> : null}
         {open && open.open > 0 ? <button onClick={() => setPay(true)} className={`${BTN} border ${th.line} flex-1`} data-testid="doc-pay">{L("Record payment", "تسجيل دفعة")}</button> : null}
         {d.status === "posted" && d.type === "invoice" ? <button onClick={credit} className={`${BTN} border ${th.line}`} data-testid="doc-credit">{L("Credit note", "إشعار دائن")}</button> : null}
@@ -211,7 +211,7 @@ export function SalesModule() {
           <div className="flex gap-2 mb-2"><div className="flex-1"><Search_ value={q} onChange={setQ} placeholder={L("Search number or customer", "دوّر برقم أو عميل")} /></div>
             <button onClick={() => setPicker(true)} className={`${btnPrimary} flex items-center gap-1`} data-testid="sales-new"><Plus size={15} />{L("New", "جديد")}</button></div>
           <div className="mb-2"><Chips value={filter} onChange={setFilter} options={[["all", L("All", "الكل")], ["invoice", L("Invoices", "فواتير")], ["quote", L("Quotes", "عروض")], ["credit", L("Credit notes", "إشعارات")], ["draft", L("Drafts", "مسودات")]]} /></div>
-          {!docs.length ? <Empty title={L("No documents yet", "مفيش مستندات لسه")} hint={L("Create your first invoice or quotation.", "اعمل أول فاتورة أو عرض سعر.")} action={<button onClick={() => setNewType("invoice")} className={btnPrimary}>{L("New invoice", "فاتورة جديدة")}</button>} />
+          {!docs.length ? <Empty title={L("No documents yet", "لا توجد مستندات بعد")} hint={L("Create your first invoice or quotation.", "اعمل أول فاتورة أو عرض سعر.")} action={<button onClick={() => setNewType("invoice")} className={btnPrimary}>{L("New invoice", "فاتورة جديدة")}</button>} />
             : <Card className="divide-y" testid="sales-list">{docs.map((d) => { const t = B.docTotals(d, s.tax); return (
               <button key={d.id} onClick={() => setOpenId(d.id)} className="w-full flex items-center gap-3 px-3 py-2.5 text-start" data-testid="sales-row">
                 <div className="min-w-0 flex-1"><p className="text-[13.5px] font-medium truncate">{name(d.customer)}</p><p className={`text-[11.5px] ${th.sub}`}>{d.number || L("Draft", "مسودة")} · {docLabel(d.type)} · {fmtDate(d.date)}</p></div>
@@ -220,10 +220,10 @@ export function SalesModule() {
       ) : (
         <>
           <button onClick={() => setParty({})} className={`${btnPrimary} w-full mb-3 flex items-center justify-center gap-1.5`} data-testid="customer-add"><Plus size={15} />{L("Add a customer", "ضيف عميل")}</button>
-          {!s.customers.length ? <Empty title={L("No customers yet", "مفيش عملاء لسه")} /> : <Card className="divide-y" testid="customer-list">{s.customers.map((c) => <CustomerRow key={c.id} c={c} onEdit={() => setParty(c)} />)}</Card>}
+          {!s.customers.length ? <Empty title={L("No customers yet", "لا يوجد عملاء بعد")} /> : <Card className="divide-y" testid="customer-list">{s.customers.map((c) => <CustomerRow key={c.id} c={c} onEdit={() => setParty(c)} />)}</Card>}
         </>
       )}
-      {picker ? <Sheet title={L("New document", "مستند جديد")} onClose={() => setPicker(false)}><div className="space-y-2">{[["invoice", "Tax invoice", "فاتورة ضريبية", "Bill a customer; goes into your books.", "بتحاسب العميل وبتدخل في دفاترك."], ["quote", "Quotation", "عرض سعر", "A price offer; no effect on your books until it becomes an invoice.", "عرض سعر؛ مالوش تأثير على الدفاتر لحد ما يبقى فاتورة."]].map(([k, en, ar, hen, har]) => (
+      {picker ? <Sheet title={L("New document", "مستند جديد")} onClose={() => setPicker(false)}><div className="space-y-2">{[["invoice", "Tax invoice", "فاتورة ضريبية", "Bill a customer; goes into your books.", "تُحتسب على العميل وتُقيَّد في دفاترك."], ["quote", "Quotation", "عرض سعر", "A price offer; no effect on your books until it becomes an invoice.", "عرض سعر؛ مالوش تأثير على الدفاتر لحد ما يبقى فاتورة."]].map(([k, en, ar, hen, har]) => (
         <Card key={k} onClick={() => { setPicker(false); setNewType(k); }} className="p-3" testid={"new-" + k}><p className="text-[14px] font-semibold">{L(en, ar)}</p><p className={`text-[12px] ${th.sub}`}>{L(hen, har)}</p></Card>))}</div></Sheet> : null}
       {newType ? <DocEditor type={newType} onClose={() => setNewType(null)} onSaved={(id) => setOpenId(id)} /> : null}
       {openId ? <DocView id={openId} onClose={() => setOpenId(null)} /> : null}

@@ -80,7 +80,7 @@ with sync_playwright() as p:
     # ---- 5. in Arabic ----
     page.evaluate("localStorage.setItem('attune:ui:lang','ar')"); page.reload(); page.wait_for_selector("nav", timeout=15000); page.wait_for_timeout(500)
     page.locator("nav button").last.click(); page.wait_for_timeout(400)
-    check(page.locator(".rounded-t-2xl button:has-text('افحص الصفقة')").count() == 1, "Arabic: 'افحص الصفقة' in More")
+    check(page.locator(".rounded-t-2xl button:has-text('فحص الصفقة')").count() == 1, "Arabic: 'فحص الصفقة' in More")
 
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])
     ctx.close(); br.close()

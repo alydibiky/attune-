@@ -129,7 +129,7 @@ export function factSheet(question, sources, ar = false) {
     md += (ar ? "### الأرقام من المصادر (منقولة بالحرف)\n" : "### Key figures (copied exactly from the sources)\n") +
       (ar ? "| البند | القيمة | \n| --- | --- |\n" : "| Spec | Value |\n| --- | --- |\n") +
       keepRows.map((r) => "| " + r.label + " | " + r.cell.replace(/\|/g, "/") + " |").join("\n") + "\n" +
-      (keepRows.some((r) => /✓/.test(r.cell)) ? (ar ? "\n✓ = نفس الرقم في موقعين أو أكتر.\n" : "\n✓ = the same figure on 2 or more sites.\n") : "");
+      (keepRows.some((r) => /✓/.test(r.cell)) ? (ar ? "\n✓ = الرقم نفسه في موقعين أو أكثر.\n" : "\n✓ = the same figure on 2 or more sites.\n") : "");
   }
   for (const t of tables) {
     const w = Math.max(...t.rows.map((r) => r.length));

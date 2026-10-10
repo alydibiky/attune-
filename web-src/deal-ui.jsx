@@ -14,11 +14,11 @@ const saveH = (v) => { try { localStorage.setItem(HKEY, JSON.stringify(v.slice(0
 
 const LEVELS = {
   scam: { en: "Looks like a scam", ar: "شكلها نصب", cls: "border-rose-700 bg-rose-500/10 text-rose-200", dot: "bg-rose-400" },
-  risky: { en: "Risky — be careful", ar: "فيها مخاطرة — خلي بالك", cls: "border-amber-700 bg-amber-500/10 text-amber-200", dot: "bg-amber-400" },
+  risky: { en: "Risky — be careful", ar: "فيها مخاطرة — انتبه", cls: "border-amber-700 bg-amber-500/10 text-amber-200", dot: "bg-amber-400" },
   overpriced: { en: "Overpriced", ar: "غالية", cls: "border-orange-700 bg-orange-500/10 text-orange-200", dot: "bg-orange-400" },
   fair: { en: "Fair price", ar: "سعر معقول", cls: "border-sky-700 bg-sky-500/10 text-sky-200", dot: "bg-sky-400" },
   good: { en: "Good deal", ar: "صفقة كويسة", cls: "border-emerald-700 bg-emerald-500/10 text-emerald-200", dot: "bg-emerald-400" },
-  unknown: { en: "No red flags found", ar: "مفيش علامات خطر واضحة", cls: "border-slate-700 bg-slate-800/40 text-slate-200", dot: "bg-slate-400" },
+  unknown: { en: "No red flags found", ar: "لا توجد علامات خطر واضحة", cls: "border-slate-700 bg-slate-800/40 text-slate-200", dot: "bg-slate-400" },
 };
 const STEPS = ["Reading the offer", "Working out the real cost", "Checking market prices", "Looking for traps", "Writing your reply"];
 
@@ -194,9 +194,9 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
           ) : (
             <div className="space-y-2">
               <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} dir="auto" data-testid="deal-note"
-                placeholder={ar ? "اشرح قصدك، مثلاً: «السعر 38,000 كاش، و12,400 ده المقدم»" : "Explain what you mean, e.g. “the price is 38,000 cash; 12,400 is the down payment”"}
+                placeholder={ar ? "وضّح ما تقصده، مثلًا: «السعر 38,000 نقدًا، و12,400 هي المقدّم»" : "Explain what you mean, e.g. “the price is 38,000 cash; 12,400 is the down payment”"}
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-[14px] text-slate-100 placeholder-slate-600" />
-              <button onClick={() => { if (note.trim()) { check({ note: note.trim() }); setNote(""); } }} disabled={!note.trim()} className="w-full py-2.5 rounded-xl bg-emerald-500 disabled:opacity-40 text-slate-950 font-semibold text-sm" data-testid="deal-note-go">{ar ? "اقرا العرض تاني بالشرح ده" : "Read the offer again with this"}</button>
+              <button onClick={() => { if (note.trim()) { check({ note: note.trim() }); setNote(""); } }} disabled={!note.trim()} className="w-full py-2.5 rounded-xl bg-emerald-500 disabled:opacity-40 text-slate-950 font-semibold text-sm" data-testid="deal-note-go">{ar ? "إعادة قراءة العرض بهذا التوضيح" : "Read the offer again with this"}</button>
             </div>
           )}
         </section>

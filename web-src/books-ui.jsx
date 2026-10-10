@@ -45,7 +45,7 @@ export function BooksApp({ flash, saveFile, share, onBack, openPlan, goCustom })
       return out && out.state ? out : { state: next };
     } catch (e) {
       if (e instanceof O.BooksError) { flash && flash(e.message); return null; }
-      console.error(e); flash && flash(L("Something went wrong — nothing was changed", "حصلت مشكلة — مفيش حاجة اتغيّرت")); return null;
+      console.error(e); flash && flash(L("Something went wrong — nothing was changed", "حدثت مشكلة — لم يتغيّر شيء")); return null;
     }
   }, [flash]);
   const th = themeFor(themeName);
@@ -97,18 +97,18 @@ function Home() {
         <Card className="p-4 mb-4">
           <p className="text-[14px] font-semibold">{L("Welcome — set up your shop in 3 steps", "أهلاً — جهّز محلك في ٣ خطوات")}</p>
           <ol className={`mt-2 text-[13px] space-y-1 ${th.sub} list-decimal ps-5`}>
-            <li>{L("Open Settings (the building icon) and add your company name, tax number and logo — they print on every invoice.", "افتح الإعدادات (أيقونة المبنى) وحط اسم الشركة والرقم الضريبي واللوجو — بيتطبعوا على كل فاتورة.")}</li>
+            <li>{L("Open Settings (the building icon) and add your company name, tax number and logo — they print on every invoice.", "افتح الإعدادات (أيقونة المبنى) وأدخل اسم الشركة والرقم الضريبي والشعار — تُطبع على كل فاتورة.")}</li>
             <li>{L("Add your items (Stock) and customers (Sales).", "ضيف أصنافك (المخزون) وعملاءك (المبيعات).")}</li>
             <li>{L("Create your first invoice from the button below.", "اعمل أول فاتورة من الزرار تحت.")}</li>
           </ol>
-          <button onClick={() => run((st) => O.sampleShop(st, td), L("Sample shop loaded — look around, then restore a backup or clear it in Settings", "اتحمّل محل تجريبي — اتفرج، وبعدين امسحه من الإعدادات"))} className={`${BTN} border ${th.line} mt-3 w-full`} data-testid="books-sample">{L("Try it with a sample shop", "جرّبه بمحل تجريبي")}</button>
+          <button onClick={() => run((st) => O.sampleShop(st, td), L("Sample shop loaded — look around, then restore a backup or clear it in Settings", "حُمّل متجر تجريبي — تصفّحه، ثم احذفه من الإعدادات"))} className={`${BTN} border ${th.line} mt-3 w-full`} data-testid="books-sample">{L("Try it with a sample shop", "جرّبه بمحل تجريبي")}</button>
         </Card>
       ) : null}
       <div className="grid grid-cols-2 gap-2 mb-3">
         <Stat testid="stat-cash" label={L("Cash & bank", "النقدية والبنك")} value={<Money v={d.cash.total} />} sub={`${L("Cash", "خزنة")} ${B.fmt(d.cash.cash)} · ${L("Bank", "بنك")} ${B.fmt(d.cash.bank)}`} onClick={() => goTab("money")} />
-        <Stat testid="stat-receivable" label={L("Customers owe you", "العملاء عليهم لك")} value={<Money v={d.receivable} />} tone={d.overdue ? "warn" : undefined} sub={d.overdueCount ? `${d.overdueCount} ${L("overdue", "متأخرة")} · ${B.fmt(d.overdue)}` : L("nothing overdue", "مفيش متأخرات")} onClick={() => goTab("money")} />
+        <Stat testid="stat-receivable" label={L("Customers owe you", "العملاء عليهم لك")} value={<Money v={d.receivable} />} tone={d.overdue ? "warn" : undefined} sub={d.overdueCount ? `${d.overdueCount} ${L("overdue", "متأخرة")} · ${B.fmt(d.overdue)}` : L("nothing overdue", "لا توجد متأخرات")} onClick={() => goTab("money")} />
         <Stat testid="stat-payable" label={L("You owe suppliers", "عليك للموردين")} value={<Money v={d.payable} />} onClick={() => goTab("buy")} />
-        <Stat testid="stat-profit" label={L("This month's profit", "ربح الشهر ده")} value={<Money v={d.month.netProfit} />} tone={d.month.netProfit < 0 ? "bad" : "good"} sub={`${L("Sales", "مبيعات")} ${B.fmt(d.month.revenue)}`} onClick={() => goTab("reports")} />
+        <Stat testid="stat-profit" label={L("This month's profit", "ربح هذا الشهر")} value={<Money v={d.month.netProfit} />} tone={d.month.netProfit < 0 ? "bad" : "good"} sub={`${L("Sales", "مبيعات")} ${B.fmt(d.month.revenue)}`} onClick={() => goTab("reports")} />
       </div>
       <div className="grid grid-cols-4 gap-2 mb-4" data-testid="books-actions">
         {[["sales", "invoice", "+ Invoice", "+ فاتورة"], ["money", "receipt", "+ Receipt", "+ قبض"], ["buy", "bill", "+ Bill", "+ مشتريات"], ["money", "expense", "+ Expense", "+ مصروف"]].map(([tab, what, en, ar]) => (
@@ -120,7 +120,7 @@ function Home() {
             <button key={x.id} onClick={() => goTab("stock")} className="w-full flex items-center justify-between px-3 py-2.5 text-[13px]"><span className="flex items-center gap-2"><AlertTriangle size={14} className="text-amber-600" />{x.name}</span><span className={th.sub}>{x.onHand} / {x.reorder}</span></button>))}</Card>
         </Section>) : null}
       {d.debtors.length ? (
-        <Section title={L("Who owes you the most", "أكتر العملاء مديونية")}>
+        <Section title={L("Who owes you the most", "أكثر العملاء مديونية")}>
           <Card className="divide-y" testid="home-debtors">{d.debtors.map((x) => {
             const c = s.customers.find((y) => y.id === x.customer);
             return <div key={x.customer} className="flex items-center justify-between px-3 py-2.5 text-[13px]"><span>{c ? c.name : x.customer}{x.overdue ? <span className="ms-2"><Badge tone="red">{L("overdue", "متأخر")}</Badge></span> : null}</span><Money v={x.owed} bold /></div>;
@@ -166,7 +166,7 @@ function Settings({ onClose, goCustom }) {
       next.creditDays = Math.max(0, Math.round(Number(days) || 0));
       next.tax = { ...next.tax, asOf: today(), vatCodes: { ...next.tax.vatCodes, S: { ...next.tax.vatCodes.S, bp, label: `Standard ${Number(vat)}% · عادية ${Number(vat)}٪` } } };
       return next;
-    }, L("Saved", "اتحفظ"));
+    }, L("Saved", "حُفظ"));
     onClose();
   };
   const backup = () => { const text = exportBooks(s); saveFile ? saveFile(`books-backup-${today()}.json`, text, "application/json") : flash(L("Saving files works in the Android app", "حفظ الملفات شغال في تطبيق أندرويد")); };
@@ -176,13 +176,13 @@ function Settings({ onClose, goCustom }) {
     try {
       const st = parseBackup(await file.text());
       if (!window.confirm(L("Replace ALL your current books with this backup?", "تستبدل كل دفاترك الحالية بالنسخة دي؟"))) return;
-      await replaceBooks(st); run(() => st, L("Backup restored", "النسخة اتسترجعت")); onClose();
+      await replaceBooks(st); run(() => st, L("Backup restored", "تم استرجاع النسخة")); onClose();
     } catch (e) { flash(e.message); }
   };
   const audit = O.verifyAudit(s);
   return (
     <Sheet title={L("Settings", "الإعدادات")} onClose={onClose} testid="books-settings" footer={<button onClick={save} className={`${btnPrimary} w-full`} data-testid="books-settings-save">{L("Save", "حفظ")}</button>}>
-      <Section title={L("Company (printed on every document)", "الشركة (بتتطبع على كل مستند)")}>
+      <Section title={L("Company (printed on every document)", "الشركة (تُطبع على كل مستند)")}>
         <div className="space-y-2.5">
           <Field label={L("Company name (English)", "اسم الشركة (إنجليزي)")}><Input value={c.name} onChange={set("name")} data-testid="co-name" /></Field>
           <Field label={L("Company name (Arabic)", "اسم الشركة (عربي)")}><Input value={c.nameAr} onChange={set("nameAr")} dir="rtl" data-testid="co-name-ar" /></Field>
@@ -192,7 +192,7 @@ function Settings({ onClose, goCustom }) {
             <details className="text-[12.5px]" data-testid="books-eta-settings"><summary className="cursor-pointer py-1 opacity-80">{L("E-invoice (ETA) details", "بيانات الفاتورة الإلكترونية")}</summary><div className="space-y-2 pt-2">
               <Field label={L("Activity code (4 digits, on your tax card)", "كود النشاط (٤ أرقام، على البطاقة الضريبية)")}><Input value={(c.eta || {}).activityCode || ""} onChange={(v) => setC((x) => ({ ...x, eta: { ...(x.eta || {}), activityCode: v } }))} inputMode="numeric" /></Field>
               {[["governate", "Governorate", "المحافظة"], ["regionCity", "City / area", "المدينة / المنطقة"], ["street", "Street", "الشارع"], ["buildingNumber", "Building no.", "رقم المبنى"], ["branchID", "Branch ID (0 = head office)", "كود الفرع (٠ = المركز الرئيسي)"]].map(([k, en, ar]) => <Field key={k} label={L(en, ar)}><Input value={((c.eta || {}).address || {})[k] || ""} onChange={(v) => setC((x) => ({ ...x, eta: { ...(x.eta || {}), address: { ...((x.eta || {}).address || {}), [k]: v } } }))} /></Field>)}
-              <p className="opacity-70">{L("The app makes the e-invoice file; signing it and sending it to the tax authority needs your company's e-signature token or an e-invoicing provider.", "التطبيق بيعمل ملف الفاتورة الإلكترونية؛ توقيعه وإرساله لمصلحة الضرائب محتاج توكن التوقيع الإلكتروني بتاع شركتك أو مزوّد فاتورة إلكترونية.")}</p>
+              <p className="opacity-70">{L("The app makes the e-invoice file; signing it and sending it to the tax authority needs your company's e-signature token or an e-invoicing provider.", "يُنشئ التطبيق ملف الفاتورة الإلكترونية؛ أما توقيعه وإرساله إلى مصلحة الضرائب فيحتاج رمز التوقيع الإلكتروني الخاص بشركتك أو مزوّد فاتورة إلكترونية.")}</p>
             </div></details>
           </div>
           <Field label={L("Address", "العنوان")}><Input value={c.address} onChange={set("address")} /></Field>
@@ -200,7 +200,7 @@ function Settings({ onClose, goCustom }) {
             <Field label={L("Phone", "التليفون")}><Input value={c.phone} onChange={set("phone")} inputMode="tel" /></Field>
             <Field label={L("Email", "الإيميل")}><Input value={c.email} onChange={set("email")} inputMode="email" /></Field>
           </div>
-          <Field label={L("Bank details (shown on invoices)", "بيانات البنك (بتظهر على الفواتير)")}><Input value={c.bank} onChange={set("bank")} /></Field>
+          <Field label={L("Bank details (shown on invoices)", "بيانات البنك (تظهر على الفواتير)")}><Input value={c.bank} onChange={set("bank")} /></Field>
           <Field label={L("Footer line", "سطر أسفل المستند")}><Input value={c.footer} onChange={set("footer")} /></Field>
           <div className="flex items-center gap-3">
             {c.logo ? <img src={c.logo} alt="" className="h-12 max-w-[120px] object-contain border rounded" /> : <div className={`h-12 w-12 rounded border ${th.line} grid place-items-center text-[10px] ${th.sub}`}>{L("logo", "لوجو")}</div>}
@@ -212,7 +212,7 @@ function Settings({ onClose, goCustom }) {
       </Section>
       <Section title={L("Tax & credit", "الضريبة والائتمان")}>
         <div className="grid grid-cols-2 gap-2">
-          <Field label={L("Standard VAT %", "ضريبة القيمة المضافة %")} hint={L("Egypt's standard rate is 14%. Check the current rate with your accountant.", "النسبة العادية في مصر ١٤٪. اتأكد من النسبة الحالية مع محاسبك.")}><Input value={vat} onChange={setVat} inputMode="decimal" data-testid="co-vat" /></Field>
+          <Field label={L("Standard VAT %", "ضريبة القيمة المضافة %")} hint={L("Egypt's standard rate is 14%. Check the current rate with your accountant.", "النسبة العامة في مصر 14٪. تأكّد من النسبة الحالية مع محاسبك.")}><Input value={vat} onChange={setVat} inputMode="decimal" data-testid="co-vat" /></Field>
           <Field label={L("Days customers have to pay", "أيام السداد للعملاء")}><Input value={days} onChange={setDays} inputMode="numeric" /></Field>
         </div>
       </Section>
@@ -221,22 +221,22 @@ function Settings({ onClose, goCustom }) {
           <button key={k} onClick={() => setTheme(k)} className={`${BTN} border ${themeName === k ? "bg-teal-700 text-white border-teal-700" : th.line}`}>{L(en, ar)}</button>))}</div>
       </Section>
       <Section title={L("PIN lock", "قفل بالرقم السري")}>
-        <p className={`text-[12px] mb-2 ${th.sub}`}>{L("Asks for a 4–6 digit PIN when the books are opened. It keeps casual eyes out on a shared phone; it is not encryption.", "بيطلب رقم سري من ٤ لـ ٦ أرقام لما تفتح الدفاتر. بيمنع الفضول على تليفون مشترك؛ مش تشفير.")}</p>
+        <p className={`text-[12px] mb-2 ${th.sub}`}>{L("Asks for a 4–6 digit PIN when the books are opened. It keeps casual eyes out on a shared phone; it is not encryption.", "يطلب رقمًا سريًا من 4 إلى 6 أرقام عند فتح الدفاتر. يمنع التطفّل على هاتف مشترك؛ وليس تشفيرًا.")}</p>
         <div className="flex gap-2"><div className="flex-1"><Input value={pinIn} onChange={(v) => setPinIn(v.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" placeholder={O.hasPin(s) ? L("New PIN", "رقم سري جديد") : L("Choose a PIN", "اختار رقم سري")} data-testid="books-pin-set" /></div>
-          <button onClick={() => run((st) => O.setPin(st, pinIn), L("PIN saved", "اتحفظ الرقم السري")).then(() => setPinIn(""))} className={`${BTN} border ${th.line}`} disabled={pinIn.length < 4}>{L("Save", "حفظ")}</button>
-          {O.hasPin(s) ? <button onClick={() => run((st) => O.setPin(st, ""), L("PIN removed", "اتشال الرقم السري"))} className={`${BTN} border ${th.line} text-red-600`}>{L("Remove", "شيل")}</button> : null}</div>
+          <button onClick={() => run((st) => O.setPin(st, pinIn), L("PIN saved", "حُفظ الرقم السري")).then(() => setPinIn(""))} className={`${BTN} border ${th.line}`} disabled={pinIn.length < 4}>{L("Save", "حفظ")}</button>
+          {O.hasPin(s) ? <button onClick={() => run((st) => O.setPin(st, ""), L("PIN removed", "أُزيل الرقم السري"))} className={`${BTN} border ${th.line} text-red-600`}>{L("Remove", "شيل")}</button> : null}</div>
       </Section>
       <Section title={L("Backup", "النسخ الاحتياطي")}>
-        <p className={`text-[12px] mb-2 ${th.sub}`}>{L("Your books live only on this phone. Save a backup file regularly (to Drive, WhatsApp or a computer).", "دفاترك على التليفون ده بس. احفظ نسخة احتياطية بانتظام (على درايف أو واتساب أو كمبيوتر).")}</p>
+        <p className={`text-[12px] mb-2 ${th.sub}`}>{L("Your books live only on this phone. Save a backup file regularly (to Drive, WhatsApp or a computer).", "دفاترك على هذا الهاتف فقط. احفظ نسخة احتياطية بانتظام (على Drive أو واتساب أو حاسوب).")}</p>
         <div className="flex gap-2">
           <button onClick={backup} className={`${BTN} border ${th.line} flex items-center gap-1.5`} data-testid="books-backup"><Download size={14} />{L("Save backup", "احفظ نسخة")}</button>
           <button onClick={() => restoreRef.current && restoreRef.current.click()} className={`${BTN} border ${th.line} flex items-center gap-1.5`}><Upload size={14} />{L("Restore", "استرجاع")}</button>
           <input ref={restoreRef} type="file" accept=".json,application/json" className="hidden" onChange={(e) => restore(e.target.files && e.target.files[0])} />
         </div>
-        <p className={`text-[11px] mt-2 ${audit.ok ? "text-emerald-600" : "text-red-600"}`} data-testid="books-audit">{audit.ok ? L(`Audit log intact (${audit.count} entries)`, `سجل المراجعة سليم (${audit.count} حركة)`) : L(`Audit log changed at entry ${audit.brokenAt}`, `سجل المراجعة اتغيّر عند الحركة ${audit.brokenAt}`)}</p>
+        <p className={`text-[11px] mt-2 ${audit.ok ? "text-emerald-600" : "text-red-600"}`} data-testid="books-audit">{audit.ok ? L(`Audit log intact (${audit.count} entries)`, `سجل المراجعة سليم (${audit.count} حركة)`) : L(`Audit log changed at entry ${audit.brokenAt}`, `تغيّر سجل المراجعة عند الحركة ${audit.brokenAt}`)}</p>
       </Section>
       <Section title={L("Danger zone", "منطقة الخطر")}>
-        <button onClick={async () => { if (!window.confirm(L("Erase ALL your books on this phone? Save a backup first — this cannot be undone.", "تمسح كل دفاترك من التليفون ده؟ احفظ نسخة احتياطية الأول — مفيش رجوع."))) return; await replaceBooks(O.EMPTY()); run(() => O.EMPTY(), L("All books erased", "اتمسحت كل الدفاتر")); onClose(); }} className={`${BTN} border border-red-300 text-red-600`} data-testid="books-erase">{L("Erase all books", "امسح كل الدفاتر")}</button>
+        <button onClick={async () => { if (!window.confirm(L("Erase ALL your books on this phone? Save a backup first — this cannot be undone.", "حذف كل دفاترك من هذا الهاتف؟ احفظ نسخة احتياطية أولًا — لا يمكن التراجع."))) return; await replaceBooks(O.EMPTY()); run(() => O.EMPTY(), L("All books erased", "حُذفت كل الدفاتر")); onClose(); }} className={`${BTN} border border-red-300 text-red-600`} data-testid="books-erase">{L("Erase all books", "امسح كل الدفاتر")}</button>
       </Section>
       {goCustom ? <Section title={L("More", "المزيد")}><button onClick={() => { onClose(); goCustom(); }} className={`${BTN} border ${th.line} flex items-center gap-1.5`}><Users size={14} />{L("Custom tables (build your own system)", "جداول مخصصة (ابني نظامك بنفسك)")}</button></Section> : null}
     </Sheet>
@@ -253,7 +253,7 @@ function PinLock({ s, onOk, onBack }) {
       <p className="text-[15px] font-semibold">{L("Enter your PIN to open the books", "اكتب الرقم السري لفتح الدفاتر")}</p>
       <input value={pin} onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setPin(v); if (v.length >= 4 && O.checkPin(s, v)) onOk(); }} type="password" inputMode="numeric" autoFocus data-testid="books-pin"
         className={`w-40 text-center tracking-[0.5em] text-xl rounded-lg border px-3 py-2 ${th.input}`} />
-      {bad ? <p className="text-[12px] text-red-600">{L("Wrong PIN", "الرقم غلط")}{bad >= 5 ? " · " + L("take a breath and try again", "اهدى وجرّب تاني") : ""}</p> : null}
+      {bad ? <p className="text-[12px] text-red-600">{L("Wrong PIN", "الرقم غلط")}{bad >= 5 ? " · " + L("take a breath and try again", "انتظر قليلًا ثم حاول مرة أخرى") : ""}</p> : null}
       <button onClick={() => tryPin(pin)} className={btnPrimary} disabled={pin.length < 4}>{L("Open", "فتح")}</button>
       <button onClick={onBack} className={`text-[12px] ${th.sub}`}>{L("Back", "رجوع")}</button>
     </div>
