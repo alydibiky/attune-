@@ -1372,27 +1372,43 @@ def drug_name(of):
     g = re.sub(r"[()\[\]]", "", g)
     return re.sub(r"\s+", " ", g).strip(" ,-")
 
+ROUTE_GROUP = [("oral", ("ORAL", "SUBLINGUAL", "BUCCAL")), ("injection", ("INTRAVENOUS", "INTRAMUSCULAR", "SUBCUTANEOUS", "INTRATHECAL", "EPIDURAL", "INFILTRATION", "PERINEURAL", "INTRADERMAL")),
+               ("skin", ("TOPICAL", "TRANSDERMAL", "CUTANEOUS")), ("eye/ear", ("OPHTHALMIC", "AURICULAR (OTIC)", "OTIC")), ("inhaled/nasal", ("RESPIRATORY (INHALATION)", "NASAL", "INHALATION"))]
+def route_group(routes):
+    r = set(x.upper() for x in routes or [])
+    for name, keys in ROUTE_GROUP:
+        if r & set(keys): return name
+    return "other"
+
 def drug_rows(labels):
-    """openFDA label records → one medicine per set of active ingredients (prescription first, newest label), a passage per
-    section. Cosmetics with a drug label (sunscreens, antiperspirants, toothpaste) are left out — not what people ask about."""
-    best = {}
+    """openFDA label records → one medicine per (active ingredients, route): «Acetaminophen — oral» and «— injection» are
+    different labels with different doses, so a question about the tablets doesn't get the hospital injection's dose. Per
+    medicine: the prescription label first, then the newest; brands listed by how many labels use them. Cosmetics with a
+    drug label (sunscreens, antiperspirants, toothpaste) are left out."""
+    best, brand_n = {}, {}
     for d in labels:
         of = d.get("openfda") or {}
         g = drug_name(of)
         if not g or len(g) > 120 or not re.search(r"[A-Z]{3}", g): continue
         if COSMETIC.search(" ".join((of.get("generic_name") or []) + (of.get("brand_name") or [])).upper()): continue
         if not (d.get("indications_and_usage") or d.get("purpose")): continue
+        k = (g, route_group(of.get("route")))
         rx = "PRESCRIPTION" in " ".join(of.get("product_type") or []).upper()
         key = (rx, d.get("effective_time") or "")
-        if g not in best or key > best[g][0]: best[g] = (key, d, best.get(g, (0, 0, set()))[2])
-        best[g][2].update(b.strip().title() for b in of.get("brand_name") or [] if b.strip())
+        if k not in best or key > best[k][0]: best[k] = (key, d)
+        for b_ in set(b.strip().title() for b in of.get("brand_name") or [] if b.strip()):
+            brand_n.setdefault(k, {}); brand_n[k][b_] = brand_n[k].get(b_, 0) + 1
+    groups = {}
+    for (g, rg) in best: groups.setdefault(g, []).append(rg)
     rows = []
-    for g, (_, d, brand_set) in sorted(best.items()):
+    for (g, rg), (_, d) in sorted(best.items()):
         of = d.get("openfda") or {}
-        brands = ", ".join(sorted(b for b in brand_set if b.upper() != g)[:8])
+        bn = brand_n.get((g, rg), {})
+        brands = ", ".join(b for b, _ in sorted(bn.items(), key=lambda x: (-x[1], x[0])) if b.upper() != g)
+        if len(brands) > 240: brands = brands[:240].rsplit(",", 1)[0] + "…"
         route = ", ".join(sorted(set(r.lower() for r in of.get("route") or []))[:3])
         alias = " / ".join(INN[w] for w in INN if w in g)
-        name = g.title() + (f" ({alias})" if alias else "")
+        name = g.title() + (f" ({alias})" if alias else "") + (f" — {rg}" if len(groups[g]) > 1 else "")
         seen = set()
         for key, label in DRUG_SECTIONS:
             txt = re.sub(r"\s+", " ", " ".join(d.get(key) or [])).strip()

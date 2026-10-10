@@ -337,6 +337,12 @@ check(S.arabic_name(["Alexandria", "yەskەndەryە", "ئىسكەندەرىيە"
 ur = S.unique_rows([{"x": "Labor productivity drives growth."}, {"x": "Labor  productivity drives growth."}, {"x": "Critical Thinking Questions"}, {"x": "GDP = C + I + G"}])
 check([r["x"] for r in ur] == ["Labor productivity drives growth.", "GDP = C + I + G"], "Quality: a passage repeated in another edition of the book, and a bare heading, are left out")
 check(S.fix_mojibake("C-ELYSÃ©E") == "C-ELYSéE" and S.fix_mojibake("Škoda") == "Škoda", "Quality: a car name read in the wrong encoding is repaired (Citroën C-Elysée)")
+labels3 = [{"openfda": {"substance_name": ["ACETAMINOPHEN"], "brand_name": ["TYLENOL"], "route": ["ORAL"], "product_type": ["HUMAN OTC DRUG"]}, "effective_time": "20240101", "purpose": ["Pain reliever"], "warnings": ["do not take more than 4,000 mg in 24 hours"]},
+           {"openfda": {"substance_name": ["ACETAMINOPHEN"], "brand_name": ["TYLENOL"], "route": ["ORAL"], "product_type": ["HUMAN OTC DRUG"]}, "effective_time": "20230101", "purpose": ["Pain reliever"]},
+           {"openfda": {"substance_name": ["ACETAMINOPHEN"], "brand_name": ["OFIRMEV"], "route": ["INTRAVENOUS"], "product_type": ["HUMAN PRESCRIPTION DRUG"]}, "effective_time": "20250101", "indications_and_usage": ["IV for pain"], "dosage_and_administration": ["1,000 mg every 6 hours"]}]
+d3 = S.drug_rows(labels3); t3 = sorted(set(r["t"].split(" — Medicine")[0].rsplit(" — ", 1)[0] for r in d3))
+check(any("— oral" in r["t"] and "4,000 mg" in r["x"] and "Tylenol" in r["x"] for r in d3) and any("— injection" in r["t"] and "Ofirmev" in r["x"] for r in d3),
+      "Medicines: the tablets and the hospital injection are separate entries (different doses): " + str(t3))
 hd = S.hadith_rows("bukhari", "صحيح البخاري", {"hadiths": [{"hadithnumber": 834, "text": "ظُلْمًا كَثِيرًا \ufffd\ufffdَلاَ يَغْفِرُ", "grades": []}]})
 check(S.hadith_rows("nawawi", "الأربعون النووية", {"hadiths": [{"hadithnumber": 6, "text": "أَلَا وَهِيَ الْقَلْبُ .<br>[رَوَاهُ الْبُخَارِيُّ]", "grades": []}]})[0]["x"].startswith("أَلَا وَهِيَ الْقَلْبُ .\n[رَوَاهُ"), "Quality: no HTML left in a hadith")
 check("\ufffd" not in hd[0]["x"] and "[…]" in hd[0]["x"] and "الدرر السنية" in hd[0]["x"], "Quality: a letter damaged in the hadith source is marked, never guessed, and the reader is sent to Dorar")
