@@ -1989,6 +1989,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             )}
           </div>
         </div>
+        {/* v6.16c (Ali): like every AI app, a small line that answers can be wrong */}
+        <p className="text-center text-[10.5px] leading-tight text-slate-500 mt-1 px-2" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
       </div>
     </div>
   );

@@ -506,5 +506,6 @@ function CycleChat({ cycle, todayKey }) {
           className="flex-1 min-w-0 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[13px] text-slate-100" />
         <button onClick={() => ask()} className="px-3 rounded-lg bg-rose-500 text-white text-[13px]" data-testid="cycle-ask-go">{tr("Ask")}</button>
       </div>
+      <p className="text-center text-[10.5px] leading-tight text-slate-500 mt-1" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
     </div>);
 }

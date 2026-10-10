@@ -9230,6 +9230,7 @@ export default function App() {
                   {askBusy ? tr("Stop") : tr("Ask")}
                 </button>
               </div>
+              <p className="text-center text-[10.5px] leading-tight text-slate-500 mt-1" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
               {/* The web toggle sits with the input, not in settings, because
                   it changes what happens to THIS question. On means the
                   question goes to the internet; the answer still comes from

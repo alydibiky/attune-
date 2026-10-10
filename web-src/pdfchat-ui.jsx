@@ -455,6 +455,7 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
               className="flex-1 rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-[14px] text-slate-100 resize-none max-h-28" />
             <button onClick={() => ask()} disabled={!q.trim() || !!asking} className="rounded-xl bg-teal-500 p-2.5 text-slate-950 disabled:opacity-40" aria-label={tr("Send")} data-testid="pdf-send"><Send size={17} className="rtl:-scale-x-100" /></button>
           </div>
+          <p className="text-center text-[10.5px] leading-tight text-slate-500 bg-slate-950 -mt-1 pb-1 px-2" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
         </>
       ) : (
         <div className="flex-1 overflow-auto" data-testid="pdf-reader" ref={scroller} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onWheel={onWheel}>

@@ -1282,6 +1282,7 @@ export const AR = {
   "Save to Memory": "الحفظ في الذاكرة",
   "Listening…": "جارٍ الاستماع…",
   "Message Attune": "اكتب رسالة إلى Attune",
+  "Attune is AI and can make mistakes. Check important info.": "Attune ذكاء اصطناعي وقد يخطئ، فتحقّق من المعلومات المهمة.",
   "Search the web": "البحث على الويب",
   "Web": "الويب",
   "Send": "إرسال",
