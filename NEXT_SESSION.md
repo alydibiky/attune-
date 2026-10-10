@@ -481,6 +481,17 @@ touch, merge origin/main before pushing, and push your branch (not main).
    built-in plans in English and Arabic (`daily.js READY_COURSES / readyCourse`), start at once (no model plan needed).
 6. ✅ **Cycle is chattable** — `cycle.jsx cycleAnswer`: next period, late?, ovulation, fertile window, cycle/period length,
    history, symptoms — answered by code from the logged days (`CycleChat` under the headline).
+8. ✅ **"Everything Yazio has, plus more"** (Ali, 10 Oct). Added in v6.14 (`fityazio.js`, `YazioPlus` in fit-ui.jsx):
+   quick add kcal/macros, fasting stages + 23:1 and 36 h plans, body measurements over time (waist, hips, chest, arm,
+   thigh, neck), progress photos (before/now), more calories on chosen weekdays (Attune keeps the WEEK's total — Yazio
+   doesn't), 7-day nutrient averages with the energy split, diary export (CSV), copy a meal / a day to another day.
+   Already there before: diary, goals (Mifflin-St Jeor), barcode + 1M-product database, photo and voice logging, recipes,
+   week meal plan + shopping list, favourites / recent / my meals / my own food, water, weight trend, streak, Nutri-Score
+   & NOVA, sugar / salt, reminders, watch sync (Health Connect, Huawei), fasting timer, workouts with a coach timer, week report.
+   Attune-only: offline AI photo reading in ~1 s, Egyptian / Arab foods first, Ramadan mode with real prayer times,
+   talk-to-the-list corrections, chat with your data, privacy (nothing uploaded), body fat from a tape measure.
+   ⬜ Yazio items still missing: vitamins & minerals per food (needs micronutrient data in the food table), home-screen
+   widgets, challenges.
 7. ⬜ **Still open from the other account's list (M)**: Mind page "better than My Mind", Coding page "visually better and more
    powerful", the whole-app UI/UX rework and Maps look (LOOK choices — show options first); Business leftovers (roles,
    multi-currency, price lists); big-model max-tests; measuring the comparison answers with a real 4B/9B model.
