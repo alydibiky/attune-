@@ -202,6 +202,7 @@ open(os.path.join(d2, "modules", "m2", "index.cnxml"), "w").write("""<document x
 <example id="ex1"><title>Calculating Displacement of an Accelerating Car</title><exercise><problem><para>A car starts from rest and accelerates at 2.0 m/s² for 5.0 s. How far does it travel?</para></problem>
 <solution><para>Use x = ½ a t² = 0.5 × 2.0 × 25 = 25 m. The car travels 25 meters.</para></solution></exercise></example>
 <exercise id="q1"><problem><para>End of chapter: a bus accelerates for 10 s, find its speed.</para></problem></exercise></content></document>""")
+check(S.openstax_lang(os.path.join(d2, "collections", "university-physics-volume-1.collection.xml")) == "en", "OpenStax: an English book is recognised (translations are left out)")
 title2, lic2, mods2 = S.openstax_book(d2, os.path.join(d2, "collections", "university-physics-volume-1.collection.xml"), keep_math=True)
 t2 = mods2[0][2] if mods2 else ""
 check("v_f = v_0 + a t" in t2 and "x = x_0 + v_0 t + 1/2 a t^2" in t2, "Subject packs: formulas kept as plain text: " + t2[:160])

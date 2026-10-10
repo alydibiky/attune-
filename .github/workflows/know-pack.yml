@@ -25,6 +25,9 @@ on:
       budget_mb:
         description: "Text budget in MB (laws, science)"
         default: "25"
+      allow_nc:
+        description: "Subject packs: also use non-commercial (CC BY-NC-SA) OpenStax books — only while the app is not sold"
+        default: "no"
 
 permissions:
   contents: write
@@ -59,7 +62,8 @@ jobs:
           pip install pyarrow
           budget="${{ github.event.inputs.budget_mb }}"; [ -z "$budget" ] && budget=25
           [ "${{ matrix.pack }}" = "laws" ] && budget=$(( budget < 20 ? budget : 20 ))
-          python3 tools/build_know_pack.py "${{ matrix.pack }}" out --budget-mb "$budget" | tee build.log
+          nc=""; [ "${{ github.event.inputs.allow_nc }}" = "yes" ] && nc="--allow-nc"
+          python3 tools/build_know_pack.py "${{ matrix.pack }}" out --budget-mb "$budget" $nc | tee build.log
           ls -la out
       - name: Summary
         run: |

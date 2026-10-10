@@ -83,6 +83,11 @@ def text_keep(el, in_example=False):
         parts.append(text_keep(c, ex)); parts.append(c.tail or "")
     return "".join(parts)
 
+def openstax_lang(collection_path):
+    """The book's language from its collection file ("en", "es", "pl"…)."""
+    try: return (strip_ns(ET.parse(collection_path).getroot()).findtext(".//metadata/language") or "en").strip().lower()[:2]
+    except Exception: return "en"
+
 def openstax_book(repo_dir, collection_path, keep_math=False):
     """One OpenStax book (a collection file) → (title, license url, [(chapter title, module title, text)]).
     keep_math (the subject packs): formulas written as plain text, equations and worked examples kept."""
@@ -158,7 +163,7 @@ def build_science(a):
     cols.sort()
     in_subjects = {x for _, _, l in SUBJECTS.values() for x in l}   # math, physics, chemistry, biology and history have their own packs
     for pri, slug, d, path in cols:
-        if slug in in_subjects: continue
+        if slug in in_subjects or openstax_lang(path) != "en": continue   # translations (Polish, Spanish…) left out
         try: title, lic, mods = openstax_book(d, path)
         except Exception as e: print("skip", slug, e, file=sys.stderr); continue
         if "/by/" not in lic or "-nc" in lic or "-nd" in lic:       # only books anyone may reuse (CC BY), so the app may be sold
@@ -816,17 +821,21 @@ def build_subject(a, pid):
     for slug in slugs:
         if slug not in found: print("not found", slug, file=sys.stderr); continue
         d, path = found[slug]
+        if openstax_lang(path) != "en": continue
         try: title, lic, mods = openstax_book(d, path, keep_math=True)
         except Exception as e: print("skip", slug, e, file=sys.stderr); continue
-        if "/by/" not in lic or "-nc" in lic or "-nd" in lic: print("license", slug, lic, file=sys.stderr); continue
+        nc = "-nc" in lic
+        if "-nd" in lic or ("/by" not in lic) or (nc and not getattr(a, "allow_nc", False)): print("license", slug, lic, file=sys.stderr); continue
         url = f"https://openstax.org/details/books/{slug}"
         r = subject_rows(title, url, mods)
         b = sum(len(x["x"].encode()) for x in r)
         if not r or used + b > budget: print("over budget", slug, b, file=sys.stderr); continue
-        rows += r; used += b; books.append({"title": title, "url": url, "license": "CC BY 4.0"})
+        rows += r; used += b; books.append({"title": title, "url": url, "license": "CC BY-NC-SA 4.0" if nc else "CC BY 4.0"})
         print(f"{pid}: {title}: {len(r)} passages", file=sys.stderr)
+    anync = any(b["license"] != "CC BY 4.0" for b in books)
     B.write_pack(a.out, pid, rows, {
-        "name": f"{name} (OpenStax textbooks)", "name_ar": f"{name_ar} (كتب أوبن ستاكس الجامعية)", "license": "CC BY 4.0",
+        "name": f"{name} (OpenStax textbooks)", "name_ar": f"{name_ar} (كتب أوبن ستاكس الجامعية)",
+        "license": "CC BY-NC-SA 4.0 — non-commercial use only" if anync else "CC BY 4.0", **({"noncommercial": True} if anync else {}),
         "attribution": "OpenStax (Rice University), openstax.org — peer-reviewed open textbooks, CC BY 4.0. Text with its formulas (as plain text) and worked examples; end-of-chapter exercises left out.",
         "sources": books, "retrieved": time.strftime("%Y-%m-%d"), "books": len(books)})
 
