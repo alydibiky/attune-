@@ -85,7 +85,7 @@ await K.installKnowPack(kp, { manifest: man, getText: async (nm) => { got++; ret
 ok(got === 2, "installing again skips shards already there (resumable)");
 await K.removeKnowPack(kp, "t");
 ok((await kp.sources()).length === 0, "a pack is removed as a whole");
-ok(["world", "egy-laws", "numbers", "cities", "science", "health", "cranes", "quran", "fiqh", "hadith"].every((id) => K.CATALOG.some((p) => p.id === id)) && K.CATALOG.every((p) => p.name_ar && p.license && p.license_ar && p.size), "the catalogue: the 10 public packs, each with Arabic name, size and licence");
+ok(["world", "egy-laws", "numbers", "cities", "science", "health", "cranes", "quran", "fiqh", "hadith", "cars"].every((id) => K.CATALOG.some((p) => p.id === id)) && K.CATALOG.every((p) => p.name_ar && p.license && p.license_ar && p.size), "the catalogue: the 11 public packs, each with Arabic name, size and licence");
 ok(!/wiki/i.test(JSON.stringify(K.CATALOG)), "no pack in the catalogue comes from Wikipedia (Ali's rule)");
 ok(!/[A-Za-z]/.test(K.CATALOG.map((p) => p.name_ar + p.about_ar + p.license_ar + (p.notice_ar || "") + p.size_ar).join("")), "the catalogue's Arabic text has no Latin letters");
 

@@ -509,4 +509,144 @@ def build_hadith(a):
         "sources": [{"title": "hadith-api (fawazahmed0)", "url": "https://github.com/fawazahmed0/hadith-api", "license": "Unlicense (public domain)"}],
         "retrieved": time.strftime("%Y-%m-%d")})
 
-BUILDERS = {"science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith}
+# ---- cars: specs of every car sold in the US (EPA, 1984–now) and in Europe (EEA, incl. the Chinese brands sold there) ----------------
+EPA_CARS = "https://www.fueleconomy.gov/feg/epadata/vehicles.csv.zip"
+EEA_SQL = "https://discodata.eea.europa.eu/sql"
+MAKES_AR = {"TOYOTA": "تويوتا", "LEXUS": "لكزس", "HONDA": "هوندا", "NISSAN": "نيسان", "MAZDA": "مازدا", "MITSUBISHI": "ميتسوبيشي", "SUZUKI": "سوزوكي",
+    "SUBARU": "سوبارو", "HYUNDAI": "هيونداي", "KIA": "كيا", "GENESIS": "جينيسيس", "CHEVROLET": "شيفروليه", "FORD": "فورد", "JEEP": "جيب",
+    "DODGE": "دودج", "CHRYSLER": "كرايسلر", "CADILLAC": "كاديلاك", "GMC": "جي إم سي", "TESLA": "تسلا", "BMW": "بي إم دبليو", "MERCEDES-BENZ": "مرسيدس",
+    "MERCEDES": "مرسيدس", "AUDI": "أودي", "VOLKSWAGEN": "فولكس فاجن", "VW": "فولكس فاجن", "PORSCHE": "بورشه", "OPEL": "أوبل", "PEUGEOT": "بيجو",
+    "CITROEN": "ستروين", "RENAULT": "رينو", "DACIA": "داسيا", "FIAT": "فيات", "ALFA ROMEO": "ألفا روميو", "SKODA": "سكودا", "SEAT": "سيات",
+    "CUPRA": "كوبرا", "VOLVO": "فولفو", "LAND ROVER": "لاند روفر", "JAGUAR": "جاكوار", "MINI": "ميني", "FERRARI": "فيراري", "LAMBORGHINI": "لامبورغيني",
+    "MASERATI": "مازيراتي", "BENTLEY": "بنتلي", "ROLLS-ROYCE": "رولز رويس", "BYD": "بي واي دي", "MG": "إم جي", "SAIC": "سايك", "CHERY": "شيري",
+    "OMODA": "أومودا", "JAECOO": "جيكو", "GEELY": "جيلي", "ZEEKR": "زيكر", "LYNK & CO": "لينك آند كو", "POLESTAR": "بولستار", "NIO": "نيو",
+    "XPENG": "إكس بنغ", "LEAPMOTOR": "ليب موتور", "GWM": "جريت وول", "GREAT WALL": "جريت وول", "ORA": "أورا", "HAVAL": "هافال", "WEY": "وي",
+    "DONGFENG": "دونغ فنغ", "VOYAH": "فوياه", "HONGQI": "هونشي", "AIWAYS": "أيويز", "SERES": "سيريس", "DFSK": "دي إف إس كيه", "JAC": "جاك",
+    "CHANGAN": "شانجان", "BAIC": "بايك", "GAC": "جي إيه سي", "SMART": "سمارت", "LOTUS": "لوتس", "SSANGYONG": "سانج يونج", "KGM": "كيه جي إم",
+    "ISUZU": "إيسوزو", "RAM": "رام", "BUICK": "بيوك", "LINCOLN": "لينكون", "INFINITI": "إنفينيتي", "ACURA": "أكيورا", "RIVIAN": "ريفيان", "LUCID": "لوسيد",
+    "DS": "دي إس", "ABARTH": "أبارث", "LANCIA": "لانشيا", "XEV": "إكس إي في", "BESTUNE": "بستيون", "JETOUR": "جيتور", "EXEED": "إكسيد", "TANK": "تانك",
+    "SKYWELL": "سكاي ويل", "MAXUS": "ماكسوس", "FORTHING": "فورثينج", "KAIYI": "كايي", "SWM": "إس دبليو إم", "BAW": "باو"}
+CHINESE = {"BYD", "MG", "SAIC", "CHERY", "OMODA", "JAECOO", "GEELY", "ZEEKR", "LYNK & CO", "POLESTAR", "NIO", "XPENG", "LEAPMOTOR", "GWM", "GREAT WALL",
+    "ORA", "HAVAL", "WEY", "DONGFENG", "VOYAH", "HONGQI", "AIWAYS", "SERES", "DFSK", "JAC", "CHANGAN", "BAIC", "GAC", "MAXUS", "XEV", "BESTUNE", "JETOUR",
+    "EXEED", "TANK", "SKYWELL", "FORTHING", "KAIYI", "SWM", "BAW", "SMART", "LOTUS"}
+
+def make_label(mk):
+    m = (mk or "").strip(); u = m.upper()
+    ar = MAKES_AR.get(u, ""); cn = " — صيني" if u in CHINESE else ""
+    return f"{m} ({ar}{cn})" if ar else m
+
+def _f(x):
+    try: v = float(x); return v if v == v else None
+    except (TypeError, ValueError): return None
+
+def epa_line(r):
+    """One EPA vehicle row → a spec line (metric next to US units)."""
+    g = lambda k: (r.get(k) or "").strip()
+    bits = []
+    displ, cyl = _f(g("displ")), _f(g("cylinders"))
+    eng = ", ".join(x for x in [f"{displ:g} L" if displ else "", f"{cyl:g} cyl" if cyl else "", "turbo" if g("tCharger") in ("T", "True", "1") else "",
+                                "supercharged" if g("sCharger") == "S" else "", g("eng_dscr")] if x)
+    if eng: bits.append("engine " + eng)
+    if g("evMotor"): bits.append("electric motor " + g("evMotor"))
+    for k, lab in (("trany", "gearbox"), ("drive", "drive"), ("VClass", "class"), ("fuelType", "fuel"), ("atvType", "type")):
+        if g(k): bits.append(f"{lab} {g(k)}")
+    c, h, cb = _f(g("city08")), _f(g("highway08")), _f(g("comb08"))
+    if cb:
+        l100 = lambda mpg: f"{235.215 / mpg:.1f}" if mpg else "?"
+        unit = "MPGe" if g("atvType") == "EV" else "mpg"
+        bits.append(f"economy {c:g}/{h:g}/{cb:g} {unit} city/highway/combined" + ("" if unit == "MPGe" else f" ({l100(c)}/{l100(h)}/{l100(cb)} L/100 km)"))
+    rng = _f(g("range")) or _f(g("rangeA"))
+    if rng and rng > 0: bits.append(f"electric range {rng:g} mi ({rng * 1.609:.0f} km)")
+    co2 = _f(g("co2TailpipeGpm"))
+    if co2 and co2 > 0: bits.append(f"CO2 {co2 / 1.609:.0f} g/km")
+    cost = _f(g("fuelCost08"))
+    if cost: bits.append(f"US fuel cost about ${cost:,.0f} a year")
+    return "; ".join(bits)
+
+def epa_rows(csv_text):
+    """vehicles.csv → one passage per (make, model, year) listing every version."""
+    groups = {}
+    for r in csv.DictReader(io.StringIO(csv_text)):
+        mk, mo, yr = (r.get("make") or "").strip(), (r.get("model") or "").strip(), (r.get("year") or "").strip()
+        if not (mk and mo and yr): continue
+        line = epa_line(r)
+        if line: groups.setdefault((mk, mo, yr), []).append(line)
+    rows = []
+    for (mk, mo, yr), lines in sorted(groups.items()):
+        lines = list(dict.fromkeys(lines))
+        text = f"{mk} {mo} {yr} — US versions (EPA tests): " + " | ".join(f"({i + 1}) {l}" for i, l in enumerate(lines))
+        for j, piece in enumerate(_bk().chunk(text, 1400)):
+            rows.append({"t": f"{make_label(mk)} {mo} {yr} — specs (US, EPA)", "x": piece, "u": "https://www.fueleconomy.gov/feg/findacar.shtml", "l": "en"})
+    return rows
+
+FUEL = {"petrol": "petrol", "diesel": "diesel", "electric": "electric", "petrol/electric": "plug-in hybrid (petrol)", "diesel/electric": "plug-in hybrid (diesel)",
+        "lpg": "LPG", "ng": "natural gas", "e85": "E85", "hydrogen": "hydrogen"}
+
+def eea_rows(groups):
+    """EEA groups [{Mk, Cn, Ft, Fm, ec, ep, m, ew, er, z, w, n, y0, y1}] → one passage per (make, model) with its versions."""
+    models = {}
+    for g in groups:
+        mk = (g.get("Mk") or "").strip().upper(); cn = re.sub(r"\s+", " ", (g.get("Cn") or "").strip().upper())
+        if not mk or not cn or cn in ("?", "-"): continue
+        bits = []
+        ft = (g.get("Ft") or "").strip().lower(); bits.append(FUEL.get(ft, ft) + (" hybrid" if (g.get("Fm") or "") == "H" and "electric" not in ft else ""))
+        ep, ec = _f(g.get("ep")), _f(g.get("ec"))
+        if ep: bits.append(f"{ep:.0f} kW ({ep * 1.341:.0f} hp)")
+        if ec: bits.append(f"{ec:.0f} cc")
+        m, w = _f(g.get("m")), _f(g.get("w"))
+        if m: bits.append(f"weight {m:.0f} kg")
+        if w: bits.append(f"wheelbase {w:.0f} mm")
+        ew, er, z = _f(g.get("ew")), _f(g.get("er")), _f(g.get("z"))
+        if ew is not None and ew > 0: bits.append(f"CO2 {ew:.0f} g/km (WLTP)")
+        if er: bits.append(f"electric range {er:.0f} km (WLTP)")
+        if z: bits.append(f"uses {z / 10:.1f} kWh/100 km")
+        y0, y1, n = g.get("y0"), g.get("y1"), _f(g.get("n")) or 0
+        bits.append(f"registered {y0}" + (f"–{y1}" if y1 and y1 != y0 else "") + f" ({n:,.0f} cars)")
+        models.setdefault((mk, cn), []).append((n, ", ".join(b for b in bits if b)))
+    rows = []
+    for (mk, cn), vs in sorted(models.items()):
+        vs.sort(key=lambda v: -v[0])
+        name = cn if cn.startswith(mk) else f"{mk} {cn}"
+        text = f"{name} — versions sold in Europe (EU registrations): " + " | ".join(f"({i + 1}) {v}" for i, (_, v) in enumerate(vs[:40]))
+        for piece in _bk().chunk(text, 1400):
+            rows.append({"t": f"{make_label(mk)} {cn.title() if cn.isupper() else cn} — specs (Europe, EEA)", "x": piece, "u": "https://www.eea.europa.eu/en/datahub/datahubitem-view/fa8b1229-3db6-495d-b18e-9c9b3267c02b", "l": "en"})
+    return rows
+
+def eea_query(B, sql, page):
+    from urllib.parse import urlencode
+    return json.loads(B.get(EEA_SQL + "?" + urlencode({"query": sql, "p": page, "nrOfHits": 10000}), 300).decode("utf-8")).get("results") or []
+
+def build_cars(a):
+    B = _bk(); rows = []
+    try:
+        z = zipfile.ZipFile(io.BytesIO(B.get(EPA_CARS, 300)))
+        r = epa_rows(z.read(z.namelist()[0]).decode("utf-8", "replace")); print(f"cars: EPA {len(r)} passages"); rows += r
+    except BaseException as e: print(f"cars: EPA failed ({e})")
+    try:
+        cols = list((eea_query(B, "SELECT TOP 1 * FROM [CO2Emission].[latest].[co2cars]", 1) or [{}])[0].keys())
+        print("cars: EEA columns", cols)
+        col = lambda *names: next((f"[{c}]" for n in names for c in cols if c.lower() == n.lower()), "NULL")
+        er = col("Electric range (km)", "Erwltp", "ElectricRange")
+        sql = (f"SELECT {col('Mk')} AS Mk, {col('Cn')} AS Cn, {col('Ft')} AS Ft, {col('Fm')} AS Fm, ROUND({col('ec')}, -1) AS ec, ROUND({col('ep')}, 0) AS ep, "
+               f"AVG(CAST({col('m (kg)', 'm')} AS float)) AS m, AVG(CAST({col('W (mm)', 'W')} AS float)) AS w, AVG(CAST({col('Ewltp (g/km)', 'Ewltp')} AS float)) AS ew, "
+               f"AVG(CAST({er} AS float)) AS er, AVG(CAST({col('z (Wh/km)', 'z')} AS float)) AS z, SUM(CAST({col('r')} AS float)) AS n, MIN([year]) AS y0, MAX([year]) AS y1 "
+               f"FROM [CO2Emission].[latest].[co2cars] WHERE [year] >= 2019 AND {col('Status')} = 'F' "
+               f"GROUP BY {col('Mk')}, {col('Cn')}, {col('Ft')}, {col('Fm')}, ROUND({col('ec')}, -1), ROUND({col('ep')}, 0) HAVING SUM(CAST({col('r')} AS float)) >= 20")
+        groups, page = [], 1
+        while True:
+            part = eea_query(B, sql, page); groups += part; print(f"cars: EEA page {page}: {len(part)}")
+            if len(part) < 10000 or page >= 60: break
+            page += 1
+        r = eea_rows(groups); print(f"cars: EEA {len(groups)} versions → {len(r)} passages"); rows += r
+    except BaseException as e: print(f"cars: EEA failed ({e})")
+    B.write_pack(a.out, "cars", rows, {
+        "name": "Cars — specs (US & Europe, incl. Chinese brands)", "name_ar": "السيارات — المواصفات (أمريكا وأوروبا، ومنها الصينية)",
+        "license": "US EPA data: public domain. EEA data: CC BY 4.0",
+        "attribution": "US: fueleconomy.gov (US EPA / Department of Energy), every model sold in the US since 1984. Europe: CO2 monitoring data of new passenger cars, European Environment Agency (EEA), CC BY 4.0 — every version registered in the EU since 2019, Chinese brands included.",
+        "notice": "Official test figures (EPA / WLTP); prices are not in these sources — ask online for today's price.",
+        "notice_ar": "أرقام الاختبارات الرسمية (EPA / WLTP)؛ الأسعار ليست في هذه المصادر — اسأل عبر الإنترنت عن السعر الحالي.",
+        "sources": [{"title": "fueleconomy.gov (US EPA)", "url": "https://www.fueleconomy.gov/feg/download.shtml", "license": "Public domain"},
+                    {"title": "EEA — CO2 emissions from new passenger cars", "url": "https://www.eea.europa.eu/en/datahub", "license": "CC BY 4.0"}],
+        "retrieved": time.strftime("%Y-%m-%d")})
+
+BUILDERS = {"science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith, "cars": build_cars}

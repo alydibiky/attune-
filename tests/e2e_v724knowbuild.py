@@ -153,6 +153,31 @@ man, db = pack("hadith", hr)
 r = search(db, "ماذا اقول عند دخول الخلاء")
 check(r and "6" in r[0][0], "a hadith is found from plain words without diacritics: " + (r[0][0] if r else "nothing"))
 
+# ---- cars (EPA vehicles.csv + EEA new-car registrations) ----
+EPA = """year,make,model,displ,cylinders,trany,drive,VClass,fuelType,atvType,city08,highway08,comb08,range,rangeA,evMotor,tCharger,sCharger,eng_dscr,co2TailpipeGpm,fuelCost08
+2024,Toyota,Camry,2.5,4,Automatic (S8),Front-Wheel Drive,Midsize Cars,Regular,,28,39,32,0,,,,,,276,1650
+2024,Toyota,Camry,2.5,4,Automatic (AV-S6),Front-Wheel Drive,Midsize Cars,Regular,Hybrid,51,53,52,0,,,,,HEV,170,1000
+2024,BYD,Seal,,,Automatic (A1),Rear-Wheel Drive,Midsize Cars,Electricity,EV,130,115,123,354,,230 kW PMSM,,,,0,700
+"""
+er = S.epa_rows(EPA)
+cam = [r for r in er if "Camry" in r["t"]]
+check(len(er) == 2 and cam and cam[0]["t"].startswith("Toyota (تويوتا) Camry 2024") and "(1) engine 2.5 L, 4 cyl" in cam[0]["x"] and "(2)" in cam[0]["x"] and "28/39/32 mpg" in cam[0]["x"] and "L/100 km" in cam[0]["x"],
+      "Cars (EPA): one passage per model and year with every version, metric next to US units")
+seal = [r for r in er if "Seal" in r["t"]][0]
+check("صيني" in seal["t"] and "electric range 354 mi (570 km)" in seal["x"] and "230 kW PMSM" in seal["x"] and "MPGe" in seal["x"], "Cars (EPA): an electric car with its range, motor and MPGe; Chinese brands are marked")
+eg = [{"Mk": "BYD", "Cn": "SEAL", "Ft": "electric", "Fm": "E", "ec": None, "ep": 230, "m": 2185, "w": 2920, "ew": 0, "er": 570, "z": 165, "n": 5400, "y0": 2023, "y1": 2024},
+      {"Mk": "MG", "Cn": "MG4", "Ft": "electric", "Fm": "E", "ec": None, "ep": 150, "m": 1685, "w": 2705, "ew": 0, "er": 435, "z": 160, "n": 41000, "y0": 2022, "y1": 2024},
+      {"Mk": "BYD", "Cn": "SEAL", "Ft": "electric", "Fm": "E", "ec": None, "ep": 390, "m": 2260, "w": 2920, "ew": 0, "er": 520, "z": 181, "n": 2100, "y0": 2023, "y1": 2024}]
+eu = S.eea_rows(eg)
+bs = [r for r in eu if "SEAL" in r["x"]][0]
+check(len(eu) == 2 and bs["t"].startswith("BYD (بي واي دي — صيني) Seal") and "(1) electric, 230 kW (308 hp)" in bs["x"] and "390 kW (523 hp)" in bs["x"] and "electric range 570 km (WLTP)" in bs["x"] and "16.5 kWh/100 km" in bs["x"],
+      "Cars (EEA): one passage per model with all its European versions (power, range, use, weight), most sold first")
+man, db = pack("cars", er + eu)
+r = search(db, "BYD Seal range")
+check(r and "Seal" in r[0][0], "a car question finds its specs: " + (r[0][0] if r else "nothing"))
+r = search(db, "مواصفات تويوتا كامري")
+check(r and "Camry" in r[0][0], "an Arabic brand name finds the car: " + (r[0][0] if r else "nothing"))
+
 # ---- OpenStax (CNXML) ----
 d = tempfile.mkdtemp(); os.makedirs(os.path.join(d, "modules", "m1")); os.makedirs(os.path.join(d, "collections"))
 open(os.path.join(d, "collections", "biology-2e.collection.xml"), "w").write("""<col:collection xmlns:col="http://cnx.rice.edu/collxml" xmlns:md="http://cnx.rice.edu/mdml"><col:metadata><md:title>Biology 2e</md:title><md:license url="http://creativecommons.org/licenses/by/4.0/"/></col:metadata>
