@@ -593,6 +593,8 @@ def eea_rows(groups):
     models = {}
     for g in groups:
         mk = make_key(g.get("Mk")); cn = re.sub(r"\s+", " ", (g.get("Cn") or "").strip().upper())
+        for pre in (mk + " ", re.sub(r"\s+", " ", (g.get("Mk") or "").strip().upper()) + " "):
+            if cn.startswith(pre) and len(cn) > len(pre): cn = cn[len(pre):]
         if not mk or not cn or cn in ("?", "-"): continue
         bits = []
         ft = (g.get("Ft") or "").strip().lower(); bits.append(FUEL.get(ft, ft) + (" hybrid" if (g.get("Fm") or "") == "H" and "electric" not in ft else ""))
@@ -624,6 +626,15 @@ def eea_query(B, sql, page=1):
     j = json.loads(raw)
     if "results" not in j: print("cars: EEA said", raw[:300])
     return j.get("results") or []
+
+def eea_probe(sql):
+    """One quick try, no retries (most tried table names don't exist): → rows or None."""
+    import urllib.request
+    from urllib.parse import urlencode
+    try:
+        with urllib.request.urlopen(urllib.request.Request(EEA_SQL + "?" + urlencode({"query": sql}), headers={"User-Agent": "attune-knowledge-builder"}), timeout=30) as r:
+            return json.loads(r.read().decode("utf-8")).get("results") or None
+    except Exception: return None
 
 def eea_merge(parts):
     """Per-year groups → one row per version (make, model, fuel, mode, engine, power): averages weighted by cars, years spanned."""
@@ -657,16 +668,17 @@ def build_cars(a):
         for r in years:
             y = int(_f(r.get("y")) or 0)
             if y >= 2019 and (r.get("s") == "F" or y not in have): have[y] = (T, r.get("s"))
-        # newer years are published as their own tables (co2cars_2024Fv29, co2cars_2025Pv31…): the final one, else the newest provisional
-        tabs = eea_query(B, "SELECT TABLE_SCHEMA AS sch, TABLE_NAME AS t FROM [CO2Emission].INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'co2cars[_]20%'")
-        print("cars: EEA year tables", sorted(r.get("t") for r in tabs))
+        # newer years are published as their own tables (co2cars_2024Fv29, co2cars_2025Pv31…); the list of tables can't be read, so the
+        # likely names are tried, newest version first: the final table of a year, else its newest provisional one
         best = {}
-        for r in tabs:
-            m = re.match(r"co2cars_(20\d\d)([FP])v(\d+)$", r.get("t") or "")
-            if not m: continue
-            y, fp, v = int(m.group(1)), m.group(2), int(m.group(3))
-            rank = (fp == "F", v)
-            if y > max(have or [0]) - 0 and (y not in best or rank > best[y][0]): best[y] = (rank, f"[CO2Emission].[{r.get('sch') or 'latest'}].[{r.get('t')}]", fp)
+        for y in range(max(have or [2022]) + 1, int(time.strftime("%Y")) + 1):
+            for fp in ("F", "P"):
+                for v in range(45, 0, -1):
+                    tab = f"[CO2Emission].[latest].[co2cars_{y}{fp}v{v}]"
+                    ok = eea_probe(f"SELECT TOP 1 {yr} AS y FROM {tab}")
+                    if ok: best[y] = ((fp == "F", v), tab, fp); break
+                if y in best: break
+        print("cars: EEA year tables", {y: b[1] for y, b in best.items()})
         for y, (_, tab, fp) in best.items():
             if y not in have or (have[y][1] != "F" and fp == "F"): have[y] = (tab, fp)
         ec, ep = col("Ec (cm3)", "ec"), col("Ep (KW)", "ep")
