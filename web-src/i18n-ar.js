@@ -3368,4 +3368,6 @@ export const AR = {
   "The map of {c} works offline now": "خريطة {c} تعمل الآن بلا إنترنت",
   "Delete the offline map of {c}? You can download it again.": "حذف خريطة {c}؟ يمكنك تنزيلها مرة أخرى.",
   "The map file is missing — download the country again": "ملف الخريطة غير موجود — نزّل الدولة مرة أخرى",
+  "Find a country": "ابحث عن دولة",
+  "Find a country — {n} available": "ابحث عن دولة — {n} متاحة",
 };

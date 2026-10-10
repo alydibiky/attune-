@@ -149,6 +149,13 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
     for (const p of packs) check(p.code);
   }, [online]);
   const updates = packs.filter((p) => OM.isNewer(remote[p.code], p));
+  const [cq, setCq] = useState("");
+  // the countries: the ones on this phone first, then by name; the box filters by English or Arabic name
+  const countryList = useMemo(() => {
+    const k = OM.normalize(cq);
+    return OM.COUNTRIES.filter((c) => !k || OM.normalize(c.en + " " + c.ar).includes(k))
+      .sort((a, b) => (packs.some((p) => p.code === b.code) - packs.some((p) => p.code === a.code)) || (lang === "ar" ? a.ar.localeCompare(b.ar, "ar") : a.en.localeCompare(b.en)));
+  }, [cq, packs, lang]);
   const install = async (code) => {
     if (!N || !nativeCall) return flash(tr("Offline maps work in the Android app."));
     const m = remote[code] && !remote[code].error ? remote[code] : await check(code);
@@ -255,7 +262,9 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
                 ) : (
                   <div className="space-y-2" data-testid="map-offline">
                     <p className="text-[12px] text-slate-400 leading-relaxed">{tr("Download a whole country once: every road, building, place and shop, and search — all with no signal. A new version is built every week from OpenStreetMap; the app tells you when one is ready.")}</p>
-                    {OM.COUNTRIES.map((c) => {
+                    <input value={cq} onChange={(e) => setCq(e.target.value)} dir="auto" data-testid="map-country-find" aria-label={tr("Find a country")}
+                      placeholder={tr("Find a country — {n} available", { n: OM.COUNTRIES.length })} className="w-full h-11 rounded-xl bg-slate-900 border border-slate-800 px-3 text-[14px] text-slate-100 placeholder:text-slate-500" />
+                    {countryList.map((c) => {
                       const have = packs.find((p) => p.code === c.code), rm = remote[c.code], upd = have && OM.isNewer(rm, have), mine = dl && dl.code === c.code;
                       return (
                         <div key={c.code} className={`rounded-2xl border p-3 ${active === c.code ? "border-emerald-700 bg-emerald-950/30" : "border-slate-800 bg-slate-900"}`} data-testid={"map-country-" + c.code}>

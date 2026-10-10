@@ -59,5 +59,18 @@ with tempfile.TemporaryDirectory() as d:
     m = B.manifest("eg", "Egypt", "2026-10-09", d, ["eg-places.sqlite"])
     check(m["files"][0]["bytes"] == os.path.getsize(out) and len(m["files"][0]["sha256"]) == 64 and os.path.exists(os.path.join(d, "eg-manifest.json")), "the manifest lists each file with its size and SHA-256")
 
+# a big file is published in parts under GitHub's 2 GB limit; the parts join back to the same bytes
+with tempfile.TemporaryDirectory() as d:
+    data = os.urandom(2500)
+    open(os.path.join(d, "xx.pmtiles"), "wb").write(data)
+    m = B.manifest("xx", "Test", "2026-10-10", d, ["xx.pmtiles"], part=1000)
+    e = m["files"][0]
+    joined = b"".join(open(os.path.join(d, p["name"]), "rb").read() for p in e["parts"])
+    up = [os.path.basename(u) for u in B.uploads(m, d)]
+    check([p["bytes"] for p in e["parts"]] == [1000, 1000, 500] and joined == data and e["sha256"] == __import__("hashlib").sha256(data).hexdigest()
+          and up == ["xx.pmtiles.001", "xx.pmtiles.002", "xx.pmtiles.003", "xx-manifest.json"] and not os.path.exists(os.path.join(d, "xx.pmtiles")),
+          "a file over the limit is split into parts that join back exactly (the SHA-256 is of the whole file)")
+check(B.country("us")["maxzoom"] == 13 and B.country("eg")["gf"] == "africa/egypt", "the country list gives the extract and the zoom")
+
 print("ALL PASSED" if not fails else f"{fails} FAILED")
 sys.exit(1 if fails else 0)

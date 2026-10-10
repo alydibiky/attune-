@@ -157,13 +157,56 @@ def build_places(pbf, out):
 
 
 # ---- the manifest and the shared fonts ------------------------------------------------------------------------
-def manifest(code, name, date, folder, files):
-    m = {"code": code, "name": name, "date": date, "built": __import__("datetime").datetime.utcnow().strftime("%Y-%m-%dT%H:%MZ"),
+PART = 1_900_000_000          # GitHub release files must stay under 2 GB: bigger files are published in parts
+
+
+def split_parts(path, part=PART):
+    """Splits a big file into <name>.001, .002 … next to it (the phone appends them back into one file)."""
+    out, i = [], 0
+    with open(path, "rb") as src:
+        while True:
+            chunk = src.read(part)
+            if not chunk:
+                break
+            i += 1
+            p = f"{path}.{i:03d}"
+            with open(p, "wb") as dst:
+                dst.write(chunk)
+            out.append({"name": os.path.basename(p), "bytes": len(chunk)})
+    return out
+
+
+def manifest(code, name, date, folder, files, part=PART):
+    """Writes <code>-manifest.json and returns it; prints nothing. Files over `part` bytes get "parts" (and are split)."""
+    import datetime
+    entries = []
+    for f in files:
+        p = os.path.join(folder, os.path.basename(f))
+        e = {"name": os.path.basename(f), "bytes": os.path.getsize(p), "sha256": sha256(p)}
+        if e["bytes"] > part:
+            e["parts"] = split_parts(p, part)
+            os.remove(p)
+        entries.append(e)
+    m = {"code": code, "name": name, "date": date, "built": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
          "source": "OpenStreetMap contributors (ODbL) · map tiles: Protomaps build · search: Geofabrik extract",
-         "files": [{"name": os.path.basename(f), "bytes": os.path.getsize(os.path.join(folder, os.path.basename(f))), "sha256": sha256(os.path.join(folder, os.path.basename(f)))} for f in files]}
-    with open(os.path.join(folder, f"{code}-manifest.json"), "w") as f:
-        json.dump(m, f, ensure_ascii=False, indent=1)
+         "files": entries}
+    with open(os.path.join(folder, f"{code}-manifest.json"), "w") as fh:
+        json.dump(m, fh, ensure_ascii=False, indent=1)
     return m
+
+
+def uploads(m, folder):
+    """The files to publish for a manifest: each file, or its parts, and the manifest itself."""
+    names = [p["name"] for e in m["files"] for p in (e.get("parts") or [e])]
+    return [os.path.join(folder, n) for n in names] + [os.path.join(folder, m["code"] + "-manifest.json")]
+
+
+def country(code):
+    here = os.path.dirname(os.path.abspath(__file__))
+    for c in json.load(open(os.path.join(here, "map_countries.json"))):
+        if c["code"] == code:
+            return c
+    raise SystemExit(f"Unknown country {code}")
 
 
 def assets(fonts, sprites, outdir):
@@ -187,8 +230,13 @@ if __name__ == "__main__":
         json.dump(poly_to_geojson(open(sys.argv[2]).read()), open(sys.argv[3], "w"))
     elif cmd == "places":
         print("places:", build_places(sys.argv[2], sys.argv[3]))
-    elif cmd == "manifest":
-        print(json.dumps(manifest(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6:]), ensure_ascii=False))
+    elif cmd == "manifest":            # prints the files to upload, one per line
+        m = manifest(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6:])
+        print("\n".join(uploads(m, sys.argv[5])))
+    elif cmd == "country":             # code -> "gf<TAB>name<TAB>maxzoom" for the workflow
+        c = country(sys.argv[2]); print(f"{c['gf']}\t{c['en']}\t{c.get('maxzoom', 15)}")
+    elif cmd == "all":                 # every country code, as a JSON list (the weekly run)
+        print(json.dumps([c["code"] for c in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "map_countries.json")))]))
     elif cmd == "assets":
         print(json.dumps(assets(sys.argv[2], sys.argv[3], sys.argv[4])))
     else:

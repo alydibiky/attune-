@@ -11,19 +11,11 @@ import { layers, namedFlavor } from "@protomaps/basemaps";
 
 export const RELEASE_BASE = "https://github.com/alydibiky/attune-/releases/download/";
 
-/** The countries a pack is built for. gf = the Geofabrik extract (the GCC states come as one file). */
-export const COUNTRIES = [
-  { code: "eg", gf: "africa/egypt", en: "Egypt", ar: "مصر", c: [30.8, 26.8], z: 5 },
-  { code: "gcc", gf: "asia/gcc-states", en: "Gulf states (Saudi, UAE, Kuwait, Qatar, Bahrain, Oman)", ar: "دول الخليج (السعودية، الإمارات، الكويت، قطر، البحرين، عُمان)", c: [47, 24], z: 4 },
-  { code: "tr", gf: "europe/turkey", en: "Turkey", ar: "تركيا", c: [35, 39], z: 5 },
-  { code: "jo", gf: "asia/jordan", en: "Jordan", ar: "الأردن", c: [36.2, 31.2], z: 6 },
-  { code: "lb", gf: "asia/lebanon", en: "Lebanon", ar: "لبنان", c: [35.8, 33.9], z: 7 },
-  { code: "iq", gf: "asia/iraq", en: "Iraq", ar: "العراق", c: [43.7, 33.2], z: 5 },
-  { code: "ly", gf: "africa/libya", en: "Libya", ar: "ليبيا", c: [17.2, 27], z: 5 },
-  { code: "sd", gf: "africa/sudan", en: "Sudan", ar: "السودان", c: [30.2, 15.6], z: 5 },
-  { code: "tn", gf: "africa/tunisia", en: "Tunisia", ar: "تونس", c: [9.5, 34], z: 6 },
-  { code: "ma", gf: "africa/morocco", en: "Morocco", ar: "المغرب", c: [-6.5, 31.8], z: 5 },
-];
+/** The countries a pack is built for — one list for the app and the builder (tools/map_countries.json). gf = the
+ *  Geofabrik extract (some come grouped: the GCC states; Malaysia, Singapore and Brunei); maxzoom = the most detailed
+ *  zoom kept (the biggest countries keep 13–14 so the download stays sensible; the map still zooms in further). */
+import LIST from "../tools/map_countries.json";
+export const COUNTRIES = LIST;
 export const countryOf = (code) => COUNTRIES.find((c) => c.code === code) || null;
 
 /** The same text normalisation as the search index (tools/build_map_pack.py) and MapPacks.kt — keep the three equal. */

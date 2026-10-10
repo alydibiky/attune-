@@ -104,7 +104,22 @@ object MapPacks {
             val base = done
             if (!(target.exists() && target.length() == size)) {
                 val part = File(next, "$name.part")
-                fetchResumable(BASE + "map-$code/$name", part, size, isCancelled) { got -> onProgress(base + got, total, name) }
+                val parts = f.optJSONArray("parts")
+                if (parts == null) fetchResumable(BASE + "map-$code/$name", part, size, isCancelled) { got -> onProgress(base + got, total, name) }
+                else {
+                    // a file over GitHub's 2 GB limit comes in parts: each is appended to the same file (resumable across parts)
+                    var start = 0L
+                    for (k in 0 until parts.length()) {
+                        val pk = parts.getJSONObject(k); val pn = pk.getString("name"); val pb = pk.getLong("bytes")
+                        if (!NAME.matches(pn)) throw Exception("Unexpected file in the map: $pn")
+                        if (part.length() < start + pb) {
+                            val s0 = start
+                            fetchInto(BASE + "map-$code/$pn", part, s0, pb, isCancelled) { got -> onProgress(base + s0 + got, total, name) }
+                        }
+                        start += pb
+                    }
+                    if (part.length() != size) throw Exception("The map download stopped early — tap Download again to continue")
+                }
                 verify(part, f.optString("sha256"), name)
                 if (!part.renameTo(target)) throw Exception("Couldn't save $name")
             }
@@ -228,7 +243,7 @@ object MapPacks {
         var from = if (part.exists()) part.length() else 0L
         val c = URL(url).openConnection() as HttpURLConnection
         c.connectTimeout = 20_000; c.readTimeout = 90_000; c.instanceFollowRedirects = true
-        c.setRequestProperty("User-Agent", "Attune/6.15 (Android; offline map)")
+        c.setRequestProperty("User-Agent", "Attune/6.16 (Android; offline map)")
         if (from > 0) c.setRequestProperty("Range", "bytes=$from-")
         try {
             val code = c.responseCode
@@ -251,12 +266,45 @@ object MapPacks {
         } finally { try { c.disconnect() } catch (e: Exception) {} }
     }
 
+    /** Appends one part (bytes [start, start+size) of the joined file) to `file`, continuing a stopped part. */
+    private fun fetchInto(url: String, file: File, start: Long, size: Long, isCancelled: () -> Boolean, onBytes: (Long) -> Unit) {
+        if (file.length() < start) throw Exception("The map download is out of order — delete it and download again")
+        if (file.length() > start + size) return
+        Prefs.requireOnline(url, "map")
+        val from = file.length() - start
+        if (from == size) { onBytes(size); return }
+        val c = URL(url).openConnection() as HttpURLConnection
+        c.connectTimeout = 20_000; c.readTimeout = 90_000; c.instanceFollowRedirects = true
+        c.setRequestProperty("User-Agent", "Attune/6.16 (Android; offline map)")
+        if (from > 0) c.setRequestProperty("Range", "bytes=$from-")
+        try {
+            val code = c.responseCode
+            if (code !in 200..299) throw Exception("The map download returned HTTP $code")
+            val skip = if (code == 200 && from > 0) from else 0L      // the server ignored Range: skip what we have
+            val buf = ByteArray(1 shl 16)
+            c.inputStream.use { inp ->
+                var toSkip = skip
+                while (toSkip > 0) { val n = inp.skip(toSkip); if (n <= 0) break; toSkip -= n }
+                java.io.FileOutputStream(file, true).use { out ->
+                    var n: Int; var got = from; var last = got
+                    while (inp.read(buf).also { n = it } > 0) {
+                        if (isCancelled()) throw Cancelled()
+                        out.write(buf, 0, n); got += n
+                        if (got - last > 2_000_000) { last = got; onBytes(got) }
+                    }
+                    onBytes(got)
+                }
+            }
+            if (file.length() != start + size) throw Exception("The map download stopped early — tap Download again to continue")
+        } finally { try { c.disconnect() } catch (e: Exception) {} }
+    }
+
     /** One small file (a manifest) → bytes. */
     private fun get(url: String, to: File?, isCancelled: () -> Boolean): ByteArray {
         Prefs.requireOnline(url, "map")
         val c = URL(url).openConnection() as HttpURLConnection
         c.connectTimeout = 15_000; c.readTimeout = 30_000; c.instanceFollowRedirects = true
-        c.setRequestProperty("User-Agent", "Attune/6.15 (Android; offline map)")
+        c.setRequestProperty("User-Agent", "Attune/6.16 (Android; offline map)")
         try {
             val code = c.responseCode
             if (code == 404) throw Exception("This map is not published yet — run \"Build a country map\" on GitHub for it once")
