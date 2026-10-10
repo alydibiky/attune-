@@ -1077,6 +1077,41 @@ def libretexts_rows(B, url, title, max_pages=400):
     print(f"libretexts: {title}: {len(seen)} pages → {len(rows)} passages")
     return rows
 
+# Pressbooks books (Lumen Learning): the whole book through its REST API; formula pictures carry their LaTeX in alt text.
+# (pack, site, title). The book's own licence (from its metadata) must allow commercial use, or it is skipped.
+PRESSBOOKS = [("math", "https://courses.lumenlearning.com/suny-calc1and2", "Calculus I & II (Dale Hoffman, Contemporary Calculus)")]
+
+def pressbooks_text(html):
+    """Chapter HTML → text: a formula picture becomes its LaTeX (alt text), paragraphs and list items on their own lines."""
+    t = re.sub(r'<img[^>]*?alt="([^"]*)"[^>]*>', lambda m: " \\(" + htmlmod.unescape(m.group(1)).strip() + "\\) " if m.group(1).strip() else " ", html or "", flags=re.I)
+    t = re.sub(r"<(script|style|figure)\b.*?</\1>", " ", t, flags=re.S | re.I)
+    t = re.sub(r"<(?:h[1-6]|p|li|tr|br|div)\b[^>]*>", "\n", t, flags=re.I)
+    t = htmlmod.unescape(re.sub(r"<[^>]+>", " ", t))
+    lines = [re.sub(r"[ \t]+", " ", l).strip() for l in t.split("\n")]
+    return "\n".join(l for l in lines if l)
+
+def pressbooks_rows(B, site, title):
+    try:
+        meta = json.loads(B.get(site + "/wp-json/pressbooks/v2/metadata", 60).decode("utf-8"))
+        lic = json.dumps(meta.get("license") or "")
+    except BaseException as e: print(f"pressbooks: {site} metadata failed ({e})"); return [], ""
+    lic_url = (re.search(r"https?://creativecommons\.org/[^\"\s]+", lic) or [""])[0]
+    if not commercial_ok(lic_url): print(f"pressbooks: {title} skipped — licence {lic_url or lic[:80]} does not allow commercial use"); return [], lic_url
+    rows, page = [], 1
+    while page <= 20:
+        try: items = json.loads(B.get(f"{site}/wp-json/pressbooks/v2/chapters?per_page=100&page={page}", 60).decode("utf-8"))
+        except BaseException as e: print(f"pressbooks: page {page} ({e})"); break
+        if not isinstance(items, list) or not items: break
+        for ch in items:
+            name = htmlmod.unescape(re.sub(r"<[^>]+>", "", (ch.get("title") or {}).get("rendered", ""))).strip()
+            text = pressbooks_text((ch.get("content") or {}).get("rendered", ""))
+            if len(re.sub(r"\W+", "", text)) < 200: continue
+            for piece in _bk().chunk(text, 900):
+                rows.append({"t": f"{title} — {name}", "x": piece, "u": ch.get("link") or site, "l": "en"})
+        page += 1; time.sleep(1)
+    print(f"pressbooks: {title}: {len(rows)} passages ({lic_url})")
+    return rows, lic_url
+
 def subject_rows(title, url, mods):
     """A book's sections → passages titled «Book — Chapter — Section»."""
     rows = []
@@ -1112,6 +1147,11 @@ def build_subject(a, pid):
         if not r or used + b > budget: print("over budget", slug, b, file=sys.stderr); continue
         rows += r; used += b; books.append({"title": title, "url": url, "license": lic, "version": commit})
         print(f"{pid}: {title}: {len(r)} passages", file=sys.stderr)
+    for ppid, psite, ptitle in PRESSBOOKS:
+        if ppid != pid: continue
+        r, plic = pressbooks_rows(B, psite, ptitle)
+        r = unique_rows(r, seen)
+        if r: rows += r; books.append({"title": ptitle + " (Lumen Learning)", "url": psite, "license": plic})
     for lpid, lurl, ltitle, llic in LIBRETEXTS:
         if lpid != pid: continue
         r = unique_rows(libretexts_rows(B, lurl, ltitle), seen)

@@ -372,6 +372,8 @@ lt = """<html><head><title>7.2: Derivatives of Sine and Cosine - Mathematics Lib
 lt_t, lt_x = S.libretexts_page(lt)
 check(lt_t == "7.2: Derivatives of Sine and Cosine" and "\\frac{d}{dx}\\sin(x) = \\cos(x)" in lt_x and "x()" not in lt_x and "menu" not in lt_x, "Calculus (LibreTexts): the article only, formulas kept as LaTeX: " + lt_x[:80])
 check(S.libretexts_links(lt, S.LIBRETEXTS[0][1]) == ["https://math.libretexts.org/Bookshelves/Calculus/Applied_Calculus_(Calaway_Hoffman_and_Lippman)/07:_Trig/7.03:_More"], "Calculus (LibreTexts): only the book's own pages are followed")
+pb = S.pressbooks_text('<h2>2.3 Derivatives of Trigonometric Functions</h2><p>We have <img class="ql-img-inline-formula" src="x.png" alt="\\frac{d}{dx}\\sin(x) = \\cos(x)" /> for every x.</p><script>bad()</script>')
+check("\\(\\frac{d}{dx}\\sin(x) = \\cos(x)\\)" in pb and "bad()" not in pb and pb.startswith("2.3 Derivatives"), "Calculus (Pressbooks): a formula picture becomes its LaTeX: " + pb[:90])
 hd = S.hadith_rows("bukhari", "صحيح البخاري", {"hadiths": [{"hadithnumber": 834, "text": "ظُلْمًا كَثِيرًا \ufffd\ufffdَلاَ يَغْفِرُ", "grades": []}]})
 check(S.hadith_rows("nawawi", "الأربعون النووية", {"hadiths": [{"hadithnumber": 6, "text": "أَلَا وَهِيَ الْقَلْبُ .<br>[رَوَاهُ الْبُخَارِيُّ]", "grades": []}]})[0]["x"].startswith("أَلَا وَهِيَ الْقَلْبُ .\n[رَوَاهُ"), "Quality: no HTML left in a hadith")
 check("\ufffd" not in hd[0]["x"] and "[…]" in hd[0]["x"] and "الدرر السنية" in hd[0]["x"], "Quality: a letter damaged in the hadith source is marked, never guessed, and the reader is sent to Dorar")
