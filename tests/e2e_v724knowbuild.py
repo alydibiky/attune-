@@ -345,6 +345,9 @@ check(any("— oral" in r["t"] and "4,000 mg" in r["x"] and "Tylenol" in r["x"] 
       "Medicines: the tablets and the hospital injection are separate entries (different doses): " + str(t3))
 check([S.clean_model(x) for x in ["SEAL U SEAL U", "SEAL AWD", "SEAL- SEAL- HALO 1-HALO 2-", "SEAL U DMI", "MODEL 3"]] == ["SEAL U", "SEAL", "SEAL", "SEAL U DM-I", "MODEL 3"],
       "Cars: an EU model name written twice, or with a trim after it, joins its model (BYD Seal is one passage)")
+hc = S.head_chunks("BYD SEAL — versions sold in Europe (EU registrations):", [f"({i}) electric, 230 kW (308 hp horsepower), weight 2136 kg" for i in range(1, 60)])
+check(len(hc) > 1 and all(x.startswith("BYD SEAL — versions sold in Europe") and "308 hp" in x and len(x) <= 1400 for x in hc),
+      "Cars: every piece of a long version list starts with the model name and holds versions (no tiny header-only passage)")
 hd = S.hadith_rows("bukhari", "صحيح البخاري", {"hadiths": [{"hadithnumber": 834, "text": "ظُلْمًا كَثِيرًا \ufffd\ufffdَلاَ يَغْفِرُ", "grades": []}]})
 check(S.hadith_rows("nawawi", "الأربعون النووية", {"hadiths": [{"hadithnumber": 6, "text": "أَلَا وَهِيَ الْقَلْبُ .<br>[رَوَاهُ الْبُخَارِيُّ]", "grades": []}]})[0]["x"].startswith("أَلَا وَهِيَ الْقَلْبُ .\n[رَوَاهُ"), "Quality: no HTML left in a hadith")
 check("\ufffd" not in hd[0]["x"] and "[…]" in hd[0]["x"] and "الدرر السنية" in hd[0]["x"], "Quality: a letter damaged in the hadith source is marked, never guessed, and the reader is sent to Dorar")

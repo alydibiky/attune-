@@ -663,6 +663,16 @@ def epa_line(r):
     if cost: bits.append(f"US fuel cost about ${cost:,.0f} a year")
     return "; ".join(bits)
 
+def head_chunks(head, items, size=1400):
+    """«Head: (1) … | (2) … | …» in pieces of about `size`, each starting with the head, cut between items only. (Cut at sentence
+    ends, the head «BYD SEAL — versions sold in Europe:» became its own tiny passage and outranked the one with the numbers.)"""
+    out, cur = [], ""
+    for it in items:
+        if cur and len(head) + len(cur) + len(it) + 3 > size: out.append(head + " " + cur); cur = it
+        else: cur = (cur + " | " + it) if cur else it
+    if cur or not out: out.append(head + " " + cur)
+    return out
+
 def epa_rows(csv_text):
     """vehicles.csv → one passage per (make, model, year) listing every version."""
     groups = {}
@@ -674,8 +684,7 @@ def epa_rows(csv_text):
     rows = []
     for (mk, mo, yr), lines in sorted(groups.items()):
         lines = list(dict.fromkeys(lines))
-        text = f"{mk} {mo} {yr} — US versions (EPA tests): " + " | ".join(f"({i + 1}) {l}" for i, l in enumerate(lines))
-        for j, piece in enumerate(_bk().chunk(text, 1400)):
+        for j, piece in enumerate(head_chunks(f"{mk} {mo} {yr} — US versions (EPA tests):", [f"({i + 1}) {l}" for i, l in enumerate(lines)])):
             rows.append({"t": f"{make_label(mk)} {mo} {yr} — specs (US, EPA)", "x": piece, "u": "https://www.fueleconomy.gov/feg/findacar.shtml", "l": "en"})
     return rows
 
@@ -726,8 +735,7 @@ def eea_rows(groups):
     for (mk, cn), vs in sorted(models.items()):
         vs.sort(key=lambda v: -v[0])
         name = cn if cn.startswith(mk) else f"{mk} {cn}"
-        text = f"{name} — versions sold in Europe (EU registrations): " + " | ".join(f"({i + 1}) {v}" for i, (_, v) in enumerate(vs[:40]))
-        for piece in _bk().chunk(text, 1400):
+        for piece in head_chunks(f"{name} — versions sold in Europe (EU registrations):", [f"({i + 1}) {v}" for i, (_, v) in enumerate(vs[:40])]):
             rows.append({"t": f"{make_label(mk)} {cn.title() if cn.isupper() else cn} — specs (Europe, EEA)", "x": piece, "u": "https://www.eea.europa.eu/en/datahub/datahubitem-view/fa8b1229-3db6-495d-b18e-9c9b3267c02b", "l": "en"})
     return rows
 
@@ -796,8 +804,7 @@ def recall_rows(lines, fields, from_year=2000, makes=None):
                      + (" Risk: " + short(g(r, "CONEQUENCE_DEFECT"), 140) if g(r, "CONEQUENCE_DEFECT") else ""))
     rows = []
     for (mk, mo, y), lst in sorted(by.items()):
-        text = f"{mk.title()} {mo.title()} {y} — {len(lst)} safety recall(s) in the US (NHTSA): " + " | ".join(lst.values())
-        for piece in _bk().chunk(text, 1400):
+        for piece in head_chunks(f"{mk.title()} {mo.title()} {y} — {len(lst)} safety recall(s) in the US (NHTSA):", list(lst.values())):
             rows.append({"t": f"{make_label(mk)} {mo.title()} {y} — recalls (NHTSA)", "x": piece, "u": f"https://www.nhtsa.gov/vehicle/{y}/{mk}/{mo}".replace(" ", "%20"), "l": "en"})
     return rows
 
