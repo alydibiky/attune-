@@ -1091,6 +1091,7 @@ def pressbooks_text(html):
     return "\n".join(l for l in lines if l)
 
 def pressbooks_rows(B, site, title):
+    import urllib.request
     try:
         meta = json.loads(B.get(site + "/wp-json/pressbooks/v2/metadata", 60).decode("utf-8"))
         lic = json.dumps(meta.get("license") or "")
@@ -1099,12 +1100,22 @@ def pressbooks_rows(B, site, title):
     if not commercial_ok(lic_url): print(f"pressbooks: {title} skipped — licence {lic_url or lic[:80]} does not allow commercial use"); return [], lic_url
     rows, page = [], 1
     while page <= 20:
-        try: items = json.loads(B.get(f"{site}/wp-json/pressbooks/v2/chapters?per_page=100&page={page}", 60).decode("utf-8"))
-        except BaseException as e: print(f"pressbooks: page {page} ({e})"); break
+        try:
+            with urllib.request.urlopen(urllib.request.Request(f"{site}/wp-json/pressbooks/v2/chapters?per_page=100&page={page}", headers={"User-Agent": "attune-know-pack/1.0"}), timeout=60) as r:
+                items = json.loads(r.read().decode("utf-8"))
+        except Exception as e: print(f"pressbooks: no page {page} ({e}) — the end of the book"); break   # 400 past the last page
         if not isinstance(items, list) or not items: break
         for ch in items:
             name = htmlmod.unescape(re.sub(r"<[^>]+>", "", (ch.get("title") or {}).get("rendered", ""))).strip()
             text = pressbooks_text((ch.get("content") or {}).get("rendered", ""))
+            if len(re.sub(r"\W+", "", text)) < 200 and ch.get("link"):   # the API left the text out: read the chapter's own page
+                try:
+                    html = B.get(ch["link"], 60).decode("utf-8", "replace")
+                    m = re.search(r'<section[^>]*class="[^"]*\bchapter\b[^"]*"[^>]*>(.*?)</section>\s*(?:<!--|</div>|<nav)', html, re.S) or \
+                        re.search(r'<div[^>]*class="[^"]*\b(?:entry-content|ugc chapter-ugc)\b[^"]*"[^>]*>(.*)', html, re.S)
+                    if m: text = pressbooks_text(m.group(1).split('<nav class="nav-reading"')[0].split('<div class="nav-reading')[0])
+                    time.sleep(0.5)
+                except BaseException as e: print(f"pressbooks: {ch.get('link')} ({e})")
             if len(re.sub(r"\W+", "", text)) < 200: continue
             for piece in _bk().chunk(text, 900):
                 rows.append({"t": f"{title} — {name}", "x": piece, "u": ch.get("link") or site, "l": "en"})
