@@ -337,12 +337,31 @@ export function quickBudget(question, budget, deep = false) {
    kind of subject, with tables. A small model writes far better when it is handed that shape. `topicKind` names the subject's
    kind; `topicSearches` adds the searches that fill each section; `answerTemplate` is the shape the final answer must follow. */
 const KIND_RX = {
-  vehicle: /\b(car|cars|suv|sedan|hatchback|pickup|truck|ev|hybrid|phev|motorcycle|bike|lynk|byd|chery|geely|toyota|hyundai|kia|nissan|bmw|mercedes|audi|vw|volkswagen|skoda|peugeot|renault|mg|jetour|haval|tesla|honda|mazda|ford|chevrolet|jeep|land rover|range rover|porsche|lexus|mitsubishi|suzuki|opel|citroen|fiat|seat|cupra|zeekr|xpeng|nio|li auto|xiaomi su7|exeed|omoda|baic|changan|gac|jaecoo|proton)\b|سيارة|عربية|عربيه|فئات|موديل \d{4}/i,
+  vehicle: /\b(car|cars|suv|sedan|hatchback|pickup|truck|ev|hybrid|phev|motorcycle|bike|lynk|byd|chery|geely|toyota|hyundai|kia|nissan|bmw|mercedes|audi|vw|volkswagen|skoda|peugeot|renault|mg|jetour|haval|tesla|honda|mazda|ford|chevrolet|jeep|land rover|range rover|porsche|lexus|mitsubishi|suzuki|opel|citroen|fiat|seat|cupra|zeekr|xpeng|nio|li auto|xiaomi su7|exeed|omoda|baic|changan|gac|jaecoo|proton)\b|سيارة|سيارات|عربية|عربيه|فئات|موديل \d{4}|تويوتا|هيونداي|هيونداى|كيا|نيسان|شيفروليه|شيفرولية|بي واي دي|جيلي|شيري|إم جي|ام جي|هافال|شانجان|جيتور|بيجو|رينو|سكودا|فولكس|مرسيدس|بي إم دبليو|بى ام دبليو|أودي|اودي|ميتسوبيشي|سوزوكي|هوندا|مازدا|فورد|جيب|أوبل|اوبل|ستروين|فيات|سيات|كوبرا|تسلا|زيكر|أومودا|اومودا|جيكو|إكسيد|اكسيد|بايك|لينك آند كو|بستيون|دونج فينج|دونغ فنغ|كايي|سوايست|بروتون|لادا|ماكسوس|فورثينج|جيتور/i,
   machine: /\b(crane|excavator|loader|forklift|bulldozer|grader|telehandler|aerial|boom lift|generator|compressor|liebherr|tadano|grove|demag|terex|xcmg|sany|zoomlion|manitowoc|kobelco|komatsu|caterpillar|cat \d|jcb|hitachi|volvo ce|ltm|gmk|atf|rough terrain)\b|ونش|كرين|لودر|حفار|بلدوزر|مولد/i,
   gadget: /\b(iphone|ipad|macbook|galaxy|pixel|xiaomi|redmi|poco|oppo|vivo|realme|honor|huawei|oneplus|nothing phone|laptop|notebook|tablet|smartwatch|watch|earbuds|headphones|airpods|camera|tv|monitor|gpu|rtx|cpu|ryzen|intel core|playstation|ps5|xbox|switch)\b|موبايل|تليفون|لابتوب|تابلت|ساعة ذكية|سماعة/i,
   place: /\b(hotel|resort|restaurant|beach|museum|city|visit|trip|travel|things to do|tour|flight|airport)\b|فندق|مطعم|شاطئ|متحف|رحلة|سفر|أماكن/i,
   org: /\b(company|ceo|founder|net worth|startup|brand|who is|biography|born)\b|شركة|مؤسس|مين هو|مين هي/i,
 };
+const CN_CAR = /\b(byd|chery|geely|zeekr|lynk|xpeng|nio|li auto|xiaomi|exeed|omoda|jaecoo|jetour|haval|great wall|gwm|tank|changan|gac|aion|hongqi|baic|bestune|dongfeng|voyah|leapmotor|seres|aito|avatr|deepal|wuling|kaiyi|forthing|maxus|mg|jac|dfsk|swm|soueast)\b|بي واي دي|شيري|جيلي|زيكر|جيتور|هافال|شانجان|أومودا|اومودا|جيكو|إكسيد|اكسيد|بايك|بستيون|كايي|ماكسوس|فورثينج|إم جي|ام جي|دونغ فنغ|دونج فينج/i;
+/** v6.16: today's rates (open.er-api.com JSON) → a note so every price also shows in US dollars (and the maker's currency). */
+export function fxNote(body, q = "") {
+  let j; try { j = typeof body === "string" ? JSON.parse(body) : body; } catch (e) { return ""; }
+  const r = j && j.rates; if (!r || !r.EGP) return "";
+  const pick = ["EGP", ...(isChineseCar(q) ? ["CNY"] : []), "EUR", "AED", "SAR"].filter((c) => r[c]);
+  const date = String(j.time_last_update_utc || "").replace(/ \d\d:\d\d:\d\d.*$/, "");
+  return "\n\n(Exchange rates" + (date ? " on " + date : "") + " (open.er-api.com): 1 USD = " + pick.map((c) => (+r[c]).toFixed(c === "EGP" ? 2 : 3) + " " + c).join(" = ") +
+    ". Next to every price write its value in US dollars (≈ $…) using these rates" + (isChineseCar(q) ? ", and for a price in China give yuan (CNY) and US dollars" : "") + ". Prices without a source stay \"—\".)";
+}
+/** v6.16: the official test figures from the Cars pack (US EPA / EU EEA) → a block placed before the web sources. */
+export function officialSpecsNote(passages) {
+  const ps = (passages || []).filter((p) => p && p.text).slice(0, 4);
+  if (!ps.length) return "";
+  return "\n\n(OFFICIAL TEST DATA from government records — use these exact figures in the specs tables and say they are official (US EPA / EU EEA):\n" +
+    ps.map((p) => "• " + p.title + ": " + String(p.text).slice(0, 700)).join("\n") + ")";
+}
+/** A Chinese brand? Its price at home (in yuan) is searched too. */
+export const isChineseCar = (q) => CN_CAR.test(String(q || ""));
 /** What kind of subject the question is about: vehicle | machine | gadget | place | org | general */
 export function topicKind(q) {
   const t = String(q || "");
@@ -352,9 +371,11 @@ export function topicKind(q) {
 /** The extra searches that fill each section (on top of expandQueries). */
 export function topicSearches(q, kind = topicKind(q), n = 4) {
   const ar = /[؀-ۿ]/.test(q), y = new Date().getFullYear();
-  const t = topicOf(q).replace(FACET_WORDS, " ").replace(/\b(in|of|for)?\s*egypt\b|في مصر|بمصر/gi, " ").replace(/\s+/g, " ").trim() || topicOf(q);
+  const t = topicOf(q).replace(FACET_WORDS, " ").replace(/\b(in|of|for)?\s*egypt\b|في مصر|بمصر/gi, " ").replace(/\s+/g, " ").replace(/(^|\s)(و|and)(?=\s|$)/gi, " ").replace(/\s+/g, " ").trim() || topicOf(q);
   const F = {
-    vehicle: ar ? [`${t} الفئات والأسعار في مصر ${y}`, `${t} مواصفات المحرك القوة العزم`, `${t} عيوب ومميزات`, `${t} price specs review`] : [`${t} trims prices ${y}`, `${t} specifications horsepower torque range`, `${t} review pros cons`, `${t} price Egypt ${y}`],
+    // v6.16 (Ali): the official price AND the market price (overprice, used), every spec, from reliable sites; a Chinese car's home price too
+    vehicle: ar ? [`${t} السعر الرسمي الفئات ${y}`, `${t} سعر السوق أوفر برايس مستعمل هتلاقي كونتكت كارز`, `${t} مواصفات المحرك القوة العزم الأبعاد التسارع`, `${t} official price specs review`, ...(isChineseCar(t) ? [`${t} price China yuan specs`] : [`${t} عيوب ومميزات`])]
+      : [`${t} official price trims ${y}`, `${t} market price used price Egypt hatla2ee`, `${t} specifications horsepower torque dimensions 0-100`, `${t} review reliability pros cons`, ...(isChineseCar(t) ? [`${t} price China yuan`] : [`${t} price Egypt ${y}`])],
     machine: ar ? [`${t} مواصفات الحمولة طول الذراع`, `${t} load chart`, `${t} سعر`] : [`${t} specifications capacity boom length`, `${t} load chart`, `${t} engine transport dimensions`],
     gadget: ar ? [`${t} مواصفات`, `${t} سعر في مصر ${y}`, `${t} مراجعة عيوب`] : [`${t} specifications`, `${t} price ${y}`, `${t} review pros cons`],
     place: ar ? [`${t} أسعار مواعيد`, `${t} مراجعات`] : [`${t} prices opening hours tickets`, `${t} reviews`],
@@ -364,7 +385,7 @@ export function topicSearches(q, kind = topicKind(q), n = 4) {
   return [...new Set(F)].slice(0, n);
 }
 const TPL = {
-  vehicle: "1. **Quick answer** (2–3 lines: what it is, the price range, the one thing that stands out).\n2. ## Versions and prices — a table: | Version | Engine / motor | Power (hp) | Torque (Nm) | Range or fuel use | Price | — every version the sources name, the price with its currency and market (Egypt first when given).\n3. ## Engine and performance — a table (0–100 km/h, top speed, battery, gearbox, drive).\n4. ## Size and practicality — length × width × height, wheelbase, seats, boot.\n5. ## Key equipment by version — what each version adds.\n6. ## Pros and cons — two short lists from the reviews.\n7. ## Rivals — 2–4 competitors with their price, one line each.\n8. ## Availability in Egypt — dealer, price in EGP, warranty, if the sources say so.",
+  vehicle: "1. **Quick answer** (2–3 lines: what it is, the price range, the one thing that stands out).\n2. ## Versions and prices — a table: | Version | Engine / motor | Power (hp) | Torque (Nm) | Range or fuel use | Official price | Market price | — every version the sources name. Official price = the brand's / agent's list price; market price = what dealers actually ask (with overprice) — each with its currency, market and date (Egypt first when given), and the USD value next to it when an exchange rate is given.\n## Prices: official vs market — a short table: official price, market (new) price, used prices by model year, and the price in the maker's home country in its own currency (e.g. China in yuan) — each with its source and date; say which is newer.\n3. ## Engine and performance — a table (0–100 km/h, top speed, battery, gearbox, drive).\n4. ## Size and practicality — length × width × height, wheelbase, seats, boot.\n5. ## Key equipment by version — what each version adds.\n6. ## Pros and cons — two short lists from the reviews.\n7. ## Rivals — 2–4 competitors with their price, one line each.\n8. ## Availability in Egypt — dealer, price in EGP, warranty, if the sources say so.",
   machine: "1. **Quick answer** (2–3 lines).\n2. ## Main specifications — a table: | Item | Value | (max capacity, at what radius, main boom length, with jib, max tip height, axles, engine, travel speed, weight / transport dimensions, counterweight).\n3. ## Load chart highlights — capacities at key radii if the sources give them.\n4. ## Versions / configurations.\n5. ## Strengths and limits for real jobs.\n6. ## Comparable models — a table with their capacity and boom.\n7. ## Price and availability (new / used), if given.",
   gadget: "1. **Quick answer** (2–3 lines).\n2. ## Versions and prices — a table (storage / RAM / colour if relevant, price with currency and market, Egypt first when given).\n3. ## Key specifications — a table (screen, chip, cameras, battery and charging, weight).\n4. ## Pros and cons.\n5. ## Rivals — 2–4 alternatives with price.\n6. ## Verdict — who should buy it.",
   place: "1. **Quick answer**.\n2. ## Essentials — a table: address / area, hours, ticket or price range, how to get there, best time.\n3. ## What to see / do / eat.\n4. ## Tips.\n5. ## Reviews — what people praise and complain about.",

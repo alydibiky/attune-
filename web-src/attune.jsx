@@ -8881,6 +8881,13 @@ export default function App() {
     pro: () => proActive,          // v5.29: Pro or the 7-day trial (expert review, deep research)
     // v5.20 deep research: pages in full, and the passages of one page / of all
     webPages: NATIVE ? (q, pages) => webLookupRaw(q, pages) : null,
+    // v6.16: a car question also gets the Cars pack's official figures and today's exchange rates (cached 6 h)
+    carSpecs: NATIVE && NATIVE.knowSearch ? async (q) => ((await nativeCall("knowSearch", { q, k: 4, ids: ["cars"] })) || {}).passages || [] : null,
+    fxRates: NATIVE && NATIVE.fxRates ? async () => {
+      const now = Date.now();
+      if (window.__attuneFx && now - window.__attuneFx.t < 6 * 3600e3) return window.__attuneFx.body;
+      const r = await nativeCall("fxRates"); window.__attuneFx = { t: now, body: r && r.body }; return r && r.body;
+    } : null,
     rankOne: (question, h) => { const n = getPower().notesChars; const r = rankPassages(question, [h], { budget: n, perSource: n }); return r[0] ? r[0].text : ""; },
     rankAll: (question, hits, o) => rankPassages(question, hits, o),
     isPersonal: (q) => ASK_PERSONAL.test(q),

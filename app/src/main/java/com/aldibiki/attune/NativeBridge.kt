@@ -786,6 +786,23 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v6.16: today's exchange rates against the US dollar (open.er-api.com, free, no key) → {body}; the offline lock stops it. */
+    @JavascriptInterface
+    fun fxRates(id: String, @Suppress("UNUSED_PARAMETER") arg: String) {
+        if (blockedByAirGap(id, "exchange rates")) return
+        pool.execute {
+            try {
+                val url = "https://open.er-api.com/v6/latest/USD"
+                Prefs.requireOnline(url, "exchange rates")
+                val c = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                c.connectTimeout = 6_000; c.readTimeout = 8_000
+                val code = c.responseCode
+                if (code !in 200..299) { reject(id, "Exchange rates answered HTTP $code"); return@execute }
+                resolve(id, JSONObject().put("body", c.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText().take(200_000) }))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't get exchange rates") }
+        }
+    }
+
     /** v6.18: a file of the offline food pack → {text}. Only this app's own food-pack release can be asked. */
     @JavascriptInterface
     fun foodPackText(id: String, name: String) {

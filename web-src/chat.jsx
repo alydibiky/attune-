@@ -24,7 +24,7 @@ import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, websiteF
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
-import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts } from "./research.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts, fxNote, officialSpecsNote } from "./research.js";
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
@@ -838,7 +838,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // v6.12: a detail question about a car, a crane, a phone, a place, a company → the searches that fill every section, and
         // the answer's shape (research.js answerTemplate) — what makes Gemini's answers complete
         const kindT = topicKind(question), shaped = api.webPages && wantsShape(typed, kindT);
-        if (shaped) { const cmpQ = compareSearches(question, kindT); queries = [...new Set([...queries, ...(cmpQ.length ? cmpQ : topicSearches(query, kindT))])].slice(0, cmpQ.length ? 7 : 5); readCap = Math.max(readCap, pwR.readPages || pwR.pages || 8, cmpQ.length ? 10 : 0); }
+        if (shaped) { const cmpQ = compareSearches(question, kindT); queries = [...new Set([...queries, ...(cmpQ.length ? cmpQ : topicSearches(query, kindT, kindT === "vehicle" ? 5 : 4))])].slice(0, cmpQ.length ? 7 : kindT === "vehicle" ? 6 : 5); readCap = Math.max(readCap, pwR.readPages || pwR.pages || 8, cmpQ.length ? 10 : 0); }
+        // v6.16 (Ali): a car → the official test figures from the Cars pack and today's exchange rates, fetched while the web is searched
+        const carP = kindT === "vehicle" ? Promise.all([
+          api.carSpecs ? api.carSpecs(question).catch(() => []) : Promise.resolve([]),
+          api.fxRates ? api.fxRates().catch(() => null) : Promise.resolve(null),
+        ]).then(([specs, fx]) => officialSpecsNote(specs) + (fx ? fxNote(fx, question) : "")).catch(() => "") : Promise.resolve("");
         const per = Math.min(8, Math.ceil(readCap / queries.length) + 2);
         onStatus(queries.length > 1 ? tr("Searching {n} ways at once…", { n: queries.length }) : tr("Searching the web…"));
         const found = await Promise.all(queries.map((q, i) =>
@@ -878,7 +883,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const sheet0 = factSheet(question, ranked, /[؀-ۿ]/.test(typed));
           const ask0 = sheet0.md ? SHEET_NOTE : deep ? FAST_REPORT_ADD : "";
           tplUsed = shaped ? answerTemplate(question, kindT) : "";
-          content = api.groundedPrompt(asked, ranked) + figs.block + ask0 + tplUsed + photoNote;
+          const carNote = await carP;
+          content = api.groundedPrompt(asked, ranked) + figs.block + carNote + ask0 + tplUsed + photoNote;
           webCtx = { query, asked, question, toRead, budget: budgetF, tail: figs.block + ask0 + photoNote };
         } else if (toRead.length && api.webPages) {
           const notesSrc = [], tR = Date.now(), budget = (pwR.researchSecs || 170) * 1000; let read = 0;
@@ -927,7 +933,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             sources = cc.notes; via = look.via; research = { pages: read, withFacts: notesSrc.length, searches: queries.length, confirmed: cc.confirmed,
               log: { queries: queries.slice(0, 8), read: notesSrc.slice(0, 12).map((h) => ({ title: String(h.title || "").slice(0, 90), url: h.url })) } };
             onStatus(tr("Writing the full answer from {n} pages…", { n: notesSrc.length }));
-            content = api.groundedPrompt(asked, cc.notes) + (queries.length > 1 || cc.confirmed ? REPORT_ADD : FINAL_ADD) + (shaped ? answerTemplate(question, kindT) : "") + photoNote;
+            content = api.groundedPrompt(asked, cc.notes) + (await carP) + (queries.length > 1 || cc.confirmed ? REPORT_ADD : FINAL_ADD) + (shaped ? answerTemplate(question, kindT) : "") + photoNote;
           } else {
             const ranked = api.rankAll(question, toRead);
             sources = ranked; via = look.via;
