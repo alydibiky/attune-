@@ -1079,7 +1079,9 @@ def libretexts_rows(B, url, title, max_pages=400):
 
 # Pressbooks books (Lumen Learning): the whole book through its REST API; formula pictures carry their LaTeX in alt text.
 # (pack, site, title). The book's own licence (from its metadata) must allow commercial use, or it is skipped.
-PRESSBOOKS = [("math", "https://courses.lumenlearning.com/suny-calc1and2", "Calculus I & II (Dale Hoffman, Contemporary Calculus)")]
+# (Lumen's "suny-calc1and2" turned out to be a course page, not the book's text — its 7 passages were adverts, so it was taken out.
+# Add a site here only after checking that its chapters hold the book itself.)
+PRESSBOOKS = []
 
 def pressbooks_text(html):
     """Chapter HTML → text: a formula picture becomes its LaTeX (alt text), paragraphs and list items on their own lines."""
