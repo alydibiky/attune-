@@ -605,6 +605,13 @@ Ali tested 6.11 and sent 7 screenshots + a list (NEXT_SESSION.md section L). Wha
   One-time `db.ui.v613` migration: tabs accounts/goals/notes hidden (tiles in More, `moreTiles()`), `db.ui.cards`
   switches. Tests: unit v715moneyask; e2e_v713yusr covers question, cards, 5 tabs, bar on Home only.
 
+### 5.42 v6.14 (10 Oct 2026) — formal Arabic everywhere, copy food, A-vs-B answers, ready courses, Cycle chat
+- Arabic style decision (Ali, 4 Oct): simple MSA for every screen. `i18n-ar.js` is now generated-style (one entry per line,
+  header documents the style). Inline Arabic: keep Egyptian only in input-reading code. Tests that read Arabic UI text were
+  updated (e2e_v5, v62, v542, v537, v538, v533, v512_more, audit.py, unit v529).
+- `tests/unit/jsxload.mjs` bundles a `.jsx` with React/icon stubs (`tests/unit/stubs/`) so its pure functions can be unit-tested.
+- New tests: unit v716compare, v717copyfood, v718ready, v719cyclechat; e2e_v713copyfood.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

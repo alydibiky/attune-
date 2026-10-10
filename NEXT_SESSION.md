@@ -465,6 +465,26 @@ touch, merge origin/main before pushing, and push your branch (not main).
    5 tabs (Home · Trends · Bills · Zakat · More); Accounts, Goals & debts and Notes are tiles at the top of More, with
    "Home shows" switches (ring / cards / conversation). ⬜ Ali to check it on the phone (Arabic too).
 
+## O. Added 4–10 Oct 2026 — done in v6.14 unless marked
+1. ✅ **Arabic was "badly translated"** → Ali chose **simple formal Arabic (فصحى مبسطة)** for the WHOLE app (Attune + Yusr).
+   All 3,175 entries of `i18n-ar.js` reviewed (1,914 rewritten; style rules in the file's header), plus ~250 Arabic strings
+   written in the code (`L(en, ar)`, `ar ? … :`). Egyptian is kept ONLY where it reads what people type (regexes, stop-word
+   lists, example inputs). Yusr fixes: «ليدجر بريميوم» → «يُسر المميز», «6 معاملة» → «عدد المعاملات: 6», Insights = «رؤى».
+   App names in Arabic letters (باوربوينت، وورد، إكسل) — e2e_v5 allows ≤3 Latin words per screen.
+2. ✅ **Yusr look = mix of B + C** (cards + write-or-ask conversation) — see N.7.
+3. ✅ **Fit: copy food from day to day like Yazio** — a copy button on every meal (→ any day, any meal) and "Copy this day's
+   food to another day" (`fitplus.js copyFood`, `CopySheet` in fit-ui.jsx). Meal names now فطور / غداء / عشاء / وجبات خفيفة.
+4. ✅ **Web: "A vs B" answers like Gemini** — `research.js compareParts / compareSearches / CMP templates`: each side's
+   versions & prices table, a head-to-head table (| | A | B | Better |), advantages, which to choose, Egypt availability;
+   7 searches, 10 pages, long answer budget.
+5. ✅ **Learn daily: ready courses** — Turkish beginner → expert in 30 lessons, English for work (30), Crane hydraulics (20),
+   built-in plans in English and Arabic (`daily.js READY_COURSES / readyCourse`), start at once (no model plan needed).
+6. ✅ **Cycle is chattable** — `cycle.jsx cycleAnswer`: next period, late?, ovulation, fertile window, cycle/period length,
+   history, symptoms — answered by code from the logged days (`CycleChat` under the headline).
+7. ⬜ **Still open from the other account's list (M)**: Mind page "better than My Mind", Coding page "visually better and more
+   powerful", the whole-app UI/UX rework and Maps look (LOOK choices — show options first); Business leftovers (roles,
+   multi-currency, price lists); big-model max-tests; measuring the comparison answers with a real 4B/9B model.
+
 ## Prompt to start the next session
 
 ```

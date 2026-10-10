@@ -4,10 +4,10 @@
    for the session. Work through all of it with a task list.
 2. Read **`HANDOFF.md`** §0 ("START HERE") and the latest section (§5.37) for how the app is built and tested.
 
-## Where things stand (4 Oct 2026, v6.13 — HANDOFF §5.41; Ali's latest lists: NEXT_SESSION.md sections M and N)
+## Where things stand (10 Oct 2026, v6.14 — HANDOFF §5.42; Ali's latest lists: NEXT_SESSION.md sections M, N and O)
 - Read **`PLANS_2026-10-02.md`** too: the converter / Fit / heat / Business plans and exactly what is left.
-- `main` = branch `claude/attune-android-continuation-4lp2wq` = v6.9 (versionCode 71). All 89 test files
-  pass (`bash tests/run_all.sh`). Last green APK: https://github.com/alydibiky/attune-/actions/runs/36567802881
+- `main` = branch `ccr-a0eb3595-e2c7a7` = v6.14 (versionCode 75). All test files pass (`bash tests/run_all.sh`).
+- Arabic UI = simple formal Arabic (Ali's choice, 4 Oct 2026); Egyptian only where code reads what people type.
 - Web app: edit `web-src/`, then `bash web-src/build.sh` → `app/src/main/assets/www/index.html` (commit both).
 - Real-model trials: `tests/trials/max.mjs` (sections: deal, xray, action, fit, math, travel, business, code,
   translate, instant, mind, assistants, photos; `MMPROJ=` is needed for photos; `TRIAL_PORT=` picks the
