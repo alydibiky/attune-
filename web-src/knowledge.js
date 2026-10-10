@@ -231,9 +231,9 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
       const id = src.id || newId();
       const parts = chunkSource(src);
       if (!parts.length) throw new Error("There is no readable text in this source.");
-      const chunks = parts.map((p, i) => ({ id: id + "#" + i, src: id, title: src.title || "", page: p.page, text: p.text, kind: src.kind || "text" }));
+      const chunks = parts.map((p, i) => ({ id: id + "#" + i, src: id, title: src.title || "", page: p.page, text: p.text, kind: src.kind || "text", ...(src.collection ? { coll: src.collection } : {}) }));
       const bytes = chunks.reduce((s, c) => s + sizeOf(c.text), 0);
-      const rec = { id, kind: src.kind || "text", title: src.title || "", added: now(), bytes, chunks: chunks.length, pages: src.pages ? src.pages.length : 0, url: src.url || "", license: src.license || "", pack: src.pack || "" };
+      const rec = { id, kind: src.kind || "text", title: src.title || "", added: now(), bytes, chunks: chunks.length, pages: src.pages ? src.pages.length : 0, url: src.url || "", license: src.license || "", pack: src.pack || "", ...(src.collection ? { collection: src.collection } : {}) };
       await store.putSource(rec, chunks); dirty = true;
       return rec;
     },
@@ -252,9 +252,12 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
         if (a.enabled === false) continue;
         for (const it of a.items()) for (const [i, p] of chunkSource({ text: it.text }).entries()) live.push({ id: "@" + a.id + ":" + it.id + "#" + i, src: "@" + a.id, title: it.title || a.label, page: 0, text: p.text, kind: a.id });
       }
-      index = indexChunks(cache.concat(live)); stamp = st; dirty = false;
+      const off = K.offPacks;   // v6.16: the person's own packs that are switched off
+      index = indexChunks((off && off.size ? cache.filter((c) => !c.coll || !off.has(c.coll)) : cache).concat(live)); stamp = st; dirty = false;
       return index;
     },
+    /** v6.16: names of the person's own packs (collections) left out of lookups — set it, then invalidate(). */
+    offPacks: new Set(),
     /** v6.16: the public packs searched on the phone (set by the app): async question → passages. */
     packSearch: null,
     /** v6.16: live sources asked only when online (Dorar for hadith questions): async question → passages, or null. */
