@@ -501,6 +501,17 @@ touch, merge origin/main before pushing, and push your branch (not main).
 7. ⬜ **Still open from the other account's list (M)**: Mind page "better than My Mind", Coding page "visually better and more
    powerful", the whole-app UI/UX rework and Maps look (LOOK choices — show options first); ~~Business leftovers~~ (done, item 9); big-model max-tests; measuring the comparison answers with a real 4B/9B model.
 
+## P. Added 10 Oct 2026 — knowledge packs: commercial-safe, accurate (HANDOFF §5.48)
+Ali: "Attune will charge money … find reliable free sources … full mark … all correct and reliable info".
+- [x] Every pack source allows commercial use (no NC/ND, no modern copyrighted books); catalogue shows each real licence.
+- [x] Quran: تفسير الجلالين; Islamic library: تفسير ابن كثير verse by verse + رياض الصالحين + بلوغ المرام; fiqh: six classical books.
+- [x] Quality audit tool (`tools/audit_packs.py`) and fixes (repeats, encoding, damaged hadith letters, wrong-script names, cosmetics).
+- [x] Accuracy fixes: Arabic country questions, dictionary not crowding out textbooks, the answering line pointed out, Quran
+      phrases with the small alif, exact car model names, recalls for car makes only, medicines per route.
+- [ ] Ask Ali: calculus source (OpenStax Calculus was never CC BY) — Applied Calculus (CC BY) or Contemporary Calculus (CC BY-SA)?
+- [ ] Ask Ali: Wikidata (CC0, huge, crowd-edited)? Dorar live search in a paid app — ask Dorar for written permission?
+- [ ] Next trial target: 45/45 on q08 (`tests/trials/packtrial.mjs`); misses left are mostly the tiny model misreading.
+
 ## Prompt to start the next session
 
 ```
