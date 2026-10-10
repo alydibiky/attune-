@@ -671,6 +671,19 @@ Four branches from the "Pages & look" / helper sessions had never reached `main`
   newer published build replaces the old one. The packs were published on 10 Oct (know-pack.yml, confirm=yes).
   Still no Wikipedia (Ali's rule, v5.22). Test: unit v723knowauto.
 
+### 5.46 (10 Oct 2026, v6.16) — general knowledge: 6 more reliable packs, searched on the phone
+- Ali: "find reliable sources and make the app better in general knowledge". New packs (tools/know_sources.py): science
+  (OpenStax, CC BY only), health (MedlinePlus, public domain), numbers (World Bank, CC BY, monthly), cities (GeoNames,
+  CC BY), cranes (OSHA eCFR, public domain), quran (Tanzil, verbatim). Still no Wikipedia.
+- Format 2: every pack is a gzipped SQLite file (passages + FTS4 on the normalised text, same normalize() as the maps,
+  incl. Arabic digits, dagger alef, Quranic marks) at release know-<id>-v2. KnowPacks.kt downloads (MapPacks' resumable
+  downloader + SHA-256), unpacks, searches with BM25 from matchinfo('pcnalx'), common words dropped, light English
+  stemming, prefix match. The page never holds pack text in memory (the old JSONL packs used ~150 MB of RAM for laws alone;
+  autoInstallPacks removes those old copies). knowledge.find ranks own sources + the phone's candidates together.
+- Chat: an Arabic question with no Knowledge hit is retried with a short English search line from the model (24 tokens).
+- know-pack.yml: all 8 packs, monthly (1st), confirm gate removed (Ali approved). Tests: e2e_v724knowbuild (parsers +
+  the phone's search replicated in Python), unit v723knowauto, knowledge.test updated.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

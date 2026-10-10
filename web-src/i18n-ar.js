@@ -3371,4 +3371,7 @@ export const AR = {
   "Find a country": "ابحث عن دولة",
   "Find a country — {n} available": "ابحث عن دولة — {n} متاحة",
   "Chat now knows: {n}": "أصبحت المحادثة تعرف: {n}",
+  "Chat looks these up before it answers, and shows the source. They download by themselves when you are online and stay up to date.": "تبحث المحادثة فيها قبل أن تجيب، وتُظهر المصدر. تُنزَّل تلقائيًا عند الاتصال بالإنترنت وتبقى محدَّثة.",
+  "ready": "جاهزة",
+  "updated {d}": "حُدِّثت {d}",
 };

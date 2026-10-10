@@ -11,12 +11,12 @@ Tested by tests/unit/v722maps.test.mjs (the normalisation) and tests/e2e_v722map
 """
 import hashlib, json, os, re, sqlite3, sys, unicodedata, zipfile
 
-AR_DIAC = re.compile("[ً-ْٰـ]")
+AR_DIAC = re.compile("[ً-ْـ\u06D6-\u06ED]")
 
 
 def normalize(s):
     t = (s or "").lower()
-    t = AR_DIAC.sub("", t)
+    t = AR_DIAC.sub("", t.replace("\u0670", "ا"))   # the dagger alef (ٰ) is an alef
     for a, b in (("أ", "ا"), ("إ", "ا"), ("آ", "ا"), ("ٱ", "ا"), ("ى", "ي"), ("ة", "ه"), ("ؤ", "و"), ("ئ", "ي"), ("ı", "i")):
         t = t.replace(a, b)
     t = t.translate({ord(c): str(i) for i, c in enumerate("٠١٢٣٤٥٦٧٨٩")}).translate({ord(c): str(i) for i, c in enumerate("۰۱۲۳۴۵۶۷۸۹")})   # ٩٠ = 90

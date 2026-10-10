@@ -810,6 +810,41 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun foodClipRemove(): Boolean = FoodClip.remove(ctx)
 
+    /* ---- v6.16: the public Knowledge packs as search databases (KnowPacks) ---- */
+    @JavascriptInterface
+    fun knowPacks(): String = try { JSONObject().put("packs", KnowPacks.list(ctx)).toString() } catch (e: Throwable) { "{\"packs\":[]}" }
+
+    @JavascriptInterface
+    fun knowRemote(id: String, arg: String) {
+        if (blockedByAirGap(id, "checking the Knowledge packs")) return
+        pool.execute { try { resolve(id, KnowPacks.remote(JSONObject(arg).getString("id"))) } catch (e: Throwable) { reject(id, e.message ?: "Couldn't check the pack") } }
+    }
+
+    @JavascriptInterface
+    fun knowInstall(id: String, arg: String) {
+        if (blockedByAirGap(id, "downloading a Knowledge pack")) return
+        val flag = AtomicBoolean(false); cancels[id] = flag
+        pool.execute {
+            try {
+                val man = KnowPacks.install(ctx, JSONObject(arg).getString("id"), { done, total, name ->
+                    val pct = if (total > 0) ((done * 100) / total).toInt().coerceIn(0, 99) else 0
+                    progress(id, pct, name, "%.1f / %.1f MB".format(done / 1e6, total / 1e6))
+                }, { flag.get() })
+                resolve(id, man)
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't download the pack") }
+            finally { cancels.remove(id) }
+        }
+    }
+
+    @JavascriptInterface
+    fun knowRemove(packId: String): Boolean = KnowPacks.remove(ctx, packId)
+
+    /** Search the installed packs ({q, k}) → {passages: [...]} — fast (SQLite FTS), so Chat calls it on every lookup. */
+    @JavascriptInterface
+    fun knowSearch(id: String, arg: String) {
+        pool.execute { try { resolve(id, KnowPacks.search(ctx, arg)) } catch (e: Throwable) { reject(id, e.message ?: "Couldn't search") } }
+    }
+
     /* ---- v6.15: whole-country offline maps (MapPacks) ---- */
     /** The packs on the phone → {packs: [...], assets: bool} */
     @JavascriptInterface

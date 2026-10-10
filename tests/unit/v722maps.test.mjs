@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { loadJsx } from "./jsxload.mjs";
 const OM = await loadJsx("web-src/offlinemap.js");          // bundled with pmtiles and the map style
 let fail = 0; const ok = (c, w) => { console.log((c ? "PASS " : "FAIL ") + w); if (!c) fail++; };
-const samples = ["مَدِينَةُ نَصْر", "إسكندرية", "الإسكندرية", "Şişli, İstanbul", "Ring Rd. (Cairo)", "شارع ٩٠ الشمالي", "Café Riche", "مؤسسة", "طريق مصر–الإسماعيلية الصحراوي"];
+const samples = ["ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ ۝", "مَدِينَةُ نَصْر", "إسكندرية", "الإسكندرية", "Şişli, İstanbul", "Ring Rd. (Cairo)", "شارع ٩٠ الشمالي", "Café Riche", "مؤسسة", "طريق مصر–الإسماعيلية الصحراوي"];
 const py = JSON.parse(execFileSync("python3", ["-c", "import json,sys; sys.path.insert(0,'tools'); import build_map_pack as B; print(json.dumps([B.normalize(s) for s in json.loads(sys.argv[1])], ensure_ascii=False))", JSON.stringify(samples)], { cwd: new URL("../..", import.meta.url).pathname }).toString());
 ok(OM.normalize("شارع ٩٠") === "شارع 90", "Arabic digits match typed ones: " + OM.normalize("شارع ٩٠"));
 samples.forEach((s, i) => ok(OM.normalize(s) === py[i], `normalize("${s}") → "${OM.normalize(s)}" (builder: "${py[i]}")`));

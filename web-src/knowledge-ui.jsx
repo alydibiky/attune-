@@ -63,16 +63,25 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
     refresh();
   };
   const rebuild = async () => { setBusy(tr("Rebuilding the index…")); const t = Date.now(); knowledge.invalidate(); await knowledge.ensure(); setBusy(""); flash && flash(tr("Index rebuilt in {s} ms", { s: Date.now() - t })); refresh(); };
+  // v6.16: the public packs live on the phone as search databases (KnowPacks.kt)
+  const N = typeof window !== "undefined" ? window.AttuneNative : null;
+  const readPacks = () => { try { return (JSON.parse(N.knowPacks()).packs) || []; } catch (e) { return []; } };
+  const [phonePacks, setPhonePacks] = useState(() => (N && N.knowPacks ? readPacks() : []));
   const getPack = async (p) => {
-    if (!packText) return;
-    stop.current = false; setPackBusy({ id: p.id, shard: 0, of: 1 });
+    if (!nativeCall || !N || !N.knowInstall) return;
+    setPackBusy({ id: p.id, pct: 0 });
     try {
-      const man = JSON.parse(await packText(p.tag, "manifest.json"));
-      await K.installKnowPack(knowledge, { manifest: man, getText: (name) => packText(p.tag, name), isStopped: () => stop.current, onProgress: (x) => setPackBusy({ id: p.id, ...x }) });
-      try { localStorage.setItem("attune:knowledge:pack:" + p.id, JSON.stringify({ license: man.license, attribution: man.attribution, sources: man.sources, built: man.built })); } catch (e) {}
+      await nativeCall("knowInstall", { id: p.id }, (pct) => setPackBusy({ id: p.id, pct }));
+      if (p.legacy) await K.removeKnowPack(knowledge, p.id);            // the old in-page copy, if any
+      setPhonePacks(readPacks());
       flash && flash(tr("“{n}” is ready", { n: ar ? p.name_ar : p.name }));
     } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 160)); }
     finally { setPackBusy(null); refresh(); }
+  };
+  const dropPack = (p) => {
+    if (!window.confirm(tr("Remove “{t}” from Knowledge?", { t: ar ? p.name_ar : p.name }))) return;
+    try { N.knowRemove(p.id); } catch (e) {}
+    setPhonePacks(readPacks());
   };
 
   // packs are shown once (not one row per shard)
@@ -145,25 +154,25 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
 
       <div className={card + " space-y-2"}>
         <p className="text-[13px] font-semibold text-slate-100">{tr("Public packs")}</p>
+        <p className="text-[12px] text-slate-400">{tr("Chat looks these up before it answers, and shows the source. They download by themselves when you are online and stay up to date.")}</p>
         {K.CATALOG.map((p) => {
-          const has = packIds.has(p.id), info = packInfo(p.id), mine = rows.filter((r) => r.pack === p.id), b = packBusy && packBusy.id === p.id ? packBusy : null;
+          const got = phonePacks.find((x) => x.id === p.id), b = packBusy && packBusy.id === p.id ? packBusy : null;
           return (
-            <div key={p.id} className="space-y-1.5" data-testid={"kn-pack-" + p.id}>
+            <div key={p.id} className="space-y-1.5 border-t border-slate-800 pt-2" data-testid={"kn-pack-" + p.id}>
               <div className="flex items-center gap-2"><Globe size={15} className="text-sky-300" />
-                <p className="flex-1 text-[13px] text-slate-100">{ar ? p.name_ar : p.name}{has ? " · " + mb(mine.reduce((a, x) => a + x.bytes, 0)) : ""}</p></div>
+                <p className="flex-1 text-[13px] text-slate-100">{ar ? p.name_ar : p.name}{got ? " · " + mb(got.size || 0) : ""}</p>
+                {got ? <span className="text-[11px] text-emerald-300">{tr("ready")}</span> : null}</div>
               <p className="text-[12px] text-slate-400">{ar ? p.about_ar : p.about}</p>
-              <p className="text-[11px] text-slate-500" data-testid={"kn-pack-lic-" + p.id}>{ar ? p.size_ar : p.size} · {tr("Licence")}: {ar ? p.license_ar : p.license}</p>
+              <p className="text-[11px] text-slate-500" data-testid={"kn-pack-lic-" + p.id}>{ar ? p.size_ar : p.size} · {tr("Licence")}: {ar ? p.license_ar : p.license}{got && got.built ? " · " + tr("updated {d}", { d: got.built }) : ""}</p>
               {p.notice ? <p className="text-[11px] text-amber-300">{ar ? p.notice_ar : p.notice}</p> : null}
-              {has && info ? <p className="text-[11px] text-slate-500" data-testid="kn-attrib">{tr("Licence")}: {info.license}{info.attribution ? " — " + info.attribution : ""}</p> : null}
               {b ? (
-                <div className="space-y-1"><div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-teal-500" style={{ width: Math.round((b.shard / Math.max(1, b.of)) * 100) + "%" }} /></div>
-                  <button className={ghost} onClick={() => { stop.current = true; }}>{tr("Stop")}</button></div>
+                <div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-teal-500" style={{ width: (b.pct || 0) + "%" }} /></div>
               ) : (
                 <div className="flex gap-2">
-                  {!has ? <button className={primary} disabled={!packText} onClick={() => getPack(p)} data-testid={"kn-pack-get-" + p.id}><Download size={13} />{tr("Download")}</button> : null}
-                  {has ? <button className={ghost} onClick={() => remove({ pack: p.id, title: ar ? p.name_ar : p.name })}><Trash2 size={13} />{tr("Remove")}</button> : null}
+                  {!got ? <button className={primary} disabled={!N || !N.knowInstall} onClick={() => getPack(p)} data-testid={"kn-pack-get-" + p.id}><Download size={13} />{tr("Download")}</button> : null}
+                  {got ? <button className={ghost} onClick={() => dropPack(p)} data-testid={"kn-pack-rm-" + p.id}><Trash2 size={13} />{tr("Remove")}</button> : null}
                 </div>)}
-              {!packText && !has ? <p className="text-[11px] text-slate-500">{tr("Downloads work in the Android app.")}</p> : null}
+              {(!N || !N.knowInstall) && !got ? <p className="text-[11px] text-slate-500">{tr("Downloads work in the Android app.")}</p> : null}
             </div>);
         })}
       </div>

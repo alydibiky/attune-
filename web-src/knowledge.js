@@ -250,10 +250,19 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
       index = indexChunks(cache.concat(live)); stamp = st; dirty = false;
       return index;
     },
-    /** The facts for a question (empty when it isn't a lookup or nothing fits). */
+    /** v6.16: the public packs searched on the phone (set by the app): async question → passages. */
+    packSearch: null,
+    /** The facts for a question (empty when it isn't a lookup or nothing fits): your own sources and the packs, ranked together. */
     async find(question, o) {
       if (!wantsFacts(question)) return [];
-      return findFacts(await K.ensure(), question, o);
+      const idx = await K.ensure();
+      let pack = [];
+      if (K.packSearch) { try { pack = (await K.packSearch(question)) || []; } catch (e) { pack = []; } }
+      if (!pack.length) return findFacts(idx, question, o);
+      const own = idx.N ? rank(idx, question, { k: 9 }).map((h) => h.chunk) : [];
+      const cands = own.concat(pack.map((p) => ({ id: p.id, src: "pack:" + p.pack, title: p.title || "", page: 0, text: p.text || "", kind: "pack", url: p.url || "", pack: p.pack,
+        ...(p.notice ? { note: p.notice, note_ar: p.notice_ar || "" } : {}) })));
+      return findFacts(indexChunks(cands), question, o);
     },
     async stats() {
       const s = await store.sources(); const rows = K.adapterRows();
@@ -271,13 +280,33 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
     Each shard becomes one stored source (so a pack can be removed as a whole: every source carries pack = id). */
 export const KNOW_BASE = "https://github.com/alydibiky/attune-/releases/download/";
 export const CATALOG = [
-  { id: "world", tag: "know-world-v1", name: "World facts", name_ar: "حقائق عن دول العالم", size: "≈ 3 MB", size_ar: "≈ ٣ ميجابايت", license: "Public domain (CIA World Factbook)", license_ar: "ملكية عامة (كتاب حقائق العالم)",
-    about: "Every country's geography, people, government, economy, energy and transport — Egypt first and complete. CIA World Factbook, public domain.",
-    about_ar: "جغرافيا كل دولة وسكانها وحكومتها واقتصادها وطاقتها ومواصلاتها — مصر أولًا وكاملة. من كتاب حقائق العالم، ملكية عامة." },
-  { id: "egy-laws", tag: "know-egy-laws-v1", name: "Egyptian laws (Arabic)", name_ar: "القوانين المصرية", size: "≈ 3 MB", size_ar: "≈ ٣ ميجابايت", license: "MIT, as declared by the publisher (Dataflare)", license_ar: "ترخيص مفتوح حسب الناشر",
-    about: "Articles of Egyptian laws and codes (civil, procedure, penal, labour, commercial, tax, rent, personal status…), each passage titled with its law and article. From the Egyptian Legal Corpus (Dataflare), MIT as declared.",
-    about_ar: "مواد القوانين المصرية (المدني، المرافعات، العقوبات، العمل، التجاري، الضرائب، الإيجارات، الأحوال الشخصية…)، ومع كل فقرة اسم القانون ورقم المادة. من مجموعة نصوص قانونية منشورة بترخيص مفتوح.",
+  { id: "world", legacy: true, name: "World facts", name_ar: "حقائق عن دول العالم", size: "≈ 8 MB", size_ar: "≈ ٨ ميجابايت", license: "Public domain (CIA World Factbook)", license_ar: "ملكية عامة (كتاب حقائق العالم)",
+    about: "Every country's geography, people, government, economy, energy and transport. CIA World Factbook, public domain.",
+    about_ar: "جغرافيا كل دولة وسكانها وحكومتها واقتصادها وطاقتها ومواصلاتها. من كتاب حقائق العالم، ملكية عامة." },
+  { id: "numbers", name: "Country numbers", name_ar: "أرقام الدول", size: "≈ 1 MB", size_ar: "≈ ١ ميجابايت", license: "CC BY 4.0 (World Bank)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (البنك الدولي)",
+    about: "Each country's latest population, GDP, growth, inflation, unemployment, life expectancy, trade and more — World Bank open data, rebuilt every month.",
+    about_ar: "أحدث أرقام كل دولة: السكان والناتج المحلي والنمو والتضخم والبطالة ومتوسط العمر والتجارة وغيرها — بيانات البنك الدولي، تُحدَّث كل شهر." },
+  { id: "cities", name: "Countries & cities", name_ar: "الدول والمدن", size: "≈ 6 MB", size_ar: "≈ ٦ ميجابايت", license: "CC BY 4.0 (GeoNames)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (جيونيمز)",
+    about: "Every city over 15,000 people (with Arabic names), each country's capital, currency, calling code and languages — GeoNames.",
+    about_ar: "كل مدينة يزيد سكانها على ١٥ ألفًا (بأسمائها العربية)، وعاصمة كل دولة وعملتها ورمز الاتصال ولغاتها — من جيونيمز." },
+  { id: "science", name: "Science & study", name_ar: "العلوم والدراسة", size: "≈ 15 MB", size_ar: "≈ ١٥ ميجابايت", license: "CC BY 4.0 (OpenStax)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (أوبن ستاكس)",
+    about: "Peer-reviewed university textbooks: biology, chemistry, physics, anatomy, psychology, economics, business, history, astronomy, statistics — OpenStax (Rice University).",
+    about_ar: "كتب جامعية محكَّمة: الأحياء والكيمياء والفيزياء والتشريح وعلم النفس والاقتصاد والأعمال والتاريخ والفلك والإحصاء — أوبن ستاكس (جامعة رايس)." },
+  { id: "health", name: "Health", name_ar: "الصحة", size: "≈ 3 MB", size_ar: "≈ ٣ ميجابايت", license: "Public domain (US National Library of Medicine)", license_ar: "ملكية عامة (المكتبة الوطنية الأمريكية للطب)",
+    about: "About 1,000 health topics — conditions, symptoms, treatments, tests, healthy living — written and reviewed by MedlinePlus.",
+    about_ar: "نحو ١٠٠٠ موضوع صحي — الأمراض والأعراض والعلاج والفحوص والحياة الصحية — من ميدلاين بلس.",
+    notice: "General health information, not medical advice — see a doctor for your own case.", notice_ar: "معلومات صحية عامة وليست نصيحة طبية — راجع طبيبًا في حالتك." },
+  { id: "cranes", name: "Cranes & lifting rules", name_ar: "قواعد الرافعات والرفع", size: "≈ 1 MB", size_ar: "≈ ١ ميجابايت", license: "Public domain (US government)", license_ar: "ملكية عامة (الحكومة الأمريكية)",
+    about: "OSHA's rules for cranes and derricks, overhead and mobile cranes, rigging and slings — inspections, operator qualification, assembly, power lines, signals.",
+    about_ar: "قواعد أوشا للرافعات والأوناش العلوية والمتحركة والرفع والحبال — الفحص وتأهيل المشغّل والتركيب وخطوط الكهرباء والإشارات.",
+    notice: "US rules (OSHA) — for safety guidance; Egyptian law and the manufacturer's load chart come first.", notice_ar: "قواعد أمريكية (أوشا) للإرشاد في السلامة؛ القانون المصري وجدول أحمال الشركة المصنّعة لهما الأولوية." },
+  { id: "egy-laws", legacy: true, name: "Egyptian laws (Arabic)", name_ar: "القوانين المصرية", size: "≈ 7 MB", size_ar: "≈ ٧ ميجابايت", license: "MIT, as declared by the publisher (Dataflare)", license_ar: "ترخيص إم آي تي كما أعلنه الناشر (داتافلير)",
+    about: "Articles of Egyptian laws and codes (civil, procedure, penal, labour, commercial, tax, rent, personal status…), each passage titled with its law and article.",
+    about_ar: "مواد القوانين المصرية (المدني، المرافعات، العقوبات، العمل، التجاري، الضرائب، الإيجارات، الأحوال الشخصية…)، ومع كل فقرة اسم القانون ورقم المادة.",
     notice: "Not legal advice; may be out of date; check the official gazette.", notice_ar: "ليست استشارة قانونية؛ قد تكون قديمة؛ راجع الجريدة الرسمية." },
+  { id: "quran", name: "The Quran (Arabic text)", name_ar: "القرآن الكريم", size: "≈ 2 MB", size_ar: "≈ ٢ ميجابايت", license: "Tanzil Project — verbatim, with credit", license_ar: "مشروع تنزيل — النص كما هو مع ذكر المصدر",
+    about: "The full Arabic text, verse by verse, from the verified Tanzil text — so a verse is quoted exactly, with its surah and number.",
+    about_ar: "النص العربي كاملًا، آيةً آية، من نص تنزيل الموثَّق — فتُنقل الآية كما هي مع اسم السورة ورقمها." },
 ];
 export const parsePackShard = (text) => String(text || "").split("\n").map((l) => { try { return l.trim() ? JSON.parse(l) : null; } catch (e) { return null; } }).filter((r) => r && r.x);
 
@@ -305,25 +334,32 @@ export async function installKnowPack(K, { manifest, getText, onProgress = () =>
 export async function removeKnowPack(K, packId) { for (const s of await K.sources()) if (s.pack === packId) await K.remove(s.id); }
 
 /**
- * v6.16 (Ali: "I want them integrated so the model has this knowledge and Chat answers me") — the public packs are
- * installed by themselves: missing ones are fetched, and a pack whose published build is newer is refreshed.
- * packText(tag, name) reads a file of a release (the phone's downloader). → the names of the packs installed now.
+ * v6.16 (Ali: "integrate them so the model has this knowledge and Chat answers me"; "find reliable sources and make the app
+ * better in general knowledge") — the public packs are ready search databases on the phone (KnowPacks.kt), installed by
+ * themselves: missing ones are fetched, a newer published build replaces the old one, and the old in-page copies of the
+ * first two packs (stored passages, heavy in memory) are removed once the phone has them.
+ * native: { list() → [{id, built}], remote(id) → manifest, install(id) → manifest }. → the catalogue entries installed now.
  */
-export async function autoInstallPacks(K, packText, { ids = CATALOG.map((c) => c.id), isStopped = () => false } = {}) {
+export async function autoInstallPacks(K, native, { ids = CATALOG.map((c) => c.id), isStopped = () => false } = {}) {
   const done = [];
+  const have = new Map(((await native.list()) || []).map((p) => [p.id, p]));
   for (const id of ids) {
     if (isStopped()) break;
     const cat = CATALOG.find((c) => c.id === id); if (!cat) continue;
-    let man;
-    try { man = JSON.parse(await packText(cat.tag, "manifest.json")); } catch (e) { continue; }   // not published yet, or no signal
-    let had = null; try { had = JSON.parse(localStorage.getItem("attune:knowledge:pack:" + id) || "null"); } catch (e) {}
-    const have = (await K.sources()).filter((s) => s.pack === id).length;
-    const fresh = had && had.built === man.built && have >= (man.shards || []).length;
-    if (fresh) continue;
-    if (had && had.built !== man.built) await removeKnowPack(K, id);          // a newer build: replace it
-    await installKnowPack(K, { manifest: man, getText: (name) => packText(cat.tag, name), isStopped });
-    try { localStorage.setItem("attune:knowledge:pack:" + id, JSON.stringify({ license: man.license, attribution: man.attribution, sources: man.sources, built: man.built })); } catch (e) {}
-    done.push(cat);
+    let man; try { man = await native.remote(id); } catch (e) { continue; }       // not published yet, or no signal
+    const mine = have.get(id);
+    if (!mine || String(man.built || "") > String(mine.built || "")) {
+      try { await native.install(id); done.push(cat); } catch (e) { continue; }
+    }
+    if (cat.legacy && (await K.sources()).some((s) => s.pack === id)) await removeKnowPack(K, id);
   }
   return done;
+}
+
+/** The phone's pack search for createKnowledge: question → [{ id, pack, title, text, url, notice, notice_ar }]. */
+export function phonePackSearch(nativeCall) {
+  return async (question) => {
+    const r = await nativeCall("knowSearch", { q: question, k: 24 });
+    return (r && r.passages) || [];
+  };
 }

@@ -7553,6 +7553,7 @@ export default function App() {
     return KNOW.createKnowledge(store, { adapters: [KNOW.mindAdapter(() => memRef.current, mindKindOf)] });
   }, []);
   knowledge.adapters.forEach((a) => { a.enabled = knPrefs.adapters[a.id] !== false; });
+  if (NATIVE && NATIVE.knowSearch) knowledge.packSearch = KNOW.phonePackSearch(nativeCall);   // v6.16: the public packs, searched on the phone
   const [commits, setCommits] = useState(() => {
     try { return JSON.parse(localStorage.getItem("attune:commits:v1") || "[]").filter((c) => !(c && /^\s*(please\s+)?(save|remember|note|keep|store)\b/i.test(String(c.action || "")))); } catch (e) { return []; }   // v6.12: notes to self saved as "promises" before the gate knew better
   });
@@ -7933,14 +7934,17 @@ export default function App() {
   // v6.16: the public Knowledge packs (world facts, Egyptian laws) are fetched by themselves so Chat can answer from
   // them — quietly, a few seconds after start, at most every 6 h, never with the offline lock on
   useEffect(() => {
-    if (!NATIVE || !NATIVE.knowPackText || airGap || !knPrefs.on) return;
+    if (!NATIVE || !NATIVE.knowInstall || airGap || !knPrefs.on) return;
     if (typeof navigator !== "undefined" && navigator.onLine === false) return;
     let last = 0; try { last = +localStorage.getItem("attune:knowledge:auto") || 0; } catch (e) {}
     if (Date.now() - last < 6 * 3600e3) return;
     const t = setTimeout(async () => {
       try { localStorage.setItem("attune:knowledge:auto", String(Date.now())); } catch (e) {}
       try {
-        const got = await KNOW.autoInstallPacks(knowledge, async (tag, name) => { const r = await nativeCall("knowPackText", { tag, name }); return (r && r.text) || ""; });
+        const got = await KNOW.autoInstallPacks(knowledge, {
+          list: async () => { try { return JSON.parse(NATIVE.knowPacks()).packs || []; } catch (e) { return []; } },
+          remote: (id) => nativeCall("knowRemote", { id }),
+          install: (id) => nativeCall("knowInstall", { id }) });
         if (got.length) flash(tr("Chat now knows: {n}", { n: got.map((c) => (getLang() === "ar" ? c.name_ar : c.name)).join(getLang() === "ar" ? "، " : ", ") }));
       } catch (e) {}
     }, 8000);
@@ -8881,7 +8885,7 @@ export default function App() {
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     withRecords,
-    knowledge: { on: () => !!knPrefs.on, find: (q) => knowledge.find(q) },   // v6.20 Knowledge
+    knowledge: { on: () => !!knPrefs.on, find: (q) => knowledge.find(q), packs: () => !!knowledge.packSearch },   // v6.20 Knowledge (+ v6.16 phone packs)
     lastStats: () => LAST_STATS,
     contextTokens: () => { const m = String((engineInfo && engineInfo.settings) || "").match(/context (\d+)/); return m ? Number(m[1]) : 0; },
     remember, flash,

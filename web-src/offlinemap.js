@@ -20,8 +20,8 @@ export const countryOf = (code) => COUNTRIES.find((c) => c.code === code) || nul
 
 /** The same text normalisation as the search index (tools/build_map_pack.py) and MapPacks.kt — keep the three equal. */
 export function normalize(s) {
-  return String(s || "").toLowerCase()
-    .replace(/[ً-ْٰـ]/g, "")              // Arabic diacritics and tatweel
+  return String(s || "").toLowerCase().replace(/\u0670/g, "ا")      // the dagger alef (ٰ) is an alef
+    .replace(/[ً-ْـ\u06D6-\u06ED]/g, "")              // Arabic diacritics and tatweel
     .replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/ؤ/g, "و").replace(/ئ/g, "ي")
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))   // ٩٠ = 90
     .replace(/ı/g, "i").normalize("NFD").replace(/[̀-ͯ]/g, "")   // Turkish ı, accents

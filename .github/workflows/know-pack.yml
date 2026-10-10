@@ -1,49 +1,68 @@
 name: Build a knowledge pack
 
-# v6.20 — Knowledge: public packs the app downloads on demand (More → Knowledge → Public packs). Built by tools/build_know_pack.py.
-#   world     "World facts"            CIA World Factbook (public domain)                → release know-world-v1
-#   egy-laws  "Egyptian laws (Arabic)" dataflare/egypt-legal-corpus (MIT, as declared)   → release know-egy-laws-v1
-# No encyclopedia text (Ali's rule). DO NOT RUN until the lead / Ali says so: it never runs by itself (manual
-# workflow_dispatch only) and the job only runs when confirm = yes is typed.
+# v6.16 — the public Knowledge packs (Knowledge → Public packs; Chat looks them up before it answers). Built by
+# tools/build_know_pack.py (+ tools/know_sources.py) as ready search databases, published as release know-<id>-v2:
+#   world     CIA World Factbook (public domain)            laws      Egyptian Legal Corpus (MIT as declared)
+#   numbers   World Bank open data (CC BY 4.0)              cities    GeoNames (CC BY 4.0)
+#   science   OpenStax textbooks, CC BY only (CC BY 4.0)    health    MedlinePlus, NLM (public domain)
+#   cranes    OSHA crane rules, eCFR (public domain)        quran     Tanzil Quran text (verbatim, with credit)
+# No Wikipedia (Ali's rule). Ali approved publishing (10 Oct 2026). Rebuilt on the 1st of every month so the numbers stay
+# current; the app installs a newer build by itself.
 
 on:
+  schedule:
+    - cron: "41 3 1 * *"
   workflow_dispatch:
     inputs:
-      pack:
-        description: "Which pack: world or laws"
-        default: "world"
+      packs:
+        description: "Packs, space-separated (world laws numbers cities science health cranes quran), or all"
+        default: "all"
       budget_mb:
-        description: "laws: text budget in MB"
-        default: "15"
-      confirm:
-        description: "Approved to publish? (type yes)"
-        default: "no"
+        description: "Text budget in MB (laws, science)"
+        default: "25"
 
 permissions:
   contents: write
 
 jobs:
-  pack:
-    if: github.event.inputs.confirm == 'yes'
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    outputs:
+      list: ${{ steps.p.outputs.list }}
+    steps:
+      - id: p
+        run: |
+          packs="${{ github.event.inputs.packs }}"
+          if [ -z "$packs" ] || [ "$packs" = "all" ]; then packs="world laws numbers cities science health cranes quran"; fi
+          echo "list=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1].split()))' "$packs")" >> $GITHUB_OUTPUT
+
+  pack:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        pack: ${{ fromJSON(needs.plan.outputs.list) }}
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - name: Build
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
         run: |
           pip install pyarrow
-          python3 tools/build_know_pack.py "${{ github.event.inputs.pack }}" out --budget-mb "${{ github.event.inputs.budget_mb }}" | tee build.log
-          ls -la out; du -sh out
+          budget="${{ github.event.inputs.budget_mb }}"; [ -z "$budget" ] && budget=25
+          [ "${{ matrix.pack }}" = "laws" ] && budget=$(( budget < 20 ? budget : 20 ))
+          python3 tools/build_know_pack.py "${{ matrix.pack }}" out --budget-mb "$budget" | tee build.log
+          ls -la out
       - name: Summary
         run: |
-          { echo "## Knowledge pack: ${{ github.event.inputs.pack }}"; echo; tail -1 build.log; } >> "$GITHUB_STEP_SUMMARY"
-      - name: Publish the release (replaced each time)
-        env:
-          GH_TOKEN: ${{ github.token }}
+          { echo "## Knowledge pack: ${{ matrix.pack }}"; echo; tail -1 build.log; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish (the app installs a newer build by itself)
         run: |
-          if [ "${{ github.event.inputs.pack }}" = "world" ]; then tag=know-world-v1; title="World facts"; notes="CIA World Factbook (public domain), via github.com/factbook/factbook.json."
-          else tag=know-egy-laws-v1; title="Egyptian laws (Arabic)"; notes="Egyptian Legal Corpus by Dataflare (huggingface.co/datasets/dataflare/egypt-legal-corpus), MIT as declared. Not legal advice; may be out of date; check the official gazette."; fi
-          gh release delete "$tag" --cleanup-tag --yes 2>/dev/null || true
-          gh release create "$tag" out/* --title "Knowledge pack: $title" --notes "$notes Built $(date -u +%F)." --prerelease
+          id=$(python3 -c "import json; print(json.load(open('out/manifest.json'))['id'])")
+          name=$(python3 -c "import json; print(json.load(open('out/manifest.json'))['name'])")
+          tag="know-$id-v2"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "Knowledge pack: $name" --notes "Attune Knowledge pack (search database). Sources and licence are in manifest.json. Rebuilt every month."
+          gh release upload "$tag" out/* --clobber

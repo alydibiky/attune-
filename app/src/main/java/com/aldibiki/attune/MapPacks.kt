@@ -156,8 +156,8 @@ object MapPacks {
 
     /** The search index's text normalisation — the same as offlinemap.js normalize() and tools/build_map_pack.py. */
     fun normalize(s: String): String {
-        var t = s.lowercase()
-            .replace(Regex("[ً-ْٰـ]"), "")
+        var t = s.lowercase().replace('\u0670', 'ا')   // the dagger alef (ٰ) is an alef
+            .replace(Regex("[ً-ْـ\u06D6-\u06ED]"), "")
             .replace(Regex("[أإآٱ]"), "ا").replace('ى', 'ي').replace('ة', 'ه').replace('ؤ', 'و').replace('ئ', 'ي')
             .replace('ı', 'i')
         t = buildString { for (ch in t) append(when (ch) { in '٠'..'٩' -> '0' + (ch - '٠'); in '۰'..'۹' -> '0' + (ch - '۰'); else -> ch }) }   // ٩٠ = 90
@@ -212,12 +212,12 @@ object MapPacks {
         return 2 * r * Math.asin(Math.sqrt(h))
     }
 
-    private fun sha256(f: File): String {
+    internal fun sha256(f: File): String {
         val md = MessageDigest.getInstance("SHA-256")
         f.inputStream().use { inp -> val buf = ByteArray(1 shl 16); var n: Int; while (inp.read(buf).also { n = it } > 0) md.update(buf, 0, n) }
         return md.digest().joinToString("") { "%02x".format(it) }
     }
-    private fun verify(f: File, want: String, name: String) {
+    internal fun verify(f: File, want: String, name: String) {
         if (want.isEmpty()) return
         if (sha256(f) != want.lowercase()) { f.delete(); throw Exception("$name arrived damaged — download it again") }
     }
@@ -236,7 +236,7 @@ object MapPacks {
     }
 
     /** Downloads `url` into `part`, continuing from where an earlier try stopped (HTTP Range). */
-    private fun fetchResumable(url: String, part: File, size: Long, isCancelled: () -> Boolean, onBytes: (Long) -> Unit) {
+    internal fun fetchResumable(url: String, part: File, size: Long, isCancelled: () -> Boolean, onBytes: (Long) -> Unit) {
         if (part.exists() && part.length() > size) part.delete()
         if (part.exists() && part.length() == size) { onBytes(size); return }
         Prefs.requireOnline(url, "map")
@@ -300,7 +300,7 @@ object MapPacks {
     }
 
     /** One small file (a manifest) → bytes. */
-    private fun get(url: String, to: File?, isCancelled: () -> Boolean): ByteArray {
+    internal fun get(url: String, to: File?, isCancelled: () -> Boolean): ByteArray {
         Prefs.requireOnline(url, "map")
         val c = URL(url).openConnection() as HttpURLConnection
         c.connectTimeout = 15_000; c.readTimeout = 30_000; c.instanceFollowRedirects = true

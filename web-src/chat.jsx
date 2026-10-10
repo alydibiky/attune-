@@ -1124,6 +1124,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (answer == null && typed && !sources && !fileAtt && !pic && !longMsg && api.knowledge && api.knowledge.on() && !looksLikeCodeTask(typed) && !looksLikeMathProblem(typed)) {
         try { knHits = await api.knowledge.find(typed); } catch (e) { knHits = null; }
         if (runRef.current !== run) return;
+        // v6.16: most general-knowledge packs are in English — an Arabic question that found nothing is looked up once more
+        // with a short English search line from the model (≈ 24 tokens); the answer itself stays in Arabic
+        if ((!knHits || !knHits.length) && /[\u0600-\u06FF]/.test(typed) && api.knowledge.packs && api.knowledge.packs() && typed.length < 300) {
+          try {
+            const en = await api.run([{ role: "system", content: "Turn the question into a short English search query: the key words only (names, things, places), no sentence. Reply with the query only." },
+              { role: "user", content: typed }], null, { maxTokens: 24, temperature: 0, think: false });
+            if (runRef.current !== run) return;
+            const q2 = String(en || "").split("\n")[0].replace(/["“”]/g, "").trim();
+            if (q2 && !/[\u0600-\u06FF]/.test(q2)) knHits = await api.knowledge.find(q2);
+          } catch (e) {}
+          if (runRef.current !== run) return;
+        }
         if (knHits && knHits.length) { content = factsBlock(knHits, typed) + content; extra.knowledgeUsed = knHits.length; }
       }
       content += langHint(typed);

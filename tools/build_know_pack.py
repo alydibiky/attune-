@@ -9,12 +9,23 @@
                                   each article ("مادة N") into ~600-character passages titled "<law> — مادة N". Most-used laws first,
                                   up to a size budget. NOT legal advice: texts may be old or amended — check the official gazette.
 
-Output (out/): manifest.json + <id>-NNN.jsonl.gz, one passage per line {"t": title, "x": text, "u": source link, "l": lang}.
+v6.16 (Ali: "find reliable sources and make the app better in general knowledge") — six more, all reliable and open:
+  science  OpenStax textbooks (Rice University; peer-reviewed; CC BY 4.0 only — NC books are left out)
+  health   MedlinePlus health topics (US National Library of Medicine; public domain)
+  numbers  World Bank open data: each country's latest key figures (CC BY 4.0)
+  cities   GeoNames: every city over 15,000 people, with Arabic names (CC BY 4.0)
+  cranes   OSHA crane, derrick, hoist and sling rules from the eCFR (US government; public domain)
+  quran    the Quran's Arabic text from the Tanzil Project (verbatim, with credit — the text is never changed)
 
-  python3 tools/build_know_pack.py world out [--max-countries N]
-  python3 tools/build_know_pack.py laws  out [--budget-mb 15] [--parquet local.parquet]
+Output (out/, format 2): manifest.json + <id>.sqlite.gz — a ready search database (the phone searches it with SQLite FTS4;
+nothing is indexed in the page's memory): passages(id, title, text, url, lang) + passages_fts(key) where key is the
+normalised title + text (the same normalisation as the maps: tools/build_map_pack.py normalize()).
+
+  python3 tools/build_know_pack.py <world|laws|science|health|numbers|cities|cranes|quran> out [--budget-mb N]
 """
-import argparse, gzip, json, os, re, sys, tempfile, time, urllib.request
+import argparse, gzip, hashlib, io, json, os, re, shutil, sqlite3, subprocess, sys, tempfile, time, urllib.request, zipfile
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from build_map_pack import normalize
 
 def get(url, timeout=120):
     for i in range(5):
@@ -27,7 +38,43 @@ def get(url, timeout=120):
             print("retry", url, e, file=sys.stderr); time.sleep(3 * (i + 1))
     raise SystemExit("download failed: " + url)
 
-def write_pack(out, pid, rows, manifest, shard=4000):
+STOP = set("the a an of in on at to for and or is are was were be by with from as that this these those it its into about what which who whom whose when where why how do does did can could will would should may might than then there their them they he she his her you your i we our not no yes".split()) | \
+       set("في من على عن إلى الى هو هي ما ماذا متى أين اين كيف كم هل التي الذي الذين و او أو ثم مع كان كانت هذا هذه ذلك تلك".split())
+
+def write_pack(out, pid, rows, manifest):
+    """Format 2: <pid>.sqlite.gz (passages + FTS4 on the normalised text) and manifest.json with its size and SHA-256."""
+    os.makedirs(out, exist_ok=True)
+    db_path = os.path.join(out, pid + ".sqlite")
+    if os.path.exists(db_path): os.remove(db_path)
+    db = sqlite3.connect(db_path)
+    db.execute("PRAGMA journal_mode=OFF"); db.execute("PRAGMA synchronous=OFF"); db.execute("PRAGMA page_size=4096")
+    db.execute("CREATE TABLE passages(id INTEGER PRIMARY KEY, title TEXT, text TEXT, url TEXT, lang TEXT)")
+    db.execute('CREATE VIRTUAL TABLE passages_fts USING fts4(key, prefix="3,5")')
+    raw = 0
+    for i, r in enumerate(rows, 1):
+        db.execute("INSERT INTO passages VALUES (?,?,?,?,?)", (i, r.get("t", ""), r["x"], r.get("u", ""), r.get("l", "")))
+        db.execute("INSERT INTO passages_fts(rowid, key) VALUES (?,?)", (i, normalize((r.get("t", "") + " " + r["x"]))))
+        raw += len(r["x"].encode("utf-8"))
+    db.commit(); db.execute("INSERT INTO passages_fts(passages_fts) VALUES('optimize')"); db.commit(); db.execute("VACUUM"); db.close()
+    gz = db_path + ".gz"
+    with open(db_path, "rb") as src, gzip.open(gz, "wb", compresslevel=9) as dst: shutil.copyfileobj(src, dst)
+    full = os.path.getsize(db_path); os.remove(db_path)
+    h = hashlib.sha256(open(gz, "rb").read()).hexdigest()
+    manifest.update({"id": pid, "format": 2, "built": time.strftime("%Y-%m-%d"), "count": len(rows), "bytes": raw,
+                     "files": [{"name": os.path.basename(gz), "bytes": os.path.getsize(gz), "sha256": h, "gz": True, "unpacked": full}]})
+    json.dump(manifest, open(os.path.join(out, "manifest.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    print(f"{manifest['name']}: {len(rows)} passages, {raw / 1e6:.1f} MB text, {os.path.getsize(gz) / 1e6:.1f} MB to download ({full / 1e6:.1f} MB on the phone)")
+
+def chunk(text, size=650):
+    """Text → pieces of about `size` characters, cut at sentence ends."""
+    out, cur = [], ""
+    for s in re.split(r"(?<=[.!?؟;:])\s+", re.sub(r"\s+", " ", text).strip()):
+        if cur and len(cur) + len(s) > size: out.append(cur); cur = s
+        else: cur = (cur + " " + s).strip()
+    if cur: out.append(cur)
+    return out
+
+def write_pack_v1(out, pid, rows, manifest, shard=4000):
     os.makedirs(out, exist_ok=True); shards = []
     for i in range(0, len(rows), shard):
         name = f"{pid}-{i // shard:03d}.jsonl.gz"
@@ -154,7 +201,7 @@ def build_laws(a):
         "license": "MIT (as declared by the dataset publisher)",
         "attribution": f"Egyptian Legal Corpus by Dataflare (huggingface.co/datasets/{LAW_DS}, MIT as declared). Laws and codes only, cut at each article.",
         "notice": "Not legal advice; may be out of date; check the official gazette.",
-        "notice_ar": "مش استشارة قانونية؛ ممكن تكون قديمة؛ راجع الجريدة الرسمية.",
+        "notice_ar": "ليست استشارة قانونية؛ قد تكون قديمة؛ راجع الجريدة الرسمية.",
         "caveat": "The corpus holds older texts (for example the repealed 1971 constitution, which this pack leaves out); laws may since have been amended or replaced.",
         "sources": [{"title": "Egyptian Legal Corpus (Dataflare)", "url": f"https://huggingface.co/datasets/{LAW_DS}", "license": "MIT (declared)"}],
         "retrieved": time.strftime("%Y-%m-%d"), "laws": len(laws), "law_names": laws[:400],
@@ -162,10 +209,11 @@ def build_laws(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("pack", choices=["world", "laws"]); ap.add_argument("out")
+    ap.add_argument("pack", choices=["world", "laws", "science", "health", "numbers", "cities", "cranes", "quran"]); ap.add_argument("out")
     ap.add_argument("--max-countries", type=int, default=0)
     ap.add_argument("--budget-mb", type=float, default=15)
     ap.add_argument("--parquet", default="")
     ap.add_argument("--tree", default="", help="world: the repository's file list (JSON from the GitHub trees API) instead of asking for it")
     a = ap.parse_args()
-    (build_world if a.pack == "world" else build_laws)(a)
+    from know_sources import BUILDERS
+    {"world": build_world, "laws": build_laws, **BUILDERS}[a.pack](a)
