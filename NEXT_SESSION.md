@@ -508,8 +508,9 @@ Ali: "Attune will charge money … find reliable free sources … full mark … 
 - [x] Quality audit tool (`tools/audit_packs.py`) and fixes (repeats, encoding, damaged hadith letters, wrong-script names, cosmetics).
 - [x] Accuracy fixes: Arabic country questions, dictionary not crowding out textbooks, the answering line pointed out, Quran
       phrases with the small alif, exact car model names, recalls for car makes only, medicines per route.
-- [ ] Ask Ali: calculus source (OpenStax Calculus was never CC BY) — Applied Calculus (CC BY) or Contemporary Calculus (CC BY-SA)?
-- [ ] Ask Ali: Wikidata (CC0, huge, crowd-edited)? Dorar live search in a paid app — ask Dorar for written permission?
+- [x] Calculus: Applied Calculus (CC BY) — still no clean CC BY source for the trig-derivative chapter.
+- [x] Wikidata: option B (Ali: "if B is reliable then ok") — sourced statements only. Dorar: free on every plan.
+- [x] Small «AI can make mistakes» line under every AI ask box.
 - [ ] Next trial target: 45/45 on q08 (`tests/trials/packtrial.mjs`); misses left are mostly the tiny model misreading.
 
 ## Prompt to start the next session

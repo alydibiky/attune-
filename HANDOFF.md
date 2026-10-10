@@ -752,6 +752,24 @@ Ali: "Attune will charge money … find reliable free sources … full mark … 
   calculus source; Dorar live API in a paid app (ask Dorar in writing).
 - Builds that were still running at the end: fiqh (with MEASURES, ~1.5 h), dictionary (لسان العرب page by page, up to 6 h).
 
+### 5.49 (10–11 Oct 2026, v6.16) — Ali: "accuracy and reliability above all"; Wikidata B; Dorar free; the AI note
+- **AI note** (Ali: "like any AI, write in a small font that AI can make mistakes"): `data-testid=ai-note` under Chat's box,
+  Ask a file, Ask and Cycle — «Attune ذكاء اصطناعي وقد يخطئ، فتحقّق من المعلومات المهمة.» Test: e2e_v728ainote.py.
+- **Dorar is free** (Ali: "I won't take money from people for the Dorar service"): `billing.countsTowardLimit(q, isHadithQuestion)`
+  — a hadith question never counts toward a daily limit (whatever enforces FREE_LIMITS must ask it); plans table row
+  «Hadith search (Dorar): Free, unlimited» on every plan. Test: unit v729dorarfree.
+- **Wikidata (option B)**: `build_wikidata` — SPARQL per (class, property); a statement is kept only if a reference is a
+  non-Wikimedia URL (P854) or «stated in» (P248) a work that isn't a Wikipedia edition; not deprecated, not ended (P582); when
+  one value is «preferred», older ones are dropped. Each fact shows its source; the app scores Wikidata ×0.75 so official
+  packs lead. Famous people dropped (query over WDQS's 60 s). Queries are syntax-checked with rdflib in e2e_v724 (if
+  installed). A `\.` in a SPARQL string = 400 for every query — use CONTAINS.
+- **Calculus**: Applied Calculus (Calaway, Hoffman & Lippman, CC BY 3.0) from LibreTexts (`LIBRETEXTS`, LaTeX kept). No
+  CC BY trig-derivative chapter there; Lumen "suny-calc1and2" was a course page with adverts — removed (`PRESSBOOKS = []`).
+- **Quality**: fiqh dotted separators out (turath_text), nisab etc. in grams (`MEASURES`), «Click here to…» sentences out of
+  textbooks (`LINK_OUT`), audit check «site junk». Pack builds: `timeout-minutes: 350`, `PYTHONUNBUFFERED=1`.
+- Search: filler words out, 'single-quoted' exact, `near_phrase` ×2, `verseFirst`, squared exact-name bonus.
+- Trials: q08 23 → 39/45, q4b 34 → 41/45 (+3 the grader now accepts); see tests/trials/packtrial-*.md.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
