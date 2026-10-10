@@ -36,7 +36,7 @@ def get(url, timeout=120, accept=None):
             req = urllib.request.Request(url, headers=h)
             with urllib.request.urlopen(req, timeout=timeout) as r: return r.read()
         except Exception as e:
-            print("retry", url, e, file=sys.stderr); time.sleep(3 * (i + 1))
+            print("retry", url, e, file=sys.stderr); time.sleep((20 if "429" in str(e) else 3) * (i + 1))   # 429 = too fast: wait longer
     raise SystemExit("download failed: " + url)
 
 STOP = set("the a an of in on at to for and or is are was were be by with from as that this these those it its into about what which who whom whose when where why how do does did can could will would should may might than then there their them they he she his her you your i we our not no yes".split()) | \

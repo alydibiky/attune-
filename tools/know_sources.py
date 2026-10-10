@@ -479,6 +479,7 @@ TURATH_API = "https://api.turath.io/"
 
 def turath_json(B, path, **q):
     from urllib.parse import urlencode
+    time.sleep(1.2)   # turath answers 429 (too many requests) when asked faster
     try: return json.loads(B.get(TURATH_API + path + "?" + urlencode({**q, "ver": 3}), 120).decode("utf-8"))
     except BaseException as e: print(f"turath: {path} {q} failed ({e})"); return None
 
@@ -537,6 +538,7 @@ def fiqh_rows(book, title, by):
 
 def build_fiqh(a):
     B = _bk(); rows, used = turath_rows(B, FIQH_BOOKS)
+    if len(used) < len(FIQH_BOOKS): turath_probe(B)
     B.write_pack(a.out, "fiqh", rows, {
         "name": "Islamic jurisprudence (the classical books)", "name_ar": "الفقه الإسلامي (الكتب المعتمدة)",
         "license": "Classical texts (public domain), from the Shamela library via turath.io; editors' footnotes left out",
@@ -1179,6 +1181,21 @@ def build_coding(a):
         "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
 
 # ---- turath books in general (the fiqh pack's method): found by exact title, read whole, titled with chapter, volume and page ------------
+def turath_probe(B):
+    """When titles aren't found: print where turath's web app gets its list of books (its script's turath URLs and API paths),
+    so the next build can look titles up in that list instead of the full-text search."""
+    try:
+        html = B.get("https://app.turath.io/", 60).decode("utf-8", "replace")
+        srcs = re.findall(r'(?:src|href)="([^"]+\.js)"', html)
+        print("turath probe: scripts", srcs[:10])
+        seen = set()
+        for src in srcs[:6]:
+            js = B.get(src if src.startswith("http") else "https://app.turath.io" + ("" if src.startswith("/") else "/") + src, 60).decode("utf-8", "replace")
+            for u in re.findall(r'https?://[a-z0-9.-]*turath\.io[^"\'`\s)]*', js) + re.findall(r'["\'`](/(?:api/)?[a-z_]+(?:/[a-z_]+)?)\?', js):
+                if u not in seen: seen.add(u)
+        print("turath probe: URLs and paths:", sorted(seen)[:80])
+    except BaseException as e: print("turath probe failed", e)
+
 def turath_rows(B, specs):
     """specs: [(title, avoid, author hint, credit)] → (rows, sources)."""
     rows, used = [], []
