@@ -300,5 +300,30 @@ check(r and "Python docs" in r[0][0], "a coding question finds the docs: " + (r[
 txt = db.execute("SELECT text FROM passages WHERE text LIKE '%Math.sqrt%'").fetchone()[0]
 check("\nconst roots" in txt, "the pack keeps the code's line breaks for the phone")
 
+# ---- dictionary (Open English WordNet JSON), medicines (openFDA labels), car complaints (NHTSA) ----
+import io as _io, zipfile as _zip
+zb = _io.BytesIO()
+with _zip.ZipFile(zb, "w") as z:
+    z.writestr("entries-c.json", json.dumps({"crane": {"n": {"sense": [{"id": "crane%1:06:00::", "synset": "03126580-n"}, {"id": "crane%1:05:00::", "synset": "02003037-n"}]}, "v": {"sense": [{"id": "crane%2:38:00::", "synset": "01522878-v"}]}}}))
+    z.writestr("noun.artifact.json", json.dumps({"03126580-n": {"definition": ["lifts and moves heavy objects; lifting tackle is suspended from a pivoted boom"], "members": ["crane"], "partOfSpeech": "n"}}))
+    z.writestr("noun.animal.json", json.dumps({"02003037-n": {"definition": ["large long-necked wading bird"], "members": ["crane"], "partOfSpeech": "n"}}))
+    z.writestr("verb.motion.json", json.dumps({"01522878-v": {"definition": ["stretch (the neck) so as to see better"], "example": ["The women craned their necks"], "members": ["crane"], "partOfSpeech": "v"}}))
+wr = S.wordnet_rows(_zip.ZipFile(_io.BytesIO(zb.getvalue())))
+check(len(wr) == 1 and wr[0]["t"] == "Dictionary — crane" and "noun: 1) lifts and moves heavy objects" in wr[0]["x"] and "verb: 1) stretch (the neck)" in wr[0]["x"] and "e.g. “The women craned their necks”" in wr[0]["x"],
+      "Dictionary: every meaning of a word by part of speech, with examples")
+labels = [{"openfda": {"generic_name": ["ACETAMINOPHEN"], "brand_name": ["TYLENOL"], "route": ["ORAL"], "product_type": ["HUMAN OTC DRUG"]}, "effective_time": "20230101",
+           "purpose": ["Pain reliever/fever reducer"], "warnings": ["Liver warning: This product contains acetaminophen. Severe liver damage may occur if you take more than 4,000 mg in 24 hours."], "dosage_and_administration": ["adults: take 2 caplets every 6 hours"]},
+          {"openfda": {"generic_name": ["ACETAMINOPHEN"], "brand_name": ["OLD"], "product_type": ["HUMAN OTC DRUG"]}, "effective_time": "20190101", "warnings": ["old label"]}]
+dr = S.drug_rows(labels)
+check(dr and all("Acetaminophen (paracetamol)" in r["t"] for r in dr) and any("4,000 mg" in r["x"] and r["t"].endswith("— Warnings") for r in dr) and not any("old label" in r["x"] for r in dr) and "brands: Tylenol" in dr[0]["x"],
+      "Medicines: one medicine per generic name (newest label), its international name, a passage per section")
+man, db = pack("medicines", dr)
+r = search(db, "paracetamol maximum dose liver")
+check(r and "Acetaminophen" in r[0][0], "a medicine is found by its international name: " + (r[0][0] if r else "nothing"))
+cf = ["CMPLID", "ODINO", "MFR_NAME", "MAKETXT", "MODELTXT", "YEARTXT", "CRASH", "FAILDATE", "FIRE", "INJURED", "DEATHS", "COMPDESC"]
+mk = lambda comp, crash="N": "\t".join({"CMPLID": "1", "ODINO": "2", "MFR_NAME": "x", "MAKETXT": "TOYOTA", "MODELTXT": "CAMRY", "YEARTXT": "2012", "CRASH": crash, "FAILDATE": "", "FIRE": "N", "INJURED": "0", "DEATHS": "0", "COMPDESC": comp}[f] for f in cf)
+cr = S.complaint_rows([mk("AIR BAGS")] * 3 + [mk("ENGINE", "Y")] * 4, cf)
+check(len(cr) == 1 and "7 complaints" in cr[0]["x"] and "4 crashes" in cr[0]["x"] and "Engine (4), Air Bags (3)" in cr[0]["x"], "Cars: owner complaints per model-year with the most reported problems (reliability)")
+
 print("ALL PASSED" if not fails else f"{fails} FAILED")
 sys.exit(1 if fails else 0)

@@ -717,6 +717,84 @@ def eea_merge(parts):
         for f, (t, w) in o.pop("_s").items(): o[f] = t / w if w else None
     return list(out.values())
 
+# ---- car safety: NHTSA recalls and owner complaints (US government, public domain) — reliability for the car answers ------------------
+NHTSA = "https://static.nhtsa.gov/odi/ffdd/"
+def nhtsa_fields(doc):
+    """The field order from NHTSA's data dictionary (RCL.txt / CMPL.txt): lines like '20  DESC_DEFECT  VARCHAR2(2000) …'."""
+    f = {}
+    for line in doc.splitlines():
+        m = re.match(r"^\s*(\d{1,2})\s+([A-Z][A-Z0-9_]+)\s", line)
+        if m and int(m.group(1)) not in f: f[int(m.group(1))] = m.group(2)
+    return [f.get(i, f"F{i}") for i in range(1, max(f) + 1)] if f else []   # a missing number keeps its place (no shifted columns)
+
+def recall_rows(lines, fields, from_year=2000):
+    ix = {n: i for i, n in enumerate(fields)}
+    g = lambda r, n: (r[ix[n]].strip() if n in ix and ix[n] < len(r) else "")
+    by = {}
+    for line in lines:
+        r = line.rstrip("\r\n").split("\t")
+        if g(r, "RCLTYPECD") not in ("V", ""): continue
+        y = g(r, "YEARTXT")
+        if not y.isdigit() or int(y) < from_year: continue
+        key = (g(r, "MAKETXT").upper(), g(r, "MODELTXT").upper(), y)
+        camp = g(r, "CAMPNO")
+        lst = by.setdefault(key, {})
+        if camp in lst: continue
+        d = g(r, "RCDATE") or g(r, "ODATE")
+        lst[camp] = (f"{camp}" + (f" ({d[:4]}-{d[4:6]})" if len(d) >= 6 else "") + f" — {g(r, 'COMPNAME').title()}: " + g(r, "DESC_DEFECT")[:320]
+                     + (" Risk: " + g(r, "CONEQUENCE_DEFECT")[:200] if g(r, "CONEQUENCE_DEFECT") else "") + (" Fix: " + g(r, "CORRECTIVE_ACTION")[:160] if g(r, "CORRECTIVE_ACTION") else ""))
+    rows = []
+    for (mk, mo, y), lst in sorted(by.items()):
+        text = f"{mk.title()} {mo.title()} {y} — {len(lst)} safety recall(s) in the US (NHTSA): " + " | ".join(lst.values())
+        for piece in _bk().chunk(text, 1400):
+            rows.append({"t": f"{make_label(mk)} {mo.title()} {y} — recalls (NHTSA)", "x": piece, "u": f"https://www.nhtsa.gov/vehicle/{y}/{mk}/{mo}".replace(" ", "%20"), "l": "en"})
+    return rows
+
+def complaint_rows(lines, fields, from_year=2000, min_n=5):
+    ix = {n: i for i, n in enumerate(fields)}
+    g = lambda r, n: (r[ix[n]].strip() if n in ix and ix[n] < len(r) else "")
+    agg = {}
+    for line in lines:
+        r = line.rstrip("\r\n").split("\t")
+        y = g(r, "YEARTXT")
+        if not y.isdigit() or int(y) < from_year: continue
+        key = (g(r, "MAKETXT").upper(), g(r, "MODELTXT").upper(), y)
+        a = agg.setdefault(key, {"n": 0, "crash": 0, "fire": 0, "inj": 0, "dead": 0, "comp": {}})
+        a["n"] += 1; a["crash"] += g(r, "CRASH") == "Y"; a["fire"] += g(r, "FIRE") == "Y"
+        try: a["inj"] += int(g(r, "INJURED") or 0); a["dead"] += int(g(r, "DEATHS") or 0)
+        except ValueError: pass
+        for c in g(r, "COMPDESC").split(","):
+            c = c.strip().title()
+            if c: a["comp"][c] = a["comp"].get(c, 0) + 1
+    rows = []
+    for (mk, mo, y), a in sorted(agg.items()):
+        if a["n"] < min_n: continue
+        top = sorted(a["comp"].items(), key=lambda x: -x[1])[:6]
+        rows.append({"t": f"{make_label(mk)} {mo.title()} {y} — owner complaints (NHTSA)",
+                     "x": f"{mk.title()} {mo.title()} {y} — owner complaints to NHTSA (reliability): {a['n']:,} complaints; {a['crash']} crashes, {a['fire']} fires, {a['inj']} injured, {a['dead']} deaths. Most reported problems: "
+                          + ", ".join(f"{c} ({n})" for c, n in top) + ".", "u": "https://www.nhtsa.gov/recalls", "l": "en"})
+    return rows
+
+def nhtsa_safety(B):
+    rows = []
+    try:
+        z = zipfile.ZipFile(io.BytesIO(B.get(NHTSA + "rcl/FLAT_RCL.zip", 600)))
+        f = nhtsa_fields(B.get(NHTSA + "rcl/RCL.txt", 60).decode("latin-1"))
+        with z.open(z.namelist()[0]) as fh:
+            r = recall_rows(io.TextIOWrapper(fh, encoding="latin-1"), f)
+        print(f"cars: NHTSA recalls {len(r)} passages (fields {f[:6]}…)"); rows += r
+    except BaseException as e: print("cars: recalls failed", e)
+    try:
+        path = os.path.join(tempfile.mkdtemp(), "cmpl.zip")
+        subprocess.run(["curl", "-sfL", "--retry", "4", "-o", path, NHTSA + "cmpl/FLAT_CMPL.zip"], check=True, timeout=3600)
+        f = nhtsa_fields(B.get(NHTSA + "cmpl/CMPL.txt", 60).decode("latin-1"))
+        with zipfile.ZipFile(path) as z, z.open(z.namelist()[0]) as fh:
+            r = complaint_rows(io.TextIOWrapper(fh, encoding="latin-1"), f)
+        os.remove(path)
+        print(f"cars: NHTSA complaints {len(r)} model-years (fields {f[:6]}…)"); rows += r
+    except BaseException as e: print("cars: complaints failed", e)
+    return rows
+
 def build_cars(a):
     B = _bk(); rows = []
     try:
@@ -763,14 +841,16 @@ def build_cars(a):
         groups = eea_merge(parts)
         r = eea_rows(groups); print(f"cars: EEA {len(groups)} versions → {len(r)} passages"); rows += r
     except BaseException as e: print(f"cars: EEA failed ({e})")
+    rows += nhtsa_safety(B)
     B.write_pack(a.out, "cars", rows, {
         "name": "Cars — specs (US & Europe, incl. Chinese brands)", "name_ar": "السيارات — المواصفات (أمريكا وأوروبا، ومنها الصينية)",
         "license": "US EPA data: public domain. EEA data: CC BY 4.0",
-        "attribution": "US: fueleconomy.gov (US EPA / Department of Energy), every model sold in the US since 2000. Europe: CO2 monitoring data of new passenger cars, European Environment Agency (EEA), CC BY 4.0 — every version registered in the EU since 2010, Chinese brands included.",
+        "attribution": "US: fueleconomy.gov (US EPA / Department of Energy), every model sold in the US since 2000; safety recalls and owner complaints from NHTSA (public domain). Europe: CO2 monitoring data of new passenger cars, European Environment Agency (EEA), CC BY 4.0 — every version registered in the EU since 2010, Chinese brands included.",
         "notice": "Official test figures (EPA / WLTP); prices are not in these sources — ask online for today's price.",
         "notice_ar": "أرقام الاختبارات الرسمية (EPA / WLTP)؛ الأسعار ليست في هذه المصادر — اسأل عبر الإنترنت عن السعر الحالي.",
         "sources": [{"title": "fueleconomy.gov (US EPA)", "url": "https://www.fueleconomy.gov/feg/download.shtml", "license": "Public domain"},
-                    {"title": "EEA — CO2 emissions from new passenger cars", "url": "https://www.eea.europa.eu/en/datahub", "license": "CC BY 4.0"}],
+                    {"title": "EEA — CO2 emissions from new passenger cars", "url": "https://www.eea.europa.eu/en/datahub", "license": "CC BY 4.0"},
+                    {"title": "NHTSA recalls and complaints", "url": "https://www.nhtsa.gov/nhtsa-datasets-and-apis", "license": "Public domain"}],
         "retrieved": time.strftime("%Y-%m-%d")})
 
 # ---- subject packs (Ali): math, physics, chemistry, biology, history — OpenStax CC BY books, formulas and worked examples kept ----------
@@ -1020,4 +1100,142 @@ def build_coding(a):
         "attribution": "The official Python documentation (python.org), MDN Web Docs for JavaScript, HTML and CSS (by Mozilla Contributors, CC BY-SA 2.5) and the Kotlin documentation (JetBrains, Apache 2.0) — code examples kept with their lines.",
         "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
 
-BUILDERS = {"science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith, "cars": build_cars, "geography": build_geography, "coding": build_coding, **{k: (lambda a, k=k: build_subject(a, k)) for k in SUBJECTS}}
+# ---- turath books in general (the fiqh pack's method): found by exact title, read whole, titled with chapter, volume and page ------------
+def turath_rows(B, specs):
+    """specs: [(title, avoid, author hint, credit)] → (rows, sources)."""
+    rows, used = [], []
+    for title, avoid, author, credit in specs:
+        bid = name = None
+        for q in (title, title + " " + author if author else title):
+            for page in (1, 2, 3):
+                r = turath_json(B, "search", q=q, page=page)
+                bid, name = turath_pick((r or {}).get("data"), title, avoid, author)
+                if bid: break
+            if bid: break
+        if not bid: print(f"turath: «{title}» was not found"); continue
+        book = turath_book(B, bid)
+        if not book or not book.get("pages"): print(f"turath: «{name}» ({bid}) could not be read"); continue
+        book["_id"] = bid; r = fiqh_rows(book, title, credit)
+        print(f"turath: {bid} «{name}»: {len(book['pages'])} pages → {len(r)} passages")
+        rows += r; used.append({"title": f"{title} — {credit}", "url": f"https://app.turath.io/book/{bid}", "license": "Classical text (public domain), via the Shamela library"})
+    return rows, used
+
+ISLAM_LIB = [("تفسير القرآن العظيم", "", "ابن كثير", "ابن كثير (ت ٧٧٤هـ)"),
+             ("تيسير الكريم الرحمن في تفسير كلام المنان", "", "السعدي", "عبد الرحمن السعدي (ت ١٣٧٦هـ)"),
+             ("رياض الصالحين", "شرح", "النووي", "النووي (ت ٦٧٦هـ)"),
+             ("بلوغ المرام من أدلة الأحكام", "", "ابن حجر", "ابن حجر العسقلاني (ت ٨٥٢هـ)")]
+
+def build_islamlib(a):
+    B = _bk(); rows, used = turath_rows(B, ISLAM_LIB)
+    B.write_pack(a.out, "islamlib", rows, {
+        "name": "Islamic library (tafsir and hadith classics)", "name_ar": "المكتبة الإسلامية",
+        "license": "Classical texts (public domain), from the Shamela library via turath.io",
+        "attribution": "تفسير ابن كثير، وتفسير السعدي، ورياض الصالحين، وبلوغ المرام — النصوص كاملة كما في المكتبة الشاملة (turath.io)، مع الباب والجزء والصفحة لكل فقرة.",
+        "notice": "For learning; for a ruling on your own case, ask a qualified scholar or Dar al-Ifta.",
+        "notice_ar": "للتعلّم؛ وفي مسألتك الخاصة اسأل عالمًا موثوقًا أو دار الإفتاء.", "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
+
+# ---- dictionary: Open English WordNet 2025 (CC BY 4.0) + the classical Arabic dictionaries (public domain) ------------------------------
+WN_ZIP = "https://github.com/globalwordnet/english-wordnet/releases/download/2025-edition/english-wordnet-2025-json.zip"
+POS = {"n": "noun", "v": "verb", "a": "adjective", "s": "adjective", "r": "adverb"}
+AR_DICTS = [("لسان العرب", "", "ابن منظور", "ابن منظور (ت ٧١١هـ)"), ("مختار الصحاح", "", "الرازي", "زين الدين الرازي (ت ٦٦٦هـ)")]
+
+def wordnet_rows(z):
+    syn = {}
+    for n in z.namelist():
+        if n.endswith(".json") and not n.startswith("entries-"):
+            syn.update(json.loads(z.read(n)))
+    rows = []
+    for n in sorted(x for x in z.namelist() if x.startswith("entries-")):
+        for lemma, by_pos in json.loads(z.read(n)).items():
+            parts = []
+            for pos, e in by_pos.items():
+                senses = []
+                for i, sense in enumerate(e.get("sense") or [], 1):
+                    sy = syn.get(sense.get("synset")) or {}
+                    d = "; ".join(sy.get("definition") or [])
+                    if not d: continue
+                    ex = [x if isinstance(x, str) else x.get("text", "") for x in (sy.get("example") or [])][:2]
+                    others = [m for m in (sy.get("members") or []) if m != lemma][:6]
+                    senses.append(f"{i}) {d}" + (f" — e.g. “{ex[0]}”" if ex and ex[0] else "") + (f" (same as: {', '.join(others)})" if others else ""))
+                if senses: parts.append(f"{POS.get(pos, pos)}: " + " ".join(senses[:12]))
+            if parts:
+                rows.append({"t": f"Dictionary — {lemma}", "x": f"{lemma} — " + " | ".join(parts), "u": "https://en-word.net/lemma/" + lemma.replace(" ", "_"), "l": "en"})
+    return rows
+
+def build_dictionary(a):
+    B = _bk()
+    z = zipfile.ZipFile(io.BytesIO(B.get(WN_ZIP, 300)))
+    rows = wordnet_rows(z); print(f"dictionary: WordNet {len(rows)} words")
+    ar, used = turath_rows(B, AR_DICTS)
+    B.write_pack(a.out, "dictionary", rows + ar, {
+        "name": "Dictionary (English and classical Arabic)", "name_ar": "القاموس (الإنجليزي والعربي)",
+        "license": "Open English WordNet: CC BY 4.0; Arabic dictionaries: classical texts (public domain)",
+        "attribution": "Open English WordNet 2025 (en-word.net, CC BY 4.0, derived from Princeton WordNet) — every English word with its meanings, examples and synonyms; لسان العرب ومختار الصحاح من المكتبة الشاملة (turath.io).",
+        "sources": [{"title": "Open English WordNet 2025", "url": "https://en-word.net/", "license": "CC BY 4.0"}] + used, "retrieved": time.strftime("%Y-%m-%d")})
+
+# ---- medicines: every US drug label (openFDA, CC0 public domain) — uses, dose, contraindications, warnings, side effects, interactions ---
+OPENFDA = "https://api.fda.gov/download.json"
+DRUG_SECTIONS = [("boxed_warning", "Boxed warning"), ("indications_and_usage", "Uses"), ("dosage_and_administration", "Dose"),
+                 ("contraindications", "Do not use if"), ("warnings_and_cautions", "Warnings"), ("warnings", "Warnings"),
+                 ("adverse_reactions", "Side effects"), ("drug_interactions", "Interactions"), ("pregnancy", "Pregnancy"),
+                 ("use_in_specific_populations", "Special groups"), ("overdosage", "Overdose"), ("do_not_use", "Do not use"),
+                 ("stop_use", "Stop use and ask a doctor if"), ("purpose", "Purpose")]
+INN = {"ACETAMINOPHEN": "paracetamol", "ALBUTEROL": "salbutamol", "EPINEPHRINE": "adrenaline", "NOREPINEPHRINE": "noradrenaline", "MEPERIDINE": "pethidine",
+       "GLYBURIDE": "glibenclamide", "FUROSEMIDE": "frusemide", "LIDOCAINE": "lignocaine", "CYCLOSPORINE": "ciclosporin", "ISOPROTERENOL": "isoprenaline",
+       "PHENYLEPHRINE": "phenylephrine", "RIFAMPIN": "rifampicin", "SULFAMETHOXAZOLE": "sulphamethoxazole", "ACETYLSALICYLIC ACID": "aspirin", "ASPIRIN": "acetylsalicylic acid"}
+def drug_rows(labels):
+    """openFDA label records → one medicine per generic name (prescription first, newest label), a passage per section."""
+    best = {}
+    for d in labels:
+        of = d.get("openfda") or {}
+        g = ", ".join(sorted(set(x.strip().upper() for x in of.get("generic_name") or [] if x.strip())))
+        if not g or len(g) > 120: continue
+        rx = "PRESCRIPTION" in " ".join(of.get("product_type") or []).upper()
+        key = (rx, d.get("effective_time") or "")
+        if g not in best or key > best[g][0]: best[g] = (key, d)
+    rows = []
+    for g, (_, d) in sorted(best.items()):
+        of = d.get("openfda") or {}
+        brands = ", ".join(sorted(set(b.title() for b in of.get("brand_name") or []))[:5])
+        route = ", ".join(sorted(set(r.lower() for r in of.get("route") or []))[:3])
+        alias = " / ".join(INN[w] for w in INN if w in g)
+        name = g.title() + (f" ({alias})" if alias else "")
+        seen = set()
+        for key, label in DRUG_SECTIONS:
+            txt = re.sub(r"\s+", " ", " ".join(d.get(key) or [])).strip()
+            if not txt or label in seen: continue
+            seen.add(label)
+            txt = re.sub(r"^\d+(\.\d+)*\s+[A-Z &]+\s+", "", txt)[:2600]
+            for piece in _bk().chunk(txt, 900):
+                rows.append({"t": f"Medicine — {name} — {label}", "x": f"{name}" + (f" (brands: {brands})" if brands else "") + (f", {route}" if route else "") + f" — {label}: {piece}",
+                             "u": "https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=" + g.split(",")[0].replace(" ", "+"), "l": "en"})
+    return rows
+
+def build_medicines(a):
+    B = _bk()
+    idx = json.loads(B.get(OPENFDA, 120))
+    parts = idx["results"]["drug"]["label"]["partitions"]
+    labels = []
+    for prt in parts:
+        try:
+            z = zipfile.ZipFile(io.BytesIO(B.get(prt["file"], 600)))
+            for n in z.namelist():
+                for d in json.loads(z.read(n)).get("results") or []:
+                    labels.append({k: d.get(k) for k in ["openfda", "effective_time"] + [x for x, _ in DRUG_SECTIONS] if d.get(k)})
+            print(f"medicines: {prt['file'].rsplit('/', 1)[-1]}: {len(labels)} labels so far")
+        except BaseException as e: print("medicines: skip", prt.get("file"), e)
+    rows = drug_rows(labels); print(f"medicines: {len(rows)} passages")
+    budget = int(a.budget_mb * 1e6); kept, b = [], 0
+    for r in rows:
+        n = len(r["x"].encode())
+        if b + n > budget: continue
+        kept.append(r); b += n
+    B.write_pack(a.out, "medicines", kept, {
+        "name": "Medicines (FDA drug labels)", "name_ar": "الأدوية (نشرات هيئة الغذاء والدواء الأمريكية)",
+        "license": "Public domain (openFDA, CC0)",
+        "attribution": "openFDA drug labels (US Food and Drug Administration, CC0): every medicine's official label — uses, dose, contraindications, warnings, side effects, interactions, pregnancy, overdose.",
+        "notice": "From the official US labels — not medical advice; your doctor or pharmacist decides your dose.",
+        "notice_ar": "من النشرات الرسمية الأمريكية — ليست نصيحة طبية؛ الطبيب أو الصيدلي يحدد جرعتك.",
+        "sources": [{"title": "openFDA drug labels", "url": "https://open.fda.gov/apis/drug/label/", "license": "CC0 (public domain)"}], "retrieved": time.strftime("%Y-%m-%d")})
+
+BUILDERS = {"science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith, "cars": build_cars, "geography": build_geography, "coding": build_coding, "islamlib": build_islamlib, "dictionary": build_dictionary, "medicines": build_medicines, **{k: (lambda a, k=k: build_subject(a, k)) for k in SUBJECTS}}

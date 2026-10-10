@@ -8887,7 +8887,12 @@ export default function App() {
     // v5.20 deep research: pages in full, and the passages of one page / of all
     webPages: NATIVE ? (q, pages) => webLookupRaw(q, pages) : null,
     // v6.16: a car question also gets the Cars pack's official figures and today's exchange rates (cached 6 h)
-    carSpecs: NATIVE && NATIVE.knowSearch ? async (q) => ((await nativeCall("knowSearch", { q, k: 4, ids: ["cars"] })) || {}).passages || [] : null,
+    // the specs, then the same car's recalls and owner complaints (NHTSA) — reliability in every car answer
+    carSpecs: NATIVE && NATIVE.knowSearch ? async (q) => {
+      const a = ((await nativeCall("knowSearch", { q, k: 3, ids: ["cars"] })) || {}).passages || [];
+      const b = ((await nativeCall("knowSearch", { q: q + " recalls complaints NHTSA", k: 2, ids: ["cars"] })) || {}).passages || [];
+      return a.concat(b.filter((x) => !a.some((y) => y.id === x.id))).slice(0, 5);
+    } : null,
     fxRates: NATIVE && NATIVE.fxRates ? async () => {
       const now = Date.now();
       if (window.__attuneFx && now - window.__attuneFx.t < 6 * 3600e3) return window.__attuneFx.body;
