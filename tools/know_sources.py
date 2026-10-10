@@ -530,8 +530,14 @@ CHINESE = {"BYD", "MG", "SAIC", "CHERY", "OMODA", "JAECOO", "GEELY", "ZEEKR", "L
     "ORA", "HAVAL", "WEY", "DONGFENG", "VOYAH", "HONGQI", "AIWAYS", "SERES", "DFSK", "JAC", "CHANGAN", "BAIC", "GAC", "MAXUS", "XEV", "BESTUNE", "JETOUR",
     "EXEED", "TANK", "SKYWELL", "FORTHING", "KAIYI", "SWM", "BAW", "SMART", "LOTUS"}
 
+_MAKE_KEYS = sorted(MAKES_AR, key=len, reverse=True)
+def make_key(mk):
+    """'BYD AUTO' → 'BYD', 'MG. ROEWE' → 'MG', 'Mercedes-Benz' → 'MERCEDES-BENZ' (the longest known brand the name starts with)."""
+    u = re.sub(r"\s+", " ", (mk or "").strip().upper())
+    return next((k for k in _MAKE_KEYS if u == k or (u.startswith(k) and not u[len(k)].isalnum())), u)
+
 def make_label(mk):
-    m = (mk or "").strip(); u = m.upper()
+    m = (mk or "").strip(); u = make_key(m)
     ar = MAKES_AR.get(u, ""); cn = " — صيني" if u in CHINESE else ""
     return f"{m} ({ar}{cn})" if ar else m
 
@@ -586,7 +592,7 @@ def eea_rows(groups):
     """EEA groups [{Mk, Cn, Ft, Fm, ec, ep, m, ew, er, z, w, n, y0, y1}] → one passage per (make, model) with its versions."""
     models = {}
     for g in groups:
-        mk = (g.get("Mk") or "").strip().upper(); cn = re.sub(r"\s+", " ", (g.get("Cn") or "").strip().upper())
+        mk = make_key(g.get("Mk")); cn = re.sub(r"\s+", " ", (g.get("Cn") or "").strip().upper())
         if not mk or not cn or cn in ("?", "-"): continue
         bits = []
         ft = (g.get("Ft") or "").strip().lower(); bits.append(FUEL.get(ft, ft) + (" hybrid" if (g.get("Fm") or "") == "H" and "electric" not in ft else ""))
@@ -650,14 +656,26 @@ def build_cars(a):
         have = {}
         for r in years:
             y = int(_f(r.get("y")) or 0)
-            if y >= 2019 and (r.get("s") == "F" or y not in have): have[y] = r.get("s")
+            if y >= 2019 and (r.get("s") == "F" or y not in have): have[y] = (T, r.get("s"))
+        # newer years are published as their own tables (co2cars_2024Fv29, co2cars_2025Pv31…): the final one, else the newest provisional
+        tabs = eea_query(B, "SELECT TABLE_SCHEMA AS sch, TABLE_NAME AS t FROM [CO2Emission].INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'co2cars[_]20%'")
+        print("cars: EEA year tables", sorted(r.get("t") for r in tabs))
+        best = {}
+        for r in tabs:
+            m = re.match(r"co2cars_(20\d\d)([FP])v(\d+)$", r.get("t") or "")
+            if not m: continue
+            y, fp, v = int(m.group(1)), m.group(2), int(m.group(3))
+            rank = (fp == "F", v)
+            if y > max(have or [0]) - 0 and (y not in best or rank > best[y][0]): best[y] = (rank, f"[CO2Emission].[{r.get('sch') or 'latest'}].[{r.get('t')}]", fp)
+        for y, (_, tab, fp) in best.items():
+            if y not in have or (have[y][1] != "F" and fp == "F"): have[y] = (tab, fp)
         ec, ep = col("Ec (cm3)", "ec"), col("Ep (KW)", "ep")
         parts = []
-        for y, status in sorted(have.items()):
+        for y, (tab, status) in sorted(have.items()):
             sql = (f"SELECT {col('Mk')} AS Mk, {col('Cn')} AS Cn, {col('Ft')} AS Ft, {col('Fm')} AS Fm, ROUND({ec}, -1) AS ec, ROUND({ep}, 0) AS ep, "
                    f"AVG(CAST({col('M (kg)', 'm')} AS float)) AS m, AVG(CAST({col('W (mm)', 'W')} AS float)) AS w, AVG(CAST({col('Ewltp (g/km)', 'Ewltp')} AS float)) AS ew, "
                    f"AVG(CAST({col('Z (Wh/km)', 'z')} AS float)) AS z, SUM(CAST({col('R', 'r')} AS float)) AS n, {y} AS y "
-                   f"FROM {T} WHERE {yr} = {y} AND {st} = '{status}' "
+                   f"FROM {tab} WHERE {yr} = {y}" + (f" AND {st} = '{status}' " if tab == T else " ") +
                    f"GROUP BY {col('Mk')}, {col('Cn')}, {col('Ft')}, {col('Fm')}, ROUND({ec}, -1), ROUND({ep}, 0) HAVING SUM(CAST({col('R', 'r')} AS float)) >= 20")
             page = 1
             while True:
