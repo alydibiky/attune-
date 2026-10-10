@@ -270,6 +270,12 @@ def build_numbers(a):
 # ---- cities: GeoNames --------------------------------------------------------------------------------------------------------------
 AR = re.compile(r"[؀-ۿ]")
 
+AR_CORE = re.compile(r"^[\u0621-\u063A\u0641-\u0652\u0670 \-]+$")
+def arabic_name(alts):
+    """The Arabic name among a place's other names: Arabic letters only (U+0621–U+0652). Uyghur, Persian, Urdu and Kurdish
+    names use the same script with extra letters (ە ې ک گ پ چ ی) — «يەسكەندەريە» is not Arabic, so it's skipped."""
+    return next((x.strip() for x in alts if x.strip() and AR_CORE.match(x.strip()) and len(x.strip()) >= 2), "")
+
 def cities_rows(cities_tsv, country_tsv, admin1_tsv):
     countries, rows = {}, []
     for line in country_tsv.splitlines():
@@ -288,7 +294,7 @@ def cities_rows(cities_tsv, country_tsv, admin1_tsv):
         f = line.split("\t")
         if len(f) < 19: continue
         gid, name, alts, lat, lon, cc, a1, pop, tz = f[0], f[1], f[3], f[4], f[5], f[8], f[10], f[14], f[17]
-        ar = next((x for x in alts.split(",") if AR.search(x)), "")
+        ar = arabic_name(alts.split(","))
         region = admin.get(f"{cc}.{a1}", "")
         country = countries.get(cc, cc)
         rows.append({"t": f"{name}{' (' + ar + ')' if ar else ''} — {country}",
@@ -378,10 +384,14 @@ def quran_rows(txt):
         rows.append({"t": f"سورة {name} — الآية {v} ({s}:{v})", "x": t, "u": f"https://tanzil.net/#{s}:{v}", "l": "ar"})
     return rows, header
 
-# التفسير الميسر (King Fahd Complex), as published in Quran.com's library (QUL tafsir 38), one JSON file per surah:
-# [{surah, ayah, text}]. A surah's first verse also carries the surah's introduction (تسمية السورة، مقاصد السورة) before
-# "[التفسير]" — kept as its own passage. Every word is kept as published.
-MUYASSAR = "https://raw.githubusercontent.com/spa5k/tafsir_api/main/tafsir/ar-tafsir-muyassar/{}.json"
+# Per-verse tafsir from Quran.com's library (QUL), one JSON file per surah: [{surah, ayah, text}]. Attune is sold, so only
+# classical tafsir in the public domain: تفسير الجلالين (QUL 523; al-Mahalli d. 864H and al-Suyuti d. 911H) in the quran
+# pack, and تفسير ابن كثير (QUL 22; d. 774H) in the Islamic library. (التفسير الميسر, King Fahd Complex, is free to share
+# but not for sale, so it left on 10 Oct 2026.) The edition's own notes in [[double brackets]] (the editor's manuscript
+# variants, not the author's words) are taken out; every word of the tafsir itself is kept.
+TAFSIR_API = "https://raw.githubusercontent.com/spa5k/tafsir_api/main/tafsir/{}/{}.json"
+# (slug, name, QUL id, verses it explains at least: الجلالين leaves out 226 verses it had already explained or found plain)
+TAFSIRS = {"jalalayn": ("ar-tafsir-al-jalalayn", "تفسير الجلالين", 523, 6000), "ibnkathir": ("ar-tafsir-ibn-kathir", "تفسير ابن كثير", 22, 6236)}
 
 def split_intro(t):
     """The surah introduction (تسمية السورة / من مقاصد السورة and their • points) from the tafsir that follows it."""
@@ -392,55 +402,78 @@ def split_intro(t):
     while k < len(paras) and (paras[k].startswith("•") or paras[k] in ("تسمية السورة", "من مقاصد السورة")): k += 1
     return "\n\n".join(paras[:k]), "\n\n".join(paras[k:])
 
-def tafsir_rows(s, items, verses):
-    """One surah's تفسير ميسر → passages: the surah's introduction once, then the tafsir with its verse(s). When the tafsir
-    explains several verses together the source repeats it on each; those become one passage (الآيات ١–٦)."""
-    rows, name, intro_done, groups = [], SURAS[s - 1], False, []
+def editor_notes_out(t):
+    """[[في أ: "يفتتح".]] — an edition's footnote inside the text — out; the author's words stay."""
+    return re.sub(r"[ \t]*\[\[.*?\]\]", "", t, flags=re.S)
+
+def tafsir_rows(s, items, verses, name="تفسير الجلالين", slug="ar-tafsir-al-jalalayn", size=0):
+    """One surah's tafsir → passages: a surah introduction once (if the edition has one), then the tafsir with its verse(s).
+    When the tafsir explains several verses together the source repeats it on each (or leaves the others empty); those become
+    one passage (الآيات ١–٦). size > 0 cuts a long explanation into parts (ابن كثير), each still titled with its verses."""
+    rows, sura, intro_done, groups = [], SURAS[s - 1], False, []
     for it in sorted(items, key=lambda i: int(i["ayah"])):
         v = int(it["ayah"])
-        intro, t = split_intro((it.get("text") or "").strip())
+        intro, t = split_intro(editor_notes_out((it.get("text") or "").strip()))
         if intro and not intro_done:
-            rows.append({"t": f"التفسير الميسر — مقدمة سورة {name}", "x": intro, "u": f"https://quran.com/{s}", "l": "ar"}); intro_done = True
-        if not t: continue
+            rows.append({"t": f"{name} — مقدمة سورة {sura}", "x": intro, "u": f"https://quran.com/{s}", "l": "ar"}); intro_done = True
+        if not t:
+            if groups and groups[-1][0][-1] == v - 1: groups[-1][0].append(v)
+            continue
         if groups and groups[-1][1] == t and groups[-1][0][-1] == v - 1: groups[-1][0].append(v)
         else: groups.append(([v], t))
     for vs, t in groups:
         a, b = vs[0], vs[-1]
         quote = " ".join(f"﴿{verses[(s, v)]}﴾ ({v})" for v in vs if verses.get((s, v)))
         label = f"الآية {a} ({s}:{a})" if a == b else f"الآيات {a}–{b} ({s}:{a}-{b})"
-        rows.append({"t": f"التفسير الميسر — سورة {name}، {label}", "x": (quote + " " if quote else "") + t,
-                     "u": f"https://quran.com/{s}:{a}/tafsirs/ar-tafsir-muyassar", "l": "ar", "_n": len(vs)})
+        title, url = f"{name} — سورة {sura}، {label}", f"https://quran.com/{s}:{a}/tafsirs/{slug}"
+        parts = _bk().chunk(t, size) if size and len(t) > size * 1.3 else [t]
+        for j, part in enumerate(parts):
+            rows.append({"t": title + (f" — {j + 1}/{len(parts)}" if len(parts) > 1 else ""),
+                         "x": (quote[:1200] + " " if quote and j == 0 else "") + part, "u": url, "l": "ar", "_n": len(vs) if j == 0 else 0})
     return rows
 
-def build_quran(a):
-    B = _bk()
+def quran_verses(B):
     txt = B.get("https://tanzil.net/pub/download/index.php?quranType=simple&outType=txt-2&agree=true", 300).decode("utf-8")
-    rows, header = quran_rows(txt)
-    if len(rows) != 6236: raise SystemExit(f"Quran text: expected 6236 verses, got {len(rows)}")
     verses = {}
     for line in txt.splitlines():
         f = line.split("|")
         if len(f) == 3 and f[0].isdigit(): verses[(int(f[0]), int(f[1]))] = f[2].strip()
-    tafsir = []
+    return txt, verses
+
+def tafsir_all(B, key, verses, size=0):
+    slug, name, _, least = TAFSIRS[key]; rows = []
     for s in range(1, 115):
-        tafsir += tafsir_rows(s, json.loads(B.get(MUYASSAR.format(s), 120).decode("utf-8")), verses)
-    n = sum(r.pop("_n", 0) for r in tafsir)
-    if n != 6236: raise SystemExit(f"Tafsir al-Muyassar: expected 6236 verses, got {n}")
+        rows += tafsir_rows(s, json.loads(B.get(TAFSIR_API.format(slug, s), 120).decode("utf-8")), verses, name, slug, size)
+    n = sum(r.pop("_n", 0) for r in rows)
+    if not least <= n <= 6236: raise SystemExit(f"{name}: expected {least}–6236 verses, got {n}")
+    return rows
+
+def build_quran(a):
+    B = _bk()
+    txt, verses = quran_verses(B)
+    rows, header = quran_rows(txt)
+    if len(rows) != 6236: raise SystemExit(f"Quran text: expected 6236 verses, got {len(rows)}")
+    tafsir = tafsir_all(B, "jalalayn", verses)
     print(f"quran: {len(rows)} verses + {len(tafsir)} tafsir passages")
     B.write_pack(a.out, "quran", rows + tafsir, {
-        "name": "The Quran + Tafsir al-Muyassar", "name_ar": "القرآن الكريم مع التفسير الميسر",
-        "license": "Quran text: Tanzil Project, verbatim with credit. Tafsir: King Fahd Complex, free to share, with credit",
+        "name": "The Quran + Tafsir al-Jalalayn", "name_ar": "القرآن الكريم مع تفسير الجلالين",
+        "license": "Quran text: Tanzil Project, verbatim with credit (commercial use allowed). Tafsir al-Jalalayn: classical text (public domain)",
         "attribution": "Quran text from the Tanzil Project (tanzil.net), verbatim, one passage per verse. " + " ".join(h for h in header if h)[:600]
-                       + " — التفسير الميسر: نخبة من العلماء، مجمع الملك فهد لطباعة المصحف الشريف، كما نشرته مكتبة Quran.com (QUL).",
+                       + " — تفسير الجلالين: جلال الدين المحلي (ت ٨٦٤هـ) وجلال الدين السيوطي (ت ٩١١هـ)، كما نشرته مكتبة Quran.com (QUL).",
         "sources": [{"title": "Tanzil Project", "url": "https://tanzil.net/", "license": "Verbatim copies with credit"},
-                    {"title": "التفسير الميسر — مجمع الملك فهد (Quran.com QUL, tafsir 38)", "url": "https://qul.tarteel.ai/resources/tafsir/38", "license": "Free to share, with credit"}],
+                    {"title": "تفسير الجلالين (Quran.com QUL, tafsir 523)", "url": "https://qul.tarteel.ai/resources/tafsir/523", "license": "Classical text (public domain)"}],
         "retrieved": time.strftime("%Y-%m-%d")})
 
-# ---- fiqh: الفقه الميسر, the full books from turath.io (the Shamela library's texts) -----------------------------------------------
+# ---- fiqh: the classical books (public domain — Attune is sold, so not the modern الفقه الميسر), from turath.io ---------------------
 # files.turath.io/books/<id>.json → {meta: {name, …}, indexes: {headings: [{title, level, page}], …}, pages: [{text, vol, page}]}
-FIQH_BOOKS = [   # (exact book title on turath, a word that must NOT be in it, author hint, credit)
-    ("الفقه الميسر", "ضوء", "الطيار", "عبد الله الطيار، عبد الله المطلق، محمد الموسى (مدار الوطن، ١٣ جزءًا)"),
-    ("الفقه الميسر في ضوء الكتاب والسنة", "", "", "نخبة من العلماء، مجمع الملك فهد لطباعة المصحف الشريف"),
+# A title may list other names it's published under («A|B»). The modern editor's footnotes are left out (turath_text).
+FIQH_BOOKS = [   # (title on turath, a word that must NOT be in it, author hint, credit)
+    ("الفقه على المذاهب الأربعة", "", "الجزيري", "عبد الرحمن الجزيري (ت ١٣٦٠هـ / ١٩٤١م) — الفقه على المذاهب الأربعة"),
+    ("بداية المجتهد ونهاية المقتصد", "شرح", "رشد", "ابن رشد الحفيد (ت ٥٩٥هـ) — الفقه المقارن بأدلته"),
+    ("عمدة الفقه", "شرح", "قدامة", "ابن قدامة المقدسي (ت ٦٢٠هـ) — المذهب الحنبلي"),
+    ("متن أبي شجاع|الغاية والتقريب|متن الغاية والتقريب", "شرح", "", "أبو شجاع الأصفهاني (ت ٥٩٣هـ) — المذهب الشافعي"),
+    ("مختصر القدوري", "شرح", "القدوري", "أبو الحسين القدوري (ت ٤٢٨هـ) — المذهب الحنفي"),
+    ("مختصر خليل|مختصر العلامة خليل", "شرح", "خليل", "خليل بن إسحاق الجندي (ت ٧٧٦هـ) — المذهب المالكي"),
 ]
 TURATH_API = "https://api.turath.io/"
 
@@ -474,9 +507,14 @@ def turath_book(B, bid):
         time.sleep(0.15)   # gently
     return {"meta": info.get("meta") or {}, "indexes": {"headings": idx.get("headings") or []}, "pages": pages}
 
-def turath_text(html):
-    """A turath page → plain text: tags out, entities decoded; every word kept (footnotes too)."""
+def turath_text(html, notes=False):
+    """A turath page → plain text: tags out, entities decoded. The modern editor's footnotes (below the page's ____ line, and
+    their (1) marks in the text) are copyrighted, not the author's words, so they're left out unless notes=True."""
     t = re.sub(r"<br\s*/?>|</p>", "\n", html or "")
+    if not notes:
+        parts = re.split(r"<hr\b[^>]*>|\n\s*_{5,}\s*", t, maxsplit=1)
+        t = parts[0]
+        if len(parts) > 1: t = re.sub(r"[ \t]*\(\s*[0-9\u0660-\u0669]{1,3}\s*\)(?=[\s.،؛:]|$)", "", t)
     t = re.sub(r"<[^>]+>", "", t)
     return htmlmod.unescape(t).replace("\u200f", "").strip()
 
@@ -498,25 +536,11 @@ def fiqh_rows(book, title, by):
     return rows
 
 def build_fiqh(a):
-    B = _bk(); rows, used = [], []
-    for title, avoid, author, credit in FIQH_BOOKS:
-        bid = name = None
-        for q in (title, title + " " + author if author else title):
-            for page in (1, 2, 3):
-                r = turath_json(B, "search", q=q, page=page)
-                bid, name = turath_pick((r or {}).get("data"), title, avoid, author)
-                if bid: break
-            if bid: break
-        if not bid: print(f"fiqh: «{title}» was not found on turath"); continue
-        book = turath_book(B, bid)
-        if not book or not book.get("pages"): print(f"fiqh: «{name}» ({bid}) could not be read"); continue
-        book["_id"] = bid; r = fiqh_rows(book, title, credit)
-        print(f"fiqh: {bid} «{name}»: {len(book['pages'])} pages → {len(r)} passages")
-        rows += r; used.append({"title": f"{title} — {credit}", "url": f"https://app.turath.io/book/{bid}", "license": "Shared freely for learning, with credit"})
+    B = _bk(); rows, used = turath_rows(B, FIQH_BOOKS)
     B.write_pack(a.out, "fiqh", rows, {
-        "name": "Islamic jurisprudence (al-Fiqh al-Muyassar)", "name_ar": "الفقه الميسر",
-        "license": "The publishers' texts as shared by the Shamela library (turath.io), for learning, with credit",
-        "attribution": "الفقه الميسر — النص كاملًا كما في المكتبة الشاملة (turath.io)، مع اسم الكتاب والباب والجزء والصفحة لكل فقرة.",
+        "name": "Islamic jurisprudence (the classical books)", "name_ar": "الفقه الإسلامي (الكتب المعتمدة)",
+        "license": "Classical texts (public domain), from the Shamela library via turath.io; editors' footnotes left out",
+        "attribution": "الفقه على المذاهب الأربعة (الجزيري)، وبداية المجتهد (ابن رشد)، وعمدة الفقه (ابن قدامة)، ومتن أبي شجاع، ومختصر القدوري، ومختصر خليل — النصوص كاملة كما في المكتبة الشاملة (turath.io)، مع اسم الكتاب والباب والجزء والصفحة لكل فقرة.",
         "notice": "For learning; for a ruling on your own case, ask a qualified scholar or Dar al-Ifta.",
         "notice_ar": "للتعلّم؛ وفي مسألتك الخاصة اسأل عالمًا موثوقًا أو دار الإفتاء.",
         "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
@@ -973,7 +997,7 @@ def geo_feature_rows(lines, countries, admin, min_names=8):
         f = line.rstrip("\n").split("\t")
         if len(f) < 19 or f[7] not in GEO_KINDS: continue
         alts = [x for x in f[3].split(",") if x]
-        ar = next((x for x in alts if AR.search(x)), "")
+        ar = arabic_name(alts)
         elev = f[15] or f[16]
         try: e = int(float(elev)) if elev not in ("", "-9999") else None
         except ValueError: e = None
@@ -1136,15 +1160,24 @@ def build_coding(a):
 def turath_rows(B, specs):
     """specs: [(title, avoid, author hint, credit)] → (rows, sources)."""
     rows, used = [], []
-    for title, avoid, author, credit in specs:
-        bid = name = None
-        for q in (title, title + " " + author if author else title):
-            for page in (1, 2, 3):
-                r = turath_json(B, "search", q=q, page=page)
-                bid, name = turath_pick((r or {}).get("data"), title, avoid, author)
+    for titles, avoid, author, credit in specs:
+        bid = name = None; title = titles.split("|")[0]
+        for t in titles.split("|"):
+            for q in (t, t + " " + author if author else t):
+                for page in (1, 2, 3):
+                    r = turath_json(B, "search", q=q, page=page)
+                    bid, name = turath_pick((r or {}).get("data"), t, avoid, author)
+                    if bid: break
                 if bid: break
             if bid: break
-        if not bid: print(f"turath: «{title}» was not found"); continue
+        if not bid:
+            r = turath_json(B, "search", q=title) or {}
+            seen = []
+            for h in (r.get("data") or [])[:30]:
+                m = h.get("meta"); m = json.loads(m) if isinstance(m, str) else (m or {})
+                x = f"{h.get('book_id')} «{m.get('book_name')}» ({(m.get('author_name') or '')[:40]})"
+                if x not in seen: seen.append(x)
+            print(f"turath: «{title}» was not found; the search gave: " + "; ".join(seen[:12])); continue
         book = turath_book(B, bid)
         if not book or not book.get("pages"): print(f"turath: «{name}» ({bid}) could not be read"); continue
         book["_id"] = bid; r = fiqh_rows(book, title, credit)
@@ -1152,19 +1185,24 @@ def turath_rows(B, specs):
         rows += r; used.append({"title": f"{title} — {credit}", "url": f"https://app.turath.io/book/{bid}", "license": "Classical text (public domain), via the Shamela library"})
     return rows, used
 
-ISLAM_LIB = [("تفسير القرآن العظيم", "", "ابن كثير", "ابن كثير (ت ٧٧٤هـ)"),
-             ("تيسير الكريم الرحمن في تفسير كلام المنان", "", "السعدي", "عبد الرحمن السعدي (ت ١٣٧٦هـ)"),
-             ("رياض الصالحين", "شرح", "النووي", "النووي (ت ٦٧٦هـ)"),
-             ("بلوغ المرام من أدلة الأحكام", "", "ابن حجر", "ابن حجر العسقلاني (ت ٨٥٢هـ)")]
+ISLAM_LIB = [("رياض الصالحين", "شرح", "النووي", "النووي (ت ٦٧٦هـ)"),
+             ("بلوغ المرام من أدلة الأحكام", "شرح", "حجر", "ابن حجر العسقلاني (ت ٨٥٢هـ)")]
 
 def build_islamlib(a):
-    B = _bk(); rows, used = turath_rows(B, ISLAM_LIB)
-    B.write_pack(a.out, "islamlib", rows, {
-        "name": "Islamic library (tafsir and hadith classics)", "name_ar": "المكتبة الإسلامية",
-        "license": "Classical texts (public domain), from the Shamela library via turath.io",
-        "attribution": "تفسير ابن كثير، وتفسير السعدي، ورياض الصالحين، وبلوغ المرام — النصوص كاملة كما في المكتبة الشاملة (turath.io)، مع الباب والجزء والصفحة لكل فقرة.",
+    """تفسير ابن كثير verse by verse (Quran.com QUL) + رياض الصالحين and بلوغ المرام whole (turath.io). Public domain only:
+    تفسير السعدي left (its author died in 1956, so it is still under copyright in some countries until 2027)."""
+    B = _bk()
+    _, verses = quran_verses(B)
+    ik = tafsir_all(B, "ibnkathir", verses, size=1400); print(f"islamlib: تفسير ابن كثير {len(ik)} passages")
+    rows, used = turath_rows(B, ISLAM_LIB)
+    B.write_pack(a.out, "islamlib", ik + rows, {
+        "name": "Islamic library (Ibn Kathir, Riyad as-Salihin, Bulugh al-Maram)", "name_ar": "المكتبة الإسلامية",
+        "license": "Classical texts (public domain); editions' footnotes left out",
+        "attribution": "تفسير ابن كثير (ت ٧٧٤هـ) آيةً آية كما نشرته مكتبة Quran.com (QUL)، ورياض الصالحين (النووي) وبلوغ المرام (ابن حجر) كاملين كما في المكتبة الشاملة (turath.io)، مع الباب والجزء والصفحة لكل فقرة.",
         "notice": "For learning; for a ruling on your own case, ask a qualified scholar or Dar al-Ifta.",
-        "notice_ar": "للتعلّم؛ وفي مسألتك الخاصة اسأل عالمًا موثوقًا أو دار الإفتاء.", "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
+        "notice_ar": "للتعلّم؛ وفي مسألتك الخاصة اسأل عالمًا موثوقًا أو دار الإفتاء.",
+        "sources": [{"title": "تفسير ابن كثير (Quran.com QUL, tafsir 22)", "url": "https://qul.tarteel.ai/resources/tafsir/22", "license": "Classical text (public domain)"}] + used,
+        "retrieved": time.strftime("%Y-%m-%d")})
 
 # ---- dictionary: Open English WordNet 2025 (CC BY 4.0) + the classical Arabic dictionaries (public domain) ------------------------------
 WN_ZIP = "https://github.com/globalwordnet/english-wordnet/releases/download/2025-edition/english-wordnet-2025-json.zip"
@@ -1215,20 +1253,36 @@ DRUG_SECTIONS = [("boxed_warning", "Boxed warning"), ("indications_and_usage", "
 INN = {"ACETAMINOPHEN": "paracetamol", "ALBUTEROL": "salbutamol", "EPINEPHRINE": "adrenaline", "NOREPINEPHRINE": "noradrenaline", "MEPERIDINE": "pethidine",
        "GLYBURIDE": "glibenclamide", "FUROSEMIDE": "frusemide", "LIDOCAINE": "lignocaine", "CYCLOSPORINE": "ciclosporin", "ISOPROTERENOL": "isoprenaline",
        "PHENYLEPHRINE": "phenylephrine", "RIFAMPIN": "rifampicin", "SULFAMETHOXAZOLE": "sulphamethoxazole", "ACETYLSALICYLIC ACID": "aspirin", "ASPIRIN": "acetylsalicylic acid"}
+COSMETIC = re.compile(r"\b(SUNSCREEN|SPF|ANTIPERSPIRANT|DEODORANT|TOOTHPASTE|SHAMPOO|LIP BALM|HAND SANITI[SZ]ER|SCENT|FOUNDATION|MOISTURI[SZ]ER|SERUM|BB CREAM|CC CREAM|MAKEUP|CONCEALER|LIPSTICK|FRAGRANCE)\b")
+
+def drug_name(of):
+    """The medicine's name = its active ingredients (openFDA substance_name), so «Ibuprofen 200Mg», «IBUPROFEN» and a store brand
+    are one medicine. Labels without them fall back to the generic name with doses, percentages and stray brackets taken out."""
+    subs = sorted(set(x.strip().upper() for x in of.get("substance_name") or [] if x.strip()))
+    if subs: return ", ".join(subs)
+    g = ", ".join(sorted(set(x.strip().upper() for x in of.get("generic_name") or [] if x.strip())))
+    g = re.sub(r"\d+(\.\d+)?\s*(%|MG|MCG|G|ML|IU)\b", "", g)
+    g = re.sub(r"[()\[\]]", "", g)
+    return re.sub(r"\s+", " ", g).strip(" ,-")
+
 def drug_rows(labels):
-    """openFDA label records → one medicine per generic name (prescription first, newest label), a passage per section."""
+    """openFDA label records → one medicine per set of active ingredients (prescription first, newest label), a passage per
+    section. Cosmetics with a drug label (sunscreens, antiperspirants, toothpaste) are left out — not what people ask about."""
     best = {}
     for d in labels:
         of = d.get("openfda") or {}
-        g = ", ".join(sorted(set(x.strip().upper() for x in of.get("generic_name") or [] if x.strip())))
-        if not g or len(g) > 120: continue
+        g = drug_name(of)
+        if not g or len(g) > 120 or not re.search(r"[A-Z]{3}", g): continue
+        if COSMETIC.search(" ".join((of.get("generic_name") or []) + (of.get("brand_name") or [])).upper()): continue
+        if not (d.get("indications_and_usage") or d.get("purpose")): continue
         rx = "PRESCRIPTION" in " ".join(of.get("product_type") or []).upper()
         key = (rx, d.get("effective_time") or "")
-        if g not in best or key > best[g][0]: best[g] = (key, d)
+        if g not in best or key > best[g][0]: best[g] = (key, d, best.get(g, (0, 0, set()))[2])
+        best[g][2].update(b.strip().title() for b in of.get("brand_name") or [] if b.strip())
     rows = []
-    for g, (_, d) in sorted(best.items()):
+    for g, (_, d, brand_set) in sorted(best.items()):
         of = d.get("openfda") or {}
-        brands = ", ".join(sorted(set(b.title() for b in of.get("brand_name") or []))[:5])
+        brands = ", ".join(sorted(b for b in brand_set if b.upper() != g)[:8])
         route = ", ".join(sorted(set(r.lower() for r in of.get("route") or []))[:3])
         alias = " / ".join(INN[w] for w in INN if w in g)
         name = g.title() + (f" ({alias})" if alias else "")

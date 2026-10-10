@@ -108,15 +108,24 @@ man, db = pack("quran", rows)
 r = search(db, "لا تأخذه سنة ولا نوم")
 check(r and "2:255" in r[0][0], "a verse is found from its words without diacritics (آية الكرسي)")
 
-# ---- التفسير الميسر (QUL tafsir 38) ----
+# ---- per-verse tafsir (QUL; the intro format is kept for editions that have one) ----
 INTRO = "تسمية السورة\n\n• سميت الذاريات؛ لتفردها وافتتاحها بقَسَم الله بالذاريات.\n\nمن مقاصد السورة\n\n• تأكيدُ وقوعِ البعث والجزاء."
 T16 = "أقسم الله تعالى بالرياح المثيرات للتراب، فالسحب الحاملات ثِقْلًا عظيمًا من الماء."
 items = [{"surah": "51", "ayah": str(v), "text": INTRO + "\n\n[التفسير]\n\n" + T16} for v in range(1, 7)] + [{"surah": "51", "ayah": "7", "text": "وأقسم الله بالسماء ذات الطرق الحسنة."}]
 tr = S.tafsir_rows(51, items, {(51, 1): "وَالذَّارِيَاتِ ذَرْوًا", (51, 7): "وَالسَّمَاءِ ذَاتِ الْحُبُكِ"})
-check(len(tr) == 3 and tr[0]["t"] == "التفسير الميسر — مقدمة سورة الذاريات" and tr[0]["x"] == INTRO, "Tafsir: the surah's introduction once, word for word, though the source repeats it")
+check(len(tr) == 3 and tr[0]["t"] == "تفسير الجلالين — مقدمة سورة الذاريات" and tr[0]["x"] == INTRO, "Tafsir: the surah's introduction once, word for word, though the source repeats it")
 check(tr[1]["t"].endswith("الآيات 1–6 (51:1-6)") and tr[1]["_n"] == 6 and tr[1]["x"].endswith(T16) and "﴿وَالذَّارِيَاتِ ذَرْوًا﴾ (1)" in tr[1]["x"], "Tafsir: verses explained together are one passage, with the verse text quoted")
 check(tr[2]["t"].endswith("الآية 7 (51:7)") and tr[2]["x"].startswith("﴿وَالسَّمَاءِ ذَاتِ الْحُبُكِ﴾"), "Tafsir: a single verse with its own explanation")
 i5, t5 = S.split_intro("تسمية السورة\n\n• سميت المائدة.\n\nمن مقاصد السورة\n\n• بيان العقود.\n\nيا أيها الذين صدَّقوا الله ورسوله، أتِمُّوا عهود الله.")
+ik = S.tafsir_rows(1, [{"surah": "1", "ayah": "1", "text": 'فَاتِحَةُ الْكِتَابِ وَبِهَا تُفْتَحُ [[في أ: "يفتتح".]] الْقِرَاءَةُ.'}, {"surah": "1", "ayah": "2", "text": ""},
+                    {"surah": "1", "ayah": "3", "text": "الرَّحْمَنِ الرَّحِيمِ تَقَدَّمَ."}], {}, "تفسير ابن كثير", "ar-tafsir-ibn-kathir")
+check(len(ik) == 2 and "[[" not in ik[0]["x"] and "وَبِهَا تُفْتَحُ الْقِرَاءَةُ" in ik[0]["x"] and ik[0]["t"].endswith("الآيات 1–2 (1:1-2)") and ik[0]["u"].endswith("/ar-tafsir-ibn-kathir"),
+      "Tafsir: the edition's [[notes]] are out (the author's words stay); an empty verse joins the explanation before it")
+long = S.tafsir_rows(1, [{"surah": "1", "ayah": "1", "text": "جملة طويلة في التفسير. " * 200}], {(1, 1): "بِسْمِ اللَّهِ"}, "تفسير ابن كثير", "x", 1400)
+check(len(long) > 2 and long[0]["t"].endswith("— 1/" + str(len(long))) and long[0]["x"].startswith("﴿بِسْمِ اللَّهِ﴾") and not long[1]["x"].startswith("﴿") and sum(r["_n"] for r in long) == 1,
+      "Tafsir: a long explanation (ابن كثير) is cut into numbered parts, the verse quoted once, counted once")
+check(all("الميسر" not in str(v) for v in S.TAFSIRS.values()) and "الميسر" not in str(S.FIQH_BOOKS) and "السعدي" not in str(S.ISLAM_LIB),
+      "Licences: no modern copyrighted Islamic book is built into a pack (Attune is sold)")
 check(i5.endswith("• بيان العقود.") and t5.startswith("يا أيها الذين"), "Tafsir: an introduction without the [التفسير] mark is still separated (al-Ma'idah)")
 man, db = pack("quran", rows + [{k: v for k, v in r.items() if k != "_n"} for r in tr])
 r = search(db, "ما معنى الذاريات")
@@ -136,6 +145,9 @@ hits = [{"book_id": 1, "meta": json.dumps({"book_name": "الفقه الميسر
         {"book_id": 3, "meta": {"book_name": "الفقه الميسر", "author_name": "عبد الله بن محمد الطيار وآخرون"}}]
 check(S.turath_pick(hits, "الفقه الميسر", "ضوء", "الطيار") == (3, "الفقه الميسر") and S.turath_pick(hits, "الفقه الميسر في ضوء الكتاب والسنة", "", "")[0] == 1,
       "Fiqh: each book is found on turath by its exact title (not a longer book that mentions it)")
+ft = S.turath_text("الماء طهور (1) لا ينجسه شيء (٢).<br>__________<br>(1) رواه أبو داود، وصححه المحقق.<br>(٢) انظر الطبعة الأولى.")
+check(ft == "الماء طهور لا ينجسه شيء." and "المحقق" not in ft, "Turath: the modern editor's footnotes and their (1) marks are left out: " + ft)
+check(S.turath_text("حديث (12) في الباب.") == "حديث (12) في الباب.", "Turath: a number in brackets stays when the page has no footnotes")
 man, db = pack("fiqh", fr)
 r = search(db, "ما هي شروط الصلاة؟")
 check(r and "شروط الصلاة" in r[0][0], "a fiqh question finds its chapter: " + (r[0][0] if r else "nothing"))
@@ -320,6 +332,15 @@ check(dr and all("Acetaminophen (paracetamol)" in r["t"] for r in dr) and any("4
 man, db = pack("medicines", dr)
 r = search(db, "paracetamol maximum dose liver")
 check(r and "Acetaminophen" in r[0][0], "a medicine is found by its international name: " + (r[0][0] if r else "nothing"))
+check(S.arabic_name(["Alexandria", "yەskەndەryە", "ئىسكەندەرىيە", "اسکندریه", "الإسكندرية"]) == "الإسكندرية" and S.arabic_name(["Paris", "پاریس"]) == "",
+      "Places: the Arabic name is the one in Arabic letters only — not Uyghur, Persian or a mixed spelling")
+labels2 = [{"openfda": {"generic_name": ["IBUPROFEN 200 MG"], "substance_name": ["IBUPROFEN"], "brand_name": ["ADVIL"], "product_type": ["HUMAN OTC DRUG"]}, "effective_time": "20240101", "purpose": ["Pain reliever"]},
+           {"openfda": {"generic_name": ["IBUPROFEN"], "substance_name": ["IBUPROFEN"], "brand_name": ["MOTRIN"], "product_type": ["HUMAN PRESCRIPTION DRUG"]}, "effective_time": "20200101", "indications_and_usage": ["For pain and fever"]},
+           {"openfda": {"generic_name": ["(CHLOROPROCAINE HCI"], "brand_name": ["NESACAINE"]}, "effective_time": "20200101", "indications_and_usage": ["Local anaesthesia"]},
+           {"openfda": {"generic_name": ["BLACK FROZEN PEAR SCENT 48H ANTIPERSPIRANT"], "substance_name": ["ALUMINUM ZIRCONIUM TETRACHLOROHYDREX GLY"]}, "effective_time": "20240101", "purpose": ["Antiperspirant"]}]
+d2 = S.drug_rows(labels2); names2 = sorted(set(r["t"].split(" — ")[1] for r in d2))
+check(names2 == ["Chloroprocaine Hci", "Ibuprofen"] and any("For pain and fever" in r["x"] and "Advil" in r["x"] and "Motrin" in r["x"] for r in d2),
+      "Medicines: one entry per active ingredient (prescription label first, all brands listed), no stray brackets, no cosmetics: " + str(names2))
 cf = ["CMPLID", "ODINO", "MFR_NAME", "MAKETXT", "MODELTXT", "YEARTXT", "CRASH", "FAILDATE", "FIRE", "INJURED", "DEATHS", "COMPDESC"]
 mk = lambda comp, crash="N": "\t".join({"CMPLID": "1", "ODINO": "2", "MFR_NAME": "x", "MAKETXT": "TOYOTA", "MODELTXT": "CAMRY", "YEARTXT": "2012", "CRASH": crash, "FAILDATE": "", "FIRE": "N", "INJURED": "0", "DEATHS": "0", "COMPDESC": comp}[f] for f in cf)
 cr = S.complaint_rows([mk("AIR BAGS")] * 3 + [mk("ENGINE", "Y")] * 4, cf)

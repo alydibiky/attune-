@@ -224,7 +224,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("pack", choices=["world", "laws", "science", "health", "numbers", "cities", "cranes", "quran", "fiqh", "hadith", "cars", "math", "physics", "chemistry", "biology", "history", "geography", "coding", "business", "economics", "society", "islamlib", "dictionary", "medicines"]); ap.add_argument("out")
     ap.add_argument("--max-countries", type=int, default=0)
-    ap.add_argument("--allow-nc", action="store_true", help="subject packs: also take non-commercial (CC BY-NC-SA) books")
     ap.add_argument("--budget-mb", type=float, default=15)
     ap.add_argument("--parquet", default="")
     ap.add_argument("--tree", default="", help="world: the repository's file list (JSON from the GitHub trees API) instead of asking for it")

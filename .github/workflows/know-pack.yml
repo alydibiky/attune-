@@ -5,14 +5,14 @@ name: Build a knowledge pack
 #   world     CIA World Factbook (public domain)            laws      Egyptian Legal Corpus (MIT as declared)
 #   numbers   World Bank open data (CC BY 4.0)              cities    GeoNames (CC BY 4.0)
 #   science   OpenStax textbooks, CC BY only (CC BY 4.0)    health    MedlinePlus, NLM (public domain)
-#   cranes    OSHA crane rules, govinfo CFR (public domain)        quran     Tanzil Quran text + التفسير الميسر (King Fahd Complex)
-#   fiqh      الفقه الميسر, the full books (Shamela texts via turath.io)
+#   cranes    OSHA crane rules, govinfo CFR (public domain)        quran     Tanzil Quran text + تفسير الجلالين (public domain)
+#   fiqh      the classical fiqh books (الجزيري، ابن رشد، ابن قدامة، أبو شجاع، القدوري، خليل — public domain, via turath.io)
 #   hadith    the main hadith books with the scholars' rulings (hadith-api, public domain)
 #   math physics chemistry biology history business economics society   OpenStax books (CC BY), formulas and worked examples kept
 #   geography Factbook geography + GeoNames physical features    coding    Python docs, MDN, Kotlin docs
-#   medicines openFDA drug labels (CC0)    dictionary Open English WordNet (CC BY) + لسان العرب، مختار الصحاح    islamlib ابن كثير، السعدي، رياض الصالحين، بلوغ المرام
+#   medicines openFDA drug labels (CC0)    dictionary Open English WordNet (CC BY) + لسان العرب، مختار الصحاح    islamlib تفسير ابن كثير آيةً آية، رياض الصالحين، بلوغ المرام
 #   cars      car specs: US EPA (public domain, 2000–now) + EEA new-car data (CC BY 4.0, 2010–now, incl. Chinese brands)
-# No Wikipedia (Ali's rule). Ali approved publishing (10 Oct 2026). Rebuilt on the 1st of every month so the numbers stay
+# Attune is sold: every source must allow commercial use (no NC/ND licences, no modern copyrighted books). No Wikipedia (Ali's rule). Ali approved publishing (10 Oct 2026). Rebuilt on the 1st of every month so the numbers stay
 # current; the app installs a newer build by itself.
 
 on:
@@ -26,9 +26,6 @@ on:
       budget_mb:
         description: "Text budget in MB (laws, science)"
         default: "25"
-      allow_nc:
-        description: "Subject packs: also use non-commercial (CC BY-NC-SA) OpenStax books — only while the app is not sold"
-        default: "no"
 
 permissions:
   contents: write
@@ -63,8 +60,7 @@ jobs:
           pip install pyarrow
           budget="${{ github.event.inputs.budget_mb }}"; [ -z "$budget" ] && budget=25
           [ "${{ matrix.pack }}" = "laws" ] && budget=$(( budget < 20 ? budget : 20 ))
-          nc=""; [ "${{ github.event.inputs.allow_nc }}" = "yes" ] && nc="--allow-nc"
-          python3 tools/build_know_pack.py "${{ matrix.pack }}" out --budget-mb "$budget" $nc | tee build.log
+          python3 tools/build_know_pack.py "${{ matrix.pack }}" out --budget-mb "$budget" | tee build.log
           ls -la out
       - name: Summary
         run: |
