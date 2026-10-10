@@ -3305,7 +3305,6 @@ export const AR = {
   "p. {p}": "ص {p}",
   "Your facts — Chat looks them up before it answers": "معلوماتك — ترجع إليها المحادثة قبل أن تجيب",
   "In Knowledge": "في المعرفة",
-  "Add to Knowledge": "أضف للمعرفة",
   "Pasted text": "نص ملصوق",
   "Public pack": "باقة عامة",
   "Mind notes": "ملاحظات عقلي",
