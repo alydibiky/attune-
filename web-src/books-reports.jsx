@@ -54,9 +54,9 @@ export function ReportsModule() {
   }, [rep, f, t, s]);
 
   const exportCsv = () => {
-    if (!actorCan("export")) return flash(L("Your role cannot export", "دورك مش مسموح له بالتصدير"));
+    if (!actorCan("export")) return flash(L("Your role cannot export", "دورك لا يسمح بالتصدير"));
     const rows = data.cols ? [data.cols, ...data.rows.map((r) => r.map((c, i) => (typeof c === "number" && !(data.stock && i === 1) ? (c / 100).toFixed(2) : c)))] : data.rows.map((r) => [r[0], (r[1] / 100).toFixed(2)]);
-    saveFile ? saveFile(`${rep}-${td}.csv`, "﻿" + csv(rows), "text/csv") : flash(L("Saving files works in the Android app", "حفظ الملفات شغال في تطبيق أندرويد"));
+    saveFile ? saveFile(`${rep}-${td}.csv`, "﻿" + csv(rows), "text/csv") : flash(L("Saving files works in the Android app", "حفظ الملفات متاح في تطبيق أندرويد"));
   };
   const list = [...(actorCan("profit") ? [["pl", L("Profit & loss", "الأرباح والخسائر")]] : []), ["cust", L("Sales by customer", "مبيعات بالعميل")], ["item", L("Sales by item", "مبيعات بالصنف")], ["vat", L("VAT", "الضريبة")], ["stock", L("Stock value", "قيمة المخزون")], ["tb", L("Trial balance", "ميزان المراجعة")], ["eta", L("E-invoices (ETA)", "الفواتير الإلكترونية")]];
   const noPeriod = rep === "stock" || rep === "tb";

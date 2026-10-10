@@ -36,7 +36,7 @@ export function BooksApp({ flash, saveFile, share, onBack, openPlan, goCustom })
   // automatic encrypted snapshot, once per opening, keyed by the PIN that opened the books (never stored)
   const opened = useCallback((pin, who) => {
     setUnlocked(true);
-    setTimeout(() => { autoSnapshot(ref.current, pin, who).then((r) => { if (r.took) flash && flash(L("Encrypted backup saved on this phone", "اتحفظت نسخة مشفّرة على التليفون")); }).catch(() => {}); }, 300);
+    setTimeout(() => { autoSnapshot(ref.current, pin, who).then((r) => { if (r.took) flash && flash(L("Encrypted backup saved on this phone", "حُفظت نسخة مشفّرة على الهاتف")); }).catch(() => {}); }, 300);
   }, [flash]);
   useSubBack(true, onBack);
 
@@ -117,7 +117,7 @@ function Home() {
         <Stat testid="stat-cash" label={L("Cash & bank", "النقدية والبنك")} value={<Money v={d.cash.total} />} sub={`${L("Cash", "خزنة")} ${B.fmt(d.cash.cash)} · ${L("Bank", "بنك")} ${B.fmt(d.cash.bank)}`} onClick={() => goTab("money")} />
         <Stat testid="stat-receivable" label={L("Customers owe you", "العملاء عليهم لك")} value={<Money v={d.receivable} />} tone={d.overdue ? "warn" : undefined} sub={d.overdueCount ? `${d.overdueCount} ${L("overdue", "متأخرة")} · ${B.fmt(d.overdue)}` : L("nothing overdue", "لا توجد متأخرات")} onClick={() => goTab("money")} />
         <Stat testid="stat-payable" label={L("You owe suppliers", "عليك للموردين")} value={<Money v={d.payable} />} onClick={() => goTab("buy")} />
-        {actorCan("profit") ? <Stat testid="stat-profit" label={L("This month's profit", "ربح الشهر ده")} value={<Money v={d.month.netProfit} />} tone={d.month.netProfit < 0 ? "bad" : "good"} sub={`${L("Sales", "مبيعات")} ${B.fmt(d.month.revenue)}`} onClick={() => goTab("reports")} /> : null}
+        {actorCan("profit") ? <Stat testid="stat-profit" label={L("This month's profit", "ربح هذا الشهر")} value={<Money v={d.month.netProfit} />} tone={d.month.netProfit < 0 ? "bad" : "good"} sub={`${L("Sales", "مبيعات")} ${B.fmt(d.month.revenue)}`} onClick={() => goTab("reports")} /> : null}
       </div>
       <div className="grid grid-cols-4 gap-2 mb-4" data-testid="books-actions">
         {[["sales", "invoice", "+ Invoice", "+ فاتورة"], ["money", "receipt", "+ Receipt", "+ قبض"], ["buy", "bill", "+ Bill", "+ مشتريات"], ["money", "expense", "+ Expense", "+ مصروف"]].map(([tab, what, en, ar]) => (
@@ -180,11 +180,11 @@ function Settings({ onClose, goCustom }) {
     }, L("Saved", "حُفظ"));
     onClose();
   };
-  const backup = () => { if (!actorCan("export")) return flash(L("Your role cannot export", "دورك مش مسموح له بالتصدير")); const text = exportBooks(s); saveFile ? saveFile(`books-backup-${today()}.json`, text, "application/json") : flash(L("Saving files works in the Android app", "حفظ الملفات شغال في تطبيق أندرويد")); };
+  const backup = () => { if (!actorCan("export")) return flash(L("Your role cannot export", "دورك لا يسمح بالتصدير")); const text = exportBooks(s); saveFile ? saveFile(`books-backup-${today()}.json`, text, "application/json") : flash(L("Saving files works in the Android app", "حفظ الملفات متاح في تطبيق أندرويد")); };
   const restoreRef = useRef(null);
   const restore = async (file) => {
     if (!file) return;
-    if (!actorCan("restore")) return flash(L("Only the owner can restore", "المالك بس اللي يقدر يسترجع"));
+    if (!actorCan("restore")) return flash(L("Only the owner can restore", "المالك وحده يمكنه الاسترجاع"));
     try {
       const st = parseBackup(await file.text());
       if (!window.confirm(L("Replace ALL your current books with this backup?", "تستبدل كل دفاترك الحالية بالنسخة دي؟"))) return;
@@ -212,7 +212,7 @@ function Settings({ onClose, goCustom }) {
           <div className="flex items-center gap-3">
             {c.logo ? <img src={c.logo} alt="" className="h-12 max-w-[120px] object-contain border rounded" /> : <div className={`h-12 w-12 rounded border ${th.line} grid place-items-center text-[10px] ${th.sub}`}>{L("logo", "لوجو")}</div>}
             <button onClick={() => logoRef.current && logoRef.current.click()} className={`${BTN} border ${th.line}`}>{c.logo ? L("Change logo", "غيّر اللوجو") : L("Add logo", "ضيف لوجو")}</button>
-            {c.logo ? <button onClick={() => set("logo")("")} className={`${BTN} ${th.sub}`}>{L("Remove", "شيل")}</button> : null}
+            {c.logo ? <button onClick={() => set("logo")("")} className={`${BTN} ${th.sub}`}>{L("Remove", "إزالة")}</button> : null}
             <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickLogo(e.target.files && e.target.files[0])} />
           </div>
         </div>
@@ -231,7 +231,7 @@ function Settings({ onClose, goCustom }) {
         <p className={`text-[12px] mb-2 ${th.sub}`}>{L("Asks for a 4–6 digit PIN when the books are opened. It keeps casual eyes out on a shared phone; it is not encryption.", "يطلب رقمًا سريًا من 4 إلى 6 أرقام عند فتح الدفاتر. يمنع التطفّل على هاتف مشترك؛ وليس تشفيرًا.")}</p>
         <div className="flex gap-2"><div className="flex-1"><Input value={pinIn} onChange={(v) => setPinIn(v.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" placeholder={O.hasPin(s) ? L("New PIN", "رقم سري جديد") : L("Choose a PIN", "اختار رقم سري")} data-testid="books-pin-set" /></div>
           <button onClick={() => run((st) => O.setPin(st, pinIn), L("PIN saved", "حُفظ الرقم السري")).then(() => setPinIn(""))} className={`${BTN} border ${th.line}`} disabled={pinIn.length < 4}>{L("Save", "حفظ")}</button>
-          {O.hasPin(s) ? <button onClick={() => run((st) => O.setPin(st, ""), L("PIN removed", "أُزيل الرقم السري"))} className={`${BTN} border ${th.line} text-red-600`}>{L("Remove", "شيل")}</button> : null}</div>
+          {O.hasPin(s) ? <button onClick={() => run((st) => O.setPin(st, ""), L("PIN removed", "أُزيل الرقم السري"))} className={`${BTN} border ${th.line} text-red-600`}>{L("Remove", "إزالة")}</button> : null}</div>
       </Section>
       <EtaSettings eta={eta} setEta={setEta} />
       <CurrencySection />
@@ -248,9 +248,9 @@ function Settings({ onClose, goCustom }) {
       </Section>
       <VaultSection onClose={onClose} />
       {actorCan("users") ? <Section title={L("Danger zone", "منطقة الخطر")}>
-        <button onClick={async () => { if (!window.confirm(L("Erase ALL your books on this phone? Save a backup first — this cannot be undone.", "تمسح كل دفاترك من التليفون ده؟ احفظ نسخة احتياطية الأول — مفيش رجوع."))) return; await replaceBooks(O.EMPTY()); run(() => O.EMPTY(), L("All books erased", "اتمسحت كل الدفاتر")); onClose(); }} className={`${BTN} border border-red-300 text-red-600`} data-testid="books-erase">{L("Erase all books", "امسح كل الدفاتر")}</button>
+        <button onClick={async () => { if (!window.confirm(L("Erase ALL your books on this phone? Save a backup first — this cannot be undone.", "حذف كل دفاترك من هذا الهاتف؟ احفظ نسخة احتياطية أولًا — لا يمكن التراجع."))) return; await replaceBooks(O.EMPTY()); run(() => O.EMPTY(), L("All books erased", "حُذفت كل الدفاتر")); onClose(); }} className={`${BTN} border border-red-300 text-red-600`} data-testid="books-erase">{L("Erase all books", "احذف كل الدفاتر")}</button>
       </Section> : null}
-      {goCustom ? <Section title={L("More", "المزيد")}><button onClick={() => { onClose(); goCustom(); }} className={`${BTN} border ${th.line} flex items-center gap-1.5`}><Users size={14} />{L("Custom tables (build your own system)", "جداول مخصصة (ابني نظامك بنفسك)")}</button></Section> : null}
+      {goCustom ? <Section title={L("More", "المزيد")}><button onClick={() => { onClose(); goCustom(); }} className={`${BTN} border ${th.line} flex items-center gap-1.5`}><Users size={14} />{L("Custom tables (build your own system)", "جداول مخصصة (ابنِ نظامك بنفسك)")}</button></Section> : null}
     </Sheet>
   );
 }
@@ -265,7 +265,7 @@ function PinLock({ s, onOk, onBack }) {
       <p className="text-[15px] font-semibold">{L("Enter your PIN to open the books", "اكتب الرقم السري لفتح الدفاتر")}</p>
       <input value={pin} onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 6); setPin(v); if (v.length >= 4 && O.checkPin(s, v)) onOk(v); }} type="password" inputMode="numeric" autoFocus data-testid="books-pin"
         className={`w-40 text-center tracking-[0.5em] text-xl rounded-lg border px-3 py-2 ${th.input}`} />
-      {bad ? <p className="text-[12px] text-red-600">{L("Wrong PIN", "الرقم غلط")}{bad >= 5 ? " · " + L("take a breath and try again", "انتظر قليلًا ثم حاول مرة أخرى") : ""}</p> : null}
+      {bad ? <p className="text-[12px] text-red-600">{L("Wrong PIN", "الرقم خطأ")}{bad >= 5 ? " · " + L("take a breath and try again", "انتظر قليلًا ثم حاول مرة أخرى") : ""}</p> : null}
       <button onClick={() => tryPin(pin)} className={btnPrimary} disabled={pin.length < 4}>{L("Open", "فتح")}</button>
       <button onClick={onBack} className={`text-[12px] ${th.sub}`}>{L("Back", "رجوع")}</button>
     </div>

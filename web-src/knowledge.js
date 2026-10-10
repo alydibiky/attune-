@@ -112,7 +112,7 @@ export function factsBlock(hits, question = "") {
   return "Facts from your Knowledge (the person's own saved sources):\n" + lines.join("\n") +
     (notes.length ? "\n\nIf you use these facts, end the answer with this line: " + notes.join(" ") : "") +
     "\n\nHow to use them: if these facts answer the question, answer from them only — do not change their numbers, names or dates — and put the tag, like [K1], after each sentence that uses one. " +
-    "If they do not answer the question, say in one short sentence that your Knowledge doesn't cover it" + (ar ? " (in Arabic: «معرفتك مفيهاش ده»)" : "") + ", then answer from what you know." +
+    "If they do not answer the question, say in one short sentence that your Knowledge doesn't cover it" + (ar ? " (in Arabic: «لا تحتوي معرفتك على هذا»)" : "") + ", then answer from what you know." +
     "\n\nQuestion: ";
 }
 
@@ -271,13 +271,13 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
     Each shard becomes one stored source (so a pack can be removed as a whole: every source carries pack = id). */
 export const KNOW_BASE = "https://github.com/alydibiky/attune-/releases/download/";
 export const CATALOG = [
-  { id: "world", tag: "know-world-v1", name: "World facts", name_ar: "حقائق عن دول العالم", size: "≈ 3 MB", size_ar: "≈ ٣ ميجا", license: "Public domain (CIA World Factbook)", license_ar: "ملكية عامة (كتاب حقائق العالم)",
+  { id: "world", tag: "know-world-v1", name: "World facts", name_ar: "حقائق عن دول العالم", size: "≈ 3 MB", size_ar: "≈ ٣ ميجابايت", license: "Public domain (CIA World Factbook)", license_ar: "ملكية عامة (كتاب حقائق العالم)",
     about: "Every country's geography, people, government, economy, energy and transport — Egypt first and complete. CIA World Factbook, public domain.",
-    about_ar: "جغرافيا وسكان وحكومة واقتصاد وطاقة ومواصلات كل دولة — مصر الأول وكاملة. من كتاب حقائق العالم، ملكية عامة." },
-  { id: "egy-laws", tag: "know-egy-laws-v1", name: "Egyptian laws (Arabic)", name_ar: "القوانين المصرية", size: "≈ 3 MB", size_ar: "≈ ٣ ميجا", license: "MIT, as declared by the publisher (Dataflare)", license_ar: "ترخيص مفتوح حسب الناشر",
+    about_ar: "جغرافيا كل دولة وسكانها وحكومتها واقتصادها وطاقتها ومواصلاتها — مصر أولًا وكاملة. من كتاب حقائق العالم، ملكية عامة." },
+  { id: "egy-laws", tag: "know-egy-laws-v1", name: "Egyptian laws (Arabic)", name_ar: "القوانين المصرية", size: "≈ 3 MB", size_ar: "≈ ٣ ميجابايت", license: "MIT, as declared by the publisher (Dataflare)", license_ar: "ترخيص مفتوح حسب الناشر",
     about: "Articles of Egyptian laws and codes (civil, procedure, penal, labour, commercial, tax, rent, personal status…), each passage titled with its law and article. From the Egyptian Legal Corpus (Dataflare), MIT as declared.",
-    about_ar: "مواد القوانين المصرية (المدني، المرافعات، العقوبات، العمل، التجاري، الضرايب، الإيجارات، الأحوال الشخصية…)، كل فقرة معاها اسم القانون ورقم المادة. من مجموعة نصوص قانونية منشورة بترخيص مفتوح.",
-    notice: "Not legal advice; may be out of date; check the official gazette.", notice_ar: "مش استشارة قانونية؛ ممكن تكون قديمة؛ راجع الجريدة الرسمية." },
+    about_ar: "مواد القوانين المصرية (المدني، المرافعات، العقوبات، العمل، التجاري، الضرائب، الإيجارات، الأحوال الشخصية…)، ومع كل فقرة اسم القانون ورقم المادة. من مجموعة نصوص قانونية منشورة بترخيص مفتوح.",
+    notice: "Not legal advice; may be out of date; check the official gazette.", notice_ar: "ليست استشارة قانونية؛ قد تكون قديمة؛ راجع الجريدة الرسمية." },
 ];
 export const parsePackShard = (text) => String(text || "").split("\n").map((l) => { try { return l.trim() ? JSON.parse(l) : null; } catch (e) { return null; } }).filter((r) => r && r.x);
 

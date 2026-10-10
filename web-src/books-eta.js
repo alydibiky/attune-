@@ -185,7 +185,7 @@ export function etaBatch(s, from, to) {
 export const etaFileText = (x) => JSON.stringify(Array.isArray(x) ? { documents: x } : x, null, 2);
 export const ETA_NOTE = {
   en: "Unsigned ETA document(s). To submit, sign with your company's ETA certificate (USB token) and send with your own ETA portal credentials — this app does not sign or submit.",
-  ar: "مستند (أو مستندات) لمصلحة الضرائب غير موقّعة. للإرسال: وقّعها بشهادة شركتك (التوكن) وابعتها ببيانات دخولك على بوابة المصلحة — التطبيق لا يوقّع ولا يرسل.",
+  ar: "مستند (أو مستندات) لمصلحة الضرائب غير موقّعة. للإرسال: وقّعها بشهادة شركتك (التوكن) وأرسلها ببيانات دخولك على بوابة المصلحة — التطبيق لا يوقّع ولا يرسل.",
 };
 
 /* v6.12 names, kept so older callers and tests still work: the portal's errors as { en, ar } items, and the file text. */
