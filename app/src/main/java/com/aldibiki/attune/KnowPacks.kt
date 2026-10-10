@@ -64,6 +64,7 @@ object KnowPacks {
             done += size; onProgress(done, total, name)
         }
         File(next, "manifest.json").writeText(man.toString())
+        close(id)
         val d = dir(ctx, id); val old = File(root(ctx), "$id.old"); old.deleteRecursively()
         if (d.exists() && !d.renameTo(old)) throw Exception("Couldn't replace the old pack")
         if (!next.renameTo(d)) { old.renameTo(d); throw Exception("Couldn't install the pack") }
@@ -71,7 +72,7 @@ object KnowPacks {
         return man.put("installed", true)
     }
 
-    fun remove(ctx: Context, id: String): Boolean = try { dir(ctx, id).deleteRecursively(); true } catch (e: Exception) { false }
+    fun remove(ctx: Context, id: String): Boolean = try { close(id); dir(ctx, id).deleteRecursively(); true } catch (e: Exception) { false }
 
     private val STOP = ("the a an of in on at to for and or is are was were be by with from as that this these those it its into about what which who whom " +
         "whose when where why how do does did can could will would should may might than then there their them they he she his her you your i we our not no " +
@@ -84,9 +85,28 @@ object KnowPacks {
         return w
     }
 
+    /** Open pack databases, kept between questions (opening a 100 MB file on every lookup cost more than the search). */
+    private val open = HashMap<String, SQLiteDatabase>()
+    @Synchronized private fun handle(ctx: Context, id: String): SQLiteDatabase? {
+        open[id]?.let { if (it.isOpen) return it }
+        val f = File(dir(ctx, id), "$id.sqlite"); if (!f.exists()) return null
+        return SQLiteDatabase.openDatabase(f.path, null, SQLiteDatabase.OPEN_READONLY).also { open[id] = it }
+    }
+    /** Called before a pack is replaced or removed. */
+    @Synchronized fun close(id: String) { open.remove(id)?.close() }
+
+    private fun ints(blob: ByteArray): IntArray { val b = ByteBuffer.wrap(blob).order(ByteOrder.nativeOrder()); return IntArray(blob.size / 4) { b.getInt(it * 4) } }
+    private val ENDINGS = setOf("s", "es", "ed", "er", "ing")
+    private fun near(x: String, w: String) = x == w || (x.startsWith(w) && x.substring(w.length) in ENDINGS)   // "seal" → "seals", not "sealion"
+
     /**
-     * {q, k, ids?} → {passages: [{pack, id, title, text, url, lang, score, notice?, notice_ar?}]} best first (BM25 over the packs).
-     * Words are normalised like the packs, common words dropped, each searched as a prefix, any of them may match.
+     * {q, k, ids?} → {passages: [{pack, id, title, text, url, lang, score, cov, notice?, notice_ar?}]} best first.
+     * v6.16b (measured in tests/trials/packtrial.mjs: the right passage given 22/24 instead of 12/24):
+     *  1. each pack is probed once: how many passages hold each word → how telling each word is, across all the packs;
+     *  2. candidates: every passage holding a DISTINCTIVE word (in ≤ 3 % of the pack) — not the first 4,000 rows in storage order;
+     *  3. score = BM25 (mild length penalty) × (0.3 + coverage)² × (1 + title coverage) × (1 + name match), where coverage is weighted
+     *     by how telling each word is, and "name match" prefers "BYD Seal" over "BYD Seal U" for "BYD Seal".
+     * tests/trials/packsearch.py is the same search in Python (keep the two in step).
      */
     fun search(ctx: Context, arg: String): JSONObject {
         val a = JSONObject(arg)
@@ -95,27 +115,61 @@ object KnowPacks {
         if (words.isEmpty()) return JSONObject().put("passages", out)
         val k = a.optInt("k", 24).coerceIn(1, 60)
         val only = a.optJSONArray("ids")?.let { j -> (0 until j.length()).map { j.getString(it) }.toSet() }
-        val match = words.joinToString(" OR ") { it.replace("\"", "") + "*" }
-        data class Hit(val o: JSONObject, val score: Double)
-        val hits = ArrayList<Hit>()
+        val phr = words.map { it.replace("\"", "") + "*" }
+        val orAll = phr.joinToString(" OR ")
+        data class Probe(val id: String, val man: JSONObject, val db: SQLiteDatabase, val n: Int, val df: IntArray)
+        val probes = ArrayList<Probe>()
         val packs = list(ctx)
         for (p in 0 until packs.length()) {
             val man = packs.getJSONObject(p); val id = man.getString("id")
             if (only != null && id !in only) continue
-            val db = File(dir(ctx, id), "$id.sqlite")
             try {
-                SQLiteDatabase.openDatabase(db.path, null, SQLiteDatabase.OPEN_READONLY).use { sq ->
-                    sq.rawQuery("SELECT rowid, matchinfo(passages_fts, 'pcnalx') FROM passages_fts WHERE passages_fts MATCH ? LIMIT 4000", arrayOf(match)).use { c ->
-                        val scored = ArrayList<Pair<Long, Double>>()
-                        while (c.moveToNext()) scored.add(c.getLong(0) to bm25(c.getBlob(1)))
-                        scored.sortByDescending { it.second }
-                        for ((rowid, score) in scored.take(k)) {
-                            sq.rawQuery("SELECT title, text, url, lang FROM passages WHERE id = ?", arrayOf(rowid.toString())).use { r ->
-                                if (r.moveToFirst()) hits.add(Hit(JSONObject().put("pack", id).put("id", "$id:$rowid").put("title", r.getString(0) ?: "").put("text", r.getString(1) ?: "")
-                                    .put("url", r.getString(2) ?: "").put("lang", r.getString(3) ?: "").put("score", score)
-                                    .put("notice", man.optString("notice")).put("notice_ar", man.optString("notice_ar")), score))
-                            }
-                        }
+                val db = handle(ctx, id) ?: continue
+                db.rawQuery("SELECT matchinfo(passages_fts, 'pcnalx') FROM passages_fts WHERE passages_fts MATCH ? LIMIT 1", arrayOf(orAll)).use { c ->
+                    if (c.moveToFirst()) { val ii = ints(c.getBlob(0)); val cc = ii[1]; val x0 = 3 + 2 * cc
+                        probes.add(Probe(id, man, db, ii[2], IntArray(ii[0]) { ii[x0 + 3 * (it * cc) + 2] })) }
+                }
+            } catch (e: Exception) { }
+        }
+        if (probes.isEmpty()) return JSONObject().put("passages", out)
+        val bigN = probes.sumOf { it.n }.coerceAtLeast(1)
+        val gidf = DoubleArray(words.size) { i -> Math.log(1.0 + bigN.toDouble() / probes.sumOf { it.df[i] }.coerceAtLeast(1)) }
+        val tot = gidf.sum()
+        data class Hit(val o: JSONObject, val score: Double)
+        val hits = ArrayList<Hit>()
+        for (pr in probes) {
+            try {
+                val order = words.indices.sortedBy { pr.df[it] }
+                var rare = order.filter { pr.df[it] > 0 && pr.df[it] <= maxOf(200.0, pr.n * 0.03) }
+                if (rare.isEmpty()) rare = order.filter { pr.df[it] > 0 }.take(1)
+                if (rare.isEmpty()) continue
+                if (rare.sumOf { pr.df[it] } > 6000) rare = rare.take(2)
+                val q = "(" + rare.joinToString(" OR ") { phr[it] } + ") (" + orAll + ")"
+                val nf = rare.size
+                val cand = ArrayList<Triple<Long, Double, Double>>()
+                pr.db.rawQuery("SELECT rowid, matchinfo(passages_fts, 'pcnalx') FROM passages_fts WHERE passages_fts MATCH ? LIMIT 6000", arrayOf(q)).use { c ->
+                    while (c.moveToNext()) {
+                        val blob = c.getBlob(1); val ii = ints(blob); val cc = ii[1]
+                        var cov = 0.0
+                        for (j in words.indices) if (ii[3 + 2 * cc + 3 * ((nf + j) * cc)] > 0) cov += gidf[j]
+                        cov /= tot
+                        cand.add(Triple(c.getLong(0), bm25(blob) * (0.3 + cov) * (0.3 + cov), cov))
+                    }
+                }
+                cand.sortByDescending { it.second }
+                for ((rowid, sc, cov) in cand.take(k * 3)) {
+                    pr.db.rawQuery("SELECT title, text, url, lang FROM passages WHERE id = ?", arrayOf(rowid.toString())).use { r ->
+                        if (!r.moveToFirst()) return@use
+                        val title = r.getString(0) ?: ""
+                        val tw = MapPacks.normalize(title).split(' ').filter { it.isNotEmpty() }
+                        var tcov = 0.0; for (j in words.indices) if (tw.any { near(it, words[j]) }) tcov += gidf[j]
+                        tcov /= tot
+                        val head = MapPacks.normalize(title.replace(Regex("\\([^)]*\\)"), " ").split(" — ")[0]).split(' ').filter { it.isNotEmpty() }.toSet()
+                        val tprec = if (head.isEmpty()) 0.0 else head.count { x -> words.any { near(x, it) } }.toDouble() / head.size
+                        val score = sc * (1 + tcov) * (1 + tprec)
+                        hits.add(Hit(JSONObject().put("pack", pr.id).put("id", "${pr.id}:$rowid").put("title", title).put("text", r.getString(1) ?: "")
+                            .put("url", r.getString(2) ?: "").put("lang", r.getString(3) ?: "").put("score", score).put("cov", Math.round(cov * 1000) / 1000.0)
+                            .put("notice", pr.man.optString("notice")).put("notice_ar", pr.man.optString("notice_ar")), score))
                     }
                 }
             } catch (e: Exception) { }
@@ -139,7 +193,7 @@ object KnowPacks {
             val tf = ints[o].toDouble(); val df = ints[o + 2].toDouble()
             if (tf <= 0) continue
             val idf = Math.log(1 + (n - df + 0.5) / (df + 0.5))
-            s += idf * (tf * 2.4) / (tf + 1.4 * (0.3 + 0.7 * len / avg))
+            s += idf * (tf * 2.4) / (tf + 1.4 * (0.75 + 0.25 * len / avg))   // v6.16b: a mild length penalty (long = the main model with all its versions)
         }
         return s
     }

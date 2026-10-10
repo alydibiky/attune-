@@ -115,9 +115,9 @@ export function factsBlock(hits, question = "") {
   const solve = SOLVE.test(question);
   return "Facts from your Knowledge (the person's own saved sources and the reference packs on this phone):\n" + lines.join("\n") +
     (notes.length ? "\n\nIf you use these facts, end the answer with this line: " + notes.join(" ") : "") +
-    "\n\nHow to use them: if these facts answer the question, answer from them only — do not change their numbers, names or dates — and put the tag, like [K1], after each sentence that uses one. " +
+    "\n\nHow to use them: these facts were found for this question — answer from them only, copying their numbers, names and dates exactly, and put the tag, like [K1], after each sentence that uses one. " +
     (solve ? "This question asks you to solve, calculate, write code or explain: use the passages' definitions, formulas, rules, code and worked examples as your method, then work it out yourself step by step — show each step, do the arithmetic carefully, and adapt the code to the person's case; put the tag after the step whose method comes from a passage. " : "") +
-    "If they do not answer the question, say in one short sentence that your Knowledge doesn't cover it" + (ar ? " (in Arabic: «لا تحتوي معرفتك على هذا»)" : "") + ", then answer from what you know." +
+    "Only if NONE of them is about the question at all, say in one short sentence that your Knowledge doesn't cover it" + (ar ? " (in Arabic: «لا تحتوي معرفتك على هذا»)" : "") + ", then answer from what you know." +
     "\n\nQuestion: ";
 }
 
@@ -271,10 +271,13 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
       if (K.packSearch) { try { pack = (await K.packSearch(question)) || []; } catch (e) { pack = []; } }
       if (K.liveSearch) { try { pack = ((await K.liveSearch(question)) || []).concat(pack); } catch (e) { /* offline or Dorar unreachable: the packs still answer */ } }
       if (!pack.length) return findFacts(idx, question, o);
+      // passages the phone ranked (they carry its score) keep that order; any others (Dorar's live answers) are ranked here with your own
+      const scored = pack.filter((p) => typeof p.score === "number"), loose = pack.filter((p) => typeof p.score !== "number");
+      const asChunk = (p) => ({ id: p.id, src: "pack:" + p.pack, title: p.title || "", page: 0, text: p.text || "", kind: "pack", url: p.url || "", pack: p.pack,
+        ...(p.notice ? { note: p.notice, note_ar: p.notice_ar || "" } : {}) });
       const own = idx.N ? rank(idx, question, { k: 9 }).map((h) => h.chunk) : [];
-      const cands = own.concat(pack.map((p) => ({ id: p.id, src: "pack:" + p.pack, title: p.title || "", page: 0, text: p.text || "", kind: "pack", url: p.url || "", pack: p.pack,
-        ...(p.notice ? { note: p.notice, note_ar: p.notice_ar || "" } : {}) })));
-      return findFacts(indexChunks(cands), question, o);
+      const first = loose.length ? findFacts(indexChunks(own.concat(loose.map(asChunk))), question, o) : findFacts(idx, question, { ...(o || {}), k: 2 });
+      return scored.length ? mergePackFacts(first, scored, o) : first;
     },
     async stats() {
       const s = await store.sources(); const rows = K.adapterRows();
@@ -282,6 +285,30 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
     },
   };
   return K;
+}
+
+/**
+ * v6.16b — the phone's packs are ranked on the phone (rare words, coverage weighted by how telling each word is, title bonus;
+ * tests/trials/packtrial.mjs measured it): their order is kept here. The person's own facts come first when they fit; then the
+ * best pack passages — those close to the best one and covering enough of the question — up to 3 passages and ~3,200 characters.
+ */
+export function mergePackFacts(own, pack, o = {}) {
+  const k = (o && o.k) || 3, budget = (o && o.budget) || 3200;
+  const top = pack.length ? Number(pack[0].score) || 1 : 1;
+  const topCov = pack.length && pack[0].cov != null ? Number(pack[0].cov) : null;
+  // the rest must be close to the best one in score AND cover nearly as much of the question (no "West Bank" for "World Bank")
+  const keep = pack.filter((p, i) => i === 0 || ((Number(p.score) || 0) >= top * 0.45 && (p.cov == null || topCov == null || p.cov >= Math.max(0.5, topCov * 0.8))));
+  const out = (own || []).map((h) => ({ chunk: h.chunk, score: h.score }));
+  let used = out.reduce((t, h) => t + String(h.chunk.text || "").length, 0);
+  for (const p of keep) {
+    if (out.length >= k) break;
+    const text = String(p.text || ""), room = budget - used;
+    if (room < 200 && out.length) break;
+    const chunk = { id: p.id, src: "pack:" + p.pack, title: p.title || "", page: 0, text: text.length > room ? text.slice(0, Math.max(200, room)) + "…" : text, kind: "pack", url: p.url || "", pack: p.pack,
+      ...(p.notice ? { note: p.notice, note_ar: p.notice_ar || "" } : {}) };
+    out.push({ chunk, score: Number(p.score) || 0 }); used += chunk.text.length;
+  }
+  return out.map((h, i) => ({ ...h, tag: "K" + (i + 1) }));
 }
 
 // ---- downloadable public packs ------------------------------------------------------------------------------------------------------
@@ -322,9 +349,15 @@ export const CATALOG = [
   { id: "coding", name: "Coding", name_ar: "البرمجة", size: "≈ 12 MB", size_ar: "≈ ١٢ ميجابايت", license: "PSF (Python docs), CC BY-SA 2.5 (MDN), Apache 2.0 (Kotlin)", license_ar: "رخصة بايثون للتوثيق، ورخصة المشاع الإبداعي مع الإسناد والمشاركة بالمثل ٢٫٥ (إم دي إن)، ورخصة أباتشي ٢٫٠ (كوتلن)",
     about: "The official Python documentation, MDN's JavaScript, HTML and CSS reference and guides, and the Kotlin docs — with their code examples line by line.",
     about_ar: "التوثيق الرسمي للغة بايثون، ومراجع وأدلة جافاسكربت وإتش تي إم إل وسي إس إس من إم دي إن، وتوثيق كوتلن — بأمثلة الكود سطرًا سطرًا." },
-  { id: "science", name: "Society, economics & business", name_ar: "المجتمع والاقتصاد والأعمال", size: "≈ 15 MB", size_ar: "≈ ١٥ ميجابايت", license: "CC BY 4.0 (OpenStax)", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (أوبن ستاكس)",
-    about: "Peer-reviewed university textbooks: psychology, economics, sociology, philosophy, business, management, marketing, accounting, government — OpenStax (Rice University).",
-    about_ar: "كتب جامعية محكَّمة: علم النفس والاقتصاد وعلم الاجتماع والفلسفة والأعمال والإدارة والتسويق والمحاسبة ونظم الحكم — أوبن ستاكس (جامعة رايس)." },
+  { id: "business", name: "Business", name_ar: "الأعمال", size: "≈ 10 MB", size_ar: "≈ ١٠ ميجابايت", license: "CC BY 4.0 / CC BY-NC-SA 4.0 (OpenStax)", license_ar: "رخص المشاع الإبداعي (أوبن ستاكس)",
+    about: "Introduction to Business, Management, Marketing, Entrepreneurship, Organizational Behavior, Business Ethics, Financial and Managerial Accounting, Business Law, Finance — OpenStax university textbooks.",
+    about_ar: "مدخل إلى الأعمال، والإدارة، والتسويق، وريادة الأعمال، والسلوك التنظيمي، وأخلاقيات الأعمال، والمحاسبة المالية والإدارية، وقانون الأعمال، والتمويل — كتب أوبن ستاكس الجامعية." },
+  { id: "economics", name: "Economics", name_ar: "الاقتصاد", size: "≈ 6 MB", size_ar: "≈ ٦ ميجابايت", license: "CC BY 4.0 / CC BY-NC-SA 4.0 (OpenStax)", license_ar: "رخص المشاع الإبداعي (أوبن ستاكس)",
+    about: "Principles of Economics, Microeconomics and Macroeconomics — supply and demand, markets, money, inflation, growth, trade — with their worked examples.",
+    about_ar: "مبادئ الاقتصاد والاقتصاد الجزئي والكلي — العرض والطلب والأسواق والنقود والتضخم والنمو والتجارة — بالأمثلة المحلولة." },
+  { id: "society", name: "Society & people", name_ar: "المجتمع والإنسان", size: "≈ 10 MB", size_ar: "≈ ١٠ ميجابايت", license: "CC BY 4.0 / CC BY-NC-SA 4.0 (OpenStax)", license_ar: "رخص المشاع الإبداعي (أوبن ستاكس)",
+    about: "Sociology, Psychology, Philosophy, Political Science, Government, Anthropology and Lifespan Development — OpenStax university textbooks.",
+    about_ar: "علم الاجتماع، وعلم النفس، والفلسفة، والعلوم السياسية، ونظم الحكم، والأنثروبولوجيا، والنمو عبر مراحل العمر — كتب أوبن ستاكس الجامعية." },
   { id: "health", name: "Health", name_ar: "الصحة", size: "≈ 3 MB", size_ar: "≈ ٣ ميجابايت", license: "Public domain (US National Library of Medicine)", license_ar: "ملكية عامة (المكتبة الوطنية الأمريكية للطب)",
     about: "About 1,000 health topics — conditions, symptoms, treatments, tests, healthy living — written and reviewed by MedlinePlus.",
     about_ar: "نحو ١٠٠٠ موضوع صحي — الأمراض والأعراض والعلاج والفحوص والحياة الصحية — من ميدلاين بلس.",
@@ -388,6 +421,8 @@ export async function removeKnowPack(K, packId) { for (const s of await K.source
 export async function autoInstallPacks(K, native, { ids = CATALOG.map((c) => c.id), isStopped = () => false, bigOk = true, big = 15e6 } = {}) {
   const done = [];
   const have = new Map(((await native.list()) || []).map((p) => [p.id, p]));
+  // a pack the app no longer offers (the general "science" pack, split into subject packs) leaves the phone
+  for (const id of have.keys()) if (!CATALOG.some((c) => c.id === id) && native.remove) { try { await native.remove(id); } catch (e) {} }
   for (const id of ids) {
     if (isStopped()) break;
     const cat = CATALOG.find((c) => c.id === id); if (!cat) continue;

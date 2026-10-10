@@ -783,6 +783,13 @@ SUBJECTS = {
     "chemistry": ("Chemistry", "الكيمياء", ["chemistry-2e", "chemistry-atoms-first-2e", "organic-chemistry"]),
     "biology": ("Biology", "الأحياء", ["biology-2e", "concepts-biology", "anatomy-and-physiology-2e", "microbiology", "biology-ap-courses"]),
     "history": ("History", "التاريخ", ["world-history-volume-1", "world-history-volume-2", "us-history"]),
+    "business": ("Business", "الأعمال", ["introduction-business", "principles-management", "principles-marketing", "entrepreneurship", "organizational-behavior",
+                 "business-ethics", "principles-financial-accounting", "principles-managerial-accounting", "business-law-i-essentials", "principles-finance",
+                 "intellectual-property", "workplace-software-skills"]),
+    "economics": ("Economics", "الاقتصاد", ["principles-economics-3e", "principles-microeconomics-3e", "principles-macroeconomics-3e",
+                  "principles-microeconomics-ap-courses-2e", "principles-macroeconomics-ap-courses-2e", "principles-economics-2e"]),
+    "society": ("Society & people", "المجتمع والإنسان", ["introduction-sociology-3e", "psychology-2e", "introduction-philosophy", "introduction-political-science",
+                "american-government-3e", "introduction-anthropology", "lifespan-development", "life-liberty-and-pursuit-happiness", "college-success"]),
 }
 
 def openstax_collections():
@@ -877,8 +884,9 @@ def build_geography(a):
         region, code = p[:-5].split("/")
         try: js = json.loads(B.get(BK.FB + p))
         except BaseException as e: print("skip", p, e, file=sys.stderr); continue
-        name, r = BK.country_rows(region, code, {k: v for k, v in js.items() if k in GEO_FB})
-        rows += [dict(x, t=x["t"].replace(" — ", " — geography — ", 1)) for x in r]
+        # the country's name comes from its Government section (else the rows are titled "TZ" instead of "Tanzania")
+        name, r = BK.country_rows(region, code, {k: v for k, v in js.items() if k in GEO_FB or k == "Government"})
+        rows += [dict(x, t=x["t"].replace(" — ", " — geography — ", 1)) for x in r if " — Government — " not in x["x"]]
     print(f"geography: Factbook {len(rows)} passages", file=sys.stderr)
     countries, admin = {}, {}
     for line in B.get("https://download.geonames.org/export/dump/countryInfo.txt").decode("utf-8").splitlines():

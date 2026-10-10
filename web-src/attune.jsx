@@ -7945,7 +7945,8 @@ export default function App() {
         const got = await KNOW.autoInstallPacks(knowledge, {
           list: async () => { try { return JSON.parse(NATIVE.knowPacks()).packs || []; } catch (e) { return []; } },
           remote: (id) => nativeCall("knowRemote", { id }),
-          install: (id) => nativeCall("knowInstall", { id }) }, { bigOk: !!(NATIVE.unmetered && NATIVE.unmetered()) });   // the big ones on Wi-Fi
+          install: (id) => nativeCall("knowInstall", { id }),
+          remove: async (id) => { try { NATIVE.knowRemove(id); } catch (e) {} } }, { bigOk: !!(NATIVE.unmetered && NATIVE.unmetered()) });   // the big ones on Wi-Fi
         if (got.length) flash(tr("Chat now knows: {n}", { n: got.map((c) => (getLang() === "ar" ? c.name_ar : c.name)).join(getLang() === "ar" ? "، " : ", ") }));
       } catch (e) {}
     }, 8000);

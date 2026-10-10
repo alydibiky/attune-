@@ -30,13 +30,12 @@ def bm25(blob):
         if tf <= 0: continue
         s += math.log(1 + (n - df + 0.5) / (df + 0.5)) * (tf * 2.4) / (tf + 1.4 * (0.3 + 0.7 * ln / avg))
     return s
+sys.path.insert(0, os.path.join(HERE, "trials"))
+import packsearch as PS   # the phone's search (KnowPacks.kt) — the same code the trials measure
 def search(db, q, k=5):
-    words = list(dict.fromkeys(stem(w) for w in normalize(q).split() if len(w) >= 2 and w not in STOP))[:10]
+    words = PS.terms_of(q)
     if not words: return []
-    m = " OR ".join(w + "*" for w in words)
-    rows = [(r, bm25(mi)) for r, mi in db.execute("SELECT rowid, matchinfo(passages_fts, 'pcnalx') FROM passages_fts WHERE passages_fts MATCH ?", (m,))]
-    rows.sort(key=lambda t: -t[1])
-    return [db.execute("SELECT title, text FROM passages WHERE id=?", (r,)).fetchone() for r, _ in rows[:k]]
+    return [(h["title"], h["text"]) for h in PS.pack_search(db, words, k)]
 
 def pack(pid, rows, extra=None):
     d = tempfile.mkdtemp()
@@ -224,6 +223,8 @@ check(len(gr) == 2 and gr[0]["t"] == "Nile (نهر النيل) — river, Egypt"
       "Geography: well-known features (Arabic name, many languages, high peaks) with elevation; small creeks and cities left out")
 gname, grows = B.country_rows("africa", "eg", {"Geography": {"Area": {"total": {"text": "1,001,450 sq km"}}, "Climate": {"text": "desert; hot, dry summers with moderate winters"}}})
 check(any("Climate" in r["t"] and "desert" in r["x"] for r in grows), "Geography: each country's geography from the Factbook")
+gn, gr2 = B.country_rows("africa", "eg", {"Government": {"Country name": {"conventional short form": {"text": "Egypt"}}}, "Geography": {"Climate": {"text": "desert"}}})
+check(gn == "Egypt" and any(r["t"].startswith("Egypt — ") for r in gr2), "Geography: rows carry the country's name, not its code")
 man, db = pack("geography", gr + grows)
 r = search(db, "how high is mount everest")
 check(r and "Everest" in r[0][0], "a geography question finds the feature")
