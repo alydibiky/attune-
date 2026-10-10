@@ -688,6 +688,11 @@ Four branches from the "Pages & look" / helper sessions had never reached `main`
   cranes 596 / 0.45 MB. Packs over 15 MB (science) install only on Wi-Fi (N.unmetered()). write_pack refuses an empty pack.
 - Maps "all" run 38042755681: the USA was killed for memory while indexing places (12 GB pbf → 3.4 GB named). Fix:
   build_places uses idx=sparse_file_array on disk when the pbf is over 1 GB; a USA-only rerun was queued.
+  By 11:20 the other 41 countries + map-assets were published (ru, cn, in included); za and au were finishing; the USA
+  rerun is run 38046680530 (it waits for the "all" run: concurrency group map-pack).
+- APK runs 99–101 failed: NativeBridge.unmetered() was an expression body whose second line began with '!' — Kotlin
+  read it as a continuation of the line above. Now a block body (87bb0d3); branch run 38047174802 is green. No Android
+  SDK in the cloud sandbox, so a Kotlin change is only compiled by "Build the APK" — dispatch it on the branch first.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
