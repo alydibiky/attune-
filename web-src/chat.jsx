@@ -1051,6 +1051,20 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         ? prevQ.text + "\nFollow-up (answer this, using the question above): " + typed : typed;
       // v6.9: "okay you do the frontend only" after a website request continues THAT website
       const siteFollow = route && !longMsg && !img && !sources && api.codeTask ? websiteFollowUp(typed, history) : null;
+      // v6.16 (Ali): a code task or a maths / physics problem gets its reference from the packs (the official docs, the textbook
+      // formulas and worked examples) — the model then uses it to write the code or work the problem out
+      const refFor = async (q) => {
+        if (!api.knowledge || !api.knowledge.on()) return "";
+        try {
+          const hits = await api.knowledge.find(q, { solve: true });
+          if (runRef.current !== run || !hits || !hits.length) return "";
+          let room = 2200;
+          const parts = hits.slice(0, 3).map((h) => { const t = String(h.chunk.text || "").slice(0, Math.max(0, room)); room -= t.length; return "• " + (h.chunk.title || "") + ":\n" + t; }).filter((x) => x.length > 8);
+          if (!parts.length) return "";
+          extra.knowledgeUsed = parts.length;
+          return "\n\n(Reference from the reference packs on this phone — use these exact APIs, formulas and methods where they fit; the work itself is yours:\n" + parts.join("\n") + ")";
+        } catch (e) { return ""; }
+      };
       const buildCode = async (task, web) => {
         // While it writes: the model's own ```python fence (and anything
         // before it) is dropped, so the preview is ONE code box — not an
@@ -1062,7 +1076,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           s = s.split(/\n\s*```/)[0];
           return "```\n" + s.split("\n").slice(-30).join("\n") + "\n```";
         };
-        const r = await api.codeTask(task, { onStep: (s) => onStatus(s), onToken: (tx) => onToken(livePreview(tx), ""), lang: web ? "html" : undefined });
+        const ref = web ? "" : await refFor(task);
+        if (runRef.current !== run) return false;
+        const r = await api.codeTask(task, { ref, onStep: (s) => onStatus(s), onToken: (tx) => onToken(livePreview(tx), ""), lang: web ? "html" : undefined });
         if (runRef.current !== run) return false;
         if (r && r.code) {
           answer = (r.ok ? "" : tr("I couldn't make every test pass yet — here is the closest version; tap “Test & fix in Code” to keep going.") + "\n\n") + "```" + r.lang + "\n" + r.code + "\n```";
@@ -1072,7 +1088,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       };
       if (route && !longMsg && !img && !sources && api.verifyMath && looksLikeMathProblem(mathQ) && !looksLikeDeduction(typed)) {
         try {
-          const r = await api.verifyMath(mathQ + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+          const mref = await refFor(mathQ);
+          if (runRef.current !== run) return;
+          const r = await api.verifyMath(mathQ + mref + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
           if (runRef.current !== run) return;
           if (r && r.ok) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
@@ -1128,8 +1146,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (o.queuedDuring) content = "(I sent this while you were still writing your last answer. If it adds to or changes that answer, write the complete UPDATED answer with the change included — don't just acknowledge it. If it is a new question, simply answer it.)\n\n" + content;
       // v6.20 Knowledge: a lookup question gets the person's own facts that fit it (word index, < 100 ms), with tags to cite
       let knHits = null;
-      if (answer == null && typed && !sources && !fileAtt && !pic && !longMsg && api.knowledge && api.knowledge.on() && !looksLikeCodeTask(typed) && !looksLikeMathProblem(typed)) {
-        try { knHits = await api.knowledge.find(typed); } catch (e) { knHits = null; }
+      if (answer == null && typed && !sources && !fileAtt && !pic && !longMsg && api.knowledge && api.knowledge.on()) {
+        // v6.16: code tasks and maths problems look things up too (the coding and subject packs are their reference)
+        const solveT = looksLikeCodeTask(typed) || looksLikeMathProblem(typed);
+        try { knHits = await api.knowledge.find(typed, solveT ? { solve: true } : undefined); } catch (e) { knHits = null; }
         if (runRef.current !== run) return;
         // v6.16: most general-knowledge packs are in English — an Arabic question that found nothing is looked up once more
         // with a short English search line from the model (≈ 24 tokens); the answer itself stays in Arabic
@@ -1369,7 +1389,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           if (raf) { clearTimeout(raf); raf = 0; } pend = null;
           patchMsg(cid, aiId, { text: "", thinking: "", phase: tr("Found a slip in the sums — re-checking by running code…") });
           try {
-            const r = await api.verifyMath(mathQ + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
+            const mref = await refFor(mathQ);
+          if (runRef.current !== run) return;
+          const r = await api.verifyMath(mathQ + mref + langHint(typed), { onStep: (s) => onStatus(s), onToken: (tx) => onToken(tx, "") });
             if (runRef.current !== run) return;
             if (r && r.ok && r.text) { answer = r.text; extra.verified = { code: r.code, output: r.output, answer: r.answer }; extra.fixedSlip = true; st = api.lastStats(); }
           } catch (e) { if (String(e && e.message) === "Stopped") throw e; }

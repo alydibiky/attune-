@@ -8893,7 +8893,7 @@ export default function App() {
     isPersonal: (q) => ASK_PERSONAL.test(q),
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     withRecords,
-    knowledge: { on: () => !!knPrefs.on, find: (q) => knowledge.find(q), packs: () => !!knowledge.packSearch },   // v6.20 Knowledge (+ v6.16 phone packs)
+    knowledge: { on: () => !!knPrefs.on, find: (q, o) => knowledge.find(q, o), packs: () => !!knowledge.packSearch },   // v6.20 Knowledge (+ v6.16 phone packs)
     lastStats: () => LAST_STATS,
     contextTokens: () => { const m = String((engineInfo && engineInfo.settings) || "").match(/context (\d+)/); return m ? Number(m[1]) : 0; },
     remember, flash,
@@ -8939,8 +8939,8 @@ export default function App() {
       const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken ? (t) => o.onToken(t) : undefined });
       return verifyMath({ question, llm, runPy: (code) => runCode({ lang: "python", code }), warm: () => warmUp("python"), onStep: (x) => onStep && onStep(tr(x)), onToken });
     },
-    codeTask: async (task, { onStep, onToken, lang: forced } = {}) => {
-      const lang = forced || guessLang(task);
+    codeTask: async (task0, { onStep, onToken, lang: forced, ref = "" } = {}) => {
+      const lang = forced || guessLang(task0), task = task0 + ref;   // v6.16: the docs from the coding pack ride along; the language is judged from the request
       if (lang === "python" && !(await pythonAvailable())) return null;
       const llm = (messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken });
       const say = { write: "Writing the program and its tests…", run: "Running it on this phone…", fix: "Sending the error back — fixing…", continue: "The page was cut off — writing the rest…" };

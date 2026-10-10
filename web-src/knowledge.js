@@ -103,15 +103,20 @@ export function findFacts(index, question, { k = 3, cover = 0.34, rel = 0.45, bu
 }
 
 /** The block added to the request: the passages with their tags and sources, and how to use them. */
+const SOLVE = /\b(solve|calculate|compute|find the|derive|prove|simplify|integrate|differentiate|evaluate|how (much|many|long|far|fast)|write (a|an|the|me)?\s*(code|program|function|script|class|query)|fix (this|my)|debug|implement|explain how|step by step)\b|احسب|حل |أوجد|اوجد|اثبت|أثبت|بسّط|بسط|اشتق|كامل|اكتب (كود|برنامج|دالة)|صحح الكود|خطوة بخطوة|كيف أحسب|اشرح كيف/i;
 export function factsBlock(hits, question = "") {
   if (!hits || !hits.length) return "";
   const ar = hasArabic(question);
-  const lines = hits.map((h) => `[${h.tag}] (${h.chunk.title || "note"}${h.chunk.page ? ", p. " + h.chunk.page : ""}) ${h.chunk.text.replace(/\s+/g, " ").trim()}`);
+  // code keeps its lines (the coding pack, or any passage with an indented or fenced block)
+  const body = (t) => /```|\n {2,}\S|\n\t/.test(t) ? "\n" + String(t).trim() : String(t).replace(/\s+/g, " ").trim();
+  const lines = hits.map((h) => `[${h.tag}] (${h.chunk.title || "note"}${h.chunk.page ? ", p. " + h.chunk.page : ""}) ${body(h.chunk.text)}`);
   // a pack with a warning (the laws pack): the answer must repeat it when it uses those facts
   const notes = [...new Set(hits.filter((h) => h.chunk.note).map((h) => (ar && h.chunk.note_ar) || h.chunk.note))];
-  return "Facts from your Knowledge (the person's own saved sources):\n" + lines.join("\n") +
+  const solve = SOLVE.test(question);
+  return "Facts from your Knowledge (the person's own saved sources and the reference packs on this phone):\n" + lines.join("\n") +
     (notes.length ? "\n\nIf you use these facts, end the answer with this line: " + notes.join(" ") : "") +
     "\n\nHow to use them: if these facts answer the question, answer from them only — do not change their numbers, names or dates — and put the tag, like [K1], after each sentence that uses one. " +
+    (solve ? "This question asks you to solve, calculate, write code or explain: use the passages' definitions, formulas, rules, code and worked examples as your method, then work it out yourself step by step — show each step, do the arithmetic carefully, and adapt the code to the person's case; put the tag after the step whose method comes from a passage. " : "") +
     "If they do not answer the question, say in one short sentence that your Knowledge doesn't cover it" + (ar ? " (in Arabic: «لا تحتوي معرفتك على هذا»)" : "") + ", then answer from what you know." +
     "\n\nQuestion: ";
 }
@@ -256,7 +261,8 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
     liveSearch: null,
     /** The facts for a question (empty when it isn't a lookup or nothing fits): your own sources and the packs, ranked together. */
     async find(question, o) {
-      if (!wantsFacts(question)) return [];
+      // v6.16: a task to solve (code to write, a problem to work out) still looks things up — the subject packs are its reference
+      if (!(o && o.solve) && !wantsFacts(question)) return [];
       const idx = await K.ensure();
       let pack = [];
       if (K.packSearch) { try { pack = (await K.packSearch(question)) || []; } catch (e) { pack = []; } }
