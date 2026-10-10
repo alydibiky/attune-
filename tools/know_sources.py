@@ -537,13 +537,26 @@ def fiqh_rows(book, title, by):
             rows.append({"t": f"{title} — {where} ({ref})" if where else f"{title} ({ref})", "x": piece, "u": f"https://app.turath.io/book/{book['_id']}?page={i}", "l": "ar"})
     return rows
 
+# The classical books give measures in مثقال، درهم، صاع؛ people ask in grams. The standard conversions, with where scholars differ,
+# written by Attune (numbers and facts — no one's text), so an answer in grams isn't left to the model's memory.
+MEASURES = [
+    ("الأوزان الشرعية — نصاب الذهب بالجرامات", "نصاب الذهب في الزكاة عشرون مثقالًا (عشرون دينارًا). والمثقال نحو 4.25 جرامًا، فالنصاب نحو 85 جرامًا من الذهب الخالص (عيار 24). ومن قدّره بالذهب المتداول عيار 21 قال: نحو 97 جرامًا. فإذا ملك المسلم هذا القدر وحال عليه الحول وجب فيه ربع العشر (2.5٪)."),
+    ("الأوزان الشرعية — نصاب الفضة بالجرامات", "نصاب الفضة في الزكاة مئتا درهم. والدرهم نحو 2.975 جرامًا، فالنصاب نحو 595 جرامًا من الفضة الخالصة، والواجب فيه ربع العشر (2.5٪)."),
+    ("الأوزان الشرعية — الصاع وزكاة الفطر", "زكاة الفطر صاع من غالب قوت البلد عن كل فرد. والصاع أربعة أمداد، ويقدَّر وزنًا بنحو 2.04 كيلوجرام من القمح، وقدّرته دار الإفتاء المصرية بنحو 2.5 كيلوجرام من الأرز. ويجيز الحنفية إخراج قيمته نقدًا."),
+    ("الأوزان الشرعية — نصاب الزروع والثمار", "نصاب الزروع والثمار خمسة أوسق، والوسق ستون صاعًا، فالنصاب ثلاثمئة صاع، ويقدَّر بنحو 612 كيلوجرامًا من القمح (وقيل 653). والواجب العشر فيما سُقي بلا كلفة، ونصف العشر فيما سُقي بكلفة."),
+]
+
+def measure_rows():
+    return [{"t": t, "x": x, "u": "", "l": "ar"} for t, x in MEASURES]
+
 def build_fiqh(a):
     B = _bk(); rows, used = turath_rows(B, FIQH_BOOKS)
+    rows += measure_rows()
     if len(used) < len(FIQH_BOOKS): turath_probe(B)
     B.write_pack(a.out, "fiqh", rows, {
         "name": "Islamic jurisprudence (the classical books)", "name_ar": "الفقه الإسلامي (الكتب المعتمدة)",
         "license": "Classical texts (public domain), from the Shamela library via turath.io; editors' footnotes left out",
-        "attribution": "الفقه على المذاهب الأربعة (الجزيري)، وبداية المجتهد (ابن رشد)، وعمدة الفقه (ابن قدامة)، ومتن أبي شجاع، ومختصر القدوري، ومختصر خليل — النصوص كاملة كما في المكتبة الشاملة (turath.io)، مع اسم الكتاب والباب والجزء والصفحة لكل فقرة.",
+        "attribution": "الفقه على المذاهب الأربعة (الجزيري)، وبداية المجتهد (ابن رشد)، وعمدة الفقه (ابن قدامة)، ومتن أبي شجاع، ومختصر القدوري، ومختصر خليل — النصوص كاملة كما في المكتبة الشاملة (turath.io)، مع اسم الكتاب والباب والجزء والصفحة لكل فقرة؛ ومعها ملاحظة من Attune بتحويل الأوزان الشرعية (المثقال والدرهم والصاع) إلى الجرامات.",
         "notice": "For learning; for a ruling on your own case, ask a qualified scholar or Dar al-Ifta.",
         "notice_ar": "للتعلّم؛ وفي مسألتك الخاصة اسأل عالمًا موثوقًا أو دار الإفتاء.",
         "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
