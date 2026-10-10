@@ -741,7 +741,16 @@ Ali: "Attune will charge money … find reliable free sources … full mark … 
   active ingredient (openFDA substance_name), cosmetics out.
 - **Trial:** packtrial.mjs now 45 questions (medicines, recalls, dictionary, hadith, fiqh, Ibn Kathir, Arabic geography,
   quadratic formula, Newton, pH, opportunity cost); grading strips Arabic diacritics.
-- Still to ask Ali: Wikidata (CC0, huge, but crowd-edited like Wikipedia); Dorar live API in a paid app (ask Dorar in writing).
+- Search fixes found by the trial: Arabic country names → English (Intl.DisplayNames), one dictionary entry max and the bar set
+  by the best non-dictionary passage, `keyLine()` points the model at the answering clause, question filler words ignored,
+  'single-quoted' words exact, the question's own 2–4-word run boosted ×2 (`near_phrase`), `verseFirst()` for quoted verses,
+  squared exact-name bonus, `head_chunks()` (no header-only passages), EU trims merged, recalls only for car makes (cars 24 MB),
+  medicines split by route, fiqh dotted separators out, the classical measures in grams (MEASURES).
+- Trial (45 questions, tests/trials/packtrial-*.md): small q08 23 → 39 with packs; 4B q4b 34 → 41 (44 after the grader accepted 3
+  correct answers; nisab needs the fiqh rebuild with MEASURES). Lookup ≈ 180 ms.
+- Still to ask Ali: Wikipedia/Wikidata (he: "if you can guarantee it's reliable, add it" — nobody can guarantee it; options given);
+  calculus source; Dorar live API in a paid app (ask Dorar in writing).
+- Builds that were still running at the end: fiqh (with MEASURES, ~1.5 h), dictionary (لسان العرب page by page, up to 6 h).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
