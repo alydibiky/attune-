@@ -694,6 +694,27 @@ Four branches from the "Pages & look" / helper sessions had never reached `main`
   read it as a continuation of the line above. Now a block body (87bb0d3); branch run 38047174802 is green. No Android
   SDK in the cloud sandbox, so a Kotlin change is only compiled by "Build the APK" — dispatch it on the branch first.
 
+### 5.47 (10 Oct 2026, v6.16) — Islamic packs, Dorar, Cars pack, and Ali's car answer
+- quran pack now = Tanzil text + التفسير الميسر (King Fahd Complex, from QUL tafsir 38 via github.com/spa5k/tafsir_api):
+  114 surah introductions once, verses explained together kept as one passage (الآيات ١–٦), 11,390 passages, 4.5 MB.
+- fiqh pack (new): الفقه الميسر (الطيار/المطلق/الموسى, 13 vols) + الفقه الميسر في ضوء الكتاب والسنة, from turath.io. turath
+  ids ≠ Shamela ids → books found via api.turath.io/search by exact title; book file, else page by page (/page, 0.15 s apart).
+- hadith pack (new): 36,104 hadiths (Bukhari, Muslim, 4 Sunan, Muwatta, 40s) from fawazahmed0/hadith-api (Unlicense) with
+  rulings (الألباني، الأرناؤوط، أحمد شاكر، زبير علي زئي…) translated by grade_ar(); 23 MB download, Wi-Fi only.
+- Dorar (الدرر السنية) has no bulk download → live: native dorarSearch (dorar.net/dorar_api.json?skey=, offline lock),
+  knowledge.js isHadithQuestion/dorarQuery/parseDorar/dorarSearch, K.liveSearch merged in find(). Fixture:
+  tests/fixtures/dorar_api_sample.json (a real recorded answer, MIT dorar_hadith package). Test: unit v725dorar.
+- cars pack (new): US EPA vehicles.csv (public domain, model years 2000+) + EEA CO2 new-car data (CC BY 4.0, 2010+) via
+  discodata SQL, one query per year; 2023+ live in their own tables (co2cars_2024Fv29…) — listing tables is refused, so
+  names are probed (eea_probe, no retries). Brands get Arabic names, Chinese brands are marked (make_key prefix match).
+  No prices in any open source.
+- Car answers (research.js TPL.vehicle, Ali's "bare minimum"): expert driver's overview → every trim (hp, Nm, 0–100, top
+  speed, price USD + home currency, official and market) → per-trim specs (dimensions, ground clearance, WLTP and CLTC
+  ranges, pure-electric WLTP/CLTC for hybrids) → features → prices official vs market (used by year, home-country price) →
+  advantages → disadvantages → rivals → Egypt. 7 searches, 10 pages, ≈40% of the window for the answer. Today's rates via
+  native fxRates (open.er-api.com, cached 6 h) → fxNote; the Cars pack's figures → officialSpecsNote (api.carSpecs).
+- Bridge methods always get (id, arg): a method with only (id) is not found from JS — fxRates takes an unused arg.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
