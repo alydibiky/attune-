@@ -139,7 +139,7 @@ export function looksLikePeriodLog(text) {
 }
 
 const NUM_WORDS = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
-  twelve: 12, couple: 2, few: 3, "واحد": 1, "واحدة": 1, "اتنين": 2, "اثنين": 2, "تلات": 3, "تلاتة": 3, "ثلاث": 3, "ثلاثة": 3,
+  twelve: 12, couple: 2, few: 3, "واحد": 1, "واحدة": 1, "اثنان": 2, "اثنين": 2, "تلات": 3, "تلاتة": 3, "ثلاث": 3, "ثلاثة": 3,
   "اربع": 4, "أربع": 4, "اربعة": 4, "خمس": 5, "خمسة": 5, "ست": 6, "ستة": 6 };
 const AR_DIGITS = { "٠": 0, "١": 1, "٢": 2, "٣": 3, "٤": 4, "٥": 5, "٦": 6, "٧": 7, "٨": 8, "٩": 9 };
 const toLatinDigits = (s) => s.replace(/[٠-٩]/g, (c) => AR_DIGITS[c]);

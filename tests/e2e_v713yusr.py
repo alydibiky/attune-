@@ -46,7 +46,7 @@ with sync_playwright() as p:
     check([t[0] for t in tx] == [80, 500] and tx[1][1] == "transport", "Arabic: %s" % tx)
     # a question is answered (by code, from the ledger), not logged
     n1 = y.evaluate("db.txns.length")
-    y.fill("#write-text", "how much did I spend on transport this week?")
+    y.fill("#write-text", "how much did I spend on transport in the last 7 days?")
     y.click("#write-go")
     y.wait_for_selector("[data-testid=talk-answer]", timeout=15000)
     ans = y.locator("[data-testid=talk-answer]").last.inner_text()

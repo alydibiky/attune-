@@ -66,7 +66,7 @@ export function RamadanCard({ L, ar, tg, city }) {
         <span className="text-[12px] text-violet-200 tabular-nums" data-testid="fit-ramadan-times">{L("Fajr", "الفجر")} {t.fajr} · {L("Maghrib", "المغرب")} {t.maghrib}</span>
       </div>
       <div className="text-xl font-semibold text-white tabular-nums" data-testid="fit-ramadan-left">{fasting ? L(`Iftar in ${hm(left)}`, `الفطار بعد ${hm(left)}`) : L(`Suhoor ends in ${hm(left)}`, `السحور يخلص بعد ${hm(left)}`)}</div>
-      <div className="text-[12px] text-violet-100/90">{L(`Iftar ~${plan.iftar} · after Taraweeh ~${plan.snack} · Suhoor ~${plan.suhoor} kcal · a glass of water every ${plan.everyMin} min from Maghrib to Fajr (${plan.glasses} glasses)`, `الفطار ~${plan.iftar} · بعد التراويح ~${plan.snack} · السحور ~${plan.suhoor} سعر · كوباية مية كل ${plan.everyMin} دقيقة من المغرب للفجر (${plan.glasses} كوبايات)`)}</div>
+      <div className="text-[12px] text-violet-100/90">{L(`Iftar ~${plan.iftar} · after Taraweeh ~${plan.snack} · Suhoor ~${plan.suhoor} kcal · a glass of water every ${plan.everyMin} min from Maghrib to Fajr (${plan.glasses} glasses)`, `الإفطار ~${plan.iftar} · بعد التراويح ~${plan.snack} · السحور ~${plan.suhoor} سعر · كوب ماء كل ${plan.everyMin} دقيقة من المغرب إلى الفجر (${plan.glasses} أكواب)`)}</div>
       {plan.tips.map((x, i) => <div key={i} className="text-[11.5px] text-violet-200/80">• {L(x.en, x.ar)}</div>)}
       <div className="text-[10.5px] text-violet-300/70">{L("Times by the sun's position (Egyptian General Authority angles), ±3 min — follow your local mosque's call.", "المواقيت محسوبة من موقع الشمس (زوايا الهيئة المصرية)، ±3 دقائق — اتّبع أذان المسجد القريب منك.")}</div>
     </div>
@@ -205,7 +205,7 @@ export function FitSettings({ L, ar, st, upd, native, flash, packText, photoClip
     const now = Date.now(), ids = [];
     const add = (id, time, en, a) => { ids.push(id); if (on) try { native.schedule(JSON.stringify({ id, at: nextAt(time, now), title: ar ? a : en, body: ar ? "افتح الأكل والرياضة" : "Open Fit & Food", repeat: "daily" })); } catch (e) {} };
     for (const r of P.REMINDERS) if (r.time !== "every2h") add("daily-" + r.id, r.time, r.en, r.ar);
-    for (const h of ["10:00", "12:00", "16:00", "18:00", "22:00"]) add("daily-fit-water-" + h.slice(0, 2), h, "Drink a glass of water", "اشرب كوباية مية");
+    for (const h of ["10:00", "12:00", "16:00", "18:00", "22:00"]) add("daily-fit-water-" + h.slice(0, 2), h, "Drink a glass of water", "اشرب كوب ماء");
     if (!on) for (const id of ids) try { native.unschedule(id); } catch (e) {}
     if (on && native.notifyAllowed && !native.notifyAllowed() && native.askNotifications) native.askNotifications();
     flash && flash(on ? L("Reminders on: meals and water", "التنبيهات شغالة: الوجبات والمية") : L("Reminders off", "التنبيهات مقفولة"));
@@ -222,7 +222,7 @@ export function FitSettings({ L, ar, st, upd, native, flash, packText, photoClip
         {Object.entries(P.CITIES).map(([k, c]) => <option key={k} value={k}>{ar ? c.ar : c.en}</option>)}</select> : null}
       <FoodPackCard {...{ L, packText, flash }} />
       <FoodClipCard {...{ L, photoClip, flash }} onChange={onClip} />
-      <label className="flex items-center gap-2 text-[13px] text-slate-200"><input type="checkbox" checked={!!st.reminders} onChange={(e) => setReminders(e.target.checked)} data-testid="fit-reminders" /><Bell size={14} />{L("Remind me to log meals and drink water", "فكّرني أسجّل الوجبات وأشرب مية")}</label>
+      <label className="flex items-center gap-2 text-[13px] text-slate-200"><input type="checkbox" checked={!!st.reminders} onChange={(e) => setReminders(e.target.checked)} data-testid="fit-reminders" /><Bell size={14} />{L("Remind me to log meals and drink water", "ذكّرني بتسجيل الوجبات وشرب الماء")}</label>
     </div>
   );
 }
@@ -372,7 +372,7 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
   const hwOffer = hwDirect && !hwOn && ((status && status.huawei) || hwS.app || hwS.hms);
   const hwButton = hwOffer ? (
     <div className="rounded-xl bg-rose-500/10 border border-rose-800 p-2.5 space-y-1.5" data-testid="fit-huawei-direct">
-      <div className="text-[12.5px] text-rose-100">{L("Huawei watch or band: connect Huawei Health directly — steps, calories, distance and heart rate, read only.", "ساعة أو باند هواوي: اربط Huawei Health على طول — الخطوات والسعرات والمسافة والنبض، قراءة بس.")}</div>
+      <div className="text-[12.5px] text-rose-100">{L("Huawei watch or band: connect Huawei Health directly — steps, calories, distance and heart rate, read only.", "ساعة أو سوار هواوي: اربط Huawei Health مباشرة — الخطوات والسعرات والمسافة والنبض، قراءة فقط.")}</div>
       {hwS.hms ? <button onClick={() => { setNote(""); hwKit.connect(); }} className="w-full rounded-lg bg-rose-600 py-2 text-[13px] font-medium text-white" data-testid="fit-huawei-connect">{L("Connect Huawei Health", "اربط Huawei Health")}</button>
         : <button onClick={() => health.openApp("com.huawei.hwid")} className="w-full rounded-lg bg-rose-700 py-2 text-[13px] text-white" data-testid="fit-huawei-hms">{L("First install HMS Core (Huawei's services — free)", "الأول نزّل HMS Core (خدمات هواوي — ببلاش)")}</button>}
     </div>) : null;

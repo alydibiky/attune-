@@ -218,7 +218,7 @@ export function checkCV(cv) {
     if (!bl.length) add("tip", where, `“${where}”: add 2–4 bullet points of what you achieved`, `«${where}»: ضيف ٢–٤ نقاط بإنجازاتك`);
     bl.forEach((x, i) => {
       if (WEAK_START.test(x)) add("tip", where, `“${where}”: start bullet ${i + 1} with an action verb (Led, Reduced, Built…), not “${x.split(" ")[0]}”`, `«${where}»: ابدأ النقطة ${i + 1} بفعل إنجاز مش «${x.split(" ")[0]}»`);
-      if (x.split(/\s+/).length > 28) add("tip", where, `“${where}”: bullet ${i + 1} is long — keep it under about 25 words`, `«${where}»: النقطة ${i + 1} طويلة — خليها أقل من ٢٥ كلمة تقريبًا`);
+      if (x.split(/\s+/).length > 28) add("tip", where, `“${where}”: bullet ${i + 1} is long — keep it under about 25 words`, `«${where}»: النقطة ${i + 1} طويلة — اجعلها أقل من 25 كلمة تقريبًا`);
     });
     if (bl.length && !bl.some((x) => HAS_NUMBER.test(x))) add("tip", where, `“${where}”: add a number (how many, how much, how fast)`, `«${where}»: أضف رقمًا (كم، وما المقدار، وما السرعة)`);
   }

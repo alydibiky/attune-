@@ -28,6 +28,21 @@ export function copyMeal(days, fromDay, slot) {
   const src = ((days[fromDay] || {}).meals || {})[slot] || [];
   return src.map(({ t, ...x }) => ({ ...x }));
 }
+/**
+ * v6.13 — copy food from day to day, like Yazio: one meal (to the same or another meal) or the whole day.
+ * days: st.days; slot: a meal id, or null for the whole day; toSlot: the target meal (ignored for a whole day).
+ * → the new days object (items appended to what is already there, each with a fresh time), or the same object when nothing to copy.
+ */
+export function copyFood(days, fromKey, toKey, slot = null, toSlot = null, now = Date.now()) {
+  const src = (days[fromKey] || {}).meals || {};
+  const pairs = slot ? [[slot, toSlot || slot]] : Object.keys(src).map((m) => [m, m]);
+  const add = pairs.filter(([m]) => (src[m] || []).length);
+  if (!add.length || (fromKey === toKey && (!slot || (toSlot || slot) === slot))) return days;
+  const tgt = days[toKey] || { meals: {}, water: 0, workouts: [] };
+  const meals = { ...(tgt.meals || {}) };
+  for (const [m, to] of add) meals[to] = [...(meals[to] || []), ...src[m].map(({ t, ...x }, i) => ({ ...x, t: now + i }))];
+  return { ...days, [toKey]: { ...tgt, meals } };
+}
 /** A saved combination ("my breakfast") → { id, name, items, kcal }. */
 export function myMeal(name, items) {
   const clean = items.map(({ t, ...x }) => x);
@@ -214,7 +229,7 @@ export function weekReport(days, weights, tg, from = new Date()) {
   const lines = [];
   lines.push({ en: `You logged ${logged.length} of 7 days; average ${avg} kcal (goal ${tg.kcal}).`, ar: `سجّلت ${logged.length} من ٧ أيام؛ المتوسط ${avg} سعر (الهدف ${tg.kcal}).` });
   lines.push({ en: `On target ${onTarget} day(s); protein reached on ${proteinDays}.`, ar: `ضمن الهدف ${onTarget} يوم؛ وتحقق هدف البروتين ${proteinDays} يوم.` });
-  if (change != null) lines.push({ en: `Weight ${change > 0 ? "+" : ""}${change} kg this week${tg.goal === "lose" ? (change < 0 ? " — right direction." : " — look at the days over target.") : "."}`, ar: `الوزن ${change > 0 ? "+" : ""}${change} كجم الأسبوع ده${tg.goal === "lose" ? (change < 0 ? " — ماشي صح." : " — راجع الأيام التي تجاوزت فيها الهدف.") : "."}` });
+  if (change != null) lines.push({ en: `Weight ${change > 0 ? "+" : ""}${change} kg this week${tg.goal === "lose" ? (change < 0 ? " — right direction." : " — look at the days over target.") : "."}`, ar: `الوزن ${change > 0 ? "+" : ""}${change} كجم هذا الأسبوع${tg.goal === "lose" ? (change < 0 ? " — ماشي صح." : " — راجع الأيام التي تجاوزت فيها الهدف.") : "."}` });
   if (proteinDays < logged.length / 2) lines.push({ en: "Next week: protein at every meal (eggs, chicken, fish, Greek yogurt, lentils).", ar: "الأسبوع الجاي: بروتين في كل وجبة (بيض، فراخ، سمك، زبادي يوناني، عدس)." });
   if (logged.length < 5) lines.push({ en: "Log at least 5 days — a week's picture needs them.", ar: "سجّل ٥ أيام على الأقل — صورة الأسبوع محتاجاهم." });
   return { logged: logged.length, avg, onTarget, proteinDays, best: best ? best.day : null, score, change, lines };
@@ -225,7 +240,7 @@ export const REMINDERS = [
   { id: "fit-breakfast", time: "09:00", en: "Log your breakfast", ar: "سجّل فطارك" },
   { id: "fit-lunch", time: "14:30", en: "Log your lunch", ar: "سجّل غداك" },
   { id: "fit-dinner", time: "20:30", en: "Log your dinner", ar: "سجّل عشاك" },
-  { id: "fit-water", time: "every2h", en: "Drink a glass of water", ar: "اشرب كوباية مية" },
+  { id: "fit-water", time: "every2h", en: "Drink a glass of water", ar: "اشرب كوب ماء" },
 ];
 
 export { RECIPES, recipeNutrients };

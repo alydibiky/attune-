@@ -223,7 +223,7 @@ export function SalesModule() {
           {!s.customers.length ? <Empty title={L("No customers yet", "لا يوجد عملاء بعد")} /> : <Card className="divide-y" testid="customer-list">{s.customers.map((c) => <CustomerRow key={c.id} c={c} onEdit={() => setParty(c)} />)}</Card>}
         </>
       )}
-      {picker ? <Sheet title={L("New document", "مستند جديد")} onClose={() => setPicker(false)}><div className="space-y-2">{[["invoice", "Tax invoice", "فاتورة ضريبية", "Bill a customer; goes into your books.", "تُحتسب على العميل وتُقيَّد في دفاترك."], ["quote", "Quotation", "عرض سعر", "A price offer; no effect on your books until it becomes an invoice.", "عرض سعر؛ مالوش تأثير على الدفاتر لحد ما يبقى فاتورة."]].map(([k, en, ar, hen, har]) => (
+      {picker ? <Sheet title={L("New document", "مستند جديد")} onClose={() => setPicker(false)}><div className="space-y-2">{[["invoice", "Tax invoice", "فاتورة ضريبية", "Bill a customer; goes into your books.", "تُحتسب على العميل وتُقيَّد في دفاترك."], ["quote", "Quotation", "عرض سعر", "A price offer; no effect on your books until it becomes an invoice.", "عرض سعر؛ لا يؤثر على الدفاتر حتى يتحوّل إلى فاتورة."]].map(([k, en, ar, hen, har]) => (
         <Card key={k} onClick={() => { setPicker(false); setNewType(k); }} className="p-3" testid={"new-" + k}><p className="text-[14px] font-semibold">{L(en, ar)}</p><p className={`text-[12px] ${th.sub}`}>{L(hen, har)}</p></Card>))}</div></Sheet> : null}
       {newType ? <DocEditor type={newType} onClose={() => setNewType(null)} onSaved={(id) => setOpenId(id)} /> : null}
       {openId ? <DocView id={openId} onClose={() => setOpenId(null)} /> : null}

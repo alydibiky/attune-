@@ -146,7 +146,7 @@ def sec_arabic(br):
     check(labels[0] == "المحادثة" and labels[-1] == "المزيد" and "المال" in labels, "bottom bar is in Arabic: %s" % labels)
     b0 = nav.nth(0).bounding_box(); b4 = nav.nth(nav.count() - 1).bounding_box()
     check(b0["x"] > b4["x"], "and it reads from the right (Chat is on the right)")
-    check(page.locator("textarea[placeholder='راسل Attune']").count() == 1, "the message box says راسل Attune")
+    check(page.locator("textarea[placeholder='اكتب رسالة إلى Attune']").count() == 1, "the message box says اكتب رسالة إلى Attune")
     check(json.loads(page.evaluate("localStorage.getItem('ledger.v3')"))["lang"] == "ar", "Yusr (Money) switches to Arabic too")
     latin = page.evaluate(LATIN)
     check(len(latin) == 0, "no English left on the home screen: %s" % latin[:5])

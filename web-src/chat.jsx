@@ -24,7 +24,7 @@ import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, websiteF
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
-import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, topicKind, topicSearches, answerTemplate, wantsShape } from "./research.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts } from "./research.js";
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
@@ -837,7 +837,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // v6.12: a detail question about a car, a crane, a phone, a place, a company → the searches that fill every section, and
         // the answer's shape (research.js answerTemplate) — what makes Gemini's answers complete
         const kindT = topicKind(question), shaped = api.webPages && wantsShape(typed, kindT);
-        if (shaped) { queries = [...new Set([...queries, ...topicSearches(query, kindT)])].slice(0, 5); readCap = Math.max(readCap, pwR.readPages || pwR.pages || 8); }
+        if (shaped) { const cmpQ = compareSearches(question, kindT); queries = [...new Set([...queries, ...(cmpQ.length ? cmpQ : topicSearches(query, kindT))])].slice(0, cmpQ.length ? 7 : 5); readCap = Math.max(readCap, pwR.readPages || pwR.pages || 8, cmpQ.length ? 10 : 0); }
         const per = Math.min(8, Math.ceil(readCap / queries.length) + 2);
         onStatus(queries.length > 1 ? tr("Searching {n} ways at once…", { n: queries.length }) : tr("Searching the web…"));
         const found = await Promise.all(queries.map((q, i) =>
@@ -866,7 +866,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const ansF = (api.power && api.power().longTokens) || 2048;
           // v5.32: the passages fill at most a 12k window even on 16k phones — a small model copies
           // figures far more reliably from a shorter prompt (and it reads faster)
-          const budgetF = quickBudget(typed, fitChars(Math.min(ctxF, 12288), ansF, 2600 + (shaped ? 350 : 0), toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" ")), deep || shaped);   // the answer's shape takes ≈350 tokens of the window   // v6.8: a quick question reads less
+          const budgetF = quickBudget(typed, fitChars(Math.min(ctxF, 12288), ansF, 2600 + (shaped ? (compareParts(question) ? 600 : 350) : 0), toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" ")), deep || shaped);   // the answer's shape takes ≈350 tokens of the window   // v6.8: a quick question reads less
           const ranked = api.rankAll(question, toRead, { budget: budgetF, perSource: Math.max(1500, Math.floor(budgetF / Math.max(1, Math.min(toRead.length, 6)) * 1.4)) });
           const figs = confirmedFigures(ranked);
           sources = ranked; via = look.via;
@@ -1125,7 +1125,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // penalties (they mangled copied numbers). (v5.17)
         const copy = !!sources || !!fileAtt || !!(spaceRef.current.project && (spaceRef.current.project.knowledge || []).length);
         // a research report gets the level's long-answer budget (v5.23)
-        const longRep = research && !useThink && api.power ? { maxTokens: api.power().longTokens } : {};
+        const longRep = (research || tplUsed) && !useThink && api.power ? { maxTokens: api.power().longTokens } : {};
         // v5.33: a web answer copies figures — near-greedy sampling (0.1) keeps a small model from
         // picking a wrong digit or a stray token ("1.2.93", "kWkW", "a a a")
         const webT = sources && !useThink ? { temperature: 0.1 } : {};

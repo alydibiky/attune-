@@ -470,7 +470,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
         <Detail rec={openRec} close={() => setOpenId(null)} update={update} forget={doForget} togglePin={togglePin} openRec={(r) => setOpenId(r.id)}
           search={search} scheduleReminder={scheduleReminder} flash={flash}
           findPromises={(r) => (pro ? findCommitments(r.text, r.id) : openPlan())}
-          askAbout={(r) => { setOpenId(null); setQ(""); const qq = ar ? "إيه أهم حاجة في ده؟" : "What matters in this?"; if (pro) doAsk(qq, r); else openPlan(); }} />
+          askAbout={(r) => { setOpenId(null); setQ(""); const qq = ar ? "ما أهم شيء في هذا؟" : "What matters in this?"; if (pro) doAsk(qq, r); else openPlan(); }} />
       ) : null}
     </div>
   );

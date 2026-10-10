@@ -133,7 +133,7 @@ function Home() {
           <div className={`flex justify-between font-semibold border-t pt-1.5 mt-1.5 ${th.line}`}><span>{d.vat.payable >= 0 ? L("To pay", "مستحق السداد") : L("To recover", "مستحق الاسترداد")}</span><Money v={Math.abs(d.vat.payable)} /></div>
         </Card>
       </Section>
-      <p className={`text-[11px] ${th.sub} pb-4`}>{L("Stock value", "قيمة المخزون")}: <Money v={d.stockValue} /> · {L("Figures come only from your posted documents.", "الأرقام جاية من مستنداتك المرحّلة بس.")}</p>
+      <p className={`text-[11px] ${th.sub} pb-4`}>{L("Stock value", "قيمة المخزون")}: <Money v={d.stockValue} /> · {L("Figures come only from your posted documents.", "الأرقام مأخوذة من مستنداتك المرحّلة فقط.")}</p>
     </div>
   );
 }
@@ -238,7 +238,7 @@ function Settings({ onClose, goCustom }) {
       <Section title={L("Danger zone", "منطقة الخطر")}>
         <button onClick={async () => { if (!window.confirm(L("Erase ALL your books on this phone? Save a backup first — this cannot be undone.", "حذف كل دفاترك من هذا الهاتف؟ احفظ نسخة احتياطية أولًا — لا يمكن التراجع."))) return; await replaceBooks(O.EMPTY()); run(() => O.EMPTY(), L("All books erased", "حُذفت كل الدفاتر")); onClose(); }} className={`${BTN} border border-red-300 text-red-600`} data-testid="books-erase">{L("Erase all books", "امسح كل الدفاتر")}</button>
       </Section>
-      {goCustom ? <Section title={L("More", "المزيد")}><button onClick={() => { onClose(); goCustom(); }} className={`${BTN} border ${th.line} flex items-center gap-1.5`}><Users size={14} />{L("Custom tables (build your own system)", "جداول مخصصة (ابني نظامك بنفسك)")}</button></Section> : null}
+      {goCustom ? <Section title={L("More", "المزيد")}><button onClick={() => { onClose(); goCustom(); }} className={`${BTN} border ${th.line} flex items-center gap-1.5`}><Users size={14} />{L("Custom tables (build your own system)", "جداول مخصصة (ابنِ نظامك بنفسك)")}</button></Section> : null}
     </Sheet>
   );
 }

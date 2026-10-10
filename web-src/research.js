@@ -371,13 +371,51 @@ const TPL = {
   org: "1. **Quick answer**.\n2. ## Key facts — a table (founded, headquarters, leaders, size, revenue if given).\n3. ## What it does.\n4. ## Latest news (with dates).\n5. ## Notes.",
   general: "",
 };
+/**
+ * v6.13: "A vs B" — the two things compared, or null. "Geely Galaxy M9 vs Lynk & Co 900", "compare X and Y",
+ * «X ولا Y», «الفرق بين X و Y», «قارن X و Y». Ali's quality bar: Gemini's answer (tests/websearch/targets/README.md).
+ */
+export function compareParts(q) {
+  const t = String(q || "").replace(/[?؟!.]+\s*$/, "").trim();
+  let m = /^(?:compare|comparison(?: of| between)?|difference between|قارن(?: بين)?|مقارنة(?: بين)?|الفرق بين|ايه الفرق بين|إيه الفرق بين)\s+(.+?)\s+(?:and|with|vs\.?|versus|و|مع|ولا|أو)\s+(.+)$/i.exec(t)
+    || /^(.+?)\s+(?:vs\.?|versus|v\.?|against|compared (?:to|with)|ولا|مقابل|ضد|أو أحسن من|أحسن من|ولا أحسن)\s+(.+)$/i.exec(t);
+  if (!m) return null;
+  const clean = (x) => x.replace(/^(the|a|an)\s+/i, "").replace(/\s+(which is better|which one|أيهما أفضل|أنهي أحسن|انهي احسن|مين أحسن)\s*$/i, "").trim();
+  const a = clean(m[1]), b = clean(m[2]);
+  if (a.length < 2 || b.length < 2 || a.split(/\s+/).length > 8 || b.split(/\s+/).length > 8) return null;
+  return [a, b];
+}
+const CMP = {
+  vehicle: (a, b) => `1. **Quick verdict** (3–4 lines: the main difference, the price gap, who each one suits).
+2. ## ${a} — a table: | Version | Engine / motor | Power (hp) | Torque (Nm) | Range or fuel use | 0–100 km/h | Price | — every version the sources name; then 2–3 lines on what stands out.
+3. ## ${b} — the same table for every version; then 2–3 lines on what stands out.
+4. ## Head to head — a table: | | ${a} | ${b} | Better | — rows: starting price, top price, power, torque, 0–100 km/h, electric range / fuel use, battery, length × width × height, wheelbase, seats, boot, charging, warranty. Put "—" where no source gives a figure.
+5. ## Advantages of each — ${a}: 3–5 bullets; ${b}: 3–5 bullets (only what the sources support).
+6. ## Which to choose — by buyer: e.g. "for long trips…", "for the best price…", "for tech…".
+7. ## Availability in Egypt — dealers and EGP prices for both, if the sources say so.`,
+  machine: (a, b) => `1. **Quick verdict**.\n2. ## Head to head — a table: | | ${a} | ${b} | Better | — max capacity (and at what radius), main boom, with jib, max tip height, axles, engine power, travel speed, weight, transport dimensions, counterweight.\n3. ## Load chart at key radii — both, if the sources give them.\n4. ## Strengths of each.\n5. ## Which to choose — by job type.`,
+  gadget: (a, b) => `1. **Quick verdict**.\n2. ## ${a} — versions and prices.\n3. ## ${b} — versions and prices.\n4. ## Head to head — a table: | | ${a} | ${b} | Better | — price, screen, chip, RAM / storage, cameras, battery and charging, weight, software updates.\n5. ## Advantages of each.\n6. ## Which to choose — by buyer.`,
+  general: (a, b) => `1. **Quick verdict**.\n2. ## Head to head — a table: | | ${a} | ${b} | — every measurable point the sources give.\n3. ## Advantages of each.\n4. ## Which to choose and when.`,
+};
+/** Searches for a comparison: each side's versions/prices and specs, then the direct comparison. */
+export function compareSearches(q, kind = topicKind(q), n = 6) {
+  const p = compareParts(q); if (!p) return [];
+  const ar = /[؀-ۿ]/.test(q), y = new Date().getFullYear(), [a, b] = p;
+  const side = (x) => kind === "vehicle" ? (ar ? [`${x} الفئات والأسعار ${y}`, `${x} مواصفات`] : [`${x} trims prices ${y}`, `${x} specifications horsepower range dimensions`])
+    : kind === "machine" ? [`${x} specifications capacity boom length`, `${x} load chart`] : [`${x} specifications price ${y}`];
+  return [...new Set([`${a} vs ${b}`, ...side(a), ...side(b), ar ? `مقارنة ${a} و ${b}` : `${a} vs ${b} comparison review`])].slice(0, n);
+}
+
 /** The shape the final answer follows for this kind of subject ("" for general questions). */
 export function answerTemplate(q, kind = topicKind(q)) {
+  const p = compareParts(q);
+  if (p) return "\n\n(This is a COMPARISON. Write it in this structure — fill every section the sources can, cover EVERY version of both, put \"—\" in a table cell no source gives, and cite the source number after each fact.)\n" + (CMP[kind] || CMP.general)(p[0], p[1]);
   const t = TPL[kind] || "";
   return t ? "\n\n(Write the answer in this structure — use every section the sources can fill, skip a section only when no source says anything for it, and put \"—\" in a table cell no source gives. Cite the source number after each fact.)\n" + t : "";
 }
 /** Should the answer get the full topic shape? A detail question ("all trims", "specs", "compare") or a bare subject ("Lynk & Co 900"). */
 export function wantsShape(q, kind = topicKind(q)) {
+  if (compareParts(q)) return true;
   if (kind === "general") return false;
   const t = String(q || "").trim();
   if (pagesFor(t) === 8) return true;

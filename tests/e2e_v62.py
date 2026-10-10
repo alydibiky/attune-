@@ -97,7 +97,7 @@ with sync_playwright() as p:
     page.locator(".rounded-t-2xl button:has-text('الغذاء واللياقة')").first.click()
     page.wait_for_selector("[data-testid=fit-today]", timeout=6000)
     t = page.locator("[data-testid=fit-today]").inner_text()
-    check("الفجر" in t and "سحور" in t and "درجة النهارده" in t, "Ramadan card, meal names and the score in Arabic — " + t.replace("\n", " ")[:300])
+    check("الفجر" in t and "سحور" in t and "درجة اليوم" in t, "Ramadan card, meal names and the score in Arabic — " + t.replace("\n", " ")[:300])
     shot(page, "fit-ramadan-ar")
 
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])

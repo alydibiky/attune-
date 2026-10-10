@@ -133,7 +133,7 @@ const SIGNS = [
   ["code", 4, /(otp|verification code|send (me )?the code|الكود اللي (وصلك|جالك)|ابعت(لي)? الكود|كود التفعيل|رمز التحقق)/i,
     "They ask for a code sent to your phone — that is how accounts and wallets are stolen.", "يطلبون رمزًا وصلك على الهاتف — وهذه طريقة لسرقة الحسابات والمحافظ."],
   ["prize", 3, /(you (have )?won|congratulations.{0,30}(prize|winner|won)|claim your (prize|reward)|مبروك.{0,20}(كسبت|فزت|ربحت)|كسبت (جايزة|جائزة)|فزت ب)/i,
-    "A prize you never entered for.", "جايزة إنت ما دخلتش مسابقتها أصلًا."],
+    "A prize you never entered for.", "جائزة من مسابقة لم تشارك فيها أصلًا."],
   ["urgent", 1, /(today only|last chance|only \d+ left|hurry|limited time|expires (today|tonight|in \d+)|act now|النهاردة بس|النهارده بس|آخر فرصة|اخر فرصة|لفترة محدودة|الحق قبل|الكمية محدودة|فاضل \d+ بس)/i,
     "Pressure to decide fast — a classic trick.", "ضغط لتتخذ قرارك بسرعة — أسلوب معروف."],
   ["off-platform", 2, /(contact me on whatsapp|whatsapp me|message me outside|pay outside|كلمني (واتس|على الواتس)|تواصل (واتس|خاص)|برا الموقع|خارج (المنصة|الموقع))/i,
@@ -177,8 +177,8 @@ export function verdict(d) {
   }
   const pl = d.plan;
   if (pl && isFinite(pl.extra) && pl.extra > 0) {
-    say(`With the installments you pay ${fmt(pl.total)} — ${fmt(pl.extra)} more than the cash price.`, `بالتقسيط هتدفع ${fmt(pl.total)} — يعني ${fmt(pl.extra)} زيادة عن الكاش.`);
-    if (pl.yearlyRate != null) say(`That is a real interest of about ${Math.round(pl.yearlyRate * 100)}% a year${d.claimsZero ? ", although it says 0%" : ""}.`, `ده فايدة حقيقية حوالي ${Math.round(pl.yearlyRate * 100)}% في السنة${d.claimsZero ? "، رغم إنه مكتوب 0%" : ""}.`);
+    say(`With the installments you pay ${fmt(pl.total)} — ${fmt(pl.extra)} more than the cash price.`, `بالتقسيط ستدفع ${fmt(pl.total)} — أي ${fmt(pl.extra)} زيادة على السعر النقدي.`);
+    if (pl.yearlyRate != null) say(`That is a real interest of about ${Math.round(pl.yearlyRate * 100)}% a year${d.claimsZero ? ", although it says 0%" : ""}.`, `هذه فائدة حقيقية تبلغ نحو ${Math.round(pl.yearlyRate * 100)}% سنويًا${d.claimsZero ? "، رغم أنه مكتوب 0%" : ""}.`);
     if (pl.yearlyRate != null && pl.yearlyRate > 0.35 && (level === "fair" || level === "good" || level === "unknown")) level = "overpriced";
   } else if (pl && pl.extra <= 0 && pl.total > 0) say("The installments add nothing over the cash price — a real 0%.", "التقسيط لا يضيف شيئًا على السعر النقدي — 0% فعلًا.");
   if (pl && pl.inconsistent) say(`The installments add up to ${fmt(pl.total)} — less than the price, so the terms don't match; ask the seller for the exact total.`, `مجموع الأقساط ${fmt(pl.total)} — أقل من السعر، أي أن الشروط غير متسقة؛ اسأل البائع عن الإجمالي بالتحديد.`);
@@ -197,7 +197,7 @@ export function questionsFor(v, signs, kind) {
   if (ids.has("no-warranty") || kind === "product") q.push(["Is there an official warranty, and for how long? Invoice included?", "فيه ضمان رسمي؟ مدته قد إيه؟ وفيه فاتورة؟"]);
   if (v.level === "overpriced" || v.target) q.push(["Can you do a better price? Others sell it for less.", "هل يمكن سعر أفضل؟ هناك أماكن تبيعه بسعر أقل."]);
   if (kind === "installment") q.push(["What is the total I pay, all fees included? Is there an early-payment penalty?", "كم إجمالي ما سأدفعه بكل الرسوم؟ وهل توجد غرامة على السداد المبكر؟"]);
-  if (kind === "car") q.push(["Can I take it to an independent mechanic and check the papers (license, violations)?", "ممكن أكشف عليها عند ميكانيكي من برا وأشوف الرخصة والمخالفات؟"]);
+  if (kind === "car") q.push(["Can I take it to an independent mechanic and check the papers (license, violations)?", "هل يمكن فحصها عند ميكانيكي مستقل والاطلاع على الرخصة والمخالفات؟"]);
   if (kind === "rent") q.push(["Is the contract registered, and who pays the maintenance and utilities?", "هل العقد موثّق؟ ومن يدفع الصيانة والمرافق؟"]);
   if (!q.length) q.push(["Can I get everything agreed in writing?", "هل يمكن أن يُكتب كل ما اتفقنا عليه؟"]);
   return q.slice(0, 5).map(([en, ar]) => ({ en, ar }));

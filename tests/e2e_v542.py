@@ -157,7 +157,7 @@ with sync_playwright() as p:
     page.locator(".rounded-t-2xl button:has-text('الغذاء واللياقة')").first.click()
     page.wait_for_selector("[data-testid=fit-app]", timeout=6000)
     t = page.locator("[data-testid=fit-app]").inner_text()
-    check("اليوم" in t and "فطار" in t and "كشري" in t, "the Fit screen in Arabic, foods by their Arabic names")
+    check("اليوم" in t and "فطور" in t and "كشري" in t, "the Fit screen in Arabic, foods by their Arabic names")
     shot(page, "fit-ar")
 
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])

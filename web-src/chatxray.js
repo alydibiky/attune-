@@ -313,7 +313,7 @@ export function askKind(q) {
   if (/\b(what (was|is|were) (the |this |our )?(chat|conversation|group|discussion)s?( all)? about|what did (we|they) (talk|discuss|say)|summar(y|ise|ize)|overview|main topics?|gist)\b|ملخص|لخص|لخّص|بيتكلموا عن|اتكلمنا عن|اتكلموا عن|الكلام كان عن|المحادثة (كانت )?عن|الشات (كان )?عن|الموضوع (كان )?(إيه|ايه)|المواضيع/i.test(t)) return "about";
   return "other";
 }
-/** The phrase to look for in "was “LTM 1100” mentioned?", «هل اتقال "العربون"؟», "did anyone mention the deposit" → "LTM 1100" / … */
+/** The phrase to look for in "was “LTM 1100” mentioned?", «هل ذُكر "العربون"؟», "did anyone mention the deposit" → "LTM 1100" / … */
 export function mentionTerm(q) {
   const t = String(q || "").trim();
   const quoted = t.match(/["“”«»'‘’]([^"“”«»'‘’]{1,60})["“”«»'‘’]/);
@@ -344,7 +344,7 @@ export function mentionAnswer(term, hits, total, ar) {
   if (!hits.length) return ar ? `لا — «${term}» غير موجودة في المحادثة (فُحصت كل الرسائل: ${total}).` : `No — “${term}” doesn't appear anywhere in this chat (all ${total} messages checked).`;
   const first = hits[0], last = hits[hits.length - 1];
   const who = [...new Set(hits.map((m) => m.who))].slice(0, 4).join(ar ? "، " : ", ");
-  return ar ? `أيوه — «${term}» اتذكرت ${hits.length} مرة${hits.length > 1 ? "" : ""}، أول مرة ${fmtDate(first.t)} (${first.who})${hits.length > 1 ? ` وآخر مرة ${fmtDate(last.t)} (${last.who})` : ""}. قالها: ${who}.`
+  return ar ? `نعم — ذُكرت «${term}» ${hits.length} مرة${hits.length > 1 ? "" : ""}، أول مرة في ${fmtDate(first.t)} (${first.who})${hits.length > 1 ? ` وآخر مرة في ${fmtDate(last.t)} (${last.who})` : ""}. قالها: ${who}.`
     : `Yes — “${term}” was mentioned ${hits.length} time${hits.length > 1 ? "s" : ""}: first on ${fmtDate(first.t)} by ${first.who}${hits.length > 1 ? `, last on ${fmtDate(last.t)} by ${last.who}` : ""}. Said by: ${who}.`;
 }
 /** Messages spread over the whole chat (start → end), the longer ones first, within a budget — for an overview. */
