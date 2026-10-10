@@ -575,6 +575,8 @@ def hadith_rows(key, title, data):
     for h in data.get("hadiths") or []:
         t = (h.get("text") or "").strip()
         if not t: continue
+        if "\ufffd" in t:   # a letter damaged in the source (both its editions): marked, never guessed
+            t = re.sub("\ufffd+", "[…]", t) + "\n(في هذا النص حرف تالف في المصدر، موضعه […]؛ راجع لفظه في الدرر السنية dorar.net)"
         n = h.get("hadithnumber")
         rulings = [f"{SCHOLARS.get(g.get('name'), g.get('name'))}: {grade_ar(g.get('grade'))}" for g in h.get("grades") or [] if grade_ar(g.get("grade"))]
         if not rulings and key in ("bukhari", "muslim"): rulings = [f"صحيح — من {title}"]
@@ -682,7 +684,7 @@ def eea_rows(groups):
     """EEA groups [{Mk, Cn, Ft, Fm, ec, ep, m, ew, er, z, w, n, y0, y1}] → one passage per (make, model) with its versions."""
     models = {}
     for g in groups:
-        mk = make_key(g.get("Mk")); cn = re.sub(r"\s+", " ", (g.get("Cn") or "").strip().upper())
+        mk = make_key(fix_mojibake(g.get("Mk"))); cn = re.sub(r"\s+", " ", fix_mojibake(g.get("Cn") or "").strip().upper())
         for pre in (mk + " ", re.sub(r"\s+", " ", (g.get("Mk") or "").strip().upper()) + " "):
             if cn.startswith(pre) and len(cn) > len(pre): cn = cn[len(pre):]
         if not mk or not cn or cn in ("?", "-"): continue
@@ -941,6 +943,26 @@ def cc_by_version(repo_dir, collection_path):
             return wt, os.path.join(wt, rel), h
     return None
 
+def unique_rows(rows, seen=None, min_chars=40):
+    """Exact repeats out (the Micro-, Macro- and AP editions of a textbook share whole chapters; the same FAQ answer sits on two
+    pages) — the first copy stays, so Chat never fills its few passages with the same text twice. A bare heading with no text
+    («Critical Thinking Questions») is dropped too."""
+    seen = set() if seen is None else seen; out = []
+    for r in rows:
+        k = re.sub(r"\s+", " ", r["x"]).strip().lower()
+        if len(k) < min_chars and not re.search(r"[.!?:;=)]", k): continue
+        if k in seen: continue
+        seen.add(k); out.append(r)
+    return out
+
+def fix_mojibake(t):
+    """«CITROËN» read as Latin-1 arrives as «CITROÃ«N»: bytes back to UTF-8 when that's what happened, else unchanged."""
+    if not t or not re.search(r"Ã.|Â.|Ø.|Ù.|â€", t): return t
+    for enc in ("cp1252", "latin-1"):
+        try: return t.encode(enc).decode("utf-8")
+        except (UnicodeEncodeError, UnicodeDecodeError): pass
+    return t
+
 def subject_rows(title, url, mods):
     """A book's sections → passages titled «Book — Chapter — Section»."""
     rows = []
@@ -953,7 +975,7 @@ def subject_rows(title, url, mods):
 def build_subject(a, pid):
     B = _bk(); name, name_ar, slugs = SUBJECTS[pid]
     found = openstax_collections()
-    budget, used, rows, books = int(a.budget_mb * 1e6), 0, [], []
+    budget, used, rows, books, seen = int(a.budget_mb * 1e6), 0, [], [], set()
     for slug in slugs:
         if slug not in found: print("not found", slug, file=sys.stderr); continue
         d, path = found[slug]
@@ -971,7 +993,7 @@ def build_subject(a, pid):
         nc = not commercial_ok(lic)
         if nc: print("license", slug, lic, file=sys.stderr); continue
         url = f"https://openstax.org/details/books/{slug}"
-        r = subject_rows(title, url, mods)
+        r = unique_rows(subject_rows(title, url, mods), seen)
         b = sum(len(x["x"].encode()) for x in r)
         if not r or used + b > budget: print("over budget", slug, b, file=sys.stderr); continue
         rows += r; used += b; books.append({"title": title, "url": url, "license": lic, "version": commit})
@@ -1146,7 +1168,7 @@ def build_coding(a):
         used.append({"title": "Kotlin documentation (JetBrains)", "url": "https://kotlinlang.org/docs/", "license": "Apache 2.0"})
     except BaseException as e: print("coding: Kotlin failed", e, file=sys.stderr)
     budget = int(a.budget_mb * 1e6); kept, b = [], 0
-    for r in rows:
+    for r in unique_rows(rows, min_chars=0):
         n = len(r["x"].encode())
         if b + n > budget: break
         kept.append(r); b += n

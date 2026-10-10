@@ -16,7 +16,7 @@ export const QS = [
   ["What is the population of Alexandria, Egypt?", /5[,.]?26\d|5\.2\d? million/],
   ["What is Turkey's international calling code?", /\+?\s?90\b/],
   ["ما هي الآية التي فيها «الله لا إله إلا هو الحي القيوم»؟ اذكر السورة ورقم الآية", /البقرة|2:255|255|آل عمران|3:2/],
-  ["ما تفسير قوله تعالى «إياك نعبد وإياك نستعين» في التفسير الميسر؟", /نخصك|وحدك بالعبادة|نستعين بك وحدك/],
+  ["ما تفسير قوله تعالى «إياك نعبد وإياك نستعين» في تفسير الجلالين؟", /نخصك|نخص|وحدك بالعبادة|نستعين بك وحدك|نطلب المعونة/],
   ["ما هي شروط الصلاة؟", /الوقت|الطهارة|ستر العورة|استقبال القبلة/],
   ["كم نصاب الذهب بالجرامات؟", /(70|٧٠|85|٨٥)\s?(جرام|غرام|g)/],
   ["What is the power in horsepower of the BYD Seal sold in Europe?", /308|523/],
@@ -42,6 +42,19 @@ export const QS = [
   ["Who proposed the hierarchy of needs in psychology?", /Maslow/i],
   ["How do you declare a read-only variable in Kotlin?", /\bval\b/],
   ["What is the derivative of sin(x)?", /cos/i],
+  // v6.16c: the new packs (medicines, dictionary, recalls, classical Islamic books) and more subject questions
+  ["What is the maximum daily dose of acetaminophen for adults?", /4[,.]?000\s?mg|4\s?g(rams)?\b/i],
+  ["What are the common side effects of metformin?", /diarrh|nausea|vomit|flatulence|abdominal/i],
+  ["What was the NHTSA recall about the air bag inflators in the 2003 Honda Accord?", /inflator[\s\S]*(rupture|explode|metal fragments)|rupture|metal fragments/i],
+  ["What does the word 'ubiquitous' mean?", /everywhere|present|omnipresent/i],
+  ["من روى حديث «إنما الأعمال بالنيات»؟", /البخاري|مسلم|عمر/],
+  ["ما هي فرائض الوضوء؟", /الوجه[\s\S]*(اليدين|اليد)|غسل الوجه/],
+  ["ماذا قال ابن كثير في تفسير «الحمد لله رب العالمين»؟", /الثناء|الشكر|ثناء|شكر/],
+  ["ما هي عاصمة كازاخستان؟", /أستانا|استانا|Astana|نور سلطان/],
+  ["What is the quadratic formula?", /b\s?\^?\s?2\s?[-−]\s?4\s?a\s?c|b²\s?[-−]\s?4ac/i],
+  ["What is Newton's second law of motion?", /F\s?=\s?m\s?a|force[\s\S]*mass[\s\S]*acceleration/i],
+  ["What is the pH of pure water at 25 °C?", /\b7\b/],
+  ["What is opportunity cost?", /next[- ]best|forgone|forego|give up|given up/i],
 ];
 const proc = spawn("python3", [SEARCH, DIR, "--serve"], { stdio: ["pipe", "pipe", "inherit"] });
 let buf = "", waiting = [];
@@ -58,7 +71,7 @@ async function ask(user) {
   const j = await r.json();
   return { text: String(j.choices?.[0]?.message?.content || "").replace(/<think>[\s\S]*?<\/think>/g, "").trim(), ms: Date.now() - t, prompt: j.usage?.prompt_tokens || 0 };
 }
-const toLatin = (s) => String(s).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+const toLatin = (s) => String(s).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[\u064B-\u0652\u0670\u0640]/g, "").replace(/[إأآ]/g, "ا");
 const S = Object.fromEntries(MODES.map((m) => [m, { ok: 0, found: 0, ms: 0, prompt: 0, look: 0 }]));
 const rows = [];
 for (const [q, rx] of QS) {

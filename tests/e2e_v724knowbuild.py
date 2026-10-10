@@ -334,6 +334,11 @@ r = search(db, "paracetamol maximum dose liver")
 check(r and "Acetaminophen" in r[0][0], "a medicine is found by its international name: " + (r[0][0] if r else "nothing"))
 check(S.arabic_name(["Alexandria", "yەskەndەryە", "ئىسكەندەرىيە", "اسکندریه", "الإسكندرية"]) == "الإسكندرية" and S.arabic_name(["Paris", "پاریس"]) == "",
       "Places: the Arabic name is the one in Arabic letters only — not Uyghur, Persian or a mixed spelling")
+ur = S.unique_rows([{"x": "Labor productivity drives growth."}, {"x": "Labor  productivity drives growth."}, {"x": "Critical Thinking Questions"}, {"x": "GDP = C + I + G"}])
+check([r["x"] for r in ur] == ["Labor productivity drives growth.", "GDP = C + I + G"], "Quality: a passage repeated in another edition of the book, and a bare heading, are left out")
+check(S.fix_mojibake("C-ELYSÃ©E") == "C-ELYSéE" and S.fix_mojibake("Škoda") == "Škoda", "Quality: a car name read in the wrong encoding is repaired (Citroën C-Elysée)")
+hd = S.hadith_rows("bukhari", "صحيح البخاري", {"hadiths": [{"hadithnumber": 834, "text": "ظُلْمًا كَثِيرًا \ufffd\ufffdَلاَ يَغْفِرُ", "grades": []}]})
+check("\ufffd" not in hd[0]["x"] and "[…]" in hd[0]["x"] and "الدرر السنية" in hd[0]["x"], "Quality: a letter damaged in the hadith source is marked, never guessed, and the reader is sent to Dorar")
 labels2 = [{"openfda": {"generic_name": ["IBUPROFEN 200 MG"], "substance_name": ["IBUPROFEN"], "brand_name": ["ADVIL"], "product_type": ["HUMAN OTC DRUG"]}, "effective_time": "20240101", "purpose": ["Pain reliever"]},
            {"openfda": {"generic_name": ["IBUPROFEN"], "substance_name": ["IBUPROFEN"], "brand_name": ["MOTRIN"], "product_type": ["HUMAN PRESCRIPTION DRUG"]}, "effective_time": "20200101", "indications_and_usage": ["For pain and fever"]},
            {"openfda": {"generic_name": ["(CHLOROPROCAINE HCI"], "brand_name": ["NESACAINE"]}, "effective_time": "20200101", "indications_and_usage": ["Local anaesthesia"]},
