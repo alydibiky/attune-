@@ -575,7 +575,7 @@ def hadith_rows(key, title, data):
     """One book → a passage per hadith: the Arabic text exactly as published, then each scholar's ruling."""
     rows = []
     for h in data.get("hadiths") or []:
-        t = (h.get("text") or "").strip()
+        t = htmlmod.unescape(re.sub(r"<[^>]+>", "", re.sub(r"<br\s*/?>", "\n", h.get("text") or ""))).strip()   # the Forties carry <br>
         if not t: continue
         if "\ufffd" in t:   # a letter damaged in the source (both its editions): marked, never guessed
             t = re.sub("\ufffd+", "[…]", t) + "\n(في هذا النص حرف تالف في المصدر، موضعه […]؛ راجع لفظه في الدرر السنية dorar.net)"

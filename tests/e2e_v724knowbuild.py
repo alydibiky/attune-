@@ -338,6 +338,7 @@ ur = S.unique_rows([{"x": "Labor productivity drives growth."}, {"x": "Labor  pr
 check([r["x"] for r in ur] == ["Labor productivity drives growth.", "GDP = C + I + G"], "Quality: a passage repeated in another edition of the book, and a bare heading, are left out")
 check(S.fix_mojibake("C-ELYSÃ©E") == "C-ELYSéE" and S.fix_mojibake("Škoda") == "Škoda", "Quality: a car name read in the wrong encoding is repaired (Citroën C-Elysée)")
 hd = S.hadith_rows("bukhari", "صحيح البخاري", {"hadiths": [{"hadithnumber": 834, "text": "ظُلْمًا كَثِيرًا \ufffd\ufffdَلاَ يَغْفِرُ", "grades": []}]})
+check(S.hadith_rows("nawawi", "الأربعون النووية", {"hadiths": [{"hadithnumber": 6, "text": "أَلَا وَهِيَ الْقَلْبُ .<br>[رَوَاهُ الْبُخَارِيُّ]", "grades": []}]})[0]["x"].startswith("أَلَا وَهِيَ الْقَلْبُ .\n[رَوَاهُ"), "Quality: no HTML left in a hadith")
 check("\ufffd" not in hd[0]["x"] and "[…]" in hd[0]["x"] and "الدرر السنية" in hd[0]["x"], "Quality: a letter damaged in the hadith source is marked, never guessed, and the reader is sent to Dorar")
 labels2 = [{"openfda": {"generic_name": ["IBUPROFEN 200 MG"], "substance_name": ["IBUPROFEN"], "brand_name": ["ADVIL"], "product_type": ["HUMAN OTC DRUG"]}, "effective_time": "20240101", "purpose": ["Pain reliever"]},
            {"openfda": {"generic_name": ["IBUPROFEN"], "substance_name": ["IBUPROFEN"], "brand_name": ["MOTRIN"], "product_type": ["HUMAN PRESCRIPTION DRUG"]}, "effective_time": "20200101", "indications_and_usage": ["For pain and fever"]},
