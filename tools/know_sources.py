@@ -612,9 +612,27 @@ def eea_rows(groups):
             rows.append({"t": f"{make_label(mk)} {cn.title() if cn.isupper() else cn} — specs (Europe, EEA)", "x": piece, "u": "https://www.eea.europa.eu/en/datahub/datahubitem-view/fa8b1229-3db6-495d-b18e-9c9b3267c02b", "l": "en"})
     return rows
 
-def eea_query(B, sql, page):
+def eea_query(B, sql, page=1):
     from urllib.parse import urlencode
-    return json.loads(B.get(EEA_SQL + "?" + urlencode({"query": sql, "p": page, "nrOfHits": 10000}), 300).decode("utf-8")).get("results") or []
+    raw = B.get(EEA_SQL + "?" + urlencode({"query": sql, "p": page, "nrOfHits": 10000}), 300).decode("utf-8")
+    j = json.loads(raw)
+    if "results" not in j: print("cars: EEA said", raw[:300])
+    return j.get("results") or []
+
+def eea_merge(parts):
+    """Per-year groups → one row per version (make, model, fuel, mode, engine, power): averages weighted by cars, years spanned."""
+    out = {}
+    for g in parts:
+        k = tuple((str(g.get(x) or "")).strip().upper() for x in ("Mk", "Cn", "Ft", "Fm")) + (_f(g.get("ec")), _f(g.get("ep")))
+        n = _f(g.get("n")) or 0; y = int(_f(g.get("y")) or 0)
+        o = out.setdefault(k, {"Mk": g.get("Mk"), "Cn": g.get("Cn"), "Ft": g.get("Ft"), "Fm": g.get("Fm"), "ec": g.get("ec"), "ep": g.get("ep"), "n": 0, "y0": y, "y1": y, "_s": {}})
+        o["n"] += n; o["y0"] = min(o["y0"], y); o["y1"] = max(o["y1"], y)
+        for f in ("m", "w", "ew", "z"):
+            v = _f(g.get(f))
+            if v is not None: s0 = o["_s"].setdefault(f, [0.0, 0.0]); s0[0] += v * max(n, 1); s0[1] += max(n, 1)
+    for o in out.values():
+        for f, (t, w) in o.pop("_s").items(): o[f] = t / w if w else None
+    return list(out.values())
 
 def build_cars(a):
     B = _bk(); rows = []
@@ -623,20 +641,30 @@ def build_cars(a):
         r = epa_rows(z.read(z.namelist()[0]).decode("utf-8", "replace")); print(f"cars: EPA {len(r)} passages"); rows += r
     except BaseException as e: print(f"cars: EPA failed ({e})")
     try:
-        cols = list((eea_query(B, "SELECT TOP 1 * FROM [CO2Emission].[latest].[co2cars]", 1) or [{}])[0].keys())
-        print("cars: EEA columns", cols)
+        T = "[CO2Emission].[latest].[co2cars]"
+        cols = list((eea_query(B, f"SELECT TOP 1 * FROM {T}") or [{}])[0].keys())
         col = lambda *names: next((f"[{c}]" for n in names for c in cols if c.lower() == n.lower()), "NULL")
-        er = col("Electric range (km)", "Erwltp", "ElectricRange")
-        sql = (f"SELECT {col('Mk')} AS Mk, {col('Cn')} AS Cn, {col('Ft')} AS Ft, {col('Fm')} AS Fm, ROUND({col('ec')}, -1) AS ec, ROUND({col('ep')}, 0) AS ep, "
-               f"AVG(CAST({col('m (kg)', 'm')} AS float)) AS m, AVG(CAST({col('W (mm)', 'W')} AS float)) AS w, AVG(CAST({col('Ewltp (g/km)', 'Ewltp')} AS float)) AS ew, "
-               f"AVG(CAST({er} AS float)) AS er, AVG(CAST({col('z (Wh/km)', 'z')} AS float)) AS z, SUM(CAST({col('r')} AS float)) AS n, MIN([year]) AS y0, MAX([year]) AS y1 "
-               f"FROM [CO2Emission].[latest].[co2cars] WHERE [year] >= 2019 AND {col('Status')} = 'F' "
-               f"GROUP BY {col('Mk')}, {col('Cn')}, {col('Ft')}, {col('Fm')}, ROUND({col('ec')}, -1), ROUND({col('ep')}, 0) HAVING SUM(CAST({col('r')} AS float)) >= 20")
-        groups, page = [], 1
-        while True:
-            part = eea_query(B, sql, page); groups += part; print(f"cars: EEA page {page}: {len(part)}")
-            if len(part) < 10000 or page >= 60: break
-            page += 1
+        yr, st = col("Year"), col("Status")
+        years = eea_query(B, f"SELECT {yr} AS y, {st} AS s, COUNT(*) AS c FROM {T} GROUP BY {yr}, {st}")
+        print("cars: EEA years", sorted((r.get("y"), r.get("s"), r.get("c")) for r in years))
+        have = {}
+        for r in years:
+            y = int(_f(r.get("y")) or 0)
+            if y >= 2019 and (r.get("s") == "F" or y not in have): have[y] = r.get("s")
+        ec, ep = col("Ec (cm3)", "ec"), col("Ep (KW)", "ep")
+        parts = []
+        for y, status in sorted(have.items()):
+            sql = (f"SELECT {col('Mk')} AS Mk, {col('Cn')} AS Cn, {col('Ft')} AS Ft, {col('Fm')} AS Fm, ROUND({ec}, -1) AS ec, ROUND({ep}, 0) AS ep, "
+                   f"AVG(CAST({col('M (kg)', 'm')} AS float)) AS m, AVG(CAST({col('W (mm)', 'W')} AS float)) AS w, AVG(CAST({col('Ewltp (g/km)', 'Ewltp')} AS float)) AS ew, "
+                   f"AVG(CAST({col('Z (Wh/km)', 'z')} AS float)) AS z, SUM(CAST({col('R', 'r')} AS float)) AS n, {y} AS y "
+                   f"FROM {T} WHERE {yr} = {y} AND {st} = '{status}' "
+                   f"GROUP BY {col('Mk')}, {col('Cn')}, {col('Ft')}, {col('Fm')}, ROUND({ec}, -1), ROUND({ep}, 0) HAVING SUM(CAST({col('R', 'r')} AS float)) >= 20")
+            page = 1
+            while True:
+                part = eea_query(B, sql, page); parts += part; print(f"cars: EEA {y} ({status}) page {page}: {len(part)}")
+                if len(part) < 10000 or page >= 30: break
+                page += 1
+        groups = eea_merge(parts)
         r = eea_rows(groups); print(f"cars: EEA {len(groups)} versions → {len(r)} passages"); rows += r
     except BaseException as e: print(f"cars: EEA failed ({e})")
     B.write_pack(a.out, "cars", rows, {

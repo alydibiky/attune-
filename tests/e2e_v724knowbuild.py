@@ -172,6 +172,9 @@ eu = S.eea_rows(eg)
 bs = [r for r in eu if "SEAL" in r["x"]][0]
 check(len(eu) == 2 and bs["t"].startswith("BYD (بي واي دي — صيني) Seal") and "(1) electric, 230 kW (308 hp)" in bs["x"] and "390 kW (523 hp)" in bs["x"] and "electric range 570 km (WLTP)" in bs["x"] and "16.5 kWh/100 km" in bs["x"],
       "Cars (EEA): one passage per model with all its European versions (power, range, use, weight), most sold first")
+mg = S.eea_merge([{"Mk": "BYD", "Cn": "SEAL", "Ft": "electric", "Fm": "E", "ec": None, "ep": 230, "m": 2180, "w": 2920, "ew": 0, "z": 165, "n": 1000, "y": 2023},
+                   {"Mk": "BYD", "Cn": "Seal", "Ft": "Electric", "Fm": "E", "ec": None, "ep": 230, "m": 2200, "w": 2920, "ew": 0, "z": 170, "n": 3000, "y": 2024}])
+check(len(mg) == 1 and mg[0]["n"] == 4000 and (mg[0]["y0"], mg[0]["y1"]) == (2023, 2024) and abs(mg[0]["m"] - 2195) < 0.01, "Cars (EEA): one version across the years, figures weighted by the cars registered")
 man, db = pack("cars", er + eu)
 r = search(db, "BYD Seal range")
 check(r and "Seal" in r[0][0], "a car question finds its specs: " + (r[0][0] if r else "nothing"))
