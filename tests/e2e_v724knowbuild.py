@@ -147,6 +147,7 @@ check(S.turath_pick(hits, "الفقه الميسر", "ضوء", "الطيار") =
       "Fiqh: each book is found on turath by its exact title (not a longer book that mentions it)")
 ft = S.turath_text("الماء طهور (1) لا ينجسه شيء (٢).<br>__________<br>(1) رواه أبو داود، وصححه المحقق.<br>(٢) انظر الطبعة الأولى.")
 check(ft == "الماء طهور لا ينجسه شيء." and "المحقق" not in ft, "Turath: the modern editor's footnotes and their (1) marks are left out: " + ft)
+check(S.turath_text("باب المياه . . . . . . . . . . . الماء طهور") == "باب المياه الماء طهور", "Turath: the printed book's dotted separator lines are left out")
 check(S.turath_text("حديث (12) في الباب.") == "حديث (12) في الباب.", "Turath: a number in brackets stays when the page has no footnotes")
 man, db = pack("fiqh", fr)
 r = search(db, "ما هي شروط الصلاة؟")

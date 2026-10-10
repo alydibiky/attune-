@@ -517,7 +517,8 @@ def turath_text(html, notes=False):
         t = parts[0]
         if len(parts) > 1: t = re.sub(r"[ \t]*\(\s*[0-9\u0660-\u0669]{1,3}\s*\)(?=[\s.،؛:]|$)", "", t)
     t = re.sub(r"<[^>]+>", "", t)
-    return htmlmod.unescape(t).replace("\u200f", "").strip()
+    t = re.sub(r"(?:[.…*]\s*){4,}", " ", htmlmod.unescape(t))   # the printed book's dotted separator lines («. . . . .»)
+    return re.sub(r"[ \t]+", " ", t).replace("\u200f", "").strip()
 
 def fiqh_rows(book, title, by):
     """A turath book → passages titled with the book, the chapter path and the printed volume/page."""
@@ -529,7 +530,7 @@ def fiqh_rows(book, title, by):
             _, lvl, t = heads[hi]; hi += 1
             path = {k: v for k, v in path.items() if k < lvl}; path[lvl] = t
         text = turath_text(pg.get("text"))
-        if not text: continue
+        if len(re.sub(r"[\W_\d]+", "", text)) < 20: continue   # a page with no real text (a separator, a page number)
         where = " › ".join(path[k] for k in sorted(path))[-160:]
         ref = f"ج{pg.get('vol')} ص{pg.get('page')}" if pg.get("vol") else f"ص{pg.get('page', i)}"
         for j, piece in enumerate(_bk().chunk(text, 900)):
