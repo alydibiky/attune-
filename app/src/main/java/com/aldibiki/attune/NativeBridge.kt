@@ -710,6 +710,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun setWidget(json: String): Boolean = try { DailyWidget.save(ctx, json); true } catch (e: Exception) { false }
 
+    /** v6.14 — what the Fit & Food widget shows: {left, leftLabel, line, water}. */
+    @JavascriptInterface
+    fun setFitWidget(json: String): Boolean = try { FitWidget.save(ctx, json); true } catch (e: Exception) { false }
+
     /** Readable text of one page. */
     @JavascriptInterface
     fun fetchText(id: String, url: String) {

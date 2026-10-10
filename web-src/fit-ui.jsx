@@ -14,6 +14,7 @@ import * as PH from "./fitphoto.js";
 import * as CL from "./fitclip.js";
 import * as P from "./fitplus.js";
 import * as Y from "./fityazio.js";
+import * as MI from "./fitmicro.js";
 import { WatchCard, Grades, DayQuality, RamadanCard, QuickLog, SaveMyMeal, WeekPlanView, WeekReport, BodyCard, FitSettings, RAMADAN_NAMES } from "./fitplus-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 
@@ -104,6 +105,15 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const tg = useMemo(() => { const t = st.profile ? F.targets(st.profile) : null; return t ? { ...t, kg: +st.profile.kg } : null; }, [st.profile]);
   const tot = F.dayTotals(day);
   const setDay = (fn) => upd((s) => { const d = s.days[dayKey] || { meals: {}, water: 0, workouts: [] }; return { ...s, days: { ...s.days, [dayKey]: fn(d) } }; });
+  // v6.14: the home-screen widget shows today's calories left and water (FitWidget.kt)
+  useEffect(() => {
+    if (!native || !native.setFitWidget || !tg) return;
+    const td = st.days[F.today()] || { meals: {}, water: 0, workouts: [] }, t = F.dayTotals(td);
+    const goal = st.profile.cycleExtra ? Y.dayGoal(tg.kcal, F.today(), st.profile.cycleExtra) : tg.kcal, left = goal + (t.burned || 0) - t.kcal;
+    try { native.setFitWidget(JSON.stringify({ left: String(Math.abs(left)), leftLabel: left < 0 ? L("kcal over today", "سعر زيادة اليوم") : L("kcal left today", "سعر متبقٍ اليوم"),
+      line: L(`Eaten ${t.kcal} · goal ${goal} · protein ${Math.round(t.p)}/${tg.protein} g`, `أكلت ${t.kcal} · الهدف ${goal} · بروتين ${Math.round(t.p)}/${tg.protein} جم`),
+      water: L(`Water ${(t.water / 1000).toFixed(1)} / ${(tg.water / 1000).toFixed(1)} L`, `الماء ${(t.water / 1000).toFixed(1)} / ${(tg.water / 1000).toFixed(1)} لتر`) })); } catch (e) {}
+  }, [st.days, tg]);
   const addItems = (meal, items) => setDay((d) => ({ ...d, meals: { ...d.meals, [meal]: [...((d.meals || {})[meal] || []), ...items.map((x) => ({ ...x, t: Date.now() }))] } }));
 
   // ---- logging ----
@@ -557,6 +567,7 @@ function Today({ L, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdd
       </div>
       {st.ramadan && st.ramadan.on && dayKey === F.today() ? <RamadanCard {...{ L, ar, tg, city: st.ramadan.city }} /> : null}
       <DayQuality {...{ L, day, tg }} isToday={dayKey === F.today()} />
+      <Micros {...{ L, ar, day, sex: (st.profile || {}).sex }} />
       <WatchCard {...{ L, ar, health, st, upd, dayKey }} compact />
       {tips.map((t, i) => <div key={i} className="rounded-xl bg-amber-500/10 border border-amber-800 px-3 py-2 text-[12.5px] text-amber-100">{t}</div>)}
 
@@ -889,7 +900,52 @@ function YazioPlus({ L, ar, st, upd, tg, share }) {
       <div className="flex flex-wrap gap-1.5">{WD.map(([en, a], i) => <button key={i} onClick={() => upd((s) => { const e = { ...((s.profile || {}).cycleExtra || {}) }; if (e[i]) delete e[i]; else e[i] = 300; return { ...s, profile: { ...s.profile, cycleExtra: e } }; })}
         className={"rounded-lg px-2 py-1 text-[12px] border " + (extra[i] ? "border-emerald-500 bg-emerald-500/15 text-emerald-100" : "border-slate-700 text-slate-300")} data-testid={"fit-cyc-" + i}>{L(en, a)} {extra[i] ? Y.dayGoal(tg.kcal, (() => { const d = new Date(); d.setDate(d.getDate() + ((i - d.getDay() + 7) % 7)); return F.today(d); })(), extra) : ""}</button>)}</div>
     </div> : null}
+    <Challenges {...{ L, st, upd, tg }} />
     <button onClick={() => { const csv = Y.diaryCSV(st.days); if (share) share(csv); else { const a = document.createElement("a"); a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv); a.download = "fit-diary.csv"; a.click(); } }}
       className="w-full rounded-xl border border-slate-800 bg-slate-900/40 py-2 text-[13px] text-slate-300" data-testid="fit-export">{L("Export my food diary (CSV for Excel)", "تصدير يوميات الطعام (CSV لإكسل)")}</button>
   </>);
+}
+
+
+/* v6.14 — vitamins & minerals for the day (Yazio Pro has them). */
+function Micros({ L, ar, day, sex }) {
+  const [open, setOpen] = useState(false);
+  const m = MI.dayMicros(day, sex === "f" ? "f" : "m");
+  if (!m.total) return null;
+  return (
+    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3" data-testid="fit-micros">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between text-[13px] text-white">
+        <span>{L("Vitamins & minerals", "الفيتامينات والمعادن")}</span>
+        <span className="text-[11.5px] text-slate-400">{m.low.length ? L(`${m.low.length} low`, `${m.low.length} منخفضة`) : L("all good so far", "جيدة حتى الآن")} · {open ? "▲" : "▼"}</span>
+      </button>
+      {open ? <div className="mt-2 space-y-1.5" data-testid="fit-micros-list">
+        {m.rows.map((r) => (
+          <div key={r.k}>
+            <div className="flex justify-between text-[12px]"><span className="text-slate-300">{L(r.en, r.ar)}</span><span className="tabular-nums text-slate-400">{r.v} / {r.ref} {r.unit} · {r.pct}%</span></div>
+            <div className="h-1.5 rounded-full bg-slate-800"><div className={"h-1.5 rounded-full " + (r.pct >= 100 ? "bg-emerald-400" : r.pct >= 50 ? "bg-sky-400" : "bg-amber-400")} style={{ width: Math.min(100, r.pct) + "%" }} /></div>
+            {r.pct < 50 ? <div className="text-[11px] text-amber-200/80 mt-0.5">{L("Good sources: ", "مصادر جيدة: ")}{MI.bestSources(r.k, 4).map((id) => { const f = F.FOODS.find((x) => x.id === id); return f ? (ar ? f.ar : f.en) : id; }).join(ar ? "، " : ", ")}</div> : null}
+          </div>))}
+        <div className="text-[11px] text-slate-500">{L(`Counted from ${m.known} of ${m.total} foods (the ones with known values; USDA data and product labels). A guide, not a lab test.`, `محسوبة من ${m.known} من ${m.total} أطعمة (التي قيمها معروفة؛ بيانات USDA وملصقات المنتجات). دليل تقريبي، وليس تحليلًا مخبريًا.`)}</div>
+      </div> : null}
+    </div>);
+}
+
+/* v6.14 — challenges, checked automatically from the diary. */
+function Challenges({ L, st, upd, tg }) {
+  const run = (st.challenges || []).map((c) => ({ ...c, p: Y.challengeProgress(c, st.days, tg) })).filter((c) => c.p);
+  const active = new Set(run.filter((c) => c.p.state === "on").map((c) => c.id));
+  const start = (id) => upd((s) => ({ ...s, challenges: [...(s.challenges || []).filter((c) => c.id !== id), { id, start: F.today() }] }));
+  return (
+    <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3" data-testid="fit-challenges">
+      <div className="text-[13px] text-white mb-2">{L("Challenges", "التحديات")}</div>
+      {run.map((c) => (
+        <div key={c.id} className="mb-2" data-testid={"fit-ch-" + c.id}>
+          <div className="flex justify-between text-[12.5px]"><span className="text-slate-200">{c.p.c.emoji} {L(c.p.c.en[0], c.p.c.ar[0])}</span>
+            <span className={c.p.state === "won" ? "text-emerald-300" : "text-slate-400"}>{c.p.state === "won" ? L("Done! 🎉", "أُنجز! 🎉") : c.p.state === "ended" ? L(`Ended · ${c.p.done}/${c.p.days}`, `انتهى · ${c.p.done}/${c.p.days}`) : `${c.p.done}/${c.p.days}`}</span></div>
+          <div className="flex gap-1 mt-1">{c.p.marks.map((m, i) => <span key={i} className={"h-2 flex-1 rounded-full " + (m === true ? "bg-emerald-400" : m === false ? "bg-rose-400/60" : "bg-slate-800")} />)}</div>
+        </div>))}
+      <div className="flex flex-wrap gap-1.5">{Y.CHALLENGES.filter((c) => !active.has(c.id)).map((c) => (
+        <button key={c.id} onClick={() => start(c.id)} title={L(c.en[1], c.ar[1])} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200" data-testid={"fit-ch-start-" + c.id}>{c.emoji} {L(c.en[0], c.ar[0])}</button>))}</div>
+      <div className="text-[11px] text-slate-500 mt-1.5">{L("Checked from your diary each day — nothing to tick.", "تُتابَع تلقائيًا من يومياتك — لا حاجة لتسجيل يدوي.")}</div>
+    </div>);
 }

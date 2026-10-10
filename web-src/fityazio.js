@@ -98,3 +98,29 @@ export function shrinkPhoto(dataUrl, max = 560) {
     im.onerror = () => bad(new Error("photo")); im.src = dataUrl;
   });
 }
+
+/* ---- challenges (Yazio has them; these are checked from your own diary, nothing to tick by hand) ---- */
+const SWEET_DRINK = /cola|soda|juice|sugarcane|karkadeh|energy|pepsi|عصير|كولا|بيبسي|قصب/i;
+const VEG = new Set(["salad", "tomato", "cucumber", "lettuce", "carrot", "onion", "pepper", "zucchini", "spinach", "broccoli", "peas", "molokhia", "molokhia-leaves", "mahshi", "bamia", "fasolia"]);
+const items = (day) => Object.values((day && day.meals) || {}).flat().filter(Boolean);
+export const CHALLENGES = [
+  { id: "water", days: 7, emoji: "💧", en: ["Water week", "Drink 2 L of water every day for 7 days"], ar: ["أسبوع الماء", "اشرب 2 لتر ماء يوميًا لمدة 7 أيام"], ok: (d) => (d.water || 0) >= 2000 },
+  { id: "protein", days: 7, emoji: "💪", en: ["Protein week", "Reach your protein target 7 days"], ar: ["أسبوع البروتين", "حقّق هدف البروتين 7 أيام"], ok: (d, tg) => tg && items(d).reduce((a, x) => a + (+x.p || 0), 0) >= tg.protein },
+  { id: "nosugar", days: 7, emoji: "🚫🥤", en: ["No sugary drinks", "7 days without soft drinks or juice"], ar: ["بلا مشروبات سكرية", "7 أيام بلا مشروبات غازية أو عصائر"], ok: (d) => items(d).length > 0 && !items(d).some((x) => SWEET_DRINK.test((x.id || "") + " " + (x.name || "") + " " + (x.ar || ""))) },
+  { id: "veg", days: 5, emoji: "🥗", en: ["Vegetables every day", "Vegetables at least once a day, 5 days"], ar: ["خضار كل يوم", "خضار مرة على الأقل يوميًا، لمدة 5 أيام"], ok: (d) => items(d).some((x) => VEG.has(x.id)) },
+  { id: "logall", days: 14, emoji: "📒", en: ["Log every day", "Log at least 3 meals a day for 14 days"], ar: ["سجّل كل يوم", "سجّل 3 وجبات على الأقل يوميًا لمدة 14 يومًا"], ok: (d) => Object.values((d && d.meals) || {}).filter((m) => (m || []).length).length >= 3 },
+  { id: "goal", days: 10, emoji: "🎯", en: ["On target", "Stay within your calorie goal (±10%) for 10 days"], ar: ["في الهدف", "ابقَ ضمن هدف السعرات (±10%) لمدة 10 أيام"], ok: (d, tg) => tg && items(d).length > 0 && Math.abs(items(d).reduce((a, x) => a + (+x.kcal || 0), 0) - tg.kcal) <= tg.kcal * 0.1 },
+];
+const keyOf = (dt) => dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0");
+/** A running challenge { id, start } → { done (days met), days, left (days remaining), state: "on" | "won" | "ended", marks: [true/false/null per day] }. */
+export function challengeProgress(ch, days, tg, today = new Date()) {
+  const c = CHALLENGES.find((x) => x.id === ch.id); if (!c) return null;
+  const t0 = new Date(ch.start + "T12:00:00"), marks = [];
+  for (let i = 0; i < c.days; i++) {
+    const d = new Date(t0); d.setDate(d.getDate() + i); const k = keyOf(d);
+    marks.push(k > keyOf(today) ? null : !!c.ok((days || {})[k] || {}, tg));
+  }
+  const done = marks.filter((m) => m === true).length, past = marks.filter((m) => m !== null).length;
+  const state = done >= c.days ? "won" : past >= c.days ? "ended" : "on";
+  return { c, done, days: c.days, left: c.days - past, state, marks };
+}

@@ -8029,6 +8029,7 @@ export default function App() {
       const d = (e && e.data) || {};
       if (d.kind === "reminder" && /^daily-learn-/.test(d.id || "")) { setDailyOpen(d.id); navTo("learn"); return; }
       if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); navTo("news"); return; }
+      if (d.kind === "reminder" && /^daily-fit-/.test(d.id || "")) { navTo("fit"); return; }   // v6.14: the Fit widget and Fit reminders
       if (d.kind === "reminder") { navTo("reminders"); return; }
       // A photo or screenshot shared from another app (a receipt, a menu, a
       // document): it opens in Instant, ready for "Add to Money", "Translate"…

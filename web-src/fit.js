@@ -662,7 +662,7 @@ export function itemFromFood(fd, qty = 1, unit = "serving") {
   const grams = Math.round(gramsOf(fd, qty, unit));
   const q = {}; for (const k of ["sug", "sat", "salt"]) if (fd[k] != null) q[k] = r1(fd[k] * grams / 100);   // v6.2 quality, when the label gives it
   return { name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", brand: fd.brand || "", qty, unit: unitNorm(unit), grams, ...nutrients(fd, grams), ...q,
-    ...(fd.grade ? { grade: fd.grade } : {}), ...(fd.nova ? { nova: fd.nova } : {}), estimate: false, check: !!fd.check };
+    ...(fd.grade ? { grade: fd.grade } : {}), ...(fd.nova ? { nova: fd.nova } : {}), ...(fd.micro ? { micro: fd.micro } : {}), estimate: false, check: !!fd.check };
 }
 
 // ---- v6.1 photo recognition, on the phone (Ali: "an elite photo food recognition"; no cloud) ----

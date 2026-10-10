@@ -14,4 +14,8 @@
     <string name="widget_empty_news">Follow a topic in Attune → Daily news</string>
     <string name="widget_desc">Today\'s lesson and headline</string>
     <string name="widget_name">Attune · Today</string>
+    <string name="widget_fit_name">Attune · Fit &amp; Food</string>
+    <string name="widget_fit_desc">Calories left today and water</string>
+    <string name="widget_fit_left">kcal left today</string>
+    <string name="widget_fit_empty">Open Fit &amp; Food to set your goal</string>
 </resources>

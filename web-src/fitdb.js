@@ -63,6 +63,10 @@ export function fromOFF(p) {
   if (sug != null) food.sug = r1(sug); if (sat != null) food.sat = r1(sat); if (salt != null) food.salt = r1(salt);
   if (/^[a-e]$/i.test(String(p.nutriscore_grade || ""))) food.grade = String(p.nutriscore_grade).toUpperCase();
   if ([1, 2, 3, 4].includes(+p.nova_group)) food.nova = +p.nova_group;
+  // v6.14: vitamins & minerals when the label gives them (Open Food Facts stores grams per 100 g)
+  const mk = { fe: ["iron_100g", 1e3], ca: ["calcium_100g", 1e3], vc: ["vitamin-c_100g", 1e3], vd: ["vitamin-d_100g", 1e6], k: ["potassium_100g", 1e3], mg: ["magnesium_100g", 1e3], b12: ["vitamin-b12_100g", 1e6], va: ["vitamin-a_100g", 1e6] };
+  const micro = {}; for (const [k, [f, x]] of Object.entries(mk)) { const v = num(n[f]); if (v != null && v >= 0) micro[k] = Math.round(v * x * 100) / 100; }
+  if (Object.keys(micro).length) food.micro = micro;
   food.check = !consistent(food);
   return food;
 }

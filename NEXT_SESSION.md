@@ -490,8 +490,11 @@ touch, merge origin/main before pushing, and push your branch (not main).
    & NOVA, sugar / salt, reminders, watch sync (Health Connect, Huawei), fasting timer, workouts with a coach timer, week report.
    Attune-only: offline AI photo reading in ~1 s, Egyptian / Arab foods first, Ramadan mode with real prayer times,
    talk-to-the-list corrections, chat with your data, privacy (nothing uploaded), body fat from a tape measure.
-   ⬜ Yazio items still missing: vitamins & minerals per food (needs micronutrient data in the food table), home-screen
-   widgets, challenges.
+   ✅ Then (same day) the last three: vitamins & minerals (`fitmicro.js`: 8 nutrients per 100 g for ~130 common foods from
+   USDA, plus label values from Open Food Facts; day panel with % of the daily reference and "good sources" for low ones),
+   a home-screen widget (`FitWidget.kt`, calories left / eaten / protein / water, the page updates it via setFitWidget),
+   and challenges checked from the diary (`fityazio.js CHALLENGES`: water week, protein week, no sugary drinks, vegetables
+   every day, log every day, on target).
 7. ⬜ **Still open from the other account's list (M)**: Mind page "better than My Mind", Coding page "visually better and more
    powerful", the whole-app UI/UX rework and Maps look (LOOK choices — show options first); Business leftovers (roles,
    multi-currency, price lists); big-model max-tests; measuring the comparison answers with a real 4B/9B model.

@@ -8,7 +8,8 @@ from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 STATE = {"profile": {"sex": "m", "age": 21, "cm": 178, "kg": 92, "activity": "light", "goal": "lose", "rate": 0.5, "goalKg": 80, "diet": "balanced"},
          "days": {}, "weights": [], "fast": None, "myRecipes": [], "favs": []}
-INIT = "try { if (!localStorage.getItem('attune:fit:v1')) localStorage.setItem('attune:fit:v1', %s); } catch (e) {}" % json.dumps(json.dumps(STATE))
+INIT = "try { if (!localStorage.getItem('attune:fit:v1')) localStorage.setItem('attune:fit:v1', %s); } catch (e) {}" % json.dumps(json.dumps(STATE)) + r"""
+(() => { const go = () => { const N = window.AttuneNative; if (!N) return setTimeout(go, 0); N.setFitWidget = (j) => { (window.__mock = window.__mock || {}).fitWidget = JSON.parse(j); return true; }; }; go(); })();"""
 PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
 with sync_playwright() as p:
     br = p.chromium.launch()
@@ -25,6 +26,10 @@ with sync_playwright() as p:
     page.locator("[data-testid=fit-quick-add]").click()
     page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(250)
     check("450" in page.locator("[data-testid=fit-meal-lunch]").inner_text(), "quick add: 450 kcal in lunch")
+    w = page.evaluate("window.__mock && window.__mock.fitWidget") or {}
+    check(w.get("leftLabel", "").startswith("kcal") and "Eaten 450" in w.get("line", ""), "the home-screen widget gets today's numbers: %s" % w)
+    page.locator("[data-testid=fit-micros] button").first.click(); page.wait_for_timeout(150)
+    check("Vitamin C" in page.locator("[data-testid=fit-micros-list]").inner_text(), "vitamins & minerals for the day")
     # fasting: a 36 h plan and the body's stage
     page.locator("[data-testid=fit-fast-36]").click(); page.wait_for_timeout(200)
     check("Digesting" in page.locator("[data-testid=fit-fast-stage]").inner_text(), "the fast shows the body's stage")
@@ -41,6 +46,8 @@ with sync_playwright() as p:
     page.locator("[data-testid=fit-tab-today]").click(); page.wait_for_timeout(250)
     check(page.locator("[data-testid=fit-left]").inner_text() != goal0, "today has the higher goal now (%s → %s)" % (goal0, page.locator("[data-testid=fit-left]").inner_text()))
     page.locator("[data-testid=fit-tab-progress]").click(); page.wait_for_timeout(200)
+    page.locator("[data-testid=fit-ch-start-water]").click(); page.wait_for_timeout(150)
+    check("0/7" in page.locator("[data-testid=fit-ch-water]").inner_text(), "a challenge starts and is tracked from the diary")
     page.locator("[data-testid=fit-export]").click(); page.wait_for_timeout(200)
     shared = page.evaluate("window.__mock && window.__mock.shared") or ""
     check("date,meal,food" in shared and "Quick add" in shared, "the diary exports as CSV")
