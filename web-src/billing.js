@@ -67,6 +67,11 @@ export const PRO_BENEFITS = [
   "Memory that remembers everything and can search it",
 ];
 export const FREE_LIMITS = { answersPerDay: 15, picturesPerDay: 3 };
+/** v6.16c (Ali: "I won't take money from people for the Dorar service"): a hadith question — answered with الدرر السنية's live
+ *  search — never counts toward a daily limit, on any plan. Whatever enforces FREE_LIMITS.answersPerDay asks this first. */
+export function countsTowardLimit(question, isHadithQuestion) {
+  return !(typeof isHadithQuestion === "function" && isHadithQuestion(String(question || "")));
+}
 
 /** v6.10 — Plans & billing page: what Pro gives, grouped by the app it belongs to (Money is included in Pro). */
 export const BILLING_GROUPS = [
@@ -86,6 +91,7 @@ export const BILLING_GROUPS = [
 /** Free / Pro / Business columns for the compare table. */
 export const COMPARE_ROWS = [
   ["Answers", "15 a day", "Unlimited", "Unlimited"],
+  ["Hadith search (Dorar)", "Free, unlimited", "Free, unlimited", "Free, unlimited"],
   ["Deal Check", "3 a day", "Unlimited", "Unlimited"],
   ["Chat X-Ray", "1 a day", "Unlimited", "Unlimited"],
   ["File conversions", "5 a day", "Unlimited", "Unlimited"],
