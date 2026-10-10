@@ -11,6 +11,8 @@ CHECKS = {   # name: (regex on the text or title, limit as a share of passages)
     "mojibake": (re.compile(r"Ã[\x80-\xbf]|Ø[\x80-\xbf§¨ª«]|Ù[\x80-\x8a]|â€[™œ\x9d“”]"), 0.001),
     "replacement": (re.compile("�"), 0.001),
     "editor notes": (re.compile(r"\[\[.*?\]\]|^_{5,}", re.M | re.S), 0.001),
+    # a site's own menus and adverts taken for content (a course page instead of the book, a cookie banner)
+    "site junk": (re.compile(r"\b(subscribe now|accept cookies|cookie policy|click here to|course materials|lumen ohm|all rights reserved)\b", re.I), 0.002),
 }
 FOREIGN_AR = re.compile(r"[کگپچژیەېۆۇڭ]")   # ک گ پ چ ژ ی ە ې ۆ ۇ ڭ — Persian, Urdu, Uyghur, Kurdish letters
 
@@ -22,7 +24,7 @@ def open_db(path):
     return sqlite3.connect(path), None
 
 # what's normal for a pack: code docs show HTML and RST underlines; Quran verses can be one word («الم»)
-EXEMPT = {"coding": {"html", "editor notes", "replacement"}, "quran": {"tiny"}, "egy-laws": {"duplicates"}}
+EXEMPT = {"coding": {"html", "editor notes", "replacement", "site junk"}, "quran": {"tiny"}, "egy-laws": {"duplicates"}}
 
 def audit(path, show=3):
     db, tmp = open_db(path)
@@ -56,12 +58,12 @@ def main():
     d = sys.argv[1]; show = int(sys.argv[sys.argv.index("--show") + 1]) if "--show" in sys.argv else 3
     files = sorted(f for f in os.listdir(d) if f.endswith(".sqlite") or f.endswith(".sqlite.gz"))
     failed = False
-    print("| pack | passages | empty/tiny | duplicates | HTML | mojibake | � | editor notes | foreign-script titles | verdict |\n|---|---|---|---|---|---|---|---|---|---|")
+    print("| pack | passages | empty/tiny | duplicates | HTML | mojibake | � | editor notes | site junk | foreign-script titles | verdict |\n|---|---|---|---|---|---|---|---|---|---|---|")
     details = []
     for f in files:
         out, problems, samples = audit(os.path.join(d, f), show)
         failed |= bool(problems)
-        print(f"| {f.split('.')[0]} | {out['passages']:,} | {out['tiny']} | {out['duplicates']} | {out['html']} | {out['mojibake']} | {out['replacement']} | {out['editor notes']} | {out['foreign-script titles']} | {'❌ ' + ', '.join(problems) if problems else '✅'} |")
+        print(f"| {f.split('.')[0]} | {out['passages']:,} | {out['tiny']} | {out['duplicates']} | {out['html']} | {out['mojibake']} | {out['replacement']} | {out['editor notes']} | {out['site junk']} | {out['foreign-script titles']} | {'❌ ' + ', '.join(problems) if problems else '✅'} |")
         if samples: details.append((f, samples))
     for f, samples in details:
         print(f"\n**{f}** examples:")

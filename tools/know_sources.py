@@ -1125,10 +1125,14 @@ def pressbooks_rows(B, site, title):
     print(f"pressbooks: {title}: {len(rows)} passages ({lic_url})")
     return rows, lic_url
 
+LINK_OUT = re.compile(r"(?:^|(?<=[.!?]\s))(?:Click here|Visit this (?:web)?site|Watch this (?:video|animation)|Use this (?:interactive|simulation)|Explore this (?:interactive|simulation)|Go to this (?:website|site))[^.!?]*[.!?]", re.I)
+
 def subject_rows(title, url, mods):
-    """A book's sections → passages titled «Book — Chapter — Section»."""
+    """A book's sections → passages titled «Book — Chapter — Section». The book's «Click here to see an animation» sentences
+    point at websites a phone offline can't open — they're left out."""
     rows = []
     for chap, mt, text in mods:
+        text = re.sub(r"[ \t]{2,}", " ", LINK_OUT.sub("", text))
         head = " — ".join(x for x in (title, chap, mt) if x)
         for p in _bk().chunk(text, 900):
             rows.append({"t": head, "x": p, "u": url, "l": "en"})

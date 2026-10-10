@@ -386,6 +386,8 @@ try:
             except Exception as e: badq.append(f"{nm} {label}: {e}")
     check(not badq, "Wikidata: every query is valid SPARQL (a bad escape had made all of them fail): " + "; ".join(badq)[:300])
 except ImportError: print("(rdflib not installed — the SPARQL syntax check is skipped)")
+sr = S.subject_rows("Biology 2e", "u", [("Life", "Water", "Ice floats. Click here to see a 3-D animation of an ice lattice structure. Water is polar.")])
+check(sr and "Click here" not in sr[0]["x"] and "Ice floats." in sr[0]["x"] and "Water is polar." in sr[0]["x"], "Textbooks: «Click here to see an animation» sentences (dead offline) are left out: " + (sr[0]["x"] if sr else ""))
 hd = S.hadith_rows("bukhari", "صحيح البخاري", {"hadiths": [{"hadithnumber": 834, "text": "ظُلْمًا كَثِيرًا \ufffd\ufffdَلاَ يَغْفِرُ", "grades": []}]})
 check(S.hadith_rows("nawawi", "الأربعون النووية", {"hadiths": [{"hadithnumber": 6, "text": "أَلَا وَهِيَ الْقَلْبُ .<br>[رَوَاهُ الْبُخَارِيُّ]", "grades": []}]})[0]["x"].startswith("أَلَا وَهِيَ الْقَلْبُ .\n[رَوَاهُ"), "Quality: no HTML left in a hadith")
 check("\ufffd" not in hd[0]["x"] and "[…]" in hd[0]["x"] and "الدرر السنية" in hd[0]["x"], "Quality: a letter damaged in the hadith source is marked, never guessed, and the reader is sent to Dorar")
