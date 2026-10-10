@@ -343,6 +343,8 @@ labels3 = [{"openfda": {"substance_name": ["ACETAMINOPHEN"], "brand_name": ["TYL
 d3 = S.drug_rows(labels3); t3 = sorted(set(r["t"].split(" — Medicine")[0].rsplit(" — ", 1)[0] for r in d3))
 check(any("— oral" in r["t"] and "4,000 mg" in r["x"] and "Tylenol" in r["x"] for r in d3) and any("— injection" in r["t"] and "Ofirmev" in r["x"] for r in d3),
       "Medicines: the tablets and the hospital injection are separate entries (different doses): " + str(t3))
+check([S.clean_model(x) for x in ["SEAL U SEAL U", "SEAL AWD", "SEAL- SEAL- HALO 1-HALO 2-", "SEAL U DMI", "MODEL 3"]] == ["SEAL U", "SEAL", "SEAL", "SEAL U DM-I", "MODEL 3"],
+      "Cars: an EU model name written twice, or with a trim after it, joins its model (BYD Seal is one passage)")
 hd = S.hadith_rows("bukhari", "صحيح البخاري", {"hadiths": [{"hadithnumber": 834, "text": "ظُلْمًا كَثِيرًا \ufffd\ufffdَلاَ يَغْفِرُ", "grades": []}]})
 check(S.hadith_rows("nawawi", "الأربعون النووية", {"hadiths": [{"hadithnumber": 6, "text": "أَلَا وَهِيَ الْقَلْبُ .<br>[رَوَاهُ الْبُخَارِيُّ]", "grades": []}]})[0]["x"].startswith("أَلَا وَهِيَ الْقَلْبُ .\n[رَوَاهُ"), "Quality: no HTML left in a hadith")
 check("\ufffd" not in hd[0]["x"] and "[…]" in hd[0]["x"] and "الدرر السنية" in hd[0]["x"], "Quality: a letter damaged in the hadith source is marked, never guessed, and the reader is sent to Dorar")

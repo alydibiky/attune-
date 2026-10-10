@@ -682,6 +682,8 @@ def epa_rows(csv_text):
 FUEL = {"petrol": "petrol", "diesel": "diesel", "electric": "electric", "petrol/electric": "plug-in hybrid (petrol)", "diesel/electric": "plug-in hybrid (diesel)",
         "lpg": "LPG", "ng": "natural gas", "e85": "E85", "hydrogen": "hydrogen"}
 
+EEA_TRIMS = {"AWD", "4WD", "2WD", "RWD", "FWD", "4X4", "4X2", "4MATIC", "XDRIVE", "SDRIVE", "QUATTRO", "4MOTION", "HALO", "DESIGN", "COMFORT",
+             "PREMIUM", "EXCELLENCE", "EXCLUSIVE", "LUXURY", "STANDARD", "BOOST", "FLAGSHIP"}
 def clean_model(cn):
     """EEA model names as registered: «SEAL U SEAL U», «SEAL- SEAL- HALO 1-HALO 2-» → «SEAL U», «SEAL HALO 1 HALO 2» (a name
     written twice made its passage outrank the plain «SEAL»)."""
@@ -691,7 +693,10 @@ def clean_model(cn):
     out = []
     for x in w:
         if not out or out[-1] != x: out.append(x)
-    return " ".join(out)
+    # a trim or drive name after the model («SEAL AWD», «SEAL HALO 1 HALO 2») is a version of that model, listed in its passage
+    for i, x in enumerate(out[1:], 1):
+        if x in EEA_TRIMS: out = out[:i]; break
+    return " ".join(out).replace("DMI", "DM-I")
 
 def eea_rows(groups):
     """EEA groups [{Mk, Cn, Ft, Fm, ec, ep, m, ew, er, z, w, n, y0, y1}] → one passage per (make, model) with its versions."""
@@ -818,12 +823,30 @@ def complaint_rows(lines, fields, from_year=2000, min_n=5):
 def nhtsa_safety(B):
     rows = []
     try:
-        path = os.path.join(tempfile.mkdtemp(), "rcl.zip")   # curl: NHTSA's server drops Python's long downloads
-        subprocess.run(["curl", "-sfL", "--retry", "4", "-o", path, NHTSA + "rcl/FLAT_RCL.zip"], check=True, timeout=3600)
-        f = nhtsa_fields(B.get(NHTSA + "rcl/RCL.txt", 60).decode("latin-1"))
-        with zipfile.ZipFile(path) as z, z.open(z.namelist()[0]) as fh:
-            r = recall_rows(io.TextIOWrapper(fh, encoding="latin-1"), f)
-        os.remove(path)
+        # NHTSA has moved and split this file before: every known place is tried; one big file or the pre/post-2010 halves
+        hosts = [NHTSA + "rcl/", "https://www-odi.nhtsa.dot.gov/downloads/folders/Recalls/"]
+        f, r = None, []
+        for h in hosts:
+            try: f = nhtsa_fields(B.get(h + "RCL.txt", 60).decode("latin-1")); break
+            except BaseException as e: print("cars: recall field list not at", h, e)
+        if not f: raise RuntimeError("no RCL.txt")
+        def fetch(url):
+            path = os.path.join(tempfile.mkdtemp(), "rcl.zip")
+            ok = subprocess.run(["curl", "-sfL", "--retry", "3", "-o", path, url], timeout=3600).returncode == 0
+            print(f"cars: recalls {url} → {'ok' if ok else 'not there'}")
+            return path if ok else None
+        parts = []
+        for h in hosts:
+            one = fetch(h + "FLAT_RCL.zip")
+            parts = [one] if one else [p for p in (fetch(h + "FLAT_RCL_PRE_2010.zip"), fetch(h + "FLAT_RCL_POST_2010.zip")) if p]
+            if parts: break
+        lines = []
+        for path in parts:
+            with zipfile.ZipFile(path) as z:
+                for n in z.namelist():
+                    with z.open(n) as fh: lines += io.TextIOWrapper(fh, encoding="latin-1").readlines()
+            os.remove(path)
+        r = recall_rows(lines, f)
         print(f"cars: NHTSA recalls {len(r)} passages (fields {f[:6]}…)"); rows += r
     except BaseException as e: print("cars: recalls failed", e)
     try:
