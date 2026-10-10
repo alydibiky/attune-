@@ -719,6 +719,30 @@ Four branches from the "Pages & look" / helper sessions had never reached `main`
 - Maps: all 44 packs published (data 10 Oct 2026). The USA rerun (38046680530, sparse_file_array) is green: 6.1 GB in parts;
   also in parts: ca, fr, de, se, no, ru. Main APK for 35aee65 (run 38047936952) green; branch runs 106/107 compile dorarSearch/fxRates.
 
+### 5.48 (10 Oct 2026, v6.16) — Attune is sold: only commercial-safe sources; pack quality audit
+Ali: "Attune will charge money … find reliable free sources … full mark … all correct and reliable info".
+- **Licence rule:** every pack source must allow commercial use — CC BY, CC BY-SA, CC0, public domain, PSF, Apache, Tanzil
+  (verbatim with credit). No NC/ND, no modern copyrighted books. `commercial_ok()` in know_sources.py; `--allow-nc` removed.
+- **OpenStax** moved all books to CC BY-NC-SA → `cc_by_version()` reads each book at its newest commit still under CC BY
+  (git history, worktree checkout; CC licences are irrevocable). Manifest `sources[].version` = that commit.
+- **quran** = Tanzil + تفسير الجلالين (QUL 523, public domain; it skips 226 verses it found plain — check is ≥ 6000).
+  التفسير الميسر removed (King Fahd Complex: free to share, not for sale).
+- **islamlib** = تفسير ابن كثير verse by verse (QUL 22; the edition's `[[…]]` notes stripped, long parts cut 1,400 chars,
+  numbered) + رياض الصالحين + بلوغ المرام (turath). تفسير السعدي out (author d. 1956 → life+70 until end of 2026).
+- **fiqh** = classical books via turath: الفقه على المذاهب الأربعة (الجزيري d. 1941), بداية المجتهد, عمدة الفقه, متن أبي شجاع,
+  مختصر القدوري, مختصر خليل. الفقه الميسر (both) removed. Titles may list alternatives `A|B`; when a title isn't found
+  the log prints what turath's search returned (turath is blocked from the cloud sandbox — only Actions can reach it).
+- **Editors' footnotes** (copyrighted, not the author's) are cut from every turath page: text below `<hr>` / `_____`, and
+  `(1)` marks only when the page had notes.
+- **Quality** (`tools/audit_packs.py <dir>` → table; exit 1 on problems): found 5× repeated passages in economics (Micro/
+  Macro/AP editions share chapters) → `unique_rows()` in subject + coding packs; `Ã©` car names → `fix_mojibake()`;
+  76 Bukhari hadiths with a damaged letter in BOTH hadith-api editions → shown as `[…]` + a note to check Dorar;
+  Uyghur/Persian names as "Arabic" in cities/geography → `arabic_name()` (U+0621–U+0652 only); medicines grouped by
+  active ingredient (openFDA substance_name), cosmetics out.
+- **Trial:** packtrial.mjs now 45 questions (medicines, recalls, dictionary, hadith, fiqh, Ibn Kathir, Arabic geography,
+  quadratic formula, Newton, pH, opportunity cost); grading strips Arabic diacritics.
+- Still to ask Ali: Wikidata (CC0, huge, but crowd-edited like Wikipedia); Dorar live API in a paid app (ask Dorar in writing).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
