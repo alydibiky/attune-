@@ -1,6 +1,7 @@
 /* ---- Fit & Food, level 2 screens (v6.2): the parts that put Fit "above Yazio by levels" ----
    Faster logging, food quality, Ramadan mode, the day score, the weekly report, body fat, a week
    plan with one shopping list, reminders. The numbers all come from fitplus.js (code).       */
+import { LookPicker } from "./fitlook-ui.jsx";
 import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Check, Copy, Share2, Star, Timer, Bell, BarChart3, X } from "lucide-react";
 import * as F from "./fit.js";
@@ -219,6 +220,7 @@ export function FitSettings({ L, ar, st, upd, native, flash, packText, photoClip
   };
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="fit-settings">
+      <LookPicker {...{ st, upd, L, ar }} />
       {/* v6.10: whose food the app suggests, reads and recognises in photos */}
       <label className="flex flex-wrap items-center gap-2 text-[13px] text-slate-200">🍽 {L("Food from", "أكل بلد")}
         <select value={F.getCountry()} onChange={(e) => { F.setCountry(e.target.value); upd((s) => ({ ...s, country: e.target.value })); }} className="rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" data-testid="fit-country">

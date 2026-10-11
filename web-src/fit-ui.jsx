@@ -14,6 +14,8 @@ import * as R from "./fitread.js";
 import * as PH from "./fitphoto.js";
 import * as CL from "./fitclip.js";
 import * as AQ from "./fitamount.js";
+import * as LK from "./fitlook.js";
+import { LookStyle, PhotoLoading, PhotoMarks } from "./fitlook-ui.jsx";
 import * as P from "./fitplus.js";
 import * as Y from "./fityazio.js";
 import * as MI from "./fitmicro.js";
@@ -143,7 +145,8 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   // double-checks in the background and replaces the list only if the person has not changed it (else it is offered)
   const draftRef = useRef(null); useEffect(() => { draftRef.current = draft; }, [draft]);
   const shownRef = useRef(null);
-  const fastSeen = useRef(null);   // the last photo's vectors from the fast look (fitclip.js)
+  const fastSeen = useRef(null);
+  const pinNo = useRef({});        // v6.18 (look Night): the number of each food's pin on the photo   // the last photo's vectors from the fast look (fitclip.js)
   const [refining, setRefining] = useState(false);
   const [fastDl, setFastDl] = useState("");
   const [aiAlt, setAiAlt] = useState(null);
@@ -442,12 +445,15 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
 
   // the first-visit screens hide Attune's bars too, so they get Fit's own way back
   const exitBar = onExit ? <div className="max-w-md mx-auto px-2" style={{ paddingTop: "env(safe-area-inset-top)" }}><button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-300" aria-label={L("Back to Attune", "رجوع إلى Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button></div> : null;
-  if (!st.profile && !fullForm) return <>{exitBar}<QuickSetup {...{ t, L, ar, save: quickSave }} full={() => setFullForm(true)} /></>;
-  if (!st.profile) return <>{exitBar}<ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={null} extra={null} /></>;
-  if (editProfile) return <ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} /> : null} />;
+  // v6.18: Ali's three looks (Fresh by default), chosen in Fit's settings — every Fit screen takes it
+  const look = LK.lookOf(st), lookCls = "fit-look-" + look;
+  if (!st.profile && !fullForm) return <div className={lookCls}><LookStyle look={look} />{exitBar}<QuickSetup {...{ t, L, ar, save: quickSave }} full={() => setFullForm(true)} /></div>;
+  if (!st.profile) return <div className={lookCls}><LookStyle look={look} />{exitBar}<ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={null} extra={null} /></div>;
+  if (editProfile) return <div className={lookCls}><LookStyle look={look} /><ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} /> : null} /></div>;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-2 pb-28 space-y-4" data-testid="fit-app">
+    <div className={"max-w-2xl mx-auto px-4 pt-2 pb-28 space-y-4 " + lookCls} data-testid="fit-app" data-look={look}>
+      <LookStyle look={look} />
       {/* v6.16c (Ali picked look A): Fit & Food is its own app — its own top bar and bottom bar; Attune's are hidden while it's open */}
       <div className="sticky top-0 z-30 -mx-4 px-2 bg-slate-950/95 backdrop-blur flex items-center gap-1 min-h-[52px]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {onExit ? <button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-300" aria-label={L("Back to Attune", "رجوع إلى Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button> : null}
@@ -482,8 +488,9 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} data-testid="fit-log-text"
               placeholder={L("What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful", "كلت إيه؟ مثلاً ٢ بيض ورغيف عيش وطبق فول")}
               className="w-full rounded-xl bg-slate-800 p-2.5 text-[14px] text-white placeholder:text-slate-500" />
-            {photo && <div className="relative w-28"><img src={photo.url} className="rounded-lg w-28 h-28 object-cover" /><button onClick={() => setPhoto(null)} className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5"><X size={14} /></button></div>}
-            {busy ? <div className="space-y-2" data-testid="fit-skeleton" aria-busy="true" aria-label={t("Recognising the food…")}>{[0, 1].map((i) => <div key={i} className="h-12 rounded-lg bg-slate-800/80 motion-safe:animate-pulse" />)}</div> : null}
+            {photo && !busy && <div className="relative w-28"><img src={photo.url} className="rounded-lg w-28 h-28 object-cover" /><button onClick={() => setPhoto(null)} className="absolute top-1 right-1 rounded-full p-0.5" style={{ background: "rgba(0,0,0,.6)", color: "#fff" }}><X size={14} /></button></div>}
+            {busy && photo ? <PhotoLoading look={look} url={photo.url} stage={stage} L={L} ar={ar} /> : null}
+            {busy && !photo ? <div className="space-y-2" data-testid="fit-skeleton" aria-busy="true" aria-label={t("Recognising the food…")}>{[0, 1].map((i) => <div key={i} className="h-12 rounded-lg bg-slate-800/80 motion-safe:animate-pulse" />)}</div> : null}
             {text.trim() || photo || busy ? <div className="flex gap-2">
               <button onClick={() => speak("text")} className={"rounded-xl px-3 py-2 text-[13px] flex items-center gap-1.5 shrink-0 " + (listening === "text" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-200")} data-testid="fit-mic"><Mic size={16} />{listening === "text" ? L("Listening…", "أستمع…") : L("Say it", "تحدّث")}</button>
               <button onClick={() => fileRef.current && fileRef.current.click()} className="rounded-xl bg-slate-800 px-3 py-2 text-[13px] text-slate-200 flex items-center gap-1.5 shrink-0" data-testid="fit-photo"><Camera size={16} />{L("Photo", "صورة")}</button>
@@ -511,6 +518,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
             ))}
           </>) : (
             <div className="space-y-2" data-testid="fit-draft">
+              {photo && draft.length ? <PhotoMarks look={look} url={photo.url} items={draft} L={L} ar={ar} /> : null}
               <div className="text-[12.5px] text-slate-400">{L("Check the amounts — change the grams if needed, then save.", "راجع الكميات — غيّر الجرامات لو محتاج، وبعدين احفظ.")}</div>
               {refining ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5" data-testid="fit-refining"><span className="inline-block w-2 h-2 rounded-full bg-sky-400 animate-pulse" />{L("The AI is double-checking the photo — you can save now.", "يراجع الذكاء الاصطناعي الصورة — يمكنك الحفظ الآن.")}</div> : null}
               {aiAlt && aiAlt.length ? <div className="rounded-xl bg-sky-500/10 border border-sky-800 p-2 text-[12.5px] text-sky-100" data-testid="fit-ai-alt">
@@ -518,12 +526,14 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                 <div className="flex gap-2 mt-1.5"><button onClick={() => { setDraft(aiAlt); setAiAlt(null); }} className="rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold">{L("Use this", "استخدام هذا")}</button><button onClick={() => setAiAlt(null)} className="rounded-lg bg-slate-800 px-2.5 py-1">{L("Keep mine", "الإبقاء على اختياري")}</button></div></div> : null}
               {busy && stage ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{stage}</div> : null}
               {(() => { const ask = AQ.askFirst(draft); return ask.length ? <div className="text-[12.5px] text-amber-200" data-testid="fit-ask-note">{L(`One tap each: how much is on your plate? (${ask.length})`, `ضغطة واحدة لكل صنف: كم الكمية في طبقك؟ (${ask.length})`)}</div> : null; })()}
+              {(() => { pinNo.current = look === "night" && photo ? Object.fromEntries(LK.placeMarks(draft).marks.map((m, k) => [m.i, k + 1])) : {}; return null; })()}
               {draft.map((x, i) => (
                 <div key={i} className={"rounded-lg bg-slate-800/70 px-2 py-1.5 space-y-1.5 " + (AQ.askFirst(draft).includes(i) ? "ring-1 ring-amber-500/70" : "")} data-testid="fit-draft-item">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="text-[13.5px] text-white truncate">
                         {x.conf != null ? <span className={"inline-block w-2 h-2 rounded-full me-1.5 " + (x.conf >= 0.75 ? "bg-emerald-400" : x.conf >= 0.5 ? "bg-amber-400" : "bg-rose-400")} title={L("how sure", "درجة التأكد")} /> : null}
+                        {pinNo.current[i] ? <span className="inline-flex w-5 h-5 me-1.5 rounded-full bg-emerald-500 text-slate-950 text-[11px] font-extrabold items-center justify-center align-middle" data-testid="fit-pin-no">{pinNo.current[i]}</span> : null}
                         {ar && x.ar ? x.ar : x.name}
                         {x.hidden ? <span className="ms-1 text-[10.5px] text-sky-300" data-testid="fit-hidden">{L("easy to miss", "سهل يتنسي")}</span> : null}
                         {x.learned ? <span className="ms-1 text-[10.5px] text-violet-300">{L("as you corrected it", "كما صحّحته")}</span> : null}
