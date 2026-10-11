@@ -223,7 +223,8 @@ def build_laws(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("pack", choices=["world", "laws", "science", "health", "numbers", "cities", "cranes", "quran", "fiqh", "hadith", "cars", "math", "physics", "chemistry", "biology", "history", "geography", "coding", "business", "economics", "society", "islamlib", "dictionary", "medicines", "wikidata"]); ap.add_argument("out")
+    from know_sources import BUILDERS as _B   # every pack know_sources.py can build (v6.21: the qa-* packs were missing from a fixed list)
+    ap.add_argument("pack", choices=sorted({"world", "laws", *_B})); ap.add_argument("out")
     ap.add_argument("--max-countries", type=int, default=0)
     ap.add_argument("--budget-mb", type=float, default=15)
     ap.add_argument("--parquet", default="")
