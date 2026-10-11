@@ -15,10 +15,11 @@ import { unknownItem } from "./fitphoto.js";
 
 export const AUTO = 0.5;          // the first answer's share at or above this → taken as the answer (85 % right on Food-101, measured)
 export const LOGIT_SCALE = 100;   // the encoder's own temperature
-export const CLIP_BASE = "https://github.com/alydibiky/attune-/releases/download/food-clip-v1/";
+export const CLIP_BASE = "https://github.com/alydibiky/attune-/releases/download/food-clip-v2/";   // v6.17: two models (v1 stays for older apps)
 
 /** The bank file → what ranking needs: unit vectors (dequantised from int8) and the per-name bias already weighted. */
 export function parseBank(j) {
+  if (j && j.v === 2) return parseBank2(j);
   if (!j || !j.items || !j.vec || !j.dim) throw new Error("bank");
   const n = j.items.length, dim = j.dim;
   const raw = typeof j.vec === "string" ? b64bytes(j.vec) : j.vec;
@@ -40,6 +41,70 @@ export function parseBank(j) {
 function b64bytes(s) {
   if (typeof atob === "function") { const b = atob(s); const u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
   return new Uint8Array(Buffer.from(s, "base64"));
+}
+
+// ---- v6.17: two image models and the user's own cuisine first ------------------------------------------------------------
+// Ali: "53 percent is not accurate at all". Measured on the same 2,316 photos (tools/eval_food_clip.py): CLIP B/32 alone
+// 58 % / 51 % / 43 % (Food-101 / Middle-Eastern plates / Arab dishes); CLIP + SigLIP with the user's region first 65 / 65 / 74 %,
+// the right dish among the first five 88 / 88 / 95 %. Each model's scores are standardised over the whole bank (so the two
+// add up fairly), then the dish's country moves it up or down (prior), then a softmax at `temp` gives the confidence.
+const ARAB = new Set("eg sa ae ma dz tn lb sy jo iq sd ly kw qa bh om ye ps".split(" "));
+/** The country bonus of a bank entry for a user in `cc`: own country +own, same region (the Arab world) +region, a far
+ *  cuisine `other` (negative); international dishes, plain foods and Egypt's base table ("base", Egyptian) are neutral or own. */
+export function priorOf(entryCc, userCc, prior) {
+  if (!prior || !entryCc) return 0;
+  const u = String(userCc || "").toLowerCase();
+  if (entryCc === "base") return u === "eg" ? prior.own : 0;
+  if (["intl", "plain", "not"].includes(entryCc)) return 0;
+  if (entryCc === u) return prior.own;
+  if (ARAB.has(entryCc) && ARAB.has(u)) return prior.region;
+  return prior.other;
+}
+function dequant(n, dim, b64, scale) {
+  const raw = typeof b64 === "string" ? b64bytes(b64) : b64;
+  const q = new Int8Array(raw.buffer, raw.byteOffset, n * dim), vec = new Float32Array(n * dim);
+  for (let i = 0; i < n; i++) {
+    let s = 0; const sc = scale ? scale[i] : 1;
+    for (let d = 0; d < dim; d++) { const v = q[i * dim + d] * sc; vec[i * dim + d] = v; s += v * v; }
+    const inv = 1 / Math.sqrt(s || 1);
+    for (let d = 0; d < dim; d++) vec[i * dim + d] *= inv;
+  }
+  return vec;
+}
+function parseBank2(j) {
+  if (!Array.isArray(j.items) || !Array.isArray(j.encoders) || !j.encoders.length) throw new Error("bank");
+  const n = j.items.length;
+  const encoders = j.encoders.map((e) => {
+    if (!e.vec || !e.dim || !e.file) throw new Error("bank");
+    return { file: e.file, dim: e.dim, output: e.output || "", image: e.image, vec: dequant(n, e.dim, e.vec, e.scale) };
+  });
+  const first = encoders[0];
+  return { v: 2, n, encoders, prior: j.prior || null, temp: j.temp || 1.5, auto: j.auto || 0.6,
+    // the single-model fields keep older callers (and rank) working on the first model
+    dim: first.dim, vec: first.vec, bias: new Float32Array(n), image: first.image, file: first.file,
+    items: j.items.map(([kind, id, en, ar, cc]) => ({ kind, id, en, ar, cc: cc || "" })) };
+}
+/** One model's scores for a photo vector, standardised over the bank (mean 0, spread 1). */
+export function zScores(vec, n, dim, emb) {
+  let norm = 0; for (let d = 0; d < dim; d++) norm += emb[d] * emb[d];
+  const inv = 1 / Math.sqrt(norm || 1), sc = new Float32Array(n);
+  let m = 0;
+  for (let i = 0; i < n; i++) { let s = 0; const o = i * dim; for (let d = 0; d < dim; d++) s += vec[o + d] * emb[d]; sc[i] = s * inv; m += sc[i]; }
+  m /= n; let v = 0; for (let i = 0; i < n; i++) v += (sc[i] - m) * (sc[i] - m);
+  const sd = Math.sqrt(v / n) || 1;
+  for (let i = 0; i < n; i++) sc[i] = (sc[i] - m) / sd;
+  return sc;
+}
+/** v2: the photo's vector from each model → the k best names [{i, score, p}], the user's country first. */
+export function rankAll(bank, embs, k = 5, userCc = "") {
+  if (bank.v !== 2) return rank(bank, embs[0], k);
+  const { n } = bank, tot = new Float32Array(n);
+  bank.encoders.forEach((e, x) => { if (!embs[x]) return; const z = zScores(e.vec, n, e.dim, embs[x]); for (let i = 0; i < n; i++) tot[i] += z[i]; });
+  if (bank.prior) for (let i = 0; i < n; i++) tot[i] += priorOf(bank.items[i].cc, userCc, bank.prior);
+  let max = -Infinity; for (let i = 0; i < n; i++) if (tot[i] > max) max = tot[i];
+  let sum = 0; for (let i = 0; i < n; i++) sum += Math.exp(bank.temp * (tot[i] - max));
+  const order = Array.from(tot.keys()).sort((a, b) => tot[b] - tot[a]).slice(0, k);
+  return order.map((i) => ({ i, score: tot[i], p: Math.exp(bank.temp * (tot[i] - max)) / sum }));
 }
 
 /** The centred square of a w×h photo (the encoder looks at a square). */
@@ -97,7 +162,7 @@ export function defaultItem(fd) {
  *   {status: "notfood"}  a face, a page, a label… → the usual chain
  * The item is an ordinary draft item (conf = the dot colour, alts = "Is it:" chips, base = the portion buttons).
  */
-export function decide(bank, ranked, auto = AUTO) {
+export function decide(bank, ranked, auto = (bank && bank.auto) || AUTO) {
   if (!ranked || !ranked.length) return { status: "notfood", items: [] };
   const top = bank.items[ranked[0].i];
   if (top.kind === "not") return { status: "notfood", items: [], top };
@@ -131,8 +196,10 @@ export function loadClip(base, { fetchImpl = (u) => fetch(u), win = typeof windo
     const ort = win.ort;
     ort.env.wasm.wasmPaths = base; ort.env.wasm.numThreads = 1; ort.env.wasm.proxy = false;
     const bank = parseBank(await (await fetchImpl(base + "food-clip-bank.json")).json());
-    const session = await ort.InferenceSession.create(base + bank.file, { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
-    return { ort, bank, session };
+    const opts = { executionProviders: ["wasm"], graphOptimizationLevel: "all" };
+    const sessions = [];
+    for (const e of bank.encoders || [{ file: bank.file }]) sessions.push(await ort.InferenceSession.create(base + e.file, opts));   // one after the other: less memory at once
+    return { ort, bank, session: sessions[0], sessions };
   })();
   loading.catch(() => { loading = null; });
   return loading;
@@ -140,14 +207,15 @@ export function loadClip(base, { fetchImpl = (u) => fetch(u), win = typeof windo
 export function resetClip() { loading = null; }
 
 /** A photo (a data: or blob: URL) → its pixels, centre square, size×size. */
-export function photoPixels(url, size, doc = document) {
+export function photoPixels(url, size, doc = document, fit = "crop") {
   return new Promise((ok, bad) => {
     const img = new Image();
     img.onload = () => {
-      const { sx, sy, s } = centerSquare(img.naturalWidth || img.width, img.naturalHeight || img.height);
+      const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+      const { sx, sy, s } = fit === "stretch" ? { sx: 0, sy: 0, s: 0 } : centerSquare(w, h);   // SigLIP looks at the whole photo, squeezed
       const c = doc.createElement("canvas"); c.width = size; c.height = size;
       const g = c.getContext("2d"); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
-      g.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+      if (fit === "stretch") g.drawImage(img, 0, 0, w, h, 0, 0, size, size); else g.drawImage(img, sx, sy, s, s, 0, 0, size, size);
       ok(g.getImageData(0, 0, size, size).data);
     };
     img.onerror = () => bad(new Error("photo"));
@@ -156,8 +224,20 @@ export function photoPixels(url, size, doc = document) {
 }
 
 /** The whole fast look: photo → ranking. ≈ 0.1 s on a desktop core; a phone ≈ 0.3–1 s after the first load. */
-export async function classify(clip, url, k = 5) {
+export async function classify(clip, url, k = 5, userCc = F.getCountry ? F.getCountry() : "") {
   const { ort, bank, session } = clip, sz = bank.image.size;
+  if (bank.v === 2) {
+    if (clip.test) return rankAll(bank, await Promise.all(bank.encoders.map((e, x) => clip.test.embed(url, x))), k, userCc);
+    const embs = [];
+    for (let x = 0; x < bank.encoders.length; x++) {
+      const e = bank.encoders[x], ses = clip.sessions[x], im = e.image;
+      const px = await photoPixels(url, im.size, document, im.fit || "crop");
+      const t = new ort.Tensor("float32", toTensor(px, im.size, im.mean, im.std), [1, 3, im.size, im.size]);
+      const out = await ses.run({ [ses.inputNames[0]]: t });
+      embs.push(out[e.output && out[e.output] ? e.output : ses.outputNames[ses.outputNames.length - 1]].data);
+    }
+    return rankAll(bank, embs, k, userCc);
+  }
   if (clip.test) return rank(bank, await clip.test.embed(url), k);
   const px = await photoPixels(url, sz);
   const x = new ort.Tensor("float32", toTensor(px, sz, bank.image.mean, bank.image.std), [1, 3, sz, sz]);

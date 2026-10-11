@@ -30,7 +30,7 @@ SKIP = {"whey", "sweetener", "sugar", "sugar-brown", "lemon", "tomato-paste", "m
 
 
 def app_foods():
-    js = "import * as F from './web-src/fit.js'; console.log(JSON.stringify(F.FOODS.map((f) => ({ id: f.id, en: f.en, ar: f.ar, names: f.names }))));"
+    js = "import * as F from './web-src/fit.js'; console.log(JSON.stringify(F.FOODS.map((f) => ({ id: f.id, en: f.en, ar: f.ar, names: f.names, cc: f.cc || '' }))));"
     out = subprocess.run(["node", "--input-type=module", "-e", js], cwd=ROOT, capture_output=True, text=True, check=True).stdout
     return json.loads(out)
 
@@ -53,25 +53,29 @@ def entries():
         if f["id"].endswith(("-raw", "-dry")) or f["id"] in SKIP: continue
         names = [clean(n) for n in f["names"] if latin(n)]
         at[f["id"]] = len(out)
-        out.append({"kind": "id", "id": f["id"], "en": f["en"], "ar": f["ar"], "names": list(dict.fromkeys(names))})
+        out.append({"kind": "id", "id": f["id"], "en": f["en"], "ar": f["ar"], "names": list(dict.fromkeys(names)), "cc": f.get("cc") or "base"})
     bad = []
+    region = "eg"   # v6.17: the section of food_clip_names.tsv says where a dish is from (the phone prefers the user's own)
     for line in open(os.path.join(ROOT, "tools", "food_clip_names.tsv"), encoding="utf-8"):
         line = line.rstrip("\n")
+        if line.startswith("# ----"):
+            region = "intl" if "international" in line else "eg" if "Egyptian" in line else "plain"
+            continue
         if not line.strip() or line.startswith("#"): continue
         cols = line.split("\t") + ["", ""]
         tag, names, ar = cols[0].strip(), [n.strip() for n in cols[1].split("|") if n.strip()], cols[2].strip()
         if not names: continue
         if tag == "!":
-            out.append({"kind": "not", "id": "", "en": names[0], "ar": "", "names": names}); continue
+            out.append({"kind": "not", "id": "", "en": names[0], "ar": "", "names": names, "cc": "not"}); continue
         if tag == "-":
-            out.append({"kind": "name", "id": "", "en": names[0], "ar": ar, "names": names}); continue
+            out.append({"kind": "name", "id": "", "en": names[0], "ar": ar, "names": names, "cc": region}); continue
         like = tag.startswith("~"); fid = tag.lstrip("~")
         if fid not in by_id: bad.append(fid); continue
         if like:
-            out.append({"kind": "like", "id": fid, "en": names[0][:1].upper() + names[0][1:], "ar": ar, "names": names}); continue
+            out.append({"kind": "like", "id": fid, "en": names[0][:1].upper() + names[0][1:], "ar": ar, "names": names, "cc": region}); continue
         if fid not in at:
             at[fid] = len(out); f = by_id[fid]
-            out.append({"kind": "id", "id": fid, "en": f["en"], "ar": f["ar"], "names": []})
+            out.append({"kind": "id", "id": fid, "en": f["en"], "ar": f["ar"], "names": [], "cc": f.get("cc") or "base"})
         e = out[at[fid]]
         e["names"] = list(dict.fromkeys(e["names"] + names))
     if bad: raise SystemExit("food_clip_names.tsv names foods the table doesn't have: " + ", ".join(sorted(set(bad))))
@@ -160,26 +164,78 @@ def calib_bias(vision_path, T, cache, n=600):
     return (e @ T.T).mean(0)
 
 
+# ---- v6.17: two image models (Ali: "53 percent is not accurate at all") -----------------------------------------------------
+# Measured with tools/eval_food_clip.py on the same 2,316 photos (Food-101 / Middle-Eastern plates / Arab dishes, top-1):
+#   CLIP B/32 alone 58 / 51 / 43 %;  + SigLIP B/16, the user's region first: 65 / 65 / 74 % (top-5 88 / 88 / 95 %).
+# SigLIP (Apache 2.0) knows Arab dishes far better; CLIP (MIT) knows the Western ones; their standardised scores add up.
+ENCODERS = [
+    {"key": "clip", "repo": "Xenova/clip-vit-base-patch32", "vision": "onnx/vision_model_quantized.onnx", "text": "onnx/text_model.onnx",
+     "file": "food-clip-vision.onnx", "output": "image_embeds", "len": 77, "pad": 0, "lower": False, "eos": 49407,
+     "image": {"size": 224, "mean": IMAGE["mean"], "std": IMAGE["std"], "fit": "crop"}},
+    {"key": "siglip", "repo": "Xenova/siglip-base-patch16-224", "vision": "onnx/vision_model_quantized.onnx", "text": "onnx/text_model.onnx",
+     "file": "food-clip-vision-siglip.onnx", "output": "pooler_output", "len": 64, "pad": 1, "lower": True, "eos": None,
+     "image": {"size": 224, "mean": [0.5, 0.5, 0.5], "std": [0.5, 0.5, 0.5], "fit": "stretch"}},
+]
+PRIOR = {"own": 0.5, "region": 0.5, "other": -1.0}   # measured: Arab dishes 68 → 74 %, Food-101 63 → 65 %, Middle-Eastern 62 → 65 %
+TEMP, AUTO = 1.5, 0.6                               # measured: about 30 % of photos taken at once, 90 % of those right
+
+
+class Encoder:
+    """One model's text side: names → unit vectors (only here, on the build machine; the phone gets the vectors)."""
+    def __init__(self, cfg, cache):
+        import onnxruntime as ort
+        from tokenizers import Tokenizer
+        base = f"https://huggingface.co/{cfg['repo']}/resolve/main/"
+        d = os.path.join(cache, cfg["key"])
+        self.cfg = cfg
+        self.tok = Tokenizer.from_file(fetch(base + "tokenizer.json", os.path.join(d, "tokenizer.json")))
+        self.sess = ort.InferenceSession(fetch(base + cfg["text"], os.path.join(d, "text_model.onnx")), providers=["CPUExecutionProvider"])
+        self.outs = [o.name for o in self.sess.get_outputs()]
+
+    def __call__(self, texts):
+        c, out = self.cfg, []
+        for i in range(0, len(texts), 64):
+            part = [t.lower() if c["lower"] else t for t in texts[i:i + 64]]
+            ids = np.full((len(part), c["len"]), c["pad"], np.int64)
+            for j, t in enumerate(part):
+                e = self.tok.encode(t).ids[:c["len"]]
+                if c["eos"] is not None and e[-1] != c["eos"]: e[-1] = c["eos"]
+                ids[j, :len(e)] = e
+            r = self.sess.run(None, {"input_ids": ids})
+            name = "text_embeds" if "text_embeds" in self.outs else "pooler_output"
+            out.append(r[self.outs.index(name)])
+        x = np.concatenate(out).astype(np.float32)
+        return x / np.linalg.norm(x, axis=1, keepdims=True)
+
+
+def embed_names(items, enc):
+    texts, owner = [], []
+    for k, e in enumerate(items):
+        for n in e["names"][:4]:
+            for t in (TEMPLATES_NOT_FOOD if e["kind"] == "not" else TEMPLATES):
+                texts.append(t.format(n)); owner.append(k)
+    v = enc(texts); owner = np.array(owner)
+    m = np.zeros((len(items), v.shape[1]), np.float32)
+    np.add.at(m, owner, v)
+    return m / np.linalg.norm(m, axis=1, keepdims=True), len(texts)
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     out = args[0] if args else "out"
     cache = os.environ.get("FOOD_CLIP_CACHE", os.path.join(out, ".cache"))
     os.makedirs(out, exist_ok=True)
-    base = f"https://huggingface.co/{MODEL_REPO}/resolve/main/"
-    vision = fetch(base + MODEL_FILES["vision"], os.path.join(out, "food-clip-vision.onnx"))
     items = entries()
-    m, n_texts = embed(items, TextEncoder(cache))
-    q, scale = quantize(m)
-    T = q.astype(np.float32) * scale[:, None]; T /= np.linalg.norm(T, axis=1, keepdims=True)
-    bias = calib_bias(vision, T, cache) if "--no-calib" not in sys.argv else np.zeros(len(items))
-    bank = {
-        "v": 1, "model": MODEL_REPO, "file": "food-clip-vision.onnx", "dim": int(m.shape[1]), "image": IMAGE,
-        "count": len(items), "texts": n_texts, "biasWeight": BIAS_WEIGHT,
-        "items": [[e["kind"], e["id"], e["en"], e["ar"]] for e in items],
-        "scale": [round(float(s), 7) for s in scale],
-        "bias": [round(float(b), 4) for b in bias],
-        "vec": base64.b64encode(q.tobytes()).decode(),
-    }
+    encs, n_texts = [], 0
+    for cfg in ENCODERS:
+        fetch(f"https://huggingface.co/{cfg['repo']}/resolve/main/{cfg['vision']}", os.path.join(out, cfg["file"]))
+        m, n_texts = embed_names(items, Encoder(cfg, cache))
+        q, scale = quantize(m)
+        encs.append({"model": cfg["repo"], "file": cfg["file"], "output": cfg["output"], "dim": int(m.shape[1]), "image": cfg["image"],
+                     "scale": [round(float(x), 7) for x in scale], "vec": base64.b64encode(q.tobytes()).decode()})
+        print(f"{cfg['key']}: {len(items)} names, {n_texts} phrasings", flush=True)
+    bank = {"v": 2, "count": len(items), "texts": n_texts, "prior": PRIOR, "temp": TEMP, "auto": AUTO,
+            "items": [[e["kind"], e["id"], e["en"], e["ar"], e.get("cc", "")] for e in items], "encoders": encs}
     with open(os.path.join(out, "food-clip-bank.json"), "w", encoding="utf-8") as f: json.dump(bank, f, ensure_ascii=False, separators=(",", ":"))
     # the runtime (onnxruntime-web, MIT) from the npm registry
     fetch(f"https://registry.npmjs.org/onnxruntime-web/-/onnxruntime-web-{ORT_VERSION}.tgz", os.path.join(cache, "ort.tgz"))
@@ -189,11 +245,12 @@ def main():
             with open(os.path.join(out, f), "wb") as w: w.write(t.extractfile("package/dist/" + f).read())
     files = {f: os.path.getsize(os.path.join(out, f)) for f in sorted(os.listdir(out)) if not f.startswith(".") and not f.endswith(".json")}
     files["food-clip-bank.json"] = os.path.getsize(os.path.join(out, "food-clip-bank.json"))
-    manifest = {"v": 1, "model": MODEL_REPO, "ort": ORT_VERSION, "count": len(items), "texts": n_texts, "files": [{"name": k, "bytes": v} for k, v in files.items()]}
+    manifest = {"v": 2, "models": [c["repo"] for c in ENCODERS], "ort": ORT_VERSION, "count": len(items), "texts": n_texts,
+                "files": [{"name": k, "bytes": v} for k, v in files.items()]}
     with open(os.path.join(out, "food-clip-manifest.json"), "w") as f: json.dump(manifest, f, indent=1)
     kinds = {}
     for e in items: kinds[e["kind"]] = kinds.get(e["kind"], 0) + 1
-    print(f"bank: {len(items)} foods ({kinds}), {n_texts} name phrasings, {files['food-clip-bank.json'] // 1024} KB; files: {files}")
+    print(f"bank: {len(items)} foods ({kinds}), {n_texts} name phrasings per model, {files['food-clip-bank.json'] // 1024} KB; files: {files}")
 
 
 if __name__ == "__main__":

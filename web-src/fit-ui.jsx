@@ -201,8 +201,8 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const giveUp = () => { flash && flash(L("Couldn't recognise the food in time — name it instead (e.g. “2 fried eggs and baladi bread”) or search it below", "مقدرتش أتعرّف على الأكل في الوقت — اكتب اسمه (مثلاً «٢ بيض مقلي وعيش بلدي») أو دوّر عليه تحت")); setPhoto(null); };
   // v6.10 step 0 — the fast look (fitclip.js): no chat model, ≈ a second. Started at once, side by side with the barcode look.
   const fastLook = async () => {
-    const clip = await PH.withLimit(CL.loadClip(photoClip ? photoClip.base : CL.CLIP_BASE), 20000);   // the first load reads ≈ 100 MB from the phone's storage
-    return CL.decide(clip.bank, await PH.withLimit(CL.classify(clip, photo.url, 5), 8000));
+    const clip = await PH.withLimit(CL.loadClip(photoClip ? photoClip.base : CL.CLIP_BASE), 30000);   // the first load reads ≈ 200 MB (two models) from the phone's storage
+    return CL.decide(clip.bank, await PH.withLimit(CL.classify(clip, photo.url, 5), 15000));
   };
   const useFast = async (fast, me) => {
     let items = fast.items;
@@ -481,7 +481,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               <button onClick={() => speak("text")} className={"rounded-xl px-3 py-2 text-[13px] flex items-center gap-1.5 shrink-0 " + (listening === "text" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-200")} data-testid="fit-mic"><Mic size={16} />{listening === "text" ? L("Listening…", "أستمع…") : L("Say it", "تحدّث")}</button>
               <button onClick={() => fileRef.current && fileRef.current.click()} className="rounded-xl bg-slate-800 px-3 py-2 text-[13px] text-slate-200 flex items-center gap-1.5 shrink-0" data-testid="fit-photo"><Camera size={16} />{L("Photo", "صورة")}</button>
               {photo && !clipOn && photoClip ? <div className="w-full basis-full rounded-xl border border-sky-800 bg-sky-500/10 p-2 text-[12px] text-sky-100" data-testid="fit-fast-offer">
-                {L("Photos take 20–30 s with the chat model. Get “Fast photo recognition” (≈100 MB, once) and a photo is read in about a second.", "تستغرق الصور 20–30 ثانية مع نموذج المحادثة. نزّل «التعرّف السريع على الصور» (نحو 100 ميجابايت مرة واحدة) لتُقرأ الصورة في نحو ثانية.")}
+                {L("Photos take 20–30 s with the chat model. Get “Fast photo recognition” (≈200 MB, once) and a photo is read in a few seconds.", "تستغرق الصور 20–30 ثانية مع نموذج المحادثة. نزّل «التعرّف السريع على الصور» (نحو 200 ميجابايت مرة واحدة) لتُقرأ الصورة في ثوانٍ قليلة.")}
                 <button disabled={!!fastDl} onClick={async () => { setFastDl(L("Downloading…", "جارٍ التنزيل…")); try { await photoClip.install((pct) => setFastDl(Math.round(pct || 0) + "%")); setClipOn(true); flash && flash(L("Fast photo recognition is ready", "التعرّف السريع جاهز")); } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 100)); } finally { setFastDl(""); } }}
                   className="ms-2 rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold" data-testid="fit-fast-get">{fastDl || L("Get it", "نزّله")}</button></div> : null}
               <button onClick={readMeal} disabled={busy || (!text.trim() && !photo)} className="flex-1 rounded-xl bg-emerald-600 disabled:opacity-40 py-2 text-[14px] font-medium text-white flex items-center justify-center gap-1.5" data-testid="fit-read">

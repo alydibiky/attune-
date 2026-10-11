@@ -67,3 +67,29 @@ ok(noAr.length === 0, "every dish the table lacks has an Arabic name with no Lat
 const egypt = ["koshari", "ful", "taameya", "molokhia", "fatta", "mahshi", "hawawshi", "kofta", "shawarma", "feteer", "om ali", "basbousa", "konafa", "bechamel"];
 const allNames = tsv.map((x) => x[1].toLowerCase()).join("|") + "|" + F.FOODS.map((f) => f.names.join("|").toLowerCase()).join("|");
 ok(egypt.every((w) => allNames.includes(w)), "the Egyptian dishes Ali named are all in the bank");
+
+// ---- v6.17: bank v2 — two models, the user's cuisine first (Ali: "53 percent is not accurate at all") ----
+{
+  const items2 = [["like", "kofta", "Kibbeh", "كبة", "lb"], ["like", "kofta", "Arancini", "أرانشيني", "it"], ["id", "koshari", "Koshari", "كشري", "base"],
+    ["id", "egg-fried", "Fried egg", "بيض مقلي", "plain"], ["not", "", "a person's face", "", "not"], ["like", "cake", "Cheesecake", "تشيز كيك", "intl"]];
+  const D = 6, enc = (rows) => { const q = new Int8Array(items2.length * D); rows.forEach((r, i) => r.forEach((x, d) => { q[i * D + d] = x; })); return Buffer.from(q.buffer).toString("base64"); };
+  const eye = items2.map((_, i) => Array.from({ length: D }, (_, d) => (d === i ? 127 : 5)));
+  const raw2 = { v: 2, count: items2.length, items: items2, prior: { own: 0.5, region: 0.5, other: -1 }, temp: 1.5, auto: 0.6,
+    encoders: [{ file: "a.onnx", dim: D, output: "image_embeds", image: { size: 4, mean: [0, 0, 0], std: [1, 1, 1], fit: "crop" }, scale: items2.map(() => 0.01), vec: enc(eye) },
+               { file: "b.onnx", dim: D, output: "pooler_output", image: { size: 4, mean: [0, 0, 0], std: [1, 1, 1], fit: "stretch" }, scale: items2.map(() => 0.01), vec: enc(eye) }] };
+  const b2 = C.parseBank(raw2);
+  ok(b2.v === 2 && b2.encoders.length === 2 && b2.items[0].cc === "lb" && b2.auto === 0.6, "bank v2 is read: two models, each dish's country, its own confidence rule");
+  ok(C.priorOf("eg", "eg", raw2.prior) === 0.5 && C.priorOf("lb", "eg", raw2.prior) === 0.5 && C.priorOf("it", "eg", raw2.prior) === -1 && C.priorOf("intl", "eg", raw2.prior) === 0 && C.priorOf("base", "eg", raw2.prior) === 0.5,
+    "for a user in Egypt: Egyptian and Arab dishes up, a far cuisine down, international and plain foods neutral");
+  ok(C.priorOf("base", "tr", raw2.prior) === 0 && C.priorOf("tr", "tr", raw2.prior) === 0.5, "a user in Turkey: Turkish dishes up, Egypt's own table neutral");
+  const e = (i, j, w) => { const x = new Float32Array(D); x[i] = 1; x[j] = w; return x; };
+  // a photo halfway between kibbeh (Lebanese) and arancini (Italian): the region decides for a user in Egypt, not for one in Italy
+  let r = C.rankAll(b2, [e(0, 1, 0.98), e(1, 0, 0.98)], 3, "eg");
+  ok(b2.items[r[0].i].en === "Kibbeh", "Egypt: a fried bulgur ball is Kibbeh, not Arancini");
+  r = C.rankAll(b2, [e(0, 1, 0.98), e(1, 0, 0.98)], 3, "it");
+  ok(b2.items[r[0].i].en === "Arancini", "Italy: the same photo is Arancini");
+  r = C.rankAll(b2, [e(2, 3, 0), e(2, 3, 0)], 5, "eg");
+  ok(b2.items[r[0].i].en === "Koshari" && r[0].p > 0.6 && C.decide(b2, r).status === "auto", "both models agree on koshari → taken at once");
+  r = C.rankAll(b2, [e(2, 3, 0), e(0, 3, 0)], 5, "eg");   // one model says koshari, the other kibbeh (both home dishes)
+  ok(C.decide(b2, r).status === "guess", "the models disagree → not taken blindly: the choices are shown");
+}

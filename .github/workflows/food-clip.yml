@@ -7,6 +7,9 @@ name: Build the photo fast path
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [tools/build_food_clip_bank.py, tools/food_clip_names.tsv, .github/workflows/food-clip.yml]
 
 permissions:
   contents: write
@@ -27,17 +30,17 @@ jobs:
         run: |
           set -o pipefail
           python3 tools/build_food_clip_bank.py out | tee build.log
-          test -s out/food-clip-manifest.json && test -s out/food-clip-vision.onnx
+          test -s out/food-clip-manifest.json && test -s out/food-clip-vision.onnx && test -s out/food-clip-vision-siglip.onnx
       - name: Summary
         run: |
           {
             echo "## Photo fast path"; echo; tail -1 build.log; echo
             ls -la out | head -12
           } >> "$GITHUB_STEP_SUMMARY"
-      - name: Publish the release (tag food-clip-v1, replaced each time)
+      - name: Publish the release (tag food-clip-v2, replaced each time; food-clip-v1 stays for apps before 6.17)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           rm -rf out/.cache
-          gh release delete food-clip-v1 --cleanup-tag --yes 2>/dev/null || true
-          gh release create food-clip-v1 out/* --title "Photo fast path" --notes "CLIP ViT-B/32 int8 (MIT), onnxruntime-web (MIT), name bank. Built $(date -u +%F). Used by the app: Fit → My plan → Fast photo recognition." --prerelease
+          gh release delete food-clip-v2 --cleanup-tag --yes 2>/dev/null || true
+          gh release create food-clip-v2 out/* --title "Photo fast path (two models)" --notes "CLIP ViT-B/32 int8 (MIT) + SigLIP B/16 int8 (Apache 2.0), onnxruntime-web (MIT), name bank v2. Built $(date -u +%F). Used by the app from 6.17: Fit → Me → Fast photo recognition." --prerelease

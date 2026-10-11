@@ -14,7 +14,7 @@ import java.net.URL
  * (MainActivity) and runs them itself — nothing here looks at a photo.
  */
 object FoodClip {
-    private const val BASE = "https://github.com/alydibiky/attune-/releases/download/food-clip-v1/"
+    private const val BASE = "https://github.com/alydibiky/attune-/releases/download/food-clip-v2/"   // v6.17: two image models (v1 stays for older apps)
     private const val MANIFEST = "food-clip-manifest.json"
     private val NAME = Regex("^[a-z0-9._-]{1,60}$")
 
@@ -29,7 +29,9 @@ object FoodClip {
         val out = JSONObject().put("installed", false).put("bytes", 0L)
         if (!man.exists()) return out
         return try {
-            val files = JSONObject(man.readText()).getJSONArray("files")
+            val mj = JSONObject(man.readText())
+            if (mj.optInt("v", 1) < 2) return out.put("old", true)          // the one-model files of v6.10: offer the better ones
+            val files = mj.getJSONArray("files")
             var all = true; var bytes = 0L
             for (i in 0 until files.length()) {
                 val f = files.getJSONObject(i)
