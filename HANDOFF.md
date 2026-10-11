@@ -927,6 +927,12 @@ Ali: "I don't want mistakes" / "I want an accuracy of above 80 percent".
 - **New food** `egg-toast` "Fried egg on toast" (76 g piece, 224 kcal / 100 g; amount question counts pieces: 4 ≈ 680 kcal);
   bank: `egg-toast fried eggs on toast|eggs on toast|…|fried eggs on bread`; GENERIC: "eggs with tomatoes" → shakshuka.
 - Tests: `unit/v622fitclip` (old bank entries, 4 eggs on toast, the daily check).
+- **Web answers sized to the phone (Ali: "Reading 10 pages… 5 min 19 s — when will it end", Core Lite at 7.5 tokens/s):**
+  attune.jsx keeps the measured speed (`attune:speed:v1`, running average of `tps` / `promptTps` from answers ≥ 40 tokens;
+  cleared when another model starts; `api.speed()`). `research.timeBudget(speed)` → read ≈ 35 s, write ≈ 70 s (70 / 180 s
+  for "More detail" / detail questions). chat.jsx: fewer pages (≈ 900 tokens each), a smaller passage budget, `maxTokens`
+  capped for every web answer (found pages or not), and on a slow phone (< 1,200 answer tokens) no section template but a
+  "answer in about N words" note. Tests: `unit/v712shape`, `e2e_v700auto.py` (7.5 tokens/s → max 525 tokens, short prompt).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

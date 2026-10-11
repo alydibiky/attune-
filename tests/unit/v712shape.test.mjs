@@ -23,4 +23,13 @@ ok(!R.topicSearches("iPhone 17 Pro price in Egypt").some((x) => /Egypt specifica
 const t = R.answerTemplate("Lynk & Co 900 all trims and prices");
 ok(/Trims and versions/.test(t) && /\| Trim \| Powertrain/.test(t) && /Advantages/.test(t) && /Rivals/.test(t) && /Availability in Egypt/.test(t), "the car answer's sections (trims table, specs, advantages, rivals, Egypt)");
 ok(R.wantsShape("Lynk & Co 900") && R.wantsShape("Lynk & Co 900 all trims and prices") && !R.wantsShape("What is the top speed of the Tesla Model S Plaid?") && !R.wantsShape("How tall is the Cairo Tower"), "full shape for a bare subject or a detail question, not for a one-fact question");
+// v6.20 (Ali: "Reading 10 pages… 5 min 19 s — when will it end" on Core Lite, 7.5 tokens/s): sized to the phone's speed
+{
+  const t = R.timeBudget({ tps: 7.5, promptTps: 40 });
+  ok(t && t.answerTokens === 525 && t.promptTokens === 1400, "7.5 tokens/s writing, 40 reading → ≈ 70 s of answer (525 tokens), ≈ 35 s of reading (1,400 tokens)");
+  ok(R.timeBudget({ tps: 7.5 }).promptTokens > 1200 && R.timeBudget(null) === null, "no reading speed yet: estimated from the writing speed; nothing measured: no limit");
+  const d = R.timeBudget({ tps: 7.5, promptTps: 40 }, { readSecs: 70, writeSecs: 180 });
+  ok(d.answerTokens === 1350, "\"More detail\": a longer allowance (≈ 3 min)");
+  ok(R.timeBudget({ tps: 60, promptTps: 900 }).answerTokens >= 4000, "a fast phone keeps long answers");
+}
 console.log(fail ? `${fail} FAILED` : "ALL PASSED");

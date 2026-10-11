@@ -1632,9 +1632,26 @@ const LocalEngine = {
   },
 };
 
+// v6.20 (Ali: a web answer on Core Lite was still "Reading 10 pages… 5 min 19 s"): the phone's real speed, kept from
+// answers long enough to measure — web answers are sized to it (research.js timeBudget)
+const SPEED_KEY = "attune:speed:v1";
+function keepSpeed(st) {
+  try {
+    if (!st || !st.tps || !(st.tokens >= 40)) return;
+    const old = JSON.parse(localStorage.getItem(SPEED_KEY) || "{}");
+    const pt = st.promptTps && st.promptTokens >= 300 ? st.promptTps : old.promptTps || null;
+    // a running average, so one odd answer doesn't swing it
+    const avg = (o, n) => (o ? Math.round((o * 2 + n) / 3 * 10) / 10 : n);
+    localStorage.setItem(SPEED_KEY, JSON.stringify({ tps: avg(old.tps, st.tps), promptTps: pt && old.promptTps && pt !== old.promptTps ? avg(old.promptTps, pt) : pt, at: Date.now() }));
+  } catch (e) {}
+}
+function measuredSpeed() { try { const v = JSON.parse(localStorage.getItem(SPEED_KEY) || "null"); return v && v.tps ? v : null; } catch (e) { return null; } }
 function statsFrom(j, ms) {
   const t = j.timings || {};
   const u = j.usage || {};
+  const out = statsFrom0(t, u, ms); keepSpeed(out); return out;
+}
+function statsFrom0(t, u, ms) {
   return {
     ms,
     tps: t.predicted_per_second ? Math.round(t.predicted_per_second * 10) / 10 : null,
@@ -8045,6 +8062,7 @@ export default function App() {
   };
   const cancelInstall = () => { if (NATIVE && installIdRef.current) { try { NATIVE.cancel(installIdRef.current); } catch (e) {} } };
   const useInstalled = async (modelId) => {
+    try { localStorage.removeItem(SPEED_KEY); } catch (e) {}   // v6.20: a different model is measured afresh
     try {
       setModelState("starting");
       await nativeCall("use", modelId);
@@ -8907,6 +8925,7 @@ export default function App() {
     knowledge: { on: () => !!knPrefs.on, find: (q, o) => knowledge.find(q, o), packs: () => !!knowledge.packSearch,
       myPacks: () => TEACH.myPacks(knowledge), teachChat: (chat, name) => teachChat(knowledge, chat, name) },   // v6.16 «علّم نموذجك»   // v6.20 Knowledge (+ v6.16 phone packs)
     lastStats: () => LAST_STATS,
+    speed: () => (NATIVE ? measuredSpeed() : null),
     contextTokens: () => { const m = String((engineInfo && engineInfo.settings) || "").match(/context (\d+)/); return m ? Number(m[1]) : 0; },
     remember, flash,
     openTab: (m) => setMode(m),

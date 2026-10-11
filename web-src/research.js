@@ -324,6 +324,14 @@ export function needsWeb(text) {
     the first word appears. Measured on the web benchmark: the answer is still in the passages at
     6,000 characters for every question, and the prompt is about a third shorter. Comparisons,
     lists, specs and reports keep the full budget. */
+/** v6.20 (Ali: "Reading 10 pages… 5 min 19 s — when will it end"): a web answer sized to the phone's measured speed, so it
+ *  is read in about 35 s and written in about 70 s. speed = {tps, promptTps} (tokens a second writing / reading), or null
+ *  (not measured yet: no limit). → {promptTokens, answerTokens} or null. "More detail" asks for the long version. */
+export function timeBudget(speed, { readSecs = 35, writeSecs = 70 } = {}) {
+  if (!speed || !(speed.tps > 0)) return null;
+  const pt = speed.promptTps > 0 ? speed.promptTps : speed.tps * 6;   // reading is usually 5–10× faster than writing on a phone
+  return { promptTokens: Math.max(1200, Math.round(pt * readSecs)), answerTokens: Math.max(350, Math.round(speed.tps * writeSecs)) };
+}
 export function quickBudget(question, budget, deep = false) {
   const q = String(question || "");
   if (deep || q.length > 160) return budget;

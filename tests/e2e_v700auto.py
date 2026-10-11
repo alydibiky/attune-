@@ -30,6 +30,14 @@ with sync_playwright() as p:
     page.wait_for_function("document.querySelectorAll('button[title=Regenerate]').length >= 3", timeout=40000)
     q = page.evaluate("window.__mock.lastSearch && window.__mock.lastSearch.q")
     check(bool(q) and "900" in q, "a bare model name (Lynk and co 900) searches the web too: %s" % q)
+    # v6.20 (Ali: "Reading 10 pages… 5 min 19 s — when will it end"): on a phone that writes 7.5 tokens a second the web answer
+    # is sized to about a minute and a half — a short prompt, a short answer, "More detail" for the rest
+    page.evaluate("() => { localStorage.setItem('attune:speed:v1', JSON.stringify({ tps: 7.5, promptTps: 40 })); const M = window.__mock; M.bodies = []; M.fakeQueue = ['The Lynk & Co 900 is a large plug-in hybrid SUV [1].', 'x', 'x']; }")
+    send(page, "Lynk and co 900")
+    page.wait_for_function("document.querySelectorAll('button[title=Regenerate]').length >= 4", timeout=40000)
+    last = page.evaluate("() => { const b = window.__mock.bodies.filter((x) => x && x.messages && JSON.stringify(x.messages).includes('writes slowly')); return b.length ? { max: b[b.length - 1].max_tokens, chars: JSON.stringify(b[b.length - 1].messages).length } : null; }")
+    check(last is not None and last["max"] <= 525 and last["chars"] < 9000, "a slow phone (7.5 tokens/s): a short answer (max %s tokens) from a short prompt (%s characters)" % (last and last["max"], last and last["chars"]))
+    page.evaluate("localStorage.removeItem('attune:speed:v1')")
     page.click("[data-testid=web-toggle]"); page.wait_for_timeout(150)
     check("Auto" not in page.locator("[data-testid=web-toggle]").inner_text(), "one tap: Web always on")
     page.click("[data-testid=web-toggle]"); page.wait_for_timeout(150)

@@ -24,7 +24,7 @@ import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, websiteF
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
 import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
-import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts, fxNote, officialSpecsNote } from "./research.js";
+import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, timeBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts, fxNote, officialSpecsNote } from "./research.js";
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
@@ -763,7 +763,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // v6.10: the person's own Skills — "/quote 50 t crane…" or a question that fits a skill's description
       const uSk = typed && api.userSkills ? api.userSkills(typed) : null;
       if (uSk && uSk.stripped != null) content = uSk.stripped || content;
-      let sources = null, via = null, research = null, webCtx = null, webEmpty = false, tplUsed = ""; const extra0 = {};
+      let sources = null, via = null, research = null, webCtx = null, webEmpty = false, tplUsed = "", speedCap = null, speedBrief = ""; const extra0 = {};
       const pic = img || carried;
       // v6.12: Auto — the best installed model for this kind of question (a quick one keeps the loaded model)
       if (api.autoModel && api.autoModel() && api.switchModel) {
@@ -845,7 +845,14 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           api.carSpecs ? api.carSpecs(question).catch(() => []) : Promise.resolve([]),
           api.fxRates ? api.fxRates().catch(() => null) : Promise.resolve(null),
         ]).then(([specs, fx]) => officialSpecsNote(specs) + (fx ? fxNote(fx, question) : "")).catch(() => "") : Promise.resolve("");
-        const carTokens = (n) => kindT === "vehicle" && shaped ? Math.max(n, Math.min(6144, Math.floor(((api.contextTokens && api.contextTokens()) || 8192) * 0.4))) : n;
+        // v6.20 (Ali: "Reading 10 pages… 5 min 19 s — when will it end"): sized to this phone's measured speed — read in ≈35 s,
+        // written in ≈70 s (twice that when the person asked for detail); "More detail" gets the long version
+        const tb = timeBudget(api.speed && api.speed(), deep || wantsDeep(typed) || /more detail|in detail|full (answer|version|report)|بتفصيل|تفاصيل|بالتفصيل/i.test(typed) ? { readSecs: 70, writeSecs: 180 } : undefined);
+        if (tb) speedCap = tb.answerTokens;
+        if (tb && tb.answerTokens < 1200) speedBrief = `\n\n(This phone writes slowly: answer in at most about ${Math.round(tb.answerTokens * 0.6)} words — the key facts and figures first, no long sections. The person can tap "More detail" for the full version.)`;
+        const carTokens0 = (n) => kindT === "vehicle" && shaped ? Math.max(n, Math.min(6144, Math.floor(((api.contextTokens && api.contextTokens()) || 8192) * 0.4))) : n;
+        const carTokens = (n) => (tb ? Math.min(carTokens0(n), tb.answerTokens) : carTokens0(n));
+        if (tb) readCap = Math.min(readCap, Math.max(3, Math.round(tb.promptTokens / 900)));   // ≈ 900 tokens of passages a page
         const per = Math.min(8, Math.ceil(readCap / queries.length) + 2);
         onStatus(queries.length > 1 ? tr("Searching {n} ways at once…", { n: queries.length }) : tr("Searching the web…"));
         const found = await Promise.all(queries.map((q, i) =>
@@ -874,7 +881,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           const ansF = carTokens((api.power && api.power().longTokens) || 2048);
           // v5.32: the passages fill at most a 12k window even on 16k phones — a small model copies
           // figures far more reliably from a shorter prompt (and it reads faster)
-          const budgetF = quickBudget(typed, fitChars(Math.min(ctxF, 12288), ansF, 2600 + (shaped ? (compareParts(question) ? 600 : 350) : 0), toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" ")), deep || shaped);   // the answer's shape takes ≈350 tokens of the window   // v6.8: a quick question reads less
+          const budgetF0 = quickBudget(typed, fitChars(Math.min(ctxF, 12288), ansF, 2600 + (shaped ? (compareParts(question) ? 600 : 350) : 0), toRead.map((h) => String(h.text || "").slice(0, 3000)).join(" ")), deep || shaped);   // the answer's shape takes ≈350 tokens of the window   // v6.8: a quick question reads less
+          const budgetF = tb ? Math.min(budgetF0, Math.round(tb.promptTokens * 3.2)) : budgetF0;   // ≈ 3.2 characters a token
           const ranked = api.rankAll(question, toRead, { budget: budgetF, perSource: Math.max(1500, Math.floor(budgetF / Math.max(1, Math.min(toRead.length, 6)) * 1.4)) });
           const figs = confirmedFigures(ranked);
           sources = ranked; via = look.via;
@@ -884,7 +892,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           // the answer and what it means — the figures come from the sheet, not re-typed by the model
           const sheet0 = factSheet(question, ranked, /[؀-ۿ]/.test(typed));
           const ask0 = sheet0.md ? SHEET_NOTE : deep ? FAST_REPORT_ADD : "";
-          tplUsed = shaped ? answerTemplate(question, kindT) : "";
+          tplUsed = shaped && !speedBrief ? answerTemplate(question, kindT) : "";   // a slow phone: the short version first, "More detail" for the rest
           const carNote = await carP;
           content = api.groundedPrompt(asked, ranked) + figs.block + carNote + ask0 + tplUsed + photoNote;
           webCtx = { query, asked, question, toRead, budget: budgetF, tail: figs.block + ask0 + photoNote };
@@ -1174,7 +1182,10 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         // penalties (they mangled copied numbers). (v5.17)
         const copy = !!sources || !!fileAtt || !!(knHits && knHits.length) || !!(spaceRef.current.project && (spaceRef.current.project.knowledge || []).length);
         // a research report gets the level's long-answer budget (v5.23)
-        const longRep = (research || tplUsed) && !useThink && api.power ? { maxTokens: tplUsed && /expert driver/.test(tplUsed) ? Math.max(api.power().longTokens, Math.min(6144, Math.floor(((api.contextTokens && api.contextTokens()) || 8192) * 0.4))) : api.power().longTokens } : {};
+        const longRep0 = (research || tplUsed) && !useThink && api.power ? { maxTokens: tplUsed && /expert driver/.test(tplUsed) ? Math.max(api.power().longTokens, Math.min(6144, Math.floor(((api.contextTokens && api.contextTokens()) || 8192) * 0.4))) : api.power().longTokens } : {};
+        // v6.20: every web answer (found pages or not) is sized to the phone's speed
+        const longRep = speedCap && (sources || webEmpty) ? { maxTokens: Math.min(longRep0.maxTokens || speedCap, speedCap) } : longRep0;
+        if (speedBrief && (sources || webEmpty)) content += speedBrief;
         // v5.33: a web answer copies figures — near-greedy sampling (0.1) keeps a small model from
         // picking a wrong digit or a stray token ("1.2.93", "kWkW", "a a a")
         const webT = sources && !useThink ? { temperature: 0.1 } : {};
