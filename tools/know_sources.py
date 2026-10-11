@@ -500,18 +500,18 @@ def turath_book(B, bid):
     idx = info.get("indexes") or {}
     n = len(idx.get("page_map") or [])
     if not n: return None
-    # 4 pages at a time (a 9,000-page dictionary read one by one didn't fit in the 6-hour build limit); a 429 backs off in B.get
-    from concurrent.futures import ThreadPoolExecutor
-    def one(pg):
-        r = turath_json(B, "page", book_id=bid, pg=pg) or {}
+    # one page at a time, calmly: turath answers 429 to fast readers (4 at a time made it refuse every page). A book with
+    # more than 2 % of its pages missing is not used at all — a dictionary with holes would give wrong «not found» answers.
+    pages, t0, missing = [], time.time(), 0
+    for pg in range(1, n + 1):
+        r = turath_json(B, "page", book_id=bid, pg=pg)
+        if r is None: missing += 1
+        r = r or {}
         m = r.get("meta"); m = json.loads(m) if isinstance(m, str) else (m or {})
-        time.sleep(0.25)   # gently, per worker
-        return {"text": r.get("text") or "", "vol": m.get("vol"), "page": m.get("page")}
-    pages, t0 = [], time.time()
-    with ThreadPoolExecutor(4) as ex:
-        for i, page in enumerate(ex.map(one, range(1, n + 1)), 1):
-            pages.append(page)
-            if i % 500 == 0: print(f"turath: book {bid}: {i}/{n} pages ({time.time() - t0:.0f} s)")
+        pages.append({"text": r.get("text") or "", "vol": m.get("vol"), "page": m.get("page")})
+        if missing > max(5, n * 0.02): print(f"turath: book {bid}: {missing} pages refused by page {pg} — the book is left out"); return None
+        if pg % 500 == 0: print(f"turath: book {bid}: {pg}/{n} pages ({time.time() - t0:.0f} s)")
+        time.sleep(0.6)
     return {"meta": info.get("meta") or {}, "indexes": {"headings": idx.get("headings") or []}, "pages": pages}
 
 def turath_text(html, notes=False):
@@ -1479,7 +1479,8 @@ def build_islamlib(a):
 # ---- dictionary: Open English WordNet 2025 (CC BY 4.0) + the classical Arabic dictionaries (public domain) ------------------------------
 WN_ZIP = "https://github.com/globalwordnet/english-wordnet/releases/download/2025-edition/english-wordnet-2025-json.zip"
 POS = {"n": "noun", "v": "verb", "a": "adjective", "s": "adjective", "r": "adverb"}
-AR_DICTS = [("لسان العرب", "", "ابن منظور", "ابن منظور (ت ٧١١هـ)"), ("مختار الصحاح", "", "الرازي", "زين الدين الرازي (ت ٦٦٦هـ)")]
+# مختار الصحاح: one reliable volume. لسان العرب (≈20 volumes) is more than turath lets a build read in 6 hours — left out.
+AR_DICTS = [("مختار الصحاح", "", "الرازي", "زين الدين الرازي (ت ٦٦٦هـ)")]
 
 def wordnet_rows(z):
     syn = {}
@@ -1512,7 +1513,7 @@ def build_dictionary(a):
     B.write_pack(a.out, "dictionary", rows + ar, {
         "name": "Dictionary (English and classical Arabic)", "name_ar": "القاموس (الإنجليزي والعربي)",
         "license": "Open English WordNet: CC BY 4.0; Arabic dictionaries: classical texts (public domain)",
-        "attribution": "Open English WordNet 2025 (en-word.net, CC BY 4.0, derived from Princeton WordNet) — every English word with its meanings, examples and synonyms; لسان العرب ومختار الصحاح من المكتبة الشاملة (turath.io).",
+        "attribution": "Open English WordNet 2025 (en-word.net, CC BY 4.0, derived from Princeton WordNet) — every English word with its meanings, examples and synonyms; مختار الصحاح من المكتبة الشاملة (turath.io).",
         "sources": [{"title": "Open English WordNet 2025", "url": "https://en-word.net/", "license": "CC BY 4.0"}] + used, "retrieved": time.strftime("%Y-%m-%d")})
 
 # ---- medicines: every US drug label (openFDA, CC0 public domain) — uses, dose, contraindications, warnings, side effects, interactions ---
