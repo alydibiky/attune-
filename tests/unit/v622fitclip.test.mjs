@@ -113,3 +113,18 @@ ok(egypt.every((w) => allNames.includes(w)), "the Egyptian dishes Ali named are 
   const other = [new Float32Array([0, 0, 0, 1]), new Float32Array([0, 0, 0, 1])];
   ok(b3.items[C.rankAll(b3, other, 3, "eg", C.loadMemory(store))[0].i].en === "Cheesecake", "a photo that doesn't look like it is untouched");
 }
+
+// ---- v6.17: an estimated dish never borrows its calories from a bare ingredient (Ali: "Eggs with tomatoes", 123 g = 22 kcal —
+// it was estimated from tomato) ----
+{
+  const bad = [];
+  for (const [tag, names] of tsv) {
+    if (!tag.startsWith("~")) continue;
+    const fd = F.food(tag.slice(1)), n = names.toLowerCase();
+    if (!fd) continue;
+    if (/\((dry|raw)\)|-raw$|-dry$/.test(fd.en + " " + fd.id)) bad.push(names + " ← " + fd.en);
+    else if (/\beggs?\b/.test(n) && fd.kcal < 90) bad.push(names + " ← " + fd.en + " " + fd.kcal + " kcal");
+    else if (["tomato", "onion", "cucumber", "lettuce", "lemon"].includes(fd.id) && !/salad|soup/.test(n)) bad.push(names + " ← " + fd.en);
+  }
+  ok(bad.length === 0, "every estimated dish takes its calories from a similar dish, not a bare ingredient" + (bad.length ? ": " + bad.join("; ") : ""));
+}

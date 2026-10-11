@@ -296,7 +296,7 @@ export function FoodClipCard({ L, photoClip, flash, onChange }) {
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="fit-foodclip">
       <p className="text-[13px] font-semibold text-slate-100">{L("Fast photo recognition", "التعرّف السريع على صور الأكل")}</p>
       <p className="text-[12px] text-slate-400">{st.installed ? L(`On this phone (${mb} MB). A food photo is named in about a second, with no chat model and no internet.`, `موجود على الهاتف (${mb} ميجابايت). يُتعرّف على صورة الطعام في نحو ثانية، دون نموذج محادثة ودون إنترنت.`)
-        : L("A small picture model (~100 MB, once) that names the food in a photo in about a second — Egyptian dishes included — offline.", "نموذج صور صغير (~100 ميجابايت، مرة واحدة) يتعرّف على الطعام في الصورة في نحو ثانية — بما فيه الطعام المصري — دون إنترنت.")}</p>
+        : L("Two picture models (~200 MB, once) that name the food in a photo in a few seconds — your country's dishes first — offline. They learn from the photo meals you save.", "نموذجا صور (~200 ميجابايت، مرة واحدة) يتعرّفان على الطعام في الصورة في ثوانٍ — أطباق بلدك أولًا — دون إنترنت، ويتعلّمان من وجبات الصور التي تحفظها.")}</p>
       {busy ? (
         <div className="space-y-1.5"><div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: (busy.pct || 0) + "%" }} /></div>
           <p className="text-[12px] text-slate-400" data-testid="fit-foodclip-progress">{(busy.pct || 0) + "%"}{busy.detail ? " · " + busy.detail.replace(" MB", L(" MB", " ميجا")) : ""}</p>

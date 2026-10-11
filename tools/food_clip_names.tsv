@@ -284,7 +284,7 @@ quinoa	quinoa salad|quinoa
 # ---- more Egyptian and Arab home and street food ---------------------------------------------------------------
 ~rice	roz meammar, baked rice with milk and butter	رز معمر
 ~rice	rice with nuts and minced meat|hashweh rice	رز بالخلطة
-~tomato	eggs with tomatoes	بيض بالطماطم
+~shakshuka	eggs with tomatoes	بيض بالطماطم
 ~feta	white cheese with tomatoes	جبنة بالطماطم
 ~fries	potato sandwich, fries in baladi bread	ساندوتش بطاطس
 ~halawa	halawa sandwich	ساندوتش حلاوة
@@ -341,8 +341,8 @@ quinoa	quinoa salad|quinoa
 ~smoothie	avocado smoothie	عصير أفوكادو
 ~milk	glass of milk	كوباية لبن
 ~yogurt	bowl of yogurt	طبق زبادي
-~oats	oatmeal with fruit	شوفان بالفاكهة
-~granola	acai bowl	أساي بول
+~gb.porridge	oatmeal with fruit	شوفان بالفاكهة
+~br.acai	acai bowl	أساي بول
 ~cottage	ricotta toast	توست بالريكوتا
 ~avocado	avocado toast with egg	توست أفوكادو وبيض
 ~salmon	smoked salmon	سالمون مدخن
