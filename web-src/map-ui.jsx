@@ -220,12 +220,16 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
           </div>
         </div>
 
+        {/* Ali: "give me a place to download new maps" — the Offline maps list, one tap from the map whatever is open */}
+        {sheet !== "full" ? <><button onClick={() => { setSel(null); setHits(null); setTab("offline"); setSheet("full"); }} data-testid="map-open-offline"
+          className="absolute start-3 h-12 rounded-full bg-slate-950/95 border border-emerald-800 px-4 text-[13.5px] font-medium text-emerald-200 flex items-center gap-2 shadow-lg" style={{ bottom: `calc(${sheetH} + 12px)` }}>
+          <Download size={16} aria-hidden="true" />{packs.length ? tr("Offline maps") : tr("Download maps")}{updates.length ? <span className="w-2 h-2 rounded-full bg-emerald-400" aria-label={tr("Update ready")} /> : null}</button>
         <button onClick={locateMe} aria-label={tr("My location")} data-testid="map-locate" className="absolute end-3 w-12 h-12 rounded-full bg-slate-950/95 border border-slate-800 text-slate-100 flex items-center justify-center shadow-lg" style={{ bottom: `calc(${sheetH} + 12px)` }}>
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg></button>
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg></button></> : null}
 
         {/* the sheet */}
         <section className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-slate-950 border-t border-slate-800 shadow-[0_-8px_24px_rgba(0,0,0,.35)] flex flex-col transition-[height] duration-200 z-[5]" style={{ height: sheetH }} data-testid="map-sheet">
-          <span className="absolute -top-6 start-2 rounded-md bg-slate-950/75 px-1.5 py-0.5 text-[10px] text-slate-400 pointer-events-none" data-testid="map-credit">© OpenStreetMap contributors{active ? " · Protomaps" : ""}</span>
+          {sheet !== "full" ? <span className="absolute -top-6 start-2 rounded-md bg-slate-950/75 px-1.5 py-0.5 text-[10px] text-slate-400 pointer-events-none" data-testid="map-credit">© OpenStreetMap contributors{active ? " · Protomaps" : ""}</span> : null}
           <button onClick={() => setSheet(sheet === "peek" ? "half" : sheet === "half" ? "full" : "peek")} aria-label={tr("Pull up")} className="w-full pt-2 pb-1 flex justify-center shrink-0">
             <span className="w-10 h-1.5 rounded-full bg-slate-700" /></button>
           <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">

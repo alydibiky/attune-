@@ -60,6 +60,9 @@ with sync_playwright() as p:
     box = page.evaluate("() => { const b = document.querySelector('[data-testid=map-canvas]').getBoundingClientRect(), h = document.querySelector('header.sticky').getBoundingClientRect(), s = document.querySelector('[data-testid=map-search]').getBoundingClientRect(); return { h: b.height, top: s.top, hb: h.bottom }; }")
     check(box["h"] > 500, "the map is really on screen: its box is %d px tall (MapLibre's CSS once made it 0 — the map was drawn but invisible)" % box["h"])
     check(box["top"] >= box["hb"], "the search bar sits below the app's header, not under it (%s)" % box)
+    page.click("[data-testid=map-open-offline]"); page.wait_for_selector("[data-testid=map-offline]", timeout=3000)
+    check(page.locator("[data-testid=map-country-find]").count() == 1, "«Offline maps» on the map opens the list of countries to download")
+    page.locator("[data-testid=map-tab-places]").click(); page.wait_for_timeout(150)
     shot(page, "v722-map")
 
     # ---- search: the offline index, then pick and save ----

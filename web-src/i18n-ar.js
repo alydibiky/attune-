@@ -3355,6 +3355,8 @@ export const AR = {
   "{n} results": "النتائج: {n}",
   "offline": "بدون إنترنت",
   "Offline maps": "خرائط بدون إنترنت",
+  "Download maps": "تنزيل الخرائط",
+  "Update ready": "يوجد تحديث",
   "Search a place and tap “Save this place” — saved places work with no signal.": "ابحث عن مكان واضغط «احفظ هذا المكان» — تعمل الأماكن المحفوظة بلا إشارة.",
   "Download a whole country once: every road, building, place and shop, and search — all with no signal. A new version is built every week from OpenStreetMap; the app tells you when one is ready.": "نزّل خريطة دولة كاملة مرة واحدة: كل طريق ومبنى ومكان ومحل، مع البحث — كلها بلا إنترنت. تُبنى نسخة جديدة كل أسبوع من OpenStreetMap، ويخبرك التطبيق عندما تكون جاهزة.",
   "On this phone · data of {d} · {s}": "على هذا الهاتف · بيانات {d} · {s}",
