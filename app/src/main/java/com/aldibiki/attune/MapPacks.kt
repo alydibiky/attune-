@@ -236,7 +236,7 @@ object MapPacks {
     }
 
     /** Downloads `url` into `part`, continuing from where an earlier try stopped (HTTP Range). */
-    internal fun fetchResumable(url: String, part: File, size: Long, isCancelled: () -> Boolean, onBytes: (Long) -> Unit) {
+    internal fun fetchResumable(url: String, part: File, size: Long, isCancelled: () -> Boolean, every: Long = 2_000_000, onBytes: (Long) -> Unit) {
         if (part.exists() && part.length() > size) part.delete()
         if (part.exists() && part.length() == size) { onBytes(size); return }
         Prefs.requireOnline(url, "map")
@@ -257,7 +257,7 @@ object MapPacks {
                     while (inp.read(buf).also { n = it } > 0) {
                         if (isCancelled()) throw Cancelled()
                         out.write(buf, 0, n); got += n
-                        if (got - last > 2_000_000) { last = got; onBytes(got) }
+                        if (got - last > every) { last = got; onBytes(got) }
                     }
                     onBytes(got)
                 }

@@ -38,6 +38,8 @@ export async function readSourceFile(file, nativeCall) {
 
 const KIND = { text: "Pasted text", file: "File", doc: "Document", pack: "Public pack", mind: "Mind notes", shelf: "Shelf notes" };
 
+const STALL_MS = () => (typeof window !== "undefined" && window.__attuneStallMs) || 120000;   // no progress for this long = the download is stuck (tests shorten it)
+
 export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, flash, nativeCall, packText }) {
   const ar = getLang() === "ar";
   const [rows, setRows] = useState([]);
@@ -68,16 +70,24 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
   const N = typeof window !== "undefined" ? window.AttuneNative : null;
   const readPacks = () => { try { return (JSON.parse(N.knowPacks()).packs) || []; } catch (e) { return []; } };
   const [phonePacks, setPhonePacks] = useState(() => (N && N.knowPacks ? readPacks() : []));
+  const [packErr, setPackErr] = useState(null);       // {id, msg}: shown on the pack's card, not only in a passing note
+  // packs the app downloads by itself appear as «ready» while this page is open
+  useEffect(() => { if (!N || !N.knowPacks) return; const t = setInterval(() => setPhonePacks(readPacks()), 5000); return () => clearInterval(t); }, []);
   const getPack = async (p) => {
     if (!nativeCall || !N || !N.knowInstall) return;
-    setPackBusy({ id: p.id, pct: 0 });
+    setPackBusy({ id: p.id, pct: 0, detail: "" }); setPackErr(null);
+    // Ali: "it keeps loading only" — a download that stops moving for 2 minutes is stopped and says so (it resumes on the next tap)
+    let last = Date.now(), timer = null;
     try {
-      await nativeCall("knowInstall", { id: p.id }, (pct) => setPackBusy({ id: p.id, pct }));
+      const call = nativeCall("knowInstall", { id: p.id }, (pct, stage, detail) => { last = Date.now(); setPackBusy({ id: p.id, pct, detail: detail || "" }); });
+      const callId = typeof window !== "undefined" && window.__attuneNativeLastId ? window.__attuneNativeLastId() : null;
+      const stalled = new Promise((_, rej) => { timer = setInterval(() => { if (Date.now() - last > STALL_MS()) { try { callId && N.cancel && N.cancel(callId); } catch (e) {} rej(new Error(tr("The download stopped moving. Check the connection and tap Download — it continues where it stopped."))); } }, 2000); });
+      await Promise.race([call, stalled]);
       if (p.legacy) await K.removeKnowPack(knowledge, p.id);            // the old in-page copy, if any
       setPhonePacks(readPacks());
       flash && flash(tr("“{n}” is ready", { n: ar ? p.name_ar : p.name }));
-    } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 160)); }
-    finally { setPackBusy(null); refresh(); }
+    } catch (e) { const msg = String((e && e.message) || e).slice(0, 160); setPackErr({ id: p.id, msg }); }
+    finally { clearInterval(timer); setPackBusy(null); refresh(); }
   };
   const dropPack = (p) => {
     if (!window.confirm(tr("Remove “{t}” from Knowledge?", { t: ar ? p.name_ar : p.name }))) return;
@@ -167,18 +177,27 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
                 <p className="flex-1 text-[13px] text-slate-100">{ar ? p.name_ar : p.name}{got ? " · " + mb(got.size || 0) : ""}</p>
                 {got ? <span className="text-[11px] text-emerald-300">{tr("ready")}</span> : null}</div>
               <p className="text-[12px] text-slate-400">{ar ? p.about_ar : p.about}</p>
-              <p className="text-[11px] text-slate-500" data-testid={"kn-pack-lic-" + p.id}>{ar ? p.size_ar : p.size} · {tr("Licence")}: {ar ? p.license_ar : p.license}{got && got.built ? " · " + tr("updated {d}", { d: got.built }) : ""}</p>
+              <p className="text-[11px] text-slate-500" data-testid={"kn-pack-lic-" + p.id}>{ar ? p.size_ar : p.size}{got && got.built ? " · " + tr("updated {d}", { d: got.built }) : ""}</p>
               {p.notice ? <p className="text-[11px] text-amber-300">{ar ? p.notice_ar : p.notice}</p> : null}
               {b ? (
-                <div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-teal-500" style={{ width: (b.pct || 0) + "%" }} /></div>
+                <div data-testid={"kn-pack-progress-" + p.id}><div className="h-2 rounded bg-slate-800 overflow-hidden"><div className="h-full bg-teal-500 transition-[width]" style={{ width: Math.max(3, b.pct || 0) + "%" }} /></div>
+                  <p className="text-[11px] text-slate-400 mt-1 tabular-nums">{b.detail ? (b.pct || 0) + "% · " + b.detail : tr("Connecting…")}</p></div>
               ) : (
                 <div className="flex gap-2">
                   {!got ? <button className={primary} disabled={!N || !N.knowInstall} onClick={() => getPack(p)} data-testid={"kn-pack-get-" + p.id}><Download size={13} />{tr("Download")}</button> : null}
                   {got ? <button className={ghost} onClick={() => dropPack(p)} data-testid={"kn-pack-rm-" + p.id}><Trash2 size={13} />{tr("Remove")}</button> : null}
                 </div>)}
+              {packErr && packErr.id === p.id && !b ? <p className="text-[11.5px] text-amber-300" data-testid={"kn-pack-err-" + p.id}>{packErr.msg}</p> : null}
               {(!N || !N.knowInstall) && !got ? <p className="text-[11px] text-slate-500">{tr("Downloads work in the Android app.")}</p> : null}
             </div>);
         })}
+        {/* Ali: naming every source on the cards looks less professional — the credits the licences ask for live here, once */}
+        <details className="pt-2 border-t border-slate-800" data-testid="kn-credits">
+          <summary className="text-[11.5px] text-slate-500 cursor-pointer select-none">{tr("Sources & licences")}</summary>
+          <ul className="mt-2 space-y-1">
+            {K.CATALOG.map((p) => <li key={p.id} className="text-[11px] text-slate-500 leading-relaxed"><span className="text-slate-400">{ar ? p.name_ar : p.name}</span> — {ar ? p.license_ar : p.license}</li>)}
+          </ul>
+        </details>
       </div>
     </div>
   );

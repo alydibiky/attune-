@@ -47,6 +47,7 @@ object KnowPacks {
         val man = remote(id)
         val files = man.getJSONArray("files")
         var total = 0L; for (i in 0 until files.length()) total += files.getJSONObject(i).getLong("bytes")
+        onProgress(0L, total, "")                                         // the bar moves at once (Ali: "it keeps loading only")
         val next = File(root(ctx), "$id.next").apply { deleteRecursively(); mkdirs() }
         var done = 0L
         for (i in 0 until files.length()) {
@@ -54,7 +55,7 @@ object KnowPacks {
             if (!NAME.matches(name)) throw Exception("Unexpected file in the pack: $name")
             val part = File(root(ctx), "$id-$name.part")              // outside .next, so a stopped download resumes
             val base = done
-            MapPacks.fetchResumable(BASE + "know-$id-v2/$name", part, size, isCancelled) { got -> onProgress(base + got, total, name) }
+            MapPacks.fetchResumable(BASE + "know-$id-v2/$name", part, size, isCancelled, 262_144) { got -> onProgress(base + got, total, name) }   // every 256 KB: a slow line still moves
             MapPacks.verify(part, f.optString("sha256"), name)
             val target = File(next, "$id.sqlite")
             if (f.optBoolean("gz")) {

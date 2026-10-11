@@ -859,19 +859,36 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         pool.execute { try { resolve(id, KnowPacks.remote(JSONObject(arg).getString("id"))) } catch (e: Throwable) { reject(id, e.message ?: "Couldn't check the pack") } }
     }
 
+    /** pack id → the page's calls waiting for it. One download per pack: the quiet auto-download and a tap on Download
+     *  for the same pack used to run side by side on the same files and spoil each other ("it keeps loading only"). */
+    private val knowJobs = HashMap<String, MutableList<String>>()
+    private val knowFlags = ConcurrentHashMap<String, AtomicBoolean>()   // a Stop from any waiting call stops the one download
+
     @JavascriptInterface
     fun knowInstall(id: String, arg: String) {
         if (blockedByAirGap(id, "downloading a Knowledge pack")) return
-        val flag = AtomicBoolean(false); cancels[id] = flag
+        val pack = try { JSONObject(arg).getString("id") } catch (e: Exception) { reject(id, "Unknown pack"); return }
+        synchronized(knowJobs) {
+            val running = knowJobs[pack]
+            if (running != null) { running.add(id); knowFlags[pack]?.let { cancels[id] = it }; progress(id, 0, "", ""); return }   // join the download already running
+            knowJobs[pack] = mutableListOf(id)
+        }
+        val flag = AtomicBoolean(false); cancels[id] = flag; knowFlags[pack] = flag
+        fun waiting(): List<String> = synchronized(knowJobs) { knowJobs[pack]?.toList() ?: listOf(id) }
         pool.execute {
             try {
-                val man = KnowPacks.install(ctx, JSONObject(arg).getString("id"), { done, total, name ->
+                val man = KnowPacks.install(ctx, pack, { done, total, name ->
                     val pct = if (total > 0) ((done * 100) / total).toInt().coerceIn(0, 99) else 0
-                    progress(id, pct, name, "%.1f / %.1f MB".format(done / 1e6, total / 1e6))
+                    val detail = "%.1f / %.1f MB".format(done / 1e6, total / 1e6)
+                    for (c in waiting()) progress(c, pct, name, detail)
                 }, { flag.get() })
-                resolve(id, man)
-            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't download the pack") }
-            finally { cancels.remove(id) }
+                val all = synchronized(knowJobs) { knowJobs.remove(pack) ?: mutableListOf(id) }
+                for (c in all) resolve(c, man)
+            } catch (e: Throwable) {
+                val all = synchronized(knowJobs) { knowJobs.remove(pack) ?: mutableListOf(id) }
+                for (c in all) reject(c, e.message ?: "Couldn't download the pack")
+            }
+            finally { knowFlags.remove(pack); cancels.entries.removeIf { it.value === flag } }
         }
     }
 
