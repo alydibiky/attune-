@@ -142,6 +142,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   // double-checks in the background and replaces the list only if the person has not changed it (else it is offered)
   const draftRef = useRef(null); useEffect(() => { draftRef.current = draft; }, [draft]);
   const shownRef = useRef(null);
+  const fastSeen = useRef(null);   // the last photo's vectors from the fast look (fitclip.js)
   const [refining, setRefining] = useState(false);
   const [fastDl, setFastDl] = useState("");
   const [aiAlt, setAiAlt] = useState(null);
@@ -202,7 +203,9 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   // v6.10 step 0 — the fast look (fitclip.js): no chat model, ≈ a second. Started at once, side by side with the barcode look.
   const fastLook = async () => {
     const clip = await PH.withLimit(CL.loadClip(photoClip ? photoClip.base : CL.CLIP_BASE), 30000);   // the first load reads ≈ 200 MB (two models) from the phone's storage
-    return CL.decide(clip.bank, await PH.withLimit(CL.classify(clip, photo.url, 5), 15000));
+    const ranked = await PH.withLimit(CL.classify(clip, photo.url, 5), 15000);
+    fastSeen.current = { clip, embs: clip.lastEmbs, photo: photo.url };   // v6.17: kept with the dish you save, so next time it is known
+    return CL.decide(clip.bank, ranked);
   };
   const useFast = async (fast, me) => {
     let items = fast.items;
@@ -349,6 +352,9 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     } else if (x.said && (x.chosen || (x.base && Math.abs(x.grams - x.base) / x.base > 0.1))) {
       const fd = F.food(x.id) || DB.cachedFood(x.id); if (fd) F.learnFix(x.said, fd, x.base ? x.grams / x.base : 1);
     }
+    // v6.17: a photo meal teaches the photo matcher this dish (its first food) — Arab dishes 75 → 92 % after 3 such photos (measured)
+    const fs = fastSeen.current;
+    if (fs && photo && fs.photo === photo.url && fs.embs) { const x = ok[0]; try { CL.remember(fs.clip.bank, fs.embs, x.like || x.id, x.chosen ? "" : x.said); } catch (e) {} fastSeen.current = null; }
     logNow(adding, ok, L(`Added to ${MEAL_NAMES[adding][0].toLowerCase()} — ${ok.reduce((a, x) => a + (x.kcal || 0), 0)} kcal`, `أُضيف إلى ${MEAL_NAMES[adding][1]} — ${ok.reduce((a, x) => a + (x.kcal || 0), 0)} سعر`));
     setDraft(null); setText(""); setPhoto(null); setQ(""); setAdding(null);
   };

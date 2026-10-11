@@ -170,7 +170,8 @@ def calib_bias(vision_path, T, cache, n=600):
 
 # ---- v6.17: two image models (Ali: "53 percent is not accurate at all") -----------------------------------------------------
 # Measured with tools/eval_food_clip.py on the same 2,316 photos (Food-101 / Middle-Eastern plates / Arab dishes, top-1):
-#   CLIP B/32 alone 58 / 51 / 43 %;  + SigLIP B/16, the user's region first: 65 / 65 / 74 % (top-5 88 / 88 / 95 %).
+#   CLIP B/32 alone 58 / 51 / 43 %;  + SigLIP B/16, the user's region first: 76 / 56 / 74 % (top-5 91 / 84 / 88 %).
+# (SigLIP's text is padded with </s>, id 1, as it was trained: padded with 0 its Food-101 score fell from 69 to 47 %.)
 # SigLIP (Apache 2.0) knows Arab dishes far better; CLIP (MIT) knows the Western ones; their standardised scores add up.
 ENCODERS = [
     {"key": "clip", "repo": "Xenova/clip-vit-base-patch32", "vision": "onnx/vision_model_quantized.onnx", "text": "onnx/text_model.onnx",
@@ -180,8 +181,8 @@ ENCODERS = [
      "file": "food-clip-vision-siglip.onnx", "output": "pooler_output", "len": 64, "pad": 1, "lower": True, "eos": None,
      "image": {"size": 224, "mean": [0.5, 0.5, 0.5], "std": [0.5, 0.5, 0.5], "fit": "stretch"}},
 ]
-PRIOR = {"own": 0.5, "region": 0.5, "other": -1.0}   # measured: Arab dishes 68 → 74 %, Food-101 63 → 65 %, Middle-Eastern 62 → 65 %
-TEMP, AUTO = 1.5, 0.6                               # measured: about 30 % of photos taken at once, 90 % of those right
+PRIOR = {"own": 0.5, "region": 0.5, "other": -1.0}   # measured: Arab dishes 68 → 74 %, Food-101 73 → 76 %, Middle-Eastern 56 → 56 %
+TEMP, AUTO = 2.0, 0.6                               # measured: about half of the photos taken at once, 92 % of those right
 
 
 class Encoder:

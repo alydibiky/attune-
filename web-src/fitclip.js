@@ -45,8 +45,8 @@ function b64bytes(s) {
 
 // ---- v6.17: two image models and the user's own cuisine first ------------------------------------------------------------
 // Ali: "53 percent is not accurate at all". Measured on the same 2,316 photos (tools/eval_food_clip.py): CLIP B/32 alone
-// 58 % / 51 % / 43 % (Food-101 / Middle-Eastern plates / Arab dishes); CLIP + SigLIP with the user's region first 65 / 65 / 74 %,
-// the right dish among the first five 88 / 88 / 95 %. Each model's scores are standardised over the whole bank (so the two
+// 58 % / 51 % / 43 % (Food-101 / Middle-Eastern plates / Arab dishes); CLIP + SigLIP with the user's region first 76 / 56 / 74 %,
+// the right dish among the first five 91 / 84 / 88 %; about half the photos are sure enough to log at once, 92 % of those right. Each model's scores are standardised over the whole bank (so the two
 // add up fairly), then the dish's country moves it up or down (prior), then a softmax at `temp` gives the confidence.
 const ARAB = new Set("eg sa ae ma dz tn lb sy jo iq sd ly kw qa bh om ye ps".split(" "));
 /** The country bonus of a bank entry for a user in `cc`: own country +own, same region (the Arab world) +region, a far
@@ -79,7 +79,7 @@ function parseBank2(j) {
     return { file: e.file, dim: e.dim, output: e.output || "", image: e.image, vec: dequant(n, e.dim, e.vec, e.scale) };
   });
   const first = encoders[0];
-  return { v: 2, n, encoders, prior: j.prior || null, temp: j.temp || 1.5, auto: j.auto || 0.6,
+  return { v: 2, n, encoders, prior: j.prior || null, temp: j.temp || 2, auto: j.auto || 0.6,
     // the single-model fields keep older callers (and rank) working on the first model
     dim: first.dim, vec: first.vec, bias: new Float32Array(n), image: first.image, file: first.file,
     items: j.items.map(([kind, id, en, ar, cc]) => ({ kind, id, en, ar, cc: cc || "" })) };
@@ -95,12 +95,57 @@ export function zScores(vec, n, dim, emb) {
   for (let i = 0; i < n; i++) sc[i] = (sc[i] - m) / sd;
   return sc;
 }
+// ---- v6.17: the phone learns from your own photos ------------------------------------------------------------------------
+// Each photo meal you save keeps the photo's vectors (int8, ≈ 1.3 KB) with the dish you chose. A new photo that looks like one
+// of them (both models' similarity above MEM_TH) moves that dish up. Measured (3 earlier photos of each dish): Arab dishes
+// 75 → 92 %, Middle-Eastern plates 54 → 98 %, Food-101 75 → 78 %. Only on this phone; nothing is sent anywhere.
+export const MEM_KEY = "attune:fit:photomem", MEM_MAX = 200, MEM_TH = 0.8, MEM_W = 3;
+const memKey = (it) => (it.id || "") + "|" + it.en;
+function packVec(v) {
+  let m = 0; for (const x of v) m = Math.max(m, Math.abs(x));
+  const sc = m / 127 || 1, q = new Int8Array(v.length);
+  for (let i = 0; i < v.length; i++) q[i] = Math.round(v[i] / sc);
+  let s = ""; for (let i = 0; i < q.length; i++) s += String.fromCharCode(q[i] & 255);
+  return { q: typeof btoa === "function" ? btoa(s) : Buffer.from(q.buffer).toString("base64"), sc };
+}
+function unpackVec(p) {
+  const b = b64bytes(p.q), q = new Int8Array(b.buffer, b.byteOffset, b.length), v = new Float32Array(q.length);
+  let n = 0; for (let i = 0; i < q.length; i++) { v[i] = q[i] * p.sc; n += v[i] * v[i]; }
+  n = 1 / Math.sqrt(n || 1); for (let i = 0; i < v.length; i++) v[i] *= n;
+  return v;
+}
+export function loadMemory(store = typeof localStorage !== "undefined" ? localStorage : null) {
+  try { const a = JSON.parse((store && store.getItem(MEM_KEY)) || "[]"); return a.map((m) => ({ key: m.key, v: m.v.map(unpackVec) })); } catch (e) { return []; }
+}
+/** Remembers this photo as the dish `foodId` / `name` (the bank entry it is). → true when kept. */
+export function remember(bank, embs, foodId, name, store = typeof localStorage !== "undefined" ? localStorage : null) {
+  if (!bank || bank.v !== 2 || !embs || embs.length !== bank.encoders.length || !store) return false;
+  const nm = String(name || "").toLowerCase();
+  const it = (nm && bank.items.find((x) => x.kind !== "not" && x.en.toLowerCase() === nm))          // the dish the matcher named (Kibbeh, not the kofta it is estimated from)
+    || bank.items.find((x) => foodId && x.kind === "id" && x.id === foodId)                            // or the table food you picked
+    || bank.items.find((x) => foodId && x.kind === "like" && x.id === foodId);
+  if (!it) return false;
+  let a = []; try { a = JSON.parse(store.getItem(MEM_KEY) || "[]"); } catch (e) {}
+  a.push({ key: memKey(it), v: embs.map((e) => packVec(Array.from(e))) });
+  try { store.setItem(MEM_KEY, JSON.stringify(a.slice(-MEM_MAX))); return true; } catch (e) { return false; }
+}
+function cosine(a, b) { let s = 0, na = 0, nb = 0; for (let i = 0; i < a.length; i++) { s += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; } return s / Math.sqrt((na || 1) * (nb || 1)); }
+
 /** v2: the photo's vector from each model → the k best names [{i, score, p}], the user's country first. */
-export function rankAll(bank, embs, k = 5, userCc = "") {
+export function rankAll(bank, embs, k = 5, userCc = "", memory = null) {
   if (bank.v !== 2) return rank(bank, embs[0], k);
   const { n } = bank, tot = new Float32Array(n);
   bank.encoders.forEach((e, x) => { if (!embs[x]) return; const z = zScores(e.vec, n, e.dim, embs[x]); for (let i = 0; i < n; i++) tot[i] += z[i]; });
   if (bank.prior) for (let i = 0; i < n; i++) tot[i] += priorOf(bank.items[i].cc, userCc, bank.prior);
+  if (memory && memory.length) {
+    if (!bank.keyIndex) { bank.keyIndex = new Map(); bank.items.forEach((it, i) => bank.keyIndex.set(memKey(it), i)); }
+    for (const m of memory) {
+      const i = bank.keyIndex.get(m.key); if (i == null || m.v.length !== embs.length) continue;
+      let c = 0; for (let x = 0; x < embs.length; x++) c += cosine(m.v[x], embs[x]);
+      c /= embs.length;
+      if (c > MEM_TH) tot[i] = Math.max(tot[i], tot[i] + MEM_W * (c - MEM_TH) / (1 - MEM_TH));
+    }
+  }
   let max = -Infinity; for (let i = 0; i < n; i++) if (tot[i] > max) max = tot[i];
   let sum = 0; for (let i = 0; i < n; i++) sum += Math.exp(bank.temp * (tot[i] - max));
   const order = Array.from(tot.keys()).sort((a, b) => tot[b] - tot[a]).slice(0, k);
@@ -224,10 +269,10 @@ export function photoPixels(url, size, doc = document, fit = "crop") {
 }
 
 /** The whole fast look: photo → ranking. ≈ 0.1 s on a desktop core; a phone ≈ 0.3–1 s after the first load. */
-export async function classify(clip, url, k = 5, userCc = F.getCountry ? F.getCountry() : "") {
+export async function classify(clip, url, k = 5, userCc = F.getCountry ? F.getCountry() : "", memory = loadMemory()) {
   const { ort, bank, session } = clip, sz = bank.image.size;
   if (bank.v === 2) {
-    if (clip.test) return rankAll(bank, await Promise.all(bank.encoders.map((e, x) => clip.test.embed(url, x))), k, userCc);
+    if (clip.test) { const embs = await Promise.all(bank.encoders.map((e, x) => clip.test.embed(url, x))); clip.lastEmbs = embs; return rankAll(bank, embs, k, userCc, memory); }
     const embs = [];
     for (let x = 0; x < bank.encoders.length; x++) {
       const e = bank.encoders[x], ses = clip.sessions[x], im = e.image;
@@ -236,7 +281,8 @@ export async function classify(clip, url, k = 5, userCc = F.getCountry ? F.getCo
       const out = await ses.run({ [ses.inputNames[0]]: t });
       embs.push(out[e.output && out[e.output] ? e.output : ses.outputNames[ses.outputNames.length - 1]].data);
     }
-    return rankAll(bank, embs, k, userCc);
+    clip.lastEmbs = embs;   // remembered with the dish when the meal is saved (remember())
+    return rankAll(bank, embs, k, userCc, memory);
   }
   if (clip.test) return rank(bank, await clip.test.embed(url), k);
   const px = await photoPixels(url, sz);

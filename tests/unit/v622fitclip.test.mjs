@@ -93,3 +93,23 @@ ok(egypt.every((w) => allNames.includes(w)), "the Egyptian dishes Ali named are 
   r = C.rankAll(b2, [e(2, 3, 0), e(0, 3, 0)], 5, "eg");   // one model says koshari, the other kibbeh (both home dishes)
   ok(C.decide(b2, r).status === "guess", "the models disagree → not taken blindly: the choices are shown");
 }
+
+// ---- v6.17: the phone learns from your own photos ----
+{
+  const items3 = [["like", "kofta", "Kibbeh", "كبة", "lb"], ["id", "kofta", "Kofta", "كفتة", "base"], ["id", "koshari", "Koshari", "كشري", "base"], ["like", "cake", "Cheesecake", "تشيز كيك", "intl"]];
+  const D = 4, eye = items3.map((_, i) => Array.from({ length: D }, (_, d) => (d === i ? 127 : 0)));
+  const enc = () => { const q = new Int8Array(items3.length * D); eye.forEach((r, i) => r.forEach((x, d) => { q[i * D + d] = x; })); return Buffer.from(q.buffer).toString("base64"); };
+  const b3 = C.parseBank({ v: 2, items: items3, prior: { own: 0.5, region: 0.5, other: -1 }, temp: 2, auto: 0.6,
+    encoders: [0, 1].map(() => ({ file: "x.onnx", dim: D, image: {}, scale: items3.map(() => 0.01), vec: enc() })) });
+  const mem = new Map(), store = { getItem: (k) => mem.get(k) || null, setItem: (k, v) => mem.set(k, v) };
+  const photo = [new Float32Array([0.1, 0.55, 0.6, 0.1]), new Float32Array([0.1, 0.55, 0.6, 0.1])];   // a close call: koshari just ahead of kofta
+  ok(b3.items[C.rankAll(b3, photo, 3, "eg")[0].i].en === "Koshari", "before: the matcher says Koshari");
+  ok(C.remember(b3, photo, "kofta", "", store), "you corrected it to Kofta: the photo is remembered with Kofta");
+  ok(b3.items[C.remember(b3, photo, "kofta", "Kibbeh", store) && C.loadMemory(store).length === 2 ? 0 : 0].en === "Kibbeh" && JSON.parse(mem.get(C.MEM_KEY))[1].key === "kofta|Kibbeh",
+    "a dish estimated from another food is remembered as itself (Kibbeh, not Kofta)");
+  mem.set(C.MEM_KEY, JSON.stringify(JSON.parse(mem.get(C.MEM_KEY)).slice(0, 1)));
+  const again = [new Float32Array([0.12, 0.55, 0.6, 0.1]), new Float32Array([0.1, 0.56, 0.6, 0.11])];   // a new photo of the same plate
+  ok(b3.items[C.rankAll(b3, again, 3, "eg", C.loadMemory(store))[0].i].en === "Kofta", "next time a photo like it is Kofta");
+  const other = [new Float32Array([0, 0, 0, 1]), new Float32Array([0, 0, 0, 1])];
+  ok(b3.items[C.rankAll(b3, other, 3, "eg", C.loadMemory(store))[0].i].en === "Cheesecake", "a photo that doesn't look like it is untouched");
+}
