@@ -859,6 +859,28 @@ Ali: "I don't want mistakes" / "I want an accuracy of above 80 percent".
   within ±25 %. Useful later for Asian dishes; 83 of its photos are near-duplicates of the test sets (drop cos ≥ 0.92).
 - The photo bank (`food-clip-v2`) does not know the 13 new foods until `food-clip.yml` runs again (Actions → Run).
 
+### 5.53 (11 Oct 2026, v6.18) — Fit & Food's three looks, the photo loading screen and labels on the photo; Maps look A
+- **Fit looks (Ali: "all 3 optional in the settings but the default is A"):** `web-src/fitlook.js` (+ `fitlook-ui.jsx`).
+  Mock-ups: artifact "Fit & Food new look". Fresh (light green, default), Night (dark teal), Bold (white/orange).
+  Tailwind 4 colours are CSS variables, so a look just redefines the palette for the page while Fit is open
+  (`body:has(.fit-look-<id>)` — Attune's own wrapper is behind Fit and stayed dark otherwise). Light looks turn the
+  slate scale around (950 = page, white = ink) and darken accents; filled buttons keep white writing (`ON_FILL`).
+  `st.look` in Fit's state; the picker (`LookPicker`) is at the top of Fit's settings. No web fonts (no CDN rule).
+- **While a photo is read:** `PhotoLoading` — the photo (scan line / pulse / spinning ring), the stage, and one of 12
+  sourced facts (WHO, EFSA, USDA, Atwater…; EN + AR) every 5 s.
+- **Labels on the photo:** `PhotoMarks` + `placeMarks(items)` — each food with a box (from the photo reader) gets a
+  label (name + kcal) on the nearer side, spread so they never overlap (tested), and a line to it measured after
+  layout; Night adds numbered pins (same numbers in the list), Bold a dashed frame per food. One dish with no box =
+  the whole plate (points at the middle); others without a box are chips at the bottom. `useLayoutEffect` was added
+  to `web-src/build/react-shim.js`.
+- **Maps look A (Ali: "make it like an app inside Attune"):** mock-ups: artifact "Maps new look". Full screen —
+  `mode === "map"` hides Attune's header and nav like Fit; `onExit` (← in the search bar) and `listen` (voice) come
+  from attune.jsx. Light map style (`dark: false`). Search bar: ← · input · mic · country badge (`map-open-offline`).
+  Sheet: peek = your places as chips + `map-mode`; tabs show when pulled up; place card with Directions/Save/Share and
+  "Other matches" (`sel.from`). The offline search now also tries `MS.variants()` (Ali's "Address east compound").
+- Tests: `e2e_v718looks.py` (draws its own plate with PIL — PNGs in tests/ are git-ignored), `unit/fitlook`,
+  `e2e_v722maps.py` (full screen, bright style, ← back), `e2e_v700maps.py`.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
