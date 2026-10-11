@@ -461,7 +461,7 @@ export const CATALOG = [
     about_ar: "كل مدينة يزيد سكانها على ١٥ ألفًا (بأسمائها العربية)، وعاصمة كل دولة وعملتها ورمز الاتصال ولغاتها." },
   { id: "math", name: "Mathematics", name_ar: "الرياضيات", size: "≈ 10 MB", size_ar: "≈ ١٠ ميجابايت", license: "CC BY 4.0 (OpenStax, each book at its last CC BY edition) + CC BY 3.0 (Applied Calculus) — commercial use allowed", license_ar: "رخص المشاع الإبداعي مع نسب المصنَّف (أوبن ستاكس، وكتاب التفاضل والتكامل التطبيقي) — يُسمح بالاستخدام التجاري",
     about: "University and school math — calculus, algebra and trigonometry, precalculus, statistics, prealgebra to intermediate algebra — with every formula and worked example, so Chat can solve step by step.",
-    about_ar: "رياضيات الجامعة والمدرسة — التفاضل والتكامل، والجبر وحساب المثلثات، وما قبل التفاضل، والإحصاء، والجبر من البداية — بكل الصيغ والأمثلة المحلولة، ليحل Chat المسائل خطوة بخطوة." },
+    about_ar: "رياضيات الجامعة والمدرسة — التفاضل والتكامل، والجبر وحساب المثلثات، وما قبل التفاضل، والإحصاء، والجبر من البداية — بكل الصيغ والأمثلة المحلولة، لتُحل المسائل خطوة بخطوة." },
   { id: "physics", name: "Physics", name_ar: "الفيزياء", size: "≈ 11 MB", size_ar: "≈ ١١ ميجابايت", license: "CC BY 4.0 (OpenStax, each book at its last CC BY edition) — commercial use allowed", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف ٤٫٠ (أوبن ستاكس، كل كتاب بآخر إصدار بهذه الرخصة) — يُسمح بالاستخدام التجاري",
     about: "University and school physics and astronomy — laws, formulas and worked examples.",
     about_ar: "الفيزياء الجامعية والمدرسية والفلك — القوانين والصيغ والأمثلة المحلولة." },
