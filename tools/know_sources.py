@@ -500,12 +500,18 @@ def turath_book(B, bid):
     idx = info.get("indexes") or {}
     n = len(idx.get("page_map") or [])
     if not n: return None
-    pages = []
-    for pg in range(1, n + 1):
+    # 4 pages at a time (a 9,000-page dictionary read one by one didn't fit in the 6-hour build limit); a 429 backs off in B.get
+    from concurrent.futures import ThreadPoolExecutor
+    def one(pg):
         r = turath_json(B, "page", book_id=bid, pg=pg) or {}
         m = r.get("meta"); m = json.loads(m) if isinstance(m, str) else (m or {})
-        pages.append({"text": r.get("text") or "", "vol": m.get("vol"), "page": m.get("page")})
-        time.sleep(0.15)   # gently
+        time.sleep(0.25)   # gently, per worker
+        return {"text": r.get("text") or "", "vol": m.get("vol"), "page": m.get("page")}
+    pages, t0 = [], time.time()
+    with ThreadPoolExecutor(4) as ex:
+        for i, page in enumerate(ex.map(one, range(1, n + 1)), 1):
+            pages.append(page)
+            if i % 500 == 0: print(f"turath: book {bid}: {i}/{n} pages ({time.time() - t0:.0f} s)")
     return {"meta": info.get("meta") or {}, "indexes": {"headings": idx.get("headings") or []}, "pages": pages}
 
 def turath_text(html, notes=False):
