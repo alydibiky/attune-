@@ -33,13 +33,26 @@ export function taskOf(text, { photo = false, file = false } = {}) {
 }
 const HARD = new Set(["code", "math", "reason", "report"]);
 
+// v6.18 (Ali typed just "Lynk and co 900" and got "your Knowledge doesn't cover it"): a short message that is only the name
+// of a product or model — a name followed by its model number, maybe "Pro / Max / Hybrid…" — is a lookup of something that
+// may be newer than the model's training, so Auto searches the web for it too.
+const NAMED = /(?:^|\s)[A-Za-z][\w&'.-]*\s+[A-Za-z]{0,3}\d{1,4}[A-Za-z]{0,3}(?:\s+(?:pro|max|plus|ultra|mini|lite|se|fe|hybrid|ev|phev|hev|gt|gts|rs|amg|turbo|sport|edge|neo|note|fold|flip|s|x|l|xl))*\s*\??$/i;
+const NAMED_AR = /[\u0600-\u06FF]{2,}\s+[A-Za-z]{0,3}\d{1,4}[A-Za-z]{0,3}\s*[؟?]?$/;
+const NOT_NAMED = /\b(give|make|list|show|need|want|top|best|first|last|chapter|page|step|day|week|month|year|hour|minute|times?|me|my|of|in|at|on|for|to|by|from|and|or)\s+\d+\s*\??$|^\s*\d|[-+*/×÷=^%]|اعطني|أعطني|عايز|عاوز|صفحة|يوم|سنة|الفصل|خطوة/i;
+export function looksLikeProductName(text) {
+  const t = String(text || "").trim();
+  if (!t || t.split(/\s+/).length > 8 || t.length > 60) return false;
+  if (NOT_NAMED.test(t) && !/\b(?:co|&)\s+\d+\s*\??$/i.test(t)) return false;
+  return NAMED.test(t) || NAMED_AR.test(t);
+}
+
 /** Does this question need the web? (auto mode) */
 export function wantsWeb(text, task = taskOf(text)) {
   const t = String(text || "");
   if (t.trim().length < 8 || PERSONAL.test(t)) return false;
   if (task === "code" || task === "math" || task === "translate") return false;
   if (/^(write|draft|rewrite|summari[sz]e|translate|fix|improve|make it|اكتب|لخص|ترجم|صلح|حسّن)/i.test(t.trim())) return false;
-  return FRESH.test(t);
+  return FRESH.test(t) || looksLikeProductName(t);
 }
 
 /** Should the model think first? (auto mode) */

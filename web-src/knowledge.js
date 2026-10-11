@@ -144,6 +144,22 @@ export function factsBlock(hits, question = "") {
     "\n\nQuestion: ";
 }
 
+/** v6.18 (Ali asked "Lynk and co 900"; the packs had the Lynk & Co 02 and 08, and the answer listed those and said the
+ *  900 isn't in his sources): when the question names a model number (900, S25, LTM 1100…), only passages that mention that
+ *  number are about it. The others are dropped, so the model answers from what it knows (or the web) instead.
+ *  Maths and code questions are not filtered (their numbers are the person's own). */
+export function keepCovering(hits, question) {
+  if (!hits || !hits.length) return hits;
+  const q = toLatin(question);
+  if (q.split(/\s+/).length > 12 || SOLVE.test(question)) return hits;
+  const keys = [...new Set((q.match(/(?:^|[\s(])([A-Za-z]{0,4}\d{2,4}[A-Za-z]{0,3})(?=[\s?.,!)]|$)/g) || []).map((x) => x.trim().replace(/^\(/, "").toLowerCase()))]
+    .filter((x) => !/^(19|20)\d\d$/.test(x));        // a year narrows nothing on its own
+  if (!keys.length) return hits;
+  const has = (h) => { const t = toLatin((h.chunk.title || "") + " " + (h.chunk.text || "")).toLowerCase().replace(/[\s-]+/g, " ");
+    return keys.every((k) => new RegExp("(^|[^0-9a-z])" + k.replace(/([a-z])(\d)/, "$1 ?$2") + "($|[^0-9])").test(t)); };
+  return hits.filter(has);
+}
+
 // ---- checking the answer ------------------------------------------------------------------------------------------------------------
 const TAG = /\s?\[\s*K\s*(\d{1,2})(?:\s*[,،]\s*K?\s*\d{1,2})*\s*\]/gi;
 const tagsIn = (m) => (m.match(/\d{1,2}/g) || []).map(Number);

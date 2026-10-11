@@ -24,6 +24,12 @@ with sync_playwright() as p:
     page.wait_for_function("document.querySelectorAll('button[title=Regenerate]').length >= 2", timeout=40000)
     q = page.evaluate("window.__mock.lastSearch && window.__mock.lastSearch.q")
     check(bool(q) and "Liebherr" in q, "a specs/price question searches by itself: %s" % q)
+    # v6.18 (Ali's screenshot): just a car's name — no "price" or "specs" — is a lookup too
+    page.evaluate("() => { const M = window.__mock; M.lastSearch = null; M.fakeQueue = ['The Lynk & Co 900 is a large plug-in hybrid SUV [1].', 'x', 'x']; }")
+    send(page, "Lynk and co 900")
+    page.wait_for_function("document.querySelectorAll('button[title=Regenerate]').length >= 3", timeout=40000)
+    q = page.evaluate("window.__mock.lastSearch && window.__mock.lastSearch.q")
+    check(bool(q) and "900" in q, "a bare model name (Lynk and co 900) searches the web too: %s" % q)
     page.click("[data-testid=web-toggle]"); page.wait_for_timeout(150)
     check("Auto" not in page.locator("[data-testid=web-toggle]").inner_text(), "one tap: Web always on")
     page.click("[data-testid=web-toggle]"); page.wait_for_timeout(150)

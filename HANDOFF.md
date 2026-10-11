@@ -906,6 +906,15 @@ Ali: "I don't want mistakes" / "I want an accuracy of above 80 percent".
   for Business); Home in two columns, the form in `formCols` columns. The exported app file follows: computer menu,
   form columns, form order, sections, list columns and hidden fields (CSS `@media (min-width:900px)`).
 
+### 5.55 (11 Oct 2026, v6.19, versionCode 80) — a bare product name searches the web; packs don't answer for other models
+- **Ali's screenshot:** "Lynk and co 900" (Web · Auto) → "Your Knowledge does not contain… you may be thinking of the 01 or 02".
+  Two causes: Auto searched only for words like price/specs/latest, and the packs' passages about the Lynk & Co 02 / 08
+  were handed to the model as if they were about the 900.
+- `router.js` `looksLikeProductName()` (a name + model number, maybe Pro/Max/Hybrid…, ≤ 8 words; not "give me 5", "page 12",
+  sums) → `wantsWeb` true. `knowledge.js` `keepCovering(hits, q)`: when the question names a model number, only passages
+  that mention it are used (years and maths questions are not filtered); chat.jsx applies it before `factsBlock`.
+- Tests: `unit/v710router`, `unit/knowledge`, `e2e_v700auto.py` (types "Lynk and co 900", checks the web search).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

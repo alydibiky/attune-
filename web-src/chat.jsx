@@ -34,7 +34,7 @@ const chipFade = () => { const side = typeof document !== "undefined" && documen
 const LEVEL_NAMES = Object.fromEntries(Object.entries(LEVELS).map(([k, v]) => [k, v.name]));
 import { compactSystem, HONESTY_RULE, NO_CODE_RULE, codeInsteadOfAnswer, reread, partsOf, everyPart, sandwich } from "./boost.js";
 import { tipsBlock } from "./tips.js";
-import { factsBlock, checkFacts } from "./knowledge.js";
+import { factsBlock, checkFacts, keepCovering } from "./knowledge.js";
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
@@ -1164,6 +1164,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           } catch (e) {}
           if (runRef.current !== run) return;
         }
+        knHits = keepCovering(knHits, typed);   // "Lynk and co 900": passages about other models are not about it
         if (knHits && knHits.length) { content = factsBlock(knHits, typed) + content; extra.knowledgeUsed = knHits.length; }
       }
       content += langHint(typed);

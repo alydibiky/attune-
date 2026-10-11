@@ -101,4 +101,14 @@ ok(/end the answer with this line: ليست استشارة قانونية/.test(
 c = K.checkFacts("مدة الإنذار ثلاثة أشهر قبل نهاية العقد [K1].", h);
 ok(c.chips.length === 1 && /official gazette/.test(c.chips[0].note), "the chip carries the notice so Chat shows it under the answer");
 
+// v6.18: passages about other models are not about the one asked for (Ali: "Lynk and co 900" → the packs' 02 and 08)
+{
+  const H = (title, text) => ({ chunk: { title, text } });
+  const cars = [H("LYNK & CO LYNK CO 02", "Lynk & Co 02 electric crossover"), H("LYNK&CO LYNK CO 08", "Lynk & Co 08 plug-in hybrid")];
+  ok(K.keepCovering(cars, "Lynk and co 900").length === 0, "no passage mentions the 900 → none is used (the model or the web answers instead)");
+  ok(K.keepCovering([...cars, H("Lynk & Co 900", "a large SUV")], "Lynk and co 900").length === 1, "…the one passage about the 900 is kept");
+  ok(K.keepCovering(cars, "Lynk and co cars").length === 2 && K.keepCovering(cars, "Lynk & Co 2025").length === 2, "no model number (or only a year): nothing is dropped");
+  ok(K.keepCovering([H("LTM 1100-5.2", "Liebherr LTM 1100")], "Liebherr LTM1100").length === 1, "LTM1100 matches LTM 1100");
+  ok(K.keepCovering(cars, "solve 900 / 4 step by step").length === 2, "maths questions are not filtered");
+}
 console.log(`knowledge: ${n} checks passed`);

@@ -21,4 +21,9 @@ ok(p.switch && p.id === "sm", "a photo needs a model that sees");
 p = R.pickModel("reason", [T("fast-e4b", 12, true, "litert"), T("md", 8)], { active: "fast-e4b", ramGB: 16 });
 ok(!p.switch, "a model barely better (< 1 step) is not worth a switch");
 ok(/Zenith/.test(R.switchLine("Zenith", "code")) && /زينث|Zenith/.test(R.switchLine("Zenith", "code", true)), "the switch is announced");
+// v6.18: a bare product / model name is a lookup (Ali: "Lynk and co 900" answered from the packs, no web)
+for (const t of ["Lynk and co 900", "Lynk & Co 900?", "iPhone 17 Pro Max", "BYD Seal 06", "Galaxy S25 Ultra", "Chery Tiggo 8 Pro", "Liebherr LTM 1100", "شيري تيجو 8"])
+  ok(R.wantsWeb(t), "Auto searches the web for a product name: " + t);
+for (const t of ["give me 5", "top 10", "chapter 3", "what is 25 * 4", "page 12", "hello there", "I have 2 cats", "remind me in 10", "Day 3", "write a poem about 2 cats"])
+  ok(!R.wantsWeb(t), "…but not for: " + t);
 console.log(fail ? `${fail} FAILED` : "ALL PASSED");
