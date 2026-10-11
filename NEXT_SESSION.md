@@ -522,6 +522,13 @@ Ali: "Attune will charge money … find reliable free sources … full mark … 
 6. Big BAIK photo (1000 kcal) read as "fish 600 kcal" → the printed text is read first (ML Kit). ✅ — **check on the phone.**
 7. "Maps doesn't work or where is the map itself" → the map box was 0 px tall (MapLibre CSS); fixed. ✅ — **check on the phone.**
 
+8. "Give me a place to download new maps" → «Download maps» on the map. ✅
+9. Knowledge packs "keep loading only" → one download per pack, a stall watchdog, progress from 0 %. ✅ — **check on the phone.**
+10. "Not professional to tell them the exact sources for each pack" → cards without providers; one credits list. ✅
+11. "Food recognition is not that accurate" / "53 percent is not accurate at all" → two models + home cuisine + learning from
+    his own photos (HANDOFF §5.51 has the numbers). ✅ first step — **next: train on licensed food photos (see §5.51); ask Ali
+    about an optional online precise mode.**
+
 ## Prompt to start the next session
 
 ```

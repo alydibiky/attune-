@@ -794,6 +794,43 @@ Ali: "Attune will charge money … find reliable free sources … full mark … 
 - **Tests:** new `e2e_v731fitapp.py`, `e2e_v728ainote.py`, unit `v728packfix`, `v729dorarfree`, `v730menutext`; the old Fit
   tests were moved to the new structure (welcome → plan → + panel / Me / Progress).
 
+### 5.51 (11 Oct 2026, v6.17) — Maps download button, Knowledge downloads that never hang, packs without provider names, food photos measured and improved
+- **Maps:** a «Download maps» / «Offline maps» button on the map (`map-open-offline`) opens the country list; a dot when an
+  update is ready; the floating buttons hide while the sheet is pulled up.
+- **Knowledge downloads ("it keeps loading only"):** one download per pack (`NativeBridge.knowJobs`: a second request for the
+  same pack — the quiet auto-download and a tap — joins the first instead of writing the same files), progress every 256 KB
+  and at 0 %, a JS watchdog (`STALL_MS` 2 min, `window.__attuneStallMs` in tests) that sends Stop and leaves the reason on
+  the card, and the list refreshes every 5 s so background downloads show «ready». Test: `e2e_v732packdl.py`.
+  All 24 published packs were downloaded and checked here (size, sha256, gzip): all fine — the problem was on the phone.
+- **Pack cards (Ali: naming every source "is not professional"):** the cards say what a pack does (no OpenStax, GeoNames,
+  World Bank…); the credits the licences require (CC BY etc.) are in one closed «Sources & licences» list at the bottom
+  (`kn-credits`). Book titles of the Islamic packs stay — they are the content. Answers in Chat still cite their passage.
+- **Food photos (Ali: "53 percent is not accurate at all").** Measured with `tools/eval_food_clip.py` on 2,316 photos —
+  1,010 Food-101, 703 Middle-Eastern home plates, 603 Arab dishes (test sets only: their licences are unknown, never trained on):
+  | | Food-101 | Middle-East | Arab dishes |
+  |---|---|---|---|
+  | v6.10 CLIP B/32 int8 alone | 58 % | 51 % | 43 % |
+  | v6.17 CLIP + SigLIP B/16 int8 + the user's region first | 75 % (top-5 92) | 57 % (83) | 74 % (88) |
+  | + the phone's memory of 3 earlier photos of the dish | 78 % | ≈ 98 % | 92 % |
+  Also measured and not taken: CLIP B/32 fp32 (60/53/54, 351 MB), CLIP B/16 (63/51/48), CLIP L/14 (69/54/51, 307 MB, 4× slower),
+  SigLIP 2 (ONNX export scores 21 %: broken). SigLIP's text MUST be padded with `</s>` (id 1): padded with 0 its Food-101
+  fell from 69 to 47 %.
+  - Bank v2 (`food-clip-v2` release, `tools/build_food_clip_bank.py`): items carry their country (`cc`; tsv sections →
+    eg/intl/plain), `encoders` = [CLIP (centre square), SigLIP (whole photo squeezed, mean/std 0.5, output pooler_output)],
+    each model's scores standardised over the bank and added, prior {own 0.5, region 0.5, other −1} (`priorOf` = Python
+    `prior_of`), softmax at temp 2.0, auto 0.6 (≈ half the photos logged at once, 92 % of those right). v1 stays for older apps;
+    `FoodClip.status()` reports a v1 install as not installed (`old: true`) so the app offers the new files (≈ 200 MB).
+  - Personal memory (`fitclip.remember/loadMemory`, `attune:fit:photomem`, 200 photos, int8): saving a photo meal keeps the
+    photo's vectors with the dish (the chosen food when the guess was corrected); a new photo with mean cosine > 0.8 lifts
+    that dish by up to 3.
+  - Browser runtime check (onnxruntime-web 1.22, both int8 models): browser vs Python vectors cosine 0.99; 0.2 s + 0.7 s on one
+    desktop core (a phone ≈ 2–4 s).
+  - **Next for accuracy (not done):** train on commercially licensed food photos — MM-Food-100K (OpenRAIL, 100k phone photos;
+    mostly Asian; hosted on file.b18a.io, blocked in this sandbox, reachable from GitHub Actions) and Wikimedia Commons CC0/CC BY
+    photos of Egyptian dishes — as image prototypes per bank entry; expected to lift top-1 well above 80 %. Remove photos that
+    also appear in the Middle-Eastern test set (it looks derived from MM-Food-100K). Ali was asked whether an optional online
+    "precise mode" (paid per photo, the photo leaves the phone) is wanted — awaiting his answer.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
