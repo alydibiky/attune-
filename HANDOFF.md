@@ -770,6 +770,30 @@ Ali: "Attune will charge money … find reliable free sources … full mark … 
 - Search: filler words out, 'single-quoted' exact, `near_phrase` ×2, `verseFirst`, squared exact-name bonus.
 - Trials: q08 23 → 39/45; q4b 34 → **45/45** with every rebuilt pack (11 Oct); see tests/trials/packtrial-*.md.
 
+### 5.50 (11 Oct 2026, v6.17, versionCode 78) — Fit & Food as an app of its own (look A); food photos read the printed text; Maps fixed
+- **Ali:** Fit & Food was "cluttered … a page in an app, not an app in an app", "more confusing than Yazio"; typed foods
+  found nothing; a Big BAIK photo (1000 kcal printed) was logged as "fish 600 kcal". He picked **look A (Diary app)** from
+  the artifact "Fit & Food Looks". Then: "Maps doesn't work or where is the map itself" (screenshot: empty dark map).
+- **Fit look A (`web-src/fit-ui.jsx`):** Attune's header and nav hide in Fit (`mode === "fit"` in attune.jsx); Fit has its own
+  top bar (`fit-exit`, title, engine chip) and bottom tabs Today · Recipes · **+** (`fit-add`) · Progress · Me (`fit-tab-*`).
+  First visit: welcome (`fit-qs-welcome` → `fit-qs-start`), 3 questions, then the plan screen (`fit-qs-plan`, `fit-qs-kcal`,
+  «Start logging» = `fit-qs-next`). Today = calories ring, meals (with per-meal ideas `fit-suggest-*`), water, fasting,
+  exercise card (`fit-open-move`). The log bar + one-tap chips live under **+** (`LogBar`); Say it/Photo/Read it under the
+  text box show only once there is text or a photo. Day quality, vitamins and tips moved to Progress; plan, workouts
+  (`fit-me-move`) and settings to **Me** (`MeTab`). Saving a changed plan returns to Today. Log-bar buttons keep the meal
+  the + panel was opened for (was: switched to "now").
+- **Food photos:** ML Kit text recognition (`NativeBridge.readText`, `com.google.mlkit:text-recognition`) runs first; if the
+  photo has a printed calorie line, `fitphoto.menuFromText` → one "as printed" item (`src: "photo-text"`). Full nutrition
+  labels return null (they go to the label path). Food database downloads itself on Wi-Fi (`fit-pack-bg`); typed foods
+  search online 900 ms after typing when there are < 6 local hits. Food pack rebuilds monthly (food-pack.yml cron).
+- **Maps blank — cause:** MapLibre's CSS (`.maplibregl-map{position:relative}`) loads after Tailwind and overrode the map
+  box's `absolute inset-0`, so the box was **0 px tall**: the map was drawn (features loaded) but invisible. Fixed with an
+  inline style; the map's top is re-measured after the page settles (the search bar had slid under the header); the
+  OSM credit sits on the sheet (`map-credit`). Reproduced and verified with the real `map-eg` pack read through a mocked
+  bridge (270 MB). `e2e_v722maps.py` now checks the box height and the search-bar position.
+- **Tests:** new `e2e_v731fitapp.py`, `e2e_v728ainote.py`, unit `v728packfix`, `v729dorarfree`, `v730menutext`; the old Fit
+  tests were moved to the new structure (welcome → plan → + panel / Me / Progress).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

@@ -39,7 +39,7 @@ with sync_playwright() as p:
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(250)
 
     # ---- the card: My plan → Offline food pack → download the starter
-    page.locator("[data-testid=fit-edit-profile]").click()
+    page.locator("[data-testid=fit-tab-me]").click(); page.locator("[data-testid=fit-edit-profile]").click()
     page.wait_for_selector("[data-testid=fit-foodpack]", timeout=4000)
     shot(page, "foodpack-card")
     page.locator("[data-testid=fit-foodpack-starter]").click()
@@ -49,8 +49,7 @@ with sync_playwright() as p:
     check(page.evaluate("window.__mock.packAsked") == ["manifest.json", "foodpack-000.tsv.gz", "foodpack-001.tsv.gz"], "it asked for the manifest, then each part once")
     shot(page, "foodpack-done")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(300)
-    if page.locator("[data-testid=fit-today]").count() == 0:
-        page.locator("[data-testid=fit-edit-profile]").count()
+    page.locator("[data-testid=fit-tab-today]").click()   # v7.31: Back returns to «Me»
 
     # ---- offline search by name, Arabic and barcode while the databases are unreachable
     page.locator("[data-testid=fit-add-snacks]").click()

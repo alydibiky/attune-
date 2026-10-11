@@ -24,7 +24,9 @@ def sent(page):
 def open_fit(page):
     page.locator("nav button").last.click(); page.wait_for_timeout(250)
     page.locator(".rounded-t-2xl button:has-text('Fit & Food')").first.click()
-    page.wait_for_selector("[data-testid=fit-profile], [data-testid=fit-app], [data-testid=fit-qs]", timeout=6000)
+    page.wait_for_selector("[data-testid=fit-profile], [data-testid=fit-app], [data-testid=fit-qs], [data-testid=fit-qs-welcome]", timeout=6000)
+    # v7.31: a welcome screen first
+    if page.locator("[data-testid=fit-qs-welcome]").count(): page.locator("[data-testid=fit-qs-start]").click()
     # v6.10: the first visit asks 3 questions; this test sets up the full plan form, one tap away
     if page.locator("[data-testid=fit-qs]").count(): page.locator("[data-testid=fit-qs-full]").click()
 
@@ -116,7 +118,7 @@ with sync_playwright() as p:
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(250)
 
     # ---- move: an activity and a guided workout ----
-    page.locator("[data-testid=fit-tab-move]").click()
+    page.locator("[data-testid=fit-tab-me]").click(); page.locator("[data-testid=fit-me-move]").click()
     page.locator("[data-testid=fit-act]").fill("brisk walking")
     page.locator("[data-testid=fit-act-min]").fill("30")
     check(page.locator("[data-testid=fit-act-log]").count() == 1, "an activity is matched with its calories")
@@ -137,6 +139,7 @@ with sync_playwright() as p:
     shot(page, "fit-progress")
 
     # ---- Chat: "I ate…" offers Fit and opens it with the text ----
+    page.locator("[data-testid=fit-exit]").click(); page.wait_for_timeout(200)   # v7.31: Fit is an app of its own; leave it first
     page.locator("nav button").first.click(); page.wait_for_timeout(200)
     queue(page, ["Sounds like a good dinner.", "ok", "ok"])
     page.locator("textarea[placeholder='Message Attune']").fill("I ate a plate of koshari and a can of cola")

@@ -28,8 +28,10 @@ with sync_playwright() as p:
     check("450" in page.locator("[data-testid=fit-meal-lunch]").inner_text(), "quick add: 450 kcal in lunch")
     w = page.evaluate("window.__mock && window.__mock.fitWidget") or {}
     check(w.get("leftLabel", "").startswith("kcal") and "Eaten 450" in w.get("line", ""), "the home-screen widget gets today's numbers: %s" % w)
+    page.locator("[data-testid=fit-tab-progress]").click(); page.wait_for_timeout(200)   # v7.31: vitamins live in Progress
     page.locator("[data-testid=fit-micros] button").first.click(); page.wait_for_timeout(150)
     check("Vitamin C" in page.locator("[data-testid=fit-micros-list]").inner_text(), "vitamins & minerals for the day")
+    page.locator("[data-testid=fit-tab-today]").click(); page.wait_for_timeout(200)
     # fasting: a 36 h plan and the body's stage
     page.locator("[data-testid=fit-fast-36]").click(); page.wait_for_timeout(200)
     check("Digesting" in page.locator("[data-testid=fit-fast-stage]").inner_text(), "the fast shows the body's stage")

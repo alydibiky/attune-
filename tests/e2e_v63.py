@@ -53,9 +53,8 @@ with sync_playwright() as p:
     queue(page, [])
     page.evaluate("() => { window.__mock.said = ['نص فرخة مشوية ورز وكوباية بيبسي']; }")
     page.locator("[data-testid=fit-add-lunch]").click()
-    page.locator("[data-testid=fit-mic]").click(); page.wait_for_timeout(400)
-    check("فرخة" in page.locator("[data-testid=fit-log-text]").input_value(), "the spoken meal lands in the box")
-    page.locator("[data-testid=fit-read]").click()
+    page.locator("[data-testid=fit-lb-voice]").click(); page.wait_for_timeout(400)
+    # v7.31: what you say is read straight away (no extra «Read it» tap)
     page.wait_for_selector("[data-testid=fit-draft]", timeout=5000)
     d = [(items(page).nth(i).inner_text(), page.locator("[data-testid=fit-draft-grams]").nth(i).input_value()) for i in range(items(page).count())]
     check(len(d) == 3 and d[0][1] == "400" and len(sent(page)) == 0, "«نص فرخة مشوية ورز وكوباية بيبسي» → half chicken 400 g, rice, cola — by code, no model (%s)" % [x[1] for x in d])
@@ -99,7 +98,7 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=fit-steps]").inner_text() == "8,421" and page.locator("[data-testid=fit-watch-kcal]").inner_text() == "356", "after connecting: 8,421 steps and 356 active kcal from the watch")
     check("Burned 356" in page.locator("[data-testid=fit-today]").inner_text().replace("\n", " ") or "356" in page.locator("[data-testid=fit-today]").inner_text(), "burned calories on Today come from the watch")
     shot(page, "fit-watch")
-    page.locator("[data-testid=fit-tab-move]").click()
+    page.locator("[data-testid=fit-tab-me]").click(); page.locator("[data-testid=fit-me-move]").click()
     check("Morning walk" in page.locator("[data-testid=fit-watch]").inner_text() and "141" in page.locator("[data-testid=fit-watch]").inner_text(), "Move shows the watch's workout and heart rate")
     # a manual workout smaller than the watch's calories does not add on top
     page.locator("[data-testid=fit-act]").fill("walking"); page.locator("[data-testid=fit-act-min]").fill("20")

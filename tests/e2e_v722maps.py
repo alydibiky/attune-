@@ -57,6 +57,9 @@ with sync_playwright() as p:
     reads = [c for c in page.evaluate("window.__mapmock.calls") if c[0] == "read"]
     check(len(reads) >= 2 and all(r[1].endswith(".pmtiles") or r[1].startswith("assets/") for r in reads), "every byte came through the bridge (%d reads), nothing from the internet" % len(reads))
     check("offline map" in page.locator("[data-testid=map-mode]").inner_text(), "the search bar says it is the offline map")
+    box = page.evaluate("() => { const b = document.querySelector('[data-testid=map-canvas]').getBoundingClientRect(), h = document.querySelector('header.sticky').getBoundingClientRect(), s = document.querySelector('[data-testid=map-search]').getBoundingClientRect(); return { h: b.height, top: s.top, hb: h.bottom }; }")
+    check(box["h"] > 500, "the map is really on screen: its box is %d px tall (MapLibre's CSS once made it 0 — the map was drawn but invisible)" % box["h"])
+    check(box["top"] >= box["hb"], "the search bar sits below the app's header, not under it (%s)" % box)
     shot(page, "v722-map")
 
     # ---- search: the offline index, then pick and save ----

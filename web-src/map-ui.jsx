@@ -54,7 +54,19 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   const active = pack === "-" ? "" : packs.find((p) => p.code === pack) ? pack : (packs[0] && packs[0].code) || "";   // "-" = you chose the online map
 
   useEffect(() => { const on = () => setOnline(true), off = () => setOnline(false); window.addEventListener("online", on); window.addEventListener("offline", off); return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); }; }, []);
-  useEffect(() => { if (holder.current) setTop(Math.max(0, Math.round(holder.current.getBoundingClientRect().top))); }, []);
+  // where the map starts: below the app's header. Measured again after the page settles (opened from a scrolled page,
+  // the first measure put the search bar under the header — Ali's screenshot, Oct 2026) and when the screen turns.
+  useEffect(() => {
+    const measure = () => {
+      const h = document.querySelector("header.sticky"), hb = h && h.getClientRects().length ? h.getBoundingClientRect().bottom : 0;
+      const ht = holder.current ? holder.current.getBoundingClientRect().top : 0;
+      setTop(Math.max(0, Math.round(Math.max(hb, ht))));
+    };
+    try { window.scrollTo(0, 0); } catch (e) {}
+    measure(); const raf = requestAnimationFrame(measure), tm = setTimeout(measure, 350);
+    window.addEventListener("resize", measure);
+    return () => { cancelAnimationFrame(raf); clearTimeout(tm); window.removeEventListener("resize", measure); };
+  }, []);
   useEffect(() => { save({ places: st.places, view }); }, [st.places, view]);
 
   // ---- the map ----
@@ -66,7 +78,8 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
       if (gone || !box.current) return;
       OM.registerProtocols(ml, N, getTile);
       map = new ml.Map({ container: box.current, style: OM.mapStyle({ pack: active || null, dark: true, lang }), center: [view.lon, view.lat], zoom: view.z,
-        attributionControl: { compact: true }, maxZoom: 19, dragRotate: false, pitchWithRotate: false });
+        attributionControl: false,   // the credit rides on the sheet (below): MapLibre's box sat on top of the sheet
+        maxZoom: 19, dragRotate: false, pitchWithRotate: false });
       map.touchZoomRotate.disableRotation();
       map.on("moveend", () => { const c = map.getCenter(); setView({ lat: c.lat, lon: c.lng, z: map.getZoom() }); });
       map.on("load", () => setReady(true));
@@ -188,7 +201,9 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   return (
     <div ref={holder} data-testid="map-page" style={{ height: `calc(100dvh - ${top}px - 58px)` }}>
       <div className="fixed inset-x-0 z-10 bg-[#0b1220]" style={{ top, bottom: "calc(58px + env(safe-area-inset-bottom))" }}>
-        <div ref={box} className="absolute inset-0" data-testid="map-canvas" />
+        {/* inline: MapLibre's own CSS (.maplibregl-map{position:relative}) loads later and turned the class into a 0-px-tall box —
+            the map was drawn but never seen (Ali, Oct 2026) */}
+        <div ref={box} style={{ position: "absolute", inset: 0 }} data-testid="map-canvas" />
 
         {/* search + chips */}
         <div className="absolute inset-x-0 top-0 p-3 space-y-2 pointer-events-none">
@@ -209,7 +224,8 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
           <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg></button>
 
         {/* the sheet */}
-        <section className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-slate-950 border-t border-slate-800 shadow-[0_-8px_24px_rgba(0,0,0,.35)] flex flex-col transition-[height] duration-200" style={{ height: sheetH }} data-testid="map-sheet">
+        <section className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-slate-950 border-t border-slate-800 shadow-[0_-8px_24px_rgba(0,0,0,.35)] flex flex-col transition-[height] duration-200 z-[5]" style={{ height: sheetH }} data-testid="map-sheet">
+          <span className="absolute -top-6 start-2 rounded-md bg-slate-950/75 px-1.5 py-0.5 text-[10px] text-slate-400 pointer-events-none" data-testid="map-credit">© OpenStreetMap contributors{active ? " · Protomaps" : ""}</span>
           <button onClick={() => setSheet(sheet === "peek" ? "half" : sheet === "half" ? "full" : "peek")} aria-label={tr("Pull up")} className="w-full pt-2 pb-1 flex justify-center shrink-0">
             <span className="w-10 h-1.5 rounded-full bg-slate-700" /></button>
           <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">

@@ -57,13 +57,14 @@ with sync_playwright() as p:
     page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(200)
 
     # ---- quality + score ----
+    page.locator("[data-testid=fit-tab-progress]").click(); page.wait_for_timeout(200)   # v7.31: day quality lives in Progress
     qtext = page.locator("[data-testid=fit-quality]").inner_text()
     check("41/53" in qtext.replace(" ", ""), "today's sugar: 41 g of a 53 g limit (the cola's 35 + the yogurt's 6) — " + qtext.replace("\n", " ")[:80])
     check(page.locator("[data-testid=fit-score]").count() == 1, "the day has a score out of 100")
     shot(page, "fit-quality")
 
     # ---- Ramadan mode + reminders (My plan) ----
-    page.locator("[data-testid=fit-edit-profile]").click()
+    page.locator("[data-testid=fit-tab-me]").click(); page.locator("[data-testid=fit-edit-profile]").click()
     page.locator("[data-testid=fit-ramadan-on]").check()
     page.locator("[data-testid=fit-reminders]").check(); page.wait_for_timeout(200)
     ids = [x["id"] for x in page.evaluate("window.__mock.sched")]
@@ -97,7 +98,9 @@ with sync_playwright() as p:
     page.locator(".rounded-t-2xl button:has-text('الغذاء واللياقة')").first.click()
     page.wait_for_selector("[data-testid=fit-today]", timeout=6000)
     t = page.locator("[data-testid=fit-today]").inner_text()
-    check("الفجر" in t and "سحور" in t and "درجة اليوم" in t, "Ramadan card, meal names and the score in Arabic — " + t.replace("\n", " ")[:300])
+    check("الفجر" in t and "سحور" in t, "Ramadan card and meal names in Arabic — " + t.replace("\n", " ")[:300])
+    page.locator("[data-testid=fit-tab-progress]").click(); page.wait_for_timeout(200)   # v7.31: the day's score lives in Progress
+    check("درجة اليوم" in page.locator("[data-testid=fit-quality]").inner_text(), "the day's score in Arabic")
     shot(page, "fit-ramadan-ar")
 
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])

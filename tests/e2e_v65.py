@@ -44,7 +44,7 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=fit-steps]", timeout=6000)
     check(page.evaluate("window.__mock.asked") == 1, "Connect opens Huawei's sign-in / permission screens")
     check(page.locator("[data-testid=fit-steps]").inner_text() == "9,120" and page.locator("[data-testid=fit-watch-kcal]").inner_text() == "388", "after allowing: 9,120 steps and 388 kcal from Huawei Health")
-    page.locator("[data-testid=fit-tab-move]").click(); page.wait_for_timeout(200)
+    page.locator("[data-testid=fit-tab-me]").click(); page.locator("[data-testid=fit-me-move]").click(); page.wait_for_timeout(200)
     w = page.locator("[data-testid=fit-watch]").inner_text()
     check("Huawei Health ✓" in w and "74" in w and "6.3" in w, "Move: Huawei Health ✓, heart rate 74 avg, 6.3 km")
     check(page.locator("[data-testid=fit-huawei-direct]").count() == 0, "the connect box goes away once connected")

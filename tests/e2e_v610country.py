@@ -23,11 +23,12 @@ def suggestion(page, m):
     loc = page.locator("[data-testid=fit-suggest-%s]" % m)
     return loc.inner_text() if loc.count() else ""
 def choose(page, cc):
-    page.locator("[data-testid=fit-edit-profile]").click()
+    page.locator("[data-testid=fit-tab-me]").click(); page.locator("[data-testid=fit-edit-profile]").click()
     page.wait_for_selector("[data-testid=fit-country]", timeout=4000)
     page.select_option("[data-testid=fit-country]", cc); page.wait_for_timeout(200)
     shot(page, "fit-country-" + cc)
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(300)
+    page.locator("[data-testid=fit-tab-today]").click()   # v7.31: Back returns to «Me»
     page.wait_for_selector("[data-testid=fit-today]", timeout=4000)
 def typed(page, slot, text):
     page.locator("[data-testid=fit-add-%s]" % slot).click()

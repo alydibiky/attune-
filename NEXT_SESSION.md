@@ -513,6 +513,15 @@ Ali: "Attune will charge money … find reliable free sources … full mark … 
 - [x] Small «AI can make mistakes» line under every AI ask box.
 - [ ] Next trial target: 45/45 on q08 (`tests/trials/packtrial.mjs`); misses left are mostly the tiny model misreading.
 
+## Q. Added 10–11 Oct 2026 — done in v6.17 (HANDOFF §5.49–§5.50)
+1. Use only accurate, reliable sources; Wikipedia only if reliable → Wikidata facts with a real (non-Wikipedia) source. ✅
+2. Dorar hadith search free for everyone. ✅  3. Small "AI can make mistakes" note under every chat box. ✅
+4. Fit & Food: cluttered, "a page not an app", needs an intro like a food app, more confusing than Yazio → look A
+   (Ali's pick): app-in-app with its own tabs, welcome + plan screens, calm Today. ✅ — **check on the phone.**
+5. Typed food search loaded nothing → food database downloads itself on Wi-Fi + online search after a pause. ✅
+6. Big BAIK photo (1000 kcal) read as "fish 600 kcal" → the printed text is read first (ML Kit). ✅ — **check on the phone.**
+7. "Maps doesn't work or where is the map itself" → the map box was 0 px tall (MapLibre CSS); fixed. ✅ — **check on the phone.**
+
 ## Prompt to start the next session
 
 ```

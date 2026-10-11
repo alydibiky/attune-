@@ -41,7 +41,7 @@ with sync_playwright() as p:
     page.locator("[data-testid=fit-watch-connect]").click()
     page.wait_for_selector("[data-testid=fit-steps]", timeout=6000)
     check(page.locator("[data-testid=fit-steps]").inner_text() == "10,230", "after connecting: the Huawei watch's 10,230 steps arrive")
-    page.locator("[data-testid=fit-tab-move]").click(); page.wait_for_timeout(200)
+    page.locator("[data-testid=fit-tab-me]").click(); page.locator("[data-testid=fit-me-move]").click(); page.wait_for_timeout(200)
     w = page.locator("[data-testid=fit-watch]").inner_text()
     check("Huawei Health, through Health Sync" in w and page.locator("[data-testid=fit-huawei]").count() == 0, "the card says where it comes from, and the setup steps are gone")
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])
