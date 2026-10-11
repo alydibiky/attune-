@@ -1,0 +1,64 @@
+name: Train the photo fast path on real meal photos
+
+# v6.18 — Ali: "I want an accuracy of above 80 percent".
+# Reads MM-Food-100K (OpenRAIL: commercial use allowed; 100,000 phone photos with dish, grams and calories) the way the
+# phone does (tools/embed_mmfood.py) on 8 machines at once, and publishes the vectors + the table as the release
+# food-train-v1. tools/build_food_clip_bank.py uses them to learn what each dish looks like; the photos are not kept.
+# Run by hand from the Actions tab.
+
+on:
+  push:
+    paths: [tools/embed_mmfood.py, .github/workflows/food-train.yml]
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Photos per machine (0 = all, about 12,000)"
+        default: "0"
+
+permissions:
+  contents: write
+
+jobs:
+  embed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Python packages
+        run: pip install numpy onnxruntime tokenizers pyarrow pillow
+      - name: Read the photos (the phone's two image models)
+        env:
+          LIMIT: ${{ github.event.inputs.limit || '0' }}
+        run: python3 tools/embed_mmfood.py ${{ matrix.shard }} 8 out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mmfood-${{ matrix.shard }}
+          path: out/mmfood-${{ matrix.shard }}.npz
+          retention-days: 7
+
+  publish:
+    needs: embed
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: parts, pattern: "mmfood-*", merge-multiple: true }
+      - name: Publish the release (tag food-train-v1, replaced each time)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la parts
+          curl -sL -o parts/MM-Food-100K.csv https://huggingface.co/datasets/Humanbased-AI/MM-Food-100K/resolve/main/MM-Food-100K.csv
+          gh release delete food-train-v1 --cleanup-tag --yes -R "$GITHUB_REPOSITORY" 2>/dev/null || true
+          gh release create food-train-v1 parts/* -R "$GITHUB_REPOSITORY" --title "Photo training vectors (MM-Food-100K)" --notes "Image vectors (CLIP B/32 int8, SigLIP B/16 int8: the phone's models) of the MM-Food-100K photos (Humanbased-AI, OpenRAIL licence), with its table. Training input for tools/build_food_clip_bank.py; the photos themselves are not kept. Built $(date -u +%F)." --prerelease
+          {
+            echo "## Photo training vectors"; echo; ls -la parts
+          } >> "$GITHUB_STEP_SUMMARY"
