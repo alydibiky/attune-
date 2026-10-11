@@ -881,6 +881,24 @@ Ali: "I don't want mistakes" / "I want an accuracy of above 80 percent".
 - Tests: `e2e_v718looks.py` (draws its own plate with PIL — PNGs in tests/ are git-ignored), `unit/fitlook`,
   `e2e_v722maps.py` (full screen, bright style, ← back), `e2e_v700maps.py`.
 
+### 5.54 (11 Oct 2026, v6.18) — Business as an app of its own: introduction, five-step builder, Home/Form/Reports, AI design chat
+- **Ali:** "rework the whole Business UI … an app in the app with introductions … step by step"; "an AI chat inside
+  Business where I ask it to change the design"; "a mix of the 3 in a brilliant way" (mock-ups: artifact "Business new
+  look", looks A guided / B workspace / C studio); "a form like Microsoft Access for data entry".
+- **Files:** `web-src/biz-ui.jsx` (the app), `biz-steps.js` (steps, interview suggestions, checks, alerts, chart data —
+  pure, `unit/biz.test.mjs`), `erp-screens.js` (the system's look: colour, menu, density, home parts, KPIs, list
+  columns, form order/sections/hidden fields; `applyScreenOp` is reached from erp.js `applyOne`, so the AI, Undo and
+  the design history all work on screens too). `erp-ui.jsx` keeps `SystemView` (now `embedded`), BusinessPage is gone.
+- **Look:** light professional palette for all of Business (`LIGHT_BASE` from fitlook.js); the system's colour
+  re-maps the teal accent (`accentVars`). biz-ui uses hex classes (`bg-[#FFFFFF]`) — slate/white are re-mapped there.
+- **Builder:** Name → Data → Logic → Screens → Launch; each step asks one question with one-tap answers computed from
+  the design (no model needed) plus free text to the model; phone + computer previews; Undo; "Design" on a live system
+  reopens the same steps (Done saves).
+- **A system:** coloured header, tabs Home (KPIs, latest, chart, alerts) · Tables (the old grid with Design/Queries/
+  Forms/Summary/More) · Form (Access-style: one record, ◀ ▶ first/new, Record n of m, required checks, related records)
+  · Reports; the ✦ button opens the design chat (shows the change first, Apply, Undo).
+- Tests: `e2e_v718biz.py`; `harness.py` got `to_tables` and `leave_apps` for the older Business tests.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
