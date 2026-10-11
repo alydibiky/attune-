@@ -915,6 +915,19 @@ Ali: "I don't want mistakes" / "I want an accuracy of above 80 percent".
   that mention it are used (years and maths questions are not filtered); chat.jsx applies it before `factsBlock`.
 - Tests: `unit/v710router`, `unit/knowledge`, `e2e_v700auto.py` (types "Lynk and co 900", checks the web search).
 
+### 5.56 (11 Oct 2026, v6.20, versionCode 81) — the photo name bank updates itself; fried eggs on toast
+- **Ali's photo:** four fried eggs on toast → "Eggs with tomatoes, 123 g = 22 kcal". The bank line «eggs with tomatoes» was
+  `~tomato` in the first bank (fixed to `~shakshuka` in 9d8127b), but the phone never downloads the bank again.
+- **Updates:** `tools/build_food_clip_bank.py` writes a sha256 per file in the manifest; `FoodClip.install()` fetches only
+  files whose fingerprint changed (an old manifest without fingerprints: the .json bank is fetched again, models kept by
+  size); `{"update":true}` from the page = the quiet daily check (`fitclip.updateDue`, once / 20 h when Fit opens; files over
+  5 MB wait for Wi-Fi; the manifest keeps the old entry of a skipped file). `resetClip()` → the next photo loads the new bank.
+- **Safety net (works offline, before any update):** `fitclip.entryFood` — a bank name that is exactly a main-table food's
+  name or a GENERIC name (`F.exactFood`, no country dishes) uses that food: an old «eggs with tomatoes = tomato» → shakshuka.
+- **New food** `egg-toast` "Fried egg on toast" (76 g piece, 224 kcal / 100 g; amount question counts pieces: 4 ≈ 680 kcal);
+  bank: `egg-toast fried eggs on toast|eggs on toast|…|fried eggs on bread`; GENERIC: "eggs with tomatoes" → shakshuka.
+- Tests: `unit/v622fitclip` (old bank entries, 4 eggs on toast, the daily check).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

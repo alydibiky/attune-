@@ -251,11 +251,19 @@ def main():
     files = {f: os.path.getsize(os.path.join(out, f)) for f in sorted(os.listdir(out)) if not f.startswith(".") and not f.endswith(".json")}
     files["food-clip-bank.json"] = os.path.getsize(os.path.join(out, "food-clip-bank.json"))
     manifest = {"v": 2, "models": [c["repo"] for c in ENCODERS], "ort": ORT_VERSION, "count": len(items), "texts": n_texts,
-                "files": [{"name": k, "bytes": v} for k, v in files.items()]}
+                "files": [{"name": k, "bytes": v, "sha256": sha256_of(os.path.join(out, k))} for k, v in files.items()]}   # v6.19: the phone updates what changed
     with open(os.path.join(out, "food-clip-manifest.json"), "w") as f: json.dump(manifest, f, indent=1)
     kinds = {}
     for e in items: kinds[e["kind"]] = kinds.get(e["kind"], 0) + 1
     print(f"bank: {len(items)} foods ({kinds}), {n_texts} name phrasings per model, {files['food-clip-bank.json'] // 1024} KB; files: {files}")
+
+
+def sha256_of(path):
+    import hashlib
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""): h.update(chunk)
+    return h.hexdigest()
 
 
 if __name__ == "__main__":

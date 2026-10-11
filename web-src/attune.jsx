@@ -7331,7 +7331,7 @@ const MODE_TITLES = { knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Re
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.19";
+const PAGE_VERSION = "6.20";
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9623,7 +9623,7 @@ export default function App() {
             fetchJson={NATIVE && NATIVE.fetchJson ? async (url) => { const r = await nativeCall("fetchJson", url); return JSON.parse((r && r.body) || "{}"); } : null}
             packText={NATIVE && NATIVE.foodPackText ? async (name) => { const r = await nativeCall("foodPackText", name); return (r && r.text) || ""; } : null}
             photoClip={NATIVE && NATIVE.foodClipStatus ? { base: "https://appassets.androidplatform.net/foodclip/", status: () => { try { return JSON.parse(NATIVE.foodClipStatus()); } catch (e) { return { installed: false }; } },
-              install: (onProgress) => nativeCall("foodClipInstall", {}, onProgress), stop: () => NATIVE.cancel(nativeLastId()), remove: () => NATIVE.foodClipRemove() } : null}
+              install: (onProgress) => nativeCall("foodClipInstall", {}, onProgress), update: () => nativeCall("foodClipInstall", { update: true }), stop: () => NATIVE.cancel(nativeLastId()), remove: () => NATIVE.foodClipRemove() } : null}
             scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null}
             readText={NATIVE && NATIVE.readText ? async (b64) => nativeCall("readText", { b64 }) : null}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}

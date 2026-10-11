@@ -44,29 +44,46 @@ object FoodClip {
 
     fun remove(ctx: Context): Boolean = try { dir(ctx).deleteRecursively(); true } catch (e: Exception) { false }
 
-    /** Downloads what is missing; a file already complete is kept, so a stopped download resumes file by file. */
-    fun install(ctx: Context, onProgress: (Long, Long, String) -> Unit, isCancelled: () -> Boolean) {
+    /**
+     * Downloads what is missing or changed; a file already complete is kept, so a stopped download resumes file by file.
+     * v6.19 (Ali's photo: "Eggs with tomatoes, 123 g = 22 kcal" — a mistake in the name bank fixed weeks before, but the
+     * phone kept the bank it downloaded first): the manifest carries each file's sha256, so a file whose fingerprint changed
+     * is fetched again (an older manifest without fingerprints: the small name bank is fetched again, the models are kept
+     * when their size matches). smallOnly = an update on mobile data: files over 5 MB are left for Wi-Fi.
+     * Returns how many files were fetched.
+     */
+    fun install(ctx: Context, onProgress: (Long, Long, String) -> Unit, isCancelled: () -> Boolean, smallOnly: Boolean = false): Int {
         val d = dir(ctx)
         val manText = String(get(BASE + MANIFEST, null, isCancelled), Charsets.UTF_8)
         val files: JSONArray = JSONObject(manText).getJSONArray("files")
+        val old = HashMap<String, JSONObject>()
+        try { val oj = JSONObject(File(d, MANIFEST).readText()).getJSONArray("files"); for (i in 0 until oj.length()) { val o = oj.getJSONObject(i); old[o.getString("name")] = o } } catch (e: Exception) {}
         var total = 0L
         for (i in 0 until files.length()) total += files.getJSONObject(i).getLong("bytes")
-        var done = 0L
+        var done = 0L; var fetched = 0; var skipped = false
+        val kept = JSONArray()   // what is on the phone now, file by file (a big file left for Wi-Fi keeps its old entry)
         for (i in 0 until files.length()) {
             val f = files.getJSONObject(i)
             val name = f.getString("name"); val size = f.getLong("bytes")
             if (!NAME.matches(name)) throw Exception("Unexpected file in the photo model: $name")
             val local = File(d, name)
-            if (local.exists() && local.length() == size) { done += size; onProgress(done, total, name); continue }
+            val sha = f.optString("sha256", ""); val oldSha = old[name]?.optString("sha256", "") ?: ""
+            val same = local.exists() && local.length() == size &&
+                (if (sha.isNotEmpty() && oldSha.isNotEmpty()) sha == oldSha else !(name.endsWith(".json") && sha.isNotEmpty() && old.isNotEmpty()))
+            if (same) { done += size; onProgress(done, total, name); kept.put(f); continue }
+            if (smallOnly && size > 5_000_000) { skipped = true; old[name]?.let { kept.put(it) }; continue }
+            fetched++
             val part = File(d, "$name.part")
             val base = done
             get(BASE + name, part, isCancelled) { got -> onProgress(base + got, total, name) }
             if (part.length() != size) { part.delete(); throw Exception("The download of $name was incomplete — try again") }
             if (local.exists()) local.delete()
             if (!part.renameTo(local)) throw Exception("Couldn't save $name")
-            done += size
+            done += size; kept.put(f)
         }
-        File(d, MANIFEST).writeText(manText)   // written last: its presence + sizes = installed
+        // written last: its presence + sizes (+ fingerprints) = installed
+        File(d, MANIFEST).writeText(if (skipped) JSONObject(manText).put("files", kept).toString() else manText)
+        return fetched
     }
 
     /** One file → bytes (to == null) or into `to`. */

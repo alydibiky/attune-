@@ -128,3 +128,21 @@ ok(egypt.every((w) => allNames.includes(w)), "the Egyptian dishes Ali named are 
   }
   ok(bad.length === 0, "every estimated dish takes its calories from a similar dish, not a bare ingredient" + (bad.length ? ": " + bad.join("; ") : ""));
 }
+
+// v6.19 (Ali's photo: four fried eggs on toast → "Eggs with tomatoes, 123 g = 22 kcal"): the phone kept its FIRST name bank,
+// where «eggs with tomatoes» was estimated from a tomato. The app's own table now wins over such an old entry.
+{
+  const AQ = await import("../../web-src/fitamount.js");
+  const old = C.entryFood({ kind: "like", id: "tomato", en: "Eggs with tomatoes" });
+  ok(old && old.id === "shakshuka" && C.defaultItem(old).kcal > 200, "an old bank's «eggs with tomatoes = tomato» → shakshuka, one plate ≈ 275 kcal (not 22)");
+  const et = C.entryFood({ kind: "id", id: "egg-fried", en: "fried eggs on bread" });
+  ok(et && et.id === "egg-toast", "an old bank's «fried eggs on bread» → Fried egg on toast (the toast counts too)");
+  const it = C.defaultItem(F.food("egg-toast")), q = AQ.amountQuestion({ ...it, base: it.grams });
+  const four = q && q.choices.find((c) => /^4\b/.test(c.en));
+  ok(q && q.kind === "count" && four && Math.round(F.food("egg-toast").kcal * four.grams / 100) >= 600, "«how many?» → 4 eggs on toast ≈ " + (four && Math.round(F.food("egg-toast").kcal * four.grams / 100)) + " kcal");
+  ok(F.matchFood("eggs with tomatoes").id === "shakshuka" && F.matchFood("fried eggs on toast").id === "egg-toast", "typed: eggs with tomatoes → shakshuka, fried eggs on toast → egg on toast");
+  const names = readFileSync(new URL("../../tools/food_clip_names.tsv", import.meta.url), "utf8");
+  ok(/^egg-toast\tfried eggs on toast/m.test(names) && !/^~tomato\teggs with tomatoes/m.test(names), "the name bank: eggs on toast is its own entry; «eggs with tomatoes» is not a tomato");
+  const mem = new Map(), store = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
+  ok(C.updateDue(1e12, store) && !C.updateDue(1e12 + 3600e3, store) && C.updateDue(1e12 + 25 * 3600e3, store), "the check for a newer name bank runs at most once a day");
+}

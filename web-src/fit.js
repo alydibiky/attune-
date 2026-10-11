@@ -57,6 +57,9 @@ const F = [
   // protein
   ["egg", "Egg|boiled egg|eggs", "بيض|بيضة|بيض مسلوق", 143, 12.6, 0.7, 9.5, 0, { piece: 50, egg: 50, large: 55 }, "protein"],
   ["egg-fried", "Fried egg|eggs fried|omelette", "بيض مقلي|بيض أومليت|أومليت|عجة", 196, 13.6, 0.8, 15, 0, { piece: 46, egg: 46 }, "protein"],
+  // v6.19 (Ali's photo: four fried eggs on toast was "Eggs with tomatoes, 22 kcal"): one fried egg on one slice of toast
+  // (46 g egg ≈ 90 kcal + 30 g toast ≈ 80 kcal) — counted by the piece, so "4" is the whole plate
+  ["egg-toast", "Fried egg on toast|fried eggs on toast|eggs on toast|egg on toast|egg toast|fried eggs on bread", "بيض على توست|توست بالبيض|بيض مقلي على عيش", 224, 11.6, 19, 10.3, 1, { piece: 76 }, "protein"],
   ["egg-white", "Egg white", "بياض بيض", 52, 10.9, 0.7, 0.2, 0, { piece: 33 }, "protein"],
   ["chicken-breast", "Chicken breast (grilled)|grilled chicken|chicken", "صدور فراخ|صدر فراخ|فراخ مشوية|دجاج مشوي|فراخ", 165, 31, 0, 3.6, 0, { piece: 150, palm: 120, portion: 150 }, "protein"],
   ["chicken-thigh", "Chicken thigh (with skin)|chicken leg", "ورك فراخ|ورك", 229, 25, 0, 14, 0, { piece: 110 }, "protein"],
@@ -195,7 +198,7 @@ const nameIx = () => { if (!NAME_IX) { NAME_IX = new Map(); for (const fd of FOO
  *  v6.10: a name two foods share goes to the chosen country's dish; another country's dish is found by its exact name only. */
 // v6.17: one-word names a photo reader writes ("cheese", "burger", "salad") — exact only, so "white cheese" still finds
 // white cheese. Before: "cheese" → Cheese sandwich, "burger" → Burger bun, "salad" → Caesar salad with chicken.
-const GENERIC = { cheese: "cheddar", "sliced cheese": "cheddar", "cheese slice": "cheddar", "cheese slices": "cheddar", "melted cheese": "cheddar",
+const GENERIC = { "eggs with tomatoes": "shakshuka", "eggs with tomato": "shakshuka", "egg with tomatoes": "shakshuka", "بيض بالطماطم": "shakshuka", cheese: "cheddar", "sliced cheese": "cheddar", "cheese slice": "cheddar", "cheese slices": "cheddar", "melted cheese": "cheddar",
   burger: "burger", "beef burger": "burger", cheeseburger: "burger", salad: "salad", "green salad": "salad", "side salad": "salad", "mixed salad": "salad",
   "tomato sauce": "tomato-sauce", "pizza sauce": "tomato-sauce", bun: "kaiser", "white cheese": "feta", "feta": "feta",
   // v6.18 (measured on 40 real plates): "potato fries" was a boiled potato, "shredded cheese" a cheese sandwich…
@@ -206,6 +209,12 @@ const GENERIC = { cheese: "cheddar", "sliced cheese": "cheddar", "cheese slice":
   flatbread: "shami", "pita bread": "shami", "bread slice": "toast-white", "sourdough bread": "toast-white", "multigrain bread": "toast-brown",
   "ravioli pasta": "pasta", ravioli: "pasta", "pizza dough": "pizza", "spicy mayo": "mayonnaise", mayo: "mayonnaise", "pomegranate molasses": "molasses",
   "ground beef": "minced-meat", "ground beef or lamb": "minced-meat", "ground lamb": "minced-meat", "minced meat": "minced-meat", "minced beef": "minced-meat" };
+/** v6.19: the table food whose own name (or a fixed generic name) is exactly this, or null — no word guessing. */
+export function exactFood(name) {
+  const q = normT(name); if (!q) return null;
+  if (GENERIC[q]) { const g = food(GENERIC[q]); if (g) return g; }
+  const ex = nameIx().get(q); return (ex && ex.find((fd) => !fd.cc)) || null;   // a country's own dish ("New York cheesecake") is not a generic name
+}
 export function matchFood(name, cc = CZ.getCountry()) {
   const q = normT(name); if (!q) return null;
   if (GENERIC[q]) { const g = food(GENERIC[q]); if (g) return g; }

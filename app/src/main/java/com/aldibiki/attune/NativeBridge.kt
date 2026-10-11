@@ -834,11 +834,13 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         val flag = AtomicBoolean(false); cancels[id] = flag
         pool.execute {
             try {
-                FoodClip.install(ctx, { done, total, name ->
+                // v6.19: {"update":true} = the quiet daily check (only what changed; big files wait for Wi-Fi)
+                val upd = try { JSONObject(arg).optBoolean("update", false) } catch (e: Exception) { false }
+                val fetched = FoodClip.install(ctx, { done, total, name ->
                     val pct = if (total > 0) ((done * 100) / total).toInt().coerceIn(0, 99) else 0
                     progress(id, pct, name, "%.0f / %.0f MB".format(done / 1e6, total / 1e6))
-                }, { flag.get() })
-                resolve(id, FoodClip.status(ctx))
+                }, { flag.get() }, smallOnly = upd && !unmetered())
+                resolve(id, FoodClip.status(ctx).put("fetched", fetched))
             } catch (e: FoodClip.Cancelled) {
                 reject(id, "Download stopped — it continues where it stopped next time.")
             } catch (e: Throwable) { reject(id, e.message ?: "Couldn't download the photo model") }

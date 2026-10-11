@@ -158,6 +158,12 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   // v6.10: the photo fast path (fitclip.js) is on the phone → a photo is named in about a second, no chat model needed
   const [clipOn, setClipOn] = useState(() => { try { return !!(photoClip && photoClip.status().installed) || !!(typeof window !== "undefined" && window.__attuneClipTest); } catch (e) { return false; } });
   useEffect(() => { if (photo && clipOn && photoClip) CL.loadClip(photoClip.base).catch(() => {}); }, [photo, clipOn]);   // warm it up while the person types a note
+  // v6.19 (Ali: "Eggs with tomatoes, 123 g = 22 kcal" — fixed in the name bank weeks ago, but the phone kept its first download):
+  // once a day, quietly, only what changed is fetched (big files wait for Wi-Fi); the next photo uses the new bank
+  useEffect(() => {
+    if (!clipOn || !photoClip || !photoClip.update || !CL.updateDue()) return;
+    photoClip.update().then((r) => { if (r && r.fetched) CL.resetClip(); }).catch(() => {});
+  }, [clipOn]);
   const fileRef = useRef(null);
   const codeRef = useRef(null);
   const run = useRef(0);

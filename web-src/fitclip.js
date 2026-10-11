@@ -190,6 +190,9 @@ export function rank(bank, emb, k = 5) {
 /** A bank entry → a food the meal screen can use (a table food, or a dish estimated from one), or null (found by name / not food). */
 export function entryFood(e) {
   if (!e || (e.kind !== "id" && e.kind !== "like")) return null;
+  // v6.19: a dish the app's own table now knows by this exact name wins over an estimate in an older downloaded bank
+  // (Ali's phone: the first bank's «eggs with tomatoes» = a tomato, 123 g = 22 kcal; the table says shakshuka)
+  { const ex = F.exactFood(e.en); if (ex && ex.id !== e.id) return ex; }
   const fd = F.food(e.id); if (!fd) return null;
   return e.kind === "id" ? fd : { ...fd, en: e.en, ar: e.ar || fd.ar, names: [e.en, e.ar].filter(Boolean), like: fd.id };
 }
@@ -230,6 +233,10 @@ export function decide(bank, ranked, auto = (bank && bank.auto) || AUTO) {
 
 // ---- the runtime: onnxruntime-web (wasm, one thread) from the downloaded files ------------------------------------------------
 let loading = null;
+/** v6.19: is today's quiet check for a newer name bank due? (once a day; `store` = localStorage) */
+export function updateDue(now = Date.now(), store = typeof localStorage !== "undefined" ? localStorage : null) {
+  try { const t = +(store && store.getItem("attune:fit:clipcheck")) || 0; if (now - t < 20 * 3600e3) return false; store && store.setItem("attune:fit:clipcheck", String(now)); return true; } catch (e) { return false; }
+}
 /** Loads the runtime, the encoder and the bank from `base` (a folder the WebView can read). Once per app run. */
 export function loadClip(base, { fetchImpl = (u) => fetch(u), win = typeof window !== "undefined" ? window : null } = {}) {
   if (loading) return loading;
