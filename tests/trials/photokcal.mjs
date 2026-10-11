@@ -22,10 +22,11 @@ const errs = []; let unknown = 0, t0 = Date.now();
 for (const [k, s] of set.slice(0, N).entries()) {
   let msgs = process.env.PROMPT === "v2" ? V2 : process.env.PROMPT === "v3" ? V3 : F.photoMessages("", "eg", HINTS ? HINTS[k] || [] : []);
   let described = "";
-  if (process.env.PROMPT === "v4" && !(process.env.RESCORE)) {
+  if (["v4", "v5"].includes(process.env.PROMPT) && !(process.env.RESCORE)) {
     const img0 = "data:image/jpeg;base64," + readFileSync(s.file).toString("base64");
     try { const r = await fetch(`http://127.0.0.1:${PORT}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ messages: [DESCRIBE[0], { role: "user", content: [{ type: "image_url", image_url: { url: img0 } }, { type: "text", text: DESCRIBE[1].content }] }], max_tokens: 300, temperature: 0, chat_template_kwargs: { enable_thinking: false } }) }); described = (await r.json()).choices[0].message.content; } catch (e) {}
-    msgs = [{ role: "system", content: V3[0].content + "\nA careful look at the photo found: " + described }, V3[1]];
+    const hint = process.env.PROMPT === "v5" && HINTS && HINTS[k] ? "\nA food-recognition model's best guesses for the dish (use one only if it matches what you see): " + HINTS[k].join(", ") + "." : "";
+    msgs = [{ role: "system", content: V3[0].content + "\nA careful look at the photo found: " + described + hint }, V3[1]];
   }
   const img = "data:image/jpeg;base64," + readFileSync(s.file).toString("base64");
   const user = msgs[msgs.length - 1];
@@ -40,7 +41,7 @@ for (const [k, s] of set.slice(0, N).entries()) {
   if (process.env.RAW && !process.env.RESCORE) { cache[k] = raw; writeFileSync(process.env.RAW, JSON.stringify(cache)); }
   const p = F.parsePhoto(raw);
   let kcal = p.items.reduce((a, x) => a + (x.kcal || 0), 0); unknown += p.items.filter((x) => x.kcal == null).length;
-  if (["v2", "v3", "v4"].includes(process.env.PROMPT)) {   // the table's calories for foods it knows, the model's own estimate for the rest; MODE=model: the model's total
+  if (["v2", "v3", "v4", "v5"].includes(process.env.PROMPT)) {   // the table's calories for foods it knows, the model's own estimate for the rest; MODE=model: the model's total
     let j = {}; try { j = JSON.parse(String(raw).replace(/^[^{]*/, "").replace(/[^}]*$/, "")); } catch (e) {}
     const its = Array.isArray(j.items) ? j.items : [];
     const tab = its.reduce((a, it) => { const fd = F.matchFood(String(it.food || "")); const g = +it.grams > 0 ? +it.grams : 0; return a + (fd && g ? fd.kcal * g / 100 : +it.kcal || 0); }, 0);
