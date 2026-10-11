@@ -10,7 +10,7 @@ const item = (id, extra = {}) => { const fd = F.food(id); const it = F.itemFromF
 const egg = A.amountQuestion(item("egg-fried"));
 ok(egg && egg.kind === "count" && egg.choices[egg.at].grams === 46 && egg.choices.find((c) => c.n === 4).grams === 184, "fried egg: how many? 4 eggs = 184 g");
 const rice = A.amountQuestion(item("rice"));
-ok(rice && rice.kind === "plate" && rice.choices.map((c) => c.grams).join() === "115,225,340,450,630", "rice: ¼ ½ ¾ full heaped plate = 115/225/340/450/630 g");
+ok(rice && rice.kind === "plate" && rice.choices.map((c) => c.grams).join() === "45,115,225,340,450,630", "rice: a little, ¼ ½ ¾ full, heaped plate = 45/115/225/340/450/630 g");
 const cola = A.amountQuestion(item("cola"));
 ok(cola && cola.kind === "drink" && cola.choices[1].en === "1 can" && cola.choices[1].grams === 330, "cola: its own container (a can, 330 ml)");
 ok(A.amountQuestion(item("tahini")).kind === "spoon", "tahini: how many spoons?");
@@ -31,3 +31,13 @@ F.learnFix("Koshari", F.food("koshari"), 450 / 350);
 const bank = { auto: 0.6, items: [["id", "koshari", "Koshari", "كشري", "eg"]].map(([kind, id, en, ar, cc]) => ({ kind, id, en, ar, cc })) };
 const d = C.decide(bank, [{ i: 0, p: 0.9 }]);
 ok(Math.abs(d.items[0].grams - 450) <= 5 && d.items[0].k === 1 && d.items[0].learned && d.items[0].learnedN === 1, "the fast path uses your usual amount for the dish (350 → 450 g)");
+// v6.18 measured fixes: nuts are a pinch/spoon/handful (not ¼ plate = 532 kcal of pistachios), oil starts at a teaspoon,
+// cream reaches cups, a big piece can be half or one and a half
+const pis = A.amountQuestion(item("pistachio"));
+ok(pis && pis.kind === "sprinkle" && pis.choices.map((c) => c.grams).join() === "5,10,20,30,60", "pistachios: a pinch … 2 handfuls (5–60 g)");
+const oil = A.amountQuestion(item("olive-oil"));
+ok(oil && oil.kind === "spoon" && oil.choices[0].en === "1 tsp" && oil.choices[0].grams <= 5, "olive oil: starts at a teaspoon");
+const cream = A.amountQuestion(item("heavy-cream"));
+ok(cream && cream.choices.some((c) => c.en === "1 cup" && c.grams === 240), "heavy cream: up to a cup (240 g)");
+const ch = A.amountQuestion(item("chicken-breast"));
+ok(ch && ch.choices.map((c) => c.en).join() === "½,1,1½,2,3,4", "chicken breast: ½ 1 1½ 2 3 4 pieces");

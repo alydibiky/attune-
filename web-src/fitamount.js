@@ -39,17 +39,26 @@ export function amountQuestion(x) {
     q = { kind: "drink", en: `How much ${nameEn}?`, ar: `كم من ${name}؟`,
       choices: [0.5, 1, 2, 3].map((n) => ({ en: (n === 0.5 ? "½ " : n + " ") + drink + (n > 1 ? "s" : ""), ar: (n === 0.5 ? "نصف " : n + " ") + (DRINK_AR[drink] || drink), grams: r5(n * ml), n })) };
   } else if (per && !(P.plate || P.bowl) && per < 400) {
-    const ns = per <= 30 ? [1, 2, 3, 4, 5, 6, 8, 10] : per <= 150 ? [1, 2, 3, 4, 5, 6] : [0.5, 1, 2, 3];
-    const choices = ns.map((n) => ({ en: n === 0.5 ? "½" : String(n), ar: n === 0.5 ? "½" : String(n), grams: Math.max(1, Math.round(n * per)), n }));
+    // v6.18 (measured): a 218 g chicken breast had to be 1 (150 g) or 2 (300 g) — halves for the big pieces
+    const ns = per <= 30 ? [1, 2, 3, 4, 5, 6, 8, 10] : per <= 60 ? [1, 2, 3, 4, 5, 6] : [0.5, 1, 1.5, 2, 3, 4];
+    const fr = (n) => (n === 0.5 ? "½" : n === 1.5 ? "1½" : String(n));
+    const choices = ns.map((n) => ({ en: fr(n), ar: fr(n), grams: Math.max(1, Math.round(n * per)), n }));
     q = { kind: "count", en: `How many? (${nameEn})`, ar: `كم عددها؟ (${name})`, choices };
   } else if ((P.tbsp || P.spoon) && !(P.plate || P.bowl || P.piece)) {
-    const sp = P.tbsp || P.spoon;
-    q = { kind: "spoon", en: `How many spoons? (${nameEn})`, ar: `كم ملعقة؟ (${name})`,
-      choices: [1, 2, 3, 4].map((n) => ({ en: String(n), ar: String(n), grams: r5(n * sp), n })) };
+    // v6.18 (measured): oil drizzled on a plate is often a teaspoon; cream in a sauce is cups, not spoons
+    const sp = P.tbsp || P.spoon, ch = [{ en: "1 tsp", ar: "ملعقة صغيرة", grams: Math.max(1, Math.round(sp / 3)) }];
+    for (const n of [1, 2, 3]) ch.push({ en: n + " tbsp", ar: n + " ملعقة", grams: Math.round(n * sp), n });
+    if (P.cup) for (const [k, en, ar] of [[0.25, "¼ cup", "ربع كوب"], [0.5, "½ cup", "نصف كوب"], [1, "1 cup", "كوب"]]) ch.push({ en, ar, grams: Math.round(k * P.cup) });
+    else ch.push({ en: "4 tbsp", ar: "4 ملاعق", grams: Math.round(4 * sp), n: 4 });
+    q = { kind: "spoon", en: `How much? (${nameEn})`, ar: `كم الكمية؟ (${name})`, choices: ch };
+  } else if (fd && fd.kcal >= 350 && !(P.plate || P.bowl)) {
+    // v6.18 (measured): nuts, seeds and grated cheese on top were asked "how much of the plate" — ¼ plate of pistachios = 532 kcal
+    q = { kind: "sprinkle", en: `How much? (${nameEn})`, ar: `كم الكمية؟ (${name})`,
+      choices: [[5, "a pinch", "رشة"], [10, "1 tbsp", "ملعقة"], [20, "2 tbsp", "ملعقتان"], [30, "a handful", "حفنة"], [60, "2 handfuls", "حفنتان"]].map(([g, en, ar]) => ({ en, ar, grams: g })) };
   } else if (fd) {
     const full = fullPlate(fd);
     q = { kind: "plate", en: `How much of the plate? (${nameEn})`, ar: `كم من الطبق؟ (${name})`,
-      choices: [[0.25, "¼ plate", "ربع طبق"], [0.5, "½ plate", "نصف طبق"], [0.75, "¾ plate", "ثلاثة أرباع"], [1, "full plate", "طبق كامل"], [1.4, "heaped", "طبق ممتلئ جدًا"]]
+      choices: [[0.1, "a little", "قليل"], [0.25, "¼ plate", "ربع طبق"], [0.5, "½ plate", "نصف طبق"], [0.75, "¾ plate", "ثلاثة أرباع"], [1, "full plate", "طبق كامل"], [1.4, "heaped", "طبق ممتلئ جدًا"]]
         .map(([s, en, ar]) => ({ en, ar, grams: r5(s * full) })) };
   }
   if (!q || !q.choices.length) return null;

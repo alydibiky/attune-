@@ -129,6 +129,18 @@ export const MORE_FOODS = [
   // v6.17: a photo's "tomato sauce" / "ricotta" had no food of their own (tomato sauce became raw tomato, 18 kcal)
   ["tomato-sauce", "Tomato sauce|marinara sauce|pasta sauce|red sauce", "صلصة طماطم|صلصة|صوص طماطم", 60, 1.5, 8, 2.5, 1.5, { tbsp: 15, cup: 250, serving: 60 }, "fats"],
   ["ricotta", "Ricotta cheese|ricotta", "ريكوتا|جبنة ريكوتا", 174, 11, 3, 13, 0, { tbsp: 30, cup: 250, serving: 60 }, "dairy"],
+  // v6.18: common foods a photo reader names that the table lacked (measured on 40 real plates; USDA values)
+  ["beef-patty", "Beef burger patty|beef patty|burger patty|hamburger patty", "قرص برجر|برجر لحم", 250, 26, 0, 16, 0, { piece: 110, patty: 110 }, "protein"],
+  ["ham", "Ham (sliced)|ham|deli ham", "لانشون|هام", 145, 21, 1.5, 6, 0, { slice: 28, piece: 28 }, "protein"],
+  ["heavy-cream", "Heavy cream|whipping cream|double cream", "كريمة خفق|كريمة ثقيلة", 340, 2.8, 2.7, 36, 0, { tbsp: 15, cup: 240 }, "dairy"],
+  ["whipped-cream", "Whipped cream|chantilly", "كريمة مخفوقة|شانتيه", 257, 3.2, 12.5, 22, 0, { tbsp: 8, cup: 60 }, "dairy"],
+  ["dessert-sauce", "Chocolate or caramel sauce|chocolate sauce|caramel sauce|chocolate syrup|caramel", "صوص شوكولاتة|صوص كراميل", 320, 2, 60, 9, 1, { tbsp: 20 }, "sweets"],
+  ["brioche", "Brioche|brioche bread|brioche bun", "بريوش", 350, 9, 48, 13, 2, { slice: 35, piece: 55 }, "grains"],
+  ["burrata", "Burrata|burrata cheese", "بوراتا", 300, 17, 2, 25, 0, { piece: 120 }, "dairy"],
+  ["smoked-salmon", "Smoked salmon|lox", "سلمون مدخن", 117, 18, 0, 4.3, 0, { slice: 20, serving: 60 }, "protein"],
+  ["minced-meat", "Minced meat (cooked)|ground beef|minced beef|ground lamb|cooked mince", "لحمة مفرومة|لحم مفروم", 270, 25, 0, 18, 0, { cup: 150, serving: 100 }, "protein"],
+  ["pine-nuts", "Pine nuts|pignoli", "صنوبر", 673, 14, 13, 68, 3.7, { tbsp: 9, handful: 30 }, "nuts"],
+  ["coconut-milk", "Coconut milk (canned)|coconut milk", "حليب جوز الهند", 230, 2.3, 6, 24, 2.2, { cup: 240, tbsp: 15 }, "dairy"],
   ["halloumi", "Halloumi", "حلوم|حلومي", 321, 21, 2, 25, 0, { slice: 30 }, "dairy"],
   ["cream-cheese", "Cream cheese", "جبنة كريمي|كيري|جبنة كريمية", 342, 6, 4, 34, 0, { tbsp: 15, piece: 18 }, "dairy"],
   ["mish", "Mish (aged cheese)", "مش|جبنة قديمة", 280, 18, 3, 22, 0, { tbsp: 15 }, "dairy"],
