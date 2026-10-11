@@ -122,6 +122,8 @@ dependencies {
     // Fit & Food (v6.1): barcodes read on the phone from a photo — ML Kit with its model bundled
     // (works offline, nothing uploaded). Apache-2.0 SDK terms from Google.
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    // v6.16c: the text in a food photo (a menu, a delivery app, a label: «Big BAIK … 1000 kcal») read on the phone — Latin model bundled
+    implementation("com.google.mlkit:text-recognition:16.0.1")
     // Fit & Food (v6.3): steps, calories burned and workouts from the watch apps, through Android's
     // Health Connect (read only). Coroutines: its API is suspend functions.
     // (1.1.0 final needs compileSdk 36 + AGP 8.9.1; this release builds with compileSdk 35 / AGP 8.7.2)

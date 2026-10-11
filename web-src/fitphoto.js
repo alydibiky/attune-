@@ -127,3 +127,32 @@ export function noteItems(note) {
   const r = R.readMealText(t);
   return r.items.length && !r.unknown.length ? r.items : [];
 }
+
+/* v6.16c (Ali: a photo of a menu said «fish, 600 kcal» for «Big BAIK … 1000 kcal») — the text IN the photo comes first.
+   A menu, a delivery app or a label prints the dish and its calories; ML Kit reads them on the phone (readText), and
+   these numbers beat any guess from the picture. ocr = {text, lines: [{text, h, y}]} → {name, kcal, p, c, f} or null. */
+const KCAL_RX = /(\d{1,4}(?:[.,]\d+)?)\s*(?:k\s?cal|kcals?|calories|cal\b|سعرة|سعر|كالوري|كيلو\s?كالوري)/i;
+const NOT_NAME = /^(add to (order|cart|basket)|order|buy|dietary|allergens?|nutrition|calories|ingredients|description|qty|quantity|total|subtotal|price|delivery|menu|back|share|favou?rites?|reviews?|\d+)$/i;
+const MACRO = { p: /protein\D{0,12}(\d+(?:[.,]\d+)?)\s*g/i, c: /carb(?:ohydrate)?s?\D{0,12}(\d+(?:[.,]\d+)?)\s*g/i, f: /\bfat\D{0,12}(\d+(?:[.,]\d+)?)\s*g/i };
+export function menuFromText(ocr) {
+  const lines = ((ocr && ocr.lines) || []).map((l) => ({ text: String(l.text || "").trim(), h: +l.h || 0, y: +l.y || 0 })).filter((l) => l.text);
+  const all = ((ocr && ocr.text) || lines.map((l) => l.text).join("\n"));
+  if (/nutrition facts|per 100\s?g|القيمة الغذائية|لكل ١٠٠|لكل 100/i.test(all)) return null;   // a full label: the label reader handles serving vs 100 g
+  const m = KCAL_RX.exec(all) || /(?:calories|energy|السعرات)\s*[:\-]?\s*(\d{2,4})(?!\s*(?:g|mg|%))/i.exec(all);
+  if (!m) return null;
+  const kcal = Math.round(parseFloat(m[1].replace(",", ".")));
+  if (!(kcal >= 20 && kcal <= 5000)) return null;
+  // the dish: the biggest line that is words (not a price, a button, a calorie count or a sentence of description)
+  const cands = lines.filter((l) => /\p{L}{2,}/u.test(l.text) && !KCAL_RX.test(l.text) && !NOT_NAME.test(l.text.replace(/[^\p{L}\p{N} ]/gu, "").trim())
+    && !/[$€£¥]|\b(egp|sar|aed|usd|le|ج\.?م|ر\.?س)\b|^\s*[\d.,]+\s*$/i.test(l.text) && l.text.split(/\s+/).length <= 6 && l.text.length <= 48);
+  cands.sort((a, b) => b.h - a.h || a.y - b.y);
+  const name = cands.length ? cands[0].text : "";
+  const out = { name, kcal };
+  for (const [k, rx] of Object.entries(MACRO)) { const x = rx.exec(all); if (x) out[k] = parseFloat(x[1].replace(",", ".")); }
+  return out;
+}
+/** The menu's numbers as a draft item: its calories exactly as printed (a quick add — no grams), named as printed. */
+export function menuItem(menu) {
+  const name = menu.name || "Meal from the photo";
+  return { name, ar: name, said: name, quick: true, grams: 0, kcal: menu.kcal, p: menu.p || 0, c: menu.c || 0, f: menu.f || 0, fib: 0, src: "photo-text", from: "photo-text" };
+}

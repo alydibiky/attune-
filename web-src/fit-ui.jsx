@@ -9,6 +9,7 @@ import { getLang } from "./i18n.js";
 import * as F from "./fit.js";
 import { searchGenerated, getGenerated, GENERATED_COUNT } from "./fit-recipegen.js";
 import * as DB from "./fitdb.js";
+import * as FP from "./foodpack.js";
 import * as R from "./fitread.js";
 import * as PH from "./fitphoto.js";
 import * as CL from "./fitclip.js";
@@ -94,7 +95,7 @@ function Bar({ label, v, max, cls }) {
 // the watch and 3 photo meals a day; Pro adds unlimited photo meals, the week's meal plan + shopping
 // list and the week report. `pro` defaults to on (web preview, tests); the app passes the real state.
 export const FREE_PHOTOS_PER_DAY = 3;
-export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, packText, scanBarcode, native, share, listen, health, pro = true, openPlan, photoClip }) {
+export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, packText, scanBarcode, readText, native, share, listen, health, pro = true, openPlan, photoClip }) {
   const ar = getLang() === "ar";
   const L = (en, a) => (ar ? a : en);
   const [st, setSt] = useState(load);
@@ -214,12 +215,17 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     // the chat model's list: in place of the instant one when it is untouched, else offered with one tap
     const place = (items) => { if (!instant) { setDraft(items); return; } if (draftRef.current === shownRef.current) { shownRef.current = items; setDraft(items); } else setAiAlt(items); };
     const fastP = clipOn ? fastLook().catch(() => null) : Promise.resolve(null);
+    // v6.16c: the text in the photo, read side by side with the barcode look — a menu / delivery app / label that prints the
+    // dish and its calories («Big BAIK … 1000 kcal») is logged with those numbers, never with a guess from the picture
+    const textP = readText ? PH.withLimit(readText(photo.data), 6000).catch(() => null) : Promise.resolve(null);
     if (scanBarcode) {
       setStage(L("Looking for a barcode…", "بدوّر على باركود…"));
       try { const codes = await PH.withLimit(scanBarcode(photo.data), 8000); if (run.current !== me) return;
         for (const c of codes || []) { const fd = await DB.byBarcode(c, fetchJson); if (fd) { setDraft([{ ...F.itemFromFood(fd, 1, Object.keys(fd.portions || {})[0] || "serving"), base: null }]); return; } }
       } catch (e) {}
     }
+    { const menu = PH.menuFromText(await textP); if (run.current !== me) return;
+      if (menu) { setDraft([PH.menuItem(menu)]); return; } }
     const note = text.trim();
     let fast = null;
     if (clipOn) {
@@ -346,6 +352,22 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     logNow(adding, ok, L(`Added to ${MEAL_NAMES[adding][0].toLowerCase()} — ${ok.reduce((a, x) => a + (x.kcal || 0), 0)} kcal`, `أُضيف إلى ${MEAL_NAMES[adding][1]} — ${ok.reduce((a, x) => a + (x.kcal || 0), 0)} سعر`));
     setDraft(null); setText(""); setPhoto(null); setQ(""); setAdding(null);
   };
+  // v6.16c (Ali: "I downloaded all the packs but typing the food loaded nothing" — the food pack lived in Fit's settings):
+  // the food database (Egypt + the most popular, ≈240,000 products) downloads by itself on Wi-Fi the first time Fit opens
+  const [packBg, setPackBg] = useState(null);
+  useEffect(() => {
+    let stopped = false;
+    (async () => {
+      const s = DB.getPackStore(); if (!packText || !s) return;
+      if (!(native && native.unmetered && native.unmetered())) return;
+      const meta = await s.getMeta(); const m = JSON.parse(await packText("manifest.json")); const want = Math.min(10, m.shards.length);
+      if ((meta.done || []).length >= want) return;
+      setPackBg({ shard: 0, of: want, count: 0 });
+      await FP.installPack({ store: s, manifest: m, getText: packText, shards: want, isStopped: () => stopped, onProgress: (p) => setPackBg(p) });
+      if (!stopped) setPackBg(null);
+    })().catch(() => setPackBg(null));
+    return () => { stopped = true; };
+  }, []);
   // the offline food pack answers while you type (when it is installed)
   const [packHits, setPackHits] = useState([]);
   useEffect(() => {
@@ -353,6 +375,12 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     let on = true; const t = setTimeout(() => { DB.packSearch(qq, 12).then((h) => on && setPackHits(h)); }, 120);
     return () => { on = false; clearTimeout(t); };
   }, [q, adding]);
+  // v6.16c: and when the phone knows little, the big online databases are asked by themselves after a short pause (no button)
+  useEffect(() => {
+    const qq = q.trim(); if (!fetchJson || qq.length < 3 || /^\d{8,14}$/.test(qq) || (online && online.q === qq)) return;
+    const t = setTimeout(() => { if (DB.searchOffline(qq, 12).length + packHits.length < 6) searchOnline(); }, 900);
+    return () => clearTimeout(t);
+  }, [q, packHits]);
   const results = useMemo(() => {
     if (q.trim().length < 2) return [];
     const base = online && online.q === q.trim() ? online.foods : DB.searchOffline(q, 12);
@@ -454,6 +482,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               <Search size={15} className="absolute top-2.5 start-2.5 text-slate-500" />
               <input ref={searchRef} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") searchOnline(); }} data-testid="fit-search" placeholder={L("Or search foods, brands or a barcode…", "أو ابحث عن طعام أو علامة تجارية أو باركود…")} className="w-full rounded-xl bg-slate-800 py-2 ps-8 pe-2 text-[14px] text-white placeholder:text-slate-500" />
             </div>
+            {packBg ? <p className="text-[11.5px] text-emerald-300 flex items-center gap-1.5" data-testid="fit-pack-bg"><Loader2 size={12} className="animate-spin" />{L(`Getting the food database on Wi-Fi… ${(packBg.count || 0).toLocaleString("en")} foods so far`, `جارٍ تنزيل قاعدة الأطعمة على الواي فاي… ${(packBg.count || 0).toLocaleString("en")} طعام حتى الآن`)}</p> : null}
             <div className="flex gap-2">
               {fetchJson && q.trim().length >= 2 ? <button onClick={searchOnline} disabled={searching} className="flex-1 rounded-lg bg-sky-700 py-1.5 text-[12.5px] text-white flex items-center justify-center gap-1" data-testid="fit-search-online">{searching ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}{L("Search millions of foods", "دوّر في ملايين الأكلات")}</button> : null}
               {scanBarcode ? <button onClick={() => codeRef.current && codeRef.current.click()} disabled={searching} className="flex-1 rounded-lg bg-slate-800 py-1.5 text-[12.5px] text-slate-200 flex items-center justify-center gap-1" data-testid="fit-barcode"><Camera size={14} />{L("Scan a barcode", "صوّر الباركود")}</button> : null}
@@ -482,14 +511,15 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                         {x.learned ? <span className="ms-1 text-[10.5px] text-violet-300">{L("as you corrected it", "كما صحّحته")}</span> : null}
                         {x.flag ? <span className="ms-1 text-[10.5px] text-amber-300" data-testid="fit-flag">{x.flag === "amount" ? L(`check the amount (${x.was} g written)`, `راجع الكمية (المكتوب ${x.was} جم)`) : L("check the portion", "راجع الكمية")}</span> : null}
                         {x.zoomed ? <span className="ms-1 text-[10.5px] text-sky-300">{L("looked closer", "اتبص عليها أقرب")}</span> : null}
+                        {x.from === "photo-text" ? <span className="ms-1 text-[10.5px] text-emerald-300" data-testid="fit-as-printed">{L("calories as printed in the photo", "السعرات كما هي مكتوبة في الصورة")}</span> : null}
                         {x.estimate && <span className="ms-1 text-[10.5px] text-amber-300">{x.unknown ? L("unknown", "غير معروف") : L("estimate", "تقدير")}</span>}
                         {x.check ? <span className="ms-1 text-[10.5px] text-amber-300">{L("label may be wrong", "الملصق ممكن يكون غلط")}</span> : null}
                         <Grades x={x} L={L} />
                       </div>
                       <div className="text-[11.5px] text-slate-400 tabular-nums">{r0(x.kcal)} kcal · P {r0(x.p)} · C {r0(x.c)} · F {r0(x.f)}</div>
                     </div>
-                    <input type="number" inputMode="numeric" value={x.grams} onChange={(e) => setGrams(i, e.target.value)} className="w-16 rounded bg-slate-900 px-1.5 py-1 text-[13px] text-white text-end" data-testid="fit-draft-grams" />
-                    <span className="text-[11px] text-slate-500">g</span>
+                    {x.quick ? null : <><input type="number" inputMode="numeric" value={x.grams} onChange={(e) => setGrams(i, e.target.value)} className="w-16 rounded bg-slate-900 px-1.5 py-1 text-[13px] text-white text-end" data-testid="fit-draft-grams" />
+                    <span className="text-[11px] text-slate-500">g</span></>}
                     {x.id ? <button onClick={() => { const on = P.isFav(st.favFoods, x.id); upd((s) => ({ ...s, favFoods: P.toggleFav(s.favFoods, x) })); flash && flash(on ? L("Removed from favorites", "أُزيلت من المفضلة") : L(`★ ${x.name} — ${x.grams} g, one tap next time`, `★ ${x.ar || x.name} — ${x.grams} جم، ضغطة واحدة المرة الجاية`)); }}
                       className={P.isFav(st.favFoods, x.id) ? "text-amber-300" : "text-slate-500"} data-testid="fit-fav-toggle" aria-label={L("Favorite", "مفضلة")}><Star size={15} fill={P.isFav(st.favFoods, x.id) ? "currentColor" : "none"} /></button> : null}
                     <button onClick={() => setDraft((d) => d.filter((_, k) => k !== i))} className="text-slate-500"><Trash2 size={15} /></button>

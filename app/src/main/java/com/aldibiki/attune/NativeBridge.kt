@@ -955,6 +955,27 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v6.16c: the text in a photo ({b64}), read on the phone by ML Kit (Latin) → {text, lines: [{text, h, y}]} — h = the
+     *  line's height in pixels (the biggest line is usually the dish's name), y = its top. */
+    @JavascriptInterface
+    fun readText(id: String, arg: String) {
+        pool.execute {
+            try {
+                val bytes = android.util.Base64.decode(JSONObject(arg).getString("b64"), android.util.Base64.DEFAULT)
+                val bmp = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: throw Exception("Couldn't open that picture")
+                val client = com.google.mlkit.vision.text.TextRecognition.getClient(com.google.mlkit.vision.text.latin.TextRecognizerOptions.DEFAULT_OPTIONS)
+                val found = com.google.android.gms.tasks.Tasks.await(client.process(com.google.mlkit.vision.common.InputImage.fromBitmap(bmp, 0)), 20, java.util.concurrent.TimeUnit.SECONDS)
+                val lines = org.json.JSONArray()
+                for (block in found.textBlocks) for (line in block.lines) {
+                    val b = line.boundingBox
+                    lines.put(JSONObject().put("text", line.text).put("h", b?.height() ?: 0).put("y", b?.top ?: 0))
+                }
+                client.close(); bmp.recycle()
+                resolve(id, JSONObject().put("text", found.text).put("lines", lines))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the text in that picture") }
+        }
+    }
+
     /** SHA-256 of the weights in use: proof that the model has not changed. */
     @JavascriptInterface
     fun hash(id: String, modelId: String) {
