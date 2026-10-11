@@ -779,7 +779,7 @@ function photoItem(it, extra = {}, plate = "dinner plate") {
   if (fd) { const g = Math.round(grams || gramsOf(fd, 1, "serving")); item = { name: fd.en, ar: fd.ar || "", id: fd.id, src: fd.src || "table", qty: 1, unit: "g", grams: g, ...nutrients(fd, g), estimate: false }; }
   else item = { name, qty: 1, unit: "g", grams: Math.round(grams || 150), kcal: null, p: null, c: null, f: null, fib: 0, estimate: true, unknown: true };
   const box = Array.isArray(it.box) && it.box.length === 4 && it.box.every((v) => num(v) >= 0 && num(v) <= 1) ? it.box.map(num) : null;
-  return { ...item, said: name, alts, conf, learned: !!lf, base: item.grams, ...(portionFlag ? { flag: "portion" } : {}), ...(box ? { box } : {}), ...extra };
+  return { ...item, said: name, alts, conf, learned: !!lf, ...(lf ? { learnedN: lf.n } : {}), base: item.grams, ...(portionFlag ? { flag: "portion" } : {}), ...(box ? { box } : {}), ...extra };
 }
 /** The zoomed look's JSON → the item with a better name (the grams stay), or the item unchanged. */
 export function applyZoom(item, raw) {

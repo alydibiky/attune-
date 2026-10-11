@@ -39,7 +39,7 @@ with sync_playwright() as p:
             check(items(page).count() == 2 and "toast" in txt.lower(), "untouched → the AI's fuller list replaces it (eggs + toast)")
             page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(300)
         else:
-            page.locator("[data-testid=fit-portion-1\\.5]").first.click()   # the person changes the quick answer
+            page.locator("[data-testid=fit-amount]").first.locator("[data-testid=fit-amount-choice]").nth(1).click()   # the person changes the quick answer (v6.18: how many)
             page.wait_for_selector("[data-testid=fit-ai-alt]", timeout=30000)
             check(items(page).count() == 1 and "toast" in page.locator("[data-testid=fit-ai-alt]").inner_text().lower(), "changed by the person → the AI's list is offered, not forced")
             page.locator("[data-testid=fit-ai-alt] button").first.click(); page.wait_for_timeout(200)

@@ -80,9 +80,11 @@ with sync_playwright() as p:
     check(alts.count() >= 2 and "Koshari" in page.locator("[data-testid=fit-alts]").first.inner_text(), "an unsure item offers its other guesses")
     shot(page, "fit-photo-guesses")
     page.locator("[data-testid=fit-alt]", has_text="Koshari").first.click()
-    page.locator("[data-testid=fit-portion-1\\.5]").first.click()
+    # v6.18: the amount is asked with concrete choices ("how much of the plate?") instead of ×0.5…×2
+    check(page.locator("[data-testid=fit-amount]").count() >= 1 and page.locator("[data-testid=fit-ask-note]").count() == 1, "the unsure item asks how much of the plate")
+    page.locator("[data-testid=fit-amount]").first.locator("[data-testid=fit-amount-choice]", has_text="full plate").click()
     t0 = items(page).first.inner_text()
-    check("Koshari" in t0 and page.locator("[data-testid=fit-draft-grams]").first.input_value() == "450", "tapped Koshari, ×1.5 → 450 g")
+    check("Koshari" in t0 and page.locator("[data-testid=fit-draft-grams]").first.input_value() == "450", "tapped Koshari, “full plate” → 450 g")
     page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(200)
 
     # ---- the next photo remembers the correction ----

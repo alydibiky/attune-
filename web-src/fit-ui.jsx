@@ -13,6 +13,7 @@ import * as FP from "./foodpack.js";
 import * as R from "./fitread.js";
 import * as PH from "./fitphoto.js";
 import * as CL from "./fitclip.js";
+import * as AQ from "./fitamount.js";
 import * as P from "./fitplus.js";
 import * as Y from "./fityazio.js";
 import * as MI from "./fitmicro.js";
@@ -516,8 +517,9 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                 {L("The AI sees: ", "الذكاء الاصطناعي شايف: ")}<b>{aiAlt.map((x) => (ar && x.ar) || x.name).join(" · ")}</b>
                 <div className="flex gap-2 mt-1.5"><button onClick={() => { setDraft(aiAlt); setAiAlt(null); }} className="rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold">{L("Use this", "استخدام هذا")}</button><button onClick={() => setAiAlt(null)} className="rounded-lg bg-slate-800 px-2.5 py-1">{L("Keep mine", "الإبقاء على اختياري")}</button></div></div> : null}
               {busy && stage ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" />{stage}</div> : null}
+              {(() => { const ask = AQ.askFirst(draft); return ask.length ? <div className="text-[12.5px] text-amber-200" data-testid="fit-ask-note">{L(`One tap each: how much is on your plate? (${ask.length})`, `ضغطة واحدة لكل صنف: كم الكمية في طبقك؟ (${ask.length})`)}</div> : null; })()}
               {draft.map((x, i) => (
-                <div key={i} className="rounded-lg bg-slate-800/70 px-2 py-1.5 space-y-1.5" data-testid="fit-draft-item">
+                <div key={i} className={"rounded-lg bg-slate-800/70 px-2 py-1.5 space-y-1.5 " + (AQ.askFirst(draft).includes(i) ? "ring-1 ring-amber-500/70" : "")} data-testid="fit-draft-item">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="text-[13.5px] text-white truncate">
@@ -546,7 +548,13 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                       {(x.alts || []).map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={"rounded-full px-2 py-0.5 text-[11.5px] " + (a.food.id === x.id ? "bg-emerald-700 text-white" : "bg-slate-900 text-slate-300")} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : a.food.en}</button> : null)}
                       <button onClick={() => { setReplaceAt(i); setDraft((d) => d); }} className="rounded-full px-2 py-0.5 text-[11.5px] bg-slate-900 text-sky-300" data-testid="fit-alt-other">{L("something else…", "شيء آخر…")}</button>
                     </div>) : null}
-                  {x.base ? (
+                  {(() => { const aq = x.from === "text" ? null : AQ.amountQuestion(x); if (!aq) return null;
+                    return <div className="flex flex-wrap gap-1 items-center" data-testid="fit-amount">
+                      <span className="text-[11.5px] text-amber-200 me-0.5">{L(aq.en.replace(/ \(.*\)$/, ""), aq.ar.replace(/ \(.*\)$/, ""))}</span>
+                      {aq.choices.map((c, k) => <button key={k} onClick={() => setDraft((d) => d.map((y, j) => (j === i ? AQ.answerAmount(y, c.grams) : y)))}
+                        className={"rounded-full px-2.5 py-1 text-[12px] " + (x.answered && k === aq.at ? "bg-amber-500 text-slate-950 font-semibold" : k === aq.at ? "bg-slate-700 text-white" : "bg-slate-900 text-slate-300")} data-testid="fit-amount-choice">{L(c.en, c.ar)}</button>)}
+                    </div>; })()}
+                  {x.base && (x.from === "text" || !AQ.amountQuestion(x)) ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-portions">
                       {[0.5, 0.75, 1, 1.5, 2].map((k) => <button key={k} onClick={() => scaleAt(i, k)} className={"rounded px-2 py-0.5 text-[11.5px] " + ((x.k || 1) === k ? "bg-sky-700 text-white" : "bg-slate-900 text-slate-300")} data-testid={"fit-portion-" + k}>{k === 1 ? (x.from === "text" ? L("as written", "كما كتبت") : L("as seen", "كما في الصورة")) : "×" + k}</button>)}
                     </div>) : null}

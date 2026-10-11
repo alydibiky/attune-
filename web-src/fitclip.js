@@ -214,11 +214,14 @@ export function decide(bank, ranked, auto = (bank && bank.auto) || AUTO) {
   const alts = F.uniqAlts(ranked.map((r) => entryFood(bank.items[r.i])).filter(Boolean).map((fd) => ({ label: fd.en, food: fd })));   // v6.12: no "Fried egg · Fried egg"
   const p = ranked[0].p, conf = Math.round(Math.min(0.99, Math.max(0.3, p)) * 100) / 100;
   const status = p >= auto ? "auto" : "guess";
-  const fd = entryFood(top);
+  // v6.18: what the person corrected last time (the food they chose, their usual amount) is used for this dish at once
+  const lf = F.learned(top.en), lfd = lf ? (F.food(lf.id) || lf.food) : null;
+  const fd = lfd || entryFood(top);
   let item;
   if (fd) {
-    const base = defaultItem(fd);
-    item = { ...base, said: top.en, conf, alts, base: base.grams, fast: true, ...(top.kind === "like" ? { estimate: true, like: fd.like } : {}) };
+    const base = defaultItem(fd), g = lf ? Math.max(1, Math.round(base.grams * lf.ratio)) : base.grams;
+    const it0 = g !== base.grams ? F.scaleItem({ ...base, base: base.grams }, g / base.grams) : base;
+    item = { ...it0, k: 1, said: top.en, conf, alts, base: g, fast: true, ...(lf ? { learned: true, learnedN: lf.n } : {}), ...(!lfd && top.kind === "like" ? { estimate: true, like: fd.like } : {}) };
   } else {
     item = { ...unknownItem(top.en, null, { ar: top.ar }), conf, alts, fast: true };
   }
