@@ -894,8 +894,78 @@ def nhtsa_safety(B, makes=None):
     except BaseException as e: print("cars: complaints failed", e)
     return rows
 
+# v6.21 (Ali: "huge knowledge packs about cars till Oct 10 2026"): Canada's official fuel-consumption ratings (NRCan, Open
+# Government Licence – Canada: commercial use allowed with credit) — every car, SUV and pickup sold in Canada, petrol, hybrid,
+# plug-in and electric, model years 2015 to 2026 (one CSV per year on open.canada.ca, read through its CKAN API).
+NRCAN_PKG = "https://open.canada.ca/data/api/action/package_show?id=98f1a129-f628-4ce4-b24d-6f16bf24dd64"
+
+def nrcan_rows(csv_text, kind="fuel"):
+    """One NRCan ratings CSV → passages, one per make + model + year (its versions listed). Columns are found by their words."""
+    lines = [l for l in csv_text.splitlines() if l.strip()]
+    # the header may span two lines ("Fuel consumption" over "City (L/100 km)" …): use the line that names Make and Model
+    hi = next((i for i, l in enumerate(lines[:6]) if "make" in l.lower() and "model" in l.lower()), 0)
+    rd = csv.reader(lines[hi:])
+    head = [h.strip().lower() for h in next(rd)]
+    def col(*words):
+        for i, h in enumerate(head):          # the exact name first ("model", not "model year")
+            if h == " ".join(words): return i
+        for i, h in enumerate(head):
+            if all(w in h for w in words) and not (words == ("model",) and "year" in h): return i
+        return None
+    c = {k: col(*w) for k, w in {"year": ("year",), "make": ("make",), "model": ("model",), "cls": ("class",), "eng": ("engine",), "cyl": ("cylinder",),
+         "tr": ("transmission",), "fuel": ("fuel", "type"), "city": ("city",), "hwy": ("highway",), "comb": ("combined",), "co2": ("co2", "emission"),
+         "kw": ("motor",), "range": ("range",), "charge": ("recharge",)}.items()}
+    if c["make"] is None or c["model"] is None: return []
+    g = {}
+    for r in rd:
+        if len(r) < len(head) - 2: continue
+        v = lambda k: (r[c[k]].strip() if c[k] is not None and c[k] < len(r) else "")
+        y, mk, md = v("year"), v("make"), v("model")
+        if not (y.isdigit() and mk and md): continue
+        bits = []
+        if v("cls"): bits.append(v("cls").lower())
+        if v("eng") and v("eng") not in ("0", "0.0"): bits.append(f"{v('eng')} L" + (f" {v('cyl')}-cyl" if v("cyl") else ""))
+        if v("kw"): bits.append(f"{v('kw')} kW motor")
+        if v("tr"): bits.append("transmission " + v("tr"))
+        if v("comb"): bits.append(f"{v('city')}/{v('hwy')}/{v('comb')} L/100 km city/highway/combined" if kind == "fuel" else f"{v('comb')} kWh/100 km combined")
+        if v("range"): bits.append(f"range {v('range')} km")
+        if v("charge"): bits.append(f"recharge {v('charge')} h")
+        if v("co2"): bits.append(f"CO2 {v('co2')} g/km")
+        g.setdefault((y, make_label(mk), md), []).append(", ".join(bits))
+    out = []
+    for (y, mk, md), vers in g.items():
+        vers = list(dict.fromkeys(vers))[:12]
+        out.append({"t": f"{mk} {md} ({y}, Canada)", "x": f"{mk} {md}, model year {y} (Canada, {'electric' if kind == 'bev' else 'plug-in hybrid' if kind == 'phev' else 'petrol / diesel / hybrid'}) — "
+                    + " · ".join(vers) + ". Official ratings, Natural Resources Canada.", "u": "https://open.canada.ca/data/en/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64", "l": "en"})
+    return out
+
+def nrcan_all(B, from_year=2015):
+    pkg = json.loads(B.get(NRCAN_PKG))
+    rows = []
+    for res in pkg["result"]["resources"]:
+        url, name = res.get("url", ""), (res.get("name") or res.get("name_translated", {}).get("en") or "")
+        if isinstance(name, dict): name = name.get("en", "")
+        if not url.lower().endswith(".csv") or "fr" in (res.get("language") or []) and "en" not in (res.get("language") or []): continue
+        lo = (name + " " + url).lower()
+        kind = "bev" if ("battery" in lo or "bev" in lo) and "hybrid" not in lo else "phev" if "plug-in" in lo or "phev" in lo else "fuel"
+        yrs = [int(x) for x in re.findall(r"(?<!\d)(20\d\d)(?!\d)", lo)]
+        if yrs and max(yrs) < from_year: continue
+        try: text = B.get(url, 180).decode("latin-1")
+        except BaseException as e: print("cars: NRCan skip", url, e); continue
+        r = nrcan_rows(text, kind); r = [x for x in r if int(re.search(r"\((\d{4})", x["t"]).group(1)) >= from_year]
+        print(f"cars: NRCan {name or url}: {len(r)} passages"); rows += r
+    # the same model + year from two files (a year's file and a multi-year one): kept once
+    seen, out = set(), []
+    for x in rows:
+        if x["t"] in seen: continue
+        seen.add(x["t"]); out.append(x)
+    return out
+
 def build_cars(a):
     B = _bk(); rows = []
+    try:
+        r = nrcan_all(B); print(f"cars: NRCan {len(r)} passages"); rows += r
+    except BaseException as e: print(f"cars: NRCan failed ({e})")
     try:
         z = zipfile.ZipFile(io.BytesIO(B.get(EPA_CARS, 300)))
         r = epa_rows(z.read(z.namelist()[0]).decode("utf-8", "replace")); print(f"cars: EPA {len(r)} passages"); rows += r
@@ -944,14 +1014,15 @@ def build_cars(a):
     makes = {make_key(r["t"].split(" (")[0] if " (" in r["t"] else r["t"].split(" ")[0]) for r in rows}
     rows += nhtsa_safety(B, makes)
     B.write_pack(a.out, "cars", rows, {
-        "name": "Cars — specs (US & Europe, incl. Chinese brands)", "name_ar": "السيارات — المواصفات (أمريكا وأوروبا، ومنها الصينية)",
+        "name": "Cars — specs (US, Europe & Canada, incl. Chinese brands)", "name_ar": "السيارات — المواصفات (أمريكا وأوروبا وكندا، ومنها الصينية)",
         "license": "US EPA data: public domain. EEA data: CC BY 4.0",
-        "attribution": "US: fueleconomy.gov (US EPA / Department of Energy), every model sold in the US since 2000; safety recalls and owner complaints from NHTSA (public domain). Europe: CO2 monitoring data of new passenger cars, European Environment Agency (EEA), CC BY 4.0 — every version registered in the EU since 2010, Chinese brands included.",
+        "attribution": "US: fueleconomy.gov (US EPA / Department of Energy), every model sold in the US since 2000; safety recalls and owner complaints from NHTSA (public domain). Europe: CO2 monitoring data of new passenger cars, European Environment Agency (EEA), CC BY 4.0 — every version registered in the EU since 2010, Chinese brands included. Canada: Fuel consumption ratings, Natural Resources Canada — contains information licensed under the Open Government Licence – Canada (2015 to the newest model year).",
         "notice": "Official test figures (EPA / WLTP); prices are not in these sources — ask online for today's price.",
         "notice_ar": "أرقام الاختبارات الرسمية (EPA / WLTP)؛ الأسعار ليست في هذه المصادر — اسأل عبر الإنترنت عن السعر الحالي.",
         "sources": [{"title": "fueleconomy.gov (US EPA)", "url": "https://www.fueleconomy.gov/feg/download.shtml", "license": "Public domain"},
                     {"title": "EEA — CO2 emissions from new passenger cars", "url": "https://www.eea.europa.eu/en/datahub", "license": "CC BY 4.0"},
-                    {"title": "NHTSA recalls and complaints", "url": "https://www.nhtsa.gov/nhtsa-datasets-and-apis", "license": "Public domain"}],
+                    {"title": "NHTSA recalls and complaints", "url": "https://www.nhtsa.gov/nhtsa-datasets-and-apis", "license": "Public domain"},
+                    {"title": "Fuel consumption ratings (Natural Resources Canada)", "url": "https://open.canada.ca/data/en/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64", "license": "Open Government Licence – Canada"}],
         "retrieved": time.strftime("%Y-%m-%d")})
 
 # ---- subject packs (Ali): math, physics, chemistry, biology, history — OpenStax CC BY books, formulas and worked examples kept ----------
