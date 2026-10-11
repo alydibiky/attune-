@@ -934,6 +934,37 @@ Ali: "I don't want mistakes" / "I want an accuracy of above 80 percent".
   capped for every web answer (found pages or not), and on a slow phone (< 1,200 answer tokens) no section template but a
   "answer in about N words" note. Tests: `unit/v712shape`, `e2e_v700auto.py` (7.5 tokens/s → max 525 tokens, short prompt).
 
+### 5.57 (12 Oct 2026, v6.21, versionCode 82) — Maps: directions inside Attune + many more places; Q&A packs; packs before the web; faster search
+Ali: "what's the point of maps if it will redirect me to another map, a lot of places is not in the map" → he approved
+directions on the phone + Overture places. Then: "add huge databases for knowledge packs so the app doesn't do a lot of
+internet searching … improve internet searching and make it faster".
+- **More places** (`tools/build_map_pack.py overture`, a step in map-pack.yml): Overture Maps Places (Meta / Microsoft /
+  Foursquare / AllThePlaces; CDLA-Permissive-2.0, Apache-2.0, CC0 — commercial OK) merged into `<code>-places.sqlite`:
+  confidence ≥ 0.5, open, the country's own (address country), a commercial-safe licence, no phone-number adverts, not
+  already in the OSM index within ≈ 150 m. Overture categories → OSM kinds for the chips (`OV_KIND`). Measured Cairo + Giza:
+  148,524 → +87,190 places (Palm Hills, Madinaty, Mall of Arabia, SODIC, B.TECH, Seoudi…). Read from S3 with pyarrow
+  (anonymous; DuckDB's httpfs can't be downloaded in the cloud sandbox). Test: `e2e_v720overture.py`.
+- **Directions, offline** (`tools/build_route_graph.py` → `<code>-route.bin`, `web-src/route.js`): Overture's
+  transportation theme (OSM roads, ODbL), roads split at junctions; one-way = `access_restrictions` heading denied for vehicles
+  (people may walk both ways); speed = limit × 0.85 or a class default. The file = a JSON directory + blobs: squares of 0.1°
+  and a backbone (motorway…secondary). route.js reads only what a trip needs by byte range (`N.mapRead`), joins them by
+  country-wide node id, A* (car = time, walk = 1.35 m/s), steps from names and turn angles (`tidySteps` folds short unnamed
+  links). Measured: west Cairo 195k junctions → 19 MB; Egypt ≈ 3.7 M road pieces ≈ 300 MB → an OPTIONAL download
+  (`MapPacks.isRoutes`, `installRoutes`, bridge `mapInstall {routesOnly}`); the map's size excludes it (`packBytes`).
+  Sheikh Zayed → Dokki 29 km / 27 min in 0.75 s (node). UI: Directions = a button (map-directions) → download offer with the
+  size, Car / Walk, the blue line, time (no traffic), steps, "Open in another maps app" as a small link; "Add a missing place"
+  (map-add-place: a pin at the centre, a name → your places, searchable offline). Tests: `unit/v720route` (fixture
+  `tests/fixtures/cairo-route-small.bin`, 1 MB, downtown), `e2e_v720directions.py`.
+- **Q&A packs** (`know_sources.SE_PACKS`, `build_stackexchange`): Stack Exchange data dump on the Internet Archive (7z →
+  Posts.xml stream), CC BY-SA 4.0: qa-tech, qa-cars, qa-home, qa-science, qa-life, qa-language, qa-code — a question with
+  score ≥ 3 and its accepted / best answer (≥ 3), top-voted first, ≈ 100 MB text per pack; no religious, medical or legal
+  sites. CATALOG entries `big: true`. Test: `e2e_v720qapacks.py`. (Still no Wikipedia — Ali's rule.)
+- **Packs before the web:** chat.jsx — when Auto would search, `knowledge.find` first; `packsCover()` (≥ 80 % of the
+  question's words in one of the best three passages) and not `router.needsToday()` (prices, news, weather, latest, years…)
+  → answered offline, no web.
+- **Faster search** (WebTools.kt): one shared deadline for the engines (DDG + Bing ≤ 8 s; Brave + Mojeek +1.2 s once those
+  answered) instead of 16 + 16 + 10 + 6 s in a row; quick questions read pages 50 % / 2.5 s / cap 6 s (was 60 % / 4 / 9).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

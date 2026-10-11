@@ -7,6 +7,7 @@ import { Search, X, Download, RefreshCw, Trash2, MapPin, Share2, Loader2 } from 
 import { tr, getLang } from "./i18n.js";
 import * as OM from "./offlinemap.js";
 import * as MS from "./mapsearch.js";
+import * as RT from "./route.js";
 
 const PACK_KEY = "attune:map:pack";
 const CHIPS = [
@@ -51,6 +52,9 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   const [sheet, setSheet] = useState("peek");              // peek | half | full
   const [tab, setTab] = useState("places");
   const [top, setTop] = useState(56);
+  const [trip, setTrip] = useState(null);
+  const [adding, setAdding] = useState(null);              // v6.20 "add a missing place": the name being typed, or null                  // v6.20 directions: {to, mode, busy, res, error, need}
+  const routeFiles = useRef({});                           // code → opened route file (route.js)
   const holder = useRef(null), box = useRef(null), mapRef = useRef(null), markers = useRef([]);
   const active = pack === "-" ? "" : packs.find((p) => p.code === pack) ? pack : (packs[0] && packs[0].code) || "";   // "-" = you chose the online map
 
@@ -126,7 +130,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   const center = () => { const m = mapRef.current; const c = m ? m.getCenter() : { lat: view.lat, lng: view.lon }; return { lat: c.lat, lon: c.lng }; };
   const runSearch = async (term, chip) => {
     term = String(term || "").trim(); if (!term && !chip) return;
-    setBusy(true); setSel(null); setSheet("half");
+    setBusy(true); setSel(null); setSheet("half"); if (trip) endTrip();
     const c = center(), out = [], seen = new Set();
     const push = (p) => { const k = Math.round(p.lat * 2000) + ":" + Math.round(p.lon * 2000) + ":" + String(p.name).slice(0, 12); if (seen.has(k)) return; seen.add(k); out.push({ ...p, dist: p.dist != null ? p.dist : distKm(c, p) }); };
     if (term) for (const p of searchSaved(st.places, term)) push({ ...p, local: true });
@@ -201,6 +205,79 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   };
   const usePack = (code) => { setPack(code); try { localStorage.setItem(PACK_KEY, code); } catch (e) {} const c = OM.countryOf(code); const m = mapRef.current; if (m && c) m.flyTo({ center: c.c, zoom: c.z }); };
 
+  // ---- v6.20: directions inside Attune, offline (Ali: "what's the point of maps if it will redirect me to another map") ----
+  const packsNow = () => { try { return (JSON.parse(N.mapPacks()).packs) || packs; } catch (e) { return packs; } };   // fresh: just after a download, the state is a render behind
+  const packOf = (p) => { const L = packsNow(); return L.find((x) => x.code === active) || L.find((x) => { const c = OM.countryOf(x.code); return c && c.c && Math.abs(c.c[1] - p.lat) < 12 && Math.abs(c.c[0] - p.lon) < 15; }) || null; };
+  const openRoutes = async (code) => {
+    if (routeFiles.current[code]) return routeFiles.current[code];
+    const path = `${code}/${code}-route.bin`;
+    const readRange = async (offset, length) => {
+      const b64 = N.mapRead(JSON.stringify({ path, offset, length }));
+      if (!b64) throw new Error("missing");
+      const raw = atob(b64), u8 = new Uint8Array(raw.length); for (let i = 0; i < raw.length; i++) u8[i] = raw.charCodeAt(i);
+      return u8.buffer;
+    };
+    const r = await RT.openRoutes(readRange); routeFiles.current[code] = r; return r;
+  };
+  const whereAmI = () => new Promise((ok) => {
+    if (me) return ok(me);
+    if (!navigator.geolocation) return ok(null);
+    navigator.geolocation.getCurrentPosition((p) => { const pt = { lat: p.coords.latitude, lon: p.coords.longitude }; setMe(pt); ok(pt); }, () => ok(null), { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+  });
+  const drawTrip = (line) => {
+    const m = mapRef.current; if (!m) return;
+    const data = { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: line || [] } };
+    try {
+      if (m.getSource("trip")) m.getSource("trip").setData(data);
+      else {
+        m.addSource("trip", { type: "geojson", data });
+        m.addLayer({ id: "trip-casing", type: "line", source: "trip", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": "#ffffff", "line-width": 10 } });
+        m.addLayer({ id: "trip-line", type: "line", source: "trip", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": "#2563eb", "line-width": 6 } });
+      }
+      if (line && line.length > 1) {
+        const xs = line.map((p) => p[0]), ys = line.map((p) => p[1]);
+        m.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: { top: 140, bottom: Math.round(innerHeight * 0.5) + 20, left: 40, right: 40 }, duration: 600 });
+      }
+    } catch (e) {}
+  };
+  const goTrip = async (to, mode = (trip && trip.mode) || "car") => {
+    setSheet("half");
+    const pk = N && N.mapRead ? packOf(to) : null;
+    if (!pk) { setTrip({ to, mode, need: "map" }); return; }
+    if (!pk.routes) { setTrip({ to, mode, need: "routes", code: pk.code }); if (online && !remote[pk.code]) check(pk.code); return; }
+    setTrip({ to, mode, busy: true, code: pk.code });
+    const from = await whereAmI();
+    if (!from) { setTrip({ to, mode, error: "location", code: pk.code }); return; }
+    try {
+      const R = await openRoutes(pk.code);
+      const res = await RT.route(R, from, to, mode);
+      if (res.error) { setTrip({ to, mode, error: res.error, code: pk.code }); drawTrip(null); return; }
+      setTrip({ to, mode, res, code: pk.code, from }); drawTrip(res.line);
+    } catch (e) { setTrip({ to, mode, error: "read", code: pk.code }); }
+  };
+  const endTrip = () => { setTrip(null); drawTrip(null); };
+  const getRoutes = async (code) => {
+    const m = remote[code] && !remote[code].error ? remote[code] : await check(code);
+    const f = m && (m.files || []).find((x) => /-route\.bin$/.test(x.name));
+    if (!f) return flash(tr("Directions for this country aren't published yet — the maps are rebuilt every Friday."));
+    if (!window.confirm(tr("Download the directions of {c}? {s} — on Wi-Fi is best. Routes by car and on foot, with no signal.", { c: OM.countryOf(code)[lang === "ar" ? "ar" : "en"], s: OM.prettyMB(f.bytes) }))) return;
+    setDl({ code, pct: 0, detail: "" });
+    const p = nativeCall("mapInstall", { code, routesOnly: true }, (pct, stage, detail) => setDl((d) => (d ? { ...d, pct, detail } : d)));
+    setDl((d) => ({ ...d, id: lastNativeId ? lastNativeId() : null }));
+    const was = trip;
+    try { await p; refreshPacks(); flash(tr("Directions work offline now")); if (was && was.to) goTrip(was.to, was.mode); }
+    catch (e) { flash(String((e && e.message) || e).slice(0, 140)); }
+    finally { setDl(null); }
+  };
+  const turnText = (s, i, all) => {
+    const road = s.name || tr("the road");
+    const T = { start: tr("Head out on {r}", { r: road }), straight: tr("Continue on {r}", { r: road }), "slight left": tr("Keep left onto {r}", { r: road }), "slight right": tr("Keep right onto {r}", { r: road }),
+      left: tr("Turn left onto {r}", { r: road }), right: tr("Turn right onto {r}", { r: road }), "u-turn": tr("Make a U-turn on {r}", { r: road }) };
+    return T[s.turn] || road;
+  };
+  const turnIcon = (t) => ({ start: "↑", straight: "↑", "slight left": "↖", "slight right": "↗", left: "←", right: "→", "u-turn": "↶" }[t] || "↑");
+  const mins = (s) => { const m = Math.max(1, Math.round(s / 60)); return m < 60 ? tr("{m} min", { m }) : tr("{h} h {m} min", { h: Math.floor(m / 60), m: m % 60 }); };
+
   if (fail) return fallback;
   // v6.18 look A (Ali: "the maps is still stupid… make it like an app inside Attune"): the map fills the whole screen
   // (Attune's header and bottom bar are hidden while it is open), a bright map, one white search bar with ← back,
@@ -237,13 +314,25 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
         </div>
 
         {sheet !== "full" ? <div className="absolute end-3 flex flex-col gap-2.5" style={{ bottom: `calc(${sheetH} + 14px)` }}>
+          <button onClick={() => { setSel(null); setHits(null); setAdding(""); setSheet("peek"); }} aria-label={tr("Add a missing place")} title={tr("Add a missing place")} data-testid="map-add-place" className={fab + " w-14 h-14 text-emerald-700"}><MapPin size={20} /><span className="text-[15px] font-black -ms-0.5">+</span></button>
           <button onClick={locateMe} aria-label={tr("My location")} data-testid="map-locate" className={fab + " w-14 h-14 text-blue-700"}>
             <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg></button>
         </div> : null}
 
+        {adding != null ? <>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full pointer-events-none z-[4]" data-testid="map-add-cross" aria-hidden="true">
+            <svg width="34" height="44" viewBox="0 0 34 44"><path d="M17 43C17 43 32 27 32 16A15 15 0 0 0 2 16C2 27 17 43 17 43Z" fill="#059669" stroke="#fff" strokeWidth="3" /><circle cx="17" cy="16" r="5" fill="#fff" /></svg></div>
+          <form onSubmit={(e) => { e.preventDefault(); const n = adding.trim(); if (!n) return; const c = center(); savePlace({ name: n, lat: c.lat, lon: c.lon }); setAdding(null); }}
+            className="absolute inset-x-3 z-[6] rounded-2xl bg-white shadow-[0_4px_18px_rgba(17,24,39,.2)] p-3 space-y-2" style={{ bottom: "calc(118px + 12px)" }} data-testid="map-add-form">
+            <p className="text-[13px] text-slate-600">{tr("Move the map so the pin is on the place, then name it. It is saved on this phone and found by search, offline.")}</p>
+            <div className="flex gap-2"><input autoFocus value={adding} onChange={(e) => setAdding(e.target.value)} dir="auto" placeholder={tr("The place's name")} data-testid="map-add-name"
+              className="flex-1 min-w-0 h-11 rounded-xl bg-slate-100 px-3 text-[15px] text-slate-900 focus:outline-none" />
+              <button type="submit" disabled={!adding.trim()} data-testid="map-add-save" className="h-11 px-4 rounded-xl bg-emerald-600 text-white font-bold disabled:opacity-40">{tr("Save")}</button>
+              <button type="button" onClick={() => setAdding(null)} aria-label={tr("Cancel")} className="w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><X size={18} /></button></div>
+          </form></> : null}
         {/* the sheet */}
         <section className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white shadow-[0_-4px_18px_rgba(17,24,39,.16)] flex flex-col transition-[height] duration-200 z-[5]" style={{ height: sheetH, paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="map-sheet">
-          {sheet !== "full" ? <span className="absolute -top-6 start-2 rounded-md bg-white/85 px-1.5 py-0.5 text-[10px] text-slate-600 pointer-events-none" data-testid="map-credit">© OpenStreetMap contributors{active ? " · Protomaps" : ""}</span> : null}
+          {sheet !== "full" ? <span className="absolute -top-6 start-2 rounded-md bg-white/85 px-1.5 py-0.5 text-[10px] text-slate-600 pointer-events-none" data-testid="map-credit">© OpenStreetMap contributors{active ? " · Protomaps · Overture Maps" : ""}</span> : null}
           <button onClick={() => setSheet(sheet === "peek" ? "half" : sheet === "half" ? "full" : "peek")} aria-label={tr("Pull up")} className="w-full pt-2.5 pb-1.5 flex justify-center shrink-0">
             <span className="w-10 h-1.5 rounded-full bg-slate-300" /></button>
           <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
@@ -251,7 +340,47 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
               <button onClick={() => install(updates[0].code)} className="w-full text-start rounded-2xl bg-emerald-50 border border-emerald-200 p-3 text-[13px] text-emerald-900" data-testid="map-update-banner">
                 <RefreshCw size={13} className="inline me-1.5" />{tr("A newer map of {c} is ready (data of {d}) — tap to update", { c: cname(OM.countryOf(updates[0].code)), d: remote[updates[0].code].date })}</button>) : null}
 
-            {sel ? (
+            {trip ? (
+              <div className="space-y-3" data-testid="map-trip">
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0"><p className="text-[12.5px] text-slate-500">{tr("Directions to")}</p>
+                    <p className="text-[19px] font-extrabold text-slate-900 leading-snug truncate" dir="auto">{String(trip.to.name || "").split(",")[0]}</p></div>
+                  <button onClick={endTrip} aria-label={tr("Close")} data-testid="map-trip-close" className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><X size={18} /></button>
+                </div>
+                <div className="flex gap-2" role="group" aria-label={tr("Travel by")}>
+                  {[["car", tr("Car"), "🚗"], ["walk", tr("Walk"), "🚶"]].map(([k, l, e]) => (
+                    <button key={k} onClick={() => goTrip(trip.to, k)} aria-pressed={trip.mode === k} data-testid={"map-mode-" + k}
+                      className={`flex-1 h-11 rounded-full text-[14px] font-bold ${trip.mode === k ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"}`}>{e} {l}</button>))}
+                </div>
+                {trip.busy ? <p className="text-[13.5px] text-slate-600 flex items-center gap-2"><Loader2 size={16} className="animate-spin" />{tr("Finding the way…")}</p> : null}
+                {trip.res ? <>
+                  <div className="rounded-2xl bg-blue-50 p-3" data-testid="map-trip-summary">
+                    <p className="text-[24px] font-extrabold text-blue-800 leading-tight">{mins(trip.res.seconds)}</p>
+                    <p className="text-[13px] text-blue-900/80">{km(trip.res.metres / 1000)} · {trip.mode === "car" ? tr("by car, without traffic") : tr("on foot")} · {tr("offline")}</p>
+                  </div>
+                  <ol className="divide-y divide-slate-100" data-testid="map-steps">
+                    {trip.res.steps.map((s, i, all) => (
+                      <li key={i} className="flex items-start gap-3 py-2.5" data-testid="map-step">
+                        <span className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-[16px] shrink-0 rtl:-scale-x-100" aria-hidden="true">{turnIcon(s.turn)}</span>
+                        <span className="flex-1 min-w-0"><span className="block text-[14px] font-semibold text-slate-800" dir="auto">{turnText(s, i, all)}</span>
+                          <span className="block text-[12px] text-slate-500 tabular-nums">{km(s.metres / 1000)}</span></span>
+                      </li>))}
+                    <li className="flex items-center gap-3 py-2.5"><span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0"><MapPin size={16} /></span>
+                      <span className="text-[14px] font-semibold text-slate-800" dir="auto">{tr("Arrive at {p}", { p: String(trip.to.name || "").split(",")[0] })}</span></li>
+                  </ol>
+                </> : null}
+                {trip.need === "routes" ? (
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 space-y-2" data-testid="map-trip-need-routes">
+                    <p className="text-[13.5px] text-slate-700">{tr("Directions work inside Attune, with no signal, once the directions of {c} are on the phone.", { c: cname(OM.countryOf(trip.code)) })}</p>
+                    {dl && dl.code === trip.code ? <p className="text-[13px] text-blue-700">{tr("Downloading…")} {dl.pct}% {dl.detail}</p>
+                      : <button onClick={() => getRoutes(trip.code)} data-testid="map-get-routes" className="w-full h-11 rounded-full bg-blue-600 text-white font-bold text-[14px]">{tr("Download directions")}{remote[trip.code] && (remote[trip.code].files || []).find((x) => /-route\.bin$/.test(x.name)) ? " · " + OM.prettyMB((remote[trip.code].files || []).find((x) => /-route\.bin$/.test(x.name)).bytes) : ""}</button>}
+                  </div>) : null}
+                {trip.need === "map" ? <p className="text-[13.5px] text-slate-700" data-testid="map-trip-need-map">{tr("Download this country's offline map first (the country button in the search bar) — then directions work inside Attune.")}</p> : null}
+                {trip.error ? <p className="text-[13.5px] text-amber-800" data-testid="map-trip-error">{trip.error === "location" ? tr("Couldn't get your location — turn location on, then try again.")
+                  : trip.error === "far-from-road" ? tr("One of the two places is far from any road in the map.") : trip.error === "no-roads" ? tr("This place is outside the directions you downloaded.") : tr("No way was found between these two places.")}</p> : null}
+                <a href={`geo:${trip.to.lat},${trip.to.lon}?q=${trip.to.lat},${trip.to.lon}`} data-testid="map-other-app" className="block text-center text-[12.5px] text-slate-500 underline py-1">{tr("Open in another maps app")}</a>
+              </div>
+            ) : sel ? (
               <div className="space-y-3" data-testid="map-place">
                 <div className="flex items-start gap-2">
                   <div className="flex-1 min-w-0"><p className="text-[21px] font-extrabold text-slate-900 leading-snug" dir="auto">{String(sel.name).split(",")[0]}</p>
@@ -259,7 +388,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
                   <button onClick={() => setSel(null)} aria-label={tr("Close")} className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><X size={18} /></button>
                 </div>
                 <div className="flex gap-2">
-                  <a href={`geo:${sel.lat},${sel.lon}?q=${sel.lat},${sel.lon}`} className="flex-1 h-12 rounded-full bg-blue-600 text-white font-bold text-[14.5px] flex items-center justify-center">{tr("Directions")}</a>
+                  <button onClick={() => goTrip(sel)} data-testid="map-directions" className="flex-1 h-12 rounded-full bg-blue-600 text-white font-bold text-[14.5px] flex items-center justify-center">{tr("Directions")}</button>
                   {sel.found ? <button onClick={() => savePlace(sel)} data-testid="map-save-found" className="flex-1 h-12 rounded-full border-[1.5px] border-slate-300 text-blue-700 font-bold text-[14.5px]">{tr("Save")}</button>
                     : <button onClick={() => { if (!window.confirm(tr("Delete this place?"))) return; setSt((s) => ({ ...s, places: s.places.filter((x) => x.id !== sel.id) })); setSel(null); }} className="flex-1 h-12 rounded-full border-[1.5px] border-slate-300 text-slate-700 font-semibold text-[14.5px]">{tr("Remove")}</button>}
                   <button onClick={() => { const t = `${sel.name}\nhttps://www.openstreetmap.org/?mlat=${sel.lat}&mlon=${sel.lon}#map=17/${sel.lat}/${sel.lon}`; if (N && N.share) N.share(t); else { try { navigator.clipboard.writeText(t); } catch (e) {} flash(tr("Copied")); } }}

@@ -355,10 +355,16 @@ object WebTools {
             val bj = pool.submit(Callable { try { bing(q, 10) } catch (e: Exception) { emptyList<Hit>() } })
             val rj = pool.submit(Callable { try { braveHtml(q, 10) } catch (e: Exception) { emptyList<Hit>() } })
             val mj = pool.submit(Callable { try { mojeek(q, 10) } catch (e: Exception) { emptyList<Hit>() } })
-            val d = try { dj.get(16, TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
-            val b = try { bj.get(16, TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
-            val r = try { rj.get(maxOf(1L, 10L), TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
-            val m = try { mj.get(maxOf(1L, 6L), TimeUnit.SECONDS) } catch (e: Exception) { emptyList<Hit>() }
+            // v6.20 (Ali: "make web searching faster"): one shared deadline, not four waits in a row (16 + 16 + 10 + 6 s at worst).
+            // DuckDuckGo and Bing get up to 8 s together; once they have answered with results, Brave and Mojeek get ≈ 1.2 s
+            // more (they only add to the ranking); when the first two found nothing, the others get up to 6 s.
+            val t0s = System.currentTimeMillis()
+            fun left(until: Long) = maxOf(1L, until - (System.currentTimeMillis() - t0s))
+            val d = try { dj.get(left(8_000), TimeUnit.MILLISECONDS) } catch (e: Exception) { emptyList<Hit>() }
+            val b = try { bj.get(left(8_000), TimeUnit.MILLISECONDS) } catch (e: Exception) { emptyList<Hit>() }
+            val extra = if (d.size + b.size >= 6) (System.currentTimeMillis() - t0s) + 1_200 else 9_000L
+            val r = try { rj.get(left(extra), TimeUnit.MILLISECONDS) } catch (e: Exception) { emptyList<Hit>() }
+            val m = try { mj.get(left(extra), TimeUnit.MILLISECONDS) } catch (e: Exception) { emptyList<Hit>() }
             // v6.12: reciprocal-rank fusion — a page found by several engines, or high on one, ranks first;
             // an engine whose results are mostly dictionaries (a poisoned answer) counts for nothing
             val lists = listOf(d, b, r, m).map { l -> l.filter { !isWiki(it.url) } }
@@ -381,11 +387,14 @@ object WebTools {
             val list = hits.take(n)
             for (h in list) cs.submit(Callable { h to pageText(h.url, 16_000) })
             val t0 = System.currentTimeMillis(); var done = 0
-            val enough = maxOf(1, Math.ceil(list.size * 0.6).toInt())
+            // v6.20: a quick question (≤ 5 pages) goes on with half of them after 2.5 s (cap 6 s); a detailed one keeps 60 % / 4 s / 9 s
+            val quick = n <= 5
+            val enough = maxOf(1, Math.ceil(list.size * (if (quick) 0.5 else 0.6)).toInt())
+            val minWait = if (quick) 2_500L else 4_000L; val cap = if (quick) 6_000L else 9_000L
             while (done < list.size) {
                 val waited = System.currentTimeMillis() - t0
-                if (waited >= 9_000 || (done >= enough && waited >= 4_000)) break
-                val wait = if (done >= enough) 4_000 - waited else 9_000 - waited
+                if (waited >= cap || (done >= enough && waited >= minWait)) break
+                val wait = if (done >= enough) minWait - waited else cap - waited
                 val f = cs.poll(maxOf(1L, wait), TimeUnit.MILLISECONDS) ?: continue
                 done++
                 try {

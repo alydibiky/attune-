@@ -1731,4 +1731,84 @@ def build_wikidata(a):
         "notice_ar": "بيانات يحررها المتطوعون، أُخذ منها ما له مصدر فقط؛ وفي الأمور المهمة راجع المصدر المذكور.",
         "sources": [{"title": "Wikidata — sourced statements only", "url": "https://www.wikidata.org/", "license": "CC0"}], "retrieved": time.strftime("%Y-%m-%d")})
 
-BUILDERS = {"wikidata": build_wikidata, "science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith, "cars": build_cars, "geography": build_geography, "coding": build_coding, "islamlib": build_islamlib, "dictionary": build_dictionary, "medicines": build_medicines, **{k: (lambda a, k=k: build_subject(a, k)) for k in SUBJECTS}}
+# ---- v6.20 Q&A packs: the Stack Exchange network (CC BY-SA, commercial use allowed with credit) ----------------------------------
+# Ali: "add huge databases for knowledge packs so the app doesn't do a lot of internet searching". No Wikipedia (his rule).
+# Stack Exchange's questions and answers are written and voted by people who do the work (mechanics, electricians, cooks, IT
+# staff, physicists…); each passage is one question with its accepted (or best) answer, only when both have earned votes.
+# Source: the public data dump on the Internet Archive (stackexchange/<site>.7z, Posts.xml), read as a stream.
+SE_PACKS = {
+    "qa-tech":    ("Computers & phones Q&A", "أسئلة وأجوبة: الكمبيوتر والهواتف", ["superuser.com", "askubuntu.com", "android.stackexchange.com", "apple.stackexchange.com", "unix.stackexchange.com", "security.stackexchange.com"]),
+    "qa-cars":    ("Cars & mechanics Q&A", "أسئلة وأجوبة: السيارات والميكانيكا", ["mechanics.stackexchange.com", "engineering.stackexchange.com", "electronics.stackexchange.com"]),
+    "qa-home":    ("Home, DIY & cooking Q&A", "أسئلة وأجوبة: البيت والإصلاحات والطبخ", ["diy.stackexchange.com", "cooking.stackexchange.com", "gardening.stackexchange.com", "pets.stackexchange.com", "lifehacks.stackexchange.com"]),
+    "qa-science": ("Science & math Q&A", "أسئلة وأجوبة: العلوم والرياضيات", ["math.stackexchange.com", "physics.stackexchange.com", "chemistry.stackexchange.com", "biology.stackexchange.com", "earthscience.stackexchange.com", "astronomy.stackexchange.com"]),
+    "qa-life":    ("Money, travel & work Q&A", "أسئلة وأجوبة: المال والسفر والعمل", ["money.stackexchange.com", "travel.stackexchange.com", "expatriates.stackexchange.com", "workplace.stackexchange.com", "academia.stackexchange.com", "fitness.stackexchange.com"]),
+    "qa-language": ("English language Q&A", "أسئلة وأجوبة: اللغة الإنجليزية", ["english.stackexchange.com", "ell.stackexchange.com"]),
+    "qa-code":    ("Programming Q&A", "أسئلة وأجوبة: البرمجة", ["codereview.stackexchange.com", "softwareengineering.stackexchange.com", "dba.stackexchange.com", "serverfault.com", "webmasters.stackexchange.com", "datascience.stackexchange.com"]),
+}
+SE_DUMP = "https://archive.org/download/stackexchange/{}.7z"
+TAG_RX = re.compile(r"<[^>]+>")
+
+def se_text(html, limit):
+    """A post's HTML -> plain text: code blocks kept on their own lines, links' text kept, entities decoded."""
+    import html as H
+    t = re.sub(r"<pre[^>]*>\s*<code[^>]*>(.*?)</code>\s*</pre>", lambda m: "\n```\n" + m.group(1) + "\n```\n", html, flags=re.S)
+    t = re.sub(r"<(br|/p|/li|/h\d|/blockquote)[^>]*>", "\n", t)
+    t = re.sub(r"<li[^>]*>", "• ", t)
+    t = H.unescape(TAG_RX.sub("", t))
+    t = re.sub(r"[ \t]+", " ", re.sub(r"\n\s*\n+", "\n", t)).strip()
+    return t if len(t) <= limit else t[:limit].rsplit(" ", 1)[0] + " …"
+
+def se_rows(posts_xml_stream, site, min_q=3, min_a=3, q_chars=500, a_chars=1800):
+    """Posts.xml (a stream) -> rows: one question + its accepted answer (or its best one), when both have votes."""
+    import xml.etree.ElementTree as ET
+    qs, best = {}, {}
+    for _, el in ET.iterparse(posts_xml_stream, events=("end",)):
+        if el.tag != "row": continue
+        a = el.attrib; typ = a.get("PostTypeId"); sc = int(a.get("Score", "0") or 0)
+        if typ == "1" and sc >= min_q and a.get("Title") and not a.get("ClosedDate"):
+            qs[a["Id"]] = (a["Title"], se_text(a.get("Body", ""), q_chars), sc, a.get("AcceptedAnswerId"), a.get("Tags", ""))
+        elif typ == "2" and sc >= min_a:
+            pid = a.get("ParentId"); cur = best.get(pid)
+            body = a.get("Body", "")
+            if cur is None or sc > cur[1] or a.get("Id") == (qs.get(pid) or (0, 0, 0, None))[3]:
+                best[pid] = (a.get("Id"), sc, body)
+        el.clear()
+    rows = []
+    for qid, (title, q, sc, acc, tags) in qs.items():
+        b = best.get(qid)
+        if not b: continue
+        ans = se_text(b[2], a_chars)
+        if len(ans) < 60: continue
+        host = site if "." in site else site + ".stackexchange.com"
+        rows.append({"t": title, "x": f"Question: {q}\nAnswer ({b[1]} votes{', accepted' if b[0] == acc else ''}): {ans}", "u": f"https://{host}/q/{qid}", "l": "en", "_score": sc + b[1]})
+    return rows
+
+def build_stackexchange(a, pid):
+    B = _bk()
+    name, name_ar, sites = SE_PACKS[pid]
+    budget = int(getattr(a, "budget_mb", 25) or 25) * 1_000_000
+    per_site = budget // len(sites)
+    allrows, used = [], []
+    for site in sites:
+        path = os.path.join(tempfile.gettempdir(), site + ".7z")
+        if not os.path.exists(path):
+            print("download", site, flush=True)
+            subprocess.run(["curl", "-sfL", "--retry", "5", "-o", path, SE_DUMP.format(site)], check=True)
+        p = subprocess.Popen(["7z", "e", "-so", path, "Posts.xml"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        rows = se_rows(p.stdout, site); p.wait(); os.remove(path)
+        rows.sort(key=lambda r: -r["_score"])      # the most-voted first, up to this site's share of the budget
+        n = 0; size = 0
+        for r in rows:
+            size += len(r["t"]) + len(r["x"])
+            if size > per_site: break
+            r.pop("_score"); allrows.append(r); n += 1
+        used.append({"title": site, "url": "https://" + site, "license": "CC BY-SA 4.0", "passages": n})
+        print(f"{site}: {n} of {len(rows)} Q&A kept", flush=True)
+    B.write_pack(a.out, pid, allrows, {
+        "name": name, "name_ar": name_ar, "license": "CC BY-SA 4.0 (Stack Exchange contributors) — commercial use allowed with credit",
+        "attribution": "Questions and answers by the Stack Exchange community (" + ", ".join(sites) + "), licensed CC BY-SA. Each passage links to its question, where the authors are named.",
+        "notice": "Community answers (voted, not checked by an editor) — for anything important, open the question and check.",
+        "notice_ar": "إجابات من مجتمع المستخدمين (مصوَّت عليها، لا يراجعها محرر) — في الأمور المهمة افتح السؤال وتحقق.",
+        "sources": used, "retrieved": time.strftime("%Y-%m-%d")})
+
+BUILDERS = {"wikidata": build_wikidata, "science": build_science, "health": build_health, "numbers": build_numbers, "cities": build_cities, "cranes": build_cranes, "quran": build_quran, "fiqh": build_fiqh, "hadith": build_hadith, "cars": build_cars, "geography": build_geography, "coding": build_coding, "islamlib": build_islamlib, "dictionary": build_dictionary, "medicines": build_medicines, **{k: (lambda a, k=k: build_subject(a, k)) for k in SUBJECTS}, **{k: (lambda a, k=k: build_stackexchange(a, k)) for k in SE_PACKS}}

@@ -7,7 +7,7 @@
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
 import { shareLink, looksLikeChat, fromPage, fromText, contextBlock } from "./ai-import.js";
-import { taskOf, wantsWeb, wantsThink, pickModel, switchLine } from "./router.js";
+import { taskOf, wantsWeb, wantsThink, pickModel, switchLine, needsToday } from "./router.js";
 import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
@@ -34,7 +34,7 @@ const chipFade = () => { const side = typeof document !== "undefined" && documen
 const LEVEL_NAMES = Object.fromEntries(Object.entries(LEVELS).map(([k, v]) => [k, v.name]));
 import { compactSystem, HONESTY_RULE, NO_CODE_RULE, codeInsteadOfAnswer, reread, partsOf, everyPart, sandwich } from "./boost.js";
 import { tipsBlock } from "./tips.js";
-import { factsBlock, checkFacts, keepCovering } from "./knowledge.js";
+import { factsBlock, checkFacts, keepCovering, packsCover } from "./knowledge.js";
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
@@ -777,7 +777,13 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           }
         } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
       }
-      const autoWeb = !api.webOn && !o.web && api.webAuto && typed && !img && !fileAtt && wantsWeb(typed, task);
+      let autoWeb = !api.webOn && !o.web && api.webAuto && typed && !img && !fileAtt && wantsWeb(typed, task);
+      // v6.20 (Ali: "huge databases … so the app doesn't do a lot of internet searching"): the packs first (≈ 0.2 s) — when
+      // they clearly cover a question that doesn't need today's facts, it is answered offline and the web is skipped
+      if (autoWeb && !needsToday(typed) && api.knowledge && api.knowledge.on() && api.knowledge.packs && api.knowledge.packs()) {
+        try { const kh = keepCovering(await api.knowledge.find(typed), typed); if (packsCover(kh, typed)) { autoWeb = false; extra0.packsFirst = true; } } catch (e) {}
+        if (runRef.current !== run) return;
+      }
       if ((api.webOn || o.web || autoWeb) && typed) {
         // With a photo, LOOK first: search for what is in the picture, not
         // for the words "what is this car".

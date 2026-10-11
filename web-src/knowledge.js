@@ -160,6 +160,21 @@ export function keepCovering(hits, question) {
   return hits.filter(has);
 }
 
+/** v6.20 (Ali: "huge databases … so the app doesn't do a lot of internet searching"): do the packs clearly answer this?
+ *  True when one of the best three passages holds nearly every meaningful word of the question (≥ 80 %, at least two words) —
+ *  then Chat answers from the packs and skips the web, unless the question needs today's facts (router.needsToday). */
+export function packsCover(hits, question) {
+  const clean = (t) => String(t || "").replace(/[^\p{L}\p{N}\s]+/gu, " ");   // "braking." is "braking"
+  const qw = [...new Set(words(clean(question)))].filter((w) => w.length > 2);
+  if (qw.length < 2 || !hits || !hits.length) return false;
+  for (const h of hits.slice(0, 3)) {
+    const cw = new Set(words(clean((h.chunk.title || "") + " " + (h.chunk.text || ""))));
+    let m = 0; for (const w of qw) if (cw.has(w)) m++;
+    if (m / qw.length >= 0.8) return true;
+  }
+  return false;
+}
+
 // ---- checking the answer ------------------------------------------------------------------------------------------------------------
 const TAG = /\s?\[\s*K\s*(\d{1,2})(?:\s*[,،]\s*K?\s*\d{1,2})*\s*\]/gi;
 const tagsIn = (m) => (m.match(/\d{1,2}/g) || []).map(Number);
@@ -543,6 +558,35 @@ export const CATALOG = [
     about: "Fiqh of the four schools (al-Jaziri), Bidayat al-Mujtahid (Ibn Rushd), 'Umdat al-Fiqh (Ibn Qudama, Hanbali), Matn Abi Shuja' (Shafi'i), Mukhtasar al-Quduri (Hanafi) and Mukhtasar Khalil (Maliki) — purification, prayer, zakat, fasting, hajj, transactions, family and inheritance — each passage with its book, chapter, volume and page.",
     about_ar: "الفقه على المذاهب الأربعة (الجزيري)، وبداية المجتهد (ابن رشد)، وعمدة الفقه (ابن قدامة، حنبلي)، ومتن أبي شجاع (شافعي)، ومختصر القدوري (حنفي)، ومختصر خليل (مالكي) — الطهارة والصلاة والزكاة والصيام والحج والمعاملات والأسرة والمواريث — ومع كل فقرة اسم الكتاب والباب والجزء والصفحة.",
     notice: "For learning; for a ruling on your own case, ask a qualified scholar or Dar al-Ifta.", notice_ar: "للتعلّم؛ وفي مسألتك الخاصة اسأل عالمًا موثوقًا أو دار الإفتاء." },
+  // v6.20 (Ali: "add huge databases … so the app doesn't do a lot of internet searching"): Q&A from Stack Exchange
+  { id: "qa-tech", name: "Computers & phones Q&A", name_ar: "أسئلة وأجوبة: الكمبيوتر والهواتف", size: "≈ 200 MB", size_ar: "≈ ٢٠٠ ميجابايت", license: "CC BY-SA 4.0 (Stack Exchange contributors) — commercial use allowed with credit", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف والمشاركة بالمثل ٤٫٠ (مستخدمو شبكة ستاك إكستشينج)",
+    about: "Windows, Linux, Android, iPhone and Mac problems and how people fixed them \u2014 Super User, Ask Ubuntu, Android, Apple, Unix and Security.",
+    about_ar: "مشكلات ويندوز ولينكس وأندرويد وآيفون وماك وكيف حُلّت — من مواقع متخصصة يجيب فيها أهل الخبرة.",
+    notice: "Community answers (voted, not checked by an editor) — for anything important, open the question and check.", notice_ar: "إجابات من مجتمع المستخدمين (مصوَّت عليها، لا يراجعها محرر) — في الأمور المهمة افتح السؤال وتحقق.", big: true },
+  { id: "qa-cars", name: "Cars & mechanics Q&A", name_ar: "أسئلة وأجوبة: السيارات والميكانيكا", size: "≈ 200 MB", size_ar: "≈ ٢٠٠ ميجابايت", license: "CC BY-SA 4.0 (Stack Exchange contributors) — commercial use allowed with credit", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف والمشاركة بالمثل ٤٫٠ (مستخدمو شبكة ستاك إكستشينج)",
+    about: "Car faults, maintenance and repairs, engineering and electronics \u2014 answered by mechanics and engineers (Motor Vehicle Maintenance, Engineering, Electrical Engineering).",
+    about_ar: "أعطال السيارات وصيانتها وإصلاحها، والهندسة والإلكترونيات — يجيب عنها ميكانيكيون ومهندسون.",
+    notice: "Community answers (voted, not checked by an editor) — for anything important, open the question and check.", notice_ar: "إجابات من مجتمع المستخدمين (مصوَّت عليها، لا يراجعها محرر) — في الأمور المهمة افتح السؤال وتحقق.", big: true },
+  { id: "qa-home", name: "Home, DIY & cooking Q&A", name_ar: "أسئلة وأجوبة: البيت والإصلاحات والطبخ", size: "≈ 200 MB", size_ar: "≈ ٢٠٠ ميجابايت", license: "CC BY-SA 4.0 (Stack Exchange contributors) — commercial use allowed with credit", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف والمشاركة بالمثل ٤٫٠ (مستخدمو شبكة ستاك إكستشينج)",
+    about: "Home repairs, wiring and plumbing, cooking, gardening and pets.",
+    about_ar: "إصلاحات البيت والكهرباء والسباكة، والطبخ، والزراعة المنزلية، والحيوانات الأليفة.",
+    notice: "Community answers (voted, not checked by an editor) — for anything important, open the question and check.", notice_ar: "إجابات من مجتمع المستخدمين (مصوَّت عليها، لا يراجعها محرر) — في الأمور المهمة افتح السؤال وتحقق.", big: true },
+  { id: "qa-science", name: "Science & math Q&A", name_ar: "أسئلة وأجوبة: العلوم والرياضيات", size: "≈ 200 MB", size_ar: "≈ ٢٠٠ ميجابايت", license: "CC BY-SA 4.0 (Stack Exchange contributors) — commercial use allowed with credit", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف والمشاركة بالمثل ٤٫٠ (مستخدمو شبكة ستاك إكستشينج)",
+    about: "Math, physics, chemistry, biology, earth science and astronomy \u2014 worked answers voted by people in the field.",
+    about_ar: "الرياضيات والفيزياء والكيمياء والأحياء وعلوم الأرض والفلك — إجابات محلولة صوّت عليها أهل التخصص.",
+    notice: "Community answers (voted, not checked by an editor) — for anything important, open the question and check.", notice_ar: "إجابات من مجتمع المستخدمين (مصوَّت عليها، لا يراجعها محرر) — في الأمور المهمة افتح السؤال وتحقق.", big: true },
+  { id: "qa-life", name: "Money, travel & work Q&A", name_ar: "أسئلة وأجوبة: المال والسفر والعمل", size: "≈ 200 MB", size_ar: "≈ ٢٠٠ ميجابايت", license: "CC BY-SA 4.0 (Stack Exchange contributors) — commercial use allowed with credit", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف والمشاركة بالمثل ٤٫٠ (مستخدمو شبكة ستاك إكستشينج)",
+    about: "Personal finance, travel and visas, living abroad, the workplace, university and fitness.",
+    about_ar: "التمويل الشخصي، والسفر والتأشيرات، والعيش في الخارج، وبيئة العمل، والجامعة، واللياقة.",
+    notice: "Community answers (voted, not checked by an editor) — for anything important, open the question and check.", notice_ar: "إجابات من مجتمع المستخدمين (مصوَّت عليها، لا يراجعها محرر) — في الأمور المهمة افتح السؤال وتحقق.", big: true },
+  { id: "qa-language", name: "English language Q&A", name_ar: "أسئلة وأجوبة: اللغة الإنجليزية", size: "≈ 200 MB", size_ar: "≈ ٢٠٠ ميجابايت", license: "CC BY-SA 4.0 (Stack Exchange contributors) — commercial use allowed with credit", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف والمشاركة بالمثل ٤٫٠ (مستخدمو شبكة ستاك إكستشينج)",
+    about: "Grammar, word choice and usage, for learners and native speakers.",
+    about_ar: "القواعد واختيار الكلمات والاستخدام، للمتعلمين وأهل اللغة.",
+    notice: "Community answers (voted, not checked by an editor) — for anything important, open the question and check.", notice_ar: "إجابات من مجتمع المستخدمين (مصوَّت عليها، لا يراجعها محرر) — في الأمور المهمة افتح السؤال وتحقق.", big: true },
+  { id: "qa-code", name: "Programming Q&A", name_ar: "أسئلة وأجوبة: البرمجة", size: "≈ 200 MB", size_ar: "≈ ٢٠٠ ميجابايت", license: "CC BY-SA 4.0 (Stack Exchange contributors) — commercial use allowed with credit", license_ar: "رخصة المشاع الإبداعي، نسب المصنَّف والمشاركة بالمثل ٤٫٠ (مستخدمو شبكة ستاك إكستشينج)",
+    about: "Code review, software design, databases, servers, websites and data science.",
+    about_ar: "مراجعة الكود، وتصميم البرامج، وقواعد البيانات، والخوادم، والمواقع، وعلم البيانات.",
+    notice: "Community answers (voted, not checked by an editor) — for anything important, open the question and check.", notice_ar: "إجابات من مجتمع المستخدمين (مصوَّت عليها، لا يراجعها محرر) — في الأمور المهمة افتح السؤال وتحقق.", big: true },
 ];
 export const parsePackShard = (text) => String(text || "").split("\n").map((l) => { try { return l.trim() ? JSON.parse(l) : null; } catch (e) { return null; } }).filter((r) => r && r.x);
 

@@ -46,6 +46,10 @@ export function looksLikeProductName(text) {
   return NAMED.test(t) || NAMED_AR.test(t);
 }
 
+// v6.20: what only today's web can answer — prices, news, weather, scores, "latest", this year… (a pack can't be newer than its build)
+const TODAY = /\b(latest|newest|today|tonight|yesterday|this (week|month|year)|news|current(ly)?|right now|price|prices|cost of|how much (is|are|does)|release[ds]?|launch(ed)?|who won|score|results?|weather|exchange rate|stock|share price|schedule|opening hours|open now|near me|20[2-3]\d)\b|أحدث|احدث|أخبار|اخبار|النهارده|انهارده|امبارح|سعر|أسعار|اسعار|بكام|نزل امتى|الطقس|الجو|مواعيد|نتيجة|سعر الصرف/i;
+export const needsToday = (text) => TODAY.test(String(text || ""));
+
 /** Does this question need the web? (auto mode) */
 export function wantsWeb(text, task = taskOf(text)) {
   const t = String(text || "");

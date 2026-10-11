@@ -111,4 +111,12 @@ ok(c.chips.length === 1 && /official gazette/.test(c.chips[0].note), "the chip c
   ok(K.keepCovering([H("LTM 1100-5.2", "Liebherr LTM 1100")], "Liebherr LTM1100").length === 1, "LTM1100 matches LTM 1100");
   ok(K.keepCovering(cars, "solve 900 / 4 step by step").length === 2, "maths questions are not filtered");
 }
+// v6.20: the packs first — a clear answer in the packs means no web search (unless it needs today's facts)
+{
+  const H = (title, text) => ({ chunk: { title, text } });
+  const R = await import("../../web-src/router.js");
+  ok(K.packsCover([H("Brake judder", "Warped front brake discs make a car shake when braking.")], "why does my car shake when braking"), "a passage holding the question's words covers it → no web search");
+  ok(!K.packsCover([H("Brakes", "Brake pads wear out.")], "why does my car shake when braking at high speed"), "a passage about something near it does not");
+  ok(R.needsToday("price of a Toyota Corolla") && R.needsToday("أحدث أخبار مصر") && !R.needsToday("how does a counterbalance valve work"), "prices and news always need the web; how something works does not");
+}
 console.log(`knowledge: ${n} checks passed`);

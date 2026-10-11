@@ -3,6 +3,7 @@
 
   region <code.poly> <out.geojson>            Geofabrik's country outline -> GeoJSON (for `pmtiles extract --region`)
   places <country.osm.pbf> <out.sqlite>       every named place, street, shop, amenity -> SQLite + FTS4 search index
+  overture <code> <region.geojson> <sqlite>   v6.20: + Overture Maps' places of the country (shops, clinics, compounds…)
   manifest <code> <name> <date> <dir> <files…> -> <code>-manifest.json with sizes and SHA-256
   assets <fonts_dir> <sprites_dir> <outdir>   fonts + icons -> map-assets.zip + assets-manifest.json
 
@@ -164,6 +165,101 @@ def build_places(pbf, out):
     return idx.close()
 
 
+# ---- v6.20: more places from Overture Maps -----------------------------------------------------------------------
+# Ali: "a lot of places is not in the map". OpenStreetMap is thin in Egypt for shops, clinics and compounds; Overture
+# Maps' Places (Meta, Microsoft, Foursquare, AllThePlaces — CDLA-Permissive-2.0 / Apache-2.0 / CC0, commercial use OK)
+# add them. Measured on Cairo + Giza (Oct 2026): 148,524 places, 88,042 with confidence ≥ 0.5 — Palm Hills, Madinaty,
+# Mall of Arabia, SODIC, B.TECH, Seoudi… Only places with a commercial-safe licence, a real name (no phone-number
+# adverts), confidence ≥ 0.5, open, and in this country are added; a name already in the index nearby is kept once.
+OVERTURE_BUCKET = "overturemaps-us-west-2"
+OVERTURE_OK = {"CDLA-Permissive-2.0", "CDLA-Permissive-1.0", "Apache-2.0", "CC0-1.0", "CC-BY-4.0", "ODbL-1.0", "MIT"}
+OV_KIND = {"gas_station": "amenity/fuel", "fueling_station": "amenity/fuel", "fast_food_restaurant": "amenity/fast_food",
+           "coffee_shop": "amenity/cafe", "cafe": "amenity/cafe", "pharmacy_and_drug_store": "amenity/pharmacy", "pharmacy": "amenity/pharmacy",
+           "hospital": "amenity/hospital", "atm": "amenity/atm", "bank_or_credit_union": "amenity/bank", "bank": "amenity/bank",
+           "muslim_place_of_worship": "amenity/place_of_worship", "christian_place_of_worship": "amenity/place_of_worship",
+           "place_of_worship": "amenity/place_of_worship"}
+SPAM = re.compile(r"\d{7,}|\b01[0125]\d{8}\b|\+20\d")
+CLOSED = {"permanently_closed", "closed", "temporarily_closed"}
+AR_ANY = re.compile("[\u0600-\u06FF]")
+
+
+def ov_kind(cat):
+    """Overture's category -> the index's kind (OpenStreetMap's words where the map's buttons look for them)."""
+    c = cat or ""
+    if c in OV_KIND:
+        return OV_KIND[c]
+    if c.endswith("restaurant"):
+        return "amenity/restaurant"
+    if c.endswith("clinic") or c in ("dentist", "doctor"):
+        return "amenity/clinic"
+    return "poi/" + (c or "place")
+
+
+def ov_keep(r, country):
+    """One Overture row (names, basic_category, confidence, addresses, sources, operating_status) -> keep it?"""
+    name = ((r.get("names") or {}).get("primary") or "").strip()
+    if not name or len(name) > 90 or SPAM.search(name):
+        return False
+    if (r.get("confidence") or 0) < 0.5 or (r.get("operating_status") or "") in CLOSED:
+        return False
+    if not any((s or {}).get("license") in OVERTURE_OK for s in (r.get("sources") or [])):
+        return False
+    ad = r.get("addresses") or []
+    return bool(ad) and (ad[0] or {}).get("country", "").upper() == country.upper()
+
+
+def overture_release(fs):
+    """The newest Overture release folder (release/YYYY-MM-DD.N/)."""
+    from pyarrow.fs import FileSelector
+    rel = [i.path.split("/")[-1] for i in fs.get_file_info(FileSelector(OVERTURE_BUCKET + "/release/")) if i.type.name == "Directory"]
+    return sorted(rel)[-1]
+
+
+def add_overture(code, region_geojson, index_path, table=None):
+    """Adds Overture's places of the country to an index built by build_places. `table` (tests): rows instead of S3."""
+    if table is None:
+        import pyarrow.dataset as pds, pyarrow.fs as pfs, pyarrow.compute as pc
+        g = json.load(open(region_geojson))
+        xs, ys = [], []
+        for f in g["features"]:
+            for poly in f["geometry"]["coordinates"]:
+                for x, y in poly[0]:
+                    xs.append(x); ys.append(y)
+        fs = pfs.S3FileSystem(anonymous=True, region="us-west-2")
+        rel = overture_release(fs)
+        d = pds.dataset(f"{OVERTURE_BUCKET}/release/{rel}/theme=places/type=place/", filesystem=fs, format="parquet")
+        flt = (pc.field("bbox", "xmin") >= min(xs)) & (pc.field("bbox", "xmin") <= max(xs)) & (pc.field("bbox", "ymin") >= min(ys)) & (pc.field("bbox", "ymin") <= max(ys))
+        table = d.to_table(columns=["names", "basic_category", "confidence", "addresses", "bbox", "sources", "operating_status"], filter=flt).to_pylist()
+        print(f"overture {rel}: {len(table)} places in the box", flush=True)
+    db = sqlite3.connect(index_path)
+    near = {}
+    for name, lat, lon in db.execute("SELECT name, lat, lon FROM places"):
+        near.setdefault(normalize(name), []).append((lat, lon))
+    n = db.execute("SELECT COALESCE(MAX(id), 0) FROM places").fetchone()[0]
+    added = 0
+    for r in table:
+        if not ov_keep(r, code):
+            continue
+        name = r["names"]["primary"].strip()
+        lat, lon = r["bbox"]["ymin"], r["bbox"]["xmin"]
+        k = normalize(name)
+        if not k or any(abs(a - lat) < 0.0015 and abs(b - lon) < 0.0015 for a, b in near.get(k, ())):
+            continue                       # already in the index here (≈ 150 m)
+        near.setdefault(k, []).append((lat, lon))
+        n += 1; added += 1
+        ar = name if AR_ANY.search(name) else ""
+        en = "" if ar and not re.search("[A-Za-z]", name) else name
+        db.execute("INSERT INTO places VALUES (?,?,?,?,?,?,?,?)", (n, name, ar, en, ov_kind(r.get("basic_category")), round(lat, 6), round(lon, 6), 34))
+        db.execute("INSERT INTO places_fts(rowid, key) VALUES (?,?)", (n, k))
+    db.commit()
+    db.execute("INSERT INTO places_fts(places_fts) VALUES('optimize')")
+    db.commit()
+    db.execute("VACUUM")
+    db.close()
+    print(f"overture: +{added} places", flush=True)
+    return added
+
+
 # ---- the manifest and the shared fonts ------------------------------------------------------------------------
 PART = 1_900_000_000          # GitHub release files must stay under 2 GB: bigger files are published in parts
 
@@ -196,7 +292,7 @@ def manifest(code, name, date, folder, files, part=PART):
             os.remove(p)
         entries.append(e)
     m = {"code": code, "name": name, "date": date, "built": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
-         "source": "OpenStreetMap contributors (ODbL) · map tiles: Protomaps build · search: Geofabrik extract",
+         "source": "OpenStreetMap contributors (ODbL) · map tiles: Protomaps build · search: Geofabrik extract + Overture Maps Foundation places (CDLA-Permissive-2.0)",
          "files": entries}
     with open(os.path.join(folder, f"{code}-manifest.json"), "w") as fh:
         json.dump(m, fh, ensure_ascii=False, indent=1)
@@ -238,6 +334,8 @@ if __name__ == "__main__":
         json.dump(poly_to_geojson(open(sys.argv[2]).read()), open(sys.argv[3], "w"))
     elif cmd == "places":
         print("places:", build_places(sys.argv[2], sys.argv[3]))
+    elif cmd == "overture":            # code region.geojson index.sqlite — adds Overture's places (v6.20)
+        add_overture(sys.argv[2], sys.argv[3], sys.argv[4])
     elif cmd == "manifest":            # prints the files to upload, one per line
         m = manifest(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6:])
         print("\n".join(uploads(m, sys.argv[5])))

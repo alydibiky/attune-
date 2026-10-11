@@ -44,17 +44,23 @@ object MapPacks {
             val man = File(d, "manifest.json"); if (!man.exists()) continue
             try {
                 val j = JSONObject(man.readText())
-                var bytes = 0L; var ok = true
+                var bytes = 0L; var ok = true; var routes = false
                 val files = j.getJSONArray("files")
                 for (i in 0 until files.length()) {
                     val f = files.getJSONObject(i); val local = File(d, f.getString("name"))
-                    if (!local.exists() || local.length() != f.getLong("bytes")) ok = false else bytes += local.length()
+                    val full = local.exists() && local.length() == f.getLong("bytes")
+                    // v6.20: the directions file is optional (a separate, bigger download)
+                    if (isRoutes(f.getString("name"))) { if (full) { routes = true; bytes += local.length() }; continue }
+                    if (!full) ok = false else bytes += local.length()
                 }
-                if (ok) out.put(j.put("bytes", bytes).put("installed", true))
+                if (ok) out.put(j.put("bytes", bytes).put("installed", true).put("routes", routes))
             } catch (e: Exception) { }
         }
         return out
     }
+
+    /** v6.20: "<code>-route.bin" — the offline directions (web-src/route.js), downloaded only when asked for. */
+    fun isRoutes(name: String) = name.endsWith("-route.bin")
 
     fun assetsInstalled(ctx: Context): Boolean = File(root(ctx), "assets/assets-manifest.json").exists()
 
@@ -65,9 +71,13 @@ object MapPacks {
     }
 
     /** Downloads (or updates) a country's pack and, the first time, the shared fonts and icons. */
-    fun install(ctx: Context, code: String, onProgress: (Long, Long, String) -> Unit, isCancelled: () -> Boolean): JSONObject {
+    fun install(ctx: Context, code: String, onProgress: (Long, Long, String) -> Unit, isCancelled: () -> Boolean, withRoutes: Boolean = false): JSONObject {
         val man = remote(code)
-        val files = man.getJSONArray("files")
+        val all = man.getJSONArray("files")
+        // the directions file comes along when asked for, or when the phone already has it (an update keeps it)
+        val hadRoutes = (0 until all.length()).any { isRoutes(all.getJSONObject(it).getString("name")) && File(dir(ctx, code), all.getJSONObject(it).getString("name")).exists() }
+        val files = JSONArray()
+        for (i in 0 until all.length()) { val f = all.getJSONObject(i); if (!isRoutes(f.getString("name")) || withRoutes || hadRoutes) files.put(f) }
         val needAssets = !assetsInstalled(ctx)
         val assetsMan = if (needAssets) JSONObject(String(get(BASE + "map-assets/assets-manifest.json", null, isCancelled), Charsets.UTF_8)) else null
         var total = 0L
@@ -131,6 +141,33 @@ object MapPacks {
         if (!next.renameTo(d)) { trash.renameTo(d); throw Exception("Couldn't install the map") }
         trash.deleteRecursively()
         return man.put("installed", true)
+    }
+
+    /** v6.20: the directions of an installed country only ({code}) — downloaded into its folder, checked, then listed. */
+    fun installRoutes(ctx: Context, code: String, onProgress: (Long, Long, String) -> Unit, isCancelled: () -> Boolean): JSONObject {
+        val d = dir(ctx, code)
+        if (!File(d, "manifest.json").exists()) throw Exception("Download the map of this country first")
+        val man = remote(code)
+        val all = man.getJSONArray("files")
+        val f = (0 until all.length()).map { all.getJSONObject(it) }.firstOrNull { isRoutes(it.getString("name")) }
+            ?: throw Exception("Directions for this country are not published yet")
+        val name = f.getString("name"); val size = f.getLong("bytes")
+        if (!NAME.matches(name)) throw Exception("Unexpected file in the map: $name")
+        val target = File(d, name)
+        if (!(target.exists() && target.length() == size)) {
+            val part = File(d, "$name.part")
+            fetchResumable(BASE + "map-$code/$name", part, size, isCancelled) { got -> onProgress(got, size, name) }
+            verify(part, f.optString("sha256"), name)
+            if (target.exists()) target.delete()
+            if (!part.renameTo(target)) throw Exception("Couldn't save $name")
+        }
+        // the phone's manifest lists it now (a pack installed before directions existed didn't)
+        val local = JSONObject(File(d, "manifest.json").readText())
+        val lf = local.getJSONArray("files"); val keep = JSONArray()
+        for (i in 0 until lf.length()) if (!isRoutes(lf.getJSONObject(i).getString("name"))) keep.put(lf.getJSONObject(i))
+        keep.put(f); File(d, "manifest.json").writeText(local.put("files", keep).toString())
+        onProgress(size, size, name)
+        return JSONObject().put("code", code).put("routes", true).put("bytes", size)
     }
 
     fun remove(ctx: Context, code: String): Boolean = try {

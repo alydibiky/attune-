@@ -931,11 +931,14 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         val flag = AtomicBoolean(false); cancels[id] = flag
         pool.execute {
             try {
-                val code = JSONObject(arg).getString("code")
-                val man = MapPacks.install(ctx, code, { done, total, name ->
+                val a = JSONObject(arg); val code = a.getString("code")
+                val prog = { done: Long, total: Long, name: String ->
                     val pct = if (total > 0) ((done * 100) / total).toInt().coerceIn(0, 99) else 0
                     progress(id, pct, name, "%.0f / %.0f MB".format(done / 1e6, total / 1e6))
-                }, { flag.get() })
+                }
+                // v6.20: {code, routesOnly: true} = the offline directions of an installed country; {code, routes: true} = map + directions
+                val man = if (a.optBoolean("routesOnly")) MapPacks.installRoutes(ctx, code, prog, { flag.get() })
+                    else MapPacks.install(ctx, code, prog, { flag.get() }, a.optBoolean("routes"))
                 resolve(id, man)
             } catch (e: MapPacks.Cancelled) {
                 reject(id, "Download paused — it continues where it stopped next time.")

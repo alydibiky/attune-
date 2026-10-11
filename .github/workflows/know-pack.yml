@@ -13,6 +13,7 @@ name: Build a knowledge pack
 #   wikidata  Wikidata, ONLY statements citing an outside source (CC0)
 #   medicines openFDA drug labels (CC0)    dictionary Open English WordNet (CC BY) + لسان العرب، مختار الصحاح    islamlib تفسير ابن كثير آيةً آية، رياض الصالحين، بلوغ المرام
 #   cars      car specs: US EPA (public domain, 2000–now) + EEA new-car data (CC BY 4.0, 2010–now, incl. Chinese brands)
+#   qa-*      v6.20 Q&A from Stack Exchange (CC BY-SA 4.0): tech, cars, home, science, life, language, code — top-voted answers
 # Attune is sold: every source must allow commercial use (no NC/ND licences, no modern copyrighted books). No Wikipedia (Ali's rule). Ali approved publishing (10 Oct 2026). Rebuilt on the 1st of every month so the numbers stay
 # current; the app installs a newer build by itself.
 
@@ -22,7 +23,7 @@ on:
   workflow_dispatch:
     inputs:
       packs:
-        description: "Packs, space-separated (world laws numbers cities health cranes quran fiqh hadith cars math physics chemistry biology history geography coding business economics society medicines dictionary islamlib wikidata), or all"
+        description: "Packs, space-separated (world laws numbers cities health cranes quran fiqh hadith cars math physics chemistry biology history geography coding business economics society medicines dictionary islamlib wikidata qa-tech qa-cars qa-home qa-science qa-life qa-language qa-code), or all"
         default: "all"
       budget_mb:
         description: "Text budget in MB (laws, science)"
@@ -40,7 +41,7 @@ jobs:
       - id: p
         run: |
           packs="${{ github.event.inputs.packs }}"
-          if [ -z "$packs" ] || [ "$packs" = "all" ]; then packs="world laws numbers cities health cranes quran fiqh hadith cars math physics chemistry biology history geography coding business economics society medicines dictionary islamlib wikidata"; fi
+          if [ -z "$packs" ] || [ "$packs" = "all" ]; then packs="world laws numbers cities health cranes quran fiqh hadith cars math physics chemistry biology history geography coding business economics society medicines dictionary islamlib wikidata qa-tech qa-cars qa-home qa-science qa-life qa-language qa-code"; fi
           echo "list=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1].split()))' "$packs")" >> $GITHUB_OUTPUT
 
   pack:
@@ -60,6 +61,8 @@ jobs:
         run: |
           pip install pyarrow
           budget="${{ github.event.inputs.budget_mb }}"; [ -z "$budget" ] && budget=25
+          # v6.20 the big Q&A packs (Stack Exchange): ≈ 100 MB of text each, read from the Internet Archive's 7z dumps
+          case "${{ matrix.pack }}" in qa-*) sudo apt-get install -y -qq p7zip-full >/dev/null; sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true; budget=100;; esac
           [ "${{ matrix.pack }}" = "laws" ] && budget=$(( budget < 20 ? budget : 20 ))
           PYTHONUNBUFFERED=1 python3 tools/build_know_pack.py "${{ matrix.pack }}" out --budget-mb "$budget" | tee build.log   # unbuffered: progress shows live
           ls -la out

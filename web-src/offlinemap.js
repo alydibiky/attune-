@@ -34,7 +34,7 @@ export function isNewer(remote, local) {
   if (!local || !local.date) return true;
   return String(remote.date) > String(local.date);
 }
-export const packBytes = (man) => ((man && man.files) || []).reduce((a, f) => a + (Number(f.bytes) || 0), 0);
+export const packBytes = (man) => ((man && man.files) || []).filter((f) => !/-route\.bin$/.test(f.name || "")).reduce((a, f) => a + (Number(f.bytes) || 0), 0);   // v6.20: directions are a separate download
 export function prettyMB(bytes) {
   const mb = (Number(bytes) || 0) / 1e6;
   return mb >= 1000 ? (mb / 1000).toFixed(1) + " GB" : mb >= 10 ? Math.round(mb) + " MB" : mb.toFixed(1) + " MB";
