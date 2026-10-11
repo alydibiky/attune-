@@ -898,6 +898,13 @@ Ali: "I don't want mistakes" / "I want an accuracy of above 80 percent".
   Forms/Summary/More) · Form (Access-style: one record, ◀ ▶ first/new, Record n of m, required checks, related records)
   · Reports; the ✦ button opens the design chat (shows the change first, Apply, Undo).
 - Tests: `e2e_v718biz.py`; `harness.py` got `to_tables` and `leave_apps` for the older Business tests.
+- **Phone AND computer (Ali: "design the same business system if I use it both on mobile or desktop"):** one system
+  (tables, rules, records, colour shared); `ui.homeComputer` (null = same as the phone) and `ui.formCols` (1–3) are
+  the computer's own; ops `setHome {device}` and `setFormColumns`. Screens step: a Phone | Computer switch
+  (`biz-device-*`, sticky `biz:device`). `useWide()` (≥ 900 px) switches `SystemShell` to `data-layout`
+  computer-left (coloured side menu + tables list) or computer-top, full width (attune.jsx drops its max-w-3xl wrapper
+  for Business); Home in two columns, the form in `formCols` columns. The exported app file follows: computer menu,
+  form columns, form order, sections, list columns and hidden fields (CSS `@media (min-width:900px)`).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
