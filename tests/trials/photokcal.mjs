@@ -12,9 +12,21 @@ Reply with ONLY compact JSON on ONE line: {"meal":"short name of the whole meal"
 List EVERY food you can see as its own item: the main food, bread/buns/toast/wraps, rice/pasta/fries, cheese, sauces and spreads, visible oil or butter, toppings, sides, drinks. A burger or sandwich: list the bun/bread, the filling, the cheese and the sauce separately. Count countable things (eggs, slices, pieces, balls, skewers).
 Estimate grams as served from the photo: a dinner plate is about 26 cm across; use typical restaurant/home portions. kcal = your best estimate for that item. Do not list foods you cannot see.` },
   { role: "user", content: "Estimate this meal." }];
+// v3: no food named anywhere (small models copy any example); v4: first describe the photo in words, then the list from that
+const JSON_SPEC = `Reply with ONLY compact JSON on ONE line: {"meal":"short name","items":[{"food":"common English name","count":number or null,"grams":number,"kcal":number}],"total_kcal":number}`;
+const V3 = [{ role: "system", content: `You are an expert dietitian. Look carefully at THIS photo only. Decide what the meal is, then list each separate food or component you can actually see, with its weight in grams as served and its calories. Count countable pieces. Use the plate (about 26 cm across) to judge sizes. Never list a food you cannot see in this photo.\n${JSON_SPEC}` },
+  { role: "user", content: "Estimate this meal." }];
+const DESCRIBE = [{ role: "system", content: "You are an expert dietitian. Describe exactly what food is in this photo: name the dish, then each separate component you can see (what it is, how many pieces, how big compared with the plate, what is on top and underneath). Plain sentences, no guessing beyond what is visible." },
+  { role: "user", content: "What exactly is in this photo?" }];
 const errs = []; let unknown = 0, t0 = Date.now();
 for (const [k, s] of set.slice(0, N).entries()) {
-  const msgs = process.env.PROMPT === "v2" ? V2 : F.photoMessages("", "eg", HINTS ? HINTS[k] || [] : []);
+  let msgs = process.env.PROMPT === "v2" ? V2 : process.env.PROMPT === "v3" ? V3 : F.photoMessages("", "eg", HINTS ? HINTS[k] || [] : []);
+  let described = "";
+  if (process.env.PROMPT === "v4" && !(process.env.RESCORE)) {
+    const img0 = "data:image/jpeg;base64," + readFileSync(s.file).toString("base64");
+    try { const r = await fetch(`http://127.0.0.1:${PORT}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ messages: [DESCRIBE[0], { role: "user", content: [{ type: "image_url", image_url: { url: img0 } }, { type: "text", text: DESCRIBE[1].content }] }], max_tokens: 300, temperature: 0, chat_template_kwargs: { enable_thinking: false } }) }); described = (await r.json()).choices[0].message.content; } catch (e) {}
+    msgs = [{ role: "system", content: V3[0].content + "\nA careful look at the photo found: " + described }, V3[1]];
+  }
   const img = "data:image/jpeg;base64," + readFileSync(s.file).toString("base64");
   const user = msgs[msgs.length - 1];
   const body = { messages: [...msgs.slice(0, -1), { role: "user", content: [{ type: "image_url", image_url: { url: img } }, { type: "text", text: user.content }] }],
@@ -28,7 +40,7 @@ for (const [k, s] of set.slice(0, N).entries()) {
   if (process.env.RAW && !process.env.RESCORE) { cache[k] = raw; writeFileSync(process.env.RAW, JSON.stringify(cache)); }
   const p = F.parsePhoto(raw);
   let kcal = p.items.reduce((a, x) => a + (x.kcal || 0), 0); unknown += p.items.filter((x) => x.kcal == null).length;
-  if (process.env.PROMPT === "v2") {   // the table's calories for foods it knows, the model's own estimate for the rest; MODE=model: the model's total
+  if (["v2", "v3", "v4"].includes(process.env.PROMPT)) {   // the table's calories for foods it knows, the model's own estimate for the rest; MODE=model: the model's total
     let j = {}; try { j = JSON.parse(String(raw).replace(/^[^{]*/, "").replace(/[^}]*$/, "")); } catch (e) {}
     const its = Array.isArray(j.items) ? j.items : [];
     const tab = its.reduce((a, it) => { const fd = F.matchFood(String(it.food || "")); const g = +it.grams > 0 ? +it.grams : 0; return a + (fd && g ? fd.kcal * g / 100 : +it.kcal || 0); }, 0);
