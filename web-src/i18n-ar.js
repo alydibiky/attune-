@@ -498,6 +498,13 @@ export const AR = {
   "Open in your maps app": "الفتح في تطبيق الخرائط",
   "Remove": "إزالة",
   "Your places": "أماكنك",
+  // v6.18 Maps look A
+  "Search here": "ابحث هنا",
+  "Back to Attune": "رجوع إلى Attune",
+  "Other matches": "نتائج أخرى",
+  "Say it": "تحدّث",
+  "Download a country once: roads, buildings, shops and search, with no signal. A new map comes every week.": "نزّل خريطة البلد مرة واحدة: الطرق والمباني والمحلات والبحث، دون إنترنت. وتصل خريطة جديدة كل أسبوع.",
+  "Search a place and tap “Save” — saved places work with no signal.": "ابحث عن مكان واضغط «احفظ» — تعمل الأماكن المحفوظة دون إنترنت.",
   "Saved places are on this device and searchable with no signal.": "الأماكن المحفوظة على هذا الجهاز ويمكن البحث فيها بدون شبكة.",
   "Which word?": "أي كلمة؟",
   "That one needs a second look": "هذه تحتاج مراجعة",

@@ -9038,7 +9038,7 @@ export default function App() {
       <div className="max-w-3xl mx-auto px-3 pb-24">
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
-        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" ? " hidden" : "")}>
+        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" ? " hidden" : "")}>
           {mode === "chat" ? (
             <button onClick={() => setDrawerOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Chats")}><Menu size={20} /></button>
           ) : (
@@ -9683,7 +9683,8 @@ export default function App() {
           <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("instant")} />
         ) : mode === "map" ? (
           <MapPage N={NATIVE} nativeCall={NATIVE ? nativeCall : null} lastNativeId={nativeLastId} getTile={getTile} findPlaces={findPlaces} searchSaved={searchSaved}
-            load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />} />
+            load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />}
+            onExit={goBack} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
         ) : mode === "money" ? (
           <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)} />
         ) : mode === "travel" ? (
@@ -10803,7 +10804,7 @@ export default function App() {
       {toast && <div className="fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       <ConfirmHost />
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
-      <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (mode === "fit" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (mode === "fit" || mode === "map" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
           {/* v5.17: Memory in the bottom bar (Ali) */}
           {[["chat", "Chat", MessageCircle], ["instant", "Instant", Zap], ["money", "Money", Wallet],

@@ -57,9 +57,13 @@ with sync_playwright() as p:
     reads = [c for c in page.evaluate("window.__mapmock.calls") if c[0] == "read"]
     check(len(reads) >= 2 and all(r[1].endswith(".pmtiles") or r[1].startswith("assets/") for r in reads), "every byte came through the bridge (%d reads), nothing from the internet" % len(reads))
     check("offline map" in page.locator("[data-testid=map-mode]").inner_text(), "the search bar says it is the offline map")
-    box = page.evaluate("() => { const b = document.querySelector('[data-testid=map-canvas]').getBoundingClientRect(), h = document.querySelector('header.sticky').getBoundingClientRect(), s = document.querySelector('[data-testid=map-search]').getBoundingClientRect(); return { h: b.height, top: s.top, hb: h.bottom }; }")
+    box = page.evaluate("() => { const b = document.querySelector('[data-testid=map-canvas]').getBoundingClientRect(), s = document.querySelector('[data-testid=map-search]').getBoundingClientRect(); return { h: b.height, top: s.top, vh: innerHeight }; }")
     check(box["h"] > 500, "the map is really on screen: its box is %d px tall (MapLibre's CSS once made it 0 — the map was drawn but invisible)" % box["h"])
-    check(box["top"] >= box["hb"], "the search bar sits below the app's header, not under it (%s)" % box)
+    # v6.18 look A (Ali: "make it like an app inside Attune"): the whole screen, Attune's header and bottom bar hidden
+    bars = page.evaluate("() => [...document.querySelectorAll('header.sticky, nav')].filter((e) => e.getClientRects().length && getComputedStyle(e).display !== 'none').length")
+    check(bars == 0 and box["h"] >= box["vh"] - 2, "Maps fills the whole screen: Attune's header and bottom bar are hidden (%s, %d visible bars)" % (box, bars))
+    bg = page.evaluate("() => { const l = window.__attuneMap.getStyle().layers; const b = l.find((x) => x.type === 'background'); return b && b.paint && b.paint['background-color']; }")
+    check(bg and not str(bg).startswith("#0") and "rgb(0" not in str(bg), "a bright map (the light style), not the grey dark one: background %s" % bg)
     page.click("[data-testid=map-open-offline]"); page.wait_for_selector("[data-testid=map-offline]", timeout=3000)
     check(page.locator("[data-testid=map-country-find]").count() == 1, "«Offline maps» on the map opens the list of countries to download")
     page.locator("[data-testid=map-tab-places]").click(); page.wait_for_timeout(150)
@@ -84,8 +88,8 @@ with sync_playwright() as p:
     check(s.get("kinds") == ["amenity/fuel"] and "Wataniya" in page.locator("[data-testid=map-hit]").first.inner_text(), "Fuel asks the index for fuel stations near the centre")
     page.locator("[data-testid=map-sheet] button:has-text('Close')").first.click(); page.wait_for_timeout(200)
 
-    # ---- updates: a newer Egypt map is offered and installed ----
-    page.click("[data-testid=map-tab-offline]")
+    # ---- updates: a newer Egypt map is offered and installed (the country badge in the search bar opens the list) ----
+    page.click("[data-testid=map-open-offline]")
     page.wait_for_selector("[data-testid=map-update-eg]", timeout=8000)
     t = page.locator("[data-testid=map-country-eg]").inner_text()
     check("2026-10-02" in t, "Egypt is on the phone with its data date: " + t.replace("\n", " · "))
@@ -108,10 +112,12 @@ with sync_playwright() as p:
     page.locator("nav button").last.click(); page.wait_for_timeout(250)
     page.locator(".rounded-t-2xl button:has-text('الخرائط')").first.click()
     page.wait_for_selector("[data-testid=map-page]", timeout=8000)
-    page.click("[data-testid=map-tab-offline]"); page.wait_for_timeout(300)
+    page.click("[data-testid=map-open-offline]"); page.wait_for_timeout(300)
     t = page.locator("[data-testid=map-sheet]").inner_text()
     check("خرائط بدون إنترنت" in t and "تركيا" in t, "the sheet in Arabic: " + t.replace("\n", " · ")[:160])
 
+    page.click("[data-testid=map-exit]"); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=map-page]").count() == 0 and page.locator("nav").first.is_visible(), "← in the search bar goes back to Attune, its bars return")
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])
     ctx.close(); br.close()
 env.close()

@@ -25,9 +25,9 @@ with sync_playwright() as p:
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     page.locator("nav button").last.click(); page.wait_for_timeout(250)
     page.locator(".rounded-t-2xl button:has-text('Maps')").first.click()
-    page.wait_for_selector("input[placeholder^='Search a place']", timeout=5000)
-    page.fill("input[placeholder^='Search a place']", "Address east compound")
-    page.press("input[placeholder^='Search a place']", "Enter")      # v6.15: the floating search runs on Enter
+    page.wait_for_selector("[data-testid=map-search]", timeout=5000)
+    page.fill("[data-testid=map-search]", "Address east compound")
+    page.press("[data-testid=map-search]", "Enter")      # v6.15: the floating search runs on Enter
     page.wait_for_selector("[data-testid=map-hit]", timeout=15000)
     hit = page.locator("[data-testid=map-hit]").first.inner_text()
     check("Address East" in hit, "Ali's search finds the compound: %s" % hit.replace("\n", " · "))

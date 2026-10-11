@@ -6,6 +6,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Search, X, Download, RefreshCw, Trash2, MapPin, Share2, Loader2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as OM from "./offlinemap.js";
+import * as MS from "./mapsearch.js";
 
 const PACK_KEY = "attune:map:pack";
 const CHIPS = [
@@ -30,7 +31,7 @@ function pinEl(kind) {
   return el;
 }
 
-export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, searchSaved, load, save, remember, flash, myLang, fallback }) {
+export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, searchSaved, load, save, remember, flash, myLang, fallback, onExit, listen }) {
   const ar = getLang() === "ar";
   const lang = ar || myLang === "Arabic" ? "ar" : "en";
   const [st, setSt] = useState(load);
@@ -77,7 +78,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
       const ml = await OM.loadMapLibre();
       if (gone || !box.current) return;
       OM.registerProtocols(ml, N, getTile);
-      map = new ml.Map({ container: box.current, style: OM.mapStyle({ pack: active || null, dark: true, lang }), center: [view.lon, view.lat], zoom: view.z,
+      map = new ml.Map({ container: box.current, style: OM.mapStyle({ pack: active || null, dark: false, lang }), center: [view.lon, view.lat], zoom: view.z,
         attributionControl: false,   // the credit rides on the sheet (below): MapLibre's box sat on top of the sheet
         maxZoom: 19, dragRotate: false, pitchWithRotate: false });
       map.touchZoomRotate.disableRotation();
@@ -95,7 +96,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   useEffect(() => {
     const m = mapRef.current; if (!m) return;
     const k = (active || "-") + lang;
-    if (styleKey.current && styleKey.current !== k) m.setStyle(OM.mapStyle({ pack: active || null, dark: true, lang }));
+    if (styleKey.current && styleKey.current !== k) m.setStyle(OM.mapStyle({ pack: active || null, dark: false, lang }));
     styleKey.current = k;
   }, [active, lang, ready]);
   // pins: your places, the picked result, you
@@ -130,8 +131,13 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
     const push = (p) => { const k = Math.round(p.lat * 2000) + ":" + Math.round(p.lon * 2000) + ":" + String(p.name).slice(0, 12); if (seen.has(k)) return; seen.add(k); out.push({ ...p, dist: p.dist != null ? p.dist : distKm(c, p) }); };
     if (term) for (const p of searchSaved(st.places, term)) push({ ...p, local: true });
     if (packs.length && nativeCall) {
-      try { const r = await nativeCall("mapSearch", { q: chip ? "" : term, kinds: chip ? chip[3] : [], limit: 15, lat: c.lat, lon: c.lon });
-        for (const p of (r && r.places) || []) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, offline: true, dist: p.dist }); } catch (e) {}
+      // v6.18 (Ali searched "Address east compound" offline and got nothing): the offline map is asked again with
+      // simpler wordings — without "address", "compound"… — as the online search already was
+      for (const t of chip ? [""] : [term, ...MS.variants(term)]) {
+        try { const r = await nativeCall("mapSearch", { q: t, kinds: chip ? chip[3] : [], limit: 15, lat: c.lat, lon: c.lon });
+          for (const p of (r && r.places) || []) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, offline: true, dist: p.dist }); } catch (e) {}
+        if (out.some((x) => x.offline)) break;
+      }
     }
     if (online && out.filter((x) => !x.local).length < 3) {
       try { const r = await findPlaces(chip ? chip[4] : term, { center: c, lang, fetchJson: async (u) => { const res = await fetch(u, { headers: { Accept: "application/json" } }); if (!res.ok) throw new Error("search " + res.status); return res.json(); } });
@@ -139,9 +145,10 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
     }
     setHits(chip ? out.sort((a, b) => a.dist - b.dist) : out);
     setBusy(false);
-    if (!out.length) flash(online || packs.length ? tr("Nothing found for that — try the area's name too (e.g. “… New Cairo”), or move the map there and search again.") : tr("No signal, so only your saved places are searchable — nothing matched."));
+    if (!out.length && !(online || packs.length)) flash(tr("No signal, so only your saved places are searchable — nothing matched."));
   };
-  const pick = (r) => { setSel({ ...r, found: !r.local }); setHits(null); setSheet("half"); flyTo(r, 16); };
+  // v6.18: the place card keeps the other results, shown as "Other matches" (look A)
+  const pick = (r, from) => { setSel({ ...r, found: !r.local, src: r, from: from || null }); setHits(null); setSheet("half"); flyTo(r, 16); };
   const savePlace = (p) => {
     const place = { id: "p" + Date.now().toString(36), name: String(p.name).slice(0, 120), lat: p.lat, lon: p.lon, note: "", ts: Date.now() };
     setSt((s) => ({ ...s, places: [place, ...s.places].slice(0, 300) }));
@@ -195,118 +202,139 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   const usePack = (code) => { setPack(code); try { localStorage.setItem(PACK_KEY, code); } catch (e) {} const c = OM.countryOf(code); const m = mapRef.current; if (m && c) m.flyTo({ center: c.c, zoom: c.z }); };
 
   if (fail) return fallback;
-  const sheetH = sheet === "full" ? "86%" : sheet === "half" ? "46%" : "132px";
+  // v6.18 look A (Ali: "the maps is still stupid… make it like an app inside Attune"): the map fills the whole screen
+  // (Attune's header and bottom bar are hidden while it is open), a bright map, one white search bar with ← back,
+  // the country badge opens Offline maps, a white sheet for your places, results and the picked place.
+  const sheetH = sheet === "full" ? "88%" : sheet === "half" ? "50%" : "118px";
   const cname = (c) => (lang === "ar" ? c.ar : c.en);
-  const chipCls = "shrink-0 h-9 px-3.5 rounded-full bg-slate-950/95 border border-slate-800 text-[13px] text-slate-100 shadow";
+  const chipCls = "shrink-0 h-10 px-4 rounded-full bg-white text-[13.5px] font-semibold text-slate-900 shadow-[0_2px_8px_rgba(17,24,39,.14)]";
+  const fab = "w-12 h-12 rounded-full bg-white text-slate-700 flex items-center justify-center shadow-[0_3px_10px_rgba(17,24,39,.2)]";
+  const others = sel && sel.from ? sel.from.filter((r) => r !== sel.src).slice(0, 3) : [];
   return (
-    <div ref={holder} data-testid="map-page" style={{ height: `calc(100dvh - ${top}px - 58px)` }}>
-      <div className="fixed inset-x-0 z-10 bg-[#0b1220]" style={{ top, bottom: "calc(58px + env(safe-area-inset-bottom))" }}>
+    <div ref={holder} data-testid="map-page" data-look="a" style={{ height: "100dvh" }}>
+      <div className="fixed inset-0 z-10 bg-[#f2efe9] text-slate-900" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {/* inline: MapLibre's own CSS (.maplibregl-map{position:relative}) loads later and turned the class into a 0-px-tall box —
             the map was drawn but never seen (Ali, Oct 2026) */}
         <div ref={box} style={{ position: "absolute", inset: 0 }} data-testid="map-canvas" />
 
         {/* search + chips */}
-        <div className="absolute inset-x-0 top-0 p-3 space-y-2 pointer-events-none">
-          <form onSubmit={(e) => { e.preventDefault(); runSearch(q); }} className="pointer-events-auto flex items-center gap-2 h-12 rounded-full bg-slate-950/95 border border-slate-800 ps-4 pe-1.5 shadow-lg">
-            <Search size={17} className="text-slate-400 shrink-0" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} dir="auto" data-testid="map-search" aria-label={tr("Search a place or address")}
-              placeholder={tr("Search a place or address")} className="flex-1 min-w-0 bg-transparent text-[14.5px] text-slate-100 placeholder:text-slate-500 focus:outline-none" />
-            {q ? <button type="button" onClick={() => { setQ(""); setHits(null); }} aria-label={tr("Clear")} className="p-2 text-slate-400"><X size={16} /></button> : null}
-            <span className={`text-[11px] px-2 py-1 rounded-full shrink-0 ${active ? "bg-emerald-950 text-emerald-300" : online ? "bg-slate-800 text-slate-300" : "bg-amber-950 text-amber-300"}`} data-testid="map-mode">
-              {active ? tr("offline map") : online ? tr("online") : tr("no signal")}</span>
+        <div className="absolute inset-x-0 p-3 space-y-2.5 pointer-events-none" style={{ top: "env(safe-area-inset-top)" }}>
+          <form onSubmit={(e) => { e.preventDefault(); runSearch(q); }} className="pointer-events-auto flex items-center gap-1 h-14 rounded-full bg-white ps-1.5 pe-1.5 shadow-[0_4px_14px_rgba(17,24,39,.18)]">
+            {onExit ? <button type="button" onClick={onExit} aria-label={tr("Back to Attune")} data-testid="map-exit" className="w-11 h-11 rounded-full flex items-center justify-center text-slate-800 shrink-0">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true" className="rtl:-scale-x-100"><path d="M15 5l-7 7 7 7" /></svg></button> : <Search size={18} className="text-slate-500 shrink-0 ms-3" />}
+            <input value={q} onChange={(e) => setQ(e.target.value)} dir="auto" data-testid="map-search" aria-label={tr("Search a place or address")} enterKeyHint="search"
+              placeholder={tr("Search here")} className="flex-1 min-w-0 bg-transparent text-[15.5px] text-slate-900 placeholder:text-slate-500 focus:outline-none" />
+            {q ? <button type="button" onClick={() => { setQ(""); setHits(null); }} aria-label={tr("Clear")} className="w-10 h-10 flex items-center justify-center text-slate-500"><X size={18} /></button> : null}
+            {listen && !q ? <button type="button" onClick={async () => { try { const said = await listen(lang === "ar" ? "ar-EG" : "", (t) => setQ(t)); if (said) { setQ(said); runSearch(said); } } catch (e) {} }}
+              aria-label={tr("Say it")} className="w-10 h-10 flex items-center justify-center text-slate-600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg></button> : null}
+            <button type="button" onClick={() => { setSel(null); setHits(null); setTab("offline"); setSheet("full"); }} data-testid="map-open-offline" aria-label={tr("Offline maps")}
+              className={`relative h-10 min-w-10 px-2.5 rounded-full text-[12.5px] font-extrabold flex items-center justify-center shrink-0 ${active ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-700"}`}>
+              {active ? active.toUpperCase() : <Download size={17} aria-hidden="true" />}{updates.length ? <span className="absolute -top-0.5 -end-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white" aria-label={tr("Update ready")} /> : null}</button>
           </form>
-          <div className="pointer-events-auto flex gap-2 overflow-x-auto [scrollbar-width:none] -mx-3 px-3">
+          <div className="pointer-events-auto flex gap-2 overflow-x-auto [scrollbar-width:none] -mx-3 px-3 pb-1">
             {CHIPS.map((c) => <button key={c[0]} onClick={() => runSearch(lang === "ar" ? c[2] : c[1], c)} className={chipCls} data-testid={"map-chip-" + c[0]}>{lang === "ar" ? c[2] : c[1]}</button>)}
           </div>
         </div>
 
-        {/* Ali: "give me a place to download new maps" — the Offline maps list, one tap from the map whatever is open */}
-        {sheet !== "full" ? <><button onClick={() => { setSel(null); setHits(null); setTab("offline"); setSheet("full"); }} data-testid="map-open-offline"
-          className="absolute start-3 h-12 rounded-full bg-slate-950/95 border border-emerald-800 px-4 text-[13.5px] font-medium text-emerald-200 flex items-center gap-2 shadow-lg" style={{ bottom: `calc(${sheetH} + 12px)` }}>
-          <Download size={16} aria-hidden="true" />{packs.length ? tr("Offline maps") : tr("Download maps")}{updates.length ? <span className="w-2 h-2 rounded-full bg-emerald-400" aria-label={tr("Update ready")} /> : null}</button>
-        <button onClick={locateMe} aria-label={tr("My location")} data-testid="map-locate" className="absolute end-3 w-12 h-12 rounded-full bg-slate-950/95 border border-slate-800 text-slate-100 flex items-center justify-center shadow-lg" style={{ bottom: `calc(${sheetH} + 12px)` }}>
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg></button></> : null}
+        {sheet !== "full" ? <div className="absolute end-3 flex flex-col gap-2.5" style={{ bottom: `calc(${sheetH} + 14px)` }}>
+          <button onClick={locateMe} aria-label={tr("My location")} data-testid="map-locate" className={fab + " w-14 h-14 text-blue-700"}>
+            <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg></button>
+        </div> : null}
 
         {/* the sheet */}
-        <section className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-slate-950 border-t border-slate-800 shadow-[0_-8px_24px_rgba(0,0,0,.35)] flex flex-col transition-[height] duration-200 z-[5]" style={{ height: sheetH }} data-testid="map-sheet">
-          {sheet !== "full" ? <span className="absolute -top-6 start-2 rounded-md bg-slate-950/75 px-1.5 py-0.5 text-[10px] text-slate-400 pointer-events-none" data-testid="map-credit">© OpenStreetMap contributors{active ? " · Protomaps" : ""}</span> : null}
-          <button onClick={() => setSheet(sheet === "peek" ? "half" : sheet === "half" ? "full" : "peek")} aria-label={tr("Pull up")} className="w-full pt-2 pb-1 flex justify-center shrink-0">
-            <span className="w-10 h-1.5 rounded-full bg-slate-700" /></button>
+        <section className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white shadow-[0_-4px_18px_rgba(17,24,39,.16)] flex flex-col transition-[height] duration-200 z-[5]" style={{ height: sheetH, paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="map-sheet">
+          {sheet !== "full" ? <span className="absolute -top-6 start-2 rounded-md bg-white/85 px-1.5 py-0.5 text-[10px] text-slate-600 pointer-events-none" data-testid="map-credit">© OpenStreetMap contributors{active ? " · Protomaps" : ""}</span> : null}
+          <button onClick={() => setSheet(sheet === "peek" ? "half" : sheet === "half" ? "full" : "peek")} aria-label={tr("Pull up")} className="w-full pt-2.5 pb-1.5 flex justify-center shrink-0">
+            <span className="w-10 h-1.5 rounded-full bg-slate-300" /></button>
           <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
             {updates.length && !sel && hits == null ? (
-              <button onClick={() => install(updates[0].code)} className="w-full text-start rounded-2xl bg-emerald-950/70 border border-emerald-900 p-3 text-[13px] text-emerald-100" data-testid="map-update-banner">
+              <button onClick={() => install(updates[0].code)} className="w-full text-start rounded-2xl bg-emerald-50 border border-emerald-200 p-3 text-[13px] text-emerald-900" data-testid="map-update-banner">
                 <RefreshCw size={13} className="inline me-1.5" />{tr("A newer map of {c} is ready (data of {d}) — tap to update", { c: cname(OM.countryOf(updates[0].code)), d: remote[updates[0].code].date })}</button>) : null}
 
             {sel ? (
               <div className="space-y-3" data-testid="map-place">
                 <div className="flex items-start gap-2">
-                  <div className="flex-1 min-w-0"><p className="text-[17px] font-semibold text-white" dir="auto">{sel.name}</p>
-                    <p className="text-[12.5px] text-slate-400 mt-0.5">{sel.local || sel.id ? tr("saved place") : sel.kind ? String(sel.kind).split("/").pop().replace(/_/g, " ") : ""}{me ? " · " + km(distKm(me, sel)) + " " + tr("from you") : ""}</p></div>
-                  <button onClick={() => setSel(null)} aria-label={tr("Close")} className="p-2 text-slate-400"><X size={18} /></button>
+                  <div className="flex-1 min-w-0"><p className="text-[21px] font-extrabold text-slate-900 leading-snug" dir="auto">{String(sel.name).split(",")[0]}</p>
+                    <p className="text-[13px] text-slate-600 mt-0.5" dir="auto">{[sel.local || sel.id ? tr("saved place") : sel.kind ? String(sel.kind).split("/").pop().replace(/_/g, " ") : "", String(sel.name).split(",").slice(1, 3).join(",").trim(), me ? km(distKm(me, sel)) + " " + tr("from you") : sel.dist != null ? km(sel.dist) : ""].filter(Boolean).join(" · ")}</p></div>
+                  <button onClick={() => setSel(null)} aria-label={tr("Close")} className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><X size={18} /></button>
                 </div>
                 <div className="flex gap-2">
-                  <a href={`geo:${sel.lat},${sel.lon}?q=${sel.lat},${sel.lon}`} className="flex-1 h-12 rounded-2xl bg-emerald-500 text-slate-950 font-semibold text-[14px] flex items-center justify-center">{tr("Directions")}</a>
-                  {sel.found ? <button onClick={() => savePlace(sel)} data-testid="map-save-found" className="flex-1 h-12 rounded-2xl border border-slate-700 text-slate-100 text-[14px]">{tr("Save this place")}</button>
-                    : <button onClick={() => { if (!window.confirm(tr("Delete this place?"))) return; setSt((s) => ({ ...s, places: s.places.filter((x) => x.id !== sel.id) })); setSel(null); }} className="flex-1 h-12 rounded-2xl border border-slate-700 text-slate-300 text-[14px]">{tr("Remove")}</button>}
+                  <a href={`geo:${sel.lat},${sel.lon}?q=${sel.lat},${sel.lon}`} className="flex-1 h-12 rounded-full bg-blue-600 text-white font-bold text-[14.5px] flex items-center justify-center">{tr("Directions")}</a>
+                  {sel.found ? <button onClick={() => savePlace(sel)} data-testid="map-save-found" className="flex-1 h-12 rounded-full border-[1.5px] border-slate-300 text-blue-700 font-bold text-[14.5px]">{tr("Save")}</button>
+                    : <button onClick={() => { if (!window.confirm(tr("Delete this place?"))) return; setSt((s) => ({ ...s, places: s.places.filter((x) => x.id !== sel.id) })); setSel(null); }} className="flex-1 h-12 rounded-full border-[1.5px] border-slate-300 text-slate-700 font-semibold text-[14.5px]">{tr("Remove")}</button>}
                   <button onClick={() => { const t = `${sel.name}\nhttps://www.openstreetmap.org/?mlat=${sel.lat}&mlon=${sel.lon}#map=17/${sel.lat}/${sel.lon}`; if (N && N.share) N.share(t); else { try { navigator.clipboard.writeText(t); } catch (e) {} flash(tr("Copied")); } }}
-                    aria-label={tr("Share")} className="w-12 h-12 rounded-2xl border border-slate-700 text-slate-200 flex items-center justify-center"><Share2 size={17} /></button>
+                    className="flex-1 h-12 rounded-full border-[1.5px] border-slate-300 text-blue-700 font-bold text-[14.5px] flex items-center justify-center gap-1.5"><Share2 size={16} />{tr("Share")}</button>
                 </div>
-                <p className="text-[11px] text-slate-500 font-mono">{sel.lat.toFixed(5)}, {sel.lon.toFixed(5)}</p>
+                {others.length ? <div className="pt-2 border-t border-slate-200" data-testid="map-others"><p className="text-[12.5px] text-slate-500 mb-1">{tr("Other matches")}</p>
+                  {others.map((r, i) => <button key={i} onClick={() => pick(r, sel.from)} className="w-full flex items-center justify-between gap-3 py-2.5 text-start"><span className="text-[14px] font-semibold text-slate-800 truncate" dir="auto">{String(r.name).split(",").slice(0, 2).join(",")}</span><span className="text-[12.5px] text-slate-500 shrink-0 tabular-nums">{km(r.dist)}</span></button>)}</div> : null}
+                <p className="text-[11px] text-slate-400 font-mono">{sel.lat.toFixed(5)}, {sel.lon.toFixed(5)}</p>
               </div>
             ) : hits != null ? (
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between"><p className="text-[12px] text-slate-400">{busy ? tr("Searching…") : tr("{n} results", { n: hits.length })}</p>
-                  <button onClick={() => setHits(null)} className="text-[12px] text-slate-400 p-1">{tr("Close")}</button></div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between"><p className="text-[13px] text-slate-600">{busy ? tr("Searching…") : tr("{n} results", { n: hits.length })}</p>
+                  <button onClick={() => setHits(null)} className="text-[13px] text-blue-700 font-semibold p-1">{tr("Close")}</button></div>
                 {busy ? <Loader2 size={18} className="animate-spin text-slate-400" /> : null}
+                {!busy && !hits.length ? <p className="text-[13.5px] text-slate-600 py-2" data-testid="map-none">{tr("Nothing found for that — try the area's name too (e.g. “… New Cairo”), or move the map there and search again.")}</p> : null}
                 {hits.map((r, i) => (
-                  <button key={i} onClick={() => pick(r)} data-testid="map-hit" className="w-full flex items-center gap-3 text-start rounded-2xl bg-slate-900 px-3 py-2.5">
-                    <MapPin size={16} className={r.local ? "text-emerald-300" : r.offline ? "text-sky-300" : "text-slate-400"} />
-                    <span className="flex-1 min-w-0"><span className="block text-[14px] text-slate-100 truncate" dir="auto">{r.name}</span>
-                      <span className="block text-[11.5px] text-slate-500">{r.local ? tr("saved place") : r.kind ? String(r.kind).split("/").pop().replace(/_/g, " ") : ""}{r.offline ? " · " + tr("offline") : ""}</span></span>
-                    <span className="text-[12px] text-slate-400 tabular-nums shrink-0">{km(r.dist)}</span>
+                  <button key={i} onClick={() => pick(r, hits)} data-testid="map-hit" className="w-full flex items-center gap-3 text-start py-3 border-b border-slate-100">
+                    <span className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${r.local ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"}`}><MapPin size={17} /></span>
+                    <span className="flex-1 min-w-0"><span className="block text-[14.5px] font-semibold text-slate-900 truncate" dir="auto">{String(r.name).split(",")[0]}</span>
+                      <span className="block text-[12px] text-slate-500 truncate" dir="auto">{[r.local ? tr("saved place") : r.kind ? String(r.kind).split("/").pop().replace(/_/g, " ") : "", String(r.name).split(",").slice(1, 3).join(",").trim(), r.offline ? tr("offline") : ""].filter(Boolean).join(" · ")}</span></span>
+                    <span className="text-[12.5px] text-slate-600 tabular-nums shrink-0">{km(r.dist)}</span>
                   </button>))}
               </div>
             ) : (
               <>
-                <div className="flex rounded-xl border border-slate-800 overflow-hidden" role="tablist">
+                {sheet === "peek" ? (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2"><span className="text-[16px] font-bold text-slate-900">{tr("Your places")}</span>
+                      <span className="text-[12px] font-semibold text-emerald-700 truncate" data-testid="map-mode">{active ? tr("offline map") + " · " + cname(OM.countryOf(active) || { en: active, ar: active }) : online ? tr("online") : tr("no signal")}</span></div>
+                    <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
+                      {st.places.length ? st.places.slice(0, 12).map((p) => <button key={p.id} onClick={() => { setSel(p); setSheet("half"); flyTo(p, 15); }} className="shrink-0 max-w-[60%] truncate px-3.5 py-2 rounded-2xl bg-slate-100 text-[13.5px] font-semibold text-slate-800" dir="auto">{p.name}</button>)
+                        : <span className="text-[13px] text-slate-500">{tr("Search a place and tap “Save” — saved places work with no signal.")}</span>}
+                    </div>
+                  </div>
+                ) : <>
+                <div className="flex rounded-full bg-slate-100 p-1" role="tablist">
                   {[["places", tr("Your places")], ["offline", tr("Offline maps") + (updates.length ? " •" : "")]].map(([k, l]) => (
                     <button key={k} role="tab" aria-selected={tab === k} onClick={() => { setTab(k); if (sheet === "peek") setSheet("half"); }} data-testid={"map-tab-" + k}
-                      className={`flex-1 h-10 text-[13px] ${tab === k ? "bg-slate-800 text-white font-medium" : "text-slate-400"}`}>{l}</button>))}
+                      className={`flex-1 h-10 rounded-full text-[13.5px] ${tab === k ? "bg-white text-slate-900 font-bold shadow-sm" : "text-slate-600"}`}>{l}</button>))}
                 </div>
                 {tab === "places" ? (
                   st.places.length ? st.places.map((p) => (
-                    <button key={p.id} onClick={() => { setSel(p); flyTo(p, 15); }} className="w-full flex items-center gap-3 text-start py-2.5 border-b border-slate-900">
-                      <MapPin size={16} className="text-emerald-300 shrink-0" /><span className="flex-1 min-w-0 text-[14px] text-slate-200 truncate" dir="auto">{p.name}</span>
-                      <span className="text-[12px] text-slate-500">{me ? km(distKm(me, p)) : ""}</span></button>))
-                    : <p className="text-[13px] text-slate-500 py-2">{tr("Search a place and tap “Save this place” — saved places work with no signal.")}</p>
+                    <button key={p.id} onClick={() => { setSel(p); flyTo(p, 15); }} className="w-full flex items-center gap-3 text-start py-3 border-b border-slate-100">
+                      <span className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0"><MapPin size={17} /></span><span className="flex-1 min-w-0 text-[14.5px] font-semibold text-slate-800 truncate" dir="auto">{p.name}</span>
+                      <span className="text-[12.5px] text-slate-500">{me ? km(distKm(me, p)) : ""}</span></button>))
+                    : <p className="text-[13.5px] text-slate-600 py-2">{tr("Search a place and tap “Save” — saved places work with no signal.")}</p>
                 ) : (
                   <div className="space-y-2" data-testid="map-offline">
-                    <p className="text-[12px] text-slate-400 leading-relaxed">{tr("Download a whole country once: every road, building, place and shop, and search — all with no signal. A new version is built every week from OpenStreetMap; the app tells you when one is ready.")}</p>
+                    <p className="text-[12.5px] text-slate-600 leading-relaxed">{tr("Download a country once: roads, buildings, shops and search, with no signal. A new map comes every week.")}</p>
                     <input value={cq} onChange={(e) => setCq(e.target.value)} dir="auto" data-testid="map-country-find" aria-label={tr("Find a country")}
-                      placeholder={tr("Find a country — {n} available", { n: OM.COUNTRIES.length })} className="w-full h-11 rounded-xl bg-slate-900 border border-slate-800 px-3 text-[14px] text-slate-100 placeholder:text-slate-500" />
+                      placeholder={tr("Find a country — {n} available", { n: OM.COUNTRIES.length })} className="w-full h-12 rounded-2xl bg-slate-100 px-4 text-[14.5px] text-slate-900 placeholder:text-slate-500" />
                     {countryList.map((c) => {
                       const have = packs.find((p) => p.code === c.code), rm = remote[c.code], upd = have && OM.isNewer(rm, have), mine = dl && dl.code === c.code;
                       return (
-                        <div key={c.code} className={`rounded-2xl border p-3 ${active === c.code ? "border-emerald-700 bg-emerald-950/30" : "border-slate-800 bg-slate-900"}`} data-testid={"map-country-" + c.code}>
+                        <div key={c.code} className={`rounded-2xl border-[1.5px] p-3 ${active === c.code ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"}`} data-testid={"map-country-" + c.code}>
                           <div className="flex items-center gap-2">
                             <button onClick={() => (have ? usePack(c.code) : null)} className="flex-1 min-w-0 text-start">
-                              <span className="block text-[14px] text-slate-100 font-medium truncate">{cname(c)}</span>
-                              <span className="block text-[11.5px] text-slate-400">{have ? tr("On this phone · data of {d} · {s}", { d: have.date, s: OM.prettyMB(have.bytes) }) + (active === c.code ? " · " + tr("showing") : "")
+                              <span className="block text-[15px] text-slate-900 font-bold truncate">{cname(c)}</span>
+                              <span className="block text-[12px] text-slate-600">{have ? tr("On this phone · data of {d} · {s}", { d: have.date, s: OM.prettyMB(have.bytes) }) + (active === c.code ? " · " + tr("showing") : "")
                                 : rm && rm.date ? tr("{s} · data of {d}", { s: OM.prettyMB(OM.packBytes(rm)), d: rm.date }) : ""}</span>
                             </button>
-                            {mine ? <button onClick={pause} className="h-10 px-3 rounded-xl border border-slate-700 text-slate-200 text-[13px]">{tr("Pause")}</button>
-                              : upd ? <button onClick={() => install(c.code)} disabled={!!dl} data-testid={"map-update-" + c.code} className="h-10 px-3 rounded-xl bg-emerald-500 text-slate-950 text-[13px] font-semibold flex items-center gap-1 disabled:opacity-40"><RefreshCw size={13} />{tr("Update")}</button>
-                              : have ? <button onClick={() => removePack(c.code)} aria-label={tr("Delete")} data-testid={"map-remove-" + c.code} className="h-10 w-10 rounded-xl border border-slate-800 text-slate-400 flex items-center justify-center"><Trash2 size={15} /></button>
-                              : <button onClick={() => install(c.code)} disabled={!!dl} data-testid={"map-dl-" + c.code} className="h-10 px-3 rounded-xl border border-emerald-800 text-emerald-200 text-[13px] flex items-center gap-1 disabled:opacity-40"><Download size={13} />{tr("Download")}</button>}
+                            {mine ? <button onClick={pause} className="h-10 px-4 rounded-full bg-slate-100 text-slate-800 font-semibold text-[13px]">{tr("Pause")}</button>
+                              : upd ? <button onClick={() => install(c.code)} disabled={!!dl} data-testid={"map-update-" + c.code} className="h-10 px-4 rounded-full bg-blue-600 text-white text-[13px] font-bold flex items-center gap-1 disabled:opacity-40"><RefreshCw size={13} />{tr("Update")}</button>
+                              : have ? <button onClick={() => removePack(c.code)} aria-label={tr("Delete")} data-testid={"map-remove-" + c.code} className="h-10 w-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center"><Trash2 size={15} /></button>
+                              : <button onClick={() => install(c.code)} disabled={!!dl} data-testid={"map-dl-" + c.code} className="h-10 px-4 rounded-full bg-blue-50 text-blue-700 text-[13px] font-bold flex items-center gap-1 disabled:opacity-40"><Download size={13} />{tr("Download")}</button>}
                           </div>
-                          {mine ? <div className="mt-2" data-testid="map-progress"><div className="h-1.5 rounded-full bg-slate-800"><div className="h-1.5 rounded-full bg-emerald-400" style={{ width: (dl.pct || 0) + "%" }} /></div>
-                            <p className="text-[11px] text-slate-400 mt-1 tabular-nums">{dl.pct || 0}% · {dl.detail}</p></div> : null}
-                          {rm && rm.error && !have ? <p className="text-[11px] text-amber-300 mt-1">{tr(rm.error)}</p> : null}
+                          {mine ? <div className="mt-2" data-testid="map-progress"><div className="h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-blue-600" style={{ width: (dl.pct || 0) + "%" }} /></div>
+                            <p className="text-[11.5px] text-slate-600 mt-1 tabular-nums">{dl.pct || 0}% · {dl.detail}</p></div> : null}
+                          {rm && rm.error && !have ? <p className="text-[11.5px] text-amber-700 mt-1">{tr(rm.error)}</p> : null}
                         </div>);
                     })}
-                    {packs.length ? <button onClick={() => { setPack(""); try { localStorage.setItem(PACK_KEY, "-"); } catch (e) {} }} className="text-[12px] text-slate-400 underline">{tr("Show the online map instead")}</button> : null}
+                    {packs.length ? <button onClick={() => { setPack(""); try { localStorage.setItem(PACK_KEY, "-"); } catch (e) {} }} className="text-[12.5px] text-slate-600 underline">{tr("Show the online map instead")}</button> : null}
                   </div>
                 )}
+                </>}
               </>
             )}
           </div>
