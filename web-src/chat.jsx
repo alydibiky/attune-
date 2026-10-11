@@ -858,7 +858,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         if (tb && tb.answerTokens < 1200) speedBrief = `\n\n(This phone writes slowly: answer in at most about ${Math.round(tb.answerTokens * 0.6)} words — the key facts and figures first, no long sections. The person can tap "More detail" for the full version.)`;
         const carTokens0 = (n) => kindT === "vehicle" && shaped ? Math.max(n, Math.min(6144, Math.floor(((api.contextTokens && api.contextTokens()) || 8192) * 0.4))) : n;
         const carTokens = (n) => (tb ? Math.min(carTokens0(n), tb.answerTokens) : carTokens0(n));
-        if (tb) readCap = Math.min(readCap, Math.max(3, Math.round(tb.promptTokens / 900)));   // ≈ 900 tokens of passages a page
+        // v6.21: the pages are NOT cut on a slow phone — reading them costs no model time; only the passages the model reads are
         const per = Math.min(8, Math.ceil(readCap / queries.length) + 2);
         onStatus(queries.length > 1 ? tr("Searching {n} ways at once…", { n: queries.length }) : tr("Searching the web…"));
         const found = await Promise.all(queries.map((q, i) =>
@@ -1391,8 +1391,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       // v5.34 — the facts sheet: every spec / price / table from the sources, copied by code with
       // its citations (✓ = on 2+ sites), under the answer. (factsheet.js)
       if (sources && answer && String(answer).trim()) {
-        const fs = factSheet((webCtx && webCtx.question) || typed, sources, /[؀-ۿ]/.test(typed || ""));
-        if (fs.md) { answer = String(answer).trim() + "\n\n" + fs.md; extra.factSheet = fs.rows.length + fs.tables.length; }
+        // v6.21 (Ali: "as strong as Gemini — find a loophole", phone-only): CODE is nearly free on the phone, the model is not.
+        // The model read a short slice; the sheet reads EVERY page found, in full (up to 16,000 characters each) — every figure,
+        // version and price table, cited. Pages the model didn't read are added to the source list so their numbers stay right.
+        const full = new Map(((webCtx && webCtx.toRead) || []).map((h) => [h.url, h]));
+        const seen = new Set(sources.map((x) => x.url));
+        const extraPages = [...full.values()].filter((h) => h.url && !seen.has(h.url));
+        const forSheet = [...sources.map((x) => (full.has(x.url) ? { ...x, text: full.get(x.url).text } : x)), ...extraPages];
+        const fs = factSheet((webCtx && webCtx.question) || typed, forSheet, /[؀-ۿ]/.test(typed || ""));
+        if (fs.md) {
+          answer = String(answer).trim() + "\n\n" + fs.md; extra.factSheet = fs.rows.length + fs.tables.length;
+          if (extraPages.length) sources = [...sources, ...extraPages.map((h) => ({ ...h, text: String(h.text || "").slice(0, 600) }))];
+        }
       }
       // A sum in the answer that doesn't add up ("25,000 × 4 = 10,000"): the
       // question is worked out again as a program the phone runs, and that

@@ -965,6 +965,20 @@ internet searching … improve internet searching and make it faster".
 - **Faster search** (WebTools.kt): one shared deadline for the engines (DDG + Bing ≤ 8 s; Brave + Mojeek +1.2 s once those
   answered) instead of 16 + 16 + 10 + 6 s in a row; quick questions read pages 50 % / 2.5 s / cap 6 s (was 60 % / 4 / 9).
 
+### 5.58 (12 Oct 2026, v6.22, versionCode 83) — web answers: code reads every page in full (phone-only "loophole")
+- Ali: "the Lynk & Co answer is lame — as strong as Gemini, find a loophole". Options given (his own Gemini key, his PC as
+  the brain over Wi-Fi, both, phone-only) → **he chose phone-only** (12 Oct 2026). No cloud, no PC — don't offer them again.
+- The loophole: code is nearly free on the phone, the model isn't. The model still reads a short, speed-sized slice
+  (§5.56 timeBudget), but the facts sheet (factsheet.js) is now built from EVERY page found, in full (webCtx.toRead, up to
+  16,000 characters each); pages the model didn't read are added to the source list so citations stay right. The page
+  count is no longer cut on slow phones (fetching costs no model time).
+- factsheet.js: new specs `powertrain` (plug-in hybrid / EREV / EV / hybrid / petrol / diesel), `drive` (AWD / FWD …),
+  `launch` (month + year); word-valued specs read sentences with no number (`WORDY`), and a "Spec | Value" row only gives
+  them a value that IS one. Up to 3 tables, versions / trims / prices first. Test: `unit/v721sheet`.
+- Cars pack (know_sources.py): + Natural Resources Canada fuel-consumption ratings 2015 → newest model year (Open
+  Government Licence – Canada) via the open.canada.ca CKAN API (`nrcan_rows`, columns found by their words). China-only
+  models (e.g. the Lynk & Co 900) are in no open dataset — the web covers them.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

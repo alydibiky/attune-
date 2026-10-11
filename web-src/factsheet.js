@@ -40,8 +40,17 @@ export const ATTRS = [
   ["camera", "Camera", "الكاميرا", /\bcamera\b|كاميرا/i, V("mp|megapixels?|ميجا")],
   ["fuel", "Fuel use", "استهلاك الوقود", /\b(consumption|fuel economy|economy)\b|استهلاك/i, V("l\\/100\\s?km|km\\/l|mpg|لتر")],
   ["motor", "Motor", "الموتور", /\bmotor\b|موتور/i, V("w|kw")],
+  // v6.21 (Ali: "the Lynk & Co answer is lame — as strong as Gemini"): what Gemini always states about a car
+  ["powertrain", "Powertrain", "نوع المحرك", /\b(powertrain|propulsion|fuel type|plug-in|hybrid|electric|phev|erev|bev)\b|هجين|كهربائ|بنزين|ديزل/i,
+    /\b(plug-in hybrid|phev|erev|range[- ]extend(?:er|ed)|full[- ]electric|all[- ]electric|bev|mild hybrid|full hybrid|hybrid|hev|petrol|gasoline|diesel)\b|هجين قابل للشحن|كهربائية بالكامل|هجين|بنزين|ديزل/i],
+  ["drive", "Drive", "الدفع", /\b(drive|drivetrain|awd|4wd|fwd|rwd|4x4)\b|دفع/i, /\b(awd|4wd|4x4|fwd|rwd|all[- ]wheel drive|front[- ]wheel drive|rear[- ]wheel drive)\b|دفع رباعي|دفع أمامي|دفع خلفي/i],
+  ["launch", "Launch", "الإطلاق", /\b(launch(?:ed|es)?|released?|on sale|debut(?:ed|s)?|unveiled|went on sale|deliveries (?:start|began))\b|إطلاق|طرح|أطلقت/i,
+    /\b((?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+20[1-3]\d|20[1-3]\d)\b/i],
 ];
 
+// v6.21: specs whose value is a word, not a number (found in sentences with no digit too)
+const WORDY = new Set(["powertrain", "drive"]);
+const WORDY_KEY = /\b(powertrain|drivetrain|propulsion|plug-in|hybrid|electric|phev|erev|bev|awd|4wd|fwd|rwd|4x4|wheel drive)\b|هجين|كهربائ|دفع/i;
 const norm = (v) => String(v).toLowerCase().replace(/[\s,]/g, "").replace(/litres?|liters?/g, "l").replace(/kilomet(er|re)s?/g, "km").replace(/seconds?|sec/g, "s");
 const cells = (row) => row.split("|").map((c) => c.trim()).filter((c, i, a) => c || (i > 0 && i < a.length - 1));
 
@@ -51,13 +60,16 @@ export function factsIn(text) {
   const lines = String(text || "").split(/\n|(?<=[.!?;])\s+(?=[A-Z0-9؀-ۿ])/);
   for (const raw of lines) {
     const line = raw.replace(/^\[[^\]]{1,80}\]\s*/, "").trim();   // the ranker's "[heading] " prefix
-    if (!/\d/.test(line) || line.length > 600) continue;
+    const digit = /\d/.test(line);
+    if (line.length > 600 || (!digit && !WORDY_KEY.test(line))) continue;
     const cs = line.includes("|") ? cells(line) : null;
     for (const [id, , , key, val] of ATTRS) {
       let v = null;
+      const wordy = WORDY.has(id);
+      if (!digit && !wordy) continue;
       if (cs && cs.length === 2) {
-        // "Spec | Value" rows (spec sheets)
-        if (key.test(cs[0]) && /\d/.test(cs[1])) { const m = cs[1].match(val); v = m ? m[0] : cs[1].slice(0, 40); }
+        // "Spec | Value" rows (spec sheets); a word-valued spec (powertrain, drive) only takes a value that IS one
+        if (key.test(cs[0]) && (wordy || /\d/.test(cs[1]))) { const m = cs[1].match(val); v = m ? m[0] : wordy ? null : cs[1].slice(0, 40); }
       } else if (!cs) {
         const k = line.search(key);
         if (k < 0) continue;
@@ -120,9 +132,11 @@ export function factSheet(question, sources, ar = false) {
     for (const t of tablesIn((h && h.text) || "")) {
       const head = t[0].join(" ").toLowerCase();
       const hit = ATTRS.some(([, , , key]) => key.test(head)) || qWords.some((w) => head.includes(w));
-      if (hit && tables.length < 2) tables.push({ src: i + 1, site: siteOf(h.url), rows: t });
+      // v6.21: up to three — versions / trims / prices first
+      if (hit && tables.length < 3) tables.push({ src: i + 1, site: siteOf(h.url), rows: t, versions: /\b(trim|version|variant|grade|model|price)\b|فئة|الفئات|السعر/i.test(head) });
     }
   });
+  tables.sort((a, b) => b.versions - a.versions);
   if (keepRows.length < 2 && !tables.length) return { md: "", rows: keepRows, tables };
   let md = "";
   if (keepRows.length >= 2) {
