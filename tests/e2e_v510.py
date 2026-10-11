@@ -10,7 +10,7 @@
 """
 import re, sys, json
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish, HERE
+from harness import Env, new_page, check, real_errors, finish, HERE, leave_apps
 
 SECTIONS = sys.argv[1:] or ["layout", "layout-ar", "scroll", "typing", "loops", "verify", "photo"]
 env = Env()
@@ -46,7 +46,7 @@ def sec_layout(br, lang="en"):
         if r["sw"] > r["W"] + 1 or r["out"]: bad[name] = r
     audit("chat")
     for i, tab in enumerate(["Instant", "Money", "Mind"]):
-        page.locator("nav button").nth(i + 1).click(); audit(tab)
+        page.locator("nav button").nth(i + 1).click(); audit(tab); leave_apps(page)   # Business (in the bar) hides the bar
     page.locator("nav button").last.click(); page.wait_for_timeout(300)
     tools = page.evaluate("""() => [...document.querySelectorAll('.rounded-t-2xl .grid.grid-cols-3 > button')].map(b => (b.querySelector('span') || {}).innerText).filter(Boolean)""")
     page.mouse.click(180, 60); page.wait_for_timeout(200)
@@ -56,10 +56,7 @@ def sec_layout(br, lang="en"):
         btn = page.locator(".rounded-t-2xl .grid button").filter(has_text=t).first
         if not btn.count(): continue
         btn.click(); page.wait_for_timeout(300); audit(t)
-        if page.locator("[data-testid=fit-exit]").count():   # v7.31: Fit hides Attune's bars; leave it with its own back button
-            page.locator("[data-testid=fit-exit]").click(); page.wait_for_timeout(200)
-        if page.locator("[data-testid=map-exit]").count():   # v6.18: Maps (look A) hides Attune's bars too
-            page.locator("[data-testid=map-exit]").click(); page.wait_for_timeout(200)
+        leave_apps(page)   # Fit, Maps and Business hide Attune's bars; leave them with their own back buttons
         if ti >= len(tools) - 4:   # Engine, profile, plan, backup open over the page
             page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(200)
         if t == "Travel":

@@ -39,3 +39,19 @@ ok(!B.suggestions(sys0, "logic").some((x) => /Capacity/.test(x.en)), "no nonsens
 const shop = E.systemFromSpec({ name: "Shop", tables: [{ name: "Orders", fields: [{ name: "Item", type: "text" }, { name: "Qty", type: "number" }, { name: "Price", type: "money" }] }] });
 ok(B.suggestions(shop, "logic").some((x) => x.en === "Orders: Total = Qty × Price"), "a quantity and a price → Total = Qty × Price");
 ok(B.alerts(sys0).length === 0 && B.checks(E.systemFromSpec({ name: "x", tables: [{ name: "A", fields: [{ name: "N", type: "text" }] }] })).length >= 1, "alerts and launch checks");
+
+// one system on a phone and a computer (Ali: "design the same business system if I use it both on mobile or desktop")
+const d = E.applyOps(sys0, [{ op: "setHome", device: "computer", parts: ["kpis", "chart", "alerts", "tables"] }, { op: "setFormColumns", columns: 3 }]);
+ok(d.errors.length === 0 && SC.homeFor(d.sys, "computer").join() === "kpis,chart,alerts,tables" && SC.homeFor(d.sys, "phone").join() === "kpis,latest,tables" && SC.uiOf(d.sys).formCols === 3,
+  "the computer gets its own home and 3 form columns; the phone's home is unchanged");
+const d2 = E.applyOps(d.sys, [{ op: "setHome", device: "phone", parts: ["latest"] }]).sys;
+ok(SC.homeFor(d2, "phone").join() === "latest" && SC.homeFor(d2, "computer").join() === "kpis,chart,alerts,tables", "changing the phone's home leaves the computer's alone");
+const d3 = E.applyOps(d2, [{ op: "setHome", parts: ["kpis"] }]).sys;
+ok(SC.homeFor(d3, "computer").join() === "kpis" && SC.uiOf(d3).homeComputer === null, "a home change for both makes them the same again");
+ok(E.applyOps(sys0, [{ op: "setFormColumns", columns: 7 }]).errors.length === 1, "form columns are 1–3");
+ok(/forms in 3 column/.test(SC.describeScreens(d.sys)) && /Computer: menu on the left; home screen shows kpis, chart/.test(SC.describeScreens(d.sys)), "the AI is told both layouts");
+const sgD = B.suggestions(d.sys, "screens").filter((x) => x.id === "chart" || x.id === "alerts");
+ok(sgD.every((x) => x.ops.length === 2), "with its own computer home, a home answer changes both layouts");
+const A = await import("../../web-src/erp-app.js");
+const html = A.buildApp(E.applyOps(r.sys, [{ op: "setFormColumns", columns: 3 }]).sys);
+ok(/body\.menu-left #app/.test(html) && /formCols/.test(html) && /"formCols":3/.test(html) && A.readApp(html).ui.formCols === 3, "the app file carries both layouts (computer menu and form columns) and opens back in Attune");

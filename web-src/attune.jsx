@@ -9035,7 +9035,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans">
-      <div className="max-w-3xl mx-auto px-3 pb-24">
+      <div className={mode === "business" ? "" : "max-w-3xl mx-auto px-3 pb-24"}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
         <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")}>

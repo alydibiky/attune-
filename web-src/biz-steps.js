@@ -60,9 +60,12 @@ export function suggestions(sys, step) {
   }
   if (step === "screens") {
     const u = SC.uiOf(sys);
-    for (const c of ["blue", "green", "orange", "black"]) if (u.color !== c) out.push({ id: "c-" + c, en: `Make it ${c}`, ar: `اجعله ${SC.COLORS_AR[c]}`, ops: [{ op: "setColor", color: c }] });
-    if (!u.home.includes("chart")) out.push({ id: "chart", en: "Show a chart on the home screen", ar: "اعرض رسمًا بيانيًا في الشاشة الرئيسية", ops: [{ op: "setHome", parts: [...u.home, "chart"] }] });
-    if (!u.home.includes("alerts")) out.push({ id: "alerts", en: "Show alerts (missing information) on the home screen", ar: "اعرض التنبيهات (بيانات ناقصة) في الشاشة الرئيسية", ops: [{ op: "setHome", parts: ["alerts", ...u.home] }] });
+    for (const c of ["blue", "green", "orange"].filter((x) => x !== u.color).slice(0, 2)) out.push({ id: "c-" + c, en: `Make it ${c}`, ar: `اجعله ${SC.COLORS_AR[c]}`, ops: [{ op: "setColor", color: c }] });
+    // a home change touches both devices, and keeps the computer's own layout when it has one
+    const both = (fn) => u.homeComputer ? [{ op: "setHome", device: "phone", parts: fn(u.home) }, { op: "setHome", device: "computer", parts: fn(u.homeComputer) }] : [{ op: "setHome", parts: fn(u.home) }];
+    if (!u.home.includes("chart")) out.push({ id: "chart", en: "Show a chart on the home screen", ar: "اعرض رسمًا بيانيًا في الشاشة الرئيسية", ops: both((h) => h.includes("chart") ? h : [...h, "chart"]) });
+    if (!u.home.includes("alerts")) out.push({ id: "alerts", en: "Show alerts (missing information) on the home screen", ar: "اعرض التنبيهات (بيانات ناقصة) في الشاشة الرئيسية", ops: both((h) => h.includes("alerts") ? h : ["alerts", ...h]) });
+    if (!u.homeComputer) { const big = [...new Set([...u.home, "chart", "alerts"])]; if (big.length > u.home.length) out.push({ id: "pc-more", en: "Show more on a computer's bigger screen (chart and alerts too)", ar: "اعرض أكثر على شاشة الكمبيوتر الأكبر (رسم بياني وتنبيهات أيضًا)", ops: [{ op: "setHome", device: "computer", parts: big }] }); }
     out.push({ id: "menu", en: u.menu === "left" ? "On a computer, put the menu on top" : "On a computer, put the menu on the left", ar: u.menu === "left" ? "على الكمبيوتر، ضع القائمة في الأعلى" : "على الكمبيوتر، ضع القائمة على اليسار", ops: [{ op: "setMenu", position: u.menu === "left" ? "top" : "left" }] });
   }
   return out.slice(0, 6);

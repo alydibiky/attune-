@@ -3,7 +3,7 @@ Run after tests/setup.sh and web-src/build.sh:  python3 tests/e2e_v5.py [section
 """
 import re, json, sys
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish, HERE
+from harness import Env, new_page, check, real_errors, finish, HERE, leave_apps
 
 SECTIONS = sys.argv[1:] or ["backup", "arabic", "actions", "speed", "crane", "fast", "fastengine"]
 env = Env()
@@ -185,6 +185,7 @@ def sec_arabic(br):
         latin = page.evaluate(LATIN)
         check(len(latin) <= 2, "%s screen is in Arabic: %s" % (name, latin[:5]))
     page.screenshot(path=HERE + "/v5-ar-instant.png")
+    leave_apps(page)   # the 4th button may open Fit, which hides Attune's bars
     # back to English
     open_more(page)
     with page.expect_navigation(timeout=10000):

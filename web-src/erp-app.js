@@ -40,7 +40,11 @@ button.p{background:var(--accent);color:#fff;border:0;border-radius:10px;padding
 th,td{padding:9px 10px;text-align:start;white-space:nowrap;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}tr.r:active{background:var(--accent2)}td.n{text-align:end;font-variant-numeric:tabular-nums}
 tfoot td{font-weight:700}.muted{color:var(--muted);font-size:12px}label{display:block;margin:10px 0}label span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
 .foot{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap}
-.ro{padding:9px 10px;border-radius:10px;background:var(--bg)}.err{color:#dc2626;font-size:12px}
+.ro{padding:9px 10px;border-radius:10px;background:var(--bg)}.err{color:#dc2626;font-size:12px}.sec{grid-column:1/-1;margin:14px 0 0;font-size:12px;font-weight:700;text-transform:uppercase;color:var(--accent)}
+@media (min-width:900px){main{max-width:1200px;margin:0 auto;padding:20px 24px 90px}.fg{display:grid;grid-template-columns:repeat(var(--cols,2),minmax(0,1fr));column-gap:18px}.fg label.w{grid-column:1/-1}
+body.menu-left #app{display:grid;grid-template-columns:240px minmax(0,1fr)}body.menu-left header{height:100vh;border-bottom:0;border-right:1px solid var(--line);background:var(--accent);color:#fff}
+body.menu-left .tabs{flex-direction:column}body.menu-left .tab{color:#fff;border-color:transparent;text-align:start;border-radius:10px;padding:9px 12px}body.menu-left .tab.on{background:#fff;color:var(--accent)}
+body.menu-left .foot{left:240px}body.menu-top header{background:var(--accent);color:#fff;display:flex;align-items:center;gap:16px}body.menu-top h1{margin:0}body.menu-top .tab{color:#fff;border-color:#ffffff66}body.menu-top .tab.on{background:#fff;color:var(--accent)}}
 </style></head>
 <body><div id="app"></div>
 <script type="application/json" id="${APP_MARK}">${esc(JSON.stringify(data))}</script>
@@ -69,6 +73,14 @@ function runtime() {
   // The records people add live in this browser; a newer copy wins.
   try { var saved = JSON.parse(localStorage.getItem(KEY) || "null"); if (saved && (saved.updated || 0) > (sys.updated || 0)) sys = saved; } catch (e) {}
   var tid = sys.tables[0] && sys.tables[0].id, q = "", editing = null;
+  // the design made in Attune: one system, a phone layout and a computer layout (menu, form columns), form order, lists
+  var UI = sys.ui || {};
+  document.body.className = "menu-" + (UI.menu === "top" ? "top" : "left");
+  document.body.style.setProperty("--cols", String(Math.min(3, Math.max(1, +UI.formCols || 2))));
+  var hidden = function (t) { return (UI.hidden && UI.hidden[t.id]) || []; };
+  var byIds = function (t, ids) { return (ids || []).map(function (id) { return t.fields.filter(function (f) { return f.id === id; })[0]; }).filter(Boolean); };
+  var listCols = function (t) { var c = byIds(t, UI.lists && UI.lists[t.id]); return c.length ? c : t.fields.filter(function (f) { return hidden(t).indexOf(f.id) < 0; }).slice(0, 10); };
+  var formCols = function (t) { var c = byIds(t, UI.forms && UI.forms[t.id]); t.fields.forEach(function (f) { if (c.indexOf(f) < 0) c.push(f); }); return c.filter(function (f) { return hidden(t).indexOf(f.id) < 0; }); };
   var H = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
   var T = function (id) { return sys.tables.filter(function (t) { return t.id === id; })[0]; };
   var save = function () { sys.updated = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(sys)); } catch (e) { alertBox("This browser's storage is full."); } };
@@ -117,7 +129,7 @@ function runtime() {
     var head = '<header><h1>' + H(sys.name) + '</h1><div class="tabs">' + sys.tables.map(function (t) { return '<button class="tab' + (t.id === tid ? " on" : "") + '" data-t="' + t.id + '">' + H(t.name) + " " + (sys.rows[t.id] || []).length + "</button>"; }).join("") + "</div></header>";
     if (editing) { root.innerHTML = head + form(table); bindForm(table); bindTabs(); return; }
     var rows = (sys.rows[table.id] || []).filter(function (r) { if (!q) return true; var k = q.toLowerCase(); return table.fields.some(function (f) { return fmt(table, f, r).toLowerCase().indexOf(k) >= 0; }); });
-    var shown = table.fields.slice(0, 10);
+    var shown = listCols(table);
     var sums = shown.map(function (f) { if (!/^(number|money|formula)$/.test(f.type)) return null; var s = 0, any = false; rows.forEach(function (r) { var v = f.type === "formula" ? calc(table, r, f.formula || "", 0) : num(f, r[f.id]); if (v != null) { s += v; any = true; } }); return any ? s : null; });
     root.innerHTML = head + '<main><div class="bar"><input id="q" placeholder="Search ' + H(table.name) + '" value="' + H(q) + '"><button class="p" id="add">+ Record</button></div>' +
       '<div class="grid"><table><thead><tr>' + shown.map(function (f) { return "<th>" + H(f.name) + "</th>"; }).join("") + "</tr></thead><tbody>" +
@@ -146,7 +158,8 @@ function runtime() {
   var bindTabs = function () { [].forEach.call(root.querySelectorAll(".tab"), function (b) { b.onclick = function () { tid = b.getAttribute("data-t"); editing = null; q = ""; draw(); }; }); };
   var form = function (table) {
     var row = editing === "new" ? {} : (sys.rows[table.id] || []).filter(function (r) { return r._id === editing; })[0] || {};
-    return "<main><button class=\"g\" id=\"back\">← " + H(table.name) + "</button>" + table.fields.map(function (f) {
+    var secs = (UI.sections && UI.sections[table.id]) || {};
+    return "<main><button class=\"g\" id=\"back\">← " + H(table.name) + "</button><div class=\"fg\">" + formCols(table).map(function (f) {
       var v = row[f.id], id = "f_" + f.id, inp;
       if (f.type === "formula") inp = '<div class="ro">' + H(editing === "new" ? "—" : fmt(table, f, row)) + "</div>";
       else if (f.type === "auto") inp = '<div class="ro">' + H(v || "(given when saved)") + "</div>";
@@ -155,8 +168,8 @@ function runtime() {
       else if (f.type === "link") { var lt = T(f.link); inp = '<select id="' + id + '"><option value=""></option>' + (lt ? (sys.rows[lt.id] || []).map(function (r) { return '<option value="' + r._id + '"' + (r._id === v ? " selected" : "") + ">" + H(label(lt, r)) + "</option>"; }).join("") : "") + "</select>"; }
       else if (f.type === "longtext") inp = '<textarea id="' + id + '" rows="3">' + H(v) + "</textarea>";
       else inp = '<input id="' + id + '" type="' + (f.type === "date" ? "date" : f.type === "number" || f.type === "money" ? "text\" inputmode=\"decimal" : f.type === "phone" ? "tel" : f.type === "email" ? "email" : "text") + '" value="' + H(v) + '">';
-      return "<label><span>" + H(f.name) + (f.required ? " *" : "") + "</span>" + inp + "</label>";
-    }).join("") + '<p class="err" id="err"></p><div class="bar"><button class="p" id="ok">Save</button>' + (editing !== "new" ? '<button class="g" id="del">Delete</button>' : "") + "</div></main>";
+      return (secs[f.id] ? '<p class="sec">' + H(secs[f.id]) + "</p>" : "") + "<label" + (f.type === "longtext" ? ' class="w"' : "") + "><span>" + H(f.name) + (f.required ? " *" : "") + "</span>" + inp + "</label>";
+    }).join("") + '</div><p class="err" id="err"></p><div class="bar"><button class="p" id="ok">Save</button>' + (editing !== "new" ? '<button class="g" id="del">Delete</button>' : "") + "</div></main>";
   };
   var bindForm = function (table) {
     document.getElementById("back").onclick = function () { editing = null; draw(); };

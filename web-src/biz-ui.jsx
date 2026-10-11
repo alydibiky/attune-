@@ -10,7 +10,7 @@
    The tables' own tools (grid, design view, queries, forms, summary, licence, app file) stay in erp-ui.jsx and live in
    the "Tables" tab, so nothing that worked is lost. Logic: erp.js (tables), erp-screens.js (screens), biz-steps.js. */
 import React, { useState, useEffect, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Plus, Save, Trash2, Sparkles, Undo2, LayoutGrid, FileText, BarChart3, Database, Palette, Send, Check, X, Loader2, Upload, Wrench } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Save, Trash2, Sparkles, Undo2, LayoutGrid, FileText, BarChart3, Database, Palette, Send, Check, X, Loader2, Upload, Wrench, Smartphone, Monitor } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as E from "./erp.js";
@@ -23,6 +23,14 @@ import { SystemView, FieldInput, RenameSheet } from "./erp-ui.jsx";
 import { BooksApp } from "./books-ui.jsx";
 
 const KEY = "attune:erp:v1", INTRO = "attune:biz:intro";
+// a computer-sized screen (a tablet, a Chromebook, a phone on a monitor): the system switches to its computer layout
+const WIDE = "(min-width: 900px)";
+function useWide() {
+  const mq = typeof window !== "undefined" && window.matchMedia ? window.matchMedia(WIDE) : null;
+  const [w, setW] = useState(() => !!(mq && mq.matches));
+  useEffect(() => { if (!mq) return; const f = () => setW(mq.matches); f(); mq.addEventListener ? mq.addEventListener("change", f) : mq.addListener(f); return () => (mq.removeEventListener ? mq.removeEventListener("change", f) : mq.removeListener(f)); }, []);
+  return w;
+}
 const L2 = (en, ar) => (getLang() === "ar" ? ar : en);
 // one professional light palette for all of Business (the tables' tools inside it too); the system's colour is the accent
 const BIZ_CSS = `body:has(.biz-app),.biz-app{${LIGHT_BASE("#0F172A", "#F4F6FA", "#FFFFFF", "#EEF2F7", "#DCE3EC", "#C3CDDA", "#56657A", "#3E4D62")}color-scheme:light}
@@ -63,6 +71,7 @@ export function BusinessApp({ flash, llm, modelReady, openEngine, saveFile, shar
   const open = (id) => { const s = loadSys(id); if (s) { setSysRaw(s); setView("system"); } };
   const done = () => { try { localStorage.setItem(INTRO, "1"); } catch (e) {} setIntro(false); };
   const color = sys && (view === "system" || view === "new") ? SC.colorOf(sys) : SC.COLORS.blue;
+  const full = useWide() && view === "system" && !!sys;     // a system on a computer-sized screen uses the whole width
   let body;
   if (view === "books") body = <div className="p-3"><BooksApp flash={flash} saveFile={saveFile} share={share} onBack={() => setView("list")} goCustom={() => setView("list")} /></div>;
   else if (view === "new") body = <Builder llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} onBack={() => setView("list")}
@@ -81,7 +90,7 @@ export function BusinessApp({ flash, llm, modelReady, openEngine, saveFile, shar
   return (
     <div className="biz-app min-h-[100dvh] bg-[#F4F6FA] text-[#0F172A]" style={accentVars(color)} data-testid="business-app">
       <style>{BIZ_CSS}</style>
-      <div className="max-w-3xl mx-auto" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>{body}</div>
+      <div className={full ? "" : "max-w-3xl mx-auto px-3"} style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>{body}</div>
     </div>
   );
 }
@@ -365,55 +374,75 @@ function LogicStep({ draft, run }) {
 // ④ Screens: colour, home screen, computer menu, spacing — with a live phone + computer preview
 export function ScreensEditor({ sys, run }) {
   const u = SC.uiOf(sys), ar = getLang() === "ar";
+  // one system, two layouts: the tables, rules, colour and records are shared; the home screen, menu and form columns can differ
+  const [dev, setDev] = useSticky("biz:device", "phone");
+  const home = SC.homeFor(sys, dev), own = dev === "computer" && !!u.homeComputer;
+  const setHome = (next) => run([{ op: "setHome", parts: next, device: dev === "computer" ? "computer" : u.homeComputer ? "phone" : "both" }], true);
+  const seg = (on) => "flex-1 h-10 rounded-lg text-[13px] font-semibold " + (on ? "text-[#FFFFFF]" : "bg-[#EEF2F7]");
   return (
     <div className="space-y-3" data-testid="biz-screens">
-      <Previews sys={sys} />
+      <div className={card + " p-1.5 grid grid-cols-2 gap-1.5"} role="tablist" aria-label={tr("Design for")}>
+        {[["phone", tr("Phone"), Smartphone], ["computer", tr("Computer"), Monitor]].map(([k, l, I]) => (
+          <button key={k} role="tab" aria-selected={dev === k} onClick={() => setDev(k)} data-testid={"biz-device-" + k}
+            className={"h-11 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 " + (dev === k ? "text-[#FFFFFF]" : "text-[#334155]")} style={dev === k ? { background: "var(--biz)" } : null}><I size={17} />{l}</button>))}
+      </div>
+      <p className="text-[12.5px] text-[#5B6B80] px-1" data-testid="biz-device-note">{tr("One system on both: the same tables, rules and records. The phone and the computer can each have their own layout.")}</p>
+      <Previews sys={sys} focus={dev} />
       <div className={card + " p-3.5 space-y-2.5"}>
-        <p className="text-[13px] font-bold flex items-center gap-1.5"><Palette size={15} />{tr("Colour")}</p>
+        <p className="text-[13px] font-bold flex items-center gap-1.5"><Palette size={15} />{tr("Colour")} <span className="font-normal text-[#5B6B80]">· {tr("both")}</span></p>
         <div className="flex flex-wrap gap-2.5">{Object.entries(SC.COLORS).map(([k, c]) => (
           <button key={k} onClick={() => run([{ op: "setColor", color: k }], true)} aria-label={ar ? SC.COLORS_AR[k] : k} aria-pressed={u.color === k} data-testid={"biz-color-" + k}
             className="w-11 h-11 rounded-full" style={{ background: c, boxShadow: u.color === k ? `0 0 0 3px #fff, 0 0 0 5px ${c}` : "none" }} />))}</div>
       </div>
       <div className={card + " p-3.5 space-y-2.5"}>
-        <p className="text-[13px] font-bold">{tr("Home screen shows")}</p>
-        <div className="flex flex-wrap gap-2">{Object.keys(SC.HOME_PARTS).map((p) => { const on = u.home.includes(p);
-          return <button key={p} onClick={() => { const next = on ? u.home.filter((x) => x !== p) : [...u.home, p]; if (next.length) run([{ op: "setHome", parts: next }], true); }} aria-pressed={on} data-testid={"biz-home-" + p}
+        <p className="text-[13px] font-bold">{dev === "computer" ? tr("Computer home screen shows") : tr("Phone home screen shows")}{dev === "computer" && !own ? <span className="font-normal text-[#5B6B80]"> · {tr("same as the phone")}</span> : null}</p>
+        <div className="flex flex-wrap gap-2">{Object.keys(SC.HOME_PARTS).map((p) => { const on = home.includes(p);
+          return <button key={p} onClick={() => { const next = on ? home.filter((x) => x !== p) : [...home, p]; if (next.length) setHome(next); }} aria-pressed={on} data-testid={"biz-home-" + p}
             className={"px-3 py-2 rounded-xl text-[13px] font-semibold " + (on ? "text-[#FFFFFF]" : "bg-[#EEF2F7] text-[#334155]")} style={on ? { background: "var(--biz)" } : null}>{on ? "✓ " : ""}{ar ? SC.HOME_PARTS_AR[p] : SC.HOME_PARTS[p]}</button>; })}</div>
+        {own ? <button onClick={() => run([{ op: "setHome", parts: u.home }], true)} className="text-[13px] font-semibold underline" style={{ color: "var(--biz)" }} data-testid="biz-home-same">{tr("Use the phone's home screen here too")}</button> : null}
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className={card + " p-3.5 space-y-2"}><p className="text-[13px] font-bold">{tr("Computer menu")}</p>
-          <div className="flex gap-1.5">{[["left", tr("Left")], ["top", tr("Top")]].map(([k, l]) => <button key={k} onClick={() => run([{ op: "setMenu", position: k }], true)} className={"flex-1 h-10 rounded-lg text-[13px] font-semibold " + (u.menu === k ? "text-[#FFFFFF]" : "bg-[#EEF2F7]")} style={u.menu === k ? { background: "var(--biz)" } : null} data-testid={"biz-menu-" + k}>{l}</button>)}</div></div>
-        <div className={card + " p-3.5 space-y-2"}><p className="text-[13px] font-bold">{tr("Spacing")}</p>
-          <div className="flex gap-1.5">{[["comfortable", tr("Roomy")], ["compact", tr("Compact")]].map(([k, l]) => <button key={k} onClick={() => run([{ op: "setDensity", density: k }], true)} className={"flex-1 h-10 rounded-lg text-[13px] font-semibold " + (u.density === k ? "text-[#FFFFFF]" : "bg-[#EEF2F7]")} style={u.density === k ? { background: "var(--biz)" } : null}>{l}</button>)}</div></div>
-      </div>
+      {dev === "computer" ? <div className="grid grid-cols-2 gap-3">
+        <div className={card + " p-3.5 space-y-2"}><p className="text-[13px] font-bold">{tr("Menu")}</p>
+          <div className="flex gap-1.5">{[["left", tr("Left")], ["top", tr("Top")]].map(([k, l]) => <button key={k} onClick={() => run([{ op: "setMenu", position: k }], true)} className={seg(u.menu === k)} style={u.menu === k ? { background: "var(--biz)" } : null} data-testid={"biz-menu-" + k}>{l}</button>)}</div></div>
+        <div className={card + " p-3.5 space-y-2"}><p className="text-[13px] font-bold">{tr("Form columns")}</p>
+          <div className="flex gap-1.5">{[1, 2, 3].map((n) => <button key={n} onClick={() => run([{ op: "setFormColumns", columns: n }], true)} className={seg(u.formCols === n)} style={u.formCols === n ? { background: "var(--biz)" } : null} data-testid={"biz-formcols-" + n}>{n}</button>)}</div></div>
+      </div> : null}
+      <div className={card + " p-3.5 space-y-2"}><p className="text-[13px] font-bold">{tr("Spacing")} <span className="font-normal text-[#5B6B80]">· {tr("both")}</span></p>
+        <div className="flex gap-1.5">{[["comfortable", tr("Roomy")], ["compact", tr("Compact")]].map(([k, l]) => <button key={k} onClick={() => run([{ op: "setDensity", density: k }], true)} className={seg(u.density === k)} style={u.density === k ? { background: "var(--biz)" } : null}>{l}</button>)}</div></div>
     </div>
   );
 }
 
 // the live previews, drawn from the real design (tables, key numbers, colour, menu)
-function Previews({ sys }) {
-  const u = SC.uiOf(sys), c = SC.colorOf(sys), kp = u.kpis.slice(0, 3);
+function Previews({ sys, focus = null }) {
+  const u = SC.uiOf(sys), c = SC.colorOf(sys), kp = u.kpis.slice(0, 3), hp = SC.homeFor(sys, "phone"), hc = SC.homeFor(sys, "computer");
+  const ring = (d) => (focus === d ? { boxShadow: `0 0 0 3px ${c}55`, borderColor: c } : focus ? { opacity: 0.55 } : null);
   const bars = (n) => Array.from({ length: n }, (_, i) => <span key={i} className="block h-1.5 rounded-full bg-[#DCE3EC]" style={{ width: 60 + ((i * 23) % 40) + "%" }} />);
   return (
     <div className="flex gap-3 items-end" data-testid="biz-previews" aria-label={tr("Preview")}>
       <div className="w-[34%] max-w-[150px] shrink-0">
-        <div className="rounded-[18px] border-[3px] border-[#0F172A] bg-[#FFFFFF] overflow-hidden aspect-[9/17] flex flex-col" data-testid="biz-preview-phone">
+        <div className="rounded-[18px] border-[3px] border-[#0F172A] bg-[#FFFFFF] overflow-hidden aspect-[9/17] flex flex-col transition-all" style={ring("phone")} data-testid="biz-preview-phone">
           <div className="px-2 py-2 text-[#FFFFFF] text-[8.5px] font-bold truncate" style={{ background: c }}>{sys.name}</div>
           <div className="p-1.5 space-y-1.5 flex-1">
-            {u.home.includes("kpis") ? <div className="grid grid-cols-3 gap-1">{kp.map((k, i) => <span key={i} className="rounded bg-[#EEF2F7] p-1 text-[7px] leading-tight"><b className="block text-[9px]">{SC.kpiValue(sys, k)}</b><span className="block truncate">{k.label}</span></span>)}</div> : null}
-            {u.home.includes("chart") ? <div className="flex items-end gap-0.5 h-6">{[5, 9, 6, 12, 8].map((h, i) => <span key={i} className="flex-1 rounded-sm" style={{ height: h * 2, background: c, opacity: 0.75 }} />)}</div> : null}
+            {hp.includes("alerts") ? <span className="block rounded bg-[#FEF3C7] px-1 py-0.5 text-[7px] text-[#92400E] truncate">⚠ {tr("Alerts")}</span> : null}
+            {hp.includes("kpis") ? <div className="grid grid-cols-3 gap-1">{kp.map((k, i) => <span key={i} className="rounded bg-[#EEF2F7] p-1 text-[7px] leading-tight"><b className="block text-[9px]">{SC.kpiValue(sys, k)}</b><span className="block truncate">{k.label}</span></span>)}</div> : null}
+            {hp.includes("chart") ? <div className="flex items-end gap-0.5 h-6">{[5, 9, 6, 12, 8].map((h, i) => <span key={i} className="flex-1 rounded-sm" style={{ height: h * 2, background: c, opacity: 0.75 }} />)}</div> : null}
             {sys.tables.slice(0, u.density === "compact" ? 6 : 4).map((t) => <span key={t.id} className="block rounded bg-[#EEF2F7] px-1 py-1 text-[7.5px] truncate">{t.name}</span>)}
           </div>
         </div>
         <p className="text-[11px] text-[#5B6B80] text-center mt-1">{tr("Phone")}</p>
       </div>
       <div className="flex-1 min-w-0">
-        <div className={"rounded-lg border-[3px] border-[#0F172A] bg-[#FFFFFF] overflow-hidden aspect-[16/10] flex " + (u.menu === "top" ? "flex-col" : "")} data-testid="biz-preview-desktop">
+        <div className={"rounded-lg border-[3px] border-[#0F172A] bg-[#FFFFFF] overflow-hidden aspect-[16/10] flex transition-all " + (u.menu === "top" ? "flex-col" : "")} style={ring("computer")} data-testid="biz-preview-desktop">
           <div className={(u.menu === "top" ? "h-5 px-2 flex items-center gap-2" : "w-[22%] p-1.5 space-y-1") + " shrink-0"} style={{ background: u.menu === "top" ? c : "#0F172A" }}>
             {sys.tables.slice(0, 5).map((t) => <span key={t.id} className={(u.menu === "top" ? "text-[#FFFFFFE6]" : "block text-[#CBD5E1]") + " text-[7px] truncate"}>{t.name}</span>)}</div>
           <div className="flex-1 p-1.5 space-y-1">
-            {u.home.includes("kpis") ? <div className="grid grid-cols-3 gap-1">{kp.map((k, i) => <span key={i} className="rounded p-1 text-[7px]" style={{ background: i === 0 ? "var(--color-teal-950)" : "#F1F5F9" }}><b className="block text-[8.5px]">{SC.kpiValue(sys, k)}</b><span className="block truncate">{k.label}</span></span>)}</div> : null}
-            <div className="space-y-1">{bars(u.density === "compact" ? 7 : 5)}</div>
+            {hc.includes("kpis") ? <div className="grid grid-cols-3 gap-1">{kp.map((k, i) => <span key={i} className="rounded p-1 text-[7px]" style={{ background: i === 0 ? "var(--color-teal-950)" : "#F1F5F9" }}><b className="block text-[8.5px]">{SC.kpiValue(sys, k)}</b><span className="block truncate">{k.label}</span></span>)}</div> : null}
+            <div className="grid grid-cols-2 gap-1" data-testid="biz-preview-desktop-parts">
+              {hc.includes("chart") ? <div className="flex items-end gap-0.5 h-7 rounded bg-[#F8FAFC] p-0.5" data-part="chart">{[5, 9, 6, 12, 8, 10].map((h, i) => <span key={i} className="flex-1 rounded-sm" style={{ height: h * 2, background: c, opacity: 0.75 }} />)}</div> : null}
+              {hc.includes("alerts") ? <span className="block rounded bg-[#FEF3C7] px-1 py-0.5 text-[7px] text-[#92400E] h-fit" data-part="alerts">⚠ {tr("Alerts")}</span> : null}
+              {hc.includes("latest") || hc.includes("tables") ? <div className="space-y-1 col-span-2">{bars(u.density === "compact" ? 5 : 3)}</div> : null}
+            </div>
           </div>
         </div>
         <p className="text-[11px] text-[#5B6B80] text-center mt-1">{tr("Computer")}</p>
@@ -445,45 +474,83 @@ function SystemShell({ sys, setSys, llm, modelReady, openEngine, flash, saveFile
   const [chat, setChat] = useState(false);
   const [studio, setStudio] = useState(false);
   const [formT, setFormT] = useState(null);
+  const wide = useWide();
   useSubBack(chat, () => setChat(false));
   useSubBack(studio, () => setStudio(false));
-  const c = SC.colorOf(sys);
+  const c = SC.colorOf(sys), u = SC.uiOf(sys);
   if (studio) return <div style={accentVars(c)}><Builder existing={sys} startAt={3} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} onBack={() => setStudio(false)} onSave={(d) => setSys(d)} onCreate={() => setStudio(false)} /></div>;
   const tabs = [["home", tr("Home"), LayoutGrid], ["tables", tr("Tables"), Database], ["form", tr("Form"), FileText], ["reports", tr("Reports"), BarChart3]];
-  return (
-    <section className="pb-28" style={accentVars(c)} data-testid="biz-system">
-      <div className="text-[#FFFFFF] px-3 pt-2 pb-4 rounded-b-3xl" style={{ background: c }}>
-        <div className="flex items-center gap-2">
-          <button onClick={onBack} aria-label={tr("Back")} className="w-11 h-11 rounded-full bg-[#FFFFFF33] flex items-center justify-center" data-testid="biz-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>
-          <span className="flex-1" />
-          {sys.history && sys.history.length ? <button onClick={() => { const u = E.undo(sys); if (u) setSys(u.sys, tr("Undone: {w}", { w: u.what })); }} aria-label={tr("Undo")} className="w-11 h-11 rounded-full bg-[#FFFFFF33] flex items-center justify-center" data-testid="biz-sys-undo"><Undo2 size={18} /></button> : null}
-          <button onClick={() => setStudio(true)} className="h-10 px-3.5 rounded-full bg-[#FFFFFF33] text-[13px] font-bold flex items-center gap-1.5" data-testid="biz-open-studio"><Palette size={15} />{tr("Design")}</button>
+  const undo = sys.history && sys.history.length ? () => { const x = E.undo(sys); if (x) setSys(x.sys, tr("Undone: {w}", { w: x.what })); } : null;
+  const go = (t, tid) => { if (tid) setFormT(tid); setTab(t); };
+  const body = tab === "home" ? <HomeDash sys={sys} go={go} askAI={() => setChat(true)} wide={wide} />
+    : tab === "tables" ? <SystemView sys={sys} setSys={setSys} llm={llm} modelReady={modelReady} flash={flash} saveFile={saveFile} share={share} runPy={runPy} onBack={onBack} onDelete={onDelete} embedded />
+    : tab === "form" ? <AccessForm sys={sys} setSys={setSys} flash={flash} tid={formT} setTid={setFormT} cols={wide ? u.formCols : 1} />
+    : <Reports sys={sys} />;
+  const fab = modelReady ? <button onClick={() => setChat(true)} className="fixed end-4 z-40 h-14 ps-4 pe-5 rounded-full text-[#FFFFFF] font-bold shadow-lg flex items-center gap-2" style={{ background: c, bottom: wide ? "24px" : "calc(84px + env(safe-area-inset-bottom))" }} data-testid="biz-ai-open">
+    <Sparkles size={18} />{tr("Change with AI")}</button> : null;
+  const chatSheet = chat ? <DesignChat sys={sys} setSys={setSys} llm={llm} flash={flash} onClose={() => setChat(false)} /> : null;
+  const round = "w-11 h-11 rounded-full bg-[#FFFFFF33] flex items-center justify-center";
+  const backBtn = <button onClick={onBack} aria-label={tr("Back")} className={round + " shrink-0"} data-testid="biz-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>;
+  const undoBtn = undo ? <button onClick={undo} aria-label={tr("Undo")} className={round + " shrink-0"} data-testid="biz-sys-undo"><Undo2 size={18} /></button> : null;
+  const designBtn = <button onClick={() => setStudio(true)} className="h-10 px-3.5 rounded-full bg-[#FFFFFF33] text-[13px] font-bold flex items-center gap-1.5 shrink-0" data-testid="biz-open-studio"><Palette size={15} />{tr("Design")}</button>;
+  const sub = tr("{n} tables", { n: sys.tables.length }) + (E.isActive(sys) ? "" : " · " + tr("Trial"));
+
+  // ---- the computer layout: the same system, a menu on the left or on top, wider pages ----
+  if (wide && u.menu === "left") return (
+    <section className="flex min-h-screen" style={accentVars(c)} data-testid="biz-system" data-layout="computer-left">
+      <div className="w-64 shrink-0 sticky top-0 h-screen overflow-y-auto text-[#FFFFFF] flex flex-col p-3 gap-1" style={{ background: c }}>
+        <div className="flex items-center gap-2 mb-2">{backBtn}<span className="flex-1" />{undoBtn}</div>
+        <p className="text-[20px] font-extrabold px-2 leading-tight" dir="auto" data-testid="biz-system-title">{sys.name}</p>
+        <p className="text-[12.5px] opacity-85 px-2 mb-3">{sub}</p>
+        <nav className="flex flex-col gap-1" data-testid="biz-nav">{tabs.map(([k, l, I]) => (
+          <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"h-11 px-3 rounded-xl flex items-center gap-3 text-[14px] font-semibold text-start " + (tab === k ? "bg-[#FFFFFF] " : "hover:bg-[#FFFFFF22]")} style={tab === k ? { color: c } : null}><I size={19} />{l}</button>))}</nav>
+        <p className="text-[11px] font-bold uppercase tracking-wide opacity-75 px-3 mt-4 mb-1">{tr("Tables")}</p>
+        {sys.tables.map((t) => <button key={t.id} onClick={() => go("form", t.id)} className="h-9 px-3 rounded-lg text-[13.5px] text-start truncate hover:bg-[#FFFFFF22] flex justify-between gap-2" dir="auto"><span className="truncate">{t.name}</span><span className="opacity-75 tabular-nums">{(sys.rows[t.id] || []).length}</span></button>)}
+        <div className="mt-auto pt-3">{designBtn}</div>
+      </div>
+      <div className="flex-1 min-w-0 px-6 py-5 pb-24"><div className="max-w-6xl mx-auto">{body}</div></div>
+      {fab}{chatSheet}
+    </section>
+  );
+  if (wide) return (
+    <section className="pb-24" style={accentVars(c)} data-testid="biz-system" data-layout="computer-top">
+      <div className="text-[#FFFFFF] sticky top-0 z-30" style={{ background: c }}>
+        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center gap-3">
+          {backBtn}
+          <p className="text-[18px] font-extrabold truncate max-w-[30%]" dir="auto" data-testid="biz-system-title">{sys.name}</p>
+          <nav className="flex gap-1 ms-3" data-testid="biz-nav">{tabs.map(([k, l, I]) => (
+            <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"h-10 px-3.5 rounded-full flex items-center gap-2 text-[13.5px] font-semibold " + (tab === k ? "bg-[#FFFFFF]" : "hover:bg-[#FFFFFF22]")} style={tab === k ? { color: c } : null}><I size={17} />{l}</button>))}</nav>
+          <span className="flex-1" />{undoBtn}{designBtn}
         </div>
+      </div>
+      <div className="max-w-6xl mx-auto px-5 pt-5">{body}</div>
+      {fab}{chatSheet}
+    </section>
+  );
+  // ---- the phone layout ----
+  return (
+    <section className="pb-28" style={accentVars(c)} data-testid="biz-system" data-layout="phone">
+      <div className="text-[#FFFFFF] px-3 pt-2 pb-4 rounded-b-3xl" style={{ background: c }}>
+        <div className="flex items-center gap-2">{backBtn}<span className="flex-1" />{undoBtn}{designBtn}</div>
         <p className="text-[24px] font-extrabold mt-2 px-1" dir="auto" data-testid="biz-system-title">{sys.name}</p>
-        <p className="text-[12.5px] opacity-85 px-1">{tr("{n} tables", { n: sys.tables.length })}{E.isActive(sys) ? "" : " · " + tr("Trial")}</p>
+        <p className="text-[12.5px] opacity-85 px-1">{sub}</p>
       </div>
-      <div className="px-3 pt-3">
-        {tab === "home" ? <HomeDash sys={sys} go={(t, tid) => { if (tid) setFormT(tid); setTab(t); }} askAI={() => setChat(true)} />
-          : tab === "tables" ? <SystemView sys={sys} setSys={setSys} llm={llm} modelReady={modelReady} flash={flash} saveFile={saveFile} share={share} runPy={runPy} onBack={onBack} onDelete={onDelete} embedded />
-          : tab === "form" ? <AccessForm sys={sys} setSys={setSys} flash={flash} tid={formT} setTid={setFormT} />
-          : <Reports sys={sys} />}
-      </div>
-      {modelReady ? <button onClick={() => setChat(true)} className="fixed end-4 z-40 h-14 ps-4 pe-5 rounded-full text-[#FFFFFF] font-bold shadow-lg flex items-center gap-2" style={{ background: c, bottom: "calc(84px + env(safe-area-inset-bottom))" }} data-testid="biz-ai-open">
-        <Sparkles size={18} />{tr("Change with AI")}</button> : null}
+      <div className="px-3 pt-3">{body}</div>
+      {fab}
       <nav className="fixed bottom-0 inset-x-0 z-40 bg-[#FFFFFF] border-t border-[#DCE3EC]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="biz-nav">
         <div className="max-w-3xl mx-auto grid grid-cols-4 h-[64px]">{tabs.map(([k, l, I]) => (
           <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className="flex flex-col items-center justify-center gap-0.5 text-[11.5px] font-semibold" style={{ color: tab === k ? c : "#64748B" }}><I size={21} />{l}</button>))}</div>
       </nav>
-      {chat ? <DesignChat sys={sys} setSys={setSys} llm={llm} flash={flash} onClose={() => setChat(false)} /> : null}
+      {chatSheet}
     </section>
   );
 }
 
-function HomeDash({ sys, go, askAI }) {
-  const u = SC.uiOf(sys), al = BS.alerts(sys), ch = BS.chartData(sys);
+function HomeDash({ sys, go, askAI, wide = false }) {
+  const u = SC.uiOf(sys), parts = SC.homeFor(sys, wide ? "computer" : "phone"), al = BS.alerts(sys), ch = BS.chartData(sys);
   const latest = sys.tables.map((t) => ({ t, r: (sys.rows[t.id] || []).slice(-1)[0] })).filter((x) => x.r).sort((a, b) => (b.r._u || b.r._c || 0) - (a.r._u || a.r._c || 0)).slice(0, 4);
   const part = {
-    kpis: <div key="kpis" className="grid grid-cols-3 gap-2.5" data-testid="biz-kpis">{u.kpis.slice(0, 6).map((k, i) => (
+    kpis: <div key="kpis" className={"grid gap-2.5 " + (wide ? "col-span-2" : "grid-cols-3")} style={wide ? { gridTemplateColumns: `repeat(${Math.max(1, Math.min(6, u.kpis.length))}, minmax(0, 1fr))` } : null} data-testid="biz-kpis">{u.kpis.slice(0, 6).map((k, i) => (
       <div key={i} className={card + " p-3"}><p className="text-[22px] font-extrabold tabular-nums leading-tight" style={i === 0 ? { color: "var(--biz)" } : null}>{SC.kpiValue(sys, k).toLocaleString()}</p><p className="text-[11.5px] text-[#5B6B80] leading-snug" dir="auto">{k.label}</p></div>))}</div>,
     latest: <div key="latest" className={card + " p-3.5 space-y-2"} data-testid="biz-latest"><p className="text-[13px] font-bold">{tr("Latest records")}</p>
       {latest.length ? latest.map(({ t, r }) => <button key={t.id} onClick={() => go("form", t.id)} className="w-full flex justify-between gap-2 text-start text-[13.5px]"><span className="truncate" dir="auto">{E.displayOf(t, r)}</span><span className="text-[#5B6B80] shrink-0">{t.name}</span></button>)
@@ -493,15 +560,16 @@ function HomeDash({ sys, go, askAI }) {
         : <p className="text-[13px] text-[#5B6B80]">{tr("No records yet — open the Form tab to add the first one.")}</p>}</div>,
     alerts: <div key="alerts" className={card + " p-3.5 space-y-1.5"} data-testid="biz-alerts"><p className="text-[13px] font-bold">{tr("Alerts")}</p>
       {al.length ? al.map((a, i) => <button key={i} onClick={() => go("form", a.table.id)} className="w-full text-start text-[13px] text-amber-700" dir="auto">⚠ {a.table.name}: {E.displayOf(a.table, a.row)} — {tr("missing")} {a.missing.join(", ")}</button>) : <p className="text-[13px] text-emerald-700">✓ {tr("Nothing missing")}</p>}</div>,
-    tables: <div key="tables" className="space-y-2" data-testid="biz-home-tables">{sys.tables.map((t) => (
+    tables: <div key="tables" className={wide ? "grid grid-cols-2 gap-2.5 col-span-2" : "space-y-2"} data-testid="biz-home-tables">{sys.tables.map((t) => (
       <button key={t.id} onClick={() => go("form", t.id)} className={card + " w-full p-3.5 flex items-center justify-between text-start"}><span className="font-bold text-[14.5px]" dir="auto">{t.name}</span><span className="text-[13px] text-[#5B6B80]">{tr("{n} records", { n: (sys.rows[t.id] || []).length })}</span></button>))}</div>,
     ask: <button key="ask" onClick={askAI} className={card + " w-full p-4 text-start flex items-center gap-3"}><Sparkles size={18} style={{ color: "var(--biz)" }} /><span className="text-[14px] text-[#475569]">{tr("Ask the AI to change anything in this system")}</span></button>,
   };
-  return <div className="space-y-3" data-testid="biz-home">{u.home.map((p) => part[p]).filter(Boolean)}</div>;
+  // a computer has room for two columns: the key numbers (top) and the tables (bottom) span both, the rest sit side by side
+  return <div className={wide ? "grid grid-cols-2 gap-4 items-start" : "space-y-3"} data-testid="biz-home" data-device={wide ? "computer" : "phone"}>{(wide ? [...parts.filter((p) => p === "kpis"), ...parts.filter((p) => p !== "kpis" && p !== "tables"), ...parts.filter((p) => p === "tables")] : parts).map((p) => part[p]).filter(Boolean)}</div>;
 }
 
 // ---- the Access-style form: one record at a time ----------------------------------------------------------------------
-export function AccessForm({ sys, setSys, flash, tid, setTid }) {
+export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1 }) {
   const table = sys.tables.find((t) => t.id === tid) || sys.tables[0];
   const rows = table ? sys.rows[table.id] || [] : [];
   const [at, setAt] = useState(rows.length ? rows.length - 1 : -1);        // -1 = a new record
@@ -540,17 +608,17 @@ export function AccessForm({ sys, setSys, flash, tid, setTid }) {
           <button onClick={() => go(at + 1)} disabled={at < 0 || at >= rows.length - 1} aria-label={tr("Next record")} className="w-10 h-10 rounded-lg disabled:opacity-30 flex items-center justify-center" data-testid="biz-form-next"><ChevronRight size={20} className="rtl:-scale-x-100" /></button>
           <button onClick={() => go(-1)} aria-label={tr("New record")} className="h-10 px-3 rounded-lg text-[#FFFFFF] font-bold flex items-center gap-1" style={{ background: "var(--biz)" }} data-testid="biz-form-new"><Plus size={16} />{tr("New")}</button>
         </div>
-        <div className={(compact ? "p-3 space-y-2" : "p-4 space-y-3")} data-testid="biz-form-fields">
+        <div className={cols > 1 ? "grid gap-x-5 " + (compact ? "p-3 gap-y-2" : "p-4 gap-y-3") : compact ? "p-3 space-y-2" : "p-4 space-y-3"} style={cols > 1 ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : null} data-testid="biz-form-fields" data-cols={cols}>
           {ff.map(({ field: f, section }) => (
             <React.Fragment key={f.id}>
-              {section ? <p className="text-[12px] font-bold tracking-wide uppercase pt-2 border-t border-[#DCE3EC]" style={{ color: "var(--biz)" }} dir="auto">{section}</p> : null}
-              <label className={compact ? "grid grid-cols-[38%_1fr] items-center gap-2" : "block"}>
+              {section ? <p className="text-[12px] font-bold tracking-wide uppercase pt-2 border-t border-[#DCE3EC]" style={{ color: "var(--biz)", gridColumn: "1 / -1" }} dir="auto">{section}</p> : null}
+              <label style={f.type === "longtext" && cols > 1 ? { gridColumn: "1 / -1" } : null} className={compact ? "grid grid-cols-[38%_1fr] items-center gap-2" : "block"}>
                 <span className={"block text-[12.5px] font-semibold text-[#475569] " + (compact ? "" : "mb-1")} dir="auto">{f.name}{f.required ? " *" : ""}</span>
                 <span className="block" onInput={() => setDirty(true)} onChange={() => setDirty(true)}><FieldInput sys={sys} f={f} value={vals[f.id]} set={(v) => { setVals((o) => ({ ...o, [f.id]: v })); setDirty(true); }} computed={computed ? computed[f.id] : null} /></span>
                 {errs[f.id] ? <span className="block text-[12px] text-amber-700 mt-0.5">{errs[f.id]}</span> : null}
               </label>
             </React.Fragment>))}
-          {errs._ ? <p className="text-[12.5px] text-amber-700">{errs._}</p> : null}
+          {errs._ ? <p className="text-[12.5px] text-amber-700" style={{ gridColumn: "1 / -1" }}>{errs._}</p> : null}
         </div>
         <div className="flex gap-2 px-4 pb-4">
           <button onClick={save} className={btnP + " flex-1"} style={{ background: "var(--biz)" }} data-testid="biz-form-save"><Save size={17} />{row ? tr("Save") : tr("Add")}</button>

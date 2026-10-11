@@ -63,8 +63,14 @@ with sync_playwright() as p:
     page.click("[data-testid=biz-color-green]"); page.wait_for_timeout(150)
     head = page.evaluate("() => getComputedStyle(document.querySelector('[data-testid=biz-preview-phone] > div')).backgroundColor")
     check(head == "rgb(21, 128, 61)", "step 4 (Screens): green — the phone preview turns green (%s)" % head)
-    page.click("[data-testid=biz-home-chart]"); page.click("[data-testid=biz-menu-top]"); page.wait_for_timeout(150)
-    check(page.locator("[data-testid=biz-preview-desktop]").evaluate("(e) => getComputedStyle(e).flexDirection") == "column", "…the computer preview follows the menu choice (top)")
+    check(page.locator("[data-testid=biz-menu-top]").count() == 0, "the phone tab shows only what a phone has (no computer menu)")
+    # one system, two layouts (Ali: "design the same business system if I use it both on mobile or desktop")
+    page.click("[data-testid=biz-device-computer]"); page.wait_for_timeout(150)
+    page.click("[data-testid=biz-home-chart]"); page.click("[data-testid=biz-menu-top]"); page.click("[data-testid=biz-formcols-3]"); page.wait_for_timeout(150)
+    check(page.locator("[data-testid=biz-preview-desktop]").evaluate("(e) => getComputedStyle(e).flexDirection") == "column", "Computer: the computer preview follows the menu choice (top)")
+    check(page.locator("[data-testid=biz-preview-desktop-parts] [data-part=chart]").count() == 1 and page.locator("[data-testid=biz-home-same]").count() == 1, "…a chart on the computer's home only — the computer has its own home screen now")
+    page.click("[data-testid=biz-device-phone]"); page.wait_for_timeout(150)
+    check(page.locator("[data-testid=biz-home-chart]").get_attribute("aria-pressed") == "false", "…and the phone's home is unchanged")
     shot(page, "biz-step4")
     # ---- ⑤ Launch ----
     page.click("[data-testid=biz-next]"); page.wait_for_timeout(200)
@@ -72,7 +78,7 @@ with sync_playwright() as p:
     shot(page, "biz-step5")
     page.click("[data-testid=erp-create]")
     page.wait_for_selector("[data-testid=biz-system]", timeout=5000)
-    check(page.locator("[data-testid=biz-home]").count() == 1 and page.locator("[data-testid=biz-kpis]").count() == 1 and page.locator("[data-testid=biz-chart]").count() == 1, "the system opens on its Home: key numbers and the chart chosen in step 4")
+    check(page.locator("[data-testid=biz-home]").count() == 1 and page.locator("[data-testid=biz-kpis]").count() == 1 and page.locator("[data-testid=biz-chart]").count() == 0 and page.locator("[data-testid=biz-system]").get_attribute("data-layout") == "phone", "the system opens on its Home in the phone layout: key numbers, no chart (that was for the computer)")
     hdr = page.evaluate("() => getComputedStyle(document.querySelector('[data-testid=biz-system] > div')).backgroundColor")
     check(hdr == "rgb(21, 128, 61)", "…in its own colour (green: %s)" % hdr)
     shot(page, "biz-home")
@@ -90,6 +96,22 @@ with sync_playwright() as p:
     page.click("[data-testid=biz-form-prev]"); page.wait_for_timeout(200)
     check("Record 1 of 2" in page.locator("[data-testid=biz-form-pos]").inner_text() and page.locator("[data-testid=biz-form-fields] input").first.input_value() == "Orascom", "◀ goes back to record 1 (Orascom)")
     shot(page, "biz-form")
+
+    # ---- the same system on a computer-sized screen ----
+    vp = page.viewport_size
+    page.set_viewport_size({"width": 1280, "height": 800}); page.wait_for_timeout(300)
+    sysel = page.locator("[data-testid=biz-system]")
+    check(sysel.get_attribute("data-layout") == "computer-top" and page.locator("[data-testid=biz-form-fields]").get_attribute("data-cols") == "3", "on a computer: the menu on top and the form in 3 columns, as designed")
+    w = page.evaluate("() => document.querySelector('[data-testid=biz-system]').getBoundingClientRect().width")
+    check(w > 1200, "…using the whole width (%d px), not a phone-wide column" % w)
+    check("Record 1 of 2" in page.locator("[data-testid=biz-form-pos]").inner_text(), "…with the same records (Record 1 of 2)")
+    shot(page, "biz-pc-form")
+    page.click("[data-testid=biz-tab-home]"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=biz-chart]").count() == 1 and page.locator("[data-testid=biz-home]").get_attribute("data-device") == "computer", "…and the computer's Home has the chart chosen for it")
+    shot(page, "biz-pc-home")
+    page.set_viewport_size(vp); page.wait_for_timeout(300)
+    check(sysel.get_attribute("data-layout") == "phone", "back to a phone-sized screen: the phone layout again")
+    page.click("[data-testid=biz-tab-form]"); page.wait_for_timeout(150)
 
     # ---- the tables' own tools are all still there ----
     page.click("[data-testid=biz-tab-tables]"); page.wait_for_selector("[data-testid=erp-systemview]", timeout=5000)

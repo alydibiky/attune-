@@ -7,13 +7,17 @@
      kpis       the key numbers on the home screen [{ table, field?, agg: count|sum|avg, label }]
      lists      per table: the columns a list shows, in order        forms     per table: the form's fields, in order
      hidden     per table: fields kept out of lists and forms        sections  per table: form section titles before a field
+   v6.18 (Ali: "design the same business system if I use it both on mobile or desktop"): ONE system — the same tables,
+   rules and records — with a layout per device where it matters:
+     homeComputer  the computer's home screen (null = the same as the phone's `home`)
+     formCols      how many columns the form uses on a computer (1–3; a phone always uses one)
    Pure functions only (unit-tested in tests/unit/erp-screens.test.mjs); erp-ui.jsx draws them, erp-app.js exports them. */
 
 export const COLORS = { blue: "#1D4ED8", green: "#15803D", teal: "#0F766E", orange: "#C2410C", red: "#B91C1C", purple: "#6D28D9", pink: "#BE185D", black: "#0F172A", brown: "#92400E", navy: "#1E3A8A" };
 export const COLORS_AR = { blue: "أزرق", green: "أخضر", teal: "تركوازي", orange: "برتقالي", red: "أحمر", purple: "بنفسجي", pink: "وردي", black: "أسود", brown: "بني", navy: "كحلي" };
 export const HOME_PARTS = { kpis: "Key numbers", latest: "Latest records", chart: "Chart", alerts: "Alerts", tables: "Tables", ask: "Ask a question" };
 export const HOME_PARTS_AR = { kpis: "الأرقام الرئيسية", latest: "أحدث السجلات", chart: "رسم بياني", alerts: "تنبيهات", tables: "الجداول", ask: "اسأل سؤالًا" };
-const DEFAULT = { color: "blue", menu: "left", density: "comfortable", home: ["kpis", "latest", "tables"], kpis: [], lists: {}, forms: {}, hidden: {}, sections: {} };
+const DEFAULT = { color: "blue", menu: "left", density: "comfortable", home: ["kpis", "latest", "tables"], homeComputer: null, formCols: 2, kpis: [], lists: {}, forms: {}, hidden: {}, sections: {} };
 
 const k = (s) => String(s == null ? "" : s).trim().toLowerCase().replace(/\s+/g, " ");
 const findT = (sys, ref) => sys.tables.find((t) => t.id === ref) || sys.tables.find((t) => k(t.name) === k(ref)) || sys.tables.find((t) => k(t.name).startsWith(k(ref)) && k(ref).length > 2);
@@ -24,9 +28,14 @@ export function uiOf(sys) {
   const u = { ...DEFAULT, ...((sys && sys.ui) || {}) };
   for (const key of ["lists", "forms", "hidden", "sections"]) u[key] = { ...((sys && sys.ui && sys.ui[key]) || {}) };
   u.home = Array.isArray(u.home) ? u.home.filter((p) => HOME_PARTS[p]) : DEFAULT.home;
+  u.homeComputer = Array.isArray(u.homeComputer) ? u.homeComputer.filter((p) => HOME_PARTS[p]) : null;
+  if (u.homeComputer && !u.homeComputer.length) u.homeComputer = null;
+  u.formCols = Math.min(3, Math.max(1, Math.round(Number(u.formCols) || 2)));
   if (!u.kpis.length && sys && sys.tables) u.kpis = defaultKpis(sys);
   return u;
 }
+/** The home screen's parts on a device ("phone" | "computer"). */
+export const homeFor = (sys, device) => { const u = uiOf(sys); return device === "computer" && u.homeComputer ? u.homeComputer : u.home; };
 /** The accent as a colour. */
 export const colorOf = (sys) => { const c = uiOf(sys).color; return COLORS[c] || (/^#[0-9a-f]{6}$/i.test(c) ? c : COLORS.blue); };
 
@@ -67,7 +76,8 @@ export function formFields(sys, t) {
 /** A plain description of the screens (what the AI reads, after the tables). */
 export function describeScreens(sys) {
   const u = uiOf(sys), name = (t, id) => (t.fields.find((f) => f.id === id) || {}).name;
-  const lines = [`Colour: ${u.color}. Computer menu: ${u.menu}. Density: ${u.density}.`, `Home screen shows (in order): ${u.home.join(", ")}.`,
+  const lines = [`One system for phone and computer. Colour: ${u.color}. Density: ${u.density}.`, `Phone home screen shows (in order): ${u.home.join(", ")}.`,
+    `Computer: menu on the ${u.menu}; home screen shows ${u.homeComputer ? u.homeComputer.join(", ") : "the same as the phone"}; forms in ${u.formCols} column(s).`,
     `Key numbers: ${u.kpis.map((x) => x.label).join("; ") || "none"}.`];
   for (const t of sys.tables) {
     const l = listFields(sys, t).map((f) => f.name), fo = formFields(sys, t).map((x) => (x.section ? `[${x.section}] ` : "") + x.field.name), hid = (u.hidden[t.id] || []).map((id) => name(t, id)).filter(Boolean);
@@ -78,7 +88,8 @@ export function describeScreens(sys) {
 export const SCREEN_OPS_HELP = `{"op":"setColor","color":"blue|green|teal|orange|red|purple|pink|black|brown|navy|#RRGGBB"}
 {"op":"setMenu","position":"left"|"top"}   (the computer layout's menu)
 {"op":"setDensity","density":"comfortable"|"compact"}
-{"op":"setHome","parts":["kpis","latest","chart","alerts","tables","ask"]}   (the home screen, in order)
+{"op":"setHome","parts":["kpis","latest","chart","alerts","tables","ask"],"device":"both"|"phone"|"computer"}   (the home screen, in order)
+{"op":"setFormColumns","columns":1|2|3}   (the form's columns on a computer)
 {"op":"addKpi","table":"<table>","agg":"count"|"sum"|"avg","field":"<number or money field, for sum/avg>","label":"<short label>"}
 {"op":"removeKpi","label":"<label>"}
 {"op":"setListColumns","table":"<table>","fields":["<field>", ...]}   (the columns its list shows)
@@ -105,7 +116,14 @@ export function applyScreenOp(sys, o) {
     case "setHome": {
       const parts = (Array.isArray(o.parts) ? o.parts : []).map(k).filter((p) => HOME_PARTS[p]);
       if (!parts.length) throw new Error("The home screen needs at least one part: " + Object.keys(HOME_PARTS).join(", "));
-      ui().home = [...new Set(parts)]; return `The home screen shows: ${ui().home.map((p) => HOME_PARTS[p]).join(", ")}`;
+      const dev = k(o.device), list = [...new Set(parts)], u = ui();
+      if (dev === "computer") { u.homeComputer = list; return `On a computer the home screen shows: ${list.map((p) => HOME_PARTS[p]).join(", ")}`; }
+      if (dev === "phone") { if (!u.homeComputer) u.homeComputer = u.home; u.home = list; return `On a phone the home screen shows: ${list.map((p) => HOME_PARTS[p]).join(", ")}`; }
+      u.home = list; u.homeComputer = null; return `The home screen shows: ${list.map((p) => HOME_PARTS[p]).join(", ")}`;
+    }
+    case "setFormColumns": {
+      const n = Math.round(Number(o.columns)); if (!(n >= 1 && n <= 3)) throw new Error("Form columns are 1, 2 or 3");
+      ui().formCols = n; return `On a computer the forms use ${n} column${n > 1 ? "s" : ""}`;
     }
     case "addKpi": {
       const t = T(), agg = ["sum", "avg"].includes(k(o.agg)) ? k(o.agg) : "count";
