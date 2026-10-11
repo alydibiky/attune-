@@ -11,7 +11,8 @@ ok(!/wikipedia|wikimedia/i.test(wf.replace(/^#.*$/gm, "")), "the workflow has no
 // Ali approved publishing (10 Oct 2026): by hand, and monthly so the numbers stay current — never on a push
 ok(/workflow_dispatch/.test(wf) && /schedule:\s*\n\s*- cron: "\d+ \d+ 1 \* \*"/.test(wf) && !/\bpush:/.test(wf), "the workflow runs by hand and monthly, never on a push");
 const src2 = fs.readFileSync(root + "tools/know_sources.py", "utf8");
-ok(!/wikipedia|wikimedia/i.test(src2.replace(/^.*no Wikipedia.*$/gim, "")), "the new sources read no Wikipedia either");
+// (the Wikidata pack's code names Wikipedia only to leave its statements out — what matters is that nothing is fetched from it)
+ok(!/https?:\/\/[^"'\s]*wiki(pedia|media)\.org/i.test(src2), "the new sources read no Wikipedia either (nothing is downloaded from a Wikipedia address)");
 
 const py = `
 import json, sys; sys.path.insert(0, "${root}tools"); import build_know_pack as B

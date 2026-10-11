@@ -58,6 +58,8 @@ def sec_layout(br, lang="en"):
         btn.click(); page.wait_for_timeout(300); audit(t)
         if page.locator("[data-testid=fit-exit]").count():   # v7.31: Fit hides Attune's bars; leave it with its own back button
             page.locator("[data-testid=fit-exit]").click(); page.wait_for_timeout(200)
+        if page.locator("[data-testid=map-exit]").count():   # v6.18: Maps (look A) hides Attune's bars too
+            page.locator("[data-testid=map-exit]").click(); page.wait_for_timeout(200)
         if ti >= len(tools) - 4:   # Engine, profile, plan, backup open over the page
             page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(200)
         if t == "Travel":
