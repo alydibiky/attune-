@@ -181,8 +181,11 @@ def sec_chat(br):
     check("total: 22.75" in page.locator("[data-testid=code-output]").inner_text(), "▶ Run runs the Python right under the answer")
     page.locator("[data-testid=run-code]").nth(1).click()
     fr = page.frame_locator("[data-testid=code-preview]")
-    # the button can exist a moment before its script has run: tap again until the page's handler is there (at most ~3 s)
+    # the button can exist a moment before its script has run: tap again until the page's handler is there.
+    # Chrome drops taps on a locked (cross-origin) frame that moved in the last ~0.5 s (anti-clickjacking), and a click
+    # scrolls the frame into view first — so scroll it there, let it settle, then tap.
     for _ in range(10):
+        page.locator("[data-testid=code-preview]").first.scroll_into_view_if_needed(); page.wait_for_timeout(700)
         fr.locator("#b").click(timeout=5000)
         if fr.locator("#b").inner_text() == "done": break
         page.wait_for_timeout(300)
