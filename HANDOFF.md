@@ -979,6 +979,15 @@ internet searching … improve internet searching and make it faster".
   Government Licence – Canada) via the open.canada.ca CKAN API (`nrcan_rows`, columns found by their words). China-only
   models (e.g. the Lynk & Co 900) are in no open dataset — the web covers them.
 
+### 5.59 (12 Oct 2026, v6.23, versionCode 84) — Fit diary: edit everything, copy one food
+- Ali: "I can't edit anything after I press save except the grams, and I can't copy the meal by itself, I have to copy all the breakfast".
+- Swipe a logged food → **Copy · Edit · Delete** (`LogRow`, 168 px of actions).
+- **Edit** opens `EditFood` (fit-ui.jsx): name, grams (the numbers follow), calories / protein / carbs / fat / fibre typed in,
+  and the meal (moves it). Pure helpers in `fithome.js`: `replaceAt(day, meal, i, x, to)`, `editedFood(x, base, fields)`
+  (grams scale from `base`, which takes typed numbers; a new name drops the old `ar`).
+- **Copy** one food: `CopySheet` with `item`; `fitplus.js copyItem(days, toKey, toSlot, item)`; the same day and meal is allowed.
+- Test: `tests/e2e_v723editfood.py`. `e2e_fithome.py` still edits grams through the sheet (same test ids).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

@@ -810,28 +810,24 @@ function QuickSetup({ t, L, ar, save, full }) {
 }
 
 /** One logged food on the timeline: swipe it sideways for Edit and Delete (the buttons are also reachable by keyboard). */
-function LogRow({ t, ar, x, onDelete, onEdit, testid }) {
-  const [dx, setDx] = useState(0), [open, setOpen] = useState(false), [edit, setEdit] = useState(null);
+function LogRow({ t, ar, x, onDelete, onEdit, onCopy, testid }) {
+  const [dx, setDx] = useState(0), [open, setOpen] = useState(false);
   const start = useRef(null);
   const dir = ar ? 1 : -1;   // the actions sit at the end side: left in English, right in Arabic
-  const onDown = (e) => { start.current = { x: e.clientX, y: e.clientY, dx: open ? dir * 112 : 0, moved: false }; };
-  const onMove = (e) => { const s = start.current; if (!s) return; const mx = e.clientX - s.x; if (!s.moved && Math.abs(mx) < 8) return; if (!s.moved && Math.abs(e.clientY - s.y) > Math.abs(mx)) { start.current = null; return; } if (!s.moved) { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} } s.moved = true; setDx(Math.max(-112, Math.min(112, s.dx + mx)) * (dir * Math.sign(s.dx + mx) >= 0 ? 1 : 0)); };
+  const W = 168;             // v6.23: Copy · Edit · Delete
+  const onDown = (e) => { start.current = { x: e.clientX, y: e.clientY, dx: open ? dir * W : 0, moved: false }; };
+  const onMove = (e) => { const s = start.current; if (!s) return; const mx = e.clientX - s.x; if (!s.moved && Math.abs(mx) < 8) return; if (!s.moved && Math.abs(e.clientY - s.y) > Math.abs(mx)) { start.current = null; return; } if (!s.moved) { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} } s.moved = true; setDx(Math.max(-W, Math.min(W, s.dx + mx)) * (dir * Math.sign(s.dx + mx) >= 0 ? 1 : 0)); };
   const onUp = () => { const s = start.current; start.current = null; if (!s || !s.moved) return; const o = Math.abs(dx) > 50; setOpen(o); setDx(0); };
   const tm = x.t ? new Date(x.t) : null;
   const time = tm && x.t > 1e11 ? String(tm.getHours()).padStart(2, "0") + ":" + String(tm.getMinutes()).padStart(2, "0") : "";
-  if (edit != null) return (
-    <div className="flex items-center gap-2 py-1.5" data-testid="fit-row-editing">
-      <span className="flex-1 min-w-0 truncate text-[13.5px] text-white">{ar && x.ar ? x.ar : x.name}</span>
-      <input type="number" inputMode="numeric" autoFocus value={edit} onChange={(e) => setEdit(e.target.value)} aria-label={t("Grams")} className="w-20 min-h-[44px] rounded-lg bg-slate-800 px-2 text-end text-white" data-testid="fit-row-grams" />
-      <span className="text-[12px] text-slate-500">{ar ? "جم" : "g"}</span>
-      <button onClick={() => { onEdit(+edit); setEdit(null); setOpen(false); }} className="min-h-[44px] min-w-[44px] rounded-lg bg-emerald-600 text-white flex items-center justify-center" aria-label={t("Save")} data-testid="fit-row-save"><Check size={16} /></button>
-    </div>);
-  const shown = open ? dir * 112 : dx;
+  const shown = open ? dir * W : dx;
+  const act = (fn) => () => { setOpen(false); fn(); };
   return (
     <div className="relative overflow-hidden rounded-lg" data-testid={testid}>
       <div className="absolute inset-y-0 end-0 flex" aria-hidden={!open}>
-        <button tabIndex={open ? 0 : -1} onClick={() => setEdit(x.grams)} className="w-14 bg-sky-700 text-white flex items-center justify-center" aria-label={t("Edit")} data-testid="fit-row-edit"><Pencil size={16} /></button>
-        <button tabIndex={open ? 0 : -1} onClick={() => { setOpen(false); onDelete(); }} className="w-14 bg-rose-600 text-white flex items-center justify-center" aria-label={t("Delete")} data-testid="fit-row-delete"><Trash2 size={16} /></button>
+        <button tabIndex={open ? 0 : -1} onClick={act(onCopy)} className="w-14 bg-slate-600 text-white flex items-center justify-center" aria-label={ar ? "نسخ" : "Copy"} data-testid="fit-row-copy"><Copy size={16} /></button>
+        <button tabIndex={open ? 0 : -1} onClick={act(onEdit)} className="w-14 bg-sky-700 text-white flex items-center justify-center" aria-label={t("Edit")} data-testid="fit-row-edit"><Pencil size={16} /></button>
+        <button tabIndex={open ? 0 : -1} onClick={act(onDelete)} className="w-14 bg-rose-600 text-white flex items-center justify-center" aria-label={t("Delete")} data-testid="fit-row-delete"><Trash2 size={16} /></button>
       </div>
       <div onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ transform: `translateX(${shown}px)`, touchAction: "pan-y" }}
         className={"relative bg-slate-900 flex items-center gap-2 min-h-[48px]! px-1 text-[13.5px] " + (start.current ? "" : "motion-safe:transition-transform motion-safe:duration-200")}>
@@ -844,9 +840,66 @@ function LogRow({ t, ar, x, onDelete, onEdit, testid }) {
   );
 }
 
+/* v6.23 — edit everything about a logged food (Ali: "I can't edit anything after I press save except the grams"):
+   name, grams (the numbers follow), calories and macros typed in, and which meal it is in. */
+function EditFood({ L, ar, x, meal, onClose, onSave }) {
+  const s1 = (v) => (v == null ? "" : String(Math.round(v * 10) / 10));
+  const numsOf = (y) => ({ kcal: y.kcal == null ? "" : String(Math.round(y.kcal)), p: s1(y.p), c: s1(y.c), f: s1(y.f), fib: s1(y.fib) });
+  const [name, setName] = useState(ar && x.ar ? x.ar : x.name);
+  const [base, setBase] = useState(x);                    // what the grams scale from (typed numbers included)
+  const [gs, setGs] = useState(String(x.grams || ""));
+  const [nums, setNums] = useState(numsOf(x));
+  const [to, setTo] = useState(meal);
+  const onGrams = (v) => { setGs(v); if (+v > 0) setNums(numsOf(H.atGrams(base, +v))); };
+  const onNum = (k, v) => {
+    const n2 = { ...nums, [k]: v }; setNums(n2);
+    if (+gs > 0) { const z = { ...base, grams: +gs }; for (const q of ["kcal", "p", "c", "f", "fib"]) if (n2[q] !== "" && isFinite(+n2[q])) z[q] = +n2[q]; setBase(z); }
+  };
+  const ok = +gs > 0 && String(name).trim();
+  const Num = ({ k, label }) => (
+    <label className="flex-1 min-w-0 text-[11.5px] text-slate-400">{label}
+      <input type="number" inputMode="decimal" value={nums[k]} onChange={(e) => onNum(k, e.target.value)} className="mt-0.5 w-full min-h-[44px] rounded-lg bg-slate-800 border border-slate-700 px-2 text-end text-white tabular-nums" data-testid={"fit-edit-" + k} />
+    </label>);
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/60 flex items-end" onClick={onClose}>
+      <div className="w-full max-h-[90vh] overflow-y-auto rounded-t-2xl bg-slate-900 border-t border-slate-700 p-4 space-y-3" onClick={(e) => e.stopPropagation()} data-testid="fit-edit-sheet">
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-white font-medium">{L("Edit food", "تعديل الطعام")}</div>
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400" aria-label={L("Close", "إغلاق")}><X size={18} /></button>
+        </div>
+        <label className="block text-[11.5px] text-slate-400">{L("Name", "الاسم")}
+          <input value={name} onChange={(e) => setName(e.target.value)} className="mt-0.5 w-full min-h-[44px] rounded-lg bg-slate-800 border border-slate-700 px-2 text-white" data-testid="fit-edit-name" />
+        </label>
+        <div className="flex gap-2">
+          <label className="flex-1 min-w-0 text-[11.5px] text-slate-400">{L("Amount (g)", "الكمية (جم)")}
+            <input type="number" inputMode="numeric" value={gs} onChange={(e) => onGrams(e.target.value)} className="mt-0.5 w-full min-h-[44px] rounded-lg bg-slate-800 border border-slate-700 px-2 text-end text-white tabular-nums" data-testid="fit-row-grams" />
+          </label>
+          {Num({ k: "kcal", label: L("Calories", "السعرات") })}
+        </div>
+        <div className="flex gap-2">
+          {Num({ k: "p", label: L("Protein g", "بروتين جم") })}
+          {Num({ k: "c", label: L("Carbs g", "كارب جم") })}
+          {Num({ k: "f", label: L("Fat g", "دهون جم") })}
+          {Num({ k: "fib", label: L("Fibre g", "ألياف جم") })}
+        </div>
+        <div className="text-[11.5px] text-slate-500">{L("Changing the amount changes the numbers with it. You can also type the numbers from the label.", "تغيير الكمية يغيّر الأرقام معها. ويمكنك كتابة الأرقام من الملصق.")}</div>
+        <div>
+          <div className="text-[11.5px] text-slate-400 mb-1">{L("Meal", "الوجبة")}</div>
+          <div className="flex gap-1.5 flex-wrap">
+            {F.MEALS.map((m) => <button key={m} onClick={() => setTo(m)} className={"rounded-lg px-2.5 py-1.5 text-[12.5px] border " + (to === m ? "border-emerald-500 bg-emerald-500/15 text-emerald-100" : "border-slate-700 text-slate-300")} data-testid={"fit-edit-meal-" + m}>{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}</button>)}
+          </div>
+        </div>
+        <button disabled={!ok} onClick={() => onSave(H.editedFood(x, base, { name, grams: gs, ...nums }), to)} className="w-full min-h-[48px] rounded-xl bg-emerald-600 text-white font-medium disabled:opacity-40" data-testid="fit-row-save">{L("Save", "حفظ")}</button>
+      </div>
+    </div>);
+}
+
 const DAY_LETTERS = { en: ["S", "M", "T", "W", "T", "F", "S"], ar: ["ح", "ن", "ث", "ر", "خ", "ج", "س"] };
 function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, openMove }) {
-  const [copyOf, setCopyOf] = useState(null);           // v6.13: { slot } being copied to another day (slot null = the whole day)
+  const [copyOf, setCopyOf] = useState(null);           // v6.13: { slot } being copied to another day (slot null = the whole day); v6.23: { slot, item } = one food
+  const [editing, setEditing] = useState(null);         // v6.23: { m, i } — the food in the edit sheet
+  useSubBack(!!editing, () => setEditing(null));
+  useSubBack(!!copyOf, () => setCopyOf(null));
   const left = tg.kcal - tot.kcal + tot.burned;
   const isToday = dayKey === F.today();
   const shift = (n) => { const d = new Date(dayKey + "T12:00:00"); d.setDate(d.getDate() + n); const k = F.today(d); if (k <= F.today()) setDayKey(k); };
@@ -871,7 +924,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
     const r = H.removeAt(day, m, i); setDay(() => r.day); tick();
     setUndo({ id: Date.now(), label: L(`Deleted ${r.removed.name}`, `حُذف ${r.removed.ar || r.removed.name}`), revert: () => setDay((d) => H.insertAt(d, m, i, r.removed)) });
   };
-  const edit = (m, i, g) => { if (!(g > 0)) return; setDay((d) => ({ ...d, meals: { ...d.meals, [m]: d.meals[m].map((x, k) => (k === i ? H.atGrams(x, g) : x)) } })); };
+  const saveEdit = (m, i, x, to) => { setDay((d) => H.replaceAt(d, m, i, x, to)); setEditing(null); tick(); };
   const Act = ({ k, Ic, label, primary }) => (
     <button onClick={bar[k]} data-testid={"fit-lb-" + k} aria-label={label}
       className={"min-h-[56px]! rounded-2xl flex flex-col items-center justify-center gap-0.5 text-[12.5px] font-medium active:scale-[.97] motion-safe:transition-transform " + (primary ? "bg-emerald-600 text-white" : listening && k === "voice" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-100")}>
@@ -916,7 +969,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
                   <button onClick={() => setAdding(m)} className="min-h-[48px]! min-w-[48px] rounded-full bg-emerald-600/20 text-emerald-300 flex items-center justify-center shrink-0" data-testid={"fit-add-" + m} aria-label={L(`Add to ${MEAL_NAMES[m][0]}`, `أضف إلى ${MEAL_NAMES[m][1]}`)}><Plus size={20} /></button>
                 </span>
               </div>
-              {items.map((x, i) => <LogRow key={(x.t || 0) + ":" + i} {...{ t, ar, x }} testid={"fit-item-" + m} onDelete={() => del(m, i)} onEdit={(g) => edit(m, i, g)} />)}
+              {items.map((x, i) => <LogRow key={(x.t || 0) + ":" + i} {...{ t, ar, x }} testid={"fit-item-" + m} onDelete={() => del(m, i)} onEdit={() => setEditing({ m, i })} onCopy={() => setCopyOf({ slot: m, item: x })} />)}
               {pm ? (
                 <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
                   className="mt-1 w-full min-h-[48px]! text-start rounded-lg bg-slate-800/60 px-2.5 py-2 text-[12.5px] text-slate-300" data-testid={"fit-suggest-" + m}>
@@ -929,8 +982,9 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
       {F.MEALS.some((m) => ((day.meals || {})[m] || []).length) ? (
         <button onClick={() => setCopyOf({ slot: null })} className="w-full min-h-[48px]! rounded-xl border border-slate-800 bg-slate-900/40 text-[13px] text-slate-300 flex items-center justify-center gap-1.5" data-testid="fit-copy-day">
           <Copy size={14} />{isToday ? L("Copy today's food to another day", "نسخ طعام اليوم إلى يوم آخر") : L("Copy this day's food to another day", "نسخ طعام هذا اليوم إلى يوم آخر")}</button>) : null}
-      {copyOf ? <CopySheet {...{ L, ar, from: dayKey, slot: copyOf.slot, onClose: () => setCopyOf(null), onCopy: (toKey, toSlot) => {
-          upd((s0) => ({ ...s0, days: P.copyFood(s0.days, dayKey, toKey, copyOf.slot, toSlot) }));
+      {editing && ((day.meals || {})[editing.m] || [])[editing.i] ? <EditFood key={editing.m + editing.i} {...{ L, ar, x: day.meals[editing.m][editing.i], meal: editing.m, onClose: () => setEditing(null), onSave: (x, to) => saveEdit(editing.m, editing.i, x, to) }} /> : null}
+      {copyOf ? <CopySheet {...{ L, ar, from: dayKey, slot: copyOf.slot, item: copyOf.item, onClose: () => setCopyOf(null), onCopy: (toKey, toSlot) => {
+          upd((s0) => ({ ...s0, days: copyOf.item ? P.copyItem(s0.days, toKey, toSlot, copyOf.item) : P.copyFood(s0.days, dayKey, toKey, copyOf.slot, toSlot) }));
           setCopyOf(null);
           flash && flash(toKey === F.today() ? L("Copied to today", "نُسخ إلى اليوم") : L("Copied to " + toKey, "نُسخ إلى " + toKey));
         } }} /> : null}
@@ -1181,16 +1235,17 @@ function Progress({ L, ar, st, upd, tg, pro = true, openPlan, share }) {
 
 
 /* v6.13 — copy a meal or the whole day to another day (Ali: "copy food from day to day like Yazio"). */
-function CopySheet({ L, ar, from, slot, onClose, onCopy }) {
+function CopySheet({ L, ar, from, slot, item, onClose, onCopy }) {
   const t0 = F.today(), y = new Date(); y.setDate(y.getDate() + 1);
-  const [to, setTo] = useState(from === t0 ? F.today(y) : t0);
+  const [to, setTo] = useState(item || from !== t0 ? t0 : F.today(y));   // one food: today first
   const [toSlot, setToSlot] = useState(slot);
   const quick = [[t0, L("Today", "اليوم")], [F.today(y), L("Tomorrow", "غدًا")]];
-  const same = from === to && (!slot || toSlot === slot);
+  const same = !item && from === to && (!slot || toSlot === slot);   // one food may be copied into the same meal (eaten twice)
+  const nm = item ? (ar && item.ar ? item.ar : item.name) : "";
   return (
     <div className="fixed inset-0 z-[70] bg-black/60 flex items-end" onClick={onClose}>
       <div className="w-full rounded-t-2xl bg-slate-900 border-t border-slate-700 p-4 space-y-3" onClick={(e) => e.stopPropagation()} data-testid="fit-copy-sheet">
-        <div className="text-white font-medium">{slot ? L(`Copy ${MEAL_NAMES[slot][0]} to…`, `نسخ ${MEAL_NAMES[slot][1]} إلى…`) : L("Copy the whole day to…", "نسخ اليوم كاملًا إلى…")}</div>
+        <div className="text-white font-medium">{item ? L(`Copy ${nm} to…`, `نسخ ${nm} إلى…`) : slot ? L(`Copy ${MEAL_NAMES[slot][0]} to…`, `نسخ ${MEAL_NAMES[slot][1]} إلى…`) : L("Copy the whole day to…", "نسخ اليوم كاملًا إلى…")}</div>
         <div className="flex gap-2 flex-wrap">
           {quick.map(([k, lab]) => <button key={k} onClick={() => setTo(k)} className={"rounded-lg px-3 py-1.5 text-[13px] border " + (to === k ? "border-emerald-500 bg-emerald-500/15 text-emerald-100" : "border-slate-700 text-slate-300")}>{lab}</button>)}
           <input type="date" value={to} onChange={(e) => e.target.value && setTo(e.target.value)} className="rounded-lg bg-slate-800 border border-slate-700 px-2 py-1 text-[13px] text-slate-200" data-testid="fit-copy-date" />

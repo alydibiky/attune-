@@ -43,6 +43,14 @@ export function copyFood(days, fromKey, toKey, slot = null, toSlot = null, now =
   for (const [m, to] of add) meals[to] = [...(meals[to] || []), ...src[m].map(({ t, ...x }, i) => ({ ...x, t: now + i }))];
   return { ...days, [toKey]: { ...tgt, meals } };
 }
+/** v6.23 — copy one food (not the whole meal) to a day and meal; the same day and meal is fine (eaten twice). */
+export function copyItem(days, toKey, toSlot, item, now = Date.now()) {
+  if (!item || !toSlot) return days;
+  const { t, ...x } = item, tgt = days[toKey] || { meals: {}, water: 0, workouts: [] };
+  const meals = { ...(tgt.meals || {}) };
+  meals[toSlot] = [...(meals[toSlot] || []), { ...x, t: now }];
+  return { ...days, [toKey]: { ...tgt, meals } };
+}
 /** A saved combination ("my breakfast") → { id, name, items, kcal }. */
 export function myMeal(name, items) {
   const clean = items.map(({ t, ...x }) => x);

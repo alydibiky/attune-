@@ -66,6 +66,28 @@ export function insertAt(day, meal, i, x) {
   return { ...day, meals: { ...(day.meals || {}), [meal]: list } };
 }
 
+/** v6.23 — a logged food changed by hand (Ali: "I can't edit anything except the grams"): put it back in place,
+ *  or move it to another meal (added at the end there). */
+export function replaceAt(day, meal, i, x, to = meal) {
+  const meals = { ...(day.meals || {}) }, list = [...(meals[meal] || [])];
+  if (!(i >= 0 && i < list.length)) return day;
+  if (!to || to === meal) list[i] = x; else { list.splice(i, 1); meals[to] = [...(meals[to] || []), x]; }
+  meals[meal] = list;
+  return { ...day, meals };
+}
+/**
+ * The edit sheet's fields → the saved food. Grams scale every number from `base` (the food as it was, with any
+ * numbers typed since); a number typed in wins. A new name drops the old Arabic name so the new one shows everywhere.
+ */
+export function editedFood(x, base, { name, grams, kcal, p, c, f, fib }) {
+  const g = Math.max(1, Math.round(+grams || x.grams || 1));
+  const y = atGrams(base, g), num = (v, d) => (v === "" || v == null || !isFinite(+v) ? d : Math.max(0, Math.round(+v * 10) / 10));
+  const out = { ...y, kcal: kcal === "" && y.kcal == null ? null : Math.round(num(kcal, y.kcal ?? 0)), p: num(p, y.p), c: num(c, y.c), f: num(f, y.f), fib: num(fib, y.fib) };
+  const nm = String(name || "").trim().slice(0, 80);
+  if (nm && nm !== x.name && nm !== x.ar) { out.name = nm; delete out.ar; }
+  return out;
+}
+
 /** Targets from a plain daily calorie goal (the "just a number" answer): a balanced split, by code. */
 export function targetsFromKcal(kcal, goal = "maintain") {
   kcal = Math.round(+kcal / 10) * 10;
