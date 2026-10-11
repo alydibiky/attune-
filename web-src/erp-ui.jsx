@@ -39,7 +39,7 @@ function dropSys(id) { try { localStorage.removeItem(KEY + ":" + id); localStora
 const today = () => new Date().toISOString().slice(0, 10);
 
 /** v5.17: tap a name → a small sheet → type the new name → Save. */
-function RenameSheet({ title, value, onSave, onClose, extra }) {
+export function RenameSheet({ title, value, onSave, onClose, extra }) {
   const [v, setV] = useState(value || "");
   return (
     <div className="fixed inset-0 z-[80] bg-black/60 flex items-end" onClick={onClose}>
@@ -64,186 +64,11 @@ function useLongPress(fn, ms = 550) {
   return { start, stop, fired, bind: (...a) => ({ onTouchStart: () => start(...a), onTouchEnd: stop, onTouchMove: stop, onContextMenu: (e) => { e.preventDefault(); stop(); fired.current = true; fn(...a); } }) };
 }
 
-export function BusinessPage({ flash, llm, modelReady, openEngine, saveFile, share, runPy }) {
-  const [index, setIndex] = useState(loadIndex);
-  const [sys, setSysRaw] = useSticky("erp:sys", null);
-  const [view, setView] = useSticky("erp:view", "list");            // list | new | system
-  useSubBack(view !== "list", () => { setView("list"); setSysRaw(null); });   // v5.34: Back → the list of systems
-  const setSys = (next, msg) => {
-    if (!saveSys(next)) flash(tr("The phone's storage for Business is full — export a table to CSV and delete old records."));
-    setSysRaw(next); setIndex(loadIndex());
-    if (msg) flash(msg);
-  };
-  const open = (id) => { const s = loadSys(id); if (s) { setSysRaw(s); setView("system"); } };
-
-  if (view === "books") return <BooksApp flash={flash} saveFile={saveFile} share={share} onBack={() => setView("list")} goCustom={() => setView("list")} />;
-  if (view === "new") return <NewSystem llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash}
-    onBack={() => setView("list")} onCreate={(s) => { setSys(s, tr("Created — {n} tables", { n: s.tables.length })); setView("system"); }} />;
-  if (view === "system" && sys) return <SystemView sys={sys} setSys={setSys} llm={llm} modelReady={modelReady} flash={flash} saveFile={saveFile} share={share} runPy={runPy}
-    onBack={() => { setView("list"); setSysRaw(null); }} onDelete={() => { dropSys(sys.id); setIndex(loadIndex()); setSysRaw(null); setView("list"); flash(tr("Deleted")); }} />;
-
-  return (
-    <section className="p-4 space-y-3" data-testid="business-page">
-      <div className="flex items-start gap-3">
-        <Database size={22} className="text-teal-300 mt-1" />
-        <div className="min-w-0">
-          <h2 className="text-lg font-semibold text-slate-100">{tr("Business")}</h2>
-          <p className="text-[13px] text-slate-400">{tr("Your own ERP: customers, stock, jobs, invoices — whatever your business tracks. Change any table or column later, like Microsoft Access.")}</p>
-        </div>
-      </div>
-      <button onClick={() => setView("books")} data-testid="books-open" className="w-full text-start rounded-2xl border border-teal-700/60 bg-gradient-to-br from-teal-500/15 to-transparent p-4">
-        <span className="block text-base font-semibold text-white">🧾 {tr("Shop & trading books")}</span>
-        <span className="block text-[12.5px] text-slate-300 mt-1 leading-snug">{tr("Invoices with VAT, payments and overdue tracking, stock and purchasing, reports — your own accounting, on your phone, in English and Arabic.")}</span>
-      </button>
-      <p className="text-[12px] font-semibold text-slate-400 pt-1">{tr("Custom systems")}</p>
-      <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5"} onClick={() => setView("new")} data-testid="erp-new"><Plus size={16} />{tr("New system")}</button>
-      <label className={ghost + " w-full flex items-center justify-center gap-1.5 py-2.5 cursor-pointer"} data-testid="erp-open-app">
-        <Upload size={15} />{tr("Open an app file (made with Attune)")}
-        <input type="file" accept=".html,.htm,.json,text/html" className="hidden" data-testid="erp-open-app-file" onChange={async (e) => {
-          const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
-          const s = readApp(await f.text());
-          if (!s) { flash(tr("That file isn't an app made with Attune Business.")); return; }
-          const had = loadSys(s.id);
-          // the app comes back with its data: it replaces the copy here (same system), keeping this phone's activation
-          const next = { ...s, licence: had ? had.licence : null, updated: Date.now() };
-          setSys(next, had ? tr("Updated from the app file — {n} tables with their records", { n: next.tables.length }) : tr("Opened — {n} tables with their records", { n: next.tables.length }));
-          setView("system");
-        }} />
-      </label>
-      {index.length ? index.map((x) => (
-        <button key={x.id} onClick={() => open(x.id)} className="w-full text-start rounded-xl border border-slate-800 bg-slate-900/60 p-3 flex items-center gap-3" data-testid="erp-system">
-          <Database size={18} className="text-slate-400 shrink-0" />
-          <span className="min-w-0 flex-1"><span className="block text-sm text-slate-100 truncate">{x.name}</span>
-            <span className="block text-[11px] text-slate-500">{tr("{n} tables", { n: x.tables })} · {new Date(x.updated).toLocaleDateString()}</span></span>
-          {x.active ? <span className="text-[10px] text-emerald-300 border border-emerald-800 rounded px-1.5 py-0.5">{tr("Active")}</span>
-            : <span className="text-[10px] text-slate-400 border border-slate-700 rounded px-1.5 py-0.5">{tr("Trial")}</span>}
-        </button>)) : <p className="text-[13px] text-slate-500 text-center py-6">{tr("No systems yet.")}</p>}
-    </section>
-  );
-}
-
-// ---- a new system: described to the AI, or from a template ----------------------------
-function NewSystem({ llm, modelReady, openEngine, flash, onBack, onCreate }) {
-  const [desc, setDesc] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [draft, setDraft] = useState(null);       // a system not saved yet
-  useSubBack(!!draft, () => setDraft(null));
-  const [err, setErr] = useState("");
-  const [step, setStep] = useState("");
-  const design = async () => {
-    setErr(""); setBusy(true); setStep("");
-    try {
-      // 1) the full design as JSON; 2) the same as simple lines (far easier
-      // for a phone-sized model); 3) the closest template, never a dead end.
-      let spec = null, how = "ai";
-      setStep(tr("Designing the tables…"));
-      const out = await llm(E.designMessages(desc), { maxTokens: getPower().designTokens, temperature: 0.2, json: true });
-      const j = E.jsonFrom(out);
-      // v5.17: a design whose tables are only an ID ("Clientes: ClienteID") is not a design.
-      if (j && E.designQuality(j).ok) spec = j;
-      if (!spec) {
-        setStep(tr("Trying a simpler way…"));
-        const lines = await llm(E.designLinesMessages(desc), { maxTokens: 1500, temperature: 0.2 });
-        const sp = E.specFromLines(lines, (j && j.name) || tr("My business"));
-        if (sp && E.designQuality(sp).ok) spec = sp;
-      }
-      if (!spec) { const t = E.guessTemplate(desc); if (t) { spec = t.spec; how = "template"; } }
-      if (!spec) setErr(tr("The model didn't produce a usable design. Try again, describe it differently, or start from a template."));
-      else {
-        // v5.19: fields that name another table become real links
-        const ac = E.autoConnect(spec);
-        setDraft(E.systemFromSpec({ ...ac.spec, business: desc }));
-        if (ac.added.length) flash(tr("Connected {n} fields to their tables", { n: ac.added.length }));
-        if (how === "template") flash(tr("Started from the closest template — change anything you like"));
-      }
-    } catch (e) { setErr(String(e.message || e)); }
-    setBusy(false);
-  };
-  const [ren, setRen] = useState(null);           // { tid, fid?, value }
-  // v5.17: fields added to the design before it is created — by hand or by the AI
-  const [addFor, setAddFor] = useState(null);     // { tid, name, type }
-  const [dAsk, setDAsk] = useState("");
-  const [dProp, setDProp] = useState(null);       // { ops, done, errors }
-  const [dBusy, setDBusy] = useState(false);
-  const draftOps = (ops) => { const r = E.applyOps(draft, ops); if (r.errors.length) flash(r.errors[0]); if (r.done.length) setDraft({ ...r.sys, history: [] }); return r; };
-  const proposeDraft = async () => {
-    setDBusy(true); setDProp(null);
-    try {
-      const j = E.jsonFrom(await llm(E.changeMessages(draft, dAsk), { maxTokens: 1200, temperature: 0.1, json: true }));
-      const ops = j && Array.isArray(j.ops) ? j.ops : j && j.op ? [j] : [];
-      const dry = E.applyOps(draft, ops);
-      setDProp({ ops, done: dry.done, errors: dry.errors });
-    } catch (e) { flash(String(e.message || e)); }
-    setDBusy(false);
-  };
-  const renameDraft = (name) => {
-    setDraft((d) => ({ ...d, tables: d.tables.map((t) => t.id !== ren.tid ? t : ren.fid
-      ? { ...t, fields: t.fields.map((f) => (f.id === ren.fid ? { ...f, name } : f)) } : { ...t, name }) }));
-    setRen(null);
-  };
-  if (draft) return (
-    <section className="p-4 space-y-3" data-testid="erp-draft">
-      {ren ? <RenameSheet title={ren.fid ? tr("Rename field") : tr("Rename table")} value={ren.value} onSave={renameDraft} onClose={() => setRen(null)} /> : null}
-      <button onClick={() => setDraft(null)} className="text-slate-400 text-sm flex items-center gap-1"><ChevronLeft size={16} />{tr("Back")}</button>
-      <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className={field + " text-base font-semibold"} dir="auto" />
-      <p className="text-[12px] text-slate-400">{tr("This is the design. Tap any table or field name to rename it — you can change everything else after creating it.")}</p>
-      {draft.tables.map((t) => (
-        <div key={t.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-          <button onClick={() => setRen({ tid: t.id, value: t.name })} className="text-sm font-semibold text-slate-100 flex items-center gap-1.5" dir="auto" data-testid="erp-draft-table">{t.name}<PenLine size={12} className="text-slate-500" /></button>
-          <div className="flex flex-wrap gap-1.5 mt-1.5">{t.fields.map((f) => <button key={f.id} onClick={() => setRen({ tid: t.id, fid: f.id, value: f.name })} className="text-[11px] rounded-md bg-slate-800 text-slate-300 px-1.5 py-0.5 active:bg-slate-700" dir="auto" data-testid="erp-draft-field">{f.name} <span className="text-slate-500">· {tr(E.FIELD_TYPES[f.type])}{f.type === "link" ? " → " + ((draft.tables.find((x) => x.id === f.link) || {}).name || "") : ""}</span></button>)}
-            {addFor && addFor.tid === t.id ? null : <button onClick={() => setAddFor({ tid: t.id, name: "", type: "text" })} className="text-[11px] rounded-md border border-dashed border-slate-600 text-slate-400 px-1.5 py-0.5" data-testid="erp-draft-add-field">+ {tr("field")}</button>}</div>
-          {addFor && addFor.tid === t.id ? (
-            <div className="flex gap-1.5 mt-2" data-testid="erp-draft-new-field">
-              <input autoFocus value={addFor.name} onChange={(e) => setAddFor({ ...addFor, name: e.target.value })} placeholder={tr("Field name")} className={field + " flex-1"} dir="auto" data-testid="erp-draft-new-field-name" />
-              <select value={addFor.type} onChange={(e) => setAddFor({ ...addFor, type: e.target.value })} className={field.replace("w-full ", "") + " w-28"}>
-                {Object.entries(E.FIELD_TYPES).filter(([k]) => k !== "link" && k !== "formula").map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}</select>
-              <button className={primary} disabled={!addFor.name.trim()} onClick={() => { const r = draftOps([{ op: "addField", table: t.id, name: addFor.name.trim(), type: addFor.type }]); if (r.done.length) setAddFor(null); }} data-testid="erp-draft-new-field-save">{tr("Add")}</button>
-              <button className={ghost} onClick={() => setAddFor(null)}><X size={14} /></button>
-            </div>) : null}
-        </div>))}
-      {llm && modelReady ? (
-        <div className="rounded-xl border border-teal-900 bg-teal-500/5 p-2.5 space-y-2" data-testid="erp-draft-ai">
-          <p className="text-[12px] text-teal-200 flex items-center gap-1"><Sparkles size={13} />{tr("Change the design in words — add fields to any table, new tables, links…")}</p>
-          <textarea value={dAsk} onChange={(e) => setDAsk(e.target.value)} rows={2} dir="auto" className={field} data-testid="erp-draft-ask"
-            placeholder={tr("e.g. add Email and Tax ID to Suppliers, and a Warranty months field to Parts")} />
-          <button className={primary + " flex items-center gap-1"} disabled={dBusy || dAsk.trim().length < 4} onClick={proposeDraft} data-testid="erp-draft-ask-go">
-            {dBusy ? <Loader2 size={14} className="animate-spin" /> : <Wrench size={14} />}{dBusy ? tr("Working it out…") : tr("Show me the change")}</button>
-          {dProp ? (
-            <div className="rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-[13px] space-y-1" data-testid="erp-draft-proposal">
-              {dProp.done.length ? dProp.done.map((d, i) => <p key={i} className="text-slate-200 flex gap-1.5"><Check size={14} className="text-teal-300 shrink-0 mt-0.5" /><span dir="auto">{d}</span></p>)
-                : <p className="text-slate-400">{tr("No design change found in that.")}</p>}
-              {dProp.errors.map((d, i) => <p key={"e" + i} className="text-amber-300 flex gap-1.5"><AlertTriangle size={14} className="shrink-0 mt-0.5" /><span dir="auto">{d}</span></p>)}
-              {dProp.done.length ? <div className="flex gap-2 pt-1">
-                <button className={primary} onClick={() => { draftOps(dProp.ops); setDProp(null); setDAsk(""); }} data-testid="erp-draft-apply">{tr("Apply")}</button>
-                <button className={ghost} onClick={() => setDProp(null)}>{tr("Cancel")}</button></div> : null}
-            </div>) : null}
-        </div>) : null}
-      <button className={primary + " w-full py-2.5"} onClick={() => onCreate({ ...draft, name: draft.name.trim() || "My business" })} data-testid="erp-create">{tr("Create this system")}</button>
-    </section>
-  );
-  return (
-    <section className="p-4 space-y-3" data-testid="erp-newpage">
-      <button onClick={onBack} className="text-slate-400 text-sm flex items-center gap-1"><ChevronLeft size={16} />{tr("Back")}</button>
-      <h2 className="text-base font-semibold text-slate-100">{tr("Describe your business")}</h2>
-      <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={4} dir="auto" className={field} data-testid="erp-desc"
-        placeholder={tr("e.g. We rent mobile cranes (20–500 t) with operators in Egypt. We track customers, jobs per site, daily rates, invoices and payments, maintenance and crew licences.")} />
-      {modelReady ? <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5"} disabled={busy || desc.trim().length < 15} onClick={design} data-testid="erp-design">
-        {busy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{busy ? (step || tr("Designing your system…")) : tr("Design it with AI")}</button>
-        : <button className={ghost + " w-full"} onClick={openEngine}>{tr("Load a model to design it with AI — or pick a template below")}</button>}
-      {err ? <p className="text-[13px] text-amber-300">{err}</p> : null}
-      <p className="text-[12px] text-slate-500 pt-2">{tr("Or start from a template")}</p>
-      <div className="grid grid-cols-1 gap-2">
-        {E.TEMPLATES.map((t) => (
-          <button key={t.id} onClick={() => setDraft(E.systemFromSpec(t.spec))} className="text-start rounded-xl border border-slate-800 bg-slate-900/60 p-3" data-testid={"erp-tpl-" + t.id}>
-            <span className="block text-sm text-slate-100">{tr(t.title)}</span><span className="block text-[11px] text-slate-500">{tr(t.blurb)}</span>
-          </button>))}
-      </div>
-    </section>
-  );
-}
+/* v6.18: the Business home and the "new system" screen moved to biz-ui.jsx (the app-in-app with its five steps);
+   this file keeps one system's tools (SystemView: data, design, queries, forms, summary, more) and the record form. */
 
 // ---- one system ---------------------------------------------------------------------------
-function SystemView({ sys, setSys, llm, modelReady, flash, saveFile, share, runPy, onBack, onDelete }) {
+export function SystemView({ sys, setSys, llm, modelReady, flash, saveFile, share, runPy, onBack, onDelete, embedded }) {
   const [tid, setTid] = useState(sys.tables[0] && sys.tables[0].id);
   const [tab, setTab] = useSticky("erp:tab", "data");         // data | design | queries | forms | summary | more
   const [ren, setRen] = useState(null);            // { kind: "system" | "table", tid?, value }
@@ -270,7 +95,7 @@ function SystemView({ sys, setSys, llm, modelReady, flash, saveFile, share, runP
               onClick={() => { if (!delAsk) { setDelAsk(true); return; } apply([{ op: "deleteTable", table: ren.tid }]); setRen(null); setDelAsk(false); }}>{delAsk ? tr("Tap again to delete") : tr("Delete table")}</button>
           </div>) : null} /> : null}
       <div className="flex items-center gap-2">
-        <button onClick={onBack} className="p-1.5 -ms-1.5 text-slate-400" title={tr("Back")}><ChevronLeft size={20} /></button>
+        {embedded ? null : <button onClick={onBack} className="p-1.5 -ms-1.5 text-slate-400" title={tr("Back")}><ChevronLeft size={20} /></button>}
         <button onClick={() => setRen({ kind: "system", value: sys.name })} className="text-base font-semibold text-slate-100 truncate flex-1 text-start flex items-center gap-1.5 min-w-0" dir="auto" data-testid="erp-system-name">
           <span className="truncate">{sys.name}</span><PenLine size={13} className="text-slate-500 shrink-0" /></button>
         {sys.history && sys.history.length ? <button onClick={() => { const u = E.undo(sys); if (u) setSys(u.sys, tr("Undone: {w}", { w: u.what })); }} className="p-1.5 text-slate-300" title={tr("Undo last design change")} data-testid="erp-undo"><Undo2 size={18} /></button> : null}
@@ -435,7 +260,7 @@ function RecordForm({ sys, table, rowId, setSys, llm, flash, onDone, form }) {
   );
 }
 
-function FieldInput({ sys, f, value, set, computed }) {
+export function FieldInput({ sys, f, value, set, computed }) {
   if (f.type === "formula") return <div className="px-2.5 py-2 text-sm text-slate-300 bg-slate-900 rounded-lg" dir="ltr">{computed != null ? E.show(sys, { type: "number" }, computed) : "—"}</div>;
   if (f.type === "auto") return <div className="px-2.5 py-2 text-sm text-slate-300 bg-slate-900 rounded-lg">{value || tr("(given when saved)")}</div>;
   if (f.type === "bool") return <button type="button" onClick={() => set(!value)} className={`px-3 py-2 rounded-lg text-sm border ${value ? "border-teal-600 bg-teal-500/15 text-teal-200" : "border-slate-700 text-slate-400"}`}>{value ? tr("Yes") : tr("No")}</button>;

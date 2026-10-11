@@ -17,7 +17,7 @@ export const lookOf = (st) => (LOOKS.some((l) => l.id === (st && st.look)) ? st.
 export const isLight = (id) => id === "fresh" || id === "bold";
 
 // The light looks: the slate scale turned around, then the accents darkened so they read on white (4.5:1 for text).
-const LIGHT_BASE = (ink, page, card, input, line, line2, muted, soft) => `
+export const LIGHT_BASE = (ink, page, card, input, line, line2, muted, soft) => `
   --color-slate-950:${page};--color-slate-900:${card};--color-slate-800:${input};--color-slate-700:${line};--color-slate-600:${line2};
   --color-slate-500:${muted};--color-slate-400:${soft};--color-slate-300:${soft};--color-slate-200:${ink};--color-slate-100:${ink};--color-slate-50:${ink};
   --color-white:${ink};
@@ -28,7 +28,7 @@ const LIGHT_BASE = (ink, page, card, input, line, line2, muted, soft) => `
   --color-teal-200:#115E59;--color-teal-300:#0F766E;--color-lime-300:#4D7C0F;--color-orange-300:#C2410C;--color-yellow-300:#A16207;--color-red-300:#B91C1C;
   --color-blue-300:#1D4ED8;--color-indigo-300:#4338CA;--color-pink-300:#BE185D;--color-cyan-300:#0E7490;--color-green-300:#15803D;--color-fuchsia-300:#A21CAF;`;
 // a filled button keeps white writing (white is the ink in a light look)
-const ON_FILL = (sel) => ["emerald-500", "emerald-600", "emerald-700", "sky-500", "sky-600", "sky-700", "rose-600", "amber-600", "violet-600", "red-600"]
+export const ON_FILL = (sel) => ["emerald-500", "emerald-600", "emerald-700", "sky-500", "sky-600", "sky-700", "rose-600", "amber-600", "violet-600", "red-600"]
   .map((c) => `${sel} .bg-${c}`).join(",") + "{color:#FFFFFF}";
 
 export const LOOK_CSS = `

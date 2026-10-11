@@ -6,7 +6,7 @@ Studio never silent.
 """
 import os, json
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish, HERE
+from harness import Env, new_page, check, real_errors, finish, HERE, to_tables
 
 env = Env(); errors = []
 
@@ -45,7 +45,7 @@ with sync_playwright() as p:
     page.click("[data-testid=erp-draft-apply]")
     check(page.locator("[data-testid=erp-draft-field]:has-text('Warranty months')").count() == 1, "…and by asking the AI (shown first, then applied)")
     page.click("[data-testid=erp-create]")
-    page.wait_for_selector("[data-testid=erp-systemview]")
+    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]")
 
     # a customer + a job so the app has data and a formula
     def add(values):
@@ -94,10 +94,10 @@ with sync_playwright() as p:
     app.close()
 
     # ---- 3. bring the app (with its new data) back into Attune ----
-    page.locator("[data-testid=erp-systemview] button[title='Back']").first.click()
+    page.locator("[data-testid=biz-back]").first.click()   # v6.18: the system's back is in the Business shell
     page.wait_for_selector("[data-testid=business-page]")
     page.set_input_files("[data-testid=erp-open-app-file]", path2)
-    page.wait_for_selector("[data-testid=erp-systemview]", timeout=5000)
+    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]", timeout=5000)
     page.locator("[data-testid=erp-tables] button:has-text('Jobs')").click()
     check("Port Said" in page.locator("[data-testid=erp-grid]").inner_text(), "opening the app file brings back the records added outside")
     check(page.locator("[data-testid=erp-system]").count() == 0 or True, "")

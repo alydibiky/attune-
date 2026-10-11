@@ -4,7 +4,7 @@
 """
 import os, sys, json, subprocess, tempfile
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish, HERE
+from harness import Env, new_page, check, real_errors, finish, HERE, to_tables
 
 SECTIONS = sys.argv[1:] or ["business", "aidesign", "lessons", "news", "layout"]
 env = Env()
@@ -36,7 +36,7 @@ def sec_business(br):
     page.click("[data-testid=erp-new]")
     page.click("[data-testid=erp-tpl-cranes]")
     page.click("[data-testid=erp-create]")
-    page.wait_for_selector("[data-testid=erp-systemview]")
+    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]")
     tabs = page.locator("[data-testid=erp-tables]").inner_text()
     check(all(t in tabs for t in ["Customers", "Equipment", "Jobs", "Invoices", "Maintenance", "Crew"]), "the crane-rental template makes 6 tables")
 
@@ -136,7 +136,7 @@ def sec_business(br):
     # it is all still there after a restart
     page.reload(); page.wait_for_selector("nav", timeout=15000)
     open_more(page, "Business", "business-page")
-    page.locator("[data-testid=erp-system]").first.click()
+    page.locator("[data-testid=erp-system]").first.click(); to_tables(page)
     page.locator("[data-testid=erp-tables] button:has-text('Jobs')").click()
     check("JOB-0002" in grid_text(page), "everything is kept after the app restarts")
     page.screenshot(path=HERE + "/v512-business.png", full_page=True)
@@ -161,7 +161,7 @@ def sec_aidesign(br):
     d = page.locator("[data-testid=erp-draft]").inner_text()
     check("Orders" in d and "Link to another table → Products" in d and "Formula" in d, "the AI designs the tables from a description, shown before creating")
     page.click("[data-testid=erp-create]")
-    page.wait_for_selector("[data-testid=erp-systemview]")
+    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]")
     check("Products" in page.locator("[data-testid=erp-tables]").inner_text(), "…and it is created")
     ctx.close()
 

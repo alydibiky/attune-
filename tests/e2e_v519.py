@@ -6,7 +6,7 @@ only from its own Stop button.
 """
 import json
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish, HERE
+from harness import Env, new_page, check, real_errors, finish, HERE, to_tables, leave_apps
 
 env = Env(); errors = []
 
@@ -31,7 +31,7 @@ def send(page, text):
     page.locator("button[title='Send']").first.click()
 
 def open_more(page, name, testid):
-    page.locator("nav button").last.click(); page.wait_for_timeout(200)
+    leave_apps(page); page.locator("nav button").last.click(); page.wait_for_timeout(200)
     page.locator(f".rounded-t-2xl button:has-text('{name}')").first.click()
     page.wait_for_selector(f"[data-testid={testid}]", timeout=5000)
 
@@ -109,7 +109,7 @@ with sync_playwright() as p:
     draft = page.locator("[data-testid=erp-draft]").inner_text()
     check(draft.count("Link to another table") >= 3, "a new design is connected automatically (SupplierID, Customer name, Part → links)")
     page.click("[data-testid=erp-create]")
-    page.wait_for_selector("[data-testid=erp-systemview]")
+    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]")
     page.click("[data-testid=erp-tab-design]")
     check(page.locator("[data-testid=erp-relationships]").inner_text().count("→") >= 3, "Design lists the connections")
 

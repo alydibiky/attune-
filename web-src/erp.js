@@ -13,6 +13,7 @@ import { getPower } from "./power.js";
    Pure logic, no React — unit tested in tests/unit/erp.test.mjs.            */
 
 // ---- field types ------------------------------------------------------------------------
+import * as SC from "./erp-screens.js";
 export const FIELD_TYPES = {
   text: "Text", longtext: "Long text", number: "Number", money: "Money", date: "Date", bool: "Yes / No",
   choice: "Choice", link: "Link to another table", phone: "Phone", email: "Email", auto: "Auto number", formula: "Formula",
@@ -521,7 +522,11 @@ function applyOne(sys, o) {
       const x = formulaToIds(o.formula, t); if (!x.ok) throw new Error(x.error);
       f.formula = x.expr; return `${t.name} › ${f.name} = ${o.formula}`;
     }
-    default: throw new Error(`Unknown change "${op}"`);
+    default: {
+      // v6.18: the screens (colour, home screen, lists, forms…) — erp-screens.js
+      const r = SC.applyScreenOp(sys, o); if (r !== undefined) return r;
+      throw new Error(`Unknown change "${op}"`);
+    }
   }
 }
 
@@ -717,7 +722,7 @@ export function guessTemplate(description) {
 
 export function changeMessages(sys, request) {
   return [
-    { role: "system", content: `You change the design of a business database, like a Microsoft Access developer. Reply with JSON only: {"ops": [ ... ]}. Each op is one of:
+    { role: "system", content: `You change the design of a business app — its tables and its screens — like a Microsoft Access developer. Reply with JSON only: {"ops": [ ... ]}. Each op is one of:
 {"op":"addTable","table":"<name>","fields":[{"name":..,"type":..}]}
 {"op":"renameTable","table":"<name>","to":"<new>"}
 {"op":"deleteTable","table":"<name>"}
@@ -729,11 +734,15 @@ export function changeMessages(sys, request) {
 {"op":"setFormula","table":"<table>","field":"<field>","formula":"[A] * [B]"}
 {"op":"moveField","table":"<table>","field":"<field>","dir":"up"|"down"}
 {"op":"setRequired","table":"<table>","field":"<field>","required":true|false}
+${SC.SCREEN_OPS_HELP}
 Types: ${TYPES_HELP}.
-Use the exact table and field names below. Do only what was asked. If the request is not a design change, reply {"ops": []}.
+Use the exact table and field names below. Do only what was asked ("make X instead of Y" = change X, leave the rest). If the request is not a design change, reply {"ops": []}.
 
 The database now:
-${describe(sys)}` },
+${describe(sys)}
+
+The screens now:
+${SC.describeScreens(sys)}` },
     { role: "user", content: String(request || "").trim().slice(0, 1500) },
   ];
 }

@@ -7,7 +7,7 @@ Copilot (bring a chat), Memory in the bottom bar, the version shown.
 """
 import json
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish, HERE
+from harness import Env, new_page, check, real_errors, finish, HERE, to_tables, leave_apps
 
 env = Env(); errors = []
 
@@ -31,7 +31,7 @@ def bodies(page):
     return page.evaluate("window.__mock.bodies.filter(x => x.max_tokens > 2)")
 
 def open_more(page, name, testid):
-    page.locator("nav button").last.click(); page.wait_for_timeout(200)
+    leave_apps(page); page.locator("nav button").last.click(); page.wait_for_timeout(200)
     page.locator(f".rounded-t-2xl button:has-text('{name}')").first.click()
     page.wait_for_selector(f"[data-testid={testid}]", timeout=5000)
 
@@ -80,7 +80,7 @@ with sync_playwright() as p:
     check(page.locator("text=453,000").count() == 0 and page.locator(".att-md").last.inner_text().count("570,000") >= 1, "the total is 570,000")
 
     # ---- 3. Memory: in the bottom bar, and an item opens ON the screen ----
-    nav = page.locator("nav").inner_text()
+    leave_apps(page); nav = page.locator("nav").inner_text()
     check("Mind" in nav, "Mind (v6.8, was Memory) is in the bottom bar")
     page.locator("nav button:has-text('Mind')").click()
     page.wait_for_timeout(400)
@@ -100,7 +100,7 @@ with sync_playwright() as p:
     page.click("[data-testid=erp-rename-save]")
     check(page.locator("[data-testid=erp-draft-table]:has-text('Clients')").count() == 1, "in the new design, tapping a table name renames it")
     page.click("[data-testid=erp-create]")
-    page.wait_for_selector("[data-testid=erp-systemview]")
+    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]")
     page.click("[data-testid=erp-system-name]")
     page.locator("[data-testid=erp-rename-input]").fill("Adrighem ERP")
     page.click("[data-testid=erp-rename-save]")
@@ -175,7 +175,7 @@ with sync_playwright() as p:
     check(len(bodies(page)) >= 1, "…and Attune suggests the next message straight away")
 
     # ---- 6. the version is shown ----
-    page.locator("nav button").last.click(); page.wait_for_timeout(200)
+    leave_apps(page); page.locator("nav button").last.click(); page.wait_for_timeout(200)
     import re as _re
     check(bool(_re.search(r"Attune \d+\.\d+", page.locator("[data-testid=app-version]").inner_text())), "More shows the version (so an old page can be spotted)")
 

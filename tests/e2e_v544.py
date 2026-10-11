@@ -7,7 +7,7 @@ phones keep their leading 0.
 """
 import os, tempfile
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import Env, new_page, check, real_errors, finish, to_tables
 
 env = Env(); errors = []
 SHOTS = os.environ.get("SHOTS")
@@ -34,7 +34,7 @@ with sync_playwright() as p:
     page.locator(".rounded-t-2xl button:has-text('Business')").first.click()
     page.wait_for_selector("[data-testid=business-page]", timeout=5000)
     page.click("[data-testid=erp-new]"); page.click("[data-testid=erp-tpl-cranes]"); page.click("[data-testid=erp-create]")
-    page.wait_for_selector("[data-testid=erp-systemview]")
+    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]")
 
     import_new(page, csv("Clients.csv", "Name,Phone,City\nHassan Co.,01001234567,Cairo\nNile Build,01112223334,Giza\nDelta Steel,01223334445,Tanta\n"))
     page.click("[data-testid=erp-tab-data]")

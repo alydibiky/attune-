@@ -164,7 +164,7 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=erp-draft]", timeout=30000)
     d = page.locator("[data-testid=erp-draft]").inner_text()
     check("Jobs" in d and "Cranes" in d, "a broken JSON design is rescued by the simple line format")
-    page.locator("[data-testid=erp-draft] button").first.click(); page.wait_for_timeout(200)
+    page.click("[data-testid=biz-step-name]"); page.wait_for_timeout(200)   # v6.18: back to step 1 (Name) of the builder
     queue(page, ["no idea", "sorry"])
     page.click("[data-testid=erp-design]")
     page.wait_for_selector("[data-testid=erp-draft]", timeout=30000)

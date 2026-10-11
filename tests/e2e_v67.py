@@ -7,7 +7,7 @@ wasn't applied is offered; Fit on Free: 3 photo meals a day, the week plan and r
 """
 import json, zlib, struct
 from playwright.sync_api import sync_playwright
-from harness import Env, new_page, check, real_errors, finish
+from harness import Env, new_page, check, real_errors, finish, to_tables
 
 env = Env()
 def png(w=16, h=16):
@@ -62,7 +62,7 @@ with sync_playwright() as p:
     page.locator(".rounded-t-2xl button:has-text('Business')").first.click()
     page.wait_for_selector("[data-testid=business-page]", timeout=6000)
     page.click("[data-testid=erp-new]"); page.click("[data-testid=erp-tpl-cranes]"); page.click("[data-testid=erp-create]")
-    page.wait_for_selector("[data-testid=erp-systemview]", timeout=6000)
+    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]", timeout=6000)
     page.locator("[data-testid=erp-tab-more]").click(); page.wait_for_timeout(500)
     lic = page.locator("[data-testid=erp-licence]")
     check("EGP 14,999.00" in lic.inner_text(), "the system's activation shows Play's price")
@@ -79,7 +79,7 @@ with sync_playwright() as p:
     page.locator(".rounded-t-2xl button:has-text('Business')").first.click()
     page.wait_for_selector("[data-testid=business-page]", timeout=6000)
     page.click("[data-testid=erp-new]"); page.click("[data-testid=erp-tpl-cranes]"); page.click("[data-testid=erp-create]")
-    page.wait_for_selector("[data-testid=erp-systemview]", timeout=6000)
+    to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]", timeout=6000)
     page.locator("[data-testid=erp-tab-more]").click(); page.wait_for_timeout(600)
     check(page.locator("[data-testid=erp-use-purchase]").count() == 1, "a paid, unused purchase is offered: 'Use your Google Play purchase on this system'")
     page.locator("[data-testid=erp-use-purchase]").click(); page.wait_for_timeout(500)

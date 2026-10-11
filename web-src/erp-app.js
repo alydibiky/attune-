@@ -14,6 +14,8 @@
    The runtime is a normal function here, embedded with Function.toString(), so it is
    bundled, minified and unit-tested like the rest (tests/unit/v517.test.mjs).     */
 
+import * as SC from "./erp-screens.js";
+
 export const APP_MARK = "attune-erp";
 
 const esc = (s) => String(s).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
@@ -26,7 +28,7 @@ export function buildApp(sys, { freeRows = null } = {}) {
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--text:#18202a;--muted:#6b7280;--line:#e5e7eb;--accent:#0d9488;--accent2:#ccfbf1}
+:root{--bg:#f6f7f9;--card:#fff;--text:#18202a;--muted:#6b7280;--line:#e5e7eb;--accent:${SC.colorOf(sys)};--accent2:color-mix(in srgb, ${SC.colorOf(sys)} 18%, white)}
 @media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#111a2b;--text:#e5e7eb;--muted:#94a3b8;--line:#243044;--accent:#2dd4bf;--accent2:#134e4a}}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Arabic",sans-serif;background:var(--bg);color:var(--text)}
 header{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);padding:12px 14px;z-index:2}

@@ -21,7 +21,7 @@ import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
 import { CraneToolkit } from "./crane-ui.jsx";
 import { CodeWorkbench } from "./code-ui.jsx";
 import { StudioPage } from "./studio-ui.jsx";
-import { BusinessPage } from "./erp-ui.jsx";
+import { BusinessApp } from "./biz-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
@@ -9038,7 +9038,7 @@ export default function App() {
       <div className="max-w-3xl mx-auto px-3 pb-24">
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
-        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" ? " hidden" : "")}>
+        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")}>
           {mode === "chat" ? (
             <button onClick={() => setDrawerOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Chats")}><Menu size={20} /></button>
           ) : (
@@ -9661,7 +9661,7 @@ export default function App() {
             saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "business" ? (
-          <BusinessPage flash={flash} openEngine={() => setShowEngine(true)}
+          <BusinessApp flash={flash} openEngine={() => setShowEngine(true)} onExit={goBack}
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json, onToken: o.onToken })}
             runPy={(code, files) => runCode({ lang: "python", code, files, timeoutMs: 60000 })}
@@ -10799,12 +10799,12 @@ export default function App() {
           </div>
         )}
         {/* v5.29 UX: not on Chat — the fixed message box covered it (half-hidden text) */}
-        {mode !== "chat" && mode !== "fit" ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
+        {mode !== "chat" && mode !== "fit" && mode !== "business" && mode !== "map" ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
       </div>
       {toast && <div className="fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       <ConfirmHost />
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
-      <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (mode === "fit" || mode === "map" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
           {/* v5.17: Memory in the bottom bar (Ali) */}
           {[["chat", "Chat", MessageCircle], ["instant", "Instant", Zap], ["money", "Money", Wallet],

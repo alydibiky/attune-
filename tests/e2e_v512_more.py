@@ -2,7 +2,7 @@
 Run through e2e_v512.py:  python3 tests/e2e_v512.py lessons news layout
 """
 import json, time
-from harness import new_page, check, HERE
+from harness import new_page, check, HERE, to_tables
 
 PLAN = json.dumps({"title": "Turkish from zero", "lessons": ["Alphabet & sounds", "Vowel harmony", "Plurals: -ler / -lar", "Numbers 1–10", "Olmak: to be", "Past tense -di"]})
 
@@ -186,7 +186,7 @@ def sections(env, errors, install, open_more, queue):
         page.locator(".rounded-t-2xl .grid button").filter(has_text="الأعمال").first.click()
         page.wait_for_selector("[data-testid=business-page]", timeout=5000)
         page.click("[data-testid=erp-new]"); page.click("[data-testid=erp-tpl-cranes]"); page.click("[data-testid=erp-create]")
-        page.wait_for_selector("[data-testid=erp-systemview]")
+        to_tables(page); page.wait_for_selector("[data-testid=erp-systemview]")
         bad = {}
         for tab in ["data", "design", "summary", "more"]:
             page.click(f"[data-testid=erp-tab-{tab}]"); page.wait_for_timeout(200)

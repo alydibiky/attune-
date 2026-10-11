@@ -143,3 +143,19 @@ def real_errors(errors):
 def finish():
     print("ALL PASSED" if not fails else "%d FAILED" % len(fails))
     sys.exit(0 if not fails else 1)
+
+
+def to_tables(page, timeout=8000):
+    """v6.18: a Business system opens on its Home (the new shell); the tables' tools are in its Tables tab."""
+    page.wait_for_selector("[data-testid=biz-system], [data-testid=erp-systemview]", timeout=timeout)
+    if page.locator("[data-testid=erp-systemview]").count() == 0 and page.locator("[data-testid=biz-tab-tables]").count():
+        page.click("[data-testid=biz-tab-tables]")
+
+
+def leave_apps(page, tries=4):
+    """v6.18: Business, Fit and Maps hide Attune's bars — leave them with their own back buttons first."""
+    for _ in range(tries):
+        if page.locator("nav button").last.is_visible(): return
+        for sel in ("[data-testid=biz-back]", "[data-testid=fit-exit]", "[data-testid=map-exit]"):
+            if page.locator(sel).count() and page.locator(sel).first.is_visible():
+                page.locator(sel).first.click(); page.wait_for_timeout(200); break
