@@ -5,9 +5,12 @@ name: Build the offline food pack
 # (name, brand, barcode, energy, protein, carbs, fat, fibre, sugar, saturated fat, salt, serving, Nutri-Score, NOVA —
 # only products with a COMPLETE label whose energy agrees with its macros), Egyptian and Arab-region products first,
 # and publishes them as a release the app downloads on demand (Fit → search → "Get the offline food pack").
-# Run by hand from the Actions tab. The run summary says how many products were kept.
+# Run by hand from the Actions tab, and by itself on the 2nd of every month (Ali: "make sure all data is up to date").
+# The run summary says how many products were kept.
 
 on:
+  schedule:
+    - cron: "23 4 2 * *"
   workflow_dispatch:
 
 permissions:
