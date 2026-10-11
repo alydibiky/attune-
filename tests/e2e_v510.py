@@ -56,6 +56,8 @@ def sec_layout(br, lang="en"):
         btn = page.locator(".rounded-t-2xl .grid button").filter(has_text=t).first
         if not btn.count(): continue
         btn.click(); page.wait_for_timeout(300); audit(t)
+        if page.locator("[data-testid=fit-exit]").count():   # v7.31: Fit hides Attune's bars; leave it with its own back button
+            page.locator("[data-testid=fit-exit]").click(); page.wait_for_timeout(200)
         if ti >= len(tools) - 4:   # Engine, profile, plan, backup open over the page
             page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(200)
         if t == "Travel":

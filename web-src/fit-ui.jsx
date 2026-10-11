@@ -433,8 +433,11 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
 
   const Tabs = [["today", L("Today", "اليوم"), Apple], ["recipes", L("Recipes", "وصفات"), Star], ["move", L("Move", "رياضة"), Dumbbell], ["progress", L("Progress", "التقدم"), BarChart3]];
 
-  if (!st.profile && !fullForm) return <QuickSetup {...{ t, L, ar, save: quickSave }} full={() => setFullForm(true)} />;
-  if (!st.profile || editProfile) return <ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} /> : null} />;
+  // the first-visit screens hide Attune's bars too, so they get Fit's own way back
+  const exitBar = onExit ? <div className="max-w-md mx-auto px-2" style={{ paddingTop: "env(safe-area-inset-top)" }}><button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-300" aria-label={L("Back to Attune", "رجوع إلى Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button></div> : null;
+  if (!st.profile && !fullForm) return <>{exitBar}<QuickSetup {...{ t, L, ar, save: quickSave }} full={() => setFullForm(true)} /></>;
+  if (!st.profile) return <>{exitBar}<ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={null} extra={null} /></>;
+  if (editProfile) return <ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} /> : null} />;
 
   return (
     <div className="max-w-2xl mx-auto px-4 pt-2 pb-28 space-y-4" data-testid="fit-app">
