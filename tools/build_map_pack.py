@@ -205,7 +205,7 @@ def ov_keep(r, country):
     if not any((s or {}).get("license") in OVERTURE_OK for s in (r.get("sources") or [])):
         return False
     ad = r.get("addresses") or []
-    return bool(ad) and (ad[0] or {}).get("country", "").upper() == country.upper()
+    return bool(ad) and str((ad[0] or {}).get("country") or "").upper() == country.upper()   # an empty country (None) is not this one
 
 
 def overture_release(fs):
