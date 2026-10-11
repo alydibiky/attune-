@@ -89,7 +89,11 @@ def fetch(url, path):
     if os.path.exists(path) and os.path.getsize(path) > 0: return path
     os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + ".part"
-    urllib.request.urlretrieve(url, tmp); os.replace(tmp, path)
+    for attempt in range(4):   # a long download is sometimes cut off ("retrieval incomplete"): try again
+        try: urllib.request.urlretrieve(url, tmp); os.replace(tmp, path); return path
+        except Exception:
+            if attempt == 3: raise
+            import time; time.sleep(5 * (attempt + 1))
     return path
 
 
