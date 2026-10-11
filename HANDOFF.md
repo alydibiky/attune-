@@ -831,6 +831,34 @@ Ali: "Attune will charge money … find reliable free sources … full mark … 
     also appear in the Middle-Eastern test set (it looks derived from MM-Food-100K). Ali was asked whether an optional online
     "precise mode" (paid per photo, the photo leaves the phone) is wanted — awaiting his answer.
 
+### 5.52 (11 Oct 2026, v6.18, versionCode 79) — food photo calories: one amount question per item (measured 93 % within ±25 %)
+Ali: "I don't want mistakes" / "I want an accuracy of above 80 percent".
+- **Measured first (tests/trials/photokcal.mjs, 40 real plates with per-ingredient grams, `SET=`, `PROMPT=v2…v5`, `RAW=` keeps
+  every answer, `RESCORE=1` re-scores without the model):** photo-only calories are 35–55 % median error whatever the model —
+  Qwen 0.8B 55 % (writes "fried egg, tomato, cheese" on almost every plate), 2B 64 %, 4B 45 %, Gemma 4 E2B 22–52 % by prompt,
+  E4B 32–44 %; best case ≈ 40–55 % of plates within ±25 %. The models name foods well but misjudge the amount.
+  Small models copy any food named in the prompt (v2 with examples: "burger patty, bun" on half the plates).
+- **So the person gives the amount, in one tap (web-src/fitamount.js):** `amountQuestion(item)` → count (eggs, loaves,
+  slices: 1 2 3…, big pieces ½ 1 1½ 2 3 4), plate share (a little, ¼ ½ ¾ full, heaped; grams per food type, `fullPlate`),
+  drink (its own container: cola = a 330 ml can), spoons (1 tsp … 3 tbsp, cups when the food has one), sprinkle (nuts, seeds,
+  grated cheese: pinch … 2 handfuls). None for exact amounts (written, printed in the photo, barcode, quick add).
+  `askFirst` rings the unsure items (biggest calories first, max 3); `answerAmount` scales the nutrients. The row
+  `fit-amount` replaces ×0.5…×2 for photo items (typed items keep it). The answer is learned (`learnFix`) and the fast path
+  now applies learned foods and amounts too (`fitclip.decide`, it ignored them); a dish set twice is not asked again.
+- **Measured (train/simq.mjs logic: the right food + the amount choice nearest the real grams, reference = an independent
+  USDA-style table):** 40 tuning plates 70 → 98 % within ±25 %; **1,564 untouched plates 86 % → 93 %** (median 9 %)
+  after adding the foods they showed missing.
+- Names photo readers write now find the right food (`GENERIC` in `matchFood`, exact only): cheese, burger, salad, white
+  cheese, tomato sauce, potato fries, shredded/provolone cheese, breaded chicken, pancake, bulgur wheat, salmon fillet,
+  flatbread, ground beef… New foods: tomato sauce, ricotta, beef patty, ham, heavy/whipped cream, chocolate/caramel sauce,
+  brioche, burrata, smoked salmon, coconut milk, minced meat, pine nuts.
+- **Training on MM-Food-100K (OpenRAIL) — built, measured, not shipped:** `.github/workflows/food-train.yml` +
+  `tools/embed_mmfood.py` read all 100,000 photos with the phone's two models on 8 GitHub machines (≈ 1 h; release
+  `food-train-v1`: vectors + table, no photos). Name prototypes / Tip-Adapter / nearest-photo bonus: Food-101 +1.4,
+  Middle-Eastern +1…4, Arab dishes −1…3 (the photos are mostly Chinese/SE-Asian); calories from the nearest photos: 12–18 %
+  within ±25 %. Useful later for Asian dishes; 83 of its photos are near-duplicates of the test sets (drop cos ≥ 0.92).
+- The photo bank (`food-clip-v2`) does not know the 13 new foods until `food-clip.yml` runs again (Actions → Run).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
