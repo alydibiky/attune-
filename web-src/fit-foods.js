@@ -126,6 +126,9 @@ export const MORE_FOODS = [
   ["pickles", "Pickles (torshi)", "طرشي|مخلل", 12, 0.5, 2, 0.2, 1.2, { piece: 30, plate: 100 }, "veg"],
   // ---- dairy & eggs ----
   ["cheddar", "Cheddar cheese", "شيدر|جبنة شيدر", 403, 25, 1.3, 33, 0, { slice: 20 }, "dairy"],
+  // v6.17: a photo's "tomato sauce" / "ricotta" had no food of their own (tomato sauce became raw tomato, 18 kcal)
+  ["tomato-sauce", "Tomato sauce|marinara sauce|pasta sauce|red sauce", "صلصة طماطم|صلصة|صوص طماطم", 60, 1.5, 8, 2.5, 1.5, { tbsp: 15, cup: 250, serving: 60 }, "fats"],
+  ["ricotta", "Ricotta cheese|ricotta", "ريكوتا|جبنة ريكوتا", 174, 11, 3, 13, 0, { tbsp: 30, cup: 250, serving: 60 }, "dairy"],
   ["halloumi", "Halloumi", "حلوم|حلومي", 321, 21, 2, 25, 0, { slice: 30 }, "dairy"],
   ["cream-cheese", "Cream cheese", "جبنة كريمي|كيري|جبنة كريمية", 342, 6, 4, 34, 0, { tbsp: 15, piece: 18 }, "dairy"],
   ["mish", "Mish (aged cheese)", "مش|جبنة قديمة", 280, 18, 3, 22, 0, { tbsp: 15 }, "dairy"],

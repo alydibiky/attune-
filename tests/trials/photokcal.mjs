@@ -2,7 +2,7 @@
 // The app's own prompt (fit.js photoMessages) and parser (parsePhoto) on real plates whose calories are known from their
 // ingredient grams. Needs a llama-server with a vision model:   PORT=18900 SET=set.json node tests/trials/photokcal.mjs
 import * as F from "../../web-src/fit.js";
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 const PORT = process.env.PORT || 18900, set = JSON.parse(readFileSync(process.env.SET, "utf8"));
 const N = +(process.env.N || set.length), HINTS = process.env.HINTS ? JSON.parse(readFileSync(process.env.HINTS, "utf8")) : null;
 F.setCountry && F.setCountry("eg");
@@ -15,7 +15,11 @@ for (const [k, s] of set.slice(0, N).entries()) {
     max_tokens: 1000, temperature: 0, response_format: { type: "json_object" }, chat_template_kwargs: { enable_thinking: false } };
   const t = Date.now();
   let raw = "";
-  try { const r = await fetch(`http://127.0.0.1:${PORT}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); raw = (await r.json()).choices[0].message.content; } catch (e) { raw = ""; }
+  // RAW=<file>.json keeps every answer (re-scored later without the model: RESCORE=1)
+  const cache = process.env.RAW && existsSync(process.env.RAW) ? JSON.parse(readFileSync(process.env.RAW, "utf8")) : {};
+  if (process.env.RESCORE && cache[k] != null) raw = cache[k];
+  else try { const r = await fetch(`http://127.0.0.1:${PORT}/v1/chat/completions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); raw = (await r.json()).choices[0].message.content; } catch (e) { raw = ""; }
+  if (process.env.RAW && !process.env.RESCORE) { cache[k] = raw; writeFileSync(process.env.RAW, JSON.stringify(cache)); }
   const p = F.parsePhoto(raw);
   const kcal = p.items.reduce((a, x) => a + (x.kcal || 0), 0); unknown += p.items.filter((x) => x.kcal == null).length;
   const e = (kcal - s.kcal) / s.kcal; errs.push(e);

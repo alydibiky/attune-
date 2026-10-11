@@ -193,8 +193,14 @@ const nameIx = () => { if (!NAME_IX) { NAME_IX = new Map(); for (const fd of FOO
 
 /** The food in the table that best matches a name (English or Arabic) → food or null.
  *  v6.10: a name two foods share goes to the chosen country's dish; another country's dish is found by its exact name only. */
+// v6.17: one-word names a photo reader writes ("cheese", "burger", "salad") — exact only, so "white cheese" still finds
+// white cheese. Before: "cheese" → Cheese sandwich, "burger" → Burger bun, "salad" → Caesar salad with chicken.
+const GENERIC = { cheese: "cheddar", "sliced cheese": "cheddar", "cheese slice": "cheddar", "cheese slices": "cheddar", "melted cheese": "cheddar",
+  burger: "burger", "beef burger": "burger", cheeseburger: "burger", salad: "salad", "green salad": "salad", "side salad": "salad", "mixed salad": "salad",
+  "tomato sauce": "tomato-sauce", "pizza sauce": "tomato-sauce", bun: "kaiser", "white cheese": "feta", "feta": "feta" };
 export function matchFood(name, cc = CZ.getCountry()) {
   const q = normT(name); if (!q) return null;
+  if (GENERIC[q]) { const g = food(GENERIC[q]); if (g) return g; }
   const exact = nameIx().get(q);
   const mine = countryFoodIds(cc);
   if (exact) return exact.find((fd) => fd.cc && mine.has(fd.id)) || exact.find((fd) => !fd.cc) || exact[0];
