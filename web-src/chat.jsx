@@ -1512,7 +1512,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     }
   };
   const speak = (m) => {
-    if (speakingId === m.id) { try { NATIVE ? NATIVE.stopSpeaking() : window.speechSynthesis.cancel(); } catch (e) {} setSpeakingId(null); return; }
+    if (speakingId === m.id) { try { NATIVE && NATIVE.stopSpeaking ? NATIVE.stopSpeaking() : window.speechSynthesis.cancel(); /* v6.24: the desktop reads aloud with the browser voices */ } catch (e) {} setSpeakingId(null); return; }
     const plain = String(m.text).replace(/[*_`#>|]/g, "").replace(/\n{2,}/g, "\n");
     const lang = voiceTag(detectLang(plain.slice(0, 300)), "en-US");
     try {

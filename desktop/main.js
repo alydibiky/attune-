@@ -4,7 +4,7 @@
 // Data lives in the per-user app-data folder (ATTUNE_HOME overrides it):
 //   Windows %APPDATA%\Attune  ·  macOS ~/Library/Application Support/Attune  ·  Linux ~/.config/Attune
 "use strict";
-const { app, BrowserWindow, ipcMain, protocol, net, dialog, clipboard, shell, powerSaveBlocker, nativeImage } = require("electron");
+const { app, BrowserWindow, ipcMain, protocol, net, dialog, clipboard, shell, powerSaveBlocker, nativeImage, Notification } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
@@ -14,6 +14,7 @@ const { Engine } = require("./lib/engine");
 const { makeWeb } = require("./lib/web");
 const { makePacks, Cancelled } = require("./lib/packs");
 const { makePdf } = require("./lib/pdf");
+const { makeReminders } = require("./lib/reminders");
 
 if (process.env.ATTUNE_HOME) app.setPath("userData", process.env.ATTUNE_HOME);
 const DATA = app.getPath("userData");
@@ -64,6 +65,15 @@ async function thumb(src) {
 const web = makeWeb({ online, thumb, fetch: (u, o) => net.fetch(u, o) });
 const packs = makePacks({ data: DATA, online, fetch: (u, o) => net.fetch(u, o) });
 
+// Reminders: a system notification at the time; clicking it opens Attune at that reminder (as on the phone)
+const reminders = makeReminders({ data: DATA, notify: (r) => {
+  if (!Notification.isSupported()) return;
+  const n = new Notification({ title: r.title || "Attune", body: r.body || "" });
+  n.on("click", () => { if (win) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); }
+    js("window.dispatchEvent(new CustomEvent('attune-share',{detail:" + JSON.stringify({ kind: "reminder", id: r.id }) + "}))"); });
+  n.show();
+} });
+
 let gpus = null;
 function info() {
   if (!gpus) { const b = engine.binary(); gpus = b ? device.listGpus(b.bin, b.env) : []; }
@@ -101,7 +111,14 @@ const QUICK = {
   stashGet: (name) => { try { return /^[a-z0-9][a-z0-9._-]{0,63}$/.test(name) ? fs.readFileSync(path.join(DATA, "stash", name), "utf8") : ""; } catch (e) { return ""; } },
   stashDel: (name) => { try { fs.unlinkSync(path.join(DATA, "stash", name)); return true; } catch (e) { return false; } },
   share: (text) => { clipboard.writeText(String(text || "")); },   // a computer has no share sheet: copy it
-  unmetered: () => true,                                            // a computer's connection: big downloads don't wait
+  unmetered: () => true,
+  schedule: (json) => { try { return JSON.stringify({ ok: reminders.schedule(JSON.parse(json)), exact: true, notify: Notification.isSupported() }); } catch (e) { return JSON.stringify({ ok: false, error: e.message }); } },
+  unschedule: (id) => reminders.unschedule(id),
+  scheduled: () => JSON.stringify(reminders.all()),
+  canExact: () => true,
+  notifyAllowed: () => Notification.isSupported(),
+  askNotifications: () => {},
+  askExact: () => {},                                            // a computer's connection: big downloads don't wait
   knowPacks: () => JSON.stringify({ packs: packs.knowList() }),
   knowRemove: (id) => packs.knowRemove(id),
   mapPacks: () => JSON.stringify({ packs: packs.mapList(), assets: packs.assetsInstalled() }),
@@ -179,6 +196,11 @@ const viaJson = (f) => async (id, arg) => { try { resolve(id, await f(JSON.parse
 const SLOW = {
   chat,
   search: viaJson((a) => web.search(a)),
+  async clipboardText(id) { resolve(id, { text: clipboard.readText() || "" }); },
+  async hash(id, modelId) {
+    try { const m = models.get(DATA, modelId); if (!m) return reject(id, "That model is not installed"); resolve(id, { id: modelId, sha256: await packs.sha256(m.modelFile) }); }
+    catch (e) { reject(id, e.message || "Could not read the model"); }
+  },
   // PDFs (lib/pdf.js): reading in a hidden pdf.js window, printing with Chromium, editing with pdf-lib
   pdfText: viaJson((a) => pdf().read("pdfText", a)),
   pdfWords: viaJson((a) => pdf().read("pdfWords", a)),
@@ -300,6 +322,7 @@ app.whenReady().then(() => {
   win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:/.test(url)) shell.openExternal(url); return { action: "deny" }; });
   win.webContents.on("will-navigate", (e, url) => { if (!url.startsWith("app://attune/")) { e.preventDefault(); if (/^https?:/.test(url)) shell.openExternal(url); } });
   win.loadURL("app://attune/index.html");
+  reminders.rearmAll();
   if (!SMOKE) { const m = activeModel(); if (m) { state.active = m.id; engine.start(m, info()); } }
   if (SMOKE) require("./test/smoke-run")(win, SMOKE, app, DATA);
 });
