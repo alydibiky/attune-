@@ -103,7 +103,8 @@ with sync_playwright() as p:
     sysel = page.locator("[data-testid=biz-system]")
     check(sysel.get_attribute("data-layout") == "computer-top" and page.locator("[data-testid=biz-form-fields]").get_attribute("data-cols") == "3", "on a computer: the menu on top and the form in 3 columns, as designed")
     w = page.evaluate("() => document.querySelector('[data-testid=biz-system]').getBoundingClientRect().width")
-    check(w > 1200, "…using the whole width (%d px), not a phone-wide column" % w)
+    side = page.evaluate("() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--side')) || 0")   # v6.24: the computer sidebar
+    check(w >= 1280 - side - 20 and w > 900, "…using the whole width beside the sidebar (%d px, sidebar %d), not a phone-wide column" % (w, side))
     check("Record 1 of 2" in page.locator("[data-testid=biz-form-pos]").inner_text(), "…with the same records (Record 1 of 2)")
     shot(page, "biz-pc-form")
     page.click("[data-testid=biz-tab-home]"); page.wait_for_timeout(200)
