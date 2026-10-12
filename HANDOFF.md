@@ -1055,6 +1055,8 @@ internet searching … improve internet searching and make it faster".
   with ClangCL against the Visual C++ runtime + OpenMP DLLs, which CI machines have and a normal PC does not.
   desktop.yml now builds ONE static exe (`BUILD_SHARED_LIBS=OFF`, `/MT`, `GGML_OPENMP=OFF`) for `engine/vulkan` AND a
   CPU-only `engine/cpu` fallback, and a CI step fails if any exe imports vcruntime/msvcp/libomp/vcomp/ggml/llama DLLs.
+  ALSO OpenSSL: llama.cpp linked libssl-3-x64.dll / libcrypto-3-x64.dll found on the runner → `-DLLAMA_OPENSSL=OFF`.
+  The CI check is an ALLOWLIST (only Windows' own DLLs + vulkan-1.dll), so any new outside DLL fails the build.
   `engine.js` writes why an engine stopped (`exitReason`: DLL missing 0xC0000135, no AVX2, crash, out of memory…) and
   handles spawn errors (antivirus).
 - **Next:** rest of step 5 (hash, clipboardText,
