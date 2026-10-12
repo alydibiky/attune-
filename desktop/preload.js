@@ -10,7 +10,8 @@ const QUICK = ["info", "models", "engine", "log", "remove", "wake", "setAirGap",
   "unmetered", "knowPacks", "knowRemove", "mapPacks", "mapRemove", "mapRead"];
 const SLOW = ["chat", "install", "use", "restart", "fetchJson", "saveFile",
   "search", "news", "fetchText", "fetchShare", "dorarSearch", "fxRates",
-  "knowRemote", "knowSearch", "knowInstall", "knowPackText", "foodPackText", "mapRemote", "mapSearch", "mapInstall"];
+  "knowRemote", "knowSearch", "knowInstall", "knowPackText", "foodPackText", "mapRemote", "mapSearch", "mapInstall",
+  "pdfText", "pdfWords", "pdfOutline", "pdfImages", "htmlToPdf", "makePdf", "pdfEdit"];
 
 const api = { desktop: true };
 for (const m of QUICK) api[m] = (...a) => ipcRenderer.sendSync("native-quick", m, a);

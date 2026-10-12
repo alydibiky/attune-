@@ -13,6 +13,7 @@ const device = require("./lib/device");
 const { Engine } = require("./lib/engine");
 const { makeWeb } = require("./lib/web");
 const { makePacks, Cancelled } = require("./lib/packs");
+const { makePdf } = require("./lib/pdf");
 
 if (process.env.ATTUNE_HOME) app.setPath("userData", process.env.ATTUNE_HOME);
 const DATA = app.getPath("userData");
@@ -172,10 +173,20 @@ function joined(key, id, run) {
     .catch((e) => { for (const c of j.ids) reject(c, e instanceof Cancelled ? "Download paused — it continues where it stopped next time." : (e.message || "Download failed")); })
     .finally(() => { packJobs.delete(key); for (const c of j.ids) cancels.delete(c); });
 }
+let pdfTools = null;
+const pdf = () => (pdfTools = pdfTools || makePdf({ BrowserWindow, nativeImage }));
 const viaJson = (f) => async (id, arg) => { try { resolve(id, await f(JSON.parse(arg || "{}"))); } catch (e) { reject(id, e.message || String(e)); } };
 const SLOW = {
   chat,
   search: viaJson((a) => web.search(a)),
+  // PDFs (lib/pdf.js): reading in a hidden pdf.js window, printing with Chromium, editing with pdf-lib
+  pdfText: viaJson((a) => pdf().read("pdfText", a)),
+  pdfWords: viaJson((a) => pdf().read("pdfWords", a)),
+  pdfOutline: viaJson((a) => pdf().read("pdfOutline", a)),
+  pdfImages: viaJson((a) => pdf().read("pdfImages", a)),
+  htmlToPdf: viaJson((a) => pdf().htmlToPdf(a)),
+  makePdf: viaJson((a) => pdf().makeFile(a)),
+  pdfEdit: viaJson((a) => pdf().pdfEdit(a)),
   news: viaJson((a) => web.news(a)),
   async fetchText(id, url) {
     try { const t = await web.pageText(url, 12000); if (!t) reject(id, "Could not read that page"); else resolve(id, { url, text: t }); } catch (e) { reject(id, e.message); }
@@ -269,6 +280,15 @@ if (SMOKE) app.commandLine.appendSwitch("no-sandbox");
 app.whenReady().then(() => {
   protocol.handle("app", (req) => {
     const u = new URL(req.url);
+    // the PDF reader's hidden window and pdf.js itself
+    // (read with fs: these live inside the app's archive once packaged)
+    if (u.pathname === "/__pdf/worker.html") return new Response(fs.readFileSync(path.join(__dirname, "pdfworker.html")), { headers: { "Content-Type": "text/html; charset=utf-8" } });
+    if (u.pathname.startsWith("/__pdf/build/")) {
+      const name = path.basename(u.pathname);
+      if (!/^pdf(\.worker)?\.mjs$/.test(name)) return new Response("Not found", { status: 404 });
+      const file = path.join(path.dirname(require.resolve("pdfjs-dist/package.json")), "legacy", "build", name);
+      return new Response(fs.readFileSync(file), { headers: { "Content-Type": "text/javascript; charset=utf-8" } });
+    }
     const rel = decodeURIComponent(u.pathname).replace(/^\/+/, "") || "index.html";
     const file = path.normalize(path.join(WWW, rel));
     if (!file.startsWith(path.normalize(WWW))) return new Response("Not found", { status: 404 });

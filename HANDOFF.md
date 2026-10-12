@@ -1024,7 +1024,13 @@ internet searching … improve internet searching and make it faster".
 - **CI:** `desktop.yml` now runs on pushes to `main` that touch `desktop/**` or the built page: Windows + Linux
   (macOS by hand: "Also build macOS"). Unit + web + live packs + smoke (sidebar, bridge, live web search) + package + smoke the
   packaged app. Artifact for Ali: `attune-desktop-windows-x64` (Attune Setup 6.24.0.exe, unsigned → "More info → Run anyway").
-- **Next:** step 4 (PDFs + converters: pdfText/pdfWords/pdfOutline/pdfImages/makePdf/pdfEdit/htmlToPdf), step 5 (hash, clipboardText,
+- **Step 4 DONE: PDFs on the desktop** — `desktop/lib/pdf.js` + `desktop/pdfworker.html`: reading in a hidden window with
+  pdf.js 4.10.38 (served as app://attune/__pdf/…): pdfText (lines, paragraphs, w/h, scan flag), pdfWords, pdfOutline, pdfImages;
+  htmlToPdf = Chromium printToPDF (own session "attune-print", network blocked); makePdf = pdf-lib pictures + blocks printed as
+  HTML; pdfEdit = pdf-lib merge/split/pick/rotate/annotate. Arabic stored as shaped letters in visual order is put back (fixRun).
+  NOT ported: the phone's PDF→Word layout extras (`lines` with fonts/colours, `rects`, `imgs`, `glyphs`) — the converter falls
+  back to plain paragraphs on the desktop. Tested in the smoke test (print → read back EN+AR, picture, words, merge, split, rotate).
+- **Next:** step 5 (hash, clipboardText,
   readText, speak/stopSpeaking, schedule → Notification, doctor/speed/setSpeed, foodClip*), then Studio (sd-cli), signing, updates.
 
 ## 6. How to fix Ali's problems well (method)

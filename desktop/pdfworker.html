@@ -1,0 +1,139 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Attune PDF worker</title>
+<!-- A hidden window of the desktop app that reads PDFs with pdf.js (Apache-2.0) — the same answers the phone's
+     DocTools.kt gives: pdfText, pdfWords, pdfOutline, pdfImages. main.js calls window.pdfOp(op, arg). -->
+<script type="module">
+import * as pdfjs from "app://attune/__pdf/build/pdf.mjs";
+pdfjs.GlobalWorkerOptions.workerSrc = "app://attune/__pdf/build/pdf.worker.mjs";
+
+const LOCKED = "This PDF is locked with a password — open it, save a copy without the password, and try again.";
+const bytesOf = (b64) => { const s = atob(b64); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
+async function open(b64) {
+  try { return await pdfjs.getDocument({ data: bytesOf(b64), isEvalSupported: false, disableFontFace: false, useSystemFonts: true }).promise; }
+  catch (e) { if (e && e.name === "PasswordException") throw new Error(LOCKED); throw e; }
+}
+const arabic = (s) => /[؀-ۿﭐ-﷿ﹰ-﻿]/.test(s);
+// Some PDFs (Chromium's own printing among them) store Arabic as shaped letters (presentation forms) in VISUAL order:
+// such a run is turned back into logical order (English words and numbers inside it keep theirs) and unshaped (NFKC).
+const LTR = /[A-Za-z0-9٠-٩.,:%\/+\-]/;
+function fixRun(s) {
+  if (!/[ﭐ-﷿ﹰ-﻿]/.test(s)) return s;
+  const r = [...s].reverse();
+  const out = []; let i = 0;
+  while (i < r.length) {
+    if (LTR.test(r[i])) { let j = i; while (j < r.length && LTR.test(r[j])) j++; out.push(...r.slice(i, j).reverse()); i = j; }
+    else out.push(r[i++]);
+  }
+  return out.join("").normalize("NFKC");
+}
+const r4 = (v) => Math.round(v * 10000) / 10000;
+
+/** a page's text runs → lines (top to bottom), each line's runs left to right (right to left for an Arabic line) */
+function lines(items, vp) {
+  const runs = [];
+  for (const it of items) {
+    if (!it.str || !it.str.trim()) continue;
+    const [x, y] = vp.convertToViewportPoint(it.transform[4], it.transform[5]);
+    const h = Math.max(1, Math.hypot(it.transform[2], it.transform[3]) * vp.scale);
+    runs.push({ x, base: y, h, w: it.width * vp.scale, s: fixRun(it.str) });
+  }
+  runs.sort((a, b) => a.base - b.base || a.x - b.x);
+  const groups = [];
+  for (const r of runs) {
+    const g = groups[groups.length - 1];
+    if (g && Math.abs(r.base - g.base) <= Math.max(2, Math.min(r.h, g.h) * 0.45)) { g.runs.push(r); continue; }
+    groups.push({ base: r.base, h: r.h, runs: [r] });
+  }
+  return groups.map((g) => {
+    const rtl = g.runs.filter((r) => arabic(r.s)).length * 2 > g.runs.length;
+    const rs = g.runs.sort((a, b) => (rtl ? b.x - a.x : a.x - b.x));
+    let out = "";
+    rs.forEach((r, i) => {
+      if (i) { const p = rs[i - 1]; const gap = rtl ? p.x - (r.x + r.w) : r.x - (p.x + p.w); if (gap > r.h * 0.18 && !out.endsWith(" ") && !r.s.startsWith(" ")) out += gap > r.h * 3 ? "   " : " "; }
+      out += r.s;
+    });
+    return { text: out.replace(/\s+$/, ""), base: g.base, h: g.h };
+  });
+}
+
+const ops = {
+  /** {b64, textOnly, max, from} → {pages: [{n, text, scan, w, h}], count} */
+  async pdfText(a) {
+    const doc = await open(a.b64);
+    const first = Math.max(1, a.from || 1), last = Math.min(doc.numPages, first + (a.max || 400) - 1);
+    const pages = [];
+    for (let n = first; n <= last; n++) {
+      const p = await doc.getPage(n); const vp = p.getViewport({ scale: 1 });
+      const tc = await p.getTextContent();
+      const ls = lines(tc.items, vp);
+      // a blank line between paragraphs (a gap clearly bigger than the line spacing), so Word gets real paragraphs
+      let text = "";
+      ls.forEach((l, i) => { if (i) text += l.base - ls[i - 1].base > Math.max(l.h, ls[i - 1].h) * 1.9 ? "\n\n" : "\n"; text += l.text; });
+      text = text.replace(/\r/g, "").trim();
+      const page = { n, text, scan: text.replace(/\s/g, "").length < 25 };
+      if (!a.textOnly) { page.w = vp.width; page.h = vp.height; }
+      pages.push(page); p.cleanup();
+    }
+    const count = doc.numPages; await doc.destroy();
+    return { pages, count };
+  },
+  /** {b64, pages} → {pages: [{n, ar, words: [[x, y, w, h, text]]}]} — page fractions, top-left origin */
+  async pdfWords(a) {
+    const doc = await open(a.b64); const out = [];
+    for (const n of [...new Set(a.pages || [1])].filter((x) => x >= 1 && x <= doc.numPages).slice(0, 40)) {
+      const p = await doc.getPage(n); const vp = p.getViewport({ scale: 1 }); const tc = await p.getTextContent();
+      const words = [];
+      for (const it of tc.items) {
+        if (!it.str || !it.str.trim()) continue;
+        const [x, y] = vp.convertToViewportPoint(it.transform[4], it.transform[5]);
+        const h = Math.max(1, Math.hypot(it.transform[2], it.transform[3]) * vp.scale), w = it.width * vp.scale;
+        // the run is cut into words; each word's width is its share of the characters
+        const str = fixRun(it.str); const parts = str.split(/(\s+)/); const total = str.length || 1; let off = 0;
+        const rtl = it.dir === "rtl" || arabic(str);
+        for (const part of parts) {
+          const cw = (part.length / total) * w;
+          if (part.trim()) { const wx = rtl ? x + w - off - cw : x + off; words.push([r4(wx / vp.width), r4((y - h * 0.82) / vp.height), r4(cw / vp.width), r4(h * 1.08 / vp.height), part]); }
+          off += cw;
+        }
+      }
+      out.push({ n, ar: r4(vp.width / vp.height), words }); p.cleanup();
+    }
+    await doc.destroy();
+    return { pages: out };
+  },
+  /** {b64} → {items: [{title, page, level}]} */
+  async pdfOutline(a) {
+    const doc = await open(a.b64); const items = [];
+    const walk = async (list, level) => {
+      for (const o of list || []) {
+        let page = 0;
+        try { const dest = typeof o.dest === "string" ? await doc.getDestination(o.dest) : o.dest; if (dest && dest[0]) page = (await doc.getPageIndex(dest[0])) + 1; } catch (e) {}
+        items.push({ title: String(o.title || "").trim(), page, level });
+        if (o.items && o.items.length && items.length < 2000) await walk(o.items, level + 1);
+      }
+    };
+    await walk(await doc.getOutline(), 0);
+    await doc.destroy();
+    return { items };
+  },
+  /** {b64, pages (empty = all), width, max} → {images: [{n, image: data URL}]} */
+  async pdfImages(a) {
+    const doc = await open(a.b64); const images = [];
+    const want = (a.pages && a.pages.length ? a.pages : Array.from({ length: doc.numPages }, (_, i) => i + 1)).filter((x) => x >= 1 && x <= doc.numPages).slice(0, a.max || 60);
+    const canvas = document.createElement("canvas"); const ctx = canvas.getContext("2d");
+    for (const n of want) {
+      const p = await doc.getPage(n); const vp1 = p.getViewport({ scale: 1 });
+      const vp = p.getViewport({ scale: Math.min(4, (a.width || 1240) / vp1.width) });
+      canvas.width = Math.round(vp.width); canvas.height = Math.round(vp.height);
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await p.render({ canvasContext: ctx, viewport: vp }).promise;
+      images.push({ n, image: canvas.toDataURL("image/jpeg", 0.86) }); p.cleanup();
+    }
+    await doc.destroy();
+    return { images };
+  },
+};
+window.pdfOp = async (op, arg) => { const f = ops[op]; if (!f) throw new Error("Unknown PDF tool: " + op); return JSON.stringify(await f(arg)); };
+window.pdfReady = true;
+</script>

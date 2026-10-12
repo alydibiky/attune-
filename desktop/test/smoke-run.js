@@ -33,9 +33,26 @@ module.exports = function smokeRun(win, modelPath, app) {
         const mapOk = Array.isArray(JSON.parse(window.AttuneNative.mapPacks()).packs) && window.AttuneNative.mapRead(JSON.stringify({ path: "../x" })) === "";
         const search = await call("search", { q: "Cairo Tower height", pages: 1 }).then((r) => ({ hits: r.hits.length, via: r.via, why: r.why })).catch((e) => ({ error: String(e && e.message || e) }));
         const packSearch = await call("knowSearch", { q: "crane", k: 3 }).then((r) => r.passages.length).catch((e) => "error: " + (e && e.message || e));
+        // PDFs (lib/pdf.js): print a page, read it back, a page picture, word boxes, make a PDF from blocks, merge / split / rotate
+        let pdf = {};
+        try {
+          const made = await call("htmlToPdf", { html: "<html><body style='font:14pt Arial'><h1>Liebherr LTM 1090</h1><p>Load chart page one.</p><p dir=rtl>رافعة متحركة</p></body></html>", w: 595.3, h: 841.9 });
+          const txt = await call("pdfText", { b64: made.b64 });
+          const pics = await call("pdfImages", { b64: made.b64, width: 600, max: 1 });
+          const words = await call("pdfWords", { b64: made.b64, pages: [1] });
+          const out = await call("pdfOutline", { b64: made.b64 });
+          const blocks = await call("makePdf", { blocks: [{ type: "h1", text: "Report" }, { type: "p", text: "Hello" }, { type: "table", rows: [["a", "b"], ["1", "2"]] }] });
+          const merged = await call("pdfEdit", { op: "merge", files: [made.b64, blocks.b64] });
+          const split = await call("pdfEdit", { op: "split", b64: merged.files[0].b64 });
+          const rot = await call("pdfEdit", { op: "rotate", b64: made.b64, pages: [], degrees: 90 });
+          const t = txt.pages[0].text;
+          pdf = { printed: made.bytes, text: t.slice(0, 80), count: txt.count, w: txt.pages[0].w, picture: !!(pics.images[0] && pics.images[0].image.startsWith("data:image/jpeg")),
+            words: words.pages[0].words.length, outline: Array.isArray(out.items), blocks: blocks.bytes, merged: merged.files[0].pages, split: split.files.length, rotated: rot.files[0].pages };
+          pdf.ok = t.includes("Liebherr LTM 1090") && t.includes("Load chart") && pdf.picture && pdf.words >= 5 && pdf.outline && pdf.merged >= 2 && pdf.split === pdf.merged && pdf.rotated === 1 && Math.abs(pdf.w - 595.3) < 2 && t.includes("رافعة متحركة");
+        } catch (e) { pdf = { ok: false, error: String(e && e.message || e) }; }
         const live = ${JSON.stringify(process.env.ATTUNE_LIVE === "1")};
-        const bridgeOk = info.packSearch === true && sidebar && knowOk && mapOk && packSearch === 0 && !String(search.error || "").includes("Not available") && (!live || search.hits > 0);
-        return { ok: !!(res.content && deltas > 0) && bridgeOk, packSearchEngine: info.packSearch, winW, sidebar, knowOk, mapOk, search, packSearch, deltas, content: res.content, streamedMatches: streamed === res.content,
+        const bridgeOk = pdf.ok && info.packSearch === true && sidebar && knowOk && mapOk && packSearch === 0 && !String(search.error || "").includes("Not available") && (!live || search.hits > 0);
+        return { ok: !!(res.content && deltas > 0) && bridgeOk, packSearchEngine: info.packSearch, pdf, winW, sidebar, knowOk, mapOk, search, packSearch, deltas, content: res.content, streamedMatches: streamed === res.content,
           chatMs: Date.now() - t1, totalMs: Date.now() - t0, engine: eng, installed: models.models.length, stages,
           pageChars: document.body.innerText.length, desktopFlag: !!window.__attuneDesktop,
           info: { platform: info.platform, ramGB: info.ramGB, cores: info.cores, avx2: info.avx2, gpus: info.gpus, vramGB: info.vramGB } };
