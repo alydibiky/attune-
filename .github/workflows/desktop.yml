@@ -7,11 +7,18 @@ name: Desktop app (Windows, macOS, Linux)
 # chip there, so the CPU path): the packaged app starts, installs a 0.8B model,
 # and streams an answer through the same bridge the phone uses.
 # Installers are UNSIGNED for now (see DESKTOP_PLAN.md, "Signing").
+# v6.24 (Ali, 12 Oct 2026: "Windows first"): every push to main that changes the desktop shell or the page
+# builds the Windows installer (and Linux, cheap, as a second check). macOS: run by hand with "all systems".
 on:
   workflow_dispatch:
+    inputs:
+      mac:
+        description: "Also build macOS"
+        type: boolean
+        default: false
   push:
-    branches: [desktop-shell]   # the prototype branch; a run button only appears once this file is on main
-    paths: ["desktop/**", ".github/workflows/desktop.yml"]
+    branches: [main]
+    paths: ["desktop/**", "app/src/main/assets/www/**", ".github/workflows/desktop.yml"]
 
 env:
   LLAMA_COMMIT: 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
@@ -22,16 +29,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            name: linux-x64
-            variant: vulkan
-          - os: windows-latest
-            name: windows-x64
-            variant: vulkan
-          - os: macos-latest
-            name: macos-arm64
-            variant: metal
+        # Windows + Linux on every push; macOS too when run by hand with "Also build macOS"
+        include: ${{ fromJSON(inputs.mac && '[{"os":"windows-latest","name":"windows-x64","variant":"vulkan"},{"os":"ubuntu-latest","name":"linux-x64","variant":"vulkan"},{"os":"macos-latest","name":"macos-arm64","variant":"metal"}]' || '[{"os":"windows-latest","name":"windows-x64","variant":"vulkan"},{"os":"ubuntu-latest","name":"linux-x64","variant":"vulkan"}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     defaults:
@@ -100,7 +99,10 @@ jobs:
 
       - name: Unit checks
         working-directory: desktop
-        run: node test/unit.js
+        run: |
+          node test/unit.js
+          node --no-warnings test/web.js
+          ATTUNE_LIVE=1 node --no-warnings test/packs.js
 
       - name: Small model for the smoke test
         run: curl -sSL --retry 5 -o "$RUNNER_TEMP/q08.gguf" https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B-Q4_K_M.gguf
@@ -108,6 +110,7 @@ jobs:
       - name: Smoke test from source (streams an answer)
         working-directory: desktop
         run: |
+          export ATTUNE_LIVE=1
           if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a node test/smoke.js "$RUNNER_TEMP/q08.gguf"; else node test/smoke.js "$RUNNER_TEMP/q08.gguf"; fi
 
       - name: Package (unsigned)
@@ -117,6 +120,7 @@ jobs:
       - name: Smoke test the packaged app
         working-directory: desktop
         run: |
+          export ATTUNE_LIVE=1
           if [ "$RUNNER_OS" = "Linux" ]; then APP="$(ls -d dist/linux-unpacked)/attune-desktop"; [ -x "$APP" ] || APP="$(ls dist/linux-unpacked/* | grep -iv '\.so\|\.pak\|\.dat\|\.bin\|\.json\|\.html' | head -1)"; xvfb-run -a node test/smoke.js "$RUNNER_TEMP/q08.gguf" "$APP"
           elif [ "$RUNNER_OS" = "Windows" ]; then node test/smoke.js "$RUNNER_TEMP/q08.gguf" "dist/win-unpacked/Attune.exe"
           else node test/smoke.js "$RUNNER_TEMP/q08.gguf" "$(ls -d dist/mac*/Attune.app)/Contents/MacOS/Attune"; fi

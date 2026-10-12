@@ -6,8 +6,11 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 const QUICK = ["info", "models", "engine", "log", "remove", "wake", "setAirGap", "setTextZoom", "keepAwake",
-  "cancel", "logLine", "netLog", "clearNetLog", "stashPut", "stashGet", "stashDel", "share"];
-const SLOW = ["chat", "install", "use", "restart", "fetchJson", "saveFile"];
+  "cancel", "logLine", "netLog", "clearNetLog", "stashPut", "stashGet", "stashDel", "share",
+  "unmetered", "knowPacks", "knowRemove", "mapPacks", "mapRemove", "mapRead"];
+const SLOW = ["chat", "install", "use", "restart", "fetchJson", "saveFile",
+  "search", "news", "fetchText", "fetchShare", "dorarSearch", "fxRates",
+  "knowRemote", "knowSearch", "knowInstall", "knowPackText", "foodPackText", "mapRemote", "mapSearch", "mapInstall"];
 
 const api = { desktop: true };
 for (const m of QUICK) api[m] = (...a) => ipcRenderer.sendSync("native-quick", m, a);

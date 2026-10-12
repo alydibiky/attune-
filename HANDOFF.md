@@ -1006,6 +1006,26 @@ internet searching … improve internet searching and make it faster".
   (6) desktop.yml on main, Windows installer link for Ali; (7) Studio pictures (sd-cli) later.
 - **Testing here:** Electron downloads and runs in this sandbox (`npm i electron@44.5.1` works); run with `xvfb-run -a`.
 - Progress notes go below this line as each step lands.
+- **Step 1 DONE (v6.24, versionCode 85): the Claude/ChatGPT layout** — `web-src/side-ui.jsx`: `useDesktopWide()` (≥ 1024 px),
+  `useSide()` (open/closed remembered in `attune:side:open`; sets `html.att-wide`, `--side` = 268px, `--nav-h` = 0),
+  `DesktopSide` (New chat, search over chats AND tools, Chat/Instant/Money/Business/Mind, "All tools" in MORE_GROUPS,
+  recent chats grouped by day with rename/delete, engine + Profile/Plan/Backup/Settings at the bottom).
+  Chat publishes its list as the `attune-chats` event and obeys `attune-chat-cmd` {op: rename|delete}; open = `setOpenChatId`.
+  Pinned panels carry the class `att-shift` (CSS in `build/shell.html`: `html.att-wide .att-shift{inset-inline-start:var(--side)}`)
+  and use `var(--nav-h, 58px)` instead of 58px. Phones unchanged. Test: `tests/e2e_v724desktop.py` (`new_page(..., desktop=(w,h))`).
+- **Step 2 DONE: web search on the desktop** — `desktop/lib/web.js` = WebTools.kt in Node (cheerio 1.0.0): 4 engines, shared
+  deadline, rank fusion, no Wikipedia, junk filter, pages read with tables as rows, og:image thumbnails (Electron nativeImage),
+  Google News RSS. Requests go through Electron `net.fetch` (system proxy + certificates). Bridge: search, news, fetchText,
+  fetchShare, dorarSearch, fxRates. Test: `desktop/test/web.js` (sample pages; the real engines run in CI via the smoke test).
+- **Step 3 DONE: knowledge packs + maps on the desktop** — `desktop/lib/packs.js` = KnowPacks.kt + MapPacks.kt (same releases,
+  same BM25 search; `node:sqlite` has FTS4 + matchinfo). Bridge: knowPacks/knowRemote/knowInstall/knowRemove/knowSearch/
+  knowPackText/foodPackText, mapPacks/mapRemote/mapInstall (routes, parts)/mapRemove/mapRead/mapSearch, unmetered.
+  Test: `desktop/test/packs.js` (+ LIVE: the real cranes pack downloaded, checked, searched — passes here and in CI).
+- **CI:** `desktop.yml` now runs on pushes to `main` that touch `desktop/**` or the built page: Windows + Linux
+  (macOS by hand: "Also build macOS"). Unit + web + live packs + smoke (sidebar, bridge, live web search) + package + smoke the
+  packaged app. Artifact for Ali: `attune-desktop-windows-x64` (Attune Setup 6.24.0.exe, unsigned → "More info → Run anyway").
+- **Next:** step 4 (PDFs + converters: pdfText/pdfWords/pdfOutline/pdfImages/makePdf/pdfEdit/htmlToPdf), step 5 (hash, clipboardText,
+  readText, speak/stopSpeaking, schedule → Notification, doctor/speed/setSpeed, foodClip*), then Studio (sd-cli), signing, updates.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

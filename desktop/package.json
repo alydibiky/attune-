@@ -1,7 +1,7 @@
 {
   "name": "attune-desktop",
   "productName": "Attune",
-  "version": "0.1.0",
+  "version": "6.24.0",
   "description": "Attune for Windows, macOS and Linux: the same app, private models on this computer.",
   "main": "main.js",
   "author": "Aly Aldibiki",
@@ -21,14 +21,55 @@
   "build": {
     "appId": "com.aldibiki.attune.desktop",
     "productName": "Attune",
-    "directories": { "output": "dist" },
-    "files": ["main.js", "preload.js", "lib/**", "test/smoke-run.js"],
-    "extraResources": [
-      { "from": "../app/src/main/assets/www", "to": "www", "filter": ["**/*"] },
-      { "from": "engine", "to": "engine", "filter": ["**/*"] }
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**",
+      "test/smoke-run.js"
     ],
-    "win": { "target": ["nsis", "zip"] },
-    "mac": { "target": ["dmg", "zip"], "category": "public.app-category.productivity", "identity": null },
-    "linux": { "target": ["AppImage", "tar.gz"], "category": "Office", "maintainer": "Attune <noreply@example.invalid>" }
+    "extraResources": [
+      {
+        "from": "../app/src/main/assets/www",
+        "to": "www",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "engine",
+        "to": "engine",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity",
+      "identity": null
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "tar.gz"
+      ],
+      "category": "Office",
+      "maintainer": "Attune <noreply@example.invalid>"
+    }
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0"
   }
 }

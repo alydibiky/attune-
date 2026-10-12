@@ -4,13 +4,15 @@
 // Data lives in the per-user app-data folder (ATTUNE_HOME overrides it):
 //   Windows %APPDATA%\Attune  ·  macOS ~/Library/Application Support/Attune  ·  Linux ~/.config/Attune
 "use strict";
-const { app, BrowserWindow, ipcMain, protocol, net, dialog, clipboard, shell, powerSaveBlocker } = require("electron");
+const { app, BrowserWindow, ipcMain, protocol, net, dialog, clipboard, shell, powerSaveBlocker, nativeImage } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
 const models = require("./lib/models");
 const device = require("./lib/device");
 const { Engine } = require("./lib/engine");
+const { makeWeb } = require("./lib/web");
+const { makePacks, Cancelled } = require("./lib/packs");
 
 if (process.env.ATTUNE_HOME) app.setPath("userData", process.env.ATTUNE_HOME);
 const DATA = app.getPath("userData");
@@ -40,10 +42,31 @@ const engine = new Engine({ engineRoots: ENGINE_ROOTS, logFile: path.join(DATA, 
 const netLog = [];
 const logNet = (host, ok, why) => { netLog.push({ t: Date.now(), host, ok, why }); if (netLog.length > 200) netLog.shift(); };
 
+// Every request to the internet passes here: the offline lock stops it, and the Connections log records it.
+function online(url, why) {
+  let host = ""; try { host = new URL(url).hostname; } catch (e) {}
+  if (state.airGap) { logNet(host, false, why + " (offline lock)"); throw new Error("Offline lock is on — " + why + " needs the internet. Turn the lock off in Engine first."); }
+  logNet(host, true, why);
+}
+// a picture from a search result → a small JPEG data: URL (320 px wide); the page never loads anything from the web
+async function thumb(src) {
+  try {
+    online(src, "a picture from a search result");
+    const r = await net.fetch(src); if (!r.ok) return null;
+    const buf = Buffer.from(await r.arrayBuffer()); if (buf.length > 3_000_000) return null;
+    const img = nativeImage.createFromBuffer(buf); const sz = img.getSize();
+    if (img.isEmpty() || sz.width < 200 || sz.height < 120) return null;
+    const out = img.resize({ width: 320, quality: "good" });
+    return "data:image/jpeg;base64," + out.toJPEG(72).toString("base64");
+  } catch (e) { return null; }
+}
+const web = makeWeb({ online, thumb, fetch: (u, o) => net.fetch(u, o) });
+const packs = makePacks({ data: DATA, online, fetch: (u, o) => net.fetch(u, o) });
+
 let gpus = null;
 function info() {
   if (!gpus) { const b = engine.binary(); gpus = b ? device.listGpus(b.bin, b.env) : []; }
-  return device.info(DATA, gpus, { airGap: !!state.airGap, desktopShell: "electron", appVersion: app.getVersion() });
+  return device.info(DATA, gpus, { airGap: !!state.airGap, desktopShell: "electron", appVersion: app.getVersion(), packSearch: packs.canSearch });
 }
 const activeModel = () => (state.active && models.get(DATA, state.active)) || models.list(DATA).slice(-1)[0] || null;
 
@@ -77,6 +100,12 @@ const QUICK = {
   stashGet: (name) => { try { return /^[a-z0-9][a-z0-9._-]{0,63}$/.test(name) ? fs.readFileSync(path.join(DATA, "stash", name), "utf8") : ""; } catch (e) { return ""; } },
   stashDel: (name) => { try { fs.unlinkSync(path.join(DATA, "stash", name)); return true; } catch (e) { return false; } },
   share: (text) => { clipboard.writeText(String(text || "")); },   // a computer has no share sheet: copy it
+  unmetered: () => true,                                            // a computer's connection: big downloads don't wait
+  knowPacks: () => JSON.stringify({ packs: packs.knowList() }),
+  knowRemove: (id) => packs.knowRemove(id),
+  mapPacks: () => JSON.stringify({ packs: packs.mapList(), assets: packs.assetsInstalled() }),
+  mapRemove: (code) => packs.mapRemove(code),
+  mapRead: (arg) => { try { return packs.mapRead(JSON.parse(arg)); } catch (e) { return ""; } },
 };
 
 // ---- slow calls: answer later by id ---------------------------------------------
@@ -131,8 +160,63 @@ async function useModel(id, modelId) {
   else reject(id, engine.error || "The model could not be loaded");
 }
 
+// one download per pack: a second call for the same pack joins the one running (as on the phone)
+const packJobs = new Map();
+function joined(key, id, run) {
+  const job = packJobs.get(key);
+  if (job) { job.ids.push(id); cancels.set(id, job.flag); progress(id, 0, "", ""); return; }
+  const flag = { cancelled: false }; const j = { ids: [id], flag }; packJobs.set(key, j); cancels.set(id, flag);
+  const mb = (n) => (n / 1e6).toFixed(1);
+  run((done, total, name) => { const pct = total > 0 ? Math.max(0, Math.min(99, Math.floor(done * 100 / total))) : 0; for (const c of j.ids) progress(c, pct, name, mb(done) + " / " + mb(total) + " MB"); }, () => flag.cancelled)
+    .then((v) => { for (const c of j.ids) resolve(c, v); })
+    .catch((e) => { for (const c of j.ids) reject(c, e instanceof Cancelled ? "Download paused — it continues where it stopped next time." : (e.message || "Download failed")); })
+    .finally(() => { packJobs.delete(key); for (const c of j.ids) cancels.delete(c); });
+}
+const viaJson = (f) => async (id, arg) => { try { resolve(id, await f(JSON.parse(arg || "{}"))); } catch (e) { reject(id, e.message || String(e)); } };
 const SLOW = {
   chat,
+  search: viaJson((a) => web.search(a)),
+  news: viaJson((a) => web.news(a)),
+  async fetchText(id, url) {
+    try { const t = await web.pageText(url, 12000); if (!t) reject(id, "Could not read that page"); else resolve(id, { url, text: t }); } catch (e) { reject(id, e.message); }
+  },
+  async fetchShare(id, url) {
+    // the raw page of a conversation shared from another AI — only these hosts (as on the phone)
+    if (!/^https:\/\/(share\.gemini\.google|gemini\.google\.com|g\.co|chatgpt\.com|chat\.openai\.com|claude\.ai|(www\.)?perplexity\.ai|grok\.com|x\.com|copilot\.microsoft\.com|chat\.deepseek\.com|poe\.com|(www\.)?meta\.ai)\//.test(url)) return reject(id, "Only links shared from an AI chat can be read here");
+    try {
+      online(url, "a shared AI conversation");
+      const r = await net.fetch(url, { headers: { "Accept-Language": "en,ar;q=0.8" } });
+      if (!r.ok) return reject(id, "The page answered HTTP " + r.status);
+      resolve(id, { url: r.url || url, html: (await r.text()).slice(0, 4_000_000) });
+    } catch (e) { reject(id, e.message || "Couldn't open the link"); }
+  },
+  async dorarSearch(id, q) {
+    try {
+      const url = "https://dorar.net/dorar_api.json?skey=" + encodeURIComponent(String(q).slice(0, 200));
+      online(url, "Dorar (الدرر السنية)");
+      const r = await net.fetch(url, { headers: { Accept: "application/json" } });
+      if (!r.ok) return reject(id, "Dorar answered HTTP " + r.status);
+      resolve(id, { body: (await r.text()).slice(0, 2_000_000) });
+    } catch (e) { reject(id, e.message || "Couldn't reach Dorar"); }
+  },
+  async fxRates(id) {
+    try {
+      const url = "https://open.er-api.com/v6/latest/USD"; online(url, "exchange rates");
+      const r = await net.fetch(url); if (!r.ok) return reject(id, "Exchange rates answered HTTP " + r.status);
+      resolve(id, { body: (await r.text()).slice(0, 200_000) });
+    } catch (e) { reject(id, e.message || "Couldn't get exchange rates"); }
+  },
+  knowRemote: viaJson((a) => packs.knowRemote(a.id)),
+  knowSearch: viaJson(async (a) => packs.knowSearch(a)),
+  knowInstall(id, arg) { let a; try { a = JSON.parse(arg); } catch (e) { return reject(id, "Unknown pack"); } joined("know:" + a.id, id, (p, c) => packs.knowInstall(a.id, p, c)); },
+  knowPackText: viaJson(async (a) => ({ name: a.name, text: await packs.knowPackText(a.tag, a.name) })),
+  async foodPackText(id, name) { try { resolve(id, { name, text: await packs.foodPackText(name) }); } catch (e) { reject(id, e.message || "Couldn't download the food pack"); } },
+  mapRemote: viaJson((a) => packs.mapRemote(a.code)),
+  mapSearch: viaJson(async (a) => ({ places: packs.mapSearch(a) })),
+  mapInstall(id, arg) {
+    let a; try { a = JSON.parse(arg); } catch (e) { return reject(id, "Unknown map"); }
+    joined("map:" + a.code, id, (p, c) => (a.routesOnly ? packs.mapInstallRoutes(a.code, p, c) : packs.mapInstall(a.code, p, c, !!a.routes)));
+  },
   async install(id, arg) {
     const a = JSON.parse(arg || "{}");
     if (state.airGap && !a.path) return reject(id, "Offline lock is on — downloading a model needs the internet. Turn the lock off in Engine first.");

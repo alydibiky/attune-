@@ -1,6 +1,6 @@
 # Attune — the whole app in one handoff (read this first)
 
-_Up to date: 12 Oct 2026, **v6.23** (versionCode 84) on `main` = branch `ccr-a0eb3595-e2c7a7`._
+_Up to date: 12 Oct 2026, **v6.24** (versionCode 85) on `main` = branch `ccr-a0eb3595-e2c7a7`._
 This file is the map. Details and history are in `HANDOFF.md` (§5.x = one section per release, newest at the end:
 §5.44–§5.60 cover 10–12 Oct 2026). Ali's raw problem lists are in `NEXT_SESSION.md`. The desktop plan is in
 `DESKTOP_PLAN.md`.
@@ -103,7 +103,7 @@ Google Play Billing.
 ## 6. What is open (by priority)
 1. **DESKTOP APP — in progress (12 Oct 2026).** Ali: "like Claude and ChatGPT" and **Windows first**. See HANDOFF §5.60 and
    `DESKTOP_PLAN.md`.
-   - Exists: `desktop/`, an Electron shell (chat, models, engine, info, stash, save, food JSON, offline lock). CI is `desktop.yml`, last green run 37169225266 (4 Oct, on the old `desktop-shell` branch; the push trigger still names that branch).
+   - Exists (v6.24): `desktop/`, an Electron shell — chat, models, engine, web search, knowledge packs, maps, food pack, offline lock — and the Claude/ChatGPT layout in `web-src/side-ui.jsx`. CI `desktop.yml` builds the Windows installer on every push to `main` that touches `desktop/` or the page. Done steps and what is next: HANDOFF §5.60.
    - To do, in order:
      1. A wide layout in `web-src` like Claude/ChatGPT: left sidebar with New chat, chat history and tools; content on the right; chat in a centred column.
      2. Web search on the desktop (port `WebTools.kt` to Node).
@@ -147,6 +147,7 @@ Google Play Billing.
 | v6.21 | 12 Oct | Maps: offline directions and Overture places; 7 Q&A packs; packs before the web; faster search |
 | v6.22 | 12 Oct | Fact sheet from every page in full (the phone-only "loophole"); cars pack with Canadian data (91k); Business phone + computer |
 | v6.23 | 12 Oct | Fit diary: edit name/grams/calories/macros/meal of a logged food; copy one food to any day and meal |
+| v6.24 | 12 Oct | Computer layout like Claude/ChatGPT (sidebar); the Windows app gets web search, knowledge packs and maps |
 
 ## 8. Prompt for the next session (paste as is)
 ```
