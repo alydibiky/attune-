@@ -1030,7 +1030,10 @@ internet searching … improve internet searching and make it faster".
   HTML; pdfEdit = pdf-lib merge/split/pick/rotate/annotate. Arabic stored as shaped letters in visual order is put back (fixRun).
   NOT ported: the phone's PDF→Word layout extras (`lines` with fonts/colours, `rects`, `imgs`, `glyphs`) — the converter falls
   back to plain paragraphs on the desktop. Tested in the smoke test (print → read back EN+AR, picture, words, merge, split, rotate).
-- **Next:** step 5 (hash, clipboardText,
+- **Step 5 PART DONE:** reminders → system notifications (`desktop/lib/reminders.js`; ring while Attune is open; click opens
+  the reminder via the page's `attune-share` event), clipboardText, hash (model check). Read aloud uses the browser's voices
+  (chat.jsx no longer calls a missing NATIVE.stopSpeaking). Green: Windows + Linux run 38264160588, APK 38264160569.
+- **Next:** rest of step 5 (hash, clipboardText,
   readText, speak/stopSpeaking, schedule → Notification, doctor/speed/setSpeed, foodClip*), then Studio (sd-cli), signing, updates.
 
 ## 6. How to fix Ali's problems well (method)
