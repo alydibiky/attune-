@@ -60,7 +60,17 @@ export function tr(s, vars) {
     else if (typeof window !== "undefined" && window.__trMiss && /[A-Za-z]{2}/.test(s)) window.__trMiss.add(s);
   }
   if (vars) out = out.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? String(vars[k]) : m));
+  if (ON_DESKTOP) out = forDesktop(out);
   return out;
+}
+
+// v6.25 — in the Windows/Mac app the words say "computer", not "phone" (Ali: "it is not optimized for desktop").
+// A phone number, a phone call and the phone's own apps keep their word.
+const ON_DESKTOP = typeof window !== "undefined" && !!(window.AttuneNative && window.AttuneNative.desktop);
+export function forDesktop(t) {
+  return String(t)
+    .replace(/\b(your|this|the) phone(?!\s*(number|numbers|call|calls|app|apps|book))\b('s)?/gi, (m, w, _x, s) => (/^[A-Z]/.test(w) ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w.toLowerCase()) + " computer" + (s || ""))
+    .replace(/على هاتفك/g, "على جهازك").replace(/على الهاتف/g, "على الجهاز").replace(/في هاتفك/g, "في جهازك").replace(/هاتفك/g, "جهازك");
 }
 
 /** Numbers with Western digits in both languages: Egyptian business documents

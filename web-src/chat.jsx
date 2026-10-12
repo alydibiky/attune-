@@ -509,9 +509,12 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     seenSignal.current = newChatSignal;
     stop(); setActiveId(null); setText(""); setImage(null); setPending(null);
   }, [newChatSignal]);
+  const [newAsk, setNewAsk] = useState(null);
+  useEffect(() => { if (newAsk && !activeId && !busy) { const t = newAsk; setNewAsk(null); ask(t, { now: true }); } }, [newAsk, activeId, busy]);
   useEffect(() => { if (pendingAsk && chat && chat.imported && !busy) { const t = pendingAsk; setPendingAsk(null); ask(t, { now: true }); } }, [pendingAsk, chat, busy]);
   useEffect(() => {
     if (!composerSeed) return;
+    if (composerSeed.startsWith("\u0002")) { const t = composerSeed.slice(1); clearComposerSeed && clearComposerSeed(); stop(); setActiveId(null); setPending(null); setText(""); setNewAsk(t); return; }   // v6.25: from the computer's Home: a NEW chat, sent at once
     if (composerSeed.startsWith("\u0001")) { const t = composerSeed.slice(1); clearComposerSeed && clearComposerSeed(); setTimeout(() => ask(t, { now: true }), 80); return; }   // v6.12: sent at once (a shared AI conversation)
     setText(composerSeed); clearComposerSeed && clearComposerSeed(); setTimeout(() => taRef.current && taRef.current.focus(), 50);
   }, [composerSeed]);

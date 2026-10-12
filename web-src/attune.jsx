@@ -6,14 +6,15 @@ import {
   ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users,
   AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2,
   Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple,
-  BookOpen, PanelLeft,
+  BookOpen, PanelLeft, House,
 } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
 import { logPrompt, parseLog, isQuestion } from "./yusr/logtext.js";
 import { ChatHome, Md, systemPrompt as chatSystemPrompt, loadChats } from "./chat.jsx";
-import { DesktopSide, useDesktopWide, useSide } from "./side-ui.jsx";
+import { DesktopSide, useDesktopWide, useSide, noteToolUsed } from "./side-ui.jsx";
+import { DesktopHome, ToolsPage } from "./desk-ui.jsx";
 import { tr, getLang, setLang, fmtNum, dateLocale } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
@@ -7342,7 +7343,7 @@ function tierOfInstalled(m) {
   return MODEL_TIERS.find((x) => x.realName && !!x.fast === fast && String(m.label || "").toLowerCase().replace(/[\s-]+/g, "").includes(x.realName.toLowerCase().replace(/[\s-]+/g, ""))) || null;
 }
 
-const MODE_TITLES = { knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const MODE_TITLES = { home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
@@ -7404,16 +7405,18 @@ ${(f.rec.output || "").slice(0, 600)}`).join("\n\n")}`;
 }
 
 export default function App() {
-  const [mode, setModeRaw] = useState("chat");
+  // v6.25: a computer opens on Home (Ali picked "A + C"); a phone on Chat
+  const wideAtStart = () => { try { return window.matchMedia("(min-width: 1024px)").matches; } catch (e) { return false; } };
+  const [mode, setModeRaw] = useState(() => (wideAtStart() ? "home" : "chat"));
   // v5.41 (Ali: "when I press back I can't go to the previous page, it leaves the app"): every screen
   // change is remembered, and Back returns to the previous screen — Studio → Learn daily → Chat.
-  const modeRef = useRef("chat"); modeRef.current = mode;
+  const modeRef = useRef(mode); modeRef.current = mode;
   const modeHist = useRef([]);
   const setMode = (m) => {
     if (m === "notes") m = "shelf";                              // v6.11: the old Notes route opens the Shelf
     const cur = modeRef.current;
     if (!m || m === cur) return;
-    if (m === "chat") modeHist.current = [];                    // Chat is home: Back from it leaves the app
+    if (m === "chat" || m === "home") modeHist.current = [];   // Chat (phone) / Home (computer) is home: Back from it leaves the app
     else { modeHist.current = modeHist.current.filter((x) => x !== m); modeHist.current.push(cur); if (modeHist.current.length > 30) modeHist.current.shift(); }
     modeRef.current = m;
     setModeRaw(m);
@@ -7422,7 +7425,7 @@ export default function App() {
   // (Android's rule); being SENT from one screen to another (Learn → Studio) is what Back retraces
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
   const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
-  const navTo = (m) => { if (m === "notes") m = "shelf"; modeHist.current = []; if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); modeRef.current = m; setModeRaw(m); };
+  const navTo = (m) => { if (m === "notes") m = "shelf"; noteToolUsed(m); modeHist.current = []; if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -7435,6 +7438,8 @@ export default function App() {
   // v6.24: a computer-sized screen gets a sidebar like Claude / ChatGPT instead of the bottom bar
   const wide = useDesktopWide();
   const side = useSide(wide);
+  // the computer's own pages don't exist on a phone-sized window: going narrow returns to Chat
+  useEffect(() => { if (!wide && (modeRef.current === "home" || modeRef.current === "tools")) { modeRef.current = "chat"; setModeRaw("chat"); } }, [wide]);
   const [showBackup, setShowBackup] = useState(false);   // encrypted backup / restore
   const [reminders, setRemindersRaw] = useState(() => loadReminders());
   const setReminders = (list) => { setRemindersRaw(saveReminders(list)); };
@@ -9024,7 +9029,8 @@ export default function App() {
   // home tab. Shown only when there is somewhere to go back to.
   const engineText = modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : (NATIVE && (installedModels || []).length ? tr("Asleep — wakes when needed") : tr("No model"));
   const _anyOverlay = showBackup || showEngine || showProfile || showUpgrade || showMemory || showOrg || showSource || showCustom || drawerOpen || moreOpen;
-  const canGoBack = _anyOverlay || mode !== "chat" || modeHist.current.length > 0;
+  const rootMode = wide ? "home" : "chat";                    // v6.25: the screen Back ends at
+  const canGoBack = _anyOverlay || mode !== rootMode || modeHist.current.length > 0;
   const _anyOverlayRef = useRef(false); _anyOverlayRef.current = _anyOverlay;
   const goBack = () => {
     if (drawerOpen) return setDrawerOpen(false);
@@ -9042,7 +9048,7 @@ export default function App() {
     // v5.41: back to the screen you came from (it reopens where you were — useSticky)
     const prev = modeHist.current.pop();
     if (prev) { modeRef.current = prev; setModeRaw(prev); return; }
-    if (mode !== "chat") { modeRef.current = "chat"; setModeRaw("chat"); }
+    if (mode !== rootMode) { modeRef.current = rootMode; setModeRaw(rootMode); }
   };
 
   // Bridge for the phone's hardware/gesture Back. The native wrapper calls
@@ -9075,7 +9081,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
       {side.shown ? <DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-        places={[["chat", "Chat", MessageCircle], ["instant", "Instant", Zap], ["money", "Money", Wallet], ["business", "Business", Database], ["memory", "Mind", Brain]]}
+        places={[["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]]}
         tools={MORE_TOOLS} groups={MORE_GROUPS} loadChats={loadChats}
         onNewChat={() => { setMoreOpen(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
         onOpenChat={(id) => { setMoreOpen(false); setOpenChatId(id); navTo("chat"); }}
@@ -9083,19 +9089,19 @@ export default function App() {
         onClose={() => side.setOpen(false)} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
         openEngine={() => setShowEngine(true)} openProfile={() => setShowProfile(true)} openUpgrade={() => setShowUpgrade(true)}
         openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /> : null}
-      <div className={mode === "business" ? "" : (wide && mode !== "chat" ? "max-w-5xl" : "max-w-3xl") + " mx-auto px-3 " + (wide ? "pb-8" : "pb-24")}>
+      <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-5xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide ? "pb-8" : "pb-24")}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
-        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")}>
+        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || mode === "tools" ? " hidden" : "")}>
           {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
           {mode === "chat" ? (wide ? null :
             <button onClick={() => setDrawerOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Chats")}><Menu size={20} /></button>
-          ) : (
+          ) : wide ? null : (   /* v6.25: on a computer Back is the sidebar's ← (one arrow, not two) */
             <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
           )}
           <p className="text-base font-semibold text-white truncate">{tr(MODE_TITLES[mode] || "Attune")}</p>
           <div className="flex-1" />
-          <button onClick={() => setShowEngine(true)} className={`flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
+          <button onClick={() => setShowEngine(true)} className={`${wide ? "hidden " : ""}flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
             <Cpu size={12} />{modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : (NATIVE && (installedModels || []).length ? tr("Asleep — wakes when needed") : tr("No model"))}</button>
           {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="p-2 text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
           {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); }} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("New chat")}><Plus size={20} /></button> : null}
@@ -9120,7 +9126,12 @@ export default function App() {
           </div>
         ) : null}
 
-        <Guard key={"g-" + mode} name={mode}>{mode === "chat" ? (
+        <Guard key={"g-" + mode} name={mode}>{mode === "home" ? (
+          <DesktopHome tools={MORE_TOOLS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
+            onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
+        ) : mode === "tools" ? (
+          <ToolsPage tools={MORE_TOOLS} groups={MORE_GROUPS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
+        ) : mode === "chat" ? (
           <ChatHome key="chat" api={chatApi} drawerOpen={drawerOpen} setDrawerOpen={setDrawerOpen} newChatSignal={newChatSignal}
             composerSeed={chatSeed} clearComposerSeed={() => setChatSeed("")}
             spaceSeed={spaceSeed} clearSpaceSeed={() => setSpaceSeed(null)} openChatId={openChatId} clearOpenChat={() => setOpenChatId(null)} />
@@ -10848,7 +10859,7 @@ export default function App() {
           </div>
         )}
         {/* v5.29 UX: not on Chat — the fixed message box covered it (half-hidden text) */}
-        {mode !== "chat" && mode !== "fit" && mode !== "business" && mode !== "map" ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
+        {!wide && mode !== "chat" && mode !== "fit" && mode !== "business" && mode !== "map" ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
       </div>
       {toast && <div className="fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       <ConfirmHost />

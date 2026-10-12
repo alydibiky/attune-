@@ -381,7 +381,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
           {busy ? <p className="text-[11px] text-teal-400 flex items-center gap-1"><Loader2 size={12} className="animate-spin" />{busy}</p>
             : filing ? <p className="text-[11px] text-slate-500 flex items-center gap-1"><Sparkles size={11} />{tr("filing…")}</p> : null}
           <button onClick={() => setAdding(true)} aria-label={tr("Keep something")} data-testid="mind-new"
-            className="fixed z-40 end-5 bottom-24 w-14 h-14 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center shadow-xl shadow-black/40"><Plus size={26} /></button>
+            className="fixed z-40 end-5 bottom-24 lg:bottom-8 lg:end-8 w-14 h-14 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center shadow-xl shadow-black/40"><Plus size={26} /></button>
 
           {!pro ? (
             <p className="text-[11px] text-slate-500 bg-slate-900 border border-slate-800 rounded-xl p-2.5">

@@ -38,6 +38,29 @@ export function useSide(wide) {
   return { shown, open, setOpen };
 }
 
+// ---- v6.25: pinned tools (the ★ on the Tools page) and the tools used lately (the Home page) ----
+const PINS_KEY = "attune:side:pins", RECENT_KEY = "attune:tools:recent";
+const DEFAULT_PINS = ["convert", "fit", "map"];
+const readList = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return Array.isArray(v) ? v : d; } catch (e) { return d; } };
+export function usePins() {
+  const [pins, setPinsRaw] = useState(() => readList(PINS_KEY, DEFAULT_PINS));
+  useEffect(() => { const f = () => setPinsRaw(readList(PINS_KEY, DEFAULT_PINS)); window.addEventListener("attune-pins", f); return () => window.removeEventListener("attune-pins", f); }, []);
+  const toggle = (id) => {
+    const cur = readList(PINS_KEY, DEFAULT_PINS);
+    const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id].slice(-12);
+    try { localStorage.setItem(PINS_KEY, JSON.stringify(next)); } catch (e) {}
+    try { window.dispatchEvent(new Event("attune-pins")); } catch (e) {}
+  };
+  return [pins, toggle];
+}
+/** remember a tool was opened (most recent first, 8 kept) */
+export function noteToolUsed(id) {
+  if (!id || ["chat", "home", "tools"].includes(id)) return;
+  const next = [id, ...readList(RECENT_KEY, []).filter((x) => x !== id)].slice(0, 8);
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch (e) {}
+}
+export const recentTools = () => readList(RECENT_KEY, []);
+
 /** Recent chats, as Chat publishes them (falls back to what is stored). */
 function useChatList(loadChats) {
   const [st, setSt] = useState(() => ({ list: (loadChats() || []).map(summary), activeId: null }));
@@ -62,10 +85,10 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
   const { list, activeId } = useChatList(loadChats);
   const depth = useBackDepth();
   const [q, setQ] = useState("");
-  const [toolsOpen, setToolsOpen] = useState(() => { try { return localStorage.getItem("attune:side:tools") === "1"; } catch (e) { return false; } });
+  const [pins] = usePins();
+  const pinned = pins.map((id) => tools.find((t) => t[0] === id)).filter(Boolean);
   const [renaming, setRenaming] = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
-  const toggleTools = () => { const v = !toolsOpen; setToolsOpen(v); try { localStorage.setItem("attune:side:tools", v ? "1" : "0"); } catch (e) {} };
   const nq = q.trim().toLowerCase();
   const shown = useMemo(() => list.filter((c) => !nq || String(tr(c.title)).toLowerCase().includes(nq)).slice(0, 80), [list, nq]);
   const toolHits = nq ? tools.filter(([id, label, sub]) => (tr(label) + " " + tr(sub) + " " + label).toLowerCase().includes(nq)) : [];
@@ -99,15 +122,9 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
           <div className="mb-2" data-testid="side-tool-hits">{toolHits.slice(0, 8).map(([id, label, , Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}</div>) : null}
         {!nq ? (<>
           {places.map(([id, label, Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}
-          <button onClick={toggleTools} data-testid="side-tools" aria-expanded={toolsOpen}
-            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] text-slate-300 hover:bg-slate-800/60">
-            <LayoutGrid size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("All tools")}</span>
-            <ChevronDown size={15} className={"text-slate-500 transition-transform " + (toolsOpen ? "rotate-180" : "")} /></button>
-          {toolsOpen ? groups.map(([title, ids]) => (
-            <div key={title} className="mt-1 mb-1.5" data-testid="side-group">
-              <p className="px-2.5 pt-1.5 pb-0.5 text-[10.5px] uppercase tracking-wider text-slate-500">{tr(title)}</p>
-              {ids.map((tid) => tools.find((t) => t[0] === tid)).filter(Boolean).map(([id, label, , Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}
-            </div>)) : null}
+          {/* v6.25 (Ali picked A + C): the tools you pin from the Tools page (★), not a list of all 33 */}
+          {pinned.length ? <p className="px-2.5 pt-3 pb-1 text-[10.5px] uppercase tracking-wider text-slate-500">{tr("Pinned")}</p> : null}
+          <div data-testid="side-pins">{pinned.map(([id, label, , Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}</div>
         </>) : null}
         <div className="mt-3" data-testid="side-chats">
           {shown.length === 0 ? <p className="px-2.5 py-2 text-[12px] text-slate-500">{nq ? tr("No chats match.") : tr("No chats yet.")}</p> : shown.map((c) => {
