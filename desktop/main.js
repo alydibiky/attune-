@@ -299,7 +299,14 @@ ipcMain.on("native-slow", (ev, method, id, arg) => {
 protocol.registerSchemesAsPrivileged([{ scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true } }]);
 if (SMOKE) app.commandLine.appendSwitch("no-sandbox");
 
+// One Attune at a time: opening it again (shortcut, Start menu, a file) brings the open window to the front instead of
+// starting a second window with a second model engine (Ali: "it keeps building up tabs in the desktop").
+const PRIMARY = !!SMOKE || app.requestSingleInstanceLock();
+if (!PRIMARY) app.quit();
+app.on("second-instance", () => { if (win && !win.isDestroyed()) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); } });
+
 app.whenReady().then(() => {
+  if (!PRIMARY) return;
   protocol.handle("app", (req) => {
     const u = new URL(req.url);
     // the PDF reader's hidden window and pdf.js itself
@@ -321,6 +328,8 @@ app.whenReady().then(() => {
   // Links open in the person's browser, never inside the app window.
   win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:/.test(url)) shell.openExternal(url); return { action: "deny" }; });
   win.webContents.on("will-navigate", (e, url) => { if (!url.startsWith("app://attune/")) { e.preventDefault(); if (/^https?:/.test(url)) shell.openExternal(url); } });
+  // Back on a computer: the mouse's back button and the keyboard's Back key arrive as app commands (Windows)
+  win.on("app-command", (e, cmd) => { if (cmd === "browser-backward") js("window.dispatchEvent(new Event('attune-back'))"); });
   win.loadURL("app://attune/index.html");
   reminders.rearmAll();
   if (!SMOKE) { const m = activeModel(); if (m) { state.active = m.id; engine.start(m, info()); } }

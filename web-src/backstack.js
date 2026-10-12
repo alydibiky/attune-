@@ -7,12 +7,21 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
 const STACK = [];
+// v6.24: the computer's Back button (side-ui.jsx) shows itself only when there is somewhere to go back to
+const WATCH = new Set();
+const changed = () => { for (const f of WATCH) try { f(STACK.length); } catch (x) {} };
+/** How many inner pages are open, kept up to date (for a Back button that appears when it can be used). */
+export function useBackDepth() {
+  const [n, setN] = useState(STACK.length);
+  useEffect(() => { WATCH.add(setN); setN(STACK.length); return () => { WATCH.delete(setN); }; }, []);
+  return n;
+}
 
 /** Register a back step; returns the function that removes it. */
 export function pushBack(fn) {
   const e = { fn };
-  STACK.push(e);
-  return () => { const i = STACK.indexOf(e); if (i >= 0) STACK.splice(i, 1); };
+  STACK.push(e); changed();
+  return () => { const i = STACK.indexOf(e); if (i >= 0) { STACK.splice(i, 1); changed(); } };
 }
 
 /** Close the newest inner page. → true when there was one. */

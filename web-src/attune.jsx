@@ -7349,7 +7349,7 @@ const MODE_TITLES = { knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Re
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.24";
+const PAGE_VERSION = "6.25";
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9025,6 +9025,7 @@ export default function App() {
   const engineText = modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : (NATIVE && (installedModels || []).length ? tr("Asleep — wakes when needed") : tr("No model"));
   const _anyOverlay = showBackup || showEngine || showProfile || showUpgrade || showMemory || showOrg || showSource || showCustom || drawerOpen || moreOpen;
   const canGoBack = _anyOverlay || mode !== "chat" || modeHist.current.length > 0;
+  const _anyOverlayRef = useRef(false); _anyOverlayRef.current = _anyOverlay;
   const goBack = () => {
     if (drawerOpen) return setDrawerOpen(false);
     if (moreOpen) return setMoreOpen(false);
@@ -9056,10 +9057,24 @@ export default function App() {
     };
     return () => { try { delete window.__attuneBack; } catch (e) { window.__attuneBack = undefined; } };
   }, []);
+  // v6.24 — Back on a computer (Ali: "there is no back in the app"): the mouse's back button, Alt+← and the
+  // keyboard's Back key go back one step; Esc closes an open panel or inner page (not while typing in a box).
+  useEffect(() => {
+    let last = 0;   // one press = one step (Windows can send the mouse's back button twice: as a click and as a command)
+    const back = () => { if (Date.now() - last < 300) return; last = Date.now(); window.__attuneBack && window.__attuneBack(); };
+    const typing = (t) => t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+    const onKey = (e) => {
+      if ((e.altKey && e.key === "ArrowLeft") || e.key === "BrowserBack") { e.preventDefault(); back(); }
+      else if (e.key === "Escape" && !typing(e.target) && (_anyOverlayRef.current || hasBack())) { e.preventDefault(); back(); }
+    };
+    const onMouse = (e) => { if (e.button === 3) { e.preventDefault(); back(); } };
+    window.addEventListener("keydown", onKey); window.addEventListener("mouseup", onMouse); window.addEventListener("attune-back", back);
+    return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("mouseup", onMouse); window.removeEventListener("attune-back", back); };
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
-      {side.shown ? <DesktopSide mode={mode} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
+      {side.shown ? <DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
         places={[["chat", "Chat", MessageCircle], ["instant", "Instant", Zap], ["money", "Money", Wallet], ["business", "Business", Database], ["memory", "Mind", Brain]]}
         tools={MORE_TOOLS} groups={MORE_GROUPS} loadChats={loadChats}
         onNewChat={() => { setMoreOpen(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}

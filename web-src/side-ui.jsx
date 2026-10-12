@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Plus, Search, PanelLeft, ChevronDown, Cpu, User, Crown, ShieldCheck, LayoutGrid, PenLine, Trash2, Lock } from "lucide-react";
 import { tr } from "./i18n.js";
+import { useBackDepth } from "./backstack.js";
 
 export const SIDE_W = 268;
 const WIDE_Q = "(min-width: 1024px)";
@@ -56,9 +57,10 @@ function dayGroup(ts) {
   return days <= 0 ? "Today" : days === 1 ? "Yesterday" : days < 7 ? "Previous 7 days" : days < 30 ? "Previous 30 days" : "Older";
 }
 
-export function DesktopSide({ mode, navTo, places, tools, groups, loadChats, onNewChat, onOpenChat, chatCmd, onClose,
+export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, groups, loadChats, onNewChat, onOpenChat, chatCmd, onClose,
   engineLabel, engineState, airGap, openEngine, openProfile, openUpgrade, openBackup, openSettings }) {
   const { list, activeId } = useChatList(loadChats);
+  const depth = useBackDepth();
   const [q, setQ] = useState("");
   const [toolsOpen, setToolsOpen] = useState(() => { try { return localStorage.getItem("attune:side:tools") === "1"; } catch (e) { return false; } });
   const [renaming, setRenaming] = useState(null);
@@ -75,7 +77,11 @@ export function DesktopSide({ mode, navTo, places, tools, groups, loadChats, onN
     </button>);
   return (
     <aside className="fixed top-0 bottom-0 start-0 z-[56] flex flex-col bg-slate-900 border-e border-slate-800" style={{ width: SIDE_W }} data-testid="side">
-      <div className="flex items-center gap-2 px-3 h-14 shrink-0">
+      <div className="flex items-center gap-1 px-3 h-14 shrink-0">
+        {/* v6.24 (Ali: "there is no back in the app"): a computer has no Back key like a phone — this is it
+            (also: the mouse's back button, Alt+←, and Esc for an open panel) */}
+        {canBack || depth > 0 ? <button onClick={onBack} className="att-icon-btn border-transparent! bg-transparent! text-slate-300! -ms-2" aria-label={tr("Back")} title={tr("Back") + " (Alt+←)"} data-testid="side-back">
+          <span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button> : null}
         <span className="flex-1 text-[17px] font-semibold text-white tracking-tight">Attune</span>
         <button onClick={onClose} className="att-icon-btn border-transparent! bg-transparent! text-slate-400!" aria-label={tr("Close sidebar")} title={tr("Close sidebar")} data-testid="side-close"><PanelLeft size={18} /></button>
       </div>

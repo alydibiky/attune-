@@ -1033,6 +1033,13 @@ internet searching … improve internet searching and make it faster".
 - **Step 5 PART DONE:** reminders → system notifications (`desktop/lib/reminders.js`; ring while Attune is open; click opens
   the reminder via the page's `attune-share` event), clipboardText, hash (model check). Read aloud uses the browser's voices
   (chat.jsx no longer calls a missing NATIVE.stopSpeaking). Green: Windows + Linux run 38264160588, APK 38264160569.
+- **v6.25 — Back on a computer** (Ali: "there is no back in the app, it keeps building up tabs in the desktop"):
+  the sidebar has a ← (shown only when there is somewhere to go: a tool, an open panel or an inner page — `useBackDepth()`
+  in backstack.js makes it react); Alt+←, the keyboard's Back key and the mouse's back button go back one step (a 300 ms
+  guard: Windows sends the mouse button twice — as a click and as the `app-command` main.js forwards as `attune-back`);
+  Esc closes an open panel / inner page (not while typing). The desktop app is now single-instance
+  (`requestSingleInstanceLock`): opening it again focuses the open window instead of a second window + second engine.
+  Test: `tests/e2e_v724desktop.py` (Back section).
 - **Next:** rest of step 5 (hash, clipboardText,
   readText, speak/stopSpeaking, schedule → Notification, doctor/speed/setSpeed, foodClip*), then Studio (sd-cli), signing, updates.
 
