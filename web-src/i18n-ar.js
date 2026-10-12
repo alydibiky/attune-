@@ -3530,4 +3530,15 @@ export const AR = {
   "Teach this to my model": "علّم هذا لنموذجي",
   "The model will read it when it answers — your questions and its answers, kept together.": "سيقرأها النموذج عند الإجابة — أسئلتك وإجاباته معًا.",
   "Saved in “{n}” ({p} passages)": "حُفظت في «{n}» ({p} فقرة)",
+  // v6.24 — the computer sidebar
+  "Close sidebar": "إغلاق الشريط الجانبي",
+  "Open sidebar": "فتح الشريط الجانبي",
+  "Search chats and tools": "ابحث في المحادثات والأدوات",
+  "All tools": "كل الأدوات",
+  "No chats match.": "لا توجد محادثات مطابقة.",
+  "Yesterday": "أمس",
+  "Previous 7 days": "آخر 7 أيام",
+  "Previous 30 days": "آخر 30 يومًا",
+  "Older": "أقدم",
+  "Profile": "الملف الشخصي",
 };

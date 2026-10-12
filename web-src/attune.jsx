@@ -6,13 +6,14 @@ import {
   ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users,
   AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2,
   Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple,
-  BookOpen,
+  BookOpen, PanelLeft,
 } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
 import { logPrompt, parseLog, isQuestion } from "./yusr/logtext.js";
-import { ChatHome, Md, systemPrompt as chatSystemPrompt } from "./chat.jsx";
+import { ChatHome, Md, systemPrompt as chatSystemPrompt, loadChats } from "./chat.jsx";
+import { DesktopSide, useDesktopWide, useSide } from "./side-ui.jsx";
 import { tr, getLang, setLang, fmtNum, dateLocale } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
@@ -6182,8 +6183,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   // it (two nested scroll areas were what made it feel glitchy). Attune's own
   // extras — reading a payment, asking about the money — slide up over it.
   return (
-    <div className="fixed inset-x-0 top-0 z-[45] flex flex-col bg-[#0F1218]" data-testid="money-page"
-         style={{ bottom: "calc(58px + env(safe-area-inset-bottom))" }}>
+    <div className="att-shift fixed inset-x-0 top-0 z-[45] flex flex-col bg-[#0F1218]" data-testid="money-page"
+         style={{ bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }}>
       <div className="shrink-0 flex items-center gap-2 px-2 h-12 bg-slate-950 border-b border-slate-800">
         <button onClick={() => window.__attuneBack && window.__attuneBack()} aria-label={tr("Back")}
           className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
@@ -7431,6 +7432,9 @@ export default function App() {
   }, [mode]);
   const [drawerOpen, setDrawerOpen] = useState(false);   // chat history
   const [moreOpen, setMoreOpen] = useState(false);       // every other tool
+  // v6.24: a computer-sized screen gets a sidebar like Claude / ChatGPT instead of the bottom bar
+  const wide = useDesktopWide();
+  const side = useSide(wide);
   const [showBackup, setShowBackup] = useState(false);   // encrypted backup / restore
   const [reminders, setRemindersRaw] = useState(() => loadReminders());
   const setReminders = (list) => { setRemindersRaw(saveReminders(list)); };
@@ -9018,6 +9022,7 @@ export default function App() {
 
   // In-app Back: closes the top-most open panel, otherwise returns to the Ask
   // home tab. Shown only when there is somewhere to go back to.
+  const engineText = modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : (NATIVE && (installedModels || []).length ? tr("Asleep — wakes when needed") : tr("No model"));
   const _anyOverlay = showBackup || showEngine || showProfile || showUpgrade || showMemory || showOrg || showSource || showCustom || drawerOpen || moreOpen;
   const canGoBack = _anyOverlay || mode !== "chat" || modeHist.current.length > 0;
   const goBack = () => {
@@ -9053,12 +9058,22 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans">
-      <div className={mode === "business" ? "" : "max-w-3xl mx-auto px-3 pb-24"}>
+    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
+      {side.shown ? <DesktopSide mode={mode} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
+        places={[["chat", "Chat", MessageCircle], ["instant", "Instant", Zap], ["money", "Money", Wallet], ["business", "Business", Database], ["memory", "Mind", Brain]]}
+        tools={MORE_TOOLS} groups={MORE_GROUPS} loadChats={loadChats}
+        onNewChat={() => { setMoreOpen(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
+        onOpenChat={(id) => { setMoreOpen(false); setOpenChatId(id); navTo("chat"); }}
+        chatCmd={(c) => { try { window.dispatchEvent(new CustomEvent("attune-chat-cmd", { detail: c })); } catch (e) {} }}
+        onClose={() => side.setOpen(false)} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
+        openEngine={() => setShowEngine(true)} openProfile={() => setShowProfile(true)} openUpgrade={() => setShowUpgrade(true)}
+        openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /> : null}
+      <div className={mode === "business" ? "" : (wide && mode !== "chat" ? "max-w-5xl" : "max-w-3xl") + " mx-auto px-3 " + (wide ? "pb-8" : "pb-24")}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
         <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")}>
-          {mode === "chat" ? (
+          {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
+          {mode === "chat" ? (wide ? null :
             <button onClick={() => setDrawerOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Chats")}><Menu size={20} /></button>
           ) : (
             <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
@@ -10823,7 +10838,7 @@ export default function App() {
       {toast && <div className="fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       <ConfirmHost />
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
-      <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
           {/* v5.17: Memory in the bottom bar (Ali) */}
           {[["chat", "Chat", MessageCircle], ["instant", "Instant", Zap], ["money", "Money", Wallet],
@@ -10840,8 +10855,8 @@ export default function App() {
       </nav>
       {moreOpen ? (
         <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setMoreOpen(false)}>
-          <div className="att-scroll absolute start-0 end-0 bg-slate-900 border-t border-slate-800 rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
-               style={{ bottom: "calc(58px + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
+          <div className="att-scroll att-shift absolute start-0 end-0 bg-slate-900 border-t border-slate-800 rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
+               style={{ bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
             <div className="max-w-3xl mx-auto">
               {MORE_GROUPS.map(([title, ids], gi) => (
                 <div key={title} className={gi ? "mt-4" : ""} data-testid="more-group">

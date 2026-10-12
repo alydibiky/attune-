@@ -41,6 +41,7 @@ import {
   Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2, GraduationCap,
 } from "lucide-react";
 
+import { summary as sideSummary } from "./side-ui.jsx";
 const KEY = "attune:chats:v1";
 const MAX_CHATS = 100;
 const NATIVE = (typeof window !== "undefined" && window.AttuneNative) || null;
@@ -425,7 +426,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const [padB, setPadB] = useState(200);
   useEffect(() => {
     const el = composerRef.current; if (!el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => { const h = el.getBoundingClientRect().height; if (h) setPadB(Math.round(h + 58 + 24)); });
+    const ro = new ResizeObserver(() => { const h = el.getBoundingClientRect().height; if (h) setPadB(Math.round(h + (document.documentElement.classList.contains("att-wide") ? 0 : 58) + 24)); });
     ro.observe(el); return () => ro.disconnect();
   }, []);
 
@@ -463,6 +464,19 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   }, [spaceSeed]);
   useEffect(() => { if (openChatId) { stop(); setActiveId(openChatId); setPending(null); clearOpenChat && clearOpenChat(); } }, [openChatId]);
 
+  // v6.24: the computer sidebar (side-ui.jsx) lists the chats and renames / deletes them through Chat
+  useEffect(() => {
+    if (busy) return;
+    try { window.dispatchEvent(new CustomEvent("attune-chats", { detail: { list: chats.map(sideSummary), activeId } })); } catch (e) {}
+  }, [chats, activeId, busy]);
+  useEffect(() => {
+    const f = (e) => {
+      const c = e.detail || {};
+      if (c.op === "rename" && c.title) patchChat(c.id, (x) => ({ ...x, title: c.title }));
+      if (c.op === "delete") { setChats((l) => l.filter((x) => x.id !== c.id)); setActiveId((a) => (a === c.id ? null : a)); }
+    };
+    window.addEventListener("attune-chat-cmd", f); return () => window.removeEventListener("attune-chat-cmd", f);
+  }, []);
   // Persist, lightly: not on every streamed word, only when the list settles.
   useEffect(() => { if (!busy) saveIfOurs(chats); }, [chats, busy]);
   // Leaving the app (Home, another app, the screen off) saves everything at
@@ -1956,8 +1970,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
 
       {/* ---- composer, pinned above the bottom bar (or at the very bottom
            while typing — the bottom bar steps aside for the keyboard) ---- */}
-      <div ref={composerRef} className={`fixed start-0 end-0 ${typing ? "z-[60]" : "z-40"} px-3 pb-2 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent`} data-testid="composer"
-        style={{ bottom: typing ? "env(safe-area-inset-bottom)" : "calc(58px + env(safe-area-inset-bottom))" }}>
+      <div ref={composerRef} className={`att-shift fixed start-0 end-0 ${typing ? "z-[60]" : "z-40"} px-3 pb-2 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent`} data-testid="composer"
+        style={{ bottom: typing ? "env(safe-area-inset-bottom)" : "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }}>
         <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-xl">
           {files.length ? (
             <div className="flex flex-wrap gap-1.5 mb-2 ms-1">

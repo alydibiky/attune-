@@ -289,7 +289,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   const others = sel && sel.from ? sel.from.filter((r) => r !== sel.src).slice(0, 3) : [];
   return (
     <div ref={holder} data-testid="map-page" data-look="a" style={{ height: "100dvh" }}>
-      <div className="fixed inset-0 z-10 bg-[#f2efe9] text-slate-900" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      <div className="att-shift fixed inset-0 z-10 bg-[#f2efe9] text-slate-900" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {/* inline: MapLibre's own CSS (.maplibregl-map{position:relative}) loads later and turned the class into a 0-px-tall box —
             the map was drawn but never seen (Ali, Oct 2026) */}
         <div ref={box} style={{ position: "absolute", inset: 0 }} data-testid="map-canvas" />

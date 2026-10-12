@@ -180,7 +180,7 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
   const m = rec.meta || {};
   const btn = "flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300";
   return (
-    <div className="fixed inset-x-0 top-0 z-[60] bg-slate-950 flex flex-col" style={{ height: vh, ...(m.color ? { background: `linear-gradient(${m.color}55, ${m.color}22), #020617` } : {}) }} data-testid="shelf-editor">
+    <div className="att-shift fixed inset-x-0 top-0 z-[60] bg-slate-950 flex flex-col" style={{ height: vh, ...(m.color ? { background: `linear-gradient(${m.color}55, ${m.color}22), #020617` } : {}) }} data-testid="shelf-editor">
       <div className="flex items-center gap-1 px-2 py-2 border-b border-slate-800">
         <button onClick={close} aria-label={tr("Back")} className="p-2 text-slate-300" data-testid="shelf-editor-back">{getLang() === "ar" ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}</button>
         <input value={title} onChange={set(setTitle)} dir="auto" placeholder={tr("Title")} data-testid="shelf-note-title"
@@ -464,7 +464,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
             </span>
           </button>); })}</div>
       {sel && sel.size ? (
-        <div className="fixed inset-x-0 z-30 flex justify-center gap-2 px-3" style={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }} data-testid="shelf-selbar">
+        <div className="att-shift fixed inset-x-0 z-30 flex justify-center gap-2 px-3" style={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }} data-testid="shelf-selbar">
           <button onClick={() => setSelPick("move")} data-testid="shelf-sel-move" className="px-4 py-2 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold"><Folder size={14} className="inline me-1" />{tr("Move")}</button>
           <button onClick={() => setSelPick("copy")} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-100 text-sm"><Copy size={14} className="inline me-1" />{tr("Copy to…")}</button>
           <button data-testid="shelf-sel-delete" onClick={() => { const ids = [...sel]; setRecords((rs) => S.trashNotes(rs, ids)); setSel(null); setUndo({ text: tr("Moved to the trash"), run: () => setRecords((rs) => S.restoreNotes(rs, ids)) }); }}
@@ -602,7 +602,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
           openInMind={() => { setNoteId(null); openInMind(records.find((r) => r.id === rec.id) || rec); }} />
       ) : null}
       {undo ? (
-        <div className="fixed inset-x-0 z-[65] flex justify-center px-4" style={{ bottom: "calc(140px + env(safe-area-inset-bottom))" }} data-testid="shelf-undo">
+        <div className="att-shift fixed inset-x-0 z-[65] flex justify-center px-4" style={{ bottom: "calc(140px + env(safe-area-inset-bottom))" }} data-testid="shelf-undo">
           <div className="flex items-center gap-3 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 shadow-xl">
             <span className="text-sm text-slate-100">{undo.text}</span>
             <button onClick={() => { undo.run(); setUndo(null); }} data-testid="shelf-undo-btn" className="text-sm font-semibold text-teal-300"><Undo2 size={14} className="inline me-1" />{tr("Undo")}</button>

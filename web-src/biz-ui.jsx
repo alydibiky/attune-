@@ -245,7 +245,7 @@ export function Builder({ llm, modelReady, openEngine, flash, onBack, onCreate, 
       </div>
       {/* A: Back / Next — and, from the second step, finish now (everything can be changed later) */}
       {step > 0 && draft ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 bg-[#FFFFFFF2] backdrop-blur border-t border-[#DCE3EC] px-4 pt-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
+        <div className="att-shift fixed inset-x-0 bottom-0 z-40 bg-[#FFFFFFF2] backdrop-blur border-t border-[#DCE3EC] px-4 pt-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
           <div className="max-w-3xl mx-auto flex gap-2.5">
             <button onClick={() => setStep(step - 1)} className={btnG}>{tr("Back")}</button>
             {step < 4 ? <button onClick={() => setStep(step + 1)} className={(edit ? btnG : btnP) + " flex-1"} style={edit ? null : { background: "var(--biz)" }} data-testid="biz-next">{tr("Next")}: {ar ? BS.STEPS[step + 1].ar : BS.STEPS[step + 1].en}</button> : null}
@@ -537,7 +537,7 @@ function SystemShell({ sys, setSys, llm, modelReady, openEngine, flash, saveFile
       </div>
       <div className="px-3 pt-3">{body}</div>
       {fab}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-[#FFFFFF] border-t border-[#DCE3EC]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="biz-nav">
+      <nav className="att-shift fixed bottom-0 inset-x-0 z-40 bg-[#FFFFFF] border-t border-[#DCE3EC]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="biz-nav">
         <div className="max-w-3xl mx-auto grid grid-cols-4 h-[64px]">{tabs.map(([k, l, I]) => (
           <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className="flex flex-col items-center justify-center gap-0.5 text-[11.5px] font-semibold" style={{ color: tab === k ? c : "#64748B" }}><I size={21} />{l}</button>))}</div>
       </nav>

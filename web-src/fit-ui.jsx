@@ -466,7 +466,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
         <h2 className="flex-1 min-w-0 truncate text-[17px] font-semibold text-white flex items-center gap-2"><Apple size={18} className="text-emerald-300 shrink-0" />{({ today: L("Diary", "اليوميات"), recipes: L("Recipes", "الوصفات"), progress: L("Progress", "التقدم"), me: L("Me", "أنا"), move: L("Workouts", "التمارين") })[tab] || L("Fit & Food", "الأكل والرياضة")}</h2>
         {openEngine && !modelReady ? <button onClick={openEngine} className="min-h-[36px] rounded-full border border-slate-700 px-3 text-[12px] text-slate-300" data-testid="fit-engine">{L("No model", "لا يوجد نموذج")}</button> : null}
       </div>
-      <nav className="fixed bottom-0 inset-x-0 z-[60] bg-slate-950 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="fit-nav">
+      <nav className="att-shift fixed bottom-0 inset-x-0 z-[60] bg-slate-950 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="fit-nav">
         <div className="max-w-2xl mx-auto grid grid-cols-5 items-end h-[62px]">
           {[["today", L("Diary", "اليوميات"), Apple], ["recipes", L("Recipes", "الوصفات"), Star], ["add"], ["progress", L("Progress", "التقدم"), BarChart3], ["me", L("Me", "أنا"), User]].map(([k, label, Ic]) => k === "add" ? (
             <div key={k} className="flex justify-center pb-2"><button onClick={() => { setAdding((a) => a || mealNow()); setDraft(null); setText(""); setPhoto(null); }} className="w-14 h-14 -mt-6 rounded-full bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-900/40 flex items-center justify-center active:scale-95 motion-safe:transition-transform" aria-label={L("Add food", "أضف طعامًا")} data-testid="fit-add"><Plus size={28} strokeWidth={2.6} /></button></div>
@@ -601,7 +601,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
 
       {tab === "today" && !adding && <Today {...{ L, t, ar, st, upd, tg: tg && st.profile.cycleExtra ? { ...tg, kcal: Y.dayGoal(tg.kcal, dayKey, st.profile.cycleExtra) } : tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, openMove: () => setTab("move") }} />}
       {undo ? (
-        <div role="status" aria-live="polite" className="fixed inset-x-0 bottom-20 z-40 flex justify-center px-4 pointer-events-none" data-testid="fit-undo-bar">
+        <div role="status" aria-live="polite" className="att-shift fixed inset-x-0 bottom-20 z-40 flex justify-center px-4 pointer-events-none" data-testid="fit-undo-bar">
           <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-slate-800 border border-slate-700 ps-4 pe-1 py-1 shadow-xl max-w-md w-full motion-safe:animate-[fitup_.2s_ease-out]">
             <Check size={16} className="text-emerald-300 shrink-0" />
             <span className="flex-1 min-w-0 truncate text-[13.5px] text-white" data-testid="fit-undo-text">{undo.label}</span>

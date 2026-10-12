@@ -1,0 +1,67 @@
+"""v6.24 — Attune on a computer, laid out like Claude / ChatGPT (Ali, 12 Oct 2026): a sidebar with New chat,
+search, the main places, every tool and the recent chats; no bottom bar; the chat in a centred column.
+  PYTHONPATH=tests/pwshim:tests python3 tests/e2e_v724desktop.py
+"""
+import json
+from playwright.sync_api import sync_playwright
+from harness import Env, new_page, check, real_errors, finish
+env = Env(); errors = []
+CH = [{"id": "c1", "title": "Lynk & Co 900 price", "updated": 1760250000000, "messages": [{"id": "m1", "role": "user", "text": "Lynk & Co 900 price"}, {"id": "m2", "role": "assistant", "text": "About EGP 3.2M."}]},
+      {"id": "c2", "title": "Turkish lesson 3", "updated": 1760100000000, "messages": [{"id": "m3", "role": "user", "text": "merhaba"}, {"id": "m4", "role": "assistant", "text": "Merhaba!"}]}]
+INIT = "try{if(!localStorage.getItem('attune:chats:v1'))localStorage.setItem('attune:chats:v1', %s)}catch(e){}" % json.dumps(json.dumps(CH))
+def box(page, sel): return page.locator(sel).first.bounding_box()
+with sync_playwright() as p:
+    br = p.chromium.launch()
+    ctx, page = new_page(br, env, errors, desktop=(1366, 820), extra_init=INIT)
+    page.goto(env.url); page.wait_for_selector("[data-testid=side]", timeout=15000); page.wait_for_timeout(500)
+    check(page.locator("nav").first.is_hidden(), "a computer has no bottom bar")
+    sb = box(page, "[data-testid=side]")
+    check(sb["x"] == 0 and sb["width"] > 200, "the sidebar sits on the left (%s)" % sb)
+    check(page.locator("[data-testid=side-chat]").count() == 2, "the recent chats are listed")
+    c = box(page, "[data-testid=composer]")
+    check(c["x"] >= sb["width"] - 1, "the message box sits beside the sidebar, not under it (x=%d)" % c["x"])
+    page.locator("[data-testid=side-open-chat]").nth(1).click(); page.wait_for_timeout(400)
+    check("merhaba" in page.locator("body").inner_text().lower(), "a chat opens from the sidebar")
+    # rename and delete from the sidebar
+    page.locator("[data-testid=side-chat]").nth(1).hover(); page.locator("[data-testid=side-chat]").nth(1).locator("button[title=Rename]").click()
+    page.fill("[data-testid=side-rename]", "Turkish with Ali"); page.keyboard.press("Enter"); page.wait_for_timeout(500)
+    check("Turkish with Ali" in page.locator("[data-testid=side-chats]").inner_text(), "rename from the sidebar")
+    page.locator("[data-testid=side-chat]").nth(1).hover(); page.locator("[data-testid=side-chat]").nth(1).locator("[data-testid=side-del]").click()
+    page.locator("[data-testid=side-del-yes]").click(); page.wait_for_timeout(600)
+    st = json.loads(page.evaluate("localStorage.getItem('attune:chats:v1')"))
+    check(page.locator("[data-testid=side-chat]").count() == 1 and [x["title"] for x in st] == ["Lynk & Co 900 price"], "delete from the sidebar removes the chat: %s" % [x["title"] for x in st])
+    # a new chat, then a tool found by search
+    page.locator("[data-testid=side-new]").click(); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=composer] textarea").input_value() == "" and "About EGP" not in page.locator("body").inner_text(), "New chat starts an empty chat")
+    page.fill("[data-testid=side-search]", "fit"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=side-tool-hits] [data-testid=side-go-fit]").count() == 1, "searching the sidebar finds a tool")
+    page.locator("[data-testid=side-tool-hits] [data-testid=side-go-fit]").click(); page.wait_for_timeout(600)
+    page.fill("[data-testid=side-search]", "")
+    check(page.locator("[data-testid=side]").is_visible(), "the sidebar stays while a tool is open")
+    page.locator("[data-testid=side-go-money]").click(); page.wait_for_timeout(600)
+    m = box(page, "[data-testid=money-page]")
+    check(m and m["x"] >= sb["width"] - 1, "Money fills the space beside the sidebar (x=%s)" % (m and m["x"]))
+    page.locator("[data-testid=side-tools]").click(); page.locator("[data-testid=side-go-map]").click(); page.wait_for_timeout(800)
+    mp = page.evaluate("(() => { const e = document.querySelector('.att-shift.fixed.inset-0'); return e ? e.getBoundingClientRect().left : -1; })()")
+    check(mp >= sb["width"] - 1, "Maps fills the space beside the sidebar (left=%s)" % mp)
+    # close and reopen the sidebar
+    page.locator("[data-testid=side-go-chat]").click(); page.wait_for_timeout(300)
+    page.locator("[data-testid=side-close]").click(); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=side]").count() == 0 and box(page, "[data-testid=composer]")["x"] < 20, "closing the sidebar gives the chat the whole window")
+    page.locator("[data-testid=side-open]").click(); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=side]").count() == 1, "the sidebar button opens it again")
+    # a window made narrow behaves like the phone
+    page.set_viewport_size({"width": 700, "height": 820}); page.wait_for_timeout(400)
+    check(page.locator("[data-testid=side]").count() == 0 and page.locator("nav").first.is_visible(), "a narrow window has the phone layout")
+    check(real_errors(errors) == [], "no errors: %s" % real_errors(errors)[:3])
+    ctx.close()
+    # Arabic: the sidebar is on the right
+    errors2 = []
+    ctx, page = new_page(br, env, errors2, desktop=(1366, 820), extra_init=INIT + "try{localStorage.setItem('attune:ui:lang','ar')}catch(e){}")
+    page.goto(env.url); page.wait_for_selector("[data-testid=side]", timeout=15000); page.wait_for_timeout(400)
+    sb = box(page, "[data-testid=side]"); c = box(page, "[data-testid=composer]")
+    check(sb["x"] > 1000 and c["x"] + c["width"] <= sb["x"] + 1, "in Arabic the sidebar is on the right and the message box beside it (%d, %d)" % (sb["x"], c["x"] + c["width"]))
+    check(real_errors(errors2) == [], "no errors (Arabic): %s" % real_errors(errors2)[:3])
+    ctx.close(); br.close()
+env.close()
+finish()
