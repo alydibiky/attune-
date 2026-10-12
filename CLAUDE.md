@@ -4,7 +4,7 @@
    for the session. Work through all of it with a task list.
 2. Read **`HANDOFF.md`** §0 ("START HERE") and the latest section (§5.37) for how the app is built and tested.
 
-## Where things stand (12 Oct 2026, v6.23 — HANDOFF §5.44–§5.59; packs must be commercial-safe (§5.48); Ali's latest lists: NEXT_SESSION.md sections M, N and O)
+## Where things stand (12 Oct 2026, v6.23 — HANDOFF §5.44–§5.60; DESKTOP APP (Windows first, Claude/ChatGPT layout) in progress: HANDOFF §5.60; packs must be commercial-safe (§5.48); Ali's latest lists: NEXT_SESSION.md sections M, N and O)
 - Read **`PLANS_2026-10-02.md`** too: the converter / Fit / heat / Business plans and exactly what is left.
 - `main` = branch `ccr-a0eb3595-e2c7a7` = v6.23 (versionCode 84). All test files pass (`bash tests/run_all.sh`).
 - Every other branch (business-extras, fit-home, pdf-reader, studio-preview, converter-polish, knowpack-wire) is merged.

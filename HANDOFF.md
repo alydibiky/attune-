@@ -988,6 +988,25 @@ internet searching … improve internet searching and make it faster".
 - **Copy** one food: `CopySheet` with `item`; `fitplus.js copyItem(days, toKey, toSlot, item)`; the same day and meal is allowed.
 - Test: `tests/e2e_v723editfood.py`. `e2e_fithome.py` still edits grams through the sheet (same test ids).
 
+### 5.60 (12 Oct 2026) — DESKTOP APP, Windows first (IN PROGRESS — read this before touching `desktop/`)
+- **Ali's decisions (12 Oct 2026, don't ask again):** layout on a computer = **like Claude / ChatGPT** (left sidebar:
+  New chat, chat history, the tools; the open chat or tool fills the rest, chat text in a centred column).
+  **Windows first**, macOS and Linux after. Stay phone-only for AI (no cloud), same as the phone.
+- **What exists:** `desktop/` = Electron shell (P1 of `DESKTOP_PLAN.md`): chat, model install/use, engine, info,
+  stash, saveFile, fetchJson, air-gap. CI `.github/workflows/desktop.yml` builds Windows/macOS/Linux installers
+  (last green run 37169225266, 4 Oct). The page = the same `app/src/main/assets/www/index.html`.
+- **What the phone bridge has that the desktop lacks** (NativeBridge.kt, 105 methods): search / fetchText / news /
+  fetchShare / dorarSearch / fxRates (WebTools.kt), knowledge packs (know*), map packs (map*), PDFs (pdfText,
+  pdfWords, pdfOutline, pdfImages, makePdf, pdfEdit, htmlToPdf), hash, clipboardText, readText, speak, schedule /
+  notifications, doctor / speed / setSpeed, food pack / food clip, Studio (imagine…), listen. Phone-only (never on
+  desktop): health, Huawei, widgets, barcode camera, intent, gallery.
+- **Plan, in order (each step pushed when its tests pass):** (1) web-src wide layout like Claude/ChatGPT;
+  (2) web search on desktop (port WebTools.kt to Node); (3) knowledge + map packs (same files; `node:sqlite`);
+  (4) PDFs + converters (printToPDF, pdf.js); (5) hash, clipboard, speak, reminders, doctor/speed, food pack;
+  (6) desktop.yml on main, Windows installer link for Ali; (7) Studio pictures (sd-cli) later.
+- **Testing here:** Electron downloads and runs in this sandbox (`npm i electron@44.5.1` works); run with `xvfb-run -a`.
+- Progress notes go below this line as each step lands.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
