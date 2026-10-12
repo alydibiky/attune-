@@ -78,7 +78,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name }) {
       </div>
       <div className="grid grid-cols-4 gap-4" data-testid="home-cards">
         {cards.map(([id, label, sub, Icon]) => <Card key={id} id={id} label={label} sub={sub} Icon={Icon} onClick={() => navTo(id)} />)}
-        <Card id="tools" label="All tools" sub={tr("{n} tools", { n: tools.length })} Icon={LayoutGrid} onClick={() => navTo("tools")} testid="home-all-tools" />
+        <Card id="tools" label="All tools" sub={tr("{n} tools", { n: tools.length - 1 })} Icon={LayoutGrid} onClick={() => navTo("tools")} testid="home-all-tools" />
       </div>
     </div>);
 }

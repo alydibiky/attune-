@@ -59,7 +59,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: desktop/engine
-          key: engine-${{ matrix.name }}-${{ matrix.variant }}-${{ env.LLAMA_COMMIT }}-v1
+          key: engine-${{ matrix.name }}-${{ matrix.variant }}-${{ env.LLAMA_COMMIT }}-v2
 
       - name: Build the model engine (llama.cpp, pinned)
         if: steps.cache.outputs.cache-hit != 'true'
@@ -74,7 +74,12 @@ jobs:
             git clone -q --depth 1 https://github.com/KhronosGroup/SPIRV-Headers "$RUNNER_TEMP/spirv-src"
             cmake -S "$RUNNER_TEMP/spirv-src" -B "$RUNNER_TEMP/spirv-build" -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/spirv" -DSPIRV_HEADERS_ENABLE_TESTS=OFF > /dev/null
             cmake --install "$RUNNER_TEMP/spirv-build" > /dev/null
-            cmake -S . -B build $COMMON -DGGML_VULKAN=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON -T ClangCL -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/spirv"
+            # v6.25 (Ali's PC: the engine closed at once without a word): ONE self-contained program — the C/C++ runtime
+            # built in (/MT), no OpenMP DLL, no ggml/llama DLLs — so a PC without Visual Studio's runtime files runs it.
+            # A second, CPU-only engine (no Vulkan) is the fallback when the graphics driver has no Vulkan.
+            WIN="-DBUILD_SHARED_LIBS=OFF -DGGML_OPENMP=OFF -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON -T ClangCL"
+            cmake -S . -B build $COMMON $WIN -DGGML_VULKAN=ON -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/spirv"
+            cmake -S . -B build-cpu $COMMON $WIN
           else
             cmake -S . -B build $COMMON -DGGML_VULKAN=ON -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DCMAKE_INSTALL_RPATH='$ORIGIN' -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
           fi
@@ -82,9 +87,22 @@ jobs:
           cmake --build build --config Release --target llama-server -j 4 > "$RUNNER_TEMP/build.log" 2>&1 || { grep -iE "error|fatal" "$RUNNER_TEMP/build.log" | grep -v "Wunused" | head -40; tail -15 "$RUNNER_TEMP/build.log"; exit 1; }
           OUT="$GITHUB_WORKSPACE/desktop/engine/${{ matrix.variant }}"
           mkdir -p "$OUT"
-          if [ "$RUNNER_OS" = "Windows" ]; then cp build/bin/Release/*.exe build/bin/Release/*.dll "$OUT/"; else cp -a build/bin/. "$OUT/"; fi
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            cp build/bin/Release/llama-server.exe "$OUT/"; cp build/bin/Release/*.dll "$OUT/" 2>/dev/null || true
+            cmake --build build-cpu --config Release --target llama-server -j 4 > "$RUNNER_TEMP/build-cpu.log" 2>&1 || { grep -iE "error|fatal" "$RUNNER_TEMP/build-cpu.log" | head -40; exit 1; }
+            mkdir -p "$GITHUB_WORKSPACE/desktop/engine/cpu"; cp build-cpu/bin/Release/llama-server.exe "$GITHUB_WORKSPACE/desktop/engine/cpu/"; cp LICENSE "$GITHUB_WORKSPACE/desktop/engine/cpu/LICENSE-llama.cpp.txt"
+          else cp -a build/bin/. "$OUT/"; fi
           cp LICENSE "$OUT/LICENSE-llama.cpp.txt"
           ls -la "$OUT"
+
+      - name: The Windows engine needs nothing a normal PC lacks
+        if: runner.os == 'Windows'
+        run: |
+          # every DLL each engine asks Windows for; the Visual C++ runtime and OpenMP must NOT be among them
+          for exe in desktop/engine/*/llama-server.exe; do
+            echo "== $exe"; "/c/Program Files/LLVM/bin/llvm-objdump.exe" -p "$exe" | grep -i "DLL Name" | sort -u | tee "$RUNNER_TEMP/deps.txt"
+            if grep -iE "vcruntime|msvcp|libomp|vcomp|ggml|llama\.dll|concrt" "$RUNNER_TEMP/deps.txt"; then echo "::error::$exe needs a DLL a normal PC may not have"; exit 1; fi
+          done
 
       - name: Engine sees which devices
         run: |

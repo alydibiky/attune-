@@ -7343,6 +7343,8 @@ function tierOfInstalled(m) {
   return MODEL_TIERS.find((x) => x.realName && !!x.fast === fast && String(m.label || "").toLowerCase().replace(/[\s-]+/g, "").includes(x.realName.toLowerCase().replace(/[\s-]+/g, ""))) || null;
 }
 
+// v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
+const OWN_TITLE = new Set(["skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory"]);
 const MODE_TITLES = { home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
@@ -7350,7 +7352,7 @@ const MODE_TITLES = { home: "Home", tools: "Tools", knowledge: "Knowledge", pdfc
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.25";
+const PAGE_VERSION = "6.26";
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9071,7 +9073,8 @@ export default function App() {
     const typing = (t) => t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
     const onKey = (e) => {
       if ((e.altKey && e.key === "ArrowLeft") || e.key === "BrowserBack") { e.preventDefault(); back(); }
-      else if (e.key === "Escape" && !typing(e.target) && (_anyOverlayRef.current || hasBack())) { e.preventDefault(); back(); }
+      // Esc closes the app's own panels (Engine, Profile, Settings…) — inner pages keep their own Esc (a menu closes, the page stays)
+      else if (e.key === "Escape" && !e.defaultPrevented && !typing(e.target) && _anyOverlayRef.current) { e.preventDefault(); back(); }
     };
     const onMouse = (e) => { if (e.button === 3) { e.preventDefault(); back(); } };
     window.addEventListener("keydown", onKey); window.addEventListener("mouseup", onMouse); window.addEventListener("attune-back", back);
@@ -9092,7 +9095,7 @@ export default function App() {
       <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-5xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide ? "pb-8" : "pb-24")}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
-        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || mode === "tools" ? " hidden" : "")}>
+        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || mode === "tools" || (wide && OWN_TITLE.has(mode)) ? " hidden" : "")}>
           {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
           {mode === "chat" ? (wide ? null :
             <button onClick={() => setDrawerOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Chats")}><Menu size={20} /></button>
@@ -9127,7 +9130,7 @@ export default function App() {
         ) : null}
 
         <Guard key={"g-" + mode} name={mode}>{mode === "home" ? (
-          <DesktopHome tools={MORE_TOOLS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
+          <DesktopHome tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
             onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "tools" ? (
           <ToolsPage tools={MORE_TOOLS} groups={MORE_GROUPS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />

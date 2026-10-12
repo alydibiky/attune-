@@ -1040,6 +1040,23 @@ internet searching … improve internet searching and make it faster".
   Esc closes an open panel / inner page (not while typing). The desktop app is now single-instance
   (`requestSingleInstanceLock`): opening it again focuses the open window instead of a second window + second engine.
   Test: `tests/e2e_v724desktop.py` (Back section).
+- **v6.26 — desktop look "A + C" (Ali picked it from 3 mock-ups, 12 Oct; colours KEPT as they are — Business/Fit light):**
+  sidebar = Home · Chat · Tools · Mind · Money · Business, then **Pinned** tools (★ on the Tools page; `attune:side:pins`,
+  default convert/fit/map), then recent chats. `web-src/desk-ui.jsx`: `DesktopHome` (greeting, ask box → a NEW chat sent at
+  once via chatSeed "\u0002…" — kept in the box when no model is loaded; Today card from storage: kcal eaten, reminders
+  left, chats; cards Money/Business/Mind/Maps + recently used tools `attune:tools:recent` + All tools) and `ToolsPage`
+  (every tool, 4 columns, by group, find box, ★ pin). A computer opens on Home (`mode` "home"; Back ends at Home); a
+  narrow window returns to Chat. Tool pages: `att-page` + CSS in shell.html lifts their phone-width `max-w-*` columns
+  (not dialogs); File Converter grid 4 columns; the top bar is hidden for tools with their own title (`OWN_TITLE`); no
+  second ← or model chip in the bar on a computer; the floating line at the bottom is gone; Mind's + sits in the corner.
+  `i18n.js forDesktop()`: in the Windows/Mac app "your/this/the phone" reads "computer" (not "phone number/call/app"),
+  Arabic هاتفك → جهازك. Esc closes only the app's own panels (Shelf's own Esc kept a page open → fixed).
+- **v6.26 — Windows engine fix (Ali's PC: "Stopped · Zenith", six silent starts):** the Windows llama-server was built
+  with ClangCL against the Visual C++ runtime + OpenMP DLLs, which CI machines have and a normal PC does not.
+  desktop.yml now builds ONE static exe (`BUILD_SHARED_LIBS=OFF`, `/MT`, `GGML_OPENMP=OFF`) for `engine/vulkan` AND a
+  CPU-only `engine/cpu` fallback, and a CI step fails if any exe imports vcruntime/msvcp/libomp/vcomp/ggml/llama DLLs.
+  `engine.js` writes why an engine stopped (`exitReason`: DLL missing 0xC0000135, no AVX2, crash, out of memory…) and
+  handles spawn errors (antivirus).
 - **Next:** rest of step 5 (hash, clipboardText,
   readText, speak/stopSpeaking, schedule → Notification, doctor/speed/setSpeed, foodClip*), then Studio (sd-cli), signing, updates.
 

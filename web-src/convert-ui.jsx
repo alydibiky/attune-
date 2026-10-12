@@ -304,7 +304,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
         {!files ? (
           <>
             <p className="text-[13px] font-medium text-slate-200">{tr("What do you want to do?")}</p>
-            <div className="grid grid-cols-2 gap-2" data-testid="convert-tools">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2" data-testid="convert-tools">
               {QUICK.map((q) => (
                 <button key={q.id} onClick={() => startTool(q)} data-testid={"convert-tool-" + q.id}
                   className="rounded-xl border border-slate-800 bg-slate-950 p-3 text-start active:border-teal-600">

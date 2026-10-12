@@ -30,6 +30,18 @@ function envFor(dir) {
   return env;
 }
 
+/** An engine's exit code → what happened, in plain words (Windows codes are NTSTATUS values). */
+function exitReason(code, sig) {
+  const W = { 3221225781: "a Windows file it needs is missing (DLL not found) — install the latest Attune, or the Microsoft Visual C++ Redistributable",
+    3221225501: "this processor lacks an instruction the engine uses (AVX2) — the CPU-only engine is tried next",
+    3221225477: "it crashed while loading (memory access) — often the graphics driver; the CPU-only engine is tried next",
+    3221226505: "it stopped itself (an internal check failed) — see the lines above",
+    3221225725: "it ran out of stack while loading", 3221225495: "the computer ran out of memory for this model — pick a smaller model" };
+  if (code != null && W[code >>> 0]) return "Engine stopped: " + W[code >>> 0] + " (code 0x" + (code >>> 0).toString(16).toUpperCase() + ")";
+  if (sig) return "Engine stopped by signal " + sig + (sig === "SIGKILL" ? " — often too little memory for this model" : "");
+  return "Engine stopped (exit code " + code + ")" + (code === 1 ? " — see the lines above" : "");
+}
+
 function freePort() {
   return new Promise((ok, bad) => {
     const s = net.createServer(); s.unref();
@@ -52,6 +64,7 @@ class Engine {
       phase: this.state === "starting" ? "Reading the model file" : "", heavy: false, thermal: 0,
       engine: "llama", backend: this.variant || "" };
   }
+  note(line) { try { fs.appendFileSync(this.logFile, line + "\n"); } catch (e) {} }
   logTail(n) { try { const t = fs.readFileSync(this.logFile, "utf8"); return t.slice(-(n || 8000)); } catch (e) { return ""; } }
 
   args(model, info, gpu) {
@@ -91,6 +104,9 @@ class Engine {
       fs.writeSync(log, "\n=== " + new Date().toISOString() + " start " + model.id + " with " + v.name + "\n");
       const p = spawn(path.join(v.dir, EXE), this.args(model, info, gpu), { env: envFor(v.dir), stdio: ["ignore", log, log], windowsHide: true });
       fs.closeSync(log);
+      // v6.25 (Ali's log: six starts, not one word): when the engine stops, the log says why in plain words
+      p.on("error", (e) => this.note("The engine could not be started: " + (e.code === "EACCES" || e.code === "EPERM" ? "Windows or an antivirus blocked it — allow Attune in the antivirus" : e.message)));
+      p.on("exit", (code, sig) => { if (gen === this.gen && this.proc === p && this.state !== "ready") this.note(exitReason(code, sig)); });
       this.proc = p; this.variant = v.name + (gpu ? "" : " (CPU)");
       const ok = await this.waitHealthy(p, gen);
       if (ok) { this.state = "ready"; this.onChange(this.json()); return true; }
@@ -113,4 +129,4 @@ class Engine {
   }
 }
 
-module.exports = { Engine, variants, envFor, EXE };
+module.exports = { Engine, variants, envFor, EXE, exitReason };

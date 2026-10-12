@@ -1,6 +1,6 @@
 # Attune — the whole app in one handoff (read this first)
 
-_Up to date: 12 Oct 2026, **v6.25** (versionCode 86) on `main` = branch `ccr-a0eb3595-e2c7a7`._
+_Up to date: 12 Oct 2026, **v6.26** (versionCode 87) on `main` = branch `ccr-a0eb3595-e2c7a7`._
 This file is the map. Details and history are in `HANDOFF.md` (§5.x = one section per release, newest at the end:
 §5.44–§5.60 cover 10–12 Oct 2026). Ali's raw problem lists are in `NEXT_SESSION.md`. The desktop plan is in
 `DESKTOP_PLAN.md`.
@@ -149,6 +149,7 @@ Google Play Billing.
 | v6.23 | 12 Oct | Fit diary: edit name/grams/calories/macros/meal of a logged food; copy one food to any day and meal |
 | v6.24 | 12 Oct | Computer layout like Claude/ChatGPT (sidebar); the Windows app gets web search, knowledge packs, maps, PDFs, reminders |
 | v6.25 | 12 Oct | Back on a computer (sidebar ←, mouse back button, Alt+←, Esc); one Windows app window at a time |
+| v6.26 | 12 Oct | Desktop look A + C (Home page, Tools page, pinned tools, wide pages, "computer" wording); Windows engine needs no extra Microsoft files |
 
 ## 8. Prompt for the next session (paste as is)
 ```

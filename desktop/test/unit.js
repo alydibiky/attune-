@@ -42,5 +42,10 @@ assert.ok(i.ramGB >= 1 && i.cores >= 1);
   assert.strictEqual(models.remove(dir, "t1"), true);
   assert.strictEqual(models.list(dir).length, 1);
   fs.rmSync(dir, { recursive: true, force: true });
+  // v6.25: an engine that stops says why (Ali's PC: six silent starts — a missing Windows file)
+  const { exitReason } = require("../lib/engine");
+  assert.ok(/missing \(DLL not found\)/.test(exitReason(-1073741515)), "0xC0000135 as a signed exit code");
+  assert.ok(/missing/.test(exitReason(3221225781)) && /AVX2/.test(exitReason(3221225501)) && /out of memory/.test(exitReason(3221225495)));
+  assert.ok(/too little memory/.test(exitReason(null, "SIGKILL")));
   console.log("desktop unit: all passed");
 })().catch((e) => { console.error(e); process.exit(1); });
