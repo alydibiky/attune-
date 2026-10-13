@@ -58,7 +58,7 @@ with sync_playwright() as p:
     check(t_poem > b.get("temperature", 1), "a poem gets a warmer temperature than a fact (%s > %s)" % (t_poem, b.get("temperature")))
 
     # ---- 4. Business: JSON mode, and a safe retry when the engine refuses it ----
-    page.locator("nav button:has-text('Business')").click()
+    page.locator("nav button:has-text('All')").click(); page.wait_for_timeout(250); page.locator(".rounded-t-2xl button:has-text('Business')").first.click()   # v6.27: Business lives in All
     page.wait_for_selector("[data-testid=business-page]", timeout=5000)
     page.click("[data-testid=erp-new]")
     page.evaluate("() => { const M = window.__mock; M.fakeQueue = []; M.bodies = []; }")

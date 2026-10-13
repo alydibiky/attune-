@@ -139,6 +139,7 @@ with sync_playwright() as pw:
     br = pw.chromium.launch()
     ctx = br.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, is_mobile=True, has_touch=True)
     ctx.add_init_script(MOCK)
+    ctx.add_init_script("try{if(localStorage.getItem('attune:start')===null)localStorage.setItem('attune:start','chat')}catch(e){}")   # v6.27: the phone opens on Home; these tests start in Chat
     ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")
     page = ctx.new_page()
     page.on("pageerror", lambda e: errors.append("pageerror: " + str(e)))
@@ -148,7 +149,7 @@ with sync_playwright() as pw:
         b = page.locator("nav button:has-text('%s')" % name)
         if b.count(): b.click()
         else:
-            page.locator("nav button:has-text('More')").click(); page.wait_for_timeout(150)
+            page.locator("nav button:has-text('All')").click(); page.wait_for_timeout(150)
             page.locator("button:has-text('%s')" % name).first.click()
         page.wait_for_timeout(200)
     page.goto(f"http://127.0.0.1:{PAGE_PORT}/index.html")

@@ -229,7 +229,7 @@ with sync_playwright() as p:
         shot(page, "ar-slide-%d" % k, "[data-testid=slide-canvas-%d]" % k)
     shot(page, "06-ar-deck")
     # ---- 8. from Chat: "make a presentation…" offers Slides & Reports with the prompt ----
-    page.locator("nav button").first.click(); page.wait_for_timeout(300)
+    page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(300)
     queue(page, ["Here is an outline for your presentation: 1. Intro 2. Safety."] * 4)   # spare copies: any side request takes one, never the real engine
     page.locator("textarea[placeholder='Message Attune']").fill("Make me a presentation about tower crane safety")
     page.locator("button[title='Send']").first.click()   # the Send button, like the other tests (Enter on a phone keyboard may add a line)

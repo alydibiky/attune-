@@ -156,6 +156,7 @@ with sync_playwright() as pw:
     br = pw.chromium.launch()
     ctx = br.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, is_mobile=True, has_touch=True)
     ctx.add_init_script(MOCK)
+    ctx.add_init_script("try{if(localStorage.getItem('attune:start')===null)localStorage.setItem('attune:start','chat')}catch(e){}")   # v6.27: the phone opens on Home; these tests start in Chat
     ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
     ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")
     page = ctx.new_page()
@@ -283,7 +284,7 @@ with sync_playwright() as pw:
     page.screenshot(path=HERE + "/v4-history.png")
 
     # 10. More sheet and back
-    nav.locator("button:has-text('More')").click(); page.wait_for_timeout(200)
+    nav.locator("button:has-text('All')").click(); page.wait_for_timeout(200)
     check(page.locator("text=Site reports").count() >= 1 and page.locator("text=Improve a prompt").count() >= 1, "More lists every other tool")
     page.screenshot(path=HERE + "/v4-more.png")
     page.locator("button:has-text('Improve a prompt')").click(); page.wait_for_timeout(300)
@@ -294,7 +295,7 @@ with sync_playwright() as pw:
     check(page.evaluate("window.__attuneBack()") is False, "Back on Chat leaves the app")
 
     # 11. Instant still works from the bar
-    nav.locator("button:has-text('Instant')").click(); page.wait_for_timeout(200)
+    nav.locator("button:has-text('All')").click(); page.wait_for_timeout(250); page.locator(".rounded-t-2xl button:has-text('Instant')").first.click()   # v6.27: Instant lives in All; page.wait_for_timeout(200)
     ta = page.locator("textarea[dir=auto]").first
     ta.fill("Bonjour, le prix comprend-il l'installation?")
     page.wait_for_timeout(200)

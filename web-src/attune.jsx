@@ -7,6 +7,7 @@ import {
   AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2,
   Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple,
   BookOpen, PanelLeft, House,
+  Heart,
 } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -45,6 +46,7 @@ import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
 import { MoneyDesk } from "./money-desk.jsx";
 import { LifePage } from "./life-ui.jsx";
+import { PhoneHome } from "./home-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
@@ -7384,12 +7386,18 @@ const MORE_TOOLS = [
 
 // v5.32 — Ali: "most features are cluttered, they must be organized": More shows its tools
 // in four named groups instead of one wall of 23 tiles.
+// v6.27 (design A "Calm", the agreed tool map): the areas, then the two add-ons. Video Downloader is out (a Google Play
+// risk) — its tile shows only in developer mode; a shared video link still opens it.
 const MORE_GROUPS = [
-  ["Create & learn", ["instant", "studio", "assistants", "skills", "projects", "artifacts", "code", "learn", "news"]],
-  ["Work & business", ["slides", "xray", "convert", "pdfchat", "video", "cv", "business", "crane", "field", "fleet", "reminders"]],
-  ["Your life", ["life", "fit", "deal", "shelf", "memory", "knowledge", "map", "travel", "cycle"]],
-  ["Prompts for other AIs", ["improve", "compress", "humanize", "copilot", "library", "ask"]],
-];
+  ["Money & people", ["life", "deal", "reminders"]],
+  ["Health", ["fit", "cycle"]],
+  ["Mind & learning", ["memory", "shelf", "knowledge", "learn", "news"]],
+  ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
+  ["Files", ["convert", "pdfchat", "slides", "cv", "video"]],
+  ["Places", ["map", "travel"]],
+  ["Business (add-on)", ["business", "crane", "field", "fleet"]],
+  ["Create (add-on)", ["studio", "code", "improve", "compress", "humanize", "copilot", "library", "ask"]],
+].map(([t, ids]) => [t, ids.filter((id) => id !== "video" || devMode())]);
 
 // Records from Memory, attached to a chat message about the user's own past.
 function withRecords(question, found) {
@@ -7404,7 +7412,8 @@ ${(f.rec.output || "").slice(0, 600)}`).join("\n\n")}`;
 export default function App() {
   // v6.25: a computer opens on Home (Ali picked "A + C"); a phone on Chat
   const wideAtStart = () => { try { return window.matchMedia("(min-width: 1024px)").matches; } catch (e) { return false; } };
-  const [mode, setModeRaw] = useState(() => (wideAtStart() ? "home" : "chat"));
+  // v6.27 (design A "Calm"): the phone opens on Home too ("attune:start" = "chat" keeps the old start — the test kit sets it)
+  const [mode, setModeRaw] = useState(() => { let s = ""; try { s = localStorage.getItem("attune:start") || ""; } catch (e) {} return wideAtStart() ? "home" : s === "chat" ? "chat" : "home"; });
   // v5.41 (Ali: "when I press back I can't go to the previous page, it leaves the app"): every screen
   // change is remembered, and Back returns to the previous screen — Studio → Learn daily → Chat.
   const modeRef = useRef(mode); modeRef.current = mode;
@@ -7436,7 +7445,8 @@ export default function App() {
   const wide = useDesktopWide();
   const side = useSide(wide);
   // the computer's own pages don't exist on a phone-sized window: going narrow returns to Chat
-  useEffect(() => { if (!wide && (modeRef.current === "home" || modeRef.current === "tools")) { modeRef.current = "chat"; setModeRaw("chat"); } }, [wide]);
+  // v6.27: Home exists on a phone too now — only the computer Tools page falls back to Chat on a narrow window
+  useEffect(() => { if (!wide && modeRef.current === "tools") { modeRef.current = "chat"; setModeRaw("chat"); } }, [wide]);
   const [showBackup, setShowBackup] = useState(false);   // encrypted backup / restore
   const [reminders, setRemindersRaw] = useState(() => loadReminders());
   const setReminders = (list) => { setRemindersRaw(saveReminders(list)); };
@@ -9136,7 +9146,9 @@ export default function App() {
           </div>
         ) : null}
 
-        <Guard key={"g-" + mode} name={mode}>{mode === "home" ? (
+        <Guard key={"g-" + mode} name={mode}>{mode === "home" && !wide ? (
+          <PhoneHome navTo={(m) => navTo(m)} openAll={() => setMoreOpen(true)} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
+        ) : mode === "home" ? (
           <DesktopHome tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
             onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "tools" ? (
@@ -10885,9 +10897,9 @@ export default function App() {
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
-          {/* v5.17: Memory in the bottom bar (Ali) */}
-          {[["chat", "Chat", MessageCircle], ["instant", "Instant", Zap], ["money", "Money", Wallet],
-            ["business", "Business", Database], ["memory", "Mind", Brain], ["more", "More", LayoutGrid]].map(([id, label, Icon]) => {
+          {/* v6.27 design A "Calm": Home · Chat · Money · Health · Mind, then All (every tool; Instant and Business live there now) */}
+          {[["home", "Home", House], ["chat", "Chat", MessageCircle], ["money", "Money", Wallet],
+            ["fit", "Health", Heart], ["memory", "Mind", Brain], ["more", "All", LayoutGrid]].map(([id, label, Icon]) => {
             const on = id === "more" ? moreOpen : (mode === id && !moreOpen);
             return (
               <button key={id} onClick={() => { if (id === "more") setMoreOpen((v) => !v); else { setMoreOpen(false); navTo(id); } }}

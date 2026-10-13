@@ -143,7 +143,7 @@ def sec_arabic(br):
     check(page.evaluate("document.documentElement.dir") == "rtl" and page.evaluate("document.documentElement.lang") == "ar", "Arabic turns the whole page right-to-left")
     nav = page.locator("nav button")
     labels = [nav.nth(i).inner_text().strip() for i in range(nav.count())]
-    check(labels[0] == "المحادثة" and labels[-1] == "المزيد" and "المال" in labels, "bottom bar is in Arabic: %s" % labels)
+    check(labels == ["الرئيسية", "المحادثة", "المال", "الصحة", "عقلي", "الكل"], "bottom bar is in Arabic (v6.27: Home · Chat · Money · Health · Mind · All): %s" % labels)
     b0 = nav.nth(0).bounding_box(); b4 = nav.nth(nav.count() - 1).bounding_box()
     check(b0["x"] > b4["x"], "and it reads from the right (Chat is on the right)")
     check(page.locator("textarea[placeholder='اكتب رسالة إلى Attune']").count() == 1, "the message box says اكتب رسالة إلى Attune")
@@ -492,7 +492,7 @@ def sec_fast(br):
     ctx.close()
     # first launch on a narrow screen starts with smaller text
     c2 = br.new_context(viewport={"width": 360, "height": 780}, is_mobile=True, has_touch=True)
-    c2.add_init_script(env.mock); c2.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
+    c2.add_init_script(env.mock); c2.add_init_script("try{if(localStorage.getItem('attune:start')===null)localStorage.setItem('attune:start','chat')}catch(e){}"); c2.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
     p2 = c2.new_page(); p2.goto(env.url); p2.wait_for_selector("nav", timeout=15000)
     check(p2.evaluate("window.__mock.textZoom") == 90, "a narrow screen (big display size) starts at 90% text")
     c2.close()

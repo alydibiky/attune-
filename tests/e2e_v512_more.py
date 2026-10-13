@@ -132,7 +132,7 @@ def sections(env, errors, install, open_more, queue):
         # tapping the notification opens the course and writes today's lesson
         queue(page, [lesson("Numbers 1–10", {"kind": "bars", "title": "x", "items": [{"label": "bir", "value": 1}, {"label": "iki", "value": 2}]})])
         page.evaluate("window.__attuneBack && window.__attuneBack()")
-        page.locator("nav button").first.click()
+        page.locator("nav button:has-text('Chat')").first.click()
         cid = course["id"]
         # the next morning: yesterday's lessons are behind us
         page.evaluate("""() => { const k = 'attune:daily:courses:v1'; const c = JSON.parse(localStorage.getItem(k));
@@ -174,7 +174,7 @@ def sections(env, errors, install, open_more, queue):
     def sec_layout(br):
         """Arabic, 360 px: every Business tab fits the phone (the grid scrolls inside its own box)."""
         ctx = br.new_context(viewport={"width": 360, "height": 780}, device_scale_factor=2, is_mobile=True, has_touch=True)
-        ctx.add_init_script(env.mock); ctx.add_init_script(NEWS_MOCK)
+        ctx.add_init_script(env.mock); ctx.add_init_script("try{if(localStorage.getItem('attune:start')===null)localStorage.setItem('attune:start','chat')}catch(e){}"); ctx.add_init_script(NEWS_MOCK)
         ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1');localStorage.setItem('attune:ui:lang','ar')}catch(e){}")
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append("pageerror: " + str(e)))

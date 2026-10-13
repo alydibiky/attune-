@@ -35,7 +35,7 @@ WIDE = """() => {
 
 def sec_layout(br, lang="en"):
     ctx = br.new_context(viewport={"width": 360, "height": 780}, device_scale_factor=3, is_mobile=True, has_touch=True)
-    ctx.add_init_script(env.mock); ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
+    ctx.add_init_script(env.mock); ctx.add_init_script("try{if(localStorage.getItem('attune:start')===null)localStorage.setItem('attune:start','chat')}catch(e){}"); ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
     if lang == "ar": ctx.add_init_script("try{localStorage.setItem('attune:ui:lang','ar')}catch(e){}")
     page = ctx.new_page(); page.on("pageerror", lambda e: errors.append("pageerror: " + str(e)))
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)

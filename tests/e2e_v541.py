@@ -111,7 +111,7 @@ with sync_playwright() as p:
         draw.first.click(); page.wait_for_selector("[data-testid=studio-upscale]", timeout=15000)
         page.evaluate("() => { window.__mock.slowUp = true; }")
         page.locator("[data-testid=studio-upscale]").click(); page.wait_for_timeout(300)
-        page.locator("nav button").first.click(); page.wait_for_timeout(300)          # leave Studio while it sharpens
+        page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(300)          # leave Studio while it sharpens
         page.evaluate("window.__mock.upPending()"); page.wait_for_timeout(300)        # it finishes while you are away
         open_tool(page, "Studio", "studio-page"); page.wait_for_timeout(300)
         g = page.evaluate("JSON.parse(localStorage.getItem('attune:studio:v1') || '[]').map(x => x.file)")
@@ -185,7 +185,7 @@ with sync_playwright() as p:
     # after a page reload: the job noted in storage is picked up from the Studio folder
     page.evaluate("""() => { localStorage.setItem('attune:studio:pending', JSON.stringify({ what: 'upscale', t0: Date.now(), file: 'img-77.png' }));
       window.__mock.folder = [{ file: 'img-77-x4.png', url: 'data:image/png;base64,iVBORw0KGgo=', width: 2048, height: 2048, at: Date.now() }]; }""")
-    page.locator("nav button").first.click(); page.wait_for_timeout(200)
+    page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(200)
     page.reload(); page.wait_for_selector("nav", timeout=15000)
     page.evaluate("() => { window.__mock.folder = [{ file: 'img-77-x4.png', url: 'data:image/png;base64,iVBORw0KGgo=', width: 2048, height: 2048, at: Date.now() }]; }")
     open_tool(page, "Studio", "studio-page"); page.wait_for_timeout(600)

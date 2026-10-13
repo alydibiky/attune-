@@ -20,7 +20,7 @@ def open_knowledge(page):
 def to_chat(page):
     page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
     if page.locator("textarea[placeholder='Message Attune']").count() == 0:
-        page.locator("nav button").first.click(); page.wait_for_timeout(300)
+        page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(300)
     page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300)
 
 def send(page, text, answer):

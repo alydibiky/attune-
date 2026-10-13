@@ -54,7 +54,7 @@ with sync_playwright() as pw:
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000); page.wait_for_timeout(500)
     grab(page)
     page.evaluate("window.__mock.fake = 'Hello **there**.'")
-    page.locator("nav button").first.click()
+    page.locator("nav button:has-text('Chat')").first.click()
     ta = page.locator("textarea").last
     ta.fill("test"); page.keyboard.press("Enter"); page.wait_for_timeout(1500); grab(page)
     for sel in ["header button[aria-label]"]:

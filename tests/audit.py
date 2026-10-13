@@ -2,7 +2,7 @@ import sys, json; import os; sys.path.insert(0, os.path.dirname(os.path.abspath(
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page
 env = Env()
-TOOLS = "instant studio assistants projects artifacts code learn news slides xray convert video business crane field fleet reminders life fit deal memory map travel cycle improve compress humanize copilot library ask".split()
+TOOLS = "life deal reminders fit cycle memory shelf knowledge learn news instant assistants skills projects artifacts xray convert pdfchat slides cv video map travel business crane field fleet studio code improve compress humanize copilot library ask".split()   # v6.27: the All sheet by area
 PROBE = r"""() => {
   const W = innerWidth, bad = [];
   for (const el of document.querySelectorAll('body *')) {

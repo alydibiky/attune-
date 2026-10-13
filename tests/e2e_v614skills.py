@@ -46,7 +46,7 @@ with sync_playwright() as p:
     # ---- the command reaches the model with the instructions, without the command itself
     page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
     if page.locator("textarea[placeholder='Message Attune']").count() == 0:
-        page.locator("nav button").first.click(); page.wait_for_timeout(300)
+        page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(300)
     send(page, "/quote 50 t crane for 3 days at Ain Sokhna")
     u = last_user(page)
     check("Your saved skills" in u and "Crane rental quote" in u, "the skill's instructions are added under the question")
@@ -65,7 +65,7 @@ with sync_playwright() as p:
     page.click("[data-testid=skill-toggle]"); page.wait_for_timeout(200)
     page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
     if page.locator("textarea[placeholder='Message Attune']").count() == 0:
-        page.locator("nav button").first.click(); page.wait_for_timeout(300)
+        page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(300)
     page.locator("button[aria-label='New chat']").first.click(); page.wait_for_timeout(300)
     send(page, "I need a price offer for a crane rental job next week")
     check("Your saved skills" not in last_user(page), "a switched-off skill adds nothing")
@@ -89,7 +89,7 @@ with sync_playwright() as p:
     page.click("[data-testid=skill-import-save]"); page.wait_for_timeout(300)
     page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
     if page.locator("textarea[placeholder='Message Attune']").count() == 0:
-        page.locator("nav button").first.click(); page.wait_for_timeout(300)
+        page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(300)
     send(page, "/qm 3 days at 9000")
     u = last_user(page)
     check("27000" in u and "VAT shown separately" in u and "Mobilisation" in u, "the program's result, the checklist and the facts reach the model")

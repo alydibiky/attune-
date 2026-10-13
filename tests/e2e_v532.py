@@ -79,7 +79,7 @@ with sync_playwright() as p:
 
     # ---- 4. More: four named groups; Instant explains itself and hands places to the map ----
     page.locator("nav button").last.click(); page.wait_for_timeout(300)
-    check(page.locator("[data-testid=more-group]").count() == 4, "More shows its tools in four named groups")
+    check(page.locator("[data-testid=more-group]").count() == 8, "All shows its tools by area: six areas + two add-ons (v6.27 tool map)")
     page.locator(".rounded-t-2xl button:has-text('Instant')").first.click(); page.wait_for_timeout(300)
     check(page.locator("[data-testid=instant-about]").count() == 1, "Instant says what it is for")
     page.evaluate("() => { window.__mock.fakeQueue = ['Head to the nearest fuel station.']; }")

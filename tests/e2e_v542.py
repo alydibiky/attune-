@@ -140,7 +140,7 @@ with sync_playwright() as p:
 
     # ---- Chat: "I ate…" offers Fit and opens it with the text ----
     page.locator("[data-testid=fit-exit]").click(); page.wait_for_timeout(200)   # v7.31: Fit is an app of its own; leave it first
-    page.locator("nav button").first.click(); page.wait_for_timeout(200)
+    page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(200)
     queue(page, ["Sounds like a good dinner.", "ok", "ok"])
     page.locator("textarea[placeholder='Message Attune']").fill("I ate a plate of koshari and a can of cola")
     page.locator("button[title='Send']").first.click()

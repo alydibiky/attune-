@@ -89,7 +89,7 @@ with sync_playwright() as p:
     check(page.evaluate("window.__mock.vcalls.filter(c => c[0] === 'download').length") == 3, "a third download goes through (free: 3 a day)")
 
     # ---- 6. a video link shared to Attune opens the downloader ----
-    page.locator("nav button").first.click(); page.wait_for_timeout(200)
+    page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(200)
     page.evaluate("window.dispatchEvent(new MessageEvent('attune-share', { data: { kind: 'share', text: 'https://cdn.example.org/clips/boom_720p.mp4' } }))")
     page.wait_for_selector("[data-testid=video-found]", timeout=8000)
     check("720p" in page.locator("[data-testid=video-q-0]").inner_text(), "a shared video link opens the downloader with its quality")

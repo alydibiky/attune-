@@ -1161,6 +1161,24 @@ internet searching … improve internet searching and make it faster".
   The roadmap's ~500-sentence set per language: grow this file with every sentence that fails in real use.
 - Next: show "People & plans" in Money (People & debts tab) and Home's Today card; reminders for due payments.
 
+### 5.64 (13 Oct 2026) — design A "Calm" on the phone: Home, the bottom bar, the tool map
+- **The phone opens on Home** (`web-src/home-ui.jsx` PhoneHome, Calm tokens): date + greeting, "Ask or add anything" (→
+  Chat with the text), TODAY (`home.js todayList`: People & plans' due payments + Money's bills due ≤ 7 days, late
+  first, ≤ 4 lines + today's reminders; a line opens People & plans or Money), Spent this month (of the budget) and
+  Food today (of the Fit goal, `fithome.targetsOf`), then the areas Money · Health · Mind · Files · Places · All.
+  `attune:start` = "chat" keeps the old start — **the test kit (harness.new_page and the tests with their own context)
+  sets it**, so older tests still start in Chat; Home tests set "home". A narrow window no longer drops Home.
+- **Bottom bar:** Home · Chat · Money · Health (Fit) · Mind · All (the sheet). Instant and Business moved into All.
+  Tests that pressed "the first button" for Chat now press "Chat"; Business/Instant are opened from All.
+- **All = the agreed tool map:** Money & people (People & plans, Deal Check, Reminders) · Health (Fit, Cycle) · Mind &
+  learning · Chat (Instant, Assistants, Skills, Projects, Artifacts, Chat X-Ray) · Files (Converter, Ask a PDF, Slides,
+  CV) · Places (Maps, Travel) · Business (add-on) · Create (add-on: Studio, Coding, the prompt tools). **Video
+  Downloader is out** (Google Play risk) — its tile shows only in developer mode; a shared video link still opens it.
+- Bills now carry their own name ("فاتورة الكهربا", "Electricity bill", "اشتراك نتفليكس": the words before the amount).
+- Tests: `tests/unit/v727home.test.mjs`, `tests/e2e_v727home.py` (light + dark, screenshots with SHOTS=).
+- Next in Calm: the remaining screens area by area (Chat, Fit, Mind, Files, Places) in the Calm tokens; People & plans
+  in Money's People & debts tab; reminders for due payments.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

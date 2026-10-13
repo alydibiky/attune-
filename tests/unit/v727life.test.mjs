@@ -50,7 +50,9 @@ want("Gym 900 monthly", { kind: "subscription", amount: 900, every: "month" });
 want("Rent 8000 monthly on the 5th", { kind: "rent", dir: "out", amount: 8000, every: "month", start: "2026-11-05" });
 want("الإيجار ٨٠٠٠ شهريا يوم ٥", { kind: "rent", amount: 8000, every: "month", start: "2026-11-05" });
 want("Electricity bill 640 due Thursday", { kind: "bill", amount: 640, every: null, start: "2026-10-15" });
-want("فاتورة الكهربا ٦٤٠ يوم الخميس", { kind: "bill", amount: 640, start: "2026-10-15" });
+want("فاتورة الكهربا ٦٤٠ يوم الخميس", { kind: "bill", amount: 640, start: "2026-10-15", title: "فاتورة الكهربا" });
+want("Electricity bill 640 due Thursday", { title: "Electricity bill" });
+want("اشتراك نتفليكس ٢٠٠ كل شهر", { title: "اشتراك نتفليكس" });
 want("Internet 450 every month on the 1st", { kind: "bill", amount: 450, every: "month", start: "2026-11-01" });
 want("فاتورة النت ٤٥٠ كل شهر", { kind: "bill", amount: 450, every: "month" });
 // ---- my own installments ----

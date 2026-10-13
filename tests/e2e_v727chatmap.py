@@ -41,7 +41,7 @@ with sync_playwright() as pw:
     # v6.27: a commitment typed in Chat → People & plans, read and ready to save
     page.keyboard.press("Escape"); page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)   # the question above opened "install a model"
     if not page.locator("textarea[placeholder='Message Attune']").count():
-        page.locator("nav button").first.click(); page.wait_for_timeout(300)
+        page.locator("nav button:has-text('Chat')").first.click(); page.wait_for_timeout(300)
     comp = page.locator("textarea[placeholder='Message Attune']")
     comp.fill("Ahmed owes me 12,000, 1,000 a month for a year"); page.locator("button[title='Send']").click()
     card = page.locator("[data-testid=card-emerald]").last

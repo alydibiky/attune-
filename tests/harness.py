@@ -133,6 +133,9 @@ def new_page(br, env, errors, native=True, extra_init=None, release=False, deskt
     ctx.add_init_script("try{if(!localStorage.getItem('attune:skills:seeded:v612'))localStorage.setItem('attune:skills:seeded:v612','1')}catch(e){}")
     # v6.12: Web starts on Auto in the app; tests start with it Off unless they set attune:web:auto themselves
     ctx.add_init_script("try{if(localStorage.getItem('attune:web:auto')===null)localStorage.setItem('attune:web:auto','0')}catch(e){}")
+    # v6.27: the phone opens on Home now (design A "Calm"); the older tests were written for a Chat start — kept unless a
+    # test sets attune:start itself (to "home")
+    ctx.add_init_script("try{if(localStorage.getItem('attune:start')===null)localStorage.setItem('attune:start','chat')}catch(e){}")
     if extra_init: ctx.add_init_script(extra_init)
     page = ctx.new_page()
     page.on("pageerror", lambda e: errors.append("pageerror: " + str(e)))

@@ -42,7 +42,7 @@ with sync_playwright() as p:
 
     # ---- home screen: no period tracker ----
     nav = page.locator("nav").inner_text()
-    check("Cycle" not in nav and "Business" in nav, "the bottom bar has Business, not Cycle (%s)" % nav.replace("\n", " "))
+    check("Cycle" not in nav and "Home" in nav and "Health" in nav, "the bottom bar is Home · Chat · Money · Health · Mind · All, no Cycle (v6.27 design A; Business is in All) (%s)" % nav.replace("\n", " "))
     check(page.locator("text=Log my period").count() == 0, "no 'Log my period' starter on the home screen")
     install(page)
 
@@ -154,7 +154,7 @@ with sync_playwright() as p:
     page.set_viewport_size({"width": 400, "height": 800})
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     install(page)
-    page.locator("nav button:has-text('Business')").click()
+    page.locator("nav button:has-text('All')").click(); page.wait_for_timeout(250); page.locator(".rounded-t-2xl button:has-text('Business')").first.click()   # v6.27: Business lives in All
     page.wait_for_selector("[data-testid=business-page]", timeout=5000)
     page.click("[data-testid=erp-new]")
     LINES = "TABLE Customers\n- Name: text\n- Phone: phone\nTABLE Cranes\n- Code: auto\n- Model: text\n- Status: choice (Available, On hire)\nTABLE Jobs\n- Customer: link Customers\n- Crane: link Cranes\n- Days: number\n- Daily rate: money\n- Total: formula [Days] * [Daily rate]"

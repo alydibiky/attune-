@@ -107,6 +107,13 @@ const BILL = /\b(bill|electricity|water|gas bill|internet|phone bill|due)\b|فا
 const IN_ = /\bowes me\b|\bwill pay me\b|\bpays me\b|\bi lent\b|\bi loaned\b|(?:^|\s)lent\s+(?!me\b)|\blent\b.*\bto\b|سيدفع|سيسدد|هيسدد|هيدفع(?!ل)|\bto pay me back\b|\bi gave\b.*\b(loan|borrow)|عليه|عليها|هيدفعلي|يدفعلي|هيرجعلي|سلفت|اسلفت|اقرضت|ادينت|استلف مني|اخد مني|خد مني|مديون ليا|مدين لي/i;
 const OUT_ = /\bi owe\b|\bi borrowed\b|\bi have to pay\b|\bi must pay\b|\bmy (installment|instalment)s?\b|عليا|علي ل|استلفت|اقترضت|اخدت من|خدت من|مديون ل|لازم ادفع|هدفع|قسط العربيه|قسطي|اقساطي/i;
 
+/** The name of a bill / subscription: the words before its amount («فاتورة الكهربا ٦٤٠» → «فاتورة الكهربا», "Netflix 200" → "Netflix"). */
+function nameBefore(raw, fallback) {
+  const lead = String(raw).split(/[\d\u0660-\u0669$€£]/)[0].replace(/[:،,\-–—]+\s*$/, "").replace(/\s+/g, " ").trim();
+  const words = lead.split(" ").filter(Boolean);
+  return words.length && words.length <= 5 ? words.join(" ") : fallback;
+}
+
 /**
  * One sentence → a commitment, or null when the rules can't read it (then a model may try, with the same fields).
  * now: for dates; currency: the default currency.
@@ -140,8 +147,8 @@ export function parseLife(text, { now = Date.now(), currency = "EGP" } = {}) {
     return { ...base, kind: "debt", dir: dirIn ? "in" : "out", amount: big, count: 1, total: big, every: null };
   }
   if (RENT.test(raw) || RENT.test(t)) return { ...base, kind: "rent", dir: dirIn && /tenant|المستاجر|بيدفعلي/.test(t) ? "in" : "out", amount: amts[0], count: count || 0, total: 0, every: every || "month", title: "Rent" };
-  if (SUBS.test(raw) || SUBS.test(t)) { const m = SUBS.exec(raw); return { ...base, kind: "subscription", dir: "out", amount: amts[0], count: 0, total: 0, every: every || "month", title: m[0][0].toUpperCase() + m[0].slice(1) }; }
-  if (BILL.test(raw) || BILL.test(t)) { const m = BILL.exec(raw) || BILL.exec(t); return { ...base, kind: "bill", dir: "out", amount: amts[0], count: every ? 0 : 1, total: every ? 0 : amts[0], every, title: m[0] }; }
+  if (SUBS.test(raw) || SUBS.test(t)) { const m = SUBS.exec(raw) || SUBS.exec(t); return { ...base, kind: "subscription", dir: "out", amount: amts[0], count: 0, total: 0, every: every || "month", title: nameBefore(raw, m[0][0].toUpperCase() + m[0].slice(1)) }; }
+  if (BILL.test(raw) || BILL.test(t)) { const m = BILL.exec(raw) || BILL.exec(t); return { ...base, kind: "bill", dir: "out", amount: amts[0], count: every ? 0 : 1, total: every ? 0 : amts[0], every, title: nameBefore(raw, m[0]) }; }
   if (/installments?|instalments?|قسط|اقساط/.test(t) && (count || every)) {
     const split = /\b(?:in|over)\s+\d+|عل[يى]\s*\d+/.test(t), each1 = amts.length === 1 && !split && /\b(a|per|every|each) (month|week)\b|\bmonthly\b|\bweekly\b|كل شهر|شهريا|في الشهر|بالشهر|كل اسبوع/.test(t);
     if (each1 && count > 1) return { ...base, kind: "installment", dir: dirIn ? "in" : "out", amount: amts[0], count, total: amts[0] * count, every: every || "month", title: (/(car|phone|laptop|عربيه|العربيه|موبايل|تليفون|لابتوب)/.exec(t) || [""])[0] };
