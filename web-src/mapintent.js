@@ -21,7 +21,7 @@ export const SORTS = [
   ["cafe", "cafe|cafes|coffee|coffee shop", "كافيه|كافيهات|قهوه|قهوة|مقهى|مقهي|كوفي", ["amenity/cafe"]],
   ["supermarket", "supermarket|grocery|groceries|market|hypermarket", "سوبر ماركت|سوبرماركت|ماركت|بقاله|بقالة|هايبر", ["shop/supermarket", "shop/convenience", "poi/food_and_beverage_store"]],
   ["mall", "mall|malls|shopping centre|shopping center", "مول|مولات|سنتر تجاري|مركز تجاري", ["shop/mall", "poi/shopping_mall"]],
-  ["compound", "compound|compounds|gated community|residence", "كمبوند|كومباوند|كمباوند|كمبوندات|مجمع سكني", ["place/compound", "place/neighbourhood"]],
+  ["compound", "compound|compounds|gated community|residence", "كمبوند|كومباوند|كمباوند|كمبوندات|مجمع سكني", ["place/compound", "place/residential_area", "place/neighbourhood"]],
   ["school", "school|schools", "مدرسه|مدرسة|مدارس", ["amenity/school"]],
   ["university", "university|college", "جامعه|جامعة|كليه|كلية", ["amenity/university", "amenity/college"]],
   ["hotel", "hotel|hotels|resort", "فندق|فنادق|اوتيل|أوتيل|منتجع", ["tourism/hotel", "poi/hotel", "poi/resort"]],

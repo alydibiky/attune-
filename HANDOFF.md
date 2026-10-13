@@ -1102,9 +1102,12 @@ internet searching … improve internet searching and make it faster".
   map-ui `searchAt` (saved → installed pack → country index online → web) is used for names, sorts and chips; a sort
   online searches its word in English AND Arabic (`sortNames`) and keeps only that sort's kinds.
   Tests: `tests/unit/v727mapintent.test.mjs`, e2e_v727online («أقرب صيدلية»), e2e_v722maps («أقرب بنزينة» offline).
-- **Compounds:** `build_map_pack.py` now indexes named `landuse=residential` / `residential=gated` areas as
-  `place/compound` (rank 62) — they were dropped from offline search before (Overture added some). Takes effect on the
-  next weekly pack build. Drawing compounds as labelled areas on the map is the next step (needs our own label layer).
+- **Compounds:** `build_map_pack.py` now indexes named residential areas — gated ones (`residential=gated`/`gated=yes`)
+  as `place/compound` (62), the rest as `place/residential_area` (60: many are towns or resorts, e.g. حلايب) — they
+  were dropped from offline search before. Egypt build of 13 Oct: 436,696 places, +627 residential areas. Most real
+  compounds are already there as `place/neighbourhood` (Mivida, Hyde Park, Eastown, Al Burouj; 712 names with
+  كمبوند/compound) — the «compound» sort covers all three kinds. World pack published: wld.pmtiles 45 MB (zoom ≤ 6).
+  Egypt's eg-find.bin published (45.6 MB). Drawing compounds as labelled areas on the map is the next step.
 - Tests: `tests/unit/v722maps.test.mjs` (world name, online style), `tests/e2e_v722mapbuilder.py` (compounds).
 - `tests/audit.py` never finished since a full page (Fit/Money) hides the bottom bar: it now presses the app's Back
   until the bar shows. It then found the Instant page's "Go" off a 320-px screen → that toolbar wraps now.

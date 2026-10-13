@@ -75,8 +75,11 @@ def kind_and_rank(tags):
         return "street/" + tags["highway"], 30 if tags["highway"] not in ("motorway", "trunk", "primary") else 40
     # v6.27 (Ali: "compounds like Google Maps"): a gated compound is usually drawn as a named residential area
     # (landuse=residential, often residential=gated) — it was left out of search before
-    if tags.get("landuse") == "residential" or tags.get("residential") == "gated":
+    # (a plain named residential area is often a town or a resort — only a gated one is called a compound)
+    if tags.get("residential") == "gated" or tags.get("gated") == "yes":
         return "place/compound", 62
+    if tags.get("landuse") == "residential":
+        return "place/residential_area", 60
     if tags.get("railway") in ("station", "halt", "tram_stop") or tags.get("public_transport") == "station":
         return "transport/station", 50
     if tags.get("aeroway") in ("aerodrome", "terminal"):

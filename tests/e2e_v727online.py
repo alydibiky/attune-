@@ -14,7 +14,7 @@ FIX = base64.b64encode(open(os.path.join(HERE, "fixtures", "cairo-mini.pmtiles")
 TMP = tempfile.mkdtemp()
 subprocess.run([sys.executable, "-c", """
 import sys; sys.path.insert(0, %r); import build_map_pack as B
-idx = B.Index(sys.argv[1]); idx.add({"name": "Zayed Dunes", "landuse": "residential"}, 30.06, 31.24)
+idx = B.Index(sys.argv[1]); idx.add({"name": "Zayed Dunes", "landuse": "residential", "residential": "gated"}, 30.06, 31.24)
 for i in range(600): idx.add({"name": "Street %%d" %% i, "highway": "residential"}, 30.05, 31.25)
 idx.add({"name": "صيدلية العزبي", "amenity": "pharmacy"}, 30.051, 31.251); idx.add({"name": "صيدلية سيف", "amenity": "pharmacy"}, 30.09, 31.3)
 idx.add({"name": "شارع الصيدلية", "highway": "residential"}, 30.05, 31.25)

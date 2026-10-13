@@ -8,7 +8,7 @@ let fail = 0; const ok = (c, w) => { console.log((c ? "PASS " : "FAIL ") + w); i
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "attune-find-"));
 const places = [
   [{ name: "مدينتي", "name:en": "Madinaty", place: "town" }, 30.1, 31.65],
-  [{ name: "Palm Hills October", landuse: "residential" }, 29.98, 30.95],
+  [{ name: "Palm Hills October", landuse: "residential", residential: "gated" }, 29.98, 30.95],
   [{ name: "مستشفى السلام", amenity: "hospital" }, 30.07, 31.33],
   [{ name: "B.Tech", shop: "electronics" }, 30.06, 31.34],
   [{ name: "Tech Park", place: "locality" }, 30.2, 31.4],
