@@ -7,6 +7,7 @@
    through the bridge (N.mapRead) and MapLibre draws it. One shared release, map-assets, holds the fonts and icons.
    Pure parts (normalize, isNewer, sizes, the style) are tested in tests/unit/v722maps.test.mjs.                  */
 import { PMTiles, Protocol } from "pmtiles";
+import { gunzipSync } from "fflate";
 import { layers, namedFlavor } from "@protomaps/basemaps";
 
 export const RELEASE_BASE = "https://github.com/alydibiky/attune-/releases/download/";
@@ -37,7 +38,7 @@ export function isNewer(remote, local) {
   if (!local || !local.date) return true;
   return String(remote.date) > String(local.date);
 }
-export const packBytes = (man) => ((man && man.files) || []).filter((f) => !/-route\.bin$/.test(f.name || "")).reduce((a, f) => a + (Number(f.bytes) || 0), 0);   // v6.20: directions are a separate download
+export const packBytes = (man) => ((man && man.files) || []).filter((f) => !/-(route|find)\.bin$/.test(f.name || "")).reduce((a, f) => a + (Number(f.bytes) || 0), 0);   // v6.20: directions are a separate download
 export function prettyMB(bytes) {
   const mb = (Number(bytes) || 0) / 1e6;
   return mb >= 1000 ? (mb / 1000).toFixed(1) + " GB" : mb >= 10 ? Math.round(mb) + " MB" : mb.toFixed(1) + " MB";
@@ -75,6 +76,46 @@ export class NetSource {
     const r = await this.call("mapRange", { code: this.code, name: this.code + ".pmtiles", offset, length });
     return { data: await b64ToBuf((r && r.b64) || "") };
   }
+}
+
+/** v6.27: search a country's places ONLINE without downloading its index — <code>-find.bin (tools/build_map_pack.py
+ *  build_find): a small index of pieces, read once, then the one piece (by the first 3 letters of the query's least
+ *  common word) through call("mapRange"). → [{name, name_ar, name_en, kind, lat, lon, rank}], best first. */
+const findIdx = new Map();
+const findStem = (w) => (w.startsWith("ال") && w.length > 4 ? w.slice(2) : w);
+async function findBytes(call, code, offset, length) {
+  const r = await call("mapRange", { code, name: code + "-find.bin", offset, length });
+  return new Uint8Array(await b64ToBuf((r && r.b64) || ""));
+}
+export async function netFind(call, code, q, { lat = null, lon = null, limit = 15 } = {}) {
+  const words = normalize(q).split(" ").filter((w) => w.length >= 2).slice(0, 6);
+  if (!words.length) return [];
+  let idx = findIdx.get(code);
+  if (!idx) {
+    const head = new TextDecoder().decode(await findBytes(call, code, 0, 16));
+    const m = /^AFIND1 (\d{8})\n$/.exec(head); if (!m) throw new Error("The online search of this map is not published yet");
+    idx = JSON.parse(new TextDecoder().decode(gunzipSync(await findBytes(call, code, 16, +m[1]))));
+    idx.df = idx.common || {}; idx.base = 16 + +m[1]; findIdx.set(code, idx);
+  }
+  // the piece: the query's longest uncommon word, else its rarest common word
+  const stems = words.map(findStem), df = (w) => idx.df[w] || 0;
+  const pick = stems.filter((w) => !df(w)).sort((a, b) => b.length - a.length)[0] || [...stems].sort((a, b) => df(a) - df(b) || (a < b ? -1 : a > b ? 1 : 0))[0];
+  const at = idx.shards[pick.slice(0, 3)];
+  if (!at) return [];
+  const text = new TextDecoder().decode(gunzipSync(await findBytes(call, code, idx.base + at[0], at[1])));
+  const out = [];
+  for (const line of text.split("\n")) {
+    const f = line.split("\t"); if (f.length < 8) continue;
+    const kw = f[7].split(" ");
+    if (!words.every((w) => kw.some((k) => k.startsWith(w) || findStem(k).startsWith(findStem(w))))) continue;
+    const p = { name: f[0], name_ar: f[1] || f[0], name_en: f[2] || f[0], kind: f[3], lat: +f[4], lon: +f[5], rank: +f[6] };
+    p.exact = f[7] === normalize(q) ? 1 : 0;
+    if (lat != null) p.dist = Math.hypot(p.lat - lat, (p.lon - lon) * Math.cos(lat * Math.PI / 180)) * 111;
+    out.push(p);
+  }
+  // a whole-name match first, then importance, then nearer
+  out.sort((a, b) => b.exact - a.exact || b.rank - a.rank || (a.dist || 0) - (b.dist || 0));
+  return out.slice(0, limit);
 }
 
 /** The country whose centre is nearest a point — the map to read online where the map is looking. */

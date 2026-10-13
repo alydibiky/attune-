@@ -4,6 +4,7 @@ name: Build a country map
 # tools/map_countries.json (44 packs, ~50 countries):
 #   map-<code>/<code>.pmtiles         the vector map: cut from the newest daily OpenStreetMap build by Protomaps
 #   map-<code>/<code>-places.sqlite   offline search: every named place, street, shop (Geofabrik's daily extract)
+#   map-<code>/<code>-find.bin        v6.27: the same index in small pieces, searched ONLINE (never downloaded)
 #   map-<code>/<code>-manifest.json   date, sizes, SHA-256 — the app compares the date to offer an update
 # Files over 1.9 GB are published in parts (<name>.001 …); the phone joins them. Once: map-assets/ (fonts, icons).
 # Every Friday it rebuilds ALL countries (4 at a time) so the maps stay up to date; run it by hand for some only
@@ -178,6 +179,11 @@ jobs:
           # a failure here keeps the OpenStreetMap index as it is (the map is still published)
           python3 tools/build_map_pack.py overture "${{ matrix.code }}" region.geojson "out/${{ matrix.code }}-places.sqlite" || echo "Overture step failed — publishing without it"
           ls -la out
+      - name: Online search (the places index in small pieces — searched online without downloading)
+        run: |
+          # v6.27: the app reads one small piece per search (web-src/offlinemap.js netFind); a failure publishes without it
+          python3 tools/build_map_pack.py find "out/${{ matrix.code }}-places.sqlite" "out/${{ matrix.code }}-find.bin" || { echo "Online search step failed — publishing without it"; rm -f "out/${{ matrix.code }}-find.bin"; }
+          ls -la out
       - name: Offline directions (the road network as a route file, read by web-src/route.js)
         run: |
           # an optional download in the app; a country too big for the runner is published without it
@@ -187,6 +193,7 @@ jobs:
         run: |
           d="${{ steps.b.outputs.date }}"; date="${d:0:4}-${d:4:2}-${d:6:2}"
           extra=""; [ -f "out/${{ matrix.code }}-route.bin" ] && extra="${{ matrix.code }}-route.bin"
+          [ -f "out/${{ matrix.code }}-find.bin" ] && extra="$extra ${{ matrix.code }}-find.bin"
           python3 tools/build_map_pack.py manifest "${{ matrix.code }}" "${{ steps.c.outputs.name }}" "$date" out "${{ matrix.code }}.pmtiles" "${{ matrix.code }}-places.sqlite" $extra > uploads.txt
           cat uploads.txt
           tag="map-${{ matrix.code }}"

@@ -161,6 +161,18 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
         if (out.some((x) => x.offline)) break;
       }
     }
+    // v6.27: the country in view, not downloaded → its own places index, read ONLINE in one small piece (OSM + Overture:
+    // compounds, shops, clinics the free web searches miss), then the web searches as before
+    if (term && onlineOk) {
+      const nc = OM.nearestCountry(c.lat, c.lon);
+      if (nc && !packs.some((p) => p.code === nc.code)) {
+        for (const t of [term, ...MS.variants(term)]) {
+          try { for (const p of await OM.netFind(nativeCall, nc.code, t, { lat: c.lat, lon: c.lon, limit: 15 }))
+            push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, net: true }); } catch (e) { break; }
+          if (out.some((x) => x.net)) break;
+        }
+      }
+    }
     if (online && out.filter((x) => !x.local).length < 3) {
       try { const r = await findPlaces(chip ? chip[4] : term, { center: c, lang, fetchJson: async (u) => { const res = await fetch(u, { headers: { Accept: "application/json" } }); if (!res.ok) throw new Error("search " + res.status); return res.json(); } });
         for (const p of (r && r.places) || []) push(p); } catch (e) {}

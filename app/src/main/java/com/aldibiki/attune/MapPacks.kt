@@ -50,6 +50,7 @@ object MapPacks {
                     val f = files.getJSONObject(i); val local = File(d, f.getString("name"))
                     val full = local.exists() && local.length() == f.getLong("bytes")
                     // v6.20: the directions file is optional (a separate, bigger download)
+                    if (isOnlineOnly(f.getString("name"))) continue
                     if (isRoutes(f.getString("name"))) { if (full) { routes = true; bytes += local.length() }; continue }
                     if (!full) ok = false else bytes += local.length()
                 }
@@ -61,6 +62,8 @@ object MapPacks {
 
     /** v6.20: "<code>-route.bin" — the offline directions (web-src/route.js), downloaded only when asked for. */
     fun isRoutes(name: String) = name.endsWith("-route.bin")
+    /** v6.27: "<code>-find.bin" — the places index in small pieces for searching ONLINE; never downloaded (the pack has the full index). */
+    fun isOnlineOnly(name: String) = name.endsWith("-find.bin")
 
     fun assetsInstalled(ctx: Context): Boolean = File(root(ctx), "assets/assets-manifest.json").exists()
 
@@ -77,7 +80,7 @@ object MapPacks {
         // the directions file comes along when asked for, or when the phone already has it (an update keeps it)
         val hadRoutes = (0 until all.length()).any { isRoutes(all.getJSONObject(it).getString("name")) && File(dir(ctx, code), all.getJSONObject(it).getString("name")).exists() }
         val files = JSONArray()
-        for (i in 0 until all.length()) { val f = all.getJSONObject(i); if (!isRoutes(f.getString("name")) || withRoutes || hadRoutes) files.put(f) }
+        for (i in 0 until all.length()) { val f = all.getJSONObject(i); if (!isOnlineOnly(f.getString("name")) && (!isRoutes(f.getString("name")) || withRoutes || hadRoutes)) files.put(f) }
         val assetsMan = if (!assetsInstalled(ctx)) assetsManifest(isCancelled) else null
         var total = 0L
         for (i in 0 until files.length()) total += files.getJSONObject(i).getLong("bytes")

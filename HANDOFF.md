@@ -1080,9 +1080,19 @@ internet searching … improve internet searching and make it faster".
   Before the first online view only the fonts/icons download (`mapAssets`, a few MB). Map choice (map-ui.jsx): the
   country in view if downloaded → that country online (`OM.nearestCountry` of the view centre, zoom ≥ 4) → the country
   you picked → first downloaded → world overview → "No map yet". All 44 packs (~50 countries) are published, so all
-  stream today. Search online stays Photon + Nominatim + Overpass (free OSM services); the Overture places index is
-  still offline-only (next: an online places index, sharded by area, on GitHub too).
-  Tests: `tests/e2e_v727online.py`, `desktop/test/maprange.js` (+ `tests/unit/v727maprange.test.mjs`, desktop.yml).
+  stream today.
+- **Online search of every place, $0:** `<code>-find.bin` (build_map_pack.py `find`, a new map-pack.yml step) = the
+  places index (OSM + Overture) cut into gzip pieces by the first 3 letters of each word (the Arabic "ال" skipped; words
+  in > 0.4 % of places are "common" and not used to cut, except a place's rarest common word when it is ≤ 1.5 %). The
+  app's `OM.netFind` reads the 16-byte header + the index once (Egypt: 130 KB), then ONE piece per search (Egypt:
+  median 0.3 KB, biggest 416 KB) via mapRange. Egypt: 436,120 places → 14,656 pieces, 45.6 MB file. Measured on the
+  real Egypt index: Madinaty, Palm Hills, Mall of Arabia, City Stars, El Rehab, Seoudi, B.Tech, مستشفى السلام all
+  found in 4–50 ms. "Address East" is in NO free source (OSM or Overture) — "add a missing place" covers it.
+  map-ui runSearch: saved places → installed pack → the view's country online (netFind) → Photon/Nominatim/Overpass.
+  Never downloaded with the pack (`isOnlineOnly`, Kotlin + desktop; packBytes skips it). Published from the next
+  map-pack run (weekly, Fridays; run it by hand for a country).
+  Tests: `tests/e2e_v727online.py` (map + search), `desktop/test/maprange.js` (+ `tests/unit/v727maprange.test.mjs`,
+  desktop.yml), `tests/unit/v727netfind.test.mjs` (builder ↔ netFind).
 - **Compounds:** `build_map_pack.py` now indexes named `landuse=residential` / `residential=gated` areas as
   `place/compound` (rank 62) — they were dropped from offline search before (Overture added some). Takes effect on the
   next weekly pack build. Drawing compounds as labelled areas on the map is the next step (needs our own label layer).

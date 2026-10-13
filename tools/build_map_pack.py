@@ -4,6 +4,7 @@
   region <code.poly> <out.geojson>            Geofabrik's country outline -> GeoJSON (for `pmtiles extract --region`)
   places <country.osm.pbf> <out.sqlite>       every named place, street, shop, amenity -> SQLite + FTS4 search index
   overture <code> <region.geojson> <sqlite>   v6.20: + Overture Maps' places of the country (shops, clinics, compounds…)
+  find <sqlite> <out.bin>                     v6.27: the ONLINE search file — the index cut into small pieces by word start
   manifest <code> <name> <date> <dir> <files…> -> <code>-manifest.json with sizes and SHA-256
   assets <fonts_dir> <sprites_dir> <outdir>   fonts + icons -> map-assets.zip + assets-manifest.json
 
@@ -332,6 +333,57 @@ def assets(fonts, sprites, outdir):
     return m
 
 
+# ---- v6.27: online search without downloading (Ali: "every place, free") -------------------------------------------------
+# <code>-find.bin = the places index cut into pieces by the first 3 letters of each word, each piece gzip'd, so the app
+# reads ONE small piece (median 0.3 KB, 99% under ~45 KB for Egypt) by an HTTP range request to the free GitHub release
+# (MapPacks.range / packs.mapRange) instead of downloading the 130 MB index. Very common words (شارع, street, al…: in
+# more than 0.4 % of places) are not used to cut — a place is filed under its other words. The Arabic article "ال" is
+# skipped when cutting (the key itself keeps it). Format: "AFIND1 " + 8-digit length of the index + "\n" (16 bytes),
+# then the index (gzip JSON {v, common, shards: {prefix: [offset from the first piece, length]}}), then the pieces (gzip, one place per
+# line: name, name_ar, name_en, kind, lat, lon, rank, key — tab-separated; name_ar/name_en empty when equal to name).
+# "common" in the index = {word: how many places have it}. Read by web-src/offlinemap.js netFind() (the same rules).
+FIND_COMMON, FIND_VERY = 0.004, 0.015
+
+
+def find_stem(w):
+    return w[2:] if w.startswith("ال") and len(w) > 4 else w
+
+
+def build_find(sqlite_path, out):
+    import collections, gzip
+    db = sqlite3.connect(sqlite_path)
+    rows = db.execute("SELECT p.name, p.name_ar, p.name_en, p.kind, p.lat, p.lon, p.rank, f.key FROM places p JOIN places_fts f ON f.rowid = p.id").fetchall()
+    df = collections.Counter()
+    for r in rows:
+        df.update({find_stem(w) for w in r[7].split() if len(w) >= 2})
+    common = {w for w, c in df.items() if c > len(rows) * FIND_COMMON}
+    shards = collections.defaultdict(list)
+    for name, ar, en, kind, lat, lon, rank, key in rows:
+        ws = {find_stem(w) for w in key.split() if len(w) >= 2}
+        if not ws:
+            continue
+        # its uncommon words, + its rarest common word unless that one is very common (شارع, street…): a search made
+        # only of common words ("مستشفى السلام") reads the piece of its rarest word — the same rule as netFind()
+        good = [w for w in ws if w not in common]
+        rare = sorted((w for w in ws if w in common), key=lambda w: (df[w], w))[:1]   # ties: by the word (netFind does the same)
+        if rare and (df[rare[0]] <= len(rows) * FIND_VERY or not good):
+            good += rare
+        rec = "\t".join(x.replace("\t", " ").replace("\n", " ") for x in (name, ar if ar != name else "", en if en != name else "", kind, "%.5f" % lat, "%.5f" % lon, str(rank), key))
+        for p in {w[:3] for w in good}:
+            shards[p].append(rec)
+    blobs, table, off = [], {}, 0
+    for p in sorted(shards):
+        b = gzip.compress("\n".join(shards[p]).encode("utf-8"), 9, mtime=0)
+        table[p] = [off, len(b)]; blobs.append(b); off += len(b)
+    # offsets count from the first piece (just after the index), so the index's own size never moves them
+    idx = gzip.compress(json.dumps({"v": 1, "common": {w: df[w] for w in sorted(common)}, "shards": table}, ensure_ascii=False).encode("utf-8"), 9, mtime=0)
+    with open(out, "wb") as f:
+        f.write(("AFIND1 %08d\n" % len(idx)).encode("ascii")); f.write(idx)
+        for b in blobs:
+            f.write(b)
+    return {"places": len(rows), "pieces": len(table), "common": len(common), "bytes": os.path.getsize(out), "biggest": max(v[1] for v in table.values()) if table else 0}
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "region":
@@ -340,6 +392,8 @@ if __name__ == "__main__":
         print("places:", build_places(sys.argv[2], sys.argv[3]))
     elif cmd == "overture":            # code region.geojson index.sqlite — adds Overture's places (v6.20)
         add_overture(sys.argv[2], sys.argv[3], sys.argv[4])
+    elif cmd == "find":                # sqlite out.bin — the online search file (v6.27)
+        print("find:", json.dumps(build_find(sys.argv[2], sys.argv[3])))
     elif cmd == "manifest":            # prints the files to upload, one per line
         m = manifest(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6:])
         print("\n".join(uploads(m, sys.argv[5])))

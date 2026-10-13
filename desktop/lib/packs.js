@@ -247,6 +247,7 @@ function makePacks({ data, online, fetch: f }) {
   // =================================== Maps ===================================
   const mdir = (code) => { if (!CODE.test(code)) throw new Error("Unknown map"); return path.join(MROOT, code); };
   const isRoutes = (n) => n.endsWith("-route.bin");
+  const isOnlineOnly = (n) => n.endsWith("-find.bin");   // v6.27: the places index in pieces, for searching online — never downloaded
   const assetsInstalled = () => fs.existsSync(path.join(MROOT, "assets", "assets-manifest.json"));
   function mapList() {
     const out = [];
@@ -257,6 +258,7 @@ function makePacks({ data, online, fetch: f }) {
         const j = JSON.parse(fs.readFileSync(man, "utf8")); let bytes = 0, ok = true, routes = false;
         for (const fl of j.files || []) {
           const local = path.join(d, fl.name); const full = fs.existsSync(local) && fs.statSync(local).size === fl.bytes;
+          if (isOnlineOnly(fl.name)) continue;
           if (isRoutes(fl.name)) { if (full) { routes = true; bytes += fl.bytes; } continue; }
           if (!full) ok = false; else bytes += fl.bytes;
         }
@@ -291,7 +293,7 @@ function makePacks({ data, online, fetch: f }) {
     const man = await mapRemote(code);
     const d = mdir(code);
     const hadRoutes = (man.files || []).some((fl) => isRoutes(fl.name) && fs.existsSync(path.join(d, fl.name)));
-    const files = (man.files || []).filter((fl) => !isRoutes(fl.name) || withRoutes || hadRoutes);
+    const files = (man.files || []).filter((fl) => !isOnlineOnly(fl.name) && (!isRoutes(fl.name) || withRoutes || hadRoutes));
     const assetsMan = assetsInstalled() ? null : await getJson(BASE + "map-assets/assets-manifest.json", "map");
     let total = files.reduce((s, x) => s + x.bytes, 0) + (assetsMan ? assetsMan.files.reduce((s, x) => s + x.bytes, 0) : 0);
     let done = 0;
