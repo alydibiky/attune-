@@ -40,6 +40,10 @@ with sync_playwright() as p:
         if SHOTS: page.screenshot(path=os.path.join(SHOTS, "money-desk-%s.png" % theme))
         page.locator("[data-testid=money-tab-bills]").click(); page.wait_for_timeout(1200)
         check(page.locator("[data-testid=money-yusr]").is_visible() and page.locator("[data-testid=money-overview]").count() == 0, "[%s] the Bills tab opens Money itself" % theme)
+        fr = [f for f in page.frames if f != page.main_frame and "Yusr" in (f.title() or "")]
+        page.wait_for_timeout(800)
+        scr = fr[0].evaluate("state.screen") if fr else None
+        check(scr == "bills", "[%s] …on Money's own Bills screen (the bridge's “go”): %s" % (theme, scr))
         page.locator("[data-testid=money-tab-overview]").click(); page.wait_for_timeout(200)
         check(page.locator("[data-testid=money-overview]").count() == 1, "[%s] …and back to the Overview" % theme)
         ctx.close()

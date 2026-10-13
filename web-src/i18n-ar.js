@@ -3663,4 +3663,9 @@ export const AR = {
   "{n} payments read from your notifications": "{n} مدفوعات قُرئت من إشعاراتك",
   "Dismiss": "تجاهل",
   "Add all {n}": "إضافة الكل ({n})",
+  "{n} payments added by themselves": "أُضيفت {n} مدفوعات تلقائيًا",
+  "Ask me first": "اسألني أولًا",
+  "Add by themselves": "أضفها تلقائيًا",
+  "Add the sure ones by themselves (bank and InstaPay messages with a name)": "أضف المؤكدة تلقائيًا (رسائل البنك وإنستاباي التي فيها اسم)",
+  "{n} payments added to Money by themselves": "أُضيفت {n} مدفوعات إلى المال تلقائيًا",
 };

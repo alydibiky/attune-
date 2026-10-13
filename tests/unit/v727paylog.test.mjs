@@ -25,5 +25,16 @@ ok(box[0].amount === 250, "newest first");
 ok(inbox(Q, ["1", "2", "3", "7", "8"]).length === 0, "added or dismissed ones are not listed again");
 const tx = toTxns([readNotification(Q[0]), readNotification(Q[1])]);
 ok(tx[0].type === "expense" && tx[0].amount === 350 && tx[0].note === "CARREFOUR · CIB" && tx[0].date === "2026-10-13" && tx[1].type === "income", "entries for Money: " + JSON.stringify(tx[0]));
+// ---- by itself: only sure ones; written into Money's ledger like Money does ----
+const P = await import("../../web-src/paylog.js");
+const sure = P.autoPick(inbox(Q));
+ok(sure.length === 3 && !sure.some((x) => x.amount === 250), "only the sure ones are added by themselves (the Vodafone Cash transfer with no name waits for a tap): " + sure.map((x) => x.amount).join(", "));
+const led = { currency: "EGP", accounts: [{ id: "u", currency: "USD" }, { id: "c", currency: "EGP" }], txns: [{ id: "old" }] };
+const r = P.appendToLedger(led, toTxns(sure), t0);
+ok(r.ids.length === 3 && r.ledger.txns.length === 4 && r.ledger.txns.every((x) => x.id === "old" || x.account === "c"), "written into Money's ledger, in the EGP account");
+ok(led.txns.length === 1, "the old ledger object is untouched (a new one is returned)");
+ok(P.appendToLedger(null, toTxns(sure)).ids.length === 0, "no ledger yet → nothing written");
+ok(P.categorise("CARREFOUR", "out") === "groceries" && P.categorise("WATANIYA fuel", "out") === "transport" && P.categorise("Seoudi Market", "out") === "groceries" && P.categorise("صيدلية العزبي", "out") === "health" && P.categorise("AHMED MOHAMED", "in") === "other" && P.categorise("Salary October", "in") === "salary", "payments get a category: Carrefour/Seoudi → groceries, Wataniya → transport, El Ezaby → health, a person → other, salary → salary");
+ok(r.ledger.txns.find((x) => x.amount === 350).cat === "groceries", "the Carrefour payment lands in Groceries");
 console.log(fail ? fail + " FAILED" : "v727paylog ok");
 process.exit(fail ? 1 : 0);

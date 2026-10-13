@@ -47,7 +47,7 @@ import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.j
 import { MoneyDesk } from "./money-desk.jsx";
 import { LifePage } from "./life-ui.jsx";
 import { PhoneHome } from "./home-ui.jsx";
-import { PayInbox } from "./paylog-ui.jsx";
+import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
@@ -6208,7 +6208,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
         </button>
       ) : null}
       {/* v6.27 "Money tracks itself": payments read from notifications, to add with one tap */}
-      <PayInbox N={NATIVE} onAdd={(txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); }} />
+      <PayInbox N={NATIVE} ready={ready} onAdd={(txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); }} />
       <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={{ border: 0 }} />
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
@@ -8146,6 +8146,15 @@ export default function App() {
     };
     window.addEventListener("attune-share", onShare);
     return () => window.removeEventListener("attune-share", onShare);
+  }, []);
+  // v6.27 "Money tracks itself": on opening Attune and every return to it, the sure payments read from notifications go
+  // into Money by themselves (when Money is open, its review strip does it through Money instead)
+  useEffect(() => {
+    const run = () => { if (modeRef.current === "money" || document.visibilityState === "hidden") return;
+      const n = runAutoPay(NATIVE); if (n) flash(tr("{n} payments added to Money by themselves", { n })); };
+    const t = setTimeout(run, 2500);
+    document.addEventListener("visibilitychange", run);
+    return () => { clearTimeout(t); document.removeEventListener("visibilitychange", run); };
   }, []);
   // v6.27: "Save it" from a commitment typed in Chat — People & plans opens with it read
   useEffect(() => {

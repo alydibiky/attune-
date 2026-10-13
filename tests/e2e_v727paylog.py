@@ -11,8 +11,10 @@ now = int(time.time() * 1000)
 Q = [{"id": "1", "app": "CIB", "title": "CIB", "text": "Your card ending 1234 was charged EGP 350.00 at CARREFOUR", "ts": now - 3600000},
      {"id": "2", "app": "InstaPay", "title": "InstaPay", "text": "You have received EGP 1,000.00 from AHMED MOHAMED", "ts": now - 1800000},
      {"id": "3", "app": "CIB", "title": "CIB", "text": "Your OTP is 482913", "ts": now - 600000}]
-def mock(access):
-    return r"""(() => { const S = window.__paymock = { forgot: [], opened: 0 };
+def mock(access, auto=False, ledger=False):
+    pre = "localStorage.setItem('attune:paylog:auto','%s');" % ("1" if auto else "0")
+    if ledger: pre += "localStorage.setItem('ledger.v3', JSON.stringify({currency:'EGP',accounts:[{id:'c',name:'Cash',currency:'EGP',start:0}],txns:[],budgets:{overall:0,cats:{}},recurring:[],debts:[]}));"
+    return "try{" + pre + "}catch(e){}\n" + r"""(() => { const S = window.__paymock = { forgot: [], opened: 0 };
   const go = () => { const N = window.AttuneNative; if (!N) return setTimeout(go, 0);
     N.payAccess = () => %s; N.openPayAccess = () => { S.opened++; };
     N.payQueue = () => %s; N.payForget = (ids) => { S.forgot.push(...JSON.parse(ids)); };
@@ -46,6 +48,25 @@ with sync_playwright() as p:
     check("Never SMS" in page.locator("[data-testid=paylog-setup]").inner_text(), "with notification access off: a card that says what it does (never SMS, nothing leaves the phone)")
     page.click("[data-testid=paylog-turn-on]"); page.wait_for_timeout(200)
     check(page.evaluate("window.__paymock.opened") == 1, "“Turn on” opens Android's Notification access screen")
+    ctx.close()
+    # BY ITSELF, Money closed: on opening Attune the sure payments go straight into Money's ledger, with a category
+    ctx, page = new_page(br, env, errors, extra_init=mock(True, auto=True, ledger=True))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000); page.wait_for_timeout(4000)
+    led = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3') || '{}')")
+    tx = {t["amount"]: t for t in led.get("txns") or []}
+    check(350 in tx and 1000 in tx and tx[350]["type"] == "expense" and tx[350]["cat"] == "groceries" and tx[1000]["type"] == "income", "with Money closed, the sure payments are added by themselves — Carrefour into Groceries: %s" % [(t["amount"], t["cat"]) for t in tx.values()])
+    check(sorted(page.evaluate("window.__paymock.forgot")) == ["1", "2"], "…and forgotten on the phone")
+    ctx.close()
+    # BY ITSELF, Money open: added through Money once it is loaded; the strip says so
+    ctx, page = new_page(br, env, errors, extra_init=mock(True, auto=True))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
+    page.locator("nav button:has-text('Money')").click()
+    page.wait_for_selector("[data-testid=paylog-auto-done]", timeout=15000)
+    check("2 payments added by themselves" in page.locator("[data-testid=paylog-auto-done]").inner_text(), "with Money open: “2 payments added by themselves”")
+    led = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3') || '{}')")
+    check(sorted(t["amount"] for t in led.get("txns") or [] if t.get("amount") in (350, 1000)) == [350, 1000], "…and they are in Money's ledger")
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])
     br.close()
 env.close()

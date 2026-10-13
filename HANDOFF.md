@@ -1179,6 +1179,26 @@ internet searching … improve internet searching and make it faster".
 - Next in Calm: the remaining screens area by area (Chat, Fit, Mind, Files, Places) in the Calm tokens; People & plans
   in Money's People & debts tab; reminders for due payments.
 
+### 5.65 (13 Oct 2026) — Calm everywhere; "Money tracks itself", by itself
+- **Calm is the app's default look** (spaces.js themeVars): the slate scale → `PALETTES.calm` (green-grey; dark ground
+  #111416, cards #181C1F, lines #262C2F), teal → `PALETTES.calmteal` (#4FC2AF … #0F7B6C); light = ground #F4F5F3, white
+  cards, lines #E4E8E5. Font for the whole app: Figtree + IBM Plex Sans Arabic (tw.css @theme --font-sans, shell.html).
+  Settings' other themes (zinc, stone, black, accents) still work. Fit & Business keep their own looks.
+- **Money tracks itself (Android):** `PayListener.kt` (NotificationListenerService, manifest + BIND_NOTIFICATION_LISTENER_SERVICE)
+  keeps only notifications that look like money (`PayLog.looksLikeMoney`), last 200, private prefs; never SMS; nothing
+  leaves the phone. Bridge: payAccess / openPayAccess / payQueue / payForget. Page: `paylog.js` (paytext.js reads each;
+  OTPs, balance-only and adverts dropped; the same payment twice kept once; `categorise` — merchants (Wataniya, Seoudi,
+  El Ezaby…) then Money's own words; `autoPick` = high confidence only; `appendToLedger` = Money's own add) and
+  `paylog-ui.jsx` (PayInbox at the top of Money: access card → "Turn on"; review list Add / Dismiss / Add all).
+  **By itself (on by default, "Ask me first" turns it off):** Money closed → `runAutoPay` at app open and every return
+  writes the sure ones straight into ledger.v3 + a flash "N payments added to Money by themselves"; Money open →
+  PayInbox adds them through Money once it is loaded ("ready"). Unsure ones wait for a tap.
+- **Bridge fix:** yusr-bridge.js only allowed 4 message types, so "go" (the computer's Money tabs) never reached Money.
+  Now "go" (whitelisted screens) and "add-txns" (1–50 entries, expense/income, no account — Money picks it by
+  currency — and never zakat) are allowed and checked; Yusr handles add-txns (categories kept).
+- Tests: `tests/unit/v727paylog.test.mjs`, `tests/e2e_v727paylog.py` (by hand, by itself with Money closed, by itself
+  with Money open, access off), e2e_v727moneydesk now checks Money really opens its Bills screen.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

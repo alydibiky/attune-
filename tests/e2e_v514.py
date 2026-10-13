@@ -177,7 +177,9 @@ with sync_playwright() as p:
     check("292" in v, "a colour theme recolours the whole app (teal → violet: %s)" % v.strip())
     page.locator("[data-testid=bg-light]").click()
     bg = page.evaluate("getComputedStyle(document.body).backgroundColor")
-    check(bg.startswith("oklch(0.98") or "248" in bg or bg.startswith("oklch(98"), "Light background makes the page light (%s)" % bg)
+    import re as _re
+    _n = [int(x) for x in _re.findall(r"\d+", bg)[:3]] if bg.startswith("rgb") else []
+    check(bg.startswith("oklch(0.98") or bg.startswith("oklch(98") or (len(_n) == 3 and min(_n) >= 230), "Light background makes the page light (v6.27 Calm: #F4F5F3) (%s)" % bg)
     page.screenshot(path=HERE + "/v514-light.png")
     page.reload(); page.wait_for_selector("nav", timeout=15000)
     check("292" in page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--color-teal-500')"), "the theme is kept after reopening the app")

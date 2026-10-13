@@ -5,12 +5,39 @@
 import React, { useEffect, useState } from "react";
 import { Bell, Check, X } from "lucide-react";
 import { tr } from "./i18n.js";
-import { inbox, toTxns } from "./paylog.js";
+import { inbox, toTxns, autoPick, appendToLedger } from "./paylog.js";
+import { loadLedger } from "./myledger.js";
 
-const DONE_KEY = "attune:paylog:done", OFF_KEY = "attune:paylog:not-now";
+const DONE_KEY = "attune:paylog:done", OFF_KEY = "attune:paylog:not-now", AUTO_KEY = "attune:paylog:auto", LOG_KEY = "attune:paylog:auto-log";
 const readDone = () => { try { return JSON.parse(localStorage.getItem(DONE_KEY) || "[]"); } catch (e) { return []; } };
+export const autoOn = () => { try { return localStorage.getItem(AUTO_KEY) !== "0"; } catch (e) { return true; } };   // on unless turned off
+const markDone = (N, ids) => {
+  try { localStorage.setItem(DONE_KEY, JSON.stringify([...readDone(), ...ids].slice(-500))); } catch (e) {}
+  try { N && N.payForget && N.payForget(JSON.stringify(ids)); } catch (e) {}
+};
+const logAuto = (entries) => {
+  let log = []; try { log = JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); } catch (e) {}
+  log = [...entries.map((e) => ({ amount: e.amount, currency: e.currency, direction: e.direction, party: e.party, app: e.app, ts: e.ts, at: Date.now() })), ...log].slice(0, 50);
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch (e) {}
+};
+/** v6.27 "by itself" while Money is NOT open: the sure payments go straight into Money's ledger (the same way Money adds
+ *  them). → how many were added. Money open → PayInbox adds them through Money instead. */
+export function runAutoPay(N) {
+  if (!N || !N.payAccess || !N.payQueue || !autoOn()) return 0;
+  let on = false; try { on = N.payAccess(); } catch (e) {}
+  if (!on) return 0;
+  let q = []; try { q = JSON.parse(N.payQueue() || "[]"); } catch (e) {}
+  const sure = autoPick(inbox(q, readDone()));
+  if (!sure.length) return 0;
+  const led = loadLedger(); if (!led) return 0;
+  const r = appendToLedger(led, toTxns(sure));
+  if (!r.ids.length) return 0;
+  try { localStorage.setItem("ledger.v3", JSON.stringify(r.ledger)); } catch (e) { return 0; }
+  markDone(N, sure.map((e) => e.id)); logAuto(sure);
+  return r.ids.length;
+}
 
-export function PayInbox({ N, onAdd }) {
+export function PayInbox({ N, onAdd, ready = true }) {
   const can = !!(N && N.payAccess && N.payQueue);
   const [on, setOn] = useState(() => { try { return can && N.payAccess(); } catch (e) { return false; } });
   const [items, setItems] = useState([]);
@@ -27,12 +54,20 @@ export function PayInbox({ N, onAdd }) {
     return () => { window.removeEventListener("focus", f); document.removeEventListener("visibilitychange", f); }; }, []);
   if (!can) return null;
   const finish = (list) => {
-    const ids = list.map((e) => e.id), done = [...readDone(), ...ids].slice(-500);
-    try { localStorage.setItem(DONE_KEY, JSON.stringify(done)); } catch (e) {}
-    try { N.payForget(JSON.stringify(ids)); } catch (e) {}
+    const ids = list.map((e) => e.id);
+    markDone(N, ids);
     setItems((x) => x.filter((e) => !ids.includes(e.id)));
   };
   const add = (list) => { onAdd(toTxns(list)); finish(list); };
+  const [auto, setAuto] = useState(autoOn);
+  const [autoN, setAutoN] = useState(0);
+  // by itself, with Money open: the sure ones go in through Money; the rest wait here for a tap
+  useEffect(() => {
+    if (!on || !auto || !ready) return;   // only once Money is loaded, so nothing is marked done before Money has it
+    const sure = autoPick(items);
+    if (sure.length) { const t = setTimeout(() => { add(sure); logAuto(sure); setAutoN((n) => n + sure.length); }, 1500); return () => clearTimeout(t); }
+  }, [on, auto, ready, items.length]);
+  const toggleAuto = () => { const v = !auto; setAuto(v); try { localStorage.setItem(AUTO_KEY, v ? "1" : "0"); } catch (e) {} };
   if (!on) {
     if (notNow) return null;
     return (
@@ -45,7 +80,10 @@ export function PayInbox({ N, onAdd }) {
         </div>
       </div>);
   }
-  if (!items.length) return null;
+  if (!items.length) return autoN ? (
+    <div className="shrink-0 mx-2 my-2 rounded-xl border border-teal-800/60 bg-slate-900 px-3 py-2.5 flex items-center gap-2" data-testid="paylog-auto-done">
+      <Check size={15} className="text-teal-300" /><span className="flex-1 text-[13px] text-slate-100">{tr("{n} payments added by themselves", { n: autoN })}</span>
+      <button onClick={toggleAuto} className="text-[11.5px] text-slate-400 underline" data-testid="paylog-auto-toggle">{auto ? tr("Ask me first") : tr("Add by themselves")}</button></div>) : null;
   return (
     <div className="shrink-0 mx-2 my-2 rounded-xl border border-teal-800/60 bg-slate-900" data-testid="paylog">
       <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center gap-2 px-3 py-2.5 text-start" data-testid="paylog-open">
@@ -60,6 +98,7 @@ export function PayInbox({ N, onAdd }) {
               <button onClick={() => add([e])} aria-label={tr("Add")} className="w-8 h-8 rounded-full bg-teal-500 text-slate-950 grid place-items-center" data-testid="paylog-add"><Check size={15} /></button>
               <button onClick={() => finish([e])} aria-label={tr("Dismiss")} className="w-8 h-8 rounded-full bg-slate-800 text-slate-300 grid place-items-center" data-testid="paylog-dismiss"><X size={15} /></button>
             </div>))}
+          <label className="flex items-center gap-2 text-[12px] text-slate-400 pt-1"><input type="checkbox" checked={auto} onChange={toggleAuto} data-testid="paylog-auto" />{tr("Add the sure ones by themselves (bank and InstaPay messages with a name)")}</label>
           {items.length > 1 ? <button onClick={() => add(items)} className="w-full py-2 rounded-lg bg-teal-500/15 text-teal-200 text-[13px] font-semibold" data-testid="paylog-add-all">{tr("Add all {n}", { n: items.length })}</button> : null}
         </div>) : null}
     </div>);

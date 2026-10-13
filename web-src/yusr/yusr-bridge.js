@@ -49,7 +49,8 @@ const BRIDGE_NS = "yusr-bridge";
 //   ai-request    Yusr asks Attune to run the on-device model for it. Yusr
 //                 holds no model and never will: inference lives in exactly
 //                 one place, so there is one prompt to audit, not two.
-const OUT_TYPES = new Set(["propose-txn", "request", "ai-result", "entitlement"]);
+const OUT_TYPES = new Set(["propose-txn", "request", "ai-result", "entitlement", "go", "add-txns"]);   // v6.27: go (open a screen), add-txns (confirmed / sure payments read from notifications)
+const GO_SCREENS = new Set(["home", "trends", "accounts", "bills", "goals", "zakat", "notes", "invoices"]);
 const IN_TYPES  = new Set(["ready", "snapshot", "txn-added", "zakat-paid", "error", "ai-request", "open-plan"]);
 
 // What Yusr is allowed to ask the model for. A closed list, because "run this
@@ -144,6 +145,20 @@ function validateOut(type, data) {
     if (d.account) return { ok: false, why: "Attune must not choose the account" };
     // Structurally impossible to propose a Zakat payment from outside.
     if (d.type === "zakat") return { ok: false, why: "Zakat is recorded in Yusr only" };
+  }
+  if (type === "go") {
+    if (!data || !GO_SCREENS.has(data.screen)) return { ok: false, why: "unknown screen" };
+  }
+  if (type === "add-txns") {
+    const L = (data && data.txns) || [];
+    if (!Array.isArray(L) || !L.length || L.length > 50) return { ok: false, why: "add-txns needs 1–50 entries" };
+    for (const t of L) {
+      if (!t || num(t.amount) === null || t.amount <= 0) return { ok: false, why: "each entry needs a positive amount" };
+      if (!["expense", "income"].includes(t.type)) return { ok: false, why: "type must be expense or income" };
+      // the same rules as a proposal: Yusr picks the account (by currency), and never a zakat entry from outside
+      if (t.account) return { ok: false, why: "Attune must not choose the account" };
+      if (t.type === "zakat" || t.cat === "zakat") return { ok: false, why: "Zakat is recorded in Yusr only" };
+    }
   }
   if (type === "entitlement") {
     if (!data || typeof data.pro !== "boolean") return { ok: false, why: "entitlement needs pro: true or false" };

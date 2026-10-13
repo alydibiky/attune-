@@ -5,6 +5,26 @@
    The entries are listed in Money to confirm; confirmed ones go to Money (Yusr) through the bridge ("add-txns").
    Pure logic; tests: tests/unit/v727paylog.test.mjs.                                                                         */
 import { parsePayment } from "./yusr/paytext.js";
+import { catOf } from "./yusr/logtext.js";
+
+// merchants Money's own words don't know yet (Egypt first; add more per country) → its categories
+const MERCHANTS = [
+  [/wataniya|وطنية|total ?energies|misr ?petroleum|mobil|chill ?out|emarat ?misr|shell|taqa|petrol|fuel|بنزين/i, "transport"],
+  [/seoudi|سعودي|spinneys|hyper ?one|kazyon|كازيون|oscar|metro market|gourmet|lulu|bim\b|panda|kheir zaman|خير زمان|fathalla|فتح الله|ragab|رجب/i, "groceries"],
+  [/swvl|careem|indrive|didi|bolt|metro|مترو/i, "transport"],
+  [/elmenus|breadfast|instashop|mrsool|noon food|kfc|mcdonald|hardee|buffalo|koshary|كشري|abou ?tarek|عبو طارق/i, "food"],
+  [/amazon|noon|jumia|b\.?tech|2b\b|raya|ikea|h&m|zara|defacto|lc ?waikiki|max fashion/i, "shopping"],
+  [/ezaby|العزبي|seif|سيف|misr pharmac|roshdy|clinic|hospital|vezeeta|فيزيتا|lab\b|معمل/i, "health"],
+  [/vodafone|orange|etisalat|e&|\bwe\b|telecom egypt|fawry|فوري|electricity|كهرباء|water|مياه|gas|غاز|netflix|shahid|spotify|osn|watch it/i, "bills"],
+  [/salary|payroll|راتب|مرتب/i, "salary"],
+];
+/** The category of a payment from its party / note (merchants first, then Money's own words), else "other". */
+export function categorise(text, direction) {
+  const t = String(text || "");
+  for (const [re, c] of MERCHANTS) if (re.test(t)) return direction === "in" && c !== "salary" ? "other" : c;
+  const c = catOf(t);
+  return c && c !== "other" && !(direction === "in" && c !== "salary") ? c : "other";
+}
 
 const OTP = /\b(otp|one[- ]time|verification code|passcode|pin)\b|رمز التحقق|كود التفعيل|كلمة المرور لمرة|رمز التفعيل/i;
 const BALANCE_ONLY = /^(?=.*\b(balance|available|رصيدك|الرصيد)\b)(?!.*\b(debited|credited|charged|purchase|paid|received|transfer|withdraw|deposit|خصم|إيداع|ايداع|تحويل|سحب|شراء|استلام)\b)/i;
@@ -37,6 +57,25 @@ export function inbox(queue, done = []) {
 export function toTxns(entries) {
   const iso = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
   return (entries || []).filter((e) => e.amount > 0).slice(0, 50).map((e) => ({
-    type: e.direction === "in" ? "income" : "expense", amount: Math.round(e.amount * 100) / 100, currency: e.currency || "",
+    type: e.direction === "in" ? "income" : "expense", amount: Math.round(e.amount * 100) / 100, currency: e.currency || "", cat: categorise([e.party, e.text].join(" "), e.direction),
     note: [e.party, e.app].filter(Boolean).join(" · ").slice(0, 80) || "Payment", date: iso(e.ts), source: "notification" }));
+}
+
+/** v6.27 "by itself": only what the reader is sure of is added without a tap (high confidence, a direction, an amount). */
+export const autoPick = (entries) => (entries || []).filter((e) => e.confidence === "high" && e.amount > 0 && (e.direction === "in" || e.direction === "out"));
+
+/** The same as Money's own "add-txns" (yusr/index.new.html): each entry into the first account of its currency (else the
+ *  first account), id, date, note — used when Money isn't open, so its ledger is written directly. → { ledger, ids } */
+export function appendToLedger(ledger, txns, now = Date.now()) {
+  if (!ledger || !Array.isArray(ledger.txns) || !Array.isArray(ledger.accounts) || !ledger.accounts.length) return { ledger, ids: [] };
+  const L = { ...ledger, txns: [...ledger.txns] }, ids = [];
+  for (const t of (txns || []).slice(0, 50)) {
+    const a = parseFloat(t.amount);
+    if (!(a > 0 && a < 1e9) || (t.type !== "expense" && t.type !== "income")) continue;
+    const acc = L.accounts.find((x) => t.currency && x.currency === t.currency) || L.accounts[0];
+    const id = "n" + now.toString(36) + Math.random().toString(36).slice(2, 6) + ids.length;
+    L.txns.push({ id, type: t.type, amount: Math.round(a * 100) / 100, cat: /^[a-z_]{2,20}$/.test(t.cat || "") ? t.cat : "other", account: acc.id, date: /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : new Date(now).toISOString().slice(0, 10), note: String(t.note || "").slice(0, 80) });
+    ids.push(id);
+  }
+  return { ledger: L, ids };
 }
