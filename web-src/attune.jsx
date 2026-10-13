@@ -7386,18 +7386,18 @@ const MORE_TOOLS = [
 
 // v5.32 — Ali: "most features are cluttered, they must be organized": More shows its tools
 // in four named groups instead of one wall of 23 tiles.
-// v6.27 (design A "Calm", the agreed tool map): the areas, then the two add-ons. Video Downloader is out (a Google Play
-// risk) — its tile shows only in developer mode; a shared video link still opens it.
+// v6.27 (design A "Calm", the agreed tool map): the areas, then the two add-ons. Video Downloader stays (Ali, 13 Oct),
+// in Files — it saves a file to the phone.
 const MORE_GROUPS = [
   ["Money & people", ["life", "deal", "reminders"]],
   ["Health", ["fit", "cycle"]],
   ["Mind & learning", ["memory", "shelf", "knowledge", "learn", "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
-  ["Files", ["convert", "pdfchat", "slides", "cv", "video"]],
+  ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "travel"]],
   ["Business (add-on)", ["business", "crane", "field", "fleet"]],
   ["Create (add-on)", ["studio", "code", "improve", "compress", "humanize", "copilot", "library", "ask"]],
-].map(([t, ids]) => [t, ids.filter((id) => id !== "video" || devMode())]);
+];
 
 // Records from Memory, attached to a chat message about the user's own past.
 function withRecords(question, found) {

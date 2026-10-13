@@ -1172,8 +1172,8 @@ internet searching … improve internet searching and make it faster".
   Tests that pressed "the first button" for Chat now press "Chat"; Business/Instant are opened from All.
 - **All = the agreed tool map:** Money & people (People & plans, Deal Check, Reminders) · Health (Fit, Cycle) · Mind &
   learning · Chat (Instant, Assistants, Skills, Projects, Artifacts, Chat X-Ray) · Files (Converter, Ask a PDF, Slides,
-  CV) · Places (Maps, Travel) · Business (add-on) · Create (add-on: Studio, Coding, the prompt tools). **Video
-  Downloader is out** (Google Play risk) — its tile shows only in developer mode; a shared video link still opens it.
+  CV, Video Downloader) · Places (Maps, Travel) · Business (add-on) · Create (add-on: Studio, Coding, the prompt tools).
+  **Video Downloader stays** (Ali, 13 Oct — he overruled removing it): in Files, second.
 - Bills now carry their own name ("فاتورة الكهربا", "Electricity bill", "اشتراك نتفليكس": the words before the amount).
 - Tests: `tests/unit/v727home.test.mjs`, `tests/e2e_v727home.py` (light + dark, screenshots with SHOTS=).
 - Next in Calm: the remaining screens area by area (Chat, Fit, Mind, Files, Places) in the Calm tokens; People & plans
