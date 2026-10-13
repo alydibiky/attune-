@@ -243,6 +243,11 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
     if (said && mapRef.current && out.length) mapRef.current.flyTo({ center: [c.lon, c.lat], zoom: 13 });
     if (!out.length && !(online || packs.length)) flash(tr("No signal, so only your saved places are searchable — nothing matched."));
   };
+  // v6.27: a search handed over from Chat ("Show on the map")
+  useEffect(() => {
+    let q0 = ""; try { q0 = localStorage.getItem("attune:map:ask") || ""; localStorage.removeItem("attune:map:ask"); } catch (e) {}
+    if (q0) { setQ(q0); setTimeout(() => runSearch(q0), 300); }
+  }, []);
   // v6.18: the place card keeps the other results, shown as "Other matches" (look A)
   const pick = (r, from) => { setSel({ ...r, found: !r.local, src: r, from: from || null }); setHits(null); setSheet("half"); flyTo(r, 16); };
   const savePlace = (p) => {

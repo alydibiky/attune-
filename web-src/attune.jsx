@@ -8128,6 +8128,12 @@ export default function App() {
     window.addEventListener("attune-share", onShare);
     return () => window.removeEventListener("attune-share", onShare);
   }, []);
+  // v6.27: "Show on the map" from a map question in Chat — Maps opens and runs the search
+  useEffect(() => {
+    const on = (e) => { try { localStorage.setItem("attune:map:ask", String((e.detail && e.detail.q) || "")); } catch (x) {} setMode("map"); };
+    window.addEventListener("attune-map", on);
+    return () => window.removeEventListener("attune-map", on);
+  }, []);
   // "Draw it in Studio" from a picture request in Chat.
   const [studioIn, setStudioIn] = useState(null);
   useEffect(() => {

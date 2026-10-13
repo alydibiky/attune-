@@ -1118,6 +1118,11 @@ internet searching … improve internet searching and make it faster".
   4×name match (whole name 1, starts with 0.85, a whole word 0.75, else words × 0.6) + importance (index `rank`/100, or
   by kind) + 1/(1 + km/10) + 0.4 for a saved place. "Nearest X" stays sorted by distance. `rank` now comes back from
   the phone's and the computer's mapSearch. Tests: v707mapsearch (Madinaty town beats "Madinaty Pharmacy" next door…).
+- **Ask the map from Chat:** `MI.chatMapIntent` (mapintent.js) spots a map question — a "where / nearest" word AND a
+  sort, or "where is <a short name>" (personal or technical things excluded: «فين مفاتيحي», «where is the bug…»,
+  «nearest star»). chat.jsx shows an emerald card "A place — Maps finds it" [Show on the map | Just answer]; the
+  "attune-map" event stores the search in `attune:map:ask` and opens Maps, which runs it on open. No model needed.
+  Tests: v727mapintent (Chat cases), `tests/e2e_v727chatmap.py`.
 - Tests: `tests/unit/v722maps.test.mjs` (world name, online style), `tests/e2e_v722mapbuilder.py` (compounds).
 - `tests/audit.py` never finished since a full page (Fit/Money) hides the bottom bar: it now presses the app's Back
   until the bar shows. It then found the Instant page's "Go" off a 320-px screen → that toolbar wraps now.

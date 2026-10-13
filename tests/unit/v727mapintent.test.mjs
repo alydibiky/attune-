@@ -28,5 +28,10 @@ const r = MI.readModel('Sure! {"sort": "cafe", "what": "quiet", "area": "", "nea
 ok(r && r.sort === "cafe" && r.kinds.includes("amenity/cafe") && r.near && r.model, "the model's JSON → the same fields");
 ok(MI.readModel('{"sort": "casino", "what": "x"}').sort === null && MI.readModel("no json") === null, "anything outside the fixed list is dropped");
 ok(/"pharmacy"/.test(MI.modelPrompt("x")), "the prompt lists the fixed sorts");
+// v6.27: map questions typed in Chat
+for (const [q, want] of [["فين أقرب صيدلية؟", "أقرب صيدلية"], ["where is City Stars?", "City Stars"], ["ATM near me", "ATM near me"], ["أقرب بنزينة", "أقرب بنزينة"],
+  ["فين مول العرب", "مول العرب"], ["عايز اروح مدينتي", "مدينتي"], ["how do I get to Mall of Arabia", "Mall of Arabia"]]) ok(MI.chatMapIntent(q) === want, `Chat «${q}» → Maps «${MI.chatMapIntent(q)}»`);
+for (const q of ["where is the bug in my code?", "what is the nearest star to Earth?", "فين مفاتيحي", "where is my phone", "nearest prime to 100", "explain the history of Cairo", "فين الغلط في الكود ده", "where's the difference between these two"])
+  ok(MI.chatMapIntent(q) === null, `Chat «${q}» stays in Chat`);
 console.log(fail ? fail + " FAILED" : "v727mapintent ok");
 process.exit(fail ? 1 : 0);

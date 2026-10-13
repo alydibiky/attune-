@@ -89,3 +89,22 @@ export function sortWords(id, lang) {
   const s = sortById(id); if (!s) return "";
   return (lang === "ar" ? s[2] : s[1]).split("|")[0];
 }
+
+/** v6.27: a map question typed in Chat («فين أقرب صيدلية؟», «where is City Stars», «ATM near me») → the search to run in
+ *  Maps, else null. Needs a "where / nearest" word AND something to find (a sort, or a name after "where is"); questions
+ *  ABOUT places ("what is the history of Cairo") stay in Chat. */
+const WHERE = /(^|\s)(فين|وين|أين|اين|فى اي حته|where is|where's|where can i (?:find|buy|get)|where are|how do i get to|directions to|nearest|closest|near me|nearby|اقرب|أقرب|قريب مني|جنبي|جمبي|حواليا|عايز اروح|ازاي اروح|إزاي أروح)(?=\s|$|[؟?])/i;
+const NOT_PLACE = /\s(my|mine|your|his|her|our|their|bug|error|code|file|function|variable|mistake|problem|meaning|answer|difference|keys?|phone|wallet|money|god|love|peace|happiness|mistake|موبايلي|مفاتيحي|محفظتي|فلوسي|الغلط|المشكله|المشكلة|الخطأ|الكود|الملف|معني|معنى|الفرق|الله|شنطتي|نضارتي|عربيتي|ابني|بنتي|مراتي|جوزي|ولادي|هدومي|ورقي|كتابي|تليفوني)(?=\s|$|[؟?])/i;   // personal things, never a place («مدينتي» = Madinaty is a place)
+export function chatMapIntent(text) {
+  const t = String(text || "").trim();
+  if (!t || t.length > 120 || !WHERE.test(t)) return null;
+  const p = parseMapQuery(t.replace(/[؟?!.]+$/g, ""));
+  const name = p.what.replace(/(^|\s)(is|are|to|get|go|the|ل|الى|إلى)(?=\s|$)/gi, " ").trim();
+  if (!p.sort) {
+    // no sort of place: only "where is <a short name>" — never "nearest star", "where is the bug in my code", "فين مفاتيحي"
+    if (!/(^|\s)(فين|وين|أين|اين|where is|where's|how do i get to|directions to|عايز اروح|ازاي اروح|إزاي أروح)(?=\s)/i.test(t)) return null;
+    const words = (name + " " + p.area).trim().split(" ").filter((w) => w.length > 1);
+    if (!words.length || words.length > 4 || NOT_PLACE.test(" " + t + " ")) return null;
+  }
+  return t.replace(/[؟?!.]+$/g, "").replace(/^(where is|where's|where are|how do i get to|directions to|فين|وين|أين|اين|ازاي اروح|إزاي أروح|عايز اروح)\s+/i, "").trim();
+}

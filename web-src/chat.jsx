@@ -11,6 +11,7 @@ import { taskOf, wantsWeb, wantsThink, pickModel, switchLine, needsToday } from 
 import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
+import { chatMapIntent } from "./mapintent.js";
 import { wantsDoc } from "./slides.js";
 import { detectLang, replyLanguageRule, voiceTag, deviceLang } from "./langs.js";
 import { looksLikeFoodLog } from "./fit.js";
@@ -702,6 +703,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       patchChat(cid, (ch) => ({ ...ch, updated: Date.now(), messages: [...ch.messages,
         { id: newId(), role: "user", text: typed },
         { id: newId(), role: "assistant", text: m.text, calc: true, askText: typed }] }));
+      setText("");
+      return;
+    }
+
+    // v6.27: "فين أقرب صيدلية؟" — a map question: Maps searches it (code; offline with a downloaded country), one tap away
+    const mapQ = route && !img ? chatMapIntent(typed) : null;
+    if (mapQ) {
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "A place — Maps finds it", detail: mapQ,
+          actions: [["Show on the map", "map"], ["Just answer", "answer"]] }, mapQuery: mapQ }] }));
       setText("");
       return;
     }
@@ -1505,6 +1518,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (act === "cycle") api.openTab("cycle");
     else if (act === "undo") { m.undo && m.undo(); patchMsg(chat.id, m.id, { card: { ...m.card, title: "Removed", detail: "", actions: [] } }); }
     else if (act === "money") api.sendToMoney(m.payText);
+    else if (act === "map") window.dispatchEvent(new CustomEvent("attune-map", { detail: { q: m.mapQuery || "" } }));
     else if (act === "studio") window.dispatchEvent(new CustomEvent("attune-studio", { detail: { prompt: m.studioPrompt || "" } }));
     else if (act === "answer") {
       const at = messages.findIndex((x) => x.id === m.id);

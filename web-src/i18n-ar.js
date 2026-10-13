@@ -2334,6 +2334,8 @@ export const AR = {
   "Download it on Wi-Fi. After that, pictures are made with no internet at all.": "نزّله عبر Wi-Fi. بعد ذلك تُنشأ الصور بدون إنترنت تمامًا.",
   "Draw it": "الرسم",
   "Draw it in Studio": "الرسم في «الاستوديو»",
+  "A place — Maps finds it": "مكان — تبحث عنه «الخرائط»",
+  "Show on the map": "عرض على الخريطة",
   "Draw on the graphics chip (faster; switches itself off if the driver fails)": "الرسم على شريحة الرسوميات (أسرع؛ ويتوقف تلقائيًا إن فشل التعريف)",
   "Drawing on the GPU failed, so Attune switched Studio to the CPU. ": "فشل الرسم على GPU، فنقل Attune «الاستوديو» إلى المعالج. ",
   "Drawing — step {n} of {t}": "جارٍ الرسم — الخطوة {n} من {t}",
