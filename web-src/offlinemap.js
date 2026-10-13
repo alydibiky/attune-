@@ -90,13 +90,7 @@ async function findBytes(call, code, offset, length) {
 export async function netFind(call, code, q, { lat = null, lon = null, limit = 15 } = {}) {
   const words = normalize(q).split(" ").filter((w) => w.length >= 2).slice(0, 6);
   if (!words.length) return [];
-  let idx = findIdx.get(code);
-  if (!idx) {
-    const head = new TextDecoder().decode(await findBytes(call, code, 0, 16));
-    const m = /^AFIND1 (\d{8})\n$/.exec(head); if (!m) throw new Error("The online search of this map is not published yet");
-    idx = JSON.parse(new TextDecoder().decode(gunzipSync(await findBytes(call, code, 16, +m[1]))));
-    idx.df = idx.common || {}; idx.base = 16 + +m[1]; findIdx.set(code, idx);
-  }
+  const idx = await findIndex(call, code);
   // the piece: the query's longest uncommon word, else its rarest common word
   const stems = words.map(findStem), df = (w) => idx.df[w] || 0;
   const pick = stems.filter((w) => !df(w)).sort((a, b) => b.length - a.length)[0] || [...stems].sort((a, b) => df(a) - df(b) || (a < b ? -1 : a > b ? 1 : 0))[0];
@@ -116,6 +110,49 @@ export async function netFind(call, code, q, { lat = null, lon = null, limit = 1
   // a whole-name match first, then importance, then nearer
   out.sort((a, b) => b.exact - a.exact || b.rank - a.rank || (a.dist || 0) - (b.dist || 0));
   return out.slice(0, limit);
+}
+
+/** v6.27: the named areas (compounds, residential areas, neighbourhoods) inside a box, read ONLINE from <code>-find.bin's
+ *  "areas" squares (0.25°) — a few KB per square, each read once. → [{name, name_ar, name_en, kind, lat, lon, rank}] */
+const areaCache = new Map();
+async function findIndex(call, code) {
+  let idx = findIdx.get(code);
+  if (!idx) {
+    const head = new TextDecoder().decode(await findBytes(call, code, 0, 16));
+    const m = /^AFIND1 (\d{8})\n$/.exec(head); if (!m) throw new Error("The online search of this map is not published yet");
+    idx = JSON.parse(new TextDecoder().decode(gunzipSync(await findBytes(call, code, 16, +m[1]))));
+    idx.df = idx.common || {}; idx.base = 16 + +m[1]; findIdx.set(code, idx);
+  }
+  return idx;
+}
+const readRow = (line) => { const f = line.split("\t"); return f.length < 8 ? null : { name: f[0], name_ar: f[1] || f[0], name_en: f[2] || f[0], kind: f[3], lat: +f[4], lon: +f[5], rank: +f[6], key: f[7] }; };
+export async function netAreas(call, code, { s, w, n, e }) {
+  const idx = await findIndex(call, code), out = [];
+  if (!idx.areas) return out;
+  const y0 = Math.floor(s * 4), y1 = Math.floor(n * 4), x0 = Math.floor(w * 4), x1 = Math.floor(e * 4);
+  if ((y1 - y0 + 1) * (x1 - x0 + 1) > 16) return out;   // zoomed far out: no area names
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const k = code + "|" + y + ":" + x, at = idx.areas[y + ":" + x]; if (!at) continue;
+    if (!areaCache.has(k)) areaCache.set(k, findBytes(call, code, idx.base + at[0], at[1]).then((b) => new TextDecoder().decode(gunzipSync(b)).split("\n").map(readRow).filter(Boolean)));
+    for (const p of await areaCache.get(k)) if (p.lat >= s && p.lat <= n && p.lon >= w && p.lon <= e) out.push(p);
+  }
+  return out;
+}
+
+/** The kinds drawn as named areas on the map. */
+export const AREA_KINDS = ["place/compound", "place/residential_area", "place/neighbourhood", "place/quarter", "place/suburb"];
+
+/** Areas → a GeoJSON for the label layer; compounds first, at most `max`. lang picks the name. */
+export function areasGeoJSON(list, lang = "en", max = 300) {
+  const seen = new Set(), feats = [];
+  const order = (p) => (p.kind === "place/compound" || /كمبوند|كومباوند|compound/i.test(p.name + " " + p.name_en) ? 0 : 1);
+  for (const p of [...list].sort((a, b) => order(a) - order(b) || b.rank - a.rank)) {
+    const name = (lang === "ar" ? p.name_ar : p.name_en) || p.name, k = normalize(name);
+    if (!name || seen.has(k)) continue; seen.add(k);
+    feats.push({ type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] }, properties: { name, compound: order(p) === 0 ? 1 : 0 } });
+    if (feats.length >= max) break;
+  }
+  return { type: "FeatureCollection", features: feats };
 }
 
 /** The country whose centre is nearest a point — the map to read online where the map is looking. */

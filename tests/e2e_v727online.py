@@ -56,10 +56,12 @@ with sync_playwright() as p:
     feats = page.evaluate("() => window.__attuneMap.queryRenderedFeatures().map((f) => f.sourceLayer || f.layer.id)")
     check("roads" in feats, "with nothing downloaded, Cairo's streets are drawn online: %s" % sorted(set(feats))[:8])
     calls = page.evaluate("window.__mapmock.calls")
-    ranges = [c for c in calls if c[0] == "range"]
-    check(len(ranges) >= 2 and all(c[1] == "eg" and c[2] == "eg.pmtiles" for c in ranges), "every piece came from Egypt's published map through the phone (%d pieces)" % len(ranges))
+    ranges = [c for c in calls if c[0] == "range" and c[2] == "eg.pmtiles"]
+    check(len(ranges) >= 2 and all(c[1] == "eg" and c[0] == "range" for c in calls if c[0] == "range"), "every piece came from Egypt's published files through the phone (%d map pieces)" % len(ranges))
     check(all(c[4] <= 4_000_000 for c in ranges), "only small pieces are asked for (largest %d bytes)" % max(c[4] for c in ranges))
     check(["assets"] in calls and not any(c[0] == "install" for c in calls), "only the fonts and icons are downloaded — never the whole country")
+    page.wait_for_function("() => { const s = window.__attuneMap.getSource('att-areas'); const d = s && s.serialize().data; return d && (d.features || []).some((f) => f.properties.name === 'Zayed Dunes'); }", timeout=15000)
+    check(True, "the compound is NAMED on the online map (our own label layer from Egypt's index)")
     mode = page.locator("[data-testid=map-mode]").inner_text()
     check("online map" in mode and "Egypt" in mode, "the search bar says: " + mode)
     check(page.locator("[data-testid=map-empty]").count() == 0, "no 'No map yet' box while the online map shows")
@@ -67,12 +69,13 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=map-online-note]").count() == 1, "the country list says every country shows online without downloading")
     # search: the country's own places index, read online in one small piece (the web searches can't be reached here)
     page.locator("[data-testid=map-tab-places]").click(); page.wait_for_timeout(150)
+    before = len([c for c in page.evaluate("window.__mapmock.calls") if c[0] == "range" and c[2] == "eg-find.bin"])
     page.fill("[data-testid=map-search]", "zayed dun"); page.press("[data-testid=map-search]", "Enter")
     page.wait_for_selector("[data-testid=map-hit]", timeout=15000)
     hit = page.locator("[data-testid=map-hit]").first.inner_text()
     check("Zayed Dunes" in hit and "compound" in hit, "a compound is found ONLINE in Egypt's own index without downloading it: " + hit.replace("\n", " · "))
-    finds = [c for c in page.evaluate("window.__mapmock.calls") if c[0] == "range" and c[2] == "eg-find.bin"]
-    check(len(finds) == 3, "the search read 3 small pieces: the header, the index and one piece (%d)" % len(finds))
+    finds = [c for c in page.evaluate("window.__mapmock.calls") if c[0] == "range" and c[2] == "eg-find.bin"][before:]
+    check(len(finds) == 1, "the search read ONE small piece (the index was already read for the area names): %d" % len(finds))
     # "AI-powered" search, read by code: a sort + near me → only pharmacies, nearest first (not the street named after one)
     page.fill("[data-testid=map-search]", "أقرب صيدلية"); page.press("[data-testid=map-search]", "Enter")
     page.wait_for_function("() => [...document.querySelectorAll('[data-testid=map-hit]')].some((e) => e.innerText.includes('العزبي'))", timeout=15000)

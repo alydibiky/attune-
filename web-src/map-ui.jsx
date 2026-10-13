@@ -33,6 +33,16 @@ function pinEl(kind) {
   return el;
 }
 
+// v6.27: the label layer of named areas (drawn above the basemap's own labels: compounds in teal, neighbourhoods in grey)
+function addAreaLayer(map) {
+  if (map.getSource("att-areas")) return;
+  map.addSource("att-areas", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({ id: "att-areas", type: "symbol", source: "att-areas", minzoom: 12,
+    layout: { "text-field": ["get", "name"], "text-font": ["Noto Sans Medium"], "text-size": ["interpolate", ["linear"], ["zoom"], 12, 11, 16, 14],
+      "text-max-width": 8, "symbol-sort-key": ["-", 1, ["get", "compound"]], "text-padding": 6 },
+    paint: { "text-color": ["case", ["==", ["get", "compound"], 1], "#0f766e", "#475569"], "text-halo-color": "#ffffff", "text-halo-width": 1.6 } });
+}
+
 export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, searchSaved, load, save, remember, flash, myLang, fallback, onExit, listen, ask }) {
   const ar = getLang() === "ar";
   const lang = ar || myLang === "Arabic" ? "ar" : "en";
@@ -107,6 +117,9 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
       map.touchZoomRotate.disableRotation();
       map.on("moveend", () => { const c = map.getCenter(); setView({ lat: c.lat, lon: c.lng, z: map.getZoom() }); });
       map.on("load", () => setReady(true));
+      // v6.27: our own label layer — compounds and neighbourhoods from the places index (offline pack or online pieces)
+      map.on("style.load", () => { try { addAreaLayer(map); areaFn.current && areaFn.current(); } catch (e) {} });
+      map.on("moveend", () => { clearTimeout(areaT.current); areaT.current = setTimeout(() => areaFn.current && areaFn.current(), 250); });
       let told = false;   // a tile that can't be read: say it once, never a stream of console errors
       map.on("error", (e) => { const m = String((e && e.error && e.error.message) || ""); if (!told && /missing|not published/.test(m)) { told = true; flash(tr(m)); } });
       mapRef.current = map;
@@ -114,6 +127,23 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
     })().catch((e) => setFail(String((e && e.message) || e)));
     return () => { gone = true; if (map) map.remove(); mapRef.current = null; };
   }, []);
+  // ---- v6.27: compounds and neighbourhoods named on the map (Ali: "compounds like Google Maps") ----
+  const areaFn = useRef(null), areaT = useRef(null);
+  areaFn.current = async () => {
+    const m = mapRef.current; if (!m || !m.getSource || !m.getSource("att-areas")) return;
+    const empty = { type: "FeatureCollection", features: [] };
+    if (m.getZoom() < 12) { m.getSource("att-areas").setData(empty); return; }
+    const b = m.getBounds(), box = { s: b.getSouth(), w: b.getWest(), n: b.getNorth(), e: b.getEast() }, c = m.getCenter();
+    const nc = OM.nearestCountry(c.lat, c.lng); if (!nc) return;
+    let list = [];
+    try {
+      if (packs.some((p) => p.code === nc.code) && nativeCall) {
+        const r = await nativeCall("mapSearch", { q: "", kinds: OM.AREA_KINDS, limit: 50, lat: c.lat, lon: c.lng, radiusDeg: Math.max(box.n - box.s, box.e - box.w) / 1.5 });
+        list = ((r && r.places) || []).filter((p) => OM.AREA_KINDS.includes(p.kind));
+      } else if (onlineOk) list = await OM.netAreas(nativeCall, nc.code, box);
+    } catch (e) { list = []; }
+    const src = m.getSource("att-areas"); if (src) src.setData(OM.areasGeoJSON(list, lang));
+  };
   // the source: the active country pack, or online tiles
   const styleKey = useRef("");
   useEffect(() => {

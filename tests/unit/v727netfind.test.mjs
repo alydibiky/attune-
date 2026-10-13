@@ -37,6 +37,13 @@ r = await OM.netFind(call, "eg", "B.TECH");
 okQuiet(r[0] && r[0].name === "B.Tech", "a whole-name match comes first: " + r.map((p) => p.name).join(", "));
 r = await OM.netFind(call, "eg", "zzzz");
 okQuiet(Array.isArray(r) && r.length === 0, "nothing found → an empty list");
+// v6.27: the named areas by map square, for the label layer
+asks = []; const areas = await OM.netAreas(call, "eg", { s: 29.9, w: 30.9, n: 30.05, e: 31.0 });
+okQuiet(areas.some((p) => p.name === "Palm Hills October") && !areas.some((p) => p.kind === "amenity/hospital"), "the areas inside a box: " + areas.map((p) => p.name).join(", "));
+okQuiet(asks.length === 1, "one small square read (" + asks.length + ")");
+const gj = OM.areasGeoJSON([...areas, { name: "حي الأمل", name_ar: "حي الأمل", name_en: "Hay El Amal", kind: "place/neighbourhood", lat: 30, lon: 31, rank: 65 }], "en");
+okQuiet(gj.features[0].properties.name === "Palm Hills October" && gj.features[0].properties.compound === 1 && gj.features[1].properties.name === "Hay El Amal", "compounds first, names in the app's language");
+okQuiet((await OM.netAreas(call, "eg", { s: 20, w: 20, n: 35, e: 40 })).length === 0, "zoomed far out: no area names (nothing read)");
 fs.rmSync(dir, { recursive: true, force: true });
 console.log(fail ? fail + " FAILED" : "v727netfind ok");
 process.exit(fail ? 1 : 0);

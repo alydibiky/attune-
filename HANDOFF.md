@@ -1107,7 +1107,13 @@ internet searching … improve internet searching and make it faster".
   were dropped from offline search before. Egypt build of 13 Oct: 436,696 places, +627 residential areas. Most real
   compounds are already there as `place/neighbourhood` (Mivida, Hyde Park, Eastown, Al Burouj; 712 names with
   كمبوند/compound) — the «compound» sort covers all three kinds. World pack published: wld.pmtiles 45 MB (zoom ≤ 6).
-  Egypt's eg-find.bin published (45.6 MB). Drawing compounds as labelled areas on the map is the next step.
+  Egypt's eg-find.bin published (45.6 MB).
+- **Compounds NAMED on the map (our own label layer `att-areas`, map-ui `addAreaLayer`, zoom ≥ 12):** the basemap only
+  labels neighbourhoods drawn as points; compounds drawn as areas, and Overture's, never showed. Now the places index's
+  named areas (`OM.AREA_KINDS`: compound, residential_area, neighbourhood, quarter, suburb) are labelled where you look —
+  compounds in teal, first. Offline: `mapSearch` {kinds, radiusDeg} on the downloaded pack. Online: find.bin's new
+  `areas` section (0.25° squares, gzip; Egypt: 171 squares ≈ 260 KB in all) via `OM.netAreas` (one square ≈ a few
+  KB, cached). Re-read on every map stop (250 ms debounce) and after each style change ("style.load").
 - Tests: `tests/unit/v722maps.test.mjs` (world name, online style), `tests/e2e_v722mapbuilder.py` (compounds).
 - `tests/audit.py` never finished since a full page (Fit/Money) hides the bottom bar: it now presses the app's Back
   until the bar shows. It then found the Instant page's "Go" off a 320-px screen → that toolbar wraps now.

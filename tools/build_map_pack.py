@@ -11,7 +11,7 @@
 The search key's normalisation must equal offlinemap.js normalize() and MapPacks.kt normalize().
 Tested by tests/unit/v722maps.test.mjs (the normalisation) and tests/e2e_v722mapbuilder.py.
 """
-import hashlib, json, os, re, sqlite3, sys, unicodedata, zipfile
+import hashlib, json, math, os, re, sqlite3, sys, unicodedata, zipfile
 
 AR_DIAC = re.compile("[ً-ْـ\u06D6-\u06ED]")
 
@@ -346,6 +346,7 @@ def assets(fonts, sprites, outdir):
 # line: name, name_ar, name_en, kind, lat, lon, rank, key — tab-separated; name_ar/name_en empty when equal to name).
 # "common" in the index = {word: how many places have it}. Read by web-src/offlinemap.js netFind() (the same rules).
 FIND_COMMON, FIND_VERY = 0.004, 0.015
+AREA_KINDS = {"place/compound", "place/residential_area", "place/neighbourhood", "place/quarter", "place/suburb"}
 
 
 def find_stem(w):
@@ -378,13 +379,23 @@ def build_find(sqlite_path, out):
     for p in sorted(shards):
         b = gzip.compress("\n".join(shards[p]).encode("utf-8"), 9, mtime=0)
         table[p] = [off, len(b)]; blobs.append(b); off += len(b)
+    # v6.27: the named areas (compounds, residential areas, neighbourhoods) by map square (0.25°), so the online map can
+    # LABEL them where you look — the basemap only labels neighbourhoods drawn as points
+    squares = collections.defaultdict(list)
+    for name, ar, en, kind, lat, lon, rank, key in rows:
+        if kind in AREA_KINDS:
+            squares["%d:%d" % (math.floor(lat * 4), math.floor(lon * 4))].append("\t".join(x.replace("\t", " ").replace("\n", " ") for x in (name, ar if ar != name else "", en if en != name else "", kind, "%.5f" % lat, "%.5f" % lon, str(rank), key)))
+    areas = {}
+    for k in sorted(squares):
+        b = gzip.compress("\n".join(squares[k]).encode("utf-8"), 9, mtime=0)
+        areas[k] = [off, len(b)]; blobs.append(b); off += len(b)
     # offsets count from the first piece (just after the index), so the index's own size never moves them
-    idx = gzip.compress(json.dumps({"v": 1, "common": {w: df[w] for w in sorted(common)}, "shards": table}, ensure_ascii=False).encode("utf-8"), 9, mtime=0)
+    idx = gzip.compress(json.dumps({"v": 1, "common": {w: df[w] for w in sorted(common)}, "shards": table, "areas": areas}, ensure_ascii=False).encode("utf-8"), 9, mtime=0)
     with open(out, "wb") as f:
         f.write(("AFIND1 %08d\n" % len(idx)).encode("ascii")); f.write(idx)
         for b in blobs:
             f.write(b)
-    return {"places": len(rows), "pieces": len(table), "common": len(common), "bytes": os.path.getsize(out), "biggest": max(v[1] for v in table.values()) if table else 0}
+    return {"places": len(rows), "pieces": len(table), "common": len(common), "area_squares": len(areas), "bytes": os.path.getsize(out), "biggest": max(v[1] for v in table.values()) if table else 0}
 
 
 if __name__ == "__main__":
