@@ -44,7 +44,8 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name }) {
   const [text, setText] = useState("");
   const facts = useMemo(() => todayFacts(), []);
   const recent = recentTools().map((id) => tools.find((t) => t[0] === id)).filter(Boolean);
-  const core = ["money", "business", "memory", "map"].map((id) => tools.find((t) => t[0] === id)).filter(Boolean);
+  // v6.27 (Ali: "I don't want Maps with Money"): the main cards are Money, Business and Mind; Maps lives in Tools / pinned
+  const core = ["money", "business", "memory"].map((id) => tools.find((t) => t[0] === id)).filter(Boolean);
   const cards = [...core, ...recent.filter((t) => !core.includes(t))].slice(0, 7);
   const send = () => { const t = text.trim(); if (!t) return; setText(""); onAsk(t); };
   const starters = [["Summarise a PDF", "pdfchat"], ["Price a crane job", null], ["Plan my meals", "fit"], ["Convert a file", "convert"]];

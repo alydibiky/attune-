@@ -1044,7 +1044,7 @@ internet searching … improve internet searching and make it faster".
   sidebar = Home · Chat · Tools · Mind · Money · Business, then **Pinned** tools (★ on the Tools page; `attune:side:pins`,
   default convert/fit/map), then recent chats. `web-src/desk-ui.jsx`: `DesktopHome` (greeting, ask box → a NEW chat sent at
   once via chatSeed "\u0002…" — kept in the box when no model is loaded; Today card from storage: kcal eaten, reminders
-  left, chats; cards Money/Business/Mind/Maps + recently used tools `attune:tools:recent` + All tools) and `ToolsPage`
+  left, chats; cards Money/Business/Mind (v6.27: Maps taken out — Ali) + recently used tools `attune:tools:recent` + All tools) and `ToolsPage`
   (every tool, 4 columns, by group, find box, ★ pin). A computer opens on Home (`mode` "home"; Back ends at Home); a
   narrow window returns to Chat. Tool pages: `att-page` + CSS in shell.html lifts their phone-width `max-w-*` columns
   (not dialogs); File Converter grid 4 columns; the top bar is hidden for tools with their own title (`OWN_TITLE`); no
