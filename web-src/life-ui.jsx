@@ -6,7 +6,7 @@
 import React, { useMemo, useState } from "react";
 import { Users, Check, Trash2, Wallet, Sparkles } from "lucide-react";
 import { tr } from "./i18n.js";
-import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, lifeModelPrompt, readLifeModel } from "./life.js";
+import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, lifeModelPrompt, readLifeModel, nextReminder } from "./life.js";
 import { fmt } from "./money-calm.js";
 
 const KIND = { installment: "Installments", debt: "Money between people", circle: "Savings circle", bill: "Bill", rent: "Rent", subscription: "Subscription" };
@@ -57,7 +57,7 @@ function Item({ c, onTick, onRemove }) {
     </div>);
 }
 
-export function LifePage({ ask, toMoney, flash }) {
+export function LifePage({ ask, toMoney, flash, remind, unremind }) {
   const [data, setData] = useState(() => loadLife());
   const [text, setText] = useState("");
   const [draft, setDraft] = useState(null);
@@ -75,12 +75,14 @@ export function LifePage({ ask, toMoney, flash }) {
     if (!c) { flash && flash(tr("I couldn't read an amount and who — try: “Ahmed owes me 12,000, 1,000 a month for a year”")); return; }
     setDraft({ ...c, source: t });
   };
-  const save = () => { put(addCommitment(data, draft)); setDraft(null); setText(""); flash && flash(tr("Saved — the payments are on your list")); };
+  // v6.27: one reminder per commitment — 9:00 on the day its next payment is due; moved on every tick
+  const remindFor = (c) => { const r = c && nextReminder(c); if (r && remind) remind(r); else if (c && unremind) unremind("life-" + c.id); };
+  const save = () => { const d = addCommitment(data, draft); put(d); remindFor(d.items[d.items.length - 1]); setDraft(null); setText(""); flash && flash(tr("Saved — the payments are on your list")); };
   const tick = (c, i, on) => {
-    put(togglePaid(data, c.id, i));
+    const d = togglePaid(data, c.id, i); put(d); remindFor(d.items.find((x) => x.id === c.id));
     if (on && toMoney && window.confirm(tr("Add it to Money? {t}", { t: tickText(c, i) }))) toMoney(tickText(c, i));
   };
-  const remove = (c) => { if (window.confirm(tr("Delete this?"))) put(removeCommitment(data, c.id)); };
+  const remove = (c) => { if (window.confirm(tr("Delete this?"))) { put(removeCommitment(data, c.id)); unremind && unremind("life-" + c.id); } };
   const soon = dueSoon(data);
   const groups = [["People", data.items.filter((c) => c.kind === "debt" || (c.kind === "installment" && c.person))],
     ["Installments", data.items.filter((c) => c.kind === "installment" && !c.person)], ["Savings circles", data.items.filter((c) => c.kind === "circle")],

@@ -248,3 +248,15 @@ export function chatLifeIntent(text, opts) {
   if (["bill", "rent", "subscription"].includes(c.kind) && !c.start && !/\b(every|each|a|per) (month|week|year)\b|\bmonthly\b|\bweekly\b|\byearly\b|كل شهر|شهري|شهريا|في الشهر|بالشهر|كل اسبوع|كل سنه|سنويا/i.test(fold(t))) return null;
   return c.person || c.kind === "circle" || c.kind === "installment" || c.every ? c : null;
 }
+
+/** v6.27: the reminder for a commitment's NEXT unpaid payment — 9:00 on its day (or in an hour if that is today and
+ *  9:00 has passed); null when everything is paid or the day is gone. One reminder per commitment, moved on each tick. */
+export function nextReminder(c, now = Date.now()) {
+  const n = progressOf(c, now).next; if (!n) return null;
+  const d = new Date(n.date + "T09:00:00"); let at = d.getTime();
+  if (at < now) { const end = new Date(n.date + "T20:00:00").getTime(); if (end < now) return null; at = now + 3600000; }
+  const who = c.person ? c.person + " · " : "";
+  const what = c.kind === "installment" ? `installment ${n.i + 1} of ${c.count}` : c.kind === "circle" ? `${c.title || "savings circle"} ${n.i + 1}/${c.count}` : c.title || c.kind;
+  const amount = n.amount.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + (c.currency || "EGP");
+  return { id: "life-" + c.id, at, title: (c.dir === "in" ? "Due to you: " : "Due: ") + who + what, body: amount + " — tick it in People & plans when it's paid" };
+}

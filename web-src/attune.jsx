@@ -9769,6 +9769,8 @@ export default function App() {
             onExit={goBack} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
         ) : mode === "life" ? (
           <LifePage flash={flash} toMoney={(t) => sendToMoney(t, tr("Payment read — pick the account and confirm"))}
+            remind={(r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "life" })}
+            unremind={(id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }}
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 160, temperature: 0, think: false }) : null} />
         ) : mode === "money" ? (
           wide ? (

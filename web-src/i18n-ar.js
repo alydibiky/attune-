@@ -3655,4 +3655,5 @@ export const AR = {
   "Mind & learning": "العقل والتعلّم",
   "Business (add-on)": "الأعمال (إضافة)",
   "Create (add-on)": "الإبداع (إضافة)",
+  "from People & plans": "من «الأشخاص والالتزامات»",
 };

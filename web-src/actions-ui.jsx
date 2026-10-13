@@ -152,7 +152,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
                 <span>🔔</span>
                 <div className="flex-1 min-w-0">
                   <p dir="auto" className="text-sm text-slate-100 truncate">{r.title}</p>
-                  <p className="text-[11px] text-teal-300/80">{whenText(r.next)}{r.repeat && r.repeat !== "none" ? " · " + tr(REPEAT_LABEL[r.repeat]) : ""}{r.source === "promise" ? " · " + tr("from a promise") : ""}</p>
+                  <p className="text-[11px] text-teal-300/80">{whenText(r.next)}{r.repeat && r.repeat !== "none" ? " · " + tr(REPEAT_LABEL[r.repeat]) : ""}{r.source === "promise" ? " · " + tr("from a promise") : r.source === "life" ? " · " + tr("from People & plans") : ""}</p>
                 </div>
                 <button onClick={async () => { if (await askConfirm("Delete this reminder?")) remove(r.id); }} className="p-2 text-slate-500" aria-label={tr("Delete")}><Trash2 size={15} /></button>
               </div>

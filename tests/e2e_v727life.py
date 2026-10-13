@@ -22,6 +22,10 @@ with sync_playwright() as p:
     check("Ahmed owes you" in dr and "12 payments" in dr and "12,000" in dr, "read by code, shown to check first: " + dr.replace("\n", " · "))
     page.click("[data-testid=life-save]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=life-item]").count() == 1 and page.locator("[data-testid=life-tick]").count() == 12, "saved with 12 monthly checkboxes")
+    rem = page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1')||'[]')")
+    rem = rem if isinstance(rem, list) else rem.get("items", [])
+    lr = [r for r in rem if str(r.get("id", "")).startswith("life-")]
+    check(len(lr) == 1 and "installment 1 of 12" in lr[0]["title"], "a reminder for the next payment is set: %s" % [r.get("title") for r in lr])
     page.locator("[data-testid=life-tick]").first.click(); page.wait_for_timeout(300)
     check(any("Received 1,000 EGP from Ahmed — installment 1 of 12" in m for m in dialogs), "a tick is offered to Money: %s" % dialogs[-1:])
     page.wait_for_selector("[data-testid=money-page]", timeout=8000)
@@ -30,6 +34,9 @@ with sync_playwright() as p:
     if not page.locator("[data-testid=life-page]").count():
         page.locator("nav button").last.click(); page.wait_for_timeout(250)
         page.locator(".rounded-t-2xl button:has-text('People & plans')").first.click(); page.wait_for_selector("[data-testid=life-page]", timeout=8000)
+    rem = page.evaluate("JSON.parse(localStorage.getItem('attune:reminders:v1')||'[]')")
+    rem = rem if isinstance(rem, list) else rem.get("items", [])
+    check(any("installment 2 of 12" in r.get("title", "") for r in rem if str(r.get("id", "")).startswith("life-")), "after the tick the reminder moved to the next payment (2 of 12)")
     item = page.locator("[data-testid=life-item]").first.inner_text()
     check("11,000" in item, "the tick is kept: 11,000 left — " + item.replace("\n", " · ")[:120])
     page.fill("[data-testid=life-input]", "جمعية ٢٠٠٠ في الشهر لمدة ١٠ شهور ودوري الرابع"); page.click("[data-testid=life-read]")

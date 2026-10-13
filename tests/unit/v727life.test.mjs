@@ -87,6 +87,11 @@ L.saveLife(d, store); ok(L.loadLife(store).items.length === 1, "saved and read b
 const r = L.readLifeModel('ok {"kind":"installment","person":"Hana","dir":"in","amount":250,"count":8,"every":"week","start":"2026-10-20"}');
 ok(r && r.kind === "installment" && r.total === 2000 && r.every === "week" && r.model, "the model's JSON → the same fields");
 ok(L.readLifeModel('{"kind":"lottery","amount":5}') === null, "anything outside the fixed kinds is dropped");
+// ---- reminders: one per commitment, for its next unpaid payment ----
+{ const c0 = { ...P("Ahmed owes me 12,000, 1,000 a month starting November"), id: "z", paid: [0] };
+  const r = L.nextReminder(c0, now);
+  ok(r && r.id === "life-z" && new Date(r.at).toISOString().slice(0, 10) === "2026-12-01" && /installment 2 of 12/.test(r.title) && /1,000 EGP/.test(r.body), "the reminder is for the next unpaid one (2 of 12, 1 Dec): " + JSON.stringify(r));
+  ok(L.nextReminder({ ...c0, paid: [...Array(12).keys()] }, now) === null, "all paid → no reminder"); }
 // ---- Chat: statements are saved, questions stay in Chat ----
 for (const q of ["Ahmed owes me 12,000, 1,000 a month for a year", "جمعية ٢٠٠٠ في الشهر لمدة ١٠ شهور ودوري الرابع", "Netflix 200 every month", "I lent Sara 500"]) ok(L.chatLifeIntent(q, { now }), `Chat «${q}» → People & plans`);
 for (const q of ["Crane hire 25000 each day, the 1st to the 5th both included. Give me the rent and the rent with the 14 tax added.", "The rent here is 8000", "احسب قسط ١٢٠٠٠ على ١٢ شهر", "How much does Ahmed owe me?", "كام عليه احمد؟", "What is 12000 / 12", "should I lend Omar 2000", "Write a poem about rent"]) ok(!L.chatLifeIntent(q, { now }), `Chat «${q}» stays in Chat`);
