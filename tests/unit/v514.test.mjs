@@ -47,11 +47,13 @@ eq(S.fileNameFor({ title: "Crane Simulator", kind: "html" }), "Crane-Simulator.h
 eq(S.fileNameFor({ title: "خطة الرفع", kind: "doc" }), "خطة-الرفع.md", "…Arabic titles too");
 
 // ---- themes ----
-eq(Object.keys(S.themeVars({ accent: "teal", bg: "slate" })).length, 0, "the default theme changes nothing");
+// v6.27: the default theme is design A "Calm" (Ali's pick) — a green-grey ground and Calm's teal
+const D = S.themeVars({ accent: "teal", bg: "slate" });
+eq([D["--color-slate-950"], D["--color-slate-900"], D["--color-teal-400"]], ["#111416", "#181C1F", "#4FC2AF"], "the default theme is Calm: its ground, cards and teal");
 const v = S.themeVars({ accent: "violet", bg: "slate" });
 eq(v["--color-teal-500"], S.PALETTES.violet["500"], "an accent theme points teal at the new colour");
 const L = S.themeVars({ accent: "teal", bg: "light" });
-eq([L["--color-slate-950"], L["--color-slate-100"], L["--color-teal-300"]], [S.PALETTES.slate["50"], S.PALETTES.slate["900"], S.PALETTES.teal["700"]], "light flips the scales: dark surfaces → light, light text → dark, accents deepen");
+eq([L["--color-slate-950"], L["--color-slate-900"], L["--color-slate-800"], L["--color-slate-100"], L["--color-teal-300"]], ["#F4F5F3", "#FFFFFF", "#E4E8E5", S.PALETTES.calm["900"], S.PALETTES.calmteal["700"]], "Calm light: grey ground, white cards, soft lines; light text → dark, accents deepen");
 eq(S.themeVars({ bg: "black" })["--color-slate-950"], "#000000", "Black (OLED) makes the background truly black");
 S.saveTheme({ accent: "rose", bg: "stone" });
 eq(S.loadTheme(), { accent: "rose", bg: "stone" }, "the theme is remembered");
