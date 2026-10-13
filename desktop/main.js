@@ -245,6 +245,8 @@ const SLOW = {
   knowPackText: viaJson(async (a) => ({ name: a.name, text: await packs.knowPackText(a.tag, a.name) })),
   async foodPackText(id, name) { try { resolve(id, { name, text: await packs.foodPackText(name) }); } catch (e) { reject(id, e.message || "Couldn't download the food pack"); } },
   mapRemote: viaJson((a) => packs.mapRemote(a.code)),
+  mapRange: viaJson((a) => packs.mapRange(a)),
+  mapAssets: viaJson(() => packs.mapAssets()),
   mapSearch: viaJson(async (a) => ({ places: packs.mapSearch(a) })),
   mapInstall(id, arg) {
     let a; try { a = JSON.parse(arg); } catch (e) { return reject(id, "Unknown map"); }

@@ -1072,13 +1072,17 @@ internet searching … improve internet searching and make it faster".
   ground. New pack **`wld`** (world overview, maxzoom 6) built by `map-pack.yml` job `world`; the map page downloads it
   by itself on Wi-Fi when no map is installed, else shows "No map on this device yet" + "Download the world map".
   `countryOf("wld")` / `countryOf("online")` have names (the update banner crashed on `wld` before).
-- **(WITHDRAWN 13 Oct — Ali: "I don't want to pay for maps"; OpenFreeMap rejected too; map-planet.yml removed; the online
-  code stays OFF while ONLINE_PLANET_URL is empty, until Ali picks the free route)** Online planet: `map-planet.yml` streams the newest Protomaps planet (~120 GB) into
-  Ali's R2 bucket every Saturday (rclone `copyurl`, 64 MB parts; skips when `planet.json` already has that build). Needs
-  secrets `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`. The page reads it with HTTP range
-  requests when `OM.ONLINE_PLANET_URL` (offlinemap.js) is set — EMPTY until Ali's bucket has a public domain + CORS for
-  `https://appassets.androidplatform.net` and `app://attune`. Map order: your pick → your country pack → online planet
-  (with signal) → world overview → empty. Fonts come from protomaps.github.io until a pack brings them.
+- **Online map, $0 (Ali: "I don't want to pay for maps"; R2 and OpenFreeMap both rejected; he picked "our own packs"):**
+  with signal, the country the map looks at is read ONLINE from its free GitHub release without downloading it —
+  `"net:<code>"`. The phone/computer fetch only the pieces on screen: `MapPacks.range` (Kotlin) / `packs.mapRange`
+  (desktop) = HTTP Range requests (≤ 4 MB, files in parts mapped onto the right part, the manifest cached 6 h, every
+  request through the offline lock); the page's `OM.NetSource` asks `nativeCall("mapRange")` (no browser CORS limits).
+  Before the first online view only the fonts/icons download (`mapAssets`, a few MB). Map choice (map-ui.jsx): the
+  country in view if downloaded → that country online (`OM.nearestCountry` of the view centre, zoom ≥ 4) → the country
+  you picked → first downloaded → world overview → "No map yet". All 44 packs (~50 countries) are published, so all
+  stream today. Search online stays Photon + Nominatim + Overpass (free OSM services); the Overture places index is
+  still offline-only (next: an online places index, sharded by area, on GitHub too).
+  Tests: `tests/e2e_v727online.py`, `desktop/test/maprange.js` (+ `tests/unit/v727maprange.test.mjs`, desktop.yml).
 - **Compounds:** `build_map_pack.py` now indexes named `landuse=residential` / `residential=gated` areas as
   `place/compound` (rank 62) — they were dropped from offline search before (Overture added some). Takes effect on the
   next weekly pack build. Drawing compounds as labelled areas on the map is the next step (needs our own label layer).

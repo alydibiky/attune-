@@ -6,7 +6,7 @@
    as the release map-<code>. The phone keeps them in its private folder (MapPacks.kt); the page reads the map file
    through the bridge (N.mapRead) and MapLibre draws it. One shared release, map-assets, holds the fonts and icons.
    Pure parts (normalize, isNewer, sizes, the style) are tested in tests/unit/v722maps.test.mjs.                  */
-import { PMTiles, Protocol, FetchSource } from "pmtiles";
+import { PMTiles, Protocol } from "pmtiles";
 import { layers, namedFlavor } from "@protomaps/basemaps";
 
 export const RELEASE_BASE = "https://github.com/alydibiky/attune-/releases/download/";
@@ -17,8 +17,9 @@ export const RELEASE_BASE = "https://github.com/alydibiky/attune-/releases/downl
 import LIST from "../tools/map_countries.json";
 export const COUNTRIES = LIST;
 // v6.27: the world overview pack has a name and a view too (the update banner and the pack line read them)
-const WORLD_ENTRY = { code: "wld", en: "the world", ar: "العالم", c: [20, 25], z: 2 }, ONLINE_ENTRY = { code: "online", en: "the whole world (online)", ar: "العالم كله (على الإنترنت)", c: [20, 25], z: 2 };
-export const countryOf = (code) => (code === "wld" ? WORLD_ENTRY : code === "online" ? ONLINE_ENTRY : COUNTRIES.find((c) => c.code === code) || null);
+// "net:eg" = Egypt's map read online (not downloaded) — the same country
+const WORLD_ENTRY = { code: "wld", en: "the world", ar: "العالم", c: [20, 25], z: 2 };
+export const countryOf = (code) => { const k = String(code || "").replace(/^net:/, ""); return k === "wld" ? WORLD_ENTRY : COUNTRIES.find((c) => c.code === k) || null; };
 
 /** The same text normalisation as the search index (tools/build_map_pack.py) and MapPacks.kt — keep the three equal. */
 export function normalize(s) {
@@ -64,23 +65,43 @@ export class BridgeSource {
   }
 }
 
+/** v6.27 (Ali: "streets and compounds everywhere online, and I don't want to pay for maps"): a country's map read online
+ *  without downloading it — only the pieces on the screen, fetched by the phone/computer (mapRange: HTTP range requests
+ *  to the free GitHub release the download uses). PMTiles caches the map's index; MapLibre caches the tiles. */
+export class NetSource {
+  constructor(call, code, key) { this.call = call; this.code = code; this.key = key; }
+  getKey() { return this.key; }
+  async getBytes(offset, length) {
+    const r = await this.call("mapRange", { code: this.code, name: this.code + ".pmtiles", offset, length });
+    return { data: await b64ToBuf((r && r.b64) || "") };
+  }
+}
+
+/** The country whose centre is nearest a point — the map to read online where the map is looking. */
+export function nearestCountry(lat, lon) {
+  let best = null, bd = Infinity;
+  for (const c of COUNTRIES) { if (!c.c) continue; const d = (c.c[1] - lat) ** 2 + ((c.c[0] - lon) * Math.cos(lat * Math.PI / 180)) ** 2; if (d < bd) { bd = d; best = c; } }
+  return best;
+}
+
 let registered = null;
 /**
  * Registers the protocols MapLibre uses, once:
  *   pmtiles://<code>/<code>.pmtiles   the country's vector map, read through the bridge
  *   mapasset://fonts/… , sprites/…    the shared fonts and icons (empty answer when a font range isn't there)
+ *   pmtiles://net/<code>.pmtiles      v6.27: a country's map read ONLINE, not downloaded (NetSource, below)
  *   osmc://z/x/y                      online picture tiles through the app's own tile cache (no pack, or outside it)
+ * call: the app's nativeCall (the online pieces come through the phone / computer: no browser limits on GitHub's files).
  */
-export function registerProtocols(maplibregl, N, getTile) {
+export function registerProtocols(maplibregl, N, getTile, call) {
   if (registered) return registered;
   const proto = new Protocol();
   maplibregl.addProtocol("pmtiles", (params, ac) => {
     // pmtiles://eg/eg.pmtiles (the TileJSON) and pmtiles://eg/eg.pmtiles/z/x/y (a tile): the archive key is the path
     const m = /^pmtiles:\/\/(.+?)(?:\/\d+\/\d+\/\d+)?$/.exec(params.url), key = m ? m[1] : "";
-    if (key === ONLINE + "/" + ONLINE + ".pmtiles") {
-      // v6.27: the whole planet, read online in small pieces (HTTP range requests) from Attune's own copy
-      if (ONLINE_PLANET_URL && !proto.get(key)) { const f = new FetchSource(ONLINE_PLANET_URL); proto.add(new PMTiles({ getKey: () => key, getBytes: (...a) => f.getBytes(...a) })); }
-    } else if (N && N.mapRead && key && !proto.get(key)) proto.add(new PMTiles(new BridgeSource(N, key)));
+    const net = /^net\/([a-z]{2,4})\.pmtiles$/.exec(key);
+    if (net) { if (call && !proto.get(key)) proto.add(new PMTiles(new NetSource(call, net[1], key))); }
+    else if (N && N.mapRead && key && !proto.get(key)) proto.add(new PMTiles(new BridgeSource(N, key)));
     return proto.tilev4(params, ac);
   });
   maplibregl.addProtocol("mapasset", async (params) => {
@@ -104,30 +125,23 @@ export function registerProtocols(maplibregl, N, getTile) {
 /** v6.27: the world overview (low zoom, every country) — a pack like the others, code "wld". */
 export const WORLD = "wld";
 
-/** v6.27 (Ali: "maps like Google Maps — streets and compounds everywhere online"): the newest Protomaps planet, copied
- *  every week to Attune's own Cloudflare R2 bucket (.github/workflows/map-planet.yml). Empty = not set up yet: the app
- *  then uses the country packs and the world overview only. ONLINE is the "pack" code of this online map. */
-export const ONLINE = "online";
-export const ONLINE_PLANET_URL = "";
-export const ONLINE_ASSETS = "https://protomaps.github.io/basemaps-assets";   // fonts and icons when no pack brought them
 
 /**
  * The map style.
  * pack: an installed pack's code (vector map from the phone; WORLD = the world overview) or null (no map yet:
  * just the ground — v6.27: OpenStreetMap's own tile servers forbid apps and answered 403 on the desktop).
- * dark: the app's theme. lang: "ar" | "en" (place names). localAssets: the fonts and icons are on the device (any pack
- * downloaded once) — else the online map reads them from the web.
+ * "net:<code>" = that country read online (not downloaded). dark: the app's theme. lang: "ar" | "en" (place names).
  */
-export function mapStyle({ pack = null, dark = true, lang = "en", localAssets = true } = {}) {
+export function mapStyle({ pack = null, dark = true, lang = "en" } = {}) {
   if (!pack) {
     return { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": dark ? "#0b1220" : "#f1f5f9" } }] };
   }
-  const web = pack === ONLINE && !localAssets;
+  const net = /^net:([a-z]{2,4})$/.exec(pack);
   return {
     version: 8,
-    glyphs: web ? ONLINE_ASSETS + "/fonts/{fontstack}/{range}.pbf" : "mapasset://fonts/{fontstack}/{range}.pbf",
-    sprite: (web ? ONLINE_ASSETS + "/sprites/v4/" : "mapasset://sprites/v4/") + (dark ? "dark" : "light"),
-    sources: { protomaps: { type: "vector", url: `pmtiles://${pack}/${pack}.pmtiles`, attribution: "© OpenStreetMap contributors · Protomaps" } },
+    glyphs: "mapasset://fonts/{fontstack}/{range}.pbf",
+    sprite: "mapasset://sprites/v4/" + (dark ? "dark" : "light"),
+    sources: { protomaps: { type: "vector", url: net ? `pmtiles://net/${net[1]}.pmtiles` : `pmtiles://${pack}/${pack}.pmtiles`, attribution: "© OpenStreetMap contributors · Protomaps" } },
     layers: layers("protomaps", namedFlavor(dark ? "dark" : "light"), { lang: lang === "ar" ? "ar" : "en" }),
   };
 }

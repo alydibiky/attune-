@@ -18,8 +18,11 @@ ok(!JSON.stringify(s0).includes("osmc") && Object.keys(s0.sources).length === 0,
 const sw = OM.mapStyle({ pack: OM.WORLD });
 ok(OM.WORLD === "wld" && sw.sources.protomaps.url === "pmtiles://wld/wld.pmtiles", "the world overview is a pack like the others");
 ok(OM.countryOf(OM.WORLD) && OM.countryOf(OM.WORLD).en === "the world" && OM.countryOf("eg").en === "Egypt", "the world pack has a name (the update banner reads it)");
-const so = OM.mapStyle({ pack: OM.ONLINE, localAssets: false }), sl = OM.mapStyle({ pack: OM.ONLINE });
-ok(so.sources.protomaps.url === "pmtiles://online/online.pmtiles" && so.glyphs.startsWith("https://") && sl.glyphs.startsWith("mapasset://"), "the online planet: fonts from the web until a pack brings them");
+ok(OM.mapStyle({ pack: "net:eg" }).sources.protomaps.url === "pmtiles://net/eg.pmtiles" && OM.countryOf("net:eg").en === "Egypt", "a country read online (not downloaded) is the same map, from the net");
+ok(OM.nearestCountry(30.04, 31.24).code === "eg", "Cairo → Egypt's map");
+{ const calls = []; const src = new OM.NetSource(async (m, a) => { calls.push([m, a]); return { b64: Buffer.from("hi").toString("base64") }; }, "eg", "net/eg.pmtiles");
+  const got = await src.getBytes(10, 2);
+  ok(src.getKey() === "net/eg.pmtiles" && calls[0][0] === "mapRange" && calls[0][1].name === "eg.pmtiles" && calls[0][1].offset === 10 && new Uint8Array(got.data).length === 2, "the online map asks the phone for just the bytes it needs"); }
 ok(OM.COUNTRIES.some((c) => c.code === "eg") && OM.COUNTRIES.every((c) => /^[a-z]{2,4}$/.test(c.code) && c.ar && c.en), "the country list (codes the phone accepts)");
 console.log(fail ? `${fail} FAILED` : "v722maps ok");
 process.exit(fail ? 1 : 0);

@@ -344,6 +344,63 @@ function makePacks({ data, online, fetch: f }) {
     return { ...man, installed: true };
   }
 
+  // ---- v6.27: a country's map read ONLINE without downloading it (only the pieces on screen, HTTP range requests to the
+  // same free GitHub release); files over 1.9 GB come in parts and the offset is mapped onto the right part.
+  const manifests = new Map();
+  async function manifestCached(code) {
+    const had = manifests.get(code);
+    if (had && Date.now() - had.at < 6 * 3600e3) return had.m;
+    const m = await mapRemote(code); manifests.set(code, { at: Date.now(), m }); return m;
+  }
+  async function getRange(url, off, len) {
+    online(url, "map");
+    const r = await FETCH(url, { headers: { "User-Agent": UA, Range: "bytes=" + off + "-" + (off + len - 1) }, redirect: "follow" });
+    if (r.status !== 206) throw new Error(r.status === 404 ? "This map is not published yet" : "The map server returned HTTP " + r.status);
+    const b = Buffer.from(await r.arrayBuffer());
+    if (b.length !== len) throw new Error("The map piece came back short");
+    return b;
+  }
+  /** {code, name, offset, length (≤ 4 MB)} → {b64} */
+  async function mapRange(a) {
+    const code = String(a.code || ""), name = String(a.name || "");
+    if (!CODE.test(code) || !NAME.test(name)) throw new Error("Unknown map");
+    const off = Math.max(0, Number(a.offset) || 0), len = Math.min(4_000_000, Math.max(1, Number(a.length) || 0));
+    const f = ((await manifestCached(code)).files || []).find((x) => x.name === name);
+    if (!f) throw new Error("Unknown map file");
+    const end = Math.min(off + len, f.bytes);
+    if (end <= off) return { b64: "" };
+    const bufs = [];
+    if (!f.parts) bufs.push(await getRange(BASE + "map-" + code + "/" + name, off, end - off));
+    else {
+      let start = 0;
+      for (const p of f.parts) {
+        const a0 = Math.max(off, start), a1 = Math.min(end, start + p.bytes);
+        if (a1 > a0) { if (!NAME.test(p.name)) throw new Error("Unknown map file"); bufs.push(await getRange(BASE + "map-" + code + "/" + p.name, a0 - start, a1 - a0)); }
+        start += p.bytes;
+      }
+    }
+    return { b64: Buffer.concat(bufs).toString("base64") };
+  }
+  /** v6.27: the map fonts and icons only (a few MB, once) — before a country is shown online. */
+  let assetsBusy = null;
+  async function mapAssets() {
+    if (assetsInstalled()) return { assets: true };
+    if (!assetsBusy) assetsBusy = (async () => {
+      const assetsMan = await getJson(BASE + "map-assets/assets-manifest.json", "map");
+      const tmp = path.join(MROOT, "assets.new"); rmrf(tmp); fs.mkdirSync(tmp, { recursive: true });
+      for (const fl of assetsMan.files) {
+        if (!NAME.test(fl.name)) throw new Error("Unexpected file in the map fonts: " + fl.name);
+        const zip = path.join(MROOT, fl.name + ".part");
+        await fetchResumable(BASE + "map-assets/" + fl.name, zip, fl.bytes, () => false, () => {});
+        await verify(zip, fl.sha256, fl.name);
+        await unzip(zip, tmp); fs.unlinkSync(zip);
+      }
+      fs.writeFileSync(path.join(tmp, "assets-manifest.json"), JSON.stringify(assetsMan));
+      const dest = path.join(MROOT, "assets"); rmrf(dest); fs.renameSync(tmp, dest);
+    })().finally(() => { assetsBusy = null; });
+    await assetsBusy; return { assets: true };
+  }
+
   async function mapInstallRoutes(code, onProgress, isCancelled) {
     const d = mdir(code);
     if (!fs.existsSync(path.join(d, "manifest.json"))) throw new Error("Download the map of this country first");
@@ -418,7 +475,7 @@ function makePacks({ data, online, fetch: f }) {
   }
 
   return { normalize, knowList, knowRemote, knowInstall, knowRemove, knowSearch, knowPackText, foodPackText,
-    mapList, mapRemote, mapInstall, mapInstallRoutes, mapRemove, mapRead, mapSearch, assetsInstalled, Cancelled, sha256, canSearch: !!sqlite };
+    mapList, mapRemote, mapInstall, mapInstallRoutes, mapRemove, mapRead, mapSearch, mapRange, mapAssets, assetsInstalled, Cancelled, sha256, canSearch: !!sqlite };
 }
 
 module.exports = { makePacks, Cancelled };

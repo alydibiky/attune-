@@ -917,6 +917,20 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun mapPacks(): String = try { JSONObject().put("packs", MapPacks.list(ctx)).put("assets", MapPacks.assetsInstalled(ctx)).toString() } catch (e: Throwable) { "{\"packs\":[]}" }
 
+    /** v6.27: a piece of a published map file, read online ({code, name, offset, length}) → {b64}. */
+    @JavascriptInterface
+    fun mapRange(id: String, arg: String) {
+        if (blockedByAirGap(id, "showing the online map")) return
+        pool.execute { try { resolve(id, MapPacks.range(arg)) } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the online map") } }
+    }
+
+    /** v6.27: the map fonts and icons only (a few MB, once) — before a country is shown online. */
+    @JavascriptInterface
+    fun mapAssets(id: String, arg: String) {
+        if (blockedByAirGap(id, "downloading the map fonts")) return
+        pool.execute { try { resolve(id, MapPacks.ensureAssets(ctx) { false }) } catch (e: Throwable) { reject(id, e.message ?: "Couldn't download the map fonts") } }
+    }
+
     /** The published manifest of a country ({code}) — to offer a download or an update. */
     @JavascriptInterface
     fun mapRemote(id: String, arg: String) {

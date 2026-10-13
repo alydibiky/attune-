@@ -78,31 +78,14 @@ object MapPacks {
         val hadRoutes = (0 until all.length()).any { isRoutes(all.getJSONObject(it).getString("name")) && File(dir(ctx, code), all.getJSONObject(it).getString("name")).exists() }
         val files = JSONArray()
         for (i in 0 until all.length()) { val f = all.getJSONObject(i); if (!isRoutes(f.getString("name")) || withRoutes || hadRoutes) files.put(f) }
-        val needAssets = !assetsInstalled(ctx)
-        val assetsMan = if (needAssets) JSONObject(String(get(BASE + "map-assets/assets-manifest.json", null, isCancelled), Charsets.UTF_8)) else null
+        val assetsMan = if (!assetsInstalled(ctx)) assetsManifest(isCancelled) else null
         var total = 0L
         for (i in 0 until files.length()) total += files.getJSONObject(i).getLong("bytes")
         assetsMan?.getJSONArray("files")?.let { for (i in 0 until it.length()) total += it.getJSONObject(i).getLong("bytes") }
         var done = 0L
 
         // the shared fonts and icons (a few MB, once)
-        if (assetsMan != null) {
-            val tmp = File(root(ctx), "assets.new").apply { deleteRecursively(); mkdirs() }
-            val af = assetsMan.getJSONArray("files")
-            for (i in 0 until af.length()) {
-                val f = af.getJSONObject(i); val name = f.getString("name")
-                if (!NAME.matches(name)) throw Exception("Unexpected file in the map fonts: $name")
-                val zip = File(root(ctx), "$name.part")
-                val base = done
-                fetchResumable(BASE + "map-assets/$name", zip, f.getLong("bytes"), isCancelled) { got -> onProgress(base + got, total, name) }
-                verify(zip, f.getString("sha256"), name)
-                unzip(zip, tmp); zip.delete()
-                done += f.getLong("bytes")
-            }
-            File(tmp, "assets-manifest.json").writeText(assetsMan.toString())
-            val dest = File(root(ctx), "assets"); dest.deleteRecursively()
-            if (!tmp.renameTo(dest)) throw Exception("Couldn't save the map fonts")
-        }
+        if (assetsMan != null) { val base = done; installAssets(ctx, assetsMan, isCancelled) { got -> onProgress(base + got, total, "map-assets") }; done += assetsBytes(assetsMan) }
 
         // the country: downloaded beside the old pack, swapped in when complete
         val d = dir(ctx, code)
@@ -141,6 +124,84 @@ object MapPacks {
         if (!next.renameTo(d)) { trash.renameTo(d); throw Exception("Couldn't install the map") }
         trash.deleteRecursively()
         return man.put("installed", true)
+    }
+
+    private fun assetsManifest(isCancelled: () -> Boolean) = JSONObject(String(get(BASE + "map-assets/assets-manifest.json", null, isCancelled), Charsets.UTF_8))
+    private fun assetsBytes(m: JSONObject): Long { val af = m.getJSONArray("files"); var t = 0L; for (i in 0 until af.length()) t += af.getJSONObject(i).getLong("bytes"); return t }
+
+    /** The shared fonts and icons (map-assets): downloaded, checked, unzipped into maps/assets. */
+    private fun installAssets(ctx: Context, assetsMan: JSONObject, isCancelled: () -> Boolean, onBytes: (Long) -> Unit) {
+        val tmp = File(root(ctx), "assets.new").apply { deleteRecursively(); mkdirs() }
+        val af = assetsMan.getJSONArray("files"); var done = 0L
+        for (i in 0 until af.length()) {
+            val f = af.getJSONObject(i); val name = f.getString("name")
+            if (!NAME.matches(name)) throw Exception("Unexpected file in the map fonts: $name")
+            val zip = File(root(ctx), "$name.part")
+            val base = done
+            fetchResumable(BASE + "map-assets/$name", zip, f.getLong("bytes"), isCancelled) { got -> onBytes(base + got) }
+            verify(zip, f.getString("sha256"), name)
+            unzip(zip, tmp); zip.delete()
+            done += f.getLong("bytes")
+        }
+        File(tmp, "assets-manifest.json").writeText(assetsMan.toString())
+        val dest = File(root(ctx), "assets"); dest.deleteRecursively()
+        if (!tmp.renameTo(dest)) throw Exception("Couldn't save the map fonts")
+    }
+
+    /** v6.27: only the fonts and icons — before a country is shown online without being downloaded. */
+    fun ensureAssets(ctx: Context, isCancelled: () -> Boolean): JSONObject {
+        if (!assetsInstalled(ctx)) synchronized(this) { if (!assetsInstalled(ctx)) installAssets(ctx, assetsManifest(isCancelled), isCancelled) { } }
+        return JSONObject().put("assets", true)
+    }
+
+    // ---- v6.27 (Ali: "streets and compounds everywhere online, and I don't want to pay for maps"): a country's map read
+    // ONLINE without downloading it — only the pieces on the screen, by HTTP range requests to the same free GitHub
+    // release the download uses. Files over 1.9 GB come in parts: the offset is mapped onto the right part.
+    private val manifests = HashMap<String, Pair<Long, JSONObject>>()
+    private fun manifestCached(code: String): JSONObject = synchronized(manifests) {
+        val had = manifests[code]
+        if (had != null && System.currentTimeMillis() - had.first < 6 * 3600_000L) return had.second
+        val m = remote(code); manifests[code] = System.currentTimeMillis() to m; m
+    }
+
+    /** {code, name, offset, length (≤ 4 MB)} → {b64} — bytes of a published file, read online. */
+    fun range(arg: String): JSONObject {
+        val a = JSONObject(arg); val code = a.getString("code"); val name = a.getString("name")
+        require(CODE.matches(code) && NAME.matches(name)) { "Unknown map" }
+        val off = a.getLong("offset").coerceAtLeast(0L); val len = a.getLong("length").coerceIn(1L, 4_000_000L)
+        val files = manifestCached(code).getJSONArray("files")
+        val f = (0 until files.length()).map { files.getJSONObject(it) }.firstOrNull { it.getString("name") == name } ?: throw Exception("Unknown map file")
+        val end = minOf(off + len, f.getLong("bytes"))
+        if (end <= off) return JSONObject().put("b64", "")
+        val parts = f.optJSONArray("parts")
+        val out = java.io.ByteArrayOutputStream((end - off).toInt())
+        if (parts == null) out.write(getRange(BASE + "map-$code/$name", off, end - off))
+        else {
+            var start = 0L
+            for (k in 0 until parts.length()) {
+                val p = parts.getJSONObject(k); val pn = p.getString("name"); val pb = p.getLong("bytes")
+                val a0 = maxOf(off, start); val a1 = minOf(end, start + pb)
+                if (a1 > a0) { require(NAME.matches(pn)) { "Unknown map file" }; out.write(getRange(BASE + "map-$code/$pn", a0 - start, a1 - a0)) }
+                start += pb
+            }
+        }
+        return JSONObject().put("b64", android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP))
+    }
+
+    private fun getRange(url: String, off: Long, len: Long): ByteArray {
+        Prefs.requireOnline(url, "map")
+        val c = URL(url).openConnection() as HttpURLConnection
+        c.connectTimeout = 15_000; c.readTimeout = 30_000; c.instanceFollowRedirects = true
+        c.setRequestProperty("User-Agent", "Attune/6.27 (Android; online map)")
+        c.setRequestProperty("Range", "bytes=$off-${off + len - 1}")
+        try {
+            val code = c.responseCode
+            if (code != 206) throw Exception(if (code == 404) "This map is not published yet" else "The map server returned HTTP $code")
+            val buf = ByteArray(len.toInt()); var got = 0
+            c.inputStream.use { inp -> while (got < len) { val n = inp.read(buf, got, (len - got).toInt()); if (n <= 0) break; got += n } }
+            if (got.toLong() != len) throw Exception("The map piece came back short")
+            return buf
+        } finally { try { c.disconnect() } catch (e: Exception) {} }
     }
 
     /** v6.20: the directions of an installed country only ({code}) — downloaded into its folder, checked, then listed. */

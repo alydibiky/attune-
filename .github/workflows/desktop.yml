@@ -124,6 +124,7 @@ jobs:
           node test/unit.js
           node --no-warnings test/web.js
           node test/reminders.js
+          node --no-warnings test/maprange.js
           ATTUNE_LIVE=1 node --no-warnings test/packs.js
 
       - name: Small model for the smoke test

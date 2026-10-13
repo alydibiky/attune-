@@ -11,7 +11,7 @@ const QUICK = ["info", "models", "engine", "log", "remove", "wake", "setAirGap",
   "schedule", "unschedule", "scheduled", "canExact", "notifyAllowed", "askNotifications", "askExact"];
 const SLOW = ["chat", "install", "use", "restart", "fetchJson", "saveFile",
   "search", "news", "fetchText", "fetchShare", "dorarSearch", "fxRates",
-  "knowRemote", "knowSearch", "knowInstall", "knowPackText", "foodPackText", "mapRemote", "mapSearch", "mapInstall",
+  "knowRemote", "knowSearch", "knowInstall", "knowPackText", "foodPackText", "mapRemote", "mapRange", "mapAssets", "mapSearch", "mapInstall",
   "pdfText", "pdfWords", "pdfOutline", "pdfImages", "htmlToPdf", "makePdf", "pdfEdit", "clipboardText", "hash"];
 
 const api = { desktop: true };
