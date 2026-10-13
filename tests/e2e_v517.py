@@ -60,7 +60,11 @@ with sync_playwright() as p:
     fr.locator("#go").click(); page.wait_for_timeout(600)
     check(fr.locator("text=Welcome to Our Table").count() == 1 and fr.locator("nav").count() == 1 and fr.locator("text=Message Attune").count() == 0,
           "tapping a #menu link keeps the page (Attune does not open inside it)")
-    y = page.frame_locator("[data-testid=artifact-frame]").locator("body").evaluate("e => e.ownerDocument.defaultView.scrollY")
+    body = page.frame_locator("[data-testid=artifact-frame]").locator("body")
+    for _ in range(12):   # smooth scrolling can take longer when the machine is busy
+        y = body.evaluate("e => e.ownerDocument.defaultView.scrollY")
+        if y > 300: break
+        page.wait_for_timeout(250)
     check(y > 300, "…and scrolls down to that section (%d px)" % y)
     fr.locator("#away").click(); page.wait_for_timeout(400)
     check(fr.locator("text=Welcome to Our Table").count() == 1, "a link to another file doesn't load Attune either")
