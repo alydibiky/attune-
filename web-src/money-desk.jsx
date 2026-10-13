@@ -9,6 +9,21 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ShoppingCart, Car, Building2, Zap, User, Utensils, House, Heart, Gift, Coffee, FileText, Wallet } from "lucide-react";
 import { moneyOverview, fmt } from "./money-calm.js";
 import { loadLedger } from "./myledger.js";
+import { loadLife, progressOf } from "./life.js";
+
+/** v6.27: People & plans' money between people (debts and installments with a person), in the same shape as Money's own
+ *  debts, so the Overview shows everyone who owes you — whichever page it was written in. */
+export function lifePeople(life, now = Date.now()) {
+  const owed = [], owe = [];
+  for (const c of (life && life.items) || []) {
+    if (!c.person || !(c.kind === "debt" || c.kind === "installment")) continue;
+    const pr = progressOf(c, now), left = pr.left != null ? pr.left : c.amount;
+    if (!(left > 0)) continue;
+    const row = { person: c.person, left, amount: c.total || c.amount, paid: pr.paidCount, note: c.kind === "installment" ? c.count + " × " + fmt(c.amount) : "", life: true };
+    (c.dir === "in" ? owed : owe).push(row);
+  }
+  return { owed, owe };
+}
 import { tr } from "./i18n.js";
 
 export const MONEY_TABS = [["overview", "Overview", null], ["home", "Transactions", "home"], ["bills", "Bills", "bills"], ["people", "People & debts", "goals"],
@@ -52,7 +67,7 @@ function Overview({ o, go, onAsk }) {
 
       <div className="flex flex-col gap-4 min-w-0">
         {o.owed.slice(0, 2).map((p, i) => (
-          <button key={i} className="c-card text-start" onClick={() => go("people")} data-testid="money-owed">
+          <button key={i} className="c-card text-start" onClick={() => (p.life && onPeople ? onPeople() : go("people"))} data-testid="money-owed">
             <div className="flex items-center"><span className="c-lbl">{tr("{p} owes you", { p: p.person })}</span><b className="c-num ms-auto">{fmt(p.left)}</b></div>
             <div className="c-sub mt-1">{tr("{n} payments so far", { n: p.paid })}{p.note ? " · " + p.note : ""}</div>
             {p.paid > 0 && p.paid < 24 ? <div className="c-ticks mt-2">{Array.from({ length: Math.min(12, Math.max(p.paid + 1, Math.round(p.amount / Math.max(1, (p.amount - p.left) / p.paid)))) }, (_, k) => <i key={k} className={k < p.paid ? "d" : k === p.paid ? "n" : ""} />)}</div> : null}
@@ -70,11 +85,14 @@ function Overview({ o, go, onAsk }) {
 }
 
 /** The computer layout of Money. `yusr` = the Money app (MoneyTab) for every tab but Overview; `screen` is passed to it. */
-export function MoneyDesk({ renderYusr, onAsk }) {
+export function MoneyDesk({ renderYusr, onAsk, onPeople }) {
   const [tab, setTab] = useState("overview");
   const [v, setV] = useState(0);
   useEffect(() => { const on = (e) => { if (!e || !e.key || e.key === "ledger.v3") setV((x) => x + 1); }; window.addEventListener("storage", on); return () => window.removeEventListener("storage", on); }, []);
-  const o = useMemo(() => moneyOverview(loadLedger()), [v, tab]);
+  const o = useMemo(() => {
+    const m = moneyOverview(loadLedger()), lp = lifePeople(loadLife());
+    return { ...m, owed: [...m.owed, ...lp.owed].sort((a, b) => b.left - a.left), owe: [...m.owe, ...lp.owe].sort((a, b) => b.left - a.left) };
+  }, [v, tab]);
   const go = (k) => setTab(k);
   const screen = (MONEY_TABS.find((t) => t[0] === tab) || [])[2];
   const month = new Date().toLocaleDateString(undefined, { month: "long", year: "numeric" });

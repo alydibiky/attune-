@@ -16,7 +16,8 @@ L = {"currency": "EGP", "accounts": [{"id": "c", "name": "Cash", "emoji": "💵"
      "recurring": [{"id": "r1", "type": "expense", "amount": 640, "cat": "bills", "account": "b", "freq": "monthly", "nextDate": (T + datetime.timedelta(days=3)).isoformat(), "note": "Electricity", "active": True}],
      "debts": [{"id": "x1", "type": "owed_to_me", "person": "Ahmed", "amount": 12000, "note": "installments", "settled": False, "payments": [{"amount": 1000}, {"amount": 1000}, {"amount": 1000}]}],
      "customCats": [], "goals": [], "projects": [], "notes": [], "zakatPayments": [], "zakatHistory": []}
-INIT = "try{localStorage.setItem('ledger.v3', %s)}catch(e){}" % json.dumps(json.dumps(L))
+LIFE = {"v": 1, "items": [{"id": "m", "kind": "installment", "person": "Mona", "dir": "in", "amount": 600, "count": 6, "total": 3600, "every": "month", "start": T.isoformat(), "currency": "EGP", "paid": [0], "title": ""}]}
+INIT = "try{localStorage.setItem('ledger.v3', %s);localStorage.setItem('attune:life:v1', %s)}catch(e){}" % (json.dumps(json.dumps(L)), json.dumps(json.dumps(LIFE)))
 with sync_playwright() as p:
     br = p.chromium.launch()
     for theme in ["dark", "light"]:
@@ -30,6 +31,8 @@ with sync_playwright() as p:
         owed = page.locator("[data-testid=money-owed]").first.inner_text()
         check("ahmed" in owed.lower() and "9,000" in owed, "[%s] Ahmed owes 9,000 more after 3 payments: %s" % (theme, owed.replace("\n", " · ")))
         check("Electricity" in page.locator("[data-testid=money-due]").inner_text(), "[%s] the bill due this week" % theme)
+        owed_all = " | ".join(page.locator("[data-testid=money-owed]").all_inner_texts())
+        check("mona" in owed_all.lower() and "3,000" in owed_all, "[%s] People & plans' Mona (3,000 left) is listed with Money's own debts" % theme)
         w = page.evaluate("() => { const o = document.querySelector('[data-testid=money-overview]').getBoundingClientRect(); return o.width; }")
         check(w > 900, "[%s] a real wide layout — three columns across %d px, not the phone column" % (theme, w))
         fam = page.evaluate("() => getComputedStyle(document.querySelector('[data-testid=money-desk]')).fontFamily")

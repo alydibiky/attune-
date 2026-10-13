@@ -9775,7 +9775,7 @@ export default function App() {
         ) : mode === "money" ? (
           wide ? (
             // v6.27: design A "Calm" — a real computer layout for Money (money-desk.jsx); the phone keeps Money as it is
-            <MoneyDesk onAsk={() => { setChatSeed("How much did I spend on food this month?"); navTo("chat"); }}
+            <MoneyDesk onAsk={() => { setChatSeed("How much did I spend on food this month?"); navTo("chat"); }} onPeople={() => navTo("life")}
               renderYusr={(screen) => <MoneyTab screen={screen} incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)} />} />
           ) : (
           <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)} />
