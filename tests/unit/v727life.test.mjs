@@ -87,6 +87,6 @@ ok(r && r.kind === "installment" && r.total === 2000 && r.every === "week" && r.
 ok(L.readLifeModel('{"kind":"lottery","amount":5}') === null, "anything outside the fixed kinds is dropped");
 // ---- Chat: statements are saved, questions stay in Chat ----
 for (const q of ["Ahmed owes me 12,000, 1,000 a month for a year", "جمعية ٢٠٠٠ في الشهر لمدة ١٠ شهور ودوري الرابع", "Netflix 200 every month", "I lent Sara 500"]) ok(L.chatLifeIntent(q, { now }), `Chat «${q}» → People & plans`);
-for (const q of ["How much does Ahmed owe me?", "كام عليه احمد؟", "What is 12000 / 12", "should I lend Omar 2000", "Write a poem about rent"]) ok(!L.chatLifeIntent(q, { now }), `Chat «${q}» stays in Chat`);
+for (const q of ["Crane hire 25000 each day, the 1st to the 5th both included. Give me the rent and the rent with the 14 tax added.", "The rent here is 8000", "احسب قسط ١٢٠٠٠ على ١٢ شهر", "How much does Ahmed owe me?", "كام عليه احمد؟", "What is 12000 / 12", "should I lend Omar 2000", "Write a poem about rent"]) ok(!L.chatLifeIntent(q, { now }), `Chat «${q}» stays in Chat`);
 console.log(fail ? `${fail} of ${n} FAILED` : `v727life ok (${n} checks)`);
 process.exit(fail ? 1 : 0);

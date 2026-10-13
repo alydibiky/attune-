@@ -29,7 +29,7 @@ FREE = "try { localStorage.setItem('attune:testing-pro', 'off'); localStorage.se
 
 def open_plan(page):
     page.locator("nav button").last.click(); page.wait_for_timeout(300)
-    page.locator("text=Plan").first.click()
+    page.locator("[data-testid=more-settings] button").nth(2).click()   # v6.27: "text=Plan" also matched "People & plans"
     page.wait_for_selector("[data-testid=upgrade]", timeout=5000)
 
 with sync_playwright() as p:

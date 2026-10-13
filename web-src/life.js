@@ -233,6 +233,11 @@ export function readLifeModel(text, currency = "EGP") {
 export function chatLifeIntent(text, opts) {
   const t = String(text || "").trim();
   if (!t || t.length > 200 || /[?؟]\s*$/.test(t) || /^(how|what|why|when|should|can|is|are|do|does|كام|ازاي|إزاي|ليه|امتى|هل|ايه|إيه)\b/i.test(t) || /\b(how much|how many|advice|calculate|interest rate)\b/i.test(t)) return null;
+  // a request to work something out is a Chat task, not a note («… give me the rent with the tax», «احسب …»)
+  if (/\b(give me|calculate|work out|tell me|compute|show me|explain|write|find|estimate|compare)\b|احسب|اديني|اعطني|قولي|قول لي|اكتب|اعملي|اشرح|قارن/i.test(t)) return null;
   const c = parseLife(t, opts);
-  return c && (c.person || c.kind === "circle" || c.kind === "installment" || c.every) ? c : null;
+  if (!c) return null;
+  // a bill, rent or subscription only when the text itself says how often or when (not a price mentioned in passing)
+  if (["bill", "rent", "subscription"].includes(c.kind) && !c.start && !/\b(every|each|a|per) (month|week|year)\b|\bmonthly\b|\bweekly\b|\byearly\b|كل شهر|شهري|شهريا|في الشهر|بالشهر|كل اسبوع|كل سنه|سنويا/i.test(fold(t))) return null;
+  return c.person || c.kind === "circle" || c.kind === "installment" || c.every ? c : null;
 }
