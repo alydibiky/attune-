@@ -9734,6 +9734,7 @@ export default function App() {
           <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("instant")} />
         ) : mode === "map" ? (
           <MapPage N={NATIVE} nativeCall={NATIVE ? nativeCall : null} lastNativeId={nativeLastId} getTile={getTile} findPlaces={findPlaces} searchSaved={searchSaved}
+            ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
             load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />}
             onExit={goBack} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
         ) : mode === "money" ? (

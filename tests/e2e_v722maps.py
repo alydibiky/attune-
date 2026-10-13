@@ -107,6 +107,13 @@ with sync_playwright() as p:
     page.click("[data-testid=map-remove-eg]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=map-dl-eg]").count() == 1, "a country map can be deleted (and downloaded again)")
 
+    # ---- v6.27: typed words read by code, offline: "أقرب بنزينة" = fuel stations near you, from the phone's map ----
+    page.locator("[data-testid=map-tab-places]").click(); page.wait_for_timeout(150)
+    page.fill("[data-testid=map-search]", "أقرب بنزينة"); page.press("[data-testid=map-search]", "Enter")
+    page.wait_for_selector("[data-testid=map-hit]", timeout=8000)
+    asked = [c[1] for c in page.evaluate("window.__mapmock.calls") if c[0] == "search"][-1]
+    check(asked.get("kinds") == ["amenity/fuel"] and "Wataniya" in page.locator("[data-testid=map-hit]").first.inner_text(), "«أقرب بنزينة» asks the offline map for fuel stations (no internet, no AI needed): %s" % asked)
+
     # ---- Arabic ----
     page.evaluate("localStorage.setItem('attune:ui:lang', 'ar')"); page.reload(); page.wait_for_selector("nav", timeout=15000)
     page.locator("nav button").last.click(); page.wait_for_timeout(250)

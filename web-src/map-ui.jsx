@@ -7,6 +7,7 @@ import { Search, X, Download, RefreshCw, Trash2, MapPin, Share2, Loader2, Globe 
 import { tr, getLang } from "./i18n.js";
 import * as OM from "./offlinemap.js";
 import * as MS from "./mapsearch.js";
+import * as MI from "./mapintent.js";
 import * as RT from "./route.js";
 
 const PACK_KEY = "attune:map:pack";
@@ -32,7 +33,7 @@ function pinEl(kind) {
   return el;
 }
 
-export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, searchSaved, load, save, remember, flash, myLang, fallback, onExit, listen }) {
+export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, searchSaved, load, save, remember, flash, myLang, fallback, onExit, listen, ask }) {
   const ar = getLang() === "ar";
   const lang = ar || myLang === "Arabic" ? "ar" : "en";
   const [st, setSt] = useState(load);
@@ -146,39 +147,69 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
 
   // ---- search: your places, then the offline pack (works with no signal), then online ----
   const center = () => { const m = mapRef.current; const c = m ? m.getCenter() : { lat: view.lat, lng: view.lon }; return { lat: c.lat, lon: c.lng }; };
-  const runSearch = async (term, chip) => {
-    term = String(term || "").trim(); if (!term && !chip) return;
-    setBusy(true); setSel(null); setSheet("half"); if (trip) endTrip();
-    const c = center(), out = [], seen = new Set();
-    const push = (p) => { const k = Math.round(p.lat * 2000) + ":" + Math.round(p.lon * 2000) + ":" + String(p.name).slice(0, 12); if (seen.has(k)) return; seen.add(k); out.push({ ...p, dist: p.dist != null ? p.dist : distKm(c, p) }); };
-    if (term) for (const p of searchSaved(st.places, term)) push({ ...p, local: true });
+  // One search around a point: your saved places → the downloaded pack → the country's index online → the web searches.
+  // kinds: the sorts to look for (a chip, or a sort read from what was typed); word: those sorts as a word for the web.
+  const searchAt = async (term, kinds, word, c, push, out) => {
+    if (term && !kinds.length) for (const p of searchSaved(st.places, term)) push({ ...p, local: true });
     if (packs.length && nativeCall) {
       // v6.18 (Ali searched "Address east compound" offline and got nothing): the offline map is asked again with
       // simpler wordings — without "address", "compound"… — as the online search already was
-      for (const t of chip ? [""] : [term, ...MS.variants(term)]) {
-        try { const r = await nativeCall("mapSearch", { q: t, kinds: chip ? chip[3] : [], limit: 15, lat: c.lat, lon: c.lon });
+      for (const t of kinds.length ? [""] : [term, ...MS.variants(term)]) {
+        try { const r = await nativeCall("mapSearch", { q: t, kinds, limit: kinds.length ? 40 : 15, lat: c.lat, lon: c.lon });
           for (const p of (r && r.places) || []) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, offline: true, dist: p.dist }); } catch (e) {}
         if (out.some((x) => x.offline)) break;
       }
     }
     // v6.27: the country in view, not downloaded → its own places index, read ONLINE in one small piece (OSM + Overture:
     // compounds, shops, clinics the free web searches miss), then the web searches as before
-    if (term && onlineOk) {
+    if ((term || word) && onlineOk) {
       const nc = OM.nearestCountry(c.lat, c.lon);
       if (nc && !packs.some((p) => p.code === nc.code)) {
-        for (const t of [term, ...MS.variants(term)]) {
-          try { for (const p of await OM.netFind(nativeCall, nc.code, t, { lat: c.lat, lon: c.lon, limit: 15 }))
-            push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, net: true }); } catch (e) { break; }
-          if (out.some((x) => x.net)) break;
+        // a sort: its name words ("سوري"), then the sort's own word ("مطعم"), keeping only places of that sort
+        for (const t of (kinds.length ? [term, ...MI.sortNames(word)] : [term, ...MS.variants(term)]).filter(Boolean)) {
+          try { for (const p of await OM.netFind(nativeCall, nc.code, t, { lat: c.lat, lon: c.lon, limit: kinds.length ? 60 : 25 }))
+            if (!kinds.length || kinds.includes(p.kind)) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, net: true }); } catch (e) { break; }
+          if (!kinds.length && out.some((x) => x.net)) break;
         }
       }
     }
     if (online && out.filter((x) => !x.local).length < 3) {
-      try { const r = await findPlaces(chip ? chip[4] : term, { center: c, lang, fetchJson: async (u) => { const res = await fetch(u, { headers: { Accept: "application/json" } }); if (!res.ok) throw new Error("search " + res.status); return res.json(); } });
+      try { const r = await findPlaces(kinds.length ? [word, term].filter(Boolean).join(" ") : term, { center: c, lang, fetchJson: async (u) => { const res = await fetch(u, { headers: { Accept: "application/json" } }); if (!res.ok) throw new Error("search " + res.status); return res.json(); } });
         for (const p of (r && r.places) || []) push(p); } catch (e) {}
     }
-    setHits(chip ? out.sort((a, b) => a.dist - b.dist) : out);
+  };
+  const runSearch = async (term, chip) => {
+    term = String(term || "").trim(); if (!term && !chip) return;
+    setBusy(true); setSel(null); setSheet("half"); if (trip) endTrip();
+    let c = center(); const out = [], seen = new Set();
+    const push = (p) => { const k = Math.round(p.lat * 2000) + ":" + Math.round(p.lon * 2000) + ":" + String(p.name).slice(0, 12); if (seen.has(k)) return; seen.add(k); out.push({ ...p, dist: p.dist != null ? p.dist : distKm(c, p) }); };
+    let byDist = !!chip, said = "";
+    if (chip) await searchAt("", chip[3], chip[4], c, push, out);
+    else {
+      // v6.27 (Ali: "AI-powered"): what was typed is read first — a sort ("أقرب صيدلية"), an area ("… في التجمع"), "near me";
+      // code does it; the phone's model only for a longer request code can't read (and only when it is already loaded)
+      let it = MI.parseMapQuery(term);
+      if (MI.needsModel(term, it) && ask) { try { const r = MI.readModel(await ask(MI.modelPrompt(term))); if (r && (r.sort || r.area)) it = r; } catch (e) {} }
+      if (it.sort || it.area) {
+        if (it.area) {
+          const found = [], seenA = new Set(), pushA = (p) => { const k = p.lat + ":" + p.lon; if (!seenA.has(k)) { seenA.add(k); found.push(p); } };
+          await searchAt(it.area, [], "", c, pushA, found);
+          const a = found.find((p) => /^place\//.test(p.kind || "")) || found.find((p) => !p.local) || found[0];
+          if (a) { c = { lat: a.lat, lon: a.lon }; said = a.name; }
+        } else if (it.near && me) c = { lat: me.lat, lon: me.lon };
+        if (it.sort) await searchAt(it.what, it.kinds, MI.sortWords(it.sort, lang), c, push, out);
+        else await searchAt(it.what || term, [], "", c, push, out);
+        if (it.sort && it.what) out.sort((a, b) => (MS.nameScore(b.name, it.what) > 0) - (MS.nameScore(a.name, it.what) > 0));   // "سوري" names first
+        byDist = !!it.sort && !it.what;
+        if (said) flash(tr("Around {p}", { p: said }));
+        else if (it.model) flash(tr("Read by AI: {s}", { s: [it.sort && MI.sortWords(it.sort, lang), it.what].filter(Boolean).join(" · ") }));
+        if (out.length < 3 && it.sort && it.what) await searchAt(term, [], "", center(), push, out);     // a name that holds a sort word ("Mall of Arabia")
+      } else await searchAt(term, [], "", c, push, out);
+    }
+    out.forEach((p) => { p.dist = distKm(c, p); });
+    setHits(byDist ? out.sort((a, b) => a.dist - b.dist) : out);
     setBusy(false);
+    if (said && mapRef.current && out.length) mapRef.current.flyTo({ center: [c.lon, c.lat], zoom: 13 });
     if (!out.length && !(online || packs.length)) flash(tr("No signal, so only your saved places are searchable — nothing matched."));
   };
   // v6.18: the place card keeps the other results, shown as "Other matches" (look A)

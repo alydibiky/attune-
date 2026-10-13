@@ -15,7 +15,9 @@ TMP = tempfile.mkdtemp()
 subprocess.run([sys.executable, "-c", """
 import sys; sys.path.insert(0, %r); import build_map_pack as B
 idx = B.Index(sys.argv[1]); idx.add({"name": "Zayed Dunes", "landuse": "residential"}, 30.06, 31.24)
-for i in range(50): idx.add({"name": "Street %%d" %% i, "highway": "residential"}, 30.05, 31.25)
+for i in range(600): idx.add({"name": "Street %%d" %% i, "highway": "residential"}, 30.05, 31.25)
+idx.add({"name": "صيدلية العزبي", "amenity": "pharmacy"}, 30.051, 31.251); idx.add({"name": "صيدلية سيف", "amenity": "pharmacy"}, 30.09, 31.3)
+idx.add({"name": "شارع الصيدلية", "highway": "residential"}, 30.05, 31.25)
 idx.close(); B.build_find(sys.argv[1], sys.argv[2])""" % os.path.join(HERE, "..", "tools"), os.path.join(TMP, "p.sqlite"), os.path.join(TMP, "f.bin")], check=True)
 FIND = base64.b64encode(open(os.path.join(TMP, "f.bin"), "rb").read()).decode()
 env = Env(); errors = []
@@ -71,6 +73,11 @@ with sync_playwright() as p:
     check("Zayed Dunes" in hit and "compound" in hit, "a compound is found ONLINE in Egypt's own index without downloading it: " + hit.replace("\n", " · "))
     finds = [c for c in page.evaluate("window.__mapmock.calls") if c[0] == "range" and c[2] == "eg-find.bin"]
     check(len(finds) == 3, "the search read 3 small pieces: the header, the index and one piece (%d)" % len(finds))
+    # "AI-powered" search, read by code: a sort + near me → only pharmacies, nearest first (not the street named after one)
+    page.fill("[data-testid=map-search]", "أقرب صيدلية"); page.press("[data-testid=map-search]", "Enter")
+    page.wait_for_function("() => [...document.querySelectorAll('[data-testid=map-hit]')].some((e) => e.innerText.includes('العزبي'))", timeout=15000)
+    hits = page.locator("[data-testid=map-hit]").all_inner_texts()
+    check("العزبي" in hits[0] and not any("شارع الصيدلية" in h for h in hits), "«أقرب صيدلية» → pharmacies only, the nearest first: " + " | ".join(h.split("\n")[0] for h in hits[:3]))
     # no signal: nothing online, the empty state again
     page.evaluate("window.dispatchEvent(new Event('offline'))"); page.wait_for_timeout(400)
     check(page.locator("[data-testid=map-empty]").count() == 1, "with no signal and nothing downloaded: 'No map on this device yet'")

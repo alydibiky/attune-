@@ -3489,6 +3489,8 @@ export const AR = {
   "No map on this device yet": "لا توجد خريطة على هذا الجهاز بعد",
   "online map": "خريطة على الإنترنت",
   "showing online": "معروضة على الإنترنت",
+  "Around {p}": "حول {p}",
+  "Read by AI: {s}": "فهمها الذكاء الاصطناعي: {s}",
   "With signal, every country here shows online without downloading — every street, compound and place. Download only to use it with no signal.": "مع وجود اتصال، تظهر كل دولة هنا على الإنترنت دون تنزيل — كل شارع وكمبوند ومكان. نزّلها فقط لاستخدامها دون اتصال.",
   "This map is not published yet": "هذه الخريطة لم تُنشر بعد",
   "Download the world map to see every country, or your country's map for streets, places and offline search.": "نزّل خريطة العالم لترى كل الدول، أو خريطة بلدك للشوارع والأماكن والبحث بدون إنترنت.",

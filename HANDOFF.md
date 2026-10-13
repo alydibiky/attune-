@@ -1093,6 +1093,15 @@ internet searching … improve internet searching and make it faster".
   map-pack run (weekly, Fridays; run it by hand for a country).
   Tests: `tests/e2e_v727online.py` (map + search), `desktop/test/maprange.js` (+ `tests/unit/v727maprange.test.mjs`,
   desktop.yml), `tests/unit/v727netfind.test.mjs` (builder ↔ netFind).
+- **AI-powered search, code first (Ali: "every place, offline, and AI-powered"):** `web-src/mapintent.js`
+  `parseMapQuery` reads what was typed into {sort (22 sorts, Arabic formal + Egyptian + English words → index kinds),
+  what, area, near}: «أقرب صيدلية», «بنزينة جنبي», «كمبوند في التجمع», «مطعم سوري في مدينة نصر», «ATM near me».
+  The area is found in the map's own index (a `place/*` first) and searched around; near = your location. Only a
+  longer request code can't read goes to the phone's model (`ask` prop = callClaude, 120 tokens, only when a model is
+  already loaded — never waits), which fills the same JSON from the same fixed list (`readModel` drops anything else).
+  map-ui `searchAt` (saved → installed pack → country index online → web) is used for names, sorts and chips; a sort
+  online searches its word in English AND Arabic (`sortNames`) and keeps only that sort's kinds.
+  Tests: `tests/unit/v727mapintent.test.mjs`, e2e_v727online («أقرب صيدلية»), e2e_v722maps («أقرب بنزينة» offline).
 - **Compounds:** `build_map_pack.py` now indexes named `landuse=residential` / `residential=gated` areas as
   `place/compound` (rank 62) — they were dropped from offline search before (Overture added some). Takes effect on the
   next weekly pack build. Drawing compounds as labelled areas on the map is the next step (needs our own label layer).
