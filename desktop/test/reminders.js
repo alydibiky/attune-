@@ -26,5 +26,14 @@ setTimeout(() => {
   assert.equal(R2.all().length, 1, "kept on disk for the next start"); R2.rearmAll(); R2.stop();
   assert.ok(R2.unschedule("b") && R2.all().length === 0);
   console.log("PASS ring once, repeat moves on, one-off removed, kept after a restart");
-  console.log("reminders: all passed");
+  // a timer that fires a little early (the clock reads 300 ms before its time) still rings a repeating one once
+  let off = 0; const rang2 = [];
+  const R3 = makeReminders({ data: fs.mkdtempSync(path.join(os.tmpdir(), "attune-rem-")), notify: (r) => rang2.push(r.id), now: () => Date.now() + off });
+  R3.schedule({ id: "d", at: Date.now() + 400, repeat: "daily" });
+  setTimeout(() => { off = -300; }, 200);
+  setTimeout(() => {
+    R3.stop(); assert.deepEqual(rang2, ["d"], "fired early, rang once: " + rang2);
+    console.log("PASS a timer that fires early rings a daily one once");
+    console.log("reminders: all passed");
+  }, 1300);
 }, 700);

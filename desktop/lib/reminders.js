@@ -31,7 +31,8 @@ function makeReminders({ data, notify, now = () => Date.now() }) {
   function fire(id) {
     const r = list.find((x) => x.id === id); if (!r) return;
     try { notify(r); } catch (e) {}
-    if ((r.repeat || "none") !== "none") { r.at = next(r.at, r.repeat, now()); save(); arm(r); }
+    // it may fire up to 1 s early: move past its own time too, or a repeating one rings twice
+    if ((r.repeat || "none") !== "none") { r.at = next(r.at, r.repeat, Math.max(now(), r.at)); save(); arm(r); }
     else unschedule(id);
   }
   function schedule(r) {
