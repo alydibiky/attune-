@@ -1,0 +1,70 @@
+name: Online map (planet to Cloudflare R2)
+
+# v6.27 (Ali: "maps like Google Maps — streets and compounds everywhere, online"): copies the newest Protomaps planet
+# build (one .pmtiles file, ~120 GB, every street and building on Earth) into Attune's own Cloudflare R2 bucket every
+# week. The app reads only the small pieces it shows (HTTP range requests) — see ONLINE_PLANET_URL in
+# web-src/offlinemap.js. R2 charges no download (egress) fees; storage is ~$2 a month.
+# Needs four repository secrets (Settings → Secrets and variables → Actions); never put the keys in the code:
+#   R2_ACCOUNT_ID         the Cloudflare account ID
+#   R2_ACCESS_KEY_ID      the R2 API token's Access Key ID
+#   R2_SECRET_ACCESS_KEY  the R2 API token's Secret Access Key
+#   R2_BUCKET             the bucket's name (e.g. attune-maps)
+# Without them the job says so and stops. Data © OpenStreetMap contributors (ODbL); tiles: Protomaps build.
+
+on:
+  schedule:
+    - cron: "41 3 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: map-planet
+  cancel-in-progress: false
+
+jobs:
+  planet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+    steps:
+      - name: The R2 keys are set
+        id: keys
+        run: |
+          if [ -z "$R2_ACCOUNT_ID" ] || [ -z "$R2_ACCESS_KEY_ID" ] || [ -z "$R2_SECRET_ACCESS_KEY" ] || [ -z "$R2_BUCKET" ]; then
+            echo "The four R2 secrets are not set yet — nothing to do"; echo "ok=no" >> $GITHUB_OUTPUT
+          else echo "ok=yes" >> $GITHUB_OUTPUT; fi
+      - name: rclone
+        if: steps.keys.outputs.ok == 'yes'
+        run: |
+          curl -sfL https://downloads.rclone.org/rclone-current-linux-amd64.deb -o rclone.deb && sudo dpkg -i rclone.deb >/dev/null && rclone version | head -1
+          mkdir -p ~/.config/rclone
+          printf '[r2]\ntype = s3\nprovider = Cloudflare\naccess_key_id = %s\nsecret_access_key = %s\nendpoint = https://%s.r2.cloudflarestorage.com\nacl = private\nno_check_bucket = true\n' \
+            "$R2_ACCESS_KEY_ID" "$R2_SECRET_ACCESS_KEY" "$R2_ACCOUNT_ID" > ~/.config/rclone/rclone.conf
+      - name: The newest OpenStreetMap build
+        if: steps.keys.outputs.ok == 'yes'
+        id: b
+        run: |
+          for i in $(seq 0 14); do
+            d=$(date -u -d "-$i day" +%Y%m%d)
+            if curl -sfI "https://build.protomaps.com/$d.pmtiles" >/dev/null; then echo "date=$d" >> $GITHUB_OUTPUT; echo "build $d"; exit 0; fi
+          done
+          echo "No Protomaps build found in the last 2 weeks"; exit 1
+      - name: Copy it to R2 (streamed — the runner's disk is too small to hold it)
+        if: steps.keys.outputs.ok == 'yes'
+        run: |
+          d="${{ steps.b.outputs.date }}"
+          have=$(rclone cat "r2:$R2_BUCKET/planet.json" 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin).get("build",""))' 2>/dev/null || true)
+          if [ "$have" = "$d" ]; then echo "R2 already has the build of $d"; exit 0; fi
+          # 64 MB parts: a streamed upload may have 10,000 parts, so up to 640 GB
+          rclone copyurl "https://build.protomaps.com/$d.pmtiles" "r2:$R2_BUCKET/planet.pmtiles" \
+            --s3-chunk-size 64M --s3-upload-concurrency 8 --stats 60s --stats-one-line -v
+          size=$(rclone size --json "r2:$R2_BUCKET/planet.pmtiles" | python3 -c 'import json,sys; print(json.load(sys.stdin)["bytes"])')
+          printf '{"build": "%s", "bytes": %s, "copied": "%s"}\n' "$d" "$size" "$(date -u +%Y-%m-%dT%H:%MZ)" > planet.json
+          rclone copyto planet.json "r2:$R2_BUCKET/planet.json"
+          { echo "### Online map — Protomaps build $d"; echo "planet.pmtiles: $((size / 1000000000)) GB"; } >> $GITHUB_STEP_SUMMARY

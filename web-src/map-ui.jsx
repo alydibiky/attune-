@@ -3,7 +3,7 @@
    The map is drawn by MapLibre: from an installed country pack (offline, vector, offlinemap.js) or, without one, from
    online picture tiles through the app's tile cache. If the phone can't draw it (no WebGL), the old map is shown. */
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Search, X, Download, RefreshCw, Trash2, MapPin, Share2, Loader2 } from "lucide-react";
+import { Search, X, Download, RefreshCw, Trash2, MapPin, Share2, Loader2, Globe } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as OM from "./offlinemap.js";
 import * as MS from "./mapsearch.js";
@@ -59,7 +59,12 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   // v6.27: a country you picked → else the first country → else the world overview → else no map yet (OpenStreetMap's
   // own tile servers are not used any more: they forbid apps and answered 403 on the desktop)
   const countryPacks = packs.filter((p) => p.code !== OM.WORLD), hasWorld = packs.some((p) => p.code === OM.WORLD);
-  const active = countryPacks.find((p) => p.code === pack) ? pack : (countryPacks[0] && countryPacks[0].code) || (hasWorld ? OM.WORLD : "");
+  // v6.27: + the online planet (when it is set up and there is signal) — streets and compounds everywhere, like Google Maps;
+  // order: what you picked → your country (offline, free) → the online planet → the world overview → nothing yet
+  const onlineOk = !!OM.ONLINE_PLANET_URL && online;
+  const active = pack === OM.ONLINE && onlineOk ? OM.ONLINE : countryPacks.find((p) => p.code === pack) ? pack
+    : (countryPacks[0] && countryPacks[0].code) || (onlineOk ? OM.ONLINE : "") || (hasWorld ? OM.WORLD : "");
+  const styleOf = (code) => OM.mapStyle({ pack: code || null, dark: false, lang, localAssets: packs.length > 0 });
 
   useEffect(() => { const on = () => setOnline(true), off = () => setOnline(false); window.addEventListener("online", on); window.addEventListener("offline", off); return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); }; }, []);
   // where the map starts: below the app's header. Measured again after the page settles (opened from a scrolled page,
@@ -85,7 +90,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
       const ml = await OM.loadMapLibre();
       if (gone || !box.current) return;
       OM.registerProtocols(ml, N, getTile);
-      map = new ml.Map({ container: box.current, style: OM.mapStyle({ pack: active || null, dark: false, lang }), center: [view.lon, view.lat], zoom: view.z,
+      map = new ml.Map({ container: box.current, style: styleOf(active), center: [view.lon, view.lat], zoom: view.z,
         attributionControl: false,   // the credit rides on the sheet (below): MapLibre's box sat on top of the sheet
         maxZoom: 19, dragRotate: false, pitchWithRotate: false });
       map.touchZoomRotate.disableRotation();
@@ -103,7 +108,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   useEffect(() => {
     const m = mapRef.current; if (!m) return;
     const k = (active || "-") + lang;
-    if (styleKey.current && styleKey.current !== k) m.setStyle(OM.mapStyle({ pack: active || null, dark: false, lang }));
+    if (styleKey.current && styleKey.current !== k) m.setStyle(styleOf(active));
     styleKey.current = k;
   }, [active, lang, ready]);
   // pins: your places, the picked result, you
@@ -222,7 +227,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
     try { N.mapRemove(code); } catch (e) {}
     refreshPacks(); if (pack === code) { setPack(""); try { localStorage.removeItem(PACK_KEY); } catch (e) {} }
   };
-  const usePack = (code) => { setPack(code); try { localStorage.setItem(PACK_KEY, code); } catch (e) {} const c = OM.countryOf(code); const m = mapRef.current; if (m && c) m.flyTo({ center: c.c, zoom: c.z }); };
+  const usePack = (code) => { setPack(code); try { localStorage.setItem(PACK_KEY, code); } catch (e) {} const c = code === OM.ONLINE ? null : OM.countryOf(code); const m = mapRef.current; if (m && c) m.flyTo({ center: c.c, zoom: c.z }); };
 
   // ---- v6.20: directions inside Attune, offline (Ali: "what's the point of maps if it will redirect me to another map") ----
   const packsNow = () => { try { return (JSON.parse(N.mapPacks()).packs) || packs; } catch (e) { return packs; } };   // fresh: just after a download, the state is a render behind
@@ -332,7 +337,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
               aria-label={tr("Say it")} className="w-10 h-10 flex items-center justify-center text-slate-600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg></button> : null}
             <button type="button" onClick={() => { setSel(null); setHits(null); setTab("offline"); setSheet("full"); }} data-testid="map-open-offline" aria-label={tr("Offline maps")}
               className={`relative h-10 min-w-10 px-2.5 rounded-full text-[12.5px] font-extrabold flex items-center justify-center shrink-0 ${active ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-700"}`}>
-              {active ? active.toUpperCase() : <Download size={17} aria-hidden="true" />}{updates.length ? <span className="absolute -top-0.5 -end-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white" aria-label={tr("Update ready")} /> : null}</button>
+              {active === OM.ONLINE ? <Globe size={17} aria-hidden="true" /> : active ? active.toUpperCase() : <Download size={17} aria-hidden="true" />}{updates.length ? <span className="absolute -top-0.5 -end-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white" aria-label={tr("Update ready")} /> : null}</button>
           </form>
           <div className="pointer-events-auto flex gap-2 overflow-x-auto [scrollbar-width:none] -mx-3 px-3 pb-1">
             {CHIPS.map((c) => <button key={c[0]} onClick={() => runSearch(lang === "ar" ? c[2] : c[1], c)} className={chipCls} data-testid={"map-chip-" + c[0]}>{lang === "ar" ? c[2] : c[1]}</button>)}
@@ -443,7 +448,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
                 {sheet === "peek" ? (
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between gap-2"><span className="text-[16px] font-bold text-slate-900">{tr("Your places")}</span>
-                      <span className="text-[12px] font-semibold text-emerald-700 truncate" data-testid="map-mode">{active ? tr("offline map") + " · " + cname(OM.countryOf(active) || { en: active, ar: active }) : online ? tr("online") : tr("no signal")}</span></div>
+                      <span className="text-[12px] font-semibold text-emerald-700 truncate" data-testid="map-mode">{active === OM.ONLINE ? tr("online map") + " · " + tr("the whole world") : active ? tr("offline map") + " · " + cname(OM.countryOf(active) || { en: active, ar: active }) : online ? tr("online") : tr("no signal")}</span></div>
                     <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
                       {st.places.length ? st.places.slice(0, 12).map((p) => <button key={p.id} onClick={() => { setSel(p); setSheet("half"); flyTo(p, 15); }} className="shrink-0 max-w-[60%] truncate px-3.5 py-2 rounded-2xl bg-slate-100 text-[13.5px] font-semibold text-slate-800" dir="auto">{p.name}</button>)
                         : <span className="text-[13px] text-slate-500">{tr("Search a place and tap “Save” — saved places work with no signal.")}</span>}
@@ -466,6 +471,10 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
                     <p className="text-[12.5px] text-slate-600 leading-relaxed">{tr("Download a country once: roads, buildings, shops and search, with no signal. A new map comes every week.")}</p>
                     <input value={cq} onChange={(e) => setCq(e.target.value)} dir="auto" data-testid="map-country-find" aria-label={tr("Find a country")}
                       placeholder={tr("Find a country — {n} available", { n: OM.COUNTRIES.length })} className="w-full h-12 rounded-2xl bg-slate-100 px-4 text-[14.5px] text-slate-900 placeholder:text-slate-500" />
+                    {onlineOk ? (
+                      <button onClick={() => usePack(OM.ONLINE)} data-testid="map-use-online" className={`w-full rounded-2xl border-[1.5px] p-3 text-start ${active === OM.ONLINE ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"}`}>
+                        <span className="block text-[15px] text-slate-900 font-bold">{tr("Online map — the whole world")}</span>
+                        <span className="block text-[12px] text-slate-600">{tr("Every street and compound, no download — needs signal")}{active === OM.ONLINE ? " · " + tr("showing") : ""}</span></button>) : null}
                     {countryList.map((c) => {
                       const have = packs.find((p) => p.code === c.code), rm = remote[c.code], upd = have && OM.isNewer(rm, have), mine = dl && dl.code === c.code;
                       return (

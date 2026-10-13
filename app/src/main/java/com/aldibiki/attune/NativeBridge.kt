@@ -680,7 +680,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         use(id, m.id)
     }
 
-    /** Web search: {q, provider: "duckduckgo"|"brave", key?, pages?} */
+    /** Web search: {q, provider: "duckduckgo", key? (ignored since v6.27), pages?} */
     @JavascriptInterface
     fun search(id: String, arg: String) {
         if (blockedByAirGap(id, "web lookup")) return

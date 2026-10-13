@@ -1062,6 +1062,27 @@ internet searching … improve internet searching and make it faster".
 - **Next:** rest of step 5 (hash, clipboardText,
   readText, speak/stopSpeaking, schedule → Notification, doctor/speed/setSpeed, foodClip*), then Studio (sd-cli), signing, updates.
 
+### 5.61 (13 Oct 2026) — v6.27: roadmap, no Brave, maps without OpenStreetMap's tile servers, online planet (R2)
+- **Roadmap** agreed with Ali: `ROADMAP_2026-10-13.md` (sync via Google Drive, device levels, code-first, design A "Calm",
+  Life layer). Read it after APP_HANDOFF.md.
+- **Brave removed** (page scraping and the API option): `WebTools.kt`, `desktop/lib/web.js`, settings in `attune.jsx`.
+  Free search = DuckDuckGo + Bing + Mojeek at once (reciprocal-rank fusion). A paid API for Pro only if it measures close
+  to Gemini (roadmap).
+- **Maps never use tile.openstreetmap.org** (it forbids apps; 403 on the desktop). The style with no pack is just the
+  ground. New pack **`wld`** (world overview, maxzoom 6) built by `map-pack.yml` job `world`; the map page downloads it
+  by itself on Wi-Fi when no map is installed, else shows "No map on this device yet" + "Download the world map".
+  `countryOf("wld")` / `countryOf("online")` have names (the update banner crashed on `wld` before).
+- **Online planet (Ali approved Cloudflare R2):** `map-planet.yml` streams the newest Protomaps planet (~120 GB) into
+  Ali's R2 bucket every Saturday (rclone `copyurl`, 64 MB parts; skips when `planet.json` already has that build). Needs
+  secrets `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`. The page reads it with HTTP range
+  requests when `OM.ONLINE_PLANET_URL` (offlinemap.js) is set — EMPTY until Ali's bucket has a public domain + CORS for
+  `https://appassets.androidplatform.net` and `app://attune`. Map order: your pick → your country pack → online planet
+  (with signal) → world overview → empty. Fonts come from protomaps.github.io until a pack brings them.
+- **Compounds:** `build_map_pack.py` now indexes named `landuse=residential` / `residential=gated` areas as
+  `place/compound` (rank 62) — they were dropped from offline search before (Overture added some). Takes effect on the
+  next weekly pack build. Drawing compounds as labelled areas on the map is the next step (needs our own label layer).
+- Tests: `tests/unit/v722maps.test.mjs` (world name, online style), `tests/e2e_v722mapbuilder.py` (compounds).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

@@ -70,6 +70,9 @@ with tempfile.TemporaryDirectory() as d:
     check([p["bytes"] for p in e["parts"]] == [1000, 1000, 500] and joined == data and e["sha256"] == __import__("hashlib").sha256(data).hexdigest()
           and up == ["xx.pmtiles.001", "xx.pmtiles.002", "xx.pmtiles.003", "xx-manifest.json"] and not os.path.exists(os.path.join(d, "xx.pmtiles")),
           "a file over the limit is split into parts that join back exactly (the SHA-256 is of the whole file)")
+check(B.kind_and_rank({"landuse": "residential", "name": "Madinaty"}) == ("place/compound", 62)
+      and B.kind_and_rank({"residential": "gated", "name": "Palm Hills"})[0] == "place/compound"
+      and B.kind_and_rank({"landuse": "farmland", "name": "x"}) is None, "a named residential area (a compound) is searchable")
 check(B.country("us")["maxzoom"] == 13 and B.country("eg")["gf"] == "africa/egypt", "the country list gives the extract and the zoom")
 
 print("ALL PASSED" if not fails else f"{fails} FAILED")
