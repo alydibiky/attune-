@@ -35,7 +35,7 @@ with sync_playwright() as p:
     page.fill("[data-testid=life-input]", "جمعية ٢٠٠٠ في الشهر لمدة ١٠ شهور ودوري الرابع"); page.click("[data-testid=life-read]")
     page.wait_for_selector("[data-testid=life-draft]", timeout=3000)
     dr = page.locator("[data-testid=life-draft]").inner_text()
-    check("Savings circle" in dr and "your turn: 4" in dr, "an Egyptian جمعية, read by code: " + dr.replace("\n", " · "))
+    check("savings circle" in dr.lower() and "your turn: 4" in dr, "an Egyptian جمعية, read by code: " + dr.replace("\n", " · "))
     page.click("[data-testid=life-save]"); page.wait_for_timeout(200)
     check(page.locator("[data-testid=life-item]").count() == 2, "two commitments on the page")
     page.fill("[data-testid=life-input]", "what's the weather"); page.click("[data-testid=life-read]"); page.wait_for_timeout(300)

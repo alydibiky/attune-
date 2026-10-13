@@ -39,12 +39,15 @@ with sync_playwright() as pw:
         comp.fill("where is the bug in my code?"); page.locator("button[title='Send']").click(); page.wait_for_timeout(500)
         check(page.locator("[data-testid=card-emerald]").count() == n0, "«where is the bug in my code?» stays a Chat question")
     # v6.27: a commitment typed in Chat → People & plans, read and ready to save
+    page.keyboard.press("Escape"); page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)   # the question above opened "install a model"
+    if not page.locator("textarea[placeholder='Message Attune']").count():
+        page.locator("nav button").first.click(); page.wait_for_timeout(300)
     comp = page.locator("textarea[placeholder='Message Attune']")
     comp.fill("Ahmed owes me 12,000, 1,000 a month for a year"); page.locator("button[title='Send']").click()
     card = page.locator("[data-testid=card-emerald]").last
     page.wait_for_function("() => [...document.querySelectorAll('[data-testid=card-emerald]')].some((e) => e.innerText.includes('People & plans'))", timeout=5000)
     check("People & plans" in card.inner_text(), "a commitment in Chat becomes a card: " + card.inner_text().replace("\n", " · ")[:100])
-    card.get_by_role("button", name="Save it").click()
+    page.locator("[data-testid=card-emerald]").last.get_by_role("button", name="Save it").click()
     page.wait_for_selector("[data-testid=life-draft]", timeout=8000)
     check("Ahmed owes you" in page.locator("[data-testid=life-draft]").inner_text(), "…People & plans opens with it read, ready to save")
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])

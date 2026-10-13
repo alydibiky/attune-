@@ -7387,7 +7387,7 @@ const MORE_TOOLS = [
 const MORE_GROUPS = [
   ["Create & learn", ["instant", "studio", "assistants", "skills", "projects", "artifacts", "code", "learn", "news"]],
   ["Work & business", ["slides", "xray", "convert", "pdfchat", "video", "cv", "business", "crane", "field", "fleet", "reminders"]],
-  ["Your life", ["fit", "deal", "shelf", "memory", "knowledge", "map", "travel", "cycle"]],
+  ["Your life", ["life", "fit", "deal", "shelf", "memory", "knowledge", "map", "travel", "cycle"]],
   ["Prompts for other AIs", ["improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
 

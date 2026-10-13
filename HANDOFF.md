@@ -1143,6 +1143,24 @@ internet searching … improve internet searching and make it faster".
   Tests: `tests/unit/v727moneycalm.test.mjs`, `tests/e2e_v727moneydesk.py` (dark + light, screenshots with SHOTS=).
 - Next in "Calm": the phone Home (Today card + areas, bottom bar Home·Chat·Money·Health·Mind), then the 7-area tool map.
 
+### 5.63 (13 Oct 2026) — the Life layer: "People & plans"
+- `web-src/life.js` (pure): `parseLife(text)` reads a sentence in English, formal Arabic or Egyptian Arabic into a
+  commitment {kind installment|debt|circle|bill|rent|subscription, person, dir in|out, amount (each payment), count,
+  total, every month|week|year|null, start, myTurn, currency}. Rules per language; amounts with Arabic digits, "12 ألف",
+  "1.5k", "ألفين"; counts/days/turns are never read as money; "monthly" is not Monday; one amount "a month" is each
+  payment, "in 12 / على 12" splits a total. Savings circles under local names (جمعية, tanda, susu, chit fund, hui,
+  arisan…). `scheduleOf` (dates), `progressOf` (paid / left / next), `tickText` (the sentence Money already reads:
+  "Received 1,000 EGP from Ahmed — installment 4 of 12"), `dueSoon`, store `attune:life:v1`, model fallback
+  `lifeModelPrompt` / `readLifeModel` (same fields, fixed kinds). `chatLifeIntent`: statements only, questions stay.
+- `web-src/life-ui.jsx` `LifePage` (mode "life", tool "People & plans", first in "Your life"; Calm design): type → read
+  by code (the loaded model only if the rules can't) → preview → Save; groups People / Installments / Savings circles /
+  Bills…; a checkbox per payment (≤ 24 shown); a tick → confirm → `sendToMoney(tickText)` (Money asks for the account).
+  Chat: a commitment typed there → emerald card [Save it | Just answer] → "attune-life" event → the page opens with it read.
+- Tests: `tests/unit/v727life.test.mjs` (68: Ali's example 7 ways, debts, circles, bills, rent, subscriptions, my
+  installments, non-commitments, schedule/ticks/store/model), `tests/e2e_v727life.py`, `tests/e2e_v727chatmap.py`.
+  The roadmap's ~500-sentence set per language: grow this file with every sentence that fails in real use.
+- Next: show "People & plans" in Money (People & debts tab) and Home's Today card; reminders for due payments.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
