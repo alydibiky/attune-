@@ -38,6 +38,24 @@ export function nameScore(name, q) {
   return words.filter((w) => n.includes(w)).length / words.length;
 }
 
+/** v6.27 (Ali: "like Google Maps"): one order for every result, from any source — how well the NAME matches (whole name,
+ *  then its start, then its words), then how important the place is (a city over a shop; `rank` from the index, or the
+ *  kind), then how near (a gentle fall over ~10 km, so a perfect match far away still beats a weak one next door).
+ *  Saved places get a small lift. Pure: tests in tests/unit/v707mapsearch.test.mjs. */
+const KIND_RANK = { city: 95, town: 85, suburb: 75, village: 70, quarter: 65, neighbourhood: 65, compound: 62, residential_area: 60, hamlet: 55 };
+export function placeScore(p, q, center) {
+  const fold = (s) => String(s || "").toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+  const n = fold(String(p.name || "").split(",")[0]), t = fold(q);
+  const match = !t ? 0.5 : n === t ? 1 : n.startsWith(t) ? 0.85 : (" " + n).includes(" " + t) ? 0.75 : nameScore(p.name, q) * 0.6;
+  const kind = String(p.kind || "").split("/").pop();
+  const rank = Number.isFinite(p.rank) ? p.rank : KIND_RANK[kind] || (/^street/.test(p.kind || "") ? 32 : 40);
+  const d = p.dist != null ? p.dist : center ? km(center, p) : 20;
+  return 4 * match + rank / 100 + 1 / (1 + d / 10) + (p.local ? 0.4 : 0);
+}
+export function rankPlaces(list, q, center) {
+  return [...(list || [])].map((p) => ({ p, s: placeScore(p, q, center) })).sort((a, b) => b.s - a.s).map((x) => x.p);
+}
+
 /** Results from several services → one list: the same place (within 150 m and a similar name) once; better name match, then nearer, first. */
 export function mergePlaces(lists, center, q) {
   const all = [];

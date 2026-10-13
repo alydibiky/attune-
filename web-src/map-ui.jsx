@@ -186,7 +186,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
       // simpler wordings — without "address", "compound"… — as the online search already was
       for (const t of kinds.length ? [""] : [term, ...MS.variants(term)]) {
         try { const r = await nativeCall("mapSearch", { q: t, kinds, limit: kinds.length ? 40 : 15, lat: c.lat, lon: c.lon });
-          for (const p of (r && r.places) || []) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, offline: true, dist: p.dist }); } catch (e) {}
+          for (const p of (r && r.places) || []) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, rank: p.rank, offline: true, dist: p.dist }); } catch (e) {}
         if (out.some((x) => x.offline)) break;
       }
     }
@@ -198,7 +198,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
         // a sort: its name words ("سوري"), then the sort's own word ("مطعم"), keeping only places of that sort
         for (const t of (kinds.length ? [term, ...MI.sortNames(word)] : [term, ...MS.variants(term)]).filter(Boolean)) {
           try { for (const p of await OM.netFind(nativeCall, nc.code, t, { lat: c.lat, lon: c.lon, limit: kinds.length ? 60 : 25 }))
-            if (!kinds.length || kinds.includes(p.kind)) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, net: true }); } catch (e) { break; }
+            if (!kinds.length || kinds.includes(p.kind)) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, rank: p.rank, net: true }); } catch (e) { break; }
           if (!kinds.length && out.some((x) => x.net)) break;
         }
       }
@@ -213,7 +213,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
     setBusy(true); setSel(null); setSheet("half"); if (trip) endTrip();
     let c = center(); const out = [], seen = new Set();
     const push = (p) => { const k = Math.round(p.lat * 2000) + ":" + Math.round(p.lon * 2000) + ":" + String(p.name).slice(0, 12); if (seen.has(k)) return; seen.add(k); out.push({ ...p, dist: p.dist != null ? p.dist : distKm(c, p) }); };
-    let byDist = !!chip, said = "";
+    let byDist = !!chip, said = "", rankQ = term;
     if (chip) await searchAt("", chip[3], chip[4], c, push, out);
     else {
       // v6.27 (Ali: "AI-powered"): what was typed is read first — a sort ("أقرب صيدلية"), an area ("… في التجمع"), "near me";
@@ -230,14 +230,15 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
         if (it.sort) await searchAt(it.what, it.kinds, MI.sortWords(it.sort, lang), c, push, out);
         else await searchAt(it.what || term, [], "", c, push, out);
         if (it.sort && it.what) out.sort((a, b) => (MS.nameScore(b.name, it.what) > 0) - (MS.nameScore(a.name, it.what) > 0));   // "سوري" names first
-        byDist = !!it.sort && !it.what;
+        byDist = !!it.sort && !it.what; rankQ = it.what || term;
         if (said) flash(tr("Around {p}", { p: said }));
         else if (it.model) flash(tr("Read by AI: {s}", { s: [it.sort && MI.sortWords(it.sort, lang), it.what].filter(Boolean).join(" · ") }));
         if (out.length < 3 && it.sort && it.what) await searchAt(term, [], "", center(), push, out);     // a name that holds a sort word ("Mall of Arabia")
       } else await searchAt(term, [], "", c, push, out);
     }
     out.forEach((p) => { p.dist = distKm(c, p); });
-    setHits(byDist ? out.sort((a, b) => a.dist - b.dist) : out);
+    // v6.27: one Google-like order (name match → importance → distance); "nearest X" stays nearest first
+    setHits(byDist ? out.sort((a, b) => a.dist - b.dist) : MS.rankPlaces(out, rankQ, c));
     setBusy(false);
     if (said && mapRef.current && out.length) mapRef.current.flyTo({ center: [c.lon, c.lat], zoom: 13 });
     if (!out.length && !(online || packs.length)) flash(tr("No signal, so only your saved places are searchable — nothing matched."));

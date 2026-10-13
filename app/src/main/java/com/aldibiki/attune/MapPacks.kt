@@ -295,7 +295,7 @@ object MapPacks {
                             val plat = c.getDouble(4); val plon = c.getDouble(5)
                             val dist = if (lat.isNaN() || lon.isNaN()) 0.0 else haversineKm(lat, lon, plat, plon)
                             hits.add(Hit(JSONObject().put("name", c.getString(0) ?: "").put("name_ar", c.getString(1) ?: "").put("name_en", c.getString(2) ?: "")
-                                .put("kind", c.getString(3) ?: "").put("lat", plat).put("lon", plon).put("code", code).put("dist", Math.round(dist * 10) / 10.0), c.getInt(6), dist))
+                                .put("kind", c.getString(3) ?: "").put("lat", plat).put("lon", plon).put("code", code).put("dist", Math.round(dist * 10) / 10.0).put("rank", c.getInt(6)), c.getInt(6), dist))
                         }
                     }
                 }

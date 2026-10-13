@@ -20,4 +20,24 @@ const near = await M.findPlaces("Mivida", { center, fetchJson: async (u) => (u.i
 ok(near.places.length === 1 && near.places[0].via === "overpass", "nothing by name anywhere → named places within 40 km (Overpass)");
 const m = M.mergePlaces([[{ name: "Cairo Festival City Mall, New Cairo", lat: 30.0287, lon: 31.4085, via: "photon" }], [{ name: "Cairo Festival City Mall, Road 90, New Cairo, Egypt", lat: 30.0289, lon: 31.4087, via: "osm" }, { name: "Cairo Festival City Mall, Dubai", lat: 25.2, lon: 55.3, via: "osm" }]], center, "Cairo Festival City Mall");
 ok(m.length === 2 && m[0].via === "photon + osm" && m[0].dist < m[1].dist, "the same place from two services is shown once; the nearer one first");
+// v6.27: one Google-like order — name match, then importance, then distance
+const cairo = { lat: 30.05, lon: 31.25 };
+let rk = M.rankPlaces([
+  { name: "Madinaty Pharmacy", kind: "amenity/pharmacy", lat: 30.05, lon: 31.25, rank: 42 },
+  { name: "مدينتي", kind: "place/town", lat: 30.1, lon: 31.65, rank: 85 },
+  { name: "Madinaty", kind: "place/town", lat: 30.1, lon: 31.65, rank: 85 },
+], "Madinaty", cairo);
+ok(rk[0].name === "Madinaty" && rk[1].name === "Madinaty Pharmacy", "the town named exactly «Madinaty» beats a pharmacy next door named after it: " + rk.map((p) => p.name).join(" | "));
+rk = M.rankPlaces([
+  { name: "City Stars", kind: "shop/mall", lat: 31.2, lon: 29.9, rank: 35 },   // Alexandria, 180 km
+  { name: "City Stars", kind: "shop/mall", lat: 30.07, lon: 31.35, rank: 35 },  // Cairo, 10 km
+], "city stars", cairo);
+ok(rk[0].lat === 30.07, "two places with the same name: the nearer first");
+rk = M.rankPlaces([
+  { name: "Seoudi Market Zamalek", kind: "shop/supermarket", lat: 30.06, lon: 31.22, rank: 35 },
+  { name: "Street of Seoudi", kind: "street/residential", lat: 30.05, lon: 31.25, rank: 30 },
+], "seoudi", cairo);
+ok(rk[0].name === "Seoudi Market Zamalek", "a name that STARTS with the words beats one that only contains them");
+rk = M.rankPlaces([{ name: "Gym", kind: "leisure/fitness_centre", lat: 30.05, lon: 31.25 }, { name: "My gym", kind: "", lat: 30.2, lon: 31.4, local: true }], "gym", cairo);
+ok(rk[0].name === "Gym", "a saved place gets a small lift, not a free pass: " + rk.map((p) => p.name).join(" | "));
 console.log(fail ? `${fail} FAILED` : "ALL PASSED");

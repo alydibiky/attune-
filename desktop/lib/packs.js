@@ -467,7 +467,7 @@ function makePacks({ data, online, fetch: f }) {
         } else rows = db.prepare("SELECT p.name, p.name_ar, p.name_en, p.kind, p.lat, p.lon, p.rank FROM places_fts f JOIN places p ON p.id = f.rowid WHERE f.key MATCH ? LIMIT 400").all(match);
         for (const r of rows) {
           const dist = isNaN(lat) || isNaN(lon) ? 0 : haversineKm(lat, lon, r.lat, r.lon);
-          hits.push({ rank: r.rank || 0, dist, o: { name: r.name || "", name_ar: r.name_ar || "", name_en: r.name_en || "", kind: r.kind || "", lat: r.lat, lon: r.lon, code: p.code, dist: Math.round(dist * 10) / 10 } });
+          hits.push({ rank: r.rank || 0, dist, o: { name: r.name || "", name_ar: r.name_ar || "", name_en: r.name_en || "", kind: r.kind || "", lat: r.lat, lon: r.lon, code: p.code, dist: Math.round(dist * 10) / 10, rank: r.rank || 0 } });
         }
       } catch (e) {} finally { try { db && db.close(); } catch (e) {} }
     }

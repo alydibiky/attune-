@@ -1114,6 +1114,10 @@ internet searching … improve internet searching and make it faster".
   compounds in teal, first. Offline: `mapSearch` {kinds, radiusDeg} on the downloaded pack. Online: find.bin's new
   `areas` section (0.25° squares, gzip; Egypt: 171 squares ≈ 260 KB in all) via `OM.netAreas` (one square ≈ a few
   KB, cached). Re-read on every map stop (250 ms debounce) and after each style change ("style.load").
+- **Google-like order (`MS.rankPlaces` / `placeScore`, mapsearch.js):** every result, whatever its source, gets
+  4×name match (whole name 1, starts with 0.85, a whole word 0.75, else words × 0.6) + importance (index `rank`/100, or
+  by kind) + 1/(1 + km/10) + 0.4 for a saved place. "Nearest X" stays sorted by distance. `rank` now comes back from
+  the phone's and the computer's mapSearch. Tests: v707mapsearch (Madinaty town beats "Madinaty Pharmacy" next door…).
 - Tests: `tests/unit/v722maps.test.mjs` (world name, online style), `tests/e2e_v722mapbuilder.py` (compounds).
 - `tests/audit.py` never finished since a full page (Fit/Money) hides the bottom bar: it now presses the app's Back
   until the bar shows. It then found the Instant page's "Go" off a 320-px screen → that toolbar wraps now.
