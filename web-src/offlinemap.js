@@ -96,19 +96,18 @@ export function registerProtocols(maplibregl, N, getTile) {
   return proto;
 }
 
+/** v6.27: the world overview (low zoom, every country) — a pack like the others, code "wld". */
+export const WORLD = "wld";
+
 /**
  * The map style.
- * pack: an installed pack's code (vector map from the phone) or null (online picture tiles through the cache).
+ * pack: an installed pack's code (vector map from the phone; WORLD = the world overview) or null (no map yet:
+ * just the ground — v6.27: OpenStreetMap's own tile servers forbid apps and answered 403 on the desktop).
  * dark: the app's theme. lang: "ar" | "en" (place names).
  */
 export function mapStyle({ pack = null, dark = true, lang = "en" } = {}) {
   if (!pack) {
-    return {
-      version: 8,
-      sources: { osm: { type: "raster", tiles: ["osmc://{z}/{x}/{y}"], tileSize: 256, maxzoom: 19, attribution: "© OpenStreetMap contributors" } },
-      layers: [{ id: "bg", type: "background", paint: { "background-color": dark ? "#0b1220" : "#f1f5f9" } },
-               { id: "osm", type: "raster", source: "osm", paint: dark ? { "raster-brightness-max": 0.82, "raster-saturation": -0.25 } : {} }],
-    };
+    return { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": dark ? "#0b1220" : "#f1f5f9" } }] };
   }
   return {
     version: 8,

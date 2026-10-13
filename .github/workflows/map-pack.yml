@@ -23,6 +23,12 @@ on:
       assets:
         description: "Rebuild the fonts and icons too? (yes/no)"
         default: "no"
+      world:
+        description: "Rebuild the world overview map (every country, low zoom) too? (yes/no)"
+        default: "yes"
+      world_maxzoom:
+        description: "Most detailed zoom of the world overview"
+        default: "6"
 
 permissions:
   contents: write
@@ -72,6 +78,44 @@ jobs:
           python3 tools/build_map_pack.py assets fonts sprites out
           gh release view map-assets >/dev/null 2>&1 || gh release create map-assets --title "Offline maps: fonts and icons" --notes "Fonts (Noto Sans, SIL OFL) and icons for Attune's offline maps (Protomaps basemaps-assets)."
           gh release upload map-assets out/map-assets.zip out/assets-manifest.json --clobber
+
+  # v6.27: the world overview (map-wld) — every country at low zoom, so the app never needs OpenStreetMap's own tile
+  # servers (they forbid apps: 403 on the desktop). The app downloads it by itself on Wi-Fi when no map is installed.
+  world:
+    needs: [assets]
+    if: github.event_name == 'schedule' || github.event.inputs.world != 'no'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: |
+          gh release download -R protomaps/go-pmtiles -p "go-pmtiles_*_Linux_x86_64.tar.gz" -O pm.tgz
+          tar xzf pm.tgz pmtiles && sudo mv pmtiles /usr/local/bin/ && pmtiles version
+      - name: The newest OpenStreetMap build
+        id: b
+        run: |
+          for i in $(seq 0 14); do
+            d=$(date -u -d "-$i day" +%Y%m%d)
+            if curl -sfI "https://build.protomaps.com/$d.pmtiles" >/dev/null; then echo "date=$d" >> $GITHUB_OUTPUT; echo "build $d"; exit 0; fi
+          done
+          echo "No Protomaps build found in the last 2 weeks"; exit 1
+      - name: The world overview (vector tiles, whole planet, low zoom)
+        run: |
+          mkdir -p out
+          mz="${{ github.event.inputs.world_maxzoom }}"; [ -z "$mz" ] && mz=6
+          pmtiles extract "https://build.protomaps.com/${{ steps.b.outputs.date }}.pmtiles" out/wld.pmtiles --maxzoom="$mz" --download-threads=8
+          ls -la out
+      - name: Publish
+        run: |
+          d="${{ steps.b.outputs.date }}"; date="${d:0:4}-${d:4:2}-${d:6:2}"
+          python3 tools/build_map_pack.py manifest wld "World" "$date" out wld.pmtiles > uploads.txt
+          cat uploads.txt
+          gh release view map-wld >/dev/null 2>&1 || gh release create map-wld --title "Offline map: World overview" --notes "Attune's world overview map (every country, low zoom). Data © OpenStreetMap contributors (ODbL); tiles: Protomaps build. Rebuilt every week."
+          xargs -a uploads.txt -d '\n' gh release upload map-wld --clobber
+          { echo "### World overview — data of $date"; ls -la out | sed 's/^/    /'; } >> $GITHUB_STEP_SUMMARY
 
   country:
     needs: [plan, assets]

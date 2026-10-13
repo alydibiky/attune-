@@ -56,7 +56,10 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   const [adding, setAdding] = useState(null);              // v6.20 "add a missing place": the name being typed, or null                  // v6.20 directions: {to, mode, busy, res, error, need}
   const routeFiles = useRef({});                           // code → opened route file (route.js)
   const holder = useRef(null), box = useRef(null), mapRef = useRef(null), markers = useRef([]);
-  const active = pack === "-" ? "" : packs.find((p) => p.code === pack) ? pack : (packs[0] && packs[0].code) || "";   // "-" = you chose the online map
+  // v6.27: a country you picked → else the first country → else the world overview → else no map yet (OpenStreetMap's
+  // own tile servers are not used any more: they forbid apps and answered 403 on the desktop)
+  const countryPacks = packs.filter((p) => p.code !== OM.WORLD), hasWorld = packs.some((p) => p.code === OM.WORLD);
+  const active = countryPacks.find((p) => p.code === pack) ? pack : (countryPacks[0] && countryPacks[0].code) || (hasWorld ? OM.WORLD : "");
 
   useEffect(() => { const on = () => setOnline(true), off = () => setOnline(false); window.addEventListener("online", on); window.addEventListener("offline", off); return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); }; }, []);
   // where the map starts: below the app's header. Measured again after the page settles (opened from a scrolled page,
@@ -197,6 +200,22 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
     } catch (e) { flash(String((e && e.message) || e).slice(0, 140)); }
     finally { setDl(null); }
   };
+  // v6.27: the world overview — every country at low zoom, so the map is never empty; downloads by itself on Wi-Fi
+  const installWorld = async (quiet) => {
+    if (!N || !nativeCall || dl) return;
+    const m = remote[OM.WORLD] && !remote[OM.WORLD].error ? remote[OM.WORLD] : await check(OM.WORLD);
+    if (!m) { if (!quiet) flash(tr("The world map isn't published yet.")); return; }
+    if (!quiet && !window.confirm(tr("Download the world map? {s} — every country, without street detail.", { s: OM.prettyMB(OM.packBytes(m)) }))) return;
+    setDl({ code: OM.WORLD, pct: 0, detail: "" });
+    const p = nativeCall("mapInstall", { code: OM.WORLD }, (pct, stage, detail) => setDl((d) => (d ? { ...d, pct, detail } : d)));
+    setDl((d) => ({ ...d, id: lastNativeId ? lastNativeId() : null }));
+    try { await p; refreshPacks(); } catch (e) { if (!quiet) flash(String((e && e.message) || e).slice(0, 140)); }
+    finally { setDl(null); }
+  };
+  useEffect(() => {
+    let wifi = false; try { wifi = !!(N && N.unmetered && N.unmetered()); } catch (e) {}
+    if (!packs.length && online && wifi) installWorld(true);
+  }, []);
   const pause = () => { if (dl && dl.id && N && N.cancel) try { N.cancel(dl.id); } catch (e) {} };
   const removePack = (code) => {
     if (!window.confirm(tr("Delete the offline map of {c}? You can download it again.", { c: OM.countryOf(code)[lang === "ar" ? "ar" : "en"] }))) return;
@@ -207,7 +226,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
 
   // ---- v6.20: directions inside Attune, offline (Ali: "what's the point of maps if it will redirect me to another map") ----
   const packsNow = () => { try { return (JSON.parse(N.mapPacks()).packs) || packs; } catch (e) { return packs; } };   // fresh: just after a download, the state is a render behind
-  const packOf = (p) => { const L = packsNow(); return L.find((x) => x.code === active) || L.find((x) => { const c = OM.countryOf(x.code); return c && c.c && Math.abs(c.c[1] - p.lat) < 12 && Math.abs(c.c[0] - p.lon) < 15; }) || null; };
+  const packOf = (p) => { const L = packsNow().filter((x) => x.code !== OM.WORLD); return L.find((x) => x.code === active) || L.find((x) => { const c = OM.countryOf(x.code); return c && c.c && Math.abs(c.c[1] - p.lat) < 12 && Math.abs(c.c[0] - p.lon) < 15; }) || null; };
   const openRoutes = async (code) => {
     if (routeFiles.current[code]) return routeFiles.current[code];
     const path = `${code}/${code}-route.bin`;
@@ -293,6 +312,13 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
         {/* inline: MapLibre's own CSS (.maplibregl-map{position:relative}) loads later and turned the class into a 0-px-tall box —
             the map was drawn but never seen (Ali, Oct 2026) */}
         <div ref={box} style={{ position: "absolute", inset: 0 }} data-testid="map-canvas" />
+        {!active && !fail ? (
+          <div className="absolute inset-x-4 top-24 z-10 mx-auto max-w-sm rounded-2xl bg-white/95 border border-slate-200 p-4 shadow-sm text-center" data-testid="map-empty">
+            <p className="text-[15px] font-bold text-slate-900">{tr("No map on this device yet")}</p>
+            <p className="text-[12.5px] text-slate-600 mt-1 leading-relaxed">{tr("Download the world map to see every country, or your country's map for streets, places and offline search.")}</p>
+            {dl && dl.code === OM.WORLD ? <p className="text-[12px] text-slate-600 mt-2 tabular-nums" data-testid="map-world-progress">{dl.pct || 0}% · {dl.detail}</p>
+              : <button onClick={() => installWorld(false)} disabled={!!dl} data-testid="map-dl-world" className="mt-3 h-10 px-4 rounded-full bg-blue-600 text-white text-[13px] font-bold disabled:opacity-40">{tr("Download the world map")}</button>}
+          </div>) : null}
 
         {/* search + chips */}
         <div className="absolute inset-x-0 p-3 space-y-2.5 pointer-events-none" style={{ top: "env(safe-area-inset-top)" }}>
@@ -460,7 +486,6 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
                           {rm && rm.error && !have ? <p className="text-[11.5px] text-amber-700 mt-1">{tr(rm.error)}</p> : null}
                         </div>);
                     })}
-                    {packs.length ? <button onClick={() => { setPack(""); try { localStorage.setItem(PACK_KEY, "-"); } catch (e) {} }} className="text-[12.5px] text-slate-600 underline">{tr("Show the online map instead")}</button> : null}
                   </div>
                 )}
                 </>}

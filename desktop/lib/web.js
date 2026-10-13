@@ -1,5 +1,5 @@
 // Web lookup for the desktop — the same work as the phone's WebTools.kt, in Node:
-// four keyless engines at once (DuckDuckGo, Bing, Brave, Mojeek) with one shared deadline,
+// three keyless engines at once (DuckDuckGo, Bing, Mojeek; Brave removed in v6.27) with one shared deadline,
 // reciprocal-rank fusion, no Wikipedia (Ali's rule), no dictionary pages unless the question
 // is about a word, the top pages read in full with their tables kept as rows, and the main
 // picture of each page as a small JPEG. Google News RSS for Daily news.
@@ -96,24 +96,6 @@ function makeEngines(online) {
     } catch (e) {}
     return out;
   }
-  async function braveHtml(q, max = 8) {
-    const out = [];
-    try {
-      online("https://search.brave.com/search", "web search (Brave)");
-      const r = await get("https://search.brave.com/search?" + qs({ q, source: "web" }), { timeout: 9000, headers: { "Accept-Language": lang(q) } });
-      const $ = cheerio.load(r.text);
-      $("div.snippet[data-type=web], #results div[data-pos], div.snippet").each((_, el) => {
-        const e = $(el);
-        const a = e.find("a[href]").filter((_, x) => { const h = $(x).attr("href") || ""; return h.startsWith("http") && !h.includes("brave.com"); }).first();
-        if (!a.length) return;
-        const url = a.attr("href");
-        const title = (txt(e.find(".title, .snippet-title, .heading-serpresult")) || a.text()).trim();
-        if (title && !out.some((h) => h.url === url)) out.push({ title, url, text: txt(e.find(".snippet-description, .description, .content, .generic-snippet")), source: "web" });
-        if (out.length >= max) return false;
-      });
-    } catch (e) {}
-    return out;
-  }
   async function mojeek(q, max = 8) {
     const out = [];
     try {
@@ -132,18 +114,7 @@ function makeEngines(online) {
     } catch (e) {}
     return out;
   }
-  async function braveApi(q, key, max = 6) {
-    const u = "https://api.search.brave.com/res/v1/web/search?" + qs({ q, count: max, search_lang: isArabic(q) ? "ar" : "en", extra_snippets: "true" });
-    online(u, "web search (Brave)");
-    const r = await FETCH(u, { headers: { Accept: "application/json", "X-Subscription-Token": key } });
-    if (r.status === 401 || r.status === 403) throw new Error("Brave rejected the key (HTTP " + r.status + ")");
-    if (r.status === 429) throw new Error("Brave: monthly or per-second limit reached");
-    if (!r.ok) throw new Error("Brave returned HTTP " + r.status);
-    const j = await r.json(); const plain = (h) => cheerio.load(h || "").text();
-    return ((j.web && j.web.results) || []).slice(0, max).map((x) => ({ title: plain(x.title), url: x.url,
-      text: [plain(x.description), ...(x.extra_snippets || []).map(plain)].join(" "), source: "web" }));
-  }
-  return { duckduckgo, bing, braveHtml, mojeek, braveApi };
+  return { duckduckgo, bing, mojeek };
 }
 
 const JUNK = /(^|\.)(merriam-webster\.com|dictionary\.cambridge\.org|dictionary\.com|thefreedictionary\.com|wordreference\.com|collinsdictionary\.com|vocabulary\.com|thesaurus\.com|oxfordlearnersdictionaries\.com|britannicaenglish\.com|wiktionary\.org|yourdictionary\.com|urbandictionary\.com|definitions\.net|almaany\.com|reverso\.net)$/;
@@ -199,21 +170,20 @@ function makeWeb({ online, thumb, fetch: f }) {
 
   async function search({ provider = "duckduckgo", q, key = "", pages = 3 }) {
     let via = provider, hits = [], why = "";
-    if (provider === "brave" && key) { try { hits = (await E.braveApi(q, key, 10)).filter((h) => !isWiki(h.url)); } catch (e) { why = e.message || "Brave failed"; } }
     if (!hits.length) {
-      // one shared deadline: DuckDuckGo + Bing up to 8 s together; Brave + Mojeek get ≈ 1.2 s more once those answered
+      // one shared deadline: DuckDuckGo + Bing up to 8 s together; Mojeek gets ≈ 1.2 s more once those answered
       const t0 = Date.now();
       const wait = (p, until) => Promise.race([p.catch(() => []), new Promise((r) => setTimeout(() => r(null), Math.max(1, until - (Date.now() - t0))))]);
-      const dj = E.duckduckgo(q, 12), bj = E.bing(q, 10), rj = E.braveHtml(q, 10), mj = E.mojeek(q, 10);
+      const dj = E.duckduckgo(q, 12), bj = E.bing(q, 10), mj = E.mojeek(q, 10);
       const [d, b] = [(await wait(dj, 8000)) || [], (await wait(bj, 8000)) || []];
       const extra = d.length + b.length >= 6 ? Date.now() - t0 + 1200 : 9000;
-      const [r, m] = [(await wait(rj, extra)) || [], (await wait(mj, extra)) || []];
-      const lists = [d, b, r, m].map((l) => l.filter((h) => !isWiki(h.url)))
+      const m = (await wait(mj, extra)) || [];
+      const lists = [d, b, m].map((l) => l.filter((h) => !isWiki(h.url)))
         .map((l) => (l.length && l.filter((h) => isJunk(h.url, q)).length * 2 >= l.length ? [] : l.filter((h) => !isJunk(h.url, q))));
       const score = new Map(), first = new Map();
       for (const l of lists) l.forEach((h, i) => { const k = urlKey(h.url); score.set(k, (score.get(k) || 0) + 1 / (8 + i)); const had = first.get(k); if (!had) first.set(k, { ...h }); else if (h.text.length > had.text.length) had.text = h.text; });
       hits = [...first.entries()].sort((a, c) => score.get(c[0]) - score.get(a[0])).map((e) => e[1]).slice(0, 14);
-      via = ["duckduckgo", "bing", "brave", "mojeek"].filter((_, i) => lists[i].length).join(" + ") || "duckduckgo";
+      via = ["duckduckgo", "bing", "mojeek"].filter((_, i) => lists[i].length).join(" + ") || "duckduckgo";
       if (!hits.length && !why) why = "The search engines returned nothing";
     }
     // the top pages read in full, in parallel; a quick question goes on with half of them after 2.5 s (cap 6 s)

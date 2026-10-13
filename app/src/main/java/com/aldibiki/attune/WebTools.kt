@@ -110,26 +110,8 @@ object WebTools {
 
     // ---- v6.12: two more keyless indexes, searched at the same time ---------------------------------------
     // Ali: "web search is still shit". Two engines were not enough when one answers a question's common words
-    // with dictionary pages (measured on the web benchmark). Brave's and Mojeek's own indexes are read too;
+    // with dictionary pages (measured on the web benchmark). Mojeek's own index is read too (v6.27: Brave removed);
     // a page several engines agree on ranks first (see search()). Any of them failing just adds nothing.
-    fun braveHtml(q: String, max: Int = 8): List<Hit> {
-        val out = ArrayList<Hit>()
-        try {
-            Prefs.requireOnline("https://search.brave.com/search", "web search (Brave)")
-            val doc = Jsoup.connect("https://search.brave.com/search").data("q", q).data("source", "web")
-                .userAgent(UA).header("Accept-Language", if (isArabic(q)) "ar,en;q=0.8" else "en,ar;q=0.8").timeout(9_000).get()
-            val blocks = doc.select("div.snippet[data-type=web], #results div[data-pos], div.snippet")
-            for (r in blocks) {
-                val a = r.select("a[href]").firstOrNull { val h = it.attr("href"); h.startsWith("http") && !h.contains("brave.com") } ?: continue
-                val url = a.attr("href")
-                val title = (r.selectFirst(".title, .snippet-title, .heading-serpresult")?.text() ?: a.text()).trim()
-                val snippet = (r.selectFirst(".snippet-description, .description, .content, .generic-snippet"))?.text().orEmpty()
-                if (title.isNotEmpty() && out.none { it.url == url }) out.add(Hit(title, url, snippet, "web"))
-                if (out.size >= max) break
-            }
-        } catch (e: Exception) { }
-        return out
-    }
     fun mojeek(q: String, max: Int = 8): List<Hit> {
         val out = ArrayList<Hit>()
         try {
@@ -200,33 +182,6 @@ object WebTools {
         if (i < 0) return h
         val v = h.substring(i + 5).substringBefore('&')
         return try { URLDecoder.decode(v, "UTF-8") } catch (e: Exception) { h }
-    }
-
-    // ---- Brave Search API (the user's key) -----------------------------------
-    fun brave(q: String, key: String, max: Int = 6): List<Hit> {
-        val lang = if (isArabic(q)) "ar" else "en"
-        val u = "https://api.search.brave.com/res/v1/web/search?q=" + URLEncoder.encode(q, "UTF-8") +
-            "&count=$max&search_lang=$lang&extra_snippets=true"
-        Prefs.requireOnline(u, "web search (Brave)")
-        val c = URL(u).openConnection() as HttpURLConnection
-        c.connectTimeout = 10_000; c.readTimeout = 15_000
-        c.setRequestProperty("Accept", "application/json")
-        c.setRequestProperty("X-Subscription-Token", key)
-        val code = c.responseCode
-        if (code == 401 || code == 403) throw Exception("Brave rejected the key (HTTP $code)")
-        if (code == 429) throw Exception("Brave: monthly or per-second limit reached")
-        if (code !in 200..299) throw Exception("Brave returned HTTP $code")
-        val j = JSONObject(c.inputStream.bufferedReader().use { it.readText() })
-        val res = j.optJSONObject("web")?.optJSONArray("results") ?: JSONArray()
-        val out = ArrayList<Hit>()
-        for (i in 0 until minOf(res.length(), max)) {
-            val r = res.getJSONObject(i)
-            val extra = r.optJSONArray("extra_snippets")
-            val sb = StringBuilder(Jsoup.parse(r.optString("description")).text())
-            if (extra != null) for (k in 0 until extra.length()) sb.append(" ").append(Jsoup.parse(extra.optString(k)).text())
-            out.add(Hit(Jsoup.parse(r.optString("title")).text(), r.optString("url"), sb.toString(), "web"))
-        }
-        return out
     }
 
     // ---- v6.1 food databases (Fit & Food): JSON from Open Food Facts and USDA only ----------
@@ -342,9 +297,6 @@ object WebTools {
         var via = provider
         var hits: List<Hit> = emptyList()
         var why = ""
-        if (provider == "brave" && !key.isNullOrBlank()) {
-            try { hits = brave(q, key, 10).filter { !isWiki(it.url) } } catch (e: Exception) { why = e.message ?: "Brave failed" }
-        }
         if (hits.isEmpty()) {
             // v5.34: DuckDuckGo and Bing at the same time, results interleaved (d1, b1, d2, b2 …)
             // v6.8: the plain question goes to the engines — NOT "-site:wikipedia.org". Bing misreads that
@@ -353,27 +305,25 @@ object WebTools {
             // right pages). Wikipedia is still left out: its pages are dropped by isWiki below.
             val dj = pool.submit(Callable { try { duckduckgo(q, 12) } catch (e: Exception) { emptyList<Hit>() } })
             val bj = pool.submit(Callable { try { bing(q, 10) } catch (e: Exception) { emptyList<Hit>() } })
-            val rj = pool.submit(Callable { try { braveHtml(q, 10) } catch (e: Exception) { emptyList<Hit>() } })
             val mj = pool.submit(Callable { try { mojeek(q, 10) } catch (e: Exception) { emptyList<Hit>() } })
             // v6.20 (Ali: "make web searching faster"): one shared deadline, not four waits in a row (16 + 16 + 10 + 6 s at worst).
-            // DuckDuckGo and Bing get up to 8 s together; once they have answered with results, Brave and Mojeek get ≈ 1.2 s
+            // DuckDuckGo and Bing get up to 8 s together; once they have answered with results, Mojeek gets ≈ 1.2 s
             // more (they only add to the ranking); when the first two found nothing, the others get up to 6 s.
             val t0s = System.currentTimeMillis()
             fun left(until: Long) = maxOf(1L, until - (System.currentTimeMillis() - t0s))
             val d = try { dj.get(left(8_000), TimeUnit.MILLISECONDS) } catch (e: Exception) { emptyList<Hit>() }
             val b = try { bj.get(left(8_000), TimeUnit.MILLISECONDS) } catch (e: Exception) { emptyList<Hit>() }
             val extra = if (d.size + b.size >= 6) (System.currentTimeMillis() - t0s) + 1_200 else 9_000L
-            val r = try { rj.get(left(extra), TimeUnit.MILLISECONDS) } catch (e: Exception) { emptyList<Hit>() }
             val m = try { mj.get(left(extra), TimeUnit.MILLISECONDS) } catch (e: Exception) { emptyList<Hit>() }
             // v6.12: reciprocal-rank fusion — a page found by several engines, or high on one, ranks first;
             // an engine whose results are mostly dictionaries (a poisoned answer) counts for nothing
-            val lists = listOf(d, b, r, m).map { l -> l.filter { !isWiki(it.url) } }
+            val lists = listOf(d, b, m).map { l -> l.filter { !isWiki(it.url) } }
                 .map { l -> if (l.isNotEmpty() && l.count { isJunk(it.url, q) } * 2 >= l.size) emptyList() else l.filter { !isJunk(it.url, q) } }
             val score = HashMap<String, Double>(); val first = LinkedHashMap<String, Hit>()
             for (l in lists) for ((i, h) in l.withIndex()) { val k = urlKey(h.url); score[k] = (score[k] ?: 0.0) + 1.0 / (8 + i); val had = first[k]; if (had == null) first[k] = h else if (h.text.length > had.text.length) had.text = h.text }
             hits = first.entries.sortedByDescending { score[it.key] ?: 0.0 }.map { it.value }.take(14)
             via = listOfNotNull(if (lists[0].isNotEmpty()) "duckduckgo" else null, if (lists[1].isNotEmpty()) "bing" else null,
-                if (lists[2].isNotEmpty()) "brave" else null, if (lists[3].isNotEmpty()) "mojeek" else null).joinToString(" + ").ifEmpty { "duckduckgo" }
+                if (lists[2].isNotEmpty()) "mojeek" else null).joinToString(" + ").ifEmpty { "duckduckgo" }
             if (hits.isEmpty() && why.isEmpty()) why = "The search engines returned nothing"
         }
 

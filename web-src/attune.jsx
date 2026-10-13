@@ -6395,14 +6395,11 @@ const SEARCH_KEY = "attune:search:v1";
 // September 2026 — shown in the app so nobody signs up for a surprise.
 const BYO_PROVIDERS = [
   { id: "duckduckgo", label: "DuckDuckGo", free: "Free, no key, no account", keyless: true, nativeOnly: true,
-    note: "The default in the Android app. Reads DuckDuckGo's results page from your phone and opens the top pages, so answers come from real passages. DuckDuckGo has no official results API, so it can occasionally rate-limit; Brave is the official, dependable route.",
+    note: "The default in the Android app. Reads DuckDuckGo's results page from your phone and opens the top pages, so answers come from real passages. DuckDuckGo has no official results API, so it can occasionally rate-limit; the app also asks Bing and Mojeek route.",
     url: "https://duckduckgo.com" },
   { id: "tavily", label: "Tavily", free: "1,000 searches a month, free, no card required",
     note: "Suggested. The free tier stops when it runs out instead of charging you.",
     url: "https://tavily.com", endpoint: "https://api.tavily.com/search" },
-  { id: "brave", label: "Brave Search", free: "About 1,000 searches a month on $5 of monthly credit",
-    note: "Needs a card on file. An independent index — good in English, unproven in Arabic.",
-    url: "https://api-dashboard.search.brave.com", endpoint: "https://api.search.brave.com/res/v1/web/search" },
   { id: "serper", label: "Serper", free: "2,500 searches once, then paid",
     note: "Returns Google's own results, so the best Arabic quality of the three.",
     url: "https://serper.dev", endpoint: "https://google.serper.dev/search" },
@@ -6429,14 +6426,6 @@ async function byoLookup(q, cfg) {
     if (!r.ok) throw new Error("Tavily returned " + r.status);
     const j = await r.json();
     return (j.results || []).map((x) => ({ title: x.title, text: (x.content || "").slice(0, 1800), url: x.url, source: "web" }));
-  }
-  if (p.id === "brave") {
-    const r = await fetch(p.endpoint + "?q=" + encodeURIComponent(q) + "&count=5",
-      { headers: { Accept: "application/json", "X-Subscription-Token": cfg.key } });
-    if (!r.ok) throw new Error("Brave returned " + r.status);
-    const j = await r.json();
-    return ((j.web && j.web.results) || []).map((x) => ({
-      title: x.title, text: (x.description || "").slice(0, 1800), url: x.url, source: "web" }));
   }
   if (p.id === "serper") {
     const r = await fetch(p.endpoint, { method: "POST",
@@ -6468,12 +6457,12 @@ async function webLookupRaw(q, pages = 6) {
 async function webLookupRawLive(q, pages = 6) {
   const cfg = searchLoad();
   const out = { hits: [], via: "none", why: "" };
-  // Android app: search natively. DuckDuckGo needs no key; Brave uses yours.
+  // Android app: search natively with the free engines (no key).
   // The top result pages are opened and read, so the model answers from real
   // passages instead of one-line snippets. Only the query and the pages
   // opened leave the phone — never the conversation or memory.
   if (NATIVE) {
-    const provider = cfg.provider === "brave" && cfg.key ? "brave" : "duckduckgo";
+    const provider = "duckduckgo";   // v6.27: Brave removed (Ali); the native search runs every free engine
     try {
       const r = await nativeCall("search", { q, provider, key: cfg.key || "", pages });
       out.hits = (r.hits || []).filter((h) => h && h.url && (h.text || "").length > 40);
@@ -9213,7 +9202,6 @@ export default function App() {
                           <div className="mt-2 pt-2 border-t border-slate-800">
                             <span className="text-[10px] text-slate-600">
                               {t.via === "duckduckgo" ? tr("from the web via DuckDuckGo")
-                                : t.via === "brave" ? tr("from the web via Brave Search")
                                 : "from the web via your own " + t.via} {tr("· answered on this device")}
                             </span>
                             <div className="mt-1.5 space-y-1">
@@ -9313,7 +9301,7 @@ export default function App() {
                 {webOn ? (
                   <span className="text-[11px] text-slate-500">
                     {NATIVE
-                      ? (searchCfg.provider === "brave" && searchCfg.key ? "Brave Search" : "DuckDuckGo") + " · only the question leaves the phone; the answer is written here"
+                      ? "DuckDuckGo · Bing · Mojeek" + " · only the question leaves the phone; the answer is written here"
                       : searchCfg.provider && searchCfg.key
                       ? `your ${searchCfg.provider} key · the question leaves the device, the answer is still written here`
                       : tr("Web search needs the Android app, or your own search key in settings")}
@@ -11328,8 +11316,6 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
   const [net, setNet] = useState(null);
   const [hashes, setHashes] = useState({});
   const [armDelete, setArmDelete] = useState(null);
-  const [key, setKey] = useState((n.searchCfg && n.searchCfg.key) || "");
-  const provider = (n.searchCfg && n.searchCfg.provider === "brave") ? "brave" : "duckduckgo";
 
   const labelFor = (id) => {
     const m = (n.installedModels || []).find((x) => x.id === id);
@@ -11493,24 +11479,8 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
       {/* web lookup */}
       <div className={box}>
         <p className={head}>{tr("Web lookup")}</p>
-        <div className="grid grid-cols-2 gap-1.5">
-          {[["duckduckgo", "DuckDuckGo", "Free · no key"], ["brave", "Brave Search", "Your API key"]].map(([id, label, sub]) => (
-            <button key={id} onClick={() => n.saveSearchCfg({ ...(n.searchCfg || {}), provider: id, key: id === "brave" ? key : (n.searchCfg && n.searchCfg.key) || "" })}
-              className={`rounded-lg border px-3 py-2 text-start ${provider === id ? "border-teal-600 bg-teal-500/5" : "border-slate-800 bg-slate-900"}`}>
-              <span className="block text-[clamp(11px,3.6vw,14px)] text-slate-200 whitespace-nowrap">{tr(label)}</span><span className="block text-[11px] text-slate-500">{tr(sub)}</span>
-            </button>
-          ))}
-        </div>
-        {provider === "brave" ? (
-          <div className="mt-2">
-            <input value={key} onChange={(ev) => setKey(ev.target.value)} onBlur={() => n.saveSearchCfg({ provider: "brave", key: key.trim() })}
-              placeholder={tr("Brave Search API key")} type="password"
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
-            <p className="text-[11px] text-slate-500 mt-1">{tr("Get one at api-dashboard.search.brave.com. Stored only on this phone. Falls back to DuckDuckGo if Brave refuses.")}</p>
-          </div>
-        ) : (
-          <p className="text-[11px] text-slate-500 mt-2 leading-snug">{tr("Reads DuckDuckGo's results from your phone and opens the top pages, so answers come from real passages. DuckDuckGo has no official API and can occasionally rate-limit; Brave is the dependable route.")}</p>
-        )}
+        {/* v6.27 (Ali): Brave removed — free search reads three engines at once */}
+        <p className="text-[11px] text-slate-500 leading-snug">{tr("Free web search: DuckDuckGo, Bing and Mojeek at once, then the top pages are read in full, so answers come from real passages.")}</p>
         <p className="text-[10px] text-slate-600 mt-2">{tr("Only the question you look up and the pages opened leave the phone — never your conversation, files or memory.")}</p>
       </div>
 

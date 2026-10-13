@@ -10,7 +10,6 @@ const ddg = `<div class="result"><a class="result__a" href="//duckduckgo.com/l/?
 <div class="result"><a class="result__a" href="https://news.example/900">900 launched</a><a class="result__snippet">Launch news</a></div>`;
 const bing = `<ol><li class="b_algo"><h2><a href="https://www.bing.com/ck/a?!&&p=1&u=a1${Buffer.from("https://cars.example/lynk-900").toString("base64").replace(/=+$/, "")}&ntb=1">Lynk 900 — Cars</a></h2><div class="b_caption"><p>Prices and versions</p></div></li>
 <li class="b_algo"><h2><a href="https://dealer.example/900">Dealer 900</a></h2><div class="b_caption"><p>Dealer prices</p></div></li></ol>`;
-const brave = `<div id="results"><div class="snippet" data-type="web"><a href="https://dealer.example/900"><div class="title">Dealer 900</div></a><div class="snippet-description">Prices at the dealer</div></div></div>`;
 const mojeek = `<ul class="results-standard"><li><h2><a href="https://www.merriam-webster.com/dictionary/900">900 definition</a></h2><p class="s">dictionary</p></li></ul>`;
 const page = `<html><head><meta property="og:image" content="/img/900.jpg"></head><body><nav>menu</nav><article><h1>Lynk & Co 900</h1>
 <p>The Lynk & Co 900 is a large plug-in hybrid SUV launched in 2025 with three rows of seats and a long electric range.</p>
@@ -24,7 +23,6 @@ const fakeFetch = async (url, opt = {}) => {
   const u = new URL(url); let body = "", type = "text/html";
   if (u.host === "html.duckduckgo.com") body = ddg;
   else if (u.host === "www.bing.com") body = bing;
-  else if (u.host === "search.brave.com") body = brave;
   else if (u.host === "www.mojeek.com") body = mojeek;
   else if (u.host === "news.google.com") { body = rss; type = "application/rss+xml"; }
   else if (u.host === "cars.example" || u.host === "dealer.example" || u.host === "news.example") body = page;
@@ -42,8 +40,9 @@ const W = makeWeb({ fetch: fakeFetch, online: (url, why) => { blocked.push(why);
   assert.ok(!urls.some((u) => u.includes("ads.example")), "no ads");
   assert.ok(!urls.some((u) => u.includes("merriam-webster")), "no dictionary for a non-word question");
   assert.equal(urls[0], "https://cars.example/lynk-900", "a page two engines agree on ranks first (Bing's wrapped link unwrapped)");
-  assert.ok(urls.includes("https://dealer.example/900"), "Bing + Brave page kept");
-  assert.equal(r.via, "duckduckgo + bing + brave", "engines that answered are named: " + r.via);
+  assert.ok(urls.includes("https://dealer.example/900"), "Bing page kept");
+  assert.ok(!seen.some((u) => u.includes("brave.com")), "Brave is never asked (v6.27)");
+  assert.equal(r.via, "duckduckgo + bing", "engines that answered are named: " + r.via);
   const top = r.hits[0];
   assert.ok(top.text.includes("Pro | EGP 3.2M | 551 hp"), "tables are read as rows: " + top.text.slice(0, 300));
   assert.ok(!top.text.includes("menu") && !top.text.includes("footer"), "menus and footers left out");
