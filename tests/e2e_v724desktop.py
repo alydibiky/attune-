@@ -43,8 +43,8 @@ with sync_playwright() as p:
     page.fill("[data-testid=side-search]", "")
     check(page.locator("[data-testid=side]").is_visible(), "the sidebar stays while a tool is open")
     page.locator("[data-testid=side-go-money]").click(); page.wait_for_timeout(600)
-    m = box(page, "[data-testid=money-page]")
-    check(m and m["x"] >= sb["width"] - 1, "Money fills the space beside the sidebar (x=%s)" % (m and m["x"]))
+    m = box(page, "[data-testid=money-desk]")   # v6.27: the Calm computer layout of Money
+    check(m and m["x"] >= sb["width"] - 1 and m["width"] > 800, "Money fills the space beside the sidebar (x=%s, w=%s)" % (m and m["x"], m and m["width"]))
     page.locator("[data-testid=side-go-tools]").first.click(); page.wait_for_timeout(300)
     check(page.locator("[data-testid=tools-page] [data-testid^=tools-open-]").count() >= 30, "the Tools page lists every tool")
     page.locator("[data-testid=tools-pin-crane]").click(); page.wait_for_timeout(200)

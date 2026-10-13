@@ -2200,6 +2200,8 @@ if(!db.onboarded)setTimeout(showOnboarding,250);if(posted)setTimeout(()=>toast('
     if(!m||typeof m!=='object'||m.ns!==NS||m.v!==V)return;
     if(m.type==='propose-txn'){ propose(m.data); return; }
     if(m.type==='entitlement'){ ATTUNE_PRO=!!(m.data&&m.data.pro); try{refresh();}catch(e){} return; }
+    // v6.27: Attune's computer layout opens a screen (its own tabs: Transactions, Bills, People & debts, Zakat, Reports)
+    if(m.type==='go'){ var sc=m.data&&m.data.screen; if(['home','trends','accounts','bills','goals','zakat','notes','invoices'].indexOf(sc)>=0){ try{go(sc);}catch(e){} } return; }
     if(m.type==='request'){
       if(m.data&&m.data.kind==='ready') send('ready',{app:'yusr'});
       else snapshot(m.data&&m.data.kind);

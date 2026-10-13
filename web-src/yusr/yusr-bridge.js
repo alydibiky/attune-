@@ -204,6 +204,8 @@ function createBridge(post, opts) {
     },
     request(kind) { return send("request", { kind }); },
     sendEntitlement(pro) { return send("entitlement", { pro: !!pro }); },
+    /** v6.27: open one of Yusr's screens (Attune's computer tabs) — home, trends, accounts, bills, goals, zakat, notes, invoices. */
+    go(screen) { return send("go", { screen: String(screen || "home") }); },
     // Handshake, not hope. The child can finish loading and announce itself
     // before the parent has attached its listener — a race that shows up
     // exactly once in ten launches and is miserable to debug. So the parent

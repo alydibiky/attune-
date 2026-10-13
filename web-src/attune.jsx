@@ -43,6 +43,7 @@ import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
+import { MoneyDesk } from "./money-desk.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
@@ -5966,7 +5967,7 @@ function moneyAnalysisPrompt(snapshot, recent, lang) {
     lang ? `Answer in ${lang}.` : ""].filter(Boolean).join("\n");
 }
 
-function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIncoming, openPlan }) {
+function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIncoming, openPlan, screen }) {
   const [ready, setReady] = React.useState(false);
   const [snapshot, setSnapshot] = React.useState(null);
   const [feed, setFeed] = React.useState([]);
@@ -5997,6 +5998,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   React.useEffect(() => { openPlanRef.current = openPlan; }, [openPlan]);
   React.useEffect(() => { proRef.current = proNow; if (bridgeRef.current) bridgeRef.current.sendEntitlement(proNow); }, [proNow]);
   const html = React.useMemo(yusrDocumentHtml, []);
+  // v6.27: the computer layout's tabs open Yusr's matching screen
+  React.useEffect(() => { if (ready && screen && bridgeRef.current && bridgeRef.current.go) bridgeRef.current.go(screen); }, [ready, screen]);
 
   React.useEffect(() => {
     if (!html) return;
@@ -6184,9 +6187,10 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   // it (two nested scroll areas were what made it feel glitchy). Attune's own
   // extras — reading a payment, asking about the money — slide up over it.
   return (
-    <div className="att-shift fixed inset-x-0 top-0 z-[45] flex flex-col bg-[#0F1218]" data-testid="money-page"
-         style={{ bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }}>
-      <div className="shrink-0 flex items-center gap-2 px-2 h-12 bg-slate-950 border-b border-slate-800">
+    <div className={screen ? "relative flex flex-col bg-[#0F1218] rounded-xl overflow-hidden" : "att-shift fixed inset-x-0 top-0 z-[45] flex flex-col bg-[#0F1218]"} data-testid="money-page"
+         style={screen ? { height: "calc(100vh - 150px)" } : { bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }}>
+      {/* v6.27: inside the computer layout (screen set) Money is a panel under the Calm tabs, not the whole screen */}
+      <div className="shrink-0 flex items-center gap-2 px-2 h-12 bg-slate-950 border-b border-slate-800" style={screen ? { display: "none" } : null}>
         <button onClick={() => window.__attuneBack && window.__attuneBack()} aria-label={tr("Back")}
           className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
         <p className="flex-1 min-w-0 text-base font-semibold text-white truncate">{tr("Money & Zakāt")}</p>
@@ -7333,7 +7337,7 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory"]);
+const OWN_TITLE = new Set(["skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money"]);   // v6.27: money (the Calm computer layout has its own title)
 const MODE_TITLES = { home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
@@ -9744,7 +9748,13 @@ export default function App() {
             load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />}
             onExit={goBack} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
         ) : mode === "money" ? (
+          wide ? (
+            // v6.27: design A "Calm" — a real computer layout for Money (money-desk.jsx); the phone keeps Money as it is
+            <MoneyDesk onAsk={() => { setChatSeed("How much did I spend on food this month?"); navTo("chat"); }}
+              renderYusr={(screen) => <MoneyTab screen={screen} incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)} />} />
+          ) : (
           <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)} />
+          )
         ) : mode === "travel" ? (
           <div className="space-y-5">
             <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">

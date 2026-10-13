@@ -1127,6 +1127,22 @@ internet searching … improve internet searching and make it faster".
 - `tests/audit.py` never finished since a full page (Fit/Money) hides the bottom bar: it now presses the app's Back
   until the bar shows. It then found the Instant page's "Go" off a 320-px screen → that toolbar wraps now.
 
+### 5.62 (13 Oct 2026) — design A "Calm" begins: tokens, fonts, Money on a computer
+- **Tokens** (web-src/build/tw.css, class `.calm`): from Ali's pick (claude.ai/artifact/ES7tU5XVeN4wPDWSPf3wV4) — light
+  bg #F4F5F3 / cards #FFF / ink #16201D / muted #6B7672 / lines #E4E8E5 / teal #0F7B6C (+ soft #E2F1ED); dark bg
+  #111416 / cards #181C1F / teal #4FC2AF; green / amber / red only for good / due / overdue. Light follows
+  html.att-light (spaces.js applyTheme). Helpers: c-card, c-lbl, c-sub, c-amt, c-num, c-pill(.due/.late), c-list,
+  c-ic, c-tab, c-btn, c-bar, c-ticks. Fonts (SIL OFL, in www/fonts, 252 KB): Figtree 400–700 + IBM Plex Sans Arabic
+  400–700 (Arabic range only). Six icons added to build/lucide-shim.js (ShoppingCart, Car, Utensils, Gift, Coffee, Heart).
+- **Money on a computer** (`web-src/money-desk.jsx`, shown when `wide`): title + tabs (Overview · Transactions · Bills ·
+  People & debts · Zakat · Reports · Accounts). Overview = 3 columns from `money-calm.js moneyOverview(ledger)` (pure,
+  by code: balance per currency — never adds EGP to USD; this month in/out; 4 weeks of spending vs budget; latest 6;
+  bills due ≤ 7 days, late ones marked; who owes you with paid-instalment ticks; what you owe). Every other tab is Yusr
+  itself, kept loaded below (MoneyTab `screen` prop → new bridge message `go` → Yusr's `go(screen)`, whitelisted
+  screens only). The phone keeps Money exactly as before. Re-reads the ledger on the "storage" event.
+  Tests: `tests/unit/v727moneycalm.test.mjs`, `tests/e2e_v727moneydesk.py` (dark + light, screenshots with SHOTS=).
+- Next in "Calm": the phone Home (Today card + areas, bottom bar Home·Chat·Money·Health·Mind), then the 7-area tool map.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
