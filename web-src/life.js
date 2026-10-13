@@ -179,3 +179,60 @@ export function tickEntry(c, i, now = Date.now()) {
   const what = c.kind === "installment" ? `installment ${i + 1} of ${c.count}` : c.kind === "circle" ? `${c.title || "savings circle"} ${i + 1}/${c.count}` : c.title || c.kind;
   return { direction: c.dir === "in" ? "in" : "out", amount: s.amount, currency: c.currency, party: c.person || "", note: (who + what).trim(), ts: Date.parse(s.date + "T12:00:00") };
 }
+
+/** The sentence a tick sends to Money (read there by paytext.js, confirmed by the person):
+ *  "Received 1,000 EGP from Ahmed — installment 4 of 12" / "Paid 2,000 EGP — جمعية 1/10". */
+export function tickText(c, i, now = Date.now()) {
+  const e = tickEntry(c, i, now); if (!e) return "";
+  const amt = e.amount.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + (e.currency || "EGP");
+  const what = e.note.replace(/^.*? — /, "");
+  return e.direction === "in" ? `Received ${amt}${e.party ? " from " + e.party : ""} — ${what}` : `Paid ${amt}${e.party ? " to " + e.party : ""} — ${what}`;
+}
+
+// ---- the store: { v: 1, items: [commitment + id + created] } in localStorage "attune:life:v1" ----
+export const LIFE_KEY = "attune:life:v1";
+export function loadLife(store = typeof localStorage !== "undefined" ? localStorage : null) {
+  try { const j = JSON.parse((store && store.getItem(LIFE_KEY)) || "null"); return j && Array.isArray(j.items) ? j : { v: 1, items: [] }; } catch (e) { return { v: 1, items: [] }; }
+}
+export function saveLife(data, store = typeof localStorage !== "undefined" ? localStorage : null) {
+  try { store && store.setItem(LIFE_KEY, JSON.stringify(data)); } catch (e) {}
+  return data;
+}
+export function addCommitment(data, c, now = Date.now()) {
+  const id = "c" + now.toString(36) + Math.random().toString(36).slice(2, 6);
+  return { ...data, items: [...data.items, { ...c, id, created: now, paid: c.paid || [] }] };
+}
+export function togglePaid(data, id, i) {
+  return { ...data, items: data.items.map((c) => c.id !== id ? c : { ...c, paid: (c.paid || []).includes(i) ? c.paid.filter((x) => x !== i) : [...(c.paid || []), i].sort((a, b) => a - b) }) };
+}
+export function removeCommitment(data, id) { return { ...data, items: data.items.filter((c) => c.id !== id) }; }
+
+/** What is due soon across everything (for Home's "Today" and reminders): [{ c, i, date, amount, late }] within `days`. */
+export function dueSoon(data, now = Date.now(), days = 7) {
+  const today = iso(new Date(now)), until = iso(new Date(now + days * 86400000)), out = [];
+  for (const c of data.items || []) for (const s of scheduleOf(c, now)) if (!s.paid && s.date <= until) { out.push({ c, i: s.i, date: s.date, amount: s.amount, late: s.date < today }); }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** The model's fallback prompt and reader — the same fields, only when the rules return null. */
+export function lifeModelPrompt(text) {
+  return `Read this note about money between people, an installment, a savings circle, a bill, rent or a subscription. Note: «${String(text).slice(0, 240)}»
+Reply with ONLY one JSON object: {"kind": "installment"|"debt"|"circle"|"bill"|"rent"|"subscription"|null, "person": name or "", "dir": "in" if money comes to the writer else "out", "amount": each payment as a number, "count": number of payments or 0, "every": "month"|"week"|"year"|null, "start": "YYYY-MM-DD" or ""}`;
+}
+export function readLifeModel(text, currency = "EGP") {
+  const m = /\{[\s\S]*\}/.exec(String(text || "")); if (!m) return null;
+  let j; try { j = JSON.parse(m[0]); } catch (e) { return null; }
+  if (!["installment", "debt", "circle", "bill", "rent", "subscription"].includes(j.kind) || !(Number(j.amount) > 0)) return null;
+  const count = Math.max(0, Math.min(600, Math.round(Number(j.count) || 0)));
+  return { kind: j.kind, person: String(j.person || "").slice(0, 60), dir: j.dir === "in" ? "in" : "out", amount: Number(j.amount), count, total: count ? Number(j.amount) * count : 0,
+    every: ["month", "week", "year"].includes(j.every) ? j.every : null, start: /^\d{4}-\d{2}-\d{2}$/.test(j.start || "") ? j.start : "", currency, paid: [], title: "", model: true };
+}
+
+/** v6.27: a statement typed in Chat that is a commitment («Ahmed owes me 12,000, 1,000 a month for a year») → it, else null.
+ *  Questions («how much does Ahmed owe me?», «كام عليه؟») and advice requests stay in Chat. */
+export function chatLifeIntent(text, opts) {
+  const t = String(text || "").trim();
+  if (!t || t.length > 200 || /[?؟]\s*$/.test(t) || /^(how|what|why|when|should|can|is|are|do|does|كام|ازاي|إزاي|ليه|امتى|هل|ايه|إيه)\b/i.test(t) || /\b(how much|how many|advice|calculate|interest rate)\b/i.test(t)) return null;
+  const c = parseLife(t, opts);
+  return c && (c.person || c.kind === "circle" || c.kind === "installment" || c.every) ? c : null;
+}

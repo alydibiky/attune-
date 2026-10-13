@@ -71,5 +71,22 @@ ok(e.direction === "in" && e.amount === 1000 && e.party === "Ahmed" && /installm
 const cc = P("جمعية ٢٠٠٠ في الشهر لمدة ١٠ شهور ودوري الرابع");
 ok(tickEntry(cc, 0, now).direction === "out", "paying into a savings circle is money out");
 
+// ---- the store, ticks → Money, due soon, the model fallback ----
+const L = await import("../../web-src/life.js");
+let d = L.addCommitment({ v: 1, items: [] }, P("Ahmed owes me 12,000, 1,000 a month starting November"), now);
+const id = d.items[0].id;
+d = L.togglePaid(d, id, 0); d = L.togglePaid(d, id, 1); d = L.togglePaid(d, id, 1);
+ok(JSON.stringify(d.items[0].paid) === "[0]", "a tick, and a tick undone");
+ok(L.tickText(d.items[0], 1, now) === "Received 1,000 EGP from Ahmed — installment 2 of 12", "the sentence Money reads: " + L.tickText(d.items[0], 1, now));
+const soon = L.dueSoon(L.addCommitment({ v: 1, items: [] }, P("فاتورة الكهربا ٦٤٠ يوم الخميس"), now), now, 7);
+ok(soon.length === 1 && soon[0].date === "2026-10-15" && !soon[0].late, "due this week: the electricity bill on Thursday");
+const mem = {}; const store = { getItem: (k) => mem[k] || null, setItem: (k, v) => { mem[k] = v; } };
+L.saveLife(d, store); ok(L.loadLife(store).items.length === 1, "saved and read back");
+const r = L.readLifeModel('ok {"kind":"installment","person":"Hana","dir":"in","amount":250,"count":8,"every":"week","start":"2026-10-20"}');
+ok(r && r.kind === "installment" && r.total === 2000 && r.every === "week" && r.model, "the model's JSON → the same fields");
+ok(L.readLifeModel('{"kind":"lottery","amount":5}') === null, "anything outside the fixed kinds is dropped");
+// ---- Chat: statements are saved, questions stay in Chat ----
+for (const q of ["Ahmed owes me 12,000, 1,000 a month for a year", "جمعية ٢٠٠٠ في الشهر لمدة ١٠ شهور ودوري الرابع", "Netflix 200 every month", "I lent Sara 500"]) ok(L.chatLifeIntent(q, { now }), `Chat «${q}» → People & plans`);
+for (const q of ["How much does Ahmed owe me?", "كام عليه احمد؟", "What is 12000 / 12", "should I lend Omar 2000", "Write a poem about rent"]) ok(!L.chatLifeIntent(q, { now }), `Chat «${q}» stays in Chat`);
 console.log(fail ? `${fail} of ${n} FAILED` : `v727life ok (${n} checks)`);
 process.exit(fail ? 1 : 0);

@@ -12,6 +12,7 @@ import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import { chatMapIntent } from "./mapintent.js";
+import { chatLifeIntent } from "./life.js";
 import { wantsDoc } from "./slides.js";
 import { detectLang, replyLanguageRule, voiceTag, deviceLang } from "./langs.js";
 import { looksLikeFoodLog } from "./fit.js";
@@ -703,6 +704,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       patchChat(cid, (ch) => ({ ...ch, updated: Date.now(), messages: [...ch.messages,
         { id: newId(), role: "user", text: typed },
         { id: newId(), role: "assistant", text: m.text, calc: true, askText: typed }] }));
+      setText("");
+      return;
+    }
+
+    // v6.27: «Ahmed owes me 12,000, 1,000 a month for a year» — a commitment: saved in People & plans (checkboxes, Money)
+    const lifeC = route && !img ? chatLifeIntent(typed) : null;
+    if (lifeC) {
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "A commitment — save it in People & plans", detail: typed,
+          actions: [["Save it", "life"], ["Just answer", "answer"]] }, lifeText: typed }] }));
       setText("");
       return;
     }
@@ -1518,6 +1531,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (act === "cycle") api.openTab("cycle");
     else if (act === "undo") { m.undo && m.undo(); patchMsg(chat.id, m.id, { card: { ...m.card, title: "Removed", detail: "", actions: [] } }); }
     else if (act === "money") api.sendToMoney(m.payText);
+    else if (act === "life") window.dispatchEvent(new CustomEvent("attune-life", { detail: { text: m.lifeText || "" } }));
     else if (act === "map") window.dispatchEvent(new CustomEvent("attune-map", { detail: { q: m.mapQuery || "" } }));
     else if (act === "studio") window.dispatchEvent(new CustomEvent("attune-studio", { detail: { prompt: m.studioPrompt || "" } }));
     else if (act === "answer") {

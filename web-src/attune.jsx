@@ -44,6 +44,7 @@ import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
 import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.js";
 import { MoneyDesk } from "./money-desk.jsx";
+import { LifePage } from "./life-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
@@ -7350,6 +7351,7 @@ const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = dev
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
+  ["life", "People & plans", "Debts, installments, savings circles, bills — a checkbox for every payment", Users],   // v6.27: the Life layer
   ["slides", "Slides & Reports", "A designed PowerPoint or a full report from one sentence", Presentation],
   ["fit", "Fit & Food", "Calories from a sentence or a photo, 50+ recipes, workouts", Apple],
   ["deal", "Deal Check", "Before you pay or sign", ShieldCheck],
@@ -8131,6 +8133,12 @@ export default function App() {
     };
     window.addEventListener("attune-share", onShare);
     return () => window.removeEventListener("attune-share", onShare);
+  }, []);
+  // v6.27: "Save it" from a commitment typed in Chat — People & plans opens with it read
+  useEffect(() => {
+    const on = (e) => { try { localStorage.setItem("attune:life:ask", String((e.detail && e.detail.text) || "")); } catch (x) {} setMode("life"); };
+    window.addEventListener("attune-life", on);
+    return () => window.removeEventListener("attune-life", on);
   }, []);
   // v6.27: "Show on the map" from a map question in Chat — Maps opens and runs the search
   useEffect(() => {
@@ -9747,6 +9755,9 @@ export default function App() {
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
             load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />}
             onExit={goBack} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
+        ) : mode === "life" ? (
+          <LifePage flash={flash} toMoney={(t) => sendToMoney(t, tr("Payment read — pick the account and confirm"))}
+            ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 160, temperature: 0, think: false }) : null} />
         ) : mode === "money" ? (
           wide ? (
             // v6.27: design A "Calm" — a real computer layout for Money (money-desk.jsx); the phone keeps Money as it is
