@@ -1199,6 +1199,22 @@ internet searching … improve internet searching and make it faster".
 - Tests: `tests/unit/v727paylog.test.mjs`, `tests/e2e_v727paylog.py` (by hand, by itself with Money closed, by itself
   with Money open, access off), e2e_v727moneydesk now checks Money really opens its Bills screen.
 
+### 5.66 (13 Oct 2026) — Money Guardian: "Attune pays for itself" (the reason to pay for Pro)
+- **What it is:** `guardian.js` reads the person's own data on the phone (ledger.v3 — filled by itself from payment
+  notifications —, People & plans, Money's bills) and finds money BY CODE: `late` (someone owes you and the date passed →
+  a polite reminder written by code, Egyptian Arabic for an Arabic name, sent on WhatsApp), `double` (same amount, same
+  merchant, ≤ 10 min → ask the bank to refund one), `creep` (a steady monthly payment went up ≥ 5 % → the yearly cost),
+  `subs` (a subscription paid 3+ months → the yearly total), `fees` (bank fees this month), `due` (a bill in ≤ 3 days).
+- **The honest counter** ("attune:guardian:v1"): only what the person did and marked counts — refund got back, a
+  subscription cancelled (counts one month for every month since), a rise fixed (rise ÷ 12 a month), and a late debt
+  that was ticked paid in People & plans AFTER a Guardian reminder (`noteReminded` → `collected`, wired in life-ui tick).
+- **UI:** `guardian-ui.jsx` — `GuardianPage` (mode "guardian", first in All → Money & people) and `GuardianCard` on the
+  phone Home ("3 ways to save 2,790"; Pro also "X saved for you this month"). **Pro gate:** Free sees the first finding in
+  full and the rest as "2 more ways to save 1,790" → the plan; the counter shows "—". Findings carry `T`/`D` templates so
+  titles are translated (i18n-ar.js).
+- Tests: `tests/unit/v727guardian.test.mjs` (14), `tests/e2e_v727guardian.py` (Pro: findings, WhatsApp, refund counted,
+  collected after a reminder; Free: one shown, rest locked → plan). audit.py TOOLS starts with "guardian".
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

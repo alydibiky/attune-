@@ -48,6 +48,7 @@ import { MoneyDesk } from "./money-desk.jsx";
 import { LifePage } from "./life-ui.jsx";
 import { PhoneHome } from "./home-ui.jsx";
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
+import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
@@ -7356,6 +7357,7 @@ const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = dev
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
+  ["guardian", "Money Guardian", "Finds money in your payments: late debts, double charges, price rises, subscriptions", ShieldCheck],   // v6.27
   ["life", "People & plans", "Debts, installments, savings circles, bills — a checkbox for every payment", Users],   // v6.27: the Life layer
   ["slides", "Slides & Reports", "A designed PowerPoint or a full report from one sentence", Presentation],
   ["fit", "Fit & Food", "Calories from a sentence or a photo, 50+ recipes, workouts", Apple],
@@ -7392,7 +7394,7 @@ const MORE_TOOLS = [
 // v6.27 (design A "Calm", the agreed tool map): the areas, then the two add-ons. Video Downloader stays (Ali, 13 Oct),
 // in Files — it saves a file to the phone.
 const MORE_GROUPS = [
-  ["Money & people", ["life", "deal", "reminders"]],
+  ["Money & people", ["guardian", "life", "deal", "reminders"]],
   ["Health", ["fit", "cycle"]],
   ["Mind & learning", ["memory", "shelf", "knowledge", "learn", "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
@@ -9159,7 +9161,7 @@ export default function App() {
         ) : null}
 
         <Guard key={"g-" + mode} name={mode}>{mode === "home" && !wide ? (
-          <PhoneHome navTo={(m) => navTo(m)} openAll={() => setMoreOpen(true)} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
+          <PhoneHome navTo={(m) => navTo(m)} openAll={() => setMoreOpen(true)} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
             onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
@@ -9779,6 +9781,8 @@ export default function App() {
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
             load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />}
             onExit={goBack} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
+        ) : mode === "guardian" ? (
+          <GuardianPage pro={proActive} openPlan={() => setShowUpgrade(true)} flash={flash} />
         ) : mode === "life" ? (
           <LifePage flash={flash} toMoney={(t) => sendToMoney(t, tr("Payment read — pick the account and confirm"))}
             remind={(r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "life" })}

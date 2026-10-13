@@ -8,6 +8,7 @@ import { Users, Check, Trash2, Wallet, Sparkles } from "lucide-react";
 import { tr } from "./i18n.js";
 import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, lifeModelPrompt, readLifeModel, nextReminder } from "./life.js";
 import { fmt } from "./money-calm.js";
+import { loadGuardian, saveGuardian, collected } from "./guardian.js";
 
 const KIND = { installment: "Installments", debt: "Money between people", circle: "Savings circle", bill: "Bill", rent: "Rent", subscription: "Subscription" };
 const EVERY = { month: "a month", week: "a week", year: "a year" };
@@ -80,6 +81,8 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
   const save = () => { const d = addCommitment(data, draft); put(d); remindFor(d.items[d.items.length - 1]); setDraft(null); setText(""); flash && flash(tr("Saved — the payments are on your list")); };
   const tick = (c, i, on) => {
     const d = togglePaid(data, c.id, i); put(d); remindFor(d.items.find((x) => x.id === c.id));
+    // the Money Guardian counts a late payment that came back after its reminder as saved
+    if (on) { try { const s = progressOf(c).schedule[i]; saveGuardian(collected(loadGuardian(), c.id, i, s ? s.amount : c.amount)); } catch (e) {} }
     if (on && toMoney && window.confirm(tr("Add it to Money? {t}", { t: tickText(c, i) }))) toMoney(tickText(c, i));
   };
   const remove = (c) => { if (window.confirm(tr("Delete this?"))) { put(removeCommitment(data, c.id)); unremind && unremind("life-" + c.id); } };

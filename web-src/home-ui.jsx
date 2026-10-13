@@ -16,7 +16,7 @@ import { targetsOf } from "./fithome.js";
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
 
-export function PhoneHome({ navTo, onAsk, openAll, name }) {
+export function PhoneHome({ navTo, onAsk, openAll, name, guardian }) {
   const [text, setText] = useState("");
   const now = new Date();
   const data = useMemo(() => {
@@ -51,6 +51,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name }) {
           </>) : (
           <button onClick={() => navTo("life")} className="w-full text-start py-1.5 c-sub flex items-center gap-2" data-testid="home-empty"><Users size={15} />{tr("Nothing due. Add a debt, an installment or a bill in People & plans.")}</button>)}
       </div>
+      {guardian || null}
       <div className="grid grid-cols-2 gap-3">
         <button className="c-card text-start" onClick={() => navTo("money")} data-testid="home-spent">
           <span className="c-lbl">{tr("Spent this month")}</span>
