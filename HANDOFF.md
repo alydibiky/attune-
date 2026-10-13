@@ -1072,7 +1072,8 @@ internet searching … improve internet searching and make it faster".
   ground. New pack **`wld`** (world overview, maxzoom 6) built by `map-pack.yml` job `world`; the map page downloads it
   by itself on Wi-Fi when no map is installed, else shows "No map on this device yet" + "Download the world map".
   `countryOf("wld")` / `countryOf("online")` have names (the update banner crashed on `wld` before).
-- **Online planet (Ali approved Cloudflare R2):** `map-planet.yml` streams the newest Protomaps planet (~120 GB) into
+- **(WITHDRAWN 13 Oct — Ali: "I don't want to pay for maps"; OpenFreeMap rejected too; map-planet.yml removed; the online
+  code stays OFF while ONLINE_PLANET_URL is empty, until Ali picks the free route)** Online planet: `map-planet.yml` streams the newest Protomaps planet (~120 GB) into
   Ali's R2 bucket every Saturday (rclone `copyurl`, 64 MB parts; skips when `planet.json` already has that build). Needs
   secrets `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`. The page reads it with HTTP range
   requests when `OM.ONLINE_PLANET_URL` (offlinemap.js) is set — EMPTY until Ali's bucket has a public domain + CORS for
