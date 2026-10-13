@@ -917,6 +917,16 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun mapPacks(): String = try { JSONObject().put("packs", MapPacks.list(ctx)).put("assets", MapPacks.assetsInstalled(ctx)).toString() } catch (e: Throwable) { "{\"packs\":[]}" }
 
+    /** v6.27 "Money tracks itself": payment notifications read on the phone (PayListener). */
+    @JavascriptInterface
+    fun payAccess(): Boolean = try { PayLog.enabled(ctx) } catch (e: Throwable) { false }
+    @JavascriptInterface
+    fun openPayAccess() { PayLog.openSettings(ctx) }
+    @JavascriptInterface
+    fun payQueue(): String = try { PayLog.list(ctx) } catch (e: Throwable) { "[]" }
+    @JavascriptInterface
+    fun payForget(idsJson: String) { try { PayLog.remove(ctx, idsJson) } catch (e: Throwable) { } }
+
     /** v6.27: a piece of a published map file, read online ({code, name, offset, length}) → {b64}. */
     @JavascriptInterface
     fun mapRange(id: String, arg: String) {

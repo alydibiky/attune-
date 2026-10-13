@@ -3656,4 +3656,11 @@ export const AR = {
   "Business (add-on)": "الأعمال (إضافة)",
   "Create (add-on)": "الإبداع (إضافة)",
   "from People & plans": "من «الأشخاص والالتزامات»",
+  // v6.27: Money tracks itself
+  "Log spending by itself": "سجّل المصروفات تلقائيًا",
+  "Turn on notification access and Attune reads your bank, InstaPay and wallet notifications on this phone, then asks you to add each payment. Never SMS; nothing leaves the phone.": "فعّل الوصول إلى الإشعارات ليقرأ Attune إشعارات البنك وإنستاباي والمحافظ على هذا الهاتف، ثم يسألك عن إضافة كل دفعة. لا يقرأ الرسائل القصيرة أبدًا، ولا يغادر شيء الهاتف.",
+  "Turn on": "تفعيل",
+  "{n} payments read from your notifications": "{n} مدفوعات قُرئت من إشعاراتك",
+  "Dismiss": "تجاهل",
+  "Add all {n}": "إضافة الكل ({n})",
 };

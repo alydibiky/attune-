@@ -47,6 +47,7 @@ import { myMoneyIntent, answerMyMoney, loadLedger, catAsked } from "./myledger.j
 import { MoneyDesk } from "./money-desk.jsx";
 import { LifePage } from "./life-ui.jsx";
 import { PhoneHome } from "./home-ui.jsx";
+import { PayInbox } from "./paylog-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
@@ -6206,6 +6207,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
           {parsed.direction === "out" ? "−" : "+"}{parsed.amount} {parsed.currency || ""}{parsed.party ? " · " + parsed.party : ""} · {tr("read from: “")}{parsed.amountSource}”
         </button>
       ) : null}
+      {/* v6.27 "Money tracks itself": payments read from notifications, to add with one tap */}
+      <PayInbox N={NATIVE} onAdd={(txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); }} />
       <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={{ border: 0 }} />
       {sheet ? (
         <div className="absolute inset-0 z-10 bg-black/60 flex flex-col justify-end" onClick={() => setSheet(false)}>
