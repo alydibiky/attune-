@@ -10070,8 +10070,8 @@ export default function App() {
                   className="att-scroll w-full min-h-[8.5rem] max-h-[45vh] bg-slate-950 border border-slate-800 rounded-xl p-3 text-[15px] leading-relaxed text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               )}
 
-              {/* toolbar */}
-              <div className="flex items-center gap-1.5 mt-2.5">
+              {/* toolbar (wraps on a 320-px phone: "Go" went off the screen) */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
                 <label className="att-icon-btn" title={tr("Photo")}>
                   <ImagePlus size={18} />
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { loadImage(e.target.files && e.target.files[0]); e.target.value = ""; }} />
@@ -10084,11 +10084,11 @@ export default function App() {
                   <Brain size={18} /><span className="text-[11px] ms-1">{inThink ? tr("Think: on") : tr("Think")}</span></button>
                 <div className="flex-1" />
                 {inBusy ? (
-                  <button onClick={stopInstant} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-500/90 text-white text-sm font-semibold active:scale-95">
+                  <button onClick={stopInstant} className="ms-auto flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-500/90 text-white text-sm font-semibold active:scale-95">
                     <Square size={14} /> {tr("Stop")}</button>
                 ) : (
                   <button onClick={() => (photoMode ? runPhoto(tr("Explain it"), PHOTO_ACTIONS[3][1], "out") : runSmart())} disabled={!photoMode && !inText.trim()}
-                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold disabled:opacity-40 active:scale-95">
+                    className="ms-auto flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold disabled:opacity-40 active:scale-95">
                     <Send size={15} /> {tr("Go")}</button>
                 )}
               </div>

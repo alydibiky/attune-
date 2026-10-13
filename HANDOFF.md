@@ -1082,6 +1082,8 @@ internet searching … improve internet searching and make it faster".
   `place/compound` (rank 62) — they were dropped from offline search before (Overture added some). Takes effect on the
   next weekly pack build. Drawing compounds as labelled areas on the map is the next step (needs our own label layer).
 - Tests: `tests/unit/v722maps.test.mjs` (world name, online style), `tests/e2e_v722mapbuilder.py` (compounds).
+- `tests/audit.py` never finished since a full page (Fit/Money) hides the bottom bar: it now presses the app's Back
+  until the bar shows. It then found the Instant page's "Go" off a 320-px screen → that toolbar wraps now.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

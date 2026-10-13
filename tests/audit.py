@@ -56,15 +56,21 @@ with sync_playwright() as p:
             if errors: issues.append("JS: " + errors[-1][:120]); errors.clear()
             print(("%-3s %-12s " % (lang, name)) + ("OK" if not issues else " | ".join(issues)), flush=True)
         nav = page.locator("nav button")
+        def bar():   # a full page (Fit, Money…) hides the bottom bar: the app's own Back until it shows again
+            for _ in range(4):
+                if nav.last.is_visible(): return
+                page.keyboard.press("Escape"); page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(400)
         for i in range(nav.count() - 1):
+            bar()
+            if not nav.nth(i).is_visible(): print("%-3s %-12s skipped (bottom bar hidden)" % (lang, "tab%d" % i), flush=True); continue
             nav.nth(i).click(); page.wait_for_timeout(500); report("tab%d" % i)
         for i, t in enumerate(TOOLS):
-            page.locator("nav button").last.click(); page.wait_for_timeout(300)
+            bar(); page.locator("nav button").last.click(); page.wait_for_timeout(300)
             tiles = page.locator("[data-testid=more-group] button")
             if i >= tiles.count(): print(lang, t, "no tile"); continue
             tiles.nth(i).click(); page.wait_for_timeout(700); report(t)
         for label, sel in [("engine", 0), ("profile", 1), ("plan", 2), ("backup", 3)]:
-            page.locator("nav button").last.click(); page.wait_for_timeout(300)
+            bar(); page.locator("nav button").last.click(); page.wait_for_timeout(300)
             page.locator("[data-testid=more-settings] button").nth(sel).click(); page.wait_for_timeout(700); report(label)
             page.keyboard.press("Escape"); page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(300)
         ctx.close()
