@@ -7869,7 +7869,7 @@ export default function App() {
   // A payment waiting to be opened in Money (from a share, a photo or Instant).
   const [pendingPay, setPendingPay] = useState(null);
   const sendToMoney = (text, how) => { setPendingPay({ text, id: Date.now() }); setMode("money");
-    setToast(how || "Reading the payment in Money…"); setTimeout(() => setToast(""), 3000); };
+    showToast(how || "Reading the payment in Money…", 3000); };
   // Cycle tracker. Kept apart from Memory on purpose (see cycle.jsx).
   const [cycle, setCycle] = useState(() => cycleLoad());
   const [cycleOn, setCycleOn] = useState(() => { try { return localStorage.getItem("attune:cycle:on") === "1" || Object.keys(cycleLoad().days).length > 0; } catch (e) { return false; } });
@@ -8047,7 +8047,7 @@ export default function App() {
       } else if (d.state === "error") {
         LocalEngine.ready = false;
         setModelState((st) => (st === "downloading" ? st : "none"));
-        if (d.error) { setToast(d.error); setTimeout(() => setToast(""), 6000); }
+        if (d.error) { showToast(d.error, 6000); }
       } else {
         LocalEngine.ready = false;
         setModelState((st) => (st === "downloading" ? st : "none"));
@@ -8092,11 +8092,11 @@ export default function App() {
       const ok = await LocalEngine.load(tierForUi || null);
       LocalEngine.ready = !!ok;
       setModelState(ok ? "ready" : "none");
-      if (ok) { setToast(tr("Model running on this phone")); setTimeout(() => setToast(""), 2500); }
+      if (ok) { showToast(tr("Model running on this phone"), 2500); }
       return ok;
     } catch (e) {
       setModelState(LocalEngine.ready ? "ready" : "none");
-      setToast(String((e && e.message) || e)); setTimeout(() => setToast(""), 6000);
+      showToast(String((e && e.message) || e), 6000);
       return false;
     } finally { installIdRef.current = null; setDlStage(""); refreshModels(); }
   };
@@ -8113,7 +8113,7 @@ export default function App() {
       setModelState(ok ? "ready" : "none");
     } catch (e) {
       setModelState(LocalEngine.ready ? "ready" : "none");
-      setToast(String((e && e.message) || e)); setTimeout(() => setToast(""), 6000);
+      showToast(String((e && e.message) || e), 6000);
     } finally { refreshModels(); }
   };
   const removeInstalled = (modelId) => {
@@ -8140,7 +8140,7 @@ export default function App() {
         const url = String(d.image);
         setInImage({ data: url.split(",")[1], media: "image/jpeg", url }); setInResult(""); setInAction(""); setInLogged(null);
         navTo("instant");
-        setToast(tr("Photo received — a receipt? tap “Add to Money”")); setTimeout(() => setToast(""), 3500);
+        showToast(tr("Photo received — a receipt? tap “Add to Money”"), 3500);
         return;
       }
       // v5.35: WhatsApp → Export chat → Attune: the chat opens in Chat X-Ray
@@ -8154,13 +8154,13 @@ export default function App() {
         if (link && ["direct", "archive", "commons"].includes(vk) && shared.length - link.length < 120) { setVideoIn(link + "#" + Date.now()); navTo("video"); return; }
         const pay = parsePayment(shared, { now: Date.now(), ...payOpts() });
         if (pay && pay.ok) { setPendingPay({ text: shared, id: Date.now() }); navTo("money");
-          setToast(tr("Payment received — pick the account and confirm")); setTimeout(() => setToast(""), 3500); return; }
+          showToast(tr("Payment received — pick the account and confirm"), 3500); return; }
       }
       // v6.12: a conversation shared from Gemini / ChatGPT / Claude… (Share → Attune) opens in Chat as its context
       if (shareLink(shared)) { setChatSeed("\u0001" + shared); navTo("chat"); return; }
       if (d.kind === "selection") {
         setInText(shared); setInResult(""); navTo("instant");
-        setToast(tr("Your selected text is ready — pick what to do with it")); setTimeout(() => setToast(""), 3000);
+        showToast(tr("Your selected text is ready — pick what to do with it"), 3000);
         return;
       }
       const r = memMake({ kind: "note", title: shared.slice(0, 60), text: shared, output: "", tags: ["shared"] });
@@ -8300,7 +8300,10 @@ export default function App() {
   const strength = useMemo(() => scorePrompt(input), [input]);
   const lint = useMemo(() => lintPrompt(input), [input]);
   const setOpt = (k, v) => setOpts((o) => ({ ...o, [k]: v }));
-  const flash = (m) => { setToast(m); setTimeout(() => setToast(""), 2000); };
+  // each message gets its full 2 s: an earlier message's timer must not hide a newer one
+  const flashT = useRef(0);
+  const showToast = (m, ms = 2000) => { setToast(m); clearTimeout(flashT.current); flashT.current = setTimeout(() => setToast(""), ms); };
+  const flash = (m) => showToast(m, 2000);
   const gate = (fn) => (proActive ? fn() : setShowUpgrade(true));
   // On-device inference is free to run, so it is never metered. Credits only
   // gate the cloud engine, which is the part that actually costs money.
