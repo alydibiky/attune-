@@ -3,7 +3,7 @@
    the key facts, money and the fair-price check) · Say it (hand-written phrases: copy, speak aloud, show big; a sign or a menu
    → Translate) · Ask · Know (overcharges, money, manners, health and everything else, folded).
    The logic is in travel.js (code decides; tests/unit/v727travel.test.mjs). Tests: tests/e2e_v727travel.py.               */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Plane, Languages, RefreshCw, Loader2, Copy, Volume2, AlertTriangle, Maximize2, X, Search, Camera, ShieldCheck, Bell, MapPin, Check } from "lucide-react";
 import { tr } from "./i18n.js";
 import * as T from "./travel.js";
@@ -37,6 +37,9 @@ export function TravelPage(p) {
     online, runSync, syncing, packFeed, netInfo, dateLocale, nationality, setNationality, NATIONALITIES, entry, tripChecklist, remember, flash,
     rates, convert, packCurrency, convAmt, setConvAmt, travelQ, setTravelQ, askTravel, travelA, loading, N, native, remind, openTranslate, openMap, openAgent } = p;
   const [tab, setTab] = useState("trip");
+  // v6.28: a computer-width window (the layout A breakpoint) — the Trip tab places its flights block by it
+  const [wide, setWide] = useState(() => { try { return window.matchMedia("(min-width: 1024px)").matches; } catch (e) { return false; } });
+  useEffect(() => { try { const m = window.matchMedia("(min-width: 1024px)"); const on = () => setWide(m.matches); m.addEventListener("change", on); return () => m.removeEventListener("change", on); } catch (e) {} }, []);
   const [pick, setPick] = useState(false);
   const [find, setFind] = useState("");
   const [phraseFilter, setPhraseFilter] = useState("");
@@ -71,6 +74,22 @@ export function TravelPage(p) {
   };
   const say = (ph) => speakNow(ph.loc, { lang: pack.lang, rate: 0.9, native });
 
+  const owedCard = (<>
+          {/* v6.27 What you're owed: compensation for a delayed or cancelled flight, worked out by code */}
+          <button onClick={() => openOwed({ flight: { from: trip.from || "", to: air[0] || "", date: trip.depart || "" } })} className="c-card w-full text-start flex items-center gap-3 cursor-pointer" data-testid="travel-owed">
+            <span className="c-ic"><Plane size={16} /></span><span className="flex-1"><b className="block text-[14px]">{tr("Flight delayed or cancelled?")}</b><span className="c-sub">{tr("See what the airline owes you — up to €600 — and get the letter")}</span></span><span className="c-acc">›</span></button>
+  </>);
+  const book = (<>
+          {/* flights and hotels: the agent's links, filled from the trip; you choose and pay */}
+          <Section title="Flights and hotels" testid="travel-book">
+            {!trip.from || !trip.depart ? <p className="c-sub m-0">{tr("Add where you fly from and the dates above.")}</p> : null}
+            {T.tripFlights(trip, air[0]).map((l) => <button key={l.label} onClick={() => openAgent(l)} className="w-full flex items-center justify-between text-start bg-transparent border-0 p-0 py-1 cursor-pointer" style={{ color: "var(--c-ink)" }} data-testid="travel-flight"><span><Plane size={13} className="inline me-1.5 c-acc" />{l.label} <span className="c-sub">{trip.from} → {air[0]} · {tr(l.why)}</span></span><span className="c-acc">›</span></button>)}
+            {T.tripHotels(trip, air[1]).map((l) => <button key={l.label} onClick={() => openAgent(l)} className="w-full flex items-center justify-between text-start bg-transparent border-0 p-0 py-1 cursor-pointer" style={{ color: "var(--c-ink)" }} data-testid="travel-hotel"><span><MapPin size={13} className="inline me-1.5 c-acc" />{l.label} <span className="c-sub">{air[1]} · {tr(l.why)}</span></span><span className="c-acc">›</span></button>)}
+            {trip.from && trip.depart ? <p className="c-sub m-0">{tr("Attune opens the search with your dates and marks the best offer. You choose and pay.")}</p> : null}
+          </Section>
+
+
+  </>);
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="travel-page">
       {/* the country — one line; the full list opens only when asked */}
@@ -134,6 +153,8 @@ export function TravelPage(p) {
                   {pp.status === "ok" ? <ShieldCheck size={15} className="shrink-0 mt-0.5" /> : <AlertTriangle size={15} className="shrink-0 mt-0.5" />}
                   {tr(pp.status === "ok" ? "Valid for 6+ months after you return — fine for every country." : pp.status === "short" ? "Less than 6 months left after you return — many countries and airlines refuse this. Renew it or check this country's rule." : pp.status === "expires-during" ? "It expires during the trip — renew it before you go." : "It has expired — renew it before you go.")} ({tr("expires")} {pp.expires})</p>}
           </Section>
+          {/* v6.28: on a computer the flights and hotels sit under the passport, so the two columns end near each other */}
+          {wide ? book : null}
           </div><div className="space-y-3">
 
           {/* entry rules for this passport */}
@@ -153,18 +174,8 @@ export function TravelPage(p) {
             <p className="c-warn text-[12px] m-0">{tr("Checked")} {entry.asOf}{tr(". Entry rules change with no notice and the cost of being wrong is a denied boarding — confirm with the embassy or the official portal before you book.")}</p>
           </Section>) : null}
 
-          {/* flights and hotels: the agent's links, filled from the trip; you choose and pay */}
-          <Section title="Flights and hotels" testid="travel-book">
-            {!trip.from || !trip.depart ? <p className="c-sub m-0">{tr("Add where you fly from and the dates above.")}</p> : null}
-            {T.tripFlights(trip, air[0]).map((l) => <button key={l.label} onClick={() => openAgent(l)} className="w-full flex items-center justify-between text-start bg-transparent border-0 p-0 py-1 cursor-pointer" style={{ color: "var(--c-ink)" }} data-testid="travel-flight"><span><Plane size={13} className="inline me-1.5 c-acc" />{l.label} <span className="c-sub">{trip.from} → {air[0]} · {tr(l.why)}</span></span><span className="c-acc">›</span></button>)}
-            {T.tripHotels(trip, air[1]).map((l) => <button key={l.label} onClick={() => openAgent(l)} className="w-full flex items-center justify-between text-start bg-transparent border-0 p-0 py-1 cursor-pointer" style={{ color: "var(--c-ink)" }} data-testid="travel-hotel"><span><MapPin size={13} className="inline me-1.5 c-acc" />{l.label} <span className="c-sub">{air[1]} · {tr(l.why)}</span></span><span className="c-acc">›</span></button>)}
-            {trip.from && trip.depart ? <p className="c-sub m-0">{tr("Attune opens the search with your dates and marks the best offer. You choose and pay.")}</p> : null}
-          </Section>
-
-          {/* v6.27 What you're owed: compensation for a delayed or cancelled flight, worked out by code */}
-          <button onClick={() => openOwed({ flight: { from: trip.from || "", to: air[0] || "", date: trip.depart || "" } })} className="c-card w-full text-start flex items-center gap-3 cursor-pointer" data-testid="travel-owed">
-            <span className="c-ic"><Plane size={16} /></span><span className="flex-1"><b className="block text-[14px]">{tr("Flight delayed or cancelled?")}</b><span className="c-sub">{tr("See what the airline owes you — up to €600 — and get the letter")}</span></span><span className="c-acc">›</span></button>
-
+          {!wide ? book : null}
+          {owedCard}
           <Section title="Apps you'll need" right={<span className="c-sub">{tr("install before you fly")}</span>}>
             <ul className="space-y-1.5 m-0 p-0 list-none" dir={dirMine}>{pv("apps").map((a, i) => { const m = a.match(/^(.*?)\s+[—–-]\s+(.*)$/); return <li key={i} className="text-[13.5px]">{tr(m ? m[1] : a)}{m ? <span className="c-sub"> — {tr(m[2])}</span> : null}</li>; })}</ul>
             <p className="c-sub m-0">{tr("Some of these can't be installed or signed up for once you're in the country — do it while you still have your home connection.")}</p>

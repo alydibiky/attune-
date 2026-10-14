@@ -253,7 +253,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
       return beside(
         <section className="p-4 space-y-3" data-testid="quiz-result">
           <p className="text-2xl font-bold text-slate-100">{right} / {quiz.questions.length}</p>
-          <p className="text-[13px] text-slate-300">{right === quiz.questions.length ? tr("Perfect — well done!") : tr("What you missed comes back as a quick review in your next lessons.")}</p>
+          <p className="text-[13px] text-slate-300">{right === quiz.questions.length ? tr("Perfect — well done!") : tr("What you missed comes back in later lessons — soon at first, then further apart — until you know it.")}</p>
           <button className={primary} onClick={() => { const f = D.finishQuiz(course, quiz, quiz.picks); putCourse(f.course); setQuiz(null); setView("course"); }} data-testid="quiz-finish">{tr("Done")}</button>
         </section>);
     }
@@ -338,6 +338,8 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         </div>
         <div className="h-1.5 rounded bg-slate-800"><div className="h-1.5 rounded bg-teal-500" style={{ width: `${Math.round((doneN / Math.max(1, course.plan.length)) * 100)}%` }} /></div>
         {busy && !side ? <Working {...busy} /> : null}
+        {(() => { const r = D.reviewStatus(course); return r.due + r.waiting + r.learned ? (
+          <p className="text-[12px] text-slate-400 m-0" data-testid="srs-status">🔁 {[r.due ? tr("{n} to review in the next lesson", { n: Math.min(2, r.due) }) : "", r.waiting ? tr("{n} coming back later", { n: r.waiting }) + (r.next ? " (" + new Date(r.next).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + ")" : "") : "", r.learned ? tr("{n} learned", { n: r.learned }) : ""].filter(Boolean).join(" · ")}</p>) : null; })()}
         {due && !busy ? <button className="w-full text-start rounded-xl border border-amber-700 bg-amber-500/10 p-3" onClick={() => startQuiz(due)} data-testid="quiz-card">
           <p className="text-sm font-semibold text-amber-100">{tr("Quiz time")}</p><p className="text-[12px] text-amber-200/80">{tr("{n} questions on lessons {a}–{b}", { n: 5, a: due[0].n + 1, b: due[due.length - 1].n + 1 })}</p></button> : null}
         {today ? <button className="w-full text-start rounded-xl border border-teal-700 bg-teal-500/10 p-3" onClick={() => { putCourse(D.openLesson(course, today.n)); setLessonN(today.n); setView("lesson"); }} data-testid="today-lesson">

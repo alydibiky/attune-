@@ -19,7 +19,8 @@ import { LookStyle, PhotoMarks, PulseLoader } from "./fitlook-ui.jsx";
 import * as P from "./fitplus.js";
 import * as Y from "./fityazio.js";
 import * as MI from "./fitmicro.js";
-import { WatchCard, Grades, DayQuality, RamadanCard, QuickLog, SaveMyMeal, WeekPlanView, WeekReport, BodyCard, FitSettings, RAMADAN_NAMES } from "./fitplus-ui.jsx";
+import * as CARE from "./care.js";
+import { WatchCard, Grades, DayQuality, RamadanCard, InsulinCard, QuickLog, SaveMyMeal, WeekPlanView, WeekReport, BodyCard, FitSettings, RAMADAN_NAMES } from "./fitplus-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as H from "./fithome.js";
 import { AR } from "./i18n-ar.js";
@@ -919,6 +920,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
   useSubBack(!!copyOf, () => setCopyOf(null));
   const left = tg.kcal - tot.kcal + tot.burned;
   const isToday = dayKey === F.today();
+  const onInsulin = useMemo(() => { try { return CARE.insulinState(CARE.loadCare()).onInsulin; } catch (e) { return false; } }, [dayKey]);   // v6.28: carbs per meal for insulin users
   const shift = (n) => { const d = new Date(dayKey + "T12:00:00"); d.setDate(d.getDate() + n); const k = F.today(d); if (k <= F.today()) setDayKey(k); };
   const [now, setNow] = useState(Date.now());
   useEffect(() => { if (!st.fast) return; const h = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(h); }, [st.fast]);
@@ -952,7 +954,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
     return (
       <div key={m} className={variant === "classic" ? "p-3" : variant === "rings" ? "rounded-2xl bg-slate-900 p-3.5" : "rounded-2xl bg-slate-900 p-3.5 shadow-sm"} style={vivid ? { borderInlineStart: "6px solid " + ms.col } : undefined} data-testid={"fit-meal-" + m}>
         <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0"><div className="text-white font-medium">{variant !== "classic" && variant !== "rings" ? <span className="me-1.5" aria-hidden="true">{ms.em}</span> : null}{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])} <span className="text-[12px] text-slate-400 tabular-nums">{sum.kcal} {L("kcal", "سعرة")}</span></div></div>
+          <div className="min-w-0"><div className="text-white font-medium">{variant !== "classic" && variant !== "rings" ? <span className="me-1.5" aria-hidden="true">{ms.em}</span> : null}{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])} <span className="text-[12px] text-slate-400 tabular-nums">{sum.kcal} {L("kcal", "سعرة")}{onInsulin && items.length ? <b className="ms-1.5 text-amber-200" data-testid="fit-meal-carbs">· {Math.round(sum.c || 0)} {L("g carbs", "جم كربوهيدرات")}</b> : null}</span></div></div>
           <span className="flex items-center gap-1.5 shrink-0">
             {items.length ? <button onClick={() => setCopyOf({ slot: m })} className="min-h-[48px]! min-w-[48px] rounded-full bg-slate-800 text-slate-300 flex items-center justify-center" aria-label={L("Copy to another day", "نسخ إلى يوم آخر")} data-testid={"fit-copy-" + m}><Copy size={17} /></button> : null}
             <button onClick={() => setAdding(m)} className={"min-h-[48px]! min-w-[48px] rounded-full flex items-center justify-center shrink-0 " + (vivid ? "text-white" : "bg-emerald-600/20 text-emerald-300")} style={vivid ? { background: ms.col } : undefined} data-testid={"fit-add-" + m} aria-label={L(`Add to ${MEAL_NAMES[m][0]}`, `أضف إلى ${MEAL_NAMES[m][1]}`)}><Plus size={20} /></button>
@@ -1021,6 +1023,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
       )}
 
       {st.ramadan && st.ramadan.on && isToday ? <RamadanCard {...{ L, ar, tg, city: st.ramadan.city }} /> : null}
+      {isToday ? <InsulinCard {...{ L, ar, day }} carbsToday={tot.c} /> : null}
       </div>
 
       <div className="space-y-3 lg:col-start-2 lg:row-start-1 lg:row-span-2 min-w-0" data-testid="fit-today-meals">

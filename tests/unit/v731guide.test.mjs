@@ -1,0 +1,23 @@
+// v6.28 How to use Attune: every tool in the app's tool list has its guide, each with 3 steps and a tip in English AND Arabic.
+import fs from "fs";
+import * as G from "../../web-src/guide.js";
+const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
+const src = fs.readFileSync(new URL("../../web-src/attune.jsx", import.meta.url), "utf8");
+const block = src.slice(src.indexOf("const MORE_TOOLS = ["), src.indexOf("];", src.indexOf("const MORE_TOOLS = [")));
+const ids = [...block.matchAll(/\["([a-z]+)", "/g)].map((m) => m[1]).filter((id) => id !== "guide");
+ok(ids.length >= 40, "the app lists " + ids.length + " tools");
+const missing = ids.filter((id) => !G.TOOLS[id]);
+ok(!missing.length, "every tool has a guide (missing: " + missing.join(", ") + ")");
+const bad = Object.entries(G.TOOLS).filter(([, g]) => g.steps.length !== 3 || g.steps.some((s) => !s[0] || !s[1]) || !g.tip[0] || !g.tip[1]);
+ok(!bad.length, "each guide: 3 steps and a tip, English and Arabic (" + bad.map((b) => b[0]) + ")");
+const ar = Object.values(G.TOOLS).flatMap((g) => [...g.steps.map((s) => s[1]), g.tip[1]]).concat(G.START.flatMap((s) => [s.title[1], ...s.steps.map((x) => x[1]), s.tip[1]]));
+ok(ar.every((t) => /[؀-ۿ]/.test(t)), "every Arabic line is Arabic");
+ok(G.START.length === 4 && G.START.every((s) => s.steps.length === 3), "getting started: 4 chapters of 3 steps");
+const sketches = new Set(["photo", "type", "list", "chart", "map", "chat", "file", "lesson", "engine"]);
+ok([...Object.values(G.TOOLS), ...G.START].every((g) => sketches.has(g.sketch)), "every guide has a drawing");
+const groups = [["Money & people", ["guardian", "radar"]], ["Health", ["fit", "care"]]];
+const ch = G.chapters(groups);
+ok(ch[0].title === "Money & people" && ch[0].ids.join() === "money,guardian,radar" && ch[1].ids.join() === "fit,care", "chapters follow the app's areas, Money first");
+ok(G.searchGuide("passport", []).sort().join() === "radar,travel" && G.searchGuide("", []) === null, "search finds by what the steps say");
+ok(G.searchGuide("insulin", []).includes("care") && G.searchGuide("insulin", []).includes("fit"), "'insulin' finds Family health and Fit & Food");
+console.log(process.exitCode ? "FAILED" : "ALL PASSED");

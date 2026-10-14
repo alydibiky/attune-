@@ -1,0 +1,34 @@
+// v6.28 insulin ↔ Fit & Food: supply left, refill reminder, low blood sugar, a dose with no meal after it. Never a dose.
+import * as H from "../../web-src/care.js";
+const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
+
+const now = Date.parse("2026-10-14T13:00:00");
+ok(H.isInsulin({ name: "Lantus SoloStar" }) && H.isInsulin({ name: "انسولين ميكستارد" }) && H.isInsulin({ name: "NovoRapid" }) && !H.isInsulin({ name: "Metformin" }), "insulin found by its brand, its generic or its Arabic name; metformin is not insulin");
+let d = { members: [], meds: [], labs: [], taken: {} };
+const r = H.addMed(d, { name: "Lantus", dose: "20 units", freq: "once a day", times: ["09:00"], stock: 150 }, now - 86400000);
+d = r.data; const m = r.item;
+ok(m.stock === 150 && m.stockAt > 0, "the units left are kept with the medicine");
+ok(H.daysOfSupply(d, m) === 7 && !H.lowSupply(d).length, "150 units at 20 a day = 7 days: not low yet");
+d = H.markTaken(d, `${m.id}|2026-10-14|09:00`, now - 4 * 3600000);
+d = H.markTaken(d, `${m.id}|2026-10-13|09:00`, now - 20 * 3600000);
+ok(H.stockLeft(d, m) === 110 && H.daysOfSupply(d, m) === 5, "two doses taken: 110 left, 5 days");
+const low = H.lowSupply(d);
+ok(low.length === 1 && low[0].days === 5, "5 days or fewer → low");
+const rem = H.supplyReminder(low[0], now);
+ok(rem.id === "supply-" + m.id && new Date(rem.at).getHours() === 10 && rem.at > now && /5 days left/.test(rem.title), "one refill reminder per medicine, 10:00 the next morning");
+let st = H.insulinState(d, now);
+ok(st.onInsulin && st.low.length === 1 && st.takenToday.length === 1 && !st.sugar, "the state Food reads: on insulin, low supply, one dose today, no reading");
+let tips = H.insulinTips(st, { carbsToday: 120, mealsSince: () => 0, now });
+ok(tips.some((t) => t.kind === "supply") && tips.some((t) => t.kind === "carbs" && /120 g/.test(t.text)) && !tips.some((t) => t.kind === "eat"), "tips: refill + carbs today; the dose 4 hours ago is outside the eat-now window");
+tips = H.insulinTips(st, { mealsSince: () => 0, now: now - 3 * 3600000 - 30 * 60000 });
+ok(tips.some((t) => t.kind === "eat" && /eat now/.test(t.text)), "30 minutes after a dose with no meal logged → eat now");
+ok(!H.insulinTips(st, { mealsSince: () => 1, now: now - 3.5 * 3600000 }).some((t) => t.kind === "eat"), "a meal logged after the dose → no eat-now tip");
+d = H.addGlucose(d, "", 3.2, "mmol/L", now - 10 * 60000);
+st = H.insulinState(d, now);
+ok(st.sugar && st.sugar.mgdl === 58 && st.sugar.low, "3.2 mmol/L = 58 mg/dL → low");
+tips = H.insulinTips(st, { now });
+ok(tips[0].kind === "hypo" && /15 g/.test(tips[0].text) && /١٥/.test(tips[0].ar), "low sugar comes first: the 15 g / 15 minutes steps, in English and Arabic");
+ok(!H.insulinState(H.addGlucose(d, "", 95, "mg/dL", now - 7 * 3600000), now).sugar || H.insulinState(d, now + 7 * 3600000).sugar === null, "a reading older than 6 hours is not used");
+ok(tips.every((t) => !/\b\d+\s*units? of\b|take \d+ units/i.test(t.text)), "no tip ever suggests an insulin dose");
+ok(!H.insulinTips(H.insulinState({ meds: [{ id: "x", name: "Metformin", times: ["09:00"] }], labs: [], taken: {} }, now), { carbsToday: 200, now }).length, "not on insulin and no low reading → no tips in Food");
+console.log(process.exitCode ? "FAILED" : "ALL PASSED");

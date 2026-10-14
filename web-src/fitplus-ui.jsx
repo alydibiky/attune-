@@ -10,6 +10,7 @@ import * as Y from "./fityazio.js";
 import * as DB from "./fitdb.js";
 import * as FP from "./foodpack.js";
 import { nextAt } from "./daily.js";
+import * as CARE from "./care.js";
 
 const r0 = (v) => (v == null ? "—" : Math.round(v));
 export const RAMADAN_NAMES = { breakfast: ["Suhoor", "سحور"], lunch: ["Iftar", "فطار"], dinner: ["After Taraweeh", "بعد التراويح"], snacks: ["Snacks", "سناكس"] };
@@ -73,6 +74,22 @@ export function RamadanCard({ L, ar, tg, city }) {
       <div className="text-[10.5px] text-violet-300/70">{L("Times by the sun's position (Egyptian General Authority angles), ±3 min — follow your local mosque's call.", "المواقيت محسوبة من موقع الشمس (زوايا الهيئة المصرية)، ±3 دقائق — اتّبع أذان المسجد القريب منك.")}</div>
     </div>
   );
+}
+
+/** v6.28 insulin ↔ Food: tips from Family health (supply, low sugar, a dose with no meal after it, carbs today). Never a dose. */
+export function InsulinCard({ L, ar, day, carbsToday }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(t); }, []);
+  const state = CARE.insulinState(CARE.loadCare(), now);
+  const eatenAt = Object.values((day && day.meals) || {}).flat().map((x) => x.t || 0);
+  const tips = CARE.insulinTips(state, { carbsToday, mealsSince: (ts) => eatenAt.filter((t) => t >= ts).length, now });
+  if (!tips.length) return null;
+  const tone = { hypo: "border-rose-700 bg-rose-500/15 text-rose-100", eat: "border-amber-700 bg-amber-500/10 text-amber-100", supply: "border-amber-700 bg-amber-500/10 text-amber-100", carbs: "border-sky-800 bg-sky-500/10 text-sky-100" };
+  return (
+    <div className="space-y-2" data-testid="fit-insulin">
+      {tips.map((t) => <div key={t.id} className={"rounded-2xl border p-3 text-[13px] " + tone[t.kind]} data-testid={"fit-insulin-" + t.kind} dir="auto">{t.kind === "hypo" ? <b className="block mb-1">⚠️ {L("Low blood sugar", "هبوط السكر")}</b> : null}{ar ? t.ar : t.text}</div>)}
+      <div className="text-[10.5px] text-slate-500">{L("From Family health. Not medical advice — your doctor sets your insulin.", "من صحة العائلة. ليست نصيحة طبية — طبيبك يحدد جرعة الإنسولين.")}</div>
+    </div>);
 }
 
 /** The top of the log sheet: recent foods, yesterday's same meal, my meals, and my own food. */

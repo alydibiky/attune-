@@ -138,7 +138,44 @@ export function fontFamily(name) {
 /** 0xC00000 → "C00000"; black / near-black → null. */
 const hexOf = (c) => { c = +c || 0; const r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255; return r < 64 && g < 64 && b < 64 ? null : [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("").toUpperCase(); };
 
+/** v6.28: a subscript / superscript the reader put on a line of its own (μ_max under a table's μ, K_S in a formula, e^μt) —
+ *  a small piece that starts right where a word of a nearby line ends, a little below / above it — goes back next to that word.
+ *  (It made an extra table row, which split the table in two, and pulled formulas apart.) */
+export function attachScripts(pages) {
+  return pages.map((p) => {
+    if (!Array.isArray(p.lines) || p.lines.length < 2) return p;
+    const lines = p.lines.map((l) => ({ ...l, sp: l.sp.map((x) => [x[0], x[1], x[2], Array.isArray(x[3]) ? x[3].map((w) => [...w]) : x[3]]) }));
+    const spanText = (ws, sz) => ws.map((w, k) => (k && !(w[0] - ws[k - 1][5] < sz * 0.12) ? " " : "") + (w[6] === 1 ? "^(" + w[1] + ")" : w[1])).join("");
+    for (const A of lines) {
+      for (let si = A.sp.length - 1; si >= 0; si--) {
+        const s = A.sp[si], sz = s[2] || A.s, ws = Array.isArray(s[3]) ? s[3] : [];
+        if (!ws.length || ws.some((w) => w[5] == null) || String(s[1]).replace(/\^\(|\)/g, "").length > 8) continue;
+        let hit = null;
+        for (const B of lines) {
+          if (B === A) continue;
+          const dy = A.y - B.y;
+          for (const t of B.sp) {
+            const tsz = t[2] || B.s, tw = Array.isArray(t[3]) ? t[3] : [];
+            if (sz > tsz * 0.9 || Math.abs(dy) < 1 || Math.abs(dy) > tsz * 0.8) continue;
+            const k = tw.findIndex((w) => w[5] != null && Math.abs(s[0] - w[5]) <= Math.max(2, sz * 0.3) && !tw.some((o) => o !== w && o[0] >= w[5] - 0.5 && o[0] < s[0] + 1));
+            if (k >= 0 && (!hit || Math.abs(dy) < Math.abs(hit.dy))) hit = { B, t, k, dy };
+          }
+        }
+        if (!hit) continue;
+        const v = hit.dy > 0 ? -1 : 1, tw = hit.t[3];
+        tw.splice(hit.k + 1, 0, ...ws.map((w) => [w[0], w[1], w[2], w[3], w[4], w[5], v]));
+        hit.t[1] = spanText(tw, hit.t[2] || hit.B.s);
+        hit.B.e = hit.B.e != null ? Math.max(hit.B.e, ws[ws.length - 1][5]) : hit.B.e;
+        A.sp.splice(si, 1);
+        if (A.sp.length) { A.x = A.sp[0][0]; const lw = A.sp[A.sp.length - 1][3]; if (A.e != null && Array.isArray(lw) && lw.length && lw[lw.length - 1][5] != null) A.e = lw[lw.length - 1][5]; }
+      }
+    }
+    return { ...p, lines: lines.filter((l) => l.sp.length) };
+  });
+}
+
 export function pdfLinesToBlocks(pages) {
+  pages = attachScripts(pages);
   // superscript pieces next to each other are one: ^(−ΔΔ)^(Ct) → ^(−ΔΔCt)
   // (v6.10: and a ligature glyph — "ﬁ" in "speciﬁc" — is written as its letters, so Word can search and spell-check it)
   const LIG = { "\uFB00": "ff", "\uFB01": "fi", "\uFB02": "fl", "\uFB03": "ffi", "\uFB04": "ffl", "\uFB05": "st", "\uFB06": "st" };
@@ -386,6 +423,8 @@ export function pdfLinesToBlocks(pages) {
           cont.get(lastRow).push(all[j]); j++; continue;
         }
         if (cols(all[j]) < 2) break;
+        // (v6.28: a line of running text — a span of 6+ words starting under no column — is the paragraph after the table)
+        if (all[j].sp.some((x) => String(x[1]).trim().split(/\s+/).length >= 6 && !xs.some((c) => Math.abs(c - x[0]) < 6))) break;
         const lined = all[j].sp.filter((x) => xs.some((c) => Math.abs(c - x[0]) < 40)).length;
         if (lined < 2) break;
         rows.push(all[j]); j++;
@@ -522,7 +561,8 @@ export function pdfLinesToBlocks(pages) {
     }
     const prev = i > 0 && !all[i - 1].mk ? all[i - 1] : null;
     const gap = prev && !prev.img && prev.page === l.page ? l.y - prev.y : Infinity;
-    const near = gap <= pitch(l.s) * 1.3 + 0.5;
+    // (v6.28: a subscript / superscript on the line above pushes this one down a few points)
+    const near = gap <= pitch(l.s) * 1.3 + 0.5 + (prev && !prev.img && (prev.words || []).some((w) => w.v) ? l.s * 0.45 : 0);
     // v6.10: a bold line that the next line CONTINUES (same size, close below, starting in lower case) is a bold paragraph's
     // first line, not a heading ("Substrate decreases → … → product / continues accumulating …")
     const nx = all[i + 1], boldWraps = l.b && l.s < body * 1.18 && nx && !nx.img && nx.page === l.page && nx.y - l.y <= pitch(l.s) * 1.3 + 0.5 && Math.abs(nx.s - l.s) < 0.6 && /^\p{Ll}/u.test(nx.text);

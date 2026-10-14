@@ -5,7 +5,7 @@
    Tests: tests/e2e_v727care.py.                                                                                              */
 import React, { useEffect, useRef, useState } from "react";
 import { Heart, Camera, Pencil, Plus, Check, AlertTriangle, Trash2, Users, Pill } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, getLang } from "./i18n.js";
 import * as H from "./care.js";
 import { PANES, PANES_WIDE_LEFT, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
@@ -41,6 +41,8 @@ function MedForm({ init, members, onSave, onCancel }) {
         <label><span className="c-lbl">{tr("For how many days (0 = ongoing)")}</span><input type="number" min="0" value={m.days || 0} onChange={(e) => set("days", Math.max(0, +e.target.value || 0))} className={field} style={st} /></label>
         <label><span className="c-lbl">{tr("Food")}</span><select value={m.food} onChange={(e) => set("food", e.target.value)} className={field} style={st}><option value="">—</option>{["before food", "with food", "after food"].map((f) => <option key={f} value={f}>{tr(f)}</option>)}</select></label>
       </div>
+      <label className="block"><span className="c-lbl">{H.isInsulin(m) ? tr("Units left in your pens or vials (optional — for a refill reminder)") : tr("How many are left (optional — for a refill reminder)")}</span>
+        <input type="number" min="0" value={m.stock || ""} onChange={(e) => set("stock", Math.max(0, +e.target.value || 0))} className={field} style={st} data-testid="care-stock" /></label>
       {missing.length ? <p className="c-warn text-[12.5px] m-0" data-testid="care-missing">{tr("Fill in from the prescription:")} {missing.map((x) => tr(x)).join(" · ")}</p> : null}
       <div className="flex gap-2"><button className="c-btn" disabled={missing.length > 0} style={missing.length ? { opacity: 0.5 } : {}} onClick={() => onSave(m)} data-testid="care-save">{tr("Save and remind")}</button><button className="c-sub px-2" onClick={onCancel}>{tr("Cancel")}</button></div>
     </div>);
@@ -115,6 +117,15 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
   // v6.27: a prescription read by "Read it to me" arrives here, line by line, to check and save
   useEffect(() => { if (incoming && incoming.text) { readRx(incoming.text); clearIncoming && clearIncoming(); } }, [incoming && incoming.id]);
   const doses = H.dosesOn(data);
+  const ins = H.insulinState(data), low = H.lowSupply(data);
+  const [sugar, setSugar] = useState(""), [sugarUnit, setSugarUnit] = useState("mg/dL");
+  // v6.28: a dose marked taken lowers what is left; when a medicine gets near its end, a refill reminder is set (once per count)
+  const take = (key) => {
+    const d = H.markTaken(data, key); put(d);
+    for (const x of H.lowSupply(d)) remind && remind(H.supplyReminder(x));
+  };
+  const refill = (m) => { const v = window.prompt(tr(H.isInsulin(m) ? "How many units do you have now?" : "How many do you have now?"), ""); if (v == null || !(+v > 0)) return; unremind && unremind("supply-" + m.id); put(H.updateMed(data, m.id, { stock: +v, stockAt: Date.now() })); flash && flash(tr("Saved")); };
+  const saveSugar = () => { const v = +String(sugar).replace(",", "."); if (!(v > 0)) return; const d = ensureMember(); put(H.addGlucose(d, d.members[0].id, v, sugarUnit)); setSugar(""); if (H.mgdl(v, sugarUnit) < 70) { flash && flash(tr("Low blood sugar — see the steps below")); remind && remind({ id: "sugar-recheck", at: Date.now() + 15 * 60000, repeat: "none", title: tr("Check your blood sugar again"), body: tr("15 minutes since a low reading. Under 70 mg/dL: another 15 g of fast sugar.") }); } };
   const tests = [...new Set(data.labs.map((x) => x.test))];
 
   return (
@@ -126,10 +137,21 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
       </div>
       {busy ? <p className="c-sub">{busy}</p> : null}
 
+      {tab === "today" && (ins.onInsulin || low.length || (ins.sugar && ins.sugar.low)) ? (
+        <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start" data-testid="care-insulin">
+          {ins.onInsulin ? <div className="c-card space-y-2"><span className="c-lbl">{tr("Blood sugar now")}</span>
+            <div className="flex gap-2"><input type="number" inputMode="decimal" value={sugar} onChange={(e) => setSugar(e.target.value)} className={field} style={st} data-testid="care-sugar" />
+              <select value={sugarUnit} onChange={(e) => setSugarUnit(e.target.value)} className="rounded-lg px-2 border bg-transparent text-[13px]" style={st}><option>mg/dL</option><option>mmol/L</option></select>
+              <button className="c-btn" disabled={!sugar} onClick={saveSugar} data-testid="care-sugar-save">{tr("Save")}</button></div>
+            {ins.sugar ? <span className="c-sub text-[12.5px]">{tr("Last reading")}: <b className={ins.sugar.low ? "c-neg" : ""}>{ins.sugar.value} {ins.sugar.unit}</b> · {new Date(ins.sugar.at).toTimeString().slice(0, 5)} · {tr("Fit & Food uses it for its tips")}</span> : <span className="c-sub text-[12.5px]">{tr("Fit & Food shows each meal's carbohydrates and warns you when your sugar is low.")}</span>}
+          </div> : null}
+          {H.insulinTips(ins).filter((t) => t.kind === "hypo").map((t) => <div key={t.id} className="c-card text-[13.5px]" style={{ borderColor: "var(--c-neg)" }} data-testid="care-hypo"><b className="c-neg flex items-center gap-2"><AlertTriangle size={15} />{tr("Low blood sugar")}</b><p className="m-0 mt-1" dir="auto">{getLang() === "ar" ? t.ar : t.text}</p></div>)}
+          {low.map((x) => <div key={x.med.id} className="c-card flex items-center gap-3" style={{ borderColor: "var(--c-warn)" }} data-testid="care-lowsupply"><AlertTriangle size={16} className="c-warn shrink-0" /><span className="flex-1 text-[13.5px]" dir="auto"><b>{x.med.name}</b> · {x.days <= 0 ? tr("runs out today") : tr("about {n} days left", { n: x.days })} ({x.left})</span><button className="c-btn" onClick={() => refill(x.med)} data-testid="care-refill">{tr("I refilled")}</button></div>)}
+        </div>) : null}
       {tab === "today" ? (
         <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start" data-testid="care-today">
           {!doses.length ? <p className="c-sub">{tr("No doses today. Add a prescription in Medicines.")}</p> : doses.map((x) => (
-            <button key={x.key} onClick={() => put(H.markTaken(data, x.key))} className="c-card w-full flex items-center gap-3 text-start py-2.5" data-testid="care-dose-row" aria-pressed={x.taken}>
+            <button key={x.key} onClick={() => take(x.key)} className="c-card w-full flex items-center gap-3 text-start py-2.5" data-testid="care-dose-row" aria-pressed={x.taken}>
               <span className={"c-num font-bold w-14 " + (x.late ? "c-neg" : "")}>{x.time}</span>
               <span className="flex-1 min-w-0"><b className="block" dir="auto">{x.med.name} {x.med.strength}</b><span className="c-sub text-[12.5px]" dir="auto">{[x.member && members.length > 1 ? x.member.name : "", x.med.dose, x.med.food ? tr(x.med.food) : ""].filter(Boolean).join(" · ")}</span></span>
               <span className="w-7 h-7 rounded-full grid place-items-center" style={{ background: x.taken ? "var(--c-acc)" : "transparent", border: "1.5px solid " + (x.late ? "var(--c-neg)" : "var(--c-ln)"), color: "#fff" }}>{x.taken ? <Check size={15} /> : null}</span>
@@ -163,7 +185,8 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
               <div key={m.id} className="c-card flex items-start gap-3" data-testid="care-med">
                 <div className="c-ic"><Pill size={16} /></div>
                 <div className="flex-1 min-w-0"><b className="block" dir="auto">{m.name} {m.strength}</b>
-                  <span className="c-sub text-[12.5px]" dir="auto">{[members.find((p) => p.id === m.member) && members.length > 1 ? members.find((p) => p.id === m.member).name : "", m.dose, tr(m.freq), (m.times || []).join(", "), m.food ? tr(m.food) : "", left != null ? tr("{n} days left", { n: Math.max(0, left) }) : ""].filter(Boolean).join(" · ")}</span></div>
+                  <span className="c-sub text-[12.5px]" dir="auto">{[members.find((p) => p.id === m.member) && members.length > 1 ? members.find((p) => p.id === m.member).name : "", m.dose, tr(m.freq), (m.times || []).join(", "), m.food ? tr(m.food) : "", left != null ? tr("{n} days left", { n: Math.max(0, left) }) : "", H.daysOfSupply(data, m) != null ? tr("supply for {n} days", { n: H.daysOfSupply(data, m) }) : ""].filter(Boolean).join(" · ")}</span>
+                  {m.stock > 0 ? <button className="c-sub underline text-[12px] block mt-0.5" onClick={() => refill(m)} data-testid="care-med-refill">{tr("Update how many are left")}</button> : null}</div>
                 <button className="c-sub" aria-label={tr("Stop")} onClick={() => stopMed(m)}><Trash2 size={15} /></button>
               </div>); })}
           {!data.meds.some((m) => !m.stopped) ? <DeskEmpty icon={Pill} title={tr("Your medicines appear here")} testid="care-desk-empty" /> : null}

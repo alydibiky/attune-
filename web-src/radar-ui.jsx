@@ -255,8 +255,9 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
       {!V.soon.length && !V.later.length && !drafts.length && mode !== "form" ? (
         <p className="c-sub" data-testid="radar-empty">{tr("Nothing to watch yet. Scan a receipt, paste a trial email, or add a passport or warranty by hand.")}</p>) : null}
       {[["Soon", V.soon], ["Later", V.later], ["Done", V.done.slice(0, 20)]].map(([h, list]) => list.filter(match).length ? (
-        <div key={h} className="space-y-2" data-testid={"radar-" + h.toLowerCase()}><span className="c-lbl">{tr(h)}</span>
-          <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start">
+        <div key={h} className="space-y-2 @container" data-testid={"radar-" + h.toLowerCase()}><span className="c-lbl">{tr(h)}</span>
+          {/* v6.28: two columns only when each card has room for its buttons on one line (they wrapped at 1366 px) */}
+          <div className="space-y-2 @[920px]:space-y-0 @[920px]:grid @[920px]:grid-cols-2 @[920px]:gap-3 @[920px]:items-start" data-testid="radar-grid">
           {list.filter(match).map((x) => <Item key={x.id} x={x} onDone={done} onEdit={(it) => { setEdit(it); setMode("form"); try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {} }} onDelete={del} />)}
           </div>
         </div>) : null)}

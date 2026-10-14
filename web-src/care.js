@@ -211,7 +211,58 @@ export const loadCare = (store = typeof localStorage !== "undefined" ? localStor
 export const saveCare = (d, store = typeof localStorage !== "undefined" ? localStorage : null) => { try { store && store.setItem(CARE_KEY, JSON.stringify(d)); } catch (e) {} return d; };
 const newId = (p, now = Date.now()) => p + now.toString(36) + Math.random().toString(36).slice(2, 5);
 export const addMember = (d, m, now) => { const x = { id: newId("p", now), name: String(m.name || "").slice(0, 40), born: m.born || "", notes: String(m.notes || "").slice(0, 300) }; return { data: { ...d, members: [...d.members, x] }, item: x }; };
-export const addMed = (d, m, now = Date.now()) => { const x = { id: newId("m", now), member: m.member || "", name: m.name, strength: m.strength || "", dose: m.dose || "", freq: m.freq || "", perDay: m.perDay || null, times: m.times || [], days: m.days || 0, food: m.food || "", prn: !!m.prn, start: m.start || isoDay(now), raw: m.raw || "", source: m.source || "typed" }; return { data: { ...d, meds: [...d.meds, x] }, item: x }; };
+export const addMed = (d, m, now = Date.now()) => { const x = { id: newId("m", now), member: m.member || "", name: m.name, strength: m.strength || "", dose: m.dose || "", freq: m.freq || "", perDay: m.perDay || null, times: m.times || [], days: m.days || 0, food: m.food || "", prn: !!m.prn, start: m.start || isoDay(now), raw: m.raw || "", source: m.source || "typed", stock: +m.stock > 0 ? +m.stock : 0, stockAt: +m.stock > 0 ? now : 0 }; return { data: { ...d, meds: [...d.meds, x] }, item: x }; };
 export const updateMed = (d, id, patch) => ({ ...d, meds: d.meds.map((m) => (m.id === id ? { ...m, ...patch } : m)) });
 export const removeMed = (d, id) => ({ ...d, meds: d.meds.filter((m) => m.id !== id) });
 export const addLabs = (d, member, date, results) => ({ ...d, labs: [...d.labs, ...results.map((r) => ({ ...r, member, date }))] });
+
+// ---- v6.28 insulin ↔ Fit & Food: supply left, low blood sugar, carb counts. NEVER a dose (that is the doctor's) -------------------
+const INSULIN = /insulin|انسولين|أنسولين|lantus|toujeo|basaglar|abasaglar|semglee|levemir|tresiba|ryzodeg|xultophy|soliqua|novorapid|novolog|fiasp|humalog|admelog|lyumjev|apidra|actrapid|humulin|insulatard|novomix|mixtard|glargin|detemir|degludec|aspart|lispro|glulisine/i;
+export const isInsulin = (m) => !!m && (INSULIN.test(m.name || "") || INSULIN.test(m.raw || ""));
+/** The number in "10 units" / "1 tablet" / "½" (null when none). */
+export const doseAmount = (m) => { const x = /(\d+(?:[.,]\d+)?)/.exec(latin((m && m.dose) || "")); return x ? +x[1].replace(",", ".") : /½|half|نص|نصف/i.test((m && m.dose) || "") ? 0.5 : null; };
+/** How much is left: m.stock (units / tablets) minus every dose marked taken since m.stockAt. */
+export function stockLeft(data, m) {
+  if (!(m.stock > 0)) return null;
+  const per = doseAmount(m) || 1; let used = 0;
+  for (const [k, t] of Object.entries(data.taken || {})) if (t && k.startsWith(m.id + "|") && (!m.stockAt || t >= m.stockAt)) used += per;
+  return Math.max(0, m.stock - used);
+}
+/** Days the supply lasts at the prescribed rate (null when unknown). */
+export function daysOfSupply(data, m) {
+  const left = stockLeft(data, m); if (left == null) return null;
+  const perDay = (doseAmount(m) || 1) * Math.max(1, (m.times || []).length || m.perDay || 1);
+  return Math.floor(left / perDay);
+}
+export const LOW_SUPPLY_DAYS = 5;
+export const lowSupply = (data) => (data.meds || []).filter((m) => !m.stopped && !m.prn).map((m) => ({ med: m, days: daysOfSupply(data, m), left: stockLeft(data, m) })).filter((x) => x.days != null && x.days <= LOW_SUPPLY_DAYS);
+/** The refill reminder: 10:00 the next morning (or in an hour if before 9:00), one per medicine, replaced whenever the count changes. */
+export function supplyReminder(x, now = Date.now()) {
+  const d = new Date(now); if (d.getHours() >= 9) { d.setDate(d.getDate() + 1); d.setHours(10, 0, 0, 0); } else d.setTime(now + 3600000);
+  return { id: `supply-${x.med.id}`, at: d.getTime(), repeat: "none", title: `${x.med.name}: ${x.days <= 0 ? "running out today" : `about ${x.days} day${x.days === 1 ? "" : "s"} left`}`, body: "Time to get a refill from the pharmacy." };
+}
+/** Blood sugar in mg/dL from a reading (a value under 35 is taken as mmol/L). */
+export const mgdl = (v, unit) => (/mmol/i.test(unit || "") || (!unit && v < 35) ? Math.round(v * 18) : Math.round(v));
+export const addGlucose = (d, member, value, unit, now = Date.now()) => ({ ...d, labs: [...(d.labs || []), { test: "Glucose", value: +value, unit: unit || "mg/dL", low: null, high: null, flag: mgdl(+value, unit) < 70 ? "low" : "", member, date: isoDay(now), at: now, source: "quick" }] });
+/** What Fit & Food needs to know: { onInsulin, insulins, low (supply), sugar: { value, mgdl, at, low } | null, takenToday }. */
+export function insulinState(data, now = Date.now()) {
+  const insulins = (data.meds || []).filter((m) => !m.stopped && isInsulin(m));
+  const g = (data.labs || []).filter((x) => /glucose/i.test(x.test) && x.at).sort((a, b) => a.at - b.at).pop();
+  const sugar = g && now - g.at < 6 * 3600000 ? { value: g.value, unit: g.unit, mgdl: mgdl(g.value, g.unit), at: g.at, low: mgdl(g.value, g.unit) < 70 } : null;
+  const day = isoDay(now);
+  const takenToday = insulins.flatMap((m) => (m.times || []).filter((t) => (data.taken || {})[`${m.id}|${day}|${t}`]).map((t) => ({ med: m, time: t, at: (data.taken || {})[`${m.id}|${day}|${t}`] })));
+  return { onInsulin: insulins.length > 0, insulins, low: lowSupply(data).filter((x) => isInsulin(x.med)), sugar, takenToday };
+}
+/** Tips for the Food diary: [{ id, kind: "hypo" | "eat" | "supply" | "carbs", text, ar }]. carbsToday in grams; mealsAfter(ts) = meals logged since. */
+export function insulinTips(state, { carbsToday = 0, mealsSince = () => 0, now = Date.now() } = {}) {
+  if (!state || (!state.onInsulin && !(state.sugar && state.sugar.low))) return [];
+  const out = [];
+  if (state.sugar && state.sugar.low) out.push({ id: "hypo", kind: "hypo", text: `Blood sugar ${state.sugar.value} ${state.sugar.unit || ""} is low. Take 15 g of fast sugar now (½ cup of juice, 1 tablespoon of honey or 4 sugar cubes), check again in 15 minutes, repeat if still under 70 mg/dL. If you feel confused or faint, get help.`, ar: `السكر ${state.sugar.value} ${state.sugar.unit || ""} منخفض. تناول ١٥ جرامًا من سكر سريع الآن (نصف كوب عصير، أو ملعقة كبيرة عسل، أو ٤ مكعبات سكر)، ثم قِس مرة أخرى بعد ١٥ دقيقة، وكرّر إن ظل أقل من ٧٠. إن شعرت بدوخة أو تشوش فاطلب المساعدة.` });
+  for (const x of state.takenToday) {
+    const mins = (now - x.at) / 60000;
+    if (mins >= 20 && mins <= 120 && !mealsSince(x.at)) out.push({ id: "eat-" + x.med.id + x.time, kind: "eat", text: `You marked ${x.med.name} taken at ${x.time} and no meal is logged since. If it is a mealtime insulin, eat now to avoid low blood sugar.`, ar: `سجّلت أخذ ${x.med.name} الساعة ${x.time} ولم تُسجَّل وجبة بعدها. إن كان إنسولين وجبات فتناول طعامك الآن لتجنب هبوط السكر.` });
+  }
+  for (const x of state.low) out.push({ id: "supply-" + x.med.id, kind: "supply", text: `${x.med.name}: ${x.days <= 0 ? "runs out today" : `about ${x.days} day${x.days === 1 ? "" : "s"} left`} (${x.left} units). Get a refill.`, ar: `${x.med.name}: ${x.days <= 0 ? "ينفد اليوم" : `يكفي نحو ${x.days} يوم`} (${x.left} وحدة). اشترِ عبوة جديدة.` });
+  if (state.onInsulin && carbsToday > 0) out.push({ id: "carbs", kind: "carbs", text: `Carbohydrates today: ${Math.round(carbsToday)} g. Each meal shows its carbohydrates so you can match the insulin your doctor set.`, ar: `الكربوهيدرات اليوم: ${Math.round(carbsToday)} جم. تظهر كربوهيدرات كل وجبة لتطابقها مع جرعة الإنسولين التي حددها طبيبك.` });
+  return out;
+}

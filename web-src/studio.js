@@ -145,11 +145,18 @@ export function enhanceMessages(idea) {
 
 /** Tidy what the model wrote: one paragraph, no quotes, no "Here is…". */
 export function cleanPrompt(s, fallback) {
-  let t = String(s || "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  // (v6.28: every way a strong model marks its thinking — Qwen's <think>, one never closed because the answer ran out,
+  // Gemma 4's thought channel, gpt-oss's analysis / final channels — none of it may reach the picture model)
+  let t = String(s || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/<think>[\s\S]*$/, "");
+  t = t.replace(/<\|?channel\|?>\s*thought[\s\S]*?<\|?channel\|?>/g, "").replace(/^[\s\S]*<\|channel\|>\s*final\s*<\|message\|>/, "").replace(/<\|[a-z_]+\|>|<\/?(?:start_of_turn|end_of_turn)>/g, "").trim();
   t = t.replace(/^(here(?:'s| is)[^:\n]*:|description:|prompt:)\s*/i, "").replace(/^["“'`]+|["”'`]+$/g, "").replace(/\s+/g, " ").trim();
   if (t.length < 12 || t.length > 1200) return String(fallback || "").trim();
   return t;
 }
+
+/** v6.28: how long the description may take. A strong model (Zenith, Zenith+, Apex) writes it more slowly on a phone; at 45 s it
+ *  ran out and the picture was drawn from the raw idea — often Arabic, which the picture models can't read. */
+export function enhanceWaitMs(power) { return power && power.expert ? 120000 : 45000; }
 
 export function packReady(info, id) { return !!(info && (info.packs || []).some((p) => p.id === id)); }
 const GPU_KEY = "attune:studio:gpu";

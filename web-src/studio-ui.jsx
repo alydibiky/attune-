@@ -123,7 +123,7 @@ function commitPic(item) {
   if (LIVE.hub) { LIVE.hub.setGallery(list); LIVE.hub.setCur(item); }
 }
 
-export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, flash, incoming, clearIncoming }) {
+export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, enhanceMs, flash, incoming, clearIncoming }) {
   const readInfo = () => { try { return JSON.parse(native.imageInfo()); } catch (e) { return null; } };
   const [info, setInfo] = useState(readInfo);
   const [mode, setMode] = useSticky("studio:mode", "create");
@@ -252,7 +252,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       if (!finalPrompt) {
         setBusy((b) => ({ ...b, stage: "enhance" }));
         // v5.20: never wait on the chat model for long — after 45 s the picture is drawn from the idea as typed
-        try { finalPrompt = cleanPrompt(await Promise.race([llm(enhanceMessages(text), { maxTokens: 220 }), new Promise((_, rej) => setTimeout(() => rej(new Error("slow")), 45000))]), text); } catch (e) { finalPrompt = text; }
+        try { finalPrompt = cleanPrompt(await Promise.race([llm(enhanceMessages(text), { maxTokens: 220 }), new Promise((_, rej) => setTimeout(() => rej(new Error("slow")), enhanceMs || 45000))]), text); } catch (e) { finalPrompt = text; }
       }
       setPrompt(finalPrompt);
       // v5.17: the description is written — say what happens now, instead of

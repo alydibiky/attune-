@@ -148,7 +148,7 @@ export function isLanguageCourse(topic) {
 export function lessonMessages(c, n) {
   const title = c.plan[n] || `Lesson ${n + 1}`;
   const before = c.plan.slice(Math.max(0, n - 8), n);
-  const review = (c.review || []).slice(0, 2);
+  const review = reviewDue(c);
   return [
     { role: "system", content: `You are a warm, expert teacher writing today's 5-minute lesson of a daily course on "${c.topic}" for a ${c.level} learner. ${LANG_NOTE[c.lang]}
 Write the lesson in Markdown: a one-line hook, then 2–4 short sections with ## headings, concrete examples${isLanguageCourse(c.topic) ? " (example sentences with translation and pronunciation)" : " from real work and life"}, and one tiny practice task at the end under "## Try it". No LaTeX. Every fact must be technically correct — a plain true sentence beats a dramatic comparison; no exaggerated claims.${review.length ? " Start with a 2-line \"## Quick review\" of: " + review.join("; ") + "." : ""}
@@ -210,10 +210,33 @@ export function parseLesson(text) {
   return { body, visual, keyPoints };
 }
 
+// v6.28 spaced repetition: a missed question is reviewed in a lesson, then again after 2, 5, 12 and 30 days (each time a little
+// further apart, the way memory holds best); after the last review it is learned and leaves the list. Missed again in a quiz → it
+// starts over. c.review stays the list of what to review (text); c.srs holds when each comes back: { [text]: { box, due } }.
+export const SRS_DAYS = [2, 5, 12, 30];
+/** Up to two review items due now, the most overdue first. */
+export function reviewDue(c, now = Date.now(), max = 2) {
+  const srs = c.srs || {};
+  return (c.review || []).filter((t) => !srs[t] || srs[t].due <= now).sort((a, b) => ((srs[a] || {}).due || 0) - ((srs[b] || {}).due || 0)).slice(0, max);
+}
+/** How many are waiting, and when the next one comes back (for the course screen). */
+export function reviewStatus(c, now = Date.now()) {
+  const srs = c.srs || {}, list = c.review || [];
+  const due = list.filter((t) => !srs[t] || srs[t].due <= now).length;
+  const later = list.filter((t) => srs[t] && srs[t].due > now).map((t) => srs[t].due).sort((a, b) => a - b);
+  const learned = c.learned || 0;
+  return { due, waiting: list.length - due, next: later[0] || null, learned };
+}
 export function addLesson(c, n, parsed, { now = Date.now() } = {}) {
   const lesson = { n, title: c.plan[n] || `Lesson ${n + 1}`, ...parsed, made: now, day: "", done: false };
-  const reviewed = (c.review || []).slice(0, 2);
-  return { ...c, lessons: [...c.lessons.filter((l) => l.n !== n), lesson].sort((a, b) => a.n - b.n), review: (c.review || []).filter((x) => !reviewed.includes(x)) };
+  const reviewed = reviewDue(c, now), srs = { ...(c.srs || {}) };
+  let learned = c.learned || 0;
+  const done = [];
+  for (const t of reviewed) {
+    const box = ((srs[t] && srs[t].box) || 0) + 1;
+    if (box > SRS_DAYS.length) { delete srs[t]; done.push(t); learned++; } else srs[t] = { box, due: now + SRS_DAYS[box - 1] * 86400000 };
+  }
+  return { ...c, lessons: [...c.lessons.filter((l) => l.n !== n), lesson].sort((a, b) => a.n - b.n), review: (c.review || []).filter((x) => !done.includes(x)), srs, learned };
 }
 
 /** The lesson to show today: one already opened today, else the next not done (if made). */
@@ -270,7 +293,11 @@ export function finishQuiz(c, quiz, picks, { now = Date.now() } = {}) {
   const right = quiz.questions.filter((q, i) => picks[i] === q.answer).length;
   const missed = quiz.questions.filter((q, i) => picks[i] !== q.answer).map((q) => clean(`${q.q} → ${q.options[q.answer]}`, 200));
   const rec = { after: Math.max(...quiz.lessons), score: right, total: quiz.questions.length, at: now };
-  return { course: { ...c, quizzes: [...c.quizzes, rec], review: [...missed, ...(c.review || [])].slice(0, 12) }, right, missed };
+  // (missed again → back to the start of the schedule; the list keeps up to 30)
+  const srs = { ...(c.srs || {}) }; for (const t of missed) srs[t] = { box: 0, due: now };
+  const review = [...missed, ...(c.review || []).filter((t) => !missed.includes(t))].slice(0, 30);
+  for (const t of Object.keys(srs)) if (!review.includes(t)) delete srs[t];
+  return { course: { ...c, quizzes: [...c.quizzes, rec], review, srs }, right, missed };
 }
 
 /** What the notification and the widget say. */

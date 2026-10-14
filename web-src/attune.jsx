@@ -26,6 +26,7 @@ import { SpeedPanel, benchMessages } from "./speed-ui.jsx";
 import { CraneToolkit } from "./crane-ui.jsx";
 import { CodeWorkbench } from "./code-ui.jsx";
 import { StudioPage } from "./studio-ui.jsx";
+import { enhanceWaitMs } from "./studio.js";
 import { BusinessApp } from "./biz-ui.jsx";
 import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
@@ -55,6 +56,8 @@ import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
 import { BookingDetails, loadBooking, agentLabels } from "./agent-ui.jsx";
 import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
+import { GuidePage } from "./guide-ui.jsx";
+import { deviceLevel, groupsFor, showAll as deviceShowAll, setShowAll as setDeviceShowAll } from "./device.js";
 import { TravelPage } from "./travel-ui.jsx";
 import { OwedHost } from "./owed-ui.jsx";
 import { ReadHost } from "./readaloud-ui.jsx";
@@ -7333,6 +7336,9 @@ p, li { overflow-wrap: anywhere; }
 span, h1, h2, h3, label { overflow-wrap: break-word; }
 .att-nowrap { white-space: nowrap; }
 
+/* v6.28 device level 1 (a light phone): no blur behind sheets (the costliest effect on a weak GPU), short animations, no shadows */
+.att-lite *, .att-lite *::before, .att-lite *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important; animation-duration: .12s !important; transition-duration: .08s !important; }
+
 /* Someone who has asked their system for less motion means it. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important;
@@ -7354,15 +7360,15 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
-const MODE_TITLES = { home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const OWN_TITLE = new Set(["guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+const MODE_TITLES = { guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.27";
+const PAGE_VERSION = "6.28";
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7401,6 +7407,7 @@ const MORE_TOOLS = [
   ["compress", "Compress", "Shorter prompts", Scissors], ["humanize", "Humanize", "Sound like you", PenLine],
   ["copilot", "Copilot", "Work with another AI", MessageSquare], ["library", "Library", "Prompt recipes", Package],
   ["ask", "Ask (classic)", "The earlier Ask screen", MessageSquare],
+  ["guide", "How to use Attune", "Every tool in three steps, with pictures", BookOpen],   // v6.28: opened from the top of All and from Settings
 ];
 
 // v5.32 — Ali: "most features are cluttered, they must be organized": More shows its tools
@@ -7908,6 +7915,12 @@ export default function App() {
   const myDevice = useMemo(() => deviceId(), []);
   const [queued, setQueued] = useState(0);
   const [device, setDevice] = useState(() => detectDevice());
+  // v6.28 device levels: what this device can really do → which tools it lists and how light the effects are
+  const devLevel = deviceLevel(device);
+  const [allTools, setAllToolsRaw] = useState(() => deviceShowAll());
+  const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
+  const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
+  useEffect(() => { try { document.documentElement.classList.toggle("att-lite", !!devLevel.lite); } catch (e) {} }, [devLevel.lite]);
   // The person knows their own machine better than any heuristic does.
   const setRamOverride = (gb) => {
     try { if (gb) localStorage.setItem(RAM_OVERRIDE_KEY, String(gb)); else localStorage.removeItem(RAM_OVERRIDE_KEY); } catch (e) {}
@@ -9190,7 +9203,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
       {side.shown ? <DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
         places={[["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]]}
-        tools={MORE_TOOLS} groups={MORE_GROUPS} loadChats={loadChats}
+        tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
         onNewChat={() => { setMoreOpen(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
         onOpenChat={(id) => { setMoreOpen(false); setOpenChatId(id); navTo("chat"); }}
         chatCmd={(c) => { try { window.dispatchEvent(new CustomEvent("attune-chat-cmd", { detail: c })); } catch (e) {} }}
@@ -9240,7 +9253,7 @@ export default function App() {
           <DesktopHome tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
             onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "tools" ? (
-          <ToolsPage tools={MORE_TOOLS} groups={MORE_GROUPS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
+          <ToolsPage tools={MORE_TOOLS} groups={groupsHere} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "chat" ? (
           <ChatHome key="chat" api={chatApi} drawerOpen={drawerOpen} setDrawerOpen={setDrawerOpen} newChatSignal={newChatSignal}
             composerSeed={chatSeed} clearComposerSeed={() => setChatSeed("")}
@@ -9761,7 +9774,7 @@ export default function App() {
         ) : mode === "studio" ? (
           NATIVE && NATIVE.imageInfo ? (
             <StudioPage native={NATIVE} nativeCall={nativeCall} nativeLastId={nativeLastId} flash={flash} incoming={studioIn} clearIncoming={() => setStudioIn(null)}
-              chatReady={modelState === "ready" || (engineInfo && engineInfo.state === "ready")}
+              chatReady={modelState === "ready" || (engineInfo && engineInfo.state === "ready")} enhanceMs={enhanceWaitMs(getPower())}
               llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.7, think: false })} />
           ) : <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300" data-testid="studio-page">{tr("Studio draws pictures with the phone's own chip — it works in the Android app.")}</div>
         ) : mode === "learn" ? (
@@ -9860,6 +9873,8 @@ export default function App() {
           <TranslatePage flash={flash} readText={readTextAny} native={{ N: NATIVE, call: nativeCall }}
             llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}
             openConverter={(to) => { try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} navTo("convert"); }} />
+        ) : mode === "guide" ? (
+          <GuidePage tools={MORE_TOOLS} groups={MORE_GROUPS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "care" ? (
           <CarePage readText={readTextAny} flash={flash} incoming={careIn} clearIncoming={() => setCareIn(null)}
             search={NATIVE && NATIVE.knowSearch ? async (q, ids, k) => { const r = await nativeCall("knowSearch", { q, k: k || 10, ids }); return (r && r.passages) || []; } : null}
@@ -10736,6 +10751,8 @@ export default function App() {
           <div className="att-scroll w-full max-w-3xl max-h-[86vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-6" onClick={(e) => e.stopPropagation()} data-testid="desk-settings" role="dialog" aria-label={tr("Settings")}>
             <div className="flex items-center justify-between"><h2 className="text-xl font-semibold text-white flex items-center gap-2"><LayoutGrid size={19} className="text-teal-300" />{tr("Settings")}</h2>
               <button onClick={() => setMoreOpen(false)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800" aria-label={tr("Close")} data-testid="desk-settings-close"><X size={18} /></button></div>
+            <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full flex items-center gap-3 rounded-xl border border-teal-800/70 bg-teal-500/10 px-4 py-3 text-start hover:border-teal-600" data-testid="desk-guide">
+              <BookOpen size={18} className="text-teal-300 shrink-0" /><span className="flex-1"><span className="block text-[14px] text-slate-100">{tr("How to use Attune")}</span><span className="block text-[12px] text-slate-400">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-teal-300 rtl:-scale-x-100">›</span></button>
             <section data-testid="more-appearance">
               <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-3">{tr("Appearance")}</p>
               <div className="grid grid-cols-2 gap-6">
@@ -10764,7 +10781,9 @@ export default function App() {
           <div className="att-scroll att-shift absolute start-0 end-0 bg-slate-900 border-t border-slate-800 rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
                style={{ bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
             <div className="max-w-3xl mx-auto">
-              {MORE_GROUPS.map(([title, ids], gi) => (
+              <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full mb-4 flex items-center gap-3 rounded-xl border border-teal-800/70 bg-teal-500/10 px-3.5 py-2.5 text-start" data-testid="more-guide">
+                <BookOpen size={18} className="text-teal-300 shrink-0" /><span className="flex-1"><span className="block text-[13.5px] text-slate-100">{tr("How to use Attune")}</span><span className="block text-[11.5px] text-slate-400">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-teal-300 rtl:-scale-x-100">›</span></button>
+              {groupsHere.map(([title, ids], gi) => (
                 <div key={title} className={gi ? "mt-4" : ""} data-testid="more-group">
                   <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2 px-0.5">{tr(title)}</p>
                   <div className="grid grid-cols-3 gap-2">
@@ -10787,6 +10806,10 @@ export default function App() {
                 {(() => { const nb = backupNudge(); return (
                 <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`rounded-xl border p-2.5 text-start ${nb.warn ? "border-amber-700/60 bg-amber-500/10" : "border-slate-800 bg-slate-950"}`}><ShieldCheck size={16} className={nb.warn ? "text-amber-300" : "text-slate-300"} /><span className="block text-[12px] text-slate-200 mt-1">{tr("Backup")}</span><span className={`block text-[10px] ${nb.warn ? "text-amber-300" : "text-slate-500"}`}>{nb.text}</span></button>); })()}
               </div>
+              {/* v6.28: what this phone can do (its level), and the way back to every tool */}
+              <div className="mt-2 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 flex items-center gap-2 text-[12px]" data-testid="device-level">
+                <Gauge size={15} className="text-teal-300 shrink-0" /><span className="flex-1 text-slate-300">{tr("This device")}: <b className="text-slate-100">{tr("Level {n}", { n: devLevel.level })} · {tr(devLevel.name)}</b><span className="block text-[11px] text-slate-500">{tr(devLevel.what)}</span></span>
+                {devLevel.hide.length ? <button onClick={() => setAllTools(!allTools)} className="text-teal-300 underline shrink-0" data-testid="device-showall">{allTools ? tr("Hide what is too heavy") : tr("Show every tool anyway")}</button> : null}</div>
               {/* v5.29 UX: tools first (what people open More for); appearance settings below */}
               <div className="mt-4 pt-3 border-t border-slate-800" data-testid="more-appearance">
                 <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("Appearance")}</p>
