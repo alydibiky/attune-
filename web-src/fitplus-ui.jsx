@@ -103,7 +103,7 @@ export function QuickLog({ L, ar, st, upd, adding, dayKey, addToDraft, flash }) 
           <label key={k} className="text-[10.5px] text-slate-400">{l}<input type="number" inputMode="decimal" value={form[k] ?? ""} onChange={(e) => set(k, e.target.value)} className="w-full rounded bg-slate-900 px-1.5 py-1 text-[13px] text-white" data-testid={"fit-own-" + k} /></label>))}
       </div>
       <div className="flex gap-2"><button onClick={() => setForm(null)} className="rounded-lg bg-slate-900 px-3 py-1.5 text-[12.5px] text-slate-300">{L("Cancel", "إلغاء")}</button>
-        <button onClick={saveOwn} className="flex-1 rounded-lg bg-emerald-600 py-1.5 text-[13px] text-white" data-testid="fit-own-save">{L("Save and add", "احفظ وضيف")}</button></div>
+        <button onClick={saveOwn} className="flex-1 rounded-lg bg-emerald-600 py-1.5 text-[13px] text-white" data-testid="fit-own-save">{L("Save and add", "حفظ وإضافة")}</button></div>
     </div>);
   const favs = st.favFoods || [];
   return (
@@ -305,7 +305,7 @@ export function FoodClipCard({ L, photoClip, flash, onChange }) {
           <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-200" onClick={() => { try { photoClip.stop(); } catch (e) {} }}>{L("Stop", "وقّف")}</button></div>
       ) : (
         <div className="flex flex-wrap gap-2">
-          {!st.installed ? <button className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[12.5px] font-medium text-white" onClick={go} data-testid="fit-foodclip-get">{L("Get it (~100 MB)", "نزّله (~١٠٠ ميجا)")}</button> : null}
+          {!st.installed ? <button className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[12.5px] font-medium text-white" onClick={go} data-testid="fit-foodclip-get">{L("Get it (~100 MB)", "تنزيل (~١٠٠ ميجابايت)")}</button> : null}
           {st.installed || st.bytes ? <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-300" onClick={wipe} data-testid="fit-foodclip-delete">{L("Delete", "امسح")}</button> : null}
         </div>)}
     </div>
@@ -335,7 +335,7 @@ export function HuaweiGuide({ L, health, status, onDone }) {
           <span className="shrink-0 w-5 h-5 rounded-full bg-rose-900/70 text-rose-100 text-[11px] flex items-center justify-center">{i + 1}</span>
           <div className="flex-1 min-w-0">{t}{pkg && health && health.openApp ? <button onClick={() => health.openApp(pkg)} className="ms-2 rounded-md bg-rose-700 px-2 py-0.5 text-[11.5px] text-white" data-testid={"fit-huawei-open-" + i}>{btn}</button> : null}</div>
         </div>))}
-      {status && status.huawei && health && health.openApp ? <button onClick={() => health.openApp(HUAWEI_HEALTH)} className="text-[11.5px] text-rose-300 underline" data-testid="fit-huawei-app">{L("Open Huawei Health (let it sync the watch first)", "افتح Huawei Health (خليه يعمل مزامنة للساعة الأول)")}</button> : null}
+      {status && status.huawei && health && health.openApp ? <button onClick={() => health.openApp(HUAWEI_HEALTH)} className="text-[11.5px] text-rose-300 underline" data-testid="fit-huawei-app">{L("Open Huawei Health (let it sync the watch first)", "افتح Huawei Health (واتركه يزامن الساعة أولًا)")}</button> : null}
       {onDone ? <button onClick={onDone} className="block text-[11px] text-slate-500 underline">{L("Hide", "اخفي")}</button> : null}
     </div>);
 }
@@ -395,7 +395,7 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
         {hwButton}{noteEl}
         {hwDirect ? null : huaweiNeeded || hw ? <HuaweiGuide {...{ L, health, status }} onDone={() => { setHw(false); if (huaweiNeeded) upd((x) => ({ ...x, huaweiHide: true })); }} />
           : <button onClick={() => setHw(true)} className="text-[11.5px] text-rose-300 underline" data-testid="fit-huawei-link">{L("Huawei watch?", "ساعة هواوي؟")}</button>}
-        {status && status.available === "none" ? <div className="text-[12px] text-amber-200">{L("This phone doesn't have Health Connect — install it from the Play Store (Android 9–13), or it's built into Settings on Android 14+. Phones without Google services (newer Huawei phones) can't use it.", "لا يحتوي هذا الهاتف على Health Connect — نزّله من Play Store (أندرويد 9–13)، أو تجده في الإعدادات بدءًا من أندرويد 14. ولا يعمل على الهواتف التي بلا خدمات Google (هواتف هواوي الحديثة).")}</div> : (
+        {status && status.available === "none" ? <div className="text-[12px] text-amber-200">{L("This phone doesn't have Health Connect — install it from the Play Store (Android 9–13), or it's built into Settings on Android 14+. Phones without Google services (newer Huawei phones) can't use it.", "لا يحتوي هذا الهاتف على Health Connect — ثبّته من Play Store (أندرويد 9–13)، أو تجده في الإعدادات بدءًا من أندرويد 14. ولا يعمل على الهواتف التي بلا خدمات Google (هواتف هواوي الحديثة).")}</div> : (
           <div className="flex gap-2">
             <button onClick={() => { health.connect(); }} className="flex-1 rounded-lg bg-teal-600 py-2 text-[13px] font-medium text-white" data-testid="fit-watch-connect">{status && status.available === "update" ? L("Install Health Connect", "نزّل Health Connect") : L("Connect my watch", "اربط ساعتي")}</button>
             {compact ? <button onClick={() => upd((x) => ({ ...x, watchSkip: true }))} className="rounded-lg bg-slate-800 px-3 text-[12px] text-slate-400">{L("Later", "بعدين")}</button> : null}
@@ -406,7 +406,7 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
   return (
     <div className="rounded-2xl bg-slate-900/60 border border-teal-900 p-3 space-y-1.5" data-testid="fit-watch">
       <div className="flex items-center justify-between"><span className="text-[13px] text-white">⌚ {L("From your watch", "من ساعتك")}</span>
-        <button onClick={refresh} className="text-[11.5px] text-teal-300 underline" data-testid="fit-watch-refresh">{busy ? L("Reading…", "بقرا…") : L("Refresh", "حدّث")}</button></div>
+        <button onClick={refresh} className="text-[11.5px] text-teal-300 underline" data-testid="fit-watch-refresh">{busy ? L("Reading…", "جارٍ القراءة…") : L("Refresh", "حدّث")}</button></div>
       {noteEl}{hwButton}
       {w && (w.sources || []).includes(HUAWEI_HEALTH) ? <div className="text-[10.5px] text-rose-300" data-testid="fit-huawei-on">{L("Huawei Health ✓", "Huawei Health ✓")}</div> : null}
       {viaHealthSync(w) ? <div className="text-[10.5px] text-rose-300" data-testid="fit-huawei-on">{L("Huawei Health, through Health Sync ✓", "Huawei Health، عن طريق Health Sync ✓")}</div> : null}

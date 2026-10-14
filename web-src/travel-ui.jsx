@@ -135,7 +135,7 @@ export function TravelPage(p) {
               <select value={nationality} onChange={(e) => setNationality(e.target.value)} className="rounded-lg px-2 py-1 text-[12px] border bg-transparent max-w-[11rem]" style={st} aria-label={tr("Travelling on a passport from")}>
                 {NATIONALITIES.map((n) => <option key={n.k} value={n.k}>{n.flag} {tr(n.label)}</option>)}</select>}>
             <p className="m-0 flex items-baseline gap-2 flex-wrap">
-              <span className="c-sub">{(NATIONALITIES.find((n) => n.k === nationality) || {}).flag} → {entry.flag} {entry.to}</span>
+              <span className="c-sub">{(NATIONALITIES.find((n) => n.k === nationality) || {}).flag} → {entry.flag} {countryShown(activePack, entry.to)}</span>
               <b className={entry.tone === "good" ? "c-pos" : entry.tone === "warn" ? "c-warn" : ""} style={{ fontSize: 16 }}>{tr(entry.label)}</b>
               {entry.days ? <span className="c-sub">{tr("· up to")} {entry.days} {tr("days")}</span> : null}</p>
             <p className="text-[13.5px] m-0">{tr(entry.note)}</p>

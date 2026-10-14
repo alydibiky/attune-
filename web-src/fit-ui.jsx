@@ -311,7 +311,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   };
   const runCmd = (c = cmd) => {
     const r = R.draftCommand(draft || [], c);
-    if (!r) { setCmdNote(L("I didn't get that change — try “remove the cola”, “rice 200 g”, “add a spoon of oil”", "مفهمتش التعديل — جرّب «شيل البيبسي»، «الرز ٢٠٠ جرام»، «ضيف معلقة زيت»")); return; }
+    if (!r) { setCmdNote(L("I didn't get that change — try “remove the cola”, “rice 200 g”, “add a spoon of oil”", "لم أفهم التعديل — جرّب «شيل البيبسي»، «الرز ٢٠٠ جرام»، «ضيف معلقة زيت»")); return; }
     setDraft(r.items); setCmdNote(L(r.done.en, r.done.ar)); setCmd("");
   };
   const scaleAt = (i, k) => setDraft((d) => d.map((x, j) => (j === i ? F.scaleItem(x, k) : x)));
@@ -335,7 +335,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const scanCode = async (file) => {
     if (!scanBarcode) return;
     try { const ph = await readPhoto(file); setSearching(true); const codes = await scanBarcode(ph.data);
-      if (!codes || !codes.length) { flash && flash(L("No barcode found — hold the phone closer, straight on", "ملقتش باركود — قرّب الموبايل وخليه مستقيم")); return; }
+      if (!codes || !codes.length) { flash && flash(L("No barcode found — hold the phone closer, straight on", "لم يُعثر على باركود — قرّب الهاتف واجعله مستقيمًا")); return; }
       const fd = await DB.byBarcode(codes[0], fetchJson);
       if (fd) pickFood(fd); else { setQ(codes[0]); flash && flash(L("This product isn't in the databases yet — log it by name", "هذا المنتج غير موجود في قواعد البيانات بعد — سجّله بالاسم")); }
     } catch (e) { flash && flash(String(e.message || e)); } finally { setSearching(false); }
@@ -481,18 +481,18 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       {adding ? (
         <div className="rounded-2xl border border-slate-700 bg-slate-900/70 p-3 space-y-3" data-testid="fit-log">
           <div className="flex items-center justify-between">
-            <div className="text-white font-medium">{L("Add to", "ضيف لل")}{ar ? "" : " "}
+            <div className="text-white font-medium">{L("Add to", "أضف إلى")}{" "}
               <select value={adding} onChange={(e) => setAdding(e.target.value)} className="bg-slate-800 rounded px-1 text-white" data-testid="fit-log-meal">
                 {F.MEALS.map((m) => <option key={m} value={m}>{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}</option>)}
               </select>
             </div>
-            <button onClick={() => { setAdding(null); setDraft(null); }} className="text-slate-400"><X size={18} /></button>
+            <button onClick={() => { setAdding(null); setDraft(null); }} className="text-slate-400 min-h-[44px] min-w-[44px] -me-2 grid place-items-center" aria-label={L("Close", "إغلاق")} data-testid="fit-log-close"><X size={20} /></button>
           </div>
           {!draft ? (<>
             {!photo && !text.trim() ? <LogBar {...{ t, L, ar, bar, listening, st }} onAgain={(item) => { logNow(adding, [item], L(`Added ${item.name} · ${r0(item.kcal)} kcal`, `أُضيف ${item.ar || item.name} · ${r0(item.kcal)} سعر`)); setAdding(null); }} /> : null}
             <QuickLog {...{ L, ar, st, upd, adding, dayKey, flash }} addToDraft={(items) => setDraft((d) => [...(d || []), ...items.map((x) => ({ ...x }))])} />
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} data-testid="fit-log-text"
-              placeholder={L("What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful", "كلت إيه؟ مثلاً ٢ بيض ورغيف عيش وطبق فول")}
+              placeholder={L("What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful", "ماذا أكلت؟ مثلًا: ٢ بيض ورغيف عيش وطبق فول")}
               className="w-full rounded-xl bg-slate-800 p-2.5 text-[14px] text-white placeholder:text-slate-500" />
             {photo && !busy && <div className="relative w-28"><img src={photo.url} className="rounded-lg w-28 h-28 object-cover" /><button onClick={() => setPhoto(null)} className="absolute top-1 right-1 rounded-full p-0.5" style={{ background: "rgba(0,0,0,.6)", color: "#fff" }}><X size={14} /></button></div>}
             {busy && photo ? <PhotoLoading look={look} url={photo.url} stage={stage} L={L} ar={ar} /> : null}
@@ -503,9 +503,9 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               {photo && !clipOn && photoClip ? <div className="w-full basis-full rounded-xl border border-sky-800 bg-sky-500/10 p-2 text-[12px] text-sky-100" data-testid="fit-fast-offer">
                 {L("Photos take 20–30 s with the chat model. Get “Fast photo recognition” (≈200 MB, once) and a photo is read in a few seconds.", "تستغرق الصور 20–30 ثانية مع نموذج المحادثة. نزّل «التعرّف السريع على الصور» (نحو 200 ميجابايت مرة واحدة) لتُقرأ الصورة في ثوانٍ قليلة.")}
                 <button disabled={!!fastDl} onClick={async () => { setFastDl(L("Downloading…", "جارٍ التنزيل…")); try { await photoClip.install((pct) => setFastDl(Math.round(pct || 0) + "%")); setClipOn(true); flash && flash(L("Fast photo recognition is ready", "التعرّف السريع جاهز")); } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 100)); } finally { setFastDl(""); } }}
-                  className="ms-2 rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold" data-testid="fit-fast-get">{fastDl || L("Get it", "نزّله")}</button></div> : null}
+                  className="ms-2 rounded-lg bg-sky-500 text-slate-950 px-2.5 py-1 font-semibold" data-testid="fit-fast-get">{fastDl || L("Get it", "تنزيل")}</button></div> : null}
               <button onClick={readMeal} disabled={busy || (!text.trim() && !photo)} className="flex-1 rounded-xl bg-emerald-600 disabled:opacity-40 py-2 text-[14px] font-medium text-white flex items-center justify-center gap-1.5" data-testid="fit-read">
-                {busy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{busy ? stage || L("Reading…", "بقرا…") : L("Read it", "اقرا")}
+                {busy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}{busy ? stage || L("Reading…", "جارٍ القراءة…") : L("Read it", "قراءة")}
               </button>
             </div> : null}
             <div className="relative">
@@ -525,7 +525,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
           </>) : (
             <div className="space-y-2" data-testid="fit-draft">
               {photo && draft.length ? <PhotoMarks look={look} url={photo.url} items={draft} L={L} ar={ar} /> : null}
-              <div className="text-[12.5px] text-slate-400">{L("Check the amounts — change the grams if needed, then save.", "راجع الكميات — غيّر الجرامات لو محتاج، وبعدين احفظ.")}</div>
+              <div className="text-[12.5px] text-slate-400">{L("Check the amounts — change the grams if needed, then save.", "راجع الكميات — غيّر الجرامات عند الحاجة، ثم احفظ.")}</div>
               {refining ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5" data-testid="fit-refining"><span className="inline-block w-2 h-2 rounded-full bg-sky-400 animate-pulse" />{L("The AI is double-checking the photo — you can save now.", "يراجع الذكاء الاصطناعي الصورة — يمكنك الحفظ الآن.")}</div> : null}
               {aiAlt && aiAlt.length ? <div className="rounded-xl bg-sky-500/10 border border-sky-800 p-2 text-[12.5px] text-sky-100" data-testid="fit-ai-alt">
                 {L("The AI sees: ", "الذكاء الاصطناعي شايف: ")}<b>{aiAlt.map((x) => (ar && x.ar) || x.name).join(" · ")}</b>
@@ -550,13 +550,13 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                         {x.check ? <span className="ms-1 text-[10.5px] text-amber-300">{L("label may be wrong", "الملصق ممكن يكون غلط")}</span> : null}
                         <Grades x={x} L={L} />
                       </div>
-                      <div className="text-[11.5px] text-slate-400 tabular-nums">{r0(x.kcal)} kcal · P {r0(x.p)} · C {r0(x.c)} · F {r0(x.f)}</div>
+                      <div className="text-[11.5px] text-slate-400 tabular-nums" dir="auto">{ar ? `${r0(x.kcal)} سعرة · بروتين ${r0(x.p)} · كربوهيدرات ${r0(x.c)} · دهون ${r0(x.f)}` : `${r0(x.kcal)} kcal · P ${r0(x.p)} · C ${r0(x.c)} · F ${r0(x.f)}`}</div>
                     </div>
-                    {x.quick ? null : <><input type="number" inputMode="numeric" value={x.grams} onChange={(e) => setGrams(i, e.target.value)} className="w-16 rounded bg-slate-900 px-1.5 py-1 text-[13px] text-white text-end" data-testid="fit-draft-grams" />
-                    <span className="text-[11px] text-slate-500">g</span></>}
-                    {x.id ? <button onClick={() => { const on = P.isFav(st.favFoods, x.id); upd((s) => ({ ...s, favFoods: P.toggleFav(s.favFoods, x) })); flash && flash(on ? L("Removed from favorites", "أُزيلت من المفضلة") : L(`★ ${x.name} — ${x.grams} g, one tap next time`, `★ ${x.ar || x.name} — ${x.grams} جم، ضغطة واحدة المرة الجاية`)); }}
-                      className={P.isFav(st.favFoods, x.id) ? "text-amber-300" : "text-slate-500"} data-testid="fit-fav-toggle" aria-label={L("Favorite", "مفضلة")}><Star size={15} fill={P.isFav(st.favFoods, x.id) ? "currentColor" : "none"} /></button> : null}
-                    <button onClick={() => setDraft((d) => d.filter((_, k) => k !== i))} className="text-slate-500"><Trash2 size={15} /></button>
+                    {x.quick ? null : <><input type="number" inputMode="numeric" value={x.grams} onChange={(e) => setGrams(i, e.target.value)} className="w-16 min-h-[38px] rounded bg-slate-900 px-1.5 py-1 text-[14px] text-white text-end" data-testid="fit-draft-grams" />
+                    <span className="text-[11px] text-slate-500">{L("g", "جم")}</span></>}
+                    {x.id ? <button onClick={() => { const on = P.isFav(st.favFoods, x.id); upd((s) => ({ ...s, favFoods: P.toggleFav(s.favFoods, x) })); flash && flash(on ? L("Removed from favorites", "أُزيلت من المفضلة") : L(`★ ${x.name} — ${x.grams} g, one tap next time`, `★ ${x.ar || x.name} — ${x.grams} جم، ضغطة واحدة في المرة القادمة`)); }}
+                      className={"min-h-[40px] min-w-[36px] grid place-items-center " + (P.isFav(st.favFoods, x.id) ? "text-amber-300" : "text-slate-500")} data-testid="fit-fav-toggle" aria-label={L("Favorite", "مفضلة")}><Star size={17} fill={P.isFav(st.favFoods, x.id) ? "currentColor" : "none"} /></button> : null}
+                    <button onClick={() => setDraft((d) => d.filter((_, k) => k !== i))} className="text-slate-500 min-h-[40px] min-w-[36px] grid place-items-center" aria-label={L("Remove", "إزالة")} data-testid="fit-draft-remove"><Trash2 size={17} /></button>
                   </div>
                   {(x.alts && x.alts.length > 1) || x.from === "text" ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-alts">
@@ -572,7 +572,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                     </div>; })()}
                   {x.base && (x.from === "text" || !AQ.amountQuestion(x)) ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-portions">
-                      {[0.5, 0.75, 1, 1.5, 2].map((k) => <button key={k} onClick={() => scaleAt(i, k)} className={"rounded px-2 py-0.5 text-[11.5px] " + ((x.k || 1) === k ? "bg-sky-700 text-white" : "bg-slate-900 text-slate-300")} data-testid={"fit-portion-" + k}>{k === 1 ? (x.from === "text" ? L("as written", "كما كتبت") : L("as seen", "كما في الصورة")) : "×" + k}</button>)}
+                      {[0.5, 0.75, 1, 1.5, 2].map((k) => <button key={k} onClick={() => scaleAt(i, k)} className={"rounded min-w-[40px] min-h-[34px] px-2 py-0.5 text-[12px] " + ((x.k || 1) === k ? "bg-sky-700 text-white" : "bg-slate-900 text-slate-300")} data-testid={"fit-portion-" + k}>{k === 1 ? (x.from === "text" ? L("as written", "كما كتبت") : L("as seen", "كما في الصورة")) : "×" + k}</button>)}
                     </div>) : null}
                 </div>
               ))}
@@ -583,16 +583,17 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                   {results.map((fd) => <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex justify-between gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-slate-800" data-testid={"fit-food-" + fd.id}><span className="text-[13px] text-slate-200 truncate">{ar && fd.ar ? fd.ar : fd.en}</span><span className="text-[11.5px] text-slate-500 shrink-0">{fd.kcal} kcal/100g</span></button>)}
                 </div>) : null}
               <div className="flex gap-2" data-testid="fit-cmd-row">
-                <input value={cmd} onChange={(e) => setCmd(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && cmd.trim()) runCmd(); }} placeholder={L("Change something: “remove the cola”, “rice 200 g”…", "عدّل: «شيل البيبسي»، «الرز ٢٠٠ جرام»…")}
+                <input value={cmd} onChange={(e) => setCmd(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && cmd.trim()) runCmd(); }} placeholder={L("Change something: “remove the cola”, “rice 200 g”…", "عدّل شيئًا: «شيل البيبسي»، «الرز ٢٠٠ جرام»…")}
                   className="flex-1 min-w-0 rounded-lg bg-slate-900 px-2 py-1.5 text-[13px] text-white placeholder:text-slate-500" data-testid="fit-cmd" />
-                <button onClick={() => speak("cmd")} className={"rounded-lg px-2.5 " + (listening === "cmd" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-300")} data-testid="fit-cmd-mic"><Mic size={15} /></button>
+                <button onClick={() => speak("cmd")} aria-label={L("Say it", "قلها")} className={"rounded-lg min-w-[44px] grid place-items-center px-2.5 " + (listening === "cmd" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-300")} data-testid="fit-cmd-mic"><Mic size={15} /></button>
                 <button onClick={() => cmd.trim() && runCmd()} className="rounded-lg bg-sky-700 px-3 text-[12.5px] text-white" data-testid="fit-cmd-go">{L("Do it", "نفّذ")}</button>
               </div>
               {cmdNote ? <div className="text-[12px] text-sky-300" data-testid="fit-cmd-note">{cmdNote}</div> : null}
               {draft.length ? <SaveMyMeal {...{ L, draft, upd, flash }} /> : null}
-              <div className="flex gap-2">
-                <button onClick={() => setDraft(null)} className="rounded-xl bg-slate-800 px-3 py-2 text-[13px] text-slate-300">{L("Back", "رجوع")}</button>
-                <button onClick={confirm} disabled={!draft.length} className="flex-1 rounded-xl bg-emerald-600 disabled:opacity-40 py-2 text-[14px] font-medium text-white flex items-center justify-center gap-1.5" data-testid="fit-confirm"><Check size={16} />{L("Save", "احفظ")} · {F.sumN(draft.filter((x) => x.kcal != null)).kcal} kcal</button>
+              {/* the Save button stays in reach above Fit's bottom bar however long the list is */}
+              <div className="flex gap-2 sticky z-10 -mx-3 px-3 py-2 bg-slate-900" style={{ bottom: "calc(92px + env(safe-area-inset-bottom))" }} data-testid="fit-save-bar">
+                <button onClick={() => setDraft(null)} className="rounded-xl bg-slate-800 px-3 py-2.5 text-[13px] text-slate-300">{L("Back", "رجوع")}</button>
+                <button onClick={confirm} disabled={!draft.length} className="flex-1 rounded-xl bg-emerald-600 disabled:opacity-40 py-2.5 text-[14px] font-medium text-white flex items-center justify-center gap-1.5" data-testid="fit-confirm"><Check size={16} />{L("Save", "حفظ")} · {F.sumN(draft.filter((x) => x.kcal != null)).kcal} {L("kcal", "سعرة")}</button>
               </div>
             </div>
           )}
@@ -688,7 +689,7 @@ function ProfileForm({ pf, setPf, save, L, cancel, extra }) {
       <p className="text-[12.5px] text-slate-400">{L("Your daily calories and protein are worked out by the Mifflin-St Jeor formula — the one dietitians use. Everything stays on your phone.", "تُحسب السعرات والبروتين بمعادلة ميفلين-سان جيور التي يستخدمها أخصائيو التغذية. ويبقى كل شيء على هاتفك.")}</p>
       {Sel("sex", [["m", L("Male", "ذكر")], ["f", L("Female", "أنثى")]])}
       <div className="flex gap-2">{Num("age", L("Age", "العمر"))}{Num("cm", L("Height (cm)", "الطول (سم)"))}{Num("kg", L("Weight (kg)", "الوزن (كجم)"))}</div>
-      <div className="text-[12px] text-slate-400">{L("How active are you?", "نشاطك قد إيه؟")}</div>
+      <div className="text-[12px] text-slate-400">{L("How active are you?", "ما مستوى نشاطك؟")}</div>
       {Sel("activity", [["sedentary", L("Desk, little walking", "مكتب، مشي قليل")], ["light", L("Light", "خفيف")], ["moderate", L("Moderate", "متوسط")], ["active", L("Active", "نشيط")], ["very", L("Very active", "نشيط جداً")]])}
       <div className="text-[12px] text-slate-400">{L("Goal", "الهدف")}</div>
       {Sel("goal", [["lose", L("Lose weight", "إنقاص الوزن")], ["maintain", L("Keep my weight", "الحفاظ على وزني")], ["gain", L("Gain muscle", "بناء العضلات")]])}
@@ -1005,7 +1006,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
             {week.map((w) => (
               <div key={w.d} className="flex-1 flex flex-col items-center gap-0.5 h-full justify-end">
                 <div className={"w-full rounded-sm " + (w.kcal > tg.kcal * 1.1 ? "bg-rose-400" : w.d === dayKey ? "bg-emerald-400" : "bg-emerald-700")} style={{ height: Math.max(2, Math.round((w.kcal / wMax) * 40)) + "px" }} />
-                <span className="text-[10px] text-slate-500">{DAY_LETTERS[ar ? "ar" : "en"][w.day]}</span>
+                <span className="text-[11px] text-slate-500">{DAY_LETTERS[ar ? "ar" : "en"][w.day]}</span>
               </div>))}
           </div>
         </div>
@@ -1174,7 +1175,7 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
       {planList.map((p) => { const c = F.planCost(p.workout, kg); return (
         <div key={p.id} className="rounded-xl bg-slate-900/60 border border-slate-800 px-3 py-2.5 flex items-center gap-3">
           <div className="flex-1 min-w-0"><div className="text-[14px] text-white truncate">{ar ? p.ar : p.en}</div><div className="text-[12px] text-slate-400">~{c.minutes} {L("min", "دقيقة")} · ~{c.kcal} kcal</div></div>
-          <button onClick={() => { const s = steps(p); const sec = secsOf(s[0]); setSess({ plan: p, steps: s, i: 0, left: sec, running: sec > 0 }); }} className="shrink-0 rounded-full bg-emerald-600 p-2 text-white" data-testid={"fit-start-" + p.id}><Play size={15} /></button>
+          <button onClick={() => { const s = steps(p); const sec = secsOf(s[0]); setSess({ plan: p, steps: s, i: 0, left: sec, running: sec > 0 }); }} className="shrink-0 rounded-full bg-emerald-600 w-11 h-11 grid place-items-center text-white" aria-label={L("Start", "ابدأ")} data-testid={"fit-start-" + p.id}><Play size={17} /></button>
         </div>); })}
       <button disabled={busy} onClick={async () => {
         if (!modelReady) { openEngine && openEngine(); return; }
@@ -1300,7 +1301,7 @@ function YazioPlus({ L, ar, st, upd, tg, share }) {
       <div className="text-[13px] text-white">{L("More calories on some days", "سعرات أكثر في أيام معيّنة")}</div>
       <div className="text-[11.5px] text-slate-400 mb-2">{L("Pick days to eat 300 kcal more (weekends, family dinners). The other days give a little back, so your week — and your weight plan — stays the same.", "اختر أيامًا تأكل فيها 300 سعر إضافية (الإجازات، عزومات العائلة). تتنازل الأيام الأخرى عن قليل، فيبقى أسبوعك — وخطة وزنك — كما هما.")}</div>
       <div className="flex flex-wrap gap-1.5">{WD.map(([en, a], i) => <button key={i} onClick={() => upd((s) => { const e = { ...((s.profile || {}).cycleExtra || {}) }; if (e[i]) delete e[i]; else e[i] = 300; return { ...s, profile: { ...s.profile, cycleExtra: e } }; })}
-        className={"rounded-lg px-2 py-1 text-[12px] border " + (extra[i] ? "border-emerald-500 bg-emerald-500/15 text-emerald-100" : "border-slate-700 text-slate-300")} data-testid={"fit-cyc-" + i}>{L(en, a)} {extra[i] ? Y.dayGoal(tg.kcal, (() => { const d = new Date(); d.setDate(d.getDate() + ((i - d.getDay() + 7) % 7)); return F.today(d); })(), extra) : ""}</button>)}</div>
+        className={"rounded-lg min-w-[44px] px-2 py-1 text-[12px] border " + (extra[i] ? "border-emerald-500 bg-emerald-500/15 text-emerald-100" : "border-slate-700 text-slate-300")} data-testid={"fit-cyc-" + i}>{L(en, a)} {extra[i] ? Y.dayGoal(tg.kcal, (() => { const d = new Date(); d.setDate(d.getDate() + ((i - d.getDay() + 7) % 7)); return F.today(d); })(), extra) : ""}</button>)}</div>
     </div> : null}
     <Challenges {...{ L, st, upd, tg }} />
     <button onClick={() => { const csv = Y.diaryCSV(st.days); if (share) share(csv); else { const a = document.createElement("a"); a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv); a.download = "fit-diary.csv"; a.click(); } }}
