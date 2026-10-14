@@ -13,6 +13,7 @@ import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import { chatMapIntent } from "./mapintent.js";
 import { chatLifeIntent } from "./life.js";
+import { chatAsk, loadStores as lifeStores } from "./lifeask.js";
 import { chatDeadlineIntent } from "./deadlines.js";
 import { agentCard } from "./agent-ui.jsx";
 import { flightFromText } from "./owed.js";
@@ -24,7 +25,7 @@ import { wantsDoc } from "./slides.js";
 import { detectLang, replyLanguageRule, voiceTag, deviceLang } from "./langs.js";
 import { looksLikeFoodLog } from "./fit.js";
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { tr, dateLocale } from "./i18n.js";
+import { tr, dateLocale, getLang } from "./i18n.js";
 import { ActionCard } from "./actions-ui.jsx";
 import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
@@ -385,7 +386,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const [chats, setChats] = useState(() => loadChats());
   const [activeId, setActiveId] = useState(() => { const c = loadChats(); return c[0] && (Date.now() - (c[0].updated || 0) < 6 * 3600e3) ? c[0].id : null; });
   const [confirmDel, setConfirmDel] = useState(null);   // chat id waiting for "Delete?" (v5.28)
-  const [text, setText] = useState("");
+  // (v6.28: a question handed over from another page — Ask your life's "Ask Chat" — waits in the box, ready to send)
+  const [text, setText] = useState(() => { try { const p = localStorage.getItem("attune:chat:prefill"); if (p) { localStorage.removeItem("attune:chat:prefill"); return p; } } catch (e) {} return ""; });
   // v6.12: several photos and files in one message (Ali: "attach more than 1 pdf or file or photo")
   const [photos, setPhotos] = useState([]);           // [{ data, media, url }]
   const [files, setFiles] = useState([]);             // [{ name, b64, size, text? }] — spreadsheets and documents
@@ -752,6 +754,20 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
 
     // v6.27 "Do it for me": «book me the cheapest flight to Dubai on Thursday» — read by code into a plan; missing details
     // are asked; the app / site opens filled in (or inside Attune with Best offer / Fill my details); it never pays
+    // v6.28 Ask your life: «who owes me money?», «is mum's HbA1c better?» — answered by code from your own data, with its source
+    const mine = route && !img ? chatAsk(typed, lifeStores()) : null;
+    if (mine) {
+      const ar = /[\u0600-\u06ff]/.test(typed) || getLang() === "ar";
+      const TOOL = { money: "Open Money", life: "Open People & plans", care: "Open Family health", fit: "Open Fit & Food", radar: "Open Deadline Radar", reminders: "Open Reminders", memory: "Open Mind" };
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: (ar ? mine.ar : mine.en).replace(/\*\*/g, "") + ((mine.rows || []).length ? "\n" + mine.rows.slice(0, 8).map(([a, b]) => "• " + a + " — " + b).join("\n") : ""),
+          actions: [...(mine.open && TOOL[mine.open] ? [[TOOL[mine.open], "open:" + mine.open]] : []), ["Just answer", "answer"]] } }] }));
+      setText("");
+      return;
+    }
+
     const ag = route && !img ? agentCard(typed, { now: Date.now(), order: dateOrder(), inApp: !!(NATIVE && NATIVE.agentOpen) }) : null;
     if (ag) {
       const cid = ensureChat(typed);
@@ -1604,6 +1620,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "coach") window.dispatchEvent(new CustomEvent("attune-coach", { detail: m.coachIn || null }));
     else if (act === "radar") window.dispatchEvent(new CustomEvent("attune-radar", { detail: { text: m.radarText || "" } }));
     else if (act === "map") window.dispatchEvent(new CustomEvent("attune-map", { detail: { q: m.mapQuery || "" } }));
+    else if (act.startsWith("open:")) window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: act.slice(5) } }));   // v6.28 Ask your life
     else if (act === "studio") window.dispatchEvent(new CustomEvent("attune-studio", { detail: { prompt: m.studioPrompt || "" } }));
     else if (act === "answer") {
       const at = messages.findIndex((x) => x.id === m.id);

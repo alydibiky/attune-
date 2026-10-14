@@ -567,7 +567,9 @@ Open — Ali wants a conversation first to set the priorities ("i will have a co
 5. How to use Attune: every tool in 3 steps with drawings, English + Arabic, phone + computer. ✅
 6. Device levels (Light / Standard / Strong / Flagship / Computer) + "Show every tool anyway". ✅
 7. Learn daily: spaced repetition (2, 5, 12, 30 days). ✅
-8. Engagement feature — ⏳ **Ali picks A, B or C** (options page: https://claude.ai/artifact/9njLu6hKRKnDEvALdBYHvV).
+8. Ali: "a feature that helps people, automates their lives or does a hard thing no one can do — see what's best" → **Ask your
+   life**: one question answered by code from all your own data (money, debts, medicines, labs, meals, deadlines, notes), on its
+   page and in Chat. ✅ — **check on the phone with real data.** (The earlier A/B/C engagement options stay on file.)
 
 Still open (each needs Ali): Google sign-in + Drive sync (his Google Cloud OAuth client ids) → Family circle; paid web search for Pro
 (pick a provider + API key, after the Gemini comparison test); the Attune keyboard (Android IME: needs phone testing); more UI

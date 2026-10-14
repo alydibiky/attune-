@@ -174,6 +174,8 @@ const LAB_ALIASES = [
   ["Platelets", /\b(platelets?|plt)\b|الصفائح/i], ["RBC", /\b(rbc|red blood cells?)\b|كرات الدم الحمراء/i], ["Sodium", /\b(sodium|na)\b|الصوديوم/i], ["Potassium", /\b(potassium|k)\b|البوتاسيوم/i],
   ["Calcium", /\b(calcium|ca)\b|الكالسيوم/i], ["CRP", /\b(crp|c-reactive protein)\b/i], ["PSA", /\b(psa)\b/i], ["INR", /\b(inr)\b/i],
 ];
+/** v6.28: the lab test a question or line names ("my HbA1c", "السكر التراكمي") → its name, or "". */
+export function labTestOf(text) { const a = LAB_ALIASES.find(([, re]) => re.test(String(text || ""))); return a ? a[0] : ""; }
 const NUMRE = "(\\d+(?:[.,]\\d+)?)";
 /** A lab report (text) → [{ test, value, unit, low, high, flag, raw }] — flag only from the printed range ("" if none). */
 export function readLabs(text) {

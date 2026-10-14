@@ -154,7 +154,7 @@ Google Play Billing.
 | v6.25 | 12 Oct | Back on a computer (sidebar ←, mouse back button, Alt+←, Esc); one Windows app window at a time |
 | v6.26 | 12 Oct | Desktop look A + C (Home page, Tools page, pinned tools, wide pages, "computer" wording); Windows engine needs no extra Microsoft files |
 | v6.27 | 13 Oct | Roadmap agreed (ROADMAP_2026-10-13.md); Brave search removed; maps without OpenStreetMap's tile servers (world overview pack); every country online without downloading, free; compounds searchable offline |
-| v6.28 | 14 Oct | Insulin ↔ Fit & Food (refill + low-sugar notifications, carbs per meal); converter sub/superscripts; Studio on big models; How to use Attune; device levels; spaced repetition in Learn |
+| v6.28 | 14 Oct | Ask your life (one question answered from all your own data); insulin ↔ Fit & Food (refill + low-sugar notifications, carbs per meal); converter sub/superscripts; Studio on big models; How to use Attune; device levels; spaced repetition in Learn |
 
 ## 8. Prompt for the next session (paste as is)
 ```

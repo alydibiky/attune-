@@ -1362,8 +1362,17 @@ Ali: "c p f is just lame"; "a pulse loading screen"; "the app is one colour"; "i
   30 days, then counts as learned; missed again → starts over. `c.review` (text list, unchanged) + `c.srs` ({text: {box, due}}) +
   `c.learned`; old courses keep working. The course screen shows "N to review · N coming back later (date) · N learned".
   Tests: `tests/unit/v731srs.test.mjs`.
-- **Engagement feature:** options A "Saved by Attune" (recommended), B "Friday Check-up", C "Family Streaks" (needs sync) shown to
-  Ali as mock-ups — build the one he picks.
+- **Ask your life** (Ali, after seeing the engagement options: "what I meant is a feature that helps people, automates their lives
+  or does a hard thing no one can do — see what's best"). Picked because a cloud AI has none of the person's data and Attune has
+  all of it, on the phone, in separate tools. `lifeask.js` (pure): `kindOf` → owed-in / owed-out (People & plans), lab trend and
+  blood sugar (Family health, per family member: `memberAsked`), medicines and today's doses, meals (Fit & Food, by `spanOf`),
+  money (→ `answerMyMoney`), due in 7 / 30 days (Radar + People & plans + Reminders, late ones flagged), else a word search over
+  Mind, Money notes, Radar, People and medicines. Every answer: English + Arabic text made by code, rows, its sources and the tool
+  to open. Page `lifeask-ui.jsx` (mode `lifeask`, first in All → Mind & learning; layout A on a computer; "Ask Chat" leaves the
+  question in Chat's box via `attune:chat:prefill`). Chat: `chatAsk` answers only questions about YOUR own things ("is my
+  HbA1c better?", «مين عليه فلوس ليا؟») as a card with "Open …" (`attune-open` event); "What is HbA1c?" stays a model answer.
+  Tests: `tests/unit/v731lifeask.test.mjs`, `tests/e2e_v731lifeask.py`. Name "Ask your life" can be changed in one place each
+  (MORE_TOOLS, i18n-ar). The A/B/C engagement options page is still there if Ali wants one later.
 - **Test setup in a fresh cloud session:** `bash tests/setup.sh` (≈ 10 min, builds llama-server). If the Pyodide download is cut,
   run `bash web-src/fetch-pyodide.sh` again — without it e2e_v510/v511/v513 time out (they run code in Python).
 
