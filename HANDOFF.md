@@ -1215,6 +1215,31 @@ internet searching … improve internet searching and make it faster".
 - Tests: `tests/unit/v727guardian.test.mjs` (14), `tests/e2e_v727guardian.py` (Pro: findings, WhatsApp, refund counted,
   collected after a reminder; Free: one shown, rest locked → plan). audit.py TOOLS starts with "guardian".
 
+### 5.67 (14 Oct 2026) — Deadline Radar; the money features made global (Ali: "make everything global")
+- **Deadline Radar** (`deadlines.js` pure, `radar-ui.jsx` page, mode "radar", All → Money & people): free trials,
+  renewals, return windows, warranties, document expiry (passport 180 days ahead, licence, ID, insurance, visa, car
+  registration, bank card). Read BY CODE in en/ar/es/fr/pt/de/it/tr/id/nl: dates (ISO, d/m/y or m/d/y by region,
+  "12 Nov 2026", "3 de noviembre", "Nov 12", card "03/27"), durations ("30-day", "2 Jahre", "سنتين"), amounts (dates
+  masked first), the item's name (a known service, else the receipt's product line). Model fallback only if a model is loaded.
+  Sources: **automatic** — `runAutoRadar` (app open + every return) adds the sure ones from the notification queue and
+  schedules reminders, the rest are suggestions; **by hand** — Scan a receipt (ML Kit `readText`; a photo-reading model
+  for other scripts), Paste or type, **Add by hand** form (Ali asked for manual input too); Chat «my Spotify trial ends on…»
+  → card "Watch it". Photos are kept in IndexedDB `attune-radar`. Home's TODAY lists items inside their warning window.
+  Cancelled / Returned / Claimed → `markSaved` kind "radar" in the Guardian counter. Free watches 3 (FREE_LIMIT).
+- **paylog**: a charge that hasn't happened yet ("you'll be charged", "renews on", trial notices — many languages) is no
+  longer read as a payment.
+- **Global**: `locale.js` (homeCurrency: Money's currency, else the phone's region; dateOrder mdy for US/PH);
+  `paytext.js` ~55 currencies (+ ambiguous $/kr/¥/Rs resolved by the home currency), every number format (`payNumber`:
+  1.234,56 · 1 234,56 · 1,23,456 · 12.500 KWD = 3 decimals), debit/credit/declined words in many languages;
+  `paylog.js` worldwide merchants + OTP/balance/promo words; `PayListener.kt` filter any currency code/sign and many
+  languages (+ trial/renew words); `life.js` es/fr/pt/de/it/tr/id sentences, month names, "15 November" is a date not an
+  amount, default currency = home; Guardian: global subscriptions/fees, neutral Arabic or English reminder, sent via the
+  phone's **share menu** (not only WhatsApp); Yusr's first run uses the phone's country/currency (`homeCountry/homeCur`);
+  EGP defaults removed from money-calm, myledger, chatxray, erp templates, the org card, research fx (home first).
+  Books (Egyptian ETA e-invoice, BASE "EGP") is unchanged — Egypt-specific by design.
+- Tests: `tests/unit/v727global.test.mjs` (24 bank messages in 15 countries, numbers, dates, People & plans in 8
+  languages), `tests/unit/v727radar.test.mjs`, `tests/e2e_v727radar.py`; desktop `test/reminders.js` (early timer).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

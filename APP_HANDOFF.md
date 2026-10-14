@@ -65,6 +65,7 @@ Google Play Billing.
 | **Slides & Reports** | A .pptx or report from one sentence | `slides.js`, `slides-ui.jsx` |
 | **CV / Resume** | Build, import, tailor and export (EN/AR) | `cv*.js`, `cv-ui.jsx` |
 | **Learn daily / Daily news** | A lesson a day with quizzes and ready courses; morning news | `daily.js`, `daily-ui.jsx`, `langs.js` |
+| **Money Guardian, Deadline Radar** (v6.27) | Finds money in your own payments (late debts, double charges, price rises, subscriptions) with an honest "saved" counter; watches free trials, renewals, returns, warranties and documents (automatic from notifications + scan/paste/by hand) | `guardian*.js(x)`, `deadlines.js`, `radar-ui.jsx`, `locale.js` |
 | **Deal Check, Chat X-Ray** | True cost before you pay; WhatsApp chat → money, promises, unanswered questions | `deal*.js(x)`, `chatxray*.js(x)` |
 | **Shelf, Skills, Assistants, Projects, Artifacts** | Notes in books; user recipes for the AI; experts; folders; saved pages | `shelf*.js(x)`, `skills-ui.jsx`, `userskills.js`, `spaces*.js(x)` |
 | **Cycle, Travel, Crane toolkit, Site reports, Fleet, Reminders, Instant, Video Downloader** | As named (crane: load charts, ground, slings, wind) | `cycle.jsx`, `crane*.js(x)`, `actions*.js(x)`, `video*.js(x)`, `places.js` |
