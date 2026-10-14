@@ -1,4 +1,4 @@
-# Next session — Ali's full problem list (29 Sep – 2 Oct 2026, after v6.9)
+# Next session — Ali's full problem list (29 Sep – 14 Oct 2026; newest: section R, then the prompt at the end)
 
 Everything Ali found on his phone after v6.9, in one place. Ali keeps adding items (latest: section H,
 2 Oct); when he sends more, add them under a new dated section at the end of the list.
@@ -529,29 +529,58 @@ Ali: "Attune will charge money … find reliable free sources … full mark … 
     his own photos (HANDOFF §5.51 has the numbers). ✅ first step — **next: train on licensed food photos (see §5.51); ask Ali
     about an optional online precise mode.**
 
+## R. 13–14 Oct 2026 — done in v6.27 (HANDOFF §5.61–§5.70) unless marked
+Built (✅ = shipped on main, all tests green; **check on the phone / computer** where marked):
+1. Maps: own packs streamed online ($0), compounds as labelled areas, Google-like search ranking, ask the map from Chat. ✅
+2. Calm design A: tokens, phone Home + 7-area tool map, Money on the computer. ✅
+3. Life layer: people, commitments, debts/installments (Ali's "Ahmed owes me 12,000" example). ✅
+4. Money tracks itself (payment notifications) + Money Guardian + Deadline Radar; made global (any country/currency). ✅
+5. Agent levels 1+2 (deep links + web agent that stops before paying). ✅
+6. Homework Coach + the lesson player (visual, narrated, interactive); Family health; Shop in your pocket. ✅
+7. Translate (text, PDF, photo, any language); Travel in Calm. ✅
+8. Fit & Food: nutrients in full words with a colour each (no P/C/F), pulse loading screen, the 3 looks
+   (colour per meal, rings, tiles) as optional looks, formal Arabic. ✅ — **Ali still has to pick the DEFAULT look (now "fresh").**
+9. Three new ideas blended in without clutter: What you're owed, Read it to me, Job ready. ✅
+10. Play Protect blocked the APK ("App blocked to protect your device"): Ali — "don't remove the notification part".
+    → two builds: `attune-apk` (full, keeps the notification reader) and `attune-apk-lite`; real fix = Google Play
+    internal testing (CI uploads once the secrets exist). ⏳ **Ali: create the Play developer account, then add the
+    secrets PLAY_SERVICE_ACCOUNT_JSON + the release keystore (never commit the key file).**
+11. "The computer interface is not optimized except Home — optimize the whole app" → Ali picked layout **A** (two panels:
+    inputs left, answer right; lists as card grids) for EVERY page; phones unchanged. ✅ (HANDOFF §5.70) — **check on the
+    computer.** Still uneven: Travel → Trip (right column longer); Radar card buttons wrap to two lines.
+12. "Why does Settings have this" (the phone All sheet on a computer) → a real Settings window. ✅
+13. Toasts vanishing early (one timer for every message). ✅  CV preview squeezed to ⅔ width on phones. ✅
+
+Open — Ali wants a conversation first to set the priorities ("i will have a convo with u to set up some things straight"):
+- **Google sign-in + Drive sync** ("where are the google sign in part, i feel like u forget some things") — NOT built;
+  needs Ali's Google Cloud project (OAuth client id for Android + desktop). Then **Family circle** on top of it.
+- Device levels + model router; paid web search for Pro; the Attune keyboard; more UI languages;
+  Business builder v2; courses / spaced repetition / speaking practice; the "more features" list in ROADMAP_2026-10-13.md.
+- Food recognition: train on licensed food photos (§5.51); optional online precise mode (ask Ali).
+
 ## Prompt to start the next session
 
 ```
-Continue Attune on branch claude/attune-android-continuation-4lp2wq.
-First read HANDOFF.md and NEXT_SESSION.md, then fix EVERY item in NEXT_SESSION.md, one by
-one, with a task list. Start with section A (heat, the engine reload, the app restarting
-when I come back), item 10 (Fit: the photo crash, no food recognised, only 54 recipes), item 17
-(the file converter is still not top notch: use the real file in tests/convert/fixtures/real/),
-item 19 ("No model" on paste), item 20 (the engine must load by itself) and item 18 (the new CV / resume page); then 21 (exact-length rules), 22 (Ali's feature verdicts), 23 (plugins and skills) and 24 (Add any model). Measure each fix on the real flow
-and with real models (speed, heat/energy, RAM, answer quality) before shipping it.
-Research item 3 (use the phone's storage to make models lighter and stronger) and ship
-only what keeps quality and speed. Rework the whole app's UI/UX like an expert with
-20 years of experience.
+Continue Attune on branch claude/design-a-maps-4pmxxr (main = the same commit).
+First read CLAUDE.md, APP_HANDOFF.md, ROADMAP_2026-10-13.md, HANDOFF.md §5.61–§5.70 and NEXT_SESSION.md
+(the newest section is R). Then START WITH A CONVERSATION: I want to set some things straight before you build.
+Show me, short and simple, what is done, what is open (section R "Open"), and your recommended order;
+wait for my answers on the priorities, then work through them with a task list.
+Things I already know I want: Google sign-in + Drive sync (tell me exactly what to create in Google Cloud),
+Family circle after it, and the app optimised for BOTH phone and computer on every page you touch.
+Also ask me to pick the default Fit look, and help me set up Google Play internal testing.
 
 Standing rules:
 - Anything subjective (UI look, layout, colours, names, wording): show me 2–4 options with a recommendation and build the one I pick.
-- Never commit *private-key*.json; never change app/attune-test.keystore.
-- Targeted fixes, except the UI/UX rework and the Fit & Food redesign I asked for.
-- Explain every step simply, with technical terms in English AND Egyptian Arabic.
+- Everything must work well on a phone AND a computer (computer = layout A: inputs left, answer right, lists as card grids).
+- Never commit *private-key*.json; never change app/attune-test.keystore; Play keys only as GitHub secrets.
+- Don't remove the payment-notification reader from the main APK.
+- Targeted fixes, no rewrites (except the UI/UX rework and the Fit & Food redesign I asked for).
+- Explain every step simply, with technical terms in English AND Egyptian Arabic. Arabic UI = simple formal Arabic.
 - Commit as Claude <noreply@anthropic.com>; no model names in commits or code.
-- Run ALL tests (bash tests/run_all.sh) before pushing to main; push to main and the branch.
-- Watch "Build the APK" on main and give me the link.
+- Run ALL tests (bash tests/run_all.sh) before pushing to main; push to main, ccr-a0eb3595-e2c7a7 and the branch.
+- Watch "Build the APK" and the desktop build on main and give me the links.
 - Answer every point I ask; don't stop to ask me unless something is irreversible.
-- Keep searching for ways to make the app smoother and every model lighter, faster and
-  more accurate without compromising anything, and don't stop until you find them.
+- Keep searching for ways to make the app smoother and every model lighter, faster and more accurate
+  without compromising anything.
 ```
