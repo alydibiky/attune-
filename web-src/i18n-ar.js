@@ -1259,7 +1259,7 @@ export const AR = {
   "The verdict appears here": "يظهر الحكم هنا",
   "The real cost, the market price, scam signs and a reply to send.": "التكلفة الحقيقية، وسعر السوق، وعلامات الاحتيال، وردٌّ جاهز للإرسال.",
   "The answer appears here": "تظهر الإجابة هنا",
-  "Paste text or add a photo on the left, pick a job, and the result shows here.": "الصق نصًا أو أضف صورة على اليسار، واختر المهمة، فتظهر النتيجة هنا.",
+  "Paste text or add a photo on the left, pick a job, and the result shows here.": "الصق نصًا أو أضف صورة، واختر المهمة، فتظهر النتيجة هنا.",
   "Save": "حفظ",
   "Profile cleared": "تم مسح الملف الشخصي",
   "Engine on this phone": "المحرك على هذا الهاتف",
