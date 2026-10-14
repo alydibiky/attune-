@@ -9196,7 +9196,7 @@ export default function App() {
         onClose={() => side.setOpen(false)} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
         openEngine={() => setShowEngine(true)} openProfile={() => setShowProfile(true)} openUpgrade={() => setShowUpgrade(true)}
         openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /> : null}
-      <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-5xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide ? "pb-8" : "pb-24")}>
+      <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-6xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide ? "pb-8" : "pb-24")}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
         <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || mode === "tools" || (wide && OWN_TITLE.has(mode)) ? " hidden" : "")}>

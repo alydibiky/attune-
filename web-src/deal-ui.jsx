@@ -7,6 +7,7 @@ import { ShieldCheck, ImagePlus, X, Loader2, Check, Copy, Send, AlertTriangle, T
 import { tr, getLang } from "./i18n.js";
 import * as D from "./deal.js";
 import { useSubBack, useSticky } from "./backstack.js";
+import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const HKEY = "attune:deals:v1";
 const loadH = () => { try { const v = JSON.parse(localStorage.getItem(HKEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
@@ -145,12 +146,14 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
 
   const lv = res ? LEVELS[res.v.level] || LEVELS.unknown : null;
   return (
-    <div className="space-y-4 max-w-2xl mx-auto" data-testid="deal">
+    <div className="space-y-4 max-w-2xl lg:max-w-none mx-auto" data-testid="deal">
       <div className="px-1">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2"><ShieldCheck size={19} className="text-emerald-300" />{tr("Deal Check")}</h2>
         <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1">{tr("Before you pay or sign: paste the offer, the seller's message or an installment plan — or add a screenshot. Attune works out the real cost, checks the market price, looks for scam signs and writes your reply.")}</p>
       </div>
 
+      {/* v6.27 computer layout A: the offer on the left, the verdict on the right (stacked on a phone) */}
+      <div className={PANES}><div className={LEFT}>
       <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
         <textarea value={text} onChange={(e) => setText(e.target.value)} dir="auto" rows={5} data-testid="deal-input"
           placeholder={tr("e.g. “iPhone 15 Pro 256GB, like new, 38,000 EGP, deposit on Vodafone Cash to hold it”  ·  “12,400 EGP or 3 × 4,133 with valU”")}
@@ -202,6 +205,21 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
         </section>
       ) : null}
 
+      {!res && !busy && hist.length ? (
+        <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[11px] uppercase tracking-wider text-slate-500">{tr("Earlier checks")}</p>
+            <button onClick={() => { setHist([]); saveH([]); }} aria-label={tr("Clear")} className="p-1.5 text-slate-500 hover:text-rose-300"><Trash2 size={14} /></button>
+          </div>
+          {hist.slice(0, 8).map((h) => (
+            <button key={h.id} onClick={() => setRes(h)} className="w-full flex items-center justify-between gap-2 py-2 border-b border-slate-800 last:border-0 text-start">
+              <span className="text-[13px] text-slate-200 truncate">{h.terms.item || h.input.slice(0, 50)}</span>
+              <span className={`text-[11px] px-2 py-0.5 rounded-md border shrink-0 ${(LEVELS[h.v.level] || LEVELS.unknown).cls}`}>{L(LEVELS[h.v.level] || LEVELS.unknown)}</span>
+            </button>
+          ))}
+        </section>
+      ) : null}
+      </div><div className={RIGHT}>
       {res ? (
         <section className="space-y-3" data-testid="deal-result">
           <div className={`rounded-2xl border p-4 ${lv.cls}`} data-testid="deal-verdict" data-level={res.v.level}>
@@ -269,22 +287,8 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
           <button onClick={() => { setRes(null); setText(""); setPhoto(null); }} data-testid="deal-new"
             className="w-full py-2.5 rounded-xl border border-slate-700 text-slate-200 text-sm">{tr("Check another deal")}</button>
         </section>
-      ) : null}
-
-      {!res && !busy && hist.length ? (
-        <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[11px] uppercase tracking-wider text-slate-500">{tr("Earlier checks")}</p>
-            <button onClick={() => { setHist([]); saveH([]); }} aria-label={tr("Clear")} className="p-1.5 text-slate-500 hover:text-rose-300"><Trash2 size={14} /></button>
-          </div>
-          {hist.slice(0, 8).map((h) => (
-            <button key={h.id} onClick={() => setRes(h)} className="w-full flex items-center justify-between gap-2 py-2 border-b border-slate-800 last:border-0 text-start">
-              <span className="text-[13px] text-slate-200 truncate">{h.terms.item || h.input.slice(0, 50)}</span>
-              <span className={`text-[11px] px-2 py-0.5 rounded-md border shrink-0 ${(LEVELS[h.v.level] || LEVELS.unknown).cls}`}>{L(LEVELS[h.v.level] || LEVELS.unknown)}</span>
-            </button>
-          ))}
-        </section>
-      ) : null}
+      ) : <DeskEmpty icon={ShieldCheck} title={tr("The verdict appears here")} text={tr("The real cost, the market price, scam signs and a reply to send.")} />}
+      </div></div>
     </div>
   );
 }
