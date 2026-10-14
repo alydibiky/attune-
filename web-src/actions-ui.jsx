@@ -6,6 +6,7 @@ import React, { useState } from "react";
 import { Bell, Trash2, X, Plus, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { newReminderId, nextOccurrence } from "./actions.js";
+import { PANES, LEFT, RIGHT } from "./desk.jsx";
 
 export const KIND_ICON = { reminder: "🔔", alarm: "⏰", timer: "⏱️", calendar: "📅", whatsapp: "💬", call: "📞", none: "❔" };
 export const KIND_LABEL = { reminder: "Reminder", alarm: "Alarm", timer: "Timer", calendar: "Calendar event", whatsapp: "WhatsApp message", call: "Phone call", none: "Nothing to do" };
@@ -119,6 +120,8 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
   const field = "bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500";
   return (
     <div className="mt-3 space-y-4" data-testid="reminders-panel">
+      {/* v6.27 computer layout (option A): what it is and "add one" on the left, what is set on the right as cards */}
+      <div className={PANES}><div className={LEFT}>
       <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
         <p className="text-sm text-slate-200 font-medium flex items-center gap-2"><Bell size={16} className="text-teal-300" />{tr("Reminders & actions")}</p>
         <p className="text-[12px] text-slate-500 mt-1">{tr("Just say it in Chat: “remind me tomorrow at 9 to call Ahmed”, “صحيني الساعة 6”, “ابعت لمحمود على الواتساب إني هتأخر”. You always confirm first.")}</p>
@@ -143,10 +146,11 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
         </div>
         <button onClick={add} className="w-full flex items-center justify-center gap-1.5 bg-teal-500 text-slate-950 font-semibold rounded-xl py-2.5 text-sm" data-testid="rem-add"><Plus size={16} />{tr("Add reminder")}</button>
       </div>
+      </div><div className={RIGHT}>
       <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
         <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("Coming up")} · {upcoming.length}</p>
         {upcoming.length === 0 ? <p className="text-sm text-slate-500">{tr("Nothing set.")}</p> : (
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">
             {upcoming.map((r) => (
               <div key={r.id} className="flex items-center gap-2 rounded-xl bg-slate-950 border border-slate-800 px-3 py-2" data-testid="rem-item">
                 <span>🔔</span>
@@ -171,6 +175,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
           </>
         ) : null}
       </div>
+      </div></div>
     </div>
   );
 }

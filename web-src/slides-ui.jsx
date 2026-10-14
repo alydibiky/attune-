@@ -15,6 +15,12 @@ import { rankPassages } from "./webrank.js";
 import { expandQueries } from "./research.js";
 import * as S from "./slides.js";
 import * as C from "./convert.js";
+import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
+// v6.27: two panels on a computer where the right-hand part sits in the middle of the phone's order — the grid places
+// SPLIT_R in the right column across every row (the last row, 1fr, takes up its extra height); everything else stays
+// in the left column in its phone order. Below 1024 px none of this applies.
+const SPLIT = "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] lg:grid-rows-[repeat(6,auto)_1fr] lg:gap-x-6 lg:gap-y-0 lg:items-start";
+const SPLIT_R = "lg:col-start-2 lg:row-start-1 lg:row-span-7 min-w-0";
 
 const MIME_PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 const KIND_LABEL = { bullets: "Key points", two: "Comparison", steps: "Steps", table: "Table", quote: "Quote", stats: "Numbers", chart: "Chart" };
@@ -564,9 +570,11 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
     <div className="space-y-4 max-w-2xl mx-auto" data-testid="slides">
       <div className="px-1">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Presentation size={19} className="text-teal-300" />{tr("Slides & Reports")}</h2>
-        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1">{tr("Describe it in one sentence — the AI on your phone writes a designed PowerPoint or a full report, from the web or your own file. Edit any slide, then save it as PowerPoint, Word or PDF.")}</p>
+        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Describe it in one sentence — the AI on your phone writes a designed PowerPoint or a full report, from the web or your own file. Edit any slide, then save it as PowerPoint, Word or PDF.")}</p>
       </div>
 
+      {/* v6.27 computer layout (option A): what to make on the left; recent ones / the slides on the right */}
+      {!deck && !report ? <div className={PANES}><div className="space-y-4">
       {!deck && !report ? (
         <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3">
           <div className="grid grid-cols-2 gap-1.5">
@@ -625,6 +633,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
           {!pro ? <p className="text-[11px] text-slate-500">{tr("Free: 2 a day · Pro: unlimited")}</p> : null}
         </section>
       ) : null}
+      </div><div className={RIGHT + (list.length ? "" : " hidden lg:block")}>
 
       {!deck && !report && list.length ? (
         <section className="space-y-1.5" data-testid="slides-recent">
@@ -638,6 +647,8 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
             </div>))}
         </section>
       ) : null}
+      <DeskEmpty icon={Presentation} title={tab === "deck" ? tr("Your slides appear here") : tr("Your report appears here")} text={tr("Each slide or section shows here as it is written.")} />
+      </div></div> : null}
 
       {deck ? (
         <section className="space-y-3" data-testid="slides-deck">
@@ -645,12 +656,13 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
             <p className="text-[14px] font-semibold text-slate-100 truncate" dir="auto" data-testid="slides-deck-title">{deck.title}</p>
             <span className="text-[11px] text-slate-500 shrink-0">{tr("{n} slides", { n: shapes.length })}</span>
           </div>
+          <div className={PANES}><div className="space-y-3 lg:sticky lg:top-4">
           {busyRow}
           {err ? <p className="text-[12.5px] text-rose-300" data-testid="slides-error">{err}</p> : null}
           {!busy && (deck.dropped || deck.unsure) ? (
             <p className="text-[12px] text-amber-200" data-testid="slides-check-note">{[deck.dropped ? tr("{n} figure(s) weren't in the sources, so they were left out.", { n: deck.dropped }) : "", deck.unsure ? tr(deck.hits.length || file ? "{n} figure(s) on the slides weren't found in the sources — check them before presenting." : "{n} figure(s) came from the AI's memory — check them before presenting.", { n: deck.unsure }) : ""].filter(Boolean).join(" ")}</p>
           ) : null}
-          <div className="flex gap-1.5 overflow-x-auto att-hscroll pb-1">{Object.entries(S.THEMES).map(([k, t]) => (
+          <div className="flex gap-1.5 overflow-x-auto att-hscroll pb-1 lg:flex-wrap lg:overflow-visible">{Object.entries(S.THEMES).map(([k, t]) => (
             <button key={k} onClick={() => { setDeck({ ...deck, theme: k }); setTheme(k); try { localStorage.setItem("attune:slides:theme", k); } catch (e) {} }} data-testid={"deck-theme-" + k}
               className={`shrink-0 rounded-lg border px-2 py-1 text-[11px] flex items-center gap-1.5 ${deck.theme === k ? "border-teal-500 text-teal-200" : "border-slate-700 text-slate-400"}`}>
               <span className="h-3 w-3 rounded-full" style={{ background: "#" + t.accent }} />{tr(t.name)}</button>))}</div>
@@ -685,7 +697,8 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
               </div>
             </div>
           ) : null}
-          <div className="space-y-2.5">
+          </div><div className="space-y-3 mt-3 lg:mt-0 min-w-0">
+          <div className="space-y-2.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
             {shapes.map((x, k) => {
               const bodyIndex = deck.slides.indexOf(x.slide);
               return (
@@ -697,6 +710,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
                 </div>);
             })}
           </div>
+          </div></div>
         </section>
       ) : null}
 
@@ -715,15 +729,17 @@ function ReportView({ report, busyRow, busy, err, saveDocx, saveReportPdf, toDec
     : /^h\d$/.test(b.type) ? <p key={k} className="text-[13.5px] font-semibold text-slate-100 mt-2" dir="auto">{b.text}</p>
     : <p key={k} className="text-[13px] text-slate-300 leading-relaxed" dir="auto">{b.text}</p>;
   return (
-    <section className="space-y-3" data-testid="report-view" dir={rtl ? "rtl" : "ltr"}>
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-2">
+    // v6.27 computer layout (option A): the title, progress and the save buttons on the left; the report itself on the
+    // right (placed by the grid, so a phone keeps its order: title, report, buttons)
+    <section className={"space-y-3 " + SPLIT} data-testid="report-view" dir={rtl ? "rtl" : "ltr"}>
+      <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-2 lg:col-start-1">
         <p className="text-[18px] font-bold text-white" dir="auto" data-testid="report-title">{report.title}</p>
         {report.subtitle ? <p className="text-[13px] text-slate-400" dir="auto">{report.subtitle}</p> : null}
         <p className="text-[11.5px] text-slate-500">{report.date}</p>
       </div>
-      {busyRow}
-      {err ? <p className="text-[12.5px] text-rose-300" data-testid="slides-error">{err}</p> : null}
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-1.5" data-testid="report-body">
+      {busyRow ? <div className="lg:col-start-1">{busyRow}</div> : null}
+      {err ? <p className="text-[12.5px] text-rose-300 lg:col-start-1" data-testid="slides-error">{err}</p> : null}
+      <div className={"bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-1.5 " + SPLIT_R} data-testid="report-body">
         <p className="text-[15px] font-semibold text-teal-200">{W0.summary}</p>
         {report.summary ? <>{report.summary.text ? <p className="text-[13px] text-slate-200 leading-relaxed" dir="auto" data-testid="report-summary">{report.summary.text}</p> : null}
           {report.summary.findings.length ? <ul className="space-y-1">{report.summary.findings.map((f, i) => <li key={i} className="ms-5 list-disc text-[13px] text-slate-200" dir="auto">{f}</li>)}</ul> : null}</>
@@ -737,9 +753,9 @@ function ReportView({ report, busyRow, busy, err, saveDocx, saveReportPdf, toDec
         {report.conclusion.length ? <div className="pt-2"><p className="text-[15px] font-semibold text-teal-200">{report.sections.length + 2}. {W0.conclusion}</p>{report.conclusion.map(B)}</div> : null}
         {report.sources && report.sources.length ? <div className="pt-2"><p className="text-[13px] font-semibold text-slate-300">{W0.sources}</p>{report.sources.map((s, i) => <p key={i} className="text-[11.5px] text-slate-500 break-all">[{i + 1}] {s.title} — {s.url}</p>)}</div> : null}
       </div>
-      {!busy && report.unsure ? <p className="text-[12px] text-amber-200" data-testid="report-check-note">{tr(report.sources.length || report.data ? "{n} figure(s) in the report weren't found in the sources — check them." : "{n} figure(s) came from the AI's memory — check them before sending.", { n: report.unsure })}</p> : null}
+      {!busy && report.unsure ? <p className="text-[12px] text-amber-200 lg:col-start-1" data-testid="report-check-note">{tr(report.sources.length || report.data ? "{n} figure(s) in the report weren't found in the sources — check them." : "{n} figure(s) came from the AI's memory — check them before sending.", { n: report.unsure })}</p> : null}
       {!busy ? (
-        <div className="space-y-2">
+        <div className="space-y-2 lg:col-start-1">
           <div className="grid grid-cols-2 gap-2">
             <button onClick={saveDocx} className="py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-semibold text-sm flex items-center justify-center gap-2" data-testid="report-save-docx"><Download size={16} />{tr("Word")}</button>
             <button onClick={saveReportPdf} className="py-2.5 rounded-xl bg-slate-100 text-slate-900 font-semibold text-sm flex items-center justify-center gap-2" data-testid="report-save-pdf"><Download size={16} />PDF</button>
@@ -772,12 +788,13 @@ function SlideEditor({ deck, index, setDeck, close, busy, busyRow, rewrite, err 
   const kinds = [...S.KINDS_TEXT, ...(S.hasFigures(deck.source || "") ? S.KINDS_FIG : [])];
   const help = { bullets: "One point per line: - Lead: sentence", steps: "One step per line: - Step: sentence", two: "LEFT: heading, its points, then RIGHT: heading, its points", table: "One row per line, cells split by |", stats: "- number | what it means", chart: "UNIT: …, then - label | number, TAKEAWAY: …", quote: "QUOTE: … and BY: …" }[s.kind];
   return (
-    <div className="space-y-3 max-w-2xl mx-auto" data-testid="slide-editor">
-      <p className="text-[13px] text-slate-400 px-1">{tr("Slide {n}", { n: k })} · {tr(KIND_LABEL[s.kind] || "")}</p>
-      <SlideCanvas shapes={shapes} testid="slide-editor-canvas" />
-      {busyRow}
-      {err ? <p className="text-[12.5px] text-rose-300">{err}</p> : null}
-      <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-2.5">
+    // v6.27 computer layout: what you change on the left, the slide as it will look on the right
+    <div className={"space-y-3 max-w-2xl lg:max-w-none mx-auto " + SPLIT} data-testid="slide-editor">
+      <p className="text-[13px] text-slate-400 px-1 lg:col-start-1">{tr("Slide {n}", { n: k })} · {tr(KIND_LABEL[s.kind] || "")}</p>
+      <div className={SPLIT_R + " lg:sticky lg:top-4"}><SlideCanvas shapes={shapes} testid="slide-editor-canvas" /></div>
+      {busyRow ? <div className="lg:col-start-1">{busyRow}</div> : null}
+      {err ? <p className="text-[12.5px] text-rose-300 lg:col-start-1">{err}</p> : null}
+      <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-2.5 lg:col-start-1">
         <input value={title} onChange={(e) => setTitle(e.target.value)} dir="auto" className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-[14px] text-slate-100 font-semibold" data-testid="slide-edit-title" />
         <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={7} dir="auto" className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-[13px] text-slate-100 leading-relaxed font-mono" data-testid="slide-edit-body" />
         <p className="text-[11px] text-slate-500">{tr(help || "")}</p>

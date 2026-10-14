@@ -5,6 +5,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X, Zap } from "lucide-react";
 import { tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
+import { DeskEmpty } from "./desk.jsx";
+// v6.27 computer layout (option A): the prompt and settings on the left, the picture and the gallery on the right. The
+// grid places PICTURE in the right column across every row (the last row, 1fr, takes up its extra height), so a phone
+// keeps its order (prompt, picture, gallery, settings). Below 1024 px none of this applies.
+const SPLIT = "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] lg:grid-rows-[repeat(6,auto)_1fr] lg:gap-x-6 lg:gap-y-0 lg:items-start";
+const PICTURE = "lg:col-start-2 lg:row-start-1 lg:row-span-7 min-w-0 space-y-3 lg:sticky lg:top-4";
 import { PACKS, SIZES, enhanceMessages, cleanPrompt, packReady, drawPack, recommendStudioPack, drawSize, gpuWorks, loadStudio, saveStudio, draftPlan, draftPrefs, setDraftPrefs, flowStep, flowSecondsLeft, flowPercent } from "./studio.js";
 
 const STAGE = {
@@ -55,7 +61,7 @@ const FLOW_LIVE = ["queued", "draft", "pick", "refining"];
 function FadeImg({ src, under, alt, testid }) {
   const [on, setOn] = useState(!under);
   return (
-    <div className="relative">
+    <div className="relative lg:max-w-[min(100%,62vh)] lg:mx-auto">
       {under ? <img src={under} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover rounded-lg" data-testid="studio-fade-under" /> : null}
       <img src={src} alt={alt} onLoad={() => setOn(true)} data-testid={testid}
         className="relative w-full rounded-lg bg-slate-950 transition-opacity duration-300 motion-reduce:transition-none" style={{ opacity: on ? 1 : 0 }} />
@@ -88,7 +94,7 @@ function DraftFrame({ flow, now, onStop, onKeep, onPick }) {
           ))}
         </div>
       ) : (
-        <div className="relative rounded-lg overflow-hidden bg-slate-950 aspect-square">
+        <div className="relative rounded-lg overflow-hidden bg-slate-950 aspect-square lg:max-w-[min(100%,62vh)] lg:mx-auto">
           {d ? <img src={d.url} alt="" className="w-full h-full object-cover" data-testid="studio-draft-img" />
             : <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 motion-safe:animate-pulse" data-testid="studio-skeleton" />}
           <span className="absolute top-2 start-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[11px]" data-testid="studio-flow-badge">{badge}</span>
@@ -404,14 +410,14 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
   const btn = "px-3 py-1.5 rounded-lg border border-slate-700 text-slate-200 text-xs flex items-center gap-1.5 disabled:opacity-40";
 
   return (
-    <div className="space-y-3 pb-24" data-testid="studio-page">
+    <div className={"space-y-3 pb-24 " + SPLIT} data-testid="studio-page">
       {!info.built ? (
-        <div className="rounded-xl border border-amber-900/60 bg-amber-500/5 p-3 text-[12px] text-amber-200" data-testid="studio-no-engine">
+        <div className="rounded-xl border border-amber-900/60 bg-amber-500/5 p-3 text-[12px] text-amber-200 lg:col-start-1" data-testid="studio-no-engine">
           {tr("This APK has no picture engine yet — it comes with the next APK built on GitHub.")}</div>
       ) : null}
 
       {!drawReady ? (
-        <div className="rounded-xl border border-violet-800/60 bg-violet-500/5 p-3" data-testid="studio-install">
+        <div className="rounded-xl border border-violet-800/60 bg-violet-500/5 p-3 lg:col-start-1" data-testid="studio-install">
           <p className="text-sm text-slate-100 font-medium flex items-center gap-1.5"><Palette size={16} className="text-violet-300" />{tr("Pictures made on your phone")}</p>
           {dp.why === "cpu" ? <p className="text-[12px] text-amber-200 mt-1 leading-relaxed" data-testid="studio-why-turbo">{tr("This phone's graphics chip isn't working with Studio, so the Pro model would take 10–20 minutes a picture on the CPU. Studio Turbo makes a picture in about a minute.")}</p> : null}
           <p className="text-[12px] text-slate-300 mt-1 leading-relaxed">{tr(P.quality)}</p>
@@ -433,7 +439,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-slate-800 bg-slate-900 p-3">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 p-3 lg:col-start-1">
         <div className="flex gap-1.5 mb-2">
           <button onClick={() => setMode("create")} className={chip(mode === "create")} data-testid="studio-mode-create"><Sparkles size={12} className="inline me-1" />{tr("Create")}</button>
           <button onClick={() => setMode("edit")} className={chip(mode === "edit")} data-testid="studio-mode-edit"><Wand2 size={12} className="inline me-1" />{tr("Edit a photo")}</button>
@@ -516,6 +522,8 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
         {prompt && mode === "create" ? <p className="text-[11px] text-slate-500 mt-2 leading-relaxed" dir="ltr" data-testid="studio-prompt">{prompt}</p> : null}
       </div>
 
+      <div className={PICTURE}>
+      {!flowLive && !cur ? <DeskEmpty icon={Palette} title={tr("Your picture appears here")} text={tr("Describe it and tap Draw it — it is made on this device, with no internet.")} testid="studio-desk-empty" /> : null}
       {flowLive ? <DraftFrame flow={flow} now={now} onStop={stop} onKeep={keepDraft} onPick={pickDraft} /> : cur ? (
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-2" data-testid="studio-result">
           <FadeImg key={cur.file} src={cur.url} alt={cur.idea} testid="studio-result-img"
@@ -536,7 +544,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
       ) : null}
 
       {gallery.length > 1 ? (
-        <div className="grid grid-cols-3 gap-1.5" data-testid="studio-gallery">
+        <div className="grid grid-cols-3 lg:grid-cols-6 gap-1.5" data-testid="studio-gallery">
           {gallery.slice(0, 30).map((g) => (
             <button key={g.file + g.at} onClick={() => setCur(g)} className={`rounded-lg overflow-hidden border ${cur && cur.file === g.file ? "border-violet-500" : "border-slate-800"}`}>
               <img src={g.url} alt="" className="w-full aspect-square object-cover bg-slate-950" loading="lazy" />
@@ -544,16 +552,17 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, f
           ))}
         </div>
       ) : null}
+      </div>
 
       {info.built && info.gpuBuilt && info.cpuOnly ? (
-        <div className="rounded-xl border border-amber-800 bg-amber-500/10 p-3 space-y-2" data-testid="studio-gpu-card">
+        <div className="rounded-xl border border-amber-800 bg-amber-500/10 p-3 space-y-2 lg:col-start-1" data-testid="studio-gpu-card">
           <p className="text-[13px] text-amber-100">{tr("Studio is drawing on the processor (slow). This phone has a graphics chip — try it: pictures and ×4 sharpening are many times faster there.")}</p>
           <button className="px-3 py-2 rounded-lg bg-amber-500 text-slate-950 text-[13px] font-semibold" data-testid="studio-gpu-on"
             onClick={() => { native.setImageCpu(false); setInfo(readInfo()); flash(tr("The next picture uses the graphics chip")); }}>{tr("Use the graphics chip")}</button>
         </div>
       ) : null}
       {info.built ? (
-        <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 text-[11px] text-slate-500 space-y-1">
+        <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 text-[11px] text-slate-500 space-y-1 lg:col-start-1">
           {info.note ? <p className="text-amber-200" data-testid="studio-note">{tr(info.note)}</p> : null}
           {info.gpuBuilt ? (
             <label className="flex items-center gap-2 text-slate-300"><input type="checkbox" checked={!info.cpuOnly} data-testid="studio-gpu"

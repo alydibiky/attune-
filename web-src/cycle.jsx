@@ -11,6 +11,10 @@
 import React, { useState, useMemo } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { useSubBack } from "./backstack.js";
+// v6.27 computer layout (option A): where you are, quick logging, the day editor and history on the left; the month's
+// calendar on the right. The grid places the calendar in the right column across every row (the last row, 1fr, takes
+// up its extra height), so a phone keeps its order. Below 1024 px none of this applies.
+const SPLIT = "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] lg:grid-rows-[repeat(3,auto)_1fr] lg:gap-x-6 lg:gap-y-0 lg:items-start";
 import { CalendarDays, ChevronLeft, ChevronRight, Droplet, Trash2, ShieldCheck, Plus, X } from "lucide-react";
 
 const KEY = "attune:cycle:v1";
@@ -364,8 +368,8 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
   };
 
   return (
-    <div className="space-y-4 max-w-xl mx-auto">
-      <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
+    <div className={"space-y-4 max-w-xl lg:max-w-none mx-auto " + SPLIT}>
+      <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 lg:col-start-1">
         <p className="text-xs uppercase tracking-wider text-rose-300/80 flex items-center gap-1.5"><Droplet size={13} /> {tr("Cycle")}</p>
         <p className="text-2xl text-white font-semibold mt-1">{headline.big}</p>
         <p className="text-sm text-slate-400 mt-1 leading-snug">{headline.small}</p>
@@ -394,7 +398,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
       </section>
 
       {/* calendar */}
-      <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
+      <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 lg:col-start-2 lg:row-start-1 lg:row-span-4 min-w-0">
         <div className="flex items-center justify-between mb-3">
           <button onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))} className="att-icon-btn"><ChevronLeft size={18} className="rtl:rotate-180" /></button>
           <p className="text-sm text-slate-200 font-medium">{month.toLocaleDateString(dateLocale(), { month: "long", year: "numeric" })}</p>
@@ -421,7 +425,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
 
       {/* edit one day */}
       {sel ? (
-        <section className="bg-slate-900 rounded-2xl border border-teal-800/60 p-4">
+        <section className="bg-slate-900 rounded-2xl border border-teal-800/60 p-4 lg:col-start-1">
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-100 font-medium">{fromKey(sel).toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" })}</p>
             <button onClick={() => setSel(null)} className="att-icon-btn"><X size={16} /></button>
@@ -463,7 +467,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
 
       {/* history */}
       {stats.periods.length ? (
-        <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
+        <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 lg:col-start-1">
           <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("History")}</p>
           <div className="space-y-1">
             {stats.periods.slice().reverse().slice(0, 8).map((p, i, arr) => {
@@ -479,7 +483,7 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
         </section>
       ) : null}
 
-      <p className="flex items-start justify-center gap-1.5 text-[11px] text-slate-500 text-center px-4 leading-snug">
+      <p className="flex items-start justify-center gap-1.5 text-[11px] text-slate-500 text-center px-4 leading-snug lg:col-span-2">
         <ShieldCheck size={12} className="mt-0.5 shrink-0" /> {tr("Stays on this phone — kept out of Memory and never sent anywhere. Predictions are estimates, not contraception or medical advice.")}
       </p>
     </div>

@@ -7,6 +7,12 @@ import { tr } from "./i18n.js";
 import { runCode, runHtml, htmlDoc, warmUp, pythonAvailable, stop as stopSandbox, LANGS, normLang } from "./sandbox.js";
 import { workLoop, guessLang, countTests, judge, errorSummary, loadProjects, saveProjects, PASS_MARK } from "./code.js";
 import { getPower } from "./power.js";
+import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
+// v6.27: two panels on a computer where the right-hand part sits in the middle of the phone's order — the grid places
+// SPLIT_R in the right column across every row (the last row, 1fr, takes up its extra height); everything else stays
+// in the left column in its phone order. Below 1024 px none of this applies.
+const SPLIT = "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] lg:grid-rows-[repeat(6,auto)_1fr] lg:gap-x-6 lg:gap-y-0 lg:items-start";
+const SPLIT_R = "lg:col-start-2 lg:row-start-1 lg:row-span-7 min-w-0";
 
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const runAny = (lang, code) => (lang === "html" ? runHtml(code) : runCode({ lang, code }));
@@ -270,6 +276,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
       ) : null}
 
       {!cur ? (
+        <div className={PANES}><div className={LEFT}>
         <div className="rounded-2xl border border-slate-800 bg-slate-900 p-3 space-y-2">
           <p className="text-sm text-slate-100 font-medium">{tr("Code that is tested before you get it")}</p>
           <p className="text-[12px] text-slate-400 leading-relaxed">{tr("The model writes the program and its tests, the phone runs them, and any error goes straight back to the model to fix — until the tests pass. Offline, in a locked sandbox.")}</p>
@@ -285,9 +292,14 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
           </div>
           {pyLine}
         </div>
+        </div><div className={RIGHT + " hidden lg:block"}>
+          <DeskEmpty icon={Code2} title={tr("The program and its tests appear here")} text={tr("Each step, the code, a live preview for web pages, and whether the tests passed.")} />
+        </div></div>
       ) : (
-        <>
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-3">
+        // v6.27 computer layout (option A): the task, Run / Fix and "change it" on the left; the steps, the code, the
+        // preview and the result on the right (placed by the grid, so a phone keeps its order)
+        <div className={"space-y-3 " + SPLIT}>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-3 lg:col-start-1">
             <p className="text-[10.5px] uppercase tracking-wider text-slate-500">{tr("Your task")}</p>
             <p className="text-[14.5px] text-slate-100 leading-snug mt-0.5" dir="auto">{cur.task || cur.title}</p>
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
@@ -300,6 +312,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
             </div>
           </div>
 
+          <div className={"space-y-3 " + SPLIT_R}>
           <div className="flex rounded-xl border border-slate-800 overflow-hidden" role="tablist">
             {views.map(([k, l]) => <button key={k} role="tab" aria-selected={v === k} onClick={() => setView(k)} data-testid={"code-view-" + k}
               className={`flex-1 min-h-[42px] text-[13px] ${v === k ? "bg-slate-800 text-white font-medium" : "text-slate-400"}`}>{l}</button>)}
@@ -327,8 +340,9 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
           {isHtml && v === "preview" ? <HtmlPreview code={cur.code} onReport={setPageErrors} /> : null}
           {isHtml && pageErrors.length ? <p className="text-[11px] text-rose-300" dir="ltr">{pageErrors.slice(-3).join(" · ")}</p> : null}
           <RunOutput res={res} lang={cur.lang} code={cur.code} />
+          </div>
 
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5 lg:col-start-1">
             <button onClick={runOnly} disabled={busy || !cur.code} data-testid="code-run" className="px-4 min-h-[44px] rounded-xl bg-sky-500 text-slate-950 text-[13px] font-semibold flex items-center gap-1.5 disabled:opacity-40">
               {isHtml ? <Eye size={14} /> : <Play size={14} />}{isHtml ? tr("Check the page") : tr("Run")}</button>
             {verdict && !verdict.passed ? (
@@ -338,16 +352,16 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
             <button onClick={save} data-testid="code-save" className="px-3 min-h-[44px] rounded-xl border border-slate-700 text-slate-300 text-[13px] flex items-center gap-1"><Save size={13} />{tr("Save .{e}", { e: ext })}</button>
             {share ? <button onClick={() => share(cur.code)} className="px-3 min-h-[44px] rounded-xl border border-slate-700 text-slate-300 text-[13px] flex items-center gap-1"><Share2 size={13} />{tr("Share")}</button> : null}
           </div>
-          {pyLine}
+          <div className="lg:col-start-1">{pyLine}</div>
 
-          <div className="flex gap-1.5 items-center bg-slate-900 border border-slate-800 rounded-2xl ps-3 pe-1.5 py-1.5">
+          <div className="flex gap-1.5 items-center bg-slate-900 border border-slate-800 rounded-2xl ps-3 pe-1.5 py-1.5 lg:col-start-1">
             <input value={change} onChange={(e) => setChange(e.target.value)} data-testid="code-change" dir="auto"
               onKeyDown={(e) => { if (e.key === "Enter" && change.trim() && !busy) run({ changeText: change.trim() }); }}
               placeholder={tr("Change it… e.g. “also show the total in EGP”")} className="flex-1 min-w-0 bg-transparent py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none" />
             <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go"
               className="px-4 min-h-[40px] rounded-xl bg-sky-500 text-slate-950 text-sm font-semibold disabled:opacity-40">{tr("Change")}</button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

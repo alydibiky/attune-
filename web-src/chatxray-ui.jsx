@@ -6,6 +6,7 @@ import { MessageCircle, Loader2, X, Check, Wallet, Clock, AlertTriangle, Search,
 import { tr, getLang, dateLocale } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as CX from "./chatxray.js";
+import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const SKEY = "attune:xray:v1";
 const loadSaved = () => { try { const v = JSON.parse(localStorage.getItem(SKEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
@@ -106,8 +107,8 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
 
   const tabBtn = (id, label, Icon, n) => (
     <button key={id} onClick={() => setTab(id)} data-testid={"xray-tab-" + id}
-      className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-[12.5px] border ${tab === id ? "border-teal-600 bg-teal-500/10 text-teal-200" : "border-slate-800 text-slate-400"}`}>
-      <Icon size={14} />{tr(label)}{n != null ? <span className="text-[11px] opacity-70">{n}</span> : null}</button>
+      className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full lg:rounded-xl text-[12.5px] border ${tab === id ? "border-teal-600 bg-teal-500/10 text-teal-200" : "border-slate-800 text-slate-400"}`}>
+      <Icon size={14} />{tr(label)}{n != null ? <span className="text-[11px] opacity-70 lg:ms-auto">{n}</span> : null}</button>
   );
   const quote = (x) => (
     <p dir="auto" className="text-[12.5px] text-slate-300 mt-1 border-s-2 border-slate-700 ps-2 whitespace-pre-wrap">“{x.quote}”
@@ -118,9 +119,12 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
     <div className="space-y-4 max-w-2xl mx-auto" data-testid="xray">
       <div className="px-1">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2"><MessageCircle size={19} className="text-teal-300" />{tr("Chat X-Ray")}</h2>
-        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1">{tr("Who owes whom, what was promised, which dates were agreed and which questions got no answer — read from a WhatsApp chat on your phone. The chat never leaves the phone.")}</p>
+        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Who owes whom, what was promised, which dates were agreed and which questions got no answer — read from a WhatsApp chat on your phone. The chat never leaves the phone.")}</p>
       </div>
 
+      {/* v6.27 computer layout (option A): the chat and its settings on the left, the X-ray on the right; with an
+          X-ray open, the totals and its sections on the left and the section's content on the right */}
+      {!res ? <div className={PANES}><div className={LEFT}>
       {!chat && !res ? (
         <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3">
           <ol className="text-[12.5px] text-slate-300 space-y-1 list-decimal ps-5">
@@ -168,9 +172,13 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
         </section>
       ) : null}
       {!chat && !res && err ? <p className="text-[12.5px] text-rose-300 px-1">{err}</p> : null}
+      </div><div className={RIGHT + " hidden lg:block"}>
+        <DeskEmpty icon={MessageCircle} title={tr("The X-ray appears here")} text={tr("Who owes whom, promises and dates, unanswered questions — and you can ask the chat anything.")} />
+      </div></div> : null}
 
       {res ? (
         <section className="space-y-3" data-testid="xray-result">
+          <div className={PANES}><div className="space-y-3 lg:sticky lg:top-4">
           <div className="grid grid-cols-2 gap-2">
             {(() => { const owed = res.ledger.filter((r) => r.net > 0), owe = res.ledger.filter((r) => r.net < 0);
               const sum = (rows) => { const m = new Map(); for (const r of rows) m.set(r.currency, (m.get(r.currency) || 0) + Math.abs(r.net)); return [...m.entries()].map(([c, v]) => money(v, c)).join(" · ") || "—"; };
@@ -179,13 +187,14 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
                 <div className="rounded-2xl border border-amber-800/70 bg-amber-500/10 p-3"><p className="text-[11px] text-amber-300">{tr("You owe")}</p><p className="text-[15px] font-semibold text-amber-100 mt-0.5">{sum(owe)}</p></div>
               </>; })()}
           </div>
-          <div className="att-hscroll flex gap-1.5 overflow-x-auto pb-1">
+          <div className="att-hscroll flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
             {tabBtn("money", "Money", Wallet, res.ledger.length)}
             {tabBtn("promises", "Promises & dates", Clock, res.items.filter((x) => ["promise", "deadline", "order"].includes(x.type)).length)}
             {tabBtn("unanswered", "Unanswered", AlertTriangle, res.unanswered.length)}
             {chat ? tabBtn("ask", "Ask this chat", Search) : null}
             {tabBtn("stats", "Stats", BarChart3)}
           </div>
+          </div><div className="space-y-3 mt-3 lg:mt-0 min-w-0">
 
           {tab === "money" ? (
             <div className="space-y-2" data-testid="xray-money">
@@ -260,6 +269,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
             </div>
           ) : null}
           <button onClick={() => { setRes(null); if (!chat) setChat(null); }} className="w-full py-2.5 rounded-xl border border-slate-700 text-slate-200 text-sm" data-testid="xray-new">{chat ? tr("Back to this chat") : tr("X-ray another chat")}</button>
+          </div></div>
         </section>
       ) : null}
     </div>

@@ -11,6 +11,7 @@ import { tr, getLang } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as C from "./convert.js";
 import * as TR from "./translate.js";
+import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const TARGET_LABEL = { docx: "Word (.docx)", pdf: "PDF", txt: "Text (.txt)", images: "Pictures (.zip)", csv: "CSV", xlsx: "Excel (.xlsx)",
   html: "Web page (.html)", md: "Markdown (.md)", odt: "LibreOffice text (.odt)", ods: "LibreOffice sheet (.ods)", json: "JSON",
@@ -288,9 +289,12 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     <div className="space-y-4 max-w-2xl mx-auto" data-testid="convert">
       <div className="px-1">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2"><FileText size={19} className="text-teal-300" />{tr("File Converter")}</h2>
-        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1">{tr("PDF ↔ Word, PowerPoint → PDF, photos → PDF, scanned paper → editable Word, Excel ↔ CSV ↔ JSON, e-books, web pages, subtitles, merge and split PDFs — on your phone. Your files are never uploaded to a converter website.")}</p>
+        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("PDF ↔ Word, PowerPoint → PDF, photos → PDF, scanned paper → editable Word, Excel ↔ CSV ↔ JSON, e-books, web pages, subtitles, merge and split PDFs — on your phone. Your files are never uploaded to a converter website.")}</p>
       </div>
 
+      {/* v6.27 computer layout (option A): before a file is picked the tools fill the width; after, the file and its
+          options on the left, the converted file on the right */}
+      <div className={files ? PANES : ""}><div className={files ? LEFT : ""}>
       <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3">
         <input ref={fileRef} type="file" multiple accept={ACCEPT} className="hidden" data-testid="convert-file"
           onChange={(e) => { const l = e.target.files; pick(l); e.target.value = ""; }} />
@@ -351,7 +355,9 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
         )}
         {err ? <p className="text-[12.5px] text-rose-300" data-testid="convert-error">{err}</p> : null}
       </section>
+      </div>
 
+      {files || out ? <div className={RIGHT + (out ? "" : " hidden lg:block")}>
       {out ? (
         <section className="bg-slate-900 rounded-2xl border border-emerald-900/60 p-4 space-y-3" data-testid="convert-result">
           <div className="flex items-center gap-2"><Check size={16} className="text-emerald-300" /><p className="text-[14px] text-slate-100 truncate" data-testid="convert-out-name">{out.name}</p><span className="text-[11px] text-slate-500 shrink-0">{kb(out.size || 0)}{out.count ? " · " + tr(out.countOf === "pdfs" ? "{n} PDFs" : "{n} pictures", { n: out.count }) : ""}{out.pagesOut ? " · " + tr("{n} pages", { n: out.pagesOut }) : ""}{out.dims ? " · " + out.dims : ""}</span></div>
@@ -363,7 +369,9 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
           <button onClick={save} className="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-semibold text-sm flex items-center justify-center gap-2" data-testid="convert-save"><Download size={16} />{tr("Save the file")}</button>
           <button onClick={() => { setFiles(null); setOut(null); }} className="w-full py-2 rounded-xl border border-slate-700 text-slate-200 text-sm">{tr("Convert another file")}</button>
         </section>
-      ) : null}
+      ) : <DeskEmpty icon={FileText} title={tr("The converted file appears here")} text={tr("Choose what it should become, then tap Convert. Nothing is uploaded.")} />}
+      </div> : null}
+      </div>
     </div>
   );
 }

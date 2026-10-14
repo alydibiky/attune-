@@ -7,6 +7,7 @@ import { Download, Loader2, X, Check, ClipboardPaste, Play, Film, Music, Link2 }
 import { tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as V from "./video.js";
+import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const KEY = "attune:video:v1";
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; } };
@@ -121,9 +122,11 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
     <div className="space-y-4 max-w-2xl mx-auto" data-testid="video">
       <div className="px-1">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Film size={19} className="text-teal-300" />{tr("Video Downloader")}</h2>
-        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1">{tr("Copy a video's link, paste it here, pick the quality — it's saved to your phone's Movies folder. Works with direct video links, Google Drive, Dropbox, archive.org, Wikimedia Commons and pages that show a plain video.")}</p>
+        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Copy a video's link, paste it here, pick the quality — it's saved to your phone's Movies folder. Works with direct video links, Google Drive, Dropbox, archive.org, Wikimedia Commons and pages that show a plain video.")}</p>
       </div>
 
+      {/* v6.27 computer layout (option A): the link on the left; the versions found and the downloads on the right */}
+      <div className={PANES}><div className={LEFT}>
       <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 min-w-0 flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3">
@@ -137,6 +140,8 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
           : !found ? <button onClick={() => find()} disabled={!link.trim()} className="w-full py-2.5 rounded-xl bg-teal-500 disabled:opacity-40 text-slate-950 font-semibold text-sm" data-testid="video-find">{tr("Find the video")}</button> : null}
         {err ? <p className="text-[12.5px] text-rose-300 leading-relaxed" data-testid="video-error">{err}</p> : null}
       </section>
+      </div><div className={RIGHT + (found || list.length ? "" : " hidden lg:block")}>
+      {!found && !list.length ? <DeskEmpty icon={Film} title={tr("The video's versions appear here")} text={tr("Paste a link and tap Find the video — then pick the quality to download.")} /> : null}
 
       {found ? (
         <section className="bg-slate-900 rounded-2xl border border-teal-900/60 p-4 space-y-3" data-testid="video-found">
@@ -185,6 +190,7 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
           })}
         </section>
       ) : null}
+      </div></div>
     </div>
   );
 }
