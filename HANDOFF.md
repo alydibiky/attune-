@@ -1240,6 +1240,44 @@ internet searching … improve internet searching and make it faster".
 - Tests: `tests/unit/v727global.test.mjs` (24 bank messages in 15 countries, numbers, dates, People & plans in 8
   languages), `tests/unit/v727radar.test.mjs`, `tests/e2e_v727radar.py`; desktop `test/reminders.js` (early timer).
 
+### 5.68 (14 Oct 2026) — The agent (levels 1+2), Homework Coach, Family health, Shop in your pocket, Translate, Travel in Calm
+Ali: "build a, b, c and the agents part 1 and 2 … don't make the app cluttered, blend them in"; "the code should be smart
+and strong enough so the app doesn't make mistakes"; "teaching with visuals, video, audio"; "travel calm and minimal without
+removing anything, much stronger"; "translate anything to any language — text, PDF, photo — with exceptional accuracy".
+Rule everywhere: **code decides, the model only helps; missing facts are asked, never guessed; nothing irreversible
+(paying, a dose) happens without the person.**
+- **Agent** (`agent.js`, `agent-ui.jsx`, `agent-kit.js`, `AgentBrowser.kt`): Chat «book a flight Cairo→Istanbul 1 Nov» →
+  a card with the plan read by code (airports, dates, people) and links (Google Flights/Skyscanner/Kayak, Booking/Airbnb,
+  food and ride apps by country). Level 1 = deep links (the app if installed, the search copied). Level 2 = "Do it here":
+  an in-app browser with **Best offer** (ranks offers on the page) and **Fill my details** (from Booking details; never
+  card/CVV/password; a "Hotel name" field is not the person's name). It stops before paying. Level 3 (full phone control)
+  waits for a Play-policy-safe way (accessibility services are restricted). Tests: `v727agent` unit, `e2e_v727agent(kit).py`.
+- **Homework Coach** (`coach-math.js` exact fractions, `coach.js`, `coach-ui.jsx`, mode "coach", Mind & learning): a photo
+  or typed sheet → each problem solved BY CODE with steps (arithmetic, linear equations with the check, percentages),
+  taught first ("what do you think comes next?"), then similar practice; weak topics remembered. The model only for
+  word problems, checked by Python when available. **Lesson player** (`lesson-ui.jsx`): spoken steps (NativeBridge
+  `speakWait`, else speechSynthesis) with animated SVG pictures (balance, fractions, dots, number line, percent bar);
+  Learn daily got **Listen** with the paragraph highlighted. Brute force: 398 sums + 300 equations, 0 wrong.
+- **Family health** (`care.js`, `care-ui.jsx`, mode "care", Health): prescriptions read line by line (counts in many
+  languages, 1x2, PRN, insulin units, tapering flagged), daily reminders `med-<id>-HHMM`, today's doses on Home,
+  interactions ONLY quoted from the medicines pack's label passages, lab results judged only by the report's printed range.
+- **Shop in your pocket** (`shop.js` on Books, `shop-ui.jsx`, Business Hub card): set up from one sentence, sell (cash/card/
+  credit, change), stock and recipes, customers, staff hours, the day's close, re-order message. Tax-inclusive shelf prices
+  are exact to the cent (16,632 combinations; a "Rounding" line when needed). Through Books' own operations — the ledger balances.
+- **Translate** (`translate.js`, `translate-ui.jsx`, mode "translate", Files): numbers, amounts, dates, links, e-mails,
+  codes, model names are locked as ⟦n⟧ markers and restored exactly; every piece checked (all markers, the target
+  script, not left untranslated, the glossary), retried alone with the reason, then MARKED. Extra careful = round trip
+  (tokens + negation by code, a YES/NO judge only when words differ). Photo: the translation drawn over the photo using
+  ML Kit line boxes (NativeBridge `readText` now returns x/w and the image size). Documents go through the File Converter,
+  which uses the same engine.
+- **Travel in Calm** (`travel.js` logic, `travel-ui.jsx` page; the old 310-line block left attune.jsx): five tabs
+  Trip · Arrive · Say it · Ask · Know, everything kept. New: the trip (dates, from, people); the **passport** from Radar
+  checked 6 months past the return; flight/hotel links with the trip's dates → the agent; the trip + a visa reminder
+  (3 weeks before) to Radar; a **fair-price check** from the pack's own price lines (all 162 lines parse; no matching line =
+  "no usual price", never a guess; another currency is converted with the saved rate or asks for it); phrases spoken
+  aloud and **shown big**; "A sign or menu" opens Translate into the country's language. Tests: `v727travel` unit,
+  `e2e_v727travel.py`; `e2e_v67b.py` updated for the tabs.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
