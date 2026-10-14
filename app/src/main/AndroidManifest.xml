@@ -151,15 +151,9 @@
                 android:value="On-device AI model writing an answer the user asked for" />
         </service>
 
-        <!-- v6.27 "Money tracks itself": reads payment notifications on the phone, only after the person turns on
-             Notification access for Attune in Settings. Never SMS. Nothing leaves the phone (PayListener.kt). -->
-        <service android:name=".PayListener" android:exported="true"
-            android:label="@string/app_name"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
+        <!-- v6.27: the payment-notification reader (PayListener) is ONLY in the Play Store build: src/play/AndroidManifest.xml.
+             Play Protect's fraud protection blocks any app installed from a browser / file manager / chat that declares a
+             notification listener, so the directly installed APK ("direct" flavour) leaves it out. -->
 
         <!-- Rings a reminder at its time, even with the app closed. -->
         <receiver android:name=".ReminderReceiver" android:exported="false" />

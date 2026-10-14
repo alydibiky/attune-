@@ -11,14 +11,14 @@ now = int(time.time() * 1000)
 Q = [{"id": "1", "app": "CIB", "title": "CIB", "text": "Your card ending 1234 was charged EGP 350.00 at CARREFOUR", "ts": now - 3600000},
      {"id": "2", "app": "InstaPay", "title": "InstaPay", "text": "You have received EGP 1,000.00 from AHMED MOHAMED", "ts": now - 1800000},
      {"id": "3", "app": "CIB", "title": "CIB", "text": "Your OTP is 482913", "ts": now - 600000}]
-def mock(access, auto=False, ledger=False):
+def mock(access, auto=False, ledger=False, available=True):
     pre = "localStorage.setItem('attune:paylog:auto','%s');" % ("1" if auto else "0")
     if ledger: pre += "localStorage.setItem('ledger.v3', JSON.stringify({currency:'EGP',accounts:[{id:'c',name:'Cash',currency:'EGP',start:0}],txns:[],budgets:{overall:0,cats:{}},recurring:[],debts:[]}));"
     return "try{" + pre + "}catch(e){}\n" + r"""(() => { const S = window.__paymock = { forgot: [], opened: 0 };
   const go = () => { const N = window.AttuneNative; if (!N) return setTimeout(go, 0);
-    N.payAccess = () => %s; N.openPayAccess = () => { S.opened++; };
+    N.payAccess = () => %s; N.openPayAccess = () => { S.opened++; }; N.payAvailable = () => %s;
     N.payQueue = () => %s; N.payForget = (ids) => { S.forgot.push(...JSON.parse(ids)); };
-  }; go(); })();""" % ("true" if access else "false", json.dumps(json.dumps(Q)))
+  }; go(); })();""" % ("true" if access else "false", "true" if available else "false", json.dumps(json.dumps(Q)))
 with sync_playwright() as p:
     br = p.chromium.launch()
     ctx, page = new_page(br, env, errors, extra_init=mock(True))
@@ -48,6 +48,13 @@ with sync_playwright() as p:
     check("Never SMS" in page.locator("[data-testid=paylog-setup]").inner_text(), "with notification access off: a card that says what it does (never SMS, nothing leaves the phone)")
     page.click("[data-testid=paylog-turn-on]"); page.wait_for_timeout(200)
     check(page.evaluate("window.__paymock.opened") == 1, "“Turn on” opens Android's Notification access screen")
+    ctx.close()
+    # the directly installed APK has no notification reader (Play Protect blocks one): no "Turn on" to nowhere
+    ctx, page = new_page(br, env, errors, extra_init=mock(False, available=False))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
+    page.locator("nav button:has-text('Money')").click(); page.wait_for_timeout(1500)
+    check(page.locator("[data-testid=paylog-setup]").count() == 0, "the direct APK (no notification reader): no 'Turn on notification access' card")
     ctx.close()
     # BY ITSELF, Money closed: on opening Attune the sure payments go straight into Money's ledger, with a category
     ctx, page = new_page(br, env, errors, extra_init=mock(True, auto=True, ledger=True))

@@ -23,8 +23,10 @@ const logAuto = (entries) => {
 };
 /** v6.27 "by itself" while Money is NOT open: the sure payments go straight into Money's ledger (the same way Money adds
  *  them). → how many were added. Money open → PayInbox adds them through Money instead. */
+/** The phone build has the payment-notification reader (the Play Store build; the direct APK leaves it out). */
+export const payReader = (N) => { try { return !!(N && N.payAccess && N.payQueue && (!N.payAvailable || N.payAvailable())); } catch (e) { return false; } };
 export function runAutoPay(N) {
-  if (!N || !N.payAccess || !N.payQueue || !autoOn()) return 0;
+  if (!payReader(N) || !autoOn()) return 0;
   let on = false; try { on = N.payAccess(); } catch (e) {}
   if (!on) return 0;
   let q = []; try { q = JSON.parse(N.payQueue() || "[]"); } catch (e) {}
@@ -39,7 +41,7 @@ export function runAutoPay(N) {
 }
 
 export function PayInbox({ N, onAdd, ready = true }) {
-  const can = !!(N && N.payAccess && N.payQueue);
+  const can = payReader(N);
   const [on, setOn] = useState(() => { try { return can && N.payAccess(); } catch (e) { return false; } });
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);

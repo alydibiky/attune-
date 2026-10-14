@@ -13,6 +13,7 @@ import { loadGuardian, saveGuardian, markSaved, savedTotals } from "./guardian.j
 import { fmt } from "./money-calm.js";
 import * as O from "./owed.js";
 import { openOwed } from "./owed-ui.jsx";
+import { payReader } from "./paylog-ui.jsx";
 
 const KIND_LABEL = { trial: "Free trial", renewal: "Renewal", return: "Return window", warranty: "Warranty", expiry: "Document expiry", other: "Other" };
 const DOC_LABEL = { passport: "Passport", visa: "Visa", licence: "Driving licence", id: "ID card", insurance: "Insurance", registration: "Car registration", card: "Bank card" };
@@ -199,7 +200,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
         </div>) : null}
 
       {/* automatic */}
-      {N && N.payAccess && !access ? (
+      {payReader(N) && !access ? (
         <div className="c-card" data-testid="radar-access"><b className="flex items-center gap-2"><Bell size={15} className="c-acc" />{tr("Find deadlines by itself")}</b>
           <p className="c-sub text-[13px] mt-1">{tr("Turn on notification access and the Radar catches free trials and renewals from your apps and bank by itself. Nothing leaves the phone.")}</p>
           <button className="c-btn mt-2" onClick={() => { try { N.openPayAccess(); } catch (e) {} }}>{tr("Turn on")}</button></div>

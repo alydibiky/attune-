@@ -987,6 +987,11 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun mapPacks(): String = try { JSONObject().put("packs", MapPacks.list(ctx)).put("assets", MapPacks.assetsInstalled(ctx)).toString() } catch (e: Throwable) { "{\"packs\":[]}" }
 
     /** v6.27 "Money tracks itself": payment notifications read on the phone (PayListener). */
+    /** Is the payment-notification reader in this build? (Only the Play Store build has it.) */
+    @JavascriptInterface
+    fun payAvailable(): Boolean = try {
+        ctx.packageManager.queryIntentServices(android.content.Intent("android.service.notification.NotificationListenerService").setPackage(ctx.packageName), 0).isNotEmpty()
+    } catch (e: Throwable) { false }
     @JavascriptInterface
     fun payAccess(): Boolean = try { PayLog.enabled(ctx) } catch (e: Throwable) { false }
     @JavascriptInterface

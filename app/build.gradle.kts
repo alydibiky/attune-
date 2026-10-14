@@ -32,6 +32,14 @@ android {
         }
     }
 
+    // Two builds of the same app (v6.27): "direct" = the APK installed from GitHub (no notification reader, so Play Protect
+    // lets it install), "play" = the Play Store bundle (with the payment-notification reader, src/play/AndroidManifest.xml).
+    flavorDimensions += "store"
+    productFlavors {
+        create("direct") { dimension = "store" }
+        create("play") { dimension = "store" }
+    }
+
     // The NDK llama.cpp's own Android release builds use at the pinned commit.
     // Install it (and CMake 3.31.6) in Android Studio → Settings → Android SDK →
     // SDK Tools, with "Show Package Details" ticked to pick exact versions.

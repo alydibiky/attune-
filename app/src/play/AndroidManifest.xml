@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Play Store build only ("play" flavour): apps installed from Google Play may declare a notification listener
+     (declared in the Play Console's permissions form). The direct APK leaves it out — see app/src/main/AndroidManifest.xml. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- v6.27 "Money tracks itself": reads payment notifications on the phone, only after the person turns on
+             Notification access for Attune in Settings. Never SMS. Nothing leaves the phone (PayListener.kt). -->
+        <service android:name=".PayListener" android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>
