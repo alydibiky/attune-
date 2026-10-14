@@ -841,7 +841,7 @@ function LogRow({ t, ar, x, onDelete, onEdit, onCopy, testid }) {
   const act = (fn) => () => { setOpen(false); fn(); };
   return (
     <div className="relative overflow-hidden rounded-lg" data-testid={testid}>
-      <div className="absolute inset-y-0 end-0 flex" aria-hidden={!open}>
+      <div className="absolute inset-y-0 end-0 flex" aria-hidden={!open} style={{ visibility: open || dx !== 0 ? "visible" : "hidden" }}>
         <button tabIndex={open ? 0 : -1} onClick={act(onCopy)} className="w-14 bg-slate-600 text-white flex items-center justify-center" aria-label={ar ? "نسخ" : "Copy"} data-testid="fit-row-copy"><Copy size={16} /></button>
         <button tabIndex={open ? 0 : -1} onClick={act(onEdit)} className="w-14 bg-sky-700 text-white flex items-center justify-center" aria-label={t("Edit")} data-testid="fit-row-edit"><Pencil size={16} /></button>
         <button tabIndex={open ? 0 : -1} onClick={act(onDelete)} className="w-14 bg-rose-600 text-white flex items-center justify-center" aria-label={t("Delete")} data-testid="fit-row-delete"><Trash2 size={16} /></button>
@@ -942,6 +942,30 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
     setUndo({ id: Date.now(), label: L(`Deleted ${r.removed.name}`, `حُذف ${r.removed.ar || r.removed.name}`), revert: () => setDay((d) => H.insertAt(d, m, i, r.removed)) });
   };
   const saveEdit = (m, i, x, to) => { setDay((d) => H.replaceAt(d, m, i, x, to)); setEditing(null); tick(); };
+  const layout = LK.layoutOf(LK.lookOf(st));
+  const [openTile, setOpenTile] = useState(null);
+  const mealView = (m, variant) => {
+    const items = (day.meals || {})[m] || [];
+    const sum = F.sumN(items.filter((x) => x.kcal != null));
+    const pm = !items.length && plan && plan.meals[m] && isToday ? plan.meals[m] : null;
+    const ms = LK.MEAL_STYLE[m], vivid = variant === "meals" || variant === "tiles";
+    return (
+      <div key={m} className={variant === "classic" ? "p-3" : variant === "rings" ? "rounded-2xl bg-slate-900 p-3.5" : "rounded-2xl bg-slate-900 p-3.5 shadow-sm"} style={vivid ? { borderInlineStart: "6px solid " + ms.col } : undefined} data-testid={"fit-meal-" + m}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0"><div className="text-white font-medium">{variant !== "classic" && variant !== "rings" ? <span className="me-1.5" aria-hidden="true">{ms.em}</span> : null}{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])} <span className="text-[12px] text-slate-400 tabular-nums">{sum.kcal} {L("kcal", "سعرة")}</span></div></div>
+          <span className="flex items-center gap-1.5 shrink-0">
+            {items.length ? <button onClick={() => setCopyOf({ slot: m })} className="min-h-[48px]! min-w-[48px] rounded-full bg-slate-800 text-slate-300 flex items-center justify-center" aria-label={L("Copy to another day", "نسخ إلى يوم آخر")} data-testid={"fit-copy-" + m}><Copy size={17} /></button> : null}
+            <button onClick={() => setAdding(m)} className={"min-h-[48px]! min-w-[48px] rounded-full flex items-center justify-center shrink-0 " + (vivid ? "text-white" : "bg-emerald-600/20 text-emerald-300")} style={vivid ? { background: ms.col } : undefined} data-testid={"fit-add-" + m} aria-label={L(`Add to ${MEAL_NAMES[m][0]}`, `أضف إلى ${MEAL_NAMES[m][1]}`)}><Plus size={20} /></button>
+          </span>
+        </div>
+        {items.map((x, i) => <LogRow key={(x.t || 0) + ":" + i} {...{ t, ar, x }} testid={"fit-item-" + m} onDelete={() => del(m, i)} onEdit={() => setEditing({ m, i })} onCopy={() => setCopyOf({ slot: m, item: x })} />)}
+        {pm ? (
+          <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
+            className="mt-1 w-full min-h-[48px]! text-start rounded-lg bg-slate-800/60 px-2.5 py-2 text-[12.5px] text-slate-300" data-testid={"fit-suggest-" + m}>
+            <span className="text-emerald-300">{L("Suggested", "مقترح")}:</span> {ar ? pm.recipe.ar : pm.recipe.en}{pm.x !== 1 ? ` ×${pm.x}` : ""} · {pm.kcal} {L("kcal", "سعرة")} — <u>{L("I ate this", "أكلت هذا")}</u>
+          </button>) : null}
+      </div>);
+  };
   const Act = ({ k, Ic, label, primary }) => (
     <button onClick={bar[k]} data-testid={"fit-lb-" + k} aria-label={label}
       className={"min-h-[56px]! rounded-2xl flex flex-col items-center justify-center gap-0.5 text-[12.5px] font-medium active:scale-[.97] motion-safe:transition-transform " + (primary ? "bg-emerald-600 text-white" : listening && k === "voice" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-100")}>
@@ -954,7 +978,32 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
         <button onClick={() => shift(1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg disabled:opacity-30" disabled={isToday} aria-label={t("Next day")}><ChevronLeft size={18} className="rotate-180 rtl:rotate-0" /></button>
       </div>
 
-      {/* the ring and macros */}
+      {/* v6.27: the summary and the meals, in the look's own layout (classic · colour per meal · rings · tiles) */}
+      {layout === "rings" ? (<>
+        <div className="rounded-3xl p-4 text-white" style={{ background: "linear-gradient(135deg,#0EA5E9,#8B5CF6)" }} data-testid="fit-ring">
+          <div className="text-[13px] opacity-90">{left < 0 ? L("Over today", "زيادة اليوم") : L("Left today", "المتبقي اليوم")}</div>
+          <div className="text-[34px] font-extrabold tabular-nums leading-tight"><span data-testid="fit-left">{Math.abs(left)}</span> <span className="text-[15px] font-semibold">{L("kcal", "سعرة")}</span></div>
+          <div className="text-[12.5px] opacity-90 tabular-nums">{L("Eaten", "أكلت")} <b data-testid="fit-eaten">{tot.kcal}</b> · {L("Burned", "حرقت")} {tot.burned} · {L("Goal", "الهدف")} {tg.kcal}</div>
+        </div>
+        <div className="rounded-3xl bg-slate-900 p-4 grid grid-cols-4 gap-1" data-testid="fit-rings">
+          {[["Protein", "بروتين", tot.p, tg.protein, "#38BDF8"], ["Carbs", "كربوهيدرات", tot.c, tg.carbs, "#FBBF24"], ["Fat", "دهون", tot.f, tg.fat, "#FB7185"], ["Fibre", "ألياف", tot.fib, tg.fibre, "#34D399"]].map(([en, a2, v, mx, col]) => {
+            const pct = mx > 0 ? Math.min(100, Math.round(((v || 0) / mx) * 100)) : 0;
+            return (<div key={en} className="flex flex-col items-center gap-1.5 text-[12px] text-slate-300">
+              <div className="w-[66px] h-[66px] rounded-full grid place-items-center" style={{ background: `conic-gradient(${col} 0 ${pct}%, var(--color-slate-800) ${pct}% 100%)` }}>
+                <div className="w-[52px] h-[52px] rounded-full bg-slate-900 grid place-items-center text-[13px] font-bold text-white tabular-nums">{Math.round(v || 0)}{L("g", "جم")}</div></div>
+              <span>{L(en, a2)}</span><span className="text-[10.5px] text-slate-500 tabular-nums -mt-1">/ {mx} {L("g", "جم")}</span></div>);
+          })}
+        </div>
+      </>) : layout === "tiles" ? (
+        <div className="rounded-3xl p-4" style={{ background: "linear-gradient(160deg,#FFE7C2,#FFD1DC)", color: "#2A2420" }} data-testid="fit-ring">
+          <div className="text-[44px] font-extrabold tabular-nums leading-none" data-testid="fit-left">{Math.abs(left)}</div>
+          <div className="text-[13px] mt-1 tabular-nums">{left < 0 ? L("kcal over", "سعرة زيادة") : L("kcal left", "سعرة متبقية")} · {L("Goal", "الهدف")} {tg.kcal} · {L("Eaten", "أكلت")} <b data-testid="fit-eaten">{tot.kcal}</b></div>
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {[["Protein", "بروتين", tot.p, tg.protein, "#DBEAFE", "#1E40AF"], ["Carbs", "كربوهيدرات", tot.c, tg.carbs, "#FEF3C7", "#92400E"], ["Fat", "دهون", tot.f, tg.fat, "#FFE4E6", "#9F1239"], ["Fibre", "ألياف", tot.fib, tg.fibre, "#DCFCE7", "#166534"]].map(([en, a2, v, mx, bg, fg]) =>
+              <span key={en} className="rounded-full px-2.5 py-1 text-[12px] font-semibold tabular-nums" style={{ background: bg, color: fg }}>{L(en, a2)} {Math.round(v || 0)}/{mx} {L("g", "جم")}</span>)}
+          </div>
+        </div>
+      ) : (
       <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-4 flex items-center gap-4" data-testid="fit-ring">
         <Ring value={tot.kcal} max={tg.kcal + tot.burned}>
           <div className={"text-2xl font-bold tabular-nums " + (left < 0 ? "text-rose-300" : "text-white")} data-testid="fit-left">{Math.abs(left)}</div>
@@ -968,33 +1017,35 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
           <Bar label={L("Fibre", "ألياف")} v={tot.fib} max={tg.fibre} cls="bg-emerald-400" />
         </div>
       </div>
+      )}
 
       {st.ramadan && st.ramadan.on && isToday ? <RamadanCard {...{ L, ar, tg, city: st.ramadan.city }} /> : null}
 
       {/* today's meals: a timeline by meal; swipe a food for Edit / Delete */}
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 divide-y divide-slate-800" data-testid="fit-meals">
-        {F.MEALS.map((m) => {
-          const items = (day.meals || {})[m] || [];
-          const sum = F.sumN(items.filter((x) => x.kcal != null));
-          const pm = !items.length && plan && plan.meals[m] && isToday ? plan.meals[m] : null;
-          return (
-            <div key={m} className="p-3" data-testid={"fit-meal-" + m}>
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0"><div className="text-white font-medium">{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])} <span className="text-[12px] text-slate-400 tabular-nums">{sum.kcal} kcal</span></div></div>
-                <span className="flex items-center gap-1.5 shrink-0">
-                  {items.length ? <button onClick={() => setCopyOf({ slot: m })} className="min-h-[48px]! min-w-[48px] rounded-full bg-slate-800 text-slate-300 flex items-center justify-center" aria-label={L("Copy to another day", "نسخ إلى يوم آخر")} data-testid={"fit-copy-" + m}><Copy size={17} /></button> : null}
-                  <button onClick={() => setAdding(m)} className="min-h-[48px]! min-w-[48px] rounded-full bg-emerald-600/20 text-emerald-300 flex items-center justify-center shrink-0" data-testid={"fit-add-" + m} aria-label={L(`Add to ${MEAL_NAMES[m][0]}`, `أضف إلى ${MEAL_NAMES[m][1]}`)}><Plus size={20} /></button>
-                </span>
-              </div>
-              {items.map((x, i) => <LogRow key={(x.t || 0) + ":" + i} {...{ t, ar, x }} testid={"fit-item-" + m} onDelete={() => del(m, i)} onEdit={() => setEditing({ m, i })} onCopy={() => setCopyOf({ slot: m, item: x })} />)}
-              {pm ? (
-                <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
-                  className="mt-1 w-full min-h-[48px]! text-start rounded-lg bg-slate-800/60 px-2.5 py-2 text-[12.5px] text-slate-300" data-testid={"fit-suggest-" + m}>
-                  <span className="text-emerald-300">{L("Suggested", "مقترح")}:</span> {ar ? pm.recipe.ar : pm.recipe.en}{pm.x !== 1 ? ` ×${pm.x}` : ""} · {pm.kcal} kcal — <u>{L("I ate this", "أكلت هذا")}</u>
-                </button>) : null}
-            </div>);
-        })}
-      </div>
+      {layout === "tiles" ? (<>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3" data-testid="fit-meals">
+          {F.MEALS.map((m) => { const ms = LK.MEAL_STYLE[m], items = (day.meals || {})[m] || [], sum = F.sumN(items.filter((x) => x.kcal != null));
+            return (<button key={m} onClick={() => (items.length ? setOpenTile(openTile === m ? null : m) : setAdding(m))} aria-expanded={openTile === m} data-testid={"fit-tile-" + m}
+              className="rounded-3xl p-3.5 min-h-[118px] flex flex-col text-start" style={{ background: ms.soft, color: "#2A2420", outline: openTile === m ? "2px solid " + ms.col : "none" }}>
+              <b className="text-[15px]">{ms.em} {L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}</b>
+              <span className="text-[12px] opacity-70 mt-0.5 line-clamp-2">{items.length ? items.map(nm).join(ar ? "، " : ", ") : L("Tap to add", "اضغط للإضافة")}</span>
+              <span className="mt-auto text-[26px] font-extrabold tabular-nums" style={{ color: items.length ? "#2A2420" : ms.col }}>{items.length ? sum.kcal : "+"}</span></button>);
+          })}
+          <button onClick={() => { setDay((d) => ({ ...d, water: (d.water || 0) + 250 })); tick(); }} className="rounded-3xl p-3.5 min-h-[118px] flex flex-col text-start" style={{ background: "#DFF4FF", color: "#2A2420" }} data-testid="fit-tile-water">
+            <b className="text-[15px]">💧 {L("Water", "ماء")}</b><span className="text-[12px] opacity-70 mt-0.5">{L("Tap for a glass", "اضغط لكوب")} · {drunk}/{glasses}</span>
+            <span className="mt-auto text-[26px] font-extrabold tabular-nums" style={{ color: "#0284C7" }}>{(tot.water / 1000).toFixed(1)} L</span></button>
+          <button onClick={() => openMove && openMove()} className="rounded-3xl p-3.5 min-h-[118px] flex flex-col text-start" style={{ background: "#F1EAFE", color: "#2A2420" }} data-testid="fit-tile-move">
+            <b className="text-[15px]">🏃 {L("Move", "الحركة")}</b><span className="text-[12px] opacity-70 mt-0.5">{L("Workouts and steps", "التمارين والخطوات")}</span>
+            <span className="mt-auto text-[26px] font-extrabold tabular-nums" style={{ color: "#7C3AED" }}>{tot.burned}</span></button>
+        </div>
+        {openTile ? mealView(openTile, "tiles") : null}
+      </>) : layout === "classic" ? (
+        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 divide-y divide-slate-800" data-testid="fit-meals">
+          {F.MEALS.map((m) => mealView(m, "classic"))}
+        </div>
+      ) : (
+        <div className="space-y-3" data-testid="fit-meals">{F.MEALS.map((m) => mealView(m, layout))}</div>
+      )}
 
       {F.MEALS.some((m) => ((day.meals || {})[m] || []).length) ? (
         <button onClick={() => setCopyOf({ slot: null })} className="w-full min-h-[48px]! rounded-xl border border-slate-800 bg-slate-900/40 text-[13px] text-slate-300 flex items-center justify-center gap-1.5" data-testid="fit-copy-day">

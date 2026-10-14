@@ -11,10 +11,18 @@ export const LOOKS = [
   { id: "fresh", en: "Fresh", ar: "منعش", hint: { en: "Light and green, big calorie ring", ar: "فاتح وأخضر، بحلقة سعرات كبيرة" }, swatch: ["#F7FAF8", "#1F8A5B", "#12241B"] },
   { id: "night", en: "Night", ar: "ليلي", hint: { en: "Dark, easy on the eyes at night", ar: "داكن ومريح للعين ليلًا" }, swatch: ["#0B1220", "#2DD4BF", "#E8EEF7"] },
   { id: "bold", en: "Bold", ar: "جريء", hint: { en: "White, orange and big numbers", ar: "أبيض وبرتقالي وأرقام كبيرة" }, swatch: ["#FFFFFF", "#F25C2A", "#1B1F3B"] },
+  // v6.27 (Ali: "i loved the 3 interfaces, make them optional"): three looks that also change how the Diary is laid out
+  { id: "meals", en: "Colour per meal", ar: "لون لكل وجبة", hint: { en: "Light; each meal its own colour", ar: "فاتح؛ لكل وجبة لونها" }, swatch: ["#F6F7FB", "#F59E0B", "#22C55E", "#6366F1"] },
+  { id: "rings", en: "Rings", ar: "الحلقات", hint: { en: "Dark; a ring for each nutrient", ar: "داكن؛ حلقة لكل عنصر غذائي" }, swatch: ["#0E1116", "#0EA5E9", "#8B5CF6", "#FB7185"] },
+  { id: "tiles", en: "Pastel tiles", ar: "مربعات هادئة", hint: { en: "Soft colours, big tiles", ar: "ألوان ناعمة ومربعات كبيرة" }, swatch: ["#FFE7C2", "#E3F7E8", "#E6E8FF", "#FFE4EC"] },
 ];
+// the Diary layout each look uses ("classic" = the ring card and one list of meals)
+export const layoutOf = (id) => (id === "meals" || id === "rings" || id === "tiles" ? id : "classic");
+// each meal's colour and sign in the new looks
+export const MEAL_STYLE = { breakfast: { col: "#F59E0B", soft: "#FEF3C7", em: "🌅" }, lunch: { col: "#22C55E", soft: "#DCFCE7", em: "☀️" }, dinner: { col: "#6366F1", soft: "#E0E7FF", em: "🌙" }, snacks: { col: "#EC4899", soft: "#FCE7F3", em: "🍎" } };
 export const DEFAULT_LOOK = "fresh";
 export const lookOf = (st) => (LOOKS.some((l) => l.id === (st && st.look)) ? st.look : DEFAULT_LOOK);
-export const isLight = (id) => id === "fresh" || id === "bold";
+export const isLight = (id) => id === "fresh" || id === "bold" || id === "meals" || id === "tiles";
 
 // The light looks: the slate scale turned around, then the accents darkened so they read on white (4.5:1 for text).
 export const LIGHT_BASE = (ink, page, card, input, line, line2, muted, soft) => `
@@ -40,6 +48,17 @@ body:has(.fit-look-bold),.fit-look-bold{${LIGHT_BASE("#1B1F3B", "#FFFFFF", "#F6F
   --color-emerald-100:#9A3412;--color-emerald-200:#9A3412;--color-emerald-300:#C2410C;--color-emerald-400:#EA580C;--color-emerald-500:#F25C2A;--color-emerald-600:#E2501F;--color-emerald-700:#C2410C;
   --color-emerald-800:#FED7C3;--color-emerald-900:#FFE4D6;--color-emerald-950:#FFF1EA;color-scheme:light}
 ${ON_FILL(".fit-look-bold")}
+body:has(.fit-look-meals),.fit-look-meals{${LIGHT_BASE("#1D2433", "#F6F7FB", "#FFFFFF", "#EEF1F6", "#E2E6EE", "#C9CFDB", "#667085", "#475467")}
+  --color-emerald-100:#14532D;--color-emerald-200:#166534;--color-emerald-300:#15803D;--color-emerald-400:#16A34A;--color-emerald-500:#22C55E;--color-emerald-600:#16A34A;--color-emerald-700:#15803D;
+  --color-emerald-800:#BBF7D0;--color-emerald-900:#DCFCE7;--color-emerald-950:#F0FDF4;color-scheme:light}
+${ON_FILL(".fit-look-meals")}
+body:has(.fit-look-rings),.fit-look-rings{--color-slate-950:#0E1116;--color-slate-900:#161B22;--color-slate-800:#222A35;--color-slate-700:#2D3746;--color-slate-600:#3D4859;
+  --color-emerald-300:#7DD3FC;--color-emerald-400:#38BDF8;--color-emerald-500:#0EA5E9;--color-emerald-600:#0284C7;--color-emerald-700:#0369A1;color-scheme:dark}
+body:has(.fit-look-tiles),.fit-look-tiles{${LIGHT_BASE("#2A2420", "#FFFDF8", "#FFFFFF", "#F7F1E8", "#F1E9DD", "#DCCFBD", "#7A6A58", "#5C4E40")}
+  --color-emerald-100:#9A3412;--color-emerald-200:#9A3412;--color-emerald-300:#C2410C;--color-emerald-400:#EA580C;--color-emerald-500:#F97316;--color-emerald-600:#EA580C;--color-emerald-700:#C2410C;
+  --color-emerald-800:#FED7AA;--color-emerald-900:#FFEDD5;--color-emerald-950:#FFF7ED;color-scheme:light}
+${ON_FILL(".fit-look-tiles")}
+.fit-look-tiles .text-2xl,.fit-look-tiles .text-3xl{font-weight:800}
 .fit-look-bold .text-2xl,.fit-look-bold .text-3xl,.fit-look-bold .text-4xl{font-weight:800;letter-spacing:-.01em}
 body:has(.fit-look-night),.fit-look-night{--color-slate-950:#0B1220;--color-slate-900:#121C30;--color-slate-800:#1E2C47;--color-slate-700:#2A3B5C;
   --color-emerald-300:#5EEAD4;--color-emerald-400:#2DD4BF;--color-emerald-500:#2DD4BF;--color-emerald-600:#0D9488;--color-emerald-700:#0F766E;color-scheme:dark}
@@ -54,7 +73,7 @@ body:has(.fit-look-night),.fit-look-night{--color-slate-950:#0B1220;--color-slat
 @media (prefers-reduced-motion:reduce){.fit-scan,.fit-pulse,.fit-spin,.fit-pop,.fit-breathe{animation:none}}
 `;
 /** The page behind Fit (outside its own boxes), so a light look fills the whole screen. */
-export const PAGE_BG = { fresh: "#F2F6F3", night: "#0B1220", bold: "#FFFFFF" };
+export const PAGE_BG = { fresh: "#F2F6F3", night: "#0B1220", bold: "#FFFFFF", meals: "#F6F7FB", rings: "#0E1116", tiles: "#FFFDF8" };
 
 // ---- nutrition facts while the photo is read: well-established findings, each with where it comes from ----
 export const FACTS = [
