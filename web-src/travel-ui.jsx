@@ -9,6 +9,7 @@ import { tr } from "./i18n.js";
 import * as T from "./travel.js";
 import * as D from "./deadlines.js";
 import { speakNow } from "./lesson-ui.jsx";
+import { openOwed } from "./owed-ui.jsx";
 
 const TABS = [["trip", "Trip"], ["arrive", "Arrive"], ["say", "Say it"], ["ask", "Ask"], ["know", "Know"]];
 const field = "rounded-lg px-3 py-2 text-[14px] border bg-transparent";
@@ -154,6 +155,10 @@ export function TravelPage(p) {
             {T.tripHotels(trip, air[1]).map((l) => <button key={l.label} onClick={() => openAgent(l)} className="w-full flex items-center justify-between text-start bg-transparent border-0 p-0 py-1 cursor-pointer" style={{ color: "var(--c-ink)" }} data-testid="travel-hotel"><span><MapPin size={13} className="inline me-1.5 c-acc" />{l.label} <span className="c-sub">{air[1]} · {tr(l.why)}</span></span><span className="c-acc">›</span></button>)}
             {trip.from && trip.depart ? <p className="c-sub m-0">{tr("Attune opens the search with your dates and marks the best offer. You choose and pay.")}</p> : null}
           </Section>
+
+          {/* v6.27 What you're owed: compensation for a delayed or cancelled flight, worked out by code */}
+          <button onClick={() => openOwed({ flight: { from: trip.from || "", to: air[0] || "", date: trip.depart || "" } })} className="c-card w-full text-start flex items-center gap-3 cursor-pointer" data-testid="travel-owed">
+            <span className="c-ic"><Plane size={16} /></span><span className="flex-1"><b className="block text-[14px]">{tr("Flight delayed or cancelled?")}</b><span className="c-sub">{tr("See what the airline owes you — up to €600 — and get the letter")}</span></span><span className="c-acc">›</span></button>
 
           <Section title="Apps you'll need" right={<span className="c-sub">{tr("install before you fly")}</span>}>
             <ul className="space-y-1.5 m-0 p-0 list-none" dir={dirMine}>{pv("apps").map((a, i) => { const m = a.match(/^(.*?)\s+[—–-]\s+(.*)$/); return <li key={i} className="text-[13.5px]">{tr(m ? m[1] : a)}{m ? <span className="c-sub"> — {tr(m[2])}</span> : null}</li>; })}</ul>

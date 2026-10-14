@@ -15,6 +15,9 @@ import { chatMapIntent } from "./mapintent.js";
 import { chatLifeIntent } from "./life.js";
 import { chatDeadlineIntent } from "./deadlines.js";
 import { agentCard } from "./agent-ui.jsx";
+import { flightFromText } from "./owed.js";
+import { openOwed } from "./owed-ui.jsx";
+import { airportOf } from "./agent.js";
 import { homeCurrency, dateOrder } from "./locale.js";
 import { wantsDoc } from "./slides.js";
 import { detectLang, replyLanguageRule, voiceTag, deviceLang } from "./langs.js";
@@ -720,6 +723,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         { id: newId(), role: "assistant", card: { tone: "emerald", title: "Homework — the Coach teaches it step by step", detail: "Pictures, a voice, and you try each answer. Maths is checked by code.",
           actions: [["Teach me", "coach"], ["Just answer", "answer"]] }, coachIn: img ? { image: img.url } : { text: typed.replace(/^(teach me|explain how to solve|help me solve|علمني|اشرحلي|ساعدني في حل)\s*/i, "") }, askText: typed }] }));
       setText(""); setPhotos([]);
+      return;
+    }
+
+    // v6.27 What you're owed: «my flight from Frankfurt to New York was 5 hours late» → what the airline owes, by code
+    const ow = route && !img ? flightFromText(typed, airportOf) : null;
+    if (ow) {
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "A delayed or cancelled flight — the airline may owe you money", detail: [ow.from, ow.to].filter(Boolean).join(" → ") + (ow.arrivalDelayH ? " · " + ow.arrivalDelayH + " h" : ""),
+          actions: [["See what I'm owed", "owed"], ["Just answer", "answer"]] }, owedFlight: ow, askText: typed }] }));
+      setText("");
       return;
     }
 
@@ -1572,6 +1587,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "money") api.sendToMoney(m.payText);
     else if (act === "life") window.dispatchEvent(new CustomEvent("attune-life", { detail: { text: m.lifeText || "" } }));
     else if (/^agent(-in)?:\d+$/.test(act)) { const i = +act.split(":")[1], p = m.agentPlan; if (p && p.links[i]) window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: p.links[i], plan: p, inApp: act.startsWith("agent-in") } })); }
+    else if (act === "owed") openOwed({ flight: m.owedFlight || {} });
     else if (act === "coach") window.dispatchEvent(new CustomEvent("attune-coach", { detail: m.coachIn || null }));
     else if (act === "radar") window.dispatchEvent(new CustomEvent("attune-radar", { detail: { text: m.radarText || "" } }));
     else if (act === "map") window.dispatchEvent(new CustomEvent("attune-map", { detail: { q: m.mapQuery || "" } }));

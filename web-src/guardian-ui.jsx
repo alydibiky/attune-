@@ -8,6 +8,8 @@ import { findings, loadGuardian, saveGuardian, markSaved, dismiss, savedTotals, 
 import { loadLedger } from "./myledger.js";
 import { loadLife } from "./life.js";
 import { fmt } from "./money-calm.js";
+import { disputeLetter } from "./owed.js";
+import { openOwed } from "./owed-ui.jsx";
 
 const DONE = { late: ["Send reminder", "Not now"], double: ["I got it back", "Not a mistake"], creep: ["I fixed it", "It's fine"], subs: ["I cancelled it", "I use it"], fees: ["Got it", null], due: ["Paid", null] };
 
@@ -63,6 +65,7 @@ export function GuardianPage({ pro, openPlan, flash }) {
           {f.kind === "late" ? <p className="c-sub mt-2 text-[12.5px] rounded-lg p-2" style={{ background: "var(--c-bg)" }} dir="auto" data-testid="guardian-message">{f.message}</p> : null}
           <div className="flex gap-2 mt-3">
             <button className="c-btn flex items-center gap-1.5" onClick={() => act(f, true)} data-testid="guardian-yes">{f.kind === "late" ? <Send size={14} /> : <Check size={14} />}{tr(DONE[f.kind][0])}</button>
+            {f.kind === "double" ? <button className="c-sub flex items-center gap-1" onClick={() => openOwed({ letter: { title: "Ask for it back", text: disputeLetter({ merchant: (f.T && f.T[1] && f.T[1].m) || "", amount: fmt(f.amount), currency: "", dates: f.D && f.D[1] && f.D[1].d ? [f.D[1].d] : [] }, { lang: getLang() === "ar" ? "ar" : "en" }) } })} data-testid="guardian-dispute"><Send size={14} />{tr("Ask for it back")}</button> : null}
             {DONE[f.kind][1] ? <button className="c-sub flex items-center gap-1" onClick={() => act(f, false)} data-testid="guardian-no"><X size={14} />{tr(DONE[f.kind][1])}</button> : null}
           </div>
         </div>))}
