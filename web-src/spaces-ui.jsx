@@ -13,6 +13,7 @@ import {
   loadArtifacts, saveArtifact, deleteArtifact, latest, fileNameFor,
   ACCENTS, BACKGROUNDS, PALETTES, loadTheme, saveTheme, applyTheme, newSpaceId,
 } from "./spaces.js";
+import { PANES, GRID3 } from "./desk.jsx";
 import { Plus, X, Trash2, PenLine, Copy, Share2, Download, Save, Loader2, Sparkles, MessageSquare, Maximize2, Wand2, FileText, Check } from "lucide-react";
 
 const card = "rounded-2xl border border-slate-800 bg-slate-900";
@@ -50,7 +51,7 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
   };
 
   if (edit) return (
-    <div className="att-in space-y-3" data-testid="assistant-edit">
+    <div className="att-in space-y-3 lg:max-w-3xl" data-testid="assistant-edit">
       <button onClick={() => setEdit(null)} className="text-[12px] text-slate-400" data-testid="assistant-back">← {tr("All assistants")}</button>
       <div className={card + " p-4 space-y-3"}>
         <div className="flex gap-2">
@@ -81,10 +82,10 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
 
   return (
     <div className="att-in space-y-3" data-testid="assistants-page">
-      <p className="text-[13px] text-slate-400 leading-relaxed">{tr("Assistants are experts you set up once — their instructions are used in every chat you start with them.")}</p>
-      <button onClick={() => setEdit({ emoji: "✨", name: "", desc: "", instructions: "", startersText: "" })} className={btnMain + " w-full flex items-center justify-center gap-2"} data-testid="assistant-new">
+      <p className="text-[13px] text-slate-400 leading-relaxed lg:max-w-[70ch]">{tr("Assistants are experts you set up once — their instructions are used in every chat you start with them.")}</p>
+      <button onClick={() => setEdit({ emoji: "✨", name: "", desc: "", instructions: "", startersText: "" })} className={btnMain + " w-full lg:w-auto lg:px-5 flex items-center justify-center gap-2"} data-testid="assistant-new">
         <Plus size={16} /> {tr("New assistant")}</button>
-      <div className="grid gap-2">
+      <div className="grid gap-2 lg:grid-cols-3 lg:gap-3">
         {list.map((a) => (
           <div key={a.id} className={card + " p-3 flex items-center gap-3"} data-testid="assistant-item">
             <button onClick={() => startChat({ assistantId: a.id })} className="flex-1 min-w-0 flex items-center gap-3 text-start">
@@ -140,7 +141,7 @@ export function ProjectsPage({ startChat, openChat, flash }) {
   };
 
   if (edit) return (
-    <div className={"att-in " + card + " p-4 space-y-3"} data-testid="project-edit">
+    <div className={"att-in " + card + " p-4 space-y-3 lg:max-w-3xl"} data-testid="project-edit">
       <div className="flex gap-2">
         <input value={edit.emoji} onChange={(e) => setEdit({ ...edit, emoji: e.target.value })} className={input + " w-16 text-center text-lg"} />
         <input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} placeholder={tr("Project name, e.g. Port Said tender")} dir="auto" className={input} data-testid="project-name" />
@@ -158,6 +159,8 @@ export function ProjectsPage({ startChat, openChat, flash }) {
   if (cur) return (
     <div className="att-in space-y-3" data-testid="project-page">
       <button onClick={() => setOpenId(null)} className="text-[12px] text-slate-400">← {tr("All projects")}</button>
+      {/* v6.27 computer layout: the project and its files on the left, its chats on the right */}
+      <div className={PANES}><div className="space-y-3 min-w-0">
       <div className={card + " p-4"}>
         <div className="flex items-center gap-3">
           <span className="text-3xl">{cur.emoji}</span>
@@ -198,6 +201,8 @@ export function ProjectsPage({ startChat, openChat, flash }) {
         )}
       </div>
 
+      </div>
+      <div className="space-y-3 mt-3 lg:mt-0 min-w-0">
       <div className={card + " p-2"}>
         <p className="text-sm text-slate-100 font-medium px-2 pt-2 pb-1">{tr("Chats")}</p>
         {chats.length === 0 ? <p className="text-[12px] text-slate-500 px-2 pb-2">{tr("No chats in this project yet.")}</p> : chats.map((c) => (
@@ -208,20 +213,21 @@ export function ProjectsPage({ startChat, openChat, flash }) {
         ))}
       </div>
       <button onClick={() => { deleteProject(cur.id); setOpenId(null); reload(); }} className="text-[12px] text-rose-300/80 flex items-center gap-1.5 px-1"><Trash2 size={13} /> {tr("Delete project (its chats stay in Chat)")}</button>
+      </div></div>
     </div>
   );
 
   return (
     <div className="att-in space-y-3" data-testid="projects-page">
-      <p className="text-[13px] text-slate-400 leading-relaxed">{tr("A project keeps related chats together with shared instructions and your own files — like a folder the assistant has read.")}</p>
-      <button onClick={() => setEdit({ emoji: "📁", name: "", instructions: "", knowledge: [] })} className={btnMain + " w-full flex items-center justify-center gap-2"} data-testid="project-new"><Plus size={16} /> {tr("New project")}</button>
-      {list.length === 0 ? <p className="text-[12px] text-slate-500 text-center py-4">{tr("No projects yet.")}</p> : list.map((p) => (
+      <p className="text-[13px] text-slate-400 leading-relaxed lg:max-w-[70ch]">{tr("A project keeps related chats together with shared instructions and your own files — like a folder the assistant has read.")}</p>
+      <button onClick={() => setEdit({ emoji: "📁", name: "", instructions: "", knowledge: [] })} className={btnMain + " w-full lg:w-auto lg:px-5 flex items-center justify-center gap-2"} data-testid="project-new"><Plus size={16} /> {tr("New project")}</button>
+      {list.length === 0 ? <p className="text-[12px] text-slate-500 text-center py-4">{tr("No projects yet.")}</p> : <div className={GRID3}>{list.map((p) => (
         <button key={p.id} onClick={() => setOpenId(p.id)} className={card + " w-full p-3 flex items-center gap-3 text-start"} data-testid="project-item">
           <span className="w-11 h-11 shrink-0 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-2xl">{p.emoji}</span>
           <span className="flex-1 min-w-0"><span className="block text-sm text-slate-100 font-medium truncate" dir="auto">{p.name}</span>
             <span className="block text-[11px] text-slate-500">{tr("{k} files", { k: (p.knowledge || []).length })}</span></span>
         </button>
-      ))}
+      ))}</div>}
     </div>
   );
 }
@@ -283,7 +289,7 @@ export function ArtifactViewer({ artifact, close, llm, modelReady, native, saveF
   };
 
   return (
-    <div className="fixed inset-0 z-[70] bg-slate-950 flex flex-col" data-testid="artifact-viewer" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+    <div className="att-shift fixed inset-0 z-[70] bg-slate-950 flex flex-col" data-testid="artifact-viewer" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-800">
         <button onClick={close} className="p-2 text-slate-300" title={tr("Close")} data-testid="artifact-close"><X size={20} /></button>
         <div className="flex-1 min-w-0">
@@ -330,14 +336,14 @@ export function ArtifactsPage({ open }) {
   useEffect(() => { const on = () => setList(loadArtifacts()); window.addEventListener("attune-artifacts-changed", on); return () => window.removeEventListener("attune-artifacts-changed", on); }, []);
   return (
     <div className="att-in space-y-3" data-testid="artifacts-page">
-      <p className="text-[13px] text-slate-400 leading-relaxed">{tr("Web pages, documents and programs from your chats. Open one to preview it full screen, change it by asking, or save it as a file.")}</p>
+      <p className="text-[13px] text-slate-400 leading-relaxed lg:max-w-[70ch]">{tr("Web pages, documents and programs from your chats. Open one to preview it full screen, change it by asking, or save it as a file.")}</p>
       {list.length === 0 ? (
         <div className={card + " p-5 text-center"}>
           <p className="text-3xl">🗂️</p>
           <p className="text-sm text-slate-300 mt-2">{tr("No artifacts yet.")}</p>
           <p className="text-[12px] text-slate-500 mt-1">{tr("Ask Chat for a website, a report or a program, then tap its card and Save.")}</p>
         </div>
-      ) : list.map((a) => (
+      ) : <div className={GRID3}>{list.map((a) => (
         <div key={a.id} className={card + " p-3 flex items-center gap-3"} data-testid="artifact-item">
           <button onClick={() => open(a)} className="flex-1 min-w-0 flex items-center gap-3 text-start">
             <span className="w-11 h-11 shrink-0 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-xl">{a.kind === "html" ? "🌐" : a.kind === "doc" ? "📄" : "⌨️"}</span>
@@ -346,7 +352,7 @@ export function ArtifactsPage({ open }) {
           </button>
           <button onClick={() => { deleteArtifact(a.id); setList(loadArtifacts()); }} className="p-2 text-slate-500" title={tr("Delete")}><Trash2 size={15} /></button>
         </div>
-      ))}
+      ))}</div>}
     </div>
   );
 }

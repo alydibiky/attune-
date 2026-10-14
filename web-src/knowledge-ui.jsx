@@ -7,6 +7,7 @@ import { tr, getLang } from "./i18n.js";
 import * as K from "./knowledge.js";
 import * as C from "./convert.js";
 import { MyPacks } from "./teach-ui.jsx";
+import { PANES } from "./desk.jsx";
 
 const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 inline-flex items-center gap-1.5";
 const primary = btn + " bg-teal-500 text-slate-950";
@@ -102,7 +103,9 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
   const packInfo = (id) => { try { return JSON.parse(localStorage.getItem("attune:knowledge:pack:" + id) || "null"); } catch (e) { return null; } };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-4 space-y-3" data-testid="knowledge">
+    <div className="max-w-2xl lg:max-w-none mx-auto px-4 py-4 space-y-3" data-testid="knowledge">
+      {/* v6.27 computer layout: the switch and adding on the left, what is stored and the packs on the right */}
+      <div className={PANES}><div className="space-y-3 min-w-0 lg:sticky lg:top-4">
       <div className={card + " space-y-2"}>
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -143,6 +146,8 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
           </div>) : null}
         {busy ? <p className="text-[12px] text-teal-300" data-testid="kn-busy">{busy}</p> : null}
       </div>
+      </div>
+      <div className="space-y-3 mt-3 lg:mt-0 min-w-0">
 
       <div className={card + " space-y-1"}>
         <div className="flex items-center justify-between">
@@ -199,6 +204,7 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
           </ul>
         </details>
       </div>
+      </div></div>
     </div>
   );
 }

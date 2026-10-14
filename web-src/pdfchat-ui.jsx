@@ -15,6 +15,8 @@ import { useSubBack } from "./backstack.js";
 import * as Q from "./docqa.js";
 import * as C from "./convert.js";
 import * as R from "./pdfreader.js";
+import { PANES, DeskEmpty } from "./desk.jsx";
+import { useDesktopWide } from "./side-ui.jsx";
 
 const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40";
 const primary = btn + " bg-teal-500 text-slate-950";
@@ -81,6 +83,9 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
   const [noteFor, setNoteFor] = useState(null);          // { quote?, x, y, text }
   const [tick, setTick] = useState(0);                   // thumbnails arrived
   const scroller = useRef(null), sheet = useRef(null), pinch = useRef(null);
+  // v6.27 computer layout: the pages on the left and the chat on the right, both at once (a phone shows one tab at a time)
+  const wide = useDesktopWide();
+  const showRead = wide || tab === "read", showChat = wide || tab === "chat";
   useSubBack(!!doc, () => { close(); });
   useSubBack(!!panel, () => setPanel(null));
   useSubBack(!!sel || !!noteFor, () => { setSel(null); setNoteFor(null); });
@@ -290,7 +295,7 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
   const box = () => (scroller.current ? { w: scroller.current.clientWidth - 24, h: scroller.current.clientHeight - 24 } : { w: 360, h: 600 });
   // the page picture: sharp for the zoom; the old one stays on screen until the new one arrives (no blank flash)
   useEffect(() => {
-    if (!isPdf || tab !== "read") { setPic(null); return; }
+    if (!isPdf || !showRead) { setPic(null); return; }
     const width = R.renderWidth(box().w, Math.max(1, zoom), typeof devicePixelRatio === "number" ? devicePixelRatio : 2);
     const key = page + "@" + width;
     const anyKey = pics.current.keys().reverse().find((k) => k.startsWith(page + "@"));
@@ -299,16 +304,16 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
     let on = true;
     const t = setTimeout(() => nativeCall("pdfImages", { b64: doc.b64, pages: [page], width, max: 1 }).then((r) => { const im = r && r.images && r.images[0]; if (im) { pics.current.set(key, im.image); if (on) setPic(im.image); } }).catch(() => {}), anyKey ? 180 : 0);
     return () => { on = false; clearTimeout(t); };
-  }, [doc && doc.id, isPdf, tab, page, zoom]);
+  }, [doc && doc.id, isPdf, showRead, page, zoom]);
   // the page's word boxes (highlights, selection)
   useEffect(() => {
     setWords(null);
-    if (!isPdf || tab !== "read") return;
+    if (!isPdf || !showRead) return;
     if (wordCache.current.has(page)) { const c = wordCache.current.get(page); setWords(c.ws); setAspect(c.ar); return; }
     let on = true;
     nativeCall("pdfWords", { b64: doc.b64, pages: [page] }).then((r) => { const pg = r && r.pages && r.pages[0]; if (!pg) return; const c = { ws: R.orderWords(pg.words), ar: pg.ar || 0.707 }; wordCache.current.set(page, c); if (on) { setWords(c.ws); setAspect(c.ar); } }).catch(() => {});
     return () => { on = false; };
-  }, [doc && doc.id, isPdf, tab, page]);
+  }, [doc && doc.id, isPdf, showRead, page]);
   const searchRects = useMemo(() => (words && find.trim().length >= 2 ? R.findRects(words, find).flatMap((h) => h.rects) : []), [words, find]);
   const evidRects = useMemo(() => {
     if (!words || !evid || evid.page !== page) return [];
@@ -352,11 +357,11 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
     } catch (e) {}
   };
   useEffect(() => {
-    if (tab !== "read") return;
+    if (!showRead) return;
     const h = () => setTimeout(readSelection, 30);
     document.addEventListener("mouseup", h); document.addEventListener("touchend", h);
     return () => { document.removeEventListener("mouseup", h); document.removeEventListener("touchend", h); };
-  }, [tab, words, page]);
+  }, [showRead, words, page]);
 
   const pageAnns = useMemo(() => R.annsOn(anns, page), [anns, page]);
   const bookmarked = pageAnns.some((a) => a.kind === "bookmark");
@@ -404,11 +409,14 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
   // ---- screens -----------------------------------------------------------------------------------------------------------------------------
   if (!doc) return (
     <section className="p-4 space-y-3" data-testid="pdfchat-home">
+      <div className={PANES}><div className="space-y-3 min-w-0 lg:sticky lg:top-4">
       <div className="flex items-start gap-3"><FileText size={22} className="text-teal-300 mt-1" /><div><h2 className="text-lg font-semibold text-slate-100">{tr("Ask a PDF")}</h2><p className="text-[13px] text-slate-400">{tr("Open a PDF, Word file, book or web page. Read it here and chat with it — every answer shows the page it came from. Everything stays on your phone.")}</p></div></div>
       <label className={primary + " w-full py-3 flex items-center justify-center gap-1.5 cursor-pointer text-sm"}><Upload size={15} />{busy || tr("Open a file")}
         <input type="file" accept=".pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf,.txt,.md" className="hidden" data-testid="pdfchat-file" disabled={!!busy} onChange={(e) => { open(e.target.files && e.target.files[0]); e.target.value = ""; }} /></label>
       {err ? <p className="text-[12.5px] text-amber-300" data-testid="pdfchat-err">{err}</p> : null}
       {!modelReady ? <p className="text-[12px] text-slate-500">{tr("Reading and searching work now. To chat with the file, install a model in Engine.")}</p> : null}
+      </div>
+      <div className={(recent.length || old.length ? "mt-3 " : "") + "lg:mt-0 min-w-0"}>
       {recent.length ? (
         <div className="space-y-1.5" data-testid="pdf-recent">
           <div className="flex items-center"><p className="flex-1 text-[11px] uppercase tracking-wide text-slate-500 flex items-center gap-1"><History size={12} />{tr("Recent documents")}</p>
@@ -423,7 +431,9 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
             </div>))}
           <p className="text-[11px] text-slate-600">{tr("Kept on this phone only. Files over 25 MB keep their text, not their pages.")}</p>
         </div>
-      ) : old.length ? <div className="space-y-1"><p className="text-[11px] uppercase tracking-wide text-slate-500">{tr("Opened before")}</p>{old.map((r) => <p key={r.name} className="text-[12.5px] text-slate-400">{r.name} · {r.pages} {tr("pages")}</p>)}<p className="text-[11.5px] text-slate-600">{tr("Pick the file again to continue — files are not copied into the app.")}</p></div> : null}
+      ) : old.length ? <div className="space-y-1"><p className="text-[11px] uppercase tracking-wide text-slate-500">{tr("Opened before")}</p>{old.map((r) => <p key={r.name} className="text-[12.5px] text-slate-400">{r.name} · {r.pages} {tr("pages")}</p>)}<p className="text-[11.5px] text-slate-600">{tr("Pick the file again to continue — files are not copied into the app.")}</p></div>
+        : <DeskEmpty icon={FileText} title={tr("Your documents appear here")} text={tr("Open a file: it is kept on this device, with its chat and notes, so you can come back to it.")} testid="pdf-desk-empty" />}
+      </div></div>
     </section>
   );
 
@@ -431,17 +441,18 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
   const partial = doc.loaded < doc.count;
   const panelBtn = (k, Icon, label) => <button onClick={() => setPanel(panel === k ? null : k)} className={tool + (panel === k ? " bg-teal-500/20 border-teal-700" : "")} aria-label={label} title={label} data-testid={"pdf-panel-" + k}><Icon size={14} /></button>;
   return (
-    <div className="fixed inset-0 z-[60] bg-slate-950 flex flex-col pt-[env(safe-area-inset-top)]" data-testid="pdfchat">
+    <div className="att-shift fixed inset-0 z-[60] bg-slate-950 flex flex-col pt-[env(safe-area-inset-top)]" data-testid="pdfchat">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-800">
         <button onClick={close} className="p-1.5 -ms-1 text-slate-300" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
         <div className="min-w-0 flex-1"><p className="text-[14px] font-semibold text-white truncate" data-testid="pdf-name">{doc.name}</p><p className="text-[11.5px] text-slate-500">{doc.count} {tr("pages")}{doc.scans ? " · " + tr("{n} scanned", { n: doc.scans }) : ""}{partial ? <span data-testid="pdf-loading"> · {tr("reading {a} of {n}…", { a: doc.loaded, n: doc.count })}</span> : null}</p></div>
         {addToKnowledge ? <button onClick={async () => { if (doc.inKnowledge) return; try { const r = await addToKnowledge({ kind: "doc", title: doc.name, pages: doc.index.pages }); setDoc((d) => ({ ...d, inKnowledge: true })); flash && flash(tr("Added to Knowledge: {n} passages", { n: r.chunks })); } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 160)); } }}
           data-testid="pdf-add-knowledge" className="px-2 py-1.5 rounded-lg border border-slate-700 text-[12px] text-slate-200 disabled:opacity-50" disabled={!!doc.inKnowledge}>{doc.inKnowledge ? tr("In Knowledge") : tr("Add to Knowledge")}</button> : null}
-        <div className="flex rounded-lg border border-slate-700 overflow-hidden">{[["chat", tr("Chat")], ["read", tr("Read")]].map(([k, l]) => <button key={k} onClick={() => setTab(k)} data-testid={"pdf-tab-" + k} className={"px-3 py-1.5 text-[12.5px] " + (tab === k ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-300")}>{l}</button>)}</div>
+        <div className="flex rounded-lg border border-slate-700 overflow-hidden lg:hidden">{[["chat", tr("Chat")], ["read", tr("Read")]].map(([k, l]) => <button key={k} onClick={() => setTab(k)} data-testid={"pdf-tab-" + k} className={"px-3 py-1.5 text-[12.5px] " + (tab === k ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-300")}>{l}</button>)}</div>
       </div>
       {err ? <p className="px-3 py-1.5 text-[12px] text-amber-300 border-b border-slate-800" data-testid="pdfchat-err">{err}</p> : null}
-      {tab === "chat" ? (
-        <>
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row-reverse">
+      {showChat ? (
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-none lg:w-[400px] xl:w-[440px] lg:border-s lg:border-slate-800">
           <div className="flex-1 overflow-auto p-3 space-y-3" data-testid="pdf-chat">
             {!msgs.length ? <div className="space-y-2"><p className="text-[13px] text-slate-400">{tr("Ask anything about this file. For example:")}</p>
               <div className="flex flex-wrap gap-2">{sug.map((s) => <button key={s} onClick={() => ask(s)} className="rounded-full border border-slate-700 px-3 py-1.5 text-[12.5px] text-slate-200" data-testid="pdf-suggest">{s}</button>)}</div></div> : null}
@@ -456,9 +467,10 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
             <button onClick={() => ask()} disabled={!q.trim() || !!asking} className="rounded-xl bg-teal-500 p-2.5 text-slate-950 disabled:opacity-40" aria-label={tr("Send")} data-testid="pdf-send"><Send size={17} className="rtl:-scale-x-100" /></button>
           </div>
           <p className="text-center text-[10.5px] leading-tight text-slate-500 bg-slate-950 -mt-1 pb-1 px-2" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
-        </>
-      ) : (
-        <div className="flex-1 overflow-auto" data-testid="pdf-reader" ref={scroller} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onWheel={onWheel}>
+        </div>
+      ) : null}
+      {showRead ? (
+        <div className="flex-1 overflow-auto lg:min-w-0" data-testid="pdf-reader" ref={scroller} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onWheel={onWheel}>
           <div className="sticky top-0 z-20 bg-slate-950 border-b border-slate-800 p-2 space-y-2">
             <div className="flex items-center gap-2">
               <button onClick={() => goPage(page - 1)} disabled={page <= 1} className={ghost} aria-label={tr("Previous page")} data-testid="pdf-prev"><ChevronLeft size={15} className="rtl:rotate-180" /></button>
@@ -548,7 +560,8 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
             <button onClick={() => { setTab("chat"); setQ(tr("Explain page {n}", { n: page })); }} className={ghost + " w-full flex items-center justify-center gap-1.5"}><Sparkles size={13} />{tr("Ask about this page")}</button>
           </div>
         </div>
-      )}
+      ) : null}
+      </div>
     </div>
   );
 }

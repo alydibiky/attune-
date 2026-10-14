@@ -181,14 +181,14 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
   const btn = "flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300";
   return (
     <div className="att-shift fixed inset-x-0 top-0 z-[60] bg-slate-950 flex flex-col" style={{ height: vh, ...(m.color ? { background: `linear-gradient(${m.color}55, ${m.color}22), #020617` } : {}) }} data-testid="shelf-editor">
-      <div className="flex items-center gap-1 px-2 py-2 border-b border-slate-800">
+      <div className="flex items-center gap-1 px-2 py-2 border-b border-slate-800 lg:px-[max(1rem,calc((100%-46rem)/2))]">
         <button onClick={close} aria-label={tr("Back")} className="p-2 text-slate-300" data-testid="shelf-editor-back">{getLang() === "ar" ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}</button>
         <input value={title} onChange={set(setTitle)} dir="auto" placeholder={tr("Title")} data-testid="shelf-note-title"
           className="flex-1 min-w-0 bg-transparent text-lg font-semibold text-slate-100 placeholder-slate-600 focus:outline-none" />
         <button onClick={() => togglePin()} aria-label={tr("Pin")} className="p-2"><Star size={18} className={rec.pinned ? "text-amber-400" : "text-slate-500"} fill={rec.pinned ? "currentColor" : "none"} /></button>
         <button onClick={() => setSheet("remind")} aria-label={tr("Remind me")} data-testid="shelf-note-remind" className="p-2"><Bell size={18} className={m.remindAt > Date.now() ? "text-teal-300" : "text-slate-500"} /></button>
       </div>
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      <div className="flex-1 overflow-y-auto px-4 py-3 lg:px-[max(1rem,calc((100%-46rem)/2))]">
         <textarea ref={taRef} value={text} onChange={set(setText)} dir="auto" placeholder={tr("Write your note…")} data-testid="shelf-note-body"
           onFocus={(e) => { const el = e.target; setTimeout(() => { try { el.scrollIntoView({ block: "nearest" }); } catch (x) {} }, 300); }}
           className="w-full min-h-[40vh] bg-transparent text-slate-100 placeholder-slate-600 leading-relaxed focus:outline-none resize-none" />
@@ -209,13 +209,13 @@ function NoteEditor({ rec, shelf, save, close, remove, togglePin, setReminder, m
         {m.remindAt > Date.now() ? <p className="text-xs text-teal-300 mt-3"><AlarmClock size={12} className="inline me-1" />{tr("Reminder set")}: {fmtWhen(m.remindAt)}</p> : null}
         <p className="text-[11px] text-slate-500 mt-3"><Brain size={11} className="inline me-1" />{tr("Also in your Mind: Mind's search finds it.")}</p>
       </div>
-      <div className="flex items-center gap-0.5 px-2 pt-1.5 border-t border-slate-800 overflow-x-auto" data-testid="shelf-format" dir="ltr">
+      <div className="flex items-center gap-0.5 px-2 pt-1.5 border-t border-slate-800 overflow-x-auto lg:px-[max(1rem,calc((100%-46rem)/2))]" data-testid="shelf-format" dir="ltr">
         {[["bold", <b>B</b>], ["italic", <i>I</i>], ["strike", <s>S</s>], ["h1", "H1"], ["h2", "H2"], ["bullet", "•"], ["number", "1."], ["check", "☐"], ["quote", "❝"]].map(([k, l]) => (
           <button key={k} onMouseDown={(e) => e.preventDefault()} onClick={() => fmt(k)} data-testid={"shelf-fmt-" + k} className="min-w-[34px] px-2 py-1 rounded-md text-sm text-slate-200 active:bg-slate-800">{l}</button>))}
         <button onClick={undoT} aria-label={tr("Undo")} data-testid="shelf-undo-text" className="px-2 py-1 text-slate-300"><Undo2 size={16} /></button>
         <button onClick={redoT} aria-label={tr("Redo")} data-testid="shelf-redo-text" className="px-2 py-1 text-slate-300"><Undo2 size={16} className="-scale-x-100" /></button>
       </div>
-      <div className="flex flex-wrap gap-1.5 px-3 py-2 bg-slate-950" data-testid="shelf-editor-bar">
+      <div className="flex flex-wrap gap-1.5 px-3 py-2 bg-slate-950 lg:justify-center" data-testid="shelf-editor-bar">
         <button className={btn} onClick={() => setSheet("more")} data-testid="shelf-note-more"><MoreVertical size={13} />{tr("More")}</button>
         <button className={btn} onClick={() => photoRef.current && photoRef.current.click()}><ImagePlus size={13} />{tr("Photo")}</button>
         <button className={btn} onClick={() => camRef.current && camRef.current.click()}><Camera size={13} />{tr("Camera")}</button>
@@ -406,7 +406,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
       <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} dir="auto" placeholder={tr("Search every book…")} data-testid="shelf-search-input"
         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 mb-3 focus:outline-none focus:border-teal-500" />
       {q.trim() && !hits.length ? <p className="text-sm text-slate-500">{tr("Nothing found")}</p> : null}
-      <div className="space-y-2">{hits.map(({ rec: r, book: b }) => (
+      <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">{hits.map(({ rec: r, book: b }) => (
         <button key={r.id} onClick={() => { setBookId(b && b.id); setNoteId(r.id); }} data-testid="shelf-hit" className="w-full text-start bg-slate-900 border border-slate-800 rounded-xl p-3">
           <p className="text-[11px] text-teal-400" dir="auto"><BookOpen size={11} className="inline me-1" />{bookName(b)}</p>
           <p className="text-sm text-slate-100 truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</p>
@@ -416,7 +416,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
     body = (<div data-testid="shelf-reminders">
       {header(tr("Reminders"), backBtn(() => setView(null)))}
       {!ups.length ? <p className="text-sm text-slate-500">{tr("No reminders yet. Open a note and tap the bell.")}</p> : null}
-      <div className="space-y-2">{ups.map(({ rec: r, at, book: b }) => (
+      <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">{ups.map(({ rec: r, at, book: b }) => (
         <button key={r.id} onClick={() => { setBookId(b && b.id); setNoteId(r.id); }} data-testid="shelf-reminder" className="w-full text-start bg-slate-900 border border-slate-800 rounded-xl p-3 flex gap-3 items-center">
           <AlarmClock size={18} className="text-teal-300 shrink-0" />
           <span className="flex-1 min-w-0"><span className="block text-sm text-slate-100 truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</span>
@@ -429,7 +429,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
         view === "trash" && list.length ? <button data-testid="shelf-empty-trash" onClick={async () => { if (!(await askConfirm(tr("Delete these {n} notes for good?", { n: list.length })))) return; const ids = new Set(list.map((r) => r.id)); setRecords((rs) => rs.filter((r) => !ids.has(r.id))); }} className="text-xs text-red-300 px-2">{tr("Empty the trash")}</button> : null)}
       <p className="text-xs text-slate-500 mb-3">{view === "trash" ? tr("Notes stay here for 30 days, then are deleted for good.") : tr("Archived notes leave their book but are still found by search.")}</p>
       {!list.length ? <p className="text-sm text-slate-500 text-center mt-8">{tr("Nothing here")}</p> : null}
-      <div className="space-y-2">{list.map((r) => (
+      <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-2">{list.map((r) => (
         <div key={r.id} className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center gap-2" data-testid="shelf-bin-note">
           <span className="flex-1 min-w-0"><span className="block text-sm text-slate-100 truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</span>
             <span className="block text-[11px] text-slate-500" dir="auto">{bookName(shelf.books.find((b) => b.id === S.bookOf(r, shelf)))}</span></span>
@@ -448,7 +448,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
         {tags.map(({ tag }) => <button key={tag} onClick={() => setTagF(tagF === tag ? null : tag)} data-testid="shelf-tag" className={`shrink-0 text-xs px-2.5 py-1 rounded-full border ${tagF === tag ? "border-teal-400 text-teal-300" : "border-slate-700 text-slate-400"}`} dir="auto">#{tag}</button>)}
       </div>
       {!notes.length ? <p className="text-sm text-slate-500 mt-8 text-center">{tr("No notes in this book yet. Tap + to write one.")}</p> : null}
-      <div className="space-y-2 pb-24">{notes.map((r) => {
+      <div className="space-y-2 pb-24 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-3">{notes.map((r) => {
         const on = sel && sel.has(r.id);
         return (
           <button key={r.id} data-testid="shelf-note" onClick={() => { if (sel) { const s = new Set(sel); on ? s.delete(r.id) : s.add(r.id); setSel(s); } else setNoteId(r.id); }}
@@ -460,7 +460,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
                 <span className="text-sm font-medium text-slate-100 truncate" dir="auto">{S.noteTitle(r) || tr("Untitled")}</span>
                 {r.meta && r.meta.remindAt > Date.now() ? <Bell size={12} className="text-teal-300 shrink-0" /> : null}
                 {r.meta && r.meta.star ? <span className="text-amber-400 text-xs shrink-0">★</span> : null}</span>
-              <span className="block text-xs text-slate-400 line-clamp-2 mt-0.5" dir="auto">{r.text}</span>
+              <span className="block text-xs text-slate-400 line-clamp-2 lg:line-clamp-4 mt-0.5" dir="auto">{r.text}</span>
             </span>
           </button>); })}</div>
       {sel && sel.size ? (
@@ -491,7 +491,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
           <button onClick={() => setSheet({ kind: "new" })} aria-label={tr("New book")} className={ib} data-testid="shelf-add"><Plus size={22} /></button>
           <button onClick={() => setSheet({ kind: "shelfmore" })} aria-label={tr("More")} className={ib} data-testid="shelf-more"><MoreVertical size={21} /></button></>)}
       {reorderOn ? <div className="flex items-center gap-2 mb-3 text-xs text-teal-300"><span className="flex-1">{tr("Move books with the arrows")}</span><button onClick={() => setReorderOn(false)} data-testid="shelf-reorder-done" className="px-3 py-1 rounded-lg bg-teal-500 text-slate-950 font-semibold">{tr("Done")}</button></div> : null}
-      <div className={prefs.view === "list" ? "grid grid-cols-4 gap-x-3 gap-y-4 pb-28" : "grid grid-cols-2 gap-x-8 gap-y-6 px-3 pb-28"} data-testid="shelf-grid">
+      <div className={prefs.view === "list" ? "grid grid-cols-4 lg:grid-cols-8 gap-x-3 gap-y-4 lg:gap-x-6 lg:gap-y-6 pb-28" : "grid grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-6 lg:gap-x-10 lg:gap-y-8 px-3 pb-28"} data-testid="shelf-grid">
         {books.map((b, i) => (
           <div key={b.id} className="min-w-0" data-testid="shelf-book-tile">
             <button className="block w-full relative" onClick={() => (reorderOn ? null : openBook(b.id))}
@@ -516,7 +516,7 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
   const sb = sheet && sheet.id ? shelf.books.find((b) => b.id === sheet.id) : null;
   const row = "w-full flex items-center gap-3 px-2 py-3 text-start text-slate-100 border-b border-slate-800";
   return (
-    <div className="max-w-3xl mx-auto px-3 pt-2 min-h-[70vh]" data-testid="shelf">
+    <div className="max-w-3xl lg:max-w-none mx-auto px-3 pt-2 min-h-[70vh]" data-testid="shelf">
       {body}
       {view === "books" ? (
         <Sheet title={tr("Your books")} close={() => setView(null)} testid="shelf-books-menu">

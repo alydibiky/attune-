@@ -8,6 +8,7 @@ import { tr, getLang } from "./i18n.js";
 import * as M from "./mind.js";
 import { useSubBack } from "./backstack.js";
 import { Md } from "./chat.jsx";
+import { PANES } from "./desk.jsx";
 
 /* ---- thumbnails: small JPEGs in IndexedDB (the records stay small text in localStorage) ---- */
 let dbP = null;
@@ -383,6 +384,8 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
           <button onClick={() => setAdding(true)} aria-label={tr("Keep something")} data-testid="mind-new"
             className="fixed z-40 end-5 bottom-24 lg:bottom-8 lg:end-8 w-14 h-14 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center shadow-xl shadow-black/40"><Plus size={26} /></button>
 
+          {/* v6.27 computer layout: search, the answer and your spaces on the left; everything you kept on the right */}
+          <div className={PANES}><div className="space-y-4 min-w-0">
           {!pro ? (
             <p className="text-[11px] text-slate-500 bg-slate-900 border border-slate-800 rounded-xl p-2.5">
               {tr("Free: keep and search everything. Pro: it files each item by itself (title, summary, tags), reads your photos and answers questions from your Mind.")}
@@ -475,7 +478,9 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
             </section>
           )}
 
-          {!filterOn && items.length ? <h3 className="text-sm font-semibold text-white pt-1">{tr("Everything, newest first")}</h3> : null}
+          </div>
+          <div className="space-y-4 mt-4 lg:mt-0 min-w-0">
+          {!filterOn && items.length ? <h3 className="text-sm font-semibold text-white pt-1 lg:pt-0">{tr("Everything, newest first")}</h3> : null}
 
           {/* the board */}
           {items.length ? (
@@ -487,6 +492,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
               {records.length ? tr("Nothing matches that.") : <>{tr("Your Mind is empty.")}<br /><span className="text-xs">{tr("Keep a note, a link or a photo above — or share anything to Attune from another app.")}</span></>}
             </p>
           )}
+          </div></div>
         </>
       )}
 

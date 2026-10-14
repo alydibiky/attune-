@@ -9,6 +9,8 @@ import { useSubBack, useSticky } from "./backstack.js";
 import { Md } from "./chat.jsx";
 import * as D from "./daily.js";
 import { useListen, ListenBar } from "./lesson-ui.jsx";
+import { PANES, LEFT, RIGHT, GRID3, DeskEmpty } from "./desk.jsx";
+import { useDesktopWide } from "./side-ui.jsx";
 
 const CKEY = "attune:daily:courses:v1", NKEY = "attune:daily:news:v1";
 const load = (k) => { try { const v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
@@ -134,6 +136,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
   const [form, setForm] = useState({ topic: "", level: "beginner", lang: "en", time: "08:00", quizEvery: 5, goal: "" });
   const [confirmDel, setConfirmDel] = useState(false);
   const running = useRef(false);
+  const wide = useDesktopWide();   // v6.27 computer layout: the course on the left, the lesson / quiz on the right
   const course = courses.find((c) => c.id === cur) || null;
   // v6.27: Listen — the open lesson read aloud by the phone's voice, paragraph by paragraph (the one being read is highlighted)
   const openLesson = view === "lesson" && course ? course.lessons.find((x) => x.n === lessonN) : null;
@@ -206,8 +209,10 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
   if (view === "new") return (
     <section className="p-4 space-y-3" data-testid="learn-new">
       <Back onClick={() => setView("list")} />
+      <div className={PANES}>
+      <div className="space-y-3 min-w-0 lg:col-start-2 lg:row-start-1">
       <h2 className="text-base font-semibold text-slate-100">{tr("Ready courses")}</h2>
-      <div className="grid gap-2" data-testid="learn-ready">
+      <div className="grid gap-2 lg:grid-cols-2 lg:gap-3" data-testid="learn-ready">
         {D.READY_COURSES.map((r) => (
           <button key={r.id} onClick={() => startReady(r.id)} disabled={!modelReady} data-testid={"learn-ready-" + r.id}
             className="text-start rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-3 flex items-center gap-3 disabled:opacity-50">
@@ -216,7 +221,9 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
               <span className="block text-[12px] text-slate-400 truncate">{r.plan.slice(0, 3).map((p) => p[getLang() === "ar" ? 1 : 0]).join(" · ")}…</span></span>
           </button>))}
       </div>
-      <h2 className="text-base font-semibold text-slate-100 pt-2">{tr("Or any topic you like")}</h2>
+      </div>
+      <div className="space-y-3 mt-3 lg:mt-0 lg:col-start-1 lg:row-start-1 lg:sticky lg:top-4">
+      <h2 className="text-base font-semibold text-slate-100 pt-2 lg:pt-0">{tr("Or any topic you like")}</h2>
       <input value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })} className={field} dir="auto" placeholder={tr("A language, a skill, a subject…")} data-testid="learn-topic" />
       <div className="flex flex-wrap gap-1.5">{["Turkish", "English", "Crane hydraulics", "Excel & Power Automate", "Java", "Economics", "Tajweed"].map((x) =>
         <button key={x} onClick={() => setForm({ ...form, topic: tr(x) })} className="text-[12px] rounded-full border border-slate-700 text-slate-300 px-2.5 py-1">{tr(x)}</button>)}</div>
@@ -234,6 +241,8 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
       {busy ? <Working {...busy} /> : modelReady
         ? <button className={primary + " w-full py-2.5"} disabled={form.topic.trim().length < 2} onClick={create} data-testid="learn-create">{tr("Plan my course")}</button>
         : <button className={ghost + " w-full"} onClick={openEngine}>{tr("Load a model first — lessons are written on your phone")}</button>}
+      </div>
+      </div>
     </section>
   );
 
@@ -241,7 +250,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
     const q = quiz.questions[quiz.i];
     if (!q) {
       const right = quiz.questions.filter((x, i) => quiz.picks[i] === x.answer).length;
-      return (
+      return beside(
         <section className="p-4 space-y-3" data-testid="quiz-result">
           <p className="text-2xl font-bold text-slate-100">{right} / {quiz.questions.length}</p>
           <p className="text-[13px] text-slate-300">{right === quiz.questions.length ? tr("Perfect — well done!") : tr("What you missed comes back as a quick review in your next lessons.")}</p>
@@ -249,7 +258,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         </section>);
     }
     const picked = quiz.picks[quiz.i];
-    return (
+    return beside(
       <section className="p-4 space-y-3" data-testid="quiz">
         <div className="flex justify-between text-[12px] text-slate-400"><span>{tr("Quiz · {t}", { t: course.topic })}</span><span>{quiz.i + 1} / {quiz.questions.length}</span></div>
         <p className="text-[15px] text-slate-100 font-medium" dir="auto">{q.q}</p>
@@ -272,8 +281,8 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
     const l = course.lessons.find((x) => x.n === lessonN);
     if (!l) return <section className="p-4"><Back onClick={() => setView("course")} label={course.topic} /></section>;
     const due = D.quizDue(course);
-    return (
-      <section className="p-4 space-y-3" data-testid="lesson">
+    return beside(
+      <section className="p-4 space-y-3 lg:max-w-[72ch]" data-testid="lesson">
         <Back onClick={() => { L.stop(); setView("course"); }} label={course.topic} />
         <p className="text-[12px] text-teal-300">{tr("Lesson {n} of {m}", { n: l.n + 1, m: course.plan.length })}</p>
         <h2 className="text-lg font-semibold text-slate-100" dir="auto" data-listen="0" style={hl(0)}>{l.title}</h2>
@@ -308,6 +317,14 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
   }
 
   if ((view === "course" || view === "past") && course) {
+    if (!wide) return courseScreen(false);
+    return (
+      <div className={PANES}><div className={LEFT}>{courseScreen(false)}</div>
+        <div className={RIGHT + " lg:p-4"}><DeskEmpty icon={GraduationCap} title={tr("Your lesson opens here")} text={tr("Pick today's lesson or a past one from the course.")} testid="learn-desk-empty" /></div></div>);
+  }
+
+  /** The course screen. On a computer it also stays on the left while a lesson or a quiz is open (side = true). */
+  function courseScreen(side) {
     const doneN = course.lessons.filter((l) => l.done).length;
     const due = D.quizDue(course);
     const nextN = D.nextIndex(course);
@@ -320,7 +337,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
             <p className="text-[12px] text-slate-400">{tr("{d} of {n} lessons", { d: doneN, n: course.plan.length })} · {tr("streak {n}", { n: course.streak || 0 })} 🔥 · <Clock size={11} className="inline" /> {course.time}</p></div>
         </div>
         <div className="h-1.5 rounded bg-slate-800"><div className="h-1.5 rounded bg-teal-500" style={{ width: `${Math.round((doneN / Math.max(1, course.plan.length)) * 100)}%` }} /></div>
-        {busy ? <Working {...busy} /> : null}
+        {busy && !side ? <Working {...busy} /> : null}
         {due && !busy ? <button className="w-full text-start rounded-xl border border-amber-700 bg-amber-500/10 p-3" onClick={() => startQuiz(due)} data-testid="quiz-card">
           <p className="text-sm font-semibold text-amber-100">{tr("Quiz time")}</p><p className="text-[12px] text-amber-200/80">{tr("{n} questions on lessons {a}–{b}", { n: 5, a: due[0].n + 1, b: due[due.length - 1].n + 1 })}</p></button> : null}
         {today ? <button className="w-full text-start rounded-xl border border-teal-700 bg-teal-500/10 p-3" onClick={() => { putCourse(D.openLesson(course, today.n)); setLessonN(today.n); setView("lesson"); }} data-testid="today-lesson">
@@ -335,7 +352,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
           <p className="text-[12px] font-semibold text-slate-300 mb-1.5">{tr("The course")}</p>
           {course.plan.map((t, i) => { const l = course.lessons.find((x) => x.n === i);
-            return <button key={i} disabled={!l} onClick={() => { setLessonN(i); setView("lesson"); }} className="w-full text-start flex gap-2 py-1 text-[13px] disabled:opacity-100">
+            return <button key={i} disabled={!l} onClick={() => { if (side) L.stop(); setLessonN(i); setView("lesson"); }} className={"w-full text-start flex gap-2 py-1 text-[13px] disabled:opacity-100" + (side && view === "lesson" && lessonN === i ? " rounded-md bg-teal-500/10" : "")}>
               <span className={`w-5 shrink-0 text-end ${l && l.done ? "text-emerald-400" : "text-slate-600"}`}>{l && l.done ? "✓" : i + 1}</span>
               <span className={l ? "text-slate-200" : "text-slate-500"} dir="auto">{t}</span></button>; })}
         </div>
@@ -353,19 +370,27 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         </div>
       </section>);
   }
+  /** A lesson or a quiz: alone on a phone; beside the course on a computer. */
+  function beside(el) {
+    if (!wide || !course) return el;
+    return <div className={PANES}><div className={LEFT}>{courseScreen(true)}</div><div className={RIGHT}>{el}</div></div>;
+  }
 
   return (
     <section className="p-4 space-y-3" data-testid="learn-page">
       <div className="flex items-start gap-3">
         <GraduationCap size={22} className="text-teal-300 mt-1 shrink-0" />
         <div className="min-w-0"><h2 className="text-lg font-semibold text-slate-100">{tr("Learn daily")}</h2>
-          <p className="text-[13px] text-slate-400">{tr("Pick a topic or a language. Every day a short lesson with a visual, a quiz every few lessons, and what you miss comes back until it sticks.")}</p></div>
+          <p className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Pick a topic or a language. Every day a short lesson with a visual, a quiz every few lessons, and what you miss comes back until it sticks.")}</p></div>
       </div>
-      <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5"} onClick={() => setView("new")} data-testid="learn-new-btn"><Plus size={16} />{tr("New course")}</button>
+      <button className={primary + " w-full lg:w-auto lg:px-5 flex items-center justify-center gap-1.5 py-2.5"} onClick={() => setView("new")} data-testid="learn-new-btn"><Plus size={16} />{tr("New course")}</button>
+      <div className={GRID3}>
       {courses.map((c) => { const t = D.todaysLesson(c); const doneN = c.lessons.filter((l) => l.done).length;
-        return <button key={c.id} onClick={() => { setCur(c.id); setView("course"); }} className="w-full text-start rounded-xl border border-slate-800 bg-slate-900/60 p-3" data-testid="learn-course">
-          <span className="block text-sm text-slate-100" dir="auto">{c.title || c.topic}</span>
+        return <button key={c.id} onClick={() => { setCur(c.id); setView("course"); }} className="w-full text-start rounded-xl border border-slate-800 bg-slate-900/60 p-3 lg:p-4 lg:flex lg:flex-col lg:gap-2 lg:hover:border-teal-700" data-testid="learn-course">
+          <span className="block text-sm text-slate-100 lg:text-[15px] lg:font-semibold" dir="auto">{c.title || c.topic}</span>
+          <span className="hidden lg:block h-1.5 rounded bg-slate-800"><span className="block h-1.5 rounded bg-teal-500" style={{ width: `${Math.round((doneN / Math.max(1, c.plan.length)) * 100)}%` }} /></span>
           <span className="block text-[11px] text-slate-500">{tr("{d} of {n} lessons", { d: doneN, n: c.plan.length })} · {tr("streak {n}", { n: c.streak || 0 })}{t && !t.done ? " · " + tr("today: {t}", { t: t.title }) : ""}{D.quizDue(c) ? " · " + tr("quiz due") : ""}</span></button>; })}
+      </div>
     </section>
   );
 }
@@ -379,6 +404,7 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
   const [busy, setBusy] = useState(null);
   const [past, setPast] = useSticky("news:past", null);
   const [confirmDel, setConfirmDel] = useState(false);
+  const wide = useDesktopWide();   // v6.27 computer layout: the topics on the left, the day's news on the right
   const topic = topics.find((t) => t.id === cur) || null;
   // v5.34: Back — an old digest → the topic → all topics
   useSubBack(!!cur || adding || !!past, () => { if (past) setPast(null); else if (adding) setAdding(false); else setCur(null); });
@@ -424,8 +450,9 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
       </div> : null}
     </div>);
 
-  if (topic) return (
-    <section className="p-4 space-y-3" data-testid="news-topic">
+  if (topic) {
+    const el = (
+    <section className="p-4 space-y-3 lg:max-w-[76ch]" data-testid="news-topic">
       <Back onClick={() => { setCur(null); setPast(null); }} label={tr("Daily news")} />
       <div className="flex items-center gap-2"><Newspaper size={20} className="text-amber-300 shrink-0" /><h2 className="text-lg font-semibold text-slate-100 flex-1" dir="auto">{topic.query}</h2>
         {todays && !busy && modelReady ? <button className="p-1.5 text-slate-400" onClick={() => gather(topic)} title={tr("Refresh")} data-testid="news-refresh"><RefreshCw size={16} /></button> : null}</div>
@@ -451,16 +478,22 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
           <Trash2 size={14} />{confirmDel ? tr("Tap again to stop following") : tr("Stop following")}</button>
       </div>
     </section>);
+    if (!wide) return el;
+    return <div className={PANES}><div className={LEFT}>{listScreen(true)}</div><div className={RIGHT}>{el}</div></div>;
+  }
+  return listScreen(false);
 
+  /** All the topics. On a computer they stay on the left while a topic is open (side = true). */
+  function listScreen(side) {
   return (
     <section className="p-4 space-y-3" data-testid="news-page">
       <div className="flex items-start gap-3">
         <Newspaper size={22} className="text-amber-300 mt-1 shrink-0" />
         <div className="min-w-0"><h2 className="text-lg font-semibold text-slate-100">{tr("Daily news")}</h2>
-          <p className="text-[13px] text-slate-400">{tr("Follow a team, a player, a market, a subject. Each day: what happened in the last 24 hours, with the sources.")}</p></div>
+          <p className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Follow a team, a player, a market, a subject. Each day: what happened in the last 24 hours, with the sources.")}</p></div>
       </div>
       {adding ? (
-        <div className="rounded-xl border border-teal-800 bg-slate-900 p-3 space-y-2" data-testid="news-add">
+        <div className={"rounded-xl border border-teal-800 bg-slate-900 p-3 space-y-2" + (side ? "" : " lg:max-w-xl")} data-testid="news-add">
           <input value={form.query} onChange={(e) => setForm({ ...form, query: e.target.value })} className={field} dir="auto" placeholder={tr("e.g. Al Ahly, Mohamed Salah, Egypt economy")} data-testid="news-query" autoFocus />
           <div className="flex flex-wrap gap-1.5">{["Al Ahly", "Mohamed Salah", "Premier League", "Egypt economy", "Gold price", "AI", "Crane industry"].map((x) =>
             <button key={x} onClick={() => setForm({ ...form, query: tr(x) })} className="text-[12px] rounded-full border border-slate-700 text-slate-300 px-2.5 py-1">{tr(x)}</button>)}</div>
@@ -472,13 +505,16 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
             <button className={primary} disabled={form.query.trim().length < 2} data-testid="news-follow" onClick={() => { const t = D.newTopic(form); putTopic(t); setAdding(false); setForm({ query: "", lang: form.lang, time: form.time }); setCur(t.id); }}>{tr("Follow")}</button>
             <button className={ghost} onClick={() => setAdding(false)}>{tr("Cancel")}</button>
           </div>
-        </div>) : <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5"} onClick={() => setAdding(true)} data-testid="news-add-btn"><Plus size={16} />{tr("Follow a topic")}</button>}
+        </div>) : <button className={primary + " w-full flex items-center justify-center gap-1.5 py-2.5" + (side ? "" : " lg:w-auto lg:px-5")} onClick={() => setAdding(true)} data-testid="news-add-btn"><Plus size={16} />{tr("Follow a topic")}</button>}
+      <div className={side ? "space-y-3" : GRID3}>
       {topics.map((t) => { const d = t.digests[0]; const fresh = d && d.day === todayKey;
-        return <button key={t.id} onClick={() => setCur(t.id)} className="w-full text-start rounded-xl border border-slate-800 bg-slate-900/60 p-3" data-testid="news-topic-item">
+        return <button key={t.id} onClick={() => { if (side) setPast(null); setCur(t.id); }} className={"w-full text-start rounded-xl border p-3 lg:hover:border-teal-700 " + (side && t.id === cur ? "border-teal-700 bg-teal-500/10" : "border-slate-800 bg-slate-900/60")} data-testid="news-topic-item">
           <span className="block text-sm text-slate-100" dir="auto">{t.query}</span>
           <span className="block text-[11px] text-slate-500 truncate" dir="auto">{fresh ? (d.none ? tr("Nothing new today") : String(d.text).split("\n")[0].replace(/\*+/g, "")) : tr("Not gathered today")} · {t.time}</span></button>; })}
+      </div>
     </section>
   );
+  }
 }
 
 function ago(t) {

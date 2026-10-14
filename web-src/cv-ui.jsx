@@ -13,6 +13,8 @@ import { sharePdf } from "./books-docs.jsx";
 import * as J from "./jobready.js";
 import { speakNow } from "./lesson-ui.jsx";
 import { myCountry } from "./agent-ui.jsx";
+import { GRID3 } from "./desk.jsx";
+import { useDesktopWide } from "./side-ui.jsx";
 
 const field = "w-full min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500";
 const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40";
@@ -23,7 +25,7 @@ const L2 = (en, ar) => (getLang() === "ar" ? ar : en);
 function Sheet({ title, onClose, right, children, testid }) {
   useSubBack(true, onClose);
   return (
-    <div className="fixed inset-0 z-[70] bg-slate-950 flex flex-col" data-testid={testid}>
+    <div className="att-shift fixed inset-0 z-[70] bg-slate-950 flex flex-col" data-testid={testid}>
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-800">
         <button onClick={onClose} className="p-1.5 -ms-1 rounded-lg text-slate-300" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
         <h2 className="text-[15px] font-semibold text-white flex-1 truncate">{title}</h2>{right}
@@ -54,17 +56,18 @@ function measureScale(cv) {
   });
 }
 
-function Preview({ cv }) {
+function Preview({ cv, desk }) {
   const wrap = useRef(null);
   const [w, setW] = useState(340);
   const [scale, setScale] = useState(1);
   useEffect(() => { let on = true; const t = setTimeout(() => measureScale(cv).then((s) => on && setScale(s)), 250); return () => { on = false; clearTimeout(t); }; }, [cv]);
   useEffect(() => { const el = wrap.current; if (!el) return; const ro = new ResizeObserver(() => setW(el.clientWidth)); ro.observe(el); setW(el.clientWidth); return () => ro.disconnect(); }, []);
-  const P = V.PAGES[cv.page] || V.PAGES.A4, pxW = P.w * 96 / 25.4, pxH = P.h * 96 / 25.4, k = Math.min(1, (w - 2) / pxW);
+  const P = V.PAGES[cv.page] || V.PAGES.A4, pxW = P.w * 96 / 25.4, pxH = P.h * 96 / 25.4, k = Math.min(1, (w - (desk ? 26 : 2)) / pxW);
+  // desk: the computer's side panel — the page fits inside the padding, and the frame keeps its full page width under the scale
   return (
     <div ref={wrap} className="p-3" data-testid="cv-preview">
       <div style={{ width: pxW * k, height: pxH * k * Math.max(1, cv.fit || 1), margin: "0 auto", background: "#fff", boxShadow: "0 2px 14px rgba(0,0,0,.45)", overflow: "hidden", position: "relative" }}>
-        <iframe title="CV" srcDoc={V.cvHtml(cv, { scale })} style={{ width: pxW, height: pxH * Math.max(1, cv.fit || 1), border: 0, transform: `scale(${k})`, transformOrigin: "top left", position: "absolute", left: 0, top: 0 }} sandbox="allow-same-origin" />
+        <iframe title="CV" srcDoc={V.cvHtml(cv, { scale })} style={{ width: pxW, ...(desk ? { maxWidth: "none" } : null), height: pxH * Math.max(1, cv.fit || 1), border: 0, transform: `scale(${k})`, transformOrigin: "top left", position: "absolute", left: 0, top: 0 }} sandbox="allow-same-origin" />
       </div>
       {scale < 1 ? <p className="text-center text-[11px] text-amber-300 mt-2">{tr("Text shrunk to {p}% to fit {n} page(s)", { p: Math.round(scale * 100), n: cv.fit })}</p> : null}
     </div>
@@ -342,6 +345,9 @@ function AITab({ cv, setCV, llm, modelReady, openEngine, flash, onCopyFor, onNew
 function Editor({ cv: cv0, onChange, onClose, onNewCV, onCopyFor, llm, modelReady, openEngine, flash, share, saveFile, listen, native }) {
   const [cv, setCVRaw] = useState(cv0);
   const [tab, setTab] = useState("content");
+  // v6.27 computer layout: what you edit on the left, the live preview always on the right (so the Preview tab is not needed there)
+  const wide = useDesktopWide();
+  const shown = wide && tab === "preview" ? "content" : tab;
   const setCV = (c) => { const n = { ...c, updated: Date.now() }; setCVRaw(n); onChange(n); };
   const exportName = (cv.basics.name || cv.name || "CV").replace(/[^\w؀-ۿ]+/g, "_");
   const doPdf = async () => { const s = await measureScale(cv); await sharePdf({ html: V.cvHtml(cv, { scale: s }), name: exportName, text: "", flash }); };
@@ -372,14 +378,19 @@ function Editor({ cv: cv0, onChange, onClose, onNewCV, onCopyFor, llm, modelRead
   return (
     <Sheet title={cv.name} onClose={onClose} testid="cv-editor"
       right={<div className="flex gap-1"><button className={primary + " flex items-center gap-1"} onClick={doPdf} data-testid="cv-export-pdf"><Share2 size={12} />PDF</button><button className={ghost} onClick={doWord} data-testid="cv-export-word">Word</button><button className={ghost} onClick={doText}>TXT</button></div>}>
-      <div className="sticky top-0 z-10 bg-slate-950 border-b border-slate-800 px-2 py-1.5 flex gap-1 overflow-x-auto">{TABS.map(([k, l]) => <button key={k} onClick={() => setTab(k)} data-testid={"cv-tab-" + k} className={`${btn} shrink-0 ${tab === k ? "bg-teal-500 text-slate-950" : "text-slate-300"}`}>{l}</button>)}</div>
-      {tab === "content" ? <ContentTab cv={cv} setCV={setCV} improveJob={improveJob} />
-        : tab === "design" ? <DesignTab cv={cv} setCV={setCV} flash={flash} />
-        : tab === "preview" ? <Preview cv={cv} />
-        : tab === "check" ? <CheckTab cv={cv} />
-        : tab === "job" ? <JobTab cv={cv} setCV={setCV} llm={llm} modelReady={modelReady} listen={listen} native={native} flash={flash} goAI={() => setTab("ai")} />
+      <div className="lg:flex lg:h-full">
+      <div className="lg:flex-1 lg:min-w-0 lg:overflow-auto">
+      <div className="sticky top-0 z-10 bg-slate-950 border-b border-slate-800 px-2 py-1.5 flex gap-1 overflow-x-auto">{TABS.map(([k, l]) => <button key={k} onClick={() => setTab(k)} data-testid={"cv-tab-" + k} className={`${btn} shrink-0 ${shown === k ? "bg-teal-500 text-slate-950" : "text-slate-300"}${k === "preview" ? " lg:hidden" : ""}`}>{l}</button>)}</div>
+      {shown === "content" ? <ContentTab cv={cv} setCV={setCV} improveJob={improveJob} />
+        : shown === "design" ? <DesignTab cv={cv} setCV={setCV} flash={flash} />
+        : shown === "preview" ? <Preview cv={cv} />
+        : shown === "check" ? <CheckTab cv={cv} />
+        : shown === "job" ? <JobTab cv={cv} setCV={setCV} llm={llm} modelReady={modelReady} listen={listen} native={native} flash={flash} goAI={() => setTab("ai")} />
         : <AITab cv={cv} setCV={setCV} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} share={(t) => (share ? share(t) : null)} shareWord={letterWord}
             onNewCV={(c) => { onNewCV(c); flash(tr("Saved as a new CV: {n}", { n: c.name })); }} onCopyFor={(co) => { const c = V.copyFor(cv, co); onNewCV(c); flash(tr("Saved a copy: {n}", { n: c.name })); }} />}
+      </div>
+      {wide ? <div className="hidden lg:block lg:w-[46%] lg:shrink-0 lg:overflow-auto lg:border-s lg:border-slate-800 lg:bg-slate-900/40" data-testid="cv-live-preview"><Preview cv={cv} desk /></div> : null}
+      </div>
     </Sheet>
   );
 }
@@ -423,13 +434,13 @@ export function CVPage({ flash, llm, modelReady, openEngine, share, saveFile, na
   };
   return (
     <section className="p-4 space-y-3" data-testid="cv-page">
-      <div className="flex items-start gap-3"><FileText size={22} className="text-teal-300 mt-1" /><div><h2 className="text-lg font-semibold text-slate-100">{tr("CV / Resume")}</h2><p className="text-[13px] text-slate-400">{tr("Build a CV in English or Arabic, keep a copy for every job, and export a clean PDF or Word file. The AI on your phone helps with wording.")}</p></div></div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="flex items-start gap-3"><FileText size={22} className="text-teal-300 mt-1" /><div><h2 className="text-lg font-semibold text-slate-100">{tr("CV / Resume")}</h2><p className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Build a CV in English or Arabic, keep a copy for every job, and export a clean PDF or Word file. The AI on your phone helps with wording.")}</p></div></div>
+      <div className="grid grid-cols-2 gap-2 lg:max-w-md">
         <button className={primary + " py-2.5 flex items-center justify-center gap-1.5"} onClick={() => setSheet("new")} data-testid="cv-new"><Plus size={14} />{tr("New CV")}</button>
         <button className={ghost + " py-2.5 flex items-center justify-center gap-1.5"} onClick={() => setSheet("import")} data-testid="cv-import"><Upload size={14} />{tr("Import my CV")}</button>
       </div>
       {!list.length ? <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center"><p className="text-sm text-slate-300">{tr("No CVs yet")}</p><p className="text-[12px] text-slate-500 mt-1">{tr("Start a new one, or import the one you already have.")}</p></div>
-        : list.map((c) => (
+        : <div className={GRID3}>{list.map((c) => (
           <div key={c.id} className="rounded-xl border border-slate-700 bg-slate-900/70 p-3" data-testid="cv-row">
             <button className="w-full text-start" onClick={() => setOpenId(c.id)}>
               <p className="text-sm font-medium text-slate-100">{c.name}</p>
@@ -439,7 +450,7 @@ export function CVPage({ flash, llm, modelReady, openEngine, share, saveFile, na
               <button className={ghost + " flex items-center gap-1"} onClick={() => { const n = V.copyFor(c); setList([n, ...list]); flash(tr("Copied as “{n}”", { n: n.name })); }}><Copy size={12} />{tr("Duplicate")}</button>
               <button className={ghost + " flex items-center gap-1 text-red-300 ms-auto"} onClick={() => { if (window.confirm(tr("Delete the CV “{n}”?", { n: c.name }))) setList(list.filter((x) => x.id !== c.id)); }}><Trash2 size={12} />{tr("Delete")}</button>
             </div>
-          </div>))}
+          </div>))}</div>}
       {sheet === "new" ? <Sheet title={tr("New CV")} onClose={() => setSheet(null)} testid="cv-new-sheet"><div className="p-4 space-y-2"><p className="text-sm text-slate-300">{tr("Which language is this CV in?")}</p>
         <button className={primary + " w-full py-3"} onClick={() => create("en")} data-testid="cv-new-en">English · left to right</button>
         <button className={primary + " w-full py-3"} onClick={() => create("ar")} data-testid="cv-new-ar">العربية · من اليمين لليسار</button></div></Sheet> : null}

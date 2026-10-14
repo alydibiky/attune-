@@ -6,6 +6,7 @@ import { Plus, Trash2, Share2, Download, Upload, Wand2, Check, X, ChevronLeft, S
 import { tr } from "./i18n.js";
 import { useSubBack } from "./backstack.js";
 import * as S from "./userskills.js";
+import { GRID3 } from "./desk.jsx";
 
 const field = "w-full min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500";
 const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40";
@@ -15,14 +16,14 @@ const ghost = btn + " border border-slate-700 text-slate-200";
 function Sheet({ title, onClose, children, footer, testid }) {
   useSubBack(true, onClose);
   return (
-    <div className="fixed inset-0 z-[70] bg-slate-950 flex flex-col" data-testid={testid}>
+    <div className="att-shift fixed inset-0 z-[70] bg-slate-950 flex flex-col" data-testid={testid}>
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-800">
         <button onClick={onClose} className="p-1.5 -ms-1 rounded-lg text-slate-300" aria-label={tr("Back")}><ChevronLeft size={20} className="rtl:rotate-180" /></button>
         <h2 className="text-[15px] font-semibold text-white flex-1 truncate">{title}</h2>
         <button onClick={onClose} className="p-1.5 text-slate-400" aria-label={tr("Close")}><X size={18} /></button>
       </div>
-      <div className="flex-1 overflow-auto p-4">{children}</div>
-      {footer ? <div className="border-t border-slate-800 p-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>{footer}</div> : null}
+      <div className="flex-1 overflow-auto p-4"><div className="lg:max-w-5xl lg:mx-auto">{children}</div></div>
+      {footer ? <div className="border-t border-slate-800 p-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}><div className="lg:max-w-5xl lg:mx-auto">{footer}</div></div> : null}
     </div>
   );
 }
@@ -57,7 +58,9 @@ function Editor({ skill, onSave, onClose, llm, modelReady, openEngine, flash }) 
   return (
     <Sheet title={skill ? tr("Edit skill") : tr("New skill")} onClose={onClose} testid="skill-editor"
       footer={<div className="flex gap-2"><button className={primary + " flex-1 py-2.5"} onClick={save} data-testid="skill-save">{tr("Save")}</button></div>}>
-      <div className="space-y-3">
+      {/* v6.27 computer layout: the skill itself on the left, the optional extras on the right */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
+      <div className="space-y-3 min-w-0">
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Name")}</span><input className={field} value={s.name} onChange={set("name")} data-testid="skill-name" placeholder={tr("e.g. Crane quote writer")} /></label>
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Command (optional)")}</span><input className={field} value={s.command} onChange={set("command")} dir="ltr" data-testid="skill-command" placeholder="/quote" />
           <span className="block text-[11px] text-slate-500 mt-1">{tr("Start a message with it to use this skill, e.g. “/quote 50 t crane for 3 days”.")}</span></label>
@@ -66,10 +69,13 @@ function Editor({ skill, onSave, onClose, llm, modelReady, openEngine, flash }) 
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Instructions")}</span><textarea className={field + " resize-none"} rows={7} value={s.instructions} onChange={set("instructions")} data-testid="skill-instructions" placeholder={tr("What the AI should do: the structure of the answer, the tone, what to ask if something is missing…")} />
           <span className="block text-[11px] text-slate-500 mt-1" dir="ltr">{s.instructions.length} / {S.LIMITS.instructions}</span></label>
         <button onClick={draft} disabled={busy} className={ghost + " w-full flex items-center justify-center gap-1.5 py-2.5"} data-testid="skill-draft"><Wand2 size={14} />{busy ? tr("Writing…") : tr("Write it for me (from “When to use it”)")}</button>
+      </div>
+      <div className="space-y-3 mt-3 lg:mt-0 min-w-0">
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Example of a good answer (optional)")}</span><textarea className={field + " resize-none"} rows={3} value={s.example} onChange={set("example")} /></label>
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Checklist: what every answer must satisfy (one per line, optional)")}</span><textarea className={field + " resize-none"} rows={3} value={s.checklist || ""} onChange={set("checklist")} data-testid="skill-checklist" /></label>
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Facts the AI should know (prices, rules, terms — optional)")}</span><textarea className={field + " resize-none"} rows={4} value={s.reference || ""} onChange={set("reference")} data-testid="skill-reference" />
           <span className="block text-[11px] text-slate-500 mt-1">{tr("Separate topics with an empty line. Only the paragraphs that fit the question are used, so this can be long.")}</span></label>
+      </div>
       </div>
     </Sheet>
   );
@@ -79,7 +85,7 @@ function Catalogue({ have, onAdd, onClose }) {
   return (
     <Sheet title={tr("Skill catalogue")} onClose={onClose} testid="skill-catalogue">
       <p className="text-[12.5px] text-slate-400 mb-3">{tr("Ready-made skills. Add one, then change it to fit your work.")}</p>
-      <div className="space-y-2">
+      <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-3">
         {S.CATALOGUE.map((c) => {
           const added = have.some((x) => x.name === c.name);
           return (
@@ -144,10 +150,10 @@ export function SkillsPage({ flash, llm, modelReady, openEngine, share, saveFile
         <Sparkles size={22} className="text-teal-300 mt-1" />
         <div className="min-w-0">
           <h2 className="text-lg font-semibold text-slate-100">{tr("Skills")}</h2>
-          <p className="text-[13px] text-slate-400">{tr("Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill adds instructions, facts and a checklist to your question; a small program inside it (only if you keep one) runs offline in a locked box.")}</p>
+          <p className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill adds instructions, facts and a checklist to your question; a small program inside it (only if you keep one) runs offline in a locked box.")}</p>
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 lg:max-w-xl">
         <button className={primary + " flex-1 min-w-0 whitespace-nowrap flex items-center justify-center gap-1.5 py-2.5 px-2"} onClick={() => setSheet({ kind: "edit" })} data-testid="skill-new"><Plus size={14} />{tr("New")}</button>
         <button className={ghost + " flex-[1.4] min-w-0 whitespace-nowrap flex items-center justify-center gap-1.5 py-2.5 px-2"} onClick={() => setSheet("catalogue")} data-testid="skill-open-catalogue"><Package size={14} />{tr("Catalogue")}</button>
         <button className={ghost + " flex-1 min-w-0 whitespace-nowrap flex items-center justify-center gap-1.5 py-2.5 px-2"} onClick={() => setSheet("import")} data-testid="skill-open-import"><Download size={14} />{tr("Import")}</button>
@@ -157,8 +163,8 @@ export function SkillsPage({ flash, llm, modelReady, openEngine, share, saveFile
           <p className="text-sm text-slate-300">{tr("No skills yet")}</p>
           <p className="text-[12px] text-slate-500 mt-1">{tr("Add one from the catalogue, or write your own.")}</p>
         </div>
-      ) : list.map((s) => (
-        <div key={s.id} className={`rounded-xl border p-3 ${s.on ? "border-slate-700 bg-slate-900/70" : "border-slate-800 bg-slate-900/30 opacity-70"}`} data-testid="skill-row">
+      ) : <div className={GRID3}>{list.map((s) => (
+        <div key={s.id} className={`rounded-xl border p-3 lg:flex lg:flex-col ${s.on ? "border-slate-700 bg-slate-900/70" : "border-slate-800 bg-slate-900/30 opacity-70"}`} data-testid="skill-row">
           <div className="flex items-start gap-3">
             <button className="min-w-0 flex-1 text-start" onClick={() => setSheet({ kind: "edit", skill: s })}>
               <p className="text-sm font-medium text-slate-100">{s.name} {s.command ? <span className="text-[11px] text-teal-300 ms-1" dir="ltr">{s.command}</span> : null}
@@ -167,13 +173,13 @@ export function SkillsPage({ flash, llm, modelReady, openEngine, share, saveFile
             </button>
             <Toggle on={s.on !== false} onChange={(v) => upd(s.id, { on: v })} label={tr("Use this skill")} />
           </div>
-          <div className="flex gap-2 mt-2.5">
+          <div className="flex gap-2 mt-2.5 lg:mt-auto lg:pt-2.5">
             <button className={ghost + " flex items-center gap-1"} onClick={() => shareOne(s)} data-testid="skill-share"><Share2 size={12} />{tr("Share")}</button>
             <button className={ghost + " flex items-center gap-1"} onClick={() => saveOne(s)}><Download size={12} />{tr("Save file")}</button>
             <button className={ghost + " flex items-center gap-1 text-red-300 ms-auto"} onClick={() => del(s)} data-testid="skill-delete"><Trash2 size={12} />{tr("Delete")}</button>
           </div>
         </div>
-      ))}
+      ))}</div>}
       {sheet && sheet.kind === "edit" ? <Editor skill={sheet.skill} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} onClose={() => setSheet(null)}
         onSave={(sk) => { if (sheet.skill) { const clash = sk.command && list.some((x) => x.id !== sheet.skill.id && x.command === sk.command); if (clash) return flash(tr("Another skill already uses that command")); upd(sheet.skill.id, { ...sk, id: sheet.skill.id, ts: sheet.skill.ts }); } else { const clash = sk.command && list.some((x) => x.command === sk.command); if (clash) return flash(tr("Another skill already uses that command")); add({ ...sk, source: "mine" }); } setSheet(null); flash(tr("Saved")); }} /> : null}
       {sheet === "catalogue" ? <Catalogue have={list} onClose={() => setSheet(null)} onAdd={(c) => { add(c); flash(tr("Added — open it to change it")); }} /> : null}
