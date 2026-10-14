@@ -571,6 +571,11 @@ Open — Ali wants a conversation first to set the priorities ("i will have a co
    life**: one question answered by code from all your own data (money, debts, medicines, labs, meals, deadlines, notes), on its
    page and in Chat. ✅ — **check on the phone with real data.** (The earlier A/B/C engagement options stay on file.)
 
+9. "Do it from Home": type or say it once on Home — food, money, a dose, water, weight, a workout, a reminder, a debt, a deadline,
+   blood sugar, a note, a period — and it happens in the right tool, with Undo. ✅ — **try it on the phone with your own sentences.**
+10. Scout (agent that hunts for days: flats, cars, products, jobs, work) — Ali said yes "if it's made correctly, very strong and very
+   accurate". ⏳ in progress.
+
 Still open (each needs Ali): Google sign-in + Drive sync (his Google Cloud OAuth client ids) → Family circle; paid web search for Pro
 (pick a provider + API key, after the Gemini comparison test); the Attune keyboard (Android IME: needs phone testing); more UI
 languages (which ones?); Business builder v2 (what first?); food photos (licensed photo set); precise mode (online, his call);

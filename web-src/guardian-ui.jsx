@@ -29,7 +29,7 @@ export function GuardianCard({ pro, open }) {
     <button onClick={open} className="c-card w-full text-start" data-testid="guardian-card">
       <div className="flex items-center gap-2"><ShieldCheck size={17} className="c-acc" /><span className="c-lbl">{tr("Money Guardian")}</span>{!pro ? <span className="c-pill ms-auto">Pro</span> : null}</div>
       {pro && totals.month ? <div className="mt-1"><span className="c-num text-[20px] font-bold">{fmt(totals.month)}</span> <span className="c-sub">{tr("saved for you this month")}</span></div> : null}
-      {F.length ? <div className="c-sub mt-1">{tr("{n} ways to save {a}", { n: F.length, a: fmt(at) })}</div> : null}
+      {F.length ? <div className="c-sub mt-1">{F.length === 1 ? tr("1 way to save {a}", { a: fmt(at) }) : tr("{n} ways to save {a}", { n: F.length, a: fmt(at) })}</div> : null}
     </button>);
 }
 
@@ -73,7 +73,7 @@ export function GuardianPage({ pro, openPlan, flash }) {
         </div>))}
       {hidden.length ? (
         <button className="c-card w-full text-start" onClick={openPlan} data-testid="guardian-locked">
-          <div className="flex items-center gap-2"><Crown size={16} className="c-warn" /><b>{tr("{n} more ways to save {a}", { n: hidden.length, a: fmt(hidden.reduce((a, f) => a + f.amount, 0)) })}</b></div>
+          <div className="flex items-center gap-2"><Crown size={16} className="c-warn" /><b>{hidden.length === 1 ? tr("1 more way to save {a}", { a: fmt(hidden.reduce((a, f) => a + f.amount, 0)) }) : tr("{n} more ways to save {a}", { n: hidden.length, a: fmt(hidden.reduce((a, f) => a + f.amount, 0)) })}</b></div>
           <div className="c-sub mt-1">{tr("Pro shows them all, and counts what Attune saved you — usually more than it costs.")}</div>
         </button>) : null}
       </div> : null}

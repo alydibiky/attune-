@@ -4430,4 +4430,9 @@ export const AR = {
   "Open Deadline Radar": "افتح رادار المواعيد",
   "Open Reminders": "افتح التذكيرات",
   "Open Mind": "افتح عقلي",
+  "Undone": "تم التراجع",
+  "Just say it:": "قلها فقط:",
+  "Ask, or tell Attune what happened — «spent 150 on lunch», «had foul for breakfast»…": "اسأل، أو أخبر Attune بما حدث — «صرفت ١٥٠ على الغدا»، «فطرت فول»…",
+  "1 way to save {a}": "طريقة واحدة لتوفير {a}",
+  "1 more way to save {a}": "طريقة أخرى لتوفير {a}",
 };

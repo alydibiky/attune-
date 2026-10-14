@@ -1373,6 +1373,17 @@ Ali: "c p f is just lame"; "a pulse loading screen"; "the app is one colour"; "i
   HbA1c better?", «مين عليه فلوس ليا؟») as a card with "Open …" (`attune-open` event); "What is HbA1c?" stays a model answer.
   Tests: `tests/unit/v731lifeask.test.mjs`, `tests/e2e_v731lifeask.py`. Name "Ask your life" can be changed in one place each
   (MORE_TOOLS, i18n-ar). The A/B/C engagement options page is still there if Ali wants one later.
+- **"Do it from Home"** (Ali: "when I'm lazy I just type on Home 'I ate that for breakfast' and it happens in the food app — for the
+  whole app"). `doit.js` (pure): `understand(text)` uses each tool's OWN reader — food `readMealText`, money `readLocal`, reminders
+  `quickAction`, debts `chatLifeIntent`, deadlines `chatDeadlineIntent` — plus rules for water (ml), weight, workouts (Fit's MET table),
+  a dose taken (nearest untaken time of the named medicine / insulin), blood sugar, period, "note: …"; one sentence can be two
+  actions (food + its price). Order matters: a reminder before food; money only with a money word or currency ("2 eggs" is not
+  money); the water phrase is removed before reading food/money ("glasses" read as molasses, "water" as a bill). `apply(action)`
+  returns the tool's new store; the page (`doFromHome` in attune.jsx) writes it, keeps the old values for Undo, and does the
+  rest (schedule the reminder, Mind note, Cycle log, low-sugar re-check). Questions about your own data are answered on Home
+  (Ask your life); everything else goes to Chat as before. The card: `doit-ui.jsx` (phone Home + computer Home), with Open
+  per line and one Undo; Home's numbers refresh at once. Tests: `tests/unit/v731doit.test.mjs` (23 sentences EN/AR),
+  `tests/e2e_v731doit.py`. Also fixed: "1 ways to save" in Money Guardian.
 - **Test setup in a fresh cloud session:** `bash tests/setup.sh` (≈ 10 min, builds llama-server). If the Pyodide download is cut,
   run `bash web-src/fetch-pyodide.sh` again — without it e2e_v510/v511/v513 time out (they run code in Python).
 

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { Send, Star, LayoutGrid, Bell, Apple, Brain, MessageCircle } from "lucide-react";
 import { openRead } from "./readaloud-ui.jsx";
+import { DoResult } from "./doit-ui.jsx";
 import { tr } from "./i18n.js";
 import { usePins, recentTools } from "./side-ui.jsx";
 
@@ -41,14 +42,15 @@ const Card = ({ id, label, sub, Icon, onClick, testid }) => (
     <span className="mt-0.5 text-[12px] text-slate-400 leading-snug line-clamp-2">{tr(sub)}</span>
   </button>);
 
-export function DesktopHome({ tools, navTo, onAsk, engineReady, name }) {
+export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
   const [text, setText] = useState("");
+  const [done, setDone] = useState(null);   // v6.28 "Do it from Home"
   const facts = useMemo(() => todayFacts(), []);
   const recent = recentTools().map((id) => tools.find((t) => t[0] === id)).filter(Boolean);
   // v6.27 (Ali: "I don't want Maps with Money"): the main cards are Money, Business and Mind; Maps lives in Tools / pinned
   const core = ["money", "business", "memory"].map((id) => tools.find((t) => t[0] === id)).filter(Boolean);
   const cards = [...core, ...recent.filter((t) => !core.includes(t))].slice(0, 7);
-  const send = () => { const t = text.trim(); if (!t) return; setText(""); onAsk(t); };
+  const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) setDone({ ...r, id: Date.now() }); else onAsk(t); };
   const starters = [["Summarise a PDF", "pdfchat"], ["Read a paper to me", "read"], ["Price a crane job", null], ["Plan my meals", "fit"], ["Convert a file", "convert"]];
   return (
     <div className="pt-2 pb-10 space-y-5" data-testid="desk-home">
@@ -59,10 +61,11 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name }) {
           <div className="flex items-end gap-2 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 focus-within:border-teal-600">
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="home-ask"
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder={tr("Message Attune…")} className="flex-1 resize-none bg-transparent text-[15px] text-slate-100 placeholder-slate-600 focus:outline-none py-1" />
+              placeholder={tr("Ask, or tell Attune what happened — «spent 150 on lunch», «had foul for breakfast»…")} className="flex-1 resize-none bg-transparent text-[15px] text-slate-100 placeholder-slate-600 focus:outline-none py-1" />
             <button onClick={send} disabled={!text.trim()} data-testid="home-send" aria-label={tr("Send")}
               className="w-9 h-9 rounded-lg bg-teal-500 text-slate-950 flex items-center justify-center disabled:opacity-40"><Send size={16} /></button>
           </div>
+          {done ? <div className="calm rounded-2xl mt-3"><DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} /></div> : null}
           <div className="flex flex-wrap gap-2 mt-3">
             {starters.map(([t, tool]) => <button key={t} onClick={() => (tool === "read" ? openRead() : tool ? navTo(tool) : onAsk(tr(t)))} data-testid={tool === "read" ? "home-read" : undefined}
               className="rounded-full border border-teal-800/70 text-teal-200 text-[12.5px] px-3 py-1 hover:bg-teal-500/10">{tr(t)}</button>)}

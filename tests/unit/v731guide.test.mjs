@@ -12,7 +12,7 @@ const bad = Object.entries(G.TOOLS).filter(([, g]) => g.steps.length !== 3 || g.
 ok(!bad.length, "each guide: 3 steps and a tip, English and Arabic (" + bad.map((b) => b[0]) + ")");
 const ar = Object.values(G.TOOLS).flatMap((g) => [...g.steps.map((s) => s[1]), g.tip[1]]).concat(G.START.flatMap((s) => [s.title[1], ...s.steps.map((x) => x[1]), s.tip[1]]));
 ok(ar.every((t) => /[؀-ۿ]/.test(t)), "every Arabic line is Arabic");
-ok(G.START.length === 4 && G.START.every((s) => s.steps.length === 3), "getting started: 4 chapters of 3 steps");
+ok(G.START.length === 5 && G.START.every((s) => s.steps.length === 3), "getting started: 5 chapters of 3 steps (incl. “Just say it on Home”)");
 const sketches = new Set(["photo", "type", "list", "chart", "map", "chat", "file", "lesson", "engine"]);
 ok([...Object.values(G.TOOLS), ...G.START].every((g) => sketches.has(g.sketch)), "every guide has a drawing");
 const groups = [["Money & people", ["guardian", "radar"]], ["Health", ["fit", "care"]]];

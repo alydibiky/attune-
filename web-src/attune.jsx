@@ -58,6 +58,8 @@ import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
 import { LifeAskPage } from "./lifeask-ui.jsx";
+import { understand as doUnderstand, apply as doApply } from "./doit.js";
+import { loadStores as loadLifeStores } from "./lifeask.js";
 import { deviceLevel, groupsFor, showAll as deviceShowAll, setShowAll as setDeviceShowAll } from "./device.js";
 import { TravelPage } from "./travel-ui.jsx";
 import { OwedHost } from "./owed-ui.jsx";
@@ -9145,6 +9147,31 @@ export default function App() {
       return { ok: true, text: res.note ? txt + " " + tr(res.note) : txt };
     },
   };
+  // v6.28 "Do it from Home" (doit.js): Ali — "I just type on Home 'I ate that for breakfast' and it happens in the food app — for the
+  // whole app". Code reads it; each action writes into its tool's own store (the old values kept for Undo); a question about your
+  // own data is answered on Home; anything else goes to Chat as before. → { lines: [{ text, open, low }], undo, answer } | null (→ Chat)
+  const doFromHome = (text) => {
+    const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
+    const u = doUnderstand(text, { now, stores: loadLifeStores() });
+    if (u.ask) return { answer: u.ask, ar };
+    if (!u.actions.length) return null;
+    const before = {}, extra = [], lines = [];
+    for (const a of u.actions) {
+      const r = doApply(a, loadLifeStores(), { now });
+      for (const [k, v] of Object.entries(r.stores)) { if (!(k in before)) { try { before[k] = localStorage.getItem(k); } catch (e) { before[k] = null; } } try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+      if (r.need === "reminder") {
+        const x = a.action;
+        if (x.kind === "reminder") { const id = newReminderId(); scheduleReminder({ id, at: x.at, title: x.title, body: x.message || "", repeat: x.repeat || "none", created: now, source: "home" }); extra.push(() => { setReminders(loadReminders().filter((y) => y.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }); }
+        else chatApi.doAction(x);
+      } else if (r.need === "note") { const rec = remember({ kind: "note", title: a.text.slice(0, 70), text: a.text, tags: ["home"] }); extra.push(() => setMemory((m) => m.filter((y) => y.id !== rec.id))); }
+      else if (r.need === "period") { const prev = cycle; const pr = applyPeriodLog(cycle, parsePeriodText(a.text, now)); setCycle(cycleSave(pr.state)); enableCycle(true); extra.push(() => setCycle(cycleSave(prev))); }
+      else if (r.need === "money-setup") { sendToMoney(text, ""); return { lines: [{ text: ar ? r.done.ar : r.done.en, open: "money" }], undo: null }; }
+      if (a.kind === "sugar" && r.low) scheduleReminder({ id: "sugar-recheck", at: now + 15 * 60000, repeat: "none", title: tr("Check your blood sugar again"), body: tr("15 minutes since a low reading. Under 70 mg/dL: another 15 g of fast sugar."), created: now, source: "home" });
+      lines.push({ text: ar ? r.done.ar : r.done.en, open: r.open, low: !!r.low });
+    }
+    const undo = () => { for (const [k, v] of Object.entries(before)) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } extra.forEach((f) => { try { f(); } catch (e) {} }); };
+    return { lines, undo };
+  };
 
   // In-app Back: closes the top-most open panel, otherwise returns to the Ask
   // home tab. Shown only when there is somewhere to go back to.
@@ -9252,9 +9279,9 @@ export default function App() {
         ) : null}
 
         <Guard key={"g-" + mode} name={mode}>{mode === "home" && !wide ? (
-          <PhoneHome navTo={(m) => navTo(m)} openAll={() => setMoreOpen(true)} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
+          <PhoneHome navTo={(m) => navTo(m)} doIt={doFromHome} openAll={() => setMoreOpen(true)} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "home" ? (
-          <DesktopHome tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
+          <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
             onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "tools" ? (
           <ToolsPage tools={MORE_TOOLS} groups={groupsHere} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />

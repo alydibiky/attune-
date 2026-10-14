@@ -5,7 +5,7 @@
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import React, { useMemo, useState } from "react";
 import { MessageCircle, ArrowUp, Camera, Wallet, Heart, Brain, FileText, MapPin, LayoutGrid, Users, Zap } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, getLang } from "./i18n.js";
 import { loadLife } from "./life.js";
 import { loadRadar } from "./deadlines.js";
 import { loadCare } from "./care.js";
@@ -15,19 +15,25 @@ import { moneyOverview, fmt } from "./money-calm.js";
 import { todayFacts } from "./desk-ui.jsx";
 import { targetsOf } from "./fithome.js";
 import { openRead } from "./readaloud-ui.jsx";
+import { DoResult, DO_HINTS } from "./doit-ui.jsx";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
 
-export function PhoneHome({ navTo, onAsk, openAll, name, guardian }) {
+export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt }) {
   const [text, setText] = useState("");
+  const [done, setDone] = useState(null);
+  const [tick, setTick] = useState(0);   // v6.28: what Home did (or undid) shows in Today and the two numbers at once
+  const ar = getLang() === "ar";
+  const hint = DO_HINTS[new Date().getMinutes() % DO_HINTS.length];
   const now = new Date();
   const data = useMemo(() => {
     const ledger = loadLedger(), o = moneyOverview(ledger);
     const fit = readJSON("attune:fit:v1"), tg = fit && fit.profile ? targetsOf(fit.profile) : null;
     return { items: todayList({ care: loadCare(), radar: loadRadar(), life: loadLife(), ledger }), o, hasLedger: !!ledger, kcal: todayFacts().kcal || 0, goal: tg && tg.kcal ? tg.kcal : 0, reminders: todayFacts().reminders || 0 };
-  }, []);
-  const send = () => { const t = text.trim(); if (!t) return; setText(""); onAsk(t); };
+  }, [tick]);
+  // v6.28: Home does it first (food → Fit, money → Money, a dose, a reminder, a debt…); only what it can't do goes to Chat
+  const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); } else onAsk(t); };
   const date = now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
   const AREAS = [["money", "Money", Wallet], ["fit", "Health", Heart], ["memory", "Mind", Brain], ["convert", "Files", FileText], ["map", "Places", MapPin], ["all", "All", LayoutGrid]];
   const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
@@ -40,8 +46,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian }) {
           placeholder={tr("Ask or add anything…")} className="flex-1 min-w-0 bg-transparent focus:outline-none text-[15px]" style={{ color: "var(--c-ink)" }} />
         {/* v6.27 Read it to me: any paper read aloud, explained and acted on */}
         <button onClick={() => openRead()} aria-label={tr("Read it to me")} title={tr("Read it to me")} className="w-8 h-8 rounded-full grid place-items-center c-sub" data-testid="home-read"><Camera size={17} /></button>
-        <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }}><ArrowUp size={16} /></button>
+        <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={16} /></button>
       </div>
+      {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : hint[0]}»</p>}
       <div className="c-card" data-testid="home-today">
         <div className="flex items-center mb-1"><span className="c-lbl">{tr("Today")}</span><span className="c-sub ms-auto">{data.items.length ? tr("{n} things", { n: data.items.length + (data.reminders || 0) }) : ""}</span></div>
         {data.items.length || data.reminders ? (
