@@ -558,6 +558,22 @@ Open — Ali wants a conversation first to set the priorities ("i will have a co
   Business builder v2; courses / spaced repetition / speaking practice; the "more features" list in ROADMAP_2026-10-13.md.
 - Food recognition: train on licensed food photos (§5.51); optional online precise mode (ask Ali).
 
+## S. 14 Oct 2026 (evening) — done in v6.28 (HANDOFF §5.71) unless marked
+1. Insulin works with Fit & Food: units left → refill notification; blood sugar box → low-sugar steps + 15-min re-check; Food shows
+   carbs per meal and the same warnings. Never a dose. ✅ — **check on the phone** (a real insulin pen count, notifications).
+2. Converter: sub/superscripts no longer split tables or lose formulas (real paper: tables 0 → 100). ✅
+3. Studio on Zenith / Zenith+: 2 minutes for the description; thinking never reaches the picture model. ✅ — **check on the phone.**
+4. Computer layout leftovers: Radar buttons on one line; Travel → Trip columns even. ✅
+5. How to use Attune: every tool in 3 steps with drawings, English + Arabic, phone + computer. ✅
+6. Device levels (Light / Standard / Strong / Flagship / Computer) + "Show every tool anyway". ✅
+7. Learn daily: spaced repetition (2, 5, 12, 30 days). ✅
+8. Engagement feature — ⏳ **Ali picks A, B or C** (options page: https://claude.ai/artifact/9njLu6hKRKnDEvALdBYHvV).
+
+Still open (each needs Ali): Google sign-in + Drive sync (his Google Cloud OAuth client ids) → Family circle; paid web search for Pro
+(pick a provider + API key, after the Gemini comparison test); the Attune keyboard (Android IME: needs phone testing); more UI
+languages (which ones?); Business builder v2 (what first?); food photos (licensed photo set); precise mode (online, his call);
+the default Fit look; Google Play internal testing (developer account + secrets).
+
 ## Prompt to start the next session
 
 ```

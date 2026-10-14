@@ -1327,6 +1327,46 @@ Ali: "c p f is just lame"; "a pulse loading screen"; "the app is one colour"; "i
 - Arabic placeholder lines never say "on the left" (the panels swap sides in Arabic).
 - Still a little uneven on a computer: Travel → Trip (right column longer), Radar card buttons wrap to two lines.
 
+### 5.71 (14 Oct 2026) — v6.28: insulin ↔ Food, converter subscripts, Studio on big models, How to use, device levels, spaced repetition
+- **Insulin ↔ Fit & Food** (Ali: "the insulin app should work with Food — tips and notifications when insulin is low"). `care.js`
+  (end of file): `isInsulin` (brands, generics, Arabic), `stock`/`stockAt` on a medicine (units / tablets left; each dose ticked
+  counts down), `daysOfSupply`, `lowSupply` (≤ 5 days) → `supplyReminder` (one notification `supply-<id>` at 10:00 next morning,
+  set when a dose is ticked), blood sugar quick log (`addGlucose`, mmol/L under 35 converted), `insulinState`, `insulinTips`
+  (hypo 15 g / 15 min steps first; "eat now" 20–120 min after a dose with no meal logged; refill; carbs today). NEVER a dose.
+  Family health → Today: the "Blood sugar now" box, refill warnings with "I refilled"; a reading under 70 sets a `sugar-recheck`
+  notification in 15 min. Fit → Diary (today): `InsulinCard` (fitplus-ui.jsx) + "· N g carbs" on each meal for insulin users.
+  Tests: `tests/unit/v731insulin.test.mjs`, `tests/e2e_v731insulin.py`.
+- **Converter** (Ali: "converter not working properly"): on the real two-column paper the table split in two and a formula vanished,
+  because the PDF reader puts sub/superscripts (μ_max, K_S, e^μt) on lines of their own. `attachScripts()` (convert.js, runs first in
+  `pdfLinesToBlocks`) glues a small piece that starts where a nearby word ends back on as a sub/superscript; a table stops at a
+  line of running text; a line under a sub/superscript may sit a little lower in the same paragraph. Real bench `paper_2col`:
+  tables 0 → 100, paragraphs 81 → 95, text 96 → 97; the other real files and the synthetic bench unchanged (all 100).
+  Tests: `tests/unit/v731scripts.test.mjs`.
+- **Studio on Zenith / Zenith+:** the description step had 45 s; a 9–12B model on a phone often needs longer, so the picture was
+  drawn from the raw idea (often Arabic — the picture models read English). Now `enhanceWaitMs(power)`: 120 s for expert models
+  (level ≥ 4). `cleanPrompt` also removes an unclosed `<think>`, Gemma 4's thought channel and gpt-oss channels.
+  Tests: `tests/unit/v731studio.test.mjs`.
+- **Computer layout leftovers:** Radar's lists use a container query (`@[920px]:grid-cols-2`): one column until each card's buttons fit
+  on one line. Travel → Trip: on a computer "Flights and hotels" moves under the passport (a `matchMedia` flag renders it once, in
+  one place) so the two columns end together; the phone order is unchanged.
+- **How to use Attune** (mode `guide`; `guide.js` content, `guide-ui.jsx`): Getting started (4) + every tool in All (41) in 3 steps
+  each, English and formal Arabic, a tip, and an SVG drawing of the screen whose numbered marks follow the step (tap a step, Next,
+  Play). Phone: search + chapters opening in place; computer: layout A. Opened from the top of All (phone) and the Settings window
+  (computer); sidebar search finds it. `tests/unit/v731guide.test.mjs` fails if a tool in MORE_TOOLS has no guide.
+  Tests: `tests/e2e_v731guide.py`.
+- **Device levels** (ROADMAP §2; `device.js`): phone < 6 GB → 1 Light (small models, no Studio in the list, `att-lite` effects),
+  6–8 → 2, 8–12 → 3, 12+ → 4, computer → 5; fewer than 6 cores → one level down. Settings shows "This device: Level N" and
+  "Show every tool anyway". `modelFits()` is ready for the Engine list (not wired: the Engine already marks heavy models).
+  Tests: `tests/unit/v731device.test.mjs`, `tests/e2e_v731device.py`. The model router itself has existed since v6.12 (router.js).
+- **Learn daily spaced repetition** (`daily.js`): a missed quiz question is reviewed in the next lesson, then again after 2, 5, 12 and
+  30 days, then counts as learned; missed again → starts over. `c.review` (text list, unchanged) + `c.srs` ({text: {box, due}}) +
+  `c.learned`; old courses keep working. The course screen shows "N to review · N coming back later (date) · N learned".
+  Tests: `tests/unit/v731srs.test.mjs`.
+- **Engagement feature:** options A "Saved by Attune" (recommended), B "Friday Check-up", C "Family Streaks" (needs sync) shown to
+  Ali as mock-ups — build the one he picks.
+- **Test setup in a fresh cloud session:** `bash tests/setup.sh` (≈ 10 min, builds llama-server). If the Pyodide download is cut,
+  run `bash web-src/fetch-pyodide.sh` again — without it e2e_v510/v511/v513 time out (they run code in Python).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
