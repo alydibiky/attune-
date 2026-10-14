@@ -1278,6 +1278,31 @@ Rule everywhere: **code decides, the model only helps; missing facts are asked, 
   aloud and **shown big**; "A sign or menu" opens Translate into the country's language. Tests: `v727travel` unit,
   `e2e_v727travel.py`; `e2e_v67b.py` updated for the tabs.
 
+### 5.69 (14 Oct 2026) — Fit looks A/B/C, full nutrient words + pulse loader, What you're owed, Read it to me, Job ready
+Ali: "c p f is just lame"; "a pulse loading screen"; "the app is one colour"; "i loved the 3 interfaces, make them optional";
+"build all ideas … blend them in without cluttering"; "optimized for every device interface" (phone AND computer, every time).
+- **Fit & Food:** `Macros` (fit-ui.jsx) writes Protein / Carbs / Fat in full with a colour dot (sky / amber / rose, the Diary
+  bars' colours) — no P/C/F anywhere. `PulseLoader` (fitlook-ui.jsx) replaces the photo loader and the text skeleton: rings
+  pulse from the plate or the photo, the stage, a sourced fact; held ≥ 0.7 s (`hold`) so an 80-ms code read doesn't flicker
+  ("Found 3 foods"). Three new looks in Me → Look (fitlook.js `LOOKS`, `layoutOf`, `MEAL_STYLE`): **meals** (colour per meal
+  cards), **rings** (gradient card + a ring per nutrient), **tiles** (pastel tiles; a tile opens its meal; md: 3 columns).
+  Today's meal content is one `mealView(m, variant)` for every layout. Tap targets ≥ 36–44 px; Save bar sticky; formal Arabic.
+  Tests: e2e_v727fitlooks.py (+ all Fit e2e).
+- **What you're owed** (`owed.js`, `owed-ui.jsx` `OwedHost` mounted once; window event `attune-owed`): EU261 / UK261 / APPR by
+  code (great-circle km from `AIRPORT_POS`, carriers by IATA code, extraordinary causes not owed, unknown cause "probably owed"
+  and asked); claim / return / warranty / duplicate-charge letters (en/ar). Opened from Chat (`flightFromText`), Travel → Trip,
+  Radar (return/warranty "Write the request"), Guardian (double charge "Ask for it back"). Tests: v727owed, e2e_v727owed.py.
+- **Read it to me** (`readaloud.js`, `readaloud-ui.jsx` `ReadHost`; event `attune-read`): kind of paper, amount, due date,
+  medicines by code; says what it is first, then reads sentence by sentence (lit), Slower, translate (checked engine), a
+  labelled AI explanation; due date → Radar, prescription → Care (`attune-care` → CarePage `incoming`), bill → Money
+  (`attune-money`). Entry: Home's camera (phone), "Read a paper to me" (desktop Home), Chat (photo + "read it"/"اقرأ"),
+  Translate photo. Tests: v727read, e2e_v727read.py.
+- **Job ready** (`jobready.js`; CV editor tab "job"): role → skills shown/missing (16 roles; missing → `attune-learn` → Learn
+  daily's new-course form with the topic, via `attune:learn:seed`), interview practice (questions spoken; answer by voice —
+  NATIVE.listen or Chrome's SpeechRecognition — or typed; code feedback: length, fillers, story, a number, matches the CV;
+  optional AI coach), job links by country. Tests: v727job, e2e_v727job.py.
+- Every new sheet: bottom sheet on a phone, centred window (md:) on a computer — checked at 1280 px in the e2e tests.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

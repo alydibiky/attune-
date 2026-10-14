@@ -26,7 +26,7 @@ with sync_playwright() as p:
     page.set_input_files("[data-testid=read-camera-input]", {"name": "bill.png", "mimeType": "image/png", "buffer": PNG})
     page.wait_for_selector("[data-testid=read-what]", timeout=8000); page.wait_for_timeout(600)
     w = page.locator("[data-testid=read-what]").inner_text()
-    check("A bill to pay" in w and "1,236.5 EGP" in w and "Pay by" in w, "says what it is, the amount and the date: " + w.replace("\n", " | ")[:140])
+    check("A bill to pay" in w and "1,236.50 EGP" in w and "Pay by" in w, "says what it is, the amount and the date: " + w.replace("\n", " | ")[:140])
     said = page.evaluate("window.__said")
     check(said and said[0].startswith("A bill to pay"), "…and says it aloud first: %s" % said[:2])
     page.click("[data-testid=read-play]"); page.wait_for_timeout(250)

@@ -7,7 +7,7 @@ const BILL = "North Cairo Electricity Distribution\nAccount number 448812\nElect
 const f = R.factsOf(BILL, { now, home: "EGP" });
 ok(f.kind === "bill" && f.amount === 1236.5 && f.currency === "EGP" && f.due === "2026-10-25", "an electricity bill: 1,236.50 EGP, pay by 25 Oct: " + JSON.stringify({ k: f.kind, a: f.amount, c: f.currency, d: f.due }));
 const e = R.explain(f, "en");
-ok(/A bill to pay/.test(e.say[0]) && /1,236.5 EGP/.test(e.say.join(" ")) && /Pay by/.test(e.say.join(" ")), "said: what it is, the amount, the date: " + e.say.join(" | "));
+ok(/A bill to pay/.test(e.say[0]) && /1,236.50 EGP/.test(e.say.join(" ")) && /Pay by/.test(e.say.join(" ")), "said: what it is, the amount, the date: " + e.say.join(" | "));
 ok(e.actions.some((a) => a.type === "radar" && a.item.date === "2026-10-25") && e.actions.some((a) => a.type === "money"), "actions: a Radar reminder for the due date, and Money");
 const ea = R.explain(f, "ar");
 ok(/فاتورة/.test(ea.say[0]) && /آخر موعد للدفع/.test(ea.say.join(" ")), "…and in Arabic: " + ea.say.join(" | "));

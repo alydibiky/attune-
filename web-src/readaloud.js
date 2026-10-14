@@ -61,7 +61,7 @@ export function factsOf(text, { now = Date.now(), home = "", order = "dmy" } = {
 
 /** What to say first and what can be done, by code. lang: "en" | "ar". */
 export function explain(f, lang = "en") {
-  const ar = lang === "ar", n = (x) => Number(x).toLocaleString("en"), money = f.amount ? `${n(f.amount)} ${f.currency}`.trim() : "";
+  const ar = lang === "ar", n = (x) => Number(x).toLocaleString("en", Number.isInteger(Number(x)) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 }), money = f.amount ? `${n(f.amount)} ${f.currency}`.trim() : "";
   const day = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(ar ? "ar-EG" : "en-GB", { weekday: "long", day: "numeric", month: "long" }); } catch (e) { return iso; } };
   const WHAT = { prescription: ["A prescription from a doctor.", "هذه وصفة طبية من طبيب."], medicine: ["A medicine's box or leaflet.", "هذه علبة دواء أو نشرته."],
     bill: ["A bill to pay.", "هذه فاتورة للدفع."], receipt: ["A receipt for something you bought.", "هذا إيصال لشيء اشتريته."], school: ["A note from the school.", "هذه رسالة من المدرسة."],

@@ -238,7 +238,7 @@ function JobTab({ cv, setCV, llm, modelReady, listen, native, flash, goAI }) {
   const country = myCountry();
   const links = J.jobLinks(target.role || "", target.city || "", country);
   return (
-    <div className="p-3 space-y-3" data-testid="cv-job">
+    <div className="p-3 space-y-3 md:max-w-3xl md:mx-auto" data-testid="cv-job">
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
         <p className="text-[13px] font-semibold text-slate-100">{tr("The job you want")}</p>
         <div className="grid grid-cols-2 gap-2">
