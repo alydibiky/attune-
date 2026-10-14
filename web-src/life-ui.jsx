@@ -121,7 +121,7 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
               <span className={"c-pill " + (x.late ? "late" : "due")}>{x.late ? tr("Late") : x.date.slice(5)} · <span className="c-num">{fmt(x.amount)}</span></span></div>))}
         </div>) : null}
       {!data.items.length && !draft ? <p className="c-sub flex items-center gap-2"><Sparkles size={14} />{tr("Try: «جمعية ٢٠٠٠ في الشهر لمدة ١٠ شهور ودوري الرابع» or “Netflix 200 every month”.")}</p> : null}
-      </div><div className={RIGHT}>
+      </div><div className={groups.length ? RIGHT : "min-w-0"}>
       {groups.map(([g, items]) => (
         <div key={g} className="space-y-2"><span className="c-lbl">{tr(g)}</span>
           <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>{items.map((c) => <Item key={c.id} c={c} onTick={tick} onRemove={remove} />)}</div></div>))}

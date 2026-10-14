@@ -148,7 +148,7 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
           <input ref={fileRx} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { photo(e.target.files && e.target.files[0], "rx"); e.target.value = ""; }} data-testid="care-rx-file" />
           {typing === "rx" ? <div className="c-card space-y-2"><textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} dir="auto" placeholder={tr("e.g. Amoxicillin 500 mg — 1 cap 3 times daily for 7 days")} className={field} style={st} data-testid="care-rx-text" /><button className="c-btn" disabled={!text.trim()} onClick={() => { readRx(text); setTyping(""); }} data-testid="care-rx-read">{tr("Read it")}</button></div> : null}
           {drafts.map((d) => <MedForm key={d._k} init={d} members={members} onCancel={() => setDrafts((x) => x.filter((y) => y._k !== d._k))} onSave={(m) => { const { _k, missing, raw0, ...rest } = m; saveMed(rest); setDrafts((x) => x.filter((y) => y._k !== d._k)); }} />)}
-          </div><div className={R3}>
+          </div><div className={(warn && warn.length) || data.meds.some((m) => !m.stopped) ? R3 : "min-w-0"}>
           {warn && warn.length ? (
             <div className="c-card space-y-2" style={{ borderColor: "var(--c-warn)" }} data-testid="care-warnings">
               <b className="flex items-center gap-2 c-warn"><AlertTriangle size={16} />{tr("Check with your pharmacist")}</b>
@@ -186,7 +186,7 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
               {labDraft.rows.map((r, i) => <div key={i} className="flex items-center gap-2 text-[13.5px]"><span className="flex-1">{tr(r.test)}</span><input value={r.value} onChange={(e) => setLabDraft({ ...labDraft, rows: labDraft.rows.map((x, k) => (k === i ? { ...x, value: +e.target.value || 0 } : x)) })} className="w-20 rounded-lg px-2 py-1 border bg-transparent c-num" style={st} /><span className="c-sub w-16">{r.unit}</span></div>)}
               <button className="c-btn" onClick={() => { const d = ensureMember(); put(H.addLabs(d, labDraft.member || d.members[0].id, labDraft.date, labDraft.rows.map((r) => ({ ...r, flag: r.low != null && r.value < r.low ? "low" : r.high != null && r.value > r.high ? "high" : r.low != null || r.high != null ? "in range" : "" })))); setLabDraft(null); }} data-testid="care-lab-save">{tr("Save")}</button>
             </div>) : null}
-          </div><div className={R3}>
+          </div><div className={tests.length || !labDraft ? R3 : "min-w-0"}>
           {tests.map((t) => { const tr0 = H.trendOf(data.labs, t), L = tr0[tr0.length - 1] || data.labs.filter((x) => x.test === t).pop();
             return (
               <div key={t} className="c-card flex items-center gap-3" data-testid="care-lab">

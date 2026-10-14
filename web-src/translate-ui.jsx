@@ -138,7 +138,7 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
         <div className="c-card space-y-2" data-testid="tr-gloss"><span className="c-lbl">{tr("Always translate these my way")}</span>
           {gloss.map((g, i) => <div key={i} className="flex gap-2 items-center"><input value={g.from} onChange={(e) => saveG(gloss.map((x, k) => (k === i ? { ...x, from: e.target.value } : x)))} placeholder={tr("Word")} className={field} style={st} dir="auto" /><span>→</span><input value={g.to} onChange={(e) => saveG(gloss.map((x, k) => (k === i ? { ...x, to: e.target.value } : x)))} placeholder={tr("My translation")} className={field} style={st} dir="auto" /><button aria-label={tr("Delete")} onClick={() => saveG(gloss.filter((_, k) => k !== i))}><Trash2 size={14} /></button></div>)}
           <button className="c-pill inline-flex items-center gap-1" onClick={() => saveG([...gloss, { from: "", to: "" }])}><Plus size={13} />{tr("Add")}</button></div>) : null}
-      </div><div className={RIGHT}>
+      </div><div className={res || busy ? RIGHT : "min-w-0"}>
       {busy ? <p className="c-sub" data-testid="tr-busy">{busy}</p> : null}
       {res ? <Result res={res} to={to} native={native} onCopy={(t) => { try { navigator.clipboard.writeText(t); flash && flash(tr("Copied")); } catch (e) {} }} /> : null}
       {!res && !busy && tab !== "doc" ? <DeskEmpty icon={Languages} title={tr("The translation appears here")} text={tr("Every part is checked: numbers, names and codes kept exactly.")} testid="tr-desk-empty" /> : null}

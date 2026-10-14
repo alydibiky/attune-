@@ -110,7 +110,7 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
               <button className="c-btn px-3 py-1.5" onClick={() => open(i)} data-testid="coach-teachme">{tr("Teach me")}</button>
             </div>))}
         </div>) : null}
-      </div><div className={RIGHT}>
+      </div><div className={active ? RIGHT : "min-w-0"}>
       {active && active.none ? <p className="c-sub" data-testid="coach-none">{tr("This needs the phone's AI model — install one in Engine, or type the problem more simply.")}</p> : null}
       {active && active.lesson ? (
         <div className="space-y-3">

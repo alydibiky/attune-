@@ -190,6 +190,8 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   const del = (x) => { if (!window.confirm(tr("Delete this?"))) return; put(D.removeDeadline(data, x.id)); unremind && unremind("radar-" + x.id); if (x.photo) delPhoto(x.photo); };
   const search = q.trim().toLowerCase();
   const match = (x) => !search || [x.title, x.note, x.doc, KIND_LABEL[x.kind]].join(" ").toLowerCase().includes(search);
+  // the right panel has something a phone shows (else it keeps no gap, as before)
+  const rightHas = data.items.length > 3 || (!V.soon.length && !V.later.length && !drafts.length && mode !== "form") || [V.soon, V.later, V.done.slice(0, 20)].some((l) => l.filter(match).length);
 
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="radar-page">
@@ -246,7 +248,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
             if (edit.id) { const d = D.updateDeadline(data, edit.id, { ...f }); put(d); const it = d.items.find((x) => x.id === edit.id); unremind && unremind("radar-" + edit.id); const rem = D.radarReminder(it); if (rem && remind) remind(rem); flash && flash(tr("Saved")); }
             else saveOne({ ...edit, ...f, source: edit.source || "manual" });
             setMode(null); setEdit(null); setPhoto(""); }} />) : null}
-      </div><div className={RIGHT}>
+      </div><div className={rightHas ? RIGHT : "min-w-0"}>
 
       {data.items.length > 3 ? (
         <div className="flex items-center gap-2 c-card py-2"><Search size={15} className="c-sub" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Find a receipt or document…")} className="flex-1 bg-transparent outline-none text-[14px]" style={{ color: "var(--c-ink)" }} data-testid="radar-search" /></div>) : null}
