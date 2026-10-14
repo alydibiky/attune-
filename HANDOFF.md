@@ -1384,6 +1384,24 @@ Ali: "c p f is just lame"; "a pulse loading screen"; "the app is one colour"; "i
   (Ask your life); everything else goes to Chat as before. The card: `doit-ui.jsx` (phone Home + computer Home), with Open
   per line and one Undo; Home's numbers refresh at once. Tests: `tests/unit/v731doit.test.mjs` (23 sentences EN/AR),
   `tests/e2e_v731doit.py`. Also fixed: "1 ways to save" in Money Guardian.
+- **Scout** (Ali: "I like Scout if it is made correctly, very strong, very accurate and works with everything"). `scout.js` (pure):
+  `parseGoal` (EN + Egyptian Arabic: kind rent / buy-home / car / product / job / tender / service, place, budget incl. «ألف» /
+  «مليون» / k, and wishes: beds, not ground floor, m², model years, km, one owner, no accident, automatic, new/used, metro, pets,
+  furnished, elevator, parking, remote, full-time, warranty); `searchesFor` (the sites that matter per kind, `site:` searches + one
+  open search, through the app's own free search: DuckDuckGo + Bing + Mojeek with pages read in full); `isAdPage` (one ad, not a
+  search/category page); `readAd` (price — phone numbers blanked first, years / sizes / down payments skipped — area, beds, floor
+  incl. «دور ارضي», year, km, the yes/no wishes with WHOLE-word matching: «بالمعادي» is not «عادي»); `check` (✓ / ✗ / "not stated",
+  each with a quote cut from the ad's own sentence); `mergeTwins` (the same ad on two sites); `fairness` (vs the median of similar
+  ads seen, per m² for homes); `learn` / `tasteNudge` (👍 / 👎); `runGoal` + `worthTelling` (new strong ones or a price drop; score
+  ≥ 75); `sellerMessage` (Arabic / English, an offer from the fair price). Page `scout-ui.jsx` (mode `scout`, first in All → Money
+  & people; layout A on a computer): goals, Check now, pause, finds with checks, fair price, drop, twins, Open the ad (the agent),
+  Message to the seller (copied), 👍 / 👎. Runs: Check now; 25 s after Attune opens for goals due (each ≤ twice a day, ≤ 3 per open);
+  the computer app the same. "find me …" / «دورلي على …» on Home starts a goal. Arabic name «الكشّاف». Icons added to the lucide
+  shim: Binoculars, ThumbsUp, HelpCircle, TrendingDown.
+  **Not yet:** a native background worker for nightly runs while Attune is closed (WorkManager + a headless WebView; needs phone
+  testing); photo checks (the vision model on each ad's photos); map distance to the metro (text only now). The live-web check
+  could not run in the cloud session (its network policy blocks duckduckgo.com / bing.com / the ad sites) — test it on the phone.
+  Tests: `tests/unit/v731scout.test.mjs` (real-looking ads, Arabic and English), `tests/e2e_v731scout.py`.
 - **Test setup in a fresh cloud session:** `bash tests/setup.sh` (≈ 10 min, builds llama-server). If the Pyodide download is cut,
   run `bash web-src/fetch-pyodide.sh` again — without it e2e_v510/v511/v513 time out (they run code in Python).
 

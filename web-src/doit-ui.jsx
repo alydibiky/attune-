@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Check, Undo2, ChevronRight, AlertTriangle } from "lucide-react";
 import { tr } from "./i18n.js";
 
-const TOOL_NAME = { fit: "Fit & Food", money: "Money", care: "Family health", life: "People & plans", radar: "Deadline Radar", reminders: "Reminders", memory: "Mind", cycle: "Cycle" };
+const TOOL_NAME = { fit: "Fit & Food", money: "Money", care: "Family health", life: "People & plans", radar: "Deadline Radar", reminders: "Reminders", memory: "Mind", cycle: "Cycle", scout: "Scout" };
 /** v6.28 "Do it from Home": what was done (each line opens its tool), Undo for all of it; or the answer to a question about your data. */
 export function DoResult({ r, navTo, onClose, onUndo }) {
   const [undone, setUndone] = useState(false);

@@ -573,8 +573,10 @@ Open — Ali wants a conversation first to set the priorities ("i will have a co
 
 9. "Do it from Home": type or say it once on Home — food, money, a dose, water, weight, a workout, a reminder, a debt, a deadline,
    blood sugar, a note, a period — and it happens in the right tool, with Undo. ✅ — **try it on the phone with your own sentences.**
-10. Scout (agent that hunts for days: flats, cars, products, jobs, work) — Ali said yes "if it's made correctly, very strong and very
-   accurate". ⏳ in progress.
+10. Scout — goals that hunt for days (flats, cars, products, jobs, suppliers, tenders): every wish checked against each ad's own
+   words, twins merged, fair price, 👍/👎, notifications for strong new finds or price drops, a message for the seller. ✅ —
+   **test it on the phone with real goals** (the cloud session could not reach the search engines). Next: nightly runs while
+   Attune is closed (native worker), checking the ad photos, distance to the metro on the map.
 
 Still open (each needs Ali): Google sign-in + Drive sync (his Google Cloud OAuth client ids) → Family circle; paid web search for Pro
 (pick a provider + API key, after the Gemini comparison test); the Attune keyboard (Android IME: needs phone testing); more UI

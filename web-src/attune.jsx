@@ -6,7 +6,7 @@ import {
   ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users,
   AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2,
   Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple,
-  BookOpen, PanelLeft, House,
+  BookOpen, PanelLeft, House, Binoculars,
   Heart,
 } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
@@ -58,6 +58,8 @@ import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
 import { LifeAskPage } from "./lifeask-ui.jsx";
+import { ScoutPage, runScoutGoal, tellText as scoutTell } from "./scout-ui.jsx";
+import { loadScout, saveScout, dueGoals, looksLikeGoal } from "./scout.js";
 import { understand as doUnderstand, apply as doApply } from "./doit.js";
 import { loadStores as loadLifeStores } from "./lifeask.js";
 import { deviceLevel, groupsFor, showAll as deviceShowAll, setShowAll as setDeviceShowAll } from "./device.js";
@@ -7363,8 +7365,8 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
-const MODE_TITLES = { lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const OWN_TITLE = new Set(["scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+const MODE_TITLES = { scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
@@ -7376,6 +7378,7 @@ const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = dev
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
+  ["scout", "Scout", "Hunts for a flat, a car, a product or a job for days — tells you when something good appears", Binoculars],   // v6.28
   ["lifeask", "Ask your life", "One question about your money, people, health, meals and deadlines — answered from your own data", Sparkles],   // v6.28
   ["guardian", "Money Guardian", "Finds money in your payments: late debts, double charges, price rises, subscriptions", ShieldCheck],   // v6.27
   ["radar", "Deadline Radar", "Free trials, renewals, returns, warranties and documents — a warning before each one", Radar],   // v6.27
@@ -7419,7 +7422,7 @@ const MORE_TOOLS = [
 // v6.27 (design A "Calm", the agreed tool map): the areas, then the two add-ons. Video Downloader stays (Ali, 13 Oct),
 // in Files — it saves a file to the phone.
 const MORE_GROUPS = [
-  ["Money & people", ["guardian", "radar", "life", "deal", "reminders"]],
+  ["Money & people", ["scout", "guardian", "radar", "life", "deal", "reminders"]],
   ["Health", ["fit", "care", "cycle"]],
   ["Mind & learning", ["lifeask", "coach", "learn", "memory", "shelf", "knowledge", "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
@@ -8234,6 +8237,23 @@ export default function App() {
   useEffect(() => { const on = (e) => { try { localStorage.setItem("attune:learn:seed", (e.detail && e.detail.topic) || ""); } catch (x) {} navTo("learn"); }; window.addEventListener("attune-learn", on); return () => window.removeEventListener("attune-learn", on); }, []);
   // v6.27 Read it to me hands a prescription to Family health and a bill to Money
   const [careIn, setCareIn] = useState(null);
+  const [scoutIn, setScoutIn] = useState(null);   // v6.28: a goal typed on Home → Scout starts it
+  // v6.28 Scout: goals due (each at most twice a day) are checked a little after Attune opens; a strong new find → a notification
+  useEffect(() => {
+    if (!NATIVE || !NATIVE.search) return;
+    const t = setTimeout(async () => {
+      const due = dueGoals(loadScout()); if (!due.length) return;
+      const search = (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 8 });
+      for (const gl of due.slice(0, 3)) {
+        try {
+          const r = await runScoutGoal(gl, search);
+          const d = loadScout(); saveScout({ ...d, goals: d.goals.map((x) => (x.id === gl.id ? { ...r.goal, votes: x.votes, taste: x.taste, on: x.on } : x)) });
+          if (r.tell.length) { const tt = scoutTell(gl, r.tell, getLang() === "ar"); scheduleReminder({ id: "scout-" + gl.id, at: Date.now() + 1500, repeat: "none", title: tt.title, body: tt.body, created: Date.now(), source: "scout" }); }
+        } catch (e) { /* the next open tries again */ }
+      }
+    }, 25000);
+    return () => clearTimeout(t);
+  }, []);
   useEffect(() => {
     const c = (e) => { setCareIn({ text: (e.detail && e.detail.text) || "", id: Date.now() }); navTo("care"); };
     const m = (e) => sendToMoney((e.detail && e.detail.text) || "", "");
@@ -9152,6 +9172,8 @@ export default function App() {
   // own data is answered on Home; anything else goes to Chat as before. → { lines: [{ text, open, low }], undo, answer } | null (→ Chat)
   const doFromHome = (text) => {
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
+    // "find me a flat in Maadi under 15k" / «دورلي على عربية …» → a Scout goal, started at once
+    if (looksLikeGoal(text)) { setScoutIn({ id: now, text }); navTo("scout"); return { lines: [{ text: ar ? "بدأ الكشّاف البحث" : "Scout is on it", open: "scout" }], undo: null }; }
     const u = doUnderstand(text, { now, stores: loadLifeStores() });
     if (u.ask) return { answer: u.ask, ar };
     if (!u.actions.length) return null;
@@ -9904,6 +9926,10 @@ export default function App() {
           <TranslatePage flash={flash} readText={readTextAny} native={{ N: NATIVE, call: nativeCall }}
             llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}
             openConverter={(to) => { try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} navTo("convert"); }} />
+        ) : mode === "scout" ? (
+          <ScoutPage search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 8 }) : null} flash={flash}
+            remind={(r) => scheduleReminder({ ...r, created: Date.now(), source: "scout" })} incoming={scoutIn} clearIncoming={() => setScoutIn(null)}
+            openLink={(url, label) => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: { label: label || url, url }, plan: null, inApp: false } }))} />
         ) : mode === "lifeask" ? (
           <LifeAskPage navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }}
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }}
