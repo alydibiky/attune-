@@ -2,6 +2,7 @@
 // full-width page; ★ pins a tool to the sidebar). Phones keep Chat as home and the More sheet.
 import React, { useState, useMemo } from "react";
 import { Send, Star, LayoutGrid, Bell, Apple, Brain, MessageCircle } from "lucide-react";
+import { openRead } from "./readaloud-ui.jsx";
 import { tr } from "./i18n.js";
 import { usePins, recentTools } from "./side-ui.jsx";
 
@@ -48,7 +49,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name }) {
   const core = ["money", "business", "memory"].map((id) => tools.find((t) => t[0] === id)).filter(Boolean);
   const cards = [...core, ...recent.filter((t) => !core.includes(t))].slice(0, 7);
   const send = () => { const t = text.trim(); if (!t) return; setText(""); onAsk(t); };
-  const starters = [["Summarise a PDF", "pdfchat"], ["Price a crane job", null], ["Plan my meals", "fit"], ["Convert a file", "convert"]];
+  const starters = [["Summarise a PDF", "pdfchat"], ["Read a paper to me", "read"], ["Price a crane job", null], ["Plan my meals", "fit"], ["Convert a file", "convert"]];
   return (
     <div className="pt-2 pb-10 space-y-5" data-testid="desk-home">
       <h1 className="text-[26px] font-semibold text-white tracking-tight">{tr(greeting())}{name ? ", " + name : ""}</h1>
@@ -63,7 +64,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name }) {
               className="w-9 h-9 rounded-lg bg-teal-500 text-slate-950 flex items-center justify-center disabled:opacity-40"><Send size={16} /></button>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
-            {starters.map(([t, tool]) => <button key={t} onClick={() => (tool ? navTo(tool) : onAsk(tr(t)))}
+            {starters.map(([t, tool]) => <button key={t} onClick={() => (tool === "read" ? openRead() : tool ? navTo(tool) : onAsk(tr(t)))} data-testid={tool === "read" ? "home-read" : undefined}
               className="rounded-full border border-teal-800/70 text-teal-200 text-[12.5px] px-3 py-1 hover:bg-teal-500/10">{tr(t)}</button>)}
           </div>
         </div>

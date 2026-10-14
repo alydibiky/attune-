@@ -56,7 +56,7 @@ function Spark({ list }) {
     </svg>);
 }
 
-export function CarePage({ readText, search, packs, installPack, remind, unremind, flash }) {
+export function CarePage({ readText, search, packs, installPack, remind, unremind, flash, incoming, clearIncoming }) {
   const [data, setData] = useState(() => H.loadCare());
   const put = (d) => setData(H.saveCare(d));
   const [tab, setTab] = useState(() => (H.loadCare().meds.length ? "today" : "meds"));
@@ -109,6 +109,8 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
     if (!t.trim()) { flash && flash(tr("Couldn't read the photo — type it")); setTyping(kind); return; }
     kind === "rx" ? readRx(t) : readLab(t);
   };
+  // v6.27: a prescription read by "Read it to me" arrives here, line by line, to check and save
+  useEffect(() => { if (incoming && incoming.text) { readRx(incoming.text); clearIncoming && clearIncoming(); } }, [incoming && incoming.id]);
   const doses = H.dosesOn(data);
   const tests = [...new Set(data.labs.map((x) => x.test))];
 

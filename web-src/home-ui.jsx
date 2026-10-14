@@ -4,7 +4,7 @@
    areas (Money · Health · Mind · Files · Places · All). The bottom bar is Home · Chat · Money · Health · Mind · All.
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import React, { useMemo, useState } from "react";
-import { MessageCircle, ArrowUp, Wallet, Heart, Brain, FileText, MapPin, LayoutGrid, Users, Zap } from "lucide-react";
+import { MessageCircle, ArrowUp, Camera, Wallet, Heart, Brain, FileText, MapPin, LayoutGrid, Users, Zap } from "lucide-react";
 import { tr } from "./i18n.js";
 import { loadLife } from "./life.js";
 import { loadRadar } from "./deadlines.js";
@@ -14,6 +14,7 @@ import { loadLedger } from "./myledger.js";
 import { moneyOverview, fmt } from "./money-calm.js";
 import { todayFacts } from "./desk-ui.jsx";
 import { targetsOf } from "./fithome.js";
+import { openRead } from "./readaloud-ui.jsx";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
@@ -37,6 +38,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian }) {
         <MessageCircle size={17} className="c-sub" />
         <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(); }} dir="auto" data-testid="home-ask"
           placeholder={tr("Ask or add anything…")} className="flex-1 min-w-0 bg-transparent focus:outline-none text-[15px]" style={{ color: "var(--c-ink)" }} />
+        {/* v6.27 Read it to me: any paper read aloud, explained and acted on */}
+        <button onClick={() => openRead()} aria-label={tr("Read it to me")} title={tr("Read it to me")} className="w-8 h-8 rounded-full grid place-items-center c-sub" data-testid="home-read"><Camera size={17} /></button>
         <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }}><ArrowUp size={16} /></button>
       </div>
       <div className="c-card" data-testid="home-today">

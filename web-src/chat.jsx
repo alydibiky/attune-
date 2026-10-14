@@ -17,6 +17,7 @@ import { chatDeadlineIntent } from "./deadlines.js";
 import { agentCard } from "./agent-ui.jsx";
 import { flightFromText } from "./owed.js";
 import { openOwed } from "./owed-ui.jsx";
+import { openRead } from "./readaloud-ui.jsx";
 import { airportOf } from "./agent.js";
 import { homeCurrency, dateOrder } from "./locale.js";
 import { wantsDoc } from "./slides.js";
@@ -711,6 +712,17 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         { id: newId(), role: "user", text: typed },
         { id: newId(), role: "assistant", text: m.text, calc: true, askText: typed }] }));
       setText("");
+      return;
+    }
+
+    // v6.27 Read it to me: a photo with «read it to me / what does it say / اقرأ / إيه المكتوب» → read aloud, explained, acted on
+    if (route && img && /^(?:please\s+)?(?:read (?:it|this|that)(?: (?:to|for) me)?|what does (?:it|this) say|اقر[أا](?:ها|ه|لي|هالي)?|إقرأ|ممكن تقر[أا]|ايه المكتوب|إيه المكتوب|ماذا (?:يقول|مكتوب)|lis(?:ez)?[- ]moi|léeme|lies (?:es|das) vor)(?![\p{L}])/iu.test(typed.trim())) {
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed, image: img.url },
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "Read it to me", detail: "I read the paper aloud, say what it is and what to do — and add its date or medicine where it belongs.",
+          actions: [["Read it to me", "read"], ["Just answer", "answer"]] }, readIn: { image: img.url }, askText: typed }] }));
+      setText(""); setPhotos([]);
       return;
     }
 
@@ -1588,6 +1600,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "life") window.dispatchEvent(new CustomEvent("attune-life", { detail: { text: m.lifeText || "" } }));
     else if (/^agent(-in)?:\d+$/.test(act)) { const i = +act.split(":")[1], p = m.agentPlan; if (p && p.links[i]) window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: p.links[i], plan: p, inApp: act.startsWith("agent-in") } })); }
     else if (act === "owed") openOwed({ flight: m.owedFlight || {} });
+    else if (act === "read") openRead(m.readIn || {});
     else if (act === "coach") window.dispatchEvent(new CustomEvent("attune-coach", { detail: m.coachIn || null }));
     else if (act === "radar") window.dispatchEvent(new CustomEvent("attune-radar", { detail: { text: m.radarText || "" } }));
     else if (act === "map") window.dispatchEvent(new CustomEvent("attune-map", { detail: { q: m.mapQuery || "" } }));

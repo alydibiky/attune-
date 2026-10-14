@@ -56,6 +56,7 @@ import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { TravelPage } from "./travel-ui.jsx";
 import { OwedHost } from "./owed-ui.jsx";
+import { ReadHost } from "./readaloud-ui.jsx";
 import { TranslatePage } from "./translate-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
@@ -8209,6 +8210,14 @@ export default function App() {
     return () => window.removeEventListener("attune-coach", on);
   }, []);
   // v6.27: "Watch it" from a deadline typed in Chat — the Deadline Radar opens with it read
+  // v6.27 Read it to me hands a prescription to Family health and a bill to Money
+  const [careIn, setCareIn] = useState(null);
+  useEffect(() => {
+    const c = (e) => { setCareIn({ text: (e.detail && e.detail.text) || "", id: Date.now() }); navTo("care"); };
+    const m = (e) => sendToMoney((e.detail && e.detail.text) || "", "");
+    window.addEventListener("attune-care", c); window.addEventListener("attune-money", m);
+    return () => { window.removeEventListener("attune-care", c); window.removeEventListener("attune-money", m); };
+  }, []);
   useEffect(() => {
     const on = (e) => { try { localStorage.setItem("attune:radar:ask", String((e.detail && e.detail.text) || "")); } catch (x) {} setMode("radar"); };
     window.addEventListener("attune-radar", on);
@@ -9843,7 +9852,7 @@ export default function App() {
             llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}
             openConverter={(to) => { try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} navTo("convert"); }} />
         ) : mode === "care" ? (
-          <CarePage readText={readTextAny} flash={flash}
+          <CarePage readText={readTextAny} flash={flash} incoming={careIn} clearIncoming={() => setCareIn(null)}
             search={NATIVE && NATIVE.knowSearch ? async (q, ids, k) => { const r = await nativeCall("knowSearch", { q, k: k || 10, ids }); return (r && r.passages) || []; } : null}
             packs={NATIVE && NATIVE.knowPacks ? () => { try { return (JSON.parse(NATIVE.knowPacks()).packs || []).filter((p) => p.installed); } catch (e) { return []; } } : null}
             installPack={NATIVE && NATIVE.knowInstall ? (id) => nativeCall("knowInstall", { id }) : null}
@@ -10799,6 +10808,9 @@ export default function App() {
       {showUpgrade && <Upgrade tier={tier} setTier={setTier} close={() => setShowUpgrade(false)} flash={flash} trialLeft={trialLeft} />}
       {/* v6.27 What you're owed: one sheet any page opens (Travel, Chat, Radar, Guardian) */}
       <OwedHost flash={flash} />
+      {/* v6.27 Read it to me: one sheet (Home's camera, Chat, Translate) — reads any paper aloud and acts on it */}
+      <ReadHost flash={flash} readText={readTextAny} native={{ N: NATIVE, call: nativeCall }} llm={modelState === "ready" ? callChat : null}
+        remind={(r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "radar" })} />
     </div>
   );
 }

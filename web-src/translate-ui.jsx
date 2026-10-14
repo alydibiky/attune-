@@ -4,6 +4,7 @@
    never hidden. Tests: tests/e2e_v727translate.py.                                                                         */
 import React, { useEffect, useRef, useState } from "react";
 import { Languages, Camera, FileText, Copy, Volume2, Shuffle, ShieldCheck, AlertTriangle, Plus, Trash2, Download } from "lucide-react";
+import { openRead } from "./readaloud-ui.jsx";
 import { tr, getLang } from "./i18n.js";
 import * as T from "./translate.js";
 import { speakNow } from "./lesson-ui.jsx";
@@ -85,13 +86,14 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
     const src = await new Promise((ok) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(file); });
     setPhoto({ src, out: null }); setRes(null); setBusy(tr("Reading the photo…"));
     let r = null; try { r = readText ? await readText(String(src).split(",")[1]) : null; } catch (e) {}
+    const said = (r && r.text) || ""; setPhoto({ src, out: null, text: said });
     const lines = ((r && r.lines) || []).filter((l) => /\p{L}{2,}/u.test(l.text || ""));
     if (!lines.length) { setBusy(""); if (r && r.text) { const out = await run(T.piecesOf(r.text), guessFrom(r.text)); if (out) setRes(out); } else flash && flash(tr("No text found in the photo")); return; }
     const out = await run(lines.map((l) => l.text), guessFrom(lines.map((l) => l.text).join(" ")));
     if (!out) return;
     setRes(out);
     // the boxes are in the photo's own pixels; the photo we draw on is the same file
-    try { setPhoto({ src, out: await overlay(src, lines, out.map((x) => x.text), to) }); } catch (e) {}
+    try { setPhoto({ src, text: said, out: await overlay(src, lines, out.map((x) => x.text), to) }); } catch (e) {}
   };
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="translate-page">
@@ -123,6 +125,7 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
           {photo && photo.out ? <div className="space-y-2" data-testid="tr-overlay"><img src={photo.out} alt="" className="w-full rounded-xl" />
             <a href={photo.out} download="translated.jpg" className="c-pill inline-flex items-center gap-1"><Download size={13} />{tr("Save the picture")}</a></div> : photo ? <img src={photo.src} alt="" className="max-h-56 rounded-xl" /> : null}
         </div>) : null}
+      {tab === "photo" && photo && photo.text ? <button className="c-pill inline-flex items-center gap-1" style={{ fontSize: 13, padding: "6px 12px", border: 0, cursor: "pointer" }} onClick={() => openRead({ text: photo.text, image: photo.src })} data-testid="tr-read"><Volume2 size={14} />{tr("Read it to me")}</button> : null}
       {tab === "doc" ? (
         <div className="c-card space-y-2" data-testid="tr-doc"><b className="flex items-center gap-2"><FileText size={16} className="c-acc" />{tr("PDF, Word, slides, subtitles…")}</b>
           <p className="c-sub m-0 text-[13.5px]">{tr("The File Converter translates the whole file and keeps its layout — tables, headings and pictures stay where they are — with the same checks.")}</p>
