@@ -16,44 +16,27 @@ export function LookStyle({ look }) {
 }
 
 /** While a photo is read: the photo, what is happening, and a nutrition fact that changes every few seconds. */
-export function PhotoLoading({ look, url, stage, L, ar }) {
+/** v6.27 (Ali: "a pulse loading screen when it's reading a food"): rings pulse out from the food — the photo when there is
+    one, else a plate — with what is happening now and a fact to read meanwhile. */
+export function PulseLoader({ url, stage, L, ar, label }) {
   const [order] = useState(() => LK.factOrder());
   const [k, setK] = useState(0);
   useEffect(() => { const t = setInterval(() => setK((n) => n + 1), 5000); return () => clearInterval(t); }, []);
   const f = LK.FACTS[order[k % order.length]];
-  const h = 240;
   return (
-    <div className="space-y-3" data-testid="fit-photo-loading" aria-busy="true">
-      {look === "bold" ? (
-        <div className="flex flex-col items-center gap-2 pt-1">
-          <div className="relative" style={{ width: 176, height: 176 }}>
-            <img src={url} alt="" className="absolute rounded-full object-cover" style={{ inset: 14, width: 148, height: 148 }} />
-            <svg width="176" height="176" viewBox="0 0 176 176" className="absolute inset-0 fit-spin" aria-hidden="true">
-              <circle cx="88" cy="88" r="80" fill="none" stroke="#ECECF2" strokeWidth="10" />
-              <circle cx="88" cy="88" r="80" fill="none" stroke="#F25C2A" strokeWidth="10" strokeLinecap="round" strokeDasharray="150 353" />
-            </svg>
-          </div>
-        </div>
-      ) : (
-        <div className="relative overflow-hidden rounded-2xl" style={{ height: h, "--h": h + "px" }}>
-          <img src={url} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0" style={{ background: "rgba(8,20,16,.30)" }} />
-          {look === "night" ? (
-            <div className="absolute" style={{ left: "50%", top: "50%", width: 30, height: 30, marginLeft: -15, marginTop: -15 }}>
-              <div className="absolute inset-0 rounded-full fit-pulse" style={{ border: "3px solid #5EEAD4" }} />
-              <div className="absolute rounded-full" style={{ left: 10, top: 10, width: 10, height: 10, background: "#5EEAD4" }} />
-            </div>
-          ) : <div className="absolute inset-x-0 top-0 fit-scan" style={{ height: 4, background: "#7CF2B4", boxShadow: "0 0 18px 6px rgba(124,242,180,.55)" }} />}
-        </div>
-      )}
-      <p className={"text-[14px] text-slate-200 flex items-center gap-2 " + (look === "bold" ? "justify-center" : "")} data-testid="fit-loading-stage">
-        <span className="inline-block w-4 h-4 rounded-full border-2 border-emerald-500 border-r-transparent fit-spin" aria-hidden="true" />{stage || L("Recognising the food…", "جارٍ التعرّف على الطعام…")}</p>
-      <div key={k} className="fit-pop rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-1.5 shadow-sm" data-testid="fit-fact" aria-live="polite">
-        <p className="text-[11.5px] font-bold tracking-wider text-emerald-300">{L("DID YOU KNOW?", "هل تعلم؟")}</p>
-        <p className="text-[15.5px] leading-relaxed font-medium text-white">{ar ? f.ar : f.en}</p>
-        <p className="text-[11.5px] text-slate-500">{ar ? f.src.ar : f.src.en}</p>
+    <div className="flex flex-col items-center gap-4 py-3" data-testid="fit-pulse-loading" aria-busy="true" aria-label={label}>
+      <div className="relative grid place-items-center" style={{ width: 200, height: 200 }}>
+        {[0, 0.55, 1.1].map((d) => <span key={d} className="absolute rounded-full fit-pulse" style={{ width: 92, height: 92, background: "var(--color-emerald-500)", opacity: 0.35, animationDelay: d + "s", animationDuration: "1.8s" }} />)}
+        <span className="absolute rounded-full fit-breathe" style={{ width: 104, height: 104, background: "var(--color-emerald-500)", opacity: 0.18 }} />
+        {url ? <img src={url} alt="" className="relative rounded-full object-cover fit-breathe" style={{ width: 92, height: 92, boxShadow: "0 0 0 4px var(--color-emerald-500)" }} />
+          : <span className="relative grid place-items-center rounded-full fit-breathe text-[40px]" style={{ width: 92, height: 92, background: "var(--color-emerald-600)" }} aria-hidden="true">🍽️</span>}
       </div>
-      <div className="flex justify-center gap-1.5" aria-hidden="true">{[0, 1, 2, 3].map((i) => <span key={i} className={"h-1.5 rounded-full " + (i === k % 4 ? "w-5 bg-emerald-500" : "w-1.5 bg-slate-700")} />)}</div>
+      <p className="text-[15px] font-medium text-white text-center m-0" data-testid="fit-loading-stage">{stage || L("Reading your meal…", "جارٍ قراءة وجبتك…")}</p>
+      <div key={k} className="fit-pop w-full rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-1.5" data-testid="fit-fact" aria-live="polite">
+        <p className="text-[11.5px] font-bold tracking-wider text-emerald-300 m-0">{L("DID YOU KNOW?", "هل تعلم؟")}</p>
+        <p className="text-[15px] leading-relaxed font-medium text-white m-0">{ar ? f.ar : f.en}</p>
+        <p className="text-[11.5px] text-slate-500 m-0">{ar ? f.src.ar : f.src.en}</p>
+      </div>
     </div>
   );
 }

@@ -153,7 +153,7 @@ export function WeekPlanView({ L, ar, tg, diet, share, close, addToDay }) {
       <div className="flex items-center justify-between"><h3 className="text-white font-semibold">{L("My week", "أسبوعي")}</h3><button onClick={close} className="text-slate-400"><X size={18} /></button></div>
       {week.map((d) => (
         <div key={d.day} className="rounded-xl bg-slate-900/60 border border-slate-800 p-2.5" data-testid="fit-week-day">
-          <div className="flex justify-between text-[12.5px]"><span className="text-white">{new Date(d.day + "T12:00:00").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "short" })}</span><span className="text-slate-400 tabular-nums">{d.plan.total.kcal} kcal · P {Math.round(d.plan.total.p)}</span></div>
+          <div className="flex justify-between text-[12.5px]"><span className="text-white">{new Date(d.day + "T12:00:00").toLocaleDateString(ar ? "ar-EG-u-nu-latn" : undefined, { weekday: "long", day: "numeric", month: "short" })}</span><span className="text-slate-400 tabular-nums">{d.plan.total.kcal} {L("kcal", "سعرة")} · {L("Protein", "بروتين")} {Math.round(d.plan.total.p)} {L("g", "جم")}</span></div>
           {Object.entries(d.plan.meals).map(([slot, m]) => <div key={slot} className="text-[12px] text-slate-300 mt-0.5">{names[slot]}: {ar ? m.recipe.ar : m.recipe.en}{m.x !== 1 ? ` ×${m.x}` : ""} · {m.kcal}</div>)}
         </div>))}
       <div className="rounded-xl bg-slate-900/60 border border-emerald-900 p-3 space-y-2" data-testid="fit-shopping">

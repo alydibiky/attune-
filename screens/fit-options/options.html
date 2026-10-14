@@ -1,0 +1,88 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Fit options</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#e9ecef;padding:24px;display:flex;gap:28px}
+.ph{width:390px;height:844px;border-radius:36px;overflow:hidden;position:relative;box-shadow:0 10px 40px rgba(0,0,0,.18)}
+.cap{position:absolute;top:-2px;left:0;right:0;text-align:center;font:700 13px system-ui;color:#555}
+.wrap{position:relative;padding-top:26px}
+.t{font-weight:700}.mut{opacity:.6}.row{display:flex;align-items:center}.sp{flex:1}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-inline-end:5px}
+.nav{position:absolute;bottom:0;left:0;right:0;height:74px;display:flex;align-items:center;justify-content:space-around;font-size:11px}
+.fab{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:30px;margin-top:-26px}
+/* A — colour per meal, light */
+.A{background:#F6F7FB;color:#1D2433}.A .hd{padding:22px 20px 8px}.A .sum{margin:8px 16px;background:#fff;border-radius:22px;padding:18px;display:flex;gap:16px;align-items:center;box-shadow:0 2px 10px rgba(30,40,80,.06)}
+.A .ring{width:118px;height:118px;border-radius:50%;background:conic-gradient(#22C55E 0 38%,#E8ECF3 38% 100%);display:grid;place-items:center}.A .ring i{width:96px;height:96px;border-radius:50%;background:#fff;display:grid;place-items:center;font-style:normal;text-align:center}
+.A .bar{height:7px;border-radius:9px;background:#EEF1F6;margin:3px 0 9px;overflow:hidden}.A .bar b{display:block;height:100%;border-radius:9px}
+.A .meal{margin:10px 16px;background:#fff;border-radius:20px;padding:14px 16px;box-shadow:0 2px 10px rgba(30,40,80,.05);border-inline-start:6px solid}
+.A .food{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #F0F2F7;font-size:14px}
+.A .em{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:20px}
+.A .add{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:20px;color:#fff}
+.A .nav{background:#fff;border-top:1px solid #E6E9F0;color:#8A93A6}
+/* B — rings, dark */
+.B{background:#0E1116;color:#EEF2F6}.B .hd{padding:22px 20px 6px}
+.B .rings{display:flex;justify-content:space-between;margin:10px 16px;padding:18px;border-radius:24px;background:#161B22}
+.B .rg{width:78px;text-align:center;font-size:12px}.B .rg .c{width:70px;height:70px;border-radius:50%;margin:0 auto 6px;display:grid;place-items:center}.B .rg .c i{width:56px;height:56px;border-radius:50%;background:#161B22;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:14px}
+.B .big{margin:6px 16px 4px;padding:18px;border-radius:24px;background:linear-gradient(135deg,#0EA5E9,#8B5CF6);display:flex;align-items:center}
+.B .meal{margin:10px 16px;padding:14px;border-radius:20px;background:#161B22}
+.B .food{display:flex;gap:10px;align-items:center;padding:8px 0;font-size:14px;border-top:1px solid #222A35}
+.B .ph2{width:42px;height:42px;border-radius:12px;background-size:cover;display:grid;place-items:center;font-size:22px}
+.B .nav{background:#0E1116;border-top:1px solid #1F2630;color:#6B7686}
+/* C — pastel tiles */
+.C{background:#FFFDF8;color:#2A2420}.C .hd{padding:20px 20px 10px;background:linear-gradient(160deg,#FFE7C2,#FFD1DC);border-radius:0 0 30px 30px;padding-bottom:22px}
+.C .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 16px}
+.C .tile{border-radius:22px;padding:14px;min-height:118px;display:flex;flex-direction:column}
+.C .tile .n{font-size:26px;font-weight:800;margin-top:auto}
+.C .chip{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:600;margin:2px 4px 0 0}
+.C .nav{background:#fff;border-top:1px solid #F1E9DD;color:#A08F7A}
+</style></head><body>
+
+<div class="wrap"><div class="cap">A · Colour per meal (light, like the big food apps)</div>
+<div class="ph A">
+ <div class="hd row"><div><div class="mut" style="font-size:13px">Wednesday, 14 Oct</div><div class="t" style="font-size:24px">Today</div></div><div class="sp"></div><div style="font-size:22px">🔥 6</div></div>
+ <div class="sum"><div class="ring"><i><span><b style="font-size:26px">1,320</b><br><span class="mut" style="font-size:11px">kcal left</span></span></i></div>
+  <div class="sp" style="font-size:12.5px">
+   <div class="row"><span class="dot" style="background:#38BDF8"></span>Protein<div class="sp"></div><b>62</b>/153 g</div><div class="bar"><b style="width:40%;background:#38BDF8"></b></div>
+   <div class="row"><span class="dot" style="background:#F59E0B"></span>Carbs<div class="sp"></div><b>88</b>/192 g</div><div class="bar"><b style="width:46%;background:#F59E0B"></b></div>
+   <div class="row"><span class="dot" style="background:#F43F5E"></span>Fat<div class="sp"></div><b>21</b>/60 g</div><div class="bar"><b style="width:35%;background:#F43F5E"></b></div>
+  </div></div>
+ <div class="meal" style="border-color:#F59E0B"><div class="row"><span style="font-size:20px;margin-inline-end:8px">🌅</span><b>Breakfast</b><span class="mut" style="margin-inline-start:6px;font-size:13px">600 kcal</span><div class="sp"></div><span class="add" style="background:#F59E0B">+</span></div>
+  <div class="food"><span class="em" style="background:#FEF3C7">🥚</span><div class="sp">Eggs · 2<div class="mut" style="font-size:12px"><span class="dot" style="background:#38BDF8"></span>Protein 13 g · <span class="dot" style="background:#F43F5E"></span>Fat 10 g</div></div><b>143</b></div>
+  <div class="food"><span class="em" style="background:#FEF3C7">🫓</span><div class="sp">Baladi bread · 1 loaf<div class="mut" style="font-size:12px"><span class="dot" style="background:#F59E0B"></span>Carbs 49 g</div></div><b>237</b></div>
+ </div>
+ <div class="meal" style="border-color:#22C55E"><div class="row"><span style="font-size:20px;margin-inline-end:8px">☀️</span><b>Lunch</b><span class="mut" style="margin-inline-start:6px;font-size:13px">0 kcal</span><div class="sp"></div><span class="add" style="background:#22C55E">+</span></div><div class="mut" style="font-size:13px;margin-top:6px">Suggested: Koshari · 520 kcal</div></div>
+ <div class="meal" style="border-color:#6366F1"><div class="row"><span style="font-size:20px;margin-inline-end:8px">🌙</span><b>Dinner</b><div class="sp"></div><span class="add" style="background:#6366F1">+</span></div></div>
+ <div class="nav"><span>📖<br>Diary</span><span>⭐<br>Recipes</span><span class="fab" style="background:#22C55E">+</span><span>📊<br>Progress</span><span>👤<br>Me</span></div>
+</div></div>
+
+<div class="wrap"><div class="cap">B · Three rings (dark, sporty)</div>
+<div class="ph B">
+ <div class="hd row"><div><div class="mut" style="font-size:13px">Wednesday, 14 Oct</div><div class="t" style="font-size:24px">Today</div></div><div class="sp"></div><div style="font-size:22px">🔥 6</div></div>
+ <div class="big"><div><div style="font-size:13px;opacity:.85">Left today</div><div style="font-size:36px;font-weight:800">1,320 <span style="font-size:15px;font-weight:600">kcal</span></div><div style="font-size:12.5px;opacity:.85">Eaten 600 · Burned 0 · Goal 1,920</div></div></div>
+ <div class="rings">
+  <div class="rg"><div class="c" style="background:conic-gradient(#38BDF8 0 40%,#26303C 40%)"><i>62g</i></div>Protein</div>
+  <div class="rg"><div class="c" style="background:conic-gradient(#FBBF24 0 46%,#26303C 46%)"><i>88g</i></div>Carbs</div>
+  <div class="rg"><div class="c" style="background:conic-gradient(#FB7185 0 35%,#26303C 35%)"><i>21g</i></div>Fat</div>
+  <div class="rg"><div class="c" style="background:conic-gradient(#34D399 0 30%,#26303C 30%)"><i>8g</i></div>Fibre</div>
+ </div>
+ <div class="meal"><div class="row"><b>Breakfast</b><span class="mut" style="margin-inline-start:6px;font-size:13px">600 kcal</span><div class="sp"></div><span style="color:#38BDF8;font-size:22px">⊕</span></div>
+  <div class="food"><span class="ph2" style="background:#2A2F3A">🥚</span><div class="sp">Eggs · 2<div class="mut" style="font-size:12px">Protein 13 g · Carbs 1 g · Fat 10 g</div></div><b>143</b></div>
+  <div class="food"><span class="ph2" style="background:#2A2F3A">🫓</span><div class="sp">Baladi bread<div class="mut" style="font-size:12px">Protein 8 g · Carbs 49 g · Fat 1 g</div></div><b>237</b></div></div>
+ <div class="meal"><div class="row"><b>Lunch</b><div class="sp"></div><span style="color:#38BDF8;font-size:22px">⊕</span></div></div>
+ <div class="nav"><span>📖<br>Diary</span><span>⭐<br>Recipes</span><span class="fab" style="background:linear-gradient(135deg,#0EA5E9,#8B5CF6)">+</span><span>📊<br>Progress</span><span>👤<br>Me</span></div>
+</div></div>
+
+<div class="wrap"><div class="cap">C · Pastel tiles (soft, friendly)</div>
+<div class="ph C">
+ <div class="hd"><div class="row"><div><div class="mut" style="font-size:13px">Wednesday, 14 Oct</div><div class="t" style="font-size:24px">Good morning, Ali</div></div><div class="sp"></div><div style="font-size:22px">🔥 6</div></div>
+  <div style="margin-top:14px;font-size:44px;font-weight:800">1,320</div><div style="font-size:13px">kcal left of 1,920 · eaten 600</div>
+  <div style="margin-top:10px"><span class="chip" style="background:#DBEAFE;color:#1E40AF">Protein 62/153 g</span><span class="chip" style="background:#FEF3C7;color:#92400E">Carbs 88/192 g</span><span class="chip" style="background:#FFE4E6;color:#9F1239">Fat 21/60 g</span></div></div>
+ <div class="grid">
+  <div class="tile" style="background:#FFF1D6"><b>🌅 Breakfast</b><span class="mut" style="font-size:12px;margin-top:4px">Eggs, baladi bread, ful</span><span class="n">600</span></div>
+  <div class="tile" style="background:#E3F7E8"><b>☀️ Lunch</b><span class="mut" style="font-size:12px;margin-top:4px">Tap to add</span><span class="n" style="color:#16A34A">+</span></div>
+  <div class="tile" style="background:#E6E8FF"><b>🌙 Dinner</b><span class="mut" style="font-size:12px;margin-top:4px">Tap to add</span><span class="n" style="color:#4F46E5">+</span></div>
+  <div class="tile" style="background:#FFE4EC"><b>🍎 Snacks</b><span class="mut" style="font-size:12px;margin-top:4px">Tap to add</span><span class="n" style="color:#DB2777">+</span></div>
+  <div class="tile" style="background:#DFF4FF"><b>💧 Water</b><span class="mut" style="font-size:12px;margin-top:4px">4 of 8 glasses</span><span class="n" style="color:#0284C7">1.0 L</span></div>
+  <div class="tile" style="background:#F1EAFE"><b>🏃 Move</b><span class="mut" style="font-size:12px;margin-top:4px">Walk 20 min</span><span class="n" style="color:#7C3AED">0</span></div>
+ </div>
+ <div class="nav"><span>📖<br>Diary</span><span>⭐<br>Recipes</span><span class="fab" style="background:#F97316">+</span><span>📊<br>Progress</span><span>👤<br>Me</span></div>
+</div></div>
+</body></html>

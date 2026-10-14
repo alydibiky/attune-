@@ -47,9 +47,11 @@ body:has(.fit-look-night),.fit-look-night{--color-slate-950:#0B1220;--color-slat
 @keyframes fitPop{0%{opacity:0;transform:translateY(12px) scale(.97)}100%{opacity:1;transform:none}}
 @keyframes fitPulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.4);opacity:0}}
 @keyframes fitSpin{to{transform:rotate(360deg)}}
+@keyframes fitBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.fit-breathe{animation:fitBreathe 1.8s ease-in-out infinite}
 .fit-scan{animation:fitScan 2.6s ease-in-out infinite}.fit-pop{animation:fitPop .45s ease-out both}
 .fit-pulse{animation:fitPulse 1.6s ease-out infinite}.fit-spin{animation:fitSpin 1.4s linear infinite}
-@media (prefers-reduced-motion:reduce){.fit-scan,.fit-pulse,.fit-spin,.fit-pop{animation:none}}
+@media (prefers-reduced-motion:reduce){.fit-scan,.fit-pulse,.fit-spin,.fit-pop,.fit-breathe{animation:none}}
 `;
 /** The page behind Fit (outside its own boxes), so a light look fills the whole screen. */
 export const PAGE_BG = { fresh: "#F2F6F3", night: "#0B1220", bold: "#FFFFFF" };
