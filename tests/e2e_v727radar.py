@@ -13,7 +13,7 @@ words = lambda d: d.strftime("%d %b %Y").lstrip("0")
 now = int(time.time() * 1000)
 Q = [{"id": "t1", "app": "Google Play", "title": "Google Play", "text": "Your free trial of YouTube Premium ends on %s. You'll be charged USD 13.99" % words(T + datetime.timedelta(days=2)), "ts": now - 3600000},
      {"id": "p1", "app": "Chase", "title": "Chase", "text": "You paid $12.00 at STARBUCKS", "ts": now - 600000}]
-RECEIPT = "BEST BUY\nApple AirPods Pro\nTotal $249.00\nReturn by %s" % (T + datetime.timedelta(days=12)).strftime("%m/%d/%Y")
+RECEIPT = "BEST BUY\nApple AirPods Pro\nTotal $249.00\nReturn by %s\n1 year warranty" % (T + datetime.timedelta(days=12)).strftime("%m/%d/%Y")
 def init(pro=True, radar=None):
     s = "try{localStorage.setItem('attune:start','home');localStorage.setItem('ledger.v3',JSON.stringify({currency:'USD',accounts:[{id:'c',name:'Cash',currency:'USD',start:0}],txns:[],budgets:{overall:0,cats:{}},recurring:[],debts:[]}))"
     if radar: s += ";localStorage.setItem('attune:radar:v1',%s)" % json.dumps(json.dumps(radar))
@@ -70,12 +70,16 @@ with sync_playwright() as p:
     page.set_input_files("[data-testid=radar-file]", path); os.remove(path)
     page.wait_for_selector("[data-testid=radar-form]", timeout=8000); page.wait_for_timeout(300)
     check(page.locator("[data-testid=radar-title]").first.input_value() == "Apple AirPods Pro" and page.locator("[data-testid=radar-amount]").first.input_value() == "249", "a receipt photo is read: AirPods Pro, 249, return by its date")
+    page.locator("[data-testid=radar-save]").first.click(); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=radar-form]").count() == 1, "the receipt's second deadline (its warranty) waits to be saved")
     page.locator("[data-testid=radar-save]").first.click(); page.wait_for_timeout(500)
+    ks = page.evaluate("JSON.parse(localStorage.getItem('attune:radar:v1')).items.filter(i => i.title === 'Apple AirPods Pro').map(i => i.kind).sort().join()")
+    check(ks == "return,warranty", "…and saving both keeps both, not the first one twice: %s" % ks)
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, "radar.png"), full_page=True)
     ph = page.locator("[data-testid=radar-item]:has-text('AirPods') [data-testid=radar-photo]")
-    check(ph.count() == 1, "…and the receipt photo is kept with it")
+    check(ph.count() == 2, "…and the receipt photo is kept with both of its deadlines")
     titles = page.evaluate("JSON.parse(localStorage.getItem('attune:radar:v1')).items.map(i => i.title + ' ' + i.source)")
-    check(len(titles) == 4, "four deadlines: %s" % titles)
+    check(len(titles) == 5, "five deadlines: %s" % titles)
 
     # ---- done: cancelled the trial before the charge → saved ----
     page.locator("[data-testid=radar-item]:has-text('YouTube Premium') [data-testid=radar-cancelled]").click(); page.wait_for_timeout(300)

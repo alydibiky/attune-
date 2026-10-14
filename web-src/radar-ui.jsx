@@ -160,7 +160,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
     let found = D.readDeadlines(t, opts());
     if (!found.length && ask) { setBusy(tr("Reading…")); try { found = D.readDeadlineModel(await ask(D.deadlineModelPrompt(t)), opts()); } catch (e) { found = []; } setBusy(""); }
     if (!found.length) { setEdit({ note: t.slice(0, 200) }); setMode("form"); flash && flash(tr("No date found — fill it in")); return; }
-    setDrafts(found.map((x) => ({ ...x, note: x.note || "" }))); setMode(null);
+    setDrafts(found.map((x, i) => ({ ...x, note: x.note || "", _k: Date.now() + ":" + i }))); setMode(null);
   };
   const onPhoto = async (file) => {
     if (!file) return;
@@ -172,7 +172,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
     try { if (readText && url) { const r = await readText(url.split(",")[1]); txt = (r && r.text) || ""; } } catch (e) {}
     setBusy("");
     const found = txt ? D.readDeadlines(txt, opts()) : [];
-    if (found.length) setDrafts(found.map((x) => ({ ...x, photo: key, source: "photo" })));
+    if (found.length) setDrafts(found.map((x, i) => ({ ...x, photo: key, source: "photo", _k: key + ":" + i })));
     else { setEdit({ photo: key, source: "photo", note: txt.slice(0, 160) }); setMode("form"); flash && flash(tr("Couldn't find a date in the photo — fill it in, the photo is kept")); }
   };
   const done = (x, outcome) => {
@@ -228,9 +228,9 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
           <button className="c-btn" disabled={!text.trim()} onClick={() => read(text)} data-testid="radar-read">{tr("Find the deadline")}</button>
         </div>) : null}
       {drafts.map((d, i) => (
-        <div key={i}><span className="c-lbl">{tr("Check it, then save")}</span>
-          <Form init={d} photo={i === 0 ? photo : ""} onCancel={() => setDrafts((x) => x.filter((_, j) => j !== i))}
-            onSave={(f) => { if (saveOne({ ...d, ...f })) setDrafts((x) => x.filter((_, j) => j !== i)); }} /></div>))}
+        <div key={d._k || i}><span className="c-lbl">{tr("Check it, then save")}</span>
+          <Form init={d} photo={i === 0 ? photo : ""} onCancel={() => setDrafts((x) => x.filter((y) => y !== d))}
+            onSave={(f) => { const { _k, ...rest } = { ...d, ...f }; if (saveOne(rest)) setDrafts((x) => x.filter((y) => y !== d)); }} /></div>))}
       {mode === "form" && edit ? (
         <Form init={edit} photo={edit.photo && photo ? photo : ""} onCancel={() => { setMode(null); setEdit(null); }}
           onSave={(f) => {

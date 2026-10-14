@@ -53,6 +53,7 @@ import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
 import { BookingDetails, loadBooking, agentLabels } from "./agent-ui.jsx";
 import { CoachPage } from "./coach-ui.jsx";
+import { CarePage } from "./care-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
@@ -7366,6 +7367,7 @@ const MORE_TOOLS = [
   ["life", "People & plans", "Debts, installments, savings circles, bills — a checkbox for every payment", Users],   // v6.27: the Life layer
   ["slides", "Slides & Reports", "A designed PowerPoint or a full report from one sentence", Presentation],
   ["fit", "Fit & Food", "Calories from a sentence or a photo, 50+ recipes, workouts", Apple],
+  ["care", "Family health", "Medicines and reminders for the family, lab results over time", Heart],   // v6.27
   ["deal", "Deal Check", "Before you pay or sign", ShieldCheck],
   ["xray", "Chat X-Ray", "Money, promises & questions in a WhatsApp chat", MessageCircle],
   ["convert", "File Converter", "PDF, Word, PowerPoint, Excel, photos — 80+ conversions, and translation", FileText],
@@ -7401,7 +7403,7 @@ const MORE_TOOLS = [
 // in Files — it saves a file to the phone.
 const MORE_GROUPS = [
   ["Money & people", ["guardian", "radar", "life", "deal", "reminders"]],
-  ["Health", ["fit", "cycle"]],
+  ["Health", ["fit", "care", "cycle"]],
   ["Mind & learning", ["coach", "learn", "memory", "shelf", "knowledge", "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
   ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
@@ -8125,7 +8127,9 @@ export default function App() {
       const d = (e && e.data) || {};
       if (d.kind === "reminder" && /^daily-learn-/.test(d.id || "")) { setDailyOpen(d.id); navTo("learn"); return; }
       if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); navTo("news"); return; }
-      if (d.kind === "reminder" && /^daily-fit-/.test(d.id || "")) { navTo("fit"); return; }   // v6.14: the Fit widget and Fit reminders
+      if (d.kind === "reminder" && /^daily-fit-/.test(d.id || "")) { navTo("fit"); return; }
+      if (d.kind === "reminder" && /^med-/.test(d.id || "")) { navTo("care"); return; }      // v6.27 a medicine reminder → Family health
+      if (d.kind === "reminder" && /^radar-/.test(d.id || "")) { navTo("radar"); return; }  // v6.27 a deadline → the Radar   // v6.14: the Fit widget and Fit reminders
       if (d.kind === "reminder") { navTo("reminders"); return; }
       // A photo or screenshot shared from another app (a receipt, a menu, a
       // document): it opens in Instant, ready for "Add to Money", "Translate"…
@@ -9831,6 +9835,13 @@ export default function App() {
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
             load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />}
             onExit={goBack} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
+        ) : mode === "care" ? (
+          <CarePage readText={readTextAny} flash={flash}
+            search={NATIVE && NATIVE.knowSearch ? async (q, ids, k) => { const r = await nativeCall("knowSearch", { q, k: k || 10, ids }); return (r && r.passages) || []; } : null}
+            packs={NATIVE && NATIVE.knowPacks ? () => { try { return (JSON.parse(NATIVE.knowPacks()).packs || []).filter((p) => p.installed); } catch (e) { return []; } } : null}
+            installPack={NATIVE && NATIVE.knowInstall ? (id) => nativeCall("knowInstall", { id }) : null}
+            remind={(r) => scheduleReminder({ ...r, created: Date.now(), source: "care" })}
+            unremind={(id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }} />
         ) : mode === "coach" ? (
           <CoachPage native={{ N: NATIVE, call: nativeCall }} readText={readTextAny} flash={flash} incoming={coachIn} clearIncoming={() => setCoachIn(null)}
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 900, temperature: 0.2, think: false }) : null}
