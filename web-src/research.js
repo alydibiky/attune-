@@ -10,6 +10,8 @@
      4. "what is still missing?" → one more search just for that, read the same way
      5. the final answer is written from all the notes, complete and cited.
    Pure helpers here (unit-tested in tests/unit/v520.test.mjs); the loop is in chat.jsx.  */
+import { homeCurrency } from "./locale.js";
+
 
 export const NOTES_SYS = `You read ONE web page for a question and write NOTES — every fact on the page that helps answer it.
 Rules:
@@ -353,10 +355,10 @@ const KIND_RX = {
 };
 const CN_CAR = /\b(byd|chery|geely|zeekr|lynk|xpeng|nio|li auto|xiaomi|exeed|omoda|jaecoo|jetour|haval|great wall|gwm|tank|changan|gac|aion|hongqi|baic|bestune|dongfeng|voyah|leapmotor|seres|aito|avatr|deepal|wuling|kaiyi|forthing|maxus|mg|jac|dfsk|swm|soueast)\b|بي واي دي|شيري|جيلي|زيكر|جيتور|هافال|شانجان|أومودا|اومودا|جيكو|إكسيد|اكسيد|بايك|بستيون|كايي|ماكسوس|فورثينج|إم جي|ام جي|دونغ فنغ|دونج فينج/i;
 /** v6.16: today's rates (open.er-api.com JSON) → a note so every price also shows in US dollars (and the maker's currency). */
-export function fxNote(body, q = "") {
+export function fxNote(body, q = "", home = homeCurrency()) {
   let j; try { j = typeof body === "string" ? JSON.parse(body) : body; } catch (e) { return ""; }
   const r = j && j.rates; if (!r || !r.EGP) return "";
-  const pick = ["EGP", ...(isChineseCar(q) ? ["CNY"] : []), "EUR", "AED", "SAR"].filter((c) => r[c]);
+  const pick = [...new Set([home !== "USD" ? home : "EUR", ...(isChineseCar(q) ? ["CNY"] : []), "EUR", "GBP", "AED", "SAR", "EGP"])].filter((c) => r[c]).slice(0, 5);
   const date = String(j.time_last_update_utc || "").replace(/ \d\d:\d\d:\d\d.*$/, "");
   return "\n\n(Exchange rates" + (date ? " on " + date : "") + " (open.er-api.com): 1 USD = " + pick.map((c) => (+r[c]).toFixed(c === "EGP" ? 2 : 3) + " " + c).join(" = ") +
     ". Next to every price write its value in US dollars (≈ $…) using these rates" + (isChineseCar(q) ? ", and for a price in China give yuan (CNY) and US dollars" : "") + ". Prices without a source stay \"—\".)";

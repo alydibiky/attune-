@@ -9,6 +9,9 @@
      - the verdict and the price to ask for.
    The model only reads the offer into fields and writes the negotiation message.
    Pure functions; tests in tests/unit/v533.test.mjs.                                            */
+import { homeCurrency } from "./locale.js";
+import { payCurrency } from "./yusr/paytext.js";
+
 
 const AR_DIGITS = /[٠-٩]/g;
 const toLatin = (s) => String(s || "").replace(AR_DIGITS, (d) => String(d.charCodeAt(0) - 0x0660)).replace(/٬/g, ",").replace(/٫/g, ".");
@@ -30,7 +33,7 @@ const CUR = [
   [/(egp|le\b|l\.e|e£|جنيه|جنية|ج\.م|ج م)/i, "EGP"], [/(usd|us\$|\$|dollars?|دولار)/i, "USD"], [/(eur|€|euros?|يورو)/i, "EUR"],
   [/(sar|riyals?|ريال)/i, "SAR"], [/(aed|dirhams?|درهم)/i, "AED"], [/(gbp|£|pounds? sterling)/i, "GBP"], [/(cny|rmb|yuan|يوان)/i, "CNY"],
 ];
-export function currencyOf(s) { const t = String(s || ""); for (const [re, c] of CUR) if (re.test(t)) return c; return ""; }
+export function currencyOf(s) { const t = String(s || ""); for (const [re, c] of CUR) if (re.test(t)) return c; return payCurrency(t, homeCurrency()) || ""; }
 
 /** Every price written in a text: [{ value, cur, at }] (a currency must be next to the number). */
 export function pricesIn(text) {

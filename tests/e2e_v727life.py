@@ -8,7 +8,8 @@ from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
 with sync_playwright() as p:
     br = p.chromium.launch()
-    ctx, page = new_page(br, env, errors)
+    # Ali's Money is in EGP (v6.27: with no Money yet, the phone's own region decides — this browser is en-US → USD)
+    ctx, page = new_page(br, env, errors, extra_init="try{localStorage.setItem('ledger.v3', JSON.stringify({currency:'EGP',accounts:[{id:'c',name:'Cash',currency:'EGP',start:0}],txns:[],budgets:{overall:0,cats:{}},recurring:[],debts:[]}))}catch(e){}")
     page.set_viewport_size({"width": 390, "height": 844})
     dialogs = []
     page.on("dialog", lambda d: (dialogs.append(d.message), d.accept()))

@@ -3,7 +3,7 @@
    others as a total ("3 more ways to save 2,280 EGP") with "Get Pro" — the counter is what Pro is sold on.            */
 import React, { useMemo, useState } from "react";
 import { ShieldCheck, Send, Check, X, Crown } from "lucide-react";
-import { tr } from "./i18n.js";
+import { tr, getLang } from "./i18n.js";
 import { findings, loadGuardian, saveGuardian, markSaved, dismiss, savedTotals, noteReminded } from "./guardian.js";
 import { loadLedger } from "./myledger.js";
 import { loadLife } from "./life.js";
@@ -14,7 +14,7 @@ const DONE = { late: ["Send reminder", "Not now"], double: ["I got it back", "No
 function useGuardian() {
   const [g, setG] = useState(() => loadGuardian());
   const put = (x) => setG(saveGuardian(x));
-  const F = useMemo(() => findings({ ledger: loadLedger(), life: loadLife(), dismissed: g.dismissed || [] }), [g]);
+  const F = useMemo(() => findings({ ledger: loadLedger(), life: loadLife(), dismissed: g.dismissed || [], lang: getLang() }), [g]);
   return { g, put, F, totals: savedTotals(g) };
 }
 
@@ -37,8 +37,9 @@ export function GuardianPage({ pro, openPlan, flash }) {
     if (!yes) { put(dismiss(g, f.id)); return; }
     if (f.kind === "late") {
       put(noteReminded(dismiss(g, f.id), f.id));
-      const url = "https://wa.me/?text=" + encodeURIComponent(f.message || "");
-      try { window.open(url, "_blank"); } catch (e) {}
+      // the phone's own Share menu (WhatsApp, SMS, iMessage, Telegram, Signal… whatever the person uses), else WhatsApp
+      const N = typeof window !== "undefined" && window.AttuneNative;
+      try { if (N && N.share) N.share(f.message || ""); else if (navigator.share) navigator.share({ text: f.message || "" }).catch(() => {}); else window.open("https://wa.me/?text=" + encodeURIComponent(f.message || ""), "_blank"); } catch (e) {}
       flash && flash(tr("When it comes back, tick it in People & plans — it counts as saved"));
       return;
     }

@@ -7,6 +7,7 @@ import { Bell, Check, X } from "lucide-react";
 import { tr } from "./i18n.js";
 import { inbox, toTxns, autoPick, appendToLedger } from "./paylog.js";
 import { loadLedger } from "./myledger.js";
+import { payOpts } from "./locale.js";
 
 const DONE_KEY = "attune:paylog:done", OFF_KEY = "attune:paylog:not-now", AUTO_KEY = "attune:paylog:auto", LOG_KEY = "attune:paylog:auto-log";
 const readDone = () => { try { return JSON.parse(localStorage.getItem(DONE_KEY) || "[]"); } catch (e) { return []; } };
@@ -27,7 +28,7 @@ export function runAutoPay(N) {
   let on = false; try { on = N.payAccess(); } catch (e) {}
   if (!on) return 0;
   let q = []; try { q = JSON.parse(N.payQueue() || "[]"); } catch (e) {}
-  const sure = autoPick(inbox(q, readDone()));
+  const sure = autoPick(inbox(q, readDone(), payOpts()));
   if (!sure.length) return 0;
   const led = loadLedger(); if (!led) return 0;
   const r = appendToLedger(led, toTxns(sure));
@@ -48,7 +49,7 @@ export function PayInbox({ N, onAdd, ready = true }) {
     let a = false; try { a = N.payAccess(); } catch (e) {}
     setOn(a);
     let q = []; try { q = JSON.parse(N.payQueue() || "[]"); } catch (e) {}
-    setItems(inbox(q, readDone()));
+    setItems(inbox(q, readDone(), payOpts()));
   };
   useEffect(() => { load(); const f = () => load(); window.addEventListener("focus", f); document.addEventListener("visibilitychange", f);
     return () => { window.removeEventListener("focus", f); document.removeEventListener("visibilitychange", f); }; }, []);

@@ -13,6 +13,8 @@ import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import { chatMapIntent } from "./mapintent.js";
 import { chatLifeIntent } from "./life.js";
+import { chatDeadlineIntent } from "./deadlines.js";
+import { homeCurrency, dateOrder } from "./locale.js";
 import { wantsDoc } from "./slides.js";
 import { detectLang, replyLanguageRule, voiceTag, deviceLang } from "./langs.js";
 import { looksLikeFoodLog } from "./fit.js";
@@ -704,6 +706,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       patchChat(cid, (ch) => ({ ...ch, updated: Date.now(), messages: [...ch.messages,
         { id: newId(), role: "user", text: typed },
         { id: newId(), role: "assistant", text: m.text, calc: true, askText: typed }] }));
+      setText("");
+      return;
+    }
+
+    // v6.27: «my Netflix trial ends on 20 November» — a deadline: watched by the Deadline Radar (a reminder before it)
+    const dl = route && !img ? chatDeadlineIntent(typed, { now: Date.now(), home: homeCurrency(), order: dateOrder() }) : null;
+    if (dl) {
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "A deadline — the Radar reminds you before it", detail: (dl.title ? dl.title + " · " : "") + dl.date,
+          actions: [["Watch it", "radar"], ["Just answer", "answer"]] }, radarText: typed }] }));
       setText("");
       return;
     }
@@ -1532,6 +1546,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "undo") { m.undo && m.undo(); patchMsg(chat.id, m.id, { card: { ...m.card, title: "Removed", detail: "", actions: [] } }); }
     else if (act === "money") api.sendToMoney(m.payText);
     else if (act === "life") window.dispatchEvent(new CustomEvent("attune-life", { detail: { text: m.lifeText || "" } }));
+    else if (act === "radar") window.dispatchEvent(new CustomEvent("attune-radar", { detail: { text: m.radarText || "" } }));
     else if (act === "map") window.dispatchEvent(new CustomEvent("attune-map", { detail: { q: m.mapQuery || "" } }));
     else if (act === "studio") window.dispatchEvent(new CustomEvent("attune-studio", { detail: { prompt: m.studioPrompt || "" } }));
     else if (act === "answer") {

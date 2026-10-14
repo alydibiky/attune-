@@ -43,9 +43,11 @@ object PayLog {
     private const val KEY = "items"
     private const val MAX = 200
 
-    // an amount next to a currency, or a money word next to a number (English and Arabic)
-    private val CUR = Regex("(?i)(\\d[\\d,٬.٫]*\\s*(egp|le|l\\.e|usd|sar|aed|kwd|qar|eur|gbp|\\$|€|£|جنيه|ج\\.م|جم|ريال|درهم|دولار|يورو))|((egp|le|usd|sar|aed|eur|gbp|\\$|€|£|جنيه|ج\\.م)\\s*\\d)")
-    private val WORD = Regex("(?i)(debited|credited|purchase|payment|paid|received|transfer|withdraw|deposit|spent|charged|instapay|خصم|إيداع|ايداع|تحويل|سحب|شراء|استلام|دفع|مدفوعات|رصيد)")
+    // an amount next to a currency, or a money word next to a number — v6.27 worldwide: any 3-letter currency code
+    // (USD, EUR, INR…) or currency sign, and the money words of the common banking languages; plus the words of free
+    // trials and renewals ("your trial ends", "renews on") for the Deadline Radar
+    private val CUR = Regex("(\\d[\\d,٬.٫' ]*\\s*([A-Z]{3}\\b|LE\\b|L\\.E|le\\b|l\\.e|[\$€£¥₹₺₽₩₦₱฿₫৳₪₴₵]|R\\$|zł|Kč|kr\\b|Rp|RM|Rs\\.?|Ksh|جنيه|ج\\.م|جم|ريال|درهم|دينار|دولار|يورو|руб|грн|元|円|원))|(([A-Z]{3}|[\$€£¥₹₺₽₩₦₱฿₫৳₪₴₵]|R\\$|Rp|RM|Rs\\.?|Ksh|جنيه|ج\\.م)\\s*\\d)")
+    private val WORD = Regex("(?i)(debited|credited|purchase|payment|paid|received|transfer|withdraw|deposit|spent|charged|refund|instapay|upi|pix|trial|renew|subscription|billing|invoice|receipt|warranty|expires|débit|crédit|paiement|achat|virement|prélèvement|remboursement|essai|abonnement|cargo|abono|pago|compra|transferencia|reembolso|prueba|suscripci|pagamento|compra|transferência|estorno|assinatura|zahlung|gutschrift|überweisung|lastschrift|abbuchung|probe|abo|kündig|addebito|accredito|bonifico|rimborso|prova|abbonamento|ödeme|harcama|havale|iade|deneme|abonelik|pembayaran|transfer|langganan|uji coba|списан|зачислен|оплата|перевод|подписк|支付|付款|收到|订阅|결제|입금|구독|支払|入金|خصم|إيداع|ايداع|تحويل|سحب|شراء|استلام|دفع|مدفوعات|رصيد|اشتراك|تجربة|تجديد)")
     private val NUM = Regex("[\\d٠-٩]{2,}")
 
     fun looksLikeMoney(s: String): Boolean = s.length in 8..2000 && (CUR.containsMatchIn(s) || (WORD.containsMatchIn(s) && NUM.containsMatchIn(s)))

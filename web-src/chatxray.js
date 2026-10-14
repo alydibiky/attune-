@@ -10,6 +10,8 @@
        the message itself, and an amount is kept only if that number is really in the message;
      - ledgerOf (who owes whom, per currency), unanswered questions and stats: by code.
    Pure functions; tests in tests/unit/v535.test.mjs.                                            */
+import { homeCurrency } from "./locale.js";
+
 
 const AR = /[٠-٩]/g;
 const clean = (s) => String(s || "").replace(/[‎‏‪-‮⁦-⁩﻿]/g, "").replace(AR, (d) => String(d.charCodeAt(0) - 0x0660)).replace(/،/g, ",");
@@ -246,7 +248,7 @@ export function ledgerOf(items, me) {
   };
   for (const it of items) {
     if (it.amount == null || !["owes", "paid"].includes(it.type)) continue;
-    const cur = it.currency || "EGP";
+    const cur = it.currency || homeCurrency();
     // "owes": from owes to.   "paid": from paid to (settles what from owed to).
     if (it.type === "owes") {
       if (it.to === me) add(it.from, cur, +it.amount, it);

@@ -3,7 +3,7 @@
 import { parseLife, amountsIn, scheduleOf, progressOf, tickEntry } from "../../web-src/life.js";
 let fail = 0, n = 0; const ok = (c, w) => { n++; if (!c) { console.log("FAIL " + w); fail++; } };
 const now = new Date("2026-10-13T12:00:00").getTime();
-const P = (s) => parseLife(s, { now });
+const P = (s) => parseLife(s, { now, currency: "EGP" });   // Ali's own currency (the default is now the person's region)
 const want = (s, exp) => { const r = P(s); const bad = r ? Object.entries(exp).filter(([k, v]) => JSON.stringify(r[k]) !== JSON.stringify(v)) : [["null", "null"]];
   ok(!bad.length, `«${s}» → ${JSON.stringify(r && { kind: r.kind, person: r.person, dir: r.dir, amount: r.amount, count: r.count, total: r.total, every: r.every, start: r.start, myTurn: r.myTurn, currency: r.currency })}  wanted ${JSON.stringify(exp)}`); };
 

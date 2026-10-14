@@ -10,6 +10,7 @@ import {
   Heart,
 } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
+import { payOpts, homeCurrency } from "./locale.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
 import { logPrompt, parseLog, isQuestion } from "./yusr/logtext.js";
@@ -49,6 +50,7 @@ import { LifePage } from "./life-ui.jsx";
 import { PhoneHome } from "./home-ui.jsx";
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
+import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
@@ -5693,7 +5695,7 @@ ${list}`;
 // An organisation's own vocabulary. THIS is the part competitors cannot copy:
 // it is the customer's private operational language, and it lives on their
 // devices. Every output uses their real names for their real things.
-const EMPTY_ORG = { on: false, name: "", sites: "", assets: "", terms: "", rules: "", rate: "", currency: "EGP" };
+const EMPTY_ORG = { on: false, name: "", sites: "", assets: "", terms: "", rules: "", rate: "", currency: homeCurrency() };
 function orgLine(org) {
   if (!org || !org.on) return "";
   const bits = [];
@@ -6125,7 +6127,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
   const doShare = (textArg) => {
     const src = typeof textArg === "string" ? textArg : share;
     setErr(""); setAnswer("");
-    const p = parsePayment(src, { now: Date.now() });
+    const p = parsePayment(src, { now: Date.now(), ...payOpts() });
     setParsed(p);
     if (!p) { setErr(tr("Nothing to read in that.")); return; }
     if (p.declined) { setErr(tr("That payment did not go through, so there is nothing to record.")); return; }
@@ -7358,6 +7360,7 @@ const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.s
 
 const MORE_TOOLS = [
   ["guardian", "Money Guardian", "Finds money in your payments: late debts, double charges, price rises, subscriptions", ShieldCheck],   // v6.27
+  ["radar", "Deadline Radar", "Free trials, renewals, returns, warranties and documents — a warning before each one", Radar],   // v6.27
   ["life", "People & plans", "Debts, installments, savings circles, bills — a checkbox for every payment", Users],   // v6.27: the Life layer
   ["slides", "Slides & Reports", "A designed PowerPoint or a full report from one sentence", Presentation],
   ["fit", "Fit & Food", "Calories from a sentence or a photo, 50+ recipes, workouts", Apple],
@@ -7394,7 +7397,7 @@ const MORE_TOOLS = [
 // v6.27 (design A "Calm", the agreed tool map): the areas, then the two add-ons. Video Downloader stays (Ali, 13 Oct),
 // in Files — it saves a file to the phone.
 const MORE_GROUPS = [
-  ["Money & people", ["guardian", "life", "deal", "reminders"]],
+  ["Money & people", ["guardian", "radar", "life", "deal", "reminders"]],
   ["Health", ["fit", "cycle"]],
   ["Mind & learning", ["memory", "shelf", "knowledge", "learn", "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
@@ -7540,6 +7543,7 @@ export default function App() {
   // v5.32: TESTING_ALL_PRO (billing.js) unlocks everything while Ali tests; the trial
   // now really unlocks every Pro feature (before, most gates checked the paid plan only)
   const proActive = testingPro() || isPro(tier) || trialLeft > 0;
+  const proRef = useRef(proActive); proRef.current = proActive;
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -8131,7 +8135,7 @@ export default function App() {
         // v5.38: a shared video link (a direct file, archive.org, Wikimedia Commons) → Video Downloader
         const link = linkIn(shared), vk = link && videoLink(link).kind;
         if (link && ["direct", "archive", "commons"].includes(vk) && shared.length - link.length < 120) { setVideoIn(link + "#" + Date.now()); navTo("video"); return; }
-        const pay = parsePayment(shared, { now: Date.now() });
+        const pay = parsePayment(shared, { now: Date.now(), ...payOpts() });
         if (pay && pay.ok) { setPendingPay({ text: shared, id: Date.now() }); navTo("money");
           setToast(tr("Payment received — pick the account and confirm")); setTimeout(() => setToast(""), 3500); return; }
       }
@@ -8153,10 +8157,18 @@ export default function App() {
   // into Money by themselves (when Money is open, its review strip does it through Money instead)
   useEffect(() => {
     const run = () => { if (modeRef.current === "money" || document.visibilityState === "hidden") return;
-      const n = runAutoPay(NATIVE); if (n) flash(tr("{n} payments added to Money by themselves", { n })); };
+      // v6.27 Deadline Radar: trials and renewals in the notifications are added (and reminded) by themselves
+      const k = modeRef.current === "radar" ? 0 : runAutoRadar(NATIVE, { pro: proRef.current, remind: (r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "radar" }) });
+      const n = runAutoPay(NATIVE); if (n) flash(tr("{n} payments added to Money by themselves", { n })); else if (k) flash(tr("{n} deadlines added to your Radar by themselves", { n: k })); };
     const t = setTimeout(run, 2500);
     document.addEventListener("visibilitychange", run);
     return () => { clearTimeout(t); document.removeEventListener("visibilitychange", run); };
+  }, []);
+  // v6.27: "Watch it" from a deadline typed in Chat — the Deadline Radar opens with it read
+  useEffect(() => {
+    const on = (e) => { try { localStorage.setItem("attune:radar:ask", String((e.detail && e.detail.text) || "")); } catch (x) {} setMode("radar"); };
+    window.addEventListener("attune-radar", on);
+    return () => window.removeEventListener("attune-radar", on);
   }, []);
   // v6.27: "Save it" from a commitment typed in Chat — People & plans opens with it read
   useEffect(() => {
@@ -8913,7 +8925,7 @@ export default function App() {
       setCycle(cycleSave(r.state)); enableCycle(true);
       return { title: r.title, detail: r.detail, undo: () => setCycle(cycleSave(before)) };
     },
-    parsePayment: (t) => parsePayment(t, { now: Date.now() }),
+    parsePayment: (t) => parsePayment(t, { now: Date.now(), ...payOpts() }),
     canUseAI, spend: spendIfFree, deepThink: () => ENGINE_PREFS.deepThink,
     webOn,
     toggleWeb: () => {   // On / Off; while Off, Auto (a setting, on by default) still searches when a question needs fresh facts
@@ -9781,6 +9793,16 @@ export default function App() {
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
             load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />}
             onExit={goBack} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
+        ) : mode === "radar" ? (
+          <RadarPage pro={proActive} openPlan={() => setShowUpgrade(true)} flash={flash} N={NATIVE}
+            readText={async (b64) => {
+              // the phone's own text reader (Latin scripts) first; a photo-reading model on the phone for the rest (Arabic…)
+              let r = null; try { if (NATIVE && NATIVE.readText) r = await nativeCall("readText", { b64 }); } catch (e) {}
+              if ((!r || !/\d/.test(r.text || "")) && modelState === "ready" && LocalEngine.vision) { try { r = { text: await aiTranscribe({ data: b64, media: "image/jpeg", url: "data:image/jpeg;base64," + b64 }) }; } catch (e) {} }
+              return r; }}
+            ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
+            remind={(r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "radar" })}
+            unremind={(id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }} />
         ) : mode === "guardian" ? (
           <GuardianPage pro={proActive} openPlan={() => setShowUpgrade(true)} flash={flash} />
         ) : mode === "life" ? (
@@ -10179,7 +10201,7 @@ export default function App() {
                           setInPhase(tr("Reading the receipt…"));
                           const text = await aiTranscribe(inImage, { onStatus: r.onStatus });
                           if (!r.done()) return;
-                          const pay = parsePayment(text, { now: Date.now() });
+                          const pay = parsePayment(text, { now: Date.now(), ...payOpts() });
                           if (pay && pay.ok) sendToMoney(text, tr("Receipt read — pick the account and confirm"));
                           else { setInResult("Couldn't find a clear amount and direction in this photo. What it says:\n\n" + text); }
                         } catch (e) { failInstant(r, e); } finally { endInstant(r); }
@@ -10201,7 +10223,7 @@ export default function App() {
                   <p className="text-[11px] text-slate-500 mb-1.5">
                     {looksLikePeriodLog(inText) ? tr("🩸 Looks like a period log — Go files it in the tracker") : <>{inKind.icon} {tr(inKind.label)} {tr("— tap Go, or pick one")}</>}</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {(() => { const pay = parsePayment(inText, { now: Date.now() }); return pay && pay.ok ? (
+                    {(() => { const pay = parsePayment(inText, { now: Date.now(), ...payOpts() }); return pay && pay.ok ? (
                       <button onClick={() => sendToMoney(inText, tr("Payment read — pick the account and confirm"))}
                         className="px-3 py-2 rounded-lg text-sm border border-emerald-800 bg-emerald-500/10 text-emerald-200">{tr("💳 Add to Money ·")} {pay.direction === "out" ? "−" : "+"}{pay.amount} {pay.currency || ""}</button>
                     ) : null; })()}

@@ -45,8 +45,8 @@ with sync_playwright() as p:
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, "guardian-pro.png"))
     # remind Ahmed → WhatsApp with the text
     items.first.locator("[data-testid=guardian-yes]").click(); page.wait_for_timeout(300)
-    url = page.evaluate("window.__opened || ''")
-    check(url.startswith("https://wa.me/?text=") and "Ahmed" in __import__("urllib.parse").parse.unquote(url), "Send reminder opens WhatsApp with the message")
+    shared = page.evaluate("window.__mock.shared || ''")
+    check("Ahmed" in shared and "1,000" in shared, "Send reminder opens the phone's Share menu (WhatsApp, SMS, iMessage…) with the message")
     # the double charge refunded → counted
     page.locator("[data-testid=guardian-item]:has-text('Charged twice') [data-testid=guardian-yes]").click(); page.wait_for_timeout(300)
     check("350" in page.locator("[data-testid=guardian-month]").inner_text(), "the refund is counted as saved this month: %s" % page.locator("[data-testid=guardian-month]").inner_text().replace("\n", " "))

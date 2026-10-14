@@ -11,18 +11,21 @@
    Pure logic; store "attune:guardian:v1" = { saved: [{id, kind, amount, at, what}], dismissed: [ids] }.
    Tests: tests/unit/v727guardian.test.mjs.                                                                              */
 import { progressOf } from "./life.js";
+import { homeCurrency } from "./locale.js";
 
 const DAY = 86400000;
 const iso = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 const money = (n) => (Math.round(n * 100) / 100).toLocaleString("en-US", { maximumFractionDigits: 2 });
 /** "CARREFOUR · CIB" / "Carrefour Maadi" → "carrefour" — the merchant a payment was made to. */
-export const merchantOf = (note) => String(note || "").split(/ · | - |—/)[0].toLowerCase().replace(/[^\p{L}\p{N} ]/gu, " ").replace(/\b(egypt|eg|maadi|cairo|branch|store|market|s\.?a\.?e)\b/g, " ").replace(/\s+/g, " ").trim().split(" ").slice(0, 2).join(" ");
-const SUBS = /netflix|shahid|spotify|osn|watch ?it|youtube|icloud|google one|apple|anghami|disney|amazon prime|chatgpt|canva|adobe|gym|نتفليكس|شاهد|انغامي|أنغامي|اشتراك/i;
-const FEES = /\b(fee|fees|commission|charges?|service charge|maintenance fee|annual fee|stamp)\b|عمولة|عموله|رسوم|مصاريف إدارية|دمغة/i;
+// v6.27 global: legal forms, branch words and store numbers are dropped ("STARBUCKS #1234 LONDON GB" → "starbucks")
+const NOT_MERCHANT = /\b(egypt|eg|maadi|cairo|branch|store|market|s\.?a\.?e|inc|llc|ltd|limited|plc|gmbh|ag|sarl|sas|srl|spa|bv|nv|pty|pvt|co|corp|company|sa|sl|ltda|tbk|bhd|sdn|kk|online|pos|purchase|card|visa|mastercard|debit|credit|www|com|us|uk|gb|de|fr|es|it|in|ae|sa|london|paris|new york|dubai|riyadh)\b|#\s*\d+|\b\d{3,}\b/g;
+export const merchantOf = (note) => String(note || "").split(/ · | - |—|\*/)[0].toLowerCase().replace(/[^\p{L}\p{N}# ]/gu, " ").replace(NOT_MERCHANT, " ").replace(/\s+/g, " ").trim().split(" ").slice(0, 2).join(" ");
+const SUBS = /netflix|shahid|spotify|osn|watch ?it|youtube|icloud|google one|google storage|apple\.com\/bill|apple music|apple tv|apple one|anghami|disney|hulu|hbo|paramount|peacock|prime video|amazon prime|crunchyroll|deezer|tidal|audible|kindle unlimited|xbox|game ?pass|playstation|ps plus|nintendo|steam|microsoft 365|office 365|onedrive|dropbox|chatgpt|openai|claude|gemini|copilot|canva|adobe|figma|notion|evernote|grammarly|duolingo|babbel|headspace|calm\b|strava|peloton|linkedin|patreon|onlyfans|twitch|tinder|bumble|hinge|nordvpn|expressvpn|surfshark|1password|lastpass|gym|fitness|نتفليكس|شاهد|انغامي|أنغامي|اشتراك|(?<![\p{L}])(abonnement|suscripción|suscripcion|assinatura|abbonamento|abonelik|langganan|abo|mitgliedschaft|membresía|adhésion)(?![\p{L}])/iu;
+const FEES = /\b(fee|fees|commission|charges?|service charge|maintenance fee|annual fee|stamp|overdraft|late fee|atm fee|foreign transaction|fx fee)\b|عمولة|عموله|رسوم|مصاريف إدارية|دمغة|(?<![\p{L}])(frais|commission|cotisation|agios|comisión|comision|cargo por|tarifa|taxa|tarifa bancária|gebühr|gebühren|entgelt|kontoführung|commissione|canone|spese|ücret|masraf|komisyon|biaya|biaya admin|kosten|provisie|комиссия|手续费|수수료|手数料)(?![\p{L}])/iu;
 
 /** Everything the Guardian finds now. → [{ id, kind, title, detail, amount (EGP at stake), action }] */
-export function findings({ ledger, life, now = Date.now(), dismissed = [] }) {
-  const out = [], skip = new Set(dismissed), cur = (ledger && ledger.currency) || "EGP";
+export function findings({ ledger, life, now = Date.now(), dismissed = [], lang }) {
+  const out = [], skip = new Set(dismissed), cur = homeCurrency(ledger);
   const txns = ((ledger && ledger.txns) || []).filter((t) => t && t.amount > 0 && t.date);
   const exp = txns.filter((t) => t.type === "expense");
   const add = (f) => { if (!skip.has(f.id)) out.push({ currency: cur, ...f }); };
@@ -35,7 +38,7 @@ export function findings({ ledger, life, now = Date.now(), dismissed = [] }) {
     const amt = late.reduce((a, s) => a + s.amount, 0), days = Math.round((now - Date.parse(late[0].date + "T12:00:00")) / DAY);
     add({ id: "late:" + c.id + ":" + late[0].i, kind: "late", amount: amt, person: c.person, days, commitment: c.id,
       title: `${c.person} is ${days} day${days === 1 ? "" : "s"} late`, detail: `${money(amt)} ${c.currency || cur} due since ${late[0].date}`,
-      action: "remind", message: reminderText(c, late[0], days),
+      action: "remind", message: reminderText(c, late[0], days, lang),
       T: [days === 1 ? "{p} is 1 day late" : "{p} is {n} days late", { p: c.person, n: days }], D: ["{a} due since {d}", { a: `${money(amt)} ${c.currency || cur}`, d: late[0].date }] });
   }
   // double: the same amount at the same merchant within 10 minutes
@@ -97,11 +100,16 @@ const sameMinuteNote = (a, b) => a.note === b.note;
 const titleCase = (s) => String(s || "").replace(/\b\p{L}/gu, (c) => c.toUpperCase());
 
 /** A polite reminder in the person's language (Egyptian Arabic for an Arabic name, else English) — written by code. */
-export function reminderText(c, s, days) {
-  const amt = money(s.amount) + " " + (c.currency || "EGP"), ar = /[؀-ۿ]/.test(c.person || "");
+// v6.27 global: Arabic (neutral, every Arab country) when the name or the app is in Arabic, else English; the person
+// edits it in their messaging app before it goes. More languages: add a line to REMIND.
+const REMIND = {
+  en: (n, a, w, d) => `Hi ${n}, hope you're well! Just a friendly reminder about ${a}${w}, due on ${d}. Thanks a lot 🙏`,
+  ar: (n, a, w, d) => `مرحبًا ${n}، أتمنى أن تكون بخير. أذكّرك بلطف بمبلغ ${a}${w} الذي كان موعده ${d}. شكرًا جزيلًا 🙏`,
+};
+export function reminderText(c, s, days, lang) {
+  const amt = money(s.amount) + " " + (c.currency || homeCurrency()), ar = lang === "ar" || /[؀-ۿ]/.test(c.person || "");
   const which = c.kind === "installment" ? (ar ? ` (القسط ${s.i + 1} من ${c.count})` : ` (installment ${s.i + 1} of ${c.count})`) : "";
-  return ar ? `أهلاً ${c.person}، إزيك؟ بفكّرك بس بمبلغ ${amt}${which} اللي كان ميعاده ${s.date}. لو تقدر تحوّله النهارده يبقى كتر خيرك 🙏`
-    : `Hi ${c.person}, hope you're well! Just a friendly reminder about ${amt}${which}, due on ${s.date}. Thanks a lot 🙏`;
+  return (ar ? REMIND.ar : REMIND.en)(c.person, amt, which, s.date);
 }
 
 // ---- the honest counter ----

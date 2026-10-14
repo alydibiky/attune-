@@ -13,6 +13,7 @@ import { getPower } from "./power.js";
    Pure logic, no React — unit tested in tests/unit/erp.test.mjs.            */
 
 // ---- field types ------------------------------------------------------------------------
+import { homeCurrency } from "./locale.js";
 import * as SC from "./erp-screens.js";
 export const FIELD_TYPES = {
   text: "Text", longtext: "Long text", number: "Number", money: "Money", date: "Date", bool: "Yes / No",
@@ -634,7 +635,7 @@ export function designQuality(spec) {
   return { ok: true };
 }
 
-export function designMessages(description, { currency = "EGP" } = {}) {
+export function designMessages(description, { currency = homeCurrency() } = {}) {
   return [
     { role: "system", content: `You design the database of a small business's ERP system, like an expert Microsoft Access developer. Reply with JSON only, no other text:
 {"name": "<short system name>", "currency": "${currency}", "tables": [{"name": "<table>", "fields": [{"name": "<field>", "type": "<type>", ...}]}]}
@@ -761,7 +762,7 @@ Today is ${today}. Numbers as plain numbers.` },
 // ---- templates (work with no model at all) ----------------------------------------------
 export const TEMPLATES = [
   { id: "cranes", title: "Crane & equipment rental", blurb: "Customers, fleet, jobs, invoices, maintenance, crew", spec: {
-    name: "Crane rental", currency: "EGP", tables: [
+    name: "Crane rental", currency: homeCurrency(), tables: [
       { name: "Customers", fields: [{ name: "Name", type: "text", required: true }, { name: "Company", type: "text" }, { name: "Phone", type: "phone" }, { name: "Email", type: "email" }, { name: "City", type: "text" }, { name: "Notes", type: "longtext" }] },
       { name: "Equipment", fields: [{ name: "Code", type: "auto", prefix: "EQ-" }, { name: "Model", type: "text", required: true }, { name: "Brand", type: "choice", options: ["Liebherr", "XCMG", "Sany", "Zoomlion", "Grove", "Terex", "Demag", "Tadano", "Hitachi"] }, { name: "Capacity (t)", type: "number" }, { name: "Year", type: "number" }, { name: "Status", type: "choice", options: ["Available", "On hire", "Maintenance", "Out of service"] }, { name: "Daily rate", type: "money" }] },
       { name: "Jobs", fields: [{ name: "Job no", type: "auto", prefix: "JOB-" }, { name: "Customer", type: "link", link: "Customers" }, { name: "Crane", type: "link", link: "Equipment" }, { name: "Site", type: "text" }, { name: "Start", type: "date" }, { name: "End", type: "date" }, { name: "Days", type: "formula", formula: "DAYS([End], [Start]) + 1" }, { name: "Daily rate", type: "money" }, { name: "Total", type: "formula", formula: "[Days] * [Daily rate]" }, { name: "Status", type: "choice", options: ["Quoted", "Confirmed", "Running", "Done", "Invoiced"] }] },
@@ -770,7 +771,7 @@ export const TEMPLATES = [
       { name: "Crew", fields: [{ name: "Name", type: "text", required: true }, { name: "Role", type: "choice", options: ["Operator", "Rigger", "Driver", "Mechanic", "Site supervisor", "Office"] }, { name: "Phone", type: "phone" }, { name: "Licence expiry", type: "date" }] },
     ] } },
   { id: "shop", title: "Shop & stock", blurb: "Products, stock, sales, customers, suppliers", spec: {
-    name: "Shop", currency: "EGP", tables: [
+    name: "Shop", currency: homeCurrency(), tables: [
       { name: "Products", fields: [{ name: "Product", type: "text", required: true }, { name: "SKU", type: "auto", prefix: "P-" }, { name: "Category", type: "choice", options: ["General"] }, { name: "Cost", type: "money" }, { name: "Price", type: "money" }, { name: "Margin", type: "formula", formula: "[Price] - [Cost]" }, { name: "In stock", type: "number" }, { name: "Reorder at", type: "number" }] },
       { name: "Customers", fields: [{ name: "Name", type: "text", required: true }, { name: "Phone", type: "phone" }, { name: "Address", type: "text" }] },
       { name: "Sales", fields: [{ name: "Sale no", type: "auto", prefix: "S-" }, { name: "Date", type: "date" }, { name: "Customer", type: "link", link: "Customers" }, { name: "Product", type: "link", link: "Products" }, { name: "Qty", type: "number" }, { name: "Unit price", type: "money" }, { name: "Total", type: "formula", formula: "[Qty] * [Unit price]" }, { name: "Payment", type: "choice", options: ["Cash", "Card", "InstaPay", "Wallet", "On credit"] }] },
@@ -778,7 +779,7 @@ export const TEMPLATES = [
       { name: "Purchases", fields: [{ name: "Date", type: "date" }, { name: "Supplier", type: "link", link: "Suppliers" }, { name: "Product", type: "link", link: "Products" }, { name: "Qty", type: "number" }, { name: "Unit cost", type: "money" }, { name: "Total", type: "formula", formula: "[Qty] * [Unit cost]" }] },
     ] } },
   { id: "services", title: "Contracting & services", blurb: "Clients, projects, quotes, invoices, expenses", spec: {
-    name: "Projects", currency: "EGP", tables: [
+    name: "Projects", currency: homeCurrency(), tables: [
       { name: "Clients", fields: [{ name: "Client", type: "text", required: true }, { name: "Contact", type: "text" }, { name: "Phone", type: "phone" }, { name: "Email", type: "email" }] },
       { name: "Projects", fields: [{ name: "Project", type: "text", required: true }, { name: "Client", type: "link", link: "Clients" }, { name: "Start", type: "date" }, { name: "Deadline", type: "date" }, { name: "Budget", type: "money" }, { name: "Status", type: "choice", options: ["Lead", "Quoted", "Active", "On hold", "Done"] }] },
       { name: "Quotes", fields: [{ name: "Quote no", type: "auto", prefix: "Q-" }, { name: "Project", type: "link", link: "Projects" }, { name: "Date", type: "date" }, { name: "Amount", type: "money" }, { name: "Status", type: "choice", options: ["Sent", "Accepted", "Rejected"] }] },
@@ -786,7 +787,7 @@ export const TEMPLATES = [
       { name: "Expenses", fields: [{ name: "Date", type: "date" }, { name: "Project", type: "link", link: "Projects" }, { name: "What", type: "text" }, { name: "Category", type: "choice", options: ["Materials", "Labour", "Transport", "Equipment", "Other"] }, { name: "Amount", type: "money" }] },
     ] } },
   { id: "restaurant", title: "Restaurant & café", blurb: "Menu, orders, ingredients, staff", spec: {
-    name: "Restaurant", currency: "EGP", tables: [
+    name: "Restaurant", currency: homeCurrency(), tables: [
       { name: "Menu", fields: [{ name: "Item", type: "text", required: true }, { name: "Category", type: "choice", options: ["Starters", "Mains", "Drinks", "Desserts"] }, { name: "Price", type: "money" }, { name: "Available", type: "bool" }] },
       { name: "Orders", fields: [{ name: "Order no", type: "auto", prefix: "ORD-" }, { name: "Date", type: "date" }, { name: "Item", type: "link", link: "Menu" }, { name: "Qty", type: "number" }, { name: "Price", type: "money" }, { name: "Total", type: "formula", formula: "[Qty] * [Price]" }, { name: "Type", type: "choice", options: ["Dine in", "Takeaway", "Delivery"] }] },
       { name: "Ingredients", fields: [{ name: "Ingredient", type: "text", required: true }, { name: "Unit", type: "choice", options: ["kg", "g", "l", "piece"] }, { name: "In stock", type: "number" }, { name: "Reorder at", type: "number" }, { name: "Unit cost", type: "money" }] },

@@ -37,19 +37,89 @@ function payNormalize(s) {
     .replace(/[  ]/g, " ");
 }
 
-// Currencies as they actually appear in Egyptian and Gulf messages.
+// Currencies as they actually appear in messages (v6.27: worldwide). Order matters: the most specific first ("R$" before
+// "$", "د.ك" before "د"); codes are checked before symbols. A bare "$", "kr", "¥" or "Rs" is ambiguous — opts.home
+// (the person's own currency) decides when it is one of that family.
 const CURRENCIES = [
   ["EGP", /\b(EGP|E\.?G\.?P)\b|جنيه|ج\.?م\.?|جنيهاً|جنيها/i],
+  ["EGP", /(?<=\d\s?)L\.?E\b|\bL\.?E\.?(?=\s?\d)/],
   ["SAR", /\bSAR\b|ريال سعودي|ر\.?س\b/i],
-  ["AED", /\bAED\b|درهم|د\.?إ\b/i],
-  ["USD", /\bUSD\b|\$|دولار/i],
-  ["KWD", /\bKWD\b|دينار كويتي/i],
-  ["QAR", /\bQAR\b|ريال قطري/i],
+  ["AED", /\bAED\b|درهم إماراتي|د\.?إ\b/i],
+  ["KWD", /\bKWD\b|دينار كويتي|د\.ك/i],
+  ["QAR", /\bQAR\b|ريال قطري|ر\.ق/i],
+  ["BHD", /\bBHD\b|دينار بحريني/i],
+  ["OMR", /\bOMR\b|ريال عماني|ر\.ع/i],
+  ["JOD", /\bJOD\b|دينار أردني|دينار اردني/i],
+  ["MAD", /\bMAD\b|درهم مغربي|(?<=\d\s?)DHS?\b|\bDHS?(?=\s?\d)/],
+  ["TND", /\bTND\b|دينار تونسي/i],
+  ["DZD", /\bDZD\b|دينار جزائري|(?<=\d\s?)DA\b/],
+  ["IQD", /\bIQD\b|دينار عراقي/i],
+  ["LBP", /\bLBP\b|ليرة لبنانية/i],
+  ["BRL", /\bBRL\b|R\$/],
+  ["CAD", /\bCAD\b|C\$|CA\$/],
+  ["AUD", /\bAUD\b|A\$|AU\$/],
+  ["NZD", /\bNZD\b|NZ\$/],
+  ["MXN", /\bMXN\b|MX\$/],
+  ["SGD", /\bSGD\b|S\$/],
+  ["HKD", /\bHKD\b|HK\$/],
+  ["USD", /\bUSD\b|US\$|دولار/i],
+  ["EUR", /\bEUR\b|€|euros?\b|يورو/i],
+  ["GBP", /\bGBP\b|£|ج\.إ\.س|جنيه إسترليني/i],
+  ["INR", /\bINR\b|₹|\bRs\.?(?=\s?\d)|रु/],
+  ["PKR", /\bPKR\b/],
+  ["BDT", /\bBDT\b|৳|Tk\.?(?=\s?\d)/],
+  ["LKR", /\bLKR\b/],
+  ["NPR", /\bNPR\b/],
+  ["IDR", /\bIDR\b|\bRp\.?(?=\s?\d)/],
+  ["MYR", /\bMYR\b|\bRM(?=\s?\d)/],
+  ["PHP", /\bPHP\b|₱/],
+  ["THB", /\bTHB\b|฿|บาท/],
+  ["VND", /\bVND\b|₫/],
+  ["KRW", /\bKRW\b|₩|(?<=\d\s?)원/],
+  ["CNY", /\b(CNY|RMB)\b|(?<=\d\s?)元/],
+  ["JPY", /\bJPY\b|(?<=\d\s?)円/],
+  ["TRY", /\bTRY\b|₺|(?<=\d\s?)TL\b|\bTL(?=\s?\d)/],
+  ["RUB", /\bRUB\b|₽|руб/i],
+  ["UAH", /\bUAH\b|₴|грн/i],
+  ["PLN", /\bPLN\b|zł/i],
+  ["CZK", /\bCZK\b|Kč/],
+  ["HUF", /\bHUF\b|(?<=\d\s?)Ft\b/],
+  ["RON", /\bRON\b|(?<=\d\s?)lei\b/],
+  ["CHF", /\bCHF\b/],
+  ["SEK", /\bSEK\b/],
+  ["NOK", /\bNOK\b/],
+  ["DKK", /\bDKK\b/],
+  ["ZAR", /\bZAR\b/],
+  ["NGN", /\bNGN\b|₦/],
+  ["KES", /\bKES\b|\bKsh(?=\s?\d)/i],
+  ["GHS", /\bGHS\b|GH₵|₵/],
+  ["ILS", /\bILS\b|₪/],
+  ["CLP", /\bCLP\b/],
+  ["COP", /\bCOP\b/],
+  ["ARS", /\bARS\b/],
+  ["PEN", /\bPEN\b|S\/\s?\d/],
 ];
+// the ambiguous signs and the currencies they can mean (the first is the default)
+const AMBIGUOUS = [
+  [/\$/, ["USD", "CAD", "AUD", "NZD", "MXN", "SGD", "HKD", "CLP", "COP", "ARS"]],
+  [/¥|￥/, ["JPY", "CNY"]],
+  [/\bkr\.?(?=\s?\d)|\d\s?kr\b|\bkr\b/i, ["SEK", "NOK", "DKK"]],
+  [/\bRs\.?(?=\s?\d)/, ["INR", "PKR", "LKR", "NPR"]],
+  [/\bR\s?(?=\d)/, ["ZAR"]],
+  [/ريال/, ["SAR", "QAR", "OMR"]],
+  [/درهم/, ["AED", "MAD"]],
+  [/دينار/, ["KWD", "JOD", "BHD", "TND", "DZD", "IQD"]],
+  [/جنيه/, ["EGP"]],
+];
+// currencies written with 3 decimals (fils / millimes): "12.500 KWD" is twelve and a half
+const THREE_DEC = /^(KWD|BHD|OMR|JOD|TND|LYD|IQD)$/;
 
 // Direction. Ordered: the most specific wording wins, and "received" is
 // checked before generic transfer words so "تم تحويل مبلغ إليك" is not read
 // as money leaving.
+// v6.27: the same verbs in the world's common banking languages. Words are matched with letter-aware edges (JavaScript's
+// \b only knows ASCII, so "débité\b" would never match).
+const W = (words, flags = "iu") => new RegExp("(?<![\\p{L}])(?:" + words + ")(?![\\p{L}])", flags);
 const DIRECTION = [
   // STRONGEST FIRST: an explicit debit/credit verb beats any preposition.
   // This ordering is not cosmetic. "تم خصم 250 من حسابك" contains "من حساب",
@@ -61,8 +131,12 @@ const DIRECTION = [
   // that makes the pattern dead.
   ["out", /(تم\s+)?(خصم|سحب|دفع|شراء|سداد)|حولت|قمت بتحويل|تم التحويل/],
   ["in",  /(تم\s+)?(استلام|إضافة|اضافة|ايداع|إيداع|توريد)|اضيف|أضيف|وردك/],
-  ["out", /\b(sent|paid|debited|deducted|charged|withdraw(n|al)?|transferred to|purchase|payment to)\b/i],
+  // "payment received" in other languages before their "payment" (out) words
+  ["in",  W("payment received|received a payment|paiement reçu|virement reçu|pago recibido|transferencia recibida|pagamento recebido|transferência recebida|pix recebido|zahlung erhalten|zahlungseingang|überweisung erhalten|ödeme alındı|gelen (?:havale|eft|fast)|pembayaran diterima|transfer masuk|dana masuk|pagamento ricevuto|bonifico ricevuto|betaling ontvangen")],
+  ["out", /\b(sent|paid|debited|deducted|charged|withdraw(n|al)?|transferred to|purchase|payment to|spent|you made a|transaction (?:with|at)|payment of)\b/i],
   ["in",  /\b(received|credited|deposit(ed)?|refund(ed)?|you have received)\b/i],
+  ["out", W("débité|débitée|payé|paiement|achat|prélèvement|retrait|virement émis|cargo|cargado|pagado|pagaste|compra|retiro|débito|debitado|pago con|pagamento|saque|pix enviado|transferência enviada|belastet|bezahlt|zahlung an|abbuchung|lastschrift|abgehoben|kartenzahlung|harcama|ödeme|çekildi|tahsil edildi|gönderildi|pembayaran|pembelian|tarik tunai|transfer keluar|addebitato|addebito|pagato|acquisto|prelievo|afgeschreven|betaald|списан[оа]?|оплата|покупка|снятие|zapłacono|płatność|obciążenie|支付|付款|消费|支出|결제|출금|支払|ご利用")],
+  ["in",  W("crédité|créditée|reçu|remboursement|dépôt|abonado|recibido|recibiste|abono|depósito|reembolso|creditado|recebido|recebeu|estorno|gutgeschrieben|erhalten|eingang|gutschrift|rückerstattung|yatırıldı|alındı|iade|diterima|masuk|pengembalian dana|accreditato|ricevuto|rimborso|bijgeschreven|ontvangen|зачислен[оа]?|поступление|получен[оа]?|возврат|wpłata|uznanie|收到|入账|到账|退款|입금|入金|返金")],
   // Then prepositions — but "من حسابك/حسابي" (from YOUR/MY account) is money
   // leaving, while a bare "من <name>" is money arriving.
   ["out", /من\s+حساب(ك|ي|نا)/],
@@ -78,19 +152,32 @@ const DIRECTION = [
 // the amount, the remaining balance, a reference, a date, a phone. Candidates
 // are scored by what sits next to them, and a "balance" number is pushed down
 // hard because mistaking it for the amount is the classic failure.
-const AMOUNT_RE = /(?:^|[^\d.,])((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?)(?=[^\d]|$)/g;
-const NEAR_AMOUNT = /(EGP|SAR|AED|USD|KWD|QAR|جنيه|ج\.?م|ريال|درهم|دولار|مبلغ|amount|بمبلغ|قيمة)/i;
-const NEAR_BALANCE = /(balance|available|رصيد|الرصيد|المتاح|المتبقي)/i;
-const NEAR_REF = /(ref|reference|transaction|txn|رقم|مرجع|العملية|المرجعية)/i;
+// v6.27: every common way of writing a number — 1,500.00 · 1.500,00 · 1 500,00 · 1'500.00 · 1,23,456.00 (India) · 12,50
+const AMOUNT_RE = /(?:^|[^\d.,])((?:\d{1,2}(?:,\d{2})+,\d{3}|\d{1,3}(?:,\d{3})+|\d{1,3}(?:\.\d{3})+|\d{1,3}(?:[ '’]\d{3})+|\d+)(?:[.,]\d{1,3})?)(?=[^\d]|$)/g;
+const NEAR_AMOUNT = /(\b[A-Z]{3}\b|[$€£¥₹₺₽₩₦₱฿₫৳₪₴₵]|R\$|zł|Kč|جنيه|ج\.?م|ريال|درهم|دولار|دينار|يورو|مبلغ|amount|bedrag|montant|importe|monto|valor|betrag|tutar|jumlah|nominal|importo|сумма|kwota|金额|금액|金額|بمبلغ|قيمة)/i;
+const NEAR_BALANCE = /(balance|available|avl\.? ?bal|\bbal\b|solde|saldo|disponible|disponível|disponibile|kontostand|verfügbar|bakiye|kullanılabilir|остаток|доступно|余额|잔액|残高|رصيد|الرصيد|المتاح|المتبقي)/i;
+const NEAR_REF = /(ref|reference|transaction|txn|réf|referencia|referência|referenz|riferimento|işlem no|no\.? ?ref|рнн|номер|رقم|مرجع|العملية|المرجعية)/i;
 
-function payAmount(text) {
-  const t = payNormalize(text);
+/** "1.500,00" → 1500 · "12,50" → 12.5 · "1,23,456" → 123456 · "150.000" → 150000 — but "12.500" KWD → 12.5 (3 decimals). */
+function payNumber(raw, cur) {
+  const s = String(raw).replace(/[ '’]/g, "");
+  const last = Math.max(s.lastIndexOf("."), s.lastIndexOf(","));
+  if (last < 0) return Number(s);
+  const sep = s[last], tail = s.length - last - 1, once = s.indexOf(sep) === last;
+  let dec = tail <= 2;
+  if (tail === 3) dec = once && sep === "." && !!cur && THREE_DEC.test(cur) && !/,/.test(s.slice(0, last));
+  if (dec) return Number(s.slice(0, last).replace(/[.,]/g, "") + "." + s.slice(last + 1));
+  return Number(s.replace(/[.,]/g, ""));
+}
+
+function payAmount(text, home) {
+  const t = payNormalize(text), cur = payCurrency(text, home);
   const cands = [];
   let m;
   AMOUNT_RE.lastIndex = 0;
   while ((m = AMOUNT_RE.exec(t)) !== null) {
     const raw = m[1];
-    const val = Number(raw.replace(/,/g, ""));
+    const val = payNumber(raw, cur);
     if (!isFinite(val) || val <= 0) continue;
     const at = m.index + m[0].indexOf(raw);
     const before = t.slice(Math.max(0, at - 28), at);
@@ -105,9 +192,10 @@ function payAmount(text) {
     if (NEAR_BALANCE.test(before)) score -= 14;
     if (NEAR_BALANCE.test(after)) score -= 3;
     if (NEAR_REF.test(before)) score -= 9;              // reference numbers
-    if (/\.\d{2}$/.test(raw)) score += 3;               // 1,500.00 looks like money
-    if (/,/.test(raw)) score += 2;
-    if (raw.replace(/[^\d]/g, "").length >= 9) score -= 9;   // phone / reference length
+    if (/[.,]\d{2}$/.test(raw)) score += 3;            // 1,500.00 / 12,50 look like money
+    if (/[,. '’]\d{3}/.test(raw)) score += 2;
+    if (raw.replace(/[^\d]/g, "").length >= 9 && !/[,. '’]\d{3}/.test(raw)) score -= 9;   // phone / reference length (not 1,250,000.00)
+    if (/^(19|20)\d{2}$/.test(raw) && /[\/.-]\s*$|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s*$/i.test(before)) score -= 8;   // a year
     if (/^0/.test(raw)) score -= 4;                     // leading zero: phone number
     cands.push({ value: val, raw, score, ctx: (before + raw + after).trim() });
   }
@@ -116,9 +204,10 @@ function payAmount(text) {
   return cands[0].score > -3 ? cands[0] : null;
 }
 
-function payCurrency(text) {
+function payCurrency(text, home) {
   const t = payNormalize(text);
   for (const [code, re] of CURRENCIES) if (re.test(t)) return code;
+  for (const [re, family] of AMBIGUOUS) if (re.test(t)) return home && family.includes(home) ? home : family[0];
   return null;
 }
 
@@ -132,8 +221,8 @@ function payDirection(text) {
   // from / to count only right after the amount (and a currency): "250 EGP from …", "80 جنيه إلى …"
   const CUR_OR_LANG = "(?:[A-Z]{3}\\b|dollars?|pounds?|euros?|arabic|english|french|turkish|german|spanish)";
   if (payCurrency(text)) {
-    if (new RegExp("\\d[\\d,.]*\\s*(?:[A-Za-z]{3}|جنيه|دولار|ريال|درهم|[$€£])?\\s+(?:from|من)\\s+(?!" + CUR_OR_LANG + ")\\S", "i").test(t)) return "in";
-    if (new RegExp("\\d[\\d,.]*\\s*(?:[A-Za-z]{3}|جنيه|دولار|ريال|درهم|[$€£])?\\s+(?:to|إلى|الى)\\s+(?!" + CUR_OR_LANG + ")\\S", "i").test(t)) return "out";
+    if (new RegExp("\\d[\\d,.]*\\s*(?:[A-Za-z]{3}|جنيه|دولار|ريال|درهم|[$€£₹¥₺₽₩])?\\s+(?:from|من)\\s+(?!" + CUR_OR_LANG + ")\\S", "i").test(t)) return "in";
+    if (new RegExp("\\d[\\d,.]*\\s*(?:[A-Za-z]{3}|جنيه|دولار|ريال|درهم|[$€£₹¥₺₽₩])?\\s+(?:to|إلى|الى)\\s+(?!" + CUR_OR_LANG + ")\\S", "i").test(t)) return "out";
   }
   return null;
 }
@@ -144,14 +233,18 @@ function payRef(text) {
   return m ? m[1] : null;
 }
 
-function payDate(text, now) {
+// v6.27: day-first unless the person's region writes month-first (US, Philippines…) — or the numbers say so (13/02 is
+// day-first anywhere, 02/13 month-first anywhere).
+function payDate(text, now, order) {
   const t = payNormalize(text);
-  let m = t.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
+  let m = t.match(/\b(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/);
   if (m) return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
-  m = t.match(/\b(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})\b/);
+  m = t.match(/\b(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})\b/);
   if (m) {
     const y = m[3].length === 2 ? 2000 + +m[3] : +m[3];
-    return new Date(y, +m[2] - 1, +m[1]).getTime();     // day-first, as used in Egypt
+    let d = +m[1], mo = +m[2];
+    if (mo > 12 || (order === "mdy" && d <= 12)) { d = +m[2]; mo = +m[1]; }
+    if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) return new Date(y, mo - 1, d).getTime();
   }
   return now || Date.now();
 }
@@ -179,6 +272,7 @@ function payRelation(text) {
 }
 
 const PARTY_RE = [
+  /\b(?:chez|bei|presso|bij)\s+([A-Z][A-Za-z0-9'’&-]+(?:\s+[A-Z][A-Za-z0-9'’&-]+){0,3})/,
   // A Latin name inside an Arabic sentence is the ordinary InstaPay case, and
   // it is followed by an Arabic word rather than punctuation — so the list of
   // terminators has to include those words.
@@ -213,7 +307,7 @@ function payParty(text) {
 // checked before anything else: proposing a transaction for money that never
 // moved is the one error that silently corrupts a balance in the user's favour
 // and is hardest to notice later.
-const DECLINED = /\b(declined|failed|unsuccessful|cancell?ed|reversed|rejected|insufficient)\b|فشل|مرفوض|لم يتم|ملغا|ملغي|غير كاف|إلغاء/i;
+const DECLINED = /\b(declined|failed|unsuccessful|cancell?ed|reversed|rejected|insufficient)\b|فشل|مرفوض|لم يتم|ملغا|ملغي|غير كاف|إلغاء|(?<![\p{L}])(refusée?|échouée?|annulée?|rechazad[oa]|fallid[oa]|cancelad[oa]|recusad[oa]|negad[oa]|abgelehnt|fehlgeschlagen|storniert|reddedildi|başarısız|ditolak|gagal|dibatalkan|rifiutat[oa]|annullat[oa]|отклонен[оа]?|失败|拒绝|거절|실패)(?![\p{L}])/iu;
 
 function parsePayment(text, opts) {
   const o = opts || {};
@@ -221,17 +315,17 @@ function parsePayment(text, opts) {
   if (!src) return null;
   if (DECLINED.test(payNormalize(src))) {
     return { ok: false, declined: true, amount: null, currency: payCurrency(src),
-             direction: null, party: null, ref: payRef(src), date: payDate(src, o.now),
+             direction: null, party: null, ref: payRef(src), date: payDate(src, o.now, o.order),
              missing: ["this payment did not go through"], confidence: "low",
              source: src.slice(0, 1200) };
   }
-  const amt = payAmount(src);
+  const amt = payAmount(src, o.home);
   const dir = payDirection(src);
-  const cur = payCurrency(src);
+  const cur = payCurrency(src, o.home);
   const rel = payRelation(src);
   const party = rel ? rel.party : payParty(src);
   const ref = payRef(src);
-  const date = payDate(src, o.now);
+  const date = payDate(src, o.now, o.order);
 
   const missing = [];
   if (!amt) missing.push("amount");
@@ -257,5 +351,5 @@ function parsePayment(text, opts) {
 }
 
 if (typeof module !== "undefined") module.exports = {
-  parsePayment, payAmount, payDirection, payCurrency, payParty, payRef, payDate, payNormalize,
+  parsePayment, payAmount, payDirection, payCurrency, payParty, payRef, payDate, payNormalize, payNumber,
 };

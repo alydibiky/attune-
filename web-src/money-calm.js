@@ -2,6 +2,8 @@
    (Yusr keeps it in localStorage "ledger.v3": accounts, txns, budgets, recurring bills, debts). Pure; the page is
    money-desk.jsx; tests: tests/unit/v727moneycalm.test.mjs. Amounts are never added across currencies: the overview is
    in the ledger's main currency, other currencies are listed apart.                                                   */
+import { homeCurrency } from "./locale.js";
+
 
 const day = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x.getTime(); };
 const iso = (t) => { const x = new Date(t); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; };
@@ -9,7 +11,7 @@ const DAY = 86400000;
 
 /** The overview of a ledger at `now` → { cur, balance, others, monthIn, monthOut, budget, weeks, latest, due, owed, owe }. */
 export function moneyOverview(L, now = Date.now()) {
-  const cur = (L && L.currency) || "EGP";
+  const cur = homeCurrency(L);
   const accounts = (L && L.accounts) || [], txns = (L && L.txns) || [];
   const curOf = (accId) => { const a = accounts.find((x) => x.id === accId); return (a && a.currency) || cur; };
   // balance per currency: each account's start + income − expense (a transfer moves money between two accounts)

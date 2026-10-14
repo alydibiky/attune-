@@ -7,6 +7,7 @@ import React, { useMemo, useState } from "react";
 import { MessageCircle, ArrowUp, Wallet, Heart, Brain, FileText, MapPin, LayoutGrid, Users, Zap } from "lucide-react";
 import { tr } from "./i18n.js";
 import { loadLife } from "./life.js";
+import { loadRadar } from "./deadlines.js";
 import { todayList } from "./home.js";
 import { loadLedger } from "./myledger.js";
 import { moneyOverview, fmt } from "./money-calm.js";
@@ -22,7 +23,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian }) {
   const data = useMemo(() => {
     const ledger = loadLedger(), o = moneyOverview(ledger);
     const fit = readJSON("attune:fit:v1"), tg = fit && fit.profile ? targetsOf(fit.profile) : null;
-    return { items: todayList({ life: loadLife(), ledger }), o, hasLedger: !!ledger, kcal: todayFacts().kcal || 0, goal: tg && tg.kcal ? tg.kcal : 0, reminders: todayFacts().reminders || 0 };
+    return { items: todayList({ radar: loadRadar(), life: loadLife(), ledger }), o, hasLedger: !!ledger, kcal: todayFacts().kcal || 0, goal: tg && tg.kcal ? tg.kcal : 0, reminders: todayFacts().reminders || 0 };
   }, []);
   const send = () => { const t = text.trim(); if (!t) return; setText(""); onAsk(t); };
   const date = now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
@@ -42,7 +43,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian }) {
         {data.items.length || data.reminders ? (
           <>
             {data.items.map((x, i) => (
-              <button key={i} onClick={() => navTo(x.from === "life" ? "life" : "money")} className="w-full flex items-center gap-3 py-2 text-start" data-testid="home-due">
+              <button key={i} onClick={() => navTo(x.from === "life" ? "life" : x.from === "radar" ? "radar" : "money")} className="w-full flex items-center gap-3 py-2 text-start" data-testid="home-due">
                 <span className="w-[18px] h-[18px] rounded-md shrink-0" style={{ border: "1.6px solid var(--c-mut)" }} />
                 <span className="flex-1 min-w-0"><b className="block truncate text-[14px]" dir="auto">{x.title}</b><span className="c-sub">{x.late ? tr("Late") : new Date(x.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}</span></span>
                 <span className={"c-pill " + (x.late ? "late" : x.dir === "in" ? "" : "due")}><span className="c-num">{x.dir === "in" ? "+" : ""}{fmt(x.amount)}</span></span>

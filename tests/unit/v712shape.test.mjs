@@ -14,7 +14,7 @@ ok(/20 years of experience/.test(tpl) && /## Overview/.test(tpl) && /## Trims an
    "Ali's car answer: an expert driver's overview, every trim, prices in US dollars and the home currency, official vs market");
 ok(["Power (hp)", "Torque (Nm)", "ground clearance", "0–100 km/h", "Top speed", "total range WLTP", "total range CLTC", "pure-electric range WLTP (km) and CLTC (km) for hybrids", "## Features", "## Advantages", "## Disadvantages"].every((k) => tpl.includes(k)),
    "every figure Ali named is asked for each trim: hp, Nm, dimensions, ground clearance, 0–100, top speed, features, WLTP and CLTC ranges, advantages, disadvantages");
-const fx = R.fxNote(JSON.stringify({ time_last_update_utc: "Sat, 10 Oct 2026 00:02:31 +0000", rates: { USD: 1, EGP: 48.5123, CNY: 7.1234, EUR: 0.91, AED: 3.6725, SAR: 3.75 } }), "BYD Seal");
+const fx = R.fxNote(JSON.stringify({ time_last_update_utc: "Sat, 10 Oct 2026 00:02:31 +0000", rates: { USD: 1, EGP: 48.5123, CNY: 7.1234, EUR: 0.91, AED: 3.6725, SAR: 3.75 } }), "BYD Seal", "EGP");   // Ali's home currency (v6.27: the person's own, first)
 ok(/1 USD = 48\.51 EGP = 7\.123 CNY = 0\.910 EUR/.test(fx) && /Sat, 10 Oct 2026/.test(fx) && /yuan \(CNY\) and US dollars/.test(fx), "today's rates: every price also in US dollars (and yuan for a Chinese car): " + fx.slice(0, 120));
 ok(R.fxNote("oops") === "" && R.fxNote({ rates: {} }) === "", "no rates → no note (never made up)");
 const sp = R.officialSpecsNote([{ title: "BYD (بي واي دي — صيني) Seal — specs (Europe, EEA)", text: "BYD SEAL — versions sold in Europe: (1) electric, 230 kW (308 hp), electric range 570 km (WLTP)" }]);

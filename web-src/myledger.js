@@ -4,6 +4,7 @@
    Now Instant and Chat spot a question about the person's own spending / income, read the ledger, and answer with sums
    computed here — the model never adds up money. Pure logic; tests: tests/unit/v702myledger.test.mjs.                       */
 
+import { homeCurrency } from "./locale.js";
 import { CAT_WORDS } from "./yusr/logtext.js";
 
 /** The category a question is about ("how much on food this week?" → "food"), or "". Salary only for income questions. */
@@ -75,7 +76,7 @@ export function answerMyMoney(question, ledger, { now = Date.now(), ar = /[؀-ۿ
   const L = (en, a) => (ar ? a : en);
   if (!ledger) return { noLedger: true, text: L("Nothing is recorded in **Money** yet. Add your expenses there (or share a bank SMS to Attune) and ask again.", "لا يوجد شيء مسجّل في **المال** بعد. سجّل مصروفاتك هناك (أو شارك رسالة البنك مع Attune) واسأل مرة أخرى.") };
   const acct = new Map((ledger.accounts || []).map((a) => [a.id, a]));
-  const cur = (tx) => ((acct.get(tx.account) || {}).currency || ledger.currency || "EGP");
+  const cur = (tx) => ((acct.get(tx.account) || {}).currency || ledger.currency || homeCurrency());
   const custom = new Map((ledger.customCats || []).map((c) => [c.id, [c.en || c.name || c.id, c.ar || c.en || c.id]]));
   const catName = (id) => { const c = CATS[id] || custom.get(id) || [String(id || "Other"), String(id || "أخرى")]; return ar ? c[1] : c[0]; };
   const inSpan = (ledger.txns || []).filter((x) => x && x.date >= span.from && x.date <= span.to && (x.type === "expense" || x.type === "income") && (acct.get(x.account) || {}).unit !== "g"
