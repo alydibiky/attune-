@@ -9811,6 +9811,7 @@ export default function App() {
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "business" ? (
           <BusinessApp flash={flash} openEngine={() => setShowEngine(true)} onExit={goBack}
+            scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null}
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json, onToken: o.onToken })}
             runPy={(code, files) => runCode({ lang: "python", code, files, timeoutMs: 60000 })}

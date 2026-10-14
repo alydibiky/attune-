@@ -10,8 +10,9 @@
    The tables' own tools (grid, design view, queries, forms, summary, licence, app file) stay in erp-ui.jsx and live in
    the "Tables" tab, so nothing that worked is lost. Logic: erp.js (tables), erp-screens.js (screens), biz-steps.js. */
 import React, { useState, useEffect, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Plus, Save, Trash2, Sparkles, Undo2, LayoutGrid, FileText, BarChart3, Database, Palette, Send, Check, X, Loader2, Upload, Wrench, Smartphone, Monitor } from "lucide-react";
+import { ShoppingCart, ChevronLeft, ChevronRight, Plus, Save, Trash2, Sparkles, Undo2, LayoutGrid, FileText, BarChart3, Database, Palette, Send, Check, X, Loader2, Upload, Wrench, Smartphone, Monitor } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
+import { ShopApp } from "./shop-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as E from "./erp.js";
 import * as SC from "./erp-screens.js";
@@ -57,7 +58,7 @@ function dropSys(id) { try { localStorage.removeItem(KEY + ":" + id); localStora
 const seenIntro = () => { try { return !!localStorage.getItem(INTRO); } catch (e) { return true; } };
 
 /** Business — the app inside Attune. */
-export function BusinessApp({ flash, llm, modelReady, openEngine, saveFile, share, runPy, onExit }) {
+export function BusinessApp({ flash, llm, modelReady, openEngine, saveFile, share, runPy, onExit, scanBarcode }) {
   const [index, setIndex] = useState(loadIndex);
   const [sys, setSysRaw] = useSticky("erp:sys", null);
   const [view, setView] = useSticky("erp:view", "list");          // list | new | system | books
@@ -73,12 +74,13 @@ export function BusinessApp({ flash, llm, modelReady, openEngine, saveFile, shar
   const color = sys && (view === "system" || view === "new") ? SC.colorOf(sys) : SC.COLORS.blue;
   const full = useWide() && view === "system" && !!sys;     // a system on a computer-sized screen uses the whole width
   let body;
-  if (view === "books") body = <div className="p-3"><BooksApp flash={flash} saveFile={saveFile} share={share} onBack={() => setView("list")} goCustom={() => setView("list")} /></div>;
+  if (view === "shop") body = <ShopApp onBack={() => setView("list")} flash={flash} scanBarcode={scanBarcode} share={share} />;
+  else if (view === "books") body = <div className="p-3"><BooksApp flash={flash} saveFile={saveFile} share={share} onBack={() => setView("list")} goCustom={() => setView("list")} /></div>;
   else if (view === "new") body = <Builder llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} onBack={() => setView("list")}
     onCreate={(s) => { setSys(s, tr("Created — {n} tables", { n: s.tables.length })); setView("system"); }} />;
   else if (view === "system" && sys) body = <SystemShell sys={sys} setSys={setSys} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} saveFile={saveFile} share={share} runPy={runPy}
     onBack={() => { setView("list"); setSysRaw(null); }} onDelete={() => { dropSys(sys.id); setIndex(loadIndex()); setSysRaw(null); setView("list"); flash(tr("Deleted")); }} />;
-  else body = <Hub index={index} open={open} onNew={() => { done(); setView("new"); }} onBooks={() => { done(); setView("books"); }} onExit={onExit} intro={intro} onIntro={() => setIntro(true)} onIntroDone={done}
+  else body = <Hub index={index} open={open} onNew={() => { done(); setView("new"); }} onBooks={() => { done(); setView("books"); }} onShop={() => { done(); setView("shop"); }} onExit={onExit} intro={intro} onIntro={() => setIntro(true)} onIntroDone={done}
     onOpenFile={async (f) => {
       const s = readApp(await f.text());
       if (!s) { flash(tr("That file isn't an app made with Attune Business.")); return; }
@@ -127,12 +129,18 @@ function IntroHero({ onDone }) {
 }
 
 // ---- the hub: your systems --------------------------------------------------------------------------------------------
-function Hub({ index, open, onNew, onBooks, onExit, onOpenFile, intro, onIntro, onIntroDone }) {
+function Hub({ index, open, onNew, onBooks, onShop, onExit, onOpenFile, intro, onIntro, onIntroDone }) {
   return (
     <section className="px-4 pb-6 space-y-4" data-testid="business-page">
       <TopBar title={tr("Business")} sub={tr("Your own systems — like Microsoft Access, on your phone")} onBack={onExit} label={tr("Back to Attune")}
         right={intro ? null : <button onClick={onIntro} className="h-10 px-3 text-[13px] font-semibold text-[#475569]" data-testid="biz-how">{tr("How it works")}</button>} />
       {intro ? <IntroHero onDone={onIntroDone} /> : null}
+      {/* v6.27: a shop's whole day on the phone — the counter, stock, customers, staff, the day's close (shop-ui.jsx) */}
+      <button onClick={onShop} data-testid="shop-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
+        <span className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-[#FFFFFF]" style={{ background: "var(--biz)" }}><ShoppingCart size={20} /></span>
+        <span className="min-w-0"><span className="block font-bold text-[15px]">{tr("Shop in your pocket")}</span>
+          <span className="block text-[12.5px] text-[#5B6B80] leading-snug">{tr("Say what your shop is — the counter with barcodes, stock, customers who owe, staff and the end-of-day close, ready in a minute. Every sale goes into your books.")}</span></span>
+      </button>
       <button onClick={onNew} className={btnP + " w-full"} style={{ background: "var(--biz)" }} data-testid="erp-new"><Plus size={18} />{intro ? tr("Start a new system") : tr("New system")}</button>
       <button onClick={onBooks} data-testid="books-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
         <span className="w-11 h-11 rounded-xl bg-[#FEF3C7] text-[#B45309] flex items-center justify-center shrink-0"><FileText size={20} /></span>

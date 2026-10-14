@@ -290,7 +290,7 @@ def sec_actions(br):
 
     # H. the Reminders screen
     open_more(page)
-    page.locator(".rounded-t-2xl button:has-text('Reminders')").click()
+    page.locator(".rounded-t-2xl button:has-text('Reminders')").first.click()
     page.wait_for_selector("[data-testid=reminders-panel]", timeout=5000)
     check(page.locator("[data-testid=rem-item]").count() == 1 and "Call Ahmed" in page.locator("[data-testid=rem-item]").inner_text(), "Reminders lists the one set from chat")
     page.fill("[data-testid=rem-title]", "Pay the crane insurance")
@@ -301,7 +301,7 @@ def sec_actions(br):
     page.click("[data-testid=confirm-yes]"); page.wait_for_timeout(200)
     check(len(page.evaluate("window.__mock.notes")) == 1, "deleting it cancels it on the phone")
     page.evaluate("window.__mock.inexact = true"); page.evaluate("window.__attuneBack()"); open_more(page)
-    page.locator(".rounded-t-2xl button:has-text('Reminders')").click(); page.wait_for_timeout(200)
+    page.locator(".rounded-t-2xl button:has-text('Reminders')").first.click(); page.wait_for_timeout(200)
     page.locator("[data-testid=ask-exact]").click()
     check(page.evaluate("window.__mock.askedExact") is True, "without “Alarms & reminders” it says so and opens the setting")
     page.screenshot(path=HERE + "/v5-reminders.png")
