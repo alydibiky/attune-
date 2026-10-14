@@ -273,6 +273,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         if (!ttsReady) return
         val loc = if (lang.isNotBlank()) java.util.Locale.forLanguageTag(lang) else java.util.Locale.getDefault()
         try { t.language = loc } catch (e: Exception) {}
+        try { t.setSpeechRate(1f) } catch (e: Exception) {}   // the lesson player may have changed it
         // Long answers are split: one utterance has a length limit.
         val chunks = text.chunked(3500)
         chunks.forEachIndexed { i, c ->
@@ -282,6 +283,53 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
 
     @JavascriptInterface
     fun stopSpeaking() { web.post { try { tts?.stop() } catch (e: Exception) {} } }
+
+    // v6.27 the lesson player: speak one step and answer when it has been said (or stopped), so pictures and voice stay together
+    private val ttsWait = ConcurrentHashMap<String, String>()   // utterance id → the page's call id
+    private var ttsListening = false
+    private fun ttsListener(t: android.speech.tts.TextToSpeech) {
+        if (ttsListening) return
+        ttsListening = true
+        t.setOnUtteranceProgressListener(object : android.speech.tts.UtteranceProgressListener() {
+            override fun onStart(u: String?) {}
+            override fun onDone(u: String?) { u?.let { ttsWait.remove(it)?.let { id -> resolve(id, JSONObject().put("ok", true)) } } }
+            @Deprecated("old API") override fun onError(u: String?) { u?.let { ttsWait.remove(it)?.let { id -> resolve(id, JSONObject().put("ok", false)) } } }
+            override fun onStop(u: String?, interrupted: Boolean) { u?.let { ttsWait.remove(it)?.let { id -> resolve(id, JSONObject().put("ok", false)) } } }
+        })
+    }
+
+    /** {text, lang, rate} → answered when the phone has finished saying it. */
+    @JavascriptInterface
+    fun speakWait(id: String, arg: String) {
+        val a = try { JSONObject(arg) } catch (e: Exception) { return reject(id, "Bad request") }
+        val text = a.optString("text").take(3500)
+        val lang = a.optString("lang")
+        val rate = a.optDouble("rate", 1.0).toFloat().coerceIn(0.5f, 2f)
+        web.post {
+            val go: () -> Unit = {
+                val t = tts
+                if (t == null || !ttsReady || text.isBlank()) resolve(id, JSONObject().put("ok", false))
+                else {
+                    ttsListener(t)
+                    val loc = if (lang.isNotBlank()) java.util.Locale.forLanguageTag(lang) else java.util.Locale.getDefault()
+                    try { t.language = loc } catch (e: Exception) {}
+                    try { t.setSpeechRate(rate) } catch (e: Exception) {}
+                    val uid = "wait-$id"
+                    ttsWait[uid] = id
+                    if (t.speak(text, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, uid) != android.speech.tts.TextToSpeech.SUCCESS) {
+                        ttsWait.remove(uid); resolve(id, JSONObject().put("ok", false))
+                    }
+                }
+            }
+            if (tts == null) {
+                tts = android.speech.tts.TextToSpeech(ctx) { status ->
+                    ttsReady = status == android.speech.tts.TextToSpeech.SUCCESS
+                    ttsPending?.let { (x, l) -> ttsPending = null; say(x, l) }
+                    go()
+                }
+            } else go()
+        }
+    }
 
     /** The phone's share sheet: WhatsApp, email, notes… */
     @JavascriptInterface

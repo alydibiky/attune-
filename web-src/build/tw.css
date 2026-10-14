@@ -38,3 +38,16 @@ html:not(.att-light) .calm .c-btn{color:#0B1A17}
 .calm .c-bar{height:6px;border-radius:9px;background:var(--c-ln);overflow:hidden}.calm .c-bar>i{display:block;height:100%;background:var(--c-acc)}
 .calm .c-ticks{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}
 .calm .c-ticks>i{height:14px;border-radius:4px;border:1.5px solid var(--c-ln)}.calm .c-ticks>i.d{background:var(--c-acc);border-color:var(--c-acc)}.calm .c-ticks>i.n{border-color:var(--c-acc)}
+
+/* v6.27 the lesson player: pictures that draw themselves (lesson-ui.jsx) */
+@keyframes att-pop { from { transform: scale(0); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+@keyframes att-draw { from { stroke-dasharray: 600; stroke-dashoffset: 600 } to { stroke-dasharray: 600; stroke-dashoffset: 0 } }
+@keyframes att-grow { from { width: 0 } }
+@keyframes att-fadein { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+@keyframes att-tilt { 0% { transform: rotate(-6deg) } 60% { transform: rotate(2deg) } 100% { transform: rotate(0) } }
+.att-pop { transform-box: fill-box; transform-origin: center; animation: att-pop .35s ease-out both }
+.att-draw { animation: att-draw .9s ease-out both }
+.att-grow { animation: att-grow .9s ease-out both }
+.att-fadein { animation: att-fadein .35s ease-out both }
+.att-tilt { transform-box: view-box; transform-origin: 150px 40px; animation: att-tilt 1.1s ease-out both }
+@media (prefers-reduced-motion: reduce) { .att-pop, .att-draw, .att-grow, .att-fadein, .att-tilt { animation: none } }

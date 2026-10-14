@@ -87,6 +87,12 @@ def sections(env, errors, install, open_more, queue):
         check(page.locator("[data-testid=visual-cards]").count() == 1 and page.locator("[data-testid=key-points]").count() == 1, "the lesson has a visual (word cards) and key points")
         page.locator("[data-testid=visual-cards] button").first.click()
         check("ch as in chair" in page.locator("[data-testid=visual-cards]").inner_text(), "a card turns over to show its meaning")
+        # v6.27: Listen — the lesson is read aloud by the phone's voice, part by part
+        page.evaluate("""() => { window.__said = []; const N = window.AttuneNative; N.speakWait = (id, arg) => { window.__said.push(JSON.parse(arg).text); setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ ok: true })), 20); }; }""")
+        page.click("[data-testid=listen]"); page.wait_for_timeout(1500)
+        said = page.evaluate("window.__said")
+        check(len(said) >= 3 and "Alphabet" in said[0], "Listen reads the lesson aloud, title first, part by part (%d parts)" % len(said))
+        page.click("[data-testid=listen]"); page.wait_for_timeout(200)
         page.screenshot(path=HERE + "/v512-lesson.png", full_page=True)
 
         def read_and_next(nxt):

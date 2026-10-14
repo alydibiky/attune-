@@ -711,6 +711,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       return;
     }
 
+    // v6.27 Homework Coach: a photo of homework («solve this», «help with my homework», «حل», «اشرح») or «teach me 2x + 3 = 11»
+    const hw = /\b(homework|worksheet|solve (this|these|it)|help me (solve|with)|teach me|explain (this|how to solve)|step by step)\b|واجب|الواجب|حل (ده|دي|المسأله|المسألة|التمرين)|اشرحلي|اشرح لي|علمني|ساعدني في حل/i;
+    if (route && ((img && hw.test(typed)) || (!img && /^(teach me|explain how to solve|help me solve|علمني|اشرحلي|ساعدني في حل)\b/i.test(typed.trim())))) {
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed, ...(img ? { image: img.url } : {}) },
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "Homework — the Coach teaches it step by step", detail: "Pictures, a voice, and you try each answer. Maths is checked by code.",
+          actions: [["Teach me", "coach"], ["Just answer", "answer"]] }, coachIn: img ? { image: img.url } : { text: typed.replace(/^(teach me|explain how to solve|help me solve|علمني|اشرحلي|ساعدني في حل)\s*/i, "") }, askText: typed }] }));
+      setText(""); setPhotos([]);
+      return;
+    }
+
     // v6.27 "Do it for me": «book me the cheapest flight to Dubai on Thursday» — read by code into a plan; missing details
     // are asked; the app / site opens filled in (or inside Attune with Best offer / Fill my details); it never pays
     const ag = route && !img ? agentCard(typed, { now: Date.now(), order: dateOrder(), inApp: !!(NATIVE && NATIVE.agentOpen) }) : null;
@@ -1560,6 +1572,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "money") api.sendToMoney(m.payText);
     else if (act === "life") window.dispatchEvent(new CustomEvent("attune-life", { detail: { text: m.lifeText || "" } }));
     else if (/^agent(-in)?:\d+$/.test(act)) { const i = +act.split(":")[1], p = m.agentPlan; if (p && p.links[i]) window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: p.links[i], plan: p, inApp: act.startsWith("agent-in") } })); }
+    else if (act === "coach") window.dispatchEvent(new CustomEvent("attune-coach", { detail: m.coachIn || null }));
     else if (act === "radar") window.dispatchEvent(new CustomEvent("attune-radar", { detail: { text: m.radarText || "" } }));
     else if (act === "map") window.dispatchEvent(new CustomEvent("attune-map", { detail: { q: m.mapQuery || "" } }));
     else if (act === "studio") window.dispatchEvent(new CustomEvent("attune-studio", { detail: { prompt: m.studioPrompt || "" } }));
@@ -1568,7 +1581,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       const u = messages[at - 1];
       const hist = messages.slice(0, at - 1);
       patchChat(chat.id, (c) => ({ ...c, messages: hist }));
-      setTimeout(() => ask(u.text, { history: hist, noRoute: true }), 0);
+      const pic = u && u.image ? { data: String(u.image).split(",")[1], media: (String(u.image).match(/^data:([^;]+);/) || [])[1] || "image/jpeg", url: u.image } : undefined;
+      setTimeout(() => ask(u.text, { history: hist, noRoute: true, ...(pic ? { image: pic } : {}) }), 0);
     }
   };
   const speak = (m) => {

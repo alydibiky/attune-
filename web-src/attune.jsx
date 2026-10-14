@@ -52,6 +52,7 @@ import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
 import { BookingDetails, loadBooking, agentLabels } from "./agent-ui.jsx";
+import { CoachPage } from "./coach-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
@@ -7373,6 +7374,7 @@ const MORE_TOOLS = [
   ["projects", "Projects", "Chats, files & instructions together", Folder],
   ["artifacts", "Artifacts", "Saved pages, documents & programs", Layers],
   ["instant", "Instant", "Quick actions on text & photos", Zap], ["studio", "Studio", "Pictures made on your phone", Palette],
+  ["coach", "Homework Coach", "Snap the homework — taught step by step with pictures and a voice", GraduationCap],   // v6.27
   ["learn", "Learn daily", "A lesson a day, with quizzes", GraduationCap],
   ["news", "Daily news", "Topics you follow, every morning", Newspaper],
   ["business", "Business", "Your own ERP — tables you can reshape", Database],
@@ -7400,7 +7402,7 @@ const MORE_TOOLS = [
 const MORE_GROUPS = [
   ["Money & people", ["guardian", "radar", "life", "deal", "reminders"]],
   ["Health", ["fit", "cycle"]],
-  ["Mind & learning", ["memory", "shelf", "knowledge", "learn", "news"]],
+  ["Mind & learning", ["coach", "learn", "memory", "shelf", "knowledge", "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
   ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "travel"]],
@@ -7465,6 +7467,7 @@ export default function App() {
   const [dailyOpen, setDailyOpen] = useState(null);
   const [pdfIn, setPdfIn] = useState(null);             // v6.18: a document attached in Chat → Ask a PDF
   const [fitIn, setFitIn] = useState(null);             // v5.42: "I ate…" from a Chat chip
+  const [coachIn, setCoachIn] = useState(null);         // v6.27: homework handed over from Chat ({ image } or { text })
   const [slidesIn, setSlidesIn] = useState(null);        // v5.40: { prompt, tab } from a Chat chip
   const [videoIn, setVideoIn] = useState("");             // v5.38: a video link shared to Attune
   const [xrayIn, setXrayIn] = useState(null);             // v5.35: a WhatsApp chat export shared to Attune      // "daily-learn-…" / "daily-news-…" from a notification or the widget
@@ -7545,6 +7548,12 @@ export default function App() {
   // now really unlocks every Pro feature (before, most gates checked the paid plan only)
   const proActive = testingPro() || isPro(tier) || trialLeft > 0;
   const proRef = useRef(proActive); proRef.current = proActive;
+  // v6.27: the text in a photo — the phone's own reader (Latin scripts) first, then a photo-reading model on the phone (Arabic…)
+  const readTextAny = async (b64) => {
+    let r = null; try { if (NATIVE && NATIVE.readText) r = await nativeCall("readText", { b64 }); } catch (e) {}
+    if ((!r || !/\d|\p{L}{3}/u.test(r.text || "")) && modelState === "ready" && LocalEngine.vision) { try { r = { text: await aiTranscribe({ data: b64, media: "image/jpeg", url: "data:image/jpeg;base64," + b64 }) }; } catch (e) {} }
+    return r;
+  };
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -8186,6 +8195,12 @@ export default function App() {
     };
     window.addEventListener("attune-agent", on);
     return () => window.removeEventListener("attune-agent", on);
+  }, []);
+  // v6.27 Homework Coach: a homework photo (or "teach me …") from Chat
+  useEffect(() => {
+    const on = (e) => { setCoachIn((e && e.detail) || null); setMode("coach"); };
+    window.addEventListener("attune-coach", on);
+    return () => window.removeEventListener("attune-coach", on);
   }, []);
   // v6.27: "Watch it" from a deadline typed in Chat — the Deadline Radar opens with it read
   useEffect(() => {
@@ -9726,7 +9741,7 @@ export default function App() {
               llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.7, think: false })} />
           ) : <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300" data-testid="studio-page">{tr("Studio draws pictures with the phone's own chip — it works in the Android app.")}</div>
         ) : mode === "learn" ? (
-          <LearnPage flash={flash} native={NATIVE} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
+          <LearnPage flash={flash} native={NATIVE} call={NATIVE ? nativeCall : null} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken })}
             illustrate={NATIVE && NATIVE.imageInfo ? (p) => { setStudioIn({ prompt: p }); setMode("studio"); } : null} />
@@ -9816,13 +9831,13 @@ export default function App() {
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
             load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />}
             onExit={goBack} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
+        ) : mode === "coach" ? (
+          <CoachPage native={{ N: NATIVE, call: nativeCall }} readText={readTextAny} flash={flash} incoming={coachIn} clearIncoming={() => setCoachIn(null)}
+            ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 900, temperature: 0.2, think: false }) : null}
+            verify={modelState === "ready" ? async (q) => { if (!(await pythonAvailable())) return null; const r = await verifyMath({ question: q, llm: (m, o) => callChat(m, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false }), runPy: (code) => runCode({ lang: "python", code }), warm: () => warmUp("python"), explain: false }); return r && r.ok ? { ok: true, answer: r.answer } : null; } : null} />
         ) : mode === "radar" ? (
           <RadarPage pro={proActive} openPlan={() => setShowUpgrade(true)} flash={flash} N={NATIVE}
-            readText={async (b64) => {
-              // the phone's own text reader (Latin scripts) first; a photo-reading model on the phone for the rest (Arabic…)
-              let r = null; try { if (NATIVE && NATIVE.readText) r = await nativeCall("readText", { b64 }); } catch (e) {}
-              if ((!r || !/\d/.test(r.text || "")) && modelState === "ready" && LocalEngine.vision) { try { r = { text: await aiTranscribe({ data: b64, media: "image/jpeg", url: "data:image/jpeg;base64," + b64 }) }; } catch (e) {} }
-              return r; }}
+            readText={readTextAny}
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
             remind={(r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "radar" })}
             unremind={(id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }} />

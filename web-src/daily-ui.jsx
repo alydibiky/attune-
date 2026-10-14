@@ -8,6 +8,7 @@ import { getLang, tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import { Md } from "./chat.jsx";
 import * as D from "./daily.js";
+import { useListen, ListenBar } from "./lesson-ui.jsx";
 
 const CKEY = "attune:daily:courses:v1", NKEY = "attune:daily:news:v1";
 const load = (k) => { try { const v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
@@ -123,7 +124,7 @@ export function Visual({ v }) {
 }
 
 // ================================ Learn daily ================================
-export function LearnPage({ llm, modelReady, openEngine, flash, native, openId, clearOpen, illustrate }) {
+export function LearnPage({ llm, modelReady, openEngine, flash, native, call, openId, clearOpen, illustrate }) {
   const [courses, setCoursesRaw] = useState(loadCourses);
   const [cur, setCur] = useSticky("learn:cur", null);                 // course id
   const [view, setView] = useSticky("learn:view", "list");             // list | new | course | lesson | quiz | past
@@ -134,6 +135,12 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, openId, 
   const [confirmDel, setConfirmDel] = useState(false);
   const running = useRef(false);
   const course = courses.find((c) => c.id === cur) || null;
+  // v6.27: Listen — the open lesson read aloud by the phone's voice, paragraph by paragraph (the one being read is highlighted)
+  const openLesson = view === "lesson" && course ? course.lessons.find((x) => x.n === lessonN) : null;
+  const paras = openLesson ? String(openLesson.body || "").split(/\n{2,}/).filter((x) => x.trim()) : [];
+  const listenParts = openLesson ? [openLesson.title, ...paras, ...((openLesson.keyPoints || []).length ? [tr("Remember") + ": " + openLesson.keyPoints.join(". ")] : [])] : [];
+  const L = useListen(listenParts, { lang: course && course.lang && course.lang !== "auto" ? course.lang : getLang(), native: native ? { N: native, call } : null });
+  const hl = (k) => (L.at === k ? { background: "rgba(79,194,175,.12)", borderRadius: 8, transition: "background .3s" } : { transition: "background .3s" });
   // v5.34: Back — lesson / quiz / past lessons → the course → all courses
   useSubBack(view !== "list", () => { if (["lesson", "quiz", "past"].includes(view)) { setQuiz(null); setView("course"); } else { setView("list"); setCur(null); } });
   const setCourses = (list) => { store(CKEY, list); setCoursesRaw(list); syncDaily(native, list); };
@@ -265,13 +272,14 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, openId, 
     const due = D.quizDue(course);
     return (
       <section className="p-4 space-y-3" data-testid="lesson">
-        <Back onClick={() => setView("course")} label={course.topic} />
+        <Back onClick={() => { L.stop(); setView("course"); }} label={course.topic} />
         <p className="text-[12px] text-teal-300">{tr("Lesson {n} of {m}", { n: l.n + 1, m: course.plan.length })}</p>
-        <h2 className="text-lg font-semibold text-slate-100" dir="auto">{l.title}</h2>
-        <div dir="auto"><Md text={l.body} runnable={false} /></div>
+        <h2 className="text-lg font-semibold text-slate-100" dir="auto" data-listen="0" style={hl(0)}>{l.title}</h2>
+        <ListenBar L={L} />
+        <div dir="auto">{paras.map((p, k) => <div key={k} data-listen={k + 1} style={hl(k + 1)}><Md text={p} runnable={false} /></div>)}</div>
         <Visual v={l.visual} />
         {l.keyPoints && l.keyPoints.length ? (
-          <div className="rounded-xl border border-amber-800/70 bg-amber-500/5 p-3" data-testid="key-points">
+          <div className="rounded-xl border border-amber-800/70 bg-amber-500/5 p-3" data-testid="key-points" data-listen={paras.length + 1} style={hl(paras.length + 1)}>
             <p className="text-[12px] font-semibold text-amber-200 mb-1">{tr("Remember")}</p>
             {l.keyPoints.map((k, i) => <p key={i} className="text-[13px] text-slate-200 mt-1" dir="auto">• {k}</p>)}
           </div>) : null}
