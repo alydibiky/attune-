@@ -5,7 +5,7 @@
    for the session. Work through all of it with a task list.
 2. Read **`HANDOFF.md`** §0 ("START HERE") and the latest section (§5.37) for how the app is built and tested.
 
-## Where things stand (14 Oct 2026, v6.27 — HANDOFF §5.44–§5.69 (latest: Fit looks, owed, read it to me, job ready); Ali: everything optimised for phone AND desktop; DESKTOP APP (Windows first, Claude/ChatGPT layout) in progress: HANDOFF §5.60; packs must be commercial-safe (§5.48); Ali's latest lists: NEXT_SESSION.md sections M, N and O)
+## Where things stand (14 Oct 2026, v6.27 — HANDOFF §5.44–§5.70 (latest: the computer layout A across the whole app, §5.70); Ali: everything optimised for phone AND desktop; DESKTOP APP (Windows first, Claude/ChatGPT layout) in progress: HANDOFF §5.60; packs must be commercial-safe (§5.48); Ali's latest lists: NEXT_SESSION.md sections M, N and O)
 - **Read `ROADMAP_2026-10-13.md` (the direction agreed 13 Oct: sync, device levels, code-first, redesign, Life layer).**
 - Read **`PLANS_2026-10-02.md`** too: the converter / Fit / heat / Business plans and exactly what is left.
 - `main` = branch `ccr-a0eb3595-e2c7a7` = v6.27 (versionCode 88). All test files pass (`bash tests/run_all.sh`).

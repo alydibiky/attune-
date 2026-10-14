@@ -1312,6 +1312,21 @@ Ali: "c p f is just lame"; "a pulse loading screen"; "the app is one colour"; "i
   `NativeBridge.payAvailable()` / `payReader(N)` hide "Turn on notification access" in the lite build. Never add SMS or
   accessibility to the main manifest.
 
+### 5.70 (14 Oct 2026) — The computer layout "A" across the whole app (Ali: "optimize it for the whole app"; he picked A)
+- **Rule:** on a computer (Tailwind `lg:`, ≥1024 px) what you type/choose is on the LEFT and the answer on the RIGHT; lists are
+  card grids. Phones are untouched (every group was checked pixel-for-pixel at 390 px). Helpers live in `web-src/desk.jsx`:
+  `PANES`, `LEFT`, `RIGHT`, `GRID2/3`, `DeskEmpty` (the dashed "…appears here" placeholder, computer only).
+- **Done:** Deal, Instant, Library (3 cols), Plans & billing (centred two-column window above the sidebar), Profile (2 cols),
+  Settings window (not the phone "All" sheet), Fit (Diary: summary/water/fasting left, meals right; Recipes 3 cols; Progress
+  and Me as 2 card columns), Business home, Guardian, Radar, People & plans, Family health, Homework Coach, Translate, Travel,
+  Learn, News, Knowledge, Shelf, Mind, Skills, Ask a PDF (pages + chat side by side), CV (live preview always on the right),
+  Assistants/Projects/Artifacts, Converter, Slides & Reports, Video, Chat X-Ray, Studio, Code, Crane, Cycle, Reminders.
+- `shell.html` widens `.att-page` children; a form that should stay narrow adds the class **`att-keep`** (Fit's setup screens).
+- Calm pages joined `OWN_TITLE` (no extra "Attune" bar above them on a computer).
+- Fixed on phones too: the CV Preview iframe was squeezed to ~⅔ width by Tailwind's `max-width:100%` (now `maxWidth: none`).
+- Arabic placeholder lines never say "on the left" (the panels swap sides in Arabic).
+- Still a little uneven on a computer: Travel → Trip (right column longer), Radar card buttons wrap to two lines.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
