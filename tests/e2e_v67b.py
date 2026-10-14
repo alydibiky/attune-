@@ -33,10 +33,16 @@ with sync_playwright() as p:
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
     page.locator("nav button").last.click(); page.wait_for_timeout(200)
     page.locator(".rounded-t-2xl button:has-text('Travel')").first.click(); page.wait_for_timeout(400)
-    check(page.locator("text=43 countries").count() >= 1, "43 country packs (31 before)")
+    check(page.locator("[data-testid=travel-packs]").inner_text().find("43") >= 0, "43 country packs (31 before)")
     for name, fact in [("Maldives", "IMUGA"), ("Uzbekistan", "Afrosiyob"), ("Bosnia and Herzegovina", "BH Telecom"), ("United States", "ESTA")]:
-        page.locator(f"button:has-text('{name}')").first.click(); page.wait_for_timeout(400)
-        body = page.locator("body").inner_text()
+        # v6.27 Calm travel: the list opens from "Change country"; a pack's knowledge is spread over five tabs
+        if not page.locator("[data-testid=travel-packs]").count(): page.click("[data-testid=travel-change]")
+        page.fill("[data-testid=travel-find]", name); page.locator(f"[data-testid=travel-packs] button:has-text('{name}')").first.click(); page.wait_for_timeout(400)
+        body = ""
+        for t in ["trip", "arrive", "know"]:
+            page.click(f"[data-testid=travel-tab-{t}]"); page.wait_for_timeout(100)
+            for d in page.locator("details").all(): d.evaluate("e => e.open = true")
+            body += page.locator("body").inner_text()
         check(fact.lower() in body.lower(), f"{name} opens with its local knowledge ({fact})")
     errs = real_errors(errors)
     check(not errs, "no JavaScript errors (%d)%s" % (len(errs), (": " + errs[0]) if errs else ""))
