@@ -8210,6 +8210,8 @@ export default function App() {
     return () => window.removeEventListener("attune-coach", on);
   }, []);
   // v6.27: "Watch it" from a deadline typed in Chat — the Deadline Radar opens with it read
+  // v6.27 Job ready: a missing skill starts a Learn daily course on it
+  useEffect(() => { const on = (e) => { try { localStorage.setItem("attune:learn:seed", (e.detail && e.detail.topic) || ""); } catch (x) {} navTo("learn"); }; window.addEventListener("attune-learn", on); return () => window.removeEventListener("attune-learn", on); }, []);
   // v6.27 Read it to me hands a prescription to Family health and a bill to Money
   const [careIn, setCareIn] = useState(null);
   useEffect(() => {
@@ -9811,7 +9813,7 @@ export default function App() {
             initialFile={pdfIn} clearInitial={() => setPdfIn(null)}
             llm={(messages, a, b) => { const image = b ? a : null, o = b || a || {}; return callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false }); }} />
         ) : mode === "cv" ? (
-          <CVPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} nativeCall={NATIVE ? nativeCall : null}
+          <CVPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} nativeCall={NATIVE ? nativeCall : null} native={NATIVE ? { N: NATIVE, call: nativeCall } : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.3, think: false, json: !!o.json })}
             saveFile={NATIVE ? (name, text, mime, b64) => nativeCall("saveFile", b64 ? { name, mime, b64 } : { name, mime, text }) : null}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />

@@ -3,13 +3,16 @@
    (right-to-left); a live preview that fits 1–2 pages; PDF, Word and plain text; the phone's own model helps with wording only
    (cv-ai.js, every number checked by code). Logic: cv.js, cv-ai.js.                                                         */
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Plus, Trash2, Copy, Share2, Download, Upload, ChevronLeft, ChevronDown, ArrowUp, ArrowDown, Check, X, Sparkles, FileText, Camera, AlertTriangle, Info } from "lucide-react";
+import { Plus, Trash2, Copy, Share2, Download, Upload, ChevronLeft, ChevronDown, ArrowUp, ArrowDown, Check, X, Sparkles, FileText, Camera, AlertTriangle, Info, Volume2, Mic } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { useSubBack } from "./backstack.js";
 import * as V from "./cv.js";
 import * as A from "./cv-ai.js";
 import * as C from "./convert.js";
 import { sharePdf } from "./books-docs.jsx";
+import * as J from "./jobready.js";
+import { speakNow } from "./lesson-ui.jsx";
+import { myCountry } from "./agent-ui.jsx";
 
 const field = "w-full min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500";
 const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40";
@@ -210,6 +213,73 @@ function CheckTab({ cv }) {
 }
 
 // ---- AI tools -----------------------------------------------------------------------------------------------------------------------------
+// v6.27 Job ready (jobready.js — all code): the job you want → the skills your CV shows and lacks (a missing one can start a
+// Learn daily course), interview practice by voice with feedback, and the job sites people use in your country.
+function JobTab({ cv, setCV, llm, modelReady, listen, native, flash, goAI }) {
+  const ar = getLang() === "ar";
+  const target = cv.target || {}, setT = (k, v) => setCV({ ...cv, target: { ...target, [k]: v } });
+  const text = useMemo(() => V.cvText(cv), [cv]);
+  const sk = J.skillsCheck(text, target.role || "");
+  const qs = J.questions(target.role || "", ar ? "ar" : "en");
+  const [qi, setQi] = useState(0), [ans, setAns] = useState(""), [fb, setFb] = useState(null), [ai, setAi] = useState(""), [rec, setRec] = useState(false);
+  const ask = () => speakNow(qs[qi % qs.length], { lang: ar ? "ar" : "en", native });
+  const speak = async () => {
+    if (rec) return;
+    if (listen) { setRec(true); try { const t = await listen(ar ? "ar-EG" : "en-US", (p) => setAns(p)); if (t) setAns(t); } catch (e) {} setRec(false); return; }
+    const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    if (!SR) { flash(tr("Voice input works in the Android app and in Chrome — or type your answer")); return; }
+    const r = new SR(); r.lang = ar ? "ar-EG" : "en-US"; r.interimResults = true; r.continuous = true; let base = ans ? ans + " " : "";
+    r.onresult = (e) => { let s = ""; for (const x of e.results) s += x[0].transcript; setAns(base + s); };
+    r.onend = () => setRec(false); setRec(r); r.start();
+  };
+  const stopRec = () => { try { rec && rec.stop && rec.stop(); } catch (e) {} setRec(false); };
+  const check = () => { stopRec(); setFb(J.feedback(ans, { cvText: text, lang: ar ? "ar" : "en" })); setAi(""); };
+  const coach = async () => { if (!modelReady) return; setAi("…"); try { setAi(String(await llm(J.coachPrompt(qs[qi % qs.length], ans, ar ? "ar" : "en"), { maxTokens: 300, temperature: 0.3 }) || "").trim()); } catch (e) { setAi(""); } };
+  const country = myCountry();
+  const links = J.jobLinks(target.role || "", target.city || "", country);
+  return (
+    <div className="p-3 space-y-3" data-testid="cv-job">
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
+        <p className="text-[13px] font-semibold text-slate-100">{tr("The job you want")}</p>
+        <div className="grid grid-cols-2 gap-2">
+          <input value={target.role || ""} onChange={(e) => setT("role", e.target.value)} placeholder={tr("e.g. Data analyst")} className={field} dir="auto" data-testid="cv-job-role" />
+          <input value={target.city || ""} onChange={(e) => setT("city", e.target.value)} placeholder={tr("City")} className={field} dir="auto" data-testid="cv-job-city" />
+        </div>
+      </div>
+      {target.role ? (sk.role ? (
+        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="cv-job-skills">
+          <div className="flex items-center justify-between"><p className="text-[13px] font-semibold text-slate-100">{tr("Skills employers ask for")}</p><span className="text-[12px] text-teal-300 tabular-nums">{sk.have.length}/{sk.have.length + sk.missing.length}</span></div>
+          <div className="h-2 rounded-full bg-slate-800 overflow-hidden"><div className="h-full bg-teal-500" style={{ width: sk.score + "%" }} /></div>
+          <div className="flex flex-wrap gap-1.5">{sk.have.map((x) => <span key={x} className="rounded-full px-2.5 py-1 text-[12px] bg-teal-500/15 text-teal-200"><Check size={11} className="inline me-1" />{x}</span>)}</div>
+          {sk.missing.length ? <><p className="text-[12px] text-slate-400 m-0">{tr("Not on your CV yet — add it if you have it, or learn it:")}</p>
+            <div className="flex flex-wrap gap-1.5">{sk.missing.map((x) => <button key={x} onClick={() => window.dispatchEvent(new CustomEvent("attune-learn", { detail: { topic: x } }))} className="rounded-full px-2.5 py-1 text-[12px] border border-amber-700 text-amber-200" data-testid="cv-job-learn">{x} · {tr("learn it")}</button>)}</div></> : null}
+          <button className={ghost} onClick={goAI}>{tr("Tailor this CV to a job ad")}</button>
+        </div>) : <p className="text-[12.5px] text-slate-400">{tr("I don't have a skills list for this job yet — the interview practice and job search still work.")}</p>) : null}
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="cv-job-practice">
+        <div className="flex items-center justify-between"><p className="text-[13px] font-semibold text-slate-100">{tr("Interview practice")}</p><span className="text-[12px] text-slate-400">{(qi % qs.length) + 1}/{qs.length}</span></div>
+        <p className="text-[16px] text-white m-0" dir="auto" data-testid="cv-job-q">{qs[qi % qs.length]}</p>
+        <div className="flex gap-2 flex-wrap">
+          <button className={ghost + " flex items-center gap-1"} onClick={ask} data-testid="cv-job-hear"><Volume2 size={13} />{tr("Hear it")}</button>
+          <button className={(rec ? "px-3 py-2 rounded-lg text-xs font-semibold bg-rose-600 text-white" : primary) + " flex items-center gap-1"} onClick={rec ? stopRec : speak} data-testid="cv-job-mic"><Mic size={13} />{rec ? tr("Stop") : tr("Answer out loud")}</button>
+          <button className={ghost} onClick={() => { stopRec(); setQi(qi + 1); setAns(""); setFb(null); setAi(""); }} data-testid="cv-job-next">{tr("Next question")}</button>
+        </div>
+        <Tx rows={4} value={ans} onChange={setAns} placeholder={tr("…or type your answer")} data-testid="cv-job-answer" />
+        <button className={primary + " w-full py-2.5"} disabled={!ans.trim()} onClick={check} data-testid="cv-job-check">{tr("How did I do?")}</button>
+        {fb ? <div className="space-y-1" data-testid="cv-job-feedback">
+          {fb.good.map((x, i) => <p key={"g" + i} className="m-0 text-[13px] text-teal-200 flex gap-1.5"><Check size={14} className="shrink-0 mt-0.5" />{x}</p>)}
+          {fb.fix.map((x, i) => <p key={"f" + i} className="m-0 text-[13px] text-amber-200 flex gap-1.5"><AlertTriangle size={14} className="shrink-0 mt-0.5" />{x}</p>)}
+          {modelReady ? <button className={ghost + " flex items-center gap-1 mt-1"} onClick={coach} data-testid="cv-job-coach"><Sparkles size={13} />{tr("Ask the AI coach")}</button> : null}
+          {ai ? <p className="m-0 text-[13px] text-slate-200 whitespace-pre-wrap" dir="auto"><Sparkles size={12} className="inline me-1 text-teal-300" />{ai}</p> : null}
+        </div> : null}
+      </div>
+      {links.length ? <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-1.5" data-testid="cv-job-links">
+        <p className="text-[13px] font-semibold text-slate-100">{tr("Find jobs")} · {target.role}{target.city ? " · " + target.city : ""}</p>
+        <div className="flex flex-wrap gap-1.5">{links.map((l) => <button key={l.label} className={ghost} onClick={() => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: l, plan: null, inApp: false } }))} data-testid="cv-job-link">{l.label}</button>)}</div>
+        <p className="text-[11.5px] text-slate-500 m-0">{tr("Apply with the PDF from this CV (the button at the top).")}</p>
+      </div> : null}
+    </div>);
+}
+
 function AITab({ cv, setCV, llm, modelReady, openEngine, flash, onCopyFor, onNewCV, share, shareWord }) {
   const [busy, setBusy] = useState("");
   const [ad, setAd] = useState(""); const [company, setCompany] = useState("");
@@ -269,7 +339,7 @@ function AITab({ cv, setCV, llm, modelReady, openEngine, flash, onCopyFor, onNew
 }
 
 // ---- the editor ---------------------------------------------------------------------------------------------------------------------------------
-function Editor({ cv: cv0, onChange, onClose, onNewCV, onCopyFor, llm, modelReady, openEngine, flash, share, saveFile }) {
+function Editor({ cv: cv0, onChange, onClose, onNewCV, onCopyFor, llm, modelReady, openEngine, flash, share, saveFile, listen, native }) {
   const [cv, setCVRaw] = useState(cv0);
   const [tab, setTab] = useState("content");
   const setCV = (c) => { const n = { ...c, updated: Date.now() }; setCVRaw(n); onChange(n); };
@@ -298,7 +368,7 @@ function Editor({ cv: cv0, onChange, onClose, onNewCV, onCopyFor, llm, modelRead
       flash(r.refused.length ? tr("Improved — {n} line(s) kept as you wrote them (the AI tried to add a number)", { n: r.refused.length }) : tr("Improved — check the wording"));
     } catch (e) { flash(String((e && e.message) || e).slice(0, 140)); }
   };
-  const TABS = [["content", tr("Content")], ["design", tr("Design")], ["preview", tr("Preview")], ["check", tr("Check")], ["ai", tr("AI")]];
+  const TABS = [["content", tr("Content")], ["design", tr("Design")], ["preview", tr("Preview")], ["check", tr("Check")], ["job", tr("Job ready")], ["ai", tr("AI")]];
   return (
     <Sheet title={cv.name} onClose={onClose} testid="cv-editor"
       right={<div className="flex gap-1"><button className={primary + " flex items-center gap-1"} onClick={doPdf} data-testid="cv-export-pdf"><Share2 size={12} />PDF</button><button className={ghost} onClick={doWord} data-testid="cv-export-word">Word</button><button className={ghost} onClick={doText}>TXT</button></div>}>
@@ -307,6 +377,7 @@ function Editor({ cv: cv0, onChange, onClose, onNewCV, onCopyFor, llm, modelRead
         : tab === "design" ? <DesignTab cv={cv} setCV={setCV} flash={flash} />
         : tab === "preview" ? <Preview cv={cv} />
         : tab === "check" ? <CheckTab cv={cv} />
+        : tab === "job" ? <JobTab cv={cv} setCV={setCV} llm={llm} modelReady={modelReady} listen={listen} native={native} flash={flash} goAI={() => setTab("ai")} />
         : <AITab cv={cv} setCV={setCV} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} share={(t) => (share ? share(t) : null)} shareWord={letterWord}
             onNewCV={(c) => { onNewCV(c); flash(tr("Saved as a new CV: {n}", { n: c.name })); }} onCopyFor={(co) => { const c = V.copyFor(cv, co); onNewCV(c); flash(tr("Saved a copy: {n}", { n: c.name })); }} />}
     </Sheet>
@@ -314,7 +385,7 @@ function Editor({ cv: cv0, onChange, onClose, onNewCV, onCopyFor, llm, modelRead
 }
 
 // ---- the page: your CVs ----------------------------------------------------------------------------------------------------------------------------
-export function CVPage({ flash, llm, modelReady, openEngine, share, saveFile, nativeCall }) {
+export function CVPage({ flash, llm, modelReady, openEngine, share, saveFile, nativeCall, listen, native }) {
   const [list, setListRaw] = useState(V.loadAll);
   const [openId, setOpenId] = useState(null);
   const [sheet, setSheet] = useState(null);
@@ -378,7 +449,7 @@ export function CVPage({ flash, llm, modelReady, openEngine, share, saveFile, na
         <Tx rows={10} value={text} onChange={setText} placeholder={tr("…or paste your CV text here")} data-testid="cv-import-text" />
         <button className={primary + " w-full py-2.5"} disabled={busy} onClick={doImport} data-testid="cv-import-go">{busy ? tr("Reading your CV…") : tr("Import")}</button>
         {note ? <p className="text-[12.5px] text-amber-300" data-testid="cv-import-note">{note}</p> : null}</div></Sheet> : null}
-      {cur ? <Editor key={cur.id} cv={cur} onChange={upsert} onClose={() => setOpenId(null)} onNewCV={(c) => setList([c, ...list])} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} share={share} saveFile={saveFile} /> : null}
+      {cur ? <Editor key={cur.id} cv={cur} onChange={upsert} onClose={() => setOpenId(null)} onNewCV={(c) => setList([c, ...list])} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} share={share} saveFile={saveFile} listen={listen} native={native} /> : null}
     </section>
   );
 }

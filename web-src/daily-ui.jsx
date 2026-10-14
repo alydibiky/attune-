@@ -146,6 +146,8 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
   const setCourses = (list) => { store(CKEY, list); setCoursesRaw(list); syncDaily(native, list); };
   const putCourse = (c) => setCourses([c, ...loadCourses().filter((x) => x.id !== c.id)].sort((a, b) => a.created - b.created));
 
+  // v6.27: opened from CV → Job ready with a skill to learn — the new-course form, filled in
+  useEffect(() => { let t = ""; try { t = localStorage.getItem("attune:learn:seed") || ""; localStorage.removeItem("attune:learn:seed"); } catch (e) {} if (t) { setForm((f) => ({ ...f, topic: t })); setView("new"); } }, []);
   // opened from the notification or the widget
   useEffect(() => {
     if (!openId) return;
