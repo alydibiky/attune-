@@ -92,7 +92,7 @@ export function BusinessApp({ flash, llm, modelReady, openEngine, saveFile, shar
   return (
     <div className="biz-app min-h-[100dvh] bg-[#F4F6FA] text-[#0F172A]" style={accentVars(color)} data-testid="business-app">
       <style>{BIZ_CSS}</style>
-      <div className={full ? "" : "max-w-3xl mx-auto px-3"} style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>{body}</div>
+      <div className={full ? "" : "max-w-3xl lg:max-w-5xl mx-auto px-3"} style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>{body}</div>
     </div>
   );
 }
@@ -119,7 +119,7 @@ function IntroHero({ onDone }) {
         <p className="text-[26px] font-extrabold leading-tight">{tr("Build your own business system")}</p>
         <p className="text-[14px] text-[#CBD5E1]">{tr("For your company, on your phone — no code, and it works without internet.")}</p>
       </div>
-      <ol className="space-y-3.5">
+      <ol className="space-y-3.5 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-4">
         {pts.map(([h, d], i) => <li key={i} className="flex gap-3"><span className="w-9 h-9 rounded-xl font-extrabold flex items-center justify-center shrink-0 text-[#FFFFFF]" style={{ background: "var(--biz)" }}>{i + 1}</span>
           <span><span className="block font-bold text-[15px]">{h}</span><span className="block text-[13.5px] text-[#5B6B80]">{d}</span></span></li>)}
       </ol>
@@ -136,21 +136,23 @@ function Hub({ index, open, onNew, onBooks, onShop, onExit, onOpenFile, intro, o
         right={intro ? null : <button onClick={onIntro} className="h-10 px-3 text-[13px] font-semibold text-[#475569]" data-testid="biz-how">{tr("How it works")}</button>} />
       {intro ? <IntroHero onDone={onIntroDone} /> : null}
       {/* v6.27: a shop's whole day on the phone — the counter, stock, customers, staff, the day's close (shop-ui.jsx) */}
+      <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
       <button onClick={onShop} data-testid="shop-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
         <span className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-[#FFFFFF]" style={{ background: "var(--biz)" }}><ShoppingCart size={20} /></span>
         <span className="min-w-0"><span className="block font-bold text-[15px]">{tr("Shop in your pocket")}</span>
           <span className="block text-[12.5px] text-[#5B6B80] leading-snug">{tr("Say what your shop is — the counter with barcodes, stock, customers who owe, staff and the end-of-day close, ready in a minute. Every sale goes into your books.")}</span></span>
       </button>
-      <button onClick={onNew} className={btnP + " w-full"} style={{ background: "var(--biz)" }} data-testid="erp-new"><Plus size={18} />{intro ? tr("Start a new system") : tr("New system")}</button>
+      <button onClick={onNew} className={btnP + " w-full lg:col-span-2 lg:order-last"} style={{ background: "var(--biz)" }} data-testid="erp-new"><Plus size={18} />{intro ? tr("Start a new system") : tr("New system")}</button>
       <button onClick={onBooks} data-testid="books-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
         <span className="w-11 h-11 rounded-xl bg-[#FEF3C7] text-[#B45309] flex items-center justify-center shrink-0"><FileText size={20} /></span>
         <span className="min-w-0"><span className="block font-bold text-[15px]">{tr("Shop & trading books")}</span>
           <span className="block text-[12.5px] text-[#5B6B80] leading-snug">{tr("Invoices with VAT, payments and overdue tracking, stock and purchasing, reports — your own accounting, on your phone, in English and Arabic.")}</span></span>
       </button>
+      </div>
       <div className="flex items-center justify-between pt-1"><p className="text-[15px] font-bold">{tr("Your systems")}</p>
         <label className="text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer" style={{ color: "var(--biz)" }} data-testid="erp-open-app"><Upload size={15} />{tr("Open an app file")}
           <input type="file" accept=".html,.htm,.json,text/html" className="hidden" data-testid="erp-open-app-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) onOpenFile(f); }} /></label></div>
-      {index.length ? <div className="space-y-2.5">{index.map((x) => (
+      {index.length ? <div className="space-y-2.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">{index.map((x) => (
         <button key={x.id} onClick={() => open(x.id)} className={card + " w-full text-start p-3.5 flex items-center gap-3"} data-testid="erp-system">
           <span className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-[#FFFFFF]" style={{ background: x.color || "var(--biz)" }}><Database size={19} /></span>
           <span className="min-w-0 flex-1"><span className="block font-bold text-[15px] truncate" dir="auto">{x.name}</span>
