@@ -7,11 +7,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { Heart, Camera, Pencil, Plus, Check, AlertTriangle, Trash2, Users, Pill } from "lucide-react";
 import { tr } from "./i18n.js";
 import * as H from "./care.js";
+import { PANES, PANES_WIDE_LEFT, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const TABS = [["today", "Today"], ["meds", "Medicines"], ["labs", "Lab results"], ["family", "Family"]];
 const FREQS = [["once a day", 1], ["twice a day", 2], ["3 times a day", 3], ["4 times a day", 4], ["every 8 hours", 3], ["every 12 hours", 2], ["at bedtime", 1], ["once a week", "week"], ["only when needed", "prn"]];
 const TIMES_FOR = { "once a day": ["09:00"], "twice a day": ["09:00", "21:00"], "3 times a day": ["08:00", "14:00", "20:00"], "4 times a day": ["08:00", "12:00", "16:00", "20:00"], "every 8 hours": ["06:00", "14:00", "22:00"], "every 12 hours": ["08:00", "20:00"], "at bedtime": ["22:00"] };
 function shrink(file) { return new Promise((ok) => { const fr = new FileReader(); fr.onload = () => { const img = new Image(); img.onload = () => { const k = Math.min(1, 1600 / Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", 0.85)); }; img.onerror = () => ok(""); img.src = fr.result; }; fr.onerror = () => ok(""); fr.readAsDataURL(file); }); }
+// v6.27 computer layout A: the two panels with this page's own 12-px gaps (so a phone shows exactly what it did)
+const L3 = "space-y-3 lg:sticky lg:top-4", R3 = "space-y-3 mt-3 lg:mt-0 min-w-0";
 const field = "w-full rounded-lg px-3 py-2 text-[14px] border bg-transparent";
 const st = { borderColor: "var(--c-ln)", color: "var(--c-ink)" };
 
@@ -117,14 +120,14 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="care-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Heart size={20} className="c-acc" />{tr("Family health")}</h2>
-        <p className="c-sub m-0">{tr("Medicines, reminders and lab results for your family — read from the prescription and the report, kept on this phone. Not medical advice: ask your doctor or pharmacist.")}</p></div>
+        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("Medicines, reminders and lab results for your family — read from the prescription and the report, kept on this phone. Not medical advice: ask your doctor or pharmacist.")}</p></div>
       <div className="flex gap-4 border-b" style={{ borderColor: "var(--c-ln)" }} role="tablist">
         {TABS.map(([id, l]) => <button key={id} role="tab" aria-selected={tab === id} className="c-tab pb-2" onClick={() => setTab(id)} data-testid={"care-tab-" + id}>{tr(l)}</button>)}
       </div>
       {busy ? <p className="c-sub">{busy}</p> : null}
 
       {tab === "today" ? (
-        <div className="space-y-2" data-testid="care-today">
+        <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start" data-testid="care-today">
           {!doses.length ? <p className="c-sub">{tr("No doses today. Add a prescription in Medicines.")}</p> : doses.map((x) => (
             <button key={x.key} onClick={() => put(H.markTaken(data, x.key))} className="c-card w-full flex items-center gap-3 text-start py-2.5" data-testid="care-dose-row" aria-pressed={x.taken}>
               <span className={"c-num font-bold w-14 " + (x.late ? "c-neg" : "")}>{x.time}</span>
@@ -135,6 +138,8 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
 
       {tab === "meds" ? (
         <div className="space-y-3" data-testid="care-meds">
+          {/* v6.27 computer layout A: the ways in and the forms on the left, the warnings and the medicines on the right */}
+          <div className={PANES}><div className={L3}>
           <div className="grid grid-cols-3 gap-2">
             <button className="c-card text-center py-3" onClick={() => fileRx.current && fileRx.current.click()} data-testid="care-rx-photo"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Prescription photo")}</span></button>
             <button className="c-card text-center py-3" onClick={() => setTyping(typing === "rx" ? "" : "rx")} data-testid="care-rx-type"><Pencil size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Type it")}</span></button>
@@ -143,6 +148,7 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
           <input ref={fileRx} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { photo(e.target.files && e.target.files[0], "rx"); e.target.value = ""; }} data-testid="care-rx-file" />
           {typing === "rx" ? <div className="c-card space-y-2"><textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} dir="auto" placeholder={tr("e.g. Amoxicillin 500 mg — 1 cap 3 times daily for 7 days")} className={field} style={st} data-testid="care-rx-text" /><button className="c-btn" disabled={!text.trim()} onClick={() => { readRx(text); setTyping(""); }} data-testid="care-rx-read">{tr("Read it")}</button></div> : null}
           {drafts.map((d) => <MedForm key={d._k} init={d} members={members} onCancel={() => setDrafts((x) => x.filter((y) => y._k !== d._k))} onSave={(m) => { const { _k, missing, raw0, ...rest } = m; saveMed(rest); setDrafts((x) => x.filter((y) => y._k !== d._k)); }} />)}
+          </div><div className={R3}>
           {warn && warn.length ? (
             <div className="c-card space-y-2" style={{ borderColor: "var(--c-warn)" }} data-testid="care-warnings">
               <b className="flex items-center gap-2 c-warn"><AlertTriangle size={16} />{tr("Check with your pharmacist")}</b>
@@ -160,10 +166,14 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
                   <span className="c-sub text-[12.5px]" dir="auto">{[members.find((p) => p.id === m.member) && members.length > 1 ? members.find((p) => p.id === m.member).name : "", m.dose, tr(m.freq), (m.times || []).join(", "), m.food ? tr(m.food) : "", left != null ? tr("{n} days left", { n: Math.max(0, left) }) : ""].filter(Boolean).join(" · ")}</span></div>
                 <button className="c-sub" aria-label={tr("Stop")} onClick={() => stopMed(m)}><Trash2 size={15} /></button>
               </div>); })}
+          {!data.meds.some((m) => !m.stopped) ? <DeskEmpty icon={Pill} title={tr("Your medicines appear here")} testid="care-desk-empty" /> : null}
+          </div></div>
         </div>) : null}
 
       {tab === "labs" ? (
         <div className="space-y-3" data-testid="care-labs">
+          {/* v6.27 computer layout A: adding results on the left, each test over time on the right */}
+          <div className={PANES}><div className={L3}>
           <div className="grid grid-cols-2 gap-2">
             <button className="c-card text-center py-3" onClick={() => fileLab.current && fileLab.current.click()} data-testid="care-lab-photo"><Camera size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Photo of a lab report")}</span></button>
             <button className="c-card text-center py-3" onClick={() => setTyping(typing === "lab" ? "" : "lab")} data-testid="care-lab-type"><Pencil size={18} className="c-acc mx-auto" /><span className="block text-[12px] mt-1">{tr("Type results")}</span></button>
@@ -176,6 +186,7 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
               {labDraft.rows.map((r, i) => <div key={i} className="flex items-center gap-2 text-[13.5px]"><span className="flex-1">{tr(r.test)}</span><input value={r.value} onChange={(e) => setLabDraft({ ...labDraft, rows: labDraft.rows.map((x, k) => (k === i ? { ...x, value: +e.target.value || 0 } : x)) })} className="w-20 rounded-lg px-2 py-1 border bg-transparent c-num" style={st} /><span className="c-sub w-16">{r.unit}</span></div>)}
               <button className="c-btn" onClick={() => { const d = ensureMember(); put(H.addLabs(d, labDraft.member || d.members[0].id, labDraft.date, labDraft.rows.map((r) => ({ ...r, flag: r.low != null && r.value < r.low ? "low" : r.high != null && r.value > r.high ? "high" : r.low != null || r.high != null ? "in range" : "" })))); setLabDraft(null); }} data-testid="care-lab-save">{tr("Save")}</button>
             </div>) : null}
+          </div><div className={R3}>
           {tests.map((t) => { const tr0 = H.trendOf(data.labs, t), L = tr0[tr0.length - 1] || data.labs.filter((x) => x.test === t).pop();
             return (
               <div key={t} className="c-card flex items-center gap-3" data-testid="care-lab">
@@ -184,12 +195,19 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
                 <div className="text-end"><div className="c-num font-bold">{L.value} <span className="c-sub text-[11px]">{L.unit}</span></div>{L.flag ? <span className={"c-pill " + (L.flag === "in range" ? "" : "late")} data-testid="care-flag">{tr(L.flag)}</span> : null}</div>
               </div>); })}
           {!tests.length && !labDraft ? <p className="c-sub">{tr("No results yet. Add a lab report to see each test over time.")}</p> : null}
+          {!tests.length && labDraft ? <DeskEmpty icon={Heart} title={tr("Each test over time appears here")} testid="care-desk-empty" /> : null}
+          </div></div>
         </div>) : null}
 
       {tab === "family" ? (
         <div className="space-y-2" data-testid="care-family">
+          {/* v6.27 computer layout A: the family as cards on the left (2 columns), adding someone on the right */}
+          <div className={PANES_WIDE_LEFT}>
+          {data.members.length ? <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start">
           {data.members.map((p) => <div key={p.id} className="c-card flex items-center gap-3"><div className="c-ic"><Users size={16} /></div><div className="flex-1"><b>{p.name}</b>{p.notes ? <span className="block c-sub text-[12.5px]" dir="auto">{p.notes}</span> : null}</div><span className="c-sub text-[12px]">{tr("{n} medicines", { n: data.meds.filter((m) => m.member === p.id && !m.stopped).length })}</span></div>)}
-          <AddMember onAdd={(m) => put(H.addMember(data, m).data)} />
+          </div> : <DeskEmpty icon={Users} title={tr("Your family appears here")} testid="care-desk-family" />}
+          <div className={(data.members.length ? "mt-2 " : "") + "lg:mt-0 lg:sticky lg:top-4"}><AddMember onAdd={(m) => put(H.addMember(data, m).data)} /></div>
+          </div>
         </div>) : null}
     </div>);
 }

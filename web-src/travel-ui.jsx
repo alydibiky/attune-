@@ -12,6 +12,8 @@ import { speakNow } from "./lesson-ui.jsx";
 import { openOwed } from "./owed-ui.jsx";
 
 const TABS = [["trip", "Trip"], ["arrive", "Arrive"], ["say", "Say it"], ["ask", "Ask"], ["know", "Know"]];
+// v6.27 computer layout A: two equal columns inside a tab (one under the other on a phone)
+const COLS = "lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start";
 const field = "rounded-lg px-3 py-2 text-[14px] border bg-transparent";
 const st = { borderColor: "var(--c-ln)", color: "var(--c-ink)" };
 const PHRASE_TAGS = [["all", "All"], ["emergency", "🚨 Emergency"], ["transport", "🚕 Getting around"], ["food", "🍽 Eating"], ["shopping", "💰 Buying"], ["basics", "💬 Basics"]];
@@ -108,7 +110,9 @@ export function TravelPage(p) {
           {TABS.map(([id, l]) => <button key={id} role="tab" aria-selected={tab === id} className="c-tab pb-2" onClick={() => setTab(id)} data-testid={"travel-tab-" + id}>{tr(l)}</button>)}
         </div>
 
-        {tab === "trip" ? (<div className="space-y-3">
+        {tab === "trip" ? (<div className={"space-y-3 " + COLS}>
+          {/* v6.27 computer layout A: the trip and the passport on the left; entry, flights and the rest on the right */}
+          <div className="space-y-3">
           {/* the trip itself: dates, people, from where — everything else on this tab is checked against it */}
           <Section title="Your trip" testid="travel-trip">
             <div className="grid grid-cols-2 gap-2">
@@ -130,6 +134,7 @@ export function TravelPage(p) {
                   {pp.status === "ok" ? <ShieldCheck size={15} className="shrink-0 mt-0.5" /> : <AlertTriangle size={15} className="shrink-0 mt-0.5" />}
                   {tr(pp.status === "ok" ? "Valid for 6+ months after you return — fine for every country." : pp.status === "short" ? "Less than 6 months left after you return — many countries and airlines refuse this. Renew it or check this country's rule." : pp.status === "expires-during" ? "It expires during the trip — renew it before you go." : "It has expired — renew it before you go.")} ({tr("expires")} {pp.expires})</p>}
           </Section>
+          </div><div className="space-y-3">
 
           {/* entry rules for this passport */}
           {entry ? (<Section title="Going there — what you need" testid="travel-entry" right={
@@ -164,9 +169,12 @@ export function TravelPage(p) {
             <ul className="space-y-1.5 m-0 p-0 list-none" dir={dirMine}>{pv("apps").map((a, i) => { const m = a.match(/^(.*?)\s+[—–-]\s+(.*)$/); return <li key={i} className="text-[13.5px]">{tr(m ? m[1] : a)}{m ? <span className="c-sub"> — {tr(m[2])}</span> : null}</li>; })}</ul>
             <p className="c-sub m-0">{tr("Some of these can't be installed or signed up for once you're in the country — do it while you still have your home connection.")}</p>
           </Section>
+          </div>
         </div>) : null}
 
-        {tab === "arrive" ? (<div className="space-y-3">
+        {tab === "arrive" ? (<div className={"space-y-3 " + COLS}>
+          {/* v6.27 computer layout A: landing and the key facts on the left, money and connection on the right */}
+          <div className="space-y-3">
           {pack.emergency ? <div className="c-card" style={{ borderColor: "var(--c-neg)" }} data-testid="travel-emergency"><p className="c-lbl m-0">{tr("🚨 Emergency")}</p><p className="c-neg text-[17px] font-bold m-0 mt-1">{tr(pack.emergency)}</p></div> : null}
           <Section title="When you land" right={<span className="c-sub">{tr("first hour")}</span>}>
             <ol className="space-y-1.5 m-0 p-0 list-none" dir={dirMine}>{pv("arrival").map((a, i) => <li key={i} className="flex gap-2 text-[13.5px]"><span className="c-acc font-bold c-num">{i + 1}</span><span>{tr(a)}</span></li>)}</ol>
@@ -174,6 +182,7 @@ export function TravelPage(p) {
           </Section>
           <div className="c-list">{[["💱 Money", pack.currency], ["🔌 Power", pack.plug], ["🚰 Water", pack.water], ["🛂 Visa", pack.visa], ["📅 Best time", pack.best], ["💵 Tipping", pack.tipping], ["🤝 Haggling", pack.haggle], ["SIM:", pack.sim]].filter(([, v]) => v).map(([l, v]) => (
             <div key={l} className="px-4 py-2.5 flex gap-3"><span className="c-sub w-24 shrink-0">{tr(l)}</span><span className="text-[13.5px]">{tr(v)}</span></div>))}</div>
+          </div><div className="space-y-3">
 
           {/* money: the converter and the fair-price check, both from numbers, not the model */}
           {code ? <Section title="Is this price fair?" testid="travel-fair">
@@ -193,15 +202,19 @@ export function TravelPage(p) {
           </Section> : null}
           {pack.connectivity ? <Section title="📶 Staying connected"><p className="text-[13.5px] m-0">{tr(pack.connectivity)}</p></Section> : null}
           {openMap ? <button onClick={openMap} className="c-sub underline bg-transparent border-0 p-0 cursor-pointer inline-flex items-center gap-1"><MapPin size={12} />{tr("Open the map")}</button> : null}
+          </div>
         </div>) : null}
 
-        {tab === "say" ? (<div className="space-y-3">
-          <div className="flex gap-2">
+        {tab === "say" ? (<div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] lg:gap-6 lg:items-start">
+          {/* v6.27 computer layout A: finding a phrase on the left, the phrases on the right */}
+          <div className="space-y-3 lg:sticky lg:top-4">
+          <div className="flex gap-2 lg:flex-wrap">
             <div className="relative flex-1"><Search size={14} className="absolute top-2.5 start-2.5 c-sub" />
               <input value={phraseFilter} onChange={(e) => setPhraseFilter(e.target.value)} placeholder={tr("search phrases…")} className={field + " w-full ps-8"} style={st} /></div>
             {openTranslate ? <button onClick={() => openTranslate(pack.lang)} className="c-btn inline-flex items-center gap-1.5" data-testid="travel-translate"><Camera size={15} />{tr("A sign or menu")}</button> : null}
           </div>
-          <div className="flex gap-3 overflow-x-auto border-b" style={{ borderColor: "var(--c-ln)" }}>{PHRASE_TAGS.map(([k, l]) => <button key={k} className="c-tab pb-2" aria-selected={phraseTag === k} onClick={() => setPhraseTag(k)}>{tr(l)}</button>)}</div>
+          <div className="flex gap-3 overflow-x-auto border-b lg:flex-wrap lg:gap-y-1" style={{ borderColor: "var(--c-ln)" }}>{PHRASE_TAGS.map(([k, l]) => <button key={k} className="c-tab pb-2" aria-selected={phraseTag === k} onClick={() => setPhraseTag(k)}>{tr(l)}</button>)}</div>
+          </div><div className="space-y-3 min-w-0">
           <div className="c-list" data-testid="travel-phrases">
             {pack.phrases.map((ph, i) => ({ ...ph, mine: (packView && packView.gloss && packView.gloss[i]) || ph.en }))
               .filter((ph) => phraseTag === "all" || ph.tag === phraseTag)
@@ -217,16 +230,21 @@ export function TravelPage(p) {
               </div>))}
           </div>
           <p className="c-sub m-0">{tr("Tap to copy. These are written by hand, not generated — so an allergy or emergency phrase can never come out wrong.")}</p>
+          </div>
         </div>) : null}
 
         {tab === "ask" ? (<Section title="Ask anything about being here" testid="travel-ask">
+          {/* v6.27 computer layout A: the question on the left, the answer on the right */}
+          <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start"><div className="space-y-2">
           <textarea value={travelQ} onChange={(e) => setTravelQ(e.target.value)} rows={3} dir="auto"
             placeholder={tr("e.g. the taxi driver won't turn the meter on, what do I say? / is this price fair for a carpet? / can I drink the tap water?")} className={field + " w-full resize-none"} style={st} />
           <div className="flex flex-wrap gap-1.5">{["Is this price fair?", "How do I get a taxi?", "What should I not do here?", "How do I ask for directions?"].map((q) => (
             <button key={q} onClick={() => setTravelQ(q)} className="rounded-full px-3 py-1 text-[12.5px] border bg-transparent cursor-pointer" style={st}>{tr(q)}</button>))}</div>
           <button onClick={askTravel} disabled={!travelQ.trim() || loading} className="c-btn w-full inline-flex items-center justify-center gap-2 disabled:opacity-50">{loading ? <Loader2 size={15} className="animate-spin" /> : <Plane size={15} />}{loading ? "…" : tr("Ask")}</button>
+          </div><div className="space-y-2">
           {travelA ? <p className="text-[14px] whitespace-pre-wrap leading-relaxed m-0 pt-1" dir={dirMine}>{travelA}</p> : null}
           <p className="c-sub m-0">{tr("It knows how things actually work here — fair prices, common overcharges, what's rude. It will tell you when something needs live data it can't have offline.")}</p>
+          </div></div>
         </Section>) : null}
 
         {tab === "know" ? (<div className="space-y-3">
@@ -236,8 +254,11 @@ export function TravelPage(p) {
               {LANGS.filter((l) => l.k !== "match").map((l) => <option key={l.k} value={l.k}>{tr(l.label)}</option>)}</select>
             {translating ? <span className="c-sub inline-flex items-center gap-1"><Loader2 size={11} className="animate-spin" />{tr("translating on your phone…")}</span> : myLang !== "en" ? <span className="c-sub">{tr("saved — this pack now reads in")} {langShown(myLang)}</span> : null}
           </div>
+          {/* v6.27 computer layout A: the tips as cards in 2 columns */}
+          <div className={"space-y-3 " + COLS}>
           {pv("scams").length ? <Section title="How you'll get overcharged"><List items={pv("scams")} dir={dirMine} warn /></Section> : null}
           {[["Money here", "money"], ["What's rude, what's fine", "etiquette"], ["Staying well", "health"]].map(([t, k]) => pv(k).length ? <Section key={k} title={t}><List items={pv(k)} dir={dirMine} /></Section> : null)}
+          </div>
           <p className="c-lbl m-0 pt-1">{tr("Everything else about")} {tr(pack.name)} · {tr("all offline")}</p>
           <div className="c-list">{[["💸", "What things cost", "costs", "Rough ranges, for sanity-checking a price — not a price list."], ["🚉", "Getting around", "getAround"], ["🍽", "Eating well", "eat"], ["⚖️", "Laws that surprise people", "laws"],
               ["⚠️", "Real dangers", "dangers"], ["📅", "When things shut", "holidays"], ["🛃", "Customs & what not to bring", "customs"], ["☎️", "Useful numbers", "numbers"]].map(([icon, title, k, note]) => pv(k).length ? (

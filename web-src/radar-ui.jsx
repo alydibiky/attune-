@@ -14,11 +14,14 @@ import { fmt } from "./money-calm.js";
 import * as O from "./owed.js";
 import { openOwed } from "./owed-ui.jsx";
 import { payReader } from "./paylog-ui.jsx";
+import { LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const KIND_LABEL = { trial: "Free trial", renewal: "Renewal", return: "Return window", warranty: "Warranty", expiry: "Document expiry", other: "Other" };
 const DOC_LABEL = { passport: "Passport", visa: "Visa", licence: "Driving licence", id: "ID card", insurance: "Insurance", registration: "Car registration", card: "Bank card" };
 const DONE_ACTS = { trial: [["cancelled", "Cancelled it"], ["kept", "Keep it"]], renewal: [["cancelled", "Cancelled it"], ["renewed", "Let it renew"]],
   return: [["returned", "Returned it"], ["kept", "Keep it"]], warranty: [["claimed", "Claimed"], ["kept", "Ended"]], expiry: [["renewed", "Renewed it"]], other: [["kept", "Done"]] };
+// v6.27 computer layout A: a narrower left panel here, so the deadlines on the right fit two cards side by side
+const PANES_N = "lg:grid lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)] lg:gap-6 lg:items-start";
 const opts = () => ({ now: Date.now(), home: homeCurrency(), order: dateOrder() });
 
 // ---- receipt photos: kept on the phone in IndexedDB (never in the backup text, never online) ----
@@ -191,8 +194,10 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="radar-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Radar size={20} className="c-acc" />{tr("Deadline Radar")}</h2>
-        <p className="c-sub m-0">{tr("Free trials, renewals, returns, warranties and documents — Attune warns you before each one. Everything stays on this phone.")}</p></div>
+        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("Free trials, renewals, returns, warranties and documents — Attune warns you before each one. Everything stays on this phone.")}</p></div>
 
+      {/* v6.27 computer layout A: the counters and the ways in on the left, the deadlines on the right (stacked on a phone) */}
+      <div className={PANES_N}><div className={LEFT}>
       {radarSaved > 0 || auto > 0 ? (
         <div className="grid grid-cols-2 gap-3">
           <div className="c-card"><span className="c-lbl">{tr("Saved by the Radar")}</span><div className="c-amt" data-testid="radar-saved">{fmt(radarSaved)}</div></div>
@@ -241,6 +246,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
             if (edit.id) { const d = D.updateDeadline(data, edit.id, { ...f }); put(d); const it = d.items.find((x) => x.id === edit.id); unremind && unremind("radar-" + edit.id); const rem = D.radarReminder(it); if (rem && remind) remind(rem); flash && flash(tr("Saved")); }
             else saveOne({ ...edit, ...f, source: edit.source || "manual" });
             setMode(null); setEdit(null); setPhoto(""); }} />) : null}
+      </div><div className={RIGHT}>
 
       {data.items.length > 3 ? (
         <div className="flex items-center gap-2 c-card py-2"><Search size={15} className="c-sub" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Find a receipt or document…")} className="flex-1 bg-transparent outline-none text-[14px]" style={{ color: "var(--c-ink)" }} data-testid="radar-search" /></div>) : null}
@@ -248,7 +254,11 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
         <p className="c-sub" data-testid="radar-empty">{tr("Nothing to watch yet. Scan a receipt, paste a trial email, or add a passport or warranty by hand.")}</p>) : null}
       {[["Soon", V.soon], ["Later", V.later], ["Done", V.done.slice(0, 20)]].map(([h, list]) => list.filter(match).length ? (
         <div key={h} className="space-y-2" data-testid={"radar-" + h.toLowerCase()}><span className="c-lbl">{tr(h)}</span>
+          <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:items-start">
           {list.filter(match).map((x) => <Item key={x.id} x={x} onDone={done} onEdit={(it) => { setEdit(it); setMode("form"); try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {} }} onDelete={del} />)}
+          </div>
         </div>) : null)}
+      {!data.items.length && (drafts.length || mode === "form") ? <DeskEmpty icon={Radar} title={tr("Your deadlines appear here")} testid="radar-desk-empty" /> : null}
+      </div></div>
     </div>);
 }

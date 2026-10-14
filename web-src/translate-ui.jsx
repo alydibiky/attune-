@@ -8,6 +8,7 @@ import { openRead } from "./readaloud-ui.jsx";
 import { tr, getLang } from "./i18n.js";
 import * as T from "./translate.js";
 import { speakNow } from "./lesson-ui.jsx";
+import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const field = "w-full rounded-xl px-3 py-2.5 text-[15px] border bg-transparent";
 const st = { borderColor: "var(--c-ln)", color: "var(--c-ink)" };
@@ -98,10 +99,13 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="translate-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Languages size={20} className="c-acc" />{tr("Translate")}</h2>
-        <p className="c-sub m-0">{tr("Any language, on this phone. Numbers, names and codes can't be changed; every part is checked, and anything doubtful is marked.")}</p></div>
+        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("Any language, on this phone. Numbers, names and codes can't be changed; every part is checked, and anything doubtful is marked.")}</p></div>
       <div className="flex gap-4 border-b" style={{ borderColor: "var(--c-ln)" }} role="tablist">
         {[["text", "Text"], ["photo", "Photo"], ["doc", "Document"]].map(([id, l]) => <button key={id} role="tab" aria-selected={tab === id} className="c-tab pb-2" onClick={() => { setTab(id); setRes(null); }} data-testid={"tr-tab-" + id}>{tr(l)}</button>)}
       </div>
+      {/* v6.27 computer layout A: what to translate on the left, the translation on the right (stacked on a phone);
+          a document opens the File Converter, so its tab keeps one column */}
+      <div className={tab === "doc" ? "lg:max-w-2xl" : PANES}><div className={LEFT}>
       <div className="flex items-center gap-2">
         <span className="c-sub text-[13px]">{tr("Into")}</span>
         <select value={to} onChange={(e) => { setTo(e.target.value); setRes(null); }} className={field + " flex-1"} style={st} data-testid="tr-to">
@@ -134,7 +138,10 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
         <div className="c-card space-y-2" data-testid="tr-gloss"><span className="c-lbl">{tr("Always translate these my way")}</span>
           {gloss.map((g, i) => <div key={i} className="flex gap-2 items-center"><input value={g.from} onChange={(e) => saveG(gloss.map((x, k) => (k === i ? { ...x, from: e.target.value } : x)))} placeholder={tr("Word")} className={field} style={st} dir="auto" /><span>→</span><input value={g.to} onChange={(e) => saveG(gloss.map((x, k) => (k === i ? { ...x, to: e.target.value } : x)))} placeholder={tr("My translation")} className={field} style={st} dir="auto" /><button aria-label={tr("Delete")} onClick={() => saveG(gloss.filter((_, k) => k !== i))}><Trash2 size={14} /></button></div>)}
           <button className="c-pill inline-flex items-center gap-1" onClick={() => saveG([...gloss, { from: "", to: "" }])}><Plus size={13} />{tr("Add")}</button></div>) : null}
+      </div><div className={RIGHT}>
       {busy ? <p className="c-sub" data-testid="tr-busy">{busy}</p> : null}
       {res ? <Result res={res} to={to} native={native} onCopy={(t) => { try { navigator.clipboard.writeText(t); flash && flash(tr("Copied")); } catch (e) {} }} /> : null}
+      {!res && !busy && tab !== "doc" ? <DeskEmpty icon={Languages} title={tr("The translation appears here")} text={tr("Every part is checked: numbers, names and codes kept exactly.")} testid="tr-desk-empty" /> : null}
+      </div></div>
     </div>);
 }

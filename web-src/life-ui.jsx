@@ -9,8 +9,11 @@ import { tr } from "./i18n.js";
 import { parseLife, progressOf, tickText, loadLife, saveLife, addCommitment, togglePaid, removeCommitment, dueSoon, lifeModelPrompt, readLifeModel, nextReminder } from "./life.js";
 import { fmt } from "./money-calm.js";
 import { loadGuardian, saveGuardian, collected } from "./guardian.js";
+import { LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const KIND = { installment: "Installments", debt: "Money between people", circle: "Savings circle", bill: "Bill", rent: "Rent", subscription: "Subscription" };
+// v6.27 computer layout A: a narrower left panel here, so the commitments on the right fit two cards side by side
+const PANES_N = "lg:grid lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] lg:gap-6 lg:items-start";
 const EVERY = { month: "a month", week: "a week", year: "a year" };
 
 function describe(c) {
@@ -92,7 +95,9 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
     ["Bills, rent and subscriptions", data.items.filter((c) => ["bill", "rent", "subscription"].includes(c.kind))]].filter((g) => g[1].length);
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="life-page">
-      <div><h2 className="text-[22px] font-bold m-0">{tr("People & plans")}</h2><p className="c-sub m-0">{tr("Debts, installments, savings circles, bills — with a checkbox for every payment.")}</p></div>
+      <div><h2 className="text-[22px] font-bold m-0">{tr("People & plans")}</h2><p className="c-sub m-0 lg:max-w-[70ch]">{tr("Debts, installments, savings circles, bills — with a checkbox for every payment.")}</p></div>
+      {/* v6.27 computer layout A: what you type and what's due on the left, the commitments on the right (stacked on a phone) */}
+      <div className={PANES_N}><div className={LEFT}>
       <div className="c-card">
         <div className="flex items-end gap-2">
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="life-input"
@@ -115,9 +120,12 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
             <div key={k} className="flex items-center mt-2"><span className="flex-1 truncate" dir="auto">{heading(x.c)}</span>
               <span className={"c-pill " + (x.late ? "late" : "due")}>{x.late ? tr("Late") : x.date.slice(5)} · <span className="c-num">{fmt(x.amount)}</span></span></div>))}
         </div>) : null}
+      {!data.items.length && !draft ? <p className="c-sub flex items-center gap-2"><Sparkles size={14} />{tr("Try: «جمعية ٢٠٠٠ في الشهر لمدة ١٠ شهور ودوري الرابع» or “Netflix 200 every month”.")}</p> : null}
+      </div><div className={RIGHT}>
       {groups.map(([g, items]) => (
         <div key={g} className="space-y-2"><span className="c-lbl">{tr(g)}</span>
           <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>{items.map((c) => <Item key={c.id} c={c} onTick={tick} onRemove={remove} />)}</div></div>))}
-      {!data.items.length && !draft ? <p className="c-sub flex items-center gap-2"><Sparkles size={14} />{tr("Try: «جمعية ٢٠٠٠ في الشهر لمدة ١٠ شهور ودوري الرابع» or “Netflix 200 every month”.")}</p> : null}
+      {!groups.length ? <DeskEmpty icon={Users} title={tr("Your people and plans appear here")} testid="life-desk-empty" /> : null}
+      </div></div>
     </div>);
 }

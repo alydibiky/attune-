@@ -7,6 +7,7 @@ import { GraduationCap, Camera, Pencil, Check, X, ShieldCheck, AlertTriangle } f
 import { tr, getLang } from "./i18n.js";
 import * as C from "./coach.js";
 import { LessonPlayer, answerMatches, speakNow } from "./lesson-ui.jsx";
+import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const LANG_NAME = () => (getLang() === "ar" ? "Arabic (simple, formal)" : "English");
 function shrink(file) {
@@ -81,7 +82,9 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="coach-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><GraduationCap size={21} className="c-acc" />{tr("Homework Coach")}</h2>
-        <p className="c-sub m-0">{tr("Snap the homework — Attune teaches it step by step, with pictures and a voice. Maths is checked by code before you see it.")}</p></div>
+        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("Snap the homework — Attune teaches it step by step, with pictures and a voice. Maths is checked by code before you see it.")}</p></div>
+      {/* v6.27 computer layout A: the homework and its problems on the left, the lesson on the right (stacked on a phone) */}
+      <div className={PANES}><div className={LEFT}>
       <div className="flex gap-2 flex-wrap">
         {[[true, "Teach me first"], [false, "Show the answers"]].map(([v, l]) => <button key={l} className="c-pill" aria-pressed={teach === v} style={teach === v ? { background: "var(--c-acc)", color: "#fff" } : {}} onClick={() => put({ ...state, settings: { ...(state.settings || {}), teach: v } })} data-testid={v ? "coach-teach" : "coach-answers"}>{tr(l)}</button>)}
       </div>
@@ -107,6 +110,7 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
               <button className="c-btn px-3 py-1.5" onClick={() => open(i)} data-testid="coach-teachme">{tr("Teach me")}</button>
             </div>))}
         </div>) : null}
+      </div><div className={RIGHT}>
       {active && active.none ? <p className="c-sub" data-testid="coach-none">{tr("This needs the phone's AI model — install one in Engine, or type the problem more simply.")}</p> : null}
       {active && active.lesson ? (
         <div className="space-y-3">
@@ -117,5 +121,7 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
             {active.by === "code" ? tr("Every step checked by exact arithmetic") : active.by === "python" ? tr("The answer was checked by running the maths") : tr("Explained by the phone's AI — not checked; ask your teacher if unsure")}</p>
           {active.by === "code" && active.kind !== "error" ? <Practice key={active.src} src={active.src} native={native} onResult={(okk, t) => put(C.record(C.loadCoach(), active.topic, okk, t))} /> : null}
         </div>) : null}
+      {!active ? <DeskEmpty icon={GraduationCap} title={tr("The lesson appears here")} text={tr("Type or snap the homework, then tap Teach me on a problem.")} testid="coach-desk-empty" /> : null}
+      </div></div>
     </div>);
 }
