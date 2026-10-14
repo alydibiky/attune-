@@ -55,6 +55,14 @@
         <!-- To open WhatsApp (or WhatsApp Business) directly for a message. -->
         <package android:name="com.whatsapp" />
         <package android:name="com.whatsapp.w4b" />
+        <!-- v6.27 "Do it for me": is the person's booking / delivery / ride / shop app installed (open it, else the website) -->
+        <package android:name="com.talabat" /><package android:name="com.ubercab" /><package android:name="com.ubercab.eats" />
+        <package android:name="com.careem.acma" /><package android:name="com.dd.doordash" /><package android:name="com.deliveroo.orderapp" />
+        <package android:name="in.swiggy.android" /><package android:name="com.application.zomato" /><package android:name="com.glovo" />
+        <package android:name="com.grabtaxi.passenger" /><package android:name="com.gojek.app" /><package android:name="ee.mtakso.client" />
+        <package android:name="me.lyft.android" /><package android:name="sinet.startup.inDriver" /><package android:name="com.olacabs.customer" />
+        <package android:name="com.booking" /><package android:name="com.airbnb.android" /><package android:name="net.skyscanner.android.main" />
+        <package android:name="com.amazon.mShop.android.shopping" />
     </queries>
 
     <application
@@ -73,6 +81,12 @@
         <!-- Unencrypted http is allowed ONLY to 127.0.0.1, where the on-device
              model listens. Every other connection must be https. -->
 
+        <!-- v6.27 "Do it for me": a website inside Attune, with "Best offer" / "Fill my details" (never pays) -->
+        <activity
+            android:name=".AgentBrowser"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden|uiMode"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

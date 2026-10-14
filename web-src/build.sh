@@ -28,6 +28,9 @@ mkdir -p "$VENDOR"
 cp node_modules/maplibre-gl/dist/maplibre-gl.js node_modules/maplibre-gl/dist/maplibre-gl.css node_modules/@mapbox/mapbox-gl-rtl-text/dist/mapbox-gl-rtl-text.js "$VENDOR/"
 cp node_modules/maplibre-gl/LICENSE.txt "$VENDOR/maplibre-gl-LICENSE.txt"
 
+# v6.27 "Do it for me": the kit the app's own browser injects into booking sites (AgentBrowser.kt reads www/agent-kit.js)
+cp "$HERE/agent-kit.js" "$HERE/../app/src/main/assets/www/agent-kit.js"
+
 # 1. CSS: Tailwind compiled from the classes the app actually uses.
 node_modules/.bin/tailwindcss -i build/tw.css -o "$TMP/app.css" --minify >/dev/null 2>&1
 test -s "$TMP/app.css" || { echo "CSS build failed"; exit 1; }

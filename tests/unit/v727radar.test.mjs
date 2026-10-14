@@ -61,4 +61,5 @@ ok(R.resolveDeadline(D, D.items[0].id, "cancelled", new Date("2026-10-20").getTi
 ok(R.radarToday(D, now).map((x) => x.title).join() === "Spotify", "Home's today: the trial ending in 2 days (not the passport months away)");
 // the model fallback
 ok(R.readDeadlineModel('{"kind":"return","title":"Shoes","date":"2026-11-01","amount":80}', { home: "EUR", now })[0].currency === "EUR" && !R.readDeadlineModel('{"kind":"x"}').length, "the model's answer is checked");
+ok(R.cancelLink({ kind: "trial", title: "Netflix" }).url === "https://www.netflix.com/cancelplan" && R.cancelLink({ kind: "trial", title: "Some App", app: "Google Play" }).label === "Google Play" && R.cancelLink({ kind: "warranty", title: "Netflix" }) === null && R.cancelLink({ kind: "trial", title: "Gym X" }) === null, "where to cancel: the service's page, else the store, never a guess");
 console.log(bad ? bad + " FAILED" : "v727radar ok");

@@ -471,6 +471,27 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         out.toString()
     } catch (e: Exception) { JSONObject().put("ok", false).put("error", e.message ?: "").toString() }
 
+    /** v6.27 "Do it for me", level 2: a website inside Attune with Best offer / Fill my details (AgentBrowser) —
+     *  {url, title, profile{}, rules{}, labels{}, search} → when it closes: {reason, offers, filled, payment}. */
+    @JavascriptInterface
+    fun agentOpen(id: String, arg: String) {
+        if (blockedByAirGap(id, "opening a website")) return
+        try {
+            val a = JSONObject(arg)
+            if (!a.optString("url").startsWith("https://")) return reject(id, "Not a web link")
+            AgentBrowser.onDone?.invoke(JSONObject().put("reason", "replaced"))
+            AgentBrowser.onDone = { r -> resolve(id, r) }
+            val i = android.content.Intent(ctx, AgentBrowser::class.java)
+                .putExtra("url", a.optString("url")).putExtra("title", a.optString("title"))
+                .putExtra("profile", a.optJSONObject("profile")?.toString() ?: "{}")
+                .putExtra("rules", a.optJSONObject("rules")?.toString() ?: "{}")
+                .putExtra("labels", a.optJSONObject("labels")?.toString() ?: "{}")
+                .putExtra("search", a.optBoolean("search", true))
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(i)
+        } catch (e: Exception) { AgentBrowser.onDone = null; reject(id, e.message ?: "Could not open it") }
+    }
+
     // ---- voice -----------------------------------------------------------------
     var voice: Voice? = null
     var askMic: (() -> Unit)? = null

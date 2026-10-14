@@ -51,6 +51,7 @@ import { PhoneHome } from "./home-ui.jsx";
 import { PayInbox, runAutoPay } from "./paylog-ui.jsx";
 import { GuardianPage, GuardianCard } from "./guardian-ui.jsx";
 import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
+import { BookingDetails, loadBooking, agentLabels } from "./agent-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
@@ -8164,6 +8165,28 @@ export default function App() {
     document.addEventListener("visibilitychange", run);
     return () => { clearTimeout(t); document.removeEventListener("visibilitychange", run); };
   }, []);
+  // v6.27 "Do it for me": open the chosen link — inside Attune (level 2, Android), else the person's app (search copied) or the site
+  useEffect(() => {
+    const on = async (e) => {
+      const { link, plan, inApp } = (e && e.detail) || {}; if (!link || !/^https:\/\//.test(link.url || "")) return;
+      if (inApp && NATIVE && NATIVE.agentOpen) {
+        try {
+          const r = await nativeCall("agentOpen", { url: link.url, title: link.label, profile: loadBooking(), rules: (plan && plan.fields) || {}, labels: agentLabels(), search: true });
+          if (r && r.payment) flash(tr("You reached the payment — that part is yours")); else if (r && r.filled) flash(tr("Filled {n} fields", { n: r.filled }));
+        } catch (x) { flash(String((x && x.message) || x)); }
+        return;
+      }
+      if (NATIVE && NATIVE.intent) {
+        let r = {}; try { r = JSON.parse(NATIVE.intent(JSON.stringify({ kind: "link", url: link.url, app: link.app || "", copy: link.copy || "" })) || "{}"); } catch (x) {}
+        if (r.ok === false) { try { window.open(link.url, "_blank"); } catch (x) {} }
+        else if (link.copy) flash(tr("Search copied — paste it in {app}", { app: link.label }));
+        return;
+      }
+      try { window.open(link.url, "_blank"); } catch (x) {}
+    };
+    window.addEventListener("attune-agent", on);
+    return () => window.removeEventListener("attune-agent", on);
+  }, []);
   // v6.27: "Watch it" from a deadline typed in Chat — the Deadline Radar opens with it read
   useEffect(() => {
     const on = (e) => { try { localStorage.setItem("attune:radar:ask", String((e.detail && e.detail.text) || "")); } catch (x) {} setMode("radar"); };
@@ -11371,6 +11394,7 @@ function ProfileModal({ profile, setProfile, close, flash }) {
         <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("More about your work")}</p>
         <textarea value={p.detail} onChange={(e) => set("detail", e.target.value)} placeholder={tr("e.g. I run a crane rental company; I write supplier RFQs and lift plans")}
           className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
+        <BookingDetails />
         {p.on && profileLine(p) ? <p className="text-[11px] text-teal-500/70 mt-2 border-l border-teal-900/60 ps-2">{tr("Applied to prompts:")} {profileLine(p).replace("About the user (use this to make the prompt specific and domain-aware, but never mention it): ", "")}</p> : null}
         <div className="flex gap-2 mt-4">
           <button onClick={() => { setProfile(p); flash(tr("Profile saved")); close(); }} className="flex-1 py-2.5 rounded-lg bg-teal-500 text-slate-950 font-medium">{tr("Save")}</button>

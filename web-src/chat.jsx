@@ -14,6 +14,7 @@ import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import { chatMapIntent } from "./mapintent.js";
 import { chatLifeIntent } from "./life.js";
 import { chatDeadlineIntent } from "./deadlines.js";
+import { agentCard } from "./agent-ui.jsx";
 import { homeCurrency, dateOrder } from "./locale.js";
 import { wantsDoc } from "./slides.js";
 import { detectLang, replyLanguageRule, voiceTag, deviceLang } from "./langs.js";
@@ -706,6 +707,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       patchChat(cid, (ch) => ({ ...ch, updated: Date.now(), messages: [...ch.messages,
         { id: newId(), role: "user", text: typed },
         { id: newId(), role: "assistant", text: m.text, calc: true, askText: typed }] }));
+      setText("");
+      return;
+    }
+
+    // v6.27 "Do it for me": «book me the cheapest flight to Dubai on Thursday» — read by code into a plan; missing details
+    // are asked; the app / site opens filled in (or inside Attune with Best offer / Fill my details); it never pays
+    const ag = route && !img ? agentCard(typed, { now: Date.now(), order: dateOrder(), inApp: !!(NATIVE && NATIVE.agentOpen) }) : null;
+    if (ag) {
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", card: ag.card, agentPlan: ag.plan, askText: typed }] }));
       setText("");
       return;
     }
@@ -1546,6 +1559,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     else if (act === "undo") { m.undo && m.undo(); patchMsg(chat.id, m.id, { card: { ...m.card, title: "Removed", detail: "", actions: [] } }); }
     else if (act === "money") api.sendToMoney(m.payText);
     else if (act === "life") window.dispatchEvent(new CustomEvent("attune-life", { detail: { text: m.lifeText || "" } }));
+    else if (/^agent(-in)?:\d+$/.test(act)) { const i = +act.split(":")[1], p = m.agentPlan; if (p && p.links[i]) window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: p.links[i], plan: p, inApp: act.startsWith("agent-in") } })); }
     else if (act === "radar") window.dispatchEvent(new CustomEvent("attune-radar", { detail: { text: m.radarText || "" } }));
     else if (act === "map") window.dispatchEvent(new CustomEvent("attune-map", { detail: { q: m.mapQuery || "" } }));
     else if (act === "studio") window.dispatchEvent(new CustomEvent("attune-studio", { detail: { prompt: m.studioPrompt || "" } }));

@@ -106,6 +106,7 @@ function Item({ x, onDone, onEdit, onDelete }) {
       {x.status !== "done" ? (
         <div className="flex flex-wrap gap-2 mt-2.5">
           {(DONE_ACTS[x.kind] || DONE_ACTS.other).map(([o, l], i) => <button key={o} className={i === 0 ? "c-btn" : "c-sub px-1"} onClick={() => onDone(x, o)} data-testid={"radar-" + o}>{i === 0 ? <Check size={14} className="inline -mt-0.5 me-1" /> : null}{tr(l)}</button>)}
+          {D.cancelLink(x) ? <button className="c-sub px-1" onClick={() => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: D.cancelLink(x), plan: null, inApp: false } }))} data-testid="radar-cancel-page">{tr("Where to cancel")}</button> : null}
           <button className="c-sub px-1" onClick={() => onEdit(x)} data-testid="radar-edit">{tr("Edit")}</button>
           {x.photo ? <button className="c-sub px-1" onClick={async () => setImg(img ? "" : await getPhoto(x.photo))} data-testid="radar-photo">{img ? tr("Hide receipt") : tr("Receipt")}</button> : null}
           <button className="c-sub px-1 ms-auto" aria-label={tr("Delete")} onClick={() => onDelete(x)}><Trash2 size={14} /></button>

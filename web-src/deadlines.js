@@ -289,3 +289,23 @@ export function radarView(data, now = Date.now()) {
 }
 /** Home's TODAY: the radar items inside their warning window. */
 export const radarToday = (data, now = Date.now()) => radarView(data, now).soon.filter((x) => daysLeft(x, now) >= 0 && daysLeft(x, now) <= Math.min(alertDays(x), 7));
+
+// ---- "Do it for me" in the Radar: where a subscription is cancelled (the official account pages) ----------------------------
+const CANCEL = [
+  [/netflix/i, "https://www.netflix.com/cancelplan"], [/youtube/i, "https://www.youtube.com/paid_memberships"], [/spotify/i, "https://www.spotify.com/account/subscription/"],
+  [/disney/i, "https://www.disneyplus.com/account/subscription"], [/amazon prime|prime video/i, "https://www.amazon.com/gp/primecentral"], [/audible/i, "https://www.audible.com/account/overview"],
+  [/apple|icloud/i, "https://apps.apple.com/account/subscriptions"], [/microsoft 365|office 365|xbox|game pass/i, "https://account.microsoft.com/services"],
+  [/google one|google play|play store/i, "https://play.google.com/store/account/subscriptions"], [/chatgpt|openai/i, "https://chatgpt.com/#settings/Subscription"],
+  [/canva/i, "https://www.canva.com/settings/billing-and-plans"], [/dropbox/i, "https://www.dropbox.com/account/plan"], [/adobe/i, "https://account.adobe.com/plans"],
+  [/linkedin/i, "https://www.linkedin.com/premium/manage/"], [/duolingo/i, "https://www.duolingo.com/settings/subscription"],
+];
+/** The page where this trial / renewal is cancelled: the service's own, else the store it was bought in (from the notification), else null. */
+export function cancelLink(x) {
+  if (!x || (x.kind !== "trial" && x.kind !== "renewal")) return null;
+  const hay = [x.title, x.note, x.app].join(" ");
+  for (const [re, url] of CANCEL) if (re.test(x.title || "")) return { label: x.title, url };
+  if (/google play/i.test(hay)) return { label: "Google Play", url: "https://play.google.com/store/account/subscriptions" };
+  if (/app store|apple/i.test(hay)) return { label: "App Store", url: "https://apps.apple.com/account/subscriptions" };
+  for (const [re, url] of CANCEL) if (re.test(hay)) return { label: x.title, url };
+  return null;
+}

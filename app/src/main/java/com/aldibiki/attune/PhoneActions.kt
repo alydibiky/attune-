@@ -62,6 +62,21 @@ object PhoneActions {
             "call" -> Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + a.optString("phone").filter { it.isDigit() || it == '+' }))
             "sms" -> Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + a.optString("phone").filter { it.isDigit() || it == '+' }))
                 .putExtra("sms_body", a.optString("message"))
+            // v6.27 "Do it for me": the person's app if it is installed (the search copied, ready to paste), else the website
+            "link" -> {
+                val url = a.optString("url"); val pkg = a.optString("app"); val copy = a.optString("copy")
+                if (!url.startsWith("https://")) return JSONObject().put("ok", false).put("error", "Not a web link")
+                if (copy.isNotBlank()) try {
+                    (ctx.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager)
+                        .setPrimaryClip(android.content.ClipData.newPlainText("Attune", copy))
+                } catch (e: Exception) {}
+                val installed = pkg.isNotBlank() && try { ctx.packageManager.getPackageInfo(pkg, 0); true } catch (e: Exception) { false }
+                when {
+                    installed && copy.isNotBlank() -> ctx.packageManager.getLaunchIntentForPackage(pkg) ?: Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    installed -> Intent(Intent.ACTION_VIEW, Uri.parse(url)).setPackage(pkg)
+                    else -> Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                }
+            }
             else -> return JSONObject().put("ok", false).put("error", "Unknown action")
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -69,6 +84,11 @@ object PhoneActions {
             ctx.startActivity(intent)
             JSONObject().put("ok", true)
         } catch (e: ActivityNotFoundException) {
+            // the app doesn't open that link itself: the plain link instead
+            if (kind == "link") try {
+                ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(a.optString("url"))).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                return JSONObject().put("ok", true).put("note", "opened the website")
+            } catch (e2: Exception) {}
             // WhatsApp not installed (or a clock app without timers): fall back
             // to the share sheet / the plain link instead of failing.
             if (kind == "whatsapp") try {
