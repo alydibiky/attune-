@@ -9135,6 +9135,9 @@ export default function App() {
   const rootMode = wide ? "home" : "chat";                    // v6.25: the screen Back ends at
   const canGoBack = _anyOverlay || mode !== rootMode || modeHist.current.length > 0;
   const _anyOverlayRef = useRef(false); _anyOverlayRef.current = _anyOverlay;
+  // v6.27: while a window is open over a page (Plans, Settings, Backup, Engine…), that page's own look and bars step aside —
+  // Fit & Food's colours and bottom bar showed through Plans & billing on the computer
+  useEffect(() => { try { document.body.classList.toggle("att-modal-open", !!(showBackup || showEngine || showProfile || showUpgrade || showOrg || (moreOpen && wide))); } catch (e) {} }, [showBackup, showEngine, showProfile, showUpgrade, showOrg, moreOpen, wide]);
   const goBack = () => {
     if (drawerOpen) return setDrawerOpen(false);
     if (moreOpen) return setMoreOpen(false);
@@ -10723,7 +10726,36 @@ export default function App() {
           })}
         </div>
       </nav>
-      {moreOpen ? (
+      {moreOpen && wide ? (
+        // v6.27 (Ali: "why does settings have this"): on a computer Settings is a settings window — the tools are in the sidebar
+        <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-6" onClick={() => setMoreOpen(false)} data-testid="desk-settings-bg">
+          <div className="att-scroll w-full max-w-3xl max-h-[86vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-6" onClick={(e) => e.stopPropagation()} data-testid="desk-settings" role="dialog" aria-label={tr("Settings")}>
+            <div className="flex items-center justify-between"><h2 className="text-xl font-semibold text-white flex items-center gap-2"><LayoutGrid size={19} className="text-teal-300" />{tr("Settings")}</h2>
+              <button onClick={() => setMoreOpen(false)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800" aria-label={tr("Close")} data-testid="desk-settings-close"><X size={18} /></button></div>
+            <section data-testid="more-appearance">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-3">{tr("Appearance")}</p>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div><p className="text-[13px] text-slate-300 mb-1.5">{tr("App language")}</p><LangSwitch /></div>
+                  <div><p className="text-[13px] text-slate-300 mb-1.5">{tr("Text size")}</p><TextSize /></div>
+                </div>
+                <div><ThemePicker theme={theme} setTheme={setTheme} /></div>
+              </div>
+            </section>
+            <section>
+              <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-3">{tr("Account and this device")}</p>
+              <div className="grid grid-cols-4 gap-3" data-testid="more-settings">
+                <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 hover:border-teal-700 p-3.5 text-start"><Cpu size={18} className="text-slate-300" /><span className="block text-[13.5px] text-slate-100 mt-2">{tr("Engine & privacy")}</span><span className="block text-[11.5px] text-slate-500 mt-0.5">{tr("The AI model on this device")}</span></button>
+                <button onClick={() => { setShowProfile(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 hover:border-teal-700 p-3.5 text-start"><User size={18} className="text-slate-300" /><span className="block text-[13.5px] text-slate-100 mt-2">{tr("Your profile")}</span><span className="block text-[11.5px] text-slate-500 mt-0.5">{tr("Name, country, how Attune talks to you")}</span></button>
+                <button onClick={() => { setShowUpgrade(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 hover:border-teal-700 p-3.5 text-start"><Crown size={18} className="text-amber-300" /><span className="block text-[13.5px] text-slate-100 mt-2">{isPro(tier) ? tr("Pro") : trialLeft > 0 ? tr("Pro trial") : tr("Plan")}</span><span className="block text-[11.5px] text-slate-500 mt-0.5">{!isPro(tier) && trialLeft > 0 ? tr("{n} days left", { n: trialLeft }) : tr(creditLabel)}</span></button>
+                {(() => { const nb = backupNudge(); return (
+                <button onClick={() => { setShowBackup(true); setMoreOpen(false); }} data-testid="more-backup" className={`rounded-xl border p-3.5 text-start ${nb.warn ? "border-amber-700/60 bg-amber-500/10" : "border-slate-800 bg-slate-950 hover:border-teal-700"}`}><ShieldCheck size={18} className={nb.warn ? "text-amber-300" : "text-slate-300"} /><span className="block text-[13.5px] text-slate-100 mt-2">{tr("Backup")}</span><span className={`block text-[11.5px] mt-0.5 ${nb.warn ? "text-amber-300" : "text-slate-500"}`}>{nb.text}</span></button>); })()}
+              </div>
+            </section>
+            <p className="text-center text-[11px] text-slate-600 select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
+          </div>
+        </div>
+      ) : moreOpen ? (
         <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setMoreOpen(false)}>
           <div className="att-scroll att-shift absolute start-0 end-0 bg-slate-900 border-t border-slate-800 rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
                style={{ bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>

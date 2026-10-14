@@ -40,28 +40,29 @@ export const ON_FILL = (sel) => ["emerald-500", "emerald-600", "emerald-700", "s
   .map((c) => `${sel} .bg-${c}`).join(",") + "{color:#FFFFFF}";
 
 export const LOOK_CSS = `
-body:has(.fit-look-fresh),.fit-look-fresh{${LIGHT_BASE("#12241B", "#F2F6F3", "#FFFFFF", "#EAF1EC", "#D3E0D7", "#B9CBBF", "#5E7166", "#43574B")}
+body:has(.fit-look-fresh):not(.att-modal-open),.fit-look-fresh{${LIGHT_BASE("#12241B", "#F2F6F3", "#FFFFFF", "#EAF1EC", "#D3E0D7", "#B9CBBF", "#5E7166", "#43574B")}
   --color-emerald-100:#145C3B;--color-emerald-200:#1A6B45;--color-emerald-300:#1F7A50;--color-emerald-400:#22915F;--color-emerald-500:#1F8A5B;--color-emerald-600:#1F8A5B;--color-emerald-700:#176B46;
   --color-emerald-800:#BFE3CF;--color-emerald-900:#CFEBDB;--color-emerald-950:#E7F6EE;color-scheme:light}
 ${ON_FILL(".fit-look-fresh")}
-body:has(.fit-look-bold),.fit-look-bold{${LIGHT_BASE("#1B1F3B", "#FFFFFF", "#F6F6F9", "#ECECF2", "#DCDCE6", "#C4C5D4", "#5F6278", "#44475E")}
+body:has(.fit-look-bold):not(.att-modal-open),.fit-look-bold{${LIGHT_BASE("#1B1F3B", "#FFFFFF", "#F6F6F9", "#ECECF2", "#DCDCE6", "#C4C5D4", "#5F6278", "#44475E")}
   --color-emerald-100:#9A3412;--color-emerald-200:#9A3412;--color-emerald-300:#C2410C;--color-emerald-400:#EA580C;--color-emerald-500:#F25C2A;--color-emerald-600:#E2501F;--color-emerald-700:#C2410C;
   --color-emerald-800:#FED7C3;--color-emerald-900:#FFE4D6;--color-emerald-950:#FFF1EA;color-scheme:light}
 ${ON_FILL(".fit-look-bold")}
-body:has(.fit-look-meals),.fit-look-meals{${LIGHT_BASE("#1D2433", "#F6F7FB", "#FFFFFF", "#EEF1F6", "#E2E6EE", "#C9CFDB", "#667085", "#475467")}
+body:has(.fit-look-meals):not(.att-modal-open),.fit-look-meals{${LIGHT_BASE("#1D2433", "#F6F7FB", "#FFFFFF", "#EEF1F6", "#E2E6EE", "#C9CFDB", "#667085", "#475467")}
   --color-emerald-100:#14532D;--color-emerald-200:#166534;--color-emerald-300:#15803D;--color-emerald-400:#16A34A;--color-emerald-500:#22C55E;--color-emerald-600:#16A34A;--color-emerald-700:#15803D;
   --color-emerald-800:#BBF7D0;--color-emerald-900:#DCFCE7;--color-emerald-950:#F0FDF4;color-scheme:light}
 ${ON_FILL(".fit-look-meals")}
-body:has(.fit-look-rings),.fit-look-rings{--color-slate-950:#0E1116;--color-slate-900:#161B22;--color-slate-800:#222A35;--color-slate-700:#2D3746;--color-slate-600:#3D4859;
+body:has(.fit-look-rings):not(.att-modal-open),.fit-look-rings{--color-slate-950:#0E1116;--color-slate-900:#161B22;--color-slate-800:#222A35;--color-slate-700:#2D3746;--color-slate-600:#3D4859;
   --color-emerald-300:#7DD3FC;--color-emerald-400:#38BDF8;--color-emerald-500:#0EA5E9;--color-emerald-600:#0284C7;--color-emerald-700:#0369A1;color-scheme:dark}
-body:has(.fit-look-tiles),.fit-look-tiles{${LIGHT_BASE("#2A2420", "#FFFDF8", "#FFFFFF", "#F7F1E8", "#F1E9DD", "#DCCFBD", "#7A6A58", "#5C4E40")}
+body:has(.fit-look-tiles):not(.att-modal-open),.fit-look-tiles{${LIGHT_BASE("#2A2420", "#FFFDF8", "#FFFFFF", "#F7F1E8", "#F1E9DD", "#DCCFBD", "#7A6A58", "#5C4E40")}
   --color-emerald-100:#9A3412;--color-emerald-200:#9A3412;--color-emerald-300:#C2410C;--color-emerald-400:#EA580C;--color-emerald-500:#F97316;--color-emerald-600:#EA580C;--color-emerald-700:#C2410C;
   --color-emerald-800:#FED7AA;--color-emerald-900:#FFEDD5;--color-emerald-950:#FFF7ED;color-scheme:light}
 ${ON_FILL(".fit-look-tiles")}
 .fit-look-tiles .text-2xl,.fit-look-tiles .text-3xl{font-weight:800}
 .fit-look-bold .text-2xl,.fit-look-bold .text-3xl,.fit-look-bold .text-4xl{font-weight:800;letter-spacing:-.01em}
-body:has(.fit-look-night),.fit-look-night{--color-slate-950:#0B1220;--color-slate-900:#121C30;--color-slate-800:#1E2C47;--color-slate-700:#2A3B5C;
+body:has(.fit-look-night):not(.att-modal-open),.fit-look-night{--color-slate-950:#0B1220;--color-slate-900:#121C30;--color-slate-800:#1E2C47;--color-slate-700:#2A3B5C;
   --color-emerald-300:#5EEAD4;--color-emerald-400:#2DD4BF;--color-emerald-500:#2DD4BF;--color-emerald-600:#0D9488;--color-emerald-700:#0F766E;color-scheme:dark}
+body.att-modal-open [data-testid=fit-nav]{display:none}
 @keyframes fitScan{0%{transform:translateY(0)}50%{transform:translateY(calc(var(--h,256px) - 4px))}100%{transform:translateY(0)}}
 @keyframes fitPop{0%{opacity:0;transform:translateY(12px) scale(.97)}100%{opacity:1;transform:none}}
 @keyframes fitPulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.4);opacity:0}}
