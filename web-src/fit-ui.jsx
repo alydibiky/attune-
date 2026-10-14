@@ -674,7 +674,7 @@ function MeTab({ L, ar, st, tg, openPlanForm, openMove, settings }) {
   const pf = st.profile || {};
   const goal = { lose: L("Lose weight", "إنقاص الوزن"), maintain: L("Keep my weight", "الحفاظ على وزني"), gain: L("Gain muscle", "بناء العضلات") }[pf.goal] || "";
   return (
-    <div className="space-y-3" data-testid="fit-me">
+    <div className="space-y-3 lg:space-y-0 lg:columns-2 lg:gap-6 lg:[&>*]:break-inside-avoid lg:[&>*]:mb-4" data-testid="fit-me">
       <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-4 space-y-2">
         <div className="text-[12px] text-slate-400">{L("My plan", "خطتي")}{goal ? " · " + goal : ""}</div>
         {tg ? <div className="text-[22px] font-semibold text-white tabular-nums" data-testid="fit-me-kcal">{tg.kcal} <span className="text-[13px] font-normal text-slate-400">{L("kcal a day", "سعر في اليوم")}</span></div> : null}
@@ -752,7 +752,7 @@ function QuickSetup({ t, L, ar, save, full }) {
   const next = () => { if (step < 2) { setStep(step + 1); return; } const r = H.quickProfile(a); if (r.error) { save(a); return; } setPlan(H.targetsOf(r.profile)); };
   const countries = useMemo(() => Object.entries(F.COUNTRIES).sort((x, y) => (ar ? x[1].ar.localeCompare(y[1].ar, "ar") : x[1].en.localeCompare(y[1].en))), [ar]);
   if (intro) return (
-    <div className="max-w-md mx-auto px-4 py-6 space-y-5" data-testid="fit-qs-welcome">
+    <div className="max-w-md lg:max-w-xl att-keep mx-auto px-4 py-6 lg:py-10 space-y-5" data-testid="fit-qs-welcome">
       <div className="h-40 rounded-3xl bg-gradient-to-br from-emerald-700/50 via-slate-900 to-slate-950 border border-emerald-900 flex items-center justify-center" aria-hidden="true"><Apple size={64} className="text-emerald-300" /></div>
       <div className="space-y-2">
         <h2 className="text-[24px] leading-tight font-semibold text-white">{t("Welcome to Fit & Food")}</h2>
@@ -768,7 +768,7 @@ function QuickSetup({ t, L, ar, save, full }) {
     </div>
   );
   if (plan) return (
-    <div className="max-w-md mx-auto px-4 py-6 space-y-5" data-testid="fit-qs-plan">
+    <div className="max-w-md lg:max-w-xl att-keep mx-auto px-4 py-6 lg:py-10 space-y-5" data-testid="fit-qs-plan">
       <h2 className="text-[22px] font-semibold text-white">{L("Your plan is ready", "خطتك جاهزة")}</h2>
       <div className="rounded-3xl bg-emerald-500/10 border border-emerald-800 p-5 text-center space-y-1">
         <div className="text-[13px] text-emerald-200">{L("Your daily target", "هدفك اليومي")}</div>
@@ -787,7 +787,7 @@ function QuickSetup({ t, L, ar, save, full }) {
     </div>
   );
   return (
-    <div className="max-w-md mx-auto px-4 py-5 space-y-4" data-testid="fit-qs">
+    <div className="max-w-md lg:max-w-xl att-keep mx-auto px-4 py-5 lg:py-10 space-y-4" data-testid="fit-qs">
       <div className="flex items-center gap-2">
         <Apple size={19} className="text-emerald-300" /><h2 className="text-lg font-semibold text-white flex-1">{t("Welcome to Fit & Food")}</h2>
         <span className="text-[12px] text-slate-400 tabular-nums" data-testid="fit-qs-step">{step + 1}/3</span>
@@ -971,7 +971,8 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
       className={"min-h-[56px]! rounded-2xl flex flex-col items-center justify-center gap-0.5 text-[12.5px] font-medium active:scale-[.97] motion-safe:transition-transform " + (primary ? "bg-emerald-600 text-white" : listening && k === "voice" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-100")}>
       <Ic size={19} aria-hidden="true" /><span>{label}</span></button>);
   return (
-    <div className="space-y-3" data-testid="fit-today">
+    <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-[minmax(320px,400px)_minmax(0,1fr)] lg:gap-x-6 lg:gap-y-3 lg:items-start" data-testid="fit-today">
+      <div className="space-y-3 lg:col-start-1">
       <div className="flex items-center justify-between gap-2 text-[13px] text-slate-300">
         <button onClick={() => shift(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg" aria-label={t("Previous day")}><ChevronLeft size={18} className="rtl:rotate-180" /></button>
         <span data-testid="fit-day" className="font-medium text-white">{isToday ? L("Today", "اليوم") : dayKey}</span>
@@ -1020,7 +1021,9 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
       )}
 
       {st.ramadan && st.ramadan.on && isToday ? <RamadanCard {...{ L, ar, tg, city: st.ramadan.city }} /> : null}
+      </div>
 
+      <div className="space-y-3 lg:col-start-2 lg:row-start-1 lg:row-span-2 min-w-0" data-testid="fit-today-meals">
       {/* today's meals: a timeline by meal; swipe a food for Edit / Delete */}
       {layout === "tiles" ? (<>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3" data-testid="fit-meals">
@@ -1056,7 +1059,9 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
           setCopyOf(null);
           flash && flash(toKey === F.today() ? L("Copied to today", "نُسخ إلى اليوم") : L("Copied to " + toKey, "نُسخ إلى " + toKey));
         } }} /> : null}
+      </div>
 
+      <div className="space-y-3 lg:col-start-1">
       {/* water and the week */}
       <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-3" data-testid="fit-water">
         <div className="flex items-center justify-between gap-2">
@@ -1098,6 +1103,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
         </>) : (
           <div className="flex flex-wrap gap-1.5 mt-2">{Object.entries({ ...F.FASTS, ...Y.MORE_FASTS }).map(([k, h]) => <button key={k} onClick={() => upd((s) => ({ ...s, fast: { start: Date.now(), hours: h } }))} className="min-h-[44px] rounded-lg bg-slate-800 px-3 text-[12.5px] text-slate-200" data-testid={"fit-fast-" + h}>{k}</button>)}</div>
         )}
+      </div>
       </div>
     </div>
   );
@@ -1171,11 +1177,13 @@ function Recipes({ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, fl
         <input value={have} onChange={(e) => setHave(e.target.value)} placeholder={L("What's in your fridge? AI makes a recipe", "ماذا لديك في الثلاجة؟ يُعدّ لك الذكاء الاصطناعي وصفة")} className="flex-1 min-w-0 bg-transparent text-[13px] text-white placeholder:text-slate-500" data-testid="fit-invent-text" />
         <button onClick={invent} disabled={busy} className="shrink-0 rounded-lg bg-violet-600 px-3 py-1.5 text-[12.5px] text-white flex items-center gap-1" data-testid="fit-invent">{busy ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}{L("Create", "اعمل")}</button>
       </div>
+      <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-3" data-testid="fit-recipe-grid">
       {list.map((rc) => { const n = F.recipeNutrients(rc); return (
         <button key={rc.id} onClick={() => setOpen(rc)} className="w-full text-start rounded-xl bg-slate-900/60 border border-slate-800 px-3 py-2.5" data-testid={"fit-rc-" + rc.id}>
           <div className="text-[14px] text-white">{ar && rc.ar ? rc.ar : rc.en}</div>
           <div className="text-[12px] text-slate-400 tabular-nums">{n.kcal} {L("kcal", "سعرة")} · <span className="inline-flex items-center gap-1"><i className="inline-block w-2 h-2 rounded-full" style={{ background: MACRO[0][3] }} />{L("Protein", "بروتين")} {n.p} {L("g", "جم")}</span>{rc.mins ? <> · {rc.mins} {L("min", "دقيقة")}</> : <> · {n.grams} {L("g", "جم")}</>}</div>
         </button>); })}
+      </div>
       {!list.length && <div className="text-center text-[13px] text-slate-500 py-6">{L("No recipe matches", "لا توجد وصفة مطابقة")}</div>}
     </div>
   );
@@ -1266,7 +1274,7 @@ function Progress({ L, ar, st, upd, tg, pro = true, openPlan, share }) {
   const lo = Math.min(...pts.map((p) => p.kg), st.profile.goalKg ? +st.profile.goalKg : Infinity) - 1, hi = Math.max(...pts.map((p) => p.kg)) + 1;
   const X = (i) => (pts.length < 2 ? 150 : (i / (pts.length - 1)) * 290 + 5), Y = (v) => 110 - ((v - lo) / (hi - lo || 1)) * 100;
   return (
-    <div className="space-y-4" data-testid="fit-progress">
+    <div className="space-y-4 lg:space-y-0 lg:columns-2 lg:gap-6 lg:[&>*]:break-inside-avoid lg:[&>*]:mb-4" data-testid="fit-progress">
       <YazioPlus {...{ L, ar, st, upd, tg, share }} />
       {pro ? <WeekReport {...{ L, st, tg }} /> : <button onClick={() => openPlan && openPlan()} className="w-full rounded-2xl border border-amber-800 bg-amber-500/10 p-3 text-start text-[13px] text-amber-100" data-testid="fit-report-locked">📊 {L("Your week report — what went well, what to change — is in Pro.", "تقرير أسبوعك — ما يسير جيدًا وما يحتاج تغييرًا — في Pro.")}</button>}
       <div className="grid grid-cols-3 gap-2 text-center">

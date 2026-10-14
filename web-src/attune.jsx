@@ -17,6 +17,7 @@ import { logPrompt, parseLog, isQuestion } from "./yusr/logtext.js";
 import { ChatHome, Md, systemPrompt as chatSystemPrompt, loadChats } from "./chat.jsx";
 import { DesktopSide, useDesktopWide, useSide, noteToolUsed } from "./side-ui.jsx";
 import { DesktopHome, ToolsPage } from "./desk-ui.jsx";
+import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import { tr, getLang, setLang, fmtNum, dateLocale } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
@@ -9905,7 +9906,8 @@ export default function App() {
             openMap={() => navTo("map")}
             openAgent={(link) => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link, plan: null, inApp: !!(NATIVE && NATIVE.agentOpen) } }))} />
         ) : mode === "instant" ? (
-          <div className="space-y-4 max-w-2xl mx-auto">
+          <div className="space-y-4 max-w-2xl lg:max-w-none mx-auto">
+            <div className={PANES}><div className={LEFT}>
             {/* v5.32 — Ali: "I still don't know what Instant is about" */}
             <p className="text-[12.5px] text-slate-400 leading-relaxed px-1" data-testid="instant-about">{tr("Instant does one quick job on any text or photo — answer it, rewrite it, translate it, summarise it — without starting a chat. For a conversation use Chat; for places near you, Instant hands you to the map.")}</p>
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
@@ -10040,6 +10042,7 @@ export default function App() {
                 </div>
               ) : null}
             </section>
+            </div><div className={RIGHT}>
 
             {/* the answer */}
             {inLogged ? (
@@ -10166,7 +10169,7 @@ export default function App() {
                   </>
                 ) : null}
               </section>
-            ) : null}
+            ) : <DeskEmpty icon={Zap} testid="instant-empty" title={tr("The answer appears here")} text={tr("Paste text or add a photo on the left, pick a job, and the result shows here.")} />}
 
             {instantHistory.length > 0 && !inBusy ? (
               <section className="bg-slate-900 rounded-2xl border border-slate-800 p-3">
@@ -10182,6 +10185,7 @@ export default function App() {
                 </div>
               </section>
             ) : null}
+            </div></div>
             <p className="flex items-center justify-center gap-1.5 text-[11px] text-teal-500/60"><ShieldCheck size={12} /> {tr("Runs on your phone · works with no signal")}</p>
           </div>
         ) : mode === "fleet" ? (
@@ -10548,7 +10552,7 @@ export default function App() {
               <button onClick={checkUpdates} disabled={syncing} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-400 hover:border-teal-600 hover:text-teal-400">{syncing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} v{library.version} {tr("· check updates")}</button>
             </div>
             <div className="flex flex-wrap gap-1.5 mb-4">{CATEGORIES.map((cat) => <button key={cat.key} onClick={() => setLibCat(cat.key)} className={btn(libCat === cat.key)}>{tr(cat.label)}</button>)}</div>
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {library.recipes.filter((r) => r.cat === libCat).map((r) => (
                 <div key={r.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col">
                   <div className="flex items-center justify-between"><h3 className="text-sm font-semibold text-white">{tr(r.title)}</h3><span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">{tr(TOOLS[r.tool].label)}</span></div>
@@ -10920,13 +10924,15 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
   const planNote = { year: P.yearNote, month: "cancel any time", life: P.lifeNote }[plan];
   const [openGroup, setOpenGroup] = useState("");
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 overflow-auto" data-testid="upgrade">
-      <div className="max-w-lg mx-auto min-h-full pb-10">
+    <div className="fixed inset-0 z-50 lg:z-[70] bg-slate-950 lg:bg-black/60 overflow-auto lg:py-8 lg:px-6" data-testid="upgrade" onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
+      <div className="max-w-lg lg:max-w-5xl mx-auto min-h-full lg:min-h-0 pb-10 lg:bg-slate-950 lg:rounded-2xl lg:border lg:border-slate-800">
         <div className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
           <h2 className="text-lg font-bold text-white flex items-center gap-2"><Crown size={18} className="text-amber-400" /> {tr("Plans & billing")}</h2>
           <button onClick={close} className="text-slate-400 hover:text-slate-200 p-1" aria-label={tr("Close")}><X size={20} /></button>
         </div>
-        <div className="px-4 pt-4 space-y-4">
+        <div className="px-4 pt-4 space-y-4 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,430px)_minmax(0,1fr)] lg:gap-6 lg:items-start">
+          {/* v6.27 computer layout A: the plan to choose on the left (stays in view), what you get on the right */}
+          <div className="space-y-4 lg:sticky lg:top-20">
           {/* where you are now */}
           {TESTING_ALL_PRO && devMode() && !pro ? (
             <div className="text-[13px] text-sky-300 rounded-xl border border-sky-900/60 bg-sky-500/5 p-3" data-testid="testing-pro">
@@ -10971,6 +10977,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
             </section>
           ) : null}
 
+          </div><div className="space-y-4">
           {/* 2 · what you get, app by app */}
           <section>
             <h3 className="text-[13px] font-semibold text-slate-200 mb-2">{tr("What Pro gives you, app by app")}</h3>
@@ -11047,6 +11054,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
             </section>
           ) : null}
           <p className="text-[11px] text-slate-600 pb-2">{tr("Everything runs on your phone: no account, nothing uploaded. Your plan is checked on the phone, even offline.")}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -11158,7 +11166,7 @@ function ProfileModal({ profile, setProfile, close, flash }) {
   const btn = (a) => `px-3 py-1.5 rounded-lg text-sm border transition-colors ${a ? "bg-teal-500 border-teal-500 text-slate-950 font-medium" : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-600"}`;
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-auto" onClick={close}>
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 my-8" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg lg:max-w-4xl w-full p-5 lg:p-7 my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><User size={18} className="text-teal-400" /> {tr("Your profile")}</h2>
           <button onClick={close} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
@@ -11168,16 +11176,28 @@ function ProfileModal({ profile, setProfile, close, flash }) {
           <span>{tr("Personalized prompting")}</span>
           <span className={`w-9 h-5 rounded-full p-0.5 transition-colors ${p.on ? "bg-teal-500" : "bg-slate-700"}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${p.on ? "translate-x-4 rtl:-translate-x-4" : ""}`} /></span>
         </button>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Field")}</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">{FIELDS.map((f) => <button key={f} onClick={() => set("field", multiToggle(p.field, f))} className={btn(multiHas(p.field, f))}>{tr(f)}</button>)}</div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Role")}</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">{ROLE_LEVELS.map((r) => <button key={r} onClick={() => set("role", multiToggle(p.role, r))} className={btn(multiHas(p.role, r))}>{tr(r)}</button>)}</div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Use it for")}</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">{USES.map(([id, l]) => { const on = (p.uses || []).includes(id); return <button key={id} onClick={() => set("uses", on ? (p.uses || []).filter((x) => x !== id) : [...(p.uses || []), id])} className={btn(on)}>{tr(l)}</button>; })}</div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Languages")}</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">{SPEAKS.map((l) => { const on = (p.speaks || []).includes(l); return <button key={l} onClick={() => set("speaks", on ? (p.speaks || []).filter((x) => x !== l) : [...(p.speaks || []), l])} className={btn(on)}>{tr(l)}</button>; })}</div>
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("AI experience")}</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">{EXPERTISE.map((e) => <button key={e} onClick={() => set("expertise", e)} className={btn(p.expertise === e)}>{tr(e)}</button>)}</div>
+        <div className="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start" data-testid="profile-grid">
+          <div>
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Field")}</p>
+          <div className="flex flex-wrap gap-1.5 mb-3">{FIELDS.map((f) => <button key={f} onClick={() => set("field", multiToggle(p.field, f))} className={btn(multiHas(p.field, f))}>{tr(f)}</button>)}</div>
+          </div>
+          <div>
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Role")}</p>
+          <div className="flex flex-wrap gap-1.5 mb-3">{ROLE_LEVELS.map((r) => <button key={r} onClick={() => set("role", multiToggle(p.role, r))} className={btn(multiHas(p.role, r))}>{tr(r)}</button>)}</div>
+          </div>
+          <div>
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Use it for")}</p>
+          <div className="flex flex-wrap gap-1.5 mb-3">{USES.map(([id, l]) => { const on = (p.uses || []).includes(id); return <button key={id} onClick={() => set("uses", on ? (p.uses || []).filter((x) => x !== id) : [...(p.uses || []), id])} className={btn(on)}>{tr(l)}</button>; })}</div>
+          </div>
+          <div>
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("Languages")}</p>
+          <div className="flex flex-wrap gap-1.5 mb-3">{SPEAKS.map((l) => { const on = (p.speaks || []).includes(l); return <button key={l} onClick={() => set("speaks", on ? (p.speaks || []).filter((x) => x !== l) : [...(p.speaks || []), l])} className={btn(on)}>{tr(l)}</button>; })}</div>
+          </div>
+          <div>
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("AI experience")}</p>
+          <div className="flex flex-wrap gap-1.5 mb-3">{EXPERTISE.map((e) => <button key={e} onClick={() => set("expertise", e)} className={btn(p.expertise === e)}>{tr(e)}</button>)}</div>
+          </div>
+        </div>
         <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("More about your work")}</p>
         <textarea value={p.detail} onChange={(e) => set("detail", e.target.value)} placeholder={tr("e.g. I run a crane rental company; I write supplier RFQs and lift plans")}
           className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
