@@ -67,7 +67,7 @@ function Preview({ cv, desk }) {
   return (
     <div ref={wrap} className="p-3" data-testid="cv-preview">
       <div style={{ width: pxW * k, height: pxH * k * Math.max(1, cv.fit || 1), margin: "0 auto", background: "#fff", boxShadow: "0 2px 14px rgba(0,0,0,.45)", overflow: "hidden", position: "relative" }}>
-        <iframe title="CV" srcDoc={V.cvHtml(cv, { scale })} style={{ width: pxW, ...(desk ? { maxWidth: "none" } : null), height: pxH * Math.max(1, cv.fit || 1), border: 0, transform: `scale(${k})`, transformOrigin: "top left", position: "absolute", left: 0, top: 0 }} sandbox="allow-same-origin" />
+        <iframe title="CV" srcDoc={V.cvHtml(cv, { scale })} style={{ width: pxW, maxWidth: "none", height: pxH * Math.max(1, cv.fit || 1), border: 0, transform: `scale(${k})`, transformOrigin: "top left", position: "absolute", left: 0, top: 0 }} sandbox="allow-same-origin" />
       </div>
       {scale < 1 ? <p className="text-center text-[11px] text-amber-300 mt-2">{tr("Text shrunk to {p}% to fit {n} page(s)", { p: Math.round(scale * 100), n: cv.fit })}</p> : null}
     </div>
