@@ -3,7 +3,7 @@ The AI translates numbered pieces; code puts them back in place (headings, table
 
   python3 tests/e2e_v539.py
 """
-import base64, io, json, zipfile
+import json, base64, io, zipfile
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish, HERE
 
@@ -43,7 +43,9 @@ with sync_playwright() as p:
     name = page.locator("[data-testid=convert-out-name]").inner_text()
     check(name == "lift-plan-ar.pdf", "the result is lift-plan-ar.pdf (%s)" % name)
     sent = page.evaluate("window.__mock.bodies.filter(b => b.max_tokens > 2).map(b => JSON.stringify(b.messages))")
-    check(len(sent) == 1 and "into Arabic" in sent[0] and "[[2]] The 100 t crane lifts the 12 t beam." in sent[0] and "14 m" not in sent[0], "one batch goes to the AI, numbered; the number-only cell (14 m) isn't sent")
+    user = json.loads(sent[0])[1]["content"] if sent else ""
+    check(len(sent) == 1 and "into Arabic" in sent[0] and "The ⟦1⟧ t crane lifts the ⟦2⟧ t beam." in user and "14 m" not in sent[0] and "LTM 1100" not in sent[0],
+          "one batch goes to the AI, numbered, its numbers locked (v6.27: ⟦1⟧ ⟦2⟧ are put back by code); the number-only cell (14 m) and the model name (LTM 1100) aren't sent")
     blocks = page.evaluate("window.__mock.pdfCalls.pop().blocks")
     check([b["type"] for b in blocks] == ["h1", "p", "table"] and blocks[0]["text"] == "خطة الرفع", "the PDF keeps its heading, paragraph and table — now in Arabic")
     check(blocks[2]["rows"] == [["الونش", "نصف القطر"], ["LTM 1100", "14 m"]], "table cells translated in place; the model name and the number stay")

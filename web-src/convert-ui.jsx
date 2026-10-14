@@ -10,6 +10,7 @@ import { FileText, Loader2, X, Download, Check, ImagePlus, ChevronRight, Eye } f
 import { tr, getLang } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as C from "./convert.js";
+import * as TR from "./translate.js";
 
 const TARGET_LABEL = { docx: "Word (.docx)", pdf: "PDF", txt: "Text (.txt)", images: "Pictures (.zip)", csv: "CSV", xlsx: "Excel (.xlsx)",
   html: "Web page (.html)", md: "Markdown (.md)", odt: "LibreOffice text (.odt)", ods: "LibreOffice sheet (.ods)", json: "JSON",
@@ -178,27 +179,19 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
         try { localStorage.setItem("attune:convert:tlang", tLang); } catch (e) {}
         const cueBlocks = cues ? cues.map((c) => ({ type: "p", text: c.text })) : null;
         const src = cueBlocks || blocks || [];
-        const units = C.translateUnits(src), batches = C.batchUnits(units);
-        const texts = Array(units.length).fill(null);
-        let missed = 0;
-        for (let bi = 0; bi < batches.length; bi++) {
-          if (!alive()) return;
-          setBusy(tr("Translating into {l} — part {n} of {t}…", { l: langLabel(tLang), n: bi + 1, t: batches.length }));
-          const idx = batches[bi];
-          const reply = await llm(C.translateMessages(idx.map((i) => units[i].text), T_LANGS[tLang]), null, { maxTokens: Math.min(3500, 300 + Math.round(idx.reduce((n, i) => n + units[i].text.length, 0) * 1.6)), temperature: 0.2 });
-          const got = C.parseTranslated(reply, idx.length);
-          for (let j = 0; j < idx.length; j++) {
-            if (got[j] == null) {   // a piece the model skipped: once more on its own
-              if (!alive()) return;
-              const one = C.parseTranslated(await llm(C.translateMessages([units[idx[j]].text], T_LANGS[tLang]), null, { maxTokens: 1500, temperature: 0.2 }), 1)[0];
-              if (one == null) missed++;
-              texts[idx[j]] = one;
-            } else texts[idx[j]] = got[j];
-          }
-        }
+        const units = C.translateUnits(src);
+        // v6.27: the checked engine (translate.js) — numbers, names and codes locked; script, untranslated and the person's
+        // glossary checked; a piece that fails is retried alone with the reason, then marked — never silently wrong
+        let gloss = []; try { gloss = JSON.parse(localStorage.getItem("attune:translate:glossary") || "[]"); } catch (e) {}
+        const out = await TR.translatePieces(units.map((u) => u.text), (m, o) => llm(m, null, { maxTokens: o.maxTokens, temperature: 0.2 }),
+          { lang: tLang, language: T_LANGS[tLang], glossary: gloss, onProgress: (i, n) => alive() && setBusy(tr("Translating into {l} — part {n} of {t}…", { l: langLabel(tLang), n: i + 1, t: n })) });
+        if (!alive()) return;
+        const texts = out.map((r) => r.text);
+        const flagged = out.filter((r) => !r.ok);
+        const missed = 0;
         const tb = C.applyTranslations(src, units, texts);
         if (cues) cues = cues.map((c, i) => ({ ...c, text: tb[i].text })); else blocks = tb;
-        note = (note ? note + " " : "") + (missed ? tr("{n} piece(s) couldn't be translated and were left as they were.", { n: missed }) + " " : "") + tr("Translated by the AI on your phone — check important names and numbers.");
+        note = (note ? note + " " : "") + (flagged.length ? tr("{n} piece(s) to check: {list}", { n: flagged.length, list: flagged.slice(0, 3).map((f) => "«" + f.src.slice(0, 40) + "» (" + f.why + ")").join("; ") }) + " " : tr("Checked: numbers, names and codes kept exactly.") + " ") + tr("Translated by the AI on your phone — check important names and numbers.");
         outTarget = cues ? files.kind : tFmt; suffix = "-" + tLang;
       }
       // a PDF → Excel: its tables (read as "a | b" rows), else each line split at wide gaps

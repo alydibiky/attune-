@@ -54,6 +54,7 @@ import { RadarPage, runAutoRadar } from "./radar-ui.jsx";
 import { BookingDetails, loadBooking, agentLabels } from "./agent-ui.jsx";
 import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
+import { TranslatePage } from "./translate-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
@@ -7370,6 +7371,7 @@ const MORE_TOOLS = [
   ["care", "Family health", "Medicines and reminders for the family, lab results over time", Heart],   // v6.27
   ["deal", "Deal Check", "Before you pay or sign", ShieldCheck],
   ["xray", "Chat X-Ray", "Money, promises & questions in a WhatsApp chat", MessageCircle],
+  ["translate", "Translate", "Text, photos and documents — any language, every part checked", Languages],   // v6.27
   ["convert", "File Converter", "PDF, Word, PowerPoint, Excel, photos — 80+ conversions, and translation", FileText],
   ["video", "Video Downloader", "Paste a video link, pick the quality, save it to your phone", Film],
   ["assistants", "Assistants", "Experts that follow your instructions", Bot],
@@ -7406,7 +7408,7 @@ const MORE_GROUPS = [
   ["Health", ["fit", "care", "cycle"]],
   ["Mind & learning", ["coach", "learn", "memory", "shelf", "knowledge", "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
-  ["Files", ["convert", "video", "pdfchat", "slides", "cv"]],
+  ["Files", ["translate", "convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "travel"]],
   ["Business (add-on)", ["business", "crane", "field", "fleet"]],
   ["Create (add-on)", ["studio", "code", "improve", "compress", "humanize", "copilot", "library", "ask"]],
@@ -9836,6 +9838,10 @@ export default function App() {
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
             load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />}
             onExit={goBack} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
+        ) : mode === "translate" ? (
+          <TranslatePage flash={flash} readText={readTextAny} native={{ N: NATIVE, call: nativeCall }}
+            llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}
+            openConverter={(to) => { try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} navTo("convert"); }} />
         ) : mode === "care" ? (
           <CarePage readText={readTextAny} flash={flash}
             search={NATIVE && NATIVE.knowSearch ? async (q, ids, k) => { const r = await nativeCall("knowSearch", { q, k: k || 10, ids }); return (r && r.passages) || []; } : null}

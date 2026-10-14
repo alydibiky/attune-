@@ -1083,10 +1083,12 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 val lines = org.json.JSONArray()
                 for (block in found.textBlocks) for (line in block.lines) {
                     val b = line.boundingBox
-                    lines.put(JSONObject().put("text", line.text).put("h", b?.height() ?: 0).put("y", b?.top ?: 0))
+                    lines.put(JSONObject().put("text", line.text).put("h", b?.height() ?: 0).put("y", b?.top ?: 0)
+                        .put("x", b?.left ?: 0).put("w", b?.width() ?: 0))   // v6.27: where the line is, to draw its translation over it
                 }
+                val bw = bmp.width; val bh = bmp.height
                 client.close(); bmp.recycle()
-                resolve(id, JSONObject().put("text", found.text).put("lines", lines))
+                resolve(id, JSONObject().put("text", found.text).put("lines", lines).put("width", bw).put("height", bh))
             } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the text in that picture") }
         }
     }
