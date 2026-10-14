@@ -151,9 +151,9 @@
                 android:value="On-device AI model writing an answer the user asked for" />
         </service>
 
-        <!-- v6.27: the payment-notification reader (PayListener) is ONLY in the Play Store build: src/play/AndroidManifest.xml.
-             Play Protect's fraud protection blocks any app installed from a browser / file manager / chat that declares a
-             notification listener, so the directly installed APK ("direct" flavour) leaves it out. -->
+        <!-- v6.27: the payment-notification reader (PayListener) is declared in src/full/AndroidManifest.xml ("full" build:
+             the main APK and the Play Store bundle). Play Protect's fraud protection blocks a notification reader installed
+             from a browser / file manager / chat, so the "lite" build leaves it out for phones that can't install the full one. -->
 
         <!-- Rings a reminder at its time, even with the app closed. -->
         <receiver android:name=".ReminderReceiver" android:exported="false" />

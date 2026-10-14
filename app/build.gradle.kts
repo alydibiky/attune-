@@ -11,7 +11,7 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 35
-        versionCode = 88                 // raise with every release — the phone shows it in Settings → Apps
+        versionCode = System.getenv("ATTUNE_VERSION_CODE")?.toIntOrNull() ?: 88   // CI: 1000 + the run number, so every build installs over the last and Play accepts each upload
         versionName = "6.27"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
@@ -32,12 +32,13 @@ android {
         }
     }
 
-    // Two builds of the same app (v6.27): "direct" = the APK installed from GitHub (no notification reader, so Play Protect
-    // lets it install), "play" = the Play Store bundle (with the payment-notification reader, src/play/AndroidManifest.xml).
+    // Two builds of the same app (v6.27): "full" = everything, with the payment-notification reader (src/full/
+    // AndroidManifest.xml) — the APK CI uploads as attune-apk and the Play Store bundle; "lite" = the same without the
+    // reader, for phones whose Play Protect blocks a notification reader installed from a browser / file manager / chat.
     flavorDimensions += "store"
     productFlavors {
-        create("direct") { dimension = "store" }
-        create("play") { dimension = "store" }
+        create("full") { dimension = "store" }
+        create("lite") { dimension = "store" }
     }
 
     // The NDK llama.cpp's own Android release builds use at the pinned commit.

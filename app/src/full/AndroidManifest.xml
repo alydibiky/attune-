@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The Play Store build only ("play" flavour): apps installed from Google Play may declare a notification listener
-     (declared in the Play Console's permissions form). The direct APK leaves it out — see app/src/main/AndroidManifest.xml. -->
+<!-- The "full" build (the main APK and the Play Store bundle): the payment-notification reader. Installed from Google Play
+     (or over USB / with Play Protect's scan paused) it is allowed; the "lite" build leaves it out — see src/main/AndroidManifest.xml. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <!-- v6.27 "Money tracks itself": reads payment notifications on the phone, only after the person turns on

@@ -32,8 +32,15 @@ jobs:
     # ordinary environment variable below.
     env:
       HAS_KEYSTORE: ${{ secrets.ATTUNE_KEYSTORE_BASE64 != '' }}
+      # Google Play internal testing: a service-account key (JSON) from the Play Console, kept as a secret — never in the repo
+      HAS_PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+
     steps:
       - uses: actions/checkout@v4
+
+      # every build gets a higher version, so it installs over the last one and Google Play accepts each upload
+      - name: Version number
+        run: echo "ATTUNE_VERSION_CODE=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -163,7 +170,9 @@ jobs:
           ATTUNE_STORE_PASSWORD: ${{ secrets.ATTUNE_STORE_PASSWORD }}
           ATTUNE_KEY_ALIAS: ${{ secrets.ATTUNE_KEY_ALIAS }}
           ATTUNE_KEY_PASSWORD: ${{ secrets.ATTUNE_KEY_PASSWORD }}
-        run: gradle assembleDirectRelease --no-daemon --stacktrace
+        # full = everything, with the payment-notification reader (the main APK); lite = the same without it, for phones whose
+        # Play Protect blocks a notification reader installed from a browser / file manager / chat
+        run: gradle assembleFullRelease assembleLiteRelease --no-daemon --stacktrace
 
       - name: Say whether it is signed for the Play Store
         run: |
@@ -177,22 +186,42 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: attune-apk
-          path: app/build/outputs/apk/direct/release/*.apk
+          path: app/build/outputs/apk/full/release/*.apk
+          retention-days: 30
+
+      - name: Upload the lite APK (no notification reader)
+        uses: actions/upload-artifact@v4
+        with:
+          name: attune-apk-lite
+          path: app/build/outputs/apk/lite/release/*.apk
           retention-days: 30
 
       # An AAB is what the Play Store actually wants for a new listing.
       - name: Build the Play Store bundle
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' || (env.HAS_PLAY == 'true' && env.HAS_KEYSTORE == 'true' && github.ref == 'refs/heads/main' && github.event_name == 'push') }}
         env:
           ATTUNE_STORE_PASSWORD: ${{ secrets.ATTUNE_STORE_PASSWORD }}
           ATTUNE_KEY_ALIAS: ${{ secrets.ATTUNE_KEY_ALIAS }}
           ATTUNE_KEY_PASSWORD: ${{ secrets.ATTUNE_KEY_PASSWORD }}
-        run: gradle bundlePlayRelease --no-daemon
+        run: gradle bundleFullRelease --no-daemon
+
+      # Internal testing on Google Play: testers install Attune from the Play Store (no Play Protect block, updates by
+      # themselves). Needs the release key and PLAY_SERVICE_ACCOUNT_JSON; the very first bundle is uploaded by hand once.
+      - name: Send it to Google Play internal testing
+        if: ${{ env.HAS_PLAY == 'true' && env.HAS_KEYSTORE == 'true' && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.aldibiki.attune
+          releaseFiles: app/build/outputs/bundle/fullRelease/*.aab
+          track: internal
+          status: completed
 
       - name: Attach both to the release
         if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            app/build/outputs/apk/direct/release/*.apk
-            app/build/outputs/bundle/playRelease/*.aab
+            app/build/outputs/apk/full/release/*.apk
+            app/build/outputs/apk/lite/release/*.apk
+            app/build/outputs/bundle/fullRelease/*.aab

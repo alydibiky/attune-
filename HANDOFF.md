@@ -1304,10 +1304,13 @@ Ali: "c p f is just lame"; "a pulse loading screen"; "the app is one colour"; "i
 - Every new sheet: bottom sheet on a phone, centred window (md:) on a computer — checked at 1280 px in the e2e tests.
 - **Two Android builds (14 Oct, Ali's phone: "App blocked to protect your device")**: Play Protect's enhanced fraud protection
   (≈185 markets) blocks apps installed from a browser / file manager / chat that declare a notification listener, SMS or
-  accessibility. So: flavour **direct** (the APK CI uploads — `assembleDirectRelease`, apk/direct/release) has NO PayListener;
-  flavour **play** (`bundlePlayRelease`, the store AAB) adds it via `app/src/play/AndroidManifest.xml`. `NativeBridge.payAvailable()`
-  says whether the reader is in the build; `payReader(N)` (paylog-ui.jsx) hides "Turn on notification access" in Money and Radar
-  when it isn't. Never add SMS / accessibility / a notification listener to the main manifest again.
+  accessibility. Ali: keep the notification reading. So: flavour **full** (the main APK `attune-apk` and the Play bundle) HAS
+  PayListener via `app/src/full/AndroidManifest.xml`; flavour **lite** (`attune-apk-lite`) leaves it out for phones that can't
+  install the full one. Ways to install the full one: Google Play **internal testing** (CI uploads the AAB to the internal track
+  on every push to main once `PLAY_SERVICE_ACCOUNT_JSON` + the release keystore secrets exist; the first bundle is uploaded by
+  hand), or once with Play Protect's scan paused, or over USB (adb). versionCode = 1000 + the CI run number (ATTUNE_VERSION_CODE).
+  `NativeBridge.payAvailable()` / `payReader(N)` hide "Turn on notification access" in the lite build. Never add SMS or
+  accessibility to the main manifest.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
