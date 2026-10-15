@@ -583,12 +583,28 @@ Still open (each needs Ali): Google sign-in + Drive sync (his Google Cloud OAuth
 languages (which ones?); Business builder v2 (what first?); food photos (licensed photo set); precise mode (online, his call);
 the default Fit look; Google Play internal testing (developer account + secrets).
 
+## T. 15 Oct 2026 — done in v6.29 (HANDOFF §5.72) unless marked
+1. UI still cluttered → doubled titles removed, footer only on Home/All, empty Home cards hidden. ✅ Bigger look changes (Home
+   area tiles) → **Ali to pick** (options in chat).
+2. Back returns to the previous page, whatever it was — never jumps Home. ✅
+3. Scout really good in everything: exact model/storage, variants, job experience, rent vs sale, specs not prices, cheapest
+   store, retry with plain words. ✅ — **test with real goals on the phone.**
+4. Health from Home opens a Health page (Fit & Food, Family health, Cycle). ✅
+5. Ask your life automatically in Home and Chat ("how much did I pay for…", "history of…", "last time…"). ✅
+6. Finish Learn daily, rework logic and UI: today's plan, review cards by code, honest streak, checked quizzes. ✅
+7. The app sometimes crashes → guards, crash log, native background-thread handler, the CV share crash fixed; crawler clean. ✅
+   — **tell me if it still happens, and what you were doing.**
+8. Rework Slides & Reports UI and logic. ✅
+9. Fit & Food on Home. ✅
+10. Run the app and check everything / strong code so models do less: crawler over every tool; more checks by code (quiz
+   grounding, figure checks, price/spec reading). ✅
+
 ## Prompt to start the next session
 
 ```
 Continue Attune on branch claude/design-a-maps-4pmxxr (main = the same commit).
-First read CLAUDE.md, APP_HANDOFF.md, ROADMAP_2026-10-13.md, HANDOFF.md §5.61–§5.70 and NEXT_SESSION.md
-(the newest section is R). Then START WITH A CONVERSATION: I want to set some things straight before you build.
+First read CLAUDE.md, APP_HANDOFF.md, ROADMAP_2026-10-13.md, HANDOFF.md §5.61–§5.72 and NEXT_SESSION.md
+(the newest section is T). Then START WITH A CONVERSATION: I want to set some things straight before you build.
 Show me, short and simple, what is done, what is open (section R "Open"), and your recommended order;
 wait for my answers on the priorities, then work through them with a task list.
 Things I already know I want: Google sign-in + Drive sync (tell me exactly what to create in Google Cloud),

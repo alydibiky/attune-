@@ -7376,7 +7376,7 @@ const MODE_TITLES = { health: "Health", scout: "Scout", lifeask: "Ask your life"
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.28";
+const PAGE_VERSION = "6.29";
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 

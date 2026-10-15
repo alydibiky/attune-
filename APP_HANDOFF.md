@@ -155,6 +155,7 @@ Google Play Billing.
 | v6.26 | 12 Oct | Desktop look A + C (Home page, Tools page, pinned tools, wide pages, "computer" wording); Windows engine needs no extra Microsoft files |
 | v6.27 | 13 Oct | Roadmap agreed (ROADMAP_2026-10-13.md); Brave search removed; maps without OpenStreetMap's tile servers (world overview pack); every country online without downloading, free; compounds searchable offline |
 | v6.28 | 14 Oct | Ask your life (one question answered from all your own data); insulin ↔ Fit & Food (refill + low-sugar notifications, carbs per meal); converter sub/superscripts; Studio on big models; How to use Attune; device levels; spaced repetition in Learn |
+| v6.29 | 15 Oct | Back to the previous page; crash guards; Health page + Fit & Food on Home; data questions in Chat; Scout exact items and cheapest store; Learn daily rework (review cards by code); Slides & Reports rework; declutter |
 
 ## 8. Prompt for the next session (paste as is)
 ```

@@ -1405,6 +1405,41 @@ Ali: "c p f is just lame"; "a pulse loading screen"; "the app is one colour"; "i
 - **Test setup in a fresh cloud session:** `bash tests/setup.sh` (≈ 10 min, builds llama-server). If the Pyodide download is cut,
   run `bash web-src/fetch-pyodide.sh` again — without it e2e_v510/v511/v513 time out (they run code in Python).
 
+### 5.72 (15 Oct 2026) — v6.29: Back, crashes, Health page, data questions in Chat, Scout accuracy, Learn daily, Slides, declutter
+Ali's list: "the UI is still cluttered; Back must return to the previous page, not Home; Scout really good in everything; Health
+from Home opens Fit & Food, not a Health page; Ask your life automatically in the Home chat; finish Learn daily; the app sometimes
+crashes; rework Slides & Reports; Fit & Food on Home; run the app and check; make it strong from a coding perspective".
+- **Back** (attune.jsx): every page change pushes where it came from (`pushHist`, also in `navTo` — it used to clear the list);
+  Back walks the list and ends on Home (or Chat for the old start). Tests: `tests/e2e_v732back.py`.
+- **Crashes:** `entry.jsx` RootGuard ("Reopen Attune", data-testid app-error) + window error/unhandledrejection → saved in
+  `attune:lastcrash` and the Engine log, toast "That didn't work — …"; `<Guard>` around windows/sheets and the computer sidebar;
+  `nativeCall` rejects cleanly when a native method is missing (the CV "share" crash on desktop); MainActivity.kt: a background
+  thread's uncaught error is logged to engine.log instead of closing the app (the main thread still crashes normally).
+  A crawler (46 tools × phone EN / phone AR / computer, 30 random taps each, 138 visits) found no page errors after the fixes.
+- **Health page** (`health-ui.jsx`): Fit & Food today, Family health (next dose, late doses, supply running out, last sugar),
+  Cycle. Home's Health and the bottom bar open it. `FitToday` is also on Home (meals open Fit on adding to that meal; + glass).
+  Tests: `tests/e2e_v732health.py`.
+- **Data questions in Home and Chat** (`lifeask.js`): "how much did I pay for X", "history of X", "last time I …" are answered by
+  code from Money, People & plans, Mind, Health (paid-for sums, record lists, last date). Tests: `tests/unit/v731lifeask.test.mjs`.
+- **Scout** (`scout.js`): the exact item — model words must all be there, a variant word not asked for (Pro Max, Plus, Ultra…)
+  is out, storage normalised (256 GB = 256 جيجا), Arabic transliteration; jobs: years of experience asked vs yours; rent: a sale
+  price is out; the price reader skips specs (256GB, 5000mAh are not prices); the same product in 2+ stores → the cheapest is
+  marked ("cheapest of 3 stores"); no ad page at all → searched again with the item's own words. Tests: `tests/unit/v731scout.test.mjs`.
+- **Learn daily rework** (`daily.js`, `daily-ui.jsx`, Calm design): one plan per course for today — review the cards → today's
+  lesson → the quiz. Cards are made BY CODE from each lesson read (word cards, table rows, timeline, "term: meaning" key points)
+  and from missed quiz questions; they come back after 1, 3, 7, 16, 35 days, need no model (`cardsFromLesson`, `addCards`,
+  `cardsDue`, `gradeCard`). `streakNow` (a missed day shows 0), `todayPlan`, `groundQuiz` (drops a question the lessons contradict
+  or with doubled options), a too-short lesson is written once more. The plan shows only the lessons around you (Show all).
+  Tests: `tests/unit/v732learn.test.mjs`, `tests/e2e_v732learn.py`; the old `e2e_v512 lessons` still passes.
+- **Slides & Reports:** the form is request → sources → one button → one line with the chosen options ("8 slides · Midnight ·
+  Short points — Change") that opens them; the deck shows Play / PowerPoint / PDF first; labelled transition / animation pickers
+  (they were cut off); report tables write 910000 as 910,000 (`groupNum`; codes and years untouched). Tests: `tests/unit/v732slides.test.mjs`.
+- **Declutter:** a page with its own big title doesn't repeat it in the top bar (phones; Money keeps it); the privacy footer only on
+  Home and the tools list; Home hides "Today" when nothing is due and "Spent this month" at 0 with no budget.
+- **Version:** 6.29 (versionCode 90).
+- **Open, Ali to choose (look):** the Home area tiles repeat the bottom bar — options given in chat (keep / remove / replace with
+  "recent tools"); the Health page empty space on a computer.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
