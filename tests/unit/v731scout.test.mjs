@@ -65,4 +65,28 @@ ok(/متاح/.test(msg) && /14,000/.test(msg), "a ready message to the seller, i
 const AR = S.readAd({ url: "https://www.dubizzle.com.eg/en/ad/x-ID1.html", title: "y", text: "شقة للايجار بالمعادي دور ارضي ٣ غرف ١٦٠ متر السعر ١٢٠٠٠ جنيه شهريا مفروشة ومكيفة واسانسير" }, S.parseGoal("flat"));
 ok(AR.facts.auto === undefined && AR.facts.furnished === true && AR.facts.elevator === true, "whole words: «بالمعادي» is not «عادي» (manual); «مفروشة», «واسانسير» are read");
 ok(ad.quotes.metro === "…walk to Maadi metro station" && ad.quotes.pets === "Pets allowed", "quotes are the ad's own words, cut at whole words: «" + ad.quotes.metro + "»");
+// ---- v6.28: the exact item — a Pro Max, a 15 Pro, a 128 GB or an Elantra is not what was asked for
+{
+  const gp = S.parseGoal("ايفون 16 برو 256 جيجا جديد أقل من 70 ألف");
+  const P1 = (u, title, text) => S.check(S.readAd({ url: u, title, text }, gp), gp);
+  const good = P1("https://www.amazon.eg/Apple-iPhone-16-Pro-256/dp/B0D1", "Apple iPhone 16 Pro 256GB Desert Titanium", "Apple iPhone 16 Pro, 256 GB, new, sealed. Price: EGP 65,999");
+  ok(!good.out && good.ok.some((x) => x.k === "model"), "an Arabic goal finds the exact iPhone 16 Pro 256GB on an English store page");
+  ok(P1("https://www.noon.com/egypt-en/iphone-16-pro-max/N1/p/", "Apple iPhone 16 Pro Max 256GB", "iPhone 16 Pro Max 256GB EGP 69,000").out, "a Pro MAX is out");
+  ok(P1("https://www.noon.com/egypt-en/iphone-15-pro/N2/p/", "Apple iPhone 15 Pro 256GB", "iPhone 15 Pro 256GB EGP 52,000").out, "an iPhone 15 Pro is out");
+  ok(P1("https://www.amazon.eg/x/dp/B0D2", "Apple iPhone 16 Pro 128GB", "iPhone 16 Pro 128 GB EGP 58,000").out, "a 128 GB one is out");
+  const gcar = S.parseGoal("Hyundai Tucson 2019 to 2021 under 900k");
+  ok(S.check(S.readAd({ url: "https://www.dubizzle.com.eg/en/ad/elantra-ID3.html", title: "Hyundai Elantra 2020", text: "Hyundai Elantra 2020 automatic 60,000 km price 700,000 EGP" }, gcar), gcar).out, "an Elantra is not a Tucson");
+  const gj = S.parseGoal("data analyst job in Cairo, I have 2 years experience");
+  const job = S.readAd({ url: "https://wuzzuf.net/jobs/p/abc-Senior-Data-Analyst-Cairo-Egypt", title: "Senior Data Analyst", text: "Senior Data Analyst - Cairo. Requirements: 5+ years of experience in SQL and Python. Full time." }, gj);
+  ok(job.facts.exp === 5 && S.check(job, gj).out, "a job asking 5+ years is out for 2 years' experience");
+  const gr = S.parseGoal("3 bedroom flat for rent in Maadi under 20,000");
+  ok(S.check(S.readAd({ url: "https://www.aqarmap.com.eg/en/listing/9-apartment-maadi", title: "Apartment for sale Maadi", text: "Apartment in Maadi 3 bedrooms floor 3. Price 3,500,000 EGP." }, gr), gr).out, "a sale price in a rent search is out");
+}
+{
+  const gp = S.parseGoal("iPhone 16 Pro 256GB new");
+  const hits = [["https://www.amazon.eg/a/dp/B1", "Apple iPhone 16 Pro 256GB", "iPhone 16 Pro 256GB EGP 66,500"], ["https://www.noon.com/egypt-en/x/N1/p/", "iPhone 16 Pro 256GB", "Apple iPhone 16 Pro 256 GB price EGP 64,900"], ["https://btech.com/en/apple-iphone-16-pro-256gb.html", "Apple iPhone 16 Pro 256GB", "Price: 67,000 EGP"], ["https://www.noon.com/egypt-en/y/N2/p/", "iPhone 16 Pro Max 256GB", "EGP 61,000"]].map(([url, title, text]) => ({ url, title, text }));
+  const r = S.runGoal({ id: "p", g: gp, seen: [], votes: {}, taste: {} }, hits, { now: 1e12 });
+  ok(r.found.length === 3 && r.found[0].site === "noon.com" && r.found[0].cheapest === 3, "the same iPhone in 3 stores: Noon's 64,900 is marked the cheapest of 3 (the cheaper Pro Max is not the item)");
+  ok(S.fallbackSearches(gp)[0].startsWith("iphone 16 pro 256gb"), "no ad found → the item's own words are searched plainly");
+}
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");

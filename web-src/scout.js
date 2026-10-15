@@ -65,9 +65,31 @@ export function parseGoal(text) {
   // a home with a budget a monthly rent would have ("flat in Maadi under 15,000") is a rent
   if (g.kind === "buy-home" && g.max && g.max < 200000) g.kind = "rent";
   g.what = whatOf(raw, g);
+  // v6.28: the exact item (make, model, numbers, storage) — an iPhone 16 Pro Max or an Elantra is not what was asked for
+  if (g.kind === "product" || g.kind === "car") g.model = modelOf(g);
+  // a job: the years of experience you have ("with 2 years experience") and the salary you want
+  const ex = /(\d{1,2})\s*\+?\s*(?:years?|yrs?|سنين|سنوات|سنه|سنة)\s*(?:of\s+)?(?:experience|exp|خبره|خبرة)/i.exec(latin(raw));
+  if (g.kind === "job" && ex) g.wish.push({ k: "exp", have: +ex[1], say: [`asks ≤ ${ex[1]} years' experience`, `يطلب خبرة ${ex[1]} سنوات أو أقل`] });
   return g;
 }
 const PLACES = ["new cairo", "التجمع", "التجمع الخامس", "fifth settlement", "maadi", "المعادي", "zamalek", "الزمالك", "heliopolis", "مصر الجديده", "مصر الجديدة", "nasr city", "مدينه نصر", "مدينة نصر", "dokki", "الدقي", "mohandessin", "المهندسين", "sheikh zayed", "الشيخ زايد", "zayed", "زايد", "6th of october", "october", "اكتوبر", "أكتوبر", "6 اكتوبر", "6 أكتوبر", "shorouk", "الشروق", "madinaty", "مدينتي", "rehab", "الرحاب", "obour", "العبور", "giza", "الجيزه", "الجيزة", "haram", "الهرم", "faisal", "فيصل", "downtown", "وسط البلد", "garden city", "جاردن سيتي", "mokattam", "المقطم", "shubra", "شبرا", "ain shams", "عين شمس", "helwan", "حلوان", "alexandria", "اسكندريه", "الإسكندرية", "اسكندرية", "smouha", "سموحه", "sidi gaber", "سيدي جابر", "north coast", "الساحل", "sahel", "hurghada", "الغردقه", "الغردقة", "sharm", "شرم", "ain sokhna", "السخنه", "العين السخنة", "new capital", "العاصمه الاداريه", "العاصمة الإدارية", "mansoura", "المنصوره", "المنصورة", "tanta", "طنطا", "zagazig", "الزقازيق", "cairo", "القاهره", "القاهرة", "remote", "dubai", "دبي", "riyadh", "الرياض", "jeddah", "جده", "جدة", "doha", "الدوحه", "kuwait", "الكويت"];
+// ---- the exact item ------------------------------------------------------------------------------------------------------------------
+// Arabic names → the words the ads use (stores write models in Latin letters)
+const TRANSLIT = { "ايفون": "iphone", "آيفون": "iphone", "برو": "pro", "ماكس": "max", "بلس": "plus", "الترا": "ultra", "ألترا": "ultra", "ميني": "mini", "سامسونج": "samsung", "جالاكسي": "galaxy", "شاومي": "xiaomi", "ريدمي": "redmi", "اوبو": "oppo", "اوبو": "oppo", "ريلمي": "realme", "هواوي": "huawei", "ابل": "apple", "ماك": "mac", "ماك بوك": "macbook", "ايباد": "ipad", "بلايستيشن": "playstation", "سوني": "sony", "ال جي": "lg",
+  "هيونداي": "hyundai", "توسان": "tucson", "النترا": "elantra", "إلنترا": "elantra", "اكسنت": "accent", "كريتا": "creta", "كيا": "kia", "سبورتاج": "sportage", "سيراتو": "cerato", "بيكانتو": "picanto", "تويوتا": "toyota", "كورولا": "corolla", "ياريس": "yaris", "نيسان": "nissan", "صني": "sunny", "سنترا": "sentra", "قشقاي": "qashqai", "شيفروليه": "chevrolet", "افيو": "aveo", "اوبترا": "optra", "مرسيدس": "mercedes", "بي ام دبليو": "bmw", "ام جي": "mg", "شيري": "chery", "تيجو": "tiggo", "اسكودا": "skoda", "اوكتافيا": "octavia", "بيجو": "peugeot", "رينو": "renault", "لوجان": "logan", "فيات": "fiat", "تيبو": "tipo", "هوندا": "honda", "سيفيك": "civic", "ميتسوبيشي": "mitsubishi", "سوزوكي": "suzuki", "سويفت": "swift", "جيلي": "geely", "بي واي دي": "byd", "جيتور": "jetour" };
+const VARIANTS = ["pro", "max", "plus", "ultra", "mini", "lite", "fe", "air", "edge", "neo"];
+const ITEM_STOP = new Set(["new", "used", "brand", "original", "sealed", "cheap", "cheapest", "best", "price", "for", "sale", "with", "and", "the", "a", "an", "in", "near", "under", "below", "less", "than", "up", "to", "from", "max.", "budget", "one", "owner", "first", "no", "accident", "accidents", "automatic", "manual", "km", "egp", "model", "car", "cars", "phone", "mobile", "egypt", "cairo", "جديد", "مستعمل", "عربيه", "عربية", "سياره", "سيارة", "موبايل", "موديل", "اول", "أول", "مالك", "بدون", "حوادث", "اوتوماتيك", "أوتوماتيك", "اقل", "أقل", "من", "في", "على", "لـ", "الى", "إلى"]);
+const normItem = (s) => { let t = " " + fold(s).replace(/(\d+)\s*(gb|tb|جيجابايت|جيجا|تيرا)(?![\p{L}])/gu, (m, n, u) => " " + n + (/t|تيرا/.test(u) ? "tb" : "gb") + " ") + " ";
+  for (const [a, l] of Object.entries(TRANSLIT).sort((x, y) => y[0].length - x[0].length)) t = t.split(" " + fold(a) + " ").join(" " + l + " ");
+  return t.replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim(); };
+/** The words an ad must have to be the item asked for, and the variants that make it a different one. */
+export function modelOf(g) {
+  const place = new Set(normItem(g.place || "").split(" "));
+  let toks = normItem(g.what || g.raw).split(" ").filter((w) => w && (w.length > 1 || /\d/.test(w)) && !ITEM_STOP.has(w) && !place.has(w) && !/^(19|20)\d{2}$/.test(w) && !/^\d{4,}$/.test(w) && !/^\d+k$/.test(w));
+  if (g.kind === "car") toks = toks.filter((w) => !/^\d+$/.test(w));   // a car: make and model words (the years are checked apart)
+  const must = [...new Set(toks)].slice(0, 6);
+  return { must, avoid: VARIANTS.filter((v) => !must.includes(v)) };
+}
 export function placeOf(text) {
   const t = fold(text);
   const hit = PLACES.filter((p) => t.includes(fold(p))).sort((a, b) => b.length - a.length)[0];
@@ -93,6 +115,11 @@ export const SITES = {
   tender: ["etenders.gov.eg", "tenders.gov.eg", "egypttenders.com"],
   service: ["dubizzle.com.eg", "olx.com.eg", "yellowpages.com.eg", "facebook.com"],
 };
+/** v6.28: when the site searches bring no ad at all — the item's own words alone, and with the place. */
+export function fallbackSearches(g) {
+  const core = g.model && g.model.must.length ? g.model.must.join(" ") : (g.what || g.raw).split(/\s+/).slice(0, 5).join(" ");
+  return [core + (g.place ? " " + g.place : ""), core + (g.kind === "rent" ? " للإيجار" : g.kind === "car" ? " للبيع" : g.kind === "job" ? " jobs" : " price")];
+}
 /** The searches for a goal: the goal's words on each site that matters, plus one open search. */
 export function searchesFor(g, max = 6) {
   const base = [g.what || g.raw, g.place && !fold(g.what || "").includes(fold(g.place)) ? g.place : ""].filter(Boolean).join(" ");
@@ -124,6 +151,8 @@ export function pricesIn(text) {
     const priced = !!cur || /price|سعر|السعر|بسعر|egp|جنيه|per month|monthly|شهري|\/month|asking|للبيع|for sale|للايجار|للإيجار|salary|راتب|مرتب/.test(near);
     if (!priced) continue;
     if (/^(19|20)\d{2}$/.test(raw) && !cur) continue;                                     // a year
+    const after = t.slice(m.index + m[0].indexOf(raw) + raw.length, m.index + m[0].indexOf(raw) + raw.length + 8).toLowerCase();
+    if (!cur && /^\s*(gb|tb|mb|g\b|جيجا|تيرا|ram|mah|hz|mp\b|w\b|inch|بوصة|cc\b|hp\b|حصان)/.test(after)) continue;   // a storage size / spec (256GB, 5000mAh), not a price
     if (/(m2|m²|sqm|متر|م2|km|كم|كيلو)/.test(t.slice(m.index + m[0].length, m.index + m[0].length + 6).toLowerCase()) && !cur) continue;   // a size / distance
     if (v < 100) continue;
     out.push({ v, at: m.index, cur: /usd|\$/.test(cur) ? "USD" : /aed|درهم/.test(cur) ? "AED" : /sar|ريال/.test(cur) ? "SAR" : "EGP" });
@@ -182,6 +211,8 @@ export function readAd(hit, g) {
   yes("remote", /(remote|work from home|wfh|عن بعد)/, /(on.?site|من المكتب)/);
   yes("fullTime", /(full.time|دوام كامل)/, /(part.time|دوام جزئي)/);
   yes("warranty", /(warranty|ضمان)/, /(no warranty|بدون ضمان)/);
+  if (g && g.kind === "job" && (m = /(\d{1,2})\s*(?:\+|-\s*\d{1,2})?\s*(?:years?|yrs?|سنين|سنوات|سنه|سنة)\s*(?:of\s+)?(?:experience|exp|خبره|خبرة)/i.exec(t))) { out.facts.exp = +m[1]; q("exp", m[0]); }
+  out.item = normItem(out.title + " " + text.slice(0, 300));
   out.facts.place = (g && g.place && f.includes(fold(g.place))) ? g.place : placeOf(text.slice(0, 600));
   if (out.facts.place) q("place", out.facts.place);
   return out;
@@ -196,6 +227,14 @@ export function check(ad, g) {
   // the budget
   if (g.max) line({ k: "price", say: [`under ${num(g.max)}`, `أقل من ${num(g.max)}`] }, F.price == null ? null : F.price <= g.max * 1.0001, ad.quotes.price);
   if (g.min) line({ k: "minPrice", say: [`over ${num(g.min)}`, `أكثر من ${num(g.min)}`] }, F.price == null ? null : F.price >= g.min, ad.quotes.price);
+  if (g.model && g.model.must.length) {
+    const have = " " + (ad.item || normItem(ad.title)) + " ";
+    const miss = g.model.must.filter((w) => !have.includes(" " + w + " "));
+    const extra = g.model.avoid.filter((v) => have.includes(" " + v + " ") && !(v === "pro" && g.model.must.includes("pro")));
+    line({ k: "model", say: [`exactly ${g.model.must.join(" ")}`, `بالضبط ${g.model.must.join(" ")}`] }, miss.length ? false : extra.length ? false : true, miss.length ? "missing: " + miss.join(", ") : extra.length ? "it is a " + extra.join(" / ") + " model" : ad.title.slice(0, 60));
+  }
+  // a rent: a price a monthly rent can't be (a sale ad) is out
+  if (g.kind === "rent" && F.price && F.price > 300000 && (!g.max || g.max < 300000)) line({ k: "price", say: ["a monthly rent (this is a sale price)", "إيجار شهري (هذا سعر بيع)"] }, false, ad.quotes.price);
   if (g.place) line({ k: "place", say: [`in ${g.place}`, `في ${g.place}`] }, F.place ? fold(F.place) === fold(g.place) || fold(F.place).includes(fold(g.place)) || fold(g.place).includes(fold(F.place)) : null, ad.quotes.place);
   for (const w of g.wish) {
     let r = null;
@@ -204,10 +243,11 @@ export function check(ad, g) {
     else if (w.k === "area") r = F.area == null ? null : F.area >= w.min;
     else if (w.k === "year") r = F.year == null ? null : F.year >= w.min && (!w.max || F.year <= w.max);
     else if (w.k === "km") r = F.km == null ? null : F.km <= w.max;
+    else if (w.k === "exp") r = F.exp == null ? null : F.exp <= w.have;
     else r = F[w.k] == null ? null : F[w.k];
     line(w, r, ad.quotes[w.k === "notGround" ? "floor" : w.k]);
   }
-  const hard = bad.some((b) => ["price", "minPrice", "beds", "year", "km", "notGround", "place"].includes(b.k));
+  const hard = bad.some((b) => ["price", "minPrice", "beds", "year", "km", "notGround", "place", "model", "exp"].includes(b.k));
   const total = ok.length + bad.length + unknown.length || 1;
   const score = Math.max(0, Math.round(100 * (ok.length + 0.3 * unknown.length) / total - (hard ? 40 : 0) - 15 * bad.length));
   return { ok, bad, unknown, score, out: hard };
@@ -269,6 +309,12 @@ export function runGoal(goal, hits, { now = Date.now() } = {}) {
     const dropped = a.history && a.history.length >= 2 && a.history[a.history.length - 1][1] < a.history[0][1] ? a.history[0][1] - a.history[a.history.length - 1][1] : 0;
     return { ...a, check: c, fair, score, dropped };
   }).filter((a) => !a.check.out).sort((a, b) => b.score - a.score);
+  // a product: the same item in several stores → the cheapest is marked (and ranks first among equals)
+  if (g.kind === "product") {
+    const priced = found.filter((a) => a.facts.price && a.check.ok.some((x) => x.k === "model"));
+    const sites = new Set(priced.map((a) => a.site));
+    if (sites.size >= 2) { const min = Math.min(...priced.map((a) => a.facts.price)); for (const a of priced) if (a.facts.price === min) { a.cheapest = sites.size; a.score = Math.min(100, a.score + 5); } found.sort((a, b) => b.score - a.score); }
+  }
   return { found, fresh: ads.filter((a) => !seenIds.has(a.id)).map((a) => a.id), seen: seen.slice(-400) };
 }
 /** The few worth a notification: new this run (or cheaper than before) and strong. */

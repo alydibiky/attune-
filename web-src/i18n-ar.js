@@ -4488,4 +4488,5 @@ export const AR = {
   "Log the first day of your period to see predictions.": "سجّلي أول يوم للدورة لتظهر التوقعات.",
   "Period — day {n}": "الدورة — اليوم {n}",
   "about 1 day left": "يكفي نحو يوم واحد",
+  "cheapest of {n} stores": "الأرخص بين {n} متاجر",
 };

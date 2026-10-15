@@ -26,6 +26,10 @@ export async function runScoutGoal(goal, search, onStep, now = Date.now()) {
     onStep && onStep(i + 1, qs.length, qs[i]);
     try { const r = await search(qs[i]); for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h); } catch (e) { /* one site failing never stops the run */ }
   }
+  // (no ad page at all → the item's own words, plain — some sites only show up that way)
+  if (!hits.some((h) => S.isAdPage(h.url, h.text || ""))) {
+    for (const q of S.fallbackSearches(goal.g)) { try { const r = await search(q); for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h); } catch (e) {} }
+  }
   const run = S.runGoal(goal, hits, { now });
   return { goal: { ...goal, seen: run.seen, lastRun: now, lastCount: run.found.length, lastHits: hits.length }, tell: S.worthTelling(run), run };
 }
@@ -108,6 +112,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
             </div>
             <div className="flex flex-wrap gap-1.5 text-[12px]">
               {a.fair ? <span className={"c-pill " + (a.fair.pct > 10 ? "late" : "")} data-testid="scout-fair">{a.fair.pct <= -3 ? tr("{p}% below similar", { p: -a.fair.pct }) : a.fair.pct >= 3 ? tr("{p}% above similar", { p: a.fair.pct }) : tr("a fair price")}{a.fair.basis === "m2" ? " " + tr("(per m²)") : ""}</span> : null}
+              {a.cheapest ? <span className="c-pill" data-testid="scout-cheapest">{tr("cheapest of {n} stores", { n: a.cheapest })}</span> : null}
               {a.dropped > 0 ? <span className="c-pill" data-testid="scout-drop"><TrendingDown size={11} className="inline" /> {tr("dropped {v}", { v: fmt(a.dropped) })}</span> : null}
             </div>
             <ul className="m-0 p-0 list-none space-y-0.5 text-[13px]" data-testid="scout-checks">
