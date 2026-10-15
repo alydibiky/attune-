@@ -42,7 +42,7 @@ with sync_playwright() as p:
 
     # ---- home screen: no period tracker ----
     nav = page.locator("nav").inner_text()
-    check("Cycle" not in nav and "Home" in nav and "Health" in nav, "the bottom bar is Home · Chat · Money · Health · Mind · All, no Cycle (v6.27 design A; Business is in All) (%s)" % nav.replace("\n", " "))
+    check("Cycle" not in nav and "Home" in nav and "Scout" in nav, "the bottom bar is Home · Chat · Money · Scout · Mind · All, no Cycle (v6.29: Health → Scout; Business is in All) (%s)" % nav.replace("\n", " "))
     check(page.locator("text=Log my period").count() == 0, "no 'Log my period' starter on the home screen")
     install(page)
 

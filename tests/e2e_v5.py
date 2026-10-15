@@ -143,7 +143,7 @@ def sec_arabic(br):
     check(page.evaluate("document.documentElement.dir") == "rtl" and page.evaluate("document.documentElement.lang") == "ar", "Arabic turns the whole page right-to-left")
     nav = page.locator("nav button")
     labels = [nav.nth(i).inner_text().strip() for i in range(nav.count())]
-    check(labels == ["الرئيسية", "المحادثة", "المال", "الصحة", "عقلي", "الكل"], "bottom bar is in Arabic (v6.27: Home · Chat · Money · Health · Mind · All): %s" % labels)
+    check(labels == ["الرئيسية", "المحادثة", "المال", "الكشّاف", "عقلي", "الكل"], "bottom bar is in Arabic (v6.29: Home · Chat · Money · Scout · Mind · All): %s" % labels)
     b0 = nav.nth(0).bounding_box(); b4 = nav.nth(nav.count() - 1).bounding_box()
     check(b0["x"] > b4["x"], "and it reads from the right (Chat is on the right)")
     check(page.locator("textarea[placeholder='اكتب رسالة إلى Attune']").count() == 1, "the message box says اكتب رسالة إلى Attune")
@@ -180,7 +180,7 @@ def sec_arabic(br):
     check("النسخ الاحتياطي والاسترجاع" in page.locator("[data-testid=backup-panel]").inner_text(), "Backup screen is in Arabic")
     page.screenshot(path=HERE + "/v5-ar-backup.png")
     page.evaluate("window.__attuneBack()")
-    for i, name in ((1, "instant"), (3, "cycle-or-memory")):
+    for i, name in ((1, "instant"), (3, "scout")):
         nav.nth(i).click(); page.wait_for_timeout(400)
         latin = page.evaluate(LATIN)
         check(len(latin) <= 2, "%s screen is in Arabic: %s" % (name, latin[:5]))
