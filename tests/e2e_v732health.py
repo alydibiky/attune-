@@ -32,7 +32,7 @@ with sync_playwright() as p:
     page.locator("[data-testid=home-area-health]").click(); page.wait_for_timeout(400)
     check(page.locator("[data-testid=health-page]").count() == 1, "Home's Health opens the Health page (not Fit)")
     hc = page.locator("[data-testid=health-care]").inner_text()
-    check("Lantus" in hc and ("days left" in hc or "runs out" in hc), "Family health on it: the next dose and the insulin running out: " + hc.replace("\n", " ")[:100])
+    check("Lantus" in hc and ("day left" in hc or "days left" in hc or "runs out" in hc), "Family health on it: the next dose and the insulin running out: " + hc.replace("\n", " ")[:100])
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, "health-phone.png"), full_page=True)
     page.locator("[data-testid=health-care]").click(); page.wait_for_timeout(300)
     check(page.locator("[data-testid=care-page]").count() == 1, "it opens Family health")

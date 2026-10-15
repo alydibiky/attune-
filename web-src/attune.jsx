@@ -9293,7 +9293,8 @@ export default function App() {
           ) : wide ? null : (   /* v6.25: on a computer Back is the sidebar's ← (one arrow, not two) */
             <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
           )}
-          <p className="text-base font-semibold text-white truncate">{tr(MODE_TITLES[mode] || "Attune")}</p>
+          {/* v6.28 (Ali: "the UI is still cluttered"): a page with its own big title doesn't repeat it in the top bar */}
+          <p className="text-base font-semibold text-white truncate">{OWN_TITLE.has(mode) && mode !== "money" ? "" : tr(MODE_TITLES[mode] || "Attune")}</p>
           <div className="flex-1" />
           <button onClick={() => setShowEngine(true)} className={`${wide ? "hidden " : ""}flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
             <Cpu size={12} />{modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : (NATIVE && (installedModels || []).length ? tr("Asleep — wakes when needed") : tr("No model"))}</button>
@@ -10808,7 +10809,7 @@ export default function App() {
           </div>
         )}
         {/* v5.29 UX: not on Chat — the fixed message box covered it (half-hidden text) */}
-        {!wide && mode !== "chat" && mode !== "fit" && mode !== "business" && mode !== "map" ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
+        {!wide && (mode === "home" || mode === "tools") ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
       </div>
       {toast && <div className="fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       <ConfirmHost />

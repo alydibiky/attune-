@@ -50,7 +50,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt }) {
         <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={16} /></button>
       </div>
       {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : hint[0]}»</p>}
-      <div className="c-card" data-testid="home-today">
+      {/* v6.28 declutter: a card with nothing to say is not shown (nothing due today, nothing spent and no budget) */}
+      {data.items.length || data.reminders ? <div className="c-card" data-testid="home-today">
         <div className="flex items-center mb-1"><span className="c-lbl">{tr("Today")}</span><span className="c-sub ms-auto">{data.items.length ? tr("{n} things", { n: data.items.length + (data.reminders || 0) }) : ""}</span></div>
         {data.items.length || data.reminders ? (
           <>
@@ -62,20 +63,19 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt }) {
               </button>))}
             {data.reminders ? <button onClick={() => navTo("reminders")} className="w-full flex items-center gap-3 py-2 text-start c-sub"><Zap size={15} />{tr("{n} reminders today", { n: data.reminders })}</button> : null}
           </>) : (
-          <button onClick={() => navTo("life")} className="w-full text-start py-1.5 c-sub flex items-center gap-2" data-testid="home-empty"><Users size={15} />{tr("Nothing due. Add a debt, an installment or a bill in People & plans.")}</button>)}
-      </div>
+          null)}
+      </div> : null}
       {/* v6.28 (Ali: "Fit & Food should be on the Home page"): today's food, water and the four meals — tap a meal to add to it */}
       <FitToday key={"fit" + tick} openFit={() => navTo("fit")} compact />
       {guardian || null}
-      <div>
+      {data.o.monthOut || data.o.budget ? <div>
         <button className="c-card text-start w-full" onClick={() => navTo("money")} data-testid="home-spent">
           <span className="c-lbl">{tr("Spent this month")}</span>
           <div className="c-num text-[20px] font-bold mt-0.5">{fmt(data.o.monthOut)}</div>
           <div className="c-sub">{data.o.budget ? tr("of {b} {c}", { b: fmt(data.o.budget), c: data.o.cur }) : data.o.cur}</div>
           {data.o.budget ? <div className="c-bar mt-2"><i style={{ width: pct(data.o.monthOut, data.o.budget) + "%" }} /></div> : null}
         </button>
-
-      </div>
+      </div> : null}
       <div className="grid grid-cols-3 gap-2.5" data-testid="home-areas">
         {AREAS.map(([id, label, I]) => (
           <button key={id} onClick={() => (id === "all" ? openAll() : navTo(id))} data-testid={"home-area-" + id}
