@@ -57,6 +57,7 @@ import { BookingDetails, loadBooking, agentLabels } from "./agent-ui.jsx";
 import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
+import { PrivacyPage } from "./privacy-ui.jsx";
 import { HealthPage } from "./health-ui.jsx";
 import { LifeAskPage } from "./lifeask-ui.jsx";
 import { ScoutPage, runScoutGoal, tellText as scoutTell } from "./scout-ui.jsx";
@@ -575,7 +576,7 @@ const Store = {
   async owned() {
     const b = this.bridge;
     if (!b || !b.owned) return [];
-    try { return (await b.owned()) || []; } catch (e) { return []; }
+    try { return (await b.owned()) || []; } catch (e) { return null; }   // null = the store didn't answer (keep what we knew)
   },
   // Play's own local prices ({ id → "EGP 2,499.00" }), so the screen shows exactly what Play charges
   async prices() {
@@ -606,7 +607,7 @@ async function storeEntitlement() {
   // No bridge yet (web preview, or the store client is still starting): fall
   // back to what the store told us last time rather than downgrading someone
   // mid-flight. A genuine cancellation clears this on the next successful read.
-  if (!Store.available()) {
+  if (!Store.available() || owned === null) {
     try {
       const c = JSON.parse(localStorage.getItem(STORE_CACHE) || "null");
       if (c && (!c.expires || c.expires > Date.now())) return { ...c, stale: true };
@@ -1269,7 +1270,8 @@ if (typeof window !== "undefined" && NATIVE && NATIVE.storeBuy && !window.ATTUNE
   window.ATTUNE_STORE = {
     name: "Google Play",
     purchase: (sku) => nativeCall("storeBuy", { sku }),
-    owned: async () => ((await nativeCall("storeOwned", {})) || {}).items || [],
+    // v6.29: Play not answering throws (it is not "owns nothing"), so a paying user keeps Pro until Play answers again
+    owned: async () => { const r = (await nativeCall("storeOwned", {})) || {}; if (r.error) throw new Error(r.error); return r.items || []; },
     products: async () => ((await nativeCall("storeProducts", {})) || {}).items || [],
     consume: (token) => nativeCall("storeConsume", { token }),
   };
@@ -7368,8 +7370,8 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
-const MODE_TITLES = { health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const OWN_TITLE = new Set(["privacy", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
@@ -8162,6 +8164,7 @@ export default function App() {
   useEffect(() => {
     const onShare = (e) => {
       const d = (e && e.data) || {};
+      if (d.kind === "privacy") { navTo("privacy"); return; }   // v6.29 Health Connect: "why this app reads your data"
       if (d.kind === "reminder" && /^daily-learn-/.test(d.id || "")) { setDailyOpen(d.id); navTo("learn"); return; }
       if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); navTo("news"); return; }
       if (d.kind === "reminder" && /^daily-fit-/.test(d.id || "")) { navTo("fit"); return; }
@@ -9969,6 +9972,8 @@ export default function App() {
           <LifeAskPage navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }}
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
+        ) : mode === "privacy" ? (
+          <PrivacyPage />
         ) : mode === "guide" ? (
           <GuidePage tools={MORE_TOOLS} groups={MORE_GROUPS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "care" ? (
@@ -10873,6 +10878,7 @@ export default function App() {
               </div>
             </section>
             <p className="text-center text-[11px] text-slate-600 select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
+            <button onClick={() => { setMoreOpen(false); navTo("privacy"); }} className="block mx-auto text-[11px] text-slate-500 underline mt-1" data-testid="more-privacy">{tr("Privacy")}</button>
           </div>
         </div>
       ) : moreOpen ? (
@@ -10917,6 +10923,7 @@ export default function App() {
                 <div className="mb-3"><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
               <p className="text-center text-[10px] text-slate-600 mt-3 select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
+            <button onClick={() => { setMoreOpen(false); navTo("privacy"); }} className="block mx-auto text-[11px] text-slate-500 underline mt-1" data-testid="more-privacy">{tr("Privacy")}</button>
             </div>
           </div>
         </div>
@@ -11152,8 +11159,9 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
           {/* 5 · codes, restore */}
           {!pro ? (
             <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-              <button onClick={() => setHaveCode((v) => !v)} className="text-[12px] text-slate-300 underline" data-testid="have-code">{tr("I have an activation code (company deals)")}</button>
-              {haveCode ? <>
+              {/* v6.29 Google Play's payments policy: on a Play build Pro is bought only through Google Play — no codes or keys */}
+              {!Store.available() ? <button onClick={() => setHaveCode((v) => !v)} className="text-[12px] text-slate-300 underline" data-testid="have-code">{tr("I have an activation code (company deals)")}</button> : null}
+              {haveCode && !Store.available() ? <>
                 <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
                   <span className="text-[11px] text-slate-500">{tr("Your request code")}</span>
                   <button onClick={async () => { try { await navigator.clipboard.writeText(req); flash(tr("Copied")); } catch (e) {} }} className="font-mono text-sm text-white tracking-wider" data-testid="request-code">{req}</button>
@@ -11165,10 +11173,10 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
                 </div>
               </> : null}
               <div className="flex items-center justify-between mt-3">
-                <button onClick={() => setShowOld((v) => !v)} className="text-[11px] text-slate-500">{tr("I have an older key")}</button>
+                {!Store.available() && ATTUNE_PUBLIC_KEY ? <button onClick={() => setShowOld((v) => !v)} className="text-[11px] text-slate-500">{tr("I have an older key")}</button> : <span />}
                 {Store.available() ? <button onClick={restore} className="text-[12px] text-slate-300">{tr("Restore purchase")}</button> : null}
               </div>
-              {showOld ? (
+              {showOld && !Store.available() ? (
                 <div className="mt-2 flex gap-2">
                   <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="ATTUNE-…" className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200" />
                   <button onClick={redeemOld} className="px-3 py-2 rounded-lg bg-slate-800 text-slate-200 text-sm">{tr("Activate")}</button>

@@ -21,7 +21,10 @@ export const TRIAL_DAYS = 7;
 export const TESTING_ALL_PRO = true;     // the testing FEATURE exists; it is OFF for everyone unless developer mode is on (below)
 /** v6.11 release: developer mode is hidden — tap the version number 7 times (More, bottom). Off on every fresh install, so customers
     always get the 7-day trial, the Free limits and Pro by purchase; Ali turns it on to test Pro features. */
-export function devMode() { try { return localStorage.getItem("attune:dev") === "1"; } catch (e) { return false; } }
+/** v6.29: the Android app says whether it is a test build (signed with the test key). A Play build signed with the real key says no,
+    and then developer mode can never be on — the 7-tap trick unlocks nothing for customers. (No such answer → the browser tests.) */
+export function devAllowed() { try { const N = typeof window !== "undefined" && window.AttuneNative; return !(N && typeof N.testBuild === "function") || !!N.testBuild(); } catch (e) { return false; } }
+export function devMode() { try { return devAllowed() && localStorage.getItem("attune:dev") === "1"; } catch (e) { return false; } }
 export function setDevMode(on) { try { localStorage.setItem("attune:dev", on ? "1" : "0"); localStorage.setItem("attune:testing-pro", on ? "on" : "off"); } catch (e) {} }
 /** In developer mode every Pro feature is unlocked; Plan can switch it off to see the app as a Free user ("attune:testing-pro" = "off"). */
 export function testingPro() {

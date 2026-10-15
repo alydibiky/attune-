@@ -50,7 +50,9 @@ object PayLog {
     private val WORD = Regex("(?i)(debited|credited|purchase|payment|paid|received|transfer|withdraw|deposit|spent|charged|refund|instapay|upi|pix|trial|renew|subscription|billing|invoice|receipt|warranty|expires|débit|crédit|paiement|achat|virement|prélèvement|remboursement|essai|abonnement|cargo|abono|pago|compra|transferencia|reembolso|prueba|suscripci|pagamento|compra|transferência|estorno|assinatura|zahlung|gutschrift|überweisung|lastschrift|abbuchung|probe|abo|kündig|addebito|accredito|bonifico|rimborso|prova|abbonamento|ödeme|harcama|havale|iade|deneme|abonelik|pembayaran|transfer|langganan|uji coba|списан|зачислен|оплата|перевод|подписк|支付|付款|收到|订阅|결제|입금|구독|支払|入金|خصم|إيداع|ايداع|تحويل|سحب|شراء|استلام|دفع|مدفوعات|رصيد|اشتراك|تجربة|تجديد)")
     private val NUM = Regex("[\\d٠-٩]{2,}")
 
-    fun looksLikeMoney(s: String): Boolean = s.length in 8..2000 && (CUR.containsMatchIn(s) || (WORD.containsMatchIn(s) && NUM.containsMatchIn(s)))
+    // v6.29 (privacy policy + Play review): one-time codes are never kept, even when the message also names an amount
+    private val OTP = Regex("""(?i)\b(otp|one[- ]time (pass(word|code)?|code)|verification code|security code|passcode|auth(entication)? code|2fa)\b|رمز التحقق|كود التحقق|رمز التفعيل|كلمة المرور لمرة واحدة|الرمز السري|كود التفعيل|رقم سري""")
+    fun looksLikeMoney(s: String): Boolean = s.length in 8..2000 && !OTP.containsMatchIn(s) && (CUR.containsMatchIn(s) || (WORD.containsMatchIn(s) && NUM.containsMatchIn(s)))
 
     @Synchronized fun add(ctx: Context, item: JSONObject) {
         val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

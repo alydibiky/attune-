@@ -4547,4 +4547,5 @@ export const AR = {
   "Spent this month: {n}": "المصروف هذا الشهر: {n}",
   "Fit & Food, Family health and Cycle": "اللياقة والطعام وصحة العائلة والدورة",
   "1 goal watched": "هدف واحد قيد المتابعة",
+  "Updated {d}": "آخر تحديث {d}",
 };

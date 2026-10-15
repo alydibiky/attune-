@@ -570,7 +570,7 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
       if (r && r.ok && r.purchase) { await applyPlay(r.purchase); return; }
       if (r && r.already) { const l = await store.owned(); const p = l.find((x) => x.productId === PLAY.business && x.purchased !== false); if (p) { await applyPlay(p); return; } }
       flash(r && r.reason && r.reason !== "cancelled" ? tr("Google Play: {e}", { e: r.reason }) : tr("Purchase cancelled"));
-    } finally { setBuying(false); }
+    } catch (e) { flash(tr("Google Play: {e}", { e: String((e && e.message) || e) })); } finally { setBuying(false); }
   };
   const tzP = pricesFor((() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return ""; } })(), (typeof navigator !== "undefined" && navigator.language) || "");
   const [confirmDel, setConfirmDel] = useState(false);
@@ -679,8 +679,9 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
           {unused ? <button className={primary + " w-full"} onClick={() => applyPlay(unused)} data-testid="erp-use-purchase">{tr("Use your Google Play purchase on this system")}</button>
             : store ? <button className={primary + " w-full"} disabled={buying} onClick={buyBusiness} data-testid="erp-buy-play">{buying ? tr("Opening Google Play…") : tr("Activate this system · {p}", { p: bizPrice || tzP.business })}</button>
             : <p className="text-[12px] text-slate-400" data-testid="erp-play-only">{tr("Activation is bought in the Google Play version of Attune — one tap, and the system unlocks by itself.")}</p>}
-          <button className="text-[11px] text-slate-500 underline" onClick={() => setHaveCode((v) => !v)} data-testid="erp-have-code">{tr("I have an activation code (company deals)")}</button>
-          {haveCode ? <>
+          {/* v6.29 Google Play's payments policy: a Play build activates only through Google Play */}
+          {!store ? <button className="text-[11px] text-slate-500 underline" onClick={() => setHaveCode((v) => !v)} data-testid="erp-have-code">{tr("I have an activation code (company deals)")}</button> : null}
+          {haveCode && !store ? <>
           <div className="flex gap-2 items-center"><code className="text-[13px] text-teal-200 bg-slate-950 rounded px-2 py-1 select-all" data-testid="erp-request-code">{req}</code>
             <button className="p-1.5 text-slate-400" onClick={() => { try { navigator.clipboard.writeText(req); } catch (e) {} flash(tr("Copied")); }} title={tr("Copy")}><Copy size={15} /></button>
             {share ? <button className="p-1.5 text-slate-400" onClick={() => share(requestText + (E.SELLER.contact ? "\n" + E.SELLER.contact : ""))} title={tr("Send the request")}><Share2 size={15} /></button> : null}</div>

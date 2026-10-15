@@ -198,12 +198,22 @@ jobs:
 
       # An AAB is what the Play Store actually wants for a new listing.
       - name: Build the Play Store bundle
-        if: ${{ github.event_name == 'release' || (env.HAS_PLAY == 'true' && env.HAS_KEYSTORE == 'true' && github.ref == 'refs/heads/main' && github.event_name == 'push') }}
+        # v6.29: only with the real key (gradle refuses a bundle signed with the test key); a manual run also builds it, for the
+        # very first upload to the Play Console by hand
+        if: ${{ env.HAS_KEYSTORE == 'true' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (env.HAS_PLAY == 'true' && github.ref == 'refs/heads/main' && github.event_name == 'push')) }}
         env:
           ATTUNE_STORE_PASSWORD: ${{ secrets.ATTUNE_STORE_PASSWORD }}
           ATTUNE_KEY_ALIAS: ${{ secrets.ATTUNE_KEY_ALIAS }}
           ATTUNE_KEY_PASSWORD: ${{ secrets.ATTUNE_KEY_PASSWORD }}
         run: gradle bundleFullRelease --no-daemon
+
+      - name: Keep the Play Store bundle (download it for the first upload by hand)
+        if: ${{ env.HAS_KEYSTORE == 'true' && github.event_name == 'workflow_dispatch' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: attune-play-bundle
+          path: app/build/outputs/bundle/fullRelease/*.aab
+          retention-days: 30
 
       # Internal testing on Google Play: testers install Attune from the Play Store (no Play Protect block, updates by
       # themselves). Needs the release key and PLAY_SERVICE_ACCOUNT_JSON; the very first bundle is uploaded by hand once.

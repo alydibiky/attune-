@@ -46,7 +46,8 @@ class Billing(private val ctx: Context) {
 
     private fun acknowledge(p: Purchase) {
         if (p.purchaseState != Purchase.PurchaseState.PURCHASED || p.isAcknowledged) return
-        if (p.products.contains(CONSUMABLE)) return          // consumed (which acknowledges) after the system is activated
+        // v6.29: a Business activation is acknowledged at once too (it is consumed later, when a system uses it) — before, an
+        // activation not used within 3 days was refunded by Play. A failed acknowledgement is tried again on the next check.
         client?.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(p.purchaseToken).build()) { }
     }
 
@@ -67,19 +68,28 @@ class Billing(private val ctx: Context) {
         }
     }
 
-    /** Connects once; `then` runs when Play is ready (or with an error text). */
-    private fun ready(then: (String?) -> Unit) {
+    private val waitingReady = ArrayList<(String?) -> Unit>()   // v6.29: calls that arrive while connecting wait for the same connection
+    private var connecting = false
+
+    /** Connects once; `then` runs when Play is ready (or with an error text). Reconnects after Play drops the connection. */
+    @Synchronized private fun ready(then: (String?) -> Unit) {
         val c = client
         if (c != null && c.isReady) return then(null)
+        waitingReady.add(then)
+        if (connecting) return
+        connecting = true
         val nc = c ?: BillingClient.newBuilder(ctx)
             .setListener { r, l -> onPurchases(r, l) }
             .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
             .build().also { client = it }
         nc.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(r: BillingResult) {
-                then(if (r.responseCode == BillingClient.BillingResponseCode.OK) null else (r.debugMessage.ifEmpty { "Google Play billing isn't available on this phone" }))
+                val err = if (r.responseCode == BillingClient.BillingResponseCode.OK) null else (r.debugMessage.ifEmpty { "Google Play billing isn't available on this phone" })
+                val all = synchronized(this@Billing) { connecting = false; ArrayList(waitingReady).also { waitingReady.clear() } }
+                all.forEach { try { it(err) } catch (e: Exception) {} }
             }
-            override fun onBillingServiceDisconnected() { }
+            // the next call connects again (ready() sees the client is not ready)
+            override fun onBillingServiceDisconnected() { synchronized(this@Billing) { connecting = false } }
         })
     }
 
@@ -117,8 +127,12 @@ class Billing(private val ctx: Context) {
             }
             waiting = done
             a.runOnUiThread {
-                val r = client!!.launchBillingFlow(a, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(pp.build())).build())
-                if (r.responseCode != BillingClient.BillingResponseCode.OK) { waiting = null; done(JSONObject().put("ok", false).put("reason", r.debugMessage.ifEmpty { "Play error ${r.responseCode}" })) }
+                try {
+                    val c = client ?: throw IllegalStateException("Google Play isn't connected")
+                    if (a.isFinishing) throw IllegalStateException("no screen")
+                    val r = c.launchBillingFlow(a, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(pp.build())).build())
+                    if (r.responseCode != BillingClient.BillingResponseCode.OK) { waiting = null; done(JSONObject().put("ok", false).put("reason", r.debugMessage.ifEmpty { "Play error ${r.responseCode}" })) }
+                } catch (e: Exception) { waiting = null; done(JSONObject().put("ok", false).put("reason", e.message ?: "Play error")) }
             }
         }
         if (details.containsKey(id)) start() else products { start() }
@@ -128,11 +142,14 @@ class Billing(private val ctx: Context) {
     fun owned(done: (JSONObject) -> Unit) = ready { err ->
         if (err != null) return@ready done(JSONObject().put("error", err).put("items", JSONArray()))
         val out = JSONArray()
-        client!!.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(ProductType.SUBS).build()) { _, subs ->
+        val c = client ?: return@ready done(JSONObject().put("error", "Google Play isn't connected").put("items", JSONArray()))
+        c.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(ProductType.SUBS).build()) { r1, subs ->
             subs.forEach { acknowledge(it); out.put(purchaseJson(it)) }
-            client!!.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(ProductType.INAPP).build()) { _, inapp ->
+            c.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(ProductType.INAPP).build()) { r2, inapp ->
                 inapp.forEach { acknowledge(it); out.put(purchaseJson(it)) }
-                done(JSONObject().put("items", out))
+                // v6.29: Play not answering is an ERROR, not "owns nothing" — the page then keeps what it knew (a paying user keeps Pro)
+                val ok = r1.responseCode == BillingClient.BillingResponseCode.OK && r2.responseCode == BillingClient.BillingResponseCode.OK
+                done(if (ok) JSONObject().put("items", out) else JSONObject().put("items", out).put("error", "Google Play didn't answer (${r1.responseCode}/${r2.responseCode})"))
             }
         }
     }

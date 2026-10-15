@@ -100,8 +100,11 @@ android {
             isMinifyEnabled = false          // the app is one HTML file; nothing to shrink
             signingConfig = if ((System.getenv("ATTUNE_KEYSTORE") ?: "").isNotEmpty())
                 signingConfigs.getByName("release") else signingConfigs.getByName("test")
+            // v6.29 release safety: only a build signed with the TEST key may turn on developer mode (the 7-tap Pro unlock);
+            // a Play build signed with the real key never can
+            resValue("bool", "attune_test_build", (System.getenv("ATTUNE_KEYSTORE") ?: "").isEmpty().toString())
         }
-        debug { applicationIdSuffix = ".debug" }
+        debug { applicationIdSuffix = ".debug"; resValue("bool", "attune_test_build", "true") }
     }
 
     compileOptions {
@@ -144,4 +147,11 @@ dependencies {
     // Google Play Billing (v6.7): Pro subscriptions / lifetime and Business activations — Google charges,
     // renews, refunds and pays out; nothing to run on our side.
     implementation("com.android.billingclient:billing-ktx:7.1.1")
+}
+
+// v6.29 release safety: a Play Store bundle must be signed with the real upload key — never silently with the test key
+// (its passwords are in this repository). Without ATTUNE_KEYSTORE, bundle…Release stops with a clear message.
+gradle.taskGraph.whenReady {
+    if (allTasks.any { it.name.startsWith("bundle") && it.name.endsWith("Release") } && (System.getenv("ATTUNE_KEYSTORE") ?: "").isEmpty())
+        throw GradleException("A release bundle needs the upload key: set ATTUNE_KEYSTORE (and its passwords). It is never signed with the test key.")
 }
