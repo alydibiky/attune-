@@ -4549,4 +4549,5 @@ export const AR = {
   "1 goal watched": "هدف واحد قيد المتابعة",
   "Updated {d}": "آخر تحديث {d}",
   "Flash mode on this phone: the model stays on storage and only the experts each word needs are read into memory — about 3–8 words a second, slower than the small models but far more knowledgeable. Needs {g} GB free storage.": "وضع الفلاش على هذا الهاتف: يبقى النموذج في التخزين، ولا يُقرأ إلى الذاكرة إلا الخبراء الذين تحتاجهم كل كلمة — نحو 3 إلى 8 كلمات في الثانية، أبطأ من النماذج الصغيرة لكنه أوسع معرفة بكثير. يحتاج {g} جيجابايت فارغة في التخزين.",
+  "Every phone model up to Zenith+, Everest in flash mode, full Studio": "كل نماذج الهاتف حتى Zenith+، وEverest في وضع الفلاش، والاستوديو كاملًا",
 };
