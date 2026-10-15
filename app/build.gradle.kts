@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.aldibiki.attune"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
-        targetSdk = 35
+        targetSdk = 36   // Google Play: new apps and updates must target Android 16 (API 36) since 31 Aug 2026
         versionCode = System.getenv("ATTUNE_VERSION_CODE")?.toIntOrNull() ?: 90   // CI: 1000 + the run number, so every build installs over the last and Play accepts each upload
         versionName = "6.29"
 
@@ -135,8 +135,8 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.1")
     // Fit & Food (v6.3): steps, calories burned and workouts from the watch apps, through Android's
     // Health Connect (read only). Coroutines: its API is suspend functions.
-    // (1.1.0 final needs compileSdk 36 + AGP 8.9.1; this release builds with compileSdk 35 / AGP 8.7.2)
-    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
+    // (1.1.0 final: compileSdk 36 + AGP 8.9.1, which v6.29 builds with)
+    implementation("androidx.health.connect:connect-client:1.1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     // Huawei watches (v6.5): Huawei Health's data through Huawei's Health Kit, read only — the way
     // Yazio connects to Huawei Health. Version from Huawei's own Kotlin demo (HMS-Core/hms-health-demo-kotlin).

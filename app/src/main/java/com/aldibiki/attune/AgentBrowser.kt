@@ -50,6 +50,9 @@ class AgentBrowser : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(b: Bundle?) {
         super.onCreate(b)
+        // Android 16 (target 36) no longer calls onBackPressed: Back comes through the back-invoked dispatcher (Android 13+)
+        if (android.os.Build.VERSION.SDK_INT >= 33)
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT) { goBackOrClose() }
         val url = intent.getStringExtra("url") ?: ""
         profile = intent.getStringExtra("profile") ?: "{}"
         rules = intent.getStringExtra("rules") ?: "{}"
@@ -150,8 +153,9 @@ class AgentBrowser : Activity() {
         status.text = L("paying", "Payment — your turn. Attune never pays or reads card details.")
     }
 
+    private fun goBackOrClose() { if (::web.isInitialized && web.canGoBack()) web.goBack() else finishWith("closed") }
     @Deprecated("Back")
-    override fun onBackPressed() { if (::web.isInitialized && web.canGoBack()) web.goBack() else finishWith("closed") }
+    override fun onBackPressed() { goBackOrClose() }   // Android 12 and older
 
     private fun finishWith(reason: String) {
         if (closed) return
