@@ -12,7 +12,11 @@ if [ -d "$DIR/llama.cpp/.git" ]; then
 fi
 
 echo "Cloning llama.cpp (pinned $PIN)…"
-git clone https://github.com/ggml-org/llama.cpp "$DIR/llama.cpp"
+# (v6.29: GitHub sometimes times out mid-clone — HTTP 408 — so the clone is tried up to 4 times)
+for i in 1 2 3 4; do
+  git clone https://github.com/ggml-org/llama.cpp "$DIR/llama.cpp" && break
+  rm -rf "$DIR/llama.cpp"; [ "$i" = 4 ] && exit 1; echo "clone failed, trying again in $((i * 10)) s"; sleep $((i * 10))
+done
 cd "$DIR/llama.cpp"
 git checkout "$PIN"
 echo "Done. You can now build the APK in Android Studio."
