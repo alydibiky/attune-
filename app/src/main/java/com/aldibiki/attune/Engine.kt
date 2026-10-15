@@ -144,8 +144,9 @@ object Engine {
     fun start(ctx: Context, model: ModelStore.Installed, onDone: (Boolean, String?) -> Unit) {
         appCtx = ctx.applicationContext
         exec.execute {
-            val ok = startBlocking(ctx.applicationContext, model)
-            changed()
+            // v6.29: an error inside the native engine or LiteRT while starting is reported as a failed start (not a crash)
+            val ok = try { startBlocking(ctx.applicationContext, model) } catch (e: Throwable) { false.also { try { error = "The model couldn't start: ${e.message ?: e.javaClass.simpleName}" } catch (x: Exception) {} } }
+            try { changed() } catch (e: Exception) {}
             onDone(ok, error)
         }
     }

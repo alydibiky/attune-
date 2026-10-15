@@ -658,7 +658,6 @@ const NET = {
   models:  "",                                              // model + LoRA catalogue
   revoked: "",                                              // revoked licence ids
   rates:   "https://open.er-api.com/v6/latest/USD",         // free, no key, daily
-  weather: "https://api.open-meteo.com/v1/forecast",        // free, no key
 };
 
 const NET_CACHE = "attune:net:";
@@ -705,15 +704,6 @@ function convert(amount, from, to, cache) {
 }
 
 // ---- weather -------------------------------------------------------------
-async function fetchWeather(lat, lon, name) {
-  const url = NET.weather + "?latitude=" + lat + "&longitude=" + lon +
-              "&current=temperature_2m,precipitation,weather_code&forecast_days=3" +
-              "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum";
-  const j = await netFetch(url, { timeout: 8000 });
-  if (!j || !j.current) throw new Error("no weather in response");
-  return netWrite("weather:" + name, j);
-}
-
 // ---- static update feeds -------------------------------------------------
 // A version number and a payload. The app only replaces what it has when the
 // version is newer, so a failed or partial download never corrupts anything.
@@ -6801,6 +6791,7 @@ const MAX_Z = 19;
 // downloading — all three are honoured below.
 const TILE_URL = (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 const TILE_ATTRIB = "© OpenStreetMap contributors";
+const OSM_TILES_ONLINE = false;
 
 /* ---- the maths ----------------------------------------------------------
    Web Mercator, the same projection every slippy map uses. These four
@@ -6846,7 +6837,9 @@ async function getTile(z, x, y, opts) {
     const hit = await c.match(url).catch(() => null);
     if (hit) return { url, from: "cache", blob: await hit.blob() };
   }
-  if (o.cacheOnly) return null;                  // offline: no cache, no tile
+  // v6.29 (release): tile.openstreetmap.org forbids use by apps — this old fallback map shows only tiles already cached;
+  // the real map (map-ui.jsx) uses Attune's own map packs
+  if (o.cacheOnly || !OSM_TILES_ONLINE) return null;
   const res = await fetch(url, { mode: "cors" });
   if (!res.ok) throw new Error("tile " + res.status);
   if (c) c.put(url, res.clone()).catch(() => {});
