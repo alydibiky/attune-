@@ -3,7 +3,7 @@
    notifications (one repeating notification per course / topic, id
    "daily-learn-…" / "daily-news-…") and the home-screen widget's text.    */
 import React, { useState, useEffect, useRef } from "react";
-import { GraduationCap, Newspaper, Plus, Trash2, ChevronLeft, Check, X, Loader2, Bell, RefreshCw, Sparkles, ImageIcon, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
+import { GraduationCap, Newspaper, Plus, Trash2, ChevronLeft, ChevronRight, Check, X, Loader2, Bell, RefreshCw, Sparkles, ImageIcon, CheckCircle2, AlertTriangle, Clock, Layers, BookOpen, HelpCircle } from "lucide-react";
 import { getLang, tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import { Md } from "./chat.jsx";
@@ -126,17 +126,49 @@ export function Visual({ v }) {
 }
 
 // ================================ Learn daily ================================
+/* v6.28 rework (Ali: "finish Learn daily and rework its logic and UI"). Calm design. Each course shows ONE plan for today, in order:
+   review the cards (made by code from the lessons you read, no model needed) → today's lesson → the quiz. The course plan and the
+   settings sit below, small. On a computer the course stays on the left and the lesson, review or quiz opens on the right. */
+const cf = { background: "var(--c-bg)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" };
+const cField = "w-full min-w-0 rounded-lg px-2.5 py-2 text-sm focus:outline-none";
+const cGhost = "rounded-lg px-3 py-2 text-[13px] font-medium border disabled:opacity-40";
+const gs = { borderColor: "var(--c-ln)", color: "var(--c-ink)", background: "transparent" };
+function CBack({ onClick, label }) {
+  return <button onClick={onClick} className="c-sub flex items-center gap-1 text-[13px]"><ChevronLeft size={16} className="rtl:-scale-x-100" />{label || tr("Back")}</button>;
+}
+function CWorking({ what, text }) {
+  return (
+    <div className="c-card" data-testid="daily-working">
+      <p className="text-[13px] c-acc flex items-center gap-1.5 m-0"><Loader2 size={14} className="animate-spin" />{what}</p>
+      {text ? <p className="c-sub mt-1.5 line-clamp-3 break-words" dir="auto">{text.slice(-300)}</p> : null}
+    </div>);
+}
+/** One step of today: an icon (a tick once done), what it is, and a line under it. */
+function Step({ icon: I, title, sub, done, onClick, testid, disabled }) {
+  return (
+    <button onClick={onClick} disabled={disabled} data-testid={testid} className="w-full text-start flex items-center gap-3 p-3 disabled:opacity-60">
+      <span className="c-ic" style={done ? { background: "transparent", border: "1px solid var(--c-ln)", color: "var(--c-pos)" } : undefined}>{done ? <Check size={16} /> : <I size={16} />}</span>
+      <span className="flex-1 min-w-0"><b className="block text-[14px] font-semibold" dir="auto" style={done ? { color: "var(--c-mut)" } : undefined}>{title}</b>{sub ? <span className="c-sub block" dir="auto">{sub}</span> : null}</span>
+      {!done && !disabled ? <ChevronRight size={16} className="c-acc shrink-0 rtl:-scale-x-100" /> : null}
+    </button>);
+}
+const frame = (el, testid) => <div className="calm rounded-2xl p-4 md:p-6" style={{ minHeight: "70vh" }} data-testid={testid}>{el}</div>;
+const fmtDay = (t) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+const cardsWord = (n) => (n === 1 ? tr("1 card") : tr("{n} cards", { n }));
+
 export function LearnPage({ llm, modelReady, openEngine, flash, native, call, openId, clearOpen, illustrate }) {
   const [courses, setCoursesRaw] = useState(loadCourses);
   const [cur, setCur] = useSticky("learn:cur", null);                 // course id
-  const [view, setView] = useSticky("learn:view", "list");             // list | new | course | lesson | quiz | past
+  const [view, setView] = useSticky("learn:view", "list");             // list | new | course | lesson | quiz | review
   const [lessonN, setLessonN] = useSticky("learn:lesson", null);
   const [busy, setBusy] = useState(null);               // { what, text }
-  const [quiz, setQuiz] = useSticky("learn:quiz", null);               // { lessons, questions, i, picks, shown }
-  const [form, setForm] = useState({ topic: "", level: "beginner", lang: "en", time: "08:00", quizEvery: 5, goal: "" });
+  const [quiz, setQuiz] = useSticky("learn:quiz", null);               // { lessons, questions, i, picks }
+  const [rev, setRev] = useSticky("learn:rev", null);                  // { ids, i, shown, knew, again: [ids] }
+  const [form, setForm] = useState({ topic: "", level: "beginner", lang: getLang() === "ar" ? "ar" : "en", time: "08:00", quizEvery: 5, goal: "" });
   const [confirmDel, setConfirmDel] = useState(false);
+  const [allPlan, setAllPlan] = useState(false);
   const running = useRef(false);
-  const wide = useDesktopWide();   // v6.27 computer layout: the course on the left, the lesson / quiz on the right
+  const wide = useDesktopWide();
   const course = courses.find((c) => c.id === cur) || null;
   // v6.27: Listen — the open lesson read aloud by the phone's voice, paragraph by paragraph (the one being read is highlighted)
   const openLesson = view === "lesson" && course ? course.lessons.find((x) => x.n === lessonN) : null;
@@ -144,10 +176,11 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
   const listenParts = openLesson ? [openLesson.title, ...paras, ...((openLesson.keyPoints || []).length ? [tr("Remember") + ": " + openLesson.keyPoints.join(". ")] : [])] : [];
   const L = useListen(listenParts, { lang: course && course.lang && course.lang !== "auto" ? course.lang : getLang(), native: native ? { N: native, call } : null });
   const hl = (k) => (L.at === k ? { background: "rgba(79,194,175,.12)", borderRadius: 8, transition: "background .3s" } : { transition: "background .3s" });
-  // v5.34: Back — lesson / quiz / past lessons → the course → all courses
-  useSubBack(view !== "list", () => { if (["lesson", "quiz", "past"].includes(view)) { setQuiz(null); setView("course"); } else { setView("list"); setCur(null); } });
+  // Back — lesson / quiz / review → the course → all courses
+  useSubBack(view !== "list", () => { if (["lesson", "quiz", "review", "past"].includes(view)) { L.stop(); setQuiz(null); setRev(null); setView("course"); } else { setView("list"); setCur(null); } });
   const setCourses = (list) => { store(CKEY, list); setCoursesRaw(list); syncDaily(native, list); };
   const putCourse = (c) => setCourses([c, ...loadCourses().filter((x) => x.id !== c.id)].sort((a, b) => a.created - b.created));
+  const latest = () => loadCourses().find((x) => x.id === cur) || course;
 
   // v6.27: opened from CV → Job ready with a skill to learn — the new-course form, filled in
   useEffect(() => { let t = ""; try { t = localStorage.getItem("attune:learn:seed") || ""; localStorage.removeItem("attune:learn:seed"); } catch (e) {} if (t) { setForm((f) => ({ ...f, topic: t })); setView("new"); } }, []);
@@ -170,22 +203,26 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
     if (running.current) return null;
     running.current = true;
     try {
-      const out = await gen(tr("Writing lesson {n}: {t}", { n: n + 1, t: c.plan[n] || "" }), D.lessonMessages(c, n), 1600);
-      const p = D.parseLesson(out);
-      if (p.body.length < 80) { flash(tr("The lesson came out too short — try again.")); return null; }
-      const next = D.addLesson(loadCourses().find((x) => x.id === c.id) || c, n, p);
-      putCourse(next);
-      return next;
+      // (a lesson that comes out too short is written once more, a little more freely, before giving up)
+      for (let k = 0; k < 2; k++) {
+        const out = await gen(tr("Writing lesson {n}: {t}", { n: n + 1, t: c.plan[n] || "" }), D.lessonMessages(c, n), 1600, k ? 0.6 : 0.4);
+        const p = D.parseLesson(out);
+        if (p.body.length < 80) continue;
+        const next = D.addLesson(loadCourses().find((x) => x.id === c.id) || c, n, p);
+        putCourse(next);
+        return next;
+      }
+      flash(tr("The lesson came out too short — try again.")); return null;
     } catch (e) { flash(String(e.message || e)); return null; }
     finally { running.current = false; }
   };
 
-  // v6.13: a ready course starts at once — its plan is built in
+  // a ready course starts at once — its plan is built in
   const startReady = async (id) => {
     const c = D.readyCourse(id, { lang: getLang() === "ar" ? "ar" : "en", time: form.time || "08:00" });
     if (!c) return;
     putCourse(c); setCur(c.id); setView("course");
-    await makeLesson(c, 0);
+    if (modelReady) await makeLesson(c, 0);
   };
   const create = async () => {
     let c = D.newCourse(form);
@@ -205,196 +242,279 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
     if (view === "course" && course && !today && modelReady && course.plan.length && !running.current && D.nextIndex(course) < course.plan.length) makeLesson(course, D.nextIndex(course));
   }, [view, cur]);
 
+  const openL = (c, n) => { putCourse(D.openLesson(c, n)); setLessonN(n); setView("lesson"); };
+  const startReview = () => { const ids = D.cardsDue(course).map((k) => k.id); if (!ids.length) return; L.stop(); setRev({ ids, i: 0, shown: false, knew: 0, again: [] }); setView("review"); };
+  async function startQuiz(lessons) {
+    try {
+      let qs = [];
+      for (let i = 0; i < 2 && qs.length < 3; i++) qs = D.groundQuiz(D.parseQuiz(await gen(tr("Writing your quiz…"), D.quizMessages(course, lessons), 1600, i ? 0.5 : 0.3), course.id + lessons.length + i), lessons);
+      if (qs.length < 3) { flash(tr("Couldn't make a good quiz this time — try again.")); return; }
+      setQuiz({ lessons: lessons.map((l) => l.n), questions: qs, i: 0, picks: {} }); setView("quiz");
+    } catch (e) { flash(String(e.message || e)); }
+  }
+
   // ---- screens ----
-  if (view === "new") return (
-    <section className="p-4 space-y-3" data-testid="learn-new">
-      <Back onClick={() => setView("list")} />
+  if (view === "new") return frame(
+    <section className="space-y-4" data-testid="learn-new">
+      <CBack onClick={() => setView("list")} label={tr("Learn daily")} />
       <div className={PANES}>
-      <div className="space-y-3 min-w-0 lg:col-start-2 lg:row-start-1">
-      <h2 className="text-base font-semibold text-slate-100">{tr("Ready courses")}</h2>
-      <div className="grid gap-2 lg:grid-cols-2 lg:gap-3" data-testid="learn-ready">
-        {D.READY_COURSES.map((r) => (
-          <button key={r.id} onClick={() => startReady(r.id)} disabled={!modelReady} data-testid={"learn-ready-" + r.id}
-            className="text-start rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-3 flex items-center gap-3 disabled:opacity-50">
-            <span className="text-3xl">{r.emoji}</span>
-            <span className="min-w-0"><span className="block text-[14px] font-semibold text-slate-100">{r.title[getLang() === "ar" ? 1 : 0]}</span>
-              <span className="block text-[12px] text-slate-400 truncate">{r.plan.slice(0, 3).map((p) => p[getLang() === "ar" ? 1 : 0]).join(" · ")}…</span></span>
-          </button>))}
+      <div className="space-y-2 min-w-0 lg:col-start-2 lg:row-start-1">
+        <p className="c-lbl">{tr("Ready courses")}</p>
+        <div className="c-list" data-testid="learn-ready">
+          {D.READY_COURSES.map((r) => (
+            <button key={r.id} onClick={() => startReady(r.id)} data-testid={"learn-ready-" + r.id} className="w-full text-start p-3 flex items-center gap-3">
+              <span className="text-2xl">{r.emoji}</span>
+              <span className="min-w-0 flex-1"><b className="block text-[14px]">{r.title[getLang() === "ar" ? 1 : 0]}</b>
+                <span className="c-sub block truncate">{r.plan.slice(0, 3).map((p) => p[getLang() === "ar" ? 1 : 0]).join(" · ")}…</span></span>
+              <ChevronRight size={16} className="c-acc shrink-0 rtl:-scale-x-100" />
+            </button>))}
+        </div>
+        <p className="c-sub">{tr("A ready course starts at once: its lessons are already planned; each is written on your device when its day comes.")}</p>
+      </div>
+      <div className="c-card space-y-3 mt-4 lg:mt-0 lg:col-start-1 lg:row-start-1 lg:sticky lg:top-4">
+        <p className="c-lbl">{tr("Or any topic you like")}</p>
+        <input value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })} className={cField} style={cf} dir="auto" placeholder={tr("A language, a skill, a subject…")} data-testid="learn-topic" />
+        <div className="flex flex-wrap gap-1.5">{["Turkish", "English", "Crane hydraulics", "Excel & Power Automate", "Java", "Economics", "Tajweed"].map((x) =>
+          <button key={x} onClick={() => setForm({ ...form, topic: tr(x) })} className="text-[12px] rounded-full border px-2.5 py-1" style={gs}>{tr(x)}</button>)}</div>
+        <textarea value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })} rows={2} className={cField} style={cf} dir="auto" placeholder={tr("Your goal (optional) — e.g. speak like a native, pass an exam, understand my cranes")} />
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block"><span className="c-sub block mb-1">{tr("Level")}</span>
+            <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className={cField} style={cf}>{D.LEVELS.map((l) => <option key={l} value={l}>{tr(l[0].toUpperCase() + l.slice(1))}</option>)}</select></label>
+          <label className="block"><span className="c-sub block mb-1">{tr("Explained in")}</span>
+            <select value={form.lang} onChange={(e) => setForm({ ...form, lang: e.target.value })} className={cField} style={cf}><option value="en">English</option><option value="ar">العربية</option></select></label>
+          <label className="block"><span className="c-sub block mb-1">{tr("Daily lesson at")}</span>
+            <input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value || "08:00" })} className={cField} style={cf} /></label>
+          <label className="block"><span className="c-sub block mb-1">{tr("A quiz every")}</span>
+            <select value={form.quizEvery} onChange={(e) => setForm({ ...form, quizEvery: Number(e.target.value) })} className={cField} style={cf}>{[3, 5, 7].map((n) => <option key={n} value={n}>{tr("{n} lessons", { n })}</option>)}</select></label>
+        </div>
+        {busy ? <CWorking {...busy} /> : modelReady
+          ? <button className="c-btn w-full py-2.5 disabled:opacity-40" disabled={form.topic.trim().length < 2} onClick={create} data-testid="learn-create">{tr("Plan my course")}</button>
+          : <button className={cGhost + " w-full"} style={gs} onClick={openEngine}>{tr("Load a model first — lessons are written on your phone")}</button>}
       </div>
       </div>
-      <div className="space-y-3 mt-3 lg:mt-0 lg:col-start-1 lg:row-start-1 lg:sticky lg:top-4">
-      <h2 className="text-base font-semibold text-slate-100 pt-2 lg:pt-0">{tr("Or any topic you like")}</h2>
-      <input value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })} className={field} dir="auto" placeholder={tr("A language, a skill, a subject…")} data-testid="learn-topic" />
-      <div className="flex flex-wrap gap-1.5">{["Turkish", "English", "Crane hydraulics", "Excel & Power Automate", "Java", "Economics", "Tajweed"].map((x) =>
-        <button key={x} onClick={() => setForm({ ...form, topic: tr(x) })} className="text-[12px] rounded-full border border-slate-700 text-slate-300 px-2.5 py-1">{tr(x)}</button>)}</div>
-      <textarea value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })} rows={2} className={field} dir="auto" placeholder={tr("Your goal (optional) — e.g. speak like a native, pass an exam, understand my cranes")} />
-      <div className="grid grid-cols-2 gap-2">
-        <label className="block"><span className="block text-[11px] text-slate-400 mb-1">{tr("Level")}</span>
-          <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className={field}>{D.LEVELS.map((l) => <option key={l} value={l}>{tr(l[0].toUpperCase() + l.slice(1))}</option>)}</select></label>
-        <label className="block"><span className="block text-[11px] text-slate-400 mb-1">{tr("Explained in")}</span>
-          <select value={form.lang} onChange={(e) => setForm({ ...form, lang: e.target.value })} className={field}><option value="en">English</option><option value="ar">العربية</option></select></label>
-        <label className="block"><span className="block text-[11px] text-slate-400 mb-1">{tr("Daily lesson at")}</span>
-          <input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value || "08:00" })} className={field} /></label>
-        <label className="block"><span className="block text-[11px] text-slate-400 mb-1">{tr("A quiz every")}</span>
-          <select value={form.quizEvery} onChange={(e) => setForm({ ...form, quizEvery: Number(e.target.value) })} className={field}>{[3, 5, 7].map((n) => <option key={n} value={n}>{tr("{n} lessons", { n })}</option>)}</select></label>
-      </div>
-      {busy ? <Working {...busy} /> : modelReady
-        ? <button className={primary + " w-full py-2.5"} disabled={form.topic.trim().length < 2} onClick={create} data-testid="learn-create">{tr("Plan my course")}</button>
-        : <button className={ghost + " w-full"} onClick={openEngine}>{tr("Load a model first — lessons are written on your phone")}</button>}
-      </div>
-      </div>
-    </section>
-  );
+    </section>, "learn-frame");
+
+  if (view === "review" && course && rev) {
+    const id = rev.ids[rev.i], card = id && (course.cards || []).find((k) => k.id === id);
+    if (!card) {
+      const total = rev.ids.length - rev.again.length;
+      const t = D.todaysLesson(course);
+      return beside(
+        <section className="space-y-4" data-testid="review-done">
+          <CBack onClick={() => { setRev(null); setView("course"); }} label={course.topic} />
+          <p className="c-amt m-0">{rev.knew} / {total}</p>
+          <p className="text-[14px] m-0">{rev.knew === total ? tr("You knew them all. They come back further apart now.") : tr("The ones you didn't know come back tomorrow; the rest further apart.")}</p>
+          <div className="flex gap-2 flex-wrap">
+            {t && !t.done ? <button className="c-btn" onClick={() => { setRev(null); openL(course, t.n); }} data-testid="review-to-lesson">{tr("Now today's lesson")}</button> : null}
+            <button className={cGhost} style={gs} onClick={() => { setRev(null); setView("course"); }} data-testid="review-finish">{tr("Done")}</button>
+          </div>
+        </section>);
+    }
+    const grade = (knew) => {
+      const c2 = D.gradeCard(latest(), id, knew);
+      putCourse({ ...c2, reviewDay: D.dayKey() });
+      const again = !knew && !rev.again.includes(id) ? [...rev.again, id] : rev.again;   // (missed → once more at the end of today's round)
+      setRev({ ...rev, i: rev.i + 1, shown: false, knew: rev.knew + (knew && !rev.again.includes(id) ? 1 : 0), again, ids: again !== rev.again ? [...rev.ids, id] : rev.ids });
+    };
+    return beside(
+      <section className="space-y-4 lg:max-w-[60ch]" data-testid="review">
+        <CBack onClick={() => { setRev(null); setView("course"); }} label={course.topic} />
+        <div className="flex justify-between c-sub c-num"><span>{tr("Review")}</span><span>{rev.i + 1} / {rev.ids.length}</span></div>
+        <div className="c-bar"><i style={{ width: Math.round((rev.i / rev.ids.length) * 100) + "%" }} /></div>
+        <button className="c-card w-full text-center min-h-[11rem] flex flex-col items-center justify-center gap-2" onClick={() => !rev.shown && setRev({ ...rev, shown: true })} data-testid="review-card">
+          <span className="text-[22px] font-semibold" dir="auto">{card.front}</span>
+          {rev.shown ? <>
+            <span className="block w-16 border-t" style={{ borderColor: "var(--c-ln)" }} />
+            <span className="text-[16px] c-acc" dir="auto" data-testid="review-back">{card.back}</span>
+            {card.note ? <span className="c-sub" dir="auto">{card.note}</span> : null}</>
+            : <span className="c-sub">{tr("Say it in your head, then tap")}</span>}
+        </button>
+        {!rev.shown ? <button className="c-btn w-full py-2.5" onClick={() => setRev({ ...rev, shown: true })} data-testid="review-show">{tr("Show the answer")}</button>
+          : <div className="grid grid-cols-2 gap-2">
+              <button className={cGhost + " py-2.5"} style={{ ...gs, borderColor: "var(--c-neg)", color: "var(--c-neg)" }} onClick={() => grade(false)} data-testid="review-again">{tr("Not yet")}</button>
+              <button className="c-btn py-2.5" onClick={() => grade(true)} data-testid="review-knew">{tr("I knew it")}</button></div>}
+        <p className="c-sub">{tr("From lesson {n}", { n: (card.n || 0) + 1 })}{card.lapses ? " · " + tr("missed {n}×", { n: card.lapses }) : ""}</p>
+      </section>);
+  }
 
   if (view === "quiz" && course && quiz) {
     const q = quiz.questions[quiz.i];
     if (!q) {
       const right = quiz.questions.filter((x, i) => quiz.picks[i] === x.answer).length;
       return beside(
-        <section className="p-4 space-y-3" data-testid="quiz-result">
-          <p className="text-2xl font-bold text-slate-100">{right} / {quiz.questions.length}</p>
-          <p className="text-[13px] text-slate-300">{right === quiz.questions.length ? tr("Perfect — well done!") : tr("What you missed comes back in later lessons — soon at first, then further apart — until you know it.")}</p>
-          <button className={primary} onClick={() => { const f = D.finishQuiz(course, quiz, quiz.picks); putCourse(f.course); setQuiz(null); setView("course"); }} data-testid="quiz-finish">{tr("Done")}</button>
+        <section className="space-y-4" data-testid="quiz-result">
+          <p className="c-amt m-0">{right} / {quiz.questions.length}</p>
+          <p className="text-[14px] m-0">{right === quiz.questions.length ? tr("Perfect — well done!") : tr("What you missed is now a card in your review — it comes back tomorrow, then further apart, until you know it.")}</p>
+          <button className="c-btn" onClick={() => { const f = D.finishQuiz(latest(), quiz, quiz.picks); putCourse(f.course); setQuiz(null); setView("course"); }} data-testid="quiz-finish">{tr("Done")}</button>
         </section>);
     }
     const picked = quiz.picks[quiz.i];
     return beside(
-      <section className="p-4 space-y-3" data-testid="quiz">
-        <div className="flex justify-between text-[12px] text-slate-400"><span>{tr("Quiz · {t}", { t: course.topic })}</span><span>{quiz.i + 1} / {quiz.questions.length}</span></div>
-        <p className="text-[15px] text-slate-100 font-medium" dir="auto">{q.q}</p>
+      <section className="space-y-4 lg:max-w-[64ch]" data-testid="quiz">
+        <div className="flex justify-between c-sub c-num"><span>{tr("Quiz · {t}", { t: course.topic })}</span><span>{quiz.i + 1} / {quiz.questions.length}</span></div>
+        <div className="c-bar"><i style={{ width: Math.round((quiz.i / quiz.questions.length) * 100) + "%" }} /></div>
+        <p className="text-[16px] font-medium" dir="auto">{q.q}</p>
         <div className="space-y-2">
           {q.options.map((o, k) => {
             const state = picked == null ? "" : k === q.answer ? "right" : k === picked ? "wrong" : "";
+            const col = state === "right" ? "var(--c-pos)" : state === "wrong" ? "var(--c-neg)" : "var(--c-ln)";
             return <button key={k} disabled={picked != null} onClick={() => setQuiz({ ...quiz, picks: { ...quiz.picks, [quiz.i]: k } })} data-testid="quiz-option"
-              className={`w-full text-start rounded-xl border p-3 text-[14px] flex gap-2 items-start ${state === "right" ? "border-emerald-600 bg-emerald-500/10 text-emerald-100" : state === "wrong" ? "border-rose-600 bg-rose-500/10 text-rose-100" : "border-slate-700 bg-slate-900 text-slate-200"}`}>
-              <span className="text-slate-500 shrink-0">{"ABCDE"[k]}</span><span className="flex-1" dir="auto">{o}</span>
-              {state === "right" ? <Check size={16} className="shrink-0" /> : state === "wrong" ? <X size={16} className="shrink-0" /> : null}</button>;
+              className="w-full text-start rounded-xl border p-3 text-[14px] flex gap-2 items-start" style={{ borderColor: col, background: state ? "var(--c-surf)" : "transparent", color: "var(--c-ink)" }}>
+              <span className="c-sub shrink-0">{"ABCDE"[k]}</span><span className="flex-1" dir="auto">{o}</span>
+              {state === "right" ? <Check size={16} className="shrink-0 c-pos" /> : state === "wrong" ? <X size={16} className="shrink-0 c-neg" /> : null}</button>;
           })}
         </div>
         {picked != null ? <>
-          {q.why ? <p className="text-[13px] text-slate-300 rounded-lg bg-slate-900 p-2.5" dir="auto">{q.why}</p> : null}
-          <button className={primary} onClick={() => setQuiz({ ...quiz, i: quiz.i + 1 })} data-testid="quiz-next">{quiz.i + 1 < quiz.questions.length ? tr("Next") : tr("See my score")}</button></> : null}
+          {q.why ? <p className="c-card text-[13px]" dir="auto">{q.why}</p> : null}
+          <button className="c-btn" onClick={() => setQuiz({ ...quiz, i: quiz.i + 1 })} data-testid="quiz-next">{quiz.i + 1 < quiz.questions.length ? tr("Next") : tr("See my score")}</button></> : null}
       </section>);
   }
 
   if (view === "lesson" && course) {
     const l = course.lessons.find((x) => x.n === lessonN);
-    if (!l) return <section className="p-4"><Back onClick={() => setView("course")} label={course.topic} /></section>;
-    const due = D.quizDue(course);
+    if (!l) return frame(<CBack onClick={() => setView("course")} label={course.topic} />, "learn-frame");
+    const due = D.quizDue(course), newCards = D.cardsFromLesson(l).length;
     return beside(
-      <section className="p-4 space-y-3 lg:max-w-[72ch]" data-testid="lesson">
-        <Back onClick={() => { L.stop(); setView("course"); }} label={course.topic} />
-        <p className="text-[12px] text-teal-300">{tr("Lesson {n} of {m}", { n: l.n + 1, m: course.plan.length })}</p>
-        <h2 className="text-lg font-semibold text-slate-100" dir="auto" data-listen="0" style={hl(0)}>{l.title}</h2>
+      <section className="space-y-4 lg:max-w-[72ch]" data-testid="lesson">
+        <CBack onClick={() => { L.stop(); setView("course"); }} label={course.topic} />
+        <div>
+          <p className="c-lbl m-0">{tr("Lesson {n} of {m}", { n: l.n + 1, m: course.plan.length })}</p>
+          <h2 className="text-[20px] font-semibold mt-1" dir="auto" data-listen="0" style={hl(0)}>{l.title}</h2>
+        </div>
         <ListenBar L={L} />
         <div dir="auto">{paras.map((p, k) => <div key={k} data-listen={k + 1} style={hl(k + 1)}><Md text={p} runnable={false} /></div>)}</div>
         <Visual v={l.visual} />
         {l.keyPoints && l.keyPoints.length ? (
-          <div className="rounded-xl border border-amber-800/70 bg-amber-500/5 p-3" data-testid="key-points" data-listen={paras.length + 1} style={hl(paras.length + 1)}>
-            <p className="text-[12px] font-semibold text-amber-200 mb-1">{tr("Remember")}</p>
-            {l.keyPoints.map((k, i) => <p key={i} className="text-[13px] text-slate-200 mt-1" dir="auto">• {k}</p>)}
+          <div className="c-card" data-testid="key-points" data-listen={paras.length + 1} style={hl(paras.length + 1)}>
+            <p className="c-lbl m-0 mb-1.5">{tr("Remember")}</p>
+            {l.keyPoints.map((k, i) => <p key={i} className="text-[13.5px] mt-1 m-0" dir="auto">• {k}</p>)}
           </div>) : null}
-        {illustrate ? <button className={ghost + " flex items-center gap-1"} onClick={() => illustrate(`${course.topic}: ${l.title} — a clear, friendly illustration for a lesson`)}><ImageIcon size={14} />{tr("Draw a picture for this lesson (Studio)")}</button> : null}
-        {!l.done ? <button className={primary + " w-full py-2.5"} data-testid="lesson-done" onClick={() => {
-            const c2 = D.markDone(course, l.n); putCourse(c2);
-            flash(tr("Done — {n} days in a row", { n: c2.streak }));
+        {!l.done ? <button className="c-btn w-full py-2.5" data-testid="lesson-done" onClick={() => {
+            const c2 = D.markDone(latest(), l.n); putCourse(c2);
+            flash(newCards ? tr("Done — {n} days in a row · {k} new cards for tomorrow's review", { n: c2.streak, k: newCards }) : tr("Done — {n} days in a row", { n: c2.streak }));
             // tomorrow's lesson, prepared now, so the notification can say what it is
             if (modelReady && D.nextIndex(c2) < c2.plan.length && !D.quizDue(c2)) setTimeout(() => makeLesson(c2, D.nextIndex(c2)), 400);
           }}>{tr("I've read it")}</button>
-          : <p className="text-[13px] text-emerald-300 flex items-center gap-1"><CheckCircle2 size={14} />{tr("Read")}</p>}
-        {l.done && due ? <button className={primary + " w-full py-2.5"} data-testid="quiz-start" onClick={() => startQuiz(due)}>{tr("Quiz time — {n} questions on the last lessons", { n: 5 })}</button> : null}
-        {busy ? <Working {...busy} /> : null}
+          : <p className="text-[13px] c-pos flex items-center gap-1 m-0"><CheckCircle2 size={14} />{tr("Read")}{newCards ? " · " + tr("its {n} cards are in your review", { n: newCards }) : ""}</p>}
+        {l.done && due ? <button className="c-btn w-full py-2.5" data-testid="quiz-start" disabled={!!busy} onClick={() => startQuiz(due)}>{tr("Quiz time — a short quiz on lessons {a}–{b}", { a: due[0].n + 1, b: due[due.length - 1].n + 1 })}</button> : null}
+        {illustrate ? <button className={cGhost + " flex items-center gap-1"} style={gs} onClick={() => illustrate(`${course.topic}: ${l.title} — a clear, friendly illustration for a lesson`)}><ImageIcon size={14} />{tr("Draw a picture for this lesson (Studio)")}</button> : null}
+        {busy ? <CWorking {...busy} /> : null}
       </section>);
-  }
-
-  async function startQuiz(lessons) {
-    try {
-      let qs = [];
-      for (let i = 0; i < 2 && qs.length < 3; i++) qs = D.parseQuiz(await gen(tr("Writing your quiz…"), D.quizMessages(course, lessons), 1600, i ? 0.5 : 0.3), course.id + lessons.length + i);
-      if (qs.length < 3) { flash(tr("Couldn't make a good quiz this time — try again.")); return; }
-      setQuiz({ lessons: lessons.map((l) => l.n), questions: qs, i: 0, picks: {} }); setView("quiz");
-    } catch (e) { flash(String(e.message || e)); }
   }
 
   if ((view === "course" || view === "past") && course) {
-    if (!wide) return courseScreen(false);
-    return (
+    if (!wide) return frame(courseScreen(false), "learn-frame");
+    return frame(
       <div className={PANES}><div className={LEFT}>{courseScreen(false)}</div>
-        <div className={RIGHT + " lg:p-4"}><DeskEmpty icon={GraduationCap} title={tr("Your lesson opens here")} text={tr("Pick today's lesson or a past one from the course.")} testid="learn-desk-empty" /></div></div>);
+        <div className={RIGHT + " lg:p-4"}><DeskEmpty icon={GraduationCap} title={tr("Your lesson opens here")} text={tr("Start with today's plan on the left, or open a past lesson.")} testid="learn-desk-empty" /></div></div>, "learn-frame");
   }
 
-  /** The course screen. On a computer it also stays on the left while a lesson or a quiz is open (side = true). */
+  /** The course screen. On a computer it also stays on the left while a lesson, review or quiz is open (side = true). */
   function courseScreen(side) {
     const doneN = course.lessons.filter((l) => l.done).length;
-    const due = D.quizDue(course);
-    const nextN = D.nextIndex(course);
+    const plan = D.todayPlan(course), streak = D.streakNow(course), r = D.reviewStatus(course);
+    const deck = (course.cards || []).length, learnedCards = course.learnedCards || 0;
+    const nextN = D.nextIndex(course), unread = course.lessons.find((l) => !l.done);
+    const at = Math.min(course.plan.length - 1, doneN);
+    const shown = allPlan || course.plan.length <= 8 ? course.plan.map((t, i) => i) : course.plan.map((t, i) => i).filter((i) => i >= at - 2 && i <= at + 4);
     return (
-      <section className="p-4 space-y-3" data-testid="course">
-        <Back onClick={() => { setView("list"); setCur(null); }} label={tr("Learn daily")} />
-        <div className="flex items-start gap-3">
-          <GraduationCap size={22} className="text-teal-300 mt-1 shrink-0" />
-          <div className="min-w-0 flex-1"><h2 className="text-lg font-semibold text-slate-100" dir="auto">{course.title || course.topic}</h2>
-            <p className="text-[12px] text-slate-400">{tr("{d} of {n} lessons", { d: doneN, n: course.plan.length })} · {tr("streak {n}", { n: course.streak || 0 })} 🔥 · <Clock size={11} className="inline" /> {course.time}</p></div>
+      <section className="space-y-4" data-testid="course">
+        <CBack onClick={() => { setView("list"); setCur(null); }} label={tr("Learn daily")} />
+        <div>
+          <h2 className="text-[20px] font-semibold m-0" dir="auto">{course.title || course.topic}</h2>
+          <p className="c-sub c-num m-0 mt-1">{tr("{d} of {n} lessons", { d: doneN, n: course.plan.length })} · {streak ? tr("{n} days in a row", { n: streak }) + " 🔥" : tr("read today to start a streak")}</p>
+          <div className="c-bar mt-2"><i style={{ width: `${Math.round((doneN / Math.max(1, course.plan.length)) * 100)}%` }} /></div>
         </div>
-        <div className="h-1.5 rounded bg-slate-800"><div className="h-1.5 rounded bg-teal-500" style={{ width: `${Math.round((doneN / Math.max(1, course.plan.length)) * 100)}%` }} /></div>
-        {busy && !side ? <Working {...busy} /> : null}
-        {(() => { const r = D.reviewStatus(course); return r.due + r.waiting + r.learned ? (
-          <p className="text-[12px] text-slate-400 m-0" data-testid="srs-status">🔁 {[r.due ? tr("{n} to review in the next lesson", { n: Math.min(2, r.due) }) : "", r.waiting ? tr("{n} coming back later", { n: r.waiting }) + (r.next ? " (" + new Date(r.next).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + ")" : "") : "", r.learned ? tr("{n} learned", { n: r.learned }) : ""].filter(Boolean).join(" · ")}</p>) : null; })()}
-        {due && !busy ? <button className="w-full text-start rounded-xl border border-amber-700 bg-amber-500/10 p-3" onClick={() => startQuiz(due)} data-testid="quiz-card">
-          <p className="text-sm font-semibold text-amber-100">{tr("Quiz time")}</p><p className="text-[12px] text-amber-200/80">{tr("{n} questions on lessons {a}–{b}", { n: 5, a: due[0].n + 1, b: due[due.length - 1].n + 1 })}</p></button> : null}
-        {today ? <button className="w-full text-start rounded-xl border border-teal-700 bg-teal-500/10 p-3" onClick={() => { putCourse(D.openLesson(course, today.n)); setLessonN(today.n); setView("lesson"); }} data-testid="today-lesson">
-          <p className="text-[11px] text-teal-300">{today.done ? tr("Today's lesson · read") : tr("Today's lesson")}</p>
-          <p className="text-[15px] font-semibold text-slate-100" dir="auto">{today.n + 1}. {today.title}</p></button>
-          : !busy && nextN < course.plan.length ? (modelReady ? <button className={primary + " w-full py-2.5"} onClick={() => makeLesson(course, nextN)} data-testid="make-lesson">{tr("Prepare lesson {n}", { n: nextN + 1 })}</button>
-            : <button className={ghost + " w-full"} onClick={openEngine}>{tr("Load a model to write today's lesson")}</button>) : null}
-        {today && today.done && !busy && nextN < course.plan.length && modelReady ? (
-          <button className={ghost + " w-full"} onClick={async () => { const c2 = course.lessons.some((l) => !l.done) ? course : await makeLesson(course, nextN); const nl = c2 && c2.lessons.find((l) => !l.done); if (nl) { putCourse(D.openLesson(c2, nl.n)); setLessonN(nl.n); setView("lesson"); } }} data-testid="next-now">
-            {tr("One more today: lesson {n}", { n: (course.lessons.find((l) => !l.done) || { n: nextN }).n + 1 })}</button>) : null}
+        {busy && !side ? <CWorking {...busy} /> : null}
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-          <p className="text-[12px] font-semibold text-slate-300 mb-1.5">{tr("The course")}</p>
-          {course.plan.map((t, i) => { const l = course.lessons.find((x) => x.n === i);
-            return <button key={i} disabled={!l} onClick={() => { if (side) L.stop(); setLessonN(i); setView("lesson"); }} className={"w-full text-start flex gap-2 py-1 text-[13px] disabled:opacity-100" + (side && view === "lesson" && lessonN === i ? " rounded-md bg-teal-500/10" : "")}>
-              <span className={`w-5 shrink-0 text-end ${l && l.done ? "text-emerald-400" : "text-slate-600"}`}>{l && l.done ? "✓" : i + 1}</span>
-              <span className={l ? "text-slate-200" : "text-slate-500"} dir="auto">{t}</span></button>; })}
-        </div>
-        {course.quizzes.length ? <p className="text-[12px] text-slate-400">{tr("Quizzes")}: {course.quizzes.map((q) => `${q.score}/${q.total}`).join(" · ")}</p> : null}
-
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="flex items-center gap-1.5 text-[13px] text-slate-300 basis-full sm:basis-auto sm:flex-1 whitespace-nowrap"><Bell size={14} className="text-slate-400 shrink-0" />{tr("Daily notification")}</span>
-            <input type="time" value={course.time} onChange={(e) => e.target.value && putCourse({ ...course, time: e.target.value })} className={fieldFixed + " w-32 shrink-0"} data-testid="learn-time" />
-            <button onClick={() => putCourse({ ...course, notify: course.notify === false })} className={`${btn} shrink-0 whitespace-nowrap border ${course.notify !== false ? "border-teal-600 text-teal-200" : "border-slate-700 text-slate-500"}`}>{course.notify !== false ? tr("On") : tr("Off")}</button>
+        <div className="space-y-2">
+          <p className="c-lbl m-0">{plan.finished ? tr("Course finished") : plan.left ? tr("Today") : tr("Today · all done")}</p>
+          <div className="c-list" data-testid="learn-today">
+            {plan.steps.map((st) => st.kind === "review"
+              ? <Step key="r" icon={Layers} done={st.done} testid="review-start" onClick={startReview} disabled={st.done}
+                  title={st.done ? tr("Cards reviewed") : tr("Review {c}", { c: cardsWord(st.n) })} sub={st.done ? tr("Next ones come back on their day") : tr("A minute, no model needed")} />
+              : st.kind === "lesson" ? (st.lesson
+                ? <Step key="l" icon={BookOpen} done={st.done} testid="today-lesson" onClick={() => openL(course, st.lesson.n)}
+                    title={`${st.lesson.n + 1}. ${st.lesson.title}`} sub={st.done ? tr("Today's lesson · read") : tr("Today's lesson")} />
+                : busy ? <Step key="l" icon={BookOpen} disabled title={`${st.n + 1}. ${st.title}`} sub={tr("Being written on your device…")} />
+                : modelReady ? <Step key="l" icon={BookOpen} testid="make-lesson" onClick={() => makeLesson(course, st.n)} title={tr("Prepare lesson {n}", { n: st.n + 1 })} sub={st.title} />
+                : <Step key="l" icon={BookOpen} onClick={openEngine} title={`${st.n + 1}. ${st.title}`} sub={tr("Load a model to write today's lesson")} />)
+              : <Step key="q" icon={HelpCircle} testid="quiz-card" disabled={!!busy || !modelReady} onClick={() => startQuiz(st.lessons)}
+                  title={tr("Quiz time")} sub={modelReady ? tr("A short quiz on lessons {a}–{b}", { a: st.lessons[0].n + 1, b: st.lessons[st.lessons.length - 1].n + 1 }) : tr("Load a model to write the quiz")} />)}
+            {plan.finished ? <p className="p-3 m-0 text-[14px]">{tr("You finished all {n} lessons. Your cards keep coming back until you know them.", { n: course.plan.length })}</p> : null}
           </div>
-          <button className={`${btn} border ${confirmDel ? "border-rose-600 bg-rose-500/15 text-rose-200" : "border-slate-700 text-slate-400"} flex items-center gap-1`}
+          {today && today.done && !busy && nextN < course.plan.length && modelReady && !D.quizDue(course) ? (
+            <button className="c-acc text-[13px] font-medium" onClick={async () => { const c2 = unread ? course : await makeLesson(course, nextN); const nl = c2 && c2.lessons.find((l) => !l.done); if (nl) openL(c2, nl.n); }} data-testid="next-now">
+              {tr("One more today: lesson {n}", { n: (unread || { n: nextN }).n + 1 })} →</button>) : null}
+          {deck + learnedCards + r.due + r.waiting ? <p className="c-sub m-0" data-testid="srs-status">{[deck ? tr("{c} in your review deck", { c: cardsWord(deck) }) : "", learnedCards ? tr("{n} learned for good", { n: learnedCards }) : "", course.quizzes.length ? tr("Quizzes") + ": " + course.quizzes.map((q) => `${q.score}/${q.total}`).join(" · ") : ""].filter(Boolean).join(" · ")}</p> : null}
+        </div>
+
+        <div className="space-y-2">
+          <p className="c-lbl m-0">{tr("The course")}</p>
+          <div className="c-list">
+            {shown.map((i) => { const t = course.plan[i], l = course.lessons.find((x) => x.n === i);
+              return <button key={i} disabled={!l} onClick={() => { if (side) L.stop(); openL(course, i); }} className="w-full text-start flex gap-2.5 px-3 py-2 text-[13px] disabled:opacity-100" style={side && view === "lesson" && lessonN === i ? { background: "var(--c-soft)" } : undefined}>
+                <span className={"w-5 shrink-0 text-end c-num " + (l && l.done ? "c-pos" : "c-sub")}>{l && l.done ? "✓" : i + 1}</span>
+                <span style={{ color: l ? "var(--c-ink)" : "var(--c-mut)" }} dir="auto">{t}</span></button>; })}
+          </div>
+          {course.plan.length > 8 ? <button className="c-acc text-[13px] font-medium" onClick={() => setAllPlan(!allPlan)} data-testid="learn-all-plan">{allPlan ? tr("Show less") : tr("Show all {n} lessons", { n: course.plan.length })}</button> : null}
+        </div>
+
+        <div className="flex flex-wrap gap-2 items-center c-sub" data-testid="learn-settings">
+          <Bell size={14} className="shrink-0" /><span className="whitespace-nowrap">{tr("Daily notification")}</span>
+          <input type="time" value={course.time} onChange={(e) => e.target.value && putCourse({ ...course, time: e.target.value })} className="rounded-lg px-2 py-1 text-[13px] w-28 shrink-0 focus:outline-none" style={cf} data-testid="learn-time" />
+          <button onClick={() => putCourse({ ...course, notify: course.notify === false })} className={cGhost + " shrink-0"} style={course.notify !== false ? { ...gs, borderColor: "var(--c-acc)", color: "var(--c-acc)" } : gs}>{course.notify !== false ? tr("On") : tr("Off")}</button>
+          <button className={cGhost + " shrink-0 flex items-center gap-1"} style={confirmDel ? { ...gs, borderColor: "var(--c-neg)", color: "var(--c-neg)" } : { ...gs, color: "var(--c-mut)" }}
             onClick={() => { if (!confirmDel) { setConfirmDel(true); return; } setCourses(loadCourses().filter((x) => x.id !== course.id)); setConfirmDel(false); setView("list"); setCur(null); }}>
-            <Trash2 size={14} />{confirmDel ? tr("Tap again to delete this course") : tr("Delete this course")}</button>
+            <Trash2 size={14} />{confirmDel ? tr("Tap again to delete this course") : tr("Delete")}</button>
         </div>
       </section>);
   }
-  /** A lesson or a quiz: alone on a phone; beside the course on a computer. */
+  /** A lesson, review or quiz: alone on a phone; beside the course on a computer. */
   function beside(el) {
-    if (!wide || !course) return el;
-    return <div className={PANES}><div className={LEFT}>{courseScreen(true)}</div><div className={RIGHT}>{el}</div></div>;
+    if (!wide || !course) return frame(el, "learn-frame");
+    return frame(<div className={PANES}><div className={LEFT}>{courseScreen(true)}</div><div className={RIGHT}>{el}</div></div>, "learn-frame");
   }
 
-  return (
-    <section className="p-4 space-y-3" data-testid="learn-page">
+  // ---- all courses: each with today's plan in one line ----
+  const summary = (c) => {
+    const p = D.todayPlan(c);
+    if (p.finished) return tr("Course finished");
+    if (!p.left) return tr("All done for today ✓");
+    return p.steps.filter((x) => !x.done).map((x) => x.kind === "review" ? tr("Review {c}", { c: cardsWord(x.n) }) : x.kind === "quiz" ? tr("Quiz time") : tr("Lesson {n}", { n: (x.lesson ? x.lesson.n : x.n) + 1 })).join(" · ");
+  };
+  return frame(
+    <section className="space-y-4" data-testid="learn-page">
       <div className="flex items-start gap-3">
-        <GraduationCap size={22} className="text-teal-300 mt-1 shrink-0" />
-        <div className="min-w-0"><h2 className="text-lg font-semibold text-slate-100">{tr("Learn daily")}</h2>
-          <p className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Pick a topic or a language. Every day a short lesson with a visual, a quiz every few lessons, and what you miss comes back until it sticks.")}</p></div>
+        <span className="c-ic"><GraduationCap size={17} /></span>
+        <div className="min-w-0"><h2 className="text-[20px] font-semibold m-0">{tr("Learn daily")}</h2>
+          <p className="c-sub m-0 lg:max-w-[70ch]">{tr("A short lesson a day, cards that come back until you know them, and a quiz every few lessons.")}</p></div>
       </div>
-      <button className={primary + " w-full lg:w-auto lg:px-5 flex items-center justify-center gap-1.5 py-2.5"} onClick={() => setView("new")} data-testid="learn-new-btn"><Plus size={16} />{tr("New course")}</button>
-      <div className={GRID3}>
-      {courses.map((c) => { const t = D.todaysLesson(c); const doneN = c.lessons.filter((l) => l.done).length;
-        return <button key={c.id} onClick={() => { setCur(c.id); setView("course"); }} className="w-full text-start rounded-xl border border-slate-800 bg-slate-900/60 p-3 lg:p-4 lg:flex lg:flex-col lg:gap-2 lg:hover:border-teal-700" data-testid="learn-course">
-          <span className="block text-sm text-slate-100 lg:text-[15px] lg:font-semibold" dir="auto">{c.title || c.topic}</span>
-          <span className="hidden lg:block h-1.5 rounded bg-slate-800"><span className="block h-1.5 rounded bg-teal-500" style={{ width: `${Math.round((doneN / Math.max(1, c.plan.length)) * 100)}%` }} /></span>
-          <span className="block text-[11px] text-slate-500">{tr("{d} of {n} lessons", { d: doneN, n: c.plan.length })} · {tr("streak {n}", { n: c.streak || 0 })}{t && !t.done ? " · " + tr("today: {t}", { t: t.title }) : ""}{D.quizDue(c) ? " · " + tr("quiz due") : ""}</span></button>; })}
-      </div>
-    </section>
-  );
+      {courses.length ? <>
+        <p className="c-lbl m-0">{tr("Today")}</p>
+        <div className="c-list">
+          {courses.map((c) => { const doneN = c.lessons.filter((l) => l.done).length, st = D.streakNow(c), left = D.todayPlan(c).left;
+            return <button key={c.id} onClick={() => { setCur(c.id); setView("course"); }} className="w-full text-start p-3 flex items-center gap-3" data-testid="learn-course">
+              <span className="min-w-0 flex-1">
+                <b className="block text-[14px]" dir="auto">{c.title || c.topic}</b>
+                <span className="c-sub block truncate" dir="auto">{summary(c)}</span>
+                <span className="c-bar block mt-1.5"><i style={{ width: `${Math.round((doneN / Math.max(1, c.plan.length)) * 100)}%` }} /></span>
+              </span>
+              <span className="text-end shrink-0"><span className="c-sub c-num block">{doneN}/{c.plan.length}</span>{st ? <span className="c-sub c-num block">🔥 {st}</span> : null}</span>
+              {left ? <span className="c-pill">{left}</span> : <Check size={16} className="c-pos shrink-0" />}
+            </button>; })}
+        </div>
+        <button className={cGhost + " flex items-center gap-1.5"} style={gs} onClick={() => setView("new")} data-testid="learn-new-btn"><Plus size={15} />{tr("New course")}</button>
+      </> : <>
+        <p className="c-lbl m-0">{tr("Ready courses")}</p>
+        <div className="c-list">
+          {D.READY_COURSES.map((r) => (
+            <button key={r.id} onClick={() => startReady(r.id)} data-testid={"learn-start-" + r.id} className="w-full text-start p-3 flex items-center gap-3">
+              <span className="text-2xl">{r.emoji}</span><b className="flex-1 text-[14px]">{r.title[getLang() === "ar" ? 1 : 0]}</b><ChevronRight size={16} className="c-acc rtl:-scale-x-100" /></button>))}
+        </div>
+        <button className="c-btn flex items-center gap-1.5" onClick={() => setView("new")} data-testid="learn-new-btn"><Plus size={15} />{tr("Any topic you like")}</button>
+      </>}
+    </section>, "learn-frame");
 }
 
 // ================================ Daily news ================================

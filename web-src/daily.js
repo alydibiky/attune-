@@ -251,7 +251,9 @@ export function markDone(c, n, now = Date.now()) {
   const today = dayKey(now), yest = dayKey(now - 86400000);
   const lessons = c.lessons.map((l) => (l.n === n ? { ...l, done: true, day: l.day || today } : l));
   const streak = c.lastDay === today ? c.streak : c.lastDay === yest ? c.streak + 1 : 1;
-  return { ...c, lessons, streak, lastDay: today };
+  const l = c.lessons.find((x) => x.n === n), was = c.lessons.find((x) => x.n === n && x.done);
+  const c2 = { ...c, lessons, streak, lastDay: today };
+  return l && !was ? addCards(c2, cardsFromLesson(l), n, { now }) : c2;
 }
 export function openLesson(c, n, now = Date.now()) {
   return { ...c, lessons: c.lessons.map((l) => (l.n === n && !l.day ? { ...l, day: dayKey(now) } : l)) };
@@ -289,7 +291,9 @@ export function parseQuiz(text, seed = "q") {
   return out.slice(0, 8);
 }
 /** A finished quiz: the score, and what was missed goes into the review list. */
-export function finishQuiz(c, quiz, picks, { now = Date.now() } = {}) {
+export function finishQuiz(c0, quiz, picks, { now = Date.now() } = {}) {
+  // v6.28: a missed question also becomes a card in the review deck (due now — it is reviewed first)
+  const c = addCards(c0, quiz.questions.filter((q, i) => picks[i] !== q.answer).map((q) => ({ front: q.q, back: q.options[q.answer], note: q.why || "" })), Math.max(...quiz.lessons), { now, due: now });
   const right = quiz.questions.filter((q, i) => picks[i] === q.answer).length;
   const missed = quiz.questions.filter((q, i) => picks[i] !== q.answer).map((q) => clean(`${q.q} → ${q.options[q.answer]}`, 200));
   const rec = { after: Math.max(...quiz.lessons), score: right, total: quiz.questions.length, at: now };
@@ -300,12 +304,91 @@ export function finishQuiz(c, quiz, picks, { now = Date.now() } = {}) {
   return { course: { ...c, quizzes: [...c.quizzes, rec], review, srs }, right, missed };
 }
 
+// ---- v6.28 the review deck: flash cards made BY CODE from each lesson, reviewed with no model ------------------------
+// Ali: "finish Learn daily and rework its logic". A lesson read → its word cards, table rows, timeline and "term: meaning" key
+// points become cards; a missed quiz question becomes a card too. Each card comes back after 1, 3, 7, 16 and 35 days while you
+// know it, and starts over when you don't. The review needs no model, so it works on any phone, offline, every day.
+export const CARD_DAYS = [1, 3, 7, 16, 35];
+const DAY = 86400000;
+const cardId = (front) => "k" + [...String(front).toLowerCase()].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7).toString(36);
+/** One lesson → up to 8 cards {front, back, note}: only what the lesson itself states — nothing is invented. */
+export function cardsFromLesson(l) {
+  const out = [], v = l && l.visual;
+  const add = (front, back, note = "") => { front = clean(front, 90); back = clean(back, 160); if (front.length >= 1 && back.length >= 1 && front.toLowerCase() !== back.toLowerCase() && !out.some((x) => x.front.toLowerCase() === front.toLowerCase())) out.push({ front, back, note: clean(note, 140) }); };
+  if (v && v.kind === "cards") for (const x of v.items) add(x.front, x.back, x.note);
+  if (v && v.kind === "table" && v.columns.length >= 2) for (const r of v.rows) add(r[0], r.slice(1).map((x, i) => (v.columns.length > 2 ? v.columns[i + 1] + ": " : "") + x).join(" · "), v.columns.length === 2 ? v.columns[0] + " → " + v.columns[1] : "");
+  if (v && v.kind === "timeline") for (const x of v.items) if (x.when) add(x.when, x.what);
+  if (v && v.kind === "steps" && v.items.length >= 2) add(v.title || l.title, v.items.map((x, i) => i + 1 + ". " + x).join("  "), "");
+  for (const k of (l && l.keyPoints) || []) { const m = String(k).match(/^\s*([^:—=]{1,60}?)\s*(?::|—|=| - )\s*(.{2,})$/); if (m) add(m[1], m[2]); }
+  return out.slice(0, 8);
+}
+/** Cards into the deck (a card already there keeps its place in the schedule). The first review is the next day. */
+export function addCards(c, cards, n, { now = Date.now(), due = now + DAY } = {}) {
+  const deck = [...(c.cards || [])];
+  for (const x of cards) if (!deck.some((d) => d.id === cardId(x.front))) deck.push({ id: cardId(x.front), ...x, n, box: 0, due });
+  return { ...c, cards: deck.slice(-400) };
+}
+/** The cards to review now, the most overdue first (at most 20 a day — a short session is one people keep doing). */
+export function cardsDue(c, now = Date.now(), max = 20) {
+  return (c.cards || []).filter((k) => k.due <= now).sort((a, b) => a.due - b.due).slice(0, max);
+}
+/** Knew it → it comes back further away (after the last step it is learned and leaves the deck); didn't → tomorrow again, from the start. */
+export function gradeCard(c, id, knew, now = Date.now()) {
+  let learnedCards = c.learnedCards || 0;
+  const cards = [];
+  for (const k of c.cards || []) {
+    if (k.id !== id) { cards.push(k); continue; }
+    if (!knew) { cards.push({ ...k, box: 0, due: now + DAY, lapses: (k.lapses || 0) + 1 }); continue; }
+    if (k.box + 1 > CARD_DAYS.length) { learnedCards++; continue; }
+    cards.push({ ...k, box: k.box + 1, due: now + CARD_DAYS[k.box] * DAY });
+  }
+  return { ...c, cards, learnedCards };
+}
+/** The days in a row, as it stands today: a missed day breaks it (the saved number only changes when a lesson is read). */
+export function streakNow(c, now = Date.now()) {
+  return c.lastDay === dayKey(now) || c.lastDay === dayKey(now - DAY) ? c.streak || 0 : 0;
+}
+/** Today for one course, in order: review the cards → today's lesson → the quiz. Each step: {kind, done, …}. */
+export function todayPlan(c, now = Date.now()) {
+  const steps = [], due = cardsDue(c, now).length, reviewedToday = c.reviewDay === dayKey(now);
+  if (due || reviewedToday) steps.push({ kind: "review", n: due, done: !due });
+  const t = todaysLesson(c, now), next = nextIndex(c);
+  if (t) steps.push({ kind: "lesson", lesson: t, done: !!t.done });
+  else if (next < c.plan.length) steps.push({ kind: "lesson", n: next, title: c.plan[next], done: false, needsWriting: true });
+  const q = quizDue(c);
+  if (q) steps.push({ kind: "quiz", lessons: q, done: false });
+  const doneN = c.lessons.filter((l) => l.done).length;
+  return { steps, left: steps.filter((x) => !x.done).length, finished: doneN >= c.plan.length && c.plan.length > 0 && !q && !due };
+}
+/** Plain words of a text, for comparing (letters in any language, 3+ long). */
+const wordsOf = (t) => new Set((String(t || "").toLowerCase().match(/[\p{L}\p{N}][\p{L}\p{N}'-]{2,}/gu) || []));
+/** All a lesson says: body, key points, visual. */
+export function lessonText(l) {
+  const v = l.visual, vis = !v ? "" : JSON.stringify(v);
+  return [l.title, l.body, ...(l.keyPoints || []), vis].join("\n");
+}
+/** v6.28 code check on a written quiz: a question is dropped when the lessons back a WRONG option and say nothing of the right one
+   (the model mis-marked it), or when two options are the same once trimmed. What stays is safer to score. */
+export function groundQuiz(questions, lessons) {
+  const known = wordsOf(lessons.map(lessonText).join("\n"));
+  const support = (o) => { const w = [...wordsOf(o)]; return w.length ? w.filter((x) => known.has(x)).length / w.length : null; };
+  return questions.filter((q) => {
+    const norm = q.options.map((o) => o.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ""));
+    if (new Set(norm).size !== norm.length) return false;
+    const right = support(q.options[q.answer]);
+    if (right === null || right > 0) return true;
+    return !q.options.some((o, i) => i !== q.answer && (support(o) || 0) >= 0.6);
+  });
+}
+
 /** What the notification and the widget say. */
 export function lessonNotice(c) {
   const next = c.lessons.find((l) => !l.done);
   const n = next ? next.n : nextIndex(c);
   const title = next ? next.title : c.plan[n] || "";
-  return { title: `${c.topic} · ${c.lang === "ar" ? "الدرس" : "Lesson"} ${n + 1}`, body: title ? title + (quizDue(c) ? (c.lang === "ar" ? " — ومعاه اختبار قصير" : " — and a short quiz") : "") : (c.lang === "ar" ? "درس اليوم جاهز" : "Today's lesson is waiting") };
+  const cards = cardsDue(c, nextAt(c.time) + 60000).length;
+  const extra = (quizDue(c) ? (c.lang === "ar" ? " — ومعه اختبار قصير" : " — and a short quiz") : "") + (cards ? (c.lang === "ar" ? ` · ${cards === 1 ? "بطاقة واحدة" : cards + " بطاقات"} للمراجعة` : ` · ${cards} card${cards === 1 ? "" : "s"} to review`) : "");
+  return { title: `${c.topic} · ${c.lang === "ar" ? "الدرس" : "Lesson"} ${n + 1}`, body: title ? title + extra : (c.lang === "ar" ? "درس اليوم جاهز" : "Today's lesson is waiting") + extra };
 }
 
 // ---- news -------------------------------------------------------------------------------------
