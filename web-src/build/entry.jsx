@@ -11,7 +11,7 @@ function note(where, err) {
   try { if (window.AttuneNative && window.AttuneNative.logLine) window.AttuneNative.logLine("Page error (" + where + "): " + msg.split("\n")[0]); } catch (e) {}
 }
 window.addEventListener("error", (e) => note("script", e.error || e.message));
-window.addEventListener("unhandledrejection", (e) => note("promise", e.reason));
+window.addEventListener("unhandledrejection", (e) => { note("promise", e.reason); try { window.dispatchEvent(new CustomEvent("attune-error", { detail: { msg: String((e.reason && e.reason.message) || e.reason || "") } })); } catch (x) {} });
 
 class RootGuard extends React.Component {
   constructor(p) { super(p); this.state = { err: null }; }

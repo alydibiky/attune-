@@ -30,7 +30,7 @@ with sync_playwright() as p:
     fit = store(page, "attune:fit:v1")
     bf = ((fit or {}).get("days", {}).get(today, {}).get("meals", {}).get("breakfast") or [])
     check(len(bf) == 2, "…and it is in Fit & Food's breakfast (%d foods)" % len(bf))
-    check(page.locator("[data-testid=home-food]").inner_text().split("\n")[1].strip() not in ("0", ""), "Home's 'Food today' updates at once: " + page.locator("[data-testid=home-food]").inner_text().replace("\n", " "))
+    check(page.locator("[data-testid=fit-today-kcal]").inner_text().split("/")[0].strip() not in ("0", ""), "Home's Fit & Food card updates at once: " + page.locator("[data-testid=fit-today-kcal]").inner_text())
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, "doit-phone.png"))
     page.click("[data-testid=do-undo]"); page.wait_for_timeout(150)
     fit = store(page, "attune:fit:v1")

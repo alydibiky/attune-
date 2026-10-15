@@ -35,8 +35,76 @@ export function memberAsked(q, members) {
   return null;
 }
 
+// v6.28 (Ali: "when I ask how much I paid for that, or the history of X, it should understand I'm asking about my data")
+const HISTORY = /\b(history of|everything (?:about|on)|all (?:about|records? (?:of|for))|timeline (?:of|for)|tell me about my)\b|(?:^|\s)(?:تاريخ|سجل|كل حاجه عن|كل حاجة عن|كل اللي عن|كل شيء عن)\s/i;
+const LAST = /\b(when did (?:i|we) last|last time (?:i|we)|when was the last time)\b|(?:امتى|إمتى|امتي)\s+(?:اخر|آخر)\s+(?:مره|مرة)|(?:اخر|آخر)\s+(?:مره|مرة)\s/i;
+const PAID_FOR = /\b(?:pay|paid|spend|spent|cost|costs|charged)\b[^?]{0,12}\b(?:for|on)\b|(?:دفعت|صرفت|ادفع|اتكلف|كلفني|كلفتني)\s*(?:كام|قد ايه|اد ايه)?\s*(?:في|على|علي|ل|عشان)\s/i;
+/** The thing a question is about: "how much did I pay for the car service this year?" → "car service". */
+export function termOf(q) {
+  let t = latinQ(q).replace(/[?؟!.]+\s*$/, "").trim();
+  const pick = [
+    /\b(?:pay|paid|spend|spent|cost|costs|charged)\b[^?]{0,12}?\b(?:for|on)\s+(.+)$/i, /\b(?:history of|everything (?:about|on)|all about|timeline (?:of|for)|tell me about my)\s+(.+)$/i,
+    /\b(?:when did (?:i|we) last|last time (?:i|we)|when was the last time (?:i|we))\s+(?:\w+\s+)?(.+)$/i,
+    /(?:دفعت|صرفت|ادفع|اتكلف|كلفني|كلفتني)\s*(?:كام|قد ايه|اد ايه)?\s*(?:في|على|علي|ل|عشان)\s+(.+)$/, /(?:تاريخ|سجل|كل حاجه عن|كل حاجة عن|كل اللي عن|كل شيء عن)\s+(.+)$/,
+    /(?:اخر|آخر)\s+(?:مره|مرة)\s+(?:\S+\s+)?(.+)$/];
+  for (const re of pick) { const m = re.exec(t); if (m) { t = m[1]; break; } }
+  return t.replace(/\b(this|last|in|since|over|during|so far)\s+(week|month|year|\d{4}).*$/i, "").replace(/(?:الشهر|السنه|السنة|الاسبوع|الأسبوع|السنادي)\s*(?:ده|دي|اللي فات|الماضي)?.*$/, "")
+    .replace(/^(?:the|my|a|an|our)\s+/i, "").replace(/\b(?:did|do|have|has|was|were)\b/gi, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+}
+const latinQ = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d));
+const STOP = /^(the|my|our|for|and|with|from|that|this|ال|في|على|من|عن|ده|دي)$/;
+const words = (s) => fold(s).replace(/(^|\s)ال(?=\S{3})/g, "$1").split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 3 && !STOP.test(w));
+/** Every record in every tool that mentions the term: [{ date, what, src, amount?, type? }], newest first. */
+export function recordsAbout(term, s) {
+  const want = words(term); if (!want.length) return [];
+  // (longer words say more: "service" counts more than "car" — a "Toyota service" matches “car service”, a "car wash" doesn't)
+  const total = want.reduce((a, w) => a + w.length, 0);
+  const hit = (txt) => { const have = words(txt); const got = want.filter((w) => have.some((h) => h === w || (w.length >= 4 && (h.startsWith(w) || w.startsWith(h))))).reduce((a, w) => a + w.length, 0); return got >= total * 0.6; };
+  const out = [];
+  for (const t of ((s.ledger && s.ledger.txns) || [])) if (hit(t.note + " " + (t.cat || ""))) out.push({ date: t.date, what: `${t.type === "income" ? "+" : "−"}${num(t.amount)} · ${t.note || t.cat}`, src: "money", amount: t.amount, type: t.type });
+  for (const c of ((s.life && s.life.items) || [])) if (hit([c.person, c.title, c.kind].join(" "))) out.push({ date: c.start || iso(c.created || Date.now()), what: [c.person, c.title || c.kind, c.amount ? num(c.amount) + " " + (c.currency || "") : ""].filter(Boolean).join(" · "), src: "life" });
+  for (const x of ((s.radar && s.radar.items) || [])) if (hit(x.title + " " + (x.note || ""))) out.push({ date: x.date, what: `${x.title}${x.amount ? " · " + num(x.amount) + " " + (x.currency || "") : ""} (${x.kind})`, src: "radar" });
+  const care = s.care || {};
+  for (const m of care.meds || []) if (hit(m.name)) out.push({ date: m.start || "", what: `${m.name} ${m.strength || ""} · ${m.dose || ""}${m.stopped ? " (stopped)" : ""}`.trim(), src: "care" });
+  for (const l of care.labs || []) if (hit(l.test)) out.push({ date: l.date, what: `${l.test} ${l.value} ${l.unit || ""}${l.flag ? " (" + l.flag + ")" : ""}`, src: "care" });
+  for (const [d, day] of Object.entries((s.fit && s.fit.days) || {})) for (const [meal, items] of Object.entries((day && day.meals) || {})) for (const x of items || []) if (hit((x.name || "") + " " + (x.ar || ""))) out.push({ date: d, what: `${x.name} · ${meal}${x.kcal != null ? " · " + Math.round(x.kcal) + " kcal" : ""}`, src: "fit" });
+  for (const r of s.memory || []) if (hit([r.title, r.text].join(" "))) out.push({ date: r.ts ? iso(r.ts) : "", what: r.title || String(r.text || "").slice(0, 80), src: "memory" });
+  for (const r of s.reminders || []) if (r.at && hit(r.title)) out.push({ date: iso(r.at), what: r.title, src: "reminders" });
+  return out.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+}
+function paidFor(q, s, now) {
+  const term = termOf(q); const recs = recordsAbout(term, s).filter((r) => r.src === "money");
+  if (!recs.length) return null;
+  const span = /\b(this|last)\s+(week|month|year)\b|الشهر|السنه|السنة|الاسبوع|الأسبوع|امبارح|yesterday|today|النهارده/i.test(q) ? spanOf(q, now) : null;
+  const inSpan = span ? recs.filter((r) => r.date >= span.from && r.date <= span.to) : recs;
+  const out = inSpan.filter((r) => r.type !== "income"), sum = out.reduce((a, r) => a + r.amount, 0), cur = (s.ledger && s.ledger.currency) || "";
+  const when = span ? span.label : ["in all", "إجمالًا"];
+  return { kind: "paid-for", en: `You paid ${num(sum)} ${cur} for “${term}” ${when[0]} — ${out.length} payment${out.length === 1 ? "" : "s"}${out.length ? `, the last on ${out[0].date}` : ""}.`,
+    ar: `دفعت ${num(sum)} ${cur} على «${term}» ${when[1]} — ${out.length} دفعة${out.length ? `، آخرها يوم ${out[0].date}` : ""}.`,
+    rows: out.slice(0, 12).map((r) => [r.date, r.what]), open: "money", sources: ["money"] };
+}
+function history(q, s) {
+  const term = termOf(q); const recs = recordsAbout(term, s);
+  if (!recs.length) return null;
+  const src = [...new Set(recs.map((r) => r.src))];
+  return { kind: "history", en: `“${term}”: ${recs.length} record${recs.length === 1 ? "" : "s"} in your data, from ${recs[recs.length - 1].date || "—"} to ${recs[0].date || "—"}.`,
+    ar: `«${term}»: ${recs.length} سجل في بياناتك، من ${recs[recs.length - 1].date || "—"} إلى ${recs[0].date || "—"}.`,
+    rows: recs.slice(0, 14).map((r) => [r.date || "—", r.what]), open: recs[0].src, sources: src };
+}
+function lastTime(q, s) {
+  const term = termOf(q); const recs = recordsAbout(term, s).filter((r) => r.date);
+  if (!recs.length) return null;
+  const r = recs[0], days = Math.round((Date.parse(iso(Date.now()) + "T12:00:00") - Date.parse(r.date + "T12:00:00")) / DAY);
+  return { kind: "last", en: `The last time: ${r.date}${days >= 0 ? ` (${days === 0 ? "today" : days === 1 ? "yesterday" : days + " days ago"})` : ""} — ${r.what}.`,
+    ar: `آخر مرة: ${r.date}${days >= 0 ? ` (${days === 0 ? "اليوم" : days === 1 ? "أمس" : "منذ " + days + " يوم"})` : ""} — ${r.what}.`,
+    rows: recs.slice(0, 6).map((x) => [x.date, x.what]), open: r.src, sources: [...new Set(recs.map((x) => x.src))] };
+}
+
 export function kindOf(q, stores = {}) {
   const t = String(q || "");
+  if (HISTORY.test(t)) return "history";
+  if (LAST.test(t)) return "last";
+  if (PAID_FOR.test(t) && !catAsked(termOf(t))) return "paid-for";
   if (OWED_IN.test(t)) return "owed-in";
   if (/\b(installments?|instalments?|debts?|loans?)\b|اقساط|أقساط|القسط|ديوني|جمعيه|جمعية/i.test(t) || (OWED_OUT.test(t) && !myMoneyIntent(t))) return "owed-out";
   if (labTestOf(t) && (LAB_Q.test(t) || /\b(my|mum|mom|dad|her|his)\b|بتاع|بتاعت|بتاعي|عندي|ماما|بابا/i.test(t) || /\?|؟/.test(t)) && !SUGAR_NOW.test(t.replace(/hba1c|a1c|السكر التراكمي|التراكمي/gi, ""))) return "lab";
@@ -157,6 +225,8 @@ export function askLife(question, stores = {}, { now = Date.now() } = {}) {
     void ar;
     return { kind: "money", en, ar: a, open: "money", sources: ["money"] };
   }
+  if (k === "paid-for") { const term = termOf(q); return paidFor(q, stores, now) || { kind: "paid-for", en: `Nothing in Money mentions “${term}”.`, ar: `لا يوجد في المال ما يذكر «${term}».`, open: "money", sources: ["money"] }; }
+  if (k === "history" || k === "last") return (k === "history" ? history : lastTime)(q, stores, now);   // nothing about it in your data → null (the model answers)
   const f = { "owed-in": owedIn, "owed-out": owedOut, lab, sugar, meds, food, due }[k];
   return (f && f(q, stores, now)) || search(q, stores);
 }
@@ -183,7 +253,7 @@ export const EXAMPLES = [
 
 // ---- in Chat: only questions about YOUR OWN things ("what is HbA1c?" stays a normal answer; "is my HbA1c better?" is answered here)
 const QUESTION = /\?|؟|^(how|what|who|when|which|is|are|did|do|does|have|has|show|list)\b|^(كام|ايه|إيه|مين|امتى|إمتى|امتي|فين|هل|اعرض)|\b(كام|ايه|مين|امتى)\b/i;
-const MINE = /\b(my|me|mine|i|our|mum'?s?|mom'?s?|mother'?s|dad'?s?|father'?s)\b|بتاعي|بتاعتي|بتاع ماما|بتاع بابا|ليا|عليا|عندي|ماما|بابا|امي|أمي|ابويا|اكلت|أكلت|صرفت|دفعت|باخد|بتاخد|بياخد/i;
+const MINE = /\b(history of|everything about|last time|my|me|mine|i|our|mum'?s?|mom'?s?|mother'?s|dad'?s?|father'?s)\b|بتاعي|بتاعتي|بتاع ماما|بتاع بابا|ليا|عليا|عندي|ماما|بابا|امي|أمي|ابويا|اكلت|أكلت|صرفت|دفعت|باخد|بتاخد|بياخد/i;
 export function chatAsk(q, stores, { now = Date.now() } = {}) {
   const t = String(q || "").trim();
   if (!t || t.length > 160 || !QUESTION.test(t)) return null;

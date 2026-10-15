@@ -185,6 +185,8 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const codeRef = useRef(null);
   const run = useRef(0);
   useEffect(() => { if (incoming) { setText(incoming); setAdding(mealNow()); setTab("today"); clearIncoming && clearIncoming(); } }, [incoming]);
+  // v6.28: a meal tapped on Home / Health opens straight on adding to it
+  useEffect(() => { let m = ""; try { m = localStorage.getItem("attune:fit:openAdd") || ""; localStorage.removeItem("attune:fit:openAdd"); } catch (e) {} if (F.MEALS.includes(m)) { setTab("today"); setAdding(m); } }, []);
 
   const readMeal = async () => {
     if (!text.trim() && !photo) return;

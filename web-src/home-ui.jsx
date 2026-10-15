@@ -16,6 +16,7 @@ import { todayFacts } from "./desk-ui.jsx";
 import { targetsOf } from "./fithome.js";
 import { openRead } from "./readaloud-ui.jsx";
 import { DoResult, DO_HINTS } from "./doit-ui.jsx";
+import { FitToday } from "./health-ui.jsx";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
@@ -35,7 +36,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt }) {
   // v6.28: Home does it first (food → Fit, money → Money, a dose, a reminder, a debt…); only what it can't do goes to Chat
   const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); } else onAsk(t); };
   const date = now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
-  const AREAS = [["money", "Money", Wallet], ["fit", "Health", Heart], ["memory", "Mind", Brain], ["convert", "Files", FileText], ["map", "Places", MapPin], ["all", "All", LayoutGrid]];
+  const AREAS = [["money", "Money", Wallet], ["health", "Health", Heart], ["memory", "Mind", Brain], ["convert", "Files", FileText], ["map", "Places", MapPin], ["all", "All", LayoutGrid]];
   const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
   return (
     <div className="calm -mx-3 px-4 pt-3 pb-6 space-y-4" style={{ minHeight: "calc(100vh - 60px)" }} data-testid="phone-home">
@@ -63,20 +64,17 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt }) {
           </>) : (
           <button onClick={() => navTo("life")} className="w-full text-start py-1.5 c-sub flex items-center gap-2" data-testid="home-empty"><Users size={15} />{tr("Nothing due. Add a debt, an installment or a bill in People & plans.")}</button>)}
       </div>
+      {/* v6.28 (Ali: "Fit & Food should be on the Home page"): today's food, water and the four meals — tap a meal to add to it */}
+      <FitToday key={"fit" + tick} openFit={() => navTo("fit")} compact />
       {guardian || null}
-      <div className="grid grid-cols-2 gap-3">
-        <button className="c-card text-start" onClick={() => navTo("money")} data-testid="home-spent">
+      <div>
+        <button className="c-card text-start w-full" onClick={() => navTo("money")} data-testid="home-spent">
           <span className="c-lbl">{tr("Spent this month")}</span>
           <div className="c-num text-[20px] font-bold mt-0.5">{fmt(data.o.monthOut)}</div>
           <div className="c-sub">{data.o.budget ? tr("of {b} {c}", { b: fmt(data.o.budget), c: data.o.cur }) : data.o.cur}</div>
           {data.o.budget ? <div className="c-bar mt-2"><i style={{ width: pct(data.o.monthOut, data.o.budget) + "%" }} /></div> : null}
         </button>
-        <button className="c-card text-start" onClick={() => navTo("fit")} data-testid="home-food">
-          <span className="c-lbl">{tr("Food today")}</span>
-          <div className="c-num text-[20px] font-bold mt-0.5">{fmt(data.kcal)}</div>
-          <div className="c-sub">{data.goal ? tr("of {g} kcal", { g: fmt(data.goal) }) : "kcal"}</div>
-          {data.goal ? <div className="c-bar mt-2"><i style={{ width: pct(data.kcal, data.goal) + "%" }} /></div> : null}
-        </button>
+
       </div>
       <div className="grid grid-cols-3 gap-2.5" data-testid="home-areas">
         {AREAS.map(([id, label, I]) => (

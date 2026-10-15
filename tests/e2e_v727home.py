@@ -32,7 +32,7 @@ with sync_playwright() as p:
         today = page.locator("[data-testid=home-today]").inner_text()
         check("Ahmed · installment 1 of 12" in today and "Electricity bill" in today, "[%s] TODAY lists what is due: %s" % (theme, today.replace("\n", " · ")[:140]))
         check("7,420" in page.locator("[data-testid=home-spent]").inner_text() and "12,000" in page.locator("[data-testid=home-spent]").inner_text(), "[%s] spent this month, of the budget" % theme)
-        check("1,240" in page.locator("[data-testid=home-food]").inner_text() and "kcal" in page.locator("[data-testid=home-food]").inner_text(), "[%s] food today, of the goal: %s" % (theme, page.locator("[data-testid=home-food]").inner_text().replace("\n", " ")))
+        check("1,240" in page.locator("[data-testid=fit-today-kcal]").inner_text(), "[%s] food today, of the goal (the Fit & Food card, v6.28): %s" % (theme, page.locator("[data-testid=fit-today-kcal]").inner_text().replace("\n", " ")))
         fam = page.evaluate("() => getComputedStyle(document.querySelector('[data-testid=phone-home]')).fontFamily")
         check("Figtree" in fam, "[%s] the Calm font" % theme)
         if SHOTS: page.screenshot(path=os.path.join(SHOTS, "phone-home-%s.png" % theme))

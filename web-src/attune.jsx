@@ -57,6 +57,7 @@ import { BookingDetails, loadBooking, agentLabels } from "./agent-ui.jsx";
 import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
+import { HealthPage } from "./health-ui.jsx";
 import { LifeAskPage } from "./lifeask-ui.jsx";
 import { ScoutPage, runScoutGoal, tellText as scoutTell } from "./scout-ui.jsx";
 import { loadScout, saveScout, dueGoals, looksLikeGoal } from "./scout.js";
@@ -1252,6 +1253,8 @@ function nativeCall(method, arg, onProgress) {
     if (!NATIVE) return rej(new Error("Only available in the Android app"));
     const id = "n" + (++NATIVE_SEQ) + "-" + Date.now();
     NATIVE_LAST_ID = id;
+    // v6.28: a feature this app version doesn't have (the computer app, an older Android app) says so — it used to throw
+    if (typeof NATIVE[method] !== "function") return rej(new Error("This needs the newest Attune app (" + method + ")"));
     NATIVE_CALLS[id] = { res, rej, onProgress };
     try { NATIVE[method](id, typeof arg === "string" ? arg : JSON.stringify(arg || {})); }
     catch (e) { delete NATIVE_CALLS[id]; rej(e); }
@@ -7365,8 +7368,8 @@ function tierOfInstalled(m) {
 }
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
-const OWN_TITLE = new Set(["scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
-const MODE_TITLES = { scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const OWN_TITLE = new Set(["health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
+const MODE_TITLES = { health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
   field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
@@ -8353,6 +8356,13 @@ export default function App() {
   const flashT = useRef(0);
   const showToast = (m, ms = 2000) => { setToast(m); clearTimeout(flashT.current); flashT.current = setTimeout(() => setToast(""), ms); };
   const flash = (m) => showToast(m, 2000);
+  // v6.28 (Ali: "sometimes the app crashes"): an action that fails without handling its own error (entry.jsx catches it) shows a
+  // short message instead of silently doing nothing — at most one every 4 s
+  useEffect(() => {
+    let last = 0;
+    const on = (e) => { const now = Date.now(); if (now - last < 4000) return; last = now; const m = String((e.detail && e.detail.msg) || "").split("\n")[0].replace(/^Error:\s*/, "").slice(0, 120); showToast(tr("That didn't work") + (m ? " — " + m : ""), 3500); };
+    window.addEventListener("attune-error", on); return () => window.removeEventListener("attune-error", on);
+  }, []);
   const gate = (fn) => (proActive ? fn() : setShowUpgrade(true));
   // On-device inference is free to run, so it is never metered. Credits only
   // gate the cloud engine, which is the part that actually costs money.
@@ -9936,6 +9946,8 @@ export default function App() {
           <TranslatePage flash={flash} readText={readTextAny} native={{ N: NATIVE, call: nativeCall }}
             llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}
             openConverter={(to) => { try { localStorage.setItem("attune:convert:tlang", to); } catch (e) {} navTo("convert"); }} />
+        ) : mode === "health" ? (
+          <HealthPage navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} cycleOn={cycleOn} />
         ) : mode === "scout" ? (
           <ScoutPage search={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 8 }) : null} flash={flash}
             remind={(r) => scheduleReminder({ ...r, created: Date.now(), source: "scout" })} incoming={scoutIn} clearIncoming={() => setScoutIn(null)}
@@ -10805,8 +10817,9 @@ export default function App() {
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
           {/* v6.27 design A "Calm": Home · Chat · Money · Health · Mind, then All (every tool; Instant and Business live there now) */}
           {[["home", "Home", House], ["chat", "Chat", MessageCircle], ["money", "Money", Wallet],
-            ["fit", "Health", Heart], ["memory", "Mind", Brain], ["more", "All", LayoutGrid]].map(([id, label, Icon]) => {
-            const on = id === "more" ? moreOpen : (mode === id && !moreOpen);
+            ["health", "Health", Heart], ["memory", "Mind", Brain], ["more", "All", LayoutGrid]].map(([id, label, Icon]) => {
+            // v6.28 (Ali: "Health opens Fit & Food, not a health page"): Health is its own page; it stays lit inside its tools
+            const on = id === "more" ? moreOpen : ((mode === id || (id === "health" && ["fit", "care", "cycle"].includes(mode))) && !moreOpen);
             return (
               <button key={id} onClick={() => { if (id === "more") setMoreOpen((v) => !v); else { setMoreOpen(false); navTo(id); } }}
                 className={`flex flex-col items-center justify-center gap-0.5 text-[11px] ${on ? (id === "cycle" ? "text-rose-300" : "text-teal-300") : "text-slate-500"}`}>

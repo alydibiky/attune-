@@ -49,3 +49,25 @@ ok(A.chatAsk("What is HbA1c?", S, { now }) === null && A.chatAsk("How do install
 ok(A.chatAsk("Is my mum's HbA1c getting better?", S, { now }).kind === "lab" && A.chatAsk("مين عليه فلوس ليا؟", S, { now }).kind === "owed-in", "Chat: a question about your own data is answered from it");
 ok(A.chatAsk("Ahmed owes me 12,000, 1,000 a month", S, { now }) === null, "Chat: a statement (to save in People & plans) is left to that card");
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");
+// v6.28 (Ali): "how much I paid for that", "the history of X", "when did I last …" — from the data, by code
+{
+  const S2 = { ...S, ledger: { currency: "EGP", accounts: [{ id: "c", currency: "EGP" }], txns: [
+    { id: "a", type: "expense", amount: 1200, cat: "transport", account: "c", date: "2026-03-02", note: "car service Toyota" },
+    { id: "b", type: "expense", amount: 1450, cat: "transport", account: "c", date: "2026-09-20", note: "Toyota service + oil" },
+    { id: "c", type: "expense", amount: 300, cat: "food", account: "c", date: "2026-10-12", note: "lunch" }] } };
+  let r = A.askLife("How much did I pay for the car service?", S2, { now });
+  ok(r.kind === "paid-for" && /2,650 EGP/.test(r.en) && r.rows.length === 2, "paid for “car service”: 1,200 + 1,450 = 2,650, both listed: " + r.en);
+  r = A.askLife("دفعت كام على صيانة العربية toyota", S2, { now }); ok(r.kind === "paid-for", "…the Arabic phrasing is recognised");
+  r = A.askLife("What's the history of Lantus?", S2, { now });
+  ok(r && r.kind === "history" && r.rows.some((x) => /Lantus/.test(x[1])), "history of Lantus: from Family health");
+  r = A.askLife("history of Toyota", S2, { now });
+  ok(r && r.rows.length >= 2 && r.sources.includes("money") && r.sources.includes("memory"), "history of Toyota: Money AND the Mind note, one timeline");
+  r = A.askLife("When did I last pay for the car service?", S2, { now });
+  ok(r && r.kind === "last" && /2026-09-20/.test(r.en), "when did I last …: 20 Sep: " + r.en);
+  ok(A.askLife("what's the history of Egypt?", S2, { now }) === null, "history of something not in my data → null (the model answers)");
+  ok(A.chatAsk("How much did I pay for the car service?", S2, { now }).kind === "paid-for" && A.chatAsk("what is the history of Rome?", S2, { now }) === null, "in Chat: answered from the data only when it is about my own records");
+  ok(A.askLife("How much did I pay for the plumber?", S2, { now }).en.startsWith("Nothing in Money mentions"), "nothing paid for it → says so plainly");
+  ok(A.recordsAbout("car service", { ledger: { txns: [{ date: "2026-01-01", amount: 50, note: "car wash", type: "expense" }] } }).length === 0, "a “car wash” is not a “car service”");
+  ok(A.kindOf("how much did I spend on food this month") === "money", "a category question still goes to the Money summary");
+}
+console.log(process.exitCode ? "FAILED" : "ALL PASSED");

@@ -352,9 +352,12 @@ function Editor({ cv: cv0, onChange, onClose, onNewCV, onCopyFor, llm, modelRead
   const exportName = (cv.basics.name || cv.name || "CV").replace(/[^\w؀-ۿ]+/g, "_");
   const doPdf = async () => { const s = await measureScale(cv); await sharePdf({ html: V.cvHtml(cv, { scale: s }), name: exportName, text: "", flash }); };
   const shareBytes = async (name, bytes, text) => {
-    const call = typeof window !== "undefined" ? window.__attuneNativeCall : null;
-    if (call) { await call("shareFile", { name, mime: C.MIME.docx, b64: C.bytesToB64(bytes), text: text || "" }); return; }
-    if (saveFile) { await saveFile(name, null, C.MIME.docx, C.bytesToB64(bytes)); return; }
+    // (v6.28: share where the app can, else save the file; a failure says so — it used to throw, and Word did nothing)
+    const call = typeof window !== "undefined" ? window.__attuneNativeCall : null, N = typeof window !== "undefined" ? window.AttuneNative : null;
+    try {
+      if (call && N && typeof N.shareFile === "function") { await call("shareFile", { name, mime: C.MIME.docx, b64: C.bytesToB64(bytes), text: text || "" }); return; }
+      if (saveFile) { await saveFile(name, null, C.MIME.docx, C.bytesToB64(bytes)); return; }
+    } catch (e) { flash(tr("Couldn't share the file") + " — " + String((e && e.message) || e).slice(0, 80)); return; }
     flash(tr("Saving files works in the Android app"));
   };
   const doWord = () => shareBytes(exportName + ".docx", C.docxFromBlocks(V.cvBlocks(cv), cv.name));
