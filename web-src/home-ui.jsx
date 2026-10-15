@@ -35,7 +35,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt }) {
   }, [tick]);
   // v6.28: Home does it first (food → Fit, money → Money, a dose, a reminder, a debt…); only what it can't do goes to Chat
   const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); } else onAsk(t); };
-  const date = now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+  const date = now.toLocaleDateString(ar ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" });
   const AREAS = [["money", "Money", Wallet], ["health", "Health", Heart], ["memory", "Mind", Brain], ["convert", "Files", FileText], ["map", "Places", MapPin], ["all", "All", LayoutGrid]];
   const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
   return (
