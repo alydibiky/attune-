@@ -599,11 +599,15 @@ the default Fit look; Google Play internal testing (developer account + secrets)
 10. Run the app and check everything / strong code so models do less: crawler over every tool; more checks by code (quiz
    grounding, figure checks, price/spec reading). ✅
 
+11. Home: Ali picked A + Health → Scout + "What's waiting"; chat history sidebar (☰ on Home). ✅
+12. "Do all that's left — deploy within 2 weeks": Android 16 target, Play-only purchases, no free-Pro tap on Play builds,
+   privacy policy, billing fixes, signing guard. ✅ — **Ali: RELEASE_6.29.md §0 and §2 (closed test, keys, listing, decisions).**
+
 ## Prompt to start the next session
 
 ```
 Continue Attune on branch claude/design-a-maps-4pmxxr (main = the same commit).
-First read CLAUDE.md, APP_HANDOFF.md, ROADMAP_2026-10-13.md, HANDOFF.md §5.61–§5.72 and NEXT_SESSION.md
+First read CLAUDE.md, APP_HANDOFF.md, ROADMAP_2026-10-13.md, HANDOFF.md §5.61–§5.73 and NEXT_SESSION.md
 (the newest section is T). Then START WITH A CONVERSATION: I want to set some things straight before you build.
 Show me, short and simple, what is done, what is open (section R "Open"), and your recommended order;
 wait for my answers on the priorities, then work through them with a task list.

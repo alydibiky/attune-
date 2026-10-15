@@ -1440,6 +1440,28 @@ crashes; rework Slides & Reports; Fit & Food on Home; run the app and check; mak
 - **Open, Ali to choose (look):** the Home area tiles repeat the bottom bar — options given in chat (keep / remove / replace with
   "recent tools"); the Health page empty space on a computer.
 
+### 5.73 (15 Oct 2026) — v6.29 (cont.): Home A, chat sidebar on the phone, Scout tab, release blockers for Google Play
+Ali picked Home **A** ("but remove Health and add something more helpful"; chose: bottom bar Health → **Scout**, plus
+**What's waiting**) and asked for "a sidebar where I can see the history of my chats"; then "do all that's left — I want to
+deploy within 2 weeks".
+- **Home** (`home-ui.jsx`, `home.js`): "Recent" = the last 4 tools (`recentTools()`, filled with scout/learn/slides/convert/
+  lifeask) with a live line each (`toolLine`); "What's waiting" (`waitingList`) = todayList + new Scout finds (`goal.unseen`,
+  set by `runScoutGoal`, cleared when the goal is shown) + cards to review / today's lesson + a medicine running out.
+  Bottom bar: Home · Chat · Money · Scout · Mind · All. Tests: `tests/unit/v733home.test.mjs`, `tests/e2e_v733home.py`.
+- **Phone sidebar** (☰ on Home): the computer's `DesktopSide` in a drawer (`touch` shows rename/delete; `width`); places
+  include Health. `applyChatCmd` (chat.jsx) renames/deletes in storage when the Chat page isn't open.
+- **Release (RELEASE_6.29.md = the checklist for Ali):** target API 36 + AGP 8.9.1 + Health Connect 1.1.0 (CI green);
+  AgentBrowser back via OnBackInvokedDispatcher; developer mode only when `AttuneNative.testBuild()` (resValue
+  `attune_test_build` = signed with the test key) — `devAllowed()` in billing.js; no code/key purchase UI when
+  `Store.available()`; Privacy page (`privacy.js`, `privacy-ui.jsx`, mode "privacy", More → Privacy; Health Connect rationale
+  intents → `{kind:"privacy"}`), `docs/privacy-policy.html` generated from privacy.js; PayListener ignores OTP;
+  Billing.kt: ack Business at once, `owned` returns `error` when Play doesn't answer (page keeps Pro: `Store.owned()` → null),
+  reconnect + one connection for waiting calls, guarded launchBillingFlow; gradle refuses a release bundle without
+  ATTUNE_KEYSTORE; workflow_dispatch keeps `attune-play-bundle`; old map never fetches tile.openstreetmap.org; unused
+  open-meteo code removed; Engine.start catches native errors. Tests: `tests/unit/v733release.test.mjs`, `tests/e2e_v733release.py`.
+- **Ali must:** start the 14-day / 12-tester closed test now (personal accounts), keystore secrets, privacy URL, products,
+  declarations, USDA key, the Video Downloader decision (RELEASE_6.29.md §2).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
