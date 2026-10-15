@@ -7,7 +7,7 @@
    from the web or from your own file; figures not found there are never drawn and are flagged.
    Engine + drawing: slides.js. PDFs: Android makePdf. */
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { Presentation, FileText, Loader2, Download, Check, ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Trash2, Wand2, Globe, Paperclip, X, Copy, Eye, BarChart3, Play } from "lucide-react";
+import { Presentation, FileText, Loader2, Download, Check, ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Trash2, Wand2, Globe, Paperclip, X, Copy, Eye, BarChart3, Play, SlidersHorizontal } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import { askConfirm } from "./confirm.jsx";
@@ -268,6 +268,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
   const [cmd, setCmd] = useState("");                     // v5.41: "delete slide 5", "slide 4: shorter"…
   const [cmdNote, setCmdNote] = useState("");                // index into deck.slides
   const [list, setList] = useState(loadList);
+  const [opts, setOpts] = useState(false);                 // v6.28: the options fold away (one line says what is chosen)
   const run = useRef(0);
   const hitsRef = useRef({ id: null, hits: [] });   // this session's web pages, for "Rewrite this slide"
   const fileRef = useRef(null);
@@ -584,6 +585,32 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
           <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} dir="auto" data-testid="slides-prompt"
             placeholder={tab === "deck" ? tr("e.g. A pitch for our crane rental company to New Capital contractors: fleet, safety record, prices, why us") : tr("e.g. Monthly report on our crane fleet: utilisation, breakdowns, costs and what to fix next month")}
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-[14px] text-slate-100 leading-relaxed" />
+          <div className="space-y-2" data-testid="slides-sources">
+            {webPages ? (
+              <button onClick={() => setUseWeb(!useWeb)} className={chip(useWeb) + " w-full flex items-center gap-2 text-start"} data-testid="slides-web">
+                <Globe size={15} className="shrink-0" /><span className="flex-1">{tr("Research the web for facts and figures")}<span className="block text-[11px] text-slate-500">{tr("Each slide names its sources, and a Sources slide lists every page")}</span></span>{useWeb ? <Check size={15} /> : null}</button>
+            ) : null}
+            <input ref={fileRef} type="file" className="hidden" accept=".docx,.pdf,.pptx,.txt,.md,.html,.htm,.xlsx,.csv,.tsv,.ods" data-testid="slides-file" onChange={(e) => { pickFile(e.target.files[0]); e.target.value = ""; }} />
+            {file ? (
+              <div className="flex items-center gap-2 rounded-xl border border-teal-800 bg-teal-500/5 px-3 py-2 text-[12.5px] text-teal-100" data-testid="slides-file-name">
+                <Paperclip size={14} className="shrink-0" /><span className="flex-1 truncate">{file.name}{file.data ? " · " + tr("{n} rows — totals and a chart are computed", { n: file.data.rows }) : ""}</span>
+                <button onClick={() => setFile(null)} aria-label={tr("Remove")} className="p-1.5 -m-1.5 text-slate-400"><X size={15} /></button></div>
+            ) : (
+              <button onClick={() => fileRef.current && fileRef.current.click()} className={chip(false) + " w-full flex items-center gap-2 text-start"} data-testid="slides-attach">
+                <Paperclip size={15} className="shrink-0" /><span className="flex-1">{tr("Base it on my file (Word, PDF, Excel, CSV…)")}</span></button>
+            )}
+          </div>
+          {busy ? busyRow : (
+            <button onClick={tab === "deck" ? makeDeck : makeReport} className="w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm flex items-center justify-center gap-2" data-testid="slides-go">
+              <Wand2 size={16} />{tab === "deck" ? tr("Make the presentation") : tr("Write the report")}</button>
+          )}
+          <button onClick={() => setOpts(!opts)} className="w-full flex items-center gap-2 text-start rounded-xl border border-slate-800 px-3 py-2 text-[12.5px] text-slate-300" data-testid="slides-options">
+            <SlidersHorizontal size={14} className="text-teal-300 shrink-0" />
+            <span className="flex-1 min-w-0 truncate">{tab === "deck"
+              ? [tr("{n} slides", { n: count }), tr(S.THEMES[theme] ? S.THEMES[theme].name : ""), detail === "detailed" ? tr("Detailed") : tr("Short points"), motion.transition !== "none" || motion.animation !== "none" ? tr("with motion") : "", lang !== "auto" ? langName(lang) : ""].filter(Boolean).join(" · ")
+              : [tr(REPORT_LABEL[rKind]), tr("{n} sections", { n: rLen }), lang !== "auto" ? langName(lang) : ""].filter(Boolean).join(" · ")}</span>
+            <span className="text-teal-300 shrink-0">{opts ? tr("Hide") : tr("Change")}</span></button>
+          {opts ? <div className="space-y-3" data-testid="slides-options-box">
           {tab === "deck" ? (
             <>
               <input value={audience} onChange={(e) => setAudience(e.target.value)} dir="auto" placeholder={tr("Who is it for? (optional) — e.g. investors, clients, my team")} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-[13px] text-slate-100" data-testid="slides-audience" />
@@ -610,25 +637,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
             <option value="auto">{tr("Language: same as my request")}</option>
             {Object.keys(S.S_LANGS).map((k) => <option key={k} value={k}>{langName(k)}</option>)}
           </select>
-          <div className="space-y-2">
-            {webPages ? (
-              <button onClick={() => setUseWeb(!useWeb)} className={chip(useWeb) + " w-full flex items-center gap-2 text-start"} data-testid="slides-web">
-                <Globe size={15} className="shrink-0" /><span className="flex-1">{tr("Research the web for facts and figures")}<span className="block text-[11px] text-slate-500">{tr("Each slide names its sources, and a Sources slide lists every page")}</span></span>{useWeb ? <Check size={15} /> : null}</button>
-            ) : null}
-            <input ref={fileRef} type="file" className="hidden" accept=".docx,.pdf,.pptx,.txt,.md,.html,.htm,.xlsx,.csv,.tsv,.ods" data-testid="slides-file" onChange={(e) => { pickFile(e.target.files[0]); e.target.value = ""; }} />
-            {file ? (
-              <div className="flex items-center gap-2 rounded-xl border border-teal-800 bg-teal-500/5 px-3 py-2 text-[12.5px] text-teal-100" data-testid="slides-file-name">
-                <Paperclip size={14} className="shrink-0" /><span className="flex-1 truncate">{file.name}{file.data ? " · " + tr("{n} rows — totals and a chart are computed", { n: file.data.rows }) : ""}</span>
-                <button onClick={() => setFile(null)} aria-label={tr("Remove")} className="p-1.5 -m-1.5 text-slate-400"><X size={15} /></button></div>
-            ) : (
-              <button onClick={() => fileRef.current && fileRef.current.click()} className={chip(false) + " w-full flex items-center gap-2 text-start"} data-testid="slides-attach">
-                <Paperclip size={15} className="shrink-0" /><span className="flex-1">{tr("Base it on my file (Word, PDF, Excel, CSV…)")}</span></button>
-            )}
-          </div>
-          {busy ? busyRow : (
-            <button onClick={tab === "deck" ? makeDeck : makeReport} className="w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm flex items-center justify-center gap-2" data-testid="slides-go">
-              <Wand2 size={16} />{tab === "deck" ? tr("Make the presentation") : tr("Write the report")}</button>
-          )}
+          </div> : null}
           {err ? <p className="text-[12.5px] text-rose-300" data-testid="slides-error">{err}</p> : null}
           {!pro ? <p className="text-[11px] text-slate-500">{tr("Free: 2 a day · Pro: unlimited")}</p> : null}
         </section>
@@ -662,28 +671,6 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
           {!busy && (deck.dropped || deck.unsure) ? (
             <p className="text-[12px] text-amber-200" data-testid="slides-check-note">{[deck.dropped ? tr("{n} figure(s) weren't in the sources, so they were left out.", { n: deck.dropped }) : "", deck.unsure ? tr(deck.hits.length || file ? "{n} figure(s) on the slides weren't found in the sources — check them before presenting." : "{n} figure(s) came from the AI's memory — check them before presenting.", { n: deck.unsure }) : ""].filter(Boolean).join(" ")}</p>
           ) : null}
-          <div className="flex gap-1.5 overflow-x-auto att-hscroll pb-1 lg:flex-wrap lg:overflow-visible">{Object.entries(S.THEMES).map(([k, t]) => (
-            <button key={k} onClick={() => { setDeck({ ...deck, theme: k }); setTheme(k); try { localStorage.setItem("attune:slides:theme", k); } catch (e) {} }} data-testid={"deck-theme-" + k}
-              className={`shrink-0 rounded-lg border px-2 py-1 text-[11px] flex items-center gap-1.5 ${deck.theme === k ? "border-teal-500 text-teal-200" : "border-slate-700 text-slate-400"}`}>
-              <span className="h-3 w-3 rounded-full" style={{ background: "#" + t.accent }} />{tr(t.name)}</button>))}</div>
-          {styleNote ? <p className="text-[11.5px] text-teal-300 px-1" data-testid="slides-style-note">{tr("From your request:")} {styleNote}</p> : null}
-          <div className="grid grid-cols-3 gap-1.5">
-            <select value={deck.transition || "none"} onChange={(e) => { const m = { ...motion, transition: e.target.value }; setMotionSaved(m); setDeck({ ...deck, transition: m.transition }); }} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[12px] text-slate-100" data-testid="deck-transition">
-              {Object.entries(S.TRANSITIONS).map(([k, l]) => <option key={k} value={k}>{tr("Transition")}: {tr(l)}</option>)}</select>
-            <select value={deck.animation || "none"} onChange={(e) => { const m = { ...motion, animation: e.target.value }; setMotionSaved(m); setDeck({ ...deck, animation: m.animation, trigger: deck.trigger || m.trigger }); }} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[12px] text-slate-100" data-testid="deck-animation">
-              {Object.entries(S.ANIMATIONS).map(([k, l]) => <option key={k} value={k}>{tr("Animation")}: {tr(l)}</option>)}</select>
-            <select value={deck.trigger || "click"} disabled={!deck.animation || deck.animation === "none"} onChange={(e) => { const m = { ...motion, trigger: e.target.value }; setMotionSaved(m); setDeck({ ...deck, trigger: m.trigger }); }} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[12px] text-slate-100 disabled:opacity-40" data-testid="deck-trigger">
-              <option value="click">{tr("On tap")}</option><option value="auto">{tr("Automatically")}</option></select>
-          </div>
-          <div className="bg-slate-900 rounded-2xl border border-slate-800 p-3 space-y-2" data-testid="deck-cmd-box">
-            <p className="text-[12.5px] text-slate-300 flex items-center gap-1.5"><Wand2 size={14} className="text-teal-300" />{tr("Change the presentation")}</p>
-            <div className="flex gap-2">
-              <input value={cmd} onChange={(e) => setCmd(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") runCommand(); }} dir="auto" disabled={!!busy}
-                placeholder={tr("e.g. slide 4: shorter, add prices · delete slide 6 · add a slide about safety after slide 5")} className="flex-1 min-w-0 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-[13px] text-slate-100" data-testid="deck-cmd" />
-              <button onClick={runCommand} disabled={!!busy || !cmd.trim()} className="shrink-0 px-3 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm disabled:opacity-40" data-testid="deck-cmd-go">{tr("Apply")}</button>
-            </div>
-            {cmdNote ? <p className="text-[12px] text-teal-300" data-testid="deck-cmd-note">{cmdNote}</p> : null}
-          </div>
           {!busy ? <button onClick={() => setPlaying(true)} className="w-full py-2.5 rounded-xl border border-teal-600 text-teal-200 text-sm font-semibold flex items-center justify-center gap-2" data-testid="slides-play"><Play size={16} />{tr("Play — see the transitions and animations")}</button> : null}
           {!busy ? (
             <div className="space-y-2">
@@ -697,6 +684,29 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
               </div>
             </div>
           ) : null}
+          <div className="bg-slate-900 rounded-2xl border border-slate-800 p-3 space-y-2" data-testid="deck-cmd-box">
+            <p className="text-[12.5px] text-slate-300 flex items-center gap-1.5"><Wand2 size={14} className="text-teal-300" />{tr("Change the presentation")}</p>
+            <div className="flex gap-2">
+              <input value={cmd} onChange={(e) => setCmd(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") runCommand(); }} dir="auto" disabled={!!busy}
+                placeholder={tr("e.g. slide 4: shorter, add prices · delete slide 6 · add a slide about safety after slide 5")} className="flex-1 min-w-0 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-[13px] text-slate-100" data-testid="deck-cmd" />
+              <button onClick={runCommand} disabled={!!busy || !cmd.trim()} className="shrink-0 px-3 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm disabled:opacity-40" data-testid="deck-cmd-go">{tr("Apply")}</button>
+            </div>
+            {cmdNote ? <p className="text-[12px] text-teal-300" data-testid="deck-cmd-note">{cmdNote}</p> : null}
+          </div>
+          <p className="text-[11px] uppercase tracking-wider text-slate-500 px-1 pt-1">{tr("Design and motion")}</p>
+          <div className="flex gap-1.5 overflow-x-auto att-hscroll pb-1 lg:flex-wrap lg:overflow-visible">{Object.entries(S.THEMES).map(([k, t]) => (
+            <button key={k} onClick={() => { setDeck({ ...deck, theme: k }); setTheme(k); try { localStorage.setItem("attune:slides:theme", k); } catch (e) {} }} data-testid={"deck-theme-" + k}
+              className={`shrink-0 rounded-lg border px-2 py-1 text-[11px] flex items-center gap-1.5 ${deck.theme === k ? "border-teal-500 text-teal-200" : "border-slate-700 text-slate-400"}`}>
+              <span className="h-3 w-3 rounded-full" style={{ background: "#" + t.accent }} />{tr(t.name)}</button>))}</div>
+          {styleNote ? <p className="text-[11.5px] text-teal-300 px-1" data-testid="slides-style-note">{tr("From your request:")} {styleNote}</p> : null}
+          <div className="grid grid-cols-2 gap-1.5">
+            <label className="block min-w-0"><span className="block text-[11px] text-slate-500 mb-0.5">{tr("Transition")}</span><select value={deck.transition || "none"} onChange={(e) => { const m = { ...motion, transition: e.target.value }; setMotionSaved(m); setDeck({ ...deck, transition: m.transition }); }} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[12px] text-slate-100" data-testid="deck-transition">
+              {Object.entries(S.TRANSITIONS).map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}</select></label>
+            <label className="block min-w-0"><span className="block text-[11px] text-slate-500 mb-0.5">{tr("Animation")}</span><select value={deck.animation || "none"} onChange={(e) => { const m = { ...motion, animation: e.target.value }; setMotionSaved(m); setDeck({ ...deck, animation: m.animation, trigger: deck.trigger || m.trigger }); }} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[12px] text-slate-100" data-testid="deck-animation">
+              {Object.entries(S.ANIMATIONS).map(([k, l]) => <option key={k} value={k}>{tr(l)}</option>)}</select></label>
+            {deck.animation && deck.animation !== "none" ? <select value={deck.trigger || "click"} onChange={(e) => { const m = { ...motion, trigger: e.target.value }; setMotionSaved(m); setDeck({ ...deck, trigger: m.trigger }); }} className="col-span-2 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[12px] text-slate-100" data-testid="deck-trigger">
+              <option value="click">{tr("Animations: on tap")}</option><option value="auto">{tr("Animations: by themselves")}</option></select> : null}
+          </div>
           </div><div className="space-y-3 mt-3 lg:mt-0 min-w-0">
           <div className="space-y-2.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
             {shapes.map((x, k) => {

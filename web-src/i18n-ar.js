@@ -4525,4 +4525,8 @@ export const AR = {
   "{n} cards": "{n} بطاقات",
   "{n} days in a row": "{n} أيام متتالية",
   "{n} learned for good": "{n} حُفظت نهائيًا",
+  "with motion": "مع حركة",
+  "Design and motion": "التصميم والحركة",
+  "Animations: on tap": "الحركات: عند اللمس",
+  "Animations: by themselves": "الحركات: تلقائيًا",
 };

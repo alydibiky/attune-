@@ -71,6 +71,7 @@ with sync_playwright() as p:
 
     # ---- 1. a presentation from one sentence ----
     page.fill("[data-testid=slides-prompt]", "A pitch for our crane rental company to New Capital contractors")
+    if page.locator("[data-testid=slides-options-box]").count() == 0: page.locator("[data-testid=slides-options]").click()
     page.fill("[data-testid=slides-audience]", "contractors")
     page.locator("[data-testid=slides-n-5]").click()
     page.locator("[data-testid=slides-theme-steel]").click()
@@ -143,6 +144,7 @@ with sync_playwright() as p:
     page.locator("[data-testid=slides-new]").click(); page.wait_for_timeout(200)
     page.locator("[data-testid=slides-tab-report]").click()
     page.fill("[data-testid=slides-prompt]", "September fleet report: revenue per crane and what to fix")
+    if page.locator("[data-testid=slides-options-box]").count() == 0: page.locator("[data-testid=slides-options]").click()
     page.locator("[data-testid=report-len-3]").click()
     csv = "Crane,Revenue EGP,Days\nLTM 1100,420000,12\nAC 500,910000,9\nGMK 3050,260000,14\nLTM 1100,180000,5\n"
     page.set_input_files("[data-testid=slides-file]", files=[{"name": "september.csv", "mimeType": "text/csv", "buffer": csv.encode()}])
@@ -190,7 +192,7 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=slides-deck]", timeout=5000)
     page.locator("[data-testid=slides-save-pptx]").click(); page.wait_for_timeout(400)
     z, xs = pptx_texts(page.evaluate("window.__mock.lastSaved.b64"))
-    check(any("AC 500" in x and "910000" in x for x in xs) and any("Key findings" in x for x in xs), "slides from the report: key findings, the chart of the file…")
+    check(any("AC 500" in x and ("910000" in x or "910,000" in x) for x in xs) and any("Key findings" in x for x in xs), "slides from the report: key findings, the chart of the file…")
     shot(page, "05-report-deck", "[data-testid=slides-deck]")
 
     # ---- 6. back to the start: the recent list ----
@@ -198,6 +200,7 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=slides-recent]").count() == 1 and "September Fleet Report" in page.locator("[data-testid=slides-recent]").inner_text(), "recent decks and reports are listed")
     page.locator("[data-testid=slides-tab-deck]").click()
     page.fill("[data-testid=slides-prompt]", "عرض عن سوق تأجير الأوناش في مصر للمستثمرين")
+    if page.locator("[data-testid=slides-options-box]").count() == 0: page.locator("[data-testid=slides-options]").click()
     page.locator("[data-testid=slides-n-5]").click()
     page.locator("[data-testid=slides-theme-emerald]").click()
     page.locator("[data-testid=slides-web]").click()
@@ -246,6 +249,7 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=slides-prompt]", timeout=5000)
     page.locator("[data-testid=slides-tab-deck]").click()
     page.fill("[data-testid=slides-prompt]", "A pitch for our crane company. Dark blue theme, fade transitions, and the points fly in one by one")
+    if page.locator("[data-testid=slides-options-box]").count() == 0: page.locator("[data-testid=slides-options]").click()
     page.locator("[data-testid=slides-n-5]").click()
     page.locator("[data-testid=slides-theme-sunset]").click()
     queue(page, [OUTLINE] + SLIDES)

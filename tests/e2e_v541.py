@@ -155,6 +155,7 @@ with sync_playwright() as p:
     # ---- #1 change a deck by a sentence ----
     open_tool(page, "Slides & Reports", "slides")
     page.fill("[data-testid=slides-prompt]", "A pitch for our crane company")
+    if page.locator("[data-testid=slides-options-box]").count() == 0: page.locator("[data-testid=slides-options]").click()
     page.locator("[data-testid=slides-n-5]").click()
     outline = "TITLE: Crane Co\nSUBTITLE: s\n1. [bullets] One\n2. [bullets] Two\n3. [bullets] Three\n4. [bullets] Four\n5. [bullets] Five"
     queue(page, [outline] + ["- A: first point here\n- B: second point here\nNOTES: n"] * 5)

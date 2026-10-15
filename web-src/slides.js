@@ -746,11 +746,16 @@ export function parseSummary(reply) {
   return { text, findings };
 }
 /** A section's Markdown → blocks (its own heading dropped; # headings become sub-headings). */
+/** v6.28: a table cell that is a bare big number gets its thousands marked ("910000" → "910,000"); codes, years and words stay. */
+export function groupNum(c) {
+  const t = String(c == null ? "" : c).trim(), m = t.match(/^(-?)(\d{5,})(\.\d+)?$/);
+  return m ? m[1] + m[2].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (m[3] || "") : c;
+}
 export function sectionBlocks(md, heading) {
   const b = textToBlocks(String(md || "").replace(/^\s*(?:NOTES?|SECTION)\s*[:：].*$/gim, ""));
   const norm = (s) => String(s || "").toLowerCase().replace(/[^\p{L}\d]+/gu, "");
   while (b.length && /^h\d$/.test(b[0].type) && (norm(b[0].text) === norm(heading) || norm(b[0].text).includes(norm(heading)))) b.shift();
-  return b.map((x) => (/^h[12]$/.test(x.type) ? { ...x, type: "h3" } : x));
+  return b.map((x) => (/^h[12]$/.test(x.type) ? { ...x, type: "h3" } : x.type === "table" && Array.isArray(x.rows) ? { ...x, rows: x.rows.map((r, i) => (i ? r.map(groupNum) : r)) } : x));
 }
 
 // a sheet (rows, first = header) → facts computed by code, and a chart of the first number column
@@ -786,7 +791,7 @@ export function dataSummary(rows0, name = "data") {
     const top = bars.length > 10 ? [...bars].sort((a, b) => b.value - a.value).slice(0, 10) : bars;
     if (top.length >= 2) chart = { title: `${head[c]} — ${head[textCol]}`, bars: top, unit: head[c] };
   }
-  return { text: lines.join("\n"), chart, table: [head, ...body.slice(0, 20).map((r) => head.map((_, i) => String(r[i] ?? "")))], rows: body.length };
+  return { text: lines.join("\n"), chart, table: [head, ...body.slice(0, 20).map((r) => head.map((_, i) => String(groupNum(r[i] ?? ""))))], rows: body.length };
 }
 
 /** The report → blocks for Word / PDF: cover, contents, summary, chart, sections, conclusion, sources, data. */
