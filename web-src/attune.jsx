@@ -14,7 +14,7 @@ import { payOpts, homeCurrency } from "./locale.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
 import { bdPrompt, bdParseDraft } from "./yusr/bizdraft.js";
 import { logPrompt, parseLog, isQuestion } from "./yusr/logtext.js";
-import { ChatHome, Md, systemPrompt as chatSystemPrompt, loadChats } from "./chat.jsx";
+import { ChatHome, Md, systemPrompt as chatSystemPrompt, loadChats, applyChatCmd } from "./chat.jsx";
 import { DesktopSide, useDesktopWide, useSide, noteToolUsed } from "./side-ui.jsx";
 import { DesktopHome, ToolsPage } from "./desk-ui.jsx";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -7485,6 +7485,7 @@ export default function App() {
     try { window.scrollTo(0, mode === "chat" ? document.documentElement.scrollHeight : 0); } catch (e) {}
   }, [mode]);
   const [drawerOpen, setDrawerOpen] = useState(false);   // chat history
+  const [phoneSide, setPhoneSide] = useState(false);     // v6.29: the sidebar on a phone (chats, search, places), from Home's ☰
   const [moreOpen, setMoreOpen] = useState(false);       // every other tool
   // v6.24: a computer-sized screen gets a sidebar like Claude / ChatGPT instead of the bottom bar
   const wide = useDesktopWide();
@@ -9217,7 +9218,7 @@ export default function App() {
   // In-app Back: closes the top-most open panel, otherwise returns to the Ask
   // home tab. Shown only when there is somewhere to go back to.
   const engineText = modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : (NATIVE && (installedModels || []).length ? tr("Asleep — wakes when needed") : tr("No model"));
-  const _anyOverlay = showBackup || showEngine || showProfile || showUpgrade || showMemory || showOrg || showSource || showCustom || drawerOpen || moreOpen;
+  const _anyOverlay = showBackup || showEngine || showProfile || showUpgrade || showMemory || showOrg || showSource || showCustom || drawerOpen || moreOpen || phoneSide;
   const rootMode = wide ? "home" : startMode.current;         // v6.25: the screen Back ends at (v6.28: the phone's start page — Home, or Chat for the old start)
   const canGoBack = _anyOverlay || mode !== rootMode || modeHist.current.length > 0;
   const _anyOverlayRef = useRef(false); _anyOverlayRef.current = _anyOverlay;
@@ -9226,6 +9227,7 @@ export default function App() {
   useEffect(() => { try { document.body.classList.toggle("att-modal-open", !!(showBackup || showEngine || showProfile || showUpgrade || showOrg || (moreOpen && wide))); } catch (e) {} }, [showBackup, showEngine, showProfile, showUpgrade, showOrg, moreOpen, wide]);
   const goBack = () => {
     if (drawerOpen) return setDrawerOpen(false);
+    if (phoneSide) return setPhoneSide(false);
     if (moreOpen) return setMoreOpen(false);
     if (showBackup) return setShowBackup(false);
     if (showSource) return setShowSource(false);
@@ -9283,6 +9285,16 @@ export default function App() {
         onClose={() => side.setOpen(false)} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
         openEngine={() => setShowEngine(true)} openProfile={() => setShowProfile(true)} openUpgrade={() => setShowUpgrade(true)}
         openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /></Guard> : null}
+      {!wide && phoneSide ? <Guard name="sidebar"><div className="fixed inset-0 z-[60] bg-black/60" onClick={() => setPhoneSide(false)} data-testid="phone-side">
+        <div onClick={(e) => e.stopPropagation()}><DesktopSide touch width="min(86vw, 320px)" mode={mode} canBack={false} onBack={() => {}} navTo={(m) => { setPhoneSide(false); setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
+          places={[["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]]}
+          tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
+          onNewChat={() => { setPhoneSide(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
+          onOpenChat={(id) => { setPhoneSide(false); setOpenChatId(id); navTo("chat"); }}
+          chatCmd={applyChatCmd}
+          onClose={() => setPhoneSide(false)} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
+          openEngine={() => { setPhoneSide(false); setShowEngine(true); }} openProfile={() => { setPhoneSide(false); setShowProfile(true); }} openUpgrade={() => { setPhoneSide(false); setShowUpgrade(true); }}
+          openBackup={() => { setPhoneSide(false); setShowBackup(true); }} openSettings={() => { setPhoneSide(false); setMoreOpen(true); }} /></div></div></Guard> : null}
       <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-6xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide ? "pb-8" : "pb-24")}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
@@ -9322,7 +9334,7 @@ export default function App() {
         ) : null}
 
         <Guard key={"g-" + mode} name={mode}>{mode === "home" && !wide ? (
-          <PhoneHome navTo={(m) => navTo(m)} doIt={doFromHome} openAll={() => setMoreOpen(true)} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
+          <PhoneHome navTo={(m) => navTo(m)} doIt={doFromHome} openAll={() => setMoreOpen(true)} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
             onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
@@ -10816,11 +10828,11 @@ export default function App() {
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
       <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
-          {/* v6.27 design A "Calm": Home · Chat · Money · Health · Mind, then All (every tool; Instant and Business live there now) */}
+          {/* v6.27 design A "Calm": Home · Chat · Money · Scout (v6.29, was Health) · Mind, then All (every tool; Instant and Business live there now) */}
           {[["home", "Home", House], ["chat", "Chat", MessageCircle], ["money", "Money", Wallet],
-            ["health", "Health", Heart], ["memory", "Mind", Brain], ["more", "All", LayoutGrid]].map(([id, label, Icon]) => {
-            // v6.28 (Ali: "Health opens Fit & Food, not a health page"): Health is its own page; it stays lit inside its tools
-            const on = id === "more" ? moreOpen : ((mode === id || (id === "health" && ["fit", "care", "cycle"].includes(mode))) && !moreOpen);
+            ["scout", "Scout", Binoculars], ["memory", "Mind", Brain], ["more", "All", LayoutGrid]].map(([id, label, Icon]) => {
+            // v6.29 (Ali: "remove Health" → Scout): Health stays one tap away on Home (Fit & Food card) and in All
+            const on = id === "more" ? moreOpen : (mode === id && !moreOpen);
             return (
               <button key={id} onClick={() => { if (id === "more") setMoreOpen((v) => !v); else { setMoreOpen(false); navTo(id); } }}
                 className={`flex flex-col items-center justify-center gap-0.5 text-[11px] ${on ? (id === "cycle" ? "text-rose-300" : "text-teal-300") : "text-slate-500"}`}>

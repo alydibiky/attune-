@@ -84,6 +84,15 @@ function saveChats(list) {
 // else changed the chats since (a backup restore, another screen) — never
 // write an old copy over newer ones.
 let lastWritten = null;
+// v6.29: the phone sidebar can rename / delete a chat while the Chat page is closed — then the saved list is changed directly
+let chatMounted = 0;
+export function applyChatCmd(c) {
+  if (chatMounted > 0) { try { window.dispatchEvent(new CustomEvent("attune-chat-cmd", { detail: c })); } catch (e) {} return; }
+  const list = loadChats();
+  const next = c.op === "delete" ? list.filter((x) => x.id !== c.id) : c.op === "rename" && c.title ? list.map((x) => (x.id === c.id ? { ...x, title: c.title } : x)) : list;
+  saveChats(next);
+  try { window.dispatchEvent(new CustomEvent("attune-chats", { detail: { list: next.map(sideSummary), activeId: null } })); } catch (e) {}
+}
 function saveIfOurs(list) {
   let cur = null; try { cur = localStorage.getItem(KEY); } catch (e) {}
   if (lastWritten !== null && cur !== lastWritten) return false;
@@ -480,6 +489,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (busy) return;
     try { window.dispatchEvent(new CustomEvent("attune-chats", { detail: { list: chats.map(sideSummary), activeId } })); } catch (e) {}
   }, [chats, activeId, busy]);
+  useEffect(() => { chatMounted++; return () => { chatMounted--; }; }, []);
   useEffect(() => {
     const f = (e) => {
       const c = e.detail || {};

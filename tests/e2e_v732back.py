@@ -23,7 +23,7 @@ with sync_playwright() as p:
     back(page); check(on(page, "scout-page"), "Back → Scout")
     back(page); check(on(page, "phone-home"), "Back → Home")
     # the bottom bar and Home's own buttons are remembered too
-    page.locator("[data-testid=home-area-money]").click(); page.wait_for_timeout(400)
+    page.locator("nav button:has-text('Money')").click(); page.wait_for_timeout(400)
     page.locator("nav button:has-text('Chat')").click(); page.wait_for_timeout(300)
     back(page); check(page.locator("[data-testid=phone-home]").count() == 0 and page.locator("nav button:has-text('Money')").get_attribute("aria-current") in ("page", "true") or page.locator("[data-testid=money-calm], [data-testid=money-desk], iframe").count() >= 1, "Chat (bottom bar) → Back → Money")
     back(page); check(on(page, "phone-home"), "Back → Home")

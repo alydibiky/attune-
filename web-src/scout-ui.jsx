@@ -31,7 +31,9 @@ export async function runScoutGoal(goal, search, onStep, now = Date.now()) {
     for (const q of S.fallbackSearches(goal.g)) { try { const r = await search(q); for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h); } catch (e) {} }
   }
   const run = S.runGoal(goal, hits, { now });
-  return { goal: { ...goal, seen: run.seen, lastRun: now, lastCount: run.found.length, lastHits: hits.length }, tell: S.worthTelling(run), run };
+  // (v6.29: the matches new this run stay "unseen" until the goal is opened — Home's "What's waiting" counts them)
+  const unseen = [...new Set([...(goal.unseen || []), ...run.found.filter((a) => run.fresh.includes(a.id)).map((a) => a.id)])].slice(-50);
+  return { goal: { ...goal, seen: run.seen, lastRun: now, lastCount: run.found.length, lastHits: hits.length, unseen }, tell: S.worthTelling(run), run };
 }
 export function tellText(goal, tell, ar) {
   const a = tell[0], price = a.facts.price ? fmt(a.facts.price) + " " + (a.facts.cur || "") : "";
@@ -66,6 +68,8 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
     put({ ...d, goals: d.goals.map((x) => (x.id !== goal.id ? x : { ...x, votes: { ...(x.votes || {}), [ad.id]: up ? 1 : -1 }, taste: S.learn(x.taste, ad, up) })) });
   };
   const found = goal ? S.runGoal(goal, [], { now: Date.now() }).found : [];
+  // the goal on screen: its new matches are now seen
+  useEffect(() => { if (goal && (goal.unseen || []).length && !busy) { const d = S.loadScout(); put({ ...d, goals: d.goals.map((x) => (x.id === goal.id ? { ...x, unseen: [] } : x)) }); } }, [sel, goal && (goal.unseen || []).length, !!busy]);
   const field = "w-full rounded-xl px-3 py-2.5 text-[14.5px] border bg-transparent";
   const left = (
     <div className="space-y-4">

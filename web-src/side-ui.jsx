@@ -81,7 +81,7 @@ function dayGroup(ts) {
 }
 
 export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, groups, loadChats, onNewChat, onOpenChat, chatCmd, onClose,
-  engineLabel, engineState, airGap, openEngine, openProfile, openUpgrade, openBackup, openSettings }) {
+  engineLabel, engineState, airGap, openEngine, openProfile, openUpgrade, openBackup, openSettings, touch = false, width = SIDE_W }) {
   const { list, activeId } = useChatList(loadChats);
   const depth = useBackDepth();
   const [q, setQ] = useState("");
@@ -99,7 +99,7 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
       <Icon size={17} className={mode === id ? "text-teal-300" : "text-slate-400"} /><span className="truncate">{tr(label)}</span>
     </button>);
   return (
-    <aside className="fixed top-0 bottom-0 start-0 z-[56] flex flex-col bg-slate-900 border-e border-slate-800" style={{ width: SIDE_W }} data-testid="side">
+    <aside className="fixed top-0 bottom-0 start-0 z-[56] flex flex-col bg-slate-900 border-e border-slate-800" style={{ width }} data-testid="side">
       <div className="flex items-center gap-1 px-3 h-14 shrink-0">
         {/* v6.24 (Ali: "there is no back in the app"): a computer has no Back key like a phone — this is it
             (also: the mouse's back button, Alt+←, and Esc for an open panel) */}
@@ -148,7 +148,7 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
                   ) : (<>
                     <button onClick={() => onOpenChat(c.id)} data-testid="side-open-chat" className="flex-1 min-w-0 text-start px-2.5 py-2 text-[13px] text-slate-200 truncate" dir="auto" title={tr(c.title)}>
                       {c.space ? <span className="me-1">{c.space}</span> : null}{tr(c.title) || tr("New chat")}</button>
-                    <span className="hidden group-hover:flex group-focus-within:flex items-center pe-1">
+                    <span className={(touch ? "flex" : "hidden group-hover:flex group-focus-within:flex") + " items-center pe-1"}>
                       <button onClick={() => setRenaming(c.id)} className="p-1.5 text-slate-500 hover:text-slate-200" title={tr("Rename")} aria-label={tr("Rename")}><PenLine size={13} /></button>
                       <button onClick={() => setConfirmDel(c.id)} className="p-1.5 text-slate-500 hover:text-rose-300" title={tr("Delete")} aria-label={tr("Delete")} data-testid="side-del"><Trash2 size={13} /></button>
                     </span>

@@ -3,7 +3,8 @@ import { tr } from "./i18n.js";
 import { dueSoon } from "./life.js";
 import { moneyOverview } from "./money-calm.js";
 import { radarToday } from "./deadlines.js";
-import { dosesOn } from "./care.js";
+import { dosesOn, lowSupply } from "./care.js";
+import { cardsDue, todayPlan } from "./daily.js";
 
 export /** What is due today and this week, from People & plans and Money's bills — at most `max`, the late ones first. Pure. */
 function todayList({ life, ledger, radar, care, now = Date.now(), max = 4 }) {
@@ -26,3 +27,30 @@ function todayList({ life, ledger, radar, care, now = Date.now(), max = 4 }) {
   return out.sort((a, b) => (b.late - a.late) || a.date.localeCompare(b.date)).slice(0, max);
 }
 
+
+/* ---- v6.29 (Ali picked A + "What's waiting"): one card with everything that waits for you, and a live line under each recent tool.
+   Pure: every store is passed in; tests: tests/unit/v733home.test.mjs. */
+/** What's waiting: what is due (todayList), new Scout finds, cards to review / today's lesson, a medicine running out. */
+export function waitingList({ life, ledger, radar, care, scout, courses, now = Date.now(), max = 6 }) {
+  const due = todayList({ life, ledger, radar, care, now, max: 4 });
+  const extra = [];
+  for (const g of (scout && scout.goals) || []) { const n = (g.unseen || []).length; if (n) extra.push({ from: "scout", title: tr("{n} new finds: {w}", { n, w: (g.g && g.g.what) || g.text || "" }), n }); }
+  for (const c of courses || []) {
+    const k = cardsDue(c, now).length, p = todayPlan(c, now), l = p.steps.find((x) => x.kind === "lesson" && !x.done);
+    if (k || l) extra.push({ from: "learn", title: [k ? (k === 1 ? tr("1 card to review") : tr("{n} cards to review", { n: k })) : "", l ? tr("lesson {n}", { n: (l.lesson ? l.lesson.n : l.n) + 1 }) : ""].filter(Boolean).join(" · ") + " — " + (c.topic || ""), n: k });
+  }
+  for (const x of lowSupply(care || { meds: [] }).slice(0, 2)) extra.push({ from: "care", title: x.days <= 0 ? tr("{m} has run out", { m: x.med.name }) : x.days === 1 ? tr("{m}: about 1 day left", { m: x.med.name }) : tr("{m}: about {d} days left", { m: x.med.name, d: x.days }), low: true });
+  // the late ones first, then what is due, then the rest — at most `max`
+  return [...due.filter((x) => x.late), ...extra.filter((x) => x.low), ...due.filter((x) => !x.late), ...extra.filter((x) => !x.low)].slice(0, max);
+}
+/** The short line under a recent tool on Home ("2 new finds", "Review 4 cards · Lesson 5", "Fleet pitch"), or "" when there is nothing to say. */
+export function toolLine(id, { scout, courses, slides, ledger, care, now = Date.now() } = {}) {
+  try {
+    if (id === "scout") { const gs = (scout && scout.goals) || []; const n = gs.reduce((a, g) => a + (g.unseen || []).length, 0); return n ? (n === 1 ? tr("1 new find") : tr("{n} new finds", { n })) : gs.length === 1 ? tr("1 goal watched") : gs.length ? tr("{n} goals watched", { n: gs.length }) : ""; }
+    if (id === "learn") { const c = (courses || [])[0]; if (!c) return ""; const p = todayPlan(c, now); const s = p.steps.filter((x) => !x.done).map((x) => (x.kind === "review" ? (x.n === 1 ? tr("Review 1 card") : tr("Review {n} cards", { n: x.n })) : x.kind === "quiz" ? tr("Quiz time") : tr("Lesson {n}", { n: (x.lesson ? x.lesson.n : x.n) + 1 }))); return s.length ? s.join(" · ") : tr("All done for today ✓"); }
+    if (id === "slides") { const x = (slides || [])[0]; return x ? x.title || "" : ""; }
+    if (id === "care") { const low = lowSupply(care || { meds: [] }); return low.length ? tr("{m} running low", { m: low[0].med.name }) : ""; }
+    if (id === "money") { const o = moneyOverview(ledger, now); return o.monthOut ? tr("Spent this month: {n}", { n: Math.round(o.monthOut).toLocaleString("en-US") }) : ""; }
+  } catch (e) {}
+  return "";
+}

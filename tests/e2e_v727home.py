@@ -28,7 +28,7 @@ with sync_playwright() as p:
         page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000); page.wait_for_timeout(400)
         check(True, "[%s] the phone opens on Home" % theme)
         labels = [b.strip() for b in page.locator("nav button").all_inner_texts()]
-        check(labels == ["Home", "Chat", "Money", "Health", "Mind", "All"], "[%s] the bottom bar: %s" % (theme, labels))
+        check(labels == ["Home", "Chat", "Money", "Scout", "Mind", "All"], "[%s] the bottom bar: %s" % (theme, labels))
         today = page.locator("[data-testid=home-today]").inner_text()
         check("Ahmed · installment 1 of 12" in today and "Electricity bill" in today, "[%s] TODAY lists what is due: %s" % (theme, today.replace("\n", " · ")[:140]))
         check("7,420" in page.locator("[data-testid=home-spent]").inner_text() and "12,000" in page.locator("[data-testid=home-spent]").inner_text(), "[%s] spent this month, of the budget" % theme)
@@ -40,7 +40,7 @@ with sync_playwright() as p:
             page.locator("[data-testid=home-due]").first.click(); page.wait_for_selector("[data-testid=life-page]", timeout=5000)
             check(True, "a due line opens People & plans")
             page.locator("nav button:has-text('Home')").click(); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
-            page.locator("[data-testid=home-area-all]").click(); page.wait_for_timeout(300)
+            page.locator("[data-testid=home-all]").click(); page.wait_for_timeout(300)
             check(page.locator("[data-testid=more-group]").count() >= 4, "the All area opens every tool")
             page.keyboard.press("Escape"); page.mouse.click(200, 8); page.wait_for_timeout(200)
             page.locator("nav button:has-text('Home')").click(); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
