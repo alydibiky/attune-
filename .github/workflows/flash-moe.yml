@@ -1,0 +1,49 @@
+name: Flash-MoE lab (Everest from storage under phone-like memory caps)
+
+# Ali (15 Oct 2026): "make Everest XL run on a phone — use the storage instead of RAM, or use less RAM".
+# Everest = Qwen3.6 35B-A3B (mixture of experts: ~3B of 35B used per word). Each job takes one size of the file,
+# reads it from storage (mmap) under hard memory caps (cgroup v2, no swap) and measures speed, memory and the answers.
+# tests/models/flash_moe.py → flash-<name>.md (job summary + artifact).
+on:
+  push:
+    branches: [claude/design-a-maps-4pmxxr-was8h5]
+    paths: [tests/models/flash_moe.py, .github/workflows/flash-moe.yml]
+  workflow_dispatch:
+
+jobs:
+  flash:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 340
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: everest-iq4xs, quants: "UD-IQ4_XS,IQ4_XS", caps: "none,10G,8G,6G,4G" }
+          - { name: everest-q3,    quants: "UD-Q3_K_XL,UD-IQ3_XXS,Q3_K_M,IQ3_XXS", caps: "none,8G,6G,4G" }
+          - { name: everest-iq2,   quants: "UD-IQ2_M,UD-Q2_K_XL,IQ2_M,Q2_K", caps: "none,8G,6G,4G" }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk (the files are 11–18 GB)
+        run: sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL || true; df -h / | tail -1
+      - name: Build llama.cpp (the app's pinned commit)
+        run: |
+          for i in 1 2 3 4; do git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp && break; rm -rf ~/llama.cpp; sleep $((i * 10)); done
+          cd ~/llama.cpp && git checkout -q 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DLLAMA_CURL=OFF > /dev/null
+          cmake --build build --target llama-server -j"$(nproc)" > /dev/null
+          ls build/bin | head
+      - name: Download the model
+        run: |
+          read REPO FILE < <(python3 tests/models/resolve_hf.py "Qwen3.6-35B-A3B-GGUF" "${{ matrix.quants }}" 35b)
+          echo "Model: $REPO / $FILE" | tee -a "$GITHUB_STEP_SUMMARY"
+          curl -sSL --retry 5 -o ~/model.gguf "https://huggingface.co/$REPO/resolve/main/$FILE"
+          ls -la ~/model.gguf; df -h / | tail -1
+      - name: Flash-MoE lab
+        run: python3 tests/models/flash_moe.py ~/model.gguf "$HOME/llama.cpp/build/bin" "${{ matrix.name }}" "${{ matrix.caps }}"
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flash-moe-${{ matrix.name }}
+          path: flash-*.md
