@@ -7447,6 +7447,7 @@ export default function App() {
   const wideAtStart = () => { try { return window.matchMedia("(min-width: 1024px)").matches; } catch (e) { return false; } };
   // v6.27 (design A "Calm"): the phone opens on Home too ("attune:start" = "chat" keeps the old start — the test kit sets it)
   const [mode, setModeRaw] = useState(() => { let s = ""; try { s = localStorage.getItem("attune:start") || ""; } catch (e) {} return wideAtStart() ? "home" : s === "chat" ? "chat" : "home"; });
+  const startMode = useRef(mode === "chat" ? "chat" : "home");
   // v5.41 (Ali: "when I press back I can't go to the previous page, it leaves the app"): every screen
   // change is remembered, and Back returns to the previous screen — Studio → Learn daily → Chat.
   const modeRef = useRef(mode); modeRef.current = mode;
@@ -7455,16 +7456,24 @@ export default function App() {
     if (m === "notes") m = "shelf";                              // v6.11: the old Notes route opens the Shelf
     const cur = modeRef.current;
     if (!m || m === cur) return;
-    if (m === "chat" || m === "home") modeHist.current = [];   // Chat (phone) / Home (computer) is home: Back from it leaves the app
-    else { modeHist.current = modeHist.current.filter((x) => x !== m); modeHist.current.push(cur); if (modeHist.current.length > 30) modeHist.current.shift(); }
+    pushHist(cur);
     modeRef.current = m;
     setModeRaw(m);
   };
+  // v6.28 (Ali: "Back must return me to the previous page, no matter what it is — not to Home"): EVERY page change records the
+  // page it came from — from the menus, the bottom bar, Home, the sidebar, a card in Chat — and Back walks that list back.
+  // (navTo used to clear it, so Back from any tool opened from a menu fell straight to Home.) The same page twice in a row is
+  // kept once; the list holds the last 50.
+  function pushHist(cur) {
+    const h = modeHist.current;
+    if (cur && h[h.length - 1] !== cur) h.push(cur);
+    if (h.length > 50) h.splice(0, h.length - 50);
+  }
   // the bottom bar, the More menu and things shared from other apps are top-level: Back from them goes home
   // (Android's rule); being SENT from one screen to another (Learn → Studio) is what Back retraces
   // (a tool opened from the menu starts fresh; one you are sent back to reopens where you were — useSticky)
   const STICKY = { learn: "learn:", news: "news:", xray: "xray:", convert: "convert:", deal: "deal:", business: "erp:", slides: "slides:", fit: "fit:", projects: "projects:", video: "video:", studio: "studio:" };
-  const navTo = (m) => { if (m === "notes") m = "shelf"; noteToolUsed(m); modeHist.current = []; if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); modeRef.current = m; setModeRaw(m); };
+  const navTo = (m) => { if (m === "notes") m = "shelf"; noteToolUsed(m); if (m === modeRef.current) return; if (STICKY[m]) forgetSticky(STICKY[m]); pushHist(modeRef.current); modeRef.current = m; setModeRaw(m); };
   // A new screen opens at its top (Chat at its newest message) — not halfway
   // down wherever the last screen was scrolled to. (v5.13)
   const firstMode = useRef(true);
@@ -9199,7 +9208,7 @@ export default function App() {
   // home tab. Shown only when there is somewhere to go back to.
   const engineText = modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : (NATIVE && (installedModels || []).length ? tr("Asleep — wakes when needed") : tr("No model"));
   const _anyOverlay = showBackup || showEngine || showProfile || showUpgrade || showMemory || showOrg || showSource || showCustom || drawerOpen || moreOpen;
-  const rootMode = wide ? "home" : "chat";                    // v6.25: the screen Back ends at
+  const rootMode = wide ? "home" : startMode.current;         // v6.25: the screen Back ends at (v6.28: the phone's start page — Home, or Chat for the old start)
   const canGoBack = _anyOverlay || mode !== rootMode || modeHist.current.length > 0;
   const _anyOverlayRef = useRef(false); _anyOverlayRef.current = _anyOverlay;
   // v6.27: while a window is open over a page (Plans, Settings, Backup, Engine…), that page's own look and bars step aside —
@@ -9219,7 +9228,8 @@ export default function App() {
     // v5.34: an inner page of a tool (open project, table, lesson, edit form…) closes first
     if (popBack()) return;
     // v5.41: back to the screen you came from (it reopens where you were — useSticky)
-    const prev = modeHist.current.pop();
+    let prev = modeHist.current.pop();
+    while (prev && prev === modeRef.current) prev = modeHist.current.pop();
     if (prev) { modeRef.current = prev; setModeRaw(prev); return; }
     if (mode !== rootMode) { modeRef.current = rootMode; setModeRaw(rootMode); }
   };
@@ -9254,7 +9264,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
-      {side.shown ? <DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
+      {side.shown ? <Guard name="sidebar"><DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
         places={[["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]]}
         tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
         onNewChat={() => { setMoreOpen(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
@@ -9262,7 +9272,7 @@ export default function App() {
         chatCmd={(c) => { try { window.dispatchEvent(new CustomEvent("attune-chat-cmd", { detail: c })); } catch (e) {} }}
         onClose={() => side.setOpen(false)} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
         openEngine={() => setShowEngine(true)} openProfile={() => setShowProfile(true)} openUpgrade={() => setShowUpgrade(true)}
-        openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /> : null}
+        openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /></Guard> : null}
       <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-6xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide ? "pb-8" : "pb-24")}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
@@ -10806,6 +10816,8 @@ export default function App() {
           })}
         </div>
       </nav>
+      {/* v6.28: the windows and sheets have their own guard — an error in one of them no longer blanks the whole app */}
+      <Guard name="windows">
       {moreOpen && wide ? (
         // v6.27 (Ali: "why does settings have this"): on a computer Settings is a settings window — the tools are in the sidebar
         <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-6" onClick={() => setMoreOpen(false)} data-testid="desk-settings-bg">
@@ -10936,6 +10948,7 @@ export default function App() {
       {/* v6.27 Read it to me: one sheet (Home's camera, Chat, Translate) — reads any paper aloud and acts on it */}
       <ReadHost flash={flash} readText={readTextAny} native={{ N: NATIVE, call: nativeCall }} llm={modelState === "ready" ? callChat : null}
         remind={(r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "radar" })} />
+      </Guard>
     </div>
   );
 }

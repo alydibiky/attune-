@@ -116,6 +116,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // v6.28 (Ali: "sometimes the app crashes"): an unexpected error on a BACKGROUND thread (a web search, a file being read, a
+        // map piece) used to close the whole app. Now it is written to the Engine log and only that piece of work stops; the app
+        // keeps running. An error on the main (screen) thread still goes to Android as before — the app can't safely go on then.
+        val previousHandler = Thread.getDefaultUncaughtExceptionHandler()
+        val logDir = filesDir
+        Thread.setDefaultUncaughtExceptionHandler { thread, err ->
+            try {
+                java.io.File(logDir, "engine.log").appendText("\nBackground error (${java.util.Date()}) on ${thread.name}: $err\n" +
+                    err.stackTrace.take(8).joinToString("\n") { "  at $it" } + "\n")
+            } catch (e: Exception) {}
+            if (thread === android.os.Looper.getMainLooper().thread) previousHandler?.uncaughtException(thread, err)
+        }
         Prefs.airGap(this) // prime the lock before anything can reach the network
 
         // The page is served under /app/. Earlier builds served it under

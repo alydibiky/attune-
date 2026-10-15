@@ -64,7 +64,10 @@ def sec_layout(br, lang="en"):
             try:
                 page.locator("button:has-text('Turkey')").first.click(timeout=2000); audit("Travel · Turkey")
             except Exception: pass
-    page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(200)
+    # v6.28: Back retraces every page (Ali) — walk back to Chat, page by page
+    for _ in range(80):
+        if page.locator("textarea[placeholder='Message Attune'], textarea[placeholder='اكتب رسالة إلى Attune']").count() or page.locator("header button:has(svg)").count() > 1: break
+        page.evaluate("window.__attuneBack && window.__attuneBack()"); page.wait_for_timeout(120)
     page.locator("header button:has(svg)").nth(1).click(); audit("Engine")
     for k, v in bad.items(): print("   wider than the phone on", k, v)
     check(not bad, "%sno screen is wider than a 360 px phone (%d screens checked)" % ("Arabic: " if lang == "ar" else "", len(tools) + 5))

@@ -56,11 +56,11 @@ with sync_playwright() as p:
     check(mp >= sb["width"] - 1, "Maps fills the space beside the sidebar (left=%s)" % mp)
     # Back on a computer (Ali: "there is no back in the app"): the sidebar's ←, Alt+←, the mouse's back button, Esc
     page.locator("[data-testid=side-go-home]").first.click(); page.wait_for_timeout(300)
-    check(page.locator("[data-testid=side-back]").count() == 0, "no Back button on Home (nothing to go back to)")
+    check(page.locator("[data-testid=side-back]").count() == 1, "v6.28: Home still offers Back — to Maps, the page before (Ali: Back always returns to the previous page)")
     page.locator("[data-testid=side-go-memory]").first.click(); page.wait_for_timeout(400)
     check(page.locator("[data-testid=side-back]").count() == 1, "a Back button appears in a tool")
     page.locator("[data-testid=side-back]").click(); page.wait_for_timeout(400)
-    check(page.locator("[data-testid=desk-home]").count() == 1 and page.locator("[data-testid=side-back]").count() == 0, "← goes back to Home")
+    check(page.locator("[data-testid=desk-home]").count() == 1, "← goes back to Home (the page before Mind)")
     page.locator("[data-testid=side-go-memory]").first.click(); page.wait_for_timeout(400)
     page.keyboard.press("Alt+ArrowLeft"); page.wait_for_timeout(400)
     check(page.locator("[data-testid=desk-home]").count() == 1, "Alt+← goes back")
