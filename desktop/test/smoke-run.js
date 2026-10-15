@@ -51,7 +51,7 @@ module.exports = function smokeRun(win, modelPath, app) {
           pdf.ok = t.includes("Liebherr LTM 1090") && t.includes("Load chart") && pdf.picture && pdf.words >= 5 && pdf.outline && pdf.merged >= 2 && pdf.split === pdf.merged && pdf.rotated === 1 && Math.abs(pdf.w - 595.3) < 2 && t.includes("رافعة متحركة");
         } catch (e) { pdf = { ok: false, error: String(e && e.message || e) }; }
         const live = ${JSON.stringify(process.env.ATTUNE_LIVE === "1")};
-        const bridgeOk = pdf.ok && info.packSearch === true && sidebar && knowOk && mapOk && packSearch === 0 && !String(search.error || "").includes("Not available") && (!live || search.hits > 0);
+        const bridgeOk = pdf.ok && info.packSearch === true && sidebar && knowOk && mapOk && typeof packSearch === "number" &&   /* (a starter pack may download during the run on a fast connection: 0 or more passages, never an error) */ !String(search.error || "").includes("Not available") && (!live || search.hits > 0);
         return { ok: !!(res.content && deltas > 0) && bridgeOk, packSearchEngine: info.packSearch, pdf, winW, sidebar, knowOk, mapOk, search, packSearch, deltas, content: res.content, streamedMatches: streamed === res.content,
           chatMs: Date.now() - t1, totalMs: Date.now() - t0, engine: eng, installed: models.models.length, stages,
           pageChars: document.body.innerText.length, desktopFlag: !!window.__attuneDesktop,
