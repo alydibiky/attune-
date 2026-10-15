@@ -886,6 +886,9 @@ const MODEL_TIERS = [
     good: ["Ask", "Write", "Summarise", "Review", "Long documents"] },
   { id: "moe-xl", vision: false, label: "Everest", realName: "Qwen3.6 35B-A3B", smoothRam: 32, params: "35B-A3B", quant: "UD-IQ4_XS", sizeGB: 17.7,
     needRam: 24, ctx: 32768, phoneMin: 32, moe: true, heat: true,
+    // v6.29 Flash-MoE: on a phone with 12 GB+ it runs with its experts read from storage (Engine.flashMoe) — measured on ARM
+    // with slow storage: 6 words/s in 8 GB, 3 in 6 GB, answers right even in 4 GB; a phone's storage is ~8× faster
+    flashMin: 12,
     repo: "unsloth/Qwen3.6-35B-A3B-GGUF",
     quality: "The most knowledgeable: a very large model that answers at the speed of a small one (mixture of experts). Near top-tier answers. Computer-class.",
     good: ["Ask", "Write", "Summarise", "Review"] },
@@ -977,12 +980,19 @@ const QUANT_FLOOR_NOTE =
 // than a desktop with the same nominal RAM, because Android gives one app a
 // fraction of the total and a hot chassis loses roughly a third of its decode
 // speed. So: one threshold for desktops, a higher one for phones.
+/** The memory a model needs on this device: a computer's number, a phone's (higher), or — v6.29 flash mode — less on a phone
+    when the Android app can read the model's experts from storage. */
+function ramFloor(t, dev) {
+  if (dev.platform === "desktop") return t.needRam;
+  const phone = t.phoneMin || t.needRam;
+  return t.flashMin && NATIVE && !NATIVE.desktop ? Math.min(phone, t.flashMin) : phone;
+}
+const flashOn = (t, dev) => !!(t.flashMin && dev && dev.platform !== "desktop" && NATIVE && !NATIVE.desktop && dev.ram < (t.phoneMin || t.needRam) && dev.ram >= t.flashMin);
 function tierFits(t, dev) {
   if (!dev) return false;
   // The fast engine lives inside the Android app; a browser can't run it.
   if (t.engine === "litert" && (!NATIVE || NATIVE.desktop)) return false;
-  const floor = dev.platform === "desktop" ? t.needRam : (t.phoneMin || t.needRam);
-  return dev.ram >= floor;
+  return dev.ram >= ramFloor(t, dev);
 }
 // On a phone the recommendation is speed-first. A model that fills half the
 // phone's memory does run — and then answers at a few words a second, heats
@@ -11693,7 +11703,8 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
                 <p className="text-xs text-slate-500 mt-1">{tr(t.quality)}</p>
                 <p className="text-[11px] text-teal-400/80 mt-0.5">{tr(LEVELS[brandOf(t).level].blurb)}</p>
                 {/* v5.28 — Ali: "state clearly for each model what RAM it can withstand" */}
-                {(() => { const need = device.platform === "desktop" ? t.needRam : (t.phoneMin || t.needRam); const smooth = Math.max(need, t.smoothRam || need); const have = device.ram;
+                {flashOn(t, device) ? <p className="text-[11px] mt-1 text-teal-200" data-testid="flash-line">{tr("Flash mode on this phone: the model stays on storage and only the experts each word needs are read into memory — about 3–8 words a second, slower than the small models but far more knowledgeable. Needs {g} GB free storage.", { g: Math.ceil(t.sizeGB + 1) })}</p> : null}
+                {(() => { const need = ramFloor(t, device); const smooth = Math.max(need, t.smoothRam || need); const have = device.ram;
                   return (
                     <p className="text-[11px] mt-1 flex flex-wrap items-center gap-x-1.5" data-testid="ram-line">
                       <span className="text-slate-300 font-medium">{tr("RAM: needs {n} GB · smooth from {s} GB", { n: need, s: smooth })}</span>

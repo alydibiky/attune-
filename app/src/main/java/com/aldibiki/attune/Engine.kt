@@ -201,6 +201,9 @@ object Engine {
      */
     private fun contextFor(ctx: Context, model: ModelStore.Installed): Int {
         val ram = DeviceInfo.ramGB(ctx)
+        // flash mode: the file is bigger than the memory, so the file's share says nothing — the context comes out of what
+        // stays in RAM (these models keep a growing memory in only some layers, so 8K is cheap)
+        if (flashMode) return if (ram >= 16) 8192 else 4096
         val share = model.sizeBytes.toDouble() / DeviceInfo.totalRamBytes(ctx).coerceAtLeast(1)
         var c = when {
             ram >= 12 && share < 0.25 -> 16384
@@ -233,6 +236,21 @@ object Engine {
         private set
     /** Over the copy budget by at most 12 % → run mapped from storage; within budget → copied (false). */
     fun mappedFallback(size: Long, allowed: Long): Boolean = size > allowed && size <= allowed + allowed * 12 / 100
+
+    /**
+     * v6.29 Flash-MoE (Ali: "make Everest run on a phone — use the storage instead of RAM"). A mixture-of-experts model
+     * (…35B-A3B, 26B-A4B…) uses only a few of its experts for each word, so its file can stay on storage and the system
+     * keeps the experts in use in RAM. Measured (flash-moe.yml, ARM, 4 cores, a runner whose storage reads ~0.4 GB/s —
+     * a flagship phone's reads ~3–4 GB/s): Everest 35B-A3B (17.7 GB) writes 6.0 words/s under an 8 GB cap, 3.0 under 6 GB,
+     * 1.0 under 4 GB, reads prompts at ~13 tokens/s, and answered 6/6 checks right even under 4 GB. So such a model is
+     * started mapped from storage whenever it is bigger than the memory budget, as long as the budget holds the part that
+     * is always in use (FLASH_MIN_BUDGET).
+     */
+    fun isMoe(m: ModelStore.Installed): Boolean =
+        Regex("(?i)\\d+(?:\\.\\d+)?B[-_ ]?A\\d+(?:\\.\\d+)?B").containsMatchIn(m.modelFile.name + " " + m.source + " " + m.label)
+    private const val FLASH_MIN_BUDGET = 4_500L * 1024 * 1024
+    fun flashMoe(m: ModelStore.Installed, allowed: Long): Boolean = isMoe(m) && m.sizeBytes > allowed && allowed >= FLASH_MIN_BUDGET
+    @Volatile var flashMode: Boolean = false
 
     fun allowedBytes(ctx: Context): Long {
         val total = DeviceInfo.totalRamBytes(ctx)
@@ -298,7 +316,7 @@ object Engine {
         val gen = DeviceInfo.generationThreads(ctx)
         val batch = DeviceInfo.batchThreads(ctx)
         val ram = DeviceInfo.ramGB(ctx)
-        settingsNote = (if (useGpu) "GPU: $gpuName · context $nCtx" else "context $nCtx · $gen threads (prompt $batch) · flash attention · " + (if (safe) "16-bit KV cache" else "8-bit KV cache")) + (if (mappedWeights) " · weights read from storage (memory is short)" else " · weights in RAM") +
+        settingsNote = (if (useGpu) "GPU: $gpuName · context $nCtx" else "context $nCtx · $gen threads (prompt $batch) · flash attention · " + (if (safe) "16-bit KV cache" else "8-bit KV cache")) + (if (flashMode) " · flash mode: experts read from storage as needed" else if (mappedWeights) " · weights read from storage (memory is short)" else " · weights in RAM") +
             (if (cpuFeatures.isNotEmpty() && !useGpu) " · CPU: $cpuFeatures" else "")
 
         val a = arrayListOf(
@@ -413,7 +431,8 @@ object Engine {
         // still runs when its weights stay MAPPED from storage — Gemma E4B (4.6 GB) under a 5 GB cap at the
         // same speed (10.8 vs 11.1 words/s), Qwen 3.5 4B (2.7 GB) under 3 GB at 63 % speed, where the copy was
         // killed. So a model up to 12 % over the budget is started mapped instead of being refused.
-        mappedWeights = mappedFallback(model.sizeBytes, allowedBytes(ctx))
+        flashMode = flashMoe(model, allowedBytes(ctx))
+        mappedWeights = flashMode || mappedFallback(model.sizeBytes, allowedBytes(ctx))
         if (model.sizeBytes > allowedBytes(ctx) && !mappedWeights) {  // (the draft model is only added when both fit: draftFor)
             state = State.ERROR
             error = "This model is too big for this phone's memory — it would freeze the phone. Pick a smaller one in Engine (Qwen 3.5 4B is the fast choice)."
@@ -422,7 +441,8 @@ object Engine {
 
         // GPU only when asked for, built in, and the phone really has one.
         var useGpu = false
-        if (!forceCpu && Prefs.gpu(ctx)) {
+        // (flash mode stays on the CPU: the GPU would need every expert copied into its own memory)
+        if (!forceCpu && !flashMode && Prefs.gpu(ctx)) {
             gpuName = try { EngineNative.nLoadGpu(ctx.applicationInfo.nativeLibraryDir) } catch (e: Throwable) { "" }
             if (gpuName.isNotEmpty()) useGpu = true
             else {

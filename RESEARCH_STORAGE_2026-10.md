@@ -164,3 +164,26 @@ RAM levers on ARM (peak MB, app default → lever): KV q4: −64 (all models); u
 - Free 8–32 GB: + embedder 0.44 GB + Egypt / engineering / own-documents packs (≤ 200 MB); image Turbo pack.
 - Free > 32 GB: + bigger image pack (SDXL-Turbo 3.9 GB) + larger Wikipedia packs (ar+en extracts, 1–3 GB with vectors at 8-bit 1 KB/passage).
 Always keep ≥ 1.5 GB free after any download.
+
+
+## Flash-MoE: Everest (Qwen3.6 35B-A3B) read from storage under phone-like caps (15 Oct 2026)
+Run https://github.com/alydibiky/attune-/actions/runs/38812579484 (`flash-moe.yml` → `tests/models/flash_moe.py`; ARM, 4 cores,
+16 GB; the runner's storage reads only 0.38–0.44 GB/s sequential — a flagship phone's UFS 4 reads ~3–4 GB/s). mmap, context 4k, KV q8.
+
+| File | Cap | Writing t/s cold / warm | Reading t/s (2.4k-token prompt) | Peak RSS MB | Answers (6 checks) |
+|---|---|---|---|---|---|
+| UD-IQ4_XS 17.7 GB | none (≈15 GB cache) | 7.9 / 8.7 | 17.5 | 15158 | |
+| | 10 GB | 6.6 / 6.9 | 13.2 | 10221 | |
+| | 8 GB | 5.2 / 6.0 | 13.2 | 8177 | |
+| | 6 GB | 3.0 / 3.0 (no repack: 3.4 / 3.6) | 12.8 | 6133 | |
+| | 4 GB | 1.1 / 1.0 | 12.6 | 4089 | 6/6 |
+| UD-Q3_K_XL 16.9 GB | 8 / 6 / 4 GB | 6.0 / 3.2 / 1.0 (warm) | 14.6 / 14.2 / 13.9 | | 6/6 at 4 GB |
+| UD-IQ2_M 11.5 GB | none / 8 / 6 / 4 GB | 11.4 / 9.5 / 7.5 / 3.6 (warm) | 20.8 / 16.6 / 15.6 / 15.2 | | 6/6 at 4 GB |
+
+Reading: the MoE file does NOT need to fit in RAM. Speed falls gently with the cap because only the experts a word needs are read
+(storage reads = major faults grow 145k → 728k). Reading a prompt barely suffers (~13 t/s at any cap: a prompt touches the experts
+once for many tokens). The answers stay right. On a phone the storage is ~8× faster than this runner's, so a miss costs much less.
+**Implemented (v6.29):** `Engine.flashMoe` — an …B-A…B model bigger than the memory budget starts mapped ("flash mode", CPU,
+context 8k on 16 GB / 4k on 12 GB); the page offers Everest on phones with 12 GB+ (`flashMin: 12`, device level Flagship `extra`).
+Next: measure on Ali's phone (engine log: words/s); IQ2_M (11.5 GB) for 12 GB phones if the full test keeps its quality;
+Apex (26B-A4B) through the same lab.

@@ -9,7 +9,8 @@ export const LEVELS = [
   { level: 1, name: "Light", ar: "خفيف", maxModel: "sm", studio: "off", lite: true, hide: ["studio"], what: "Small models, no Studio, lighter effects" },
   { level: 2, name: "Standard", ar: "قياسي", maxModel: "md", studio: "fast", lite: false, hide: [], what: "Models up to Core, fast Studio pictures" },
   { level: 3, name: "Strong", ar: "قوي", maxModel: "lg", studio: "xl", lite: false, hide: [], what: "Models up to Sense and Blaze+, sharper Studio pictures" },
-  { level: 4, name: "Flagship", ar: "رائد", maxModel: "max", studio: "full", lite: false, hide: [], what: "Every phone model up to Zenith+, full Studio" },
+  // v6.29 Flash-MoE: a flagship also gets Everest (35B-A3B) — its experts are read from storage as needed (flash-moe.yml)
+  { level: 4, name: "Flagship", ar: "رائد", maxModel: "max", extra: ["moe-xl"], studio: "full", lite: false, hide: [], what: "Every phone model up to Zenith+, Everest in flash mode, full Studio" },
   { level: 5, name: "Computer", ar: "كمبيوتر", maxModel: "moe-xl-long", studio: "full", lite: false, hide: [], what: "Everything, the biggest models and full Studio" },
 ];
 // the model ids in order of size (power.js brands): a device offers those up to its maxModel
@@ -28,8 +29,8 @@ export function deviceLevel(device) {
 
 /** Is this model offered on this device? (unknown ids are offered — a new model is never hidden by mistake) */
 export function modelFits(level, modelId) {
-  const i = MODEL_ORDER.indexOf(modelId), cap = MODEL_ORDER.indexOf((level || LEVELS[5]).maxModel);
-  return i < 0 || cap < 0 || i <= cap;
+  const lv = level || LEVELS[5], i = MODEL_ORDER.indexOf(modelId), cap = MODEL_ORDER.indexOf(lv.maxModel);
+  return i < 0 || cap < 0 || i <= cap || (lv.extra || []).includes(modelId);
 }
 
 export const SHOW_ALL_KEY = "attune:device:showall";
