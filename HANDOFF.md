@@ -1487,6 +1487,12 @@ except Studio under one page".
   Engine log after a crash: it now says exactly why. (Next step if it's the native engine: run llama-server in its own process.)
 - **No more than 6 tabs** (Ali said yes): `INSIDE` in hubs.js — Skills inside Assistants, Artifacts inside Projects, Reminders inside
   Radar: one tab, and a small switch (`hub-parts`, `partsOf`) on top of the page moves between the two parts.
+- **Ali's first crash log (6.29, HONOR BKQ-N49, 16 GB)**: "the page's process was reclaimed by Android for memory; the page was
+  rebuilt" 6 times in 4 s — the WebView renderer (its own process) ranked below the app, so Android killed it first, and the
+  instant `recreate()` got killed again. Fix (MainActivity): `setRendererPriorityPolicy(RENDERER_PRIORITY_IMPORTANT, true)`;
+  on a loss the dead view is removed and destroyed; a 2nd loss within a minute lets the model go (not while answering);
+  from the 3rd the rebuild waits 3 s. Also in the log: prompt reading only 26 t/s (Qwen3.5-4B IQ4_XS; KleidiAI has kernels
+  only for Q4_0/Q8_0) — a Q4_0 file may read several times faster on ARM: measure before switching.
 - Test: `tests/e2e_v734sidebar.py`.
 
 ## 6. How to fix Ali's problems well (method)

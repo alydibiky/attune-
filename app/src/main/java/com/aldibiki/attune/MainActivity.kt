@@ -255,8 +255,18 @@ class MainActivity : AppCompatActivity() {
             // app crash — which would also throw away the loaded model.
             override fun onRenderProcessGone(view: WebView, detail: android.webkit.RenderProcessGoneDetail): Boolean {
                 // say so in the Engine log (crashed = Android's low-memory kill of the page, not the app)
-                try { java.io.File(filesDir, "engine.log").appendText("\nPage (${java.util.Date()}): the page's process was ${if (detail.didCrash()) "crashed" else "reclaimed by Android for memory"}; the page was rebuilt.\n") } catch (e: Exception) {}
-                recreate()
+                // v6.30 (Ali's log: "reclaimed … rebuilt" 6 times in 4 s): rebuilding at once while memory is still short only got
+                // the new page killed again. The dead view is dropped now; a second loss within a minute lets the model go
+                // (several GB, reloads on the next message) unless it is answering; from the third the rebuild waits 3 s.
+                val now = System.currentTimeMillis()
+                synchronized(pageLosses) { pageLosses.add(now); pageLosses.removeAll { now - it > 60_000 } }
+                val n = pageLosses.size
+                try { (view.parent as? android.view.ViewGroup)?.removeView(view); view.destroy() } catch (e: Exception) {}
+                val freeModel = !detail.didCrash() && n >= 2 && Engine.state == Engine.State.READY && !GenService.busy()
+                try { java.io.File(filesDir, "engine.log").appendText("\nPage (${java.util.Date()}): the page's process was ${if (detail.didCrash()) "crashed" else "reclaimed by Android for memory"}; the page was rebuilt" +
+                    (if (n > 1) " ($n times in a minute)" else "") + (if (freeModel) " — the model was let go to free memory; it reloads on the next message" else "") + ".\n") } catch (e: Exception) {}
+                if (freeModel) Engine.stop()
+                if (n >= 3) android.os.Handler(mainLooper).postDelayed({ if (!isFinishing && !isDestroyed) recreate() }, 3000) else recreate()
                 return true
             }
 
@@ -352,6 +362,9 @@ class MainActivity : AppCompatActivity() {
     // v6.1 — lighter on the phone (Ali: "reduce the load on the phone"): when Android says it is short
     // of memory while Attune is in the background, the model (several GB) is let go — unless something
     // is being written or drawn — and it comes back by itself when Attune is opened again.
+    // times the page's renderer was lost in the last minute (kept across recreate())
+    private companion object { val pageLosses = mutableListOf<Long>() }
+
     private var freedForMemory = false
     @Suppress("DEPRECATION")
     override fun onTrimMemory(level: Int) {
@@ -389,7 +402,7 @@ class MainActivity : AppCompatActivity() {
         // memory by itself when another app needs it.
         voice.stop()
         bridge.release()
-        if (::web.isInitialized) { (web.parent as? android.view.ViewGroup)?.removeView(web); web.destroy() }
+        if (::web.isInitialized) try { (web.parent as? android.view.ViewGroup)?.removeView(web); web.destroy() } catch (e: Exception) {}   // (may already be destroyed: page lost)
         super.onDestroy()
     }
 
@@ -397,6 +410,10 @@ class MainActivity : AppCompatActivity() {
         // No stretch/glow at the edges: it made the whole app bounce when a
         // list inside it was scrolled to its end.
         overScrollMode = android.view.View.OVER_SCROLL_NEVER
+        // v6.30 (Ali's log: the page's process was reclaimed for memory again and again): by default the page's renderer process
+        // ranks BELOW the app, so Android kills it first — while you are using it. IMPORTANT = same rank as the app while it is
+        // on screen (true = back to normal in the background, so Android can still take it there).
+        try { setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true) } catch (e: Exception) {}
         isVerticalScrollBarEnabled = false
         // (v5.13: no setLayerType(HARDWARE) here. A WebView is already drawn
         // on the GPU; forcing an extra layer on it left stale/black patches

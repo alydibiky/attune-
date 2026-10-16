@@ -9310,7 +9310,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
       {side.shown ? <Guard name="sidebar"><DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-        places={HUB_PLACES} activePlace={hubOf(mode)} showPins={false}
+        places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]] : HUB_PLACES} activePlace={LEGACY_NAV ? null : hubOf(mode)} showPins={LEGACY_NAV}
         tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
         onNewChat={() => { setMoreOpen(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
         onOpenChat={(id) => { setMoreOpen(false); setOpenChatId(id); navTo("chat"); }}
@@ -9320,7 +9320,7 @@ export default function App() {
         openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /></Guard> : null}
       {!wide && phoneSide ? <Guard name="sidebar"><div className="fixed inset-0 z-[60] bg-black/60" onClick={() => setPhoneSide(false)} data-testid="phone-side">
         <div onClick={(e) => e.stopPropagation()}><DesktopSide touch width="min(86vw, 320px)" mode={mode} canBack={false} onBack={() => {}} navTo={(m) => { setPhoneSide(false); setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-          places={HUB_PLACES} activePlace={hubOf(mode)} showPins={false}
+          places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]] : HUB_PLACES} activePlace={LEGACY_NAV ? null : hubOf(mode)} showPins={LEGACY_NAV}
           tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
           onNewChat={() => { setPhoneSide(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
           onOpenChat={(id) => { setPhoneSide(false); setOpenChatId(id); navTo("chat"); }}
