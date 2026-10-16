@@ -7390,7 +7390,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.29";
+const PAGE_VERSION = "6.30";
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -9368,7 +9368,7 @@ export default function App() {
         ) : null}
 
         {/* v6.30: tools that belong together are one page — a tab row on top (hubs.js) */}
-        {mode === "money" && !wide && !LEGACY_NAV ? null : hubTabsEl}
+        {LEGACY_NAV || (mode === "money" && !wide) ? null : hubTabsEl}
         <Guard key={"g-" + mode} name={mode}>{mode === "home" && !wide ? (
           <PhoneHome navTo={(m) => navTo(m)} doIt={doFromHome} openAll={() => setMoreOpen(true)} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "home" ? (

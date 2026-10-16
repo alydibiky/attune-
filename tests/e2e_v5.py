@@ -492,7 +492,7 @@ def sec_fast(br):
     ctx.close()
     # first launch on a narrow screen starts with smaller text
     c2 = br.new_context(viewport={"width": 360, "height": 780}, is_mobile=True, has_touch=True)
-    c2.add_init_script(env.mock); c2.add_init_script("try{if(localStorage.getItem('attune:start')===null)localStorage.setItem('attune:start','chat')}catch(e){}"); c2.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
+    c2.add_init_script(env.mock); c2.add_init_script("try{localStorage.setItem('attune:legacy-nav','1')}catch(e){}"); c2.add_init_script("try{if(localStorage.getItem('attune:start')===null)localStorage.setItem('attune:start','chat')}catch(e){}"); c2.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
     p2 = c2.new_page(); p2.goto(env.url); p2.wait_for_selector("nav", timeout=15000)
     check(p2.evaluate("window.__mock.textZoom") == 90, "a narrow screen (big display size) starts at 90% text")
     c2.close()

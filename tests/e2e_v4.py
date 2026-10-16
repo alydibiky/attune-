@@ -155,7 +155,7 @@ MD = "**Total: 171,000 EGP**\n\n| Item | Amount |\n|---|---|\n| Rental | 150,000
 with sync_playwright() as pw:
     br = pw.chromium.launch()
     ctx = br.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, is_mobile=True, has_touch=True)
-    ctx.add_init_script(MOCK)
+    ctx.add_init_script(MOCK); ctx.add_init_script("try{localStorage.setItem('attune:legacy-nav','1')}catch(e){}")   # v6.30: these old tests use the bottom bar
     ctx.add_init_script("try{if(localStorage.getItem('attune:start')===null)localStorage.setItem('attune:start','chat')}catch(e){}")   # v6.27: the phone opens on Home; these tests start in Chat
     ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
     ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")

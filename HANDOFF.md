@@ -1462,6 +1462,28 @@ deploy within 2 weeks".
 - **Ali must:** start the 14-day / 12-tester closed test now (personal accounts), keystore secrets, privacy URL, products,
   declarations, USDA key, the Video Downloader decision (RELEASE_6.29.md §2).
 
+### 5.74 (16 Oct 2026) — v6.30: no bottom bar, a ChatGPT-style sidebar with 6 places, combined pages; why the app closed
+Ali: "the app still crashes on its own a lot … I don't want a bottom bar in any page, I want a sidebar like ChatGPT, combine
+every feature that can be combined, no more than 6 options on the left sidebar" and, of the Create group, "combine all of this
+except Studio under one page".
+- **6 places** (`web-src/hubs.js`, pure, `tests/unit/v734hubs.test.mjs`): Home · Chat · Money · Health · Learn · Tools. Every
+  mode belongs to exactly one place (`hubOf`). A page shows a **tab row** at its top (`hub-ui.jsx` `HubTabs`, `tabsFor`):
+  its group inside Tools (Files / Places / **Create = Code · Improve a prompt · Compress · Humanize · Copilot · Library ·
+  Ask (classic)** / Business), else the members of its place (e.g. Money · Guardian · Radar · People & plans · Deal · Scout ·
+  Reminders). Studio has no tabs. Full-screen pages (`FULL`: home, tools, business, fit, map) have none. Tabs are filtered by the
+  device level (`groupsFor`). The pages themselves are unchanged — a tab is the same page as before.
+- **No bottom bar**: hidden unless `localStorage attune:legacy-nav = "1"` (the old e2e tests set it via `new_page(legacy_nav=True)`,
+  the default; new tests pass `legacy_nav=False`). `--nav-h` = 0. Phone header: ☰ (`header-menu`, opens the sidebar drawer)
+  + ←. Chat's ☰ opens the same drawer (chat history is in it). Money's phone page is a fixed iframe, so its ☰ and tab row live
+  in `MoneyTab`'s own header. `DesktopSide` takes `places` (the 6), `activePlace` (= `hubOf(mode)`), `showPins={false}`.
+- **Tools page** = one card per combined page (`TOOLS_CARDS`); "Code" card is relabelled **Create**.
+- **ExitWatch.kt** (Android 11+): on every start reads `ApplicationExitInfo` since the last start, writes each ending to the
+  Engine log (reason, foreground/background, memory, the model that was running — pref `model_at_exit` set by `Engine.start`,
+  cleared by `stop` — and the ANR trace), and keeps the newest unexpected foreground ending; the page asks `AttuneNative.lastExit()`
+  once and shows "Attune closed unexpectedly last time: …" (low memory → a tip to pick a smaller model). Ask Ali for the
+  Engine log after a crash: it now says exactly why. (Next step if it's the native engine: run llama-server in its own process.)
+- Test: `tests/e2e_v734sidebar.py`.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

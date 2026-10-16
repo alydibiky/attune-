@@ -102,6 +102,9 @@ Google Play Billing.
 - For llama.cpp JSON, use a grammar, not json_schema. LiteRT has no grammar: ask for JSON in words and repair it (`jsonFrom`).
 - A 2–4B phone model makes mistakes, so put code around it: verify by running code, fact sheets, votes, parsers. Be honest about the ceiling.
 - Every new UI string needs an Arabic entry. Business sits in the bottom bar and hides the nav, so old tests call `leave_apps`.
+- v6.30: there is NO bottom bar — a ChatGPT-style sidebar with 6 places (Home · Chat · Money · Health · Learn · Tools,
+  `web-src/hubs.js`) and tab rows on combined pages (HANDOFF §5.74). Old tests still see the bottom bar because
+  `new_page()` sets `attune:legacy-nav=1`; new tests use `new_page(..., legacy_nav=False)`.
 
 ## 6. What is open (by priority)
 1. **DESKTOP APP — in progress (12 Oct 2026).** Ali: "like Claude and ChatGPT" and **Windows first**. See HANDOFF §5.60 and
@@ -156,6 +159,7 @@ Google Play Billing.
 | v6.27 | 13 Oct | Roadmap agreed (ROADMAP_2026-10-13.md); Brave search removed; maps without OpenStreetMap's tile servers (world overview pack); every country online without downloading, free; compounds searchable offline |
 | v6.28 | 14 Oct | Ask your life (one question answered from all your own data); insulin ↔ Fit & Food (refill + low-sugar notifications, carbs per meal); converter sub/superscripts; Studio on big models; How to use Attune; device levels; spaced repetition in Learn |
 | v6.29 | 15 Oct | Back to the previous page; crash guards; Health page + Fit & Food on Home; data questions in Chat; Scout exact items and cheapest store; Learn daily rework (review cards by code); Slides & Reports rework; declutter; Home A (Recent + What's waiting), Scout tab, chat sidebar on the phone; Google Play release blockers fixed (API 36, Play-only purchases, privacy policy, billing) — RELEASE_6.29.md |
+| v6.30 | 16 Oct | No bottom bar: ChatGPT-style sidebar with 6 places; combined pages with tabs (Create = Code, prompts, compress, humanize, copilot, library, Ask; Studio separate); ExitWatch tells why the app closed (Engine log + a one-time note) |
 
 ## 8. Prompt for the next session (paste as is)
 ```

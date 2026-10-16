@@ -1,7 +1,7 @@
 {
   "name": "attune-desktop",
   "productName": "Attune",
-  "version": "6.29.0",
+  "version": "6.30.0",
   "description": "Attune for Windows, macOS and Linux: the same app, private models on this computer.",
   "main": "main.js",
   "author": "Aly Aldibiki",
