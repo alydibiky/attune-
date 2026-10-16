@@ -24,11 +24,18 @@ with sync_playwright() as p:
     page.click("[data-testid=phone-side] [data-testid=side-go-money]"); page.wait_for_timeout(400)
     tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
     check("money" in tabs and "guardian" in tabs and "radar" in tabs and "scout" in tabs, "Money is one page: its tools are tabs on top: %s" % tabs)
+    check(len(tabs) <= 6 and "reminders" not in tabs, "no more than 6 tabs; Reminders lives inside Radar: %s" % tabs)
     page.click("[data-testid=hub-tab-guardian]"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=hub-tab-guardian][aria-selected=true]").count() == 1, "a tab opens the sibling, marked as chosen")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=hub-tab-money][aria-selected=true]").count() == 1, "Back returns to the tab before")
     shot(page, "money-tabs")
+    page.click("[data-testid=hub-tab-radar]"); page.wait_for_timeout(400)
+    check(page.locator("[data-testid=hub-part-reminders]").count() == 1, "Radar has a switch: Radar · Reminders")
+    page.click("[data-testid=hub-part-reminders]"); page.wait_for_timeout(400)
+    check(page.locator("[data-testid=hub-tab-radar][aria-selected=true]").count() == 1 and page.locator("[data-testid=hub-part-reminders][aria-pressed=true]").count() == 1,
+          "Reminders opens inside Radar's tab")
+    shot(page, "radar-parts")
     # Tools: one card per combined page; Create = Code · Improve · Compress · Humanize · Copilot · Library · Ask, Studio apart
     page.locator("[data-testid=header-menu]:visible").first.click(); page.click("[data-testid=phone-side] [data-testid=side-go-tools]"); page.wait_for_selector("[data-testid=tools-page]")
     cards = page.evaluate("[...document.querySelectorAll('[data-testid^=tools-page-]')].map(b => b.dataset.testid.slice(11))")

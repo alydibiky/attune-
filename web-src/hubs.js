@@ -26,6 +26,19 @@ export const GROUPS = [
 /** Pages that take the whole screen with their own header (no tab row on them). */
 export const FULL = ["home", "tools", "business", "fit", "map"];
 
+/** v6.30 (Ali: no more than 6 tabs either): a page that lives INSIDE another — one tab; a small switch on top of the page moves
+    between the two parts. Skills is part of Assistants, Artifacts part of Projects, Reminders part of Radar (both are dates). */
+export const INSIDE = { skills: "assistants", artifacts: "projects", reminders: "radar" };
+
+/** The two parts of a merged page ([main, inside]) when this page is one of them and the device has both; else []. */
+export function partsOf(mode, available = null) {
+  const main = INSIDE[mode] || (Object.values(INSIDE).includes(mode) ? mode : null);
+  if (!main) return [];
+  const inner = Object.keys(INSIDE).find((k) => INSIDE[k] === main);
+  const has = (m) => !available || m === mode || available.includes(m);
+  return has(main) && has(inner) ? [main, inner] : [];
+}
+
 /** The sidebar place a page belongs to ("tools" for anything unknown, so nothing is lost). */
 export function hubOf(mode) {
   const h = HUBS.find((x) => x[3].includes(mode));
@@ -37,7 +50,8 @@ export function tabsFor(mode, available = null) {
   if (FULL.includes(mode)) return [];
   const g = GROUPS.find((x) => x[2].includes(mode));
   let list = g ? g[2] : hubOf(mode) === "tools" ? [] : (HUBS.find((x) => x[0] === hubOf(mode)) || [, , , []])[3];
-  if (available) list = list.filter((m) => m === mode || available.includes(m));
+  const has = (m) => !available || m === mode || available.includes(m);
+  list = list.filter(has).filter((m) => !(INSIDE[m] && has(INSIDE[m])));   // a page inside another is not a tab of its own
   return list.length > 1 ? list : [];
 }
 

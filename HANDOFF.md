@@ -1485,6 +1485,8 @@ except Studio under one page".
   cleared by `stop` — and the ANR trace), and keeps the newest unexpected foreground ending; the page asks `AttuneNative.lastExit()`
   once and shows "Attune closed unexpectedly last time: …" (low memory → a tip to pick a smaller model). Ask Ali for the
   Engine log after a crash: it now says exactly why. (Next step if it's the native engine: run llama-server in its own process.)
+- **No more than 6 tabs** (Ali said yes): `INSIDE` in hubs.js — Skills inside Assistants, Artifacts inside Projects, Reminders inside
+  Radar: one tab, and a small switch (`hub-parts`, `partsOf`) on top of the page moves between the two parts.
 - Test: `tests/e2e_v734sidebar.py`.
 
 ## 6. How to fix Ali's problems well (method)

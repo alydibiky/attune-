@@ -1,5 +1,5 @@
 // v6.30: 6 places in the sidebar; tools that belong together are one page with tabs.
-import { HUBS, GROUPS, hubOf, tabsFor, TOOL_PAGES, toolPages } from "../../web-src/hubs.js";
+import { HUBS, GROUPS, hubOf, tabsFor, TOOL_PAGES, toolPages, partsOf } from "../../web-src/hubs.js";
 const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
 ok(HUBS.length <= 6, "no more than 6 places in the sidebar (" + HUBS.length + ")");
 const all = HUBS.flatMap((h) => h[3]);
@@ -17,4 +17,9 @@ const inTools = HUBS.find((h) => h[0] === "tools")[3].filter((m) => m !== "tools
 ok(inTools.every((m) => onPages.includes(m)), "every tool is inside one of the 6 pages: missing " + inTools.filter((m) => !onPages.includes(m)));
 ok(TOOL_PAGES.every((p) => p[3].length === 1 || tabsFor(p[3][0]).length === p[3].length), "each page's first tool shows all its tools as tabs");
 ok(toolPages(["convert", "guide"]).map((p) => p[0]).join() === "files,help", "a device without a page's tools doesn't show that page");
+ok(tabsFor("chat").length <= 6 && tabsFor("money").length <= 6, "Chat and Money: no more than 6 tabs (" + tabsFor("chat") + " / " + tabsFor("money") + ")");
+ok(!tabsFor("chat").includes("skills") && !tabsFor("chat").includes("artifacts") && !tabsFor("money").includes("reminders"), "Skills, Artifacts and Reminders are not tabs of their own");
+ok(partsOf("skills").join() === "assistants,skills" && partsOf("projects").join() === "projects,artifacts" && partsOf("radar").join() === "radar,reminders", "…they are parts of Assistants, Projects and Radar");
+ok(partsOf("money").length === 0 && partsOf("radar", ["radar"]).length === 0, "no switch on other pages, or when the device lacks the second part");
+ok(tabsFor("reminders", ["money", "reminders"]).includes("reminders"), "without Radar, Reminders stays a tab");
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");

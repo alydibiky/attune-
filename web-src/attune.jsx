@@ -58,7 +58,7 @@ import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
 import { PrivacyPage } from "./privacy-ui.jsx";
-import { HUBS, hubOf, tabsFor, toolPages } from "./hubs.js";
+import { HUBS, hubOf, tabsFor, toolPages, partsOf } from "./hubs.js";
 import { HubTabs } from "./hub-ui.jsx";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
@@ -7958,7 +7958,7 @@ export default function App() {
   const hubTabsEl = (() => {
     const avail = [...new Set([...groupsHere.flatMap((g) => g[1]), "chat", "money", "health", "home", "tools", "privacy", "guide"])];
     const t = tabsFor(mode, avail);
-    return t.length ? <HubTabs mode={mode} tabs={t} titleOf={(m) => ({ chat: "Chat", ask: "Ask (classic)", money: "Money" })[m] || MODE_TITLES[m] || (MORE_TOOLS.find((x) => x[0] === m) || [])[1] || m}
+    return t.length ? <HubTabs mode={mode} tabs={t} parts={partsOf(mode, avail)} titleOf={(m) => ({ chat: "Chat", ask: "Ask (classic)", money: "Money" })[m] || MODE_TITLES[m] || (MORE_TOOLS.find((x) => x[0] === m) || [])[1] || m}
       navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} /> : null;
   })();
   // (no bottom bar → the panels pinned above it sit on the bottom edge)
