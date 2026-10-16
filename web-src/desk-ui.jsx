@@ -88,7 +88,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
     </div>);
 }
 
-export function ToolsPage({ tools, groups, navTo }) {
+export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true }) {
   const [pins, togglePin] = usePins();
   const [q, setQ] = useState("");
   const nq = q.trim().toLowerCase();
@@ -98,16 +98,16 @@ export function ToolsPage({ tools, groups, navTo }) {
       <div className="flex items-center gap-3 mb-1">
         <h1 className="text-[24px] font-semibold text-white tracking-tight">{tr("Tools")}</h1>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Find a tool")} dir="auto" data-testid="tools-find"
-          className="ms-auto w-72 rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 text-[13.5px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-700" />
+          className="ms-auto w-40 sm:w-72 min-w-0 rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 text-[13.5px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-700" />
       </div>
-      <p className="text-[12.5px] text-slate-400 mb-4">{tr("Every tool on one page — ★ pins it to the sidebar.")}</p>
+      <p className="text-[12.5px] text-slate-400 mb-4">{tr(subtitle || "Every tool on one page — ★ pins it to the sidebar.")}</p>
       {groups.map(([title, ids]) => {
         const list = ids.map((id) => tools.find((t) => t[0] === id)).filter(Boolean).filter(match);
         if (!list.length) return null;
         return (
           <section key={title} className="mb-6" data-testid="tools-group">
             <h2 className="text-[11.5px] uppercase tracking-wider text-slate-500 mb-2">{tr(title)}</h2>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {list.map(([id, label, sub, Icon]) => (
                 <div key={id} className="group relative rounded-xl border border-slate-800 bg-slate-900 hover:border-teal-700/70 transition-colors">
                   <button onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="w-full text-start flex items-start gap-3 p-3 pe-10">
@@ -115,10 +115,10 @@ export function ToolsPage({ tools, groups, navTo }) {
                     <span className="min-w-0"><span className="block text-[14px] font-semibold text-white leading-tight">{tr(label)}</span>
                       <span className="block text-[12px] text-slate-400 leading-snug mt-0.5 line-clamp-2">{tr(sub)}</span></span>
                   </button>
-                  <button onClick={() => togglePin(id)} data-testid={"tools-pin-" + id} aria-pressed={pins.includes(id)}
+                  {showPins ? <button onClick={() => togglePin(id)} data-testid={"tools-pin-" + id} aria-pressed={pins.includes(id)}
                     title={pins.includes(id) ? tr("Unpin from the sidebar") : tr("Pin to the sidebar")} aria-label={pins.includes(id) ? tr("Unpin from the sidebar") : tr("Pin to the sidebar")}
                     className={"absolute top-2 end-2 p-1.5 rounded-md " + (pins.includes(id) ? "text-amber-300" : "text-slate-600 opacity-0 group-hover:opacity-100 focus:opacity-100")}>
-                    <Star size={15} className={pins.includes(id) ? "fill-current" : ""} /></button>
+                    <Star size={15} className={pins.includes(id) ? "fill-current" : ""} /></button> : null}
                 </div>))}
             </div>
           </section>);

@@ -81,7 +81,8 @@ function dayGroup(ts) {
 }
 
 export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, groups, loadChats, onNewChat, onOpenChat, chatCmd, onClose,
-  engineLabel, engineState, airGap, openEngine, openProfile, openUpgrade, openBackup, openSettings, touch = false, width = SIDE_W }) {
+  engineLabel, engineState, airGap, openEngine, openProfile, openUpgrade, openBackup, openSettings, touch = false, width = SIDE_W,
+  activePlace = null, showPins = true }) {   // v6.30: activePlace = the sidebar place of the page shown (6 places, no pinned list)
   const { list, activeId } = useChatList(loadChats);
   const depth = useBackDepth();
   const [q, setQ] = useState("");
@@ -95,8 +96,8 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
   let lastGroup = "";
   const Row = ({ id, label, Icon }) => (
     <button onClick={() => navTo(id)} data-testid={"side-go-" + id}
-      className={"w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] text-start " + (mode === id ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/60")}>
-      <Icon size={17} className={mode === id ? "text-teal-300" : "text-slate-400"} /><span className="truncate">{tr(label)}</span>
+      className={"w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] text-start " + ((activePlace || mode) === id ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/60")}>
+      <Icon size={17} className={(activePlace || mode) === id ? "text-teal-300" : "text-slate-400"} /><span className="truncate">{tr(label)}</span>
     </button>);
   return (
     <aside className="fixed top-0 bottom-0 start-0 z-[56] flex flex-col bg-slate-900 border-e border-slate-800" style={{ width }} data-testid="side">
@@ -123,8 +124,8 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
         {!nq ? (<>
           {places.map(([id, label, Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}
           {/* v6.25 (Ali picked A + C): the tools you pin from the Tools page (★), not a list of all 33 */}
-          {pinned.length ? <p className="px-2.5 pt-3 pb-1 text-[10.5px] uppercase tracking-wider text-slate-500">{tr("Pinned")}</p> : null}
-          <div data-testid="side-pins">{pinned.map(([id, label, , Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}</div>
+          {showPins && pinned.length ? <p className="px-2.5 pt-3 pb-1 text-[10.5px] uppercase tracking-wider text-slate-500">{tr("Pinned")}</p> : null}
+          <div data-testid="side-pins">{(showPins ? pinned : []).map(([id, label, , Icon]) => <Row key={id} id={id} label={label} Icon={Icon} />)}</div>
         </>) : null}
         <div className="mt-3" data-testid="side-chats">
           {shown.length === 0 ? <p className="px-2.5 py-2 text-[12px] text-slate-500">{nq ? tr("No chats match.") : tr("No chats yet.")}</p> : shown.map((c) => {

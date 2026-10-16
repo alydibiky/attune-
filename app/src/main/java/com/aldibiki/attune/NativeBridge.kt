@@ -81,6 +81,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun setAirGap(on: Boolean) { Prefs.setAirGap(ctx, on) }
 
+    /** v6.29: the newest unexpected app ending since the last start (ExitWatch), once — "" when there was none. */
+    @JavascriptInterface
+    fun lastExit(): String = ExitWatch.last?.toString()?.also { ExitWatch.clearLast() } ?: ""
+
     /** v6.29: true only for builds signed with the test key — the page allows developer mode (Pro unlock for testing) only then. */
     @JavascriptInterface
     fun testBuild(): Boolean = try { ctx.resources.getBoolean(R.bool.attune_test_build) } catch (e: Exception) { false }

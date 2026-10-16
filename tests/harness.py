@@ -121,11 +121,14 @@ class Env:
         try: self.srv.wait(timeout=10)
         except Exception: self.srv.kill()
 
-def new_page(br, env, errors, native=True, extra_init=None, release=False, desktop=None):
+def new_page(br, env, errors, native=True, extra_init=None, release=False, desktop=None, legacy_nav=True):
     # desktop=(w, h): a computer window (mouse, no touch) — v6.24, the Claude/ChatGPT-style layout
     ctx = (br.new_context(viewport={"width": desktop[0], "height": desktop[1]}, device_scale_factor=1) if desktop
            else br.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, is_mobile=True, has_touch=True))
     if native: ctx.add_init_script(env.mock)
+    # v6.30: the app has no bottom bar any more (a sidebar like ChatGPT). The older tests drive the tools through the old bar, so
+    # it comes back for them only (attune:legacy-nav); legacy_nav=False = exactly what people see (tests/e2e_v734sidebar.py)
+    if legacy_nav: ctx.add_init_script("try{localStorage.setItem('attune:legacy-nav','1')}catch(e){}")
     ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
     ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")
     if not release: ctx.add_init_script("try{if(localStorage.getItem('attune:dev')===null)localStorage.setItem('attune:dev','1')}catch(e){}")   # tests run in developer mode (the testing box in Plan etc.); release=True = a customer's phone

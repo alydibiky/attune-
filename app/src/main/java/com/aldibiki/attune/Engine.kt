@@ -147,12 +147,14 @@ object Engine {
             // v6.29: an error inside the native engine or LiteRT while starting is reported as a failed start (not a crash)
             val ok = try { startBlocking(ctx.applicationContext, model) } catch (e: Throwable) { false.also { try { error = "The model couldn't start: ${e.message ?: e.javaClass.simpleName}" } catch (x: Exception) {} } }
             try { changed() } catch (e: Exception) {}
+            // (ExitWatch: if the app ends unexpectedly, the log says which model was running)
+            try { ctx.applicationContext.getSharedPreferences("attune", Context.MODE_PRIVATE).edit().putString("model_at_exit", if (ok) model.label.ifEmpty { model.id } else null).apply() } catch (e: Exception) {}
             onDone(ok, error)
         }
     }
 
     fun stop(onDone: (() -> Unit)? = null) {
-        exec.execute { stopBlocking(); changed(); onDone?.invoke() }
+        exec.execute { stopBlocking(); changed(); try { appCtx?.getSharedPreferences("attune", Context.MODE_PRIVATE)?.edit()?.remove("model_at_exit")?.apply() } catch (e: Exception) {}; onDone?.invoke() }
     }
 
     private fun health(): Int = try {

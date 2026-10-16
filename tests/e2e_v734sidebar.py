@@ -1,0 +1,57 @@
+"""v6.30 — Ali: "I don't want a bottom bar in any page — a sidebar like ChatGPT; combine every feature that can be combined;
+no more than 6 options on the left" and "combine all of this (Code, Improve a prompt, Compress, Humanize, Copilot, Library, Ask)
+except Studio under 1 page". Runs WITHOUT the old bar (legacy_nav=False) — what people see.
+  PYTHONPATH=tests/pwshim:tests python3 tests/e2e_v734sidebar.py     (SHOTS=dir for screenshots)
+"""
+import os
+from playwright.sync_api import sync_playwright
+from harness import Env, new_page, check, real_errors, finish
+env = Env(); errors = []
+SHOTS = os.environ.get("SHOTS")
+PLACES = ["home", "chat", "money", "health", "learn", "tools"]
+def shot(page, name):
+    if SHOTS: page.screenshot(path=os.path.join(SHOTS, name + ".png"))
+with sync_playwright() as p:
+    br = p.chromium.launch()
+    ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init="try{localStorage.setItem('attune:start','home')}catch(e){}")
+    page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
+    check(page.locator("nav:visible").count() == 0, "phone: no bottom bar")
+    page.click("[data-testid=home-menu]"); page.wait_for_selector("[data-testid=phone-side]")
+    ids = page.evaluate("[...document.querySelectorAll('[data-testid=phone-side] [data-testid^=side-go-]')].map(b => b.dataset.testid.slice(8))")
+    check(ids == PLACES, "the sidebar has 6 places: %s" % ids)
+    check(page.locator("[data-testid=phone-side] [data-testid=side-pins] button").count() == 0, "…and no extra pinned list")
+    shot(page, "side-phone")
+    page.click("[data-testid=phone-side] [data-testid=side-go-money]"); page.wait_for_timeout(400)
+    tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
+    check("money" in tabs and "guardian" in tabs and "radar" in tabs and "scout" in tabs, "Money is one page: its tools are tabs on top: %s" % tabs)
+    page.click("[data-testid=hub-tab-guardian]"); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=hub-tab-guardian][aria-selected=true]").count() == 1, "a tab opens the sibling, marked as chosen")
+    page.evaluate("window.__attuneBack()"); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=hub-tab-money][aria-selected=true]").count() == 1, "Back returns to the tab before")
+    shot(page, "money-tabs")
+    # Tools: one card per combined page; Create = Code · Improve · Compress · Humanize · Copilot · Library · Ask, Studio apart
+    page.locator("[data-testid=header-menu]:visible").first.click(); page.click("[data-testid=phone-side] [data-testid=side-go-tools]"); page.wait_for_selector("[data-testid=tools-page]")
+    check("Create" in page.locator("[data-testid=tools-open-code]").inner_text() and page.locator("[data-testid=tools-open-studio]").count() == 1, "Tools: 'Create' is one card, Studio its own")
+    shot(page, "tools-phone")
+    page.click("[data-testid=tools-open-code]"); page.wait_for_timeout(500)
+    tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
+    check(tabs == ["code", "improve", "compress", "humanize", "copilot", "library", "ask"], "Create is one page with tabs: %s" % tabs)
+    page.click("[data-testid=hub-tab-humanize]"); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=hub-tab-humanize][aria-selected=true]").count() == 1, "…Humanize opens in the same page")
+    shot(page, "create-tabs")
+    # Chat's menu opens the same sidebar (the chat history)
+    page.locator("[data-testid=header-menu]:visible").first.click(); page.click("[data-testid=phone-side] [data-testid=side-go-chat]"); page.wait_for_timeout(400)
+    page.locator("[data-testid=header-menu]:visible").first.click(); page.wait_for_selector("[data-testid=phone-side]")
+    check(page.locator("[data-testid=phone-side] [data-testid=side-chats]").count() == 1, "in Chat, ☰ opens the sidebar with the chat history")
+    ctx.close()
+    # computer: the same 6 places
+    ctx, page = new_page(br, env, errors, legacy_nav=False, desktop=(1366, 860))
+    page.goto(env.url); page.wait_for_selector("[data-testid=side]", timeout=15000)
+    ids = page.evaluate("[...document.querySelectorAll('[data-testid=side] [data-testid^=side-go-]')].map(b => b.dataset.testid.slice(8))")
+    check(ids == PLACES, "computer: the same 6 places: %s" % ids)
+    page.click("[data-testid=side-go-learn]"); page.wait_for_timeout(400)
+    check(page.locator("[data-testid=hub-tab-memory]").count() == 1 and page.locator("[data-testid=side-go-learn][class*=bg-slate-800]").count() == 1, "Learn: Mind, Shelf, News… are tabs; the place is lit")
+    shot(page, "desk-learn")
+    check(real_errors(errors) == [], "no page errors: " + str(real_errors(errors)[:3]))
+    br.close()
+finish()

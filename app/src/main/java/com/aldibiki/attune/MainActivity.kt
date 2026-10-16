@@ -116,6 +116,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ExitWatch.check(this)   // v6.29: why did the app end last time? (engine log + a one-time note on the page)
         // v6.28 (Ali: "sometimes the app crashes"): an unexpected error on a BACKGROUND thread (a web search, a file being read, a
         // map piece) used to close the whole app. Now it is written to the Engine log and only that piece of work stops; the app
         // keeps running. An error on the main (screen) thread still goes to Android as before — the app can't safely go on then.

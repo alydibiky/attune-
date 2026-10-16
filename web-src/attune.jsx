@@ -58,6 +58,13 @@ import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
 import { PrivacyPage } from "./privacy-ui.jsx";
+import { HUBS, hubOf, tabsFor, TOOLS_CARDS } from "./hubs.js";
+import { HubTabs } from "./hub-ui.jsx";
+// v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
+// which set attune:legacy-nav (tests/harness.py); people never see it.
+const LEGACY_NAV = (() => { try { return localStorage.getItem("attune:legacy-nav") === "1"; } catch (e) { return false; } })();
+const HUB_ICON = { home: House, chat: MessageCircle, money: Wallet, health: Heart, learn: GraduationCap, tools: LayoutGrid };
+const HUB_PLACES = HUBS.map(([id, label, target]) => [target, label, HUB_ICON[id]]);
 import { HealthPage } from "./health-ui.jsx";
 import { LifeAskPage } from "./lifeask-ui.jsx";
 import { ScoutPage, runScoutGoal, tellText as scoutTell } from "./scout-ui.jsx";
@@ -5995,7 +6002,7 @@ function moneyAnalysisPrompt(snapshot, recent, lang) {
     lang ? `Answer in ${lang}.` : ""].filter(Boolean).join("\n");
 }
 
-function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIncoming, openPlan, screen }) {
+function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIncoming, openPlan, screen, onMenu, tabs }) {
   const [ready, setReady] = React.useState(false);
   const [snapshot, setSnapshot] = React.useState(null);
   const [feed, setFeed] = React.useState([]);
@@ -6219,6 +6226,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
          style={screen ? { height: "calc(100vh - 150px)" } : { bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }}>
       {/* v6.27: inside the computer layout (screen set) Money is a panel under the Calm tabs, not the whole screen */}
       <div className="shrink-0 flex items-center gap-2 px-2 h-12 bg-slate-950 border-b border-slate-800" style={screen ? { display: "none" } : null}>
+        {onMenu ? <button onClick={onMenu} aria-label={tr("Menu")} data-testid="header-menu" className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><Menu size={20} /></button> : null}
         <button onClick={() => window.__attuneBack && window.__attuneBack()} aria-label={tr("Back")}
           className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
         <p className="flex-1 min-w-0 text-base font-semibold text-white truncate">{tr("Money & Zakāt")}</p>
@@ -6226,6 +6234,7 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
         <button onClick={() => setSheet(true)} data-testid="money-tools"
           className="shrink-0 px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-200">{tr("Payment · Ask")}</button>
       </div>
+      {tabs && !screen ? <div className="shrink-0 px-3 pt-2 bg-slate-950">{tabs}</div> : null}
       {parsed && parsed.ok && !sheet ? (
         <button onClick={() => setSheet(true)} className="shrink-0 text-start px-3 py-1.5 text-[11px] bg-emerald-500/10 border-b border-emerald-900/60 text-emerald-200">
           {parsed.direction === "out" ? "−" : "+"}{parsed.amount} {parsed.currency || ""}{parsed.party ? " · " + parsed.party : ""} · {tr("read from: “")}{parsed.amountSource}”
@@ -7945,6 +7954,15 @@ export default function App() {
   const [allTools, setAllToolsRaw] = useState(() => deviceShowAll());
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
+  // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
+  const hubTabsEl = (() => {
+    const avail = [...new Set([...groupsHere.flatMap((g) => g[1]), "chat", "money", "health", "home", "tools", "privacy", "guide"])];
+    const t = tabsFor(mode, avail);
+    return t.length ? <HubTabs mode={mode} tabs={t} titleOf={(m) => ({ chat: "Chat", ask: "Ask (classic)", money: "Money" })[m] || MODE_TITLES[m] || (MORE_TOOLS.find((x) => x[0] === m) || [])[1] || m}
+      navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} /> : null;
+  })();
+  // (no bottom bar → the panels pinned above it sit on the bottom edge)
+  useEffect(() => { if (!LEGACY_NAV) try { document.documentElement.style.setProperty("--nav-h", "0px"); } catch (e) {} }, []);
   useEffect(() => { try { document.documentElement.classList.toggle("att-lite", !!devLevel.lite); } catch (e) {} }, [devLevel.lite]);
   // The person knows their own machine better than any heuristic does.
   const setRamOverride = (gb) => {
@@ -8369,6 +8387,15 @@ export default function App() {
     let last = 0;
     const on = (e) => { const now = Date.now(); if (now - last < 4000) return; last = now; const m = String((e.detail && e.detail.msg) || "").split("\n")[0].replace(/^Error:\s*/, "").slice(0, 120); showToast(tr("That didn't work") + (m ? " — " + m : ""), 3500); };
     window.addEventListener("attune-error", on); return () => window.removeEventListener("attune-error", on);
+  }, []);
+  // v6.29 (Ali: "the app still crashes on its own a lot"): Android says why the app ended last time (ExitWatch.kt) — told once
+  useEffect(() => {
+    if (!NATIVE || typeof NATIVE.lastExit !== "function") return;
+    let x = null; try { const t = NATIVE.lastExit(); x = t ? JSON.parse(t) : null; } catch (e) { x = null; }
+    if (!x || !x.why) return;
+    const tip = x.reason === 3 && x.model ? " " + tr("A smaller model would be steadier on this phone.") : "";   // 3 = low memory
+    const t = setTimeout(() => showToast(tr("Attune closed unexpectedly last time: {why}{m}.", { why: tr(x.why), m: x.model ? " (" + x.model + ")" : "" }) + tip + " " + tr("It's in the Engine log — send it from Engine."), 9000), 1500);
+    return () => clearTimeout(t);
   }, []);
   const gate = (fn) => (proActive ? fn() : setShowUpgrade(true));
   // On-device inference is free to run, so it is never metered. Credits only
@@ -9283,7 +9310,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
       {side.shown ? <Guard name="sidebar"><DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-        places={[["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]]}
+        places={HUB_PLACES} activePlace={hubOf(mode)} showPins={false}
         tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
         onNewChat={() => { setMoreOpen(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
         onOpenChat={(id) => { setMoreOpen(false); setOpenChatId(id); navTo("chat"); }}
@@ -9293,7 +9320,7 @@ export default function App() {
         openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /></Guard> : null}
       {!wide && phoneSide ? <Guard name="sidebar"><div className="fixed inset-0 z-[60] bg-black/60" onClick={() => setPhoneSide(false)} data-testid="phone-side">
         <div onClick={(e) => e.stopPropagation()}><DesktopSide touch width="min(86vw, 320px)" mode={mode} canBack={false} onBack={() => {}} navTo={(m) => { setPhoneSide(false); setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-          places={[["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]]}
+          places={HUB_PLACES} activePlace={hubOf(mode)} showPins={false}
           tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
           onNewChat={() => { setPhoneSide(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
           onOpenChat={(id) => { setPhoneSide(false); setOpenChatId(id); navTo("chat"); }}
@@ -9301,16 +9328,17 @@ export default function App() {
           onClose={() => setPhoneSide(false)} engineLabel={engineText} engineState={modelState} airGap={NATIVE && airGap}
           openEngine={() => { setPhoneSide(false); setShowEngine(true); }} openProfile={() => { setPhoneSide(false); setShowProfile(true); }} openUpgrade={() => { setPhoneSide(false); setShowUpgrade(true); }}
           openBackup={() => { setPhoneSide(false); setShowBackup(true); }} openSettings={() => { setPhoneSide(false); setMoreOpen(true); }} /></div></div></Guard> : null}
-      <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-6xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide ? "pb-8" : "pb-24")}>
+      <div className={mode === "business" ? "" : (wide ? (mode === "chat" ? "max-w-3xl" : mode === "home" || mode === "tools" ? "max-w-6xl att-page px-8" : "max-w-6xl att-page px-6") : "max-w-3xl px-3") + " mx-auto " + (wide || !LEGACY_NAV ? "pb-8" : "pb-24")}>
         {/* A compact bar, like the big assistant apps: menu or back, the name
             of where you are, and the few things you need from anywhere. */}
-        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || mode === "tools" || (wide && OWN_TITLE.has(mode)) ? " hidden" : "")}>
+        <header className={"sticky top-0 z-30 bg-slate-950 flex items-center gap-1.5 py-2 mb-3 border-b border-slate-900" + (mode === "fit" || mode === "map" || mode === "business" || mode === "home" || (mode === "tools" && wide) || (mode === "money" && !wide && !LEGACY_NAV) || (wide && OWN_TITLE.has(mode)) ? " hidden" : "")}>
           {wide && !side.shown ? <button onClick={() => side.setOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Open sidebar")} data-testid="side-open"><PanelLeft size={19} /></button> : null}
           {mode === "chat" ? (wide ? null :
-            <button onClick={() => setDrawerOpen(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Chats")}><Menu size={20} /></button>
-          ) : wide ? null : (   /* v6.25: on a computer Back is the sidebar's ← (one arrow, not two) */
+            <button onClick={() => (LEGACY_NAV ? setDrawerOpen(true) : setPhoneSide(true))} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Chats")} data-testid="header-menu"><Menu size={20} /></button>
+          ) : wide ? null : (<>   {/* v6.25: on a computer Back is the sidebar's ← (one arrow, not two) */}
+            {!LEGACY_NAV ? <button onClick={() => setPhoneSide(true)} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("Menu")} data-testid="header-menu"><Menu size={20} /></button> : null}
             <button onClick={goBack} aria-label={tr("Back")} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button>
-          )}
+          </>)}
           {/* v6.28 (Ali: "the UI is still cluttered"): a page with its own big title doesn't repeat it in the top bar */}
           <p className="text-base font-semibold text-white truncate">{OWN_TITLE.has(mode) && mode !== "money" ? "" : tr(MODE_TITLES[mode] || "Attune")}</p>
           <div className="flex-1" />
@@ -9339,13 +9367,18 @@ export default function App() {
           </div>
         ) : null}
 
+        {/* v6.30: tools that belong together are one page — a tab row on top (hubs.js) */}
+        {mode === "money" && !wide && !LEGACY_NAV ? null : hubTabsEl}
         <Guard key={"g-" + mode} name={mode}>{mode === "home" && !wide ? (
           <PhoneHome navTo={(m) => navTo(m)} doIt={doFromHome} openAll={() => setMoreOpen(true)} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
             onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "tools" ? (
-          <ToolsPage tools={MORE_TOOLS} groups={groupsHere} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
+          <ToolsPage tools={MORE_TOOLS.map((t) => (t[0] === "code" ? ["code", "Create", "Code, better prompts, humanize, copilot and prompt recipes — one page", t[3]] : t))}
+            groups={TOOLS_CARDS.map(([g, ids]) => [g, ids.filter((id) => groupsHere.some((x) => x[1].includes(id)))])} showPins={false}
+            subtitle="Each opens as one page — the tools that belong together are tabs at its top."
+            navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "chat" ? (
           <ChatHome key="chat" api={chatApi} drawerOpen={drawerOpen} setDrawerOpen={setDrawerOpen} newChatSignal={newChatSignal}
             composerSeed={chatSeed} clearComposerSeed={() => setChatSeed("")}
@@ -10009,7 +10042,8 @@ export default function App() {
             <MoneyDesk onAsk={() => { setChatSeed("How much did I spend on food this month?"); navTo("chat"); }} onPeople={() => navTo("life")}
               renderYusr={(screen) => <MoneyTab screen={screen} incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)} />} />
           ) : (
-          <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)} />
+          <MoneyTab incoming={pendingPay} clearIncoming={() => setPendingPay(null)} remember={remember} flash={flash} modelState={modelState} myLang={myLang} tier={tier} openPlan={() => setShowUpgrade(true)}
+            onMenu={LEGACY_NAV ? null : () => setPhoneSide(true)} tabs={LEGACY_NAV ? null : hubTabsEl} />
           )
         ) : mode === "travel" ? (
           // v6.27: Travel in design A "Calm" — five tabs, everything kept, the trip checked by code (travel-ui.jsx, travel.js)
@@ -10834,7 +10868,7 @@ export default function App() {
       {toast && <div className="fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       <ConfirmHost />
       {/* ---- bottom bar: the four places you go most, and everything else ---- */}
-      <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <nav className={"fixed bottom-0 start-0 end-0 z-[55] bg-slate-950 border-t border-slate-800" + (!LEGACY_NAV || wide || mode === "fit" || mode === "map" || mode === "business" ? " hidden" : "")} style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="max-w-3xl mx-auto grid grid-cols-6 h-[58px]">
           {/* v6.27 design A "Calm": Home · Chat · Money · Scout (v6.29, was Health) · Mind, then All (every tool; Instant and Business live there now) */}
           {[["home", "Home", House], ["chat", "Chat", MessageCircle], ["money", "Money", Wallet],
