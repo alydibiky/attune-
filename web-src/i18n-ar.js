@@ -4564,4 +4564,13 @@ export const AR = {
   "Help": "مساعدة",
   "Code, better prompts, humanize, copilot and prompt recipes — one page": "البرمجة وتحسين الأوامر وإضفاء الطابع البشري والمساعد ووصفات الأوامر — في صفحة واحدة",
   "Each opens as one page — the tools that belong together are tabs at its top.": "كل بطاقة تفتح صفحة واحدة — والأدوات المترابطة تظهر كتبويبات في أعلاها.",
+  "Maps & travel": "الخرائط والسفر",
+  "Help & privacy": "المساعدة والخصوصية",
+  "Six pages. Open one — the tools inside it are tabs at its top.": "ست صفحات. افتح إحداها — وستجد أدواتها كتبويبات في أعلاها.",
+  "What stays on your phone, and what is sent when you use a feature": "ما يبقى على هاتفك، وما يُرسل عند استخدام ميزة",
+  "Convert, translate, ask a PDF, slides & reports, CV, video downloads": "تحويل الملفات والترجمة وسؤال ملف PDF والعروض والتقارير والسيرة الذاتية وتنزيل الفيديو",
+  "Code, better prompts, compress, humanize, copilot, prompt library": "البرمجة وتحسين الأوامر والاختصار وإضفاء الطابع البشري والمساعد ومكتبة الأوامر",
+  "Offline maps, country packs and phrases": "خرائط بلا إنترنت وحزم الدول والعبارات",
+  "Crane toolkit, site reports, fleet and your business": "أدوات الرافعات وتقارير الموقع والأسطول وعملك",
+  "How to use every tool, and what stays on your phone": "طريقة استخدام كل أداة، وما يبقى على هاتفك",
 };

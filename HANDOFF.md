@@ -1476,7 +1476,10 @@ except Studio under one page".
   the default; new tests pass `legacy_nav=False`). `--nav-h` = 0. Phone header: ☰ (`header-menu`, opens the sidebar drawer)
   + ←. Chat's ☰ opens the same drawer (chat history is in it). Money's phone page is a fixed iframe, so its ☰ and tab row live
   in `MoneyTab`'s own header. `DesktopSide` takes `places` (the 6), `activePlace` (= `hubOf(mode)`), `showPins={false}`.
-- **Tools page** = one card per combined page (`TOOLS_CARDS`); "Code" card is relabelled **Create**.
+- **Tools page = 6 pages** (Ali: "I don't want Tools to be 30 or 40 features — no more than 6 pages"): `TOOL_PAGES` / `toolPages()`
+  = Files · Create · Studio · Maps & travel · Business · Help & privacy; a card opens the first member, the rest are tabs
+  (Maps and Business are full-screen, so those cards open Travel / Crane toolkit). Search still lists single tools.
+  Legacy mode (old tests) keeps the old Tools page.
 - **ExitWatch.kt** (Android 11+): on every start reads `ApplicationExitInfo` since the last start, writes each ending to the
   Engine log (reason, foreground/background, memory, the model that was running — pref `model_at_exit` set by `Engine.start`,
   cleared by `stop` — and the ANR trace), and keeps the newest unexpected foreground ending; the page asks `AttuneNative.lastExit()`

@@ -58,7 +58,7 @@ import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
 import { PrivacyPage } from "./privacy-ui.jsx";
-import { HUBS, hubOf, tabsFor, TOOLS_CARDS } from "./hubs.js";
+import { HUBS, hubOf, tabsFor, toolPages } from "./hubs.js";
 import { HubTabs } from "./hub-ui.jsx";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
@@ -9375,9 +9375,10 @@ export default function App() {
           <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
             onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "tools" ? (
-          <ToolsPage tools={MORE_TOOLS.map((t) => (t[0] === "code" ? ["code", "Create", "Code, better prompts, humanize, copilot and prompt recipes — one page", t[3]] : t))}
-            groups={TOOLS_CARDS.map(([g, ids]) => [g, ids.filter((id) => groupsHere.some((x) => x[1].includes(id)))])} showPins={false}
-            subtitle="Each opens as one page — the tools that belong together are tabs at its top."
+          LEGACY_NAV ? <ToolsPage tools={MORE_TOOLS} groups={groupsHere} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
+          : <ToolsPage tools={[...MORE_TOOLS, ["privacy", "Privacy", "What stays on your phone, and what is sent when you use a feature", ShieldCheck]]} groups={[]} showPins={false}
+            pages={toolPages([...groupsHere.flatMap((g) => g[1]), "guide", "privacy"])}
+            subtitle="Six pages. Open one — the tools inside it are tabs at its top."
             navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "chat" ? (
           <ChatHome key="chat" api={chatApi} drawerOpen={drawerOpen} setDrawerOpen={setDrawerOpen} newChatSignal={newChatSignal}

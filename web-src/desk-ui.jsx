@@ -88,7 +88,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
     </div>);
 }
 
-export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true }) {
+export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true, pages = null }) {
   const [pins, togglePin] = usePins();
   const [q, setQ] = useState("");
   const nq = q.trim().toLowerCase();
@@ -101,7 +101,36 @@ export function ToolsPage({ tools, groups, navTo, subtitle, showPins = true }) {
           className="ms-auto w-40 sm:w-72 min-w-0 rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 text-[13.5px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-700" />
       </div>
       <p className="text-[12.5px] text-slate-400 mb-4">{tr(subtitle || "Every tool on one page — ★ pins it to the sidebar.")}</p>
-      {groups.map(([title, ids]) => {
+      {/* v6.30 (Ali: "no more than 6 pages"): `pages` = [id, title, what is inside, members] — one card each; searching lists single tools */}
+      {pages && !nq ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="tools-pages">
+          {pages.map(([pid, title, sub, members]) => {
+            const first = tools.find((t) => t[0] === members[0]); const Icon = first ? first[3] : Star;
+            const names = members.map((m) => tools.find((t) => t[0] === m)).filter(Boolean);
+            return (
+              <button key={pid} onClick={() => navTo(members[0])} data-testid={"tools-page-" + pid}
+                className="text-start rounded-2xl border border-slate-800 bg-slate-900 hover:border-teal-700/70 transition-colors p-4 flex items-start gap-3">
+                <span className="w-10 h-10 shrink-0 rounded-xl bg-teal-500/10 text-teal-300 flex items-center justify-center"><Icon size={20} /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-semibold text-white leading-tight">{tr(title)}</span>
+                  <span className="block text-[12.5px] text-slate-400 leading-snug mt-1">{tr(sub)}</span>
+                  {names.length > 1 ? <span className="flex flex-wrap gap-1 mt-2">{names.map(([id, label]) => (
+                    <span key={id} className="text-[11px] rounded-full border border-slate-700 text-slate-300 px-2 py-0.5">{tr(label)}</span>))}</span> : null}
+                </span>
+              </button>);
+          })}
+        </div>
+      ) : pages ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="tools-results">
+          {pages.flatMap((p) => p[3]).map((m) => tools.find((t) => t[0] === m)).filter(Boolean).filter(match).map(([id, label, sub, Icon]) => (
+            <button key={id} onClick={() => navTo(id)} data-testid={"tools-open-" + id} className="text-start flex items-start gap-3 p-3 rounded-xl border border-slate-800 bg-slate-900 hover:border-teal-700/70">
+              <span className="w-9 h-9 shrink-0 rounded-xl bg-teal-500/10 text-teal-300 flex items-center justify-center"><Icon size={18} /></span>
+              <span className="min-w-0"><span className="block text-[14px] font-semibold text-white leading-tight">{tr(label)}</span>
+                <span className="block text-[12px] text-slate-400 leading-snug mt-0.5 line-clamp-2">{tr(sub)}</span></span>
+            </button>))}
+        </div>
+      ) : null}
+      {(pages ? [] : groups).map(([title, ids]) => {
         const list = ids.map((id) => tools.find((t) => t[0] === id)).filter(Boolean).filter(match);
         if (!list.length) return null;
         return (

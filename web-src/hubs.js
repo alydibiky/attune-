@@ -17,9 +17,10 @@ export const HUBS = [
 /** Inside Tools, the pages that are one page with tabs (the smallest group a page is in gives its tabs). */
 export const GROUPS = [
   ["files", "Files", ["convert", "translate", "pdfchat", "slides", "cv", "video"]],
-  ["places", "Places", ["map", "travel"]],
+  ["places", "Places", ["travel", "map"]],
   ["create", "Create", ["code", "improve", "compress", "humanize", "copilot", "library", "ask"]],
-  ["work", "Business", ["business", "crane", "field", "fleet"]],
+  ["work", "Business", ["crane", "field", "fleet", "business"]],
+  ["help", "Help", ["guide", "privacy"]],
 ];
 
 /** Pages that take the whole screen with their own header (no tab row on them). */
@@ -40,11 +41,19 @@ export function tabsFor(mode, available = null) {
   return list.length > 1 ? list : [];
 }
 
-/** The Tools page: one card per combined page (Files, Places, Create, Business) plus Studio and How to use. */
-export const TOOLS_CARDS = [
-  ["Files", ["convert", "translate", "pdfchat", "slides", "cv", "video"]],
-  ["Places", ["map", "travel"]],
-  ["Create", ["studio", "code"]],
-  ["Business", ["business", "crane", "field", "fleet"]],
-  ["Help", ["guide"]],
+/** v6.30 (Ali: "I don't want Tools to be 30 or 40 features — all combined in no more than 6 pages"): the Tools page is 6 pages.
+    [id, title, what is inside, members]. A card opens the first member this device has; the rest are tabs at its top.
+    (Maps and Business are full-screen pages without a tab row, so their cards open Travel / Crane toolkit, where they are tabs.) */
+export const TOOL_PAGES = [
+  ["files", "Files", "Convert, translate, ask a PDF, slides & reports, CV, video downloads", ["convert", "translate", "pdfchat", "slides", "cv", "video"]],
+  ["create", "Create", "Code, better prompts, compress, humanize, copilot, prompt library", ["code", "improve", "compress", "humanize", "copilot", "library", "ask"]],
+  ["studio", "Studio", "Pictures made on your phone", ["studio"]],
+  ["places", "Maps & travel", "Offline maps, country packs and phrases", ["travel", "map"]],
+  ["work", "Business", "Crane toolkit, site reports, fleet and your business", ["crane", "field", "fleet", "business"]],
+  ["help", "Help & privacy", "How to use every tool, and what stays on your phone", ["guide", "privacy"]],
 ];
+
+/** The pages a device shows: members it doesn't have are dropped; a page with none left is not shown. */
+export function toolPages(available = null) {
+  return TOOL_PAGES.map(([id, t, sub, m]) => [id, t, sub, available ? m.filter((x) => available.includes(x)) : m]).filter((p) => p[3].length);
+}

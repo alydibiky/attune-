@@ -1,5 +1,5 @@
 // v6.30: 6 places in the sidebar; tools that belong together are one page with tabs.
-import { HUBS, GROUPS, hubOf, tabsFor } from "../../web-src/hubs.js";
+import { HUBS, GROUPS, hubOf, tabsFor, TOOL_PAGES, toolPages } from "../../web-src/hubs.js";
 const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
 ok(HUBS.length <= 6, "no more than 6 places in the sidebar (" + HUBS.length + ")");
 const all = HUBS.flatMap((h) => h[3]);
@@ -12,4 +12,9 @@ ok(tabsFor("radar").includes("money") && tabsFor("radar").includes("scout"), "Mo
 ok(tabsFor("home").length === 0 && tabsFor("fit").length === 0, "full-screen pages have no tab row");
 ok(tabsFor("convert", ["convert", "translate"]).join() === "convert,translate", "a tool the device hides is not a tab");
 ok(GROUPS.every((g) => g[2].every((m) => hubOf(m) === "tools")), "the groups inside Tools are all in Tools");
+ok(TOOL_PAGES.length <= 6, "the Tools page is no more than 6 pages (" + TOOL_PAGES.length + ")");
+const inTools = HUBS.find((h) => h[0] === "tools")[3].filter((m) => m !== "tools"), onPages = TOOL_PAGES.flatMap((p) => p[3]);
+ok(inTools.every((m) => onPages.includes(m)), "every tool is inside one of the 6 pages: missing " + inTools.filter((m) => !onPages.includes(m)));
+ok(TOOL_PAGES.every((p) => p[3].length === 1 || tabsFor(p[3][0]).length === p[3].length), "each page's first tool shows all its tools as tabs");
+ok(toolPages(["convert", "guide"]).map((p) => p[0]).join() === "files,help", "a device without a page's tools doesn't show that page");
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");
