@@ -1,0 +1,42 @@
+name: Quant bench (same model, which file is fastest on ARM without getting worse)
+
+# v6.30 — Ali's log: Core Lite (Qwen3.5 4B IQ4_XS) read prompts at 26 t/s on an 8 Elite Gen 5; KleidiAI only speeds up Q4_0/Q8_0.
+# Builds the app's pinned llama.cpp with KleidiAI (as on the phone) and compares the files. tests/models/quant_bench.py
+on:
+  push:
+    branches: [claude/design-a-maps-4pmxxr-was8h5]
+    paths: [tests/models/quant_bench.py, .github/workflows/quant-bench.yml]
+  workflow_dispatch:
+
+jobs:
+  bench:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build llama.cpp (the app's pinned commit, KleidiAI on)
+        run: |
+          for i in 1 2 3 4; do git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp && break; rm -rf ~/llama.cpp; sleep $((i * 10)); done
+          cd ~/llama.cpp && git checkout -q 7ab4ee7baad2d920464cbacfad4f4b07cf111fd2
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DGGML_CPU_KLEIDIAI=ON -DLLAMA_CURL=OFF > /dev/null
+          cmake --build build --target llama-bench llama-perplexity -j"$(nproc)" > /dev/null
+          ls build/bin
+      - name: Download the files
+        run: |
+          mkdir -p ~/m && cd ~/m
+          for q in Q8_0 IQ4_XS Q4_0 Q4_1 IQ4_NL Q4_K_M Q5_K_S; do
+            curl -sSL --retry 5 -o Qwen3.5-4B-$q.gguf https://huggingface.co/unsloth/Qwen3.5-4B-MTP-GGUF/resolve/main/Qwen3.5-4B-$q.gguf
+          done
+          ls -la
+      - name: Test text (English and Arabic from the app itself)
+        run: |
+          cat HANDOFF.md | head -c 120000 > ~/text.txt
+          grep -o ': "[^"]*"' web-src/i18n-ar.js | sed 's/^: "//; s/"$//' | head -c 120000 >> ~/text.txt
+          wc -c ~/text.txt
+      - name: Bench
+        run: python3 tests/models/quant_bench.py ~/llama.cpp/build/bin ~/m ~/text.txt Q8_0 IQ4_XS Q4_0 Q4_1 IQ4_NL Q4_K_M Q5_K_S
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quant-bench
+          path: quant-bench.md
