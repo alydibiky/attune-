@@ -160,6 +160,7 @@ Google Play Billing.
 | v6.28 | 14 Oct | Ask your life (one question answered from all your own data); insulin ↔ Fit & Food (refill + low-sugar notifications, carbs per meal); converter sub/superscripts; Studio on big models; How to use Attune; device levels; spaced repetition in Learn |
 | v6.29 | 15 Oct | Back to the previous page; crash guards; Health page + Fit & Food on Home; data questions in Chat; Scout exact items and cheapest store; Learn daily rework (review cards by code); Slides & Reports rework; declutter; Home A (Recent + What's waiting), Scout tab, chat sidebar on the phone; Google Play release blockers fixed (API 36, Play-only purchases, privacy policy, billing) — RELEASE_6.29.md |
 | v6.30 | 16 Oct | No bottom bar: ChatGPT-style sidebar with 6 places; combined pages with tabs (Create = Code, prompts, compress, humanize, copilot, library, Ask; Studio separate); ExitWatch tells why the app closed (Engine log + a one-time note) |
+| v6.31 | 17 Oct | Minimal design A (no intro paragraphs, thin tabs, small model dot, calm Home/Chat, "+" menu in Chat, Converter one action); Core Lite → IQ4_NL, new Core Max (8-bit) — HANDOFF §5.75 |
 
 ## 8. Prompt for the next session (paste as is)
 ```

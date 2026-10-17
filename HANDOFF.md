@@ -1495,6 +1495,27 @@ except Studio under one page".
   only for Q4_0/Q8_0) — a Q4_0 file may read several times faster on ARM: measure before switching.
 - Test: `tests/e2e_v734sidebar.py`.
 
+### 5.75 (17 Oct 2026) — v6.31: minimal design A; Core Lite → IQ4_NL; Core Max (8-bit)
+Ali: "research and make the app minimal so it's not cluttered" → research (3–5 places, progressive disclosure, one "+" menu like
+ChatGPT/Gemini/Copilot, one main action per screen, no explanation lines) + an audit of every screen + three mock-ups
+(claude.ai/artifact/Dc5kUTf3qBzPzWMGZBfvVE: A calm six, B chat first, C one feed). Ali: "do the best you see" → A (+ B's "+").
+Everything below is gated on the new layout (`!LEGACY_NAV`, i.e. `attune:legacy-nav` ≠ "1"), so old tests see the old app.
+- `html.att-min [data-intro] { display:none }`: 23 tool intro paragraphs tagged `data-intro` (setup questions and Backup keep theirs).
+- `HubTabs`: underlined text tabs; short names (`TAB_SHORT` in attune.jsx: Guardian, Radar, People, PDF chat, X-ray, …).
+- Header: the model is a small dot + name (`header-model`), not an outlined button.
+- Home (`minimal` prop): no "Just say it" hint, no footer, no Fit & Food set-up advert (shows once set up), Recent rows without
+  subtitles unless there is a live line; "All tools" opens the Tools page.
+- Chat (`MINIMAL` in chat.jsx): empty screen = title + 3 plain suggestions; composer = one "+" (`composer-plus` → `composer-menu`:
+  Photo, File, Think first, Search the web), what is on shows as a chip (`chip-think`, `web-toggle`). The menu is a portal on
+  `document.body` (`window.ReactDOM.createPortal`) — the composer has `contain: paint`, which clipped it.
+- Converter (`MINIMAL` in convert-ui.jsx): "Choose a file" first, the 4 most used as rows (TOP4), the rest behind "All conversions";
+  Translate isn't repeated (it is the next tab). Scout shows 2 examples.
+- Models (`tests/models/quant_bench.py`, CI `quant-bench.yml`, Neoverse N2 + KleidiAI, 4 threads; reading/writing t/s, KLD vs Q8_0):
+  IQ4_XS 22.5/11.0/0.051 · Q4_0 53.2/12.6/0.066 · IQ4_NL 35.2/11.4/0.048 · Q4_K_M 36.8/10.9/0.041 · Q5_K_S 31.2/8.9/0.028 ·
+  Q8_0 96.1/15.0/0. → Core Lite (md-lo) is now IQ4_NL (better on every measure); new **Core Max** (md-max, Q8_0, 4.61 GB,
+  needRam 12). Q4_0 rejected (answers drift more). Idea for later: the same bench for the big IQ4_XS models (Apex+, Everest).
+- Test: `tests/e2e_v735minimal.py`.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
