@@ -740,9 +740,21 @@ food Add sheet minimal.
 8. ⬜ Fleet → Store → Issue parts: reference code first, tap the item row.
 9. ⬜ Radar / Money → Turn on notification access → if greyed out, follow the steps (App info → ⋮ → Allow restricted settings).
 10. ⬜ If Attune closes: send the WHOLE Engine log (the end has ExitWatch's reason and "Memory:" lines).
+### Also done later the same evening (Ali: "do everything that is left in the coding area")
+- Lessons checked and repaired by code (no glitches reach the page); diagrams + flashcards in every lesson; courses past 30.
+- Home asks "paid?" on a subscription's / bill's / the maid's day → recorded in Money.
+- Fleet: maintenance by engine hours, client statement (print / PDF), one 09:00 notification for what needs you.
+- Minimal design A on Business, Fleet, Knowledge, Travel, Field. French / Spanish / Turkish: the first screens' remaining strings.
+- Windows desktop CI green again (a stale check, not a bug). Quant bench runs for Glow 2B, Spark 0.8B, Zenith 9B (results →
+  HANDOFF when they finish). NPU (Snapdragon Hexagon) as an experimental switch in Engine → Settings → Speed.
+### Add to Ali's checklist
+11. ⬜ Engine → Settings → Speed → "Use the NPU (experimental)" with **Core Max**; ask something long; note words/s and whether the
+    phone stays cool. If Attune closes, it comes back on the CPU by itself — send the Engine log.
+12. ⬜ Fleet: a crane's "Service every … hours"; a client → Statement.
 ### Still open
 1. ✅ Ali answered: diagrams + flashcards inside each lesson, and courses longer than 30 — both built (HANDOFF §5.81).
-2. Lab: the llama.cpp Hexagon (NPU) backend on SM8850 with Core Max (Q8_0) — cooler, maybe faster prompts.
+2. NPU: Ali's phone test (item 11). If the DSP session is refused for apps, the next step is a signed-PD route (Qualcomm), or drop it.
+4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
 ## Prompt to start the next session
