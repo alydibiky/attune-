@@ -4446,7 +4446,7 @@ export const AR = {
   "paused": "متوقف",
   "Searching {i} of {n}…": "جارٍ البحث {i} من {n}…",
   "Resume": "استئناف",
-  "Scout checks each goal when you open Attune (at most twice a day) and whenever you tap Check now, and tells you only about strong new finds or price drops. It reads public ads only and never contacts anyone or pays for you.": "يفحص الكشّاف كل هدف عند فتح Attune (مرتين يوميًا على الأكثر) وكلما ضغطت «افحص الآن»، ويخبرك فقط بالنتائج الجديدة القوية أو انخفاض الأسعار. يقرأ الإعلانات العامة فقط ولا يتواصل مع أحد ولا يدفع عنك.",
+  "Scout checks each goal when you open Attune (at most twice a day), once at night on the phone, and whenever you tap Check now, and tells you only about strong new finds or price drops. It reads public ads only and never contacts anyone or pays for you.": "يفحص الكشّاف كل هدف عند فتح Attune (مرتين يوميًا على الأكثر) ومرة ليلًا على الهاتف وكلما ضغطت «افحص الآن»، ويخبرك فقط بالنتائج الجديدة القوية أو انخفاض الأسعار. يقرأ الإعلانات العامة فقط ولا يتواصل مع أحد ولا يدفع عنك.",
   "Nothing that matches yet. Scout keeps looking — you'll be told when something good appears.": "لا يوجد ما يطابق بعد. سيواصل الكشّاف البحث — وستُبلَّغ عند ظهور شيء جيد.",
   "also on {s}": "أيضًا على {s}",
   "{p}% below similar": "أقل {p}% من المشابه",

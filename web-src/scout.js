@@ -345,6 +345,10 @@ export function addGoal(d, text, now = Date.now()) {
   return { data: { ...d, goals: [goal, ...d.goals] }, goal };
 }
 /** Due for a run: never run, or the last run is older than `hours` (twice a day by default). */
+/** v6.32 Scout at night: what the phone searches around 3:00 with Attune closed (ScoutNight.kt) — each goal that is on, its
+    searches and the ad links already seen, so only NEW ads are kept. Max 5 goals, 6 searches, 200 links each. */
+export const nightPlan = (d) => (d.goals || []).filter((x) => x.on !== false).slice(0, 5)
+  .map((x) => ({ id: x.id, title: String((x.g && x.g.what) || x.text || "").slice(0, 40), queries: searchesFor(x.g).slice(0, 6), seen: (x.seen || []).map((s) => s.url).filter(Boolean).slice(-200) }));
 export const dueGoals = (d, now = Date.now(), hours = 12) => (d.goals || []).filter((x) => x.on !== false && now - (x.lastRun || 0) >= hours * 3600000);
 /** Is this sentence a Scout goal? ("find me a flat in Maadi under 15k", «دورلي على عربية …») */
 export const looksLikeGoal = (text) => /^\s*(find me|look for|hunt for|search for|scout|keep looking for|watch for|alert me when|tell me when)\b|^\s*(دورلي|دور لي|دوّرلي|ابحثلي|ابحث لي|شوفلي|شوف لي|نبهني لما|قولي لما)/i.test(String(text || ""));

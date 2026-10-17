@@ -69,8 +69,8 @@ const HUB_ICON = { home: House, chat: MessageCircle, money: Wallet, health: Hear
 const HUB_PLACES = HUBS.map(([id, label, target]) => [target, label, HUB_ICON[id]]);
 import { HealthPage } from "./health-ui.jsx";
 import { LifeAskPage } from "./lifeask-ui.jsx";
-import { ScoutPage, runScoutGoal, tellText as scoutTell } from "./scout-ui.jsx";
-import { loadScout, saveScout, dueGoals, looksLikeGoal } from "./scout.js";
+import { ScoutPage, runScoutGoal, finishRun as scoutFinish, tellText as scoutTell } from "./scout-ui.jsx";
+import { loadScout, saveScout, dueGoals, looksLikeGoal, nightPlan as scoutNightPlan } from "./scout.js";
 import { understand as doUnderstand, apply as doApply } from "./doit.js";
 import { loadStores as loadLifeStores } from "./lifeask.js";
 import { deviceLevel, groupsFor, showAll as deviceShowAll, setShowAll as setDeviceShowAll } from "./device.js";
@@ -8303,16 +8303,25 @@ export default function App() {
   // v6.28 Scout: goals due (each at most twice a day) are checked a little after Attune opens; a strong new find → a notification
   useEffect(() => {
     if (!NATIVE || !NATIVE.search) return;
+    // v6.32: what the night run found (ScoutNight.kt) is checked now, by code, like any run; then tonight's plan is handed over
+    const tell = (gl, r) => { if (r.tell.length) { const tt = scoutTell(gl, r.tell, getLang() === "ar"); scheduleReminder({ id: "scout-" + gl.id, at: Date.now() + 1500, repeat: "none", title: tt.title, body: tt.body, created: Date.now(), source: "scout" }); } };
+    const keep = (gl, r) => { const d = loadScout(); saveScout({ ...d, goals: d.goals.map((x) => (x.id === gl.id ? { ...r.goal, votes: x.votes, taste: x.taste, on: x.on } : x)) }); };
+    const plan = () => { try { NATIVE.scoutNightPlan && NATIVE.scoutNightPlan(JSON.stringify(scoutNightPlan(loadScout()))); } catch (e) {} };
+    try {
+      const night = NATIVE.scoutNightTake ? JSON.parse(NATIVE.scoutNightTake() || "{}") : {};
+      for (const gl of loadScout().goals) if (Array.isArray(night[gl.id]) && night[gl.id].length) { const r = scoutFinish(gl, night[gl.id]); keep(gl, r); tell(gl, r); }
+    } catch (e) {}
+    plan();
     const t = setTimeout(async () => {
       const due = dueGoals(loadScout()); if (!due.length) return;
       const search = (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 8 });
       for (const gl of due.slice(0, 3)) {
         try {
           const r = await runScoutGoal(gl, search);
-          const d = loadScout(); saveScout({ ...d, goals: d.goals.map((x) => (x.id === gl.id ? { ...r.goal, votes: x.votes, taste: x.taste, on: x.on } : x)) });
-          if (r.tell.length) { const tt = scoutTell(gl, r.tell, getLang() === "ar"); scheduleReminder({ id: "scout-" + gl.id, at: Date.now() + 1500, repeat: "none", title: tt.title, body: tt.body, created: Date.now(), source: "scout" }); }
+          keep(gl, r); tell(gl, r);
         } catch (e) { /* the next open tries again */ }
       }
+      plan();
     }, 25000);
     return () => clearTimeout(t);
   }, []);

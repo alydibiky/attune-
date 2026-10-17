@@ -32,6 +32,10 @@ export async function runScoutGoal(goal, search, onStep, now = Date.now()) {
   if (!hits.some((h) => S.isAdPage(h.url, h.text || ""))) {
     for (const q of S.fallbackSearches(goal.g)) { try { const r = await search(q); for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h); } catch (e) {} }
   }
+  return finishRun(goal, hits, now);
+}
+/** v6.32: the same ending for a run's hits, whether searched now or found by the night run (ScoutNight.kt). */
+export function finishRun(goal, hits, now = Date.now()) {
   const run = S.runGoal(goal, hits, { now });
   // (v6.29: the matches new this run stay "unseen" until the goal is opened — Home's "What's waiting" counts them)
   const unseen = [...new Set([...(goal.unseen || []), ...run.found.filter((a) => run.fresh.includes(a.id)).map((a) => a.id)])].slice(-50);
@@ -47,7 +51,8 @@ export function tellText(goal, tell, ar) {
 export function ScoutPage({ search, remind, flash, openLink, incoming, clearIncoming }) {
   const ar = getLang() === "ar";
   const [data, setData] = useState(() => S.loadScout());
-  const put = (d) => setData(S.saveScout(d));
+  // (v6.32: every change hands tonight's searches to the phone, so Scout keeps looking with Attune closed)
+  const put = (d) => { setData(S.saveScout(d)); try { const N = window.AttuneNative; N && N.scoutNightPlan && N.scoutNightPlan(JSON.stringify(S.nightPlan(d))); } catch (e) {} };
   const [sel, setSel] = useState(() => (S.loadScout().goals[0] || {}).id || null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(null);   // { id, i, n, q }
@@ -93,7 +98,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
             <button className="c-sub p-1" aria-label={x.on === false ? tr("Resume") : tr("Pause")} title={x.on === false ? tr("Resume") : tr("Pause")} onClick={() => put({ ...data, goals: data.goals.map((y) => (y.id === x.id ? { ...y, on: y.on === false } : y)) })}>{x.on === false ? <Play size={15} /> : <Pause size={15} />}</button>
             <button className="c-sub p-1" aria-label={tr("Delete")} onClick={() => { put({ ...data, goals: data.goals.filter((y) => y.id !== x.id) }); if (sel === x.id) setSel(null); }}><Trash2 size={15} /></button>
           </div>))}</div> : null}
-      <p data-intro="" className="c-sub text-[12px] m-0">{tr("Scout checks each goal when you open Attune (at most twice a day) and whenever you tap Check now, and tells you only about strong new finds or price drops. It reads public ads only and never contacts anyone or pays for you.")}</p>
+      <p data-intro="" className="c-sub text-[12px] m-0">{tr("Scout checks each goal when you open Attune (at most twice a day), once at night on the phone, and whenever you tap Check now, and tells you only about strong new finds or price drops. It reads public ads only and never contacts anyone or pays for you.")}</p>
     </div>);
   const results = goal ? (
     <div className="space-y-3" data-testid="scout-results">

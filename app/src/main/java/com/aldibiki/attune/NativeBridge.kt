@@ -78,6 +78,13 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun vaultAvailable(): String = Vault.available(ctx)
 
+    // v6.32 Scout at night (ScoutNight.kt): the goals' searches for tonight, and what last night found
+    @JavascriptInterface
+    fun scoutNightPlan(plan: String): String { ScoutNight.setPlan(ctx, plan); return "ok" }
+
+    @JavascriptInterface
+    fun scoutNightTake(): String = ScoutNight.take(ctx)
+
     @JavascriptInterface
     fun vaultUnlock(id: String, arg: String) {
         val a = try { JSONObject(arg) } catch (e: Exception) { JSONObject() }
