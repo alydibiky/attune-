@@ -52,7 +52,7 @@ export function GuardianPage({ pro, openPlan, flash }) {
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="guardian-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><ShieldCheck size={20} className="c-acc" />{tr("Money Guardian")}</h2>
-        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("Finds money in your own payments — on this phone, by code. It only counts what you did.")}</p></div>
+        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Finds money in your own payments — on this phone, by code. It only counts what you did.")}</p></div>
       <div className="grid grid-cols-2 gap-3">
         <div className="c-card" data-testid="guardian-month"><span className="c-lbl">{tr("Saved this month")}</span><div className="c-amt">{pro ? fmt(totals.month) : "—"}</div></div>
         <div className="c-card"><span className="c-lbl">{tr("Saved in all")}</span><div className="c-amt">{pro ? fmt(totals.all) : "—"}</div></div>

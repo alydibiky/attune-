@@ -488,7 +488,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
       <div className="flex items-start gap-3">
         <span className="c-ic"><GraduationCap size={17} /></span>
         <div className="min-w-0"><h2 className="text-[20px] font-semibold m-0">{tr("Learn daily")}</h2>
-          <p className="c-sub m-0 lg:max-w-[70ch]">{tr("A short lesson a day, cards that come back until you know them, and a quiz every few lessons.")}</p></div>
+          <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("A short lesson a day, cards that come back until you know them, and a quiz every few lessons.")}</p></div>
       </div>
       {courses.length ? <>
         <p className="c-lbl m-0">{tr("Today")}</p>
@@ -612,7 +612,7 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
       <div className="flex items-start gap-3">
         <Newspaper size={22} className="text-amber-300 mt-1 shrink-0" />
         <div className="min-w-0"><h2 className="text-lg font-semibold text-slate-100">{tr("Daily news")}</h2>
-          <p className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Follow a team, a player, a market, a subject. Each day: what happened in the last 24 hours, with the sources.")}</p></div>
+          <p data-intro="" className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Follow a team, a player, a market, a subject. Each day: what happened in the last 24 hours, with the sources.")}</p></div>
       </div>
       {adding ? (
         <div className={"rounded-xl border border-teal-800 bg-slate-900 p-3 space-y-2" + (side ? "" : " lg:max-w-xl")} data-testid="news-add">

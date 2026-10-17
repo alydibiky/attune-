@@ -144,7 +144,7 @@ export function GuidePage({ tools, groups, navTo }) {
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="guide-page">
       <style>{`@keyframes guidePulse{0%{opacity:.9;transform:scale(.8)}100%{opacity:0;transform:scale(1.5)}}.guide-pulse{transform-box:fill-box;transform-origin:center;animation:guidePulse 1.3s ease-out infinite}`}</style>
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><BookOpen size={20} className="c-acc" />{tr("How to use Attune")}</h2>
-        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("Every tool in three steps, with a drawing of its screen. Tap a step to see where it happens, or play them all.")}</p></div>
+        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Every tool in three steps, with a drawing of its screen. Tap a step to see where it happens, or play them all.")}</p></div>
       {wide ? <div className={PANES}><div className={LEFT + " lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto pe-1"}>{list}</div><div className={RIGHT}>{walkFor(sel) || walkFor("start:model")}</div></div> : list}
     </div>);
 }

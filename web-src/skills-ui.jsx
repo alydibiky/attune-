@@ -150,7 +150,7 @@ export function SkillsPage({ flash, llm, modelReady, openEngine, share, saveFile
         <Sparkles size={22} className="text-teal-300 mt-1" />
         <div className="min-w-0">
           <h2 className="text-lg font-semibold text-slate-100">{tr("Skills")}</h2>
-          <p className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill adds instructions, facts and a checklist to your question; a small program inside it (only if you keep one) runs offline in a locked box.")}</p>
+          <p data-intro="" className="text-[13px] text-slate-400 lg:max-w-[70ch]">{tr("Your own recipes for the AI: how to write your quotes, replies, lessons. Start a message with a skill's command, or let the app pick it when your question fits. A skill adds instructions, facts and a checklist to your question; a small program inside it (only if you keep one) runs offline in a locked box.")}</p>
         </div>
       </div>
       <div className="flex gap-2 lg:max-w-xl">

@@ -149,7 +149,7 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
     <div className="space-y-4 max-w-2xl lg:max-w-none mx-auto" data-testid="deal">
       <div className="px-1">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2"><ShieldCheck size={19} className="text-emerald-300" />{tr("Deal Check")}</h2>
-        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1">{tr("Before you pay or sign: paste the offer, the seller's message or an installment plan — or add a screenshot. Attune works out the real cost, checks the market price, looks for scam signs and writes your reply.")}</p>
+        <p data-intro="" className="text-[12.5px] text-slate-400 leading-relaxed mt-1">{tr("Before you pay or sign: paste the offer, the seller's message or an installment plan — or add a screenshot. Attune works out the real cost, checks the market price, looks for scam signs and writes your reply.")}</p>
       </div>
 
       {/* v6.27 computer layout A: the offer on the left, the verdict on the right (stacked on a phone) */}

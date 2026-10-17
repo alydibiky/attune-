@@ -27,7 +27,7 @@ function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"
 // v6.29 (Ali picked A): the tools you used last, each with what waits there; filled with these when you have used fewer than four
 const START_TOOLS = ["scout", "learn", "slides", "convert", "lifeask"];
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };
-export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide }) {
+export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false }) {
   const [text, setText] = useState("");
   const [done, setDone] = useState(null);
   const [tick, setTick] = useState(0);   // v6.28: what Home did (or undid) shows in Today and the two numbers at once
@@ -40,7 +40,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
     const care = loadCare(), scout = loadScout(), courses = readArr("attune:daily:courses:v1"), slides = readArr("attune:slides:v1");
     const known = (id) => tools.some((t) => t[0] === id);
     const recent = [...new Set([...recentTools(), ...START_TOOLS])].filter(known).slice(0, 4);
-    return { items: waitingList({ care, radar: loadRadar(), life: loadLife(), ledger, scout, courses }), o, hasLedger: !!ledger, kcal: todayFacts().kcal || 0, goal: tg && tg.kcal ? tg.kcal : 0, reminders: todayFacts().reminders || 0,
+    return { items: waitingList({ care, radar: loadRadar(), life: loadLife(), ledger, scout, courses }), o, hasLedger: !!ledger, fitOn: !!(fit && fit.profile), kcal: todayFacts().kcal || 0, goal: tg && tg.kcal ? tg.kcal : 0, reminders: todayFacts().reminders || 0,
       recent: recent.map((id) => ({ t: tools.find((x) => x[0] === id), line: toolLine(id, { scout, courses, slides, ledger, care }) })) };
   }, [tick]);
   // v6.28: Home does it first (food → Fit, money → Money, a dose, a reminder, a debt…); only what it can't do goes to Chat
@@ -62,7 +62,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <button onClick={() => openRead()} aria-label={tr("Read it to me")} title={tr("Read it to me")} className="w-8 h-8 rounded-full grid place-items-center c-sub" data-testid="home-read"><Camera size={17} /></button>
         <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={16} /></button>
       </div>
-      {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : hint[0]}»</p>}
+      {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : minimal ? null : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : hint[0]}»</p>}
       {/* v6.28 declutter: a card with nothing to say is not shown (nothing due today, nothing spent and no budget) */}
       {data.items.length || data.reminders ? <div className="c-card" data-testid="home-today">
         <div className="flex items-center mb-1"><span className="c-lbl">{tr("What's waiting")}</span><span className="c-sub ms-auto">{data.items.length ? tr("{n} things", { n: data.items.length + (data.reminders || 0) }) : ""}</span></div>
@@ -83,7 +83,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
           null)}
       </div> : null}
       {/* v6.28 (Ali: "Fit & Food should be on the Home page"): today's food, water and the four meals — tap a meal to add to it */}
-      <FitToday key={"fit" + tick} openFit={() => navTo("fit")} compact />
+      {/* v6.31 minimal: the "set it up" card is an advert — Home shows Fit & Food once it has your numbers */}
+      {minimal && !data.fitOn ? null : <FitToday key={"fit" + tick} openFit={() => navTo("fit")} compact />}
       {guardian || null}
       {data.o.monthOut || data.o.budget ? <div>
         <button className="c-card text-start w-full" onClick={() => navTo("money")} data-testid="home-spent">
@@ -99,7 +100,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
           {data.recent.map(({ t: [id, label, sub, I], line }) => (
             <button key={id} onClick={() => navTo(id)} className="w-full text-start flex items-center gap-3 p-3" data-testid={"home-recent-" + id}>
               <span className="c-ic"><I size={16} /></span>
-              <span className="flex-1 min-w-0"><b className="block text-[14px]">{tr(label)}</b><span className="c-sub block truncate" dir="auto">{line || tr(sub)}</span></span>
+              <span className="flex-1 min-w-0"><b className="block text-[14px]">{tr(label)}</b>{line || !minimal ? <span className="c-sub block truncate" dir="auto">{line || tr(sub)}</span> : null}</span>
               <ChevronRight size={16} className="c-acc shrink-0 rtl:-scale-x-100" /></button>))}
         </div>
         <button onClick={openAll} className="c-acc text-[13px] font-medium mt-2" data-testid="home-all">{tr("All tools")} →</button>

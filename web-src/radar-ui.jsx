@@ -196,7 +196,7 @@ export function RadarPage({ pro, openPlan, flash, N, readText, ask, remind, unre
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="radar-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Radar size={20} className="c-acc" />{tr("Deadline Radar")}</h2>
-        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("Free trials, renewals, returns, warranties and documents — Attune warns you before each one. Everything stays on this phone.")}</p></div>
+        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Free trials, renewals, returns, warranties and documents — Attune warns you before each one. Everything stays on this phone.")}</p></div>
 
       {/* v6.27 computer layout A: the counters and the ways in on the left, the deadlines on the right (stacked on a phone) */}
       <div className={PANES_N}><div className={LEFT}>

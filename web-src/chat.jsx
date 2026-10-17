@@ -24,6 +24,7 @@ import { homeCurrency, dateOrder } from "./locale.js";
 import { wantsDoc } from "./slides.js";
 import { detectLang, replyLanguageRule, voiceTag, deviceLang } from "./langs.js";
 import { looksLikeFoodLog } from "./fit.js";
+const createPortal = (el, target) => window.ReactDOM.createPortal(el, target);   // (the page loads ReactDOM as a global)
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { tr, dateLocale, getLang } from "./i18n.js";
 import { ActionCard } from "./actions-ui.jsx";
@@ -390,8 +391,12 @@ const STARTERS = [
   ["📚", "Explain simply", "Explain simply how outrigger pads spread a crane's load on soft ground"],
 ];
 
+// v6.31 minimal (design A): the new layout (no bottom bar) also gets a calm empty chat — a title and three plain suggestions
+const MINIMAL = (() => { try { return localStorage.getItem("attune:legacy-nav") !== "1"; } catch (e) { return true; } })();
+
 // ---- the screen --------------------------------------------------------------------
 export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, composerSeed, clearComposerSeed, spaceSeed, clearSpaceSeed, openChatId, clearOpenChat }) {
+  const [plusOpen, setPlusOpen] = useState(false);   // v6.31 minimal: the composer's "+" menu
   const [chats, setChats] = useState(() => loadChats());
   const [activeId, setActiveId] = useState(() => { const c = loadChats(); return c[0] && (Date.now() - (c[0].updated || 0) < 6 * 3600e3) ? c[0].id : null; });
   const [confirmDel, setConfirmDel] = useState(null);   // chat id waiting for "Delete?" (v5.28)
@@ -1783,6 +1788,16 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           ) : null}
           <button onClick={() => { setPending(null); setText(""); }} className="mt-4 text-[12px] text-slate-500 underline underline-offset-2">{tr("Leave — normal chat")}</button>
         </div>
+      ) : messages.length === 0 && MINIMAL ? (
+        <div className="pt-16 px-2" data-testid="chat-empty-min">
+          <p className="text-[24px] text-white font-semibold tracking-tight">{tr("What can I help with?")}</p>
+          <div className="mt-4 flex flex-col">
+            {STARTERS.filter((x) => x[1] !== "Crane question" && x[1] !== "Translate" && x[1] !== "Explain simply").map(([, label, seed]) => (
+              <button key={label} onClick={() => { setText(tr(seed)); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
+                className="h-11 text-start text-[15px] text-slate-400 hover:text-slate-200">{tr(label)}</button>))}
+          </div>
+          {api.trialDays && api.trialDays() > 0 ? <button onClick={() => api.openPlan && api.openPlan()} className="mt-3 text-[12px] text-amber-200" data-testid="home-trial">★ {tr("Pro trial · {n} days left", { n: api.trialDays() })}</button> : null}
+        </div>
       ) : messages.length === 0 ? (
         <div className="pt-6 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-800 text-teal-300 mb-3"><Sparkles size={22} /></div>
@@ -2135,19 +2150,39 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && window.matchMedia && window.matchMedia(tr("(pointer: fine)")).matches) { e.preventDefault(); ask(); } }}
             placeholder={listening ? tr("Listening…") : tr("Message Attune")}
             className="att-scroll w-full bg-transparent px-2 py-1.5 text-[16px] leading-relaxed text-slate-100 placeholder-slate-500 resize-none focus:outline-none max-h-[180px]" />
-          <div className="flex items-center gap-1">
-            <label className="p-2 rounded-full text-slate-400 active:bg-slate-800" title={tr("Photo")}>
+          <div className="flex items-center gap-1 relative">
+            {/* the file pickers stay mounted; in the minimal layout the "+" menu opens them */}
+            <label className={MINIMAL ? "hidden" : "p-2 rounded-full text-slate-400 active:bg-slate-800"} title={tr("Photo")}>
               <ImagePlus size={19} />
-              <input type="file" accept="image/*" multiple className="hidden" data-testid="attach-photo" onChange={(e) => { pickImages(e.target.files); e.target.value = ""; }} />
+              <input type="file" accept="image/*" multiple className="hidden" id="att-pick-photo" data-testid="attach-photo" onChange={(e) => { pickImages(e.target.files); e.target.value = ""; }} />
             </label>
-            <label className="p-2 rounded-full text-slate-400 active:bg-slate-800" title={tr("Spreadsheet or document")}>
+            <label className={MINIMAL ? "hidden" : "p-2 rounded-full text-slate-400 active:bg-slate-800"} title={tr("Spreadsheet or document")}>
               <Paperclip size={18} />
-              <input type="file" accept=".csv,.tsv,.xlsx,.xlsm,.xls,.json,.txt,.md,.pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf" multiple className="hidden" data-testid="attach-file" onChange={(e) => { pickFiles(e.target.files); e.target.value = ""; }} />
+              <input type="file" accept=".csv,.tsv,.xlsx,.xlsm,.xls,.json,.txt,.md,.pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf" multiple className="hidden" id="att-pick-file" data-testid="attach-file" onChange={(e) => { pickFiles(e.target.files); e.target.value = ""; }} />
             </label>
+            {MINIMAL ? (
+              <>
+                {/* v6.31 minimal (design A, like ChatGPT/Gemini): one "+" holds photo, file, think and web; what is on shows as a chip */}
+                <button onClick={() => setPlusOpen((v) => !v)} aria-expanded={plusOpen} aria-label={tr("Add")} data-testid="composer-plus"
+                  className={"w-9 h-9 rounded-full flex items-center justify-center border " + (plusOpen ? "border-teal-600 text-teal-300" : "border-slate-700 text-slate-300")}><Plus size={18} /></button>
+                {think ? <button onClick={() => setThink(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-teal-500/10 text-teal-300" data-testid="chip-think"><Brain size={13} />{tr("Think")}<X size={12} /></button> : null}
+                {api.webOn || api.webAuto ? <button onClick={api.toggleWeb} data-testid="web-toggle" className={"h-8 px-2.5 rounded-full text-xs flex items-center gap-1 " + (api.webOn ? "bg-teal-500/10 text-teal-300" : "bg-sky-500/10 text-sky-300")}><Globe size={13} />{api.webAuto ? tr("Web · Auto") : tr("Web")}</button> : null}
+                {plusOpen ? createPortal(
+                  <div className="fixed start-3 bottom-[calc(var(--kb,0px)+7.5rem)] z-[70] pointer-events-auto w-60 rounded-2xl border border-slate-800 bg-slate-900 p-1.5 shadow-xl" data-testid="composer-menu" onClick={() => setPlusOpen(false)}>
+                    <label htmlFor="att-pick-photo" className="flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800 cursor-pointer"><ImagePlus size={17} className="text-slate-400" />{tr("Photo")}</label>
+                    <label htmlFor="att-pick-file" className="flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800 cursor-pointer"><Paperclip size={17} className="text-slate-400" />{tr("File")}</label>
+                    <button onClick={() => setThink((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-think"><Brain size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Think first")}</span>{think ? <CheckCircle2 size={15} className="text-teal-400" /> : null}</button>
+                    <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-web"><Globe size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Search the web")}</span><span className="text-[11px] text-slate-500">{api.webOn ? tr("On") : api.webAuto ? tr("Auto") : tr("Off")}</span></button>
+                  </div>, document.body) : null}
+              </>
+            ) : (
+              <>
             <button onClick={() => setThink((v) => !v)} className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${think ? "border-teal-600 text-teal-300 bg-teal-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Think first")}>
               <Brain size={14} /> {tr("Think")}</button>
             <button onClick={api.toggleWeb} data-testid="web-toggle" className={`px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 border ${api.webOn ? "border-teal-600 text-teal-300 bg-teal-500/10" : api.webAuto ? "border-sky-700 text-sky-300 bg-sky-500/10" : "border-slate-700 text-slate-400"}`} title={tr("Search the web")}>
               <Globe size={14} /> {api.webAuto ? tr("Web · Auto") : tr("Web")}</button>
+              </>
+            )}
             <div className="flex-1" />
             {busy && text.trim() ? (
               <button onClick={() => ask()} className="w-10 h-10 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center me-1" title={tr("Send")} data-testid="queue-send"><Send size={17} /></button>

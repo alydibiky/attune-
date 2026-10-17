@@ -10,7 +10,7 @@ const b = src.findIndex((l, i) => i > a && /^\];/.test(l));
 const TIERS = new Function(src.slice(a, b + 1).join("\n").replace("const MODEL_TIERS =", "return"))();
 
 const marked = TIERS.filter((t) => t.mtp);
-ok(marked.length === 7, "six Qwen 3.5 entries and Everest XL are MTP builds (got " + marked.length + ")");
+ok(marked.length === 8, "seven Qwen 3.5 entries (v6.31: + Core Max) and Everest XL are MTP builds (got " + marked.length + ")");
 for (const t of marked) {
   const m = /^unsloth\/Qwen3\.([56])-([0-9.]+B(?:-A3B)?)-MTP-GGUF$/.exec(t.repo || "");
   ok(!!m && t.realName.startsWith("Qwen3." + m[1] + " " + m[2]), t.label + ": repo " + t.repo + " matches " + t.realName);

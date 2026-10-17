@@ -122,7 +122,7 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
     <div className="space-y-4 max-w-2xl mx-auto" data-testid="video">
       <div className="px-1">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Film size={19} className="text-teal-300" />{tr("Video Downloader")}</h2>
-        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Copy a video's link, paste it here, pick the quality — it's saved to your phone's Movies folder. Works with direct video links, Google Drive, Dropbox, archive.org, Wikimedia Commons and pages that show a plain video.")}</p>
+        <p data-intro="" className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Copy a video's link, paste it here, pick the quality — it's saved to your phone's Movies folder. Works with direct video links, Google Drive, Dropbox, archive.org, Wikimedia Commons and pages that show a plain video.")}</p>
       </div>
 
       {/* v6.27 computer layout (option A): the link on the left; the versions found and the downloads on the right */}

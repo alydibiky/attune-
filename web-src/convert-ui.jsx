@@ -25,6 +25,10 @@ const T_LANGS = { en: "English", ar: "Arabic", fr: "French", es: "Spanish", de: 
   hi: "Hindi", ur: "Urdu", fa: "Persian", id: "Indonesian", nl: "Dutch", pl: "Polish", bn: "Bengali", sw: "Swahili", el: "Greek", uk: "Ukrainian", ro: "Romanian", ms: "Malay", th: "Thai", vi: "Vietnamese" };
 const langLabel = (k) => { const l = getLang(); if (l !== "en") try { return new Intl.DisplayNames([l], { type: "language" }).of(k) || tr(T_LANGS[k]); } catch (e) {} return T_LANGS[k]; };
 // v5.41 (Ali: "give me all the options — how can I merge PDFs?"): every tool shown before a file is picked
+// v6.31 minimal (design A): one main action (choose a file), the four most used as plain rows, the rest behind "All conversions";
+// Translate is its own tab next to this one, so it is not repeated here
+const MINIMAL = (() => { try { return localStorage.getItem("attune:legacy-nav") !== "1"; } catch (e) { return true; } })();
+const TOP4 = ["pdf2word", "word2pdf", "photos2pdf", "merge"];
 const QUICK = [
   { id: "merge", label: "Merge PDFs", desc: "Several PDFs → one", accept: ".pdf,application/pdf", multiple: true, target: "merge", icon: "📑" },
   { id: "pdf2word", label: "PDF → Word", desc: "Edit a PDF in Word", accept: ".pdf,application/pdf", target: "docx", icon: "📝" },
@@ -63,6 +67,7 @@ const kb = (n) => (n > 1e6 ? (n / 1e6).toFixed(1) + " MB" : Math.max(1, Math.rou
 export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, canReadPhotos, openEngine, flash, pro, openPlan }) {
   const [files, setFiles] = useSticky("convert:files", null);       // { kind, list: File[] }
   const [target, setTarget] = useSticky("convert:target", null);
+  const [showAll, setShowAll] = useState(false);   // v6.31 minimal: the other conversions
   const [busy, setBusy] = useState(null);         // text
   const [out, setOut] = useSticky("convert:out", null);           // { name, mime, b64?, text?, size, preview, note }
   const [err, setErr] = useState("");
@@ -289,7 +294,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     <div className="space-y-4 max-w-2xl mx-auto" data-testid="convert">
       <div className="px-1">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2"><FileText size={19} className="text-teal-300" />{tr("File Converter")}</h2>
-        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("PDF ↔ Word, PowerPoint → PDF, photos → PDF, scanned paper → editable Word, Excel ↔ CSV ↔ JSON, e-books, web pages, subtitles, merge and split PDFs — on your phone. Your files are never uploaded to a converter website.")}</p>
+        <p data-intro="" className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("PDF ↔ Word, PowerPoint → PDF, photos → PDF, scanned paper → editable Word, Excel ↔ CSV ↔ JSON, e-books, web pages, subtitles, merge and split PDFs — on your phone. Your files are never uploaded to a converter website.")}</p>
       </div>
 
       {/* v6.27 computer layout (option A): before a file is picked the tools fill the width; after, the file and its
@@ -300,6 +305,21 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
           onChange={(e) => { const l = e.target.files; pick(l); e.target.value = ""; }} />
         {!files ? (
           <>
+            {MINIMAL ? (
+              <>
+                <button onClick={() => { intentRef.current = null; setIntent(null); if (fileRef.current) { fileRef.current.accept = ACCEPT; fileRef.current.multiple = true; fileRef.current.click(); } }} className="w-full py-8 rounded-2xl border-2 border-dashed border-slate-700 text-slate-200 flex flex-col items-center gap-2" data-testid="convert-pick">
+                  <ImagePlus size={24} className="text-teal-300" /><span className="text-[15px] font-semibold">{tr("Choose a file")}</span>
+                  <span className="text-[12.5px] text-slate-500">{tr("It shows what it can become")}</span></button>
+                <div className="flex flex-col" data-testid="convert-tools">
+                  {QUICK.filter((q) => q.id !== "translate" && (showAll || TOP4.includes(q.id))).sort((a, b) => (TOP4.includes(b.id) ? 1 : 0) - (TOP4.includes(a.id) ? 1 : 0)).map((q) => (
+                    <button key={q.id} onClick={() => startTool(q)} data-testid={"convert-tool-" + q.id}
+                      className="h-12 flex items-center text-start text-[15px] text-slate-100 border-b border-slate-800/70 last:border-0">
+                      <span className="flex-1">{tr(q.label)}</span><span className="text-slate-600">›</span></button>))}
+                </div>
+                {showAll ? null : <button onClick={() => setShowAll(true)} className="text-[14px] text-teal-300 text-start" data-testid="convert-all">{tr("All conversions")}</button>}
+              </>
+            ) : (
+              <>
             <p className="text-[13px] font-medium text-slate-200">{tr("What do you want to do?")}</p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2" data-testid="convert-tools">
               {QUICK.map((q) => (
@@ -314,6 +334,8 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
               <ImagePlus size={20} className="text-teal-300" /><span className="text-[13.5px] font-medium">{tr("Or choose any file — see everything it can become")}</span>
               <span className="text-[11px] text-slate-500">{tr("PDF · Word · PowerPoint · Excel · CSV · photos · e-books · web pages · subtitles")}</span>
             </button>
+              </>
+            )}
           </>
         ) : (
           <>

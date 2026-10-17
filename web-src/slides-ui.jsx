@@ -571,7 +571,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
     <div className="space-y-4 max-w-2xl mx-auto" data-testid="slides">
       <div className="px-1">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Presentation size={19} className="text-teal-300" />{tr("Slides & Reports")}</h2>
-        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Describe it in one sentence — the AI on your phone writes a designed PowerPoint or a full report, from the web or your own file. Edit any slide, then save it as PowerPoint, Word or PDF.")}</p>
+        <p data-intro="" className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Describe it in one sentence — the AI on your phone writes a designed PowerPoint or a full report, from the web or your own file. Edit any slide, then save it as PowerPoint, Word or PDF.")}</p>
       </div>
 
       {/* v6.27 computer layout (option A): what to make on the left; recent ones / the slides on the right */}

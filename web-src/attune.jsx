@@ -949,6 +949,13 @@ const MODEL_TIERS = [
     repo: "unsloth/Qwen3.5-4B-MTP-GGUF", mtp: true,
     quality: "The best everyday choice if your phone can hold it: reads photos of documents and receipts, Arabic and English, with extra precision for long answers.",
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
+  // v6.31 measured on ARM with KleidiAI (tests/models/quant_bench.py): the 8-bit file of the same 4B reads prompts 96 t/s (Q5_K_S: 31,
+  // IQ4_XS: 22) and writes 15 t/s (Q5_K_S: 8.9) — the CPU's fast 8-bit path — with the closest answers to the full model. Costs memory.
+  { id: "md-max", vision: true, label: "Core Max", realName: "Qwen3.5 4B", smoothRam: 16, params: "4B", quant: "Q8_0", sizeGB: 4.61,
+    needRam: 12, ctx: 32768, platform: "any",
+    repo: "unsloth/Qwen3.5-4B-MTP-GGUF", mtp: true,
+    quality: "Core at full precision: the fastest at reading long messages and files on a 12 GB+ phone, and the most exact answers of the 4B.",
+    good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
   { id: "lg", vision: true, label: "Sense", realName: "Gemma 4 E4B", smoothRam: 16, params: "4.5B eff.", quant: "UD-Q4_K_XL", sizeGB: 5.13,
     needRam: 12, ctx: 32768, platform: "any",
     repo: "unsloth/gemma-4-E4B-it-GGUF",
@@ -959,7 +966,9 @@ const MODEL_TIERS = [
     repo: "unsloth/Qwen3.5-4B-MTP-GGUF", mtp: true,
     quality: "The sweet spot on an ordinary modern phone: everything the app does, in under 3 GB.",
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
-  { id: "md-lo", vision: true, label: "Core Lite", realName: "Qwen3.5 4B", smoothRam: 6, params: "4B", quant: "IQ4_XS", sizeGB: 2.64,
+  // v6.31 measured on ARM with KleidiAI (tests/models/quant_bench.py): IQ4_NL reads prompts 1.56× faster than IQ4_XS (35 vs 22 t/s),
+  // writes a little faster (11.4 vs 11.0) and drifts LESS from the full model (KLD 0.048 vs 0.051), for 0.09 GB more
+  { id: "md-lo", vision: true, label: "Core Lite", realName: "Qwen3.5 4B", smoothRam: 6, params: "4B", quant: "IQ4_NL", sizeGB: 2.73,
     needRam: 6, ctx: 8192, platform: "any", imatrix: true,
     repo: "unsloth/Qwen3.5-4B-MTP-GGUF", mtp: true,
     quality: "Core made 10% smaller, for a 6 GB phone that is short on free memory.",
@@ -7359,6 +7368,9 @@ span, h1, h2, h3, label { overflow-wrap: break-word; }
 .att-nowrap { white-space: nowrap; }
 
 /* v6.28 device level 1 (a light phone): no blur behind sheets (the costliest effect on a weak GPU), short animations, no shadows */
+/* v6.31 minimal (Ali: "make the app minimal so it's not cluttered" → design A): no intro paragraphs under page titles — the How to
+   use page explains every tool; set on <html> when the old bottom bar is off */
+.att-min [data-intro] { display: none !important; }
 .att-lite *, .att-lite *::before, .att-lite *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important; animation-duration: .12s !important; transition-duration: .08s !important; }
 
 /* Someone who has asked their system for less motion means it. */
@@ -7390,7 +7402,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.30";
+const PAGE_VERSION = "6.31";
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7954,15 +7966,19 @@ export default function App() {
   const [allTools, setAllToolsRaw] = useState(() => deviceShowAll());
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
+  // v6.31 minimal: short tab names (the page's own title stays full)
+  const TAB_SHORT = { chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "People", convert: "Convert",
+    pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Prompts", xray: "X-ray",
+    lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
   const hubTabsEl = (() => {
     const avail = [...new Set([...groupsHere.flatMap((g) => g[1]), "chat", "money", "health", "home", "tools", "privacy", "guide"])];
     const t = tabsFor(mode, avail);
-    return t.length ? <HubTabs mode={mode} tabs={t} parts={partsOf(mode, avail)} titleOf={(m) => ({ chat: "Chat", ask: "Ask (classic)", money: "Money" })[m] || MODE_TITLES[m] || (MORE_TOOLS.find((x) => x[0] === m) || [])[1] || m}
+    return t.length ? <HubTabs mode={mode} tabs={t} parts={partsOf(mode, avail)} titleOf={(m) => TAB_SHORT[m] || MODE_TITLES[m] || (MORE_TOOLS.find((x) => x[0] === m) || [])[1] || m}
       navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} /> : null;
   })();
   // (no bottom bar → the panels pinned above it sit on the bottom edge)
-  useEffect(() => { if (!LEGACY_NAV) try { document.documentElement.style.setProperty("--nav-h", "0px"); } catch (e) {} }, []);
+  useEffect(() => { if (!LEGACY_NAV) try { document.documentElement.style.setProperty("--nav-h", "0px"); document.documentElement.classList.add("att-min"); } catch (e) {} }, []);
   useEffect(() => { try { document.documentElement.classList.toggle("att-lite", !!devLevel.lite); } catch (e) {} }, [devLevel.lite]);
   // The person knows their own machine better than any heuristic does.
   const setRamOverride = (gb) => {
@@ -9342,8 +9358,13 @@ export default function App() {
           {/* v6.28 (Ali: "the UI is still cluttered"): a page with its own big title doesn't repeat it in the top bar */}
           <p className="text-base font-semibold text-white truncate">{OWN_TITLE.has(mode) && mode !== "money" ? "" : tr(MODE_TITLES[mode] || "Attune")}</p>
           <div className="flex-1" />
-          <button onClick={() => setShowEngine(true)} className={`${wide ? "hidden " : ""}flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
-            <Cpu size={12} />{modelState === "ready" ? (runningTier ? brandOf(runningTier).brand : tr("Ready")) : modelState === "starting" ? ("Loading" + (engineInfo && engineInfo.loadingFor ? " " + engineInfo.loadingFor + "s" : "…")) : modelState === "downloading" ? "Installing " + dlPct + "%" : (NATIVE && (installedModels || []).length ? tr("Asleep — wakes when needed") : tr("No model"))}</button>
+          {/* v6.31 minimal: the model is a small dot and a name, not a big outlined button */}
+          {LEGACY_NAV ? <button onClick={() => setShowEngine(true)} className={`${wide ? "hidden " : ""}flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border shrink-0 ${modelState === "ready" ? "border-teal-700 text-teal-300 bg-teal-500/10" : modelState === "starting" ? "border-amber-700 text-amber-200" : "border-slate-700 text-slate-400"}`}>
+            <Cpu size={12} />{engineText}</button>
+          : <button onClick={() => setShowEngine(true)} data-testid="header-model" aria-label={tr("Engine") + ": " + engineText}
+              className={`${wide ? "hidden " : ""}flex items-center gap-1.5 text-[12px] h-8 px-2.5 rounded-full bg-slate-900 text-slate-300 shrink-0 max-w-[45%]`}>
+            <span className={"w-2 h-2 rounded-full shrink-0 " + (modelState === "ready" ? "bg-teal-400" : modelState === "starting" || modelState === "downloading" ? "bg-amber-400 animate-pulse" : "bg-slate-600")} />
+            <span className="truncate">{modelState === "ready" || modelState === "starting" || modelState === "downloading" ? engineText : NATIVE && (installedModels || []).length ? tr("Asleep") : tr("No model")}</span></button>}
           {NATIVE && airGap ? <button onClick={() => setShowEngine(true)} className="p-2 text-teal-300" aria-label={tr("Offline lock on")}><Lock size={15} /></button> : null}
           {mode === "chat" ? <button onClick={() => { setNewChatSignal((n) => n + 1); }} className="att-icon-btn border-transparent! bg-transparent! text-slate-300!" aria-label={tr("New chat")}><Plus size={20} /></button> : null}
         </header>
@@ -9370,7 +9391,7 @@ export default function App() {
         {/* v6.30: tools that belong together are one page — a tab row on top (hubs.js) */}
         {LEGACY_NAV || (mode === "money" && !wide) ? null : hubTabsEl}
         <Guard key={"g-" + mode} name={mode}>{mode === "home" && !wide ? (
-          <PhoneHome navTo={(m) => navTo(m)} doIt={doFromHome} openAll={() => setMoreOpen(true)} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
+          <PhoneHome navTo={(m) => navTo(m)} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
             onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
@@ -10864,7 +10885,7 @@ export default function App() {
           </div>
         )}
         {/* v5.29 UX: not on Chat — the fixed message box covered it (half-hidden text) */}
-        {!wide && (mode === "home" || mode === "tools") ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
+        {!wide && LEGACY_NAV && (mode === "home" || mode === "tools") ? <p className="text-center text-xs text-slate-500 mt-6">{tr("Attune · the AI runs on your device · no account, no sign-in · web lookup only when a question needs it (Auto) — switch Auto off in Engine")}</p> : null}
       </div>
       {toast && <div className="fixed z-[300] bottom-5 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 text-sm font-medium px-4 py-2 rounded-full shadow-lg">{toast}</div>}
       <ConfirmHost />
@@ -10985,7 +11006,7 @@ export default function App() {
               <h2 className="text-lg font-bold text-white">{tr("Your own action")}</h2>
               <button onClick={() => setShowCustom(false)} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
             </div>
-            <p className="text-xs text-slate-500 mb-4">{tr("Make the app do the thing you do over and over — one tap, every time. Yours only, stored on this device.")}</p>
+            <p data-intro="" className="text-xs text-slate-500 mb-4">{tr("Make the app do the thing you do over and over — one tap, every time. Yours only, stored on this device.")}</p>
             <p className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">{tr("Button name")}</p>
             <input value={newAct.label} onChange={(e) => setNewAct((a) => ({ ...a, label: e.target.value }))}
               placeholder={tr("e.g. Reply in Arabic")} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
@@ -11626,7 +11647,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><Cpu size={18} className="text-teal-400" /> {tr("Engine")}</h2>
           <button onClick={close} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
-        <p className="text-xs text-slate-500 mb-4">{tr("Run the AI on your own hardware. Nothing leaves the device, nothing costs per use.")}</p>
+        <p data-intro="" className="text-xs text-slate-500 mb-4">{tr("Run the AI on your own hardware. Nothing leaves the device, nothing costs per use.")}</p>
 
         {native ? <NativeEnginePanel n={{ ...native, device }} modelState={modelState} dlPct={dlPct} flash={flash} /> : null}
 
@@ -11907,7 +11928,7 @@ function OrgModal({ org, setOrg, close, flash }) {
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><Building2 size={18} className="text-teal-400" /> {tr("Company terminology")}</h2>
           <button onClick={close} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
-        <p className="text-xs text-slate-500 mb-4">{tr("Your real names for your real things. Every document then uses them correctly — no invented equipment names, no wrong site spellings. Stays on your devices.")}</p>
+        <p data-intro="" className="text-xs text-slate-500 mb-4">{tr("Your real names for your real things. Every document then uses them correctly — no invented equipment names, no wrong site spellings. Stays on your devices.")}</p>
 
         <button onClick={() => set("on", !o.on)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm mb-4 ${o.on ? "border-teal-600 bg-teal-500/10 text-teal-300" : "border-slate-800 bg-slate-950 text-slate-400"}`}>
           <span>{tr("Use company terminology")}</span>
@@ -11971,7 +11992,7 @@ function MemoryModal({ records, findings, closeFollowUp, close }) {
           <h2 className="text-xl font-bold text-white flex items-center gap-2"><Radar size={18} className="text-teal-400" /> {tr("Site memory")}</h2>
           <button onClick={close} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
-        <p className="text-xs text-slate-500 mb-4">{tr("Every record stays on this device. The connections between them are what a single report can never show you.")}</p>
+        <p data-intro="" className="text-xs text-slate-500 mb-4">{tr("Every record stays on this device. The connections between them are what a single report can never show you.")}</p>
 
         {open.length > 0 ? (
           <div className="mb-5">

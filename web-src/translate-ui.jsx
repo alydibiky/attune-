@@ -99,7 +99,7 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="translate-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Languages size={20} className="c-acc" />{tr("Translate")}</h2>
-        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("Any language, on this phone. Numbers, names and codes can't be changed; every part is checked, and anything doubtful is marked.")}</p></div>
+        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Any language, on this phone. Numbers, names and codes can't be changed; every part is checked, and anything doubtful is marked.")}</p></div>
       <div className="flex gap-4 border-b" style={{ borderColor: "var(--c-ln)" }} role="tablist">
         {[["text", "Text"], ["photo", "Photo"], ["doc", "Document"]].map(([id, l]) => <button key={id} role="tab" aria-selected={tab === id} className="c-tab pb-2" onClick={() => { setTab(id); setRes(null); }} data-testid={"tr-tab-" + id}>{tr(l)}</button>)}
       </div>

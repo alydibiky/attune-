@@ -82,7 +82,7 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="coach-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><GraduationCap size={21} className="c-acc" />{tr("Homework Coach")}</h2>
-        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("Snap the homework — Attune teaches it step by step, with pictures and a voice. Maths is checked by code before you see it.")}</p></div>
+        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Snap the homework — Attune teaches it step by step, with pictures and a voice. Maths is checked by code before you see it.")}</p></div>
       {/* v6.27 computer layout A: the homework and its problems on the left, the lesson on the right (stacked on a phone) */}
       <div className={PANES}><div className={LEFT}>
       <div className="flex gap-2 flex-wrap">

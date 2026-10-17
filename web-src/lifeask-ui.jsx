@@ -56,7 +56,7 @@ export function LifeAskPage({ navTo, askChat, listen }) {
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="lifeask-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Sparkles size={20} className="c-acc" />{tr("Ask your life")}</h2>
-        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("One question, answered from everything Attune keeps for you — money, debts, medicines, lab results, meals, deadlines and notes.")}</p></div>
+        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("One question, answered from everything Attune keeps for you — money, debts, medicines, lab results, meals, deadlines and notes.")}</p></div>
       <div className={PANES}><div className={LEFT}>{left}</div>
         <div className={RIGHT}>{answer || <div className="hidden lg:block"><DeskEmpty icon={Sparkles} title={tr("Your answer appears here")} testid="lifeask-empty" /></div>}</div></div>
     </div>);

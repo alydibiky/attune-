@@ -9,6 +9,8 @@ import { tr, getLang } from "./i18n.js";
 import * as S from "./scout.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
+// v6.31 minimal: two examples are enough to show the idea
+const MINIMAL = (() => { try { return localStorage.getItem("attune:legacy-nav") !== "1"; } catch (e) { return true; } })();
 const EXAMPLES = [
   ["3-bedroom flat for rent in Maadi under 15,000, not ground floor, near the metro", "شقة ٣ غرف للإيجار في المعادي أقل من ١٥ ألف مش دور أرضي قريبة من المترو"],
   ["Hyundai Tucson 2019 to 2021 under 900k, one owner, no accident, automatic", "هيونداي توسان من 2019 لـ 2021 أقل من 900 ألف أول مالك بدون حوادث أوتوماتيك"],
@@ -77,7 +79,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
         <span className="c-lbl">{tr("What should Scout look for?")}</span>
         <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} dir="auto" placeholder={tr("e.g. a 3-bedroom flat for rent in Maadi under 15,000, not ground floor")} className={field} style={{ borderColor: "var(--c-ln)", color: "var(--c-ink)" }} data-testid="scout-text" />
         <button className="c-btn inline-flex items-center gap-1.5" disabled={!text.trim()} onClick={() => add()} data-testid="scout-add"><Plus size={15} />{tr("Start scouting")}</button>
-        <div className="flex flex-wrap gap-1.5 pt-1">{EXAMPLES.map(([en, a]) => <button key={en} onClick={() => setText(ar ? a : en)} className="rounded-full border px-2.5 py-1 text-[12px] text-start" style={{ borderColor: "var(--c-ln)", color: "var(--c-ink)" }} dir="auto" data-testid="scout-example">{ar ? a : en}</button>)}</div>
+        <div className="flex flex-wrap gap-1.5 pt-1">{(MINIMAL ? EXAMPLES.slice(0, 2) : EXAMPLES).map(([en, a]) => <button key={en} onClick={() => setText(ar ? a : en)} className="rounded-full border px-2.5 py-1 text-[12px] text-start" style={{ borderColor: "var(--c-ln)", color: "var(--c-ink)" }} dir="auto" data-testid="scout-example">{ar ? a : en}</button>)}</div>
       </div>
       {data.goals.length ? <div className="space-y-2" data-testid="scout-goals"><span className="c-lbl">{tr("Your goals")}</span>
         {data.goals.map((x) => (
@@ -91,7 +93,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
             <button className="c-sub p-1" aria-label={x.on === false ? tr("Resume") : tr("Pause")} title={x.on === false ? tr("Resume") : tr("Pause")} onClick={() => put({ ...data, goals: data.goals.map((y) => (y.id === x.id ? { ...y, on: y.on === false } : y)) })}>{x.on === false ? <Play size={15} /> : <Pause size={15} />}</button>
             <button className="c-sub p-1" aria-label={tr("Delete")} onClick={() => { put({ ...data, goals: data.goals.filter((y) => y.id !== x.id) }); if (sel === x.id) setSel(null); }}><Trash2 size={15} /></button>
           </div>))}</div> : null}
-      <p className="c-sub text-[12px] m-0">{tr("Scout checks each goal when you open Attune (at most twice a day) and whenever you tap Check now, and tells you only about strong new finds or price drops. It reads public ads only and never contacts anyone or pays for you.")}</p>
+      <p data-intro="" className="c-sub text-[12px] m-0">{tr("Scout checks each goal when you open Attune (at most twice a day) and whenever you tap Check now, and tells you only about strong new finds or price drops. It reads public ads only and never contacts anyone or pays for you.")}</p>
     </div>);
   const results = goal ? (
     <div className="space-y-3" data-testid="scout-results">
@@ -136,7 +138,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="scout-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Binoculars size={20} className="c-acc" />{tr("Scout")}</h2>
-        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("Say once what you're looking for — a flat, a car, a product, a job, a supplier. Scout searches the sites that matter, checks every wish against what each ad says, tells you if the price is fair, and lets you know when something good appears.")}</p></div>
+        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Say once what you're looking for — a flat, a car, a product, a job, a supplier. Scout searches the sites that matter, checks every wish against what each ad says, tells you if the price is fair, and lets you know when something good appears.")}</p></div>
       <div className={PANES}><div className={LEFT}>{left}</div><div className={RIGHT}>{results}</div></div>
     </div>);
 }

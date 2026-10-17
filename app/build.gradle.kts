@@ -11,8 +11,8 @@ android {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
         targetSdk = 36   // Google Play: new apps and updates must target Android 16 (API 36) since 31 Aug 2026
-        versionCode = System.getenv("ATTUNE_VERSION_CODE")?.toIntOrNull() ?: 91   // CI: 1000 + the run number, so every build installs over the last and Play accepts each upload
-        versionName = "6.30"
+        versionCode = System.getenv("ATTUNE_VERSION_CODE")?.toIntOrNull() ?: 92   // CI: 1000 + the run number, so every build installs over the last and Play accepts each upload
+        versionName = "6.31"
 
         // The on-device engine (llama.cpp) is native code. arm64 is every real
         // phone. Add "x86_64" only if you want to run it in the emulator — it

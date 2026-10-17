@@ -410,7 +410,7 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
   if (!doc) return (
     <section className="p-4 space-y-3" data-testid="pdfchat-home">
       <div className={PANES}><div className="space-y-3 min-w-0 lg:sticky lg:top-4">
-      <div className="flex items-start gap-3"><FileText size={22} className="text-teal-300 mt-1" /><div><h2 className="text-lg font-semibold text-slate-100">{tr("Ask a PDF")}</h2><p className="text-[13px] text-slate-400">{tr("Open a PDF, Word file, book or web page. Read it here and chat with it — every answer shows the page it came from. Everything stays on your phone.")}</p></div></div>
+      <div className="flex items-start gap-3"><FileText size={22} className="text-teal-300 mt-1" /><div><h2 className="text-lg font-semibold text-slate-100">{tr("Ask a PDF")}</h2><p data-intro="" className="text-[13px] text-slate-400">{tr("Open a PDF, Word file, book or web page. Read it here and chat with it — every answer shows the page it came from. Everything stays on your phone.")}</p></div></div>
       <label className={primary + " w-full py-3 flex items-center justify-center gap-1.5 cursor-pointer text-sm"}><Upload size={15} />{busy || tr("Open a file")}
         <input type="file" accept=".pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf,.txt,.md" className="hidden" data-testid="pdfchat-file" disabled={!!busy} onChange={(e) => { open(e.target.files && e.target.files[0]); e.target.value = ""; }} /></label>
       {err ? <p className="text-[12.5px] text-amber-300" data-testid="pdfchat-err">{err}</p> : null}

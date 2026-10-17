@@ -9,11 +9,11 @@ export function HubTabs({ mode, tabs, titleOf, navTo, parts = [] }) {
   const on = (m) => m === mode || INSIDE[mode] === m;
   return (
     <>
-    <div className="att-hscroll flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-2 mb-3" role="tablist" data-testid="hub-tabs">
+    <div className="att-hscroll flex gap-5 overflow-x-auto -mx-3 px-3 mb-4 border-b border-slate-800/80" role="tablist" data-testid="hub-tabs">
       {tabs.map((m) => (
         <button key={m} role="tab" aria-selected={on(m)} onClick={() => { if (m !== mode) navTo(m); }} data-testid={"hub-tab-" + m}
-          className={"shrink-0 rounded-full px-3.5 py-1.5 text-[13px] border whitespace-nowrap transition-colors " +
-            (on(m) ? "border-teal-600 bg-teal-500/15 text-teal-200 font-medium" : "border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700")}>
+          className={"shrink-0 h-10 -mb-px text-[14px] whitespace-nowrap border-b-2 transition-colors " +
+            (on(m) ? "border-teal-400 text-white font-semibold" : "border-transparent text-slate-400 hover:text-slate-200")}>
           {tr(titleOf(m))}</button>))}
     </div>
     {parts.length === 2 ? (

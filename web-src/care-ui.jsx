@@ -131,7 +131,7 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="care-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Heart size={20} className="c-acc" />{tr("Family health")}</h2>
-        <p className="c-sub m-0 lg:max-w-[70ch]">{tr("Medicines, reminders and lab results for your family — read from the prescription and the report, kept on this phone. Not medical advice: ask your doctor or pharmacist.")}</p></div>
+        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Medicines, reminders and lab results for your family — read from the prescription and the report, kept on this phone. Not medical advice: ask your doctor or pharmacist.")}</p></div>
       <div className="flex gap-4 border-b" style={{ borderColor: "var(--c-ln)" }} role="tablist">
         {TABS.map(([id, l]) => <button key={id} role="tab" aria-selected={tab === id} className="c-tab pb-2" onClick={() => setTab(id)} data-testid={"care-tab-" + id}>{tr(l)}</button>)}
       </div>

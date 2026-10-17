@@ -119,7 +119,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
     <div className="space-y-4 max-w-2xl mx-auto" data-testid="xray">
       <div className="px-1">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2"><MessageCircle size={19} className="text-teal-300" />{tr("Chat X-Ray")}</h2>
-        <p className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Who owes whom, what was promised, which dates were agreed and which questions got no answer — read from a WhatsApp chat on your phone. The chat never leaves the phone.")}</p>
+        <p data-intro="" className="text-[12.5px] text-slate-400 leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Who owes whom, what was promised, which dates were agreed and which questions got no answer — read from a WhatsApp chat on your phone. The chat never leaves the phone.")}</p>
       </div>
 
       {/* v6.27 computer layout (option A): the chat and its settings on the left, the X-ray on the right; with an

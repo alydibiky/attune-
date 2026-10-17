@@ -14,7 +14,7 @@ export const LEVELS = [
   { level: 5, name: "Computer", ar: "كمبيوتر", maxModel: "moe-xl-long", studio: "full", lite: false, hide: [], what: "Everything, the biggest models and full Studio" },
 ];
 // the model ids in order of size (power.js brands): a device offers those up to its maxModel
-export const MODEL_ORDER = ["xs", "sm", "fast-e2b", "md-lo", "md", "md-hi", "fast-e4b", "lg", "xl", "max", "moe-lg", "ultra", "moe-xl", "moe-xl-long"];
+export const MODEL_ORDER = ["xs", "sm", "fast-e2b", "md-lo", "md", "md-hi", "md-max", "fast-e4b", "lg", "xl", "max", "moe-lg", "ultra", "moe-xl", "moe-xl-long"];
 
 /** device = detectDevice() → its level. A phone that reports few cores drops one level (it runs hot and slow). */
 export function deviceLevel(device) {
