@@ -2,7 +2,7 @@
 import * as LK from "../../web-src/fitlook.js";
 const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
 
-ok(LK.LOOKS.map((l) => l.id).join() === "fresh,night,bold" && LK.DEFAULT_LOOK === "fresh", "three looks, Fresh (A) the default");
+ok(LK.LOOKS.map((l) => l.id).join() === "fresh,night,bold,meals,rings,tiles" && LK.DEFAULT_LOOK === "fresh", "six looks, Fresh (A) the default");
 ok(LK.lookOf({}) === "fresh" && LK.lookOf({ look: "bold" }) === "bold" && LK.lookOf({ look: "nope" }) === "fresh", "an unknown or missing look falls back to Fresh");
 ok(["fresh", "night", "bold"].every((id) => LK.LOOK_CSS.includes(".fit-look-" + id + "{") && LK.LOOK_CSS.includes("body:has(.fit-look-" + id + ")")), "each look recolours the whole page while Fit is open");
 ok(LK.FACTS.length >= 10 && LK.FACTS.every((f) => f.en.length > 30 && f.ar.length > 30 && f.src && f.src.en && f.src.ar && !/[a-z]{3}/i.test(f.ar.replace(/WHO|EFSA|USDA/g, ""))), "10+ facts, each in English and Arabic (no Latin words in the Arabic) with a source");
