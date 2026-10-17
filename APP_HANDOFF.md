@@ -127,7 +127,7 @@ Google Play Billing.
 5. TEST_GUIDE_2026-10-04.md §2 leftovers:
    - Studio fast preview (needs a look choice).
    - Converter polish.
-   - Business: done 17 Oct (HANDOFF §5.76) — Fleet & rentals + builder v2.
+   - Business: done 17 Oct (HANDOFF §5.77) — Fleet & rentals + builder v2.
    - Skills: a second "check" pass.
    - ~~Ask a PDF: highlights, and keeping documents between sessions~~ (already in v6.20; `tests/e2e_v620pdfreader.py`).
    - Coding: a plan-first prompt.
