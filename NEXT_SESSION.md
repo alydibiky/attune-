@@ -656,6 +656,16 @@ the default Fit look; Google Play internal testing (developer account + secrets)
 - `e2e_v510_more.py` and `e2e_v512_more.py` are helper modules: an empty result line is normal.
 - `e2e_v727coach.py` can time out under full-suite load; it passes when run alone.
 
+## V. 17 Oct 2026 — roadmap items built on `claude/roadmap-items-knk93s` (HANDOFF §5.76)
+Done: Money/life extras, Scout at night + metro + photo check, Learn speaking/dialogues/pictures/pack courses, web head-to-head
+tables, French/Spanish/Turkish, the Attune keyboard. Open:
+1. ⬜ Ali picks the Mind page look (A wall / B today and spaces / C diary) and the Coding page look (A editor / B talk to a coder /
+   C your programs) — images in `screens-v632/`; build the one he picks.
+2. ⬜ Ali's accounts (SETUP_CLOUD.md): Google Web client id → finish `driveSync` + Backup "Sync with Google Drive" + Family circle;
+   Serper key + relay address → `CLOUD.proSearchUrl`.
+3. ⬜ Phone tests: the keyboard, Scout at night, the metro pill, Say it (speech recognition), pack courses.
+4. ⬜ More of the app in French/Spanish/Turkish (only the first screens are translated).
+
 ## Prompt to start the next session
 
 ```

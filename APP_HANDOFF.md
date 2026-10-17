@@ -120,8 +120,8 @@ Google Play Billing.
      7. Studio pictures (`sd-cli`).
      8. Later: signing, auto-update and licence keys (these need Ali's accounts).
    - Electron 44.5.1 downloads and runs in the cloud sandbox (use `xvfb-run -a`).
-2. **Web search "as strong as Gemini"** (tasks #6/#15): it is phone-only now, with the fact sheet from full pages. Still to do: a comparison template (each
-   car, then a head-to-head table), per-trim tables, and measuring with a real 4B/9B model. The target is in `tests/websearch/targets/README.md`.
+2. **Web search "as strong as Gemini"** (tasks #6/#15): it is phone-only now, with the fact sheet from full pages; v6.32 adds the head-to-head
+   table for "A vs B" (`factsheet.js headToHead`). Still to do: per-trim tables, and measuring with a real 4B/9B model. The target is in `tests/websearch/targets/README.md`.
 3. **Big features as full customisable pages** (NEXT_SESSION M-41): Learn daily, Cycle, Yusr. These are look choices, so show options first.
 4. **Food photo on mixed plates** (task #45): calories right without the cloud.
 5. TEST_GUIDE_2026-10-04.md §2 leftovers:
@@ -129,7 +129,7 @@ Google Play Billing.
    - Converter polish.
    - Business: roles, multi-currency, price lists, encrypted backup.
    - Skills: a second "check" pass.
-   - Ask a PDF: highlights, and keeping documents between sessions.
+   - ~~Ask a PDF: highlights, and keeping documents between sessions~~ (already in v6.20; `tests/e2e_v620pdfreader.py`).
    - Coding: a plan-first prompt.
    - Max-testing the big models (needs a 64 GB machine).
 6. **Before a public release:**
