@@ -1,8 +1,8 @@
 # Attune — the whole app in one handoff (read this first)
 
-_Up to date: 17 Oct 2026, **v6.32** (versionCode 93; the joint release of five threads, HANDOFF §5.79) on `main` = branch `ccr-a0eb3595-e2c7a7`._
+_Up to date: 17 Oct 2026, **v6.33** (versionCode 94; v6.32 = the joint release of five threads, HANDOFF §5.79; v6.33 = Mind A + Code B, §5.80) on `main` = branch `ccr-a0eb3595-e2c7a7`._
 This file is the map. Details and history are in `HANDOFF.md` (§5.x = one section per release, newest at the end:
-§5.44–§5.60 cover 10–12 Oct 2026; §5.74–§5.79 cover 16–17 Oct). Ali's raw problem lists are in `NEXT_SESSION.md`. The desktop plan is in
+§5.44–§5.60 cover 10–12 Oct 2026; §5.74–§5.80 cover 16–17 Oct). Ali's raw problem lists are in `NEXT_SESSION.md`. The desktop plan is in
 `DESKTOP_PLAN.md`.
 
 ---
@@ -57,8 +57,8 @@ Google Play Billing.
 | **Fit & Food** (an app of its own, 3 looks, default A "Fresh") | Diary (swipe a food: **Copy one food · Edit everything · Delete**), food from a sentence, a photo (fast path about 1 s, then the AI checks; amount questions) or a barcode; offline food pack (about 900k products); 25k+ recipes; plans; workouts; fasting; Ramadan; vitamins; watches (Health Connect, Huawei); widget; challenges | `fit*.js`, `fit-ui.jsx`, `fitplus-ui.jsx`, `fitlook-ui.jsx`, `foodpack.js`, Kotlin `FoodClip.kt`, `Health.kt`, `HuaweiHealth.kt`, `FitWidget.kt`; workflows `food-pack.yml`, `food-clip.yml`, `food-train.yml` |
 | **Business** (an app of its own) | **Fleet & rentals** (Ali's crane + warehouse ERPs: jobs, cheques, balances, Store with reference codes, profit per crane — `fleet*.js(x)`); **Pro** (every built system: Overview tab with stock, balances & statements, due dates, no double bookings, documents, recycle bin, sample data, Excel — `erp-pro.js`, `biz-pro-ui.jsx`; export as a website/desktop app from `www/business-site.html`); **builder v2**: team & PINs, currencies, price lists, encrypted backup, export as a project (`erp-v2.js`, `biz-v2-ui.jsx`, `biz-vault.js`); ERP builder (name → design → logic → data → screens); Home/Tables/Form/Reports; AI design chat; **one system for phone AND computer** (per-device layout); export as a standalone .html app; "Books" accounting (sales, purchases, stock, VAT, ETA e-invoice) | `biz-ui.jsx`, `biz-steps.js`, `erp*.js`, `erp-ui.jsx`, `erp-screens.js`, `erp-app.js`, `books*.js(x)` |
 | **Money (Yusr)** | Expenses by typing or AI, recurring, bills, dashboard plus chat | `yusr/`, `myledger.js` |
-| **Mind** (look C) | Everything you keep, filed by itself, smart spaces, an ask bar | `mind.js`, `mind-ui.jsx` |
-| **Coding** (look B) | Task, steps and a tested program; editor; preview | `code.js`, `code-ui.jsx`, `sandbox.js`, `sandbox/` |
+| **Mind** (look A since v6.33: the wall) | Everything you keep as a picture wall, filed by itself; chips for kinds, promises, colours, spaces, #tags | `mind.js`, `mind-ui.jsx` |
+| **Coding** (v6.33 look B: talk to a coder — steps as a conversation) | Task, steps and a tested program; editor; preview | `code.js`, `code-ui.jsx`, `sandbox.js`, `sandbox/` |
 | **Studio** | Pictures on the phone (FLUX.2 klein 4B and others), upscale | `studio.js`, `studio-ui.jsx`, Kotlin `ImageEngine.kt`, `ImageRun.kt` |
 | **Ask a PDF / PDF reader** | Chat with a PDF or book, page cited | `docqa.js`, `pdfchat-ui.jsx`, `pdfreader.js`, `multidoc.js`, Kotlin `DocTools.kt` |
 | **File Converter + Translate** | 80+ conversions that keep the formatting (PDF→Word measured at 100%); **Edit a PDF** (first row, v6.32): change a line, add text, highlight, draw, sign, reorder/turn/delete/add pages, saved as a new PDF on the device | `convert.js`, `convert-ui.jsx`, `pdfedit.js`, `pdfedit-ui.jsx`, Kotlin `DocTools.kt` (`pdfEdit` op `edit`), `desktop/lib/pdf.js`; bench `tests/convert/run.sh`; test `e2e_v736pdfedit.py` |
@@ -111,8 +111,7 @@ Google Play Billing.
 ## 6. What is open (by priority)
 0. **v6.32 on Ali's phone + his release list** (NEXT_SESSION §X): the phone checklist (Deep answer, Edit a PDF, Overpaying
    check, Fit & Food B, Fleet, keyboard, Scout night, Learn extras, languages), the Play steps in RELEASE_6.29.md, and the Google
-   Cloud ids for Drive sync / Family circle / Gmail sign-in / Pro search (SETUP_CLOUD.md, docs/GMAIL_SIGNIN.md). Looks to pick:
-   Mind page and Coding page (`screens-v632/`).
+   Cloud ids for Drive sync / Family circle / Gmail sign-in / Pro search (SETUP_CLOUD.md, docs/GMAIL_SIGNIN.md). Mind A and Code B are built (v6.33).
 1. **DESKTOP APP — in progress (12 Oct 2026).** Ali: "like Claude and ChatGPT" and **Windows first**. See HANDOFF §5.60 and
    `DESKTOP_PLAN.md`.
    - Exists (v6.24): `desktop/`, an Electron shell — chat, models, engine, web search, knowledge packs, maps, food pack, offline lock — and the Claude/ChatGPT layout in `web-src/side-ui.jsx`. CI `desktop.yml` builds the Windows installer on every push to `main` that touches `desktop/` or the page. Done steps and what is next: HANDOFF §5.60.
@@ -148,7 +147,7 @@ Google Play Billing.
    - The Overture places and the route file on the phone (published 11–12 Oct).
    - The new Q&A packs downloaded on the phone.
 
-## 7. Recent history in one screen (details: HANDOFF §5.44–§5.79)
+## 7. Recent history in one screen (details: HANDOFF §5.44–§5.80)
 | Version | Date | What |
 |---|---|---|
 | v6.16 | 10 Oct | Look picks: Mind C, Coding B, Maps A; 44 country maps; Knowledge packs; Islamic packs; commercial-safe audit |
@@ -168,11 +167,12 @@ Google Play Billing.
 | v6.30 | 16 Oct | No bottom bar: ChatGPT-style sidebar with 6 places; combined pages with tabs (Create = Code, prompts, compress, humanize, copilot, library, Ask; Studio separate); ExitWatch tells why the app closed (Engine log + a one-time note) |
 | v6.31 | 17 Oct | Minimal design A (no intro paragraphs, thin tabs, small model dot, calm Home/Chat, "+" menu in Chat, Converter one action); Core Lite → IQ4_NL, new Core Max (8-bit) — HANDOFF §5.75 |
 | v6.32 | 17 Oct | Joint release of five threads (HANDOFF §5.76–§5.79): Create 6 tabs; video not sold; Deep answer; Fit & Food minimal B + contrast; **Edit a PDF**; **Overpaying check**; **Fleet & rentals** + Business v2; Scout at night, metro minutes, photo check; Learn extras; web head-to-head tables; French/Spanish/Turkish; Attune keyboard |
+| v6.33 | 17 Oct | Mind A (picture wall with colour chips) and Code B (talk to a coder) — HANDOFF §5.80 |
 
 ## 8. Prompt for the next session (paste as is)
 The current prompt is at the end of `NEXT_SESSION.md` ("Prompt to start the next session"). Short version:
 ```
-Continue Attune on main (v6.32). Read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.79 and NEXT_SESSION.md section X first.
+Continue Attune on main (v6.33). Read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.80 and NEXT_SESSION.md sections Y and X first.
 Show me what is done and open, ask the open questions with options, then work through them with a task list.
 Follow every standing rule in APP_HANDOFF.md §1.
 ```

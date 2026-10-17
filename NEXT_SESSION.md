@@ -1,4 +1,4 @@
-# Next session — Ali's full problem list (29 Sep – 17 Oct 2026; newest: section X, then the prompt at the end)
+# Next session — Ali's full problem list (29 Sep – 17 Oct 2026; newest: section Y, then X, then the prompt at the end)
 
 Everything Ali found on his phone after v6.9, in one place. Ali keeps adding items (latest: section H,
 2 Oct); when he sends more, add them under a new dated section at the end of the list.
@@ -706,7 +706,7 @@ fails (it already failed on v6.31, run 38999124552): the second streamed answer 
    Overpaying check (docs/GMAIL_SIGNIN.md), Serper key + relay for Pro search. Send Claude the Web client id.
 
 ### Still open (code)
-1. Ali picks the Mind page look and the Coding page look (3 options each, `screens-v632/*-options.png`), then build it.
+1. ✅ Mind A and Code B: built in v6.33 (section Y).
 2. Minimal design for Business, Studio, Learn's inner screens and the computer layout (show options first).
 3. Fit & Food B on the wide computer layout: check with Ali.
 4. The big-model quant bench (Apex+, Everest, Apex, Glow/Spark); Everest flash-mode speed from Ali's Engine log.
@@ -714,14 +714,20 @@ fails (it already failed on v6.31, run 38999124552): the second streamed answer 
 6. Desktop CI: the Windows smoke test ("Smoke test from source") fails after the second request; Linux passes. Fix it.
 7. Fleet ideas not built (§5.77): nightly reminders as notifications, a client statement PDF, sharing Fleet between phones (needs Drive sync).
 
+## Y. 17 Oct 2026 — v6.33: Mind A and Code B (HANDOFF §5.80). Read this section first, then X.
+- Ali: "Mind a, Code B". Built: Mind is the picture wall with colour chips; Coding is "talk to a coder" (steps as a conversation).
+- APK: APK_RUN_LINK_633
+- Add to Ali's phone checklist (section X): Mind → save a link, a photo and a note; filter by a colour chip. Coding → "build me a
+  tip calculator", watch the steps, Run, ask for a change at the bottom, Save, find it under your programs.
+- Everything else still open is in section X.
+
 ## Prompt to start the next session
 
 ```
-Continue Attune on main (= ccr-a0eb3595-e2c7a7 = claude/joint-release-6zxc2i, v6.32: the joint release of five threads).
-First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.79 and NEXT_SESSION.md — the newest section is X (what is in v6.32,
+Continue Attune on main (= ccr-a0eb3595-e2c7a7 = claude/joint-release-6zxc2i, v6.33: the joint release of five threads + Mind A, Code B).
+First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.80 and NEXT_SESSION.md — the newest sections are Y and X (what is in v6.32/6.33,
 my phone checklist, my release list and what is still open), then W and V. Then show me, short and simple: what is done,
-what is open, and your recommended order; ask me the open questions (the Mind and Coding page looks, which page to make
-minimal next, with options), wait for my answers, then work through them with a task list. If I send an Engine log or
+what is open, and your recommended order; ask me the open questions (which page to make minimal next, with options), wait for my answers, then work through them with a task list. If I send an Engine log or
 phone test results, read them first — ExitWatch says why the app closed.
 
 Standing rules:

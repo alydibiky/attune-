@@ -1643,6 +1643,20 @@ Merged into `main` on branch `claude/joint-release-6zxc2i` (version **6.32**, ve
 - **Test fix:** `tests/unit/fitlook.test.mjs` still expected three Fit looks (there are six since v6.18); it failed silently because
   `run_all.sh` read only each file's last line. Now `run_all.sh` reports a unit file's first `FAIL` line when it has one.
 
+### 5.80 (17 Oct 2026) — v6.33: Mind A (the wall) and Code B (talk to a coder)
+Ali picked from the three options each (`/mnt/project-files/screens-v632/mind-options.png`, `code-options.png`): "Mind a, Code B".
+Built on `claude/roadmap-items-knk93s`, merged into `main`; version **6.33** (versionCode 94).
+- **Mind = the wall** (`mind-ui.jsx`, `mind.js`): a search box, one row of chips (All, each kind, Promises, Your words, colours, your
+  spaces, #tags), then everything as a picture wall. Links get a coloured preview with their site; each card has a small kind label;
+  "From your past" sits on the wall. A photo's main colour is read once from its thumbnail and the colour chips filter the wall
+  (like the My Mind app). Tests: `tests/unit/v736mind.test.mjs`, `tests/e2e_v736mindwall.py`.
+- **Coding = talk to a coder** (`code-ui.jsx`): a start screen (What should I build?, four starters, your programs), then the work as
+  a conversation: the ask as a bubble, each step (plan, write, test, fix) with a mark, the code in a card (first lines; "Show code"
+  opens the editor), Run / Fix / Copy / Save, and a box at the bottom for a change, which becomes the next bubble with its own steps.
+  Test: `tests/e2e_v736coder.py` (`e2e_v58.py` adjusted).
+- Strings in Arabic, French, Spanish and Turkish. Merge: `i18n-ar.js` union; two keys that ended up twice ("Show all {n}",
+  "{n} lines") keep one entry each.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
