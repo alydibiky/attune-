@@ -25,10 +25,11 @@ module.exports = function smokeRun(win, modelPath, app) {
           max_tokens: 48, temperature: 0, stream: true, stream_options: { include_usage: true }, chat_template_kwargs: { enable_thinking: false } });
         const models = JSON.parse(window.AttuneNative.models());
         // v6.24: the computer layout and the bridge added for the desktop
-        // a window 1024 px and wider has the Claude/ChatGPT sidebar; a smaller one (a small CI screen) the phone's bottom bar
+        // a window 1024 px and wider has the Claude/ChatGPT sidebar; a smaller one (the Windows CI screen is 1008 px) the phone's
+        // layout — since v6.30 that has no bottom bar, only the ☰ menu (this check expected the old bar and failed from v6.31 on)
         const winW = window.innerWidth;
         const sidebar = winW >= 1024 ? (!!document.querySelector("[data-testid=side]") && !document.querySelector("nav:not(.hidden)"))
-          : (!document.querySelector("[data-testid=side]") && !!document.querySelector("nav:not(.hidden)"));
+          : (!document.querySelector("[data-testid=side]") && !!(document.querySelector("[data-testid=header-menu]") || document.querySelector("[data-testid=home-menu]") || document.querySelector("nav:not(.hidden)")));
         const knowOk = Array.isArray(JSON.parse(window.AttuneNative.knowPacks()).packs);
         const mapOk = Array.isArray(JSON.parse(window.AttuneNative.mapPacks()).packs) && window.AttuneNative.mapRead(JSON.stringify({ path: "../x" })) === "";
         const search = await call("search", { q: "Cairo Tower height", pages: 1 }).then((r) => ({ hits: r.hits.length, via: r.via, why: r.why })).catch((e) => ({ error: String(e && e.message || e) }));

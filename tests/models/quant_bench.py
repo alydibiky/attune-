@@ -11,7 +11,8 @@ import os, re, subprocess, sys, json
 
 BIN, DIR, TEXT, REF, QUANTS = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5:]
 env = dict(os.environ, LD_LIBRARY_PATH=BIN)
-f = lambda q: os.path.join(DIR, f"Qwen3.5-4B-{q}.gguf")
+PREFIX = os.environ.get("PREFIX", "Qwen3.5-4B")   # v6.34: any model (the workflow's inputs)
+f = lambda q: os.path.join(DIR, f"{PREFIX}-{q}.gguf")
 out = []
 def say(s=""): print(s, flush=True); out.append(s)
 

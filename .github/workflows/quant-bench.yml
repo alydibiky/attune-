@@ -7,7 +7,15 @@ on:
     branches: [claude/design-a-maps-4pmxxr-was8h5]
     paths: [tests/models/quant_bench.py, .github/workflows/quant-bench.yml]
   workflow_dispatch:
+    inputs:
+      repo:   { description: "Hugging Face repo", default: "unsloth/Qwen3.5-4B-MTP-GGUF" }
+      prefix: { description: "file name before the quant", default: "Qwen3.5-4B" }
+      quants: { description: "quants, the reference (most exact) first", default: "Q8_0 IQ4_XS Q4_0 Q4_1 IQ4_NL Q4_K_M Q5_K_S" }
 
+env:
+  REPO: ${{ inputs.repo || 'unsloth/Qwen3.5-4B-MTP-GGUF' }}
+  PREFIX: ${{ inputs.prefix || 'Qwen3.5-4B' }}
+  QUANTS: ${{ inputs.quants || 'Q8_0 IQ4_XS Q4_0 Q4_1 IQ4_NL Q4_K_M Q5_K_S' }}
 jobs:
   bench:
     runs-on: ubuntu-24.04-arm
@@ -24,8 +32,9 @@ jobs:
       - name: Download the files
         run: |
           mkdir -p ~/m && cd ~/m
-          for q in Q8_0 IQ4_XS Q4_0 Q4_1 IQ4_NL Q4_K_M Q5_K_S; do
-            curl -sSL --retry 5 -o Qwen3.5-4B-$q.gguf https://huggingface.co/unsloth/Qwen3.5-4B-MTP-GGUF/resolve/main/Qwen3.5-4B-$q.gguf
+          # v6.34: any model (Glow 2B, Spark 0.8B, …) — the inputs, else the 4B as before
+          for q in $QUANTS; do
+            curl -sSL --retry 5 -o $PREFIX-$q.gguf https://huggingface.co/$REPO/resolve/main/$PREFIX-$q.gguf
           done
           ls -la
       - name: Test text (English and Arabic from the app itself)
@@ -34,9 +43,9 @@ jobs:
           grep -o ': "[^"]*"' web-src/i18n-ar.js | sed 's/^: "//; s/"$//' | head -c 120000 >> ~/text.txt
           wc -c ~/text.txt
       - name: Bench
-        run: python3 tests/models/quant_bench.py ~/llama.cpp/build/bin ~/m ~/text.txt Q8_0 IQ4_XS Q4_0 Q4_1 IQ4_NL Q4_K_M Q5_K_S
+        run: python3 tests/models/quant_bench.py ~/llama.cpp/build/bin ~/m ~/text.txt $QUANTS
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: quant-bench
+          name: quant-bench-${{ inputs.prefix || 'Qwen3.5-4B' }}
           path: quant-bench.md
