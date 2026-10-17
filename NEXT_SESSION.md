@@ -1,4 +1,4 @@
-# Next session — Ali's full problem list (29 Sep – 14 Oct 2026; newest: section R, then the prompt at the end)
+# Next session — Ali's full problem list (29 Sep – 17 Oct 2026; newest: section U, then the prompt at the end)
 
 Everything Ali found on his phone after v6.9, in one place. Ali keeps adding items (latest: section H,
 2 Oct); when he sends more, add them under a new dated section at the end of the list.
@@ -603,17 +603,68 @@ the default Fit look; Google Play internal testing (developer account + secrets)
 12. "Do all that's left — deploy within 2 weeks": Android 16 target, Play-only purchases, no free-Pro tap on Play builds,
    privacy policy, billing fixes, signing guard. ✅ — **Ali: RELEASE_6.29.md §0 and §2 (closed test, keys, listing, decisions).**
 
+## U. 15–17 Oct 2026 — v6.30 and v6.31 (HANDOFF §5.74–§5.75). Read this section first.
+
+### Where things stand
+- `main` = `ccr-a0eb3595-e2c7a7` = branch `claude/design-a-maps-4pmxxr-was8h5` = **v6.31 (versionCode 92)**; full suite green.
+  APK: https://github.com/alydibiky/attune-/actions/runs/38999124660 (v6.30: run 38845889285).
+- Ali's phone: HONOR BKQ-N49, Snapdragon 8 Elite Gen 5 (SM8850), 16 GB. He was running **Core Lite (md-lo)**; told to switch to
+  **Core Max** after installing 6.31.
+
+### What Ali asked and what was done
+1. "The app still crashes on its own a lot." Done:
+   - **ExitWatch.kt**: Android 11+ `ApplicationExitInfo`. Every start writes the reason the app last ended to the Engine log
+     (low memory / native engine crash / ANR, memory, which model) and the page shows it once.
+   - Ali's first log showed the real cause: "the page's process was reclaimed by Android for memory; rebuilt" **6 times in
+     4 s**. The WebView renderer ranked below the app, and the instant `recreate()` looped. Fixed in MainActivity:
+     `setRendererPriorityPolicy(IMPORTANT, true)`; drop and destroy the dead view; 2nd loss in a minute → let the model go
+     (unless answering); from the 3rd → wait 3 s.
+   - **Still open:** get a 6.31 Engine log from Ali if it closes again. If ExitWatch says "engine crash (native)", the next step
+     is running llama-server in its own process.
+2. "No bottom bar on any page; a sidebar like ChatGPT; ≤6 places; combine everything that can be combined." Done:
+   - 6 places: Home · Chat · Money · Health · Learn · Tools (`web-src/hubs.js`).
+   - Combined pages with a tab row (`hub-ui.jsx`): Create = Code · Improve · Compress · Humanize · Copilot · Library · Ask
+     (Studio separate, as Ali said).
+   - **Tools = 6 pages** (`TOOL_PAGES`): Files, Create, Studio, Maps & travel, Business, Help & privacy.
+   - **≤6 tabs**: Skills inside Assistants, Artifacts inside Projects, Reminders inside Radar (`INSIDE`, a small switch on the page).
+   - **Asked, no answer yet:** Create still has 7 tabs. The proposal is to put Compress inside Improve a prompt.
+3. "Research and make the app minimal, not cluttered."
+   - Research done; three mock-ups: https://claude.ai/artifact/Dc5kUTf3qBzPzWMGZBfvVE (A calm six, B chat first, C one feed).
+   - Ali: "do the best you see" → **design A built in v6.31**: no intro paragraphs (`data-intro`, hidden by `.att-min`), thin text
+     tabs with short names, a small model dot, calm Home and Chat, a "+" menu in Chat, Converter = one action + 4 rows,
+     Scout = 2 examples.
+   - **Open:** apply the same rules to the pages not yet touched. Fit & Food, Business, Studio, Learn's inner screens and the
+     computer layout still have dense cards. Measure before and after (words/controls per screen; HANDOFF §5.75).
+4. "Make Everest XL run on a phone from storage." Done:
+   - Flash mode in Engine.kt (MoE experts read from storage, CPU only).
+   - Lab: `tests/models/flash_moe.py`, CI `flash-moe.yml`; research in `RESEARCH_STORAGE_2026-10.md`.
+   - **Open:** Ali's phone test of Everest in flash mode (words/s from the Engine log), an IQ2 quality check, and the
+     "Deep answer" mode (proposed, not started).
+5. "Test a faster file (Q4_0)." Done with `tests/models/quant_bench.py` (CI `quant-bench.yml`). Results in HANDOFF §5.75:
+   - Q4_0 rejected (answers drift more).
+   - **Core Lite → IQ4_NL** (faster and more accurate).
+   - **New Core Max** (Q8_0 4B, reads ~4× faster, needs 12 GB+).
+   - **Open:** run the same bench for the big IQ4_XS models (Apex+, Everest, Apex) and for Glow/Spark.
+6. Release (from v6.29): `RELEASE_6.29.md` §0 and §2 are Ali's to-do: the 14-day closed test with 12 testers, upload key +
+   GitHub secrets, privacy URL, Play products, declarations, USDA key, and the Video Downloader decision (A recommended).
+
+### How to test the new layout
+- The old e2e tests still see the bottom bar: `new_page()` sets `attune:legacy-nav=1` (`legacy_nav=True` is the default).
+- New tests pass `legacy_nav=False`: `tests/e2e_v734sidebar.py`, `tests/e2e_v735minimal.py`.
+- Everything new in the UI is gated on `!LEGACY_NAV` in attune.jsx, or `MINIMAL` in chat/convert/scout.
+- Tests that build their own browser context (v3, v4, v5, v510, v512_more) add the legacy flag themselves.
+- `e2e_v510_more.py` and `e2e_v512_more.py` are helper modules: an empty result line is normal.
+- `e2e_v727coach.py` can time out under full-suite load; it passes when run alone.
+
 ## Prompt to start the next session
 
 ```
-Continue Attune on branch claude/design-a-maps-4pmxxr (main = the same commit).
-First read CLAUDE.md, APP_HANDOFF.md, ROADMAP_2026-10-13.md, HANDOFF.md §5.61–§5.73 and NEXT_SESSION.md
-(the newest section is T). Then START WITH A CONVERSATION: I want to set some things straight before you build.
-Show me, short and simple, what is done, what is open (section R "Open"), and your recommended order;
-wait for my answers on the priorities, then work through them with a task list.
-Things I already know I want: Google sign-in + Drive sync (tell me exactly what to create in Google Cloud),
-Family circle after it, and the app optimised for BOTH phone and computer on every page you touch.
-Also ask me to pick the default Fit look, and help me set up Google Play internal testing.
+Continue Attune on branch claude/design-a-maps-4pmxxr-was8h5 (main = ccr-a0eb3595-e2c7a7 = the same commit, v6.31).
+First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.72–§5.75 and NEXT_SESSION.md — the newest section is U (what was
+done on 15–17 Oct and everything still open). Then show me, short and simple: what is done, what is open, and your
+recommended order; ask me the open questions (Create's 7th tab, Video Downloader, Deep answer mode, what to make minimal
+next), wait for my answers, then work through them with a task list. If I send an Engine log, read it first — ExitWatch
+now says why the app closed.
 
 Standing rules:
 - Anything subjective (UI look, layout, colours, names, wording): show me 2–4 options with a recommendation and build the one I pick.
