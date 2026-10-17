@@ -1538,6 +1538,7 @@ Ali answered the four open questions on cards: Compress → Improve; Video Downl
     dark looks get lighter greys. `.fit-min` darkens the ring / bar / glass tracks.
   - Test: `tests/e2e_v736fitmin.py` (EN + AR, contrast ≥ 7:1 checked).
 - Running a single e2e while the full suite runs: set `ATTUNE_ENGINE_PORT` / `ATTUNE_PAGE_PORT` (harness.py) to other ports.
+
 ### 5.77 (17 Oct 2026) — Business: Ali's two desktop ERP apps inside Attune (Fleet & rentals) + Business builder v2
 Ali attached the handoffs of two apps he built before (Crane Management desktop v2.7; Crane Warehouse) and asked for their
 outcomes in Business "and even more", plus Business v2 (roles, currencies, price lists, encrypted backup, export as a real project).
