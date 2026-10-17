@@ -57,7 +57,10 @@ export function readApp(text) {
   const s = String(text || "");
   let json = null;
   const m = s.match(new RegExp('<script type="application/json" id="' + APP_MARK + '">([\\s\\S]*?)</script>'));
-  try { json = JSON.parse(m ? m[1] : s); } catch (e) { return null; }
+  // v6.32: the full app's website (erp-v2.js siteHTML) carries the system as {attuneSite, kind, data}
+  const site = !m && s.match(/<script type="application\/json" id="attune-site-data">([\s\S]*?)<\/script>/);
+  try { json = JSON.parse(m ? m[1] : site ? site[1] : s); } catch (e) { return null; }
+  if (json && json.attuneSite === 1) { if (json.kind !== "system" || !json.data) return null; json = { attuneErp: 1, ...json.data }; }
   if (!json || json.attuneErp !== 1 || !Array.isArray(json.tables) || typeof json.rows !== "object") return null;
   const { attuneErp, exported, freeRows, ...sys } = json;
   sys.history = sys.history || [];

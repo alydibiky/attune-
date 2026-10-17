@@ -21,8 +21,9 @@ function open() {
   });
   return _db;
 }
+// a read gives the value (undefined when the key is missing); a write gives true
 const req = (db, mode, fn) => new Promise((ok) => {
-  try { const t = db.transaction(STORE, mode), r = fn(t.objectStore(STORE)); t.oncomplete = () => ok(r && r.result !== undefined ? r.result : true); t.onerror = () => ok(undefined); t.onabort = () => ok(undefined); }
+  try { const t = db.transaction(STORE, mode), r = fn(t.objectStore(STORE)); t.oncomplete = () => ok(mode === "readonly" ? r.result : true); t.onerror = () => ok(undefined); t.onabort = () => ok(undefined); }
   catch (e) { ok(undefined); }
 });
 async function get(key) {

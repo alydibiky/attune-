@@ -1547,6 +1547,26 @@ outcomes in Business "and even more", plus Business v2 (roles, currencies, price
 - Not built yet (ideas): Fleet nightly reminders as Android notifications; per-crane maintenance schedule by engine hours;
   a client statement PDF; sharing Fleet between phones (waits on Google Drive sync).
 
+### 5.76b (17 Oct 2026) — Business "Pro": every built system as professional as the crane system; export as a website
+Ali: "i want the output of any job like a grocery store or an erp system for any company to be as good and as professional as this"
+(his crane ERP) and "exportable so user can push it on a designated website".
+- **`erp-pro.js`** (pure, `tests/unit/v732pro.test.mjs`): finds rules in ANY design from table/field names (English + Arabic):
+  stock (opening + Purchases − Sales, low stock vs "Reorder at", overselling refused), balances (charges − payments, direct or through
+  one record: Invoices → Projects → Clients; cash sales don't count, "on credit" does; a job billed by an invoice isn't counted twice),
+  statement of account with running balance, due/expiry warnings (skipped when done/paid), no double booking of an asset (Start/End),
+  recycle bin (7 days), sample data for any design (`_demo` tagged), Excel with one sheet per table (`convert.js xlsxFromSheets`),
+  printable documents (`recordDoc`, `statementDoc`). The owner can switch each rule off (`sys.pro.off`).
+- **Screens** (`biz-pro-ui.jsx`): a 5th tab **Overview** in every system (numbers, Needs you, Stock on hand, Balances → statement →
+  print, Tools: sample records, Excel, Recycle bin, What it does for you). Form: Print button; Delete → recycle bin. SystemShell's
+  setSys runs `P.checkChange` (a refused change shows its reason). The AI design prompt now names fields so the rules switch on.
+- **Website export**: `build.sh` makes a 2nd bundle (`build/site-entry.jsx` + `build/site-shell.html`) → `www/business-site.html`
+  (~1.1 MB). `erp-v2.js siteHTML()` fills `__SITE_TITLE__`/`__SITE_DATA__`; Tools → Export as a project and Fleet → More →
+  "Website & desktop app" zip it with manifest, sw.js, Electron files and README. The site runs `SiteSystem` / `SiteFleet` (no back
+  button, no design studio); records live in that browser (a static site does NOT share data between people — that needs sync).
+  `readApp` also opens these site files.
+- Fixed: `fleet-store.js` read of a missing key returned `true` (Fleet then started empty even with a seed).
+- Tests: `tests/unit/v732pro.test.mjs`, `tests/e2e_v732pro.py` (also opens the exported sites from file://, phone + computer).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

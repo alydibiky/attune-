@@ -6,7 +6,7 @@
    the phone's M/D), every save wrapped so a real error shows instead of failing silently, a version-free data file.
    Tests: tests/unit/v732fleet.test.mjs (logic), tests/e2e_v732fleet.py (screens).                                       */
 import React, { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, Trash2, Camera, Paperclip, AlertTriangle, Check, X, Search, Printer, Download, Upload, Menu, Truck, Package, Wallet, CalendarDays, Building2, MapPin, Undo2, Pencil, Lock, Wrench, Clock, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Camera, Paperclip, AlertTriangle, Check, X, Search, Printer, Download, Upload, Menu, Truck, Package, Wallet, CalendarDays, Building2, MapPin, Undo2, Pencil, Lock, Wrench, Clock, Users, Globe } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as F from "./fleet.js";
 import { loadFleet, saveFleet, saveAttachment, loadAttachment } from "./fleet-store.js";
@@ -14,6 +14,7 @@ import { askConfirm } from "./confirm.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 import { xlsxFromRows } from "./convert.js";
 import { sealData, openData, vaultHeader } from "./biz-vault.js";
+import { saveProject } from "./biz-v2-ui.jsx";
 
 const card = "rounded-2xl bg-[#FFFFFF] border border-[#DCE3EC] shadow-[0_1px_3px_rgba(15,23,42,.06)]";
 const btnP = "h-12 px-5 rounded-2xl text-[#FFFFFF] font-bold text-[15px] disabled:opacity-40 flex items-center justify-center gap-2";
@@ -105,7 +106,7 @@ const Kpi = ({ label, value, tone }) => <div className={card + " p-3.5"}><p clas
 
 // ---- the app -------------------------------------------------------------------------------------------------------------
 /** Fleet & rentals — opened from the Business hub. */
-export function FleetApp({ flash, saveFile, onBack }) {
+export function FleetApp({ flash, saveFile, onBack, seed = null, site = false }) {
   const [s, setRaw] = useState(null);
   const [tab, setTab] = useSticky("fleet:tab", "today");
   const [sheet, setSheet] = useState(null);       // { kind, ...props }
@@ -115,7 +116,7 @@ export function FleetApp({ flash, saveFile, onBack }) {
   const cur = s ? s.settings.currency : "EGP";
   const money = (n) => num(n) + " " + cur;
   useEffect(() => { (async () => {
-    let st = (await loadFleet()) || F.EMPTY();
+    let st = (await loadFleet()) || (seed ? F.heal(seed) : F.EMPTY());     // a website made from Fleet starts with the exported records
     const p = F.purge(st);                         // the Recycle Bin forgets after 7 days (run on open, like the old app)
     if (p.purged) { st = p.state; saveFleet(st); }
     setRaw(st);
@@ -133,12 +134,12 @@ export function FleetApp({ flash, saveFile, onBack }) {
     } catch (e) { flash(tr(e.tpl || e.message || String(e), e.vars)); return null; }
   };
   if (!s) return <div className="p-6 text-center text-[14px] text-[#5B6B80]">{tr("Loading…")}</div>;
-  const ctx = { s, run, money, setSheet, setOpen, flash, saveFile, wide, setTab };
+  const ctx = { s, run, money, setSheet, setOpen, flash, saveFile, wide, setTab, site };
   const body = open ? (open.kind === "job" ? <JobDetail {...ctx} id={open.id} /> : open.kind === "crane" ? <CraneDetail {...ctx} id={open.id} /> : <ClientDetail {...ctx} id={open.id} />)
     : tab === "jobs" ? <Jobs {...ctx} /> : tab === "fleet" ? <FleetTab {...ctx} /> : tab === "money" ? <Money {...ctx} /> : tab === "store" ? <Store {...ctx} /> : <Today {...ctx} />;
   const head = (
     <div className="sticky top-0 z-30 bg-[#F4F6FAF2] backdrop-blur px-3 pt-2 pb-2 flex items-center gap-2">
-      <button onClick={open ? () => setOpen(null) : onBack} aria-label={tr("Back")} className="w-11 h-11 rounded-full bg-[#FFFFFF] border border-[#DCE3EC] grid place-items-center shrink-0" data-testid="fleet-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>
+      {open || onBack ? <button onClick={open ? () => setOpen(null) : onBack} aria-label={tr("Back")} className="w-11 h-11 rounded-full bg-[#FFFFFF] border border-[#DCE3EC] grid place-items-center shrink-0" data-testid="fleet-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button> : null}
       <div className="flex-1 min-w-0"><p className="text-[17px] font-extrabold truncate">{tr("Fleet & rentals")}</p><p className={"text-[12px] truncate " + muted}>{tr("Cranes, jobs, cheques and the store — on your phone, offline")}</p></div>
       <button onClick={() => setMenu(true)} aria-label={tr("More")} className="w-11 h-11 rounded-full bg-[#FFFFFF] border border-[#DCE3EC] grid place-items-center shrink-0" data-testid="fleet-menu"><Menu size={19} /></button>
     </div>);
@@ -704,13 +705,14 @@ function DocView({ s, run, sheet, close, money, saveFile }) {
 }
 
 // ---- More: recycle bin, settings, demo, backup --------------------------------------------------------------------------------
-function MoreMenu({ s, run, setSheet, close, flash }) {
+function MoreMenu({ s, run, setSheet, close, flash, saveFile, site }) {
   const bin = F.binList(s).length;
   const item = (I, label, onClick, testid, extra) => <button onClick={onClick} data-testid={testid} className={card + " w-full text-start p-3.5 flex items-center gap-3"}><I size={18} className="text-[#475569]" /><span className="flex-1 font-semibold text-[14.5px]">{label}</span>{extra}<ChevronRight size={17} className="text-[#94A3B8] rtl:-scale-x-100" /></button>;
   return <div className="space-y-2">
     {item(Trash2, tr("Recycle Bin"), () => { close(); setSheet({ kind: "bin" }); }, "fleet-bin", bin ? <Tag>{bin}</Tag> : null)}
     {item(Lock, tr("Encrypted backup"), () => { close(); setSheet({ kind: "backup" }); }, "fleet-backup")}
     {item(Wrench, tr("Settings"), () => { close(); setSheet({ kind: "settings" }); }, "fleet-settings")}
+    {site ? null : item(Globe, tr("Website & desktop app"), () => { close(); saveProject(s, { kind: "fleet", name: tr("Fleet & rentals"), saveFile, flash }); }, "fleet-site")}
     {F.hasDemo(s) ? item(Undo2, tr("Erase the demo data"), async () => { if (await askConfirm("Erase all demo records? Your own records stay.", { yes: "Erase" })) { run((x) => F.eraseDemo(x), tr("Demo data erased")); close(); } }, "fleet-erase-demo")
       : item(Plus, tr("Load demo data"), () => { run((x) => F.loadDemo(x), tr("Demo data loaded — erase it any time from More")); close(); }, "fleet-load-demo")}
   </div>;

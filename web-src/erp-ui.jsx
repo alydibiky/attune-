@@ -11,6 +11,7 @@ import { Plus, Trash2, Search, Database, ArrowUp, ArrowDown, Undo2, Upload, Down
 import { tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as E from "./erp.js";
+import * as P from "./erp-pro.js";
 import { buildApp, readApp } from "./erp-app.js";
 import { getPower } from "./power.js";
 import { PLAY, pricesFor } from "./billing.js";
@@ -247,7 +248,7 @@ function RecordForm({ sys, table, rowId, setSys, llm, flash, onDone, form }) {
       <div className="flex gap-2 pt-1">
         <button className={primary + " flex-1 py-2.5"} onClick={save} data-testid="erp-save">{row ? tr("Save") : tr("Add")}</button>
         {row ? <button className={`${btn} border ${confirmDel ? "border-rose-600 bg-rose-500/15 text-rose-200" : "border-slate-700 text-slate-300"} flex items-center gap-1`} data-testid="erp-delete-row"
-          onClick={() => { if (!confirmDel) { setConfirmDel(true); return; } setSys(E.deleteRow(sys, table.id, row._id), tr("Deleted")); onDone(); }}>
+          onClick={() => { if (!confirmDel) { setConfirmDel(true); return; } setSys(P.trash(sys, table.id, row._id), tr("In the Recycle Bin for 7 days")); onDone(); }}>
           <Trash2 size={14} />{confirmDel ? tr("Tap again to delete") : tr("Delete")}</button> : null}
       </div>
       {row && confirmDel && used ? <p className="text-[12px] text-amber-300">{tr("{n} records in other tables link to this one; they will show “(deleted)”.", { n: used })}</p> : null}
@@ -727,8 +728,8 @@ function MoreTab({ sys, table, setSys, flash, saveFile, share, runPy, onDelete, 
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
         <label className="block"><span className="block text-[11px] text-slate-400 mb-1">{tr("System name")}</span>
           <input defaultValue={sys.name} key={sys.name} onBlur={(e) => e.target.value.trim() && e.target.value.trim() !== sys.name && setSys({ ...sys, name: e.target.value.trim(), updated: Date.now() }, tr("Saved"))} className={field} dir="auto" /></label>
-        <button className={`${btn} border ${confirmDel ? "border-rose-600 bg-rose-500/15 text-rose-200" : "border-slate-700 text-slate-400"} flex items-center gap-1`} data-testid="erp-delete-system"
-          onClick={() => (confirmDel ? onDelete() : setConfirmDel(true))}><Trash2 size={14} />{confirmDel ? tr("Tap again — this deletes the system and all its records") : tr("Delete this system")}</button>
+        {onDelete ? <button className={`${btn} border ${confirmDel ? "border-rose-600 bg-rose-500/15 text-rose-200" : "border-slate-700 text-slate-400"} flex items-center gap-1`} data-testid="erp-delete-system"
+          onClick={() => (confirmDel ? onDelete() : setConfirmDel(true))}><Trash2 size={14} />{confirmDel ? tr("Tap again — this deletes the system and all its records") : tr("Delete this system")}</button> : null}
       </div>
     </div>
   );

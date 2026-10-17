@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { X, Plus, Trash2, Lock, Download, Upload, Users, Wallet, FileText, Check, ChevronLeft } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as V from "./erp-v2.js";
+import { zipStore } from "./convert.js";
 import { sealData, openData, vaultHeader } from "./biz-vault.js";
 import { useSubBack } from "./backstack.js";
 import { askConfirm } from "./confirm.jsx";
@@ -44,7 +45,7 @@ export function PinGate({ sys, onIn, onBack, color }) {
 }
 
 /** "Team & tools" for one system. user = who is signed in (null when the system has no team). */
-export function SystemTools({ sys, setSys, user, onSignIn, onClose, flash, saveFile, onImport, wide }) {
+export function SystemTools({ sys, setSys, user, onSignIn, onClose, flash, saveFile, onImport, wide, site = false }) {
   const [sec, setSec] = useState(null);
   useSubBack(true, () => (sec ? setSec(null) : onClose()));
   const owner = V.can(sys, user, "own");
@@ -52,7 +53,7 @@ export function SystemTools({ sys, setSys, user, onSignIn, onClose, flash, saveF
     ["money", Wallet, "Currencies", tr("Main currency: {c}", { c: V.baseCurrency(sys) }) + (sys.rates && Object.keys(sys.rates).length ? " · " + Object.keys(sys.rates).join(", ") : "")],
     ["prices", FileText, "Price lists", (sys.priceLists || []).length ? (sys.priceLists || []).map((l) => l.name).join(", ") : tr("Wholesale, retail, contract prices…")],
     ["backup", Lock, "Encrypted backup", tr("One file, locked with a passphrase")],
-    ["project", Download, "Export as a project", tr("A folder: the app, a phone web app, a Windows program, the data")]];
+    ["project", Download, "Export as a project", tr("A folder: the app, a phone web app, a Windows program, the data")]].filter((x) => !(site && x[0] === "project"));
   return (
     <div className={"fixed inset-0 z-[70] bg-[#0F172A80] flex " + (wide ? "items-center justify-center p-6" : "items-end")} onClick={onClose}>
       <div className={"bg-[#F4F6FA] w-full max-h-[92vh] overflow-y-auto p-4 space-y-3 " + (wide ? "max-w-xl rounded-3xl" : "rounded-t-3xl pb-8")} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" data-testid="biz-tools">
@@ -153,12 +154,29 @@ function Backup({ sys, flash, saveFile, onImport }) {
     {file ? <button className={btnS + " w-full h-12"} onClick={restore} disabled={busy || pass.length < 4} data-testid="biz-backup-open">{tr("Open it")}</button> : null}
   </div>;
 }
+/** v6.32: the website template (the full Business app, www/business-site.html); null when it can't be read (then the small app). */
+let TEMPLATE = null;
+export async function siteTemplate() {
+  if (TEMPLATE) return TEMPLATE;
+  try { const r = await fetch("business-site.html"); if (r.ok) { const t = await r.text(); if (/__SITE_DATA__/.test(t)) return (TEMPLATE = t); } } catch (e) {}
+  return null;
+}
+/** Save a system (kind "system") or Fleet (kind "fleet") as a project .zip: website + phone app + Windows program + data. */
+export async function saveProject(data, { kind = "system", name = null, saveFile, flash }) {
+  try {
+    const template = await siteTemplate();
+    const zip = zipStore(V.projectFiles(data, { kind, name, template, lang: getLang() }));
+    const file = V.projectName(data, name);
+    saveOut(saveFile, file, zip, "application/zip"); flash(tr("Saved {f}", { f: file }));
+  } catch (e) { flash(tr(e.message)); }
+}
 function Project({ sys, flash, saveFile }) {
-  const go = () => { try { saveOut(saveFile, V.projectName(sys), V.projectZip(sys), "application/zip"); flash(tr("Saved {f}", { f: V.projectName(sys) })); } catch (e) { flash(tr(e.message)); } };
-  const pts = [["index.html", "the app — opens in any browser, offline"], ["manifest + sw.js", "installs on a phone like an app"], ["package.json + main.js", "a Windows program: npm install, then npm run build"], ["data/system.json", "all tables and records, for a developer or another database"], ["README.md", "how to run it, in English and Arabic"]];
+  const [busy, setBusy] = useState(false);
+  const go = async () => { setBusy(true); await saveProject(sys, { saveFile, flash }); setBusy(false); };
+  const pts = [["index.html", "the full app — the same screens as in Attune, in any browser, offline; upload the folder to your own website"], ["manifest + sw.js", "installs on a phone like an app"], ["package.json + main.js", "a Windows program: npm install, then npm run build"], ["data/system.json", "all tables and records, for a developer or another database"], ["README.md", "how to run it, in English and Arabic"]];
   return <div className="space-y-2.5" data-testid="biz-project">
     <div className={card + " p-4 space-y-1.5"}>{pts.map(([a, b]) => <p key={a} className="text-[13.5px]"><b dir="ltr">{a}</b> — {tr(b)}</p>)}</div>
-    <button className={btnP + " w-full"} style={{ background: "var(--biz)" }} onClick={go} data-testid="biz-project-save"><Download size={17} />{tr("Save the project (.zip)")}</button>
+    <button className={btnP + " w-full"} style={{ background: "var(--biz)" }} onClick={go} disabled={busy} data-testid="biz-project-save"><Download size={17} />{tr("Save the project (.zip)")}</button>
     <p className={"text-[12px] " + muted}>{tr("The team's PINs stay in Attune; the exported app opens without them.")}</p>
   </div>;
 }
