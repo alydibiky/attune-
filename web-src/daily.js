@@ -203,7 +203,8 @@ export function parseLesson(text) {
   // v6.34 (Ali: "diagrams and flashcards inside the lesson"): the flashcards are their own list; a "cards" visual goes there
   let cards = j && Array.isArray(j.cards) ? (normVisual({ kind: "cards", items: j.cards }) || { items: [] }).items.slice(0, 8) : [];
   if (visual && visual.kind === "cards") { if (!cards.length) cards = visual.items; visual = null; }
-  if (!keyPoints.length && visual) {   // the model left them out: the visual's cards / steps are the lesson's key facts
+  if (!keyPoints.length && cards.length >= 2) keyPoints = cards.map((x) => clean(x.back ? `${x.front}: ${x.back}` : x.front, 160)).filter(Boolean).slice(0, 3);   // the flashcards are the key facts
+  if (!keyPoints.length && visual) {   // the model left them out: the visual's steps / timeline are the lesson's key facts
     const items = visual.kind === "cards" ? visual.items.map((x) => (x.back ? `${x.front}: ${x.back}` : x.front))
       : visual.kind === "steps" ? visual.items : visual.kind === "timeline" ? visual.items.map((x) => `${x.when}: ${x.what}`) : [];
     keyPoints = items.map((x) => clean(x, 160)).filter(Boolean).slice(0, 3);
