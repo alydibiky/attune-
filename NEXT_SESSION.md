@@ -731,7 +731,7 @@ food Add sheet minimal.
 ### Ali's phone checklist for 6.34
 1. ⬜ Fit → a photo in the Colour-per-meal / Rings look: each label shows the food's name; type "there is tomato sauce" under it.
 2. ⬜ Money → People: «the maid comes every Saturday and takes 600 EGP» → Save; on Saturday Home shows the box; tick → Money has it.
-3. ⬜ Money → Watch → Payments · Dates · Reminders.
+3. ⬜ Money → Watch → Payments · Dates · Reminders. A subscription on its renewal day: Home asks "paid?" → tick → in Money.
 4. ⬜ Engine: one line + ⋯; models as rows; Settings folded.
 5. ⬜ Fit → + on a meal: one box, Recent with +.
 6. ⬜ Learn: leave the app open with a model loaded for a minute after reading a lesson → the next one is written; "Add a lesson".

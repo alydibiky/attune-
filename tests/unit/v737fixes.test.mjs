@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import * as R from "../../web-src/fitread.js";
 import * as Q from "../../web-src/docqa.js";
 import * as LF from "../../web-src/life.js";
-import { tickRegular } from "../../web-src/regular.js";
+import { tickRegular, payRadar } from "../../web-src/regular.js";
+import { todayList } from "../../web-src/home.js";
+import * as DL from "../../web-src/deadlines.js";
 const plate = R.readMealText("fried egg on toast").items;
 assert.ok(plate.length >= 1, "a plate to correct");
 for (const said of ["There is tomato sauce", "there is tomato sauce and cheese", "it has tomato sauce", "فيه صلصة طماطم", "tomato sauce"]) {
@@ -52,4 +54,25 @@ assert.equal(JSON.parse(store.getItem("ledger.v3")).txns.length, 1);
 r = tickRegular(id, due[0].i, false, { store, now: SAT });
 assert.ok(r.removed); assert.equal(JSON.parse(store.getItem("ledger.v3")).txns.length, 0, "unticked → taken out of Money");
 assert.equal(LF.progressOf(LF.loadLife(store).items[0], SAT + 8 * 86400000).next.date, "2026-10-31", "the schedule keeps going week after week");
+// a subscription's day (People & plans) and a Radar renewal's day: Home asks "paid?"; yes = in Money
+{
+  const mem2 = new Map(); const st2 = { getItem: (k) => mem2.get(k) ?? null, setItem: (k, v) => mem2.set(k, String(v)) };
+  st2.setItem("ledger.v3", JSON.stringify({ accounts: [{ id: "a1", currency: "EGP" }], txns: [] }));
+  const net = { ...LF.parseLife("Netflix 200 every month", { now: SAT, currency: "EGP" }), start: "2026-10-17" };
+  LF.saveLife(LF.addCommitment({ v: 1, items: [] }, net, SAT), st2);
+  const rad = DL.addDeadline({ items: [] }, { kind: "renewal", title: "Shahid", date: "2026-10-17", amount: 150, currency: "EGP" }, SAT).data;
+  DL.saveRadar(rad, st2);
+  const tl = todayList({ life: LF.loadLife(st2), radar: DL.loadRadar(st2), ledger: null, care: null, now: SAT, max: 9 });
+  const lifeRow = tl.find((x) => x.pay && x.pay.kind === "life"), radRow = tl.find((x) => x.pay && x.pay.kind === "radar");
+  assert.ok(lifeRow && /Netflix/.test(lifeRow.title), "Netflix due today → a 'paid?' box");
+  assert.ok(radRow && /Shahid/.test(radRow.title), "the Radar's Shahid renewal today → a 'paid?' box");
+  assert.equal(tickRegular(lifeRow.pay.id, lifeRow.pay.i, true, { store: st2, now: SAT }).recorded, 200);
+  assert.equal(payRadar(radRow.pay.id, true, { store: st2, now: SAT }).recorded, 150);
+  const L2 = JSON.parse(st2.getItem("ledger.v3")).txns;
+  assert.deepEqual(L2.map((t) => [t.amount, t.type]), [[200, "expense"], [150, "expense"]], "both are expenses in Money");
+  assert.equal(DL.loadRadar(st2).items[0].status, "done", "the renewal is done");
+  assert.equal(todayList({ life: LF.loadLife(st2), radar: DL.loadRadar(st2), ledger: null, care: null, now: SAT, max: 9 }).filter((x) => x.pay).length, 0, "and Home stops asking");
+  const before = todayList({ life: LF.loadLife(st2), radar: DL.addDeadline({ items: [] }, { kind: "renewal", title: "OSN", date: "2026-10-19", amount: 99 }, SAT).data, ledger: null, care: null, now: SAT, max: 9 });
+  assert.ok(before.some((x) => /OSN/.test(x.title) && !x.pay), "two days before: the usual 'Renews' line, no box yet");
+}
 console.log("PASS v737fixes");

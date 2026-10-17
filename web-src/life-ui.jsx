@@ -110,9 +110,10 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
     }
     const d = addCommitment(data, draft); put(d); remindFor(d.items[d.items.length - 1]); setDraft(null); setText(""); flash && flash(tr("Saved — the payments are on your list")); };
   const tick = (c, i, on) => {
-    if (c.kind === "regular") {
+    // v6.34 (Ali): the maid, a subscription, a bill, the rent — a tick is "paid", recorded in Money by itself
+    if (["regular", "subscription", "bill", "rent"].includes(c.kind) && c.dir === "out") {
       const r = tickRegular(c.id, i, on); setData(r.data); remindFor(r.data.items.find((x) => x.id === c.id));
-      if (on && r.recorded) flash && flash(tr("Recorded in Money: {a} {cur} — {t}", { a: fmt(r.recorded), cur: c.currency, t: c.title }));
+      if (on && r.recorded) flash && flash(tr("Recorded in Money: {a} {cur} — {t}", { a: fmt(r.recorded), cur: c.currency, t: heading(c) }));
       else if (on && toMoney) toMoney(tickText(c, i));
       else if (!on && r.removed) flash && flash(tr("Taken out of Money"));
       return;

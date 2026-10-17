@@ -20,7 +20,7 @@ import { targetsOf } from "./fithome.js";
 import { openRead } from "./readaloud-ui.jsx";
 import { DoResult, DO_HINTS } from "./doit-ui.jsx";
 import { FitToday } from "./health-ui.jsx";
-import { tickRegular } from "./regular.js";
+import { tickRegular, payRadar } from "./regular.js";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
@@ -70,15 +70,18 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <div className="flex items-center mb-1"><span className="c-lbl">{tr("What's waiting")}</span><span className="c-sub ms-auto">{data.items.length ? (data.items.length + (data.reminders || 0) === 1 ? tr("1 thing") : tr("{n} things", { n: data.items.length + (data.reminders || 0) })) : ""}</span></div>
         {data.items.length || data.reminders || note ? (
           <>
-            {data.items.map((x, i) => x.regular ? (
-              // v6.34 (Ali): the maid's Saturday — tick it here and the expense is in Money at once
-              <div key={i} className="w-full flex items-center gap-3 py-2" data-testid="home-regular">
-                <button onClick={() => { const r = tickRegular(x.regular.id, x.regular.i, true);
-                    if (r.recorded) setNote(tr("Recorded in Money: {a} {cur} — {t}", { a: fmt(r.recorded), cur: x.regular.cur, t: x.title }));
-                    else { tickRegular(x.regular.id, x.regular.i, false); navTo("life"); }
+            {data.items.map((x, i) => x.pay ? (
+              // v6.34 (Ali): the maid's Saturday, a subscription's or a bill's day — "Paid?": tick = the expense in Money at once
+              <div key={i} className="w-full flex items-center gap-3 py-2" data-testid={x.pay.kind === "radar" ? "home-pay-radar" : "home-regular"}>
+                <button onClick={() => {
+                    const r = x.pay.kind === "radar" ? payRadar(x.pay.id, true) : tickRegular(x.pay.id, x.pay.i, true);
+                    if (r.recorded) setNote(tr("Recorded in Money: {a} {cur} — {t}", { a: fmt(r.recorded), cur: x.pay.cur, t: x.title }));
+                    else { if (x.pay.kind !== "radar") tickRegular(x.pay.id, x.pay.i, false); navTo("money"); }
                     setTick((n) => n + 1); }}
-                  aria-label={tr("Done today")} className="w-[22px] h-[22px] rounded-md shrink-0" style={{ border: "1.8px solid var(--c-acc)" }} data-testid="home-regular-tick" />
-                <button onClick={() => navTo("life")} className="flex-1 min-w-0 text-start"><b className="block truncate text-[14px]" dir="auto">{x.title}</b><span className="c-sub">{tr("Today — tick it when it's done")}</span></button>
+                  aria-label={tr("Paid")} className="w-[22px] h-[22px] rounded-md shrink-0" style={{ border: "1.8px solid var(--c-acc)" }} data-testid="home-regular-tick" />
+                <button onClick={() => navTo(x.pay.kind === "radar" ? "radar" : "life")} className="flex-1 min-w-0 text-start"><b className="block truncate text-[14px]" dir="auto">{x.title}</b>
+                  <span className={x.late ? "c-neg" : "c-sub"}>{x.late ? tr("Was due {d} — paid?", { d: new Date(x.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric" }) }) : tr("Due today — paid? Tick it")}</span></button>
+                {x.pay.kind === "radar" ? <button onClick={() => { payRadar(x.pay.id, false); setNote(tr("Marked as not renewed — {t}", { t: x.title })); setTick((n) => n + 1); }} className="c-sub text-[12px] shrink-0 px-1" data-testid="home-pay-no">{tr("No")}</button> : null}
                 <span className="c-pill due"><span className="c-num">{fmt(x.amount)}</span></span>
               </div>
             ) : x.from === "scout" || x.from === "learn" || x.low ? (

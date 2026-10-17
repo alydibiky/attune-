@@ -1688,6 +1688,11 @@ His picks (asked on cards): Money "integrate them the best way"; More page "B: r
   «الشغالة بتيجي كل سبت…» → "Comes regularly", a box on each Saturday (today included); Home shows it on its day (`home-regular`),
   a tick writes the expense into Money's ledger directly (cat bills, note "Maid · date"), an untick takes it out; a missed day is
   not "late". No ledger yet → the sentence goes to Money to confirm. Tests: unit `v737fixes`, e2e `e2e_v737maid.py`.
+- **"Paid?" on its day** (Ali, later the same evening: "when the deadline of a subscription comes, a checkbox asks me if I paid; yes
+  = recorded in Money"): `home.js todayList` gives a `pay` row for a People & plans payment you make (regular, subscription, bill,
+  rent) on/after its day, and for a Radar renewal with an amount on its day or up to 7 days after (`home-pay-radar`, with "No").
+  Tick → `tickRegular` / `regular.js payRadar` write the expense (rent → cat rent, else bills); the renewal becomes done "renewed"
+  ("No" → "cancelled"). In People & plans a tick on those kinds records it by itself too (no question). No Money ledger yet → Money opens.
 - **Money = 5 tabs** (hubs.js INSIDE radar/reminders → guardian; `partsOf` returns 2+ parts): Money · **Watch** · People · Deal Check ·
   Scout; Watch has a switch Payments (Guardian) · Dates (Radar) · Reminders (`hub-ui.jsx PART_TITLE`).
 - **More page removed** (new layout): Settings in the sidebar opens Settings only (no tool grid, no How-to card).

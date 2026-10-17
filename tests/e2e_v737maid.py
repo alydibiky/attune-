@@ -37,6 +37,23 @@ with sync_playwright() as p:
     # untick there → out of Money again
     page.locator("[data-testid=life-item]:has-text('Maid') [data-testid=life-tick][aria-pressed=true]").click(); page.wait_for_timeout(300)
     check(len(page.evaluate("JSON.parse(localStorage.getItem('ledger.v3'))")["txns"]) == 0, "unticked → taken out of Money")
+    # v6.34 (Ali: "when the deadline of a subscription comes, a checkbox asks me if I paid; yes = recorded in Money")
+    page.evaluate("""() => { const d = new Date(), iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      localStorage.setItem('attune:radar:v1', JSON.stringify({ items: [
+        { id: 'd1', kind: 'renewal', title: 'Shahid', date: iso, amount: 150, currency: 'EGP', status: 'active', created: 1 },
+        { id: 'd2', kind: 'renewal', title: 'OSN', date: iso, amount: 99, currency: 'EGP', status: 'active', created: 1 }], seen: [] })); }""")
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_selector("[data-testid=phone-home]", timeout=5000)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'chat'}}))"); page.wait_for_timeout(200)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_selector("[data-testid=home-pay-radar]", timeout=5000)
+    rows = page.locator("[data-testid=home-pay-radar]")
+    check(rows.count() == 2 and "Shahid" in rows.nth(0).inner_text() + rows.nth(1).inner_text() and "paid?" in rows.nth(0).inner_text(), "on the renewal day Home asks 'paid?' for each subscription")
+    page.locator("[data-testid=home-pay-radar]:has-text('Shahid') [data-testid=home-regular-tick]").click(); page.wait_for_timeout(300)
+    led = page.evaluate("JSON.parse(localStorage.getItem('ledger.v3'))")["txns"]
+    check(len(led) == 1 and led[0]["amount"] == 150 and "Shahid" in led[0]["note"], "Paid → Shahid 150 is an expense in Money: %s" % led)
+    page.locator("[data-testid=home-pay-radar]:has-text('OSN') [data-testid=home-pay-no]").click(); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=home-pay-radar]").count() == 0 and len(page.evaluate("JSON.parse(localStorage.getItem('ledger.v3'))")["txns"]) == 1, "No → not recorded, and Home stops asking")
+    rad = page.evaluate("JSON.parse(localStorage.getItem('attune:radar:v1'))")["items"]
+    check([x.get("outcome") for x in rad] == ["renewed", "cancelled"], "the Radar marks them renewed / not renewed: %s" % [x.get("outcome") for x in rad])
     check(real_errors(errors) == [], "no page errors: %s" % real_errors(errors)[:3])
     ctx.close(); br.close()
 env.close()

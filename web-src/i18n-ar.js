@@ -5323,4 +5323,9 @@ export const AR = {
   "None yet — install the recommended one below.": "لا يوجد بعد — ثبّت النموذج المقترح بالأسفل.",
   "Delete {m}?": "حذف {m}؟",
   "cores": "أنوية",
+  "Paid": "مدفوع",
+  "Renewed: {t}": "تجدّد: {t}",
+  "Was due {d} — paid?": "كان مستحقًا {d} — هل دفعت؟",
+  "Due today — paid? Tick it": "مستحق اليوم — هل دفعت؟ علّمه",
+  "Marked as not renewed — {t}": "سُجّل أنه لم يتجدد — {t}",
 };
