@@ -10,7 +10,7 @@
    The tables' own tools (grid, design view, queries, forms, summary, licence, app file) stay in erp-ui.jsx and live in
    the "Tables" tab, so nothing that worked is lost. Logic: erp.js (tables), erp-screens.js (screens), biz-steps.js. */
 import React, { useState, useEffect, useMemo } from "react";
-import { ShoppingCart, ChevronLeft, ChevronRight, Plus, Save, Trash2, Sparkles, Undo2, LayoutGrid, FileText, BarChart3, Database, Palette, Send, Check, X, Loader2, Upload, Wrench, Smartphone, Monitor } from "lucide-react";
+import { Users, Truck, ShoppingCart, ChevronLeft, ChevronRight, Plus, Save, Trash2, Sparkles, Undo2, LayoutGrid, FileText, BarChart3, Database, Palette, Send, Check, X, Loader2, Upload, Wrench, Smartphone, Monitor } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { ShopApp } from "./shop-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
@@ -22,6 +22,9 @@ import { getPower } from "./power.js";
 import { LIGHT_BASE, ON_FILL } from "./fitlook.js";
 import { SystemView, FieldInput, RenameSheet } from "./erp-ui.jsx";
 import { BooksApp } from "./books-ui.jsx";
+import { FleetApp } from "./fleet-ui.jsx";
+import * as V2 from "./erp-v2.js";
+import { PinGate, SystemTools } from "./biz-v2-ui.jsx";
 
 const KEY = "attune:erp:v1", INTRO = "attune:biz:intro";
 // a computer-sized screen (a tablet, a Chromebook, a phone on a monitor): the system switches to its computer layout
@@ -74,13 +77,14 @@ export function BusinessApp({ flash, llm, modelReady, openEngine, saveFile, shar
   const color = sys && (view === "system" || view === "new") ? SC.colorOf(sys) : SC.COLORS.blue;
   const full = useWide() && view === "system" && !!sys;     // a system on a computer-sized screen uses the whole width
   let body;
-  if (view === "shop") body = <ShopApp onBack={() => setView("list")} flash={flash} scanBarcode={scanBarcode} share={share} />;
+  if (view === "fleet") body = <FleetApp flash={flash} saveFile={saveFile} onBack={() => setView("list")} />;
+  else if (view === "shop") body = <ShopApp onBack={() => setView("list")} flash={flash} scanBarcode={scanBarcode} share={share} />;
   else if (view === "books") body = <div className="p-3"><BooksApp flash={flash} saveFile={saveFile} share={share} onBack={() => setView("list")} goCustom={() => setView("list")} /></div>;
   else if (view === "new") body = <Builder llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} onBack={() => setView("list")}
     onCreate={(s) => { setSys(s, tr("Created — {n} tables", { n: s.tables.length })); setView("system"); }} />;
   else if (view === "system" && sys) body = <SystemShell sys={sys} setSys={setSys} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} saveFile={saveFile} share={share} runPy={runPy}
     onBack={() => { setView("list"); setSysRaw(null); }} onDelete={() => { dropSys(sys.id); setIndex(loadIndex()); setSysRaw(null); setView("list"); flash(tr("Deleted")); }} />;
-  else body = <Hub index={index} open={open} onNew={() => { done(); setView("new"); }} onBooks={() => { done(); setView("books"); }} onShop={() => { done(); setView("shop"); }} onExit={onExit} intro={intro} onIntro={() => setIntro(true)} onIntroDone={done}
+  else body = <Hub index={index} open={open} onNew={() => { done(); setView("new"); }} onBooks={() => { done(); setView("books"); }} onShop={() => { done(); setView("shop"); }} onFleet={() => { done(); setView("fleet"); }} onExit={onExit} intro={intro} onIntro={() => setIntro(true)} onIntroDone={done}
     onOpenFile={async (f) => {
       const s = readApp(await f.text());
       if (!s) { flash(tr("That file isn't an app made with Attune Business.")); return; }
@@ -129,7 +133,7 @@ function IntroHero({ onDone }) {
 }
 
 // ---- the hub: your systems --------------------------------------------------------------------------------------------
-function Hub({ index, open, onNew, onBooks, onShop, onExit, onOpenFile, intro, onIntro, onIntroDone }) {
+function Hub({ index, open, onNew, onBooks, onShop, onFleet, onExit, onOpenFile, intro, onIntro, onIntroDone }) {
   return (
     <section className="px-4 pb-6 space-y-4" data-testid="business-page">
       <TopBar title={tr("Business")} sub={tr("Your own systems — like Microsoft Access, on your phone")} onBack={onExit} label={tr("Back to Attune")}
@@ -141,6 +145,12 @@ function Hub({ index, open, onNew, onBooks, onShop, onExit, onOpenFile, intro, o
         <span className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-[#FFFFFF]" style={{ background: "var(--biz)" }}><ShoppingCart size={20} /></span>
         <span className="min-w-0"><span className="block font-bold text-[15px]">{tr("Shop in your pocket")}</span>
           <span className="block text-[12.5px] text-[#5B6B80] leading-snug">{tr("Say what your shop is — the counter with barcodes, stock, customers who owe, staff and the end-of-day close, ready in a minute. Every sale goes into your books.")}</span></span>
+      </button>
+      {/* v6.32: Ali's Crane Management + Crane Warehouse apps as one (fleet-ui.jsx) */}
+      <button onClick={onFleet} data-testid="fleet-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
+        <span className="w-11 h-11 rounded-xl bg-[#E0E7FF] text-[#3730A3] flex items-center justify-center shrink-0"><Truck size={20} /></span>
+        <span className="min-w-0"><span className="block font-bold text-[15px]">{tr("Fleet & rentals")}</span>
+          <span className="block text-[12.5px] text-[#5B6B80] leading-snug">{tr("Cranes and equipment for hire: job orders by the hour or day, cheques with reminders, client balances, expenses, and a parts store linked to each crane.")}</span></span>
       </button>
       <button onClick={onNew} className={btnP + " w-full lg:col-span-2 lg:order-last"} style={{ background: "var(--biz)" }} data-testid="erp-new"><Plus size={18} />{intro ? tr("Start a new system") : tr("New system")}</button>
       <button onClick={onBooks} data-testid="books-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
@@ -479,8 +489,12 @@ function LaunchStep({ draft, edit }) {
 }
 
 // ---- a system: Home · Tables · Form · Reports, the AI design chat on every tab, the steps one tap away --------------------
-function SystemShell({ sys, setSys, llm, modelReady, openEngine, flash, saveFile, share, runPy, onBack, onDelete }) {
+function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flash, saveFile, share, runPy, onBack, onDelete }) {
   const [tab, setTab] = useSticky("biz:tab", "home");
+  // v6.32 Business v2: a system with a team opens behind a PIN, and every change is checked against the person's role
+  const [user, setUser] = useSticky("biz:user:" + sys.id, null);
+  const [tools, setTools] = useState(false);
+  const setSys = (next, msg) => { const why = V2.guardChange(sys, next, user); if (why) { flash(tr(why)); return; } setSysRaw(next, msg); };
   const [chat, setChat] = useState(false);
   const [studio, setStudio] = useState(false);
   const [formT, setFormT] = useState(null);
@@ -488,6 +502,7 @@ function SystemShell({ sys, setSys, llm, modelReady, openEngine, flash, saveFile
   useSubBack(chat, () => setChat(false));
   useSubBack(studio, () => setStudio(false));
   const c = SC.colorOf(sys), u = SC.uiOf(sys);
+  if (V2.hasTeam(sys) && !(user && V2.teamOf(sys).some((x) => x.id === user.id))) return <div style={accentVars(c)}><PinGate sys={sys} color={c} onBack={onBack} onIn={(x) => { setUser(x); flash(tr("Hello {n}", { n: x.name })); }} /></div>;
   if (studio) return <div style={accentVars(c)}><Builder existing={sys} startAt={3} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} onBack={() => setStudio(false)} onSave={(d) => setSys(d)} onCreate={() => setStudio(false)} /></div>;
   const tabs = [["home", tr("Home"), LayoutGrid], ["tables", tr("Tables"), Database], ["form", tr("Form"), FileText], ["reports", tr("Reports"), BarChart3]];
   const undo = sys.history && sys.history.length ? () => { const x = E.undo(sys); if (x) setSys(x.sys, tr("Undone: {w}", { w: x.what })); } : null;
@@ -502,6 +517,9 @@ function SystemShell({ sys, setSys, llm, modelReady, openEngine, flash, saveFile
   const round = "w-11 h-11 rounded-full bg-[#FFFFFF33] flex items-center justify-center";
   const backBtn = <button onClick={onBack} aria-label={tr("Back")} className={round + " shrink-0"} data-testid="biz-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>;
   const undoBtn = undo ? <button onClick={undo} aria-label={tr("Undo")} className={round + " shrink-0"} data-testid="biz-sys-undo"><Undo2 size={18} /></button> : null;
+  const toolsSheet = tools ? <SystemTools sys={sys} setSys={setSys} user={user} onSignIn={setUser} wide={wide} flash={flash} saveFile={saveFile} onClose={() => setTools(false)}
+    onImport={(d) => { setTools(false); setSysRaw({ ...d, id: E.uid("S"), name: d.name + " " + tr("(copy)"), team: undefined, licence: undefined, updated: Date.now() }, tr("Opened the backup as a copy")); }} /> : null;
+  const toolsBtn = <button onClick={() => setTools(true)} aria-label={tr("Team & tools")} className={round + " shrink-0"} data-testid="biz-tools-open"><Users size={18} /></button>;
   const designBtn = <button onClick={() => setStudio(true)} className="h-10 px-3.5 rounded-full bg-[#FFFFFF33] text-[13px] font-bold flex items-center gap-1.5 shrink-0" data-testid="biz-open-studio"><Palette size={15} />{tr("Design")}</button>;
   const sub = tr("{n} tables", { n: sys.tables.length }) + (E.isActive(sys) ? "" : " · " + tr("Trial"));
 
@@ -509,7 +527,7 @@ function SystemShell({ sys, setSys, llm, modelReady, openEngine, flash, saveFile
   if (wide && u.menu === "left") return (
     <section className="flex min-h-screen" style={accentVars(c)} data-testid="biz-system" data-layout="computer-left">
       <div className="w-64 shrink-0 sticky top-0 h-screen overflow-y-auto text-[#FFFFFF] flex flex-col p-3 gap-1" style={{ background: c }}>
-        <div className="flex items-center gap-2 mb-2">{backBtn}<span className="flex-1" />{undoBtn}</div>
+        <div className="flex items-center gap-2 mb-2">{backBtn}<span className="flex-1" />{undoBtn}{toolsBtn}</div>
         <p className="text-[20px] font-extrabold px-2 leading-tight" dir="auto" data-testid="biz-system-title">{sys.name}</p>
         <p className="text-[12.5px] opacity-85 px-2 mb-3">{sub}</p>
         <nav className="flex flex-col gap-1" data-testid="biz-nav">{tabs.map(([k, l, I]) => (
@@ -519,7 +537,7 @@ function SystemShell({ sys, setSys, llm, modelReady, openEngine, flash, saveFile
         <div className="mt-auto pt-3">{designBtn}</div>
       </div>
       <div className="flex-1 min-w-0 px-6 py-5 pb-24"><div className="max-w-6xl mx-auto">{body}</div></div>
-      {fab}{chatSheet}
+      {fab}{chatSheet}{toolsSheet}
     </section>
   );
   if (wide) return (
@@ -530,18 +548,18 @@ function SystemShell({ sys, setSys, llm, modelReady, openEngine, flash, saveFile
           <p className="text-[18px] font-extrabold truncate max-w-[30%]" dir="auto" data-testid="biz-system-title">{sys.name}</p>
           <nav className="flex gap-1 ms-3" data-testid="biz-nav">{tabs.map(([k, l, I]) => (
             <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className={"h-10 px-3.5 rounded-full flex items-center gap-2 text-[13.5px] font-semibold " + (tab === k ? "bg-[#FFFFFF]" : "hover:bg-[#FFFFFF22]")} style={tab === k ? { color: c } : null}><I size={17} />{l}</button>))}</nav>
-          <span className="flex-1" />{undoBtn}{designBtn}
+          <span className="flex-1" />{undoBtn}{toolsBtn}{designBtn}
         </div>
       </div>
       <div className="max-w-6xl mx-auto px-5 pt-5">{body}</div>
-      {fab}{chatSheet}
+      {fab}{chatSheet}{toolsSheet}
     </section>
   );
   // ---- the phone layout ----
   return (
     <section className="pb-28" style={accentVars(c)} data-testid="biz-system" data-layout="phone">
       <div className="text-[#FFFFFF] px-3 pt-2 pb-4 rounded-b-3xl" style={{ background: c }}>
-        <div className="flex items-center gap-2">{backBtn}<span className="flex-1" />{undoBtn}{designBtn}</div>
+        <div className="flex items-center gap-2">{backBtn}<span className="flex-1" />{undoBtn}{toolsBtn}{designBtn}</div>
         <p className="text-[24px] font-extrabold mt-2 px-1" dir="auto" data-testid="biz-system-title">{sys.name}</p>
         <p className="text-[12.5px] opacity-85 px-1">{sub}</p>
       </div>
@@ -551,7 +569,7 @@ function SystemShell({ sys, setSys, llm, modelReady, openEngine, flash, saveFile
         <div className="max-w-3xl mx-auto grid grid-cols-4 h-[64px]">{tabs.map(([k, l, I]) => (
           <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className="flex flex-col items-center justify-center gap-0.5 text-[11.5px] font-semibold" style={{ color: tab === k ? c : "#64748B" }}><I size={21} />{l}</button>))}</div>
       </nav>
-      {chatSheet}
+      {chatSheet}{toolsSheet}
     </section>
   );
 }
@@ -590,6 +608,7 @@ export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1 }) {
   const [errs, setErrs] = useState({});
   const [del, setDel] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [plId, setPl] = useState("");        // v6.32: the price list a picked product's price comes from
   useEffect(() => { setAt(table && (sys.rows[table.id] || []).length ? (sys.rows[table.id] || []).length - 1 : -1); }, [table && table.id]);
   useEffect(() => { if (!table) return; setVals(row ? fromRow(row) : blank()); setErrs({}); setDel(false); setDirty(false); }, [at, table && table.id, row && row._id]);
   if (!table) return <p className={card + " p-5 text-[14px] text-[#5B6B80]"}>{tr("No tables — add one with +.")}</p>;
@@ -605,10 +624,15 @@ export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1 }) {
     if (!row) setAt((r.sys.rows[table.id] || []).length - 1);
   };
   const ff = SC.formFields(sys, table), compact = SC.uiOf(sys).density === "compact";
+  const lists = (sys.priceLists || []).filter((l) => V2.priceTarget(sys, table.id, l.id));
+  const pt = plId ? V2.priceTarget(sys, table.id, plId) : null;
+  const setField = (f, v) => setVals((o) => { const n = { ...o, [f.id]: v }; if (pt && f.id === pt.linkFid && v) { const p = V2.priceOn(sys, plId, v); if (p != null) n[pt.priceFid] = String(p); } return n; });
   return (
     <div className="space-y-3" data-testid="biz-form">
       <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]" data-testid="biz-form-tables">{sys.tables.map((t) => (
         <button key={t.id} onClick={() => setTid(t.id)} className={"shrink-0 h-10 px-3.5 rounded-full text-[13.5px] font-semibold " + (t.id === table.id ? "text-[#FFFFFF]" : "bg-[#FFFFFF] border border-[#DCE3EC] text-[#334155]")} style={t.id === table.id ? { background: "var(--biz)" } : null} dir="auto">{t.name}</button>))}</div>
+      {lists.length ? <label className="flex items-center gap-2 text-[13px]" data-testid="biz-form-pricelist"><span className="text-[#5B6B80] shrink-0">{tr("Price list")}</span>
+        <select value={plId} onChange={(e) => setPl(e.target.value)} className="h-10 rounded-xl bg-[#FFFFFF] border border-[#DCE3EC] px-2 text-[14px] flex-1 min-w-0" dir="auto"><option value="">{tr("— base prices —")}</option>{lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label> : null}
       <div className={card + " overflow-hidden"}>
         {/* the record bar, as in Access: ◀ record 3 of 27 ▶  + new */}
         <div className="flex items-center gap-1 px-2 py-2 border-b border-[#DCE3EC] bg-[#EEF2F7]" data-testid="biz-form-nav">
@@ -624,7 +648,7 @@ export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1 }) {
               {section ? <p className="text-[12px] font-bold tracking-wide uppercase pt-2 border-t border-[#DCE3EC]" style={{ color: "var(--biz)", gridColumn: "1 / -1" }} dir="auto">{section}</p> : null}
               <label style={f.type === "longtext" && cols > 1 ? { gridColumn: "1 / -1" } : null} className={compact ? "grid grid-cols-[38%_1fr] items-center gap-2" : "block"}>
                 <span className={"block text-[12.5px] font-semibold text-[#475569] " + (compact ? "" : "mb-1")} dir="auto">{f.name}{f.required ? " *" : ""}</span>
-                <span className="block" onInput={() => setDirty(true)} onChange={() => setDirty(true)}><FieldInput sys={sys} f={f} value={vals[f.id]} set={(v) => { setVals((o) => ({ ...o, [f.id]: v })); setDirty(true); }} computed={computed ? computed[f.id] : null} /></span>
+                <span className="block" onInput={() => setDirty(true)} onChange={() => setDirty(true)}><FieldInput sys={sys} f={f} value={vals[f.id]} set={(v) => { setField(f, v); setDirty(true); }} computed={computed ? computed[f.id] : null} /></span>
                 {errs[f.id] ? <span className="block text-[12px] text-amber-700 mt-0.5">{errs[f.id]}</span> : null}
               </label>
             </React.Fragment>))}
