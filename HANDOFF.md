@@ -1746,6 +1746,15 @@ His picks (asked on cards): Money "integrate them the best way"; More page "B: r
 - Research notes (17 Oct): llama.cpp has an experimental Hexagon (NPU) backend for 8 Gen 3 / 8 Elite / 8 Elite Gen 5 (Q4_0, Q8_0,
   MXFP4) — anecdotes say CPU-like speed but much cooler; worth a lab run on Ali's SM8850 (Core Max is Q8_0 = supported). No official
   Qwen3.5 QAT GGUF exists yet.
+- **Lab results (17 Oct, ARM runner, Neoverse-N2, 4 threads)** — nothing changes in the app; the current files and MTP are the best:
+  - DFlash (block-diffusion draft, lossless) vs MTP: every mode gave the same answers as "off" (5/5), but MTP is faster on average —
+    Core Max Q8_0: off 14.2 / **MTP 23.2** / DFlash-8 16.7 / DFlash-15 20.5 t/s (DFlash-15 wins code and JSON, 35 vs 29, but
+    Arabic drops to 4.9 vs 14.4); Core Q4_K_M: MTP +22% (10.8 → 13.2); Zenith IQ4_NL: MTP +26% (6.4 → 8.1). Not wired.
+  - Quant bench (KLD vs the 8-bit file; lower = closer): Glow 2B UD-Q4_K_XL 0.036 (best 4-bit, the app's file); Spark 0.8B Q4_K_M
+    0.059 (Q5_K_S 0.031 for +0.04 GB but 10% slower writing); Zenith 9B IQ4_NL 0.055 (the app's file; Q4_0 reads 1.6× faster
+    but drifts twice as much). On this server CPU the Q8_0 files of the small models are faster AND exact (Spark Q8_0 0.83 GB,
+    68 t/s writing vs 44); on a phone memory speed decides — an option for Ali, not changed.
+  - NPU lab run 2: libggml-hexagon.so + libggml-htp-v73/v75/v79/v81.so all built (v81 = 8 Elite Gen 5).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
