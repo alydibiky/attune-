@@ -95,3 +95,24 @@ export function switchLine(tierLabel, why, ar = false) {
   const w = { code: ["code", "الكود"], math: ["maths", "الحسابات"], reason: ["reasoning", "التفكير المنطقي"], report: ["long, detailed answers", "الإجابات الطويلة المفصّلة"], photo: ["photos", "الصور"], quick: ["quick answers", "الإجابات السريعة"] }[why] || ["this", "ده"];
   return ar ? `بنقل لـ ${tierLabel} — الأقوى في ${w[1]} على موبايلك…` : `Switching to ${tierLabel} — your best model for ${w[0]}…`;
 }
+
+/** v6.32 Deep answer (Ali: "build now"): ONE question goes to the strongest installed model this phone can run at all — also one
+ *  that only runs slowly, with its experts read from storage (flash mode: Everest on a 12–16 GB phone) — and it thinks first.
+ *  Auto never picks such a model (it isn't smooth); Deep answer is the person asking for it. A photo needs a model that sees.
+ *  installed / active / ramGB as pickModel. → { id, switch, slow, label } — `slow`: it doesn't run smoothly here (show a warning). */
+export function deepModel(installed, { active = null, ramGB = 8, photo = false } = {}) {
+  let list = (installed || []).filter((m) => m && m.tier);
+  if (photo) list = list.filter((m) => m.tier.vision);
+  if (!list.length) return { id: active, switch: false, slow: false, label: "" };
+  const best = [...list].sort((a, b) => qualityOf(b.tier) - qualityOf(a.tier))[0];
+  const cur = list.find((m) => m.id === active);
+  const pick = cur && qualityOf(cur.tier) >= qualityOf(best.tier) ? cur : best;
+  const slow = !!(pick.tier.smoothRam && pick.tier.smoothRam > ramGB + 0.5);
+  return { id: pick.id, switch: pick.id !== active, slow, label: pick.tier.label || pick.id };
+}
+
+/** The words shown while a Deep answer starts. */
+export function deepLine(label, slow, ar = false) {
+  if (ar) return slow ? `إجابة متعمقة بـ ${label} — يقرأ من التخزين، فقد يستغرق بضع دقائق…` : `إجابة متعمقة بـ ${label} — يفكر أولًا…`;
+  return slow ? `Deep answer with ${label} — it reads from storage, so this can take a few minutes…` : `Deep answer with ${label} — thinking it through first…`;
+}

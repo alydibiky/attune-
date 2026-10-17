@@ -7,7 +7,7 @@
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
 import { shareLink, looksLikeChat, fromPage, fromText, contextBlock } from "./ai-import.js";
-import { taskOf, wantsWeb, wantsThink, pickModel, switchLine, needsToday } from "./router.js";
+import { taskOf, wantsWeb, wantsThink, pickModel, switchLine, needsToday, deepModel, deepLine } from "./router.js";
 import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
@@ -433,6 +433,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   };
   const [busy, setBusy] = useState(false);
   const [think, setThink] = useState(false);
+  const [deep, setDeep] = useState(false);   // v6.32 Deep answer: the next question only (router.js deepModel)
   const [listening, setListening] = useState(false);
   const [speakingId, setSpeakingId] = useState(null);
   const [q, setQ] = useState("");                       // search in history
@@ -877,7 +878,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     let pw0 = api.power ? api.power() : null;
     const task = taskOf(typed, { photo: !!img, file: !!fileAtt });   // v6.12: Auto — what kind of question (router.js)
     const autoThink = () => (pw0 && typed && ((pw0.thinkHard && (looksLikeReasoning(typed) || looksLikeMathProblem(typed))) || ((pw0.level || 3) >= 3 && wantsThink(typed, task))) ? "force" : api.deepThink());
-    let useThink = think ? "force" : autoThink();
+    const deepNow = deep; if (deepNow) setDeep(false);
+    let useThink = think || deepNow ? "force" : autoThink();
+    let deepBack = null;   // the model to go back to after a Deep answer
     setChats((list) => {
       const exists = list.some((c) => c.id === cid);
       const sp = spaceRef.current.ids || {};
@@ -906,7 +909,18 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       let sources = null, via = null, research = null, webCtx = null, webEmpty = false, tplUsed = "", speedCap = null, speedBrief = ""; const extra0 = {};
       const pic = img || carried;
       // v6.12: Auto — the best installed model for this kind of question (a quick one keeps the loaded model)
-      if (api.autoModel && api.autoModel() && api.switchModel) {
+      // v6.32 Deep answer: the strongest model this phone can run at all (also a slow, from-storage one), thinking first;
+      // the model that was loaded comes back after the answer
+      if (deepNow && api.modelsForRoute && api.switchModel) {
+        try {
+          const r = api.modelsForRoute(), dm = deepModel(r.installed, { ...r, photo: !!pic });
+          extra0.deep = dm.label || (api.power && api.power().label) || "";
+          onStatus(deepLine(extra0.deep, dm.slow, /[\u0600-\u06FF]/.test(typed)));
+          if (dm.switch && dm.id && await api.switchModel(dm.id)) { deepBack = r.active; extra0.switched = dm.label; pw0 = api.power ? api.power() : pw0; }
+          if (runRef.current !== run) return;
+        } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+      } else if (deepNow) extra0.deep = (api.power && api.power().label) || "";
+      else if (api.autoModel && api.autoModel() && api.switchModel) {
         try {
           const r = api.modelsForRoute(), pk = pickModel(task, r.installed, r);
           if (pk.switch && pk.id) {
@@ -1588,6 +1602,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       }) }));
     } finally {
       if (runRef.current === run) setBusy(false);
+      // a Deep answer's big model goes back to the one that was loaded — unless a new question already runs on it
+      if (deepBack && runRef.current === run && api.switchModel) api.switchModel(deepBack).catch(() => {});
     }
   };
 
@@ -1906,6 +1922,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : null}
             {m.fromPhotoTable && !m.streaming ? <p className="mt-1 text-[11px] text-amber-300/90" data-testid="photo-table-note">⚠ {tr("Numbers read from a photo — check them against the chart before a lift")}</p> : null}
             {m.unsourced ?<p className="mt-1 text-[11px] text-amber-300" data-testid="unsourced">⚠ {tr("Not found in the sources")}: {m.unsourced.join(", ")}</p> : null}
+            {m.deep && !m.streaming ? <p className="mt-1 text-[11px] text-violet-300" data-testid="deep-tag">{tr("Deep answer")}{m.deep ? " · " + m.deep : ""}</p> : null}
             {m.fixedSlip ? <p className="mt-1 text-[11px] text-sky-300" data-testid="slip-fixed">{tr("The first answer had a wrong sum — re-done by running code")}</p> : null}
             {m.slips && !m.fixedSlip ? <p className="mt-1 text-[11px] text-amber-300" data-testid="slip-note">⚠ {tr("Check this sum")}: {m.slips[0].expr} → {Number(m.slips[0].right.toFixed(4)).toLocaleString("en-US")}</p> : null}
             {m.rules ? (
@@ -2165,6 +2182,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 {/* v6.31 minimal (design A, like ChatGPT/Gemini): one "+" holds photo, file, think and web; what is on shows as a chip */}
                 <button onClick={() => setPlusOpen((v) => !v)} aria-expanded={plusOpen} aria-label={tr("Add")} data-testid="composer-plus"
                   className={"w-9 h-9 rounded-full flex items-center justify-center border " + (plusOpen ? "border-teal-600 text-teal-300" : "border-slate-700 text-slate-300")}><Plus size={18} /></button>
+                {deep ? <button onClick={() => setDeep(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-violet-500/10 text-violet-300" data-testid="chip-deep"><Sparkles size={13} />{tr("Deep answer")}<X size={12} /></button> : null}
                 {think ? <button onClick={() => setThink(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-teal-500/10 text-teal-300" data-testid="chip-think"><Brain size={13} />{tr("Think")}<X size={12} /></button> : null}
                 {api.webOn || api.webAuto ? <button onClick={api.toggleWeb} data-testid="web-toggle" className={"h-8 px-2.5 rounded-full text-xs flex items-center gap-1 " + (api.webOn ? "bg-teal-500/10 text-teal-300" : "bg-sky-500/10 text-sky-300")}><Globe size={13} />{api.webAuto ? tr("Web · Auto") : tr("Web")}</button> : null}
                 {plusOpen ? createPortal(
@@ -2172,6 +2190,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                     <label htmlFor="att-pick-photo" className="flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800 cursor-pointer"><ImagePlus size={17} className="text-slate-400" />{tr("Photo")}</label>
                     <label htmlFor="att-pick-file" className="flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800 cursor-pointer"><Paperclip size={17} className="text-slate-400" />{tr("File")}</label>
                     <button onClick={() => setThink((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-think"><Brain size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Think first")}</span>{think ? <CheckCircle2 size={15} className="text-teal-400" /> : null}</button>
+                    <button onClick={() => setDeep((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-deep"><Sparkles size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Deep answer")}<span className="block text-[11px] text-slate-500">{tr("Your strongest model, slow and careful")}</span></span>{deep ? <CheckCircle2 size={15} className="text-teal-400" /> : null}</button>
                     <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-web"><Globe size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Search the web")}</span><span className="text-[11px] text-slate-500">{api.webOn ? tr("On") : api.webAuto ? tr("Auto") : tr("Off")}</span></button>
                   </div>, document.body) : null}
               </>

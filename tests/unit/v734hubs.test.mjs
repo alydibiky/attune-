@@ -1,12 +1,12 @@
 // v6.30: 6 places in the sidebar; tools that belong together are one page with tabs.
-import { HUBS, GROUPS, hubOf, tabsFor, TOOL_PAGES, toolPages, partsOf } from "../../web-src/hubs.js";
+import { HUBS, GROUPS, hubOf, tabsFor, TOOL_PAGES, toolPages, partsOf, INSIDE } from "../../web-src/hubs.js";
 const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
 ok(HUBS.length <= 6, "no more than 6 places in the sidebar (" + HUBS.length + ")");
 const all = HUBS.flatMap((h) => h[3]);
 ok(new Set(all).size === all.length, "every page lives in exactly one place");
 ok(hubOf("guardian") === "money" && hubOf("fit") === "health" && hubOf("humanize") === "tools" && hubOf("assistants") === "chat", "pages find their place");
 const t = tabsFor("humanize");
-ok(t.join() === "code,improve,compress,humanize,copilot,library,ask" && !t.includes("studio"), "Create: Code · Improve · Compress · Humanize · Copilot · Library · Ask on one page; Studio stays its own");
+ok(t.join() === "code,improve,humanize,copilot,library,ask" && !t.includes("studio"), "Create: Code · Improve (+ Compress) · Humanize · Copilot · Library · Ask on one page; Studio stays its own");
 ok(tabsFor("studio").length === 0, "Studio has no tab row");
 ok(tabsFor("radar").includes("money") && tabsFor("radar").includes("scout"), "Money's tools are tabs of one page");
 ok(tabsFor("home").length === 0 && tabsFor("fit").length === 0, "full-screen pages have no tab row");
@@ -15,11 +15,12 @@ ok(GROUPS.every((g) => g[2].every((m) => hubOf(m) === "tools")), "the groups ins
 ok(TOOL_PAGES.length <= 6, "the Tools page is no more than 6 pages (" + TOOL_PAGES.length + ")");
 const inTools = HUBS.find((h) => h[0] === "tools")[3].filter((m) => m !== "tools"), onPages = TOOL_PAGES.flatMap((p) => p[3]);
 ok(inTools.every((m) => onPages.includes(m)), "every tool is inside one of the 6 pages: missing " + inTools.filter((m) => !onPages.includes(m)));
-ok(TOOL_PAGES.every((p) => p[3].length === 1 || tabsFor(p[3][0]).length === p[3].length), "each page's first tool shows all its tools as tabs");
+ok(TOOL_PAGES.every((p) => p[3].length === 1 || tabsFor(p[3][0]).length === p[3].filter((m) => !INSIDE[m]).length), "each page's first tool shows all its tools as tabs");
 ok(toolPages(["convert", "guide"]).map((p) => p[0]).join() === "files,help", "a device without a page's tools doesn't show that page");
 ok(tabsFor("chat").length <= 6 && tabsFor("money").length <= 6, "Chat and Money: no more than 6 tabs (" + tabsFor("chat") + " / " + tabsFor("money") + ")");
 ok(!tabsFor("chat").includes("skills") && !tabsFor("chat").includes("artifacts") && !tabsFor("money").includes("reminders"), "Skills, Artifacts and Reminders are not tabs of their own");
 ok(partsOf("skills").join() === "assistants,skills" && partsOf("projects").join() === "projects,artifacts" && partsOf("radar").join() === "radar,reminders", "…they are parts of Assistants, Projects and Radar");
 ok(partsOf("money").length === 0 && partsOf("radar", ["radar"]).length === 0, "no switch on other pages, or when the device lacks the second part");
 ok(tabsFor("reminders", ["money", "reminders"]).includes("reminders"), "without Radar, Reminders stays a tab");
+ok(tabsFor("code").length === 6 && !tabsFor("code").includes("compress") && partsOf("compress").join() === "improve,compress", "Create has 6 tabs; Compress is a part of Improve a prompt");
 console.log(process.exitCode ? "FAILED" : "ALL PASSED");

@@ -886,6 +886,8 @@ export const AR = {
   "Look it up on the web": "البحث على الويب",
   "Thinking first — slower, better on hard ones": "التفكير أولًا — أبطأ، وأفضل في الأسئلة الصعبة",
   "Think first": "التفكير أولًا",
+  "Deep answer": "إجابة متعمقة",
+  "Your strongest model, slow and careful": "أقوى نموذج لديك، أبطأ وأدق",
   "Wikipedia · the question leaves the device, the answer is still written here": "ويكيبيديا · السؤال يخرج من الجهاز، والإجابة تُكتب هنا",
   "Runs on this device · no account · works with no signal": "يعمل على هذا الجهاز · بلا حساب · يعمل بدون اتصال",
   "Clear": "مسح",

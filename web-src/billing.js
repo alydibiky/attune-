@@ -60,7 +60,6 @@ export const PRO_BENEFITS = [
   "Unlimited Deal Checks: the real cost, the market price and scam signs before you pay",
   "Unlimited Chat X-Rays: who owes you, promises and unanswered questions in your WhatsApp chats",
   "Unlimited file conversions, including scanned paper → editable Word",
-  "Unlimited video downloads in the quality you choose",
   "Unlimited presentations (PowerPoint) and reports (Word / PDF)",
   "Expert review: strong models check and improve their own answers",
   "Deep web research: several searches, more pages, cross-checked facts",
@@ -83,7 +82,7 @@ export const BILLING_GROUPS = [
     "Deep web research: several searches, more pages, cross-checked facts", "Mind: remembers everything and searches it" ] },
   { id: "tools", icon: "🧰", title: "Tools", items: [
     "Deal Check: the real cost, the market price and scam signs before you pay", "Chat X-Ray: who owes you, promises and unanswered questions in WhatsApp chats",
-    "File converters, including scanned paper → editable Word", "Presentations (PowerPoint) and reports (Word / PDF)", "Video downloads in the quality you choose", "Studio pictures" ] },
+    "File converters, including scanned paper → editable Word", "Presentations (PowerPoint) and reports (Word / PDF)", "Studio pictures" ] },
   { id: "fit", icon: "🥗", title: "Fit & Food", items: [
     "Unlimited photo meals", "The week's meal plan and shopping list", "The week report" ] },
   { id: "money", icon: "💰", title: "Money (Yusr)", items: [
@@ -98,7 +97,6 @@ export const COMPARE_ROWS = [
   ["Deal Check", "3 a day", "Unlimited", "Unlimited"],
   ["Chat X-Ray", "1 a day", "Unlimited", "Unlimited"],
   ["File conversions", "5 a day", "Unlimited", "Unlimited"],
-  ["Video downloads", "3 a day", "Unlimited", "Unlimited"],
   ["Presentations & reports", "2 a day", "Unlimited", "Unlimited"],
   ["Studio pictures", "3 a day", "Unlimited", "Unlimited"],
   ["Fit & Food photo meals", "3 a day", "Unlimited", "Unlimited"],

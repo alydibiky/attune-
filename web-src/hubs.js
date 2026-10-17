@@ -27,8 +27,9 @@ export const GROUPS = [
 export const FULL = ["home", "tools", "business", "fit", "map"];
 
 /** v6.30 (Ali: no more than 6 tabs either): a page that lives INSIDE another — one tab; a small switch on top of the page moves
-    between the two parts. Skills is part of Assistants, Artifacts part of Projects, Reminders part of Radar (both are dates). */
-export const INSIDE = { skills: "assistants", artifacts: "projects", reminders: "radar" };
+    between the two parts. Skills is part of Assistants, Artifacts part of Projects, Reminders part of Radar (both are dates).
+    v6.32 (Ali picked it): Compress is part of Improve a prompt, so Create has 6 tabs. */
+export const INSIDE = { skills: "assistants", artifacts: "projects", reminders: "radar", compress: "improve" };
 
 /** The two parts of a merged page ([main, inside]) when this page is one of them and the device has both; else []. */
 export function partsOf(mode, available = null) {
