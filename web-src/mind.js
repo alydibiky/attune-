@@ -308,3 +308,48 @@ export function fileRecord(rec, parsed, now = Date.now()) {
   if (parsed.kind && kindOf(rec) === "note" && parsed.kind !== "note") m.mindKind = parsed.kind;
   return { ...rec, meta: m };
 }
+
+/* ---- v6.32 Mind look A (the wall): search by colour, like My Mind. A photo's main colour is worked out once from its
+   thumbnail (mind-ui.jsx) and kept as meta.colour; the colour chips filter the wall. Pure code. */
+export const COLOURS = {
+  red: { en: "Red", ar: "أحمر", hex: "#d0534f" }, orange: { en: "Orange", ar: "برتقالي", hex: "#e08a3c" }, yellow: { en: "Yellow", ar: "أصفر", hex: "#e3c14b" },
+  green: { en: "Green", ar: "أخضر", hex: "#4f9e5f" }, teal: { en: "Teal", ar: "أخضر مزرق", hex: "#3fa59a" }, blue: { en: "Blue", ar: "أزرق", hex: "#4a7fd0" },
+  purple: { en: "Purple", ar: "بنفسجي", hex: "#8a5cc7" }, pink: { en: "Pink", ar: "وردي", hex: "#d46aa0" }, brown: { en: "Brown", ar: "بني", hex: "#8a5a35" },
+  white: { en: "White", ar: "أبيض", hex: "#e9e9e6" }, grey: { en: "Grey", ar: "رمادي", hex: "#8b9097" }, black: { en: "Black", ar: "أسود", hex: "#22252a" },
+};
+/** An average colour (0–255 each) → a colour name from COLOURS. */
+export function colourName(r, g, b) {
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 510, d = (mx - mn) / 255;
+  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  if (l < 0.16) return "black";
+  if (s < 0.16 || d < 0.08) return l > 0.8 ? "white" : l < 0.3 ? "black" : "grey";
+  let h = 0;
+  if (mx === r) h = ((g - b) / (mx - mn)) % 6; else if (mx === g) h = (b - r) / (mx - mn) + 2; else h = (r - g) / (mx - mn) + 4;
+  h = (h * 60 + 360) % 360;
+  if ((h < 45 || h >= 345) && l < 0.42 && s < 0.75) return "brown";
+  if (h < 15 || h >= 345) return "red";
+  if (h < 45) return l < 0.45 ? "brown" : "orange";
+  if (h < 68) return l < 0.35 ? "brown" : "yellow";
+  if (h < 160) return "green";
+  if (h < 195) return "teal";
+  if (h < 255) return "blue";
+  if (h < 290) return "purple";
+  return "pink";
+}
+/** Pixels (RGBA array) → the main colour: average of the non-edge-dark pixels. */
+export function mainColour(px) {
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let i = 0; i + 3 < px.length; i += 4) { if (px[i + 3] < 128) continue; r += px[i]; g += px[i + 1]; b += px[i + 2]; n++; }
+  return n ? colourName(r / n, g / n, b / n) : "";
+}
+/** The colours present on photos, most first: [{ colour, count }]. */
+export function colourCounts(records) {
+  const c = {};
+  for (const r of records || []) { const k = r && r.meta && r.meta.colour; if (k && COLOURS[k]) c[k] = (c[k] || 0) + 1; }
+  return Object.entries(c).sort((a, b) => b[1] - a[1]).map(([colour, count]) => ({ colour, count }));
+}
+/** A link's site → a stable pair of colours for its preview when there is no picture. */
+export function siteHue(site) {
+  let h = 0; for (const ch of String(site || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return h % 360;
+}

@@ -692,4 +692,5 @@ export const FR = {
   "Improve, translate, reply and better prompts in every app, offline": "Améliorer, traduire, répondre et de meilleurs prompts dans toutes les apps, hors ligne",
   "Switch to it": "Y passer",
   "Turn on": "Activer",
+  "Keep a note, a link or a photo with + — or share anything to Attune from another app.": "Gardez une note, un lien ou une photo avec + — ou partagez n'importe quoi vers Attune depuis une autre app.",
 };

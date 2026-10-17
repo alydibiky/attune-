@@ -717,4 +717,5 @@ export const TRK = {
   "Improve, translate, reply and better prompts in every app, offline": "Her uygulamada iyileştir, çevir, yanıtla ve daha iyi istemler — çevrimdışı",
   "Switch to it": "Ona geç",
   "Turn on": "Aç",
+  "Keep a note, a link or a photo with + — or share anything to Attune from another app.": "+ ile bir not, bağlantı veya fotoğraf saklayın — ya da başka bir uygulamadan Attune'a herhangi bir şey paylaşın.",
 };

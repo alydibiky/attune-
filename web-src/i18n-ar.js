@@ -4755,4 +4755,6 @@ export const AR = {
   "On — pick it from the keyboard button when you type": "مفعّلة — اخترها من زر لوحة المفاتيح عند الكتابة",
   "Improve, translate, reply and better prompts in every app, offline": "تحسين وترجمة ورد وبرومبت أفضل في كل التطبيقات، دون إنترنت",
   "Switch to it": "التبديل إليها",
+  "Open the photo": "فتح الصورة",
+  "Keep a note, a link or a photo with + — or share anything to Attune from another app.": "احفظ ملاحظة أو رابطًا أو صورة بزر + — أو شارك أي شيء إلى Attune من تطبيق آخر.",
 };

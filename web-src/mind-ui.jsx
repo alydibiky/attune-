@@ -8,7 +8,6 @@ import { tr, getLang } from "./i18n.js";
 import * as M from "./mind.js";
 import { useSubBack } from "./backstack.js";
 import { Md } from "./chat.jsx";
-import { PANES } from "./desk.jsx";
 
 /* ---- thumbnails: small JPEGs in IndexedDB (the records stay small text in localStorage) ---- */
 let dbP = null;
@@ -67,47 +66,63 @@ function useThumb(rec) {
 const dateText = (ts) => new Date(ts).toLocaleDateString(getLang() === "ar" ? "ar-EG" : undefined, { day: "numeric", month: "short", year: new Date(ts).getFullYear() === new Date().getFullYear() ? undefined : "numeric" });
 const kindLabel = (k) => { const x = M.KINDS[k] || M.KINDS.note; return getLang() === "ar" ? x.ar : x.en; };
 
-/* ---- one card on the board: each kind looks like what it is ---- */
-function Card({ rec, open }) {
+/* ---- one card on the wall (v6.32 look A, Ali: "Mind page: A"): each kind looks like what it is — a photo or a link's
+   preview on top, a small kind label, the title, one line under it. A photo's main colour is read once from its thumbnail. */
+function Card({ rec, open, update }) {
   const kind = M.kindOf(rec);
   const thumb = useThumb(rec);
   const title = M.titleOf(rec);
-  const tags = M.tagsOf(rec).slice(0, 3);
+  const tags = M.tagsOf(rec).slice(0, 2);
   const lp = kind === "link" ? M.linkParts(rec.text) : null;
   const body = String(rec.text || "");
+  useEffect(() => {
+    if (!thumb || !update || (rec.meta && rec.meta.colour)) return;
+    const img = new Image();
+    img.onload = () => { try { const c = document.createElement("canvas"); c.width = 16; c.height = 16; const x = c.getContext("2d"); x.drawImage(img, 0, 0, 16, 16);
+      const col = M.mainColour(x.getImageData(0, 0, 16, 16).data); if (col) update(rec.id, (r) => ({ ...r, meta: { ...(r.meta || {}), colour: col } })); } catch (e) {} };
+    img.src = thumb;
+  }, [thumb]);
+  const label = <p className="text-[10px] uppercase tracking-[.08em] text-slate-500 mb-1">{kindLabel(kind).replace(/s$/, "")}</p>;
+  const sub = (rec.meta && rec.meta.summary) || rec.output || "";
+  const hue = lp ? M.siteHue(lp.site) : 0;
   return (
     <button onClick={() => open(rec)} data-testid="mind-card" data-kind={kind}
-      className="mb-3 w-full break-inside-avoid text-start bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-teal-600 transition-colors">
-      {thumb ? <img src={thumb} alt="" className="w-full block" /> : null}
+      className="mb-2.5 w-full break-inside-avoid text-start bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-teal-600 transition-colors">
+      {thumb ? <img src={thumb} alt="" className="w-full block" />
+        : lp ? <div className="h-20 flex items-end p-2.5" style={{ background: `linear-gradient(135deg, hsl(${hue} 35% 26%), hsl(${(hue + 40) % 360} 45% 42%))` }}>
+            <span className="text-[22px] font-bold text-white/85 leading-none">{(lp.site || "?").replace(/^www\./, "").charAt(0).toUpperCase()}</span></div> : null}
       <div className="p-3">
         {kind === "quote" ? (
-          <p className="font-serif text-[15px] leading-relaxed text-slate-100" dir="auto">{body.slice(0, 280)}</p>
+          <>{label}<p className="font-serif text-[15px] leading-relaxed text-slate-100" dir="auto">“{body.replace(/^\s*["“«]+|["”»]+\s*$/g, "").slice(0, 280)}”</p></>
         ) : kind === "link" && lp ? (
           <>
-            <p className="text-[11px] text-teal-400 flex items-center gap-1"><Link2 size={11} /> {lp.site}</p>
-            <p className="text-sm text-slate-100 mt-1 line-clamp-3" dir="auto">{title && !/^https?:/.test(title) ? title : lp.path || lp.url}</p>
+            <p className="text-[13.5px] font-semibold text-slate-100 line-clamp-3" dir="auto">{title && !/^https?:/.test(title) ? title : lp.path || lp.url}</p>
+            <p className="text-[11.5px] text-slate-400 mt-0.5 flex items-center gap-1"><Link2 size={11} /> {lp.site}</p>
           </>
         ) : kind === "product" ? (
-          <>
-            <p className="text-sm text-slate-100 line-clamp-3" dir="auto">{title}</p>
+          <>{label}
+            <p className="text-[13.5px] font-semibold text-slate-100 line-clamp-3" dir="auto">{title}</p>
             {M.priceIn(body) ? <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300" dir="ltr">{M.priceIn(body)}</span> : null}
           </>
         ) : kind === "todo" ? (
-          <div className="space-y-1">
+          <>{label}<div className="space-y-1">
             {body.split("\n").filter((l) => l.trim()).slice(0, 5).map((l, i) => (
               <p key={i} className="text-[13px] text-slate-200 flex gap-1.5" dir="auto"><span className="text-slate-500">☐</span>{l.replace(/^\s*(-\s*)?\[ ?[x ]?\]\s*|^\s*[-•☐☑]\s*/i, "")}</p>
             ))}
-          </div>
+          </div></>
+        ) : kind === "photo" && thumb ? (
+          title && !/\.(png|jpe?g|webp|heic|gif)$/i.test(title) ? <p className="text-[13.5px] font-semibold text-slate-100 line-clamp-2" dir="auto">{title}</p> : null
         ) : (
-          <>
-            {title ? <p className="text-sm font-medium text-slate-100 line-clamp-2" dir="auto">{title}</p> : null}
-            {kind !== "photo" || !thumb ? <p className="text-[12px] text-slate-400 mt-1 line-clamp-4 whitespace-pre-line" dir="auto">{(rec.meta && rec.meta.summary) || rec.output || body}</p> : null}
+          <>{label}
+            {title ? <p className="text-[13.5px] font-semibold text-slate-100 line-clamp-3" dir="auto">{title}</p> : null}
+            {(sub || body) && (sub || body).trim() !== title.trim() ? <p className="text-[12px] text-slate-400 mt-1 line-clamp-3 whitespace-pre-line" dir="auto">{sub || body}</p> : null}
           </>
         )}
         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-          <span className="text-[10px] text-slate-500">{M.KINDS[kind].icon} {dateText(rec.ts)}</span>
+          <span className="text-[10.5px] text-slate-500">{dateText(rec.ts)}</span>
           {rec.pinned ? <Star size={10} className="text-amber-400" /> : null}
-          {tags.map((t) => <span key={t} className="text-[10px] px-1.5 rounded bg-slate-800 text-slate-400">#{t}</span>)}
+          {rec.meta && rec.meta.colour && M.COLOURS[rec.meta.colour] ? <i className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: M.COLOURS[rec.meta.colour].hex }} /> : null}
+          {tags.map((t) => <span key={t} className="text-[10px] text-slate-500">#{t}</span>)}
         </div>
       </div>
     </button>
@@ -224,7 +239,6 @@ function Detail({ rec, close, update, forget, togglePin, openRec, search, findPr
 
 const SPACES_KEY = "attune:mind:spaces:v1";
 // v6.15 look C: each space tile has its own calm colour (text stays ≥ 4.5:1 on it)
-const TILE = ["bg-violet-950 text-violet-100", "bg-cyan-950 text-cyan-100", "bg-orange-950 text-orange-100", "bg-emerald-950 text-emerald-100", "bg-amber-950 text-amber-100", "bg-rose-950 text-rose-100", "bg-sky-950 text-sky-100", "bg-lime-950 text-lime-100"];
 const loadSpaces = () => { try { const v = JSON.parse(localStorage.getItem(SPACES_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
 const saveSpaces = (v) => { try { localStorage.setItem(SPACES_KEY, JSON.stringify(v.slice(0, 30))); } catch (e) {} };
 
@@ -241,6 +255,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   const [q, setQ] = useState("");
   const [tag, setTag] = useState(null);
   const [kind, setKind] = useState(null);
+  const [colour, setColour] = useState(null);
   const [openId, setOpenId] = useState(null);
   const [busy, setBusy] = useState("");
   const [answer, setAnswer] = useState(null);
@@ -261,13 +276,9 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   const counts = useMemo(() => M.kindCounts(records), [records]);
   const auto = useMemo(() => M.autoSpaces(records), [records]);
   const past = useMemo(() => (q || tag || kind ? [] : M.resurface(records, now, 3)), [records.length, q, tag, kind, Math.floor(now / 86400000)]);
-  const filterOn = !!(kind || tag || q.trim());
-  const tiles = [
-    ...spaces.map((sp) => ({ key: "s:" + sp.id, label: sp.name, sub: tr("your space"), go: () => { setQ(sp.q || ""); setTag(sp.tag || null); setKind(null); }, remove: () => removeSpace(sp.id) })),
-    ...counts.map((c) => ({ key: "k:" + c.kind, testid: "mind-kind-" + c.kind, label: kindLabel(c.kind), sub: c.count + " " + tr(c.count === 1 ? "item" : "items"), go: () => { setKind(c.kind); setTag(null); } })),
-    ...auto.map((a) => ({ key: "t:" + a.tag, label: "#" + a.tag, sub: a.count + " " + tr(a.count === 1 ? "item" : "items"), go: () => { setTag(a.tag); setKind(null); } })),
-    ...(promiseCount ? [{ key: "p", label: tr("Promises"), sub: promiseCount + " " + tr("open"), go: () => setTab("promises") }] : []),
-  ];
+  const filterOn = !!(kind || tag || colour || q.trim());
+  const colours = useMemo(() => M.colourCounts(records), [records]);
+  const shown = colour ? items.filter((r) => r.meta && r.meta.colour === colour) : items;
   const looksLikeQuestion = /\?|؟|^(what|when|where|who|how|which|did|do|is|was|how much|كام|امتى|فين|مين|ايه|إيه|هل|ازاي|إزاي)\b/i.test(q.trim());
 
   // ---- the background filer: while this screen is open and the model is loaded, it reads one new
@@ -342,17 +353,45 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   return (
     <div className="space-y-4 att-in pb-20" data-testid="mind-page">
       <div className="flex items-center gap-2">
-        <Brain size={20} className="text-teal-400" />
-        <h2 className="text-lg font-semibold text-white">{tr("Mind")}</h2>
+        <h2 className="text-lg font-semibold text-white flex items-center gap-2"><Brain size={20} className="text-teal-400" />{tr("Mind")}</h2>
         <span className="text-[11px] text-slate-500">{records.length} {tr("kept · private, on this phone")}</span>
-      </div>
-      <div className="flex gap-1.5">
-        {[["mind", tr("Everything")], ["promises", tr("Promises") + (promiseCount ? ` (${promiseCount})` : "")], ["words", tr("Your words")]].map(([id, label]) => (
-          <button key={id} onClick={() => setTab(id)} data-testid={"mind-tab-" + id} className={chip(tab === id)}>{label}</button>
-        ))}
       </div>
       {shareBanner}
       {note}
+
+      {/* v6.32 look A (the wall): search, then one row of chips — kinds, promises, your words, colours, spaces — then the wall */}
+      {tab === "mind" ? (
+        <div>
+          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-2xl px-3 focus-within:border-teal-500">
+            <Search size={15} className="text-slate-500" />
+            <input value={q} onChange={(e) => { setQ(e.target.value); setAnswer(null); }} dir="auto" data-testid="mind-search"
+              onKeyDown={(e) => { if (e.key === "Enter" && looksLikeQuestion && pro) doAsk(q); }}
+              placeholder={tr("Search or ask — “crane photos last month”, «لينكات الونش»")}
+              className="flex-1 bg-transparent py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none" />
+            {q ? <button onClick={() => { setQ(""); setAnswer(null); }} className="text-slate-500"><X size={14} /></button> : null}
+          </div>
+          {q.trim() ? (
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+              <button onClick={() => (pro ? doAsk(q) : openPlan())} data-testid="mind-ask" className="text-xs px-3 py-1.5 rounded-lg bg-teal-500/15 border border-teal-800 text-teal-200"><Brain size={12} className="inline me-1" />{tr("Ask your Mind")}</button>
+              <button onClick={saveSpace} className="text-xs px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300"><Folder size={12} className="inline me-1" />{tr("Save as a Space")}</button>
+              {res.filters.kind || res.filters.from != null || res.filters.pinned ? (
+                <span className="text-[11px] text-slate-500">{tr("Showing")}: {[res.filters.kind && kindLabel(res.filters.kind), res.filters.from != null && `${dateText(res.filters.from)} – ${dateText(Math.min(res.filters.to, Date.now()))}`, res.filters.pinned && tr("pinned"), res.filters.words && `“${res.filters.words}”`].filter(Boolean).join(" · ")}</span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>) : null}
+
+      <div className="flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-1 [scrollbar-width:none]" data-testid="mind-spaces">
+        <button onClick={() => { setTab("mind"); setKind(null); setTag(null); setColour(null); setQ(""); setAnswer(null); }} data-testid="mind-all" className={chip(tab === "mind" && !filterOn)}>{tr("All")}</button>
+        {counts.map((c) => <button key={c.kind} onClick={() => { setTab("mind"); setKind(kind === c.kind ? null : c.kind); setTag(null); }} data-testid={"mind-kind-" + c.kind} className={chip(tab === "mind" && kind === c.kind)}>{kindLabel(c.kind)}</button>)}
+        <button onClick={() => setTab("promises")} data-testid="mind-tab-promises" className={chip(tab === "promises")}>{tr("Promises")}{promiseCount ? ` (${promiseCount})` : ""}</button>
+        <button onClick={() => setTab("words")} data-testid="mind-tab-words" className={chip(tab === "words")}>{tr("Your words")}</button>
+        {colours.map((c) => <button key={c.colour} onClick={() => { setTab("mind"); setColour(colour === c.colour ? null : c.colour); }} data-testid={"mind-colour-" + c.colour} aria-label={M.COLOURS[c.colour][ar ? "ar" : "en"]}
+          className={"shrink-0 w-8 h-8 rounded-full border-2 " + (colour === c.colour ? "border-teal-400" : "border-slate-800")} style={{ background: M.COLOURS[c.colour].hex }} />)}
+        {spaces.map((sp) => <span key={sp.id} className="relative shrink-0"><button onClick={() => { setTab("mind"); setQ(sp.q || ""); setTag(sp.tag || null); setKind(null); }} className={chip(false) + " pe-6"} dir="auto"><Folder size={11} className="inline me-1" />{sp.name}</button>
+          <button onClick={() => removeSpace(sp.id)} className="absolute top-1/2 -translate-y-1/2 end-1.5 text-slate-500" aria-label={tr("Remove")}><X size={11} /></button></span>)}
+        {auto.map((t) => <button key={t.tag} onClick={() => { setTab("mind"); setTag(tag === t.tag ? null : t.tag); setKind(null); }} className={chip(tab === "mind" && tag === t.tag)} dir="auto">#{t.tag}</button>)}
+      </div>
 
       {tab === "promises" ? promisesPanel : tab === "words" ? wordsPanel : (
         <>
@@ -384,35 +423,12 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
           <button onClick={() => setAdding(true)} aria-label={tr("Keep something")} data-testid="mind-new"
             className="fixed z-40 end-5 bottom-24 lg:bottom-8 lg:end-8 w-14 h-14 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center shadow-xl shadow-black/40"><Plus size={26} /></button>
 
-          {/* v6.27 computer layout: search, the answer and your spaces on the left; everything you kept on the right */}
-          <div className={PANES}><div className="space-y-4 min-w-0">
-          {!pro ? (
-            <p className="text-[11px] text-slate-500 bg-slate-900 border border-slate-800 rounded-xl p-2.5">
+          {!pro && records.length ? (
+            <p className="text-[11px] text-slate-500">
               {tr("Free: keep and search everything. Pro: it files each item by itself (title, summary, tags), reads your photos and answers questions from your Mind.")}
               <button onClick={openPlan} className="text-teal-400 ms-1">{tr("See Pro")}</button>
             </p>
           ) : null}
-
-          {/* search / ask */}
-          <div>
-            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-2xl px-3 focus-within:border-teal-500">
-              <Search size={15} className="text-slate-500" />
-              <input value={q} onChange={(e) => { setQ(e.target.value); setAnswer(null); }} dir="auto" data-testid="mind-search"
-                onKeyDown={(e) => { if (e.key === "Enter" && looksLikeQuestion && pro) doAsk(q); }}
-                placeholder={tr("Search or ask — “crane photos last month”, «لينكات الونش»")}
-                className="flex-1 bg-transparent py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none" />
-              {q ? <button onClick={() => { setQ(""); setAnswer(null); }} className="text-slate-500"><X size={14} /></button> : null}
-            </div>
-            {q.trim() ? (
-              <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                <button onClick={() => (pro ? doAsk(q) : openPlan())} data-testid="mind-ask" className="text-xs px-3 py-1.5 rounded-lg bg-teal-500/15 border border-teal-800 text-teal-200"><Brain size={12} className="inline me-1" />{tr("Ask your Mind")}</button>
-                <button onClick={saveSpace} className="text-xs px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300"><Folder size={12} className="inline me-1" />{tr("Save as a Space")}</button>
-                {res.filters.kind || res.filters.from != null || res.filters.pinned ? (
-                  <span className="text-[11px] text-slate-500">{tr("Showing")}: {[res.filters.kind && kindLabel(res.filters.kind), res.filters.from != null && `${dateText(res.filters.from)} – ${dateText(Math.min(res.filters.to, Date.now()))}`, res.filters.pinned && tr("pinned"), res.filters.words && `“${res.filters.words}”`].filter(Boolean).join(" · ")}</span>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
 
           {answer ? (
             <section className="bg-slate-900 border border-teal-900/60 rounded-2xl p-4" data-testid="mind-answer">
@@ -435,64 +451,30 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
             </section>
           ) : null}
 
-          {/* v6.15 (look C): one card back from your past, then your spaces as tiles */}
-          {past.length && !hidePast ? (() => { const { rec, why } = past[0]; return (
-            <section className="rounded-2xl bg-indigo-950/60 border border-indigo-900/60 p-3 flex gap-3 items-center" data-testid="mind-past">
-              <button onClick={() => setOpenId(rec.id)} className="flex-1 min-w-0 text-start">
-                <p className="text-[10.5px] uppercase tracking-wider text-indigo-300 flex items-center gap-1"><Shuffle size={11} /> {tr("From your past")}</p>
-                <p className="text-sm text-slate-100 font-medium line-clamp-2 mt-0.5" dir="auto">{M.titleOf(rec)}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">{/past/i.test(why) ? "" : tr(why) + " · "}{dateText(rec.ts)}</p>
-              </button>
-              <div className="flex flex-col gap-1.5 shrink-0">
-                <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="text-xs px-3 py-2 rounded-lg bg-indigo-500/25 text-indigo-100">{tr("Keep")}</button>
-                <button onClick={() => setHidePast(true)} className="text-xs px-3 py-2 rounded-lg text-slate-400">{tr("Not now")}</button>
-              </div>
-            </section>); })() : null}
+          {filterOn ? <p className="text-[11px] text-slate-500" data-testid="mind-count">{shown.length} {tr(shown.length === 1 ? "item" : "items")}</p> : null}
 
-          {filterOn ? (
-            <div className="flex items-center gap-2">
-              <button onClick={() => { setKind(null); setTag(null); setQ(""); setAnswer(null); }} data-testid="mind-all" className="text-xs px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 flex items-center gap-1"><ChevronLeft size={13} className="rtl:rotate-180" />{tr("All")}</button>
-              <span className="text-sm font-semibold text-white truncate">{kind ? kindLabel(kind) : tag ? "#" + tag : q}</span>
-              <span className="text-[11px] text-slate-500">{items.length}</span>
-            </div>
-          ) : (
-            <section data-testid="mind-spaces">
-              <div className="flex items-baseline justify-between mb-2">
-                <h3 className="text-sm font-semibold text-white">{tr("Your spaces")}</h3>
-                <span className="text-[11px] text-slate-500">{tr("filed by themselves")}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                {tiles.map((t, i) => (
-                  <span key={t.key} className="relative">
-                    <button onClick={t.go} data-testid={t.testid} className={`w-full h-24 rounded-2xl text-start p-3 flex flex-col justify-between ${TILE[i % TILE.length]}`}>
-                      <span className="text-[14.5px] font-semibold leading-tight line-clamp-2" dir="auto">{t.label}</span>
-                      <span className="text-[11.5px] opacity-80">{t.sub}</span>
-                    </button>
-                    {t.remove ? <button onClick={t.remove} className="absolute top-1.5 end-1.5 p-1 text-white/60" aria-label={tr("Remove")}><X size={12} /></button> : null}
-                  </span>
-                ))}
-                <button onClick={() => { setAdding(false); const el = document.querySelector("[data-testid=mind-search]"); if (el) el.focus(); flash(tr("Search for anything, then tap “Save as a Space”")); }}
-                  className="h-24 rounded-2xl border border-dashed border-slate-700 text-start p-3 flex flex-col justify-between text-slate-400">
-                  <span className="text-[14.5px] font-semibold text-slate-200">+ {tr("New space")}</span><span className="text-[11.5px]">{tr("from any search")}</span></button>
-              </div>
-            </section>
-          )}
-
-          </div>
-          <div className="space-y-4 mt-4 lg:mt-0 min-w-0">
-          {!filterOn && items.length ? <h3 className="text-sm font-semibold text-white pt-1 lg:pt-0">{tr("Everything, newest first")}</h3> : null}
-
-          {/* the board */}
-          {items.length ? (
-            <div className="columns-2 sm:columns-3 gap-3" data-testid="mind-board">
-              {items.map((r) => <Card key={r.id} rec={r} open={(x) => setOpenId(x.id)} />)}
+          {/* the wall */}
+          {shown.length ? (
+            <div className="columns-2 sm:columns-3 lg:columns-4 gap-2.5" data-testid="mind-board">
+              {past.length && !hidePast && !filterOn ? (() => { const { rec, why } = past[0]; return (
+                <div className="mb-2.5 break-inside-avoid rounded-2xl p-3 border border-teal-900/60" style={{ background: "linear-gradient(135deg, rgba(79,194,175,.16), rgba(26,30,36,1))" }} data-testid="mind-past">
+                  <button onClick={() => setOpenId(rec.id)} className="w-full text-start">
+                    <p className="text-[10px] uppercase tracking-[.08em] text-teal-300 flex items-center gap-1"><Shuffle size={10} /> {tr("From your past")}</p>
+                    <p className="text-[13.5px] text-slate-100 font-semibold line-clamp-3 mt-1" dir="auto">{M.titleOf(rec)}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{/past/i.test(why) ? "" : tr(why) + " · "}{dateText(rec.ts)}</p>
+                  </button>
+                  <div className="flex gap-1.5 mt-2">
+                    <button onClick={() => { if (!rec.pinned) togglePin(rec.id); setHidePast(true); flash(tr("Pinned")); }} className="text-[11.5px] px-2.5 py-1 rounded-lg bg-teal-500/20 text-teal-100">{tr("Keep")}</button>
+                    <button onClick={() => setHidePast(true)} className="text-[11.5px] px-2.5 py-1 rounded-lg text-slate-400">{tr("Not now")}</button>
+                  </div>
+                </div>); })() : null}
+              {shown.map((r) => <Card key={r.id} rec={r} update={update} open={(x) => setOpenId(x.id)} />)}
             </div>
           ) : (
             <p className="text-sm text-slate-500 text-center py-10 leading-relaxed">
-              {records.length ? tr("Nothing matches that.") : <>{tr("Your Mind is empty.")}<br /><span className="text-xs">{tr("Keep a note, a link or a photo above — or share anything to Attune from another app.")}</span></>}
+              {records.length ? tr("Nothing matches that.") : <>{tr("Your Mind is empty.")}<br /><span className="text-xs">{tr("Keep a note, a link or a photo with + — or share anything to Attune from another app.")}</span></>}
             </p>
           )}
-          </div></div>
         </>
       )}
 
