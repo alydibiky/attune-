@@ -42,7 +42,7 @@ object Reminders {
         return am.canScheduleExactAlarms()
     }
 
-    /** {id, at (ms), title, body, repeat: none|daily|weekly|weekdays}. The same id replaces. */
+    /** {id, at (ms), title, body, repeat: none|daily|weekly|weekdays|monthly}. The same id replaces. */
     fun schedule(ctx: Context, r: JSONObject): Boolean {
         val id = r.optString("id").takeIf { it.isNotBlank() && it.length <= 64 } ?: return false
         val at = r.optLong("at", 0L)
@@ -114,6 +114,7 @@ object Reminders {
                 "weekdays" -> do { c.add(java.util.Calendar.DAY_OF_MONTH, 1) } while (
                     c.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.FRIDAY ||
                     c.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.SATURDAY)
+                "monthly" -> c.add(java.util.Calendar.MONTH, 1)   // v6.32: the Overpaying check on the 1st
                 else -> return from
             }
         }
