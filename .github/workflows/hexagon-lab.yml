@@ -1,0 +1,44 @@
+name: NPU lab (llama.cpp Hexagon backend for Snapdragon, the app's pinned commit)
+
+# v6.34 (Ali: "make the models lighter, faster, cooler"): llama.cpp's experimental Hexagon (NPU) backend supports Snapdragon
+# 8 Gen 3 / 8 Elite / 8 Elite Gen 5 (HTP v73–v81) with Q4_0 / Q8_0 / MXFP4. Qualcomm's public toolchain image has the NDK and
+# the Hexagon SDK. This lab builds the backend at the APP's llama.cpp commit with GGML_BACKEND_DL (as in the APK), so its
+# libggml-hexagon.so + libggml-htp-v*.so can sit next to the app's engine. Output: the libraries + llama-bench (artifact).
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/loving-goldberg-2ru8xq]
+    paths: [.github/workflows/hexagon-lab.yml]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: llama.cpp at the app's commit
+        run: |
+          PIN=$(grep -o '[0-9a-f]\{40\}' app/src/main/cpp/fetch-llama.sh | head -1)
+          for i in 1 2 3 4; do git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp && break; rm -rf ~/llama.cpp; sleep $((i * 10)); done
+          cd ~/llama.cpp && git checkout -q "$PIN" && git log --oneline -1
+      - name: Build in Qualcomm's toolchain image (NDK + Hexagon SDK)
+        run: |
+          cd ~/llama.cpp && cp docs/backend/snapdragon/CMakeUserPresets.json .
+          docker run --rm -u $(id -u):$(id -g) -v $PWD:/workspace --platform linux/amd64 ghcr.io/snapdragon-toolchain/arm64-android:v0.7 bash -lc '
+            set -e; cd /workspace
+            cmake --preset arm64-android-snapdragon-release -B build-snap -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_NATIVE=OFF -DGGML_OPENCL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_CURL=OFF > /dev/null
+            cmake --build build-snap -j$(nproc) --target llama-bench llama-server > /dev/null
+            cmake --install build-snap --prefix pkg > /dev/null || true
+            ls -la pkg/lib build-snap/bin 2>/dev/null | head -60'
+      - name: What came out
+        run: |
+          cd ~/llama.cpp
+          find . -name "libggml-h*.so" -o -name "libggml-base.so" | head -20
+          for f in $(find . -name "libggml-htp-v*.so" -o -name "libggml-hexagon.so"); do ls -la "$f"; done
+          mkdir -p ~/out && find . \( -name "libggml-h*.so" -o -name "llama-bench" \) -exec cp {} ~/out/ \;
+          ls -la ~/out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hexagon-libs
+          path: ~/out
