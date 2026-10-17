@@ -73,6 +73,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     // ---- quick calls -----------------------------------------------------------
     @JavascriptInterface
     fun info(): String = DeviceInfo.toJson(ctx)
+        .put("airGap", Prefs.airGap(ctx))
+        .put("engine", engineJson())
+        .put("activeModel", Prefs.activeModel(ctx) ?: JSONObject.NULL)
+        .toString()
 
     // v6.32 Private vault: {"bio":true,"secure":true} — and the system fingerprint / face / screen-lock prompt (Vault.kt)
     @JavascriptInterface
@@ -94,10 +98,6 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
                 { resolve(id, JSONObject().put("ok", true)) }, { msg -> reject(id, msg) })
         }
     }
-        .put("airGap", Prefs.airGap(ctx))
-        .put("engine", engineJson())
-        .put("activeModel", Prefs.activeModel(ctx) ?: JSONObject.NULL)
-        .toString()
 
     @JavascriptInterface
     fun setAirGap(on: Boolean) { Prefs.setAirGap(ctx, on) }
