@@ -98,15 +98,12 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
   const start = async () => {
     const c = found && found.choices[sel];
     if (!c) return;
-    const today = new Date().toISOString().slice(0, 10);
-    let used = 0; try { used = JSON.parse(localStorage.getItem("attune:video:day") || "{}")[today] || 0; } catch (e) {}
-    if (!pro && used >= 3) { flash && flash(tr("Free includes 3 video downloads a day — Pro is unlimited")); openPlan && openPlan(); return; }
+    // v6.32 (Ali, Play policy option A): video downloads are not sold — no daily limit, not on the Pro list or the store text
     try {
       const name = V.fileName(found.title, c);
       const r = await nativeCall("videoDownload", { url: c.url, name, audio: !!c.audio, title: found.title });
       const d = { id: r.id, name: r.name || name, where: r.where, status: "pending", done: 0, total: c.size || 0, audio: !!c.audio, q: V.qualityText(c) };
       setList((l) => { const n = [d, ...l]; store(n); return n; });
-      try { const u = JSON.parse(localStorage.getItem("attune:video:day") || "{}"); localStorage.setItem("attune:video:day", JSON.stringify({ [today]: (u[today] || 0) + 1 })); } catch (e) {}
       flash && flash(tr("Downloading — you can close Attune, it keeps going"));
       setFound(null); setLink("");
     } catch (e) { setErr(tr(String((e && e.message) || e))); }

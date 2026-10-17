@@ -39,30 +39,34 @@ export const LIGHT_BASE = (ink, page, card, input, line, line2, muted, soft) => 
 export const ON_FILL = (sel) => ["emerald-500", "emerald-600", "emerald-700", "sky-500", "sky-600", "sky-700", "rose-600", "amber-600", "violet-600", "red-600"]
   .map((c) => `${sel} .bg-${c}`).join(",") + "{color:#FFFFFF}";
 
+// v6.32 (Ali: "the colour and text to be contrast so it's more visible"): darker secondary text (about 7:1 on the page),
+// firmer lines and a deeper green in the light looks; lighter grey text and lines in the dark ones
 export const LOOK_CSS = `
-body:has(.fit-look-fresh):not(.att-modal-open),.fit-look-fresh{${LIGHT_BASE("#12241B", "#F2F6F3", "#FFFFFF", "#EAF1EC", "#D3E0D7", "#B9CBBF", "#5E7166", "#43574B")}
-  --color-emerald-100:#145C3B;--color-emerald-200:#1A6B45;--color-emerald-300:#1F7A50;--color-emerald-400:#22915F;--color-emerald-500:#1F8A5B;--color-emerald-600:#1F8A5B;--color-emerald-700:#176B46;
+body:has(.fit-look-fresh):not(.att-modal-open),.fit-look-fresh{${LIGHT_BASE("#0B1A12", "#EEF3EF", "#FFFFFF", "#E4ECE6", "#BCCDC2", "#93AA9B", "#3B4D42", "#24342A")}
+  --color-emerald-100:#0E4A2F;--color-emerald-200:#11563A;--color-emerald-300:#146140;--color-emerald-400:#187A4F;--color-emerald-500:#17754C;--color-emerald-600:#156B45;--color-emerald-700:#0F5636;
   --color-emerald-800:#BFE3CF;--color-emerald-900:#CFEBDB;--color-emerald-950:#E7F6EE;color-scheme:light}
 ${ON_FILL(".fit-look-fresh")}
-body:has(.fit-look-bold):not(.att-modal-open),.fit-look-bold{${LIGHT_BASE("#1B1F3B", "#FFFFFF", "#F6F6F9", "#ECECF2", "#DCDCE6", "#C4C5D4", "#5F6278", "#44475E")}
+body:has(.fit-look-bold):not(.att-modal-open),.fit-look-bold{${LIGHT_BASE("#11142B", "#FFFFFF", "#F4F4F8", "#E8E8F0", "#C9CAD8", "#A3A5BA", "#45485E", "#2E3147")}
   --color-emerald-100:#9A3412;--color-emerald-200:#9A3412;--color-emerald-300:#C2410C;--color-emerald-400:#EA580C;--color-emerald-500:#F25C2A;--color-emerald-600:#E2501F;--color-emerald-700:#C2410C;
   --color-emerald-800:#FED7C3;--color-emerald-900:#FFE4D6;--color-emerald-950:#FFF1EA;color-scheme:light}
 ${ON_FILL(".fit-look-bold")}
-body:has(.fit-look-meals):not(.att-modal-open),.fit-look-meals{${LIGHT_BASE("#1D2433", "#F6F7FB", "#FFFFFF", "#EEF1F6", "#E2E6EE", "#C9CFDB", "#667085", "#475467")}
+body:has(.fit-look-meals):not(.att-modal-open),.fit-look-meals{${LIGHT_BASE("#111827", "#F3F5FA", "#FFFFFF", "#E8ECF3", "#CBD2DE", "#A5AFC0", "#475268", "#2F394D")}
   --color-emerald-100:#14532D;--color-emerald-200:#166534;--color-emerald-300:#15803D;--color-emerald-400:#16A34A;--color-emerald-500:#22C55E;--color-emerald-600:#16A34A;--color-emerald-700:#15803D;
   --color-emerald-800:#BBF7D0;--color-emerald-900:#DCFCE7;--color-emerald-950:#F0FDF4;color-scheme:light}
 ${ON_FILL(".fit-look-meals")}
-body:has(.fit-look-rings):not(.att-modal-open),.fit-look-rings{--color-slate-950:#0E1116;--color-slate-900:#161B22;--color-slate-800:#222A35;--color-slate-700:#2D3746;--color-slate-600:#3D4859;
+body:has(.fit-look-rings):not(.att-modal-open),.fit-look-rings{--color-slate-950:#0E1116;--color-slate-900:#161B22;--color-slate-800:#222A35;--color-slate-700:#3A4658;--color-slate-600:#56647A;--color-slate-500:#A3B0C2;--color-slate-400:#C9D3E0;--color-slate-300:#E2E8F0;
   --color-emerald-300:#7DD3FC;--color-emerald-400:#38BDF8;--color-emerald-500:#0EA5E9;--color-emerald-600:#0284C7;--color-emerald-700:#0369A1;color-scheme:dark}
-body:has(.fit-look-tiles):not(.att-modal-open),.fit-look-tiles{${LIGHT_BASE("#2A2420", "#FFFDF8", "#FFFFFF", "#F7F1E8", "#F1E9DD", "#DCCFBD", "#7A6A58", "#5C4E40")}
+body:has(.fit-look-tiles):not(.att-modal-open),.fit-look-tiles{${LIGHT_BASE("#1E1915", "#FFFDF8", "#FFFFFF", "#F4ECE0", "#E3D6C4", "#C7B49B", "#5A4B3C", "#3F3428")}
   --color-emerald-100:#9A3412;--color-emerald-200:#9A3412;--color-emerald-300:#C2410C;--color-emerald-400:#EA580C;--color-emerald-500:#F97316;--color-emerald-600:#EA580C;--color-emerald-700:#C2410C;
   --color-emerald-800:#FED7AA;--color-emerald-900:#FFEDD5;--color-emerald-950:#FFF7ED;color-scheme:light}
 ${ON_FILL(".fit-look-tiles")}
 .fit-look-tiles .text-2xl,.fit-look-tiles .text-3xl{font-weight:800}
 .fit-look-bold .text-2xl,.fit-look-bold .text-3xl,.fit-look-bold .text-4xl{font-weight:800;letter-spacing:-.01em}
-body:has(.fit-look-night):not(.att-modal-open),.fit-look-night{--color-slate-950:#0B1220;--color-slate-900:#121C30;--color-slate-800:#1E2C47;--color-slate-700:#2A3B5C;
+body:has(.fit-look-night):not(.att-modal-open),.fit-look-night{--color-slate-950:#0B1220;--color-slate-900:#121C30;--color-slate-800:#1E2C47;--color-slate-700:#3A4F78;--color-slate-600:#566B94;--color-slate-500:#A3B3CC;--color-slate-400:#C9D4E5;--color-slate-300:#E2E8F0;
   --color-emerald-300:#5EEAD4;--color-emerald-400:#2DD4BF;--color-emerald-500:#2DD4BF;--color-emerald-600:#0D9488;--color-emerald-700:#0F766E;color-scheme:dark}
 body.att-modal-open [data-testid=fit-nav]{display:none}
+.fit-min [data-testid=fit-ring] .text-slate-800{color:var(--color-slate-700)}.fit-min [data-testid=fit-ring] .bg-slate-800,.fit-min [data-testid=fit-water] .bg-slate-800{background:var(--color-slate-700)}
+.fit-min [data-testid=fit-ring] .text-slate-400{color:var(--color-slate-300)}
 @keyframes fitScan{0%{transform:translateY(0)}50%{transform:translateY(calc(var(--h,256px) - 4px))}100%{transform:translateY(0)}}
 @keyframes fitPop{0%{opacity:0;transform:translateY(12px) scale(.97)}100%{opacity:1;transform:none}}
 @keyframes fitPulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.4);opacity:0}}

@@ -43,13 +43,15 @@ So: create the app in Play Console now, upload the first bundle to a closed-test
    - **Exact alarms** (medicine doses and reminders at the minute the user set).
    - Content rating questionnaire, target audience (13+), ads: none.
 6. **Store listing**: name, short + full description (EN + AR), icon 512×512, feature graphic 1024×500, at least 2 phone
-   screenshots (I can make these from the app — say the word).
+   screenshots (I can make these from the app — say the word). **Don't mention video downloads** in the store text or the
+   screenshots (decision 8).
 7. **USDA food search key**: get a free key at api.data.gov (2 minutes) and send it to me — the app uses the shared
    `DEMO_KEY` today, which is rate-limited.
-8. **Decide** (policy risk): **Video Downloader** — it refuses YouTube, TikTok, Instagram, Facebook and the rest, but still
+8. **Decided 17 Oct (A, v6.32):** the Video Downloader stays, but it is not sold: it is off the Pro list, the plans page and the
+   compare table, has no daily limit, and the store text must not mention it. (The question was — policy risk: it refuses YouTube, TikTok, Instagram, Facebook and the rest, but still
    downloads any plain video file or stream on other sites, and Pro advertises "unlimited video downloads". Options:
    A) keep it but drop "video downloads" from the Pro list and the store text (recommended), B) only direct file links,
-   C) remove it from the Play build.
+   C) remove it from the Play build.)
 9. **Phone test** (30 minutes) on the APK from the latest run: chat, a model, Home → What's waiting, ☰ chats, Scout with a real
    goal, Learn daily review, Slides → PowerPoint, Fit & Food, a purchase as license tester, Back everywhere.
 

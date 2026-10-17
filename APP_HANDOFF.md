@@ -161,6 +161,7 @@ Google Play Billing.
 | v6.29 | 15 Oct | Back to the previous page; crash guards; Health page + Fit & Food on Home; data questions in Chat; Scout exact items and cheapest store; Learn daily rework (review cards by code); Slides & Reports rework; declutter; Home A (Recent + What's waiting), Scout tab, chat sidebar on the phone; Google Play release blockers fixed (API 36, Play-only purchases, privacy policy, billing) — RELEASE_6.29.md |
 | v6.30 | 16 Oct | No bottom bar: ChatGPT-style sidebar with 6 places; combined pages with tabs (Create = Code, prompts, compress, humanize, copilot, library, Ask; Studio separate); ExitWatch tells why the app closed (Engine log + a one-time note) |
 | v6.31 | 17 Oct | Minimal design A (no intro paragraphs, thin tabs, small model dot, calm Home/Chat, "+" menu in Chat, Converter one action); Core Lite → IQ4_NL, new Core Max (8-bit) — HANDOFF §5.75 |
+| v6.32 | 17 Oct | Create 6 tabs (Compress inside Improve); video downloads not sold; Deep answer (strongest model, thinks first); Fit & Food minimal B (tabs on top, "Log food", higher contrast) — HANDOFF §5.76 |
 
 ## 8. Prompt for the next session (paste as is)
 ```
