@@ -1725,6 +1725,9 @@ His picks (asked on cards): Money "integrate them the best way"; More page "B: r
   introduction on its own — "How it works" still opens it; card descriptions and the subtitle are `data-intro`), Fleet 77 → 38,
   Knowledge 1,441 → 735 (explanations hidden; each pack's safety notice stays on purpose), Travel 224 → 205. Learn, Studio, Coach,
   Mind, Shelf, News, Convert, Slides and CV were already under 60 words.
+- **French / Spanish / Turkish**: a crawl of every page in the new layout (French, `__trMiss`) found 251 English strings on the
+  first screens; 182 are translated in all three (+ ~170 lines each); what is left is brand and language names (they stay) and a
+  few strings that are translated twice. Deeper screens (sheets, forms) still show some English.
 - **Desktop CI** (Windows "Smoke test from source" red since v6.31): not a lost answer — the runner's window is 1008 px, and the check
   expected the phone's bottom bar under 1024 px; v6.30 removed the bar. `desktop/test/smoke-run.js` now accepts the ☰ menu.
 - **Quant bench for any model**: `quant-bench.yml` takes repo / prefix / quants (`tests/models/quant_bench.py` reads `PREFIX`); run for
