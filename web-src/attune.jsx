@@ -18,7 +18,7 @@ import { ChatHome, Md, systemPrompt as chatSystemPrompt, loadChats, applyChatCmd
 import { DesktopSide, useDesktopWide, useSide, noteToolUsed } from "./side-ui.jsx";
 import { DesktopHome, ToolsPage } from "./desk-ui.jsx";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
-import { tr, getLang, setLang, fmtNum, dateLocale } from "./i18n.js";
+import { tr, getLang, setLang, fmtNum, dateLocale, LANGS as UI_LANGS } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
 import { RemindersPanel, whenText } from "./actions-ui.jsx";
@@ -11298,8 +11298,8 @@ function TextSize() {
 function LangSwitch({ className = "" }) {
   const cur = getLang();
   return (
-    <div className={`inline-flex rounded-lg border border-slate-700 overflow-hidden text-[12px] ${className}`} data-testid="lang-switch" role="group" aria-label="Language / اللغة">
-      {[["en", "English"], ["ar", "العربية"]].map(([id, label]) => (
+    <div className={`inline-flex flex-wrap rounded-lg border border-slate-700 overflow-hidden text-[12px] ${className}`} data-testid="lang-switch" role="group" aria-label="Language / اللغة">
+      {UI_LANGS.map(([id, label]) => (
         <button key={id} onClick={() => { if (id !== cur) setLang(id); }} lang={id} data-lang={id}
           className={`px-2.5 py-1.5 ${id === cur ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-300"}`}>{label}</button>
       ))}
