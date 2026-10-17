@@ -1,0 +1,22 @@
+// v6.32 Split bills: a sentence → shares → debts in People & plans.
+import { parseSplit, splitToCommitments } from "../../web-src/split.js";
+const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
+const o = { currency: "EGP" };
+let s = parseSplit("Dinner 1,200 split with Ahmed and Sara", o);
+ok(s && s.count === 3 && s.each === 400 && s.debts.length === 2 && s.debts.every((d) => d.dir === "in" && d.amount === 400) && s.title === "Dinner", "dinner 1,200 with 2 friends → each owes you 400");
+s = parseSplit("Ahmed paid 900 for the taxi, split between me, him and Ali", o);
+ok(s && s.payer === "Ahmed" && s.count === 3 && s.debts.length === 1 && s.debts[0].person === "Ahmed" && s.debts[0].dir === "out" && s.debts[0].amount === 300, "Ahmed paid 900 for 3 → you owe Ahmed 300 (" + JSON.stringify(s && s.debts) + ")");
+s = parseSplit("قسمنا العشا ١٢٠٠ على ٤", o);
+ok(s && s.count === 4 && s.each === 300 && s.debts.length === 0 && s.title === "عشا", "«قسمنا العشا ١٢٠٠ على ٤» → 300 each, no names");
+s = parseSplit("العشا ٩٠٠ هنقسمه مع أحمد وسارة", o);
+ok(s && s.count === 3 && s.debts.length === 2 && s.debts.map((d) => d.person).join() === "أحمد,سارة" && s.debts[0].amount === 300, "Arabic names → each owes you 300 (" + JSON.stringify(s && s.debts) + ")");
+s = parseSplit("Split the bill: Ahmed 500, Sara 300, me 400", o);
+ok(s && s.total === 1200 && s.debts.length === 2 && s.debts.find((d) => d.person === "Ahmed").amount === 500, "uneven shares");
+s = parseSplit("Pizza 1000 split with Omar and Mona, 10% service", o);
+ok(s && s.total === 1100 && Math.abs(s.shares.reduce((a, x) => a + x.amount, 0) - 1100) < 0.001, "10 % service added and the cents add up");
+s = parseSplit("Lunch 100 split with Omar and Mona", o);
+ok(s && s.shares.reduce((a, x) => a + x.amount, 0) === 100 && s.shares[0].amount === 33.34, "100 / 3 → 33.34 + 33.33 + 33.33 (the extra cent stays with you)");
+ok(parseSplit("Ahmed owes me 500", o) === null && parseSplit("split screen tips", o) === null, "not a split → null");
+const cs = splitToCommitments(parseSplit("Dinner 1,200 split with Ahmed and Sara", o), { now: Date.UTC(2026, 9, 17, 12) });
+ok(cs.length === 2 && cs[0].kind === "debt" && cs[0].person === "Ahmed" && cs[0].title === "Dinner (split)" && cs[0].start === "2026-10-17", "saved as two debts in People & plans");
+console.log(process.exitCode ? "FAILED" : "ALL PASSED");

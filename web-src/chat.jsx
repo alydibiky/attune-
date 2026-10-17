@@ -15,6 +15,7 @@ import { chatMapIntent } from "./mapintent.js";
 import { chatLifeIntent } from "./life.js";
 import { chatAsk, loadStores as lifeStores } from "./lifeask.js";
 import { sourceLine } from "./sourcelabel.js";
+import { priceQuestion, insight as priceInsight, allRecords as priceRecords, loadPrices } from "./pricememory.js";
 import { chatDeadlineIntent } from "./deadlines.js";
 import { agentCard } from "./agent-ui.jsx";
 import { flightFromText } from "./owed.js";
@@ -706,6 +707,19 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       } catch (e) {
         patchMsg(cid, mid, { streaming: false, phase: "", error: true, text: String((e && e.message) || e).slice(0, 240) });
       }
+      return;
+    }
+
+    // v6.32 Price memory: «اللبن بكام آخر مرة؟» — answered from the prices you noted and Money's own entries
+    const pq = route && !img ? priceQuestion(typed) : "";
+    const pi = pq ? priceInsight(priceRecords(loadPrices(), loadLedger()), pq) : null;
+    if (pi) {
+      const cid = ensureChat(typed);
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages,
+        { id: newId(), role: "user", text: typed },
+        { id: newId(), role: "assistant", card: { tone: "emerald", title: "From your own data — worked out on this phone", detail: tr(pi.T[0], { ...pi.T[1], i: tr(pi.T[1].i) }) + (pi.last.store ? " · " + pi.last.store : "") + " · " + pi.last.date,
+          actions: [["Open Money Guardian", "open:guardian"], ["Just answer", "answer"]] } }] }));
+      setText("");
       return;
     }
 

@@ -10,6 +10,7 @@ import { loadLife } from "./life.js";
 import { fmt } from "./money-calm.js";
 import { disputeLetter } from "./owed.js";
 import { openOwed } from "./owed-ui.jsx";
+import { parsePrice, loadPrices, savePrices, addPrice, allRecords, overview } from "./pricememory.js";
 
 const DONE = { late: ["Send reminder", "Not now"], double: ["I got it back", "Not a mistake"], creep: ["I fixed it", "It's fine"], subs: ["I cancelled it", "I use it"], fees: ["Got it", null], due: ["Paid", null] };
 
@@ -31,6 +32,33 @@ export function GuardianCard({ pro, open }) {
       {pro && totals.month ? <div className="mt-1"><span className="c-num text-[20px] font-bold">{fmt(totals.month)}</span> <span className="c-sub">{tr("saved for you this month")}</span></div> : null}
       {F.length ? <div className="c-sub mt-1">{F.length === 1 ? tr("1 way to save {a}", { a: fmt(at) }) : tr("{n} ways to save {a}", { n: F.length, a: fmt(at) })}</div> : null}
     </button>);
+}
+
+/** v6.32 Price memory: what you paid for the same thing over time — typed here or read from Money's own entries (pricememory.js). */
+function PriceMemory({ flash }) {
+  const [d, setD] = useState(() => loadPrices());
+  const [text, setText] = useState("");
+  const [all, setAll] = useState(false);
+  const list = useMemo(() => overview(allRecords(d, loadLedger())), [d]);
+  const add = () => {
+    const p = parsePrice(text); if (!p) { flash && flash(tr("Write the thing and its price — “milk 1L 45 at Carrefour”")); return; }
+    setD(savePrices(addPrice(d, { ...p, source: "typed" }))); setText(""); flash && flash(tr("Remembered"));
+  };
+  return (
+    <div className="c-card" data-testid="price-memory">
+      <span className="c-lbl">{tr("Price memory")}</span>
+      <div className="flex items-end gap-2 mt-2">
+        <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") add(); }} dir="auto" data-testid="price-input"
+          placeholder={tr("“milk 1L 45 at Carrefour” or «كيلو طماطم ١٥»")} className="flex-1 bg-transparent focus:outline-none text-[14px] border-b py-1" style={{ borderColor: "var(--c-ln)", color: "var(--c-ink)" }} />
+        <button className="c-btn" onClick={add} disabled={!text.trim()} data-testid="price-add">{tr("Add")}</button>
+      </div>
+      {list.length ? <div className="mt-3 space-y-1.5">{(all ? list : list.slice(0, 6)).map((x) => (
+        <div key={x.last.key} className="flex items-center gap-2 text-[13.5px]" data-testid="price-row">
+          <span className="flex-1 min-w-0" dir="auto">{tr(x.T[0], { ...x.T[1], i: tr(x.T[1].i) })}{x.cheapest ? <span className="c-sub"> · {tr("cheapest at {s}", { s: x.cheapest.store })}</span> : null}</span>
+          {x.pct ? <span className={"c-pill " + (x.pct > 0 ? "late" : "due")}>{(x.pct > 0 ? "+" : "") + x.pct + "%"}</span> : null}</div>))}
+        {list.length > 6 ? <button className="c-sub text-[12px]" onClick={() => setAll(!all)}>{all ? tr("Show less") : tr("Show all {n}", { n: list.length })}</button> : null}</div>
+        : <p className="c-sub mt-2 text-[12.5px] m-0">{tr("Each time you note a price, it says how it compares with last time — per kilo or litre when you give the size.")}</p>}
+    </div>);
 }
 
 export function GuardianPage({ pro, openPlan, flash }) {
@@ -77,5 +105,6 @@ export function GuardianPage({ pro, openPlan, flash }) {
           <div className="c-sub mt-1">{tr("Pro shows them all, and counts what Attune saved you — usually more than it costs.")}</div>
         </button>) : null}
       </div> : null}
+      <PriceMemory flash={flash} />
     </div>);
 }

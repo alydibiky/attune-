@@ -1,0 +1,32 @@
+// v6.32 gold and currency savings tracker: sentences → holdings → worth, gain, niṣāb, zakat; "Send to Zakat".
+import * as G from "../../web-src/gold.js";
+const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
+const o = { currency: "EGP" };
+let h = G.parseHolding("جنيه ذهب", o);
+ok(h && h.kind === "gold" && h.grams === 8 && h.karat === 21, "«جنيه ذهب» → 8 g of 21k");
+h = G.parseHolding("3 جنيهات ذهب", o);
+ok(h && h.grams === 24 && h.pieces === 3, "3 gold pounds → 24 g");
+h = G.parseHolding("سبيكة ١٠ جرام عيار ٢٤ اشتريتها بـ ٣٨٠٠٠", o);
+ok(h && h.grams === 10 && h.karat === 24 && h.cost === 38000, "a 10 g 24k bar bought for 38,000 (" + JSON.stringify(h) + ")");
+h = G.parseHolding("50 g gold 21k bought for 150,000", o);
+ok(h && h.grams === 50 && h.karat === 21 && h.cost === 150000 && G.pureGold(h) === 43.75, "50 g of 21k = 43.75 g pure");
+h = G.parseHolding("500 g silver", o);
+ok(h && h.kind === "silver" && h.grams === 500, "silver");
+h = G.parseHolding("2,000 USD savings", o);
+ok(h && h.kind === "cash" && h.amount === 2000 && h.currency === "USD", "dollars saved");
+ok(G.parseHolding("hello there", o) === null && G.parseHolding("gold is nice", o) === null, "not a holding → null");
+const prices = { gold24: 4000, silver: 50, fx: { USD: 48 } };
+const T = Date.UTC(2026, 9, 17, 12);
+const items = [{ id: "a", ...G.parseHolding("50 g gold 21k bought for 150,000", o), date: "2025-09-01" }, { id: "b", ...G.parseHolding("2,000 USD", o), date: "2026-09-01" }];
+const s = G.summary(items, prices, T);
+ok(s.rows[0].worth === 175000 && s.rows[0].gain === 25000 && s.rows[1].worth === 96000, "worth today: 43.75 g × 4,000 = 175,000 (gain 25,000); $2,000 × 48 = 96,000");
+ok(s.nisabValue === 340000 && s.reaches === false && s.zakat === null, "271,000 in all is under the niṣāb (85 g × 4,000 = 340,000) → no zakat");
+const s2 = G.summary([...items, { id: "c", kind: "gold", grams: 50, karat: 24, date: "2025-01-01" }], prices, T);
+ok(s2.reaches && s2.zakat === Math.round((175000 + 200000) * 0.025 * 100) / 100 && s2.waiting.length === 1, "over the niṣāb → 2.5 % on what was held a lunar year (the dollars bought last month wait)");
+ok(G.summary(items, {}, T).missing.length === 2, "no prices set → says which prices are missing");
+// Send to Zakat
+const store = new Map([["ledger.v3", JSON.stringify({ zakat: { goldPrice: 3900, madhhab: "jumhur" }, txns: [] })]]);
+const ls = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) };
+ok(G.loadGold(ls).prices.gold24 === 3900, "the gold price Money's Zakat page already has is used");
+ok(G.toZakat({ items, prices }, ls) && JSON.parse(store.get("ledger.v3")).zakat.goldGrams === 43.75 && JSON.parse(store.get("ledger.v3")).zakat.madhhab === "jumhur" && JSON.parse(store.get("ledger.v3")).zakat.goldPrice === 4000, "Send to Zakat fills the grams and price and keeps the rest");
+console.log(process.exitCode ? "FAILED" : "ALL PASSED");
