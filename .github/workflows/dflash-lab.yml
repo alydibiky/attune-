@@ -1,0 +1,41 @@
+name: DFlash lab (identical answers, faster writing — on ARM)
+
+# v6.34 (Ali: "top-notch models on lighter devices without compromising anything"). tests/models/dflash_lab.py
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/loving-goldberg-2ru8xq]
+    paths: [tests/models/dflash_lab.py, .github/workflows/dflash-lab.yml]
+jobs:
+  lab:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: core-max-4b-q8, target: "unsloth/Qwen3.5-4B-MTP-GGUF/Qwen3.5-4B-Q8_0.gguf", draft: "AtomicChat/Qwen3.5-4B-DFlash-GGUF/Qwen3.5-4B-DFlash.Q8_0.gguf" }
+          - { name: core-4b-q4km, target: "unsloth/Qwen3.5-4B-MTP-GGUF/Qwen3.5-4B-Q4_K_M.gguf", draft: "AtomicChat/Qwen3.5-4B-DFlash-GGUF/Qwen3.5-4B-DFlash.Q8_0.gguf" }
+          - { name: zenith-9b-iq4nl, target: "unsloth/Qwen3.5-9B-MTP-GGUF/Qwen3.5-9B-IQ4_NL.gguf", draft: "lym00/Qwen3.5-9B-DFlash-GGUF-Test/Qwen3.5-9B-DFlash-q8_0.gguf" }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build llama.cpp (the app's pinned commit, KleidiAI on)
+        run: |
+          PIN=$(grep -o '[0-9a-f]\{40\}' app/src/main/cpp/fetch-llama.sh | head -1)
+          for i in 1 2 3 4; do git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp && break; rm -rf ~/llama.cpp; sleep $((i * 10)); done
+          cd ~/llama.cpp && git checkout -q "$PIN"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON -DGGML_CPU_KLEIDIAI=ON -DLLAMA_CURL=OFF > /dev/null
+          cmake --build build --target llama-server -j"$(nproc)" > /dev/null
+      - name: Download the model and its DFlash draft
+        run: |
+          r() { echo "$1" | sed -E 's#^([^/]+/[^/]+)/(.*)$#https://huggingface.co/\1/resolve/main/\2#'; }
+          curl -sSL --retry 5 -o ~/target.gguf "$(r '${{ matrix.target }}')"
+          curl -sSL --retry 5 -o ~/draft.gguf "$(r '${{ matrix.draft }}')"
+          ls -la ~/*.gguf
+      - name: Lab
+        run: python3 tests/models/dflash_lab.py ~/target.gguf ~/draft.gguf ~/llama.cpp/build/bin ${{ matrix.name }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dflash-${{ matrix.name }}
+          path: dflash-*.md
