@@ -1,8 +1,8 @@
 # Attune — the whole app in one handoff (read this first)
 
-_Up to date: 13 Oct 2026, **v6.27** (versionCode 88) on `main` = branch `ccr-a0eb3595-e2c7a7`._
+_Up to date: 17 Oct 2026, **v6.32** (versionCode 93; the joint release of five threads, HANDOFF §5.79) on `main` = branch `ccr-a0eb3595-e2c7a7`._
 This file is the map. Details and history are in `HANDOFF.md` (§5.x = one section per release, newest at the end:
-§5.44–§5.60 cover 10–12 Oct 2026). Ali's raw problem lists are in `NEXT_SESSION.md`. The desktop plan is in
+§5.44–§5.60 cover 10–12 Oct 2026; §5.74–§5.79 cover 16–17 Oct). Ali's raw problem lists are in `NEXT_SESSION.md`. The desktop plan is in
 `DESKTOP_PLAN.md`.
 
 ---
@@ -64,13 +64,15 @@ Google Play Billing.
 | **File Converter + Translate** | 80+ conversions that keep the formatting (PDF→Word measured at 100%); **Edit a PDF** (first row, v6.32): change a line, add text, highlight, draw, sign, reorder/turn/delete/add pages, saved as a new PDF on the device | `convert.js`, `convert-ui.jsx`, `pdfedit.js`, `pdfedit-ui.jsx`, Kotlin `DocTools.kt` (`pdfEdit` op `edit`), `desktop/lib/pdf.js`; bench `tests/convert/run.sh`; test `e2e_v736pdfedit.py` |
 | **Slides & Reports** | A .pptx or report from one sentence | `slides.js`, `slides-ui.jsx` |
 | **CV / Resume** | Build, import, tailor and export (EN/AR) | `cv*.js`, `cv-ui.jsx` |
-| **Learn daily / Daily news** | A lesson a day with quizzes and ready courses; morning news | `daily.js`, `daily-ui.jsx`, `langs.js` |
-| **Money Guardian, Deadline Radar** (v6.27) | Finds money in your own payments (late debts, double charges, price rises, subscriptions) with an honest "saved" counter; watches free trials, renewals, returns, warranties and documents (automatic from notifications + scan/paste/by hand) | `guardian*.js(x)`, `deadlines.js`, `radar-ui.jsx`, `locale.js` |
+| **Learn daily / Daily news** | A lesson a day with quizzes and ready courses; morning news; v6.32: FSRS review (`fsrs.js`), Say it (`speak.js`), dialogues, a picture per lesson, knowledge packs as courses (`packcourse.js`) | `daily.js`, `daily-ui.jsx`, `langs.js` |
+| **Money Guardian, Deadline Radar** (v6.27) | Finds money in your own payments (late debts, double charges, price rises, subscriptions) with an honest "saved" counter; watches free trials, renewals, returns, warranties and documents (automatic from notifications + scan/paste/by hand)  **Overpaying check** (v6.32, one list: subscriptions, trials, price rises, overlaps, renewals, unused perks, from payments / notifications / a pasted email / a Gmail export; `overpay.js`, `overpay-ui.jsx`); Price memory (`pricememory.js`).| `guardian*.js(x)`, `deadlines.js`, `radar-ui.jsx`, `locale.js` |
 | **What you're owed · Read it to me · Job ready** (v6.27, HANDOFF §5.69) | Flight compensation & claim letters (one sheet from Chat/Travel/Radar/Guardian) · any paper read aloud, explained, acted on (Home camera) · CV → skills, voice interview practice, job links | `owed*.js(x)`, `readaloud*.js(x)`, `jobready.js`, `cv-ui.jsx` |
 | **Agent, Homework Coach, Family health, Shop in your pocket, Translate, Travel** (v6.27, HANDOFF §5.68) | Book/order from Chat (links; in-app browser that marks the best offer and fills details, stops before paying) · homework solved by code and taught with spoken, animated steps · prescriptions → doses and reminders, label-quoted interactions, labs by printed range · a shop on Books from one sentence · checked translation of text, photos and documents · Travel in Calm tabs with passport, fair-price and trip checks | `agent*.js(x)`, `AgentBrowser.kt`, `coach*.js(x)`, `lesson-ui.jsx`, `care*.js(x)`, `shop*.js(x)`, `translate*.js(x)`, `travel*.js(x)` |
 | **Deal Check, Chat X-Ray** | True cost before you pay; WhatsApp chat → money, promises, unanswered questions | `deal*.js(x)`, `chatxray*.js(x)` |
 | **Shelf, Skills, Assistants, Projects, Artifacts** | Notes in books; user recipes for the AI; experts; folders; saved pages | `shelf*.js(x)`, `skills-ui.jsx`, `userskills.js`, `spaces*.js(x)` |
 | **Cycle, Crane toolkit, Site reports, Fleet, Reminders, Instant, Video Downloader** | As named (crane: load charts, ground, slings, wind) | `cycle.jsx`, `crane*.js(x)`, `actions*.js(x)`, `video*.js(x)`, `places.js` |
+| **Attune keyboard** (v6.32) | English/Arabic keys + Improve / Translate / Reply / Prompt with the loaded model | Kotlin `AttuneKeyboard.kt`, `res/xml/method.xml` |
+| **Interface languages** | English, Arabic; v6.32 adds French, Spanish, Turkish (first screen of every page) | `i18n.js` `LANGS`, `i18n-fr.js`, `i18n-es.js`, `i18n-tr.js` |
 | **Engine screen** | Install/use models, speed doctor, heat, log, offline lock | `attune.jsx`, `speed-ui.jsx`, `heat.js`, Kotlin `Engine.kt`, `ModelStore.kt`, `DeviceInfo.kt` |
 | **Arabic** | `tr("English")` → `i18n-ar.js` (every new UI string needs an entry; Arabic descriptions must not contain Latin letters) | `i18n.js`, `i18n-ar.js` |
 
@@ -107,6 +109,10 @@ Google Play Billing.
   `new_page()` sets `attune:legacy-nav=1`; new tests use `new_page(..., legacy_nav=False)`.
 
 ## 6. What is open (by priority)
+0. **v6.32 on Ali's phone + his release list** (NEXT_SESSION §X): the phone checklist (Deep answer, Edit a PDF, Overpaying
+   check, Fit & Food B, Fleet, keyboard, Scout night, Learn extras, languages), the Play steps in RELEASE_6.29.md, and the Google
+   Cloud ids for Drive sync / Family circle / Gmail sign-in / Pro search (SETUP_CLOUD.md, docs/GMAIL_SIGNIN.md). Looks to pick:
+   Mind page and Coding page (`screens-v632/`).
 1. **DESKTOP APP — in progress (12 Oct 2026).** Ali: "like Claude and ChatGPT" and **Windows first**. See HANDOFF §5.60 and
    `DESKTOP_PLAN.md`.
    - Exists (v6.24): `desktop/`, an Electron shell — chat, models, engine, web search, knowledge packs, maps, food pack, offline lock — and the Claude/ChatGPT layout in `web-src/side-ui.jsx`. CI `desktop.yml` builds the Windows installer on every push to `main` that touches `desktop/` or the page. Done steps and what is next: HANDOFF §5.60.
@@ -142,7 +148,7 @@ Google Play Billing.
    - The Overture places and the route file on the phone (published 11–12 Oct).
    - The new Q&A packs downloaded on the phone.
 
-## 7. Recent history in one screen (details: HANDOFF §5.44–§5.60)
+## 7. Recent history in one screen (details: HANDOFF §5.44–§5.79)
 | Version | Date | What |
 |---|---|---|
 | v6.16 | 10 Oct | Look picks: Mind C, Coding B, Maps A; 44 country maps; Knowledge packs; Islamic packs; commercial-safe audit |
@@ -161,12 +167,12 @@ Google Play Billing.
 | v6.29 | 15 Oct | Back to the previous page; crash guards; Health page + Fit & Food on Home; data questions in Chat; Scout exact items and cheapest store; Learn daily rework (review cards by code); Slides & Reports rework; declutter; Home A (Recent + What's waiting), Scout tab, chat sidebar on the phone; Google Play release blockers fixed (API 36, Play-only purchases, privacy policy, billing) — RELEASE_6.29.md |
 | v6.30 | 16 Oct | No bottom bar: ChatGPT-style sidebar with 6 places; combined pages with tabs (Create = Code, prompts, compress, humanize, copilot, library, Ask; Studio separate); ExitWatch tells why the app closed (Engine log + a one-time note) |
 | v6.31 | 17 Oct | Minimal design A (no intro paragraphs, thin tabs, small model dot, calm Home/Chat, "+" menu in Chat, Converter one action); Core Lite → IQ4_NL, new Core Max (8-bit) — HANDOFF §5.75 |
-| v6.32 | 17 Oct | Create 6 tabs (Compress inside Improve); video downloads not sold; Deep answer (strongest model, thinks first); Fit & Food minimal B (tabs on top, "Log food", higher contrast) — HANDOFF §5.76 |
+| v6.32 | 17 Oct | Joint release of five threads (HANDOFF §5.76–§5.79): Create 6 tabs; video not sold; Deep answer; Fit & Food minimal B + contrast; **Edit a PDF**; **Overpaying check**; **Fleet & rentals** + Business v2; Scout at night, metro minutes, photo check; Learn extras; web head-to-head tables; French/Spanish/Turkish; Attune keyboard |
 
 ## 8. Prompt for the next session (paste as is)
+The current prompt is at the end of `NEXT_SESSION.md` ("Prompt to start the next session"). Short version:
 ```
-Continue Attune. Read CLAUDE.md, then APP_HANDOFF.md (the whole app), then HANDOFF.md §5.60 (desktop, in progress)
-and the newest §5.x entries. Work on branch ccr-a0eb3595-e2c7a7. Continue the desktop app (Windows first, layout like
-Claude/ChatGPT) step by step from APP_HANDOFF.md §6.1, pushing each step when its tests pass, and answer anything new I
-send first. Keep APP_HANDOFF.md and HANDOFF.md current. Follow every standing rule in APP_HANDOFF.md §1.
+Continue Attune on main (v6.32). Read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.79 and NEXT_SESSION.md section X first.
+Show me what is done and open, ask the open questions with options, then work through them with a task list.
+Follow every standing rule in APP_HANDOFF.md §1.
 ```

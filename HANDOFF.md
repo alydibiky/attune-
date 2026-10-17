@@ -1594,6 +1594,36 @@ All with unit + e2e tests (`tests/unit/v736*.test.mjs`, `tests/e2e_v736*.py`); K
   Worker + Serper). All invisible until `CLOUD` has the ids.
 - **Looks to choose** (Ali): Mind page and Coding page, 3 options each (`/mnt/project-files/screens-v632/*-options.png`).
 
+
+### 5.79 (17 Oct 2026) — v6.32 joint release: five threads merged into one APK
+Ali ran five threads in parallel on 17 Oct, each on its own branch, and asked for one release with one APK at the end.
+Merged into `main` on branch `claude/joint-release-6zxc2i` (version **6.32**, versionCode 93; CI sets 1000 + run number):
+| Branch | What | Notes |
+|---|---|---|
+| `claude/project-thread-5y87k7` | Create 6 tabs, video not sold, Deep answer, Fit & Food minimal B + contrast | §5.76 |
+| `claude/pdf-edit-converter-mj6lcu` | **Edit a PDF** (Converter, first row; Ali picked option A) | below |
+| `claude/overpaying-finder-t3e0nu` | **Overpaying check** in Money Guardian (look A, one list) | below |
+| `claude/business-erp-uqi622` | Fleet & rentals (Ali's crane + warehouse ERPs) + Business builder v2 | §5.77 |
+| `claude/roadmap-items-knk93s` | Money/life extras, Scout night, Learn extras, web head-to-head, FR/ES/TR, Attune keyboard | §5.78 |
+- **Edit a PDF** (`pdfedit.js` logic, `pdfedit-ui.jsx` screen; phone: `DocTools.kt` `pdfEdit` mode `"edit"`; computer:
+  `desktop/lib/pdf.js` with pdf-lib): tap a line to change it, tap an empty spot to add text, highlight, draw, sign (the signature
+  is kept on this device only), drag pages to reorder, turn / delete / add pages (blank or from another PDF). Always saved as a
+  **new** PDF. Text the built-in Helvetica can't write (Arabic) is drawn, not typed (`plainLatin`). Tests: `tests/unit/pdfedit.test.mjs`,
+  `tests/e2e_v736pdfedit.py`.
+- **Overpaying check** (`overpay.js`, `overpay-ui.jsx`, in `GuardianPage`): one list of subscriptions, free trials ending, price rises,
+  overlapping services (`GROUPS`), renewals and unused perks, each with its source (payment, money notification, a pasted email, or a
+  **Gmail export** `.mbox` from Google Takeout read on the phone, with a Gmail link from `X-GM-THRID`). Guardian's own "subs" and
+  "creep" findings are hidden because the check covers them. A monthly reminder on the 1st (`Reminders.kt` / actions.js
+  `repeat: "monthly"`). Gmail sign-in (reading new mail by itself) needs Ali's Google Cloud setup: `docs/GMAIL_SIGNIN.md`. Tests:
+  `tests/unit/v732overpay.test.mjs`, `tests/e2e_v732overpay.py`.
+- **Merge notes:** the built page (`www/index.html`) was rebuilt after every merge, never hand-merged. `i18n-ar.js` conflicts were
+  unions (no key ended up with two different Arabic texts). `guardian-ui.jsx`: the Overpaying check (overpay thread) and Price memory
+  (roadmap thread) both sit on the Guardian page. Business and roadmap both wrote "§5.76"; they are §5.77 and §5.78 now, and
+  the roadmap's NEXT_SESSION "V" is "W".
+- **Test fix:** `tests/unit/fitlook.test.mjs` still expected three Fit looks (there are six since v6.18); it failed silently because
+  `run_all.sh` reads only each file's last line. Lesson: a unit file's last line can say PASS while an earlier check failed —
+  grep for `FAIL` too.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

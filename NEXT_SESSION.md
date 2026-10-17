@@ -1,4 +1,4 @@
-# Next session — Ali's full problem list (29 Sep – 17 Oct 2026; newest: section U, then the prompt at the end)
+# Next session — Ali's full problem list (29 Sep – 17 Oct 2026; newest: section X, then the prompt at the end)
 
 Everything Ali found on his phone after v6.9, in one place. Ali keeps adding items (latest: section H,
 2 Oct); when he sends more, add them under a new dated section at the end of the list.
@@ -676,15 +676,53 @@ tables, French/Spanish/Turkish, the Attune keyboard. Open:
 3. ⬜ Phone tests: the keyboard, Scout at night, the metro pill, Say it (speech recognition), pack courses.
 4. ⬜ More of the app in French/Spanish/Turkish (only the first screens are translated).
 
+## X. 17 Oct 2026 — v6.32 joint release (HANDOFF §5.79). Read this section first.
+All five of Ali's parallel threads are merged into `main` as **v6.32** (one APK): Create/Deep answer/Fit & Food (§5.76, section V),
+Edit a PDF and the Overpaying check (§5.79), Fleet & rentals + Business v2 (§5.77), the roadmap items (§5.78, section W).
+APK: APK_RUN_LINK
+
+### Ali's checklist on the phone (install the APK above over the old one)
+1. ⬜ **Chat**: a normal question, then "+" → Deep answer (note which model answered and how long it took).
+2. ⬜ **Create**: six tabs; Compress is the switch inside "Prompts".
+3. ⬜ **Converter → Edit a PDF**: change a line, add text, highlight, sign, move a page; open the new PDF in another app.
+4. ⬜ **Money → Guardian → Overpaying check**: add a pasted email or a Gmail export (Google Takeout → Mail); check each item's source.
+5. ⬜ **Fit & Food**: tabs on top, "Log food", the text is easy to read in every look (also in Arabic).
+6. ⬜ **Business → Fleet & rentals**: a crane, a job with hours, a cheque, the Store; then the same on the computer.
+7. ⬜ **Attune keyboard**: Settings → "Attune keyboard"; Improve / Translate / Reply / Prompt in WhatsApp; Arabic keys.
+8. ⬜ **Scout** at night (leave a goal, close the app, look in the morning), the metro walking minutes, the photo check.
+9. ⬜ **Learn**: Say it (microphone), a dialogue, a pack course with no model.
+10. ⬜ **Languages**: switch to French / Spanish / Turkish and back (only the first screens are translated).
+11. ⬜ If the app closes by itself: send the Engine log (ExitWatch says why).
+
+### Ali's release list (Google Play; details in RELEASE_6.29.md §0 and §2)
+1. ⬜ Start the 14-day closed test with 12+ testers (personal account rule).
+2. ⬜ Upload key + the four GitHub secrets; Play App Signing; first bundle by hand (`attune-play-bundle`).
+3. ⬜ Host the privacy policy; contact email on the listing.
+4. ⬜ Products: `attune_pro_monthly`, `attune_pro_yearly`, `attune_pro_lifetime`, `attune_business_system`; license tester.
+5. ⬜ App content declarations (Data safety, Health Connect, foreground service, notification listener, exact alarms, rating).
+6. ⬜ Store listing EN + AR (no video downloads in the text or screenshots).
+7. ⬜ USDA food key from api.data.gov.
+8. ⬜ Google Cloud (one project serves all three): Drive sync + Family circle (SETUP_CLOUD.md), Gmail sign-in for the
+   Overpaying check (docs/GMAIL_SIGNIN.md), Serper key + relay for Pro search. Send Claude the Web client id.
+
+### Still open (code)
+1. Ali picks the Mind page look and the Coding page look (3 options each, `screens-v632/*-options.png`), then build it.
+2. Minimal design for Business, Studio, Learn's inner screens and the computer layout (show options first).
+3. Fit & Food B on the wide computer layout: check with Ali.
+4. The big-model quant bench (Apex+, Everest, Apex, Glow/Spark); Everest flash-mode speed from Ali's Engine log.
+5. More of the app in French / Spanish / Turkish.
+6. Fleet ideas not built (§5.77): nightly reminders as notifications, a client statement PDF, sharing Fleet between phones (needs Drive sync).
+7. `run_all.sh` reads only the last line of each unit file, so a FAIL in the middle hides (fitlook did). Make it report any FAIL line.
+
 ## Prompt to start the next session
 
 ```
-Continue Attune on main (= ccr-a0eb3595-e2c7a7 = claude/project-thread-5y87k7, v6.32).
-First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.74–§5.76 and NEXT_SESSION.md — the newest section is V (v6.32 and
-everything still open), then U. Then show me, short and simple: what is done, what is open, and your recommended order;
-ask me the open questions (which page to make minimal next, with options), wait for my answers, then work through them
-with a task list. If I send an Engine log, read it first — ExitWatch
-now says why the app closed.
+Continue Attune on main (= ccr-a0eb3595-e2c7a7 = claude/joint-release-6zxc2i, v6.32: the joint release of five threads).
+First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.79 and NEXT_SESSION.md — the newest section is X (what is in v6.32,
+my phone checklist, my release list and what is still open), then W and V. Then show me, short and simple: what is done,
+what is open, and your recommended order; ask me the open questions (the Mind and Coding page looks, which page to make
+minimal next, with options), wait for my answers, then work through them with a task list. If I send an Engine log or
+phone test results, read them first — ExitWatch says why the app closed.
 
 Standing rules:
 - Anything subjective (UI look, layout, colours, names, wording): show me 2–4 options with a recommendation and build the one I pick.
