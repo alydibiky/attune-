@@ -1715,6 +1715,16 @@ His picks (asked on cards): Money "integrate them the best way"; More page "B: r
 - **Food Add sheet minimal A + Yazio** (fit-ui.jsx `fit-add-min`): one "What did you eat?" box with camera / barcode / mic inside;
   typing 1–3 words also searches (results under it); "Add it"; Recent · Favourites · My meals as rows with a + (one tap logs);
   More = quick add kcal, my own food, same as yesterday, search millions online, faster photos. 15 words on screen.
+- **Fleet ideas of §5.77, built** (`fleet.js`): maintenance by engine hours (crane `serviceEvery`; `craneHours` = hourly entries +
+  daily × `settings.dayHours` (8); `serviceStatus`, `markServiced`; warnings `serviceDue` / `serviceSoon`; crane screen `fleet-service`
+  with "Serviced today"); a client's statement of account (`statement`, `statementHTML`, EN/AR, running balance = the client's
+  balance; button `fleet-statement` → print / save as PDF); one phone notification at 09:00 for what needs you (`reminderNote` →
+  `AttuneNative.schedule` id "fleet-needs", re-made on every change). Test `tests/unit/v737fleet.test.mjs`. Sharing Fleet between
+  phones still waits on Drive sync.
+- **Desktop CI** (Windows "Smoke test from source" red since v6.31): not a lost answer — the runner's window is 1008 px, and the check
+  expected the phone's bottom bar under 1024 px; v6.30 removed the bar. `desktop/test/smoke-run.js` now accepts the ☰ menu.
+- **Quant bench for any model**: `quant-bench.yml` takes repo / prefix / quants (`tests/models/quant_bench.py` reads `PREFIX`); run for
+  Glow 2B, Spark 0.8B and Zenith 9B. The 13–18 GB models (Apex+, Apex, Everest) don't fit the 16 GB ARM runner several times over.
 - Tests: `tests/unit/v737fixes.test.mjs`, `e2e_v737learn.py`, `e2e_v737maid.py`, `e2e_v737engine.py`, `e2e_v737fitadd.py`; updated
   `e2e_v718looks.py`, `e2e_v732fleet.py`, `e2e_v734sidebar.py`, `v734hubs.test.mjs`.
 - Research notes (17 Oct): llama.cpp has an experimental Hexagon (NPU) backend for 8 Gen 3 / 8 Elite / 8 Elite Gen 5 (Q4_0, Q8_0,

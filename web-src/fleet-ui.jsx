@@ -122,6 +122,12 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
     setRaw(st);
   })(); }, []);
   useSubBack(!!open, () => setOpen(null));
+  // v6.34 (§5.77 idea): what needs you → one phone notification at 09:00 (cheques, jobs past their end, service, stock)
+  useEffect(() => { if (!s || site) return; const N = typeof window !== "undefined" && window.AttuneNative; if (!N) return;
+    const n = F.reminderNote(s);
+    const NAME = { chequeOverdue: "cheque overdue", chequeToday: "cheque due today", jobPast: "job past its end", jobEnding: "job ending", lowStock: "item low in the store", serviceDue: "crane due for service", serviceSoon: "service soon" };
+    const say = n && { id: n.id, at: n.at, open: "fleet", title: n.n === 1 ? tr("Fleet: 1 thing needs you") : tr("Fleet: {n} things need you", { n: n.n }), body: Object.entries(n.counts).map(([k, c]) => c + " " + tr(NAME[k] || k)).join(" · ") };
+    try { if (say && N.schedule) N.schedule(JSON.stringify(say)); else if (!n && N.unschedule) N.unschedule("fleet-needs"); } catch (e) {} }, [s]);
   /** Every change goes through here: the pure function runs, a refusal shows its real reason, the result is saved. */
   const run = (fn, ok) => {
     try {
@@ -179,8 +185,9 @@ function Today({ s, run, money, setSheet, setOpen, setTab, wide }) {
     </div>);
   const W = { chequeOverdue: (x) => tr("Cheque {no} is {d} days overdue — {who}", { no: x.no || "", d: x.days, who: x.who }), chequeToday: (x) => tr("Cheque {no} is due today — {who}", { no: x.no || "", who: x.who }),
     chequeSoon: (x) => tr("Cheque {no} is due in {d} days — {who}", { no: x.no || "", d: x.days, who: x.who }), jobPast: (x) => tr("{no} passed its end date {d} days ago — {c}", { no: x.no, d: x.days, c: x.crane }),
-    jobEnding: (x) => tr("{no} ends in {d} days — {c}", { no: x.no, d: x.days, c: x.crane }), lowStock: (x) => tr("{item}: {b} left (minimum {m})", { item: x.item, b: x.balance, m: x.min }) };
-  const go = (x) => (x.kind.startsWith("cheque") ? setTab("money") : x.kind.startsWith("job") ? setOpen({ kind: "job", id: x.id }) : setTab("store"));
+    jobEnding: (x) => tr("{no} ends in {d} days — {c}", { no: x.no, d: x.days, c: x.crane }), lowStock: (x) => tr("{item}: {b} left (minimum {m})", { item: x.item, b: x.balance, m: x.min }),
+    serviceDue: (x) => tr("{c} is due for its service ({h} h)", { c: x.crane, h: num(x.hours) }), serviceSoon: (x) => tr("{c}: service in {h} h", { c: x.crane, h: num(x.left) }) };
+  const go = (x) => (x.kind.startsWith("cheque") ? setTab("money") : x.kind.startsWith("job") ? setOpen({ kind: "job", id: x.id }) : x.kind.startsWith("service") ? setOpen({ kind: "crane", id: x.id }) : setTab("store"));
   return (
     <div className="space-y-4" data-testid="fleet-today">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
@@ -324,6 +331,11 @@ function CraneDetail({ s, run, money, setSheet, setOpen, id }) {
         <button className={btnS} onClick={() => setSheet({ kind: "list", coll: "cranes", rec: c })}><Pencil size={15} />{tr("Edit")}</button>
         <button className={btnS + " text-[#B91C1C]"} onClick={del}><Trash2 size={15} />{tr("Delete")}</button>
       </div>
+      {(() => { const sv = F.serviceStatus(s, id); if (!sv) return null;   // v6.34: maintenance by engine hours
+        return <div className={card + " p-4 flex items-center gap-3"} data-testid="fleet-service"><Wrench size={18} className={sv.left <= 0 ? "text-[#B91C1C]" : "text-[#475569]"} />
+          <span className="flex-1 min-w-0 text-[14px]"><b className="block">{sv.left <= 0 ? tr("Service due — {h} h since the last one", { h: num(sv.used) }) : tr("Service in {h} h", { h: num(sv.left) })}</b>
+            <span className={"text-[12.5px] " + muted}>{tr("Every {e} h", { e: num(sv.every) })}{sv.last ? " · " + tr("last {d}", { d: F.showDate(sv.last) }) : ""}</span></span>
+          <button className={btnS + " shrink-0"} onClick={() => run((x) => F.markServiced(x, id), tr("Service saved — the hours start again"))} data-testid="fleet-serviced"><Check size={15} />{tr("Serviced today")}</button></div>; })()}
       <Seg value={range} onChange={setRange} items={[["month", "This month"], ["year", "This year"], ["all", "All time"]]} testid="fleet-range" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5" data-testid="fleet-profit">
         <Kpi label={tr("Income")} value={money(p.income)} /><Kpi label={tr("Expenses")} value={money(p.expenses)} />
@@ -335,7 +347,7 @@ function CraneDetail({ s, run, money, setSheet, setOpen, id }) {
         {moves.map((m) => <p key={m.id} className="text-[13px] py-0.5" dir="auto">{F.showDate(m.date)} · {place(m.from) || "—"} → {place(m.to) || "—"}{m.note ? " · " + m.note : ""}</p>)}</div> : null}
     </div>);
 }
-function ClientDetail({ s, run, money, setSheet, setOpen, id }) {
+function ClientDetail({ s, run, money, setSheet, setOpen, id, saveFile }) {
   const c = F.byId(s.clients, id);
   if (!c || c.del) return <Empty>{tr("This client was deleted.")}</Empty>;
   const b = F.clientBalance(s, id);
@@ -349,6 +361,7 @@ function ClientDetail({ s, run, money, setSheet, setOpen, id }) {
         <p className={"text-[12.5px] " + muted}>{tr("Opening")} <span dir="ltr">{money(b.opening)}</span> + {tr("work")} <span dir="ltr">{money(b.work)}</span> − {tr("paid")} <span dir="ltr">{money(b.paid)}</span>{b.pending ? <> · {tr("cheques not yet due")} <span dir="ltr">{money(b.pending)}</span></> : null}</p></div>
       <div className="flex flex-wrap gap-2">
         <button className={btnP + " h-10"} style={{ background: "var(--biz)" }} onClick={() => setSheet({ kind: "cheque", dir: "in", client: id })}><Plus size={16} />{tr("Payment received")}</button>
+        <button className={btnS} onClick={() => printHTML(F.statementHTML(s, id, { rtl: isAr() }), saveFile, `statement-${String(c.name).replace(/[^\p{L}\p{N}]+/gu, "-")}.html`)} data-testid="fleet-statement"><Printer size={15} />{tr("Statement")}</button>
         <button className={btnS} onClick={() => setSheet({ kind: "list", coll: "clients", rec: c })}><Pencil size={15} />{tr("Edit")}</button>
         <button className={btnS + " text-[#B91C1C]"} onClick={del}><Trash2 size={15} />{tr("Delete")}</button></div>
       <p className="font-bold text-[14.5px]">{tr("Job orders")}</p>
@@ -508,6 +521,7 @@ function ListForm({ s, run, sheet, close }) {
     <Txt label={tr("Name")} value={r.name} onChange={set("name")} testid="fleet-f-name" />
     {coll === "cranes" ? <><div className="grid grid-cols-2 gap-2"><Txt label={tr("Brand")} value={r.brand} onChange={set("brand")} /><Txt label={tr("Capacity (t)")} value={r.tons} onChange={set("tons")} mode="decimal" /></div>
       <div className="grid grid-cols-2 gap-2"><Txt label={tr("Hourly rate")} value={r.hourly} onChange={set("hourly")} mode="decimal" testid="fleet-f-hourly" /><Txt label={tr("Daily rate")} value={r.daily} onChange={set("daily")} mode="decimal" testid="fleet-f-daily" /></div>
+      <Txt label={tr("Service every (engine hours, optional)")} value={r.serviceEvery} onChange={set("serviceEvery")} mode="decimal" testid="fleet-f-service" />
       {!r.id ? <Sel label={tr("Garage")} value={r.loc ? r.loc.id : ""} onChange={(v) => setR({ ...r, loc: { kind: "garage", id: v || null }, home: v || null })} options={opts(s.garages)} empty={F.live(s.garages).length ? null : tr("— add a garage first (optional) —")} /> : null}</> : null}
     {coll === "clients" ? <><Txt label={tr("Phone")} value={r.phone} onChange={set("phone")} mode="tel" dir="ltr" /><Txt label={tr("Opening balance (what they owed before)")} value={r.opening} onChange={set("opening")} mode="decimal" testid="fleet-f-opening" /></> : null}
     {coll === "sites" ? <Txt label={tr("Address")} value={r.address} onChange={set("address")} /> : null}

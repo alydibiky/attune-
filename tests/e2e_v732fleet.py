@@ -48,6 +48,9 @@ with sync_playwright() as p:
     page.locator("[data-testid=fleet-client]:has-text('Orascom')").click(); page.wait_for_selector("[data-testid=fleet-client-detail]")
     bal = page.locator("[data-testid=fleet-balance]").inner_text()
     check(bal.replace(",", "").startswith("54300"), "the client's balance = opening + work − payments (%s)" % bal)
+    # v6.34: the client's statement of account (printed / saved as PDF)
+    check(page.locator("[data-testid=fleet-statement]").count() == 1, "a client has a Statement button")
+    page.click("[data-testid=fleet-statement]"); page.wait_for_timeout(400)
     # ---- store: an issue split by the reference-code rule
     page.click("[data-testid=fleet-tab-store]"); page.click("[data-testid=fleet-out]"); page.wait_for_selector("[data-testid=fleet-out-form]")
     # Ali's warehouse order: the reference code first, then tap the item on that invoice (the item box is locked)

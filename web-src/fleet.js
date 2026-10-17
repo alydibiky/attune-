@@ -331,6 +331,12 @@ export function warnings(s, today = isoDay()) {
     const b = itemBalance(s.store, it.name);
     if (b <= it.min) w.push({ kind: "lowStock", level: b <= 0 ? "bad" : "warn", id: it.id, item: it.name, balance: b, min: it.min });
   }
+  // v6.34: a crane due for its service by engine hours (the hours worked since its last service)
+  for (const c of live(s.cranes)) {
+    const sv = serviceStatus(s, c.id, today); if (!sv) continue;
+    if (sv.left <= 0) w.push({ kind: "serviceDue", level: "bad", id: c.id, crane: c.name, hours: sv.used, every: sv.every });
+    else if (sv.left <= sv.every * 0.1) w.push({ kind: "serviceSoon", level: "warn", id: c.id, crane: c.name, left: sv.left, every: sv.every });
+  }
   const rank = { bad: 0, warn: 1, info: 2 };
   return w.sort((a, b) => rank[a.level] - rank[b.level] || (a.days ?? 0) - (b.days ?? 0));
 }
@@ -678,4 +684,72 @@ export function docHTML(s, doc, { company = "", currency = s.settings.currency, 
 <table><tr><th>${L.item}</th><th class="n">${L.qty}</th><th class="n">${L.unit}</th><th class="n">${L.total}</th>${t0.kind === "out" ? `<th>${L.ref}</th>` : ""}</tr>
 ${lines.map((t) => `<tr><td>${esc(t.item)}</td><td class="n">${t.qty}</td><td class="n">${fmt(t.qty ? t.total / t.qty : 0)}</td><td class="n">${fmt(t.total)}</td>${t0.kind === "out" ? `<td>${esc(t.ref || "—")}</td>` : ""}</tr>`).join("")}
 <tr><th>${L.total}</th><td></td><td></td><th class="n">${fmt(sum)} ${esc(currency)}</th>${t0.kind === "out" ? "<td></td>" : ""}</tr></table>${t0.notes ? `<p class="m">${esc(t0.notes)}</p>` : ""}</body></html>`;
+}
+
+/* ---- v6.34 (Ali: "do everything left") — the Fleet ideas of §5.77: maintenance by engine hours, a client statement, the
+   reminders as phone notifications. ------------------------------------------------------------------------------------- */
+/** Hours a crane worked (hourly entries' hours; a day of a daily job = settings.dayHours, 8 by default) after `since`. */
+export function craneHours(s, craneId, { since = "" } = {}) {
+  const jobs = new Map(live(s.jobs).filter((j) => j.crane === craneId).map((j) => [j.id, j]));
+  const dayH = +s.settings.dayHours || 8;
+  let h = 0;
+  for (const e of live(s.entries)) {
+    if (!jobs.has(e.job) || (since && e.date <= since)) continue;
+    h += e.mode === "hourly" ? +e.hours || 0 : e.mode === "daily" ? (+e.qty || 0) * dayH : 0;
+  }
+  return r2(h);
+}
+/** A crane with a service interval (serviceEvery hours): { every, used, left, last } — null when it has none. */
+export function serviceStatus(s, craneId, today = isoDay()) {
+  const c = byId(s.cranes, craneId); const every = c ? +c.serviceEvery || 0 : 0;
+  if (!(every > 0)) return null;
+  const used = craneHours(s, craneId, { since: c.lastService || "" });
+  return { every, used, left: r2(every - used), last: c.lastService || "" };
+}
+/** "Serviced" on a date: the count starts again (and the service is in the crane's moves log as a note). */
+export function markServiced(s0, craneId, date = isoDay()) {
+  const s = clone(s0), c = byId(s.cranes, craneId); if (!c) fail("Not found");
+  const d = readDate(date); if (!d) fail("Enter the date");
+  c.lastService = d; c.services = [...(c.services || []), { date: d, hours: craneHours(s0, craneId, { since: s0.cranes.find((x) => x.id === craneId).lastService || "" }) }].slice(-50);
+  return s;
+}
+/** A client's statement of account: opening, every work entry (debit) and payment (credit) by date, with the running balance.
+    Bounced cheques are listed but not counted (they stay owed); cheques not yet due are counted when they clear only. */
+export function statement(s, clientId, { from = "", to = "" } = {}) {
+  const c = byId(s.clients, clientId); if (!c) fail("Not found");
+  const jobs = new Map(live(s.jobs).filter((j) => j.client === clientId).map((j) => [j.id, j]));
+  const rows = [];
+  for (const e of live(s.entries)) if (jobs.has(e.job)) { const j = jobs.get(e.job);
+    rows.push({ date: e.date, what: `${j.no || ""} · ${(byId(s.cranes, j.crane) || {}).name || ""} · ${e.mode === "hourly" ? e.hours + " h" : e.mode === "daily" ? e.qty + " d" : (e.pStart || "") + "–" + (e.pEnd || "")}`, debit: e.amount, credit: 0 }); }
+  for (const q of live(s.cheques)) if (q.dir === "in" && q.client === clientId)
+    rows.push({ date: q.due || q.date, what: (q.method === "cheque" ? "Cheque " + (q.no || "") : q.method === "cash" ? "Cash" : "Transfer") + (q.status === "bounced" ? " (bounced)" : q.status === "pending" ? " (not yet due)" : ""), debit: 0, credit: q.status === "bounced" ? 0 : q.amount, status: q.status });
+  rows.sort((a, b) => a.date.localeCompare(b.date));
+  let bal = +c.opening || 0;
+  const before = rows.filter((r) => from && r.date < from);
+  for (const r of before) bal += r.debit - r.credit;
+  const open = r2(bal), out = [];
+  for (const r of rows.filter((r) => (!from || r.date >= from) && (!to || r.date <= to))) { bal += r.debit - r.credit; out.push({ ...r, balance: r2(bal) }); }
+  return { client: c, opening: open, rows: out, debit: r2(out.reduce((n, r) => n + r.debit, 0)), credit: r2(out.reduce((n, r) => n + r.credit, 0)), balance: r2(bal) };
+}
+export function statementHTML(s, clientId, { from = "", to = "", company = "", currency = s.settings.currency, rtl = false } = {}) {
+  const st = statement(s, clientId, { from, to }), esc = (x) => String(x ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fmt = (n) => (+n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const L = rtl ? { t: "كشف حساب", date: "التاريخ", what: "البيان", debit: "مدين", credit: "دائن", bal: "الرصيد", open: "رصيد أول المدة", total: "الإجمالي" }
+    : { t: "Statement of account", date: "Date", what: "Details", debit: "Debit", credit: "Credit", bal: "Balance", open: "Opening balance", total: "Total" };
+  return `<!doctype html><html dir="${rtl ? "rtl" : "ltr"}"><head><meta charset="utf-8"><title>${esc(L.t)} — ${esc(st.client.name)}</title><style>body{font:14px system-ui,Segoe UI,Tahoma,sans-serif;margin:32px;color:#0F172A}h1{font-size:20px;margin:0 0 4px}.m{color:#475569;margin:2px 0}table{border-collapse:collapse;width:100%;margin-top:16px}th,td{border-bottom:1px solid #CBD5E1;padding:6px 8px;text-align:start}.n{text-align:end;font-variant-numeric:tabular-nums}tfoot th{border-top:2px solid #0F172A}</style></head><body>
+<p class="m">${esc(company)}</p><h1>${L.t} — ${esc(st.client.name)}</h1><p class="m">${from || to ? showDate(from) + " – " + showDate(to || isoDay()) : showDate(isoDay())}</p>
+<table><thead><tr><th>${L.date}</th><th>${L.what}</th><th class="n">${L.debit}</th><th class="n">${L.credit}</th><th class="n">${L.bal}</th></tr></thead><tbody>
+<tr><td></td><td>${L.open}</td><td></td><td></td><td class="n">${fmt(st.opening)}</td></tr>
+${st.rows.map((r) => `<tr><td>${showDate(r.date)}</td><td>${esc(r.what)}</td><td class="n">${r.debit ? fmt(r.debit) : ""}</td><td class="n">${r.credit ? fmt(r.credit) : ""}</td><td class="n">${fmt(r.balance)}</td></tr>`).join("\n")}
+</tbody><tfoot><tr><th></th><th>${L.total}</th><th class="n">${fmt(st.debit)}</th><th class="n">${fmt(st.credit)}</th><th class="n">${fmt(st.balance)} ${esc(currency)}</th></tr></tfoot></table></body></html>`;
+}
+/** The phone notification for what needs you (overdue / today's cheques, jobs past their end, service due, stock out):
+    one at 09:00 — today if it's before 9, else tomorrow — or null when nothing does. Re-made each time Fleet changes. */
+export function reminderNote(s, now = Date.now()) {
+  const today = isoDay(new Date(now)), w = warnings(s, today).filter((x) => x.level !== "info");
+  if (!w.length) return null;
+  const d = new Date(now); d.setHours(9, 0, 0, 0); if (d.getTime() <= now) d.setDate(d.getDate() + 1);
+  const what = { chequeOverdue: "cheque overdue", chequeToday: "cheque due today", jobPast: "job past its end", jobEnding: "job ending", lowStock: "item low in the store", serviceDue: "crane due for service", serviceSoon: "service soon" };
+  const counts = {}; for (const x of w) counts[x.kind] = (counts[x.kind] || 0) + 1;
+  return { id: "fleet-needs", at: d.getTime(), n: w.length, counts, title: w.length === 1 ? "Fleet: 1 thing needs you" : `Fleet: ${w.length} things need you`, body: Object.entries(counts).map(([k, n]) => `${n} ${what[k] || k}`).join(" · ") };
 }
