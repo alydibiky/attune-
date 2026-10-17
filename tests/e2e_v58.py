@@ -150,6 +150,7 @@ print("at 4 m:", capacity_at(chart, 4))
     page.click("[data-testid=code-build]")
     page.wait_for_selector("[data-testid=code-badge]:has-text('Not passing yet')", timeout=120000)
     check(page.locator("[data-testid=code-fix]").count() == 1, "if it can't make the tests pass it says so, and offers to keep fixing")
+    page.click("[data-testid=code-new]"); page.wait_for_timeout(200)   # v6.32 look B: the list is on the start screen
     check(page.locator("text=Your programs").count() == 1 and page.locator("text=passing").count() >= 1, "programs are kept in a list")
     page.screenshot(path=HERE + "/v58-workbench.png", full_page=True)
     ctx.close()

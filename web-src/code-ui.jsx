@@ -2,17 +2,11 @@
    See code.js for the loop and sandbox.js for where code runs.                        */
 import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useRef } from "react";
-import { Code2, Play, Wrench, Terminal, Loader2, Copy, Save, Share2, Square, CheckCircle2, AlertTriangle, Eye, Trash2, Plus, RefreshCw, Maximize2, X } from "lucide-react";
+import { Code2, Play, Wrench, Terminal, Loader2, Copy, Save, Share2, Square, CheckCircle2, AlertTriangle, Eye, Trash2, Plus, RefreshCw, Maximize2, X, Send } from "lucide-react";
 import { tr } from "./i18n.js";
 import { runCode, runHtml, htmlDoc, warmUp, pythonAvailable, stop as stopSandbox, LANGS, normLang } from "./sandbox.js";
 import { workLoop, guessLang, countTests, judge, errorSummary, loadProjects, saveProjects, PASS_MARK } from "./code.js";
 import { getPower } from "./power.js";
-import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
-// v6.27: two panels on a computer where the right-hand part sits in the middle of the phone's order — the grid places
-// SPLIT_R in the right column across every row (the last row, 1fr, takes up its extra height); everything else stays
-// in the left column in its phone order. Below 1024 px none of this applies.
-const SPLIT = "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] lg:grid-rows-[repeat(6,auto)_1fr] lg:gap-x-6 lg:gap-y-0 lg:items-start";
-const SPLIT_R = "lg:col-start-2 lg:row-start-1 lg:row-span-7 min-w-0";
 
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const runAny = (lang, code) => (lang === "html" ? runHtml(code) : runCode({ lang, code }));
@@ -142,7 +136,12 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
   const [change, setChange] = useState("");
   const [py, setPy] = useState({ state: "checking" });
   const [pageErrors, setPageErrors] = useState([]);
-  const [view, setView] = useState("steps");            // v6.15: steps | code | preview
+  // v6.32 look B (Ali: "Coder B"): a conversation with the coder — your ask, each step, the code in a card, then "change it"
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [asks, setAsks] = useState([]);                  // earlier asks in this sitting: [{ text, steps }]
+  const [curAsk, setCurAsk] = useState("");
+  const setView = (v) => { setCodeOpen(v === "code"); setPreviewOpen(v === "preview"); };
   const stopRef = useRef(false);
 
   // Python takes a few seconds to start the first time: start it now.
@@ -161,7 +160,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
   useEffect(() => {
     if (!incoming) return;
     const p = { id: newId(), title: tr("From chat"), task: incoming.task || "", lang: incoming.lang, code: incoming.code, at: Date.now(), status: "draft" };
-    keep(p); setRes(incoming.result || null); setSteps([]); setView(p.lang === "html" ? "preview" : "code");
+    keep(p); setRes(incoming.result || null); setSteps([]); setAsks([]); setCurAsk(""); setView("none");
     clearIncoming && clearIncoming();
   }, [incoming]);
 
@@ -203,7 +202,9 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
     const lang = fresh ? (langPick === "auto" ? guessLang(t) : langPick) : cur.lang;
     const base = fresh ? { id: newId(), title: t.slice(0, 60), task: t, lang, code: "", at: Date.now() } : { ...cur };
     keep(base);
-    setBusy(true); setSteps([]); setRes(null); setLive(""); stopRef.current = false; setPageErrors([]); setView("steps");
+    if (fresh) { setAsks([]); setCurAsk(t); }
+    else { if (steps.length || curAsk) setAsks((a) => a.concat([{ text: curAsk || (cur && cur.task) || "", steps }])); setCurAsk(changeText || tr("Fix it automatically")); }
+    setBusy(true); setSteps([]); setRes(null); setLive(""); stopRef.current = false; setPageErrors([]); setCodeOpen(false);
     try {
       const out = await workLoop({ task: t || tr("Make this program work correctly."), lang, code: fresh ? "" : cur.code, change: changeText || "",
         llm: llmOr, run: runAny, onEvent, isStopped: () => stopRef.current, maxRounds: Math.max(4, getPower().codeRounds || 4) });
@@ -241,127 +242,138 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
     }
   };
 
-  const chip = (on) => `px-2.5 py-1 rounded-lg text-[12px] border ${on ? "bg-teal-500 border-teal-500 text-slate-950 font-medium" : "border-slate-700 text-slate-300"}`;
+  const chip = (on) => `px-3 py-1.5 rounded-full text-[12px] border ${on ? "bg-teal-500 border-teal-500 text-slate-950 font-semibold" : "border-slate-700 text-slate-300"}`;
   const isHtml = cur && cur.lang === "html";
-  const views = [["steps", tr("Steps")], ["code", tr("Code")], ...(isHtml ? [["preview", tr("Preview")]] : [])];
-  const v = view === "preview" && !isHtml ? "code" : view;
-  const stepIcon = (k) => k === "bad" ? <AlertTriangle size={13} className="text-rose-300" /> : k === "warn" ? <AlertTriangle size={13} className="text-amber-300" /> : <CheckCircle2 size={13} className="text-emerald-300" />;
+  const dot = (k) => k === "bad" ? "bg-rose-500/15 text-rose-300" : k === "warn" ? "bg-amber-500/15 text-amber-300" : "bg-emerald-500/15 text-emerald-300";
+  const stepIcon = (k) => <span className={"mt-0.5 shrink-0 w-[22px] h-[22px] rounded-full grid place-items-center " + dot(k)}>{k === "bad" ? <X size={12} /> : k === "warn" ? <AlertTriangle size={11} /> : <CheckCircle2 size={12} />}</span>;
+  const Steps = ({ list, live: lv, working }) => (list.length || working ? (
+    <div className="space-y-2" data-testid={working !== undefined ? "code-steps" : undefined}>
+      {list.map((st, i) => (
+        <p key={i} data-testid="code-step" className={`text-[13px] leading-relaxed flex gap-2.5 items-start ${st.kind === "bad" ? "text-rose-200" : st.kind === "warn" ? "text-amber-100" : "text-slate-200"}`} dir="auto">
+          {stepIcon(st.kind)}<span>{String(st.text).replace(/^[✓✗]\s*/, "")}</span></p>
+      ))}
+      {working ? <p className="text-[13px] text-teal-300 flex items-center gap-2.5"><span className="w-[22px] h-[22px] grid place-items-center"><Loader2 size={14} className="animate-spin" /></span>{tr("Working…")}</p> : null}
+      {lv ? <pre className="att-scroll ms-8 text-[11px] font-mono text-slate-500 whitespace-pre-wrap max-h-40 overflow-auto" dir="ltr">{lv.split("\n").slice(-14).join("\n")}</pre> : null}
+    </div>) : null);
+  const Bubble = ({ text }) => <div className="flex justify-end"><p className="max-w-[85%] rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[14px] leading-snug text-slate-100" style={{ background: "rgba(79,194,175,.13)" }} dir="auto" data-testid="code-ask">{text}</p></div>;
+  const STARTERS = [
+    ["Crane capacity", "A function that finds a crane's capacity at any radius from its load chart; between two rows use the lower value", "python"],
+    ["VAT invoice page", "A web page that makes an invoice: items, quantity, price, 14% VAT and the total in EGP, ready to print", "html"],
+    ["Clean a CSV", "Read a CSV of fuel fill-ups (date, litres, km) and print litres per 100 km for each fill-up and the average", "python"],
+    ["Unit converter", "A small converter between tonnes, kilograms and pounds, and metres and feet, with tests", "javascript"],
+  ];
   const pyLine = (
     <p className="text-[11px] text-slate-500" data-testid="py-status">
       {py.state === "ready" ? tr("Python {v} ready · numpy, pandas, sympy · no internet", { v: "3.14" }) : py.state === "starting" || py.state === "checking" ? tr("Starting Python…")
         : py.state === "missing" ? tr("Python is not in this build — JavaScript and web pages still work.") : tr("Python could not start: {e}", { e: py.error || "" })}
     </p>);
-  const openProject = (p) => { setCur(p); setRes(null); setSteps([]); setView(p.lang === "html" ? "preview" : "code"); };
+  const openProject = (p) => { setCur(p); setRes(null); setSteps([]); setAsks([]); setCurAsk(""); setView(p.lang === "html" ? "preview" : "none"); };
+  const lines = cur && cur.code ? cur.code.split("\n").length : 0;
   return (
-    <div className="space-y-3 pb-28" data-testid="code-page">
-      {/* v6.15 look B (Ali's pick): your programs in a row, then the task, its steps, and the result */}
+    <div className="space-y-4 pb-32 max-w-3xl lg:mx-auto" data-testid="code-page">
       <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold text-white flex-1 flex items-center gap-1.5"><Code2 size={18} className="text-sky-300" />{tr("Code")}</h2>
-        {cur ? <button onClick={() => { setCur(null); setRes(null); setSteps([]); }} data-testid="code-new" className="px-3 min-h-[40px] rounded-lg border border-slate-700 text-slate-200 text-[13px] flex items-center gap-1"><Plus size={13} />{tr("New")}</button> : null}
+        <h2 className="text-lg font-semibold text-white flex-1 flex items-center gap-2"><span className="w-8 h-8 rounded-[10px] grid place-items-center" style={{ background: "rgba(79,194,175,.14)" }}><Code2 size={17} className="text-teal-300" /></span>{tr("Code")}</h2>
+        {cur ? <button onClick={() => { setCur(null); setRes(null); setSteps([]); setAsks([]); setCurAsk(""); }} data-testid="code-new" className="px-3 min-h-[38px] rounded-full border border-slate-700 text-slate-200 text-[13px] flex items-center gap-1"><Plus size={13} />{tr("New")}</button> : null}
       </div>
-      {projects.length ? <p className="text-[11px] uppercase tracking-wider text-slate-500 -mb-1">{tr("Your programs")}</p> : null}
-      {projects.length ? (
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" data-testid="code-projects">
-          {projects.slice(0, 12).map((p) => (
-            <div key={p.id} className={`shrink-0 w-40 rounded-xl border p-2.5 ${cur && cur.id === p.id ? "border-sky-500 bg-sky-500/10" : "border-slate-800 bg-slate-900"}`}>
-              <button onClick={() => openProject(p)} className="w-full text-start">
-                <span className="block text-[13px] text-slate-100 font-medium truncate" dir="auto">{p.title || tr("Untitled")}</span>
-                <span className={`block text-[11px] mt-0.5 ${p.status === "passed" ? "text-emerald-300" : p.status === "failing" ? "text-rose-300" : "text-slate-500"}`}>{tr((LANGS[p.lang] || LANGS.python).label)} · {p.status === "passed" ? tr("passing") : p.status === "failing" ? tr("not passing") : tr("draft")}</span>
-              </button>
-              <button onClick={async () => { if (!(await askConfirm("Delete this project?"))) return; const next = projects.filter((x) => x.id !== p.id); setProjects(next); saveProjects(next); if (cur && cur.id === p.id) setCur(null); }}
-                className="mt-1 text-[11px] text-slate-500 hover:text-rose-400 flex items-center gap-1" aria-label={tr("Delete")}><Trash2 size={11} />{tr("Delete")}</button>
-            </div>
-          ))}
-        </div>
-      ) : null}
 
       {!cur ? (
-        <div className={PANES}><div className={LEFT}>
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-3 space-y-2">
-          <p className="text-sm text-slate-100 font-medium">{tr("Code that is tested before you get it")}</p>
-          <p className="text-[12px] text-slate-400 leading-relaxed">{tr("The model writes the program and its tests, the phone runs them, and any error goes straight back to the model to fix — until the tests pass. Offline, in a locked sandbox.")}</p>
-          <textarea value={task} onChange={(e) => setTask(e.target.value)} rows={3} data-testid="code-task" dir="auto"
-            placeholder={tr("What should it do? e.g. “A function that finds a crane's capacity at any radius from a load chart table”")}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder:text-slate-600" />
-          <div className="flex flex-wrap items-center gap-1.5">
-            {[["auto", "Auto"], ["python", "Python"], ["javascript", "JavaScript"], ["html", "Web page"]].map(([k, l]) => (
-              <button key={k} onClick={() => setLangPick(k)} className={chip(langPick === k)} data-testid={"code-lang-" + k}>{tr(l)}</button>
-            ))}
-            <button onClick={() => run({ fresh: true })} disabled={!task.trim()} data-testid="code-build"
-              className="ms-auto px-4 min-h-[44px] rounded-xl bg-sky-500 text-slate-950 text-sm font-semibold disabled:opacity-40 flex items-center gap-1.5"><Wrench size={14} />{tr("Build & test")}</button>
+        <>
+          <div className="pt-2">
+            <p className="text-[19px] font-semibold text-white">{tr("What should I build?")}</p>
+            <p className="text-[12.5px] text-slate-400 mt-1 leading-relaxed">{tr("I write the program and its tests, run them on this phone, and fix every error before you get it. Offline, in a locked sandbox.")}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2" data-testid="code-starters">
+            {STARTERS.map(([title, ask, lang]) => (
+              <button key={title} onClick={() => { setTask(tr(ask)); setLangPick(lang); }} className="text-start rounded-2xl border border-slate-800 bg-slate-900 p-3 hover:border-teal-600">
+                <span className="block text-[13px] font-semibold text-slate-100">{tr(title)}</span>
+                <span className="block text-[11.5px] text-slate-500 mt-0.5">{tr((LANGS[lang] || LANGS.python).label)}</span>
+              </button>))}
+          </div>
+          {projects.length ? <>
+            <p className="text-[11px] uppercase tracking-wider text-slate-500 -mb-2">{tr("Your programs")}</p>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none]" data-testid="code-projects">
+              {projects.slice(0, 12).map((p) => (
+                <div key={p.id} className="shrink-0 w-40 rounded-2xl border border-slate-800 bg-slate-900 p-2.5">
+                  <button onClick={() => openProject(p)} className="w-full text-start">
+                    <span className="block text-[13px] text-slate-100 font-medium truncate" dir="auto">{p.title || tr("Untitled")}</span>
+                    <span className={`block text-[11px] mt-0.5 ${p.status === "passed" ? "text-emerald-300" : p.status === "failing" ? "text-rose-300" : "text-slate-500"}`}>{tr((LANGS[p.lang] || LANGS.python).label)} · {p.status === "passed" ? tr("passing") : p.status === "failing" ? tr("not passing") : tr("draft")}</span>
+                  </button>
+                  <button onClick={async () => { if (!(await askConfirm("Delete this project?"))) return; const next = projects.filter((x) => x.id !== p.id); setProjects(next); saveProjects(next); }}
+                    className="mt-1 text-[11px] text-slate-500 hover:text-rose-400 flex items-center gap-1" aria-label={tr("Delete")}><Trash2 size={11} />{tr("Delete")}</button>
+                </div>))}
+            </div></> : null}
+          <div className="rounded-2xl border border-slate-700 bg-slate-900 p-2.5 space-y-2 focus-within:border-teal-500">
+            <textarea value={task} onChange={(e) => setTask(e.target.value)} rows={3} data-testid="code-task" dir="auto"
+              placeholder={tr("What should it do? e.g. “A function that finds a crane's capacity at any radius from a load chart table”")}
+              className="w-full bg-transparent p-1.5 text-sm text-slate-100 placeholder:text-slate-600 resize-none focus:outline-none" />
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[["auto", "Auto"], ["python", "Python"], ["javascript", "JavaScript"], ["html", "Web page"]].map(([k, l]) => (
+                <button key={k} onClick={() => setLangPick(k)} className={chip(langPick === k)} data-testid={"code-lang-" + k}>{tr(l)}</button>
+              ))}
+              <button onClick={() => run({ fresh: true })} disabled={!task.trim()} data-testid="code-build"
+                className="ms-auto px-4 min-h-[42px] rounded-full bg-teal-500 text-slate-950 text-sm font-semibold disabled:opacity-40 flex items-center gap-1.5"><Wrench size={14} />{tr("Build & test")}</button>
+            </div>
           </div>
           {pyLine}
-        </div>
-        </div><div className={RIGHT + " hidden lg:block"}>
-          <DeskEmpty icon={Code2} title={tr("The program and its tests appear here")} text={tr("Each step, the code, a live preview for web pages, and whether the tests passed.")} />
-        </div></div>
+        </>
       ) : (
-        // v6.27 computer layout (option A): the task, Run / Fix and "change it" on the left; the steps, the code, the
-        // preview and the result on the right (placed by the grid, so a phone keeps its order)
-        <div className={"space-y-3 " + SPLIT}>
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-3 lg:col-start-1">
-            <p className="text-[10.5px] uppercase tracking-wider text-slate-500">{tr("Your task")}</p>
-            <p className="text-[14.5px] text-slate-100 leading-snug mt-0.5" dir="auto">{cur.task || cur.title}</p>
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              <span className="text-[11px] px-2 py-0.5 rounded-md bg-cyan-950 text-cyan-200">{tr((LANGS[cur.lang] || LANGS.python).label)}</span>
+        <>
+          {asks.map((a, i) => <div key={i} className="space-y-3 opacity-80"><Bubble text={a.text} /><Steps list={a.steps} /></div>)}
+          <Bubble text={curAsk || cur.task || cur.title} />
+          <Steps list={steps} live={live} working={busy} />
+
+          {/* the code, in a card */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden">
+            <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-b border-slate-800/80">
+              <span className="text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">{tr((LANGS[cur.lang] || LANGS.python).label)}</span>
+              {lines ? <span className="text-[11px] text-slate-500">{tr("{n} lines", { n: lines })}</span> : null}
               {cur.status === "passed" && verdict && verdict.passed ? (
                 <span data-testid="code-badge" className="text-[11px] px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 flex items-center gap-1">
                   <CheckCircle2 size={11} />{cur.tests ? tr("Tested on this phone: {n} passed", { n: cur.tests }) : tr("Ran on this phone")}</span>
               ) : cur.status === "failing" ? <span data-testid="code-badge" className="text-[11px] px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-300">{tr("Not passing yet")}</span> : null}
-              {busy ? <button onClick={doStop} data-testid="code-stop" className="ms-auto px-3 min-h-[36px] rounded-lg bg-rose-500/20 border border-rose-800 text-rose-200 text-[13px] flex items-center gap-1.5"><Square size={12} />{tr("Stop")}</button> : null}
+              <span className="ms-auto flex gap-1">
+                {isHtml ? <button onClick={() => setPreviewOpen(!previewOpen)} data-testid="code-view-preview" className={chip(previewOpen)}><Eye size={12} className="inline me-1" />{tr("Preview")}</button> : null}
+                <button onClick={() => setCodeOpen(!codeOpen)} data-testid="code-view-code" className={chip(codeOpen)}><Code2 size={12} className="inline me-1" />{codeOpen ? tr("Hide code") : tr("Show code")}</button>
+              </span>
+            </div>
+            {!codeOpen && cur.code ? (
+              <button onClick={() => setCodeOpen(true)} className="w-full text-start px-3 py-2.5" dir="ltr">
+                <pre className="text-[12px] font-mono text-sky-100/90 whitespace-pre overflow-hidden">{cur.code.split("\n").slice(0, 3).join("\n")}</pre>
+                {lines > 3 ? <span className="text-[11.5px] text-slate-500 font-sans">… {tr("tap to see all {n} lines", { n: lines })}</span> : null}
+              </button>) : null}
+            <div className={codeOpen ? "" : "hidden"}>
+              <textarea value={cur.code} onChange={(e) => setCur({ ...cur, code: e.target.value, status: "edited" })} data-testid="code-editor" dir="ltr" spellCheck={false}
+                rows={Math.min(24, Math.max(10, (cur.code || "").split("\n").length + 1))}
+                className="att-scroll w-full bg-transparent p-3 text-[12.5px] leading-relaxed font-mono text-sky-50 whitespace-pre overflow-auto focus:outline-none" style={{ tabSize: 4 }} />
             </div>
           </div>
 
-          <div className={"space-y-3 " + SPLIT_R}>
-          <div className="flex rounded-xl border border-slate-800 overflow-hidden" role="tablist">
-            {views.map(([k, l]) => <button key={k} role="tab" aria-selected={v === k} onClick={() => setView(k)} data-testid={"code-view-" + k}
-              className={`flex-1 min-h-[42px] text-[13px] ${v === k ? "bg-slate-800 text-white font-medium" : "text-slate-400"}`}>{l}</button>)}
-          </div>
-
-          <div className={v === "steps" ? "" : "hidden"}>
-            {steps.length || busy ? (
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-3 space-y-1.5" data-testid="code-steps">
-                {steps.map((st, i) => (
-                  <p key={i} data-testid="code-step" className={`text-[13px] leading-relaxed flex gap-2 items-start ${st.kind === "bad" ? "text-rose-300" : st.kind === "warn" ? "text-amber-200" : "text-slate-200"}`} dir="auto">
-                    <span className="mt-1 shrink-0">{stepIcon(st.kind)}</span><span>{st.text}</span></p>
-                ))}
-                {busy ? <p className="text-[13px] text-sky-300 flex items-center gap-2"><Loader2 size={13} className="animate-spin" />{tr("Working…")}</p> : null}
-                {live ? <pre className="att-scroll mt-1 text-[11px] font-mono text-slate-400 whitespace-pre-wrap max-h-40 overflow-auto" dir="ltr">{live.split("\n").slice(-14).join("\n")}</pre> : null}
-              </div>
-            ) : <p className="text-[12.5px] text-slate-500 py-3">{tr("No steps yet — Run it, or write a change below.")}</p>}
-          </div>
-
-          <div className={v === "code" ? "" : "hidden"}>
-            <textarea value={cur.code} onChange={(e) => setCur({ ...cur, code: e.target.value, status: "edited" })} data-testid="code-editor" dir="ltr" spellCheck={false}
-              rows={Math.min(24, Math.max(10, (cur.code || "").split("\n").length + 1))}
-              className="att-scroll w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-[12.5px] leading-relaxed font-mono text-sky-50 whitespace-pre overflow-auto" style={{ tabSize: 4 }} />
-          </div>
-
-          {isHtml && v === "preview" ? <HtmlPreview code={cur.code} onReport={setPageErrors} /> : null}
+          {isHtml && previewOpen ? <HtmlPreview code={cur.code} onReport={setPageErrors} /> : null}
           {isHtml && pageErrors.length ? <p className="text-[11px] text-rose-300" dir="ltr">{pageErrors.slice(-3).join(" · ")}</p> : null}
           <RunOutput res={res} lang={cur.lang} code={cur.code} />
-          </div>
 
-          <div className="flex flex-wrap gap-1.5 lg:col-start-1">
-            <button onClick={runOnly} disabled={busy || !cur.code} data-testid="code-run" className="px-4 min-h-[44px] rounded-xl bg-sky-500 text-slate-950 text-[13px] font-semibold flex items-center gap-1.5 disabled:opacity-40">
+          <div className="flex flex-wrap gap-1.5">
+            <button onClick={runOnly} disabled={busy || !cur.code} data-testid="code-run" className="px-4 min-h-[40px] rounded-full bg-teal-500 text-slate-950 text-[13px] font-semibold flex items-center gap-1.5 disabled:opacity-40">
               {isHtml ? <Eye size={14} /> : <Play size={14} />}{isHtml ? tr("Check the page") : tr("Run")}</button>
             {verdict && !verdict.passed ? (
-              <button onClick={() => run({})} disabled={busy} data-testid="code-fix" className="px-3 min-h-[44px] rounded-xl bg-amber-500/15 border border-amber-800 text-amber-200 text-[13px] flex items-center gap-1 disabled:opacity-40"><Wrench size={13} />{tr("Fix it automatically")}</button>
+              <button onClick={() => run({})} disabled={busy} data-testid="code-fix" className="px-3 min-h-[40px] rounded-full bg-amber-500/15 border border-amber-800 text-amber-200 text-[13px] flex items-center gap-1 disabled:opacity-40"><Wrench size={13} />{tr("Fix it automatically")}</button>
             ) : null}
-            <button onClick={() => { try { navigator.clipboard.writeText(cur.code); } catch (e) {} flash(tr("Copied")); }} className="px-3 min-h-[44px] rounded-xl border border-slate-700 text-slate-300 text-[13px] flex items-center gap-1"><Copy size={13} />{tr("Copy")}</button>
-            <button onClick={save} data-testid="code-save" className="px-3 min-h-[44px] rounded-xl border border-slate-700 text-slate-300 text-[13px] flex items-center gap-1"><Save size={13} />{tr("Save .{e}", { e: ext })}</button>
-            {share ? <button onClick={() => share(cur.code)} className="px-3 min-h-[44px] rounded-xl border border-slate-700 text-slate-300 text-[13px] flex items-center gap-1"><Share2 size={13} />{tr("Share")}</button> : null}
+            <button onClick={() => { try { navigator.clipboard.writeText(cur.code); } catch (e) {} flash(tr("Copied")); }} className="px-3 min-h-[40px] rounded-full border border-slate-700 text-slate-300 text-[13px] flex items-center gap-1"><Copy size={13} />{tr("Copy")}</button>
+            <button onClick={save} data-testid="code-save" className="px-3 min-h-[40px] rounded-full border border-slate-700 text-slate-300 text-[13px] flex items-center gap-1"><Save size={13} />{tr("Save .{e}", { e: ext })}</button>
+            {share ? <button onClick={() => share(cur.code)} className="px-3 min-h-[40px] rounded-full border border-slate-700 text-slate-300 text-[13px] flex items-center gap-1"><Share2 size={13} />{tr("Share")}</button> : null}
+            {busy ? <button onClick={doStop} data-testid="code-stop" className="ms-auto px-3 min-h-[40px] rounded-full bg-rose-500/20 border border-rose-800 text-rose-200 text-[13px] flex items-center gap-1.5"><Square size={12} />{tr("Stop")}</button> : null}
           </div>
-          <div className="lg:col-start-1">{pyLine}</div>
+          {pyLine}
 
-          <div className="flex gap-1.5 items-center bg-slate-900 border border-slate-800 rounded-2xl ps-3 pe-1.5 py-1.5 lg:col-start-1">
+          {/* ask for a change, like the next message to the coder */}
+          <div className="sticky bottom-3 z-10 flex gap-1.5 items-center bg-slate-900 border border-slate-700 rounded-full ps-4 pe-1.5 py-1.5 shadow-xl shadow-black/40 focus-within:border-teal-500">
             <input value={change} onChange={(e) => setChange(e.target.value)} data-testid="code-change" dir="auto"
               onKeyDown={(e) => { if (e.key === "Enter" && change.trim() && !busy) run({ changeText: change.trim() }); }}
-              placeholder={tr("Change it… e.g. “also show the total in EGP”")} className="flex-1 min-w-0 bg-transparent py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none" />
-            <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go"
-              className="px-4 min-h-[40px] rounded-xl bg-sky-500 text-slate-950 text-sm font-semibold disabled:opacity-40">{tr("Change")}</button>
+              placeholder={tr("Ask for a change… e.g. “also show the total in EGP”")} className="flex-1 min-w-0 bg-transparent py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none" />
+            <button onClick={() => run({ changeText: change.trim() })} disabled={busy || !change.trim()} data-testid="code-change-go" aria-label={tr("Change")}
+              className="w-10 h-10 rounded-full bg-teal-500 text-slate-950 grid place-items-center disabled:opacity-40"><Send size={15} /></button>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
