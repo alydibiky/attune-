@@ -1553,7 +1553,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const seen = new Set(sources.map((x) => x.url));
         const extraPages = [...full.values()].filter((h) => h.url && !seen.has(h.url));
         const forSheet = [...sources.map((x) => (full.has(x.url) ? { ...x, text: full.get(x.url).text } : x)), ...extraPages];
-        const fs = factSheet((webCtx && webCtx.question) || typed, forSheet, /[؀-ۿ]/.test(typed || ""));
+        const fs = factSheet((webCtx && webCtx.question) || typed, forSheet, /[؀-ۿ]/.test(typed || ""), compareParts((webCtx && webCtx.question) || typed));
         if (fs.md) {
           answer = String(answer).trim() + "\n\n" + fs.md; extra.factSheet = fs.rows.length + fs.tables.length;
           if (extraPages.length) sources = [...sources, ...extraPages.map((h) => ({ ...h, text: String(h.text || "").slice(0, 600) }))];

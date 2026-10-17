@@ -140,6 +140,9 @@ export function keyTerms(question) {
 }
 /** Does this page name what was asked about? (title, address and the first part of its text) */
 export function onTopic(hit, question) {
+  // v6.32: "A vs B" — a page about either one is on topic (most pages are about one car / phone, and they hold its figures)
+  const cmp = compareParts(question);
+  if (cmp) return onTopic(hit, cmp[0]) || onTopic(hit, cmp[1]);
   const { named, content } = keyTerms(question);
   const hay = normT((hit.title || "") + " " + decodeURIComponentSafe(hit.url || "") + " " + String(hit.text || "").slice(0, 6000));
   const has = (t) => hay.includes(t) || (/\d/.test(t) && hay.replace(/[\s,.-]/g, "").includes(t.replace(/[\s,.-]/g, "")));

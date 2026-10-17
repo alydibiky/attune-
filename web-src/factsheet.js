@@ -102,8 +102,16 @@ export function tablesIn(text, maxRows = 9, maxCols = 6) {
  * The facts sheet for a question from the ranked sources → { md, rows, tables } (md "" when
  * too little was found to be worth showing).
  */
-export function factSheet(question, sources, ar = false) {
+export function factSheet(question, sources, ar = false, parts = null) {
   const q = String(question || "");
+  // v6.32 "A vs B": a side-by-side table (each figure under the car / phone / machine it belongs to) instead of one mixed list
+  if (parts) {
+    const h = headToHead(sources, parts, ar);
+    if (h.rows.length >= 3) {
+      const rest = factSheet(question, sources, ar);
+      return { md: (h.md + (rest.tables.length ? "\n" + rest.md.slice(rest.md.indexOf("####") >= 0 ? rest.md.indexOf("####") : rest.md.length) : "")).trim(), rows: h.rows, tables: rest.tables, compare: true };
+    }
+  }
   const found = new Map();           // id → Map(norm → { shown, srcs:Set })
   (sources || []).forEach((h, i) => {
     for (const f of factsIn((h && h.text) || "")) {
@@ -159,3 +167,79 @@ function siteOf(url) { try { return new URL(url).hostname.replace(/^www\./, "");
 
 /** Tell the model the sheet exists, so it writes the meaning and the few key figures only. */
 export const SHEET_NOTE = "\n\n(The app adds a table of the exact figures copied from the sources under your answer. So: give the direct answer first, then what matters — the key 3–6 points, comparisons and what they mean for the person — citing sources. Quote only the most important figures.)";
+
+// ---- v6.32 web comparisons as side-by-side tables (roadmap "Other": "web comparisons as side-by-side tables") -------------------
+// Which side a figure belongs to: the page's title, a line that names only one of the two (it stays the subject until the other is
+// named), or the column of a "Spec | A | B" table. A line naming both is not used (the figure could be either's).
+const STOP = new Set(["co", "and", "the", "new", "vs", "with", "plus", "pro", "max", "ultra", "مع", "و", "ال"]);
+const esc = (w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** The words that name a side and not the other: "Geely Galaxy M9" vs "Lynk & Co 900" → geely, galaxy, m9 | lynk. */
+export function sideWords(name, other) {
+  const toks = (x) => String(x || "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const o = new Set(toks(other));
+  let w = toks(name).filter((t) => !o.has(t) && !STOP.has(t) && /\p{L}/u.test(t) && t.length >= 2);
+  if (!w.length) w = toks(name).filter((t) => !o.has(t) && t.length >= 2);       // "iPhone 15" vs "iPhone 16": the number
+  return w.map((t) => new RegExp("(^|[^\\p{L}\\p{N}])" + esc(t) + "($|[^\\p{L}\\p{N}])", "iu"));
+}
+const names = (t, ws) => ws.some((re) => re.test(String(t || "")));
+const num = (v) => { const m = String(v).replace(/,(?=\d{3}\b)/g, "").match(/\d+(?:\.\d+)?/); return m ? +m[0] : null; };
+const unitOf = (v) => String(v).toLowerCase().replace(/[\d.,\s~≈-]+/g, "").replace(/✓.*/, "");
+// more is better / less is better (price: less; the rest is a fact, not a winner)
+const MORE = new Set(["power", "torque", "battery", "range", "top", "charge", "seats", "capacity", "boom", "storage", "ram", "camera"]);
+const LESS = new Set(["accel", "price", "fuel"]);
+
+/** sources + [a, b] → { md, rows: [{ id, label, a, b, better }] } */
+export function headToHead(sources, [a, b], ar = false) {
+  const wa = sideWords(a, b), wb = sideWords(b, a);
+  const found = { A: new Map(), B: new Map() };
+  const add = (side, id, value, i) => {
+    if (!side) return;
+    const m = found[side]; if (!m.has(id)) m.set(id, new Map());
+    const k = norm(value), mm = m.get(id);
+    if (!mm.has(k)) mm.set(k, { shown: value, srcs: new Set() });
+    mm.get(k).srcs.add(i + 1);
+  };
+  (sources || []).forEach((h, i) => {
+    const text = String((h && h.text) || ""), head = (h && (h.title || "")) + " " + (h && (h.url || ""));
+    const ta = names(head, wa), tb = names(head, wb);
+    let side = ta && !tb ? "A" : tb && !ta ? "B" : null;
+    // "Spec | A | B" tables
+    for (const t of tablesIn(text, 40, 6)) {
+      const ia = t[0].findIndex((c) => names(c, wa) && !names(c, wb)), ib = t[0].findIndex((c) => names(c, wb) && !names(c, wa));
+      if (ia < 1 || ib < 1) continue;
+      for (const r of t.slice(1)) {
+        const at = ATTRS.find(([, , , key]) => key.test(r[0] || "")); if (!at) continue;
+        for (const [col, sd] of [[ia, "A"], [ib, "B"]]) { const c = r[col] || ""; const m = c.match(at[4]); const v = m ? m[0] : /\d/.test(c) && c.length <= 40 ? c : null; if (v) add(sd, at[0], v.trim(), i); }
+      }
+    }
+    for (const raw of text.split(/\n|(?<=[.!?;])\s+(?=[A-Z0-9؀-ۿ])/)) {
+      if (raw.includes(" | ") && raw.split("|").length > 3) continue;                     // (table rows: read above)
+      const la = names(raw, wa), lb = names(raw, wb);
+      if (la && lb) continue;
+      if (la) side = "A"; else if (lb) side = "B";
+      for (const f of factsIn(raw)) add(side, f.id, f.value, i);
+    }
+  });
+  const cite = (s) => [...s].sort((x, y) => x - y).slice(0, 3).map((n) => "[" + n + "]").join("");
+  const best = (m) => (m ? [...m.values()].sort((x, y) => y.srcs.size - x.srcs.size)[0] : null);
+  const rows = [];
+  for (const [id, en, arl] of ATTRS) {
+    const va = best(found.A.get(id)), vb = best(found.B.get(id));
+    if (!va && !vb) continue;
+    let better = "";
+    if (va && vb && (MORE.has(id) || LESS.has(id)) && unitOf(va.shown) === unitOf(vb.shown)) {
+      const x = num(va.shown), y = num(vb.shown);
+      if (x != null && y != null && x !== y) better = (MORE.has(id) ? x > y : x < y) ? a : b;
+    }
+    const cell = (v) => (v ? v.shown.replace(/\|/g, "/") + (v.srcs.size >= 2 ? " ✓" : "") + " " + cite(v.srcs) : "—");
+    rows.push({ id, label: ar ? arl : en, a: cell(va), b: cell(vb), better, both: !!(va && vb) });
+  }
+  rows.sort((x, y) => y.both - x.both);
+  const keep = rows.slice(0, 16);
+  if (keep.filter((r) => r.both).length < 2) return { md: "", rows: [] };
+  const md = (ar ? "### وجهًا لوجه (الأرقام منقولة من المصادر)\n" : "### Head to head (figures copied from the sources)\n") +
+    "| " + (ar ? "البند" : "Spec") + " | " + a + " | " + b + " | " + (ar ? "الأفضل" : "Better") + " |\n| --- | --- | --- | --- |\n" +
+    keep.map((r) => "| " + r.label + " | " + r.a + " | " + r.b + " | " + (r.better || "") + " |").join("\n") + "\n" +
+    (ar ? "\n✓ = الرقم نفسه في موقعين أو أكثر. «الأفضل» للأرقام وحدها (الأقل للسعر والتسارع والاستهلاك)." : "\n✓ = the same figure on 2 or more sites. \"Better\" is by the number only (lower for price, 0–100 and fuel use).");
+  return { md, rows: keep };
+}
