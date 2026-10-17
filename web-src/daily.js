@@ -12,6 +12,7 @@
           short digest that cites every line — nothing from its own memory.
 
    Pure logic, no React — unit tested in tests/unit/daily.test.mjs.          */
+import { review as fsrsReview, isLearned } from "./fsrs.js";
 
 import { jsonFrom } from "./erp.js";
 
@@ -308,7 +309,7 @@ export function finishQuiz(c0, quiz, picks, { now = Date.now() } = {}) {
 // Ali: "finish Learn daily and rework its logic". A lesson read → its word cards, table rows, timeline and "term: meaning" key
 // points become cards; a missed quiz question becomes a card too. Each card comes back after 1, 3, 7, 16 and 35 days while you
 // know it, and starts over when you don't. The review needs no model, so it works on any phone, offline, every day.
-export const CARD_DAYS = [1, 3, 7, 16, 35];
+export const CARD_DAYS = [1, 3, 7, 16, 35];   // (the old fixed schedule; v6.32 uses FSRS — kept so old cards carry over)
 const DAY = 86400000;
 const cardId = (front) => "k" + [...String(front).toLowerCase()].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7).toString(36);
 /** One lesson → up to 8 cards {front, back, note}: only what the lesson itself states — nothing is invented. */
@@ -332,15 +333,17 @@ export function addCards(c, cards, n, { now = Date.now(), due = now + DAY } = {}
 export function cardsDue(c, now = Date.now(), max = 20) {
   return (c.cards || []).filter((k) => k.due <= now).sort((a, b) => a.due - b.due).slice(0, max);
 }
-/** Knew it → it comes back further away (after the last step it is learned and leaves the deck); didn't → tomorrow again, from the start. */
+/** v6.32 FSRS: knew it (or a grade 1–4) → the card's memory stability and difficulty are updated from the answer and the real time
+    since its last review, and it comes back when recall would fall to 90 % (fsrs.js). Didn't → tomorrow again. A card stable for
+    half a year or more is learned for good and leaves the deck. Old box cards carry over without losing their progress. */
 export function gradeCard(c, id, knew, now = Date.now()) {
   let learnedCards = c.learnedCards || 0;
   const cards = [];
   for (const k of c.cards || []) {
     if (k.id !== id) { cards.push(k); continue; }
-    if (!knew) { cards.push({ ...k, box: 0, due: now + DAY, lapses: (k.lapses || 0) + 1 }); continue; }
-    if (k.box + 1 > CARD_DAYS.length) { learnedCards++; continue; }
-    cards.push({ ...k, box: k.box + 1, due: now + CARD_DAYS[k.box] * DAY });
+    const k2 = fsrsReview(k, knew, now);
+    if (isLearned(k2)) { learnedCards++; continue; }
+    cards.push(k2);
   }
   return { ...c, cards, learnedCards };
 }
