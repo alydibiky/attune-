@@ -4722,4 +4722,6 @@ export const AR = {
   "PIN (4–6 digits)": "الرقم السري (4–6 أرقام)",
   "PIN saved": "تم حفظ الرقم السري",
   "Documents & notes": "المستندات والملاحظات",
+  "{s}: about {m} min walk": "{s}: نحو {m} دقيقة سيرًا",
+  "From the offline map: the area's centre to the station, in a straight line × 1.3": "من الخريطة دون إنترنت: من وسط المنطقة إلى المحطة، خطًا مستقيمًا × ١٫٣",
 };

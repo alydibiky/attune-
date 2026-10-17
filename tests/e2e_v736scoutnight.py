@@ -12,6 +12,10 @@ MOCK = r"""try{localStorage.setItem('attune:start','home')}catch(e){}
 (() => { const ADS = %s; window.__plans = [];
   const go = () => { const N = window.AttuneNative; if (!N) return setTimeout(go, 0);
     N.search = (id, arg) => setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ hits: [], via: "mock" })), 20);
+    N.mapSearch = (id, arg) => { const a = JSON.parse(arg); window.__maps = (window.__maps || 0) + 1;
+      const places = a.q ? [{ name: "Maadi", kind: "place/suburb", lat: 29.9602, lon: 31.2569, rank: 70 }]
+        : [{ name: "Maadi", name_en: "Maadi Metro Station", name_ar: "محطة مترو المعادي", kind: "transport/station", lat: 29.9602, lon: 31.2620 }];
+      setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ places })), 10); };
     N.scoutNightPlan = (p) => { window.__plans.push(JSON.parse(p)); return "ok"; };
     N.scoutNightTake = () => { let d = { goals: [] }; try { d = JSON.parse(localStorage.getItem("attune:scout:v1")) || d; } catch (e) {}
       return localStorage.getItem("test:night") === "1" && d.goals[0] ? JSON.stringify({ [d.goals[0].id]: ADS }) : "{}"; };
@@ -34,6 +38,13 @@ with sync_playwright() as p:
     check(len(notes) == 1 and "Degla" in notes[0], "what the night found is checked on open → a strong find is told: %s" % notes)
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))"); page.wait_for_selector("[data-testid=scout-page]", timeout=5000); page.wait_for_timeout(300)
     check(page.locator("[data-testid=scout-ad]").count() == 1 and "Degla" in page.locator("[data-testid=scout-ad]").first.inner_text(), "the night's match is on the goal")
+    page.wait_for_timeout(500)
+    m = page.locator("[data-testid=scout-metro]")
+    check(m.count() == 1 and "Maadi Metro Station" in m.first.inner_text() and "min walk" in m.first.inner_text(), "the nearest metro from the offline map, in minutes on foot: %s" % (m.first.inner_text() if m.count() else None))
+    n0 = page.evaluate("window.__maps")
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_timeout(200)
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))"); page.wait_for_timeout(400)
+    check(page.evaluate("window.__maps") == n0, "the station is kept, not looked up again")
     page.locator("[data-testid=scout-goal] button[aria-label='Pause']").first.click(); page.wait_for_timeout(200)
     check(page.evaluate("window.__plans[window.__plans.length-1].length") == 0, "pausing the goal → the night run stops")
     check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])

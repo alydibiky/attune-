@@ -4,7 +4,7 @@
    twice a day; the computer app also while it stays open). A strong NEW find (or a price drop) → a notification.
    Logic: scout.js. Tests: tests/unit/v731scout.test.mjs, tests/e2e_v731scout.py.                                                   */
 import React, { useEffect, useState } from "react";
-import { Binoculars, Plus, RefreshCw, Trash2, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check, X, HelpCircle, TrendingDown, Loader2, Pause, Play } from "lucide-react";
+import { Binoculars, Plus, RefreshCw, Trash2, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check, X, HelpCircle, TrendingDown, Loader2, Pause, Play, MapPin } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as S from "./scout.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -20,6 +20,36 @@ const EXAMPLES = [
 ];
 const KIND = { rent: ["Flat to rent", "شقة للإيجار"], "buy-home": ["Home to buy", "عقار للشراء"], car: ["Car", "سيارة"], product: ["Product", "منتج"], job: ["Job", "وظيفة"], tender: ["Tender", "مناقصة"], service: ["Service / supplier", "خدمة / مورد"] };
 const fmt = (v) => Math.round(v).toLocaleString("en-US");
+
+// v6.32 distance to the metro: each ad's area on the offline map pack (no web), its nearest station, kept so it is asked once
+const ST_KEY = "attune:scout:stations:v1";
+function useStations(goal, found, ar) {
+  const [st, setSt] = useState(() => { try { return JSON.parse(localStorage.getItem(ST_KEY) || "{}"); } catch (e) { return {}; } });
+  const call = typeof window !== "undefined" && window.__attuneNativeCall;
+  const N = typeof window !== "undefined" && window.AttuneNative;
+  const places = goal && S.wantsStation(goal.g) ? [...new Set(found.map((a) => a.facts.place || goal.g.place).filter(Boolean))].slice(0, 6) : [];
+  const key = places.join("|");
+  useEffect(() => {
+    if (!call || !N || typeof N.mapSearch !== "function") return;
+    const todo = places.filter((p) => !(p in st)); if (!todo.length) return;
+    let live = true;
+    (async () => {
+      const add = {};
+      for (const p of todo) {
+        try {
+          const at = S.pointFor(((await call("mapSearch", { q: p, limit: 10 })) || {}).places);
+          if (!at) { add[p] = null; continue; }
+          const r = await call("mapSearch", { q: "", kinds: ["transport/station"], limit: 50, lat: at.lat, lon: at.lon, radiusDeg: 0.03 });
+          add[p] = S.nearestStation(at.lat, at.lon, (r || {}).places, { ar });
+        } catch (e) { /* no map pack: nothing shown */ }
+      }
+      if (!live || !Object.keys(add).length) return;
+      setSt((o) => { const n = { ...o, ...add }; try { localStorage.setItem(ST_KEY, JSON.stringify(n)); } catch (e) {} return n; });
+    })();
+    return () => { live = false; };
+  }, [key]);
+  return st;
+}
 
 /** One run of a goal with the app's own web search. search(q) → { hits }. → { goal (updated), tell: [ads worth a notification], run } */
 export async function runScoutGoal(goal, search, onStep, now = Date.now()) {
@@ -75,6 +105,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
     put({ ...d, goals: d.goals.map((x) => (x.id !== goal.id ? x : { ...x, votes: { ...(x.votes || {}), [ad.id]: up ? 1 : -1 }, taste: S.learn(x.taste, ad, up) })) });
   };
   const found = goal ? S.runGoal(goal, [], { now: Date.now() }).found : [];
+  const stations = useStations(goal, found, ar);
   // the goal on screen: its new matches are now seen
   useEffect(() => { if (goal && (goal.unseen || []).length && !busy) { const d = S.loadScout(); put({ ...d, goals: d.goals.map((x) => (x.id === goal.id ? { ...x, unseen: [] } : x)) }); } }, [sel, goal && (goal.unseen || []).length, !!busy]);
   const field = "w-full rounded-xl px-3 py-2.5 text-[14.5px] border bg-transparent";
@@ -124,6 +155,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
             <div className="flex flex-wrap gap-1.5 text-[12px]">
               {a.fair ? <span className={"c-pill " + (a.fair.pct > 10 ? "late" : "")} data-testid="scout-fair">{a.fair.pct <= -3 ? tr("{p}% below similar", { p: -a.fair.pct }) : a.fair.pct >= 3 ? tr("{p}% above similar", { p: a.fair.pct }) : tr("a fair price")}{a.fair.basis === "m2" ? " " + tr("(per m²)") : ""}</span> : null}
               {a.cheapest ? <span className="c-pill" data-testid="scout-cheapest">{tr("cheapest of {n} stores", { n: a.cheapest })}</span> : null}
+              {stations[a.facts.place || goal.g.place] ? (() => { const st = stations[a.facts.place || goal.g.place]; return <span className="c-pill" data-testid="scout-metro" title={tr("From the offline map: the area's centre to the station, in a straight line × 1.3")}><MapPin size={11} className="inline" /> {tr("{s}: about {m} min walk", { s: st.name, m: st.walk })}</span>; })() : null}
               {a.dropped > 0 ? <span className="c-pill" data-testid="scout-drop"><TrendingDown size={11} className="inline" /> {tr("dropped {v}", { v: fmt(a.dropped) })}</span> : null}
             </div>
             <ul className="m-0 p-0 list-none space-y-0.5 text-[13px]" data-testid="scout-checks">

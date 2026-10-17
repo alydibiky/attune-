@@ -345,6 +345,30 @@ export function addGoal(d, text, now = Date.now()) {
   return { data: { ...d, goals: [goal, ...d.goals] }, goal };
 }
 /** Due for a run: never run, or the last run is older than `hours` (twice a day by default). */
+// ---- v6.32 distance to the metro (roadmap "Scout extras"): from the offline map pack, never the web ------------------------------
+const rad = (x) => x * Math.PI / 180;
+export const kmBetween = (a, b, c, d) => { const x = Math.sin(rad(c - a) / 2) ** 2 + Math.cos(rad(a)) * Math.cos(rad(c)) * Math.sin(rad(d - b) / 2) ** 2; return 6371 * 2 * Math.asin(Math.sqrt(x)); };
+const METRO = /metro|subway|underground|مترو|محطة/i;
+/** The point for an ad's area, from the map's answers for its place name: an area (place/…) first, then the best ranked. */
+export function pointFor(places) {
+  const ps = (places || []).filter((p) => isFinite(p.lat) && isFinite(p.lon));
+  return ps.find((p) => /^place\//.test(p.kind || "")) || ps.sort((a, b) => (b.rank || 0) - (a.rank || 0))[0] || null;
+}
+/** The station nearest a point. A metro station is preferred when one is within 1.5× the nearest of any kind (trams and halts
+    are stations too). Walk = straight line × 1.3 for streets, at 4.8 km/h. → { name, km, walk, metro } | null */
+export function nearestStation(lat, lon, stations, { ar = false } = {}) {
+  const all = (stations || []).filter((p) => isFinite(p.lat) && isFinite(p.lon)).map((p) => {
+    const name = (ar ? p.name_ar || p.name : p.name_en || p.name) || p.name || "";
+    return { name, km: kmBetween(lat, lon, p.lat, p.lon), metro: METRO.test([p.name, p.name_ar, p.name_en].join(" ")) };
+  }).filter((p) => p.name).sort((a, b) => a.km - b.km);
+  if (!all.length) return null;
+  const m = all.find((p) => p.metro && p.km <= all[0].km * 1.5);
+  const best = m || all[0];
+  return { name: best.name, km: Math.round(best.km * 10) / 10, walk: Math.max(1, Math.round(best.km * 1.3 / 4.8 * 60)), metro: best.metro };
+}
+/** Is a station worth showing for this goal? Homes always; anything that asks to be near the metro. */
+export const wantsStation = (g) => !!g && (g.kind === "rent" || g.kind === "buy-home" || (g.wish || []).some((w) => /metro/.test(w.k)));
+
 /** v6.32 Scout at night: what the phone searches around 3:00 with Attune closed (ScoutNight.kt) — each goal that is on, its
     searches and the ad links already seen, so only NEW ads are kept. Max 5 goals, 6 searches, 200 links each. */
 export const nightPlan = (d) => (d.goals || []).filter((x) => x.on !== false).slice(0, 5)
