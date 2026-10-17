@@ -12,11 +12,12 @@ import { useSubBack, useSticky } from "./backstack.js";
 import * as C from "./convert.js";
 import * as TR from "./translate.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
+import { PdfEditor } from "./pdfedit-ui.jsx";
 
 const TARGET_LABEL = { docx: "Word (.docx)", pdf: "PDF", txt: "Text (.txt)", images: "Pictures (.zip)", csv: "CSV", xlsx: "Excel (.xlsx)",
   html: "Web page (.html)", md: "Markdown (.md)", odt: "LibreOffice text (.odt)", ods: "LibreOffice sheet (.ods)", json: "JSON",
   jpg: "JPG photo", png: "PNG photo", webp: "WebP photo", srt: "Subtitles (.srt)", vtt: "Subtitles (.vtt)",
-  translate: "Translate…", merge: "Merge into one PDF", split: "Split into pages", pick: "Keep some pages", rotate: "Rotate pages" };
+  translate: "Translate…", edit: "Edit the PDF", merge: "Merge into one PDF", split: "Split into pages", pick: "Keep some pages", rotate: "Rotate pages" };
 const KIND_LABEL = { pdf: "PDF", pdfs: "PDFs", docx: "Word document", pptx: "PowerPoint", odt: "LibreOffice text", ods: "LibreOffice sheet", epub: "E-book",
   html: "Web page", rtf: "Rich Text", image: "Photo", images: "Photos", text: "Text", xlsx: "Excel workbook", csv: "CSV sheet", json: "JSON data", srt: "Subtitles", vtt: "Subtitles" };
 const ROWS = ["xlsx", "ods", "csv", "json"], SUBS = ["srt", "vtt"], PDF_TOOLS = ["merge", "split", "pick", "rotate", "images"], PHOTO = ["jpg", "png", "webp"];
@@ -28,8 +29,10 @@ const langLabel = (k) => { const l = getLang(); if (l !== "en") try { return new
 // v6.31 minimal (design A): one main action (choose a file), the four most used as plain rows, the rest behind "All conversions";
 // Translate is its own tab next to this one, so it is not repeated here
 const MINIMAL = (() => { try { return localStorage.getItem("attune:legacy-nav") !== "1"; } catch (e) { return true; } })();
-const TOP4 = ["pdf2word", "word2pdf", "photos2pdf", "merge"];
+// v6.32: "Edit a PDF" takes the first row (Ali picked option A); Word → PDF moved under "All conversions"
+const TOP4 = ["edit", "pdf2word", "photos2pdf", "merge"];
 const QUICK = [
+  { id: "edit", label: "Edit a PDF", desc: "Change text, highlight, sign, pages", accept: ".pdf,application/pdf", target: "edit", icon: "✏️" },
   { id: "merge", label: "Merge PDFs", desc: "Several PDFs → one", accept: ".pdf,application/pdf", multiple: true, target: "merge", icon: "📑" },
   { id: "pdf2word", label: "PDF → Word", desc: "Edit a PDF in Word", accept: ".pdf,application/pdf", target: "docx", icon: "📝" },
   { id: "photos2pdf", label: "Photos → PDF", desc: "Pictures into one PDF", accept: "image/*", multiple: true, target: "pdf", icon: "🖼️" },
@@ -71,6 +74,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
   const [busy, setBusy] = useState(null);         // text
   const [out, setOut] = useSticky("convert:out", null);           // { name, mime, b64?, text?, size, preview, note }
   const [err, setErr] = useState("");
+  const [editing, setEditing] = useState(false);   // v6.32: Edit a PDF is open
   const [pages, setPages] = useState("");         // PDF tools: "1-3, 5"
   const [deg, setDeg] = useState(90);
   const [tLang, setTLang] = useState(() => { try { return localStorage.getItem("attune:convert:tlang") || (getLang() === "ar" ? "en" : "ar"); } catch (e) { return "ar"; } });
@@ -99,6 +103,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     if (q && q.id === "merge" && kind !== "pdfs") { setErr(tr("To merge, pick two or more PDFs together (tap and hold to select several).")); setFiles(null); return; }
     setFiles({ kind, list: arr });
     setTarget(q && q.target && targetsOf(kind).includes(q.target) ? q.target : targetsOf(kind)[0]);
+    if (q && q.id === "edit") { if (kind !== "pdf") { setErr(tr("Pick one PDF to edit.")); setFiles(null); return; } if (!nativeCall) { setErr(tr("PDF files are converted by the Android app — open Attune on your phone.")); return; } setEditing(true); }
   };
 
   const targetsOf = (kind) => (kind === "images" ? C.MULTI.image.targets : kind === "pdfs" ? C.MULTI.pdf.targets : C.KINDS[kind].targets);
@@ -113,6 +118,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
 
   const convert = async () => {
     if (!files || !target) return;
+    if (target === "edit") { if (!nativeCall) { setErr(tr("PDF files are converted by the Android app — open Attune on your phone.")); return; } setOut(null); setEditing(true); return; }
     const today = new Date().toISOString().slice(0, 10);
     let used = 0; try { used = JSON.parse(localStorage.getItem("attune:convert:day") || "{}")[today] || 0; } catch (e) {}
     if (!pro && used >= 5) { flash && flash(tr("Free includes 5 conversions a day — Pro is unlimited")); openPlan && openPlan(); return; }
@@ -288,6 +294,11 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     } catch (e) { if (String(e && e.message) !== "Cancelled") flash && flash(String((e && e.message) || e)); }
   };
 
+  if (files && editing) return (
+    <PdfEditor file={files.list[0]} nativeCall={nativeCall} flash={flash}
+      onClose={() => { setEditing(false); setFiles(null); setTarget(null); }}
+      onDone={(o) => { setEditing(false); setOut(o); }} />);
+
   const chip = (on) => `px-3 py-2 rounded-xl text-[13px] border ${on ? "border-teal-600 bg-teal-500/10 text-teal-200" : "border-slate-700 text-slate-300"}`;
   const targets = files ? targetsOf(files.kind) : [];
   return (
@@ -311,7 +322,7 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
                   <ImagePlus size={24} className="text-teal-300" /><span className="text-[15px] font-semibold">{tr("Choose a file")}</span>
                   <span className="text-[12.5px] text-slate-500">{tr("It shows what it can become")}</span></button>
                 <div className="flex flex-col" data-testid="convert-tools">
-                  {QUICK.filter((q) => q.id !== "translate" && (showAll || TOP4.includes(q.id))).sort((a, b) => (TOP4.includes(b.id) ? 1 : 0) - (TOP4.includes(a.id) ? 1 : 0)).map((q) => (
+                  {QUICK.filter((q) => q.id !== "translate" && (showAll || TOP4.includes(q.id))).sort((a, b) => (TOP4.includes(a.id) ? TOP4.indexOf(a.id) : 99) - (TOP4.includes(b.id) ? TOP4.indexOf(b.id) : 99)).map((q) => (
                     <button key={q.id} onClick={() => startTool(q)} data-testid={"convert-tool-" + q.id}
                       className="h-12 flex items-center text-start text-[15px] text-slate-100 border-b border-slate-800/70 last:border-0">
                       <span className="flex-1">{tr(q.label)}</span><span className="text-slate-600">›</span></button>))}

@@ -594,6 +594,86 @@ object DocTools {
                 }
                 files.put(JSONObject().put("n", 1).put("b64", save(d)).put("pages", d.numberOfPages))
             }
+            // v6.32 — Converter → Edit a PDF (pdfedit.js): drawings on the pages, then the pages in a new order.
+            // items (page fractions, top-left, the page as shown): cover {x,y,w,h,color} | text {x, base, size, text, color, bold}
+            //   | highlight {rects, color} | ink {pts, color, width} | image {png (base64), x, y, w, h};  order = [{n (0 = blank page), rot}]
+            "edit" -> load(a.getString("b64")).use { d ->
+                val count = d.numberOfPages
+                val src = (0 until count).map { d.getPage(it) }
+                val items = a.optJSONArray("items") ?: JSONArray()
+                val byPage = (0 until items.length()).map { items.getJSONObject(it) }.groupBy { it.optInt("page", 0) }
+                fun col(s: String, def: Int) = try { Color.parseColor(s) } catch (e: Exception) { def }
+                for ((pn, its) in byPage) {
+                    if (pn !in 1..count) continue
+                    val pg = src[pn - 1]; val box = pg.cropBox
+                    val rot = ((pg.rotation % 360) + 360) % 360
+                    val dw = if (rot % 180 != 0) box.height else box.width; val dh = if (rot % 180 != 0) box.width else box.height
+                    // the page as shown (x right, y up, in points) → the page's own space, for any /Rotate
+                    val m = when (rot) {
+                        90 -> com.tom_roush.pdfbox.util.Matrix(0f, 1f, -1f, 0f, box.lowerLeftX + box.width, box.lowerLeftY)
+                        180 -> com.tom_roush.pdfbox.util.Matrix(-1f, 0f, 0f, -1f, box.upperRightX, box.upperRightY)
+                        270 -> com.tom_roush.pdfbox.util.Matrix(0f, -1f, 1f, 0f, box.lowerLeftX, box.upperRightY)
+                        else -> com.tom_roush.pdfbox.util.Matrix(1f, 0f, 0f, 1f, box.lowerLeftX, box.lowerLeftY)
+                    }
+                    fun X(f: Double) = (f * dw).toFloat()
+                    fun Y(f: Double) = (dh - f * dh).toFloat()
+                    com.tom_roush.pdfbox.pdmodel.PDPageContentStream(d, pg, com.tom_roush.pdfbox.pdmodel.PDPageContentStream.AppendMode.APPEND, true, true).use { cs ->
+                        cs.saveGraphicsState(); cs.transform(m)
+                        for (an in its) {
+                            val c = col(an.optString("color", "#000000"), Color.BLACK)
+                            val r = Color.red(c) / 255f; val g = Color.green(c) / 255f; val b = Color.blue(c) / 255f
+                            cs.saveGraphicsState()
+                            when (an.optString("kind")) {
+                                "cover" -> { cs.setNonStrokingColor(r, g, b); cs.addRect(X(an.optDouble("x")), Y(an.optDouble("y") + an.optDouble("h")), X(an.optDouble("w")), (an.optDouble("h") * dh).toFloat()); cs.fill() }
+                                "highlight" -> {
+                                    val gs = com.tom_roush.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState(); gs.nonStrokingAlphaConstant = 0.38f
+                                    cs.setGraphicsStateParameters(gs); cs.setNonStrokingColor(r, g, b)
+                                    val rects = an.optJSONArray("rects") ?: JSONArray()
+                                    for (k in 0 until rects.length()) { val q = rects.getJSONArray(k); cs.addRect(X(q.getDouble(0)), Y(q.getDouble(1) + q.getDouble(3)), X(q.getDouble(2)), (q.getDouble(3) * dh).toFloat()) }
+                                    if (rects.length() > 0) cs.fill()
+                                }
+                                "text" -> {
+                                    val font = if (an.optBoolean("bold")) com.tom_roush.pdfbox.pdmodel.font.PDType1Font.HELVETICA_BOLD else com.tom_roush.pdfbox.pdmodel.font.PDType1Font.HELVETICA
+                                    val t = an.optString("text").replace(Regex("[\\r\\n\\t]"), " ")
+                                    val safe = try { font.encode(t); t } catch (e: Exception) { t.filter { ch -> try { font.encode(ch.toString()); true } catch (e2: Exception) { false } } }
+                                    cs.beginText(); cs.setFont(font, (an.optDouble("size", 0.016) * dh).toFloat().coerceIn(3f, 300f)); cs.setNonStrokingColor(r, g, b)
+                                    cs.newLineAtOffset(X(an.optDouble("x")), Y(an.optDouble("base"))); cs.showText(safe); cs.endText()
+                                }
+                                "ink" -> {
+                                    val pts = an.optJSONArray("pts") ?: JSONArray()
+                                    if (pts.length() > 1) {
+                                        cs.setStrokingColor(r, g, b); cs.setLineWidth(X(an.optDouble("width", 0.004)).coerceAtLeast(0.3f)); cs.setLineCapStyle(1); cs.setLineJoinStyle(1)
+                                        for (k in 0 until pts.length()) { val p = pts.getJSONArray(k); if (k == 0) cs.moveTo(X(p.getDouble(0)), Y(p.getDouble(1))) else cs.lineTo(X(p.getDouble(0)), Y(p.getDouble(1))) }
+                                        cs.stroke()
+                                    }
+                                }
+                                "image" -> {
+                                    val img = com.tom_roush.pdfbox.pdmodel.graphics.image.PDImageXObject.createFromByteArray(d, Base64.decode(an.optString("png"), Base64.DEFAULT), "edit.png")
+                                    cs.drawImage(img, X(an.optDouble("x")), Y(an.optDouble("y") + an.optDouble("h")), X(an.optDouble("w")), (an.optDouble("h") * dh).toFloat())
+                                }
+                            }
+                            cs.restoreGraphicsState()
+                        }
+                        cs.restoreGraphicsState()
+                    }
+                }
+                val order = a.optJSONArray("order")
+                if (order != null) {
+                    val want = (0 until order.length()).map { order.getJSONObject(it) }
+                    if (want.isEmpty()) throw java.io.IOException("A PDF needs at least one page.")
+                    // what a page inherits from its parent is written on the page first, so it survives the move
+                    for (p in src) { p.resources = p.resources; p.mediaBox = p.mediaBox; p.cropBox = p.cropBox; p.rotation = p.rotation }
+                    for (i in count - 1 downTo 0) d.removePage(i)
+                    var last = src.firstOrNull()
+                    for (o in want) {
+                        val n = o.optInt("n", 0)
+                        val p = if (n in 1..count) src[n - 1] else com.tom_roush.pdfbox.pdmodel.PDPage(last?.mediaBox ?: com.tom_roush.pdfbox.pdmodel.common.PDRectangle.A4)
+                        p.rotation = (((p.rotation + o.optInt("rot", 0)) % 360) + 360) % 360
+                        d.addPage(p); last = p
+                    }
+                }
+                files.put(JSONObject().put("n", 1).put("b64", save(d)).put("pages", d.numberOfPages))
+            }
             else -> throw java.io.IOException("Unknown PDF tool: $op")
         }
         return JSONObject().put("files", files)
