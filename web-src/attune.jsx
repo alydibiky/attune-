@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
 import {
   Bell, Calculator, Timer, Code2,
@@ -6530,6 +6531,12 @@ async function webLookupRawLive(q, pages = 6) {
     if (out.hits.length) return out;
     if (/offline lock/i.test(out.why)) return out;   // don't try another route
   }
+  // v6.32: Pro — when the free engines found nothing, Attune's paid search (cloud.js; off until Ali's relay is set up)
+  if (!out.hits.length && proSearchOn()) {
+    try { const r = await proLookup(q, { pages }); out.hits = r.hits.filter((h) => !isWiki(h)); out.via = r.via; if (!out.hits.length) out.why = r.why || out.why; else out.why = ""; }
+    catch (e) { out.why = out.why || String(e.message || e); }
+    if (out.hits.length) return out;
+  }
   if (cfg.provider && cfg.key && cfg.provider !== "duckduckgo") {
     try { out.hits = (await byoLookup(q + " -site:wikipedia.org", cfg)).filter((h) => !isWiki(h)); out.via = cfg.provider; }
     catch (e) { out.why = String(e.message || e); }
@@ -7618,6 +7625,7 @@ export default function App() {
   // now really unlocks every Pro feature (before, most gates checked the paid plan only)
   const proActive = testingPro() || isPro(tier) || trialLeft > 0;
   const proRef = useRef(proActive); proRef.current = proActive;
+  setProSearch(proActive);
   // v6.27: the text in a photo — the phone's own reader (Latin scripts) first, then a photo-reading model on the phone (Arabic…)
   const readTextAny = async (b64) => {
     let r = null; try { if (NATIVE && NATIVE.readText) r = await nativeCall("readText", { b64 }); } catch (e) {}

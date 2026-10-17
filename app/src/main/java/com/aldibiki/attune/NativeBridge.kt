@@ -1021,6 +1021,14 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         pool.execute { try { resolve(id, JSONObject().put("sections", KnowPacks.toc(ctx, JSONObject(arg).getString("pack")))) } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the pack") } }
     }
 
+    /** v6.32 Drive sync (web-src/cloud.js): get / put the encrypted backup in the app's hidden Drive folder. Waits for Ali's
+        Google Cloud client (SETUP_CLOUD.md step 1–4): then this signs in with Google (AuthorizationClient, scope drive.appdata)
+        and reads / writes one file, attune-sync.attune, with the Drive REST API. Until then it says so. */
+    @JavascriptInterface
+    fun driveSync(id: String, arg: String) {
+        pool.execute { reject(id, "Drive sync is not set up yet — it needs Attune's Google Cloud client (SETUP_CLOUD.md)") }
+    }
+
     @JavascriptInterface
     fun knowSection(id: String, arg: String) {
         pool.execute {
