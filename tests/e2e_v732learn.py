@@ -49,7 +49,7 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=review-done]")
     check("1 / 2" in page.locator("[data-testid=review-done]").inner_text(), "the round ends: 1 of 2 known the first time")
     k = {x["id"]: x for x in json.loads(page.evaluate("localStorage.getItem('attune:daily:courses:v1')"))[0]["cards"]}
-    check(k["k1"]["box"] == 1 and k["k1"]["due"] > now + 0.9 * DAY and k["k3"]["box"] == 0, "known → it comes back further away; the card not yet due is untouched")
+    check(k["k1"].get("s", 0) > 0 and k["k1"]["due"] > now + 0.9 * DAY and "s" not in k["k3"] and k["k3"]["box"] == 0, "known → it comes back further away; the card not yet due is untouched")
     page.click("[data-testid=review-to-lesson]"); page.wait_for_selector("[data-testid=lesson]")
     check("Greetings" in page.locator("[data-testid=lesson]").inner_text(), "from the review straight to today's lesson")
     page.click("[data-testid=lesson-done]"); page.wait_for_timeout(200)

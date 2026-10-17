@@ -1,0 +1,23 @@
+// v6.32 speaking practice: the score per word, the phrases, the dialogue.
+import * as P from "../../web-src/speak.js";
+const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
+let r = P.pronScore("Merhaba, nasılsın?", "merhaba nasılsın", "tr-TR");
+ok(r.score === 100 && r.words.every((w) => w.mark === "good"), "said right → 100, every word good");
+r = P.pronScore("Çok teşekkür ederim", "cok tesekkur ederim", "tr-TR");
+ok(r.score >= 85 && r.score < 100 && r.words[0].mark === "good", "missing accents count a little (" + r.score + ")");
+r = P.pronScore("Bir çay lütfen", "bir şey lütfen", "tr-TR");
+ok(r.words[1].mark !== "good" && r.words[0].mark === "good" && r.words[2].mark === "good" && r.score < 90, "one word off → that word marked, the rest good (" + JSON.stringify(r.words) + ")");
+r = P.pronScore("Where is the train station", "where is station", "en-US");
+ok(r.words.map((w) => w.mark).join(",") === "good,good,missed,missed,good", "missed words don't shift the others (" + r.words.map((w) => w.mark) + ")");
+r = P.pronScore("I would like a coffee", "uh I would like a coffee please thanks", "en-US");
+ok(r.score < 100 && r.score >= 80 && r.extra === 3, "extra words cost a little (" + r.score + ")");
+ok(P.pronScore("Hello", "", "en").score === 0, "nothing heard → 0");
+ok(P.sayWords("İstanbul'da", "tr-TR")[0] === "istanbulda" && P.sayWords("Iİ", "tr-TR")[0] === "ıi", "Turkish dotted and dotless i kept apart");
+ok(P.pronScore("أهلًا وسهلًا", "اهلا وسهلا", "ar-EG").score === 100, "Arabic marks and letter forms don't count against you");
+ok(P.langTagOf("Turkish") === "tr-TR" && P.langTagOf("الفرنسية") === "fr-FR" && P.langTagOf("Crane hydraulics") === "", "the course language → the voice");
+const l = { title: "Greetings", body: "Say **Merhaba** (mer-ha-BA) to anyone.\n\n**Example:** this\n\nThen **Günaydın** in the morning.", visual: { kind: "cards", items: [{ front: "Teşekkürler", back: "Thanks" }, { front: "Merhaba", back: "Hello" }] } };
+ok(JSON.stringify(P.phrasesFrom(l)) === JSON.stringify(["Teşekkürler", "Merhaba", "Günaydın"]), "phrases: the cards, then the bold words, no labels (" + P.phrasesFrom(l) + ")");
+const d = P.parseDialogue('Here: {"title":"At the café","lines":[{"who":"A","text":"Merhaba!","say":"Hello!"},{"who":"B","text":"Merhaba, bir çay lütfen.","say":"Hello, a tea please."},{"who":"A","text":"Tabii.","say":"Sure."},{"who":"B","text":"Teşekkürler.","say":"Thanks."}]}');
+ok(d && d.lines.length === 4 && d.lines[1].who === "B" && d.title === "At the café", "a dialogue is read from the model's JSON");
+ok(P.parseDialogue('{"lines":[{"who":"A","text":"x"}]}') === null, "too short → none");
+console.log(process.exitCode ? "FAILED" : "ALL PASSED");

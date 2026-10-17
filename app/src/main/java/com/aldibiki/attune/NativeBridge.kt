@@ -1004,6 +1004,20 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         } catch (e: Throwable) { false }
     }
 
+    /** v6.32 packs → courses: {pack} → {sections: [{title, n}]} in book order; {pack, title} → {passages: [{text, url}]} */
+    @JavascriptInterface
+    fun knowToc(id: String, arg: String) {
+        pool.execute { try { resolve(id, JSONObject().put("sections", KnowPacks.toc(ctx, JSONObject(arg).getString("pack")))) } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the pack") } }
+    }
+
+    @JavascriptInterface
+    fun knowSection(id: String, arg: String) {
+        pool.execute {
+            try { val a = JSONObject(arg); resolve(id, JSONObject().put("passages", KnowPacks.section(ctx, a.getString("pack"), a.getString("title"), a.optInt("max", 14)))) }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the pack") }
+        }
+    }
+
     /** Search the installed packs ({q, k}) → {passages: [...]} — fast (SQLite FTS), so Chat calls it on every lookup. */
     @JavascriptInterface
     fun knowSearch(id: String, arg: String) {

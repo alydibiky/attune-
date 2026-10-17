@@ -9945,7 +9945,7 @@ export default function App() {
               llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.7, think: false })} />
           ) : <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300" data-testid="studio-page">{tr("Studio draws pictures with the phone's own chip — it works in the Android app.")}</div>
         ) : mode === "learn" ? (
-          <LearnPage flash={flash} native={NATIVE} call={NATIVE ? nativeCall : null} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
+          <LearnPage flash={flash} native={NATIVE} call={NATIVE ? nativeCall : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken })}
             illustrate={NATIVE && NATIVE.imageInfo ? (p) => { setStudioIn({ prompt: p }); setMode("studio"); } : null} />

@@ -96,6 +96,26 @@ object KnowPacks {
     /** Called before a pack is replaced or removed. */
     @Synchronized fun close(id: String) { open.remove(id)?.close() }
 
+    /** v6.32 packs → courses: the pack's sections in book order → [{title, n}] ("Book — Section", n = passages). */
+    fun toc(ctx: Context, id: String): JSONArray {
+        val out = JSONArray()
+        val db = handle(ctx, id) ?: return out
+        db.rawQuery("SELECT title, COUNT(*) FROM passages GROUP BY title ORDER BY MIN(id) LIMIT 4000", null).use { c ->
+            while (c.moveToNext()) out.put(JSONObject().put("title", c.getString(0) ?: "").put("n", c.getInt(1)))
+        }
+        return out
+    }
+
+    /** One section's passages in order → [{text, url}] (a lesson is written from these, or shown as they are). */
+    fun section(ctx: Context, id: String, title: String, max: Int = 14): JSONArray {
+        val out = JSONArray()
+        val db = handle(ctx, id) ?: return out
+        db.rawQuery("SELECT text, url FROM passages WHERE title = ? ORDER BY id LIMIT ?", arrayOf(title, max.coerceIn(1, 40).toString())).use { c ->
+            while (c.moveToNext()) out.put(JSONObject().put("text", c.getString(0) ?: "").put("url", c.getString(1) ?: ""))
+        }
+        return out
+    }
+
     private fun ints(blob: ByteArray): IntArray { val b = ByteBuffer.wrap(blob).order(ByteOrder.nativeOrder()); return IntArray(blob.size / 4) { b.getInt(it * 4) } }
     private val ENDINGS = setOf("s", "es", "ed", "er", "ing")
     // v6.16c: 'single quotes' too (What does the word 'ubiquitous' mean?), not an apostrophe inside a word (Newton's)

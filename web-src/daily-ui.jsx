@@ -11,6 +11,9 @@ import * as D from "./daily.js";
 import { useListen, ListenBar } from "./lesson-ui.jsx";
 import { PANES, LEFT, RIGHT, GRID3, DeskEmpty } from "./desk.jsx";
 import { useDesktopWide } from "./side-ui.jsx";
+import { SpeakPractice, DialogueCard, LessonPicture, PackCourses } from "./speak-ui.jsx";
+import * as PC from "./packcourse.js";
+import * as SP from "./speak.js";
 
 const CKEY = "attune:daily:courses:v1", NKEY = "attune:daily:news:v1";
 const load = (k) => { try { const v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
@@ -156,7 +159,7 @@ const frame = (el, testid) => <div className="calm rounded-2xl p-4 md:p-6" style
 const fmtDay = (t) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 const cardsWord = (n) => (n === 1 ? tr("1 card") : tr("{n} cards", { n }));
 
-export function LearnPage({ llm, modelReady, openEngine, flash, native, call, openId, clearOpen, illustrate }) {
+export function LearnPage({ llm, modelReady, openEngine, flash, native, call, openId, clearOpen, illustrate, listen }) {
   const [courses, setCoursesRaw] = useState(loadCourses);
   const [cur, setCur] = useSticky("learn:cur", null);                 // course id
   const [view, setView] = useSticky("learn:view", "list");             // list | new | course | lesson | quiz | review
@@ -203,6 +206,19 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
     if (running.current) return null;
     running.current = true;
     try {
+      // v6.32 a course from a Knowledge pack: the section's own text — shown as it is, or explained from it by the model
+      if (c.pack) {
+        const title = c.pack.titles[n] || c.plan[n];
+        const r = await call("knowSection", { pack: c.pack.id, title });
+        const passages = (r && r.passages) || [];
+        if (!passages.length) { flash(tr("That section isn't in the pack on this phone — is the pack still installed?")); return null; }
+        const base = PC.lessonFromPassages(c, n, passages);
+        let p = base;
+        if (modelReady) { try { const q = D.parseLesson(await gen(tr("Writing lesson {n}: {t}", { n: n + 1, t: c.plan[n] || "" }), PC.packLessonMessages(c, n, passages), 1600, 0.3)); if (q.body.length >= 200) p = { ...q, keyPoints: q.keyPoints.length ? q.keyPoints : base.keyPoints, source: base.source, original: base.body }; } catch (e) {} }
+        const next = D.addLesson(loadCourses().find((x) => x.id === c.id) || c, n, p);
+        putCourse(next);
+        return next;
+      }
       // (a lesson that comes out too short is written once more, a little more freely, before giving up)
       for (let k = 0; k < 2; k++) {
         const out = await gen(tr("Writing lesson {n}: {t}", { n: n + 1, t: c.plan[n] || "" }), D.lessonMessages(c, n), 1600, k ? 0.6 : 0.4);
@@ -239,13 +255,19 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
   const today = course ? D.todaysLesson(course) : null;
   // opening a course with nothing to read yet: prepare today's lesson
   useEffect(() => {
-    if (view === "course" && course && !today && modelReady && course.plan.length && !running.current && D.nextIndex(course) < course.plan.length) makeLesson(course, D.nextIndex(course));
+    if (view === "course" && course && !today && (modelReady || course.pack) && course.plan.length && !running.current && D.nextIndex(course) < course.plan.length) makeLesson(course, D.nextIndex(course));
   }, [view, cur]);
 
   const openL = (c, n) => { putCourse(D.openLesson(c, n)); setLessonN(n); setView("lesson"); };
   const startReview = () => { const ids = D.cardsDue(course).map((k) => k.id); if (!ids.length) return; L.stop(); setRev({ ids, i: 0, shown: false, knew: 0, again: [] }); setView("review"); };
   async function startQuiz(lessons) {
     try {
+      // v6.32 a pack course with no model: the quiz is made by code from the lessons' definitions (or passed when there are too few)
+      if (course.pack && !modelReady) {
+        const qs = PC.codeQuiz(lessons, { ar: getLang() === "ar" });
+        if (qs.length < 3) { putCourse({ ...latest(), quizzes: [...latest().quizzes, { after: Math.max(...lessons.map((l) => l.n)), skipped: true, at: Date.now() }] }); flash(tr("Not enough terms for a quiz yet — on to the next lesson.")); return; }
+        setQuiz({ lessons: lessons.map((l) => l.n), questions: qs, i: 0, picks: {} }); setView("quiz"); return;
+      }
       let qs = [];
       for (let i = 0; i < 2 && qs.length < 3; i++) qs = D.groundQuiz(D.parseQuiz(await gen(tr("Writing your quiz…"), D.quizMessages(course, lessons), 1600, i ? 0.5 : 0.3), course.id + lessons.length + i), lessons);
       if (qs.length < 3) { flash(tr("Couldn't make a good quiz this time — try again.")); return; }
@@ -270,6 +292,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
             </button>))}
         </div>
         <p className="c-sub">{tr("A ready course starts at once: its lessons are already planned; each is written on your device when its day comes.")}</p>
+        <PackCourses native={native} call={call} flash={flash} onStart={async (c) => { putCourse(c); setCur(c.id); setView("course"); await makeLesson(c, 0); }} />
       </div>
       <div className="c-card space-y-3 mt-4 lg:mt-0 lg:col-start-1 lg:row-start-1 lg:sticky lg:top-4">
         <p className="c-lbl">{tr("Or any topic you like")}</p>
@@ -393,11 +416,18 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
             const c2 = D.markDone(latest(), l.n); putCourse(c2);
             flash(newCards ? tr("Done — {n} days in a row · {k} new cards for tomorrow's review", { n: c2.streak, k: newCards }) : tr("Done — {n} days in a row", { n: c2.streak }));
             // tomorrow's lesson, prepared now, so the notification can say what it is
-            if (modelReady && D.nextIndex(c2) < c2.plan.length && !D.quizDue(c2)) setTimeout(() => makeLesson(c2, D.nextIndex(c2)), 400);
+            if ((modelReady || c2.pack) && D.nextIndex(c2) < c2.plan.length && !D.quizDue(c2)) setTimeout(() => makeLesson(c2, D.nextIndex(c2)), 400);
           }}>{tr("I've read it")}</button>
           : <p className="text-[13px] c-pos flex items-center gap-1 m-0"><CheckCircle2 size={14} />{tr("Read")}{newCards ? " · " + tr("its {n} cards are in your review", { n: newCards }) : ""}</p>}
         {l.done && due ? <button className="c-btn w-full py-2.5" data-testid="quiz-start" disabled={!!busy} onClick={() => startQuiz(due)}>{tr("Quiz time — a short quiz on lessons {a}–{b}", { a: due[0].n + 1, b: due[due.length - 1].n + 1 })}</button> : null}
-        {illustrate ? <button className={cGhost + " flex items-center gap-1"} style={gs} onClick={() => illustrate(`${course.topic}: ${l.title} — a clear, friendly illustration for a lesson`)}><ImageIcon size={14} />{tr("Draw a picture for this lesson (Studio)")}</button> : null}
+        {l.source ? <p className="c-sub text-[12px] m-0" data-testid="lesson-source" dir="auto">{tr("From: {s}", { s: [l.source.name, l.source.title].filter(Boolean).join(" · ") })}{l.source.url ? " · " : ""}{l.source.url ? <a href={l.source.url} target="_blank" rel="noreferrer" className="c-acc">{tr("the book")}</a> : null}</p> : null}
+        {D.isLanguageCourse(course.topic) ? <SpeakPractice lesson={l} course={course} native={native} call={call} listen={listen}
+          onBest={(p, sc) => { const c0 = latest(); putCourse({ ...c0, lessons: c0.lessons.map((x) => (x.n === l.n ? { ...x, speak: { ...(x.speak || {}), [p]: Math.max(sc, (x.speak || {})[p] || 0) } } : x)) }); }} /> : null}
+        {D.isLanguageCourse(course.topic) ? <DialogueCard lesson={l} course={course} native={native} call={call} listen={listen} busy={busy}
+          make={modelReady ? async () => { try { const dlg = SP.parseDialogue(await gen(tr("Writing a short conversation…"), SP.dialogueMessages(course, l), 700, 0.5)); if (!dlg) { flash(tr("Couldn't write a good conversation this time — try again.")); return; } const c0 = latest(); putCourse({ ...c0, lessons: c0.lessons.map((x) => (x.n === l.n ? { ...x, dialogue: dlg } : x)) }); } catch (e) { flash(String(e.message || e)); } } : null} /> : null}
+        <LessonPicture lesson={l} course={course} native={native} call={call}
+          onPicture={(url) => { const c0 = latest(); putCourse({ ...c0, lessons: c0.lessons.map((x) => (x.n === l.n ? { ...x, picture: url } : x)) }); }}
+          openStudio={illustrate ? () => illustrate(`${course.topic}: ${l.title} — a clear, friendly illustration for a lesson`) : null} />
         {busy ? <CWorking {...busy} /> : null}
       </section>);
   }
