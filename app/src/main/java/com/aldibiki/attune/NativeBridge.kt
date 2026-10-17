@@ -73,6 +73,20 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     // ---- quick calls -----------------------------------------------------------
     @JavascriptInterface
     fun info(): String = DeviceInfo.toJson(ctx)
+
+    // v6.32 Private vault: {"bio":true,"secure":true} — and the system fingerprint / face / screen-lock prompt (Vault.kt)
+    @JavascriptInterface
+    fun vaultAvailable(): String = Vault.available(ctx)
+
+    @JavascriptInterface
+    fun vaultUnlock(id: String, arg: String) {
+        val a = try { JSONObject(arg) } catch (e: Exception) { JSONObject() }
+        val act = ctx as? android.app.Activity ?: return reject(id, "not available")
+        web.post {
+            Vault.prompt(act, a.optString("title", "Attune"), a.optString("subtitle", ""), a.optString("cancel", "Cancel"),
+                { resolve(id, JSONObject().put("ok", true)) }, { msg -> reject(id, msg) })
+        }
+    }
         .put("airGap", Prefs.airGap(ctx))
         .put("engine", engineJson())
         .put("activeModel", Prefs.activeModel(ctx) ?: JSONObject.NULL)

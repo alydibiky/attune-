@@ -58,6 +58,8 @@ import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
 import { PrivacyPage } from "./privacy-ui.jsx";
+import { VaultGate } from "./vault-ui.jsx";
+import { loadVault, vaulted, stillOpen } from "./vault.js";
 import { HUBS, hubOf, tabsFor, toolPages, partsOf } from "./hubs.js";
 import { HubTabs } from "./hub-ui.jsx";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
@@ -7476,6 +7478,13 @@ export default function App() {
   const wideAtStart = () => { try { return window.matchMedia("(min-width: 1024px)").matches; } catch (e) { return false; } };
   // v6.27 (design A "Calm"): the phone opens on Home too ("attune:start" = "chat" keeps the old start — the test kit sets it)
   const [mode, setModeRaw] = useState(() => { let s = ""; try { s = localStorage.getItem("attune:start") || ""; } catch (e) {} return wideAtStart() ? "home" : s === "chat" ? "chat" : "home"; });
+  // v6.32 Private vault: locked places open with the fingerprint / screen lock (or a PIN); they lock again after a minute away
+  const [vaultCfg, setVaultCfg] = useState(() => loadVault());
+  const [vaultSess, setVaultSess] = useState({ open: false });
+  useEffect(() => {
+    const on = () => { if (document.hidden) setVaultSess((v) => (v.open ? { ...v, hiddenAt: Date.now() } : v)); else setVaultSess((v) => (stillOpen(v) ? { open: v.open } : { open: false })); };
+    document.addEventListener("visibilitychange", on); return () => document.removeEventListener("visibilitychange", on);
+  }, []);
   const startMode = useRef(mode === "chat" ? "chat" : "home");
   // v5.41 (Ali: "when I press back I can't go to the previous page, it leaves the app"): every screen
   // change is remembered, and Back returns to the previous screen — Studio → Learn daily → Chat.
@@ -9390,7 +9399,9 @@ export default function App() {
 
         {/* v6.30: tools that belong together are one page — a tab row on top (hubs.js) */}
         {LEGACY_NAV || (mode === "money" && !wide) ? null : hubTabsEl}
-        <Guard key={"g-" + mode} name={mode}>{mode === "home" && !wide ? (
+        <Guard key={"g-" + mode} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
+          <VaultGate unlock={(a) => nativeCall("vaultUnlock", a)} onOpen={() => setVaultSess({ open: true })} />
+        ) : mode === "home" && !wide ? (
           <PhoneHome navTo={(m) => navTo(m)} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
@@ -10031,7 +10042,7 @@ export default function App() {
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
         ) : mode === "privacy" ? (
-          <PrivacyPage />
+          <PrivacyPage flash={flash} onVault={(v) => { setVaultCfg(v); setVaultSess({ open: true }); }} />
         ) : mode === "guide" ? (
           <GuidePage tools={MORE_TOOLS} groups={MORE_GROUPS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "care" ? (
