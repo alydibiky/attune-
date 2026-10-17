@@ -12,6 +12,7 @@
 #include <jni.h>
 
 #include <atomic>
+#include <cstdlib>
 #include <chrono>
 #include <mutex>
 #include <string>
@@ -102,6 +103,42 @@ Java_com_aldibiki_attune_EngineNative_nLoadGpu(JNIEnv * env, jobject, jstring jd
     for (size_t i = 0; i < ggml_backend_dev_count(); i++) {
         ggml_backend_dev_t d = ggml_backend_dev_get(i);
         if (ggml_backend_dev_type(d) == GGML_BACKEND_DEVICE_TYPE_GPU) { name = ggml_backend_dev_description(d); break; }
+    }
+    std::string ascii;
+    for (char ch : name) ascii += ((unsigned char) ch < 0x80) ? ch : '?';
+    return env->NewStringUTF(ascii.c_str());
+}
+
+// v6.34 — the NPU (Snapdragon Hexagon, llama.cpp's experimental backend), loaded only when the person turns it on, like the
+// GPU. libattune-npu.so is llama.cpp's libggml-hexagon.so built in Qualcomm's toolchain image at the same commit
+// (.github/workflows: the APK build); the DSP half (libggml-htp-v73…v81.so) sits in the same folder, and the DSP loader finds
+// it through ADSP_LIBRARY_PATH. Returns the NPU device's name (e.g. "HTP0"), or "" when it is not there / not usable.
+JNIEXPORT jstring JNICALL
+Java_com_aldibiki_attune_EngineNative_nLoadNpu(JNIEnv * env, jobject, jstring jdir) {
+    static std::mutex mu;
+    std::lock_guard<std::mutex> lock(mu);
+    std::string dir;
+    if (jdir) {
+        const char * c = env->GetStringUTFChars(jdir, nullptr);
+        if (c) { dir = c; env->ReleaseStringUTFChars(jdir, c); }
+    }
+    const std::string adsp = dir + ";/vendor/lib/rfsa/adsp;/vendor/dsp/cdsp;/system/lib/rfsa/adsp;/dsp";
+    setenv("ADSP_LIBRARY_PATH", adsp.c_str(), 1);
+    bool have = false;
+    for (size_t i = 0; i < ggml_backend_reg_count(); i++) {
+        std::string n = ggml_backend_reg_name(ggml_backend_reg_get(i));
+        if (n.find("HTP") != std::string::npos || n.find("exagon") != std::string::npos) have = true;
+    }
+    if (!have) {
+        const std::string path = dir + "/libattune-npu.so";
+        ggml_backend_reg_t reg = ggml_backend_load(path.c_str());
+        ELOG("NPU backend %s: %s", path.c_str(), reg ? "loaded" : "not available");
+    }
+    std::string name;
+    for (size_t i = 0; i < ggml_backend_dev_count(); i++) {
+        ggml_backend_dev_t d = ggml_backend_dev_get(i);
+        std::string dn = ggml_backend_dev_name(d), desc = ggml_backend_dev_description(d);
+        if (dn.rfind("HTP", 0) == 0 || desc.find("exagon") != std::string::npos) { name = dn; break; }
     }
     std::string ascii;
     for (char ch : name) ascii += ((unsigned char) ch < 0x80) ? ch : '?';

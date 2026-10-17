@@ -1734,6 +1734,15 @@ His picks (asked on cards): Money "integrate them the best way"; More page "B: r
   Glow 2B, Spark 0.8B and Zenith 9B. The 13–18 GB models (Apex+, Apex, Everest) don't fit the 16 GB ARM runner several times over.
 - Tests: `tests/unit/v737fixes.test.mjs`, `e2e_v737learn.py`, `e2e_v737maid.py`, `e2e_v737engine.py`, `e2e_v737fitadd.py`; updated
   `e2e_v718looks.py`, `e2e_v732fleet.py`, `e2e_v734sidebar.py`, `v734hubs.test.mjs`.
+- **NPU (Snapdragon Hexagon), experimental, off by default**: `hexagon-lab.yml` proved llama.cpp's Hexagon backend builds at the
+  app's commit in Qualcomm's public image `ghcr.io/snapdragon-toolchain/arm64-android:v0.7` (NDK + Hexagon SDK). "Build the APK"
+  now builds it (optional step) → `jniLibs/arm64-v8a/libattune-npu.so` (= libggml-hexagon.so, renamed so the CPU scan never
+  loads it) + `libggml-htp-v*.so` (the DSP halves). `attune-engine.cpp nLoadNpu` sets ADSP_LIBRARY_PATH to the app's lib folder,
+  loads it and returns the device ("HTP0"); Engine.kt starts with `-ngl 99 --device HTP0` (NPU first, then GPU, then CPU);
+  fallback / crash guard like the GPU (`npuTrial`, `npuNote`); Engine → Settings → Speed → "Use the NPU (experimental)" when
+  `npuBuilt`. Supported types: Q4_0, Q8_0, MXFP4 → **Core Max (Q8_0)** is the model to try. Needs Ali's phone test; unknowns:
+  whether an app process may open an unsigned DSP session on his phone, and whether the separately built backend matches the
+  app's libggml-base (same commit, same API).
 - Research notes (17 Oct): llama.cpp has an experimental Hexagon (NPU) backend for 8 Gen 3 / 8 Elite / 8 Elite Gen 5 (Q4_0, Q8_0,
   MXFP4) — anecdotes say CPU-like speed but much cooler; worth a lab run on Ali's SM8850 (Core Max is Q8_0 = supported). No official
   Qwen3.5 QAT GGUF exists yet.

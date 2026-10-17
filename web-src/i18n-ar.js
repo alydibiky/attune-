@@ -5356,4 +5356,9 @@ export const AR = {
   "item low in the store": "صنف قليل في المخزن",
   "crane due for service": "ونش يحتاج صيانة",
   "service soon": "صيانة قريبة",
+  "Use the NPU (experimental)": "استخدام وحدة الذكاء الاصطناعي NPU (تجريبي)",
+  "Running on the NPU ({d}).": "يعمل على وحدة NPU ({d}).",
+  "Runs the model on the Snapdragon NPU (Hexagon): much cooler, often faster at reading. Works best with Core Max (8-bit). Switches itself back to the CPU if anything goes wrong.": "يشغّل النموذج على وحدة NPU في سناب دراجون (Hexagon): أبرد كثيرًا وغالبًا أسرع في القراءة. يعمل أفضل مع Core Max (8 بت). يعود تلقائيًا إلى المعالج إذا حدثت مشكلة.",
+  "This phone's NPU could not be used by the engine — Attune stays on the CPU.": "تعذّر على المحرك استخدام وحدة NPU في هذا الهاتف — يبقى Attune على المعالج.",
+  "Last time, starting on the NPU closed the app. Attune is back on the CPU; you can try it again in Engine → Speed.": "في المرة السابقة أُغلق التطبيق عند التشغيل على وحدة NPU. عاد Attune إلى المعالج؛ يمكنك المحاولة مرة أخرى من المحرك ← السرعة.",
 };

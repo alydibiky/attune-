@@ -93,6 +93,7 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
   return (
     <div className={box} data-testid="speed-panel">
       <p className={head}>{tr("Speed")}</p>
+      {sp.npuNote ? <p className="text-[12px] text-amber-200 flex items-start gap-1.5 mb-2" data-testid="npu-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.npuNote)}</p> : null}
       {sp.gpuNote ? (
         <p className="text-[12px] text-amber-200 flex items-start gap-1.5 mb-2" data-testid="gpu-note"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{tr(sp.gpuNote)}</p>
       ) : null}
@@ -119,6 +120,9 @@ export function SpeedPanel({ native, nativeCall, runBench, flash, box, head, row
         {sp.gpuBuilt ? row(sp.gpu, () => !busy && apply({ gpu: !sp.gpu }, tr("Restarting the engine…")), "Use the GPU",
           sp.gpuName ? tr("Running on {g}.", { g: sp.gpuName }) : "Runs the model on the phone's graphics chip (Adreno). Often faster at reading long prompts; test it below. Switches itself back to the CPU if anything goes wrong.")
           : <p className="text-[11px] text-slate-500 px-1">{tr("This build has no GPU engine — it will come with the next APK built on GitHub.")}</p>}
+        {/* v6.34 (Ali: lighter, faster, cooler): the Snapdragon NPU — llama.cpp's experimental Hexagon backend; off unless turned on */}
+        {sp.npuBuilt ? row(sp.npu, () => !busy && apply({ npu: !sp.npu }, tr("Restarting the engine…")), "Use the NPU (experimental)",
+          sp.npuDev ? tr("Running on the NPU ({d}).", { d: sp.npuDev }) : "Runs the model on the Snapdragon NPU (Hexagon): much cooler, often faster at reading. Works best with Core Max (8-bit). Switches itself back to the CPU if anything goes wrong.") : null}
         {sp.mtpMode ? (
           <div className="rounded-lg border border-slate-800 px-3 py-2" data-testid="mtp-setting">
             <span className="block text-sm text-slate-200">{tr("Faster writing (MTP)")}</span>

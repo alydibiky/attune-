@@ -747,6 +747,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             .put("gpuBuilt", Engine.gpuBuilt(ctx))
             .put("gpu", Prefs.gpu(ctx)).put("gpuName", Engine.gpuName)
             .put("gpuNote", Prefs.gpuNote(ctx))
+            .put("npuBuilt", Engine.npuBuilt(ctx)).put("npu", Prefs.npu(ctx)).put("npuDev", Engine.npuDev).put("npuNote", Prefs.npuNote(ctx))
             .put("draft", Prefs.draft(ctx))
             .put("draftInstalled", draft != null).put("draftLabel", draft?.label ?: JSONObject.NULL)
             .put("draftActive", Engine.draftId != null)
@@ -768,6 +769,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun setSpeed(id: String, arg: String) {
         val a = try { JSONObject(arg) } catch (e: Exception) { return reject(id, "Bad request") }
         if (a.has("gpu")) { Prefs.setGpu(ctx, a.optBoolean("gpu")); Prefs.setGpuNote(ctx, "") }
+        if (a.has("npu")) { Prefs.setNpu(ctx, a.optBoolean("npu")); Prefs.setNpuNote(ctx, ""); if (a.optBoolean("npu")) Prefs.setGpu(ctx, false) }
         if (a.has("draft")) Prefs.setDraft(ctx, a.optBoolean("draft"))
         if (a.has("mtp")) Prefs.setMtpMode(ctx, a.optString("mtp", "auto"))
         if (a.has("fastCpu")) { Prefs.setFastCpu(ctx, a.optBoolean("fastCpu")); Prefs.setFastNote(ctx, "") }

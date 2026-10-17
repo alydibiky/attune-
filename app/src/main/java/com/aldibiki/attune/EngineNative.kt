@@ -13,6 +13,9 @@ object EngineNative {
     /** Loads the Adreno GPU backend (libattune-gpu.so) if present; the GPU's name, or "" if none. */
     external fun nLoadGpu(nativeLibDir: String): String
 
+    /** v6.34: loads the Snapdragon NPU backend (libattune-npu.so) if present; the NPU device's name ("HTP0"), or "" if none. */
+    external fun nLoadNpu(nativeLibDir: String): String
+
     /** Active backends and CPU features (plain text, for the Engine screen). */
     external fun nSystemInfo(): String
 

@@ -47,6 +47,10 @@ object Engine {
 
     /** True when this APK contains the GPU backend at all (the CI built it). */
     fun gpuBuilt(ctx: Context): Boolean = File(ctx.applicationInfo.nativeLibraryDir, "libattune-gpu.so").exists()
+    /** v6.34: this APK carries the NPU backend (built only for arm64 in CI; a Snapdragon with a Hexagon NPU can use it). */
+    fun npuBuilt(ctx: Context): Boolean = File(ctx.applicationInfo.nativeLibraryDir, "libattune-npu.so").exists()
+    /** The NPU device the engine runs on now ("HTP0"), or "" (CPU / GPU). */
+    @Volatile var npuDev: String = ""
 
     private const val RETIRED_DRAFT = true
 
@@ -359,6 +363,7 @@ object Engine {
             // are left to llama.cpp, which knows what the OpenCL backend
             // supports; forcing them could push work back to the CPU.
             a += listOf("-ngl", "99", "-fa", "auto")
+            if (npuDev.isNotEmpty()) a += listOf("--device", npuDev)   // v6.34: the NPU, not the GPU
         } else {
             // CPU only — said explicitly, because llama.cpp's default is to
             // offload to any GPU it finds.
@@ -450,8 +455,15 @@ object Engine {
 
         // GPU only when asked for, built in, and the phone really has one.
         var useGpu = false
+        // v6.34: the NPU first when the person turned it on (it is an accelerator like the GPU: every layer goes there)
+        npuDev = ""
+        if (!forceCpu && !flashMode && Prefs.npu(ctx) && npuBuilt(ctx)) {
+            npuDev = try { EngineNative.nLoadNpu(ctx.applicationInfo.nativeLibraryDir) } catch (e: Throwable) { "" }
+            if (npuDev.isNotEmpty()) { useGpu = true; gpuName = "NPU (Hexagon) $npuDev" }
+            else { Prefs.setNpu(ctx, false); Prefs.setNpuNote(ctx, "This phone's NPU could not be used by the engine — Attune stays on the CPU.") }
+        }
         // (flash mode stays on the CPU: the GPU would need every expert copied into its own memory)
-        if (!forceCpu && !flashMode && Prefs.gpu(ctx)) {
+        if (!useGpu && !forceCpu && !flashMode && Prefs.gpu(ctx)) {
             gpuName = try { EngineNative.nLoadGpu(ctx.applicationInfo.nativeLibraryDir) } catch (e: Throwable) { "" }
             if (gpuName.isNotEmpty()) useGpu = true
             else {
@@ -474,7 +486,7 @@ object Engine {
         // Crash guard: if the graphics driver takes the whole app down while
         // loading, this flag is still set at the next launch, and the app
         // starts on the CPU instead (MainActivity → Engine.checkGpuCrash).
-        if (useGpu) Prefs.setGpuTrial(ctx, true)
+        if (useGpu) { if (npuDev.isNotEmpty()) Prefs.setNpuTrial(ctx, true) else Prefs.setGpuTrial(ctx, true) }
         if (!EngineNative.nStart(buildArgs(ctx, model, useGpu, draft, useMtp))) {
             state = State.ERROR; error = "The engine is already running."
             return false
@@ -513,7 +525,7 @@ object Engine {
                         return gpuFallback(ctx, model, "The phone's GPU could not hold this model")
                     }
                 }
-                if (useGpu) Prefs.setGpuTrial(ctx, false)
+                if (useGpu) { Prefs.setGpuTrial(ctx, false); Prefs.setNpuTrial(ctx, false) }
                 state = State.READY
                 loadStartedAt = 0L
                 return true
@@ -563,6 +575,11 @@ object Engine {
 
     /** GPU failed: switch it off, say why, and start again on the CPU. */
     private fun gpuFallback(ctx: Context, model: ModelStore.Installed, why: String): Boolean {
+        if (npuDev.isNotEmpty()) {   // v6.34: the NPU failed → off, and the CPU
+            Prefs.setNpuTrial(ctx, false); Prefs.setNpu(ctx, false); npuDev = ""
+            Prefs.setNpuNote(ctx, why.replace("GPU", "NPU") + ", so Attune switched back to the CPU. " + lastErrorLine(ctx))
+            return startBlocking(ctx, model, forceCpu = true)
+        }
         Prefs.setGpuTrial(ctx, false)
         Prefs.setGpu(ctx, false)
         Prefs.setGpuNote(ctx, "$why, so Attune switched back to the CPU. " + lastErrorLine(ctx))
@@ -571,6 +588,10 @@ object Engine {
 
     /** At launch: a GPU start that never finished means the driver crashed the app. */
     fun checkGpuCrash(ctx: Context) {
+        if (Prefs.npuTrial(ctx)) {
+            Prefs.setNpuTrial(ctx, false); Prefs.setNpu(ctx, false)
+            Prefs.setNpuNote(ctx, "Last time, starting on the NPU closed the app. Attune is back on the CPU; you can try it again in Engine → Speed.")
+        }
         if (Prefs.gpuTrial(ctx)) {
             Prefs.setGpuTrial(ctx, false)
             Prefs.setGpu(ctx, false)

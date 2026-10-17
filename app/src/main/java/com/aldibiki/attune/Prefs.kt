@@ -42,6 +42,13 @@ object Prefs {
     fun setGpuTrial(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("gpu_trial", on).commit()
 
     /** Why GPU was switched off automatically, shown once on the Engine screen. */
+    // v6.34: the NPU (Snapdragon Hexagon), experimental — off unless the person turns it on; a crash at start turns it off
+    fun npu(ctx: Context): Boolean = sp(ctx).getBoolean("npu", false)
+    fun setNpu(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("npu", on).commit()
+    fun npuTrial(ctx: Context): Boolean = sp(ctx).getBoolean("npu_trial", false)
+    fun setNpuTrial(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("npu_trial", on).commit()
+    fun npuNote(ctx: Context): String = sp(ctx).getString("npu_note", "") ?: ""
+    fun setNpuNote(ctx: Context, s: String) = sp(ctx).edit().putString("npu_note", s).apply()
     fun gpuNote(ctx: Context): String = sp(ctx).getString("gpu_note", "") ?: ""
     fun setGpuNote(ctx: Context, s: String) = sp(ctx).edit().putString("gpu_note", s).apply()
 

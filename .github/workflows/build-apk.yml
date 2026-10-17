@@ -107,6 +107,25 @@ jobs:
           if [ -f $L/libattune-image.so ] && { [ -f $L/libattune-image-gpu.so ] || [ ! -f app/src/main/cpp/opencl/lib/arm64-v8a/libOpenCL.so ]; }; then echo "picture engine from cache"; ls -la $L; exit 0; fi
           NDK="$ANDROID_SDK_ROOT/ndk/29.0.14206865" NINJA="$ANDROID_SDK_ROOT/cmake/3.31.6/bin/ninja" bash app/src/main/cpp/build-image-engine.sh
 
+      # v6.34 — the Snapdragon NPU (llama.cpp's experimental Hexagon backend), built in Qualcomm's public toolchain image at the
+      # app's llama.cpp commit with GGML_BACKEND_DL like the APK's engine. libggml-hexagon.so ships renamed libattune-npu.so (so
+      # the CPU start-up scan never loads it; Engine → Speed → "Use the NPU" does), the DSP halves libggml-htp-v*.so as they are.
+      # Optional: if it fails, the APK builds without the NPU and the switch is not shown (hexagon-lab.yml is the same build).
+      - name: NPU backend for Snapdragon (optional, experimental)
+        continue-on-error: true
+        run: |
+          L=$PWD/app/src/main/jniLibs/arm64-v8a; mkdir -p "$L"
+          rm -rf ~/npu && cp -r app/src/main/cpp/llama.cpp ~/npu && cd ~/npu && cp docs/backend/snapdragon/CMakeUserPresets.json .
+          docker run --rm -u $(id -u):$(id -g) -v $PWD:/workspace --platform linux/amd64 ghcr.io/snapdragon-toolchain/arm64-android:v0.7 bash -lc '
+            set -e; cd /workspace
+            cmake --preset arm64-android-snapdragon-release -B build-npu -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_NATIVE=OFF -DGGML_OPENCL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_CURL=OFF > /dev/null
+            cmake --build build-npu -j$(nproc) > /dev/null'
+          H=$(find build-npu -type f -name libggml-hexagon.so | head -1)
+          [ -n "$H" ] || { echo "no NPU backend built"; exit 1; }
+          cp "$H" "$L/libattune-npu.so"
+          find build-npu -type f -name "libggml-htp-v*.so" -exec cp {} "$L/" \;
+          ls -la "$L" | grep -E "npu|htp" || true
+
       # Keep compiled engine objects between runs: the first build compiles
       # llama.cpp for every ARM generation (~20-30 min); later ones are quick.
       - name: Cache the native build
