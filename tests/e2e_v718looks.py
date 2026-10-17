@@ -49,7 +49,7 @@ with sync_playwright() as p:
     bg = page.evaluate("getComputedStyle(document.body).backgroundColor")
     check(bg == "rgb(242, 246, 243)", "…a light page behind Fit (%s)" % bg)
     card = page.evaluate("getComputedStyle(document.querySelector('[data-testid=fit-app]')).getPropertyValue('--color-white').trim()")
-    check(card.lower() == "#12241b", "…dark writing on light (the palette turned around inside Fit: %s)" % card)
+    check(card.lower() == "#0b1a12", "…dark writing on light (the palette turned around inside Fit: %s)" % card)
     shot(page, "look-fresh-home")
 
     for look in ("fresh", "night", "bold"):
