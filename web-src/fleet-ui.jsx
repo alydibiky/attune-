@@ -146,7 +146,7 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
   const head = (
     <div className="sticky top-0 z-30 bg-[#F4F6FAF2] backdrop-blur px-3 pt-2 pb-2 flex items-center gap-2">
       {open || onBack ? <button onClick={open ? () => setOpen(null) : onBack} aria-label={tr("Back")} className="w-11 h-11 rounded-full bg-[#FFFFFF] border border-[#DCE3EC] grid place-items-center shrink-0" data-testid="fleet-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button> : null}
-      <div className="flex-1 min-w-0"><p className="text-[17px] font-extrabold truncate">{tr("Fleet & rentals")}</p><p className={"text-[12px] truncate " + muted}>{tr("Cranes, jobs, cheques and the store — on your phone, offline")}</p></div>
+      <div className="flex-1 min-w-0"><p className="text-[17px] font-extrabold truncate">{tr("Fleet & rentals")}</p><p data-intro="" className={"text-[12px] truncate " + muted}>{tr("Cranes, jobs, cheques and the store — on your phone, offline")}</p></div>
       <button onClick={() => setMenu(true)} aria-label={tr("More")} className="w-11 h-11 rounded-full bg-[#FFFFFF] border border-[#DCE3EC] grid place-items-center shrink-0" data-testid="fleet-menu"><Menu size={19} /></button>
     </div>);
   const tabs = (vertical) => TABS.map(([k, l, I]) => (

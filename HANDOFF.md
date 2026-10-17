@@ -1721,6 +1721,10 @@ His picks (asked on cards): Money "integrate them the best way"; More page "B: r
   balance; button `fleet-statement` → print / save as PDF); one phone notification at 09:00 for what needs you (`reminderNote` →
   `AttuneNative.schedule` id "fleet-needs", re-made on every change). Test `tests/unit/v737fleet.test.mjs`. Sharing Fleet between
   phones still waits on Drive sync.
+- **Minimal design A, more pages** (the agreed rules, measured words on screen in the new layout): Business 182 → 26 (no
+  introduction on its own — "How it works" still opens it; card descriptions and the subtitle are `data-intro`), Fleet 77 → 38,
+  Knowledge 1,441 → 735 (explanations hidden; each pack's safety notice stays on purpose), Travel 224 → 205. Learn, Studio, Coach,
+  Mind, Shelf, News, Convert, Slides and CV were already under 60 words.
 - **Desktop CI** (Windows "Smoke test from source" red since v6.31): not a lost answer — the runner's window is 1008 px, and the check
   expected the phone's bottom bar under 1024 px; v6.30 removed the bar. `desktop/test/smoke-run.js` now accepts the ☰ menu.
 - **Quant bench for any model**: `quant-bench.yml` takes repo / prefix / quants (`tests/models/quant_bench.py` reads `PREFIX`); run for

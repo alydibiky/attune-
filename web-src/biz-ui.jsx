@@ -67,7 +67,9 @@ export function BusinessApp({ flash, llm, modelReady, openEngine, saveFile, shar
   const [index, setIndex] = useState(loadIndex);
   const [sys, setSysRaw] = useSticky("erp:sys", null);
   const [view, setView] = useSticky("erp:view", "list");          // list | new | system | books
-  const [intro, setIntro] = useState(() => !seenIntro() && !loadIndex().length);   // the introduction tops the home until used
+  // (v6.34 minimal design A: no introduction on its own — it is one tap away under "How it works")
+  const minimal = (() => { try { return document.documentElement.classList.contains("att-min"); } catch (e) { return false; } })();
+  const [intro, setIntro] = useState(() => !minimal && !seenIntro() && !loadIndex().length);   // the introduction tops the home until used
   useSubBack(view !== "list", () => { setView("list"); setSysRaw(null); });
   const setSys = (next, msg) => {
     if (!saveSys(next)) flash(tr("The phone's storage for Business is full — export a table to CSV and delete old records."));
@@ -107,7 +109,7 @@ function TopBar({ title, sub, onBack, right, label }) {
   return (
     <div className="sticky top-0 z-30 bg-[#F4F6FAF2] backdrop-blur px-3 pt-2 pb-2 flex items-center gap-2">
       {onBack ? <button onClick={onBack} aria-label={label || tr("Back")} className="w-11 h-11 rounded-full bg-[#FFFFFF] border border-[#DCE3EC] flex items-center justify-center shrink-0" data-testid="biz-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button> : null}
-      <div className="flex-1 min-w-0"><p className="text-[17px] font-extrabold truncate" dir="auto">{title}</p>{sub ? <p className="text-[12px] text-[#5B6B80] truncate">{sub}</p> : null}</div>
+      <div className="flex-1 min-w-0"><p className="text-[17px] font-extrabold truncate" dir="auto">{title}</p>{sub ? <p data-intro="" className="text-[12px] text-[#5B6B80] truncate">{sub}</p> : null}</div>
       {right}
     </div>
   );
@@ -146,19 +148,19 @@ function Hub({ index, open, onNew, onBooks, onShop, onFleet, onExit, onOpenFile,
       <button onClick={onShop} data-testid="shop-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
         <span className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-[#FFFFFF]" style={{ background: "var(--biz)" }}><ShoppingCart size={20} /></span>
         <span className="min-w-0"><span className="block font-bold text-[15px]">{tr("Shop in your pocket")}</span>
-          <span className="block text-[12.5px] text-[#5B6B80] leading-snug">{tr("Say what your shop is — the counter with barcodes, stock, customers who owe, staff and the end-of-day close, ready in a minute. Every sale goes into your books.")}</span></span>
+          <span data-intro="" className="block text-[12.5px] text-[#5B6B80] leading-snug">{tr("Say what your shop is — the counter with barcodes, stock, customers who owe, staff and the end-of-day close, ready in a minute. Every sale goes into your books.")}</span></span>
       </button>
       {/* v6.32: Ali's Crane Management + Crane Warehouse apps as one (fleet-ui.jsx) */}
       <button onClick={onFleet} data-testid="fleet-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
         <span className="w-11 h-11 rounded-xl bg-[#E0E7FF] text-[#3730A3] flex items-center justify-center shrink-0"><Truck size={20} /></span>
         <span className="min-w-0"><span className="block font-bold text-[15px]">{tr("Fleet & rentals")}</span>
-          <span className="block text-[12.5px] text-[#5B6B80] leading-snug">{tr("Cranes and equipment for hire: job orders by the hour or day, cheques with reminders, client balances, expenses, and a parts store linked to each crane.")}</span></span>
+          <span data-intro="" className="block text-[12.5px] text-[#5B6B80] leading-snug">{tr("Cranes and equipment for hire: job orders by the hour or day, cheques with reminders, client balances, expenses, and a parts store linked to each crane.")}</span></span>
       </button>
       <button onClick={onNew} className={btnP + " w-full lg:col-span-2 lg:order-last"} style={{ background: "var(--biz)" }} data-testid="erp-new"><Plus size={18} />{intro ? tr("Start a new system") : tr("New system")}</button>
       <button onClick={onBooks} data-testid="books-open" className={card + " w-full text-start p-4 flex items-center gap-3"}>
         <span className="w-11 h-11 rounded-xl bg-[#FEF3C7] text-[#B45309] flex items-center justify-center shrink-0"><FileText size={20} /></span>
         <span className="min-w-0"><span className="block font-bold text-[15px]">{tr("Shop & trading books")}</span>
-          <span className="block text-[12.5px] text-[#5B6B80] leading-snug">{tr("Invoices with VAT, payments and overdue tracking, stock and purchasing, reports — your own accounting, on your phone, in English and Arabic.")}</span></span>
+          <span data-intro="" className="block text-[12.5px] text-[#5B6B80] leading-snug">{tr("Invoices with VAT, payments and overdue tracking, stock and purchasing, reports — your own accounting, on your phone, in English and Arabic.")}</span></span>
       </button>
       </div>
       <div className="flex items-center justify-between pt-1"><p className="text-[15px] font-bold">{tr("Your systems")}</p>

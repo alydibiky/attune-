@@ -110,14 +110,14 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[14px] font-semibold text-slate-100">{tr("Use Knowledge in Chat")}</p>
-            <p className="text-[12px] text-slate-400">{tr("When you ask for a fact, Chat first looks it up in your sources and shows which one it used.")}</p>
+            <p data-intro="" className="text-[12px] text-slate-400">{tr("When you ask for a fact, Chat first looks it up in your sources and shows which one it used.")}</p>
           </div>
           <button role="switch" aria-checked={on} onClick={() => setOn(!on)} data-testid="kn-switch"
             className={"shrink-0 w-11 h-6 rounded-full relative transition " + (on ? "bg-teal-500" : "bg-slate-700")}>
             <span className={"absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all " + (on ? "start-[1.375rem]" : "start-0.5")} /></button>
         </div>
         <p className="text-[12.5px] text-slate-300" data-testid="kn-stats">{tr("{mb} — {c} passages from {s} sources", { mb: mb(stats.bytes), c: stats.chunks, s: stats.sources })}</p>
-        <p className="text-[11.5px] text-slate-500">{tr("What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a second and nothing leaves the phone.")}</p>
+        <p data-intro="" className="text-[11.5px] text-slate-500">{tr("What you get: small models answer facts from your sources correctly (in our test, 31 → 99 of 104 for the smallest model). Looking up takes under a tenth of a second and nothing leaves the phone.")}</p>
       </div>
 
       <MyPacks knowledge={knowledge} flash={flash} readOther={(f) => readSourceFile(f, nativeCall)}
@@ -131,7 +131,7 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
             <input type="file" className="hidden" data-testid="kn-file" accept=".txt,.md,.markdown,.csv,.pdf,.docx,.pptx,.odt,.epub,.html,.htm,.rtf,text/*,application/pdf"
               onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; addFile(f); }} /></label>
         </div>
-        <p className="text-[11.5px] text-slate-500">{tr("Text, Markdown, PDF or Word. In Ask a PDF, “Add to Knowledge” keeps the document you opened.")}</p>
+        <p data-intro="" className="text-[11.5px] text-slate-500">{tr("Text, Markdown, PDF or Word. In Ask a PDF, “Add to Knowledge” keeps the document you opened.")}</p>
         {paste ? (
           <div className="space-y-2">
             <input value={paste.title} onChange={(e) => setPaste({ ...paste, title: e.target.value })} placeholder={tr("Title (for example: Villa rules)")} data-testid="kn-paste-title" dir="auto"
@@ -173,7 +173,7 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
 
       <div className={card + " space-y-2"}>
         <p className="text-[13px] font-semibold text-slate-100">{tr("Public packs")}</p>
-        <p className="text-[12px] text-slate-400">{tr("Chat looks these up before it answers, and shows the source. They download by themselves when you are online and stay up to date.")}</p>
+        <p data-intro="" className="text-[12px] text-slate-400">{tr("Chat looks these up before it answers, and shows the source. They download by themselves when you are online and stay up to date.")}</p>
         {K.CATALOG.map((p) => {
           const got = phonePacks.find((x) => x.id === p.id), b = packBusy && packBusy.id === p.id ? packBusy : null;
           return (
@@ -181,7 +181,7 @@ export function KnowledgePage({ knowledge, on, setOn, adapterOn, setAdapterOn, f
               <div className="flex items-center gap-2"><Globe size={15} className="text-sky-300" />
                 <p className="flex-1 text-[13px] text-slate-100">{ar ? p.name_ar : p.name}{got ? " · " + mb(got.size || 0) : ""}</p>
                 {got ? <span className="text-[11px] text-emerald-300">{tr("ready")}</span> : null}</div>
-              <p className="text-[12px] text-slate-400">{ar ? p.about_ar : p.about}</p>
+              <p data-intro="" className="text-[12px] text-slate-400">{ar ? p.about_ar : p.about}</p>
               <p className="text-[11px] text-slate-500" data-testid={"kn-pack-lic-" + p.id}>{ar ? p.size_ar : p.size}{got && got.built ? " · " + tr("updated {d}", { d: got.built }) : ""}</p>
               {p.notice ? <p className="text-[11px] text-amber-300">{ar ? p.notice_ar : p.notice}</p> : null}
               {b ? (

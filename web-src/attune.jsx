@@ -10416,7 +10416,7 @@ export default function App() {
                   <button onClick={receiveTeamRecords} className="text-xs px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-teal-400">{tr("Receive from teammate")}</button>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-600 mt-2">{tr("Records replicate between your team's devices whenever any connection exists — site Wi-Fi, a company hub, or when someone drives back into coverage. The AI model never syncs; only small text records do, and they stay inside your company.")}</p>
+              <p data-intro="" className="text-[11px] text-slate-600 mt-2">{tr("Records replicate between your team's devices whenever any connection exists — site Wi-Fi, a company hub, or when someone drives back into coverage. The AI model never syncs; only small text records do, and they stay inside your company.")}</p>
             </div>
 
             {/* the ROI number */}

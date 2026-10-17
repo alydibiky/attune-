@@ -124,7 +124,7 @@ export function MyPacks({ knowledge, flash, saveFile, readOther }) {
     <div className={card + " space-y-3"} data-testid="my-packs">
       <div>
         <p className="text-[15px] font-semibold text-slate-100">{tr("My packs")}</p>
-        <p className="text-[12px] text-slate-400">{tr("Knowledge packs you make from your chats and files — the model reads them when it answers, like the public packs.")}</p>
+        <p data-intro="" className="text-[12px] text-slate-400">{tr("Knowledge packs you make from your chats and files — the model reads them when it answers, like the public packs.")}</p>
       </div>
       {packs.map((p) => (
         <div key={p.name} className="rounded-xl border border-slate-800 bg-slate-950/50 p-3 space-y-2" data-testid="my-pack">

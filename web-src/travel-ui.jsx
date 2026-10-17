@@ -108,7 +108,7 @@ export function TravelPage(p) {
 
       {pick || !pack ? (
         <Section title="Country packs" testid="travel-packs" right={<span className="c-sub">{Object.keys(CPACKS).length}</span>}>
-          <p className="c-sub m-0">{tr("Download once on Wi-Fi — everything then works on a plane, in a tunnel, or with roaming switched off.")}</p>
+          <p data-intro="" className="c-sub m-0">{tr("Download once on Wi-Fi — everything then works on a plane, in a tunnel, or with roaming switched off.")}</p>
           {installedPacks.length ? <div className="flex flex-wrap gap-1.5">{installedPacks.filter((k) => CPACKS[k]).map((k) => (
             <button key={k} onClick={() => { installPack(k); setPick(false); }} className="c-pill" aria-pressed={activePack === k}
               style={{ fontSize: 13, padding: "6px 12px", cursor: "pointer", border: activePack === k ? "1.5px solid var(--c-acc)" : "0" }}>{CPACKS[k].flag} {countryShown(k, CPACKS[k].name)} <Check size={11} className="inline" /></button>))}</div> : null}
