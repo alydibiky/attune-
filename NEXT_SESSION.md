@@ -712,7 +712,6 @@ APK: APK_RUN_LINK
 4. The big-model quant bench (Apex+, Everest, Apex, Glow/Spark); Everest flash-mode speed from Ali's Engine log.
 5. More of the app in French / Spanish / Turkish.
 6. Fleet ideas not built (§5.77): nightly reminders as notifications, a client statement PDF, sharing Fleet between phones (needs Drive sync).
-7. `run_all.sh` reads only the last line of each unit file, so a FAIL in the middle hides (fitlook did). Make it report any FAIL line.
 
 ## Prompt to start the next session
 

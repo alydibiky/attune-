@@ -43,6 +43,15 @@ node_modules/.bin/esbuild build/entry.jsx --bundle --format=iife --minify \
   --alias:lucide-react="$HERE/build/lucide-shim.js" \
   --outfile="$TMP/app.js" --log-level=warning
 
+# 2b. v6.32 the Business website template (www/business-site.html): one system or Fleet, exported as a website /
+#     Windows program (erp-v2.js siteHTML fills __SITE_TITLE__ and __SITE_DATA__).
+node_modules/.bin/esbuild build/site-entry.jsx --bundle --format=iife --minify \
+  --jsx=transform --jsx-factory=React.createElement --jsx-fragment=React.Fragment --target=es2018 --charset=utf8 \
+  --alias:react="$HERE/build/react-shim.js" \
+  --alias:react-dom/client="$HERE/build/reactdom-shim.js" \
+  --alias:lucide-react="$HERE/build/lucide-shim.js" \
+  --outfile="$TMP/site.js" --log-level=error
+
 # 3. Assemble: CSS, React, Yusr (base64) and the app into the shell.
 python3 - "$TMP" "$OUT" <<'PY'
 import base64, pathlib, sys
@@ -63,6 +72,16 @@ b64 = base64.b64encode(ys.encode('utf-8')).decode('ascii')
 put('<script>__APP__</script>', f'<script type="text/plain" id="yusr-src">{b64}</script>\n<script>' + (tmp/'app.js').read_text(encoding='utf-8') + '</script>')
 out.write_text(shell, encoding='utf-8')
 print(f'{out}  {len(shell.encode())/1e6:.2f} MB')
+site = (here/'build/site-shell.html').read_text(encoding='utf-8')
+for marker, content in (('<script>__TAILWIND__</script>', '<style>' + (tmp/'app.css').read_text(encoding='utf-8') + '</style>'),
+                        ('<script>__REACT__</script>', '<script>' + (here/'vendor/react.js').read_text(encoding='utf-8') + '</script>'),
+                        ('<script>__REACTDOM__</script>', '<script>' + (here/'vendor/react-dom.js').read_text(encoding='utf-8') + '</script>'),
+                        ('<script>__APP__</script>', '<script>' + (tmp/'site.js').read_text(encoding='utf-8').replace('</script', '<\\/script') + '</script>')):
+    assert site.count(marker) == 1, marker + ' placeholder missing (site)'
+    i = site.index(marker); site = site[:i] + content + site[i+len(marker):]
+so = out.parent/'business-site.html'
+so.write_text(site, encoding='utf-8')
+print(f'{so}  {len(site.encode())/1e6:.2f} MB')
 PY
 
 # 4. The code sandbox's workers are separate files (a Worker needs a URL).

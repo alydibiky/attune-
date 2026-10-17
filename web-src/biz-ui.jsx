@@ -10,7 +10,7 @@
    The tables' own tools (grid, design view, queries, forms, summary, licence, app file) stay in erp-ui.jsx and live in
    the "Tables" tab, so nothing that worked is lost. Logic: erp.js (tables), erp-screens.js (screens), biz-steps.js. */
 import React, { useState, useEffect, useMemo } from "react";
-import { Users, Truck, ShoppingCart, ChevronLeft, ChevronRight, Plus, Save, Trash2, Sparkles, Undo2, LayoutGrid, FileText, BarChart3, Database, Palette, Send, Check, X, Loader2, Upload, Wrench, Smartphone, Monitor } from "lucide-react";
+import { Users, Truck, Gauge, Printer, ShoppingCart, ChevronLeft, ChevronRight, Plus, Save, Trash2, Sparkles, Undo2, LayoutGrid, FileText, BarChart3, Database, Palette, Send, Check, X, Loader2, Upload, Wrench, Smartphone, Monitor } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { ShopApp } from "./shop-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
@@ -25,6 +25,8 @@ import { BooksApp } from "./books-ui.jsx";
 import { FleetApp } from "./fleet-ui.jsx";
 import * as V2 from "./erp-v2.js";
 import { PinGate, SystemTools } from "./biz-v2-ui.jsx";
+import { ProPanel, printRecord, proAlerts } from "./biz-pro-ui.jsx";
+import * as P from "./erp-pro.js";
 
 const KEY = "attune:erp:v1", INTRO = "attune:biz:intro";
 // a computer-sized screen (a tablet, a Chromebook, a phone on a monitor): the system switches to its computer layout
@@ -489,12 +491,14 @@ function LaunchStep({ draft, edit }) {
 }
 
 // ---- a system: Home · Tables · Form · Reports, the AI design chat on every tab, the steps one tap away --------------------
-function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flash, saveFile, share, runPy, onBack, onDelete }) {
+function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flash, saveFile, share, runPy, onBack, onDelete, site = false }) {
   const [tab, setTab] = useSticky("biz:tab", "home");
   // v6.32 Business v2: a system with a team opens behind a PIN, and every change is checked against the person's role
   const [user, setUser] = useSticky("biz:user:" + sys.id, null);
   const [tools, setTools] = useState(false);
-  const setSys = (next, msg) => { const why = V2.guardChange(sys, next, user); if (why) { flash(tr(why)); return; } setSysRaw(next, msg); };
+  const setSys = (next, msg) => { const why = V2.guardChange(sys, next, user); if (why) { flash(tr(why)); return; }
+    const no = P.checkChange(sys, next); if (no) { flash(tr(no.tpl, no.vars)); return; }   // v6.32 Pro: no double bookings, no selling stock you don't have
+    setSysRaw(next, msg); };
   const [chat, setChat] = useState(false);
   const [studio, setStudio] = useState(false);
   const [formT, setFormT] = useState(null);
@@ -504,23 +508,24 @@ function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flas
   const c = SC.colorOf(sys), u = SC.uiOf(sys);
   if (V2.hasTeam(sys) && !(user && V2.teamOf(sys).some((x) => x.id === user.id))) return <div style={accentVars(c)}><PinGate sys={sys} color={c} onBack={onBack} onIn={(x) => { setUser(x); flash(tr("Hello {n}", { n: x.name })); }} /></div>;
   if (studio) return <div style={accentVars(c)}><Builder existing={sys} startAt={3} llm={llm} modelReady={modelReady} openEngine={openEngine} flash={flash} onBack={() => setStudio(false)} onSave={(d) => setSys(d)} onCreate={() => setStudio(false)} /></div>;
-  const tabs = [["home", tr("Home"), LayoutGrid], ["tables", tr("Tables"), Database], ["form", tr("Form"), FileText], ["reports", tr("Reports"), BarChart3]];
+  const tabs = [["home", tr("Home"), LayoutGrid], ["pro", tr("Overview"), Gauge], ["tables", tr("Tables"), Database], ["form", tr("Form"), FileText], ["reports", tr("Reports"), BarChart3]];
   const undo = sys.history && sys.history.length ? () => { const x = E.undo(sys); if (x) setSys(x.sys, tr("Undone: {w}", { w: x.what })); } : null;
   const go = (t, tid) => { if (tid) setFormT(tid); setTab(t); };
   const body = tab === "home" ? <HomeDash sys={sys} go={go} askAI={() => setChat(true)} wide={wide} />
     : tab === "tables" ? <SystemView sys={sys} setSys={setSys} llm={llm} modelReady={modelReady} flash={flash} saveFile={saveFile} share={share} runPy={runPy} onBack={onBack} onDelete={onDelete} embedded />
-    : tab === "form" ? <AccessForm sys={sys} setSys={setSys} flash={flash} tid={formT} setTid={setFormT} cols={wide ? u.formCols : 1} />
+    : tab === "pro" ? <ProPanel sys={sys} setSys={setSys} flash={flash} saveFile={saveFile} go={go} wide={wide} />
+    : tab === "form" ? <AccessForm sys={sys} setSys={setSys} flash={flash} tid={formT} setTid={setFormT} cols={wide ? u.formCols : 1} saveFile={saveFile} />
     : <Reports sys={sys} />;
   const fab = modelReady ? <button onClick={() => setChat(true)} className="fixed end-4 z-40 h-14 ps-4 pe-5 rounded-full text-[#FFFFFF] font-bold shadow-lg flex items-center gap-2" style={{ background: c, bottom: wide ? "24px" : "calc(84px + env(safe-area-inset-bottom))" }} data-testid="biz-ai-open">
     <Sparkles size={18} />{tr("Change with AI")}</button> : null;
   const chatSheet = chat ? <DesignChat sys={sys} setSys={setSys} llm={llm} flash={flash} onClose={() => setChat(false)} /> : null;
   const round = "w-11 h-11 rounded-full bg-[#FFFFFF33] flex items-center justify-center";
-  const backBtn = <button onClick={onBack} aria-label={tr("Back")} className={round + " shrink-0"} data-testid="biz-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>;
+  const backBtn = !onBack ? null : <button onClick={onBack} aria-label={tr("Back")} className={round + " shrink-0"} data-testid="biz-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>;
   const undoBtn = undo ? <button onClick={undo} aria-label={tr("Undo")} className={round + " shrink-0"} data-testid="biz-sys-undo"><Undo2 size={18} /></button> : null;
-  const toolsSheet = tools ? <SystemTools sys={sys} setSys={setSys} user={user} onSignIn={setUser} wide={wide} flash={flash} saveFile={saveFile} onClose={() => setTools(false)}
+  const toolsSheet = tools ? <SystemTools sys={sys} setSys={setSys} user={user} onSignIn={setUser} wide={wide} site={site} flash={flash} saveFile={saveFile} onClose={() => setTools(false)}
     onImport={(d) => { setTools(false); setSysRaw({ ...d, id: E.uid("S"), name: d.name + " " + tr("(copy)"), team: undefined, licence: undefined, updated: Date.now() }, tr("Opened the backup as a copy")); }} /> : null;
   const toolsBtn = <button onClick={() => setTools(true)} aria-label={tr("Team & tools")} className={round + " shrink-0"} data-testid="biz-tools-open"><Users size={18} /></button>;
-  const designBtn = <button onClick={() => setStudio(true)} className="h-10 px-3.5 rounded-full bg-[#FFFFFF33] text-[13px] font-bold flex items-center gap-1.5 shrink-0" data-testid="biz-open-studio"><Palette size={15} />{tr("Design")}</button>;
+  const designBtn = site ? null : <button onClick={() => setStudio(true)} className="h-10 px-3.5 rounded-full bg-[#FFFFFF33] text-[13px] font-bold flex items-center gap-1.5 shrink-0" data-testid="biz-open-studio"><Palette size={15} />{tr("Design")}</button>;
   const sub = tr("{n} tables", { n: sys.tables.length }) + (E.isActive(sys) ? "" : " · " + tr("Trial"));
 
   // ---- the computer layout: the same system, a menu on the left or on top, wider pages ----
@@ -566,7 +571,7 @@ function SystemShell({ sys, setSys: setSysRaw, llm, modelReady, openEngine, flas
       <div className="px-3 pt-3">{body}</div>
       {fab}
       <nav className="att-shift fixed bottom-0 inset-x-0 z-40 bg-[#FFFFFF] border-t border-[#DCE3EC]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="biz-nav">
-        <div className="max-w-3xl mx-auto grid grid-cols-4 h-[64px]">{tabs.map(([k, l, I]) => (
+        <div className="max-w-3xl mx-auto grid grid-cols-5 h-[64px]">{tabs.map(([k, l, I]) => (
           <button key={k} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined} data-testid={"biz-tab-" + k} className="flex flex-col items-center justify-center gap-0.5 text-[11.5px] font-semibold" style={{ color: tab === k ? c : "#64748B" }}><I size={21} />{l}</button>))}</div>
       </nav>
       {chatSheet}{toolsSheet}
@@ -587,7 +592,8 @@ function HomeDash({ sys, go, askAI, wide = false }) {
       {ch ? (() => { const mx = Math.max(1, ...ch.rows.map((r) => r.value)); return ch.rows.map((r, i) => <div key={i} className="flex items-center gap-2 text-[12.5px]"><span className="w-24 truncate text-[#475569]" dir="auto">{r.label}</span><span className="flex-1 h-3 rounded-full bg-[#EEF2F7]"><span className="block h-3 rounded-full" style={{ width: (r.value / mx) * 100 + "%", background: "var(--biz)" }} /></span><span className="tabular-nums w-16 text-end">{r.value.toLocaleString()}</span></div>); })()
         : <p className="text-[13px] text-[#5B6B80]">{tr("No records yet — open the Form tab to add the first one.")}</p>}</div>,
     alerts: <div key="alerts" className={card + " p-3.5 space-y-1.5"} data-testid="biz-alerts"><p className="text-[13px] font-bold">{tr("Alerts")}</p>
-      {al.length ? al.map((a, i) => <button key={i} onClick={() => go("form", a.table.id)} className="w-full text-start text-[13px] text-amber-700" dir="auto">⚠ {a.table.name}: {E.displayOf(a.table, a.row)} — {tr("missing")} {a.missing.join(", ")}</button>) : <p className="text-[13px] text-emerald-700">✓ {tr("Nothing missing")}</p>}</div>,
+      {proAlerts(sys).map((a, i) => <button key={"p" + i} onClick={() => go("pro")} className="w-full text-start text-[13px] text-amber-700" dir="auto" data-testid="biz-alert-pro">⚠ {a.text}</button>)}
+      {al.length ? al.map((a, i) => <button key={i} onClick={() => go("form", a.table.id)} className="w-full text-start text-[13px] text-amber-700" dir="auto">⚠ {a.table.name}: {E.displayOf(a.table, a.row)} — {tr("missing")} {a.missing.join(", ")}</button>) : proAlerts(sys).length ? null : <p className="text-[13px] text-emerald-700">✓ {tr("Nothing missing")}</p>}</div>,
     tables: <div key="tables" className={wide ? "grid grid-cols-2 gap-2.5 col-span-2" : "space-y-2"} data-testid="biz-home-tables">{sys.tables.map((t) => (
       <button key={t.id} onClick={() => go("form", t.id)} className={card + " w-full p-3.5 flex items-center justify-between text-start"}><span className="font-bold text-[14.5px]" dir="auto">{t.name}</span><span className="text-[13px] text-[#5B6B80]">{tr("{n} records", { n: (sys.rows[t.id] || []).length })}</span></button>))}</div>,
     ask: <button key="ask" onClick={askAI} className={card + " w-full p-4 text-start flex items-center gap-3"}><Sparkles size={18} style={{ color: "var(--biz)" }} /><span className="text-[14px] text-[#475569]">{tr("Ask the AI to change anything in this system")}</span></button>,
@@ -596,8 +602,33 @@ function HomeDash({ sys, go, askAI, wide = false }) {
   return <div className={wide ? "grid grid-cols-2 gap-4 items-start" : "space-y-3"} data-testid="biz-home" data-device={wide ? "computer" : "phone"}>{(wide ? [...parts.filter((p) => p === "kpis"), ...parts.filter((p) => p !== "kpis" && p !== "tables"), ...parts.filter((p) => p === "tables")] : parts).map((p) => part[p]).filter(Boolean)}</div>;
 }
 
+// ---- v6.32: the exported website / desktop program — one system on its own, the same screens as in Attune ----------------
+export function SiteSystem({ seed, flash }) {
+  const key = "attune-site:" + seed.id;
+  const [sys, setS] = useState(() => { try { const s = JSON.parse(localStorage.getItem(key) || "null"); if (s && s.id === seed.id && (s.updated || 0) >= (seed.updated || 0)) return s; } catch (e) {} return seed; });
+  const setSys = (next, msg) => { try { localStorage.setItem(key, JSON.stringify(next)); } catch (e) { flash(tr("This browser's storage is full — save an encrypted backup and delete old records.")); } setS(next); if (msg) flash(msg); };
+  const full = useWide();
+  return (
+    <div className="biz-app min-h-[100dvh] bg-[#F4F6FA] text-[#0F172A]" style={accentVars(SC.colorOf(sys))} data-testid="business-app">
+      <style>{BIZ_CSS}</style>
+      <div className={full ? "" : "max-w-3xl lg:max-w-5xl mx-auto px-3"} style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+        <SystemShell sys={sys} setSys={setSys} llm={null} modelReady={false} flash={flash} saveFile={null} site onBack={null} onDelete={null} />
+      </div>
+    </div>);
+}
+
+export function SiteFleet({ seed, flash }) {
+  return (
+    <div className="biz-app min-h-[100dvh] bg-[#F4F6FA] text-[#0F172A]" style={accentVars(SC.COLORS.blue)} data-testid="business-app">
+      <style>{BIZ_CSS}</style>
+      <div className="max-w-3xl lg:max-w-5xl mx-auto px-3" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+        <FleetApp flash={flash} saveFile={null} seed={seed} site />
+      </div>
+    </div>);
+}
+
 // ---- the Access-style form: one record at a time ----------------------------------------------------------------------
-export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1 }) {
+export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1, saveFile = null }) {
   const table = sys.tables.find((t) => t.id === tid) || sys.tables[0];
   const rows = table ? sys.rows[table.id] || [] : [];
   const [at, setAt] = useState(rows.length ? rows.length - 1 : -1);        // -1 = a new record
@@ -619,6 +650,7 @@ export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1 }) {
     for (const f of table.fields) if (f.type !== "formula" && f.type !== "auto") input[f.id] = vals[f.id];
     const r = row ? E.updateRow(sys, table.id, row._id, input) : E.addRow(sys, table.id, input);
     if (r.errors.length) { setErrs(Object.fromEntries(r.errors.map((e) => [e.field || "_", e.error]))); if (r.errors[0].limit) flash(r.errors[0].error); return; }
+    const no = P.checkChange(sys, r.sys); if (no) { flash(tr(no.tpl, no.vars)); return; }
     setSys(r.sys, row ? tr("Saved") : tr("Added to {t}", { t: table.name }));
     setDirty(false);
     if (!row) setAt((r.sys.rows[table.id] || []).length - 1);
@@ -656,7 +688,8 @@ export function AccessForm({ sys, setSys, flash, tid, setTid, cols = 1 }) {
         </div>
         <div className="flex gap-2 px-4 pb-4">
           <button onClick={save} className={btnP + " flex-1"} style={{ background: "var(--biz)" }} data-testid="biz-form-save"><Save size={17} />{row ? tr("Save") : tr("Add")}</button>
-          {row ? <button onClick={() => { if (!del) { setDel(true); return; } setSys(E.deleteRow(sys, table.id, row._id), tr("Deleted")); setAt(Math.min(at, rows.length - 2)); }} className={btnG + (del ? " border-rose-400 text-rose-700" : "")} data-testid="biz-form-delete"><Trash2 size={16} />{del ? tr("Tap again to delete") : tr("Delete")}</button> : null}
+          {row ? <button onClick={() => printRecord(sys, table.id, row._id, saveFile)} aria-label={tr("Print")} className={btnG} data-testid="biz-form-print"><Printer size={16} /></button> : null}
+          {row ? <button onClick={() => { if (!del) { setDel(true); return; } setSys(P.trash(sys, table.id, row._id), tr("In the Recycle Bin for 7 days")); setAt(Math.min(at, rows.length - 2)); }} className={btnG + (del ? " border-rose-400 text-rose-700" : "")} data-testid="biz-form-delete"><Trash2 size={16} />{del ? tr("Tap again to delete") : tr("Delete")}</button> : null}
         </div>
       </div>
       {/* the subform, as in Access: records in other tables that point at this one */}

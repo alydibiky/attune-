@@ -144,12 +144,21 @@ export function priceTarget(sys, tid, listId) {
 // ---- export as a real project -----------------------------------------------------------------------------------------
 const slug = (s) => String(s || "my-system").toLowerCase().replace(/[^a-z0-9؀-ۿ]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "my-system";
 /** The project's files: [{ name, data }] — zip them with projectZip(). */
-export function projectFiles(sys, { now = new Date().toISOString() } = {}) {
-  const name = String(sys.name || "My business").replace(/[<>&"]/g, "");
-  const dir = slug(sys.name);
+/** v6.32: the full app's page (www/business-site.html, built by build.sh) with one system or a Fleet inside it. */
+export function siteHTML(template, kind, data, { title = "", lang = "en" } = {}) {
+  if (!/__SITE_DATA__/.test(template)) throw new Error("That isn't the Business website template");
+  const json = JSON.stringify({ attuneSite: 1, kind, lang, data }).replace(/</g, "\\u003c").replace(/\u2028|\u2029/g, "");
+  return template.replace("__SITE_TITLE__", () => String(title).replace(/[<>&"]/g, "")).replace("__SITE_DATA__", () => json);
+}
+/** The project's files: [{ name, data }] — zip them with projectZip(). template = the full app (else the small one-file app).
+    kind "fleet": sys is Fleet's state and name its title. */
+export function projectFiles(sys, { now = new Date().toISOString(), template = null, kind = "system", name: title = null, lang = "en" } = {}) {
+  const fleet = kind === "fleet";
+  const name = String(title || sys.name || "My business").replace(/[<>&"]/g, "");
+  const dir = slug(fleet ? name : sys.name);
   // the team (PIN hashes) stays in Attune: a 4-digit PIN hash outside the app could be guessed
-  const pub = { ...sys, team: undefined };
-  let html = buildApp(pub);
+  const pub = fleet ? sys : { ...sys, team: undefined };
+  let html = template ? siteHTML(template, kind, pub, { title: name, lang }) : buildApp(pub);
   html = html.replace("</head>", `<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0F172A">\n<script>if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>\n</head>`);
   const manifest = { name, short_name: name.slice(0, 12), start_url: "./index.html", display: "standalone", background_color: "#F4F6FA", theme_color: "#0F172A", icons: [{ src: "icon.svg", sizes: "any", type: "image/svg+xml" }] };
   const icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="20" fill="#0F172A"/><text x="48" y="62" font-size="44" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif">${name.slice(0, 1).toUpperCase()}</text></svg>`;
@@ -163,14 +172,20 @@ function open() { const w = new BrowserWindow({ width: 1280, height: 860, title:
 app.whenReady().then(open);
 app.on("window-all-closed", () => app.quit());
 `;
-  const counts = sys.tables.map((t) => `- ${t.name}: ${(sys.rows[t.id] || []).length} records`).join("\n");
+  const counts = fleet ? Object.entries(sys).filter(([, v]) => Array.isArray(v)).map(([k, v]) => `- ${k}: ${v.length} records`).join("\n")
+    : sys.tables.map((t) => `- ${t.name}: ${(sys.rows[t.id] || []).length} records`).join("\n");
+  const dataFile = fleet ? "data/fleet.json" : "data/system.json";
+  const how = template
+    ? `- **Any browser:** open \`index.html\` — the same app as in Attune: dashboard, stock, balances and statements, documents to print, Excel, recycle bin, phone and computer layouts. Records are saved in that browser on that device; use Tools → Encrypted backup to move them to another device.
+- **On your own website:** upload the whole folder to any web host (shared hosting, Netlify, GitHub Pages, your company's server) and open its address. It installs on phones ("Add to Home screen") and works offline. Each device keeps its own records — a static website doesn't share them between people.`
+    : `- **Any browser:** open \`index.html\`. Add, edit, search and export your records. "Save a copy with my data" makes a new file with your records inside.
+- **On a phone as an app:** put this folder on any web host (or a local server) and open it; choose "Add to Home screen". It then works offline.`;
   const readme = `# ${name}
 
 Made with Attune Business on ${now.slice(0, 10)}. Everything works offline; your data stays on your device.
 
 ## Open it
-- **Any browser:** open \`index.html\`. Add, edit, search and export your records. "Save a copy with my data" makes a new file with your records inside.
-- **On a phone as an app:** put this folder on any web host (or a local server) and open it; choose "Add to Home screen". It then works offline.
+${how}
 - **As a Windows program (.exe):** install Node.js LTS, then in this folder run, one line at a time:
 \`\`\`
 npm install
@@ -181,7 +196,7 @@ npm run build
 
 ## What's inside
 ${counts}
-- \`data/system.json\` — the whole system (tables, fields, records) as JSON, for another database or a developer.
+- \`${dataFile}\` — all of it as JSON, for another database or a developer.
 
 ---
 
@@ -189,17 +204,17 @@ ${counts}
 
 تم إنشاؤه بواسطة «الأعمال» في Attune بتاريخ ${now.slice(0, 10)}. يعمل كله بدون إنترنت، وبياناتك تبقى على جهازك.
 
-- **في أي متصفح:** افتح \`index.html\`.
-- **على الهاتف كتطبيق:** ارفع المجلد على أي استضافة وافتحه، ثم اختر «إضافة إلى الشاشة الرئيسية».
+- **في أي متصفح:** افتح \`index.html\`.${template ? " تُحفظ السجلات في المتصفح على هذا الجهاز؛ استخدم «الأدوات ← نسخة احتياطية مشفرة» لنقلها." : ""}
+- **على موقعك أو على الهاتف كتطبيق:** ارفع المجلد كاملًا على أي استضافة وافتح عنوانه، ثم اختر «إضافة إلى الشاشة الرئيسية».${template ? " كل جهاز يحتفظ بسجلاته؛ الموقع الثابت لا يشاركها بين الأشخاص." : ""}
 - **كبرنامج Windows:** ثبّت Node.js LTS، ثم نفّذ في هذا المجلد \`npm install\` ثم \`npm run build\`. البرنامج في \`dist\\win-unpacked\`.
 - **لتغيير التصميم:** افتح ملف التطبيق في Attune ← الأعمال ← «فتح ملف تطبيق».
 `;
-  const data = JSON.stringify({ attuneErp: 1, exported: now, ...pub, history: [] }, null, 2);
+  const data = fleet ? JSON.stringify({ attuneFleet: 1, exported: now, ...pub }, null, 2) : JSON.stringify({ attuneErp: 1, exported: now, ...pub, history: [] }, null, 2);
   return [
     { name: `${dir}/index.html`, data: html }, { name: `${dir}/manifest.webmanifest`, data: JSON.stringify(manifest, null, 2) },
-    { name: `${dir}/sw.js`, data: sw }, { name: `${dir}/icon.svg`, data: icon }, { name: `${dir}/data/system.json`, data },
+    { name: `${dir}/sw.js`, data: sw }, { name: `${dir}/icon.svg`, data: icon }, { name: `${dir}/${dataFile}`, data },
     { name: `${dir}/package.json`, data: JSON.stringify(pkg, null, 2) }, { name: `${dir}/main.js`, data: main }, { name: `${dir}/README.md`, data: readme },
   ];
 }
 export const projectZip = (sys, o) => zipStore(projectFiles(sys, o));
-export const projectName = (sys) => slug(sys.name) + "-project.zip";
+export const projectName = (sys, title) => slug(title || sys.name) + "-project.zip";

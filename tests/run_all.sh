@@ -8,7 +8,9 @@
 cd "$(dirname "$0")/.."
 OUT=tests/results.txt
 export PYTHONPATH="$PWD/tests/pwshim:$PWD/tests${PYTHONPATH:+:$PYTHONPATH}"   # pwshim: use /opt/pw-browsers/chromium in cloud sessions
-for f in tests/unit/*.test.mjs; do echo "$f: $(node "$f" 2>/dev/null | tail -1)"; done > "$OUT"
+# a unit file can print PASS on its last line after an earlier FAIL, so any FAIL line is reported instead
+for f in tests/unit/*.test.mjs; do o=$(node "$f" 2>/dev/null); fl=$(printf '%s\n' "$o" | grep -m1 '^FAIL')
+  echo "$f: ${fl:-$(printf '%s\n' "$o" | tail -1)}"; done > "$OUT"
 # a failing file keeps its whole output in tests/fail-<name>.log (which check, and why), so an
 # intermittent failure can be read afterwards instead of guessed at
 ( cd tests && rm -f fail-*.log && for f in e2e_*.py; do out=$(timeout 900 python3 "$f" 2>&1); last=$(printf '%s\n' "$out" | tail -1)
