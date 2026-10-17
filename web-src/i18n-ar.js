@@ -4584,4 +4584,9 @@ export const AR = {
   "It shows what it can become": "يعرض لك ما يمكن تحويله إليه",
   "All conversions": "كل التحويلات",
   "Core at full precision: the fastest at reading long messages and files on a 12 GB+ phone, and the most exact answers of the 4B.": "Core بدقة كاملة: الأسرع في قراءة الرسائل والملفات الطويلة على هاتف بذاكرة 12 جيجابايت أو أكثر، وأدق إجابات نموذج 4B.",
+  "your data": "بياناتك",
+  "a knowledge pack": "حزمة معرفة",
+  "the web": "الويب",
+  "calculated on this phone": "محسوب على هذا الهاتف",
+  "the model's own knowledge": "معرفة النموذج نفسه",
 };

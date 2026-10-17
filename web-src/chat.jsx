@@ -14,6 +14,7 @@ import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import { chatMapIntent } from "./mapintent.js";
 import { chatLifeIntent } from "./life.js";
 import { chatAsk, loadStores as lifeStores } from "./lifeask.js";
+import { sourceLine } from "./sourcelabel.js";
 import { chatDeadlineIntent } from "./deadlines.js";
 import { agentCard } from "./agent-ui.jsx";
 import { flightFromText } from "./owed.js";
@@ -1574,6 +1575,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       }
       // v6.20 Knowledge: the [K1] tags become chips — only for passages the answer really uses (knowledge.js checkFacts)
       if (knHits && knHits.length && answer) { const kc = checkFacts(answer, knHits); answer = kc.text; extra.kchips = kc.chips; }
+      if (fileAtt) extra.fromFile = fileAtt.name || true;   // v6.32: the "From:" line under the answer
+      if (spaceRef.current.project && (spaceRef.current.project.knowledge || []).length) extra.projectKnowledge = true;
       if (raf) clearTimeout(raf);
       patchMsg(cid, aiId, { text: answer, streaming: false, phase: "", sources, via, secs: Math.round((Date.now() - t0) / 1000), stats: st, ...extra });
       api.spend();
@@ -2049,6 +2052,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                   onClick={async () => setToPack(toPack && toPack.id === m.id ? null : { id: m.id, packs: await api.knowledge.myPacks(), name: "" })}><GraduationCap size={15} /></button> : null}
                 {api.teach ? <button onClick={() => setTeaching(teaching && teaching.id === m.id ? null : { id: m.id, corrected: "", note: "" })} data-testid="teach"
                   className={`p-2 ${m.taught ? "text-sky-300" : ""}`} title={tr("Wrong? Teach the right answer")}><ThumbsDown size={15} /></button> : null}
+                {sourceLine(m, tr) ? <span className="text-[10px] text-slate-500 ms-1 truncate" data-testid="answer-source" dir="auto">{sourceLine(m, tr)}</span> : null}
                 {m.stats && m.stats.tps && !(m.stats.tokens && m.stats.tokens < 16) ? <span className="text-[10px] text-slate-600 ms-1">{m.stats.tps} {tr("tokens/s")}</span> : null}
                 {m.stats && m.stats.cut ? <span className="text-[10px] text-amber-300/90 ms-1" data-testid="cut-note">{tr("long answer — tap Continue")}</span> : null}
                 {m.stats && m.stats.looped ?<span className="text-[10px] text-amber-400/80 ms-1" data-testid="loop-note">{tr("stopped a repeat")}</span> : null}
