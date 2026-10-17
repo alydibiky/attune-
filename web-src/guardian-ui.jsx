@@ -10,6 +10,7 @@ import { loadLife } from "./life.js";
 import { fmt } from "./money-calm.js";
 import { disputeLetter } from "./owed.js";
 import { openOwed } from "./owed-ui.jsx";
+import { OverpayCheck } from "./overpay-ui.jsx";
 
 const DONE = { late: ["Send reminder", "Not now"], double: ["I got it back", "Not a mistake"], creep: ["I fixed it", "It's fine"], subs: ["I cancelled it", "I use it"], fees: ["Got it", null], due: ["Paid", null] };
 
@@ -33,8 +34,9 @@ export function GuardianCard({ pro, open }) {
     </button>);
 }
 
-export function GuardianPage({ pro, openPlan, flash }) {
-  const { g, put, F, totals } = useGuardian();
+export function GuardianPage({ pro, openPlan, flash, remind, unremind }) {
+  const { g, put, F: all, totals } = useGuardian();
+  const F = all.filter((f) => f.kind !== "subs" && f.kind !== "creep");   // v6.32: subscriptions and price rises live in the Overpaying check above
   const act = (f, yes) => {
     if (!yes) { put(dismiss(g, f.id)); return; }
     if (f.kind === "late") {
@@ -57,6 +59,7 @@ export function GuardianPage({ pro, openPlan, flash }) {
         <div className="c-card" data-testid="guardian-month"><span className="c-lbl">{tr("Saved this month")}</span><div className="c-amt">{pro ? fmt(totals.month) : "—"}</div></div>
         <div className="c-card"><span className="c-lbl">{tr("Saved in all")}</span><div className="c-amt">{pro ? fmt(totals.all) : "—"}</div></div>
       </div>
+      <OverpayCheck pro={pro} openPlan={openPlan} flash={flash} remind={remind} unremind={unremind} />
       {!F.length ? <p className="c-sub" data-testid="guardian-empty">{tr("Nothing to fix right now. The Guardian looks again every time a payment comes in.")}</p> : null}
       {/* v6.27 computer layout A: the findings as cards in 2 columns (one under another on a phone) */}
       {shown.length || hidden.length ? <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">

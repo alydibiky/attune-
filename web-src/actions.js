@@ -363,6 +363,8 @@ export function nextOccurrence(r, after) {
     if (r.repeat === "daily") d.setDate(d.getDate() + 1);
     else if (r.repeat === "weekly") d.setDate(d.getDate() + 7);
     else if (r.repeat === "weekdays") { do { d.setDate(d.getDate() + 1); } while (d.getDay() === 5 || d.getDay() === 6); } // Egypt: Fri + Sat off
+    else if (r.repeat === "monthly") d.setMonth(d.getMonth() + 1);   // v6.32: the Overpaying check on the 1st
+    else return t;
     t = d.getTime();
   }
   return t;

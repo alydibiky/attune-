@@ -10052,7 +10052,7 @@ export default function App() {
             remind={(r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "radar" })}
             unremind={(id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }} />
         ) : mode === "guardian" ? (
-          <GuardianPage pro={proActive} openPlan={() => setShowUpgrade(true)} flash={flash} />
+          <GuardianPage pro={proActive} openPlan={() => setShowUpgrade(true)} flash={flash} remind={scheduleReminder} unremind={(id) => { setReminders(loadReminders().filter((x) => x.id !== id)); try { NATIVE && NATIVE.unschedule && NATIVE.unschedule(id); } catch (e) {} }} />
         ) : mode === "life" ? (
           <LifePage flash={flash} toMoney={(t) => sendToMoney(t, tr("Payment read — pick the account and confirm"))}
             remind={(r) => scheduleReminder({ ...r, repeat: "none", created: Date.now(), source: "life" })}
