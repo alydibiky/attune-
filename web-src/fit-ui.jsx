@@ -4,7 +4,7 @@
    the model. The model only READS: what's on a plate in a photo or in a sentence, then the person
    confirms every item before it's saved. All data stays on the phone (localStorage). */
 import React, { useState, useRef, useMemo, useEffect } from "react";
-import { Mic, Apple, Camera, Search, Plus, Trash2, Loader2, Check, Droplet, Timer, Dumbbell, BarChart3, X, Sparkles, ChevronLeft, Play, Square, Star, Copy } from "lucide-react";
+import { Mic, Apple, Camera, Search, Plus, Trash2, Loader2, Check, Droplet, Timer, Dumbbell, BarChart3, X, Sparkles, ChevronLeft, Play, Square, Star, Copy, ChevronDown } from "lucide-react";
 import { getLang } from "./i18n.js";
 import * as F from "./fit.js";
 import { searchGenerated, getGenerated, GENERATED_COUNT } from "./fit-recipegen.js";
@@ -109,7 +109,7 @@ function Bar({ label, v, max, cls }) {
 // the watch and 3 photo meals a day; Pro adds unlimited photo meals, the week's meal plan + shopping
 // list and the week report. `pro` defaults to on (web preview, tests); the app passes the real state.
 export const FREE_PHOTOS_PER_DAY = 3;
-export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, packText, scanBarcode, readText, native, onExit, share, listen, health, pro = true, openPlan, photoClip }) {
+export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, packText, scanBarcode, readText, native, onExit, share, listen, health, pro = true, openPlan, photoClip, minimal = false }) {
   const ar = getLang() === "ar";
   const L = (en, a) => (ar ? a : en);
   const [st, setSt] = useState(load);
@@ -477,14 +477,26 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   if (editProfile) return <div className={lookCls}><LookStyle look={look} /><ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} /> : null} /></div>;
 
   return (
-    <div className={"max-w-2xl mx-auto px-4 pt-2 pb-28 space-y-4 " + lookCls} data-testid="fit-app" data-look={look}>
+    <div className={"max-w-2xl mx-auto px-4 pt-2 pb-28 space-y-4 " + lookCls + (minimal ? " fit-min" : "")} data-testid="fit-app" data-look={look}>
       <LookStyle look={look} />
       {/* v6.16c (Ali picked look A): Fit & Food is its own app — its own top bar and bottom bar; Attune's are hidden while it's open */}
       <div className="sticky top-0 z-30 -mx-4 px-2 bg-slate-950/95 backdrop-blur flex items-center gap-1 min-h-[52px]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {onExit ? <button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-300" aria-label={L("Back to Attune", "رجوع إلى Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button> : null}
-        <h2 className="flex-1 min-w-0 truncate text-[17px] font-semibold text-white flex items-center gap-2"><Apple size={18} className="text-emerald-300 shrink-0" />{({ today: L("Diary", "اليوميات"), recipes: L("Recipes", "الوصفات"), progress: L("Progress", "التقدم"), me: L("Me", "أنا"), move: L("Workouts", "التمارين") })[tab] || L("Fit & Food", "الأكل والرياضة")}</h2>
+        <h2 className="flex-1 min-w-0 truncate text-[17px] font-semibold text-white flex items-center gap-2"><Apple size={18} className="text-emerald-300 shrink-0" />{minimal ? L("Fit & Food", "الأكل والرياضة") : ({ today: L("Diary", "اليوميات"), recipes: L("Recipes", "الوصفات"), progress: L("Progress", "التقدم"), me: L("Me", "أنا"), move: L("Workouts", "التمارين") })[tab] || L("Fit & Food", "الأكل والرياضة")}</h2>
         {openEngine && !modelReady ? <button onClick={openEngine} className="min-h-[36px] rounded-full border border-slate-700 px-3 text-[12px] text-slate-300" data-testid="fit-engine">{L("No model", "لا يوجد نموذج")}</button> : null}
       </div>
+      {minimal ? (<>
+        {/* v6.32 (Ali picked B): no bottom bar — thin tabs on top like the rest of the app, and one "Log food" button */}
+        <div role="tablist" className="att-hscroll sticky z-30 -mx-4 px-4 flex gap-6 overflow-x-auto border-b-2 border-slate-700 bg-slate-950" style={{ top: "calc(52px + env(safe-area-inset-top))" }} data-testid="fit-nav">
+          {[["today", L("Diary", "اليوميات")], ["recipes", L("Recipes", "الوصفات")], ["progress", L("Progress", "التقدم")], ["me", L("Me", "أنا")]].map(([k, label]) => {
+            const on = tab === k || (k === "me" && tab === "move");
+            return <button key={k} role="tab" aria-selected={on} aria-current={on ? "page" : undefined} onClick={() => { setTab(k); setAdding(null); setDraft(null); }} data-testid={"fit-tab-" + k}
+              className={"shrink-0 h-11 -mb-[2px] text-[15px] whitespace-nowrap " + (on ? "border-b-[3px] border-emerald-500 text-white font-bold" : "text-slate-300 font-medium")}>{label}</button>; })}
+        </div>
+        {!adding ? <button onClick={() => { setAdding((a) => a || mealNow()); setDraft(null); setText(""); setPhoto(null); }} data-testid="fit-add"
+          className="att-shift fixed end-4 z-[60] h-14 ps-4 pe-5 rounded-full bg-emerald-700 text-white text-[16px] font-bold shadow-lg shadow-black/30 flex items-center gap-2 active:scale-95 motion-safe:transition-transform" style={{ bottom: "calc(20px + env(safe-area-inset-bottom))" }}>
+          <Plus size={22} strokeWidth={2.8} />{L("Log food", "سجّل طعامًا")}</button> : null}
+      </>) : (
       <nav className="att-shift fixed bottom-0 inset-x-0 z-[60] bg-slate-950 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="fit-nav">
         <div className="max-w-2xl mx-auto grid grid-cols-5 items-end h-[62px]">
           {[["today", L("Diary", "اليوميات"), Apple], ["recipes", L("Recipes", "الوصفات"), Star], ["add"], ["progress", L("Progress", "التقدم"), BarChart3], ["me", L("Me", "أنا"), User]].map(([k, label, Ic]) => k === "add" ? (
@@ -494,6 +506,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               className={"h-full flex flex-col items-center justify-center gap-0.5 text-[11px] " + (tab === k || (k === "me" && tab === "move") ? "text-emerald-300" : "text-slate-500")}><Ic size={21} />{label}</button>))}
         </div>
       </nav>
+      )}
 
       <input ref={fileRef} type="file" accept="image/*" className="hidden" data-testid="fit-photo-input" onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) { try { const ph = await readPhoto(f); setAdding((a) => a || mealNow()); setDraft(null); setPhoto(ph); if (autoRead.current) { autoRead.current = false; setGo((n) => n + 1); } } catch (x) { flash && flash(L("Couldn't open that picture", "تعذّر فتح الصورة")); } } }} />
       <input ref={codeRef} type="file" accept="image/*" capture="environment" className="hidden" data-testid="fit-barcode-input" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) { setAdding((a) => a || mealNow()); scanCode(f); } }} />
@@ -610,7 +623,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               {cmdNote ? <div className="text-[12px] text-sky-300" data-testid="fit-cmd-note">{cmdNote}</div> : null}
               {draft.length ? <SaveMyMeal {...{ L, draft, upd, flash }} /> : null}
               {/* the Save button stays in reach above Fit's bottom bar however long the list is */}
-              <div className="flex gap-2 sticky z-10 -mx-3 px-3 py-2 bg-slate-900" style={{ bottom: "calc(92px + env(safe-area-inset-bottom))" }} data-testid="fit-save-bar">
+              <div className="flex gap-2 sticky z-10 -mx-3 px-3 py-2 bg-slate-900" style={{ bottom: minimal ? "env(safe-area-inset-bottom)" : "calc(92px + env(safe-area-inset-bottom))" }} data-testid="fit-save-bar">
                 <button onClick={() => setDraft(null)} className="rounded-xl bg-slate-800 px-3 py-2.5 text-[13px] text-slate-300">{L("Back", "رجوع")}</button>
                 <button onClick={confirm} disabled={!draft.length} className="flex-1 rounded-xl bg-emerald-600 disabled:opacity-40 py-2.5 text-[14px] font-medium text-white flex items-center justify-center gap-1.5" data-testid="fit-confirm"><Check size={16} />{L("Save", "حفظ")} · {F.sumN(draft.filter((x) => x.kcal != null)).kcal} {L("kcal", "سعرة")}</button>
               </div>
@@ -619,7 +632,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
         </div>
       ) : null}
 
-      {tab === "today" && !adding && <Today {...{ L, t, ar, st, upd, tg: tg && st.profile.cycleExtra ? { ...tg, kcal: Y.dayGoal(tg.kcal, dayKey, st.profile.cycleExtra) } : tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, openMove: () => setTab("move") }} />}
+      {tab === "today" && !adding && <Today {...{ L, t, ar, st, upd, tg: tg && st.profile.cycleExtra ? { ...tg, kcal: Y.dayGoal(tg.kcal, dayKey, st.profile.cycleExtra) } : tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, minimal, openMove: () => setTab("move") }} />}
       {undo ? (
         <div role="status" aria-live="polite" className="att-shift fixed inset-x-0 bottom-20 z-40 flex justify-center px-4 pointer-events-none" data-testid="fit-undo-bar">
           <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-slate-800 border border-slate-700 ps-4 pe-1 py-1 shadow-xl max-w-md w-full motion-safe:animate-[fitup_.2s_ease-out]">
@@ -630,12 +643,15 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
         </div>) : null}
       {tab === "recipes" && !adding && <Recipes {...{ L, ar, st, upd, tg, addItems, llm, modelReady, openEngine, flash, share, pro, openPlan }} />}
       {tab === "move" && !adding && <><WatchCard {...{ L, ar, health, st, upd, dayKey }} /><Move {...{ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg: +st.profile.kg }} /></>}
-      {tab === "progress" && !adding && <>
-        <DayQuality {...{ L, day, tg }} isToday={dayKey === F.today()} />
-        <Micros {...{ L, ar, day, sex: (st.profile || {}).sex }} />
-        {F.dayTips(tot, tg, ar ? "ar" : "en").map((tp, i) => <div key={i} className="rounded-xl bg-amber-500/10 border border-amber-800 px-3 py-2 text-[12.5px] text-amber-100">{tp}</div>)}
-        <Progress {...{ L, ar, st, upd, tg, pro, openPlan, share }} />
-      </>}
+      {tab === "progress" && !adding && (() => {
+        const top = <>
+          <DayQuality {...{ L, day, tg }} isToday={dayKey === F.today()} />
+          <Micros {...{ L, ar, day, sex: (st.profile || {}).sex }} />
+          {F.dayTips(tot, tg, ar ? "ar" : "en").map((tp, i) => <div key={i} className="rounded-xl bg-amber-500/10 border border-amber-800 px-3 py-2 text-[12.5px] text-amber-100">{tp}</div>)}
+        </>;
+        // v6.32 minimal: today's quality, vitamins and tips go under "More" with the rest
+        return minimal ? <Progress {...{ L, ar, st, upd, tg, pro, openPlan, share, minimal }} extraTop={top} /> : <>{top}<Progress {...{ L, ar, st, upd, tg, pro, openPlan, share }} /></>;
+      })()}
       {tab === "me" && !adding && <MeTab {...{ L, ar, st, tg, openPlanForm: () => setEditProfile(true), openMove: () => setTab("move") }} settings={<FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} />} />}
     </div>
   );
@@ -915,7 +931,8 @@ function EditFood({ L, ar, x, meal, onClose, onSave }) {
 }
 
 const DAY_LETTERS = { en: ["S", "M", "T", "W", "T", "F", "S"], ar: ["ح", "ن", "ث", "ر", "خ", "ج", "س"] };
-function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, openMove }) {
+function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, openMove, minimal = false }) {
+  const [extra, setExtra] = useState(null);   // v6.32 minimal: which of water / move / fasting is open (small buttons, not three cards)
   const [copyOf, setCopyOf] = useState(null);           // v6.13: { slot } being copied to another day (slot null = the whole day); v6.23: { slot, item } = one food
   const [editing, setEditing] = useState(null);         // v6.23: { m, i } — the food in the edit sheet
   useSubBack(!!editing, () => setEditing(null));
@@ -959,11 +976,15 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
           <div className="min-w-0"><div className="text-white font-medium">{variant !== "classic" && variant !== "rings" ? <span className="me-1.5" aria-hidden="true">{ms.em}</span> : null}{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])} <span className="text-[12px] text-slate-400 tabular-nums">{sum.kcal} {L("kcal", "سعرة")}{onInsulin && items.length ? <b className="ms-1.5 text-amber-200" data-testid="fit-meal-carbs">· {Math.round(sum.c || 0)} {L("g carbs", "جم كربوهيدرات")}</b> : null}</span></div></div>
           <span className="flex items-center gap-1.5 shrink-0">
             {items.length ? <button onClick={() => setCopyOf({ slot: m })} className="min-h-[48px]! min-w-[48px] rounded-full bg-slate-800 text-slate-300 flex items-center justify-center" aria-label={L("Copy to another day", "نسخ إلى يوم آخر")} data-testid={"fit-copy-" + m}><Copy size={17} /></button> : null}
-            <button onClick={() => setAdding(m)} className={"min-h-[48px]! min-w-[48px] rounded-full flex items-center justify-center shrink-0 " + (vivid ? "text-white" : "bg-emerald-600/20 text-emerald-300")} style={vivid ? { background: ms.col } : undefined} data-testid={"fit-add-" + m} aria-label={L(`Add to ${MEAL_NAMES[m][0]}`, `أضف إلى ${MEAL_NAMES[m][1]}`)}><Plus size={20} /></button>
+            <button onClick={() => setAdding(m)} className={"min-h-[48px]! min-w-[48px] rounded-full flex items-center justify-center shrink-0 " + (vivid ? "text-white" : minimal ? "bg-emerald-600 text-white" : "bg-emerald-600/20 text-emerald-300")} style={vivid ? { background: ms.col } : undefined} data-testid={"fit-add-" + m} aria-label={L(`Add to ${MEAL_NAMES[m][0]}`, `أضف إلى ${MEAL_NAMES[m][1]}`)}><Plus size={20} /></button>
           </span>
         </div>
         {items.map((x, i) => <LogRow key={(x.t || 0) + ":" + i} {...{ t, ar, x }} testid={"fit-item-" + m} onDelete={() => del(m, i)} onEdit={() => setEditing({ m, i })} onCopy={() => setCopyOf({ slot: m, item: x })} />)}
-        {pm ? (
+        {pm && minimal ? (
+          <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
+            className="mt-0.5 w-full min-h-[44px]! text-start text-[13.5px] text-slate-400" data-testid={"fit-suggest-" + m}>
+            {L("Try", "جرّب")}: {ar ? pm.recipe.ar : pm.recipe.en} · {pm.kcal} {L("kcal", "سعرة")}
+          </button>) : pm ? (
           <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
             className="mt-1 w-full min-h-[48px]! text-start rounded-lg bg-slate-800/60 px-2.5 py-2 text-[12.5px] text-slate-300" data-testid={"fit-suggest-" + m}>
             <span className="text-emerald-300">{L("Suggested", "مقترح")}:</span> {ar ? pm.recipe.ar : pm.recipe.en}{pm.x !== 1 ? ` ×${pm.x}` : ""} · {pm.kcal} {L("kcal", "سعرة")} — <u>{L("I ate this", "أكلت هذا")}</u>
@@ -1019,7 +1040,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
           <Bar label={L("Protein", "بروتين")} v={tot.p} max={tg.protein} cls="bg-sky-400" />
           <Bar label={L("Carbs", "كربوهيدرات")} v={tot.c} max={tg.carbs} cls="bg-amber-400" />
           <Bar label={L("Fat", "دهون")} v={tot.f} max={tg.fat} cls="bg-rose-400" />
-          <Bar label={L("Fibre", "ألياف")} v={tot.fib} max={tg.fibre} cls="bg-emerald-400" />
+          {minimal ? null : <Bar label={L("Fibre", "ألياف")} v={tot.fib} max={tg.fibre} cls="bg-emerald-400" />}
         </div>
       </div>
       )}
@@ -1067,8 +1088,14 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
       </div>
 
       <div className="space-y-3 lg:col-start-1">
+      {minimal ? (
+        <div className="flex flex-wrap gap-2" data-testid="fit-extras">
+          {[["water", Droplet, L("Water", "ماء") + " " + drunk + "/" + glasses], ["move", Dumbbell, L("Move", "الحركة") + (tot.burned ? " −" + tot.burned : "")], ["fast", Timer, fs ? hm(fs.done) : L("Fasting", "صيام")]].map(([k, Ic, label]) =>
+            <button key={k} onClick={() => setExtra(extra === k ? null : k)} aria-expanded={extra === k} data-testid={"fit-chip-" + k}
+              className={"min-h-[44px] px-4 rounded-full border-2 text-[14px] font-semibold flex items-center gap-1.5 tabular-nums " + (extra === k ? "border-emerald-600 bg-emerald-950 text-white" : "border-slate-600 bg-slate-900 text-white")}><Ic size={16} />{label}</button>)}
+        </div>) : null}
       {/* water and the week */}
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-3" data-testid="fit-water">
+      {!minimal || extra === "water" ? <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-3" data-testid="fit-water">
         <div className="flex items-center justify-between gap-2">
           <div className="text-[13px] text-white flex items-center gap-1.5"><Droplet size={15} className="text-sky-300" />{L("Water", "ماء")} <span className="text-slate-400 tabular-nums">{(tot.water / 1000).toFixed(2)} / {(tg.water / 1000).toFixed(1)} L</span></div>
           <div className="flex gap-1.5">
@@ -1087,18 +1114,18 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
               </div>))}
           </div>
         </div>
-      </div>
+      </div> : null}
 
       {/* exercise: steps and workouts from the watch, and the workouts page one tap away */}
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2" data-testid="fit-exercise">
+      {!minimal || extra === "move" ? <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2" data-testid="fit-exercise">
         <div className="flex items-center justify-between gap-2">
           <div className="text-[13px] text-white flex items-center gap-1.5"><Dumbbell size={15} className="text-emerald-300" />{L("Exercise", "الرياضة")} <span className="text-slate-400 tabular-nums">{tot.burned ? `−${tot.burned} kcal` : ""}</span></div>
           <button onClick={openMove} className="min-h-[44px] rounded-lg bg-slate-800 px-3 text-[12.5px] text-emerald-300" data-testid="fit-open-move">{L("Workouts", "التمارين")}</button>
         </div>
         <WatchCard {...{ L, ar, health, st, upd, dayKey }} compact />
-      </div>
+      </div> : null}
 
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3" data-testid="fit-fast">
+      {!minimal || extra === "fast" ? <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3" data-testid="fit-fast">
         <div className="text-[13px] text-white flex items-center gap-1.5"><Timer size={15} className="text-violet-300" />{L("Fasting", "صيام")}</div>
         {fs ? (<>
           <div className={"text-xl font-semibold tabular-nums mt-1 " + (fs.reached ? "text-emerald-300" : "text-white")}>{hm(fs.done)} <span className="text-[12px] text-slate-400">/ {st.fast.hours}h</span></div>
@@ -1108,7 +1135,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
         </>) : (
           <div className="flex flex-wrap gap-1.5 mt-2">{Object.entries({ ...F.FASTS, ...Y.MORE_FASTS }).map(([k, h]) => <button key={k} onClick={() => upd((s) => ({ ...s, fast: { start: Date.now(), hours: h } }))} className="min-h-[44px] rounded-lg bg-slate-800 px-3 text-[12.5px] text-slate-200" data-testid={"fit-fast-" + h}>{k}</button>)}</div>
         )}
-      </div>
+      </div> : null}
       </div>
     </div>
   );
@@ -1269,8 +1296,9 @@ function Move({ L, ar, tg, setDay, llm, modelReady, openEngine, flash, kg }) {
   );
 }
 
-function Progress({ L, ar, st, upd, tg, pro = true, openPlan, share }) {
+function Progress({ L, ar, st, upd, tg, pro = true, openPlan, share, minimal = false, extraTop = null }) {
   const [w, setW] = useState("");
+  const [more, setMore] = useState(!minimal);   // v6.32 minimal: weight first; the rest one tap away
   const tr = F.trend(st.weights);
   const wk = F.weekSummary(st.days, st.weights, tg);
   const strk = F.streak(st.days);
@@ -1278,24 +1306,8 @@ function Progress({ L, ar, st, upd, tg, pro = true, openPlan, share }) {
   const pts = tr.slice(-30);
   const lo = Math.min(...pts.map((p) => p.kg), st.profile.goalKg ? +st.profile.goalKg : Infinity) - 1, hi = Math.max(...pts.map((p) => p.kg)) + 1;
   const X = (i) => (pts.length < 2 ? 150 : (i / (pts.length - 1)) * 290 + 5), Y = (v) => 110 - ((v - lo) / (hi - lo || 1)) * 100;
-  return (
-    <div className="space-y-4 lg:space-y-0 lg:columns-2 lg:gap-6 lg:[&>*]:break-inside-avoid lg:[&>*]:mb-4" data-testid="fit-progress">
-      <YazioPlus {...{ L, ar, st, upd, tg, share }} />
-      {pro ? <WeekReport {...{ L, st, tg }} /> : <button onClick={() => openPlan && openPlan()} className="w-full rounded-2xl border border-amber-800 bg-amber-500/10 p-3 text-start text-[13px] text-amber-100" data-testid="fit-report-locked">📊 {L("Your week report — what went well, what to change — is in Pro.", "تقرير أسبوعك — ما يسير جيدًا وما يحتاج تغييرًا — في Pro.")}</button>}
-      <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white" data-testid="fit-streak">{strk}</div><div className="text-[11px] text-slate-400">{L("day streak", "يوم ورا بعض")}</div></div>
-        <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white">{wk.avg}</div><div className="text-[11px] text-slate-400">{L("avg kcal (7 d)", "متوسط السعرات")}</div></div>
-        <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white">{wk.change == null ? "—" : (wk.change > 0 ? "+" : "") + wk.change}</div><div className="text-[11px] text-slate-400">{L("kg this week", "كجم هذا الأسبوع")}</div></div>
-      </div>
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3">
-        <div className="text-[13px] text-white mb-2">{L("Last 7 days", "آخر 7 أيام")} <span className="text-slate-400">· {L("on target", "في الهدف")} {wk.onTarget}/{wk.logged}</span></div>
-        <div className="flex items-end gap-1.5 h-24">{wk.rows.map((r) => (
-          <div key={r.day} className="flex-1 flex flex-col items-center justify-end h-full">
-            <div className={"w-full rounded-t " + (r.kcal > tg.kcal * 1.1 ? "bg-rose-400" : "bg-emerald-400")} style={{ height: (r.kcal / maxK) * 100 + "%" }} />
-            <div className="text-[10px] text-slate-500 mt-1">{r.day.slice(8)}</div>
-          </div>))}</div>
-      </div>
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2">
+  const weightCard = (
+      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3 space-y-2" data-testid="fit-weight-card">
         <div className="text-[13px] text-white">{L("Weight", "الوزن")} {tr.length ? <span className="text-slate-400">· {L("trend", "الاتجاه")} {tr[tr.length - 1].avg} kg</span> : null}</div>
         {pts.length >= 2 && (
           <svg viewBox="0 0 300 120" className="w-full h-28" data-testid="fit-weight-chart">
@@ -1310,7 +1322,30 @@ function Progress({ L, ar, st, upd, tg, pro = true, openPlan, share }) {
         </div>
         <div className="text-[11.5px] text-slate-500">{L("The blue line is the 7-entry average — daily weight jumps with water and salt; the average is the truth.", "الخط الأزرق هو المتوسط — يتغيّر الوزن اليومي بالماء والملح؛ والمتوسط هو المؤشر الحقيقي.")}</div>
       </div>
-      <BodyCard {...{ L, st, upd }} />
+  );
+  return (
+    <div className="space-y-4 lg:space-y-0 lg:columns-2 lg:gap-6 lg:[&>*]:break-inside-avoid lg:[&>*]:mb-4" data-testid="fit-progress">
+      {minimal ? weightCard : null}
+      {minimal ? <button onClick={() => setMore((v) => !v)} aria-expanded={more} data-testid="fit-progress-more"
+        className="w-full min-h-[48px] rounded-2xl border-2 border-slate-600 bg-slate-900 text-[14.5px] font-semibold text-white flex items-center justify-center gap-1.5">
+        {more ? L("Less", "أقل") : L("More: week, measurements, photos, challenges", "المزيد: الأسبوع والقياسات والصور والتحديات")}<ChevronDown size={16} className={more ? "rotate-180" : ""} /></button> : null}
+      {more ? <>{extraTop}<YazioPlus {...{ L, ar, st, upd, tg, share }} />
+      {pro ? <WeekReport {...{ L, st, tg }} /> : <button onClick={() => openPlan && openPlan()} className="w-full rounded-2xl border border-amber-800 bg-amber-500/10 p-3 text-start text-[13px] text-amber-100" data-testid="fit-report-locked">📊 {L("Your week report — what went well, what to change — is in Pro.", "تقرير أسبوعك — ما يسير جيدًا وما يحتاج تغييرًا — في Pro.")}</button>}
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white" data-testid="fit-streak">{strk}</div><div className="text-[11px] text-slate-400">{L("day streak", "يوم ورا بعض")}</div></div>
+        <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white">{wk.avg}</div><div className="text-[11px] text-slate-400">{L("avg kcal (7 d)", "متوسط السعرات")}</div></div>
+        <div className="rounded-xl bg-slate-900/60 p-2.5"><div className="text-xl font-semibold text-white">{wk.change == null ? "—" : (wk.change > 0 ? "+" : "") + wk.change}</div><div className="text-[11px] text-slate-400">{L("kg this week", "كجم هذا الأسبوع")}</div></div>
+      </div>
+      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3">
+        <div className="text-[13px] text-white mb-2">{L("Last 7 days", "آخر 7 أيام")} <span className="text-slate-400">· {L("on target", "في الهدف")} {wk.onTarget}/{wk.logged}</span></div>
+        <div className="flex items-end gap-1.5 h-24">{wk.rows.map((r) => (
+          <div key={r.day} className="flex-1 flex flex-col items-center justify-end h-full">
+            <div className={"w-full rounded-t " + (r.kcal > tg.kcal * 1.1 ? "bg-rose-400" : "bg-emerald-400")} style={{ height: (r.kcal / maxK) * 100 + "%" }} />
+            <div className="text-[10px] text-slate-500 mt-1">{r.day.slice(8)}</div>
+          </div>))}</div>
+      </div>
+      {minimal ? null : weightCard}
+      <BodyCard {...{ L, st, upd }} /></> : null}
     </div>
   );
 }

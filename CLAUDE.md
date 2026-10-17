@@ -5,10 +5,10 @@
    for the session. Work through all of it with a task list.
 2. Read **`HANDOFF.md`** §0 ("START HERE") and the latest section (§5.37) for how the app is built and tested.
 
-## Where things stand (17 Oct 2026, v6.31 — HANDOFF §5.44–§5.75 (latest: minimal design A, Core Lite IQ4_NL, Core Max, §5.75; before: no bottom bar, 6-place sidebar, ExitWatch, §5.74; release checklist RELEASE_6.29.md); Ali: everything optimised for phone AND desktop; DESKTOP APP (Windows first, Claude/ChatGPT layout) in progress: HANDOFF §5.60; packs must be commercial-safe (§5.48); Ali's latest lists: NEXT_SESSION.md sections M, N, O, R, S, T and **U (newest: 15–17 Oct, what is open now)**)
+## Where things stand (17 Oct 2026, v6.32 — HANDOFF §5.44–§5.76 (latest: Deep answer, Fit & Food minimal B + contrast, Create 6 tabs, video downloads not sold, §5.76; before: minimal design A, Core Lite IQ4_NL, Core Max, §5.75; before: no bottom bar, 6-place sidebar, ExitWatch, §5.74; release checklist RELEASE_6.29.md); Ali: everything optimised for phone AND desktop; DESKTOP APP (Windows first, Claude/ChatGPT layout) in progress: HANDOFF §5.60; packs must be commercial-safe (§5.48); Ali's latest lists: NEXT_SESSION.md sections M, N, O, R, S, T, U and **V (newest: 17 Oct, v6.32, what is open now)**)
 - **Read `ROADMAP_2026-10-13.md` (the direction agreed 13 Oct: sync, device levels, code-first, redesign, Life layer).**
 - Read **`PLANS_2026-10-02.md`** too: the converter / Fit / heat / Business plans and exactly what is left.
-- `main` = branch `ccr-a0eb3595-e2c7a7` = v6.31 (versionCode 92). All test files pass (`bash tests/run_all.sh`).
+- `main` = branch `ccr-a0eb3595-e2c7a7` = v6.32 (versionCode 93). All test files pass (`bash tests/run_all.sh`).
 - Every other branch (business-extras, fit-home, pdf-reader, studio-preview, converter-polish, knowpack-wire) is merged.
 - Arabic UI = simple formal Arabic (Ali's choice, 4 Oct 2026); Egyptian only where code reads what people type.
 - Web app: edit `web-src/`, then `bash web-src/build.sh` → `app/src/main/assets/www/index.html` (commit both).

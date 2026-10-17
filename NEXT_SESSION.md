@@ -656,14 +656,24 @@ the default Fit look; Google Play internal testing (developer account + secrets)
 - `e2e_v510_more.py` and `e2e_v512_more.py` are helper modules: an empty result line is normal.
 - `e2e_v727coach.py` can time out under full-suite load; it passes when run alone.
 
+## V. 17 Oct 2026 — v6.32 (HANDOFF §5.76). Read this section first.
+- Ali's answers: Create → Compress inside Improve (done); Video Downloader → A (done: not sold, no limit, keep it out of the store
+  text); Deep answer → built (Chat "+" menu); Fit & Food minimal → B with stronger contrast (done).
+- **Still open:**
+  1. A 6.32 Engine log from Ali if the app closes again; Everest in flash mode on his phone (words/s) — now also via Deep answer.
+  2. Minimal design for the next pages: Business, Studio, Learn's inner screens, the computer layout (show options first).
+  3. Fit & Food on the computer: the B tab row works there too, but check the wide layout with Ali.
+  4. The big-model quant bench (Apex+, Everest, Apex, Glow/Spark).
+  5. Ali's release list in RELEASE_6.29.md.
+
 ## Prompt to start the next session
 
 ```
-Continue Attune on branch claude/design-a-maps-4pmxxr-was8h5 (main = ccr-a0eb3595-e2c7a7 = the same commit, v6.31).
-First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.72–§5.75 and NEXT_SESSION.md — the newest section is U (what was
-done on 15–17 Oct and everything still open). Then show me, short and simple: what is done, what is open, and your
-recommended order; ask me the open questions (Create's 7th tab, Video Downloader, Deep answer mode, what to make minimal
-next), wait for my answers, then work through them with a task list. If I send an Engine log, read it first — ExitWatch
+Continue Attune on main (= ccr-a0eb3595-e2c7a7 = claude/project-thread-5y87k7, v6.32).
+First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.74–§5.76 and NEXT_SESSION.md — the newest section is V (v6.32 and
+everything still open), then U. Then show me, short and simple: what is done, what is open, and your recommended order;
+ask me the open questions (which page to make minimal next, with options), wait for my answers, then work through them
+with a task list. If I send an Engine log, read it first — ExitWatch
 now says why the app closed.
 
 Standing rules:

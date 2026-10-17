@@ -1516,6 +1516,29 @@ Everything below is gated on the new layout (`!LEGACY_NAV`, i.e. `attune:legacy-
   needRam 12). Q4_0 rejected (answers drift more). Idea for later: the same bench for the big IQ4_XS models (Apex+, Everest).
 - Test: `tests/e2e_v735minimal.py`.
 
+### 5.76 (17 Oct 2026) — v6.32: Create 6 tabs, video downloads not sold, Deep answer, Fit & Food minimal (B) + contrast
+Ali answered the four open questions on cards: Compress → Improve; Video Downloader A; Deep answer "build now"; Fit & Food next.
+- **Create = 6 tabs**: `INSIDE.compress = "improve"` (hubs.js) — Compress is the small switch inside "Prompts" (Improve a prompt).
+- **Video Downloader (Play policy A)**: off `PRO_BENEFITS`, `BILLING_GROUPS`, `COMPARE_ROWS` (billing.js); the 3-a-day limit and its
+  "Pro is unlimited" message are gone (video-ui.jsx) — it is free and never advertised. RELEASE_6.29.md §6/§8 say the store text
+  must not mention it.
+- **Deep answer** (router.js `deepModel` / `deepLine`, chat.jsx `deep`): "+" → Deep answer (`menu-deep`, chip `chip-deep`) — the NEXT
+  question only goes to the strongest installed model the phone can run at all (also one that isn't smooth, e.g. Everest in flash
+  mode; Auto never picks those), thinking forced on; a photo needs a model that sees. Status warns "reads from storage, a few
+  minutes" when `smoothRam > RAM`. The answer is tagged `deep-tag` ("Deep answer · Everest"); afterwards the model that was loaded
+  is switched back (`deepBack`, in `finally`, only when no newer question runs). Tests: unit `v736deep`, e2e `e2e_v736deep.py`.
+- **Fit & Food minimal = B** (Ali: "B but i want the colour and text to be contrast so its more visible"; mock-ups
+  claude.ai/artifact/EgFPuhDQxUm3x36GGpy5C8). `FitApp minimal` = `!LEGACY_NAV`, so old tests keep the old Fit:
+  - no bottom bar: a tab row on top (`fit-nav` is now `role=tablist`, same `fit-tab-*` ids) and a floating "Log food" (`fit-add`);
+  - header says "Fit & Food"; Diary: no fibre bar, suggestions as one line "Try: …" (`fit-suggest-*`), solid meal "+" buttons;
+    Water / Move / Fasting are 3 small buttons (`fit-chip-*`) that open their card;
+  - Progress: weight first (`fit-weight-card`), everything else (day quality, vitamins, tips, report, week, measurements, photos,
+    challenges, export, body fat) behind `fit-progress-more`;
+  - contrast (every look, fitlook.js): secondary text ~8:1 instead of ~4.8:1, firmer lines, deeper green (white on it 6.5:1);
+    dark looks get lighter greys. `.fit-min` darkens the ring / bar / glass tracks.
+  - Test: `tests/e2e_v736fitmin.py` (EN + AR, contrast ≥ 7:1 checked).
+- Running a single e2e while the full suite runs: set `ATTUNE_ENGINE_PORT` / `ATTUNE_PAGE_PORT` (harness.py) to other ports.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
