@@ -272,7 +272,9 @@ object Engine {
     private fun photosAtStart(ctx: Context, model: ModelStore.Installed): Boolean {
         val mm = model.mmproj ?: return false
         if (!mm.exists()) return false
-        return photosWantedFor == model.id || model.sizeBytes + mm.length() <= (DeviceInfo.totalRamBytes(ctx) * 0.50).toLong()
+        // (v6.34: and only with 2.5 GB still free after both — otherwise the first photo loads it)
+        return photosWantedFor == model.id || (model.sizeBytes + mm.length() <= (DeviceInfo.totalRamBytes(ctx) * 0.50).toLong() &&
+            DeviceInfo.availRamBytes(ctx) - model.sizeBytes - mm.length() > 2_500L * 1024 * 1024)
     }
     /** Called before a request with a photo: loads the photo reader if the model started without it. */
     fun ensurePhotos(ctx: Context): Boolean {
@@ -434,7 +436,12 @@ object Engine {
         // same speed (10.8 vs 11.1 words/s), Qwen 3.5 4B (2.7 GB) under 3 GB at 63 % speed, where the copy was
         // killed. So a model up to 12 % over the budget is started mapped instead of being refused.
         flashMode = flashMoe(model, allowedBytes(ctx))
-        mappedWeights = flashMode || mappedFallback(model.sizeBytes, allowedBytes(ctx))
+        // v6.34 (Ali's 6.33 log: "the phone ran out of memory (Core Max)" while in use, 16 GB phone): a copy also needs 2 GB left
+        // free RIGHT NOW for the context, the page and the other apps; when it isn't, the weights stay mapped from storage —
+        // the system can then take pages back instead of killing Attune (storage lab: about the same speed).
+        val freeAfter = DeviceInfo.availRamBytes(ctx) - model.sizeBytes - 2_000L * 1024 * 1024
+        mappedWeights = flashMode || mappedFallback(model.sizeBytes, allowedBytes(ctx)) || freeAfter < 0
+        if (freeAfter < 0 && !flashMode) try { java.io.File(ctx.filesDir, "engine.log").appendText("\nMemory: ${DeviceInfo.availRamBytes(ctx) / 1048576} MB free for a ${model.sizeBytes / 1048576} MB model — its weights are read from storage this time, so Android won't have to close Attune.\n") } catch (e: Exception) {}
         if (model.sizeBytes > allowedBytes(ctx) && !mappedWeights) {  // (the draft model is only added when both fit: draftFor)
             state = State.ERROR
             error = "This model is too big for this phone's memory — it would freeze the phone. Pick a smaller one in Engine (Qwen 3.5 4B is the fast choice)."

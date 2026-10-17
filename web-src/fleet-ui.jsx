@@ -644,20 +644,37 @@ function InForm({ s, run, close, money, flash }) {
     <SaveBtn onClick={save} disabled={!x.purchaser.trim()}>{tr("Save the invoice")}</SaveBtn>
   </div>;
 }
+/** Issue parts — the same order as Ali's warehouse app (sadrBox): reference code first (optional), then the invoice's items as
+    rows to tap (fills the item and its unit price; the item box is locked meanwhile), then quantity · technician ·
+    destination (ONE list: a crane or another place) · notes, then the preview (planOut) and save. */
 function OutForm({ s, run, close, money }) {
   const st = s.store;
-  const [x, setX] = useState({ date: F.isoDay(), item: "", qty: "", ref: "", tech: "", crane: "", dest: "", notes: "", prices: [] });
+  const [x, setX] = useState({ date: F.isoDay(), item: "", qty: "", ref: "", tech: "", to: "", newDest: "", notes: "", prices: [] });
   const set = (k) => (v) => setX({ ...x, [k]: v });
-  const refs = x.item ? F.incomingDocs(st).filter((d) => F.invoiceUnit(st, d, x.item) != null) : [];
+  const rows = x.ref ? F.invoiceItems(st, x.ref) : [];
+  const pickRef = (ref) => { const its = ref ? F.invoiceItems(st, ref) : []; setX({ ...x, ref, item: ref ? (its.some((r) => r.item === x.item) ? x.item : its.length === 1 ? its[0].item : "") : x.item }); };
   const plan = x.item && +x.qty > 0 ? F.planOut(st, { item: x.item, qty: x.qty, ref: x.ref }) : null;
   const typed = plan && plan.ok ? plan.lines.filter((l) => !l.auto) : [];
-  const save = () => { const r = run((s0) => F.addOutgoing(s0, { ...x, crane: x.crane || null }), (r) => tr("Saved as {c}", { c: r.doc }) + (r.lines > 1 ? " — " + tr("split into {n} lines", { n: r.lines }) : "")); if (r) close(); };
+  const crane = x.to.startsWith("c:") ? x.to.slice(2) : null, dest = x.to === "__new" ? x.newDest.trim() : x.to.startsWith("d:") ? x.to.slice(2) : "";
+  const dests = [...F.live(s.cranes).map((c) => ({ v: "c:" + c.id, l: c.name })), ...st.dests.map((d) => ({ v: "d:" + d, l: d })), { v: "__new", l: tr("Another place…") }];
+  const save = () => { const r = run((s0) => F.addOutgoing(s0, { date: x.date, item: x.item, qty: x.qty, ref: x.ref, tech: x.tech, crane, dest, notes: x.notes, prices: x.prices }), (r) => tr("Saved as {c}", { c: r.doc }) + (r.lines > 1 ? " — " + tr("split into {n} lines", { n: r.lines }) : "")); if (r) close(); };
   return <div className="space-y-3" data-testid="fleet-out-form">
+    <p className={"text-[13px] " + muted}>{tr("Internal code")}: <b dir="ltr">{F.docCode(st.nextDoc, x.date || F.isoDay())}</b></p>
     <DateF label={tr("Date")} value={x.date} onChange={set("date")} />
-    <Field label={tr("Item")}><input list="fl-oi" value={x.item} onChange={(e) => setX({ ...x, item: e.target.value, ref: "" })} className={inp} dir="auto" data-testid="fleet-f-oitem" /><datalist id="fl-oi">{F.stockList(st).map((i) => <option key={i.name} value={i.name}>{`${i.name} (${num(i.balance)})`}</option>)}</datalist></Field>
-    {x.item ? <p className={"text-[12.5px] -mt-1.5 " + muted}>{tr("In stock")}: <b dir="ltr">{num(F.itemBalance(st, x.item))}</b></p> : null}
+    <Sel label={tr("Reference code (optional — the original purchase invoice)")} value={x.ref} onChange={pickRef} options={F.incomingDocs(st).map((d) => ({ v: d, l: d }))} empty={tr("— no link (from the general stock) —")} testid="fleet-f-ref" />
+    <Field label={<>{tr("Item")}{x.ref ? <span className={"ms-1 text-[11.5px] " + muted}>{tr("(pick from the table below)")}</span> : null}</>}>
+      <input list="fl-oi" value={x.item} disabled={!!x.ref} onChange={(e) => setX({ ...x, item: e.target.value })} className={inp + (x.ref ? " opacity-60" : "")} dir="auto" data-testid="fleet-f-oitem" /><datalist id="fl-oi">{F.stockList(st).map((i) => <option key={i.name} value={i.name}>{`${i.name} (${num(i.balance)})`}</option>)}</datalist></Field>
+    {x.ref ? <div className={card + " overflow-hidden"} data-testid="fleet-ref-items">
+      <div className={"grid grid-cols-[1fr_auto_auto_auto] gap-x-3 px-3 py-2 text-[11.5px] font-semibold " + muted}><span>{tr("Item")}</span><span>{tr("Original")}</span><span>{tr("Left on it")}</span><span>{tr("Unit price")}</span></div>
+      {rows.map((r) => <button key={r.item} onClick={() => setX({ ...x, item: r.item })} data-testid="fleet-ref-item"
+        className={"w-full grid grid-cols-[1fr_auto_auto_auto] gap-x-3 px-3 py-2.5 text-start text-[13.5px] border-t border-[#E2E8F0] " + (x.item === r.item ? "bg-[#FEF3C7] font-semibold" : "")}>
+        <span dir="auto" className="truncate">{r.item}</span><span className="tabular-nums" dir="ltr">{num(r.qty)}</span><span className="tabular-nums" dir="ltr">{num(r.remaining)}</span><span className="tabular-nums" dir="ltr">{money(r.unit)}</span></button>)}
+    </div> : x.item ? <p className={"text-[12.5px] -mt-1.5 " + muted}>{tr("In stock")}: <b dir="ltr">{num(F.itemBalance(st, x.item))}</b></p> : null}
     <div className="grid grid-cols-2 gap-2"><Txt label={tr("Quantity")} value={x.qty} onChange={set("qty")} mode="decimal" testid="fleet-f-oqty" />
-      <Sel label={tr("Reference code (optional)")} value={x.ref} onChange={set("ref")} options={refs.map((d) => ({ v: d, l: `${d} — ${tr("left")} ${num(F.invoiceRemaining(st, d, x.item))}` }))} empty={tr("— general stock —")} testid="fleet-f-ref" /></div>
+      <Field label={tr("Technician (who installed it)")}><input list="fl-t" value={x.tech} onChange={(e) => set("tech")(e.target.value)} className={inp} dir="auto" data-testid="fleet-f-tech" /><datalist id="fl-t">{st.techs.map((v) => <option key={v} value={v} />)}</datalist></Field></div>
+    <Sel label={tr("Destination (a crane or another place)")} value={x.to} onChange={set("to")} options={dests} empty={tr("Choose…")} testid="fleet-f-ocrane" />
+    {x.to === "__new" ? <Txt label={tr("Other destination")} value={x.newDest} onChange={set("newDest")} testid="fleet-f-odest" /> : null}
+    <Txt label={tr("Notes")} value={x.notes} onChange={set("notes")} />
     {plan ? plan.ok ? <div className={card + " p-3.5 space-y-2"} data-testid="fleet-plan">
       <p className="text-[13px] font-bold">{plan.lines.length > 1 ? tr("This issue will be split:") : tr("This will be saved as:")}</p>
       {plan.lines.map((l, i) => <div key={i} className="flex items-center gap-2 text-[13.5px]"><span className="flex-1" dir="auto">{num(l.qty)} × {x.item} — {l.ref ? <span dir="ltr">{tr("from")} {l.ref}</span> : tr("from the general stock")}</span>
@@ -665,10 +682,7 @@ function OutForm({ s, run, close, money }) {
           : <input value={x.prices[typed.indexOf(l)] ?? ""} onChange={(e) => { const p = [...x.prices]; p[typed.indexOf(l)] = e.target.value; setX({ ...x, prices: p }); }} placeholder={tr("Total price")} inputMode="decimal" className={inp + " w-28 h-9"} data-testid="fleet-f-oprice" />}</div>)}
       {plan.lines[0] && plan.lines[0].fromInvoiceDepleted ? <p className={"text-[12px] " + muted}>{tr("That invoice is used up for this item, so it all comes from the general stock.")}</p> : null}
     </div> : <p className="text-[13px] text-[#B91C1C] flex gap-1.5" data-testid="fleet-plan-error"><AlertTriangle size={15} className="shrink-0 mt-0.5" />{tr(plan.tpl || plan.error, plan.vars)}</p> : null}
-    <div className="grid grid-cols-2 gap-2"><Sel label={tr("To crane")} value={x.crane} onChange={set("crane")} options={opts(s.cranes)} empty={tr("— other place —")} testid="fleet-f-ocrane" />
-      {!x.crane ? <Field label={tr("Other destination")}><input list="fl-d" value={x.dest} onChange={(e) => set("dest")(e.target.value)} className={inp} dir="auto" /><datalist id="fl-d">{st.dests.map((v) => <option key={v} value={v} />)}</datalist></Field> : <div />}</div>
-    <Field label={tr("Technician (who installed it)")}><input list="fl-t" value={x.tech} onChange={(e) => set("tech")(e.target.value)} className={inp} dir="auto" data-testid="fleet-f-tech" /><datalist id="fl-t">{st.techs.map((v) => <option key={v} value={v} />)}</datalist></Field>
-    <SaveBtn onClick={save} disabled={!plan || !plan.ok || (!x.crane && !x.dest.trim())}>{tr("Issue")}</SaveBtn>
+    <SaveBtn onClick={save} disabled={!plan || !plan.ok || (!crane && !dest)}>{tr("Issue")}</SaveBtn>
   </div>;
 }
 function ItemForm({ s, run, sheet, close, money }) {

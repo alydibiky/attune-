@@ -107,7 +107,15 @@ export function intent(q) {
   const t = norm(q);
   if (/\b(summar\w*|overview|main points|key points|key takeaways|tl dr|tldr|gist|in short|brief me|what is (this|it) about|what is the (document|pdf|file|paper|book) about)\b/.test(t) || /(لخص|تلخيص|ملخص|خلاصه|ايه ده|عن ايه|الافكار الرئيسيه|النقاط الرئيسيه|النقاط المهمه)/.test(t)) return "summary";
   if (/\b(table of contents|outline|structure|chapters|sections|headings)\b/.test(t) || /(فهرس|المحتويات|الفصول|الاقسام|العناوين)/.test(t)) return "outline";
+  // v6.34 (Ali: "Solve the questions" → "I could not find anything"): a task to DO with the document, not a passage to find
+  if (/\b(solve|work out|calculate|compute|answer (all|the|these|those|each|every|its|my)|do (the|these|this|all|my) (questions?|exercises?|problems?|homework|assignment|tasks?)|complete (the )?(exercises?|assignment|questions?|homework))\b/.test(t) || /(^|\s)(حل|حلي|حللي|حلها|حلهم|احسب|جاوب|اجب|اجابه الاسئله)(\s|$)/.test(t)) return "solve";
   return "find";
+}
+/** v6.34: solve the questions / exercises in (a part of) the document, step by step, each answer with its page. */
+export function solveMessages(request, text, part = "") {
+  const ar = hasArabic(request);
+  return [{ role: "system", content: `You are a careful tutor. The document below contains questions, exercises or problems. Do what the request asks: solve each one in order. For each: write its number and the page like [p. 2], restate what is asked in one line, then solve it step by step with the values the document gives (formulas, units, the arithmetic written out), and end with the final answer in bold. You may use general subject knowledge and maths to solve; never invent values the document doesn't give — if one is missing, say which and solve with a clearly stated assumption. Answer in ${ar ? "Egyptian Arabic (keep formulas, numbers and units as written)" : "the language of the request"}.` },
+    { role: "user", content: `Request: ${String(request).trim()}\n\nThe document${part ? " (" + part + ")" : ""}:\n${text}` }];
 }
 
 // ---- prompts ---------------------------------------------------------------------------------------------------------------------------

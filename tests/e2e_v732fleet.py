@@ -50,8 +50,15 @@ with sync_playwright() as p:
     check(bal.replace(",", "").startswith("54300"), "the client's balance = opening + work − payments (%s)" % bal)
     # ---- store: an issue split by the reference-code rule
     page.click("[data-testid=fleet-tab-store]"); page.click("[data-testid=fleet-out]"); page.wait_for_selector("[data-testid=fleet-out-form]")
-    page.fill("[data-testid=fleet-f-oitem]", "Oil filter"); page.fill("[data-testid=fleet-f-oqty]", "9")
-    page.select_option("[data-testid=fleet-f-ref]", index=1); page.wait_for_timeout(200)
+    # Ali's warehouse order: the reference code first, then tap the item on that invoice (the item box is locked)
+    nref = page.locator("[data-testid=fleet-f-ref] option").count()
+    for k in range(1, nref):
+        page.select_option("[data-testid=fleet-f-ref]", index=k); page.wait_for_timeout(120)
+        if page.locator("[data-testid=fleet-ref-item]:has-text('Oil filter')").count(): break
+    check(page.locator("[data-testid=fleet-f-oitem]").is_disabled(), "with a reference code the item box is locked (pick from the invoice)")
+    page.locator("[data-testid=fleet-ref-item]:has-text('Oil filter')").click(); page.wait_for_timeout(120)
+    check(page.input_value("[data-testid=fleet-f-oitem]") == "Oil filter", "tapping the invoice's row fills the item")
+    page.fill("[data-testid=fleet-f-oqty]", "9"); page.wait_for_timeout(200)
     plan = page.locator("[data-testid=fleet-plan]").inner_text()
     check("split" in plan and plan.count("×") == 2, "9 filters against an invoice with 8 left → split into 2 lines")
     page.fill("[data-testid=fleet-f-oprice]", "500"); page.select_option("[data-testid=fleet-f-ocrane]", index=1); page.fill("[data-testid=fleet-f-tech]", "Sayed")

@@ -20,6 +20,7 @@ import { targetsOf } from "./fithome.js";
 import { openRead } from "./readaloud-ui.jsx";
 import { DoResult, DO_HINTS } from "./doit-ui.jsx";
 import { FitToday } from "./health-ui.jsx";
+import { tickRegular } from "./regular.js";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
@@ -31,6 +32,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   const [text, setText] = useState("");
   const [done, setDone] = useState(null);
   const [tick, setTick] = useState(0);   // v6.28: what Home did (or undid) shows in Today and the two numbers at once
+  const [note, setNote] = useState("");   // v6.34: "Recorded in Money: 600 EGP — Maid"
   const ar = getLang() === "ar";
   const hint = DO_HINTS[new Date().getMinutes() % DO_HINTS.length];
   const now = new Date();
@@ -64,11 +66,22 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       </div>
       {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : minimal ? null : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : hint[0]}»</p>}
       {/* v6.28 declutter: a card with nothing to say is not shown (nothing due today, nothing spent and no budget) */}
-      {data.items.length || data.reminders ? <div className="c-card" data-testid="home-today">
-        <div className="flex items-center mb-1"><span className="c-lbl">{tr("What's waiting")}</span><span className="c-sub ms-auto">{data.items.length ? tr("{n} things", { n: data.items.length + (data.reminders || 0) }) : ""}</span></div>
-        {data.items.length || data.reminders ? (
+      {data.items.length || data.reminders || note ? <div className="c-card" data-testid="home-today">
+        <div className="flex items-center mb-1"><span className="c-lbl">{tr("What's waiting")}</span><span className="c-sub ms-auto">{data.items.length ? (data.items.length + (data.reminders || 0) === 1 ? tr("1 thing") : tr("{n} things", { n: data.items.length + (data.reminders || 0) })) : ""}</span></div>
+        {data.items.length || data.reminders || note ? (
           <>
-            {data.items.map((x, i) => x.from === "scout" || x.from === "learn" || x.low ? (
+            {data.items.map((x, i) => x.regular ? (
+              // v6.34 (Ali): the maid's Saturday — tick it here and the expense is in Money at once
+              <div key={i} className="w-full flex items-center gap-3 py-2" data-testid="home-regular">
+                <button onClick={() => { const r = tickRegular(x.regular.id, x.regular.i, true);
+                    if (r.recorded) setNote(tr("Recorded in Money: {a} {cur} — {t}", { a: fmt(r.recorded), cur: x.regular.cur, t: x.title }));
+                    else { tickRegular(x.regular.id, x.regular.i, false); navTo("life"); }
+                    setTick((n) => n + 1); }}
+                  aria-label={tr("Done today")} className="w-[22px] h-[22px] rounded-md shrink-0" style={{ border: "1.8px solid var(--c-acc)" }} data-testid="home-regular-tick" />
+                <button onClick={() => navTo("life")} className="flex-1 min-w-0 text-start"><b className="block truncate text-[14px]" dir="auto">{x.title}</b><span className="c-sub">{tr("Today — tick it when it's done")}</span></button>
+                <span className="c-pill due"><span className="c-num">{fmt(x.amount)}</span></span>
+              </div>
+            ) : x.from === "scout" || x.from === "learn" || x.low ? (
               <button key={i} onClick={() => navTo(x.from)} className="w-full flex items-center gap-3 py-2 text-start" data-testid={"home-wait-" + (x.low ? "supply" : x.from)}>
                 {(() => { const I = x.low ? AlertTriangle : ICON[x.from]; return <I size={17} className={x.low ? "c-warn shrink-0" : "c-acc shrink-0"} />; })()}
                 <b className="flex-1 min-w-0 truncate text-[14px]" dir="auto">{x.title}</b><ChevronRight size={15} className="c-sub shrink-0 rtl:-scale-x-100" /></button>
@@ -78,6 +91,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
                 <span className="flex-1 min-w-0"><b className="block truncate text-[14px]" dir="auto">{x.title}</b><span className="c-sub">{x.dose ? (x.late ? tr("Late") : tr("Medicine due")) : x.late ? tr("Late") : new Date(x.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}</span></span>
                 {x.dose ? null : <span className={"c-pill " + (x.late ? "late" : x.dir === "in" ? "" : "due")}><span className="c-num">{x.dir === "in" ? "+" : ""}{fmt(x.amount)}</span></span>}
               </button>))}
+            {note ? <p className="c-pos text-[13px] m-0 py-1" data-testid="home-regular-note" dir="auto">✓ {note}</p> : null}
             {data.reminders ? <button onClick={() => navTo("reminders")} className="w-full flex items-center gap-3 py-2 text-start c-sub"><Zap size={15} />{tr("{n} reminders today", { n: data.reminders })}</button> : null}
           </>) : (
           null)}

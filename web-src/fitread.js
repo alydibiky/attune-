@@ -104,7 +104,9 @@ const A = [
   ["ful sandwich|ساندوتش فول|سندوتش فول", "ful-sandwich"], ["falafel sandwich|taameya sandwich|ساندوتش طعميه|سندوتش طعميه", "taameya-sandwich"],
   ["crepe|كريب", "crepe"], ["waffle|وافل", "waffle"], ["pancakes|pancake|بان كيك", "pancake", { unit: "piece" }], ["donut|doughnut|دونات", "donut"],
   // sweets / snacks
-  ["chocolate|cadbury|galaxy|شوكولاته|كادبوري|جالكسي", "chocolate", { unit: "bar" }], ["ice cream|ايس كريم|جيلاتي", "ice-cream", { unit: "scoop" }],
+  ["milk chocolate|milk chocolate bar|chocolate bar|شوكولاته باللبن|شوكولاته بالحليب", "chocolate", { unit: "bar" }],
+  ["chocolate log|yule log|log cake|swiss roll|roll cake|chocolate roll|buche de noel|بوش دي نويل|سويس رول|رول كيك|رول شوكولاته", "choc-log", { unit: "slice" }],
+    ["chocolate|cadbury|galaxy|شوكولاته|كادبوري|جالكسي", "chocolate", { unit: "bar" }], ["ice cream|ايس كريم|جيلاتي", "ice-cream", { unit: "scoop" }],
   ["chocolate cake|كيكه شوكولاته|تورته شوكولاته|كيك شوكولاته", "cake", { unit: "slice", wholeN: 10 }], ["cake|كيك|كيكه|تورته", "cake", { unit: "slice", wholeN: 10 }], ["biscuits|cookies|بسكويت|كوكيز", "biscuits", { unit: "piece" }], ["chips|crisps|شيبسي|شيبس|chipsy", "chips", { unit: "bag" }],
   ["popcorn|فشار", "popcorn"], ["kahk|كحك", "kahk"], ["baklava|بقلاوه", "baklava"], ["wafer|ويفر|كيت كات|kitkat", "wafer"], ["protein bar|بروتين بار", "protein-bar"],
   ["whey|protein shake|scoop of whey|واي بروتين|بروتين", "whey", { unit: "scoop" }],
@@ -114,7 +116,7 @@ const A = [
   ["strawberries|strawberry|فراوله", "strawberries", { unit: "cup" }], ["pomegranate|رمان", "pomegranate"], ["figs|تين", "figs"], ["kiwi|كيوي", "kiwi"], ["peach|خوخ", "peach"],
   ["almonds|لوز", "almonds", { unit: "handful" }], ["peanuts|سوداني|فول سوداني", "peanuts", { unit: "handful" }], ["walnuts|عين جمل", "walnuts", { unit: "handful" }],
   ["cashews|كاجو", "cashews", { unit: "handful" }], ["pistachio|فستق", "pistachio", { unit: "handful" }], ["sunflower seeds|لب", "sunflower-seeds", { unit: "handful" }],
-  ["tomato|طماطم|قوطه", "tomato"], ["cucumber|خيار|خياره", "cucumber"], ["potato|potatoes|بطاطس مسلوقه|بطاطس بالفرن|baked potato", "potato"], ["sweet potato|بطاطا", "sweet-potato"],
+["tomato sauce|marinara|pasta sauce|pizza sauce|red sauce|صلصه طماطم|صلصه|صوص طماطم", "tomato-sauce", { unit: "tbsp", bare: 4 }],   ["tomato|طماطم|قوطه", "tomato"], ["cucumber|خيار|خياره", "cucumber"], ["potato|potatoes|بطاطس مسلوقه|بطاطس بالفرن|baked potato", "potato"], ["sweet potato|بطاطا", "sweet-potato"],
   ["avocado|افوكادو", "avocado"], ["corn|ذره", "corn"],
   ["ketchup|كاتشب", "ketchup", { unit: "tbsp" }], ["mayonnaise|mayo|مايونيز", "mayonnaise", { unit: "tbsp" }], ["garlic sauce|toum|ثوميه", "garlic-sauce", { unit: "tbsp" }],
 ];
@@ -440,6 +442,16 @@ export function draftCommand(items, text) {
     const r = readMealText(m[1]); if (!r.items.length) return null;
     return { items: [...items, ...r.items], done: { en: "Added " + r.items.map((x) => x.name).join(", "), ar: "اتضاف " + r.items.map((x) => x.ar || x.name).join("، ") } };
   }
+  // Ali 17 Oct: "There is tomato sauce and cheese" / "it has oil" / «فيه صلصة» — something on the plate the photo missed → add it
+  if ((m = t.match(/^(?:there(?: s| is| are| was| were)|it (?:also )?(?:has|had)|it comes with|on it|under it|with|also there(?: s| is)|and there(?: s| is)|وفيه|فيه كمان|كمان فيه|فيه|في|عليه|عليها|معاه|معاها)\s+(?:also\s+|some\s+|a\s+|an\s+)*(.+)$/))) {
+    const r = readMealText(m[1]); if (r.items.length) return { items: [...items, ...r.items], done: { en: "Added " + r.items.map((x) => x.name).join(", "), ar: "اتضاف " + r.items.map((x) => x.ar || x.name).join("، ") } };
+  }
+  // "it's a chocolate éclair" / "it's cake, not milk chocolate" / «ده جاتوه مش شوكولاتة» → swap that food, keep its grams
+  if ((m = t.match(/^(?:no[, ]+)?(?:it ?s|it is|this is|that ?s|that is|they ?re|they are|actually|ده|دي|دا|هو|هي|دول)\s+(?:an?\s+|the\s+)?(.+?)(?:\s*,?\s+(?:not|مش|وليس|مو)\s+(?:an?\s+|the\s+)?(.+))?$/))) {
+    const k = m[2] ? findItem(items, m[2]) : items.length === 1 ? 0 : -1;
+    const nu = readMealText(m[1]).items[0];
+    if (k >= 0 && nu) { const old = items[k]; return { items: items.map((x, i) => (i === k ? { ...regram(nu, old.grams || nu.grams), box: old.box, learned: true } : x)), done: { en: `${old.name} → ${nu.name}`, ar: `${old.ar || old.name} ← ${nu.ar || nu.name}` } }; }
+  }
   // "rice 200 g" / "make the rice 200 grams" / «الرز ٢٠٠ جرام» / "chicken 1.5 portions"
   const t2 = " " + t.replace(/^(?:make|set|change|خلي|خليه|خليها|خليهم|غير)\s+/, "").replace(/(\d+(?:\.\d+)?)\s?(g|gm|gram|grams|جم|جرام)(?=\s|$)/g, "$1 g") + " ";
   if ((m = t2.match(/^\s(.+?)\s(?:to\s|=\s|يبقى\s|تبقى\s)?(\d+(?:\.\d+)?)\s(g|ml)\s$/)) || (m = t2.match(/^\s(\d+(?:\.\d+)?)\s(g|ml)\s(?:of\s|من\s)?(.+?)\s$/))) {
@@ -455,6 +467,10 @@ export function draftCommand(items, text) {
     const per = fd ? (Object.values(fd.portions || {})[0] || 100) : x.grams / (x.qty || 1);
     return { items: items.map((y, i) => (i === k ? { ...regram(y, n * per), qty: n } : y)), done: { en: `${x.name} × ${n}`, ar: `${x.ar || x.name} × ${n}` } };
   }
+  // anything else that names foods not on the plate yet ("tomato sauce and cheese") is an addition
+  const r = readMealText(t);
+  const fresh = r.items.filter((x) => !items.some((y) => y.id && y.id === x.id));
+  if (fresh.length) return { items: [...items, ...fresh], done: { en: "Added " + fresh.map((x) => x.name).join(", "), ar: "اتضاف " + fresh.map((x) => x.ar || x.name).join("، ") } };
   return null;
 }
 

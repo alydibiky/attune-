@@ -1034,6 +1034,15 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
           (api.webPages ? api.webPages(q, queries.length > 1 ? per : Math.min(pwR.pages, pagesFor(question))) : (i === 0 ? api.webLookup(q, question) : Promise.resolve({ hits: [] })))
             .catch((e) => { if (String(e && e.message) === "Stopped") throw e; return { hits: [] }; })));
         if (runRef.current !== run) return;
+        // v6.34 (Ali: "Lynk & Co 900" → "no web page was found"): many searches at once can all come back empty when the search
+        // engine refuses a burst — then one plain search, a moment later, before deciding the web has nothing
+        if (api.webPages && found.every((r) => !(r && r.hits && r.hits.length))) {
+          await new Promise((ok) => setTimeout(ok, 1200));
+          if (runRef.current !== run) return;
+          onStatus(tr("Searching the web…"));
+          found[0] = await api.webPages(query, Math.min(8, readCap + 2)).catch((e) => { if (String(e && e.message) === "Stopped") throw e; return { hits: [] }; });
+          if (runRef.current !== run) return;
+        }
         const look = found[0] || { hits: [] };
         const lists = found.map((r) => (r && r.hits) || []);
         let toRead = api.webPages ? mergeHits(lists, readCap, question) : look.hits || [];
@@ -1131,7 +1140,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         } else if (api.webPages) {
           // v6.12: the web gave nothing about the subject — answer from what the model knows, and say so plainly
           webEmpty = true;
-          content = content + "\n\n(A web search was made, but it found no page about this. Answer from your own knowledge, say in one short line at the start that the web search found nothing about it, and mark anything that may have changed recently as possibly out of date.)" + photoNote;
+          content = content + "\n\n(A web search was made, but it found no page about this. Answer from your own knowledge, say in one short line at the start that the web search found nothing about it, and mark anything that may have changed recently as possibly out of date. Never say that a product, model, car, phone or person does not exist just because you don't know it — it may be newer than what you know: say you have no reliable information about it yet. Never give the figures of a different model in its place.)" + photoNote;
         }
       } else if (typed && api.isPersonal(typed)) {
         const found = api.memSearch(typed);

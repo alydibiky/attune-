@@ -14,7 +14,7 @@ function todayList({ life, ledger, radar, care, now = Date.now(), max = 4 }) {
     const title = c.kind === "installment" ? (who ? tr("{p} · installment {i} of {n}", { p: who, i: x.i + 1, n: c.count }) : tr("Installment {i} of {n}", { i: x.i + 1, n: c.count }))
       : c.kind === "circle" ? tr("Savings circle · {i} of {n}", { i: x.i + 1, n: c.count }) : c.kind === "debt" ? (c.dir === "in" ? tr("{p} pays you back", { p: who }) : tr("Pay {p} back", { p: who }))
       : (c.title ? c.title[0].toUpperCase() + c.title.slice(1) : tr("Bill"));
-    out.push({ from: "life", title, date: x.date, amount: x.amount, dir: c.dir, late: x.late });
+    out.push({ from: "life", title, date: x.date, amount: x.amount, dir: c.dir, late: x.late, ...(c.kind === "regular" ? { regular: { id: c.id, i: x.i, cur: c.currency } } : {}) });
   }
   for (const b of moneyOverview(ledger, now).due) out.push({ from: "money", title: b.note, date: b.date, amount: b.amount, dir: "out", late: b.late });
   // v6.27 Family health: the next doses not taken yet (late ones first)
@@ -35,10 +35,19 @@ export function waitingList({ life, ledger, radar, care, scout, courses, now = D
   const due = todayList({ life, ledger, radar, care, now, max: 4 });
   const extra = [];
   for (const g of (scout && scout.goals) || []) { const n = (g.unseen || []).length; if (n) extra.push({ from: "scout", title: tr("{n} new finds: {w}", { n, w: (g.g && g.g.what) || g.text || "" }), n }); }
+  // (Ali 17 Oct: "lesson 2 — Turkish" showed above "lesson 1 — Turkish": two courses on one topic, newest first. Now one
+  // line per topic — the course furthest behind, lowest lesson first)
+  const learn = [];
   for (const c of courses || []) {
     const k = cardsDue(c, now).length, p = todayPlan(c, now), l = p.steps.find((x) => x.kind === "lesson" && !x.done);
-    if (k || l) extra.push({ from: "learn", title: [k ? (k === 1 ? tr("1 card to review") : tr("{n} cards to review", { n: k })) : "", l ? tr("lesson {n}", { n: (l.lesson ? l.lesson.n : l.n) + 1 }) : ""].filter(Boolean).join(" · ") + " — " + (c.topic || ""), n: k });
+    const ln = l ? (l.lesson ? l.lesson.n : l.n) : 1e9, key = String(c.topic || c.title || "").trim().toLowerCase();
+    if (!(k || l)) continue;
+    const prev = learn.find((x) => x.key === key);
+    if (prev && prev.ln <= ln) continue;
+    if (prev) learn.splice(learn.indexOf(prev), 1);
+    learn.push({ key, ln, from: "learn", course: c.id, title: [k ? (k === 1 ? tr("1 card to review") : tr("{n} cards to review", { n: k })) : "", l ? tr("lesson {n}", { n: ln + 1 }) : ""].filter(Boolean).join(" · ") + " — " + (c.topic || ""), n: k });
   }
+  extra.push(...learn.sort((a, b) => a.ln - b.ln).map(({ key, ln, ...x }) => x));
   for (const x of lowSupply(care || { meds: [] }).slice(0, 2)) extra.push({ from: "care", title: x.days <= 0 ? tr("{m} has run out", { m: x.med.name }) : x.days === 1 ? tr("{m}: about 1 day left", { m: x.med.name }) : tr("{m}: about {d} days left", { m: x.med.name, d: x.days }), low: true });
   // the late ones first, then what is due, then the rest — at most `max`
   return [...due.filter((x) => x.late), ...extra.filter((x) => x.low), ...due.filter((x) => !x.late), ...extra.filter((x) => !x.low)].slice(0, max);

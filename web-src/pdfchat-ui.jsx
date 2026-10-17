@@ -240,6 +240,17 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
         sources = r.pages; allowed = r.pages;
         setAsking(tr("Reading pages {p}…", { p: r.pages.slice(0, 6).join(", ") }));
         answer = String(await llm(Q.answerMessages(text, r.excerpts, history), { maxTokens: 700, temperature: 0.1 }) || "");
+      } else if (kind === "solve") {
+        // the whole document (a short one in one go; a long one part by part), solved question by question
+        const secs = Q.sections(doc.index, 7000).slice(0, 8); allowed = doc.index.pages.map((p) => p.n);
+        const parts = [];
+        for (let i = 0; i < secs.length; i++) {
+          if (!alive()) return;
+          setAsking(secs.length > 1 ? tr("Solving part {i} of {n} (pages {a}–{b})…", { i: i + 1, n: secs.length, a: secs[i].from, b: secs[i].to }) : tr("Solving the questions…"));
+          parts.push(String(await llm(Q.solveMessages(text, secs[i].text, secs.length > 1 ? tr("pages {a}–{b}", { a: secs[i].from, b: secs[i].to }) : ""), { maxTokens: 2200, temperature: 0.1 }) || "").trim());
+        }
+        answer = parts.filter(Boolean).join("\n\n");
+        if (doc.index.pages.length > secs.reduce((a, s) => a + (s.to - s.from + 1), 0)) note = tr("Only the first parts of this long document were solved.");
       } else {
         const secs = Q.sections(doc.index, 3200).slice(0, 14); allowed = doc.index.pages.map((p) => p.n);
         const notes = [];
@@ -256,7 +267,7 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
       }
       if (!alive()) return;
       const chk = Q.checkCitations(answer, allowed);
-      if (!chk.supported && !chk.saysNotFound) note = (note ? note + " " : "") + tr("This answer could not be tied to a page — check the pages listed below before relying on it.");
+      if (!chk.supported && !chk.saysNotFound && kind !== "solve") note = (note ? note + " " : "") + tr("This answer could not be tied to a page — check the pages listed below before relying on it.");
       if (chk.removed) note = (note ? note + " " : "") + tr("{n} page reference(s) the AI made up were removed.", { n: chk.removed });
       setMsgs((m) => [...m, { role: "ai", q: text, text: chk.text || tr("I could not find anything about that in this document."), note, sources: chk.supported ? [] : sources }]);
     } catch (e) { setMsgs((m) => [...m, { role: "ai", q: text, text: tr("Something went wrong: {e}", { e: String((e && e.message) || e).slice(0, 120) }), sources: [] }]); }

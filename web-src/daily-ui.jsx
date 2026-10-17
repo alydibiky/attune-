@@ -29,6 +29,33 @@ const primary = btn + " bg-teal-500 text-slate-950";
 const fieldFixed = field.replace("w-full ", "");
 const ghost = btn + " border border-slate-700 text-slate-200";
 
+/* v6.34 (Ali 17 Oct: "I want the lesson to be ready when the user opens the app"): while a model is loaded and nothing else
+   runs, the app keeps ONE unread lesson written ahead for every course — the next one is waiting when Learn opens. One at a
+   time (WRITING is shared with the Learn page), never over a newer lesson, never when a quiz is due. */
+let WRITING = false;
+export async function lessonAhead(llm, native) {
+  if (WRITING) return null;
+  try { if (localStorage.getItem("attune:learn:ahead") === "0") return null; } catch (e) {}
+  for (const c of loadCourses()) {
+    if (c.pack || !c.plan || !c.plan.length || (c.lessons || []).some((l) => !l.done)) continue;
+    const n = D.nextIndex(c); if (n >= c.plan.length || D.quizDue(c)) continue;
+    WRITING = true;
+    try {
+      const p = D.parseLesson(await llm(D.lessonMessages(c, n), { maxTokens: 1600, temperature: 0.4 }));
+      if (p.body.length < 80) return null;
+      const all = loadCourses(), c0 = all.find((x) => x.id === c.id);
+      if (!c0 || c0.lessons.some((l) => l.n >= n)) return null;
+      const list = all.map((x) => (x.id === c.id ? D.addLesson(c0, n, p) : x));
+      store(CKEY, list); syncDaily(native, list);
+      try { window.dispatchEvent(new Event("attune:learn-updated")); } catch (e) {}
+      return { id: c.id, n };
+    } catch (e) { return null; } finally { WRITING = false; }
+  }
+  return null;
+}
+/** The live "writing…" preview without markdown signs (it showed «**# Mastering Turkish Sounds ##»). */
+export const plainPreview = (t) => String(t || "").replace(/```[\s\S]*?(```|$)/g, " ").replace(/^\s*[{\["]+.*?:\s*"?/, "").replace(/[#*_`>|]+/g, " ").replace(/\\n|\n+/g, " ").replace(/\s+/g, " ").trim();
+
 /** Daily notifications + the widget, from the saved courses and topics. Safe to call often. */
 export function syncDaily(native, courses = loadCourses(), topics = loadTopics(), now = Date.now()) {
   if (!native) return;
@@ -143,8 +170,16 @@ function CWorking({ what, text }) {
   return (
     <div className="c-card" data-testid="daily-working">
       <p className="text-[13px] c-acc flex items-center gap-1.5 m-0"><Loader2 size={14} className="animate-spin" />{what}</p>
-      {text ? <p className="c-sub mt-1.5 line-clamp-3 break-words" dir="auto">{text.slice(-300)}</p> : null}
+      {text ? <p className="c-sub mt-1.5 line-clamp-3 break-words" dir="auto">{plainPreview(text).slice(-300)}</p> : null}
     </div>);
+}
+/** v6.34 (Ali: "I want to add lessons"): your own lesson at the end of a course — written like the others, in its turn. */
+function AddLesson({ onAdd }) {
+  const [open, setOpen] = useState(false), [t, setT] = useState("");
+  if (!open) return <button className="c-acc text-[13px] font-medium flex items-center gap-1" onClick={() => setOpen(true)} data-testid="learn-add-lesson"><Plus size={14} />{tr("Add a lesson")}</button>;
+  const add = () => { const v = t.trim(); if (!v) return; onAdd(v.slice(0, 120)); setT(""); setOpen(false); };
+  return <div className="flex gap-2"><input autoFocus value={t} onChange={(e) => setT(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") add(); }} placeholder={tr("What should the lesson be about?")} className={cField} style={cf} dir="auto" data-testid="learn-add-title" />
+    <button className="c-btn px-3 shrink-0" onClick={add} disabled={!t.trim()} data-testid="learn-add-save">{tr("Add")}</button></div>;
 }
 /** One step of today: an icon (a tick once done), what it is, and a line under it. */
 function Step({ icon: I, title, sub, done, onClick, testid, disabled }) {
@@ -203,8 +238,8 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
   };
 
   const makeLesson = async (c, n) => {
-    if (running.current) return null;
-    running.current = true;
+    if (running.current || WRITING) return null;
+    running.current = true; WRITING = true;
     try {
       // v6.32 a course from a Knowledge pack: the section's own text — shown as it is, or explained from it by the model
       if (c.pack) {
@@ -230,13 +265,18 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
       }
       flash(tr("The lesson came out too short — try again.")); return null;
     } catch (e) { flash(String(e.message || e)); return null; }
-    finally { running.current = false; }
+    finally { running.current = false; WRITING = false; }
   };
+  // a lesson written ahead in the background shows up at once
+  useEffect(() => { const on = () => setCoursesRaw(loadCourses()); window.addEventListener("attune:learn-updated", on); return () => window.removeEventListener("attune:learn-updated", on); }, []);
 
   // a ready course starts at once — its plan is built in
   const startReady = async (id) => {
     const c = D.readyCourse(id, { lang: getLang() === "ar" ? "ar" : "en", time: form.time || "08:00" });
     if (!c) return;
+    // the same ready course twice made two "Turkish" courses (Home listed lesson 2 above lesson 1): open the one you have
+    const had = loadCourses().find((x) => !x.pack && String(x.topic).toLowerCase() === String(c.topic).toLowerCase() && x.plan.length === c.plan.length);
+    if (had) { setCur(had.id); setView("course"); return; }
     putCourse(c); setCur(c.id); setView("course");
     if (modelReady) await makeLesson(c, 0);
   };
@@ -487,6 +527,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
                 <span className={"w-5 shrink-0 text-end c-num " + (l && l.done ? "c-pos" : "c-sub")}>{l && l.done ? "✓" : i + 1}</span>
                 <span style={{ color: l ? "var(--c-ink)" : "var(--c-mut)" }} dir="auto">{t}</span></button>; })}
           </div>
+          <AddLesson onAdd={(t) => { putCourse({ ...latest(), plan: [...latest().plan, t] }); flash(tr("Lesson {n} added: {t}", { n: latest().plan.length + 1, t })); }} />
           {course.plan.length > 8 ? <button className="c-acc text-[13px] font-medium" onClick={() => setAllPlan(!allPlan)} data-testid="learn-all-plan">{allPlan ? tr("Show less") : tr("Show all {n} lessons", { n: course.plan.length })}</button> : null}
         </div>
 

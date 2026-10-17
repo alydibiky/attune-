@@ -150,6 +150,11 @@ const OUT_W = /\b(le debo|je dois|eu devo|ich schulde|gli devo|le devo|borçluyu
 const IN_ = /\bowes me\b|\bwill pay me\b|\bpays me\b|\bi lent\b|\bi loaned\b|(?:^|\s)lent\s+(?!me\b)|\blent\b.*\bto\b|سيدفع|سيسدد|هيسدد|هيدفع(?!ل)|\bto pay me back\b|\bi gave\b.*\b(loan|borrow)|عليه|عليها|هيدفعلي|يدفعلي|هيرجعلي|سلفت|اسلفت|اقرضت|ادينت|استلف مني|اخد مني|خد مني|مديون ليا|مدين لي/i;
 const OUT_ = /\bi owe\b|\bi borrowed\b|\bi have to pay\b|\bi must pay\b|\bmy (installment|instalment)s?\b|عليا|علي ل|استلفت|اقترضت|اخدت من|خدت من|مديون ل|لازم ادفع|هدفع|قسط العربيه|قسطي|اقساطي/i;
 
+// v6.34 (Ali: "the maid comes every Saturday and takes 600 EGP — a checkbox when I log in on Saturday, and it records the expense
+// by itself"): someone who comes on a day and is paid each time → kind "regular", a checkbox on each day, ticked = spent in Money
+const HELP = /\b(maid|housekeeper|cleaner|cleaning lady|nanny|babysitter|driver|gardener|tutor|private teacher|coach|trainer|doorman|cook|nurse|physio(?:therapist)?|car wash(?:er)?)\b|الشغال[هة]|شغال[هة]|الداد[هة]|داد[هة]|السواق|سواق|المدرس|مدرس|المدرسه الخصوصي|الجنايني|جنايني|البواب|بواب|الطباخ|طباخ|الممرض[هة]|ممرض[هة]|الكوتش|كوتش|المدرب|مدرب|عامله النظاف[هة]|ست النظاف[هة]|اللي بتنضف|غسيل العربي[هة]/i;
+const DAY_EVERY = /\b(every|each|on)\s+(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b|كل\s+(يوم\s+)?(احد|اتنين|اثنين|تلات|ثلاثاء|اربع|اربعاء|خميس|جمعه|سبت)|(?:كل|يوم)\s+(ال)?(احد|اتنين|اثنين|تلات|ثلاثاء|اربع|اربعاء|خميس|جمعه|سبت)/i;
+
 /** The name of a bill / subscription: the words before its amount («فاتورة الكهربا ٦٤٠» → «فاتورة الكهربا», "Netflix 200" → "Netflix"). */
 function nameBefore(raw, fallback) {
   const lead = String(raw).split(/[\d\u0660-\u0669$€£]/)[0].replace(/[:،,\-–—]+\s*$/, "").replace(/\s+/g, " ").trim();
@@ -190,6 +195,15 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
     }
     return { ...base, kind: "debt", dir: dirIn ? "in" : "out", amount: big, count: 1, total: big, every: null };
   }
+  if ((HELP.test(raw) || HELP.test(t)) && (DAY_EVERY.test(t) || every)) {
+    const m = HELP.exec(raw) || HELP.exec(t), name = m[0].replace(/^ال/, "");
+    // the start: that weekday — today when today is the day (the first box is today's)
+    const dm = DAY_EVERY.exec(t), word = dm ? (dm[2] || dm[4] || dm[6] || "") : "";
+    const W = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, "احد": 0, "اتنين": 1, "اثنين": 1, "تلات": 2, "ثلاثاء": 2, "اربع": 3, "اربعاء": 3, "خميس": 4, "جمعه": 5, "سبت": 6 };
+    let st = start;
+    if (word in W) { const d = new Date(now); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + ((W[word] - d.getDay() + 7) % 7)); st = iso(d); }   // that weekday, today included
+    return { ...base, kind: "regular", dir: "out", amount: amts[0], count: 0, total: 0, every: every || "week", start: st || iso(new Date(now)), title: /^[a-z]/i.test(name) ? name[0].toUpperCase() + name.slice(1) : name, auto: true };
+  }
   if (RENT.test(raw) || RENT.test(t)) return { ...base, kind: "rent", dir: dirIn && /tenant|المستاجر|بيدفعلي|inquilino|locataire|mieter|affittuario|kiracı|penyewa/.test(t) ? "in" : "out", amount: amts[0], count: count || 0, total: 0, every: every || "month", title: "Rent" };
   if (SUBS.test(raw) || SUBS.test(t)) { const m = SUBS.exec(raw) || SUBS.exec(t); return { ...base, kind: "subscription", dir: "out", amount: amts[0], count: 0, total: 0, every: every || "month", title: nameBefore(raw, m[0][0].toUpperCase() + m[0].slice(1)) }; }
   if (BILL.test(raw) || BILL.test(t)) { const m = BILL.exec(raw) || BILL.exec(t); return { ...base, kind: "bill", dir: "out", amount: amts[0], count: every ? 0 : 1, total: every ? 0 : amts[0], every, title: nameBefore(raw, m[0]) }; }
@@ -204,7 +218,9 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
 
 /** A commitment's dates: [{ i, date, amount, paid }] — `count` payments (or the next 12 for an open-ended one). */
 export function scheduleOf(c, now = Date.now()) {
-  const n = c.count > 0 ? c.count : c.every ? 12 : 1;
+  let n = c.count > 0 ? c.count : c.every ? 12 : 1;
+  // a "regular" (the maid every Saturday) never ends: every day from its start up to the next one ahead
+  if (c.kind === "regular" && c.start) { const days = (now - Date.parse(c.start + "T12:00:00")) / 86400000; n = Math.max(1, Math.floor(days / (c.every === "month" ? 30.44 : c.every === "year" ? 365.25 : 7)) + 2); }
   let d = c.start ? new Date(c.start + "T12:00:00") : new Date(now);
   if (!c.start) { d.setHours(12, 0, 0, 0); if (c.every === "month") d = new Date(d.getFullYear(), d.getMonth() + 1, 1, 12); }
   const out = [];
@@ -220,14 +236,17 @@ export function scheduleOf(c, now = Date.now()) {
 export function progressOf(c, now = Date.now()) {
   const s = scheduleOf(c, now), paid = s.filter((x) => x.paid);
   const total = c.total || (c.count > 0 ? c.amount * c.count : 0);
-  return { paidCount: paid.length, paidAmount: paid.reduce((a, x) => a + x.amount, 0), left: total ? Math.max(0, total - paid.reduce((a, x) => a + x.amount, 0)) : null, next: s.find((x) => !x.paid) || null, schedule: s };
+  // (a regular day that passed unticked = they didn't come — not late; its next is today or the next day ahead)
+  const today = iso(new Date(now));
+  const next = c.kind === "regular" ? s.find((x) => !x.paid && x.date >= today) || null : s.find((x) => !x.paid) || null;
+  return { paidCount: paid.length, paidAmount: paid.reduce((a, x) => a + x.amount, 0), left: total ? Math.max(0, total - paid.reduce((a, x) => a + x.amount, 0)) : null, next, schedule: s };
 }
 
 /** A tick on payment i → the Money entry it makes (proposed to Money, confirmed there): income for "in", expense for "out". */
 export function tickEntry(c, i, now = Date.now()) {
   const s = scheduleOf(c, now)[i]; if (!s) return null;
   const who = c.person ? c.person + " — " : "";
-  const what = c.kind === "installment" ? `installment ${i + 1} of ${c.count}` : c.kind === "circle" ? `${c.title || "savings circle"} ${i + 1}/${c.count}` : c.title || c.kind;
+  const what = c.kind === "regular" ? `${c.title || "regular"} · ${s.date}` : c.kind === "installment" ? `installment ${i + 1} of ${c.count}` : c.kind === "circle" ? `${c.title || "savings circle"} ${i + 1}/${c.count}` : c.title || c.kind;
   return { direction: c.dir === "in" ? "in" : "out", amount: s.amount, currency: c.currency, party: c.person || "", note: (who + what).trim(), ts: Date.parse(s.date + "T12:00:00") };
 }
 
@@ -261,7 +280,7 @@ export function removeCommitment(data, id) { return { ...data, items: data.items
 /** What is due soon across everything (for Home's "Today" and reminders): [{ c, i, date, amount, late }] within `days`. */
 export function dueSoon(data, now = Date.now(), days = 7) {
   const today = iso(new Date(now)), until = iso(new Date(now + days * 86400000)), out = [];
-  for (const c of data.items || []) for (const s of scheduleOf(c, now)) if (!s.paid && s.date <= until) { out.push({ c, i: s.i, date: s.date, amount: s.amount, late: s.date < today }); }
+  for (const c of data.items || []) for (const s of scheduleOf(c, now)) if (!s.paid && s.date <= until && (c.kind !== "regular" || s.date === today)) { out.push({ c, i: s.i, date: s.date, amount: s.amount, late: s.date < today }); }
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 

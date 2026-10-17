@@ -52,7 +52,7 @@ with sync_playwright() as p:
     check(card.lower() == "#0b1a12", "…dark writing on light (the palette turned around inside Fit: %s)" % card)
     shot(page, "look-fresh-home")
 
-    for look in ("fresh", "night", "bold"):
+    for look in ("fresh", "night", "bold", "meals", "rings"):   # (tiles shares the light labels; its home has no meal "+" buttons)
         if look != "fresh":
             page.locator("[data-testid=fit-tab-me]").click(); page.wait_for_timeout(200)
             page.locator("[data-testid=fit-look-%s]" % look).click(); page.wait_for_timeout(200)
@@ -73,6 +73,9 @@ with sync_playwright() as p:
         check(marks.count() == 4, "%s: the photo shows a label on each of the 4 foods (%d)" % (look, marks.count()))
         txt = page.locator("[data-testid=fit-photo-marks]").inner_text()
         check("Fried egg" in txt and "Tomato sauce" in txt and "180" in txt, "%s: …each with its name and calories" % look)
+        # Ali 17 Oct: in the light looks the label was white text on a white pill (an empty white box)
+        same = page.evaluate("() => [...document.querySelectorAll('[data-testid=fit-mark]')].filter((e) => { const s = getComputedStyle(e); return s.color === s.backgroundColor; }).length")
+        check(same == 0, "%s: …each label's text is readable (not the colour of its pill: %d)" % (look, same))
         lines = page.locator("[data-testid=fit-photo-marks] svg line").count()
         check(lines >= 4, "%s: …and a line from each label to its food (%d lines)" % (look, lines))
         # the labels never cover each other (Night's first try put them beside the pins: they overlapped)

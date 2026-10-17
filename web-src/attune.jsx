@@ -29,7 +29,7 @@ import { CodeWorkbench } from "./code-ui.jsx";
 import { StudioPage } from "./studio-ui.jsx";
 import { enhanceWaitMs } from "./studio.js";
 import { BusinessApp } from "./biz-ui.jsx";
-import { LearnPage, NewsPage, syncDaily } from "./daily-ui.jsx";
+import { LearnPage, NewsPage, syncDaily, lessonAhead } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
 import { MindPage, keepPicture } from "./mind-ui.jsx";
@@ -8083,6 +8083,14 @@ export default function App() {
   // moment a tool sends a request (LocalEngine.waitReady), so no tool should send the user to Engine.
   const modelUsable = modelState === "ready" || (NATIVE && ((engineInfo && engineInfo.state === "ready") || (installedModels || []).length > 0));
   const refreshModels = () => { const m = nativeJSON("models"); setInstalledModels((m && m.models) || []); };
+  // v6.34 (Ali): the next lesson is written ahead while a model is loaded and idle — ready when Learn is opened.
+  // Only when the engine is already up (never wakes a model for it), 20 s after the last check, never during a request.
+  const engineUp = modelState === "ready" || !!(engineInfo && engineInfo.state === "ready");
+  useEffect(() => {
+    if (!engineUp) return;
+    const t = setInterval(() => { if (!LocalEngine._abort && !LocalEngine._nativeId && !(LocalEngine._bg && LocalEngine._bg.size) && Date.now() - (LocalEngine.lastAsked || 0) > 30000 && !document.hidden) lessonAhead((messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature, think: false, background: true }), NATIVE); }, 20000);
+    return () => clearInterval(t);
+  }, [engineUp]);
   const [airGap, setAirGapState] = useState(() => { const i = nativeJSON("info"); return !!(i && i.airGap); });
   // v6.16: the public Knowledge packs (world facts, Egyptian laws) are fetched by themselves so Chat can answer from
   // them — quietly, a few seconds after start, at most every 6 h, never with the offline lock on

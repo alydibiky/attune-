@@ -483,9 +483,10 @@ body.on-home .fab{display:none}
 <section class="screen" id="scr-settings">
     <header><div><h1 data-i18n="settings"></h1><div class="sub" data-i18n="settingsSub"></div></div></header>
     <div class="field"><label data-i18n="language"></label><div class="lang-toggle" id="lang-toggle"><button data-l="en" onclick="setLang('en')">English</button><button data-l="ar" onclick="setLang('ar')">العربية</button></div></div>
-    <div class="sec-head"><h2 data-i18n="premium"></h2><span id="prem-status" class="link"></span></div>
+    <!-- v6.34 (Ali: "remove premium active and test premium"): inside Attune, Pro is Attune's own; kept hidden so the code that fills them still finds them -->
+    <div hidden><div class="sec-head"><h2 data-i18n="premium"></h2><span id="prem-status" class="link"></span></div>
     <button class="btn" id="prem-btn" onclick="openPaywall()"></button>
-    <button class="btn ghost" onclick="toggleTestPremium()" data-i18n="testPremium"></button>
+    <button class="btn ghost" onclick="toggleTestPremium()" data-i18n="testPremium"></button></div>
     <button class="btn ghost" onclick="openGuide()" data-i18n="openGuide"></button>
     <div class="sec-head"><h2 data-i18n="customize"></h2><button class="link" onclick="resetLook()" data-i18n="resetLook"></button></div>
     <div class="field"><label data-i18n="theme"></label><div class="theme-row" id="theme-row"></div></div>

@@ -16,8 +16,9 @@ import { parseHolding, loadGold, saveGold, addHolding } from "./gold.js";
 import { parseCar, loadCar, saveCar, addCarEntry, carMoneyText } from "./car.js";
 import { loadRadar, saveRadar, addDeadline, radarReminder } from "./deadlines.js";
 import { PlanDraft, GoldCard, CarCard } from "./plans-ui.jsx";
+import { tickRegular } from "./regular.js";
 
-const KIND = { installment: "Installments", debt: "Money between people", circle: "Savings circle", bill: "Bill", rent: "Rent", subscription: "Subscription" };
+const KIND = { installment: "Installments", debt: "Money between people", circle: "Savings circle", bill: "Bill", rent: "Rent", subscription: "Subscription", regular: "Comes regularly" };
 // v6.27 computer layout A: a narrower left panel here, so the commitments on the right fit two cards side by side
 const PANES_N = "lg:grid lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] lg:gap-6 lg:items-start";
 const EVERY = { month: "a month", week: "a week", year: "a year" };
@@ -27,6 +28,7 @@ function describe(c) {
   if (c.kind === "installment") return tr("{a} {cur}{per} · {n} payments · {t} in all", { a: fmt(c.amount), cur: c.currency, per, n: c.count, t: fmt(c.total) });
   if (c.kind === "circle") return tr("{a} {cur}{per} · {n} months", { a: fmt(c.amount), cur: c.currency, per, n: c.count }) + (c.myTurn ? " · " + tr("your turn: {k}", { k: c.myTurn }) : "");
   if (c.kind === "debt") return fmt(c.amount) + " " + c.currency;
+  if (c.kind === "regular") return tr("{a} {cur} each time · {when}", { a: fmt(c.amount), cur: c.currency, when: c.every === "week" && c.start ? tr("every {d}", { d: new Date(c.start + "T12:00:00").toLocaleDateString(undefined, { weekday: "long" }) }) : tr(EVERY[c.every] || "a week") }) + " · " + tr("tick the day — it goes into Money by itself");
   return fmt(c.amount) + " " + c.currency + per;
 }
 function heading(c) {
@@ -39,7 +41,8 @@ function heading(c) {
 
 function Item({ c, onTick, onRemove }) {
   const pr = useMemo(() => progressOf(c), [c]);
-  const show = pr.schedule.slice(0, 24);
+  // a regular (the maid every Saturday): the last few days and the next one — ticked = she came, and it's in Money
+  const show = c.kind === "regular" ? pr.schedule.slice(Math.max(0, pr.schedule.length - 6)) : pr.schedule.slice(0, 24);
   return (
     <div className="c-card" data-testid="life-item">
       <div className="flex items-start gap-3">
@@ -107,6 +110,13 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
     }
     const d = addCommitment(data, draft); put(d); remindFor(d.items[d.items.length - 1]); setDraft(null); setText(""); flash && flash(tr("Saved — the payments are on your list")); };
   const tick = (c, i, on) => {
+    if (c.kind === "regular") {
+      const r = tickRegular(c.id, i, on); setData(r.data); remindFor(r.data.items.find((x) => x.id === c.id));
+      if (on && r.recorded) flash && flash(tr("Recorded in Money: {a} {cur} — {t}", { a: fmt(r.recorded), cur: c.currency, t: c.title }));
+      else if (on && toMoney) toMoney(tickText(c, i));
+      else if (!on && r.removed) flash && flash(tr("Taken out of Money"));
+      return;
+    }
     const d = togglePaid(data, c.id, i); put(d); remindFor(d.items.find((x) => x.id === c.id));
     // the Money Guardian counts a late payment that came back after its reminder as saved
     if (on) { try { const s = progressOf(c).schedule[i]; saveGuardian(collected(loadGuardian(), c.id, i, s ? s.amount : c.amount)); } catch (e) {} }
@@ -116,7 +126,7 @@ export function LifePage({ ask, toMoney, flash, remind, unremind }) {
   const soon = dueSoon(data);
   const groups = [["People", data.items.filter((c) => c.kind === "debt" || (c.kind === "installment" && c.person))],
     ["Installments", data.items.filter((c) => c.kind === "installment" && !c.person)], ["Savings circles", data.items.filter((c) => c.kind === "circle")],
-    ["Bills, rent and subscriptions", data.items.filter((c) => ["bill", "rent", "subscription"].includes(c.kind))]].filter((g) => g[1].length);
+    ["Bills, rent and subscriptions", data.items.filter((c) => ["bill", "rent", "subscription"].includes(c.kind))], ["Comes regularly", data.items.filter((c) => c.kind === "regular")]].filter((g) => g[1].length);
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="life-page">
       <div><h2 className="text-[22px] font-bold m-0">{tr("People & plans")}</h2><p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Debts, installments, savings circles, bills — with a checkbox for every payment.")}</p></div>

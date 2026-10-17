@@ -139,6 +139,7 @@ const F = [
   ["dark-chocolate", "Dark chocolate", "شوكولاتة داكنة|دارك شوكليت", 546, 4.9, 61, 31, 7, { bar: 45, square: 10 }, "sweets"],
   ["biscuits", "Biscuits|cookies", "بسكويت|كوكيز", 480, 6, 68, 21, 2, { piece: 10 }, "sweets"],
   ["cake", "Cake", "كيك|كيكة|جاتوه|تورتة", 380, 5, 52, 17, 1, { slice: 80, piece: 80 }, "sweets"],
+  ["choc-log", "Chocolate log (roll cake)", "رول شوكولاتة|بوش دي نويل|سويس رول", 400, 5, 50, 20, 2, { slice: 80, piece: 80 }, "sweets"],
   ["ice-cream", "Ice cream", "آيس كريم|ايس كريم|جيلاتي", 207, 3.5, 24, 11, 0.7, { scoop: 66, cup: 132 }, "sweets"],
   ["chips", "Potato chips (crisps)", "شيبسي|شيبس", 536, 7, 53, 34, 4.4, { bag: 40, small: 25 }, "sweets"],
   // drinks (per 100 ml)

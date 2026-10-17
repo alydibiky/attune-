@@ -1058,6 +1058,11 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun payAccess(): Boolean = try { PayLog.enabled(ctx) } catch (e: Throwable) { false }
     @JavascriptInterface
     fun openPayAccess() { PayLog.openSettings(ctx) }
+    /** v6.34: Attune's App info — where "Allow restricted settings" is (⋮), for an APK not installed from Google Play. */
+    @JavascriptInterface
+    fun openAppInfo() {
+        try { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:" + ctx.packageName)).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (e: Exception) {}
+    }
     @JavascriptInterface
     fun payQueue(): String = try { PayLog.list(ctx) } catch (e: Throwable) { "[]" }
     @JavascriptInterface

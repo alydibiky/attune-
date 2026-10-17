@@ -130,6 +130,8 @@ def new_page(br, env, errors, native=True, extra_init=None, release=False, deskt
     # it comes back for them only (attune:legacy-nav); legacy_nav=False = exactly what people see (tests/e2e_v734sidebar.py)
     if legacy_nav: ctx.add_init_script("try{localStorage.setItem('attune:legacy-nav','1')}catch(e){}")
     ctx.add_init_script("try{localStorage.setItem('attune:onboarded','1')}catch(e){}")
+    # v6.34: lessons written ahead in the background would take canned answers meant for the test; a test turns it on itself
+    ctx.add_init_script("try{if(localStorage.getItem('attune:learn:ahead')===null)localStorage.setItem('attune:learn:ahead','0')}catch(e){}")
     ctx.add_init_script("try{if(!localStorage.getItem('attune:testing-pro'))localStorage.setItem('attune:testing-pro','off')}catch(e){}")
     if not release: ctx.add_init_script("try{if(localStorage.getItem('attune:dev')===null)localStorage.setItem('attune:dev','1')}catch(e){}")   # tests run in developer mode (the testing box in Plan etc.); release=True = a customer's phone
     # v6.12: the app adds the engineering skill once on a first start; tests start from no skills unless they ask (seed=…)

@@ -72,13 +72,13 @@ export function PhotoMarks({ look, url, items, L, ar }) {
       {/* the lines: white (Fresh), the food's colour (Bold), teal from a numbered pin (Night) */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden="true">
         {lines.map((l) => { const k = marks.findIndex((m) => m.i === l.i), c = look === "bold" ? BOLD_COLORS[k % BOLD_COLORS.length] : look === "night" ? "#2DD4BF" : "#FFFFFF";
-          return <g key={l.i}>{look === "fresh" ? <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="rgba(0,0,0,.35)" strokeWidth="4.5" strokeLinecap="round" /> : null}
+          return <g key={l.i}>{look !== "bold" && look !== "night" ? <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="rgba(0,0,0,.35)" strokeWidth="4.5" strokeLinecap="round" /> : null}
             <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={c} strokeWidth={look === "fresh" ? 2.5 : 3} strokeLinecap="round" />
             {look === "night" ? null : <circle cx={l.x2} cy={l.y2} r="5.5" fill={c} stroke={look === "bold" ? "#FFFFFF" : "rgba(0,0,0,.35)"} strokeWidth="1.5" />}</g>; })}
       </svg>
       {marks.map((m, k) => {
         const x = items[m.i];
-        const bg = look === "bold" ? BOLD_COLORS[k % BOLD_COLORS.length] : look === "night" ? "rgba(11,18,32,.88)" : "#FFFFFF", fg = look === "fresh" ? "#12241B" : look === "night" ? "#E8EEF7" : "#FFFFFF";
+        const bg = look === "bold" ? BOLD_COLORS[k % BOLD_COLORS.length] : look === "night" ? "rgba(11,18,32,.88)" : "#FFFFFF", fg = look === "bold" ? "#FFFFFF" : look === "night" ? "#E8EEF7" : "#12241B";   // a white label always gets dark text (every light look, not only Fresh)
         return (
           <div key={m.i} ref={(el) => { chips.current[m.i] = el; }} className="absolute px-2.5 py-1 rounded-xl shadow-md max-w-[44%] leading-tight" data-testid="fit-mark"
             style={{ top: m.ly * 100 + "%", transform: "translateY(-50%)", [m.side === "l" ? "left" : "right"]: "2.5%", background: bg, color: fg, border: look === "night" ? "1px solid #2DD4BF" : "none" }}>

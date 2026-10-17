@@ -25,6 +25,21 @@ const logAuto = (entries) => {
  *  them). → how many were added. Money open → PayInbox adds them through Money instead. */
 /** The phone build has the payment-notification reader (the Play Store build; the direct APK leaves it out). */
 export const payReader = (N) => { try { return !!(N && N.payAccess && N.payQueue && (!N.payAvailable || N.payAvailable())); } catch (e) { return false; } };
+/** v6.34 (Ali: Attune greyed out — "Controlled by restricted setting"): Android 13+ blocks notification access for an app
+ *  installed from an APK file, not from Google Play. Opening the access screen once marks it; while access is still off the
+ *  steps show, with a button straight to Attune's App info (⋮ → Allow restricted settings). */
+const ASKED_KEY = "attune:pay:asked";
+export const openAccess = (N) => { try { localStorage.setItem(ASKED_KEY, "1"); } catch (e) {} try { N.openPayAccess(); } catch (e) {} };
+export function RestrictedHelp({ N }) {
+  let asked = false; try { asked = localStorage.getItem(ASKED_KEY) === "1"; } catch (e) {}
+  if (!asked || !N || !N.openAppInfo) return null;
+  return (
+    <div className="mt-2 text-[12.5px] leading-relaxed" style={{ color: "var(--c-mut, #94A3B8)" }} data-testid="pay-restricted-help">
+      <b style={{ color: "var(--c-ink, #E2E8F0)" }}>{tr("Attune is greyed out (\"restricted setting\")?")}</b>{" "}
+      {tr("Android does this for apps installed from a file instead of Google Play. In App info tap ⋮ (top right) → Allow restricted settings, then turn Attune on here again.")}
+      <button onClick={() => { try { N.openAppInfo(); } catch (e) {} }} className="ms-1 underline font-semibold" style={{ color: "var(--c-acc, #2DD4BF)" }} data-testid="pay-open-appinfo">{tr("Open App info")}</button>
+    </div>);
+}
 export function runAutoPay(N) {
   if (!payReader(N) || !autoOn()) return 0;
   let on = false; try { on = N.payAccess(); } catch (e) {}
@@ -78,9 +93,10 @@ export function PayInbox({ N, onAdd, ready = true }) {
         <p className="text-[13.5px] font-semibold text-slate-100 flex items-center gap-2"><Bell size={15} className="text-teal-300" />{tr("Log spending by itself")}</p>
         <p className="text-[12px] text-slate-400 mt-1 leading-relaxed">{tr("Turn on notification access and Attune reads your bank, InstaPay and wallet notifications on this phone, then asks you to add each payment. Never SMS; nothing leaves the phone.")}</p>
         <div className="flex gap-2 mt-2.5">
-          <button onClick={() => { try { N.openPayAccess(); } catch (e) {} }} className="px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 text-[12.5px] font-semibold" data-testid="paylog-turn-on">{tr("Turn on")}</button>
+          <button onClick={() => openAccess(N)} className="px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 text-[12.5px] font-semibold" data-testid="paylog-turn-on">{tr("Turn on")}</button>
           <button onClick={() => { setNotNow(true); try { localStorage.setItem(OFF_KEY, "1"); } catch (e) {} }} className="px-3 py-1.5 rounded-lg text-slate-400 text-[12.5px]">{tr("Not now")}</button>
         </div>
+        <RestrictedHelp N={N} />
       </div>);
   }
   if (!items.length) return autoN ? (
