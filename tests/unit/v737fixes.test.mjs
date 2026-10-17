@@ -15,6 +15,13 @@ const one = R.readMealText("milk chocolate 45 g").items;
 const sw = R.draftCommand(one, "it's cake, not milk chocolate");
 assert.ok(sw && sw.items.length === 1 && sw.items[0].id !== one[0].id, "a swap keeps one food: " + (sw && sw.done.en));
 assert.equal(Math.round(sw.items[0].grams), Math.round(one[0].grams), "…and its grams");
+// Ali's photo (17 Oct): "It is a chocolate crepe with chcoo rice on it and stuffed with cream" — read right, and as a correction
+assert.deepEqual(R.readMealText("It is a chocolate crepe with chcoo rice on it and stuffed with cream").items.map((x) => x.id), ["crepe", "choco-rice", "cream-filling"]);
+const choc = R.readMealText("milk chocolate").items;
+const fix = R.draftCommand(choc, "It is a chocolate crepe with chcoo rice on it and stuffed with cream");
+assert.ok(fix, "the correction is understood");
+assert.deepEqual(fix.items.map((x) => x.id), ["crepe", "choco-rice", "cream-filling"], "milk chocolate → crepe + choco rice + cream");
+assert.equal(R.readMealText("stuffed cabbage").items[0].id, "stuffed-cabbage"); assert.equal(R.readMealText("whipped cream").items[0].id, "whipped-cream");
 assert.equal(R.draftCommand(plate, "remove the egg").items.length, plate.length - 1, "remove still works");
 assert.equal(R.draftCommand(plate, "blah blah"), null, "nonsense still says it didn't get it");
 // a task on a document ("Solve the questions") is solved from the whole document, not searched for

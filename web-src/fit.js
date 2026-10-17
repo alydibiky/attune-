@@ -139,6 +139,9 @@ const F = [
   ["dark-chocolate", "Dark chocolate", "شوكولاتة داكنة|دارك شوكليت", 546, 4.9, 61, 31, 7, { bar: 45, square: 10 }, "sweets"],
   ["biscuits", "Biscuits|cookies", "بسكويت|كوكيز", 480, 6, 68, 21, 2, { piece: 10 }, "sweets"],
   ["cake", "Cake", "كيك|كيكة|جاتوه|تورتة", 380, 5, 52, 17, 1, { slice: 80, piece: 80 }, "sweets"],
+  // v6.34 (Ali: "a chocolate crepe with choco rice on it and stuffed with cream")
+  ["choco-rice", "Chocolate sprinkles (choco rice)|chocolate sprinkles|choco rice|sprinkles", "شوكو رايس|حبيبات شوكولاتة", 480, 4, 70, 20, 3, { tbsp: 10, serving: 15 }, "sweets"],
+  ["cream-filling", "Cream filling (pastry cream)|pastry cream|cream filling|custard filling", "كريمة|حشوة كريمة|كاسترد", 250, 3, 22, 17, 0, { tbsp: 20, serving: 40 }, "sweets"],
   ["choc-log", "Chocolate log (roll cake)", "رول شوكولاتة|بوش دي نويل|سويس رول", 400, 5, 50, 20, 2, { slice: 80, piece: 80 }, "sweets"],
   ["ice-cream", "Ice cream", "آيس كريم|ايس كريم|جيلاتي", 207, 3.5, 24, 11, 0.7, { scoop: 66, cup: 132 }, "sweets"],
   ["chips", "Potato chips (crisps)", "شيبسي|شيبس", 536, 7, 53, 34, 4.4, { bag: 40, small: 25 }, "sweets"],

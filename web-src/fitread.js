@@ -105,7 +105,11 @@ const A = [
   ["crepe|كريب", "crepe"], ["waffle|وافل", "waffle"], ["pancakes|pancake|بان كيك", "pancake", { unit: "piece" }], ["donut|doughnut|دونات", "donut"],
   // sweets / snacks
   ["milk chocolate|milk chocolate bar|chocolate bar|شوكولاته باللبن|شوكولاته بالحليب", "chocolate", { unit: "bar" }],
-  ["chocolate log|yule log|log cake|swiss roll|roll cake|chocolate roll|buche de noel|بوش دي نويل|سويس رول|رول كيك|رول شوكولاته", "choc-log", { unit: "slice" }],
+["chocolate crepe|crepe with chocolate|nutella crepe|crepe nutella|chocolate crepes|كريب شوكولاته|كريب بالشوكولاته|كريب نوتيلا", "crepe", { unit: "piece" }],
+  ["whipped cream|chantilly|كريمه مخفوقه|شانتيه", "whipped-cream", { unit: "tbsp", bare: 2 }],
+  ["choco rice|chocorice|chcoo rice|choc rice|chocolate rice|chocolate sprinkles|sprinkles|شوكو رايس|شوكورايس|حبيبات شوكولاته", "choco-rice", { unit: "tbsp", bare: 1.5 }],
+  ["cream filling|pastry cream|stuffed with cream|filled with cream|cream|custard|كريمه|بالكريمه|حشوه كريمه|كاسترد", "cream-filling", { unit: "serving", bare: 1 }],
+    ["chocolate log|yule log|log cake|swiss roll|roll cake|chocolate roll|buche de noel|بوش دي نويل|سويس رول|رول كيك|رول شوكولاته", "choc-log", { unit: "slice" }],
     ["chocolate|cadbury|galaxy|شوكولاته|كادبوري|جالكسي", "chocolate", { unit: "bar" }], ["ice cream|ايس كريم|جيلاتي", "ice-cream", { unit: "scoop" }],
   ["chocolate cake|كيكه شوكولاته|تورته شوكولاته|كيك شوكولاته", "cake", { unit: "slice", wholeN: 10 }], ["cake|كيك|كيكه|تورته", "cake", { unit: "slice", wholeN: 10 }], ["biscuits|cookies|بسكويت|كوكيز", "biscuits", { unit: "piece" }], ["chips|crisps|شيبسي|شيبس|chipsy", "chips", { unit: "bag" }],
   ["popcorn|فشار", "popcorn"], ["kahk|كحك", "kahk"], ["baklava|بقلاوه", "baklava"], ["wafer|ويفر|كيت كات|kitkat", "wafer"], ["protein bar|بروتين بار", "protein-bar"],
@@ -224,6 +228,7 @@ export function readMealText(text, cc = getCountry()) {
   // filler: "I (just) had / ate", "for lunch", «كلت», «فطرت» …
   t = t.replace(/\b(i|i've|ive|just|had|ate|have|eaten|drank|drink|for|my|today|breakfast|lunch|dinner|snack|supper)\b/g, " ")
     .replace(/(^|\s)(كلت|اكلت|فطرت|اتغديت|اتعشيت|شربت|النهارده|فطار|غدا|عشا|سناك|على|علي)(?=\s|$)/g, " ").replace(/:/g, " ");
+  t = t.replace(/\b(it is|it s|this is|stuffed(?! (cabbage|vegetables?|vine|peppers?|grape|zucchini|eggplant|pigeon))|filled|topped|covered|sprinkled|on it|on top|inside)\b/g, " ");
   const noSugar = /(no sugar|without sugar|sugar free|unsweetened|من غير سكر|بدون سكر|سكر خفيف لا|ساده)/.test(t);
   t = t.replace(/(no sugar|without sugar|sugar free|unsweetened|من غير سكر|بدون سكر|ساده)/g, " ");
   const meal = /\b(meal|combo)\b|وجبه|كومبو/.test(t);
@@ -449,8 +454,15 @@ export function draftCommand(items, text) {
   // "it's a chocolate éclair" / "it's cake, not milk chocolate" / «ده جاتوه مش شوكولاتة» → swap that food, keep its grams
   if ((m = t.match(/^(?:no[, ]+)?(?:it ?s|it is|this is|that ?s|that is|they ?re|they are|actually|ده|دي|دا|هو|هي|دول)\s+(?:an?\s+|the\s+)?(.+?)(?:\s*,?\s+(?:not|مش|وليس|مو)\s+(?:an?\s+|the\s+)?(.+))?$/))) {
     const k = m[2] ? findItem(items, m[2]) : items.length === 1 ? 0 : -1;
-    const nu = readMealText(m[1]).items[0];
-    if (k >= 0 && nu) { const old = items[k]; return { items: items.map((x, i) => (i === k ? { ...regram(nu, old.grams || nu.grams), box: old.box, learned: true } : x)), done: { en: `${old.name} → ${nu.name}`, ar: `${old.ar || old.name} ← ${nu.ar || nu.name}` } }; }
+    const all = readMealText(m[1]).items, nu = all[0];
+    if (k >= 0 && nu) {
+      const old = items[k];
+      // one food → it takes the old one's grams; a whole description ("a chocolate crepe with choco rice, stuffed with cream") →
+      // every food it names, each with its own portion, in the old one's place
+      const put = all.length > 1 ? all.map((x, j) => ({ ...x, box: j ? undefined : old.box, learned: true })) : [{ ...regram(nu, old.grams || nu.grams), box: old.box, learned: true }];
+      const names = (f) => all.map((x) => f(x)).join(" + ");
+      return { items: [...items.slice(0, k), ...put, ...items.slice(k + 1)], done: { en: `${old.name} → ${names((x) => x.name)}`, ar: `${old.ar || old.name} ← ${names((x) => x.ar || x.name)}` } };
+    }
   }
   // "rice 200 g" / "make the rice 200 grams" / «الرز ٢٠٠ جرام» / "chicken 1.5 portions"
   const t2 = " " + t.replace(/^(?:make|set|change|خلي|خليه|خليها|خليهم|غير)\s+/, "").replace(/(\d+(?:\.\d+)?)\s?(g|gm|gram|grams|جم|جرام)(?=\s|$)/g, "$1 g") + " ";
