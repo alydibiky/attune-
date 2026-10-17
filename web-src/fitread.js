@@ -480,8 +480,10 @@ export function draftCommand(items, text) {
     return { items: items.map((y, i) => (i === k ? { ...regram(y, n * per), qty: n } : y)), done: { en: `${x.name} × ${n}`, ar: `${x.ar || x.name} × ${n}` } };
   }
   // anything else that names foods not on the plate yet ("tomato sauce and cheese") is an addition
+  // (not a question, and only foods named as written — "what's the weather" must not become water through the typo fixer)
+  if (/[?؟]\s*$/.test(String(text)) || /^(what|how|why|when|where|who|is|are|can|do|does|ايه|إيه|ازاي|إزاي|ليه|امتي|امتى|فين|مين|هل)(\s|$)/.test(t)) return null;
   const r = readMealText(t);
-  const fresh = r.items.filter((x) => !items.some((y) => y.id && y.id === x.id));
+  const fresh = r.items.filter((x) => !items.some((y) => y.id && y.id === x.id) && x.said && new RegExp("(^|\\s)" + normA(x.said).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(\\s|$)").test(t));
   if (fresh.length) return { items: [...items, ...fresh], done: { en: "Added " + fresh.map((x) => x.name).join(", "), ar: "اتضاف " + fresh.map((x) => x.ar || x.name).join("، ") } };
   return null;
 }
