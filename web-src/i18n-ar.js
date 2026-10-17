@@ -4724,4 +4724,5 @@ export const AR = {
   "Documents & notes": "المستندات والملاحظات",
   "{s}: about {m} min walk": "{s}: نحو {m} دقيقة سيرًا",
   "From the offline map: the area's centre to the station, in a straight line × 1.3": "من الخريطة دون إنترنت: من وسط المنطقة إلى المحطة، خطًا مستقيمًا × ١٫٣",
+  "The same photo is in another ad ({s}{p}) — it may be copied; ask for a new photo or a video call": "الصورة نفسها موجودة في إعلان آخر ({s}{p}) — قد تكون منسوخة؛ اطلب صورة جديدة أو مكالمة فيديو",
 };

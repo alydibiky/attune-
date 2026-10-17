@@ -4,7 +4,7 @@
    twice a day; the computer app also while it stays open). A strong NEW find (or a price drop) → a notification.
    Logic: scout.js. Tests: tests/unit/v731scout.test.mjs, tests/e2e_v731scout.py.                                                   */
 import React, { useEffect, useState } from "react";
-import { Binoculars, Plus, RefreshCw, Trash2, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check, X, HelpCircle, TrendingDown, Loader2, Pause, Play, MapPin } from "lucide-react";
+import { Binoculars, Plus, RefreshCw, Trash2, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check, X, HelpCircle, TrendingDown, Loader2, Pause, Play, MapPin, AlertTriangle } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as S from "./scout.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -49,6 +49,32 @@ function useStations(goal, found, ar) {
     return () => { live = false; };
   }, [key]);
   return st;
+}
+
+// v6.32 the photo check: each ad picture's fingerprint, made here from the small copy the search brought (no download), kept by ad
+const PH_KEY = "attune:scout:photos:v1";
+const greyOf = (src) => new Promise((res) => {
+  const im = new Image();
+  im.onload = () => { try { const c = document.createElement("canvas"); c.width = 9; c.height = 8; const x = c.getContext("2d"); x.drawImage(im, 0, 0, 9, 8);
+    const d = x.getImageData(0, 0, 9, 8).data, g = []; for (let i = 0; i < 72; i++) g.push((299 * d[i * 4] + 587 * d[i * 4 + 1] + 114 * d[i * 4 + 2]) / 1000); res(g); } catch (e) { res(null); } };
+  im.onerror = () => res(null); im.src = src; });
+function usePhotoPrints(found) {
+  const [h, setH] = useState(() => { try { return JSON.parse(localStorage.getItem(PH_KEY) || "{}"); } catch (e) { return {}; } });
+  const todo = found.filter((a) => /^data:image\//.test(a.image || "") && !(a.id in h)).slice(0, 30);
+  const key = todo.map((a) => a.id).join("|");
+  useEffect(() => {
+    if (!todo.length || typeof document === "undefined") return;
+    let live = true;
+    (async () => {
+      const add = {};
+      for (const a of todo) { const g = await greyOf(a.image); add[a.id] = g ? S.dhash(g) : ""; }
+      if (!live) return;
+      setH((o) => { const n = { ...o, ...add }; const ks = Object.keys(n); const keep = ks.length > 600 ? Object.fromEntries(ks.slice(-600).map((k) => [k, n[k]])) : n;
+        try { localStorage.setItem(PH_KEY, JSON.stringify(keep)); } catch (e) {} return keep; });
+    })();
+    return () => { live = false; };
+  }, [key]);
+  return h;
 }
 
 /** One run of a goal with the app's own web search. search(q) → { hits }. → { goal (updated), tell: [ads worth a notification], run } */
@@ -106,6 +132,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
   };
   const found = goal ? S.runGoal(goal, [], { now: Date.now() }).found : [];
   const stations = useStations(goal, found, ar);
+  const twins = S.photoTwins(found, usePhotoPrints(found));
   // the goal on screen: its new matches are now seen
   useEffect(() => { if (goal && (goal.unseen || []).length && !busy) { const d = S.loadScout(); put({ ...d, goals: d.goals.map((x) => (x.id === goal.id ? { ...x, unseen: [] } : x)) }); } }, [sel, goal && (goal.unseen || []).length, !!busy]);
   const field = "w-full rounded-xl px-3 py-2.5 text-[14.5px] border bg-transparent";
@@ -161,6 +188,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
             <ul className="m-0 p-0 list-none space-y-0.5 text-[13px]" data-testid="scout-checks">
               {a.check.ok.map((x) => <li key={"o" + x.k} className="flex gap-1.5"><Check size={14} className="c-pos shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en}{x.quote ? <span className="c-sub"> — «{x.quote}»</span> : null}</span></li>)}
               {a.check.bad.map((x) => <li key={"b" + x.k} className="flex gap-1.5"><X size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en}{x.quote ? <span className="c-sub"> — «{x.quote}»</span> : null}</span></li>)}
+              {(twins[a.id] || []).slice(0, 1).map((x) => <li key="photo" className="flex gap-1.5" data-testid="scout-photo"><AlertTriangle size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{tr("The same photo is in another ad ({s}{p}) — it may be copied; ask for a new photo or a video call", { s: x.site || "", p: x.price ? " · " + fmt(x.price) : "" })}</span></li>)}
               {a.check.unknown.map((x) => <li key={"u" + x.k} className="flex gap-1.5 c-sub"><HelpCircle size={14} className="shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en} — {tr("not stated in the ad")}</span></li>)}
             </ul>
             <div className="flex flex-wrap gap-2 items-center pt-1">

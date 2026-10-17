@@ -140,7 +140,7 @@ const urlKey = (u) => String(u || "").toLowerCase().replace(/^https?:\/\/(www\.)
 export function pricesIn(text) {
   // phone numbers first blanked out (same length, so positions stay): 01001234567, 0100 123 4567, +20 100 123 4567
   const t = latin(text).replace(/(?:\+?20[\s-]?)?0?1[0125][\s-]?\d{3,4}[\s-]?\d{4}(?!\d)/g, (m) => " ".repeat(m.length)), out = [];
-  const re = /(?:(egp|le|l\.e\.?|usd|\$|aed|sar|ج\.م|جنيه|جنية)\s*)?(\d{1,3}(?:[,.\s]\d{3})+|\d{3,9})(?:\s*(k|الف|ألف|m|مليون|million))?\s*(egp|le\b|l\.e\.?|usd|aed|sar|ج\.م\.?|جنيه|جنية|pounds?|ريال|درهم)?/gi;
+  const re = /(?:(egp|le|l\.e\.?|usd|\$|aed|sar|ج\.م|جنيه|جنية)\s*)?(\d{1,3}(?:[,.\s]\d{3})+|\d{3,9})(?:\s*(k(?![a-z])|الف|ألف|m(?![2²a-z])|مليون|million))?\s*(egp|le\b|l\.e\.?|usd|aed|sar|ج\.م\.?|جنيه|جنية|pounds?|ريال|درهم)?/gi;
   let m;
   while ((m = re.exec(t))) {
     const raw = m[2], cur = (m[1] || m[4] || "").toLowerCase(), mul = (m[3] || "").toLowerCase();
@@ -368,6 +368,33 @@ export function nearestStation(lat, lon, stations, { ar = false } = {}) {
 }
 /** Is a station worth showing for this goal? Homes always; anything that asks to be near the metro. */
 export const wantsStation = (g) => !!g && (g.kind === "rent" || g.kind === "buy-home" || (g.wish || []).some((w) => /metro/.test(w.k)));
+
+// ---- v6.32 the photo check (roadmap "Scout extras"): the same picture in two different ads is a classic sign of a copied or fake
+// ad. Each ad's picture gets a fingerprint (dHash: 64 bits from a 9×8 grey copy — the same photo resized or re-saved stays within a
+// few bits); ads whose fingerprints are this close, and that are not the same ad on two sites, are marked. Pure code.
+export const PHOTO_NEAR = 6;
+export function hamming(a, b) {
+  if (!a || !b || a.length !== b.length) return 64;
+  let n = 0;
+  for (let i = 0; i < a.length; i++) { let x = parseInt(a[i], 16) ^ parseInt(b[i], 16); while (x) { n += x & 1; x >>= 1; } }
+  return n;
+}
+/** A 9×8 grey picture (72 numbers, row by row) → its 16-hex-digit fingerprint. */
+export function dhash(grey) {
+  let bits = "";
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) bits += grey[y * 9 + x] > grey[y * 9 + x + 1] ? "1" : "0";
+  let hex = ""; for (let i = 0; i < 64; i += 4) hex += parseInt(bits.slice(i, i + 4), 2).toString(16);
+  return hex;
+}
+/** ads + {adId: fingerprint} → {adId: [the other ads with the same photo: {id, site, title, price}]} */
+export function photoTwins(ads, hashes) {
+  const out = {}, list = (ads || []).filter((a) => hashes && hashes[a.id]);
+  for (const a of list) for (const b of list) {
+    if (a.id === b.id || (a.also || []).some((x) => x.id === b.id || x.url === b.url) || (b.also || []).some((x) => x.id === a.id || x.url === a.url)) continue;
+    if (hamming(hashes[a.id], hashes[b.id]) <= PHOTO_NEAR) (out[a.id] = out[a.id] || []).push({ id: b.id, site: b.site, title: b.title, price: b.facts && b.facts.price });
+  }
+  return out;
+}
 
 /** v6.32 Scout at night: what the phone searches around 3:00 with Attune closed (ScoutNight.kt) — each goal that is on, its
     searches and the ad links already seen, so only NEW ads are kept. Max 5 goals, 6 searches, 200 links each. */

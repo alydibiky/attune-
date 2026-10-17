@@ -7,7 +7,8 @@ import json
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
-ADS = [{"url": "https://www.aqarmap.com.eg/en/listing/555-apartment-maadi", "title": "Apartment for rent in Maadi Degla", "text": "Apartment for rent in Maadi, Degla. 3 bedrooms, 2 bathrooms, 170 m². Floor: 3. Elevator, near Maadi metro station. Price: 13,500 EGP per month."}]
+ADS = [{"url": "https://www.dubizzle.com.eg/en/ad/flat-maadi-degla-ID5151.html", "title": "Flat in Maadi Degla, cheap", "text": "Flat for rent in Maadi Degla, 3 bedrooms, floor 3, 170 m2. Price 8,000 EGP monthly. Transfer the deposit first.", "pic": 1},
+       {"url": "https://www.aqarmap.com.eg/en/listing/555-apartment-maadi", "title": "Apartment for rent in Maadi Degla", "text": "Apartment for rent in Maadi, Degla. 3 bedrooms, 2 bathrooms, 170 m². Floor: 3. Elevator, near Maadi metro station. Price: 13,500 EGP per month."}]
 MOCK = r"""try{localStorage.setItem('attune:start','home')}catch(e){}
 (() => { const ADS = %s; window.__plans = [];
   const go = () => { const N = window.AttuneNative; if (!N) return setTimeout(go, 0);
@@ -18,7 +19,12 @@ MOCK = r"""try{localStorage.setItem('attune:start','home')}catch(e){}
       setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ places })), 10); };
     N.scoutNightPlan = (p) => { window.__plans.push(JSON.parse(p)); return "ok"; };
     N.scoutNightTake = () => { let d = { goals: [] }; try { d = JSON.parse(localStorage.getItem("attune:scout:v1")) || d; } catch (e) {}
-      return localStorage.getItem("test:night") === "1" && d.goals[0] ? JSON.stringify({ [d.goals[0].id]: ADS }) : "{}"; };
+      // the same photo in two different ads (one cheap and pushy) — drawn here as a small JPEG, as the search brings it
+      const c = document.createElement("canvas"); c.width = 320; c.height = 200; const x = c.getContext("2d");
+      for (let i = 0; i < 8; i++) { x.fillStyle = "hsl(" + i * 45 + ",60%%," + (30 + i * 6) + "%%)"; x.fillRect(i * 40, 0, 40, 200); }
+      const img = c.toDataURL("image/jpeg", 0.8);
+      const ads = ADS.map((a) => ({ ...a, image: img }));
+      return localStorage.getItem("test:night") === "1" && d.goals[0] ? JSON.stringify({ [d.goals[0].id]: ads }) : "{}"; };
   }; go(); })();""" % json.dumps(ADS)
 with sync_playwright() as p:
     br = p.chromium.launch()
@@ -35,12 +41,17 @@ with sync_playwright() as p:
     page.evaluate("localStorage.setItem('test:night','1')")
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000); page.wait_for_timeout(800)
     notes = page.evaluate("window.__mock.notes.filter(n => n.id.startsWith('scout-')).map(n => n.title + ' | ' + n.body)")
-    check(len(notes) == 1 and "Degla" in notes[0], "what the night found is checked on open → a strong find is told: %s" % notes)
+    check(len(notes) == 1 and "Degla" in notes[0] and "2 strong" in notes[0], "what the night found is checked on open → a strong find is told: %s" % notes)
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))"); page.wait_for_selector("[data-testid=scout-page]", timeout=5000); page.wait_for_timeout(300)
-    check(page.locator("[data-testid=scout-ad]").count() == 1 and "Degla" in page.locator("[data-testid=scout-ad]").first.inner_text(), "the night's match is on the goal")
+    page.wait_for_timeout(600)
+    ads = page.locator("[data-testid=scout-ad]")
+    check(ads.count() == 2 and "Apartment for rent in Maadi Degla" in ads.nth(0).inner_text() + ads.nth(1).inner_text(), "the night's matches are on the goal: %d" % ads.count())
+    ph = page.locator("[data-testid=scout-photo]")
+    t = [ph.nth(i).inner_text() for i in range(ph.count())]
+    check(ph.count() == 2 and any("dubizzle.com.eg · 8,000" in x for x in t) and any("aqarmap.com.eg · 13,500" in x for x in t), "the same photo in two different ads → both marked: %s" % [ph.nth(i).inner_text() for i in range(ph.count())])
     page.wait_for_timeout(500)
     m = page.locator("[data-testid=scout-metro]")
-    check(m.count() == 1 and "Maadi Metro Station" in m.first.inner_text() and "min walk" in m.first.inner_text(), "the nearest metro from the offline map, in minutes on foot: %s" % (m.first.inner_text() if m.count() else None))
+    check(m.count() >= 1 and "Maadi Metro Station" in m.first.inner_text() and "min walk" in m.first.inner_text(), "the nearest metro from the offline map, in minutes on foot: %s" % (m.first.inner_text() if m.count() else None))
     n0 = page.evaluate("window.__maps")
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'home'}}))"); page.wait_for_timeout(200)
     page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'scout'}}))"); page.wait_for_timeout(400)
