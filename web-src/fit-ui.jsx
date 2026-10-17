@@ -428,6 +428,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const [go, setGo] = useState(0);
   useEffect(() => { if (go && (photo || text.trim())) readMeal(); }, [go]);
   const [searchFocus, setSearchFocus] = useState(0);
+  const [addTab, setAddTab] = useState("recent");   // v6.34 the minimal Add sheet (Yazio-like): Recent · Favourites · My meals
   const bar = {
     photo: () => { autoRead.current = true; fileRef.current && fileRef.current.click(); },
     barcode: () => { if (!scanBarcode) { setAdding((a) => a || mealNow()); setDraft(null); setSearchFocus((n) => n + 1); flash && flash(t("Type the barcode number in search")); return; } codeRef.current && codeRef.current.click(); },
@@ -522,6 +523,61 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
           </div>
           {busy || hold ? (
             <div data-testid={photo ? "fit-photo-loading" : "fit-skeleton"}><PulseLoader url={photo && photo.url} stage={busy ? stage : draft && draft.length ? L(`Found ${draft.length} ${draft.length === 1 ? "food" : "foods"}`, `وُجد ${draft.length} ${draft.length === 1 ? "صنف" : draft.length === 2 ? "صنفان" : "أصناف"}`) : L("Reading your meal…", "جارٍ قراءة وجبتك…")} L={L} ar={ar} label={t("Recognising the food…")} /></div>
+          ) : !draft && minimal ? (
+            /* v6.34 (Ali: "it is cluttered, make it minimal — and take ideas from Yazio"; he picked A): ONE box with the camera,
+               barcode and microphone inside it; what you type also searches the foods; Recent · Favourites · My meals as one list
+               with a + on each row (one tap logs it); everything else under More. */
+            <div className="space-y-3" data-testid="fit-add-min">
+              <div className="rounded-2xl bg-slate-800 flex items-start gap-1 ps-3 pe-1 py-1.5">
+                <textarea value={text} onChange={(e) => { const v = e.target.value; setText(v); const w = v.trim(); setQ(w && w.split(/\s+/).length <= 3 && !/\d/.test(w) ? w : ""); }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && text.trim()) { e.preventDefault(); readMeal(); } }}
+                  rows={text.length > 38 ? 3 : 1} data-testid="fit-log-text" placeholder={L("What did you eat?", "ماذا أكلت؟")}
+                  className="flex-1 min-w-0 resize-none bg-transparent py-2 text-[15px] text-white placeholder:text-slate-400 focus:outline-none" />
+                {[["photo", Camera, L("Photo", "صورة")], ["barcode", Barcode, t("Barcode")], ["voice", Mic, listening ? L("Listening…", "أستمع…") : L("Say it", "تحدّث")]].map(([k, Ic, lb]) => (
+                  <button key={k} onClick={bar[k]} aria-label={lb} title={lb} data-testid={"fit-lb-" + k}
+                    className={"w-10 h-10 shrink-0 rounded-full grid place-items-center " + (k === "voice" && listening ? "bg-rose-600 text-white" : "text-slate-300 active:bg-slate-700")}><Ic size={19} /></button>))}
+              </div>
+              {photo && !busy ? <div className="relative w-24"><img src={photo.url} className="rounded-lg w-24 h-24 object-cover" /><button onClick={() => setPhoto(null)} className="absolute top-1 right-1 rounded-full p-0.5" style={{ background: "rgba(0,0,0,.6)", color: "#fff" }} aria-label={L("Remove", "إزالة")}><X size={14} /></button></div> : null}
+              {text.trim() || photo ? <button onClick={readMeal} disabled={busy} className="w-full min-h-[48px] rounded-xl bg-emerald-600 disabled:opacity-40 text-[14.5px] font-semibold text-white flex items-center justify-center gap-1.5" data-testid="fit-read">
+                <Sparkles size={16} />{L("Add it", "أضفه")}</button> : null}
+              {results.length ? <div className="rounded-xl bg-slate-900/60 divide-y divide-slate-800" data-testid="fit-min-results">
+                {results.slice(0, 6).map((fd) => (
+                  <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex items-center gap-2 text-start px-3 py-2.5" data-testid={"fit-food-" + fd.id}>
+                    <span className="flex-1 min-w-0 truncate text-[14px] text-slate-100">{ar && fd.ar ? fd.ar : fd.en}</span><span className="text-[12px] text-slate-400 tabular-nums">{fd.kcal} kcal/100g</span></button>))}
+              </div> : null}
+              {!text.trim() && !photo ? (() => {
+                const recent = H.frequentChips(st.days, { limit: 8 }).map((c) => ({ key: c.key, item: c.item }));
+                const favs = (st.favFoods || []).map((e) => ({ key: e.id, item: e.item }));
+                const meals = (st.myMeals || []).map((m) => ({ key: m.id, item: { name: m.name, kcal: m.kcal }, items: m.items }));
+                const lists = { recent, favs, meals };
+                const tabsHere = [["recent", L("Recent", "الأخيرة")], ["favs", L("Favourites", "المفضلة")], ["meals", L("My meals", "وجباتي")]].filter(([k]) => k === "recent" || lists[k].length);
+                const cur = lists[tabsHere.some(([k]) => k === addTab) ? addTab : "recent"];
+                const add = (x) => { const its = x.items || [x.item]; logNow(adding, its.map((y) => ({ ...y })), L(`Added ${x.item.name} · ${r0(x.item.kcal)} kcal`, `أُضيف ${x.item.ar || x.item.name} · ${r0(x.item.kcal)} سعر`)); setAdding(null); };
+                return <div>
+                  {tabsHere.length > 1 ? <div className="flex gap-4 border-b border-slate-800 mb-1" role="tablist">{tabsHere.map(([k, lb]) => (
+                    <button key={k} role="tab" aria-selected={addTab === k} onClick={() => setAddTab(k)} data-testid={"fit-add-tab-" + k}
+                      className={"h-9 -mb-px text-[13.5px] border-b-2 " + (addTab === k ? "border-emerald-500 text-white font-semibold" : "border-transparent text-slate-400")}>{lb}</button>))}</div> : null}
+                  {cur.length ? cur.slice(0, 8).map((x) => (
+                    <div key={x.key} className="flex items-center gap-2 py-1.5" data-testid="fit-add-row">
+                      <span className="flex-1 min-w-0"><span className="block truncate text-[14px] text-slate-100">{ar && x.item.ar ? x.item.ar : x.item.name}</span>
+                        <span className="block text-[12px] text-slate-400 tabular-nums">{r0(x.item.kcal)} kcal{x.item.grams ? ` · ${x.item.grams} g` : ""}</span></span>
+                      <button onClick={() => add(x)} aria-label={L("Add", "إضافة")} className="w-10 h-10 shrink-0 rounded-full bg-emerald-600 text-white grid place-items-center" data-testid="fit-add-row-plus"><Plus size={18} /></button>
+                    </div>)) : <p className="text-[13px] text-slate-400 py-2">{L("What you log shows here — one tap to add it again.", "ما تسجله يظهر هنا — بضغطة لإضافته مرة أخرى.")}</p>}
+                </div>;
+              })() : null}
+              <details data-testid="fit-add-more">
+                <summary className="cursor-pointer select-none text-[13px] text-slate-400 flex items-center gap-1"><ChevronDown size={14} />{L("More", "المزيد")}</summary>
+                <div className="space-y-2 mt-2">
+                  <QuickLog {...{ L, ar, st, upd, adding, dayKey, flash }} toolsOnly addToDraft={(items) => setDraft((d) => [...(d || []), ...items.map((x) => ({ ...x }))])} />
+                  <div className="flex flex-wrap gap-1.5">
+                    {fetchJson && q.trim().length >= 2 ? <button onClick={searchOnline} disabled={searching} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-sky-300 flex items-center gap-1" data-testid="fit-search-online">{searching ? <Loader2 size={12} className="animate-spin" /> : <Search size={12} />}{L("Search millions of foods", "دوّر في ملايين الأكلات")}</button> : null}
+                    {photo && !clipOn && photoClip ? <button disabled={!!fastDl} onClick={async () => { setFastDl(L("Downloading…", "جارٍ التنزيل…")); try { await photoClip.install((pct) => setFastDl(Math.round(pct || 0) + "%")); setClipOn(true); flash && flash(L("Fast photo recognition is ready", "التعرّف السريع جاهز")); } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 100)); } finally { setFastDl(""); } }}
+                      className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-sky-300" data-testid="fit-fast-get">{fastDl || L("Faster photos (≈200 MB)", "صور أسرع (نحو 200 ميجابايت)")}</button> : null}
+                  </div>
+                </div>
+              </details>
+              {packBg ? <p className="text-[11.5px] text-emerald-300 flex items-center gap-1.5" data-testid="fit-pack-bg"><Loader2 size={12} className="animate-spin" />{L(`Getting the food database on Wi-Fi… ${(packBg.count || 0).toLocaleString("en")} foods so far`, `جارٍ تنزيل قاعدة الأطعمة على الواي فاي… ${(packBg.count || 0).toLocaleString("en")} طعام حتى الآن`)}</p> : null}
+            </div>
           ) : !draft ? (<>
             {!photo && !text.trim() ? <LogBar {...{ t, L, ar, bar, listening, st }} onAgain={(item) => { logNow(adding, [item], L(`Added ${item.name} · ${r0(item.kcal)} kcal`, `أُضيف ${item.ar || item.name} · ${r0(item.kcal)} سعر`)); setAdding(null); }} /> : null}
             <QuickLog {...{ L, ar, st, upd, adding, dayKey, flash }} addToDraft={(items) => setDraft((d) => [...(d || []), ...items.map((x) => ({ ...x }))])} />

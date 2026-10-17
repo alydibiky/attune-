@@ -733,4 +733,6 @@ export const TRK = {
   "Read a CSV of fuel fill-ups (date, litres, km) and print litres per 100 km for each fill-up and the average": "Yakıt alımlarının CSV'sini (tarih, litre, km) okuyup her alım için 100 km'de litreyi ve ortalamayı yazdır",
   "Unit converter": "Birim dönüştürücü",
   "A small converter between tonnes, kilograms and pounds, and metres and feet, with tests": "Ton, kilogram ve pound ile metre ve feet arasında küçük bir dönüştürücü, testleriyle",
+  "Watch": "Takip",
+  "Dates": "Tarihler",
 };

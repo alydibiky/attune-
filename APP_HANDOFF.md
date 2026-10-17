@@ -1,6 +1,6 @@
 # Attune — the whole app in one handoff (read this first)
 
-_Up to date: 17 Oct 2026, **v6.33** (versionCode 94; v6.32 = the joint release of five threads, HANDOFF §5.79; v6.33 = Mind A + Code B, §5.80) on `main` = branch `ccr-a0eb3595-e2c7a7`._
+_Up to date: 17 Oct 2026, **v6.34** (versionCode 95; v6.34 = Ali's 17 Oct phone list, HANDOFF §5.81; v6.32 = the joint release of five threads, HANDOFF §5.79; v6.33 = Mind A + Code B, §5.80) on `main` = branch `ccr-a0eb3595-e2c7a7`._
 This file is the map. Details and history are in `HANDOFF.md` (§5.x = one section per release, newest at the end:
 §5.44–§5.60 cover 10–12 Oct 2026; §5.74–§5.80 cover 16–17 Oct). Ali's raw problem lists are in `NEXT_SESSION.md`. The desktop plan is in
 `DESKTOP_PLAN.md`.
@@ -65,7 +65,7 @@ Google Play Billing.
 | **Slides & Reports** | A .pptx or report from one sentence | `slides.js`, `slides-ui.jsx` |
 | **CV / Resume** | Build, import, tailor and export (EN/AR) | `cv*.js`, `cv-ui.jsx` |
 | **Learn daily / Daily news** | A lesson a day with quizzes and ready courses; morning news; v6.32: FSRS review (`fsrs.js`), Say it (`speak.js`), dialogues, a picture per lesson, knowledge packs as courses (`packcourse.js`) | `daily.js`, `daily-ui.jsx`, `langs.js` |
-| **Money Guardian, Deadline Radar** (v6.27) | Finds money in your own payments (late debts, double charges, price rises, subscriptions) with an honest "saved" counter; watches free trials, renewals, returns, warranties and documents (automatic from notifications + scan/paste/by hand)  **Overpaying check** (v6.32, one list: subscriptions, trials, price rises, overlaps, renewals, unused perks, from payments / notifications / a pasted email / a Gmail export; `overpay.js`, `overpay-ui.jsx`); Price memory (`pricememory.js`).| `guardian*.js(x)`, `deadlines.js`, `radar-ui.jsx`, `locale.js` |
+| **Money Guardian, Deadline Radar** (v6.27; v6.34: one tab "Watch" = Payments · Dates · Reminders) | Finds money in your own payments (late debts, double charges, price rises, subscriptions) with an honest "saved" counter; watches free trials, renewals, returns, warranties and documents (automatic from notifications + scan/paste/by hand)  **Overpaying check** (v6.32, one list: subscriptions, trials, price rises, overlaps, renewals, unused perks, from payments / notifications / a pasted email / a Gmail export; `overpay.js`, `overpay-ui.jsx`); Price memory (`pricememory.js`).| `guardian*.js(x)`, `deadlines.js`, `radar-ui.jsx`, `locale.js` |
 | **What you're owed · Read it to me · Job ready** (v6.27, HANDOFF §5.69) | Flight compensation & claim letters (one sheet from Chat/Travel/Radar/Guardian) · any paper read aloud, explained, acted on (Home camera) · CV → skills, voice interview practice, job links | `owed*.js(x)`, `readaloud*.js(x)`, `jobready.js`, `cv-ui.jsx` |
 | **Agent, Homework Coach, Family health, Shop in your pocket, Translate, Travel** (v6.27, HANDOFF §5.68) | Book/order from Chat (links; in-app browser that marks the best offer and fills details, stops before paying) · homework solved by code and taught with spoken, animated steps · prescriptions → doses and reminders, label-quoted interactions, labs by printed range · a shop on Books from one sentence · checked translation of text, photos and documents · Travel in Calm tabs with passport, fair-price and trip checks | `agent*.js(x)`, `AgentBrowser.kt`, `coach*.js(x)`, `lesson-ui.jsx`, `care*.js(x)`, `shop*.js(x)`, `translate*.js(x)`, `travel*.js(x)` |
 | **Deal Check, Chat X-Ray** | True cost before you pay; WhatsApp chat → money, promises, unanswered questions | `deal*.js(x)`, `chatxray*.js(x)` |
@@ -168,11 +168,12 @@ Google Play Billing.
 | v6.31 | 17 Oct | Minimal design A (no intro paragraphs, thin tabs, small model dot, calm Home/Chat, "+" menu in Chat, Converter one action); Core Lite → IQ4_NL, new Core Max (8-bit) — HANDOFF §5.75 |
 | v6.32 | 17 Oct | Joint release of five threads (HANDOFF §5.76–§5.79): Create 6 tabs; video not sold; Deep answer; Fit & Food minimal B + contrast; **Edit a PDF**; **Overpaying check**; **Fleet & rentals** + Business v2; Scout at night, metro minutes, photo check; Learn extras; web head-to-head tables; French/Spanish/Turkish; Attune keyboard |
 | v6.33 | 17 Oct | Mind A (picture wall with colour chips) and Code B (talk to a coder) — HANDOFF §5.80 |
+| v6.34 | 17 Oct | Food labels, maid every Saturday, Money = Money · Watch · People · Deal Check · Scout, Engine + Food sheet minimal, lessons ahead, Fleet issue in the warehouse order — HANDOFF §5.81 |
 
 ## 8. Prompt for the next session (paste as is)
 The current prompt is at the end of `NEXT_SESSION.md` ("Prompt to start the next session"). Short version:
 ```
-Continue Attune on main (v6.33). Read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.80 and NEXT_SESSION.md sections Y and X first.
+Continue Attune on main (v6.34). Read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.81 and NEXT_SESSION.md sections Z, Y and X first.
 Show me what is done and open, ask the open questions with options, then work through them with a task list.
 Follow every standing rule in APP_HANDOFF.md §1.
 ```

@@ -93,7 +93,7 @@ export function InsulinCard({ L, ar, day, carbsToday }) {
 }
 
 /** The top of the log sheet: recent foods, yesterday's same meal, my meals, and my own food. */
-export function QuickLog({ L, ar, st, upd, adding, dayKey, addToDraft, flash }) {
+export function QuickLog({ L, ar, st, upd, adding, dayKey, addToDraft, flash, toolsOnly = false }) {
   const [qa, setQa] = useState(null);   // v6.14: Yazio's "quick add" — calories (and macros) without a food
   const freq = useMemo(() => P.frequentFoods(st.days, { limit: 8 }), [st.days]);
   const y = new Date(dayKey + "T12:00:00"); y.setDate(y.getDate() - 1);
@@ -129,17 +129,17 @@ export function QuickLog({ L, ar, st, upd, adding, dayKey, addToDraft, flash }) 
         {[["kcal", "kcal"], ["p", L("P g", "بروتين")], ["c", L("C g", "كارب")], ["f", L("F g", "دهون")]].map(([k, ph]) => <input key={k} inputMode="decimal" placeholder={ph} value={qa[k] || ""} onChange={(e) => setQa({ ...qa, [k]: e.target.value })} data-testid={"fit-quick-" + k} className="min-w-0 rounded-lg bg-slate-800 px-2 py-1.5 text-[13px] text-white" />)}
         <button onClick={() => { const it = Y.quickItem(qa, ar); if (!it) return; addToDraft([it]); setQa(null); }} className="rounded-lg bg-emerald-600 text-white text-[13px]" data-testid="fit-quick-add">{L("Add", "إضافة")}</button>
       </div> : null}
-      {favs.length ? <div className="flex gap-1.5 overflow-x-auto pb-1" data-testid="fit-favs">
+      {favs.length && !toolsOnly ? <div className="flex gap-1.5 overflow-x-auto pb-1" data-testid="fit-favs">
         <span className="text-[11px] text-amber-300 self-center shrink-0 flex items-center gap-0.5"><Star size={11} />{L("Favorites:", "المفضلة:")}</span>
         {favs.map((e) => <button key={e.id} onClick={() => addToDraft([{ ...e.item }])} className="shrink-0 rounded-full bg-amber-500/15 border border-amber-700/60 px-2.5 py-1 text-[12px] text-amber-100" data-testid="fit-fav-item">{ar && e.item.ar ? e.item.ar : e.item.name} · {r0(e.item.kcal)}</button>)}
       </div> : null}
-      {freq.length ? <div className="flex gap-1.5 overflow-x-auto pb-1" data-testid="fit-recent">
+      {freq.length && !toolsOnly ? <div className="flex gap-1.5 overflow-x-auto pb-1" data-testid="fit-recent">
         <span className="text-[11px] text-slate-500 self-center shrink-0">{L("Recent:", "الأخيرة:")}</span>
         {freq.map((e) => <button key={e.key} onClick={() => { const { t, ...x } = e.item; addToDraft([x]); }} className="shrink-0 rounded-full bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200" data-testid="fit-recent-item">{ar && e.item.ar ? e.item.ar : e.item.name} · {r0(e.item.kcal)}</button>)}
       </div> : null}
       <div className="flex flex-wrap gap-1.5">
         {yItems.length ? <button onClick={() => addToDraft(yItems)} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-slate-200 flex items-center gap-1" data-testid="fit-copy-yesterday"><Copy size={12} />{L("Same as yesterday", "مثل أمس")} ({F.sumN(yItems.filter((x) => x.kcal != null)).kcal} kcal)</button> : null}
-        {mine.map((m) => <button key={m.id} onClick={() => addToDraft(m.items)} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-amber-200 flex items-center gap-1" data-testid="fit-mymeal"><Star size={12} />{m.name} · {m.kcal}</button>)}
+        {(toolsOnly ? [] : mine).map((m) => <button key={m.id} onClick={() => addToDraft(m.items)} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-amber-200 flex items-center gap-1" data-testid="fit-mymeal"><Star size={12} />{m.name} · {m.kcal}</button>)}
         <button onClick={() => setQa(qa ? null : {})} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-emerald-300 flex items-center gap-1" data-testid="fit-quick-open"><Plus size={12} />{L("Quick add kcal", "إضافة سريعة للسعرات")}</button>
         <button onClick={() => setForm({ per: "100g" })} className="rounded-lg bg-slate-800 px-2.5 py-1 text-[12px] text-sky-300 flex items-center gap-1" data-testid="fit-own-open"><Plus size={12} />{L("My own food", "طعامي الخاص")}</button>
       </div>

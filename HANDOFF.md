@@ -1657,6 +1657,52 @@ Built on `claude/roadmap-items-knk93s`, merged into `main`; version **6.33** (ve
 - Strings in Arabic, French, Spanish and Turkish. Merge: `i18n-ar.js` union; two keys that ended up twice ("Show all {n}",
   "{n} lines") keep one entry each.
 
+### 5.81 (17 Oct 2026) — v6.34: Ali's phone list of 17 Oct (food labels, maid, Watch, Engine + Food minimal, Learn ahead, Fleet issue)
+Ali sent 13 screenshots, two 6.33 Engine logs (Core Max loading) and his warehouse app's handoff + the crane-desktop zips.
+His picks (asked on cards): Money "integrate them the best way"; More page "B: remove it completely"; Engine "A"; Food sheet "A + ideas from Yazio".
+- **Food photo labels** (`fitlook-ui.jsx PhotoMarks`): in the looks Colour per meal / Rings / Pastel tiles the label was WHITE text on a
+  white pill (fg was dark only for Fresh). Every white label now has dark text and the shadowed line. `e2e_v718looks.py` checks 5 looks.
+- **Food corrections** (`fitread.js draftCommand`): "There is tomato sauce …", "it has …", «فيه صلصة» → added; "it's cake, not milk chocolate"
+  → swapped (grams kept); any sentence naming new foods → added. Table: "milk chocolate" was milk + chocolate, "tomato sauce" a raw
+  tomato, "chocolate log" milk chocolate → aliases + a new food `choc-log` (fit.js). Note: normA turns an apostrophe into a space ("it s").
+- **Fleet → Issue parts** (`fleet-ui.jsx OutForm`) in the order of Ali's warehouse app (sadrBox): internal code, date, reference code first
+  (optional, "— no link (from the general stock) —"), the invoice's items as rows to tap (Item · Original · Left · Unit price; the item
+  box is locked meanwhile), quantity + technician, ONE destination list (cranes, other places, "Another place…"), notes, the planOut preview.
+- **Learn**: `daily-ui.jsx lessonAhead` — while a model is loaded and idle (no request, nothing asked for 30 s, page visible; checked
+  every 20 s in attune.jsx; background request, gives way to the person), every course whose lessons are all read gets its NEXT lesson
+  written — ready when Learn opens. Off in tests unless `attune:learn:ahead` = 1 (harness sets "0"). "Add a lesson" (`AddLesson`)
+  appends your title to the plan. The writing preview has no markdown signs (`plainPreview`). Home: one line per topic, lowest
+  lesson first; starting the same ready course again opens the one you have. "1 things" → "1 thing".
+- **Documents** (`docqa.js intent "solve"` + `solveMessages`, `pdfchat-ui.jsx`): "Solve the questions" / «حل الأسئلة» solve the questions
+  from the whole document (7,000-character parts, up to 8), step by step with pages — it used to search for a passage and say "not found".
+- **Web**: when every search of a question comes back empty (a burst refused), one plain search again after 1.2 s; the "web found
+  nothing" prompt forbids saying a product doesn't exist (Lynk & Co 900 is real, 2025).
+- **Engine memory** (Engine.kt): Ali's 6.33 log/ExitWatch: "the phone ran out of memory (Core Max)" in use. A copy now also needs
+  2 GB free after the weights (availMem); else the weights are mapped from storage (logged). The photo reader loads at start only
+  with 2.5 GB still free after model + reader; otherwise on the first photo. The "unused tensor blk.32.nextn" lines are the MTP layer
+  as seen by the main loader — harmless; whether MTP ran shows as "· MTP" in Engine → Details.
+- **Notification access** (`paylog-ui.jsx RestrictedHelp`, `NativeBridge.openAppInfo`): after "Turn on" the steps for Android's
+  "Controlled by restricted setting" (APK not from Play: App info → ⋮ → Allow restricted settings) with a button to App info.
+- **Money settings** (yusr/index.new.html): the Premium heading, "Premium active" and "Test premium (developer)" are hidden.
+- **The maid every Saturday** (`life.js` kind "regular", `regular.js tickRegular`): «the maid comes every Saturday and takes 600 EGP» /
+  «الشغالة بتيجي كل سبت…» → "Comes regularly", a box on each Saturday (today included); Home shows it on its day (`home-regular`),
+  a tick writes the expense into Money's ledger directly (cat bills, note "Maid · date"), an untick takes it out; a missed day is
+  not "late". No ledger yet → the sentence goes to Money to confirm. Tests: unit `v737fixes`, e2e `e2e_v737maid.py`.
+- **Money = 5 tabs** (hubs.js INSIDE radar/reminders → guardian; `partsOf` returns 2+ parts): Money · **Watch** · People · Deal Check ·
+  Scout; Watch has a switch Payments (Guardian) · Dates (Radar) · Reminders (`hub-ui.jsx PART_TITLE`).
+- **More page removed** (new layout): Settings in the sidebar opens Settings only (no tool grid, no How-to card).
+- **Engine minimal A** (attune.jsx NativeEnginePanel, `engine-min`, only without LEGACY_NAV): a dot + "Blaze+ · running" + ⋯ (Restart,
+  Engine log, Details); each model one row (✓ in use, size; tap = use; ⋯ Fingerprint / Delete with a confirm on the row); a download
+  is a thin bar row; everything else (switches, instructions, network log, community model, Speed) folded under "Settings".
+- **Food Add sheet minimal A + Yazio** (fit-ui.jsx `fit-add-min`): one "What did you eat?" box with camera / barcode / mic inside;
+  typing 1–3 words also searches (results under it); "Add it"; Recent · Favourites · My meals as rows with a + (one tap logs);
+  More = quick add kcal, my own food, same as yesterday, search millions online, faster photos. 15 words on screen.
+- Tests: `tests/unit/v737fixes.test.mjs`, `e2e_v737learn.py`, `e2e_v737maid.py`, `e2e_v737engine.py`, `e2e_v737fitadd.py`; updated
+  `e2e_v718looks.py`, `e2e_v732fleet.py`, `e2e_v734sidebar.py`, `v734hubs.test.mjs`.
+- Research notes (17 Oct): llama.cpp has an experimental Hexagon (NPU) backend for 8 Gen 3 / 8 Elite / 8 Elite Gen 5 (Q4_0, Q8_0,
+  MXFP4) — anecdotes say CPU-like speed but much cooler; worth a lab run on Ali's SM8850 (Core Max is Q8_0 = supported). No official
+  Qwen3.5 QAT GGUF exists yet.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

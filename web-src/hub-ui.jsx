@@ -4,7 +4,9 @@ import React from "react";
 import { tr } from "./i18n.js";
 import { INSIDE } from "./hubs.js";
 
-// parts = [main, inside] of a merged page (hubs.js INSIDE, e.g. Assistants · Skills): a small switch under the tabs
+// parts = [main, ...inside] of a merged page (hubs.js INSIDE, e.g. Assistants · Skills; Watch = Payments · Dates · Reminders):
+// a small switch under the tabs. A part can have its own short name (the tab "Watch" is "Payments" in its switch).
+const PART_TITLE = { guardian: "Payments", radar: "Dates" };
 export function HubTabs({ mode, tabs, titleOf, navTo, parts = [] }) {
   const on = (m) => m === mode || INSIDE[mode] === m;
   return (
@@ -16,12 +18,12 @@ export function HubTabs({ mode, tabs, titleOf, navTo, parts = [] }) {
             (on(m) ? "border-teal-400 text-white font-semibold" : "border-transparent text-slate-400 hover:text-slate-200")}>
           {tr(titleOf(m))}</button>))}
     </div>
-    {parts.length === 2 ? (
+    {parts.length >= 2 ? (
       <div className="inline-flex rounded-lg border border-slate-800 bg-slate-900 p-0.5 mb-3" data-testid="hub-parts">
         {parts.map((m) => (
           <button key={m} onClick={() => { if (m !== mode) navTo(m); }} aria-pressed={m === mode} data-testid={"hub-part-" + m}
             className={"rounded-md px-3 py-1 text-[12.5px] " + (m === mode ? "bg-slate-700 text-white font-medium" : "text-slate-400 hover:text-slate-200")}>
-            {tr(titleOf(m))}</button>))}
+            {tr(PART_TITLE[m] || titleOf(m))}</button>))}
       </div>) : null}
     </>);
 }

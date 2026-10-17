@@ -717,4 +717,6 @@ export const ES = {
   "Read a CSV of fuel fill-ups (date, litres, km) and print litres per 100 km for each fill-up and the average": "Leer un CSV de repostajes (fecha, litros, km) e imprimir los litros cada 100 km de cada repostaje y la media",
   "Unit converter": "Conversor de unidades",
   "A small converter between tonnes, kilograms and pounds, and metres and feet, with tests": "Un pequeño conversor entre toneladas, kilogramos y libras, y metros y pies, con pruebas",
+  "Watch": "Vigilar",
+  "Dates": "Fechas",
 };

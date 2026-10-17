@@ -5316,4 +5316,11 @@ export const AR = {
   "Taken out of Money": "حُذف من المال",
   "Done today": "تم اليوم",
   "Today — tick it when it's done": "اليوم — علّمه عند الانتهاء",
+  "Watch": "المتابعة",
+  "Dates": "المواعيد",
+  "Hide details": "إخفاء التفاصيل",
+  "Large for this phone: slower answers, a warm phone.": "كبير على هذا الهاتف: إجابات أبطأ وهاتف دافئ.",
+  "None yet — install the recommended one below.": "لا يوجد بعد — ثبّت النموذج المقترح بالأسفل.",
+  "Delete {m}?": "حذف {m}؟",
+  "cores": "أنوية",
 };

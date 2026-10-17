@@ -19,7 +19,8 @@ ok(TOOL_PAGES.every((p) => p[3].length === 1 || tabsFor(p[3][0]).length === p[3]
 ok(toolPages(["convert", "guide"]).map((p) => p[0]).join() === "files,help", "a device without a page's tools doesn't show that page");
 ok(tabsFor("chat").length <= 6 && tabsFor("money").length <= 6, "Chat and Money: no more than 6 tabs (" + tabsFor("chat") + " / " + tabsFor("money") + ")");
 ok(!tabsFor("chat").includes("skills") && !tabsFor("chat").includes("artifacts") && !tabsFor("money").includes("reminders"), "Skills, Artifacts and Reminders are not tabs of their own");
-ok(partsOf("skills").join() === "assistants,skills" && partsOf("projects").join() === "projects,artifacts" && partsOf("radar").join() === "radar,reminders", "…they are parts of Assistants, Projects and Radar");
+ok(partsOf("skills").join() === "assistants,skills" && partsOf("projects").join() === "projects,artifacts" && partsOf("radar").join() === "guardian,radar,reminders", "…they are parts of Assistants, Projects and Watch");
+ok(tabsFor("money").join() === "money,guardian,life,deal,scout", "Money: Money · Watch (Guardian + Radar + Reminders) · People · Deal Check · Scout (" + tabsFor("money") + ")");
 ok(partsOf("money").length === 0 && partsOf("radar", ["radar"]).length === 0, "no switch on other pages, or when the device lacks the second part");
 ok(tabsFor("reminders", ["money", "reminders"]).includes("reminders"), "without Radar, Reminders stays a tab");
 ok(tabsFor("code").length === 6 && !tabsFor("code").includes("compress") && partsOf("compress").join() === "improve,compress", "Create has 6 tabs; Compress is a part of Improve a prompt");

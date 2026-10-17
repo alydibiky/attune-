@@ -8,7 +8,7 @@ import {
   AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2,
   Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple,
   BookOpen, PanelLeft, House, Binoculars,
-  Heart,
+  Heart, MoreVertical,
 } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { payOpts, homeCurrency } from "./locale.js";
@@ -7411,7 +7411,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.33";
+const PAGE_VERSION = "6.34";
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7984,7 +7984,7 @@ export default function App() {
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
   // v6.31 minimal: short tab names (the page's own title stays full)
-  const TAB_SHORT = { chat: "Chat", ask: "Ask", money: "Money", guardian: "Guardian", radar: "Radar", life: "People", convert: "Convert",
+  const TAB_SHORT = { chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
     pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Prompts", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
@@ -10982,6 +10982,9 @@ export default function App() {
           <div className="att-scroll att-shift absolute start-0 end-0 bg-slate-900 border-t border-slate-800 rounded-t-2xl p-4 max-h-[75vh] overflow-y-auto"
                style={{ bottom: "calc(var(--nav-h, 58px) + env(safe-area-inset-bottom))" }} onClick={(e) => e.stopPropagation()}>
             <div className="max-w-3xl mx-auto">
+              {/* v6.34 (Ali: "I don't want this More page"): without the bottom bar this sheet is Settings only — every tool is in
+                  the sidebar's 6 places (How to use is in Tools → Help) */}
+              {LEGACY_NAV ? <>
               <button onClick={() => { setMoreOpen(false); navTo("guide"); }} className="w-full mb-4 flex items-center gap-3 rounded-xl border border-teal-800/70 bg-teal-500/10 px-3.5 py-2.5 text-start" data-testid="more-guide">
                 <BookOpen size={18} className="text-teal-300 shrink-0" /><span className="flex-1"><span className="block text-[13.5px] text-slate-100">{tr("How to use Attune")}</span><span className="block text-[11.5px] text-slate-400">{tr("Every tool in three steps, with pictures")}</span></span><span className="text-teal-300 rtl:-scale-x-100">›</span></button>
               {groupsHere.map(([title, ids], gi) => (
@@ -10999,6 +11002,7 @@ export default function App() {
                   </div>
                 </div>
               ))}
+              </> : null}
               <p className="text-[11px] uppercase tracking-wider text-slate-500 mt-4 mb-2 px-0.5">{tr("Settings")}</p>
               <div className="grid grid-cols-3 gap-2" data-testid="more-settings">
                 <button onClick={() => { setShowEngine(true); setMoreOpen(false); }} className="rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-start"><Cpu size={16} className="text-slate-300" /><span className="block text-[12px] text-slate-200 mt-1">{tr("Engine & privacy")}</span></button>
@@ -11502,6 +11506,97 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
   const box = "bg-slate-950 border border-slate-800 rounded-xl p-3";
   const head = "text-xs uppercase tracking-wider text-slate-500 mb-2";
   const small = "text-[11px] px-2 py-1 rounded-md border border-slate-800 bg-slate-900 text-slate-300 hover:border-teal-600";
+  // v6.34 (Ali: "I want this page to be more minimal", he picked A): one line for what runs (⋯ = restart, log, details), a thin
+  // bar for a download, and each model as one row — tap it to use it; Fingerprint and Delete in its ⋯. The old page stays for
+  // the legacy layout (old tests).
+  const [menu, setMenu] = useState(null);   // "engine" | a model id
+  const [details, setDetails] = useState(false);
+  const fingerprint = async (m) => { setHashes((h) => ({ ...h, [m.id]: "reading the file…" })); try { const r = await nativeCall("hash", m.id); setHashes((h) => ({ ...h, [m.id]: r.sha256 })); } catch (err) { setHashes((h) => ({ ...h, [m.id]: String(err.message || err) })); } };
+  const MenuItem = ({ onClick, children, danger, testid }) => <button onClick={() => { setMenu(null); onClick(); }} data-testid={testid} className={"block w-full text-start px-3 py-2 text-[13px] hover:bg-slate-800 " + (danger ? "text-rose-300" : "text-slate-200")}>{children}</button>;
+  const Pop = ({ children }) => <div className="absolute end-0 top-full mt-1 z-20 min-w-[170px] rounded-xl border border-slate-700 bg-slate-900 py-1 shadow-xl" data-testid="engine-menu">{children}</div>;
+  if (!LEGACY_NAV) return (
+    <div className="space-y-3 mb-5" data-testid="engine-min">
+      <div className="relative flex items-center gap-2 px-1">
+        <span className={"w-2.5 h-2.5 rounded-full shrink-0 " + (e.state === "ready" ? "bg-teal-400" : e.state === "starting" ? "bg-amber-400 animate-pulse" : e.state === "error" ? "bg-rose-400" : "bg-slate-600")} />
+        <p className="flex-1 min-w-0 text-[15px] text-slate-100 truncate" data-testid="engine-status">{e.modelId ? labelFor(e.modelId) + " · " : ""}{tr(stateText).toLowerCase()}{e.state === "starting" && e.loadingFor ? " · " + e.loadingFor + " s" : ""}</p>
+        <button onClick={() => setMenu(menu === "engine" ? null : "engine")} aria-label={tr("More")} className="w-9 h-9 grid place-items-center rounded-full text-slate-400 hover:bg-slate-800" data-testid="engine-more"><MoreVertical size={18} /></button>
+        {menu === "engine" ? <Pop>
+          {e.modelId ? <MenuItem testid="engine-restart" onClick={async () => { try { await nativeCall("restart", ""); flash(tr("Engine restarted")); } catch (err) { flash(String(err.message || err)); } }}>{tr("Restart engine")}</MenuItem> : null}
+          <MenuItem testid="engine-show-log" onClick={() => { let t = ""; try { t = NATIVE.log(); } catch (err) {} setLog(log === null ? (t || "The log is empty.") : null); }}>{log === null ? tr("Engine log") : tr("Hide log")}</MenuItem>
+          <MenuItem testid="engine-details" onClick={() => setDetails(!details)}>{details ? tr("Hide details") : tr("Details")}</MenuItem>
+        </Pop> : null}
+      </div>
+      {e.error ? <p className="text-[12px] text-amber-300 px-1 leading-snug">{e.error}</p> : null}
+      {e.heavy ? <p className="text-[12px] text-amber-200/90 px-1 leading-snug">{tr("Large for this phone: slower answers, a warm phone.")}</p> : null}
+      {details ? <p className="text-[11.5px] text-slate-500 px-1 leading-relaxed" data-testid="engine-detail-text">{e.settings || ""}{n.device && n.device.native ? (e.settings ? " · " : "") + `${n.device.native.model}${n.device.native.soc ? " · " + n.device.native.soc : ""} · ${n.device.ram} GB · ${n.device.cores} ${tr("cores")}` : ""}</p> : null}
+      {log !== null ? (() => {
+        const full = `Attune ${PAGE_VERSION}${APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""} · ${new Date().toISOString().slice(0, 16).replace("T", " ")}\n`
+          + (n.device && n.device.native ? `${n.device.native.model || ""} · ${n.device.native.soc || ""} · ${n.device.ram} GB\n` : "") + (e.modelId ? `model: ${e.modelId}\n` : "") + "\n" + log;
+        const copy = async () => {
+          try { await navigator.clipboard.writeText(full); flash(tr("Log copied — paste it in the chat")); return; } catch (err) {}
+          try { const ta = document.createElement("textarea"); ta.value = full; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); flash(tr("Log copied — paste it in the chat")); }
+          catch (err) { flash(tr("Couldn't copy — press and hold the log to select it")); }
+        };
+        return <div className={box}>
+          <div className="flex gap-1.5"><button className={small} onClick={copy} data-testid="engine-log-copy">{tr("Copy log")}</button>
+            {NATIVE && NATIVE.share ? <button className={small} onClick={() => { try { NATIVE.share(full); } catch (err) {} }} data-testid="engine-log-share">{tr("Send log")}</button> : null}</div>
+          <pre className="mt-2 max-h-52 overflow-auto text-[10px] text-slate-500 whitespace-pre-wrap break-all select-text" style={{ userSelect: "text", WebkitUserSelect: "text" }} data-testid="engine-log">{full}</pre></div>;
+      })() : null}
+      <div className="rounded-xl border border-slate-800 divide-y divide-slate-800/80" data-testid="engine-models">
+        {(n.installedModels || []).length === 0 && !busy ? <p className="p-3 text-[13px] text-slate-500">{tr("None yet — install the recommended one below.")}</p> : null}
+        {(n.installedModels || []).map((m) => (
+          <div key={m.id} className="relative">
+            <div className="flex items-center gap-2 ps-3">
+              <button disabled={busy || m.active} onClick={() => n.useInstalled(m.id)} className="flex-1 min-w-0 flex items-center gap-2.5 py-3 text-start disabled:opacity-100" data-testid="engine-model">
+                <span className={"w-4 shrink-0 " + (m.active ? "text-teal-300" : "text-transparent")}><Check size={16} /></span>
+                <span className={"truncate text-[14.5px] " + (m.active ? "text-white font-semibold" : "text-slate-200")}>{labelFor(m.id)}{m.vision ? " · 📷" : ""}</span>
+                <span className="ms-auto text-[12px] text-slate-500 tabular-nums shrink-0">{(m.sizeBytes / 1e9).toFixed(1)} {tr("GB")}</span>
+              </button>
+              <button onClick={() => { setArmDelete(null); setMenu(menu === m.id ? null : m.id); }} aria-label={tr("More")} className="w-10 h-10 grid place-items-center text-slate-500 shrink-0" data-testid="engine-model-more"><MoreVertical size={16} /></button>
+            </div>
+            {menu === m.id ? <Pop>
+              <MenuItem testid="engine-fingerprint" onClick={() => fingerprint(m)}>{tr("Fingerprint")}</MenuItem>
+              <MenuItem testid="engine-delete" danger onClick={() => setArmDelete(m.id)}>{tr("Delete")}</MenuItem>
+            </Pop> : null}
+            {armDelete === m.id ? <div className="flex items-center gap-2 px-3 pb-2.5 text-[12.5px]"><span className="flex-1 text-slate-400">{tr("Delete {m}?", { m: labelFor(m.id) })}</span>
+              <button className="px-2.5 py-1 rounded-md bg-rose-600 text-white" onClick={() => { n.removeInstalled(m.id); setArmDelete(null); flash(tr("Deleted — space freed")); }} data-testid="engine-delete-yes">{tr("Delete")}</button>
+              <button className="px-2.5 py-1 rounded-md text-slate-400" onClick={() => setArmDelete(null)}>{tr("Cancel")}</button></div> : null}
+            {hashes[m.id] ? <p className="px-3 pb-2 text-[10px] text-slate-500 break-all font-mono">{tr("SHA-256")} {hashes[m.id]}</p> : null}
+          </div>))}
+        {busy ? <div className="px-3 py-2.5" data-testid="engine-download">
+          <div className="flex items-center gap-2 text-[13px] text-slate-300"><span className="flex-1 truncate">{n.dlStage || tr("Downloading…")}</span><span className="tabular-nums">{dlPct}%</span>
+            <button onClick={n.cancelInstall} aria-label={tr("Cancel")} className="w-7 h-7 grid place-items-center text-slate-500" data-testid="engine-download-cancel"><X size={15} /></button></div>
+          <div className="h-1 bg-slate-800 rounded-full overflow-hidden mt-1"><div className="h-full bg-teal-500 transition-all" style={{ width: dlPct + "%" }} /></div>
+          {n.dlDetail ? <p className="text-[11px] text-slate-500 mt-1 tabular-nums">{n.dlDetail}</p> : null}
+        </div> : null}
+      </div>
+      <details className={box} data-testid="engine-settings-more">
+        <summary className="cursor-pointer select-none text-[13.5px] text-slate-300">{tr("Settings")}</summary>
+        <div className="space-y-1.5 mt-2">
+          {n.setWebAuto ? row(n.webAutoOn, () => n.setWebAuto(!n.webAutoOn), tr("Search the web by itself when a question needs it")) : null}
+          {n.setAutoModel && (n.installedModels || []).length > 1 ? row(n.autoModel, () => n.setAutoModel(!n.autoModel), tr("Pick the best model for each question")) : null}
+          {row(p.deepThink, () => n.updateEnginePrefs({ deepThink: !p.deepThink }), tr("Always think before answering"))}
+          {row(p.longAnswers, () => n.updateEnginePrefs({ longAnswers: !p.longAnswers }), tr("Long answers"))}
+          {row(p.reproducible, () => n.updateEnginePrefs({ reproducible: !p.reproducible }), tr("Same question, same answer"))}
+          {row(n.airGap, () => n.setAirGap(!n.airGap), tr("Offline lock"))}
+        </div>
+        <p className="text-[11px] text-slate-400 mt-3 mb-1">{tr("Standing instructions for every answer")}</p>
+        <textarea value={sys} onChange={(ev) => setSys(ev.target.value)} onBlur={() => { n.updateEnginePrefs({ systemPrompt: sys }); }} rows={3}
+          className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 resize-none focus:outline-none focus:border-teal-500" />
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          <button className={small} onClick={() => setNet(net ? null : nativeJSON("netLog"))}>{net ? tr("Hide network log") : tr("Network log")}</button></div>
+        {net ? <div className="mt-2 max-h-52 overflow-auto">{(net.entries || []).length === 0 ? <p className="text-[11px] text-slate-500">{tr("Nothing has left the phone.")}</p> : (net.entries || []).map((x, i) => (
+          <p key={i} className="text-[10px] font-mono text-slate-500 truncate">{new Date(x.t).toLocaleTimeString()} {x.blocked ? "✕" : "→"} {x.host} <span className="text-slate-600">· {tr(x.what)}</span></p>))}</div> : null}
+        <div className="mt-3"><p className="text-[11px] text-slate-400 mb-1">{tr("Advanced — add a community model")}</p>
+          <div className="flex gap-2"><input value={custom} onChange={(ev) => setCustom(ev.target.value)} placeholder={tr("user/model-GGUF:Q4_K_M   or   https://…/model.gguf")}
+            className="flex-1 min-w-0 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
+          <button disabled={!custom.trim() || busy || n.airGap} onClick={() => { const v = custom.trim(); n.installNative(v.startsWith("https://") ? { url: v } : { spec: v, vision: true }, null); }}
+            className="px-3 py-2 rounded-lg bg-teal-500 text-slate-950 text-xs font-medium disabled:opacity-40">{tr("Install")}</button></div></div>
+        <div className="mt-3">{NATIVE && NATIVE.speed ? <SpeedPanel native={NATIVE} nativeCall={nativeCall} runBench={runBench} flash={flash} box={box} head={head} row={row} engineReady={e.state === "ready"}
+        busy={!!busy} fastTier={MODEL_TIERS.find((t) => t.id === "fast-e2b")}
+        onFast={(t) => n.installNative({ id: t.id, label: brandOf(t).brand, url: t.url, ctx: t.ctx || 8192 }, t)} /> : null}</div>
+      </details>
+    </div>);
 
   return (
     <div className="space-y-3 mb-5">

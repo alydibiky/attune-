@@ -721,11 +721,35 @@ fails (it already failed on v6.31, run 38999124552): the second streamed answer 
   tip calculator", watch the steps, Run, ask for a change at the bottom, Save, find it under your programs.
 - Everything else still open is in section X.
 
+## Z. 17 Oct 2026 (evening) — v6.34: Ali's phone list (HANDOFF §5.81). Read this section first, then Y and X.
+Ali's answers: Money "integrate the best way" → Watch (Guardian + Radar + Reminders); More page → removed; Engine → A; Food sheet → A + Yazio.
+Done in v6.34: food labels readable in every look; food corrections in plain sentences ("there is tomato sauce"); milk chocolate /
+tomato sauce / chocolate log read right; Fleet Issue parts in the warehouse app's order; lessons written ahead in the background +
+Add a lesson + Home order; "Solve the questions" in a document; web search retry + never "doesn't exist"; Core Max memory guard;
+restricted-setting help; Money settings without premium; the maid every Saturday (tick → expense); Money = 5 tabs; Engine and the
+food Add sheet minimal.
+### Ali's phone checklist for 6.34
+1. ⬜ Fit → a photo in the Colour-per-meal / Rings look: each label shows the food's name; type "there is tomato sauce" under it.
+2. ⬜ Money → People: «the maid comes every Saturday and takes 600 EGP» → Save; on Saturday Home shows the box; tick → Money has it.
+3. ⬜ Money → Watch → Payments · Dates · Reminders.
+4. ⬜ Engine: one line + ⋯; models as rows; Settings folded.
+5. ⬜ Fit → + on a meal: one box, Recent with +.
+6. ⬜ Learn: leave the app open with a model loaded for a minute after reading a lesson → the next one is written; "Add a lesson".
+7. ⬜ PDF chat: "Solve the questions".
+8. ⬜ Fleet → Store → Issue parts: reference code first, tap the item row.
+9. ⬜ Radar / Money → Turn on notification access → if greyed out, follow the steps (App info → ⋮ → Allow restricted settings).
+10. ⬜ If Attune closes: send the WHOLE Engine log (the end has ExitWatch's reason and "Memory:" lines).
+### Still open
+1. Ali to answer: what "the visuals we talked about" are for lessons (a picture per lesson exists — Studio; diagrams/cards exist as `visual`),
+   and whether "add lessons" also means his own lessons with his own text.
+2. Lab: the llama.cpp Hexagon (NPU) backend on SM8850 with Core Max (Q8_0) — cooler, maybe faster prompts.
+3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
+
 ## Prompt to start the next session
 
 ```
-Continue Attune on main (= ccr-a0eb3595-e2c7a7 = claude/joint-release-6zxc2i, v6.33: the joint release of five threads + Mind A, Code B).
-First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.80 and NEXT_SESSION.md — the newest sections are Y and X (what is in v6.32/6.33,
+Continue Attune on main (= ccr-a0eb3595-e2c7a7, v6.34: Ali's 17 Oct phone list on top of the joint release).
+First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.81 and NEXT_SESSION.md — the newest sections are Z, Y and X (what is in v6.32/6.33,
 my phone checklist, my release list and what is still open), then W and V. Then show me, short and simple: what is done,
 what is open, and your recommended order; ask me the open questions (which page to make minimal next, with options), wait for my answers, then work through them with a task list. If I send an Engine log or
 phone test results, read them first — ExitWatch says why the app closed.

@@ -29,15 +29,19 @@ export const FULL = ["home", "tools", "business", "fit", "map"];
 /** v6.30 (Ali: no more than 6 tabs either): a page that lives INSIDE another — one tab; a small switch on top of the page moves
     between the two parts. Skills is part of Assistants, Artifacts part of Projects, Reminders part of Radar (both are dates).
     v6.32 (Ali picked it): Compress is part of Improve a prompt, so Create has 6 tabs. */
-export const INSIDE = { skills: "assistants", artifacts: "projects", reminders: "radar", compress: "improve" };
+export const INSIDE = { skills: "assistants", artifacts: "projects", radar: "guardian", reminders: "guardian", compress: "improve" };
+/* v6.34 (Ali: "what's the difference between Guardian and Radar — make Guardian, Radar and People all in Money"; "integrate them
+   the best way"): Guardian (money already paid: overcharges, subscriptions, price rises) and Radar (dates coming: trials,
+   renewals, warranties) + Reminders are ONE tab, "Watch", with a switch Payments · Dates · Reminders. Money = 5 tabs. */
 
-/** The two parts of a merged page ([main, inside]) when this page is one of them and the device has both; else []. */
+/** The parts of a merged page ([main, ...inside]) when this page is one of them and the device has the main and at least one
+    other; else []. */
 export function partsOf(mode, available = null) {
   const main = INSIDE[mode] || (Object.values(INSIDE).includes(mode) ? mode : null);
   if (!main) return [];
-  const inner = Object.keys(INSIDE).find((k) => INSIDE[k] === main);
   const has = (m) => !available || m === mode || available.includes(m);
-  return has(main) && has(inner) ? [main, inner] : [];
+  const inner = Object.keys(INSIDE).filter((k) => INSIDE[k] === main && has(k));
+  return has(main) && inner.length ? [main, ...inner] : [];
 }
 
 /** The sidebar place a page belongs to ("tools" for anything unknown, so nothing is lost). */
