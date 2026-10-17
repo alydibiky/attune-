@@ -1516,6 +1516,37 @@ Everything below is gated on the new layout (`!LEGACY_NAV`, i.e. `attune:legacy-
   needRam 12). Q4_0 rejected (answers drift more). Idea for later: the same bench for the big IQ4_XS models (Apex+, Everest).
 - Test: `tests/e2e_v735minimal.py`.
 
+### 5.76 (17 Oct 2026) — Business: Ali's two desktop ERP apps inside Attune (Fleet & rentals) + Business builder v2
+Ali attached the handoffs of two apps he built before (Crane Management desktop v2.7; Crane Warehouse) and asked for their
+outcomes in Business "and even more", plus Business v2 (roles, currencies, price lists, encrypted backup, export as a real project).
+- **Fleet & rentals** (Hub card `fleet-open`; `fleet.js` logic, `fleet-store.js` IndexedDB `attune-fleet`, `fleet-ui.jsx`): one app,
+  tabs Today · Jobs · Fleet · Money · Store (phone: top tabs; ≥ 900 px: side rail `fleet-rail`). The old apps' confirmed rules are
+  kept exactly: crane in a garage or at a site (job only when free or already at that site; complete/cancel → back to its garage;
+  Move Crane log); hourly (start → end, optional end date, 08→08 next day = 24 h), daily, period; no overlapping hours for a crane;
+  evidence required on every work entry (full quality, IndexedDB `att:<id>`); month grouping; client balance = opening + work −
+  non-bounced incoming payments; cheques in/out with maturity warnings (N days in Settings); expenses per crane / site / general
+  with type lines; Recycle Bin 7 days (purged on open); demo data tagged and erased without touching real records; DD/MM/YYYY typed
+  (never the phone's M/D). **Store** = the warehouse: internal code `{seq}/{month}{yy}` (1/526), one counter for in and out that never
+  goes back, multi-item purchase invoices (purchaser required), issues linked to a reference code, `planOut` = the original
+  planSadr split rule (linked line at the invoice's unit price + the rest from the general balance; refuse above the total balance;
+  used-up invoice → all general, no zero line), running balance per item, opening stock, Reference-code / technician / crane /
+  supplier reports. **More than the originals:** cash/transfer payments beside cheques; editing a line (re-priced from its invoice,
+  never below what was issued, stock never negative); deleting an invoice with linked issues is refused (the old orphan problem);
+  minimum-stock warnings; **profit per crane = income − expenses − parts issued to it from the Store**; Excel export (6 sheets);
+  printable invoice / issue (EN/AR); encrypted backup.
+- **Business builder v2** (`erp-v2.js`, `biz-v2-ui.jsx`, `biz-vault.js`; header button `biz-tools-open` → "Team & tools"):
+  Team & roles (owner / editor (optionally some tables) / viewer, a PIN each, salted SHA-256; the system opens behind `PinGate`;
+  ONE check `guardChange(before, after, user)` wraps SystemShell's setSys so the form, grid, design chat and import are all
+  covered); currencies (a money column's own currency + `sys.rates`, totals in the system currency, a missing rate is named, not
+  guessed); price lists (± % and fixed prices; the form's "Price list" select fills the price when a product is picked);
+  encrypted backup (`attune-biz-vault`, PBKDF2 600k → AES-GCM-256, header authenticated, opens as a copy); export as a real project
+  (.zip: index.html + manifest + offline worker, data/system.json, Electron package.json/main.js with Ali's build lessons
+  (`--dir`, no signing, author set), README EN/AR). The team's PIN hashes are never exported.
+- Books already had roles, currencies, price lists and its own vault (v6.15/v6.20); those stay as they are.
+- Tests: `tests/unit/v732fleet.test.mjs` (58), `tests/unit/v732bizv2.test.mjs`, `tests/e2e_v732fleet.py`, `tests/e2e_v732bizv2.py`.
+- Not built yet (ideas): Fleet nightly reminders as Android notifications; per-crane maintenance schedule by engine hours;
+  a client statement PDF; sharing Fleet between phones (waits on Google Drive sync).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
