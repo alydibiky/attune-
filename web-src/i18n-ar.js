@@ -5335,4 +5335,6 @@ export const AR = {
   "Planning the next {n} lessons…": "جارٍ تخطيط الدروس الـ{n} التالية…",
   "The model didn't produce more lessons — try again.": "لم يقدّم النموذج دروسًا أخرى — حاول مرة أخرى.",
   "{n} more lessons added": "أُضيف {n} درسًا",
+  "Making the diagram and flashcards…": "جارٍ إعداد الرسم وبطاقات الحفظ…",
+  "Checking it and writing it again…": "جارٍ التحقق وإعادة الكتابة…",
 };

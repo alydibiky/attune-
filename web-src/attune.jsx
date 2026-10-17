@@ -8088,7 +8088,7 @@ export default function App() {
   const engineUp = modelState === "ready" || !!(engineInfo && engineInfo.state === "ready");
   useEffect(() => {
     if (!engineUp) return;
-    const t = setInterval(() => { if (!LocalEngine._abort && !LocalEngine._nativeId && !(LocalEngine._bg && LocalEngine._bg.size) && Date.now() - (LocalEngine.lastAsked || 0) > 30000 && !document.hidden) lessonAhead((messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature, think: false, background: true }), NATIVE); }, 20000);
+    const t = setInterval(() => { if (!LocalEngine._abort && !LocalEngine._nativeId && !(LocalEngine._bg && LocalEngine._bg.size) && Date.now() - (LocalEngine.lastAsked || 0) > 30000 && !document.hidden) lessonAhead((messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature, think: false, background: true, grammar: o.grammar }), NATIVE); }, 20000);
     return () => clearInterval(t);
   }, [engineUp]);
   const [airGap, setAirGapState] = useState(() => { const i = nativeJSON("info"); return !!(i && i.airGap); });
@@ -9963,7 +9963,7 @@ export default function App() {
         ) : mode === "learn" ? (
           <LearnPage flash={flash} native={NATIVE} call={NATIVE ? nativeCall : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
             modelReady={modelUsable}
-            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken })}
+            llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken, grammar: o.grammar })}
             illustrate={NATIVE && NATIVE.imageInfo ? (p) => { setStudioIn({ prompt: p }); setMode("studio"); } : null} />
         ) : mode === "convert" ? (
           <FileConverter flash={flash} native={NATIVE} nativeCall={NATIVE ? nativeCall : null} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}

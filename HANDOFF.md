@@ -1677,6 +1677,12 @@ His picks (asked on cards): Money "integrate them the best way"; More page "B: r
   diagram, not cards) + `cards` (4–6) + keyPoints; `parseLesson` returns `cards` (an old "cards" visual becomes them). The lesson
   shows `lessonDiagram(l)` (the model's, else a map of its own ## headings) and `lessonCards(l)` (the model's, else `cardsFromLesson`)
   as flip cards (`lesson-diagram`, `lesson-cards`); `cardsFromLesson` takes `l.cards` first, so they go into the review deck.
+- **Lessons checked by code** (Ali: "make the lessons very good coding so the models don't glitch"): `daily.js writeLesson` (used by
+  the Learn page and `lessonAhead`): write → `cleanLessonBody` (loop cut, stray JSON/fences, LaTeX → text, "Sure, here is…", the title
+  echoed, a repeated paragraph/line, a cut-off last sentence; `fixed` records what) → `lessonProblems` (short < 300, < 2 sections, wrong
+  language by Arabic-letter share, loop) → one stricter retry, the better kept (language 4, loop 3, short 2, sections 1) → extras broken
+  → a request under `EXTRAS_GRAMMAR` (GBNF; checked on the real llama-server: valid JSON) → still missing → `codeKeyPoints`,
+  `cardsFromLesson`, `codeTryIt`. Nothing usable → null ("try again"). Test: `tests/unit/v737lessons.test.mjs` (8 broken answers).
 - **Courses past 30** (Ali: "a language takes more than 30 lessons"): `needsMore` (≤ 3 planned lessons left, plan < 300) → the
   background writer plans the next 20 (`moreMessages` / `addMore`, repeats dropped, `parts` counted; a failed try waits 6 h) after
   writing the next lesson; the course screen has "Plan 20 more lessons" (`learn-more`). Languages go on "towards fluent".

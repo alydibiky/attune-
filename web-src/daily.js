@@ -15,6 +15,7 @@
 import { review as fsrsReview, isLearned } from "./fsrs.js";
 
 import { jsonFrom } from "./erp.js";
+import { detectLoop, trimLoop, mathToText } from "./quality.js";
 
 export const LEVELS = ["beginner", "intermediate", "advanced"];
 const clean = (s, n = 200) => String(s == null ? "" : s).replace(/\s+/g, " ").trim().slice(0, n);
@@ -481,4 +482,117 @@ export function addMore(c, text) {
   const have = new Set(c.plan.map((t) => t.toLowerCase().trim()));
   const fresh = p.plan.filter((t) => !have.has(t.toLowerCase().trim())).slice(0, MORE_N);
   return fresh.length >= 3 ? { ...c, plan: [...c.plan, ...fresh].slice(0, MAX_PLAN), parts: (c.parts || 1) + 1 } : null;
+}
+
+/* ---- v6.34 (Ali: "make the lessons very good coding so the models don't glitch"): the lesson is checked and repaired by CODE.
+   One pipeline (writeLesson) for the Learn page and the background writer:
+     1. write → 2. clean the body (loops, leftover JSON / fences, LaTeX, "Sure, here is…", the title echoed, a sentence cut off)
+     3. check it (long enough, two sections, the course's language, no loop) → one stricter retry when it fails
+     4. the diagram / flashcards JSON broken or missing → a second short request under a GRAMMAR (the engine can only write valid
+        JSON) → 5. still missing → made by code from the lesson itself (key points, flashcards, "Try it").                       */
+const META = /^(sure|certainly|of course|here(?:'s| is) (?:your|the|today'?s)|okay|ok,|absolutely|great!|as an ai|i hope this|let me know|feel free|happy learning|بالتأكيد|إليك|اليك|طبعًا|طبعا|حسنًا|حسنا)\b/i;
+const arShare = (t) => { const a = (String(t).match(/[؀-ۿ]/g) || []).length, l = (String(t).match(/[A-Za-z]/g) || []).length; return a + l ? a / (a + l) : 0; };
+/** The body, cleaned: → { body, fixed: [what was repaired] }. Pure. */
+export function cleanLessonBody(body, title = "") {
+  let t = String(body || "").replace(/\r/g, ""), fixed = [];
+  const lp = detectLoop(t); if (lp.loop) { t = trimLoop(t, lp.cut); fixed.push("loop"); }
+  const t0 = t; t = t.replace(/```(?:json)?[\s\S]*$/i, "").replace(/\n\{\s*"(?:visual|cards|keyPoints)"[\s\S]*$/, ""); if (t !== t0) fixed.push("json");
+  const t1 = t; t = mathToText(t); if (t !== t1) fixed.push("latex");
+  let lines = t.split("\n");
+  while (lines.length && (!lines[0].trim() || META.test(lines[0].trim().replace(/^[#*\s]+/, "")))) { if (lines[0].trim()) fixed.push("meta"); lines.shift(); }
+  // "# Lesson 3: Numbers" / the title repeated as the first line (the app shows the title already)
+  const norm = (x) => String(x).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  if (lines.length && (/^#\s/.test(lines[0]) || /^(lesson|الدرس)\s*\d+/i.test(lines[0].replace(/^[#*\s]+/, "")) || (title && norm(lines[0]) === norm(title)))) { lines.shift(); fixed.push("title"); }
+  while (lines.length && META.test(lines[lines.length - 1].trim())) { lines.pop(); fixed.push("meta"); }
+  // the same paragraph twice → once
+  const seen = new Set(), paras = lines.join("\n").split(/\n{2,}/).filter((pp) => { const k = norm(pp); if (k.length > 30 && seen.has(k)) { fixed.push("repeat"); return false; } seen.add(k); return true; });
+  t = paras.join("\n\n").trim();
+  // …and the same long line twice (also when one copy sits under a heading); tables and code are left alone
+  const seenL = new Set(); let inCode = false;
+  t = t.split("\n").filter((ln) => { const tl = ln.trim(); if (/^```/.test(tl)) inCode = !inCode; if (inCode || tl.startsWith("|") || /^#/.test(tl)) return true;
+    const k = norm(tl); if (k.length > 30 && seenL.has(k)) { fixed.push("repeat"); return false; } if (k.length > 30) seenL.add(k); return true; }).join("\n").replace(/\n{3,}/g, "\n\n");
+  // a last sentence cut off by the length limit → dropped (a heading, list item or table row is kept as it is)
+  const last = t.split("\n").pop() || "";
+  if (last.length > 25 && !/[.!?؟:)"»”*\d]$/.test(last.trim()) && !/^\s*([-*•|#]|\d+[.)])/.test(last)) { const cut = Math.max(t.lastIndexOf(". "), t.lastIndexOf("؟ "), t.lastIndexOf("! "), t.lastIndexOf(".\n")); if (cut > t.length * 0.6) { t = t.slice(0, cut + 1); fixed.push("cut"); } }
+  return { body: t.replace(/\n{3,}/g, "\n\n"), fixed: [...new Set(fixed)] };
+}
+/** What is wrong with a lesson, as codes ([] = good): short, sections, language, loop. Pure. */
+export function lessonProblems(p, c) {
+  const body = String((p && p.body) || ""), out = [];
+  if (body.length < 300) out.push("short");
+  if ((body.match(/^#{2,3}\s+\S/gm) || []).length < 2) out.push("sections");
+  const ar = arShare(body);
+  // an Arabic course must be mostly Arabic; an English one mostly not (a language course quotes the language it teaches, so it's freer)
+  if (c && c.lang === "ar" && ar < (isLanguageCourse(c.topic) ? 0.25 : 0.45)) out.push("language");
+  if (c && c.lang !== "ar" && ar > (isLanguageCourse(c.topic) ? 0.75 : 0.4)) out.push("language");
+  if (detectLoop(body).loop) out.push("loop");
+  return out;
+}
+/** The grammar for the lesson's extras: {"visual":{"kind":"steps"|"table",…},"cards":[3–6],"keyPoints":[3]} — always valid JSON. */
+export const EXTRAS_GRAMMAR = String.raw`root ::= "{" ws "\"visual\":" ws visual "," ws "\"cards\":" ws "[" ws card ("," ws card){2,5} ws "]" "," ws "\"keyPoints\":" ws "[" ws str "," ws str "," ws str ws "]" ws "}"
+visual ::= steps | table
+steps ::= "{" ws "\"kind\":" ws "\"steps\"" "," ws "\"title\":" ws str "," ws "\"items\":" ws "[" ws str ("," ws str){1,5} ws "]" ws "}"
+table ::= "{" ws "\"kind\":" ws "\"table\"" "," ws "\"title\":" ws str "," ws "\"columns\":" ws "[" ws str "," ws str ws "]" "," ws "\"rows\":" ws "[" ws row ("," ws row){1,7} ws "]" ws "}"
+row ::= "[" ws str "," ws str ws "]"
+card ::= "{" ws "\"front\":" ws str "," ws "\"back\":" ws str "," ws "\"note\":" ws str ws "}"
+str ::= "\"" ch{1,80} "\""
+ch ::= [^"\\\x00-\x1f] | "\\" ["\\/nt]
+ws ::= [ ]?`;
+export function extrasMessages(c, title, body) {
+  return [{ role: "system", content: `From the lesson below, make: one diagram ("steps" for a process or order of ideas, "table" for words / forms / values side by side), 3–6 flashcards (front: a word, term or question from the lesson; back: its meaning or answer; note: a short example), and 3 key points. Only what the lesson says. ${c.lang === "ar" ? "Write in Arabic (keep terms in the language taught)." : "Write in English (keep terms in the language taught)."} JSON only.` },
+    { role: "user", content: `Lesson: ${title}\n\n${String(body).slice(0, 3500)}` }];
+}
+/** Key points by code: the first sentence under each ## heading (or the first sentences). */
+export function codeKeyPoints(body) {
+  const out = [], secs = String(body || "").split(/^#{2,3}\s+.+$/m).slice(1);
+  for (const sec of secs.length ? secs : [String(body || "")]) {
+    const sent = sec.replace(/[*_`>#|-]+/g, " ").replace(/\s+/g, " ").trim().split(/(?<=[.!?؟])\s+/)[0];
+    if (sent && sent.length >= 12 && !/^(try it|جرب)/i.test(sent)) out.push(clean(sent, 140));
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+/** A "## Try it" by code when the lesson has none: say / recall its flashcards, or its key points in your own words. */
+export function codeTryIt(p, c) {
+  const cards = (p.cards || []).slice(0, 3), ar = c && c.lang === "ar";
+  if (cards.length >= 2) return ar ? `## جرّب\nبدون النظر، ما معنى: ${cards.map((x) => "**" + x.front + "**").join("، ")}؟` : `## Try it\nWithout looking: what do ${cards.map((x) => "**" + x.front + "**").join(", ")} mean?`;
+  const k = (p.keyPoints || [])[0];
+  return k ? (ar ? `## جرّب\nاشرح بكلماتك: ${k}` : `## Try it\nExplain in your own words: ${k}`) : "";
+}
+/** The whole pipeline. llm(messages, { maxTokens, temperature, grammar?, onToken? }) → text. → the parsed lesson, or null. */
+export async function writeLesson(llm, c, n, { onToken, onStage } = {}) {
+  const title = c.plan[n] || `Lesson ${n + 1}`;
+  let best = null;
+  for (let k = 0; k < 2; k++) {
+    onStage && onStage(k ? "retry" : "write");
+    const msgs = lessonMessages(c, n);
+    if (k) msgs[0] = { ...msgs[0], content: msgs[0].content + `\n\nIMPORTANT: the last try came out ${best ? best.problems.join(", ") : "empty"}. Write at least 4 full paragraphs under 2–4 "## " headings${c.lang === "ar" ? ", in Arabic" : ", in English"}; no repeated sentences; end with the JSON block.` };
+    const raw = await llm(msgs, { maxTokens: 1600, temperature: k ? 0.3 : 0.4, onToken });
+    const p = parseLesson(raw), cl = cleanLessonBody(p.body, title);
+    const q = { ...p, body: cl.body, fixed: cl.fixed };
+    q.problems = lessonProblems(q, c);
+    // (the wrong language or a loop is worse than a short lesson)
+    const W = { language: 4, loop: 3, short: 2, sections: 1 }, score = (x) => x.problems.reduce((a, k) => a + (W[k] || 1), 0);
+    if (!best || score(q) < score(best) || (score(q) === score(best) && q.body.length > best.body.length)) best = q;
+    if (!q.problems.length) break;
+  }
+  if (!best || best.body.length < 120) return null;
+  // the extras: broken or missing → one short request under the grammar
+  if (!best.visual || (best.cards || []).length < 3) {
+    onStage && onStage("extras");
+    try {
+      const j = jsonFrom(await llm(extrasMessages(c, title, best.body), { maxTokens: 1000, temperature: 0.2, grammar: EXTRAS_GRAMMAR }));
+      if (j) {
+        if (!best.visual) best.visual = normVisual(j.visual);
+        if ((best.cards || []).length < 3) { const cs = (normVisual({ kind: "cards", items: j.cards || [] }) || { items: [] }).items; if (cs.length) best.cards = cs; }
+        if (!(best.keyPoints || []).length && Array.isArray(j.keyPoints)) best.keyPoints = j.keyPoints.map((x) => clean(x, 160)).filter(Boolean).slice(0, 5);
+      }
+    } catch (e) { if (String(e && e.message) === "Stopped") throw e; }
+  }
+  // still missing → made by code from the lesson itself
+  if (!(best.keyPoints || []).length) best.keyPoints = codeKeyPoints(best.body);
+  if ((best.cards || []).length < 2) best.cards = cardsFromLesson(best);
+  if (!/^#{2,3}\s+(try it|جرّب|جرب)/im.test(best.body)) { const tr = codeTryIt(best, c); if (tr) best.body += "\n\n" + tr; }
+  const { problems, ...lesson } = best;
+  return { ...lesson, checked: problems };
 }

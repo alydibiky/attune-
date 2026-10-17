@@ -42,8 +42,8 @@ export async function lessonAhead(llm, native) {
     const n = D.nextIndex(c); if (n >= c.plan.length || D.quizDue(c)) continue;
     WRITING = true;
     try {
-      const p = D.parseLesson(await llm(D.lessonMessages(c, n), { maxTokens: 1600, temperature: 0.4 }));
-      if (p.body.length < 80) return null;
+      const p = await D.writeLesson(llm, c, n);
+      if (!p) return null;
       const all = loadCourses(), c0 = all.find((x) => x.id === c.id);
       if (!c0 || c0.lessons.some((l) => l.n >= n)) return null;
       const list = all.map((x) => (x.id === c.id ? D.addLesson(c0, n, p) : x));
@@ -268,16 +268,18 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         putCourse(next);
         return next;
       }
-      // (a lesson that comes out too short is written once more, a little more freely, before giving up)
-      for (let k = 0; k < 2; k++) {
-        const out = await gen(tr("Writing lesson {n}: {t}", { n: n + 1, t: c.plan[n] || "" }), D.lessonMessages(c, n), 1600, k ? 0.6 : 0.4);
-        const p = D.parseLesson(out);
-        if (p.body.length < 80) continue;
-        const next = D.addLesson(loadCourses().find((x) => x.id === c.id) || c, n, p);
-        putCourse(next);
-        return next;
-      }
-      flash(tr("The lesson came out too short — try again.")); return null;
+      // v6.34: written, cleaned, checked and repaired by code (daily.js writeLesson) — a glitch of the model never reaches the page
+      const what0 = tr("Writing lesson {n}: {t}", { n: n + 1, t: c.plan[n] || "" });
+      let acc = ""; setBusy({ what: what0, text: "" });
+      let p = null;
+      try {
+        p = await D.writeLesson((m, o) => llm(m, { ...o, onToken: (t) => { acc += t; setBusy((b) => (b ? { ...b, text: acc } : b)); } }), c, n, {
+          onStage: (st) => { acc = ""; setBusy({ what: st === "extras" ? tr("Making the diagram and flashcards…") : st === "retry" ? tr("Checking it and writing it again…") : what0, text: "" }); } });
+      } finally { setBusy(null); }
+      if (!p) { flash(tr("The lesson came out too short — try again.")); return null; }
+      const next = D.addLesson(loadCourses().find((x) => x.id === c.id) || c, n, p);
+      putCourse(next);
+      return next;
     } catch (e) { flash(String(e.message || e)); return null; }
     finally { running.current = false; WRITING = false; }
   };
