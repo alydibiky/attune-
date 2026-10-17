@@ -716,7 +716,7 @@ fails (it already failed on v6.31, run 38999124552): the second streamed answer 
 
 ## Y. 17 Oct 2026 — v6.33: Mind A and Code B (HANDOFF §5.80). Read this section first, then X.
 - Ali: "Mind a, Code B". Built: Mind is the picture wall with colour chips; Coding is "talk to a coder" (steps as a conversation).
-- APK: APK_RUN_LINK_633
+- APK: https://github.com/alydibiky/attune-/actions/runs/39028329559 (green)
 - Add to Ali's phone checklist (section X): Mind → save a link, a photo and a note; filter by a colour chip. Coding → "build me a
   tip calculator", watch the steps, Run, ask for a change at the bottom, Save, find it under your programs.
 - Everything else still open is in section X.
