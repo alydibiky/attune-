@@ -59,6 +59,13 @@ with sync_playwright() as p:
     ids = page.eval_on_selector_all("[data-testid=contract-flag]", "els => els.map(e => e.dataset.id)")
     check(page.get_attribute("[data-testid=contract-review]", "data-level") == "serious" and {"blank-cheque", "auto-renew", "late-fee"} <= set(ids), "risky terms flagged: %s" % ids)
     check("Before I sign" in page.locator("[data-testid=contract-message]").inner_text(), "a reply asking for the changes is written")
+    # Reminders: Plan my day around the prayers
+    open_mode("reminders", "[data-testid=prayer-planner]")
+    check(page.locator("[data-testid=prayer-times] > div").count() == 5, "today's five prayer times are shown")
+    page.fill("[data-testid=prayer-tasks]", "study 2 hours, gym 1h, call mum 15 min"); page.click("[data-testid=prayer-plan]")
+    page.wait_for_selector("[data-testid=prayer-result]", timeout=3000)
+    n = page.locator("[data-testid=plan-task]").count() + len(page.locator("[data-testid=prayer-result] p").all_inner_texts())
+    check(n == 3, "the three tasks are planned (or said not to fit late in the day): %s" % page.locator("[data-testid=prayer-result]").inner_text().replace("\n", " · ")[:200])
     # Chat: the price question, and the "From:" line
     open_mode("chat", "[data-testid=chat-input]")
     page.fill("[data-testid=chat-input]", "how much did I pay for petrol last time?"); page.click("button[title='Send']")
