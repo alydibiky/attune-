@@ -5328,4 +5328,11 @@ export const AR = {
   "Was due {d} — paid?": "كان مستحقًا {d} — هل دفعت؟",
   "Due today — paid? Tick it": "مستحق اليوم — هل دفعت؟ علّمه",
   "Marked as not renewed — {t}": "سُجّل أنه لم يتجدد — {t}",
+  "Flashcards": "بطاقات الحفظ",
+  "Plan {n} more lessons": "خطّط {n} دروس أخرى",
+  "The course goes on from lesson {n} — the next level": "تستمر الدورة من الدرس {n} — المستوى التالي",
+  "Load a model to plan them": "حمّل نموذجًا لتخطيطها",
+  "Planning the next {n} lessons…": "جارٍ تخطيط الدروس الـ{n} التالية…",
+  "The model didn't produce more lessons — try again.": "لم يقدّم النموذج دروسًا أخرى — حاول مرة أخرى.",
+  "{n} more lessons added": "أُضيف {n} درسًا",
 };

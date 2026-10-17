@@ -37,7 +37,8 @@ export async function lessonAhead(llm, native) {
   if (WRITING) return null;
   try { if (localStorage.getItem("attune:learn:ahead") === "0") return null; } catch (e) {}
   for (const c of loadCourses()) {
-    if (c.pack || !c.plan || !c.plan.length || (c.lessons || []).some((l) => !l.done)) continue;
+    if (c.pack || !c.plan || !c.plan.length) continue;
+    if ((c.lessons || []).some((l) => !l.done)) continue;
     const n = D.nextIndex(c); if (n >= c.plan.length || D.quizDue(c)) continue;
     WRITING = true;
     try {
@@ -50,6 +51,19 @@ export async function lessonAhead(llm, native) {
       try { window.dispatchEvent(new Event("attune:learn-updated")); } catch (e) {}
       return { id: c.id, n };
     } catch (e) { return null; } finally { WRITING = false; }
+  }
+  // then: a course near its end plans its next 20 lessons by itself (v6.34: a language doesn't stop at 30)
+  for (const c of loadCourses()) {
+    if (!c.plan || !c.plan.length) continue;
+    if (D.needsMore(c) && !(c.moreTriedAt > Date.now() - 6 * 3600000)) {   // (a failed try waits 6 h — not every 20 s)
+      WRITING = true;
+      { const all = loadCourses(); store(CKEY, all.map((x) => (x.id === c.id ? { ...x, moreTriedAt: Date.now() } : x))); }
+      try {
+        const c2 = D.addMore(c, await llm(D.moreMessages(c), { maxTokens: 1400, temperature: 0.3 }));
+        if (c2) { const all = loadCourses(); const list = all.map((x) => (x.id === c.id ? { ...x, plan: c2.plan, parts: c2.parts, moreTriedAt: 0 } : x)); store(CKEY, list); syncDaily(native, list); try { window.dispatchEvent(new Event("attune:learn-updated")); } catch (e) {} return { id: c.id, more: c2.plan.length - c.plan.length }; }
+      } catch (e) { return null; } finally { WRITING = false; }
+      return null;
+    }
   }
   return null;
 }
@@ -267,6 +281,18 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
     } catch (e) { flash(String(e.message || e)); return null; }
     finally { running.current = false; WRITING = false; }
   };
+  // v6.34 (Ali: "a language takes more than 30 lessons"): the next 20 lessons of the course, planned from the ones before
+  const planMore = async (c) => {
+    if (running.current || WRITING) return null;
+    running.current = true; WRITING = true;
+    try {
+      const out = await gen(tr("Planning the next {n} lessons…", { n: D.MORE_N }), D.moreMessages(latest() || c), 1400, 0.3);
+      const c2 = D.addMore(loadCourses().find((x) => x.id === c.id) || c, out);
+      if (!c2) { flash(tr("The model didn't produce more lessons — try again.")); return null; }
+      putCourse(c2); flash(tr("{n} more lessons added", { n: c2.plan.length - c.plan.length })); return c2;
+    } catch (e) { flash(String(e.message || e)); return null; }
+    finally { running.current = false; WRITING = false; }
+  };
   // a lesson written ahead in the background shows up at once
   useEffect(() => { const on = () => setCoursesRaw(loadCourses()); window.addEventListener("attune:learn-updated", on); return () => window.removeEventListener("attune:learn-updated", on); }, []);
 
@@ -446,7 +472,9 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
         </div>
         <ListenBar L={L} />
         <div dir="auto">{paras.map((p, k) => <div key={k} data-listen={k + 1} style={hl(k + 1)}><Md text={p} runnable={false} /></div>)}</div>
-        <Visual v={l.visual} />
+        {/* v6.34 (Ali: "diagrams and flashcards inside the lesson"): the diagram, then the lesson's flashcards to turn over */}
+        <div data-testid="lesson-diagram"><Visual v={D.lessonDiagram(l)} /></div>
+        {(() => { const cs = D.lessonCards(l); return cs.length >= 2 ? <div data-testid="lesson-cards"><Visual v={{ kind: "cards", title: tr("Flashcards"), items: cs }} /></div> : null; })()}
         {l.keyPoints && l.keyPoints.length ? (
           <div className="c-card" data-testid="key-points" data-listen={paras.length + 1} style={hl(paras.length + 1)}>
             <p className="c-lbl m-0 mb-1.5">{tr("Remember")}</p>
@@ -511,7 +539,11 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
                 : <Step key="l" icon={BookOpen} onClick={openEngine} title={`${st.n + 1}. ${st.title}`} sub={tr("Load a model to write today's lesson")} />)
               : <Step key="q" icon={HelpCircle} testid="quiz-card" disabled={!!busy || !modelReady} onClick={() => startQuiz(st.lessons)}
                   title={tr("Quiz time")} sub={modelReady ? tr("A short quiz on lessons {a}–{b}", { a: st.lessons[0].n + 1, b: st.lessons[st.lessons.length - 1].n + 1 }) : tr("Load a model to write the quiz")} />)}
-            {plan.finished ? <p className="p-3 m-0 text-[14px]">{tr("You finished all {n} lessons. Your cards keep coming back until you know them.", { n: course.plan.length })}</p> : null}
+            {(plan.finished || D.needsMore(course)) && !course.pack && course.plan.length < D.MAX_PLAN ? (
+              <button className="w-full text-start flex items-center gap-3 p-3 disabled:opacity-60" disabled={!!busy || !modelReady} onClick={() => planMore(course)} data-testid="learn-more">
+                <span className="c-ic"><Plus size={16} /></span><span className="flex-1 min-w-0"><b className="block text-[14px] font-semibold">{tr("Plan {n} more lessons", { n: D.MORE_N })}</b>
+                <span className="c-sub block">{modelReady ? tr("The course goes on from lesson {n} — the next level", { n: course.plan.length + 1 }) : tr("Load a model to plan them")}</span></span></button>) : null}
+            {plan.finished && !D.needsMore(course) ? <p className="p-3 m-0 text-[14px]">{tr("You finished all {n} lessons. Your cards keep coming back until you know them.", { n: course.plan.length })}</p> : null}
           </div>
           {today && today.done && !busy && nextN < course.plan.length && modelReady && !D.quizDue(course) ? (
             <button className="c-acc text-[13px] font-medium" onClick={async () => { const c2 = unread ? course : await makeLesson(course, nextN); const nl = c2 && c2.lessons.find((l) => !l.done); if (nl) openL(c2, nl.n); }} data-testid="next-now">

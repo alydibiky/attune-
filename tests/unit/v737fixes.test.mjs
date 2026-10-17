@@ -6,6 +6,7 @@ import * as LF from "../../web-src/life.js";
 import { tickRegular, payRadar } from "../../web-src/regular.js";
 import { todayList } from "../../web-src/home.js";
 import * as DL from "../../web-src/deadlines.js";
+import * as DY from "../../web-src/daily.js";
 const plate = R.readMealText("fried egg on toast").items;
 assert.ok(plate.length >= 1, "a plate to correct");
 for (const said of ["There is tomato sauce", "there is tomato sauce and cheese", "it has tomato sauce", "فيه صلصة طماطم", "tomato sauce"]) {
@@ -74,5 +75,24 @@ assert.equal(LF.progressOf(LF.loadLife(store).items[0], SAT + 8 * 86400000).next
   assert.equal(todayList({ life: LF.loadLife(st2), radar: DL.loadRadar(st2), ledger: null, care: null, now: SAT, max: 9 }).filter((x) => x.pay).length, 0, "and Home stops asking");
   const before = todayList({ life: LF.loadLife(st2), radar: DL.addDeadline({ items: [] }, { kind: "renewal", title: "OSN", date: "2026-10-19", amount: 99 }, SAT).data, ledger: null, care: null, now: SAT, max: 9 });
   assert.ok(before.some((x) => /OSN/.test(x.title) && !x.pay), "two days before: the usual 'Renews' line, no box yet");
+}
+// lessons: a diagram AND flashcards; a course goes past 30
+{
+  const out = "## Numbers\nBir, iki, üç.\n## Counting things\nİki çay.\n## Try it\nCount.\n```json\n" + JSON.stringify({ visual: { kind: "table", columns: ["Turkish", "English"], rows: [["bir", "one"], ["iki", "two"]] }, cards: [{ front: "bir", back: "one" }, { front: "iki", back: "two" }, { front: "üç", back: "three" }], keyPoints: ["bir = one"] }) + "\n```";
+  const L1 = DY.parseLesson(out);
+  assert.equal(L1.visual.kind, "table"); assert.equal(L1.cards.length, 3, "flashcards kept as their own list");
+  assert.equal(DY.lessonDiagram(L1).kind, "table"); assert.equal(DY.lessonCards(L1).length, 3);
+  const old = DY.parseLesson("## A\ntext\n## B\ntext\n```json\n" + JSON.stringify({ visual: { kind: "cards", items: [{ front: "x", back: "y" }, { front: "z", back: "w" }] }, keyPoints: ["k"] }) + "\n```");
+  assert.equal(old.visual, null); assert.equal(old.cards.length, 2, "a 'cards' visual becomes the flashcards");
+  assert.deepEqual(DY.lessonDiagram({ ...old, title: "T" }).items, ["A", "B"], "no diagram from the model → a map of the lesson from its headings");
+  assert.match(DY.lessonMessages({ ...DY.newCourse({ topic: "Turkish" }), plan: ["Numbers"] }, 0)[0].content, /"cards"/);
+  const c = { ...DY.readyCourse("turkish"), lessons: [] };
+  assert.equal(c.plan.length, 30); assert.equal(DY.needsMore(c), false);
+  const near = { ...c, lessons: Array.from({ length: 28 }, (_, n) => ({ n, done: true })) };
+  assert.equal(DY.needsMore(near), true, "3 lessons left → plan the next part");
+  assert.match(DY.moreMessages(near)[0].content, /NEXT 20 lessons/); assert.match(DY.moreMessages(near)[0].content, /fluent/);
+  const more = DY.addMore(near, JSON.stringify({ lessons: [near.plan[0], ...Array.from({ length: 20 }, (_, i) => "Part 2 lesson " + (i + 1))] }));
+  assert.equal(more.plan.length, 50, "20 new lessons (a repeat dropped): " + more.plan.length); assert.equal(more.parts, 2);
+  assert.equal(DY.addMore(near, "nothing useful"), null);
 }
 console.log("PASS v737fixes");

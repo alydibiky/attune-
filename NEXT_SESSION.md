@@ -734,14 +734,14 @@ food Add sheet minimal.
 3. ⬜ Money → Watch → Payments · Dates · Reminders. A subscription on its renewal day: Home asks "paid?" → tick → in Money.
 4. ⬜ Engine: one line + ⋯; models as rows; Settings folded.
 5. ⬜ Fit → + on a meal: one box, Recent with +.
-6. ⬜ Learn: leave the app open with a model loaded for a minute after reading a lesson → the next one is written; "Add a lesson".
+6. ⬜ Learn: leave the app open with a model loaded for a minute after reading a lesson → the next one is written; "Add a lesson";
+   each new lesson has a diagram and flashcards; near lesson 28 of 30 the course plans 20 more by itself ("Plan 20 more lessons").
 7. ⬜ PDF chat: "Solve the questions".
 8. ⬜ Fleet → Store → Issue parts: reference code first, tap the item row.
 9. ⬜ Radar / Money → Turn on notification access → if greyed out, follow the steps (App info → ⋮ → Allow restricted settings).
 10. ⬜ If Attune closes: send the WHOLE Engine log (the end has ExitWatch's reason and "Memory:" lines).
 ### Still open
-1. Ali to answer: what "the visuals we talked about" are for lessons (a picture per lesson exists — Studio; diagrams/cards exist as `visual`),
-   and whether "add lessons" also means his own lessons with his own text.
+1. ✅ Ali answered: diagrams + flashcards inside each lesson, and courses longer than 30 — both built (HANDOFF §5.81).
 2. Lab: the llama.cpp Hexagon (NPU) backend on SM8850 with Core Max (Q8_0) — cooler, maybe faster prompts.
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 

@@ -1673,6 +1673,13 @@ His picks (asked on cards): Money "integrate them the best way"; More page "B: r
   written — ready when Learn opens. Off in tests unless `attune:learn:ahead` = 1 (harness sets "0"). "Add a lesson" (`AddLesson`)
   appends your title to the plan. The writing preview has no markdown signs (`plainPreview`). Home: one line per topic, lowest
   lesson first; starting the same ready course again opens the one you have. "1 things" → "1 thing".
+- **Lessons: a diagram AND flashcards** (Ali: "diagrams and flashcards inside the lesson"): the lesson prompt asks for `visual` (one
+  diagram, not cards) + `cards` (4–6) + keyPoints; `parseLesson` returns `cards` (an old "cards" visual becomes them). The lesson
+  shows `lessonDiagram(l)` (the model's, else a map of its own ## headings) and `lessonCards(l)` (the model's, else `cardsFromLesson`)
+  as flip cards (`lesson-diagram`, `lesson-cards`); `cardsFromLesson` takes `l.cards` first, so they go into the review deck.
+- **Courses past 30** (Ali: "a language takes more than 30 lessons"): `needsMore` (≤ 3 planned lessons left, plan < 300) → the
+  background writer plans the next 20 (`moreMessages` / `addMore`, repeats dropped, `parts` counted; a failed try waits 6 h) after
+  writing the next lesson; the course screen has "Plan 20 more lessons" (`learn-more`). Languages go on "towards fluent".
 - **Documents** (`docqa.js intent "solve"` + `solveMessages`, `pdfchat-ui.jsx`): "Solve the questions" / «حل الأسئلة» solve the questions
   from the whole document (7,000-character parts, up to 8), step by step with pages — it used to search for a passage and say "not found".
 - **Web**: when every search of a question comes back empty (a burst refused), one plain search again after 1.2 s; the "web found

@@ -155,9 +155,10 @@ export function lessonMessages(c, n) {
 Write the lesson in Markdown: a one-line hook, then 2–4 short sections with ## headings, concrete examples${isLanguageCourse(c.topic) ? " (example sentences with translation and pronunciation)" : " from real work and life"}, and one tiny practice task at the end under "## Try it". No LaTeX. Every fact must be technically correct — a plain true sentence beats a dramatic comparison; no exaggerated claims.${review.length ? " Start with a 2-line \"## Quick review\" of: " + review.join("; ") + "." : ""}
 Then, at the very end, a JSON block:
 \`\`\`json
-{"visual": <one visual>, "keyPoints": ["<3 short things to remember>"]}   (both keys are required)
+{"visual": <one diagram>, "cards": [{"front": "..", "back": "..", "note": ".."}], "keyPoints": ["<3 short things to remember>"]}   (all three keys are required)
 \`\`\`
-${VISUALS}` },
+"cards" = 4–6 flashcards of this lesson (front: a word, term or question; back: its meaning or answer; note: a short example).
+"visual" = ONE diagram that is not cards — a table, steps, compare, bars or timeline. ${VISUALS}` },
     { role: "user", content: `Lesson ${n + 1}: ${title}` + (before.length ? `\n(Already covered: ${before.join("; ")} — don't repeat them.)` : "") + (c.goal ? `\nMy goal: ${c.goal}` : "") },
   ];
 }
@@ -197,7 +198,10 @@ export function parseLesson(text) {
     const k = body.match(/##\s*(key points|remember|تذكر|أهم النقاط)[^\n]*\n([\s\S]*?)(\n##|$)/i);
     if (k) keyPoints = k[2].split("\n").map((l) => clean(l.replace(/^\s*[-*•\d.)]+\s*/, ""), 160)).filter(Boolean).slice(0, 5);
   }
-  const visual = j ? normVisual(j.visual) : null;
+  let visual = j ? normVisual(j.visual) : null;
+  // v6.34 (Ali: "diagrams and flashcards inside the lesson"): the flashcards are their own list; a "cards" visual goes there
+  let cards = j && Array.isArray(j.cards) ? (normVisual({ kind: "cards", items: j.cards }) || { items: [] }).items.slice(0, 8) : [];
+  if (visual && visual.kind === "cards") { if (!cards.length) cards = visual.items; visual = null; }
   if (!keyPoints.length && visual) {   // the model left them out: the visual's cards / steps are the lesson's key facts
     const items = visual.kind === "cards" ? visual.items.map((x) => (x.back ? `${x.front}: ${x.back}` : x.front))
       : visual.kind === "steps" ? visual.items : visual.kind === "timeline" ? visual.items.map((x) => `${x.when}: ${x.what}`) : [];
@@ -208,7 +212,7 @@ export function parseLesson(text) {
       .map((m) => clean(m[2].replace(/^\s*[-*•\d.)]+\s*/, "").replace(/\*\*/g, "").split(/(?<=[.!؟?])\s/)[0], 160)).filter(Boolean).slice(0, 3);
   }
   body = body.replace(/\$\$?([^$\n]+)\$\$?/g, "$1");
-  return { body, visual, keyPoints };
+  return { body, visual, keyPoints, cards };
 }
 
 // v6.28 spaced repetition: a missed question is reviewed in a lesson, then again after 2, 5, 12 and 30 days (each time a little
@@ -316,6 +320,7 @@ const cardId = (front) => "k" + [...String(front).toLowerCase()].reduce((h, ch) 
 export function cardsFromLesson(l) {
   const out = [], v = l && l.visual;
   const add = (front, back, note = "") => { front = clean(front, 90); back = clean(back, 160); if (front.length >= 1 && back.length >= 1 && front.toLowerCase() !== back.toLowerCase() && !out.some((x) => x.front.toLowerCase() === front.toLowerCase())) out.push({ front, back, note: clean(note, 140) }); };
+  for (const x of (l && l.cards) || []) add(x.front, x.back, x.note);
   if (v && v.kind === "cards") for (const x of v.items) add(x.front, x.back, x.note);
   if (v && v.kind === "table" && v.columns.length >= 2) for (const r of v.rows) add(r[0], r.slice(1).map((x, i) => (v.columns.length > 2 ? v.columns[i + 1] + ": " : "") + x).join(" · "), v.columns.length === 2 ? v.columns[0] + " → " + v.columns[1] : "");
   if (v && v.kind === "timeline") for (const x of v.items) if (x.when) add(x.when, x.what);
@@ -442,4 +447,38 @@ export function newsNotice(t) {
   const d = t.digests[0];
   const head = d && d.text ? clean(String(d.text).split("\n")[0].replace(/\*+/g, ""), 140) : "";
   return { title: `${t.query} · ${t.lang === "ar" ? "أخبار اليوم" : "today's news"}`, body: head && d.day === dayKey() ? head : (t.lang === "ar" ? "افتح لجمع أخبار آخر 24 ساعة" : "Tap to gather the last 24 hours") };
+}
+
+/* ---- v6.34 (Ali): every lesson shows a diagram AND flashcards; a course is not stuck at 30 lessons ---------------------------- */
+/** The lesson's diagram: the model's (not cards), else a map of the lesson made from its own ## headings (honest: only what it says). */
+export function lessonDiagram(l) {
+  if (!l) return null;
+  if (l.visual && l.visual.kind !== "cards") return l.visual;
+  const heads = [...String(l.body || "").matchAll(/^#{2,3}\s+(.+)$/gm)].map((m) => clean(m[1].replace(/[*_`]/g, ""), 80)).filter((h) => !/^(try it|quick review|جرّب|جرب|مراجعة سريعة)/i.test(h));
+  return heads.length >= 2 ? { kind: "steps", title: l.title, items: heads.slice(0, 6) } : null;
+}
+/** The lesson's flashcards: the model's, else the ones code makes from the lesson (the same that go into the review deck). */
+export function lessonCards(l) {
+  const own = (l && l.cards) || [];
+  return (own.length >= 2 ? own : cardsFromLesson(l)).slice(0, 8);
+}
+/** How many lessons are planned but not written yet; at 3 or fewer the course plans its next part. */
+export const lessonsLeft = (c) => Math.max(0, (c.plan || []).length - nextIndex(c));
+export const MAX_PLAN = 300, MORE_N = 20;
+export const needsMore = (c) => !c.pack && (c.plan || []).length > 0 && (c.plan || []).length < MAX_PLAN && lessonsLeft(c) <= 3;
+/** The next part of a course: 20 more lessons after the ones planned, towards expert (a language goes on to fluent). */
+export function moreMessages(c, n = MORE_N) {
+  const done = c.plan.slice(-40);
+  return [
+    { role: "system", content: `You are an expert teacher continuing a daily course. Reply with JSON only: {"lessons": ["<lesson title>", ...]}.
+Plan the NEXT ${n} lessons of this course, continuing straight after the last one — the next level, a ${c.level} learner who has done all of the lessons below and is going on towards expert${isLanguageCourse(c.topic) ? " (for a language: from where the learner is now towards fluent — new grammar, more words, real conversations, reading and listening, in a good order)" : ""}. Each lesson is one small idea that fits in 5 minutes; never repeat a lesson below. Titles short and concrete. ${c.lang === "ar" ? "Titles in Arabic." : "Titles in English."}` },
+    { role: "user", content: `Course: ${c.title || c.topic}\nLessons so far (${c.plan.length}), the last ones:\n${done.map((t, i) => `${c.plan.length - done.length + i + 1}. ${t}`).join("\n")}` },
+  ];
+}
+/** The model's answer → the course with the new lessons added (repeats of a planned title dropped); null when it gave none. */
+export function addMore(c, text) {
+  const p = parsePlan(text); if (!p) return null;
+  const have = new Set(c.plan.map((t) => t.toLowerCase().trim()));
+  const fresh = p.plan.filter((t) => !have.has(t.toLowerCase().trim())).slice(0, MORE_N);
+  return fresh.length >= 3 ? { ...c, plan: [...c.plan, ...fresh].slice(0, MAX_PLAN), parts: (c.parts || 1) + 1 } : null;
 }
