@@ -679,7 +679,8 @@ tables, French/Spanish/Turkish, the Attune keyboard. Open:
 ## X. 17 Oct 2026 — v6.32 joint release (HANDOFF §5.79). Read this section first.
 All five of Ali's parallel threads are merged into `main` as **v6.32** (one APK): Create/Deep answer/Fit & Food (§5.76, section V),
 Edit a PDF and the Overpaying check (§5.79), Fleet & rentals + Business v2 (§5.77), the roadmap items (§5.78, section W).
-APK: APK_RUN_LINK
+APK: https://github.com/alydibiky/attune-/actions/runs/39011813651 (green). Desktop build: Linux green, Windows smoke test
+fails (it already failed on v6.31, run 38999124552): the second streamed answer never arrives on the Windows runner.
 
 ### Ali's checklist on the phone (install the APK above over the old one)
 1. ⬜ **Chat**: a normal question, then "+" → Deep answer (note which model answered and how long it took).
@@ -711,7 +712,8 @@ APK: APK_RUN_LINK
 3. Fit & Food B on the wide computer layout: check with Ali.
 4. The big-model quant bench (Apex+, Everest, Apex, Glow/Spark); Everest flash-mode speed from Ali's Engine log.
 5. More of the app in French / Spanish / Turkish.
-6. Fleet ideas not built (§5.77): nightly reminders as notifications, a client statement PDF, sharing Fleet between phones (needs Drive sync).
+6. Desktop CI: the Windows smoke test ("Smoke test from source") fails after the second request; Linux passes. Fix it.
+7. Fleet ideas not built (§5.77): nightly reminders as notifications, a client statement PDF, sharing Fleet between phones (needs Drive sync).
 
 ## Prompt to start the next session
 
