@@ -12,7 +12,7 @@ L0 = {"n": 0, "title": "Greetings", "body": "Say Merhaba to anyone. " * 8, "keyP
 C1 = {"id": "c1", "topic": "Turkish", "title": "Turkish", "level": "beginner", "lang": "en", "goal": "", "time": "08:00", "quizEvery": 9, "created": now - 2 * DAY,
       "plan": ["Greetings", "Numbers", "Food"], "lessons": [L0], "quizzes": [], "review": [], "streak": 1, "lastDay": "", "notify": True, "cards": []}
 C2 = dict(C1, id="c2", created=now - DAY, lessons=[])   # the same course started twice
-LESSON = ("## Numbers\nBir, iki, üç — one, two, three. Count everything you see today: bir çay, iki simit, üç kedi. " * 3 + "\n```json\n"
+LESSON = ("## Numbers\nBir, iki, üç — one, two, three. Count everything you see today: bir çay, iki simit, üç kedi.\n\n## Using them\nThe number comes before the noun and the noun stays singular: iki çay, never iki çaylar. Say each one slowly.\n\n## Try it\nCount the cups on your table.\n```json\n"
           + json.dumps({"visual": {"kind": "table", "title": "1 to 3", "columns": ["Turkish", "English"], "rows": [["bir", "one"], ["iki", "two"], ["üç", "three"]]},
                         "cards": [{"front": "bir", "back": "one"}, {"front": "iki", "back": "two"}, {"front": "üç", "back": "three"}], "keyPoints": ["bir = one", "iki = two"]}) + "\n```")
 INIT = "try{localStorage.setItem('attune:learn:ahead','1');localStorage.setItem('attune:start','home');localStorage.setItem('attune:daily:courses:v1',%s)}catch(e){}" % json.dumps(json.dumps([C1, C2]))

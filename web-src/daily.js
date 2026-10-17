@@ -520,7 +520,7 @@ export function cleanLessonBody(body, title = "") {
 /** What is wrong with a lesson, as codes ([] = good): short, sections, language, loop. Pure. */
 export function lessonProblems(p, c) {
   const body = String((p && p.body) || ""), out = [];
-  if (body.length < 300) out.push("short");
+  if (body.length < 200) out.push("short");   // (a real 5-minute lesson is ~1,500 characters; under 200 is a failed one)
   if ((body.match(/^#{2,3}\s+\S/gm) || []).length < 2) out.push("sections");
   const ar = arShare(body);
   // an Arabic course must be mostly Arabic; an English one mostly not (a language course quotes the language it teaches, so it's freer)
@@ -579,7 +579,8 @@ export async function writeLesson(llm, c, n, { onToken, onStage } = {}) {
   }
   if (!best || best.body.length < 120) return null;
   // the extras: broken or missing → one short request under the grammar
-  if (!best.visual || (best.cards || []).length < 3) {
+  // (only when the JSON gave nothing: a lesson with flashcards but no diagram gets its map by code — one model call less)
+  if (!best.visual && (best.cards || []).length < 2) {
     onStage && onStage("extras");
     try {
       const j = jsonFrom(await llm(extrasMessages(c, title, best.body), { maxTokens: 1000, temperature: 0.2, grammar: EXTRAS_GRAMMAR }));
