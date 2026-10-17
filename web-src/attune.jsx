@@ -10942,6 +10942,7 @@ export default function App() {
                 <div className="space-y-4">
                   <div><p className="text-[13px] text-slate-300 mb-1.5">{tr("App language")}</p><LangSwitch /></div>
                   <div><p className="text-[13px] text-slate-300 mb-1.5">{tr("Text size")}</p><TextSize /></div>
+                  <KeyboardRow />
                 </div>
                 <div><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
@@ -10999,6 +11000,7 @@ export default function App() {
                 <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("Appearance")}</p>
                 <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("App language")}</span><LangSwitch /></div>
                 <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("Text size")}</span><TextSize /></div>
+                <KeyboardRow />
                 <div className="mb-3"><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
               <p className="text-center text-[10px] text-slate-600 mt-3 select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
@@ -11295,6 +11297,26 @@ function TextSize() {
 
 // English | العربية. Switching reloads the page in the other language
 // (the model stays loaded in the engine, so it takes about a second).
+/** v6.32: the Attune keyboard (Android, AttuneKeyboard.kt) — Improve, Translate, Reply and Prompt in every app. Shown only in the app. */
+function KeyboardRow() {
+  const N = typeof window !== "undefined" ? window.AttuneNative : null;
+  const read = () => { try { return JSON.parse(N.keyboardState()).enabled; } catch (e) { return false; } };
+  const [on, setOn] = useState(() => (N && N.keyboardState ? read() : false));
+  useEffect(() => {
+    if (!N || !N.keyboardState) return;
+    const f = () => setOn(read());
+    window.addEventListener("focus", f); document.addEventListener("visibilitychange", f);
+    return () => { window.removeEventListener("focus", f); document.removeEventListener("visibilitychange", f); };
+  }, []);
+  if (!N || !N.keyboardState) return null;
+  return (
+    <div className="flex items-center gap-2 mb-3" data-testid="keyboard-row">
+      <span className="flex-1 min-w-0"><span className="block text-[12px] text-slate-300">{tr("Attune keyboard")}</span>
+        <span className="block text-[11px] text-slate-500">{on ? tr("On — pick it from the keyboard button when you type") : tr("Improve, translate, reply and better prompts in every app, offline")}</span></span>
+      <button onClick={() => N.keyboardSetup(on ? "pick" : "settings")} className="shrink-0 rounded-lg border border-teal-700 px-2.5 py-1 text-[12px] text-teal-200" data-testid="keyboard-setup">{on ? tr("Switch to it") : tr("Turn on")}</button>
+    </div>);
+}
+
 function LangSwitch({ className = "" }) {
   const cur = getLang();
   return (

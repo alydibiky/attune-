@@ -89,6 +89,17 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun scoutNightTake(): String = ScoutNight.take(ctx)
 
+    // v6.32 the Attune keyboard (AttuneKeyboard.kt): is it on, and open the system's keyboard settings / picker
+    @JavascriptInterface
+    fun keyboardState(): String = org.json.JSONObject().put("enabled", AttuneKeyboard.enabled(ctx)).toString()
+
+    @JavascriptInterface
+    fun keyboardSetup(what: String): String = try {
+        if (what == "pick") android.os.Handler(android.os.Looper.getMainLooper()).post { try { (ctx.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showInputMethodPicker() } catch (e: Exception) {} }
+        else ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_INPUT_METHOD_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+        "ok"
+    } catch (e: Exception) { "error: " + e.message }
+
     @JavascriptInterface
     fun vaultUnlock(id: String, arg: String) {
         val a = try { JSONObject(arg) } catch (e: Exception) { JSONObject() }

@@ -696,4 +696,9 @@ export const ES = {
   "Photo format": "Formato de foto",
   "Or choose any file — see everything it can become": "O elige cualquier archivo y mira todo en lo que puede convertirse",
   "PDF · Word · PowerPoint · Excel · CSV · photos · e-books · web pages · subtitles": "PDF · Word · PowerPoint · Excel · CSV · fotos · libros electrónicos · páginas web · subtítulos",
+  "Attune keyboard": "Teclado Attune",
+  "On — pick it from the keyboard button when you type": "Activado: elígelo con el botón de teclado al escribir",
+  "Improve, translate, reply and better prompts in every app, offline": "Mejorar, traducir, responder y mejores prompts en todas las apps, sin conexión",
+  "Switch to it": "Cambiar a él",
+  "Turn on": "Activar",
 };

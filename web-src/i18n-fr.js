@@ -687,4 +687,9 @@ export const FR = {
   "Photo format": "Format photo",
   "Or choose any file — see everything it can become": "Ou choisissez n'importe quel fichier — voyez tout ce qu'il peut devenir",
   "PDF · Word · PowerPoint · Excel · CSV · photos · e-books · web pages · subtitles": "PDF · Word · PowerPoint · Excel · CSV · photos · livres numériques · pages web · sous-titres",
+  "Attune keyboard": "Clavier Attune",
+  "On — pick it from the keyboard button when you type": "Activé — choisissez-le avec le bouton clavier quand vous tapez",
+  "Improve, translate, reply and better prompts in every app, offline": "Améliorer, traduire, répondre et de meilleurs prompts dans toutes les apps, hors ligne",
+  "Switch to it": "Y passer",
+  "Turn on": "Activer",
 };

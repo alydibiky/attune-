@@ -712,4 +712,9 @@ export const TRK = {
   "Photo format": "Fotoğraf biçimi",
   "Or choose any file — see everything it can become": "Ya da herhangi bir dosya seçin — neye dönüşebileceğini görün",
   "PDF · Word · PowerPoint · Excel · CSV · photos · e-books · web pages · subtitles": "PDF · Word · PowerPoint · Excel · CSV · fotoğraflar · e-kitaplar · web sayfaları · altyazılar",
+  "Attune keyboard": "Attune klavyesi",
+  "On — pick it from the keyboard button when you type": "Açık — yazarken klavye düğmesinden seçin",
+  "Improve, translate, reply and better prompts in every app, offline": "Her uygulamada iyileştir, çevir, yanıtla ve daha iyi istemler — çevrimdışı",
+  "Switch to it": "Ona geç",
+  "Turn on": "Aç",
 };

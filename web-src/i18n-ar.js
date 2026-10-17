@@ -4751,4 +4751,8 @@ export const AR = {
   "the book": "الكتاب",
   "Writing a short conversation…": "جارٍ كتابة محادثة قصيرة…",
   "Couldn't write a good conversation this time — try again.": "تعذّرت كتابة محادثة جيدة هذه المرة — حاول مرة أخرى.",
+  "Attune keyboard": "لوحة مفاتيح Attune",
+  "On — pick it from the keyboard button when you type": "مفعّلة — اخترها من زر لوحة المفاتيح عند الكتابة",
+  "Improve, translate, reply and better prompts in every app, offline": "تحسين وترجمة ورد وبرومبت أفضل في كل التطبيقات، دون إنترنت",
+  "Switch to it": "التبديل إليها",
 };
