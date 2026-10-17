@@ -1,6 +1,7 @@
 /* ---- reminders & actions: the card in Chat and the Reminders screen -------------
    The card shows exactly what will happen — kind, title, date and time, who —
    with each part editable, and nothing happens until "Set it" is tapped.     */
+import { PrayerPlanner } from "./prayer-ui.jsx";
 import { askConfirm } from "./confirm.jsx";
 import React, { useState } from "react";
 import { Bell, Trash2, X, Plus, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
@@ -146,6 +147,7 @@ export function RemindersPanel({ reminders, setReminders, native, flash, onSched
         </div>
         <button onClick={add} className="w-full flex items-center justify-center gap-1.5 bg-teal-500 text-slate-950 font-semibold rounded-xl py-2.5 text-sm" data-testid="rem-add"><Plus size={16} />{tr("Add reminder")}</button>
       </div>
+      <PrayerPlanner onSchedule={onSchedule} flash={flash} />
       </div><div className={RIGHT}>
       <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
         <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("Coming up")} · {upcoming.length}</p>

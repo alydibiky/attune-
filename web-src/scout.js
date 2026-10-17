@@ -140,7 +140,7 @@ const urlKey = (u) => String(u || "").toLowerCase().replace(/^https?:\/\/(www\.)
 export function pricesIn(text) {
   // phone numbers first blanked out (same length, so positions stay): 01001234567, 0100 123 4567, +20 100 123 4567
   const t = latin(text).replace(/(?:\+?20[\s-]?)?0?1[0125][\s-]?\d{3,4}[\s-]?\d{4}(?!\d)/g, (m) => " ".repeat(m.length)), out = [];
-  const re = /(?:(egp|le|l\.e\.?|usd|\$|aed|sar|ج\.م|جنيه|جنية)\s*)?(\d{1,3}(?:[,.\s]\d{3})+|\d{3,9})(?:\s*(k|الف|ألف|m|مليون|million))?\s*(egp|le\b|l\.e\.?|usd|aed|sar|ج\.م\.?|جنيه|جنية|pounds?|ريال|درهم)?/gi;
+  const re = /(?:(egp|le|l\.e\.?|usd|\$|aed|sar|ج\.م|جنيه|جنية)\s*)?(\d{1,3}(?:[,.\s]\d{3})+|\d{3,9})(?:\s*(k(?![a-z])|الف|ألف|m(?![2²a-z])|مليون|million))?\s*(egp|le\b|l\.e\.?|usd|aed|sar|ج\.م\.?|جنيه|جنية|pounds?|ريال|درهم)?/gi;
   let m;
   while ((m = re.exec(t))) {
     const raw = m[2], cur = (m[1] || m[4] || "").toLowerCase(), mul = (m[3] || "").toLowerCase();
@@ -345,6 +345,61 @@ export function addGoal(d, text, now = Date.now()) {
   return { data: { ...d, goals: [goal, ...d.goals] }, goal };
 }
 /** Due for a run: never run, or the last run is older than `hours` (twice a day by default). */
+// ---- v6.32 distance to the metro (roadmap "Scout extras"): from the offline map pack, never the web ------------------------------
+const rad = (x) => x * Math.PI / 180;
+export const kmBetween = (a, b, c, d) => { const x = Math.sin(rad(c - a) / 2) ** 2 + Math.cos(rad(a)) * Math.cos(rad(c)) * Math.sin(rad(d - b) / 2) ** 2; return 6371 * 2 * Math.asin(Math.sqrt(x)); };
+const METRO = /metro|subway|underground|مترو|محطة/i;
+/** The point for an ad's area, from the map's answers for its place name: an area (place/…) first, then the best ranked. */
+export function pointFor(places) {
+  const ps = (places || []).filter((p) => isFinite(p.lat) && isFinite(p.lon));
+  return ps.find((p) => /^place\//.test(p.kind || "")) || ps.sort((a, b) => (b.rank || 0) - (a.rank || 0))[0] || null;
+}
+/** The station nearest a point. A metro station is preferred when one is within 1.5× the nearest of any kind (trams and halts
+    are stations too). Walk = straight line × 1.3 for streets, at 4.8 km/h. → { name, km, walk, metro } | null */
+export function nearestStation(lat, lon, stations, { ar = false } = {}) {
+  const all = (stations || []).filter((p) => isFinite(p.lat) && isFinite(p.lon)).map((p) => {
+    const name = (ar ? p.name_ar || p.name : p.name_en || p.name) || p.name || "";
+    return { name, km: kmBetween(lat, lon, p.lat, p.lon), metro: METRO.test([p.name, p.name_ar, p.name_en].join(" ")) };
+  }).filter((p) => p.name).sort((a, b) => a.km - b.km);
+  if (!all.length) return null;
+  const m = all.find((p) => p.metro && p.km <= all[0].km * 1.5);
+  const best = m || all[0];
+  return { name: best.name, km: Math.round(best.km * 10) / 10, walk: Math.max(1, Math.round(best.km * 1.3 / 4.8 * 60)), metro: best.metro };
+}
+/** Is a station worth showing for this goal? Homes always; anything that asks to be near the metro. */
+export const wantsStation = (g) => !!g && (g.kind === "rent" || g.kind === "buy-home" || (g.wish || []).some((w) => /metro/.test(w.k)));
+
+// ---- v6.32 the photo check (roadmap "Scout extras"): the same picture in two different ads is a classic sign of a copied or fake
+// ad. Each ad's picture gets a fingerprint (dHash: 64 bits from a 9×8 grey copy — the same photo resized or re-saved stays within a
+// few bits); ads whose fingerprints are this close, and that are not the same ad on two sites, are marked. Pure code.
+export const PHOTO_NEAR = 6;
+export function hamming(a, b) {
+  if (!a || !b || a.length !== b.length) return 64;
+  let n = 0;
+  for (let i = 0; i < a.length; i++) { let x = parseInt(a[i], 16) ^ parseInt(b[i], 16); while (x) { n += x & 1; x >>= 1; } }
+  return n;
+}
+/** A 9×8 grey picture (72 numbers, row by row) → its 16-hex-digit fingerprint. */
+export function dhash(grey) {
+  let bits = "";
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) bits += grey[y * 9 + x] > grey[y * 9 + x + 1] ? "1" : "0";
+  let hex = ""; for (let i = 0; i < 64; i += 4) hex += parseInt(bits.slice(i, i + 4), 2).toString(16);
+  return hex;
+}
+/** ads + {adId: fingerprint} → {adId: [the other ads with the same photo: {id, site, title, price}]} */
+export function photoTwins(ads, hashes) {
+  const out = {}, list = (ads || []).filter((a) => hashes && hashes[a.id]);
+  for (const a of list) for (const b of list) {
+    if (a.id === b.id || (a.also || []).some((x) => x.id === b.id || x.url === b.url) || (b.also || []).some((x) => x.id === a.id || x.url === a.url)) continue;
+    if (hamming(hashes[a.id], hashes[b.id]) <= PHOTO_NEAR) (out[a.id] = out[a.id] || []).push({ id: b.id, site: b.site, title: b.title, price: b.facts && b.facts.price });
+  }
+  return out;
+}
+
+/** v6.32 Scout at night: what the phone searches around 3:00 with Attune closed (ScoutNight.kt) — each goal that is on, its
+    searches and the ad links already seen, so only NEW ads are kept. Max 5 goals, 6 searches, 200 links each. */
+export const nightPlan = (d) => (d.goals || []).filter((x) => x.on !== false).slice(0, 5)
+  .map((x) => ({ id: x.id, title: String((x.g && x.g.what) || x.text || "").slice(0, 40), queries: searchesFor(x.g).slice(0, 6), seen: (x.seen || []).map((s) => s.url).filter(Boolean).slice(-200) }));
 export const dueGoals = (d, now = Date.now(), hours = 12) => (d.goals || []).filter((x) => x.on !== false && now - (x.lastRun || 0) >= hours * 3600000);
 /** Is this sentence a Scout goal? ("find me a flat in Maadi under 15k", «دورلي على عربية …») */
 export const looksLikeGoal = (text) => /^\s*(find me|look for|hunt for|search for|scout|keep looking for|watch for|alert me when|tell me when)\b|^\s*(دورلي|دور لي|دوّرلي|ابحثلي|ابحث لي|شوفلي|شوف لي|نبهني لما|قولي لما)/i.test(String(text || ""));

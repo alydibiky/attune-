@@ -19,11 +19,12 @@ ok(D.cardsDue(c, T0).length === 0 && D.cardsDue(c, T0 + DAY).length === 3, "noth
 ok(D.markDone(c, 0, T0 + 1000).cards.length === 3, "marking it read again adds nothing twice");
 let k = c.cards[0].id;
 let c2 = D.gradeCard(c, k, true, T0 + DAY);
-ok(c2.cards.find((x) => x.id === k).due === T0 + DAY + 1 * DAY && c2.cards.find((x) => x.id === k).box === 1, "knew it → back in 1 day (then 3, 7, 16, 35)");
-let c3 = c2; for (let i = 0; i < 5; i++) c3 = D.gradeCard(c3, k, true, T0 + (10 + i) * DAY);
-ok(!c3.cards.some((x) => x.id === k) && c3.learnedCards === 1, "known every time through the last step → learned, out of the deck");
+const k2 = c2.cards.find((x) => x.id === k);
+ok(k2.due >= T0 + DAY + 2 * DAY && k2.s > 0 && k2.d >= 1, "knew it → back in a few days (v6.32 FSRS: " + Math.round((k2.due - T0 - DAY) / DAY) + " days)");
+let c3 = c2, tt = T0 + DAY; for (let i = 0; i < 8 && c3.cards.some((x) => x.id === k); i++) { tt = c3.cards.find((x) => x.id === k).due; c3 = D.gradeCard(c3, k, true, tt); }
+ok(!c3.cards.some((x) => x.id === k) && c3.learnedCards === 1, "known every time on its day → learned for good, out of the deck");
 let c4 = D.gradeCard(c2, k, false, T0 + 3 * DAY);
-ok(c4.cards.find((x) => x.id === k).box === 0 && c4.cards.find((x) => x.id === k).due === T0 + 4 * DAY, "didn't know it → tomorrow again, from the start");
+ok(c4.cards.find((x) => x.id === k).due === T0 + 4 * DAY && c4.cards.find((x) => x.id === k).lapses === 1, "didn't know it → tomorrow again");
 
 ok(D.streakNow({ streak: 12, lastDay: D.dayKey(T0 - 3 * DAY) }, T0) === 0, "a 12-day streak with 2 days missed shows 0, not 12");
 ok(D.streakNow({ streak: 4, lastDay: D.dayKey(T0 - DAY) }, T0) === 4, "read yesterday → the streak still stands today");

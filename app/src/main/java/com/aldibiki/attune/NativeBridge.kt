@@ -78,6 +78,38 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         .put("activeModel", Prefs.activeModel(ctx) ?: JSONObject.NULL)
         .toString()
 
+    // v6.32 Private vault: {"bio":true,"secure":true} — and the system fingerprint / face / screen-lock prompt (Vault.kt)
+    @JavascriptInterface
+    fun vaultAvailable(): String = Vault.available(ctx)
+
+    // v6.32 Scout at night (ScoutNight.kt): the goals' searches for tonight, and what last night found
+    @JavascriptInterface
+    fun scoutNightPlan(plan: String): String { ScoutNight.setPlan(ctx, plan); return "ok" }
+
+    @JavascriptInterface
+    fun scoutNightTake(): String = ScoutNight.take(ctx)
+
+    // v6.32 the Attune keyboard (AttuneKeyboard.kt): is it on, and open the system's keyboard settings / picker
+    @JavascriptInterface
+    fun keyboardState(): String = org.json.JSONObject().put("enabled", AttuneKeyboard.enabled(ctx)).toString()
+
+    @JavascriptInterface
+    fun keyboardSetup(what: String): String = try {
+        if (what == "pick") android.os.Handler(android.os.Looper.getMainLooper()).post { try { (ctx.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showInputMethodPicker() } catch (e: Exception) {} }
+        else ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_INPUT_METHOD_SETTINGS).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+        "ok"
+    } catch (e: Exception) { "error: " + e.message }
+
+    @JavascriptInterface
+    fun vaultUnlock(id: String, arg: String) {
+        val a = try { JSONObject(arg) } catch (e: Exception) { JSONObject() }
+        val act = ctx as? android.app.Activity ?: return reject(id, "not available")
+        web.post {
+            Vault.prompt(act, a.optString("title", "Attune"), a.optString("subtitle", ""), a.optString("cancel", "Cancel"),
+                { resolve(id, JSONObject().put("ok", true)) }, { msg -> reject(id, msg) })
+        }
+    }
+
     @JavascriptInterface
     fun setAirGap(on: Boolean) { Prefs.setAirGap(ctx, on) }
 
@@ -981,6 +1013,28 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             val cm = ctx.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
             cm.isActiveNetworkMetered.not()
         } catch (e: Throwable) { false }
+    }
+
+    /** v6.32 packs → courses: {pack} → {sections: [{title, n}]} in book order; {pack, title} → {passages: [{text, url}]} */
+    @JavascriptInterface
+    fun knowToc(id: String, arg: String) {
+        pool.execute { try { resolve(id, JSONObject().put("sections", KnowPacks.toc(ctx, JSONObject(arg).getString("pack")))) } catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the pack") } }
+    }
+
+    /** v6.32 Drive sync (web-src/cloud.js): get / put the encrypted backup in the app's hidden Drive folder. Waits for Ali's
+        Google Cloud client (SETUP_CLOUD.md step 1–4): then this signs in with Google (AuthorizationClient, scope drive.appdata)
+        and reads / writes one file, attune-sync.attune, with the Drive REST API. Until then it says so. */
+    @JavascriptInterface
+    fun driveSync(id: String, arg: String) {
+        pool.execute { reject(id, "Drive sync is not set up yet — it needs Attune's Google Cloud client (SETUP_CLOUD.md)") }
+    }
+
+    @JavascriptInterface
+    fun knowSection(id: String, arg: String) {
+        pool.execute {
+            try { val a = JSONObject(arg); resolve(id, JSONObject().put("passages", KnowPacks.section(ctx, a.getString("pack"), a.getString("title"), a.optInt("max", 14)))) }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the pack") }
+        }
     }
 
     /** Search the installed packs ({q, k}) → {passages: [...]} — fast (SQLite FTS), so Chat calls it on every lookup. */

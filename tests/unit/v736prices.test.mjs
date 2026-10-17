@@ -1,0 +1,27 @@
+// v6.32 price memory: the same thing over time, per unit, in any wording.
+import * as P from "../../web-src/pricememory.js";
+const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
+let p = P.parsePrice("milk 1L 45 at Carrefour", { today: "2026-09-15" });
+ok(p && p.key === "milk" && p.price === 45 && p.qty === 1 && p.unit === "L" && p.store === "Carrefour", "milk 1L 45 at Carrefour (" + JSON.stringify(p) + ")");
+p = P.parsePrice("كيلو طماطم ١٥", { today: "2026-10-15" });
+ok(p && p.key === "tomatoes" && p.price === 15 && p.unitPrice === 15 && p.unit === "kg", "«كيلو طماطم ١٥» → tomatoes 15 / kg");
+p = P.parsePrice("نص كيلو جبنة رومي 120", { today: "2026-10-15" });
+ok(p && p.key === "cheese" && p.unitPrice === 240, "half a kilo of cheese for 120 → 240 / kg");
+p = P.parsePrice("eggs 30 pcs 180");
+ok(p && p.key === "eggs" && p.qty === 30 && p.unitPrice === 6, "30 eggs for 180 → 6 each");
+ok(P.itemKey("حليب جهينة") === "milk" && P.itemKey("لبن") === "milk", "milk = لبن = حليب");
+const recs = [P.parsePrice("milk 1L 45", { today: "2026-09-15" }), P.parsePrice("لبن لتر ٥٢", { today: "2026-10-15" })];
+let i = P.insight(recs, "milk");
+ok(i && i.pct === 16 && i.T[0].includes("more than last month"), "45 → 52 a litre: 16 % more than last month (" + JSON.stringify(i.T) + ")");
+const recs2 = [P.parsePrice("milk 1L 45", { today: "2026-09-15" }), P.parsePrice("milk 2L 80", { today: "2026-10-15" })];
+i = P.insight(recs2, "milk");
+ok(i && i.pct === -11 && i.perUnit, "a bigger pack is compared per litre: 40 vs 45 → 11 % less, not a rise");
+ok(P.insight([recs[0]], "milk").before === null, "one price → no comparison yet");
+const led = { txns: [{ id: "t1", type: "expense", amount: 500, note: "بنزين", date: "2026-09-10" }, { id: "t2", type: "expense", amount: 600, note: "بنزين", date: "2026-10-12" }, { id: "t3", type: "expense", amount: 900, note: "Carrefour", date: "2026-10-12" }]};
+const fl = P.fromLedger(led);
+ok(fl.length === 2 && fl[1].key === "petrol" && P.insight(fl, "petrol").pct === 20, "Money's own entries: petrol 500 → 600 = 20 % (a shop name alone is skipped)");
+ok(P.priceQuestion("اللبن بكام آخر مرة؟") === "milk" && P.priceQuestion("how much did I pay for eggs?") === "eggs" && P.priceQuestion("milk is healthy") === "", "Chat: «اللبن بكام آخر مرة؟» is a price question");
+const st = [P.parsePrice("rice 1kg 40 at Metro", { today: "2026-10-01" }), P.parsePrice("rice 5kg 175 at Carrefour", { today: "2026-10-10" })];
+ok(P.insight(st, "rice").cheapest.store === "Carrefour" && P.insight(st, "rice").cheapest.price === 35, "cheapest shop per kilo");
+ok(P.allRecords({ items: [{ ...fl[0] }] }, led).length === 2, "a Money entry is not counted twice");
+console.log(process.exitCode ? "FAILED" : "ALL PASSED");

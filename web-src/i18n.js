@@ -10,14 +10,23 @@
    engine, so this takes a second). That lets tables of labels defined once at
    start-up be translated with plain tr() calls.                              */
 import { AR } from "./i18n-ar.js";
+import { FR } from "./i18n-fr.js";
+import { ES } from "./i18n-es.js";
+import { TRK } from "./i18n-tr.js";
 
 export const LANG_KEY = "attune:ui:lang";
-const DICTS = { ar: AR };
+/** v6.32 more interface languages (roadmap: "more UI languages after English + Arabic"). [id, its own name, locale for dates and
+    numbers]. Arabic is complete; the others cover the screens people see first and show English where a line has no translation
+    yet (tests/unit/v736langs.test.mjs measures each one's share). A new language = a dictionary file + one row here. */
+export const LANGS = [["en", "English", "en-US"], ["ar", "العربية", "ar-EG-u-nu-latn"], ["fr", "Français", "fr-FR"], ["es", "Español", "es-ES"], ["tr", "Türkçe", "tr-TR"]];
+const DICTS = { ar: AR, fr: FR, es: ES, tr: TRK };
+const RTL = new Set(["ar", "ur", "fa", "he"]);
+const known = (l) => LANGS.some((x) => x[0] === l);
 
 function initialLang() {
   try {
     const saved = localStorage.getItem(LANG_KEY);
-    if (saved === "ar" || saved === "en") return saved;
+    if (known(saved)) return saved;
   } catch (e) {}
   return "en";
 }
@@ -25,8 +34,8 @@ let LANG = initialLang();
 
 export function getLang() { return LANG; }
 /** v5.31: dates in the APP's language (Arabic month and day names, Western digits like the rest of the app). */
-export function dateLocale() { return LANG === "ar" ? "ar-EG-u-nu-latn" : undefined; }
-export function isRTL(l) { return (l || LANG) === "ar"; }
+export function dateLocale() { return LANG === "en" ? undefined : (LANGS.find((x) => x[0] === LANG) || [])[2]; }
+export function isRTL(l) { return RTL.has(l || LANG); }
 
 export function applyDir() {
   if (typeof document === "undefined") return;
@@ -36,14 +45,15 @@ export function applyDir() {
 
 /** Switch the interface language. Also tells the Yusr ledger, then reloads. */
 export function setLang(l, opts = {}) {
-  LANG = l === "ar" ? "ar" : "en";
+  LANG = known(l) ? l : "en";
   try { localStorage.setItem(LANG_KEY, LANG); } catch (e) {}
   // Yusr (the Money ledger) keeps its own language setting inside ledger.v3.
   try {
     const raw = localStorage.getItem("ledger.v3");
     if (raw) {
       const db = JSON.parse(raw);
-      if (db && typeof db === "object" && db.lang !== LANG) { db.lang = LANG; localStorage.setItem("ledger.v3", JSON.stringify(db)); }
+      const yl = LANG === "ar" ? "ar" : "en";      // (Yusr itself is English or Arabic)
+      if (db && typeof db === "object" && db.lang !== yl) { db.lang = yl; localStorage.setItem("ledger.v3", JSON.stringify(db)); }
     }
   } catch (e) {}
   applyDir();
@@ -76,7 +86,7 @@ export function forDesktop(t) {
 /** Numbers with Western digits in both languages: Egyptian business documents
     and the ledger use 0-9, so Arabic-Indic digits would only get in the way. */
 export function fmtNum(n, opts) {
-  try { return Number(n).toLocaleString(LANG === "ar" ? "ar-EG-u-nu-latn" : "en-US", opts); } catch (e) { return String(n); }
+  try { return Number(n).toLocaleString((LANGS.find((x) => x[0] === LANG) || LANGS[0])[2], opts); } catch (e) { return String(n); }
 }
 
 applyDir();

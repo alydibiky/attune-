@@ -1,0 +1,9 @@
+# Attune Pro search relay — `npx wrangler deploy` from this folder (SETUP_CLOUD.md part B).
+name = "attune-search"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+# Optional per-device daily cap: `npx wrangler kv namespace create LIMITS`, then paste the id it prints here and uncomment.
+# [[kv_namespaces]]
+# binding = "LIMITS"
+# id = "<the id>"

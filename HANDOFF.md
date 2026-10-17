@@ -1570,6 +1570,30 @@ outcomes in Business "and even more", plus Business v2 (roles, currencies, price
 - Not built yet (ideas): Fleet nightly reminders as Android notifications; per-crane maintenance schedule by engine hours;
   a client statement PDF; sharing Fleet between phones (waits on Google Drive sync).
 
+### 5.78 (17 Oct 2026) — v6.32 roadmap items (branch `claude/roadmap-items-knk93s`)
+All with unit + e2e tests (`tests/unit/v736*.test.mjs`, `tests/e2e_v736*.py`); Kotlin checked by "Build the APK" on the branch.
+- **Money / life:** split bills, gold & currency savings (niṣāb → Zakat), car manager (People & plans: `split.js`, `gold.js`,
+  `car.js`, `plans-ui.jsx`); price memory (Guardian + Chat); contract second opinion (Deal Check, `contract.js`); Plan my day around
+  the prayers (Reminders, `prayer.js planDay`); private vault (Privacy; `Vault.kt`, `vault.js`); "From:" line on answers.
+- **Scout:** searches once a night with the app closed (`ScoutNight.kt`, `scout.js nightPlan`, attune.jsx takes the results on
+  open); walking minutes to the nearest metro (`nearestStation`, map pack stations); same photo in another ad (`dhash`, `photoTwins`).
+  Fix: "170 m2" was read as 170 million (multiplier lookahead in `pricesIn`).
+- **Learn:** FSRS review deck (`fsrs.js`); Say it — a score per word (`speak.js pronScore`, phone speech recognition); spoken
+  dialogues; a picture per lesson (Studio engine); knowledge packs as courses with no model (`packcourse.js`, `KnowPacks.toc/section`).
+- **Web comparisons:** "A vs B" gets a head-to-head table built by code (`factsheet.js headToHead`); `research.js onTopic` keeps a page
+  about either side.
+- **UI languages:** French, Spanish, Turkish (`i18n-fr.js`, `i18n-es.js`, `i18n-tr.js`, ~700 lines each = the first screen of every
+  page; the rest shows in English). New language = a dictionary + one row in `LANGS` (i18n.js). The strings were collected by opening
+  every page with `window.__trMiss` (a crawl in both layouts).
+- **Attune keyboard** (`AttuneKeyboard.kt`, `res/xml/method.xml`): English/Arabic keys + Improve / Translate / Reply (Egyptian for
+  Arabic messages, from the clipboard) / Prompt, using the model already loaded (Engine HTTP or FastEngine, same process). No model →
+  Improve tidies by code, the strip offers "Wake the model". Passwords/numbers: keys only. Settings → "Attune keyboard" row
+  (`keyboardState` / `keyboardSetup`). **Needs a phone test.**
+- **Waiting for Ali's accounts** (`cloud.js`, `SETUP_CLOUD.md`): Drive sync (encrypted backup in drive.appdata, pull → merge → push;
+  `NativeBridge.driveSync` is the stub), Family circle lists (`mergeList`), paid Pro search via `tools/pro-search-relay` (Cloudflare
+  Worker + Serper). All invisible until `CLOUD` has the ids.
+- **Looks to choose** (Ali): Mind page and Coding page, 3 options each (`/mnt/project-files/screens-v632/*-options.png`).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

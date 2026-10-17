@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
 import {
   Bell, Calculator, Timer, Code2,
@@ -18,7 +19,7 @@ import { ChatHome, Md, systemPrompt as chatSystemPrompt, loadChats, applyChatCmd
 import { DesktopSide, useDesktopWide, useSide, noteToolUsed } from "./side-ui.jsx";
 import { DesktopHome, ToolsPage } from "./desk-ui.jsx";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
-import { tr, getLang, setLang, fmtNum, dateLocale } from "./i18n.js";
+import { tr, getLang, setLang, fmtNum, dateLocale, LANGS as UI_LANGS } from "./i18n.js";
 import { BackupPanel, backupNudge } from "./backup-ui.jsx";
 import { looksLikeAction, actionMessages, ACTION_GRAMMAR, ACTION_MAX_TOKENS, buildAction, quickAction, loadReminders, saveReminders, newReminderId, syncToPhone } from "./actions.js";
 import { RemindersPanel, whenText } from "./actions-ui.jsx";
@@ -58,6 +59,8 @@ import { CoachPage } from "./coach-ui.jsx";
 import { CarePage } from "./care-ui.jsx";
 import { GuidePage } from "./guide-ui.jsx";
 import { PrivacyPage } from "./privacy-ui.jsx";
+import { VaultGate } from "./vault-ui.jsx";
+import { loadVault, vaulted, stillOpen } from "./vault.js";
 import { HUBS, hubOf, tabsFor, toolPages, partsOf } from "./hubs.js";
 import { HubTabs } from "./hub-ui.jsx";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
@@ -67,8 +70,8 @@ const HUB_ICON = { home: House, chat: MessageCircle, money: Wallet, health: Hear
 const HUB_PLACES = HUBS.map(([id, label, target]) => [target, label, HUB_ICON[id]]);
 import { HealthPage } from "./health-ui.jsx";
 import { LifeAskPage } from "./lifeask-ui.jsx";
-import { ScoutPage, runScoutGoal, tellText as scoutTell } from "./scout-ui.jsx";
-import { loadScout, saveScout, dueGoals, looksLikeGoal } from "./scout.js";
+import { ScoutPage, runScoutGoal, finishRun as scoutFinish, tellText as scoutTell } from "./scout-ui.jsx";
+import { loadScout, saveScout, dueGoals, looksLikeGoal, nightPlan as scoutNightPlan } from "./scout.js";
 import { understand as doUnderstand, apply as doApply } from "./doit.js";
 import { loadStores as loadLifeStores } from "./lifeask.js";
 import { deviceLevel, groupsFor, showAll as deviceShowAll, setShowAll as setDeviceShowAll } from "./device.js";
@@ -6528,6 +6531,12 @@ async function webLookupRawLive(q, pages = 6) {
     if (out.hits.length) return out;
     if (/offline lock/i.test(out.why)) return out;   // don't try another route
   }
+  // v6.32: Pro — when the free engines found nothing, Attune's paid search (cloud.js; off until Ali's relay is set up)
+  if (!out.hits.length && proSearchOn()) {
+    try { const r = await proLookup(q, { pages }); out.hits = r.hits.filter((h) => !isWiki(h)); out.via = r.via; if (!out.hits.length) out.why = r.why || out.why; else out.why = ""; }
+    catch (e) { out.why = out.why || String(e.message || e); }
+    if (out.hits.length) return out;
+  }
   if (cfg.provider && cfg.key && cfg.provider !== "duckduckgo") {
     try { out.hits = (await byoLookup(q + " -site:wikipedia.org", cfg)).filter((h) => !isWiki(h)); out.via = cfg.provider; }
     catch (e) { out.why = String(e.message || e); }
@@ -7476,6 +7485,13 @@ export default function App() {
   const wideAtStart = () => { try { return window.matchMedia("(min-width: 1024px)").matches; } catch (e) { return false; } };
   // v6.27 (design A "Calm"): the phone opens on Home too ("attune:start" = "chat" keeps the old start — the test kit sets it)
   const [mode, setModeRaw] = useState(() => { let s = ""; try { s = localStorage.getItem("attune:start") || ""; } catch (e) {} return wideAtStart() ? "home" : s === "chat" ? "chat" : "home"; });
+  // v6.32 Private vault: locked places open with the fingerprint / screen lock (or a PIN); they lock again after a minute away
+  const [vaultCfg, setVaultCfg] = useState(() => loadVault());
+  const [vaultSess, setVaultSess] = useState({ open: false });
+  useEffect(() => {
+    const on = () => { if (document.hidden) setVaultSess((v) => (v.open ? { ...v, hiddenAt: Date.now() } : v)); else setVaultSess((v) => (stillOpen(v) ? { open: v.open } : { open: false })); };
+    document.addEventListener("visibilitychange", on); return () => document.removeEventListener("visibilitychange", on);
+  }, []);
   const startMode = useRef(mode === "chat" ? "chat" : "home");
   // v5.41 (Ali: "when I press back I can't go to the previous page, it leaves the app"): every screen
   // change is remembered, and Back returns to the previous screen — Studio → Learn daily → Chat.
@@ -7609,6 +7625,7 @@ export default function App() {
   // now really unlocks every Pro feature (before, most gates checked the paid plan only)
   const proActive = testingPro() || isPro(tier) || trialLeft > 0;
   const proRef = useRef(proActive); proRef.current = proActive;
+  setProSearch(proActive);
   // v6.27: the text in a photo — the phone's own reader (Latin scripts) first, then a photo-reading model on the phone (Arabic…)
   const readTextAny = async (b64) => {
     let r = null; try { if (NATIVE && NATIVE.readText) r = await nativeCall("readText", { b64 }); } catch (e) {}
@@ -8294,16 +8311,25 @@ export default function App() {
   // v6.28 Scout: goals due (each at most twice a day) are checked a little after Attune opens; a strong new find → a notification
   useEffect(() => {
     if (!NATIVE || !NATIVE.search) return;
+    // v6.32: what the night run found (ScoutNight.kt) is checked now, by code, like any run; then tonight's plan is handed over
+    const tell = (gl, r) => { if (r.tell.length) { const tt = scoutTell(gl, r.tell, getLang() === "ar"); scheduleReminder({ id: "scout-" + gl.id, at: Date.now() + 1500, repeat: "none", title: tt.title, body: tt.body, created: Date.now(), source: "scout" }); } };
+    const keep = (gl, r) => { const d = loadScout(); saveScout({ ...d, goals: d.goals.map((x) => (x.id === gl.id ? { ...r.goal, votes: x.votes, taste: x.taste, on: x.on } : x)) }); };
+    const plan = () => { try { NATIVE.scoutNightPlan && NATIVE.scoutNightPlan(JSON.stringify(scoutNightPlan(loadScout()))); } catch (e) {} };
+    try {
+      const night = NATIVE.scoutNightTake ? JSON.parse(NATIVE.scoutNightTake() || "{}") : {};
+      for (const gl of loadScout().goals) if (Array.isArray(night[gl.id]) && night[gl.id].length) { const r = scoutFinish(gl, night[gl.id]); keep(gl, r); tell(gl, r); }
+    } catch (e) {}
+    plan();
     const t = setTimeout(async () => {
       const due = dueGoals(loadScout()); if (!due.length) return;
       const search = (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 8 });
       for (const gl of due.slice(0, 3)) {
         try {
           const r = await runScoutGoal(gl, search);
-          const d = loadScout(); saveScout({ ...d, goals: d.goals.map((x) => (x.id === gl.id ? { ...r.goal, votes: x.votes, taste: x.taste, on: x.on } : x)) });
-          if (r.tell.length) { const tt = scoutTell(gl, r.tell, getLang() === "ar"); scheduleReminder({ id: "scout-" + gl.id, at: Date.now() + 1500, repeat: "none", title: tt.title, body: tt.body, created: Date.now(), source: "scout" }); }
+          keep(gl, r); tell(gl, r);
         } catch (e) { /* the next open tries again */ }
       }
+      plan();
     }, 25000);
     return () => clearTimeout(t);
   }, []);
@@ -9390,7 +9416,9 @@ export default function App() {
 
         {/* v6.30: tools that belong together are one page — a tab row on top (hubs.js) */}
         {LEGACY_NAV || (mode === "money" && !wide) ? null : hubTabsEl}
-        <Guard key={"g-" + mode} name={mode}>{mode === "home" && !wide ? (
+        <Guard key={"g-" + mode} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
+          <VaultGate unlock={(a) => nativeCall("vaultUnlock", a)} onOpen={() => setVaultSess({ open: true })} />
+        ) : mode === "home" && !wide ? (
           <PhoneHome navTo={(m) => navTo(m)} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
@@ -9925,7 +9953,7 @@ export default function App() {
               llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.7, think: false })} />
           ) : <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300" data-testid="studio-page">{tr("Studio draws pictures with the phone's own chip — it works in the Android app.")}</div>
         ) : mode === "learn" ? (
-          <LearnPage flash={flash} native={NATIVE} call={NATIVE ? nativeCall : null} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
+          <LearnPage flash={flash} native={NATIVE} call={NATIVE ? nativeCall : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} openEngine={() => setShowEngine(true)} openId={dailyOpen} clearOpen={() => setDailyOpen(null)}
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false, onToken: o.onToken })}
             illustrate={NATIVE && NATIVE.imageInfo ? (p) => { setStudioIn({ prompt: p }); setMode("studio"); } : null} />
@@ -10031,7 +10059,7 @@ export default function App() {
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
         ) : mode === "privacy" ? (
-          <PrivacyPage />
+          <PrivacyPage flash={flash} onVault={(v) => { setVaultCfg(v); setVaultSess({ open: true }); }} />
         ) : mode === "guide" ? (
           <GuidePage tools={MORE_TOOLS} groups={MORE_GROUPS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "care" ? (
@@ -10922,6 +10950,7 @@ export default function App() {
                 <div className="space-y-4">
                   <div><p className="text-[13px] text-slate-300 mb-1.5">{tr("App language")}</p><LangSwitch /></div>
                   <div><p className="text-[13px] text-slate-300 mb-1.5">{tr("Text size")}</p><TextSize /></div>
+                  <KeyboardRow />
                 </div>
                 <div><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
@@ -10979,6 +11008,7 @@ export default function App() {
                 <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{tr("Appearance")}</p>
                 <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("App language")}</span><LangSwitch /></div>
                 <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("Text size")}</span><TextSize /></div>
+                <KeyboardRow />
                 <div className="mb-3"><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
               <p className="text-center text-[10px] text-slate-600 mt-3 select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>
@@ -11275,11 +11305,31 @@ function TextSize() {
 
 // English | العربية. Switching reloads the page in the other language
 // (the model stays loaded in the engine, so it takes about a second).
+/** v6.32: the Attune keyboard (Android, AttuneKeyboard.kt) — Improve, Translate, Reply and Prompt in every app. Shown only in the app. */
+function KeyboardRow() {
+  const N = typeof window !== "undefined" ? window.AttuneNative : null;
+  const read = () => { try { return JSON.parse(N.keyboardState()).enabled; } catch (e) { return false; } };
+  const [on, setOn] = useState(() => (N && N.keyboardState ? read() : false));
+  useEffect(() => {
+    if (!N || !N.keyboardState) return;
+    const f = () => setOn(read());
+    window.addEventListener("focus", f); document.addEventListener("visibilitychange", f);
+    return () => { window.removeEventListener("focus", f); document.removeEventListener("visibilitychange", f); };
+  }, []);
+  if (!N || !N.keyboardState) return null;
+  return (
+    <div className="flex items-center gap-2 mb-3" data-testid="keyboard-row">
+      <span className="flex-1 min-w-0"><span className="block text-[12px] text-slate-300">{tr("Attune keyboard")}</span>
+        <span className="block text-[11px] text-slate-500">{on ? tr("On — pick it from the keyboard button when you type") : tr("Improve, translate, reply and better prompts in every app, offline")}</span></span>
+      <button onClick={() => N.keyboardSetup(on ? "pick" : "settings")} className="shrink-0 rounded-lg border border-teal-700 px-2.5 py-1 text-[12px] text-teal-200" data-testid="keyboard-setup">{on ? tr("Switch to it") : tr("Turn on")}</button>
+    </div>);
+}
+
 function LangSwitch({ className = "" }) {
   const cur = getLang();
   return (
-    <div className={`inline-flex rounded-lg border border-slate-700 overflow-hidden text-[12px] ${className}`} data-testid="lang-switch" role="group" aria-label="Language / اللغة">
-      {[["en", "English"], ["ar", "العربية"]].map(([id, label]) => (
+    <div className={`inline-flex flex-wrap rounded-lg border border-slate-700 overflow-hidden text-[12px] ${className}`} data-testid="lang-switch" role="group" aria-label="Language / اللغة">
+      {UI_LANGS.map(([id, label]) => (
         <button key={id} onClick={() => { if (id !== cur) setLang(id); }} lang={id} data-lang={id}
           className={`px-2.5 py-1.5 ${id === cur ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-300"}`}>{label}</button>
       ))}

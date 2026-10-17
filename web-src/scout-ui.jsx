@@ -4,7 +4,7 @@
    twice a day; the computer app also while it stays open). A strong NEW find (or a price drop) → a notification.
    Logic: scout.js. Tests: tests/unit/v731scout.test.mjs, tests/e2e_v731scout.py.                                                   */
 import React, { useEffect, useState } from "react";
-import { Binoculars, Plus, RefreshCw, Trash2, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check, X, HelpCircle, TrendingDown, Loader2, Pause, Play } from "lucide-react";
+import { Binoculars, Plus, RefreshCw, Trash2, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check, X, HelpCircle, TrendingDown, Loader2, Pause, Play, MapPin, AlertTriangle } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as S from "./scout.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -21,6 +21,62 @@ const EXAMPLES = [
 const KIND = { rent: ["Flat to rent", "شقة للإيجار"], "buy-home": ["Home to buy", "عقار للشراء"], car: ["Car", "سيارة"], product: ["Product", "منتج"], job: ["Job", "وظيفة"], tender: ["Tender", "مناقصة"], service: ["Service / supplier", "خدمة / مورد"] };
 const fmt = (v) => Math.round(v).toLocaleString("en-US");
 
+// v6.32 distance to the metro: each ad's area on the offline map pack (no web), its nearest station, kept so it is asked once
+const ST_KEY = "attune:scout:stations:v1";
+function useStations(goal, found, ar) {
+  const [st, setSt] = useState(() => { try { return JSON.parse(localStorage.getItem(ST_KEY) || "{}"); } catch (e) { return {}; } });
+  const call = typeof window !== "undefined" && window.__attuneNativeCall;
+  const N = typeof window !== "undefined" && window.AttuneNative;
+  const places = goal && S.wantsStation(goal.g) ? [...new Set(found.map((a) => a.facts.place || goal.g.place).filter(Boolean))].slice(0, 6) : [];
+  const key = places.join("|");
+  useEffect(() => {
+    if (!call || !N || typeof N.mapSearch !== "function") return;
+    const todo = places.filter((p) => !(p in st)); if (!todo.length) return;
+    let live = true;
+    (async () => {
+      const add = {};
+      for (const p of todo) {
+        try {
+          const at = S.pointFor(((await call("mapSearch", { q: p, limit: 10 })) || {}).places);
+          if (!at) { add[p] = null; continue; }
+          const r = await call("mapSearch", { q: "", kinds: ["transport/station"], limit: 50, lat: at.lat, lon: at.lon, radiusDeg: 0.03 });
+          add[p] = S.nearestStation(at.lat, at.lon, (r || {}).places, { ar });
+        } catch (e) { /* no map pack: nothing shown */ }
+      }
+      if (!live || !Object.keys(add).length) return;
+      setSt((o) => { const n = { ...o, ...add }; try { localStorage.setItem(ST_KEY, JSON.stringify(n)); } catch (e) {} return n; });
+    })();
+    return () => { live = false; };
+  }, [key]);
+  return st;
+}
+
+// v6.32 the photo check: each ad picture's fingerprint, made here from the small copy the search brought (no download), kept by ad
+const PH_KEY = "attune:scout:photos:v1";
+const greyOf = (src) => new Promise((res) => {
+  const im = new Image();
+  im.onload = () => { try { const c = document.createElement("canvas"); c.width = 9; c.height = 8; const x = c.getContext("2d"); x.drawImage(im, 0, 0, 9, 8);
+    const d = x.getImageData(0, 0, 9, 8).data, g = []; for (let i = 0; i < 72; i++) g.push((299 * d[i * 4] + 587 * d[i * 4 + 1] + 114 * d[i * 4 + 2]) / 1000); res(g); } catch (e) { res(null); } };
+  im.onerror = () => res(null); im.src = src; });
+function usePhotoPrints(found) {
+  const [h, setH] = useState(() => { try { return JSON.parse(localStorage.getItem(PH_KEY) || "{}"); } catch (e) { return {}; } });
+  const todo = found.filter((a) => /^data:image\//.test(a.image || "") && !(a.id in h)).slice(0, 30);
+  const key = todo.map((a) => a.id).join("|");
+  useEffect(() => {
+    if (!todo.length || typeof document === "undefined") return;
+    let live = true;
+    (async () => {
+      const add = {};
+      for (const a of todo) { const g = await greyOf(a.image); add[a.id] = g ? S.dhash(g) : ""; }
+      if (!live) return;
+      setH((o) => { const n = { ...o, ...add }; const ks = Object.keys(n); const keep = ks.length > 600 ? Object.fromEntries(ks.slice(-600).map((k) => [k, n[k]])) : n;
+        try { localStorage.setItem(PH_KEY, JSON.stringify(keep)); } catch (e) {} return keep; });
+    })();
+    return () => { live = false; };
+  }, [key]);
+  return h;
+}
+
 /** One run of a goal with the app's own web search. search(q) → { hits }. → { goal (updated), tell: [ads worth a notification], run } */
 export async function runScoutGoal(goal, search, onStep, now = Date.now()) {
   const qs = S.searchesFor(goal.g), hits = [];
@@ -32,6 +88,10 @@ export async function runScoutGoal(goal, search, onStep, now = Date.now()) {
   if (!hits.some((h) => S.isAdPage(h.url, h.text || ""))) {
     for (const q of S.fallbackSearches(goal.g)) { try { const r = await search(q); for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h); } catch (e) {} }
   }
+  return finishRun(goal, hits, now);
+}
+/** v6.32: the same ending for a run's hits, whether searched now or found by the night run (ScoutNight.kt). */
+export function finishRun(goal, hits, now = Date.now()) {
   const run = S.runGoal(goal, hits, { now });
   // (v6.29: the matches new this run stay "unseen" until the goal is opened — Home's "What's waiting" counts them)
   const unseen = [...new Set([...(goal.unseen || []), ...run.found.filter((a) => run.fresh.includes(a.id)).map((a) => a.id)])].slice(-50);
@@ -47,7 +107,8 @@ export function tellText(goal, tell, ar) {
 export function ScoutPage({ search, remind, flash, openLink, incoming, clearIncoming }) {
   const ar = getLang() === "ar";
   const [data, setData] = useState(() => S.loadScout());
-  const put = (d) => setData(S.saveScout(d));
+  // (v6.32: every change hands tonight's searches to the phone, so Scout keeps looking with Attune closed)
+  const put = (d) => { setData(S.saveScout(d)); try { const N = window.AttuneNative; N && N.scoutNightPlan && N.scoutNightPlan(JSON.stringify(S.nightPlan(d))); } catch (e) {} };
   const [sel, setSel] = useState(() => (S.loadScout().goals[0] || {}).id || null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(null);   // { id, i, n, q }
@@ -70,6 +131,8 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
     put({ ...d, goals: d.goals.map((x) => (x.id !== goal.id ? x : { ...x, votes: { ...(x.votes || {}), [ad.id]: up ? 1 : -1 }, taste: S.learn(x.taste, ad, up) })) });
   };
   const found = goal ? S.runGoal(goal, [], { now: Date.now() }).found : [];
+  const stations = useStations(goal, found, ar);
+  const twins = S.photoTwins(found, usePhotoPrints(found));
   // the goal on screen: its new matches are now seen
   useEffect(() => { if (goal && (goal.unseen || []).length && !busy) { const d = S.loadScout(); put({ ...d, goals: d.goals.map((x) => (x.id === goal.id ? { ...x, unseen: [] } : x)) }); } }, [sel, goal && (goal.unseen || []).length, !!busy]);
   const field = "w-full rounded-xl px-3 py-2.5 text-[14.5px] border bg-transparent";
@@ -93,7 +156,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
             <button className="c-sub p-1" aria-label={x.on === false ? tr("Resume") : tr("Pause")} title={x.on === false ? tr("Resume") : tr("Pause")} onClick={() => put({ ...data, goals: data.goals.map((y) => (y.id === x.id ? { ...y, on: y.on === false } : y)) })}>{x.on === false ? <Play size={15} /> : <Pause size={15} />}</button>
             <button className="c-sub p-1" aria-label={tr("Delete")} onClick={() => { put({ ...data, goals: data.goals.filter((y) => y.id !== x.id) }); if (sel === x.id) setSel(null); }}><Trash2 size={15} /></button>
           </div>))}</div> : null}
-      <p data-intro="" className="c-sub text-[12px] m-0">{tr("Scout checks each goal when you open Attune (at most twice a day) and whenever you tap Check now, and tells you only about strong new finds or price drops. It reads public ads only and never contacts anyone or pays for you.")}</p>
+      <p data-intro="" className="c-sub text-[12px] m-0">{tr("Scout checks each goal when you open Attune (at most twice a day), once at night on the phone, and whenever you tap Check now, and tells you only about strong new finds or price drops. It reads public ads only and never contacts anyone or pays for you.")}</p>
     </div>);
   const results = goal ? (
     <div className="space-y-3" data-testid="scout-results">
@@ -119,11 +182,13 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
             <div className="flex flex-wrap gap-1.5 text-[12px]">
               {a.fair ? <span className={"c-pill " + (a.fair.pct > 10 ? "late" : "")} data-testid="scout-fair">{a.fair.pct <= -3 ? tr("{p}% below similar", { p: -a.fair.pct }) : a.fair.pct >= 3 ? tr("{p}% above similar", { p: a.fair.pct }) : tr("a fair price")}{a.fair.basis === "m2" ? " " + tr("(per m²)") : ""}</span> : null}
               {a.cheapest ? <span className="c-pill" data-testid="scout-cheapest">{tr("cheapest of {n} stores", { n: a.cheapest })}</span> : null}
+              {stations[a.facts.place || goal.g.place] ? (() => { const st = stations[a.facts.place || goal.g.place]; return <span className="c-pill" data-testid="scout-metro" title={tr("From the offline map: the area's centre to the station, in a straight line × 1.3")}><MapPin size={11} className="inline" /> {tr("{s}: about {m} min walk", { s: st.name, m: st.walk })}</span>; })() : null}
               {a.dropped > 0 ? <span className="c-pill" data-testid="scout-drop"><TrendingDown size={11} className="inline" /> {tr("dropped {v}", { v: fmt(a.dropped) })}</span> : null}
             </div>
             <ul className="m-0 p-0 list-none space-y-0.5 text-[13px]" data-testid="scout-checks">
               {a.check.ok.map((x) => <li key={"o" + x.k} className="flex gap-1.5"><Check size={14} className="c-pos shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en}{x.quote ? <span className="c-sub"> — «{x.quote}»</span> : null}</span></li>)}
               {a.check.bad.map((x) => <li key={"b" + x.k} className="flex gap-1.5"><X size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en}{x.quote ? <span className="c-sub"> — «{x.quote}»</span> : null}</span></li>)}
+              {(twins[a.id] || []).slice(0, 1).map((x) => <li key="photo" className="flex gap-1.5" data-testid="scout-photo"><AlertTriangle size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{tr("The same photo is in another ad ({s}{p}) — it may be copied; ask for a new photo or a video call", { s: x.site || "", p: x.price ? " · " + fmt(x.price) : "" })}</span></li>)}
               {a.check.unknown.map((x) => <li key={"u" + x.k} className="flex gap-1.5 c-sub"><HelpCircle size={14} className="shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en} — {tr("not stated in the ad")}</span></li>)}
             </ul>
             <div className="flex flex-wrap gap-2 items-center pt-1">

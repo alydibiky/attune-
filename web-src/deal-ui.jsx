@@ -8,6 +8,8 @@ import { tr, getLang } from "./i18n.js";
 import * as D from "./deal.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
+import { looksLikeContract, reviewContract } from "./contract.js";
+import { ContractReview } from "./contract-ui.jsx";
 
 const HKEY = "attune:deals:v1";
 const loadH = () => { try { const v = JSON.parse(localStorage.getItem(HKEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
@@ -63,9 +65,14 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
   const [ask, setAsk] = useState(null);          // { terms, plans, allText, why, reading, src }
   const [askNo, setAskNo] = useState(false);
   const [note, setNote] = useState("");
+  // v6.32: a pasted contract gets a "second opinion" by code — no model needed (contract.js)
+  const [contract, setContract] = useState(null);
+  useSubBack(!!contract, () => setContract(null));
   const check = async (opts = {}) => {
     if (opts && opts.nativeEvent) opts = {};      // called straight from the button
     if (!text.trim() && !photo) return;
+    if (!photo && !opts.resume && !opts.note && looksLikeContract(text)) { setRes(null); setAsk(null); setContract(reviewContract(text)); return; }
+    setContract(null);
     if (!modelReady) { openEngine && openEngine(); return; }
     // Free: 3 checks a day; Pro: unlimited
     const today = new Date().toISOString().slice(0, 10);
@@ -170,7 +177,7 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
           <button onClick={() => fileRef.current && fileRef.current.click()} className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-slate-700 text-slate-200 text-sm"><ImagePlus size={16} />{tr("Screenshot")}</button>
           <button onClick={busy ? () => { run.current++; setBusy(false); setStep(-1); } : check} disabled={!busy && !text.trim() && !photo} data-testid="deal-go"
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm disabled:opacity-40 ${busy ? "bg-rose-500/20 border border-rose-800 text-rose-200" : "bg-emerald-500 text-slate-950"}`}>
-            {busy ? <><X size={15} />{tr("Stop")}</> : <><Calculator size={16} />{tr("Check this deal")}</>}
+            {busy ? <><X size={15} />{tr("Stop")}</> : <><Calculator size={16} />{tr(looksLikeContract(text) && !photo ? "Check this contract" : "Check this deal")}</>}
           </button>
         </div>
         {busy ? (
@@ -220,6 +227,7 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
         </section>
       ) : null}
       </div><div className={RIGHT}>
+      {contract && !busy ? <ContractReview r={contract} flash={flash} share={sendWhatsApp} /> : null}
       {res ? (
         <section className="space-y-3" data-testid="deal-result">
           <div className={`rounded-2xl border p-4 ${lv.cls}`} data-testid="deal-verdict" data-level={res.v.level}>
@@ -287,7 +295,7 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
           <button onClick={() => { setRes(null); setText(""); setPhoto(null); }} data-testid="deal-new"
             className="w-full py-2.5 rounded-xl border border-slate-700 text-slate-200 text-sm">{tr("Check another deal")}</button>
         </section>
-      ) : <DeskEmpty icon={ShieldCheck} title={tr("The verdict appears here")} text={tr("The real cost, the market price, scam signs and a reply to send.")} />}
+      ) : contract ? null : <DeskEmpty icon={ShieldCheck} title={tr("The verdict appears here")} text={tr("The real cost, the market price, scam signs and a reply to send.")} />}
       </div></div>
     </div>
   );
