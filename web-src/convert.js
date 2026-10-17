@@ -1770,7 +1770,7 @@ export function applyTranslations(blocks, units, texts) {
 
 // ---- what can become what ----------------------------------------------------------------------
 export const KINDS = {
-  pdf: { ext: /\.pdf$/i, mime: /pdf/, targets: ["docx", "translate", "txt", "images", "xlsx", "html", "md", "odt", "split", "pick", "rotate"] },
+  pdf: { ext: /\.pdf$/i, mime: /pdf/, targets: ["docx", "edit", "translate", "txt", "images", "xlsx", "html", "md", "odt", "split", "pick", "rotate"] },
   docx: { ext: /\.docx$/i, mime: /wordprocessingml/, targets: ["pdf", "translate", "txt", "html", "md", "odt"] },
   pptx: { ext: /\.pptx$/i, mime: /presentationml/, targets: ["pdf", "translate", "docx", "txt", "md", "html"] },
   odt: { ext: /\.odt$/i, mime: /opendocument\.text/, targets: ["docx", "translate", "pdf", "txt", "html", "md"] },

@@ -2,9 +2,10 @@
 //   reading (pdfText, pdfWords, pdfOutline, pdfImages) → pdf.js in a hidden window (pdfworker.html; it has a canvas)
 //   htmlToPdf → Chromium's own printing (printToPDF): the page's CSS sets the size, margins, header and footer
 //   makePdf   → pictures with pdf-lib; text blocks laid out as HTML and printed
-//   pdfEdit   → pdf-lib: merge, split, pick, rotate, annotate (highlights and notes drawn into the pages)
+//   pdfEdit   → pdf-lib: merge, split, pick, rotate, annotate (highlights and notes drawn into the pages),
+//               edit (Converter → Edit a PDF: changed text, highlights, drawings, signature, page order)
 "use strict";
-const { PDFDocument, degrees, rgb } = require("pdf-lib");
+const { PDFDocument, degrees, rgb, StandardFonts, LineCapStyle, pushGraphicsState, popGraphicsState, concatTransformationMatrix } = require("pdf-lib");
 
 const LOCKED = "This PDF is locked with a password — open it, save a copy without the password, and try again.";
 
@@ -108,6 +109,55 @@ function makePdf({ BrowserWindow, nativeImage }) {
   const out64 = async (d) => Buffer.from(await d.save()).toString("base64");
   const hex = (c) => { const m = /^#?([0-9a-f]{6})$/i.exec(c || ""); const n = m ? parseInt(m[1], 16) : 0xffd54a; return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255); };
 
+  /** v6.32 — Converter → Edit a PDF, the same as DocTools.kt "edit": items in page fractions (top-left, the page as
+   * shown) drawn on the pages, then the pages in the new order ({n: 0} = a blank page), turned by `rot`. */
+  async function editPdf(d, a) {
+    const pages = d.getPages(), count = pages.length;
+    const fonts = {};
+    const font = async (bold) => (fonts[bold ? 1 : 0] = fonts[bold ? 1 : 0] || (await d.embedFont(bold ? StandardFonts.HelveticaBold : StandardFonts.Helvetica)));
+    for (const [pn, its] of Object.entries(groupBy(a.items || [], (it) => it.page || 0))) {
+      const pg = pages[+pn - 1]; if (!pg) continue;
+      const box = pg.getCropBox(), rot = ((pg.getRotation().angle % 360) + 360) % 360;
+      const dw = rot % 180 ? box.height : box.width, dh = rot % 180 ? box.width : box.height;
+      // the page as shown (x right, y up, in points) → the page's own space, for any /Rotate
+      const m = rot === 90 ? [0, 1, -1, 0, box.x + box.width, box.y] : rot === 180 ? [-1, 0, 0, -1, box.x + box.width, box.y + box.height]
+        : rot === 270 ? [0, -1, 1, 0, box.x, box.y + box.height] : [1, 0, 0, 1, box.x, box.y];
+      const X = (f) => (+f || 0) * dw, Y = (f) => dh - (+f || 0) * dh;
+      pg.pushOperators(pushGraphicsState(), concatTransformationMatrix(...m));
+      for (const it of its) {
+        const color = hex(it.color || "#000000");
+        if (it.kind === "cover") pg.drawRectangle({ x: X(it.x), y: Y(it.y + it.h), width: X(it.w), height: it.h * dh, color });
+        else if (it.kind === "highlight") for (const q of it.rects || []) pg.drawRectangle({ x: X(q[0]), y: Y(q[1] + q[3]), width: X(q[2]), height: q[3] * dh, color, opacity: 0.38 });
+        else if (it.kind === "text") {
+          const f = await font(it.bold), t = String(it.text || "").replace(/[\r\n\t]/g, " ");
+          const safe = [...t].filter((ch) => { try { f.encodeText(ch); return true; } catch (e) { return false; } }).join("");
+          pg.drawText(safe, { x: X(it.x), y: Y(it.base), size: Math.min(300, Math.max(3, (it.size || 0.016) * dh)), font: f, color });
+        } else if (it.kind === "ink") {
+          const p = it.pts || [], t = Math.max(0.3, X(it.width || 0.004));
+          for (let k = 1; k < p.length; k++) pg.drawLine({ start: { x: X(p[k - 1][0]), y: Y(p[k - 1][1]) }, end: { x: X(p[k][0]), y: Y(p[k][1]) }, thickness: t, color, lineCap: LineCapStyle.Round });
+        } else if (it.kind === "image" && it.png) {
+          const img = await d.embedPng(Buffer.from(it.png, "base64"));
+          pg.drawImage(img, { x: X(it.x), y: Y(it.y + it.h), width: X(it.w), height: it.h * dh });
+        }
+      }
+      pg.pushOperators(popGraphicsState());
+    }
+    if (!a.order) return { b64: await out64(d), pages: count };
+    if (!a.order.length) throw new Error("A PDF needs at least one page.");
+    const out = await PDFDocument.create();
+    const copied = await out.copyPages(d, d.getPageIndices());
+    let last = null;
+    for (const o of a.order) {
+      const n = o.n || 0;
+      let p;
+      if (n >= 1 && n <= count) { p = copied[n - 1]; out.addPage(p); }
+      else { const s = last ? last.getSize() : { width: 595.28, height: 841.89 }; p = out.addPage([s.width, s.height]); }
+      p.setRotation(degrees((((p.getRotation().angle + (o.rot || 0)) % 360) + 360) % 360)); last = p;
+    }
+    return { b64: await out64(out), pages: out.getPageCount() };
+  }
+  const groupBy = (xs, k) => xs.reduce((m, x) => { (m[k(x)] = m[k(x)] || []).push(x); return m; }, {});
+
   /** op = merge {files} | split {b64} | pick {b64, pages} | rotate {b64, pages, degrees} | annotate {b64, anns} → {files: [{n, b64, pages}]} */
   async function pdfEdit(a) {
     const files = [];
@@ -142,6 +192,8 @@ function makePdf({ BrowserWindow, nativeImage }) {
         }
       }
       files.push({ n: 1, b64: await out64(d), pages: d.getPageCount() });
+    } else if (a.op === "edit") {
+      files.push({ n: 1, ...(await editPdf(await load(a.b64), a)) });
     } else throw new Error("Unknown PDF tool: " + a.op);
     return { files };
   }

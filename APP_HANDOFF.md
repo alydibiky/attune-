@@ -61,7 +61,7 @@ Google Play Billing.
 | **Coding** (look B) | Task, steps and a tested program; editor; preview | `code.js`, `code-ui.jsx`, `sandbox.js`, `sandbox/` |
 | **Studio** | Pictures on the phone (FLUX.2 klein 4B and others), upscale | `studio.js`, `studio-ui.jsx`, Kotlin `ImageEngine.kt`, `ImageRun.kt` |
 | **Ask a PDF / PDF reader** | Chat with a PDF or book, page cited | `docqa.js`, `pdfchat-ui.jsx`, `pdfreader.js`, `multidoc.js`, Kotlin `DocTools.kt` |
-| **File Converter + Translate** | 80+ conversions that keep the formatting (PDF→Word measured at 100%) | `convert.js`, `convert-ui.jsx`; bench `tests/convert/run.sh` |
+| **File Converter + Translate** | 80+ conversions that keep the formatting (PDF→Word measured at 100%); **Edit a PDF** (first row, v6.32): change a line, add text, highlight, draw, sign, reorder/turn/delete/add pages, saved as a new PDF on the device | `convert.js`, `convert-ui.jsx`, `pdfedit.js`, `pdfedit-ui.jsx`, Kotlin `DocTools.kt` (`pdfEdit` op `edit`), `desktop/lib/pdf.js`; bench `tests/convert/run.sh`; test `e2e_v736pdfedit.py` |
 | **Slides & Reports** | A .pptx or report from one sentence | `slides.js`, `slides-ui.jsx` |
 | **CV / Resume** | Build, import, tailor and export (EN/AR) | `cv*.js`, `cv-ui.jsx` |
 | **Learn daily / Daily news** | A lesson a day with quizzes and ready courses; morning news | `daily.js`, `daily-ui.jsx`, `langs.js` |
