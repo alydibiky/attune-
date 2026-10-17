@@ -659,8 +659,7 @@ the default Fit look; Google Play internal testing (developer account + secrets)
 ## V. 17 Oct 2026 — roadmap items built on `claude/roadmap-items-knk93s` (HANDOFF §5.76)
 Done: Money/life extras, Scout at night + metro + photo check, Learn speaking/dialogues/pictures/pack courses, web head-to-head
 tables, French/Spanish/Turkish, the Attune keyboard. Open:
-1. ⬜ Ali picks the Mind page look (A wall / B today and spaces / C diary) and the Coding page look (A editor / B talk to a coder /
-   C your programs) — images in `screens-v632/`; build the one he picks.
+1. ✅ Ali picked Mind A (the wall, with colour search) and Code B (talk to a coder) — built (`mind-ui.jsx`, `code-ui.jsx`).
 2. ⬜ Ali's accounts (SETUP_CLOUD.md): Google Web client id → finish `driveSync` + Backup "Sync with Google Drive" + Family circle;
    Serper key + relay address → `CLOUD.proSearchUrl`.
 3. ⬜ Phone tests: the keyboard, Scout at night, the metro pill, Say it (speech recognition), pack courses.
