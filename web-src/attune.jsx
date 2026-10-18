@@ -58,6 +58,7 @@ import { HubTabs } from "./hub-ui.jsx";
 import { SafeSpend } from "./safespend-ui.jsx";
 import { MissionsPage } from "./missions-ui.jsx";
 import { MicButton, SitePhotos } from "./site-ui.jsx";
+import { fold as foldNet, loadNetWeek, saveNetWeek } from "./netreport.js";
 import { parseMission } from "./missions.js";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
@@ -7630,6 +7631,15 @@ export default function App() {
     try { return localStorage.getItem("attune:tier") || "free"; } catch (e) { return "free"; }
   });
   useEffect(() => { try { localStorage.setItem("attune:tier", tier); } catch (e) {} }, [tier]);
+  // v6.37 (X3): fold this session's connection log into the weekly privacy report — at start, every 5 minutes, on leaving
+  useEffect(() => {
+    if (!NATIVE || !NATIVE.netLog) return;
+    const run = () => { const raw = nativeJSON("netLog"); if (raw) saveNetWeek(foldNet(loadNetWeek(), raw)); };
+    run(); const t = setInterval(run, 300000);
+    const on = () => { if (document.visibilityState === "hidden") run(); };
+    document.addEventListener("visibilitychange", on);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", on); };
+  }, []);
   // v5.29 — the 7-day Pro trial for every new install (a "reverse trial")
   const [trialLeft] = useState(() => {
     try { let f = Number(localStorage.getItem(FIRST_RUN_KEY)); if (!f) { f = Date.now(); localStorage.setItem(FIRST_RUN_KEY, String(f)); } return trialDaysLeft(f); } catch (e) { return 0; }
@@ -10097,7 +10107,7 @@ export default function App() {
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
         ) : mode === "privacy" ? (
-          <PrivacyPage flash={flash} onVault={(v) => { setVaultCfg(v); setVaultSess({ open: true }); }} />
+          <PrivacyPage flash={flash} readNet={NATIVE && NATIVE.netLog ? () => nativeJSON("netLog") : null} onVault={(v) => { setVaultCfg(v); setVaultSess({ open: true }); }} />
         ) : mode === "guide" ? (
           <GuidePage tools={MORE_TOOLS} groups={MORE_GROUPS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "care" ? (
