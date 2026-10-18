@@ -62,6 +62,7 @@ import { fold as foldNet, loadNetWeek, saveNetWeek } from "./netreport.js";
 import { TimelinePage } from "./timeline-ui.jsx";
 import { RecallCard } from "./recall-ui.jsx";
 import { WatchPanel } from "./watch-ui.jsx";
+import { PromptLab } from "./promptlab-ui.jsx";
 import { parseWatch, newRule, saveWatch, loadWatch, ruleText } from "./watch.js";
 import { parseMission } from "./missions.js";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
@@ -10818,6 +10819,10 @@ export default function App() {
             </div>
           </div>
         ) : mode === "library" ? (
+          <>{/* v6.40 (W5): the Prompt lab and My prompts on top of the recipes */}
+          <PromptLab ready={modelState === "ready"} openEngine={() => setShowEngine(true)} flash={flash}
+            run={(prompt) => callChat([{ role: "user", content: prompt }], null, { maxTokens: 600, temperature: 0.3, think: false })}
+            onUse={(m) => { setInput(m.template); setResult(null); setMode("improve"); flash(tr("Prompt loaded")); }} />
           <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <p className="text-sm text-slate-300">{tr("Ready prompt recipes — pick one, fill the blanks, then")} <span className="text-teal-400">{tr("AI Rewrite")}</span> {tr("to tailor it.")}</p>
@@ -10836,7 +10841,7 @@ export default function App() {
               ))}
             </div>
             <p className="text-xs text-slate-600 mt-4">{tr("Recipes ship with the app and work offline.")}</p>
-          </div>
+          </div></>
         ) : mode === "improve" ? (
           <div className="grid md:grid-cols-2 gap-5">
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
