@@ -1,4 +1,6 @@
 """v6.28 — Ali: "a How to Use page with detailed visuals, explanations and step-by-step walkthroughs of everything".
+v6.37: chapters in the sidebar's order, "Where" on each guide, today's new parts, and "Get the most of Attune" (a plan for the
+morning, day, evening, week, month and work; each line opens its tool).
 Phone: All → How to use Attune; getting started + every tool by area; a tool opens in place with its drawing, 3 steps (tap one: its
 mark on the drawing lights), Next, a tip, and Open it (goes to the tool); search in English and Arabic. Computer: Settings → How to
 use; the chapters on the left, the guide on the right (layout A). Arabic: the steps are in Arabic.
@@ -22,7 +24,25 @@ with sync_playwright() as p:
     check(n_rows >= 45, "the guide lists getting started + every tool: %d rows" % n_rows)
     ids = page.evaluate("[...document.querySelectorAll('[data-testid^=guide-row-]')].map(e => e.dataset.testid.slice(10))")
     for t in ["care", "fit", "convert", "radar", "travel", "map", "studio", "coach", "money", "start:model"]: check(t in ids, "has " + t)
-    check(page.locator("[data-testid=guide-chapter]").count() >= 8, "in chapters by area")
+    check(page.locator("[data-testid=guide-chapter]").count() >= 10, "in chapters by area (+ the plan)")
+    labels = page.evaluate("[...document.querySelectorAll('[data-testid=guide-chapter] > .c-lbl')].map(e => e.textContent.trim())")
+    check(labels[:3] == ["Getting started", "Get the most of Attune", "Create"] and "Work" in labels and "Money" in labels, "chapters: start, the plan, then the sidebar's places: %s" % labels)
+    check("the All button" not in page.locator("[data-testid=guide-page]").inner_text(), "no word of the old All button")
+    for k in ["plan:morning", "plan:day", "plan:evening", "plan:week", "plan:month", "plan:work", "start:keyboard"]: check(k in ids, "has " + k)
+    # the plan: a part opens in place with its lines; a line opens its tool
+    page.click("[data-testid='guide-row-plan:morning']"); page.wait_for_timeout(200)
+    pl = page.locator("[data-testid=guide-plan]")
+    check(pl.count() == 1 and pl.get_attribute("data-id") == "plan:morning", "the morning plan opens in place")
+    check(pl.locator("[data-testid=guide-plan-item]").count() >= 4 and "Safe to spend today" in pl.inner_text(), "morning: its lines (Safe to spend today…)")
+    tools_in = pl.evaluate("e => [...e.querySelectorAll('[data-testid=guide-plan-item]')].map(b => b.dataset.tool)")
+    check(all(t in tools_in for t in ["home", "money", "learn", "news"]), "morning points to Home, Money, Learn, News: %s" % tools_in)
+    page.click("[data-testid='guide-row-plan:morning']"); page.wait_for_timeout(100)
+    # a Follow-ups part says where it lives and explains the Cancel kit
+    page.click("[data-testid=guide-row-radar]"); page.wait_for_timeout(200)
+    wh = page.locator("[data-testid=guide-where]").inner_text()
+    check("Money" in wh and "Follow-ups" in wh and "Dates" in wh, "Dates says where it lives: " + wh)
+    check("Cancel kit" in page.locator("[data-testid=guide-walk]").inner_text(), "Dates explains the Cancel kit")
+    page.click("[data-testid=guide-row-radar]"); page.wait_for_timeout(100)
     # a tool, opened in place
     page.click("[data-testid=guide-row-care]"); page.wait_for_timeout(200)
     w = page.locator("[data-testid=guide-walk]")
@@ -42,6 +62,9 @@ with sync_playwright() as p:
     page.fill("[data-testid=guide-search]", "passport"); page.wait_for_timeout(150)
     got = page.evaluate("[...document.querySelectorAll('[data-testid^=guide-row-]')].map(e => e.dataset.testid.slice(10))")
     check("radar" in got and "travel" in got and "fit" not in got, "search 'passport' → Radar and Travel: %s" % got)
+    page.fill("[data-testid=guide-search]", "koshary"); page.wait_for_timeout(150)
+    got = page.evaluate("[...document.querySelectorAll('[data-testid^=guide-row-]')].map(e => e.dataset.testid.slice(10))")
+    check("plan:day" in got and "start:say" in got, "search finds the plan too: %s" % got)
     page.fill("[data-testid=guide-search]", "zzqx"); page.wait_for_timeout(100)
     check(page.locator("[data-testid=guide-none]").count() == 1, "no match → says so")
     # computer: Settings → guide; two panels
@@ -53,6 +76,13 @@ with sync_playwright() as p:
     check(page.locator("[data-testid=guide-walk]").get_attribute("data-id") == "start:model", "it opens on 'Get the AI on your phone'")
     page.click("[data-testid=guide-row-convert]"); page.wait_for_timeout(150)
     check(page.locator("[data-testid=guide-walk]").get_attribute("data-id") == "convert" and page.locator("[data-testid=guide-walk]").count() == 1, "a tool picked on the left shows on the right")
+    page.click("[data-testid='guide-row-plan:week']"); page.wait_for_timeout(150)
+    check(page.locator("[data-testid=guide-plan]").get_attribute("data-id") == "plan:week", "the week plan shows on the right")
+    page.click("[data-testid=guide-plan-item][data-tool='start:safe']"); page.wait_for_timeout(150)
+    check(page.locator("[data-testid=guide-walk]").get_attribute("data-id") == "start:safe", "'Save a backup' opens the backup guide")
+    page.click("[data-testid='guide-row-plan:work']"); page.wait_for_timeout(150)
+    page.click("[data-testid=guide-plan-item][data-tool=crane]"); page.wait_for_timeout(300)
+    check(page.locator("[data-testid=guide-page]").count() == 0, "a plan line opens its tool (Crane toolkit)")
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, "guide-desk.png"))
     # Arabic
     page.evaluate("localStorage.setItem('attune:ui:lang','ar')"); page.set_viewport_size({"width": 390, "height": 844})
@@ -62,6 +92,9 @@ with sync_playwright() as p:
     page.click("[data-testid=guide-row-fit]"); page.wait_for_timeout(150)
     st = page.locator("[data-testid=guide-step]").first.inner_text()
     check("وجبة" in st, "the steps in Arabic: " + st[:60])
+    check("إزاي تستفيد من Attune لآخر حاجة" in page.locator("[data-testid=guide-page]").text_content(), "the plan's title in Arabic")
+    page.click("[data-testid='guide-row-plan:morning']"); page.wait_for_timeout(150)
+    check("تقدر تصرف النهارده" in page.locator("[data-testid=guide-plan]").inner_text(), "the plan in Egyptian Arabic")
     page.fill("[data-testid=guide-search]", "الجواز"); page.wait_for_timeout(150)
     got = page.evaluate("[...document.querySelectorAll('[data-testid^=guide-row-]')].map(e => e.dataset.testid.slice(10))")
     check("travel" in got, "Arabic search works: %s" % got)

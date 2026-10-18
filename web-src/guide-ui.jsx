@@ -1,8 +1,10 @@
 /* ---- v6.28 How to use Attune (mode "guide") — every tool explained in three steps, with a drawing of its screen whose numbered
    marks follow the step you are on (tap a step, or Next / Play). Phone: search + chapters that open in place. Computer (layout A):
-   the chapters on the left, the open guide on the right. Content: guide.js. Tests: tests/e2e_v731guide.py.                       */
+   the chapters on the left, the open guide on the right. Content: guide.js. Tests: tests/e2e_v731guide.py.
+   v6.37: chapters follow the sidebar (hubs.js), each guide says where the tool lives, and "Get the most of Attune" is a plan for
+   the morning, the day, the evening, the week, the month and work — every line opens its tool.                                 */
 import React, { useEffect, useMemo, useState } from "react";
-import { BookOpen, Search, ChevronRight, Play, Pause } from "lucide-react";
+import { BookOpen, Search, ChevronRight, Play, Pause, Coffee, Clock, Star, CalendarDays, BarChart3, Briefcase, Sparkles } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as G from "./guide.js";
 import { PANES, LEFT, RIGHT } from "./desk.jsx";
@@ -60,7 +62,7 @@ const SKETCH = {
 export function Sketch({ kind, step = -1, small = false }) {
   const k = SKETCH[kind] || SKETCH.type;
   return (
-    <svg viewBox="0 0 140 250" className={small ? "w-9 h-16 shrink-0" : "w-full max-w-[180px] sm:max-w-[220px] h-auto mx-auto"} role="img" aria-label={tr("A drawing of the screen")} data-testid="guide-sketch">
+    <svg viewBox="0 0 140 250" direction="ltr" className={small ? "w-9 h-16 shrink-0" : "w-full max-w-[180px] sm:max-w-[220px] h-auto mx-auto"} role="img" aria-label={tr("A drawing of the screen")} data-testid="guide-sketch">
       <rect x="2" y="2" width="136" height="246" rx="18" fill="var(--c-bg, #fff)" stroke={INK} strokeOpacity="0.25" strokeWidth="2" />
       <rect x="54" y="10" width="32" height="5" rx="2.5" fill={INK} opacity="0.2" />
       <rect x="8" y="22" width="124" height="1" fill={L} />
@@ -76,7 +78,7 @@ export function Sketch({ kind, step = -1, small = false }) {
 }
 
 /** One walkthrough: the drawing, the three steps (the current one highlighted), Next / Play, and the tip. */
-function Walk({ id, title, purpose, sketch, steps, tip, open, ar }) {
+function Walk({ id, title, purpose, where, sketch, steps, tip, open, ar }) {
   const [step, setStep] = useState(0);
   const [play, setPlay] = useState(false);
   useEffect(() => { setStep(0); setPlay(false); }, [id]);
@@ -84,7 +86,8 @@ function Walk({ id, title, purpose, sketch, steps, tip, open, ar }) {
   const pick = (p) => (ar ? p[1] : p[0]);
   return (
     <div className="c-card space-y-3" data-testid="guide-walk" data-id={id}>
-      <div><b className="block text-[17px]" dir="auto">{title}</b>{purpose ? <span className="c-sub text-[13px]" dir="auto">{purpose}</span> : null}</div>
+      <div><b className="block text-[17px]" dir="auto">{title}</b>{purpose ? <span className="c-sub text-[13px]" dir="auto">{purpose}</span> : null}
+        {where && where.length ? <span className="block text-[12px] mt-0.5" style={{ color: "var(--c-acc)" }} dir="auto" data-testid="guide-where">{tr("Where")}: {where.join(ar ? " ‹ " : " › ")}</span> : null}</div>
       <div className="grid gap-4 sm:grid-cols-[minmax(150px,220px)_1fr] sm:items-start">
         <Sketch kind={sketch} step={step} />
         <div className="space-y-2">
@@ -106,26 +109,52 @@ function Walk({ id, title, purpose, sketch, steps, tip, open, ar }) {
     </div>);
 }
 
+/** v6.37 One part of "Get the most of Attune": when, then each habit with the tool that does it (tap to open it). */
+const PLAN_ICON = { morning: Coffee, day: Clock, evening: Star, week: CalendarDays, month: BarChart3, work: Briefcase };
+function PlanCard({ p, ar, nameOf, open, see }) {
+  const pick = (x) => (ar ? x[1] : x[0]), Ic = PLAN_ICON[p.icon] || Sparkles;
+  return (
+    <div className="c-card space-y-3" data-testid="guide-plan" data-id={"plan:" + p.id}>
+      <div className="flex items-center gap-3"><span className="c-ic"><Ic size={18} /></span>
+        <div><b className="block text-[17px]" dir="auto">{pick(p.title)}</b><span className="c-sub text-[13px]" dir="auto">{pick(p.when)}</span></div></div>
+      <ol className="m-0 p-0 list-none space-y-2">
+        {p.items.map((it, i) => { const n = it.tool ? nameOf(it.tool) : null, go = it.tool ? (open ? () => open(it.tool) : null) : it.see ? () => see(it.see) : null;
+          return (
+          <li key={i}><button onClick={go || undefined} disabled={!go} data-testid="guide-plan-item" data-tool={it.tool || it.see || ""}
+            className="w-full text-start flex gap-3 items-start rounded-xl p-2.5 border" style={{ borderColor: "var(--c-ln)", background: "transparent", color: "var(--c-ink)" }}>
+            <span className="w-6 h-6 shrink-0 rounded-full grid place-items-center text-[12px] font-bold" style={{ background: "var(--c-acc)", color: "#fff" }}>{i + 1}</span>
+            <span className="flex-1 min-w-0">{n ? <b className="block text-[12.5px]" style={{ color: "var(--c-acc)" }} dir="auto">{n[0]}</b> : null}
+              <span className="text-[14px] leading-snug" dir="auto">{pick(it.text)}</span></span>
+            {go ? <ChevronRight size={15} className="c-sub shrink-0 mt-1 rtl:-scale-x-100" /> : null}</button></li>); })}
+      </ol>
+      <p className="text-[13px] m-0 rounded-xl p-2.5" style={{ background: "var(--c-soft)" }} dir="auto" data-testid="guide-tip"><b>{tr("Tip")}:</b> {pick(p.tip)}</p>
+    </div>);
+}
+
 export function GuidePage({ tools, groups, navTo }) {
   const ar = getLang() === "ar";
   const [q, setQ] = useState("");
   const [sel, setSel] = useState("start:model");      // the open guide (computer: on the right; phone: opened in place)
   const [wide, setWide] = useState(() => { try { return window.matchMedia("(min-width: 1024px)").matches; } catch (e) { return false; } });
   useEffect(() => { try { const m = window.matchMedia("(min-width: 1024px)"); const on = () => setWide(m.matches); m.addEventListener("change", on); return () => m.removeEventListener("change", on); } catch (e) {} }, []);
-  const toolOf = (id) => (tools || []).find((t) => t[0] === id) || (id === "money" ? ["money", "Money", "Spending, bills and Zakāt"] : null);
-  const chs = useMemo(() => G.chapters(groups || []), [groups]);
+  const pk = (x) => (ar ? x[1] : x[0]);
+  // a tool's [name, purpose] as shown: the app's own tool list, or guide.js NAMES for places that are not in it (Home, Money…)
+  const nameOf = (id) => { const n = G.NAMES[id]; if (n) return [pk(n[0]), pk(n[1])]; const t = (tools || []).find((x) => x[0] === id); return t ? [tr(t[1]), tr(t[2])] : null; };
+  const chs = useMemo(() => G.chapters(), [groups]);   // the sidebar's order (hubs.js), not the old All menu
   const hits = useMemo(() => G.searchGuide(q, tools), [q, tools]);
-  const startHits = q.trim() ? G.START.filter((s) => (s.title.join(" ") + " " + s.steps.flat().join(" ")).toLowerCase().includes(q.trim().toLowerCase())) : G.START;
+  const startHits = q.trim() ? G.START.filter((s) => (s.title.join(" ") + " " + s.steps.flat().join(" ") + " " + s.tip.join(" ")).toLowerCase().includes(q.trim().toLowerCase())) : G.START;
+  const planHits = useMemo(() => G.searchPlan(q), [q]);
   const walkFor = (key) => {
     if (key.startsWith("start:")) { const s = G.START.find((x) => "start:" + x.id === key); return s ? <Walk key={key} id={key} title={ar ? s.title[1] : s.title[0]} sketch={s.sketch} steps={s.steps} tip={s.tip} ar={ar} /> : null; }
-    const g = G.TOOLS[key], t = toolOf(key); if (!g || !t) return null;
-    return <Walk key={key} id={key} title={tr(t[1])} purpose={tr(t[2])} sketch={g.sketch} steps={g.steps} tip={g.tip} ar={ar} open={navTo ? () => navTo(key) : null} />;
+    if (key.startsWith("plan:")) { const p = G.PLAN.find((x) => "plan:" + x.id === key); return p ? <PlanCard key={key} p={p} ar={ar} nameOf={nameOf} open={navTo} see={setSel} /> : null; }
+    const g = G.TOOLS[key], t = nameOf(key); if (!g || !t) return null;
+    return <Walk key={key} id={key} title={t[0]} purpose={t[1]} where={G.whereOf(key).map((w) => tr(w))} sketch={g.sketch} steps={g.steps} tip={g.tip} ar={ar} open={navTo ? () => navTo(key) : null} />;
   };
-  const Row = ({ k, label, sub, sketch }) => (
+  const Row = ({ k, label, sub, sketch, icon: Ic }) => (
     <div>
       <button onClick={() => setSel(sel === k && !wide ? "" : k)} aria-expanded={sel === k} data-testid={"guide-row-" + k}
         className="w-full flex items-center gap-3 text-start py-2 px-1 rounded-lg" style={{ background: wide && sel === k ? "var(--c-soft)" : "transparent", color: "var(--c-ink)" }}>
-        <Sketch kind={sketch} small /><span className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{label}</b>{sub ? <span className="c-sub text-[12.5px] block truncate" dir="auto">{sub}</span> : null}</span>
+        {Ic ? <span className="w-9 h-9 shrink-0 rounded-lg grid place-items-center" style={{ background: "var(--c-soft)", color: "var(--c-acc)" }}><Ic size={17} /></span> : <Sketch kind={sketch} small />}<span className="flex-1 min-w-0"><b className="block text-[14px]" dir="auto">{label}</b>{sub ? <span className="c-sub text-[12.5px] block truncate" dir="auto">{sub}</span> : null}</span>
         <ChevronRight size={16} className={"c-sub shrink-0 transition-transform rtl:-scale-x-100 " + (!wide && sel === k ? "rotate-90" : "")} /></button>
       {!wide && sel === k ? <div className="mt-2 mb-3">{walkFor(k)}</div> : null}
     </div>);
@@ -135,16 +164,18 @@ export function GuidePage({ tools, groups, navTo }) {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search the guide…")} className="w-full rounded-xl ps-9 pe-3 py-2.5 text-[14px] border bg-transparent" style={{ borderColor: "var(--c-ln)", color: "var(--c-ink)" }} dir="auto" data-testid="guide-search" /></div>
       {startHits.length ? <section data-testid="guide-chapter"><span className="c-lbl">{tr("Getting started")}</span>
         {startHits.map((s) => <Row key={s.id} k={"start:" + s.id} label={ar ? s.title[1] : s.title[0]} sketch={s.sketch} />)}</section> : null}
-      {chs.map((c) => { const ids = hits ? c.ids.filter((id) => hits.includes(id)) : c.ids; return ids.length ? (
-        <section key={c.title} data-testid="guide-chapter"><span className="c-lbl">{tr(c.title)}</span>
-          {ids.map((id) => { const t = toolOf(id); return t ? <Row key={id} k={id} label={tr(t[1])} sub={tr(t[2])} sketch={G.TOOLS[id].sketch} /> : null; })}</section>) : null; })}
-      {hits && !hits.length && !startHits.length ? <p className="c-sub" data-testid="guide-none">{tr("Nothing in the guide matches — try another word.")}</p> : null}
+      {planHits.length ? <section data-testid="guide-chapter" data-chapter="plan"><span className="c-lbl">{pk(G.PLAN_TITLE)}</span>
+        {G.PLAN.filter((p) => planHits.includes(p.id)).map((p) => <Row key={p.id} k={"plan:" + p.id} label={pk(p.title)} sub={pk(p.when)} icon={PLAN_ICON[p.icon] || Sparkles} />)}</section> : null}
+      {chs.map((c) => { const ids = hits ? c.ids.filter((id) => hits.includes(id)) : c.ids, title = Array.isArray(c.title) ? pk(c.title) : tr(c.title); return ids.length ? (
+        <section key={title} data-testid="guide-chapter"><span className="c-lbl">{title}</span>
+          {ids.map((id) => { const t = nameOf(id); return t ? <Row key={id} k={id} label={t[0]} sub={t[1]} sketch={G.TOOLS[id].sketch} /> : null; })}</section>) : null; })}
+      {hits && !hits.length && !startHits.length && !planHits.length ? <p className="c-sub" data-testid="guide-none">{tr("Nothing in the guide matches — try another word.")}</p> : null}
     </div>);
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="guide-page">
       <style>{`@keyframes guidePulse{0%{opacity:.9;transform:scale(.8)}100%{opacity:0;transform:scale(1.5)}}.guide-pulse{transform-box:fill-box;transform-origin:center;animation:guidePulse 1.3s ease-out infinite}`}</style>
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><BookOpen size={20} className="c-acc" />{tr("How to use Attune")}</h2>
-        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Every tool in three steps, with a drawing of its screen. Tap a step to see where it happens, or play them all.")}</p></div>
+        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Every tool in three steps, with a drawing of its screen — and a plan to make Attune part of your day.")}</p></div>
       {wide ? <div className={PANES}><div className={LEFT + " lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto pe-1"}>{list}</div><div className={RIGHT}>{walkFor(sel) || walkFor("start:model")}</div></div> : list}
     </div>);
 }

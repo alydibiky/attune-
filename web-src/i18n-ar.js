@@ -5461,4 +5461,7 @@ export const AR = {
   "A goal with a date — Attune works on it every day": "هدف وليه ميعاد — Attune بيشتغل عليه كل يوم",
   "{c}% chance": "فرصتك {c}%",
   "A goal with a date — Attune works on it every day and shows your real chance": "هدف وليه ميعاد — Attune بيشتغل عليه كل يوم ويوريك فرصتك الحقيقية",
+  // v6.37 How to use Attune (guide-ui.jsx)
+  "Where": "مكانها",
+  "Every tool in three steps, with a drawing of its screen — and a plan to make Attune part of your day.": "كل أداة في 3 خطوات مع رسمة لشاشتها — وخطة تخلي Attune جزء من يومك.",
 };
