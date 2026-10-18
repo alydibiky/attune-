@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.aldibiki.attune"
-    compileSdk = 36
+    compileSdk = 37   // v6.35 (Ali: "developed for Android 17 and lower"): Android 17 = API 37
 
     defaultConfig {
         applicationId = "com.aldibiki.attune"
         minSdk = 28                 // Android 9: the engine uses system functions added in Android 9 (llama.cpp's own Android builds target the same)
-        targetSdk = 36   // Google Play: new apps and updates must target Android 16 (API 36) since 31 Aug 2026
+        targetSdk = 37   // v6.35: Android 17 (API 37); minSdk 28 keeps Android 9 – 16 phones. Checked against Google's "behavior changes for apps targeting 17": no writable native libraries, no background activity starts, no widget bitmaps, no SMS
         versionCode = System.getenv("ATTUNE_VERSION_CODE")?.toIntOrNull() ?: 96   // CI: 1000 + the run number, so every build installs over the last and Play accepts each upload
         versionName = "6.35"
 

@@ -1799,6 +1799,11 @@ page (Artifact: https://claude.ai/artifact/LQ1s1sqbSGJtSC8vfZQLec) — six quest
   (Ali's test builds, 7 taps on the version). Without it: no Knowledge page in the tools / Learn hub, no "Add to Knowledge" in
   Ask a PDF, no "Teach this to my model", no "Chat now knows: …" toast; the packs still install by themselves and answer, and the
   answer shows "Sources: …" chips. Pack expansion = choice 4.
+- **Android 17** (Ali: "developed for Android 17 and lower, not 16"): compileSdk and targetSdk 37 (API 37), minSdk stays 28. AGP stays
+  8.9.1 (Google's Android 17 setup page: 8.9.0-rc01 or newer; `android.suppressUnsupportedCompileSdk=37` in gradle.properties;
+  AGP 9.1.1+ is the fully supported line — a bigger upgrade, later). The APK workflow installs `platforms;android-37`. Checked against
+  "behavior changes for apps targeting 17": no System.load of writable files, no background-activity PendingIntent modes, no
+  widget bitmaps, no SMS, no reflection on MessageQueue; LAN access would need ACCESS_LOCAL_NETWORK (the engine is on 127.0.0.1).
 - Version 6.35 (versionCode 96). Tests: `tests/unit/v738plate.test.mjs`, `tests/unit/v738fixes.test.mjs`.
 - Ali's big idea (answered on the choices page): Core Max and up only on computers (done); a code-first app where the small model
   only phrases and connects (the direction already; agent ideas = choice 2); regroup the app (choice 1); food stronger than Yazio

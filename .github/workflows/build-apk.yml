@@ -59,7 +59,10 @@ jobs:
       # The on-device engine is native code: it needs the NDK and CMake, in
       # the exact versions app/build.gradle.kts asks for.
       - name: Install the NDK and CMake
-        run: sdkmanager --install "ndk;29.0.14206865" "cmake;3.31.6" > /dev/null
+        run: |
+          sdkmanager --install "ndk;29.0.14206865" "cmake;3.31.6" > /dev/null
+          # v6.35: Android 17 (compileSdk 37); Gradle would also fetch it by itself
+          yes | sdkmanager --install "platforms;android-37" > /dev/null || echo "platform 37 is fetched by Gradle instead"
 
       # llama.cpp, pinned to the commit the engine was written and tested
       # against. Not stored in the repository; fetched fresh for each build.
