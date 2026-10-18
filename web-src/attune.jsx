@@ -57,6 +57,7 @@ import { HUBS, hubOf, tabsFor, toolPages, partsOf } from "./hubs.js";
 import { HubTabs } from "./hub-ui.jsx";
 import { SafeSpend } from "./safespend-ui.jsx";
 import { MissionsPage } from "./missions-ui.jsx";
+import { MicButton, SitePhotos } from "./site-ui.jsx";
 import { parseMission } from "./missions.js";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
@@ -7665,6 +7666,7 @@ export default function App() {
   const [org, setOrg] = useState(EMPTY_ORG);
   const [showOrg, setShowOrg] = useState(false);
   const [fdInput, setFdInput] = useState("");
+  const [fdPhotos, setFdPhotos] = useState([]);   // v6.37 (W3) the report's photos
   const [fdDoc, setFdDoc] = useState("incident");
   const [fdLangs, setFdLangs] = useState(["match"]);
   const [fdResult, setFdResult] = useState("");
@@ -10526,7 +10528,8 @@ export default function App() {
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-slate-300">{tr("What happened / what's needed")}</label>
-                <button onClick={() => flash(tr("Voice capture runs in the installed app"))} className="shrink-0 whitespace-nowrap flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-teal-500/10 border border-teal-900/60 text-teal-300"><Mic size={13} /> {tr("Dictate")}</button>
+                {/* v6.37 (W3): a real microphone — the phone's speech recognition */}
+                <MicButton listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} value={fdInput} setValue={setFdInput} flash={flash} />
               </div>
               <textarea value={fdInput} onChange={(e) => setFdInput(e.target.value)}
                 placeholder={tr("Speak or type it roughly, in any language. e.g. 'crane 3 hydraulic leak at north gate around 2pm, stopped work, called maintenance, no injuries'")}
@@ -10579,6 +10582,8 @@ export default function App() {
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <HardHat size={16} />}{loading ? tr("Writing…") : tr("Create document")}
               </button>
               {queued > 0 ? <p className="text-[11px] text-amber-400 mt-2">{queued} {tr("queued — will process when an engine is available.")}</p> : null}
+              {/* v6.37 (W3): photos with time + place, and one PDF of the report with them */}
+              <SitePhotos photos={fdPhotos} setPhotos={setFdPhotos} title={tr(FIELD_DOCS[fdDoc].label)} text={fdResult || ""} by={fdBy} flash={flash} />
             </section>
 
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5 flex flex-col">

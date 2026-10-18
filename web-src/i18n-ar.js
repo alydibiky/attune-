@@ -5510,4 +5510,9 @@ export const AR = {
   "Add logo": "ضيف لوجو",
   "Use my brand": "استخدم هوية شركتي",
   "Your brand": "هوية شركتك",
+  "Add photos": "ضيف صور",
+  "Each photo gets the time and the place": "كل صورة بتاخد الوقت والمكان",
+  "What it shows (optional)": "فيها إيه (اختياري)",
+  "Report with {n} photos (PDF)": "التقرير بـ {n} صور (PDF)",
+  "Report as PDF": "التقرير PDF",
 };
