@@ -95,7 +95,8 @@ function Form({ init, onSave, onCancel, photo }) {
 }
 
 function Item({ x, onDone, onEdit, onDelete }) {
-  const left = D.daysLeft(x), [img, setImg] = useState("");
+  const left = D.daysLeft(x), [img, setImg] = useState(""), [kit, setKit] = useState(false), [copied, setCopied] = useState(false);
+  const K = kit ? D.cancelKit(x, getLang() === "ar" ? "ar" : "en") : null;
   const when = left < 0 ? tr("{n} days ago", { n: -left }) : left === 0 ? tr("today") : left === 1 ? tr("tomorrow") : left < 60 ? tr("in {n} days", { n: left }) : left < 730 ? tr("in {n} months", { n: Math.round(left / 30.4) }) : tr("in {n} years", { n: Math.round(left / 365) });
   return (
     <div className="c-card" data-testid="radar-item">
@@ -113,10 +114,21 @@ function Item({ x, onDone, onEdit, onDelete }) {
         <div className="flex flex-wrap gap-2 mt-2.5">
           {(DONE_ACTS[x.kind] || DONE_ACTS.other).map(([o, l], i) => <button key={o} className={i === 0 ? "c-btn" : "c-sub px-1"} onClick={() => onDone(x, o)} data-testid={"radar-" + o}>{i === 0 ? <Check size={14} className="inline -mt-0.5 me-1" /> : null}{tr(l)}</button>)}
           {D.cancelLink(x) ? <button className="c-sub px-1" onClick={() => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: D.cancelLink(x), plan: null, inApp: false } }))} data-testid="radar-cancel-page">{tr("Where to cancel")}</button> : null}
+          {x.kind === "trial" || x.kind === "renewal" ? <button className="c-sub px-1" onClick={() => setKit(!kit)} aria-expanded={kit} data-testid="radar-kit">{tr("Cancel kit")}</button> : null}
           {x.kind === "return" || x.kind === "warranty" ? <button className="c-sub px-1" onClick={() => openOwed({ letter: { title: x.kind === "return" ? "Return request" : "Warranty claim", text: x.kind === "return" ? O.returnLetter(x, { lang: getLang() === "ar" ? "ar" : "en" }) : O.warrantyLetter(x, { lang: getLang() === "ar" ? "ar" : "en" }) } })} data-testid="radar-letter">{tr("Write the request")}</button> : null}
           <button className="c-sub px-1" onClick={() => onEdit(x)} data-testid="radar-edit">{tr("Edit")}</button>
           {x.photo ? <button className="c-sub px-1" onClick={async () => setImg(img ? "" : await getPhoto(x.photo))} data-testid="radar-photo">{img ? tr("Hide receipt") : tr("Receipt")}</button> : null}
           <button className="c-sub px-1 ms-auto" aria-label={tr("Delete")} onClick={() => onDelete(x)}><Trash2 size={14} /></button>
+        </div>) : null}
+      {/* v6.37 (M5): the cancel kit — the steps and a ready message */}
+      {K ? (
+        <div className="mt-2.5 rounded-lg border p-3 text-[12.5px] grid gap-2" style={{ borderColor: "var(--c-ln)" }} data-testid="radar-kit-panel">
+          <ol className="m-0 ps-5 grid gap-1">{K.steps.map((st, i) => <li key={i} dir="auto">{st}</li>)}</ol>
+          <p className="c-sub" dir="auto" data-testid="radar-kit-msg">{K.message}</p>
+          <div className="flex flex-wrap gap-2">
+            <button className="c-btn" onClick={() => { try { navigator.clipboard.writeText(K.message).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }, () => {}); } catch (e) {} }} data-testid="radar-kit-copy">{copied ? tr("Copied") : tr("Copy the message")}</button>
+            {K.link ? <button className="c-sub px-1" onClick={() => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: K.link, plan: null, inApp: false } }))}>{tr("Open the page")}</button> : null}
+          </div>
         </div>) : null}
     </div>);
 }

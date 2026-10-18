@@ -72,6 +72,12 @@ with sync_playwright() as p:
     check(int(rate.strip('%')) >= 30, "the '0%% interest' plan's real yearly interest is worked out by code (%s)" % rate)
     check("although it says 0%" in page.locator("[data-testid=deal-reasons]").inner_text(), "…and it says the plan claimed 0%")
     check(page.locator("[data-testid=deal-verdict]").get_attribute("data-level") in ("overpriced", "risky"), "…so it is not called a good deal")
+    # v6.37 (M2): installments vs cash in today's money, at the bank rate the person sets
+    real = page.locator("[data-testid=deal-real]").inner_text()
+    check("Cash is cheaper" in real, "v6.37: a plan at 30%%+ real interest → cash is cheaper even after the bank's 20%%: %s" % real[:90])
+    page.fill("[data-testid=deal-bank-rate]", str(int(rate.strip("%")) + 15)); page.locator("[data-testid=deal-bank-rate]").blur(); page.wait_for_timeout(200)
+    check("Installments are cheaper" in page.locator("[data-testid=deal-real]").inner_text(), "…if the bank paid more than the plan's own interest (%s + 15), the installments would win" % rate)
+    page.fill("[data-testid=deal-bank-rate]", "20"); page.locator("[data-testid=deal-bank-rate]").blur()
 
     # ---- 4. earlier checks are kept ----
     page.locator("[data-testid=deal-new]").click(); page.wait_for_timeout(300)

@@ -309,3 +309,28 @@ export function cancelLink(x) {
   for (const [re, url] of CANCEL) if (re.test(hay)) return { label: x.title, url };
   return null;
 }
+
+/* ---- v6.37 (upgrade M5): the cancel kit — for a trial or a renewal: where, the exact steps, and a ready message to send
+   (for services cancelled by asking: a gym, a club, a telecom add-on, insurance). The Radar already alerts 2 days before a
+   trial and 3 before a renewal. Steps are the stores' own menus (Google Play / App Store) or the service's account page. */
+const STEPS = {
+  play: { en: ["Open the Play Store", "Tap your picture (top right) → Payments & subscriptions → Subscriptions", "Pick {t} → Cancel subscription", "Keep the confirmation e-mail"],
+    ar: ["افتح جوجل بلاي", "دوس على صورتك فوق ← المدفوعات والاشتراكات ← الاشتراكات", "اختار {t} ← إلغاء الاشتراك", "احتفظ بإيميل التأكيد"] },
+  apple: { en: ["Open Settings → your name → Subscriptions", "Pick {t} → Cancel Subscription", "Keep the confirmation e-mail"],
+    ar: ["افتح الإعدادات ← اسمك ← الاشتراكات", "اختار {t} ← إلغاء الاشتراك", "احتفظ بإيميل التأكيد"] },
+  web: { en: ["Open {t}'s account page (the button below)", "Sign in → Plan / Subscription / Billing", "Choose Cancel and finish every step until it says it is cancelled", "Take a screenshot of the confirmation"],
+    ar: ["افتح صفحة حسابك في {t} (الزرار تحت)", "سجل دخول ← الخطة / الاشتراك / الدفع", "اختار إلغاء وكمّل كل الخطوات لحد ما يقولك اتلغى", "خد سكرين شوت لرسالة التأكيد"] },
+  ask: { en: ["Send them the message below (WhatsApp, e-mail or their app)", "Ask for the cancellation in writing", "Watch the next statement: no charge after {d}"],
+    ar: ["ابعتلهم الرسالة اللي تحت (واتساب أو إيميل أو الأبلكيشن بتاعهم)", "اطلب تأكيد الإلغاء مكتوب", "راجع الكشف الجاي: مفيش خصم بعد {d}"] },
+};
+export function cancelKit(x, lang = "en") {
+  if (!x || (x.kind !== "trial" && x.kind !== "renewal")) return null;
+  const L = lang === "ar" ? "ar" : "en", t = x.title || (L === "ar" ? "الاشتراك" : "the subscription");
+  const link = cancelLink(x), hay = [x.title, x.note, x.app].join(" ");
+  const way = link && /play\.google/.test(link.url) && /google play/i.test(hay) ? "play" : link && /apps\.apple/.test(link.url) ? "apple" : link ? (/play\.google/.test(link.url) ? "play" : "web") : "ask";
+  const steps = STEPS[way][L].map((s) => s.replace("{t}", t).replace("{d}", x.date));
+  const message = L === "ar"
+    ? `أهلًا، أنا مشترك في ${t}${x.amount ? ` (${x.amount} ${x.currency || ""})`.replace(" )", ")") : ""}. عايز ألغي الاشتراك قبل ما يتجدد يوم ${x.date}، ومش عايز أي خصم بعد كده. ياريت تبعتولي تأكيد الإلغاء مكتوب. شكرًا.`
+    : `Hello, I have a subscription to ${t}${x.amount ? ` (${x.amount} ${x.currency || ""})`.replace(" )", ")") : ""}. Please cancel it before it renews on ${x.date}, with no further charges, and send me the cancellation in writing. Thank you.`;
+  return { way, link, steps, message };
+}

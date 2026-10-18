@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ShoppingCart, Car, Building2, Zap, User, Utensils, House, Heart, Gift, Coffee, FileText, Wallet } from "lucide-react";
 import { moneyOverview, fmt } from "./money-calm.js";
 import { loadLedger } from "./myledger.js";
+import { SafeSpend } from "./safespend-ui.jsx";
 import { loadLife, progressOf } from "./life.js";
 
 /** v6.27: People & plans' money between people (debts and installments with a person), in the same shape as Money's own
@@ -42,6 +43,7 @@ function Overview({ o, go, onAsk }) {
           <div className="flex gap-4 mt-2 c-sub"><span>{tr("In")} <b className="c-num c-pos">{fmt(o.monthIn, { sign: true })}</b></span><span>{tr("Out")} <b className="c-num c-neg">{fmt(-o.monthOut)}</b></span><span>{tr("this month")}</span></div>
           {o.others.length ? <div className="c-sub mt-2">{o.others.map((x) => x.currency + " " + fmt(x.balance)).join(" · ")}</div> : null}
         </div>
+        <SafeSpend calm />
         <div className="c-card">
           <div className="flex items-center"><span className="c-lbl">{tr("Spending by week")}</span>{o.budget ? <span className="c-sub ms-auto">{tr("Budget")} <span className="c-num">{fmt(o.budget)}</span></span> : null}</div>
           <div className="flex items-end gap-2 mt-3" style={{ height: 96 }}>

@@ -55,6 +55,7 @@ import { VaultGate } from "./vault-ui.jsx";
 import { loadVault, vaulted, stillOpen } from "./vault.js";
 import { HUBS, hubOf, tabsFor, toolPages, partsOf } from "./hubs.js";
 import { HubTabs } from "./hub-ui.jsx";
+import { SafeSpend } from "./safespend-ui.jsx";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
 const LEGACY_NAV = (() => { try { return localStorage.getItem("attune:legacy-nav") === "1"; } catch (e) { return false; } })();
@@ -6250,6 +6251,8 @@ function MoneyTab({ remember, flash, modelState, myLang, tier, incoming, clearIn
         </button>
       ) : null}
       {/* v6.27 "Money tracks itself": payments read from notifications, to add with one tap */}
+      {/* v6.37 (M1): what is safe to spend today, by code */}
+      {!screen ? <SafeSpend /> : null}
       <PayInbox N={NATIVE} ready={ready} onAdd={(txns) => { if (bridgeRef.current && bridgeRef.current.addTxns) bridgeRef.current.addTxns(txns); }} />
       <iframe ref={frameRef} srcDoc={html} title={tr("Money")} className="flex-1 min-h-0 w-full block bg-[#0F1218]" style={{ border: 0 }} />
       {sheet ? (

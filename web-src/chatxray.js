@@ -373,3 +373,31 @@ export function overviewMessages(question, sample, me, total) {
 }
 
 export { fmtDate };
+
+/* ---- v6.37 (upgrade M4): promise score per person — over every chat you X-rayed, who keeps their word.
+   A promise to pay (or any promise with a date) is KEPT when a payment from the same person follows it (same amount when both
+   have one) by its date + 3 days of grace; BROKEN when its date + 3 days passed without one; OPEN when the date is ahead or
+   there is no date and no payment yet. Code only — the model only found the items (parseItems). */
+const GRACE = 3 * 86400000;
+const dayEnd = (s) => Date.parse(s + "T23:59:59");
+export function promiseScores(analyses, now = Date.now()) {
+  const per = new Map();
+  const get = (p) => { if (!per.has(p)) per.set(p, { person: p, kept: 0, broken: 0, open: 0, late: 0, examples: [] }); return per.get(p); };
+  for (const a of analyses || []) {
+    const items = (a && a.items) || [];
+    const pays = items.filter((x) => x.type === "paid");
+    const used = new Set();
+    for (const pr of items.filter((x) => x.type === "promise")) {
+      const who = pr.from || pr.author; if (!who || who === a.me) continue;
+      const limit = pr.due ? dayEnd(pr.due) + GRACE : Infinity;
+      const match = pays.find((p, k) => !used.has(k) && (p.from || p.author) === who && p.t >= pr.t && (pr.amount == null || p.amount == null || Math.abs(p.amount - pr.amount) < 0.01) && (used.add(k) || true));
+      const r = get(who);
+      if (match && match.t <= limit) r.kept++;
+      else if (match) { r.kept++; r.late++; }
+      else if (pr.due && now > limit) { r.broken++; if (r.examples.length < 3) r.examples.push({ what: pr.what || pr.quote, due: pr.due, chat: a.name }); }
+      else r.open++;
+    }
+  }
+  return [...per.values()].map((r) => ({ ...r, score: r.kept + r.broken ? Math.round((100 * (r.kept - r.late * 0.5)) / (r.kept + r.broken)) : null }))
+    .sort((x, y) => (x.score == null) - (y.score == null) || (x.score ?? 0) - (y.score ?? 0));
+}

@@ -54,6 +54,12 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState(-1);
   const [res, setRes] = useSticky("deal:res", null);
+  // v6.37 (M2): what the bank pays a year on a certificate — the person sets it once (default 20%)
+  const RATE_KEY = "attune:deal:bankrate";
+  const [rateTxt, setRateTxt] = useState(() => { try { return localStorage.getItem(RATE_KEY) || "20"; } catch (e) { return "20"; } });
+  const [rateV, setRateV] = useState(rateTxt);
+  const saveRate = (t) => { const v = String(Number(t) > 0 && Number(t) < 200 ? Number(t) : 20); setRateTxt(v); setRateV(v); try { localStorage.setItem(RATE_KEY, v); } catch (e) {} };
+  const real = res && res.plan && res.terms ? D.realCost({ cash: res.terms.cash || res.terms.price, down: res.terms.down || 0, monthly: res.terms.monthly, months: res.terms.months, fees: res.terms.fees || 0, rate: Number(rateV) / 100 }) : null;
   useSubBack(!!res, () => setRes(null));   // v5.34: Back → a new check
   const [err, setErr] = useState("");
   const [hist, setHist] = useState(loadH);
@@ -244,10 +250,21 @@ export function DealCheck({ llm, webPages, native, flash, openEngine, modelReady
                 <tr><td className="py-1 text-slate-400">{tr("You pay in total")}</td><td className="py-1 text-end text-slate-100" data-testid="deal-total">{fmt(res.plan.total, res.terms.currency)}</td></tr>
                 {isFinite(res.plan.extra) ? <tr><td className="py-1 text-slate-400">{tr("More than cash")}</td><td className={`py-1 text-end ${res.plan.extra > 0 ? "text-amber-300" : "text-emerald-300"}`}>{fmt(res.plan.extra, res.terms.currency)}</td></tr> : null}
                 {res.plan.yearlyRate != null ? <tr><td className="py-1 text-slate-400">{tr("Real yearly interest")}</td><td className="py-1 text-end text-slate-100" data-testid="deal-rate">{Math.round(res.plan.yearlyRate * 100)}%</td></tr> : null}
+                {real ? <tr><td className="py-1 text-slate-400">{tr("In today's money")}</td><td className="py-1 text-end text-slate-100" data-testid="deal-pv">{fmt(real.pv, res.terms.currency)}</td></tr> : null}
               </> : null}
               {res.market ? <tr><td className="py-1 text-slate-400">{tr("Market price")}</td><td className="py-1 text-end text-slate-100" data-testid="deal-market">{fmt(res.market.low)}–{fmt(res.market.high, res.terms.currency)}</td></tr>
                 : <tr><td className="py-1 text-slate-400">{tr("Market price")}</td><td className="py-1 text-end text-slate-500">{webPages ? tr("not found online") : tr("turn on the internet to compare")}</td></tr>}
             </tbody></table>
+            {real ? (
+              <div className="mt-3 rounded-xl bg-slate-950/60 border border-slate-800 p-3 text-[12.5px] grid gap-2" data-testid="deal-real">
+                <p className={real.cheaper === "plan" ? "text-emerald-300" : real.cheaper === "cash" ? "text-amber-300" : "text-slate-200"}>
+                  {real.cheaper === "plan" ? tr("Installments are cheaper in real money by {x}: keep the cash in the bank and pay monthly from it.", { x: fmt(real.diff, res.terms.currency) })
+                    : real.cheaper === "cash" ? tr("Cash is cheaper in real money by {x}, even after what the bank would pay you.", { x: fmt(real.diff, res.terms.currency) })
+                    : tr("Cash and installments cost about the same in real money.")}</p>
+                <label className="flex items-center gap-2 text-slate-400">{tr("Your bank pays a year")}
+                  <input value={rateTxt} onChange={(e) => setRateTxt(e.target.value.replace(/[^\d.]/g, ""))} onBlur={() => saveRate(rateTxt)} inputMode="decimal" data-testid="deal-bank-rate"
+                    className="w-16 rounded-md border border-slate-700 bg-transparent px-2 py-0.5 text-slate-100 tabular-nums" />%</label>
+              </div>) : null}
             {res.market && (res.terms.cash || res.terms.price) ? (() => {
               const lo = Math.min(res.market.low, res.terms.cash || res.terms.price) * 0.9, hi = Math.max(res.market.high, res.terms.cash || res.terms.price) * 1.1;
               const pos = (x) => Math.max(0, Math.min(100, ((x - lo) / (hi - lo)) * 100));

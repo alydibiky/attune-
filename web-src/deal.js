@@ -127,6 +127,22 @@ export function planCost({ cash, down = 0, monthly, months, fees = 0 }) {
   return out;
 }
 
+/**
+ * v6.37 (upgrade M2): installments or cash in REAL money. If you keep the cash in the bank (a certificate at `rate` a year)
+ * and pay the installments from it, each future payment is worth less than today's pound. present value = down + fees +
+ * every monthly payment discounted at the bank's monthly rate. If it is below the cash price, the plan is the better deal.
+ * → { pv, cash, cheaper: "plan" | "cash" | "same", diff (always ≥ 0), rate } or null.
+ */
+export function realCost({ cash, down = 0, monthly, months, fees = 0, rate = 0.2 }) {
+  cash = num(cash); down = num(down) || 0; monthly = num(monthly); months = Math.round(num(months)); fees = num(fees) || 0; rate = Number(rate);
+  if (!(cash > 0) || !(monthly > 0) || !(months > 0) || !(rate >= 0) || rate > 3) return null;
+  const r = Math.pow(1 + rate, 1 / 12) - 1;
+  // the first installment is a month from now (an installment paid today belongs in `down`)
+  const pv = down + fees + (r === 0 ? monthly * months : monthly * (1 - Math.pow(1 + r, -months)) / r);
+  const d = pv - cash, same = Math.abs(d) <= Math.max(5, cash * 0.005);
+  return { pv: Math.round(pv), cash, cheaper: same ? "same" : d < 0 ? "plan" : "cash", diff: Math.round(Math.abs(d)), rate };
+}
+
 /** Scam and trap signs, by code. → [{ id, weight, en, ar }] */
 const SIGNS = [
   ["pay-first", 3, /(deposit|advance payment|pay (first|before|in advance)|transfer (the money|first)|send (the )?money|عربون|حو(ّ)?ل (الأول|الاول|الفلوس)|ابعت (الفلوس|المبلغ)|ادفع (الأول|الاول|مقدم)|مقدم)/i,

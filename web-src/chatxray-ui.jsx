@@ -144,6 +144,18 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
               {saved.map((s) => <button key={s.id} onClick={() => { setRes(s); setTab("money"); }} className="w-full text-start py-2 text-[13px] text-slate-200 border-b border-slate-800 last:border-0">{s.name} <span className="text-slate-500 text-[11px]">· {fmtD(s.at)}</span></button>)}
             </div>
           ) : null}
+          {/* v6.37 (M4): who keeps their word, over every chat X-rayed here */}
+          {(() => { const sc = CX.promiseScores(saved).filter((r) => r.score != null); return sc.length ? (
+            <div className="pt-2 border-t border-slate-800" data-testid="xray-scores">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">{tr("Who keeps their word")}</p>
+              {sc.map((r) => (
+                <div key={r.person} className="py-1.5 text-[13px] text-slate-200 border-b border-slate-800 last:border-0" data-testid="xray-score">
+                  <div className="flex items-center gap-2"><span className="flex-1 min-w-0 truncate">{r.person}</span>
+                    <b className={"tabular-nums " + (r.score >= 80 ? "text-emerald-300" : r.score >= 50 ? "text-amber-300" : "text-rose-300")}>{r.score}%</b></div>
+                  <p className="text-[11.5px] text-slate-500">{tr("{k} kept · {b} broken · {l} late · {o} open", { k: r.kept, b: r.broken, l: r.late, o: r.open })}</p>
+                  {r.examples[0] ? <p className="text-[11.5px] text-slate-500 truncate" dir="auto">“{r.examples[0].what}” · {r.examples[0].due}</p> : null}
+                </div>))}
+            </div>) : null; })()}
         </section>
       ) : null}
 
