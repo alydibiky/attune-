@@ -9,7 +9,7 @@
    A long file shows its first pages at once; the rest is read in parts in the background.
    The logic is docqa.js and pdfreader.js (tested); this file is the screen.                                                             */
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { Upload, Send, ChevronLeft, ChevronRight, Search, FileText, X, AlertTriangle, Copy, Trash2, Sparkles, Star, PenLine, Languages, Menu, LayoutGrid, Eye, Share2, Download, Maximize2, Plus, Brain, History } from "lucide-react";
+import { Upload, Send, ChevronLeft, ChevronRight, Search, FileText, X, AlertTriangle, Copy, Trash2, Sparkles, Star, PenLine, Languages, Menu, LayoutGrid, Eye, Share2, Download, Maximize2, Plus, Brain, History, Check } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { useSubBack } from "./backstack.js";
 import * as Q from "./docqa.js";
@@ -17,6 +17,9 @@ import * as C from "./convert.js";
 import * as R from "./pdfreader.js";
 import { PANES, DeskEmpty } from "./desk.jsx";
 import { useDesktopWide } from "./side-ui.jsx";
+import { Md } from "./chat.jsx";
+import { mathToText } from "./quality.js";
+import { checkMath, dedupeAnswer } from "./mathcheck.js";
 
 const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40";
 const primary = btn + " bg-teal-500 text-slate-950";
@@ -38,15 +41,58 @@ export function textToPages(text) {
 const idle = () => new Promise((ok) => setTimeout(ok, 0));
 const fmtSize = (b) => b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
 
+/* v6.38 (Ali: "add a copy button; the formulas are written in a wrong way; I'm not sure the answers are correct"):
+   answers are drawn as real text — headings, bold, lists and formulas (LaTeX → "μ = ln(X₂/X₁)/(t₂ − t₁)", Md) — with their
+   pages as chips; a "Solve" answer is one card per question, each with Copy and the calculations re-done by code. */
+const plain = (t) => mathToText(String(t || "")).replace(/\[\s*(?:p{1,2}\.?|pages?|ص|صفحه|صفحة)\s*[\d٠-٩][\d٠-٩,\s\-–و]*\]/gi, "").replace(/\*\*/g, "").replace(/^#{1,6}\s*/gm, "").replace(/[ \t]+\n/g, "\n").trim();
+const pagesOf = (t) => [...new Set(Q.splitCitations(t).filter((x) => x.p).map((x) => x.p))];
+const noCites = (t) => String(t || "").replace(/\s*\[\s*(?:p{1,2}\.?|pages?|ص|صفحه|صفحة)\s*[\d٠-٩][\d٠-٩,\s\-–و]*\]/gi, "");
+function CopyBtn({ text, testid = "pdf-copy", label }) {
+  const [done, setDone] = useState(false);
+  const go = () => { const t = plain(text); try { if (window.AttuneNative && window.AttuneNative.copy) window.AttuneNative.copy(t); else navigator.clipboard.writeText(t); } catch (e) { try { navigator.clipboard.writeText(t); } catch (x) {} } setDone(true); setTimeout(() => setDone(false), 1400); };
+  return <button onClick={go} className="text-[11.5px] px-2 py-1 rounded-md border border-slate-700 text-slate-300 flex items-center gap-1 shrink-0" data-testid={testid}>{done ? <Check size={12} className="text-emerald-300" /> : <Copy size={12} />}{done ? tr("Copied") : label || tr("Copy")}</button>;
+}
+function Chips({ pages, onPage, q, claims }) {
+  return pages.length ? <span className="inline-flex flex-wrap gap-1">{pages.map((p) => <button key={p} onClick={() => onPage(p, q, claims && claims[p])} className="px-1.5 rounded bg-teal-500/20 text-teal-200 text-[12px]" data-testid="pdf-cite">p. {p}</button>)}</span> : null;
+}
+/** The calculations of one answer, re-done by code (mathcheck.js). */
+function MathNote({ text }) {
+  const r = useMemo(() => checkMath(text), [text]);
+  if (!r.checked) return null;
+  if (!r.wrong.length) return <p className="text-[11.5px] text-emerald-300 m-0 flex items-center gap-1" data-testid="pdf-math-ok"><Check size={12} />{tr("{n} calculations checked by code — all correct", { n: r.checked })}</p>;
+  return (<div className="rounded-lg border border-amber-700/60 bg-amber-500/10 p-2 text-[12px] text-amber-100 space-y-0.5" data-testid="pdf-math-wrong">
+    <p className="m-0 font-semibold flex items-center gap-1"><AlertTriangle size={12} />{tr("Checked by code: {n} calculation(s) don't add up", { n: r.wrong.length })}</p>
+    {r.wrong.slice(0, 4).map((w, i) => <p key={i} className="m-0" dir="ltr">{w.expr} = <b>{w.value}</b>, {tr("not")} {w.written}</p>)}</div>);
+}
+/** A "Solve" answer → its questions: [{ head, page, body }] (the "### Question N [p. 2]" lines the screen writes). */
+export function solveBlocks(text) {
+  const t = String(text || ""); const re = /^###\s+(.+)$/gm; const out = []; let m, last = null;
+  while ((m = re.exec(t))) { if (last) last.body = t.slice(last.end, m.index).trim(); last = { head: m[1], end: re.lastIndex }; out.push(last); }
+  if (last) last.body = t.slice(last.end).trim();
+  const pre = out.length ? t.slice(0, t.search(/^###\s+/m)).trim() : "";
+  return out.length >= 1 && /\bQ|سؤال|Question/i.test(out[0].head) ? { pre, items: out.map((b) => ({ title: noCites(b.head).trim(), pages: pagesOf(b.head), body: dedupeAnswer(b.body) })) } : null;
+}
 function Msg({ m, onPage }) {
   if (m.role === "user") return <div className="ms-10 rounded-2xl rounded-ee-md bg-teal-500/15 border border-teal-800 px-3 py-2 text-[14px] text-slate-100 whitespace-pre-wrap" data-testid="pdf-msg-user">{m.text}</div>;
-  const parts = Q.splitCitations(m.text);
   const claims = R.claimsByPage(m.text);
+  const blocks = m.key || /^###\s+/m.test(m.text) ? solveBlocks(m.text) : null;
   return (
-    <div className="me-6 rounded-2xl rounded-es-md bg-slate-900 border border-slate-800 px-3 py-2 text-[14px] text-slate-100 leading-relaxed" data-testid="pdf-msg-ai">
-      <div className="whitespace-pre-wrap">{parts.map((x, i) => x.p ? <button key={i} onClick={() => onPage(x.p, m.q, claims[x.p])} className="mx-0.5 px-1.5 rounded bg-teal-500/20 text-teal-200 text-[12px] align-baseline" data-testid="pdf-cite">p. {x.p}</button> : <span key={i}>{x.t}</span>)}</div>
+    <div className="me-6 rounded-2xl rounded-es-md bg-slate-900 border border-slate-800 px-3 py-2 text-[14px] text-slate-100 leading-relaxed space-y-2" data-testid="pdf-msg-ai">
+      {blocks ? <>
+        {blocks.pre ? <Md text={noCites(blocks.pre)} runnable={false} /> : null}
+        {blocks.items.map((b, i) => (
+          <section key={i} className="rounded-xl border border-slate-800 bg-slate-950/50 p-2.5 space-y-1.5" data-testid="pdf-solve-card">
+            <div className="flex items-center gap-2"><b className="text-[14.5px] text-white flex-1 min-w-0" dir="auto">{b.title}</b><Chips pages={b.pages} onPage={onPage} q={m.q} claims={claims} /><CopyBtn text={b.title + "\n" + b.body} testid="pdf-copy-one" /></div>
+            <Md text={noCites(b.body)} runnable={false} />
+            {m.done !== false ? <MathNote text={b.body} /> : null}
+          </section>))}
+      </> : <>
+        <Md text={noCites(m.text)} runnable={false} />
+        <Chips pages={pagesOf(m.text)} onPage={onPage} q={m.q} claims={claims} />
+      </>}
       {m.note ? <p className="mt-2 text-[12px] text-amber-300 flex items-start gap-1.5"><AlertTriangle size={13} className="mt-0.5 shrink-0" />{m.note}</p> : null}
       {m.sources && m.sources.length ? <p className="mt-2 text-[11.5px] text-slate-500">{tr("Read pages")}: {m.sources.map((p) => <button key={p} onClick={() => onPage(p, m.q)} className="mx-0.5 underline text-slate-400">{p}</button>)}</p> : null}
+      {m.text && m.text.length > 40 ? <div className="flex justify-end"><CopyBtn text={blocks ? blocks.items.map((b) => b.title + "\n" + b.body).join("\n\n") : m.text} label={blocks ? tr("Copy all") : tr("Copy")} /></div> : null}
     </div>
   );
 }
@@ -246,14 +292,14 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
         const pageText = (n) => ((doc.index.pages.find((p) => p.n === n) || {}).text || "");
         const done = []; const key = "solve-" + id;
         const show = (extra) => setMsgs((m) => { const t = done.join("\n\n") + (extra ? (done.length ? "\n\n" : "") + extra : ""); const i = m.findIndex((x) => x.key === key);
-          const row = { role: "ai", key, q: text, text: t, sources: [] }; return i >= 0 ? m.map((x, j) => (j === i ? row : x)) : [...m, row]; });
+          const row = { role: "ai", key, q: text, text: t, sources: [], done: false }; return i >= 0 ? m.map((x, j) => (j === i ? row : x)) : [...m, row]; });
         for (let i = 0; i < qs.length; i++) {
           if (!alive()) return;
           setAsking(tr("Solving question {i} of {n}…", { i: i + 1, n: qs.length }));
           const headLine = `### ${tr("Question {n}", { n: qs[i].n })} [p. ${qs[i].page}]`;
           let acc = "";
-          const out = String(await llm(Q.solveOneMessages(text, qs[i], pageText(qs[i].page)), { maxTokens: 900, temperature: 0.1, onToken: (t) => { acc += t; if (alive()) show(headLine + "\n" + acc); } }) || acc || "").trim();
-          done.push(headLine + "\n" + (out || tr("(no answer came for this one — ask about it on its own)")));
+          const out = String(await llm(Q.solveOneMessages(text, qs[i], pageText(qs[i].page)), { maxTokens: 750, temperature: 0.1, onToken: (t) => { acc = t; if (alive()) show(headLine + "\n" + acc); } }) || acc || "").trim();   // (onToken gives the whole answer so far, not a piece)
+          done.push(headLine + "\n" + (dedupeAnswer(out) || tr("(no answer came for this one — ask about it on its own)")));
           show("");
         }
         if (!alive()) return;

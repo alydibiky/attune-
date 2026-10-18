@@ -757,6 +757,16 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AE. 18 Oct 2026 — v6.39: Ali's "Solve the questions" screenshots (HANDOFF §5.87). Read this first, then AD.
+Fixed: the answer that was written, removed and rewritten (a streaming bug) · a freeze on half-written formulas · formulas and
+headings drawn properly · one card per question with Copy / Copy all · every calculation re-checked by code (his screenshot's
+doubling time 1.98 h is really 2.00 h — now flagged) · repeated "Final Answer" removed · shorter, faster prompts · research
+tables: blanks filled from the pages, empty columns dropped, "not published" for the rest.
+### Ali's phone checklist for 6.39
+1. ⬜ Ask a PDF → the same assignment → "Solve the questions": cards, formulas readable, Copy, the green / amber check line.
+2. ⬜ Learn → a new lesson: the text grows smoothly while it is written (no flashing).
+3. ⬜ Chat → a car question with the web (e.g. "Lynk & Co 900 all trims"): the table has no "—".
+
 ## AD. 18 Oct 2026 — v6.38: batch 2 (HANDOFF §5.86). Read this first, then AC.
 Built: H5 Instant quick-settings tile · H6 Shelf review · S4 brand kit · W3 site reports (mic + stamped photos + PDF) ·
 W6 video cut / sound only (subtitles wait for an on-device speech model) · X3 "Your week in privacy" · and batch 3: M3 Timeline

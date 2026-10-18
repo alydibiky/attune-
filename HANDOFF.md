@@ -1946,6 +1946,31 @@ Built in this release (each: pure module + unit test + UI + e2e + Egyptian Arabi
   1/3/5 years, owned after 5; stress tests (pound −30% → +20 pts inflation for a year, 35% for 5 years, 3 months without
   income). Tests: unit v740lifesim, e2e_v740lifesim.
 
+### 5.87 (18 Oct 2026) — v6.39: Ali's screenshots of "Solve the questions" + research blanks + "writes it, removes it, rewrites it"
+- **The rewrite flash (a real bug):** `onToken` gives the WHOLE answer so far (LocalEngine.run, both the phone and the fetch path),
+  but the PDF Solve screen and three Learn / News places did `acc += t` — the screen filled with "a ab abc…" copies, got slow,
+  and at the end the real answer replaced it ("writes the whole answer then removes it"). Now `acc = t` (pdfchat-ui,
+  daily-ui ×3). Rule: **onToken is cumulative — never `+=`.**
+- **A freeze (a real bug):** quality.js `tex()` looped forever on a half-written `\text` / `\mathrm` with no "{" yet — any
+  screen drawing a streaming formula could hang. Fixed; tests run every prefix of a formula (v740mathcheck).
+- **PDF answers drawn properly** (pdfchat-ui `Msg`): Md (headings, bold, lists, formulas as text: `μ = ln(4.0)/(4 h)`,
+  `Y(X/S)`), pages as chips; a Solve answer = one card per question (`solveBlocks`) with Copy, and "Copy all" (clean text,
+  no $, **, [p. N]).
+- **Every calculation re-done by code** (`mathcheck.js checkMath`): lines split at = / ≈, numeric sides evaluated by a
+  small safe calculator (units after a number dropped, variables never guessed), a variable followed across lines
+  ("t_d = 0.69315/0.34657" … "t_d ≈ 1.980"). Under each card: "N calculations checked by code — all correct" or
+  "0.69315/0.34657 = 2, not 1.980 h". (Ali's own screenshot had exactly that slip: the doubling time is 2.00 h.)
+- **No repeats:** `dedupeAnswer` drops a paragraph written twice and every "Final Answer" block after the first.
+- **Faster, tidier prompts** (docqa solveOneMessages / solveMessages): no "The request asks…", plain-text formulas (no
+  LaTeX, fewer tokens), each final answer once; 750 tokens per question (was 900).
+- **Research without blanks** (`tableblanks.js fillBlanks`, after the facts sheet in chat.jsx): each "—" cell is filled from
+  the pages read (the spec from the column or row name via factsheet ATTRS, the version from the other; the version's
+  sentence or the next one), cited [n]; a column / row no source fills is dropped; what is still unknown says "not
+  published". The answer templates no longer ask the model for "—".
+- **Chat says why it rewrites:** a wrong-language answer is asked again with the status "The answer came in English —
+  writing it again in Arabic…".
+- Tests: unit v740mathcheck, v740tableblanks; e2e_v740solve.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

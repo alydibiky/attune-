@@ -41,6 +41,7 @@ import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
 import { factSheet, SHEET_NOTE } from "./factsheet.js";
+import { fillBlanks } from "./tableblanks.js";
 import { EXPERT_RULES, worthReview, reviewMessages, pickReviewed, LEVELS } from "./power.js";
 // v5.29 UX: the follow-up chips fade out at the end, so it's clear the row scrolls (left in Arabic)
 const chipFade = () => { const side = typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "left" : "right"; const g = "linear-gradient(to " + side + ", #000 82%, transparent)"; return { WebkitMaskImage: g, maskImage: g }; };
@@ -1425,6 +1426,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       if (plain && answer && !sources) {
         const want = wrongLanguage(typed || q, answer);
         if (want) {
+          // v6.38 (Ali: "it writes the whole answer then removes it and rewrites it"): say why before it is written again
+          onStatus(want === "ar" ? tr("The answer came in English — writing it again in Arabic…") : tr("The answer came in the wrong language — writing it again in English…"));
           try {
             const again = await api.run(buildMessages(history, content + (want === "ar" ? "\n\n(اكتب الرد كله بالعربي — Write the whole answer in Arabic.)" : "\n\n(Write the whole answer in English.)")), pic, { onToken, onStatus, think: false, copy: !!fileAtt });
             if (runRef.current !== run) return;
@@ -1577,10 +1580,15 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         const extraPages = [...full.values()].filter((h) => h.url && !seen.has(h.url));
         const forSheet = [...sources.map((x) => (full.has(x.url) ? { ...x, text: full.get(x.url).text } : x)), ...extraPages];
         const fs = factSheet((webCtx && webCtx.question) || typed, forSheet, /[؀-ۿ]/.test(typed || ""), compareParts((webCtx && webCtx.question) || typed));
+        const nBefore = sources.length;
         if (fs.md) {
           answer = String(answer).trim() + "\n\n" + fs.md; extra.factSheet = fs.rows.length + fs.tables.length;
           if (extraPages.length) sources = [...sources, ...extraPages.map((h) => ({ ...h, text: String(h.text || "").slice(0, 600) }))];
         }
+        // v6.38 (Ali: "the research still leaves blanks"): every "—" cell is filled from the pages read, by code; a column or
+        // row no source fills is dropped; what is still unknown says "not published" (tableblanks.js)
+        const fb = fillBlanks(answer, forSheet.slice(0, sources.length > nBefore ? forSheet.length : nBefore), { ar: /[؀-ۿ]/.test(typed || "") });
+        if (fb.filled || fb.dropped || fb.left) { answer = fb.md; extra.blanksFilled = fb.filled; }
       }
       // A sum in the answer that doesn't add up ("25,000 × 4 = 10,000"): the
       // question is worked out again as a program the phone runs, and that

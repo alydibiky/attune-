@@ -247,7 +247,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
   const gen = async (what, messages, maxTokens, temperature = 0.4) => {
     let acc = "";
     setBusy({ what, text: "" });
-    try { return await llm(messages, { maxTokens, temperature, onToken: (t) => { acc += t; setBusy({ what, text: acc }); } }); }
+    try { return await llm(messages, { maxTokens, temperature, onToken: (t) => { acc = t; setBusy({ what, text: acc }); } }); }
     finally { setBusy(null); }
   };
 
@@ -273,7 +273,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
       let acc = ""; setBusy({ what: what0, text: "" });
       let p = null;
       try {
-        p = await D.writeLesson((m, o) => llm(m, { ...o, onToken: (t) => { acc += t; setBusy((b) => (b ? { ...b, text: acc } : b)); } }), c, n, {
+        p = await D.writeLesson((m, o) => llm(m, { ...o, onToken: (t) => { acc = t; setBusy((b) => (b ? { ...b, text: acc } : b)); } }), c, n, {
           onStage: (st) => { acc = ""; setBusy({ what: st === "extras" ? tr("Making the diagram and flashcards…") : st === "retry" ? tr("Checking it and writing it again…") : what0, text: "" }); } });
       } finally { setBusy(null); }
       if (!p) { flash(tr("The lesson came out too short — try again.")); return null; }
@@ -651,7 +651,7 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
       if (!items.length) { setBusy(null); putTopic(D.addDigest(t, { day: todayKey, at: Date.now(), text: "", items: [], none: true, why: r.why || "" })); return; }
       let acc = "";
       setBusy({ what: tr("Reading {n} articles and writing your digest…", { n: items.length }), text: "" });
-      const out = await llm(D.digestMessages(t, items), { maxTokens: 900, temperature: 0.2, onToken: (x) => { acc += x; setBusy((b) => b && { ...b, text: acc }); } });
+      const out = await llm(D.digestMessages(t, items), { maxTokens: 900, temperature: 0.2, onToken: (x) => { acc = x; setBusy((b) => b && { ...b, text: acc }); } });
       setBusy(null);
       if (/^\s*NOTHING NEW/i.test(out)) { putTopic(D.addDigest(t, { day: todayKey, at: Date.now(), text: "", items, none: true })); return; }
       const ck = D.checkCitations(out, items.length);

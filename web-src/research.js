@@ -456,9 +456,9 @@ export function compareSearches(q, kind = topicKind(q), n = 6) {
 /** The shape the final answer follows for this kind of subject ("" for general questions). */
 export function answerTemplate(q, kind = topicKind(q)) {
   const p = compareParts(q);
-  if (p) return "\n\n(This is a COMPARISON. Write it in this structure — fill every section the sources can, cover EVERY version of both, put \"—\" in a table cell no source gives, and cite the source number after each fact.)\n" + (CMP[kind] || CMP.general)(p[0], p[1]);
+  if (p) return "\n\n(This is a COMPARISON. Write it in this structure — fill every section the sources can, cover EVERY version of both, leave a table cell empty only when no source gives it (the app fills what it can from the pages), and cite the source number after each fact.)\n" + (CMP[kind] || CMP.general)(p[0], p[1]);
   const t = TPL[kind] || "";
-  return t ? "\n\n(Write the answer in this structure — use every section the sources can fill, skip a section only when no source says anything for it, and put \"—\" in a table cell no source gives. Cite the source number after each fact.)\n" + t : "";
+  return t ? "\n\n(Write the answer in this structure — use every section the sources can fill, skip a section only when no source says anything for it, and leave a table cell empty only when no source gives it (the app fills what it can from the pages). Cite the source number after each fact.)\n" + t : "";
 }
 /** Should the answer get the full topic shape? A detail question ("all trims", "specs", "compare") or a bare subject ("Lynk & Co 900"). */
 export function wantsShape(q, kind = topicKind(q)) {

@@ -5618,4 +5618,11 @@ export const AR = {
   "Careful: with every option, your cash runs out in more than 1 future in 10. The safest is {best} ({ok}% of futures stay above zero).": "خلي بالك: في كل الاختيارات، الكاش بيخلص في أكتر من مستقبل من كل 10. الأأمن هو {best} ({ok}% من المستقبلات فوق الصفر).",
   "{best}: {ok}% of futures never run out of cash; after 5 years you would have about {worth} (today's pounds, including what you bought).": "{best}: {ok}% من المستقبلات الكاش فيها ميخلصش؛ وبعد 5 سنين هيبقى معاك حوالي {worth} (بجنيه النهارده، ومعاه اللي اشتريته).",
   "{best} is better: {ok}% of futures never run out of cash, and after 5 years you would have about {worth} in today's pounds — {diff} more than {other}.": "{best} أحسن: {ok}% من المستقبلات الكاش فيها ميخلصش، وبعد 5 سنين هيبقى معاك حوالي {worth} بجنيه النهارده — يعني {diff} أكتر من {other}.",
+  "The answer came in English — writing it again in Arabic…": "الإجابة طلعت إنجليزي — بكتبها تاني بالعربي…",
+  "The answer came in the wrong language — writing it again in English…": "الإجابة طلعت بلغة غلط — بكتبها تاني بالإنجليزي…",
+  "{n} calculations checked by code — all correct": "{n} حسابات اتراجعت بالكود — كلها صح",
+  "Checked by code: {n} calculation(s) don't add up": "اتراجعت بالكود: {n} حساب مش مظبوط",
+  "not": "مش",
+  "Copy all": "انسخ الكل",
+  "not published": "مش منشور",
 };

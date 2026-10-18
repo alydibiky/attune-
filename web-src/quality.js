@@ -88,7 +88,9 @@ function group(s, i) {
   for (; j < s.length; j++) { if (s[j] === "{") d++; else if (s[j] === "}") { d--; if (d === 0) break; } }
   return [s.slice(i + 1, j), j + 1];
 }
-const wrap = (x) => (/^[\w.√]+$/.test(x) ? x : "(" + x + ")");
+const balanced = (x) => { let d = 0; for (let k = 0; k < x.length; k++) { if (x[k] === "(") d++; else if (x[k] === ")" && --d === 0 && k < x.length - 1) return false; } return d === 0; };
+// no extra brackets around a plain number / word, a function call "ln(4.0)" or something already in brackets
+const wrap = (x) => (/^[\w.√⁰¹²³⁴⁵⁶⁷⁸⁹⁻₀-₉]+$/.test(x) || (/^(?:[a-zA-Zα-ω√]+)?\(.*\)$/.test(x) && balanced(x.replace(/^[a-zA-Zα-ω√]+/, ""))) ? x : "(" + x + ")");
 
 function tex(s) {
   let out = "", i = 0;
@@ -100,13 +102,15 @@ function tex(s) {
     }
     if (s.startsWith("\\sqrt", i)) { i += 5; const [a, i1] = group(s, i); const v = tex(a); out += "√" + (/^(\d+(\.\d+)?|[a-zA-Z])$/.test(v) ? v : "(" + v + ")"); i = i1; continue; }
     if (/^\\(text|mathrm|mathbf|textbf|operatorname|mbox|mathit)\b/.test(s.slice(i))) {
-      i = s.indexOf("{", i); const [a, i1] = group(s, i); out += tex(a); i = i1; continue;
+      // (a half-written "\text" while the answer streams has no "{" yet: skip the word, never loop back to the start)
+      const ob = s.indexOf("{", i); if (ob < 0) { i += /^\\[a-zA-Z]+/.exec(s.slice(i))[0].length; continue; }
+      i = ob; const [a, i1] = group(s, i); out += tex(a); i = i1; continue;
     }
     if (s.startsWith("\\left", i)) { i += 5; continue; }
     if (s.startsWith("\\right", i)) { i += 6; continue; }
     if (s[i] === "^" || s[i] === "_") {
       const map = s[i] === "^" ? SUP : SUB; const [a, i1] = group(s, i + 1); const v = tex(a);
-      out += [...v].every((c) => map[c]) ? [...v].map((c) => map[c]).join("") : (s[i] === "^" ? "^" + wrap(v) : "_" + v);
+      out += [...v].every((c) => map[c]) ? [...v].map((c) => map[c]).join("") : (s[i] === "^" ? "^" + wrap(v) : /[/,]/.test(v) ? "(" + v + ")" : "_" + v);   // Y_{X/S} → Y(X/S); t_{AB} stays t_AB
       i = i1; continue;
     }
     const cmd = /^\\[a-zA-Z]+|^\\[,;%]/.exec(s.slice(i));
