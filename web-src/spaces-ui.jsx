@@ -13,9 +13,10 @@ import {
   loadProjects, upsertProject, deleteProject,
   loadArtifacts, saveArtifact, deleteArtifact, latest, fileNameFor,
   ACCENTS, BACKGROUNDS, PALETTES, loadTheme, saveTheme, applyTheme, newSpaceId,
+  rulesFor, setRules, exportAssistant, importAssistant,
 } from "./spaces.js";
 import { PANES, GRID3 } from "./desk.jsx";
-import { Plus, X, Trash2, PenLine, Copy, Share2, Download, Save, Loader2, Sparkles, MessageSquare, Maximize2, Wand2, FileText, Check, Brain } from "lucide-react";
+import { Plus, X, Trash2, PenLine, Copy, Share2, Download, Save, Loader2, Sparkles, MessageSquare, Maximize2, Wand2, FileText, Check, Brain, Upload } from "lucide-react";
 
 const card = "rounded-2xl border border-slate-800 bg-slate-900";
 const input = "w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-600";
@@ -34,6 +35,15 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
   const [drafting, setDrafting] = useState(false);
   const reload = () => setList(loadAssistants());
   useSubBack(!!edit, () => setEdit(null));   // v5.34: Back closes the edit form first
+  // v6.40 (C1): an assistant as one file (with what it learned), and opening one
+  const [rulesV, setRulesV] = useState(0);
+  const importRef = useRef(null);
+  const exportOne = async (a) => {
+    const name = String(tr(a.name)).replace(/[^\p{L}\p{N}]+/gu, "-") + ".attune-assistant.json", text = exportAssistant(a);
+    try { if (window.__attuneNativeCall) { await window.__attuneNativeCall("saveFile", { name, mime: "application/json", text }); flash && flash(tr("Saved")); return; } } catch (e) { if (/cancel/i.test(String(e && e.message))) return; }
+    try { const el = document.createElement("a"); el.href = URL.createObjectURL(new Blob([text], { type: "application/json" })); el.download = name; document.body.appendChild(el); el.click(); el.remove(); } catch (e) {}
+  };
+  const importOne = (f) => { if (!f) return; const r = new FileReader(); r.onload = () => { try { const a = importAssistant(r.result); reload(); flash && flash(tr("{n} added, with what it learned", { n: tr(a.name) })); } catch (e) { flash && flash(tr(e.message)); } }; r.readAsText(f); };
 
   const draft = async () => {
     if (!llm || !edit.name.trim()) return;
@@ -73,6 +83,12 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
           <span className="text-[12px] text-slate-400">{tr("Starter questions (one per line, optional)")}</span>
           <textarea value={edit.startersText || ""} onChange={(e) => setEdit({ ...edit, startersText: e.target.value })} rows={3} dir="auto" className={input + " mt-1"} />
         </div>
+        {edit.id ? (() => { const rl = rulesFor(edit.id); void rulesV; return (
+          <div data-testid="assistant-rules"><p className="text-[12px] text-slate-400 mb-1">{tr("Learned from your corrections")} ({rl.length})</p>
+            {!rl.length ? <p className="text-[11.5px] text-slate-500 m-0">{tr("Tap 👎 on an answer in a chat with this assistant and write the right one — it becomes a rule here.")}</p> : null}
+            {rl.map((r, i) => <div key={i} className="flex items-start gap-2 py-1 border-t border-slate-800" data-testid="assistant-rule"><span className="flex-1 text-[12.5px] text-slate-200" dir="auto">{r.text}</span>
+              <button onClick={() => { setRules(edit.id, rl.filter((_, j) => j !== i)); setRulesV((v) => v + 1); }} className="p-1 text-slate-500" aria-label={tr("Delete")}><Trash2 size={12} /></button></div>)}
+          </div>); })() : null}
         <div className="flex gap-2">
           <button onClick={save} disabled={!edit.name.trim() || !edit.instructions.trim()} className={btnMain} data-testid="assistant-save">{tr("Save")}</button>
           <button onClick={() => setEdit(null)} className={btnGhost}>{tr("Cancel")}</button>
@@ -86,6 +102,8 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
       <p className="text-[13px] text-slate-400 leading-relaxed lg:max-w-[70ch]">{tr("Assistants are experts you set up once — their instructions are used in every chat you start with them.")}</p>
       <button onClick={() => setEdit({ emoji: "✨", name: "", desc: "", instructions: "", startersText: "" })} className={btnMain + " w-full lg:w-auto lg:px-5 flex items-center justify-center gap-2"} data-testid="assistant-new">
         <Plus size={16} /> {tr("New assistant")}</button>
+      <button onClick={() => importRef.current && importRef.current.click()} className={btnGhost + " w-full lg:w-auto lg:px-5 lg:ms-2 flex items-center justify-center gap-2"} data-testid="assistant-import"><Upload size={15} /> {tr("Open an assistant file")}</button>
+      <input ref={importRef} type="file" accept=".json,application/json" className="hidden" data-testid="assistant-import-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; importOne(f); }} />
       <div className="grid gap-2 lg:grid-cols-3 lg:gap-3">
         {list.map((a) => (
           <div key={a.id} className={card + " p-3 flex items-center gap-3"} data-testid="assistant-item">
@@ -96,6 +114,7 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
                 <span className="block text-[11px] text-slate-500 leading-snug line-clamp-2" dir="auto">{tr(a.desc || "")}</span>
               </span>
             </button>
+            <button onClick={() => exportOne(a)} className="p-2 text-slate-500" title={tr("Save as a file")} data-testid="assistant-export"><Share2 size={15} /></button>
             {isBuiltinAssistant(a.id) ? (
               <button onClick={() => setEdit({ ...a, id: undefined, name: tr(a.name) + " (" + tr("mine") + ")", startersText: (a.starters || []).join("\n") })} className="p-2 text-slate-500" title={tr("Copy and edit")}><Copy size={15} /></button>
             ) : (<>

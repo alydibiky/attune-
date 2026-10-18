@@ -5654,4 +5654,10 @@ export const AR = {
   "Keep {k}": "احتفظ بـ {k}",
   "My prompts": "طلباتي",
   "Prompt loaded": "الطلب اتفتح",
+  "{n} added, with what it learned": "{n} اتضاف، ومعاه اللي اتعلمه",
+  "That is not an assistant file": "ده مش ملف مساعد",
+  "Learned from your corrections": "اتعلمه من تصحيحاتك",
+  "Tap 👎 on an answer in a chat with this assistant and write the right one — it becomes a rule here.": "دوس 👎 على أي إجابة في شات مع المساعد ده واكتب الصح — هتبقى قاعدة هنا.",
+  "Open an assistant file": "افتح ملف مساعد",
+  "Save as a file": "احفظه كملف",
 };

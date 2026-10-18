@@ -127,10 +127,42 @@ export function knowledgeFor(project, question, budget = 3500) {
   return out.sort((a, b) => (a.doc === b.doc ? a.i - b.i : 0));
 }
 
+/* ---- v6.40 (upgrade C1): assistants that learn from your corrections. A 👎 + the right answer (or a note "always …") in a chat
+   with an assistant becomes a rule that assistant keeps and follows from then on (any assistant, built-in ones too). An
+   assistant can be saved as one file with its rules and opened on another phone. */
+export const RULES_KEY = "attune:assistants:rules:v1";
+export function rulesFor(id) { const all = read(RULES_KEY, {}); return (all && Array.isArray(all[id]) ? all[id] : []); }
+export function setRules(id, list) { const all = read(RULES_KEY, {}) || {}; all[id] = (list || []).slice(-40); write(RULES_KEY, all); return all[id]; }
+/** A correction → the rule text: the note when there is one ("always answer in Egyptian Arabic"), else the corrected answer. */
+export function ruleFromCorrection({ input = "", corrected = "", note = "" } = {}) {
+  const n = String(note || "").trim(), c = String(corrected || "").replace(/\s+/g, " ").trim(), q = String(input || "").replace(/\s+/g, " ").trim();
+  if (n) return n.slice(0, 240);
+  if (!c) return "";
+  return `When asked something like “${q.slice(0, 90)}”, the right answer is: ${c.slice(0, 220)}`;
+}
+export function learnRule(id, entry) {
+  const r = ruleFromCorrection(entry); if (!id || !r) return null;
+  const list = rulesFor(id).filter((x) => x.text !== r);
+  return setRules(id, [...list, { text: r, at: Date.now() }]);
+}
+/** One file with the assistant and what it learned → JSON text; and back. */
+export function exportAssistant(a) {
+  const { id, builtin, ...rest } = a || {};
+  return JSON.stringify({ kind: "attune-assistant", v: 1, assistant: rest, rules: rulesFor(id).map((x) => x.text) }, null, 2);
+}
+export function importAssistant(text) {
+  let j; try { j = JSON.parse(String(text || "")); } catch (e) { throw new Error("That is not an assistant file"); }
+  if (!j || j.kind !== "attune-assistant" || !j.assistant || !j.assistant.name) throw new Error("That is not an assistant file");
+  const a = upsertAssistant({ ...j.assistant, id: undefined });
+  if (a && Array.isArray(j.rules)) setRules(a.id, j.rules.filter((x) => typeof x === "string" && x.trim()).map((t) => ({ text: t.slice(0, 300), at: Date.now() })));
+  return a;
+}
+
 /** The extra system-prompt block for a chat that belongs to an assistant and/or project. */
 export function spaceBlock({ assistant, project, question, chats = null }) {
   const parts = [];
   if (assistant && assistant.instructions) parts.push(`YOUR ROLE — you are "${assistant.name}":\n${assistant.instructions}`);
+  if (assistant) { const rl = rulesFor(assistant.id); if (rl.length) parts.push("WHAT THIS USER TAUGHT YOU (from their corrections — always follow these):\n" + rl.map((r) => "- " + r.text).join("\n")); }
   if (project) {
     if (project.instructions) parts.push(`PROJECT "${project.name}" — standing instructions:\n${project.instructions}`);
     // v6.38 (C4): what earlier chats in this project decided, left open and dated

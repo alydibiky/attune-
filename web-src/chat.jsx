@@ -36,7 +36,7 @@ import { mathToText } from "./quality.js";
 import { looksLikeMathProblem, looksLikeCodeTask, looksLikeWebsiteTask, websiteFollowUp, refusesToBuild, arithmeticSlips, fixSlips } from "./verify.js";
 import { looksLikeReasoning, looksLikeDeduction, DATA_EXT } from "./reason.js";
 import { looksLikeImageRequest, pictureSubject } from "./studio.js";
-import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp } from "./spaces.js";
+import { loadAssistants, loadProjects, spaceBlock, detectArtifact, looksLikeFollowUp , learnRule } from "./spaces.js";
 import { notesMessages, checkNotes, missingMessages, cleanQuery, pagesFor, FINAL_ADD, planMessages, parsePlan, mergeHits, crossCheck, REPORT_ADD, fitNotes, expandQueries, confirmedFigures, wantsDeep, FAST_REPORT_ADD, needsWeb, topicOf, quickBudget, timeBudget, topicKind, topicSearches, answerTemplate, wantsShape, compareSearches, compareParts, fxNote, officialSpecsNote } from "./research.js";
 import { repairFigures, tidyAnswer, gapsOf, fixModelNames, wrongLanguage } from "./answerfix.js";
 import { rulesOf, violations, fixMessage, enforce } from "./constraints.js";
@@ -418,6 +418,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const saveTeach = (m, idx, corrected, note, checked) => {
     const u = messages[idx - 1];
     const ok = api.teach({ input: (u && u.text) || "", was: m.text, corrected, note, checked });
+    // v6.40 (C1): in a chat with an assistant, the correction also becomes one of that assistant's rules
+    if (ok && spaceRef.current.assistant) { try { learnRule(spaceRef.current.assistant.id, { input: (u && u.text) || "", corrected, note }); } catch (e) {} }
     if (ok) { patchMsg(chat.id, m.id, { taught: true }); api.flash(checked === "right" ? tr("Checked — you're right. Learned for next time")
       : checked === "preference" ? tr("Learned — Chat will answer your way on similar questions") : tr("Learned — Chat will use this on similar questions")); }
     else api.flash(tr("That is the same as the answer — nothing to learn"));
