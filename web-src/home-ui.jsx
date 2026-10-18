@@ -21,6 +21,7 @@ import { openRead } from "./readaloud-ui.jsx";
 import { DoResult, DO_HINTS } from "./doit-ui.jsx";
 import { FitToday } from "./health-ui.jsx";
 import { tickRegular, payRadar } from "./regular.js";
+import { MissionsLine } from "./missions-ui.jsx";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
@@ -135,6 +136,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       </> : <>
       {/* v6.36 layout 1A: the four areas, each with its one number — tap to open */}
       {guardian || null}
+      {/* v6.37: Missions — the goal most at risk, its chance and today's step */}
+      <MissionsLine go={() => navTo("missions")} />
       <div className="grid grid-cols-2 gap-2" data-testid="home-areas">
         <button className="c-card text-start p-3" onClick={() => navTo("money")} data-testid="home-area-money"><span className="flex items-center gap-1.5"><Wallet size={15} className="c-acc" /><b className="text-[14px]">{tr("Money")}</b></span>
           <span className="c-sub block text-[12.5px] mt-1 c-num" dir="auto">{data.o.monthOut ? tr("{v} spent", { v: fmt(data.o.monthOut) }) : tr("Spending, bills, Scout")}</span>

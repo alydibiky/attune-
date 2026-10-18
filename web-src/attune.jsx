@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
-import { Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase } from "lucide-react";
+import { Target, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { payOpts, homeCurrency } from "./locale.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -56,6 +56,8 @@ import { loadVault, vaulted, stillOpen } from "./vault.js";
 import { HUBS, hubOf, tabsFor, toolPages, partsOf } from "./hubs.js";
 import { HubTabs } from "./hub-ui.jsx";
 import { SafeSpend } from "./safespend-ui.jsx";
+import { MissionsPage } from "./missions-ui.jsx";
+import { parseMission } from "./missions.js";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
 const LEGACY_NAV = (() => { try { return localStorage.getItem("attune:legacy-nav") === "1"; } catch (e) { return false; } })();
@@ -7416,6 +7418,7 @@ const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = dev
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
 const MORE_TOOLS = [
+  ["missions", "Missions", "A goal with a date — Attune works on it every day and shows your real chance", Target],   // v6.37
   ["scout", "Scout", "Hunts for a flat, a car, a product or a job for days — tells you when something good appears", Binoculars],   // v6.28
   ["lifeask", "Ask your life", "One question about your money, people, health, meals and deadlines — answered from your own data", Sparkles],   // v6.28
   ["guardian", "Money Guardian", "Finds money in your payments: late debts, double charges, price rises, subscriptions", ShieldCheck],   // v6.27
@@ -7993,7 +7996,7 @@ export default function App() {
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
   // v6.31 minimal: short tab names (the page's own title stays full)
-  const TAB_SHORT = { fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
+  const TAB_SHORT = { missions: "Missions", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
     pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Prompts", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
@@ -8240,6 +8243,7 @@ export default function App() {
       if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); navTo("news"); return; }
       if (d.kind === "reminder" && /^daily-fit-/.test(d.id || "")) { navTo("fit"); return; }
       if (d.kind === "reminder" && /^med-/.test(d.id || "")) { navTo("care"); return; }      // v6.27 a medicine reminder → Family health
+      if (d.kind === "reminder" && /^missions-/.test(d.id || "")) { navTo("missions"); return; }   // v6.37 the morning debrief
       if (d.kind === "reminder" && /^radar-/.test(d.id || "")) { navTo("radar"); return; }  // v6.27 a deadline → the Radar   // v6.14: the Fit widget and Fit reminders
       if (d.kind === "reminder") { navTo("reminders"); return; }
       // A photo or screenshot shared from another app (a receipt, a menu, a
@@ -9290,6 +9294,9 @@ export default function App() {
   // own data is answered on Home; anything else goes to Chat as before. → { lines: [{ text, open, low }], undo, answer } | null (→ Chat)
   const doFromHome = (text) => {
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
+    // v6.37: a goal with a number and a date («عايز أوفر 60 ألف قبل يونيو», "lose 6 kg before 20 January") → Missions, ready to start
+    { const pm = parseMission(text, now); if (pm && pm.deadline) { try { localStorage.setItem("attune:missions:draft", text); } catch (e) {} navTo("missions");
+      return { lines: [{ text: ar ? "جهزتلك المهمة — دوس «ابدأ المهمة»" : "Your mission is ready — tap Start the mission", open: "missions" }], undo: null }; } }
     // "find me a flat in Maadi under 15k" / «دورلي على عربية …» → a Scout goal, started at once
     if (looksLikeGoal(text)) { setScoutIn({ id: now, text }); navTo("scout"); return { lines: [{ text: ar ? "بدأ الكشّاف البحث" : "Scout is on it", open: "scout" }], undo: null }; }
     const u = doUnderstand(text, { now, stores: loadLifeStores() });
@@ -10101,6 +10108,8 @@ export default function App() {
           <CoachPage native={{ N: NATIVE, call: nativeCall }} readText={readTextAny} flash={flash} incoming={coachIn} clearIncoming={() => setCoachIn(null)}
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 900, temperature: 0.2, think: false }) : null}
             verify={modelState === "ready" ? async (q) => { if (!(await pythonAvailable())) return null; const r = await verifyMath({ question: q, llm: (m, o) => callChat(m, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false }), runPy: (code) => runCode({ lang: "python", code }), warm: () => warmUp("python"), explain: false }); return r && r.ok ? { ok: true, answer: r.answer } : null; } : null} />
+        ) : mode === "missions" ? (
+          <MissionsPage flash={flash} />
         ) : mode === "radar" ? (
           <RadarPage pro={proActive} openPlan={() => setShowUpgrade(true)} flash={flash} N={NATIVE}
             readText={readTextAny}

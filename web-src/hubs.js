@@ -9,7 +9,7 @@ export const HUBS = [
   // Money, Health, Daily, Work; How to use + Privacy at the bottom of the sidebar, next to Settings (side-ui.jsx)
   ["create", "Create", "assistants", ["assistants", "skills", "artifacts", "studio", "code"]],
   ["projects", "Projects", "projects", ["projects"]],
-  ["home", "Home", "home", ["home", "chat", "lifeask", "translate", "instant", "shelf"]],
+  ["home", "Home", "home", ["home", "missions", "chat", "lifeask", "translate", "instant", "shelf"]],
   ["students", "Students", "coach", ["coach", "convert", "pdfchat", "slides", "cv"]],
   ["money", "Money", "money", ["money", "reminders", "xray", "radar", "life", "guardian", "deal"]],
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
@@ -23,7 +23,7 @@ export const GROUPS = [
   ["talk", "Chat", ["chat", "lifeask", "translate"]],
   ["work", "Work", ["business", "fleet", "crane", "field", "tools"]],
   // pages with no tab row: they open from a Home tile, the Tools choices or the sidebar ("as choices, not tabs")
-  ...["instant", "shelf", "projects", "improve", "compress", "humanize", "copilot", "library", "video", "ask", "guide", "privacy", "home"].map((m) => ["solo-" + m, m, [m]]),
+  ...["missions", "instant", "shelf", "projects", "improve", "compress", "humanize", "copilot", "library", "video", "ask", "guide", "privacy", "home"].map((m) => ["solo-" + m, m, [m]]),
 ];
 
 /** Pages that take the whole screen with their own header (no tab row on them). */
