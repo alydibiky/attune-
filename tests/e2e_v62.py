@@ -100,7 +100,7 @@ with sync_playwright() as p:
     t = page.locator("[data-testid=fit-today]").inner_text()
     check("الفجر" in t and "سحور" in t, "Ramadan card and meal names in Arabic — " + t.replace("\n", " ")[:300])
     page.locator("[data-testid=fit-tab-progress]").click(); page.wait_for_timeout(200)   # v7.31: the day's score lives in Progress
-    check("درجة اليوم" in page.locator("[data-testid=fit-quality]").inner_text(), "the day's score in Arabic")
+    check("درجة النهارده" in page.locator("[data-testid=fit-quality]").inner_text(), "the day's score in Arabic")
     shot(page, "fit-ramadan-ar")
 
     check(not real_errors(errors), "no errors (%s)" % real_errors(errors)[:3])

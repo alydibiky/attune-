@@ -68,7 +68,7 @@ with sync_playwright() as pw:
         page.locator("nav button").nth(i).click(); page.wait_for_timeout(700); grab(page)
     # Engine (native), Profile, Plan, Backup — all panels opened from the header chip / More
     try:
-        page.locator("header button").filter(has_text="لا يوجد نموذج").first.click(); page.wait_for_timeout(500); grab(page)
+        page.locator("header button").filter(has_text="مفيش نموذج").first.click(); page.wait_for_timeout(500); grab(page)
         page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
     except Exception as e: print("engine", e)
     for label in ["ملفك الشخصي", "الخطة", "النسخ الاحتياطي", "Pro"]:

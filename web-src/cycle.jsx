@@ -113,20 +113,20 @@ export function cycleAnswer(q, state, todayKey, ar = /[\u0600-\u06FF]/.test(q)) 
   const L = (en, a) => (ar ? a : en);
   const fd = (k) => fromKey(k).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-GB", { weekday: "short", day: "numeric", month: "short" });
   const has = (re) => re.test(t);
-  if (!st.last) return { text: L("Nothing is logged yet. Log your first period (tap the day on the calendar) and I can answer from your own data.", "لا يوجد شيء مسجّل بعد. سجّلي أول دورة (اضغطي على اليوم في التقويم) لأتمكن من الإجابة من بياناتك.") };
+  if (!st.last) return { text: L("Nothing is logged yet. Log your first period (tap the day on the calendar) and I can answer from your own data.", "مفيش حاجة متسجلة لسه. سجّلي أول دورة (اضغطي على اليوم في التقويم) عشان أقدر أرد من بياناتك.") };
   const sinceNext = diffDays(st.nextStart, todayKey);
   if (has(/late|delay|overdue|متأخر|تأخر|اتأخرت|متاخر/)) {
-    return { text: st.late > 0 ? L(`Yes — ${st.late} day(s) late. It was expected on ${fd(st.nextStart)} (your cycle averages ${st.cycleLen} days${st.variation != null ? `, varying by ${st.variation}` : ""}). A few days either way is common; if you are more than a week late and could be pregnant, a test is the way to know.`, `نعم — متأخرة ${st.late} يوم. كانت متوقعة في ${fd(st.nextStart)} (متوسط دورتك ${st.cycleLen} يومًا${st.variation != null ? `، ويختلف بمقدار ${st.variation}` : ""}). التقدم أو التأخر بضعة أيام أمر شائع؛ وإذا تأخرت أكثر من أسبوع واحتمال الحمل قائم، فالاختبار هو الطريقة للتأكد.`)
-      : L(`No — it is expected on ${fd(st.nextStart)}, in ${-sinceNext} day(s).`, `لا — موعدها المتوقع ${fd(st.nextStart)}، بعد ${-sinceNext} يوم.`) };
+    return { text: st.late > 0 ? L(`Yes — ${st.late} day(s) late. It was expected on ${fd(st.nextStart)} (your cycle averages ${st.cycleLen} days${st.variation != null ? `, varying by ${st.variation}` : ""}). A few days either way is common; if you are more than a week late and could be pregnant, a test is the way to know.`, `أيوه — متأخرة ${st.late} يوم. كانت متوقعة يوم ${fd(st.nextStart)} (متوسط دورتك ${st.cycleLen} يومًا${st.variation != null ? `، ويختلف بمقدار ${st.variation}` : ""}). إنها تيجي بدري أو متأخر كام يوم حاجة عادية؛ ولو اتأخرت أكتر من أسبوع وفي احتمال حمل، الاختبار هو اللي هيأكد.`)
+      : L(`No — it is expected on ${fd(st.nextStart)}, in ${-sinceNext} day(s).`, `لأ — معادها المتوقع ${fd(st.nextStart)}، كمان ${-sinceNext} يوم.`) };
   }
-  if (has(/ovulat|التبويض|تبويض/)) return { text: L(`Estimated ovulation: ${fd(st.ovulation)} (14 days before the next expected period). It is an estimate from your dates, not a test.`, `التبويض التقديري: ${fd(st.ovulation)} (قبل الدورة المتوقعة بـ14 يومًا). هذا تقدير من تواريخك، وليس فحصًا.`) };
+  if (has(/ovulat|التبويض|تبويض/)) return { text: L(`Estimated ovulation: ${fd(st.ovulation)} (14 days before the next expected period). It is an estimate from your dates, not a test.`, `التبويض التقديري: ${fd(st.ovulation)} (قبل الدورة المتوقعة بـ14 يوم). ده تقدير من تواريخك، مش فحص.`) };
   if (has(/fertil|pregnan|خصوب|حمل|الحمل/)) {
     const inF = diffDays(st.fertile.from, todayKey) >= 0 && diffDays(todayKey, st.fertile.to) >= 0;
-    return { text: L(`Fertile window: ${fd(st.fertile.from)} – ${fd(st.fertile.to)}. Today is ${inF ? "inside" : "outside"} it. Predictions are estimates — never use them as contraception.`, `فترة الخصوبة: ${fd(st.fertile.from)} – ${fd(st.fertile.to)}. اليوم ${inF ? "داخلها" : "خارجها"}. التوقعات تقديرية — لا تعتمدي عليها أبدًا كوسيلة لمنع الحمل.`) };
+    return { text: L(`Fertile window: ${fd(st.fertile.from)} – ${fd(st.fertile.to)}. Today is ${inF ? "inside" : "outside"} it. Predictions are estimates — never use them as contraception.`, `فترة الخصوبة: ${fd(st.fertile.from)} – ${fd(st.fertile.to)}. النهارده ${inF ? "جواها" : "براها"}. التوقعات تقديرية — أوعي تعتمدي عليها كوسيلة لمنع الحمل.`) };
   }
   if (has(/how long|length|average|cycle day|طول|متوسط|كم يوم|كام يوم/)) {
-    if (has(/period|bleed|الدورة تستمر|الدورة بتقعد|مدة الدورة|بتقعد|تستمر/)) return { text: L(`Your periods last about ${st.periodLen} days (from your last ${Math.min(6, st.periods.length)}).`, `تستمر دورتك نحو ${st.periodLen} أيام (من آخر ${Math.min(6, st.periods.length)} دورات).`) };
-    return { text: L(`Your cycle averages ${st.cycleLen} days${st.known ? ` (last ${st.lens.length}: ${st.lens.join(", ")})` : " (default — log two periods to learn yours)"}. Today is cycle day ${st.cycleDay}.`, `متوسط دورتك ${st.cycleLen} يومًا${st.known ? ` (آخر ${st.lens.length}: ${st.lens.join("، ")})` : " (افتراضي — سجّلي دورتين لمعرفة متوسطك)"}. اليوم هو اليوم ${st.cycleDay} من الدورة.`) };
+    if (has(/period|bleed|الدورة تستمر|الدورة بتقعد|مدة الدورة|بتقعد|تستمر/)) return { text: L(`Your periods last about ${st.periodLen} days (from your last ${Math.min(6, st.periods.length)}).`, `دورتك بتقعد حوالي ${st.periodLen} أيام (من آخر ${Math.min(6, st.periods.length)} دورات).`) };
+    return { text: L(`Your cycle averages ${st.cycleLen} days${st.known ? ` (last ${st.lens.length}: ${st.lens.join(", ")})` : " (default — log two periods to learn yours)"}. Today is cycle day ${st.cycleDay}.`, `متوسط دورتك ${st.cycleLen} يوم${st.known ? ` (آخر ${st.lens.length}: ${st.lens.join("، ")})` : " (افتراضي — سجّلي دورتين عشان نعرف متوسطك)"}. النهارده اليوم ${st.cycleDay} من الدورة.`) };
   }
   if (has(/history|last \d|previous|list|all my|السابقة|آخر الدورات|سجل|كل الدورات/)) {
     const rows = st.periods.slice(-6).reverse().map((p) => `- ${fd(p.start)} · ${p.length} ${L("days", "أيام")}`).join("\n");
@@ -135,11 +135,11 @@ export function cycleAnswer(q, state, todayKey, ar = /[\u0600-\u06FF]/.test(q)) 
   if (has(/symptom|cramp|headache|pain|mood|أعراض|اعراض|مغص|صداع|ألم|الم|مزاج/)) {
     const c = {}; for (const d of Object.values(state.days)) for (const x of d.symptoms || []) c[x] = (c[x] || 0) + 1;
     const top = Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    return { text: top.length ? L("Most logged symptoms: ", "أكثر الأعراض تسجيلًا: ") + top.map(([k, n]) => `${tr(k)} (${n})`).join(ar ? "، " : ", ") : L("No symptoms logged yet.", "لا توجد أعراض مسجّلة بعد.") };
+    return { text: top.length ? L("Most logged symptoms: ", "أكتر أعراض متسجلة: ") + top.map(([k, n]) => `${tr(k)} (${n})`).join(ar ? "، " : ", ") : L("No symptoms logged yet.", "مفيش أعراض متسجلة لسه.") };
   }
-  if (has(/last period|when did|started|آخر دورة|اخر دورة|بدأت|نزلت امتى|نزلت إمتى/)) return { text: L(`Your last period started on ${fd(st.last.start)} and lasted ${st.last.length} day(s).`, `بدأت آخر دورة في ${fd(st.last.start)} واستمرت ${st.last.length} يوم.`) };
-  if (has(/next|when|expected|due|الجاية|القادمة|امتى|إمتى|متى|موعد/)) return { text: st.inPeriod ? L(`You are on day ${st.cycleDay} of your period now. The next one is expected around ${fd(addDays(st.last.start, st.cycleLen))}.`, `أنتِ الآن في اليوم ${st.cycleDay} من الدورة. والدورة القادمة متوقعة نحو ${fd(addDays(st.last.start, st.cycleLen))}.`)
-    : L(`Next period: about ${fd(st.nextStart)}${sinceNext <= 0 ? ` (in ${-sinceNext} day(s))` : ` — ${st.late} day(s) late`}.`, `الدورة القادمة: نحو ${fd(st.nextStart)}${sinceNext <= 0 ? ` (بعد ${-sinceNext} يوم)` : ` — متأخرة ${st.late} يوم`}.`) };
+  if (has(/last period|when did|started|آخر دورة|اخر دورة|بدأت|نزلت امتى|نزلت إمتى/)) return { text: L(`Your last period started on ${fd(st.last.start)} and lasted ${st.last.length} day(s).`, `آخر دورة بدأت يوم ${fd(st.last.start)} وقعدت ${st.last.length} يوم.`) };
+  if (has(/next|when|expected|due|الجاية|القادمة|امتى|إمتى|متى|موعد/)) return { text: st.inPeriod ? L(`You are on day ${st.cycleDay} of your period now. The next one is expected around ${fd(addDays(st.last.start, st.cycleLen))}.`, `إنتِ دلوقتي في اليوم ${st.cycleDay} من الدورة. والدورة الجاية متوقعة حوالي ${fd(addDays(st.last.start, st.cycleLen))}.`)
+    : L(`Next period: about ${fd(st.nextStart)}${sinceNext <= 0 ? ` (in ${-sinceNext} day(s))` : ` — ${st.late} day(s) late`}.`, `الدورة الجاية: حوالي ${fd(st.nextStart)}${sinceNext <= 0 ? ` (كمان ${-sinceNext} يوم)` : ` — متأخرة ${st.late} يوم`}.`) };
   return null;
 }
 

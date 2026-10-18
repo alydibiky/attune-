@@ -1368,7 +1368,7 @@ export const AR = {
   "Prefill runs where compute is fastest, decode where bandwidth is. Using both raises usable bandwidth ~43 → 59 GB/s.": "المعالجة الأولية بتشتغل في المكان الأسرع في الحساب، والتوليد في المكان اللي عرض النطاق فيه أكبر. استخدام الاتنين بيرفع عرض النطاق الفعلي من ~43 لـ 59 GB/ث.",
   "Task adapters": "محوّلات المهام",
   "Small fine-tunes for each job — this is what makes a phone-sized model punch above its weight. Loaded over the base model, a few MB each.": "تعديلات صغيرة لكل مهمة — وده اللي بيخلي نموذج على قد الموبايل يدّي أكتر من حجمه. بتتحمّل فوق النموذج الأساسي، وكل واحدة كام MB.",
-  "MB": "MB",
+  "MB": "ميجا",
   "Training data": "بيانات التدريب",
   "Each cloud answer is a worked example. Collected, they train the small adapters that bring on-device quality up to cloud level — and a slice is held back to prove it. Stored on this device only.": "كل رد من السحابة مثال محلول. ولما تتجمع بتدرّب المحوّلات الصغيرة اللي بترفع جودة الجهاز لمستوى السحابة — وجزء منها بيتحجز عشان يثبت ده. محفوظة على الجهاز ده بس.",
   "Save my prompts as training data": "احفظ طلباتي كبيانات تدريب",

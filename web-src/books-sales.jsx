@@ -97,7 +97,7 @@ export function DocEditor({ type, doc, onClose, onSaved }) {
   };
   return (
     <Sheet title={`${doc && doc.number ? doc.number : docLabel(type)}`} onClose={onClose} testid="doc-editor"
-      footer={<div className="flex gap-2"><button onClick={() => save(false)} className={`${BTN} border ${th.line} flex-1`} data-testid="doc-save">{L("Save draft", "حفظ مسودة")}</button>
+      footer={<div className="flex gap-2"><button onClick={() => save(false)} className={`${BTN} border ${th.line} flex-1`} data-testid="doc-save">{L("Save draft", "احفظ مسودة")}</button>
         <button onClick={() => save(true)} className={`${btnPrimary} flex-1`} data-testid="doc-post">{type === "quote" ? L("Issue", "إصدار") : L("Post", "ترحيل")}</button></div>}>
       <div className="space-y-3">
         <Field label={L("Customer", "العميل")}>
@@ -113,7 +113,7 @@ export function DocEditor({ type, doc, onClose, onSaved }) {
         <Totals doc={d} />
         {d.fx && d.fx.rate ? <p className="text-[12px] text-end" dir="ltr" data-testid="fx-note">{d.fx.currency} × {M.rateText(d.fx.rate)} = {B.fmt(B.docTotals(M.toBaseDoc({ ...d, lines: d.lines.map(({ fxPrice, ...l }) => l) }, d.fx.currency, d.fx.rate), s.tax).total)} EGP</p> : null}
         <Field label={L("Notes (printed on the document)", "ملاحظات (تُطبع على المستند)")}><Input value={d.notes || ""} onChange={set("notes")} /></Field>
-        {type === "invoice" ? <p className={`text-[11px] ${th.sub}`}>{L("Posting gives the invoice its number and locks it. A mistake after that is fixed with a credit note.", "الترحيل يمنح الفاتورة رقمها ويقفلها. وأي خطأ بعد ذلك يُصحَّح بإشعار دائن.")}</p> : null}
+        {type === "invoice" ? <p className={`text-[11px] ${th.sub}`}>{L("Posting gives the invoice its number and locks it. A mistake after that is fixed with a credit note.", "الترحيل بيدّي الفاتورة رقمها ويقفلها. وأي غلطة بعد كده تتصلح بإشعار دائن.")}</p> : null}
       </div>
       {newCust ? <PartyForm kind="customers" onClose={() => setNewCust(false)} onSaved={(id) => { set("customer")(id); setNewCust(false); }} /> : null}
     </Sheet>
@@ -128,7 +128,7 @@ export function PartyForm({ kind, party, onClose, onSaved }) {
   const set = (k) => (v) => setP((x) => ({ ...x, [k]: v }));
   const save = async () => { const r = await run((st) => O.upsert(st, kind, { ...p, creditLimit: B.toMinor(limit) || 0 })); if (r) { onSaved && onSaved(r.id); onClose(); } };
   return (
-    <Sheet title={kind === "customers" ? L("Customer", "عميل") : L("Supplier", "مورد")} onClose={onClose} testid="party-form" footer={<button onClick={save} className={`${btnPrimary} w-full`} data-testid="party-save">{L("Save", "حفظ")}</button>}>
+    <Sheet title={kind === "customers" ? L("Customer", "عميل") : L("Supplier", "مورد")} onClose={onClose} testid="party-form" footer={<button onClick={save} className={`${btnPrimary} w-full`} data-testid="party-save">{L("Save", "احفظ")}</button>}>
       <div className="space-y-2.5">
         <Field label={L("Name", "الاسم")}><Input value={p.name} onChange={set("name")} data-testid="party-name" /></Field>
         <div className="grid grid-cols-2 gap-2">
@@ -159,20 +159,20 @@ function DocView({ id, onClose }) {
   const cust = s.customers.find((c) => c.id === d.customer);
   const t = B.docTotals(d, s.tax);
   const open = d.type === "invoice" && d.status === "posted" ? O.openInvoices(s, today()).find((o) => o.number === d.number) : null;
-  const credit = async () => { const r = await run((st) => ({ state: st, draft: O.creditNoteFor(st, d.id, { restock: true, date: today(), reason: L("Credit note for ", "إشعار دائن عن ") + d.number }) })); if (r) { const rr = await run((st) => O.saveDraft(st, r.draft)); if (rr) flash(L("Credit note drafted — review and post it", "أُنشئت مسودة إشعار دائن — راجعها ثم رحّلها")); onClose(); } };
-  const toInvoice = async () => { const r = await run((st) => ({ state: st, draft: O.invoiceFromQuote(st, d.id, today()) })); if (r) { const rr = await run((st) => O.saveDraft(st, r.draft)); if (rr) flash(L("Invoice drafted from the quote", "أُنشئت مسودة فاتورة من عرض السعر")); onClose(); } };
+  const credit = async () => { const r = await run((st) => ({ state: st, draft: O.creditNoteFor(st, d.id, { restock: true, date: today(), reason: L("Credit note for ", "إشعار دائن عن ") + d.number }) })); if (r) { const rr = await run((st) => O.saveDraft(st, r.draft)); if (rr) flash(L("Credit note drafted — review and post it", "اتعملت مسودة إشعار دائن — راجعها وبعدين رحّلها")); onClose(); } };
+  const toInvoice = async () => { const r = await run((st) => ({ state: st, draft: O.invoiceFromQuote(st, d.id, today()) })); if (r) { const rr = await run((st) => O.saveDraft(st, r.draft)); if (rr) flash(L("Invoice drafted from the quote", "اتعملت مسودة فاتورة من عرض السعر")); onClose(); } };
   const del = async () => { if (!window.confirm(L("Delete this draft?", "تمسح المسودة دي؟"))) return; const r = await run((st) => O.deleteDraft(st, d.id)); if (r) onClose(); };
   return (
     <Sheet title={d.number || docLabel(d.type)} onClose={onClose} testid="doc-view"
       footer={<div className="flex gap-2 flex-wrap">
-        {d.status === "draft" ? <><button onClick={() => setEdit(true)} className={`${btnPrimary} flex-1`} data-testid="doc-edit">{L("Edit & post", "تعديل وترحيل")}</button><button onClick={del} className={`${BTN} border ${th.line} text-red-600`}>{L("Delete", "حذف")}</button></> : null}
+        {d.status === "draft" ? <><button onClick={() => setEdit(true)} className={`${btnPrimary} flex-1`} data-testid="doc-edit">{L("Edit & post", "عدّل ورحّل")}</button><button onClick={del} className={`${BTN} border ${th.line} text-red-600`}>{L("Delete", "امسح")}</button></> : null}
         {d.status === "posted" ? <button onClick={() => shareDocument({ s, doc: d, kind: d.type, flash })} className={`${btnPrimary} flex-1 flex items-center justify-center gap-1.5`} data-testid="doc-share"><Share2 size={14} />{L("Share / PDF", "مشاركة / PDF")}</button> : null}
         {d.status === "posted" ? <button onClick={() => shareDocumentWord({ s, doc: d, kind: d.type, flash, saveFile })} className={`${BTN} border ${th.line}`} data-testid="doc-word">{L("Word", "وورد")}</button> : null}
         {open && open.open > 0 ? <button onClick={() => setPay(true)} className={`${BTN} border ${th.line} flex-1`} data-testid="doc-pay">{L("Record payment", "تسجيل دفعة")}</button> : null}
         {d.status === "posted" && d.type === "invoice" && actorCan("void") ? <button onClick={credit} className={`${BTN} border ${th.line}`} data-testid="doc-credit">{L("Credit note", "إشعار دائن")}</button> : null}
         {d.status === "posted" && (d.type === "invoice" || d.type === "credit") ? <EtaButton doc={d} /> : null}
         {d.status === "posted" && (d.type === "invoice" || d.type === "order") ? <DeliveryButton doc={d} /> : null}
-        {d.status === "posted" && d.type === "order" ? <button onClick={async () => { const r = await run((st) => O.saveDraft(st, O2.invoiceFromOrder(st, d.id, today()))); if (r) { flash(L("Invoice drafted from what was delivered", "أُنشئت مسودة فاتورة بما سُلِّم")); onClose(); } }} className={`${BTN} border ${th.line}`} data-testid="doc-order-invoice">{L("Invoice delivered", "فوترة المسلّم")}</button> : null}
+        {d.status === "posted" && d.type === "order" ? <button onClick={async () => { const r = await run((st) => O.saveDraft(st, O2.invoiceFromOrder(st, d.id, today()))); if (r) { flash(L("Invoice drafted from what was delivered", "اتعملت مسودة فاتورة باللي اتسلم")); onClose(); } }} className={`${BTN} border ${th.line}`} data-testid="doc-order-invoice">{L("Invoice delivered", "فوترة المسلّم")}</button> : null}
         {d.status === "posted" && d.type === "quote" ? <button onClick={toInvoice} className={`${BTN} border ${th.line} flex-1`} data-testid="doc-to-invoice">{L("Make an invoice", "حوّل لفاتورة")}</button> : null}
       </div>}>
       <div className="space-y-3">
@@ -217,7 +217,7 @@ export function SalesModule() {
           <div className="flex gap-2 mb-2"><div className="flex-1"><Search_ value={q} onChange={setQ} placeholder={L("Search number or customer", "دوّر برقم أو عميل")} /></div>
             <button onClick={() => setPicker(true)} className={`${btnPrimary} flex items-center gap-1`} data-testid="sales-new"><Plus size={15} />{L("New", "جديد")}</button></div>
           <div className="mb-2"><Chips value={filter} onChange={setFilter} options={[["all", L("All", "الكل")], ["invoice", L("Invoices", "فواتير")], ["quote", L("Quotes", "عروض")], ["credit", L("Credit notes", "إشعارات")], ["order", L("Orders", "أوامر بيع")], ["draft", L("Drafts", "مسودات")]]} /></div>
-          {!docs.length ? <Empty title={L("No documents yet", "لا توجد مستندات بعد")} hint={L("Create your first invoice or quotation.", "أنشئ أول فاتورة أو عرض سعر.")} action={<button onClick={() => setNewType("invoice")} className={btnPrimary}>{L("New invoice", "فاتورة جديدة")}</button>} />
+          {!docs.length ? <Empty title={L("No documents yet", "مفيش مستندات لسه")} hint={L("Create your first invoice or quotation.", "اعمل أول فاتورة أو عرض سعر.")} action={<button onClick={() => setNewType("invoice")} className={btnPrimary}>{L("New invoice", "فاتورة جديدة")}</button>} />
             : <Card className="divide-y" testid="sales-list">{docs.map((d) => { const t = B.docTotals(d, s.tax); return (
               <button key={d.id} onClick={() => setOpenId(d.id)} className="w-full flex items-center gap-3 px-3 py-2.5 text-start" data-testid="sales-row">
                 <div className="min-w-0 flex-1"><p className="text-[13.5px] font-medium truncate">{name(d.customer)}</p><p className={`text-[11.5px] ${th.sub}`}>{d.number || L("Draft", "مسودة")} · {docLabel(d.type)} · {fmtDate(d.date)}</p></div>
@@ -226,10 +226,10 @@ export function SalesModule() {
       ) : (
         <>
           <button onClick={() => setParty({})} className={`${btnPrimary} w-full mb-3 flex items-center justify-center gap-1.5`} data-testid="customer-add"><Plus size={15} />{L("Add a customer", "ضيف عميل")}</button>
-          {!s.customers.length ? <Empty title={L("No customers yet", "لا يوجد عملاء بعد")} /> : <Card className="divide-y" testid="customer-list">{s.customers.map((c) => <CustomerRow key={c.id} c={c} onEdit={() => setParty(c)} />)}</Card>}
+          {!s.customers.length ? <Empty title={L("No customers yet", "مفيش عملاء لسه")} /> : <Card className="divide-y" testid="customer-list">{s.customers.map((c) => <CustomerRow key={c.id} c={c} onEdit={() => setParty(c)} />)}</Card>}
         </>
       )}
-      {picker ? <Sheet title={L("New document", "مستند جديد")} onClose={() => setPicker(false)}><div className="space-y-2">{[["invoice", "Tax invoice", "فاتورة ضريبية", "Bill a customer; goes into your books.", "تحاسب بها العميل وتدخل في دفاترك."], ["quote", "Quotation", "عرض سعر", "A price offer; no effect on your books until it becomes an invoice.", "عرض سعر؛ لا يؤثر على الدفاتر حتى يتحوّل إلى فاتورة."], ["order", "Sales order", "أمر بيع", "A confirmed order: deliver it in parts with delivery notes, then invoice.", "طلب مؤكد: سلّمه على دفعات بأذون تسليم، ثم أصدر فاتورته."]].map(([k, en, ar, hen, har]) => (
+      {picker ? <Sheet title={L("New document", "مستند جديد")} onClose={() => setPicker(false)}><div className="space-y-2">{[["invoice", "Tax invoice", "فاتورة ضريبية", "Bill a customer; goes into your books.", "بتحاسب بيها العميل وبتدخل في دفاترك."], ["quote", "Quotation", "عرض سعر", "A price offer; no effect on your books until it becomes an invoice.", "عرض سعر؛ مش بيأثر على الدفاتر لحد ما يتحوّل لفاتورة."], ["order", "Sales order", "أمر بيع", "A confirmed order: deliver it in parts with delivery notes, then invoice.", "طلب مؤكد: سلّمه على دفعات بأذون تسليم، وبعدين طلّع فاتورته."]].map(([k, en, ar, hen, har]) => (
         <Card key={k} onClick={() => { setPicker(false); setNewType(k); }} className="p-3" testid={"new-" + k}><p className="text-[14px] font-semibold">{L(en, ar)}</p><p className={`text-[12px] ${th.sub}`}>{L(hen, har)}</p></Card>))}</div></Sheet> : null}
       {newType ? <DocEditor type={newType} onClose={() => setNewType(null)} onSaved={(id) => setOpenId(id)} /> : null}
       {openId ? <DocView id={openId} onClose={() => setOpenId(null)} /> : null}
