@@ -1831,14 +1831,30 @@ it, it belongs in Scout", 4 = "every pack that makes food stronger than Yazio", 
   0.9 MB. Published by food-pack.yml as the pack's FIRST piece (`foodgen-000.tsv.gz`); foodpack.js reads the two extra columns,
   `toFood` makes portions units, a plain name ranks the generic food first (+6), a brand name the product; the install check
   is by piece name, so phones that have the old 10 pieces fetch the new one. Tests `v739foodgen.test.mjs`.
-- **Android 17**: compileSdk / targetSdk 37 with AGP 8.9.1 (gradle.properties `android.suppressUnsupportedCompileSdk=37`). Google
-  publishes it as `platforms;android-37.0` (37.1, 37.2 = updates); the APK workflow installs it and registers the same files as
-  `android-37` (the name AGP 8.9 asks for). AGP 9.1.1+ would read the new name itself — a bigger upgrade, later.
+- **Android 17**: targetSdk 37 (Android 17 behaviour), compileSdk 36. AGP 8.9 can't read Google's API-37 platform (published as
+  `platforms;android-37.0`): the build failed in CheckAarMetadata ("compiled against android-37 … needs 33 or later"). Compiling
+  against 37 needs AGP 9.1.1+ (Gradle 9, built-in Kotlin) — a bigger upgrade for later; the app uses no API-37 calls.
 - **Bug found by the clock**: a "regular" (the maid every Sunday) before noon had one box only (the start day's 12:00 was still ahead,
   the day count went negative) and People & plans showed no tick — counted from the day now (`life.js scheduleOf`).
 - Agent ideas round 2 (choice page, waiting for Ali): invoice chaser that closes itself, promise keeper, overcharge fighter,
   price-drop refund hunter, buy-it-right project, three quotes compared, pantry-to-plate week, paper renewal agent, idle money
   mover, gam'eya manager.
+
+### 5.84 (18 Oct 2026) — v6.36: Ali's own arrangement of the app (the board)
+Ali arranged every page himself on https://claude.ai/artifact/89PPsVB9ybyytBBEKfskMo. `hubs.js` now:
+- Sidebar: **Create** (Assistants · Skills · Artifacts · Studio · Code, tabs) · **Projects** (alone) · **Home** (the box; Chat with
+  Ask your life + Translate as tabs; Instant and Shelf as Home tiles) · **Students** (Homework · Convert · Doc chat · Slides · CV)
+  · **Money** (Money · Follow-ups · Deal Check) · **Health** (Health · Fit & Food · Family · Cycle) · **Daily** (Learn · Scout · Mind
+  · News · Maps · Travel; + Knowledge in developer mode) · **Work** (Business · Fleet · Crane · Reports · Tools). How to use and
+  Privacy sit at the bottom of the sidebar next to Settings (`side-help`). Sidebar ids are the page each place opens
+  (`side-go-assistants`, `side-go-coach`, `side-go-business`…).
+- **Follow-ups** (Ali: "rename Reminders to a good name"): one Money tab with a switch Reminders · Dates (Radar) · People & plans
+  · Chat X-Ray · Payments (Guardian — Ali didn't place it; it stays with the other "watch my money" parts). The switch scrolls
+  sideways on a phone.
+- **Tools** (Ali: "improve, compress, humanize, copilot, library, video downloader under a tab called Tools in Business, as
+  choices, not tabs"): the Tools page is one card each (+ Ask classic); a card opens its page with no tab row.
+- Tests: `unit/v734hubs.test.mjs` rewritten for this order, `e2e_v734sidebar.py` updated, `e2e_v736pdfedit.py` opens the
+  Converter directly. Fit & Food and the shop books had their own built-in Arabic (formal) → Egyptian too.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).

@@ -1,15 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
-import {
-  Bell, Calculator, Timer, Code2,
-  Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User,
-  ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users,
-  AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2,
-  Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple,
-  BookOpen, PanelLeft, House, Binoculars,
-  Heart, MoreVertical,
-} from "lucide-react";
+import { Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { payOpts, homeCurrency } from "./locale.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -66,7 +58,7 @@ import { HubTabs } from "./hub-ui.jsx";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
 const LEGACY_NAV = (() => { try { return localStorage.getItem("attune:legacy-nav") === "1"; } catch (e) { return false; } })();
-const HUB_ICON = { home: House, chat: MessageCircle, money: Wallet, health: Heart, learn: GraduationCap, tools: LayoutGrid };
+const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCircle, students: GraduationCap, money: Wallet, health: Heart, learn: CalendarDays, tools: Briefcase };   // (v6.36 Ali's board)
 const HUB_PLACES = HUBS.map(([id, label, target]) => [target, label, HUB_ICON[id]]);
 import { HealthPage } from "./health-ui.jsx";
 import { LifeAskPage } from "./lifeask-ui.jsx";
@@ -7409,9 +7401,9 @@ function tierOfInstalled(m) {
 
 // v6.25: tools that show their own title at the top — on a computer the bar above them would only repeat it
 const OWN_TITLE = new Set(["privacy", "health", "scout", "lifeask", "guide", "skills", "code", "learn", "news", "slides", "xray", "convert", "pdfchat", "video", "cv", "deal", "shelf", "memory", "money", "guardian", "radar", "life", "care", "coach", "translate", "travel"]);   // v6.27: money (the Calm computer layout has its own title)
-const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Work", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
+const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", lifeask: "Ask your life", guide: "How to use Attune", home: "Home", tools: "Tools", knowledge: "Knowledge", pdfchat: "Ask a PDF", cv: "CV / Resume", skills: "Skills", chat: "Attune", ask: "Ask", instant: "Instant", travel: "Travel", map: "Maps", money: "Money & Zakāt",
   cycle: "Cycle", memory: "Mind", improve: "Improve a prompt", compress: "Compress", library: "Library", fleet: "Fleet",
-  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Reminders", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
+  field: "Site reports", humanize: "Humanize", copilot: "Copilot", reminders: "Follow-ups", crane: "Crane toolkit", code: "Code", studio: "Studio", business: "Business", learn: "Learn daily", news: "Daily news",
   assistants: "Assistants", projects: "Projects", artifacts: "Artifacts", deal: "Deal Check", xray: "Chat X-Ray", convert: "File Converter", video: "Video Downloader", slides: "Slides & Reports", fit: "Fit & Food" };
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
@@ -7998,7 +7990,7 @@ export default function App() {
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
   // v6.31 minimal: short tab names (the page's own title stays full)
-  const TAB_SHORT = { chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
+  const TAB_SHORT = { reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
     pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Prompts", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
@@ -9374,7 +9366,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans" style={{ paddingInlineStart: "var(--side, 0px)" }}>
       {side.shown ? <Guard name="sidebar"><DesktopSide mode={mode} canBack={canGoBack} onBack={() => window.__attuneBack && window.__attuneBack()} navTo={(m) => { setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-        places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]] : HUB_PLACES} activePlace={LEGACY_NAV ? null : hubOf(mode)} showPins={LEGACY_NAV}
+        places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["business", "Business", Database]] : HUB_PLACES} activePlace={LEGACY_NAV ? null : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
         tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
         onNewChat={() => { setMoreOpen(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
         onOpenChat={(id) => { setMoreOpen(false); setOpenChatId(id); navTo("chat"); }}
@@ -9384,7 +9376,7 @@ export default function App() {
         openBackup={() => setShowBackup(true)} openSettings={() => setMoreOpen((v) => !v)} /></Guard> : null}
       {!wide && phoneSide ? <Guard name="sidebar"><div className="fixed inset-0 z-[60] bg-black/60" onClick={() => setPhoneSide(false)} data-testid="phone-side">
         <div onClick={(e) => e.stopPropagation()}><DesktopSide touch width="min(86vw, 320px)" mode={mode} canBack={false} onBack={() => {}} navTo={(m) => { setPhoneSide(false); setMoreOpen(false); if (m === "cycle") enableCycle(true); navTo(m); }}
-          places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]] : HUB_PLACES} activePlace={LEGACY_NAV ? null : hubOf(mode)} showPins={LEGACY_NAV}
+          places={LEGACY_NAV ? [["home", "Home", House], ["chat", "Chat", MessageCircle], ["tools", "Tools", LayoutGrid], ["memory", "Mind", Brain], ["money", "Money", Wallet], ["health", "Health", Heart]] : HUB_PLACES} activePlace={LEGACY_NAV ? null : (HUBS.find((h) => h[0] === hubOf(mode)) || [, , mode])[2]} showPins={LEGACY_NAV}
           tools={MORE_TOOLS} groups={groupsHere} loadChats={loadChats}
           onNewChat={() => { setPhoneSide(false); navTo("chat"); setNewChatSignal((n) => n + 1); }}
           onOpenChat={(id) => { setPhoneSide(false); setOpenChatId(id); navTo("chat"); }}
@@ -9437,7 +9429,7 @@ export default function App() {
         ) : null}
 
         {/* v6.30: tools that belong together are one page — a tab row on top (hubs.js) */}
-        {LEGACY_NAV || (mode === "money" && !wide) ? null : hubTabsEl}
+        {LEGACY_NAV || (mode === "money" && !wide) || !hubTabsEl ? null : mode === "business" ? <div className="px-4 pt-1 max-w-3xl mx-auto">{hubTabsEl}</div> : hubTabsEl}
         <Guard key={"g-" + mode} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
           <VaultGate unlock={(a) => nativeCall("vaultUnlock", a)} onOpen={() => setVaultSess({ open: true })} />
         ) : mode === "home" && !wide ? (
@@ -9448,8 +9440,8 @@ export default function App() {
         ) : mode === "tools" ? (
           LEGACY_NAV ? <ToolsPage tools={MORE_TOOLS} groups={groupsHere} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
           : <ToolsPage tools={[...MORE_TOOLS, ["privacy", "Privacy", "What stays on your phone, and what is sent when you use a feature", ShieldCheck]]} groups={[]} showPins={false}
-            pages={toolPages([...groupsHere.flatMap((g) => g[1]), "guide", "privacy"])}
-            subtitle="Six pages. Open one — the tools inside it are tabs at its top."
+            pages={toolPages([...groupsHere.flatMap((g) => g[1])])}
+            subtitle="Pick a tool."
             navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "chat" ? (
           <ChatHome key="chat" api={chatApi} drawerOpen={drawerOpen} setDrawerOpen={setDrawerOpen} newChatSignal={newChatSignal}

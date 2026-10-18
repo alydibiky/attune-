@@ -58,7 +58,7 @@ with sync_playwright() as p:
     page.evaluate("localStorage.setItem('attune:ui:lang','ar')"); page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
     page.locator("nav button").last.click(); page.wait_for_timeout(300); page.click("[data-testid=more-guide]"); page.wait_for_timeout(200)
-    check("طريقة استخدام" in page.locator("[data-testid=guide-page] h2").inner_text(), "the title in Arabic")
+    check("إزاي تستخدم" in page.locator("[data-testid=guide-page] h2").inner_text(), "the title in Arabic")
     page.click("[data-testid=guide-row-fit]"); page.wait_for_timeout(150)
     st = page.locator("[data-testid=guide-step]").first.inner_text()
     check("وجبة" in st, "the steps in Arabic: " + st[:60])

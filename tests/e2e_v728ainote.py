@@ -8,7 +8,7 @@ env = Env(); errors = []
 shots = sys.argv[1] if len(sys.argv) > 1 else None
 with sync_playwright() as p:
     br = p.chromium.launch()
-    for lang, want in (("en", "Attune is AI and can make mistakes. Check important info."), ("ar", "Attune ذكاء اصطناعي وقد يخطئ، فتحقّق من المعلومات المهمة.")):
+    for lang, want in (("en", "Attune is AI and can make mistakes. Check important info."), ("ar", "Attune ذكاء اصطناعي وممكن يغلط، فاتأكد من المعلومات المهمة.")):
         ctx, page = new_page(br, env, errors, extra_init=("localStorage.setItem('attune:ui:lang','ar');" if lang == "ar" else ""))
         page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
         page.wait_for_selector("[data-testid=chat-input]", timeout=10000)

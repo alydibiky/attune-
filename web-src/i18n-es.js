@@ -929,4 +929,10 @@ export const ES = {
   "Food, medicines, cycle": "Comida, medicinas, ciclo",
   "A lesson a day": "Una lección al día",
   "Files, business, create": "Archivos, negocio, crear",
+  "Students": "Estudiantes",
+  "Daily": "Diario",
+  "Follow-ups": "Seguimientos",
+  "Homework": "Deberes",
+  "Pick a tool.": "Elige una herramienta.",
+  "Calories from a sentence or a photo": "Calorías de una frase o una foto",
 };

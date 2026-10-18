@@ -12,7 +12,7 @@ def snap(page, name):
     if shots: page.screenshot(path=f"{shots}/{name}.png")
 def open_fit(page):
     page.locator("nav button").last.click(); page.wait_for_timeout(250)
-    page.locator(".rounded-t-2xl button:has-text('Fit & Food'), .rounded-t-2xl button:has-text('الغذاء واللياقة')").first.click()
+    page.locator(".rounded-t-2xl button:has-text('Fit & Food'), .rounded-t-2xl button:has-text('الأكل واللياقة')").first.click()
     page.wait_for_selector("[data-testid=fit-qs-welcome], [data-testid=fit-today]", timeout=6000)
 with sync_playwright() as p:
     br = p.chromium.launch()

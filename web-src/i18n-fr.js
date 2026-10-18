@@ -932,4 +932,10 @@ export const FR = {
   "Food, medicines, cycle": "Repas, médicaments, cycle",
   "A lesson a day": "Une leçon par jour",
   "Files, business, create": "Fichiers, entreprise, création",
+  "Students": "Étudiants",
+  "Daily": "Au quotidien",
+  "Follow-ups": "Suivis",
+  "Homework": "Devoirs",
+  "Pick a tool.": "Choisissez un outil.",
+  "Calories from a sentence or a photo": "Les calories d’une phrase ou d’une photo",
 };

@@ -121,7 +121,7 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=map-page]", timeout=8000)
     page.click("[data-testid=map-open-offline]"); page.wait_for_timeout(300)
     t = page.locator("[data-testid=map-sheet]").inner_text()
-    check("خرائط بدون إنترنت" in t and "تركيا" in t, "the sheet in Arabic: " + t.replace("\n", " · ")[:160])
+    check("خرايط من غير نت" in t and "تركيا" in t, "the sheet in Arabic: " + t.replace("\n", " · ")[:160])
 
     page.click("[data-testid=map-exit]"); page.wait_for_timeout(300)
     check(page.locator("[data-testid=map-page]").count() == 0 and page.locator("nav").first.is_visible(), "← in the search bar goes back to Attune, its bars return")

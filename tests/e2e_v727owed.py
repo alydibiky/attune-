@@ -17,7 +17,7 @@ with sync_playwright() as p:
         ctx, page = new_page(br, env, errors, extra_init=INIT)
         page.set_viewport_size({"width": W, "height": H}); dev = "phone" if W < 600 else "desktop"
         page.goto(env.url); page.wait_for_timeout(1500)
-        if dev == "desktop": page.locator("[data-testid=side-go-chat]").first.click(); page.wait_for_timeout(300)
+        if dev == "desktop": page.locator("[data-testid=side-new]").first.click(); page.wait_for_timeout(300)
         send(page, "my flight LH400 from FRA to JFK was 5 hours late")
         card = page.locator("[data-testid=card-emerald]").last
         check("owe you" in card.inner_text() and "FRA → JFK" in card.inner_text(), f"{dev}: Chat reads the flight and offers the check")

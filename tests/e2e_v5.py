@@ -127,7 +127,7 @@ LATIN = r"""() => { const out = []; const w = document.createTreeWalker(document
   for (let n = w.nextNode(); n; n = w.nextNode()) { const t = n.nodeValue.trim(); const el = n.parentElement;
     if (!t || !el || el.closest('[data-i18n-skip],textarea,script,style')) continue; const r = el.getBoundingClientRect();
     if (!r.width || !r.height || r.bottom < 0 || r.top > innerHeight) continue;
-    const words = (t.match(/[A-Za-z]{3,}/g) || []).filter((w) => !/^(Attune|Pro|Spark|Glow|Blaze|Core|Lite|Sense|Zenith|Apex|Everest|Qwen|Gemma|GGUF|InstaPay|Yusr|ChatGPT|Claude|Gemini|English|Brave|DuckDuckGo|KV|SHA|CPU|GPU|NPU|NEON|dotprod|KleidiAI|int8|matmul|Test|Phone|SM8650|imatrix|MoE|mmap|INT4|Vulkan|EGP|USD|Adreno|OpenCL|QUALCOMM)$/.test(w));
+    const words = (t.match(/[A-Za-z]{3,}/g) || []).filter((w) => !/^(Attune|Pro|Spark|Glow|Blaze|Core|Lite|Sense|Zenith|Apex|Everest|Qwen|Gemma|GGUF|InstaPay|Yusr|ChatGPT|Claude|Gemini|English|Brave|DuckDuckGo|KV|SHA|CPU|GPU|NPU|NEON|dotprod|KleidiAI|int8|matmul|Test|Phone|SM8650|imatrix|MoE|mmap|INT4|Vulkan|EGP|USD|Adreno|OpenCL|QUALCOMM|Hugging|Face|owner|repo|QUANT|https|MTP|JSON)$/.test(w));
     if (words.length) out.push(t.slice(0, 80)); } return out; }"""
 
 def sec_arabic(br):
@@ -143,41 +143,41 @@ def sec_arabic(br):
     check(page.evaluate("document.documentElement.dir") == "rtl" and page.evaluate("document.documentElement.lang") == "ar", "Arabic turns the whole page right-to-left")
     nav = page.locator("nav button")
     labels = [nav.nth(i).inner_text().strip() for i in range(nav.count())]
-    check(labels == ["الرئيسية", "المحادثة", "المال", "الكشّاف", "عقلي", "الكل"], "bottom bar is in Arabic (v6.29: Home · Chat · Money · Scout · Mind · All): %s" % labels)
+    check(labels == ["الرئيسية", "الشات", "الفلوس", "الكشّاف", "عقلي", "الكل"], "bottom bar is in Arabic (v6.29: Home · Chat · Money · Scout · Mind · All): %s" % labels)
     b0 = nav.nth(0).bounding_box(); b4 = nav.nth(nav.count() - 1).bounding_box()
     check(b0["x"] > b4["x"], "and it reads from the right (Chat is on the right)")
-    check(page.locator("textarea[placeholder='اكتب رسالة إلى Attune']").count() == 1, "the message box says اكتب رسالة إلى Attune")
+    check(page.locator("textarea[placeholder='اكتب رسالة لـ Attune']").count() == 1, "the message box says اكتب رسالة إلى Attune")
     check(json.loads(page.evaluate("localStorage.getItem('ledger.v3')"))["lang"] == "ar", "Yusr (Money) switches to Arabic too")
     latin = page.evaluate(LATIN)
     check(len(latin) == 0, "no English left on the home screen: %s" % latin[:5])
     page.screenshot(path=HERE + "/v5-ar-home.png")
-    page.locator("header button").filter(has_text="لا يوجد نموذج").first.click(); page.wait_for_timeout(300)
+    page.locator("header button").filter(has_text="مفيش نموذج").first.click(); page.wait_for_timeout(300)
     latin = page.evaluate(LATIN)
     check(len(latin) <= 3, "Engine screen is in Arabic (only model/tech names left): %s" % latin[:6])
     page.screenshot(path=HERE + "/v5-ar-engine.png", full_page=False)
-    rec = page.locator("text=المُوصى به لهذا الجهاز").locator("xpath=..")
-    rec.get_by_role("button", name="تثبيت").first.click()
-    page.wait_for_selector("text=يعمل الآن", timeout=10000)
+    rec = page.locator("text=المقترح للجهاز ده").locator("xpath=..")
+    rec.get_by_role("button", name=re.compile("ثبّت")).first.click()
+    page.wait_for_selector("text=شغال دلوقتي", timeout=10000)
     check(True, "installing a model works in Arabic")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
     # a chat still works
     page.locator("textarea").last.fill("3 أوناش × 4 أيام × 12,500 جنيه + 14% ضريبة، الإجمالي كام؟")
-    page.locator("button[title='إرسال']").click()
+    page.locator("button[title='ابعت']").click()
     page.wait_for_selector("text=الإجمالي: 171,000 جنيه", timeout=5000)
-    check("محسوبة على الهاتف" in page.locator("[data-testid=calc-note]").inner_text(), "an Arabic sum is worked out instantly on the phone, in Arabic")
+    check("محسوبة على الموبايل" in page.locator("[data-testid=calc-note]").inner_text(), "an Arabic sum is worked out instantly on the phone, in Arabic")
     page.evaluate("window.__mock.fake = 'الونش المتحرك **ونش على شاسيه بعجل**.'")
     page.locator("textarea").last.fill("اوصف الونش المتحرك في سطر")
-    page.locator("button[title='إرسال']").click()
+    page.locator("button[title='ابعت']").click()
     page.wait_for_selector("text=ونش على شاسيه بعجل", timeout=20000)
     page.wait_for_timeout(800); page.screenshot(path=HERE + "/dbg.png")
-    check(page.locator("button[title='إعادة التوليد']").count() >= 1, "chatting works in Arabic, with Arabic answer buttons")
+    check(page.locator("button[title='ولّد تاني']").count() >= 1, "chatting works in Arabic, with Arabic answer buttons")
     page.screenshot(path=HERE + "/v5-ar-chat.png")
     open_more(page)
     latin = page.evaluate(LATIN)
     check(len(latin) <= 1, "More sheet is in Arabic: %s" % latin[:5])
     page.screenshot(path=HERE + "/v5-ar-more.png")
     page.locator("[data-testid=more-backup]").click(); page.wait_for_timeout(200)
-    check("النسخ الاحتياطي والاسترجاع" in page.locator("[data-testid=backup-panel]").inner_text(), "Backup screen is in Arabic")
+    check("النسخة الاحتياطية والاسترجاع" in page.locator("[data-testid=backup-panel]").inner_text(), "Backup screen is in Arabic")
     page.screenshot(path=HERE + "/v5-ar-backup.png")
     page.evaluate("window.__attuneBack()")
     for i, name in ((1, "instant"), (3, "scout")):
@@ -420,7 +420,7 @@ def sec_crane(br):
     check("Liebherr LTM 1100" in (page.evaluate("localStorage.getItem('attune:crane:v1')") or ""), "charts are kept (and so go into backups)")
     # the same screens in Arabic
     page.evaluate("localStorage.setItem('attune:ui:lang','ar')"); page.reload(); page.wait_for_selector("nav", timeout=15000)
-    open_more(page); page.locator(".rounded-t-2xl button:has-text('أدوات الرافعات')").click()
+    open_more(page); page.locator(".rounded-t-2xl button:has-text('أدوات الأوناش')").click()
     page.wait_for_selector("[data-testid=crane-toolkit]", timeout=5000)
     bad = []
     for t in ["lift", "ground", "slings", "wind", "check", "charts"]:

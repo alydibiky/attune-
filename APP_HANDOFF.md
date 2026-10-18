@@ -104,8 +104,8 @@ Google Play Billing.
 - For llama.cpp JSON, use a grammar, not json_schema. LiteRT has no grammar: ask for JSON in words and repair it (`jsonFrom`).
 - A 2–4B phone model makes mistakes, so put code around it: verify by running code, fact sheets, votes, parsers. Be honest about the ceiling.
 - Every new UI string needs an Arabic entry. Business sits in the bottom bar and hides the nav, so old tests call `leave_apps`.
-- v6.30: there is NO bottom bar — a ChatGPT-style sidebar with 6 places (Home · Chat · Money · Health · Learn · Tools,
-  `web-src/hubs.js`) and tab rows on combined pages (HANDOFF §5.74). Old tests still see the bottom bar because
+- v6.30: there is NO bottom bar — a ChatGPT-style sidebar (v6.36, Ali's own order: Create · Projects · Home · Students · Money ·
+  Health · Daily · Work + How to use / Privacy at the bottom, `web-src/hubs.js`, HANDOFF §5.84) and tab rows on combined pages (HANDOFF §5.74). Old tests still see the bottom bar because
   `new_page()` sets `attune:legacy-nav=1`; new tests use `new_page(..., legacy_nav=False)`.
 
 ## 6. What is open (by priority)

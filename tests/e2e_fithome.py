@@ -165,7 +165,7 @@ with sync_playwright() as p:
     # ---- Arabic
     ctx, page = new_page(br, env, errors, extra_init=MOCK + "\ntry { localStorage.setItem('attune:ui:lang', 'ar'); localStorage.setItem('attune:fit:v1', %s); } catch (e) {}" % json.dumps(saved))
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
-    open_fit(page, "الغذاء واللياقة")
+    open_fit(page, "الأكل واللياقة")
     check(page.evaluate("document.documentElement.dir") == "rtl", "Arabic is right-to-left")
     page.locator("[data-testid=fit-add]").click()
     lb = page.locator("[data-testid=fit-logbar]").inner_text()

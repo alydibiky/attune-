@@ -5,31 +5,37 @@
 
 /** The 6 places in the sidebar: [id, label, the page it opens, members (every mode that lives there)]. */
 export const HUBS = [
-  ["home", "Home", "home", ["home"]],
-  ["chat", "Chats", "chat", ["chat", "assistants", "projects", "skills", "artifacts", "instant", "xray", "lifeask"]],
-  ["money", "Money", "money", ["money", "guardian", "radar", "life", "deal", "scout", "reminders"]],
+  // v6.36 (Ali arranged it himself on the board, 18 Oct): Create on top, Projects its own place, Home (Chat lives here), Students,
+  // Money, Health, Daily, Work; How to use + Privacy at the bottom of the sidebar, next to Settings (side-ui.jsx)
+  ["create", "Create", "assistants", ["assistants", "skills", "artifacts", "studio", "code"]],
+  ["projects", "Projects", "projects", ["projects"]],
+  ["home", "Home", "home", ["home", "chat", "lifeask", "translate", "instant", "shelf"]],
+  ["students", "Students", "coach", ["coach", "convert", "pdfchat", "slides", "cv"]],
+  ["money", "Money", "money", ["money", "reminders", "xray", "radar", "life", "guardian", "deal"]],
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
-  ["learn", "Learn", "learn", ["learn", "coach", "memory", "shelf", "knowledge", "news"]],
-  ["tools", "Work", "tools", ["tools", "convert", "translate", "pdfchat", "slides", "cv", "video", "map", "travel", "studio",
-    "code", "improve", "compress", "humanize", "copilot", "library", "ask", "business", "crane", "field", "fleet", "guide", "privacy"]],
+  ["learn", "Daily", "learn", ["learn", "scout", "memory", "news", "map", "travel", "knowledge"]],
+  ["tools", "Work", "business", ["business", "fleet", "crane", "field", "tools", "improve", "compress", "humanize", "copilot", "library", "video", "ask", "guide", "privacy"]],
 ];
 
 /** Inside Tools, the pages that are one page with tabs (the smallest group a page is in gives its tabs). */
 export const GROUPS = [
-  ["files", "Files", ["convert", "translate", "pdfchat", "slides", "cv", "video"]],
-  ["places", "Places", ["travel", "map"]],
-  ["create", "Create", ["code", "improve", "compress", "humanize", "copilot", "library", "ask"]],
-  ["work", "Business", ["crane", "field", "fleet", "business"]],
-  ["help", "Help", ["guide", "privacy"]],
+  // the tab rows (v6.36, Ali's board): Chat · Ask your life · Translate; Work = Business · Fleet · Crane · Reports · Tools
+  ["talk", "Chat", ["chat", "lifeask", "translate"]],
+  ["work", "Work", ["business", "fleet", "crane", "field", "tools"]],
+  // pages with no tab row: they open from a Home tile, the Tools choices or the sidebar ("as choices, not tabs")
+  ...["instant", "shelf", "projects", "improve", "compress", "humanize", "copilot", "library", "video", "ask", "guide", "privacy", "home"].map((m) => ["solo-" + m, m, [m]]),
 ];
 
 /** Pages that take the whole screen with their own header (no tab row on them). */
-export const FULL = ["home", "tools", "business", "fit", "map"];
+export const FULL = ["home", "fit", "map"];   // (v6.36: Business shows the Work tabs — Tools is one of them)
 
 /** v6.30 (Ali: no more than 6 tabs either): a page that lives INSIDE another — one tab; a small switch on top of the page moves
     between the two parts. Skills is part of Assistants, Artifacts part of Projects, Reminders part of Radar (both are dates).
     v6.32 (Ali picked it): Compress is part of Improve a prompt, so Create has 6 tabs. */
-export const INSIDE = { skills: "assistants", artifacts: "projects", radar: "guardian", reminders: "guardian", compress: "improve" };
+export const INSIDE = { radar: "reminders", life: "reminders", xray: "reminders", guardian: "reminders" };
+/* v6.36 (Ali's board: "reminders · tabs inside: xray, radar, life — rename it to a good name"): one Money tab, "Follow-ups", with a
+   switch Reminders · Dates · People & plans · Chat X-Ray · Payments (the old Watch). Skills, Artifacts and Compress are their own
+   pages again (Create's tabs / the Tools choices). */
 /* v6.34 (Ali: "what's the difference between Guardian and Radar — make Guardian, Radar and People all in Money"; "integrate them
    the best way"): Guardian (money already paid: overcharges, subscriptions, price rises) and Radar (dates coming: trials,
    renewals, warranties) + Reminders are ONE tab, "Watch", with a switch Payments · Dates · Reminders. Money = 5 tabs. */
@@ -64,12 +70,15 @@ export function tabsFor(mode, available = null) {
     [id, title, what is inside, members]. A card opens the first member this device has; the rest are tabs at its top.
     (Maps and Business are full-screen pages without a tab row, so their cards open Travel / Crane toolkit, where they are tabs.) */
 export const TOOL_PAGES = [
-  ["files", "Files", "Convert, translate, ask a PDF, slides & reports, CV, video downloads", ["convert", "translate", "pdfchat", "slides", "cv", "video"]],
-  ["create", "Create", "Code, better prompts, compress, humanize, copilot, prompt library", ["code", "improve", "compress", "humanize", "copilot", "library", "ask"]],
-  ["studio", "Studio", "Pictures made on your phone", ["studio"]],
-  ["places", "Maps & travel", "Offline maps, country packs and phrases", ["travel", "map"]],
-  ["work", "Business", "Crane toolkit, site reports, fleet and your business", ["crane", "field", "fleet", "business"]],
-  ["help", "Help & privacy", "How to use every tool, and what stays on your phone", ["guide", "privacy"]],
+  // v6.36 (Ali: "improve, compress, humanize, copilot, library, video downloader — under a tab called Tools in Business, as
+  // choices, not tabs"): one card each
+  ["improve", "Improve a prompt", "For ChatGPT, Claude, Gemini…", ["improve"]],
+  ["compress", "Compress", "Shorter prompts", ["compress"]],
+  ["humanize", "Humanize", "Sound like you", ["humanize"]],
+  ["copilot", "Copilot", "Work with another AI", ["copilot"]],
+  ["library", "Library", "Prompt recipes", ["library"]],
+  ["video", "Video Downloader", "Paste a video link, pick the quality, save it to your phone", ["video"]],
+  ["ask", "Ask (classic)", "The earlier Ask screen", ["ask"]],
 ];
 
 /** The pages a device shows: members it doesn't have are dropped; a page with none left is not shown. */

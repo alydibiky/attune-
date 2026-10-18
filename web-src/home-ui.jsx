@@ -5,7 +5,7 @@
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import React, { useMemo, useState } from "react";
-import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase } from "lucide-react";
+import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { loadLife } from "./life.js";
 import { loadRadar } from "./deadlines.js";
@@ -139,13 +139,14 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <button className="c-card text-start p-3" onClick={() => navTo("money")} data-testid="home-area-money"><span className="flex items-center gap-1.5"><Wallet size={15} className="c-acc" /><b className="text-[14px]">{tr("Money")}</b></span>
           <span className="c-sub block text-[12.5px] mt-1 c-num" dir="auto">{data.o.monthOut ? tr("{v} spent", { v: fmt(data.o.monthOut) }) : tr("Spending, bills, Scout")}</span>
           {data.o.budget ? <div className="c-bar mt-1.5"><i style={{ width: pct(data.o.monthOut, data.o.budget) + "%" }} /></div> : null}</button>
-        <button className="c-card text-start p-3" onClick={() => navTo("fit")} data-testid="home-area-health"><span className="flex items-center gap-1.5"><Heart size={15} className="c-acc" /><b className="text-[14px]">{tr("Health")}</b></span>
-          <span className="c-sub block text-[12.5px] mt-1 c-num">{data.fitOn ? tr("{a} / {b} kcal", { a: fmt(data.kcal), b: fmt(data.goal) }) : tr("Food, medicines, cycle")}</span>
+        <button className="c-card text-start p-3" onClick={() => navTo("fit")} data-testid="home-area-health"><span className="flex items-center gap-1.5"><Apple size={15} className="c-acc" /><b className="text-[14px]">{tr("Fit & Food")}</b></span>
+          <span className="c-sub block text-[12.5px] mt-1 c-num">{data.fitOn ? tr("{a} / {b} kcal", { a: fmt(data.kcal), b: fmt(data.goal) }) : tr("Calories from a sentence or a photo")}</span>
           {data.fitOn && data.goal ? <div className="c-bar mt-1.5"><i style={{ width: pct(data.kcal, data.goal) + "%" }} /></div> : null}</button>
-        <button className="c-card text-start p-3" onClick={() => navTo("learn")} data-testid="home-area-learn"><span className="flex items-center gap-1.5"><GraduationCap size={15} className="c-acc" /><b className="text-[14px]">{tr("Learn")}</b></span>
-          <span className="c-sub block text-[12.5px] mt-1 truncate" dir="auto">{data.learn ? data.learn.title + " · " + data.learn.n + "/" + data.learn.of : tr("A lesson a day")}</span></button>
-        <button className="c-card text-start p-3" onClick={() => navTo("tools")} data-testid="home-area-work"><span className="flex items-center gap-1.5"><Briefcase size={15} className="c-acc" /><b className="text-[14px]">{tr("Work")}</b></span>
-          <span className="c-sub block text-[12.5px] mt-1 truncate">{data.work.length ? data.work.map((x) => tr(x)).join(" · ") : tr("Files, business, create")}</span></button>
+        {/* v6.36 (Ali's board): Instant and Shelf live on Home too, as tiles — not tabs */}
+        <button className="c-card text-start p-3" onClick={() => navTo("instant")} data-testid="home-area-instant"><span className="flex items-center gap-1.5"><Zap size={15} className="c-acc" /><b className="text-[14px]">{tr("Instant")}</b></span>
+          <span className="c-sub block text-[12.5px] mt-1 truncate">{tr("Quick actions on text & photos")}</span></button>
+        <button className="c-card text-start p-3" onClick={() => navTo("shelf")} data-testid="home-area-shelf"><span className="flex items-center gap-1.5"><BookOpen size={15} className="c-acc" /><b className="text-[14px]">{tr("Shelf")}</b></span>
+          <span className="c-sub block text-[12.5px] mt-1 truncate">{tr("Your notes, in books")}</span></button>
       </div>
       <button onClick={openAll} className="c-sub text-[12.5px] px-1" data-testid="home-all">{tr("All tools")} {ar ? "←" : "→"}</button>
       </>}

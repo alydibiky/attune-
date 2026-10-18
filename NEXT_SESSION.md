@@ -758,10 +758,13 @@ food Add sheet minimal.
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
 ## AB. 18 Oct 2026 — v6.36: Ali's choices built (HANDOFF §5.83). Read this first, then AA.
-Built: layout 1A, Egyptian Arabic UI, keyboard A, all of Scout (meter, scam check, follow, gold, offer), USDA generic foods
+Built: **Ali's own arrangement from the board** (HANDOFF §5.84: Create · Projects · Home · Students · Money · Health · Daily ·
+Work; Follow-ups; Tools as choices), layout 1A, Egyptian Arabic UI, keyboard A, all of Scout (meter, scam check, follow, gold, offer), USDA generic foods
 (13,266, vitamins + portions), Android 17 target. Waiting for Ali: **which agent ideas** (round 2 on https://claude.ai/artifact/LQ1s1sqbSGJtSC8vfZQLec).
 ### Ali's phone checklist for 6.36
-1. ⬜ Home: the box, Food photo / A file / Find for me, "Attune suggests", the four tiles; the sidebar says Work and Chats.
+1. ⬜ Sidebar: Create · Projects · Home · Students · Money · Health · Daily · Work, and How to use / Privacy at the bottom.
+   Money › Follow-ups (Reminders · Dates · People & plans · Chat X-Ray · Payments); Work › Tools (the choices).
+   Home: the box, Food photo / A file / Find for me, "Attune suggests", the tiles Money · Fit & Food · Instant · Shelf.
 2. ⬜ Arabic: every screen in Egyptian; tell me any word that sounds wrong.
 3. ⬜ Keyboard: light keys, the letter bubble when pressing, the bottom row works.
 4. ⬜ Scout: a car goal → "Fair price · market a–b", warnings, "Follow price", the offer; "21 karat gold under 3,500".

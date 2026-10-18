@@ -936,4 +936,10 @@ export const TRK = {
   "Food, medicines, cycle": "Yemek, ilaçlar, döngü",
   "A lesson a day": "Her gün bir ders",
   "Files, business, create": "Dosyalar, iş, oluştur",
+  "Students": "Öğrenciler",
+  "Daily": "Günlük",
+  "Follow-ups": "Takipler",
+  "Homework": "Ödev",
+  "Pick a tool.": "Bir araç seçin.",
+  "Calories from a sentence or a photo": "Bir cümleden ya da fotoğraftan kalori",
 };

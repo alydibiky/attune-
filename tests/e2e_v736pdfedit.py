@@ -45,8 +45,8 @@ with sync_playwright() as p:
         page.goto(env.url); page.wait_for_selector("[data-testid=phone-home], [data-testid=desk-home], body", timeout=15000)
         page.evaluate(NATIVE + "(%s)" % __import__("json").dumps(PAGES))
         tag = "desk" if desk else "phone"
-        page.locator("[data-testid=home-all]:visible, [data-testid=side-go-tools]:visible").first.click(); page.wait_for_selector("[data-testid=tools-page]")
-        page.click("[data-testid=tools-page-files]"); page.wait_for_timeout(500)
+        # v6.36: the Converter is a Students tab (Ali's board)
+        page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'convert'}}))"); page.wait_for_timeout(500)
         rows = page.locator("[data-testid=convert-tools] [data-testid^=convert-tool-]")
         check(rows.count() == 4 and rows.first.get_attribute("data-testid") == "convert-tool-edit", tag + ": Converter's first row is 'Edit a PDF' (still 4 rows)")
         if not desk: shot(page, "1-converter")

@@ -3,7 +3,7 @@
 // New chat, search, the main places, every tool, and the recent chats; the open chat or tool
 // fills the rest, and the chat reads in a centred column. Phones keep the bottom bar.
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, Search, PanelLeft, ChevronDown, Cpu, User, Crown, ShieldCheck, LayoutGrid, PenLine, Trash2, Lock } from "lucide-react";
+import { Plus, Search, PanelLeft, ChevronDown, Cpu, User, Crown, ShieldCheck, LayoutGrid, PenLine, Trash2, Lock, HelpCircle } from "lucide-react";
 import { tr } from "./i18n.js";
 import { useBackDepth } from "./backstack.js";
 
@@ -160,6 +160,12 @@ export function DesktopSide({ mode, canBack, onBack, navTo, places, tools, group
         </div>
       </div>
       <div className="shrink-0 border-t border-slate-800 p-2 space-y-0.5">
+        {/* v6.36 (Ali's board: "put How to use and Privacy in settings, at the bottom of the left sidebar") */}
+        <div className="grid grid-cols-2 gap-1" data-testid="side-help">
+          {[["guide", HelpCircle, "How to use Attune"], ["privacy", Lock, "Privacy"]].map(([id, Ic, label]) => (
+            <button key={id} onClick={() => navTo(id)} data-testid={"side-go-" + id} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[12px] text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 text-start">
+              <Ic size={14} className="shrink-0" /><span className="truncate">{tr(label)}</span></button>))}
+        </div>
         <button onClick={openEngine} data-testid="side-engine" className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-slate-300 hover:bg-slate-800/60">
           <Cpu size={16} className={engineState === "ready" ? "text-teal-300" : engineState === "starting" ? "text-amber-300" : "text-slate-400"} />
           <span className="flex-1 text-start truncate">{engineLabel}</span>{airGap ? <Lock size={13} className="text-teal-300" /> : null}</button>
