@@ -99,7 +99,11 @@ export async function runCode({ lang, code, stdin = "", timeoutMs, files }) {
  * access to the app). Errors are sent to the parent as
  * {attuneSandbox: token, kind: "error"|"log", text}.
  */
-export function htmlDoc(src, token) {
+/** v6.40 (upgrade C5): a saved page keeps its data. `store` = what the page saved last time (its own localStorage keys, plus
+    "__attune_fields": every box, tick and choice the person filled in). The page's storage starts with it, and every change is
+    sent to the app ("store"), which keeps it for that page — so a tracker or a checklist made in Chat works like a small app. */
+export function htmlDoc(src, token, opts = {}) {
+  const keep = opts && opts.store && typeof opts.store === "object" ? opts.store : null;
   const csp = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:";
   const hook = `<meta http-equiv="Content-Security-Policy" content="${csp}"><script>(function(){var T=${JSON.stringify(String(token))};` +
     `function send(k,t){try{parent.postMessage({attuneSandbox:T,kind:k,text:String(t).slice(0,2000)},"*")}catch(e){}}` +
@@ -107,6 +111,16 @@ export function htmlDoc(src, token) {
     // to localStorage — give them a private in-memory one so they work (nothing reaches the app's storage)
     `(function(){function M(){var d={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[k]=String(v)},removeItem:function(k){delete d[k]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}` +
     `["localStorage","sessionStorage"].forEach(function(n){var ok=false;try{ok=!!window[n]}catch(e){}if(!ok)try{Object.defineProperty(window,n,{value:M(),configurable:true})}catch(e){}})})();` +
+    (keep ? `(function(){var K=${JSON.stringify(keep).replace(/</g, "\\u003c")};var S=window.localStorage;var mute=true;try{for(var k in K)if(k!=="__attune_fields")S.setItem(k,K[k])}catch(e){}` +
+      // every change → the app keeps it (debounced)
+      `var tm=null;function dump(){if(mute)return;clearTimeout(tm);tm=setTimeout(function(){var o={};try{for(var i=0;i<S.length;i++){var kk=S.key(i);o[kk]=S.getItem(kk)}}catch(e){}o.__attune_fields=JSON.stringify(F);try{parent.postMessage({attuneSandbox:T,kind:"store",data:JSON.stringify(o).slice(0,500000)},"*")}catch(e){}},300)}` +
+      `var si=S.setItem,ri=S.removeItem;S.setItem=function(a,b){si.call(S,a,b);dump()};S.removeItem=function(a){ri.call(S,a);dump()};` +
+      // the boxes the person fills in: kept by their place on the page, put back when it opens
+      `var F={};try{F=JSON.parse(K.__attune_fields||"{}")||{}}catch(e){}function key(el){if(el.id)return"#"+el.id;if(el.name)return"n:"+el.name+(el.type==="radio"?":"+el.value:"");var all=document.querySelectorAll("input,textarea,select");return"i:"+[].indexOf.call(all,el)}` +
+      `function rec(e){var el=e.target;if(!el||!/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)||el.type==="password"||el.type==="file")return;F[key(el)]=el.type==="checkbox"||el.type==="radio"?(el.checked?"1":"0"):el.value;dump()}` +
+      `document.addEventListener("input",rec,true);document.addEventListener("change",rec,true);` +
+      `document.addEventListener("DOMContentLoaded",function(){var all=document.querySelectorAll("input,textarea,select");[].forEach.call(all,function(el){var v=F[key(el)];if(v==null)return;if(el.type==="checkbox"||el.type==="radio")el.checked=v==="1";else el.value=v})});` +
+      `window.addEventListener("load",function(){mute=false})})();` : "") +
     `window.addEventListener("error",function(e){send("error",(e.message||"Error")+(e.lineno?" (line "+e.lineno+")":""))});` +
     `window.addEventListener("unhandledrejection",function(e){send("error","Unhandled promise rejection: "+(e.reason&&e.reason.message||e.reason))});` +
     `var L=console.log;console.log=function(){send("log",[].slice.call(arguments).join(" "));try{L.apply(console,arguments)}catch(e){}};` +

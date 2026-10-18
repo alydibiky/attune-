@@ -5686,4 +5686,10 @@ export const AR = {
   "Your WhatsApp number (for orders)": "رقم الواتساب بتاعك (للطلبات)",
   "As a message": "كرسالة",
   "As a PDF": "كـ PDF",
+  "That page was deleted": "الصفحة دي اتمسحت",
+  "Clear everything typed into this page?": "تمسح كل اللي اتكتب في الصفحة دي؟",
+  "Android will ask to add it to your home screen": "أندرويد هيسألك تضيفها على الشاشة الرئيسية",
+  "This phone's home screen can't add it — open it from Artifacts": "الشاشة الرئيسية في الموبايل ده مش بتقبلها — افتحها من الصفحات المحفوظة",
+  "Home screen": "الشاشة الرئيسية",
+  "Clear data": "امسح البيانات",
 };

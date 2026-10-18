@@ -16,7 +16,7 @@ import {
   rulesFor, setRules, exportAssistant, importAssistant,
 } from "./spaces.js";
 import { PANES, GRID3 } from "./desk.jsx";
-import { Plus, X, Trash2, PenLine, Copy, Share2, Download, Save, Loader2, Sparkles, MessageSquare, Maximize2, Wand2, FileText, Check, Brain, Upload } from "lucide-react";
+import { Plus, X, Trash2, PenLine, Copy, Share2, Download, Save, Loader2, Sparkles, MessageSquare, Maximize2, Wand2, FileText, Check, Brain, Upload, Pin, Eraser } from "lucide-react";
 
 const card = "rounded-2xl border border-slate-800 bg-slate-900";
 const input = "w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-600";
@@ -265,9 +265,18 @@ export function ProjectsPage({ startChat, openChat, flash }) {
 }
 
 /* ============================== Artifacts ============================== */
-function ArtifactBody({ kind, lang, content }) {
+// v6.40 (C5): what a saved page stored (its own storage + the boxes filled in), kept per page on the phone (and synced)
+export const ARTDATA_KEY = (id) => "attune:artifact:data:v1:" + id;
+const loadArtData = (id) => { try { return JSON.parse(localStorage.getItem(ARTDATA_KEY(id)) || "null") || {}; } catch (e) { return {}; } };
+function ArtifactBody({ kind, lang, content, dataId, onData }) {
   const [token] = useState(() => "a" + Math.random().toString(36).slice(2));
-  if (kind === "html") return <iframe title="artifact" sandbox="allow-scripts allow-forms" srcDoc={htmlDoc(content, token)} data-testid="artifact-frame" className="w-full h-full bg-white" />;
+  const [store] = useState(() => (dataId ? loadArtData(dataId) : null));
+  useEffect(() => {
+    if (!dataId) return;
+    const on = (e) => { const d = e.data; if (!d || d.attuneSandbox !== token || d.kind !== "store") return; try { localStorage.setItem(ARTDATA_KEY(dataId), d.data); onData && onData(); } catch (x) {} };
+    window.addEventListener("message", on); return () => window.removeEventListener("message", on);
+  }, [dataId, token]);
+  if (kind === "html") return <iframe title="artifact" sandbox="allow-scripts allow-forms" srcDoc={htmlDoc(content, token, dataId ? { store: store || {} } : {})} data-testid="artifact-frame" className="w-full h-full bg-white" />;
   if (kind === "doc") return <div className="att-scroll h-full overflow-y-auto p-4 text-[15px] text-slate-200 leading-relaxed" dir="auto"><Md text={content} runnable={false} /></div>;
   return <pre className="att-scroll h-full overflow-auto p-4 text-[12.5px] font-mono text-slate-200 whitespace-pre" dir="ltr">{content}</pre>;
 }
@@ -283,6 +292,14 @@ export function ArtifactViewer({ artifact, close, llm, modelReady, native, saveF
   const [ask, setAsk] = useState("");
   const [busy, setBusy] = useState(false);
   const meta = item || draft;
+  const [dataV, setDataV] = useState(0);   // v6.40 (C5): bumps to reload the page after its data is cleared
+  const [hasData, setHasData] = useState(() => { try { return !!(item && localStorage.getItem(ARTDATA_KEY(item.id))); } catch (e) { return false; } });
+  const clearData = async () => { if (!item || !(await askConfirm("Clear everything typed into this page?"))) return; try { localStorage.removeItem(ARTDATA_KEY(item.id)); } catch (e) {} setHasData(false); setDataV((v) => v + 1); };
+  const pin = () => {
+    const it = item || persist(content); if (!it) return;
+    let done = false; try { done = !!(native && native.pinPage && native.pinPage(it.id, meta.title || "Attune")); } catch (e) {}
+    flash && flash(done ? tr("Android will ask to add it to your home screen") : tr("This phone's home screen can't add it — open it from Artifacts"));
+  };
   const content = (versions[vi] || versions[versions.length - 1]).content;
   useEffect(() => { setVi(versions.length - 1); }, [versions.length]);
 
@@ -341,7 +358,7 @@ export function ArtifactViewer({ artifact, close, llm, modelReady, native, saveF
         </div>
       ) : null}
       <div className="flex-1 min-h-0">
-        <ArtifactBody key={vi + ":" + view} kind={view === "code" ? "code" : meta.kind} lang={meta.lang} content={content} />
+        <ArtifactBody key={vi + ":" + view + ":" + dataV} kind={view === "code" ? "code" : meta.kind} lang={meta.lang} content={content} dataId={item && meta.kind === "html" ? item.id : null} onData={() => setHasData(true)} />
       </div>
       <div className="border-t border-slate-800 p-2 space-y-2 bg-slate-900">
         {llm ? (
@@ -357,6 +374,8 @@ export function ArtifactViewer({ artifact, close, llm, modelReady, native, saveF
           <button onClick={() => { try { navigator.clipboard.writeText(content); flash && flash(tr("Copied")); } catch (e) {} }} className="flex flex-col items-center text-[10px] text-slate-300 px-2 py-1"><Copy size={17} />{tr("Copy")}</button>
           <button onClick={() => share(native, flash, content)} className="flex flex-col items-center text-[10px] text-slate-300 px-2 py-1"><Share2 size={17} />{tr("Share")}</button>
           <button onClick={download} className="flex flex-col items-center text-[10px] text-slate-300 px-2 py-1" data-testid="artifact-download"><Download size={17} />{tr("File")}</button>
+          {meta.kind === "html" && native && native.pinPage ? <button onClick={pin} className="flex flex-col items-center text-[10px] text-slate-300 px-2 py-1" data-testid="artifact-pin"><Pin size={17} />{tr("Home screen")}</button> : null}
+          {hasData ? <button onClick={clearData} className="flex flex-col items-center text-[10px] text-amber-300 px-2 py-1" data-testid="artifact-clear-data"><Eraser size={17} />{tr("Clear data")}</button> : null}
         </div>
       </div>
     </div>

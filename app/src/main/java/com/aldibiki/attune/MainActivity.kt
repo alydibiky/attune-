@@ -466,6 +466,13 @@ class MainActivity : AppCompatActivity() {
             if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p
             return
         }
+        // v6.40: a saved page pinned to the home screen → open that page
+        intent?.getStringExtra(EXTRA_OPEN_ARTIFACT)?.let { aid ->
+            intent.removeExtra(EXTRA_OPEN_ARTIFACT)
+            val p = JSONObject().put("kind", "artifact").put("id", aid)
+            if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p
+            return
+        }
         // v6.29: Health Connect's "why this app reads your data" (Android 13 and 14+) → the privacy page
         if (intent?.action == "androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" || intent?.action == "android.intent.action.VIEW_PERMISSION_USAGE") {
             val p = JSONObject().put("kind", "privacy")

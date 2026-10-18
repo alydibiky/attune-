@@ -1117,6 +1117,20 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     fun watchSave(json: String) { try { MessageWatch.save(ctx, json) } catch (e: Throwable) { } }
     @JavascriptInterface
     fun watchHits(): String = try { MessageWatch.hits(ctx) } catch (e: Throwable) { "[]" }
+    /** v6.40 (C5): pin a saved page (an artifact made in Chat: a tracker, a checklist) to the home screen as its own icon.
+        Tapping it opens Attune straight on that page. Android asks the person first; false when the launcher can't pin. */
+    @JavascriptInterface
+    fun pinPage(artifactId: String, label: String): Boolean = try {
+        val sm = ctx.getSystemService(android.content.pm.ShortcutManager::class.java)
+        if (sm == null || !sm.isRequestPinShortcutSupported) false else {
+            val i = android.content.Intent(ctx, MainActivity::class.java).setAction(android.content.Intent.ACTION_VIEW)
+                .putExtra(EXTRA_OPEN_ARTIFACT, artifactId).addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            val info = android.content.pm.ShortcutInfo.Builder(ctx, "page-" + artifactId.take(40))
+                .setShortLabel(label.ifBlank { "Attune" }.take(24)).setLongLabel(label.ifBlank { "Attune" }.take(60))
+                .setIcon(android.graphics.drawable.Icon.createWithResource(ctx, R.mipmap.ic_launcher)).setIntent(i).build()
+            sm.requestPinShortcut(info, null)
+        }
+    } catch (e: Throwable) { false }
     @JavascriptInterface
     fun payForget(idsJson: String) { try { PayLog.remove(ctx, idsJson) } catch (e: Throwable) { } }
 

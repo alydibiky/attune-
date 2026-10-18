@@ -100,6 +100,7 @@ import { LICENCE_PUBLIC_KEY, SELLER, setTestingOpen } from "./erp.js";
 import { Guard } from "./guard.jsx";
 import { rankPassages } from "./webrank.js";
 import { AssistantsPage, ProjectsPage, ArtifactsPage, ArtifactViewer, ThemePicker, loadTheme, applyTheme } from "./spaces-ui.jsx";
+import { loadArtifacts } from "./spaces.js";   // v6.40: open a page pinned to the home screen
 import { detectLoop, trimLoop, detectDegenerate, junkStart } from "./quality.js";
 import { verifyMath, looksLikeMathProblem, arithmeticSlips, looksLikeCodeTask } from "./verify.js";
 import { reasonVote, analyzeFile, checkCorrection } from "./reason.js";
@@ -8259,6 +8260,7 @@ export default function App() {
     const onShare = (e) => {
       const d = (e && e.data) || {};
       if (d.kind === "privacy") { navTo("privacy"); return; }
+      if (d.kind === "artifact" && d.id) { const a = loadArtifacts().find((x) => x.id === d.id); if (a) setArtifact(a); else flash(tr("That page was deleted")); return; }   // v6.40 a page pinned to the home screen
       if (d.kind === "open" && d.mode) { navTo(String(d.mode)); return; }   // v6.37 the Instant quick-settings tile   // v6.29 Health Connect: "why this app reads your data"
       if (d.kind === "reminder" && /^daily-learn-/.test(d.id || "")) { setDailyOpen(d.id); navTo("learn"); return; }
       if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); navTo("news"); return; }

@@ -11,6 +11,7 @@ import android.service.quicksettings.TileService
  */
 /** The extra that opens one page of the app (MainActivity.handleShare). */
 const val EXTRA_OPEN_PAGE = "attune_open"
+const val EXTRA_OPEN_ARTIFACT = "attune_artifact"   // v6.40: a saved page pinned to the home screen (NativeBridge.pinPage)
 
 class InstantTile : TileService() {
     override fun onClick() {
