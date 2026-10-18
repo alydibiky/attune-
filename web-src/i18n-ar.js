@@ -5585,4 +5585,9 @@ export const AR = {
   "The eraser failed": "الممحاة معرفتش تشتغل",
   "That picture is gone.": "الصورة دي مبقتش موجودة.",
   "Couldn't open that photo.": "معرفتش أفتح الصورة دي.",
+  "Log food on {n} more days and your target will follow what your body really does.": "سجّل أكلك {n} أيام كمان، وهدفك هيمشي على اللي جسمك بيعمله فعلاً.",
+  "Weigh yourself 2–3 times a week for two weeks and your target will follow what your body really does.": "اوزن نفسك 2–3 مرات في الأسبوع لمدة أسبوعين، وهدفك هيمشي على اللي جسمك بيعمله فعلاً.",
+  "You ate about {eaten} kcal a day and your weight held — so you burn about {burn}. Your plan now counts {tdee}.": "أكلت حوالي {eaten} سعرة في اليوم ووزنك ثابت — يعني بتحرق حوالي {burn}. خطتك دلوقتي بتحسب {tdee}.",
+  "You ate about {eaten} kcal a day and lost {kg} kg a week — so you burn about {burn}. Your plan now counts {tdee}.": "أكلت حوالي {eaten} سعرة في اليوم ونزلت {kg} كيلو في الأسبوع — يعني بتحرق حوالي {burn}. خطتك دلوقتي بتحسب {tdee}.",
+  "You ate about {eaten} kcal a day and gained {kg} kg a week — so you burn about {burn}. Your plan now counts {tdee}.": "أكلت حوالي {eaten} سعرة في اليوم وزدت {kg} كيلو في الأسبوع — يعني بتحرق حوالي {burn}. خطتك دلوقتي بتحسب {tdee}.",
 };

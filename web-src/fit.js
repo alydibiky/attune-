@@ -330,7 +330,9 @@ export function targets(pr) {
   if (!(kg > 25 && cm > 100 && age >= 10)) return null;
   const notes = [];
   const bmr = Math.round(10 * kg + 6.25 * cm - 5 * age + (male ? 5 : -161));
-  const tdee = Math.round(bmr * (ACTIVITY[pr.activity] || 1.375));
+  const formulaTdee = Math.round(bmr * (ACTIVITY[pr.activity] || 1.375));
+  // v6.38 (F2): once your own weeks of food + weight say what you really burn, that is used (fitcoach.js weeklyAdapt)
+  const tdee = pr.adapt && +pr.adapt.tdee > 900 ? Math.round(+pr.adapt.tdee) : formulaTdee;
   const bmi = r1(kg / Math.pow(cm / 100, 2));
   let goal = pr.goal || "maintain", rate = Math.min(Math.max(+pr.rate || 0.5, 0.1), 1);
   if (goal === "lose" && (age < 18 || pr.pregnant)) { goal = "maintain"; notes.push({ en: age < 18 ? "Under 18: the plan keeps your weight steady — growing bodies need their energy. Talk to a doctor before dieting." : "Pregnant or breastfeeding: no calorie deficit — ask your doctor what is right for you.", ar: age < 18 ? "أقل من 18 سنة: تُثبّت الخطة الوزن — فالجسم في مرحلة النمو يحتاج طاقته. استشر طبيبًا قبل أي حمية." : "حامل أو مُرضِع: لا يوجد عجز في السعرات — اسألي طبيبك عمّا يناسبك." }); }
@@ -361,7 +363,7 @@ export function targets(pr) {
     const perWeek = Math.abs(tdee - kcal) * 7 / 7700;
     if (perWeek > 0) weeks = Math.ceil(Math.abs(+pr.goalKg - kg) / perWeek);
   }
-  return { bmr, tdee, kcal, protein, carbs, fat, fibre, water, bmi, goal, notes, weeks };
+  return { bmr, tdee, formulaTdee, adapted: tdee !== formulaTdee, kcal, protein, carbs, fat, fibre, water, bmi, goal, notes, weeks };
 }
 
 // ---- 3. the day ----

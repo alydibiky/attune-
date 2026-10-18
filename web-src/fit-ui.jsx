@@ -23,6 +23,7 @@ import * as CARE from "./care.js";
 import { WatchCard, Grades, DayQuality, RamadanCard, InsulinCard, QuickLog, SaveMyMeal, WeekPlanView, WeekReport, BodyCard, FitSettings, RAMADAN_NAMES } from "./fitplus-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as H from "./fithome.js";
+import { weeklyAdapt } from "./fitcoach.js";
 import { AR } from "./i18n-ar.js";
 import { Barcode, Undo2, Pencil, User } from "lucide-react";
 
@@ -122,6 +123,15 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const day = st.days[dayKey] || { meals: {}, water: 0, workouts: [] };
   const tg = useMemo(() => { const t = H.targetsOf(st.profile); return t ? { ...t, kg: +st.profile.kg || 70 } : null; }, [st.profile]);
   const t = (en) => (ar ? AR[en] || en : en);   // v6.10 home: every new string lives in i18n-ar.js
+  // v6.38 (F2): once a week the plan follows what your body really burns (your food + your weight trend), with the reason
+  const [coach, setCoach] = useState(null);
+  useEffect(() => {
+    if (!st.profile || !F.targets(st.profile)) return;
+    const f = F.targets({ ...st.profile, adapt: null }).formulaTdee;
+    const r = weeklyAdapt(st.profile, { days: st.days, weights: st.weights }, f);
+    if (r.profile !== st.profile) upd((s) => ({ ...s, profile: { ...s.profile, adapt: r.profile.adapt } }));
+    setCoach(r.line ? { text: Object.entries(r.line[1]).reduce((x, [k, v]) => x.split("{" + k + "}").join(v), t(r.line[0])), ready: r.a.ready, changed: r.changed } : null);
+  }, [st.weights.length, Object.keys(st.days).length, !!st.profile]);
   const tot = F.dayTotals(day);
   const setDay = (fn) => upd((s) => { const d = s.days[dayKey] || { meals: {}, water: 0, workouts: [] }; return { ...s, days: { ...s.days, [dayKey]: fn(d) } }; });
   // v6.14: the home-screen widget shows today's calories left and water (FitWidget.kt)
@@ -708,7 +718,10 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
           {F.dayTips(tot, tg, ar ? "ar" : "en").map((tp, i) => <div key={i} className="rounded-xl bg-amber-500/10 border border-amber-800 px-3 py-2 text-[12.5px] text-amber-100">{tp}</div>)}
         </>;
         // v6.32 minimal: today's quality, vitamins and tips go under "More" with the rest
-        return minimal ? <Progress {...{ L, ar, st, upd, tg, pro, openPlan, share, minimal }} extraTop={top} /> : <>{top}<Progress {...{ L, ar, st, upd, tg, pro, openPlan, share }} /></>;
+        { const cc = coach ? <div className={"rounded-2xl border p-3 text-[13px] " + (coach.ready ? "border-emerald-800 bg-emerald-500/10 text-emerald-100" : "border-slate-800 bg-slate-900/60 text-slate-300")} data-testid="fit-coach">
+            <div className="font-semibold mb-0.5">{L("Your coach this week", "مدربك الأسبوع ده")}</div>{coach.text}
+            {st.profile.adapt ? <button className="block mt-1.5 text-[11.5px] underline opacity-80" data-testid="fit-coach-reset" onClick={() => upd((s) => ({ ...s, profile: { ...s.profile, adapt: null } }))}>{L("Go back to the formula", "ارجع للمعادلة")}</button> : null}</div> : null;
+        return minimal ? <>{cc}<Progress {...{ L, ar, st, upd, tg, pro, openPlan, share, minimal }} extraTop={top} /></> : <>{cc}{top}<Progress {...{ L, ar, st, upd, tg, pro, openPlan, share }} /></>; }
       })()}
       {tab === "me" && !adding && <MeTab {...{ L, ar, st, tg, openPlanForm: () => setEditProfile(true), openMove: () => setTab("move") }} settings={<FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} />} />}
     </div>
