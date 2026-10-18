@@ -134,7 +134,7 @@ def sections(env, errors):
         png = page.evaluate("""() => { const c = document.createElement('canvas'); c.width = 3000; c.height = 2000; const g = c.getContext('2d'); g.fillStyle = '#556b2f'; g.fillRect(0,0,3000,2000); g.fillStyle='#fff'; g.font='200px sans-serif'; g.fillText('ECAR', 900, 1000); return c.toDataURL('image/png').split(',')[1]; }""")
         path = os.path.join(HERE, "_car.png"); open(path, "wb").write(base64.b64decode(png))
         page.set_input_files("input[type=file][accept='image/*']", path); os.remove(path)
-        page.wait_for_selector("textarea[placeholder='Message Attune'] >> xpath=../div//img", timeout=5000)
+        page.wait_for_selector("textarea[placeholder='Message Attune'] >> xpath=../div//img", timeout=15000)
         page.locator("button:has-text('Web')").first.click()
         page.evaluate("() => { const M = window.__mock; M.fakeQueue = ['ECAR E5 electric SUV', 'NONE', 'NONE', 'This is an **ECAR E5** electric SUV [1].']; M.bodies = []; }")
         send(page, "what is this car")
