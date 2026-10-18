@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.aldibiki.attune"
-    compileSdk = 37   // v6.35 (Ali: "developed for Android 17 and lower"): Android 17 = API 37
+    compileSdk = 36   // v6.36: the API-37 platform (android-37.0) needs AGP 9.1+; targetSdk below is Android 17 all the same
 
     defaultConfig {
         applicationId = "com.aldibiki.attune"
