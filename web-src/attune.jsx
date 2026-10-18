@@ -60,6 +60,7 @@ import { MissionsPage } from "./missions-ui.jsx";
 import { MicButton, SitePhotos } from "./site-ui.jsx";
 import { fold as foldNet, loadNetWeek, saveNetWeek } from "./netreport.js";
 import { TimelinePage } from "./timeline-ui.jsx";
+import { RecallCard } from "./recall-ui.jsx";
 import { parseMission } from "./missions.js";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
@@ -10184,6 +10185,7 @@ export default function App() {
                   placeholder={tr("Type what you want, or paste anything.\n\n“Summarise this in Arabic: …”  ·  “لخصلي الرسالة دي”\n“I got my period 2 hours ago, it was heavy”")}
                   className="att-scroll w-full min-h-[8.5rem] max-h-[45vh] bg-slate-950 border border-slate-800 rounded-xl p-3 text-[15px] leading-relaxed text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               )}
+              {!photoMode ? <RecallCard text={inText} navTo={navTo} className="mt-2" /> : null}
 
               {/* toolbar (wraps on a 320-px phone: "Go" went off the screen) */}
               <div className="flex flex-wrap items-center gap-1.5 mt-2.5">

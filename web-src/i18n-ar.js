@@ -5590,4 +5590,5 @@ export const AR = {
   "You ate about {eaten} kcal a day and your weight held — so you burn about {burn}. Your plan now counts {tdee}.": "أكلت حوالي {eaten} سعرة في اليوم ووزنك ثابت — يعني بتحرق حوالي {burn}. خطتك دلوقتي بتحسب {tdee}.",
   "You ate about {eaten} kcal a day and lost {kg} kg a week — so you burn about {burn}. Your plan now counts {tdee}.": "أكلت حوالي {eaten} سعرة في اليوم ونزلت {kg} كيلو في الأسبوع — يعني بتحرق حوالي {burn}. خطتك دلوقتي بتحسب {tdee}.",
   "You ate about {eaten} kcal a day and gained {kg} kg a week — so you burn about {burn}. Your plan now counts {tdee}.": "أكلت حوالي {eaten} سعرة في اليوم وزدت {kg} كيلو في الأسبوع — يعني بتحرق حوالي {burn}. خطتك دلوقتي بتحسب {tdee}.",
+  "Remembered about {p}": "فاكر عن {p}",
 };

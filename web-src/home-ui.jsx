@@ -6,6 +6,7 @@
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import React, { useMemo, useState } from "react";
 import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen } from "lucide-react";
+import { RecallCard } from "./recall-ui.jsx";
 import { tr, getLang } from "./i18n.js";
 import { loadLife } from "./life.js";
 import { loadRadar } from "./deadlines.js";
@@ -70,6 +71,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={16} /></button>
       </div>
       {/* v6.36 layout 1A (Ali picked it): one box, three quick starts under it — tools are reached by asking, not from a list */}
+      <RecallCard text={text} navTo={navTo} className="-mt-1" />
       <div className="flex gap-2 overflow-x-auto -mt-1 pb-0.5" data-testid="home-quick">
         {[[Apple, "Food photo", () => (openFitAdd ? openFitAdd() : navTo("fit")), "home-quick-food"], [FileText, "A file", () => navTo("pdfchat"), "home-quick-file"], [Binoculars, "Find for me", () => navTo("scout"), "home-quick-scout"]].map(([I, l, go, id]) => (
           <button key={id} onClick={go} className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px]" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid={id}><I size={14} className="c-acc" />{tr(l)}</button>))}
