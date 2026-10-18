@@ -5591,4 +5591,8 @@ export const AR = {
   "You ate about {eaten} kcal a day and lost {kg} kg a week — so you burn about {burn}. Your plan now counts {tdee}.": "أكلت حوالي {eaten} سعرة في اليوم ونزلت {kg} كيلو في الأسبوع — يعني بتحرق حوالي {burn}. خطتك دلوقتي بتحسب {tdee}.",
   "You ate about {eaten} kcal a day and gained {kg} kg a week — so you burn about {burn}. Your plan now counts {tdee}.": "أكلت حوالي {eaten} سعرة في اليوم وزدت {kg} كيلو في الأسبوع — يعني بتحرق حوالي {burn}. خطتك دلوقتي بتحسب {tdee}.",
   "Remembered about {p}": "فاكر عن {p}",
+  "Project brain": "مخ المشروع",
+  "As you chat in this project, what you decide, what is still open and the dates coming up collect here — and the assistant keeps to them.": "وانت بتتكلم في المشروع ده، اللي بتقرروه واللي لسه مفتوح والمواعيد الجاية بيتجمعوا هنا — والمساعد بيمشي عليهم.",
+  "Decided": "اتقرر",
+  "Still open": "لسه مفتوح",
 };

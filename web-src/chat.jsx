@@ -629,7 +629,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       kept.unshift({ role: "user", content: ut }, { role: "assistant", content: at });
     }
     const sp = spaceRef.current;
-    const block = sp.assistant || sp.project ? spaceBlock({ assistant: sp.assistant, project: sp.project, question: typeof userContent === "string" ? userContent.slice(0, 600) : "" }) : "";
+    const block = sp.assistant || sp.project ? spaceBlock({ assistant: sp.assistant, project: sp.project, question: typeof userContent === "string" ? userContent.slice(0, 600) : "", chats: sp.project ? loadChats() : null }) : "";
     // v5.23: strong models (Expert / Master level) work to a professional standard
     const pw = api.power ? api.power() : null;
     // v5.26: small models (levels 1–2) get the SHORT prompt with one example; every model

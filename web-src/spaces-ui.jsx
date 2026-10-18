@@ -5,6 +5,7 @@ import { useSubBack, useSticky } from "./backstack.js";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { Md, loadChats } from "./chat.jsx";
+import { brainOf } from "./projectbrain.js";
 import { htmlDoc } from "./sandbox.js";
 import { fixMessages, applyFix } from "./code.js";
 import {
@@ -14,7 +15,7 @@ import {
   ACCENTS, BACKGROUNDS, PALETTES, loadTheme, saveTheme, applyTheme, newSpaceId,
 } from "./spaces.js";
 import { PANES, GRID3 } from "./desk.jsx";
-import { Plus, X, Trash2, PenLine, Copy, Share2, Download, Save, Loader2, Sparkles, MessageSquare, Maximize2, Wand2, FileText, Check } from "lucide-react";
+import { Plus, X, Trash2, PenLine, Copy, Share2, Download, Save, Loader2, Sparkles, MessageSquare, Maximize2, Wand2, FileText, Check, Brain } from "lucide-react";
 
 const card = "rounded-2xl border border-slate-800 bg-slate-900";
 const input = "w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-600";
@@ -171,6 +172,18 @@ export function ProjectsPage({ startChat, openChat, flash }) {
         {cur.instructions ? <p className="text-[12px] text-slate-400 mt-2 whitespace-pre-wrap line-clamp-4" dir="auto">{cur.instructions}</p> : null}
         <button onClick={() => startChat({ projectId: cur.id })} className={btnMain + " w-full mt-3 flex items-center justify-center gap-2"} data-testid="project-new-chat"><MessageSquare size={16} /> {tr("New chat in this project")}</button>
       </div>
+
+      {/* v6.38 (C4): the project brain — decisions, open points, dates, read from its chats */}
+      {(() => { const b = brainOf(cur, loadChats()); const any = b.decisions.length || b.open.length || b.dates.length; return (
+        <div className={card + " p-4 space-y-2"} data-testid="project-brain">
+          <p className="text-sm text-slate-100 font-medium flex items-center gap-1.5"><Brain size={15} className="text-violet-300" />{tr("Project brain")}</p>
+          {!any ? <p className="text-[12px] text-slate-500">{tr("As you chat in this project, what you decide, what is still open and the dates coming up collect here — and the assistant keeps to them.")}</p> : null}
+          {[["decisions", "Decided", "text-emerald-300"], ["open", "Still open", "text-amber-300"]].map(([k, label, col]) => b[k].length ? (
+            <div key={k} data-testid={"project-brain-" + k}><p className={"text-[11px] uppercase tracking-wider " + col}>{tr(label)}</p>
+              <ul className="m-0 p-0 list-none space-y-1">{b[k].map((x, i) => <li key={i}><button onClick={() => openChat(x.chat)} className="text-start text-[13px] text-slate-200 hover:underline" dir="auto">• {x.text}</button></li>)}</ul></div>) : null)}
+          {b.dates.length ? <div data-testid="project-brain-dates"><p className="text-[11px] uppercase tracking-wider text-sky-300">{tr("Dates")}</p>
+            <ul className="m-0 p-0 list-none space-y-1">{b.dates.map((x, i) => <li key={i} className="text-[13px] text-slate-200" dir="auto"><b className="tabular-nums" dir="ltr">{x.date}</b> · {x.text}</li>)}</ul></div> : null}
+        </div>); })()}
 
       <div className={card + " p-4"}>
         <p className="text-sm text-slate-100 font-medium">{tr("Knowledge")}</p>

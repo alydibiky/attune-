@@ -12,6 +12,7 @@
    - Themes: the app's colours come from Tailwind's CSS variables (--color-teal-300 …),
      so a theme swaps the variables on <html> — every screen follows, nothing is rewritten.
    Everything lives in localStorage under attune:* keys, so backups include it.         */
+import { brainOf, brainBlock } from "./projectbrain.js";
 
 export const ASSISTANTS_KEY = "attune:assistants:v1";
 export const PROJECTS_KEY = "attune:projects:v1";
@@ -127,11 +128,13 @@ export function knowledgeFor(project, question, budget = 3500) {
 }
 
 /** The extra system-prompt block for a chat that belongs to an assistant and/or project. */
-export function spaceBlock({ assistant, project, question }) {
+export function spaceBlock({ assistant, project, question, chats = null }) {
   const parts = [];
   if (assistant && assistant.instructions) parts.push(`YOUR ROLE — you are "${assistant.name}":\n${assistant.instructions}`);
   if (project) {
     if (project.instructions) parts.push(`PROJECT "${project.name}" — standing instructions:\n${project.instructions}`);
+    // v6.38 (C4): what earlier chats in this project decided, left open and dated
+    if (chats) { const bb = brainBlock(brainOf(project, chats)); if (bb) parts.push(bb); }
     const k = knowledgeFor(project, question);
     if (k.length) parts.push(`PROJECT KNOWLEDGE (the user's own files and notes — use them when relevant and say which file you used, e.g. "from ${k[0].doc}"; if they don't cover the question, say so and answer normally):\n` +
       k.map((c) => `[${c.doc}]\n${c.text}`).join("\n\n"));
