@@ -6,6 +6,7 @@ import { Target, Trash2, Check, Pause, Play, ChevronDown, ChevronUp, AlertTriang
 import { tr, getLang } from "./i18n.js";
 import * as M from "./missions.js";
 import * as S from "./scout.js";
+import * as LS from "./lifesim.js";
 
 const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") || d; } catch (e) { return d; } };
 const dataNow = () => ({ ledger: j("ledger.v3", null), fit: j("attune:fit:v1", null), market: S.loadMarket() });
@@ -123,6 +124,68 @@ export function MissionsPage({ flash }) {
       {rows.length ? rows.map(({ m, e }) => <Card key={m.id} m={m} e={e} onChange={(x) => put(data.items.map((y) => (y.id === x.id ? x : y)))} onDelete={(x) => put(data.items.filter((y) => y.id !== x.id))}
         openScout={() => window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "scout" } }))} />)
         : <p className="c-sub text-[13px] text-center py-6">{tr("No missions yet. Start one above — a saving goal, a weight goal, or something to buy.")}</p>}
+      <DecisionLab />
+    </div>);
+}
+
+/** v6.38 Missions phase 2 — "Test a big decision" (the Life Simulator): two options, thousands of futures from your own Money
+    history, 1 / 3 / 5 years, in today's pounds, with stress tests. lifesim.js does the numbers. */
+const OPT0 = [{ name: "Cash", now: "900000", monthly: "", months: "", value: "900000" }, { name: "Installments", now: "200000", monthly: "15000", months: "60", value: "900000" }];
+function DecisionLab() {
+  const ar = getLang() === "ar";
+  const [open, setOpen] = useState(false);
+  const [opts, setOpts] = useState(() => { try { return JSON.parse(localStorage.getItem("attune:lifesim:v1") || "null") || OPT0.map((o) => ({ ...o, name: tr(o.name) })); } catch (e) { return OPT0; } });
+  const [rates, setRates] = useState({ inflation: "25", certificate: "20" });
+  const [res, setRes] = useState(null), [err, setErr] = useState("");
+  const num = (v) => Number(String(v || "").replace(/[,\s]/g, "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d))) || 0;
+  const run = () => {
+    setErr("");
+    const ms = M.moneySense(j("ledger.v3", null), Date.now(), 365), B = LS.monthlyBlocks(ms.net, ms.inc);
+    if (!B) { setRes(null); return setErr(tr("The simulator needs at least a month of your income and spending in Money.")); }
+    try { localStorage.setItem("attune:lifesim:v1", JSON.stringify(opts)); } catch (e) {}
+    const options = opts.filter((o) => o.name.trim()).map((o) => ({ name: o.name.trim(), now: num(o.now), monthly: num(o.monthly), months: num(o.months), value: num(o.value) }));
+    const sim = LS.simulate({ blocks: B, balance: ms.balance, options, rates: { inflation: num(rates.inflation) / 100, certificate: num(rates.certificate) / 100 } });
+    setRes({ sim, cur: ms.cur, months: ms.net.length });
+  };
+  const box = "w-full bg-transparent border rounded-lg px-2 py-1.5 text-[13px] tabular-nums";
+  const field = (i, k, ph) => <input value={opts[i][k]} onChange={(e) => setOpts(opts.map((o, j2) => (j2 === i ? { ...o, [k]: e.target.value } : o)))} placeholder={tr(ph)} dir={k === "name" ? "auto" : "ltr"} inputMode={k === "name" ? "text" : "decimal"} className={box} style={{ borderColor: "var(--c-ln)" }} data-testid={`lifesim-${k}-${i}`} />;
+  const fmt = (v) => n(v);
+  const v = res && res.sim ? LS.verdict(res.sim) : null;
+  return (
+    <div className="c-card space-y-3" data-testid="lifesim">
+      <button onClick={() => setOpen((x) => !x)} className="w-full text-start flex items-center justify-between gap-2" data-testid="lifesim-open">
+        <span><b className="block text-[15px]">{tr("Test a big decision")}</b><span className="c-sub text-[12.5px]">{tr("Cash or installments, a new flat, a second crane — see 2,000 futures from your own money before you decide.")}</span></span>
+        {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</button>
+      {open ? <>
+        <div className="grid sm:grid-cols-2 gap-2">{opts.map((o, i) => (
+          <div key={i} className="rounded-xl border p-2 space-y-1.5" style={{ borderColor: "var(--c-ln)" }}>
+            {field(i, "name", "Option name")}
+            <label className="text-[11.5px] c-sub block">{tr("Pay now")}{field(i, "now", "0")}</label>
+            <div className="grid grid-cols-2 gap-1.5"><label className="text-[11.5px] c-sub">{tr("Then every month")}{field(i, "monthly", "0")}</label><label className="text-[11.5px] c-sub">{tr("For months")}{field(i, "months", "0")}</label></div>
+            <label className="text-[11.5px] c-sub block">{tr("What you get is worth")}{field(i, "value", "0")}</label>
+          </div>))}</div>
+        <div className="flex flex-wrap gap-3 text-[12px] c-sub items-center">
+          <label className="flex items-center gap-1">{tr("Inflation")} <input value={rates.inflation} onChange={(e) => setRates({ ...rates, inflation: e.target.value })} className={box + " w-14"} style={{ borderColor: "var(--c-ln)" }} dir="ltr" data-testid="lifesim-infl" />%</label>
+          <label className="flex items-center gap-1">{tr("Bank certificate")} <input value={rates.certificate} onChange={(e) => setRates({ ...rates, certificate: e.target.value })} className={box + " w-14"} style={{ borderColor: "var(--c-ln)" }} dir="ltr" data-testid="lifesim-cert" />%</label>
+          <button className="c-btn ms-auto" onClick={run} data-testid="lifesim-run">{tr("Run the futures")}</button>
+        </div>
+        {err ? <p className="text-[12.5px] c-warn m-0" data-testid="lifesim-err">{err}</p> : null}
+        {res && res.sim ? <div className="space-y-2" data-testid="lifesim-result">
+          {v ? <p className="text-[14px] font-medium m-0" dir="auto" data-testid="lifesim-verdict">{tr(v[0], v[1])}</p> : null}
+          <div className="overflow-x-auto"><table className="w-full text-[12.5px] c-num">
+            <thead><tr className="c-sub text-start"><th className="text-start py-1 pe-2">{tr("Option")}</th><th className="pe-2">{tr("Never runs out")}</th><th className="pe-2">{tr("Cash in 1 year")}</th><th className="pe-2">{tr("3 years")}</th><th className="pe-2">{tr("5 years")}</th><th>{tr("Owned after 5 years")}</th></tr></thead>
+            <tbody>{res.sim.results.map((x) => <tr key={x.name} className="border-t" style={{ borderColor: "var(--c-ln)" }} data-testid="lifesim-row">
+              <td className="py-1.5 pe-2 font-medium" dir="auto">{x.base ? tr("Don't do it") : x.name}{x.name === res.sim.best ? " ✓" : ""}</td>
+              <td className={"pe-2 " + (x.ok < 0.9 ? "c-neg" : "c-pos")}>{Math.round(x.ok * 100)}%</td>
+              <td className="pe-2">{fmt(x.at[1].p50)}</td><td className="pe-2">{fmt(x.at[3].p50)}</td><td className="pe-2">{fmt(x.at[5].p50)}</td><td>{fmt(x.worth5)}</td></tr>)}</tbody></table></div>
+          <p className="text-[11px] uppercase tracking-wider c-sub m-0 pt-1">{tr("Stress tests: chance cash never runs out")}</p>
+          <div className="overflow-x-auto"><table className="w-full text-[12.5px] c-num" data-testid="lifesim-stress"><tbody>
+            {LS.STRESS.map((sc) => <tr key={sc.id} className="border-t" style={{ borderColor: "var(--c-ln)" }}><td className="py-1 pe-2" dir="auto">{ar ? sc.ar : sc.en}</td>
+              {res.sim.results.filter((x) => !x.base).map((x) => { const st = x.stress.find((y) => y.id === sc.id); return <td key={x.name} className={"pe-2 " + (st.ok < 0.9 ? "c-neg" : "")}>{x.name}: {Math.round(st.ok * 100)}%</td>; })}</tr>)}
+          </tbody></table></div>
+          <p className="c-sub text-[11px] m-0">{tr("Median of 2,000 futures in today's {c}, from your last {d} days in Money. Installments are fixed, so inflation makes them smaller each month; savings earn the certificate rate. A model, not a promise.", { c: res.cur, d: res.months })}</p>
+        </div> : null}
+      </> : null}
     </div>);
 }
 

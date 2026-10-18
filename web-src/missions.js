@@ -93,15 +93,15 @@ export function moneySense(L, now = Date.now(), days = 60) {
   }
   const today = iso(now), first = txns.map((t) => t.date).filter(Boolean).sort()[0] || today;
   const span = Math.max(1, Math.min(days, daysBetween(first, today) + 1));
-  const net = new Array(span).fill(0), byCat = {};
+  const net = new Array(span).fill(0), inc = new Array(span).fill(0), byCat = {};
   for (const t of txns) {
     if (!t.date || !mine(curOf(t.account))) continue;
     const i = daysBetween(t.date, today); if (i < 0 || i >= span) continue;
     const amt = Number(t.amount) || 0;
-    if (t.type === "income") net[span - 1 - i] += amt;
+    if (t.type === "income") { net[span - 1 - i] += amt; inc[span - 1 - i] += amt; }
     else if (t.type === "expense") { net[span - 1 - i] -= amt; if (i < 30) byCat[t.cat || "other"] = (byCat[t.cat || "other"] || 0) + amt; }
   }
-  return { cur, balance: Math.round(balance * 100) / 100, net, byCat };
+  return { cur, balance: Math.round(balance * 100) / 100, net, inc, byCat };
 }
 
 /** Weight: the latest weight (7-entry average), the trend in kg per day over the last 28 days, and the calories eaten. */
