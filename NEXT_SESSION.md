@@ -770,8 +770,13 @@ Work; Follow-ups; Tools as choices), layout 1A, Egyptian Arabic UI, keyboard A, 
 4. ⬜ Scout: a car goal → "Fair price · market a–b", warnings, "Follow price", the offer; "21 karat gold under 3,500".
 5. ⬜ Fit search: «رز مطبوخ», "lentil soup", "chicken breast grilled" → foods with vitamins and cups/pieces as units (after the
    food pack updates on Wi-Fi — run "Build the offline food pack" once on GitHub).
+### Waiting for Ali (18 Oct, second page): https://claude.ai/artifact/3SKvXz5Ah5ArEkPfXP3rhM
+- The big agent: **A Missions** (recommended: a goal with a deadline → milestones, a night loop sense → forecast → plan → act →
+  debrief, chance of success from his own data, missions using Scout/Money/Fit/Follow-ups as tools), **B Life Simulator**
+  (10,000 futures for a big decision, Egyptian stress tests), **C Recall** (on-phone index of photos/files/notifications by meaning).
+- One upgrade per feature, codes H1–H6, C1–C5, S1–S5, M1–M5, F1–F4, D1–D6, W1–W6, X1–X4 (my picks: A, then W1, M1, F1, X1, D2).
 ### Still open
-1. Run "Build the offline food pack" (Actions) so the generic foods are published.
+1. "Build the offline food pack" was started on main on 18 Oct (check it finished; the generic foods = foodgen-000).
 2. Ali's agent picks → build them code-first.
 3. Canadian Nutrient File / CIQUAL (their sites didn't answer from the build machines).
 
