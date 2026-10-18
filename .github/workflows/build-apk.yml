@@ -61,8 +61,15 @@ jobs:
       - name: Install the NDK and CMake
         run: |
           sdkmanager --install "ndk;29.0.14206865" "cmake;3.31.6" > /dev/null
-          # v6.35: Android 17 (compileSdk 37); Gradle would also fetch it by itself
-          yes | sdkmanager --install "platforms;android-37" > /dev/null || echo "platform 37 is fetched by Gradle instead"
+          # v6.36: Android 17 (compileSdk 37). Google publishes it as "platforms;android-37.0" (37.1, 37.2 are its updates); AGP 8.9
+          # looks for "android-37" — the same files are registered under that name too (AGP 9.1+ reads the new name itself)
+          yes | sdkmanager --install "platforms;android-37.0" > /dev/null
+          P="${ANDROID_HOME:-$ANDROID_SDK_ROOT}/platforms"
+          if [ -d "$P/android-37.0" ] && [ ! -d "$P/android-37" ]; then
+            cp -r "$P/android-37.0" "$P/android-37"
+            sed -i 's#platforms;android-37.0#platforms;android-37#' "$P/android-37/package.xml"
+          fi
+          ls "$P"; grep -o 'path="[^"]*"' "$P/android-37/package.xml"
 
       # llama.cpp, pinned to the commit the engine was written and tested
       # against. Not stored in the repository; fetched fresh for each build.
