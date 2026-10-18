@@ -759,11 +759,14 @@ food Add sheet minimal.
 
 ## AD. 18 Oct 2026 — v6.38: batch 2 (HANDOFF §5.86). Read this first, then AC.
 Built: H5 Instant quick-settings tile · H6 Shelf review · S4 brand kit · W3 site reports (mic + stamped photos + PDF) ·
-W6 video cut / sound only (subtitles wait for an on-device speech model) · X3 "Your week in privacy".
+W6 video cut / sound only (subtitles wait for an on-device speech model) · X3 "Your week in privacy" · and batch 3: M3 Timeline
+(Money → Follow-ups → Timeline).
+Batch 4: the Studio eraser (paint over → gone, MI-GAN on the phone). Batch 6: F2 adaptive Fit coach · H3 charts in Ask your life ·
+D3 Mind recall · C4 Project brain · Missions phase 2 "Test a big decision" (the Life Simulator).
 Still for Ali: the Google Cloud setup in AC (Google sync works after it).
 ### Next (batch order)
-3: M3 one timeline. 4: Studio eraser (MagicTouch + LaMa-Dilated on the NPU/GPU, STUDIO_ERASER_PLAN.md) + SD 1.5 on the NPU.
-6: Missions phase 2 (Life Simulator inside) · F2 · H3 · D3 · C4. 7: Recall · S3 · C1 · C5 · W2 · W4 · W5. 8: the large ones. 9: Missions 3–4.
+4b: eraser tap-to-select (MagicTouch) + "remove all people" + LaMa on the NPU; SD 1.5 on the NPU (STUDIO_ERASER_PLAN.md).
+7: Recall · S3 · C1 · C5 · W2 · W4 · W5. 8: the large ones. 9: Missions 3–4.
 Also: Google sync on the computer; Fleet photo sync; deletes that travel (tombstones); W6 subtitles.
 ### Ali's phone checklist for 6.38
 1. ⬜ Pull down quick settings → edit → add "Attune فوري" → tap it over WhatsApp.
@@ -772,6 +775,13 @@ Also: Google sync on the computer; Fleet photo sync; deletes that travel (tombst
 4. ⬜ Reports: tap «اتكلم» and speak; add 2 photos (time + place on each) → Report with photos (PDF).
 5. ⬜ Video: a saved video → قص → 0:10 to 0:40 → save; and "Sound only".
 6. ⬜ Privacy (bottom of the sidebar): "Your week in privacy".
+7. ⬜ Money → Follow-ups → Timeline: everything coming up, late ones in red, a tap opens its page.
+8. ⬜ Studio → "Remove people or things from a photo" → pick a photo with a person → paint over them → Remove (28 MB once).
+9. ⬜ Fit & Food → Progress: "Your coach this week" (after two weeks of food + weigh-ins).
+10. ⬜ Ask your life: «مصاريف الأكل اتغيرت ازاي من رمضان؟» → the chart.
+11. ⬜ Home: type the name of someone who owes you → "Remembered about …".
+12. ⬜ Projects → a project with chats → "Project brain".
+13. ⬜ Missions → "Test a big decision" → Run the futures (needs a month of Money).
 
 ## AC. 18 Oct 2026 — v6.37: "do them all" — batch 1, Missions, guide, sync (HANDOFF §5.85). Read this first, then AB.
 Ali liked every option: all 3 agents (Missions, Life Simulator, Recall) + all 41 upgrades, Studio like the Honor Gallery

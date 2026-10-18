@@ -1890,7 +1890,7 @@ Built in this release (each: pure module + unit test + UI + e2e + Egyptian Arabi
   21.3.0). **Needs Ali's Google Cloud setup** (NEXT_SESSION AC) before it works; the computer's Google sync comes later.
 - Android 17: target 37, compile 36 (AGP 8.9 can't read the android-37.0 platform — §5.83).
 
-### 5.86 (18 Oct 2026) — v6.38: batch 2 of BUILD_PLAN (Ali: "continue the rest")
+### 5.86 (18 Oct 2026) — v6.38: batches 2, 3, 4 (eraser) and 6 of BUILD_PLAN (Ali: "continue the rest")
 - **H5 Attune Instant tile** (`InstantTile.kt`, a TileService; `EXTRA_OPEN_PAGE` "attune_open"): quick settings → opens Instant
   over any app (startActivityAndCollapse with a PendingIntent on Android 14+). MainActivity hands the page `{kind:"open", mode}`.
   Android's own Arabic strings (values-ar) are Egyptian now.
@@ -1911,6 +1911,40 @@ Built in this release (each: pure module + unit test + UI + e2e + Egyptian Arabi
   shows this week / last week: connections, places, blocked, and why. Only host + reason, never content.
 - Guide entries for all of these. Tests: unit v740sitereport, v740clip, v740netreport; e2e_v740site, e2e_v740clip,
   e2e_v740privacyweek.
+- **M3 Timeline** (batch 3; `timeline.js`, `timeline-ui.jsx`; mode `timeline`, a part of Follow-ups after Reminders, in
+  INSIDE + the Money members + MORE_GROUPS "Money & people"): reminders (next ring of repeating ones), Radar dates, People &
+  plans (late + the next one of a plan; every week ahead for a regular, past regular days are not "late"), Money's repeating
+  bills, debts both ways, and open chat promises with a date (X-Ray) — by day, 7 days / 30 days / 3 months, the late ones first
+  (up to 14 days back), "going out / coming in" per currency, and for each one the sentence "what slips if you skip this".
+  A tap opens the page that owns it. Tests: unit v740timeline, e2e_v740timeline.
+- **Studio eraser** (batch 4; `Eraser.kt`, bridge `eraseImage` / `eraserRelease`; `erase-ui.jsx` EraseSheet; Studio pack
+  `eraser` = MI-GAN `migan_pipeline_v2.onnx`, MIT, 28,079,181 bytes, sha256 6f1f3530…c40b): paint over a person or a thing →
+  Remove → filled on the phone by ONNX Runtime (`com.microsoft.onnxruntime:onnxruntime-android:1.29.0`, MIT) on the CPU,
+  ~1 s, no internet. Model inputs image uint8 [1,3,H,W] + mask uint8 [1,1,H,W], **255 = keep, 0 = fill** (checked in
+  Python on a test picture: the hole is filled, everything outside is untouched). The model's own pipeline crops around the
+  mask, works at 512 and pastes back, so a 12 MP photo keeps its pixels (capped at 3072 px). Works on Studio pictures and
+  any photo ("Remove people or things from a photo"). The page sends a PNG mask at the photo's proportions (painted =
+  white, widened ~15% so edges go too). Next: tap-to-select (MagicTouch) and "remove all people" (MediaPipe person
+  segmenter), LaMa on the NPU (STUDIO_ERASER_PLAN.md), SD 1.5 on the NPU. Tests: e2e_v740erase.
+- **F2 the coach that adapts every week** (`fitcoach.js`; fit.js `targets` uses `profile.adapt.tdee`): average eaten (days
+  with ≥ 800 kcal) − least-squares weight slope × 7,700 = what you burn; needs 14 logged days + 4 weigh-ins over 14 days in
+  28; blended with the formula by the amount of data; moves ≤ 150 kcal a week; one line on Progress ("You ate about … and lost
+  … — so you burn about …"), "Go back to the formula". Tests: unit v740fitcoach, e2e_v740fitcoach.
+- **H3 Ask your life with charts** (`lifecharts.js`; `AnswerChart` in lifeask-ui): "change / since / by month" money questions
+  → calendar-month bars + before vs since (whole months; Ramadan/Eid start dates 2024–2028, month names); lab, sugar and
+  food answers get a line/bar chart from their rows. Tests: unit v740lifecharts, e2e_v740lifecharts (en + ar).
+- **D3 Mind brings things back** (`recall.js`, `recall-ui.jsx` RecallCard under Home's box and Instant's box): a known person
+  named in the text → open promises (X-Ray), what they owe / you owe (People & plans, debts), notes (Mind). Tests: unit
+  v740recall, e2e_v740recall.
+- **C4 Project brain** (`projectbrain.js`; card on the project page; `spaceBlock(..., chats)` adds "PROJECT BRAIN" to the
+  assistant's instructions in that project): decided / still open / dates, every line a sentence from the chats. Tests: unit
+  v740projectbrain, e2e_v740projectbrain.
+- **Missions phase 2 — Test a big decision** (`lifesim.js`, `DecisionLab` in missions-ui): two options (pay now, monthly ×
+  months, value of what you get), "Don't do it" as the baseline; 2,000 seeded futures × 60 months from your own 30-day
+  stretches (moneySense now also returns daily income), in today's pounds: yearly inflation drawn (25% ± 8), savings at the
+  certificate rate, fixed installments shrink with inflation, what you own depreciates 8%/yr; never-runs-out chance, cash at
+  1/3/5 years, owned after 5; stress tests (pound −30% → +20 pts inflation for a year, 35% for 5 years, 3 months without
+  income). Tests: unit v740lifesim, e2e_v740lifesim.
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
