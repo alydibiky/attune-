@@ -8238,7 +8238,8 @@ export default function App() {
   useEffect(() => {
     const onShare = (e) => {
       const d = (e && e.data) || {};
-      if (d.kind === "privacy") { navTo("privacy"); return; }   // v6.29 Health Connect: "why this app reads your data"
+      if (d.kind === "privacy") { navTo("privacy"); return; }
+      if (d.kind === "open" && d.mode) { navTo(String(d.mode)); return; }   // v6.37 the Instant quick-settings tile   // v6.29 Health Connect: "why this app reads your data"
       if (d.kind === "reminder" && /^daily-learn-/.test(d.id || "")) { setDailyOpen(d.id); navTo("learn"); return; }
       if (d.kind === "reminder" && /^daily-news-/.test(d.id || "")) { setDailyOpen(d.id); navTo("news"); return; }
       if (d.kind === "reminder" && /^daily-fit-/.test(d.id || "")) { navTo("fit"); return; }

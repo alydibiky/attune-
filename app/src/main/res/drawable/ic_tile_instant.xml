@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v6.37 the Instant quick-settings tile: a lightning bolt (one colour; the system tints it) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M13,2L4,14h6l-1,8 9,-12h-6z" />
+</vector>

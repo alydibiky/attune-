@@ -14,6 +14,7 @@ import { askConfirm } from "./confirm.jsx";
 import { rankPassages } from "./webrank.js";
 import { expandQueries } from "./research.js";
 import * as S from "./slides.js";
+import * as B from "./brand.js";
 import * as C from "./convert.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 // v6.27: two panels on a computer where the right-hand part sits in the middle of the phone's order — the grid places
@@ -117,7 +118,15 @@ function drawTable(g, s) {
     });
   });
 }
-export function drawShapes(g, shapes, k) {
+// v6.37 (S4): the brand logo on the preview — loaded once; a canvas redraws when it is ready
+const IMGS = new Map();
+function imgOf(src, onReady) {
+  let im = IMGS.get(src);
+  if (!im) { im = new Image(); IMGS.set(src, im); im.src = src; }
+  if (!(im.complete && im.naturalWidth) && onReady) im.addEventListener("load", onReady, { once: true });
+  return im;
+}
+export function drawShapes(g, shapes, k, onImage) {
   g.save(); g.scale(k, k);
   for (const s of shapes) {
     g.save(); g.globalAlpha = s.alpha ?? 1;
@@ -133,19 +142,21 @@ export function drawShapes(g, shapes, k) {
       g.fill();
     } else if (s.t === "text") drawText(g, s);
     else if (s.t === "table") drawTable(g, s);
+    else if (s.t === "pic" && s.src) { const im = imgOf(s.src, onImage); if (im.complete && im.naturalWidth) g.drawImage(im, s.x, s.y, s.w, s.h); }
     g.restore();
   }
   g.restore();
 }
 function SlideCanvas({ shapes, className = "", testid }) {
   const ref = useRef(null);
+  const [, redraw] = useState(0);
   useEffect(() => {
     const c = ref.current; if (!c) return;
     const w = Math.min(1280, Math.round((c.clientWidth || 360) * (window.devicePixelRatio || 1)));
     c.width = w; c.height = Math.round(w * S.SH / S.SW);
     const g = c.getContext("2d"); g.clearRect(0, 0, c.width, c.height);
-    drawShapes(g, shapes, w / S.SW);
-  }, [shapes]);
+    drawShapes(g, shapes, w / S.SW, () => redraw((x) => x + 1));
+  });
   return <canvas ref={ref} className={"w-full rounded-lg border border-slate-800 bg-slate-950 " + className} style={{ aspectRatio: "16 / 9" }} data-testid={testid} />;
 }
 const toImage = (shapes, w, type = "image/jpeg") => { const c = document.createElement("canvas"); c.width = w; c.height = Math.round(w * S.SH / S.SW); drawShapes(c.getContext("2d"), shapes, w / S.SW); return c.toDataURL(type, 0.9); };
@@ -252,6 +263,10 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
   const [count, setCount] = useState(8);
   const [lang, setLangPick] = useState("auto");
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem("attune:slides:theme") || "midnight"; } catch (e) { return "midnight"; } });
+  // v6.37 (S4): the brand kit (brand.js) — "Your brand" is the first design when it is set
+  const [brand, setBrandRaw] = useState(() => B.loadBrand());
+  const setBrand = (b) => setBrandRaw(B.saveBrand(b));
+  const themeList = [...(brand ? [["brand", B.brandTheme(brand)]] : []), ...Object.entries(S.THEMES)];
   const [detail, setDetail] = useState(() => { try { return localStorage.getItem("attune:slides:detail") || "short"; } catch (e) { return "short"; } });
   const [motion, setMotion] = useState(loadMotion);       // { transition, animation, trigger }
   const [playing, setPlaying] = useState(false);
@@ -387,7 +402,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
       if (!alive()) return;
       const did = "d" + Date.now().toString(36);
       hitsRef.current = { id: did, hits };
-      let d = { id: did, topic, audience, detail: st.detail || detail, fileName: file ? file.name : "", title: outline.title, subtitle: outline.subtitle, lang: L, theme: useTheme, ...mo, date: dateLine(L), slides: outline.slides.map((s) => ({ ...s, bullets: [], pending: true })), source, hits: hits.map((h) => ({ title: h.title, url: h.url })), dropped: 0, unsure: 0 };
+      let d = { id: did, topic, audience, detail: st.detail || detail, fileName: file ? file.name : "", title: outline.title, subtitle: outline.subtitle, lang: L, theme: useTheme === "brand" && !brand ? "ocean" : useTheme, brand: useTheme === "brand" ? brand : null, ...mo, date: dateLine(L), slides: outline.slides.map((s) => ({ ...s, bullets: [], pending: true })), source, hits: hits.map((h) => ({ title: h.title, url: h.url })), dropped: 0, unsure: 0 };
       setDeck(d);
       for (let i = 0; i < d.slides.length; i++) {
         if (!alive()) return;
@@ -539,7 +554,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
     const chart = report.data && report.data.chart ? chartPng(report.data.chart) : null;
     return S.reportBlocks(report, { chartImage: chart });
   };
-  const saveDocx = () => { const th = S.THEMES[theme] || S.THEMES.ocean; const b = C.docxFromBlocks(reportOut(), report.title, { accent: th.accent === "FFFFFF" ? null : (["midnight", "royal", "steel"].includes(theme) ? "1E3A8A" : th.accent) }); saveOut(fname(report.title, "docx"), C.MIME.docx, C.bytesToB64(b)); };
+  const saveDocx = () => { const th = theme === "brand" && brand ? B.brandTheme(brand) : S.THEMES[theme] || S.THEMES.ocean; const b = C.docxFromBlocks(reportOut(), report.title, { accent: th.accent === "FFFFFF" ? null : (["midnight", "royal", "steel"].includes(theme) ? "1E3A8A" : th.accent) }); saveOut(fname(report.title, "docx"), C.MIME.docx, C.bytesToB64(b)); };
   const saveReportPdf = async () => {
     if (!nativeCall) { setErr(tr("PDF files are made by the Android app — open Attune on your phone.")); return; }
     setBusy(tr("Making the PDF…"));
@@ -617,9 +632,10 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
               <div><p className="text-[12px] text-slate-400 mb-1.5">{tr("Slides")}</p>
                 <div className="flex flex-wrap gap-1.5">{[5, 8, 10, 12, 15].map((n) => <button key={n} onClick={() => setCount(n)} className={chip(count === n)} data-testid={"slides-n-" + n}>{n}</button>)}</div></div>
               <div><p className="text-[12px] text-slate-400 mb-1.5">{tr("Design")}</p>
-                <div className="grid grid-cols-3 min-[380px]:grid-cols-4 gap-1.5">{Object.entries(S.THEMES).map(([k, t]) => (
+                <div className="grid grid-cols-3 min-[380px]:grid-cols-4 gap-1.5">{themeList.map(([k, t]) => (
                   <button key={k} onClick={() => setTheme(k)} data-testid={"slides-theme-" + k} className={`rounded-xl border p-1.5 text-[11px] ${theme === k ? "border-teal-500 text-teal-200" : "border-slate-700 text-slate-400"}`}>
-                    <span className="block h-7 rounded-md mb-1 relative overflow-hidden" style={{ background: "#" + t.cover }}><span className="absolute left-1.5 top-2 h-1 w-5 rounded" style={{ background: "#" + t.accent }} /><span className="absolute right-1 bottom-1 h-3 w-3 rounded-full" style={{ background: "#" + t.accent2 }} /></span>{tr(t.name)}</button>))}</div></div>
+                    <span className="block h-7 rounded-md mb-1 relative overflow-hidden" style={{ background: "#" + t.cover }}><span className="absolute left-1.5 top-2 h-1 w-5 rounded" style={{ background: "#" + t.accent }} /><span className="absolute right-1 bottom-1 h-3 w-3 rounded-full" style={{ background: "#" + t.accent2 }} /></span>{k === "brand" ? t.name : tr(t.name)}</button>))}</div>
+                <BrandKit brand={brand} setBrand={(b) => { setBrand(b); if (b) setTheme("brand"); else if (theme === "brand") setTheme("ocean"); }} /></div>
               <div><p className="text-[12px] text-slate-400 mb-1.5">{tr("Words on each point")}</p>
                 <div className="flex flex-wrap gap-1.5">{[["short", "Short points"], ["detailed", "Detailed — full sentences"]].map(([k, l]) => <button key={k} onClick={() => { setDetail(k); try { localStorage.setItem("attune:slides:detail", k); } catch (e) {} }} className={chip(detail === k)} data-testid={"slides-detail-" + k}>{tr(l)}</button>)}</div></div>
               <MotionPicker motion={motion} setMotion={setMotionSaved} chip={chip} />
@@ -694,10 +710,10 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
             {cmdNote ? <p className="text-[12px] text-teal-300" data-testid="deck-cmd-note">{cmdNote}</p> : null}
           </div>
           <p className="text-[11px] uppercase tracking-wider text-slate-500 px-1 pt-1">{tr("Design and motion")}</p>
-          <div className="flex gap-1.5 overflow-x-auto att-hscroll pb-1 lg:flex-wrap lg:overflow-visible">{Object.entries(S.THEMES).map(([k, t]) => (
-            <button key={k} onClick={() => { setDeck({ ...deck, theme: k }); setTheme(k); try { localStorage.setItem("attune:slides:theme", k); } catch (e) {} }} data-testid={"deck-theme-" + k}
+          <div className="flex gap-1.5 overflow-x-auto att-hscroll pb-1 lg:flex-wrap lg:overflow-visible">{themeList.map(([k, t]) => (
+            <button key={k} onClick={() => { setDeck({ ...deck, theme: k, brand: k === "brand" ? brand : deck.brand }); setTheme(k); try { localStorage.setItem("attune:slides:theme", k); } catch (e) {} }} data-testid={"deck-theme-" + k}
               className={`shrink-0 rounded-lg border px-2 py-1 text-[11px] flex items-center gap-1.5 ${deck.theme === k ? "border-teal-500 text-teal-200" : "border-slate-700 text-slate-400"}`}>
-              <span className="h-3 w-3 rounded-full" style={{ background: "#" + t.accent }} />{tr(t.name)}</button>))}</div>
+              <span className="h-3 w-3 rounded-full" style={{ background: "#" + t.accent }} />{k === "brand" ? t.name : tr(t.name)}</button>))}</div>
           {styleNote ? <p className="text-[11.5px] text-teal-300 px-1" data-testid="slides-style-note">{tr("From your request:")} {styleNote}</p> : null}
           <div className="grid grid-cols-2 gap-1.5">
             <label className="block min-w-0"><span className="block text-[11px] text-slate-500 mb-0.5">{tr("Transition")}</span><select value={deck.transition || "none"} onChange={(e) => { const m = { ...motion, transition: e.target.value }; setMotionSaved(m); setDeck({ ...deck, transition: m.transition }); }} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-[12px] text-slate-100" data-testid="deck-transition">
@@ -837,4 +853,29 @@ function MotionPicker({ motion, setMotion, chip }) {
         {motion.animation !== "none" ? <div className="flex gap-1.5 mt-1.5">{[["click", "On tap"], ["auto", "Automatically"]].map(([k, l]) => <button key={k} onClick={() => setMotion({ ...motion, trigger: k })} className={chip(motion.trigger === k)} data-testid={"slides-trigger-" + k}>{tr(l)}</button>)}</div> : null}</div>
     </div>
   );
+}
+
+/** v6.37 (S4): the brand kit — company name, colour, logo — set once, used on every deck ("Your brand") and report. */
+function BrandKit({ brand, setBrand }) {
+  const [open, setOpen] = useState(false);
+  const [k, setK] = useState(() => brand || { name: "", color: "#1D4ED8", logo: "", lw: 1, lh: 1 });
+  const fileRef = useRef(null);
+  const pick = (f) => { if (!f) return; const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => {
+    const sc = Math.min(1, 400 / Math.max(im.width, im.height)), c = document.createElement("canvas"); c.width = Math.round(im.width * sc); c.height = Math.round(im.height * sc);
+    c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); setK((x) => ({ ...x, logo: c.toDataURL("image/png"), lw: c.width, lh: c.height })); }; im.src = r.result; }; r.readAsDataURL(f); };
+  if (!open) return <button onClick={() => setOpen(true)} className="mt-2 text-[12px] text-teal-300" data-testid="brand-open">{brand ? tr("Edit your brand kit") : tr("+ Your brand kit (logo, colour, name)")}</button>;
+  return (
+    <div className="mt-2 rounded-xl border border-slate-700 p-3 space-y-2" data-testid="brand-kit">
+      <input value={k.name} onChange={(e) => setK({ ...k, name: e.target.value })} placeholder={tr("Company name")} dir="auto" className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-[13px] text-slate-100" data-testid="brand-name" />
+      <div className="flex items-center gap-2">
+        <label className="flex items-center gap-2 text-[12px] text-slate-400">{tr("Colour")}<input type="color" value={"#" + String(k.color || "1D4ED8").replace("#", "")} onChange={(e) => setK({ ...k, color: e.target.value.replace("#", "") })} className="h-8 w-10 bg-transparent" data-testid="brand-color" /></label>
+        <button onClick={() => fileRef.current && fileRef.current.click()} className="ms-auto rounded-lg border border-slate-700 px-3 py-1.5 text-[12px] text-slate-200" data-testid="brand-logo-pick">{k.logo ? tr("Change logo") : tr("Add logo")}</button>
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => pick(e.target.files && e.target.files[0])} data-testid="brand-logo" />
+        {k.logo ? <img src={k.logo} alt="" className="h-8 max-w-[80px] object-contain rounded bg-white" /> : null}
+      </div>
+      <div className="flex gap-2">
+        <button onClick={() => { setBrand({ ...k, color: String(k.color || "").replace("#", "") }); setOpen(false); }} disabled={!String(k.name || "").trim()} className="flex-1 rounded-lg bg-teal-500 text-slate-950 font-semibold py-2 text-[13px] disabled:opacity-50" data-testid="brand-save">{tr("Use my brand")}</button>
+        {brand ? <button onClick={() => { setBrand(null); setOpen(false); }} className="rounded-lg border border-slate-700 px-3 text-[12px] text-slate-400" data-testid="brand-remove">{tr("Remove")}</button> : null}
+      </div>
+    </div>);
 }

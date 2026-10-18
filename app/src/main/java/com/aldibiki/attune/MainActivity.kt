@@ -459,6 +459,13 @@ class MainActivity : AppCompatActivity() {
             if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p
             return
         }
+        // v6.37: open one page (the Instant quick-settings tile, InstantTile.kt)
+        intent?.getStringExtra(EXTRA_OPEN_PAGE)?.let { mode ->
+            intent.removeExtra(EXTRA_OPEN_PAGE)
+            val p = JSONObject().put("kind", "open").put("mode", mode)
+            if (::web.isInitialized && web.progress == 100) deliverShare(p) else pendingShare = p
+            return
+        }
         // v6.29: Health Connect's "why this app reads your data" (Android 13 and 14+) → the privacy page
         if (intent?.action == "androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" || intent?.action == "android.intent.action.VIEW_PERMISSION_USAGE") {
             val p = JSONObject().put("kind", "privacy")

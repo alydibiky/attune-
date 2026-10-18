@@ -228,7 +228,7 @@ export function FitSettings({ L, ar, st, upd, native, flash, packText, photoClip
     upd((s) => ({ ...s, reminders: on }));
     if (!native || !native.schedule) return;
     const now = Date.now(), ids = [];
-    const add = (id, time, en, a) => { ids.push(id); if (on) try { native.schedule(JSON.stringify({ id, at: nextAt(time, now), title: ar ? a : en, body: ar ? "افتح الأكل والرياضة" : "Open Fit & Food", repeat: "daily" })); } catch (e) {} };
+    const add = (id, time, en, a) => { ids.push(id); if (on) try { native.schedule(JSON.stringify({ id, at: nextAt(time, now), title: ar ? a : en, body: ar ? "افتح الأكل واللياقة" : "Open Fit & Food", repeat: "daily" })); } catch (e) {} };
     for (const r of P.REMINDERS) if (r.time !== "every2h") add("daily-" + r.id, r.time, r.en, r.ar);
     for (const h of ["10:00", "12:00", "16:00", "18:00", "22:00"]) add("daily-fit-water-" + h.slice(0, 2), h, "Drink a glass of water", "اشرب كوباية مية");
     if (!on) for (const id of ids) try { native.unschedule(id); } catch (e) {}

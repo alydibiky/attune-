@@ -6,6 +6,7 @@
    PDF canvas, so what you see is what you get), and writes the PowerPoint file itself (a zip of
    XML, like the Word writer in convert.js). Pure functions; tests in tests/unit/v540.test.mjs. */
 import { zipStore, textToBlocks } from "./convert.js";
+import { brandTheme, dataUrlBytes } from "./brand.js";
 
 // ---- languages & themes ---------------------------------------------------------------------------
 export const S_LANGS = { en: "English", ar: "Arabic", fr: "French", de: "German", es: "Spanish", tr: "Turkish", it: "Italian", pt: "Portuguese" };
@@ -540,10 +541,19 @@ export function sourcesOf(deck) {
   return [...(deck.hits || []).map((h, i) => ({ n: h.n || String(i + 1), title: String(h.title || host(h.url)).slice(0, 110), url: h.url || "", short: host(h.url) || String(h.title || "").slice(0, 30) })),
     ...(deck.fileName ? [{ n: "F", title: deck.fileName, url: "", short: deck.fileName }] : [])];
 }
+/** v6.37 (S4): the deck's design — "brand" is made from the brand kit carried on the deck (brand.js). */
+export const themeOf = (deck) => (deck && deck.theme === "brand" && deck.brand ? brandTheme(deck.brand) : THEMES[deck && deck.theme] || THEMES.midnight);
 export function deckShapes(deck) {
-  const th = THEMES[deck.theme] || THEMES.midnight, rtl = isRtl(deck.lang);
+  const th = themeOf(deck), rtl = isRtl(deck.lang);
   const sources = Object.fromEntries(sourcesOf(deck).map((x) => [x.n, x.short]));
-  return fullDeck(deck).map((s, k) => ({ slide: s, shapes: layoutSlide(s, th, { i: k + 1, deckTitle: deck.title, rtl, lang: deck.lang, sources }) }));
+  const br = deck.theme === "brand" && deck.brand ? deck.brand : null;
+  return fullDeck(deck).map((s, k) => {
+    // the brand: the company name in front of the footer, the logo big on the cover and small in the top corner of the others
+    const shapes = layoutSlide(s, th, { i: k + 1, deckTitle: br && br.name ? br.name + " · " + deck.title : deck.title, rtl, lang: deck.lang, sources });
+    if (br && br.logo) { const cover = k === 0, h = cover ? 96 : 40, w = Math.min(cover ? 320 : 140, Math.round(h * ((br.lw || 1) / (br.lh || 1))));
+      shapes.push({ t: "pic", src: br.logo, x: rtl ? 36 : SW - w - 36, y: cover ? 36 : 18, w, h }); }
+    return { slide: s, shapes };
+  });
 }
 
 /** The order things appear in: [[{idx, para?}], …] — groups by `g`; a list marked byPara appears point by point. */
@@ -585,6 +595,8 @@ function textXml(sh) {
 }
 function shapeXml(sh, id) {
   const xf = `<a:xfrm><a:off x="${E(sh.x)}" y="${E(sh.y)}"/><a:ext cx="${E(Math.max(1, sh.w))}" cy="${E(Math.max(1, sh.h))}"/></a:xfrm>`;
+  if (sh.t === "pic")   // the brand logo — its image is rId3 in every slide's rels (pptxFromDeck)
+    return `<p:pic><p:nvPicPr><p:cNvPr id="${id}" name="Logo ${id}"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rId3"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr>${xf}<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`;
   if (sh.t === "text")
     return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="Text ${id}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr>${xf}<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr>${textXml(sh)}</p:sp>`;
   if (sh.t === "table") {
@@ -645,7 +657,8 @@ const CT = "application/vnd.openxmlformats-officedocument.presentationml.";
 
 /** deck → .pptx bytes (16:9, one blank layout, every slide drawn with shapes, speaker notes). */
 export function pptxFromDeck(deck) {
-  const th = THEMES[deck.theme] || THEMES.midnight;
+  const th = themeOf(deck);
+  const logo = deck.theme === "brand" && deck.brand ? dataUrlBytes(deck.brand.logo) : null;
   const slides = deckShapes(deck);
   const n = slides.length;
   const files = [];
@@ -655,7 +668,7 @@ export function pptxFromDeck(deck) {
     ["/ppt/notesMasters/notesMaster1.xml", CT + "notesMaster+xml"], ["/ppt/presProps.xml", CT + "presProps+xml"], ["/ppt/viewProps.xml", CT + "viewProps+xml"], ["/ppt/tableStyles.xml", CT + "tableStyles+xml"],
     ["/docProps/core.xml", "application/vnd.openxmlformats-package.core-properties+xml"], ["/docProps/app.xml", "application/vnd.openxmlformats-officedocument.extended-properties+xml"]);
   for (let k = 1; k <= n; k++) over.push([`/ppt/slides/slide${k}.xml`, CT + "slide+xml"], [`/ppt/notesSlides/notesSlide${k}.xml`, CT + "notesSlide+xml"]);
-  files.push({ name: "[Content_Types].xml", data: XML + `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${over.map(([p, t]) => `<Override PartName="${p}" ContentType="${t}"/>`).join("")}</Types>` });
+  files.push({ name: "[Content_Types].xml", data: XML + `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpeg" ContentType="image/jpeg"/>${over.map(([p, t]) => `<Override PartName="${p}" ContentType="${t}"/>`).join("")}</Types>` });
   files.push({ name: "_rels/.rels", data: rels([["rId1", "officeDocument", "ppt/presentation.xml"], ["rId2", "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties", "docProps/core.xml"], ["rId3", "extended-properties", "docProps/app.xml"]]) });
   files.push({ name: "docProps/core.xml", data: XML + `<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${esc(deck.title)}</dc:title><dc:creator>Attune</dc:creator></cp:coreProperties>` });
   files.push({ name: "docProps/app.xml", data: XML + `<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Attune</Application><Slides>${n}</Slides></Properties>` });
@@ -681,11 +694,12 @@ export function pptxFromDeck(deck) {
   slides.forEach(({ slide, shapes }, k0) => {
     const k = k0 + 1;
     files.push({ name: `ppt/slides/slide${k}.xml`, data: slideXml(shapes, { transition: deck.transition, animation: deck.animation, trigger: deck.trigger }) });
-    files.push({ name: `ppt/slides/_rels/slide${k}.xml.rels`, data: rels([["rId1", "slideLayout", "../slideLayouts/slideLayout1.xml"], ["rId2", "notesSlide", `../notesSlides/notesSlide${k}.xml`]]) });
+    files.push({ name: `ppt/slides/_rels/slide${k}.xml.rels`, data: rels([["rId1", "slideLayout", "../slideLayouts/slideLayout1.xml"], ["rId2", "notesSlide", `../notesSlides/notesSlide${k}.xml`], ...(logo ? [["rId3", "image", "../media/logo." + logo.ext]] : [])]) });
     const note = slide.notes || "";
     files.push({ name: `ppt/notesSlides/notesSlide${k}.xml`, data: XML + `<p:notes ${NS}><p:cSld><p:spTree>${GRP}<p:sp><p:nvSpPr><p:cNvPr id="2" name="Slide Image Placeholder 1"/><p:cNvSpPr><a:spLocks noGrp="1" noRot="1" noChangeAspect="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldImg"/></p:nvPr></p:nvSpPr><p:spPr/></p:sp><p:sp><p:nvSpPr><p:cNvPr id="3" name="Notes Placeholder 2"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p>${note ? `<a:pPr${/[؀-ۿ]/.test(note) ? ' algn="r" rtl="1"' : ""}/><a:r><a:rPr lang="${langTag(note)}" dirty="0"/><a:t>${esc(note)}</a:t></a:r>` : '<a:endParaRPr lang="en-US"/>'}</a:p></p:txBody></p:sp></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>` });
     files.push({ name: `ppt/notesSlides/_rels/notesSlide${k}.xml.rels`, data: rels([["rId1", "notesMaster", "../notesMasters/notesMaster1.xml"], ["rId2", "slide", `../slides/slide${k}.xml`]]) });
   });
+  if (logo) files.push({ name: "ppt/media/logo." + logo.ext, data: logo.bytes });
   return zipStore(files);
 }
 

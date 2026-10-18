@@ -201,7 +201,7 @@ export function evaluate(m, data, now = Date.now()) {
   }
   if (m.kind === "weight") {
     const b = bodySense(data.fit, now), start = (m.base && m.base.kg) || b.last;
-    if (b.last == null || start == null) return out({ value: 0, target: m.target, left: m.target, pct: 0, chance: null, state: "unknown", step: { en: "Log your weight in Fit & Food (Progress) — the mission starts counting from it.", ar: "سجّل وزنك في الأكل والرياضة (التقدم) — المهمة هتبتدي تحسب منه." } });
+    if (b.last == null || start == null) return out({ value: 0, target: m.target, left: m.target, pct: 0, chance: null, state: "unknown", step: { en: "Log your weight in Fit & Food (Progress) — the mission starts counting from it.", ar: "سجّل وزنك في الأكل واللياقة (التقدم) — المهمة هتبتدي تحسب منه." } });
     const value = Math.round((start - b.last) * 10) / 10, left = Math.max(0, Math.round((m.target - value) * 10) / 10);
     const perDayNeed = days > 0 ? left / days : left;
     let chance = null;
@@ -215,7 +215,7 @@ export function evaluate(m, data, now = Date.now()) {
     const kcal = Math.round((perDayNeed * 7700) / 10) * 10;
     const step = left <= 0 ? null : perDayNeed * 7 > 1
       ? { en: `That is ${fmtN(perDayNeed * 7, 1)} kg a week — faster than is safe (about 1 kg). Move the date, or aim lower.`, ar: `ده ${fmtN(perDayNeed * 7, 1)} كيلو في الأسبوع — أسرع من الآمن (حوالي كيلو). أجّل الميعاد أو قلّل الهدف.` }
-      : { en: `Eat about ${fmtN(kcal)} kcal a day under what you burn (Fit's target does it), and weigh in twice a week.`, ar: `كل حوالي ${fmtN(kcal)} سعرة في اليوم أقل من اللي بتحرقه (هدف الأكل والرياضة بيعمل كده)، واتوزن مرتين في الأسبوع.` };
+      : { en: `Eat about ${fmtN(kcal)} kcal a day under what you burn (Fit's target does it), and weigh in twice a week.`, ar: `كل حوالي ${fmtN(kcal)} سعرة في اليوم أقل من اللي بتحرقه (هدف الأكل واللياقة بيعمل كده)، واتوزن مرتين في الأسبوع.` };
     const state = left <= 0 ? "done" : !days ? "late" : chance == null ? "unknown" : chance >= 0.8 ? "ahead" : chance >= 0.5 ? "on-track" : "behind";
     return out({ value, target: m.target, left, pct: Math.max(0, Math.min(100, Math.round((value / m.target) * 100))), perDayNeed, perDayNow: b.slope == null ? null : -b.slope, chance, state, step });
   }

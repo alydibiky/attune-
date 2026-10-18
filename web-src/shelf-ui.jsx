@@ -5,6 +5,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Lock, Mic, PenLine, Menu, AlarmClock, Search, Plus, MoreVertical, X, Star, Bell, Trash2, Copy, Share2, Brain, ArrowUp, ArrowDown, Folder, Check, ImagePlus, Undo2, Camera, ChevronLeft, ChevronRight, Square, BookOpen, Download } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as S from "./shelf.js";
+import * as R from "./shelfreview.js";
 import * as SI from "./shelf-import.js";
 import * as C from "./convert.js";
 import { thumbPut, thumbGet, thumbDel } from "./mind-ui.jsx";
@@ -490,6 +491,8 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
           <button onClick={() => { setQ(""); setView("search"); }} aria-label={tr("Search")} className={ib} data-testid="shelf-search-open"><Search size={21} /></button>
           <button onClick={() => setSheet({ kind: "new" })} aria-label={tr("New book")} className={ib} data-testid="shelf-add"><Plus size={22} /></button>
           <button onClick={() => setSheet({ kind: "shelfmore" })} aria-label={tr("More")} className={ib} data-testid="shelf-more"><MoreVertical size={21} /></button></>)}
+      {/* v6.37 (H6): a few of your notes come back each day, spaced by how well you remembered them */}
+      {!reorderOn ? <ShelfReview records={records} shelf={shelf} /> : null}
       {reorderOn ? <div className="flex items-center gap-2 mb-3 text-xs text-teal-300"><span className="flex-1">{tr("Move books with the arrows")}</span><button onClick={() => setReorderOn(false)} data-testid="shelf-reorder-done" className="px-3 py-1 rounded-lg bg-teal-500 text-slate-950 font-semibold">{tr("Done")}</button></div> : null}
       <div className={prefs.view === "list" ? "grid grid-cols-4 lg:grid-cols-8 gap-x-3 gap-y-4 lg:gap-x-6 lg:gap-y-6 pb-28" : "grid grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-6 lg:gap-x-10 lg:gap-y-8 px-3 pb-28"} data-testid="shelf-grid">
         {books.map((b, i) => (
@@ -610,4 +613,36 @@ export function ShelfPage({ records, setRecords, scheduleReminder, flash, openIn
         </div>) : null}
     </div>
   );
+}
+
+/** v6.37 (H6): "Review 3 notes" on the Shelf: the title first, think, Show, then how well you remembered it. */
+function ShelfReview({ records, shelf }) {
+  const [st, setSt] = useState(() => R.loadReview());
+  const [open, setOpen] = useState(false), [shown, setShown] = useState(false);
+  const due = R.dueNotes(records, shelf, st);
+  if (!due.length && !open) return null;
+  const cur = due[0];
+  const rate = (g) => { setSt(R.saveReview(R.grade(st, cur.id, g))); setShown(false); };
+  if (!open) return (
+    <button onClick={() => setOpen(true)} className="w-full mb-3 rounded-2xl border border-teal-900/60 bg-teal-500/5 p-3 text-start flex items-center gap-3" data-testid="shelf-review">
+      <Brain size={18} className="text-teal-300 shrink-0" />
+      <span className="flex-1 min-w-0"><b className="block text-[14px] text-slate-100">{tr("Remember your notes")}</b>
+        <span className="block text-[12px] text-slate-400">{tr("{n} notes to look at again today · about a minute", { n: due.length })}</span></span>
+    </button>);
+  return (
+    <div className="mb-3 rounded-2xl border border-teal-900/60 bg-slate-900 p-4 space-y-3" data-testid="shelf-review-card">
+      {cur ? <>
+        <p className="text-[11px] uppercase tracking-wider text-slate-500">{tr("{n} left", { n: due.length })}{cur.isNew ? " · " + tr("first time") : ""}</p>
+        <p className="text-[16px] font-semibold text-slate-100" dir="auto">{cur.title}</p>
+        {shown ? <p className="text-[14px] text-slate-300 whitespace-pre-wrap max-h-60 overflow-y-auto" dir="auto" data-testid="shelf-review-text">{cur.text}</p>
+          : <p className="text-[12.5px] text-slate-500">{tr("Try to remember what it says, then show it.")}</p>}
+        {!shown ? <button onClick={() => setShown(true)} className="w-full rounded-xl bg-teal-500 text-slate-950 font-semibold py-2.5 text-sm" data-testid="shelf-review-show">{tr("Show")}</button> : (
+          <div className="grid grid-cols-3 gap-2">
+            <button onClick={() => rate(1)} className="rounded-xl border border-slate-700 py-2 text-[13px] text-rose-300" data-testid="shelf-review-forgot">{tr("Forgot")}</button>
+            <button onClick={() => rate(2)} className="rounded-xl border border-slate-700 py-2 text-[13px] text-amber-300" data-testid="shelf-review-hard">{tr("Hard")}</button>
+            <button onClick={() => rate(3)} className="rounded-xl border border-slate-700 py-2 text-[13px] text-emerald-300" data-testid="shelf-review-good">{tr("Remembered")}</button>
+          </div>)}
+      </> : <p className="text-[13px] text-emerald-300" data-testid="shelf-review-done">{tr("Done for today — they will come back when you are about to forget them.")}</p>}
+      <button onClick={() => { setOpen(false); setShown(false); }} className="text-[12px] text-slate-500">{tr("Close")}</button>
+    </div>);
 }

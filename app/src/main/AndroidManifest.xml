@@ -151,6 +151,11 @@
             </intent-filter>
         </activity-alias>
 
+        <!-- v6.37 (H5): the "Attune Instant" quick-settings tile -->
+        <service android:name=".InstantTile" android:label="@string/tile_instant" android:icon="@drawable/ic_tile_instant" android:exported="true"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+        </service>
         <service android:name=".GenService" android:exported="false" android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="On-device AI model writing an answer the user asked for" />
