@@ -147,6 +147,8 @@ dependencies {
     // Google Play Billing (v6.7): Pro subscriptions / lifetime and Business activations — Google charges,
     // renews, refunds and pays out; nothing to run on our side.
     implementation("com.android.billingclient:billing-ktx:7.1.1")
+    // v6.37 Google sync: Google's sign-in/consent for the Drive app folder (drive.appdata); the Drive calls are plain https
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
 }
 
 // v6.29 release safety: a Play Store bundle must be signed with the real upload key — never silently with the test key

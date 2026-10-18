@@ -85,6 +85,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var voice: Voice
+    // v6.37 Google sync: Google's own sign-in / consent screen for the hidden Drive app folder (drive.appdata) → a token
+    private var drivePending: ((String?, String?) -> Unit)? = null
+    private val driveConsent = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { r ->
+        val cb = drivePending; drivePending = null
+        try { val res = com.google.android.gms.auth.api.identity.Identity.getAuthorizationClient(this).getAuthorizationResultFromIntent(r.data); cb?.invoke(res.accessToken, null) }
+        catch (e: Exception) { cb?.invoke(null, e.message ?: "Google sign-in was cancelled") }
+    }
+    fun authorizeDrive(cb: (String?, String?) -> Unit) = runOnUiThread {
+        try {
+            val req = com.google.android.gms.auth.api.identity.AuthorizationRequest.builder()
+                .setRequestedScopes(listOf(com.google.android.gms.common.api.Scope("https://www.googleapis.com/auth/drive.appdata"))).build()
+            com.google.android.gms.auth.api.identity.Identity.getAuthorizationClient(this).authorize(req)
+                .addOnSuccessListener { res ->
+                    val pi = res.pendingIntent
+                    if (res.hasResolution() && pi != null) { drivePending = cb; driveConsent.launch(androidx.activity.result.IntentSenderRequest.Builder(pi.intentSender).build()) }
+                    else cb(res.accessToken, null)
+                }
+                .addOnFailureListener { e -> cb(null, e.message ?: "Google sign-in is not available on this phone") }
+        } catch (e: Throwable) { cb(null, "Google sign-in is not available on this phone (" + (e.message ?: e.javaClass.simpleName) + ")") }
+    }
+
+    // v6.37 Wi-Fi sync: Android 17's "local network" permission (the page asks again after the answer)
+    private val askLocalNetPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        web.evaluateJavascript("window.dispatchEvent(new CustomEvent('attune-localnet',{detail:$granted}))", null)
+    }
     private val askMicPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         bridge.lastVoiceSink?.let { voice.onPermission(granted, it) }
     }
@@ -199,6 +224,8 @@ class MainActivity : AppCompatActivity() {
         voice = Voice(this)
         bridge.voice = voice
         bridge.askMic = { askMicPermission.launch(android.Manifest.permission.RECORD_AUDIO) }
+        bridge.authorizeDrive = { cb -> authorizeDrive(cb) }
+        bridge.askLocalNet = { try { askLocalNetPermission.launch("android.permission.ACCESS_LOCAL_NETWORK") } catch (e: Exception) {} }
         bridge.askHealth = { runOnUiThread { try { askHealthPermission.launch(Health.PERMISSIONS) } catch (e: Exception) {} } }
         bridge.askHuawei = { runOnUiThread {
             try { askHuaweiPermission.launch(HuaweiHealth.authIntent(this)) }

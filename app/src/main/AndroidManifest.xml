@@ -10,6 +10,8 @@
     <!-- Needed for the optional web lookup, the map tiles and downloading a
          model. The assistant itself never uses it. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- v6.37 Wi-Fi sync between your own devices: Android 17 asks the person first (targetSdk 37) -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <!-- Android 9 only: the Video Downloader saves to Movies/Attune (Android 10+ needs no permission) -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

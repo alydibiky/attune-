@@ -9,6 +9,7 @@
 import React, { useState, useRef } from "react";
 import { X, Lock, Download, RefreshCw, ShieldCheck, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { tr, fmtNum } from "./i18n.js";
+import { SyncPanel } from "./sync-ui.jsx";
 import {
   collectData, summarize, encryptBackup, decryptBackup, readHeader, restoreData, passwordProblem,
   passwordStrength, backupFileName, LAST_BACKUP_KEY, daysSinceBackup,
@@ -137,13 +138,14 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
     <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5" onClick={(e) => e.stopPropagation()} data-testid="backup-panel">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2"><ShieldCheck size={19} className="text-teal-300" />{tr("Backup & restore")}</h2>
+          <h2 className="text-lg font-bold text-white flex items-center gap-2"><ShieldCheck size={19} className="text-teal-300" />{tr("Backup & sync")}</h2>
           <button onClick={close} className="-m-2 p-2 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <p className="text-xs text-slate-500 mb-3">{tr("Everything in Attune lives only on this phone. A backup is one file, locked with your password, that you can keep anywhere.")}</p>
-        <div className="flex gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1 mb-4">{tabBtn("backup", tr("Back up"))}{tabBtn("restore", tr("Restore"))}</div>
+        <div className="flex gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1 mb-4">{tabBtn("backup", tr("Back up"))}{tabBtn("restore", tr("Restore"))}{tabBtn("sync", tr("Sync"))}</div>
 
-        {tab === "backup" ? (
+        {/* v6.37: Sync — Wi-Fi or Google Drive (sync-ui.jsx) */}
+        {tab === "sync" ? <SyncPanel native={native} flash={flash} /> : tab === "backup" ? (
           <div className="space-y-3">
             <p className="text-[11px] uppercase tracking-wider text-slate-500">{tr("What will be saved")}</p>
             <Summary s={now} />

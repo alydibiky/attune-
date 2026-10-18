@@ -82,6 +82,54 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun vaultAvailable(): String = Vault.available(ctx)
 
+    // ---- v6.37 Wi-Fi sync (LocalSync.kt): this device hosts, or sends to the one hosting. Only encrypted files cross.
+    // Android 17 (target 37) asks the person before an app may use the home network: ACCESS_LOCAL_NETWORK.
+    var askLocalNet: (() -> Unit)? = null
+    private val LOCAL_NET = "android.permission.ACCESS_LOCAL_NETWORK"
+    @JavascriptInterface
+    fun localNetAllowed(): Boolean = android.os.Build.VERSION.SDK_INT < 37 ||
+        ctx.checkSelfPermission(LOCAL_NET) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    @JavascriptInterface
+    fun askLocalNetwork() { web.post { askLocalNet?.invoke() } }
+    @JavascriptInterface
+    fun syncHostStart(): String = try { NetLog.add("lan://this-device", "Wi-Fi sync: waiting for the other device"); LocalSync.start() }
+        catch (e: Throwable) { "{\"ok\":false,\"error\":" + q(e.message ?: "could not start") + "}" }
+    @JavascriptInterface
+    fun syncHostTake(): String = LocalSync.take()
+    @JavascriptInterface
+    fun syncHostAnswer(text: String): String { LocalSync.answer(text); return "ok" }
+    @JavascriptInterface
+    fun syncHostStop(): String { LocalSync.stop(); return "ok" }
+    @JavascriptInterface
+    fun syncExchange(id: String, arg: String) {
+        pool.execute {
+            try {
+                val j = JSONObject(arg); val host = j.getString("host"); val port = j.getInt("port")
+                NetLog.add("lan://$host:$port", "Wi-Fi sync with your other device (encrypted file)")
+                resolve(id, JSONObject().put("text", LocalSync.exchange(host, port, j.getString("body"))))
+            } catch (e: Throwable) { reject(id, e.message ?: "Could not reach the other device — are both on the same Wi-Fi?") }
+        }
+    }
+
+    // ---- v6.37 Google sync (GoogleDrive.kt): the token from Google's screen, then get / put the one encrypted file
+    var authorizeDrive: (((String?, String?) -> Unit) -> Unit)? = null
+    @JavascriptInterface
+    fun driveSync(id: String, arg: String) {
+        if (blockedByAirGap(id, "Google sync")) return
+        val auth = authorizeDrive ?: run { reject(id, "Google sign-in is not available here"); return }
+        auth { token, err ->
+            if (token == null) { reject(id, err ?: "Google sign-in was cancelled"); return@auth }
+            pool.execute {
+                try {
+                    val j = JSONObject(arg)
+                    NetLog.add("https://www.googleapis.com/drive (app folder)", if (j.optString("op") == "put") "Google sync: upload your encrypted file" else "Google sync: read your encrypted file")
+                    if (j.optString("op") == "put") resolve(id, JSONObject().put("id", GoogleDrive.put(token, j.optString("id").ifEmpty { null }, j.getString("text"))))
+                    else resolve(id, GoogleDrive.get(token))
+                } catch (e: Throwable) { reject(id, e.message ?: "Google Drive did not answer") }
+            }
+        }
+    }
+
     // v6.32 Scout at night (ScoutNight.kt): the goals' searches for tonight, and what last night found
     @JavascriptInterface
     fun scoutNightPlan(plan: String): String { ScoutNight.setPlan(ctx, plan); return "ok" }

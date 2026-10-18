@@ -85,7 +85,12 @@ const cancels = new Map();
 let awake = null;
 
 // ---- quick calls: answer at once ------------------------------------------------
+const localsync = require("./lib/localsync.js");   // v6.37 Wi-Fi sync with a phone (the same protocol as LocalSync.kt)
 const QUICK = {
+  localNetAllowed: () => true,
+  syncHostTake: () => localsync.take(),
+  syncHostAnswer: (t) => { localsync.answer(t); return "ok"; },
+  syncHostStop: () => { localsync.stop(); return "ok"; },
   info: () => JSON.stringify(info()),
   models: () => JSON.stringify({ models: models.list(DATA).map((m) => models.toJson(m, m.id === state.active)), active: state.active || null }),
   engine: () => JSON.stringify(engine.json()),
@@ -195,6 +200,8 @@ const pdf = () => (pdfTools = pdfTools || makePdf({ BrowserWindow, nativeImage }
 const viaJson = (f) => async (id, arg) => { try { resolve(id, await f(JSON.parse(arg || "{}"))); } catch (e) { reject(id, e.message || String(e)); } };
 const SLOW = {
   chat,
+  syncHostBegin: viaJson(() => localsync.start()),
+  syncExchange: viaJson(async (a) => ({ text: await localsync.exchange(a.host, +a.port, a.body) })),
   search: viaJson((a) => web.search(a)),
   async clipboardText(id) { resolve(id, { text: clipboard.readText() || "" }); },
   async hash(id, modelId) {
