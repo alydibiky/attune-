@@ -152,6 +152,8 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
     put({ ...d, goals: d.goals.map((x) => (x.id !== goal.id ? x : { ...x, votes: { ...(x.votes || {}), [ad.id]: up ? 1 : -1 }, taste: S.learn(x.taste, ad, up) })) });
   };
   const found = goal ? S.runGoal(goal, [], { now: Date.now(), market: S.loadMarket() }).found : [];
+  // v6.37 (D2): wait or buy — how long ads of this search stay up and how often their price drops (the market book)
+  const book = goal ? (S.loadMarket()[S.marketKey(goal.g)] || []) : [];
   const follow = (ad) => { const d = S.loadScout(); put({ ...d, goals: d.goals.map((x) => (x.id === goal.id ? S.toggleFollow(x, ad.id) : x)) }); flash && flash((goal.follow || {})[ad.id] ? tr("Not following this ad") : tr("Following — you'll be told if the price drops or it sells")); };
   const stations = useStations(goal, found, ar);
   const twins = S.photoTwins(found, usePhotoPrints(found));
@@ -206,6 +208,7 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
               <div className="text-end shrink-0">{a.facts.price ? <div className="c-num font-bold" data-testid="scout-price">{fmt(a.facts.price)} <span className="c-sub text-[11px]">{a.facts.cur}</span></div> : null}
                 <div className="c-num text-[12px] c-acc" data-testid="scout-score">{a.score}/100</div></div>
             </div>
+            {(() => { const tm = S.timingOf(book, a); return tm && tm.verdict !== "steady" ? <p className={"text-[12.5px] " + (tm.verdict === "buy" ? "c-acc" : "c-sub")} data-testid="scout-timing" dir="auto">{tm.verdict === "buy" ? "⏱ " : "⏳ "}{S.timingText(tm, ar ? "ar" : "en")}</p> : null; })()}
             <div className="flex flex-wrap gap-1.5 text-[12px]">
               {a.fair ? <span className={"c-pill " + (a.fair.verdict === "high" || a.fair.verdict === "too-cheap" ? "late" : a.fair.verdict === "cheap" ? "" : "due")} data-testid="scout-fair" title={tr("Compared with {n} ads of the same thing", { n: a.fair.n })}>{tr(a.fair.verdict === "too-cheap" ? "Suspiciously cheap" : a.fair.verdict === "cheap" ? "Cheap" : a.fair.verdict === "high" ? "Expensive" : "Fair price")} · {a.fair.pct > 0 ? "+" : ""}{a.fair.pct}% · {tr("market {a}–{b}", { a: fmt(a.fair.low), b: fmt(a.fair.high) })}{a.fair.basis === "m2" ? " " + tr("(per m²)") : ""}</span>
                 : null}

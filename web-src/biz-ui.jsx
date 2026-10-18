@@ -71,6 +71,9 @@ export function BusinessApp({ flash, llm, modelReady, openEngine, saveFile, shar
   const minimal = (() => { try { return document.documentElement.classList.contains("att-min"); } catch (e) { return false; } })();
   const [intro, setIntro] = useState(() => !minimal && !seenIntro() && !loadIndex().length);   // the introduction tops the home until used
   useSubBack(view !== "list", () => { setView("list"); setSysRaw(null); });
+  // v6.37: another page can open a Business view (a crane request shared from WhatsApp → Fleet & rentals)
+  useEffect(() => { const on = (e) => { const v = e && e.detail; if (v === "fleet" || v === "books" || v === "shop") setView(v); };
+    window.addEventListener("attune-biz-view", on); return () => window.removeEventListener("attune-biz-view", on); }, []);
   const setSys = (next, msg) => {
     if (!saveSys(next)) flash(tr("The phone's storage for Business is full — export a table to CSV and delete old records."));
     setSysRaw(next); setIndex(loadIndex());

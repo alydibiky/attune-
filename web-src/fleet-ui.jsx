@@ -6,9 +6,10 @@
    the phone's M/D), every save wrapped so a real error shows instead of failing silently, a version-free data file.
    Tests: tests/unit/v732fleet.test.mjs (logic), tests/e2e_v732fleet.py (screens).                                       */
 import React, { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, Trash2, Camera, Paperclip, AlertTriangle, Check, X, Search, Printer, Download, Upload, Menu, Truck, Package, Wallet, CalendarDays, Building2, MapPin, Undo2, Pencil, Lock, Wrench, Clock, Users, Globe } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Camera, Paperclip, AlertTriangle, Check, X, Search, Printer, Download, Upload, Menu, Truck, Package, Wallet, CalendarDays, Building2, MapPin, Undo2, Pencil, Lock, Wrench, Clock, Users, Globe, MessageSquare, Copy } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as F from "./fleet.js";
+import * as FO from "./fleet-order.js";
 import { loadFleet, saveFleet, saveAttachment, loadAttachment } from "./fleet-store.js";
 import { askConfirm } from "./confirm.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
@@ -120,7 +121,11 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
     const p = F.purge(st);                         // the Recycle Bin forgets after 7 days (run on open, like the old app)
     if (p.purged) { st = p.state; saveFleet(st); }
     setRaw(st);
+    // v6.37 (W1): a crane request shared from WhatsApp opens in "Order from a message"
+    try { const inc = localStorage.getItem("attune:fleet:incoming"); if (inc && !site) { localStorage.removeItem("attune:fleet:incoming"); setSheet({ kind: "order", text: inc }); } } catch (e) {}
   })(); }, []);
+  useEffect(() => { if (site) return; const on = () => { try { const inc = localStorage.getItem("attune:fleet:incoming"); if (inc) { localStorage.removeItem("attune:fleet:incoming"); setOpen(null); setSheet({ kind: "order", text: inc }); } } catch (e) {} };
+    window.addEventListener("attune-fleet-order", on); return () => window.removeEventListener("attune-fleet-order", on); }, []);
   useSubBack(!!open, () => setOpen(null));
   // v6.34 (§5.77 idea): what needs you → one phone notification at 09:00 (cheques, jobs past their end, service, stock)
   useEffect(() => { if (!s || site) return; const N = typeof window !== "undefined" && window.AttuneNative; if (!N) return;
@@ -166,7 +171,7 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
       {menu ? <Sheet title={tr("More")} onClose={() => setMenu(false)} wide={wide}><MoreMenu {...ctx} close={() => setMenu(false)} /></Sheet> : null}
     </section>);
 }
-const sheetTitle = (sh) => tr({ job: "New job order", work: "Add work", cheque: sh.dir === "out" ? "Pay out" : "Payment received", expense: "New expense", in: "Incoming invoice", out: "Issue parts", move: "Move crane",
+const sheetTitle = (sh) => tr({ order: "Order from a message", job: "New job order", work: "Add work", cheque: sh.dir === "out" ? "Pay out" : "Payment received", expense: "New expense", in: "Incoming invoice", out: "Issue parts", move: "Move crane",
   list: sh.rec && sh.rec.id ? "Edit" : "Add", item: "Item", doc: "Document", bin: "Recycle Bin", settings: "Settings", backup: "Encrypted backup" }[sh.kind] || "");
 
 // ---- Today ------------------------------------------------------------------------------------------------------------
@@ -197,7 +202,7 @@ function Today({ s, run, money, setSheet, setOpen, setTab, wide }) {
         <Kpi label={tr("Cheques to collect")} value={money(k.chequesIn)} />
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-        {[["work", "Work", Clock], ["job", "Job order", Plus], ["cheque", "Payment", Wallet], ["expense", "Expense", Wrench], ["out", "Issue parts", Package]].map(([kind, l, I]) =>
+        {[["order", "From a message", MessageSquare], ["work", "Work", Clock], ["job", "Job order", Plus], ["cheque", "Payment", Wallet], ["expense", "Expense", Wrench], ["out", "Issue parts", Package]].map(([kind, l, I]) =>
           <button key={kind} className={btnS + " whitespace-nowrap shrink-0"} onClick={() => setSheet({ kind, dir: "in" })} data-testid={"fleet-quick-" + kind}><I size={15} />{tr(l)}</button>)}
       </div>
       <div className={wide ? "grid grid-cols-2 gap-4 items-start" : "space-y-4"}>
@@ -496,6 +501,7 @@ function SheetBody(p) {
   const k = p.sheet.kind;
   if (k === "list") return <ListForm {...p} />;
   if (k === "job") return <JobForm {...p} />;
+  if (k === "order") return <OrderForm {...p} />;
   if (k === "work") return <WorkForm {...p} />;
   if (k === "cheque") return <ChequeForm {...p} />;
   if (k === "expense") return <ExpenseForm {...p} />;
@@ -551,6 +557,65 @@ function JobForm({ s, run, sheet, close, money }) {
     <Txt label={tr(j.mode === "hourly" ? "Rate per hour" : j.mode === "daily" ? "Rate per day" : "Rate per period")} value={j.rate} onChange={set("rate")} mode="decimal" placeholder={def !== "" ? num(def) : ""} />
     <div className="grid grid-cols-2 gap-2"><DateF label={tr("Start")} value={j.start} onChange={set("start")} /><DateF label={tr("End (optional)")} value={j.end} onChange={set("end")} /></div>
     <SaveBtn onClick={save} disabled={!j.crane || !j.client || !j.site || (can && !can.ok)} />
+  </div>;
+}
+/** v6.37 (W1): a client's WhatsApp message → the cranes free those days, the price, the reply, a quote, and the booking. */
+function OrderForm({ s, run, sheet, close, money, flash, saveFile }) {
+  const [text, setText] = useState(sheet.text || "");
+  const [edit, setEdit] = useState({});            // what the person corrected (wins over what was read)
+  const [client, setClient] = useState("");
+  const [pick, setPick] = useState(null);
+  const read = useMemo(() => FO.readOrder(text, { today: F.isoDay(), sites: F.live(s.sites) }), [text, s.sites]);
+  const o = { ...read, ...edit };
+  if (edit.mode === "hourly") { o.hours = edit.hours || read.hours || 8; o.days = 0; } else if (edit.mode === "daily") { o.days = edit.days || read.days || 1; o.hours = 0; }
+  const list = text.trim() ? FO.cranesFor(s, o) : [];
+  const chosen = list.find((x) => x.crane.id === pick) || list.find((x) => !x.busy) || null;
+  const cur = s.settings.currency, ar = isAr();
+  const site = F.live(s.sites).find((x) => x.name.toLowerCase() === String(o.siteText || "").toLowerCase());
+  const reply = chosen ? FO.quoteText(o, chosen, { lang: /[\u0600-\u06FF]/.test(text) ? "ar" : "en", currency: cur }) : "";   // in the client's own language
+  const book = () => {
+    const r = run((x) => {
+      let y = x, siteId = site ? site.id : null;
+      if (!siteId) { y = F.upsert(y, "sites", { name: o.siteText || tr("Site") }); siteId = y.sites[y.sites.length - 1].id; }
+      const end = o.mode === "hourly" ? o.start : F.addDays(o.start, Math.max(1, o.days) - 1);
+      return F.addJob(y, { crane: chosen.crane.id, client, site: siteId, mode: o.mode, start: o.start, end, rate: chosen.rate, notes: text.slice(0, 300) });
+    }, tr("Job order saved"));
+    if (r) close();
+  };
+  return <div className="space-y-3" data-testid="fleet-order-form">
+    <Field label={tr("The client's message")}><textarea value={text} onChange={(e) => { setText(e.target.value); setEdit({}); setPick(null); }} rows={3} dir="auto" data-testid="fleet-order-text"
+      placeholder={tr("Paste it, e.g. «محتاج ونش 50 طن السبت في 6 أكتوبر يومين»")} className={inp + " h-auto py-2"} /></Field>
+    {text.trim() ? <>
+      <div className="grid grid-cols-2 gap-2">
+        <Txt label={tr("Capacity (t)")} value={String(o.tons || "")} onChange={(v) => setEdit({ ...edit, tons: +v || 0 })} mode="decimal" testid="fleet-order-tons" />
+        <DateF label={tr("Start")} value={o.start} onChange={(v) => setEdit({ ...edit, start: v })} testid="fleet-order-start" />
+      </div>
+      <Seg value={o.mode} onChange={(v) => setEdit({ ...edit, mode: v })} items={[["daily", "Daily"], ["hourly", "Hourly"]]} testid="fleet-order-mode" />
+      <div className="grid grid-cols-2 gap-2">
+        <Txt label={tr(o.mode === "hourly" ? "Hours" : "Days")} value={String(o.mode === "hourly" ? o.hours : o.days)} onChange={(v) => setEdit({ ...edit, [o.mode === "hourly" ? "hours" : "days"]: Math.max(1, +v || 1) })} mode="decimal" testid="fleet-order-qty" />
+        <Txt label={tr("Site")} value={o.siteText} onChange={(v) => setEdit({ ...edit, siteText: v })} testid="fleet-order-site" />
+      </div>
+      {!o.start ? <p className="text-[13px] text-[#B45309]">{tr("No date found in the message — pick the start.")}</p> : null}
+      <div className="space-y-1.5" data-testid="fleet-order-cranes">
+        <p className="text-[13px] font-bold">{tr("Cranes for this job")}</p>
+        {list.length ? list.map((x) => (
+          <button key={x.crane.id} onClick={() => !x.busy && setPick(x.crane.id)} disabled={!!x.busy} data-testid="fleet-order-crane"
+            className={card + " w-full text-start p-3 flex items-center gap-2.5 " + (x.busy ? "opacity-60" : "") + (chosen && chosen.crane.id === x.crane.id ? " ring-2" : "")} style={chosen && chosen.crane.id === x.crane.id ? { "--tw-ring-color": "var(--biz)" } : null}>
+            <span className="flex-1 min-w-0"><span className="block font-bold text-[14px] truncate" dir="auto">{x.crane.name} · {x.crane.tons} t</span>
+              <span className={"block text-[12.5px] " + muted}>{x.busy ? tr("Booked: {no}", { no: x.busy.no }) : num(x.rate) + " × " + x.qty}</span></span>
+            {!x.busy ? <b className="text-[13.5px] tabular-nums" dir="ltr">{money(x.price)}</b> : null}</button>))
+          : <Empty>{tr("No crane of {t} t or more.", { t: o.tons })}</Empty>}
+      </div>
+      {chosen ? <>
+        <Field label={tr("Reply to send")}><p className={card + " p-3 text-[13px] whitespace-pre-wrap"} dir="auto" data-testid="fleet-order-reply">{reply}</p></Field>
+        <div className="grid grid-cols-2 gap-2">
+          <button className={btnS} onClick={() => { try { navigator.clipboard.writeText(reply).then(() => flash(tr("Copied")), () => {}); } catch (e) {} }} data-testid="fleet-order-copy"><Copy size={15} />{tr("Copy the reply")}</button>
+          <button className={btnS} onClick={() => printHTML(FO.quoteHTML(o, chosen, { client: (F.byId(s.clients, client) || {}).name || "", currency: cur, rtl: ar }), saveFile, "quote.html")} data-testid="fleet-order-quote"><Printer size={15} />{tr("Quote")}</button>
+        </div>
+        <div><Sel label={tr("Client")} value={client} onChange={setClient} options={opts(s.clients)} empty={tr("Choose…")} testid="fleet-order-client" /><QuickAdd s={s} run={run} coll="clients" label={tr("New client")} onAdded={setClient} /></div>
+        <SaveBtn onClick={book} disabled={!client || !o.start} testid="fleet-order-book">{tr("Book it")}</SaveBtn>
+      </> : null}
+    </> : null}
   </div>;
 }
 function WorkForm({ s, run, sheet, close, money, flash }) {

@@ -54,6 +54,7 @@ class AttuneKeyboard : InputMethodService() {
     private var shift = 0              // 0 off, 1 once, 2 caps lock
     private var lastShiftAt = 0L
     private var aiAllowed = true
+    private var franco = false         // v6.37 (X1): Franco-Arabic → Arabic as you type (English layout only)
 
     private lateinit var root: LinearLayout
     private lateinit var strip: LinearLayout
@@ -85,6 +86,7 @@ class AttuneKeyboard : InputMethodService() {
     override fun onCreate() {
         super.onCreate()
         lang = getSharedPreferences("attune", MODE_PRIVATE).getString("kb_lang", "en") ?: "en"
+        franco = getSharedPreferences("attune", MODE_PRIVATE).getBoolean("kb_franco", false)
     }
 
     override fun onCreateInputView(): View {
@@ -133,6 +135,10 @@ class AttuneKeyboard : InputMethodService() {
         if (!aiAllowed) {
             strip.addView(label(t("Attune keyboard", "لوحة مفاتيح Attune")))
             return
+        }
+        // v6.37 (X1): type Franco ("ana gay bokra") and get Arabic («أنا جاي بكرة») — each word when you press space
+        if (!ar) chip((if (franco) "✓ " else "") + "3→ع " + t("Franco", "فرانكو")) {
+            franco = !franco; getSharedPreferences("attune", MODE_PRIVATE).edit().putBoolean("kb_franco", franco).apply(); buildStrip(); buildKeys()
         }
         chip("✨ " + t("Improve", "تحسين")) { act("improve") }
         chip("🌐 " + t("Translate", "ترجمة")) { act("translate") }
@@ -278,7 +284,7 @@ class AttuneKeyboard : InputMethodService() {
         last.addView(modKey(if (symbols) t("ABC", "أبج") else "?123", 1.4f) { symbols = !symbols; buildKeys() })
         last.addView(modKey("🌐", 1.1f, long = { (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }) { switchLang() })
         last.addView(charKey(if (ar) "،" else ","))
-        last.addView(modKey(if (ar) "عربي" else "English", 4.2f, text = " ") {})
+        last.addView(modKey(if (ar) "عربي" else if (franco && !symbols) "Franco → عربي" else "English", 4.2f, text = " ") {})
         last.addView(charKey("."))
         last.addView(modKey("⏎", 1.5f, primary = true) { enter() })
         keys.addView(last)
@@ -335,7 +341,7 @@ class AttuneKeyboard : InputMethodService() {
         keyView(label, w, if (primary) acc else if (text != null) keyBg else modBg, if (primary) Color.WHITE else if (text != null) sub else ink).apply {
             setOnClickListener {
                 it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                if (text != null) { currentInputConnection?.commitText(text, 1); if (!ar && !symbols && shift == 0) autoCap() } else on()
+                if (text != null) { if (text == " ") francoWord(); currentInputConnection?.commitText(text, 1); if (!ar && !symbols && shift == 0 && !franco) autoCap() } else on()
             }
             if (long != null) setOnLongClickListener { long(); true }
         }
@@ -376,7 +382,21 @@ class AttuneKeyboard : InputMethodService() {
         buildStrip(); buildKeys()
     }
 
+    /** v6.37 (X1): the Franco word just before the cursor → Arabic (pure code: Franco.kt). */
+    private fun francoWord() {
+        if (!franco || ar || symbols) return
+        val ic = currentInputConnection ?: return
+        if (!ic.getSelectedText(0).isNullOrEmpty()) return
+        val before = ic.getTextBeforeCursor(48, 0)?.toString() ?: return
+        val m = Regex("[A-Za-z0-9']+$").find(before) ?: return
+        val w = m.value
+        if (!Franco.isFranco(w) || (m.range.first > 0 && before[m.range.first - 1].let { it == '@' || it == '.' || it == '/' })) return
+        val a = Franco.word(w)
+        if (a != w) { ic.beginBatchEdit(); ic.deleteSurroundingText(w.length, 0); ic.commitText(a, 1); ic.endBatchEdit() }
+    }
+
     private fun enter() {
+        francoWord()
         val ei = currentInputEditorInfo
         val action = (ei?.imeOptions ?: 0) and EditorInfo.IME_MASK_ACTION
         val noAction = ((ei?.imeOptions ?: 0) and EditorInfo.IME_FLAG_NO_ENTER_ACTION) != 0

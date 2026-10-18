@@ -7993,7 +7993,7 @@ export default function App() {
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
   // v6.31 minimal: short tab names (the page's own title stays full)
-  const TAB_SHORT = { reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
+  const TAB_SHORT = { fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
     pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Prompts", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
@@ -8263,6 +8263,12 @@ export default function App() {
         const pay = parsePayment(shared, { now: Date.now(), ...payOpts() });
         if (pay && pay.ok) { setPendingPay({ text: shared, id: Date.now() }); navTo("money");
           showToast(tr("Payment received — pick the account and confirm"), 3500); return; }
+      }
+      // v6.37 (W1): a client's crane request shared from WhatsApp («محتاج ونش 50 طن السبت») → Fleet's "Order from a message"
+      if (/ونش|كرين|crane|مرفاع/i.test(shared) && /\d{2,4}\s*(?:طن|tons?\b|t\b)/i.test(shared.replace(/[٠-٩]/g, (x) => String(x.charCodeAt(0) - 0x660))) && shared.length < 600) {
+        try { localStorage.setItem("attune:fleet:incoming", shared); } catch (e) {}
+        // Fleet & rentals lives inside Business (its "fleet" view); the event reaches it whether it is open already or not
+        navTo("business"); setTimeout(() => { window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "fleet" })); window.dispatchEvent(new CustomEvent("attune-fleet-order")); }, 80); return;
       }
       // v6.12: a conversation shared from Gemini / ChatGPT / Claude… (Share → Attune) opens in Chat as its context
       if (shareLink(shared)) { setChatSeed("\u0001" + shared); navTo("chat"); return; }

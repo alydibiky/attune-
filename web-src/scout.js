@@ -344,9 +344,47 @@ export function marketKey(g) {
 export function addToMarket(book, g, ads, now = Date.now()) {
   const k = marketKey(g); if (!k) return book || {};
   const b = { ...(book || {}) }, list = [...(b[k] || [])];
-  for (const a of ads || []) if (a.facts && a.facts.price) { const i = list.findIndex((x) => x.id === a.id); const rec = { id: a.id, at: now, facts: { price: a.facts.price, cur: a.facts.cur, year: a.facts.year, km: a.facts.km, area: a.facts.area, beds: a.facts.beds } }; if (i >= 0) list[i] = rec; else list.push(rec); }
+  for (const a of ads || []) if (a.facts && a.facts.price) {
+    const i = list.findIndex((x) => x.id === a.id), old = i >= 0 ? list[i] : null;
+    // v6.37 (D2): when it was first seen and at what price, so "how long ads last" and "how often the price drops" are known
+    const rec = { id: a.id, at: now, first: old ? old.first || old.at : now, p0: old ? old.p0 || old.facts.price : a.facts.price,
+      facts: { price: a.facts.price, cur: a.facts.cur, year: a.facts.year, km: a.facts.km, area: a.facts.area, beds: a.facts.beds } };
+    if (i >= 0) list[i] = rec; else list.push(rec);
+  }
   b[k] = list.slice(-120); return b;
 }
+/**
+ * v6.37 (upgrade D2): wait or buy — from the market book of this search. An ad that was seen and then stopped appearing for a
+ * week while the search kept running is counted as gone (sold or taken down) after the days it was up. →
+ *  { verdict: "wait" | "buy" | "steady", n, gone, days (median days an ad stays up), dropShare (share of ads that cut their
+ *    price), dropPct (their median cut, %), age (this ad's days so far, if given) } — or null when the book is too young
+ *    (fewer than 6 ads, or tracked under 10 days).
+ */
+const DAYMS = 86400000;
+export function timingOf(list, ad = null, now = Date.now()) {
+  const L = (list || []).filter((x) => x && x.facts && x.facts.price && x.first);
+  if (L.length < 6) return null;
+  const lastRun = Math.max(...L.map((x) => x.at)), span = (lastRun - Math.min(...L.map((x) => x.first))) / DAYMS;
+  if (span < 10) return null;
+  const med = (a) => { const v = [...a].sort((x, y) => x - y); return v.length ? v[Math.floor((v.length - 1) / 2)] : 0; };
+  const gone = L.filter((x) => lastRun - x.at > 7 * DAYMS).map((x) => Math.max(1, Math.round((x.at - x.first) / DAYMS)));
+  const drops = L.filter((x) => x.p0 && x.facts.price < x.p0 * 0.99).map((x) => Math.round((1 - x.facts.price / x.p0) * 100));
+  const days = gone.length >= 3 ? med(gone) : 0, dropShare = Math.round((drops.length / L.length) * 100) / 100, dropPct = drops.length ? med(drops) : 0;
+  const rec = ad ? L.find((x) => x.id === ad.id) : null, age = rec ? Math.round((now - rec.first) / DAYMS) : null;
+  const cheapNow = ad && ad.fair && (ad.fair.verdict === "cheap" || ad.fair.verdict === "fair");
+  let verdict = "steady";
+  if (days && days <= 10 && cheapNow) verdict = "buy";                    // good ones go fast here
+  else if (dropShare >= 0.25 && (age == null || !days || age < days)) verdict = "wait";   // many cut their price — and this one is young
+  return { verdict, n: L.length, gone: gone.length, days, dropShare, dropPct, age };
+}
+export function timingText(t, lang = "en") {
+  if (!t) return "";
+  const ar = lang === "ar", pc = Math.round(t.dropShare * 100);
+  if (t.verdict === "buy") return ar ? `الحاجات الكويسة هنا بتتباع بسرعة (حوالي ${t.days} يوم) — لو السعر مناسب متستناش.` : `Good ones go fast here (about ${t.days} days) — if the price is right, don't wait.`;
+  if (t.verdict === "wait") return ar ? `${pc}% من الإعلانات هنا نزّلت سعرها (بحوالي ${t.dropPct}%)${t.days ? ` وبتقعد حوالي ${t.days} يوم` : ""} — استنى شوية أو افاصل.` : `${pc}% of ads here cut their price (by about ${t.dropPct}%)${t.days ? `; they stay up about ${t.days} days` : ""} — wait a little, or bargain.`;
+  return ar ? `السوق هادي${t.days ? `: الإعلانات بتقعد حوالي ${t.days} يوم` : ""} — مفيش استعجال.` : `A steady market${t.days ? `: ads stay up about ${t.days} days` : ""} — no rush.`;
+}
+
 export function loadMarket(ls = typeof localStorage !== "undefined" ? localStorage : null) { try { return JSON.parse((ls && ls.getItem(MARKET_KEY)) || "{}") || {}; } catch (e) { return {}; } }
 export function saveMarket(b, ls = typeof localStorage !== "undefined" ? localStorage : null) { try { ls && ls.setItem(MARKET_KEY, JSON.stringify(b)); } catch (e) {} return b; }
 
