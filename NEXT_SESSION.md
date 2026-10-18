@@ -757,6 +757,27 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AF. 18 Oct 2026 — v6.40: Message alerts + batch 7 (HANDOFF §5.88). Read this first, then AE.
+Built: Message alerts (Ali's ask: "tell me if X messages me") · S3 PDF tables by code · W5 Prompt lab · C1 assistants learn
+your corrections · W2 lift plan · W4 shop catalogue · C5 saved pages keep their data + Home-screen icon · Recall (agent C).
+Ali to decide: Recall's Arabic name (now «افتكر»); whether Recall may read the whole gallery by itself (needs a media
+permission Google Play reviews) or stays "Add screenshots".
+### Next (batch order)
+8 (large): H2, H4, S1, S2, S5, D1, D4, D5, D6, F1, F3, F4, C2, C3, X2. 9: Missions 3–4. 4b: eraser tap-to-select + remove all
+people + LaMa NPU; SD 1.5 NPU; W6 subtitles. Sync gaps: tombstones, Fleet photos, desktop Google; H1. Recall phase 2 (embedder).
+### Ali's phone checklist for 6.40
+1. ⬜ Settings → Notification access → Attune on (the Money switch). Home: «لو أحمد بعتلي على الواتس قولي» → ask someone
+   called Ahmed to message you → Attune's alert; tap it → WhatsApp opens. Also "tell me when the bank emails me".
+2. ⬜ Ask a PDF with a table → "what is the total of the amount column?" → the number by code; Tables → Excel.
+3. ⬜ Library → Prompt lab: fill a prompt, compare two versions.
+4. ⬜ An assistant → correct one answer → its form lists the rule; Export → a file.
+5. ⬜ Crane → Plan: a lift → go / caution, Share PDF.
+6. ⬜ Shop → Stock → Catalogue: your number → As a message (WhatsApp opens) / As a PDF.
+7. ⬜ Chat: «اعملي صفحة أتابع بيها شرب المية» → open it → add cups → close → open again: still there. «الشاشة الرئيسية» →
+   the icon on the home screen opens it.
+8. ⬜ Home → Recall («افتكر»): Add screenshots (pick 10 old ones) → search «باسورد الواي فاي» or "the receipt"; switch on
+   Keep my notifications → a day later: «العنوان اللي فلان بعته على الواتس».
+
 ## AE. 18 Oct 2026 — v6.39: Ali's "Solve the questions" screenshots (HANDOFF §5.87). Read this first, then AD.
 Fixed: the answer that was written, removed and rewritten (a streaming bug) · a freeze on half-written formulas · formulas and
 headings drawn properly · one card per question with Copy / Copy all · every calculation re-checked by code (his screenshot's

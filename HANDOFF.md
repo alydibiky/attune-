@@ -1971,6 +1971,38 @@ Built in this release (each: pure module + unit test + UI + e2e + Egyptian Arabi
   writing it again in Arabic…".
 - Tests: unit v740mathcheck, v740tableblanks; e2e_v740solve.
 
+### 5.88 (18 Oct 2026) — v6.40: Message alerts (Ali's ask) + batch 7: S3 · W5 · C1 · W2 · W4 · C5 · Recall
+- **Message alerts** (Ali: "tell me if X messages me, on Gmail or any email"): Home or Follow-ups → «لو أحمد بعتلي قولي»,
+  "tell me when the bank emails me about the card" (`watch.js parseWatch`, EN / Egyptian / Franco). Rules go to the phone
+  (`NativeBridge.watchSave`); PayListener checks each new notification (`MessageWatch.kt`, matcher `WatchMatch.kt`, Kotlin
+  test) → Attune's own loud alert, a tap opens the message. Never SMS (`WatchMatch.isSms`: Google, Samsung, Honor, Huawei,
+  Xiaomi, OnePlus, Oppo, Vivo SMS apps and any *.mms / *.sms). Needs Notification access (the Money switch).
+- **S3 PDF tables by code** (`pdftables.js`): tables rebuilt from the page's words (continuation over pages), "the total of
+  column 3" / "average price" answered by code, Tables → Excel.
+- **W5 Prompt lab** (`promptlab.js`, atop Library): fill a prompt's [blanks], run two versions side by side, keep yours.
+- **C1 Assistants learn** (`spaces.js rulesFor/learnRule`): a correction to an assistant becomes a rule it keeps ("WHAT THIS
+  USER TAUGHT YOU"); the rules are listed in its form; export / import an assistant as a file.
+- **W2 Lift plan** (`liftplan.js`, Crane → Plan): chart capacity, ground pressure (mats), slings, wind → go / caution / plan /
+  stop, as a PDF.
+- **W4 Catalogue** (`catalogue.js`, Shop → Stock): the shelf as a WhatsApp message (wa.me, 01x → 201x) or a PDF; "prices
+  changed — share the new one". A live web link needs a server — not built (offline app).
+- **C5 Saved pages keep their data** (`sandbox.js htmlDoc(src, token, {store})`, spaces-ui ArtifactBody `dataId`): what a
+  page made in Chat stores (its localStorage) and every box typed / ticked (`__attune_fields`; never password boxes) is
+  kept under `attune:artifact:data:v1:<id>` and put back next time; "Clear data" starts fresh; **Home screen** pins the
+  page as its own icon (`NativeBridge.pinPage` → ShortcutManager, extra `attune_artifact` → MainActivity → page
+  `{kind:"artifact", id}`).
+- **Recall (agent C)** — Home → Recall (`lookback.js` + `lookback-ui.jsx`; the older `recall.js` is D3, people-recall):
+  one box over screenshots / photos (Add screenshots → text read by ML Kit, kept in Mind as photos), the notifications the
+  person keeps (`RecallLog.kt`, opt-in, 30 days, 1,500 max, never SMS / ongoing / summaries, off = forgotten), chats,
+  Mind, saved pages, payments (PayLog). By meaning: dates ("last week", «امبارح», "in March", "2 days ago"), kinds
+  (screenshot, notification…), apps (WhatsApp, Gmail…) become filters; each other word also matches its MEANINGS group
+  (receipt = فاتورة = invoice = total…; two-word ones like «واي فاي» as phrases); light Arabic / English stemming.
+  Phase 2 (not built): a small multilingual embedder pack for true semantic search; reading the gallery by itself needs
+  READ_MEDIA_IMAGES (a Play policy question — ask Ali first).
+- Tests: unit v740watch, v740pdftables, v740promptlab, v740assistrules, v740liftplan, v740catalogue, v740lookback; Kotlin
+  WatchMatchTest; e2e v740watch, v740pdftables, v740promptlab, v740assistrules, v740liftplan, v740catalogue,
+  v740artdata, v740recall.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

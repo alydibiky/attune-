@@ -1,6 +1,6 @@
 # Attune — the whole app in one handoff (read this first)
 
-_Up to date: 18 Oct 2026, **v6.39** (versionCode 100, target Android 17; v6.39 = Solve fixes: no rewrite flash, formulas, Copy, calculations checked by code, research blanks filled, HANDOFF §5.87; v6.38 = batches 2–6: Instant tile, Shelf review, brand kit, site reports, video cut, privacy week, Timeline, Studio eraser, Fit coach, charts, Mind recall, Project brain, Life Simulator, HANDOFF §5.86; v6.37 = "do them all" batch 1 + Missions + guide + sync, HANDOFF §5.85; v6.36 = Ali's choices, HANDOFF §5.83; v6.35 = Ali's 18 Oct notes, HANDOFF §5.82; v6.34 = Ali's 17 Oct phone list, HANDOFF §5.81; v6.32 = the joint release of five threads, HANDOFF §5.79; v6.33 = Mind A + Code B, §5.80) on `main` = branch `ccr-a0eb3595-e2c7a7`._
+_Up to date: 18 Oct 2026, **v6.40** (versionCode 101, target Android 17; v6.40 = Message alerts + batch 7: PDF tables, Prompt lab, assistants learn, lift plan, catalogue, saved pages keep data, Recall, HANDOFF §5.88; v6.39 = Solve fixes: no rewrite flash, formulas, Copy, calculations checked by code, research blanks filled, HANDOFF §5.87; v6.38 = batches 2–6: Instant tile, Shelf review, brand kit, site reports, video cut, privacy week, Timeline, Studio eraser, Fit coach, charts, Mind recall, Project brain, Life Simulator, HANDOFF §5.86; v6.37 = "do them all" batch 1 + Missions + guide + sync, HANDOFF §5.85; v6.36 = Ali's choices, HANDOFF §5.83; v6.35 = Ali's 18 Oct notes, HANDOFF §5.82; v6.34 = Ali's 17 Oct phone list, HANDOFF §5.81; v6.32 = the joint release of five threads, HANDOFF §5.79; v6.33 = Mind A + Code B, §5.80) on `main` = branch `ccr-a0eb3595-e2c7a7`._
 This file is the map. Details and history are in `HANDOFF.md` (§5.x = one section per release, newest at the end:
 §5.44–§5.60 cover 10–12 Oct 2026; §5.74–§5.80 cover 16–17 Oct). Ali's raw problem lists are in `NEXT_SESSION.md`. The desktop plan is in
 `DESKTOP_PLAN.md`.
@@ -58,6 +58,8 @@ Google Play Billing.
 | **Business** (an app of its own) | **Fleet & rentals** (Ali's crane + warehouse ERPs: jobs, cheques, balances, Store with reference codes, profit per crane — `fleet*.js(x)`); **Pro** (every built system: Overview tab with stock, balances & statements, due dates, no double bookings, documents, recycle bin, sample data, Excel — `erp-pro.js`, `biz-pro-ui.jsx`; export as a website/desktop app from `www/business-site.html`); **builder v2**: team & PINs, currencies, price lists, encrypted backup, export as a project (`erp-v2.js`, `biz-v2-ui.jsx`, `biz-vault.js`); ERP builder (name → design → logic → data → screens); Home/Tables/Form/Reports; AI design chat; **one system for phone AND computer** (per-device layout); export as a standalone .html app; "Books" accounting (sales, purchases, stock, VAT, ETA e-invoice) | `biz-ui.jsx`, `biz-steps.js`, `erp*.js`, `erp-ui.jsx`, `erp-screens.js`, `erp-app.js`, `books*.js(x)` |
 | **Money (Yusr)** | Expenses by typing or AI, recurring, bills, dashboard plus chat | `yusr/`, `myledger.js` |
 | **Mind** (look A since v6.33: the wall) | Everything you keep as a picture wall, filed by itself; chips for kinds, promises, colours, spaces, #tags | `mind.js`, `mind-ui.jsx` |
+| **Recall** «افتكر» (v6.40, agent C) | One search over screenshots (text read on the phone), kept notifications (30 days, never SMS), chats, Mind, saved pages, payments — by meaning, EN / Egyptian / Franco | `lookback.js`, `lookback-ui.jsx`, `RecallLog.kt` |
+| **Message alerts** (v6.40) | «لو أحمد بعتلي قولي» / "tell me when the bank emails me" → Attune's own alert from WhatsApp, Gmail, any email or chat app (never SMS) | `watch.js`, `watch-ui.jsx`, `MessageWatch.kt`, `WatchMatch.kt` |
 | **Coding** (v6.33 look B: talk to a coder — steps as a conversation) | Task, steps and a tested program; editor; preview | `code.js`, `code-ui.jsx`, `sandbox.js`, `sandbox/` |
 | **Studio** | Pictures on the phone (FLUX.2 klein 4B and others), upscale | `studio.js`, `studio-ui.jsx`, Kotlin `ImageEngine.kt`, `ImageRun.kt` |
 | **Ask a PDF / PDF reader** | Chat with a PDF or book, page cited | `docqa.js`, `pdfchat-ui.jsx`, `pdfreader.js`, `multidoc.js`, Kotlin `DocTools.kt` |
@@ -171,11 +173,15 @@ Google Play Billing.
 | v6.34 | 17 Oct | Food labels, maid every Saturday, Money = Money · Watch · People · Deal Check · Scout, Engine + Food sheet minimal, lessons ahead, Fleet issue in the warehouse order — HANDOFF §5.81 |
 | v6.35 | 18 Oct | Food plate scan (every food, grams from its share), Core Max and bigger desktop-only, NPU driver declared + reason logged, lesson conversation robust, Solve question by question, research model-number lock + loop cut, Scout exact year / real prices, Arabic letter-spacing + money format, keyboard above the nav bar, Knowledge only in developer mode — HANDOFF §5.82 |
 | v6.36 | 18 Oct | Layout 1A (one box, quick starts, Attune suggests, four areas), Egyptian Arabic UI, keyboard A (light), Scout fair-price meter + scam check + follow + gold + offer, USDA generic foods (13,266 with vitamins and portions), Android 17 target — HANDOFF §5.83 |
+| v6.37 | 18 Oct | "Do them all" batch 1, Missions phase 1, How to use rewrite, Sync (Wi-Fi + Google) — HANDOFF §5.85 |
+| v6.38 | 18 Oct | Batches 2–6 (Instant tile, Shelf review, brand kit, site reports, Timeline, Studio eraser, Fit coach, Life Simulator…) — §5.86 |
+| v6.39 | 18 Oct | Solve fixes: no rewrite flash, formulas, Copy, calculations checked by code, research blanks filled — §5.87 |
+| v6.40 | 18 Oct | Message alerts + batch 7: PDF tables by code, Prompt lab, assistants learn, lift plan, catalogue, saved pages keep data, Recall — §5.88 |
 
 ## 8. Prompt for the next session (paste as is)
 The current prompt is at the end of `NEXT_SESSION.md` ("Prompt to start the next session"). Short version:
 ```
-Continue Attune on main (v6.36). Read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.83 and NEXT_SESSION.md sections AB, AA, Z, Y and X first.
+Continue Attune on main (v6.40). Read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.83–§5.88 and NEXT_SESSION.md sections AF, AE, AD and AC first.
 Show me what is done and open, ask the open questions with options, then work through them with a task list.
 Follow every standing rule in APP_HANDOFF.md §1.
 ```
