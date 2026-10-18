@@ -177,7 +177,7 @@ def sec_arabic(br):
     check(len(latin) <= 1, "More sheet is in Arabic: %s" % latin[:5])
     page.screenshot(path=HERE + "/v5-ar-more.png")
     page.locator("[data-testid=more-backup]").click(); page.wait_for_timeout(200)
-    check("النسخة الاحتياطية والاسترجاع" in page.locator("[data-testid=backup-panel]").inner_text(), "Backup screen is in Arabic")
+    check("نسخة احتياطية ومزامنة" in page.locator("[data-testid=backup-panel]").inner_text(), "Backup screen is in Arabic")
     page.screenshot(path=HERE + "/v5-ar-backup.png")
     page.evaluate("window.__attuneBack()")
     for i, name in ((1, "instant"), (3, "scout")):

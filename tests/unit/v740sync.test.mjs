@@ -13,11 +13,11 @@ ok(M.accounts.length === 2 && M.txns.length === 3, "lists with ids are joined: n
 ok(M.txns.find((x) => x.id === "t1").amount === 120, "the newer copy of the same item wins (edited on the other device later)");
 ok(M.lang === "ar", "a plain setting keeps this device's value");
 ok(JSON.stringify(mergeValue([1, 2], [3])) === "[1,2]", "plain lists are not mixed");
-const K = syncMerge({ "ledger.v3": JSON.stringify(A), "attune:theme": "dark" }, { "ledger.v3": JSON.stringify(B), "attune:fit:v1": "{\"weights\":[]}", "attune:sync:v1": "{\"pass\":\"x\"}" });
-ok(JSON.parse(K["ledger.v3"]).txns.length === 3 && K["attune:fit:v1"] && !K["attune:sync:v1"], "whole stores merge; what this device lacks is added; sync settings never travel");
+const K = syncMerge({ "ledger.v3": JSON.stringify(A), "attune:theme": "dark" }, { "ledger.v3": JSON.stringify(B), "attune:fit:v1": "{\"weights\":[]}", "attune:sync:me:v1": "{\"pass\":\"x\"}" });
+ok(JSON.parse(K["ledger.v3"]).txns.length === 3 && K["attune:fit:v1"] && !K["attune:sync:me:v1"], "whole stores merge; what this device lacks is added; sync settings never travel");
 ok(passphraseProblem("short") && !passphraseProblem("my crane yard 2026"), "the Drive passphrase must be long");
 // a full exchange: phone (host) and computer (client)
-const phone = new Store({ "ledger.v3": JSON.stringify(A), "attune:missions:v1": JSON.stringify({ items: [{ id: "m1", title: "save" }] }), "attune:sync:v1": "{\"device\":\"phone\"}" });
+const phone = new Store({ "ledger.v3": JSON.stringify(A), "attune:missions:v1": JSON.stringify({ items: [{ id: "m1", title: "save" }] }), "attune:sync:me:v1": "{\"device\":\"phone\"}" });
 const pc = new Store({ "ledger.v3": JSON.stringify(B), "attune:life:v1": JSON.stringify({ items: [{ id: "l1" }] }) });
 const code = makeCode(), it = { iterations: 1000 };
 const fromPc = await packFor(code, pc, it);
@@ -28,7 +28,7 @@ const reply = await packFor(code, phone, it);
 await takeIn(reply, code, pc);
 const pl = JSON.parse(phone.getItem("ledger.v3")), cl = JSON.parse(pc.getItem("ledger.v3"));
 ok(r1.added >= 1 && pl.txns.length === 3 && cl.txns.length === 3 && phone.getItem("attune:life:v1") && pc.getItem("attune:missions:v1"), "after one exchange both devices have everything");
-ok(phone.getItem("attune:sync:v1") === "{\"device\":\"phone\"}" && pc.getItem("attune:sync:v1") === null, "each device keeps its own sync settings");
+ok(phone.getItem("attune:sync:me:v1") === "{\"device\":\"phone\"}" && pc.getItem("attune:sync:me:v1") === null, "each device keeps its own sync settings");
 // replace: the computer becomes exactly like the phone
 pc.setItem("attune:extra", "{\"a\":1}");
 await takeIn(await packFor(code, phone, it), code, pc, "replace");

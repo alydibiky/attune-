@@ -1,6 +1,6 @@
 # Attune — the whole app in one handoff (read this first)
 
-_Up to date: 18 Oct 2026, **v6.36** (versionCode 97, target Android 17; v6.36 = Ali's choices, HANDOFF §5.83; v6.35 = Ali's 18 Oct notes, HANDOFF §5.82; v6.34 = Ali's 17 Oct phone list, HANDOFF §5.81; v6.32 = the joint release of five threads, HANDOFF §5.79; v6.33 = Mind A + Code B, §5.80) on `main` = branch `ccr-a0eb3595-e2c7a7`._
+_Up to date: 18 Oct 2026, **v6.37** (versionCode 98, target Android 17; v6.37 = "do them all" batch 1 + Missions + guide + sync, HANDOFF §5.85; v6.36 = Ali's choices, HANDOFF §5.83; v6.35 = Ali's 18 Oct notes, HANDOFF §5.82; v6.34 = Ali's 17 Oct phone list, HANDOFF §5.81; v6.32 = the joint release of five threads, HANDOFF §5.79; v6.33 = Mind A + Code B, §5.80) on `main` = branch `ccr-a0eb3595-e2c7a7`._
 This file is the map. Details and history are in `HANDOFF.md` (§5.x = one section per release, newest at the end:
 §5.44–§5.60 cover 10–12 Oct 2026; §5.74–§5.80 cover 16–17 Oct). Ali's raw problem lists are in `NEXT_SESSION.md`. The desktop plan is in
 `DESKTOP_PLAN.md`.

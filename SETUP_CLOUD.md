@@ -4,29 +4,21 @@ The code is in: `web-src/cloud.js` (sync, Family circle lists, Pro search), `Nat
 for the client id), `tools/pro-search-relay/` (the search relay). Nothing shows in the app until the ids below are filled in
 `CLOUD` at the top of `web-src/cloud.js`. Send Claude the two values (they are not secrets) and it finishes the wiring.
 
-## A. Google sign-in + Drive sync (then the Family circle)
+## A. Google sign-in + Drive sync — WIRED in v6.37 (Backup → Sync → Google Drive); only the Google Cloud part is left
 
-What it does: the encrypted backup (your password locks it on the phone) is kept in Attune's **hidden** Drive folder
-(`drive.appdata`). Attune can see only its own file there, never your Drive. Every phone pulls, merges, pushes.
+The app side is done: `GoogleDrive.kt` (one file `attune-sync.attune` in the hidden app folder), Google's sign-in screen
+(`MainActivity.authorizeDrive`, AuthorizationClient, scope `drive.appdata`), `web-src/sync.js` + `sync-ui.jsx` (the file is
+locked with the person's sync passphrase on the phone). It works as soon as Google knows the app:
 
-1. Open https://console.cloud.google.com → top bar → **New project** → name `Attune` → Create.
-2. **APIs & Services → Library** → search **Google Drive API** → **Enable**.
-3. **APIs & Services → OAuth consent screen** (now called **Google Auth Platform**):
-   - User type **External**; app name `Attune`; support email `alydibiky@gmail.com`; app logo optional.
-   - **Data access → Add scopes** → tick `.../auth/drive.appdata` ("See, create, and delete its own configuration data in
-     your Google Drive"). Google lists it as non-sensitive, so no security review is needed.
-   - **Audience**: while testing, add your Gmail under **Test users**. Press **Publish app** before the Play release.
-4. **Credentials → Create credentials → OAuth client ID**, three times:
-   - **Android**, package `com.aldibiki.attune`, SHA-1 of the **test key**:
-     `keytool -list -v -keystore app/attune-test.keystore -storepass attune-test` → copy the SHA1 line.
-   - **Android** again, same package, SHA-1 from **Play Console → your app → Test and release → App integrity → App signing
-     key certificate** (the key Google Play signs with).
-   - **Web application** (no URLs needed). Copy its **Client ID** (`…apps.googleusercontent.com`).
-5. Send Claude the **Web application Client ID**. No client secret or JSON file is needed (and none goes in the repo).
-
-Claude then: adds Google's sign-in library, fills `NativeBridge.driveSync` (AuthorizationClient with `drive.appdata` → Drive
-REST: find / create `attune-sync.attune`), puts "Sync with Google Drive" in Backup, and builds the Family circle on it
-(shared lists merge item by item — `mergeList` in cloud.js is already tested).
+1. https://console.cloud.google.com → **New project** → `Attune` → Create.
+2. **APIs & Services → Library** → **Google Drive API** → **Enable**.
+3. **Google Auth Platform** (OAuth consent screen): External; name `Attune`; support email `alydibiky@gmail.com`;
+   **Data access → Add scopes** → `.../auth/drive.appdata` (non-sensitive: no security review); **Audience → Test users** → your
+   Gmail (press **Publish app** before the Play release).
+4. **Clients → Create client → Android**, package `com.aldibiki.attune`, SHA-1 of the test key (the "Build the APK" key):
+   `0D:B6:88:FA:EE:3D:1A:29:EF:B1:EC:BF:F1:21:3C:F9:AA:8E:48:A1`
+   Later, a second Android client with the SHA-1 from **Play Console → App integrity → App signing key certificate**.
+   No Web client, no secret, nothing to send to Claude — the phone is matched by package + SHA-1.
 
 ## B. Paid web search for Pro
 

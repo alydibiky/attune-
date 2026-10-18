@@ -767,8 +767,8 @@ Google needs the setup below). Food pack with the USDA generic foods published (
 ### Ali has to do (Google sync), once
 1. https://console.cloud.google.com → new project "Attune" → APIs & Services → Library → **Google Drive API** → Enable.
 2. OAuth consent screen → External → app name Attune, his e-mail → scope `.../auth/drive.appdata` → add himself as a test user.
-3. Credentials → Create OAuth client → **Android** → package `com.aldibiki.attune` + the **SHA-1** of the signing key
-   (the "Build the APK" key, and later the Play app-signing key from Play Console → App integrity). No secret goes in the app.
+3. Clients → Create client → **Android** → package `com.aldibiki.attune` + SHA-1 `0D:B6:88:FA:EE:3D:1A:29:EF:B1:EC:BF:F1:21:3C:F9:AA:8E:48:A1`
+   (the test key; later also the Play app-signing key's SHA-1). No secret, nothing to send — full steps in SETUP_CLOUD.md §A.
 ### Next (batch order)
 2: H5 Instant tile · H6 Shelf review · S4 brand kit · W3 voice site report · W6 clip + subtitles · X3 privacy report.
 3: M3 one timeline. 4: Studio eraser (MagicTouch + LaMa-Dilated on the NPU/GPU, STUDIO_ERASER_PLAN.md) + SD 1.5 on the NPU.

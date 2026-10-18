@@ -12,7 +12,7 @@
    desktop/main.js).                                                                                                    */
 import { collectData, encryptBackup, decryptBackup, restoreData } from "./backup.js";
 
-export const SYNC_KEY = "attune:sync:v1";          // { pass (Drive passphrase, this device only), last, lastDrive, device }
+export const SYNC_KEY = "attune:sync:me:v1";       // { pass (Drive passphrase, this device only), last, lastHow } (cloud.js keeps attune:sync:v1)
 const ALPHA = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";    // no 0/O, 1/I: easy to read out loud
 
 /** A one-time pairing code: 8 characters (40 bits), shown as "K7Q2 9XFD". */
