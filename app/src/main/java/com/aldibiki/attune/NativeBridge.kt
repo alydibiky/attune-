@@ -1131,6 +1131,15 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             sm.requestPinShortcut(info, null)
         }
     } catch (e: Throwable) { false }
+    /** v6.40 Recall: keep notifications for 30 days (on/off — off forgets them), read them, forget some. */
+    @JavascriptInterface
+    fun recallNotesOn(on: Boolean) { try { RecallLog.setOn(ctx, on) } catch (e: Throwable) { } }
+    @JavascriptInterface
+    fun recallNotesIsOn(): Boolean = try { RecallLog.isOn(ctx) } catch (e: Throwable) { false }
+    @JavascriptInterface
+    fun recallNotes(): String = try { RecallLog.items(ctx) } catch (e: Throwable) { "[]" }
+    @JavascriptInterface
+    fun recallForget(idsJson: String) { try { RecallLog.forget(ctx, idsJson) } catch (e: Throwable) { } }
     @JavascriptInterface
     fun payForget(idsJson: String) { try { PayLog.remove(ctx, idsJson) } catch (e: Throwable) { } }
 

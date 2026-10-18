@@ -30,6 +30,8 @@ class PayListener : NotificationListenerService() {
             val all = "$title $text"
             // v6.40: the message alerts the person asked for ("tell me when Ahmed messages me") — before the money check
             try { MessageWatch.check(applicationContext, sbn, title, text) } catch (e: Exception) { }
+            // v6.40 Recall: kept for 30 days when the person switched it on (never SMS)
+            try { if (RecallLog.isOn(applicationContext)) RecallLog.add(applicationContext, sbn, try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }, title, text) } catch (e: Exception) { }
             if (!PayLog.looksLikeMoney(all)) return
             val label = try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }
             PayLog.add(applicationContext, JSONObject()

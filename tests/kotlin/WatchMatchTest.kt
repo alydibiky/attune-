@@ -12,6 +12,7 @@ fun main() {
     check(!WatchMatch.matches(ahmed, "com.whatsapp", "Mona", "Ahmed said hi"), "on WhatsApp the sender is the title, not a name in the text")
     check(WatchMatch.matches(ahmed, "com.google.android.gm", "Ahmed Fathy", "Invoice for October"), "Gmail from Ahmed (any app)")
     check(!WatchMatch.matches(ahmed, "com.google.android.apps.messaging", "Ahmed", "hi"), "SMS apps are never watched")
+    check(WatchMatch.isSms("com.hihonor.mms") && WatchMatch.isSms("com.example.sms.app") && !WatchMatch.isSms("org.thoughtcrime.securesms") && !WatchMatch.isSms("com.whatsapp"), "isSms: Honor and other SMS apps; Signal and WhatsApp are chats")
     check(!WatchMatch.matches(ahmed, "com.example.game", "Ahmed", "hi"), "games and other apps are not watched")
     val hr = WatchRule("2", listOf("hr@company.com"), app = "email")
     check(WatchMatch.matches(hr, "com.microsoft.office.outlook", "HR Team", "From hr@company.com: your contract"), "an email address in the text (Outlook)")

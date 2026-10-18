@@ -1,34 +1,67 @@
-"""v6.38 (upgrade D3) — Mind brings things back by itself: a message from Ahmed pasted into Instant (or his name typed on
-Home) shows what he promised and what he owes, from Chat X-Ray and People & plans; a tap opens that page.
-  PYTHONPATH=tests/pwshim:tests python3 tests/e2e_v740recall.py
+"""v6.40 Recall (agent C): one search over screenshots (their text read on the phone), kept notifications (never SMS), chats,
+Mind and payments — by meaning, in English and Egyptian Arabic, with dates and apps from the question.
+  PYTHONPATH=tests/pwshim:tests python3 tests/e2e_v740recall.py     (SHOTS=dir for screenshots)
 """
-import json, datetime
+import os, json, time, base64
 from playwright.sync_api import sync_playwright
 from harness import Env, new_page, check, real_errors, finish
 env = Env(); errors = []
-T = datetime.date.today(); iso = lambda n: (T + datetime.timedelta(days=n)).isoformat()
-XR = [{"id": "x1", "name": "Ahmed", "me": "Ali", "at": 1, "ledger": [], "unanswered": [], "stats": {}, "items": [{"type": "promise", "from": "Ahmed", "t": 1, "amount": 2000, "due": iso(-2), "what": "الباقي بكرة"}]}]
-LIFE = {"v": 1, "items": [{"id": "l1", "kind": "installment", "dir": "in", "person": "Ahmed", "amount": 1000, "currency": "EGP", "count": 5, "every": "month", "start": iso(-40), "paid": [0]}]}
-INIT = "try{localStorage.setItem('attune:xray:v1', %s);localStorage.setItem('attune:life:v1', %s);localStorage.setItem('attune:start','home')}catch(e){}" % (json.dumps(json.dumps(XR)), json.dumps(json.dumps(LIFE)))
+SHOTS = os.environ.get("SHOTS")
+now = int(time.time() * 1000); D = 86400000
+NOTES = [{"id": "n1", "pkg": "com.whatsapp", "app": "WhatsApp", "title": "Ahmed", "text": "العنوان: 12 شارع 9 المعادي، الدور التالت", "ts": now - 2 * D},
+         {"id": "n2", "pkg": "com.google.android.gm", "app": "Gmail", "title": "EgyptAir", "text": "Your booking MS 985 Cairo – Dubai, 2 Nov 08:40", "ts": now - 5 * D}]
+CHATS = [{"id": "c1", "title": "AC repair", "updated": now - 20 * D, "messages": [{"role": "user", "text": "The technician said the AC compressor warranty is 5 years"}]}]
+INIT = ("try{localStorage.setItem('attune:start','home');localStorage.setItem('attune:chats:v1'," + json.dumps(json.dumps(CHATS)) + ")}catch(e){}"
+        "(function w(){ var N = window.AttuneNative; if (!N) return setTimeout(w, 0); window.__on = false; window.__notes = " + json.dumps(NOTES) + ";"
+        "N.recallNotesIsOn = function () { return window.__on; }; N.recallNotesOn = function (on) { window.__on = on; if (!on) window.__notes = []; };"
+        "N.recallNotes = function () { return window.__on ? JSON.stringify(window.__notes) : '[]'; }; N.recallForget = function (j) { var g = JSON.parse(j); window.__notes = window.__notes.filter(function (n) { return g.indexOf(n.id) < 0; }); };"
+        "N.payAccess = function () { return true; }; N.payQueue = function () { return '[]'; };"
+        "N.readText = function (id, arg) { setTimeout(function () { window.__attuneNative.resolve(id, JSON.stringify({ text: '12:45\\nNour_Home\\nNetwork: Nour_Home\\nPassword: kiwi7781', lines: [] })); }, 30); };"
+        "})();")
+# a tiny real PNG (1x1) for the picker
+PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
 with sync_playwright() as p:
     br = p.chromium.launch()
-    ctx, page = new_page(br, env, errors, legacy_nav=False, extra_init=INIT)
+    ctx, page = new_page(br, env, errors, extra_init=INIT)
+    page.set_viewport_size({"width": 390, "height": 844})
     page.goto(env.url); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
-    page.fill("[data-testid=home-ask]", "remind me to call Ahmed")
-    page.wait_for_selector("[data-testid=recall-card]", timeout=4000)
-    items = page.locator("[data-testid=recall-item]").all_inner_texts()
-    check(any("Promised, not kept" in x and "الباقي بكرة" in x for x in items) and any("Owes you 4,000 EGP" in x for x in items), "Home: what Ahmed promised and still owes: %s" % items)
-    page.fill("[data-testid=home-ask]", "remind me to call mum")
-    page.wait_for_timeout(600)
-    check(page.locator("[data-testid=recall-card]").count() == 0, "…and nothing for someone with no records")
-    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'instant'}}))")
-    page.wait_for_selector("textarea", timeout=6000)
-    page.locator("textarea").first.fill("Ahmed: ya Ali I'll send it next week inshallah")
-    page.wait_for_selector("[data-testid=recall-card]", timeout=4000)
-    check("Remembered about Ahmed" in page.locator("[data-testid=recall-card]").inner_text(), "Instant: a message from Ahmed brings it back")
-    page.locator("[data-testid=recall-item]", has_text="Promised").first.click()
-    page.wait_for_selector("[data-testid=hub-part-xray][aria-pressed=true]", timeout=6000)
-    check(True, "a tap opens Chat X-Ray")
-    check(real_errors(errors) == [], "no page errors: " + str(real_errors(errors)[:3]))
+    check(page.evaluate("JSON.parse(localStorage.getItem('attune:chats:v1')||'[]').length") == 1, "a saved chat is there")
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'recall'}}))")
+    page.wait_for_selector("[data-testid=recall-page]", timeout=5000)
+    q = page.locator("[data-testid=recall-q]")
+    q.fill("AC warranty")
+    check(page.locator("[data-testid=recall-hit]").count() >= 1 and "AC repair" in page.locator("[data-testid=recall-hit]").first.inner_text(), "“AC warranty” finds the chat about the compressor")
+    # keep notifications
+    page.click("[data-testid=recall-notes-toggle]"); page.wait_for_timeout(200)
+    check(page.evaluate("window.__on") is True, "Keep my notifications switches the phone's keeping on")
+    q.fill("العنوان اللي أحمد بعته على الواتس"); page.wait_for_timeout(200)
+    check("Ahmed" in page.locator("[data-testid=recall-hit]").first.inner_text(), "«العنوان اللي أحمد بعته على الواتس» → Ahmed's WhatsApp")
+    q.fill("flight ticket"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=recall-hit]").count() == 1 and "EgyptAir" in page.locator("[data-testid=recall-hit]").first.inner_text(), "“flight ticket” → the booking email (by meaning: booking)")
+    page.locator("[data-testid=recall-hit]").first.click(); page.wait_for_selector("[data-testid=recall-open]")
+    check("MS 985" in page.locator("[data-testid=recall-open]").inner_text(), "tapping a notification shows it in full")
+    page.click("[data-testid=recall-forget]"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=recall-hit]").count() == 0 and page.evaluate("window.__notes.length") == 1, "Forget removes it from the phone")
+    # add a screenshot: its text is read and it is kept in Mind
+    page.set_input_files("[data-testid=recall-add-file]", files=[{"name": "Screenshot_20261010.png", "mimeType": "image/png", "buffer": PNG}])
+    page.wait_for_function("!document.querySelector('[data-testid=recall-add]').innerText.includes('Reading')", timeout=8000)
+    page.wait_for_timeout(300)
+    q.fill("wifi password"); page.wait_for_timeout(200)
+    hit = page.locator("[data-testid=recall-hit]").first
+    check(hit.count() == 1 and "Nour_Home" in hit.inner_text() and "Password" in hit.inner_text(), "the screenshot is found by the text read in it: " + (hit.inner_text().replace("\n", " | ") if hit.count() else ""))
+    q.fill("باسورد الواي فاي"); page.wait_for_timeout(200)
+    check("Nour_Home" in page.locator("[data-testid=recall-hit]").first.inner_text(), "…also in Egyptian Arabic: «باسورد الواي فاي»")
+    mem = page.evaluate("JSON.parse(localStorage.getItem('attune:memory:v1')||'[]')")
+    check(any(r.get("kind") == "photo" and "kiwi7781" in r.get("text", "") for r in mem), "the screenshot is kept in Mind with its text")
+    q.fill("screenshots"); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=recall-understood]").count() == 1 and page.locator("[data-testid=recall-hit]").count() == 1, "“screenshots” lists only screenshots and says what it looked in")
+    if SHOTS: page.screenshot(path=os.path.join(SHOTS, "recall.png"))
+    # switching off forgets the notifications
+    page.click("[data-testid=recall-notes-toggle]"); page.wait_for_timeout(200)
+    q.fill("Ahmed"); page.wait_for_timeout(200)
+    check(page.evaluate("window.__on") is False and page.locator("[data-testid=recall-hit]").count() == 0, "turning it off forgets the kept notifications")
+    ctx.close()
+    check(not real_errors(errors), "no page errors: %s" % real_errors(errors)[:3])
     br.close()
+env.close()
 finish()

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
-import { Target, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase } from "lucide-react";
+import { Target, Search, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { payOpts, homeCurrency } from "./locale.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -25,6 +25,7 @@ import { LearnPage, NewsPage, syncDaily, lessonAhead } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
 import { MindPage, keepPicture } from "./mind-ui.jsx";
+import { RecallPage } from "./lookback-ui.jsx";   // v6.40 Recall (agent C)
 import { ShelfPage } from "./shelf-ui.jsx";
 import * as SH from "./shelf.js";
 import { notesFromText } from "./shelf-import.js";
@@ -7427,6 +7428,7 @@ const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.s
 
 const MORE_TOOLS = [
   ["missions", "Missions", "A goal with a date — Attune works on it every day and shows your real chance", Target],   // v6.37
+  ["recall", "Recall", "Find anything on your phone by meaning — screenshots, notifications, chats, notes", Search],   // v6.40 (agent C)
   ["timeline", "Timeline", "Everything coming up — reminders, dates, payments, promises — on one list", CalendarDays],   // v6.38 (M3)
   ["scout", "Scout", "Hunts for a flat, a car, a product or a job for days — tells you when something good appears", Binoculars],   // v6.28
   ["lifeask", "Ask your life", "One question about your money, people, health, meals and deadlines — answered from your own data", Sparkles],   // v6.28
@@ -8017,7 +8019,7 @@ export default function App() {
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
   // v6.31 minimal: short tab names (the page's own title stays full)
-  const TAB_SHORT = { timeline: "Timeline", missions: "Missions", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
+  const TAB_SHORT = { timeline: "Timeline", missions: "Missions", recall: "Recall", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
     pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Prompts", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
@@ -10141,6 +10143,10 @@ export default function App() {
           <TimelinePage navTo={navTo} />
         ) : mode === "missions" ? (
           <MissionsPage flash={flash} />
+        ) : mode === "recall" ? (
+          <RecallPage memory={memory} remember={remember} native={NATIVE} readText={readTextAny} flash={flash}
+            openRec={(r) => { setOpenRec(r); setMode("memory"); }} openChat={(id) => { setOpenChatId(id); navTo("chat"); }}
+            openArtifact={(id) => { const a = loadArtifacts().find((x) => x.id === id); if (a) setArtifact(a); }} />
         ) : mode === "radar" ? (
           <RadarPage pro={proActive} openPlan={() => setShowUpgrade(true)} flash={flash} N={NATIVE}
             readText={readTextAny}

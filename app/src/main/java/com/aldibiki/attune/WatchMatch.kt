@@ -25,7 +25,10 @@ object WatchMatch {
     )
     /** Every app a rule with app = "any" listens to (chats and email; never SMS). */
     val ANY: Set<String> = APPS.values.flatten().toSet() + setOf("com.viber.voip", "jp.naver.line.android", "com.imo.android.imoim", "com.discord", "com.linkedin.android")
-    private val SMS = setOf("com.google.android.apps.messaging", "com.samsung.android.messaging", "com.android.mms", "com.android.messaging")
+    private val SMS = setOf("com.google.android.apps.messaging", "com.samsung.android.messaging", "com.android.mms", "com.android.messaging",
+        "com.hihonor.mms", "com.huawei.message", "com.miui.mms", "com.oneplus.mms", "com.coloros.mms", "com.vivo.message")
+    /** v6.40: an SMS app (by its name or its kind) — Attune never reads these, for alerts or for Recall. */
+    fun isSms(pkg: String): Boolean = pkg in SMS || Regex("(^|\\.)(mms|sms)(\\.|$)|\\.messaging$|\\.message$").containsMatchIn(pkg)
 
     fun fold(s: String): String = s.lowercase()
         .replace(Regex("[أإآ]"), "ا").replace("ى", "ي").replace(Regex("ة(?=\\s|$)"), "ه")
@@ -39,7 +42,7 @@ object WatchMatch {
     }
 
     fun appOk(rule: WatchRule, pkg: String): Boolean {
-        if (pkg in SMS) return false
+        if (isSms(pkg)) return false
         return if (rule.app == "any") pkg in ANY else pkg in (APPS[rule.app] ?: emptySet())
     }
 
