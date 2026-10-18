@@ -6,11 +6,11 @@
 /** The 6 places in the sidebar: [id, label, the page it opens, members (every mode that lives there)]. */
 export const HUBS = [
   ["home", "Home", "home", ["home"]],
-  ["chat", "Chat", "chat", ["chat", "assistants", "projects", "skills", "artifacts", "instant", "xray", "lifeask"]],
+  ["chat", "Chats", "chat", ["chat", "assistants", "projects", "skills", "artifacts", "instant", "xray", "lifeask"]],
   ["money", "Money", "money", ["money", "guardian", "radar", "life", "deal", "scout", "reminders"]],
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
   ["learn", "Learn", "learn", ["learn", "coach", "memory", "shelf", "knowledge", "news"]],
-  ["tools", "Tools", "tools", ["tools", "convert", "translate", "pdfchat", "slides", "cv", "video", "map", "travel", "studio",
+  ["tools", "Work", "tools", ["tools", "convert", "translate", "pdfchat", "slides", "cv", "video", "map", "travel", "studio",
     "code", "improve", "compress", "humanize", "copilot", "library", "ask", "business", "crane", "field", "fleet", "guide", "privacy"]],
 ];
 

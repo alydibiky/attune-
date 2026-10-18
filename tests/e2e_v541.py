@@ -54,12 +54,13 @@ with sync_playwright() as p:
     chip0 = page.locator("header button").filter(has_text=re.compile("Blaze|Glow|Spark|Core|Sense|Zenith")).first.inner_text()
 
     # ---- #13 choosing a model that isn't on the phone offers its download; the chip keeps the running one ----
-    page.locator("[data-testid=tier-xl]").click(); page.wait_for_timeout(200)
-    check(page.locator("[data-testid=engine-download-selected]").count() == 1 and "Download" in page.locator("[data-testid=engine-download-selected]").inner_text(), "tapping Zenith offers its download")
-    check(page.locator("[data-testid=engine-loaded]").inner_text().find("Zenith") < 0, "…and never says “Zenith loaded” while another model runs")
+    # (v6.35: Zenith is computer-only now — the same check with Core+, a model this phone can download)
+    page.locator("[data-testid=tier-md-hi]").click(); page.wait_for_timeout(200)
+    check(page.locator("[data-testid=engine-download-selected]").count() == 1 and "Download" in page.locator("[data-testid=engine-download-selected]").inner_text(), "tapping Core+ offers its download")
+    check(page.locator("[data-testid=engine-loaded]").inner_text().find("Core+") < 0, "…and never says “Core+ loaded” while another model runs")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(250)
     chip1 = page.locator("header button").filter(has_text=re.compile("Blaze|Glow|Spark|Core|Sense|Zenith")).first.inner_text()
-    check(chip1 == chip0 and "Zenith" not in chip1, "the header still names the model that is running (%s)" % chip1)
+    check(chip1 == chip0 and "Core+" not in chip1, "the header still names the model that is running (%s)" % chip1)
 
     # ---- #9/#10 a website request goes the code route: clean HTML, Preview card ----
     queue(page, [HTML] * 3)

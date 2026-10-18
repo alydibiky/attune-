@@ -220,7 +220,8 @@ export function parseLife(text, { now = Date.now(), currency = homeCurrency() } 
 export function scheduleOf(c, now = Date.now()) {
   let n = c.count > 0 ? c.count : c.every ? 12 : 1;
   // a "regular" (the maid every Saturday) never ends: every day from its start up to the next one ahead
-  if (c.kind === "regular" && c.start) { const days = (now - Date.parse(c.start + "T12:00:00")) / 86400000; n = Math.max(1, Math.floor(days / (c.every === "month" ? 30.44 : c.every === "year" ? 365.25 : 7)) + 2); }
+  // (v6.36: counted from the start DAY — before noon "today 12:00" is still ahead, and the day's box went missing)
+  if (c.kind === "regular" && c.start) { const days = Math.max(0, (Date.parse(iso(new Date(now)) + "T12:00:00") - Date.parse(c.start + "T12:00:00")) / 86400000); n = Math.max(2, Math.floor(days / (c.every === "month" ? 30.44 : c.every === "year" ? 365.25 : 7)) + 2); }
   let d = c.start ? new Date(c.start + "T12:00:00") : new Date(now);
   if (!c.start) { d.setHours(12, 0, 0, 0); if (c.every === "month") d = new Date(d.getFullYear(), d.getMonth() + 1, 1, 12); }
   const out = [];

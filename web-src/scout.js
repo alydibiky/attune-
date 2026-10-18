@@ -31,7 +31,10 @@ export function parseGoal(text) {
     if (KIND_WORDS[5][1].test(t)) kind = "service"; else if (KIND_WORDS[3][1].test(t)) kind = "car";
   }
   if (kind === "buy-home" && KIND_WORDS[0][1].test(t)) kind = "rent";
+  // v6.35: gold — "tell me when 21 karat gold is under 3,500 a gram" (the price of a gram, not ads)
+  if (/\bgold\b|ذهب|دهب|الدهب|الذهب/.test(t) && !/\b(ring|necklace|bracelet|chain)\b|خاتم|سلسله|سلسلة|غويشه|غويشة/.test(t)) kind = "gold";
   const g = { raw, kind, place: placeOf(raw), max: null, min: null, wish: [] };
+  if (kind === "gold") { const k = /(24|22|21|18)\s*(?:k\b|kt|karat|carat|قيراط|عيار)|(?:عيار|karat)\s*(24|22|21|18)/i.exec(latin(t)); g.karat = k ? +(k[1] || k[2]) : 21; }
   // money: "under 15,000", "max 900k", «أقل من ١٥ ألف», «في حدود 2 مليون», "between 10k and 15k"
   const M = (s) => { s = s.replace(/,/g, ""); const m = /(\d+(?:\.\d+)?)\s*(k|الف|ألف|آلاف|thousand|m|مليون|million)?/i.exec(s); if (!m) return null; let v = +m[1]; const u = (m[2] || "").toLowerCase(); if (/^(k|الف|ألف|آلاف|thousand)$/.test(u)) v *= 1000; else if (/^(m|مليون|million)$/.test(u)) v *= 1e6; return v; };
   const lt = /(?:under|below|less than|max(?:imum)?|up to|budget|not more than|<|اقل من|أقل من|لحد|حتي|حتى|في حدود|ميزانيه|ميزانية|مش اكتر من|ما يزيدش عن)\s*([\d.,]+\s*(?:k|الف|ألف|آلاف|thousand|m|مليون|million)?)/i.exec(latin(raw));
@@ -224,6 +227,11 @@ export function readAd(hit, g) {
   yes("fullTime", /(full.time|دوام كامل)/, /(part.time|دوام جزئي)/);
   yes("warranty", /(warranty|ضمان)/, /(no warranty|بدون ضمان)/);
   if (g && g.kind === "job" && (m = /(\d{1,2})\s*(?:\+|-\s*\d{1,2})?\s*(?:years?|yrs?|سنين|سنوات|سنه|سنة)\s*(?:of\s+)?(?:experience|exp|خبره|خبرة)/i.exec(t))) { out.facts.exp = +m[1]; q("exp", m[0]); }
+  // v6.35 the scam check: the phone numbers in the ad, and words that ask for money before you see the thing
+  out.phones = [...new Set((latin(text).match(/(?:\+?20[\s-]?)?0?1[0125][\s-]?\d{3,4}[\s-]?\d{4}(?!\d)/g) || []).map((x) => "0" + x.replace(/\D/g, "").replace(/^20/, "").replace(/^0/, "")))].slice(0, 3);
+  const flag = RED_FLAGS.exec(f) || RED_FLAGS.exec(t.toLowerCase());
+  if (flag) out.redFlag = snip(text, Math.max(0, latin(text).toLowerCase().indexOf(flag[0])), flag[0].length, 18) || flag[0];
+  out.short = text.replace(/\s+/g, " ").trim().length < 160;
   out.item = normItem(out.title + " " + text.slice(0, 300));
   out.facts.place = (g && g.place && f.includes(fold(g.place))) ? g.place : placeOf(text.slice(0, 600));
   if (out.facts.place) q("place", out.facts.place);
@@ -242,15 +250,16 @@ export function close1(a, b) {
   for (let i = 0; i < l.length; i++) if (l.slice(0, i) + l.slice(i + 1) === s) return true;
   return false;
 }
+const RED_FLAGS = /\b(deposit (first|before)|pay (first|before|in advance)|advance payment before|send (the )?money|transfer (the )?money|western union|moneygram|gift ?cards?|shipping only|i am (abroad|outside egypt)|before (viewing|inspection|you see))\b|عربون قبل|مقدم قبل المعاينه|مقدم قبل المعاينة|قبل المعاينه|قبل المعاينة|حول الفلوس|حول المبلغ|حوّل المبلغ|تحويل قبل|ابعت الفلوس|انا مسافر|أنا مسافر|انا بره مصر|أنا بره مصر|خارج مصر|بالشحن فقط|شحن فقط/i;
 // ---- 4. checking every wish against the ad -----------------------------------------------------------------------------------------
 /** → { ok: [say], bad: [say], unknown: [say], score 0–100, out (a hard "no") }. Every ✓ / ✗ comes with the ad's own words. */
 export function check(ad, g) {
   const ok = [], bad = [], unknown = [];
-  const F = ad.facts;
+  const F = ad.facts, Q = ad.quotes || {};
   const line = (w, good, quote) => (good === true ? ok : good === false ? bad : unknown).push({ k: w.k, en: w.say[0], ar: w.say[1], quote: quote || "" });
   // the budget
-  if (g.max) line({ k: "price", say: [`under ${num(g.max)}`, `أقل من ${num(g.max)}`] }, F.price == null ? null : F.price <= g.max * 1.0001, ad.quotes.price);
-  if (g.min) line({ k: "minPrice", say: [`over ${num(g.min)}`, `أكثر من ${num(g.min)}`] }, F.price == null ? null : F.price >= g.min, ad.quotes.price);
+  if (g.max) line({ k: "price", say: [`under ${num(g.max)}`, `أقل من ${num(g.max)}`] }, F.price == null ? null : F.price <= g.max * 1.0001, Q.price);
+  if (g.min) line({ k: "minPrice", say: [`over ${num(g.min)}`, `أكثر من ${num(g.min)}`] }, F.price == null ? null : F.price >= g.min, Q.price);
   if (g.model && g.model.must.length) {
     const have = " " + (ad.item || normItem(ad.title)) + " ";
     // v6.35 ("Tuscon" for Tucson): a word of 5+ letters also matches with one letter wrong, missing, extra or two swapped
@@ -261,8 +270,8 @@ export function check(ad, g) {
     line({ k: "model", say: [`exactly ${g.model.must.join(" ")}`, `بالضبط ${g.model.must.join(" ")}`] }, miss.length ? false : extra.length ? false : true, miss.length ? "missing: " + miss.join(", ") : extra.length ? "it is a " + extra.join(" / ") + " model" : ad.title.slice(0, 60));
   }
   // a rent: a price a monthly rent can't be (a sale ad) is out
-  if (g.kind === "rent" && F.price && F.price > 300000 && (!g.max || g.max < 300000)) line({ k: "price", say: ["a monthly rent (this is a sale price)", "إيجار شهري (هذا سعر بيع)"] }, false, ad.quotes.price);
-  if (g.place) line({ k: "place", say: [`in ${g.place}`, `في ${g.place}`] }, F.place ? fold(F.place) === fold(g.place) || fold(F.place).includes(fold(g.place)) || fold(g.place).includes(fold(F.place)) : null, ad.quotes.place);
+  if (g.kind === "rent" && F.price && F.price > 300000 && (!g.max || g.max < 300000)) line({ k: "price", say: ["a monthly rent (this is a sale price)", "إيجار شهري (هذا سعر بيع)"] }, false, Q.price);
+  if (g.place) line({ k: "place", say: [`in ${g.place}`, `في ${g.place}`] }, F.place ? fold(F.place) === fold(g.place) || fold(F.place).includes(fold(g.place)) || fold(g.place).includes(fold(F.place)) : null, Q.place);
   for (const w of g.wish) {
     let r = null;
     if (w.k === "beds") r = F.beds == null ? null : F.beds >= w.min;
@@ -272,7 +281,7 @@ export function check(ad, g) {
     else if (w.k === "km") r = F.km == null ? null : F.km <= w.max;
     else if (w.k === "exp") r = F.exp == null ? null : F.exp <= w.have;
     else r = F[w.k] == null ? null : F[w.k];
-    line(w, r, ad.quotes[w.k === "notGround" ? "floor" : w.k]);
+    line(w, r, Q[w.k === "notGround" ? "floor" : w.k]);
   }
   const hard = bad.some((b) => ["price", "minPrice", "beds", "year", "km", "notGround", "place", "model", "exp"].includes(b.k));
   const total = ok.length + bad.length + unknown.length || 1;
@@ -297,15 +306,77 @@ export function mergeTwins(ads) {
 
 // ---- 6. is the price fair? ----------------------------------------------------------------------------------------------------------------
 const median = (xs) => { const s = [...xs].sort((a, b) => a - b); return s.length ? (s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2) : null; };
-/** Compared with similar ads Scout has seen for this goal: per m² for homes (when sizes are known), else the price. → { pct, basis, n } | null */
-export function fairness(ad, seen) {
+/** v6.35 the fair-price meter (Ali: "this should already be in scouting so it's more accurate"): the ad against ads of THE SAME
+    thing — a car of the same make / model within a year (each year ≈ 7 %, each 10,000 km ≈ 0.8 % — both corrected for), a home
+    with ±1 bedroom per m² when sizes are known — from this goal and every earlier search (the market book). Needs 4 like it.
+    → { pct, basis, n, median, low, high, verdict: "cheap" | "fair" | "high" | "too-cheap" } | null */
+const YEAR_K = 0.07, KM_K = 0.008;
+export function fairness(ad, seen, g = null, market = []) {
   const F = ad.facts; if (!F.price) return null;
-  const like = (seen || []).filter((s) => s.id !== ad.id && s.facts && s.facts.price && s.facts.cur === F.cur && (!F.beds || !s.facts.beds || Math.abs(s.facts.beds - F.beds) <= 1));
+  const pool = [...(seen || []), ...(market || [])].filter((s) => s && s.id !== ad.id && s.facts && s.facts.price && s.facts.cur === F.cur);
+  const car = (g && g.kind === "car") || (F.year && F.km != null);
+  let like = pool.filter((s) => !F.beds || !s.facts.beds || Math.abs(s.facts.beds - F.beds) <= 1);
+  if (car && F.year) like = like.filter((s) => !s.facts.year || Math.abs(s.facts.year - F.year) <= 1);
+  const adj = (s) => {   // what that ad would ask for a car of THIS ad's year and km
+    let v = s.facts.price;
+    if (car && F.year && s.facts.year) v *= Math.pow(1 + YEAR_K, F.year - s.facts.year);
+    if (car && F.km != null && s.facts.km != null) v *= Math.max(0.85, Math.min(1.15, 1 - KM_K * (F.km - s.facts.km) / 10000));
+    return v;
+  };
   const perM = F.area && like.filter((s) => s.facts.area).length >= 4;
-  const vals = perM ? like.filter((s) => s.facts.area).map((s) => s.facts.price / s.facts.area) : like.map((s) => s.facts.price);
+  const vals = perM ? like.filter((s) => s.facts.area).map((s) => s.facts.price / s.facts.area) : like.map(adj);
   if (vals.length < 4) return null;
-  const mid = median(vals), mine = perM ? F.price / F.area : F.price;
-  return { pct: Math.round(((mine - mid) / mid) * 100), basis: perM ? "m2" : "price", n: vals.length, median: perM ? Math.round(mid) : Math.round(mid) };
+  const sorted = [...vals].sort((a, b) => a - b), q = (p) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.round(p * (sorted.length - 1))))];
+  const mid = median(vals), mine = perM ? F.price / F.area : F.price, pct = Math.round(((mine - mid) / mid) * 100);
+  const low = q(0.25), high = q(0.75);
+  const verdict = pct <= -35 ? "too-cheap" : mine < low ? "cheap" : mine > high ? "high" : "fair";
+  return { pct, basis: perM ? "m2" : "price", n: vals.length, median: Math.round(mid), low: Math.round(low), high: Math.round(high), verdict };
+}
+/** The market book: what every search has seen, by the thing it is (make + model words, or kind + place + rooms) — so a new goal
+    knows the market at once. book = { key: [ad facts…] } (≤ 120 each, the newest kept). */
+export const MARKET_KEY = "attune:scout:market:v1";
+export function marketKey(g) {
+  if (!g) return "";
+  if ((g.kind === "car" || g.kind === "product") && g.model && g.model.must.length) return g.kind + ":" + [...g.model.must].sort().join(" ");
+  if (g.kind === "rent" || g.kind === "buy-home") return g.kind + ":" + fold(g.place || "");
+  return "";
+}
+export function addToMarket(book, g, ads, now = Date.now()) {
+  const k = marketKey(g); if (!k) return book || {};
+  const b = { ...(book || {}) }, list = [...(b[k] || [])];
+  for (const a of ads || []) if (a.facts && a.facts.price) { const i = list.findIndex((x) => x.id === a.id); const rec = { id: a.id, at: now, facts: { price: a.facts.price, cur: a.facts.cur, year: a.facts.year, km: a.facts.km, area: a.facts.area, beds: a.facts.beds } }; if (i >= 0) list[i] = rec; else list.push(rec); }
+  b[k] = list.slice(-120); return b;
+}
+export function loadMarket(ls = typeof localStorage !== "undefined" ? localStorage : null) { try { return JSON.parse((ls && ls.getItem(MARKET_KEY)) || "{}") || {}; } catch (e) { return {}; } }
+export function saveMarket(b, ls = typeof localStorage !== "undefined" ? localStorage : null) { try { ls && ls.setItem(MARKET_KEY, JSON.stringify(b)); } catch (e) {} return b; }
+
+/** v6.35 the scam check: → [{ k, en, ar }] — each a reason to be careful with this ad, by code. */
+export function risksOf(ad, seen = [], twins = []) {
+  const out = [];
+  if (ad.fair && ad.fair.verdict === "too-cheap") out.push({ k: "cheap", en: `${-ad.fair.pct}% under the market — the most common sign of a fake ad; see it before paying anything`, ar: `أرخص من السوق بـ ${-ad.fair.pct}% — دي أشهر علامة للإعلان المضروب؛ شوفه بنفسك قبل ما تدفع أي حاجة` });
+  if (ad.redFlag) out.push({ k: "money", en: `Asks for money before you see it: «${ad.redFlag}»`, ar: `بيطلب فلوس قبل ما تشوف الحاجة: «${ad.redFlag}»` });
+  const phones = ad.phones || [];
+  if (phones.length) {
+    const others = (seen || []).filter((s) => s.id !== ad.id && (s.phones || []).some((p) => phones.includes(p)));
+    const diff = others.filter((s) => normItem(s.title || "").split(" ").slice(0, 3).join(" ") !== normItem(ad.title || "").split(" ").slice(0, 3).join(" "));
+    if (diff.length >= 2) out.push({ k: "phone", en: `The same phone number is on ${diff.length + 1} different ads — a dealer, or a fake`, ar: `نفس رقم التليفون على ${diff.length + 1} إعلانات مختلفة — يا تاجر يا إعلان مضروب` });
+  }
+  const re = (ad.history || []).length >= 2 && (seen || []).filter((s) => s.id !== ad.id && twinKey(s) && twinKey(s) === twinKey(ad)).length;
+  if (re >= 2) out.push({ k: "repost", en: `Posted again ${re} times — it hasn't sold; there is room to bargain`, ar: `اتنزل تاني ${re} مرات — مابعش؛ فيه مجال للفصال` });
+  if ((twins || []).length) out.push({ k: "photo", en: `The same photo is in another ad (${twins[0].site}) — ask for a new photo or a video call`, ar: `نفس الصورة في إعلان تاني (${twins[0].site}) — اطلب صورة جديدة أو مكالمة فيديو` });
+  if (ad.short && !(ad.check && ad.check.ok.length >= 2)) out.push({ k: "thin", en: "Very few details — ask for the papers and more photos", ar: "تفاصيل قليلة جدًا — اطلب الورق وصور أكتر" });
+  return out;
+}
+/** v6.35 the offer helper: a first offer from the market — under the asking price, never under the cheap end of the market. */
+export function offerFor(ad) {
+  const F = ad.facts; if (!F.price) return null;
+  const f = ad.fair, step = F.price >= 200000 ? 5000 : F.price >= 20000 ? 500 : 50;
+  let o = F.price * 0.92;
+  if (f && f.basis === "price") o = Math.min(o, f.median * 0.97);
+  if (f && f.basis === "price" && f.low) o = Math.max(o, f.low * 0.97);
+  if (f && f.basis === "m2" && F.area) o = Math.min(o, f.median * F.area * 0.97);
+  o = Math.min(o, F.price * 0.97);
+  return Math.round(o / step) * step;
 }
 
 // ---- 7. learning from 👍 / 👎 -----------------------------------------------------------------------------------------------------------
@@ -325,17 +396,20 @@ export function learn(taste, ad, up) {
 // ---- 8. one run of a goal --------------------------------------------------------------------------------------------------------------
 /** hits from the searches → this run's results, merged with what was seen before.
  *  goal = { id, g, seen: [ad], taste, votes: {id: 1|-1} } → { found: [ad with check/fair/score], fresh: [ids new this run], seen }. */
-export function runGoal(goal, hits, { now = Date.now() } = {}) {
+export function runGoal(goal, hits, { now = Date.now(), market = null } = {}) {
   const g = goal.g, seenIds = new Set((goal.seen || []).map((s) => s.id));
   const ads = mergeTwins((hits || []).filter((h) => h && h.url && isAdPage(h.url, h.text || "", h.title || "")).map((h) => readAd(h, g)));
   const seen = [...(goal.seen || [])];
   for (const a of ads) { const i = seen.findIndex((s) => s.id === a.id); const rec = { ...a, firstSeen: i >= 0 ? seen[i].firstSeen : now, lastSeen: now, history: [...((i >= 0 && seen[i].history) || []), ...(a.facts.price ? [[now, a.facts.price]] : [])].slice(-30) }; if (i >= 0) seen[i] = rec; else seen.push(rec); }
   const found = seen.filter((a) => a.lastSeen >= now - 14 * 86400000 && (goal.votes || {})[a.id] !== -1).map((a) => {
-    const c = check(a, g), fair = fairness(a, seen);
+    const c = check(a, g), fair = fairness(a, seen, g, market ? market[marketKey(g)] : []);
     const score = Math.max(0, Math.min(100, c.score + tasteNudge(a, goal.taste) + (fair && fair.pct <= -5 ? 8 : fair && fair.pct >= 15 ? -8 : 0) + ((goal.votes || {})[a.id] === 1 ? 20 : 0)));
     const dropped = a.history && a.history.length >= 2 && a.history[a.history.length - 1][1] < a.history[0][1] ? a.history[0][1] - a.history[a.history.length - 1][1] : 0;
-    return { ...a, check: c, fair, score, dropped };
-  }).filter((a) => !a.check.out).sort((a, b) => b.score - a.score);
+    const r0 = { ...a, check: c, fair, score, dropped, followed: !!(goal.follow || {})[a.id] };
+    const risks = risksOf(r0, seen);
+    // a find with a warning never ranks as a top match; a followed ad always stays in the list
+    return { ...r0, risks, score: Math.max(0, r0.score - 12 * risks.filter((x) => x.k === "cheap" || x.k === "money" || x.k === "phone").length) };
+  }).filter((a) => !a.check.out || a.followed).sort((a, b) => (b.followed - a.followed) || b.score - a.score);
   // a product: the same item in several stores → the cheapest is marked (and ranks first among equals)
   if (g.kind === "product") {
     const priced = found.filter((a) => a.facts.price && a.check.ok.some((x) => x.k === "model"));
@@ -346,20 +420,41 @@ export function runGoal(goal, hits, { now = Date.now() } = {}) {
 }
 /** The few worth a notification: new this run (or cheaper than before) and strong. */
 export function worthTelling(run, min = 75) {
-  return run.found.filter((a) => (run.fresh.includes(a.id) || a.dropped > 0) && a.score >= min).slice(0, 3);
+  return run.found.filter((a) => (a.followed && (a.dropped > 0 || a.sold)) || ((run.fresh.includes(a.id) || a.dropped > 0) && a.score >= min && !(a.risks || []).some((x) => x.k === "cheap" || x.k === "money"))).slice(0, 3);
+}
+/** v6.35 follow one ad: Scout re-reads its page on every run — a lower price or "sold" is told at once.
+    page = { text, title } of the ad's page now (or null when it is gone). → the goal with that ad's record updated. */
+const SOLD = /\b(sold|no longer available|this ad (is|has been) (removed|deleted|expired)|ad not found|page not found|404)\b|تم البيع|اتباع|اتباعت|الإعلان غير متاح|الاعلان غير متاح|لم يعد متاح/i;
+export function followUpdate(goal, id, page, now = Date.now()) {
+  const seen = [...(goal.seen || [])], i = seen.findIndex((s) => s.id === id); if (i < 0) return goal;
+  const old = seen[i];
+  if (!page || SOLD.test(String(page.text || "").slice(0, 4000) + " " + (page.title || ""))) { seen[i] = { ...old, sold: true, lastSeen: now }; return { ...goal, seen }; }
+  const a = readAd({ url: old.url, title: page.title || old.title, text: page.text, image: old.image }, goal.g);
+  const price = a.facts.price || old.facts.price;
+  seen[i] = { ...old, facts: { ...old.facts, ...a.facts, price }, lastSeen: now, sold: false, history: [...(old.history || []), ...(price && price !== (old.history || []).slice(-1)[0]?.[1] ? [[now, price]] : [])].slice(-30) };
+  return { ...goal, seen };
+}
+export const toggleFollow = (goal, id) => { const f = { ...(goal.follow || {}) }; if (f[id]) delete f[id]; else f[id] = 1; return { ...goal, follow: f }; };
+
+/** v6.35 gold watch: a gram of this karat at this price → is it at the goal yet? (pure 24k USD/oz + the exchange rate, by code) */
+export function goldGram(usdOz, usdToLocal, karat = 21) { return usdOz && usdToLocal ? Math.round(usdOz / 31.1034768 * usdToLocal * karat / 24) : null; }
+export function goldCheck(g, perGram) {
+  if (!perGram) return { known: false };
+  return { known: true, perGram, hit: (g.max ? perGram <= g.max : false) || (g.min ? perGram >= g.min : false) };
 }
 
 // ---- 9. the message to the seller ----------------------------------------------------------------------------------------------------------
 export function sellerMessage(ad, g, { ar = true } = {}) {
-  const F = ad.facts, fair = ad.fair;
-  const offer = F.price ? Math.round((fair && fair.pct > 0 ? F.price * (1 - Math.min(fair.pct, 15) / 100) : F.price * 0.95) / 500) * 500 : null;
+  // v6.35 (Ali: Egyptian Arabic, and the offer from the market): the first offer is offerFor() — code, not a guess
+  const F = ad.facts, fair = ad.fair, offer = offerFor(ad);
   const what = ad.title || g.what;
+  const like = fair ? (fair.basis === "m2" ? num(fair.median) + (ar ? " للمتر" : " per m²") : num(fair.median)) : "";
   if (ar) return [`السلام عليكم، بخصوص إعلان «${what}»${ad.site ? " على " + ad.site : ""}.`,
-    `هل ما زال متاحًا؟${F.price ? ` وهل السعر ${num(F.price)} قابل للتفاوض؟` : ""}`,
-    fair && fair.pct > 0 ? `الإعلانات المشابهة${fair.basis === "m2" ? " في نفس المنطقة" : ""} في حدود ${fair.basis === "m2" ? num(fair.median) + " للمتر" : num(fair.median)}، فهل يمكن ${num(offer)}؟` : offer ? `هل يمكن ${num(offer)}؟` : "",
+    `لسه متاح؟${F.price ? ` والسعر ${num(F.price)} فيه فصال؟` : ""}`,
+    fair && fair.pct > 0 ? `الإعلانات اللي زيه${fair.basis === "m2" ? " في نفس المنطقة" : ""} في حدود ${like}، ينفع ${num(offer)}؟` : offer ? `ينفع ${num(offer)}؟` : "",
     "شكرًا."].filter(Boolean).join("\n");
   return [`Hello, about your ad "${what}"${ad.site ? " on " + ad.site : ""}.`, `Is it still available?${F.price ? ` Is ${num(F.price)} negotiable?` : ""}`,
-    fair && fair.pct > 0 ? `Similar listings are around ${fair.basis === "m2" ? num(fair.median) + " per m²" : num(fair.median)} — would you take ${num(offer)}?` : offer ? `Would you take ${num(offer)}?` : "", "Thank you."].filter(Boolean).join("\n");
+    fair && fair.pct > 0 ? `Similar listings are around ${like} — would you take ${num(offer)}?` : offer ? `Would you take ${num(offer)}?` : "", "Thank you."].filter(Boolean).join("\n");
 }
 
 // ---- the store --------------------------------------------------------------------------------------------------------------------------

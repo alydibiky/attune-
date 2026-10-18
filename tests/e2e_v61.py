@@ -16,11 +16,13 @@ with sync_playwright() as p:
     page.locator("header button:has-text('No model')").click(); page.wait_for_timeout(300)
     ids = page.evaluate("[...document.querySelectorAll('[data-testid^=tier-]')].map(e => e.dataset.testid)")
     check("tier-xs" not in ids and "tier-sm" not in ids, "12 GB phone: Spark (0.8B) and Glow (2B) are not offered (%s)" % ", ".join(i[5:] for i in ids))
-    check("tier-ultra" in ids and "tier-moe-lg" in ids, "v6.12: the high-end models stay listed on a flagship phone (their card says they need more memory)")
-    check("tier-md" in ids and "tier-xl" in ids, "…the good ones are (Core, Zenith)")
+    # v6.35 (Ali: "remove Core Max and higher from the mobile version"): the big models are computer-only, never listed on a phone
+    check(not any(t in ids for t in ("tier-ultra", "tier-moe-lg", "tier-xl", "tier-md-max", "tier-max", "tier-lg")), "Core Max and bigger are not listed on a phone (%s)" % ", ".join(i[5:] for i in ids))
+    check("tier-md" in ids and "tier-fast-e2b" in ids, "…the good ones are (Core, Blaze)")
+    check(page.locator("[data-testid=tiers-desktop-note]").count() == 1, "…and the Engine says they are in the desktop app")
     page.locator("[data-testid=tiers-show-all]").click(); page.wait_for_timeout(200)
     ids2 = page.evaluate("[...document.querySelectorAll('[data-testid^=tier-]')].map(e => e.dataset.testid)")
-    check("tier-xs" in ids2 and "tier-ultra" in ids2, "“Show all models” shows every model")
+    check("tier-xs" in ids2 and "tier-ultra" not in ids2, "“Show all models” shows every phone model (the computer-only ones stay out)")
     page.evaluate("window.__attuneBack()"); page.wait_for_timeout(200)
 
     # a 4 GB phone (a phone browser that says so): Glow is the sensible choice there, so it stays

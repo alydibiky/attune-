@@ -21,6 +21,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.ScrollView
 import android.widget.TextView
 import org.json.JSONArray
@@ -66,12 +67,16 @@ class AttuneKeyboard : InputMethodService() {
     private var replaceSel = false
     private var replaceAll = false
 
-    private val bg = Color.parseColor("#14171c")
-    private val keyBg = Color.parseColor("#262a31")
-    private val modBg = Color.parseColor("#1d2026")
-    private val ink = Color.parseColor("#e8ebef")
-    private val sub = Color.parseColor("#9aa3ad")
-    private val acc = Color.parseColor("#4fc2af")
+    // v6.35 (Ali picked look A, "light, like Gboard"): white keys with a soft shadow on a light grey ground, grey function keys,
+    // the app's deep teal for Enter, bigger letters, and the letter shown large above the key while it is pressed
+    private val bg = Color.parseColor("#E8EBED")
+    private val keyBg = Color.parseColor("#FFFFFF")
+    private val modBg = Color.parseColor("#CBD3D8")
+    private val ink = Color.parseColor("#1B2421")
+    private val sub = Color.parseColor("#5F6B67")
+    private val acc = Color.parseColor("#0F7B6C")
+    private val shadow = Color.parseColor("#AEB8BE")
+    private var preview: PopupWindow? = null
 
     private fun dp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v, resources.displayMetrics).toInt()
     private val ar get() = lang == "ar"
@@ -87,7 +92,7 @@ class AttuneKeyboard : InputMethodService() {
         strip = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val sv = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(strip) }
         root.addView(sv, LinearLayout.LayoutParams(-1, dp(40f)))
-        panel = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE; setPadding(dp(8f), dp(6f), dp(8f), dp(6f)); background = round(modBg, 10f) }
+        panel = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE; setPadding(dp(8f), dp(6f), dp(8f), dp(6f)); background = round(keyBg, 10f) }
         panelText = TextView(this).apply { setTextColor(ink); textSize = 15f; setTextIsSelectable(false) }
         panel.addView(ScrollView(this).apply { addView(panelText) }, LinearLayout.LayoutParams(-1, dp(92f)))
         panelButtons = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.END }
@@ -120,7 +125,7 @@ class AttuneKeyboard : InputMethodService() {
         if (::root.isInitialized) { hidePanel(); buildStrip(); buildKeys() }
     }
 
-    override fun onFinishInputView(finishingInput: Boolean) { cancel.set(true); super.onFinishInputView(finishingInput) }
+    override fun onFinishInputView(finishingInput: Boolean) { cancel.set(true); hidePreview(); super.onFinishInputView(finishingInput) }
 
     // ---------- the strip ----------
     private fun buildStrip() {
@@ -143,7 +148,7 @@ class AttuneKeyboard : InputMethodService() {
     private fun chip(text: String, on: () -> Unit) {
         val v = TextView(this).apply {
             this.text = text; setTextColor(ink); textSize = 14f; gravity = Gravity.CENTER
-            setPadding(dp(12f), 0, dp(12f), 0); background = round(modBg, 18f)
+            setPadding(dp(12f), 0, dp(12f), 0); background = round(Color.parseColor("#DDE3E6"), 18f)
             setOnClickListener { it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP); on() }
         }
         strip.addView(v, LinearLayout.LayoutParams(-2, dp(34f)).apply { setMargins(dp(3f), 0, dp(3f), 0) })
@@ -246,7 +251,7 @@ class AttuneKeyboard : InputMethodService() {
 
     private fun btn(text: String, primary: Boolean = false, on: () -> Unit) = TextView(this).apply {
         this.text = text; textSize = 14f; gravity = Gravity.CENTER
-        setTextColor(if (primary) Color.parseColor("#0b1f1c") else ink)
+        setTextColor(if (primary) Color.WHITE else ink)
         background = round(if (primary) acc else keyBg, 16f)
         setPadding(dp(14f), dp(7f), dp(14f), dp(7f))
         layoutParams = LinearLayout.LayoutParams(-2, -2).apply { setMargins(dp(6f), dp(6f), 0, 0) }
@@ -283,25 +288,51 @@ class AttuneKeyboard : InputMethodService() {
 
     private fun keyView(label: String, w: Float, color: Int, textColor: Int = ink) = TextView(this).apply {
         text = label; setTextColor(textColor); gravity = Gravity.CENTER
-        textSize = if (label.length > 2) 13f else 21f
+        textSize = if (label.length > 2) 13.5f else 23f
         if (label.length > 2) typeface = Typeface.DEFAULT_BOLD
-        background = round(color, 7f)
-        layoutParams = LinearLayout.LayoutParams(0, dp(46f), w).apply { setMargins(dp(2.5f), dp(4f), dp(2.5f), dp(4f)) }
+        background = keyFace(color)
+        layoutParams = LinearLayout.LayoutParams(0, dp(48f), w).apply { setMargins(dp(2.5f), dp(4f), dp(2.5f), dp(4f)) }
+    }
+    /** A key: its face over a 1.5 dp darker edge at the bottom (the Gboard look). */
+    private fun keyFace(color: Int): android.graphics.drawable.Drawable {
+        val l = android.graphics.drawable.LayerDrawable(arrayOf<android.graphics.drawable.Drawable>(round(shadow, 7f), round(color, 7f)))
+        l.setLayerInset(1, 0, 0, 0, dp(1.5f))
+        return l
     }
 
     private fun charKey(ch: String): View {
         val shown = if (shift > 0 && !ar && !symbols) ch.uppercase() else ch
         return keyView(shown, 1f, keyBg).apply {
-            setOnClickListener {
-                it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                currentInputConnection?.commitText(if (shift > 0 && !ar && !symbols) ch.uppercase() else ch, 1)
-                if (shift == 1) { shift = 0; buildKeys() }
+            setOnTouchListener { v, e ->
+                when (e.action) {
+                    MotionEvent.ACTION_DOWN -> { v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP); showPreview(v, shown); v.alpha = 0.85f }
+                    MotionEvent.ACTION_UP -> {
+                        hidePreview(); v.alpha = 1f
+                        currentInputConnection?.commitText(if (shift > 0 && !ar && !symbols) ch.uppercase() else ch, 1)
+                        if (shift == 1) { shift = 0; buildKeys() }
+                    }
+                    MotionEvent.ACTION_CANCEL -> { hidePreview(); v.alpha = 1f }
+                }
+                true
             }
         }
     }
+    /** The pressed letter, large, in a white bubble above the key (like Gboard). Never in the way: any failure = no bubble. */
+    private fun showPreview(key: View, text: String) {
+        try {
+            hidePreview()
+            val w = (key.width * 1.35f).toInt().coerceAtLeast(dp(40f)); val h = dp(62f)
+            val tv = TextView(this).apply { this.text = text; textSize = 30f; setTextColor(ink); gravity = Gravity.CENTER; background = keyFace(keyBg); elevation = dp(4f).toFloat() }
+            val pw = PopupWindow(tv, w, h, false).apply { isClippingEnabled = false; isTouchable = false; animationStyle = 0 }
+            val at = IntArray(2); key.getLocationInWindow(at)
+            pw.showAtLocation(key, Gravity.NO_GRAVITY, at[0] - (w - key.width) / 2, at[1] - h + dp(6f))
+            preview = pw
+        } catch (e: Throwable) { preview = null }
+    }
+    private fun hidePreview() { try { preview?.dismiss() } catch (e: Throwable) {}; preview = null }
 
     private fun modKey(label: String, w: Float, primary: Boolean = false, text: String? = null, long: (() -> Unit)? = null, on: () -> Unit): View =
-        keyView(label, w, if (primary) acc else modBg, if (primary) Color.parseColor("#0b1f1c") else if (text != null) sub else ink).apply {
+        keyView(label, w, if (primary) acc else if (text != null) keyBg else modBg, if (primary) Color.WHITE else if (text != null) sub else ink).apply {
             setOnClickListener {
                 it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                 if (text != null) { currentInputConnection?.commitText(text, 1); if (!ar && !symbols && shift == 0) autoCap() } else on()

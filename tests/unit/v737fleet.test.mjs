@@ -23,7 +23,7 @@ for (const c of F.live(s.clients)) {
 }
 // the notification
 const n = F.reminderNote(s, new Date("2026-10-17T08:00:00").getTime());
-if (n) { assert.equal(n.id, "fleet-needs"); assert.equal(new Date(n.at).getHours(), 9); assert.match(n.title, /need you/); }
+if (n) { assert.equal(n.id, "fleet-needs"); assert.equal(new Date(n.at).getHours(), 9); assert.match(n.title, /needs? you/); }
 assert.equal(F.reminderNote(F.EMPTY()), null, "nothing needs you → no notification");
 const late = F.reminderNote(s, new Date("2026-10-17T15:00:00").getTime());
 if (late) assert.equal(new Date(late.at).getDate(), 18, "after 9:00 → tomorrow at 9:00");

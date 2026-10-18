@@ -5,7 +5,7 @@
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import React, { useMemo, useState } from "react";
-import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle } from "lucide-react";
+import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import { loadLife } from "./life.js";
 import { loadRadar } from "./deadlines.js";
@@ -27,8 +27,9 @@ function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"
 
 // v6.29 (Ali picked A): the tools you used last, each with what waits there; filled with these when you have used fewer than four
 const START_TOOLS = ["scout", "learn", "slides", "convert", "lifeask"];
+const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pdfchat", "slides", "cv", "code", "studio", "map", "travel", "video"];
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };
-export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false }) {
+export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null }) {
   const [text, setText] = useState("");
   const [done, setDone] = useState(null);
   const [tick, setTick] = useState(0);   // v6.28: what Home did (or undid) shows in Today and the two numbers at once
@@ -43,7 +44,10 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
     const known = (id) => tools.some((t) => t[0] === id);
     const recent = [...new Set([...recentTools(), ...START_TOOLS])].filter(known).slice(0, 4);
     return { items: waitingList({ care, radar: loadRadar(), life: loadLife(), ledger, scout, courses }), o, hasLedger: !!ledger, fitOn: !!(fit && fit.profile), kcal: todayFacts().kcal || 0, goal: tg && tg.kcal ? tg.kcal : 0, reminders: todayFacts().reminders || 0,
-      recent: recent.map((id) => ({ t: tools.find((x) => x[0] === id), line: toolLine(id, { scout, courses, slides, ledger, care }) })) };
+      recent: recent.map((id) => ({ t: tools.find((x) => x[0] === id), line: toolLine(id, { scout, courses, slides, ledger, care }) })),
+      // v6.36 layout 1A: the four areas' one-line state
+      learn: (() => { const c = courses.find((x) => x && Array.isArray(x.plan) && x.plan.length); return c ? { title: c.topic || c.title || "", n: (c.lessons || []).filter((l) => l.read).length, of: c.plan.length } : null; })(),
+      work: [...new Set(recentTools())].filter((id) => WORK.includes(id)).slice(0, 2).map((id) => (tools.find((x) => x[0] === id) || [id, id])[1]) };
   }, [tick]);
   // v6.28: Home does it first (food → Fit, money → Money, a dose, a reminder, a debt…); only what it can't do goes to Chat
   const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); } else onAsk(t); };
@@ -64,10 +68,15 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <button onClick={() => openRead()} aria-label={tr("Read it to me")} title={tr("Read it to me")} className="w-8 h-8 rounded-full grid place-items-center c-sub" data-testid="home-read"><Camera size={17} /></button>
         <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={16} /></button>
       </div>
+      {/* v6.36 layout 1A (Ali picked it): one box, three quick starts under it — tools are reached by asking, not from a list */}
+      <div className="flex gap-2 overflow-x-auto -mt-1 pb-0.5" data-testid="home-quick">
+        {[[Apple, "Food photo", () => (openFitAdd ? openFitAdd() : navTo("fit")), "home-quick-food"], [FileText, "A file", () => navTo("pdfchat"), "home-quick-file"], [Binoculars, "Find for me", () => navTo("scout"), "home-quick-scout"]].map(([I, l, go, id]) => (
+          <button key={id} onClick={go} className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px]" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid={id}><I size={14} className="c-acc" />{tr(l)}</button>))}
+      </div>
       {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : minimal ? null : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : hint[0]}»</p>}
       {/* v6.28 declutter: a card with nothing to say is not shown (nothing due today, nothing spent and no budget) */}
       {data.items.length || data.reminders || note ? <div className="c-card" data-testid="home-today">
-        <div className="flex items-center mb-1"><span className="c-lbl">{tr("What's waiting")}</span><span className="c-sub ms-auto">{data.items.length ? (data.items.length + (data.reminders || 0) === 1 ? tr("1 thing") : tr("{n} things", { n: data.items.length + (data.reminders || 0) })) : ""}</span></div>
+        <div className="flex items-center mb-1"><span className="c-lbl">{tr("Attune suggests")}</span><span className="c-sub ms-auto">{data.items.length ? (data.items.length + (data.reminders || 0) === 1 ? tr("1 thing") : tr("{n} things", { n: data.items.length + (data.reminders || 0) })) : ""}</span></div>
         {data.items.length || data.reminders || note ? (
           <>
             {data.items.map((x, i) => x.pay ? (
@@ -99,28 +108,46 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
           </>) : (
           null)}
       </div> : null}
+      {!minimal ? <>
       {/* v6.28 (Ali: "Fit & Food should be on the Home page"): today's food, water and the four meals — tap a meal to add to it */}
-      {/* v6.31 minimal: the "set it up" card is an advert — Home shows Fit & Food once it has your numbers */}
-      {minimal && !data.fitOn ? null : <FitToday key={"fit" + tick} openFit={() => navTo("fit")} compact />}
+        {/* v6.31 minimal: the "set it up" card is an advert — Home shows Fit & Food once it has your numbers */}
+        {minimal && !data.fitOn ? null : <FitToday key={"fit" + tick} openFit={() => navTo("fit")} compact />}
+        {guardian || null}
+        {data.o.monthOut || data.o.budget ? <div>
+          <button className="c-card text-start w-full" onClick={() => navTo("money")} data-testid="home-spent">
+            <span className="c-lbl">{tr("Spent this month")}</span>
+            <div className="c-num text-[20px] font-bold mt-0.5">{fmt(data.o.monthOut)}</div>
+            <div className="c-sub">{data.o.budget ? tr("of {b} {c}", { b: fmt(data.o.budget), c: data.o.cur }) : data.o.cur}</div>
+            {data.o.budget ? <div className="c-bar mt-2"><i style={{ width: pct(data.o.monthOut, data.o.budget) + "%" }} /></div> : null}
+          </button>
+        </div> : null}
+        {data.recent.length ? <div data-testid="home-recent">
+          <p className="c-lbl m-0 mb-2">{tr("Recent")}</p>
+          <div className="c-list">
+            {data.recent.map(({ t: [id, label, sub, I], line }) => (
+              <button key={id} onClick={() => navTo(id)} className="w-full text-start flex items-center gap-3 p-3" data-testid={"home-recent-" + id}>
+                <span className="c-ic"><I size={16} /></span>
+                <span className="flex-1 min-w-0"><b className="block text-[14px]">{tr(label)}</b>{line || !minimal ? <span className="c-sub block truncate" dir="auto">{line || tr(sub)}</span> : null}</span>
+                <ChevronRight size={16} className="c-acc shrink-0 rtl:-scale-x-100" /></button>))}
+          </div>
+          <button onClick={openAll} className="c-acc text-[13px] font-medium mt-2" data-testid="home-all">{tr("All tools")} →</button>
+        </div> : null}
+      </> : <>
+      {/* v6.36 layout 1A: the four areas, each with its one number — tap to open */}
       {guardian || null}
-      {data.o.monthOut || data.o.budget ? <div>
-        <button className="c-card text-start w-full" onClick={() => navTo("money")} data-testid="home-spent">
-          <span className="c-lbl">{tr("Spent this month")}</span>
-          <div className="c-num text-[20px] font-bold mt-0.5">{fmt(data.o.monthOut)}</div>
-          <div className="c-sub">{data.o.budget ? tr("of {b} {c}", { b: fmt(data.o.budget), c: data.o.cur }) : data.o.cur}</div>
-          {data.o.budget ? <div className="c-bar mt-2"><i style={{ width: pct(data.o.monthOut, data.o.budget) + "%" }} /></div> : null}
-        </button>
-      </div> : null}
-      {data.recent.length ? <div data-testid="home-recent">
-        <p className="c-lbl m-0 mb-2">{tr("Recent")}</p>
-        <div className="c-list">
-          {data.recent.map(({ t: [id, label, sub, I], line }) => (
-            <button key={id} onClick={() => navTo(id)} className="w-full text-start flex items-center gap-3 p-3" data-testid={"home-recent-" + id}>
-              <span className="c-ic"><I size={16} /></span>
-              <span className="flex-1 min-w-0"><b className="block text-[14px]">{tr(label)}</b>{line || !minimal ? <span className="c-sub block truncate" dir="auto">{line || tr(sub)}</span> : null}</span>
-              <ChevronRight size={16} className="c-acc shrink-0 rtl:-scale-x-100" /></button>))}
-        </div>
-        <button onClick={openAll} className="c-acc text-[13px] font-medium mt-2" data-testid="home-all">{tr("All tools")} →</button>
-      </div> : null}
+      <div className="grid grid-cols-2 gap-2" data-testid="home-areas">
+        <button className="c-card text-start p-3" onClick={() => navTo("money")} data-testid="home-area-money"><span className="flex items-center gap-1.5"><Wallet size={15} className="c-acc" /><b className="text-[14px]">{tr("Money")}</b></span>
+          <span className="c-sub block text-[12.5px] mt-1 c-num" dir="auto">{data.o.monthOut ? tr("{v} spent", { v: fmt(data.o.monthOut) }) : tr("Spending, bills, Scout")}</span>
+          {data.o.budget ? <div className="c-bar mt-1.5"><i style={{ width: pct(data.o.monthOut, data.o.budget) + "%" }} /></div> : null}</button>
+        <button className="c-card text-start p-3" onClick={() => navTo("fit")} data-testid="home-area-health"><span className="flex items-center gap-1.5"><Heart size={15} className="c-acc" /><b className="text-[14px]">{tr("Health")}</b></span>
+          <span className="c-sub block text-[12.5px] mt-1 c-num">{data.fitOn ? tr("{a} / {b} kcal", { a: fmt(data.kcal), b: fmt(data.goal) }) : tr("Food, medicines, cycle")}</span>
+          {data.fitOn && data.goal ? <div className="c-bar mt-1.5"><i style={{ width: pct(data.kcal, data.goal) + "%" }} /></div> : null}</button>
+        <button className="c-card text-start p-3" onClick={() => navTo("learn")} data-testid="home-area-learn"><span className="flex items-center gap-1.5"><GraduationCap size={15} className="c-acc" /><b className="text-[14px]">{tr("Learn")}</b></span>
+          <span className="c-sub block text-[12.5px] mt-1 truncate" dir="auto">{data.learn ? data.learn.title + " · " + data.learn.n + "/" + data.learn.of : tr("A lesson a day")}</span></button>
+        <button className="c-card text-start p-3" onClick={() => navTo("tools")} data-testid="home-area-work"><span className="flex items-center gap-1.5"><Briefcase size={15} className="c-acc" /><b className="text-[14px]">{tr("Work")}</b></span>
+          <span className="c-sub block text-[12.5px] mt-1 truncate">{data.work.length ? data.work.map((x) => tr(x)).join(" · ") : tr("Files, business, create")}</span></button>
+      </div>
+      <button onClick={openAll} className="c-sub text-[12.5px] px-1" data-testid="home-all">{tr("All tools")} {ar ? "←" : "→"}</button>
+      </>}
     </div>);
 }

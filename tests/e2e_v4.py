@@ -94,7 +94,7 @@ MOCK = r"""
     hash: (id, modelId) => R(id, { id: modelId, sha256: "ab".repeat(32) }),
     search: (id, arg) => { const a = JSON.parse(arg); state.lastSearch = a;
       state.net.push({ t: Date.now(), host: "html.duckduckgo.com", what: "web search (DuckDuckGo)", blocked: false });
-      R(id, { via: a.provider, why: "", hits: [
+      R(id, { via: a.provider, why: "", hits: state.searchHits || [
         { title: "Liebherr LTM 1100", url: "https://example.com/ltm1100", source: "web",
           text: "The Liebherr LTM 1100-4.2 is a 100 tonne mobile crane with a 60 m telescopic boom. It weighs 48 tonnes and has 4 axles." },
         { title: "Crane guide", url: "https://example.com/guide", source: "web",

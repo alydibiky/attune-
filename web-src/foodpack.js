@@ -24,13 +24,29 @@ export function parseLine(line) {
   const c = line.split("\t");
   if (c.length < 14 || !c[0] || !(c[1] || c[2])) return null;
   const kcal = num(c[4]); if (kcal == null) return null;
-  return { code: c[0], en: c[1], ar: c[2], brand: c[3], kcal, p: num(c[5]) || 0, c: num(c[6]) || 0, f: num(c[7]) || 0, fib: num(c[8]) || 0,
+  const r = { code: c[0], en: c[1], ar: c[2], brand: c[3], kcal, p: num(c[5]) || 0, c: num(c[6]) || 0, f: num(c[7]) || 0, fib: num(c[8]) || 0,
     sug: num(c[9]), sat: num(c[10]), salt: num(c[11]), serving: num(c[12]), egypt: c[13] === "1", grade: c[14] || "", nova: c[15] ? +c[15] : 0, tk: tokensOf(c[1], c[2], c[3]) };
+  // v6.36 the generic foods (USDA FoodData Central, tools/build_food_generic.py): vitamins & minerals per 100 g and real portions
+  if (c[16]) try { r.micro = JSON.parse(c[16]); } catch (e) {}
+  if (c[17]) try { r.portions = JSON.parse(c[17]); } catch (e) {}
+  return r;
 }
 export const parseShard = (text) => String(text || "").split("\n").map((l) => (l ? parseLine(l) : null)).filter(Boolean);
 
 /** A pack record → the app's food shape (same fields fitdb.fromOFF gives), so the rest of Fit needs no change. */
+export const isGeneric = (r) => /^usda:|^cnf:/.test(String(r && r.code));
+/** "1 cup, chopped" → "cup" (the unit the meal screen shows); a generic food's portions become its units. */
+const unitKey = (d) => String(d).toLowerCase().replace(/^[\d.\s/½¼¾]+/, "").replace(/\(.*?\)/g, "").replace(/,.*$/, "").replace(/\s+/g, " ").trim().slice(0, 24) || "serving";
 export function toFood(r) {
+  if (isGeneric(r)) {
+    const portions = {};
+    for (const [d, g] of Object.entries(r.portions || {})) { const n = parseFloat(String(d).replace(/½/, ".5")) || 1; const k = unitKey(d); if (!(k in portions) && g > 0) portions[k] = Math.round((g / n) * 10) / 10; }
+    const food = { id: r.code, src: "usda", en: r.en, ar: r.ar || r.en, names: [r.en, r.ar].filter(Boolean), kcal: r.kcal, p: r.p, c: r.c, f: r.f, fib: r.fib,
+      portions, group: "generic", generic: true };
+    if (r.sug != null) food.sug = r.sug; if (r.sat != null) food.sat = r.sat; if (r.salt != null) food.salt = r.salt;
+    if (r.micro && Object.keys(r.micro).length) food.micro = r.micro;
+    return food;
+  }
   const name = r.en || r.ar;
   const food = { id: "off:" + r.code, src: "pack", barcode: r.code, en: r.brand && !norm(name).includes(norm(r.brand)) ? `${name} (${r.brand})` : name, ar: r.ar || name, brand: r.brand,
     names: [name, r.ar, r.brand ? `${r.brand} ${name}` : ""].filter(Boolean), kcal: r.kcal, p: r.p, c: r.c, f: r.f, fib: r.fib,
@@ -89,12 +105,16 @@ export async function searchPack(store, q, n = 30) {
   const cand = (await store.byToken(lead.slice(0, PREFIX), 6000)).filter((r) => (seen.has(r.code) ? false : (seen.add(r.code), true)));   // a short word can match several word starts of one product
   const qn = words.join(" ");
   const scored = [];
+  // a query that names a brand ("pepsi", «جهينة») is about the product, not the plain food
+  const branded = cand.some((x) => x.brand && words.some((w) => norm(x.brand).split(" ").some((b) => b.startsWith(w))));
   for (const r of cand) {
     const hay = norm(`${r.en} ${r.ar} ${r.brand}`);
     const hw = hay.split(" ");
     if (!words.every((w) => hw.some((h) => h.startsWith(w)))) continue;
     const name = norm(r.en || r.ar);
-    scored.push([r, (name === qn ? 30 : 0) + (name.startsWith(qn) ? 8 : 0) + (r.egypt ? 3 : 0) - Math.min(name.length, 80) / 40]);
+    // (v6.36: a plain food name — "rice cooked", «رز مطبوخ» — finds the generic food first, a brand name the product)
+    const gen = isGeneric(r);
+    scored.push([r, (name === qn ? 30 : 0) + (name.startsWith(qn) || norm(r.ar).startsWith(qn) ? 8 : 0) + (r.egypt ? 3 : 0) + (gen && !branded ? 6 : 0) - Math.min(name.length, 80) / 40]);
   }
   scored.sort((a, b) => b[1] - a[1]);
   return scored.slice(0, n).map(([r]) => toFood(r));

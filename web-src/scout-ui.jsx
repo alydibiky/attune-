@@ -4,7 +4,7 @@
    twice a day; the computer app also while it stays open). A strong NEW find (or a price drop) → a notification.
    Logic: scout.js. Tests: tests/unit/v731scout.test.mjs, tests/e2e_v731scout.py.                                                   */
 import React, { useEffect, useState } from "react";
-import { Binoculars, Plus, RefreshCw, Trash2, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check, X, HelpCircle, TrendingDown, Loader2, Pause, Play, MapPin, AlertTriangle } from "lucide-react";
+import { Binoculars, Plus, RefreshCw, Trash2, ThumbsUp, ThumbsDown, ExternalLink, Copy, Check, X, HelpCircle, TrendingDown, Loader2, Pause, Play, MapPin, AlertTriangle, Bell, BellOff } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as S from "./scout.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -18,7 +18,7 @@ const EXAMPLES = [
   ["Data analyst job in Cairo, remote, full-time", "وظيفة محلل بيانات في القاهرة عن بعد دوام كامل"],
   ["Crane hire 100 ton in 6th of October", "إيجار ونش 100 طن في 6 أكتوبر"],
 ];
-const KIND = { rent: ["Flat to rent", "شقة للإيجار"], "buy-home": ["Home to buy", "عقار للشراء"], car: ["Car", "سيارة"], product: ["Product", "منتج"], job: ["Job", "وظيفة"], tender: ["Tender", "مناقصة"], service: ["Service / supplier", "خدمة / مورد"] };
+const KIND = { gold: ["Gold price", "سعر الدهب"], rent: ["Flat to rent", "شقة للإيجار"], "buy-home": ["Home to buy", "عقار للشراء"], car: ["Car", "سيارة"], product: ["Product", "منتج"], job: ["Job", "وظيفة"], tender: ["Tender", "مناقصة"], service: ["Service / supplier", "خدمة / مورد"] };
 const fmt = (v) => Math.round(v).toLocaleString("en-US");
 
 // v6.32 distance to the metro: each ad's area on the offline map pack (no web), its nearest station, kept so it is asked once
@@ -78,7 +78,23 @@ function usePhotoPrints(found) {
 }
 
 /** One run of a goal with the app's own web search. search(q) → { hits }. → { goal (updated), tell: [ads worth a notification], run } */
-export async function runScoutGoal(goal, search, onStep, now = Date.now()) {
+export async function runScoutGoal(goal, search, onStep, now = Date.now(), { readPage = null, goldPrice = null } = {}) {
+  // v6.35 gold: the price of a gram (by code from the world price and the exchange rate), not ads
+  if (goal.g.kind === "gold") {
+    let per = null; try { per = goldPrice ? await goldPrice(goal.g.karat || 21) : null; } catch (e) {}
+    const c = S.goldCheck(goal.g, per);
+    const g2 = { ...goal, lastRun: now, gold: [...(goal.gold || []), ...(per ? [[now, per]] : [])].slice(-60), lastCount: c.hit ? 1 : 0, lastHits: per ? 1 : 0 };
+    const tell = c.hit && !(goal.gold || []).some(([t]) => now - t < 20 * 3600e3 && S.goldCheck(goal.g, (goal.gold || []).slice(-1)[0][1]).hit) ? [{ gold: true, perGram: per, karat: goal.g.karat }] : [];
+    return { goal: g2, tell, run: { found: [], fresh: [] } };
+  }
+  // v6.35 followed ads: their pages are read again — a lower price or "sold" is told
+  let goal0 = goal;
+  if (readPage) for (const id of Object.keys(goal.follow || {})) {
+    const ad = (goal.seen || []).find((s) => s.id === id); if (!ad || ad.sold) continue;
+    let page = null; try { page = await readPage(ad.url); } catch (e) { page = null; }
+    goal0 = S.followUpdate(goal0, id, page, now);
+  }
+  goal = goal0;
   const qs = S.searchesFor(goal.g), hits = [];
   for (let i = 0; i < qs.length; i++) {
     onStep && onStep(i + 1, qs.length, qs[i]);
@@ -92,19 +108,24 @@ export async function runScoutGoal(goal, search, onStep, now = Date.now()) {
 }
 /** v6.32: the same ending for a run's hits, whether searched now or found by the night run (ScoutNight.kt). */
 export function finishRun(goal, hits, now = Date.now()) {
-  const run = S.runGoal(goal, hits, { now });
+  const market0 = S.loadMarket();
+  const run = S.runGoal(goal, hits, { now, market: market0 });
+  // (the market book learns every priced ad, so the next goal for the same thing knows the market at once)
+  S.saveMarket(S.addToMarket(market0, goal.g, run.seen.filter((a) => a.lastSeen === now), now));
   // (v6.29: the matches new this run stay "unseen" until the goal is opened — Home's "What's waiting" counts them)
   const unseen = [...new Set([...(goal.unseen || []), ...run.found.filter((a) => run.fresh.includes(a.id)).map((a) => a.id)])].slice(-50);
   return { goal: { ...goal, seen: run.seen, lastRun: now, lastCount: run.found.length, lastHits: hits.length, unseen }, tell: S.worthTelling(run), run };
 }
 export function tellText(goal, tell, ar) {
+  if (tell[0] && tell[0].gold) return { title: ar ? `الدهب عيار ${tell[0].karat} وصل لهدفك` : `Gold ${tell[0].karat}K reached your price`, body: (ar ? "الجرام دلوقتي " : "A gram now ") + fmt(tell[0].perGram) };
+  if (tell[0] && tell[0].sold) return { title: ar ? "الإعلان اللي بتتابعه اتباع" : "An ad you follow has sold", body: tell[0].title || "" };
   const a = tell[0], price = a.facts.price ? fmt(a.facts.price) + " " + (a.facts.cur || "") : "";
   const why = a.dropped > 0 ? (ar ? `انخفض ${fmt(a.dropped)}` : `dropped ${fmt(a.dropped)}`) : a.fair && a.fair.pct <= -5 ? (ar ? `أقل ${-a.fair.pct}% من المشابه` : `${-a.fair.pct}% below similar`) : "";
   return { title: (ar ? "الكشّاف: " + tell.length + " نتيجة جديدة قوية" : `Scout: ${tell.length} strong new find${tell.length === 1 ? "" : "s"}`) + " — " + (goal.g.what || goal.text).slice(0, 40),
     body: [a.title, price, why].filter(Boolean).join(" · ") };
 }
 
-export function ScoutPage({ search, remind, flash, openLink, incoming, clearIncoming }) {
+export function ScoutPage({ search, remind, flash, openLink, incoming, clearIncoming, readPage, goldPrice }) {
   const ar = getLang() === "ar";
   const [data, setData] = useState(() => S.loadScout());
   // (v6.32: every change hands tonight's searches to the phone, so Scout keeps looking with Attune closed)
@@ -117,8 +138,8 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
   const run = async (gl) => {
     if (!search) { flash && flash(tr("Scout searches the web from the Android app or the computer app.")); return; }
     setBusy({ id: gl.id, i: 0, n: 0, q: "" });
-    const r = await runScoutGoal(gl, search, (i, n, q) => setBusy({ id: gl.id, i, n, q }));
-    const d = S.loadScout(); put({ ...d, goals: d.goals.map((x) => (x.id === gl.id ? { ...r.goal, votes: x.votes, taste: x.taste, on: x.on } : x)) });
+    const r = await runScoutGoal(gl, search, (i, n, q) => setBusy({ id: gl.id, i, n, q }), Date.now(), { readPage, goldPrice });
+    const d = S.loadScout(); put({ ...d, goals: d.goals.map((x) => (x.id === gl.id ? { ...r.goal, votes: x.votes, taste: x.taste, on: x.on, follow: { ...(r.goal.follow || {}), ...(x.follow || {}) } } : x)) });
     setBusy(null);
     if (r.tell.length && remind) { const t = tellText(gl, r.tell, ar); remind({ id: "scout-" + gl.id, at: Date.now() + 1500, repeat: "none", title: t.title, body: t.body }); }
     flash && flash(r.run.found.length ? tr("{n} matches found", { n: r.run.found.length }) : r.goal.lastHits ? tr("Nothing matches yet — Scout keeps looking") : tr("The sites didn't answer — try again in a while"));
@@ -130,7 +151,8 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
     const d = S.loadScout();
     put({ ...d, goals: d.goals.map((x) => (x.id !== goal.id ? x : { ...x, votes: { ...(x.votes || {}), [ad.id]: up ? 1 : -1 }, taste: S.learn(x.taste, ad, up) })) });
   };
-  const found = goal ? S.runGoal(goal, [], { now: Date.now() }).found : [];
+  const found = goal ? S.runGoal(goal, [], { now: Date.now(), market: S.loadMarket() }).found : [];
+  const follow = (ad) => { const d = S.loadScout(); put({ ...d, goals: d.goals.map((x) => (x.id === goal.id ? S.toggleFollow(x, ad.id) : x)) }); flash && flash((goal.follow || {})[ad.id] ? tr("Not following this ad") : tr("Following — you'll be told if the price drops or it sells")); };
   const stations = useStations(goal, found, ar);
   const twins = S.photoTwins(found, usePhotoPrints(found));
   // the goal on screen: its new matches are now seen
@@ -164,7 +186,12 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
         <div className="flex flex-wrap gap-1.5 text-[12px]">
           {goal.g.max ? <span className="c-pill">≤ {fmt(goal.g.max)}</span> : null}{goal.g.place ? <span className="c-pill">{goal.g.place}</span> : null}
           {goal.g.wish.map((w) => <span key={w.k} className="c-pill">{ar ? w.say[1] : w.say[0]}</span>)}</div></div>
-      {!found.length ? <p className="c-sub" data-testid="scout-none">{goal.lastRun ? tr("Nothing that matches yet. Scout keeps looking — you'll be told when something good appears.") : tr("Searching…")}</p> : null}
+      {goal.g.kind === "gold" ? <div className="c-card space-y-1" data-testid="scout-gold">
+        <span className="c-lbl">{tr("Gold {k}K, a gram", { k: goal.g.karat || 21 })}</span>
+        {(goal.gold || []).length ? <b className="c-amt">{fmt(goal.gold.slice(-1)[0][1])}</b> : <p className="c-sub m-0">{tr("Checking the price…")}</p>}
+        <p className="c-sub m-0 text-[12px]">{goal.g.max ? tr("You'll be told when it is at or under {v}", { v: fmt(goal.g.max) }) : goal.g.min ? tr("You'll be told when it is at or over {v}", { v: fmt(goal.g.min) }) : tr("Add a price to be told, e.g. “under 3,500”")}</p>
+      </div> : null}
+      {!found.length && goal.g.kind !== "gold" ? <p className="c-sub" data-testid="scout-none">{goal.lastRun ? tr("Nothing that matches yet. Scout keeps looking — you'll be told when something good appears.") : tr("Searching…")}</p> : null}
       {found.slice(0, 30).map((a) => {
         const vote0 = (goal.votes || {})[a.id];
         const msg = S.sellerMessage(a, goal.g, { ar });
@@ -180,7 +207,9 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
                 <div className="c-num text-[12px] c-acc" data-testid="scout-score">{a.score}/100</div></div>
             </div>
             <div className="flex flex-wrap gap-1.5 text-[12px]">
-              {a.fair ? <span className={"c-pill " + (a.fair.pct > 10 ? "late" : "")} data-testid="scout-fair">{a.fair.pct <= -3 ? tr("{p}% below similar", { p: -a.fair.pct }) : a.fair.pct >= 3 ? tr("{p}% above similar", { p: a.fair.pct }) : tr("a fair price")}{a.fair.basis === "m2" ? " " + tr("(per m²)") : ""}</span> : null}
+              {a.fair ? <span className={"c-pill " + (a.fair.verdict === "high" || a.fair.verdict === "too-cheap" ? "late" : a.fair.verdict === "cheap" ? "" : "due")} data-testid="scout-fair" title={tr("Compared with {n} ads of the same thing", { n: a.fair.n })}>{tr(a.fair.verdict === "too-cheap" ? "Suspiciously cheap" : a.fair.verdict === "cheap" ? "Cheap" : a.fair.verdict === "high" ? "Expensive" : "Fair price")} · {a.fair.pct > 0 ? "+" : ""}{a.fair.pct}% · {tr("market {a}–{b}", { a: fmt(a.fair.low), b: fmt(a.fair.high) })}{a.fair.basis === "m2" ? " " + tr("(per m²)") : ""}</span>
+                : null}
+              {a.followed ? <span className="c-pill" data-testid="scout-following"><Bell size={11} className="inline" /> {a.sold ? tr("sold") : tr("following")}</span> : null}
               {a.cheapest ? <span className="c-pill" data-testid="scout-cheapest">{tr("cheapest of {n} stores", { n: a.cheapest })}</span> : null}
               {stations[a.facts.place || goal.g.place] ? (() => { const st = stations[a.facts.place || goal.g.place]; return <span className="c-pill" data-testid="scout-metro" title={tr("From the offline map: the area's centre to the station, in a straight line × 1.3")}><MapPin size={11} className="inline" /> {tr("{s}: about {m} min walk", { s: st.name, m: st.walk })}</span>; })() : null}
               {a.dropped > 0 ? <span className="c-pill" data-testid="scout-drop"><TrendingDown size={11} className="inline" /> {tr("dropped {v}", { v: fmt(a.dropped) })}</span> : null}
@@ -188,12 +217,15 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
             <ul className="m-0 p-0 list-none space-y-0.5 text-[13px]" data-testid="scout-checks">
               {a.check.ok.map((x) => <li key={"o" + x.k} className="flex gap-1.5"><Check size={14} className="c-pos shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en}{x.quote ? <span className="c-sub"> — «{x.quote}»</span> : null}</span></li>)}
               {a.check.bad.map((x) => <li key={"b" + x.k} className="flex gap-1.5"><X size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en}{x.quote ? <span className="c-sub"> — «{x.quote}»</span> : null}</span></li>)}
+              {S.risksOf(a, goal.seen || [], twins[a.id] || []).filter((x) => x.k !== "photo").map((x) => <li key={"r" + x.k} className="flex gap-1.5" data-testid="scout-risk"><AlertTriangle size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en}</span></li>)}
               {(twins[a.id] || []).slice(0, 1).map((x) => <li key="photo" className="flex gap-1.5" data-testid="scout-photo"><AlertTriangle size={14} className="c-neg shrink-0 mt-0.5" /><span dir="auto">{tr("The same photo is in another ad ({s}{p}) — it may be copied; ask for a new photo or a video call", { s: x.site || "", p: x.price ? " · " + fmt(x.price) : "" })}</span></li>)}
               {a.check.unknown.map((x) => <li key={"u" + x.k} className="flex gap-1.5 c-sub"><HelpCircle size={14} className="shrink-0 mt-0.5" /><span dir="auto">{ar ? x.ar : x.en} — {tr("not stated in the ad")}</span></li>)}
             </ul>
             <div className="flex flex-wrap gap-2 items-center pt-1">
               <button className="c-btn inline-flex items-center gap-1" onClick={() => (openLink ? openLink(a.url, a.title) : window.open(a.url, "_blank"))} data-testid="scout-open"><ExternalLink size={14} />{tr("Open the ad")}</button>
               <button className="c-sub inline-flex items-center gap-1 px-1" onClick={() => { try { navigator.clipboard.writeText(msg); } catch (e) {} setCopied(a.id); flash && flash(tr("Message copied — paste it to the seller")); }} title={msg} data-testid="scout-msg">{copied === a.id ? <Check size={14} /> : <Copy size={14} />}{tr("Message to the seller")}</button>
+              {S.offerFor(a) && S.offerFor(a) < a.facts.price ? <span className="c-sub text-[12px]" data-testid="scout-offer">{tr("Offer {v}", { v: fmt(S.offerFor(a)) })}</span> : null}
+              <button className={"inline-flex items-center gap-1 px-1 " + (a.followed ? "c-acc" : "c-sub")} onClick={() => follow(a)} data-testid="scout-follow">{a.followed ? <BellOff size={14} /> : <Bell size={14} />}{a.followed ? tr("Unfollow") : tr("Follow price")}</button>
               <span className="ms-auto flex gap-1">
                 <button className={"p-1.5 rounded-lg " + (vote0 === 1 ? "c-acc" : "c-sub")} aria-label={tr("Good match")} onClick={() => vote(a, true)} data-testid="scout-up"><ThumbsUp size={15} /></button>
                 <button className={"p-1.5 rounded-lg " + (vote0 === -1 ? "c-neg" : "c-sub")} aria-label={tr("Not for me")} onClick={() => vote(a, false)} data-testid="scout-down"><ThumbsDown size={15} /></button></span>

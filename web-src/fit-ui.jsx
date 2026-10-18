@@ -184,7 +184,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const fileRef = useRef(null);
   const codeRef = useRef(null);
   const run = useRef(0);
-  useEffect(() => { if (incoming) { setText(incoming); setAdding(mealNow()); setTab("today"); clearIncoming && clearIncoming(); } }, [incoming]);
+  useEffect(() => { if (incoming) { if (incoming !== "\u0001add") setText(incoming); setAdding(mealNow()); setTab("today"); clearIncoming && clearIncoming(); } }, [incoming]);   // (v6.36 "\u0001add": Home's Food photo button opens the add sheet)
   // v6.28: a meal tapped on Home / Health opens straight on adding to it
   useEffect(() => { let m = ""; try { m = localStorage.getItem("attune:fit:openAdd") || ""; localStorage.removeItem("attune:fit:openAdd"); } catch (e) {} if (F.MEALS.includes(m)) { setTab("today"); setAdding(m); } }, []);
 
@@ -398,7 +398,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       const s = DB.getPackStore(); if (!packText || !s) return;
       if (!(native && native.unmetered && native.unmetered())) return;
       const meta = await s.getMeta(); const m = JSON.parse(await packText("manifest.json")); const want = Math.min(10, m.shards.length);
-      if ((meta.done || []).length >= want) return;
+      if (m.shards.slice(0, want).every((x) => (meta.done || []).includes(x.name))) return;   // (v6.36: by name — the generic foods come as a new first piece)
       setPackBg({ shard: 0, of: want, count: 0 });
       await FP.installPack({ store: s, manifest: m, getText: packText, shards: want, isStopped: () => stopped, onProgress: (p) => setPackBg(p) });
       if (!stopped) setPackBg(null);

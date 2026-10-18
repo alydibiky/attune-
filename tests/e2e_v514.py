@@ -61,6 +61,10 @@ with sync_playwright() as p:
     sys_prompt = bodies(page)[0]["messages"][0]["content"]
     check("Never stop at a generic label" in sys_prompt, "a photo question asks for type, likely make/model and facts — not just 'a mobile crane'")
     page.locator("button:has-text('Web')").first.click()
+    # v6.35: the search finds pages about THIS crane (a model number must be on the page — research.js onTopic)
+    page.evaluate("""() => { window.__mock.searchHits = [
+      { title: "Demag AC 100 all-terrain crane", url: "https://example.com/demag-ac-100", source: "web", text: "The Demag AC 100 is a 100 tonne all-terrain crane with 5 axles and a 50 m boom." },
+      { title: "Demag AC 100-4L specifications", url: "https://example.com/ac-100-4l", source: "web", text: "Demag AC 100: max capacity 100 t, main boom 59.4 m." } ]; }""")
     queue(page, ["Demag AC 100 all-terrain crane model", "NONE", "NONE", "The **Demag AC 100** is a 100 t all-terrain crane [1]."])   # (v5.20: notes per page, then the answer)
     send(page, "What model")
     done(page, 2)

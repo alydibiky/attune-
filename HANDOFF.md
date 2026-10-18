@@ -1809,6 +1809,37 @@ page (Artifact: https://claude.ai/artifact/LQ1s1sqbSGJtSC8vfZQLec) — six quest
   only phrases and connects (the direction already; agent ideas = choice 2); regroup the app (choice 1); food stronger than Yazio
   (plate scan done, USDA pack = choice 4A); Scout stronger (choice 3).
 
+### 5.83 (18 Oct 2026) — v6.36: Ali's choices (1A, 3 all, 4 food packs, 5B Egyptian, 6A keyboard) + Android 17
+Ali answered the choices page (https://claude.ai/artifact/LQ1s1sqbSGJtSC8vfZQLec): 1A, 2 = "clever agent ideas, not features we have" (round 2 on the page), 3 = "all of
+it, it belongs in Scout", 4 = "every pack that makes food stronger than Yazio", 5B, 6A. Also: "Android 17 and lower, not 16".
+- **Layout 1A**: Home = the box + three quick starts (Food photo → Fit's add sheet via `openFitAdd` / incoming "\u0001add", A file →
+  Ask a PDF, Find for me → Scout), "Attune suggests" (the old What's waiting, same Paid ticks), and four area tiles with one number
+  each (`home-area-money|health|learn|work`); the old Fit card, Spent card and Recent list stay only in the legacy layout. Sidebar:
+  Home · Chats · Money · Health · Learn · Work (hubs.js labels; ids unchanged).
+- **Arabic = Egyptian** (5B, replaces the 4 Oct formal choice): all 5,334 strings of `i18n-ar.js` rewritten (six parallel agents,
+  placeholders / line breaks validated by node); the formal file is in git before v6.36. Tests that matched old Arabic updated.
+- **Keyboard look A**: light ground #E8EBED, white keys with a 1.5 dp edge (LayerDrawable), grey function keys, teal Enter, 23 sp
+  letters, and a large letter bubble above a pressed key (PopupWindow, never in the way: any failure = no bubble).
+- **Scout, all five** (scout.js): fair-price meter (same model, year ±1, corrected 7 %/year and 0.8 %/10,000 km; range p25–p75;
+  cheap / fair / high / too-cheap) fed by a **market book** across every search (`attune:scout:market:v1`); **scam check**
+  `risksOf` (far under the market, money before viewing — `RED_FLAGS` EN/Egyptian, one phone number on unrelated ads, reposted,
+  reused photo, thin ad); **follow an ad** (`toggleFollow`, `followUpdate` re-reads its page each run via `fetchText`; a drop or
+  "sold" is always told); **gold** goals ("21 karat under 3,500 a gram" → `goldGram` from gold-api + fxRates); **offer helper**
+  `offerFor` (under the ask, never under the cheap end) in the Egyptian seller message. Tests `v739scout.test.mjs`.
+- **Food packs**: `tools/build_food_generic.py` — USDA FoodData Central Foundation + FNDDS (survey, as eaten) + SR Legacy, public
+  domain: 13,266 foods, 18 nutrients (`micro`), real portions, 5,893 with an Egyptian Arabic name (head word + safe details only),
+  0.9 MB. Published by food-pack.yml as the pack's FIRST piece (`foodgen-000.tsv.gz`); foodpack.js reads the two extra columns,
+  `toFood` makes portions units, a plain name ranks the generic food first (+6), a brand name the product; the install check
+  is by piece name, so phones that have the old 10 pieces fetch the new one. Tests `v739foodgen.test.mjs`.
+- **Android 17**: compileSdk / targetSdk 37 with AGP 8.9.1 (gradle.properties `android.suppressUnsupportedCompileSdk=37`). Google
+  publishes it as `platforms;android-37.0` (37.1, 37.2 = updates); the APK workflow installs it and registers the same files as
+  `android-37` (the name AGP 8.9 asks for). AGP 9.1.1+ would read the new name itself — a bigger upgrade, later.
+- **Bug found by the clock**: a "regular" (the maid every Sunday) before noon had one box only (the start day's 12:00 was still ahead,
+  the day count went negative) and People & plans showed no tick — counted from the day now (`life.js scheduleOf`).
+- Agent ideas round 2 (choice page, waiting for Ali): invoice chaser that closes itself, promise keeper, overcharge fighter,
+  price-drop refund hunter, buy-it-right project, three quotes compared, pantry-to-plate week, paper renewal agent, idle money
+  mover, gam'eya manager.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

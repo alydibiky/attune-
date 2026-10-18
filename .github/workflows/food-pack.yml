@@ -47,6 +47,30 @@ jobs:
           curl -sSL --retry 5 https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz | zcat | python3 tools/build_food_pack.py out $extra | tee build.log
           ls -la out | head -5; du -sh out
 
+      # v6.36 (Ali: "add all knowledge packs that will make the food app stronger than Yazio in all aspects"): the plain foods and
+      # dishes with every vitamin and mineral and their real portions — USDA FoodData Central Foundation + survey (FNDDS) + SR
+      # Legacy, public domain — as the pack's FIRST piece (it downloads first). If USDA can't be reached, the pack is as before.
+      - name: Generic foods (USDA FoodData Central, public domain) — the first piece of the pack
+        run: |
+          mkdir -p fdc && cd fdc
+          get() { for i in $(seq 0 460); do d=$(date -u -d "-$i day" +%F); u="https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_$1_$d.zip";
+                  c=$(curl -s -o /dev/null -w "%{http_code}" -I -m 10 "$u" || true); if [ "$c" = "200" ]; then echo "$u"; return; fi; done; }
+          for u in "$(get foundation_food_csv)" "$(get survey_food_csv)" "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip"; do
+            [ -n "$u" ] || continue; echo "USDA: $u"; f=$(basename "$u"); curl -sSL --retry 5 -o "$f" "$u" && mkdir -p "${f%.zip}" && unzip -q -o "$f" -d "${f%.zip}" && rm -f "$f"; done
+          cd .. && python3 tools/build_food_generic.py gen --fdc fdc | tee gen.log || echo "generic foods skipped"
+          if [ -s gen/manifest.json ]; then
+            cp gen/foodgen-*.tsv.gz out/
+            python3 - <<'PY'
+          import json
+          m = json.load(open("out/manifest.json")); g = json.load(open("gen/manifest.json"))
+          m["shards"] = g["shards"] + [s for s in m["shards"] if not s["name"].startswith("foodgen-")]
+          m["generic"] = g["count"]; m["count"] = m.get("count", 0) + g["count"]
+          json.dump(m, open("out/manifest.json", "w"), indent=1)
+          print("generic foods added:", g["count"])
+          PY
+          fi
+          rm -rf fdc
+
       - name: Summary
         run: |
           { echo "## Offline food pack"; echo; tail -1 build.log; echo; python3 -c "import json;m=json.load(open('out/manifest.json'));print('Products:', m['count'], '| from Open Food Facts:', m.get('off'), '| Egyptian:', m['egypt'], '| shards:', len(m['shards']))"; } >> "$GITHUB_STEP_SUMMARY"

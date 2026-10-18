@@ -757,6 +757,21 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AB. 18 Oct 2026 — v6.36: Ali's choices built (HANDOFF §5.83). Read this first, then AA.
+Built: layout 1A, Egyptian Arabic UI, keyboard A, all of Scout (meter, scam check, follow, gold, offer), USDA generic foods
+(13,266, vitamins + portions), Android 17 target. Waiting for Ali: **which agent ideas** (round 2 on https://claude.ai/artifact/LQ1s1sqbSGJtSC8vfZQLec).
+### Ali's phone checklist for 6.36
+1. ⬜ Home: the box, Food photo / A file / Find for me, "Attune suggests", the four tiles; the sidebar says Work and Chats.
+2. ⬜ Arabic: every screen in Egyptian; tell me any word that sounds wrong.
+3. ⬜ Keyboard: light keys, the letter bubble when pressing, the bottom row works.
+4. ⬜ Scout: a car goal → "Fair price · market a–b", warnings, "Follow price", the offer; "21 karat gold under 3,500".
+5. ⬜ Fit search: «رز مطبوخ», "lentil soup", "chicken breast grilled" → foods with vitamins and cups/pieces as units (after the
+   food pack updates on Wi-Fi — run "Build the offline food pack" once on GitHub).
+### Still open
+1. Run "Build the offline food pack" (Actions) so the generic foods are published.
+2. Ali's agent picks → build them code-first.
+3. Canadian Nutrient File / CIQUAL (their sites didn't answer from the build machines).
+
 ## AA. 18 Oct 2026 — v6.35: Ali's phone notes (HANDOFF §5.82). Read this section first, then Z.
 Ali tried 6.34: food photo found one food, NPU "could not be used", Core Max out of memory, Blaze couldn't write a lesson
 conversation, Arabic hard to read, Lynk & Co answer dragged in the 08 and repeated, Scout showed 2027 cars and "151 EGP", Solve the
@@ -783,8 +798,8 @@ an agent app; food stronger than Yazio; Scout stronger; more knowledge packs, hi
 ## Prompt to start the next session
 
 ```
-Continue Attune on main (= ccr-a0eb3595-e2c7a7, v6.35: Ali's 18 Oct phone notes on top of v6.34).
-First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.82 and NEXT_SESSION.md — the newest sections are AA (Ali's six choices), Z, Y and X (what is in v6.32/6.33,
+Continue Attune on main (= ccr-a0eb3595-e2c7a7, v6.36: Ali's choices — layout 1A, Egyptian Arabic, Scout, food packs, Android 17).
+First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.82 and NEXT_SESSION.md — the newest sections are AB (v6.36, the agent ideas waiting), AA, Z, Y and X (what is in v6.32/6.33,
 my phone checklist, my release list and what is still open), then W and V. Then show me, short and simple: what is done,
 what is open, and your recommended order; ask me the open questions (which page to make minimal next, with options), wait for my answers, then work through them with a task list. If I send an Engine log or
 phone test results, read them first — ExitWatch says why the app closed.
@@ -795,7 +810,7 @@ Standing rules:
 - Never commit *private-key*.json; never change app/attune-test.keystore; Play keys only as GitHub secrets.
 - Don't remove the payment-notification reader from the main APK.
 - Targeted fixes, no rewrites (except the UI/UX rework and the Fit & Food redesign I asked for).
-- Explain every step simply, with technical terms in English AND Egyptian Arabic. Arabic UI = simple formal Arabic.
+- Explain every step simply, with technical terms in English AND Egyptian Arabic. Arabic UI = Egyptian Arabic (my 18 Oct choice).
 - Commit as Claude <noreply@anthropic.com>; no model names in commits or code.
 - Run ALL tests (bash tests/run_all.sh) before pushing to main; push to main, ccr-a0eb3595-e2c7a7 and the branch.
 - Watch "Build the APK" and the desktop build on main and give me the links.
