@@ -5632,4 +5632,10 @@ export const AR = {
   "Say who, like: tell me when Ahmed messages me": "قول مين، كده: لو أحمد بعتلي قولي",
   "I'll tell you: {r}": "هقولك: {r}",
   "Last alerts": "آخر التنبيهات",
+  "Finding the tables…": "بدوّر على الجداول…",
+  "No tables found in this PDF.": "مفيش جداول في الـ PDF ده.",
+  "Table {n}": "جدول {n}",
+  "{n} tables saved to Excel": "{n} جداول اتحفظت Excel",
+  "Tables → Excel": "الجداول ← Excel",
+  "Reading the tables…": "بقرا الجداول…",
 };

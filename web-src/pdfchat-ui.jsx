@@ -20,6 +20,7 @@ import { useDesktopWide } from "./side-ui.jsx";
 import { Md } from "./chat.jsx";
 import { mathToText } from "./quality.js";
 import { checkMath, dedupeAnswer } from "./mathcheck.js";
+import * as PT from "./pdftables.js";
 
 const btn = "px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-40";
 const primary = btn + " bg-teal-500 text-slate-950";
@@ -270,6 +271,29 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
   useEffect(() => { if (!docKey) return; const t = setTimeout(() => lib().touch(docKey, { lastPage: page, zoom }).catch(() => {}), 400); return () => clearTimeout(t); }, [page, zoom, docKey]);
 
   // ---- ask ------------------------------------------------------------------------------------------------------------------------------
+  // v6.40 (S3): the PDF's tables, rebuilt by code from where the words sit (pdftables.js) — read once per document
+  const tablesRef = useRef(null);
+  const getTables = async () => {
+    if (!doc || !doc.b64 || !nativeCall) return [];
+    if (tablesRef.current && tablesRef.current.id === doc.id) return tablesRef.current.t;
+    const pages = [];
+    for (let s = 1; s <= Math.min(doc.count || 1, 200); s += 40) {
+      const r = await nativeCall("pdfWords", { b64: doc.b64, pages: Array.from({ length: Math.min(40, (doc.count || 1) - s + 1) }, (_, i) => s + i) });
+      pages.push(...((r && r.pages) || []));
+    }
+    const t = PT.tablesOf(pages); tablesRef.current = { id: doc.id, t }; return t;
+  };
+  const exportTables = async () => {
+    setBusy(tr("Finding the tables…"));
+    try {
+      const t = await getTables();
+      if (!t.length) { flash && flash(tr("No tables found in this PDF.")); return; }
+      const z = C.xlsxFromSheets(t.map((x, i) => ({ name: tr("Table {n}", { n: i + 1 }) + " p" + x.pages[0], rows: [x.head, ...x.rows.map((r) => r.map((c) => { const v = PT.numOf(c); return v != null && /^[\s(\-+]*[\d.,٠-٩]+[\s)%]*$/.test(c) ? v : c; }))] })));
+      await save(base + " - tables.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", null, C.bytesToB64(z));
+      flash && flash(tr("{n} tables saved to Excel", { n: t.length }));
+    } catch (e) { setErr(String((e && e.message) || e).slice(0, 200)); }
+    finally { setBusy(""); }
+  };
   const ask = async (question) => {
     const text = String(question || q).trim();
     if (!text || !doc || asking) return;
@@ -278,6 +302,12 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
     const history = msgs.slice(-4); setMsgs((m) => [...m, { role: "user", text }]);
     try {
       const kind = Q.intent(text); let answer = "", allowed = [], note = "", sources = [];
+      // v6.40 (S3): "total of the amount column", «إجمالي المبلغ» — answered by code over every row of the PDF's tables
+      if (kind !== "solve" && doc.b64 && nativeCall && /\b(total|sum|average|mean|highest|lowest|largest|smallest|maximum|minimum|how many rows|count)\b|اجمالي|إجمالي|مجموع|متوسط|أعلى|اعلى|أقل|اقل|عدد/i.test(text)) {
+        setAsking(tr("Reading the tables…"));
+        const ta = PT.tableAnswer(text, await getTables().catch(() => []));
+        if (ta && alive()) { setMsgs((m) => [...m, { role: "ai", q: text, text: PT.answerText(ta, Q.hasArabic(text) || getLang() === "ar"), sources: [] }]); return; }
+      }
       if (kind === "find") {
         setAsking(tr("Looking through the pages…"));
         const refs = Q.pageRefs(text).filter((n) => n >= 1 && n <= doc.count);
@@ -524,6 +554,7 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
         <div className="min-w-0 flex-1"><p className="text-[14px] font-semibold text-white truncate" data-testid="pdf-name">{doc.name}</p><p className="text-[11.5px] text-slate-500">{doc.count} {tr("pages")}{doc.scans ? " · " + tr("{n} scanned", { n: doc.scans }) : ""}{partial ? <span data-testid="pdf-loading"> · {tr("reading {a} of {n}…", { a: doc.loaded, n: doc.count })}</span> : null}</p></div>
         {addToKnowledge ? <button onClick={async () => { if (doc.inKnowledge) return; try { const r = await addToKnowledge({ kind: "doc", title: doc.name, pages: doc.index.pages }); setDoc((d) => ({ ...d, inKnowledge: true })); flash && flash(tr("Added to Knowledge: {n} passages", { n: r.chunks })); } catch (e) { flash && flash(String((e && e.message) || e).slice(0, 160)); } }}
           data-testid="pdf-add-knowledge" className="px-2 py-1.5 rounded-lg border border-slate-700 text-[12px] text-slate-200 disabled:opacity-50" disabled={!!doc.inKnowledge}>{doc.inKnowledge ? tr("In Knowledge") : tr("Add to Knowledge")}</button> : null}
+        {isPdf ? <button onClick={exportTables} data-testid="pdf-export-tables" className="px-2 py-1.5 rounded-lg border border-slate-700 text-[12px] text-slate-200 whitespace-nowrap">{tr("Tables → Excel")}</button> : null}
         <div className="flex rounded-lg border border-slate-700 overflow-hidden lg:hidden">{[["chat", tr("Chat")], ["read", tr("Read")]].map(([k, l]) => <button key={k} onClick={() => setTab(k)} data-testid={"pdf-tab-" + k} className={"px-3 py-1.5 text-[12.5px] " + (tab === k ? "bg-teal-500 text-slate-950 font-semibold" : "text-slate-300")}>{l}</button>)}</div>
       </div>
       {err ? <p className="px-3 py-1.5 text-[12px] text-amber-300 border-b border-slate-800" data-testid="pdfchat-err">{err}</p> : null}
