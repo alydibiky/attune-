@@ -1,0 +1,22 @@
+// v6.40 (W4) — the shop catalogue. node tests/unit/v740catalogue.test.mjs
+import assert from "node:assert/strict";
+import * as S from "../../web-src/shop.js";
+import * as Ops from "../../web-src/books-ops.js";
+import { catalogueItems, catalogueText, catalogueHtml, catalogueStamp } from "../../web-src/catalogue.js";
+const E = (n) => Math.round(n * 100);
+let s = S.applySetup(Ops.EMPTY(), { ...S.setupFromSentence("a cafe called Bean", { country: "EG", currency: "EGP" }) }, { at: "2026-10-18T08:00:00Z" });
+const item = (n) => s.items.find((i) => i.name === n);
+s = Ops.upsert(s, "items", { ...item("Cappuccino"), price: E(65) }).state;
+s = Ops.upsert(s, "items", { ...item("Croissant"), price: E(40) }).state;
+const st0 = catalogueStamp(s);
+const list = catalogueItems(s);
+assert.deepEqual(list.map((x) => x.name).sort(), ["Cappuccino", "Croissant"], "only items with a price");
+assert.equal(list.find((x) => x.name === "Croissant").inStock, false, "a tracked item with nothing on hand is sold out");
+const t = catalogueText(s, { phone: "01012345678" });
+assert.match(t, /Bean — today's prices/); assert.match(t, /Cappuccino — 65 EGP/); assert.match(t, /Croissant — 40 EGP \(sold out\)/); assert.match(t, /wa\.me\/201012345678/);
+assert.match(catalogueText(s, { lang: "ar" }), /الأسعار النهارده/);
+s = Ops.adjustStock(s, { item: item("Croissant").id, date: "2026-10-18", qty: 12, unitCost: E(15) });
+assert.notEqual(catalogueStamp(s), st0, "stock coming in changes the stamp (share the new one)");
+const h = catalogueHtml(s, { phone: "01012345678" });
+assert.match(h, /wa\.me\/201012345678\?text=I'd%20like%20to%20order%3A%20Croissant/); assert.doesNotMatch(h, /sold out/);
+console.log("v740catalogue: all passed");

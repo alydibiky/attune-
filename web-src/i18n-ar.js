@@ -5680,4 +5680,10 @@ export const AR = {
   "critical": "حرجة",
   "caution": "تنبيه",
   "Make the lift plan (PDF)": "اعمل خطة الرفع (PDF)",
+  "Set prices first — the catalogue lists items with a price": "حط الأسعار الأول — الكتالوج بيعرض الحاجات اللي ليها سعر",
+  "Your items, prices and what is in stock — as a WhatsApp message or a PDF, with an Order button that opens WhatsApp.": "حاجاتك وأسعارها واللي موجود في المخزن — كرسالة واتساب أو PDF، ومعاها زرار «اطلب» يفتح الواتساب.",
+  "Prices or stock changed since you shared it — share the new one.": "الأسعار أو المخزن اتغيروا من آخر مرة بعته — ابعت الجديد.",
+  "Your WhatsApp number (for orders)": "رقم الواتساب بتاعك (للطلبات)",
+  "As a message": "كرسالة",
+  "As a PDF": "كـ PDF",
 };

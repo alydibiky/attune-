@@ -12,6 +12,8 @@ import * as B from "./books.js";
 import { loadBooks, saveBooks } from "./books-store.js";
 import { homeCurrency } from "./locale.js";
 import { regionOf } from "./locale.js";
+import * as CAT from "./catalogue.js";
+import { sharePdf } from "./books-docs.jsx";
 
 const card = "rounded-2xl bg-[#FFFFFF] border border-[#DCE3EC] shadow-[0_1px_3px_rgba(15,23,42,.06)]";
 const btnP = "h-12 px-5 rounded-2xl text-[#FFFFFF] font-bold text-[15px] disabled:opacity-40 flex items-center justify-center gap-2";
@@ -137,8 +139,26 @@ function Stock({ books, setBooks, shop, share, flash }) {
       setBooks(s); setEdit(null); flash(tr("Saved"));
     } catch (e) { flash(String(e.message || e)); }
   };
+  // v6.40 (W4): the catalogue — the items with prices and stock as a WhatsApp message and a PDF; "share the new one" when it changed
+  const [cat, setCat] = useState(() => { try { return JSON.parse(localStorage.getItem("attune:shop:catalogue:v1") || "null") || {}; } catch (e) { return {}; } });
+  const saveCat = (c) => { setCat(c); try { localStorage.setItem("attune:shop:catalogue:v1", JSON.stringify(c)); } catch (e) {} };
+  const stamp = CAT.catalogueStamp(books), changed = cat.stamp && cat.stamp !== stamp, ar = getLang() === "ar";
+  const shareCat = async (asPdf) => {
+    if (!CAT.catalogueItems(books).length) { flash(tr("Set prices first — the catalogue lists items with a price")); return; }
+    if (asPdf) await sharePdf({ html: CAT.catalogueHtml(books, { phone: cat.phone, lang: ar ? "ar" : "en" }), name: books.company.name + " catalogue", flash });
+    else if (share) share(CAT.catalogueText(books, { phone: cat.phone, lang: ar ? "ar" : "en" }));
+    saveCat({ ...cat, stamp, at: Date.now() });
+  };
   return (
     <div className="space-y-2" data-testid="shop-stock">
+      <div className={card + " p-3 space-y-2"} data-testid="shop-catalogue">
+        <p className="font-bold m-0">{tr("Catalogue")}</p>
+        <p className="text-[12.5px] text-[#5B6B80] m-0">{tr("Your items, prices and what is in stock — as a WhatsApp message or a PDF, with an Order button that opens WhatsApp.")}</p>
+        {changed ? <p className="text-[12.5px] font-semibold text-[#B45309] m-0" data-testid="shop-catalogue-changed">{tr("Prices or stock changed since you shared it — share the new one.")}</p> : null}
+        <input value={cat.phone || ""} onChange={(e) => saveCat({ ...cat, phone: e.target.value })} placeholder={tr("Your WhatsApp number (for orders)")} inputMode="tel" className={input} data-testid="shop-catalogue-phone" />
+        <div className="flex gap-2"><button className={btnS} onClick={() => shareCat(false)} data-testid="shop-catalogue-msg"><Share2 size={14} />{tr("As a message")}</button>
+          <button className={btnS} onClick={() => shareCat(true)} data-testid="shop-catalogue-pdf"><Share2 size={14} />{tr("As a PDF")}</button></div>
+      </div>
       {msg ? <div className={card + " p-3"} data-testid="shop-low"><p className="font-bold text-[#B45309] m-0">{tr("Running low")}</p><pre className="text-[12.5px] whitespace-pre-wrap m-0 mt-1" dir="auto">{msg}</pre>
         {share ? <button className={btnS + " mt-2"} onClick={() => share(msg)} data-testid="shop-reorder"><Share2 size={14} />{tr("Send to the supplier")}</button> : null}</div> : null}
       {books.items.map((it) => (
