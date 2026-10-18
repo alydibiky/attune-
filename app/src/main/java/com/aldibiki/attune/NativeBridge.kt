@@ -1109,6 +1109,14 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     }
     @JavascriptInterface
     fun payQueue(): String = try { PayLog.list(ctx) } catch (e: Throwable) { "[]" }
+
+    /** v6.40 Message alerts: the rules (JSON array), saved as {rules, lang}; the last alerts. Checked by PayListener. */
+    @JavascriptInterface
+    fun watchRules(): String = try { MessageWatch.rules(ctx) } catch (e: Throwable) { "[]" }
+    @JavascriptInterface
+    fun watchSave(json: String) { try { MessageWatch.save(ctx, json) } catch (e: Throwable) { } }
+    @JavascriptInterface
+    fun watchHits(): String = try { MessageWatch.hits(ctx) } catch (e: Throwable) { "[]" }
     @JavascriptInterface
     fun payForget(idsJson: String) { try { PayLog.remove(ctx, idsJson) } catch (e: Throwable) { } }
 

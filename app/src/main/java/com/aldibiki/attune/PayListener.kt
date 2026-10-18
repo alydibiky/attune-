@@ -28,6 +28,8 @@ class PayListener : NotificationListenerService() {
             val title = ex.getCharSequence("android.title")?.toString().orEmpty()
             val text = (ex.getCharSequence("android.bigText") ?: ex.getCharSequence("android.text"))?.toString().orEmpty()
             val all = "$title $text"
+            // v6.40: the message alerts the person asked for ("tell me when Ahmed messages me") — before the money check
+            try { MessageWatch.check(applicationContext, sbn, title, text) } catch (e: Exception) { }
             if (!PayLog.looksLikeMoney(all)) return
             val label = try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }
             PayLog.add(applicationContext, JSONObject()

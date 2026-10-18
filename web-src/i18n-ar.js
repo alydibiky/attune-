@@ -5625,4 +5625,11 @@ export const AR = {
   "not": "مش",
   "Copy all": "انسخ الكل",
   "not published": "مش منشور",
+  "Message alerts": "تنبيهات الرسائل",
+  "Tell Attune whose message you are waiting for — on WhatsApp, Gmail or any email app — and it tells you the moment it arrives. Checked on this phone; SMS are never read.": "قول لـ Attune رسالة مين مستنيها — على الواتس أو الجيميل أو أي أبلكيشن إيميل — وهو يقولك أول ما توصل. كله على الموبايل ده، والـ SMS عمرها ما بتتقري.",
+  "Turn on Notification access for Attune so it can see new messages (Settings opens). If it is grey, see “restricted setting” in Money → Payments.": "شغّل «الوصول للإشعارات» لـ Attune عشان يشوف الرسايل الجديدة (هتفتح الإعدادات). لو الزرار رمادي، شوف «إعداد مقيّد» في الفلوس ← المدفوعات.",
+  "e.g. tell me when Ahmed messages me": "مثلاً: لو أحمد بعتلي قولي",
+  "Say who, like: tell me when Ahmed messages me": "قول مين، كده: لو أحمد بعتلي قولي",
+  "I'll tell you: {r}": "هقولك: {r}",
+  "Last alerts": "آخر التنبيهات",
 };

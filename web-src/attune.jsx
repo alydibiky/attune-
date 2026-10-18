@@ -61,6 +61,8 @@ import { MicButton, SitePhotos } from "./site-ui.jsx";
 import { fold as foldNet, loadNetWeek, saveNetWeek } from "./netreport.js";
 import { TimelinePage } from "./timeline-ui.jsx";
 import { RecallCard } from "./recall-ui.jsx";
+import { WatchPanel } from "./watch-ui.jsx";
+import { parseWatch, newRule, saveWatch, loadWatch, ruleText } from "./watch.js";
 import { parseMission } from "./missions.js";
 // v6.30 (Ali: "no bottom bar on any page — a sidebar like ChatGPT"). The old bottom bar stays only for the older browser tests,
 // which set attune:legacy-nav (tests/harness.py); people never see it.
@@ -7634,6 +7636,8 @@ export default function App() {
     try { return localStorage.getItem("attune:tier") || "free"; } catch (e) { return "free"; }
   });
   useEffect(() => { try { localStorage.setItem("attune:tier", tier); } catch (e) {} }, [tier]);
+  // v6.40: the message-alert rules (they may have come by sync) are handed to the phone at start
+  useEffect(() => { try { if (NATIVE && NATIVE.watchSave) { const l = loadWatch(); if (l.length) NATIVE.watchSave(JSON.stringify({ rules: l, lang: getLang() === "ar" ? "ar" : "en" })); } } catch (e) {} }, []);
   // v6.37 (X3): fold this session's connection log into the weekly privacy report — at start, every 5 minutes, on leaving
   useEffect(() => {
     if (!NATIVE || !NATIVE.netLog) return;
@@ -9310,6 +9314,11 @@ export default function App() {
   // own data is answered on Home; anything else goes to Chat as before. → { lines: [{ text, open, low }], undo, answer } | null (→ Chat)
   const doFromHome = (text) => {
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
+    // v6.40: "tell me when Ahmed messages me" / «لو أحمد بعتلي قولي» → a message alert, on at once
+    { const pw = parseWatch(text); if (pw) { const r = newRule(pw, now); saveWatch([r, ...loadWatch()], ar ? "ar" : "en");
+      const okAccess = !NATIVE || !NATIVE.payAccess || (() => { try { return NATIVE.payAccess(); } catch (e) { return true; } })();
+      return { lines: [{ text: (ar ? "هقولك أول ما توصل: " : "I'll tell you the moment it comes: ") + ruleText(pw, ar) + (okAccess ? "" : (ar ? " — شغّل «الوصول للإشعارات» الأول" : " — turn on Notification access first")), open: "reminders" }],
+        undo: () => saveWatch(loadWatch().filter((x) => x.id !== r.id), ar ? "ar" : "en") }; } }
     // v6.37: a goal with a number and a date («عايز أوفر 60 ألف قبل يونيو», "lose 6 kg before 20 January") → Missions, ready to start
     { const pm = parseMission(text, now); if (pm && pm.deadline) { try { localStorage.setItem("attune:missions:draft", text); } catch (e) {} navTo("missions");
       return { lines: [{ text: ar ? "جهزتلك المهمة — دوس «ابدأ المهمة»" : "Your mission is ready — tap Start the mission", open: "missions" }], undo: null }; } }
@@ -10082,7 +10091,8 @@ export default function App() {
           <CraneToolkit flash={flash} remember={remember}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "reminders" ? (
-          <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} />
+          <>{/* v6.40: Message alerts first — "tell me when Ahmed messages me" */}<div className="mt-3"><WatchPanel native={NATIVE} flash={flash} /></div>
+          <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} /></>
         ) : mode === "cycle" ? (
           <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("instant")} />
         ) : mode === "map" ? (

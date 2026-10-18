@@ -1,0 +1,27 @@
+// v6.40 — Message alerts: reading the request. node tests/unit/v740watch.test.mjs
+import assert from "node:assert/strict";
+import { parseWatch, ruleText } from "../../web-src/watch.js";
+const p = (t) => parseWatch(t);
+assert.deepEqual(p("tell me when Ahmed messages me").who, ["Ahmed"]);
+assert.equal(p("tell me when Ahmed messages me").app, "any");
+assert.deepEqual(p("notify me if Ahmed Samir texts me on WhatsApp").who, ["Ahmed Samir"]);
+assert.equal(p("notify me if Ahmed Samir texts me on WhatsApp").app, "whatsapp");
+const hr = p("let me know when I get an email from hr@company.com");
+assert.deepEqual(hr.who, ["hr@company.com"]); assert.equal(hr.app, "email");
+const cib = p("alert me when I get an email from CIB about the statement");
+assert.deepEqual(cib.who, ["CIB"]); assert.deepEqual(cib.words, ["statement"]);
+assert.deepEqual(p("لو أحمد بعتلي قولي").who, ["أحمد"]);
+const mama = p("نبهني لما ماما تكلمني على الواتس");
+assert.deepEqual(mama.who, ["ماما"]); assert.equal(mama.app, "whatsapp");
+const bank = p("لو جالي إيميل من البنك الأهلي عرفني");
+assert.deepEqual(bank.who, ["البنك الأهلي"]); assert.equal(bank.app, "email");
+const w = p("أي رسالة فيها كلمة ونش نبهني");
+assert.deepEqual(w.who, []); assert.deepEqual(w.words, ["ونش"]);
+assert.deepEqual(p("law ahmed b3tly 2oly").who, ["ahmed"]);
+assert.ok(p("next time Karim replies tell me").once);
+assert.equal(p("remind me at 5 to call Ahmed"), null, "a reminder is not a message alert");
+assert.equal(p("tell me a joke"), null);
+assert.equal(p("Ahmed messaged me yesterday"), null, "no request to be told");
+assert.equal(ruleText(mama, true), "ماما · الواتساب");
+assert.equal(ruleText(cib), "CIB · email · with: statement");
+console.log("v740watch: all passed");

@@ -4,7 +4,7 @@ set -e
 cd "$(dirname "$0")/../.."
 K=${KOTLINC:-kotlinc}
 OUT=$(mktemp -d)
-for pair in "Franco:FrancoTest" "LocalSync:LocalSyncTest"; do
+for pair in "Franco:FrancoTest" "LocalSync:LocalSyncTest" "WatchMatch:WatchMatchTest"; do
   src=${pair%%:*}; t=${pair##*:}
   $K app/src/main/java/com/aldibiki/attune/$src.kt tests/kotlin/$t.kt -include-runtime -d "$OUT/$t.jar" 2>&1 | grep -v "^warning" || true
   java -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -cp "$OUT/$t.jar" ${t}Kt
