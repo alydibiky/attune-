@@ -757,6 +757,22 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AD. 18 Oct 2026 — v6.38: batch 2 (HANDOFF §5.86). Read this first, then AC.
+Built: H5 Instant quick-settings tile · H6 Shelf review · S4 brand kit · W3 site reports (mic + stamped photos + PDF) ·
+W6 video cut / sound only (subtitles wait for an on-device speech model) · X3 "Your week in privacy".
+Still for Ali: the Google Cloud setup in AC (Google sync works after it).
+### Next (batch order)
+3: M3 one timeline. 4: Studio eraser (MagicTouch + LaMa-Dilated on the NPU/GPU, STUDIO_ERASER_PLAN.md) + SD 1.5 on the NPU.
+6: Missions phase 2 (Life Simulator inside) · F2 · H3 · D3 · C4. 7: Recall · S3 · C1 · C5 · W2 · W4 · W5. 8: the large ones. 9: Missions 3–4.
+Also: Google sync on the computer; Fleet photo sync; deletes that travel (tombstones); W6 subtitles.
+### Ali's phone checklist for 6.38
+1. ⬜ Pull down quick settings → edit → add "Attune فوري" → tap it over WhatsApp.
+2. ⬜ Shelf → Review (after a few notes exist).
+3. ⬜ Slides → Brand kit: name, colour, logo → make a deck → open the .pptx on the computer.
+4. ⬜ Reports: tap «اتكلم» and speak; add 2 photos (time + place on each) → Report with photos (PDF).
+5. ⬜ Video: a saved video → قص → 0:10 to 0:40 → save; and "Sound only".
+6. ⬜ Privacy (bottom of the sidebar): "Your week in privacy".
+
 ## AC. 18 Oct 2026 — v6.37: "do them all" — batch 1, Missions, guide, sync (HANDOFF §5.85). Read this first, then AB.
 Ali liked every option: all 3 agents (Missions, Life Simulator, Recall) + all 41 upgrades, Studio like the Honor Gallery
 eraser, sync by Google OR Wi-Fi, and "make them right, smooth, easy, explained". Order: `BUILD_PLAN_2026-10-18.md`.

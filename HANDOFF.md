@@ -1890,6 +1890,28 @@ Built in this release (each: pure module + unit test + UI + e2e + Egyptian Arabi
   21.3.0). **Needs Ali's Google Cloud setup** (NEXT_SESSION AC) before it works; the computer's Google sync comes later.
 - Android 17: target 37, compile 36 (AGP 8.9 can't read the android-37.0 platform — §5.83).
 
+### 5.86 (18 Oct 2026) — v6.38: batch 2 of BUILD_PLAN (Ali: "continue the rest")
+- **H5 Attune Instant tile** (`InstantTile.kt`, a TileService; `EXTRA_OPEN_PAGE` "attune_open"): quick settings → opens Instant
+  over any app (startActivityAndCollapse with a PendingIntent on Android 14+). MainActivity hands the page `{kind:"open", mode}`.
+  Android's own Arabic strings (values-ar) are Egyptian now.
+- **H6 Shelf review** (`shelfreview.js`, `ShelfReview` in shelf-ui): spaced reviews of your notes (Forgot / Hard / I remembered),
+  key `attune:shelf:review:v1`.
+- **S4 Brand kit** (`brand.js`; slides.js `themeOf`, a `pic` shape): company name, colour (contrast checked) and logo on every
+  deck, inside the .pptx as ppt/media/logo.png; the report colour too. Key `attune:brand:v1`.
+- **W3 Site reports** (`sitereport.js`, `site-ui.jsx`): a real mic button (the phone's speech recognition, ar-EG or English),
+  photos shrunk to 1280 px with time + GPS stamps and a note, one PDF with them. Fixed on the way: the picked files were read
+  after the input was cleared (FileList is live) → copied first; the location has its own 7 s cap.
+- **W6 Video cut** (`MediaTools.clip`, bridge `videoClip`; video.js `timeMs`/`clipRange`; `ClipPanel` in video-ui): a part of a
+  saved video, or its sound only (m4a, or webm for Opus/Vorbis), copied as-is by MediaExtractor + MediaMuxer — no re-encoding,
+  quick and cool; starts at the key frame before the start time. Saved through MediaStore to Movies/Attune or Music/Attune.
+  `videoOpen` takes `{uri, type}` for these. **Subtitles are not built**: they need an on-device speech model for long audio
+  (Whisper-class) that Attune doesn't ship yet — a later item.
+- **X3 Your week in privacy** (`netreport.js`, `PrivacyWeek` on the Privacy page): the page folds the session's NetLog (phone)
+  or netLog (computer) into per-day counts per host (35 days, `attune:netweek:v1`; never counts the same entry twice), then
+  shows this week / last week: connections, places, blocked, and why. Only host + reason, never content.
+- Guide entries for all of these. Tests: unit v740sitereport, v740clip, v740netreport; e2e_v740site, e2e_v740clip,
+  e2e_v740privacyweek.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

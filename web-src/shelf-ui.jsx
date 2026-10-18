@@ -640,7 +640,7 @@ function ShelfReview({ records, shelf }) {
           <div className="grid grid-cols-3 gap-2">
             <button onClick={() => rate(1)} className="rounded-xl border border-slate-700 py-2 text-[13px] text-rose-300" data-testid="shelf-review-forgot">{tr("Forgot")}</button>
             <button onClick={() => rate(2)} className="rounded-xl border border-slate-700 py-2 text-[13px] text-amber-300" data-testid="shelf-review-hard">{tr("Hard")}</button>
-            <button onClick={() => rate(3)} className="rounded-xl border border-slate-700 py-2 text-[13px] text-emerald-300" data-testid="shelf-review-good">{tr("Remembered")}</button>
+            <button onClick={() => rate(3)} className="rounded-xl border border-slate-700 py-2 text-[13px] text-emerald-300" data-testid="shelf-review-good">{tr("I remembered")}</button>
           </div>)}
       </> : <p className="text-[13px] text-emerald-300" data-testid="shelf-review-done">{tr("Done for today — they will come back when you are about to forget them.")}</p>}
       <button onClick={() => { setOpen(false); setShown(false); }} className="text-[12px] text-slate-500">{tr("Close")}</button>

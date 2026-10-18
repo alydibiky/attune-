@@ -5542,4 +5542,5 @@ export const AR = {
   "Wi-Fi sync with your other device (encrypted file)": "مزامنة الواي فاي مع جهازك التاني (ملف متشفّر)",
   "Google sync: upload your encrypted file": "مزامنة جوجل: رفع ملفك المتشفّر",
   "Google sync: read your encrypted file": "مزامنة جوجل: قراية ملفك المتشفّر",
+  "I remembered": "افتكرت",
 };
