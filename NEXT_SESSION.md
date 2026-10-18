@@ -757,6 +757,31 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AC. 18 Oct 2026 — v6.37: "do them all" — batch 1, Missions, guide, sync (HANDOFF §5.85). Read this first, then AB.
+Ali liked every option: all 3 agents (Missions, Life Simulator, Recall) + all 41 upgrades, Studio like the Honor Gallery
+eraser, sync by Google OR Wi-Fi, and "make them right, smooth, easy, explained". Order: `BUILD_PLAN_2026-10-18.md`.
+### Done in v6.37
+M1 safe to spend · M2 in today's money · M4 who keeps their word · M5 cancel kit · W1 order from a WhatsApp message ·
+D2 wait or buy · X1 Franco → Arabic keyboard · Missions phase 1 · How to use rewrite + lifestyle chapter · Sync (Wi-Fi works;
+Google needs the setup below). Food pack with the USDA generic foods published (run 39124054217).
+### Ali has to do (Google sync), once
+1. https://console.cloud.google.com → new project "Attune" → APIs & Services → Library → **Google Drive API** → Enable.
+2. OAuth consent screen → External → app name Attune, his e-mail → scope `.../auth/drive.appdata` → add himself as a test user.
+3. Credentials → Create OAuth client → **Android** → package `com.aldibiki.attune` + the **SHA-1** of the signing key
+   (the "Build the APK" key, and later the Play app-signing key from Play Console → App integrity). No secret goes in the app.
+### Next (batch order)
+2: H5 Instant tile · H6 Shelf review · S4 brand kit · W3 voice site report · W6 clip + subtitles · X3 privacy report.
+3: M3 one timeline. 4: Studio eraser (MagicTouch + LaMa-Dilated on the NPU/GPU, STUDIO_ERASER_PLAN.md) + SD 1.5 on the NPU.
+6: Missions phase 2 (Life Simulator inside) · F2 · H3 · D3 · C4. 7: Recall · S3 · C1 · C5 · W2 · W4 · W5. 8: the large ones. 9: Missions 3–4.
+Also: Google sync on the computer (desktop OAuth client); sync of Fleet photos; deletes that travel (tombstones).
+### Ali's phone checklist for 6.37
+1. ⬜ Money: the "Safe to spend today" line; tap it; Keep aside.
+2. ⬜ Fleet: Today → From a message → paste «محتاج ونش 50 طن السبت في 6 أكتوبر يومين»; share a WhatsApp message to Attune.
+3. ⬜ Keyboard: 3→ع Franco, type "ana gay bokra ".
+4. ⬜ Home: type «عايز أوفر 60 ألف قبل يونيو» → Missions → Start; the 08:30 note next morning.
+5. ⬜ Backup → Sync → Wi-Fi between the phone and the Windows app (same Wi-Fi), and Google after the setup above.
+6. ⬜ How to use (bottom of the sidebar): the new chapter "Get the most of Attune".
+
 ## AB. 18 Oct 2026 — v6.36: Ali's choices built (HANDOFF §5.83). Read this first, then AA.
 Built: **Ali's own arrangement from the board** (HANDOFF §5.84: Create · Projects · Home · Students · Money · Health · Daily ·
 Work; Follow-ups; Tools as choices), layout 1A, Egyptian Arabic UI, keyboard A, all of Scout (meter, scam check, follow, gold, offer), USDA generic foods

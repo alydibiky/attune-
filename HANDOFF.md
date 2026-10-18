@@ -1856,6 +1856,40 @@ Ali arranged every page himself on https://claude.ai/artifact/89PPsVB9ybyytBBEKf
 - Tests: `unit/v734hubs.test.mjs` rewritten for this order, `e2e_v734sidebar.py` updated, `e2e_v736pdfedit.py` opens the
   Converter directly. Fit & Food and the shop books had their own built-in Arabic (formal) → Egyptian too.
 
+### 5.85 (18 Oct 2026) — v6.37: Ali: "I like all the options, do them all … make them right", Google or Wi-Fi sync, a strong How to use
+Plan and order: `BUILD_PLAN_2026-10-18.md` (9 batches). Studio eraser research (models, licences, timings): `STUDIO_ERASER_PLAN.md`.
+Built in this release (each: pure module + unit test + UI + e2e + Egyptian Arabic + a guide entry):
+- **M1 Safe to spend today** (`safespend.js`, `safespend-ui.jsx`): one line on Money (phone) / a card on Overview (computer):
+  (balance − every bill, People & plans payment, trial/renewal and debt due before the next salary − "keep aside") ÷ days left,
+  minus today's spending. `occurrences()` follows Money's own recurring rules (daily ranges, weekly, monthly 31st → last day).
+- **M2 In today's money** (`deal.js realCost`): installments vs cash at the bank's yearly certificate rate (set once, default 20%).
+- **M4 Who keeps their word** (`chatxray.js promiseScores`): kept / broken / late / open per person over the saved X-rays.
+- **M5 Cancel kit** (`deadlines.js cancelKit`): steps (Play / App Store / the service's page / ask) + a ready message, on Dates.
+- **W1 Order from a message** (`fleet-order.js`, Fleet "From a message"): tons, day (weekday, dd/mm, «بكرة», ranges), days/hours,
+  site («في 6 أكتوبر» + another date = the city), free cranes (smallest that fits first, booked ones show the job), price from
+  the crane's rate, the reply in the CLIENT's language, a printable quote, Book it (addJob, a new site made). A crane request
+  shared from WhatsApp opens it (event `attune-biz-view` "fleet" + `attune-fleet-order`). The old Work tab "Fleet" (Team
+  records) is labelled Team records.
+- **D2 Wait or buy** (`scout.js timingOf`): the market book now keeps first-seen + first price; days ads stay up, share that cut
+  their price → "buy now, good ones go in ~N days" / "wait or bargain".
+- **X1 Franco → Arabic** (`Franco.kt`, keyboard chip "3→ع Franco"): dictionary of everyday Egyptian words + names, then rules;
+  each word on space/enter. `tests/kotlin/run.sh` (needs kotlinc; run_all runs it when KOTLINC is set).
+- **Missions phase 1** (`missions.js`, `missions-ui.jsx`; Home line `home-missions`, mode `missions` in Home): save / weight /
+  buy from a sentence; forecast = bootstrap of the person's own 30-day stretches (weeks below 45 days of history), seeded;
+  weight = 4-week trend ± error; buy = money chance × chance of an ad at the price (Scout's market book; a Scout goal is made);
+  the ONE step (cut a quarter of the top spending → new chance; out of reach → the reachable date / target; weight → kcal, never
+  > ~1 kg/week); evidence; a chance line (log per day); conflicts between money missions; 08:30 debrief notification
+  (`missions-morning` → opens Missions). A goal typed in the Home box opens Missions filled in.
+- **How to use rewritten** (`guide.js`, `guide-ui.jsx`): the new sidebar, every page with "where it lives", all new features,
+  Egyptian Arabic, and the chapter "Get the most of Attune" (morning, day, evening, weekly, monthly, work).
+- **Sync** (`sync.js`, `sync-ui.jsx` = Backup → Sync): the backup's encrypted file; `syncMerge` joins every list of items with an
+  id (newer copy wins), plain values keep this device's; Fleet's IndexedDB state travels ("idb:fleet"); attachments don't yet;
+  a delete doesn't travel — "Make this device exactly like the other one" does. **Wi-Fi**: `LocalSync.kt` / `desktop/lib/localsync.js`
+  (POST push / GET pull, plain sockets — the content is already AES-GCM), Android 17 `ACCESS_LOCAL_NETWORK` asked at runtime.
+  **Google**: `GoogleDrive.kt` (appDataFolder, one file), token from Google Identity AuthorizationClient (play-services-auth
+  21.3.0). **Needs Ali's Google Cloud setup** (NEXT_SESSION AC) before it works; the computer's Google sync comes later.
+- Android 17: target 37, compile 36 (AGP 8.9 can't read the android-37.0 platform — §5.83).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
