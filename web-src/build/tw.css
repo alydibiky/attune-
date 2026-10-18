@@ -39,6 +39,12 @@ html:not(.att-light) .calm .c-btn{color:#0B1A17}
 .calm .c-ticks{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}
 .calm .c-ticks>i{height:14px;border-radius:4px;border:1.5px solid var(--c-ln)}.calm .c-ticks>i.d{background:var(--c-acc);border-color:var(--c-acc)}.calm .c-ticks>i.n{border-color:var(--c-acc)}
 
+/* v6.35 (Ali: "the Arabic interface is very disturbing for the eyes — I am Arabic and didn't understand anything"): Arabic letters
+   are joined, so the spaced-out capital-label style (letter-spacing) pulls every word apart; in Arabic there is none, and the
+   lines get a little more room for the dots and marks above and below. */
+html[dir="rtl"] *, :lang(ar) { letter-spacing: 0 !important; }
+html[dir="rtl"] body { line-height: 1.6; }
+
 /* v6.27 the lesson player: pictures that draw themselves (lesson-ui.jsx) */
 @keyframes att-pop { from { transform: scale(0); opacity: 0 } to { transform: scale(1); opacity: 1 } }
 @keyframes att-draw { from { stroke-dasharray: 600; stroke-dashoffset: 600 } to { stroke-dasharray: 600; stroke-dashoffset: 0 } }

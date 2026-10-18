@@ -1,6 +1,6 @@
 # Attune — the whole app in one handoff (read this first)
 
-_Up to date: 17 Oct 2026, **v6.34** (versionCode 95; v6.34 = Ali's 17 Oct phone list, HANDOFF §5.81; v6.32 = the joint release of five threads, HANDOFF §5.79; v6.33 = Mind A + Code B, §5.80) on `main` = branch `ccr-a0eb3595-e2c7a7`._
+_Up to date: 18 Oct 2026, **v6.35** (versionCode 96; v6.35 = Ali's 18 Oct notes, HANDOFF §5.82; v6.34 = Ali's 17 Oct phone list, HANDOFF §5.81; v6.32 = the joint release of five threads, HANDOFF §5.79; v6.33 = Mind A + Code B, §5.80) on `main` = branch `ccr-a0eb3595-e2c7a7`._
 This file is the map. Details and history are in `HANDOFF.md` (§5.x = one section per release, newest at the end:
 §5.44–§5.60 cover 10–12 Oct 2026; §5.74–§5.80 cover 16–17 Oct). Ali's raw problem lists are in `NEXT_SESSION.md`. The desktop plan is in
 `DESKTOP_PLAN.md`.
@@ -169,11 +169,12 @@ Google Play Billing.
 | v6.32 | 17 Oct | Joint release of five threads (HANDOFF §5.76–§5.79): Create 6 tabs; video not sold; Deep answer; Fit & Food minimal B + contrast; **Edit a PDF**; **Overpaying check**; **Fleet & rentals** + Business v2; Scout at night, metro minutes, photo check; Learn extras; web head-to-head tables; French/Spanish/Turkish; Attune keyboard |
 | v6.33 | 17 Oct | Mind A (picture wall with colour chips) and Code B (talk to a coder) — HANDOFF §5.80 |
 | v6.34 | 17 Oct | Food labels, maid every Saturday, Money = Money · Watch · People · Deal Check · Scout, Engine + Food sheet minimal, lessons ahead, Fleet issue in the warehouse order — HANDOFF §5.81 |
+| v6.35 | 18 Oct | Food plate scan (every food, grams from its share), Core Max and bigger desktop-only, NPU driver declared + reason logged, lesson conversation robust, Solve question by question, research model-number lock + loop cut, Scout exact year / real prices, Arabic letter-spacing + money format, keyboard above the nav bar, Knowledge only in developer mode — HANDOFF §5.82 |
 
 ## 8. Prompt for the next session (paste as is)
 The current prompt is at the end of `NEXT_SESSION.md` ("Prompt to start the next session"). Short version:
 ```
-Continue Attune on main (v6.34). Read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.81 and NEXT_SESSION.md sections Z, Y and X first.
+Continue Attune on main (v6.35). Read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.82 and NEXT_SESSION.md sections AA, Z, Y and X first.
 Show me what is done and open, ask the open questions with options, then work through them with a task list.
 Follow every standing rule in APP_HANDOFF.md §1.
 ```

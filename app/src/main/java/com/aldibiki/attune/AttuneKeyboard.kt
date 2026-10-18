@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.text.InputType
@@ -15,6 +16,7 @@ import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.HorizontalScrollView
@@ -94,6 +96,15 @@ class AttuneKeyboard : InputMethodService() {
         keys = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         root.addView(keys, LinearLayout.LayoutParams(-1, -2))
         buildStrip(); buildKeys()
+        // Android 15+ draws the keyboard behind the navigation bar, whose own buttons (hide keyboard, switch keyboard)
+        // then sit on top of the bottom row and take its taps: keep the keys above the bar.
+        root.setOnApplyWindowInsetsListener { v, insets ->
+            val bottom = if (Build.VERSION.SDK_INT >= 30)
+                insets.getInsets(WindowInsets.Type.navigationBars() or WindowInsets.Type.tappableElement()).bottom
+            else @Suppress("DEPRECATION") insets.systemWindowInsetBottom
+            v.setPadding(dp(3f), dp(4f), dp(3f), dp(6f) + bottom)
+            insets
+        }
         return root
     }
 

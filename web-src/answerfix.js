@@ -188,8 +188,42 @@ export function tidyAnswer(answer) {
   // never tidy an answer away completely
   return tidy.trim() ? tidy : String(answer || "");
 }
-function tidyInner(answer) {
+/** v6.35 (Ali's Lynk & Co answer: "…[The official test data table]. The 9 **Comparison:** The Lynk…"): a small model that
+    starts the same labelled paragraph or sentence again is looping — the answer is cut where the repeat begins (back to the end
+    of the last whole sentence), and a sentence said twice is kept once. */
+export function cutLoops(answer) {
   let t = String(answer || "");
+  const labels = [...t.matchAll(/\*\*([^*\n]{2,40}?):?\*\*:?/g)];
+  const seen = new Map();
+  for (const m of labels) {
+    const k = m[1].toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+    if (!k) continue;
+    if (seen.has(k) && !/^\s*\|/.test(t.slice(t.lastIndexOf("\n", m.index) + 1, m.index + 1))) {
+      let cut = m.index;
+      const before = t.slice(0, cut), end = Math.max(before.lastIndexOf(". "), before.lastIndexOf(".\n"), before.lastIndexOf("]."), before.lastIndexOf("] "), before.lastIndexOf("\n"));
+      if (end > seen.get(k)) cut = end + 1;
+      t = t.slice(0, cut).trim();
+      break;
+    }
+    seen.set(k, m.index);
+  }
+  // a whole sentence (6+ words) written twice → the second one goes, and what follows it on that line
+  const keys = new Set();
+  return t.split("\n").map((line) => {
+    if (/^\s*\|/.test(line)) return line;
+    const out = [];
+    for (const p of line.split(/(?<=[.!?؟])[ \t]+/)) {
+      const k = p.toLowerCase().replace(/\[\d+\]/g, "").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+      const long = k.split(" ").length >= 6;
+      if (long && keys.has(k)) continue;
+      if (long) keys.add(k);
+      out.push(p);
+    }
+    return out.join(" ");
+  }).join("\n");
+}
+function tidyInner(answer) {
+  let t = cutLoops(String(answer || ""));
   // citation lists "[2, 3, 5]" → [2][3][5]; empty "[]" gone; "[5][5]" → [5]
   t = t.replace(/\[(\d{1,2}(?:[\s,]+\d{1,2})+)\]/g, (_, l) => l.split(/[\s,]+/).map((x) => "[" + x + "]").join(""));
   // v5.33 — token glitches of a small model writing fast (Ali's Lynk & Co 900 answer):

@@ -240,6 +240,26 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
         sources = r.pages; allowed = r.pages;
         setAsking(tr("Reading pages {p}…", { p: r.pages.slice(0, 6).join(", ") }));
         answer = String(await llm(Q.answerMessages(text, r.excerpts, history), { maxTokens: 700, temperature: 0.1 }) || "");
+      } else if (kind === "solve" && Q.questionsOf(doc.index).length) {
+        // v6.35: the questions found by code, solved one at a time; the answer grows on the page as each one is done
+        const qs = Q.questionsOf(doc.index); allowed = doc.index.pages.map((p) => p.n);
+        const pageText = (n) => ((doc.index.pages.find((p) => p.n === n) || {}).text || "");
+        const done = []; const key = "solve-" + id;
+        const show = (extra) => setMsgs((m) => { const t = done.join("\n\n") + (extra ? (done.length ? "\n\n" : "") + extra : ""); const i = m.findIndex((x) => x.key === key);
+          const row = { role: "ai", key, q: text, text: t, sources: [] }; return i >= 0 ? m.map((x, j) => (j === i ? row : x)) : [...m, row]; });
+        for (let i = 0; i < qs.length; i++) {
+          if (!alive()) return;
+          setAsking(tr("Solving question {i} of {n}…", { i: i + 1, n: qs.length }));
+          const headLine = `### ${tr("Question {n}", { n: qs[i].n })} [p. ${qs[i].page}]`;
+          let acc = "";
+          const out = String(await llm(Q.solveOneMessages(text, qs[i], pageText(qs[i].page)), { maxTokens: 900, temperature: 0.1, onToken: (t) => { acc += t; if (alive()) show(headLine + "\n" + acc); } }) || acc || "").trim();
+          done.push(headLine + "\n" + (out || tr("(no answer came for this one — ask about it on its own)")));
+          show("");
+        }
+        if (!alive()) return;
+        const chk = Q.checkCitations(done.join("\n\n"), allowed);
+        setMsgs((m) => m.map((x) => (x.key === key ? { role: "ai", q: text, text: chk.text || done.join("\n\n"), note: qs.length >= 20 ? tr("The first 20 questions were solved.") : "", sources: [] } : x)));
+        return;
       } else if (kind === "solve") {
         // the whole document (a short one in one go; a long one part by part), solved question by question
         const secs = Q.sections(doc.index, 7000).slice(0, 8); allowed = doc.index.pages.map((p) => p.n);
@@ -269,7 +289,7 @@ export function PdfChatPage({ flash, llm, modelReady, openEngine, canReadPhotos,
       const chk = Q.checkCitations(answer, allowed);
       if (!chk.supported && !chk.saysNotFound && kind !== "solve") note = (note ? note + " " : "") + tr("This answer could not be tied to a page — check the pages listed below before relying on it.");
       if (chk.removed) note = (note ? note + " " : "") + tr("{n} page reference(s) the AI made up were removed.", { n: chk.removed });
-      setMsgs((m) => [...m, { role: "ai", q: text, text: chk.text || tr("I could not find anything about that in this document."), note, sources: chk.supported ? [] : sources }]);
+      setMsgs((m) => [...m, { role: "ai", q: text, text: chk.text || (kind === "solve" ? tr("The model gave no answer this time — try again, or ask about one question at a time.") : tr("I could not find anything about that in this document.")), note, sources: chk.supported ? [] : sources }]);
     } catch (e) { setMsgs((m) => [...m, { role: "ai", q: text, text: tr("Something went wrong: {e}", { e: String((e && e.message) || e).slice(0, 120) }), sources: [] }]); }
     finally { setAsking(""); }
   };

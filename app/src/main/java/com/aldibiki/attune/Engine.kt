@@ -446,7 +446,9 @@ object Engine {
         // the system can then take pages back instead of killing Attune (storage lab: about the same speed).
         val freeAfter = DeviceInfo.availRamBytes(ctx) - model.sizeBytes - 2_000L * 1024 * 1024
         mappedWeights = flashMode || mappedFallback(model.sizeBytes, allowedBytes(ctx)) || freeAfter < 0
-        if (freeAfter < 0 && !flashMode) try { java.io.File(ctx.filesDir, "engine.log").appendText("\nMemory: ${DeviceInfo.availRamBytes(ctx) / 1048576} MB free for a ${model.sizeBytes / 1048576} MB model — its weights are read from storage this time, so Android won't have to close Attune.\n") } catch (e: Exception) {}
+        // notes for the Engine log, written after the log is cleared for this start (v6.35: they used to be wiped)
+        val startNotes = mutableListOf<String>()
+        if (freeAfter < 0 && !flashMode) startNotes += "Memory: ${DeviceInfo.availRamBytes(ctx) / 1048576} MB free for a ${model.sizeBytes / 1048576} MB model — its weights are read from storage this time, so Android won't have to close Attune."
         if (model.sizeBytes > allowedBytes(ctx) && !mappedWeights) {  // (the draft model is only added when both fit: draftFor)
             state = State.ERROR
             error = "This model is too big for this phone's memory — it would freeze the phone. Pick a smaller one in Engine (Qwen 3.5 4B is the fast choice)."
@@ -458,9 +460,14 @@ object Engine {
         // v6.34: the NPU first when the person turned it on (it is an accelerator like the GPU: every layer goes there)
         npuDev = ""
         if (!forceCpu && !flashMode && Prefs.npu(ctx) && npuBuilt(ctx)) {
-            npuDev = try { EngineNative.nLoadNpu(ctx.applicationInfo.nativeLibraryDir) } catch (e: Throwable) { "" }
-            if (npuDev.isNotEmpty()) { useGpu = true; gpuName = "NPU (Hexagon) $npuDev" }
-            else { Prefs.setNpu(ctx, false); Prefs.setNpuNote(ctx, "This phone's NPU could not be used by the engine — Attune stays on the CPU.") }
+            val got = try { EngineNative.nLoadNpu(ctx.applicationInfo.nativeLibraryDir) } catch (e: Throwable) { "ERR:" + (e.message ?: e.javaClass.simpleName) }
+            npuDev = if (got.startsWith("ERR:")) "" else got
+            if (npuDev.isNotEmpty()) { useGpu = true; gpuName = "NPU (Hexagon) $npuDev"; startNotes += "NPU: running on $npuDev." }
+            else {
+                val why = got.removePrefix("ERR:").replace(Regex("\\s+"), " ").trim().take(400)
+                startNotes += "NPU: could not be used — $why"
+                Prefs.setNpu(ctx, false); Prefs.setNpuNote(ctx, "This phone's NPU could not be used by the engine — Attune stays on the CPU.")
+            }
         }
         // (flash mode stays on the CPU: the GPU would need every expert copied into its own memory)
         if (!useGpu && !forceCpu && !flashMode && Prefs.gpu(ctx)) {
@@ -481,7 +488,7 @@ object Engine {
         error = null
         modelId = model.id
         changed()
-        try { logFile(ctx).writeText("") } catch (e: Exception) {}
+        try { logFile(ctx).writeText(if (startNotes.isEmpty()) "" else startNotes.joinToString("\n", postfix = "\n")) } catch (e: Exception) {}
 
         // Crash guard: if the graphics driver takes the whole app down while
         // loading, this flag is still set at the next launch, and the app

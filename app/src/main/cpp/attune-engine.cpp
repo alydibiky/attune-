@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <cstdlib>
+#include <dlfcn.h>
 #include <chrono>
 #include <mutex>
 #include <string>
@@ -113,6 +114,8 @@ Java_com_aldibiki_attune_EngineNative_nLoadGpu(JNIEnv * env, jobject, jstring jd
 // GPU. libattune-npu.so is llama.cpp's libggml-hexagon.so built in Qualcomm's toolchain image at the same commit
 // (.github/workflows: the APK build); the DSP half (libggml-htp-v73…v81.so) sits in the same folder, and the DSP loader finds
 // it through ADSP_LIBRARY_PATH. Returns the NPU device's name (e.g. "HTP0"), or "" when it is not there / not usable.
+static std::string npu_why;
+
 JNIEXPORT jstring JNICALL
 Java_com_aldibiki_attune_EngineNative_nLoadNpu(JNIEnv * env, jobject, jstring jdir) {
     static std::mutex mu;
@@ -122,6 +125,14 @@ Java_com_aldibiki_attune_EngineNative_nLoadNpu(JNIEnv * env, jobject, jstring jd
         const char * c = env->GetStringUTFChars(jdir, nullptr);
         if (c) { dir = c; env->ReleaseStringUTFChars(jdir, c); }
     }
+    // keep the backend's warnings and errors while it loads (they say why the NPU can't be used)
+    ggml_log_callback prev_cb = nullptr; void * prev_ud = nullptr;
+    ggml_log_get(&prev_cb, &prev_ud);
+    npu_why.clear();
+    ggml_log_set([](ggml_log_level lvl, const char * text, void *) {
+        if ((lvl == GGML_LOG_LEVEL_ERROR || lvl == GGML_LOG_LEVEL_WARN) && text && npu_why.size() < 600) npu_why += text;
+        ELOG("%s", text ? text : "");
+    }, nullptr);
     const std::string adsp = dir + ";/vendor/lib/rfsa/adsp;/vendor/dsp/cdsp;/system/lib/rfsa/adsp;/dsp";
     setenv("ADSP_LIBRARY_PATH", adsp.c_str(), 1);
     bool have = false;
@@ -133,6 +144,10 @@ Java_com_aldibiki_attune_EngineNative_nLoadNpu(JNIEnv * env, jobject, jstring jd
         const std::string path = dir + "/libattune-npu.so";
         ggml_backend_reg_t reg = ggml_backend_load(path.c_str());
         ELOG("NPU backend %s: %s", path.c_str(), reg ? "loaded" : "not available");
+        if (!reg) {
+            void * h = dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);   // only to read the loader's reason
+            if (!h) { const char * e = dlerror(); if (e) npu_why += e; } else dlclose(h);
+        }
     }
     std::string name;
     for (size_t i = 0; i < ggml_backend_dev_count(); i++) {
@@ -140,6 +155,9 @@ Java_com_aldibiki_attune_EngineNative_nLoadNpu(JNIEnv * env, jobject, jstring jd
         std::string dn = ggml_backend_dev_name(d), desc = ggml_backend_dev_description(d);
         if (dn.rfind("HTP", 0) == 0 || desc.find("exagon") != std::string::npos) { name = dn; break; }
     }
+    // v6.35: no device → say why (the backend's own errors, e.g. "failed to load libcdsprpc.so"), for the Engine log
+    if (name.empty()) name = "ERR:" + (npu_why.empty() ? std::string(have ? "the NPU backend has no device" : "the NPU backend did not load") : npu_why);
+    ggml_log_set(prev_cb, prev_ud);
     std::string ascii;
     for (char ch : name) ascii += ((unsigned char) ch < 0x80) ? ch : '?';
     return env->NewStringUTF(ascii.c_str());

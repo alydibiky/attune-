@@ -48,8 +48,8 @@ function Setup({ onDone, flash }) {
       <p className="text-[15px] font-bold pt-1">{tr("Items and prices")}</p>
       <p className="text-[12.5px] text-[#5B6B80] -mt-2">{tr("Set the prices you charge. Items without a price stay, but can't be sold until you set one.")}</p>
       <div className="space-y-1.5">{su.items.map((it, i) => (
-        <div key={i} className="flex items-center gap-2"><input value={it.name} onChange={(e) => setItem(i, "name", e.target.value)} className={input + " flex-1"} dir="auto" />
-          <input value={it.priceText ?? ""} onChange={(e) => setItem(i, "priceText", e.target.value)} placeholder={tr("Price")} inputMode="decimal" className={input + " w-24"} data-testid="shop-price" />
+        <div key={i} className="flex items-center gap-2"><input value={it.name} onChange={(e) => setItem(i, "name", e.target.value)} placeholder={tr("Item name")} className={input} style={{ flex: "1 1 0", minWidth: 0, width: "auto" }} dir="auto" data-testid="shop-item-name" />
+          <input value={it.priceText ?? ""} onChange={(e) => setItem(i, "priceText", e.target.value)} placeholder={tr("Price")} inputMode="decimal" className={input} style={{ width: 96, flex: "0 0 96px" }} data-testid="shop-price" />
           <button className="w-9 h-9 grid place-items-center text-[#94A3B8]" aria-label={tr("Remove")} onClick={() => setSu((x) => ({ ...x, items: x.items.filter((_, j) => j !== i) }))}><Trash2 size={15} /></button></div>))}
         <button className={btnS} onClick={() => setSu((x) => ({ ...x, items: [...x.items, { name: "", unit: "pcs", track: true, price: 0 }] }))}><Plus size={15} />{tr("Add an item")}</button>
       </div>

@@ -262,15 +262,17 @@ export function loadClip(base, { fetchImpl = (u) => fetch(u), win = typeof windo
 export function resetClip() { loading = null; }
 
 /** A photo (a data: or blob: URL) → its pixels, centre square, size×size. */
-export function photoPixels(url, size, doc = document, fit = "crop") {
+export function photoPixels(url, size, doc = document, fit = "crop", region = null) {
   return new Promise((ok, bad) => {
     const img = new Image();
     img.onload = () => {
-      const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+      // v6.35: a part of the photo (fractions 0–1) — the plate scan looks at each quarter on its own
+      const ox = region ? Math.floor(region.x * (img.naturalWidth || img.width)) : 0, oy = region ? Math.floor(region.y * (img.naturalHeight || img.height)) : 0;
+      const w = region ? Math.max(1, Math.floor(region.w * (img.naturalWidth || img.width))) : img.naturalWidth || img.width, h = region ? Math.max(1, Math.floor(region.h * (img.naturalHeight || img.height))) : img.naturalHeight || img.height;
       const { sx, sy, s } = fit === "stretch" ? { sx: 0, sy: 0, s: 0 } : centerSquare(w, h);   // SigLIP looks at the whole photo, squeezed
       const c = doc.createElement("canvas"); c.width = size; c.height = size;
       const g = c.getContext("2d"); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
-      if (fit === "stretch") g.drawImage(img, 0, 0, w, h, 0, 0, size, size); else g.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+      if (fit === "stretch") g.drawImage(img, ox, oy, w, h, 0, 0, size, size); else g.drawImage(img, ox + sx, oy + sy, s, s, 0, 0, size, size);
       ok(g.getImageData(0, 0, size, size).data);
     };
     img.onerror = () => bad(new Error("photo"));
@@ -299,4 +301,91 @@ export async function classify(clip, url, k = 5, userCc = F.getCountry ? F.getCo
   const x = new ort.Tensor("float32", toTensor(px, sz, bank.image.mean, bank.image.std), [1, 3, sz, sz]);
   const out = await session.run({ [session.inputNames[0]]: x });
   return rank(bank, out[session.outputNames[0]].data, k);
+}
+
+// ---- v6.35 the plate scan (Ali: "it does not do more than 1 meal, the proportions are wrong, it is not good in seeing sizes") ----
+// The fast look saw only the middle of the photo and called one dish "sure" — the AI never looked again, and the amount was one
+// default serving. Now the four overlapping quarters are looked at too (the first encoder only: ≈ 4 × 0.3 s on a phone):
+//   - a different food that wins a quarter is a second (third…) item, placed where it was seen;
+//   - each food's share of the quarters is its share of the plate, and the grams follow from it;
+//   - "sure" (no AI check) only for ONE dish that fills the photo and is not counted in pieces (pieces are counted by the AI).
+export const REGIONS = [{ x: 0, y: 0, w: 0.6, h: 0.6 }, { x: 0.4, y: 0, w: 0.6, h: 0.6 }, { x: 0, y: 0.4, w: 0.6, h: 0.6 }, { x: 0.4, y: 0.4, w: 0.6, h: 0.6 }];
+export const REGION_MIN_P = 0.3;     // a quarter's answer counts from this share up
+export const PLATE_G = 420;          // a full dinner plate of one cooked dish, eaten — when the food has no "plate" portion
+/** Each quarter → its ranking (the first encoder; [] when it fails). */
+export async function classifyRegions(clip, url, k = 3, userCc = F.getCountry ? F.getCountry() : "") {
+  const { ort, bank } = clip, out = [];
+  for (let r = 0; r < REGIONS.length; r++) {
+    try {
+      if (bank.v === 2) {
+        if (clip.test) { out.push(rankAll(bank, [await clip.test.embed(url, 0, REGIONS[r])], k, userCc)); continue; }
+        const e = bank.encoders[0], ses = clip.sessions[0], im = e.image;
+        const px = await photoPixels(url, im.size, document, im.fit || "crop", REGIONS[r]);
+        const t = new ort.Tensor("float32", toTensor(px, im.size, im.mean, im.std), [1, 3, im.size, im.size]);
+        const o = await ses.run({ [ses.inputNames[0]]: t });
+        out.push(rankAll(bank, [o[e.output && o[e.output] ? e.output : ses.outputNames[ses.outputNames.length - 1]].data], k, userCc));
+      } else {
+        if (clip.test) { out.push(rank(bank, await clip.test.embed(url, 0, REGIONS[r]), k)); continue; }
+        const sz = bank.image.size, px = await photoPixels(url, sz, document, "crop", REGIONS[r]);
+        const o = await clip.session.run({ [clip.session.inputNames[0]]: new ort.Tensor("float32", toTensor(px, sz, bank.image.mean, bank.image.std), [1, 3, sz, sz]) });
+        out.push(rank(bank, o[clip.session.outputNames[0]].data, k));
+      }
+    } catch (e) { out.push([]); }
+  }
+  return out;
+}
+const keyOfFood = (fd) => (fd && (fd.like ? fd.en : fd.id)) || "";
+/** A food's grams for a share of the plate: its own "plate" portion if it has one, else PLATE_G — never under 40 g. */
+export function gramsForShare(fd, share) {
+  const plate = fd && fd.portions && (fd.portions.plate || fd.portions["dinner plate"]);
+  const full = plate ? (typeof plate === "number" ? plate : plate.g || plate.grams || PLATE_G) : PLATE_G;
+  return Math.max(40, Math.round(full * Math.max(0.1, Math.min(1, share)) / 5) * 5);
+}
+/** decide() + the quarters → the plate: { status, items, foods: n }. Pure; tests in tests/unit/v738plate.test.mjs. */
+export function plateScan(bank, ranked, regions) {
+  const main = decide(bank, ranked);
+  if (main.status === "notfood" || !main.items.length || !Array.isArray(regions) || !regions.length) return main;
+  const mainFd = entryFood(main.top), mainKey = keyOfFood(mainFd) || main.top.en;
+  const seen = new Map();   // food key → { fd, entry, quarters: [r], best p }
+  regions.forEach((rk, r) => {
+    const top = rk && rk[0]; if (!top || top.p < REGION_MIN_P) return;
+    const e = bank.items[top.i]; if (!e || e.kind === "not") return;
+    const fd = entryFood(e); const key = keyOfFood(fd) || e.en;
+    const x = seen.get(key) || { fd, e, quarters: [], p: 0 }; x.quarters.push(r); x.p = Math.max(x.p, top.p); seen.set(key, x);
+  });
+  const others = [...seen.entries()].filter(([k]) => k !== mainKey).sort((a, b) => b[1].quarters.length - a[1].quarters.length || b[1].p - a[1].p).slice(0, 3);
+  const mainQ = (seen.get(mainKey) || { quarters: [] }).quarters.length;
+  const unitOf = (fd) => Object.keys((fd && fd.portions) || {})[0] || "g";
+  const countable = (fd) => /^(piece|pieces|slice|loaf|egg|skewer|roll|stick|cup|glass|can|bottle|sandwich)$/i.test(unitOf(fd));
+  const boxOf = (qs) => { const xs = qs.map((q) => REGIONS[q]); const x = Math.min(...xs.map((b) => b.x)), y = Math.min(...xs.map((b) => b.y));
+    return [x, y, Math.max(...xs.map((b) => b.x + b.w)) - x, Math.max(...xs.map((b) => b.y + b.h)) - y]; };
+  if (!others.length) {
+    // one dish: "sure" only when every quarter agrees and it is not counted in pieces (the AI counts them)
+    let one = main;
+    // a dish counted in pieces that fills the plate starts at the plate's share, not at one piece (mahshi: 1 piece = 60 g)
+    const m0 = main.items[0], plateG = mainFd && mainFd.portions && mainFd.portions.plate;
+    if (countable(mainFd) && plateG && mainQ >= 2 && m0.grams && !m0.learned) {
+      const g = gramsForShare(mainFd, mainQ / 4);
+      if (g > m0.grams) one = { ...main, items: [{ ...F.scaleItem({ ...m0, base: m0.grams }, g / m0.grams), base: g }] };
+    }
+    if (main.status === "auto" && (mainQ < 3 || countable(mainFd))) return { ...one, status: "guess", foods: 1 };
+    return { ...one, foods: 1 };
+  }
+  // several foods: each gets its share of the plate (the quarters it won; the main dish at least one quarter)
+  const total = Math.max(4, mainQ + others.reduce((a, [, o]) => a + o.quarters.length, 0));
+  const items = [];
+  const m0 = main.items[0];
+  if (mainFd && m0.grams && !m0.learned) {
+    const g = gramsForShare(mainFd, Math.max(1, mainQ) / total);
+    items.push({ ...F.scaleItem({ ...m0, base: m0.grams }, g / m0.grams), base: g, ...(mainQ ? { box: boxOf((seen.get(mainKey) || { quarters: [] }).quarters) } : {}) });
+  } else items.push(m0);
+  for (const [, o] of others) {
+    const conf = Math.round(Math.min(0.9, Math.max(0.3, o.p)) * 100) / 100;
+    if (o.fd) {
+      const share = o.quarters.length / total, g = countable(o.fd) ? null : gramsForShare(o.fd, share);
+      const it = g ? F.itemFromFood(o.fd, g, "g") : defaultItem(o.fd);
+      items.push({ ...it, k: 1, said: o.e.en, conf, alts: [], base: it.grams, fast: true, plate: true, box: boxOf(o.quarters), ...(o.e.kind === "like" ? { estimate: true, like: o.fd.like } : {}) });
+    } else items.push({ ...unknownItem(o.e.en, null, { ar: o.e.ar }), conf, alts: [], fast: true, plate: true, box: boxOf(o.quarters) });
+  }
+  return { ...main, status: "guess", items, foods: items.length };
 }

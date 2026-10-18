@@ -234,7 +234,9 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     const clip = await PH.withLimit(CL.loadClip(photoClip ? photoClip.base : CL.CLIP_BASE), 30000);   // the first load reads ≈ 200 MB (two models) from the phone's storage
     const ranked = await PH.withLimit(CL.classify(clip, photo.url, 5), 15000);
     fastSeen.current = { clip, embs: clip.lastEmbs, photo: photo.url };   // v6.17: kept with the dish you save, so next time it is known
-    return CL.decide(clip.bank, ranked);
+    // v6.35 the plate scan: the four quarters too — every food on the plate, each with its share of it (fitclip.js plateScan)
+    const regions = await PH.withLimit(CL.classifyRegions(clip, photo.url, 3), 8000).catch(() => []);
+    return CL.plateScan(clip.bank, ranked, regions || []);
   };
   const useFast = async (fast, me) => {
     let items = fast.items;
@@ -282,7 +284,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     const b = PH.budget();
     setStage(L("Recognising the food…", "جارٍ التعرّف على الطعام…"));
     let r = null;
-    const hints = fast && fast.items && fast.items[0] ? (fast.items[0].alts || []).map((a) => a.label) : [];   // v6.12: the fast look's guesses help the chat model (it said "Eggs with tomatoes"; the chat model alone said "Fried egg")
+    const hints = fast && fast.items && fast.items[0] ? [...new Set([...fast.items.slice(1).map((x) => x.said || x.name), ...(fast.items[0].alts || []).map((a) => a.label)].filter(Boolean))] : [];   // v6.35: + the other foods the plate scan saw   // v6.12: the fast look's guesses help the chat model (it said "Eggs with tomatoes"; the chat model alone said "Fried egg")
     try { r = F.parsePhoto(await limit(llm(F.photoMessages(note, undefined, hints), photo, { json: true, maxTokens: 1000, temperature: 0 }), b.slice(42000, 14000))); } catch (e) { r = null; }
     if (run.current !== me) return;
     if (r && r.label) { DB.keepFoods([r.label]); place([F.itemFromFood(r.label, 1, Object.keys(r.label.portions || {})[0] || "g")]); return; }

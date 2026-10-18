@@ -85,7 +85,7 @@ export async function runScoutGoal(goal, search, onStep, now = Date.now()) {
     try { const r = await search(qs[i]); for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h); } catch (e) { /* one site failing never stops the run */ }
   }
   // (no ad page at all → the item's own words, plain — some sites only show up that way)
-  if (!hits.some((h) => S.isAdPage(h.url, h.text || ""))) {
+  if (!hits.some((h) => S.isAdPage(h.url, h.text || "", h.title || ""))) {
     for (const q of S.fallbackSearches(goal.g)) { try { const r = await search(q); for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h); } catch (e) {} }
   }
   return finishRun(goal, hits, now);

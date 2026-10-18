@@ -5361,4 +5361,12 @@ export const AR = {
   "Runs the model on the Snapdragon NPU (Hexagon): much cooler, often faster at reading. Works best with Core Max (8-bit). Switches itself back to the CPU if anything goes wrong.": "يشغّل النموذج على وحدة NPU في سناب دراجون (Hexagon): أبرد كثيرًا وغالبًا أسرع في القراءة. يعمل أفضل مع Core Max (8 بت). يعود تلقائيًا إلى المعالج إذا حدثت مشكلة.",
   "This phone's NPU could not be used by the engine — Attune stays on the CPU.": "تعذّر على المحرك استخدام وحدة NPU في هذا الهاتف — يبقى Attune على المعالج.",
   "Last time, starting on the NPU closed the app. Attune is back on the CPU; you can try it again in Engine → Speed.": "في المرة السابقة أُغلق التطبيق عند التشغيل على وحدة NPU. عاد Attune إلى المعالج؛ يمكنك المحاولة مرة أخرى من المحرك ← السرعة.",
+  "Item name": "اسم الصنف",
+  "Core Max, Sense, Zenith, Apex and Everest run on a computer: get them in the Attune desktop app.": "Core Max وSense وZenith وApex وEverest تعمل على الكمبيوتر: احصل عليها من تطبيق Attune لسطح المكتب.",
+  "Too heavy for a phone — it can close the app. Core or Blaze run smoothly here; this one is in the desktop app.": "ثقيل على الهاتف وقد يُغلق التطبيق. Core أو Blaze يعملان هنا بسلاسة؛ أما هذا فمكانه تطبيق سطح المكتب.",
+  "Solving question {i} of {n}…": "جارٍ حل السؤال {i} من {n}…",
+  "Question {n}": "السؤال {n}",
+  "(no answer came for this one — ask about it on its own)": "(لم تصل إجابة لهذا السؤال — اسأل عنه وحده)",
+  "The first 20 questions were solved.": "حُلّت أول 20 سؤالًا.",
+  "The model gave no answer this time — try again, or ask about one question at a time.": "لم يُعطِ النموذج إجابة هذه المرة — حاول مرة أخرى، أو اسأل عن سؤال واحد في كل مرة.",
 };

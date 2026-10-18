@@ -889,4 +889,13 @@ export const ES = {
   "Safety check": "Revisión de seguridad",
   "Marketing": "Marketing",
   "imatrix · more quality per GB": "imatrix · más calidad por GB",
+  "Item name": "Nombre del artículo",
+  "Core Max, Sense, Zenith, Apex and Everest run on a computer: get them in the Attune desktop app.": "Core Max, Sense, Zenith, Apex y Everest funcionan en un ordenador: consíguelos en la aplicación de escritorio de Attune.",
+  "Too heavy for a phone — it can close the app. Core or Blaze run smoothly here; this one is in the desktop app.": "Demasiado pesado para un teléfono: puede cerrar la aplicación. Core o Blaze funcionan bien aquí; este está en la aplicación de escritorio.",
+  "Solving question {i} of {n}…": "Resolviendo la pregunta {i} de {n}…",
+  "Question {n}": "Pregunta {n}",
+  "(no answer came for this one — ask about it on its own)": "(no llegó respuesta para esta — pregúntala por separado)",
+  "The first 20 questions were solved.": "Se resolvieron las primeras 20 preguntas.",
+  "The model gave no answer this time — try again, or ask about one question at a time.": "El modelo no respondió esta vez: inténtalo de nuevo o pregunta de una en una.",
+  "Sources": "Fuentes",
 };

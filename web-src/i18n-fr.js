@@ -893,4 +893,13 @@ export const FR = {
   "Safety check": "Contrôle de sécurité",
   "Marketing": "Marketing",
   "imatrix · more quality per GB": "imatrix · plus de qualité par Go",
+  "Item name": "Nom de l’article",
+  "Core Max, Sense, Zenith, Apex and Everest run on a computer: get them in the Attune desktop app.": "Core Max, Sense, Zenith, Apex et Everest tournent sur un ordinateur : installez-les dans l’application Attune pour ordinateur.",
+  "Too heavy for a phone — it can close the app. Core or Blaze run smoothly here; this one is in the desktop app.": "Trop lourd pour un téléphone — il peut fermer l’application. Core ou Blaze tournent bien ici ; celui-ci est dans l’application pour ordinateur.",
+  "Solving question {i} of {n}…": "Résolution de la question {i} sur {n}…",
+  "Question {n}": "Question {n}",
+  "(no answer came for this one — ask about it on its own)": "(pas de réponse pour celle-ci — posez-la seule)",
+  "The first 20 questions were solved.": "Les 20 premières questions ont été résolues.",
+  "The model gave no answer this time — try again, or ask about one question at a time.": "Le modèle n’a pas répondu cette fois — réessayez, ou posez une question à la fois.",
+  "Sources": "Sources",
 };

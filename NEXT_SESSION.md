@@ -757,11 +757,34 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AA. 18 Oct 2026 — v6.35: Ali's phone notes (HANDOFF §5.82). Read this section first, then Z.
+Ali tried 6.34: food photo found one food, NPU "could not be used", Core Max out of memory, Blaze couldn't write a lesson
+conversation, Arabic hard to read, Lynk & Co answer dragged in the 08 and repeated, Scout showed 2027 cars and "151 EGP", Solve the
+questions failed, shop item name unwritable, keyboard bottom row broken. All fixed in 6.35 (HANDOFF §5.82).
+His idea: Core Max and up only on computers (done); code-first, the small model only phrases; regroup the app (he feels lost);
+an agent app; food stronger than Yazio; Scout stronger; more knowledge packs, hidden, added only by him (hiding done).
+### Waiting for Ali's answers (the choices page: https://claude.ai/artifact/LQ1s1sqbSGJtSC8vfZQLec)
+1. App layout: A one box + suggestions feed (recommended) · B four life areas · C three tabs.
+2. Agent features: 1 Money autopilot · 2 Paperwork inbox · 3 Errand planner · 4 Morning brief · 5 Deal hunter · 6 Trip · 7 Job · 8 Family health.
+3. Scout: fair-price meter · scam/repost check · price-drop alerts · more things to watch · offer helper.
+4. Packs: A USDA foods (rec.) · B Wikidata products/companies/people (rec.) · C Android/Kotlin docs · D Egyptian procedures (Ali writes).
+5. Arabic wording: A formal simpler · B Egyptian (recommended) · C Arabic + English term.
+6. Keyboard look: A light like Gboard (recommended) · B dark bigger keys · C dark, AI in one button.
+### Ali's phone checklist for 6.35
+1. ⬜ A plate with 2–3 foods (like mahshi + feteer + sauce): each one listed, grams near the truth; the AI's check replaces it.
+2. ⬜ Engine: Core Max etc. not offered; the note says they are in the desktop app. NPU switch → the Engine log says why, or "NPU: running on HTP0".
+3. ⬜ Turkish lesson → "Small conversation" on Blaze.
+4. ⬜ Ask a PDF with questions → "Solve the questions": answers appear one by one.
+5. ⬜ "Lynk & Co 900 price and specs": no 08 in the table; no repeated paragraph.
+6. ⬜ Scout "Hyundai Tucson 2022 used": only 2022 ads, real prices.
+7. ⬜ Arabic: Money page amounts on one line, letters not spaced apart.
+8. ⬜ Keyboard: ?123, 🌐, the space bar and ⏎ all work. Shop: type an item name.
+
 ## Prompt to start the next session
 
 ```
-Continue Attune on main (= ccr-a0eb3595-e2c7a7, v6.34: Ali's 17 Oct phone list on top of the joint release).
-First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.81 and NEXT_SESSION.md — the newest sections are Z, Y and X (what is in v6.32/6.33,
+Continue Attune on main (= ccr-a0eb3595-e2c7a7, v6.35: Ali's 18 Oct phone notes on top of v6.34).
+First read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.76–§5.82 and NEXT_SESSION.md — the newest sections are AA (Ali's six choices), Z, Y and X (what is in v6.32/6.33,
 my phone checklist, my release list and what is still open), then W and V. Then show me, short and simple: what is done,
 what is open, and your recommended order; ask me the open questions (which page to make minimal next, with options), wait for my answers, then work through them with a task list. If I send an Engine log or
 phone test results, read them first — ExitWatch says why the app closed.

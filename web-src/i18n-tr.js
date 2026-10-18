@@ -897,4 +897,13 @@ export const TRK = {
   "which leaves plenty of room for long conversations": "uzun sohbetler için bol yer var",
   "Safety check": "Güvenlik kontrolü",
   "imatrix · more quality per GB": "imatrix · GB başına daha fazla kalite",
+  "Item name": "Ürün adı",
+  "Core Max, Sense, Zenith, Apex and Everest run on a computer: get them in the Attune desktop app.": "Core Max, Sense, Zenith, Apex ve Everest bilgisayarda çalışır: onları Attune masaüstü uygulamasından edinin.",
+  "Too heavy for a phone — it can close the app. Core or Blaze run smoothly here; this one is in the desktop app.": "Telefon için fazla ağır — uygulamayı kapatabilir. Core veya Blaze burada akıcı çalışır; bu model masaüstü uygulamasında.",
+  "Solving question {i} of {n}…": "{n} sorudan {i}. soru çözülüyor…",
+  "Question {n}": "Soru {n}",
+  "(no answer came for this one — ask about it on its own)": "(bu soru için yanıt gelmedi — tek başına sorun)",
+  "The first 20 questions were solved.": "İlk 20 soru çözüldü.",
+  "The model gave no answer this time — try again, or ask about one question at a time.": "Model bu kez yanıt vermedi — tekrar deneyin veya her seferinde bir soru sorun.",
+  "Sources": "Kaynaklar",
 };

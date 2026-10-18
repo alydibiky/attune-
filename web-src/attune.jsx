@@ -889,12 +889,12 @@ const MODEL_TIERS = [
   // v6.8 (Ali: "a model that runs on 32 GB should run on 24, 24 on 16…"): every model moved down a phone
   // size where the file allows it — the big ones as IQ4_XS (large models lose the least from it), with
   // the engine's memory rule now counting the memory that is really free (Engine.allowedBytes).
-  { id: "moe-xl-long", vision: false, label: "Everest XL", realName: "Qwen3.6 35B-A3B · long context", smoothRam: 48, params: "35B-A3B", quant: "UD-IQ4_XS", sizeGB: 18.2,
+  { id: "moe-xl-long", phoneOff: true, vision: false, label: "Everest XL", realName: "Qwen3.6 35B-A3B · long context", smoothRam: 48, params: "35B-A3B", quant: "UD-IQ4_XS", sizeGB: 18.2,
     needRam: 32, ctx: 131072, phoneMin: 48, moe: true, heat: true,
     repo: "unsloth/Qwen3.6-35B-A3B-MTP-GGUF", mtp: true,
     quality: "Everest with a huge memory: it holds a whole book, contract or a year of notes at once. The best for very long documents. Computer-class.",
     good: ["Ask", "Write", "Summarise", "Review", "Long documents"] },
-  { id: "moe-xl", vision: false, label: "Everest", realName: "Qwen3.6 35B-A3B", smoothRam: 32, params: "35B-A3B", quant: "UD-IQ4_XS", sizeGB: 17.7,
+  { id: "moe-xl", phoneOff: true, vision: false, label: "Everest", realName: "Qwen3.6 35B-A3B", smoothRam: 32, params: "35B-A3B", quant: "UD-IQ4_XS", sizeGB: 17.7,
     needRam: 24, ctx: 32768, phoneMin: 32, moe: true, heat: true,
     // v6.29 Flash-MoE: on a phone with 12 GB+ it runs with its experts read from storage (Engine.flashMoe) — measured on ARM
     // with slow storage: 6 words/s in 8 GB, 3 in 6 GB, answers right even in 4 GB; a phone's storage is ~8× faster
@@ -902,17 +902,17 @@ const MODEL_TIERS = [
     repo: "unsloth/Qwen3.6-35B-A3B-GGUF",
     quality: "The most knowledgeable: a very large model that answers at the speed of a small one (mixture of experts). Near top-tier answers. Computer-class.",
     good: ["Ask", "Write", "Summarise", "Review"] },
-  { id: "ultra", vision: true, label: "Apex+", realName: "Gemma 4 31B", smoothRam: 32, params: "31B", quant: "IQ4_XS", sizeGB: 16.4,
+  { id: "ultra", phoneOff: true, vision: true, label: "Apex+", realName: "Gemma 4 31B", smoothRam: 32, params: "31B", quant: "IQ4_XS", sizeGB: 16.4,
     needRam: 24, ctx: 32768, phoneMin: 32, heat: true,
     repo: "unsloth/gemma-4-31B-it-GGUF",
     quality: "The strongest single model here: deep reasoning, expert writing, reads photos. Computer-class.",
     good: ["Ask", "Write", "Summarise", "Review"] },
-  { id: "moe-lg", vision: true, label: "Apex", realName: "Gemma 4 26B-A4B", smoothRam: 24, params: "26B-A4B", quant: "UD-IQ4_XS", sizeGB: 13.6,
+  { id: "moe-lg", phoneOff: true, vision: true, label: "Apex", realName: "Gemma 4 26B-A4B", smoothRam: 24, params: "26B-A4B", quant: "UD-IQ4_XS", sizeGB: 13.6,
     needRam: 16, ctx: 32768, phoneMin: 24, moe: true, heat: true,
     repo: "unsloth/gemma-4-26B-A4B-it-GGUF",
     quality: "Close to Apex+ quality at a much higher speed. Reads photos. For strong laptops.",
     good: ["Ask", "Write", "Summarise", "Review"] },
-  { id: "max", vision: true, label: "Zenith+", realName: "Gemma 4 12B", smoothRam: 24, params: "12B", quant: "UD-Q4_K_XL", sizeGB: 7.37,
+  { id: "max", phoneOff: true, vision: true, label: "Zenith+", realName: "Gemma 4 12B", smoothRam: 24, params: "12B", quant: "UD-Q4_K_XL", sizeGB: 7.37,
     needRam: 16, ctx: 32768, platform: "any",
     repo: "unsloth/gemma-4-12B-it-GGUF",
     quality: "Expert level, and reads text, photos and audio. Comfortable on a laptop or a 16 GB phone.",
@@ -921,7 +921,7 @@ const MODEL_TIERS = [
   // ARM (.github/workflows/model-bench.yml, run 36458059767): 5.37 GB instead of 5.68, writes 11 % faster
   // (7.0 vs 6.3 t/s), reads as fast, and drifts only 0.024 (KLD, Arabic) from the 8-bit model — under
   // what anyone notices. The 3-bit versions were both worse AND slower on ARM, so smaller isn't better.
-  { id: "xl", vision: true, label: "Zenith", realName: "Qwen3.5 9B", smoothRam: 12, params: "9B", quant: "IQ4_NL", sizeGB: 5.64,
+  { id: "xl", phoneOff: true, vision: true, label: "Zenith", realName: "Qwen3.5 9B", smoothRam: 12, params: "9B", quant: "IQ4_NL", sizeGB: 5.64,
     needRam: 10, ctx: 32768, platform: "any",
     repo: "unsloth/Qwen3.5-9B-MTP-GGUF", mtp: true,
     quality: "Runs smoothly on a 12 GB phone: expert answers, and the best at reading documents and photos.",
@@ -954,12 +954,12 @@ const MODEL_TIERS = [
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
   // v6.31 measured on ARM with KleidiAI (tests/models/quant_bench.py): the 8-bit file of the same 4B reads prompts 96 t/s (Q5_K_S: 31,
   // IQ4_XS: 22) and writes 15 t/s (Q5_K_S: 8.9) — the CPU's fast 8-bit path — with the closest answers to the full model. Costs memory.
-  { id: "md-max", vision: true, label: "Core Max", realName: "Qwen3.5 4B", smoothRam: 16, params: "4B", quant: "Q8_0", sizeGB: 4.61,
+  { id: "md-max", phoneOff: true, vision: true, label: "Core Max", realName: "Qwen3.5 4B", smoothRam: 16, params: "4B", quant: "Q8_0", sizeGB: 4.61,
     needRam: 12, ctx: 32768, platform: "any",
     repo: "unsloth/Qwen3.5-4B-MTP-GGUF", mtp: true,
     quality: "Core at full precision: the fastest at reading long messages and files on a 12 GB+ phone, and the most exact answers of the 4B.",
     good: ["Ask", "Write", "Summarise", "Photos", "Arabic"] },
-  { id: "lg", vision: true, label: "Sense", realName: "Gemma 4 E4B", smoothRam: 16, params: "4.5B eff.", quant: "UD-Q4_K_XL", sizeGB: 5.13,
+  { id: "lg", phoneOff: true, vision: true, label: "Sense", realName: "Gemma 4 E4B", smoothRam: 16, params: "4.5B eff.", quant: "UD-Q4_K_XL", sizeGB: 5.13,
     needRam: 12, ctx: 32768, platform: "any",
     repo: "unsloth/gemma-4-E4B-it-GGUF",
     quality: "Text, photos and audio on a flagship phone — pick it if you want voice notes understood.",
@@ -1007,8 +1007,13 @@ function ramFloor(t, dev) {
   return t.flashMin && NATIVE && !NATIVE.desktop ? Math.min(phone, t.flashMin) : phone;
 }
 const flashOn = (t, dev) => !!(t.flashMin && dev && dev.platform !== "desktop" && NATIVE && !NATIVE.desktop && dev.ram < (t.phoneMin || t.needRam) && dev.ram >= t.flashMin);
+// v6.35 (Ali: "remove Core Max and higher from the mobile version because it can't handle it, and mention that higher models
+// are available on more powerful devices"): these run in the desktop app only; a phone that already has one keeps it until deleted.
+const PHONE_OFF_NOTE = "Core Max, Sense, Zenith, Apex and Everest run on a computer: get them in the Attune desktop app.";
+const phoneOff = (t, dev) => !!(t && t.phoneOff && dev && dev.platform !== "desktop");
 function tierFits(t, dev) {
   if (!dev) return false;
+  if (phoneOff(t, dev)) return false;
   // The fast engine lives inside the Android app; a browser can't run it.
   if (t.engine === "litert" && (!NATIVE || NATIVE.desktop)) return false;
   return dev.ram >= ramFloor(t, dev);
@@ -1037,7 +1042,7 @@ function strongerPhoneTier(dev) {
   // v6.8 (Ali): on a 12 GB phone the stronger choice is Zenith — the 9B, now a smaller, faster file that
   // runs smoothly there. Blaze+ (fast engine, 4.5B) is the step up on 8–11 GB phones.
   const zen = MODEL_TIERS.find((t) => t.id === "xl");
-  if (dev.ram >= 12 && zen && tierFits(zen, dev)) return zen;
+  if (dev.ram >= 12 && zen && tierFits(zen, dev)) return zen;   // (v6.35: Zenith is computer-only, so this is skipped on a phone)
   const e4b = MODEL_TIERS.find((t) => t.id === "fast-e4b");
   if (e4b && tierFits(e4b, dev)) return e4b;
   return null;
@@ -7411,7 +7416,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.34";
+const PAGE_VERSION = "6.35";
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7455,6 +7460,15 @@ const MORE_TOOLS = [
   ["guide", "How to use Attune", "Every tool in three steps, with pictures", BookOpen],   // v6.28: opened from the top of All and from Settings
 ];
 
+// v6.35 (Ali: "expand the knowledge databases … don't make them visible to people … I want to be the one to add the knowledge,
+// not the users"): the Knowledge screen, "Add to Knowledge" and "Teach this to my model" exist only in developer mode (Ali's
+// test builds: tap the version 7 times); for everyone else the packs install and answer quietly, cited in the answer.
+const KNOW_ADMIN = devMode();
+if (!KNOW_ADMIN) {
+  for (let i = MORE_TOOLS.length - 1; i >= 0; i--) if (MORE_TOOLS[i][0] === "knowledge") MORE_TOOLS.splice(i, 1);
+  for (const h of HUBS) { const k = h[3].indexOf("knowledge"); if (k >= 0) h[3].splice(k, 1); }
+}
+
 // v5.32 — Ali: "most features are cluttered, they must be organized": More shows its tools
 // in four named groups instead of one wall of 23 tiles.
 // v6.27 (design A "Calm", the agreed tool map): the areas, then the two add-ons. Video Downloader stays (Ali, 13 Oct),
@@ -7462,7 +7476,7 @@ const MORE_TOOLS = [
 const MORE_GROUPS = [
   ["Money & people", ["scout", "guardian", "radar", "life", "deal", "reminders"]],
   ["Health", ["fit", "care", "cycle"]],
-  ["Mind & learning", ["lifeask", "coach", "learn", "memory", "shelf", "knowledge", "news"]],
+  ["Mind & learning", ["lifeask", "coach", "learn", "memory", "shelf", ...(KNOW_ADMIN ? ["knowledge"] : []), "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
   ["Files", ["translate", "convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "travel"]],
@@ -8107,7 +8121,7 @@ export default function App() {
           remote: (id) => nativeCall("knowRemote", { id }),
           install: (id) => nativeCall("knowInstall", { id }),
           remove: async (id) => { try { NATIVE.knowRemove(id); } catch (e) {} } }, { bigOk: !!(NATIVE.unmetered && NATIVE.unmetered()) });   // the big ones on Wi-Fi
-        if (got.length) flash(tr("Chat now knows: {n}", { n: got.map((c) => (getLang() === "ar" ? c.name_ar : c.name)).join(getLang() === "ar" ? "، " : ", ") }));
+        if (got.length && KNOW_ADMIN) flash(tr("Chat now knows: {n}", { n: got.map((c) => (getLang() === "ar" ? c.name_ar : c.name)).join(getLang() === "ar" ? "، " : ", ") }));
       } catch (e) {}
     }, 8000);
     return () => clearTimeout(t);
@@ -9137,7 +9151,7 @@ export default function App() {
     webAuto: !webOn && webAuto && !(NATIVE && airGap),
     autoModel: () => autoModel && NATIVE && (installedModels || []).length > 1,
     setAutoModel,
-    modelsForRoute: () => ({ installed: (installedModels || []).map((m) => ({ id: m.id, tier: tierOfInstalled(m) })).filter((m) => m.tier).map((m) => ({ id: m.tier.id, tier: m.tier, raw: m.id })),
+    modelsForRoute: () => ({ installed: (installedModels || []).map((m) => ({ id: m.id, tier: tierOfInstalled(m) })).filter((m) => m.tier && !(m.tier.phoneOff && NATIVE && !NATIVE.desktop)).map((m) => ({ id: m.tier.id, tier: m.tier, raw: m.id })),
       active: (runningTier && runningTier.id) || null, ramGB: (device && device.ram) || 8 }),
     switchModel: async (id) => { const m = (installedModels || []).find((x) => { const t = tierOfInstalled(x); return t && t.id === id; }); if (!m) return false; await useInstalled(m.id); return true; },
     webLookup, groundedPrompt: (q, hits) => groundedPrompt(q, hits, lang), groundedAudit,
@@ -9178,7 +9192,7 @@ export default function App() {
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     withRecords,
     knowledge: { on: () => !!knPrefs.on, find: (q, o) => knowledge.find(q, o), packs: () => !!knowledge.packSearch,
-      myPacks: () => TEACH.myPacks(knowledge), teachChat: (chat, name) => teachChat(knowledge, chat, name) },   // v6.16 «علّم نموذجك»   // v6.20 Knowledge (+ v6.16 phone packs)
+      myPacks: () => TEACH.myPacks(knowledge), teachChat: KNOW_ADMIN ? (chat, name) => teachChat(knowledge, chat, name) : null },   // v6.16 «علّم نموذجك»   // v6.20 Knowledge (+ v6.16 phone packs)
     lastStats: () => LAST_STATS,
     speed: () => (NATIVE ? measuredSpeed() : null),
     contextTokens: () => { const m = String((engineInfo && engineInfo.settings) || "").match(/context (\d+)/); return m ? Number(m[1]) : 0; },
@@ -10012,9 +10026,9 @@ export default function App() {
             adapterOn={knPrefs.adapters} setAdapterOn={(id, v) => { saveKn({ ...knPrefs, adapters: { ...knPrefs.adapters, [id]: v } }); }}
             packText={NATIVE && NATIVE.knowPackText ? async (tag, name) => { const r = await nativeCall("knowPackText", { tag, name }); return (r && r.text) || ""; } : null} />
         ) : mode === "pdfchat" ? (
-          <PdfChatPage flash={flash} addToKnowledge={async (d) => { const r = await knowledge.add(d); return r; }} openEngine={() => setShowEngine(true)} modelReady={modelUsable} canReadPhotos={!!LocalEngine.vision} nativeCall={NATIVE ? nativeCall : null}
+          <PdfChatPage flash={flash} addToKnowledge={KNOW_ADMIN ? async (d) => { const r = await knowledge.add(d); return r; } : null} openEngine={() => setShowEngine(true)} modelReady={modelUsable} canReadPhotos={!!LocalEngine.vision} nativeCall={NATIVE ? nativeCall : null}
             initialFile={pdfIn} clearInitial={() => setPdfIn(null)}
-            llm={(messages, a, b) => { const image = b ? a : null, o = b || a || {}; return callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false }); }} />
+            llm={(messages, a, b) => { const image = b ? a : null, o = b || a || {}; return callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, onToken: o.onToken }); }} />
         ) : mode === "cv" ? (
           <CVPage flash={flash} openEngine={() => setShowEngine(true)} modelReady={modelUsable} nativeCall={NATIVE ? nativeCall : null} native={NATIVE ? { N: NATIVE, call: nativeCall } : null} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.3, think: false, json: !!o.json })}
@@ -11562,6 +11576,8 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
               <button className="px-2.5 py-1 rounded-md bg-rose-600 text-white" onClick={() => { n.removeInstalled(m.id); setArmDelete(null); flash(tr("Deleted — space freed")); }} data-testid="engine-delete-yes">{tr("Delete")}</button>
               <button className="px-2.5 py-1 rounded-md text-slate-400" onClick={() => setArmDelete(null)}>{tr("Cancel")}</button></div> : null}
             {hashes[m.id] ? <p className="px-3 pb-2 text-[10px] text-slate-500 break-all font-mono">{tr("SHA-256")} {hashes[m.id]}</p> : null}
+            {(() => { const t = MODEL_TIERS.find((x) => x.id === m.id) || tierOfInstalled(m); return t && t.phoneOff && !(NATIVE && NATIVE.desktop); })()
+              ? <p className="px-3 pb-2.5 -mt-1 ps-10 text-[11.5px] text-amber-300/90 leading-snug" data-testid="engine-model-computer">{tr("Too heavy for a phone — it can close the app. Core or Blaze run smoothly here; this one is in the desktop app.")}</p> : null}
           </div>))}
         {busy ? <div className="px-3 py-2.5" data-testid="engine-download">
           <div className="flex items-center gap-2 text-[13px] text-slate-300"><span className="flex-1 truncate">{n.dlStage || tr("Downloading…")}</span><span className="tabular-nums">{dlPct}%</span>
@@ -11787,8 +11803,9 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
     // is short of memory for them (their card says so); only the WEAKER ones are folded away
     return fits(t) || (device.ram >= 12 && (t.sizeGB || 0) >= 5);   // a flagship phone (12 GB+) sees the high end
   };
-  const listTiers = MODEL_TIERS.filter((t) => showAll || worth(t) || instIds.has(t.id) || (activeTier && activeTier.id === t.id));
-  const hiddenTiers = MODEL_TIERS.length - listTiers.length;
+  const listTiers = MODEL_TIERS.filter((t) => (!phoneOff(t, device) || instIds.has(t.id)) && (showAll || worth(t) || instIds.has(t.id) || (activeTier && activeTier.id === t.id)));
+  const hiddenTiers = MODEL_TIERS.filter((t) => !phoneOff(t, device)).length - listTiers.filter((t) => !phoneOff(t, device)).length;
+  const offPhone = device.platform !== "desktop" && MODEL_TIERS.some((t) => t.phoneOff);
   const modes = [
     { k: "device", label: "On-device", desc: "The only mode. Nothing leaves this device." },
 
@@ -11937,6 +11954,7 @@ function EngineModal({ device, setRamOverride, bestTier, activeTier, setTierId, 
               </button>
             );
           })}
+          {offPhone ? <p className="text-[12px] text-slate-400 text-center px-2 leading-snug" data-testid="tiers-desktop-note">{tr(PHONE_OFF_NOTE)}</p> : null}
           {hiddenTiers > 0 || showAll ? <button onClick={() => setShowAll((v) => !v)} className="w-full text-center text-[12px] text-slate-400 underline py-1" data-testid="tiers-show-all">{showAll ? tr("Show only the models worth using on this device") : tr("Show all models ({n} more — weaker, or too big for this device)", { n: hiddenTiers })}</button> : null}
         </div>
 

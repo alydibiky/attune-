@@ -46,6 +46,10 @@ export function parseGoal(text) {
   if (area) g.wish.push({ k: "area", min: +area[1], say: [`${area[1]} m² or more`, `${area[1]} م² أو أكثر`] });
   const yr = /(20[0-3]\d|19[89]\d)\s*(?:-|–|to|الى|إلى|لـ)\s*(20[0-3]\d)/.exec(latin(t)) || /(?:from|after|newer than|بعد|من)\s*(20[0-3]\d)/.exec(latin(t)) || /(?:model|موديل)\s*(20[0-3]\d)/.exec(latin(t));
   if (yr) g.wish.push({ k: "year", min: +yr[1], max: yr[2] ? +yr[2] : null, say: [yr[2] ? `model ${yr[1]}–${yr[2]}` : `model ${yr[1]} or newer`, yr[2] ? `موديل ${yr[1]}–${yr[2]}` : `موديل ${yr[1]} أو أحدث`] });
+  // v6.35 (Ali: "Hyundai Tucson 2022 used price" → "it redirected me to 2027, I wanted only 2022"): a car or a product with a
+  // plain year is THAT year
+  const yr1 = !yr && (kind === "car" || kind === "product") && /(?:^|[^\d])((?:19[89]|20[0-3])\d)(?!\d)/.exec(latin(t));
+  if (yr1) g.wish.push({ k: "year", min: +yr1[1], max: +yr1[1], say: [`model ${yr1[1]}`, `موديل ${yr1[1]}`] });
   const km = /(?:under|below|less than|max|اقل من|أقل من)\s*([\d.,]+)\s*(k\s*)?(?:km|كم|كيلو)/i.exec(latin(t));
   if (km) g.wish.push({ k: "km", max: +km[1].replace(/,/g, "") * (km[2] ? 1000 : 1), say: [`under ${km[1]}${km[2] ? "k" : ""} km`, `أقل من ${km[1]}${km[2] ? " ألف" : ""} كم`] });
   if (/one owner|first owner|1 owner|اول مالك|أول مالك|فابريكه|فابريكة/.test(t)) g.wish.push({ k: "oneOwner", say: ["one owner", "أول مالك"] });
@@ -132,7 +136,11 @@ const AD_URL = [/olx\.com\.eg\/(?:en\/)?ad\//i, /dubizzle\.com\.eg\/(?:en\/)?ad\
   /hatla2ee\.com\/(?:[a-z]{2}\/)?car\/details/i, /hatla2ee\.com\/(?:[a-z]{2}\/)?car\/used\/[^/]+\/[^/]+\/\d+/i, /contactcars\.com\/(?:[a-z]{2}\/)?(?:used-cars|cars)\/[^/]+\/\d+/i, /amazon\.eg\/.*\/dp\//i, /noon\.com\/.*\/p\//i, /btech\.com\/.+\.html/i, /jumia\.com\.eg\/[^/]+\.html/i,
   /wuzzuf\.net\/jobs\/p\//i, /linkedin\.com\/jobs\/view\//i, /bayt\.com\/[a-z]{2}\/.+\/jobs\/.+-\d+/i, /forasna\.com\/(?:a\/)?job/i, /indeed\.com\/viewjob/i, /nawy\.com\/compound|nawy\.com\/property/i];
 const SEARCH_URL = /[?&](q|query|keywords|search|k)=|\/search\b|\/s\?|\/(?:results|category|categories|listing\/?$|properties-for|for-rent\/?$|for-sale\/?$)|\/l\/|\/jobs\/?\?|\/cars\/?$/i;
-export const isAdPage = (url, text) => AD_URL.some((re) => re.test(url)) || (!SEARCH_URL.test(url) && pricesIn(text).length >= 1 && pricesIn(text).length <= 3);
+// v6.35: on the sites whose ad addresses are known, only an ad address is an ad (a dubizzle "Hyundai Tucson — Vehicles for sale in
+// Egypt" category page had one stray number and was scored 100/100); a title that names a list is never one ad
+const KNOWN_AD_SITE = /(^|\.)(olx\.com\.eg|dubizzle\.com\.eg|aqarmap\.com\.eg|propertyfinder\.eg|bayut\.eg|hatla2ee\.com|contactcars\.com|amazon\.eg|noon\.com|jumia\.com\.eg|wuzzuf\.net|bayt\.com|nawy\.com)$/i;
+const LIST_TITLE = /\b(for sale in|for rent in|vehicles for sale|cars for sale|properties for|apartments for|\d[\d,]*\s+(ads|results|listings|properties|cars)|buy (&|and) sell|best prices? (in|online))\b|للبيع في مصر|للايجار في|للإيجار في|اعلان|إعلان مبوب/i;
+export const isAdPage = (url, text, title = "") => AD_URL.some((re) => re.test(url)) || (!KNOWN_AD_SITE.test(siteOf(url)) && !LIST_TITLE.test(String(title)) && !SEARCH_URL.test(url) && pricesIn(text).length >= 1 && pricesIn(text).length <= 3);
 export const siteOf = (url) => String(url || "").replace(/^https?:\/\/(www\.)?/, "").split("/")[0];
 const urlKey = (u) => String(u || "").toLowerCase().replace(/^https?:\/\/(www\.)?/, "").replace(/[?#].*$/, "").replace(/\/$/, "");
 
@@ -182,7 +190,11 @@ export function readAd(hit, g) {
   // the price: the first priced amount (a rent: per month); skip "down payment / deposit / installment" amounts when there is another
   const ps = pricesIn(text);
   const pick = ps.find((p) => !/(down ?payment|deposit|installment|instalment|مقدم|تأمين|قسط|اقساط|أقساط)/i.test(t.slice(Math.max(0, p.at - 30), p.at))) || ps[0];
-  if (pick) { out.facts.price = pick.v; out.facts.cur = pick.cur; out.quotes.price = snip(text, pick.at, String(pick.v).length + 4, 12); }
+  // v6.35 (a "151 EGP" Tucson): an amount no car / home / rent can cost is not its price
+  const LOW = { car: 30000, "buy-home": 150000, rent: 800 };
+  const floor = g && LOW[g.kind] ? (pick && pick.cur === "EGP" ? LOW[g.kind] : LOW[g.kind] / 50) : 0;
+  if (pick && pick.v < floor) { const alt = ps.find((p) => p.v >= (p.cur === "EGP" ? LOW[g.kind] : LOW[g.kind] / 50)); if (alt) Object.assign(pick, alt); }
+  if (pick && pick.v >= floor) { out.facts.price = pick.v; out.facts.cur = pick.cur; out.quotes.price = snip(text, pick.at, String(pick.v).length + 4, 12); }
   let m;
   if ((m = /(\d{2,4})\s*(?:m2|m²|sqm|sq\.?\s?m|square met\w*|متر مربع|متر|م2|م²)/i.exec(t))) { out.facts.area = +m[1]; q("area", m[0]); }
   if ((m = /(\d{1,2})\s*(?:bed(?:room)?s?|br\b|rooms?|غرف|غرفه|غرفة|اوض|أوض|اوضه|أوضة)/i.exec(t))) { out.facts.beds = +m[1]; q("beds", m[0]); }
@@ -218,6 +230,18 @@ export function readAd(hit, g) {
   return out;
 }
 
+/** Damerau–Levenshtein distance ≤ 1 (one edit or one swap of neighbours). */
+export function close1(a, b) {
+  if (a === b) return true;
+  if (a.length === b.length) {
+    const d = []; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) d.push(i);
+    return d.length === 1 || (d.length === 2 && d[1] === d[0] + 1 && a[d[0]] === b[d[1]] && a[d[1]] === b[d[0]]);
+  }
+  const [s, l] = a.length < b.length ? [a, b] : [b, a];
+  if (l.length - s.length !== 1) return false;
+  for (let i = 0; i < l.length; i++) if (l.slice(0, i) + l.slice(i + 1) === s) return true;
+  return false;
+}
 // ---- 4. checking every wish against the ad -----------------------------------------------------------------------------------------
 /** → { ok: [say], bad: [say], unknown: [say], score 0–100, out (a hard "no") }. Every ✓ / ✗ comes with the ad's own words. */
 export function check(ad, g) {
@@ -229,7 +253,10 @@ export function check(ad, g) {
   if (g.min) line({ k: "minPrice", say: [`over ${num(g.min)}`, `أكثر من ${num(g.min)}`] }, F.price == null ? null : F.price >= g.min, ad.quotes.price);
   if (g.model && g.model.must.length) {
     const have = " " + (ad.item || normItem(ad.title)) + " ";
-    const miss = g.model.must.filter((w) => !have.includes(" " + w + " "));
+    // v6.35 ("Tuscon" for Tucson): a word of 5+ letters also matches with one letter wrong, missing, extra or two swapped
+    const words = have.trim().split(" ");
+    const near = (w) => w.length >= 5 && !/\d/.test(w) && words.some((x) => Math.abs(x.length - w.length) <= 1 && close1(x, w));
+    const miss = g.model.must.filter((w) => !have.includes(" " + w + " ") && !near(w));
     const extra = g.model.avoid.filter((v) => have.includes(" " + v + " ") && !(v === "pro" && g.model.must.includes("pro")));
     line({ k: "model", say: [`exactly ${g.model.must.join(" ")}`, `بالضبط ${g.model.must.join(" ")}`] }, miss.length ? false : extra.length ? false : true, miss.length ? "missing: " + miss.join(", ") : extra.length ? "it is a " + extra.join(" / ") + " model" : ad.title.slice(0, 60));
   }
@@ -300,7 +327,7 @@ export function learn(taste, ad, up) {
  *  goal = { id, g, seen: [ad], taste, votes: {id: 1|-1} } → { found: [ad with check/fair/score], fresh: [ids new this run], seen }. */
 export function runGoal(goal, hits, { now = Date.now() } = {}) {
   const g = goal.g, seenIds = new Set((goal.seen || []).map((s) => s.id));
-  const ads = mergeTwins((hits || []).filter((h) => h && h.url && isAdPage(h.url, h.text || "")).map((h) => readAd(h, g)));
+  const ads = mergeTwins((hits || []).filter((h) => h && h.url && isAdPage(h.url, h.text || "", h.title || "")).map((h) => readAd(h, g)));
   const seen = [...(goal.seen || [])];
   for (const a of ads) { const i = seen.findIndex((s) => s.id === a.id); const rec = { ...a, firstSeen: i >= 0 ? seen[i].firstSeen : now, lastSeen: now, history: [...((i >= 0 && seen[i].history) || []), ...(a.facts.price ? [[now, a.facts.price]] : [])].slice(-30) }; if (i >= 0) seen[i] = rec; else seen.push(rec); }
   const found = seen.filter((a) => a.lastSeen >= now - 14 * 86400000 && (goal.votes || {})[a.id] !== -1).map((a) => {

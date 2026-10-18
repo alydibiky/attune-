@@ -1756,6 +1756,54 @@ His picks (asked on cards): Money "integrate them the best way"; More page "B: r
     68 t/s writing vs 44); on a phone memory speed decides — an option for Ali, not changed.
   - NPU lab run 2: libggml-hexagon.so + libggml-htp-v73/v75/v79/v81.so all built (v81 = 8 Elite Gen 5).
 
+### 5.82 (18 Oct 2026) — v6.35: Ali's phone notes of 18 Oct (food plate scan, phone models, NPU, lessons, Solve, research, Scout, Arabic, keyboard, Knowledge)
+Ali tried 6.34 and sent 9 screenshots, two Engine logs and his big idea. Objective items fixed; the subjective ones are on the choices
+page (Artifact: https://claude.ai/artifact/LQ1s1sqbSGJtSC8vfZQLec) — six questions, each with options and a recommendation.
+- **Food photo** (only mahshi, 60 g; feteer and sauce missed): the fast look (CLIP) called mahshi "sure" (≥ 50 %), so the AI never
+  looked, and mahshi's first portion is 1 piece = 60 g. `fitclip.js` **plate scan**: `classifyRegions` reads the four overlapping
+  quarters (first encoder only), `plateScan` adds a food that wins a quarter as its own item (with a `box` where it was seen, for
+  the label), gives each food grams from its share of the plate (`gramsForShare`: its "plate" portion × share, ≥ 40 g), never calls a
+  plate with several foods "sure", and a dish counted in pieces is never "sure" either (the AI counts pieces); a full plate of mahshi
+  starts at the plate amount. The AI gets every food the scan saw as hints. `photoPixels(…, region)`. Tests `v738plate.test.mjs`.
+- **Core Max and bigger off the phone** (Ali's decision): `phoneOff: true` on md-max, Sense, Zenith, Zenith+, Apex, Apex+, Everest,
+  Everest XL; `tierFits` false on a phone, hidden from the Engine list (even "Show all"), never picked by Auto / Deep answer
+  (`modelsForRoute`), a note under the list (`tiers-desktop-note`), an installed one marked "too heavy for a phone"
+  (`engine-model-computer`). The desktop app is unchanged.
+- **NPU "could not be used"**: the Hexagon backend dlopens the vendor `libcdsprpc.so`, which Android 12+ hides from apps unless the
+  manifest declares it → `<uses-native-library android:name="libcdsprpc.so" android:required="false"/>`. `nLoadNpu` now keeps the
+  backend's warnings/errors (ggml_log_set while it loads) and the loader's dlerror, and returns "ERR:<why>"; Engine.kt writes
+  "NPU: could not be used — <why>" (or "NPU: running on HTP0") into the Engine log. Bug fixed on the way: the start-up notes
+  (also the v6.34 memory note) were written before the log was cleared for the start, so they never showed (`startNotes`).
+- **Lesson conversation on Blaze** ("couldn't write a small conversation"): `speak.js parseDialogue` reads JSON in fences, JSON cut
+  off by the limit, trailing commas, names instead of A/B, and plain "A: … (meaning)" lines; `dialogueMessages(c, l, true)` = a
+  second try in plain lines (1000 then 900 tokens).
+- **Doc chat "Solve the questions"** (empty answer shown as "not found"; slow): `docqa.js questionsOf` finds the questions by code
+  ("1.", "Q2", "3)", "Problem 4", a line ending "?", a one-line PDF split before "2. Explain"), `solveOneMessages` solves each with
+  its page; the answer grows on the page question by question (streamed, `onToken` now passed to Ask a PDF); an empty solve says
+  "The model gave no answer this time…", never "not found".
+- **Research (Lynk & Co 900 → a table with the 08)**: `research.js onTopic` — a model number in the question ("900", "08", "X5")
+  must be on the page as a word (title / address, or next to the name: "Co 900"); a year stays optional. `answerfix.js cutLoops`
+  (in tidyAnswer): a labelled paragraph that starts again ("**Comparison:** … The 9 **Comparison:**") is cut at the repeat, a
+  6+-word sentence said twice is kept once.
+- **Scout (Tucson 2022 → 2027 ads, "151 EGP", category page 100/100)**: a plain year in a car / product goal is that exact year; on
+  the known ad sites only an ad address is an ad, a list title ("Vehicles for sale in Egypt") never is; an amount no car / home /
+  rent can cost is not its price (car ≥ 30,000 EGP, home ≥ 150,000, rent ≥ 800); the model words match with one letter off or
+  two swapped (`close1`: "Tuscon" = Tucson).
+- **Arabic "disturbing for the eyes"**: letter-spacing (the capital-label style) pulled the joined Arabic letters apart — none in
+  RTL now (tw.css and the Money app); line height 1.6 in Arabic; the Money app (yusr) uses IBM Plex Sans Arabic; `fmt()` in Arabic
+  keeps "-17,922" one left-to-right piece + a no-break space + the currency (it showed "ج.م-" above "17,922"). Wording = choice 5.
+- **Keyboard bottom row** ("some buttons don't work"): since Android 15 the keyboard draws behind the navigation bar and the bar's
+  own hide / switch-keyboard buttons covered the row; the root view pads the navigation-bar inset. Look = choice 6.
+- **Shop in your pocket**: the item name box was squeezed to 40 px (w-full beat flex-1) → it takes the room, the price is 96 px.
+- **Knowledge hidden from users** (Ali: "I want to be the one to add the knowledge, not the users"): `KNOW_ADMIN = devMode()`
+  (Ali's test builds, 7 taps on the version). Without it: no Knowledge page in the tools / Learn hub, no "Add to Knowledge" in
+  Ask a PDF, no "Teach this to my model", no "Chat now knows: …" toast; the packs still install by themselves and answer, and the
+  answer shows "Sources: …" chips. Pack expansion = choice 4.
+- Version 6.35 (versionCode 96). Tests: `tests/unit/v738plate.test.mjs`, `tests/unit/v738fixes.test.mjs`.
+- Ali's big idea (answered on the choices page): Core Max and up only on computers (done); a code-first app where the small model
+  only phrases and connects (the direction already; agent ideas = choice 2); regroup the app (choice 1); food stronger than Yazio
+  (plate scan done, USDA pack = choice 4A); Scout stronger (choice 3).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

@@ -2048,7 +2048,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             {m.kchips && m.kchips.length ? (
               <div className="mt-2" data-testid="kn-chips">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] text-slate-500">{tr("From your Knowledge")}:</span>
+                  <span className="text-[11px] text-slate-500">{tr("Sources")}:</span>
                   {m.kchips.map((c, i) => <button key={i} onClick={() => setOpenThought((o) => ({ ...o, ["kn" + m.id]: o["kn" + m.id] === i + 1 ? 0 : i + 1 }))} data-testid="kn-chip" dir="auto"
                     className="max-w-[14rem] truncate px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-200 text-[12px]">{c.title || tr("Note")}{c.page ? " · " + tr("p. {p}", { p: c.page }) : ""}</button>)}
                 </div>

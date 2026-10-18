@@ -140,6 +140,34 @@ export function sections(index, chars = 3200) {
   if (cur && cur.text) out.push(cur);
   return out;
 }
+/** v6.35: the questions of an assignment, found by code — "1.", "Q2", "Question 3", "Problem 4", "a)" or a line ending in "?" —
+    each with its page and the lines that belong to it (values, sub-parts). Solving them one at a time is faster on a phone and a
+    small model gets each one right more often than one long answer for everything. */
+export function questionsOf(index, max = 20) {
+  const qs = [];
+  const head = /^\s*(?:(?:q(?:uestion)?|problem|exercise|task|سؤال|س)\s*\.?\s*(\d{1,2})\b|(\d{1,2})\s*[.)\-–:]\s+\S|\(?([a-h])\)\s+\S)/i;
+  for (const p of index.pages) {
+    // a PDF's text often comes as one long line: start a new line before "2. Explain", "Q3", "(4) Find"
+    const flat = String(p.text || "").replace(/\s+(?=(?:(?:Q(?:uestion)?|Problem|Exercise)\s*\.?\s*)?\(?\d{1,2}[.)]\s+[A-Z\u0600-\u06FF(])/g, "\n");
+    const lines = flat.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    for (const l of lines) {
+      const m = l.match(head);
+      const sub = m && m[3] && !m[1] && !m[2];
+      if (m && !sub) qs.push({ page: p.n, text: l });
+      else if (qs.length && qs[qs.length - 1].page === p.n && qs[qs.length - 1].text.length < 1200) qs[qs.length - 1].text += "\n" + l;
+      else if (/[?؟]\s*$/.test(l) && l.length > 15) qs.push({ page: p.n, text: l });
+    }
+  }
+  // keep the ones that read like a question or a task, not a numbered heading
+  const real = qs.filter((q) => /[?؟]|\b(calculate|find|estimate|determine|explain|show|derive|compute|what|why|how|compare|distinguish|describe|discuss|interpret|احسب|اوجد|اشرح|قارن|وضح|ما|لماذا|كيف)\b/i.test(q.text));
+  return real.length >= 2 ? real.slice(0, max).map((q, i) => ({ ...q, n: i + 1 })) : [];
+}
+/** One question, solved step by step, with the page's text (the values, the context) — for questionsOf. */
+export function solveOneMessages(request, q, pageText) {
+  const ar = hasArabic(request);
+  return [{ role: "system", content: `You are a careful tutor. Solve the one question below. Restate what is asked in one line, then solve it step by step with the values the document gives (formulas, units, the arithmetic written out), and end with the final answer in bold. Use general subject knowledge where needed; never invent values the document doesn't give — if one is missing, say which and use a clearly stated assumption. Be concise. Answer in ${ar ? "Egyptian Arabic (keep formulas, numbers and units as written)" : "the language of the request"}.` },
+    { role: "user", content: `Request: ${request}\n\nThe page it is on (p. ${q.page}):\n${String(pageText || "").slice(0, 3500)}\n\nThe question:\n${q.text}` }];
+}
 export function notesMessages(question, sec, i, n) {
   return [{ role: "system", content: "You read part of a document and write notes for a request. Write 3–6 short bullet notes with the facts that matter for the request; after each bullet put its page like [p. 4]. Use only this part. If nothing matters, reply: none." },
     { role: "user", content: `Request: ${question}\n\nPart ${i} of ${n} (pages ${sec.from}–${sec.to}):\n${sec.text}` }];

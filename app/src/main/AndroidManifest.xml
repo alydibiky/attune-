@@ -133,6 +133,9 @@
         <!-- The phone's own GPU driver (Adreno), for Engine → Speed → GPU.
              Optional: phones without it install and run on the CPU. -->
         <uses-native-library android:name="libOpenCL.so" android:required="false" />
+        <!-- v6.35: the Snapdragon NPU's driver (FastRPC to the Hexagon DSP), for Engine → Speed → NPU. Android 12+ hides a
+             phone's vendor libraries from apps unless they are declared here. Optional: other phones install as before. -->
+        <uses-native-library android:name="libcdsprpc.so" android:required="false" />
 
         <!-- Android 14+: Health Connect's "why this app reads your data" link opens Attune. -->
         <activity-alias

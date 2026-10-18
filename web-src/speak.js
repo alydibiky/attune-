@@ -70,19 +70,66 @@ export function phrasesFrom(l, max = 6) {
 }
 
 /** A dialogue for the lesson, written by the model as JSON: {lines: [{who: "A"|"B", text (the language), say (translation)}]} */
-export function dialogueMessages(c, l) {
+export function dialogueMessages(c, l, plain = false) {
   const ar = c.lang === "ar";
+  // the second try asks for plain lines — a small model gets those right more often than JSON (parseDialogue reads both)
+  if (plain) return [
+    { role: "system", content: `Write a short, natural spoken dialogue of 6 lines between A and B in ${c.topic} for a ${c.level} learner, using what this lesson teaches. One line each, exactly like this:
+A: <the line in ${c.topic}> (<its meaning in ${ar ? "Arabic" : "English"}>)
+B: <the line in ${c.topic}> (<its meaning in ${ar ? "Arabic" : "English"}>)
+Nothing else.` },
+    { role: "user", content: `Lesson: ${l.title}\nKey points: ${(l.keyPoints || []).join("; ")}` },
+  ];
   return [
     { role: "system", content: `Write a short, natural spoken dialogue (6 to 8 lines, two people A and B) in ${c.topic} for a ${c.level} learner that uses what this lesson teaches. Simple, everyday, correct. Reply with JSON only:
 {"title": "<where it happens, in ${ar ? "Arabic" : "English"}>", "lines": [{"who": "A", "text": "<the line in ${c.topic}>", "say": "<its meaning in ${ar ? "Arabic" : "English"}>"}]}` },
     { role: "user", content: `Lesson: ${l.title}\nKey points: ${(l.keyPoints || []).join("; ")}` },
   ];
 }
+// v6.35 (Ali, Blaze: "couldn't write a small conversation"): the reply is read by code however it comes — JSON in a code fence,
+// JSON cut off by the token limit, a trailing comma, names instead of A/B, or plain "A: … (meaning)" lines.
+const lineOf = (x) => ({ who: String((x && (x.who || x.speaker || x.name)) || ""), text: String((x && (x.text || x.line)) || "").trim().slice(0, 160),
+  say: String((x && (x.say || x.meaning || x.translation || x.en || x.ar)) || "").trim().slice(0, 200) });
+function speakers(lines) {
+  const order = [];
+  for (const l of lines) { const k = l.who.trim().toLowerCase(); if (k && !order.includes(k)) order.push(k); }
+  return lines.map((l, i) => {
+    const k = l.who.trim().toLowerCase();
+    const who = k === "a" || k === "b" ? k.toUpperCase() : order.indexOf(k) >= 0 ? (order.indexOf(k) % 2 ? "B" : "A") : (i % 2 ? "B" : "A");
+    return { ...l, who };
+  });
+}
+function jsonDialogue(t) {
+  const s = t.indexOf("{");
+  if (s < 0) return null;
+  let body = t.slice(s).replace(/```/g, "");
+  const tries = [body.slice(0, body.lastIndexOf("}") + 1)];
+  // cut off mid-way: keep the lines that are complete, then close the array and the object
+  const lastLine = body.lastIndexOf("}");
+  if (lastLine > 0) tries.push(body.slice(0, lastLine + 1).replace(/,\s*$/, "") + "]}");
+  for (let x of tries) {
+    x = x.replace(/,\s*([\]}])/g, "$1");
+    try { const j = JSON.parse(x); if (j && Array.isArray(j.lines)) return j; } catch (e) {}
+  }
+  return null;
+}
+function textDialogue(t) {
+  const out = [];
+  for (const raw of t.split(/\n+/)) {
+    const m = raw.replace(/^[\s>*\-•\d.)]+/, "").replace(/\*\*/g, "").match(/^([A-Za-z\u00C0-\u024F\u0600-\u06FF]{1,20})\s*[:：]\s*(.+)$/);
+    if (!m) { const pm = raw.trim().match(/^[(（\[]\s*(.+?)\s*[)）\]]$/); if (pm && out.length && !out[out.length - 1].say) out[out.length - 1].say = pm[1].slice(0, 200); continue; }
+    if (/^(title|lesson|key|note)$/i.test(m[1])) continue;
+    let text = m[2].trim(), say = "";
+    const pm = text.match(/^(.*?)\s*[(（\[]\s*(.+?)\s*[)）\]]\s*$/) || text.match(/^(.*?)\s+[—–-]\s+(.+)$/);
+    if (pm && pm[1]) { text = pm[1].trim(); say = pm[2].trim(); }
+    out.push({ who: m[1], text: text.replace(/^["“]|["”]$/g, "").slice(0, 160), say: say.slice(0, 200) });
+  }
+  return out;
+}
 export function parseDialogue(text) {
-  const t = String(text || ""), s = t.indexOf("{"), e = t.lastIndexOf("}");
-  if (s < 0 || e <= s) return null;
-  let j; try { j = JSON.parse(t.slice(s, e + 1)); } catch (x) { return null; }
-  const lines = (Array.isArray(j.lines) ? j.lines : []).map((x) => ({ who: /b/i.test(String(x && x.who)) ? "B" : "A", text: String((x && x.text) || "").trim().slice(0, 160), say: String((x && (x.say || x.meaning || x.translation)) || "").trim().slice(0, 200) }))
-    .filter((x) => x.text).slice(0, 10);
-  return lines.length >= 4 ? { title: String(j.title || "").slice(0, 80), lines } : null;
+  const t = String(text || "");
+  const j = jsonDialogue(t);
+  let lines = j ? j.lines.map(lineOf) : textDialogue(t);
+  lines = speakers(lines.filter((x) => x.text)).slice(0, 10);
+  return lines.length >= 4 ? { title: String((j && j.title) || "").slice(0, 80), lines } : null;
 }

@@ -147,6 +147,17 @@ export function onTopic(hit, question) {
   const hay = normT((hit.title || "") + " " + decodeURIComponentSafe(hit.url || "") + " " + String(hit.text || "").slice(0, 6000));
   const has = (t) => hay.includes(t) || (/\d/.test(t) && hay.replace(/[\s,.-]/g, "").includes(t.replace(/[\s,.-]/g, "")));
   if (named.length) {
+    // v6.35 (Ali: "why did it mention the Lynk & Co 08?" — a page about the 08 had "Lynk" and "Co", 2 of 3 words): a model
+    // number or code ("900", "08", "X5", "S24") must be on the page as a word — in its title / address, or next to another
+    // word of the name ("Co 900", "Lynk & Co 900") — a year ("2022") is not a model number and stays optional
+    const codes = named.filter((t) => /\d/.test(t) && !/^(19|20)\d{2}$/.test(t));
+    if (codes.length) {
+      const top = normT((hit.title || "") + " " + decodeURIComponentSafe(hit.url || ""));
+      const word = (t) => new RegExp("(^|[^a-z0-9])" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[^a-z0-9])");
+      const others = named.filter((t) => !codes.includes(t));
+      const near = (t) => others.some((o) => new RegExp(o.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[\\s&.+-]{0,6}" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[^a-z0-9])").test(hay));
+      if (!codes.every((t) => word(t).test(top) || near(t) || (!others.length && word(t).test(hay)))) return false;
+    }
     const need = named.length <= 2 ? named.length : Math.ceil(named.length * 0.6);
     return named.filter(has).length >= need;
   }
