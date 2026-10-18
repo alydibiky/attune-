@@ -9,6 +9,7 @@
 import { myMoneyIntent, catAsked, answerMyMoney, spanOf } from "./myledger.js";
 import { progressOf, dueSoon } from "./life.js";
 import { trendOf, labTestOf, dosesOn, activeOn, isoDay, mgdl } from "./care.js";
+import { moneyTrend, chartOfRows } from "./lifecharts.js";
 
 const AR_D = "٠١٢٣٤٥٦٧٨٩";
 const fold = (s) => String(s || "").replace(/[٠-٩]/g, (d) => AR_D.indexOf(d)).replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة(?=\s|$)/g, "ه").toLowerCase();
@@ -220,6 +221,8 @@ export function askLife(question, stores = {}, { now = Date.now() } = {}) {
   const q = String(question || "").trim(); if (!q) return null;
   const k = kindOf(q, stores);
   if (k === "money") {
+    const trend = moneyTrend(q, stores.ledger || null, now);   // v6.38 (H3): "since Ramadan", "by month" → a chart
+    if (trend) return trend;
     const ar = /[؀-ۿ]/.test(q);
     const en = answerMyMoney(q, stores.ledger || null, { now, ar: false, short: true }).text, a = answerMyMoney(q, stores.ledger || null, { now, ar: true, short: true }).text;
     void ar;
@@ -228,7 +231,10 @@ export function askLife(question, stores = {}, { now = Date.now() } = {}) {
   if (k === "paid-for") { const term = termOf(q); return paidFor(q, stores, now) || { kind: "paid-for", en: `Nothing in Money mentions “${term}”.`, ar: `لا يوجد في المال ما يذكر «${term}».`, open: "money", sources: ["money"] }; }
   if (k === "history" || k === "last") return (k === "history" ? history : lastTime)(q, stores, now);   // nothing about it in your data → null (the model answers)
   const f = { "owed-in": owedIn, "owed-out": owedOut, lab, sugar, meds, food, due }[k];
-  return (f && f(q, stores, now)) || search(q, stores);
+  const r = (f && f(q, stores, now)) || search(q, stores);
+  // v6.38 (H3): results over time come with their chart (drawn from the same rows, so it matches the table)
+  if (r && !r.chart && ["lab", "sugar", "food"].includes(r.kind)) { const c = chartOfRows(r.rows, r.kind === "food" ? "bar" : "line"); if (c) r.chart = c; }
+  return r;
 }
 
 /** The stores as each tool saved them (null-safe). */
@@ -244,6 +250,7 @@ export function loadStores(ls = typeof localStorage !== "undefined" ? localStora
 /** Example questions for the page (each answered from a different tool). */
 export const EXAMPLES = [
   ["How much did I spend on food this month?", "صرفت كام على الأكل الشهر ده؟"],
+  ["How did my food spending change since Ramadan?", "مصاريف الأكل اتغيرت ازاي من رمضان؟"],
   ["Who owes me money?", "مين عليه فلوس ليا؟"],
   ["What's due this week?", "ايه المواعيد المستحقة الاسبوع ده؟"],
   ["Is my HbA1c getting better?", "السكر التراكمي بتاعي اتحسن؟"],
