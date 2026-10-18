@@ -3,7 +3,7 @@
    you pick is saved by Android's DownloadManager to Movies/Attune. Sites that allow downloading only
    (see video.js); YouTube / TikTok / Instagram / Facebook / X links get a clear "not allowed". */
 import React, { useState, useEffect, useRef } from "react";
-import { Download, Loader2, X, Check, ClipboardPaste, Play, Film, Music, Link2 } from "lucide-react";
+import { Download, Loader2, X, Check, ClipboardPaste, Play, Film, Music, Link2, Scissors } from "lucide-react";
 import { tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as V from "./video.js";
@@ -11,6 +11,35 @@ import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const KEY = "attune:video:v1";
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; } };
+/** v6.37 (W6): cut a part of a saved video, or keep its sound only — copied as-is on the phone (MediaTools.clip). */
+function ClipPanel({ d, nativeCall, flash, onMade }) {
+  const [from, setFrom] = useState(""), [to, setTo] = useState(""), [audio, setAudio] = useState(false);
+  const [busy, setBusy] = useState(false), [err, setErr] = useState("");
+  const go = async () => {
+    const r = V.clipRange(from, to); if (r.error) return setErr(tr(r.error));
+    setErr(""); setBusy(true);
+    try {
+      const x = await nativeCall("videoClip", { id: d.id, start: r.start, end: r.end, audio, name: String(d.name || "clip").replace(/\.[a-z0-9]{2,4}$/i, "") });
+      onMade({ id: "clip-" + Date.now(), clip: true, uri: x.uri, type: x.type, name: x.name, where: x.where, status: "done", done: x.size, total: x.size, audio });
+      flash && flash(tr("Saved to {w}", { w: x.where }));
+    } catch (e) { setErr(tr(String((e && e.message) || e))); }
+    setBusy(false);
+  };
+  const box = "w-24 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-[13px] text-slate-100 tabular-nums";
+  return (
+    <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-2.5 space-y-2" data-testid="video-clip">
+      <div className="flex flex-wrap items-center gap-2 text-[12px] text-slate-400">
+        <span>{tr("From")}</span><input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="0:00" dir="ltr" inputMode="decimal" className={box} data-testid="video-clip-from" />
+        <span>{tr("to")}</span><input value={to} onChange={(e) => setTo(e.target.value)} placeholder={tr("the end")} dir="ltr" inputMode="decimal" className={box} data-testid="video-clip-to" />
+      </div>
+      <label className="flex items-center gap-2 text-[12px] text-slate-300"><input type="checkbox" checked={audio} onChange={(e) => setAudio(e.target.checked)} data-testid="video-clip-audio" />{tr("Sound only (saves to Music)")}</label>
+      <button onClick={go} disabled={busy} className="w-full py-2 rounded-lg bg-teal-500 disabled:opacity-60 text-slate-950 text-[13px] font-semibold flex items-center justify-center gap-1.5" data-testid="video-clip-go">
+        {busy ? <Loader2 size={14} className="animate-spin" /> : <Scissors size={14} />}{audio ? tr("Save the sound") : tr("Save this part")}</button>
+      <p className="text-[10.5px] text-slate-500">{tr("Copied as it is, no re-encoding: quick and cool. The part starts at the nearest key frame, so it may begin a second early.")}</p>
+      {err ? <p className="text-[11.5px] text-rose-300" data-testid="video-clip-err">{err}</p> : null}
+    </div>);
+}
+
 const store = (l) => { try { localStorage.setItem(KEY, JSON.stringify(l.slice(0, 30))); } catch (e) {} };
 
 export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink }) {
@@ -19,13 +48,14 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
   const [err, setErr] = useState("");
   const [found, setFound] = useSticky("video:found", null);      // { title, choices, source }
   const [sel, setSel] = useSticky("video:sel", 0);
-  const [list, setList] = useState(load);         // [{id, name, where, status, done, total, audio}]
+  const [list, setList] = useState(load);         // [{id, name, where, status, done, total, audio}] (+ clip, uri, type for cuts)
+  const [cut, setCut] = useState(null);           // the download whose Cut panel is open
   const run = useRef(0);
   useSubBack(!!found, () => setFound(null));
 
   // progress of the downloads still running
   useEffect(() => {
-    const active = list.filter((d) => !["done", "failed"].includes(d.status)).map((d) => d.id);
+    const active = list.filter((d) => !d.clip && !["done", "failed"].includes(d.status)).map((d) => d.id);
     if (!active.length || !nativeCall) return;
     const t = setInterval(async () => {
       try {
@@ -171,7 +201,10 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
                 {d.status === "done" ? (
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11.5px] text-emerald-300 flex items-center gap-1"><Check size={13} />{tr("Saved")} · {V.sizeText(d.total)}</span>
-                    <button onClick={() => nativeCall("videoOpen", { id: d.id }).catch(() => flash && flash(tr("The file was moved or deleted")))} className="px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 text-[12.5px] font-semibold flex items-center gap-1" data-testid="video-open"><Play size={13} />{tr("Play")}</button>
+                    <span className="flex items-center gap-1.5">
+                      {!d.clip && nativeCall ? <button onClick={() => setCut(cut === d.id ? null : d.id)} className="px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-200 text-[12.5px] flex items-center gap-1" data-testid="video-cut"><Scissors size={13} />{tr("Cut")}</button> : null}
+                      <button onClick={() => nativeCall("videoOpen", d.clip ? { uri: d.uri, type: d.type } : { id: d.id }).catch(() => flash && flash(tr("The file was moved or deleted")))} className="px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 text-[12.5px] font-semibold flex items-center gap-1" data-testid="video-open"><Play size={13} />{tr("Play")}</button>
+                    </span>
                   </div>
                 ) : d.status === "failed" ? (
                   <p className="text-[11.5px] text-rose-300">{tr("The download failed — the link may have expired. Find it again and retry.")}</p>
@@ -181,6 +214,7 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
                     <p className="text-[11px] text-slate-500" data-testid="video-progress">{d.status === "paused" ? tr("Waiting for the internet…") : d.total ? `${pct}% · ${V.sizeText(d.done)} / ${V.sizeText(d.total)}` : tr("Starting…")}</p>
                   </>
                 )}
+                {cut === d.id && d.status === "done" ? <ClipPanel d={d} nativeCall={nativeCall} flash={flash} onMade={(c) => { setCut(null); setList((l) => { const n = [c, ...l]; store(n); return n; }); }} /> : null}
                 {d.where ? <p className="text-[10.5px] text-slate-600 truncate" dir="ltr">{d.where}</p> : null}
               </div>
             );

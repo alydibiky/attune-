@@ -2,12 +2,19 @@ package com.aldibiki.attune
 
 import android.Manifest
 import android.app.DownloadManager
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.media.MediaMuxer
+import android.provider.MediaStore
+import java.io.File
+import java.nio.ByteBuffer
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -20,6 +27,8 @@ import java.net.URL
  *  - download: Android's DownloadManager saves the file to Movies/Attune (or Music/Attune) with a
  *    progress notification; it continues when Attune is closed and resumes after a lost connection.
  *  - status / open / cancel for the downloads Attune started.
+ *  - clip (v6.37, W6): a part of a saved video (start → end), or its sound only, copied as-is (no re-encoding, so it
+ *    takes a second and doesn't heat the phone) with MediaExtractor + MediaMuxer.
  */
 object MediaTools {
     private const val UA = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Mobile Safari/537.36"
@@ -124,4 +133,86 @@ object MediaTools {
     }
 
     fun cancel(ctx: Context, id: Long): Boolean = dm(ctx).remove(id) > 0
+
+    /** Opens a file Attune made itself (a clip), by its content:// address. */
+    fun openUri(ctx: Context, uri: String, type: String): Boolean {
+        ctx.startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(uri), type)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK))
+        return true
+    }
+
+    /** A part of download `id` from startMs to endMs (endMs <= 0 = to the end); audio = the sound only.
+     *  Samples are copied, not re-encoded: the cut starts at the key frame just before startMs.
+     *  → {uri, where, name, size, type}. */
+    fun clip(ctx: Context, id: Long, startMs: Long, endMs: Long, audio: Boolean, base: String): JSONObject {
+        val src = dm(ctx).getUriForDownloadedFile(id) ?: throw IllegalStateException("The file was moved or deleted")
+        val ex = MediaExtractor()
+        ex.setDataSource(ctx, src, null)
+        var videoT = -1; var audioT = -1
+        for (i in 0 until ex.trackCount) {
+            val m = ex.getTrackFormat(i).getString(MediaFormat.KEY_MIME) ?: continue
+            if (m.startsWith("video/") && videoT < 0) videoT = i
+            if (m.startsWith("audio/") && audioT < 0) audioT = i
+        }
+        if (audio && audioT < 0) { ex.release(); throw IllegalStateException("This video has no sound") }
+        val tracks = if (audio) listOf(audioT) else listOf(videoT, audioT).filter { it >= 0 }
+        if (tracks.isEmpty()) { ex.release(); throw IllegalStateException("Couldn't read this file") }
+        val aMime = if (audioT >= 0) ex.getTrackFormat(audioT).getString(MediaFormat.KEY_MIME) ?: "" else ""
+        val vMime = if (videoT >= 0) ex.getTrackFormat(videoT).getString(MediaFormat.KEY_MIME) ?: "" else ""
+        // MP4 holds AAC/H.264/H.265; Opus/Vorbis/VP8/VP9 go in WebM
+        val webm = (audio && (aMime.contains("opus") || aMime.contains("vorbis"))) || (!audio && (vMime.contains("vp8") || vMime.contains("vp9")))
+        val ext = if (webm) "webm" else if (audio) "m4a" else "mp4"
+        val type = if (audio) (if (webm) "audio/webm" else "audio/mp4") else (if (webm) "video/webm" else "video/mp4")
+        val tmp = File(ctx.cacheDir, "clip-${System.currentTimeMillis()}.$ext")
+        val mux = MediaMuxer(tmp.path, if (webm) MediaMuxer.OutputFormat.MUXER_OUTPUT_WEBM else MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+        try {
+            val map = HashMap<Int, Int>()
+            for (t in tracks) { ex.selectTrack(t); map[t] = mux.addTrack(ex.getTrackFormat(t)) }
+            if (!audio && videoT >= 0) ex.getTrackFormat(videoT).let { f -> if (f.containsKey(MediaFormat.KEY_ROTATION)) mux.setOrientationHint(f.getInteger(MediaFormat.KEY_ROTATION)) }
+            mux.start()
+            val startUs = startMs * 1000; val endUs = if (endMs > 0) endMs * 1000 else Long.MAX_VALUE
+            ex.seekTo(startUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
+            val buf = ByteBuffer.allocate(4 * 1024 * 1024)
+            val info = android.media.MediaCodec.BufferInfo()
+            var first = -1L; var n = 0; val ended = HashSet<Int>()
+            while (true) {
+                info.size = ex.readSampleData(buf, 0)
+                if (info.size < 0) break
+                val t = ex.sampleTime
+                if (t > endUs) { ended.add(ex.sampleTrackIndex); if (ended.size >= tracks.size) break; ex.advance(); continue }
+                if (first < 0) first = t
+                info.offset = 0
+                info.presentationTimeUs = maxOf(0L, t - first)
+                info.flags = if ((ex.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC) != 0) android.media.MediaCodec.BUFFER_FLAG_KEY_FRAME else 0
+                mux.writeSampleData(map[ex.sampleTrackIndex] ?: break, buf, info)
+                n++
+                ex.advance()
+            }
+            if (n == 0) throw IllegalStateException("Nothing between those times")
+            mux.stop()
+        } finally {
+            try { mux.release() } catch (e: Throwable) {}
+            ex.release()
+        }
+        val safe = base.replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]+"), " ").trim().take(100).ifEmpty { "clip" } + (if (audio) " (sound)" else " (clip)") + ".$ext"
+        val dir = if (audio) Environment.DIRECTORY_MUSIC else Environment.DIRECTORY_MOVIES
+        val size = tmp.length()
+        try {
+            if (Build.VERSION.SDK_INT >= 29) {
+                val coll = if (audio) MediaStore.Audio.Media.EXTERNAL_CONTENT_URI else MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                val cv = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, safe); put(MediaStore.MediaColumns.MIME_TYPE, type)
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, "$dir/Attune")
+                }
+                val uri = ctx.contentResolver.insert(coll, cv) ?: throw IllegalStateException("Couldn't save the clip")
+                ctx.contentResolver.openOutputStream(uri)!!.use { o -> tmp.inputStream().use { it.copyTo(o) } }
+                return JSONObject().put("uri", uri.toString()).put("where", "$dir/Attune/$safe").put("name", safe).put("size", size).put("type", type)
+            }
+            // Android 9: kept inside Attune (the shared folder FileProvider may hand to a player)
+            val outDir = File(ctx.filesDir, "shared").apply { mkdirs() }
+            val out = File(outDir, safe); tmp.copyTo(out, overwrite = true)
+            val uri = androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", out)
+            return JSONObject().put("uri", uri.toString()).put("where", "Attune/$safe").put("name", safe).put("size", size).put("type", type)
+        } finally { tmp.delete() }
+    }
 }

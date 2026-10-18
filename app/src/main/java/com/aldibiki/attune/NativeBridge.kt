@@ -1490,8 +1490,18 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
 
     @JavascriptInterface
     fun videoOpen(id: String, arg: String) {
-        try { if (MediaTools.openFile(ctx, JSONObject(arg).getLong("id"))) resolve(id, JSONObject().put("ok", true)) else reject(id, "The file was moved or deleted") }
+        try { val a = JSONObject(arg); if (if (a.has("uri")) MediaTools.openUri(ctx, a.getString("uri"), a.optString("type", "video/*")) else MediaTools.openFile(ctx, a.getLong("id"))) resolve(id, JSONObject().put("ok", true)) else reject(id, "The file was moved or deleted") }
         catch (e: Throwable) { reject(id, e.message ?: "Couldn't open the video") }
+    }
+
+    @JavascriptInterface
+    fun videoClip(id: String, arg: String) {
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                resolve(id, MediaTools.clip(ctx, a.getLong("id"), a.optLong("start", 0), a.optLong("end", 0), a.optBoolean("audio"), a.optString("name", "clip")))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't cut the video") }
+        }
     }
 
     @JavascriptInterface

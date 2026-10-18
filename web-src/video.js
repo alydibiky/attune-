@@ -164,3 +164,21 @@ export function fileName(title, c) {
   const q = c.audio ? "" : c.height ? " " + c.height + "p" : "";
   return base + q + "." + ext;
 }
+
+/* v6.37 (W6) — Cut a part / keep the sound only. "1:20", "01:02:03", "75", "1.5" (seconds), Arabic digits too → ms.
+   "" → null (start = beginning, end = the end). Anything else → NaN. */
+export function timeMs(t) {
+  const s = String(t == null ? "" : t).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[٫,]/g, ".").trim();
+  if (!s) return null;
+  if (!/^\d+(?:\.\d+)?$|^\d+(?::\d{1,2}){1,2}(?:\.\d+)?$/.test(s)) return NaN;
+  const parts = s.split(":").map(Number);
+  if (parts.slice(1).some((x) => x >= 60)) return NaN;
+  return Math.round(parts.reduce((a, x) => a * 60 + x, 0) * 1000);
+}
+/** { start, end } in ms for the native cut, or { error } (an English message for tr()). */
+export function clipRange(from, to) {
+  const a = timeMs(from), b = timeMs(to);
+  if (Number.isNaN(a) || Number.isNaN(b)) return { error: "Write the times like 1:20 or 0:45" };
+  if (a != null && b != null && b <= a) return { error: "The end must come after the start" };
+  return { start: a || 0, end: b || 0 };
+}
