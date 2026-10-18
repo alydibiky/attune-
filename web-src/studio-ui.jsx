@@ -2,7 +2,8 @@
    The picture engine and its models are described in studio.js / ImageEngine.kt. */
 import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useRef } from "react";
-import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X, Zap } from "lucide-react";
+import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X, Zap, Eraser } from "lucide-react";
+import { EraseSheet } from "./erase-ui.jsx";
 import { tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import { DeskEmpty } from "./desk.jsx";
@@ -125,6 +126,9 @@ function commitPic(item) {
 
 export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, enhanceMs, flash, incoming, clearIncoming }) {
   const readInfo = () => { try { return JSON.parse(native.imageInfo()); } catch (e) { return null; } };
+  const [eraseOn, setEraseOn] = useState(null);   // { src, file | photo } while the eraser is open
+  const erasePick = useRef(null);
+  useEffect(() => () => { try { native && native.eraserRelease && native.eraserRelease(); } catch (e) {} }, []);   // the eraser model leaves memory with Studio
   const [info, setInfo] = useState(readInfo);
   const [mode, setMode] = useSticky("studio:mode", "create");
   useSubBack(mode === "edit", () => setMode("create"));   // v5.34: Back leaves photo editing
@@ -214,6 +218,14 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   const drawReady = dp.ready;
   const P = PACKS[dp.id];
   const upReady = packReady(info, "esrgan-x4");
+  const eraseReady = packReady(info, "eraser");
+  // v6.38: the eraser — on this picture, or on a photo from the gallery
+  const openErase = async (target) => {
+    if (!native.eraseImage) return;
+    if (!eraseReady && !(await install("eraser"))) return;
+    setEraseOn(target);
+  };
+  const erasePhoto = (file) => { if (!file) return; const r = new FileReader(); r.onload = () => openErase({ src: r.result, photo: r.result }); r.readAsDataURL(file); };
   const keep = (list) => { setGallery(list); saveStudio(list); };
   // adds one picture to the newest gallery (safe from a delayed call — v5.34 auto-sharpen)
   const keepRef = useRef(null);
@@ -523,6 +535,13 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
       </div>
 
       <div className={PICTURE}>
+      {native.eraseImage ? (
+        <div className="flex items-center gap-2" data-testid="studio-erase-photo-row">
+          <button className={btn} disabled={!!busy} data-testid="studio-erase-photo" onClick={() => erasePick.current && erasePick.current.click()}><Eraser size={13} />{tr("Remove people or things from a photo")}</button>
+          <input ref={erasePick} type="file" accept="image/*" className="hidden" data-testid="studio-erase-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; erasePhoto(f); }} />
+        </div>) : null}
+      {eraseOn ? <EraseSheet {...eraseOn} nativeCall={nativeCall} flash={flash} onClose={() => setEraseOn(null)}
+        onDone={(r) => { setEraseOn(null); commitPic({ ...(eraseOn.file ? cur : {}), file: r.file, url: r.url, w: r.width, h: r.height, ms: r.ms, backend: r.backend, idea: (eraseOn.file && cur && cur.idea) || tr("Erased photo"), erased: true, upscaled: false, at: Date.now() }); flash(tr("Removed in {t}", { t: secs(r.ms || 0) })); }} /> : null}
       {!flowLive && !cur ? <DeskEmpty icon={Palette} title={tr("Your picture appears here")} text={tr("Describe it and tap Draw it — it is made on this device, with no internet.")} testid="studio-desk-empty" /> : null}
       {flowLive ? <DraftFrame flow={flow} now={now} onStop={stop} onKeep={keepDraft} onPick={pickDraft} /> : cur ? (
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-2" data-testid="studio-result">
@@ -536,6 +555,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
             <button className={btn} data-testid="studio-share" onClick={() => { try { native.shareImage(cur.file); } catch (e) {} }}><Share2 size={13} />{tr("Share")}</button>
             {!cur.upscaled && cur.w <= 1216 && native.sharpenFast ? <button className={btn} disabled={!!busy} data-testid="studio-sharpen-fast" onClick={() => sharpenFast()}><Zap size={13} />{tr("×2 sharper · instant")}</button> : null}
             {(!cur.upscaled || cur.upscaled === "x2") && cur.w <= 2432 ? <button className={btn} disabled={!!busy} data-testid="studio-upscale" onClick={() => sharpen()}><Maximize2 size={13} />{tr("×4 AI sharpen")}{upReady ? "" : " · 67 MB"}{!onGpu(cur.backend) ? " · ~" + cpuMinutes(cur.upscaled === "x2" ? { w: cur.w / 2, h: cur.h / 2 } : cur) + " min" : ""}</button> : null}
+            {native.eraseImage ? <button className={btn} disabled={!!busy} data-testid="studio-erase" onClick={() => openErase({ src: cur.url, file: cur.file })}><Eraser size={13} />{tr("Erase")}{eraseReady ? "" : " · 28 MB"}</button> : null}
             <button className={btn} disabled={!!busy} data-testid="studio-edit-this" onClick={editThis}><Wand2 size={13} />{tr("Edit this")}</button>
             {!cur.edit ? <button className={btn} disabled={!!busy || !drawReady} data-testid="studio-again" onClick={() => { setMode("create"); draw({ idea: cur.idea, prompt: cur.prompt }); }}><RefreshCw size={13} />{tr("Another version")}</button> : null}
             <button className={btn + " ms-auto"} onClick={async () => { if (await askConfirm("Delete this picture?")) remove(cur); }} aria-label={tr("Delete")}><Trash2 size={13} /></button>

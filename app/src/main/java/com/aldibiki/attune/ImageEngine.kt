@@ -92,7 +92,7 @@ object ImageEngine {
         return arr
     }
 
-    private fun packFile(ctx: Context, packId: String, role: String): File? {
+    internal fun packFile(ctx: Context, packId: String, role: String): File? {
         val d = packDir(ctx, packId)
         return try {
             val j = JSONObject(File(d, "meta.json").readText())

@@ -129,6 +129,8 @@ dependencies {
     // such as Gemma 4 E2B/E4B on the phone's GPU, with multi-token prediction.
     // Pinned, not "latest.release": a build must not change by itself.
     implementation("com.google.ai.edge.litertlm:litertlm-android:0.17.1")
+    // v6.38 Studio eraser: ONNX Runtime (MIT) runs MI-GAN (MIT, a 28 MB pack) on the CPU — paint over a person, it is gone.
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.29.0")
     // File Converter (v5.36): the text of PDF pages, on the phone. PdfBox-Android, Apache-2.0.
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     // Fit & Food (v6.1): barcodes read on the phone from a photo — ML Kit with its model bundled

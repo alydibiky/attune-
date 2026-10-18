@@ -95,6 +95,13 @@ export const PACKS = {
         url: "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/vae/flux2-vae.safetensors" },
     ],
   },
+  // v6.38 (batch 4): the eraser — MI-GAN (MIT, code + weights), paint over a person or a thing and it is gone, ~1 s on the CPU.
+  eraser: {
+    id: "eraser", kind: "erase", label: "Eraser", sizeGB: 0.03, license: "MIT",
+    quality: "Removes people and things you paint over, in about a second, on the phone.",
+    files: [{ role: "inpaint", what: "eraser model", name: "migan_pipeline_v2.onnx", size: 28079181,
+      url: "https://huggingface.co/andraniksargsyan/migan/resolve/main/migan_pipeline_v2.onnx" }],
+  },
   // Real-ESRGAN ×4 (BSD-3): 1024 px → 4096 px, sharper edges and textures.
   "esrgan-x4": {
     id: "esrgan-x4", kind: "upscale", label: "Real-ESRGAN ×4", sizeGB: 0.07, license: "BSD-3-Clause",
