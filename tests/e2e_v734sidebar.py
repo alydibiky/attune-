@@ -32,7 +32,7 @@ with sync_playwright() as p:
     shot(page, "money-tabs")
     page.click("[data-testid=hub-tab-reminders]"); page.wait_for_timeout(400)
     parts = page.evaluate("[...document.querySelectorAll('[data-testid=hub-parts] button')].map(b => b.innerText)")
-    check(parts == ["Reminders", "Dates", "People & plans", "Chat X-Ray", "Payments"], "Follow-ups has a switch: %s" % parts)
+    check(parts == ["Reminders", "Timeline", "Dates", "People & plans", "Chat X-Ray", "Payments"], "Follow-ups has a switch: %s" % parts)
     page.click("[data-testid=hub-part-radar]"); page.wait_for_selector("text=Deadline Radar", timeout=5000)
     check(page.locator("[data-testid=hub-tab-reminders][aria-selected=true]").count() == 1 and page.locator("[data-testid=hub-part-radar][aria-pressed=true]").count() == 1,
           "Dates (the Radar) opens inside the Follow-ups tab")

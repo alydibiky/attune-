@@ -11,7 +11,7 @@ export const HUBS = [
   ["projects", "Projects", "projects", ["projects"]],
   ["home", "Home", "home", ["home", "missions", "chat", "lifeask", "translate", "instant", "shelf"]],
   ["students", "Students", "coach", ["coach", "convert", "pdfchat", "slides", "cv"]],
-  ["money", "Money", "money", ["money", "reminders", "xray", "radar", "life", "guardian", "deal"]],
+  ["money", "Money", "money", ["money", "reminders", "timeline", "xray", "radar", "life", "guardian", "deal"]],
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
   ["learn", "Daily", "learn", ["learn", "scout", "memory", "news", "map", "travel", "knowledge"]],
   ["tools", "Work", "business", ["business", "fleet", "crane", "field", "tools", "improve", "compress", "humanize", "copilot", "library", "video", "ask", "guide", "privacy"]],
@@ -32,7 +32,8 @@ export const FULL = ["home", "fit", "map"];   // (v6.36: Business shows the Work
 /** v6.30 (Ali: no more than 6 tabs either): a page that lives INSIDE another — one tab; a small switch on top of the page moves
     between the two parts. Skills is part of Assistants, Artifacts part of Projects, Reminders part of Radar (both are dates).
     v6.32 (Ali picked it): Compress is part of Improve a prompt, so Create has 6 tabs. */
-export const INSIDE = { radar: "reminders", life: "reminders", xray: "reminders", guardian: "reminders" };
+// v6.38 (M3): Timeline — everything from the other parts on one list
+export const INSIDE = { timeline: "reminders", radar: "reminders", life: "reminders", xray: "reminders", guardian: "reminders" };
 /* v6.36 (Ali's board: "reminders · tabs inside: xray, radar, life — rename it to a good name"): one Money tab, "Follow-ups", with a
    switch Reminders · Dates · People & plans · Chat X-Ray · Payments (the old Watch). Skills, Artifacts and Compress are their own
    pages again (Create's tabs / the Tools choices). */
