@@ -7,12 +7,14 @@ import { askConfirm } from "./confirm.jsx";
 import React, { useState } from "react";
 import { AlertTriangle, CheckCircle2, Plus, Trash2, Share2, Save, Info } from "lucide-react";
 import { tr, fmtNum } from "./i18n.js";
+import { liftPlan, planHtml } from "./liftplan.js";
+import { sharePdf } from "./books-docs.jsx";
 import {
   num, parseChart, chartCapacity, liftCheck, outriggerPressure, slingTension, windCheck, windAtHeight, beaufort,
   GROUNDS, CHECKLIST, loadCraneData, saveCraneData, DEFAULT_LIMITS,
 } from "./crane.js";
 
-const TABS = [["lift", "Lift"], ["ground", "Ground"], ["slings", "Slings"], ["wind", "Wind"], ["check", "Checklist"], ["charts", "Charts"]];
+const TABS = [["lift", "Lift"], ["plan", "Lift plan"], ["ground", "Ground"], ["slings", "Slings"], ["wind", "Wind"], ["check", "Checklist"], ["charts", "Charts"]];
 const field = "w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-teal-500";
 const n = (x, d = 2) => fmtNum(x, { maximumFractionDigits: d });
 // v6.27 computer layout (option A): in each tab the numbers you type on the left and the answer on the right. The
@@ -117,6 +119,7 @@ export function CraneToolkit({ flash, share, remember }) {
         </div>
       ) : null}
 
+      {tab === "plan" ? <PlanTab flash={flash} lift={{ crane: crane ? crane.name : "", config: crane ? crane.config || "" : "", radius, boom, capacity: capacity || "", load, hook, rig, other, limits }} /> : null}
       {tab === "ground" ? <GroundTab gross={gross} /> : null}
       {tab === "slings" ? <SlingTab gross={gross} /> : null}
       {tab === "wind" ? <WindTab gross={gross} /> : null}
@@ -124,6 +127,42 @@ export function CraneToolkit({ flash, share, remember }) {
       {tab === "charts" ? <ChartsTab data={data} setData={setData} flash={flash} onPick={(id) => { setCraneId(id); setTab("lift"); }} /> : null}
     </div>
   );
+}
+
+/* v6.40 (W2): the whole lift on one page → every check together and one verdict → a signed PDF (liftplan.js) */
+function PlanTab({ lift, flash }) {
+  const [f, setF] = useState(() => { try { return JSON.parse(localStorage.getItem("attune:liftplan:v1") || "null") || {}; } catch (e) { return {}; } });
+  const set = (k) => (v) => { const nf = { ...f, [k]: v }; setF(nf); try { localStorage.setItem("attune:liftplan:v1", JSON.stringify(nf)); } catch (e) {} };
+  const p = { ...f, ...lift, date: f.date || new Date().toISOString().slice(0, 10), legs: f.legs || 2, angle: f.angle == null ? "" : f.angle, soil: f.soil || "dense_gravel" };
+  const r = liftPlan(p);
+  const V = { go: ["ok", "GO — within every limit"], caution: ["warn", "GO WITH CARE — read the cautions"], plan: ["warn", "CRITICAL LIFT — a signed lift plan is required"], stop: ["bad", "STOP — do not lift as planned"], incomplete: ["none", "INCOMPLETE — fill the missing checks"] }[r.overall];
+  const t = (label, k, ph) => <label className="block"><span className="block text-[11px] text-slate-400 mb-1">{tr(label)}</span><input value={f[k] || ""} onChange={(e) => set(k)(e.target.value)} placeholder={ph || ""} dir="auto" className={field} data-testid={"plan-" + k} /></label>;
+  return (
+    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3" data-testid="crane-plan">
+      <p className="text-[12px] text-slate-400 m-0">{tr("The crane, radius and load come from the Lift tab. Add the rest and make the plan as a PDF to sign.")}</p>
+      <div className="grid grid-cols-2 gap-2">{t("Job", "job", "Beam lift, bay 3")}{t("Site", "site")}{t("Load (what)", "loadName", "Steel beam")}{t("Lift planner", "planner")}</div>
+      <p className="text-[11px] uppercase tracking-wider text-slate-500 m-0">{tr("Ground")}</p>
+      <div className="grid grid-cols-2 gap-2">
+        <Num label="Crane mass" unit="t" value={f.craneMass || ""} set={set("craneMass")} testid="plan-cranemass" />
+        <Num label="Counterweight" unit="t" value={f.counterweight || ""} set={set("counterweight")} />
+        <Num label="Mat length" unit="m" value={f.matL || ""} set={set("matL")} testid="plan-matl" />
+        <Num label="Mat width" unit="m" value={f.matW || ""} set={set("matW")} testid="plan-matw" />
+        <label className="block col-span-2"><span className="block text-[11px] text-slate-400 mb-1">{tr("Ground")}</span>
+          <select value={p.soil} onChange={(e) => set("soil")(e.target.value)} className={field}>{GROUNDS.map(([id, name, q]) => <option key={id} value={id}>{tr(name)} · {q} kN/m²</option>)}</select></label>
+      </div>
+      <p className="text-[11px] uppercase tracking-wider text-slate-500 m-0">{tr("Slings and wind")}</p>
+      <div className="grid grid-cols-2 gap-2">
+        <Num label="Sling legs" value={String(p.legs)} set={set("legs")} />
+        <Num label="Angle from vertical" unit="°" value={String(f.angle ?? "")} set={set("angle")} testid="plan-angle" />
+        <Num label="Rated load per leg" unit="t" value={f.swl || ""} set={set("swl")} />
+        <Num label="Chart wind limit" unit="m/s" value={f.vChart || ""} set={set("vChart")} />
+        <Num label="Load's largest face" unit="m²" value={f.area || ""} set={set("area")} />
+        <Num label="Wind now (at the tip)" unit="m/s" value={f.vNow || ""} set={set("vNow")} />
+      </div>
+      <Verdict tone={V[0]} testid="plan-verdict"><p className="font-semibold m-0">{tr(V[1])}</p>
+        <ul className="mt-1.5 mb-0 ps-4 text-[12.5px] space-y-0.5">{r.checks.map((c) => <li key={c.id}>{tr(c.title)}: {tr({ ok: "OK", caution: "caution", plan: "critical", stop: "STOP", missing: "missing" }[c.level])} — {tr(c.lines[c.lines.length - 1])}</li>)}</ul></Verdict>
+      <button onClick={() => sharePdf({ html: planHtml(p, r), name: "Lift plan " + (f.job || p.crane || "").replace(/[^\p{L}\p{N}-]+/gu, " ").trim(), flash })} className="w-full py-2.5 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm flex items-center justify-center gap-2" data-testid="plan-pdf"><Share2 size={15} />{tr("Make the lift plan (PDF)")}</button>
+    </div>);
 }
 
 function GroundTab({ gross }) {
