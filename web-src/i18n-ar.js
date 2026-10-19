@@ -5711,4 +5711,10 @@ export const AR = {
   "Screenshots & photos": "سكرينات وصور",
   "Notifications": "إشعارات",
   "Saved pages": "صفحات محفوظة",
+  "The phone is warm — stopped early so it cools": "الموبايل سخن — وقفت بدري عشان يبرد",
+  "Timing {a} of {b}…": "بقيس {a} من {b}…",
+  "Fastest on this phone: {g} threads — {t} tokens/s": "الأسرع على الموبايل ده: {g} أنوية — {t} كلمة/ثانية",
+  "Couldn't time the model — nothing changed": "مقدرتش أقيس الموديل — مفيش حاجة اتغيرت",
+  "Tune for this phone": "ظبّطه على الموبايل ده",
+  "Tuned: {g} threads, {t} tokens/s": "متظبط: {g} أنوية، {t} كلمة/ثانية",
 };

@@ -157,8 +157,8 @@ object DeviceInfo {
      * extra threads steal the cores the screen needs to scroll smoothly.
      * On a hot or power-saving phone it drops further to stay steady.
      */
-    fun generationThreads(ctx: Context): Int {
-        var t = bigCores().coerceIn(2, 4)
+    fun generationThreads(ctx: Context, tuned: Int? = null): Int {
+        var t = tuned?.coerceIn(1, cores()) ?: bigCores().coerceIn(2, 4)   // v6.41: the tuner's measured best, still cooled below
         val thermal = thermalStatus(ctx)
         if (thermal >= 3 /* SEVERE */) t = 2
         else if (thermal >= 2 /* MODERATE */ || thermalHeadroom(ctx) >= 0.95f) t = (t - 1).coerceAtLeast(2)
@@ -172,8 +172,8 @@ object DeviceInfo {
      * other thread waits for it. Two cores are always left free so the app
      * itself never freezes while it reads.
      */
-    fun batchThreads(ctx: Context): Int {
-        var t = minOf(bigCores(), cores() - 2).coerceIn(2, 6)
+    fun batchThreads(ctx: Context, tuned: Int? = null): Int {
+        var t = tuned?.coerceIn(1, (cores() - 1).coerceAtLeast(1)) ?: minOf(bigCores(), cores() - 2).coerceIn(2, 6)
         if (isHot(ctx)) t = (t - 2).coerceAtLeast(2)
         return t
     }

@@ -321,10 +321,11 @@ object Engine {
     private fun buildArgs(ctx: Context, model: ModelStore.Installed, useGpu: Boolean, draft: ModelStore.Installed?, mtp: Boolean): Array<String> {
         val nCtx = contextFor(ctx, model)
         val safe = Prefs.safeMode(ctx, model.id)
-        val gen = DeviceInfo.generationThreads(ctx)
-        val batch = DeviceInfo.batchThreads(ctx)
+        val tuned = Prefs.tunedThreads(ctx, model.id)   // v6.41 (X2): measured on this phone by the tuner
+        val gen = DeviceInfo.generationThreads(ctx, tuned?.first)
+        val batch = DeviceInfo.batchThreads(ctx, tuned?.second)
         val ram = DeviceInfo.ramGB(ctx)
-        settingsNote = (if (useGpu) "GPU: $gpuName · context $nCtx" else "context $nCtx · $gen threads (prompt $batch) · flash attention · " + (if (safe) "16-bit KV cache" else "8-bit KV cache")) + (if (flashMode) " · flash mode: experts read from storage as needed" else if (mappedWeights) " · weights read from storage (memory is short)" else " · weights in RAM") +
+        settingsNote = (if (useGpu) "GPU: $gpuName · context $nCtx" else "context $nCtx · $gen threads (prompt $batch)" + (if (tuned != null) " (tuned)" else "") + " · flash attention · " + (if (safe) "16-bit KV cache" else "8-bit KV cache")) + (if (flashMode) " · flash mode: experts read from storage as needed" else if (mappedWeights) " · weights read from storage (memory is short)" else " · weights in RAM") +
             (if (cpuFeatures.isNotEmpty() && !useGpu) " · CPU: $cpuFeatures" else "")
 
         val a = arrayListOf(

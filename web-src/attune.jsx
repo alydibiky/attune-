@@ -25,7 +25,8 @@ import { LearnPage, NewsPage, syncDaily, lessonAhead } from "./daily-ui.jsx";
 import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
 import { MindPage, keepPicture } from "./mind-ui.jsx";
-import { RecallPage } from "./lookback-ui.jsx";   // v6.40 Recall (agent C)
+import { RecallPage } from "./lookback-ui.jsx";
+import { candidates as tuneCandidates, choose as tuneChoose, TUNE_PROMPT, TUNE_TOKENS } from "./tuner.js";   // v6.41 X2   // v6.40 Recall (agent C)
 import { ShelfPage } from "./shelf-ui.jsx";
 import * as SH from "./shelf.js";
 import { notesFromText } from "./shelf-import.js";
@@ -1719,6 +1720,45 @@ function statsFrom0(t, u, ms) {
     promptTokens: u.prompt_tokens || t.prompt_n || null,
     cached: t.cache_n || null,
   };
+}
+
+// v6.41 (X2): "Tune for this phone" — time the model with a few thread counts, keep the fastest (tuner.js chooses)
+function EngineTune({ small, flash }) {
+  const [busy, setBusy] = useState(null);
+  const [res, setRes] = useState(() => { try { return JSON.parse(localStorage.getItem("attune:tune:v1") || "null"); } catch (e) { return null; } });
+  const info = () => { try { return JSON.parse(NATIVE.engineTuned() || "{}"); } catch (e) { return {}; } };
+  const run = async () => {
+    const dev = info(); const before = dev.gen ? { gen: dev.gen, batch: dev.batch } : null;
+    const list = tuneCandidates(dev); const runs = [];
+    let base = null;
+    try {
+      for (let i = 0; i < list.length; i++) {
+        if (info().hot) { flash(tr("The phone is warm — stopped early so it cools")); break; }
+        setBusy(tr("Timing {a} of {b}…", { a: i + 1, b: list.length }));
+        NATIVE.engineTune(JSON.stringify(list[i]));
+        await nativeCall("restart", "");
+        await callChat(TUNE_PROMPT, null, { maxTokens: 16, temperature: 0 });   // warm-up
+        await callChat(TUNE_PROMPT, null, { maxTokens: TUNE_TOKENS, temperature: 0 });
+        const tps = LAST_STATS && LAST_STATS.tps;
+        runs.push({ ...list[i], tps: tps || 0 });
+        if (!base && !before && list[i].gen === Math.max(2, Math.min(dev.bigCores || 4, 4))) base = { tps };
+      }
+      const c = tuneChoose(runs, base);
+      const keep = c ? c.best : before;
+      NATIVE.engineTune(JSON.stringify(keep || { gen: 0, batch: 0 }));
+      await nativeCall("restart", "");
+      const out = { model: dev.model, runs, best: c && c.best, gainPct: c && c.gainPct, at: Date.now() };
+      setRes(out); try { localStorage.setItem("attune:tune:v1", JSON.stringify(out)); } catch (e) {}
+      flash(c ? tr("Fastest on this phone: {g} threads — {t} tokens/s", { g: c.best.gen, t: c.best.tps }) : tr("Couldn't time the model — nothing changed"));
+    } catch (err) { flash(String(err.message || err)); try { NATIVE.engineTune(JSON.stringify(before || { gen: 0, batch: 0 })); await nativeCall("restart", ""); } catch (e) {} }
+    setBusy(null);
+  };
+  return (
+    <>
+      <button className={small} disabled={!!busy} onClick={run} data-testid="engine-tune">{busy || tr("Tune for this phone")}</button>
+      {res && res.best && !busy ? <span className="text-[11px] text-slate-500 self-center" data-testid="engine-tuned">{tr("Tuned: {g} threads, {t} tokens/s", { g: res.best.gen, t: res.best.tps })}{res.gainPct > 0 ? " (+" + res.gainPct + "%)" : ""}</span> : null}
+    </>
+  );
 }
 
 // ---- real AI calls ----------------------------------------------------------
@@ -11699,6 +11739,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
         <div className="flex flex-wrap gap-1.5 mt-2">
           {e.modelId ? <button className={small} onClick={async () => {
             try { await nativeCall("restart", ""); flash(tr("Engine restarted")); } catch (err) { flash(String(err.message || err)); } }}>{tr("Restart engine")}</button> : null}
+          {e.modelId && NATIVE && NATIVE.engineTune ? <EngineTune small={small} flash={flash} /> : null}
           <button className={small} onClick={() => { let t = ""; try { t = NATIVE.log(); } catch (err) {} setLog(log === null ? (t || "The log is empty.") : null); }}>
             {log === null ? tr("Engine log") : tr("Hide log")}</button>
         </div>

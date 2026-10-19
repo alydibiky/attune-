@@ -832,6 +832,18 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v6.41 (X2): the thread counts for the active model — {gen, batch} sets them (used from the next start), {gen: 0} clears. */
+    @JavascriptInterface
+    fun engineTune(json: String) {
+        try { val j = JSONObject(json); val m = ModelStore.active(ctx) ?: return; Prefs.setTunedThreads(ctx, m.id, j.optInt("gen"), j.optInt("batch")) } catch (e: Throwable) { }
+    }
+    @JavascriptInterface
+    fun engineTuned(): String = try {
+        val m = ModelStore.active(ctx); val t = m?.let { Prefs.tunedThreads(ctx, it.id) }
+        JSONObject().put("model", m?.id ?: "").put("gen", t?.first ?: 0).put("batch", t?.second ?: 0)
+            .put("cores", DeviceInfo.cores()).put("bigCores", DeviceInfo.bigCores()).put("hot", DeviceInfo.isHot(ctx)).toString()
+    } catch (e: Throwable) { "{}" }
+
     /** Restart the engine with the active model (e.g. after the phone cooled down). */
     @JavascriptInterface
     fun restart(id: String, unused: String) {

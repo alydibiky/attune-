@@ -70,6 +70,15 @@ object Prefs {
 
     /** Models that once wrote nonsense ("0000…") on this phone: they start in safe mode (no
      *  speculation of any kind, full-precision memory) from then on. Set by the page's nonsense guard. */
+    /** v6.41 (X2): the thread counts the tuner measured fastest for a model on this phone → (generation, prompt) or null. */
+    fun tunedThreads(ctx: Context, id: String): Pair<Int, Int>? {
+        val v = sp(ctx).getString("tuned_" + id, null) ?: return null
+        val p = v.split(",").mapNotNull { it.trim().toIntOrNull() }
+        return if (p.size == 2 && p[0] in 1..12 && p[1] in 1..12) Pair(p[0], p[1]) else null
+    }
+    fun setTunedThreads(ctx: Context, id: String, gen: Int, batch: Int) {
+        val e = sp(ctx).edit(); if (gen <= 0) e.remove("tuned_" + id) else e.putString("tuned_" + id, "$gen,$batch"); e.apply()
+    }
     fun safeMode(ctx: Context, id: String): Boolean = (sp(ctx).getStringSet("safe_models", emptySet()) ?: emptySet()).contains(id)
     fun setSafeMode(ctx: Context, id: String, on: Boolean) {
         val s = HashSet(sp(ctx).getStringSet("safe_models", emptySet()) ?: emptySet()); if (on) s.add(id) else s.remove(id)
