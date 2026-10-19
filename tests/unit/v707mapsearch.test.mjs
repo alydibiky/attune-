@@ -41,3 +41,12 @@ ok(rk[0].name === "Seoudi Market Zamalek", "a name that STARTS with the words be
 rk = M.rankPlaces([{ name: "Gym", kind: "leisure/fitness_centre", lat: 30.05, lon: 31.25 }, { name: "My gym", kind: "", lat: 30.2, lon: 31.4, local: true }], "gym", cairo);
 ok(rk[0].name === "Gym", "a saved place gets a small lift, not a free pass: " + rk.map((p) => p.name).join(" | "));
 console.log(fail ? `${fail} FAILED` : "ALL PASSED");
+// v6.42 (Ali: "Emerald park compound" listed Saraia / Sierra / Sharbatly compounds): only real matches count
+{
+  const MS2 = await import("../../web-src/mapsearch.js");
+  const junk = [{ name: "Saraia Compound" }, { name: "Sierra Compound" }, { name: "Sharbatly Village Compound" }];
+  console.log((MS2.keepMatching(junk, "Emerald park compound").length === 0 ? "PASS" : "FAIL") + " v6.42: other compounds sharing only the word 'compound' are not a match");
+  console.log((MS2.keepMatching([...junk, { name: "Emerald Park" }], "Emerald park compound").map((p) => p.name).join() === "Emerald Park" ? "PASS" : "FAIL") + " v6.42: Emerald Park is kept");
+  console.log((MS2.matches({ name: "إيميرالد بارك", alt: ["Emerald Park"] }, "emerald park") ? "PASS" : "FAIL") + " v6.42: the English name counts when the shown name is Arabic");
+  console.log((MS2.keepMatching(junk, "compound").length === 3 ? "PASS" : "FAIL") + " v6.42: a search of only 'compound' still lists compounds");
+}

@@ -38,6 +38,15 @@ export function nameScore(name, q) {
   return words.filter((w) => n.includes(w)).length / words.length;
 }
 
+/** v6.42 (Ali searched "Emerald park compound" and got every OTHER compound): does a found place match the words that matter?
+ *  Its name in any language it has; a search made only of generic words ("compound") matches everything. */
+export function matches(p, q) {
+  const names = [p && p.name, ...((p && p.alt) || [])].filter(Boolean);
+  return names.some((n) => nameScore(n, q) > 0);
+}
+/** Keep the places that match; none match → [] (better "not found" than other places with a shared word). */
+export function keepMatching(list, q) { return (list || []).filter((p) => p.local || matches(p, q)); }
+
 /** v6.27 (Ali: "like Google Maps"): one order for every result, from any source — how well the NAME matches (whole name,
  *  then its start, then its words), then how important the place is (a city over a shop; `rank` from the index, or the
  *  kind), then how near (a gentle fall over ~10 km, so a perfect match far away still beats a weak one next door).

@@ -186,8 +186,8 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
       // simpler wordings — without "address", "compound"… — as the online search already was
       for (const t of kinds.length ? [""] : [term, ...MS.variants(term)]) {
         try { const r = await nativeCall("mapSearch", { q: t, kinds, limit: kinds.length ? 40 : 15, lat: c.lat, lon: c.lon });
-          for (const p of (r && r.places) || []) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, rank: p.rank, offline: true, dist: p.dist }); } catch (e) {}
-        if (out.some((x) => x.offline)) break;
+          for (const p of (r && r.places) || []) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, alt: [p.name, p.name_ar, p.name_en].filter(Boolean), lat: p.lat, lon: p.lon, kind: p.kind, rank: p.rank, offline: true, dist: p.dist }); } catch (e) {}
+        if (out.some((x) => x.offline && (kinds.length || MS.matches(x, term)))) break;   // v6.42: only a real match ends the search
       }
     }
     // v6.27: the country in view, not downloaded → its own places index, read ONLINE in one small piece (OSM + Overture:
@@ -198,12 +198,12 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
         // a sort: its name words ("سوري"), then the sort's own word ("مطعم"), keeping only places of that sort
         for (const t of (kinds.length ? [term, ...MI.sortNames(word)] : [term, ...MS.variants(term)]).filter(Boolean)) {
           try { for (const p of await OM.netFind(nativeCall, nc.code, t, { lat: c.lat, lon: c.lon, limit: kinds.length ? 60 : 25 }))
-            if (!kinds.length || kinds.includes(p.kind)) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, lat: p.lat, lon: p.lon, kind: p.kind, rank: p.rank, net: true }); } catch (e) { break; }
-          if (!kinds.length && out.some((x) => x.net)) break;
+            if (!kinds.length || kinds.includes(p.kind)) push({ name: (lang === "ar" && p.name_ar) || (lang === "en" && p.name_en) || p.name, alt: [p.name, p.name_ar, p.name_en].filter(Boolean), lat: p.lat, lon: p.lon, kind: p.kind, rank: p.rank, net: true }); } catch (e) { break; }
+          if (!kinds.length && out.some((x) => x.net && MS.matches(x, term))) break;
         }
       }
     }
-    if (online && out.filter((x) => !x.local).length < 3) {
+    if (online && out.filter((x) => !x.local && (kinds.length || MS.matches(x, term))).length < 3) {
       try { const r = await findPlaces(kinds.length ? [word, term].filter(Boolean).join(" ") : term, { center: c, lang, fetchJson: async (u) => { const res = await fetch(u, { headers: { Accept: "application/json" } }); if (!res.ok) throw new Error("search " + res.status); return res.json(); } });
         for (const p of (r && r.places) || []) push(p); } catch (e) {}
     }
@@ -237,6 +237,8 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
       } else await searchAt(term, [], "", c, push, out);
     }
     out.forEach((p) => { p.dist = distKm(c, p); });
+    // v6.42: a name search shows only places whose name matches what was typed (not every place sharing "compound")
+    if (!byDist && rankQ) { const kept = MS.keepMatching(out, rankQ); if (!kept.length && out.length) flash(tr("No place called “{q}” in the map data — try another spelling", { q: rankQ })); out.splice(0, out.length, ...kept); }
     // v6.27: one Google-like order (name match → importance → distance); "nearest X" stays nearest first
     setHits(byDist ? out.sort((a, b) => a.dist - b.dist) : MS.rankPlaces(out, rankQ, c));
     setBusy(false);

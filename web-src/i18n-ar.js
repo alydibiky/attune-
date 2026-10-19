@@ -5818,4 +5818,5 @@ export const AR = {
   "Change it": "غيّره",
   "Changed only where you painted": "اتغيّر بس المكان اللي لونته",
   "Install a picture model first (Studio) — then paint and say what should change.": "نزّل موديل صور الأول (الاستوديو) — وبعدين لوّن وقول إيه اللي يتغير.",
+  "No place called “{q}” in the map data — try another spelling": "مفيش مكان اسمه «{q}» في بيانات الخريطة — جرّب كتابة تانية",
 };
