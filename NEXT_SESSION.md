@@ -757,6 +757,20 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AH. 19 Oct 2026 — v6.42: Ali's 19 Oct notes (HANDOFF §5.90). Read this first, then AG.
+Ali: "1. Okay go for B" (F1 ruler) · "2. put in the tab next to maps" (Metro) · a wrong map search («Emerald park compound» →
+other compounds) · a lunch photo (pané read as grilled breast, 3 pieces as 1, soup + potatoes missed) · an engine log · "tell me
+the exact steps of google and will I pay any money in that?" (answered: the steps in AC / SETUP_CLOUD.md §A; it is free).
+Built: map search by name · the photo fixes · F1 card / plate ruler · Metro tab + map chip. Qwen image tokens: left at 768 px (why: §5.90).
+### Ali's phone checklist for 6.42 (he was on 6.38 — install the newest APK first)
+1. ⬜ Maps: «Emerald park compound» → Emerald Park, or "No place called …" — never other compounds.
+2. ⬜ Fit: the same lunch photo → Chicken pané × 3, the soup, the potatoes.
+3. ⬜ Fit: a photo with a bank card next to the plate → "📏 Measured against your card"; set "my plate __ cm" once.
+4. ⬜ Daily → Metro (after Maps), or the Metro chip on the map: Maadi → Cairo University.
+5. ⬜ Google sync: the four steps in AC, then Backup → Sync → Google Drive.
+### Next
+Same as AG: Missions 3–4 · eraser 4b · SD 1.5 NPU · W6 subtitles · sync gaps · H1 · Recall phase 2.
+
 ## AG. 19 Oct 2026 — v6.41: batch 8 (HANDOFF §5.89). Read this first, then AF.
 Ali (19 Oct): keep «افتكر» and "Add screenshots" as they are; "continue with the rest — I will do the Google part at the end".
 Built: X2 tuner · F3 lab history + cheapest medicine price · F4 cycle from the watch temperature · D4 news threads ·

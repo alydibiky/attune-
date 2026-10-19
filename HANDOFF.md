@@ -2003,6 +2003,34 @@ Built in this release (each: pure module + unit test + UI + e2e + Egyptian Arabi
   WatchMatchTest; e2e v740watch, v740pdftables, v740promptlab, v740assistrules, v740liftplan, v740catalogue,
   v740artdata, v740recall.
 
+### 5.90 (19 Oct 2026) — v6.42: Ali's 19 Oct notes (F1 = B, Metro next to Maps, a wrong map search, a lunch photo)
+Ali sent two screenshots (6.38 on his HONOR, SM8850 16 GB, Qwen3.5-4B Q8 + photo reader) and an engine log.
+- **Map search "Emerald park compound"** listed Saraia, Sierra and Sharbatly. Cause: the search loop stopped at the first
+  batch of results (any results), and the fallback online search counted near-by places that don't match the name.
+  Fix (map-ui.jsx searchAt + mapsearch.js `matches` / `keepMatching`): a result must match the name (its English, Arabic or
+  other names); the loop stops only on a real match; the online search runs when nothing matches; a name search with no match
+  says "No place called “…” in the map data — try another spelling" instead of showing unrelated places. Unit v707mapsearch.
+- **Lunch photo**: breaded fried chicken (pané) read as "Chicken breast (grilled)", 1 piece for 3, the soup and the potatoes
+  missed. Fix (fit.js): the hints name Chicken pané, Cream of mushroom soup, Potato wedges; the prompt says how to tell how
+  food is cooked (crumbed = breaded and fried, grill marks = grilled) and that bowls / sides / bread / drinks at the edges are
+  separate items; the hidden-calories pass also asks for another dish or bowl and a side; `matchFood` penalises a name whose
+  dish word (soup, sandwich…) is missing, so "Chicken soup" is a soup, not chicken. fit-ui.jsx: when a quick result was shown
+  first, the "anything else on the table?" pass now still runs. The photo prompt stays under 3,000 characters (speed). Unit v742food.
+- **F1 (Ali picked B): a ruler for photo portions.** A bank / ID card is 8.56 × 5.4 cm (ISO 7810): the photo model gives the
+  card's box and the plate's box → the plate's real size (12–40 cm, else ignored), or, with no plate, each food's area from its
+  own box. Without a card, the person's own plate width ("my plate __ cm", set once under the photo) replaces the 26 cm guess.
+  Measured against a card, the geometry outweighs the model's grams (3 : 1). The draft says "📏 Measured against your card" /
+  "with your 30 cm plate". fit.js `photoRuler`, `myPlateCm`, `CARD_CM2`; fit-ui.jsx `PlateRuler`. Unit v742food; e2e v742ruler.
+- **Metro next to Maps (Ali's choice)**: `metro-ui.jsx` MetroPage, a Daily tab right after Maps (hubs.js) and a "Metro" chip
+  first in the map's chip row. From / To (English, Arabic, Franco, squares, old names), swap, the route with coloured legs
+  (line, toward, stops, change), minutes and the ticket (fares as of 2024-08 shown), the three lines to tap stations from.
+  e2e v742metrotab; unit v734hubs updated.
+- **The engine log's "Qwen-VL models require at minimum 1024 image tokens"**: left as it is, on purpose. Food photos go at
+  768 px ≈ 430 image tokens; 1024 would make each photo about 2–2.5× slower and take more memory (his log shows low-memory
+  kills). The warning is about exact boxes (grounding); naming the foods works. If the card ruler's boxes prove poor on his
+  phone, try `--image-min-tokens 768` for Qwen photo readers only (Engine.kt next to `--mmproj`) and measure.
+- Ali was on 6.38 — he must install the newest APK to see 6.39–6.42.
+
 ### 5.89 (19 Oct 2026) — v6.41: batch 8 (Ali: "continue with the rest; I'll do the Google part at the end")
 - **X2 engine tuner** (`tuner.js`, Engine → Tune for this phone): 3 thread counts timed with a fixed answer; the fastest kept,
   a cooler one (fewer threads) wins within 5%. Kept per model (`Prefs.tunedThreads`, `NativeBridge.engineTune`), used by
