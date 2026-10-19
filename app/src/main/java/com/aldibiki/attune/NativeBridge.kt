@@ -1253,6 +1253,24 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v6.43: scan a barcode LIVE — Google's camera screen opens, aim at the code, it closes by itself → {codes: [..]}.
+     *  "Cancelled" when the person backs out; any other failure (no Google Play services) → the page offers a photo instead. */
+    @JavascriptInterface
+    fun scanLive(id: String, arg: String) {
+        try {
+            val opts = com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions.Builder()
+                .setBarcodeFormats(com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_13,
+                    com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_8, com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_A,
+                    com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_E, com.google.mlkit.vision.barcode.common.Barcode.FORMAT_CODE_128,
+                    com.google.mlkit.vision.barcode.common.Barcode.FORMAT_QR_CODE)
+                .enableAutoZoom().build()
+            com.google.mlkit.vision.codescanner.GmsBarcodeScanning.getClient(ctx, opts).startScan()
+                .addOnSuccessListener { b -> resolve(id, JSONObject().put("codes", org.json.JSONArray().apply { b.rawValue?.let { if (it.isNotBlank()) put(it) } })) }
+                .addOnCanceledListener { reject(id, "Cancelled") }
+                .addOnFailureListener { e -> reject(id, e.message ?: "The camera scanner isn't available on this phone") }
+        } catch (e: Throwable) { reject(id, e.message ?: "The camera scanner isn't available on this phone") }
+    }
+
     /** v6.16c: the text in a photo ({b64}), read on the phone by ML Kit (Latin) → {text, lines: [{text, h, y}]} — h = the
      *  line's height in pixels (the biggest line is usually the dish's name), y = its top. */
     @JavascriptInterface

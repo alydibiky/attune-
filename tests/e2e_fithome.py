@@ -21,6 +21,7 @@ MOCK = r"""(() => { const S = window.__mock = window.__mock || {}; S.codes = [];
     N.fetchJson = (id, url) => { const body = url.includes("/api/v2/product/5449000000996") ? { status: 1, product: %COKE% } : url.includes("/api/v2/product/") ? { status: 0 } : { products: [] };
       setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ url, body: JSON.stringify(body) })), 20); };
     N.scanBarcode = (id, arg) => setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ codes: S.codes })), 10);
+    N.scanLive = (id, arg) => setTimeout(() => window.__attuneNative.resolve(id, JSON.stringify({ codes: S.codes })), 10);
     N.listen = (id, lang) => { const t = S.said.shift() || ""; setTimeout(() => { window.__attuneNative.progress(id, 0, "partial", t.slice(0, 6)); window.__attuneNative.resolve(id, JSON.stringify({ text: t })); }, 30); };
   }; go(); })();""".replace("%BANK%", json.dumps(BANK)).replace("%COKE%", json.dumps(COKE))
 
@@ -108,7 +109,9 @@ with sync_playwright() as p:
 
     # ---- log by photo: the fast path names it in a moment → Save
     page.locator("[data-testid=fit-add]").click()
-    with page.expect_file_chooser() as fc: page.locator("[data-testid=fit-lb-photo]").click()
+    page.locator("[data-testid=fit-lb-photo]").click()
+    check(page.locator("[data-testid=fit-pick-camera]").count() == 1 and page.locator("[data-testid=fit-pick-gallery]").count() == 1, "v6.43: the photo button asks: take a photo, or the gallery")
+    with page.expect_file_chooser() as fc: page.locator("[data-testid=fit-pick-gallery]").click()
     fc.value.set_files(files=[{"name": "plate.png", "mimeType": "image/png", "buffer": PNG}])
     page.wait_for_selector("[data-testid=fit-draft-item]", timeout=8000)
     check("Koshari" in page.locator("[data-testid=fit-draft]").inner_text(), "a photo is recognised by the fast path (no chat model)")
@@ -118,10 +121,19 @@ with sync_playwright() as p:
     # ---- log by barcode
     page.evaluate("window.__mock.codes = ['5449000000996']")
     page.locator("[data-testid=fit-add]").click()
-    with page.expect_file_chooser() as fc: page.locator("[data-testid=fit-lb-barcode]").click()
+    page.locator("[data-testid=fit-lb-barcode]").click()
+    check(page.locator("[data-testid=fit-pick-live]").count() == 1, "v6.43: the barcode button offers the live camera scanner first")
+    with page.expect_file_chooser() as fc: page.locator("[data-testid=fit-pick-camera]").click()
     fc.value.set_files(files=[{"name": "code.png", "mimeType": "image/png", "buffer": PNG}])
     page.wait_for_selector("[data-testid=fit-draft-item]", timeout=6000)
     check("Coca" in page.locator("[data-testid=fit-draft]").inner_text(), "the barcode finds the product")
+    page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(200)
+    check(eaten(page) > before, "the product is logged"); before = eaten(page)
+    # v6.43: the live scanner — aim the camera, the number comes back by itself
+    page.locator("[data-testid=fit-add]").click(); page.locator("[data-testid=fit-lb-barcode]").click()
+    page.locator("[data-testid=fit-pick-live]").click()
+    page.wait_for_selector("[data-testid=fit-draft-item]", timeout=6000)
+    check("Coca" in page.locator("[data-testid=fit-draft]").inner_text(), "the live camera scan finds the product")
     page.locator("[data-testid=fit-confirm]").click(); page.wait_for_timeout(200)
     check(eaten(page) > before, "the product is logged"); before = eaten(page)
 

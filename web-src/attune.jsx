@@ -10112,7 +10112,7 @@ export default function App() {
             packText={NATIVE && NATIVE.foodPackText ? async (name) => { const r = await nativeCall("foodPackText", name); return (r && r.text) || ""; } : null}
             photoClip={NATIVE && NATIVE.foodClipStatus ? { base: "https://appassets.androidplatform.net/foodclip/", status: () => { try { return JSON.parse(NATIVE.foodClipStatus()); } catch (e) { return { installed: false }; } },
               install: (onProgress) => nativeCall("foodClipInstall", {}, onProgress), update: () => nativeCall("foodClipInstall", { update: true }), stop: () => NATIVE.cancel(nativeLastId()), remove: () => NATIVE.foodClipRemove() } : null}
-            scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null}
+            scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null} scanLive={NATIVE && NATIVE.scanLive ? async () => { const r = await nativeCall("scanLive", {}); return (r && r.codes) || []; } : null}
             readText={NATIVE && NATIVE.readText ? async (b64) => nativeCall("readText", { b64 }) : null}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
             health={NATIVE && NATIVE.healthStatus ? { status: () => { try { return JSON.parse(NATIVE.healthStatus()); } catch (e) { return null; } }, connect: () => NATIVE.healthConnect(), openApp: (pkg) => { try { NATIVE.openHealthApp(pkg); } catch (e) {} }, installed: () => { try { return JSON.parse(NATIVE.watchAppsInstalled ? NATIVE.watchAppsInstalled() : "[]"); } catch (e) { return []; } },
@@ -10150,7 +10150,7 @@ export default function App() {
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
         ) : mode === "business" ? (
           <BusinessApp flash={flash} openEngine={() => setShowEngine(true)} onExit={goBack}
-            scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null}
+            scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null} scanLive={NATIVE && NATIVE.scanLive ? async () => { const r = await nativeCall("scanLive", {}); return (r && r.codes) || []; } : null}
             modelReady={modelUsable}
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.2, think: false, json: !!o.json, onToken: o.onToken })}
             runPy={(code, files) => runCode({ lang: "python", code, files, timeoutMs: 60000 })}

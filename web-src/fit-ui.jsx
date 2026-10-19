@@ -25,7 +25,7 @@ import { useSubBack, useSticky } from "./backstack.js";
 import * as H from "./fithome.js";
 import { weeklyAdapt } from "./fitcoach.js";
 import { AR } from "./i18n-ar.js";
-import { Barcode, Undo2, Pencil, User } from "lucide-react";
+import { Barcode, Undo2, Pencil, User, ImageIcon } from "lucide-react";
 
 const KEY = "attune:fit:v1";
 const EMPTY = { profile: null, days: {}, weights: [], fast: null, myRecipes: [], favs: [], favFoods: [] };
@@ -123,7 +123,7 @@ function PlateRuler({ L }) {
 }
 
 export const FREE_PHOTOS_PER_DAY = 3;
-export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, packText, scanBarcode, readText, native, onExit, share, listen, health, pro = true, openPlan, photoClip, minimal = false }) {
+export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, packText, scanBarcode, scanLive, readText, native, onExit, share, listen, health, pro = true, openPlan, photoClip, minimal = false }) {
   const ar = getLang() === "ar";
   const L = (en, a) => (ar ? a : en);
   const [st, setSt] = useState(load);
@@ -379,13 +379,22 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     else setDraft((d) => [...(d || []), it]);
     setQ(""); setOnline(null);
   };
+  const useCodes = async (codes) => {
+    if (!codes || !codes.length) { flash && flash(L("No barcode found — hold the phone closer, straight on", "ملقيتش باركود — قرّب الموبايل وخليه مستقيم")); return; }
+    const fd = await DB.byBarcode(codes[0], fetchJson);
+    if (fd) pickFood(fd); else { setQ(codes[0]); flash && flash(L("This product isn't in the databases yet — log it by name", "المنتج ده مش موجود في قواعد البيانات لسه — سجّله بالاسم")); }
+  };
   const scanCode = async (file) => {
     if (!scanBarcode) return;
-    try { const ph = await readPhoto(file); setSearching(true); const codes = await scanBarcode(ph.data);
-      if (!codes || !codes.length) { flash && flash(L("No barcode found — hold the phone closer, straight on", "ملقيتش باركود — قرّب الموبايل وخليه مستقيم")); return; }
-      const fd = await DB.byBarcode(codes[0], fetchJson);
-      if (fd) pickFood(fd); else { setQ(codes[0]); flash && flash(L("This product isn't in the databases yet — log it by name", "المنتج ده مش موجود في قواعد البيانات لسه — سجّله بالاسم")); }
-    } catch (e) { flash && flash(String(e.message || e)); } finally { setSearching(false); }
+    try { const ph = await readPhoto(file); setSearching(true); await useCodes(await scanBarcode(ph.data)); }
+    catch (e) { flash && flash(String(e.message || e)); } finally { setSearching(false); }
+  };
+  // v6.43 (Ali: "open the camera and aim at the barcode — not just choose from the gallery"): the live scanner first
+  const scanNow = async () => {
+    setPick(null); setAdding((a) => a || mealNow()); setDraft(null);
+    try { const codes = await scanLive(); setSearching(true); await useCodes(codes); }
+    catch (e) { const m = String((e && e.message) || e); if (m !== "Cancelled") { flash && flash(L("The live scanner didn't open — take a photo of the barcode instead", "الماسح المباشر مفتحش — صوّر الباركود بدل كده")); codeRef.current && codeRef.current.click(); } }
+    finally { setSearching(false); }
   };
   const setGrams = (i, g) => setDraft((d) => d.map((x, k) => {
     if (k !== i) return x;
@@ -457,11 +466,15 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   useEffect(() => { if (go && (photo || text.trim())) readMeal(); }, [go]);
   const [searchFocus, setSearchFocus] = useState(0);
   const [addTab, setAddTab] = useState("recent");
-  const [openAlt, setOpenAlt] = useState(-1);   // v6.43 design A: a found food's other choices and portion buttons open on "Change"
+  const [openAlt, setOpenAlt] = useState(-1);
+  const [pick, setPick] = useState(null);   // v6.43: "photo" | "barcode" — the camera-or-gallery sheet
+  useSubBack(!!pick, () => setPick(null));
+  const camRef = useRef(null), codeGalRef = useRef(null);   // v6.43 design A: a found food's other choices and portion buttons open on "Change"
   useEffect(() => { setOpenAlt(-1); }, [draft == null]);   // v6.34 the minimal Add sheet (Yazio-like): Recent · Favourites · My meals
   const bar = {
-    photo: () => { autoRead.current = true; fileRef.current && fileRef.current.click(); },
-    barcode: () => { if (!scanBarcode) { setAdding((a) => a || mealNow()); setDraft(null); setSearchFocus((n) => n + 1); flash && flash(t("Type the barcode number in search")); return; } codeRef.current && codeRef.current.click(); },
+    // v6.43: the camera or the gallery — the person chooses (a sheet), for the food photo and for the barcode
+    photo: () => setPick("photo"),
+    barcode: () => { if (!scanBarcode && !scanLive) { setAdding((a) => a || mealNow()); setDraft(null); setSearchFocus((n) => n + 1); flash && flash(t("Type the barcode number in search")); return; } setPick("barcode"); },
     voice: async () => {
       setAdding((a) => a || mealNow()); setDraft(null);
       if (!listen) { setTimeout(() => { const el = document.querySelector("[data-testid=fit-log-text]"); el && el.focus(); }, 60); flash && flash(L("Voice input works in the Android app", "الكلام بالصوت شغال في تطبيق أندرويد")); return; }
@@ -555,6 +568,25 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
 
       <input ref={fileRef} type="file" accept="image/*" className="hidden" data-testid="fit-photo-input" onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) { try { const ph = await readPhoto(f); setAdding((a) => a || mealNow()); setDraft(null); setPhoto(ph); if (autoRead.current) { autoRead.current = false; setGo((n) => n + 1); } } catch (x) { flash && flash(L("Couldn't open that picture", "مقدرتش أفتح الصورة")); } } }} />
       <input ref={codeRef} type="file" accept="image/*" capture="environment" className="hidden" data-testid="fit-barcode-input" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) { setAdding((a) => a || mealNow()); scanCode(f); } }} />
+      <input ref={camRef} type="file" accept="image/*" capture="environment" className="hidden" data-testid="fit-photo-camera" onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) { try { const ph = await readPhoto(f); setAdding((a) => a || mealNow()); setDraft(null); setPhoto(ph); setGo((n) => n + 1); } catch (x) { flash && flash(String((x && x.message) || x)); } } }} />
+      <input ref={codeGalRef} type="file" accept="image/*" className="hidden" data-testid="fit-barcode-gallery" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) { setAdding((a) => a || mealNow()); scanCode(f); } }} />
+      {pick ? (
+        <div className="fixed inset-0 z-[80] flex items-end" data-testid="fit-pick">
+          <button className="absolute inset-0 bg-black/40" aria-label={L("Close", "قفل")} onClick={() => setPick(null)} />
+          <div className="relative w-full max-w-2xl mx-auto rounded-t-3xl bg-slate-900 p-4 space-y-2" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
+            <div className="text-[17px] font-black text-white px-1 pb-1">{pick === "photo" ? L("Photo of your food", "صورة أكلك") : L("Barcode", "الباركود")}</div>
+            {(pick === "photo" ? [
+              ["camera", Camera, L("Take a photo", "صوّر دلوقتي"), () => { setPick(null); camRef.current && camRef.current.click(); }],
+              ["gallery", ImageIcon, L("Choose from the gallery", "اختار من المعرض"), () => { setPick(null); autoRead.current = true; fileRef.current && fileRef.current.click(); }],
+            ] : [
+              ...(scanLive ? [["live", Barcode, L("Scan with the camera — aim at the code", "امسح بالكاميرا — وجّهها على الباركود"), scanNow]] : []),
+              ...(scanBarcode ? [["camera", Camera, L("Take a photo of the barcode", "صوّر الباركود"), () => { setPick(null); codeRef.current && codeRef.current.click(); }],
+                ["gallery", ImageIcon, L("A barcode photo from the gallery", "صورة باركود من المعرض"), () => { setPick(null); codeGalRef.current && codeGalRef.current.click(); }]] : []),
+              ["type", Search, L("Type the number", "اكتب الرقم"), () => { setPick(null); setAdding((a) => a || mealNow()); setDraft(null); setSearchFocus((n) => n + 1); }],
+            ]).map(([k, Ic, label, go]) => (
+              <button key={k} onClick={go} data-testid={"fit-pick-" + k} className="w-full min-h-[56px] rounded-2xl bg-slate-800 px-4 flex items-center gap-3 text-start text-[15px] font-bold text-white"><Ic size={20} className="text-emerald-300 shrink-0" />{label}</button>))}
+          </div>
+        </div>) : null}
       {adding ? (
         <div className={designA ? "space-y-4 pt-1" : "rounded-2xl border border-slate-700 bg-slate-900/70 p-3 space-y-3"} data-testid="fit-log">
           {designA ? (<>

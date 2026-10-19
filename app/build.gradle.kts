@@ -136,6 +136,9 @@ dependencies {
     // Fit & Food (v6.1): barcodes read on the phone from a photo — ML Kit with its model bundled
     // (works offline, nothing uploaded). Apache-2.0 SDK terms from Google.
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    // v6.43 (Ali: "scan the barcode by opening the camera and targeting it, not just from the gallery"): Google's code scanner —
+    // a live camera screen run by Google Play services; the app needs no camera permission and gets only the number.
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
     // v6.16c: the text in a food photo (a menu, a delivery app, a label: «Big BAIK … 1000 kcal») read on the phone — Latin model bundled
     implementation("com.google.mlkit:text-recognition:16.0.1")
     // Fit & Food (v6.3): steps, calories burned and workouts from the watch apps, through Android's
