@@ -51,6 +51,11 @@ with sync_playwright() as p:
     t1 = ph.nth(1).inner_text()
     check("/100" in t1 and "100/100" not in t1 and "heard: «bir şey lütfen»" in t1, "one word off → a lower score and what was heard: %s" % t1.replace("\n", " | "))
     check(page.locator("[data-testid=speak-result]").nth(1).locator("span[style*='underline']").count() == 1, "the missed word is marked")
+    # v6.41 (D1): the ones to fix are replayed slowly, then the whole sentence
+    page.evaluate("() => { window.__said = []; window.__rates = []; const N = window.AttuneNative; const o = N.speakWait; N.speakWait = (id, arg) => { window.__rates.push(JSON.parse(arg).rate); o(id, arg); }; }")
+    ph.nth(1).locator("[data-testid=speak-slow]").click(); page.wait_for_timeout(500)
+    said = page.evaluate("window.__said"); rates = page.evaluate("window.__rates")
+    check(len(said) >= 2 and rates[0] < 0.6 and said[-1] == ph.nth(1).locator("span.flex-1").inner_text(), "Hear the ones to fix, slowly: %s at %s, then the sentence" % (said, rates))
     # dialogue: the phone says A, you say B
     page.evaluate("window.__heard.push('merhaba bir çay lütfen'); window.__heard.push('teşekkürler')")
     page.click("[data-testid=dialogue-play]"); page.wait_for_selector("[data-testid=dialogue-score]", timeout=8000)

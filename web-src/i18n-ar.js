@@ -5803,4 +5803,5 @@ export const AR = {
   "Check your flight. If it lands 3+ hours late or is cancelled, open Attune → Owed — you may be owed money.": "تابع رحلتك. لو وصلت متأخرة 3 ساعات أو أكتر أو اتلغت، افتح Attune ← حقك — ممكن يكون ليك فلوس.",
   "Check your flight home. Late 3+ hours or cancelled → Attune → Owed.": "تابع رحلة الرجوع. متأخرة 3 ساعات أو أكتر أو اتلغت ← Attune ← حقك.",
   "Watch on — you'll be reminded on each flight day": "المتابعة اشتغلت — هفكرك يوم كل رحلة",
+  "Hear the ones to fix, slowly": "اسمع الكلمات اللي محتاجة تتظبط، بالراحة",
 };

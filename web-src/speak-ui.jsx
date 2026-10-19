@@ -11,13 +11,15 @@ const MARK = { good: "var(--c-pos, #2f9e73)", close: "#c98a1b", missed: "var(--c
 const ghost = "rounded-lg px-3 py-1.5 text-[13px] font-medium border inline-flex items-center gap-1.5 disabled:opacity-40";
 const gs = { borderColor: "var(--c-ln)", color: "var(--c-ink)", background: "transparent" };
 
-/** The words, coloured by how each was said. */
-function Scored({ r }) {
+/** The words, coloured by how each was said; v6.41 (D1): the ones to fix are replayed slowly, one by one, then the sentence. */
+function Scored({ r, slow }) {
+  const fix = r.words.filter((w) => w.mark !== "good").map((w) => w.w);
   return (
     <div className="text-[13.5px] mt-1" dir="auto" data-testid="speak-result">
       <b className="c-num me-2" data-testid="speak-score">{r.score}/100</b>
       {r.words.map((w, i) => <span key={i} style={{ color: MARK[w.mark], textDecoration: w.mark === "missed" ? "underline dotted" : "none" }} className="me-1">{w.w}</span>)}
       <div className="c-sub text-[12px]">{tr(P.scoreWord(r.score))}{r.heard ? " · " + tr("heard: «{h}»", { h: r.heard }) : ""}</div>
+      {fix.length && slow ? <button className={ghost + " mt-1"} style={gs} onClick={() => slow(fix)} data-testid="speak-slow"><Volume2 size={13} />{tr("Hear the ones to fix, slowly")}</button> : null}
     </div>);
 }
 
@@ -53,7 +55,7 @@ export function SpeakPractice({ lesson, course, native, call, listen, onBest }) 
             <button className={ghost} style={gs} onClick={() => hear(p)} aria-label={tr("Hear it")} data-testid="speak-hear"><Volume2 size={14} /></button>
             {listen ? <button className={ghost} style={gs} disabled={!!busy} onClick={() => say(p)} data-testid="speak-say">{busy === p ? <Loader2 size={14} className="animate-spin" /> : <Mic size={14} />}{tr("Say")}</button> : null}
           </div>
-          {res[p] ? <Scored r={res[p]} /> : null}
+          {res[p] ? <Scored r={res[p]} slow={async (fix) => { for (const w of fix) await speakNow(w, { lang: tag, rate: 0.55, native: native ? { N: native, call } : null }); await speakNow(p, { lang: tag, rate: 0.7, native: native ? { N: native, call } : null }); }} /> : null}
         </div>))}
     </div>);
 }
