@@ -10139,7 +10139,7 @@ export default function App() {
           <>{/* v6.40: Message alerts first — "tell me when Ahmed messages me" */}<div className="mt-3"><WatchPanel native={NATIVE} flash={flash} /></div>
           <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} /></>
         ) : mode === "cycle" ? (
-          <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("instant")} />
+          <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("instant")} native={NATIVE} nativeCall={nativeCall} />
         ) : mode === "map" ? (
           <MapPage N={NATIVE} nativeCall={NATIVE ? nativeCall : null} lastNativeId={nativeLastId} getTile={getTile} findPlaces={findPlaces} searchSaved={searchSaved}
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}

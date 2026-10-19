@@ -11,6 +11,7 @@
 import React, { useState, useMemo } from "react";
 import { tr, dateLocale } from "./i18n.js";
 import { useSubBack } from "./backstack.js";
+import { withTemperature, mergeNights, TEMPS_KEY } from "./cycletemp.js";   // v6.41 (F4)
 // v6.27 computer layout (option A): where you are, quick logging, the day editor and history on the left; the month's
 // calendar on the right. The grid places the calendar in the right column across every row (the last row, 1fr, takes
 // up its extra height), so a phone keeps its order. Below 1024 px none of this applies.
@@ -324,12 +325,27 @@ export function parseExtract(raw, now) {
 const FLOW_BG = { spotting: "bg-rose-300/30 text-rose-100", light: "bg-rose-400/40 text-white", medium: "bg-rose-500/70 text-white", heavy: "bg-rose-600 text-white" };
 const FLOWS = [["spotting", "Spotting"], ["light", "Light"], ["medium", "Medium"], ["heavy", "Heavy"]];
 
-export function CycleTab({ cycle, setCycle, flash, goInstant }) {
+export function CycleTab({ cycle, setCycle, flash, goInstant, native, nativeCall }) {
   const todayKey = dayKey(Date.now());
+  // v6.41 (F4): the watch's night temperature (Health Connect), kept on the phone
+  const [nights, setNights] = useState(() => { try { return JSON.parse(localStorage.getItem(TEMPS_KEY) || "[]"); } catch (e) { return []; } });
+  const [tempState, setTempState] = useState(null);   // null | "busy" | {granted, n, why}
+  const readTemps = async (quiet) => {
+    if (!native || !native.healthTemps || !nativeCall) return;
+    if (!quiet) setTempState("busy");
+    try {
+      const r = await nativeCall("healthTemps", { days: 150 });
+      const m = mergeNights(nights, (r && r.nights) || []);
+      setNights(m); try { localStorage.setItem(TEMPS_KEY, JSON.stringify(m)); } catch (e) {}
+      setTempState({ granted: (r && r.granted) || 0, n: ((r && r.nights) || []).length, available: r && r.available });
+    } catch (e) { setTempState({ granted: 0, n: 0, why: String(e.message || e) }); }
+  };
+  React.useEffect(() => { if (native && native.healthTemps && nights.length) readTemps(true); }, []);
+  React.useEffect(() => { const on = () => readTemps(); window.addEventListener("attune-health-permission", on); return () => window.removeEventListener("attune-health-permission", on); }, [nights]);
   const [month, setMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const [sel, setSel] = useState(null);           // selected day key for editing
   useSubBack(sel != null, () => setSel(null));   // v5.34: Back closes the day editor
-  const stats = useMemo(() => cycleStats(cycle, todayKey), [cycle, todayKey]);
+  const stats = useMemo(() => withTemperature(cycleStats(cycle, todayKey), nights, todayKey), [cycle, todayKey, nights]);
   const upd = (fn) => setCycle((c) => cycleSave(fn(c)));
 
   const grid = useMemo(() => {
@@ -392,6 +408,25 @@ export function CycleTab({ cycle, setCycle, flash, goInstant }) {
           <button onClick={() => setSel(todayKey)} className="px-3 py-2 rounded-lg border border-slate-700 text-slate-200 text-sm">{tr("Log today")}</button>
           <button onClick={goInstant} className="px-3 py-2 rounded-lg border border-slate-700 text-slate-400 text-sm">{tr("Type it instead")}</button>
         </div>
+        {native && native.healthTemps ? (
+          <div className="mt-3 bg-slate-950 rounded-xl p-2.5 text-[12.5px]" data-testid="cycle-temp">
+            {stats.temp && stats.temp.ovulation ? (
+              <p className="text-slate-200" data-testid="cycle-temp-line">{tr("Your watch's temperature rose {r} °C: ovulation around {o}, so the period is expected {n}.", { r: stats.temp.rise, o: fromKey(stats.temp.ovulation).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }), n: fromKey(stats.temp.nextStart).toLocaleDateString(dateLocale(), { day: "numeric", month: "short" }) })}
+                {" "}<span className="text-slate-500">{stats.temp.luteal.own ? tr("(your own {d} days after ovulation)", { d: stats.temp.luteal.days }) : tr("(14 days after ovulation until 2 cycles are measured)")}</span></p>
+            ) : stats.temp && stats.temp.waiting ? (
+              <p className="text-amber-200/90" data-testid="cycle-temp-line">{tr("No temperature rise yet — ovulation looks later than usual, so the period will likely be later than the date above.")}</p>
+            ) : nights.length ? (
+              <p className="text-slate-400" data-testid="cycle-temp-line">{tr("{n} nights of temperature from your watch — the rise after ovulation shows here.", { n: nights.length })}</p>
+            ) : (
+              <p className="text-slate-400">{tr("A watch that measures night temperature (Galaxy Watch, Pixel Watch, Oura…) makes the prediction more exact.")}</p>
+            )}
+            <div className="flex gap-2 mt-1.5">
+              {!nights.length || (tempState && tempState.granted === 0) ? <button className="text-rose-300 underline" onClick={() => { try { native.healthTempConnect(); } catch (e) {} }} data-testid="cycle-temp-connect">{tr("Use my watch's temperature")}</button> : null}
+              <button className="text-slate-400 underline" onClick={() => readTemps()} data-testid="cycle-temp-read">{tempState === "busy" ? tr("Reading…") : tr("Read now")}</button>
+            </div>
+            {tempState && tempState !== "busy" && tempState.granted > 0 && !tempState.n ? <p className="text-slate-500 mt-1">{tr("Connected, but the watch hasn't shared any night temperature yet.")}</p> : null}
+          </div>
+        ) : null}
         {stats.variation != null && stats.variation > 9 ? (
           <p className="text-[11px] text-amber-300/80 mt-3 leading-snug">{tr("Your last cycles differed by")} {stats.variation} {tr("days, so predictions are rough. If cycles are often very irregular, it's worth mentioning to a doctor.")}</p>
         ) : null}

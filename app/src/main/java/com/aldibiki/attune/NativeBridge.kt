@@ -487,6 +487,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     // ---- reminders and phone actions ------------------------------------------------
     var askNotify: (() -> Unit)? = null
     var askHealth: (() -> Unit)? = null
+    var askHealthTemp: (() -> Unit)? = null   // v6.41 (F4)
     var askHuawei: (() -> Unit)? = null
     val billing = Billing(ctx)
 
@@ -507,6 +508,17 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             return
         }
         askHealth?.invoke()
+    }
+
+    /** v6.41 (F4): Cycle — ask for the temperature permissions; read the nights ({days}) → {available, granted, nights}. */
+    @JavascriptInterface
+    fun healthTempConnect() { if (Health.availability(ctx) == "update") healthConnect() else askHealthTemp?.invoke() }
+    @JavascriptInterface
+    fun healthTemps(id: String, arg: String) {
+        pool.execute {
+            try { resolve(id, Health.nights(ctx, try { JSONObject(arg).optInt("days", 120) } catch (e: Exception) { 120 })) }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't read the temperature") }
+        }
     }
 
     // ---- v6.7 Google Play Billing -------------------------------------------------------------

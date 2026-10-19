@@ -9,6 +9,8 @@ import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
+import androidx.health.connect.client.records.BasalBodyTemperatureRecord
+import androidx.health.connect.client.records.SkinTemperatureRecord
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -37,6 +39,44 @@ object Health {
         HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(ExerciseSessionRecord::class),
     )
+
+    /** v6.41 (F4): asked only from Cycle — the watch's night skin temperature, or a basal temperature typed into another app. */
+    val TEMP_PERMISSIONS: Set<String> = setOf(
+        HealthPermission.getReadPermission(SkinTemperatureRecord::class),
+        HealthPermission.getReadPermission(BasalBodyTemperatureRecord::class),
+    )
+
+    /**
+     * v6.41 (F4): one number a night for the last `days` days → {available, granted, nights: [{day, t, kind}]}.
+     * kind "skin" = the watch's average change from its own baseline that night (°C); "basal" = a measured basal temperature.
+     * The night belongs to the day it ends on (local). Skin wins when a night has both.
+     */
+    fun nights(ctx: Context, days: Int): JSONObject {
+        val out = JSONObject().put("available", availability(ctx))
+        if (out.getString("available") != "ready") return out
+        val have = granted(ctx)
+        out.put("granted", TEMP_PERMISSIONS.count { it in have })
+        val client = HealthConnectClient.getOrCreate(ctx)
+        val zone = ZoneId.systemDefault()
+        val end = Instant.now(); val start = end.minusSeconds(days.coerceIn(1, 400) * 86400L)
+        val range = TimeRangeFilter.between(start, end)
+        val by = LinkedHashMap<String, JSONObject>()
+        if (HealthPermission.getReadPermission(BasalBodyTemperatureRecord::class) in have) try {
+            for (r in runBlocking { client.readRecords(ReadRecordsRequest(BasalBodyTemperatureRecord::class, timeRangeFilter = range)) }.records) {
+                val d = r.time.atZone(zone).toLocalDate().toString()
+                by[d] = JSONObject().put("day", d).put("t", r.temperature.inCelsius).put("kind", "basal")
+            }
+        } catch (e: Exception) { out.put("basalError", e.message ?: "") }
+        if (HealthPermission.getReadPermission(SkinTemperatureRecord::class) in have) try {
+            for (r in runBlocking { client.readRecords(ReadRecordsRequest(SkinTemperatureRecord::class, timeRangeFilter = range)) }.records) {
+                if (r.deltas.isEmpty()) continue
+                val avg = r.deltas.map { it.delta.inCelsius }.average()
+                val d = r.endTime.atZone(zone).toLocalDate().toString()
+                by[d] = JSONObject().put("day", d).put("t", Math.round(avg * 100) / 100.0).put("kind", "skin")
+            }
+        } catch (e: Exception) { out.put("skinError", e.message ?: "") }   // phones without the skin-temperature feature
+        return out.put("nights", JSONArray(by.values.toList()))
+    }
 
     /** "ready" (installed), "update" (Health Connect must be installed/updated), "none" (this phone can't). */
     fun availability(ctx: Context): String = when (HealthConnectClient.getSdkStatus(ctx, PROVIDER)) {

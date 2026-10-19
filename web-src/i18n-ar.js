@@ -5725,4 +5725,13 @@ export const AR = {
   "{n} results in {y} years: {a} → {b} {u} ({c}).": "{n} نتايج في {y} سنة: {a} ← {b} {u} ({c}).",
   "Outside the report's range {k} times.": "برّه المعدل اللي في التقرير {k} مرات.",
   "Show this to your doctor — the trend says more than one result.": "ورّي ده لدكتورك — الاتجاه بيقول أكتر من نتيجة واحدة.",
+  "Your watch's temperature rose {r} °C: ovulation around {o}, so the period is expected {n}.": "حرارة ساعتك علت {r} درجة: التبويض حوالي {o}، فالدورة متوقعة {n}.",
+  "(your own {d} days after ovulation)": "(الـ{d} يوم بتوعك بعد التبويض)",
+  "(14 days after ovulation until 2 cycles are measured)": "(14 يوم بعد التبويض لحد ما دورتين يتقاسوا)",
+  "No temperature rise yet — ovulation looks later than usual, so the period will likely be later than the date above.": "الحرارة لسه معلتش — التبويض شكله متأخر عن العادي، فالدورة غالبًا هتتأخر عن التاريخ اللي فوق.",
+  "{n} nights of temperature from your watch — the rise after ovulation shows here.": "{n} ليلة حرارة من ساعتك — العلو اللي بعد التبويض هيبان هنا.",
+  "A watch that measures night temperature (Galaxy Watch, Pixel Watch, Oura…) makes the prediction more exact.": "الساعة اللي بتقيس الحرارة بالليل (Galaxy Watch، Pixel Watch، Oura…) بتخلي التوقع أدق.",
+  "Use my watch's temperature": "استخدم حرارة ساعتي",
+  "Read now": "اقرا دلوقتي",
+  "Connected, but the watch hasn't shared any night temperature yet.": "اتوصلت، بس الساعة لسه مبعتتش أي حرارة بالليل.",
 };

@@ -227,6 +227,7 @@ class MainActivity : AppCompatActivity() {
         bridge.authorizeDrive = { cb -> authorizeDrive(cb) }
         bridge.askLocalNet = { try { askLocalNetPermission.launch("android.permission.ACCESS_LOCAL_NETWORK") } catch (e: Exception) {} }
         bridge.askHealth = { runOnUiThread { try { askHealthPermission.launch(Health.PERMISSIONS) } catch (e: Exception) {} } }
+        bridge.askHealthTemp = { runOnUiThread { try { askHealthPermission.launch(Health.TEMP_PERMISSIONS) } catch (e: Exception) {} } }   // v6.41 Cycle
         bridge.askHuawei = { runOnUiThread {
             try { askHuaweiPermission.launch(HuaweiHealth.authIntent(this)) }
             catch (e: Throwable) { if (::web.isInitialized) web.evaluateJavascript(
