@@ -8092,7 +8092,7 @@ export default function App() {
     const avail = [...new Set([...groupsHere.flatMap((g) => g[1]), "chat", "money", "health", "home", "tools", "privacy", "guide"])];
     const t = tabsFor(mode, avail);
     return t.length ? <HubTabs mode={mode} tabs={t} parts={partsOf(mode, avail)} titleOf={(m) => TAB_SHORT[m] || MODE_TITLES[m] || (MORE_TOOLS.find((x) => x[0] === m) || [])[1] || m}
-      navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} /> : null;
+      navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} asBar={!wide && t.includes("business") && t.includes("fleet")} /> : null;
   })();
   // (no bottom bar → the panels pinned above it sit on the bottom edge)
   useEffect(() => { if (!LEGACY_NAV) try { document.documentElement.style.setProperty("--nav-h", "0px"); document.documentElement.classList.add("att-min"); } catch (e) {} }, []);
@@ -9546,7 +9546,10 @@ export default function App() {
         ) : null}
 
         {/* v6.30: tools that belong together are one page — a tab row on top (hubs.js) */}
-        {LEGACY_NAV || (mode === "money" && !wide) || !hubTabsEl ? null : mode === "business" ? <div className="px-4 pt-1 max-w-3xl mx-auto">{hubTabsEl}</div> : hubTabsEl}
+        {LEGACY_NAV || (mode === "money" && !wide) || !hubTabsEl ? null : mode === "business" && wide ? <div className="px-4 pt-1 max-w-3xl mx-auto">{hubTabsEl}</div> : hubTabsEl}
+        {/* v6.43: Business as its own app — its own icon on the home screen */}
+        {mode === "business" && !wide && NATIVE && NATIVE.pinTool ? <div className="px-4 max-w-3xl mx-auto flex justify-end"><button onClick={() => { const ok = NATIVE.pinTool("business", tr("Business")); flash(ok ? tr("Android asks you to add it — then Business has its own icon") : tr("This phone's home screen can't add icons")); }}
+          className="text-[12.5px] font-semibold text-teal-300 py-1" data-testid="biz-pin">{tr("＋ Business icon on my home screen")}</button></div> : null}
         <Guard key={"g-" + mode} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
           <VaultGate unlock={(a) => nativeCall("vaultUnlock", a)} onOpen={() => setVaultSess({ open: true })} />
         ) : mode === "home" && !wide ? (

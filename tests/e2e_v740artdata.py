@@ -25,8 +25,11 @@ with sync_playwright() as p:
     check("0" == fr.locator("#n").inner_text(), "the home-screen icon opens the saved page; a new tracker starts at 0")
     for _ in range(3): fr.locator("#add").click()
     fr.locator("#note").fill("drink before gym"); fr.locator("#done").check(); fr.locator("#pw").fill("secret")
-    page.wait_for_timeout(700)
-    saved = page.evaluate("localStorage.getItem('attune:artifact:data:v1:art_water')") or ""
+    # (the page saves a moment after the last change — wait for it, up to 4 s, instead of a fixed 0.7 s that a busy machine missed)
+    for _ in range(20):
+        page.wait_for_timeout(200)
+        saved = page.evaluate("localStorage.getItem('attune:artifact:data:v1:art_water')") or ""
+        if '"cups":"3"' in saved and "drink before gym" in saved: break
     check('"cups":"3"' in saved and "drink before gym" in saved, "what the page saved and the note are kept on the phone")
     check("secret" not in saved, "a password box is never kept")
     page.click("[data-testid=artifact-pin]")

@@ -757,6 +757,27 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AJ. 20 Oct 2026 — v6.43 part 2: design A built (HANDOFF §5.92). Read this first, then AI.
+Ali: "A, continue the rest" + barcode by camera, prompt/humanize tools on one page, Studio fast and high quality like the
+gallery, Scout too weak ("only Dubizzle for Nissan Tuscon 2022 used").
+Built: design A for Fit & Food (Diary, What did you eat?, Fasting tab) and the whole app (light green, Nunito, Home "Your
+apps") · live barcode camera + camera-or-gallery · Scout (maker from model, 9 searches 4 at a time, list pages and price
+guides, comparison card) · Writing page · Studio GPU fixed for Android 17 + Studio Pro HD first · eraser edges.
+### Next
+Business depth (Ali: "very detailed and complex like the business systems I gave you" — compare Fleet & rentals with his
+crane + warehouse ERPs screen by screen) ·
+Missions 3–4 · NPU (SD 1.5, LaMa) · W6 subtitles · sync gaps · Recall 2 · Google setup with Ali.
+### Ali's phone checklist for 6.43 (part 2)
+1. ⬜ The app is light green now (Settings → Theme switches back to dark if wanted).
+2. ⬜ Fit: + → "What did you eat?" → «150 grams chicken Alfredo pasta and 7 chicken strips» → Found 2 foods → Add to Lunch.
+3. ⬜ Fit: barcode → "Scan with the camera" → aim at a product → it is found.
+4. ⬜ Fit → Fasting tab → 16:8 → the ring runs.
+5. ⬜ Scout: «Nissan Tuscon 2022 used» → the note says it's a Hyundai; "Compared … from N sites", usual price, best value.
+6. ⬜ Studio: draw a picture → Engine log says the GPU check found a device (not "no GPU device"); time in seconds.
+7. ⬜ Studio → remove a person → no outline left.
+8. ⬜ Tools → Writing → the five tabs.
+9. ⬜ Home → Business → the bottom bar; "＋ Business icon on my home screen"; long-press Attune's icon → Business.
+
 ## AI. 19 Oct 2026 — v6.43: Ali's evening notes, part 1 (HANDOFF §5.91). Read this first, then AH.
 Ali: the design is cluttered and confusing — use a design program · the app refreshes when he comes back · Food as good as
 Yazio (free text that is accurate) · connect the watch to Food & Fit · words do not fit · Scout still poor · Code took 30 min

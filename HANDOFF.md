@@ -2114,6 +2114,45 @@ Food & Fit; words do not fit; Scout is still poor; Business on its own and detai
 - **Still open from this message:** build the design Ali picks (Food first, then Home and the rest); Scout quality (need his
   examples); Business as its own app and as detailed as his crane / warehouse ERPs; the rest of the list (NEXT_SESSION AI).
 
+### 5.92 (19–20 Oct 2026) — v6.43 part 2: Ali picked design A; barcode camera, Scout, Writing, Studio GPU
+Ali: "A, continue the rest" + the food barcode / photo should open the camera (not only the gallery), the prompt and humanize
+tools in one page, Studio as fast and as good as the gallery's (pictures and removing people), Scout searched only Dubizzle for
+"Nissan Tuscon 2022 used".
+- **Design A, Food & Fit** (fit-ui.jsx `designA = minimal && look === "fresh"`, Today's `a` / `only="fast"` branches,
+  fitlook.js fresh palette): Nunito (bundled, OFL: www/fonts/nunito-latin-{400,600,700,800,900}); Diary = big "Today" + date,
+  one ring card (eaten | left | burned + Carbs/Protein/Fat bars), one Meals card (coloured sign, foods, kcal, small +, copy),
+  Water + watch cards, This week; bottom bar Diary · Recipes · Fasting · Progress · Me + a round + (hidden while Undo shows);
+  "What did you eat?" page (big box, example text, camera / barcode / mic in it, "Find the foods"); found foods: Found N +
+  4 total tiles, white cards, alternatives and portions behind "Not right? Change it", "Add to Lunch · 962 kcal"; Fasting tab:
+  big timer ring, plans as cards, the body's stages. Other Fit cards take A's white card by CSS (.fit-design-a).
+- **Design A, the whole app**: spaces.js `loadTheme` — a theme still at the old default (teal on dark) or none becomes
+  {emerald, light} once (`a43`); a theme picked in Settings stays. tw.css: Nunito first, light Calm = #F4F7F5 ground, white
+  cards with a soft shadow, accent #157A52, radius 20. Home (home-ui.jsx): "Your apps" tiles (Chat, Food & Fit, Money,
+  Business as a wide dark tile, Learn, Studio, Instant, Shelf, All tools). The test kit keeps the dark look for older tests
+  (harness.py sets attune:theme:v1 unless a test does); e2e_v743 checks the light default.
+- **Barcode / photo**: Google code scanner (`play-services-code-scanner:16.1.0`, bridge `scanLive`, manifest
+  `com.google.mlkit.vision.DEPENDENCIES=barcode_ui`) — a live camera, no camera permission; a sheet asks: Scan with the camera /
+  Take a photo of the barcode / From the gallery / Type the number; the food photo: Take a photo / Choose from the gallery.
+- **Scout** (scout.js): `CARS` model → maker (+ Arabic), `fixCar` ("Nissan Tuscon" → Hyundai Tucson, note shown); the old
+  code required "nissan" in every ad, so only pages mentioning Nissan survived. 9 searches (5 car sites incl. yallamotor +
+  open EN/AR + price guides), 4 at a time (scout-ui). `listPrices` reads list pages / price guides (each price belongs to the
+  year written before it), `compareOf` → "Compared: N ads from M sites · usual price low–high · typical · ⭐ best value".
+  The market book key is unchanged ("car:hyundai tucson"). Unit v743scout. Live web can't be reached from the build box.
+- **Writing** (hubs.js GROUPS "write"): Improve · Shorten · Humanize · Copilot · Prompt lab are one page with tabs; Tools shows
+  one "Writing" card. e2e_v734sidebar / unit v734hubs updated.
+- **Studio**: Ali's log — the GPU engine could not link on Android 17 ("cannot locate symbol _ZNSt3__113__hash_memoryEPKvm
+  referenced by /system/lib64/liblog.so") because /vendor/lib64 came first in LD_LIBRARY_PATH (the vendor's older libc++).
+  ImageEngine: /system/lib64 first, the old order as a fallback, the working order remembered and logged. With the GPU
+  working and 12 GB+, Studio Pro HD (1024 px) is recommended first (estimate 30–60 s; the fast model is the alternative).
+  Eraser: the painted hole grows 4–14 px (0.6 % of the side) and the fill is blended back with a 3 px feather, so a person's
+  outline and shadow go too and the rest keeps every pixel (checked with kotlinc).
+- **Business on its own**: on a phone the Work pages (Business · Team records · Crane · Reports · Tools) get a bottom bar with
+  icons (hub-ui.jsx `asBar`), "＋ Business icon on my home screen" pins Business as its own icon (bridge `pinTool`,
+  drawable ic_shortcut_business), and a long press on Attune's icon offers Business, Log food and Scout (MainActivity
+  `addAppShortcuts`). e2e_v740artdata: waits for the save instead of a fixed 0.7 s (it failed once on a busy machine).
+- Still open: the depth of Ali's crane / warehouse ERPs inside Business; Missions 3–4;
+  SD 1.5 / LaMa on the NPU; W6 subtitles; sync gaps; Recall 2.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

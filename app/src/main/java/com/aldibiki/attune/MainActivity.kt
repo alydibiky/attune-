@@ -356,6 +356,7 @@ class MainActivity : AppCompatActivity() {
         }
         web.loadUrl("https://appassets.androidplatform.net/app/www/index.html?v=" + android.net.Uri.encode(ver))
         handleShare(intent)
+        addAppShortcuts()
 
         // Bring back the model that was in use last time — on the CPU if the
         // last GPU start crashed the app.
@@ -364,6 +365,22 @@ class MainActivity : AppCompatActivity() {
         if (Engine.state == Engine.State.IDLE) {
             ModelStore.active(this)?.let { m -> Engine.start(this, m) { _, _ -> } }
         }
+    }
+
+    /** v6.43 (Ali: "the business apps on their own"): a long press on Attune's icon offers Business, Log food and Scout —
+     *  each opens Attune straight on that part (Business can also be pinned as its own icon from the Business page). */
+    private fun addAppShortcuts() {
+        try {
+            val sm = getSystemService(android.content.pm.ShortcutManager::class.java) ?: return
+            fun sc(id: String, mode: String, label: String, icon: Int) = android.content.pm.ShortcutInfo.Builder(this, id)
+                .setShortLabel(label).setLongLabel(label).setIcon(android.graphics.drawable.Icon.createWithResource(this, icon))
+                .setIntent(Intent(this, MainActivity::class.java).setAction(Intent.ACTION_VIEW).putExtra(EXTRA_OPEN_PAGE, mode)).build()
+            val ar = resources.configuration.locales[0].language == "ar"
+            sm.dynamicShortcuts = listOf(
+                sc("app-business", "business", if (ar) "البيزنس" else "Business", R.drawable.ic_shortcut_business),
+                sc("app-fit", "fit", if (ar) "سجّل أكل" else "Log food", R.mipmap.ic_launcher),
+                sc("app-scout", "scout", if (ar) "الكشّاف" else "Scout", R.mipmap.ic_launcher))
+        } catch (e: Throwable) {}
     }
 
     override fun onNewIntent(intent: Intent) {
