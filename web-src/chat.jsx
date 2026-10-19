@@ -48,12 +48,14 @@ const chipFade = () => { const side = typeof document !== "undefined" && documen
 const LEVEL_NAMES = Object.fromEntries(Object.entries(LEVELS).map(([k, v]) => [k, v.name]));
 import { compactSystem, HONESTY_RULE, NO_CODE_RULE, codeInsteadOfAnswer, reread, partsOf, everyPart, sandwich } from "./boost.js";
 import { tipsBlock } from "./tips.js";
+import { useSubBack } from "./backstack.js";
 import { factsBlock, checkFacts, keepCovering, packsCover } from "./knowledge.js";
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
-  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2, GraduationCap,
+  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2, GraduationCap, Phone, PhoneOff,
 } from "lucide-react";
+import { sayable, endsCall } from "./voicecall.js";   // v6.41 (H2)
 
 import { summary as sideSummary } from "./side-ui.jsx";
 const KEY = "attune:chats:v1";
@@ -398,6 +400,60 @@ const STARTERS = [
 const MINIMAL = (() => { try { return localStorage.getItem("attune:legacy-nav") !== "1"; } catch (e) { return true; } })();
 
 // ---- the screen --------------------------------------------------------------------
+// v6.41 (H2): a hands-free call with Chat — it listens, answers, reads the answer a sentence at a time and listens again.
+// Tap while it speaks to cut in. "bye" / «سلام» ends it. Speech in and out are the phone's own; the answer is the model's.
+const VOICE_RULE = "We are talking by VOICE, like a phone call: answer in 1–3 short spoken sentences, no lists, tables, links or markdown. If the person speaks Arabic, answer in Egyptian Arabic.";
+function CallScreen({ ask, busy, last, api, tag, close, stop }) {
+  const [phase, setPhase] = useState("listen");   // listen | think | speak | idle
+  const [heard, setHeard] = useState(""), [saying, setSaying] = useState("");
+  const waitFor = useRef(null), cut = useRef(false), alive = useRef(true);
+  useSubBack(true, close);
+  const listen = async () => {
+    if (!alive.current) return;
+    cut.current = false; setPhase("listen"); setHeard(""); setSaying("");
+    let t = ""; try { t = (await api.listen(tag, (p) => setHeard(p))) || ""; } catch (e) { t = ""; }
+    if (!alive.current) return;
+    t = t.trim(); setHeard(t);
+    if (!t) { setPhase("idle"); return; }
+    if (endsCall(t)) { close(); return; }
+    waitFor.current = last ? last.id : "none"; setPhase("think");
+    ask(t, { now: true });
+  };
+  useEffect(() => { listen(); return () => { alive.current = false; }; }, []);
+  // the answer is done (busy went off and a new answer is there) → read it aloud, sentence by sentence, then listen again
+  useEffect(() => {
+    if (phase !== "think" || busy || !last || last.id === waitFor.current || last.streaming) return;
+    waitFor.current = last.id;
+    (async () => {
+      setPhase("speak");
+      for (const s of sayable(last.text, /^ar/i.test(tag))) {
+        if (cut.current || !alive.current) break;
+        setSaying(s);
+        try { if (api.speakWait) await api.speakWait(s, tag); } catch (e) { break; }
+      }
+      if (alive.current && !cut.current) listen();
+    })();
+  }, [busy, last && last.id, last && last.streaming, phase]);
+  const tap = () => {
+    if (phase === "speak") { cut.current = true; try { NATIVE.stopSpeaking && NATIVE.stopSpeaking(); } catch (e) {} listen(); }
+    else if (phase === "think") { try { stop && stop(); } catch (e) {} listen(); }
+    else if (phase === "idle") listen();
+    else { try { NATIVE.stopListening && NATIVE.stopListening(); } catch (e) {} }
+  };
+  const label = { listen: tr("Listening… speak now"), think: tr("Thinking…"), speak: tr("Speaking — tap to cut in"), idle: tr("Tap to talk") }[phase];
+  return (
+    <div className="fixed inset-0 z-[75] bg-slate-950 flex flex-col items-center justify-center p-6 gap-6" onClick={tap} data-testid="call-screen" data-phase={phase}
+      style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <div className={"w-40 h-40 rounded-full flex items-center justify-center " + (phase === "listen" ? "bg-rose-500/20 animate-pulse" : phase === "speak" ? "bg-teal-500/20 animate-pulse" : "bg-slate-800")}>
+        {phase === "speak" ? <Volume2 size={56} className="text-teal-300" /> : phase === "think" ? <Loader2 size={48} className="animate-spin text-slate-300" /> : <Mic size={56} className={phase === "listen" ? "text-rose-300" : "text-slate-400"} />}
+      </div>
+      <p className="text-slate-300 text-sm" data-testid="call-phase">{label}</p>
+      {heard ? <p className="text-slate-400 text-[15px] text-center max-w-md" dir="auto" data-testid="call-heard">{heard}</p> : null}
+      {saying ? <p className="text-white text-[19px] text-center max-w-md leading-snug" dir="auto" data-testid="call-saying">{saying}</p> : null}
+      <button onClick={(e) => { e.stopPropagation(); close(); }} className="mt-4 w-16 h-16 rounded-full bg-rose-600 text-white flex items-center justify-center" title={tr("End the call")} data-testid="call-end"><PhoneOff size={24} /></button>
+    </div>);
+}
+
 export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, composerSeed, clearComposerSeed, spaceSeed, clearSpaceSeed, openChatId, clearOpenChat }) {
   const [plusOpen, setPlusOpen] = useState(false);   // v6.31 minimal: the composer's "+" menu
   const [chats, setChats] = useState(() => loadChats());
@@ -440,6 +496,8 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const [think, setThink] = useState(false);
   const [deep, setDeep] = useState(false);   // v6.32 Deep answer: the next question only (router.js deepModel)
   const [listening, setListening] = useState(false);
+  const [call, setCall] = useState(false);   // v6.41 (H2): a hands-free voice call with Chat
+  const callRef = useRef(false); callRef.current = call;
   const [speakingId, setSpeakingId] = useState(null);
   const [q, setQ] = useState("");                       // search in history
   const [renaming, setRenaming] = useState(null);
@@ -644,7 +702,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     const langRule = replyLanguageRule(said.length >= 12 ? said : said + " " + (kept.length ? kept[kept.length - 2].content : ""));
     // v6.12: a conversation imported from another AI (Gemini, ChatGPT…) is read with every question of this chat
     const imp = importRef.current, impBlock = imp ? contextBlock(imp, Math.max(2500, Math.min(12000, (ctx - 4500) * 2))) : "";
-    return [{ role: "system", content: base + (langRule ? "\n\n" + langRule : "") + "\n\n" + HONESTY_RULE + "\n" + NO_CODE_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") + (impBlock ? "\n\n" + impBlock : "") }, ...kept, { role: "user", content: userContent }];
+    return [{ role: "system", content: base + (langRule ? "\n\n" + langRule : "") + "\n\n" + HONESTY_RULE + "\n" + NO_CODE_RULE + (pw && pw.expert ? "\n\n" + EXPERT_RULES : "") + (block ? "\n\n" + block : "") + (impBlock ? "\n\n" + impBlock : "") + (callRef.current ? "\n\n" + VOICE_RULE : "") }, ...kept, { role: "user", content: userContent }];
   };
 
   const ask = async (raw, opts) => {
@@ -2248,10 +2306,16 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             ) : text.trim() || image || files.length ? (
               <button onClick={() => ask()} className="w-10 h-10 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center" title={tr("Send")}><Send size={17} /></button>
             ) : (
+              <>
+              {NATIVE && NATIVE.listen && !listening ? <button onClick={() => setCall(true)} className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-800 text-teal-300" title={tr("Talk like a phone call")} data-testid="chat-call"><Phone size={17} /></button> : null}
               <button onClick={voice} className={`w-10 h-10 rounded-full flex items-center justify-center ${listening ? "bg-rose-500 text-white animate-pulse" : "bg-slate-800 text-slate-200"}`} title={tr("Speak")}><Mic size={18} /></button>
+              </>
             )}
           </div>
         </div>
+        {call ? <CallScreen ask={ask} busy={busy} last={[...messages].reverse().find((m) => m.role === "assistant")} api={api} stop={stop}
+          tag={voiceTag(detectLang([...messages].reverse().map((m) => m.text).find((t) => detectLang(t) && detectLang(t) !== "en") || "") || (api.prefersArabic() ? "ar" : deviceLang(navigator)), "")}
+          close={() => { try { NATIVE.stopSpeaking && NATIVE.stopSpeaking(); NATIVE.stopListening && NATIVE.stopListening(); } catch (e) {} setCall(false); }} /> : null}
         {/* v6.16c (Ali): like every AI app, a small line that answers can be wrong */}
         <p className="text-center text-[10.5px] leading-tight text-slate-500 mt-1 px-2" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
       </div>

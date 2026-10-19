@@ -9287,6 +9287,7 @@ export default function App() {
       const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); });
       return r && r.text;
     },
+    speakWait: NATIVE && NATIVE.speakWait ? (text, lang) => nativeCall("speakWait", { text, lang: lang || "" }) : null,   // v6.41 (H2) the call reads a sentence and waits
     prefersArabic: () => ((profile && profile.speaks) || []).some((x) => /Arabic/.test(x)),
     openSpeed: () => setShowEngine(true),
     // ---- learning from corrections, in Chat ----

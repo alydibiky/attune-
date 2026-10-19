@@ -5770,4 +5770,9 @@ export const AR = {
   "{n} fillers": "{n} كلمة حشو",
   "Show a better answer": "وريني إجابة أحسن",
   "Conversation": "محادثة",
+  "Talk like a phone call": "اتكلم كأنها مكالمة",
+  "Listening… speak now": "بسمعك… اتكلم",
+  "Speaking — tap to cut in": "بتكلم — دوس عشان تقاطعني",
+  "Tap to talk": "دوس واتكلم",
+  "End the call": "اقفل المكالمة",
 };
