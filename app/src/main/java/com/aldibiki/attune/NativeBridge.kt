@@ -1155,6 +1155,14 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             sm.requestPinShortcut(info, null)
         }
     } catch (e: Throwable) { false }
+    /** v6.41 C3: the automations — save {rules, lang}; read them; take the fired events (the queue empties). */
+    @JavascriptInterface
+    fun autoSave(json: String) { try { AutoRules.save(ctx, json) } catch (e: Throwable) { } }
+    @JavascriptInterface
+    fun autoRules(): String = try { AutoRules.rules(ctx) } catch (e: Throwable) { "[]" }
+    @JavascriptInterface
+    fun autoTake(): String = try { AutoRules.take(ctx) } catch (e: Throwable) { "[]" }
+
     /** v6.40 Recall: keep notifications for 30 days (on/off — off forgets them), read them, forget some. */
     @JavascriptInterface
     fun recallNotesOn(on: Boolean) { try { RecallLog.setOn(ctx, on) } catch (e: Throwable) { } }

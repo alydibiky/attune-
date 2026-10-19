@@ -34,6 +34,7 @@ class PayListener : NotificationListenerService() {
             try { if (RecallLog.isOn(applicationContext)) RecallLog.add(applicationContext, sbn, try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }, title, text) } catch (e: Exception) { }
             if (!PayLog.looksLikeMoney(all)) return
             val label = try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (e: Exception) { sbn.packageName }
+            try { AutoRules.check(applicationContext, sbn, label, title, text) } catch (e: Exception) { }   // v6.41 C3: the person's automations
             PayLog.add(applicationContext, JSONObject()
                 .put("id", sbn.packageName + ":" + sbn.postTime + ":" + all.hashCode())
                 .put("pkg", sbn.packageName).put("app", label)

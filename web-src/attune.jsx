@@ -26,6 +26,8 @@ import { DealCheck } from "./deal-ui.jsx";
 import { FitApp } from "./fit-ui.jsx";
 import { MindPage, keepPicture } from "./mind-ui.jsx";
 import { RecallPage } from "./lookback-ui.jsx";
+import { AutomationsPage, drainAutomations } from "./autom-ui.jsx";   // v6.41 C3
+import { parseAutomation, addRule, loadAuto, saveAuto, ruleText as autoRuleText } from "./autom.js";
 import { candidates as tuneCandidates, choose as tuneChoose, TUNE_PROMPT, TUNE_TOKENS } from "./tuner.js";   // v6.41 X2   // v6.40 Recall (agent C)
 import { ShelfPage } from "./shelf-ui.jsx";
 import * as SH from "./shelf.js";
@@ -7469,6 +7471,7 @@ const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.s
 const MORE_TOOLS = [
   ["missions", "Missions", "A goal with a date — Attune works on it every day and shows your real chance", Target],   // v6.37
   ["recall", "Recall", "Find anything on your phone by meaning — screenshots, notifications, chats, notes", Search],   // v6.40 (agent C)
+  ["automations", "Automations", "Say what should happen — “when my salary arrives, put 20% in the car fund” — and it runs by itself", Zap],   // v6.41 (C3)
   ["timeline", "Timeline", "Everything coming up — reminders, dates, payments, promises — on one list", CalendarDays],   // v6.38 (M3)
   ["scout", "Scout", "Hunts for a flat, a car, a product or a job for days — tells you when something good appears", Binoculars],   // v6.28
   ["lifeask", "Ask your life", "One question about your money, people, health, meals and deadlines — answered from your own data", Sparkles],   // v6.28
@@ -7682,6 +7685,11 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem("attune:tier", tier); } catch (e) {} }, [tier]);
   // v6.40: the message-alert rules (they may have come by sync) are handed to the phone at start
   useEffect(() => { try { if (NATIVE && NATIVE.watchSave) { const l = loadWatch(); if (l.length) NATIVE.watchSave(JSON.stringify({ rules: l, lang: getLang() === "ar" ? "ar" : "en" })); } } catch (e) {} }, []);
+  // v6.41 C3: what the automations set aside while Attune was closed goes into the pots now (and on each return to the app)
+  useEffect(() => { try { const st = loadAuto(); if (st.rules.length) saveAuto(st, NATIVE, getLang() === "ar" ? "ar" : "en"); } catch (e) {}
+    const run = () => { try { const a = drainAutomations(NATIVE); const got = a.filter((x) => x.amount != null);
+      if (got.length) flash(tr("{n} set aside for {p}", { n: got.reduce((t, x) => t + x.amount, 0).toLocaleString("en-US"), p: [...new Set(got.map((x) => x.pot))].join(", ") })); } catch (e) {} };
+    run(); const v = () => { if (document.visibilityState === "visible") run(); }; document.addEventListener("visibilitychange", v); return () => document.removeEventListener("visibilitychange", v); }, []);
   // v6.37 (X3): fold this session's connection log into the weekly privacy report — at start, every 5 minutes, on leaving
   useEffect(() => {
     if (!NATIVE || !NATIVE.netLog) return;
@@ -8059,7 +8067,7 @@ export default function App() {
   const setAllTools = (on) => { setDeviceShowAll(on); setAllToolsRaw(on); };
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
   // v6.31 minimal: short tab names (the page's own title stays full)
-  const TAB_SHORT = { timeline: "Timeline", missions: "Missions", recall: "Recall", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
+  const TAB_SHORT = { timeline: "Timeline", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
     pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Prompts", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
@@ -9359,6 +9367,9 @@ export default function App() {
   // own data is answered on Home; anything else goes to Chat as before. → { lines: [{ text, open, low }], undo, answer } | null (→ Chat)
   const doFromHome = (text) => {
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
+    // v6.41 C3: "when my salary arrives, put 20% in the car fund" → an automation, on at once
+    { const pa = parseAutomation(text); if (pa) { const st = addRule(loadAuto(), pa, now); saveAuto(st, NATIVE, ar ? "ar" : "en");
+      return { lines: [{ text: (ar ? "اشتغل: " : "On: ") + autoRuleText(pa, ar), open: "automations" }], undo: () => { const c = loadAuto(); saveAuto({ ...c, rules: c.rules.filter((x) => x.id !== st.rules[st.rules.length - 1].id) }, NATIVE, ar ? "ar" : "en"); } }; } }
     // v6.40: "tell me when Ahmed messages me" / «لو أحمد بعتلي قولي» → a message alert, on at once
     { const pw = parseWatch(text); if (pw) { const r = newRule(pw, now); saveWatch([r, ...loadWatch()], ar ? "ar" : "en");
       const okAccess = !NATIVE || !NATIVE.payAccess || (() => { try { return NATIVE.payAccess(); } catch (e) { return true; } })();
@@ -10184,6 +10195,8 @@ export default function App() {
           <TimelinePage navTo={navTo} />
         ) : mode === "missions" ? (
           <MissionsPage flash={flash} />
+        ) : mode === "automations" ? (
+          <AutomationsPage native={NATIVE} flash={flash} />
         ) : mode === "recall" ? (
           <RecallPage memory={memory} remember={remember} native={NATIVE} readText={readTextAny} flash={flash}
             openRec={(r) => { setOpenRec(r); setMode("memory"); }} openChat={(id) => { setOpenChatId(id); navTo("chat"); }}
