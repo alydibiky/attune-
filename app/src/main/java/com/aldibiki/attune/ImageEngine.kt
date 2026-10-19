@@ -227,10 +227,21 @@ object ImageEngine {
         else -> ""
     }
 
+    /**
+     * v6.43 (Ali's log, Android 17 on the Honor: "CANNOT LINK EXECUTABLE libattune-image-gpu.so: cannot locate symbol
+     * _ZNSt3__113__hash_memoryEPKvm referenced by /system/lib64/liblog.so"): with /vendor/lib64 first, the system's liblog
+     * was given the vendor's older libc++, which lacks a function the new Android needs — the GPU engine could not start
+     * and every picture was drawn on the CPU (42–79 s). The system libraries now come first; the vendor folder still
+     * gives the OpenCL driver. The order that starts is remembered; the old order is the last try.
+     */
+    private var gpuLibPath: String? = null
+    private fun gpuPaths(lib: String) = listOf(
+        "/system/lib64:/vendor/lib64:/system/vendor/lib64:$lib",
+        "/vendor/lib64:/system/vendor/lib64:$lib")
     private fun env(ctx: Context, gpu: Boolean): Map<String, String> {
         // The GPU program uses the phone's own OpenCL driver, which lives in /vendor.
         val lib = ctx.applicationInfo.nativeLibraryDir
-        return if (gpu) mapOf("LD_LIBRARY_PATH" to "/vendor/lib64:/system/vendor/lib64:$lib") else mapOf("LD_LIBRARY_PATH" to lib)
+        return if (gpu) mapOf("LD_LIBRARY_PATH" to (gpuLibPath ?: gpuPaths(lib)[0])) else mapOf("LD_LIBRARY_PATH" to lib)
     }
 
     /**
@@ -251,15 +262,22 @@ object ImageEngine {
         }
         onProgress(ImageRun.Progress("gpu"))
         var timedOut = false
-        gpuName = try {
-            val p = ProcessBuilder(bin(ctx, true).path, "--list-devices").redirectErrorStream(true)
-                .also { it.environment().putAll(env(ctx, true)) }.start()
-            val sb = StringBuilder()
-            val reader = Thread { try { sb.append(p.inputStream.bufferedReader().readText()) } catch (e: Exception) {} }.apply { isDaemon = true; start() }
-            if (!p.waitFor(120, java.util.concurrent.TimeUnit.SECONDS)) { timedOut = true; p.destroyForcibly(); null }
-            else { reader.join(2000); devicesOut = sb.toString().trim().take(600); ImageRun.gpuDevice(sb.toString()) }
-        } catch (e: Exception) { devicesOut = "could not start: " + (e.message ?: e.javaClass.simpleName); null }
-        log(ctx, "GPU check: " + (gpuName ?: (if (timedOut) "timed out after 120 s" else "no GPU device")) + "\n  " + devicesOut.replace("\n", "\n  "))
+        var linkFailed = false
+        gpuName = null
+        for (path in gpuPaths(ctx.applicationInfo.nativeLibraryDir)) {
+            linkFailed = false
+            val name = try {
+                val p = ProcessBuilder(bin(ctx, true).path, "--list-devices").redirectErrorStream(true)
+                    .also { it.environment()["LD_LIBRARY_PATH"] = path }.start()
+                val sb = StringBuilder()
+                val reader = Thread { try { sb.append(p.inputStream.bufferedReader().readText()) } catch (e: Exception) {} }.apply { isDaemon = true; start() }
+                if (!p.waitFor(120, java.util.concurrent.TimeUnit.SECONDS)) { timedOut = true; p.destroyForcibly(); null }
+                else { reader.join(2000); devicesOut = sb.toString().trim().take(600); linkFailed = devicesOut.contains("CANNOT LINK"); ImageRun.gpuDevice(sb.toString()) }
+            } catch (e: Exception) { devicesOut = "could not start: " + (e.message ?: e.javaClass.simpleName); null }
+            if (name != null) { gpuName = name; gpuLibPath = path; break }
+            if (timedOut || !linkFailed) break   // only a library that would not link is worth another order
+        }
+        log(ctx, "GPU check: " + (gpuName?.let { "$it (libraries: ${gpuLibPath?.substringBefore(':')} first)" } ?: (if (timedOut) "timed out after 120 s" else if (linkFailed) "the GPU engine would not link on this Android" else "no GPU device")) + "\n  " + devicesOut.replace("\n", "\n  "))
         gpuChecked = gpuName != null || !timedOut
         if (gpuName == null && !cpuOnly(ctx)) setNote(ctx, if (timedOut)
             "The graphics chip took too long to start this time, so this picture is drawn on the CPU (slower). Studio will try the graphics chip again next time."

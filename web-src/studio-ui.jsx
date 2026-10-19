@@ -212,9 +212,9 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   if (!info) return <div className="p-4 text-sm text-slate-400" data-testid="studio-page">{tr("Studio works in the Android app.")}</div>;
   // v6.19: the device facts (cores, big cores, platform) join the picture facts for the per-device recommendation
   let dev = info; try { dev = { ...JSON.parse(native.info()), ...info }; } catch (e) {}
-  const rec = recommendStudioPack(dev);
-  const dp = drawPack(dev, choice, mode);
   const gpuOk = gpuWorks(info);
+  const rec = recommendStudioPack({ ...dev, gpu: gpuOk });
+  const dp = drawPack(dev, choice, mode);
   const drawReady = dp.ready;
   const P = PACKS[dp.id];
   const upReady = packReady(info, "esrgan-x4");

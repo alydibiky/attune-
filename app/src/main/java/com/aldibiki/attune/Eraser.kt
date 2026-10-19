@@ -39,6 +39,32 @@ object Eraser {
         return env.createSession(f.path, opts).also { session = it; sessionPath = f.path }
     }
 
+    /** The hole (mask value 0) grown by r pixels: a box of 2r+1 around each hole pixel, by running counts (fast on 9 MP). */
+    private fun grow(keep: ByteArray, w: Int, h: Int, r: Int): ByteArray {
+        val hole = BooleanArray(w * h) { keep[it] == 0.toByte() }
+        val tmp = BooleanArray(w * h)
+        for (y in 0 until h) { var c = 0; val o = y * w
+            for (x in 0 until minOf(r, w)) if (hole[o + x]) c++
+            for (x in 0 until w) { if (x + r < w && hole[o + x + r]) c++; if (x - r - 1 >= 0 && hole[o + x - r - 1]) c--; tmp[o + x] = c > 0 } }
+        val out = ByteArray(w * h)
+        for (x in 0 until w) { var c = 0
+            for (y in 0 until minOf(r, h)) if (tmp[y * w + x]) c++
+            for (y in 0 until h) { if (y + r < h && tmp[(y + r) * w + x]) c++; if (y - r - 1 >= 0 && tmp[(y - r - 1) * w + x]) c--; out[y * w + x] = (if (c > 0) 0 else -1).toByte() } }
+        return out
+    }
+    /** How much of the filled picture to use at each pixel: 1 inside the hole, fading to 0 over k pixels outside it. */
+    private fun feather(mask: ByteArray, w: Int, h: Int, k: Int): FloatArray {
+        val a = FloatArray(w * h)
+        var cur = mask
+        for (i in a.indices) if (cur[i] == 0.toByte()) a[i] = 1f
+        for (step in 1..k) { cur = grow(cur, w, h, 1); val v = 1f - step / (k + 1f); for (i in a.indices) if (cur[i] == 0.toByte() && a[i] == 0f) a[i] = v }
+        return a
+    }
+    private fun mix(p: Int, q: Int, t: Float): Int {
+        fun ch(sh: Int) = (((p shr sh) and 255) * (1 - t) + ((q shr sh) and 255) * t).toInt().coerceIn(0, 255)
+        return -0x1000000 or (ch(16) shl 16) or (ch(8) shl 8) or ch(0)
+    }
+
     @Synchronized
     fun release() { try { session?.close() } catch (e: Throwable) {}; session = null; sessionPath = "" }
 
@@ -73,6 +99,11 @@ object Eraser {
         for (i in 0 until n) { val a = (mp[i] ushr 24) and 255; val v = (mp[i] shr 8) and 255; val hole = a > 40 && v > 40; if (hole) holes++; msk.put(if (hole) 0.toByte() else (-1).toByte()) }
         msk.rewind()
         if (holes == 0) throw IOException("Paint over what to remove first.")
+        // v6.43 (Ali: "erase people like the gallery, high quality"): a painted stroke always misses the edge of a person —
+        // their outline and shadow stayed as a halo. The hole grows by ~0.6 % of the photo's side (4–14 px) first.
+        val keep0 = ByteArray(n).also { msk.get(it); msk.rewind() }
+        val grown = grow(keep0, w, h, (maxOf(w, h) * 0.006).toInt().coerceIn(4, 14))
+        msk.put(grown); msk.rewind()
         val env = OrtEnvironment.getEnvironment()
         val s = session(ctx)
         val out = IntArray(n)
@@ -87,6 +118,9 @@ object Eraser {
                 }
             }
         }
+        // only the filled part changes, with a soft 3 px edge — the rest of the photo keeps every original pixel
+        val soft = feather(grown, w, h, 3)
+        for (i in 0 until n) { val a = soft[i]; if (a <= 0f) out[i] = px[i] else if (a < 1f) out[i] = mix(px[i], out[i], a) }
         val res = Bitmap.createBitmap(out, w, h, Bitmap.Config.ARGB_8888)
         val dest = File(ImageEngine.studioDir(ctx), "erase-${System.currentTimeMillis()}.png")
         dest.outputStream().use { res.compress(Bitmap.CompressFormat.PNG, 100, it) }

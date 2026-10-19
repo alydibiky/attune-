@@ -241,6 +241,13 @@ export function recommendStudioPack(d) {
     r = { pack: "qwen-21", steps: 4, side: 1024, estSeconds: vram >= 16 ? 10 : 25, why: "a graphics card with 8 GB or more: the most capable model" };
   } else if (ram >= 12 && room("qwen-21")) alts.push({ pack: "qwen-21", why: "best quality, slow", estSeconds: est("qwen-21") });
   if (computer && ram >= 16 && room("klein-4b")) alts.push({ pack: "klein-4b", why: "best quality, slow (minutes a picture)", estSeconds: est("klein-4b") });
+  // v6.43 (Ali: "Studio as fast and as high quality as the gallery's"): a phone whose graphics chip works (fixed in v6.43 for
+  // Android 17) and has 12 GB+ gets Studio Pro HD first — 1024 px, faces, hands and text; the fast model stays one tap away
+  if (!computer && d.gpu && ram >= 12 && (room("klein-4b-hq") || room("klein-4b"))) {
+    const id = room("klein-4b-hq") ? "klein-4b-hq" : "klein-4b";
+    alts.unshift({ pack: r.pack, why: "fastest pictures (512 px)", estSeconds: Math.max(3, Math.round(r.estSeconds / 6)) });
+    r = { pack: id, steps: 4, side: 1024, estSeconds: 45, why: "the graphics chip works and this phone has 12 GB or more: the best quality, 1024 px (about 30–60 s, an estimate)" };
+  }
   if (!room(r.pack)) r.why = "free up storage first: " + r.why;
   return { ...r, alternatives: alts };
 }
