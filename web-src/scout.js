@@ -72,8 +72,12 @@ export function parseGoal(text) {
   // a home with a budget a monthly rent would have ("flat in Maadi under 15,000") is a rent
   if (g.kind === "buy-home" && g.max && g.max < 200000) g.kind = "rent";
   g.what = whatOf(raw, g);
+  // v6.43 (Ali: "Nissan Tuscon 2022 used" found only Dubizzle pages): the car's maker comes from its model (the Tucson is a
+  // Hyundai), a misspelt model is corrected, and the search words are the maker + model + year
+  if (g.kind === "car") fixCar(g);
   // v6.28: the exact item (make, model, numbers, storage) — an iPhone 16 Pro Max or an Elantra is not what was asked for
   if (g.kind === "product" || g.kind === "car") g.model = modelOf(g);
+  if (g.kind === "car" && g.car) g.model = { must: g.car.model.split(" "), avoid: [] };
   // a job: the years of experience you have ("with 2 years experience") and the salary you want
   const ex = /(\d{1,2})\s*\+?\s*(?:years?|yrs?|سنين|سنوات|سنه|سنة)\s*(?:of\s+)?(?:experience|exp|خبره|خبرة)/i.exec(latin(raw));
   if (g.kind === "job" && ex) g.wish.push({ k: "exp", have: +ex[1], say: [`asks ≤ ${ex[1]} years' experience`, `يطلب خبرة ${ex[1]} سنوات أو أقل`] });
@@ -89,6 +93,52 @@ const ITEM_STOP = new Set(["new", "used", "brand", "original", "sealed", "cheap"
 const normItem = (s) => { let t = " " + fold(s).replace(/(\d+)\s*(gb|tb|جيجابايت|جيجا|تيرا)(?![\p{L}])/gu, (m, n, u) => " " + n + (/t|تيرا/.test(u) ? "tb" : "gb") + " ") + " ";
   for (const [a, l] of Object.entries(TRANSLIT).sort((x, y) => y[0].length - x[0].length)) t = t.split(" " + fold(a) + " ").join(" " + l + " ");
   return t.replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim(); };
+// ---- v6.43 cars: model → maker, with the Arabic names (Egypt's market first) -------------------------------------------------------
+export const CARS = {
+  hyundai: ["هيونداي", { tucson: "توسان", elantra: "النترا", accent: "اكسنت", creta: "كريتا", i10: "i10", i20: "i20", sonata: "سوناتا", "santa fe": "سانتافي", verna: "فيرنا", bayon: "بايون", kona: "كونا" }],
+  kia: ["كيا", { sportage: "سبورتاج", cerato: "سيراتو", picanto: "بيكانتو", rio: "ريو", sorento: "سورينتو", seltos: "سيلتوس", pegas: "بيجاس", sonet: "سونيت", k5: "k5" }],
+  nissan: ["نيسان", { sunny: "صني", sentra: "سنترا", qashqai: "قشقاي", "x-trail": "اكس تريل", juke: "جوك", patrol: "باترول", navara: "نافارا" }],
+  toyota: ["تويوتا", { corolla: "كورولا", yaris: "ياريس", camry: "كامري", rav4: "راف فور", fortuner: "فورتشنر", hilux: "هايلكس", "c-hr": "سي اتش ار", "land cruiser": "لاند كروزر", rush: "راش", belta: "بيلتا" }],
+  chevrolet: ["شيفروليه", { optra: "اوبترا", aveo: "افيو", cruze: "كروز", lanos: "لانوس", captiva: "كابتيفا" }],
+  mitsubishi: ["ميتسوبيشي", { lancer: "لانسر", attrage: "اتراج", "eclipse cross": "اكليبس كروس", pajero: "باجيرو", xpander: "اكسباندر", mirage: "ميراج" }],
+  mg: ["ام جي", { zs: "zs", mg5: "mg5", mg6: "mg6", rx5: "rx5", hs: "hs" }],
+  chery: ["شيري", { tiggo: "تيجو", arrizo: "اريزو" }],
+  skoda: ["سكودا", { octavia: "اوكتافيا", kodiaq: "كودياك", karoq: "كاروك", fabia: "فابيا", superb: "سوبرب", kamiq: "كاميك" }],
+  renault: ["رينو", { logan: "لوجان", duster: "داستر", megane: "ميجان", kadjar: "كادجار", sandero: "ساندرو", austral: "اوسترال" }],
+  peugeot: ["بيجو", { 301: "301", 2008: "2008", 3008: "3008", 5008: "5008", 508: "508", 408: "408" }],
+  honda: ["هوندا", { civic: "سيفيك", city: "سيتي", "cr-v": "سي ار في", accord: "اكورد" }],
+  suzuki: ["سوزوكي", { swift: "سويفت", dzire: "ديزاير", ertiga: "ارتيجا", vitara: "فيتارا", ciaz: "سياز" }],
+  volkswagen: ["فولكس", { golf: "جولف", passat: "باسات", tiguan: "تيجوان", polo: "بولو" }],
+  fiat: ["فيات", { tipo: "تيبو", "500x": "500x" }],
+  opel: ["اوبل", { astra: "استرا", corsa: "كورسا", grandland: "جراندلاند", crossland: "كروسلاند" }],
+  jetour: ["جيتور", { x70: "x70", dashing: "داشينج" }],
+  geely: ["جيلي", { coolray: "كولراي", emgrand: "امجراند" }],
+  byd: ["بي واي دي", { f3: "f3", seal: "سيل" }],
+};
+const MAKE_WORDS = { hyundai: ["hyundai", "هيونداي", "هونداي"], kia: ["kia", "كيا"], nissan: ["nissan", "نيسان"], toyota: ["toyota", "تويوتا"], chevrolet: ["chevrolet", "chevy", "شيفروليه", "شفرليه"], mitsubishi: ["mitsubishi", "ميتسوبيشي"], mg: ["mg", "ام جي"], chery: ["chery", "شيري"], skoda: ["skoda", "سكودا", "اسكودا"], renault: ["renault", "رينو"], peugeot: ["peugeot", "بيجو"], honda: ["honda", "هوندا"], suzuki: ["suzuki", "سوزوكي"], volkswagen: ["volkswagen", "vw", "فولكس"], fiat: ["fiat", "فيات"], opel: ["opel", "اوبل"], jetour: ["jetour", "جيتور"], geely: ["geely", "جيلي"], byd: ["byd"], mercedes: ["mercedes", "مرسيدس"], bmw: ["bmw", "بي ام"] };
+const cap = (w) => w.split(/([ -])/).map((x) => (/^[a-z]/.test(x) ? (x.length <= 3 && /\d/.test(x) ? x.toUpperCase() : x[0].toUpperCase() + x.slice(1)) : x)).join("");
+/** A car goal: find the model (a word one letter off counts: "tuscon" → tucson), its real maker, and say so when the maker typed is another one. */
+export function fixCar(g) {
+  const words = normItem(g.raw).split(" ");
+  const said = Object.keys(MAKE_WORDS).find((mk) => MAKE_WORDS[mk].some((w) => (" " + fold(g.raw) + " ").includes(" " + fold(w) + " ")));
+  let hit = null;
+  for (const [make, [, models]] of Object.entries(CARS)) for (const [model, ar] of Object.entries(models)) {
+    const parts = model.split(" ");
+    const at = words.findIndex((w, i) => parts.every((pt, k) => { const x = words[i + k]; return x && (x === pt || x === pt.replace("-", "") || (pt.length >= 5 && !/\d/.test(pt) && close1(x, pt)) || x === normItem(ar)); }));
+    if (at < 0) continue;
+    if (/^\d+$/.test(model) && said !== make) continue;          // "301", "2008" alone are a Peugeot only when Peugeot is said
+    const exact = words[at] === parts[0];
+    if (!hit || (exact && !hit.exact) || (said === make && hit.make !== said)) hit = { make, model, ar, exact };
+  }
+  if (!hit) return g;
+  const year = (g.wish.find((w) => w.k === "year") || {}).min;
+  const used = g.wish.some((w) => w.k === "used"), isNew = g.wish.some((w) => w.k === "new");
+  g.car = { make: hit.make, model: hit.model, makeAr: CARS[hit.make][0], modelAr: hit.ar, year: year || null };
+  if (said && said !== hit.make) g.car.note = [`The ${cap(hit.model)} is made by ${cap(hit.make)}, not ${cap(said)} — searching for the ${cap(hit.make)} ${cap(hit.model)}.`, `${hit.ar} من ${CARS[hit.make][0]} مش ${(MAKE_WORDS[said] || [said]).find((w) => /[؀-ۿ]/.test(w)) || said} — بدوّر على ${CARS[hit.make][0]} ${hit.ar}.`];
+  else if (!hit.exact) g.car.note = [`Searching for the ${cap(hit.make)} ${cap(hit.model)}.`, `بدوّر على ${CARS[hit.make][0]} ${hit.ar}.`];
+  g.what = [cap(hit.make), cap(hit.model), year || "", used ? "used" : isNew ? "new" : ""].filter(Boolean).join(" ");
+  return g;
+}
 /** The words an ad must have to be the item asked for, and the variants that make it a different one. */
 export function modelOf(g) {
   const place = new Set(normItem(g.place || "").split(" "));
@@ -116,7 +166,7 @@ function whatOf(raw, g) {
 export const SITES = {
   rent: ["aqarmap.com.eg", "propertyfinder.eg", "dubizzle.com.eg", "bayut.eg", "olx.com.eg"],
   "buy-home": ["aqarmap.com.eg", "propertyfinder.eg", "dubizzle.com.eg", "bayut.eg", "nawy.com"],
-  car: ["hatla2ee.com", "dubizzle.com.eg", "contactcars.com", "olx.com.eg", "carsemsar.com"],
+  car: ["hatla2ee.com", "dubizzle.com.eg", "contactcars.com", "yallamotor.com", "carsemsar.com"],
   product: ["amazon.eg", "noon.com", "btech.com", "2b.com.eg", "jumia.com.eg", "dubizzle.com.eg"],
   job: ["wuzzuf.net", "linkedin.com/jobs", "bayt.com", "forasna.com", "indeed.com"],
   tender: ["etenders.gov.eg", "tenders.gov.eg", "egypttenders.com"],
@@ -128,15 +178,24 @@ export function fallbackSearches(g) {
   return [core + (g.place ? " " + g.place : ""), core + (g.kind === "rent" ? " للإيجار" : g.kind === "car" ? " للبيع" : g.kind === "job" ? " jobs" : " price")];
 }
 /** The searches for a goal: the goal's words on each site that matters, plus one open search. */
-export function searchesFor(g, max = 6) {
+export function searchesFor(g, max = 9) {
   const base = [g.what || g.raw, g.place && !fold(g.what || "").includes(fold(g.place)) ? g.place : ""].filter(Boolean).join(" ");
-  return [...(SITES[g.kind] || SITES.product).map((s) => `${base} site:${s}`), base + (g.kind === "rent" ? " للإيجار" : g.kind === "job" ? " وظيفة" : "")].slice(0, max);
+  // v6.43 (Ali: "it only searched Dubizzle — open more websites, even ones nobody knows, and compare"): the known sites AND open
+  // searches in English and Arabic (they bring the sites Scout doesn't know), and for a car or a product the price guides too
+  if (g.kind === "car" && g.car) {
+    const c = g.car, y = c.year ? " " + c.year : "", used = !g.wish.some((w) => w.k === "new");
+    const en = `${cap(c.make)} ${cap(c.model)}${y}`, ar = `${c.makeAr} ${c.modelAr}${y}`;
+    return [`${en} ${used ? "used " : ""}site:hatla2ee.com`, `${en} site:dubizzle.com.eg`, `${en} site:contactcars.com`, `${ar} ${used ? "مستعمل " : ""}للبيع`,
+      `${en} ${used ? "used " : ""}for sale Egypt`, `${en} site:yallamotor.com`, `${ar} site:carsemsar.com`, `${en} ${used ? "used " : ""}price Egypt`, `سعر ${ar} ${used ? "مستعمل" : "جديد"}`].slice(0, max);
+  }
+  const AR = { rent: " للإيجار", "buy-home": " للبيع", car: " للبيع", product: " سعر", job: " وظيفة", service: "", tender: " مناقصة" };
+  return [...(SITES[g.kind] || SITES.product).slice(0, 5).map((s) => `${base} site:${s}`), base + (AR[g.kind] || ""), base + (g.kind === "job" ? " jobs Egypt" : g.kind === "rent" ? (/rent|ايجار|إيجار/i.test(base) ? " price Egypt" : " for rent") : " price Egypt"), g.kind === "product" ? base + " best price compare" : base + " Egypt"].slice(0, max);
 }
 
 // ---- 3. reading one ad -----------------------------------------------------------------------------------------------------------------
 // a page that IS one ad (not a search / category page with many prices)
 const AD_URL = [/olx\.com\.eg\/(?:en\/)?ad\//i, /dubizzle\.com\.eg\/(?:en\/)?ad\//i, /aqarmap\.com\.eg\/(?:[a-z]{2}\/)?listing\//i, /propertyfinder\.eg\/(?:[a-z]{2}\/)?plp\//i, /bayut\.eg\/(?:[a-z]{2}\/)?property\/details/i,
-  /hatla2ee\.com\/(?:[a-z]{2}\/)?car\/details/i, /hatla2ee\.com\/(?:[a-z]{2}\/)?car\/used\/[^/]+\/[^/]+\/\d+/i, /contactcars\.com\/(?:[a-z]{2}\/)?(?:used-cars|cars)\/[^/]+\/\d+/i, /amazon\.eg\/.*\/dp\//i, /noon\.com\/.*\/p\//i, /btech\.com\/.+\.html/i, /jumia\.com\.eg\/[^/]+\.html/i,
+  /hatla2ee\.com\/(?:[a-z]{2}\/)?car\/details/i, /yallamotor\.com\/used-cars\/[^?#]+\/\d{4,}/i, /carsemsar\.com\/.*(?:car|ad)[\/-]\d+/i, /hatla2ee\.com\/(?:[a-z]{2}\/)?car\/used\/[^/]+\/[^/]+\/\d+/i, /contactcars\.com\/(?:[a-z]{2}\/)?(?:used-cars|cars)\/[^/]+\/\d+/i, /amazon\.eg\/.*\/dp\//i, /noon\.com\/.*\/p\//i, /btech\.com\/.+\.html/i, /jumia\.com\.eg\/[^/]+\.html/i,
   /wuzzuf\.net\/jobs\/p\//i, /linkedin\.com\/jobs\/view\//i, /bayt\.com\/[a-z]{2}\/.+\/jobs\/.+-\d+/i, /forasna\.com\/(?:a\/)?job/i, /indeed\.com\/viewjob/i, /nawy\.com\/compound|nawy\.com\/property/i];
 const SEARCH_URL = /[?&](q|query|keywords|search|k)=|\/search\b|\/s\?|\/(?:results|category|categories|listing\/?$|properties-for|for-rent\/?$|for-sale\/?$)|\/l\/|\/jobs\/?\?|\/cars\/?$/i;
 // v6.35: on the sites whose ad addresses are known, only an ad address is an ad (a dubizzle "Hyundai Tucson — Vehicles for sale in
@@ -337,6 +396,7 @@ export function fairness(ad, seen, g = null, market = []) {
 export const MARKET_KEY = "attune:scout:market:v1";
 export function marketKey(g) {
   if (!g) return "";
+  if (g.kind === "car" && g.car) return "car:" + [g.car.make, ...g.car.model.split(" ")].sort().join(" ");   // the same book as before v6.43 ("car:hyundai tucson")
   if ((g.kind === "car" || g.kind === "product") && g.model && g.model.must.length) return g.kind + ":" + [...g.model.must].sort().join(" ");
   if (g.kind === "rent" || g.kind === "buy-home") return g.kind + ":" + fold(g.place || "");
   return "";
@@ -454,7 +514,44 @@ export function runGoal(goal, hits, { now = Date.now(), market = null } = {}) {
     const sites = new Set(priced.map((a) => a.site));
     if (sites.size >= 2) { const min = Math.min(...priced.map((a) => a.facts.price)); for (const a of priced) if (a.facts.price === min) { a.cheapest = sites.size; a.score = Math.min(100, a.score + 5); } found.sort((a, b) => b.score - a.score); }
   }
-  return { found, fresh: ads.filter((a) => !seenIds.has(a.id)).map((a) => a.id), seen: seen.slice(-400) };
+  // v6.43: the prices on list pages and price guides (14 days kept), and the comparison over all of it
+  const lists = [];
+  for (const h of hits || []) for (const v of listPrices(h, g)) lists.push({ site: siteOf(h.url), v, t: now });
+  const listSeen = [...(goal.listSeen || []).filter((x) => x.t >= now - 14 * 86400000), ...lists].slice(-300);
+  return { found, fresh: ads.filter((a) => !seenIds.has(a.id)).map((a) => a.id), seen: seen.slice(-400), listSeen, compare: compareOf(found, listSeen, g) };
+}
+// ---- v6.43 comparing the market: list pages and price guides count too -------------------------------------------------------------
+const BAND = { car: [100000, 2e7], "buy-home": [300000, 2e8], rent: [1500, 5e5], product: [300, 5e6] };
+/** A page that lists many ads or a price guide (not one ad) for the same item → its prices (EGP); near the year when a year was asked. */
+export function listPrices(hit, g) {
+  if (!hit || !hit.url || isAdPage(hit.url, hit.text || "", hit.title || "")) return [];
+  const text = String(hit.text || "").slice(0, 16000), item = " " + normItem((hit.title || "") + " " + text.slice(0, 5000)) + " ";
+  if (g.model && g.model.must.length && !g.model.must.every((w) => item.includes(" " + w + " "))) return [];
+  const [lo, hi] = BAND[g.kind] || [100, 1e9];
+  let ps = pricesIn(text).filter((p) => p.cur === "EGP" && p.v >= lo && p.v <= hi && (!g.max || p.v <= g.max * 1.8));
+  const yw = (g.wish || []).find((w) => w.k === "year");
+  if (yw) {
+    // each price belongs to the year written nearest before it (a price guide lists 2021, 2022, 2023 one after another)
+    const L = latin(text), years = []; const re = /(?<![\d,.])((?:199|20[0-3])\d)(?![\d,.])/g; let m; while ((m = re.exec(L))) years.push([m.index, +m[1]]);
+    if (!years.some(([, y]) => y === yw.min)) return [];
+    ps = ps.filter((p) => { const before = years.filter(([i]) => i < p.at), y = before.length ? before[before.length - 1] : years.find(([i]) => i > p.at); return y && y[1] >= yw.min && y[1] <= (yw.max || yw.min) && p.at - (before.length ? y[0] : p.at) < 400; });
+  }
+  return [...new Set(ps.map((p) => p.v))].slice(0, 40);
+}
+const pct = (xs, q) => xs[Math.min(xs.length - 1, Math.max(0, Math.round((xs.length - 1) * q)))];
+/** The comparison over everything seen: how many ads on how many sites, the usual price range, and the best value. */
+export function compareOf(found, listSeen, g) {
+  const ads = found.filter((a) => a.facts.price && a.facts.cur === "EGP" && !(a.check && a.check.bad.some((b) => b.k === "model")));
+  const all = [...ads.map((a) => a.facts.price), ...(listSeen || []).map((x) => x.v)].sort((a, b) => a - b);
+  const sites = {};
+  for (const a of found) sites[a.site] = (sites[a.site] || 0) + 1;
+  for (const x of listSeen || []) sites[x.site] = sites[x.site] || 0;
+  if (!all.length) return { n: found.length, sites, prices: 0 };
+  const cut = all.length >= 8 ? all.slice(Math.floor(all.length * 0.1), Math.ceil(all.length * 0.9)) : all;
+  const low = cut[0], high = cut[cut.length - 1], med = pct(cut, 0.5);
+  const best = ads.filter((a) => a.score >= 55 && a.facts.price <= med * 1.02 && a.facts.price >= low * 0.8 && !(a.risks || []).some((r) => r.k === "cheap" || r.k === "money"))
+    .sort((a, b) => b.score - a.score || a.facts.price - b.facts.price)[0] || null;
+  return { n: found.length, sites, prices: all.length, low, med, high, best: best ? { id: best.id, title: best.title, price: best.facts.price, site: best.site } : null };
 }
 /** The few worth a notification: new this run (or cheaper than before) and strong. */
 export function worthTelling(run, min = 75) {

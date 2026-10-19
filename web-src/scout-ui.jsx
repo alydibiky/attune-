@@ -95,11 +95,12 @@ export async function runScoutGoal(goal, search, onStep, now = Date.now(), { rea
     goal0 = S.followUpdate(goal0, id, page, now);
   }
   goal = goal0;
+  // v6.43 (Ali: "fast"): four searches at a time instead of one after another
   const qs = S.searchesFor(goal.g), hits = [];
-  for (let i = 0; i < qs.length; i++) {
-    onStep && onStep(i + 1, qs.length, qs[i]);
-    try { const r = await search(qs[i]); for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h); } catch (e) { /* one site failing never stops the run */ }
-  }
+  let done = 0;
+  const one = async (q) => { try { const r = await search(q); for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h); } catch (e) { /* one site failing never stops the run */ } done++; onStep && onStep(done, qs.length, q); };
+  onStep && onStep(0, qs.length, qs[0]);
+  for (let i = 0; i < qs.length; i += 4) await Promise.all(qs.slice(i, i + 4).map(one));
   // (no ad page at all → the item's own words, plain — some sites only show up that way)
   if (!hits.some((h) => S.isAdPage(h.url, h.text || "", h.title || ""))) {
     for (const q of S.fallbackSearches(goal.g)) { try { const r = await search(q); for (const h of (r && r.hits) || []) if (!hits.some((x) => x.url === h.url)) hits.push(h); } catch (e) {} }
@@ -114,7 +115,7 @@ export function finishRun(goal, hits, now = Date.now()) {
   S.saveMarket(S.addToMarket(market0, goal.g, run.seen.filter((a) => a.lastSeen === now), now));
   // (v6.29: the matches new this run stay "unseen" until the goal is opened — Home's "What's waiting" counts them)
   const unseen = [...new Set([...(goal.unseen || []), ...run.found.filter((a) => run.fresh.includes(a.id)).map((a) => a.id)])].slice(-50);
-  return { goal: { ...goal, seen: run.seen, lastRun: now, lastCount: run.found.length, lastHits: hits.length, unseen }, tell: S.worthTelling(run), run };
+  return { goal: { ...goal, seen: run.seen, listSeen: run.listSeen, lastRun: now, lastCount: run.found.length, lastHits: hits.length, lastSites: [...new Set(hits.map((h) => S.siteOf(h.url)))].slice(0, 30), unseen }, tell: S.worthTelling(run), run };
 }
 export function tellText(goal, tell, ar) {
   if (tell[0] && tell[0].gold) return { title: ar ? `الدهب عيار ${tell[0].karat} وصل لهدفك` : `Gold ${tell[0].karat}K reached your price`, body: (ar ? "الجرام دلوقتي " : "A gram now ") + fmt(tell[0].perGram) };
@@ -151,7 +152,9 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
     const d = S.loadScout();
     put({ ...d, goals: d.goals.map((x) => (x.id !== goal.id ? x : { ...x, votes: { ...(x.votes || {}), [ad.id]: up ? 1 : -1 }, taste: S.learn(x.taste, ad, up) })) });
   };
-  const found = goal ? S.runGoal(goal, [], { now: Date.now(), market: S.loadMarket() }).found : [];
+  const view = goal ? S.runGoal(goal, [], { now: Date.now(), market: S.loadMarket() }) : null;
+  const found = view ? view.found : [];
+  const cmp = view ? view.compare : null;
   // v6.37 (D2): wait or buy — how long ads of this search stay up and how often their price drops (the market book)
   const book = goal ? (S.loadMarket()[S.marketKey(goal.g)] || []) : [];
   const follow = (ad) => { const d = S.loadScout(); put({ ...d, goals: d.goals.map((x) => (x.id === goal.id ? S.toggleFollow(x, ad.id) : x)) }); flash && flash((goal.follow || {})[ad.id] ? tr("Not following this ad") : tr("Following — you'll be told if the price drops or it sells")); };
@@ -193,6 +196,15 @@ export function ScoutPage({ search, remind, flash, openLink, incoming, clearInco
         {(goal.gold || []).length ? <b className="c-amt">{fmt(goal.gold.slice(-1)[0][1])}</b> : <p className="c-sub m-0">{tr("Checking the price…")}</p>}
         <p className="c-sub m-0 text-[12px]">{goal.g.max ? tr("You'll be told when it is at or under {v}", { v: fmt(goal.g.max) }) : goal.g.min ? tr("You'll be told when it is at or over {v}", { v: fmt(goal.g.min) }) : tr("Add a price to be told, e.g. “under 3,500”")}</p>
       </div> : null}
+      {goal.g.car && goal.g.car.note ? <p className="c-acc text-[13px] m-0" data-testid="scout-car-note" dir="auto">{ar ? goal.g.car.note[1] : goal.g.car.note[0]}</p> : null}
+      {cmp && (cmp.prices || cmp.n) && goal.g.kind !== "gold" ? (
+        <div className="c-card space-y-1.5" data-testid="scout-compare">
+          <span className="c-lbl">{tr("Compared")}</span>
+          <p className="m-0 text-[14px]" dir="auto">{tr("{n} ads from {s} sites", { n: cmp.n, s: Object.keys(cmp.sites).length })}{goal.lastSites && goal.lastSites.length ? <span className="c-sub"> · {tr("{n} sites searched", { n: goal.lastSites.length })}</span> : null}</p>
+          {cmp.low ? <p className="m-0 text-[14px]" data-testid="scout-range" dir="auto">{tr("Usual price")}: <b className="c-num">{fmt(cmp.low)} – {fmt(cmp.high)}</b> · {tr("typical")} <b className="c-num">{fmt(cmp.med)}</b> <span className="c-sub text-[12px]">({tr("from {n} prices, list pages and price guides included", { n: cmp.prices })})</span></p> : null}
+          {cmp.best ? <p className="m-0 text-[13.5px]" data-testid="scout-best" dir="auto">⭐ {tr("Best value")}: {cmp.best.title} — <b className="c-num">{fmt(cmp.best.price)}</b> <span className="c-sub">({cmp.best.site})</span></p> : null}
+          <div className="flex flex-wrap gap-1.5 text-[12px]">{Object.entries(cmp.sites).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([s0, k]) => <span key={s0} className="c-pill">{s0}{k ? " · " + k : ""}</span>)}</div>
+        </div>) : null}
       {!found.length && goal.g.kind !== "gold" ? <p className="c-sub" data-testid="scout-none">{goal.lastRun ? tr("Nothing that matches yet. Scout keeps looking — you'll be told when something good appears.") : tr("Searching…")}</p> : null}
       {found.slice(0, 30).map((a) => {
         const vote0 = (goal.votes || {})[a.id];
