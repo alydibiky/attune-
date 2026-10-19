@@ -90,6 +90,9 @@ object Health {
     // there it is read like every other watch. These say which of the two are on the phone.
     const val HUAWEI = "com.huawei.health"
     const val HEALTH_SYNC = "nl.appyhapps.healthsync"
+    /** v6.43: watch makers' apps that share steps, calories and workouts with Health Connect (Fit's "Automatic tracking"). */
+    val WATCH_APPS = listOf("com.sec.android.app.shealth", "com.garmin.android.apps.connectmobile", "com.fitbit.FitbitMobile",
+        "fi.polar.polarflow", "com.xiaomi.wearable", "com.mi.health", "com.huami.watch.hmwatchmanager", "com.google.android.apps.fitness")
     fun installed(ctx: Context, pkg: String): Boolean = try {
         ctx.packageManager.getPackageInfo(pkg, 0); true
     } catch (e: Exception) { false }

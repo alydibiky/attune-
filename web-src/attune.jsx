@@ -41,7 +41,7 @@ import { FileConverter } from "./convert-ui.jsx";
 import { VideoDownloader } from "./video-ui.jsx";
 import { SlidesReports } from "./slides-ui.jsx";
 import { classify as videoLink, linkIn } from "./video.js";
-import { popBack, hasBack, useSubBack, forgetSticky } from "./backstack.js";
+import { popBack, hasBack, useSubBack, forgetSticky, saveResume, takeResume, dropResume } from "./backstack.js";
 import { skillFor } from "./skills.js";
 import { SkillsPage } from "./skills-ui.jsx";
 import { PdfChatPage } from "./pdfchat-ui.jsx";
@@ -7552,7 +7552,10 @@ export default function App() {
   // v6.25: a computer opens on Home (Ali picked "A + C"); a phone on Chat
   const wideAtStart = () => { try { return window.matchMedia("(min-width: 1024px)").matches; } catch (e) { return false; } };
   // v6.27 (design A "Calm"): the phone opens on Home too ("attune:start" = "chat" keeps the old start — the test kit sets it)
-  const [mode, setModeRaw] = useState(() => { let s = ""; try { s = localStorage.getItem("attune:start") || ""; } catch (e) {} return wideAtStart() ? "home" : s === "chat" ? "chat" : "home"; });
+  // v6.43: after Android closed the app in the background, it reopens on the screen that was open (takeResume)
+  const resumed = useRef(undefined);
+  if (resumed.current === undefined) resumed.current = takeResume();
+  const [mode, setModeRaw] = useState(() => { if (resumed.current) return resumed.current.mode; let s = ""; try { s = localStorage.getItem("attune:start") || ""; } catch (e) {} return wideAtStart() ? "home" : s === "chat" ? "chat" : "home"; });
   // v6.32 Private vault: locked places open with the fingerprint / screen lock (or a PIN); they lock again after a minute away
   const [vaultCfg, setVaultCfg] = useState(() => loadVault());
   const [vaultSess, setVaultSess] = useState({ open: false });
@@ -7564,7 +7567,19 @@ export default function App() {
   // v5.41 (Ali: "when I press back I can't go to the previous page, it leaves the app"): every screen
   // change is remembered, and Back returns to the previous screen — Studio → Learn daily → Chat.
   const modeRef = useRef(mode); modeRef.current = mode;
-  const modeHist = useRef([]);
+  const modeHist = useRef(resumed.current ? resumed.current.hist : []);
+  useEffect(() => {
+    // only while the app is away: back on screen, the note is dropped (a reload in front of you starts as usual)
+    // (a page being reloaded also turns "hidden" first: pagehide without the app being paused drops the note again)
+    let paused = false, leaving = false;
+    const save = () => { if (!leaving) saveResume(modeRef.current, modeHist.current); };
+    const pause = () => { paused = true; save(); };
+    const back = () => { paused = false; dropResume(); };
+    const vis = () => { if (document.hidden) save(); else back(); };
+    const gone = () => { if (!paused) { leaving = true; dropResume(); } };
+    window.addEventListener("attune-pause", pause); document.addEventListener("visibilitychange", vis); window.addEventListener("attune-resume", back); window.addEventListener("pagehide", gone);
+    return () => { window.removeEventListener("attune-pause", pause); document.removeEventListener("visibilitychange", vis); window.removeEventListener("attune-resume", back); window.removeEventListener("pagehide", gone); };
+  }, []);
   const setMode = (m) => {
     if (m === "notes") m = "shelf";                              // v6.11: the old Notes route opens the Shelf
     const cur = modeRef.current;
@@ -10100,7 +10115,7 @@ export default function App() {
             scanBarcode={NATIVE && NATIVE.scanBarcode ? async (b64) => { const r = await nativeCall("scanBarcode", { b64 }); return (r && r.codes) || []; } : null}
             readText={NATIVE && NATIVE.readText ? async (b64) => nativeCall("readText", { b64 }) : null}
             listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null}
-            health={NATIVE && NATIVE.healthStatus ? { status: () => { try { return JSON.parse(NATIVE.healthStatus()); } catch (e) { return null; } }, connect: () => NATIVE.healthConnect(), openApp: (pkg) => { try { NATIVE.openHealthApp(pkg); } catch (e) {} },
+            health={NATIVE && NATIVE.healthStatus ? { status: () => { try { return JSON.parse(NATIVE.healthStatus()); } catch (e) { return null; } }, connect: () => NATIVE.healthConnect(), openApp: (pkg) => { try { NATIVE.openHealthApp(pkg); } catch (e) {} }, installed: () => { try { return JSON.parse(NATIVE.watchAppsInstalled ? NATIVE.watchAppsInstalled() : "[]"); } catch (e) { return []; } },
               huawei: NATIVE.huaweiStatus ? { status: () => { try { return JSON.parse(NATIVE.huaweiStatus()); } catch (e) { return null; } }, connect: () => NATIVE.huaweiConnect(), day: (date) => nativeCall("huaweiDay", { date }) } : null, day: (date) => nativeCall("healthDay", { date }) } : null}
             onExit={goBack} native={NATIVE} share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }}
             modelReady={modelUsable}

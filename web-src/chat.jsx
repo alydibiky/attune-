@@ -72,7 +72,9 @@ export function loadChats() {
 // doesn't fit first shrinks what is expendable (photos in older chats, then
 // in all chats, then the oldest chats), so the text of recent chats is always kept.
 const noPhotos = (c) => ({ ...c, messages: (c.messages || []).map((m) => (m.image || m.images ? { ...m, image: null, images: undefined, hadImage: true } : m.webImages ? { ...m, webImages: undefined } : m)) });
-const clean = (c) => ({ ...c, messages: (c.messages || []).map((m) => (m.streaming ? { ...m, streaming: false, phase: "", text: m.text ? m.text + (m.text.endsWith("(stopped)") ? "" : " …(stopped)") : m.text } : m)) });
+// v6.43 (Ali: "I come back and it starts from the beginning"): an answer still being written when the app is put away is
+// saved as cut, so if Android closes the app for memory the answer comes back with Continue instead of being lost.
+const clean = (c) => ({ ...c, messages: (c.messages || []).map((m) => (m.streaming ? { ...m, streaming: false, phase: "", text: m.text || "", stats: { ...(m.stats || {}), cut: true }, error: m.text ? null : "The app was closed before the answer started — ask again." } : m)) });
 function saveChats(list) {
   const base = list.slice(0, MAX_CHATS).map(clean);
   const tries = [
@@ -461,7 +463,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const [activeId, setActiveId] = useState(() => { const c = loadChats(); return c[0] && (Date.now() - (c[0].updated || 0) < 6 * 3600e3) ? c[0].id : null; });
   const [confirmDel, setConfirmDel] = useState(null);   // chat id waiting for "Delete?" (v5.28)
   // (v6.28: a question handed over from another page — Ask your life's "Ask Chat" — waits in the box, ready to send)
-  const [text, setText] = useState(() => { try { const p = localStorage.getItem("attune:chat:prefill"); if (p) { localStorage.removeItem("attune:chat:prefill"); return p; } } catch (e) {} return ""; });
+  const [text, setText] = useState(() => { try { const p = localStorage.getItem("attune:chat:prefill"); if (p) { localStorage.removeItem("attune:chat:prefill"); return p; } const d = localStorage.getItem("attune:chat:draft"); if (d) { localStorage.removeItem("attune:chat:draft"); return d; } } catch (e) {} return ""; });
   // v6.12: several photos and files in one message (Ali: "attach more than 1 pdf or file or photo")
   const [photos, setPhotos] = useState([]);           // [{ data, media, url }]
   const [files, setFiles] = useState([]);             // [{ name, b64, size, text? }] — spreadsheets and documents
@@ -576,8 +578,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   // re-reads the text box (text pasted or dictated while away shows at once).
   const chatsRef = useRef(chats); chatsRef.current = chats;
   useEffect(() => {
-    const save = () => saveIfOurs(chatsRef.current);
+    const save = () => { saveIfOurs(chatsRef.current); if (document.hidden) try { const d = taRef.current && taRef.current.value; if (d) localStorage.setItem("attune:chat:draft", d); else localStorage.removeItem("attune:chat:draft"); } catch (e) {} };
     const back = () => {
+      try { localStorage.removeItem("attune:chat:draft"); } catch (e) {}   // back on screen: the box itself still holds it
       const el = taRef.current;
       if (el && el.value !== undefined) setText((t) => (el.value !== t ? el.value : t));
       const h = document.documentElement;

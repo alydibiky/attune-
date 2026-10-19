@@ -102,6 +102,8 @@ export const MORE_FOODS = [
   // ---- fast food & restaurants ----
   ["big-burger", "Double burger with cheese", "دبل برجر|برجر دبل|تشيز برجر", 270, 15, 18, 15, 1, { piece: 260, sandwich: 260 }, "dishes"],
   ["chicken-burger", "Crispy chicken burger", "برجر فراخ|تشيكن برجر|زنجر", 250, 12, 25, 11.5, 1.5, { piece: 200, sandwich: 200 }, "dishes"],
+  ["chicken-strips", "Chicken strips (breaded, fried)", "استربس|تشيكن استربس|ستربس|كرسبي", 260, 19, 14, 14, 0.8, { piece: 38 }, "protein"],
+  ["chicken-alfredo", "Chicken Alfredo pasta", "مكرونة الفريدو بالفراخ|الفريدو بالفراخ", 180, 11, 15, 8.5, 0.8, { plate: 350 }, "dishes"],
   ["chicken-nuggets", "Chicken nuggets", "ناجتس|تشيكن ناجتس", 296, 15, 16, 19, 1, { piece: 16 }, "protein"],
   ["meat-shawarma", "Meat shawarma sandwich", "شاورما لحمة|ساندوتش شاورما لحمة", 250, 14, 22, 12, 1.5, { sandwich: 250 }, "dishes"],
   ["shawarma-plate", "Shawarma plate (with rice & fries)", "طبق شاورما|وجبة شاورما|فتة شاورما", 210, 11, 20, 9.5, 1.5, { plate: 450 }, "dishes"],

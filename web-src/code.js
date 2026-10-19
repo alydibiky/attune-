@@ -59,7 +59,13 @@ export function pickProgram(text, lang) {
 /** Guess the language someone wants from their words. */
 export function guessLang(text) {
   const t = String(text || "").toLowerCase();
-  if (/\b(html|web ?page|website|web app|landing|css|button on a page|صفحة|موقع)\b/.test(t)) return "html";
+  if (/\b(python|py|pandas|numpy|sympy)\b|بايثون/.test(t)) return "python";
+  if (/\b(html|web ?page|website|web ?site|web app|landing|homepage|home page|css|button on a page|online (store|shop)|e-?commerce)\b|صفحه|صفحة|موقع|ويب/.test(t)) return "html";
+  // v6.43 (Ali: "Make me a complete clothing brand for swimsuits…" became a Python script whose tests failed for 30 minutes):
+  // a brand, a shop, a portfolio, a menu, a game or a form is something to look at and tap — a page, not a script
+  if (/\b(brand|store|shop|boutique|portfolio|restaurant|caf[eé]|menu|blog|resume|cv|invitation|catalog(ue)?|showcase|game|quiz|calculator app|todo|to-do|tracker|dashboard|form|ui|screen|interface|gallery|business card|company profile)\b|براند|ماركه|ماركة|متجر|محل|بورتفوليو|مطعم|منيو|لعبه|لعبة|فورم|استمارة/.test(t)) {
+    if (!/\b(calculate|compute|analy[sz]e|data ?set|csv|excel|xlsx|algorithm|script|function|simulate|solve|equation|statistics)\b|احسب|حلل/.test(t)) return "html";
+  }
   if (/\b(javascript|js|node|typescript)\b|جافا ?سكريبت/.test(t)) return "javascript";
   return "python";
 }
@@ -394,6 +400,17 @@ export function isCutHtml(code) {
   if (!/<!doctype html|<html[\s>]/.test(c)) return false;
   return !/<\/html>\s*$/.test(c);
 }
+/**
+ * v6.43 (Ali's swimsuit page had a second, different page glued on after the first): a file that only lacks its closing
+ * </body></html> is finished by code — asking the model to "continue" it got a whole new page back. → the closed file, or null.
+ */
+export function closeHtml(code) {
+  const c = String(code || "").trimEnd(), low = c.toLowerCase();
+  const n = (rx) => (low.match(rx) || []).length;
+  if (n(/<script\b/g) !== n(/<\/script>/g) || n(/<style\b/g) !== n(/<\/style>/g)) return null;
+  if (!/<\/(script|footer|main|section|div|body|p|form|nav|ul|table)>$/.test(low)) return null;
+  return c + (/<\/body>$/.test(low) ? "" : "\n</body>") + "\n</html>\n";
+}
 export function continueMessages(task, tail) {
   return [
     { role: "system", content: "You are finishing a single-file web page that was cut off in the middle. Output ONLY the rest of the file: start with the very next characters after the last ones shown, never repeat what is already written, no explanation, no ``` fence. Keep the same style and IDs, close every open tag, <style> and <script>, and end with </html>." },
@@ -405,6 +422,8 @@ export function joinCont(code, more) {
   let m = String(more || "").replace(/^\s*```[a-z]*\s*\n?/i, "").replace(/\n?```[\s\S]*$/, "");
   // a model that restarted the whole file: keep only what comes after the part already written
   if (/^\s*(<!doctype|<html)/i.test(m)) { const tail = code.slice(-120); const k = m.indexOf(tail); m = k >= 0 ? m.slice(k + tail.length) : ""; }
+  // a second <head>/<style>/<body> when the page already has its own is a new page, not the rest of this one
+  if (/<\/style>/i.test(code) && /^\s*(<head|<style|<body|<meta)/i.test(m)) m = "";
   // overlap: the continuation repeats the last characters (up to 400)
   for (let k = Math.min(400, m.length, code.length); k >= 8; k--) if (code.endsWith(m.slice(0, k))) { m = m.slice(k); break; }
   return code + m;
@@ -440,6 +459,8 @@ export async function workLoop({ task, lang, code: startCode = "", change = "", 
     lang = p.lang || lang; code = p.code;
     // cut off before </html> → continue from where it stopped (up to 3 times)
     for (let k = 0; k < 3 && lang === "html" && isCutHtml(code); k++) {
+      const closed = closeHtml(code);
+      if (closed) { code = closed; break; }   // only the closing tags were missing
       stopped();
       onEvent({ type: "continue", round, part: k + 2 });
       const more = await llm(continueMessages(task, code.slice(-1800)), { maxTokens: getPower().codeTokens, onToken: (t) => onEvent({ type: "writing", round, text: code + t }) });

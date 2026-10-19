@@ -40,13 +40,22 @@ class GenService : Service() {
         try {
             if (Build.VERSION.SDK_INT >= 34) startForeground(ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
             else startForeground(ID, n)
-        } catch (e: Exception) { stopSelf() }
+        } catch (e: Exception) { stopSelf(); return START_NOT_STICKY }
+        // Android kills the app if a service started with startForegroundService() is stopped before it
+        // called startForeground() (a short answer can end that fast). So "stop" comes here too, and
+        // the service stops itself only after it is in the foreground.
+        if (!on) {   // the stop intent, or an answer that already ended
+            if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE) else @Suppress("DEPRECATION") stopForeground(true)
+            stopSelf()
+        }
         return START_NOT_STICKY
     }
 
     companion object {
         private const val CHANNEL = "writing"
         private const val ID = 7301
+        private const val ACTION_STOP = "com.aldibiki.attune.GEN_STOP"
+        @Volatile private var started = false
         @Volatile private var on = false
         /** Something is being written, drawn or downloaded right now (the notification is up). */
         fun busy(): Boolean = on
@@ -56,9 +65,14 @@ class GenService : Service() {
             on = running
             val i = Intent(ctx, GenService::class.java)
             try {
-                if (running) { if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else ctx.startService(i) }
-                else ctx.stopService(i)
-            } catch (e: Exception) { on = false }
+                if (running) {
+                    if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else ctx.startService(i)
+                    started = true
+                } else if (started) {
+                    started = false
+                    ctx.startService(i.setAction(ACTION_STOP))   // allowed: the app still has its foreground service
+                }
+            } catch (e: Exception) { on = false; started = false; try { ctx.stopService(i) } catch (_: Exception) {} }
         }
     }
 }

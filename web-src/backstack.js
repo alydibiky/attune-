@@ -56,3 +56,34 @@ export function useSticky(key, init) {
   return [v, set];
 }
 export const forgetSticky = (prefix) => { for (const k of [...MEM.keys()]) if (k.startsWith(prefix)) MEM.delete(k); };
+
+// ---- v6.43 (Ali: "I work on something, come back, and it starts from the beginning") ----------
+// MagicOS closes Attune in the background when memory is short (a loaded model is several GB), and the
+// page then started on Home with every tool reset. Now, when the app is put away, the open screen and
+// what the tools remember (useSticky) are written to the phone; a start within a few hours of that
+// reopens the same screen with the same course, table, project or form.
+const RESUME_KEY = "attune:resume:v1";
+const RESUME_MS = 6 * 3600e3;
+export function saveResume(mode, hist) {
+  try {
+    const sticky = {};
+    let size = 0;
+    for (const [k, v] of MEM) {
+      let j; try { j = JSON.stringify(v); } catch (e) { continue; }
+      if (j === undefined || j.length > 200000 || size + j.length > 800000) continue;   // photos and big data stay out
+      sticky[k] = j; size += j.length;
+    }
+    localStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), mode, hist: (hist || []).slice(-20), sticky }));
+  } catch (e) {}
+}
+export function dropResume() { try { localStorage.removeItem(RESUME_KEY); } catch (e) {} }
+/** The screen to reopen after Android closed the app ({ mode, hist }), once; null when there is none or it is old. */
+export function takeResume() {
+  try {
+    const r = JSON.parse(localStorage.getItem(RESUME_KEY) || "null");
+    localStorage.removeItem(RESUME_KEY);
+    if (!r || !r.mode || Date.now() - (r.at || 0) > RESUME_MS) return null;
+    for (const [k, j] of Object.entries(r.sticky || {})) { try { MEM.set(k, JSON.parse(j)); } catch (e) {} }
+    return { mode: r.mode, hist: Array.isArray(r.hist) ? r.hist : [] };
+  } catch (e) { return null; }
+}

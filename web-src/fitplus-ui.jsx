@@ -441,3 +441,58 @@ export function WatchCard({ L, ar, health, st, upd, dayKey, compact }) {
       </> : <div className="text-[12px] text-slate-400">{L("Nothing from the watch today yet — open its app once so it syncs.", "مفيش حاجة وصلت من الساعة النهارده لسه — افتح تطبيقها مرة عشان تتزامن.")}</div>}
     </div>);
 }
+
+/* ---- v6.43 (Ali, with Yazio's Profile screenshot: "Do the Watch connect to food and fit app") ----------------------------
+   One row of watch makers, like Yazio's "Automatic tracking". Each one reaches Attune through Android's Health Connect
+   (Huawei also directly); a tap opens that maker's app with the one setting to switch on, then "Connect" here. */
+const WATCHES = [
+  { k: "hc", name: "Health Connect", nameAr: "Health Connect", bg: "linear-gradient(135deg,#e8f0fe,#ffffff)", fg: "#1a73e8", mark: "♥" },
+  { k: "huawei", name: "Huawei", nameAr: "هواوي", pkg: "com.huawei.health", bg: "linear-gradient(135deg,#e05a6d,#3fae7c)", fg: "#fff", mark: "H" },
+  { k: "samsung", name: "Samsung Health", nameAr: "Samsung Health", pkg: "com.sec.android.app.shealth", bg: "linear-gradient(135deg,#1db4b4,#0c7c8a)", fg: "#fff", mark: "S" },
+  { k: "garmin", name: "Garmin", nameAr: "Garmin", pkg: "com.garmin.android.apps.connectmobile", bg: "linear-gradient(135deg,#4aa3df,#3a3a3a 60%)", fg: "#fff", mark: "G" },
+  { k: "fitbit", name: "Fitbit / Pixel", nameAr: "Fitbit / Pixel", pkg: "com.fitbit.FitbitMobile", bg: "linear-gradient(135deg,#00b0b9,#002a3a)", fg: "#fff", mark: "F" },
+  { k: "polar", name: "Polar", nameAr: "Polar", pkg: "fi.polar.polarflow", bg: "#111", fg: "#fff", mark: "P" },
+  { k: "xiaomi", name: "Xiaomi / Amazfit", nameAr: "شاومي / Amazfit", pkg: "com.xiaomi.wearable", alt: ["com.mi.health", "com.huami.watch.hmwatchmanager"], bg: "linear-gradient(135deg,#ff6900,#ffb366)", fg: "#fff", mark: "Mi" },
+];
+const WATCH_STEP = {
+  samsung: ["Samsung Health → ☰ → Settings → Health Connect → allow all", "Samsung Health → ☰ → الإعدادات → Health Connect → اسمح بالكل"],
+  garmin: ["Garmin Connect → More → Settings → Connected apps → Health Connect → on", "Garmin Connect → المزيد → الإعدادات → التطبيقات المتصلة → Health Connect → شغّل"],
+  fitbit: ["Fitbit app → You → Settings → Health Connect → on (Pixel Watch: the same)", "تطبيق Fitbit → أنت → الإعدادات → Health Connect → شغّل (Pixel Watch: نفس الكلام)"],
+  polar: ["Polar Flow → Settings → General settings → Health Connect → on", "Polar Flow → الإعدادات → إعدادات عامة → Health Connect → شغّل"],
+  xiaomi: ["Mi Fitness / Zepp → Profile → Health Connect (or Third-party access) → on", "Mi Fitness / Zepp → البروفايل → Health Connect (أو ربط تطبيقات تانية) → شغّل"],
+};
+export function AutoTracking({ L, ar, health, st, upd }) {
+  const [open, setOpen] = useState(null);
+  const status = health ? (() => { try { return health.status(); } catch (e) { return null; } })() : null;
+  const have = health && health.installed ? health.installed() : [];
+  const hcOn = !!(status && status.available === "ready" && status.granted);
+  const live = (w) => w.k === "hc" ? hcOn : w.k === "huawei" ? hcOn && (have.includes("nl.appyhapps.healthsync") || !!(st.days && Object.values(st.days).some((d) => d && d.watch && (d.watch.sources || []).includes("com.huawei.health")))) : hcOn && [w.pkg, ...(w.alt || [])].some((p) => have.includes(p));
+  const w = open && WATCHES.find((x) => x.k === open);
+  return (
+    <div className="space-y-2" data-testid="fit-autotrack">
+      <div className="text-[15px] font-semibold text-white">{L("Automatic tracking", "تتبّع تلقائي")}</div>
+      <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+        {WATCHES.map((x) => (
+          <button key={x.k} onClick={() => setOpen(open === x.k ? null : x.k)} className="shrink-0 w-[76px] text-center" data-testid={"fit-autotrack-" + x.k}>
+            <div className={"relative mx-auto w-[64px] h-[64px] rounded-2xl flex items-center justify-center text-[22px] font-bold shadow " + (open === x.k ? "ring-2 ring-emerald-400" : "")} style={{ background: x.bg, color: x.fg }}>
+              {x.mark}{live(x) ? <span className="absolute -bottom-1 -end-1 w-5 h-5 rounded-full bg-emerald-500 text-white text-[11px] flex items-center justify-center border-2 border-slate-950">✓</span> : null}
+            </div>
+            <div className="mt-1 text-[11.5px] leading-tight text-slate-300">{ar ? x.nameAr : x.name}</div>
+          </button>))}
+      </div>
+      {w ? (
+        <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-3 space-y-2 text-[12.5px]" data-testid="fit-autotrack-sheet">
+          {w.k === "hc" ? <div className="text-slate-200">{hcOn ? L("Connected ✓ — steps, calories burned, workouts and heart rate come into your day by themselves.", "متوصل ✓ — الخطوات والسعرات المحروقة والتمارين والنبض بيدخلوا يومك لوحدهم.")
+              : L("Health Connect is Android's shared place for health data. Any watch app that writes to it reaches Attune. Read only; nothing leaves the phone.", "Health Connect هو المكان المشترك في أندرويد لبيانات الصحة. أي تطبيق ساعة بيكتب فيه بيوصل لـ Attune. قراءة بس؛ ولا حاجة بتخرج من الموبايل.")}</div>
+            : w.k === "huawei" ? <div className="text-slate-200">{L("Huawei watches and bands: use the Huawei steps under Exercise → Workouts (Huawei Health directly, or through the free Health Sync app).", "ساعات وباندات هواوي: استخدم خطوات هواوي في الرياضة ← التمارين (Huawei Health على طول، أو عن طريق تطبيق Health Sync المجاني).")}</div>
+            : <div className="space-y-1"><div className="text-slate-200">{L("1. In the watch's app: ", "١. في تطبيق الساعة: ")}<span className="text-white">{ar ? WATCH_STEP[w.k][1] : WATCH_STEP[w.k][0]}</span></div>
+                <div className="text-slate-200">{L("2. Here: Connect, and allow steps, calories, exercise and heart rate.", "٢. هنا: اربط، ووافق على الخطوات والسعرات والتمارين والنبض.")}</div></div>}
+          <div className="flex gap-2">
+            {w.pkg && health && health.openApp ? <button onClick={() => health.openApp(have.includes(w.pkg) ? w.pkg : ((w.alt || []).find((p) => have.includes(p)) || w.pkg))} className="flex-1 min-h-[44px] rounded-xl bg-slate-800 text-slate-100" data-testid="fit-autotrack-open">{[w.pkg, ...(w.alt || [])].some((p) => have.includes(p)) ? L("Open " + w.name, "افتح " + w.nameAr) : L("Get " + w.name, "نزّل " + w.nameAr)}</button> : null}
+            {!hcOn && health ? <button onClick={() => health.connect()} className="flex-1 min-h-[44px] rounded-xl bg-emerald-600 font-medium text-white" data-testid="fit-autotrack-connect">{L("Connect", "اربط")}</button> : null}
+          </div>
+          {!health ? <div className="text-amber-200">{L("Watches connect in the Android app.", "الساعات بتتربط في تطبيق أندرويد.")}</div> : null}
+        </div>) : null}
+    </div>
+  );
+}

@@ -106,6 +106,10 @@
   html.att-typing nav.fixed{display:none}
   body{overflow-wrap:anywhere}
   td,th,pre,code{overflow-wrap:normal}
+  /* v6.43 (Ali: "words do not fit" — «Rea d», «Ch at», «2 pages» one letter a line): with "anywhere" a squeezed button
+     could shrink to one letter wide. Buttons, tabs, labels and headings break only between words now (a word that is
+     longer than the whole line still breaks). */
+  button,label,h1,h2,h3,h4,[role=tab],[role=button]{overflow-wrap:break-word}
   .grid>*{min-width:0}
   input,select,textarea{min-width:0;max-width:100%}
   img,video,canvas,iframe,svg{max-width:100%}

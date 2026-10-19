@@ -20,7 +20,7 @@ import * as P from "./fitplus.js";
 import * as Y from "./fityazio.js";
 import * as MI from "./fitmicro.js";
 import * as CARE from "./care.js";
-import { WatchCard, Grades, DayQuality, RamadanCard, InsulinCard, QuickLog, SaveMyMeal, WeekPlanView, WeekReport, BodyCard, FitSettings, RAMADAN_NAMES } from "./fitplus-ui.jsx";
+import { WatchCard, AutoTracking, Grades, DayQuality, RamadanCard, InsulinCard, QuickLog, SaveMyMeal, WeekPlanView, WeekReport, BodyCard, FitSettings, RAMADAN_NAMES } from "./fitplus-ui.jsx";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as H from "./fithome.js";
 import { weeklyAdapt } from "./fitcoach.js";
@@ -742,7 +742,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
             {st.profile.adapt ? <button className="block mt-1.5 text-[11.5px] underline opacity-80" data-testid="fit-coach-reset" onClick={() => upd((s) => ({ ...s, profile: { ...s.profile, adapt: null } }))}>{L("Go back to the formula", "ارجع للمعادلة")}</button> : null}</div> : null;
         return minimal ? <>{cc}<Progress {...{ L, ar, st, upd, tg, pro, openPlan, share, minimal }} extraTop={top} /></> : <>{cc}{top}<Progress {...{ L, ar, st, upd, tg, pro, openPlan, share }} /></>; }
       })()}
-      {tab === "me" && !adding && <MeTab {...{ L, ar, st, tg, openPlanForm: () => setEditProfile(true), openMove: () => setTab("move") }} settings={<FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} />} />}
+      {tab === "me" && !adding && <MeTab {...{ L, ar, st, tg, openPlanForm: () => setEditProfile(true), openMove: () => setTab("move") }} watches={<AutoTracking {...{ L, ar, health, st, upd }} />} settings={<FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} />} />}
     </div>
   );
 }
@@ -779,7 +779,7 @@ function LogBar({ t, L, ar, bar, listening, st, onAgain }) {
 }
 
 /** v6.16c — «Me»: your plan at a glance (change it), workouts, and the settings (food database, photo recognition, watch…). */
-function MeTab({ L, ar, st, tg, openPlanForm, openMove, settings }) {
+function MeTab({ L, ar, st, tg, openPlanForm, openMove, settings, watches }) {
   const pf = st.profile || {};
   const goal = { lose: L("Lose weight", "أخسّ"), maintain: L("Keep my weight", "أحافظ على وزني"), gain: L("Gain muscle", "أبني عضل") }[pf.goal] || "";
   return (
@@ -791,6 +791,7 @@ function MeTab({ L, ar, st, tg, openPlanForm, openMove, settings }) {
         <button onClick={openPlanForm} className="w-full min-h-[48px] rounded-xl bg-emerald-600 text-white font-medium" data-testid="fit-edit-profile">{L("Change my plan", "عدّل خطتي")}</button>
       </div>
       <button onClick={openMove} className="w-full min-h-[52px] rounded-2xl bg-slate-900/70 border border-slate-800 px-4 text-start text-white flex items-center gap-2" data-testid="fit-me-move"><Dumbbell size={17} className="text-emerald-300" />{L("Workouts and steps", "التمارين والخطوات")}</button>
+      {watches ? <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-4">{watches}</div> : null}
       <div className="text-[11.5px] uppercase tracking-wide text-slate-500 pt-1">{L("Settings", "الإعدادات")}</div>
       {settings}
     </div>

@@ -50,6 +50,10 @@
         <!-- v6.4: is Huawei Health / Health Sync on the phone (for the Huawei watch setup) -->
         <package android:name="com.huawei.health" />
         <package android:name="nl.appyhapps.healthsync" />
+        <!-- v6.43: watch apps for Fit's "Automatic tracking" row (installed or not) -->
+        <package android:name="com.sec.android.app.shealth" /><package android:name="com.garmin.android.apps.connectmobile" />
+        <package android:name="com.fitbit.FitbitMobile" /><package android:name="fi.polar.polarflow" /><package android:name="com.xiaomi.wearable" />
+        <package android:name="com.mi.health" /><package android:name="com.huami.watch.hmwatchmanager" /><package android:name="com.google.android.apps.fitness" />
         <package android:name="com.huawei.hwid" />
         <intent>
             <action android:name="android.speech.RecognitionService" />

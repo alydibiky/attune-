@@ -548,7 +548,7 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     /** Opens Huawei Health or Health Sync (installed), else its Play Store / AppGallery page — only these two. */
     @JavascriptInterface
     fun openHealthApp(pkg: String) {
-        if (pkg != Health.HUAWEI && pkg != Health.HEALTH_SYNC && pkg != HuaweiHealth.HMS_CORE) return
+        if (pkg != Health.HUAWEI && pkg != Health.HEALTH_SYNC && pkg != HuaweiHealth.HMS_CORE && pkg !in Health.WATCH_APPS) return
         val launch = if (Health.installed(ctx, pkg)) ctx.packageManager.getLaunchIntentForPackage(pkg) else null
         val intents = listOfNotNull(launch,
             android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=$pkg")),
@@ -558,6 +558,10 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             try { ctx.startActivity(i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)); return } catch (e: Exception) {}
         }
     }
+
+    /** v6.43: which watch apps are on this phone (JSON array of package names), for Fit's "Automatic tracking" row. */
+    @JavascriptInterface
+    fun watchAppsInstalled(): String = org.json.JSONArray((Health.WATCH_APPS + Health.HUAWEI + Health.HEALTH_SYNC).filter { Health.installed(ctx, it) }).toString()
 
     /** One day's steps, calories burned, distance, heart rate and workouts ({date: "yyyy-mm-dd"}). */
     @JavascriptInterface

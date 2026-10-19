@@ -207,7 +207,8 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
     setBusy(true); setSteps([]); setRes(null); setLive(""); stopRef.current = false; setPageErrors([]); setCodeOpen(false);
     try {
       const out = await workLoop({ task: t || tr("Make this program work correctly."), lang, code: fresh ? "" : cur.code, change: changeText || "",
-        llm: llmOr, run: runAny, onEvent, isStopped: () => stopRef.current, maxRounds: Math.max(4, getPower().codeRounds || 4) });
+        llm: llmOr, run: runAny, onEvent, isStopped: () => stopRef.current, maxRounds: Math.max(4, getPower().codeRounds || 4),
+        maxMs: 10 * 60e3 });   // v6.43 (Ali waited 30 min): no new fix round starts after 10 minutes — you get the best version and Fix it again
       const p = { ...base, code: out.code, lang: out.lang, status: out.ok ? "passed" : "failing", tests: out.tests, rounds: out.rounds, at: Date.now() };
       keep(p); setRes(out.last); if (out.lang === "html") setView("preview");
       if (changeText) setChange("");
