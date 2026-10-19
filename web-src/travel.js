@@ -130,3 +130,43 @@ export function tripDeadlines(trip, { country, entryStatus } = {}) {
 export const TRIP_KEY = "attune:trip:v1";
 export const loadTrip = () => { try { return JSON.parse(localStorage.getItem(TRIP_KEY) || "{}") || {}; } catch (e) { return {}; } };
 export const saveTrip = (t) => { try { localStorage.setItem(TRIP_KEY, JSON.stringify(t)); } catch (e) {} return t; };
+
+/* ---- v6.41 (upgrade D6) — one trip pack: everything for the trip ready to use with no internet, in one place. The parts are
+   checked by code: the country's map on the phone, the phrasebook and money facts (built in), the papers (passport against the
+   return date, the visa), the flights (their numbers), and a watch for delays — on the travel day a reminder to check the flight
+   and, if it was late or cancelled, what you may be owed (Owed). */
+/** "MS 985 on 2 Nov, TK 691" → [{ no: "MS985" }…] (2 letters/digits + 1–4 digits; the same flight once). */
+export function flightNos(text) {
+  const out = [];
+  for (const m of String(text || "").toUpperCase().matchAll(/\b([A-Z]{2}|[A-Z]\d|\d[A-Z])\s?(\d{1,4})\b/g)) {
+    const no = m[1] + m[2];
+    if (/^(?:AM|PM|KG|KM|MB|GB|EG|UP|TO|ON|AT|IN|OF|NO|IS|IT|BY|OR|AS|MM|CM|ML)\d/.test(no)) continue;   // a time, a weight or an English word
+    if (!out.some((f) => f.no === no)) out.push({ no });
+  }
+  return out.slice(0, 8);
+}
+/**
+ * The pack's parts → [{ key, ok, note }] and how many are ready. map: the country's offline map is installed; phrases/money: the
+ * built-in pack (always ready once the country is chosen); papers: passport fine and the visa known; flights: at least one
+ * flight number; watch: the travel-day reminder is set.
+ */
+export function tripPack({ trip = {}, country = "", mapInstalled = false, passport = "none", entryStatus = "", watchSet = false } = {}) {
+  const parts = [
+    { key: "map", ok: !!mapInstalled, note: mapInstalled ? "The map and directions work with no internet" : "Download the map — it works with no internet" },
+    { key: "phrases", ok: !!country, note: "Phrases with sound, written by hand" },
+    { key: "money", ok: !!country, note: "The money, tipping and fair prices" },
+    { key: "papers", ok: passport === "ok" && !!entryStatus, note: passport === "short" ? "Your passport ends too soon after you return" : passport === "ok" ? (entryStatus ? "Passport fine; the visa rule is checked" : "Passport fine") : "Add your passport's expiry date (Deadline Radar)" },
+    { key: "flights", ok: (trip.flights || []).length > 0, note: (trip.flights || []).length ? (trip.flights || []).map((f) => f.no).join(", ") : "Add your flight numbers" },
+    { key: "watch", ok: !!watchSet, note: watchSet ? "On the travel day you're reminded to check the flight — and what you're owed if it's late" : "Turn on the delay & claim watch" },
+  ];
+  return { parts, ready: parts.filter((p) => p.ok).length, of: parts.length };
+}
+/** The travel-day reminders of the watch: the morning of each flight day (the departure, and the return when there is one). */
+export function watchReminders(trip, country = "") {
+  if (!trip || !trip.depart || !(trip.flights || []).length) return [];
+  const nos = trip.flights.map((f) => f.no).join(", ");
+  const at = (d) => new Date(d + "T07:00:00").getTime();
+  const out = [{ id: "trip-watch-" + trip.depart, title: "Flight day: " + nos, body: "Check your flight. If it lands 3+ hours late or is cancelled, open Attune → Owed — you may be owed money.", at: at(trip.depart) }];
+  if (trip.ret) out.push({ id: "trip-watch-" + trip.ret, title: "Flight home: " + nos, body: "Check your flight home. Late 3+ hours or cancelled → Attune → Owed.", at: at(trip.ret) });
+  return out;
+}

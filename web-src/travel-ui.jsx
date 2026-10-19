@@ -73,6 +73,25 @@ export function TravelPage(p) {
     flash(n ? tr("Added to Deadline Radar — you'll be reminded") : tr("Already in Deadline Radar"));
   };
   const say = (ph) => speakNow(ph.loc, { lang: pack.lang, rate: 0.9, native });
+  // v6.41 (D6): one trip pack — the parts and how many are ready; the map in one tap; flight numbers; the delay & claim watch
+  const [mapOk, setMapOk] = useState(() => { try { const NN = native && native.N; const j = JSON.parse((NN && NN.mapPacks && NN.mapPacks()) || "{}"); return (j.packs || []).some((x) => x.code === activePack && x.installed); } catch (e) { return false; } });
+  const [mapBusy, setMapBusy] = useState("");
+  const [flightIn, setFlightIn] = useState("");
+  const getMap = async () => {
+    if (!native || !native.call || !native.N || !native.N.mapInstall) { flash(tr("Maps download in the Android app")); return; }
+    setMapBusy(tr("Starting…"));
+    try { await native.call("mapInstall", { code: activePack, routes: true }, (pct, name, detail) => setMapBusy(pct + "% · " + (detail || ""))); setMapOk(true); flash(tr("The map works with no internet now")); }
+    catch (e) { flash(String((e && e.message) || e)); }
+    setMapBusy("");
+  };
+  const watch = () => {
+    const list = T.watchReminders(trip, pack && pack.name);
+    if (!list.length) return flash(tr("Add the date and your flight numbers first"));
+    for (const r of list) remind && remind({ ...r, title: tr(r.title.startsWith("Flight home") ? "Flight home: {n}" : "Flight day: {n}", { n: trip.flights.map((f) => f.no).join(", ") }), body: tr(r.body) });
+    setTrip({ watch: true }); flash(tr("Watch on — you'll be reminded on each flight day"));
+  };
+  const tp = pack ? T.tripPack({ trip, country: activePack, mapInstalled: mapOk, passport: pp.status, entryStatus: entry && entry.status, watchSet: !!trip.watch }) : null;
+  const PART = { map: "Offline map", phrases: "Phrasebook", money: "Money", papers: "Papers", flights: "Flights", watch: "Delay & claim watch" };
 
   const owedCard = (<>
           {/* v6.27 What you're owed: compensation for a delayed or cancelled flight, worked out by code */}
@@ -132,6 +151,18 @@ export function TravelPage(p) {
         {tab === "trip" ? (<div className={"space-y-3 " + COLS}>
           {/* v6.27 computer layout A: the trip and the passport on the left; entry, flights and the rest on the right */}
           <div className="space-y-3">
+          {tp ? <Section title="Trip pack" right={<b className={tp.ready === tp.of ? "c-pos" : ""} data-testid="trip-pack-count">{tr("{a} of {b} ready", { a: tp.ready, b: tp.of })}</b>} testid="trip-pack">
+            {tp.parts.map((x) => <div key={x.key} className="flex items-start gap-2 text-[13.5px]" data-testid={"trip-pack-" + x.key}>
+              {x.ok ? <Check size={15} className="c-pos shrink-0 mt-0.5" /> : <span className="w-[15px] h-[15px] rounded-full border shrink-0 mt-0.5" style={{ borderColor: "var(--c-ln)" }} />}
+              <span className="flex-1"><b>{tr(PART[x.key])}</b> <span className="c-sub">· {tr(x.note)}</span></span>
+              {x.key === "map" && !x.ok ? <button className="c-sub underline bg-transparent border-0 p-0 cursor-pointer shrink-0" onClick={getMap} disabled={!!mapBusy} data-testid="trip-pack-getmap">{mapBusy || tr("Download")}</button> : null}
+              {x.key === "watch" && !x.ok ? <button className="c-sub underline bg-transparent border-0 p-0 cursor-pointer shrink-0" onClick={watch} data-testid="trip-pack-watch-on">{tr("Turn on")}</button> : null}
+            </div>)}
+            <div className="flex gap-2 pt-1">
+              <input value={flightIn} onChange={(e) => setFlightIn(e.target.value)} placeholder={tr("Flight numbers, e.g. MS 985, TK 691")} className={field + " flex-1"} style={st} data-testid="trip-pack-flight" />
+              <button className="c-pill" onClick={() => { const f = T.flightNos(flightIn); if (!f.length) return flash(tr("No flight number found — like MS 985")); setTrip({ flights: [...(trip.flights || []), ...f.filter((x) => !(trip.flights || []).some((y) => y.no === x.no))], watch: false }); setFlightIn(""); }} data-testid="trip-pack-add">{tr("Add")}</button>
+            </div>
+          </Section> : null}
           {/* the trip itself: dates, people, from where — everything else on this tab is checked against it */}
           <Section title="Your trip" testid="travel-trip">
             <div className="grid grid-cols-2 gap-2">
