@@ -124,3 +124,48 @@ export function coachPrompt(question, answer, lang = "en") {
   return [{ role: "system", content: `You are an interview coach. In ${lang === "ar" ? "simple Arabic" : "English"}, give 2 short, specific improvements to this answer, then one better first sentence. Don't invent facts about the person.` },
     { role: "user", content: `Question: ${question}\nAnswer: ${String(answer).slice(0, 2500)}` }];
 }
+
+/* ---- v6.41 (upgrade S5) — a scored mock interview: 5 questions asked aloud, each answer scored by code on structure (what
+   happened → what you did → the result), filler words, speed and confidence (hedging), and a better version of the answer
+   written by the model from the person's OWN facts only. */
+const HEDGE = /(?<![\p{L}])(?:i think|i guess|maybe|probably|i'?m not sure|kind of|sort of|i hope|hopefully|i would say|perhaps|ممكن|يمكن|تقريبا|تقريبًا|مش متأكد|أظن|اظن|حاجة زي كده|على ما أعتقد|غالبا|غالبًا)(?![\p{L}])/giu;
+/** Speaking speed: words a minute and what it means (110–170 is easy to follow). */
+export function pace(words, secs) {
+  if (!secs || secs < 5 || !words) return { wpm: null, verdict: "unknown" };
+  const wpm = Math.round(words / (secs / 60));
+  return { wpm, verdict: wpm < 100 ? "slow" : wpm > 180 ? "fast" : "good" };
+}
+/** One answer → four scores 0–100 and the total (structure counts most). */
+export function scoreAnswer(answer, secs, opts = {}) {
+  const f = feedback(answer, opts);
+  const parts = Object.values(f.story).filter(Boolean).length;
+  const structure = Math.round((parts / 3) * 80 + (f.hasNum ? 20 : 0));
+  const per100 = f.words ? (f.fillers / f.words) * 100 : 0;
+  const fillers = f.words ? Math.max(0, Math.round(100 - per100 * 15)) : 0;
+  const p = pace(f.words, secs);
+  const paceS = p.wpm == null ? null : p.verdict === "good" ? 100 : Math.max(20, 100 - Math.abs(p.wpm - (p.wpm < 110 ? 110 : 170)) * 1.5);
+  const hedges = (String(answer || "").match(HEDGE) || []).length;
+  const confidence = f.words ? Math.max(0, 100 - hedges * 20 - (f.words < 40 ? 25 : 0)) : 0;
+  const parts4 = [structure * 2, fillers, confidence, ...(paceS == null ? [] : [Math.round(paceS)])];
+  const total = Math.round(parts4.reduce((a, b) => a + b, 0) / (parts4.length + 1));
+  return { ...f, structure, fillersScore: fillers, pace: p, paceScore: paceS == null ? null : Math.round(paceS), hedges, confidence, total };
+}
+/** The whole interview → averages and the one thing to work on first. */
+export function scorecard(rows, lang = "en") {
+  const done = (rows || []).filter((r) => r && r.score);
+  if (!done.length) return null;
+  const avg = (k) => { const v = done.map((r) => r.score[k]).filter((x) => x != null); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
+  const c = { total: avg("total"), structure: avg("structure"), fillers: avg("fillersScore"), pace: avg("paceScore"), confidence: avg("confidence"), n: done.length };
+  const weak = [["structure", c.structure], ["fillers", c.fillers], ["confidence", c.confidence], ["pace", c.pace]].filter(([, v]) => v != null).sort((a, b) => a[1] - b[1])[0];
+  const ar = lang === "ar";
+  const TIP = { structure: ar ? "احكي كل إجابة كقصة: إيه اللي حصل، إنت عملت إيه، والنتيجة برقم." : "Tell every answer as a story: what happened, what YOU did, and the result with a number.",
+    fillers: ar ? "بدل «يعني» و«اه» — سكتة صغيرة. السكوت ثانية أحسن من الحشو." : "Replace “um” and “like” with a short pause — a second of silence sounds more confident.",
+    confidence: ar ? "قول «عملت» و«نجحت» بدل «أظن» و«ممكن»." : "Say “I did” and “it worked” instead of “I think” and “maybe”.",
+    pace: ar ? "خلي سرعتك متوسطة: 110–170 كلمة في الدقيقة." : "Keep a steady pace: 110–170 words a minute." };
+  return { ...c, weakest: weak ? weak[0] : null, tip: weak ? TIP[weak[0]] : "" };
+}
+/** The better answer: the same facts, told as a clear story — nothing invented. */
+export function betterAnswerPrompt(question, answer, lang = "en") {
+  return [{ role: "system", content: `Rewrite this interview answer so it is clear and strong: what happened → what the person did → the result (with any number they gave). Keep it under 120 words, first person, ${lang === "ar" ? "in simple Egyptian Arabic" : "in English"}. Use ONLY facts in their answer — never add numbers, companies or events they didn't say; where a number would help but is missing, write [number]. Reply with the answer only.` },
+    { role: "user", content: `Question: ${question}\nTheir answer: ${String(answer).slice(0, 2500)}` }];
+}

@@ -275,11 +275,62 @@ function JobTab({ cv, setCV, llm, modelReady, listen, native, flash, goAI }) {
           {ai ? <p className="m-0 text-[13px] text-slate-200 whitespace-pre-wrap" dir="auto"><Sparkles size={12} className="inline me-1 text-teal-300" />{ai}</p> : null}
         </div> : null}
       </div>
+      <MockInterview qs={qs} ar={ar} listen={listen} native={native} llm={llm} modelReady={modelReady} cvText={text} flash={flash} />
       {links.length ? <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-1.5" data-testid="cv-job-links">
         <p className="text-[13px] font-semibold text-slate-100">{tr("Find jobs")} · {target.role}{target.city ? " · " + target.city : ""}</p>
         <div className="flex flex-wrap gap-1.5">{links.map((l) => <button key={l.label} className={ghost} onClick={() => window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: l, plan: null, inApp: false } }))} data-testid="cv-job-link">{l.label}</button>)}</div>
         <p className="text-[11.5px] text-slate-500 m-0">{tr("Apply with the PDF from this CV (the button at the top).")}</p>
       </div> : null}
+    </div>);
+}
+
+// v6.41 (S5): a scored mock interview — 5 questions read aloud, each answer timed and scored by code, a scorecard at the end,
+// and a better version of each answer from the person's own facts (the model, only when asked)
+function MockInterview({ qs, ar, listen, native, llm, modelReady, cvText, flash }) {
+  const [on, setOn] = useState(false), [i, setI] = useState(0), [rows, setRows] = useState([]), [ans, setAns] = useState(""), [rec, setRec] = useState(false), [t0, setT0] = useState(0);
+  const [better, setBetter] = useState({});
+  const list = qs.slice(0, 5), lang = ar ? "ar" : "en";
+  const hear = (k) => speakNow(list[k], { lang, native });
+  const start = () => { setOn(true); setI(0); setRows([]); setAns(""); setBetter({}); hear(0); };
+  const record = async () => {
+    if (!listen) { flash(tr("Voice input works in the Android app and in Chrome — or type your answer")); return; }
+    setRec(true); const st = Date.now(); setT0(st);
+    try { const t = await listen(ar ? "ar-EG" : "en-US", (p) => setAns(p)); if (t) setAns(t); } catch (e) {}
+    setRec(false); setT0((x) => (x ? -(Date.now() - st) : x));
+  };
+  const next = () => {
+    const secs = t0 < 0 ? -t0 / 1000 : 0;
+    const row = { q: list[i], a: ans, secs, score: ans.trim() ? J.scoreAnswer(ans, secs, { cvText, lang }) : null };
+    const r2 = [...rows, row]; setRows(r2); setAns(""); setT0(0);
+    if (i + 1 < list.length) { setI(i + 1); hear(i + 1); } else setI(list.length);
+  };
+  const improve = async (k) => { setBetter((b) => ({ ...b, [k]: "…" })); try { const t = await llm(J.betterAnswerPrompt(rows[k].q, rows[k].a, lang), { maxTokens: 350, temperature: 0.3 }); setBetter((b) => ({ ...b, [k]: String(t || "").trim() })); } catch (e) { setBetter((b) => ({ ...b, [k]: "" })); } };
+  const card = J.scorecard(rows, lang);
+  const Bar = ({ label, v }) => v == null ? null : <div className="flex items-center gap-2 text-[12px]"><span className="w-24 text-slate-400">{label}</span><div className="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div className={"h-full " + (v >= 70 ? "bg-teal-500" : v >= 45 ? "bg-amber-500" : "bg-rose-500")} style={{ width: v + "%" }} /></div><span className="w-8 text-end tabular-nums text-slate-300">{v}</span></div>;
+  if (!on) return <button className={ghost + " w-full py-2.5 flex items-center justify-center gap-1.5"} onClick={start} data-testid="mock-start"><Mic size={14} />{tr("Mock interview — 5 questions, scored")}</button>;
+  return (
+    <div className="rounded-xl border border-teal-800/60 bg-slate-900/60 p-3 space-y-2" data-testid="mock">
+      {i < list.length ? <>
+        <div className="flex items-center justify-between"><p className="text-[13px] font-semibold text-slate-100">{tr("Mock interview")}</p><span className="text-[12px] text-slate-400">{i + 1}/{list.length}</span></div>
+        <p className="text-[16px] text-white m-0" dir="auto" data-testid="mock-q">{list[i]}</p>
+        <div className="flex gap-2 flex-wrap">
+          <button className={ghost + " flex items-center gap-1"} onClick={() => hear(i)}><Volume2 size={13} />{tr("Hear it again")}</button>
+          <button className={(rec ? "px-3 py-2 rounded-lg text-xs font-semibold bg-rose-600 text-white" : primary) + " flex items-center gap-1"} onClick={rec ? () => { try { native && native.stopListening && native.stopListening(); } catch (e) {} } : record} data-testid="mock-mic"><Mic size={13} />{rec ? tr("Stop") : tr("Answer out loud")}</button>
+        </div>
+        <Tx rows={3} value={ans} onChange={setAns} placeholder={tr("…or type your answer")} data-testid="mock-answer" />
+        <button className={primary + " w-full py-2.5"} onClick={next} disabled={rec} data-testid="mock-next">{i + 1 < list.length ? tr("Next question") : tr("Finish and score")}</button>
+      </> : <>
+        <p className="text-[13px] font-semibold text-slate-100">{tr("Your score")}: <span className="text-teal-300 text-lg" data-testid="mock-total">{card ? card.total : 0}</span>/100</p>
+        {card ? <div className="space-y-1" data-testid="mock-card">
+          <Bar label={tr("Story")} v={card.structure} /><Bar label={tr("No fillers")} v={card.fillers} /><Bar label={tr("Confidence")} v={card.confidence} /><Bar label={tr("Pace")} v={card.pace} />
+          <p className="text-[12.5px] text-amber-200 m-0 pt-1" dir="auto" data-testid="mock-tip">{card.tip}</p></div> : <p className="text-[12.5px] text-slate-400">{tr("No answers to score.")}</p>}
+        {rows.map((r, k) => r.score ? <div key={k} className="border-t border-slate-800 pt-2 space-y-1" data-testid="mock-row">
+          <p className="text-[12.5px] text-slate-300 m-0" dir="auto">{k + 1}. {r.q} — <b className="text-white">{r.score.total}</b>{r.score.pace.wpm ? " · " + tr("{w} words/min", { w: r.score.pace.wpm }) : ""}{r.score.fillers ? " · " + tr("{n} fillers", { n: r.score.fillers }) : ""}</p>
+          {better[k] ? <p className="text-[13px] text-teal-100 m-0 whitespace-pre-wrap" dir="auto" data-testid="mock-better">{better[k]}</p>
+            : modelReady ? <button className={ghost + " text-[12px]"} onClick={() => improve(k)} data-testid="mock-improve"><Sparkles size={12} className="inline me-1" />{tr("Show a better answer")}</button> : null}
+        </div> : null)}
+        <button className={ghost} onClick={start}>{tr("Try again")}</button>
+      </>}
     </div>);
 }
 
