@@ -2074,6 +2074,46 @@ Ali sent two screenshots (6.38 on his HONOR, SM8850 16 GB, Qwen3.5-4B Q8 + photo
   v741autom, v741mock, v741interp, v741call, v741trippack, v741metro, v741worksheet, v741scanword, v741editarea; e2e_v736learn
   checks the slow replay.
 
+### 5.91 (19 Oct 2026) — v6.43: Ali's 19 Oct evening notes, part 1 (design, refresh, Yazio food text, watches, Code)
+Ali sent Yazio screenshots (Profile "Automatic tracking", Pro page, "Tell us what you're having" → Quick Add 947 kcal), an Ask a
+PDF screenshot (words cut letter by letter), two Code screenshots (a "clothing brand" request turned into Python, AssertionError
+rounds, 30 minutes) with the page it made (two pages glued), and an engine log. His words: the design is cluttered and
+confusing — use a design program; the app restarts when he comes back; make Food as good as Yazio; connect the watch to
+Food & Fit; words do not fit; Scout is still poor; Business on its own and detailed; do the rest — "one by one".
+- **Design (subjective → options):** a design canvas (Claude design artifact, https://claude.ai/artifact/HJSNMxkPPZ7wCjjYqkDHGR)
+  with 3 directions × 3 screens (Food today, "What did you eat?", Home with Business as its own app): A Fresh (light, rounded,
+  Yazio-like, Nunito), B Calm dark (today's colours, half the clutter, Manrope), C Bold (colour cards, black buttons, Plus
+  Jakarta Sans). Recommendation A. Nothing built in the app until Ali picks.
+- **"It refreshes when I come back":** his log shows MagicOS killing Attune in the background for memory (signal 9, LowMem,
+  1.5–2.8 GB rss with the model). The page then started on Home with everything reset. Now (backstack.js `saveResume` /
+  `takeResume` / `dropResume`, attune.jsx App): when the app is put away, the open screen, the Back history and every
+  `useSticky` value (≤ 200 KB each, 800 KB total) are written to localStorage; a start within 6 h reopens them. Only after the
+  app was really away: back on screen the note is dropped, and a reload in front of you (pagehide without attune-pause) starts as
+  usual. Chat (chat.jsx `clean`): an answer still streaming when saved is stored with `stats.cut` → it comes back with
+  **Continue** instead of "…(stopped)"; an empty one says to ask again. The chat box's draft is kept while away.
+- **Crash 23:28 (ForegroundServiceDidNotStartInTimeException, GenService):** a short answer called stopService() before the
+  service had called startForeground(). Now "stop" is a startService(ACTION_STOP) that the service handles after
+  startForeground() (GenService.kt).
+- **Words do not fit:** the root cause was `body{overflow-wrap:anywhere}` — a squeezed flex button could shrink to one letter
+  wide. shell.html: buttons, labels, headings, tabs use `break-word` (min width = the longest word). Ask a PDF: "Add to
+  Knowledge" and "Tables → Excel" moved to their own scrolling row under the title; Chat/Read never wraps.
+- **Food from a sentence (Yazio's "Tell us what you're having"):** "150 grams chicken Alfredo pasta and 7 chicken strips" read
+  as plain Alfredo + 7 portions of grilled breast (flagged). New foods `chicken-strips` (38 g a piece, 260 kcal/100 g) and
+  `chicken-alfredo`; aliases for butter croissant, bolognese, burrito, fruit smoothies. That sentence → 962 kcal, P 67 C 60
+  F 50 (Yazio 947 / 69 / 54 / 44). Unit v743foodtext. The Yazio-style screen itself waits for the design pick.
+- **Watch → Food & Fit:** it existed (Health Connect + Huawei) but was buried under Exercise. Fit → Me now has **Automatic
+  tracking** (fitplus-ui.jsx `AutoTracking`): Health Connect, Huawei, Samsung Health, Garmin, Fitbit/Pixel, Polar,
+  Xiaomi/Amazfit tiles with a ✓ when live; a tap shows the one setting to switch on in that maker's app (all reach Attune
+  through Health Connect) + Open/Get the app + Connect. Kotlin: `Health.WATCH_APPS`, bridge `watchAppsInstalled()`,
+  `openHealthApp` allows those packages, manifest `<queries>`.
+- **Code:** `guessLang` sends a brand / shop / portfolio / menu / game / form / tracker / dashboard (EN + AR) to a web page
+  unless the words ask for calculation or data; "python" in the request always wins. `closeHtml`: a page missing only
+  `</body></html>` is closed by code (the model "continuing" it wrote a second page that was glued on); `joinCont` drops a
+  continuation that starts a new `<head>/<style>/<body>`. code-ui: no new fix round after 10 minutes (`maxMs`). Unit v743code.
+- Tests: e2e_v743 (Automatic tracking, reopen on Fit after a background close, a normal reload starts as usual, Continue).
+- **Still open from this message:** build the design Ali picks (Food first, then Home and the rest); Scout quality (need his
+  examples); Business as its own app and as detailed as his crane / warehouse ERPs; the rest of the list (NEXT_SESSION AI).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

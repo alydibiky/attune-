@@ -757,6 +757,27 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AI. 19 Oct 2026 — v6.43: Ali's evening notes, part 1 (HANDOFF §5.91). Read this first, then AH.
+Ali: the design is cluttered and confusing — use a design program · the app refreshes when he comes back · Food as good as
+Yazio (free text that is accurate) · connect the watch to Food & Fit · words do not fit · Scout still poor · Code took 30 min
+and made a bad page · Business on its own and detailed like his ERPs · do the rest, "one by one".
+Built: reopen where you were + Continue · GenService crash · words fit · food text (his Yazio sentence 962 vs 947 kcal) ·
+Automatic tracking row · Code makes pages for brands/shops/games, closes cut pages, 10-minute cap.
+### Ali to decide
+1. **The new look** — design canvas https://claude.ai/artifact/HJSNMxkPPZ7wCjjYqkDHGR: A Fresh (light, Yazio-like) ·
+   B Calm dark · C Bold colour cards. Recommendation A. Build Food & Fit first in the picked look, then Home, then the rest.
+2. **Scout** — which searches were poor (a screenshot or the words he typed).
+### Next
+Build the picked design (Food: Today, the "What did you eat?" screen, Me) · Business as its own app (its own Home, sidebar,
+the crane + warehouse depth) · Scout · then AG's list (Missions 3–4, eraser 4b, SD 1.5 NPU, W6, sync gaps, H1, Recall 2).
+### Ali's phone checklist for 6.43
+1. ⬜ Open a tool (Fit, a lesson), switch to other apps for a long time / open a big game → back to Attune: the same screen.
+2. ⬜ Ask a long question, go Home while it writes, come back later: the answer, or Continue.
+3. ⬜ Ask a PDF: the top row reads «Chat | Read», the actions in their own row.
+4. ⬜ Fit → + → type «150 grams chicken Alfredo pasta and 7 chicken strips» → about 960 kcal.
+5. ⬜ Fit → Me → Automatic tracking → Huawei (or your watch) → follow the step → ✓.
+6. ⬜ Code: «Make me a complete clothing brand for swimsuits called Skittlz» → a web page, no Python tests.
+
 ## AH. 19 Oct 2026 — v6.42: Ali's 19 Oct notes (HANDOFF §5.90). Read this first, then AG.
 Ali: "1. Okay go for B" (F1 ruler) · "2. put in the tab next to maps" (Metro) · a wrong map search («Emerald park compound» →
 other compounds) · a lunch photo (pané read as grilled breast, 3 pieces as 1, soup + potatoes missed) · an engine log · "tell me
