@@ -1,0 +1,20 @@
+// v6.41 D5: Cairo Metro offline — stations by any name, the route with changes, time and fare, in English and Arabic.
+import * as M from "../../web-src/metro.js";
+let bad = 0;
+const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) bad++; };
+ok(M.LINES[0].stations.length === 35 && M.LINES[1].stations.length === 20, "line 1: 35 stations, line 2: 20");
+ok(M.findStation("tahrir").en === "Sadat" && M.findStation("رمسيس").en === "Al-Shohadaa" && M.findStation("المعادي").en === "Maadi" && M.findStation("el marg").en === "El-Marg", "Tahrir → Sadat, «رمسيس» → Al-Shohadaa, «المعادي», El Marg");
+let r = M.route("Maadi", "Sadat");
+ok(r.legs.length === 1 && r.legs[0].line === "1" && r.legs[0].toward === "New El-Marg" && r.stops === 8 && r.fare === 8, "Maadi → Sadat: line 1 toward New El-Marg, 8 stops, 8 EGP: " + M.routeText(r));
+r = M.route("Maadi", "Dokki");
+ok(r.changes === 1 && r.legs[0].to === "Sadat" && r.legs[1].line === "2" && r.legs[1].toward === "El-Monib" && r.legs[1].stops === 2, "Maadi → Dokki: change at Sadat to line 2 toward El-Monib, 2 stops: " + M.routeText(r));
+r = M.route("Helwan", "Adly Mansour");
+ok(r && r.changes >= 1 && r.legs[r.legs.length - 1].line === "3" && r.fare === 20, "Helwan → Adly Mansour: ends on line 3, the top fare: " + M.routeText(r));
+r = M.route("Imbaba", "Cairo University");
+ok(r && r.legs.every((l) => l.line === "3" || l.line === "2"), "between the two line-3 branches: " + M.routeText(r));
+r = M.route("Attaba", "Gamaat El-Dowal El-Arabiya");
+ok(r.legs.length === 1 && r.legs[0].line === "3" && r.legs[0].toward === "Cairo University", "Attaba → Gamaat El-Dowal: line 3 toward Cairo University (its branch): " + M.routeText(r));
+ok(/^اركب الخط الأول اتجاه المرج الجديدة، 8 محطات لحد السادات/.test(M.routeText(M.route("المعادي", "التحرير"), true)), "in Egyptian Arabic: " + M.routeText(M.route("المعادي", "التحرير"), true));
+ok(M.metroAsk("metro from Maadi to Attaba").to.en === "Attaba" && M.metroAsk("مترو من المعادي للعتبة").to.en === "Attaba", "“metro from Maadi to Attaba” / «مترو من المعادي للعتبة»");
+ok(M.metroAsk("from home to work") === null && M.route("xyz", "Sadat") === null, "not a metro question / unknown station → nothing");
+console.log(bad ? bad + " FAILED" : "v741metro ok");

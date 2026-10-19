@@ -12,6 +12,7 @@ import * as MD from "./multidoc.js";
 import * as CV from "./convert.js";
 import { myMoneyIntent, answerMyMoney, loadLedger } from "./myledger.js";
 import { chatMapIntent } from "./mapintent.js";
+import { metroAsk, route as metroRoute, routeText as metroText, FARES as METRO_FARES } from "./metro.js";   // v6.41 (D5)
 import { chatLifeIntent } from "./life.js";
 import { chatAsk, loadStores as lifeStores } from "./lifeask.js";
 import { sourceLine } from "./sourcelabel.js";
@@ -890,6 +891,17 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         { id: newId(), role: "user", text: typed },
         { id: newId(), role: "assistant", card: { tone: "emerald", title: "A commitment — save it in People & plans", detail: typed,
           actions: [["Save it", "life"], ["Just answer", "answer"]] }, lifeText: typed }] }));
+      setText("");
+      return;
+    }
+
+    // v6.41 (D5): "metro from Maadi to Attaba" / «مترو من المعادي للعتبة» — Cairo Metro by code, offline, at once
+    const metroQ = route && !img ? metroAsk(typed) : null;
+    if (metroQ) {
+      const ar = /[\u0600-\u06ff]/.test(typed), rr = metroRoute(metroQ.from, metroQ.to);
+      const cid = ensureChat(typed);
+      const body = metroText(rr, ar) + "\n\n" + (ar ? "_مواعيد وأسعار المترو بتتغير — آخر تحديث للأسعار " + METRO_FARES.asOf + "._" : "_Metro times and fares change — fares as of " + METRO_FARES.asOf + "._");
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed }, { id: newId(), role: "assistant", text: body, source: "code" }] }));
       setText("");
       return;
     }

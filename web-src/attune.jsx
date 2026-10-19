@@ -28,6 +28,7 @@ import { MindPage, keepPicture } from "./mind-ui.jsx";
 import { RecallPage } from "./lookback-ui.jsx";
 import { AutomationsPage, drainAutomations } from "./autom-ui.jsx";   // v6.41 C3
 import { parseAutomation, addRule, loadAuto, saveAuto, ruleText as autoRuleText } from "./autom.js";
+import { metroAsk, route as metroRoute, routeText as metroText } from "./metro.js";   // v6.41 D5
 import { candidates as tuneCandidates, choose as tuneChoose, TUNE_PROMPT, TUNE_TOKENS } from "./tuner.js";   // v6.41 X2   // v6.40 Recall (agent C)
 import { ShelfPage } from "./shelf-ui.jsx";
 import * as SH from "./shelf.js";
@@ -9368,6 +9369,8 @@ export default function App() {
   // own data is answered on Home; anything else goes to Chat as before. → { lines: [{ text, open, low }], undo, answer } | null (→ Chat)
   const doFromHome = (text) => {
     const now = Date.now(), ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text);
+    // v6.41 D5: «مترو من المعادي للعتبة» → the route, by code
+    { const mq = metroAsk(text); if (mq) return { lines: [{ text: metroText(metroRoute(mq.from, mq.to), ar) }], undo: null }; }
     // v6.41 C3: "when my salary arrives, put 20% in the car fund" → an automation, on at once
     { const pa = parseAutomation(text); if (pa) { const st = addRule(loadAuto(), pa, now); saveAuto(st, NATIVE, ar ? "ar" : "en");
       return { lines: [{ text: (ar ? "اشتغل: " : "On: ") + autoRuleText(pa, ar), open: "automations" }], undo: () => { const c = loadAuto(); saveAuto({ ...c, rules: c.rules.filter((x) => x.id !== st.rules[st.rules.length - 1].id) }, NATIVE, ar ? "ar" : "en"); } }; } }
