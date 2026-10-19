@@ -8,6 +8,7 @@ import { openRead } from "./readaloud-ui.jsx";
 import { tr, getLang } from "./i18n.js";
 import * as T from "./translate.js";
 import { speakNow } from "./lesson-ui.jsx";
+import { useSubBack } from "./backstack.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const field = "w-full rounded-xl px-3 py-2.5 text-[15px] border bg-transparent";
@@ -62,6 +63,59 @@ function Result({ res, to, native, onCopy }) {
     </div>);
 }
 
+// v6.41 (H4): a live interpreter for two people at one phone — the screen is split; the top half faces the person across the
+// table (turned round). Each side taps its mic and speaks its own language; the other side reads it (big) and hears it.
+// One mic at a time (in turns). All on the phone: the model translates, the phone listens and speaks.
+function Interpreter({ llm, native, flash, gloss, close }) {
+  const [langs, setLangs] = useState(() => { try { return JSON.parse(localStorage.getItem("attune:interp:v1")) || { a: getLang() === "ar" ? "ar" : "en", b: getLang() === "ar" ? "en" : "ar" }; } catch (e) { return { a: "ar", b: "en" }; } });
+  const [said, setSaid] = useState({ a: "", b: "" });     // what each side said (their own words)
+  const [heard, setHeard] = useState({ a: "", b: "" });   // what each side reads: the other's words in their language
+  const [busy, setBusy] = useState(null);                 // "a" | "b" | null
+  const [log, setLog] = useState([]);
+  useSubBack(true, close);   // Back closes the interpreter
+  useEffect(() => { try { localStorage.setItem("attune:interp:v1", JSON.stringify(langs)); } catch (e) {} }, [langs]);
+  const turn = async (side) => {
+    if (busy) return;
+    if (!llm) { flash && flash(tr("Install a model in Engine to translate")); return; }
+    if (!native || !native.call || !native.N || !native.N.listen) { flash && flash(tr("Voice input works in the Android app")); return; }
+    const other = side === "a" ? "b" : "a";
+    setBusy(side); setSaid((x) => ({ ...x, [side]: "" }));
+    try {
+      const r = await native.call("listen", T.speechTag(langs[side]), (p, stage, d) => { if (stage === "partial") setSaid((x) => ({ ...x, [side]: d })); });
+      const text = String((r && r.text) || "").trim();
+      if (!text) { setBusy(null); return; }
+      setSaid((x) => ({ ...x, [side]: text }));
+      setHeard((x) => ({ ...x, [other]: "…" }));
+      const out = await T.translatePieces([text], (m, o) => llm(m, o), { lang: langs[other], language: T.LANGS[langs[other]] || langs[other], glossary: gloss || [], sourceLanguage: T.LANGS[langs[side]] || "" });
+      const t = out && out[0] ? out[0].text : "";
+      setHeard((x) => ({ ...x, [other]: t }));
+      setLog((l) => [{ side, from: text, to: t, ok: out && out[0] ? out[0].ok : true }, ...l].slice(0, 40));
+      if (t) await speakNow(t, { lang: langs[other], native });
+    } catch (e) { flash && flash(String((e && e.message) || e)); }
+    setBusy(null);
+  };
+  const Half = ({ side, flip }) => (
+    <div className={"flex-1 flex flex-col p-4 gap-3 min-h-0 " + (side === "b" ? "bg-slate-900" : "bg-slate-950")} style={flip ? { transform: "rotate(180deg)" } : {}} data-testid={"interp-" + side}>
+      <div className="flex items-center gap-2">
+        <select value={langs[side]} onChange={(e) => setLangs({ ...langs, [side]: e.target.value })} className="rounded-lg bg-slate-800 text-slate-100 text-sm px-2 py-1.5" data-testid={"interp-lang-" + side}>
+          {Object.entries(T.LANGS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+        <span className="flex-1" />
+        {side === "a" ? <button onClick={close} className="text-slate-400 text-sm" data-testid="interp-close">{tr("Close")}</button> : null}
+      </div>
+      <p className="flex-1 overflow-y-auto text-[26px] leading-snug text-white m-0" dir={RTL.has(langs[side]) ? "rtl" : "ltr"} data-testid={"interp-heard-" + side}>{heard[side]}</p>
+      {said[side] ? <p className="text-[13px] text-slate-400 m-0" dir="auto" data-testid={"interp-said-" + side}>{said[side]}</p> : null}
+      <button onClick={() => turn(side)} disabled={!!busy && busy !== side} data-testid={"interp-mic-" + side}
+        className={"w-full py-4 rounded-2xl text-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-40 " + (busy === side ? "bg-rose-600 text-white" : "bg-teal-500 text-slate-950")}>
+        <Volume2 size={20} />{busy === side ? T.LANGS[langs[side]] + " …" : (T.LANGS[langs[side]] || langs[side])}</button>
+    </div>);
+  return (
+    <div className="fixed inset-0 z-[70] flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="interp">
+      <Half side="b" flip />
+      <div className="h-px bg-slate-700" />
+      <Half side="a" />
+    </div>);
+}
+
 export function TranslatePage({ llm, readText, native, openConverter, flash }) {
   const [tab, setTab] = useState("text");
   const [to, setTo] = useState(() => { try { return localStorage.getItem(LKEY) || (getLang() === "ar" ? "en" : "ar"); } catch (e) { return "ar"; } });
@@ -96,12 +150,13 @@ export function TranslatePage({ llm, readText, native, openConverter, flash }) {
     // the boxes are in the photo's own pixels; the photo we draw on is the same file
     try { setPhoto({ src, text: said, out: await overlay(src, lines, out.map((x) => x.text), to) }); } catch (e) {}
   };
+  if (tab === "talk") return <Interpreter llm={llm} native={native} flash={flash} gloss={gloss} close={() => setTab("text")} />;
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="translate-page">
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><Languages size={20} className="c-acc" />{tr("Translate")}</h2>
         <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Any language, on this phone. Numbers, names and codes can't be changed; every part is checked, and anything doubtful is marked.")}</p></div>
       <div className="flex gap-4 border-b" style={{ borderColor: "var(--c-ln)" }} role="tablist">
-        {[["text", "Text"], ["photo", "Photo"], ["doc", "Document"]].map(([id, l]) => <button key={id} role="tab" aria-selected={tab === id} className="c-tab pb-2" onClick={() => { setTab(id); setRes(null); }} data-testid={"tr-tab-" + id}>{tr(l)}</button>)}
+        {[["text", "Text"], ["talk", "Conversation"], ["photo", "Photo"], ["doc", "Document"]].map(([id, l]) => <button key={id} role="tab" aria-selected={tab === id} className="c-tab pb-2" onClick={() => { setTab(id); setRes(null); }} data-testid={"tr-tab-" + id}>{tr(l)}</button>)}
       </div>
       {/* v6.27 computer layout A: what to translate on the left, the translation on the right (stacked on a phone);
           a document opens the File Converter, so its tab keeps one column */}

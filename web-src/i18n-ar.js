@@ -5769,4 +5769,5 @@ export const AR = {
   "{w} words/min": "{w} كلمة/دقيقة",
   "{n} fillers": "{n} كلمة حشو",
   "Show a better answer": "وريني إجابة أحسن",
+  "Conversation": "محادثة",
 };

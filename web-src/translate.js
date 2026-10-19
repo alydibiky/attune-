@@ -179,3 +179,7 @@ export function piecesOf(text) {
   }
   return out;
 }
+
+/** v6.41 (H4): the speech-recogniser tag for a language (the phone listens in that language). */
+const TAGS = { en: "en-US", ar: "ar-EG", fr: "fr-FR", es: "es-ES", de: "de-DE", it: "it-IT", pt: "pt-BR", tr: "tr-TR", ru: "ru-RU", uk: "uk-UA", pl: "pl-PL", nl: "nl-NL", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR", hi: "hi-IN", ur: "ur-PK", fa: "fa-IR", he: "he-IL", id: "id-ID", ms: "ms-MY", th: "th-TH", vi: "vi-VN", bn: "bn-BD", sw: "sw-KE" };
+export const speechTag = (code) => TAGS[code] || code || "en-US";
