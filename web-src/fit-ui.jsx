@@ -109,6 +109,19 @@ function Bar({ label, v, max, cls }) {
 // v6.7 (Ali approved the billing plan): Free keeps typed / spoken logging, barcode, search, favorites,
 // the watch and 3 photo meals a day; Pro adds unlimited photo meals, the week's meal plan + shopping
 // list and the week report. `pro` defaults to on (web preview, tests); the app passes the real state.
+// v6.42 F1 (Ali picked B): the ruler for photo portions — a bank card next to the plate, or your own plate's width, set once
+function PlateRuler({ L }) {
+  const [cm, setCm] = useState(() => F.myPlateCm() || "");
+  return (
+    <div className="text-[11.5px] text-slate-400 flex flex-wrap items-center gap-x-2 gap-y-1" data-testid="fit-ruler">
+      <span>{L("📏 Exact portions: put a bank card next to the plate — or", "📏 عشان الكمية تبقى مظبوطة: حط كارت بنك جنب الطبق — أو")}</span>
+      <label className="flex items-center gap-1">{L("my plate", "طبقي")}
+        <input value={cm} inputMode="decimal" data-testid="fit-plate-cm" onChange={(e) => { setCm(e.target.value); F.setMyPlateCm(e.target.value); }}
+          placeholder="26" className="w-12 rounded-md bg-slate-800 px-1.5 py-0.5 text-center text-slate-100 placeholder:text-slate-600" />{L("cm wide", "سم عرض")}</label>
+    </div>
+  );
+}
+
 export const FREE_PHOTOS_PER_DAY = 3;
 export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngine, flash, incoming, clearIncoming, fetchJson, packText, scanBarcode, readText, native, onExit, share, listen, health, pro = true, openPlan, photoClip, minimal = false }) {
   const ar = getLang() === "ar";
@@ -600,6 +613,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               placeholder={L("What did you eat? e.g. 2 eggs, a loaf of baladi bread and a plate of ful", "أكلت إيه؟ مثلًا: ٢ بيض ورغيف عيش وطبق فول")}
               className="w-full rounded-xl bg-slate-800 p-2.5 text-[14px] text-white placeholder:text-slate-500" />
             {photo && !busy && <div className="relative w-28"><img src={photo.url} className="rounded-lg w-28 h-28 object-cover" /><button onClick={() => setPhoto(null)} className="absolute top-1 right-1 rounded-full p-0.5" style={{ background: "rgba(0,0,0,.6)", color: "#fff" }}><X size={14} /></button></div>}
+            {photo && !busy ? <PlateRuler L={L} /> : null}
             {text.trim() || photo || busy ? <div className="flex gap-2">
               <button onClick={() => speak("text")} className={"rounded-xl px-3 py-2 text-[13px] flex items-center gap-1.5 shrink-0 " + (listening === "text" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-200")} data-testid="fit-mic"><Mic size={16} />{listening === "text" ? L("Listening…", "بسمعك…") : L("Say it", "اتكلم")}</button>
               <button onClick={() => fileRef.current && fileRef.current.click()} className="rounded-xl bg-slate-800 px-3 py-2 text-[13px] text-slate-200 flex items-center gap-1.5 shrink-0" data-testid="fit-photo"><Camera size={16} />{L("Photo", "صورة")}</button>
@@ -629,6 +643,8 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
             <div className="space-y-2" data-testid="fit-draft">
               {photo && draft.length ? <PhotoMarks look={look} url={photo.url} items={draft} L={L} ar={ar} /> : null}
               <div className="text-[12.5px] text-slate-400">{L("Check the amounts — change the grams if needed, then save.", "راجع الكميات — غيّر الجرامات لو محتاج، وبعدين احفظ.")}</div>
+              {draft.some((x) => x.ruler === "card") ? <div className="text-[12px] text-emerald-300" data-testid="fit-ruler-card">{L("📏 Measured against your card", "📏 اتقاس على الكارت")}</div>
+                : draft.some((x) => x.ruler === "plate") ? <div className="text-[12px] text-emerald-300" data-testid="fit-ruler-plate">{L(`📏 Measured with your ${F.myPlateCm()} cm plate`, `📏 اتقاس على طبقك (${F.myPlateCm()} سم)`)}</div> : null}
               {refining ? <div className="text-[12px] text-sky-300 flex items-center gap-1.5" data-testid="fit-refining"><span className="inline-block w-2 h-2 rounded-full bg-sky-400 animate-pulse" />{L("The AI is double-checking the photo — you can save now.", "الذكاء الاصطناعي بيراجع الصورة — تقدر تحفظ دلوقتي.")}</div> : null}
               {aiAlt && aiAlt.length ? <div className="rounded-xl bg-sky-500/10 border border-sky-800 p-2 text-[12.5px] text-sky-100" data-testid="fit-ai-alt">
                 {L("The AI sees: ", "الذكاء الاصطناعي شايف: ")}<b>{aiAlt.map((x) => (ar && x.ar) || x.name).join(" · ")}</b>

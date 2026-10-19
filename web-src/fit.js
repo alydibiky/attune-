@@ -725,8 +725,9 @@ export function photoMessages(note, cc = CZ.getCountry(), hints = []) {
             "plate_share": 0 to 1 — how much of the plate's surface this food covers (null if not on a plate),
             "height": "flat" | "normal" | "heaped", "grams": your estimate as eaten,
             "confidence": 0 to 1, "box": [x, y, w, h] where it is in the photo, each 0 to 1}],
+ "card": box of a bank card in the photo or null, "plate_box": box of the plate or null,
  "label": {"name": "product name", "per": "100g" or "serving", "serving_g": number or null, "kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number or null} or null}
-Rules: one item per separate food (a sandwich or a mixed dish like ${eg ? "koshari" : photoHintsFor(cc)[0]} is ONE item). Foods stacked on each other are SEPARATE items: list what is underneath (toast, bread, rice), what is on top (cheese, sauce) and the main food — e.g. eggs on toast with tomato sauce and cheese = fried egg (count them), toast (count the slices), tomato sauce, cheese. Count what can be counted: every egg, slice, piece — look at the whole photo, not one part. Judge sizes against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon, a 330 ml can, ${eg ? "a baladi loaf" : "a bread loaf"}, a hand. Name HOW it is cooked when you can see it: golden and crumbed = breaded and fried (pané / schnitzel), grill marks = grilled, oily and crisp = fried. Look at the WHOLE photo — bowls (soup, yogurt), side dishes (fries, potatoes, rice, salad), bread and drinks at the edges are separate items. If unsure, give your best guess, alternatives, and a lower confidence — never invent a food you can't see. For a label, copy its numbers exactly.
+Rules: a bank card is a ruler, never an item. One item per separate food (a sandwich or a mixed dish like ${eg ? "koshari" : photoHintsFor(cc)[0]} is ONE item). Foods stacked on each other are SEPARATE items: list what is underneath (toast, bread, rice), what is on top (cheese, sauce) and the main food — e.g. eggs on toast with tomato sauce and cheese = fried egg (count them), toast (count the slices), tomato sauce, cheese. Count every egg, slice, piece — look at the whole photo. Judge sizes against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon, a 330 ml can, ${eg ? "a baladi loaf" : "a bread loaf"}, a hand. Name HOW it is cooked when you can see it: golden and crumbed = breaded and fried (pané / schnitzel), grill marks = grilled, oily and crisp = fried. Bowls (soup, yogurt), sides (fries, potatoes, rice, salad), bread and drinks at the edges are separate items. If unsure, give your best guess, alternatives, and a lower confidence — never invent a food you can't see. For a label, copy its numbers exactly.
 Use short common names in English (${localWord(cc)} by their usual name), e.g. ${photoHintsFor(cc).join(", ")}.${seen.length ? "\nA quick first look at the whole photo suggested: " + seen.join(", ") + " — use it only if it matches what you see, and still list each part separately." : ""}${note ? "\nThe person adds: " + note : ""}` },
     { role: "user", content: "What is in this photo?" },
   ];
@@ -742,6 +743,34 @@ Use a short common name, e.g. ${photoHintsFor(cc).join(", ")}.` },
 }
 // grams from what the model can judge well — the share of a 26 cm plate, how high it is, a count, a container
 const PLATE_CM2 = { "dinner plate": 531, "side plate": 314, bowl: 200, tray: 900, none: 531 };
+/* v6.42 F1 (Ali picked B: "a bank card or the plate size as the ruler"): a bank / ID card is always 8.56 × 5.4 cm (ISO 7810), so
+   a card in the photo gives the real size of the plate, or of each food when there is no plate; without a card, the person's own
+   plate (its width in cm, set once) replaces the 26 cm guess. */
+export const CARD_CM2 = 8.56 * 5.398;
+const PLATE_KEY = "attune:fit:plate:cm";
+/** The person's dinner plate width in cm, or null (not set). */
+export function myPlateCm() { try { const v = num(localStorage.getItem(PLATE_KEY)); return v >= 15 && v <= 40 ? v : null; } catch (e) { return null; } }
+export function setMyPlateCm(cm) { try { const v = num(cm); if (v >= 15 && v <= 40) localStorage.setItem(PLATE_KEY, String(Math.round(v * 2) / 2)); else localStorage.removeItem(PLATE_KEY); } catch (e) {} }
+const okBox = (b) => (Array.isArray(b) && b.length === 4 && b.every((v) => num(v) >= 0 && num(v) <= 1) && num(b[2]) > 0 && num(b[3]) > 0 ? b.map(num) : null);
+/**
+ * The ruler for one photo: { by: "card" | "plate", plateCm2, cmPerBox } — plateCm2 = the plate's real area; cmPerBox = cm² per
+ * unit of box area (from the card, for foods not on a plate). A card that makes the plate absurd (under 12 or over 40 cm) is ignored.
+ */
+export function photoRuler(j, plate = "dinner plate") {
+  const card = okBox(j && j.card), pb = okBox(j && j.plate_box);
+  if (card) {
+    const cmPerBox = CARD_CM2 / (card[2] * card[3]);
+    if (pb && /plate|tray/.test(plate)) {
+      const area = pb[2] * pb[3] * cmPerBox * (Math.PI / 4);   // a round plate fills π/4 of its box
+      const cm = 2 * Math.sqrt(area / Math.PI);
+      if (cm >= 12 && cm <= 40) return { by: "card", plateCm2: Math.round(area), plateCm: Math.round(cm), cmPerBox };
+    }
+    if (cmPerBox > 40 && cmPerBox < 20000) return { by: "card", plateCm2: null, cmPerBox };
+  }
+  const mine = myPlateCm();
+  if (mine && plate === "dinner plate") return { by: "plate", plateCm2: Math.round(Math.PI * (mine / 2) ** 2), plateCm: mine, cmPerBox: null };
+  return null;
+}
 const HEIGHT_CM = { flat: 1, normal: 2.2, heaped: 3.8 };
 function density(fd) {
   const id = fd.id, g = String(fd.group || "");
@@ -756,14 +785,18 @@ function density(fd) {
   return 0.8;
 }
 /** The geometric estimate (g) of a photo item, or null when the model gave nothing to measure. */
-export function geoGrams(fd, it, plate = "dinner plate") {
+export function geoGrams(fd, it, plate = "dinner plate", ruler = null) {
   if (!fd) return null;
   const P = fd.portions || {}, n = num(it.count), c = String(it.container || "").toLowerCase();
   if (n > 0 && n <= 40) { const per = P.piece ?? P.loaf ?? P.slice ?? P.skewer ?? P.egg ?? P.date ?? P.disc ?? P.sandwich; if (per) return n * per; }
   if (["glass", "cup", "can", "bottle", "sandwich"].includes(c) && P[c]) return P[c] * (n > 0 && n <= 6 ? n : 1);
   if (c === "bowl" && (P.bowl || P.plate)) return P.bowl || P.plate;
   const share = num(it.plate_share);
-  if (share > 0 && share <= 1) { const area = (PLATE_CM2[plate] || 531) * share; return Math.round(area * (HEIGHT_CM[it.height] || 2.2) * density(fd)); }
+  const plateArea = (ruler && ruler.plateCm2) || PLATE_CM2[plate] || 531;
+  if (share > 0 && share <= 1) { const area = plateArea * share; return Math.round(area * (HEIGHT_CM[it.height] || 2.2) * density(fd)); }
+  // (a card but no plate: the food's own box, measured against the card — a heap fills about π/4 of its box)
+  const b = okBox(it.box);
+  if (ruler && ruler.cmPerBox && b) { const area = Math.min(900, b[2] * b[3] * ruler.cmPerBox * (Math.PI / 4)); return Math.round(area * (HEIGHT_CM[it.height] || 2.2) * density(fd)); }
   return null;
 }
 /** The second look: calories people forget to log. */
@@ -788,7 +821,7 @@ export function learnFix(modelName, food, gramsRatio = 1) {
 export const learned = (modelName) => { const L = learnLoad(), k = normT(modelName); return Object.prototype.hasOwnProperty.call(L, k) && L[k] && L[k].id ? L[k] : null; };   // own keys only: "constructor" is not a learned food
 
 /** One photo item: the learned choice first, then the table; its alternatives as ready choices. */
-function photoItem(it, extra = {}, plate = "dinner plate") {
+function photoItem(it, extra = {}, plate = "dinner plate", ruler = null) {
   const name = String(it.food || it.name || "").trim(); if (!name) return null;
   let grams = num(it.grams); if (!(grams > 0 && grams < 3000)) grams = null;
   const lf = learned(name);
@@ -796,8 +829,9 @@ function photoItem(it, extra = {}, plate = "dinner plate") {
   // v6.3: the geometric estimate (plate share × height × density, or a count, or a container) —
   // blended with the model's own grams; when they disagree by more than 2.5× the item is flagged
   let portionFlag = false;
-  const geo = fd ? geoGrams(fd, it, plate) : null;
-  if (geo && grams) { if (Math.max(geo, grams) / Math.min(geo, grams) > 2.5) portionFlag = true; grams = Math.round(Math.sqrt(geo * grams)); }
+  const geo = fd ? geoGrams(fd, it, plate, ruler) : null;
+  // measured against a card, the geometry is trusted over the model's guess (3 : 1); else the two are blended evenly
+  if (geo && grams) { if (Math.max(geo, grams) / Math.min(geo, grams) > 2.5) portionFlag = !(ruler && ruler.by === "card"); grams = Math.round(ruler && ruler.by === "card" ? geo ** 0.75 * grams ** 0.25 : Math.sqrt(geo * grams)); }
   else if (geo) grams = geo;
   if (lf && grams) grams *= lf.ratio;
   const alts = uniqAlts([name, ...(Array.isArray(it.alternatives) ? it.alternatives : [])].map((a) => ({ label: String(a || ""), food: matchFood(String(a || "")) }))).slice(0, 3);
@@ -868,8 +902,9 @@ export function parsePhoto(raw) {
       portions: num(L.serving_g) > 0 ? { serving: Math.round(num(L.serving_g)) } : {} };
   }
   const plate = Object.keys(PLATE_CM2).includes(j && j.plate) ? j.plate : "dinner plate";
-  const items = (Array.isArray(j && j.items) ? j.items : []).map((it) => photoItem(it, {}, plate)).filter(Boolean).slice(0, 12);
-  return { kind, items, label };
+  const ruler = photoRuler(j, plate);
+  const items = (Array.isArray(j && j.items) ? j.items : []).map((it) => photoItem(it, ruler ? { ruler: ruler.by } : {}, plate, ruler)).filter(Boolean).slice(0, 12);
+  return { kind, items, label, ruler };
 }
 /** The second look's JSON → extra items (never one already on the list). */
 export function parseHidden(raw, have) {
