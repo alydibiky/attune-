@@ -8085,7 +8085,7 @@ export default function App() {
   const groupsHere = groupsFor(MORE_GROUPS, devLevel, allTools);
   // v6.31 minimal: short tab names (the page's own title stays full)
   const TAB_SHORT = { timeline: "Timeline", missions: "Missions", recall: "Recall", automations: "Automations", fleet: "Team records", reminders: "Follow-ups", tools: "Tools", learn: "Learn", coach: "Homework", assistants: "Assistants", chat: "Chat", ask: "Ask", money: "Money", guardian: "Watch", radar: "Radar", life: "People", convert: "Convert",
-    pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Prompts", xray: "X-ray",
+    pdfchat: "PDF chat", slides: "Slides", cv: "CV", video: "Video", crane: "Crane", field: "Reports", improve: "Improve", compress: "Shorten", library: "Prompt lab", xray: "X-ray",
     lifeask: "Your life", memory: "Mind", knowledge: "Knowledge", care: "Family", map: "Maps", guide: "How to use", fit: "Fit & Food" };
   // v6.30: the tab row of the combined page this mode belongs to (hubs.js) — null when it has none
   const hubTabsEl = (() => {

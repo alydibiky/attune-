@@ -22,8 +22,10 @@ export const GROUPS = [
   // the tab rows (v6.36, Ali's board): Chat · Ask your life · Translate; Work = Business · Fleet · Crane · Reports · Tools
   ["talk", "Chat", ["chat", "lifeask", "translate"]],
   ["work", "Work", ["business", "fleet", "crane", "field", "tools"]],
+  // v6.43 (Ali: "put the tools that improve a prompt or humanize in the same page"): Writing = Improve · Shorten · Humanize · Copilot · Prompt lab
+  ["write", "Writing", ["improve", "compress", "humanize", "copilot", "library"]],
   // pages with no tab row: they open from a Home tile, the Tools choices or the sidebar ("as choices, not tabs")
-  ...["missions", "recall", "automations", "instant", "shelf", "projects", "improve", "compress", "humanize", "copilot", "library", "video", "ask", "guide", "privacy", "home"].map((m) => ["solo-" + m, m, [m]]),
+  ...["missions", "recall", "automations", "instant", "shelf", "projects", "video", "ask", "guide", "privacy", "home"].map((m) => ["solo-" + m, m, [m]]),
 ];
 
 /** Pages that take the whole screen with their own header (no tab row on them). */
@@ -73,11 +75,8 @@ export function tabsFor(mode, available = null) {
 export const TOOL_PAGES = [
   // v6.36 (Ali: "improve, compress, humanize, copilot, library, video downloader — under a tab called Tools in Business, as
   // choices, not tabs"): one card each
-  ["improve", "Improve a prompt", "For ChatGPT, Claude, Gemini…", ["improve"]],
-  ["compress", "Compress", "Shorter prompts", ["compress"]],
-  ["humanize", "Humanize", "Sound like you", ["humanize"]],
-  ["copilot", "Copilot", "Work with another AI", ["copilot"]],
-  ["library", "Library", "Prompt recipes", ["library"]],
+  // v6.43 (Ali: "integrate the tools that improve a prompt or humanize in the same page"): one card, one page with five tabs
+  ["improve", "Writing", "Improve a prompt · Shorten · Humanize · Copilot · Prompt lab", ["improve", "compress", "humanize", "copilot", "library"]],
   ["video", "Video Downloader", "Paste a video link, pick the quality, save it to your phone", ["video"]],
   ["ask", "Ask (classic)", "The earlier Ask screen", ["ask"]],
 ];
