@@ -47,9 +47,11 @@ with sync_playwright() as p:
 
     check(page.locator("[data-testid=fit-app]").get_attribute("data-look") == "fresh", "the default look is Fresh (A)")
     bg = page.evaluate("getComputedStyle(document.body).backgroundColor")
-    check(bg == "rgb(242, 246, 243)", "…a light page behind Fit (%s)" % bg)
+    check(bg == "rgb(244, 247, 245)",   # v6.43 design A
+          "…a light page behind Fit (%s)" % bg)
     card = page.evaluate("getComputedStyle(document.querySelector('[data-testid=fit-app]')).getPropertyValue('--color-white').trim()")
-    check(card.lower() == "#0b1a12", "…dark writing on light (the palette turned around inside Fit: %s)" % card)
+    check(card.lower() == "#16201c",   # v6.43 design A
+          "…dark writing on light (the palette turned around inside Fit: %s)" % card)
     shot(page, "look-fresh-home")
 
     for look in ("fresh", "night", "bold", "meals", "rings"):   # (tiles shares the light labels; its home has no meal "+" buttons)

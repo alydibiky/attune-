@@ -42,9 +42,15 @@ export const ON_FILL = (sel) => ["emerald-500", "emerald-600", "emerald-700", "s
 // v6.32 (Ali: "the colour and text to be contrast so it's more visible"): darker secondary text (about 7:1 on the page),
 // firmer lines and a deeper green in the light looks; lighter grey text and lines in the dark ones
 export const LOOK_CSS = `
-body:has(.fit-look-fresh):not(.att-modal-open),.fit-look-fresh{${LIGHT_BASE("#0B1A12", "#EEF3EF", "#FFFFFF", "#E4ECE6", "#BCCDC2", "#93AA9B", "#3B4D42", "#24342A")}
-  --color-emerald-100:#0E4A2F;--color-emerald-200:#11563A;--color-emerald-300:#146140;--color-emerald-400:#187A4F;--color-emerald-500:#17754C;--color-emerald-600:#156B45;--color-emerald-700:#0F5636;
-  --color-emerald-800:#BFE3CF;--color-emerald-900:#CFEBDB;--color-emerald-950:#E7F6EE;color-scheme:light}
+body:has(.fit-look-fresh):not(.att-modal-open),.fit-look-fresh{${LIGHT_BASE("#16201C", "#F4F7F5", "#FFFFFF", "#EEF3F0", "#DCE5E0", "#B5C4BC", "#46534D", "#33413A")}
+  --color-emerald-100:#0E4A2F;--color-emerald-200:#11563A;--color-emerald-300:#157A52;--color-emerald-400:#178A5C;--color-emerald-500:#1E9E6A;--color-emerald-600:#178A5C;--color-emerald-700:#157A52;
+  --color-emerald-800:#BFE3CF;--color-emerald-900:#CFEBDB;--color-emerald-950:#E3F4EC;color-scheme:light}
+/* v6.43 design A: Nunito (rounded, friendly — bundled, OFL), Arabic in IBM Plex Sans Arabic */
+.fit-look-fresh,.fit-look-fresh button,.fit-look-fresh input,.fit-look-fresh textarea,.fit-look-fresh select{font-family:"Nunito","IBM Plex Sans Arabic",ui-sans-serif,system-ui,sans-serif}
+.fit-design-a [data-testid=fit-today] .divide-slate-800>*+*{border-color:#EEF2F0}
+/* every other Fit card takes design A's card too: white, no outline, a soft shadow, rounder */
+.fit-design-a .bg-slate-900\\/70,.fit-design-a .bg-slate-900\\/60{background:#FFFFFF;border-color:transparent;box-shadow:0 1px 3px rgba(16,32,28,.08)}
+.fit-design-a .rounded-2xl.bg-slate-900\\/70,.fit-design-a .rounded-2xl.bg-slate-900\\/60{border-radius:1.5rem}
 ${ON_FILL(".fit-look-fresh")}
 body:has(.fit-look-bold):not(.att-modal-open),.fit-look-bold{${LIGHT_BASE("#11142B", "#FFFFFF", "#F4F4F8", "#E8E8F0", "#C9CAD8", "#A3A5BA", "#45485E", "#2E3147")}
   --color-emerald-100:#9A3412;--color-emerald-200:#9A3412;--color-emerald-300:#C2410C;--color-emerald-400:#EA580C;--color-emerald-500:#F25C2A;--color-emerald-600:#E2501F;--color-emerald-700:#C2410C;
@@ -78,7 +84,7 @@ body.att-modal-open [data-testid=fit-nav]{display:none}
 @media (prefers-reduced-motion:reduce){.fit-scan,.fit-pulse,.fit-spin,.fit-pop,.fit-breathe{animation:none}}
 `;
 /** The page behind Fit (outside its own boxes), so a light look fills the whole screen. */
-export const PAGE_BG = { fresh: "#F2F6F3", night: "#0B1220", bold: "#FFFFFF", meals: "#F6F7FB", rings: "#0E1116", tiles: "#FFFDF8" };
+export const PAGE_BG = { fresh: "#F4F7F5", night: "#0B1220", bold: "#FFFFFF", meals: "#F6F7FB", rings: "#0E1116", tiles: "#FFFDF8" };
 
 // ---- nutrition facts while the photo is read: well-established findings, each with where it comes from ----
 export const FACTS = [

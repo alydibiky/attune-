@@ -456,7 +456,9 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   const [go, setGo] = useState(0);
   useEffect(() => { if (go && (photo || text.trim())) readMeal(); }, [go]);
   const [searchFocus, setSearchFocus] = useState(0);
-  const [addTab, setAddTab] = useState("recent");   // v6.34 the minimal Add sheet (Yazio-like): Recent · Favourites · My meals
+  const [addTab, setAddTab] = useState("recent");
+  const [openAlt, setOpenAlt] = useState(-1);   // v6.43 design A: a found food's other choices and portion buttons open on "Change"
+  useEffect(() => { setOpenAlt(-1); }, [draft == null]);   // v6.34 the minimal Add sheet (Yazio-like): Recent · Favourites · My meals
   const bar = {
     photo: () => { autoRead.current = true; fileRef.current && fileRef.current.click(); },
     barcode: () => { if (!scanBarcode) { setAdding((a) => a || mealNow()); setDraft(null); setSearchFocus((n) => n + 1); flash && flash(t("Type the barcode number in search")); return; } codeRef.current && codeRef.current.click(); },
@@ -505,16 +507,30 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
   if (!st.profile) return <div className={lookCls}><LookStyle look={look} />{exitBar}<ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={null} extra={null} /></div>;
   if (editProfile) return <div className={lookCls}><LookStyle look={look} /><ProfileForm pf={pf} setPf={setPf} save={saveProfile} L={L} cancel={st.profile ? () => setEditProfile(false) : null} extra={st.profile ? <FitSettings {...{ L, ar, st, upd, native, flash, packText, photoClip }} onClip={setClipOn} /> : null} /></div>;
 
+  const designA = minimal && look === "fresh";   // v6.43: Ali's design A (the default look)
   return (
-    <div className={"max-w-2xl mx-auto px-4 pt-2 pb-28 space-y-4 " + lookCls + (minimal ? " fit-min" : "")} data-testid="fit-app" data-look={look}>
+    <div className={"max-w-2xl mx-auto px-4 pt-2 pb-28 space-y-4 " + lookCls + (minimal ? " fit-min" : "") + (designA ? " fit-design-a" : "")} data-testid="fit-app" data-look={look}>
       <LookStyle look={look} />
       {/* v6.16c (Ali picked look A): Fit & Food is its own app — its own top bar and bottom bar; Attune's are hidden while it's open */}
       <div className="sticky top-0 z-30 -mx-4 px-2 bg-slate-950/95 backdrop-blur flex items-center gap-1 min-h-[52px]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {onExit ? <button onClick={onExit} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-slate-300" aria-label={L("Back to Attune", "ارجع لـ Attune")} data-testid="fit-exit"><span className="text-lg leading-none inline-block rtl:-scale-x-100">←</span></button> : null}
-        <h2 className="flex-1 min-w-0 truncate text-[17px] font-semibold text-white flex items-center gap-2"><Apple size={18} className="text-emerald-300 shrink-0" />{minimal ? L("Fit & Food", "الأكل واللياقة") : ({ today: L("Diary", "اليوميات"), recipes: L("Recipes", "الوصفات"), progress: L("Progress", "التقدم"), me: L("Me", "أنا"), move: L("Workouts", "التمارين") })[tab] || L("Fit & Food", "الأكل واللياقة")}</h2>
+        <h2 className="flex-1 min-w-0 truncate text-[17px] font-semibold text-white flex items-center gap-2"><Apple size={18} className="text-emerald-300 shrink-0" />{minimal ? L("Fit & Food", "الأكل واللياقة") : ({ today: L("Diary", "اليوميات"), fast: L("Fasting", "الصيام"), recipes: L("Recipes", "الوصفات"), progress: L("Progress", "التقدم"), me: L("Me", "أنا"), move: L("Workouts", "التمارين") })[tab] || L("Fit & Food", "الأكل واللياقة")}</h2>
         {openEngine && !modelReady ? <button onClick={openEngine} className="min-h-[36px] rounded-full border border-slate-700 px-3 text-[12px] text-slate-300" data-testid="fit-engine">{L("No model", "مفيش نموذج")}</button> : null}
       </div>
-      {minimal ? (<>
+      {designA ? (<>
+        {/* v6.43 (Ali picked design A): its own bottom bar — Diary · Recipes · Fasting · Progress · Me — and a round + above it */}
+        <nav className="att-shift fixed bottom-0 inset-x-0 z-[60] bg-slate-900 border-t border-slate-800" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="fit-nav">
+          <div className="max-w-2xl mx-auto grid grid-cols-5 h-[66px]">
+            {[["today", L("Diary", "اليوميات"), Apple], ["recipes", L("Recipes", "الوصفات"), Star], ["fast", L("Fasting", "الصيام"), Timer], ["progress", L("Progress", "التقدم"), BarChart3], ["me", L("Me", "أنا"), User]].map(([k, label, Ic]) => {
+              const on = tab === k || (k === "me" && tab === "move");
+              return <button key={k} onClick={() => { setTab(k); setAdding(null); setDraft(null); }} data-testid={"fit-tab-" + k} aria-current={on ? "page" : undefined}
+                className={"flex flex-col items-center justify-center gap-0.5 text-[11.5px] " + (on ? "text-emerald-300 font-extrabold" : "text-slate-500 font-bold")}><Ic size={22} strokeWidth={on ? 2.4 : 2} />{label}</button>; })}
+          </div>
+        </nav>
+        {!adding && !undo && (tab === "today" || tab === "fast") ? <button onClick={() => { setAdding((a) => a || mealNow()); setDraft(null); setText(""); setPhoto(null); }} data-testid="fit-add" aria-label={L("Log food", "سجّل أكل")}
+          className="att-shift fixed end-5 z-[60] w-[60px] h-[60px] rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-900/30 flex items-center justify-center active:scale-95 motion-safe:transition-transform" style={{ bottom: "calc(84px + env(safe-area-inset-bottom))" }}>
+          <Plus size={28} strokeWidth={2.8} /></button> : null}
+      </>) : minimal ? (<>
         {/* v6.32 (Ali picked B): no bottom bar — thin tabs on top like the rest of the app, and one "Log food" button */}
         <div role="tablist" className="att-hscroll sticky z-30 -mx-4 px-4 flex gap-6 overflow-x-auto border-b-2 border-slate-700 bg-slate-950" style={{ top: "calc(52px + env(safe-area-inset-top))" }} data-testid="fit-nav">
           {[["today", L("Diary", "اليوميات")], ["recipes", L("Recipes", "الوصفات")], ["progress", L("Progress", "التقدم")], ["me", L("Me", "أنا")]].map(([k, label]) => {
@@ -540,7 +556,18 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
       <input ref={fileRef} type="file" accept="image/*" className="hidden" data-testid="fit-photo-input" onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) { try { const ph = await readPhoto(f); setAdding((a) => a || mealNow()); setDraft(null); setPhoto(ph); if (autoRead.current) { autoRead.current = false; setGo((n) => n + 1); } } catch (x) { flash && flash(L("Couldn't open that picture", "مقدرتش أفتح الصورة")); } } }} />
       <input ref={codeRef} type="file" accept="image/*" capture="environment" className="hidden" data-testid="fit-barcode-input" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) { setAdding((a) => a || mealNow()); scanCode(f); } }} />
       {adding ? (
-        <div className="rounded-2xl border border-slate-700 bg-slate-900/70 p-3 space-y-3" data-testid="fit-log">
+        <div className={designA ? "space-y-4 pt-1" : "rounded-2xl border border-slate-700 bg-slate-900/70 p-3 space-y-3"} data-testid="fit-log">
+          {designA ? (<>
+            {/* v6.43 design A: a page of its own — "What did you eat?", one big box, the meal as a chip */}
+            <div className="flex items-center justify-between gap-2">
+              <button onClick={() => { setAdding(null); setDraft(null); }} className="w-11 h-11 -ms-2 grid place-items-center text-white" aria-label={L("Close", "قفل")} data-testid="fit-log-close"><ChevronLeft size={24} className="rtl:rotate-180" /></button>
+              <select value={adding} onChange={(e) => setAdding(e.target.value)} className="h-10 rounded-full bg-emerald-950 px-4 text-[14px] font-extrabold text-emerald-300" aria-label={L("Meal", "الوجبة")} data-testid="fit-log-meal">
+                {F.MEALS.map((m) => <option key={m} value={m}>{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}</option>)}
+              </select>
+            </div>
+            {!draft && !busy && !hold ? <div><h2 className="text-[28px] leading-tight font-black text-white">{L("What did you eat?", "أكلت إيه؟")}</h2>
+              <p className="text-[13px] font-bold text-slate-500 mt-1">{L("Write it like you'd say it — English, Arabic or Franco. Amounts if you know them.", "اكتبها زي ما بتقولها — عربي أو إنجليزي أو فرانكو. والكمية لو تعرفها.")}</p></div> : null}
+          </>) : (
           <div className="flex items-center justify-between">
             <div className="text-white font-medium">{L("Add to", "ضيف على")}{" "}
               <select value={adding} onChange={(e) => setAdding(e.target.value)} className="bg-slate-800 rounded px-1 text-white" data-testid="fit-log-meal">
@@ -548,7 +575,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               </select>
             </div>
             <button onClick={() => { setAdding(null); setDraft(null); }} className="text-slate-400 min-h-[44px] min-w-[44px] -me-2 grid place-items-center" aria-label={L("Close", "قفل")} data-testid="fit-log-close"><X size={20} /></button>
-          </div>
+          </div>)}
           {busy || hold ? (
             <div data-testid={photo ? "fit-photo-loading" : "fit-skeleton"}><PulseLoader url={photo && photo.url} stage={busy ? stage : draft && draft.length ? L(`Found ${draft.length} ${draft.length === 1 ? "food" : "foods"}`, `لقيت ${draft.length} ${draft.length === 1 ? "صنف" : draft.length === 2 ? "صنفين" : "أصناف"}`) : L("Reading your meal…", "بقرا وجبتك…")} L={L} ar={ar} label={t("Recognising the food…")} /></div>
           ) : !draft && minimal ? (
@@ -556,18 +583,20 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                barcode and microphone inside it; what you type also searches the foods; Recent · Favourites · My meals as one list
                with a + on each row (one tap logs it); everything else under More. */
             <div className="space-y-3" data-testid="fit-add-min">
-              <div className="rounded-2xl bg-slate-800 flex items-start gap-1 ps-3 pe-1 py-1.5">
+              <div className={designA ? "rounded-3xl bg-slate-900 border-2 border-emerald-500 p-3.5 flex flex-col gap-2" : "rounded-2xl bg-slate-800 flex items-start gap-1 ps-3 pe-1 py-1.5"}>
                 <textarea value={text} onChange={(e) => { const v = e.target.value; setText(v); const w = v.trim(); setQ(w && w.split(/\s+/).length <= 3 && !/\d/.test(w) ? w : ""); }}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && text.trim()) { e.preventDefault(); readMeal(); } }}
-                  rows={text.length > 38 ? 3 : 1} data-testid="fit-log-text" placeholder={L("What did you eat?", "أكلت إيه؟")}
-                  className="flex-1 min-w-0 resize-none bg-transparent py-2 text-[15px] text-white placeholder:text-slate-400 focus:outline-none" />
+                  rows={designA ? 3 : text.length > 38 ? 3 : 1} data-testid="fit-log-text" placeholder={designA ? L("e.g. 150 g chicken Alfredo pasta and 7 chicken strips", "مثلًا: طبق كشري كبير وكوباية شاي بسكر") : L("What did you eat?", "أكلت إيه؟")}
+                  className={designA ? "w-full min-h-[84px] resize-none bg-transparent text-[17px] font-semibold leading-snug text-white placeholder:text-slate-400 placeholder:font-normal focus:outline-none" : "flex-1 min-w-0 resize-none bg-transparent py-2 text-[15px] text-white placeholder:text-slate-400 focus:outline-none"} />
+                <div className={designA ? "flex justify-end gap-2" : "contents"}>
                 {[["photo", Camera, L("Photo", "صورة")], ["barcode", Barcode, t("Barcode")], ["voice", Mic, listening ? L("Listening…", "بسمعك…") : L("Say it", "اتكلم")]].map(([k, Ic, lb]) => (
                   <button key={k} onClick={bar[k]} aria-label={lb} title={lb} data-testid={"fit-lb-" + k}
-                    className={"w-10 h-10 shrink-0 rounded-full grid place-items-center " + (k === "voice" && listening ? "bg-rose-600 text-white" : "text-slate-300 active:bg-slate-700")}><Ic size={19} /></button>))}
+                    className={(designA ? "w-11 h-11 border border-slate-700 " : "w-10 h-10 ") + "shrink-0 rounded-full grid place-items-center " + (k === "voice" && listening ? "bg-rose-600 text-white" : designA && k === "voice" ? "bg-emerald-950 text-emerald-300 border-transparent" : "text-slate-300 active:bg-slate-700")}><Ic size={designA ? 20 : 19} /></button>))}
+                </div>
               </div>
               {photo && !busy ? <div className="relative w-24"><img src={photo.url} className="rounded-lg w-24 h-24 object-cover" /><button onClick={() => setPhoto(null)} className="absolute top-1 right-1 rounded-full p-0.5" style={{ background: "rgba(0,0,0,.6)", color: "#fff" }} aria-label={L("Remove", "شيل")}><X size={14} /></button></div> : null}
-              {text.trim() || photo ? <button onClick={readMeal} disabled={busy} className="w-full min-h-[48px] rounded-xl bg-emerald-600 disabled:opacity-40 text-[14.5px] font-semibold text-white flex items-center justify-center gap-1.5" data-testid="fit-read">
-                <Sparkles size={16} />{L("Add it", "ضيفه")}</button> : null}
+              {text.trim() || photo ? <button onClick={readMeal} disabled={busy} className={(designA ? "min-h-[56px] rounded-full bg-emerald-500 text-[17px] font-black" : "min-h-[48px] rounded-xl bg-emerald-600 text-[14.5px] font-semibold") + " w-full disabled:opacity-40 text-white flex items-center justify-center gap-1.5"} data-testid="fit-read">
+                <Sparkles size={16} />{designA ? L("Find the foods", "طلّع الأكل") : L("Add it", "ضيفه")}</button> : null}
               {results.length ? <div className="rounded-xl bg-slate-900/60 divide-y divide-slate-800" data-testid="fit-min-results">
                 {results.slice(0, 6).map((fd) => (
                   <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex items-center gap-2 text-start px-3 py-2.5" data-testid={"fit-food-" + fd.id}>
@@ -640,7 +669,13 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               </button>
             ))}
           </>) : (
-            <div className="space-y-2" data-testid="fit-draft">
+            <div className={designA ? "space-y-2.5" : "space-y-2"} data-testid="fit-draft">
+              {designA && draft.length ? (() => { const tt = F.sumN(draft.filter((x) => x.kcal != null)); return (<>
+                <div className="flex items-baseline justify-between gap-2 px-0.5"><h2 className="text-[20px] font-black text-white">{L(`Found ${draft.length} ${draft.length === 1 ? "food" : "foods"}`, `لقيت ${draft.length} ${draft.length === 1 ? "صنف" : draft.length === 2 ? "صنفين" : "أصناف"}`)}</h2></div>
+                <div className="grid grid-cols-4 gap-2 text-center" data-testid="fit-draft-totals">
+                  {[[tt.kcal, L("kcal", "سعرة"), ""], [Math.round(tt.c) + " g", L("carbs", "كارب"), "#1F6BBF"], [Math.round(tt.p) + " g", L("protein", "بروتين"), "#B35C0F"], [Math.round(tt.f) + " g", L("fat", "دهون"), "#6B4FB8"]].map(([v, lb, col]) =>
+                    <div key={lb} className="rounded-2xl bg-slate-900 shadow-[0_1px_3px_rgba(16,32,28,0.08)] py-2.5 px-1 flex flex-col"><span className="text-[18px] font-black tabular-nums text-white" style={col ? { color: col } : undefined}>{v}</span><span className="text-[11.5px] font-bold text-slate-500">{lb}</span></div>)}
+                </div></>); })() : null}
               {photo && draft.length ? <PhotoMarks look={look} url={photo.url} items={draft} L={L} ar={ar} /> : null}
               <div className="text-[12.5px] text-slate-400">{L("Check the amounts — change the grams if needed, then save.", "راجع الكميات — غيّر الجرامات لو محتاج، وبعدين احفظ.")}</div>
               {draft.some((x) => x.ruler === "card") ? <div className="text-[12px] text-emerald-300" data-testid="fit-ruler-card">{L("📏 Measured against your card", "📏 اتقاس على الكارت")}</div>
@@ -653,7 +688,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               {(() => { const ask = AQ.askFirst(draft); return ask.length ? <div className="text-[12.5px] text-amber-200" data-testid="fit-ask-note">{L(`One tap each: how much is on your plate? (${ask.length})`, `ضغطة لكل صنف: الكمية في طبقك قد إيه؟ (${ask.length})`)}</div> : null; })()}
               {(() => { pinNo.current = look === "night" && photo ? Object.fromEntries(LK.placeMarks(draft).marks.map((m, k) => [m.i, k + 1])) : {}; return null; })()}
               {draft.map((x, i) => (
-                <div key={i} className={"rounded-lg bg-slate-800/70 px-2 py-1.5 space-y-1.5 " + (AQ.askFirst(draft).includes(i) ? "ring-1 ring-amber-500/70" : "")} data-testid="fit-draft-item">
+                <div key={i} className={(designA ? "rounded-2xl bg-slate-900 shadow-[0_1px_3px_rgba(16,32,28,0.08)] px-3 py-2.5 space-y-1.5 " : "rounded-lg bg-slate-800/70 px-2 py-1.5 space-y-1.5 ") + (AQ.askFirst(draft).includes(i) ? "ring-1 ring-amber-500/70" : "")} data-testid="fit-draft-item">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="text-[13.5px] text-white truncate">
@@ -677,7 +712,8 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                       className={"min-h-[40px] min-w-[36px] grid place-items-center " + (P.isFav(st.favFoods, x.id) ? "text-amber-300" : "text-slate-500")} data-testid="fit-fav-toggle" aria-label={L("Favorite", "مفضلة")}><Star size={17} fill={P.isFav(st.favFoods, x.id) ? "currentColor" : "none"} /></button> : null}
                     <button onClick={() => setDraft((d) => d.filter((_, k) => k !== i))} className="text-slate-500 min-h-[40px] min-w-[36px] grid place-items-center" aria-label={L("Remove", "شيل")} data-testid="fit-draft-remove"><Trash2 size={17} /></button>
                   </div>
-                  {(x.alts && x.alts.length > 1) || x.from === "text" ? (
+                  {designA && openAlt !== i && (((x.alts && x.alts.length > 1) || x.from === "text") || x.base) ? <button onClick={() => setOpenAlt(i)} className="text-[12.5px] font-bold text-emerald-300 min-h-[32px]" data-testid="fit-draft-change"><Pencil size={13} className="inline -mt-0.5 me-1" />{L("Not right? Change it", "مش مظبوط؟ غيّره")}</button> : null}
+                  {designA && openAlt !== i ? null : (x.alts && x.alts.length > 1) || x.from === "text" ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-alts">
                       <span className="text-[11px] text-slate-500 self-center">{L("Is it:", "قصدك:")}</span>
                       {(x.alts || []).map((a, k) => a.food ? <button key={k} onClick={() => chooseAt(i, a.food)} className={"rounded-full px-2 py-0.5 text-[11.5px] " + (a.food.id === x.id ? "bg-emerald-700 text-white" : "bg-slate-900 text-slate-300")} data-testid="fit-alt">{ar && a.food.ar ? a.food.ar : a.food.en}</button> : null)}
@@ -689,7 +725,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                       {aq.choices.map((c, k) => <button key={k} onClick={() => setDraft((d) => d.map((y, j) => (j === i ? AQ.answerAmount(y, c.grams) : y)))}
                         className={"rounded-full px-2.5 py-1 text-[12px] " + (x.answered && k === aq.at ? "bg-amber-500 text-slate-950 font-semibold" : k === aq.at ? "bg-slate-700 text-white" : "bg-slate-900 text-slate-300")} data-testid="fit-amount-choice">{L(c.en, c.ar)}</button>)}
                     </div>; })()}
-                  {x.base && (x.from === "text" || !AQ.amountQuestion(x)) ? (
+                  {designA && openAlt !== i ? null : x.base && (x.from === "text" || !AQ.amountQuestion(x)) ? (
                     <div className="flex flex-wrap gap-1" data-testid="fit-portions">
                       {[0.5, 0.75, 1, 1.5, 2].map((k) => <button key={k} onClick={() => scaleAt(i, k)} className={"rounded min-w-[40px] min-h-[34px] px-2 py-0.5 text-[12px] " + ((x.k || 1) === k ? "bg-sky-700 text-white" : "bg-slate-900 text-slate-300")} data-testid={"fit-portion-" + k}>{k === 1 ? (x.from === "text" ? L("as written", "زي ما كتبت") : L("as seen", "زي الصورة")) : "×" + k}</button>)}
                     </div>) : null}
@@ -710,16 +746,17 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               {cmdNote ? <div className="text-[12px] text-sky-300" data-testid="fit-cmd-note">{cmdNote}</div> : null}
               {draft.length ? <SaveMyMeal {...{ L, draft, upd, flash }} /> : null}
               {/* the Save button stays in reach above Fit's bottom bar however long the list is */}
-              <div className="flex gap-2 sticky z-10 -mx-3 px-3 py-2 bg-slate-900" style={{ bottom: minimal ? "env(safe-area-inset-bottom)" : "calc(92px + env(safe-area-inset-bottom))" }} data-testid="fit-save-bar">
-                <button onClick={() => setDraft(null)} className="rounded-xl bg-slate-800 px-3 py-2.5 text-[13px] text-slate-300">{L("Back", "رجوع")}</button>
-                <button onClick={confirm} disabled={!draft.length} className="flex-1 rounded-xl bg-emerald-600 disabled:opacity-40 py-2.5 text-[14px] font-medium text-white flex items-center justify-center gap-1.5" data-testid="fit-confirm"><Check size={16} />{L("Save", "احفظ")} · {F.sumN(draft.filter((x) => x.kcal != null)).kcal} {L("kcal", "سعرة")}</button>
+              <div className={"flex gap-2 sticky z-10 -mx-3 px-3 py-2 " + (designA ? "bg-slate-950" : "bg-slate-900")} style={{ bottom: designA ? "calc(68px + env(safe-area-inset-bottom))" : minimal ? "env(safe-area-inset-bottom)" : "calc(92px + env(safe-area-inset-bottom))" }} data-testid="fit-save-bar">
+                <button onClick={() => setDraft(null)} className={designA ? "rounded-full bg-slate-800 px-4 min-h-[52px] text-[14px] font-bold text-white" : "rounded-xl bg-slate-800 px-3 py-2.5 text-[13px] text-slate-300"}>{L("Back", "رجوع")}</button>
+                <button onClick={confirm} disabled={!draft.length} className={(designA ? "rounded-full bg-emerald-500 min-h-[52px] text-[16px] font-black" : "rounded-xl bg-emerald-600 py-2.5 text-[14px] font-medium") + " flex-1 disabled:opacity-40 text-white flex items-center justify-center gap-1.5"} data-testid="fit-confirm"><Check size={16} />{designA ? L("Add to " + MEAL_NAMES[adding][0], "ضيف على " + MEAL_NAMES[adding][1]) : L("Save", "احفظ")} · {F.sumN(draft.filter((x) => x.kcal != null)).kcal} {L("kcal", "سعرة")}</button>
               </div>
             </div>
           )}
         </div>
       ) : null}
 
-      {tab === "today" && !adding && <Today {...{ L, t, ar, st, upd, tg: tg && st.profile.cycleExtra ? { ...tg, kcal: Y.dayGoal(tg.kcal, dayKey, st.profile.cycleExtra) } : tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, minimal, openMove: () => setTab("move") }} />}
+      {tab === "today" && !adding && <Today {...{ L, t, ar, st, upd, tg: tg && st.profile.cycleExtra ? { ...tg, kcal: Y.dayGoal(tg.kcal, dayKey, st.profile.cycleExtra) } : tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, minimal, a: designA, openMove: () => setTab("move") }} />}
+      {tab === "fast" && !adding && <Today {...{ L, t, ar, st, upd, tg: tg && st.profile.cycleExtra ? { ...tg, kcal: Y.dayGoal(tg.kcal, dayKey, st.profile.cycleExtra) } : tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, minimal, a: true, only: "fast", openMove: () => setTab("move") }} />}
       {undo ? (
         <div role="status" aria-live="polite" className="att-shift fixed inset-x-0 bottom-20 z-40 flex justify-center px-4 pointer-events-none" data-testid="fit-undo-bar">
           <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-slate-800 border border-slate-700 ps-4 pe-1 py-1 shadow-xl max-w-md w-full motion-safe:animate-[fitup_.2s_ease-out]">
@@ -1022,7 +1059,7 @@ function EditFood({ L, ar, x, meal, onClose, onSave }) {
 }
 
 const DAY_LETTERS = { en: ["S", "M", "T", "W", "T", "F", "S"], ar: ["ح", "ن", "ث", "ر", "خ", "ج", "س"] };
-function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, openMove, minimal = false }) {
+function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, setAdding, addItems, logNow, setUndo, tick, flash, health, bar, listening, scanBarcode, openMove, minimal = false, a = false, only = null }) {
   const [extra, setExtra] = useState(null);   // v6.32 minimal: which of water / move / fasting is open (small buttons, not three cards)
   const [copyOf, setCopyOf] = useState(null);           // v6.13: { slot } being copied to another day (slot null = the whole day); v6.23: { slot, item } = one food
   const [editing, setEditing] = useState(null);         // v6.23: { m, i } — the food in the edit sheet
@@ -1086,6 +1123,165 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
     <button onClick={bar[k]} data-testid={"fit-lb-" + k} aria-label={label}
       className={"min-h-[56px]! rounded-2xl flex flex-col items-center justify-center gap-0.5 text-[12.5px] font-medium active:scale-[.97] motion-safe:transition-transform " + (primary ? "bg-emerald-600 text-white" : listening && k === "voice" ? "bg-rose-600 text-white" : "bg-slate-800 text-slate-100")}>
       <Ic size={19} aria-hidden="true" /><span>{label}</span></button>);
+  const fastCard = (
+<div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3" data-testid="fit-fast">
+        <div className="text-[13px] text-white flex items-center gap-1.5"><Timer size={15} className="text-violet-300" />{L("Fasting", "صيام")}</div>
+        {fs ? (<>
+          <div className={"text-xl font-semibold tabular-nums mt-1 " + (fs.reached ? "text-emerald-300" : "text-white")}>{hm(fs.done)} <span className="text-[12px] text-slate-400">/ {st.fast.hours}h</span></div>
+          <div className="h-1.5 rounded-full bg-slate-800 mt-1"><div className="h-1.5 rounded-full bg-violet-400" style={{ width: fs.pct + "%" }} /></div>
+          {(() => { const sg = Y.fastStage(fs.done / 3600e3); return <div className="text-[11.5px] text-violet-200 mt-1.5" data-testid="fit-fast-stage">{L(sg.now[1], sg.now[2])}{sg.next ? <span className="text-slate-500"> · {L(`next in ${sg.inH} h`, `اللي بعده كمان ${sg.inH} ساعة`)}</span> : null}</div>; })()}
+          <button onClick={() => upd((s) => ({ ...s, fast: null }))} className="mt-2 w-full min-h-[44px] rounded-lg bg-slate-800 text-[12.5px] text-slate-200">{L("End fast", "خلّص الصيام")}</button>
+        </>) : (
+          <div className="flex flex-wrap gap-1.5 mt-2">{Object.entries({ ...F.FASTS, ...Y.MORE_FASTS }).map(([k, h]) => <button key={k} onClick={() => upd((s) => ({ ...s, fast: { start: Date.now(), hours: h } }))} className="min-h-[44px] rounded-lg bg-slate-800 px-3 text-[12.5px] text-slate-200" data-testid={"fit-fast-" + h}>{k}</button>)}</div>
+        )}
+      </div>);
+  // ---- v6.43 design A (Ali picked "A · Fresh" on the design canvas, 19 Oct): a big "Today", one ring card with eaten | left |
+  // burned and the three macros under it, one card of meals (a coloured sign, what was eaten, the calories, a small +), then
+  // water and the watch side by side. Fasting has its own tab (only="fast").
+  const sheets = (<>
+    {editing && ((day.meals || {})[editing.m] || [])[editing.i] ? <EditFood key={editing.m + editing.i} {...{ L, ar, x: day.meals[editing.m][editing.i], meal: editing.m, onClose: () => setEditing(null), onSave: (x, to) => saveEdit(editing.m, editing.i, x, to) }} /> : null}
+    {copyOf ? <CopySheet {...{ L, ar, from: dayKey, slot: copyOf.slot, item: copyOf.item, onClose: () => setCopyOf(null), onCopy: (toKey, toSlot) => {
+        upd((s0) => ({ ...s0, days: copyOf.item ? P.copyItem(s0.days, toKey, toSlot, copyOf.item) : P.copyFood(s0.days, dayKey, toKey, copyOf.slot, toSlot) }));
+        setCopyOf(null);
+        flash && flash(toKey === F.today() ? L("Copied to today", "اتنسخ للنهارده") : L("Copied to " + toKey, "اتنسخ ليوم " + toKey));
+      } }} /> : null}
+  </>);
+  if (a && only === "fast") {
+    // design A's Fasting tab: one big timer ring; the plans as cards; the body's stages with the current one marked
+    const cardA = "rounded-3xl bg-slate-900 shadow-[0_1px_3px_rgba(16,32,28,0.08)]";
+    const hours = fs ? fs.done / 3600e3 : 0, sg = fs ? Y.fastStage(hours) : null;
+    const PLAN_TXT = { 12: ["Easy start", "بداية سهلة"], 14: ["Gentle", "خفيف"], 16: ["The classic", "الأشهر"], 18: ["Stronger", "أقوى"], 20: ["Warrior", "المحارب"], 23: ["One meal a day", "وجبة واحدة في اليوم"], 36: ["Long fast — check with a doctor", "صيام طويل — استشير دكتور"] };
+    return (
+      <div className="space-y-4 fit-a" data-testid="fit-fast-tab">
+        <h2 className="text-[28px] font-black text-white pt-1">{L("Fasting", "الصيام")}</h2>
+        <div className={cardA + " p-5 flex flex-col items-center gap-3"} data-testid="fit-fast">
+          <div className="w-[210px] h-[210px] rounded-full grid place-items-center" style={{ background: `conic-gradient(${fs && fs.reached ? "#1E9E6A" : "#7C5CD6"} 0 ${fs ? fs.pct : 0}%, #ECE8F8 ${fs ? fs.pct : 0}% 100%)` }}>
+            <div className="w-[180px] h-[180px] rounded-full bg-slate-900 flex flex-col items-center justify-center text-center">
+              {fs ? <><span className="text-[13px] font-bold text-slate-500">{fs.reached ? L("Done! 🎉", "خلصت!") : L("Fasting for", "صايم بقالك")}</span>
+                <span className="text-[40px] font-black tabular-nums text-white leading-none my-1">{hm(fs.done)}</span>
+                <span className="text-[13px] font-bold text-slate-500">/ {st.fast.hours}h</span></>
+                : <><span className="text-[15px] font-extrabold text-white">{L("Not fasting", "مش صايم")}</span><span className="text-[12.5px] text-slate-500 mt-1 px-4">{L("Pick a plan below to start", "اختار خطة تحت وابدأ")}</span></>}
+            </div>
+          </div>
+          {fs ? <><div className="text-[14px] font-extrabold text-violet-300 text-center" data-testid="fit-fast-stage">{L(sg.now[1], sg.now[2])}{sg.next ? <span className="block text-[12.5px] font-bold text-slate-500">{L(`Next: ${sg.next[1]} in ${sg.inH} h`, `اللي بعده: ${sg.next[2]} بعد ${sg.inH} س`)}</span> : null}</div>
+            <button onClick={() => upd((s) => ({ ...s, fast: null }))} className="w-full min-h-[52px] rounded-full bg-slate-800 text-[15px] font-extrabold text-white">{L("End fast", "خلّص الصيام")}</button></> : null}
+        </div>
+        {!fs ? <div className="grid grid-cols-2 gap-3">
+          {Object.entries({ ...F.FASTS, ...Y.MORE_FASTS }).map(([k, h]) => <button key={k} onClick={() => upd((s) => ({ ...s, fast: { start: Date.now(), hours: h } }))} data-testid={"fit-fast-" + h}
+            className={cardA + " p-4 text-start flex flex-col gap-0.5 min-h-[84px]"}><span className="text-[22px] font-black text-white">{k}</span><span className="text-[12.5px] font-bold text-slate-500">{L((PLAN_TXT[h] || ["", ""])[0], (PLAN_TXT[h] || ["", ""])[1])}</span></button>)}
+        </div> : null}
+        <div className={cardA + " p-4"}>
+          <div className="text-[15px] font-black text-white mb-2">{L("What happens in your body", "إيه اللي بيحصل في جسمك")}</div>
+          {Y.FAST_STAGES.map((g, k) => { const on = fs && sg && sg.now === g; return (
+            <div key={k} className={"flex gap-3 py-1.5 text-[13px] " + (on ? "font-extrabold text-white" : "text-slate-500")}><span className="w-10 shrink-0 tabular-nums font-bold">{g[0]} h</span><span>{L(g[1], g[2])}</span></div>); })}
+        </div>
+      </div>);
+  }
+  if (a) {
+    const pct = Math.max(0, Math.min(100, Math.round((tot.kcal / Math.max(1, tg.kcal + tot.burned)) * 100)));
+    const w = day.watch || null;
+    let dateLine = dayKey; try { dateLine = new Date(dayKey + "T12:00:00").toLocaleDateString(ar ? "ar-EG" : "en-GB", { weekday: "long", day: "numeric", month: "long" }); } catch (e) {}
+    const MEAL_SIGN = {
+      breakfast: ["#FFF4D6", "#B7791F", <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>],
+      lunch: ["#E3F4EC", "#157A52", <><path d="M3 11h18a9 9 0 0 1-18 0zM8 7c0-2 2-2 2-4M13 7c0-2 2-2 2-4" /></>],
+      dinner: ["#ECE8F8", "#6B4FB8", <><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></>],
+      snacks: ["#FCE7EE", "#B83260", <><path d="M12 7c-3-2-8-1-8 5 0 4 3 9 6 9 1 0 1.5-.5 2-.5s1 .5 2 .5c3 0 6-5 6-9 0-6-5-7-8-5zM12 7c0-2 1-4 3-4" /></>],
+    };
+    const card = "rounded-3xl bg-slate-900 shadow-[0_1px_3px_rgba(16,32,28,0.08)]";
+    const macro = (label, v, mx, col, soft) => { const p2 = mx > 0 ? Math.min(100, Math.round(((v || 0) / mx) * 100)) : 0; return (
+      <div className="min-w-0 flex flex-col gap-1.5"><span className="text-[12.5px] font-extrabold text-white">{label}</span>
+        <div className="h-1.5 rounded-full" style={{ background: soft }}><div className="h-1.5 rounded-full" style={{ width: p2 + "%", background: col }} /></div>
+        <span className="text-[12px] text-slate-500 tabular-nums">{Math.round(v || 0)} / {mx} {L("g", "جم")}</span></div>); };
+    return (
+      <div className="space-y-3 fit-a" data-testid="fit-today">
+        <div className="flex items-end justify-between gap-2 pt-1">
+          <div className="min-w-0"><div className="text-[13px] font-bold text-slate-500 truncate">{dateLine}</div>
+            <div className="text-[28px] leading-tight font-black text-white" data-testid="fit-day">{isToday ? L("Today", "النهارده") : dayKey}</div></div>
+          <div className="flex gap-1.5 shrink-0">
+            <button onClick={() => shift(-1)} className={"w-11 h-11 rounded-full flex items-center justify-center text-white " + card} aria-label={t("Previous day")}><ChevronLeft size={19} className="rtl:rotate-180" /></button>
+            <button onClick={() => shift(1)} disabled={isToday} className={"w-11 h-11 rounded-full flex items-center justify-center text-white disabled:opacity-30 " + card} aria-label={t("Next day")}><ChevronLeft size={19} className="rotate-180 rtl:rotate-0" /></button>
+          </div>
+        </div>
+
+        <div className={card + " p-4 space-y-4"} data-testid="fit-ring">
+          <div className="flex items-center justify-between gap-2">
+            <div className="w-[72px] flex flex-col items-center"><span className="text-[19px] font-extrabold text-white tabular-nums" data-testid="fit-eaten">{tot.kcal}</span><span className="text-[12px] font-semibold text-slate-500">{L("eaten", "أكلت")}</span></div>
+            <div className="w-[150px] h-[150px] rounded-full grid place-items-center shrink-0" style={{ background: `conic-gradient(${left < 0 ? "#D9534F" : "#1E9E6A"} 0 ${pct}%, #E3ECE7 ${pct}% 100%)` }}>
+              <div className="w-[124px] h-[124px] rounded-full bg-slate-900 flex flex-col items-center justify-center">
+                <span className={"text-[34px] font-black tabular-nums leading-none " + (left < 0 ? "text-rose-300" : "text-white")} data-testid="fit-left">{Math.abs(left)}</span>
+                <span className="text-[13px] font-bold text-slate-500 mt-1">{left < 0 ? L("kcal over", "سعرة زيادة") : L("kcal left", "سعرة فاضلة")}</span></div>
+            </div>
+            <div className="w-[72px] flex flex-col items-center"><span className="text-[19px] font-extrabold text-white tabular-nums">{tot.burned}</span><span className="text-[12px] font-semibold text-slate-500">{L("burned", "حرقت")}</span></div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {macro(L("Carbs", "كارب"), tot.c, tg.carbs, "#2F7FD8", "#E8EEF6")}
+            {macro(L("Protein", "بروتين"), tot.p, tg.protein, "#E07A1F", "#F7EBDF")}
+            {macro(L("Fat", "دهون"), tot.f, tg.fat, "#8B5CC9", "#EFE7F7")}
+          </div>
+        </div>
+        {st.ramadan && st.ramadan.on && isToday ? <RamadanCard {...{ L, ar, tg, city: st.ramadan.city }} /> : null}
+        {isToday ? <InsulinCard {...{ L, ar, day }} carbsToday={tot.c} /> : null}
+
+        <h3 className="text-[18px] font-black text-white px-1 pt-1">{L("Meals", "الوجبات")}</h3>
+        <div className={card + " divide-y divide-slate-800"} data-testid="fit-meals">
+          {F.MEALS.map((m) => {
+            const items = (day.meals || {})[m] || [], sum = F.sumN(items.filter((x) => x.kcal != null));
+            const pm = !items.length && plan && plan.meals[m] && isToday ? plan.meals[m] : null;
+            const [soft, col, icon] = MEAL_SIGN[m] || MEAL_SIGN.snacks;
+            return (
+              <div key={m} className="px-3.5 py-3" data-testid={"fit-meal-" + m}>
+                <div className="flex items-center gap-3">
+                  <span className="w-11 h-11 rounded-2xl grid place-items-center shrink-0" style={{ background: soft }} aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{icon}</svg></span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[15.5px] font-extrabold text-white">{L(MEAL_NAMES[m][0], MEAL_NAMES[m][1])}{onInsulin && sum.c ? <span className="ms-1.5 text-[12px] font-semibold text-slate-500 tabular-nums" data-testid="fit-meal-carbs">{Math.round(sum.c)} {L("g carbs", "جم كارب")}</span> : null}</div>
+                    {items.length ? <div className="text-[13px] text-slate-500 truncate">{items.map(nm).join(ar ? "، " : ", ")}</div>
+                      : pm ? <button onClick={() => one(m, { name: pm.recipe.en, ar: pm.recipe.ar, grams: Math.round(F.recipeNutrients(pm.recipe).grams * pm.x), kcal: pm.kcal, p: pm.p, c: pm.c, f: pm.f, fib: 0, recipe: pm.recipe.id }, pm.kcal)}
+                          className="block max-w-full text-start text-[13px] text-slate-500 truncate" data-testid={"fit-suggest-" + m}>{L("Try", "جرّب")}: {ar ? pm.recipe.ar : pm.recipe.en} · {pm.kcal}</button>
+                      : <div className="text-[13px] text-slate-500">{L("Nothing yet", "لسه مفيش")}</div>}
+                  </div>
+                  {items.length ? <span className="text-[15px] font-extrabold text-white tabular-nums">{sum.kcal}</span> : null}
+                  {items.length ? <button onClick={() => setCopyOf({ slot: m })} className="w-9 h-9 rounded-full grid place-items-center text-slate-500" aria-label={L("Copy to another day", "انسخ ليوم تاني")} data-testid={"fit-copy-" + m}><Copy size={16} /></button> : null}
+                  <button onClick={() => setAdding(m)} className="w-10 h-10 rounded-full grid place-items-center shrink-0 bg-emerald-950 text-emerald-300" aria-label={L("Add to " + MEAL_NAMES[m][0], "ضيف على " + MEAL_NAMES[m][1])} data-testid={"fit-add-" + m}><Plus size={20} strokeWidth={2.6} /></button>
+                </div>
+                {items.length ? <div className="mt-1.5 ms-14">{items.map((x, i) => <LogRow key={(x.t || 0) + ":" + i} {...{ t, ar, x }} testid={"fit-item-" + m} onDelete={() => del(m, i)} onEdit={() => setEditing({ m, i })} onCopy={() => setCopyOf({ slot: m, item: x })} />)}</div> : null}
+              </div>);
+          })}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className={card + " p-3.5 flex flex-col gap-1.5"} data-testid="fit-water">
+            <span className="text-[12.5px] font-bold text-slate-500">{L("Water", "مية")}</span>
+            <span className="text-[20px] font-black text-white tabular-nums">{(tot.water / 1000).toFixed(2)} <span className="text-[13px] font-bold text-slate-500">/ {(tg.water / 1000).toFixed(1)} L</span></span>
+            <div className="flex gap-1" aria-hidden="true">{Array.from({ length: 5 }, (_, i) => <span key={i} className="flex-1 h-2 rounded-full" style={{ background: (tot.water || 0) >= ((i + 1) * tg.water) / 5 ? "#3BA3E6" : "#E3EEF6" }} />)}</div>
+            <div className="flex gap-1.5 mt-0.5">
+              <button onClick={() => setDay((d) => ({ ...d, water: Math.max(0, (d.water || 0) - 250) }))} className="w-11 h-10 rounded-full bg-slate-800 text-white text-[18px]" aria-label={t("One glass less")}>−</button>
+              <button onClick={() => { setDay((d) => ({ ...d, water: (d.water || 0) + 250 })); tick(); }} className="flex-1 h-10 rounded-full bg-sky-600 text-white text-[13.5px] font-bold" data-testid="fit-water-add">+ {L("glass", "كوب")}</button>
+            </div>
+          </div>
+          <div className={card + " p-3.5 flex flex-col gap-1.5"} data-testid="fit-exercise">
+            <span className="text-[12.5px] font-bold text-slate-500">{w ? L("From your watch", "من ساعتك") : L("Activity", "النشاط")}</span>
+            <span className="text-[20px] font-black text-white tabular-nums">{w ? <span data-testid="fit-steps">{(w.steps || 0).toLocaleString("en-US")}</span> : tot.burned} <span className="text-[13px] font-bold text-slate-500">{w ? L("steps", "خطوة") : L("kcal", "سعرة")}</span></span>
+            <span className="text-[12px] font-bold text-emerald-300 truncate">{w ? (w.activeKcal || 0) + " " + L("kcal burned", "سعرة محروقة") : L("Connect a watch in Me", "اربط ساعة من «أنا»")}</span>
+            <button onClick={openMove} className="mt-auto h-10 rounded-full bg-slate-800 text-white text-[13.5px] font-bold" data-testid="fit-open-move">{L("Workouts", "التمارين")}</button>
+          </div>
+        </div>
+
+        <div className={card + " p-3.5"} data-testid="fit-week">
+          <div className="text-[12.5px] font-bold text-slate-500 mb-1.5">{t("This week")}</div>
+          <div className="flex items-end gap-1.5 h-14" role="img" aria-label={t("Calories in the last 7 days")}>
+            {week.map((wk) => (
+              <div key={wk.d} className="flex-1 flex flex-col items-center gap-0.5 h-full justify-end">
+                <div className="w-full rounded-md" style={{ height: Math.max(3, Math.round((wk.kcal / wMax) * 40)) + "px", background: wk.kcal > tg.kcal * 1.1 ? "#E07A1F" : wk.d === dayKey ? "#1E9E6A" : "#BFE3CF" }} />
+                <span className="text-[11px] text-slate-500">{DAY_LETTERS[ar ? "ar" : "en"][wk.day]}</span>
+              </div>))}
+          </div>
+        </div>
+        {F.MEALS.some((m) => ((day.meals || {})[m] || []).length) ? (
+          <button onClick={() => setCopyOf({ slot: null })} className="w-full min-h-[44px] text-[13px] font-bold text-slate-500 flex items-center justify-center gap-1.5" data-testid="fit-copy-day">
+            <Copy size={14} />{isToday ? L("Copy today's food to another day", "انسخ أكل النهارده ليوم تاني") : L("Copy this day's food to another day", "انسخ أكل اليوم ده ليوم تاني")}</button>) : null}
+        {sheets}
+      </div>);
+  }
   return (
     <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-[minmax(320px,400px)_minmax(0,1fr)] lg:gap-x-6 lg:gap-y-3 lg:items-start" data-testid="fit-today">
       <div className="space-y-3 lg:col-start-1">
@@ -1216,17 +1412,7 @@ function Today({ L, t, ar, st, upd, tg, tot, day, dayKey, setDayKey, setDay, set
         <WatchCard {...{ L, ar, health, st, upd, dayKey }} compact />
       </div> : null}
 
-      {!minimal || extra === "fast" ? <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3" data-testid="fit-fast">
-        <div className="text-[13px] text-white flex items-center gap-1.5"><Timer size={15} className="text-violet-300" />{L("Fasting", "صيام")}</div>
-        {fs ? (<>
-          <div className={"text-xl font-semibold tabular-nums mt-1 " + (fs.reached ? "text-emerald-300" : "text-white")}>{hm(fs.done)} <span className="text-[12px] text-slate-400">/ {st.fast.hours}h</span></div>
-          <div className="h-1.5 rounded-full bg-slate-800 mt-1"><div className="h-1.5 rounded-full bg-violet-400" style={{ width: fs.pct + "%" }} /></div>
-          {(() => { const sg = Y.fastStage(fs.done / 3600e3); return <div className="text-[11.5px] text-violet-200 mt-1.5" data-testid="fit-fast-stage">{L(sg.now[1], sg.now[2])}{sg.next ? <span className="text-slate-500"> · {L(`next in ${sg.inH} h`, `اللي بعده كمان ${sg.inH} ساعة`)}</span> : null}</div>; })()}
-          <button onClick={() => upd((s) => ({ ...s, fast: null }))} className="mt-2 w-full min-h-[44px] rounded-lg bg-slate-800 text-[12.5px] text-slate-200">{L("End fast", "خلّص الصيام")}</button>
-        </>) : (
-          <div className="flex flex-wrap gap-1.5 mt-2">{Object.entries({ ...F.FASTS, ...Y.MORE_FASTS }).map(([k, h]) => <button key={k} onClick={() => upd((s) => ({ ...s, fast: { start: Date.now(), hours: h } }))} className="min-h-[44px] rounded-lg bg-slate-800 px-3 text-[12.5px] text-slate-200" data-testid={"fit-fast-" + h}>{k}</button>)}</div>
-        )}
-      </div> : null}
+      {!minimal || extra === "fast" ? fastCard : null}
       </div>
     </div>
   );
