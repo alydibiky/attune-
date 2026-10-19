@@ -5734,4 +5734,10 @@ export const AR = {
   "Use my watch's temperature": "استخدم حرارة ساعتي",
   "Read now": "اقرا دلوقتي",
   "Connected, but the watch hasn't shared any night temperature yet.": "اتوصلت، بس الساعة لسه مبعتتش أي حرارة بالليل.",
+  "Story threads": "القصص المستمرة",
+  "{n} days · {s} sources": "{n} أيام · {s} مصادر",
+  "new today": "جديد النهارده",
+  "Comparing the days…": "بقارن الأيام…",
+  "Nothing really new since the day before.": "مفيش جديد فعلًا من اليوم اللي قبله.",
+  "What changed since {d}?": "إيه اللي اتغير من {d}؟",
 };

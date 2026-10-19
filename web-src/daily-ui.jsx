@@ -666,6 +666,42 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
     clearOpen && clearOpen();
   }, [openId]);
 
+  // v6.41 (D4): the same story over several days — each day's headlines by source, and what changed since the day before
+  const [openTh, setOpenTh] = useState(null);
+  const [changes, setChanges] = useState({});
+  const whatChanged = async (th) => {
+    setChanges((c) => ({ ...c, [th.id]: { busy: true } }));
+    try {
+      const { items, messages } = D.changeMessages(th, topic.lang);
+      const out = await llm(messages, { maxTokens: 500, temperature: 0.2 });
+      const ck = /^\s*NOTHING NEW/i.test(out) ? { text: "", none: true } : D.checkCitations(out, items.length);
+      setChanges((c) => ({ ...c, [th.id]: { text: (ck.text || "").trim(), none: !!ck.none, items } }));
+    } catch (e) { setChanges((c) => ({ ...c, [th.id]: null })); flash(String(e.message || e)); }
+  };
+  const Threads = ({ topic }) => {
+    const list = D.newsThreads(topic.digests, topic.query, todayKey);
+    if (!list.length) return null;
+    return (
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2" data-testid="news-threads">
+        <p className="text-[12px] font-semibold text-slate-300">{tr("Story threads")}</p>
+        {list.map((th) => { const ch = changes[th.id];
+          return (
+          <div key={th.id} data-testid="news-thread">
+            <button className="text-start w-full" onClick={() => setOpenTh(openTh === th.id ? null : th.id)}>
+              <span className="block text-[13px] text-slate-200" dir="auto">{th.title}</span>
+              <span className="text-[11px] text-slate-500">{tr("{n} days · {s} sources", { n: th.days.length, s: th.sources.length })}{th.today ? " · " + tr("new today") : ""}</span></button>
+            {openTh === th.id ? <div className="mt-1.5 space-y-1.5 ps-2 border-s border-slate-800" data-testid="news-thread-open">
+              {th.days.map((d) => <div key={d}><p className="text-[11px] text-slate-500">{d}</p>
+                {th.byDay[d].map((it, i) => <a key={i} href={it.url} target="_blank" rel="noreferrer" className="block text-[12px] text-teal-300/90" dir="auto">{it.title}{it.source ? <span className="text-slate-500"> · {it.source}</span> : null}</a>)}</div>)}
+              {ch && ch.busy ? <p className="text-[12px] text-slate-400">{tr("Comparing the days…")}</p>
+                : ch && ch.none ? <p className="text-[12px] text-slate-400" data-testid="news-thread-change">{tr("Nothing really new since the day before.")}</p>
+                : ch ? <div className="text-[13px]" dir="auto" data-testid="news-thread-change"><Md text={ch.text} runnable={false} /></div>
+                : modelReady ? <button className={ghost + " text-[12px]"} onClick={() => whatChanged(th)} data-testid="news-thread-ask">{tr("What changed since {d}?", { d: th.days[1] })}</button> : null}
+            </div> : null}
+          </div>); })}
+      </div>);
+  };
+
   const Digest = ({ d }) => (
     <div className="space-y-2" data-testid="digest">
       {d.none ? <p className="text-[13px] text-slate-400">{tr("Nothing new on this in the last day.")}{d.why ? " (" + d.why + ")" : ""}</p> : <div dir="auto"><Md text={d.text} runnable={false} /></div>}
@@ -687,6 +723,7 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
         ? <button className={primary + " w-full py-2.5"} onClick={() => gather(topic)} data-testid="news-gather">{tr("Gather today's news")}</button>
         : <button className={ghost + " w-full"} onClick={openEngine}>{tr("Load a model to write the digest")}</button>}
       <p className="text-[11px] text-slate-500">{tr("The articles come from the web when you open this; the digest is written on your phone and cites every line. Check the sources for anything important.")}</p>
+      <Threads topic={topic} />
       {topic.digests.filter((d) => d.day !== todayKey).length ? (
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-2">
           <p className="text-[12px] font-semibold text-slate-300">{tr("Earlier days")}</p>

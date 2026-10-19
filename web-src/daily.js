@@ -598,3 +598,45 @@ export async function writeLesson(llm, c, n, { onToken, onStage } = {}) {
   const { problems, ...lesson } = best;
   return { ...lesson, checked: problems };
 }
+
+/* ---- v6.41 (upgrade D4) — news story threads. The same story over several days becomes one thread: each day's headlines with
+   their sources (how each source tells it), and "What changed since yesterday" written only from the two days' articles.
+   Threads are found by code: two headlines share at least two telling words (not the topic's own words, not small words). */
+const NSTOP = new Set(("the and for with from that this after over into amid about says said will have has was were are its their " +
+  "new news more than what when how why who why top live update updates report reports video photos watch today yesterday week " +
+  "في من على عن إلى الى مع بعد قبل هذا هذه التي الذي كان كانت أن ان يوم اليوم أمس خلال بين حول عاجل تقرير فيديو صور اخبار أخبار").split(/\s+/));
+const tw = (title, skip) => new Set(normTitle(title).replace(/[أإآ]/g, "ا").replace(/ة\b/g, "ه").split(" ").map((w) => w.replace(/^(ال|وال|بال)/, ""))
+  .filter((w) => w.length > 2 && !NSTOP.has(w) && !skip.has(w) && !/^\d{1,2}$/.test(w)));
+/** → [{ id, title, days: [day…] newest first, byDay: { day: [items] }, sources: [..], today }] spanning 2+ days, newest first. */
+export function newsThreads(digests, query = "", today = dayKey()) {
+  const skip = tw(query, new Set());
+  const items = [];
+  for (const d of digests || []) for (const it of d.items || []) items.push({ ...it, day: d.day, w: tw(it.title, skip) });
+  const parent = items.map((_, i) => i);
+  const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+  for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+    let k = 0; for (const w of items[i].w) if (items[j].w.has(w)) k++;
+    if (k >= 2) parent[find(i)] = find(j);
+  }
+  const groups = new Map();
+  items.forEach((it, i) => { const r = find(i); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(it); });
+  const out = [];
+  for (const g of groups.values()) {
+    const days = [...new Set(g.map((x) => x.day))].sort().reverse();
+    if (days.length < 2) continue;
+    const byDay = {}; for (const d of days) byDay[d] = g.filter((x) => x.day === d).map(({ w, ...x }) => x);
+    const newest = byDay[days[0]][0];
+    out.push({ id: "th-" + days[days.length - 1] + "-" + normTitle(newest.title).slice(0, 24).replace(/ /g, "-"), title: newest.title, days, byDay,
+      sources: [...new Set(g.map((x) => x.source).filter(Boolean))], today: days[0] === today });
+  }
+  return out.sort((a, b) => b.days[0].localeCompare(a.days[0]) || b.days.length - a.days.length).slice(0, 8);
+}
+/** The two latest days of a thread → messages for "what changed", citing [n] over the listed articles. */
+export function changeMessages(th, lang = "en") {
+  const [d1, d0] = th.days;
+  const list = [...(th.byDay[d0] || []).map((x) => ({ ...x, when: "before" })), ...(th.byDay[d1] || []).map((x) => ({ ...x, when: "latest" }))];
+  return { items: list, messages: [
+    { role: "system", content: `Say what is NEW in the latest articles compared with the earlier ones, about one news story. Use ONLY the articles. 2–4 bullets, most important first, each ending with its source numbers like [3]. If sources disagree or tell it differently, say who says what. Neutral wording, no opinions. ${lang === "ar" ? "اكتب بالعربية المصرية البسيطة." : "Write in English."} If nothing is really new, reply exactly: NOTHING NEW` },
+    { role: "user", content: list.map((x, i) => `[${i + 1}] (${x.when === "latest" ? d1 : d0}) ${x.title}${x.source ? " — " + x.source : ""}\n${x.text || ""}`).join("\n\n") },
+  ] };
+}
