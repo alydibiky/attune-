@@ -5717,4 +5717,12 @@ export const AR = {
   "Couldn't time the model — nothing changed": "مقدرتش أقيس الموديل — مفيش حاجة اتغيرت",
   "Tune for this phone": "ظبّطه على الموبايل ده",
   "Tuned: {g} threads, {t} tokens/s": "متظبط: {g} أنوية، {t} كلمة/ثانية",
+  "Looking…": "بدوّر…",
+  "Cheapest price": "أرخص سعر",
+  "Prices from the web — check at the pharmacy; the same box size matters.": "أسعار من النت — اتأكد في الصيدلية، وخلي بالك من حجم العلبة.",
+  "No price found online": "ملقتش سعر على النت",
+  "One result so far — the next report shows the trend.": "نتيجة واحدة لحد دلوقتي — التحليل الجاي هيبيّن الاتجاه.",
+  "{n} results in {y} years: {a} → {b} {u} ({c}).": "{n} نتايج في {y} سنة: {a} ← {b} {u} ({c}).",
+  "Outside the report's range {k} times.": "برّه المعدل اللي في التقرير {k} مرات.",
+  "Show this to your doctor — the trend says more than one result.": "ورّي ده لدكتورك — الاتجاه بيقول أكتر من نتيجة واحدة.",
 };

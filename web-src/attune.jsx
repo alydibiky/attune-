@@ -10170,6 +10170,7 @@ export default function App() {
           <GuidePage tools={MORE_TOOLS} groups={MORE_GROUPS} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} />
         ) : mode === "care" ? (
           <CarePage readText={readTextAny} flash={flash} incoming={careIn} clearIncoming={() => setCareIn(null)}
+            webSearch={NATIVE && NATIVE.search ? (q) => nativeCall("search", { q, provider: "duckduckgo", key: "", pages: 4 }) : null}
             search={NATIVE && NATIVE.knowSearch ? async (q, ids, k) => { const r = await nativeCall("knowSearch", { q, k: k || 10, ids }); return (r && r.passages) || []; } : null}
             packs={NATIVE && NATIVE.knowPacks ? () => { try { return (JSON.parse(NATIVE.knowPacks()).packs || []).filter((p) => p.installed); } catch (e) { return []; } } : null}
             installPack={NATIVE && NATIVE.knowInstall ? (id) => nativeCall("knowInstall", { id }) : null}

@@ -268,3 +268,37 @@ export function insulinTips(state, { carbsToday = 0, mealsSince = () => 0, now =
   if (state.onInsulin && carbsToday > 0) out.push({ id: "carbs", kind: "carbs", text: `Carbohydrates today: ${Math.round(carbsToday)} g. Each meal shows its carbohydrates so you can match the insulin your doctor set.`, ar: `الكربوهيدرات اليوم: ${Math.round(carbsToday)} جم. تظهر كربوهيدرات كل وجبة لتطابقها مع جرعة الإنسولين التي حددها طبيبك.` });
   return out;
 }
+
+// ---- v6.41 (upgrade F3) — a test over the years, and the cheapest price of a medicine --------------------------------------------
+/** A test's history in words: { first, last, n, change, pct, years, inRange, above, below } (null when fewer than 2 results). */
+export function labHistory(list) {
+  if (!list || list.length < 2) return null;
+  const f = list[0], l = list[list.length - 1];
+  const yrs = Math.max(0, (Date.parse(l.date) - Date.parse(f.date)) / (365.25 * 86400000));
+  const inR = (x) => (x.low == null || x.value >= x.low) && (x.high == null || x.value <= x.high);
+  return { first: f, last: l, n: list.length, change: Math.round((l.value - f.value) * 100) / 100, pct: f.value ? Math.round((l.value / f.value - 1) * 100) : null,
+    years: Math.round(yrs * 10) / 10, inRange: list.filter((x) => (x.low != null || x.high != null) && inR(x)).length,
+    above: list.filter((x) => x.high != null && x.value > x.high).length, below: list.filter((x) => x.low != null && x.value < x.low).length };
+}
+
+const PRICE_EG = /(\d{1,5}(?:[.,]\d{1,2})?)\s*(?:جنيه|جنيها|ج\.م|جم|egp|le\b|l\.e)|(?:\begp|\ble|\bl\.e\.?|ج\.م)\s*(\d{1,5}(?:[.,]\d{1,2})?)/gi;
+/**
+ * Prices of one medicine found on the web pages: [{ site, price, title, url }] cheapest first, one per site. A price is a number
+ * next to a currency on a page that names the medicine; a number that is the strength (500 mg) is never a price.
+ */
+export function medPrices(hits, med) {
+  const name = String((med && med.name) || "").toLowerCase().split(/\s+/)[0];
+  if (!name) return [];
+  const out = new Map();
+  for (const h of hits || []) {
+    const text = (h.title || "") + " \n" + (h.text || h.snippet || "");
+    if (!text.toLowerCase().includes(name)) continue;
+    const prices = [];
+    for (const m of latin(text).matchAll(PRICE_EG)) { const v = +(m[1] || m[2]).replace(",", "."); if (v >= 2 && v <= 20000) prices.push(v); }
+    if (!prices.length) continue;
+    let site = ""; try { site = new URL(h.url).hostname.replace(/^www\./, ""); } catch (e) { site = h.url || ""; }
+    const p = Math.min(...prices);
+    if (!out.has(site) || out.get(site).price > p) out.set(site, { site, price: p, title: h.title || site, url: h.url });
+  }
+  return [...out.values()].sort((a, b) => a.price - b.price).slice(0, 6);
+}

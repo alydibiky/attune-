@@ -61,8 +61,36 @@ function Spark({ list }) {
     </svg>);
 }
 
-export function CarePage({ readText, search, packs, installPack, remind, unremind, flash, incoming, clearIncoming }) {
+// v6.41 (F3): one test over the years — the chart with dates, every value, and the change in words
+function LabDetail({ list }) {
+  const h = H.labHistory(list);
+  if (!h) return <div className="c-card c-sub text-[12.5px]" data-testid="care-lab-detail">{tr("One result so far — the next report shows the trend.")}</div>;
+  const vals = list.map((x) => x.value), lo = Math.min(...vals, h.last.low ?? Infinity), hi = Math.max(...vals, h.last.high ?? -Infinity), span = hi - lo || 1;
+  const X = (i) => 24 + (i / (list.length - 1)) * 290, Y = (v) => 96 - ((v - lo) / span) * 80;
+  return (
+    <div className="c-card space-y-2" data-testid="care-lab-detail">
+      <svg viewBox="0 0 330 120" className="w-full" aria-hidden="true">
+        {h.last.low != null && h.last.high != null ? <rect x="20" y={Y(h.last.high)} width="300" height={Math.max(1, Y(h.last.low) - Y(h.last.high))} fill="var(--c-soft)" /> : null}
+        <polyline points={list.map((x, i) => `${X(i)},${Y(x.value)}`).join(" ")} fill="none" stroke="var(--c-acc)" strokeWidth="2" />
+        {list.map((x, i) => <g key={i}><circle cx={X(i)} cy={Y(x.value)} r="3.5" fill="var(--c-acc)" /><text x={X(i)} y={Y(x.value) - 7} fontSize="10" textAnchor="middle" fill="currentColor">{x.value}</text>
+          <text x={X(i)} y="114" fontSize="9" textAnchor="middle" fill="currentColor" opacity="0.6">{x.date.slice(0, 7)}</text></g>)}
+      </svg>
+      <p className="text-[13px] m-0" dir="auto" data-testid="care-lab-words">{tr("{n} results in {y} years: {a} → {b} {u} ({c}).", { n: h.n, y: h.years, a: h.first.value, b: h.last.value, u: h.last.unit || "", c: (h.change > 0 ? "+" : "") + h.change + (h.pct != null ? ", " + (h.pct > 0 ? "+" : "") + h.pct + "%" : "") })}
+        {h.above || h.below ? " " + tr("Outside the report's range {k} times.", { k: h.above + h.below }) : ""}</p>
+      <p className="c-sub text-[11px] m-0">{tr("Show this to your doctor — the trend says more than one result.")}</p>
+    </div>);
+}
+
+export function CarePage({ readText, search, webSearch, packs, installPack, remind, unremind, flash, incoming, clearIncoming }) {
   const [data, setData] = useState(() => H.loadCare());
+  const [openLab, setOpenLab] = useState(null);
+  const [prices, setPrices] = useState({});
+  const findPrice = async (m) => {
+    setPrices((p) => ({ ...p, [m.id]: "busy" }));
+    let hits = [];
+    try { const r = await webSearch(m.name + " " + (m.strength || "") + " سعر"); hits = (r && (r.results || r.hits)) || []; } catch (e) {}
+    setPrices((p) => ({ ...p, [m.id]: H.medPrices(hits, m) }));
+  };
   const put = (d) => setData(H.saveCare(d));
   const [tab, setTab] = useState(() => (H.loadCare().meds.length ? "today" : "meds"));
   const [drafts, setDrafts] = useState([]);
@@ -186,7 +214,12 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
                 <div className="c-ic"><Pill size={16} /></div>
                 <div className="flex-1 min-w-0"><b className="block" dir="auto">{m.name} {m.strength}</b>
                   <span className="c-sub text-[12.5px]" dir="auto">{[members.find((p) => p.id === m.member) && members.length > 1 ? members.find((p) => p.id === m.member).name : "", m.dose, tr(m.freq), (m.times || []).join(", "), m.food ? tr(m.food) : "", left != null ? tr("{n} days left", { n: Math.max(0, left) }) : "", H.daysOfSupply(data, m) != null ? tr("supply for {n} days", { n: H.daysOfSupply(data, m) }) : ""].filter(Boolean).join(" · ")}</span>
-                  {m.stock > 0 ? <button className="c-sub underline text-[12px] block mt-0.5" onClick={() => refill(m)} data-testid="care-med-refill">{tr("Update how many are left")}</button> : null}</div>
+                  {m.stock > 0 ? <button className="c-sub underline text-[12px] block mt-0.5" onClick={() => refill(m)} data-testid="care-med-refill">{tr("Update how many are left")}</button> : null}
+                  {webSearch ? <button className="c-sub underline text-[12px] block mt-0.5" onClick={() => findPrice(m)} data-testid="care-price">{prices[m.id] === "busy" ? tr("Looking…") : tr("Cheapest price")}</button> : null}
+                  {Array.isArray(prices[m.id]) ? (prices[m.id].length ? <div className="mt-1 space-y-0.5" data-testid="care-prices">
+                    {prices[m.id].map((x) => <a key={x.site} href={x.url} target="_blank" rel="noreferrer" className="flex justify-between text-[12.5px] gap-2"><span className="truncate" dir="auto">{x.site}</span><b className="c-num">{x.price} {tr("EGP")}</b></a>)}
+                    <span className="c-sub text-[11px] block">{tr("Prices from the web — check at the pharmacy; the same box size matters.")}</span></div>
+                    : <span className="c-sub text-[12px] block mt-0.5" data-testid="care-prices-none">{tr("No price found online")}</span>) : null}</div>
                 <button className="c-sub" aria-label={tr("Stop")} onClick={() => stopMed(m)}><Trash2 size={15} /></button>
               </div>); })}
           {!data.meds.some((m) => !m.stopped) ? <DeskEmpty icon={Pill} title={tr("Your medicines appear here")} testid="care-desk-empty" /> : null}
@@ -212,11 +245,14 @@ export function CarePage({ readText, search, packs, installPack, remind, unremin
           </div><div className={tests.length || !labDraft ? R3 : "min-w-0"}>
           {tests.map((t) => { const tr0 = H.trendOf(data.labs, t), L = tr0[tr0.length - 1] || data.labs.filter((x) => x.test === t).pop();
             return (
-              <div key={t} className="c-card flex items-center gap-3" data-testid="care-lab">
+              <React.Fragment key={t}>
+              <div className="c-card flex items-center gap-3 cursor-pointer" data-testid="care-lab" onClick={() => setOpenLab(openLab === t ? null : t)}>
                 <div className="flex-1 min-w-0"><b className="block">{tr(t)}</b><span className="c-sub text-[12.5px]">{L.date}{L.low != null || L.high != null ? " · " + tr("report range") + " " + [L.low, L.high].filter((x) => x != null).join("–") : ""}</span></div>
                 <Spark list={tr0} />
                 <div className="text-end"><div className="c-num font-bold">{L.value} <span className="c-sub text-[11px]">{L.unit}</span></div>{L.flag ? <span className={"c-pill " + (L.flag === "in range" ? "" : "late")} data-testid="care-flag">{tr(L.flag)}</span> : null}</div>
-              </div>); })}
+              </div>
+              {openLab === t ? <LabDetail list={tr0} /> : null}
+              </React.Fragment>); })}
           {!tests.length && !labDraft ? <p className="c-sub">{tr("No results yet. Add a lab report to see each test over time.")}</p> : null}
           {!tests.length && labDraft ? <DeskEmpty icon={Heart} title={tr("Each test over time appears here")} testid="care-desk-empty" /> : null}
           </div></div>
