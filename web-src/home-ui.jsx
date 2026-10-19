@@ -5,7 +5,7 @@
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import React, { useMemo, useState } from "react";
-import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen } from "lucide-react";
+import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid } from "lucide-react";
 import { RecallCard } from "./recall-ui.jsx";
 import { tr, getLang } from "./i18n.js";
 import { loadLife } from "./life.js";
@@ -140,20 +140,28 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {guardian || null}
       {/* v6.37: Missions — the goal most at risk, its chance and today's step */}
       <MissionsLine go={() => navTo("missions")} />
-      <div className="grid grid-cols-2 gap-2" data-testid="home-areas">
-        <button className="c-card text-start p-3" onClick={() => navTo("money")} data-testid="home-area-money"><span className="flex items-center gap-1.5"><Wallet size={15} className="c-acc" /><b className="text-[14px]">{tr("Money")}</b></span>
-          <span className="c-sub block text-[12.5px] mt-1 c-num" dir="auto">{data.o.monthOut ? tr("{v} spent", { v: fmt(data.o.monthOut) }) : tr("Spending, bills, Scout")}</span>
-          {data.o.budget ? <div className="c-bar mt-1.5"><i style={{ width: pct(data.o.monthOut, data.o.budget) + "%" }} /></div> : null}</button>
-        <button className="c-card text-start p-3" onClick={() => navTo("fit")} data-testid="home-area-health"><span className="flex items-center gap-1.5"><Apple size={15} className="c-acc" /><b className="text-[14px]">{tr("Fit & Food")}</b></span>
-          <span className="c-sub block text-[12.5px] mt-1 c-num">{data.fitOn ? tr("{a} / {b} kcal", { a: fmt(data.kcal), b: fmt(data.goal) }) : tr("Calories from a sentence or a photo")}</span>
-          {data.fitOn && data.goal ? <div className="c-bar mt-1.5"><i style={{ width: pct(data.kcal, data.goal) + "%" }} /></div> : null}</button>
-        {/* v6.36 (Ali's board): Instant and Shelf live on Home too, as tiles — not tabs */}
-        <button className="c-card text-start p-3" onClick={() => navTo("instant")} data-testid="home-area-instant"><span className="flex items-center gap-1.5"><Zap size={15} className="c-acc" /><b className="text-[14px]">{tr("Instant")}</b></span>
-          <span className="c-sub block text-[12.5px] mt-1 truncate">{tr("Quick actions on text & photos")}</span></button>
-        <button className="c-card text-start p-3" onClick={() => navTo("shelf")} data-testid="home-area-shelf"><span className="flex items-center gap-1.5"><BookOpen size={15} className="c-acc" /><b className="text-[14px]">{tr("Shelf")}</b></span>
-          <span className="c-sub block text-[12.5px] mt-1 truncate">{tr("Your notes, in books")}</span></button>
+      {/* v6.43 design A (Ali picked it on the design canvas): "Your apps" — big tiles, Business as its own wide dark tile */}
+      <p className="text-[18px] font-extrabold m-0 pt-1">{tr("Your apps")}</p>
+      <div className="grid grid-cols-3 gap-3" data-testid="home-areas">
+        {[["chat", MessageCircle, "Chat", "#1E9E6A", () => navTo("chat"), "home-app-chat", ""],
+          ["fit", Apple, "Food & Fit", "#E07A1F", () => navTo("fit"), "home-area-health", data.fitOn && data.goal ? tr("{a} / {b} kcal", { a: fmt(data.kcal), b: fmt(data.goal) }) : ""],
+          ["money", Wallet, "Money", "#2F7FD8", () => navTo("money"), "home-area-money", data.o.monthOut ? tr("{v} spent", { v: fmt(data.o.monthOut) }) : ""]].map(([k, I, label, col, go, id, sub]) => (
+          <button key={k} onClick={go} className="home-tile" data-testid={id}>
+            <span className="home-tile-ic" style={{ background: col + "22", color: col }}><I size={24} /></span>
+            <b className="text-[13.5px] leading-tight">{tr(label)}</b>{sub ? <span className="c-sub text-[11px] c-num leading-tight truncate max-w-full">{sub}</span> : null}</button>))}
+        <button onClick={() => navTo("business")} className="col-span-3 rounded-[20px] p-4 flex items-center gap-3 text-start" style={{ background: "#16201C", color: "#FFFFFF" }} data-testid="home-app-business">
+          <span className="w-12 h-12 rounded-2xl grid place-items-center shrink-0" style={{ background: "#2A3631" }}><Briefcase size={24} /></span>
+          <span className="flex-1 min-w-0"><b className="block text-[15.5px]">{tr("Business")}</b><span className="block text-[12.5px] truncate" style={{ color: "#B9C6C0" }}>{tr("Fleet · Warehouse · Books — its own app")}</span></span>
+          <ChevronRight size={20} className="shrink-0 rtl:-scale-x-100" /></button>
+        {[["learn", GraduationCap, "Learn", "#6B4FB8", () => navTo("learn"), "home-app-learn"],
+          ["studio", ImageIcon, "Studio", "#B83260", () => navTo("studio"), "home-app-studio"],
+          ["instant", Zap, "Instant", "#B7791F", () => navTo("instant"), "home-area-instant"],
+          ["shelf", BookOpen, "Shelf", "#157A52", () => navTo("shelf"), "home-area-shelf"],
+          ["all", LayoutGrid, "All tools", "#5B6B64", openAll, "home-all"]].map(([k, I, label, col, go, id]) => (
+          <button key={k} onClick={go} className="home-tile" data-testid={id}>
+            <span className="home-tile-ic" style={{ background: col + "22", color: col }}><I size={24} /></span>
+            <b className="text-[13.5px] leading-tight">{tr(label)}</b></button>))}
       </div>
-      <button onClick={openAll} className="c-sub text-[12.5px] px-1" data-testid="home-all">{tr("All tools")} {ar ? "←" : "→"}</button>
       </>}
     </div>);
 }

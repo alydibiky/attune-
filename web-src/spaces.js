@@ -255,8 +255,14 @@ export const ACCENTS = [
 export const BACKGROUNDS = [
   ["slate", "Midnight"], ["black", "Black (OLED)"], ["zinc", "Graphite"], ["stone", "Warm"], ["light", "Light"],
 ];
-export function loadTheme() { const t = read(THEME_KEY, {}); return { accent: t.accent || "teal", bg: t.bg || "slate" }; }
-export function saveTheme(t) { write(THEME_KEY, { accent: t.accent || "teal", bg: t.bg || "slate" }); }
+// v6.43 (Ali picked design A on the design canvas): light, green — the new default. A theme still at the old default (teal on
+// dark slate) moves to A once; a look chosen in Settings → Theme afterwards is kept.
+export function loadTheme() {
+  let t = read(THEME_KEY, null);
+  if (!t || ((t.accent || "teal") === "teal" && (t.bg || "slate") === "slate" && !t.a43)) { t = { accent: "emerald", bg: "light", a43: 1 }; write(THEME_KEY, t); }
+  return { accent: t.accent || "emerald", bg: t.bg || "light" };
+}
+export function saveTheme(t) { write(THEME_KEY, { accent: t.accent || "emerald", bg: t.bg || "light", a43: 1 }); }
 
 /**
  * The CSS variables for a theme, as { "--color-teal-300": "oklch(…)", … }.

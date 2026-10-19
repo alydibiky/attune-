@@ -141,6 +141,9 @@ def new_page(br, env, errors, native=True, extra_init=None, release=False, deskt
     # v6.27: the phone opens on Home now (design A "Calm"); the older tests were written for a Chat start — kept unless a
     # test sets attune:start itself (to "home")
     ctx.add_init_script("try{if(localStorage.getItem('attune:start')===null)localStorage.setItem('attune:start','chat')}catch(e){}")
+    # v6.43: design A (light, green) is the app's default now; the older tests were written for the dark look — kept unless a
+    # test sets attune:theme:v1 itself (e2e_v743 checks the light default)
+    ctx.add_init_script("try{if(localStorage.getItem('attune:theme:v1')===null)localStorage.setItem('attune:theme:v1',JSON.stringify({accent:'teal',bg:'slate',a43:1}))}catch(e){}")
     if extra_init: ctx.add_init_script(extra_init)
     page = ctx.new_page()
     page.on("pageerror", lambda e: errors.append("pageerror: " + str(e)))
