@@ -7,7 +7,25 @@ import { tr } from "./i18n.js";
 
 const MASK_MAX = 2048;   // the mask's longest side (the phone stretches it to the photo)
 
-export function EraseSheet({ src, file, photo, nativeCall, onDone, onClose, flash }) {
+// v6.41 (C2): what the painted part should become — empty or "remove …" = the eraser; anything else = an edit kept only there
+const REMOVE = /^\s*$|^(?:remove|erase|delete|get rid of|take out|شيل|امسح|إمسح|احذف|إحذف|اشطب|ازالة|إزالة|ورّيني من غير)(?=$|\s)/i;
+export const isRemoval = (t) => REMOVE.test(String(t || ""));
+
+/** v6.41 (C2): the original with the edit only inside the mask (the edge softened over ~1.5% of the width). → a PNG data URL. */
+export async function keepInMask(origUrl, editUrl, maskUrl) {
+  const load = (u) => new Promise((ok, bad) => { const i = new Image(); i.crossOrigin = "anonymous"; i.onload = () => ok(i); i.onerror = bad; i.src = u; });
+  const [o, e, m] = await Promise.all([load(origUrl), load(editUrl), load(maskUrl)]);
+  const W = o.naturalWidth, H = o.naturalHeight;
+  const c = Object.assign(document.createElement("canvas"), { width: W, height: H }), g = c.getContext("2d");
+  const soft = Object.assign(document.createElement("canvas"), { width: W, height: H }), sg = soft.getContext("2d");
+  sg.filter = "blur(" + Math.max(2, Math.round(W * 0.015)) + "px)"; sg.drawImage(m, 0, 0, W, H); sg.filter = "none";
+  sg.globalCompositeOperation = "source-in"; sg.drawImage(e, 0, 0, W, H);            // the edit, only where the (soft) mask is
+  g.drawImage(o, 0, 0, W, H); g.drawImage(soft, 0, 0);
+  return c.toDataURL("image/png");
+}
+
+export function EraseSheet({ src, file, photo, nativeCall, onDone, onClose, flash, onEditArea }) {
+  const [what, setWhat] = useState("");
   const view = useRef(null), mask = useRef(null), strokes = useRef([]), cur = useRef(null);
   const [nat, setNat] = useState(null);           // { w, h } of the mask
   const [size, setSize] = useState(5);            // brush, % of the picture's width
@@ -46,6 +64,7 @@ export function EraseSheet({ src, file, photo, nativeCall, onDone, onClose, flas
       const m = mask.current, g = m.getContext("2d");
       const saved = strokes.current.map((s) => ({ ...s, r: s.r * 1.15 + Math.max(2, nat.w / 300) })), keep = strokes.current;
       strokes.current = saved; redraw(); const data = m.toDataURL("image/png"); strokes.current = keep; redraw();
+      if (onEditArea && !isRemoval(what)) { await onEditArea({ mask: data, prompt: what.trim() }); setBusy(false); return; }
       const r = await nativeCall("eraseImage", file ? { file, mask: data } : { photo, mask: data });
       onDone(r);
     } catch (e) { setErr(tr(String((e && e.message) || e))); }
@@ -69,12 +88,14 @@ export function EraseSheet({ src, file, photo, nativeCall, onDone, onClose, flas
       <div className="px-3 pb-4 space-y-2">
         <label className="flex items-center gap-2 text-[12px] text-slate-300">{tr("Brush")}
           <input type="range" min="2" max="15" value={size} onChange={(e) => setSize(+e.target.value)} className="flex-1" data-testid="erase-size" /></label>
+        {onEditArea ? <input value={what} onChange={(e) => setWhat(e.target.value)} dir="auto" data-testid="erase-what"
+          placeholder={tr("What should the painted part become? Empty = remove it. e.g. a sunset sky")} className="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-slate-100" /> : null}
         {err ? <p className="text-[12px] text-rose-300" data-testid="erase-err">{err}</p> : null}
         <div className="flex gap-2">
           <button onClick={undo} disabled={!n || busy} className="px-3 py-2.5 rounded-xl border border-slate-700 text-slate-200 disabled:opacity-40" aria-label={tr("Undo")} data-testid="erase-undo"><Undo2 size={16} /></button>
           <button onClick={clear} disabled={!n || busy} className="px-3 py-2.5 rounded-xl border border-slate-700 text-slate-200 text-[13px] disabled:opacity-40">{tr("Clear all")}</button>
           <button onClick={go} disabled={busy || !nat} className="flex-1 py-2.5 rounded-xl bg-violet-500 text-white font-semibold text-sm disabled:opacity-50 flex items-center justify-center gap-2" data-testid="erase-go">
-            {busy ? <Loader2 size={15} className="animate-spin" /> : <Eraser size={15} />}{busy ? tr("Removing…") : tr("Remove")}</button>
+            {busy ? <Loader2 size={15} className="animate-spin" /> : <Eraser size={15} />}{busy ? (isRemoval(what) ? tr("Removing…") : tr("Changing it…")) : isRemoval(what) ? tr("Remove") : tr("Change it")}</button>
         </div>
       </div>
     </div>);

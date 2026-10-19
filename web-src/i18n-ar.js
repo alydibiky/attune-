@@ -5813,4 +5813,9 @@ export const AR = {
   "The steps": "الخطوات",
   "Reading photo {n} of {t} on the phone…": "بقرا الصورة {n} من {t} على الموبايل…",
   "Read on this phone with its layout and tables — check names and numbers.": "اتقرت على الموبايل بشكلها وجداولها — راجع الأسماء والأرقام.",
+  "What should the painted part become? Empty = remove it. e.g. a sunset sky": "الجزء اللي لونته يبقى إيه؟ فاضي = يتشال. مثلًا: سما وقت الغروب",
+  "Changing it…": "بغيّره…",
+  "Change it": "غيّره",
+  "Changed only where you painted": "اتغيّر بس المكان اللي لونته",
+  "Install a picture model first (Studio) — then paint and say what should change.": "نزّل موديل صور الأول (الاستوديو) — وبعدين لوّن وقول إيه اللي يتغير.",
 };

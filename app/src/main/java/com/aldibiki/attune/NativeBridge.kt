@@ -1392,6 +1392,19 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v6.41 (C2): a picture made on the page (an edit kept only where it was painted) → Studio's gallery: {b64} → the picture. */
+    @JavascriptInterface
+    fun savePicture(id: String, arg: String) {
+        pool.execute {
+            try {
+                val bytes = android.util.Base64.decode(JSONObject(arg).getString("b64").substringAfter(","), android.util.Base64.DEFAULT)
+                val f = java.io.File(ImageEngine.studioDir(ctx), "img-" + System.currentTimeMillis().toString(36) + "-area.png")
+                f.writeBytes(bytes)
+                resolve(id, imageResult(ImageEngine.Result(f, "page", 0, false)))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't keep the picture") }
+        }
+    }
+
     /** v6.38: Studio was left — the eraser's model goes back to the phone's memory. */
     @JavascriptInterface
     fun eraserRelease() { pool.execute { Eraser.release() } }

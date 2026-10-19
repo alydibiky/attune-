@@ -3,7 +3,7 @@
 import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X, Zap, Eraser } from "lucide-react";
-import { EraseSheet } from "./erase-ui.jsx";
+import { EraseSheet, keepInMask } from "./erase-ui.jsx";
 import { tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import { DeskEmpty } from "./desk.jsx";
@@ -224,6 +224,26 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
     if (!native.eraseImage) return;
     if (!eraseReady && !(await install("eraser"))) return;
     setEraseOn(target);
+  };
+  // v6.41 (C2): change only the painted part — the picture model edits the whole photo, then only the painted part is kept
+  // (softly blended into the rest, which stays exactly as it was)
+  const editArea = async ({ mask, prompt }) => {
+    const ep = drawPack(dev, choice, "edit");
+    if (!ep.ready) { setEraseOn(null); setMode("edit"); flash(tr("Install a picture model first (Studio) — then paint and say what should change.")); return; }
+    const src = eraseOn && eraseOn.src;
+    const ref = await shrink(src);
+    setBusy({ what: "draw", t0: Date.now(), stage: "start" });
+    try {
+      const PP = PACKS[ep.id] || {};
+      const r = await nativeCall("imagine", { pack: ep.id, prompt, width: ref.w, height: ref.h, steps: (PP.defaults && PP.defaults.steps) || 4, cfg: (PP.defaults && PP.defaults.cfg) || 1, refImage: ref.dataUrl }, progress("draw"));
+      const out = await keepInMask(ref.dataUrl, r.url, mask);
+      const saved = await nativeCall("savePicture", { b64: out });
+      try { native.deleteImage(r.file); } catch (e) {}
+      setEraseOn(null);
+      commitPic({ file: saved.file, url: saved.url, w: saved.width, h: saved.height, idea: prompt, prompt, edit: true, area: true, at: Date.now() });
+      flash(tr("Changed only where you painted"));
+    } catch (e) { flash(String((e && e.message) || e)); }
+    setBusy(null);
   };
   const erasePhoto = (file) => { if (!file) return; const r = new FileReader(); r.onload = () => openErase({ src: r.result, photo: r.result }); r.readAsDataURL(file); };
   const keep = (list) => { setGallery(list); saveStudio(list); };
@@ -540,7 +560,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
           <button className={btn} disabled={!!busy} data-testid="studio-erase-photo" onClick={() => erasePick.current && erasePick.current.click()}><Eraser size={13} />{tr("Remove people or things from a photo")}</button>
           <input ref={erasePick} type="file" accept="image/*" className="hidden" data-testid="studio-erase-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; erasePhoto(f); }} />
         </div>) : null}
-      {eraseOn ? <EraseSheet {...eraseOn} nativeCall={nativeCall} flash={flash} onClose={() => setEraseOn(null)}
+      {eraseOn ? <EraseSheet {...eraseOn} nativeCall={nativeCall} flash={flash} onClose={() => setEraseOn(null)} onEditArea={native.imagine ? editArea : null}
         onDone={(r) => { setEraseOn(null); commitPic({ ...(eraseOn.file ? cur : {}), file: r.file, url: r.url, w: r.width, h: r.height, ms: r.ms, backend: r.backend, idea: (eraseOn.file && cur && cur.idea) || tr("Erased photo"), erased: true, upscaled: false, at: Date.now() }); flash(tr("Removed in {t}", { t: secs(r.ms || 0) })); }} /> : null}
       {!flowLive && !cur ? <DeskEmpty icon={Palette} title={tr("Your picture appears here")} text={tr("Describe it and tap Draw it — it is made on this device, with no internet.")} testid="studio-desk-empty" /> : null}
       {flowLive ? <DraftFrame flow={flow} now={now} onStop={stop} onKeep={keepDraft} onPick={pickDraft} /> : cur ? (
