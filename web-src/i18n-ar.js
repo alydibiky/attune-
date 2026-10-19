@@ -5811,4 +5811,6 @@ export const AR = {
   "not answered": "من غير إجابة",
   "check by hand": "اتأكد بنفسك",
   "The steps": "الخطوات",
+  "Reading photo {n} of {t} on the phone…": "بقرا الصورة {n} من {t} على الموبايل…",
+  "Read on this phone with its layout and tables — check names and numbers.": "اتقرت على الموبايل بشكلها وجداولها — راجع الأسماء والأرقام.",
 };

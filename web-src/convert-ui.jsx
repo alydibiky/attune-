@@ -173,15 +173,30 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
       else if (k === "json") rows = C.jsonToRows(await f0.text());
       else if (SUBS.includes(k)) cues = C.subsParse(await f0.text());
       else if ((k === "image" || k === "images") && target !== "pdf" && !PHOTO.includes(target)) {
-        if (!modelReady || !canReadPhotos) { setErr(tr("Reading a photo needs a model marked 📷 — open Engine.")); openEngine && openEngine(); return; }
-        const parts = [];
-        for (let i = 0; i < files.list.length; i++) {
-          if (!alive()) return;
-          setBusy(tr("The AI is reading photo {n} of {t}…", { n: i + 1, t: files.list.length }));
-          parts.push(await readPicture(await readUrl(files.list[i]), i + 1, files.list.length));
+        // v6.41 (S2): a printed page in Latin script is read by the phone itself WITH its layout (headings, lists, tables);
+        // an Arabic or handwritten page goes to the AI reader
+        const got = [];
+        if (nativeCall && native && native.readText) {
+          for (let i = 0; i < files.list.length; i++) {
+            if (!alive()) return;
+            setBusy(tr("Reading photo {n} of {t} on the phone…", { n: i + 1, t: files.list.length }));
+            let r = null; try { r = await nativeCall("readText", { b64: (await readUrl(files.list[i])).split(",")[1] }); } catch (e) {}
+            got.push(C.ocrUsable(r) ? C.pdfLinesToBlocks(C.ocrPages(r)) : null);
+          }
         }
-        blocks = C.textToBlocks(parts.join("\n\n"));
-        note = tr("Read by the AI — check names and numbers.");
+        if (got.length && got.every(Boolean)) { blocks = got.flatMap((b, i) => (i && b.length ? [{ ...b[0], pageBreak: true }, ...b.slice(1)] : b)); note = tr("Read on this phone with its layout and tables — check names and numbers."); }
+        else {
+          if (!modelReady || !canReadPhotos) { setErr(tr("Reading a photo needs a model marked 📷 — open Engine.")); openEngine && openEngine(); return; }
+          const parts = [];
+          for (let i = 0; i < files.list.length; i++) {
+            if (!alive()) return;
+            if (got[i]) { parts.push(C.blocksToText(got[i])); continue; }
+            setBusy(tr("The AI is reading photo {n} of {t}…", { n: i + 1, t: files.list.length }));
+            parts.push(await readPicture(await readUrl(files.list[i]), i + 1, files.list.length));
+          }
+          blocks = C.textToBlocks(parts.join("\n\n"));
+          note = tr("Read by the AI — check names and numbers.");
+        }
       }
       if (!alive()) return;
       if (blocks && !blocks.length && !note) throw new Error("No text was found in that file.");

@@ -1810,3 +1810,33 @@ export function readPageMessages(n, total) {
 
 export const b64ToBytes = (b64) => { const s = atob(b64); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
 export const bytesToB64 = (u) => { let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+
+/* ---- v6.41 (upgrade S2) — a photo of a printed page → a real Word file, with its layout. The phone reads the text and where
+   each line is (ML Kit, NativeBridge.readText: lines with x, y, w, h in pixels). Lines on the same row are one line with several
+   pieces — exactly what a PDF gives — so the PDF → Word reader (pdfLinesToBlocks) finds the headings (bigger lines), the lists
+   and the tables (pieces that start under the same columns). Latin script; an Arabic page goes to the AI reader. */
+/** The phone's text result → pages for pdfLinesToBlocks (points: the page is 595 wide). */
+export function ocrPages(r) {
+  const lines = ((r && r.lines) || []).filter((l) => l && String(l.text || "").trim() && l.h > 0 && l.w > 0);
+  if (!lines.length) return [];
+  const W = r.width || Math.max(...lines.map((l) => l.x + l.w)), H = r.height || Math.max(...lines.map((l) => l.y + l.h));
+  const k = 595 / W;
+  const sorted = [...lines].sort((a, b) => a.y + a.h / 2 - (b.y + b.h / 2));
+  const rows = [];
+  for (const l of sorted) {
+    const c = l.y + l.h / 2, row = rows[rows.length - 1];
+    if (row && Math.abs(c - row.c) < Math.min(l.h, row.h) * 0.5) { row.items.push(l); row.c = (row.c * (row.items.length - 1) + c) / row.items.length; row.h = Math.max(row.h, l.h); }
+    else rows.push({ c, h: l.h, items: [l] });
+  }
+  const out = rows.map((row) => {
+    const items = row.items.sort((a, b) => a.x - b.x);
+    const hs = items.map((l) => l.h).sort((a, b) => a - b), med = hs[Math.floor(hs.length / 2)];
+    const size = Math.round(med * 0.72 * k * 10) / 10;
+    const sp = items.map((l) => [Math.round(l.x * k * 10) / 10, String(l.text).trim(), size, [[Math.round(l.x * k * 10) / 10, String(l.text).trim(), null, null, null, Math.round((l.x + l.w) * k * 10) / 10]]]);
+    const top = Math.min(...items.map((l) => l.y)), bottom = Math.max(...items.map((l) => l.y + l.h));
+    return { x: sp[0][0], e: Math.round((items[items.length - 1].x + items[items.length - 1].w) * k * 10) / 10, y: Math.round(bottom * k * 10) / 10, s: size, r: false, b: false, i: false, sp, top: top * k };
+  });
+  return [{ w: 595, h: Math.round(H * k), lines: out, imgs: [] }];
+}
+/** Can this photo go the layout way? A page of Latin text the phone read (no Arabic, enough letters). */
+export const ocrUsable = (r) => !!(r && r.lines && r.lines.length >= 2 && !/[؀-ۿ]/.test(r.text || "") && ((r.text || "").match(/\p{L}/gu) || []).length >= 20);
