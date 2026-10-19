@@ -45,10 +45,11 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
   const [active, setActive] = useState(null);   // { i, lesson, checked, by, answer, topic, src }
   const [busy, setBusy] = useState("");
   const [typing, setTyping] = useState(false);
+  const [marked, setMarked] = useState(null);   // v6.41 (S1) the marked worksheet
   const fileRef = useRef(null);
   const weak = C.weakTopics(state);
 
-  const readPage = (t) => { const ps = C.splitProblems(t); setItems(ps); setActive(null); if (!ps.length) flash && flash(tr("No problems found — type it instead")); };
+  const readPage = (t) => { const ps = C.splitProblems(t); setItems(ps); setActive(null); setMarked(null); if (!ps.length) flash && flash(tr("No problems found — type it instead")); };
   const fromPhoto = async (url) => {
     setPhoto(url); setBusy(tr("Reading the homework…"));
     let t = ""; try { const r = readText ? await readText(url.split(",")[1]) : null; t = (r && r.text) || ""; } catch (e) {}
@@ -62,8 +63,8 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
     clearIncoming && clearIncoming();
   }, [incoming]);
 
-  const open = async (i) => {
-    const p = items[i]; if (!p) return;
+  const open = async (i, only) => {
+    const p = only ? { ...items[i], text: only } : items[i]; if (!p) return;   // v6.41: from a marked row, the problem without the child's answer
     const L = C.lessonFor(p.text, { teach, lang: getLang() });
     if (L) { setActive({ i, lesson: L.lesson, checked: true, by: "code", answer: L.answer, topic: L.topic, src: p.text, kind: L.kind }); return; }
     if (!ask) { setActive({ i, none: true, src: p.text }); return; }
@@ -103,6 +104,16 @@ export function CoachPage({ native, readText, ask, verify, incoming, clearIncomi
       {photo && items.length ? <img src={photo} alt="" className="max-h-40 rounded-xl" /> : null}
       {items.length ? (
         <div className="space-y-2" data-testid="coach-items"><span className="c-lbl">{tr("Check it was read right, then tap Teach me")}</span>
+          {/* v6.41 (S1): the child's written answers, marked by the maths engine */}
+          <button className="c-btn w-full" onClick={() => { const r = C.markWorksheet(items, { lang: getLang() }); setMarked(r); let st = state; for (const x of r.items) if (x.status === "right" || x.status === "wrong") st = C.record(st, x.topic || "other", x.status === "right", x.text); put(st); }} data-testid="coach-mark">{tr("Mark the worksheet")}</button>
+          {marked ? <div className="c-card space-y-1.5" data-testid="coach-marked">
+            <b className="block" data-testid="coach-mark-score">{marked.score != null ? tr("{r} of {n} right", { r: marked.right, n: marked.right + marked.wrong }) : tr("Nothing the maths engine can mark")}{marked.blank ? " · " + tr("{b} not answered", { b: marked.blank }) : ""}</b>
+            {marked.items.map((x, k) => <div key={k} className="flex items-start gap-2 text-[13.5px]" data-testid="coach-mark-row" data-status={x.status}>
+              <span className={x.status === "right" ? "c-pos" : x.status === "wrong" ? "c-neg" : "c-sub"}>{x.status === "right" ? "✓" : x.status === "wrong" ? "✗" : "—"}</span>
+              <span className="flex-1 c-num" dir="ltr">{x.text}{x.given ? " → " + x.given : ""}{x.status === "wrong" ? <b className="c-pos"> · {x.correct}</b> : x.status === "blank" && x.correct ? <span className="c-sub"> · {tr("not answered")}</span> : x.status === "unsure" ? <span className="c-sub"> · {tr("check by hand")}</span> : null}</span>
+              {x.status === "wrong" || x.status === "blank" ? <button className="c-sub underline text-[12px]" onClick={() => { const i = items.findIndex((y) => y.n === x.n); if (i >= 0) open(i, x.text); }} data-testid="coach-mark-steps">{tr("The steps")}</button> : null}
+            </div>)}
+          </div> : null}
           {items.map((p, i) => (
             <div key={i} className="c-card flex items-center gap-2 py-2" data-testid="coach-item" style={active && active.i === i ? { borderColor: "var(--c-acc)" } : {}}>
               <span className="c-sub w-6">{p.n}</span>

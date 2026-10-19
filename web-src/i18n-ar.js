@@ -5804,4 +5804,11 @@ export const AR = {
   "Check your flight home. Late 3+ hours or cancelled → Attune → Owed.": "تابع رحلة الرجوع. متأخرة 3 ساعات أو أكتر أو اتلغت ← Attune ← حقك.",
   "Watch on — you'll be reminded on each flight day": "المتابعة اشتغلت — هفكرك يوم كل رحلة",
   "Hear the ones to fix, slowly": "اسمع الكلمات اللي محتاجة تتظبط، بالراحة",
+  "Mark the worksheet": "صحّح الورقة",
+  "{r} of {n} right": "{r} صح من {n}",
+  "Nothing the maths engine can mark": "مفيش حاجة الحاسبة تقدر تصححها",
+  "{b} not answered": "{b} من غير إجابة",
+  "not answered": "من غير إجابة",
+  "check by hand": "اتأكد بنفسك",
+  "The steps": "الخطوات",
 };

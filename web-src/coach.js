@@ -111,3 +111,47 @@ export function record(c, topic, right, text, now = Date.now()) {
 }
 /** Topics to practise: the most mistakes first (at least 2 tries and under 70 % right). */
 export const weakTopics = (c) => Object.entries(c.topics || {}).filter(([, v]) => v.right + v.wrong >= 2 && v.right / (v.right + v.wrong) < 0.7).sort((a, b) => b[1].wrong - a[1].wrong).map(([k]) => k);
+
+/* ---- v6.41 (upgrade S1) — mark the whole worksheet. Each problem's written answer ("12 + 7 = 19"; an equation's "x = 4" on the
+   next line) is checked by the maths engine — right, wrong (with the right answer and the steps), or not answered. What the
+   engine can't prove is left for "Teach me" (the model + Python), never marked by a guess. */
+import { parse as mParse, value as mValue } from "./coach-math.js";
+const VAR_ANS = /^\s*([a-z])\s*=\s*(-?[\d٠-٩]+(?:[./][\d٠-٩]+)?)\s*$/i;
+/** The child's answers attached to their problems: an "x = 4" line after an equation becomes that equation's answer. */
+export function withAnswers(items) {
+  const out = [];
+  for (const it of items || []) {
+    const prev = out[out.length - 1];
+    const m = VAR_ANS.exec(it.text);
+    if (m && prev && !prev.given && /[a-z]/i.test(prev.text.replace(/^(?:solve|find)\b/i, "")) && prev.text.includes("=")) { prev.given = m[1] + " = " + m[2]; continue; }
+    out.push({ ...it });
+  }
+  for (const it of out) {
+    if (it.given) continue;
+    // arithmetic written with its answer: "12 + 7 = 19", "3/4 of 20 = 15", "25% of 80 = 20"
+    const k = it.text.lastIndexOf("=");
+    if (k > 0 && !/[a-z]/i.test(it.text.slice(0, k).replace(/\bof\b|من/g, ""))) {
+      const ans = it.text.slice(k + 1).trim();
+      if (ans && /^-?[\d٠-٩][\d٠-٩.,/ ]*%?$/.test(ans)) { it.given = ans; it.text = it.text.slice(0, k).trim(); }
+    }
+  }
+  return out;
+}
+const num = (s) => { try { return mValue(mParse(String(s).replace(/^[a-z]\s*=\s*/i, "").replace(/,/g, ""))); } catch (e) { return null; } };
+const same = (a, b) => { if (!a || !b) return false; try { return a.sub(b).toString() === "0"; } catch (e) { return false; } };
+/** One problem with the child's answer → { status: right | wrong | blank | unsure, correct, lesson }. */
+export function markOne(p, opts = {}) {
+  const L = lessonFor(p.text, { teach: false, ...opts });
+  if (!L || L.kind === "error") return { ...p, status: p.given ? "unsure" : "blank", correct: null, lesson: null };
+  if (!p.given) return { ...p, status: "blank", correct: L.answer, lesson: L.lesson, topic: L.topic };
+  const g = num(p.given), t = L.sol && L.sol.answer ? L.sol.answer : num(L.answer);
+  const right = g && t ? same(g, t) : String(p.given).replace(/\s/g, "") === String(L.answer).replace(/\s/g, "");
+  return { ...p, status: right ? "right" : "wrong", correct: L.answer, lesson: L.lesson, topic: L.topic };
+}
+/** The whole worksheet → { items, right, wrong, blank, unsure, score } (score = right of those the engine could mark). */
+export function markWorksheet(items, opts = {}) {
+  const marked = withAnswers(items).map((p) => markOne(p, opts));
+  const c = (s) => marked.filter((x) => x.status === s).length;
+  const right = c("right"), wrong = c("wrong");
+  return { items: marked, right, wrong, blank: c("blank"), unsure: c("unsure"), score: right + wrong ? Math.round((right / (right + wrong)) * 100) : null };
+}
