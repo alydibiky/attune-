@@ -307,9 +307,12 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     if (!items.length) { const ni = PH.noteItems(note); if (ni.length) { place(ni); return; } await noFood(); return; }
     if (items.some((x) => x.unknown)) { items = await PH.resolveItems(items, DB.packSearch, 3000); if (run.current !== me) return; }
     place(items);
-    if (instant && draftRef.current !== items && shownRef.current !== items) return;   // offered, not placed: no more passes
+    // v6.42 (Ali's lunch photo: the soup and the potatoes were missed): when the first answer was only offered, the closer look is
+    // skipped, but the "anything else on the table?" pass still runs, on what is in the draft now
+    const offered = instant && draftRef.current !== items && shownRef.current !== items;
+    if (offered) items = draftRef.current || items;
     // v6.3: a zoomed second look at one food the model wasn't sure of (cropped from the photo, enlarged) — only when time is left
-    const unsure = items.map((x, i) => [x, i]).filter(([x]) => x.box && x.conf < 0.6).slice(0, 1);
+    const unsure = offered ? [] : items.map((x, i) => [x, i]).filter(([x]) => x.box && x.conf < 0.6).slice(0, 1);
     for (const [x, i] of unsure) {
       if (instant || b.left() < 20000) break;   // in the background: no extra pass
       setStage(L(`Looking closer at “${x.said}”…`, `ببص أقرب على «${x.said}»…`));

@@ -219,6 +219,7 @@ export function exactFood(name) {
   if (GENERIC[q]) { const g = food(GENERIC[q]); if (g) return g; }
   const ex = nameIx().get(q); return (ex && ex.find((fd) => !fd.cc)) || null;   // a country's own dish ("New York cheesecake") is not a generic name
 }
+const DISH_HEADS = new Set(["soup", "salad", "sandwich", "stew", "cake", "sauce", "pie", "juice", "pasta", "curry", "pizza", "burger", "wrap", "omelette", "omelet", "pudding", "shorba", "شوربه", "سلطه", "عصير", "ساندوتش"].map((w) => stem(w)));
 export function matchFood(name, cc = CZ.getCountry()) {
   const q = normT(name); if (!q) return null;
   if (GENERIC[q]) { const g = food(GENERIC[q]); if (g) return g; }
@@ -226,6 +227,7 @@ export function matchFood(name, cc = CZ.getCountry()) {
   const mine = countryFoodIds(cc);
   if (exact) return exact.find((fd) => fd.cc && mine.has(fd.id)) || exact.find((fd) => !fd.cc) || exact[0];
   const qw = q.split(" ").map(stem).filter((w) => w.length > 1);
+  const qHeads = qw.filter((w) => DISH_HEADS.has(w));
   let best = null, bestS = 0;
   for (const fd of FOODS) {
     if (fd.cc && !mine.has(fd.id)) continue;
@@ -236,7 +238,9 @@ export function matchFood(name, cc = CZ.getCountry()) {
       const hit = nw.filter((w) => qw.includes(w)).length;
       if (!hit) continue;
       // every word of the table's name found, and few extra words in the query → strong
-      const s = hit / nw.length + hit / Math.max(qw.length, 1) * 0.6 + (q.includes(n) ? 0.5 : 0);
+      let s = hit / nw.length + hit / Math.max(qw.length, 1) * 0.6 + (q.includes(n) ? 0.5 : 0);
+      // v6.42: the kind of dish decides — "chicken soup" is a soup, not chicken breast; "mushroom soup" not mushrooms
+      if (qHeads.some((h) => !nw.includes(h))) s -= 1;
       if (s > bestS) { bestS = s; best = fd; }
     }
   }
@@ -703,7 +707,7 @@ export const DISH_NAMES = [...new Set(FOODS.filter((f) => !f.cc && !/-(raw|dry)$
 // v6.10: the prompt names only the dishes a small vision model most often misses (≈40 instead of 350+ — the long list
 // was ≈1.8k tokens to read before every photo, a big part of the wait on a phone); any other name is matched in code
 // (matchFood, the offline reader, the food pack).
-export const PHOTO_HINTS = ["Koshari", "Ful medames", "Taameya (falafel)", "Baladi bread", "Fried egg", "Boiled egg", "Molokhia", "Mahshi", "Fatta", "Hawawshi", "Shawarma", "Kofta", "Grilled chicken", "Fried chicken", "White rice", "Pasta", "Macarona bechamel", "Okra stew (bamia)", "Green beans stew (fasolia)", "Lentil soup", "Feteer", "Feta cheese", "White cheese", "Foul sandwich", "Taameya sandwich", "Liver (kebda)", "Grilled fish", "Fries", "Green salad", "Tahini", "Baba ghanoush", "Pickles", "Basbousa", "Kunafa", "Om Ali", "Rice pudding", "Dates", "Tea with sugar", "Cola"];
+export const PHOTO_HINTS = ["Koshari", "Ful medames", "Taameya (falafel)", "Baladi bread", "Fried egg", "Boiled egg", "Molokhia", "Mahshi", "Fatta", "Hawawshi", "Shawarma", "Kofta", "Grilled chicken", "Fried chicken", "Chicken pané (breaded, fried)", "Cream of mushroom soup", "Potato wedges", "White rice", "Pasta", "Macarona bechamel", "Okra stew (bamia)", "Green beans stew (fasolia)", "Lentil soup", "Feteer", "Feta cheese", "White cheese", "Foul sandwich", "Taameya sandwich", "Liver (kebda)", "Grilled fish", "Fries", "Green salad", "Tahini", "Baba ghanoush", "Pickles", "Basbousa", "Kunafa", "Om Ali", "Rice pudding", "Dates", "Tea with sugar", "Cola"];
 /** v6.10: the hints for the chosen country (its own dishes + everyday staples); Egypt keeps PHOTO_HINTS. */
 export const photoHintsFor = (cc = CZ.getCountry()) => CZ.photoHints(cc) || PHOTO_HINTS;
 /** How the prompt names local dishes: "Egyptian dishes" → "dishes from Turkey". */
@@ -722,7 +726,7 @@ export function photoMessages(note, cc = CZ.getCountry(), hints = []) {
             "height": "flat" | "normal" | "heaped", "grams": your estimate as eaten,
             "confidence": 0 to 1, "box": [x, y, w, h] where it is in the photo, each 0 to 1}],
  "label": {"name": "product name", "per": "100g" or "serving", "serving_g": number or null, "kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number or null} or null}
-Rules: one item per separate food (a sandwich or a mixed dish like ${eg ? "koshari" : photoHintsFor(cc)[0]} is ONE item). Foods stacked on each other are SEPARATE items: list what is underneath (toast, bread, rice), what is on top (cheese, sauce) and the main food — e.g. eggs on toast with tomato sauce and cheese = fried egg (count them), toast (count the slices), tomato sauce, cheese. Count what can be counted: every egg, slice, piece — look at the whole photo, not one part. Judge sizes against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon, a 330 ml can, ${eg ? "a baladi loaf" : "a bread loaf"}, a hand. If unsure, give your best guess, alternatives, and a lower confidence — never invent a food you can't see. For a label, copy its numbers exactly.
+Rules: one item per separate food (a sandwich or a mixed dish like ${eg ? "koshari" : photoHintsFor(cc)[0]} is ONE item). Foods stacked on each other are SEPARATE items: list what is underneath (toast, bread, rice), what is on top (cheese, sauce) and the main food — e.g. eggs on toast with tomato sauce and cheese = fried egg (count them), toast (count the slices), tomato sauce, cheese. Count what can be counted: every egg, slice, piece — look at the whole photo, not one part. Judge sizes against things of known size: a dinner plate is 26 cm across, a side plate 20 cm, a tablespoon, a 330 ml can, ${eg ? "a baladi loaf" : "a bread loaf"}, a hand. Name HOW it is cooked when you can see it: golden and crumbed = breaded and fried (pané / schnitzel), grill marks = grilled, oily and crisp = fried. Look at the WHOLE photo — bowls (soup, yogurt), side dishes (fries, potatoes, rice, salad), bread and drinks at the edges are separate items. If unsure, give your best guess, alternatives, and a lower confidence — never invent a food you can't see. For a label, copy its numbers exactly.
 Use short common names in English (${localWord(cc)} by their usual name), e.g. ${photoHintsFor(cc).join(", ")}.${seen.length ? "\nA quick first look at the whole photo suggested: " + seen.join(", ") + " — use it only if it matches what you see, and still list each part separately." : ""}${note ? "\nThe person adds: " + note : ""}` },
     { role: "user", content: "What is in this photo?" },
   ];
@@ -766,7 +770,7 @@ export function geoGrams(fd, it, plate = "dinner plate") {
 export function hiddenMessages(items) {
   return [
     { role: "system", content: `A dietitian already found these foods in the photo: ${items.map((x) => x.name).join(", ")}.
-Look again ONLY for calories people usually miss: cooking oil or butter on or under the food, ghee, sauces (tomato sauce, gravy), melted or grated cheese, dressings, tahini, mayonnaise, sugar in a drink, a drink in the picture, bread, toast or rice under or beside the food. Reply with ONLY a compact JSON object on one line:
+Look again at the WHOLE photo, edges too, for what is NOT in that list: another dish or bowl (soup, yogurt, salad), a side (fries, potatoes, rice, bread), and calories people usually miss — cooking oil or butter, ghee, sauces (tomato sauce, gravy), melted or grated cheese, dressings, tahini, mayonnaise, sugar in a drink, a drink. Reply with ONLY a compact JSON object on one line:
 {"items": [{"food": "generic name in English", "grams": number, "confidence": 0 to 1}]} — an empty list if nothing was missed. Never repeat a food already found.` },
     { role: "user", content: "Anything missed?" },
   ];
