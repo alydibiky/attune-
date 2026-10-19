@@ -757,6 +757,34 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AG. 19 Oct 2026 — v6.41: batch 8 (HANDOFF §5.89). Read this first, then AF.
+Ali (19 Oct): keep «افتكر» and "Add screenshots" as they are; "continue with the rest — I will do the Google part at the end".
+Built: X2 tuner · F3 lab history + cheapest medicine price · F4 cycle from the watch temperature · D4 news threads ·
+C3 automations · S5 mock interview · H4 interpreter · H2 voice call · D6 trip pack · D5 Cairo Metro · D1 slow replay ·
+S1 mark the worksheet · S2 photo → Word with layout · C2 change the painted part.
+### Ali to decide
+1. **F1 portions by depth** — A: ARCore Depth (only phones on Google's depth list; a new camera screen) · B: a bank card or
+   the plate's size as the ruler in the photo (works on every phone) · C: leave it. Recommendation: B first, A later.
+2. **Metro in Maps** — a "Metro" tab in the Maps sheet, or keep it in Chat / the Home box only.
+### Next
+9: Missions 3–4. 4b: eraser tap-to-select + remove all people + LaMa NPU; SD 1.5 NPU; W6 subtitles. Sync gaps (tombstones,
+Fleet photos, desktop Google), H1. Recall phase 2 (embedder). Google setup with Ali at the end (AC).
+### Ali's phone checklist for 6.41
+1. ⬜ Engine → Tune for this phone (a minute or two) → "Tuned: N threads".
+2. ⬜ Family health → Labs → tap a test (2+ results) → the chart and the change; Medicines → Cheapest price.
+3. ⬜ Cycle → Use my watch's temperature (a watch that writes night temperature to Health Connect).
+4. ⬜ News → a topic followed for 2+ days → Story threads → What changed.
+5. ⬜ Home: «لما المرتب ينزل حط 20% في صندوق العربية» → Automations; when the salary notification comes → Attune's alert.
+6. ⬜ CV → Job ready → Mock interview.
+7. ⬜ Translate → Conversation: put the phone between two people.
+8. ⬜ Chat → the phone button → talk; tap while it speaks; say «سلام».
+9. ⬜ Travel → Trip → Trip pack: Download the map, add MS numbers, Turn on the watch.
+10. ⬜ Chat: «مترو من المعادي للعتبة».
+11. ⬜ Learn (a language course) → Say it → Hear the ones to fix, slowly.
+12. ⬜ Homework → photo of a worksheet → Mark the worksheet.
+13. ⬜ File Converter → a photo of a printed English page with a table → Word.
+14. ⬜ Studio → Remove people or things → paint the sky → «سما وقت الغروب» → Change it (needs Studio Pro).
+
 ## AF. 18 Oct 2026 — v6.40: Message alerts + batch 7 (HANDOFF §5.88). Read this first, then AE.
 Built: Message alerts (Ali's ask: "tell me if X messages me") · S3 PDF tables by code · W5 Prompt lab · C1 assistants learn
 your corrections · W2 lift plan · W4 shop catalogue · C5 saved pages keep their data + Home-screen icon · Recall (agent C).

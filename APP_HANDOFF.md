@@ -1,6 +1,6 @@
 # Attune — the whole app in one handoff (read this first)
 
-_Up to date: 18 Oct 2026, **v6.40** (versionCode 101, target Android 17; v6.40 = Message alerts + batch 7: PDF tables, Prompt lab, assistants learn, lift plan, catalogue, saved pages keep data, Recall, HANDOFF §5.88; v6.39 = Solve fixes: no rewrite flash, formulas, Copy, calculations checked by code, research blanks filled, HANDOFF §5.87; v6.38 = batches 2–6: Instant tile, Shelf review, brand kit, site reports, video cut, privacy week, Timeline, Studio eraser, Fit coach, charts, Mind recall, Project brain, Life Simulator, HANDOFF §5.86; v6.37 = "do them all" batch 1 + Missions + guide + sync, HANDOFF §5.85; v6.36 = Ali's choices, HANDOFF §5.83; v6.35 = Ali's 18 Oct notes, HANDOFF §5.82; v6.34 = Ali's 17 Oct phone list, HANDOFF §5.81; v6.32 = the joint release of five threads, HANDOFF §5.79; v6.33 = Mind A + Code B, §5.80) on `main` = branch `ccr-a0eb3595-e2c7a7`._
+_Up to date: 19 Oct 2026, **v6.41** (versionCode 102, target Android 17; v6.41 = batch 8: tuner, labs, cycle temperature, news threads, automations, mock interview, interpreter, voice call, trip pack, Cairo Metro, worksheet marking, photo → Word layout, painted-area edit, HANDOFF §5.89; v6.40 = Message alerts + batch 7: PDF tables, Prompt lab, assistants learn, lift plan, catalogue, saved pages keep data, Recall, HANDOFF §5.88; v6.39 = Solve fixes: no rewrite flash, formulas, Copy, calculations checked by code, research blanks filled, HANDOFF §5.87; v6.38 = batches 2–6: Instant tile, Shelf review, brand kit, site reports, video cut, privacy week, Timeline, Studio eraser, Fit coach, charts, Mind recall, Project brain, Life Simulator, HANDOFF §5.86; v6.37 = "do them all" batch 1 + Missions + guide + sync, HANDOFF §5.85; v6.36 = Ali's choices, HANDOFF §5.83; v6.35 = Ali's 18 Oct notes, HANDOFF §5.82; v6.34 = Ali's 17 Oct phone list, HANDOFF §5.81; v6.32 = the joint release of five threads, HANDOFF §5.79; v6.33 = Mind A + Code B, §5.80) on `main` = branch `ccr-a0eb3595-e2c7a7`._
 This file is the map. Details and history are in `HANDOFF.md` (§5.x = one section per release, newest at the end:
 §5.44–§5.60 cover 10–12 Oct 2026; §5.74–§5.80 cover 16–17 Oct). Ali's raw problem lists are in `NEXT_SESSION.md`. The desktop plan is in
 `DESKTOP_PLAN.md`.
@@ -59,6 +59,8 @@ Google Play Billing.
 | **Money (Yusr)** | Expenses by typing or AI, recurring, bills, dashboard plus chat | `yusr/`, `myledger.js` |
 | **Mind** (look A since v6.33: the wall) | Everything you keep as a picture wall, filed by itself; chips for kinds, promises, colours, spaces, #tags | `mind.js`, `mind-ui.jsx` |
 | **Recall** «افتكر» (v6.40, agent C) | One search over screenshots (text read on the phone), kept notifications (30 days, never SMS), chats, Mind, saved pages, payments — by meaning, EN / Egyptian / Franco | `lookback.js`, `lookback-ui.jsx`, `RecallLog.kt` |
+| **Automations** (v6.41) | «لما المرتب ينزل حط 20% في صندوق العربية» → the phone runs it on each bank notification (no AI, never SMS), money into named pots | `autom.js`, `autom-ui.jsx`, `AutoMatch.kt`, `AutoRules.kt` |
+| **Cairo Metro** (v6.41) | «مترو من المعادي للعتبة» → line, direction, stops, changes, minutes, ticket — offline, by code | `metro.js` |
 | **Message alerts** (v6.40) | «لو أحمد بعتلي قولي» / "tell me when the bank emails me" → Attune's own alert from WhatsApp, Gmail, any email or chat app (never SMS) | `watch.js`, `watch-ui.jsx`, `MessageWatch.kt`, `WatchMatch.kt` |
 | **Coding** (v6.33 look B: talk to a coder — steps as a conversation) | Task, steps and a tested program; editor; preview | `code.js`, `code-ui.jsx`, `sandbox.js`, `sandbox/` |
 | **Studio** | Pictures on the phone (FLUX.2 klein 4B and others), upscale | `studio.js`, `studio-ui.jsx`, Kotlin `ImageEngine.kt`, `ImageRun.kt` |
@@ -177,11 +179,12 @@ Google Play Billing.
 | v6.38 | 18 Oct | Batches 2–6 (Instant tile, Shelf review, brand kit, site reports, Timeline, Studio eraser, Fit coach, Life Simulator…) — §5.86 |
 | v6.39 | 18 Oct | Solve fixes: no rewrite flash, formulas, Copy, calculations checked by code, research blanks filled — §5.87 |
 | v6.40 | 18 Oct | Message alerts + batch 7: PDF tables by code, Prompt lab, assistants learn, lift plan, catalogue, saved pages keep data, Recall — §5.88 |
+| v6.41 | 19 Oct | Batch 8: tuner, labs, cycle temperature, news threads, automations, mock interview, interpreter, voice call, trip pack, Cairo Metro, worksheet marking, photo → Word layout, painted-area edit — §5.89 |
 
 ## 8. Prompt for the next session (paste as is)
 The current prompt is at the end of `NEXT_SESSION.md` ("Prompt to start the next session"). Short version:
 ```
-Continue Attune on main (v6.40). Read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.83–§5.88 and NEXT_SESSION.md sections AF, AE, AD and AC first.
+Continue Attune on main (v6.41). Read CLAUDE.md, APP_HANDOFF.md, HANDOFF.md §5.84–§5.89 and NEXT_SESSION.md sections AG, AF, AE and AC first.
 Show me what is done and open, ask the open questions with options, then work through them with a task list.
 Follow every standing rule in APP_HANDOFF.md §1.
 ```

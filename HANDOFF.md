@@ -2003,6 +2003,49 @@ Built in this release (each: pure module + unit test + UI + e2e + Egyptian Arabi
   WatchMatchTest; e2e v740watch, v740pdftables, v740promptlab, v740assistrules, v740liftplan, v740catalogue,
   v740artdata, v740recall.
 
+### 5.89 (19 Oct 2026) — v6.41: batch 8 (Ali: "continue with the rest; I'll do the Google part at the end")
+- **X2 engine tuner** (`tuner.js`, Engine → Tune for this phone): 3 thread counts timed with a fixed answer; the fastest kept,
+  a cooler one (fewer threads) wins within 5%. Kept per model (`Prefs.tunedThreads`, `NativeBridge.engineTune`), used by
+  `Engine.buildArgs`; the heat rules still lower it on a warm phone (`DeviceInfo.generationThreads(ctx, tuned)`).
+- **F3 Family health**: tap a lab test → chart with dates, every value, the change in words, times outside the range
+  (`care.js labHistory`); a medicine → Cheapest price from the web (`medPrices`: one price per site, the strength is never a
+  price). The pills countdown + refill reminders were already there (v6.27).
+- **F4 Cycle from the watch** (`cycletemp.js`): Health Connect SkinTemperature / BasalBodyTemperature, asked only from Cycle
+  (`Health.TEMP_PERMISSIONS`, manifest READ_SKIN_TEMPERATURE + READ_BASAL_BODY_TEMPERATURE, privacy text says so); "3 over 6"
+  finds the rise → ovulation, the next period = ovulation + her own luteal length (14 until 2 cycles); "later than usual" when
+  there's no rise yet.
+- **D4 News story threads** (`daily.js newsThreads/changeMessages`): headlines sharing 2+ telling words over days = a thread;
+  "What changed since …" is written from those articles only, cited.
+- **C3 Automations** (`autom.js`, `autom-ui.jsx`, Kotlin `AutoMatch.kt` (pure, tested) + `AutoRules.kt`): a sentence
+  (EN / Egyptian / Franco) → a rule once; PayListener checks each money notification (never SMS, no AI) → Attune's alert at
+  once + a queued event; the page puts the share into a named pot when it opens (read again with paylog `readNotification`,
+  each notification once). Also from the Home box. Page: Home → Automations.
+- **S5 Mock interview** (`jobready.js scoreAnswer/scorecard/betterAnswerPrompt`, CV → Job ready): 5 questions said aloud, each
+  answer timed and scored (story, fillers, confidence, pace), one tip, a better answer from their own facts only.
+- **H4 Interpreter** (Translate → Conversation): split screen, top half turned; each side listens in its language
+  (`translate.js speechTag`), the other reads it big and hears it.
+- **H2 Voice call** (`voicecall.js`, chat.jsx `CallScreen`): the phone button by the mic; listen → answer (VOICE_RULE in the
+  system prompt) → read a sentence at a time (`sayable`: no table / code / link read out) → listen; tap cuts in; bye / سلام ends.
+- **D6 Trip pack** (`travel.js tripPack/flightNos/watchReminders`, Travel → Trip): 6 parts and how many are ready, the
+  country's map + directions in one tap, flight numbers, a reminder on each flight day pointing to Owed.
+- **D5 Cairo Metro** (`metro.js`): lines 1–3 with every station (EN + AR + old names), Dijkstra route (2 min a stop, 5 a
+  change), direction = the line's last station, fares as of 2024-08; Chat and the Home box answer it by code. Buses: no
+  reliable open data — not built. A Metro tab in Maps would change Ali's map layout → ask him first.
+- **D1 Pronunciation**: Say it (v6.32) already scored each word; now "Hear the ones to fix, slowly" (rate 0.55, then the
+  sentence at 0.7).
+- **S1 Mark the worksheet** (`coach.js withAnswers/markOne/markWorksheet`, Homework): each written answer checked by the maths
+  engine; an equation's "x = 4" on the next line is its answer; never marked by a guess.
+- **S2 Photo → Word with layout** (`convert.js ocrPages/ocrUsable`): ML Kit lines with boxes → rows of pieces → the PDF → Word
+  reader (headings, paragraphs, lists, tables); Arabic / handwriting still go to the AI reader.
+- **C2 Change the painted part** (erase-ui `keepInMask`, studio-ui `editArea`, `NativeBridge.savePicture`): paint + a wish →
+  the Pro picture model edits the photo, only the painted part is kept (soft edge); empty / "remove …" = the eraser.
+- **F1 depth portions — NOT built**: needs ARCore Depth (a GL camera screen) on a phone on Google's depth list; can't be tested
+  here and could break the food camera. Options for Ali in NEXT_SESSION AG.
+- Tests: unit v741tuner, v741care, v741cycletemp, v741newsthreads, v741autom, v741mock, v741voicecall, v741trippack,
+  v741metro, v741worksheet, v741scanword; Kotlin AutoMatchTest; e2e v741tune, v741care, v741cycletemp, v741newsthreads,
+  v741autom, v741mock, v741interp, v741call, v741trippack, v741metro, v741worksheet, v741scanword, v741editarea; e2e_v736learn
+  checks the slow replay.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
