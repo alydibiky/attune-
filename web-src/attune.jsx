@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
-import { Target, Search, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase } from "lucide-react";
+import { TrainFront, Target, Search, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase } from "lucide-react";
 import { parsePayment } from "./yusr/paytext.js";
 import { payOpts, homeCurrency } from "./locale.js";
 import { createBridge, zakatExplainContext } from "./yusr/yusr-bridge.js";
@@ -29,6 +29,7 @@ import { RecallPage } from "./lookback-ui.jsx";
 import { AutomationsPage, drainAutomations } from "./autom-ui.jsx";   // v6.41 C3
 import { parseAutomation, addRule, loadAuto, saveAuto, ruleText as autoRuleText } from "./autom.js";
 import { metroAsk, route as metroRoute, routeText as metroText } from "./metro.js";   // v6.41 D5
+import { MetroPage } from "./metro-ui.jsx";   // v6.42: its own tab next to Maps
 import { candidates as tuneCandidates, choose as tuneChoose, TUNE_PROMPT, TUNE_TOKENS } from "./tuner.js";   // v6.41 X2   // v6.40 Recall (agent C)
 import { ShelfPage } from "./shelf-ui.jsx";
 import * as SH from "./shelf.js";
@@ -7505,7 +7506,7 @@ const MORE_TOOLS = [
   ["memory", "Mind", "Everything you keep — it files itself", Brain],
   ["knowledge", "Knowledge", "Your facts — Chat looks them up before it answers", Database],
   ["cycle", "Cycle", "Period tracker", Droplet], ["travel", "Travel", "Country packs & phrases", Plane],
-  ["map", "Maps", "Offline places", MapPin], ["field", "Site reports", "Incident & maintenance docs", HardHat],
+  ["map", "Maps", "Offline places", MapPin], ["metro", "Metro", "Cairo Metro — line, direction, stops, ticket", TrainFront], ["field", "Site reports", "Incident & maintenance docs", HardHat],
   ["fleet", "Fleet", "Equipment health", Gauge], ["improve", "Improve a prompt", "For ChatGPT, Claude, Gemini…", Wand2],
   ["compress", "Compress", "Shorter prompts", Scissors], ["humanize", "Humanize", "Sound like you", PenLine],
   ["copilot", "Copilot", "Work with another AI", MessageSquare], ["library", "Library", "Prompt recipes", Package],
@@ -7532,7 +7533,7 @@ const MORE_GROUPS = [
   ["Mind & learning", ["lifeask", "coach", "learn", "memory", "shelf", ...(KNOW_ADMIN ? ["knowledge"] : []), "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
   ["Files", ["translate", "convert", "video", "pdfchat", "slides", "cv"]],
-  ["Places", ["map", "travel"]],
+  ["Places", ["map", "metro", "travel"]],
   ["Business (add-on)", ["business", "crane", "field", "fleet"]],
   ["Create (add-on)", ["studio", "code", "improve", "compress", "humanize", "copilot", "library", "ask"]],
 ];
@@ -10155,11 +10156,13 @@ export default function App() {
           <RemindersPanel reminders={reminders} setReminders={setReminders} native={NATIVE} flash={flash} onSchedule={(r) => { scheduleReminder(r); flash(tr("Reminder set")); }} /></>
         ) : mode === "cycle" ? (
           <CycleTab cycle={cycle} setCycle={setCycle} flash={flash} goInstant={() => setMode("instant")} native={NATIVE} nativeCall={nativeCall} />
+        ) : mode === "metro" ? (
+          <MetroPage />
         ) : mode === "map" ? (
           <MapPage N={NATIVE} nativeCall={NATIVE ? nativeCall : null} lastNativeId={nativeLastId} getTile={getTile} findPlaces={findPlaces} searchSaved={searchSaved}
             ask={modelState === "ready" ? (p) => callClaude(p, { maxTokens: 120, temperature: 0, think: false }) : null}
             load={mapLoad} save={mapSave} remember={remember} flash={flash} myLang={myLang} fallback={<MapTab remember={remember} flash={flash} myLang={myLang} />}
-            onExit={goBack} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
+            onExit={goBack} openMetro={() => navTo("metro")} listen={NATIVE && NATIVE.listen ? async (langTag, onPartial) => { const r = await nativeCall("listen", langTag || "", (pct, stage, detail) => { if (stage === "partial") onPartial(detail); }); return r && r.text; } : null} />
         ) : mode === "translate" ? (
           <TranslatePage flash={flash} readText={readTextAny} native={{ N: NATIVE, call: nativeCall }}
             llm={modelState === "ready" ? (m, o) => callChat(m, null, { maxTokens: (o && o.maxTokens) || 1500, temperature: 0.2, think: false }) : null}

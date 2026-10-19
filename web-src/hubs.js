@@ -13,7 +13,7 @@ export const HUBS = [
   ["students", "Students", "coach", ["coach", "convert", "pdfchat", "slides", "cv"]],
   ["money", "Money", "money", ["money", "reminders", "timeline", "xray", "radar", "life", "guardian", "deal"]],
   ["health", "Health", "health", ["health", "fit", "care", "cycle"]],
-  ["learn", "Daily", "learn", ["learn", "scout", "memory", "news", "map", "travel", "knowledge"]],
+  ["learn", "Daily", "learn", ["learn", "scout", "memory", "news", "map", "metro", "travel", "knowledge"]],   // v6.42: Metro next to Maps (Ali)
   ["tools", "Work", "business", ["business", "fleet", "crane", "field", "tools", "improve", "compress", "humanize", "copilot", "library", "video", "ask", "guide", "privacy"]],
 ];
 

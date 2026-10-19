@@ -14,7 +14,8 @@ ok(tabsFor("money").join() === "money,reminders,deal", "Money: Money · Follow-u
 ok(partsOf("radar").join() === "reminders,timeline,radar,life,xray,guardian" && partsOf("money").length === 0, "Follow-ups switch: Reminders · Timeline · Dates · People & plans · Chat X-Ray · Payments");
 ok(tabsFor("reminders", ["money", "reminders"]).includes("reminders"), "without the others, Follow-ups stays a tab");
 ok(tabsFor("fit").length === 0 && tabsFor("health").join() === "health,fit,care,cycle", "Health: Health · Fit & Food · Family · Cycle; Fit is full-screen");
-ok(tabsFor("scout").join() === "learn,scout,memory,news,map,travel,knowledge", "Daily: Learn · Scout · Mind · News · Maps · Travel (+ Knowledge for Ali)");
+ok(tabsFor("scout").join() === "learn,scout,memory,news,map,metro,travel,knowledge", "Daily: Learn · Scout · Mind · News · Maps · Metro · Travel (+ Knowledge for Ali)");
+ok(tabsFor("metro").join() === tabsFor("scout").join() && hubOf("metro") === "learn", "v6.42: Metro is the tab next to Maps");
 ok(tabsFor("convert", ["convert", "pdfchat"]).join() === "convert,pdfchat", "a tool the device hides is not a tab");
 ok(tabsFor("business").join() === "business,fleet,crane,field,tools", "Work: Business · Fleet · Crane · Reports · Tools");
 const inTools = TOOL_PAGES.flatMap((p) => p[3]);

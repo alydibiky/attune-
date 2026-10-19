@@ -43,7 +43,7 @@ function addAreaLayer(map) {
     paint: { "text-color": ["case", ["==", ["get", "compound"], 1], "#0f766e", "#475569"], "text-halo-color": "#ffffff", "text-halo-width": 1.6 } });
 }
 
-export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, searchSaved, load, save, remember, flash, myLang, fallback, onExit, listen, ask }) {
+export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, searchSaved, load, save, remember, flash, myLang, fallback, onExit, listen, ask, openMetro }) {
   const ar = getLang() === "ar";
   const lang = ar || myLang === "Arabic" ? "ar" : "en";
   const [st, setSt] = useState(load);
@@ -431,6 +431,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
               {streaming ? <Globe size={17} aria-hidden="true" /> : active ? active.toUpperCase() : <Download size={17} aria-hidden="true" />}{updates.length ? <span className="absolute -top-0.5 -end-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white" aria-label={tr("Update ready")} /> : null}</button>
           </form>
           <div className="pointer-events-auto flex gap-2 overflow-x-auto [scrollbar-width:none] -mx-3 px-3 pb-1">
+            {openMetro ? <button onClick={openMetro} className={chipCls} data-testid="map-chip-metro">{tr("Metro")}</button> : null}{/* v6.42: Cairo Metro is the tab next to Maps */}
             {CHIPS.map((c) => <button key={c[0]} onClick={() => runSearch(lang === "ar" ? c[2] : c[1], c)} className={chipCls} data-testid={"map-chip-" + c[0]}>{lang === "ar" ? c[2] : c[1]}</button>)}
           </div>
         </div>
