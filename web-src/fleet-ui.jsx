@@ -19,6 +19,7 @@ import { saveProject } from "./biz-v2-ui.jsx";
 import * as P from "./fleet-pro.js";
 import * as Q from "./fleet-trade.js";
 import { QuotesPane, QuoteForm, QuoteView, OrdersPane, POForm, POView, VendorsPane, VendorForm } from "./fleet-trade-ui.jsx";   // v6.44 quotes, purchase orders, suppliers
+import { TableOut, TodayCash, RatesForm, SitesPane, QueryPane, StoreKpis, StoreFilters, HistorySheet, RefIssues, ListsPane } from "./fleet-desk-ui.jsx";   // v6.45 from Ali's desktop programs
 import { InvoicesPane, InvoiceForm, InvoiceView, AgingPane, ReportsPane, TeamPane, PersonForm, AdvanceForm, CraneMore, PaperForm, RepairForm, FuelForm, DOC_L } from "./fleet-pro-ui.jsx";
 
 export const card = "rounded-2xl bg-[#FFFFFF] border border-[#DCE3EC] shadow-[0_1px_3px_rgba(15,23,42,.06)]";
@@ -41,7 +42,7 @@ const STATUS_L = { active: "Active", completed: "Completed", cancelled: "Cancell
 export const nameOf = (arr, id) => (F.byId(arr, id) || {}).name || "";
 
 /** Download / save a file: the Android app's saveFile, else a browser download. */
-function saveOut(saveFile, name, data, mime) {
+export function saveOut(saveFile, name, data, mime) {
   if (saveFile) {
     if (data instanceof Uint8Array) { let s = ""; for (let i = 0; i < data.length; i += 0x8000) s += String.fromCharCode.apply(null, data.subarray(i, i + 0x8000)); return saveFile(name, "", mime, btoa(s)); }
     return saveFile(name, data, mime);
@@ -179,7 +180,7 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
 const sheetTitle = (sh) => tr({ order: "Order from a message", job: "New job order", work: "Add work", cheque: sh.dir === "out" ? "Pay out" : "Payment received", expense: "New expense", in: "Incoming invoice", out: "Issue parts", move: "Move crane",
   list: sh.rec && sh.rec.id ? "Edit" : "Add", item: "Item", doc: "Document", bin: "Recycle Bin", settings: "Settings", backup: "Encrypted backup",
   invoice: "New invoice", invoiceView: "Invoice", person: sh.rec && sh.rec.id ? "Edit" : "Add a person", advance: "Advance", paper: "Crane paper", repair: "Breakdown", fuel: "Fuel",
-  quote: "Quotation", quoteView: "Quotation", po: "Purchase order", poView: "Purchase order", vendor: sh.rec && sh.rec.name ? "Supplier" : "New supplier" }[sh.kind] || "");
+  quote: "Quotation", quoteView: "Quotation", po: "Purchase order", poView: "Purchase order", vendor: sh.rec && sh.rec.name ? "Supplier" : "New supplier", rates: "Rates" }[sh.kind] || (sh.kind === "history" ? sh.name : ""));
 
 // ---- Today ------------------------------------------------------------------------------------------------------------
 function Today({ s, run, money, setSheet, setOpen, setTab, wide }) {
@@ -219,6 +220,7 @@ function Today({ s, run, money, setSheet, setOpen, setTab, wide }) {
         {[["order", "From a message", MessageSquare], ["work", "Work", Clock], ["job", "Job order", Plus], ["cheque", "Payment", Wallet], ["expense", "Expense", Wrench], ["out", "Issue parts", Package]].map(([kind, l, I]) =>
           <button key={kind} className={btnS + " whitespace-nowrap shrink-0"} onClick={() => setSheet({ kind, dir: "in" })} data-testid={"fleet-quick-" + kind}><I size={15} />{tr(l)}</button>)}
       </div>
+      <TodayCash s={s} money={money} setOpen={setOpen} />
       <div className={wide ? "grid grid-cols-2 gap-4 items-start" : "space-y-4"}>
         <div className="space-y-2"><p className="text-[15px] font-bold">{tr("Needs attention")}</p>
           {w.length ? w.slice(0, 12).map((x, i) => (
@@ -322,7 +324,7 @@ function FleetTab({ s, run, money, setSheet, setOpen }) {
             <span className={"text-[12.5px] font-semibold tabular-nums " + (p.profit < 0 ? "text-[#B91C1C]" : "")} dir="ltr">{money(p.profit)}</span></Row>; }
         if (seg === "clients") { const b = F.clientBalance(s, r.id);
           return <Row key={r.id} onClick={() => setOpen({ kind: "client", id: r.id })} testid="fleet-client">
-            <span className="flex-1 min-w-0 font-bold text-[14.5px] truncate" dir="auto">{r.name}</span>
+            <span className="flex-1 min-w-0 font-bold text-[14.5px] truncate" dir="auto">{r.name}</span>{r.inactive ? <Tag>{tr("Inactive")}</Tag> : null}
             <span className={"text-[13px] font-semibold tabular-nums " + (b.balance > 0 ? "text-[#B45309]" : "text-[#15803D]")} dir="ltr">{money(b.balance)}</span></Row>; }
         return <Row key={r.id} onClick={() => setSheet({ kind: "list", coll: seg, rec: r })} testid="fleet-place">
           <span className="w-10 h-10 rounded-xl grid place-items-center shrink-0 bg-[#EEF2F7] text-[#334155]">{seg === "banks" ? <Building2 size={18} /> : <MapPin size={18} />}</span>
@@ -400,10 +402,11 @@ function Money({ s, run, money, setSheet, setOpen, saveFile, flash }) {
   const [seg, setSeg] = useSticky("fleet:money", "payments");
   return (
     <div className="space-y-3" data-testid="fleet-money">
-      <Seg value={seg} onChange={setSeg} items={[["payments", "Cheques & payments"], ["invoices", "Invoices"], ["aging", "Who owes what"], ["expenses", "Expenses"], ["profit", "Profit per crane"], ["reports", "Reports"], ["export", "Export"]]} testid="fleet-mseg" />
+      <Seg value={seg} onChange={setSeg} items={[["payments", "Cheques & payments"], ["invoices", "Invoices"], ["aging", "Who owes what"], ["expenses", "Expenses"], ["profit", "Profit per crane"], ["sites", "Profit per site"], ["query", "Query"], ["reports", "Reports"], ["export", "Export"]]} testid="fleet-mseg" />
       {seg === "payments" ? <Payments s={s} run={run} money={money} setSheet={setSheet} /> : seg === "invoices" ? <InvoicesPane s={s} money={money} setSheet={setSheet} />
         : seg === "aging" ? <AgingPane s={s} money={money} setOpen={setOpen} /> : seg === "reports" ? <ReportsPane s={s} money={money} /> : seg === "expenses" ? <Expenses s={s} run={run} money={money} setSheet={setSheet} />
-        : seg === "profit" ? <Profit s={s} money={money} /> : <ExportPane s={s} saveFile={saveFile} flash={flash} />}
+        : seg === "profit" ? <Profit s={s} money={money} saveFile={saveFile} flash={flash} /> : seg === "sites" ? <SitesPane s={s} money={money} saveFile={saveFile} flash={flash} />
+        : seg === "query" ? <QueryPane s={s} saveFile={saveFile} flash={flash} /> : <ExportPane s={s} saveFile={saveFile} flash={flash} />}
     </div>);
 }
 function Payments({ s, run, money, setSheet }) {
@@ -438,12 +441,12 @@ function Expenses({ s, run, money, setSheet }) {
       {Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([k, v]) => <div key={k} className="flex justify-between text-[13.5px] py-0.5"><span dir="auto">{tr(k)}</span><span className="tabular-nums" dir="ltr">{money(v)}</span></div>)}</div> : null}
     {list.length ? list.map((x) => <div key={x.id} className={card + " p-3.5 flex items-center gap-2"} data-testid="fleet-expense">
       <span className="flex-1 min-w-0"><span className="block text-[14px] font-semibold truncate" dir="auto">{x.lines.map((l) => tr(l.type)).join(" · ")}</span>
-        <span className={"block text-[12.5px] " + muted} dir="auto">{F.showDate(x.date)} · {x.crane ? nameOf(s.cranes, x.crane) : x.site ? nameOf(s.sites, x.site) : tr("General")}</span></span>
+        <span className={"block text-[12.5px] " + muted} dir="auto">{x.period ? F.showDate(x.from) + " → " + F.showDate(x.to) : F.showDate(x.date)} · {x.crane ? nameOf(s.cranes, x.crane) : x.site ? nameOf(s.sites, x.site) : tr("General")}</span></span>
       <span className="tabular-nums font-bold text-[14px]" dir="ltr">{money(x.total)}</span>
       <button className="w-9 h-9 grid place-items-center text-[#94A3B8]" aria-label={tr("Delete")} onClick={async () => { if (await askConfirm("Move this expense to the Recycle Bin?", { yes: "Delete" })) run((st) => F.remove(st, "expenses", x.id)); }}><Trash2 size={15} /></button></div>) : <Empty>{tr("No expenses yet.")}</Empty>}
   </div>;
 }
-function Profit({ s, money }) {
+function Profit({ s, money, saveFile, flash }) {
   const [range, setRange] = useState("month");
   const t = F.isoDay(), from = range === "month" ? t.slice(0, 7) + "-01" : range === "year" ? t.slice(0, 4) + "-01-01" : "";
   const rows = F.fleetProfit(s, { from });
@@ -455,6 +458,7 @@ function Profit({ s, money }) {
       <tbody>{rows.map((r) => <tr key={r.crane.id} className="border-t border-[#EEF2F7]"><td className="px-3 py-2.5" dir="auto">{r.crane.name}</td>{["income", "expenses", "parts", "profit"].map((k) => <td key={k} className={"px-3 py-2.5 text-end tabular-nums " + (k === "profit" && r.profit < 0 ? "text-[#B91C1C] font-semibold" : k === "profit" ? "font-semibold" : "")} dir="ltr">{num(r[k])}</td>)}</tr>)}
         <tr className="border-t-2 border-[#DCE3EC] font-bold"><td className="px-3 py-2.5">{tr("Total")}</td>{["income", "expenses", "parts", "profit"].map((k) => <td key={k} className="px-3 py-2.5 text-end tabular-nums" dir="ltr">{num(tot[k])}</td>)}</tr></tbody></table></div>
     {general ? <p className={"text-[12.5px] " + muted}>{tr("General expenses (not tied to a crane): {v} — net after them: {n}", { v: money(general), n: money(tot.profit - general) })}</p> : null}
+    {rows.length ? <TableOut s={s} saveFile={saveFile} flash={flash} title="Profit per crane" head={["Crane", "Income", "Expenses", "Parts", "Profit"]} rows={rows.map((r) => [r.crane.name, r.income, r.expenses, r.parts, r.profit])} total={tot.profit} file={"fleet-profit-" + t} testid="fleet-profit" /> : null}
   </div>;
 }
 function ExportPane({ s, saveFile, flash }) {
@@ -475,27 +479,28 @@ function Store({ s, run, money, setSheet, saveFile, flash }) {
     <div className="space-y-3" data-testid="fleet-store">
       <div className="flex gap-2"><button className={btnP + " h-10 flex-1"} style={{ background: "var(--biz)" }} onClick={() => setSheet({ kind: "in" })} data-testid="fleet-in"><Plus size={16} />{tr("Incoming")}</button>
         <button className={btnS + " flex-1 h-10"} onClick={() => setSheet({ kind: "out" })} data-testid="fleet-out"><Package size={16} />{tr("Issue parts")}</button></div>
-      <Seg value={seg} onChange={setSeg} items={[["stock", "Stock"], ["log", "Movements"], ["orders", "Purchase orders"], ["suppliers", "Suppliers"], ["reports", "Reports"]]} testid="fleet-sseg" />
-      {seg === "orders" ? <OrdersPane s={s} money={money} setSheet={setSheet} /> : seg === "suppliers" ? <VendorsPane s={s} money={money} setSheet={setSheet} /> : seg === "stock" ? <StockList s={s} money={money} setSheet={setSheet} /> : seg === "log" ? <StoreLog s={s} money={money} setSheet={setSheet} /> : <StoreReports s={s} money={money} />}
+      <Seg value={seg} onChange={setSeg} items={[["stock", "Stock"], ["log", "Movements"], ["orders", "Purchase orders"], ["suppliers", "Suppliers"], ["reports", "Reports"], ["lists", "Lists"]]} testid="fleet-sseg" />
+      {seg === "lists" ? <ListsPane s={s} run={run} /> : seg === "orders" ? <OrdersPane s={s} money={money} setSheet={setSheet} /> : seg === "suppliers" ? <VendorsPane s={s} money={money} setSheet={setSheet} /> : seg === "stock" ? <StockList s={s} money={money} setSheet={setSheet} /> : seg === "log" ? <StoreLog s={s} money={money} setSheet={setSheet} /> : <StoreReports s={s} money={money} setSheet={setSheet} />}
     </div>);
 }
 function StockList({ s, money, setSheet }) {
   const list = F.stockList(s.store);
   const value = list.reduce((n, x) => n + x.value, 0);
   if (!list.length) return <Empty>{tr("The store is empty. Add an incoming invoice to start.")}</Empty>;
-  return <div className="space-y-2"><p className={"text-[13px] " + muted}>{tr("Stock value at purchase price")}: <b className="tabular-nums" dir="ltr">{money(value)}</b></p>
+  return <div className="space-y-2"><StoreKpis s={s} money={money} /><p className={"text-[13px] " + muted}>{tr("Stock value at purchase price")}: <b className="tabular-nums" dir="ltr">{money(value)}</b></p>
     <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2.5 lg:space-y-0">{list.map((it) => <Row key={it.name} onClick={() => setSheet({ kind: "item", name: it.name })} testid="fleet-item">
       <span className="flex-1 min-w-0"><span className="block font-bold text-[14.5px] truncate" dir="auto">{it.name}</span><span className={"block text-[12px] " + muted}>{tr("Avg. price")} <span dir="ltr">{money(it.avg)}</span>{it.min ? " · " + tr("min") + " " + it.min : ""}</span></span>
       {it.low ? <Tag tone={it.balance <= 0 ? "red" : "amber"}>{tr("Low")}</Tag> : null}<span className="text-[15px] font-extrabold tabular-nums" dir="ltr">{num(it.balance)}</span></Row>)}</div></div>;
 }
 function StoreLog({ s, money, setSheet }) {
-  const [q, setQ] = useState(""), [kind, setKind] = useState("");
-  const r = F.searchStore(s.store, { text: q, kind });
+  const [q, setQ] = useState(""), [kind, setKind] = useState(""), [f, setF] = useState({});
+  const r = F.searchStore(s.store, { ...f, text: q, kind });
   const rows = r.rows.slice().reverse();
   return <div className="space-y-2.5">
     <div className="flex gap-2"><div className="relative flex-1"><Search size={16} className="absolute top-3.5 start-3 text-[#94A3B8]" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search code, item, supplier, technician…")} className={inp + " ps-9"} data-testid="fleet-store-search" dir="auto" /></div>
       <select value={kind} onChange={(e) => setKind(e.target.value)} className={inp + " w-32"}><option value="">{tr("All")}</option><option value="in">{tr("Incoming")}</option><option value="out">{tr("Outgoing")}</option></select></div>
-    <p className={"text-[12.5px] " + muted}>{tr("{n} lines · in {i} · out {o}", { n: r.count, i: money(r.inTotal), o: money(r.outTotal) })}</p>
+    <StoreFilters s={s} f={f} setF={setF} />
+    <p className={"text-[12.5px] " + muted} data-testid="fleet-store-stats">{tr("{n} lines · in {i} · out {o}", { n: r.count, i: money(r.inTotal), o: money(r.outTotal) })}{r.balance != null ? " · " + tr("balance {b}", { b: num(r.balance) }) : ""}</p>
     {rows.length ? <div className={card + " overflow-x-auto"}><table className="w-full text-[13px]"><thead><tr className={muted}>{["Code", "Date", "Item", "Qty", "Total", "Balance"].map((h, i) => <th key={h} className={"px-3 py-2.5 font-semibold whitespace-nowrap " + (i > 2 ? "text-end" : "text-start")}>{tr(h)}</th>)}</tr></thead>
       <tbody>{rows.slice(0, 300).map((t) => <tr key={t.id} className="border-t border-[#EEF2F7] cursor-pointer hover:bg-[#F8FAFC]" onClick={() => setSheet({ kind: "doc", doc: t.doc })} data-testid="fleet-tx">
         <td className="px-3 py-2.5 whitespace-nowrap" dir="ltr"><span className={"inline-block w-2 h-2 rounded-full me-1.5 " + (t.kind === "in" ? "bg-[#15803D]" : "bg-[#B91C1C]")} />{t.doc}</td>
@@ -504,7 +509,7 @@ function StoreLog({ s, money, setSheet }) {
       : <Empty>{tr("No movements.")}</Empty>}
   </div>;
 }
-function StoreReports({ s, money }) {
+function StoreReports({ s, money, setSheet }) {
   const [rep, setRep] = useState("crane");
   const docs = F.incomingDocs(s.store);
   const [doc, setDoc] = useState(docs[docs.length - 1] || "");
@@ -516,7 +521,8 @@ function StoreReports({ s, money }) {
       <select value={doc} onChange={(e) => setDoc(e.target.value)} className={inp} data-testid="fleet-ref-pick" dir="ltr">{docs.map((d) => <option key={d} value={d}>{d}</option>)}</select>
       {doc ? <div className={card + " overflow-x-auto"}><table className="w-full text-[13px]"><thead><tr className={muted}>{["Item", "Bought", "Issued", "Left", "Unit price"].map((h, i) => <th key={h} className={"px-3 py-2.5 font-semibold " + (i ? "text-end" : "text-start")}>{tr(h)}</th>)}</tr></thead>
         <tbody>{F.invoiceItems(s.store, doc).map((x) => <tr key={x.item} className="border-t border-[#EEF2F7]"><td className="px-3 py-2.5" dir="auto">{x.item}</td>{[x.qty, x.issued, x.remaining, x.unit].map((v, i) => <td key={i} className="px-3 py-2.5 text-end tabular-nums" dir="ltr">{num(v)}</td>)}</tr>)}</tbody></table></div> : <Empty>{tr("No incoming invoices yet.")}</Empty>}
-    </> : (sup || list).length ? <div className="space-y-2">{(sup || list).map((x) => <div key={x.name} className={card + " p-3.5 flex items-center gap-2"}><span className="flex-1 min-w-0 font-semibold text-[14px] truncate" dir="auto">{x.name}</span><span className={"text-[12px] " + muted}>{tr("{n} lines", { n: x.lines })}</span><span className="tabular-nums font-bold text-[14px]" dir="ltr">{money(x.total)}</span></div>)}</div> : <Empty>{tr("Nothing yet.")}</Empty>}
+      {doc ? <RefIssues s={s} doc={doc} money={money} /> : null}
+    </> : (sup || list).length ? <div className="space-y-2">{(sup || list).map((x) => <Row key={x.name} onClick={() => setSheet({ kind: "history", key: rep === "crane" ? "crane" : rep, name: x.name })} testid="fleet-rep-row"><span className="flex-1 min-w-0 font-semibold text-[14px] truncate" dir="auto">{x.name}</span><span className={"text-[12px] " + muted}>{tr("{n} lines", { n: x.lines })}</span><span className="tabular-nums font-bold text-[14px]" dir="ltr">{money(x.total)}</span></Row>)}</div> : <Empty>{tr("Nothing yet.")}</Empty>}
   </div>;
 }
 
@@ -549,6 +555,8 @@ function SheetBody(p) {
   if (k === "po") return <POForm {...p} />;
   if (k === "poView") return <POView {...p} />;
   if (k === "vendor") return <VendorForm {...p} />;
+  if (k === "rates") return <RatesForm {...p} />;
+  if (k === "history") return <HistorySheet {...p} />;
   return null;
 }
 export const SaveBtn = ({ onClick, children, disabled, testid = "fleet-save" }) => <button className={btnP + " w-full"} style={{ background: "var(--biz)" }} onClick={onClick} disabled={disabled} data-testid={testid}><Check size={18} />{children || tr("Save")}</button>;
@@ -564,8 +572,15 @@ function ListForm({ s, run, sheet, close }) {
     {coll === "cranes" ? <><div className="grid grid-cols-2 gap-2"><Txt label={tr("Brand")} value={r.brand} onChange={set("brand")} /><Txt label={tr("Capacity (t)")} value={r.tons} onChange={set("tons")} mode="decimal" /></div>
       <div className="grid grid-cols-2 gap-2"><Txt label={tr("Hourly rate")} value={r.hourly} onChange={set("hourly")} mode="decimal" testid="fleet-f-hourly" /><Txt label={tr("Daily rate")} value={r.daily} onChange={set("daily")} mode="decimal" testid="fleet-f-daily" /></div>
       <Txt label={tr("Service every (engine hours, optional)")} value={r.serviceEvery} onChange={set("serviceEvery")} mode="decimal" testid="fleet-f-service" />
+      <div className="grid grid-cols-3 gap-2"><Txt label={tr("Code")} value={r.code} onChange={set("code")} dir="ltr" testid="fleet-f-code" /><Txt label={tr("Model")} value={r.model} onChange={set("model")} /><Txt label={tr("Year")} value={r.year} onChange={set("year")} mode="numeric" dir="ltr" /></div>
+      <Txt label={tr("Notes")} value={r.notes} onChange={set("notes")} />
       {!r.id ? <Sel label={tr("Garage")} value={r.loc ? r.loc.id : ""} onChange={(v) => setR({ ...r, loc: { kind: "garage", id: v || null }, home: v || null })} options={opts(s.garages)} empty={F.live(s.garages).length ? null : tr("— add a garage first (optional) —")} /> : null}</> : null}
-    {coll === "clients" ? <><Txt label={tr("Phone")} value={r.phone} onChange={set("phone")} mode="tel" dir="ltr" /><Txt label={tr("Tax reg. no. (on invoices)")} value={r.taxNo} onChange={set("taxNo")} dir="ltr" /><Txt label={tr("Opening balance (what they owed before)")} value={r.opening} onChange={set("opening")} mode="decimal" testid="fleet-f-opening" /></> : null}
+    {coll === "clients" ? <><Txt label={tr("Phone")} value={r.phone} onChange={set("phone")} mode="tel" dir="ltr" /><Txt label={tr("Tax reg. no. (on invoices)")} value={r.taxNo} onChange={set("taxNo")} dir="ltr" /><Txt label={tr("Opening balance (what they owed before)")} value={r.opening} onChange={set("opening")} mode="decimal" testid="fleet-f-opening" />
+      <div className="grid grid-cols-2 gap-2"><Txt label={tr("Contact person")} value={r.contact} onChange={set("contact")} testid="fleet-f-contact" /><Txt label={tr("Email")} value={r.email} onChange={set("email")} dir="ltr" /></div>
+      <Txt label={tr("Address")} value={r.address} onChange={set("address")} />
+      <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" checked={!!r.inactive} onChange={(e) => setR({ ...r, inactive: e.target.checked })} className="w-5 h-5" data-testid="fleet-f-inactive" />{tr("Not active any more")}</label></> : null}
+    {coll === "banks" ? <><div className="grid grid-cols-2 gap-2"><Txt label={tr("Account number")} value={r.account} onChange={set("account")} dir="ltr" testid="fleet-f-account" /><Txt label={tr("Branch")} value={r.branch} onChange={set("branch")} /></div>
+      <div className="grid grid-cols-2 gap-2"><Txt label={tr("Account holder")} value={r.holder} onChange={set("holder")} /><Txt label={tr("Opening balance")} value={r.opening} onChange={set("opening")} mode="decimal" /></div></> : null}
     {coll === "sites" ? <Txt label={tr("Address")} value={r.address} onChange={set("address")} /> : null}
     <SaveBtn onClick={save} disabled={!String(r.name || "").trim()} />
     {r.id ? <button className={btnS + " w-full text-[#B91C1C]"} onClick={async () => { if (await askConfirm("Move this to the Recycle Bin?", { yes: "Delete" })) { if (run((x) => F.remove(x, coll, r.id), tr("In the Recycle Bin for 7 days"))) close(); } }}><Trash2 size={15} />{tr("Delete")}</button> : null}
@@ -698,12 +713,14 @@ function ChequeForm({ s, run, sheet, close }) {
   </div>;
 }
 function ExpenseForm({ s, run, close, flash }) {
-  const [x, setX] = useState({ date: F.isoDay(), crane: "", site: "", lines: [{ type: s.expTypes[0], amount: "" }], notes: "", evidence: null });
+  const [x, setX] = useState({ date: F.isoDay(), crane: "", site: "", lines: [{ type: s.expTypes[0], amount: "" }], notes: "", evidence: null, period: false, from: "", to: "" });
   const set = (k) => (v) => setX({ ...x, [k]: v });
   const setLine = (i, k, v) => setX({ ...x, lines: x.lines.map((l, j) => (j === i ? { ...l, [k]: v } : l)) });
   const save = () => { if (run((st) => F.addExpense(st, x), tr("Expense saved"))) close(); };
   return <div className="space-y-3" data-testid="fleet-expense-form">
     <DateF label={tr("Date")} value={x.date} onChange={set("date")} />
+    <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" checked={x.period} onChange={(e) => setX({ ...x, period: e.target.checked })} className="w-5 h-5" data-testid="fleet-f-xperiod" />{tr("It covers a period (rent, insurance, a monthly salary…)")}</label>
+    {x.period ? <div className="grid grid-cols-2 gap-2"><DateF label={tr("From")} value={x.from} onChange={set("from")} testid="fleet-f-xfrom" /><DateF label={tr("To")} value={x.to} onChange={set("to")} testid="fleet-f-xto" /></div> : null}
     <div className="grid grid-cols-2 gap-2"><Sel label={tr("Crane")} value={x.crane} onChange={set("crane")} options={opts(s.cranes)} empty={tr("— none —")} testid="fleet-f-xcrane" /><Sel label={tr("Site")} value={x.site} onChange={set("site")} options={opts(s.sites)} empty={tr("— none —")} /></div>
     {!x.crane && !x.site ? <p className={"text-[12px] -mt-1 " + muted}>{tr("No crane and no site = a general expense.")}</p> : null}
     {x.lines.map((l, i) => <div key={i} className="flex gap-2 items-end">
@@ -838,6 +855,7 @@ function MoreMenu({ s, run, setSheet, close, flash, saveFile, site }) {
   const bin = F.binList(s).length;
   const item = (I, label, onClick, testid, extra) => <button onClick={onClick} data-testid={testid} className={card + " w-full text-start p-3.5 flex items-center gap-3"}><I size={18} className="text-[#475569]" /><span className="flex-1 font-semibold text-[14.5px]">{label}</span>{extra}<ChevronRight size={17} className="text-[#94A3B8] rtl:-scale-x-100" /></button>;
   return <div className="space-y-2">
+    {item(Pencil, tr("Rates"), () => { close(); setSheet({ kind: "rates" }); }, "fleet-rates-open")}
     {item(Trash2, tr("Recycle Bin"), () => { close(); setSheet({ kind: "bin" }); }, "fleet-bin", bin ? <Tag>{bin}</Tag> : null)}
     {item(Lock, tr("Encrypted backup"), () => { close(); setSheet({ kind: "backup" }); }, "fleet-backup")}
     {item(Wrench, tr("Settings"), () => { close(); setSheet({ kind: "settings" }); }, "fleet-settings")}
