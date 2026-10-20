@@ -2153,6 +2153,27 @@ tools in one page, Studio as fast and as good as the gallery's (pictures and rem
 - Still open: the depth of Ali's crane / warehouse ERPs inside Business; Missions 3–4;
   SD 1.5 / LaMa on the NPU; W6 subtitles; sync gaps; Recall 2.
 
+### 5.93 (20 Oct 2026) — v6.43 part 3: free type + search, the Honor-like photo editor, "minimal + connected" options
+Ali: "minimalistic yet complete and connected in a brilliant way" · "free type and search, not only one" · "the image part
+exactly like my Honor phone".
+- **Free type + search** (fit-ui.jsx `lastFoodPhrase`, `pickFood`): while a whole meal is typed, the food being typed now is
+  searched too ("150 g chicken alfredo pasta and 7 chicken str" → "chicken str"), shown under the box with "Foods for … — tap
+  one, or Find the foods for the whole meal"; a pick keeps the rest of the sentence (read by code) and the amount written
+  before the picked food. e2e_v743search.
+- **Photo editor like the Honor Gallery** (photoedit-ui.jsx `PhotoEditor`, photoedit.js; replaces EraseSheet in Studio):
+  full-screen photo, tool row AI Eraser · Passers-by · Cut out · Enhance · Change; Undo, hold-to-compare, Save (also to the
+  phone's gallery). Shapes from `findSubjects` (PhotoSmart.kt — ML Kit subject segmentation via Play services
+  `play-services-mlkit-subject-segmentation:16.0.0-beta1`, module fetched once with ModuleInstall, manifest
+  DEPENDENCIES += subject_segment; checked with kotlinc against android-35 + the AARs). Tap = the smallest shape under the
+  finger; main subject = big and central; Passers-by = all others; Cut out = the subject with a clear background (canvas),
+  saved via savePicture; Enhance = Real-ESRGAN ×4; each step joins Studio and the editor stays open on it. e2e_v740erase /
+  e2e_v741editarea rewritten for it; unit v743photoedit.
+- **Minimal + connected — waiting for Ali**: three directions added to the design canvas
+  (https://claude.ai/artifact/HJSNMxkPPZ7wCjjYqkDHGR, row "Minimal + connected"): 1 One box does everything (Home = the box +
+  app names; one sentence acts in every app it touches, each result with Open / Undo) · 2 One Today line across apps (a
+  timeline: meals, crane jobs, cheques, Scout finds, lessons; bottom bar Today · Apps · Chat · Me) · 3 Four spaces, linked
+  (Me · Money · Work · Learn, each with its own search box and cross-links). Recommendation 1 + 2's Today line inside it.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

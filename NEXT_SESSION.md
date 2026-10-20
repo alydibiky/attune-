@@ -757,6 +757,16 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AK. 20 Oct 2026 — v6.43 part 3 (HANDOFF §5.93). Read this first, then AJ.
+Ali: minimal yet complete and connected · free type AND search · the image part exactly like his Honor phone.
+Built: free type + search in Food's box · the Honor-like photo editor (tap to erase, passers-by, cut out, enhance, change).
+### Ali to decide
+1. **Minimal + connected** — canvas row "Minimal + connected": 1 One box · 2 One Today line · 3 Four spaces. Recommendation:
+   1 with 2's Today line under the box.
+### Ali's phone checklist (part 3)
+1. ⬜ Fit → + → type «150 g chicken alfredo pasta and 7 chicken str» → the list shows strips → tap → both foods, 962 kcal.
+2. ⬜ Studio → "Edit a photo" → a photo with people → tap one → Erase; Passers-by → Remove; Cut out → Save; hold 👁 to compare.
+
 ## AJ. 20 Oct 2026 — v6.43 part 2: design A built (HANDOFF §5.92). Read this first, then AI.
 Ali: "A, continue the rest" + barcode by camera, prompt/humanize tools on one page, Studio fast and high quality like the
 gallery, Scout too weak ("only Dubizzle for Nissan Tuscon 2022 used").
