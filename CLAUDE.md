@@ -1,6 +1,8 @@
 # Attune — read this first (every session)
 
-0. Read **`APP_HANDOFF.md`** first: the whole app on one page (what it is, every feature and its files, rules, what is open).
+00. Read **`VISION.md`** first of all: Ali's vision (a global app people live in, AI + very strong code) and the roadmap
+   phases. Every change serves it.
+0. Read **`APP_HANDOFF.md`** next: the whole app on one page (what it is, every feature and its files, rules, what is open).
 1. Read **`NEXT_SESSION.md`**: Ali's full, current problem list (24 items, grouped A–I; Ali keeps adding more) and the prompt
    for the session. Work through all of it with a task list.
 2. Read **`HANDOFF.md`** §0 ("START HERE") and the latest section (§5.37) for how the app is built and tested.
