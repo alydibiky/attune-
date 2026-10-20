@@ -170,7 +170,8 @@ export function sell(books, cart, o = {}) {
   const { lines, total, exact, rounding } = cartLines(books, cart, { taxInclusive: o.taxInclusive !== false, discountBp: o.discountBp || 0 });
   if (method === "cash" && o.given != null && o.given < total) throw new Ops.BooksError("The cash given is less than the total");
   let s = books;
-  const d = Ops.saveDraft(s, { type: "invoice", customer, date: today, lines, notes: "Counter sale" }, { at }); s = d.state;
+  // v6.44: the cashier's name stays on the sale (Shop → Close → by cashier)
+  const d = Ops.saveDraft(s, { type: "invoice", customer, date: today, lines, notes: "Counter sale", ...(o.cashier ? { cashier: String(o.cashier) } : {}) }, { at }); s = d.state;
   const p = Ops.post(s, d.id, { at, today }); s = p.state;
   const warnings = [...p.warnings]; if (!exact) warnings.push("The total differs from the shelf prices by a rounding of 0.01");
   if (method !== "credit") s = Ops.receive(s, { customer, date: today, method, amount: total, allocations: [{ doc: p.number, amount: total }] }, { at }).state;

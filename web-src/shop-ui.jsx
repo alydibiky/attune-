@@ -4,7 +4,7 @@
    out) · Day close (by payment method, cash expected vs counted). Every sale is a real Books invoice + receipt (shop.js).
    Tests: tests/e2e_v727shop.py.                                                                                                  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Plus, Minus, Barcode, Search, Check, Trash2, Share2, Package, Users, Clock, BarChart3, ShoppingCart, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Plus, Minus, Barcode, Search, Check, Trash2, Share2, Package, Users, Clock, BarChart3, ShoppingCart, AlertTriangle, Undo2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
 import * as S from "./shop.js";
 import * as Ops from "./books-ops.js";
@@ -14,6 +14,8 @@ import { homeCurrency } from "./locale.js";
 import { regionOf } from "./locale.js";
 import * as CAT from "./catalogue.js";
 import { sharePdf } from "./books-docs.jsx";
+import * as SP from "./shop-pro.js";
+import { ReturnSheet, OffersPanel, ShopReports } from "./shop-pro-ui.jsx";   // v6.44: returns, offers, loyalty, reports
 
 const card = "rounded-2xl bg-[#FFFFFF] border border-[#DCE3EC] shadow-[0_1px_3px_rgba(15,23,42,.06)]";
 const btnP = "h-12 px-5 rounded-2xl text-[#FFFFFF] font-bold text-[15px] disabled:opacity-40 flex items-center justify-center gap-2";
@@ -61,8 +63,13 @@ function Setup({ onDone, flash }) {
     </div>);
 }
 
-function Sell({ books, setBooks, shop, scanBarcode, share, flash }) {
+function Sell({ books, setBooks, shop, setShop, scanBarcode, share, flash }) {
   const [cart, setCart] = useState([]);
+  // v6.44: offers in force, loyalty points, the cashier, held carts, a return
+  const [usePts, setUsePts] = useState(false), [ret, setRet] = useState(false);
+  const [cashier, setCashierRaw] = useState(() => { try { return localStorage.getItem("attune:shop:cashier") || ""; } catch (e) { return ""; } });
+  const setCashier = (v) => { setCashierRaw(v); try { localStorage.setItem("attune:shop:cashier", v); } catch (e) {} };
+  const loyal = !!(shop.loyalty && shop.loyalty.on);
   const [q, setQ] = useState("");
   const [method, setMethod] = useState("cash");
   const [given, setGiven] = useState("");
@@ -72,7 +79,10 @@ function Sell({ books, setBooks, shop, scanBarcode, share, flash }) {
   const cur = books.currency;
   const items = books.items.filter((i) => !q || i.name.toLowerCase().includes(q.toLowerCase()) || (i.sku || "") === q || (i.barcode || "") === q);
   const add = (it) => { if (!(it.price > 0)) { flash(tr("Set a price for {n} first (Stock)", { n: it.name })); return; } setDone(null); setCart((c) => { const i = c.findIndex((x) => x.item === it.id); return i >= 0 ? c.map((x, k) => (k === i ? { ...x, qty: x.qty + 1 } : x)) : [...c, { item: it.id, qty: 1 }]; }); };
-  const lines = useMemo(() => (cart.length ? S.cartLines(books, cart, { taxInclusive: shop.taxInclusive !== false }) : { total: 0 }), [cart, books]);
+  const offered = useMemo(() => SP.applyOffers(books, cart, shop.offers || [], new Date()), [cart, books, shop]);
+  const pts = loyal && cust ? SP.points(books, shop, cust) : 0;
+  const rd = usePts && pts && cart.length ? SP.redeem(books, shop, cust, offered.cart, pts, { taxInclusive: shop.taxInclusive !== false }) : { points: 0, discount: 0, discountBp: 0 };
+  const lines = useMemo(() => (cart.length ? S.cartLines(books, offered.cart, { taxInclusive: shop.taxInclusive !== false, discountBp: rd.discountBp }) : { total: 0 }), [offered, books, rd.discountBp]);
   const givenM = given ? toM(given) : null;
   const scan = async (file) => {
     if (!file || !scanBarcode) return;
@@ -84,8 +94,9 @@ function Sell({ books, setBooks, shop, scanBarcode, share, flash }) {
   };
   const complete = () => {
     try {
-      const r = S.sell(books, cart, { method, given: method === "cash" ? givenM : null, customer: method === "credit" ? cust : undefined, taxInclusive: shop.taxInclusive !== false, recipes: shop.recipes, today: today() });
-      setBooks(r.state); setDone({ ...r, lines: cart.map((c) => ({ ...c, name: books.items.find((i) => i.id === c.item).name })) }); setCart([]); setGiven("");
+      const r = S.sell(books, offered.cart, { method, given: method === "cash" ? givenM : null, customer: method === "credit" || (loyal && cust) ? cust || undefined : undefined, taxInclusive: shop.taxInclusive !== false, recipes: shop.recipes, today: today(), discountBp: rd.discountBp, cashier });
+      setBooks(r.state); setDone({ ...r, saved: offered.saved + rd.discount, applied: offered.applied, lines: cart.map((c) => ({ ...c, name: books.items.find((i) => i.id === c.item).name })) }); setCart([]); setGiven(""); setUsePts(false);
+      if (rd.points) setShop(SP.useRedeemed(shop, cust, rd.points));
       r.warnings.forEach((w) => flash(w));
     } catch (e) { flash(String(e.message || e)); }
   };
@@ -96,6 +107,7 @@ function Sell({ books, setBooks, shop, scanBarcode, share, flash }) {
           <p className="font-bold flex items-center gap-2 text-[#15803D]"><Check size={18} />{tr("Sold — {n}", { n: done.number })}</p>
           {done.lines.map((l, i) => <p key={i} className="text-[13.5px] m-0">{l.qty} × {l.name}</p>)}
           <p className="text-[18px] font-extrabold m-0" data-testid="shop-receipt-total">{money(done.total, cur)}</p>
+          {done.saved > 0 ? <p className="text-[13.5px] font-semibold text-[#15803D] m-0" data-testid="shop-saved">{tr("You saved {a}", { a: money(done.saved, cur) })}{done.applied.length ? " · " + done.applied.map((a) => a.name).join(", ") : ""}</p> : null}
           {done.change > 0 ? <p className="text-[15px] font-bold m-0" data-testid="shop-change">{tr("Change: {a}", { a: money(done.change, cur) })}</p> : null}
           {share ? <button className={btnS + " mt-2"} onClick={() => share(`${books.company.name}\n${done.number}\n${done.lines.map((l) => `${l.qty} × ${l.name}`).join("\n")}\n${tr("Total")}: ${money(done.total, cur)}`)}><Share2 size={14} />{tr("Send the receipt")}</button> : null}
         </div>) : null}
@@ -103,7 +115,11 @@ function Sell({ books, setBooks, shop, scanBarcode, share, flash }) {
         <div className="flex-1 flex items-center gap-2 h-11 rounded-xl border border-[#DCE3EC] bg-[#FFFFFF] px-3"><Search size={15} className="text-[#94A3B8]" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Find an item")} className="flex-1 outline-none bg-transparent" data-testid="shop-search" /></div>
         {scanBarcode ? <button className={btnS + " h-11"} onClick={() => fileRef.current && fileRef.current.click()} aria-label={tr("Scan a barcode")} data-testid="shop-scan"><Barcode size={17} /></button> : null}
         <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { scan(e.target.files && e.target.files[0]); e.target.value = ""; }} />
+        <button className={btnS + " h-11"} onClick={() => setRet(true)} aria-label={tr("Return / refund")} data-testid="shop-return-open"><Undo2 size={17} /></button>
       </div>
+      {(shop.held || []).length ? <div className="flex gap-1.5 overflow-x-auto" data-testid="shop-held">{shop.held.map((h) => <button key={h.id} className={btnS + " shrink-0"} onClick={() => { const t = SP.takeHeld(shop, h.id); setShop(t.shop); setCart(t.held.cart); setCust(t.held.customer || ""); setDone(null); }} data-testid="shop-held-take">{tr("Held")} · {h.note || new Date(h.at).toTimeString().slice(0, 5)} · {h.cart.reduce((n, c) => n + c.qty, 0)}</button>)}</div> : null}
+      {(shop.staff || []).length ? <select value={cashier} onChange={(e) => setCashier(e.target.value)} className={input} data-testid="shop-cashier"><option value="">{tr("Cashier: not named")}</option>{shop.staff.map((w) => <option key={w} value={w}>{tr("Cashier")}: {w}</option>)}</select> : null}
+      {ret ? <ReturnSheet books={books} setBooks={setBooks} onClose={() => setRet(false)} flash={flash} /> : null}
       <div className="grid grid-cols-3 gap-2">{items.slice(0, 30).map((it) => (
         <button key={it.id} onClick={() => add(it)} className={card + " p-2.5 text-start min-h-[64px]"} data-testid="shop-item" style={it.price > 0 ? {} : { opacity: 0.55 }}>
           <span className="block text-[13px] font-semibold leading-tight" dir="auto">{it.name}</span>
@@ -116,13 +132,17 @@ function Sell({ books, setBooks, shop, scanBarcode, share, flash }) {
               <span className="w-6 text-center font-bold">{c.qty}</span>
               <button className="w-8 h-8 rounded-lg border border-[#DCE3EC] grid place-items-center" onClick={() => add(it)} aria-label="+"><Plus size={14} /></button>
               <span className="w-20 text-end text-[13.5px]">{money(it.price * c.qty)}</span></div>); })}
+          {offered.applied.map((a, i) => <p key={i} className="flex justify-between text-[13px] text-[#15803D] m-0" data-testid="shop-offer-line"><span dir="auto">{a.name}</span><span>−{money(a.saved)}</span></p>)}
+          {loyal ? <select value={cust} onChange={(e) => { setCust(e.target.value); setUsePts(false); }} className={input} data-testid="shop-loyal-customer"><option value="">{tr("Customer (for points)")}</option>{books.customers.filter((c) => !c.walkIn).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select> : null}
+          {pts > 0 ? <label className="flex items-center gap-2 text-[13.5px]"><input type="checkbox" checked={usePts} onChange={(e) => setUsePts(e.target.checked)} data-testid="shop-use-points" />{tr("Use {p} points", { p: pts })}{usePts && rd.discount ? " (−" + money(rd.discount) + ")" : ""}</label> : null}
           <p className="text-[20px] font-extrabold text-end m-0" data-testid="shop-total">{money(lines.total, cur)}</p>
           <div className="grid grid-cols-4 gap-1.5">{[["cash", "Cash"], ["card", "Card"], ["wallet", "Wallet"], ["credit", "On credit"]].map(([m, l]) => (
             <button key={m} onClick={() => setMethod(m)} className={"h-10 rounded-xl text-[13px] font-semibold border " + (method === m ? "text-[#FFFFFF]" : "bg-[#FFFFFF] border-[#DCE3EC]")} style={method === m ? { background: "var(--biz)", borderColor: "var(--biz)" } : {}} data-testid={"shop-pay-" + m}>{tr(l)}</button>))}</div>
           {method === "cash" ? <div className="flex items-center gap-2"><input value={given} onChange={(e) => setGiven(e.target.value)} placeholder={tr("Cash given (optional)")} inputMode="decimal" className={input} data-testid="shop-given" />
             {givenM != null && givenM >= lines.total ? <span className="font-bold whitespace-nowrap" data-testid="shop-change-preview">{tr("Change: {a}", { a: money(givenM - lines.total) })}</span> : null}</div> : null}
           {method === "credit" ? <select value={cust} onChange={(e) => setCust(e.target.value)} className={input} data-testid="shop-customer"><option value="">{tr("Which customer?")}</option>{books.customers.filter((c) => !c.walkIn).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select> : null}
-          <button className={btnP + " w-full"} style={{ background: "var(--biz)" }} onClick={complete} disabled={method === "credit" && !cust} data-testid="shop-complete">{tr("Complete the sale")}</button>
+          <div className="flex gap-2"><button className={btnS + " h-12 shrink-0"} onClick={() => { setShop(SP.holdCart(shop, { cart, customer: cust })); setCart([]); setCust(""); flash(tr("Held — pick it up from the row on top")); }} data-testid="shop-hold">{tr("Hold")}</button>
+            <button className={btnP + " flex-1"} style={{ background: "var(--biz)" }} onClick={complete} disabled={method === "credit" && !cust} data-testid="shop-complete">{tr("Complete the sale")}</button></div>
         </div>) : null}
     </div>);
 }
@@ -231,6 +251,7 @@ function Close({ books, shop, setShop, share }) {
       <p className="text-[14px] m-0">{tr("Cash expected")}: <b>{money(z.expectedCash, cur)}</b></p>
       {z.difference != null ? <p className={"text-[15px] font-bold m-0 " + (z.difference === 0 ? "text-[#15803D]" : "text-[#B91C1C]")} data-testid="shop-diff">{z.difference === 0 ? tr("The drawer is right") : tr("Difference: {a}", { a: (z.difference > 0 ? "+" : "") + money(z.difference, cur) })}</p> : null}
       {z.top.length ? <div className={card + " p-3"}><p className="font-bold m-0 mb-1">{tr("Best sellers today")}</p>{z.top.map((t, i) => <p key={i} className="flex justify-between text-[13.5px] m-0"><span dir="auto">{t.name}</span><span>{money(t.net, cur)}</span></p>)}</div> : null}
+      <ShopReports books={books} day={today()} />
       <div className="flex gap-2">
         <button className={btnP + " flex-1"} style={{ background: "var(--biz)" }} onClick={() => setShop({ ...shop, float: toM(float || 0) || 0, closes: [...(shop.closes || []), { ...z, at: Date.now() }].slice(-400) })} data-testid="shop-close-save">{tr("Close the day")}</button>
         {share ? <button className={btnS + " h-12"} onClick={() => share(text)}><Share2 size={15} /></button> : null}
@@ -263,8 +284,8 @@ export function ShopApp({ onBack, flash, scanBarcode, share }) {
   return (
     <section className="px-3 pb-24 space-y-3" data-testid="shop-app">
       {head}
-      {tab === "sell" ? <Sell books={books} setBooks={setBooks} shop={shop} scanBarcode={scanBarcode} share={share} flash={flash} /> : null}
-      {tab === "stock" ? <Stock books={books} setBooks={setBooks} shop={shop} share={share} flash={flash} /> : null}
+      {tab === "sell" ? <Sell books={books} setBooks={setBooks} shop={shop} setShop={setShop} scanBarcode={scanBarcode} share={share} flash={flash} /> : null}
+      {tab === "stock" ? <><Stock books={books} setBooks={setBooks} shop={shop} share={share} flash={flash} /><OffersPanel books={books} shop={shop} setShop={setShop} /></> : null}
       {tab === "customers" ? <Customers books={books} setBooks={setBooks} share={share} flash={flash} /> : null}
       {tab === "staff" ? <Staff shop={shop} setShop={setShop} /> : null}
       {tab === "close" ? <Close books={books} shop={shop} setShop={setShop} share={share} /> : null}
