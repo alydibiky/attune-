@@ -3,7 +3,8 @@
 import { askConfirm } from "./confirm.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { Palette, ImageIcon, Download, Share2, Maximize2, Wand2, RefreshCw, Trash2, Square, Loader2, AlertTriangle, ImagePlus, Sparkles, X, Zap, Eraser } from "lucide-react";
-import { EraseSheet, keepInMask } from "./erase-ui.jsx";
+import { keepInMask } from "./erase-ui.jsx";
+import { PhotoEditor } from "./photoedit-ui.jsx";
 import { tr } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import { DeskEmpty } from "./desk.jsx";
@@ -227,10 +228,10 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   };
   // v6.41 (C2): change only the painted part — the picture model edits the whole photo, then only the painted part is kept
   // (softly blended into the rest, which stays exactly as it was)
-  const editArea = async ({ mask, prompt }) => {
+  const editArea = async ({ mask, prompt, src: from }) => {
     const ep = drawPack(dev, choice, "edit");
     if (!ep.ready) { setEraseOn(null); setMode("edit"); flash(tr("Install a picture model first (Studio) — then paint and say what should change.")); return; }
-    const src = eraseOn && eraseOn.src;
+    const src = from || (eraseOn && eraseOn.src);
     const ref = await shrink(src);
     setBusy({ what: "draw", t0: Date.now(), stage: "start" });
     try {
@@ -557,11 +558,13 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
       <div className={PICTURE}>
       {native.eraseImage ? (
         <div className="flex items-center gap-2" data-testid="studio-erase-photo-row">
-          <button className={btn} disabled={!!busy} data-testid="studio-erase-photo" onClick={() => erasePick.current && erasePick.current.click()}><Eraser size={13} />{tr("Remove people or things from a photo")}</button>
+          <button className={btn} disabled={!!busy} data-testid="studio-erase-photo" onClick={() => erasePick.current && erasePick.current.click()}><Eraser size={13} />{tr("Edit a photo — erase, passers-by, cut out")}</button>
           <input ref={erasePick} type="file" accept="image/*" className="hidden" data-testid="studio-erase-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; erasePhoto(f); }} />
         </div>) : null}
-      {eraseOn ? <EraseSheet {...eraseOn} nativeCall={nativeCall} flash={flash} onClose={() => setEraseOn(null)} onEditArea={native.imagine ? editArea : null}
-        onDone={(r) => { setEraseOn(null); commitPic({ ...(eraseOn.file ? cur : {}), file: r.file, url: r.url, w: r.width, h: r.height, ms: r.ms, backend: r.backend, idea: (eraseOn.file && cur && cur.idea) || tr("Erased photo"), erased: true, upscaled: false, at: Date.now() }); flash(tr("Removed in {t}", { t: secs(r.ms || 0) })); }} /> : null}
+      {/* v6.43 (Ali: "exactly like my Honor phone"): the photo editor — AI Eraser (tap or brush), Passers-by, Cut out, Enhance, Change */}
+      {eraseOn ? <PhotoEditor {...eraseOn} nativeCall={nativeCall} flash={flash} onClose={() => setEraseOn(null)} onEditArea={native.imagine ? editArea : null}
+        saveToGallery={(f) => { try { return JSON.parse(native.saveImageToGallery(f)).ok; } catch (e) { return false; } }}
+        onDone={(r) => commitPic({ ...(eraseOn.file ? cur : {}), file: r.file, url: r.url, w: r.width, h: r.height, ms: r.ms, backend: r.backend, idea: (eraseOn.file && cur && cur.idea) || tr(r.cutout ? "Cut-out" : "Edited photo"), erased: true, upscaled: false, at: Date.now() })} /> : null}
       {!flowLive && !cur ? <DeskEmpty icon={Palette} title={tr("Your picture appears here")} text={tr("Describe it and tap Draw it — it is made on this device, with no internet.")} testid="studio-desk-empty" /> : null}
       {flowLive ? <DraftFrame flow={flow} now={now} onStop={stop} onKeep={keepDraft} onPick={pickDraft} /> : cur ? (
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-2" data-testid="studio-result">

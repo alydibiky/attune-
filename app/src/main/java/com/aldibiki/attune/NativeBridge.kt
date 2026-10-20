@@ -1429,6 +1429,19 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v6.43: the people and things in a photo, each as its own shape (PhotoSmart.kt): {file | photo} → {w, h, subjects}. */
+    @JavascriptInterface
+    fun findSubjects(id: String, arg: String) {
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                val photo = a.optString("photo").takeIf { it.isNotEmpty() }?.let { android.util.Base64.decode(it.substringAfter(","), android.util.Base64.DEFAULT) }
+                resolve(id, PhotoSmart.subjects(ctx, a.optString("file"), photo))
+            } catch (e: OutOfMemoryError) { reject(id, "The photo is too big — try a smaller one") }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't find what is in the photo") }
+        }
+    }
+
     /** v6.41 (C2): a picture made on the page (an edit kept only where it was painted) → Studio's gallery: {b64} → the picture. */
     @JavascriptInterface
     fun savePicture(id: String, arg: String) {

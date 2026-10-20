@@ -88,7 +88,7 @@
         <!-- v6.5 Huawei Health Kit: Attune's App ID (empty until the AppGallery Connect app exists) -->
         <meta-data android:name="com.huawei.hms.client.appid" android:value="appid=${hmsAppId}" />
         <!-- v6.43: Google Play services fetches the live barcode scanner's screen when Attune is installed, so the first scan opens at once -->
-        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui" />
+        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui,subject_segment" />
         <!-- Unencrypted http is allowed ONLY to 127.0.0.1, where the on-device
              model listens. Every other connection must be https. -->
 
