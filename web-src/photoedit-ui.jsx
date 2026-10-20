@@ -11,9 +11,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { Eraser, Users, Scissors, Sparkles, Wand2, Undo2, X, Eye, Check, Loader2, PenLine } from "lucide-react";
 import { tr } from "./i18n.js";
 import { isRemoval } from "./erase-ui.jsx";
-import { mainSubject, maskRect, hitSubject } from "./photoedit.js";
+import { mainSubject, maskRect, hitSubject, findShadow } from "./photoedit.js";
 
-const MASK_MAX = 2048;
+const MASK_MAX = 2048, SHADOW_GRID = 384;
 
 const load = (u) => new Promise((ok, bad) => { const i = new Image(); i.crossOrigin = "anonymous"; i.onload = () => ok(i); i.onerror = () => bad(new Error("Couldn't open that picture")); i.src = u; });
 
@@ -33,6 +33,10 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
   const [cut, setCut] = useState(null);                 // a cut-out (PNG data URL) waiting to be saved
   const [what, setWhat] = useState("");
   const view = useRef(null);
+  // v6.44: a subject's shadow is erased with it (like the Honor gallery) — found on a small grid of the photo, once per subject
+  const [shade, setShade] = useState(true);
+  const shadows = useRef({});                           // subject index → a canvas of its shadow (white), or null
+  const grid = useRef(null);                            // { w, h, px } the photo's pixels at SHADOW_GRID
 
   // a new picture: its size, and what is in it
   useEffect(() => {
@@ -48,6 +52,11 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
             const c = Object.assign(document.createElement("canvas"), { width: s.w, height: s.h }); const g = c.getContext("2d"); g.drawImage(im, 0, 0);
             return { ...s, img: im, data: g.getImageData(0, 0, s.w, s.h).data };
           }));
+          if (off) return;
+          shadows.current = {}; grid.current = null;
+          try { const im = await load(cur.src), k = Math.min(1, SHADOW_GRID / Math.max(r.w, r.h)), gw = Math.max(1, Math.round(r.w * k)), gh = Math.max(1, Math.round(r.h * k));
+            const c = Object.assign(document.createElement("canvas"), { width: gw, height: gh }), g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(im, 0, 0, gw, gh);
+            grid.current = { w: gw, h: gh, k, px: g.getImageData(0, 0, gw, gh).data }; } catch (e) {}
           if (!off) setSubj({ w: r.w, h: r.h, list, main: mainSubject(list, r.w, r.h) });
         })
         .catch((e) => { if (!off) setSubj({ error: String((e && e.message) || e), list: [] }); })
@@ -56,6 +65,24 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
     return () => { off = true; };
   }, [cur.src]);
 
+  // the shadow of subject i (a canvas the size of the grid), found the first time it is asked for
+  const shadowOf = (i) => {
+    if (i in shadows.current) return shadows.current[i];
+    let out = null;
+    try {
+      const G = grid.current, sb = subj && subj.list && subj.list[i];
+      if (G && sb) {
+        const m = Object.assign(document.createElement("canvas"), { width: G.w, height: G.h }), mg = m.getContext("2d", { willReadFrequently: true });
+        mg.drawImage(sb.img, ...maskRect(sb, G.k));
+        const a = mg.getImageData(0, 0, G.w, G.h).data, sj = new Uint8Array(G.w * G.h);
+        for (let j = 0; j < sj.length; j++) sj[j] = a[j * 4 + 3] >= 128 ? 1 : 0;
+        const r = findShadow({ px: G.px, W: G.w, H: G.h, subj: sj, box: maskRect(sb, G.k) });
+        if (r) { const im = mg.createImageData(G.w, G.h); for (let j = 0; j < r.mask.length; j++) if (r.mask[j]) { im.data[j * 4] = im.data[j * 4 + 1] = im.data[j * 4 + 2] = im.data[j * 4 + 3] = 255; }
+          mg.clearRect(0, 0, G.w, G.h); mg.putImageData(im, 0, 0); out = m; }
+      }
+    } catch (e) { out = null; }
+    shadows.current[i] = out; return out;
+  };
   const others = subj && subj.list ? subj.list.map((_, i) => i).filter((i) => i !== subj.main) : [];
   // what is drawn over the photo: the chosen shapes (blue), the passers-by (red), the brush (pink)
   const redraw = () => {
@@ -70,9 +97,11 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
       tg.drawImage(s.img, 0, 0, t.width, t.height); tg.globalCompositeOperation = "source-in"; tg.fillStyle = col; tg.fillRect(0, 0, t.width, t.height);
       g.save(); g.shadowColor = "#fff"; g.shadowBlur = 6 * dpr; g.drawImage(t, x, y); g.restore();
     };
+    const tintShadow = (i, col) => { const c = shadowOf(i); if (!c) return; const t = Object.assign(document.createElement("canvas"), { width: v.width, height: v.height }), tg = t.getContext("2d");
+      tg.imageSmoothingEnabled = true; tg.drawImage(c, 0, 0, v.width, v.height); tg.globalCompositeOperation = "source-in"; tg.fillStyle = col; tg.fillRect(0, 0, v.width, v.height); g.drawImage(t, 0, 0); };
     if (subj && subj.list) {
-      if (tool === "people") others.forEach((i) => tint(i, "rgba(244,63,94,0.5)"));
-      else if (tool === "erase" || tool === "cutout") sel.forEach((i) => tint(i, "rgba(59,130,246,0.5)"));
+      if (tool === "people") others.forEach((i) => { tint(i, "rgba(244,63,94,0.5)"); if (shade) tintShadow(i, "rgba(244,63,94,0.3)"); });
+      else if (tool === "erase" || tool === "cutout") sel.forEach((i) => { tint(i, "rgba(59,130,246,0.5)"); if (tool === "erase" && shade) tintShadow(i, "rgba(56,189,248,0.32)"); });
     }
     const kk = v.width / nat.w;
     for (const s of strokes.current.concat(cur0.current ? [cur0.current] : [])) {
@@ -81,7 +110,7 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
       if (s.pts.length === 1) { g.arc(s.pts[0][0] * kk, s.pts[0][1] * kk, s.r * kk, 0, 7); g.fill(); } else g.stroke();
     }
   };
-  useEffect(redraw, [subj, sel, tool, nat, compare, nStrokes]);
+  useEffect(redraw, [subj, sel, tool, nat, compare, nStrokes, shade]);
   useEffect(() => { const f = () => redraw(); window.addEventListener("resize", f); return () => window.removeEventListener("resize", f); });
 
   const at = (e) => { const r = view.current.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
@@ -102,7 +131,7 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
   // the mask for the eraser: the chosen shapes + the brush, white on clear, at the picture's proportions
   const maskOf = (idx) => {
     const m = Object.assign(document.createElement("canvas"), { width: nat.w, height: nat.h }), g = m.getContext("2d");
-    if (subj && subj.list) { const k = nat.w / subj.w; for (const i of idx) { const s = subj.list[i]; g.drawImage(s.img, ...maskRect(s, k)); } }
+    if (subj && subj.list) { const k = nat.w / subj.w; for (const i of idx) { const s = subj.list[i]; g.drawImage(s.img, ...maskRect(s, k)); const sh = shade && shadowOf(i); if (sh) g.drawImage(sh, 0, 0, nat.w, nat.h); } }
     g.strokeStyle = g.fillStyle = "#fff"; g.lineCap = g.lineJoin = "round";
     for (const s of strokes.current) { g.lineWidth = s.r * 2 * 1.15; g.beginPath(); s.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); if (s.pts.length === 1) { g.arc(s.pts[0][0], s.pts[0][1], s.r, 0, 7); g.fill(); } else g.stroke(); }
     return m.toDataURL("image/png");
@@ -175,6 +204,10 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
         <div className="px-4 pt-1 flex justify-center">
           <button onClick={getHD} disabled={getting || !!busy} className="h-8 px-3 rounded-full bg-white/10 text-[12.5px] disabled:opacity-40" data-testid="pe-get-hd">{getting ? tr("Downloading Eraser HD…") : tr("Best-quality fill — download Eraser HD (208 MB, once)")}</button>
         </div>) : hd && (tool === "erase" || tool === "people") ? <div className="px-4 text-center text-[11.5px] text-emerald-300" data-testid="pe-hd-on">{tr("Eraser HD is on")}</div> : null}
+      {subj && subj.list && ((tool === "erase" && sel.some((i) => shadowOf(i))) || (tool === "people" && others.some((i) => shadowOf(i)))) ? (
+        <div className="px-4 pt-1 flex justify-center">
+          <button onClick={() => setShade((v) => !v)} aria-pressed={shade} className={"h-8 px-3 rounded-full text-[12.5px] " + (shade ? "bg-sky-500/25 text-sky-200" : "bg-white/10 text-white/70")} data-testid="pe-shadow">{shade ? "✓ " : ""}{tr("Its shadow too")}</button>
+        </div>) : null}
       <div className="px-4 py-3 flex items-center justify-center gap-2 min-h-[64px]">
         {tool === "erase" ? <>
           <button onClick={() => setBrush((b) => !b)} className={"h-11 px-4 rounded-full flex items-center gap-1.5 text-[14px] " + (brush ? "bg-white text-black font-bold" : "bg-white/10")} data-testid="pe-brush"><PenLine size={16} />{tr("Brush")}</button>

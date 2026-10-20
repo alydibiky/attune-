@@ -5,6 +5,7 @@ import { moneyOverview } from "./money-calm.js";
 import { radarToday, radarView, daysLeft } from "./deadlines.js";
 import { dosesOn, lowSupply } from "./care.js";
 import { cardsDue, todayPlan } from "./daily.js";
+import { warnings as fleetWarnings, activeNow as fleetActive } from "./fleet.js";
 
 const isoD = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 export /** What is due today and this week, from People & plans and Money's bills — at most `max`, the late ones first. Pure. */
@@ -77,7 +78,7 @@ export function toolLine(id, { scout, courses, slides, ledger, care, now = Date.
    Tests: tests/unit/v743today.test.mjs. → { needs: [waitingList items], line: [{ t, hm, app, title, sub, open, ahead }] } */
 const MEALS_T = [["breakfast", "Breakfast", 8], ["lunch", "Lunch", 13], ["dinner", "Dinner", 20], ["snacks", "Snacks", 17]];
 const hmOf = (t) => { const d = new Date(t); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
-export function todayLine({ fit, ledger, reminders, life, radar, care, scout, courses, now = Date.now() } = {}) {
+export function todayLine({ fit, ledger, reminders, life, radar, care, scout, courses, fleet, now = Date.now() } = {}) {
   const day = isoD(now), start = new Date(now); start.setHours(0, 0, 0, 0);
   const at = (h) => start.getTime() + h * 3600e3;
   const line = [];
@@ -99,6 +100,21 @@ export function todayLine({ fit, ledger, reminders, life, radar, care, scout, co
   // reminders still to come today
   const list = Array.isArray(reminders) ? reminders : (reminders && reminders.items) || [];
   for (const r of list) if (r && !r.done && r.at >= now && r.at < at(24)) line.push({ t: r.at, app: "reminders", title: r.title || tr("Reminder"), sub: "", open: "reminders", ahead: true });
+  // v6.44 Fleet & rentals: the cranes working today (one line, at 07:00 — the work day) and what needs you there
+  // (a cheque overdue / due today, a job past its end, a crane due for service, a store item out) at 09:00, when its alert comes
+  if (fleet && fleet.jobs) {
+    try {
+      const on = fleetActive(fleet).filter((a) => a.crane && (!a.job.start || a.job.start <= day));
+      if (on.length) line.push({ t: at(7), app: "fleet", title: on.length === 1 ? tr("1 crane working") : tr("{n} cranes working", { n: on.length }),
+        sub: on.slice(0, 3).map((a) => a.crane.name + (a.site ? " @ " + a.site.name : a.client ? " · " + a.client.name : "")).join(", "), open: "fleet-rentals" });
+      const W = { chequeOverdue: "Cheque overdue", chequeToday: "Cheque due today", jobPast: "Job past its end", jobEnding: "Job ends", serviceDue: "Due for service", serviceSoon: "Service soon", lowStock: "Low in the store" };
+      const ws = fleetWarnings(fleet, day).filter((w) => w.level !== "info");
+      for (const w of ws.slice(0, 3)) line.push({ t: at(9), app: "fleet", open: "fleet-rentals", ahead: at(9) > now,
+        title: tr(W[w.kind] || w.kind) + (w.crane ? " · " + w.crane : w.item ? " · " + w.item : w.who ? " · " + w.who : ""),
+        sub: w.amount != null ? Math.round(w.amount).toLocaleString("en-US") + (fleet.settings && fleet.settings.currency ? " " + fleet.settings.currency : "") + (w.no ? " · #" + w.no : "") : w.no ? "#" + w.no : "" });
+      if (ws.length > 3) line.push({ t: at(9) + 1, app: "fleet", open: "fleet-rentals", ahead: at(9) > now, title: tr("{n} more in Fleet", { n: ws.length - 3 }), sub: "" });
+    } catch (e) {}
+  }
   line.sort((a, b) => a.t - b.t);
   for (const x of line) x.hm = hmOf(x.t);
   return { needs: waitingList({ life, ledger, radar, care, scout, courses, now, max: 4 }), line };

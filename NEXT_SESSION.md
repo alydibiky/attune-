@@ -757,6 +757,19 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AM. 20 Oct 2026 — v6.44 (HANDOFF §5.95). Read this first, then AL.
+No new notes from Ali; built from AL's open list: Fleet on Home's Today line · deletes travel in Sync · a person's shadow
+erased with them ("Its shadow too").
+### Ali's phone checklist (v6.44)
+1. ⬜ Business → Fleet & rentals with cranes on jobs → Home → Today: "N cranes working" (07:00) and an overdue cheque (09:00);
+   tap → Fleet opens.
+2. ⬜ Sync two devices once → delete a Money entry on the phone → sync again → it is gone on the other device too.
+3. ⬜ Studio → Edit a photo with a person and a sun shadow → tap the person → the shadow shows lighter blue → Erase → both
+   gone. "Its shadow too" switches it off. Tell if a shadow was missed (send the photo).
+### Next
+Reflections, NPU, Expand, GPU check · Missions 3–4 · W6 subtitles · Fleet photo sync · desktop Google sync · Recall 2 ·
+Business depth (Ali's ERP screens, one by one).
+
 ## AL. 20 Oct 2026 — v6.43 part 4 (HANDOFF §5.94). Read this first, then AK.
 Ali picked the recommendation (option 1 + 2's Today line) and asked if Studio is finished like his Honor phone.
 Built: Home = one box that acts in every app + app names row + Today line · Eraser HD (LaMa, 208 MB once) in the photo editor.

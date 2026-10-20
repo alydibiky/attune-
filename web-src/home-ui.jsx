@@ -4,7 +4,7 @@
    areas (v6.29: replaced by "Recent" — the last 4 tools with what waits there; TODAY became "What's waiting": also new Scout
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid } from "lucide-react";
 import { RecallCard } from "./recall-ui.jsx";
 import { tr, getLang } from "./i18n.js";
@@ -23,6 +23,7 @@ import { DoResult, DO_HINTS } from "./doit-ui.jsx";
 import { FitToday } from "./health-ui.jsx";
 import { tickRegular, payRadar } from "./regular.js";
 import { MissionsLine } from "./missions-ui.jsx";
+import { loadFleet } from "./fleet-store.js";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
@@ -30,14 +31,17 @@ function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"
 // v6.29 (Ali picked A): the tools you used last, each with what waits there; filled with these when you have used fewer than four
 const START_TOOLS = ["scout", "learn", "slides", "convert", "lifeask"];
 const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pdfchat", "slides", "cv", "code", "studio", "map", "travel", "video"];
-const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder" };
-const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8" };
+const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet" };
+const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F" };
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };
 export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null }) {
   const [text, setText] = useState("");
   const [done, setDone] = useState(null);
   const [tick, setTick] = useState(0);   // v6.28: what Home did (or undid) shows in Today and the two numbers at once
   const [note, setNote] = useState("");   // v6.34: "Recorded in Money: 600 EGP — Maid"
+  // v6.44: Fleet & rentals lives in IndexedDB (async) — read once for the Today line (cranes working, cheques, service)
+  const [fleet, setFleet] = useState(null);
+  useEffect(() => { if (!minimal) return; let on = true; loadFleet().then((f) => { if (on && f) setFleet(f); }).catch(() => {}); return () => { on = false; }; }, [minimal]);
   const ar = getLang() === "ar";
   const hint = DO_HINTS[new Date().getMinutes() % DO_HINTS.length];
   const now = new Date();
@@ -53,10 +57,12 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       learn: (() => { const c = courses.find((x) => x && Array.isArray(x.plan) && x.plan.length); return c ? { title: c.topic || c.title || "", n: (c.lessons || []).filter((l) => l.read).length, of: c.plan.length } : null; })(),
       work: [...new Set(recentTools())].filter((id) => WORK.includes(id)).slice(0, 2).map((id) => (tools.find((x) => x[0] === id) || [id, id])[1]),
       // v6.43 (Ali picked "1 + the Today line"): today across the apps, by time
-      line: minimal ? todayLine({ fit, ledger, reminders: readJSON("attune:reminders:v1"), now: Date.now() }).line : [] };
-  }, [tick]);
+      line: minimal ? todayLine({ fit, ledger, fleet, reminders: readJSON("attune:reminders:v1"), now: Date.now() }).line : [] };
+  }, [tick, fleet]);
   // v6.28: Home does it first (food → Fit, money → Money, a dose, a reminder, a debt…); only what it can't do goes to Chat
   const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); } else onAsk(t); };
+  // Fleet & rentals is a view inside Business: open Business, then ask it for the Fleet view (as a shared crane order does)
+  const openLine = (m) => { if (m !== "fleet-rentals") return navTo(m); navTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "fleet" })), 80); };
   const date = now.toLocaleDateString(ar ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" });
   const ICON = { scout: Binoculars, learn: GraduationCap, care: Pill };
   const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
@@ -164,7 +170,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <p className="c-lbl m-0 mb-2">{tr("Today")}</p>
         {data.line.length ? <div className="space-y-2">
           {data.line.map((x, i) => (
-            <button key={i} onClick={() => navTo(x.open)} className="w-full flex items-start gap-3 text-start" data-testid={"home-line-" + x.app}>
+            <button key={i} onClick={() => openLine(x.open)} className="w-full flex items-start gap-3 text-start" data-testid={"home-line-" + x.app}>
               <span className="w-12 shrink-0 pt-3 text-[12.5px] font-extrabold c-sub c-num">{x.hm}</span>
               <span className={"flex-1 min-w-0 c-card p-3 " + (x.ahead ? "opacity-80" : "")}>
                 <span className="block text-[11px] font-extrabold tracking-wide" style={{ color: LINE_COL[x.app] || "var(--c-acc)" }}>{tr(LINE_APP[x.app] || x.app).toUpperCase()}</span>

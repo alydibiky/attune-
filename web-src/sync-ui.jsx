@@ -87,7 +87,7 @@ export function SyncPanel({ native: N, flash }) {
   const box = "w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-[14px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500";
   return (
     <div className="space-y-3" data-testid="sync-panel">
-      <p className="text-[12px] text-slate-400">{tr("Keep your phone and computer (or two phones) the same. The data is locked before it leaves this device; merging never deletes anything.")}</p>
+      <p className="text-[12px] text-slate-400">{tr("Keep your phone and computer (or two phones) the same. The data is locked before it leaves this device; what you delete on one is deleted on the other, nothing else is lost.")}</p>
       <div className="flex gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">{tab("wifi", Wifi, tr("Wi-Fi"))}{tab("google", Cloud, tr("Google Drive"))}</div>
       {way === "wifi" ? (
         <div className="space-y-3">

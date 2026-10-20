@@ -6,8 +6,8 @@
        with your sync passphrase BEFORE it leaves the phone, so Google sees only noise.
    Merging (syncMerge) never loses anything: every list of items with an id (Money entries, accounts, bills, debts,
    People & plans, the Radar, missions, chats, Mind…) is joined item by item — the newer copy of the same item wins — and
-   anything else keeps this device's value unless this device has none. A delete does not travel (yet): to make the other
-   device exactly like this one, use "Replace the other device".
+   anything else keeps this device's value unless this device has none. v6.44: deletes travel too (tombstones, below);
+   "Replace the other device" still makes the other device exactly like this one.
    Pure where it can be (tests/unit/v740sync.test.mjs); the native side only carries text (LocalSync.kt, GoogleDrive.kt,
    desktop/main.js).                                                                                                    */
 import { collectData, encryptBackup, decryptBackup, restoreData } from "./backup.js";
@@ -64,6 +64,79 @@ export function syncMerge(mine, theirs) {
   return out;
 }
 
+/* ---- v6.44 deletes that travel (tombstones). No delete button anywhere has to change: each device keeps the ids it had
+   after its last sync (SEEN_KEY, this device only); at the next sync an id that was there and is gone now was deleted
+   here → a tombstone "store|path|id" → when (GONE_KEY, travels with the data). Merging drops an item that has a tombstone
+   unless the item was edited after it (then the edit wins). Fail-safe — a delete that doesn't travel is the old behaviour,
+   a wrong delete is lost data — so nothing is tombstoned when a whole store is missing (a wipe, a reset), when a list was
+   emptied (more than 3 items), or when most of a long list vanished at once (a restore of an old backup): there "Replace" stays the way. */
+export const GONE_KEY = "attune:gone:v1";
+export const SEEN_KEY = "attune:sync:seen:v1";
+const GONE_DAYS = 120, GONE_MAX = 5000;
+const tomb = (k, path, id) => k + "|" + path + "|" + id;
+/** Every list of items with ids inside a value → { path: [ids] } ("" = the value itself, "txns", "c3/messages"…). */
+export function idLists(v, path = "", out = {}, depth = 0) {
+  if (depth > 4 || !v || typeof v !== "object") return out;
+  if (Array.isArray(v)) {
+    if (hasIds(v)) { out[path] = v.map((x) => String(x.id)); for (const x of v) idLists(x, (path ? path + "/" : "") + x.id, out, depth + 1); }
+    return out;
+  }
+  for (const [k, x] of Object.entries(v)) idLists(x, path ? path + "/" + k : k, out, depth + 1);
+  return out;
+}
+const synced = (k) => !k.startsWith("attune:sync:") && k !== GONE_KEY;
+/** The ids of every store now (what SEEN_KEY keeps after a sync). */
+export function seenOf(keys) {
+  const out = {};
+  for (const [k, v] of Object.entries(keys || {})) { if (!synced(k)) continue; const p = parse(v); if (p && typeof p === "object") { const l = idLists(p); if (Object.keys(l).length) out[k] = l; } }
+  return out;
+}
+/** seen (after the last sync) vs keys (now) → the tombstones, old ones kept, the new ones dated `now`. */
+export function noteGone(seen, keys, gone = {}, now = Date.now()) {
+  const out = { ...(gone || {}) };
+  for (const [k, lists] of Object.entries(seen || {})) {
+    if (!(k in keys) || keys[k] == null) continue;                      // a whole store gone: a wipe or a reset, not a delete
+    const p = parse(keys[k]); if (!p || typeof p !== "object") continue;
+    const cur = idLists(p);
+    for (const [path, ids] of Object.entries(lists)) {
+      if (!(path in cur)) continue;                                      // the list itself is gone (its parent deleted, or emptied)
+      const have = new Set(cur[path]), lost = ids.filter((id) => !have.has(id));
+      if (!lost.length || (lost.length === ids.length && ids.length > 3) || (ids.length > 20 && lost.length > ids.length * 0.8)) continue;
+      for (const id of lost) { const t = tomb(k, path, id); if (!out[t]) out[t] = now; }
+    }
+  }
+  // old tombstones go (every device has long synced by then), and at most GONE_MAX are kept, the newest
+  const keep = Object.entries(out).filter(([, t]) => t > now - GONE_DAYS * 86400e3).sort((a, b) => b[1] - a[1]).slice(0, GONE_MAX);
+  return Object.fromEntries(keep);
+}
+/** A value with every tombstoned item taken out (unless it was edited after the delete). */
+export function dropGone(v, k, gone, path = "", depth = 0) {
+  if (depth > 4 || !v || typeof v !== "object") return v;
+  if (Array.isArray(v)) {
+    if (!hasIds(v)) return v;
+    return v.filter((x) => { const t = gone[tomb(k, path, String(x.id))]; return !t || when(x) > t; })
+      .map((x) => dropGone(x, k, gone, (path ? path + "/" : "") + x.id, depth + 1));
+  }
+  const out = {};
+  for (const [key, x] of Object.entries(v)) out[key] = dropGone(x, k, gone, path ? path + "/" + key : key, depth + 1);
+  return out;
+}
+const goneOf = (keys) => { const g = parse(keys && keys[GONE_KEY]); return g && typeof g === "object" && !Array.isArray(g) ? g : {}; };
+const mergeGone = (a, b) => { const o = { ...a }; for (const [t, w] of Object.entries(b || {})) if (!(o[t] >= w)) o[t] = w; return o; };
+/** Every store of `keys` with the tombstones applied → only the keys that changed. */
+function applyGone(keys, gone) {
+  const out = {};
+  if (!Object.keys(gone).length) return out;
+  for (const [k, v] of Object.entries(keys)) {
+    if (!synced(k)) continue;
+    const p = parse(v); if (!p || typeof p !== "object") continue;
+    const d = JSON.stringify(dropGone(p, k, gone));
+    if (d !== JSON.stringify(p)) out[k] = d;
+  }
+  return out;
+}
+
+const parseSeen = (s) => { try { return JSON.parse(s.getItem(SEEN_KEY) || "null") || {}; } catch (e) { return {}; } };
 const deviceKeys = (s) => { const k = collectData(s); for (const x of Object.keys(k)) if (x.startsWith("attune:sync:")) delete k[x]; return k; };
 const ITER = 600000;
 /** What this device sends: all its data, locked with the code or passphrase. `opts.extra` = stores that are not in
@@ -71,6 +144,9 @@ const ITER = 600000;
 export async function packFor(secret, s = localStorage, opts = {}) {
   const keys = deviceKeys(s);
   if (opts.extra) Object.assign(keys, await opts.extra.read());
+  // the deletes made here since the last sync go with the file
+  const gone = noteGone(parseSeen(s), keys, goneOf(keys), opts.now || Date.now());
+  if (Object.keys(gone).length) { keys[GONE_KEY] = JSON.stringify(gone); try { s.setItem(GONE_KEY, keys[GONE_KEY]); } catch (e) {} }
   return encryptBackup(keys, secret, { iterations: opts.iterations || ITER, app: "sync" });
 }
 
@@ -79,19 +155,31 @@ export async function packFor(secret, s = localStorage, opts = {}) {
 export async function takeIn(text, secret, s = localStorage, mode = "merge", extra = null) {
   let theirs;
   try { theirs = await decryptBackup(text, secret); } catch (e) { throw new Error(/Wrong password/.test(String(e && e.message)) ? "Wrong code or passphrase — nothing was changed." : String((e && e.message) || e)); }
+  // v6.44 tombstones: this device's own deletes since its last sync, joined with the other device's
+  const mineX = extra ? await extra.read() : {};
+  const mine = deviceKeys(s), now = Date.now();
+  const gone = mode === "replace" ? goneOf(theirs) : mergeGone(noteGone(parseSeen(s), { ...mine, ...mineX }, goneOf(mine), now), goneOf(theirs));
   // the stores outside localStorage ("idb:" keys) are merged the same way, then written back through `extra`
   const outside = Object.keys(theirs).filter((k) => k.startsWith("idb:"));
-  if (extra && outside.length) {
-    const mineX = await extra.read();
-    for (const k of outside) { const v = mode === "replace" || !mineX[k] ? theirs[k] : syncMerge({ [k]: mineX[k] }, { [k]: theirs[k] })[k]; if (v !== mineX[k]) await extra.write(k, v); }
+  const seenX = {};
+  if (extra) {
+    for (const k of new Set([...outside, ...Object.keys(mineX)])) {
+      let v = mode === "replace" || !mineX[k] ? (theirs[k] ?? mineX[k]) : !theirs[k] ? mineX[k] : syncMerge({ [k]: mineX[k] }, { [k]: theirs[k] })[k];
+      if (mode !== "replace") v = applyGone({ [k]: v }, gone)[k] ?? v;
+      if (v !== mineX[k]) await extra.write(k, v);
+      seenX[k] = v;
+    }
   }
   for (const k of outside) delete theirs[k];
-  const mine = deviceKeys(s);
   const target = mode === "replace" ? theirs : syncMerge(mine, theirs);
+  if (mode !== "replace") Object.assign(target, applyGone(target, gone));
+  if (Object.keys(gone).length) target[GONE_KEY] = JSON.stringify(gone);
   let added = 0, changed = 0;
   for (const [k, v] of Object.entries(target)) { if (!(k in mine)) added++; else if (mine[k] !== v) changed++; }
   // replace: keys this device has that the other doesn't are removed (but never the sync settings)
   restoreData({ ...target, ...Object.fromEntries(Object.entries(collectData(s)).filter(([k]) => k.startsWith("attune:sync:"))) }, mode === "replace" ? "replace" : "merge-exact", s);
+  // what both devices have now — the next sync compares against it to find what was deleted in between
+  try { s.setItem(SEEN_KEY, JSON.stringify(seenOf({ ...target, ...seenX }))); } catch (e) {}
   return { added, changed };
 }
 

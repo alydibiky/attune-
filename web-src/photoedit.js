@@ -22,3 +22,48 @@ export function hitSubject(subs, x, y, alphaAt) {
   return hit;
 }
 
+
+/* v6.44 (the Honor gallery removes a person's shadow with them): the shadow of a subject — the darker patch on the ground that
+   touches the subject's lower half. px = RGBA pixels W×H; subj = 1 where the subject is (same grid); box = its [x, y, w, h].
+   The ground's brightness and colour are read around the subject's feet (the median, so a shadow there doesn't move it);
+   a shadow pixel is darker than the ground (12–78 %) with nearly the same colour (a shadow darkens, it doesn't recolour).
+   It grows from the pixels touching the subject's lower half, inside one subject-width each side and 0.8 of its height
+   below. Nothing (null) when the scene is too dark, the patch is tiny, or it is bigger than twice the subject (dark ground,
+   not a shadow). → { mask: Uint8Array W×H (1 = shadow), n } */
+export function findShadow({ px, W, H, subj, box }) {
+  const [bx, by, bw, bh] = box.map(Math.round);
+  const x0 = Math.max(0, bx - bw), x1 = Math.min(W, bx + 2 * bw), y0 = Math.max(0, Math.round(by + 0.4 * bh)), y1 = Math.min(H, Math.round(by + 1.8 * bh));
+  if (x1 - x0 < 3 || y1 - y0 < 3) return null;
+  const lum = (i) => 0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2];
+  const chr = (i) => { const s = px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2] + 3; return [(px[i * 4] + 1) / s, (px[i * 4 + 1] + 1) / s]; };
+  const L = [], step = Math.max(1, Math.round(Math.sqrt(((x1 - x0) * (y1 - y0)) / 4000)));
+  for (let y = y0; y < y1; y += step) for (let x = x0; x < x1; x += step) { const i = y * W + x; if (!subj[i]) L.push(i); }
+  if (L.length < 20) return null;
+  const ls = L.map(lum).sort((a, b) => a - b), Lg = ls[Math.floor(ls.length / 2)];
+  if (Lg < 25) return null;
+  const lit = L.filter((i) => lum(i) >= 0.85 * Lg).map(chr), med = (k) => { const a = lit.map((c) => c[k]).sort((p, q) => p - q); return a[Math.floor(a.length / 2)]; };
+  if (!lit.length) return null;
+  const cr = med(0), cg = med(1);
+  const shadowy = (i) => { if (subj[i]) return false; const l = lum(i); if (l >= 0.78 * Lg || l <= 0.12 * Lg) return false; const [r, g] = chr(i); return Math.abs(r - cr) < 0.07 && Math.abs(g - cg) < 0.07; };
+  const mask = new Uint8Array(W * H), q = [];
+  const inside = (x, y) => x >= x0 && x < x1 && y >= y0 && y < y1;
+  const feet = Math.round(by + 0.5 * bh);
+  for (let y = Math.max(y0, feet); y < Math.min(y1, by + bh + 1); y++) for (let x = Math.max(x0, bx - 1); x < Math.min(x1, bx + bw + 1); x++) {
+    const i = y * W + x; if (subj[i] || mask[i] || !shadowy(i)) continue;
+    if ((x > 0 && subj[i - 1]) || (x < W - 1 && subj[i + 1]) || (y > 0 && subj[i - W]) || (y < H - 1 && subj[i + W])) { mask[i] = 1; q.push(i); }
+  }
+  for (let h = 0; h < q.length; h++) {
+    const i = q[h], x = i % W, y = (i - x) / W;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy; if (!inside(nx, ny)) continue;
+      const j = ny * W + nx; if (mask[j] || !shadowy(j)) continue; mask[j] = 1; q.push(j);
+    }
+  }
+  let area = 0; for (let i = 0; i < W * H; i++) area += subj[i] ? 1 : 0;
+  if (q.length < Math.max(4, area * 0.01) || q.length > area * 2) return null;
+  // the soft edge of a shadow is lighter than the threshold: grow it by two pixels
+  let m = mask;
+  for (let r = 0; r < 2; r++) { const o = m.slice(); for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) { const i = y * W + x; if (!m[i] && !subj[i] && (m[i - 1] || m[i + 1] || m[i - W] || m[i + W])) o[i] = 1; } m = o; }
+  let n = 0; for (let i = 0; i < W * H; i++) n += m[i];
+  return { mask: m, n };
+}

@@ -2193,6 +2193,30 @@ Ali: "Do as per your recommendation" (option 1 + option 2's Today line) and "did
   dedicated model; LaMa fills shadows only if they are painted too), NPU speed (all CPU; GPU path for drawing still unverified
   on Ali's phone), "Expand" (outpainting — possible later with Studio Pro's edit model).
 
+### 5.95 (20 Oct 2026) — v6.44: Fleet on the Today line, deletes that travel, a person's shadow erased with them
+From AL's "still open" list (no new notes from Ali this session; objective items only, nothing subjective decided alone).
+- **Fleet on Home's Today line** (home.js `todayLine({ fleet })`, home-ui.jsx reads Fleet's IndexedDB once with `loadFleet`):
+  "N cranes working" at 07:00 (crane @ site, up to 3) and what needs you at 09:00, when Fleet's alert comes — cheque overdue /
+  due today (client, amount, cheque no.), job past its end / ending, crane due for service, store item out (warn/bad only, at
+  most 3 + "N more in Fleet"). A Fleet line opens Business → Fleet & rentals (`openLine` → navTo business + attune-biz-view).
+  Tests: unit v744fleetline, e2e_v744 (the demo Fleet written to IndexedDB).
+- **Deletes travel in Sync** (sync.js tombstones; no delete button changed): after each sync a device keeps the ids it had
+  (`attune:sync:seen:v1`, this device only); at the next sync ids that were there and are gone now become tombstones
+  `store|path|id → time` (`attune:gone:v1`, travels with the data, 120 days, at most 5000). Merging drops an item with a
+  tombstone unless it was edited after it. Lists inside items count too (one chat message), and Fleet's IndexedDB state.
+  Fail-safe (a wrong delete is lost data): nothing is tombstoned when a whole store is missing (wipe/reset), a list of more
+  than 3 was emptied, or > 80 % of a list of > 20 vanished at once (an old backup restored). Sync screen text updated.
+  Tests: unit v744tombstones (+ v740sync unchanged and passing).
+- **Its shadow too** (photoedit.js `findShadow`, photoedit-ui.jsx): when a person/thing is tapped (AI Eraser) or the
+  passers-by are removed, the darker patch on the ground touching the subject's lower half is found on a 384-px grid of the
+  photo (ground = median brightness + colour around the feet; shadow = 12–78 % of it, same colour ±0.07; grown from the
+  pixels touching the subject, inside 1 subject-width each side and 0.8 of its height below; dropped if tiny or > 2× the
+  subject — dark ground, not a shadow) and drawn lighter; the chip "Its shadow too" (on by default) adds it to the mask the
+  eraser gets (MI-GAN or Eraser HD). ~10 ms. Measured on synthetic scenes only (unit v744shadow, e2e_v744shadow) — Ali should
+  try real photos (sun shadows on sand/asphalt); soft indoor shadows may not be caught (then the brush still works).
+- **Still open**: reflections (needs a dedicated model), NPU speed, Expand (outpaint), GPU check on the phone; Missions 3–4,
+  W6 subtitles, Fleet photo sync (attachments), desktop Google sync, Recall 2, Business depth (needs Ali's screens).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.
