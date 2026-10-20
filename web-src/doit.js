@@ -118,14 +118,22 @@ export function understand(text, { now = Date.now(), stores = {} } = {}) {
   // food (and money spent on it)
   // (the water phrase is taken out first — "2 glasses of water" is water, not food: "glasses" read as molasses)
   const rest = ml ? fold(t).replace(WATER, " ") : t;
-  const meal = readMealText(rest);
+  // v6.43 (Ali's "I had koshari for lunch and paid 85 pounds"): the part about money is not food — the food reader reads only
+  // the other parts (it said "Not found: paid pounds")
+  const parts = rest.split(/\s*(?:,|،|;|\band then\b|\bthen\b|\band\b|\s+و(?=\s*(?:دفعت|صرفت|اشتريت|بـ?\d))|\s+و\s+)\s*/i).filter(Boolean);
+  const isMoney = (x) => MONEY_VERB.test(x) || (CURRENCY.test(x) && /\d/.test(latin(x)));
+  const foodText = parts.length > 1 && parts.some(isMoney) && parts.some((x) => !isMoney(x)) ? parts.filter((x) => !isMoney(x)).join(", ") : rest;
+  const meal = readMealText(foodText);
   const foods = (meal.items || []).filter((x) => x.kcal != null);
   const money = MONEY_VERB.test(rest) || CURRENCY.test(rest);
   const today = isoDay(now);
   if (foods.length && (EAT.test(t) || !money)) {
     // the eaten foods are counted; a price said with them ("80 pounds") is the money part
     actions.push({ kind: "food", meal: mealOf(t, now), items: foods, unknown: meal.unknown || [] });
-    if (money) { const r = readLocal(t, { today }); const it = r.items.filter((x) => x.amount >= 1)[0]; if (it) actions.push({ kind: "money", items: [{ ...it, amount: it.amount, cat: it.cat === "other" ? "food" : it.cat }] }); }
+    if (money) { const r = readLocal(t, { today }); const it = r.items.filter((x) => x.amount >= 1)[0];
+      // (the expense is named after what was eaten: "Koshari", not "paid 85 pounds")
+      const named = foods.map((x) => x.name.replace(/\s*\(.*\)$/, "")).slice(0, 3).join(", ");
+      if (it) actions.push({ kind: "money", items: [{ ...it, amount: it.amount, cat: it.cat === "other" ? "food" : it.cat, note: foodText !== rest && named ? named : it.note }] }); }
   } else if (money || Object.entries(CAT_WORDS).some(([k, re]) => k !== "food" && re.test(rest))) {
     const r = readLocal(rest, { today });
     const items = r.items.filter((x) => x.amount >= 1);

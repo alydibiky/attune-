@@ -11,7 +11,7 @@ import { tr, getLang } from "./i18n.js";
 import { loadLife } from "./life.js";
 import { loadRadar } from "./deadlines.js";
 import { loadCare } from "./care.js";
-import { waitingList, toolLine } from "./home.js";
+import { waitingList, toolLine, todayLine } from "./home.js";
 import { loadScout } from "./scout.js";
 import { recentTools } from "./side-ui.jsx";
 import { loadLedger } from "./myledger.js";
@@ -30,6 +30,8 @@ function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"
 // v6.29 (Ali picked A): the tools you used last, each with what waits there; filled with these when you have used fewer than four
 const START_TOOLS = ["scout", "learn", "slides", "convert", "lifeask"];
 const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pdfchat", "slides", "cv", "code", "studio", "map", "travel", "video"];
+const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder" };
+const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8" };
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };
 export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null }) {
   const [text, setText] = useState("");
@@ -49,7 +51,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       recent: recent.map((id) => ({ t: tools.find((x) => x[0] === id), line: toolLine(id, { scout, courses, slides, ledger, care }) })),
       // v6.36 layout 1A: the four areas' one-line state
       learn: (() => { const c = courses.find((x) => x && Array.isArray(x.plan) && x.plan.length); return c ? { title: c.topic || c.title || "", n: (c.lessons || []).filter((l) => l.read).length, of: c.plan.length } : null; })(),
-      work: [...new Set(recentTools())].filter((id) => WORK.includes(id)).slice(0, 2).map((id) => (tools.find((x) => x[0] === id) || [id, id])[1]) };
+      work: [...new Set(recentTools())].filter((id) => WORK.includes(id)).slice(0, 2).map((id) => (tools.find((x) => x[0] === id) || [id, id])[1]),
+      // v6.43 (Ali picked "1 + the Today line"): today across the apps, by time
+      line: minimal ? todayLine({ fit, ledger, reminders: readJSON("attune:reminders:v1"), now: Date.now() }).line : [] };
   }, [tick]);
   // v6.28: Home does it first (food → Fit, money → Money, a dose, a reminder, a debt…); only what it can't do goes to Chat
   const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); } else onAsk(t); };
@@ -62,6 +66,17 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         {/* v6.29 (Ali: "a sidebar where I can see the history of my chats"): ☰ opens it — chats, search, places, pinned tools */}
         {openSide ? <button onClick={openSide} aria-label={tr("Chats and menu")} className="w-9 h-9 -ms-1.5 mt-1 rounded-full grid place-items-center c-sub shrink-0" data-testid="home-menu"><Menu size={21} /></button> : null}
         <div className="min-w-0"><p className="c-sub m-0">{date}</p><h1 className="text-[24px] font-bold m-0 tracking-tight">{tr(greeting(now))}{name ? ", " + name : ""}</h1></div></div>
+      {minimal ? (
+        /* v6.43 option 1 (Ali): one big box — say anything, Attune does it in every app it touches */
+        <div className="rounded-[26px] p-4 space-y-2" style={{ background: "var(--c-surf)", boxShadow: "0 2px 10px rgba(16,32,28,.10)" }} data-testid="home-box">
+          <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} dir="auto" data-testid="home-ask" rows={2}
+            placeholder={tr("Say anything — «koshari for lunch, paid 85», «remind me at 9», «find a Tucson 2022»")} className="w-full resize-none bg-transparent focus:outline-none text-[16.5px] font-semibold leading-snug placeholder:font-normal" style={{ color: "var(--c-ink)" }} />
+          <div className="flex items-center justify-end gap-2">
+            <button onClick={() => (openFitAdd ? openFitAdd() : navTo("fit"))} aria-label={tr("Food photo")} title={tr("Food photo")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-bg)" }} data-testid="home-quick-food"><Apple size={18} /></button>
+            <button onClick={() => openRead()} aria-label={tr("Read it to me")} title={tr("Read it to me")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-bg)" }} data-testid="home-read"><Camera size={18} /></button>
+            <button onClick={send} aria-label={tr("Send")} className="w-10 h-10 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={18} /></button>
+          </div>
+        </div>) : (
       <div className="flex items-center gap-2 rounded-full px-3 py-2" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)" }}>
         <MessageCircle size={17} className="c-sub" />
         <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(); }} dir="auto" data-testid="home-ask"
@@ -69,17 +84,17 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         {/* v6.27 Read it to me: any paper read aloud, explained and acted on */}
         <button onClick={() => openRead()} aria-label={tr("Read it to me")} title={tr("Read it to me")} className="w-8 h-8 rounded-full grid place-items-center c-sub" data-testid="home-read"><Camera size={17} /></button>
         <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={16} /></button>
-      </div>
+      </div>)}
       {/* v6.36 layout 1A (Ali picked it): one box, three quick starts under it — tools are reached by asking, not from a list */}
       <RecallCard text={text} navTo={navTo} className="-mt-1" />
-      <div className="flex gap-2 overflow-x-auto -mt-1 pb-0.5" data-testid="home-quick">
+      {minimal ? null : <div className="flex gap-2 overflow-x-auto -mt-1 pb-0.5" data-testid="home-quick">
         {[[Apple, "Food photo", () => (openFitAdd ? openFitAdd() : navTo("fit")), "home-quick-food"], [FileText, "A file", () => navTo("pdfchat"), "home-quick-file"], [Binoculars, "Find for me", () => navTo("scout"), "home-quick-scout"]].map(([I, l, go, id]) => (
           <button key={id} onClick={go} className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px]" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid={id}><I size={14} className="c-acc" />{tr(l)}</button>))}
-      </div>
+      </div>}
       {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : minimal ? null : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : hint[0]}»</p>}
       {/* v6.28 declutter: a card with nothing to say is not shown (nothing due today, nothing spent and no budget) */}
       {data.items.length || data.reminders || note ? <div className="c-card" data-testid="home-today">
-        <div className="flex items-center mb-1"><span className="c-lbl">{tr("Attune suggests")}</span><span className="c-sub ms-auto">{data.items.length ? (data.items.length + (data.reminders || 0) === 1 ? tr("1 thing") : tr("{n} things", { n: data.items.length + (data.reminders || 0) })) : ""}</span></div>
+        <div className="flex items-center mb-1"><span className="c-lbl">{minimal ? tr("Needs you") : tr("Attune suggests")}</span><span className="c-sub ms-auto">{data.items.length ? (data.items.length + (data.reminders || 0) === 1 ? tr("1 thing") : tr("{n} things", { n: data.items.length + (data.reminders || 0) })) : ""}</span></div>
         {data.items.length || data.reminders || note ? (
           <>
             {data.items.map((x, i) => x.pay ? (
@@ -136,31 +151,26 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
           <button onClick={openAll} className="c-acc text-[13px] font-medium mt-2" data-testid="home-all">{tr("All tools")} →</button>
         </div> : null}
       </> : <>
-      {/* v6.36 layout 1A: the four areas, each with its one number — tap to open */}
+      {/* v6.43 option 1: the apps are one row of names (no tiles) */}
+      <div className="flex flex-wrap gap-2" data-testid="home-areas">
+        {[["fit", "Food", "home-area-health"], ["money", "Money", "home-area-money"], ["business", "Business", "home-app-business"], ["learn", "Learn", "home-app-learn"], ["studio", "Photos", "home-app-studio"], ["chat", "Chat", "home-app-chat"], ["scout", "Scout", "home-app-scout"]].map(([m, label, id]) => (
+          <button key={m} onClick={() => navTo(m)} className="home-chip" data-testid={id}>{tr(label)}</button>))}
+        <button onClick={openAll} className="home-chip home-chip-all" data-testid="home-all">{tr("All")}</button>
+      </div>
       {guardian || null}
-      {/* v6.37: Missions — the goal most at risk, its chance and today's step */}
       <MissionsLine go={() => navTo("missions")} />
-      {/* v6.43 design A (Ali picked it on the design canvas): "Your apps" — big tiles, Business as its own wide dark tile */}
-      <p className="text-[18px] font-extrabold m-0 pt-1">{tr("Your apps")}</p>
-      <div className="grid grid-cols-3 gap-3" data-testid="home-areas">
-        {[["chat", MessageCircle, "Chat", "#1E9E6A", () => navTo("chat"), "home-app-chat", ""],
-          ["fit", Apple, "Food & Fit", "#E07A1F", () => navTo("fit"), "home-area-health", data.fitOn && data.goal ? tr("{a} / {b} kcal", { a: fmt(data.kcal), b: fmt(data.goal) }) : ""],
-          ["money", Wallet, "Money", "#2F7FD8", () => navTo("money"), "home-area-money", data.o.monthOut ? tr("{v} spent", { v: fmt(data.o.monthOut) }) : ""]].map(([k, I, label, col, go, id, sub]) => (
-          <button key={k} onClick={go} className="home-tile" data-testid={id}>
-            <span className="home-tile-ic" style={{ background: col + "22", color: col }}><I size={24} /></span>
-            <b className="text-[13.5px] leading-tight">{tr(label)}</b>{sub ? <span className="c-sub text-[11px] c-num leading-tight truncate max-w-full">{sub}</span> : null}</button>))}
-        <button onClick={() => navTo("business")} className="col-span-3 rounded-[20px] p-4 flex items-center gap-3 text-start" style={{ background: "#16201C", color: "#FFFFFF" }} data-testid="home-app-business">
-          <span className="w-12 h-12 rounded-2xl grid place-items-center shrink-0" style={{ background: "#2A3631" }}><Briefcase size={24} /></span>
-          <span className="flex-1 min-w-0"><b className="block text-[15.5px]">{tr("Business")}</b><span className="block text-[12.5px] truncate" style={{ color: "#B9C6C0" }}>{tr("Fleet · Warehouse · Books — its own app")}</span></span>
-          <ChevronRight size={20} className="shrink-0 rtl:-scale-x-100" /></button>
-        {[["learn", GraduationCap, "Learn", "#6B4FB8", () => navTo("learn"), "home-app-learn"],
-          ["studio", ImageIcon, "Studio", "#B83260", () => navTo("studio"), "home-app-studio"],
-          ["instant", Zap, "Instant", "#B7791F", () => navTo("instant"), "home-area-instant"],
-          ["shelf", BookOpen, "Shelf", "#157A52", () => navTo("shelf"), "home-area-shelf"],
-          ["all", LayoutGrid, "All tools", "#5B6B64", openAll, "home-all"]].map(([k, I, label, col, go, id]) => (
-          <button key={k} onClick={go} className="home-tile" data-testid={id}>
-            <span className="home-tile-ic" style={{ background: col + "22", color: col }}><I size={24} /></span>
-            <b className="text-[13.5px] leading-tight">{tr(label)}</b></button>))}
+      {/* v6.43: one line for today across the apps — what you ate, spent, and what is still ahead */}
+      <div data-testid="home-line">
+        <p className="c-lbl m-0 mb-2">{tr("Today")}</p>
+        {data.line.length ? <div className="space-y-2">
+          {data.line.map((x, i) => (
+            <button key={i} onClick={() => navTo(x.open)} className="w-full flex items-start gap-3 text-start" data-testid={"home-line-" + x.app}>
+              <span className="w-12 shrink-0 pt-3 text-[12.5px] font-extrabold c-sub c-num">{x.hm}</span>
+              <span className={"flex-1 min-w-0 c-card p-3 " + (x.ahead ? "opacity-80" : "")}>
+                <span className="block text-[11px] font-extrabold tracking-wide" style={{ color: LINE_COL[x.app] || "var(--c-acc)" }}>{tr(LINE_APP[x.app] || x.app).toUpperCase()}</span>
+                <b className="block text-[14px] truncate" dir="auto">{x.title}</b>{x.sub ? <span className="c-sub block text-[12.5px] truncate" dir="auto">{x.sub}</span> : null}</span>
+            </button>))}
+        </div> : <p className="c-sub text-[13px] m-0" data-testid="home-line-empty">{tr("Nothing yet today — tell the box what you ate, spent or need to remember.")}</p>}
       </div>
       </>}
     </div>);

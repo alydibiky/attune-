@@ -29,6 +29,9 @@ html.att-light .calm .c-card{border-color:transparent;box-shadow:0 1px 3px rgba(
 .home-tile{background:var(--c-surf);border:1px solid var(--c-ln);border-radius:20px;padding:14px 6px;min-height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;color:var(--c-ink)}
 html.att-light .home-tile{border-color:transparent;box-shadow:0 1px 3px rgba(16,32,28,.08)}
 .home-tile-ic{width:48px;height:48px;border-radius:16px;display:grid;place-items:center}
+.home-chip{height:40px;padding:0 16px;border-radius:20px;background:var(--c-surf);border:1px solid var(--c-ln);font-size:14px;font-weight:700;color:var(--c-ink)}
+html.att-light .home-chip{border-color:transparent;box-shadow:0 1px 3px rgba(16,32,28,.08)}
+.home-chip-all{background:var(--c-ink);color:var(--c-bg)}
 .calm .c-card{background:var(--c-surf);border:1px solid var(--c-ln);border-radius:var(--c-r);padding:16px}
 .calm .c-lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--c-mut);font-weight:600}
 .calm .c-sub{color:var(--c-mut);font-size:12.5px}

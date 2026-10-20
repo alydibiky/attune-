@@ -71,3 +71,35 @@ export function toolLine(id, { scout, courses, slides, ledger, care, now = Date.
   } catch (e) {}
   return "";
 }
+
+/* ---- v6.43 (Ali picked "1 + the Today line"): Home is one box that acts in every app, and under it ONE line for today across
+   the apps — what is waiting (late first), then what happened and what is ahead today, by time. Pure; every store is passed in.
+   Tests: tests/unit/v743today.test.mjs. → { needs: [waitingList items], line: [{ t, hm, app, title, sub, open, ahead }] } */
+const MEALS_T = [["breakfast", "Breakfast", 8], ["lunch", "Lunch", 13], ["dinner", "Dinner", 20], ["snacks", "Snacks", 17]];
+const hmOf = (t) => { const d = new Date(t); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+export function todayLine({ fit, ledger, reminders, life, radar, care, scout, courses, now = Date.now() } = {}) {
+  const day = isoD(now), start = new Date(now); start.setHours(0, 0, 0, 0);
+  const at = (h) => start.getTime() + h * 3600e3;
+  const line = [];
+  // food: each meal eaten today, at the time its first food was logged
+  const meals = ((fit && fit.days && fit.days[day]) || {}).meals || {};
+  for (const [k, name, h] of MEALS_T) {
+    const xs = (meals[k] || []).filter(Boolean); if (!xs.length) continue;
+    const kcal = Math.round(xs.reduce((a, x) => a + (+x.kcal || 0), 0));
+    const t = Math.min(...xs.map((x) => (x.t && x.t >= start.getTime() ? x.t : at(h))));
+    line.push({ t, app: "fit", title: tr(name) + " · " + xs.map((x) => x.name).slice(0, 3).join(", "), sub: tr("{n} kcal", { n: kcal }), open: "fit" });
+  }
+  // money: today's spending, one line
+  const spent = ((ledger && ledger.txns) || []).filter((x) => x && x.type === "expense" && x.date === day);
+  if (spent.length) {
+    const sum = spent.reduce((a, x) => a + (+x.amount || 0), 0);
+    const ts = spent.map((x) => /^n[0-9a-z]{6,}/.test(x.id || "") ? parseInt(String(x.id).slice(1, 9), 36) : 0).filter((v) => v >= start.getTime() && v <= now + 60e3);
+    line.push({ t: ts.length ? Math.max(...ts) : now - 1, app: "money", title: tr("Spent today: {n}", { n: Math.round(sum).toLocaleString("en-US") }) + (ledger.currency ? " " + ledger.currency : ""), sub: spent.map((x) => x.note || x.cat).filter(Boolean).slice(0, 3).join(", "), open: "money" });
+  }
+  // reminders still to come today
+  const list = Array.isArray(reminders) ? reminders : (reminders && reminders.items) || [];
+  for (const r of list) if (r && !r.done && r.at >= now && r.at < at(24)) line.push({ t: r.at, app: "reminders", title: r.title || tr("Reminder"), sub: "", open: "reminders", ahead: true });
+  line.sort((a, b) => a.t - b.t);
+  for (const x of line) x.hm = hmOf(x.t);
+  return { needs: waitingList({ life, ledger, radar, care, scout, courses, now, max: 4 }), line };
+}

@@ -46,11 +46,16 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=continue]", timeout=5000)
     check(True, "the answer that was being written comes back with Continue")
     # ---- design A is the default look: light, green, Home with "Your apps" and Business as its own tile
-    ctx2, p2 = new_page(br, env, errors, legacy_nav=False, extra_init="try{localStorage.removeItem('attune:theme:v1');localStorage.setItem('attune:start','home')}catch(e){}")
+    ctx2, p2 = new_page(br, env, errors, legacy_nav=False, extra_init="try{localStorage.removeItem('attune:theme:v1');localStorage.setItem('attune:start','home');if(!localStorage.getItem('ledger.v3'))localStorage.setItem('ledger.v3',JSON.stringify({currency:'EGP',accounts:[{id:'c',name:'Cash',currency:'EGP',start:0}],txns:[],budgets:{overall:0,cats:{}},recurring:[],debts:[]}))}catch(e){}")
     p2.set_viewport_size({"width": 390, "height": 844})
     p2.goto(env.url); p2.wait_for_selector("[data-testid=phone-home]", timeout=15000)
     check(p2.evaluate("document.documentElement.classList.contains('att-light')"), "a new install opens in design A's light look")
     check(p2.locator("[data-testid=home-app-business]").count() == 1 and p2.locator("[data-testid=home-area-health]").count() == 1, "Home: Your apps, with Business as its own tile")
+    # option 1 (Ali): one sentence → Food AND Money, and both on the Today line
+    check(p2.locator("[data-testid=home-line-empty]").count() == 1, "an empty day says what to tell the box")
+    p2.fill("[data-testid=home-ask]", "I had koshari for lunch and paid 85 pounds"); p2.click("[data-testid=home-send]")
+    p2.wait_for_selector("[data-testid=home-line-money]", timeout=5000)
+    check(p2.locator("[data-testid=do-line]").count() == 2 and "Koshari" in p2.inner_text("[data-testid=home-line-fit]") and "85" in p2.inner_text("[data-testid=home-line-money]"), "one sentence: logged in Food and in Money, both on Today's line")
     p2.click("[data-testid=home-app-business]"); p2.wait_for_timeout(600)
     check(p2.locator("[data-testid=phone-home]").count() == 0, "the Business tile opens Business")
     ctx2.close()
