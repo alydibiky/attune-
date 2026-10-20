@@ -2193,7 +2193,7 @@ Ali: "Do as per your recommendation" (option 1 + option 2's Today line) and "did
   dedicated model; LaMa fills shadows only if they are painted too), NPU speed (all CPU; GPU path for drawing still unverified
   on Ali's phone), "Expand" (outpainting — possible later with Studio Pro's edit model).
 
-### 5.95 (20 Oct 2026) — v6.44: Fleet on the Today line, deletes that travel, a person's shadow erased with them, Missions 3–4, Fleet photos in Sync
+### 5.95 (20 Oct 2026) — v6.44: Fleet on the Today line, deletes that travel, a person's shadow erased with them, Missions 3–4, Fleet photos in Sync, Fleet as a full ERP (invoices, aging, team, papers, repairs, fuel, reports), Fleet as a full ERP
 From AL's "still open" list (no new notes from Ali this session; objective items only, nothing subjective decided alone).
 - **Fleet on Home's Today line** (home.js `todayLine({ fleet })`, home-ui.jsx reads Fleet's IndexedDB once with `loadFleet`):
   "N cranes working" at 07:00 (crane @ site, up to 3) and what needs you at 09:00, when Fleet's alert comes — cheque overdue /
@@ -2229,6 +2229,28 @@ From AL's "still open" list (no new notes from Ali this session; objective items
 - **Fleet photos travel in Sync** (fleet-store.js `fleetSyncExtra`, `attachmentIds`, `pickAttachments`): the time-sheet /
   receipt photos live records point at, newest first, up to 30 MB of data-URL text per sync file (the Wi-Fi exchange takes
   64 MB); a photo is written only when the device doesn't have it (ids are never reused). Tests: unit v744fleetsync.
+- **Business depth — Fleet & rentals as a real crane-rental ERP** (Ali: "make business systems with great depth so it is of
+  great value"; his ERP screens are not in the repo, so built from what such an ERP needs). Logic `fleet-pro.js` (pure; unit
+  v744fleetpro, 27 checks), screens `fleet-pro-ui.jsx` inside Fleet's own tabs (no new layout; fleet-ui.jsx now exports its
+  small parts — card, fields, Sheet pieces — for it), e2e_v744fleetpro (+ Arabic crawl):
+  · **Invoices** (Money → Invoices; client page → "Invoice the work"): the work not invoiced yet → one line per job,
+    VAT % (14 default) and withholding % (0 default; settings), INV-0001… never reused; entries get `inv` (an invoiced entry
+    can't be edited — delete the invoice first; a deleted invoice frees its work, restore re-marks it). Payments match the
+    opening balance, then invoices oldest first → paid / partly paid / unpaid / overdue; cheques not yet due shown apart.
+    `clientBalance` now adds the invoices' VAT − withholding (`tax`), the statement lists them. Printable tax invoice
+    (`invoiceHTML`, Arabic / English; company + tax reg. no. from Settings, the client's tax no. from its form).
+  · **Who owes what** (aging): per client, not due · 1–30 · 31–60 · 61–90 · 90+ · not invoiced; oldest first.
+  · **Team** (Fleet → Team): operators / drivers / riggers / mechanics, licence + expiry, crane, day wage or monthly salary;
+    advances; **payroll** per month (days = the person's crane's work days; typed days win, `attend`), net = gross − advances.
+  · **Crane papers** (licence, insurance, load test, third-party inspection, other) with expiry; **breakdowns** (from / to,
+    cause, cost → a Maintenance expense, so profit counts it; "Fixed today"); **fuel** (litres + cost → a Fuel expense with
+    `litres`; L per working hour by month; `high` when > 25 % over the crane's own median of other months).
+  · **Reports** (Money → Reports): utilisation per crane per month (worked / down / idle days, %), revenue per crane per
+    month for a year, fuel. **Excel**: invoices, aging, payroll, utilisation, revenue, fuel (Money → Export).
+  · **Warnings** (Today, the 09:00 notification, Home's Today line): paper expired / expiring (14 d warn, 30 d info), licence
+    expired / expiring, invoice overdue (> 60 d = bad), crane broken down (> 7 d = warn), fuel high.
+  · New lists are in COLLS (Recycle Bin, demo erase, sync). Not built yet: quotations → job order, purchase orders and
+    supplier balances for the store, a client portal — next if Ali wants them.
 - **Still open**: reflections (needs a dedicated model), NPU speed, Expand (outpaint), GPU check on the phone; W6 subtitles
   (needs an on-device speech model), desktop Google sync (needs Ali's Google setup), Recall 2 (embedder: bge-m3 438 MB was
   the only one good enough across Arabic ↔ English in RESEARCH_STORAGE — a download-size choice for Ali), Business depth

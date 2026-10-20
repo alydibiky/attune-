@@ -16,12 +16,14 @@ import { useSubBack, useSticky } from "./backstack.js";
 import { xlsxFromRows } from "./convert.js";
 import { sealData, openData, vaultHeader } from "./biz-vault.js";
 import { saveProject } from "./biz-v2-ui.jsx";
+import * as P from "./fleet-pro.js";
+import { InvoicesPane, InvoiceForm, InvoiceView, AgingPane, ReportsPane, TeamPane, PersonForm, AdvanceForm, CraneMore, PaperForm, RepairForm, FuelForm, DOC_L } from "./fleet-pro-ui.jsx";
 
-const card = "rounded-2xl bg-[#FFFFFF] border border-[#DCE3EC] shadow-[0_1px_3px_rgba(15,23,42,.06)]";
-const btnP = "h-12 px-5 rounded-2xl text-[#FFFFFF] font-bold text-[15px] disabled:opacity-40 flex items-center justify-center gap-2";
-const btnS = "h-10 px-3 rounded-xl border border-[#DCE3EC] bg-[#FFFFFF] text-[13.5px] font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40";
-const inp = "w-full min-w-0 h-11 rounded-xl bg-[#EEF2F7] border border-transparent px-3 text-[15px] text-[#0F172A] placeholder:text-[#64748B] focus:outline-none focus:border-[var(--biz)] focus:bg-[#FFFFFF]";
-const muted = "text-[#5B6B80]";
+export const card = "rounded-2xl bg-[#FFFFFF] border border-[#DCE3EC] shadow-[0_1px_3px_rgba(15,23,42,.06)]";
+export const btnP = "h-12 px-5 rounded-2xl text-[#FFFFFF] font-bold text-[15px] disabled:opacity-40 flex items-center justify-center gap-2";
+export const btnS = "h-10 px-3 rounded-xl border border-[#DCE3EC] bg-[#FFFFFF] text-[13.5px] font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40";
+export const inp = "w-full min-w-0 h-11 rounded-xl bg-[#EEF2F7] border border-transparent px-3 text-[15px] text-[#0F172A] placeholder:text-[#64748B] focus:outline-none focus:border-[var(--biz)] focus:bg-[#FFFFFF]";
+export const muted = "text-[#5B6B80]";
 const WIDE = "(min-width: 900px)";
 function useWide() {
   const mq = typeof window !== "undefined" && window.matchMedia ? window.matchMedia(WIDE) : null;
@@ -30,11 +32,11 @@ function useWide() {
   return w;
 }
 const isAr = () => getLang() === "ar";
-const num = (n) => (+n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
+export const num = (n) => (+n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const TABS = [["today", "Today", CalendarDays], ["jobs", "Jobs", Clock], ["fleet", "Fleet", Truck], ["money", "Money", Wallet], ["store", "Store", Package]];
 const MODE_L = { hourly: "Hourly", daily: "Daily", period: "Period" };
 const STATUS_L = { active: "Active", completed: "Completed", cancelled: "Cancelled", pending: "Pending", cleared: "Cleared", bounced: "Bounced" };
-const nameOf = (arr, id) => (F.byId(arr, id) || {}).name || "";
+export const nameOf = (arr, id) => (F.byId(arr, id) || {}).name || "";
 
 /** Download / save a file: the Android app's saveFile, else a browser download. */
 function saveOut(saveFile, name, data, mime) {
@@ -44,7 +46,7 @@ function saveOut(saveFile, name, data, mime) {
   }
   try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([data], { type: mime })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); } catch (e) {}
 }
-function printHTML(html, saveFile, name) {
+export function printHTML(html, saveFile, name) {
   try {
     const f = document.createElement("iframe");
     f.style.cssText = "position:fixed;width:0;height:0;border:0;right:0;bottom:0";
@@ -55,18 +57,18 @@ function printHTML(html, saveFile, name) {
 }
 
 // ---- small fields ------------------------------------------------------------------------------------------------------
-function Field({ label, children, hint }) {
+export function Field({ label, children, hint }) {
   return <label className="block min-w-0"><span className={"block text-[12px] mb-1 " + muted}>{label}</span>{children}{hint ? <span className="block text-[11.5px] text-[#B45309] mt-1">{hint}</span> : null}</label>;
 }
-function Txt({ label, value, onChange, testid, placeholder, mode, dir = "auto" }) {
+export function Txt({ label, value, onChange, testid, placeholder, mode, dir = "auto" }) {
   return <Field label={label}><input value={value ?? ""} onChange={(e) => onChange(e.target.value)} className={inp} data-testid={testid} placeholder={placeholder} inputMode={mode} dir={dir} /></Field>;
 }
-function Sel({ label, value, onChange, options, testid, empty }) {
+export function Sel({ label, value, onChange, options, testid, empty }) {
   return <Field label={label}><select value={value ?? ""} onChange={(e) => onChange(e.target.value)} className={inp} data-testid={testid}>
     {empty != null ? <option value="">{empty}</option> : null}{options.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}</select></Field>;
 }
 /** A date typed DD/MM/YYYY (never the phone's own M/D picker — lesson 2 of the crane app), with Today / Yesterday. */
-function DateF({ label, value, onChange, testid }) {
+export function DateF({ label, value, onChange, testid }) {
   const [t, setT] = useState(F.showDate(value));
   useEffect(() => { if (F.readDate(t) !== value) setT(F.showDate(value)); }, [value]);
   const bad = t && !F.readDate(t);
@@ -74,7 +76,7 @@ function DateF({ label, value, onChange, testid }) {
     <div className="flex gap-1.5"><input value={t} onChange={(e) => { setT(e.target.value); const d = F.readDate(e.target.value); onChange(d || ""); }} placeholder="DD/MM/YYYY" inputMode="numeric" className={inp + " flex-1"} data-testid={testid} dir="ltr" />
       <button type="button" className={btnS + " shrink-0"} onClick={() => { const d = F.isoDay(); setT(F.showDate(d)); onChange(d); }}>{tr("Today")}</button></div></Field>;
 }
-function Evidence({ value, onChange, flash, required }) {
+export function Evidence({ value, onChange, flash, required }) {
   const [busy, setBusy] = useState(false);
   return <Field label={required ? tr("Evidence (required)") : tr("Evidence (optional)")}>
     <label className={btnS + " w-full cursor-pointer " + (value ? "text-[#15803D] border-[#86EFAC]" : "")} data-testid="fleet-evidence">
@@ -93,17 +95,17 @@ function Sheet({ title, onClose, children, wide }) {
       {children}
     </div></div>;
 }
-function Seg({ value, onChange, items, testid }) {
+export function Seg({ value, onChange, items, testid }) {
   return <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" data-testid={testid}>{items.map(([v, l]) =>
     <button key={v} onClick={() => onChange(v)} data-testid={testid + "-" + v} className={"h-9 px-3.5 rounded-full text-[13.5px] font-semibold whitespace-nowrap border " + (value === v ? "text-[#FFFFFF] border-transparent" : "bg-[#FFFFFF] border-[#DCE3EC] text-[#334155]")} style={value === v ? { background: "var(--biz)" } : null}>{tr(l)}</button>)}</div>;
 }
-const Tag = ({ tone = "gray", children }) => {
+export const Tag = ({ tone = "gray", children }) => {
   const c = { gray: "bg-[#E2E8F0] text-[#475569]", green: "bg-[#DCFCE7] text-[#15803D]", red: "bg-[#FEE2E2] text-[#B91C1C]", amber: "bg-[#FEF3C7] text-[#B45309]", blue: "bg-[#DBEAFE] text-[#1D4ED8]" }[tone];
   return <span className={"text-[11px] font-semibold rounded-full px-2 py-0.5 whitespace-nowrap " + c}>{children}</span>;
 };
-const Row = ({ onClick, children, testid }) => <button onClick={onClick} data-testid={testid} className={card + " w-full text-start p-3.5 flex items-center gap-3"}>{children}<ChevronRight size={18} className="text-[#94A3B8] rtl:-scale-x-100 shrink-0" /></button>;
-const Empty = ({ children }) => <p className={card + " p-5 text-center text-[14px] " + muted}>{children}</p>;
-const Kpi = ({ label, value, tone }) => <div className={card + " p-3.5"}><p className={"text-[12px] " + muted}>{label}</p><p className={"text-[20px] font-extrabold mt-0.5 tabular-nums " + (tone === "red" ? "text-[#B91C1C]" : "")} dir="ltr">{value}</p></div>;
+export const Row = ({ onClick, children, testid }) => <button onClick={onClick} data-testid={testid} className={card + " w-full text-start p-3.5 flex items-center gap-3"}>{children}<ChevronRight size={18} className="text-[#94A3B8] rtl:-scale-x-100 shrink-0" /></button>;
+export const Empty = ({ children }) => <p className={card + " p-5 text-center text-[14px] " + muted}>{children}</p>;
+export const Kpi = ({ label, value, tone }) => <div className={card + " p-3.5"}><p className={"text-[12px] " + muted}>{label}</p><p className={"text-[20px] font-extrabold mt-0.5 tabular-nums " + (tone === "red" ? "text-[#B91C1C]" : "")} dir="ltr">{value}</p></div>;
 
 // ---- the app -------------------------------------------------------------------------------------------------------------
 /** Fleet & rentals — opened from the Business hub. */
@@ -130,7 +132,8 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
   // v6.34 (§5.77 idea): what needs you → one phone notification at 09:00 (cheques, jobs past their end, service, stock)
   useEffect(() => { if (!s || site) return; const N = typeof window !== "undefined" && window.AttuneNative; if (!N) return;
     const n = F.reminderNote(s);
-    const NAME = { chequeOverdue: "cheque overdue", chequeToday: "cheque due today", jobPast: "job past its end", jobEnding: "job ending", lowStock: "item low in the store", serviceDue: "crane due for service", serviceSoon: "service soon" };
+    const NAME = { chequeOverdue: "cheque overdue", chequeToday: "cheque due today", jobPast: "job past its end", jobEnding: "job ending", lowStock: "item low in the store", serviceDue: "crane due for service", serviceSoon: "service soon",
+      docExpired: "crane paper expired", docSoon: "crane paper expiring", licenceExpired: "licence expired", licenceSoon: "licence expiring", invoiceOverdue: "invoice overdue", repairOpen: "crane still broken down", fuelHigh: "fuel use high" };
     const say = n && { id: n.id, at: n.at, open: "fleet", title: n.n === 1 ? tr("Fleet: 1 thing needs you") : tr("Fleet: {n} things need you", { n: n.n }), body: Object.entries(n.counts).map(([k, c]) => c + " " + tr(NAME[k] || k)).join(" · ") };
     try { if (say && N.schedule) N.schedule(JSON.stringify(say)); else if (!n && N.unschedule) N.unschedule("fleet-needs"); } catch (e) {} }, [s]);
   /** Every change goes through here: the pure function runs, a refusal shows its real reason, the result is saved. */
@@ -172,7 +175,8 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
     </section>);
 }
 const sheetTitle = (sh) => tr({ order: "Order from a message", job: "New job order", work: "Add work", cheque: sh.dir === "out" ? "Pay out" : "Payment received", expense: "New expense", in: "Incoming invoice", out: "Issue parts", move: "Move crane",
-  list: sh.rec && sh.rec.id ? "Edit" : "Add", item: "Item", doc: "Document", bin: "Recycle Bin", settings: "Settings", backup: "Encrypted backup" }[sh.kind] || "");
+  list: sh.rec && sh.rec.id ? "Edit" : "Add", item: "Item", doc: "Document", bin: "Recycle Bin", settings: "Settings", backup: "Encrypted backup",
+  invoice: "New invoice", invoiceView: "Invoice", person: sh.rec && sh.rec.id ? "Edit" : "Add a person", advance: "Advance", paper: "Crane paper", repair: "Breakdown", fuel: "Fuel" }[sh.kind] || "");
 
 // ---- Today ------------------------------------------------------------------------------------------------------------
 function Today({ s, run, money, setSheet, setOpen, setTab, wide }) {
@@ -191,8 +195,14 @@ function Today({ s, run, money, setSheet, setOpen, setTab, wide }) {
   const W = { chequeOverdue: (x) => tr("Cheque {no} is {d} days overdue — {who}", { no: x.no || "", d: x.days, who: x.who }), chequeToday: (x) => tr("Cheque {no} is due today — {who}", { no: x.no || "", who: x.who }),
     chequeSoon: (x) => tr("Cheque {no} is due in {d} days — {who}", { no: x.no || "", d: x.days, who: x.who }), jobPast: (x) => tr("{no} passed its end date {d} days ago — {c}", { no: x.no, d: x.days, c: x.crane }),
     jobEnding: (x) => tr("{no} ends in {d} days — {c}", { no: x.no, d: x.days, c: x.crane }), lowStock: (x) => tr("{item}: {b} left (minimum {m})", { item: x.item, b: x.balance, m: x.min }),
-    serviceDue: (x) => tr("{c} is due for its service ({h} h)", { c: x.crane, h: num(x.hours) }), serviceSoon: (x) => tr("{c}: service in {h} h", { c: x.crane, h: num(x.left) }) };
-  const go = (x) => (x.kind.startsWith("cheque") ? setTab("money") : x.kind.startsWith("job") ? setOpen({ kind: "job", id: x.id }) : x.kind.startsWith("service") ? setOpen({ kind: "crane", id: x.id }) : setTab("store"));
+    serviceDue: (x) => tr("{c} is due for its service ({h} h)", { c: x.crane, h: num(x.hours) }), serviceSoon: (x) => tr("{c}: service in {h} h", { c: x.crane, h: num(x.left) }),
+    // v6.44 (fleet-pro.js)
+    docExpired: (x) => tr("{c}: {p} expired {d} days ago", { c: x.crane, p: x.title || tr(DOC_L[x.doc]), d: x.days }), docSoon: (x) => tr("{c}: {p} expires in {d} days", { c: x.crane, p: x.title || tr(DOC_L[x.doc]), d: x.days }),
+    licenceExpired: (x) => tr("{who}'s licence expired {d} days ago", { who: x.who, d: x.days }), licenceSoon: (x) => tr("{who}'s licence expires in {d} days", { who: x.who, d: x.days }),
+    invoiceOverdue: (x) => tr("Invoice {no} is {d} days overdue — {who}", { no: x.no, d: x.days, who: x.who }), repairOpen: (x) => tr("{c} has been broken down for {d} days", { c: x.crane, d: x.days }),
+    fuelHigh: (x) => tr("{c} used {l} L/h of fuel — its usual is {u}", { c: x.crane, l: num(x.lph), u: num(x.usual) }) };
+  const go = (x) => (x.kind.startsWith("cheque") ? setTab("money") : x.kind.startsWith("job") ? setOpen({ kind: "job", id: x.id }) : /^(service|doc|repair|fuel)/.test(x.kind) ? setOpen({ kind: "crane", id: x.id })
+    : x.kind === "invoiceOverdue" ? setSheet({ kind: "invoiceView", id: x.id }) : x.kind.startsWith("licence") ? setSheet({ kind: "person", rec: F.byId(s.people, x.id) }) : setTab("store"));
   return (
     <div className="space-y-4" data-testid="fleet-today">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
@@ -291,14 +301,14 @@ function EvidenceView({ id, onClose }) {
 // ---- Fleet: cranes, clients, sites, garages, banks ---------------------------------------------------------------------
 function FleetTab({ s, run, money, setSheet, setOpen }) {
   const [seg, setSeg] = useSticky("fleet:seg", "cranes");
-  const L = { cranes: "Cranes", clients: "Clients", sites: "Sites", garages: "Garages", banks: "Banks" };
-  const rows = F.live(s[seg]);
+  const L = { cranes: "Cranes", team: "Team", clients: "Clients", sites: "Sites", garages: "Garages", banks: "Banks" };
+  const rows = seg === "team" ? [] : F.live(s[seg]);
   const ym = F.isoDay().slice(0, 7);
   return (
     <div className="space-y-3" data-testid="fleet-fleet">
       <div className="flex items-center gap-2"><div className="flex-1 min-w-0"><Seg value={seg} onChange={setSeg} items={Object.entries(L)} testid="fleet-seg" /></div>
-        <button className={btnP + " h-10 shrink-0"} style={{ background: "var(--biz)" }} onClick={() => setSheet({ kind: "list", coll: seg, rec: {} })} data-testid="fleet-add"><Plus size={17} />{tr("Add")}</button></div>
-      {!rows.length ? <Empty>{tr("Nothing here yet.")}</Empty> : <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2.5 lg:space-y-0">{rows.map((r) => {
+        <button className={btnP + " h-10 shrink-0"} style={{ background: "var(--biz)" }} onClick={() => setSheet(seg === "team" ? { kind: "person", rec: {} } : { kind: "list", coll: seg, rec: {} })} data-testid="fleet-add"><Plus size={17} />{tr("Add")}</button></div>
+      {seg === "team" ? <TeamPane s={s} run={run} money={money} setSheet={setSheet} /> : !rows.length ? <Empty>{tr("Nothing here yet.")}</Empty> : <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2.5 lg:space-y-0">{rows.map((r) => {
         if (seg === "cranes") { const w = F.whereIs(s, r.id), p = F.craneProfit(s, r.id, { from: ym + "-01" });
           return <Row key={r.id} onClick={() => setOpen({ kind: "crane", id: r.id })} testid="fleet-crane">
             <span className="w-10 h-10 rounded-xl grid place-items-center shrink-0 bg-[#EEF2F7] text-[#334155]"><Truck size={18} /></span>
@@ -341,6 +351,7 @@ function CraneDetail({ s, run, money, setSheet, setOpen, id }) {
           <span className="flex-1 min-w-0 text-[14px]"><b className="block">{sv.left <= 0 ? tr("Service due — {h} h since the last one", { h: num(sv.used) }) : tr("Service in {h} h", { h: num(sv.left) })}</b>
             <span className={"text-[12.5px] " + muted}>{tr("Every {e} h", { e: num(sv.every) })}{sv.last ? " · " + tr("last {d}", { d: F.showDate(sv.last) }) : ""}</span></span>
           <button className={btnS + " shrink-0"} onClick={() => run((x) => F.markServiced(x, id), tr("Service saved — the hours start again"))} data-testid="fleet-serviced"><Check size={15} />{tr("Serviced today")}</button></div>; })()}
+      <CraneMore s={s} run={run} money={money} setSheet={setSheet} id={id} />
       <Seg value={range} onChange={setRange} items={[["month", "This month"], ["year", "This year"], ["all", "All time"]]} testid="fleet-range" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5" data-testid="fleet-profit">
         <Kpi label={tr("Income")} value={money(p.income)} /><Kpi label={tr("Expenses")} value={money(p.expenses)} />
@@ -363,12 +374,15 @@ function ClientDetail({ s, run, money, setSheet, setOpen, id, saveFile }) {
     <div className="space-y-3" data-testid="fleet-client-detail">
       <div className={card + " p-4"}><p className="text-[20px] font-extrabold" dir="auto">{c.name}</p>{c.phone ? <p className={"text-[13px] " + muted} dir="ltr">{c.phone}</p> : null}
         <p className="text-[24px] font-extrabold tabular-nums mt-1" dir="ltr" data-testid="fleet-balance">{money(b.balance)}</p>
-        <p className={"text-[12.5px] " + muted}>{tr("Opening")} <span dir="ltr">{money(b.opening)}</span> + {tr("work")} <span dir="ltr">{money(b.work)}</span> − {tr("paid")} <span dir="ltr">{money(b.paid)}</span>{b.pending ? <> · {tr("cheques not yet due")} <span dir="ltr">{money(b.pending)}</span></> : null}</p></div>
+        <p className={"text-[12.5px] " + muted}>{tr("Opening")} <span dir="ltr">{money(b.opening)}</span> + {tr("work")} <span dir="ltr">{money(b.work)}</span>{b.tax ? <> + {tr("VAT")} <span dir="ltr">{money(b.tax)}</span></> : null} − {tr("paid")} <span dir="ltr">{money(b.paid)}</span>{b.pending ? <> · {tr("cheques not yet due")} <span dir="ltr">{money(b.pending)}</span></> : null}</p></div>
       <div className="flex flex-wrap gap-2">
         <button className={btnP + " h-10"} style={{ background: "var(--biz)" }} onClick={() => setSheet({ kind: "cheque", dir: "in", client: id })}><Plus size={16} />{tr("Payment received")}</button>
+        {P.uninvoiced(s, id).length ? <button className={btnS} onClick={() => setSheet({ kind: "invoice", client: id })} data-testid="fleet-client-invoice"><Printer size={15} />{tr("Invoice the work")}</button> : null}
         <button className={btnS} onClick={() => printHTML(F.statementHTML(s, id, { rtl: isAr() }), saveFile, `statement-${String(c.name).replace(/[^\p{L}\p{N}]+/gu, "-")}.html`)} data-testid="fleet-statement"><Printer size={15} />{tr("Statement")}</button>
         <button className={btnS} onClick={() => setSheet({ kind: "list", coll: "clients", rec: c })}><Pencil size={15} />{tr("Edit")}</button>
         <button className={btnS + " text-[#B91C1C]"} onClick={del}><Trash2 size={15} />{tr("Delete")}</button></div>
+      {(() => { const inv = P.invoiceStatus(s).filter((v) => v.client === id); return inv.length ? <><p className="font-bold text-[14.5px]">{tr("Invoices")}</p>
+        {inv.map((v) => <Row key={v.id} onClick={() => setSheet({ kind: "invoiceView", id: v.id })}><span className="flex-1 min-w-0 text-[14px]" dir="auto"><b dir="ltr">{v.no}</b> · {F.showDate(v.date)}</span><Tag tone={v.status === "paid" ? "green" : v.status === "overdue" ? "red" : v.status === "partial" ? "amber" : "gray"}>{tr({ paid: "Paid", partial: "Partly paid", unpaid: "Unpaid", overdue: "Overdue" }[v.status])}</Tag><span className="tabular-nums text-[13px]" dir="ltr">{money(v.left)}</span></Row>)}</> : null; })()}
       <p className="font-bold text-[14.5px]">{tr("Job orders")}</p>
       {jobs.length ? jobs.map((j) => <Row key={j.id} onClick={() => setOpen({ kind: "job", id: j.id })}><span className="flex-1 min-w-0 text-[14px]" dir="auto"><b dir="ltr">{j.no}</b> · {nameOf(s.cranes, j.crane)}</span><span className="tabular-nums text-[13px]" dir="ltr">{money(F.jobTotal(s, j.id))}</span></Row>) : <Empty>{tr("No job orders yet.")}</Empty>}
       <p className="font-bold text-[14.5px]">{tr("Payments")}</p>
@@ -377,12 +391,13 @@ function ClientDetail({ s, run, money, setSheet, setOpen, id, saveFile }) {
 }
 
 // ---- Money: payments, expenses, profit, export ---------------------------------------------------------------------------
-function Money({ s, run, money, setSheet, saveFile, flash }) {
+function Money({ s, run, money, setSheet, setOpen, saveFile, flash }) {
   const [seg, setSeg] = useSticky("fleet:money", "payments");
   return (
     <div className="space-y-3" data-testid="fleet-money">
-      <Seg value={seg} onChange={setSeg} items={[["payments", "Cheques & payments"], ["expenses", "Expenses"], ["profit", "Profit per crane"], ["export", "Export"]]} testid="fleet-mseg" />
-      {seg === "payments" ? <Payments s={s} run={run} money={money} setSheet={setSheet} /> : seg === "expenses" ? <Expenses s={s} run={run} money={money} setSheet={setSheet} />
+      <Seg value={seg} onChange={setSeg} items={[["payments", "Cheques & payments"], ["invoices", "Invoices"], ["aging", "Who owes what"], ["expenses", "Expenses"], ["profit", "Profit per crane"], ["reports", "Reports"], ["export", "Export"]]} testid="fleet-mseg" />
+      {seg === "payments" ? <Payments s={s} run={run} money={money} setSheet={setSheet} /> : seg === "invoices" ? <InvoicesPane s={s} money={money} setSheet={setSheet} />
+        : seg === "aging" ? <AgingPane s={s} money={money} setOpen={setOpen} /> : seg === "reports" ? <ReportsPane s={s} money={money} /> : seg === "expenses" ? <Expenses s={s} run={run} money={money} setSheet={setSheet} />
         : seg === "profit" ? <Profit s={s} money={money} /> : <ExportPane s={s} saveFile={saveFile} flash={flash} />}
     </div>);
 }
@@ -438,10 +453,13 @@ function Profit({ s, money }) {
   </div>;
 }
 function ExportPane({ s, saveFile, flash }) {
-  const K = [["entries", "Work entries"], ["balances", "Client balances"], ["cheques", "Cheques & payments"], ["expenses", "Expenses"], ["profit", "Profit per crane"], ["store", "Store movements"]];
-  const go = (k, l) => { try { saveOut(saveFile, `fleet-${k}-${F.isoDay()}.xlsx`, xlsxFromRows(F.exportRows(s, k), tr(l).slice(0, 30)), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"); flash(tr("Saved {f}", { f: `fleet-${k}.xlsx` })); } catch (e) { flash(tr(e.message)); } };
+  const ym = F.isoDay().slice(0, 7), yr = F.isoDay().slice(0, 4);
+  const K = [["entries", "Work entries"], ["balances", "Client balances"], ["cheques", "Cheques & payments"], ["expenses", "Expenses"], ["profit", "Profit per crane"], ["store", "Store movements"],
+    ["invoices", "Invoices"], ["aging", "Who owes what (aging)"], ["payroll:" + ym, "Payroll this month"], ["utilisation:" + ym, "Utilisation this month"], ["revenue:" + yr, "Revenue by month"], ["fuel", "Fuel"]];
+  const rowsOf = (k) => (/^(invoices|aging|fuel|payroll:|utilisation:|revenue:)/.test(k) ? P.exportProRows(s, k) : F.exportRows(s, k));
+  const go = (k, l) => { k = String(k); try { saveOut(saveFile, `fleet-${k.replace(":", "-")}-${F.isoDay()}.xlsx`, xlsxFromRows(rowsOf(k), tr(l).slice(0, 30)), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"); flash(tr("Saved {f}", { f: `fleet-${k.replace(":", "-")}.xlsx` })); } catch (e) { flash(tr(e.message)); } };
   return <div className="space-y-2" data-testid="fleet-export"><p className={"text-[13px] " + muted}>{tr("Each one is an Excel file you can open on a computer or send to your accountant.")}</p>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{K.map(([k, l]) => <button key={k} className={btnS + " h-12 justify-start px-4"} onClick={() => go(k, l)} data-testid={"fleet-x-" + k}><Download size={16} />{tr(l)}</button>)}</div></div>;
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{K.map(([k, l]) => <button key={k} className={btnS + " h-12 justify-start px-4"} onClick={() => go(k, l)} data-testid={"fleet-x-" + k.split(":")[0]}><Download size={16} />{tr(l)}</button>)}</div></div>;
 }
 
 // ---- Store (the warehouse) ------------------------------------------------------------------------------------------------
@@ -513,10 +531,17 @@ function SheetBody(p) {
   if (k === "bin") return <BinView {...p} />;
   if (k === "settings") return <SettingsForm {...p} />;
   if (k === "backup") return <BackupForm {...p} />;
+  if (k === "invoice") return <InvoiceForm {...p} />;
+  if (k === "invoiceView") return <InvoiceView {...p} />;
+  if (k === "person") return <PersonForm {...p} />;
+  if (k === "advance") return <AdvanceForm {...p} />;
+  if (k === "paper") return <PaperForm {...p} />;
+  if (k === "repair") return <RepairForm {...p} />;
+  if (k === "fuel") return <FuelForm {...p} />;
   return null;
 }
-const SaveBtn = ({ onClick, children, disabled, testid = "fleet-save" }) => <button className={btnP + " w-full"} style={{ background: "var(--biz)" }} onClick={onClick} disabled={disabled} data-testid={testid}><Check size={18} />{children || tr("Save")}</button>;
-const opts = (arr) => F.live(arr).map((x) => ({ v: x.id, l: x.name }));
+export const SaveBtn = ({ onClick, children, disabled, testid = "fleet-save" }) => <button className={btnP + " w-full"} style={{ background: "var(--biz)" }} onClick={onClick} disabled={disabled} data-testid={testid}><Check size={18} />{children || tr("Save")}</button>;
+export const opts = (arr) => F.live(arr).map((x) => ({ v: x.id, l: x.name }));
 
 function ListForm({ s, run, sheet, close }) {
   const { coll } = sheet;
@@ -529,7 +554,7 @@ function ListForm({ s, run, sheet, close }) {
       <div className="grid grid-cols-2 gap-2"><Txt label={tr("Hourly rate")} value={r.hourly} onChange={set("hourly")} mode="decimal" testid="fleet-f-hourly" /><Txt label={tr("Daily rate")} value={r.daily} onChange={set("daily")} mode="decimal" testid="fleet-f-daily" /></div>
       <Txt label={tr("Service every (engine hours, optional)")} value={r.serviceEvery} onChange={set("serviceEvery")} mode="decimal" testid="fleet-f-service" />
       {!r.id ? <Sel label={tr("Garage")} value={r.loc ? r.loc.id : ""} onChange={(v) => setR({ ...r, loc: { kind: "garage", id: v || null }, home: v || null })} options={opts(s.garages)} empty={F.live(s.garages).length ? null : tr("— add a garage first (optional) —")} /> : null}</> : null}
-    {coll === "clients" ? <><Txt label={tr("Phone")} value={r.phone} onChange={set("phone")} mode="tel" dir="ltr" /><Txt label={tr("Opening balance (what they owed before)")} value={r.opening} onChange={set("opening")} mode="decimal" testid="fleet-f-opening" /></> : null}
+    {coll === "clients" ? <><Txt label={tr("Phone")} value={r.phone} onChange={set("phone")} mode="tel" dir="ltr" /><Txt label={tr("Tax reg. no. (on invoices)")} value={r.taxNo} onChange={set("taxNo")} dir="ltr" /><Txt label={tr("Opening balance (what they owed before)")} value={r.opening} onChange={set("opening")} mode="decimal" testid="fleet-f-opening" /></> : null}
     {coll === "sites" ? <Txt label={tr("Address")} value={r.address} onChange={set("address")} /> : null}
     <SaveBtn onClick={save} disabled={!String(r.name || "").trim()} />
     {r.id ? <button className={btnS + " w-full text-[#B91C1C]"} onClick={async () => { if (await askConfirm("Move this to the Recycle Bin?", { yes: "Delete" })) { if (run((x) => F.remove(x, coll, r.id), tr("In the Recycle Bin for 7 days"))) close(); } }}><Trash2 size={15} />{tr("Delete")}</button> : null}
@@ -812,8 +837,8 @@ function MoreMenu({ s, run, setSheet, close, flash, saveFile, site }) {
 }
 function BinView({ s, run }) {
   const list = F.binList(s);
-  const L = { cranes: "Crane", clients: "Client", sites: "Site", garages: "Garage", banks: "Bank", jobs: "Job order", entries: "Work", cheques: "Payment", expenses: "Expense" };
-  const label = (b) => b.rec.name || b.rec.no || (b.coll === "cheques" ? (b.rec.no || b.rec.method) + " · " + num(b.rec.amount) : b.coll === "expenses" ? F.showDate(b.rec.date) + " · " + num(b.rec.total) : F.showDate(b.rec.date));
+  const L = { cranes: "Crane", clients: "Client", sites: "Site", garages: "Garage", banks: "Bank", jobs: "Job order", entries: "Work", cheques: "Payment", expenses: "Expense", invoices: "Invoice", people: "Person", advances: "Advance", docs: "Crane paper", repairs: "Breakdown" };
+  const label = (b) => b.rec.name || b.rec.no || (b.coll === "docs" ? tr(DOC_L[b.rec.kind] || "Other paper") : "") || (b.coll === "cheques" ? (b.rec.no || b.rec.method) + " · " + num(b.rec.amount) : b.coll === "expenses" ? F.showDate(b.rec.date) + " · " + num(b.rec.total) : F.showDate(b.rec.date));
   return <div className="space-y-2" data-testid="fleet-bin-view"><p className={"text-[13px] " + muted}>{tr("Deleted items stay here for 7 days, then they're gone for good.")}</p>
     {list.length ? list.map((b) => <div key={b.coll + b.id} className={card + " p-3 flex items-center gap-2"}><span className="flex-1 min-w-0"><span className="block text-[14px] font-semibold truncate" dir="auto">{label(b)}</span><span className={"block text-[12px] " + muted}>{tr(L[b.coll])} · {tr("{d} days left", { d: b.left })}</span></span>
       <button className={btnS + " h-9"} onClick={() => run((x) => F.restore(x, b.coll, b.id), tr("Restored"))} data-testid="fleet-restore"><Undo2 size={14} />{tr("Restore")}</button></div>) : <Empty>{tr("The Recycle Bin is empty.")}</Empty>}</div>;
@@ -824,7 +849,12 @@ function SettingsForm({ s, run, close }) {
   return <div className="space-y-3" data-testid="fleet-settings-form">
     <Txt label={tr("Currency")} value={x.currency} onChange={(v) => set("currency")(v.toUpperCase().slice(0, 3))} dir="ltr" />
     <div className="grid grid-cols-2 gap-2"><Txt label={tr("Warn about cheques due within (days)")} value={x.chequeDays} onChange={set("chequeDays")} mode="numeric" /><Txt label={tr("Warn about jobs ending within (days)")} value={x.jobDays} onChange={set("jobDays")} mode="numeric" /></div>
-    <SaveBtn onClick={() => { if (run((st) => ({ ...st, settings: { ...st.settings, currency: x.currency || "EGP", chequeDays: Math.max(0, parseInt(x.chequeDays) || 0), jobDays: Math.max(0, parseInt(x.jobDays) || 0) } }), tr("Saved"))) close(); }} />
+    {/* v6.44: what the invoices carry */}
+    <Txt label={tr("Company name (on invoices)")} value={x.company} onChange={set("company")} testid="fleet-f-company" /><Txt label={tr("Tax reg. no. (on invoices)")} value={x.taxNo} onChange={set("taxNo")} dir="ltr" />
+    <div className="grid grid-cols-3 gap-2"><Txt label={tr("VAT %")} value={x.vat} onChange={set("vat")} mode="decimal" /><Txt label={tr("Withholding tax %")} value={x.wht} onChange={set("wht")} mode="decimal" /><Txt label={tr("Invoices due in (days)")} value={x.dueDays} onChange={set("dueDays")} mode="numeric" /></div>
+    <SaveBtn onClick={() => { const pc = (v, d) => { const n = parseFloat(v); return n >= 0 && n <= 100 ? n : d; };
+      if (run((st) => ({ ...st, settings: { ...st.settings, currency: x.currency || "EGP", chequeDays: Math.max(0, parseInt(x.chequeDays) || 0), jobDays: Math.max(0, parseInt(x.jobDays) || 0),
+        company: String(x.company || "").trim(), taxNo: String(x.taxNo || "").trim(), vat: pc(x.vat, 14), wht: pc(x.wht, 0), dueDays: Math.max(0, parseInt(x.dueDays) || 0) } }), tr("Saved"))) close(); }} />
   </div>;
 }
 function BackupForm({ s, run, close, saveFile, flash }) {

@@ -9,6 +9,7 @@
    Dates are ISO "YYYY-MM-DD" (shown DD/MM/YYYY); money is a number in the currency, rounded to 2 decimals.
    Tests: tests/unit/v732fleet.test.mjs.                                                                              */
 
+import { proWarnings, clientTax } from "./fleet-pro.js";   // v6.44 the ERP depth (invoices, team, papers, repairs, fuel, reports)
 export const FLEET_VERSION = 1;
 export const BIN_DAYS = 7;
 const r2 = (x) => Math.round((+x || 0) * 100 + Number.EPSILON * 100) / 100;
@@ -42,7 +43,9 @@ export const EMPTY = () => ({
   cranes: [], clients: [], sites: [], garages: [], banks: [],
   jobs: [], entries: [], moves: [], cheques: [],
   expTypes: ["Fuel", "Maintenance", "Spare parts", "Driver", "Transport", "Other"], expenses: [],
-  settings: { currency: "EGP", chequeDays: 7, jobDays: 7 },
+  settings: { currency: "EGP", chequeDays: 7, jobDays: 7, vat: 14, wht: 0, dueDays: 30, company: "", taxNo: "", nextInv: 1 },
+  // v6.44 (fleet-pro.js): invoices, the team and their advances, crane papers, breakdowns; attend = days typed by hand
+  invoices: [], people: [], advances: [], docs: [], repairs: [], attend: {},
   store: { items: [], suppliers: [], techs: [], dests: [], purchasers: [], requesters: [], nextDoc: 1, tx: [] },
 });
 /** An old or partial state → a complete one (self-healing, like healColumns: anything missing is added, nothing lost). */
@@ -191,6 +194,8 @@ export function addEntry(s0, e0, { requireEvidence = true } = {}) {
   if (date < j.start) fail("The work date is before the job started");
   if (requireEvidence && !e0.evidence) fail("Attach the evidence (a photo of the time sheet)");
   const rate = e0.rate != null && e0.rate !== "" ? r2(e0.rate) : j.rate;
+  const was = e0.id && byId(s.entries, e0.id);
+  if (was && was.inv) { const v = byId(s.invoices || [], was.inv); fail("This work is on invoice {no} — delete the invoice first to change it", { no: (v && v.no) || "" }); }
   let e = { id: e0.id || nid(s, "e"), job: j.id, mode: j.mode, date, rate, evidence: e0.evidence || null, notes: e0.notes || "" };
   if (j.mode === "hourly") {
     const hours = hoursOf({ date, start: e0.start, end: e0.end, endDate: e0.endDate ? readDate(e0.endDate) : "" });
@@ -262,7 +267,9 @@ export function clientBalance(s, clientId) {
   const paid = live(s.cheques).filter((q) => q.dir === "in" && q.client === clientId && q.status !== "bounced").reduce((n, q) => n + q.amount, 0);
   const pending = live(s.cheques).filter((q) => q.dir === "in" && q.client === clientId && q.status === "pending").reduce((n, q) => n + q.amount, 0);
   const opening = c ? c.opening || 0 : 0;
-  return { opening, work: r2(work), paid: r2(paid), pending: r2(pending), balance: r2(opening + work - paid) };
+  // v6.44: the VAT on its invoices is owed too; the withholding tax it deducts is not (it pays that to the tax office)
+  const tax = clientTax(s, clientId);
+  return { opening, work: r2(work), tax, paid: r2(paid), pending: r2(pending), balance: r2(opening + work + tax - paid) };
 }
 const inRange = (d, from, to) => (!from || d >= from) && (!to || d <= to);
 /** One crane's money for a period: income from its work, its expenses (with its share of nothing general), and the
@@ -337,6 +344,7 @@ export function warnings(s, today = isoDay()) {
     if (sv.left <= 0) w.push({ kind: "serviceDue", level: "bad", id: c.id, crane: c.name, hours: sv.used, every: sv.every });
     else if (sv.left <= sv.every * 0.1) w.push({ kind: "serviceSoon", level: "warn", id: c.id, crane: c.name, left: sv.left, every: sv.every });
   }
+  w.push(...proWarnings(s, today));   // v6.44: papers, licences, overdue invoices, open repairs, fuel
   const rank = { bad: 0, warn: 1, info: 2 };
   return w.sort((a, b) => rank[a.level] - rank[b.level] || (a.days ?? 0) - (b.days ?? 0));
 }
@@ -356,7 +364,7 @@ export function kpis(s, today = isoDay()) {
 }
 
 // ---- recycle bin ----------------------------------------------------------------------------------------------------
-const COLLS = ["cranes", "clients", "sites", "garages", "banks", "jobs", "entries", "cheques", "expenses"];
+const COLLS = ["cranes", "clients", "sites", "garages", "banks", "jobs", "entries", "cheques", "expenses", "invoices", "people", "advances", "docs", "repairs"];
 /** What still points at a record (so deleting it would leave orphans). */
 export function usedBy(s, coll, id) {
   const j = live(s.jobs);
@@ -375,6 +383,8 @@ export function remove(s0, coll, id, now = Date.now()) {
   const n = usedBy(s, coll, id);
   if (n) fail("Still used by {n} record(s) — delete or change those first", { n });
   r.del = now;
+  // v6.44: a deleted invoice frees its work to be invoiced again (its number is never reused)
+  if (coll === "invoices") for (const e of s.entries) if (e.inv === id) { delete e.inv; e.invWas = id; }
   if (coll === "jobs") {
     for (const e of s.entries) if (e.job === id && !e.del) { e.del = now; e.delWith = id; }
     const c = byId(s.cranes, r.crane);
@@ -387,6 +397,7 @@ export function restore(s0, coll, id) {
   if (!r || !r.del) fail("Not in the Recycle Bin");
   delete r.del;
   if (coll === "jobs") for (const e of s.entries) if (e.delWith === id) { delete e.del; delete e.delWith; }
+  if (coll === "invoices") for (const e of s.entries) if (e.invWas === id && !e.inv) { e.inv = id; delete e.invWas; }
   return s;
 }
 export function binList(s, now = Date.now()) {
@@ -721,6 +732,11 @@ export function statement(s, clientId, { from = "", to = "" } = {}) {
   const rows = [];
   for (const e of live(s.entries)) if (jobs.has(e.job)) { const j = jobs.get(e.job);
     rows.push({ date: e.date, what: `${j.no || ""} · ${(byId(s.cranes, j.crane) || {}).name || ""} · ${e.mode === "hourly" ? e.hours + " h" : e.mode === "daily" ? e.qty + " d" : (e.pStart || "") + "–" + (e.pEnd || "")}`, debit: e.amount, credit: 0 }); }
+  // v6.44: an invoice's VAT is owed (debit), the withholding tax the client deducts is not (credit)
+  for (const v of live(s.invoices || [])) if (v.client === clientId) {
+    if (v.vat) rows.push({ date: v.date, what: `VAT ${v.vatPct}% · ${v.no}`, debit: v.vat, credit: 0 });
+    if (v.wht) rows.push({ date: v.date, what: `Withholding tax ${v.whtPct}% · ${v.no}`, debit: 0, credit: v.wht });
+  }
   for (const q of live(s.cheques)) if (q.dir === "in" && q.client === clientId)
     rows.push({ date: q.due || q.date, what: (q.method === "cheque" ? "Cheque " + (q.no || "") : q.method === "cash" ? "Cash" : "Transfer") + (q.status === "bounced" ? " (bounced)" : q.status === "pending" ? " (not yet due)" : ""), debit: 0, credit: q.status === "bounced" ? 0 : q.amount, status: q.status });
   rows.sort((a, b) => a.date.localeCompare(b.date));
@@ -749,7 +765,8 @@ export function reminderNote(s, now = Date.now()) {
   const today = isoDay(new Date(now)), w = warnings(s, today).filter((x) => x.level !== "info");
   if (!w.length) return null;
   const d = new Date(now); d.setHours(9, 0, 0, 0); if (d.getTime() <= now) d.setDate(d.getDate() + 1);
-  const what = { chequeOverdue: "cheque overdue", chequeToday: "cheque due today", jobPast: "job past its end", jobEnding: "job ending", lowStock: "item low in the store", serviceDue: "crane due for service", serviceSoon: "service soon" };
+  const what = { chequeOverdue: "cheque overdue", chequeToday: "cheque due today", jobPast: "job past its end", jobEnding: "job ending", lowStock: "item low in the store", serviceDue: "crane due for service", serviceSoon: "service soon",
+    docExpired: "crane paper expired", docSoon: "crane paper expiring", licenceExpired: "licence expired", licenceSoon: "licence expiring", invoiceOverdue: "invoice overdue", repairOpen: "crane still broken down", fuelHigh: "fuel use high" };
   const counts = {}; for (const x of w) counts[x.kind] = (counts[x.kind] || 0) + 1;
   return { id: "fleet-needs", at: d.getTime(), n: w.length, counts, title: w.length === 1 ? "Fleet: 1 thing needs you" : `Fleet: ${w.length} things need you`, body: Object.entries(counts).map(([k, n]) => `${n} ${what[k] || k}`).join(" · ") };
 }

@@ -760,7 +760,9 @@ food Add sheet minimal.
 ## AM. 20 Oct 2026 — v6.44 (HANDOFF §5.95). Read this first, then AL.
 No new notes from Ali; built from AL's open list: Fleet on Home's Today line · deletes travel in Sync · a person's shadow
 erased with them ("Its shadow too") · then ("continue with the rest") Missions 3–4 (spending limit, debt, course, company:
-Fleet revenue + collect) · Fleet photos travel in Sync.
+Fleet revenue + collect) · Fleet photos travel in Sync · then (Ali: "business systems with great depth") Fleet as a
+full crane-rental ERP: invoices with VAT / withholding, who owes what (aging), team + payroll + advances, crane papers with
+expiry, breakdowns, fuel per hour, utilisation and revenue reports, Excel for each.
 ### Ali to decide
 1. **Recall phase 2 (search by meaning, Arabic ↔ English)** — A: download bge-m3 (438 MB, MIT; the only embedder that found
    every passage in our test) · B: the small e5 (132 MB; weaker, 58/104) · C: keep word search. Recommendation A, as an
@@ -775,6 +777,13 @@ Fleet revenue + collect) · Fleet photos travel in Sync.
    what you may spend a day. «عايز أخلص دين أحمد قبل ديسمبر» (with the debt in Money → People). «عايز الأسطول يجيب 500 ألف
    الشهر ده» → the idle crane as today's step.
 5. ⬜ Sync with Fleet time-sheet photos → open the entry on the other device → the photo is there.
+6. ⬜ Business → Fleet → ☰ → Settings: company name, tax reg. no., VAT 14 %, withholding % → Money → Invoices → "New invoice
+   from the work" → a client → Make the invoice → Print / PDF (Arabic). Then Money → "Who owes what".
+7. ⬜ Fleet → Team → Add (an operator on a crane, day wage) → the payroll for this month; Advance → it comes off.
+8. ⬜ A crane → Add a paper (insurance, its real expiry) · Breakdown (cost) · Fuel (litres, cost) → Today warns before the
+   paper runs out; Money → Reports → Utilisation / Revenue by month / Fuel.
+9. ⬜ Tell Claude what your two desktop programs have that Fleet still lacks (screens or the files) — next: quotations →
+   job orders, purchase orders + supplier balances in the store.
 ### Next
 Reflections, NPU, Expand, GPU check · W6 subtitles · desktop Google sync · Recall 2 (after Ali picks) ·
 Business depth (Ali's ERP screens, one by one).
