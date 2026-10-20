@@ -5850,4 +5850,8 @@ export const AR = {
   "{n} stops": "{n} محطات",
   "Ride the train whose sign shows the “toward” station. Fares as of {d} — check at the window; they change.": "اركب القطر اللي يافطته مكتوب عليها محطة «الاتجاه». الأسعار من {d} — اتأكد من الشباك؛ بتتغير.",
   "The lines — tap a station to put it in “{b}”": "الخطوط — دوس على محطة تتحط في «{b}»",
+  "Best-quality fill — download Eraser HD (208 MB, once)": "أحسن جودة في الملء — نزّل Eraser HD (208 ميجا، مرة واحدة)",
+  "Downloading Eraser HD…": "بننزّل Eraser HD…",
+  "Eraser HD is on": "Eraser HD شغّال",
+  "Best-quality fill: rebuilds what was behind the person — walls, sky, floors, patterns — like the phone's gallery.": "أحسن جودة في الملء: بيرجّع اللي كان ورا الشخص — حيطان، سما، أرضيات، نقوش — زي معرض صور الموبايل.",
 };

@@ -50,6 +50,7 @@ with sync_playwright() as pw:
     page.wait_for_function("window.__mock.erase.length === 1", timeout=5000)
     a = page.evaluate("window.__mock.erase[0]")
     check(a["mask"].startswith("data:image/png") and a["photo"].startswith("data:image/png") and not a.get("file"), "the phone gets the photo and a PNG mask")
+    check(a.get("hd") is False and page.locator("[data-testid=pe-get-hd]").is_visible(), "without Eraser HD: the 30 MB eraser, and the 208 MB best-quality fill is offered")
     m = page.evaluate(MASK_PX, a["mask"])
     check(m[0] == 640 and m[1] == 480 and m[2] > 200 and m[3] == 0 and m[4] == 0, "the mask: the tapped person only (not the passer-by, not the corner): %s" % m)
     page.wait_for_function("window.__mock.found.length === 2", timeout=5000)
@@ -68,6 +69,14 @@ with sync_playwright() as pw:
     page.click("[data-testid=pe-cut-go]"); page.wait_for_selector("[data-testid=pe-cut]", timeout=4000)
     page.click("[data-testid=pe-cut-save]"); page.wait_for_function("(window.__mock.saved || []).length === 1", timeout=4000)
     check(True, "Cut out: the subject on a clear background, saved to Studio")
+    # v6.43: Eraser HD (LaMa) — downloaded once from the editor, then every erase asks for it
+    page.click("[data-testid=pe-tool-erase]"); page.click("[data-testid=pe-get-hd]")
+    page.wait_for_selector("[data-testid=pe-hd-on]", timeout=6000)
+    hd = [c for c in page.evaluate("window.__mock.imgCalls") if c[0] == "install"][-1][1]
+    check(hd["id"] == "eraser-hd" and hd["files"][0]["name"] == "lama_fp32.onnx" and hd["files"][0]["role"] == "inpaint-hd", "Eraser HD: the LaMa fill model (208 MB) downloads once")
+    page.click("[data-testid=pe-tool-people]"); page.wait_for_timeout(200); page.click("[data-testid=pe-people]")
+    page.wait_for_function("window.__mock.erase.length === 3", timeout=5000)
+    check(page.evaluate("window.__mock.erase[2].hd") is True, "with Eraser HD on the phone, the erase asks for the HD fill")
     page.click("[data-testid=pe-close]")
     check(real_errors(errors) == [], "no page errors: " + str(real_errors(errors)[:3]))
     br.close()

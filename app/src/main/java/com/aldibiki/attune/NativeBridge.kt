@@ -1423,7 +1423,9 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
             try {
                 val a = JSONObject(arg)
                 val b64 = { k: String -> a.optString(k).takeIf { it.isNotEmpty() }?.let { android.util.Base64.decode(it.substringAfter(","), android.util.Base64.DEFAULT) } }
-                resolve(id, imageResult(Eraser.erase(ctx, a.optString("file"), b64("photo"), b64("mask") ?: throw IllegalStateException("Paint over what to remove first."))))
+                val mk = b64("mask") ?: throw IllegalStateException("Paint over what to remove first.")
+                // v6.43: Eraser HD (LaMa) when it is on the phone and the page asks for it
+                resolve(id, imageResult(if (a.optBoolean("hd") && Eraser.hdReady(ctx)) Eraser.eraseHD(ctx, a.optString("file"), b64("photo"), mk) else Eraser.erase(ctx, a.optString("file"), b64("photo"), mk)))
             } catch (e: OutOfMemoryError) { reject(id, "The photo is too big for the eraser — try a smaller one") }
             catch (e: Throwable) { reject(id, e.message ?: "The eraser failed") }
         }

@@ -102,6 +102,14 @@ export const PACKS = {
     files: [{ role: "inpaint", what: "eraser model", name: "migan_pipeline_v2.onnx", size: 28079181,
       url: "https://huggingface.co/andraniksargsyan/migan/resolve/main/migan_pipeline_v2.onnx" }],
   },
+  // v6.43 (Ali: "exactly like my Honor phone"): Eraser HD — LaMa (big-lama, Apache-2.0; Carve's ONNX export). It rebuilds
+  // walls, sky, floors and patterns behind a removed person far better than the 30 MB eraser. ~3–6 s on the phone.
+  "eraser-hd": {
+    id: "eraser-hd", kind: "erase", label: "Eraser HD", sizeGB: 0.21, license: "Apache-2.0",
+    quality: "Best-quality fill: rebuilds what was behind the person — walls, sky, floors, patterns — like the phone's gallery.",
+    files: [{ role: "inpaint-hd", what: "LaMa fill model", name: "lama_fp32.onnx", size: 208044816,
+      url: "https://huggingface.co/Carve/LaMa-ONNX/resolve/main/lama_fp32.onnx" }],
+  },
   // Real-ESRGAN ×4 (BSD-3): 1024 px → 4096 px, sharper edges and textures.
   "esrgan-x4": {
     id: "esrgan-x4", kind: "upscale", label: "Real-ESRGAN ×4", sizeGB: 0.07, license: "BSD-3-Clause",

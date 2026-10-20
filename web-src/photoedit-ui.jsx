@@ -17,7 +17,7 @@ const MASK_MAX = 2048;
 
 const load = (u) => new Promise((ok, bad) => { const i = new Image(); i.crossOrigin = "anonymous"; i.onload = () => ok(i); i.onerror = () => bad(new Error("Couldn't open that picture")); i.src = u; });
 
-export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClose, onEditArea, saveToGallery }) {
+export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClose, onEditArea, saveToGallery, hd, onGetHD }) {
   const [cur, setCur] = useState({ src, file, photo });
   const [hist, setHist] = useState([]);
   const orig = useRef(src);
@@ -109,9 +109,12 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
   };
   const step = (r) => { setHist((h) => [...h, cur]); setCur({ src: r.url, file: r.file }); onDone && onDone(r); };
   const run = async (label, fn) => { setErr(""); setNote(""); setBusy(label); try { await fn(); } catch (e) { setErr(tr(String((e && e.message) || e))); } setBusy(""); };
+  const [getting, setGetting] = useState(false);
+  const getHD = async () => { setGetting(true); try { await onGetHD(); } finally { setGetting(false); } };
   const erase = (idx) => run(tr("Removing…"), async () => {
     if (!idx.length && !strokes.current.length) throw new Error(tr("Tap what to remove, or brush over it"));
-    const r = await nativeCall("eraseImage", cur.file ? { file: cur.file, mask: maskOf(idx) } : { photo: cur.photo || cur.src, mask: maskOf(idx) });
+    // v6.43: Eraser HD (LaMa) when it is on the phone — the phone gallery's quality of fill
+    const r = await nativeCall("eraseImage", { ...(cur.file ? { file: cur.file } : { photo: cur.photo || cur.src }), mask: maskOf(idx), hd: !!hd });
     step(r); flash && flash(tr("Removed in {s} s", { s: Math.max(1, Math.round((r.ms || 0) / 1000)) }));
   });
   const doCut = () => run(tr("Cutting out…"), async () => {
@@ -168,6 +171,10 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
       </div>
       <div className="px-4 pt-2 text-center text-[13px] text-white/80 min-h-[22px]" data-testid="pe-hint">{note || hint}</div>
       {err ? <p className="px-4 text-center text-[12.5px] text-rose-300" data-testid="pe-err">{err}</p> : null}
+      {(tool === "erase" || tool === "people") && !hd && onGetHD ? (
+        <div className="px-4 pt-1 flex justify-center">
+          <button onClick={getHD} disabled={getting || !!busy} className="h-8 px-3 rounded-full bg-white/10 text-[12.5px] disabled:opacity-40" data-testid="pe-get-hd">{getting ? tr("Downloading Eraser HD…") : tr("Best-quality fill — download Eraser HD (208 MB, once)")}</button>
+        </div>) : hd && (tool === "erase" || tool === "people") ? <div className="px-4 text-center text-[11.5px] text-emerald-300" data-testid="pe-hd-on">{tr("Eraser HD is on")}</div> : null}
       <div className="px-4 py-3 flex items-center justify-center gap-2 min-h-[64px]">
         {tool === "erase" ? <>
           <button onClick={() => setBrush((b) => !b)} className={"h-11 px-4 rounded-full flex items-center gap-1.5 text-[14px] " + (brush ? "bg-white text-black font-bold" : "bg-white/10")} data-testid="pe-brush"><PenLine size={16} />{tr("Brush")}</button>

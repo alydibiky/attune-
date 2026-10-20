@@ -39,6 +39,82 @@ object Eraser {
         return env.createSession(f.path, opts).also { session = it; sessionPath = f.path }
     }
 
+    // ---- v6.43 (Ali: "Studio exactly like my Honor phone") — Eraser HD: LaMa (big-lama, Apache-2.0; Carve's ONNX export,
+    // 208 MB, a Studio pack). It rebuilds what was behind a person far better than MI-GAN (walls, sky, shadows' surroundings —
+    // checked on the model's own test photo). 512 × 512 in, so the photo is cut around the hole with room around it, filled
+    // there, and put back with a soft edge; the rest keeps every pixel. ~3.5 s on 4 desktop cores.
+    const val PACK_HD = "eraser-hd"
+    private var hd: OrtSession? = null
+    private var hdPath = ""
+    fun hdReady(ctx: Context) = ImageEngine.packFile(ctx, PACK_HD, "inpaint-hd") != null
+
+    @Synchronized
+    private fun hdSession(ctx: Context): OrtSession {
+        val f = ImageEngine.packFile(ctx, PACK_HD, "inpaint-hd") ?: throw IOException("Download Eraser HD first (208 MB, once).")
+        hd?.let { if (hdPath == f.path) return it }
+        try { hd?.close() } catch (e: Throwable) {}
+        val opts = OrtSession.SessionOptions().apply {
+            setIntraOpNumThreads(Runtime.getRuntime().availableProcessors().coerceIn(2, 6))
+            setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
+        }
+        return OrtEnvironment.getEnvironment().createSession(f.path, opts).also { hd = it; hdPath = f.path }
+    }
+
+    fun eraseHD(ctx: Context, file: String?, photo: ByteArray?, mask: ByteArray): ImageEngine.Result {
+        val t0 = System.currentTimeMillis()
+        val src0 = when {
+            !file.isNullOrEmpty() -> File(ImageEngine.studioDir(ctx), File(file).name).takeIf { it.exists() }?.let { BitmapFactory.decodeFile(it.path) } ?: throw IOException("That picture is gone.")
+            photo != null -> BitmapFactory.decodeByteArray(photo, 0, photo.size) ?: throw IOException("Couldn't open that photo.")
+            else -> throw IOException("No picture")
+        }
+        val src = fit(src0)
+        val w = src.width; val h = src.height; val n = w * h
+        val m0 = BitmapFactory.decodeByteArray(mask, 0, mask.size) ?: throw IOException("Paint over what to remove first.")
+        val m = if (m0.width == w && m0.height == h) m0 else Bitmap.createScaledBitmap(m0, w, h, true).also { m0.recycle() }
+        val px = IntArray(n); src.getPixels(px, 0, w, 0, 0, w, h); src.recycle()
+        val mp = IntArray(n); m.getPixels(mp, 0, w, 0, 0, w, h); m.recycle()
+        val keep0 = ByteArray(n) { i -> val a = (mp[i] ushr 24) and 255; val v = (mp[i] shr 8) and 255; if (a > 40 && v > 40) 0 else -1 }
+        if (keep0.none { it == 0.toByte() }) throw IOException("Paint over what to remove first.")
+        val grown = grow(keep0, w, h, (maxOf(w, h) * 0.006).toInt().coerceIn(4, 14))
+        // the hole's box, then a square around it with as much room again (the model needs to see what is around)
+        var x0 = w; var y0 = h; var x1 = -1; var y1 = -1
+        for (y in 0 until h) for (x in 0 until w) if (grown[y * w + x] == 0.toByte()) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y }
+        val side = (maxOf(x1 - x0 + 1, y1 - y0 + 1) * 2).coerceAtLeast(512).coerceAtMost(maxOf(w, h))
+        val cw = minOf(side, w); val ch = minOf(side, h)
+        val cx = ((x0 + x1) / 2 - cw / 2).coerceIn(0, w - cw); val cy = ((y0 + y1) / 2 - ch / 2).coerceIn(0, h - ch)
+        val crop = Bitmap.createBitmap(px, cy * w + cx, w, cw, ch, Bitmap.Config.ARGB_8888)
+        val S = 512
+        val small = Bitmap.createScaledBitmap(crop, S, S, true); crop.recycle()
+        val sp = IntArray(S * S); small.getPixels(sp, 0, S, 0, 0, S, S); small.recycle()
+        // the hole at 512, nearest neighbour (a hole pixel stays a hole)
+        val hole = FloatArray(S * S) { i -> val sx = cx + (i % S) * cw / S; val sy = cy + (i / S) * ch / S; if (grown[sy * w + sx] == 0.toByte()) 1f else 0f }
+        val img = java.nio.FloatBuffer.allocate(3 * S * S)
+        for (c in 0 until 3) { val sh = 16 - 8 * c; for (i in 0 until S * S) img.put(if (hole[i] > 0f) 0f else ((sp[i] shr sh) and 255) / 255f) }
+        img.rewind()
+        val env = OrtEnvironment.getEnvironment()
+        val outS = IntArray(S * S)
+        OnnxTensor.createTensor(env, img, longArrayOf(1, 3, S.toLong(), S.toLong())).use { ti ->
+            OnnxTensor.createTensor(env, java.nio.FloatBuffer.wrap(hole), longArrayOf(1, 1, S.toLong(), S.toLong())).use { tm ->
+                hdSession(ctx).run(mapOf("image" to ti, "mask" to tm)).use { r ->
+                    val o = (r.get(0) as OnnxTensor).floatBuffer
+                    val k = S * S
+                    fun chan(i: Int) = o.get(i).toInt().coerceIn(0, 255)   // the export gives 0–255
+                    for (i in 0 until k) outS[i] = -0x1000000 or (chan(i) shl 16) or (chan(k + i) shl 8) or chan(2 * k + i)
+                }
+            }
+        }
+        val filled = Bitmap.createScaledBitmap(Bitmap.createBitmap(outS, S, S, Bitmap.Config.ARGB_8888), cw, ch, true)
+        val fp = IntArray(cw * ch); filled.getPixels(fp, 0, cw, 0, 0, cw, ch); filled.recycle()
+        val soft = feather(grown, w, h, 3)
+        val out = px.copyOf()
+        for (y in 0 until ch) for (x in 0 until cw) { val i = (cy + y) * w + cx + x; val a = soft[i]; if (a > 0f) out[i] = if (a >= 1f) fp[y * cw + x] else mix(px[i], fp[y * cw + x], a) }
+        val res = Bitmap.createBitmap(out, w, h, Bitmap.Config.ARGB_8888)
+        val dest = File(ImageEngine.studioDir(ctx), "erase-${System.currentTimeMillis()}.png")
+        dest.outputStream().use { res.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        res.recycle()
+        return ImageEngine.Result(dest, "cpu · eraser HD", System.currentTimeMillis() - t0, false)
+    }
+
     /** The hole (mask value 0) grown by r pixels: a box of 2r+1 around each hole pixel, by running counts (fast on 9 MP). */
     private fun grow(keep: ByteArray, w: Int, h: Int, r: Int): ByteArray {
         val hole = BooleanArray(w * h) { keep[it] == 0.toByte() }
@@ -66,7 +142,7 @@ object Eraser {
     }
 
     @Synchronized
-    fun release() { try { session?.close() } catch (e: Throwable) {}; session = null; sessionPath = "" }
+    fun release() { try { session?.close() } catch (e: Throwable) {}; session = null; sessionPath = ""; try { hd?.close() } catch (e: Throwable) {}; hd = null; hdPath = "" }
 
     private fun fit(b: Bitmap): Bitmap {
         val side = maxOf(b.width, b.height)

@@ -220,6 +220,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
   const P = PACKS[dp.id];
   const upReady = packReady(info, "esrgan-x4");
   const eraseReady = packReady(info, "eraser");
+  const eraseHD = packReady(info, "eraser-hd");
   // v6.38: the eraser — on this picture, or on a photo from the gallery
   const openErase = async (target) => {
     if (!native.eraseImage) return;
@@ -562,7 +563,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
           <input ref={erasePick} type="file" accept="image/*" className="hidden" data-testid="studio-erase-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; erasePhoto(f); }} />
         </div>) : null}
       {/* v6.43 (Ali: "exactly like my Honor phone"): the photo editor — AI Eraser (tap or brush), Passers-by, Cut out, Enhance, Change */}
-      {eraseOn ? <PhotoEditor {...eraseOn} nativeCall={nativeCall} flash={flash} onClose={() => setEraseOn(null)} onEditArea={native.imagine ? editArea : null}
+      {eraseOn ? <PhotoEditor {...eraseOn} nativeCall={nativeCall} flash={flash} onClose={() => setEraseOn(null)} hd={eraseHD} onGetHD={() => install("eraser-hd")} onEditArea={native.imagine ? editArea : null}
         saveToGallery={(f) => { try { return JSON.parse(native.saveImageToGallery(f)).ok; } catch (e) { return false; } }}
         onDone={(r) => commitPic({ ...(eraseOn.file ? cur : {}), file: r.file, url: r.url, w: r.width, h: r.height, ms: r.ms, backend: r.backend, idea: (eraseOn.file && cur && cur.idea) || tr(r.cutout ? "Cut-out" : "Edited photo"), erased: true, upscaled: false, at: Date.now() })} /> : null}
       {!flowLive && !cur ? <DeskEmpty icon={Palette} title={tr("Your picture appears here")} text={tr("Describe it and tap Draw it — it is made on this device, with no internet.")} testid="studio-desk-empty" /> : null}
