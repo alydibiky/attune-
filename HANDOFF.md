@@ -2174,6 +2174,25 @@ exactly like my Honor phone".
   timeline: meals, crane jobs, cheques, Scout finds, lessons; bottom bar Today · Apps · Chat · Me) · 3 Four spaces, linked
   (Me · Money · Work · Learn, each with its own search box and cross-links). Recommendation 1 + 2's Today line inside it.
 
+### 5.94 (20 Oct 2026) — v6.43 part 4: Home option 1 (Ali's pick) + Eraser HD
+Ali: "Do as per your recommendation" (option 1 + option 2's Today line) and "did you finish Studio like I want?".
+- **Home = one box** (home-ui.jsx minimal Home; home.js `todayLine`): a big box (home-ask; camera/read, quick food, send) that
+  goes through doit.js — one sentence acts in every app it touches ("I had koshari for lunch and paid 85 pounds" → Food lunch
+  + Money food 85, the expense named after the food; doit.js `understand` now splits clauses so the money part is not read as
+  food). Under it: the app names as one row of chips (home-area-*/home-app-*, All), Missions, then **Today** — one line per
+  app (meals by time, today's spending in the ledger's currency, reminders still ahead…; home-line-<app>, home-line-empty),
+  and "Needs you". Tests: unit v743today, v743doit; e2e_v743.
+- **Eraser HD** (Eraser.kt `eraseHD`, studio.js PACKS["eraser-hd"]): LaMa (big-lama, Apache-2.0, Carve/LaMa-ONNX
+  lama_fp32.onnx, 208 MB, downloaded once from the photo editor: "Best-quality fill"). Found by trial in Python: the export
+  wants the image 0..1 **already blanked in the hole** (image·(1−mask)) and mask 1 = hole, 512×512, and gives 0..255 —
+  feeding the plain image leaves a ghost of the person. On the phone: the hole is grown a little, a square ≥ 512 around it
+  (twice its size) is cut out, filled at 512, scaled back and feather-blended; every pixel outside the hole is kept. ~3.5 s on
+  4 desktop cores. NativeBridge eraseImage uses it when the page sends hd:true and the pack is on the phone; else MI-GAN.
+  e2e_v740erase checks the offer, the download and hd:true. Kotlin compiled with kotlinc against android-35 (+ ORT stubs).
+- **Studio vs the Honor gallery — still missing**: reflection and shadow removal (Honor's "remove reflections" uses a
+  dedicated model; LaMa fills shadows only if they are painted too), NPU speed (all CPU; GPU path for drawing still unverified
+  on Ali's phone), "Expand" (outpainting — possible later with Studio Pro's edit model).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

@@ -757,6 +757,18 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AL. 20 Oct 2026 — v6.43 part 4 (HANDOFF §5.94). Read this first, then AK.
+Ali picked the recommendation (option 1 + 2's Today line) and asked if Studio is finished like his Honor phone.
+Built: Home = one box that acts in every app + app names row + Today line · Eraser HD (LaMa, 208 MB once) in the photo editor.
+### Ali's phone checklist (part 4)
+1. ⬜ Home → type «I had koshari for lunch and paid 85 pounds» → send → Food lunch Koshari + Money Food 85 EGP, each with Open.
+2. ⬜ Home → Today shows the meals, today's spending and reminders still ahead.
+3. ⬜ Studio → Edit a photo → "Best-quality fill — download Eraser HD" → after it: tap a person → Erase → wall/sky rebuilt
+   cleanly (compare with the Honor gallery on the same photo; tell how many seconds it took).
+### Still open for Studio
+Reflections/shadows removal, NPU speed, Expand (outpaint), GPU drawing check on the phone. Then task list item 15
+(Missions 3–4, subtitles, sync gaps, Recall 2, Business depth, Fleet jobs on the Today line).
+
 ## AK. 20 Oct 2026 — v6.43 part 3 (HANDOFF §5.93). Read this first, then AJ.
 Ali: minimal yet complete and connected · free type AND search · the image part exactly like his Honor phone.
 Built: free type + search in Food's box · the Honor-like photo editor (tap to erase, passers-by, cut out, enhance, change).
