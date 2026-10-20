@@ -5,6 +5,7 @@ import * as B from "./books.js";
 import * as O from "./books-ops.js";
 import { L, isAr, useBooks, useTheme, Card, Stat, Section, Money, Badge, Empty, Field, Input, Select, Chips, Sheet, BTN, btnPrimary, today, fmtDate } from "./books-kit.jsx";
 import { shareStatement, reminderText } from "./books-docs.jsx";
+import { ProMoney, PRO_MONEY } from "./books-pro-ui.jsx";   // v6.44: fixed assets, payroll, recurring, bank reconciliation, instalments
 
 const METHODS = [["cash", "Cash", "نقدي"], ["bank", "Bank / transfer", "بنك / تحويل"]];
 const methodOpts = () => METHODS.map(([k, en, ar]) => <option key={k} value={k}>{L(en, ar)}</option>);
@@ -172,8 +173,8 @@ export function MoneyModule() {
         <button onClick={() => setForm("pay")} className={btnPrimary} data-testid="money-new-pay">{L("+ Pay supplier", "+ سداد مورد")}</button>
         <button onClick={() => setForm("expense")} className={btnPrimary} data-testid="money-new-expense">{L("+ Expense", "+ مصروف")}</button>
       </div>
-      <div className="mb-2"><Chips value={view} onChange={setView} options={[["in", L("Received", "تحصيلات")], ["out", L("Paid to suppliers", "سداد موردين")], ["exp", L("Expenses", "مصروفات")], ["age", L("Who owes you", "المديونيات")]]} /></div>
-      {view === "age" ? <AgeingView /> : !items.length ? <Empty title={L("Nothing here yet", "مفيش حاجة لسه")} /> : (
+      <div className="mb-2"><Chips value={view} onChange={setView} options={[["in", L("Received", "تحصيلات")], ["out", L("Paid to suppliers", "سداد موردين")], ["exp", L("Expenses", "مصروفات")], ["age", L("Who owes you", "المديونيات")], ...PRO_MONEY()]} /></div>
+      {view === "age" ? <AgeingView /> : PRO_MONEY().some(([k]) => k === view) ? <ProMoney view={view} /> : !items.length ? <Empty title={L("Nothing here yet", "مفيش حاجة لسه")} /> : (
         <Card className="divide-y" testid="money-list">{items.map((x) => <div key={x.k} className="flex items-center gap-3 px-3 py-2.5"><div className="min-w-0 flex-1"><p className="text-[13.5px] font-medium truncate">{x.who}</p><p className={`text-[11.5px] ${th.sub}`}>{x.ref} · {fmtDate(x.date)}</p></div>{x.photo ? <img src={x.photo} alt="" className="h-9 w-9 rounded object-cover border" /> : null}<span className={x.sign > 0 ? "text-emerald-600 font-semibold" : "font-semibold"}><Money v={x.sign > 0 ? x.amt : -x.amt} /></span></div>)}</Card>)}
       {form === "receipt" ? <ReceiptForm onClose={() => setForm(null)} /> : form === "pay" ? <SupplierPayForm onClose={() => setForm(null)} /> : form === "expense" ? <ExpenseForm onClose={() => setForm(null)} /> : null}
     </div>

@@ -97,6 +97,12 @@ export const ACCOUNTS = [
   { id: "4000", en: "Sales", ar: "المبيعات", type: "income" }, { id: "4100", en: "Sales returns", ar: "مردودات المبيعات", type: "income" },
   { id: "4200", en: "Exchange gain / loss", ar: "فروق تغيير العملة", type: "income" },
   { id: "5000", en: "Cost of goods sold", ar: "تكلفة البضاعة المباعة", type: "expense" }, { id: "6000", en: "Expenses", ar: "المصروفات", type: "expense" },
+  // v6.44 (books-pro.js): fixed assets, payroll
+  { id: "1600", en: "Fixed assets", ar: "الأصول الثابتة", type: "asset" }, { id: "1650", en: "Accumulated depreciation", ar: "مجمع الإهلاك", type: "asset" },
+  { id: "2400", en: "Salaries payable", ar: "مرتبات مستحقة", type: "liability" }, { id: "2410", en: "Social insurance payable", ar: "تأمينات اجتماعية مستحقة", type: "liability" },
+  { id: "2420", en: "Payroll tax payable", ar: "ضريبة كسب العمل المستحقة", type: "liability" },
+  { id: "6100", en: "Depreciation", ar: "الإهلاك", type: "expense" }, { id: "6200", en: "Salaries & wages", ar: "المرتبات والأجور", type: "expense" },
+  { id: "6300", en: "Employer social insurance", ar: "حصة صاحب العمل في التأمينات", type: "expense" },
 ];
 const acct = (id) => ACCOUNTS.find((a) => a.id === id);
 /** A journal entry is valid only when debits equal credits. */
@@ -162,7 +168,8 @@ export function profitAndLoss(journal, from, to) {
   const b = balances(journal.filter((e) => (!from || e.date >= from) && (!to || e.date <= to)));
   const side = (id, a, c) => ((b[id] || {})[a] || 0) - ((b[id] || {})[c] || 0);
   const sales = side("4000", "credit", "debit"), salesReturns = side("4100", "debit", "credit");
-  const cogs = side("5000", "debit", "credit"), expenses = side("6000", "debit", "credit");
+  // v6.44: every expense account counts (6000 expenses, 6100 depreciation, 6200 salaries, 6300 employer insurance)
+  const cogs = side("5000", "debit", "credit"), expenses = ACCOUNTS.filter((a) => a.type === "expense" && a.id !== "5000").reduce((n, a) => n + side(a.id, "debit", "credit"), 0);
   const fxGain = side("4200", "credit", "debit");          // realised exchange gain (+) or loss (−) on foreign-currency receipts
   const revenue = sales - salesReturns, grossProfit = revenue - cogs;
   return { sales, salesReturns, revenue, cogs, grossProfit, expenses, fxGain, netProfit: grossProfit - expenses + fxGain };
