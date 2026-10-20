@@ -108,7 +108,7 @@ export function todayLine({ fit, ledger, reminders, life, radar, care, scout, co
       if (on.length) line.push({ t: at(7), app: "fleet", title: on.length === 1 ? tr("1 crane working") : tr("{n} cranes working", { n: on.length }),
         sub: on.slice(0, 3).map((a) => a.crane.name + (a.site ? " @ " + a.site.name : a.client ? " · " + a.client.name : "")).join(", "), open: "fleet-rentals" });
       const W = { chequeOverdue: "Cheque overdue", chequeToday: "Cheque due today", jobPast: "Job past its end", jobEnding: "Job ends", serviceDue: "Due for service", serviceSoon: "Service soon", lowStock: "Low in the store",
-        docExpired: "Crane paper expired", docSoon: "Crane paper expiring", licenceExpired: "Licence expired", licenceSoon: "Licence expiring", invoiceOverdue: "Invoice overdue", repairOpen: "Still broken down", fuelHigh: "Fuel use high" };
+        docExpired: "Crane paper expired", docSoon: "Crane paper expiring", licenceExpired: "Licence expired", licenceSoon: "Licence expiring", invoiceOverdue: "Invoice overdue", repairOpen: "Still broken down", fuelHigh: "Fuel use high", poLate: "Purchase order late" };
       const ws = fleetWarnings(fleet, day).filter((w) => w.level !== "info");
       for (const w of ws.slice(0, 3)) line.push({ t: at(9), app: "fleet", open: "fleet-rentals", ahead: at(9) > now,
         title: tr(W[w.kind] || w.kind) + (w.crane ? " · " + w.crane : w.item ? " · " + w.item : w.who ? " · " + w.who : ""),

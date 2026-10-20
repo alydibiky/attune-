@@ -764,7 +764,8 @@ Fleet revenue + collect) · Fleet photos travel in Sync · then (Ali: "business 
 full crane-rental ERP: invoices with VAT / withholding, who owes what (aging), team + payroll + advances, crane papers with
 expiry, breakdowns, fuel per hour, utilisation and revenue reports, Excel for each · then (Ali: "every business system")
 Books (balance sheet, cash flow, budgets, fixed assets, payroll, recurring, bank reconciliation, instalments), Shop
-(returns, offers, loyalty, held carts, cashier reports) and the builder (ten deep templates + Insights for any system).
+(returns, offers, loyalty, held carts, cashier reports) and the builder (ten deep templates + Insights for any system) ·
+then ("Okay do that") Fleet quotations → job orders, purchase orders received into the store, suppliers' balances.
 ### Ali to decide
 1. **Recall phase 2 (search by meaning, Arabic ↔ English)** — A: download bge-m3 (438 MB, MIT; the only embedder that found
    every passage in our test) · B: the small e5 (132 MB; weaker, 58/104) · C: keep word search. Recommendation A, as an
@@ -784,8 +785,9 @@ Books (balance sheet, cash flow, budgets, fixed assets, payroll, recurring, bank
 7. ⬜ Fleet → Team → Add (an operator on a crane, day wage) → the payroll for this month; Advance → it comes off.
 8. ⬜ A crane → Add a paper (insurance, its real expiry) · Breakdown (cost) · Fuel (litres, cost) → Today warns before the
    paper runs out; Money → Reports → Utilisation / Revenue by month / Fuel.
-9. ⬜ Tell Claude what your two desktop programs have that Fleet still lacks (screens or the files) — next: quotations →
-   job orders, purchase orders + supplier balances in the store.
+9. ⬜ Fleet → Jobs → Quotes → New quotation (tons → a free crane, days, rate) → Print → Mark as sent → "Make the job
+   order". Store → Purchase orders → a PO → receive part, then the rest → the items are in Stock; Store → Suppliers → the
+   statement → Pay this supplier. Tell Claude what your desktop programs still have that Fleet lacks (screens or files).
 10. ⬜ Books (Business → Books → "Try it with a sample shop"): Reports → Balance sheet ("the books balance"), Cash flow,
     Month by month, Budget vs actual; Money → Fixed assets (a car, 60 months → Post depreciation), Payroll (an employee →
     Run the payroll), Recurring (rent every month), Bank reconciliation (your bank's CSV), Instalments.

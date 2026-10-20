@@ -2249,8 +2249,18 @@ From AL's "still open" list (no new notes from Ali this session; objective items
     month for a year, fuel. **Excel**: invoices, aging, payroll, utilisation, revenue, fuel (Money → Export).
   · **Warnings** (Today, the 09:00 notification, Home's Today line): paper expired / expiring (14 d warn, 30 d info), licence
     expired / expiring, invoice overdue (> 60 d = bad), crane broken down (> 7 d = warn), fuel high.
-  · New lists are in COLLS (Recycle Bin, demo erase, sync). Not built yet: quotations → job order, purchase orders and
-    supplier balances for the store, a client portal — next if Ali wants them.
+  · New lists are in COLLS (Recycle Bin, demo erase, sync).
+  · **Quotations → job orders, purchase orders, suppliers** (Ali: "Okay do that"; `fleet-trade.js`, `fleet-trade-ui.jsx`;
+    unit v744fleettrade, e2e_v744fleettrade): Jobs → Quotes — QT-0001…, client, tons needed (free cranes that lift it are
+    offered and fill their rate), hourly / daily / period × expected qty + mobilisation + VAT, valid until (14 days by
+    default), printed (Arabic / English, two signatures); draft → sent → accepted / rejected, expired past its date; a sent
+    quote's price can't change (make a new one); "Make the job order" runs `addJob` (crane free or at the site) and the
+    quote shows Won; Open / won value and the win rate for the year. Store → Purchase orders — PO-0001…, supplier, lines
+    (item, qty, unit price), expected date; received in parts, each receipt a real incoming invoice (`addIncoming`) with
+    the supplier and the PO number, so codes, prices and planOut work as before; late → Today (`poLate`); cancel; print.
+    Store → Suppliers — a record each (phone, opening) + every supplier name on old incoming invoices; owed = opening +
+    received − paid out to that payee (not bounced; cheques not yet due shown); statement; "Pay this supplier" opens Paid
+    out filled in. Excel: quotations, purchase orders, supplier balances.
 - **Every business system in depth** (Ali: "Not just a crane rental and warehouse, I mean every business system on the app"):
   · **Books** (`books-pro.js`, `books-pro-ui.jsx`; unit v744bookspro, e2e_v744bookspro): Reports → Balance sheet (assets =
     liabilities + equity, this period's profit in equity), Cash flow (cash + bank by customers / suppliers / expenses /

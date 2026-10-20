@@ -17,6 +17,8 @@ import { xlsxFromRows } from "./convert.js";
 import { sealData, openData, vaultHeader } from "./biz-vault.js";
 import { saveProject } from "./biz-v2-ui.jsx";
 import * as P from "./fleet-pro.js";
+import * as Q from "./fleet-trade.js";
+import { QuotesPane, QuoteForm, QuoteView, OrdersPane, POForm, POView, VendorsPane, VendorForm } from "./fleet-trade-ui.jsx";   // v6.44 quotes, purchase orders, suppliers
 import { InvoicesPane, InvoiceForm, InvoiceView, AgingPane, ReportsPane, TeamPane, PersonForm, AdvanceForm, CraneMore, PaperForm, RepairForm, FuelForm, DOC_L } from "./fleet-pro-ui.jsx";
 
 export const card = "rounded-2xl bg-[#FFFFFF] border border-[#DCE3EC] shadow-[0_1px_3px_rgba(15,23,42,.06)]";
@@ -133,7 +135,7 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
   useEffect(() => { if (!s || site) return; const N = typeof window !== "undefined" && window.AttuneNative; if (!N) return;
     const n = F.reminderNote(s);
     const NAME = { chequeOverdue: "cheque overdue", chequeToday: "cheque due today", jobPast: "job past its end", jobEnding: "job ending", lowStock: "item low in the store", serviceDue: "crane due for service", serviceSoon: "service soon",
-      docExpired: "crane paper expired", docSoon: "crane paper expiring", licenceExpired: "licence expired", licenceSoon: "licence expiring", invoiceOverdue: "invoice overdue", repairOpen: "crane still broken down", fuelHigh: "fuel use high" };
+      docExpired: "crane paper expired", docSoon: "crane paper expiring", licenceExpired: "licence expired", licenceSoon: "licence expiring", invoiceOverdue: "invoice overdue", repairOpen: "crane still broken down", fuelHigh: "fuel use high", poLate: "purchase order late" };
     const say = n && { id: n.id, at: n.at, open: "fleet", title: n.n === 1 ? tr("Fleet: 1 thing needs you") : tr("Fleet: {n} things need you", { n: n.n }), body: Object.entries(n.counts).map(([k, c]) => c + " " + tr(NAME[k] || k)).join(" · ") };
     try { if (say && N.schedule) N.schedule(JSON.stringify(say)); else if (!n && N.unschedule) N.unschedule("fleet-needs"); } catch (e) {} }, [s]);
   /** Every change goes through here: the pure function runs, a refusal shows its real reason, the result is saved. */
@@ -176,7 +178,8 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
 }
 const sheetTitle = (sh) => tr({ order: "Order from a message", job: "New job order", work: "Add work", cheque: sh.dir === "out" ? "Pay out" : "Payment received", expense: "New expense", in: "Incoming invoice", out: "Issue parts", move: "Move crane",
   list: sh.rec && sh.rec.id ? "Edit" : "Add", item: "Item", doc: "Document", bin: "Recycle Bin", settings: "Settings", backup: "Encrypted backup",
-  invoice: "New invoice", invoiceView: "Invoice", person: sh.rec && sh.rec.id ? "Edit" : "Add a person", advance: "Advance", paper: "Crane paper", repair: "Breakdown", fuel: "Fuel" }[sh.kind] || "");
+  invoice: "New invoice", invoiceView: "Invoice", person: sh.rec && sh.rec.id ? "Edit" : "Add a person", advance: "Advance", paper: "Crane paper", repair: "Breakdown", fuel: "Fuel",
+  quote: "Quotation", quoteView: "Quotation", po: "Purchase order", poView: "Purchase order", vendor: sh.rec && sh.rec.name ? "Supplier" : "New supplier" }[sh.kind] || "");
 
 // ---- Today ------------------------------------------------------------------------------------------------------------
 function Today({ s, run, money, setSheet, setOpen, setTab, wide }) {
@@ -200,9 +203,10 @@ function Today({ s, run, money, setSheet, setOpen, setTab, wide }) {
     docExpired: (x) => tr("{c}: {p} expired {d} days ago", { c: x.crane, p: x.title || tr(DOC_L[x.doc]), d: x.days }), docSoon: (x) => tr("{c}: {p} expires in {d} days", { c: x.crane, p: x.title || tr(DOC_L[x.doc]), d: x.days }),
     licenceExpired: (x) => tr("{who}'s licence expired {d} days ago", { who: x.who, d: x.days }), licenceSoon: (x) => tr("{who}'s licence expires in {d} days", { who: x.who, d: x.days }),
     invoiceOverdue: (x) => tr("Invoice {no} is {d} days overdue — {who}", { no: x.no, d: x.days, who: x.who }), repairOpen: (x) => tr("{c} has been broken down for {d} days", { c: x.crane, d: x.days }),
-    fuelHigh: (x) => tr("{c} used {l} L/h of fuel — its usual is {u}", { c: x.crane, l: num(x.lph), u: num(x.usual) }) };
+    fuelHigh: (x) => tr("{c} used {l} L/h of fuel — its usual is {u}", { c: x.crane, l: num(x.lph), u: num(x.usual) }),
+    quoteExpiring: (x) => tr("Quotation {no} for {who} expires in {d} days", { no: x.no, who: x.who, d: x.days }), poLate: (x) => tr("Purchase order {no} from {who} is {d} days late", { no: x.no, who: x.who, d: x.days }) };
   const go = (x) => (x.kind.startsWith("cheque") ? setTab("money") : x.kind.startsWith("job") ? setOpen({ kind: "job", id: x.id }) : /^(service|doc|repair|fuel)/.test(x.kind) ? setOpen({ kind: "crane", id: x.id })
-    : x.kind === "invoiceOverdue" ? setSheet({ kind: "invoiceView", id: x.id }) : x.kind.startsWith("licence") ? setSheet({ kind: "person", rec: F.byId(s.people, x.id) }) : setTab("store"));
+    : x.kind === "invoiceOverdue" ? setSheet({ kind: "invoiceView", id: x.id }) : x.kind === "quoteExpiring" ? setSheet({ kind: "quoteView", id: x.id }) : x.kind === "poLate" ? setSheet({ kind: "poView", id: x.id }) : x.kind.startsWith("licence") ? setSheet({ kind: "person", rec: F.byId(s.people, x.id) }) : setTab("store"));
   return (
     <div className="space-y-4" data-testid="fleet-today">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
@@ -238,9 +242,10 @@ function Today({ s, run, money, setSheet, setOpen, setTab, wide }) {
 function Jobs({ s, money, setSheet, setOpen }) {
   const [f, setF] = useSticky("fleet:jobsf", "active");
   const jobs = F.live(s.jobs).filter((j) => f === "all" || (f === "active" ? j.status === "active" : j.status !== "active")).slice().reverse();
+  if (f === "quotes") return <div className="space-y-3" data-testid="fleet-jobs"><Seg value={f} onChange={setF} items={[["active", "Active"], ["closed", "Closed"], ["all", "All"], ["quotes", "Quotes"]]} testid="fleet-jobsf" /><QuotesPane s={s} money={money} setSheet={setSheet} /></div>;
   return (
     <div className="space-y-3" data-testid="fleet-jobs">
-      <div className="flex items-center gap-2"><div className="flex-1 min-w-0"><Seg value={f} onChange={setF} items={[["active", "Active"], ["closed", "Closed"], ["all", "All"]]} testid="fleet-jobsf" /></div>
+      <div className="flex items-center gap-2"><div className="flex-1 min-w-0"><Seg value={f} onChange={setF} items={[["active", "Active"], ["closed", "Closed"], ["all", "All"], ["quotes", "Quotes"]]} testid="fleet-jobsf" /></div>
         <button className={btnP + " h-10 shrink-0"} style={{ background: "var(--biz)" }} onClick={() => setSheet({ kind: "job" })} data-testid="fleet-new-job"><Plus size={17} />{tr("Job order")}</button></div>
       {jobs.length ? <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2.5 lg:space-y-0">{jobs.map((j) => (
         <Row key={j.id} onClick={() => setOpen({ kind: "job", id: j.id })} testid="fleet-job">
@@ -455,8 +460,8 @@ function Profit({ s, money }) {
 function ExportPane({ s, saveFile, flash }) {
   const ym = F.isoDay().slice(0, 7), yr = F.isoDay().slice(0, 4);
   const K = [["entries", "Work entries"], ["balances", "Client balances"], ["cheques", "Cheques & payments"], ["expenses", "Expenses"], ["profit", "Profit per crane"], ["store", "Store movements"],
-    ["invoices", "Invoices"], ["aging", "Who owes what (aging)"], ["payroll:" + ym, "Payroll this month"], ["utilisation:" + ym, "Utilisation this month"], ["revenue:" + yr, "Revenue by month"], ["fuel", "Fuel"]];
-  const rowsOf = (k) => (/^(invoices|aging|fuel|payroll:|utilisation:|revenue:)/.test(k) ? P.exportProRows(s, k) : F.exportRows(s, k));
+    ["invoices", "Invoices"], ["aging", "Who owes what (aging)"], ["payroll:" + ym, "Payroll this month"], ["utilisation:" + ym, "Utilisation this month"], ["revenue:" + yr, "Revenue by month"], ["fuel", "Fuel"], ["quotes", "Quotations"], ["pos", "Purchase orders"], ["vendors", "Supplier balances"]];
+  const rowsOf = (k) => (/^(quotes|pos|vendors)$/.test(k) ? Q.exportTradeRows(s, k) : /^(invoices|aging|fuel|payroll:|utilisation:|revenue:)/.test(k) ? P.exportProRows(s, k) : F.exportRows(s, k));
   const go = (k, l) => { k = String(k); try { saveOut(saveFile, `fleet-${k.replace(":", "-")}-${F.isoDay()}.xlsx`, xlsxFromRows(rowsOf(k), tr(l).slice(0, 30)), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"); flash(tr("Saved {f}", { f: `fleet-${k.replace(":", "-")}.xlsx` })); } catch (e) { flash(tr(e.message)); } };
   return <div className="space-y-2" data-testid="fleet-export"><p className={"text-[13px] " + muted}>{tr("Each one is an Excel file you can open on a computer or send to your accountant.")}</p>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{K.map(([k, l]) => <button key={k} className={btnS + " h-12 justify-start px-4"} onClick={() => go(k, l)} data-testid={"fleet-x-" + k.split(":")[0]}><Download size={16} />{tr(l)}</button>)}</div></div>;
@@ -464,13 +469,14 @@ function ExportPane({ s, saveFile, flash }) {
 
 // ---- Store (the warehouse) ------------------------------------------------------------------------------------------------
 function Store({ s, run, money, setSheet, saveFile, flash }) {
+  // v6.44: Purchase orders and Suppliers live here too
   const [seg, setSeg] = useSticky("fleet:store", "stock");
   return (
     <div className="space-y-3" data-testid="fleet-store">
       <div className="flex gap-2"><button className={btnP + " h-10 flex-1"} style={{ background: "var(--biz)" }} onClick={() => setSheet({ kind: "in" })} data-testid="fleet-in"><Plus size={16} />{tr("Incoming")}</button>
         <button className={btnS + " flex-1 h-10"} onClick={() => setSheet({ kind: "out" })} data-testid="fleet-out"><Package size={16} />{tr("Issue parts")}</button></div>
-      <Seg value={seg} onChange={setSeg} items={[["stock", "Stock"], ["log", "Movements"], ["reports", "Reports"]]} testid="fleet-sseg" />
-      {seg === "stock" ? <StockList s={s} money={money} setSheet={setSheet} /> : seg === "log" ? <StoreLog s={s} money={money} setSheet={setSheet} /> : <StoreReports s={s} money={money} />}
+      <Seg value={seg} onChange={setSeg} items={[["stock", "Stock"], ["log", "Movements"], ["orders", "Purchase orders"], ["suppliers", "Suppliers"], ["reports", "Reports"]]} testid="fleet-sseg" />
+      {seg === "orders" ? <OrdersPane s={s} money={money} setSheet={setSheet} /> : seg === "suppliers" ? <VendorsPane s={s} money={money} setSheet={setSheet} /> : seg === "stock" ? <StockList s={s} money={money} setSheet={setSheet} /> : seg === "log" ? <StoreLog s={s} money={money} setSheet={setSheet} /> : <StoreReports s={s} money={money} />}
     </div>);
 }
 function StockList({ s, money, setSheet }) {
@@ -538,6 +544,11 @@ function SheetBody(p) {
   if (k === "paper") return <PaperForm {...p} />;
   if (k === "repair") return <RepairForm {...p} />;
   if (k === "fuel") return <FuelForm {...p} />;
+  if (k === "quote") return <QuoteForm {...p} />;
+  if (k === "quoteView") return <QuoteView {...p} />;
+  if (k === "po") return <POForm {...p} />;
+  if (k === "poView") return <POView {...p} />;
+  if (k === "vendor") return <VendorForm {...p} />;
   return null;
 }
 export const SaveBtn = ({ onClick, children, disabled, testid = "fleet-save" }) => <button className={btnP + " w-full"} style={{ background: "var(--biz)" }} onClick={onClick} disabled={disabled} data-testid={testid}><Check size={18} />{children || tr("Save")}</button>;
@@ -671,7 +682,7 @@ function WorkForm({ s, run, sheet, close, money, flash }) {
   </div>;
 }
 function ChequeForm({ s, run, sheet, close }) {
-  const [q, setQ] = useState({ dir: sheet.dir || "in", method: "cheque", client: sheet.client || "", payee: "", no: "", bank: "", amount: "", due: F.isoDay() });
+  const [q, setQ] = useState({ dir: sheet.dir || "in", method: "cheque", client: sheet.client || "", payee: sheet.payee || "", no: "", bank: "", amount: "", due: F.isoDay() });
   const set = (k) => (v) => setQ({ ...q, [k]: v });
   const save = () => { if (run((x) => F.addCheque(x, q), tr("Saved"))) close(); };
   return <div className="space-y-3" data-testid="fleet-cheque-form">
@@ -837,7 +848,7 @@ function MoreMenu({ s, run, setSheet, close, flash, saveFile, site }) {
 }
 function BinView({ s, run }) {
   const list = F.binList(s);
-  const L = { cranes: "Crane", clients: "Client", sites: "Site", garages: "Garage", banks: "Bank", jobs: "Job order", entries: "Work", cheques: "Payment", expenses: "Expense", invoices: "Invoice", people: "Person", advances: "Advance", docs: "Crane paper", repairs: "Breakdown" };
+  const L = { cranes: "Crane", clients: "Client", sites: "Site", garages: "Garage", banks: "Bank", jobs: "Job order", entries: "Work", cheques: "Payment", expenses: "Expense", invoices: "Invoice", people: "Person", advances: "Advance", docs: "Crane paper", repairs: "Breakdown", quotes: "Quotation", pos: "Purchase order", vendors: "Supplier" };
   const label = (b) => b.rec.name || b.rec.no || (b.coll === "docs" ? tr(DOC_L[b.rec.kind] || "Other paper") : "") || (b.coll === "cheques" ? (b.rec.no || b.rec.method) + " · " + num(b.rec.amount) : b.coll === "expenses" ? F.showDate(b.rec.date) + " · " + num(b.rec.total) : F.showDate(b.rec.date));
   return <div className="space-y-2" data-testid="fleet-bin-view"><p className={"text-[13px] " + muted}>{tr("Deleted items stay here for 7 days, then they're gone for good.")}</p>
     {list.length ? list.map((b) => <div key={b.coll + b.id} className={card + " p-3 flex items-center gap-2"}><span className="flex-1 min-w-0"><span className="block text-[14px] font-semibold truncate" dir="auto">{label(b)}</span><span className={"block text-[12px] " + muted}>{tr(L[b.coll])} · {tr("{d} days left", { d: b.left })}</span></span>

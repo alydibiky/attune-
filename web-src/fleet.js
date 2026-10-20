@@ -9,7 +9,8 @@
    Dates are ISO "YYYY-MM-DD" (shown DD/MM/YYYY); money is a number in the currency, rounded to 2 decimals.
    Tests: tests/unit/v732fleet.test.mjs.                                                                              */
 
-import { proWarnings, clientTax } from "./fleet-pro.js";   // v6.44 the ERP depth (invoices, team, papers, repairs, fuel, reports)
+import { proWarnings, clientTax } from "./fleet-pro.js";
+import { tradeWarnings } from "./fleet-trade.js";   // v6.44 quotations, purchase orders, suppliers   // v6.44 the ERP depth (invoices, team, papers, repairs, fuel, reports)
 export const FLEET_VERSION = 1;
 export const BIN_DAYS = 7;
 const r2 = (x) => Math.round((+x || 0) * 100 + Number.EPSILON * 100) / 100;
@@ -43,9 +44,10 @@ export const EMPTY = () => ({
   cranes: [], clients: [], sites: [], garages: [], banks: [],
   jobs: [], entries: [], moves: [], cheques: [],
   expTypes: ["Fuel", "Maintenance", "Spare parts", "Driver", "Transport", "Other"], expenses: [],
-  settings: { currency: "EGP", chequeDays: 7, jobDays: 7, vat: 14, wht: 0, dueDays: 30, company: "", taxNo: "", nextInv: 1 },
+  settings: { currency: "EGP", chequeDays: 7, jobDays: 7, vat: 14, wht: 0, dueDays: 30, company: "", taxNo: "", nextInv: 1, nextQuote: 1, nextPo: 1, quoteDays: 14 },
   // v6.44 (fleet-pro.js): invoices, the team and their advances, crane papers, breakdowns; attend = days typed by hand
   invoices: [], people: [], advances: [], docs: [], repairs: [], attend: {},
+  quotes: [], pos: [], vendors: [],   // v6.44 (fleet-trade.js)
   store: { items: [], suppliers: [], techs: [], dests: [], purchasers: [], requesters: [], nextDoc: 1, tx: [] },
 });
 /** An old or partial state → a complete one (self-healing, like healColumns: anything missing is added, nothing lost). */
@@ -344,7 +346,7 @@ export function warnings(s, today = isoDay()) {
     if (sv.left <= 0) w.push({ kind: "serviceDue", level: "bad", id: c.id, crane: c.name, hours: sv.used, every: sv.every });
     else if (sv.left <= sv.every * 0.1) w.push({ kind: "serviceSoon", level: "warn", id: c.id, crane: c.name, left: sv.left, every: sv.every });
   }
-  w.push(...proWarnings(s, today));   // v6.44: papers, licences, overdue invoices, open repairs, fuel
+  w.push(...proWarnings(s, today), ...tradeWarnings(s, today));   // v6.44: papers, licences, overdue invoices, open repairs, fuel
   const rank = { bad: 0, warn: 1, info: 2 };
   return w.sort((a, b) => rank[a.level] - rank[b.level] || (a.days ?? 0) - (b.days ?? 0));
 }
@@ -364,7 +366,7 @@ export function kpis(s, today = isoDay()) {
 }
 
 // ---- recycle bin ----------------------------------------------------------------------------------------------------
-const COLLS = ["cranes", "clients", "sites", "garages", "banks", "jobs", "entries", "cheques", "expenses", "invoices", "people", "advances", "docs", "repairs"];
+const COLLS = ["cranes", "clients", "sites", "garages", "banks", "jobs", "entries", "cheques", "expenses", "invoices", "people", "advances", "docs", "repairs", "quotes", "pos", "vendors"];
 /** What still points at a record (so deleting it would leave orphans). */
 export function usedBy(s, coll, id) {
   const j = live(s.jobs);
@@ -766,7 +768,7 @@ export function reminderNote(s, now = Date.now()) {
   if (!w.length) return null;
   const d = new Date(now); d.setHours(9, 0, 0, 0); if (d.getTime() <= now) d.setDate(d.getDate() + 1);
   const what = { chequeOverdue: "cheque overdue", chequeToday: "cheque due today", jobPast: "job past its end", jobEnding: "job ending", lowStock: "item low in the store", serviceDue: "crane due for service", serviceSoon: "service soon",
-    docExpired: "crane paper expired", docSoon: "crane paper expiring", licenceExpired: "licence expired", licenceSoon: "licence expiring", invoiceOverdue: "invoice overdue", repairOpen: "crane still broken down", fuelHigh: "fuel use high" };
+    docExpired: "crane paper expired", docSoon: "crane paper expiring", licenceExpired: "licence expired", licenceSoon: "licence expiring", invoiceOverdue: "invoice overdue", repairOpen: "crane still broken down", fuelHigh: "fuel use high", poLate: "purchase order late" };
   const counts = {}; for (const x of w) counts[x.kind] = (counts[x.kind] || 0) + 1;
   return { id: "fleet-needs", at: d.getTime(), n: w.length, counts, title: w.length === 1 ? "Fleet: 1 thing needs you" : `Fleet: ${w.length} things need you`, body: Object.entries(counts).map(([k, n]) => `${n} ${what[k] || k}`).join(" · ") };
 }

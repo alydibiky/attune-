@@ -1,0 +1,50 @@
+// v6.44 Fleet: quotations → job orders (won / lost), purchase orders received in parts into the store, suppliers' balances.
+import * as F from "../../web-src/fleet.js";
+import * as Q from "../../web-src/fleet-trade.js";
+const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
+const T = "2026-10-20";
+let s = F.heal({});
+s = F.upsert(s, "garages", { name: "Yard" }); s = F.upsert(s, "sites", { name: "Sokhna port" }); s = F.upsert(s, "clients", { name: "Orascom" });
+s = F.upsert(s, "cranes", { name: "LTM 1100", tons: 100, hourly: 2000, daily: 15000 }); s = F.upsert(s, "cranes", { name: "QY50", tons: 50, hourly: 1000, daily: 7000 });
+const [k, site, c1, c2] = [s.clients[0].id, s.sites[0].id, s.cranes[0].id, s.cranes[1].id];
+// ---- quotations
+let r = Q.saveQuote(s, { client: k, tons: 80, mode: "daily", rate: 15000, qty: 10, mobilisation: 5000, date: "2026-10-10", site, start: "2026-10-25" }); s = r.state;
+ok(r.quote.no === "QT-0001" && r.quote.sub === 155000 && r.quote.vat === 21700 && r.quote.total === 176700 && r.quote.validUntil === "2026-10-24", "a quote: 10 days × 15,000 + 5,000 mobilisation = 155,000 + VAT 14 % = 176,700, valid 14 days");
+ok(Q.freeCranes(s, 80).map((c) => c.name).join() === "LTM 1100", "free cranes that lift 80 t: the LTM 1100");
+s = Q.setQuoteStatus(s, r.quote.id, "sent");
+let e = ""; try { Q.saveQuote(s, { ...r.quote, rate: 12000 }); } catch (x) { e = x.message; } ok(/make a new quote/.test(e), "a sent quote's price can't be changed silently");
+ok(F.warnings(s, "2026-10-22").some((w) => w.kind === "quoteExpiring" && w.days === 2), "Today: the quote expires in 2 days");
+r = Q.quoteToJob(s, r.quote.id, { crane: c1 }); s = r.state;
+ok(r.job.no === "JO-001" && r.job.mode === "daily" && r.job.rate === 15000 && r.job.site === site && F.whereIs(s, c1).kind === "site", "accepted → job order JO-001: daily at 15,000, the crane moves to the port");
+ok(Q.quoteState(s.quotes[0], T) === "won", "the quote shows as won");
+e = ""; try { Q.quoteToJob(s, s.quotes[0].id, { crane: c2 }); } catch (x) { e = x.message; } ok(/already a job order \(JO-001\)/.test(e), "a quote becomes a job only once");
+s = Q.saveQuote(s, { client: k, mode: "hourly", rate: 1000, qty: 40, date: "2026-09-01" }).state;
+s = Q.saveQuote(s, { client: k, mode: "daily", rate: 7000, qty: 3, date: "2026-10-18" }).state; s = Q.setQuoteStatus(s, s.quotes[2].id, "rejected");
+const st = Q.quoteStats(s, 2026, T);
+ok(st.count === 3 && st.won === 1 && st.lost === 2 && st.rate === 33 && st.wonValue === 155000, "this year: 3 quotes, 1 won, 2 lost (one rejected, one expired) → 33 % won, 155,000 won");
+ok(Q.quoteHTML(s, s.quotes[0].id, { rtl: true }).includes("عرض سعر") && Q.quoteHTML(s, s.quotes[0].id).includes("Mobilisation"), "the quote prints (Arabic and English)");
+// ---- purchase orders
+r = Q.savePO(s, { vendor: "El-Nasr Hydraulics", date: "2026-10-01", expected: "2026-10-10", lines: [{ item: "Hydraulic oil (L)", qty: 200, price: 150 }, { item: "Oil filter", qty: 10, price: 450 }] }); s = r.state;
+const po = r.po.id;
+ok(r.po.no === "PO-0001" && r.po.total === 34500, "a purchase order: 200 L oil × 150 + 10 filters × 450 = 34,500");
+ok(F.warnings(s, T).some((w) => w.kind === "poLate" && w.days === 10), "Today: the order is 10 days late");
+r = Q.receivePO(s, po, { date: "2026-10-12", purchaser: "Mahmoud", lines: [{ item: "Hydraulic oil (L)", qty: 120 }] }); s = r.state;
+ok(F.itemBalance(s.store, "Hydraulic oil (L)") === 120 && s.store.tx.at(-1).supplier === "El-Nasr Hydraulics" && s.store.tx.at(-1).notes === "PO-0001" && s.store.tx.at(-1).total === 18000, "120 L received → in the store at the order's price, with the supplier and PO-0001 on it");
+let ps = Q.poStatus(s.pos[0], T);
+ok(ps.status === "partial" && ps.lines[0].left === 80, "the order is partly received: 80 L left");
+e = ""; try { Q.receivePO(s, po, { purchaser: "M", lines: [{ item: "Hydraulic oil (L)", qty: 100 }] }); } catch (x) { e = x.message; } ok(/only 80 left/.test(e), "receiving more than ordered is refused");
+s = Q.receivePO(s, po, { date: "2026-10-15", purchaser: "Mahmoud" }).state;
+ps = Q.poStatus(s.pos[0], T); ok(ps.status === "received" && !F.warnings(s, T).some((w) => w.kind === "poLate"), "the rest received → the order is complete, no more warning");
+const plan = F.planOut(s.store, { item: "Oil filter", qty: 4, ref: s.pos[0].receipts[1].doc });
+ok(plan.ok && plan.lines[0].total === 1800, "issuing parts against the received invoice's code uses its price (4 × 450)");
+// ---- suppliers
+s = Q.saveVendor(s, { id: s.vendors[0].id, name: "El-Nasr Hydraulics", phone: "0100", opening: 5000 });
+s = F.addCheque(s, { dir: "out", payee: "El-Nasr Hydraulics", method: "transfer", amount: 20000, due: "2026-10-16" });
+s = F.addCheque(s, { dir: "out", payee: "El-Nasr Hydraulics", method: "cheque", no: "9001", amount: 10000, due: "2026-11-01" });
+const vs = Q.vendorStatement(s, "El-Nasr Hydraulics");
+ok(vs.bought === 34500 && vs.paid === 30000 && vs.balance === 5000 + 34500 - 30000 && vs.rows.some((x) => x.pending), "the supplier: 5,000 opening + 34,500 bought − 30,000 paid (a cheque not yet due shown) = 9,500 owed");
+s = F.addIncoming(s, { date: "2026-10-18", purchaser: "M", supplier: "Bolts & Co", lines: [{ item: "Bolt M20", qty: 50, total: 2500 }] }).state;
+ok(Q.vendorBalances(s).map((b) => b.vendor.name + ":" + b.balance).join() === "El-Nasr Hydraulics:9500,Bolts & Co:2500", "every supplier's balance, also the ones only on incoming invoices");
+ok(Q.exportTradeRows(s, "quotes").length === 4 && Q.exportTradeRows(s, "pos").length === 3 && Q.exportTradeRows(s, "vendors").length === 3, "quotes, purchase orders and suppliers → Excel");
+ok(F.eraseDemo(F.loadDemo(F.heal({}))).quotes.length === 0, "demo erase still clean");
+console.log(process.exitCode ? "FAILED" : "ALL PASSED");
