@@ -182,3 +182,31 @@ export function clipRange(from, to) {
   if (a != null && b != null && b <= a) return { error: "The end must come after the start" };
   return { start: a || 0, end: b || 0 };
 }
+
+/* ---- v6.45 (W6) Subtitles: the phone's offline speech recogniser reads the sound piece by piece (Subtitles.kt) →
+   [{start, end, text}] in ms → an .srt any player opens. A long piece is split into cues of at most 2 lines × 42 letters,
+   its time shared by length. */
+const srtTime = (ms) => { ms = Math.max(0, Math.round(ms)); const p = (n, w = 2) => String(n).padStart(w, "0");
+  return p(Math.floor(ms / 3600000)) + ":" + p(Math.floor(ms / 60000) % 60) + ":" + p(Math.floor(ms / 1000) % 60) + "," + p(ms % 1000, 3); };
+/** Words → lines of at most `max` letters. */
+export function wrapLines(text, max = 42) {
+  const out = []; let cur = "";
+  for (const w of String(text || "").trim().split(/\s+/).filter(Boolean)) { if (cur && (cur + " " + w).length > max) { out.push(cur); cur = w; } else cur = cur ? cur + " " + w : w; }
+  if (cur) out.push(cur);
+  return out;
+}
+/** Pieces → cues of at most 2 lines, the piece's time shared by how long each part is. */
+export function cuesOf(pieces, max = 42) {
+  const cues = [];
+  for (const p of pieces || []) {
+    const lines = wrapLines(p.text, max); if (!lines.length) continue;
+    const groups = []; for (let i = 0; i < lines.length; i += 2) groups.push(lines.slice(i, i + 2));
+    const total = lines.join(" ").length, span = Math.max(1, p.end - p.start); let t = p.start;
+    groups.forEach((g, k) => { const d = span * g.join(" ").length / total; cues.push({ start: Math.round(t), end: k === groups.length - 1 ? p.end : Math.round(t + d), text: g.join("\n") }); t += d; });
+  }
+  return cues;
+}
+/** Cues → the .srt text. */
+export const srtOf = (cues) => cues.map((c, i) => `${i + 1}\n${srtTime(c.start)} --> ${srtTime(c.end)}\n${c.text}\n`).join("\n");
+/** The recogniser's language for the app's: Egyptian Arabic, English… */
+export const speechLang = (lang) => ({ ar: "ar-EG", en: "en-US", fr: "fr-FR", es: "es-ES", tr: "tr-TR" })[lang] || "en-US";

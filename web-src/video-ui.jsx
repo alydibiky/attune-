@@ -3,8 +3,8 @@
    you pick is saved by Android's DownloadManager to Movies/Attune. Sites that allow downloading only
    (see video.js); YouTube / TikTok / Instagram / Facebook / X links get a clear "not allowed". */
 import React, { useState, useEffect, useRef } from "react";
-import { Download, Loader2, X, Check, ClipboardPaste, Play, Film, Music, Link2, Scissors } from "lucide-react";
-import { tr } from "./i18n.js";
+import { Download, Loader2, X, Check, ClipboardPaste, Play, Film, Music, Link2, Scissors, Captions } from "lucide-react";
+import { tr, getLang } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as V from "./video.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
@@ -40,6 +40,36 @@ function ClipPanel({ d, nativeCall, flash, onMade }) {
     </div>);
 }
 
+/** v6.45 (W6): subtitles for a saved video — the phone's own offline speech recogniser listens piece by piece
+ *  (Subtitles.kt), then the pieces become an .srt file (video.js cuesOf / srtOf). The sound never leaves the phone. */
+function SubsPanel({ d, nativeCall, flash }) {
+  const [lang, setLang] = useState(getLang() === "ar" ? "ar" : "en"), [busy, setBusy] = useState(null), [err, setErr] = useState(""), [srt, setSrt] = useState("");
+  const go = async () => {
+    setErr(""); setSrt(""); setBusy("0 %");
+    try {
+      const r = await nativeCall("videoSubtitles", { id: d.id, lang: V.speechLang(lang) }, (pct) => setBusy(pct + " %"));
+      const cues = V.cuesOf(r.cues || []);
+      if (!cues.length) throw new Error(tr("No speech was heard in this video"));
+      const text = V.srtOf(cues), name = String(d.name || "video").replace(/\.[a-z0-9]{2,4}$/i, "") + "." + lang + ".srt";
+      setSrt(text);
+      const s = await nativeCall("saveFile", { name, text, mime: "application/x-subrip" });
+      flash && flash(tr("Saved {f}", { f: (s && s.name) || name }));
+    } catch (e) { const m = String((e && e.message) || e); if (m !== "Cancelled") setErr(tr(m)); }
+    setBusy(null);
+  };
+  return (
+    <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-2.5 space-y-2" data-testid="video-subs">
+      <div className="flex items-center gap-2 text-[12px] text-slate-300">{tr("Spoken in")}
+        <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-[13px]" data-testid="video-subs-lang">
+          <option value="ar">{tr("Arabic (Egypt)")}</option><option value="en">{tr("English")}</option><option value="fr">{tr("French")}</option><option value="es">{tr("Spanish")}</option><option value="tr">{tr("Turkish")}</option></select></div>
+      <button onClick={go} disabled={!!busy} className="w-full py-2 rounded-lg bg-teal-500 disabled:opacity-60 text-slate-950 text-[13px] font-semibold flex items-center justify-center gap-1.5" data-testid="video-subs-go">
+        {busy ? <Loader2 size={14} className="animate-spin" /> : <Captions size={14} />}{busy ? tr("Listening… {p}", { p: busy }) : tr("Make subtitles (.srt)")}</button>
+      <p className="text-[10.5px] text-slate-500">{tr("Your phone's own offline speech recogniser listens to the video, piece by piece — the sound never leaves the phone. About as long as the video.")}</p>
+      {srt ? <pre className="text-[11px] text-slate-300 max-h-40 overflow-y-auto whitespace-pre-wrap" dir="auto" data-testid="video-subs-text">{srt.slice(0, 1500)}</pre> : null}
+      {err ? <p className="text-[11.5px] text-rose-300" data-testid="video-subs-err">{err}</p> : null}
+    </div>);
+}
+
 const store = (l) => { try { localStorage.setItem(KEY, JSON.stringify(l.slice(0, 30))); } catch (e) {} };
 
 export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink }) {
@@ -50,6 +80,8 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
   const [sel, setSel] = useSticky("video:sel", 0);
   const [list, setList] = useState(load);         // [{id, name, where, status, done, total, audio}] (+ clip, uri, type for cuts)
   const [cut, setCut] = useState(null);           // the download whose Cut panel is open
+  const [subs, setSubs] = useState(null);         // v6.45: the download whose Subtitles panel is open
+  const canSubs = (() => { try { return !!(window.AttuneNative && window.AttuneNative.subtitlesAvailable && window.AttuneNative.subtitlesAvailable()); } catch (e) { return false; } })();
   const run = useRef(0);
   useSubBack(!!found, () => setFound(null));
 
@@ -202,6 +234,7 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11.5px] text-emerald-300 flex items-center gap-1"><Check size={13} />{tr("Saved")} · {V.sizeText(d.total)}</span>
                     <span className="flex items-center gap-1.5">
+                      {!d.clip && !d.audio && nativeCall && canSubs ? <button onClick={() => setSubs(subs === d.id ? null : d.id)} className="px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-200 text-[12.5px] flex items-center gap-1" data-testid="video-subs-open"><Captions size={13} />{tr("Subtitles")}</button> : null}
                       {!d.clip && nativeCall ? <button onClick={() => setCut(cut === d.id ? null : d.id)} className="px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-200 text-[12.5px] flex items-center gap-1" data-testid="video-cut"><Scissors size={13} />{tr("Cut")}</button> : null}
                       <button onClick={() => nativeCall("videoOpen", d.clip ? { uri: d.uri, type: d.type } : { id: d.id }).catch(() => flash && flash(tr("The file was moved or deleted")))} className="px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 text-[12.5px] font-semibold flex items-center gap-1" data-testid="video-open"><Play size={13} />{tr("Play")}</button>
                     </span>
@@ -215,6 +248,7 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
                   </>
                 )}
                 {cut === d.id && d.status === "done" ? <ClipPanel d={d} nativeCall={nativeCall} flash={flash} onMade={(c) => { setCut(null); setList((l) => { const n = [c, ...l]; store(n); return n; }); }} /> : null}
+                {subs === d.id && d.status === "done" ? <SubsPanel d={d} nativeCall={nativeCall} flash={flash} /> : null}
                 {d.where ? <p className="text-[10.5px] text-slate-600 truncate" dir="ltr">{d.where}</p> : null}
               </div>
             );

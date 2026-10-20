@@ -6297,4 +6297,11 @@ export const AR = {
   "English page": "صفحة إنجليزي",
   "Locking…": "بقفلها…",
   "Make the page": "اعمل الصفحة",
+  "Spoken in": "الكلام بـ",
+  "Arabic (Egypt)": "عربي (مصري)",
+  "Listening… {p}": "بسمع… {p}",
+  "Make subtitles (.srt)": "اعمل ترجمة مكتوبة (.srt)",
+  "No speech was heard in this video": "مفيش كلام اتسمع في الفيديو ده",
+  "Your phone's own offline speech recogniser listens to the video, piece by piece — the sound never leaves the phone. About as long as the video.": "برنامج التعرّف على الكلام اللي على موبايلك بيسمع الفيديو حتة حتة من غير نت — الصوت مبيخرجش برّه الموبايل. بياخد تقريبًا قد مدة الفيديو.",
+  "Subtitles need Android 13 or newer": "الترجمة المكتوبة محتاجة أندرويد 13 أو أحدث",
 };

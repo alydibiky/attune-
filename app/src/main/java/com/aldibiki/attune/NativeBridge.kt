@@ -1674,6 +1674,28 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         catch (e: Throwable) { reject(id, e.message ?: "Couldn't open the video") }
     }
 
+    /** v6.45 (W6): can this phone make subtitles (Android 13+ with an on-device speech recogniser)? */
+    @JavascriptInterface
+    fun subtitlesAvailable(): Boolean = try { Subtitles.available(ctx) } catch (e: Throwable) { false }
+
+    /** {id (download), lang} → {cues: [{start, end, text}]} with progress; cancel(id) stops it. Nothing leaves the phone. */
+    @JavascriptInterface
+    fun videoSubtitles(id: String, arg: String) {
+        val act = ctx as? android.app.Activity ?: return reject(id, "Subtitles need the app's window")
+        val flag = AtomicBoolean(false); cancels[id] = flag
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                val cues = Subtitles.make(act, a.getLong("id"), a.optString("lang", "ar-EG"), { done, all ->
+                    progress(id, if (all > 0) (done * 100 / all).coerceIn(0, 99) else 0, "listening", "$done / $all")
+                }, { flag.get() })
+                resolve(id, JSONObject().put("cues", cues))
+            } catch (e: Subtitles.Cancelled) { reject(id, "Stopped") }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't make the subtitles") }
+            finally { cancels.remove(id) }
+        }
+    }
+
     @JavascriptInterface
     fun videoClip(id: String, arg: String) {
         pool.execute {
