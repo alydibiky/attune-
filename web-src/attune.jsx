@@ -10223,7 +10223,7 @@ export default function App() {
         ) : mode === "automations" ? (
           <AutomationsPage native={NATIVE} flash={flash} />
         ) : mode === "recall" ? (
-          <RecallPage memory={memory} remember={remember} native={NATIVE} readText={readTextAny} flash={flash}
+          <RecallPage memory={memory} remember={remember} native={NATIVE} call={nativeCall} readText={readTextAny} flash={flash}
             openRec={(r) => { setOpenRec(r); setMode("memory"); }} openChat={(id) => { setOpenChatId(id); navTo("chat"); }}
             openArtifact={(id) => { const a = loadArtifacts().find((x) => x.id === id); if (a) setArtifact(a); }} />
         ) : mode === "radar" ? (

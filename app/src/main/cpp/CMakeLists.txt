@@ -97,3 +97,16 @@ else()
     find_package(JNI REQUIRED)                       # desktop test build
     target_include_directories(attune-engine PRIVATE ${JNI_INCLUDE_DIRS})
 endif()
+
+# ---------------------------------------------------------------------------
+# v6.45 Recall's meaning model (bge-m3): System.loadLibrary("attune-embed").
+# Its own small library on the same shared libllama / ggml, so it runs beside
+# the chat server without touching it (attune-embed.cpp, Embedder.kt).
+# ---------------------------------------------------------------------------
+add_library(attune-embed SHARED attune-embed.cpp)
+target_link_libraries(attune-embed PRIVATE llama)
+if(ANDROID)
+    target_link_libraries(attune-embed PRIVATE android log)
+else()
+    target_include_directories(attune-embed PRIVATE ${JNI_INCLUDE_DIRS})
+endif()

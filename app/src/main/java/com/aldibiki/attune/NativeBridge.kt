@@ -1038,6 +1038,41 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
     @JavascriptInterface
     fun foodClipRemove(): Boolean = FoodClip.remove(ctx)
 
+    /* ---- v6.45 Recall phase 2: the meaning model (Embedder) ---- */
+    @JavascriptInterface
+    fun embedStatus(): String = try { Embedder.status(ctx).toString() } catch (e: Throwable) { "{\"installed\":false}" }
+
+    /** Downloads the meaning model (438 MB, resumable), with progress; cancel(id) stops it. */
+    @JavascriptInterface
+    fun embedInstall(id: String, arg: String) {
+        if (blockedByAirGap(id, "downloading the meaning model")) return
+        val flag = AtomicBoolean(false); cancels[id] = flag
+        pool.execute {
+            try {
+                Embedder.install(ctx, { done, total ->
+                    progress(id, ((done * 100) / total).toInt().coerceIn(0, 99), "download", "%.0f / %.0f MB".format(done / 1e6, total / 1e6))
+                }, { flag.get() })
+                resolve(id, Embedder.status(ctx))
+            } catch (e: Embedder.Cancelled) {
+                reject(id, "Download stopped — it continues where it stopped next time.")
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't download the meaning model") }
+            finally { cancels.remove(id) }
+        }
+    }
+
+    @JavascriptInterface
+    fun embedRemove(): Boolean = Embedder.remove(ctx)
+
+    /** {"texts":[…]} → {"vecs":[[…1024 numbers]…]} on the phone; nothing leaves it. */
+    @JavascriptInterface
+    fun embed(id: String, arg: String) {
+        embedPool.execute {
+            try { resolve(id, JSONObject().put("vecs", Embedder.embed(ctx, JSONObject(arg).optJSONArray("texts") ?: org.json.JSONArray()))) }
+            catch (e: Throwable) { reject(id, e.message ?: "The meaning model failed") }
+        }
+    }
+    private val embedPool = java.util.concurrent.Executors.newSingleThreadExecutor()
+
     /* ---- v6.16: the public Knowledge packs as search databases (KnowPacks) ---- */
     @JavascriptInterface
     fun knowPacks(): String = try { JSONObject().put("packs", KnowPacks.list(ctx)).toString() } catch (e: Throwable) { "{\"packs\":[]}" }

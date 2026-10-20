@@ -7,7 +7,8 @@ import { recallDocs, recallSearch, shotTitle, KINDS } from "./lookback.js";
 import { loadChats } from "./chat.jsx";
 import { loadArtifacts } from "./spaces.js";
 import { keepPicture, thumbGet } from "./mind-ui.jsx";
-import { Search, ImagePlus, Bell, Loader2, X, Copy, Trash2, ShieldCheck } from "lucide-react";
+import { Search, ImagePlus, Bell, Loader2, X, Copy, Trash2, ShieldCheck, Sparkles, Download } from "lucide-react";
+import * as M from "./meaning.js";
 
 const card = "rounded-2xl border border-slate-800 bg-slate-900";
 const readJson = (f) => { try { const v = JSON.parse(f() || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
@@ -29,7 +30,23 @@ function Thumb({ id }) {
   return u ? <img src={u} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" /> : <div className="w-14 h-14 rounded-lg bg-slate-800 shrink-0" />;
 }
 
-export function RecallPage({ memory = [], remember, native, readText, openRec, openChat, openArtifact, flash }) {
+/** v6.45 Recall phase 2: the meaning model's state and its download (Embedder.kt). */
+function useMeaning(native, call) {
+  const read = () => { try { return native && native.embedStatus ? JSON.parse(native.embedStatus()) : null; } catch (e) { return null; } };
+  const [st, setSt] = useState(read);
+  const [dl, setDl] = useState(null);          // { pct, detail } while downloading
+  const install = async (flash) => {
+    if (!call) return; setDl({ pct: 0, detail: "" });
+    try { await call("embedInstall", {}, (pct, stage, detail) => setDl({ pct, detail })); flash && flash(tr("Search by meaning is ready")); }
+    catch (e) { flash && flash(tr(e.message || "Couldn't download")); }
+    setDl(null); setSt(read());
+  };
+  const stop = () => { try { native.cancel(window.__attuneNativeLastId && window.__attuneNativeLastId()); } catch (e) {} };
+  const remove = async () => { try { native.embedRemove(); } catch (e) {} await M.clearVectors(); setSt(read()); };
+  return { st, dl, install, stop, remove, on: !!(st && st.installed) };
+}
+
+export function RecallPage({ memory = [], remember, native, call, readText, openRec, openChat, openArtifact, flash }) {
   const ar = getLang() === "ar";
   const [q, setQ] = useState("");
   const [only, setOnly] = useState(null);
@@ -43,7 +60,35 @@ export function RecallPage({ memory = [], remember, native, readText, openRec, o
     notes: native && native.recallNotes ? readJson(() => native.recallNotes()) : [],
     pays: native && native.payQueue ? readJson(() => native.payQueue()) : [],
   }), [memory, tick]);
-  const res = useMemo(() => recallSearch(only ? docs.filter((d) => d.kind === only) : docs, q), [docs, q, only]);
+  const words = useMemo(() => recallSearch(only ? docs.filter((d) => d.kind === only) : docs, q), [docs, q, only]);
+  // v6.45: by meaning too, when the model is on the phone — the things get their numbers once (in the background, newest
+  // first), the question gets its own, and the nearest are merged with the word hits.
+  const mean = useMeaning(native, call);
+  const [vecs, setVecs] = useState(null), [indexing, setIndexing] = useState(null), [qv, setQv] = useState(null);
+  useEffect(() => { if (!mean.on || !call) return; let live = true;
+    (async () => { const have = await M.loadVectors(); if (!live) return; setVecs(have);
+      const todo = M.missing(docs.slice().sort((a, b) => b.ts - a.ts).slice(0, 1500), have);
+      for (let i = 0; i < todo.length && live; i += 8) {
+        setIndexing(tr("Understanding {a} of {b}…", { a: Math.min(i + 8, todo.length), b: todo.length }));
+        try { const part = todo.slice(i, i + 8), r = await call("embed", { texts: part.map(M.textOf) }), got = (r && r.vecs) || [];
+          const pairs = part.map((d, j) => [M.keyOf(d), got[j] ? Float32Array.from(got[j]) : null]).filter((x) => x[1]);
+          pairs.forEach(([k, v]) => have.set(k, v)); await M.saveVectors(pairs); if (live) setVecs(new Map(have));
+        } catch (e) { break; }
+      }
+      if (live) setIndexing(null);
+      M.saveVectors([], new Set(docs.map(M.keyOf)));   // forget the numbers of things that are gone
+    })();
+    return () => { live = false; }; }, [mean.on, docs]);
+  useEffect(() => { setQv(null); const s = res0Terms(q); if (!mean.on || !call || s.length < 3) return; let live = true;
+    const t = setTimeout(async () => { try { const r = await call("embed", { texts: [s] }); if (live && r && r.vecs && r.vecs[0]) setQv(Float32Array.from(r.vecs[0])); } catch (e) {} }, 450);
+    return () => { live = false; clearTimeout(t); }; }, [q, mean.on]);
+  const res = useMemo(() => {
+    if (!qv || !vecs) return words;
+    const pool = only ? docs.filter((d) => d.kind === only) : docs;
+    const a = words.ask, inAsk = (d) => (a.from == null || (d.ts >= a.from && d.ts < a.to)) && (!a.kind || d.kind === a.kind);
+    const near = M.nearest(pool.filter(inAsk), (d) => vecs.get(M.keyOf(d)), qv);
+    return { ask: a, hits: M.fuseHits(words.hits, near, { snip: (d) => String(d.text || d.title || "").replace(/\s+/g, " ").slice(0, 160) }) };
+  }, [words, qv, vecs]);
   const counts = useMemo(() => { const n = {}; for (const d of docs) n[d.kind] = (n[d.kind] || 0) + 1; return n; }, [docs]);
 
   const addShots = async (files) => {
@@ -103,11 +148,11 @@ export function RecallPage({ memory = [], remember, native, readText, openRec, o
       </div>
 
       <div className="space-y-2" data-testid="recall-results">
-        {res.hits.length ? res.hits.slice(0, 40).map(({ doc: d, snip }) => (
+        {res.hits.length ? res.hits.slice(0, 40).map(({ doc: d, snip, by }) => (
           <button key={d.id} onClick={() => tap(d)} data-testid="recall-hit" className={card + " w-full p-2.5 flex gap-2.5 text-start"}>
             {d.kind === "photo" && d.thumb ? <Thumb id={d.thumb} /> : null}
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-slate-500">{ar ? KINDS[d.kind].ar : tr(KINDS[d.kind].en)}{d.app ? " · " + d.app : ""}{d.ts ? " · " + when(d.ts) : ""}</p>
+              <p className="text-[10px] text-slate-500">{ar ? KINDS[d.kind].ar : tr(KINDS[d.kind].en)}{d.app ? " · " + d.app : ""}{d.ts ? " · " + when(d.ts) : ""}{by === "meaning" ? <span className="text-teal-300" data-testid="recall-by-meaning"> · {tr("by meaning")}</span> : null}</p>
               <p className="text-sm text-white truncate" dir="auto">{d.title || snip}</p>
               {snip && snip !== d.title ? <p className="text-[12px] text-slate-400 line-clamp-2" dir="auto">{snip}</p> : null}
             </div>
@@ -131,6 +176,15 @@ export function RecallPage({ memory = [], remember, native, readText, openRec, o
             <p className="text-[11px] text-slate-500">{tr("WhatsApp, email, deliveries, banks — so you can find what someone sent. Never SMS. Turning it off forgets them.")}{notesOn && !access ? " " + tr("Needs Notification access (the same switch as Money).") : ""}</p>
           </>
         ) : null}
+        {native && native.embedStatus ? <div className="border-t border-slate-800 pt-2.5 space-y-1.5" data-testid="recall-meaning">
+          <div className="flex items-center gap-2 text-sm text-slate-200"><Sparkles size={17} className="text-teal-300" /><span className="flex-1">{tr("Search by meaning (Arabic ↔ English)")}</span>
+            {mean.on ? <span className="text-[11px] text-teal-300" data-testid="recall-meaning-on">{indexing || tr("On")}</span> : null}</div>
+          <p className="text-[11px] text-slate-500">{tr("«فاتورة الكهربا» finds “electricity bill”, “where did I park” finds «ركنت العربية». A {mb} MB model, downloaded once (Wi-Fi), runs on the phone.", { mb: Math.round(M.MODEL.bytes / 1e6) })}</p>
+          {mean.dl ? <div className="space-y-1"><div className="h-1.5 rounded-full bg-slate-800"><div className="h-1.5 rounded-full bg-teal-400" style={{ width: (mean.dl.pct || 0) + "%" }} /></div>
+            <div className="flex items-center gap-2 text-[11px] text-slate-400"><span className="flex-1">{mean.dl.detail}</span><button onClick={mean.stop} className="text-slate-300 underline" data-testid="recall-meaning-stop">{tr("Stop")}</button></div></div>
+            : mean.on ? <button onClick={mean.remove} className="text-[12px] text-rose-300 flex items-center gap-1" data-testid="recall-meaning-remove"><Trash2 size={13} />{tr("Remove the model")}</button>
+            : <button onClick={() => mean.install(flash)} className="px-3 py-2 rounded-xl bg-teal-500 text-slate-950 text-sm font-semibold flex items-center gap-1.5" data-testid="recall-meaning-get"><Download size={15} />{tr("Download ({mb} MB)", { mb: Math.round(M.MODEL.bytes / 1e6) })}</button>}
+        </div> : null}
         <p className="text-[11px] text-emerald-300/80 flex items-center gap-1.5"><ShieldCheck size={13} />{tr("Everything stays on this phone.")}</p>
       </div>
 
@@ -151,3 +205,5 @@ export function RecallPage({ memory = [], remember, native, readText, openRec, o
   );
 }
 const d0 = (d, ar) => (ar ? KINDS[d.kind].ar : tr(KINDS[d.kind].en));
+// the words of a question without its filters ("last week", "screenshot") — what the meaning model should read
+const res0Terms = (q) => String(q || "").trim();
