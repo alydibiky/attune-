@@ -6,7 +6,13 @@
      3 plan      what is needed per day / week from now, and the ONE step that raises the chance most
      4 act       safe steps only (a Scout goal for a buy mission, the morning reminder); nothing leaves the phone
      5 debrief   a short morning report with the evidence behind each line
-   Pure (tests/unit/v740missions.test.mjs); the page is missions-ui.jsx. Phase 1 kinds: save, weight, buy.          */
+   Pure (tests/unit/v740missions.test.mjs); the page is missions-ui.jsx. Phase 1 kinds: save, weight, buy.
+   v6.44 phases 3–4 (tests/unit/v744missions.test.mjs) — each new kind reads real data, never a guess:
+     cap      «مش عايز أصرف أكتر من 3000 على الأكل الشهر ده» — a category (or all spending) kept under a limit
+     debt     «عايز أخلص دين أحمد قبل ديسمبر» — a debt in Money → People paid off (or one owed to you collected)
+     learn    "finish the Turkish course by December" — a Learn course's lessons done
+     revenue  «عايز الأسطول يجيب 500 ألف الشهر ده» — company: Fleet's work entries (crane income)
+     collect  "collect 200k from clients by the end of the month" — company: Fleet's incoming payments + cheques due  */
 import { homeCurrency } from "./locale.js";
 
 const DAY = 86400000;
@@ -41,7 +47,10 @@ export function deadlineIn(text, now = Date.now()) {
     const k = w === "شهرين" ? [2, "m"] : w === "اسبوعين" ? [2, "w"] : /سن/.test(w) ? [1, "y"] : [+w, /week|اسبوع|اسابيع/.test(unit) ? "w" : /year|سن/.test(unit) ? "y" : "m"];
     if (k[0] > 0) { const d = new Date(now); if (k[1] === "w") d.setDate(d.getDate() + 7 * k[0]); else if (k[1] === "y") d.setFullYear(d.getFullYear() + k[0]); else d.setMonth(d.getMonth() + k[0]); return iso(d); }
   }
-  if (/end of (the )?year|اخر السنه|آخر السنة|نهايه السنه/.test(t)) return iso(new Date(y, 11, 31, 12));
+  if (/end of (the )?year|اخر السنه|آخر السنة|نهايه السنه|this year|السنه دي/.test(t)) return iso(new Date(y, 11, 31, 12));
+  // v6.44: "this month" / «الشهر ده» / "end of the month" → the month's last day; "this week" / «الأسبوع ده» → 6 days on
+  if (/this month|end of (the )?month|الشهر ده|الشهر دا|الشهر دي|الشهر الحالي|اخر الشهر|نهايه الشهر/.test(t)) return iso(new Date(y, n.getMonth() + 1, 0, 12));
+  if (/this week|الاسبوع ده|الاسبوع دا/.test(t)) return iso(now + 6 * DAY);
   return "";
 }
 
@@ -65,6 +74,25 @@ export function parseMission(text, now = Date.now()) {
     const target = parseFloat(kg[1].replace(",", "."));
     return target > 0 && target < 60 ? { kind: "weight", target, deadline, title: raw.slice(0, 80) } : null;
   }
+  // v6.44 phases 3–4: never a question ("how much did Fleet earn this month?" is answered, not made a mission)
+  const asks = /[?؟]|how (much|many)|\bكام\b|\bايه\b|\bقد ايه\b/.test(t), wants = /(want|goal|target|aim|need to|i will|i'll|let's|عايز|عاوز|هدف|نفسي|لازم|محتاج|هخلي|خلي)/.test(t) || /^(collect|make|earn|get|bring|حصل|احصل|خلي)/.test(t);
+  // v6.44 phase 4 — company missions (Fleet & rentals)
+  if (!asks && wants && /(collect|تحصيل|احصل|أحصل|احصّل|حصل من|اجمع من العملاء)/.test(t) && /(client|customer|عميل|عملا|العملا|الزباين|fleet|الاسطول)/.test(t)) {
+    const target = amountIn(t.replace(/(\d{1,2})\s*[/.-]\s*(\d{1,2})/, " "));
+    return target >= 100 ? { kind: "collect", target, deadline, title: raw.slice(0, 80) } : null;
+  }
+  if (!asks && wants && /(fleet|crane|الاسطول|الونش|الونشات|الكرين|المعدات|revenue|ايراد|دخل الشركه)/.test(t) && /(earn|make|bring|revenue|يجيب|يجيبو|يجيبوا|تجيب|يدخل|تدخل|يكسب|تكسب|ايراد|دخل)/.test(t)) {
+    const target = amountIn(t.replace(/(\d{1,2})\s*[/.-]\s*(\d{1,2})/, " "));
+    return target >= 100 ? { kind: "revenue", target, deadline, title: raw.slice(0, 80) } : null;
+  }
+  // v6.44 phase 3
+  if (!asks && /(دين|سلف|debt|pay (off|back)|owe|اسدد|اخلص.*(فلوس|دين))/.test(t) && /(pay|off|back|collect|اخلص|اسدد|ادفع|اسد|اخد|احصل|يرجع)/.test(t)) return { kind: "debt", target: 0, deadline, title: raw.slice(0, 80) };
+  if (!asks && /(course|lessons?|كورس|الكورس|دروس|الدروس|منهج)/.test(t) && /(finish|complete|done|اخلص|اكمل|اخلّص|خلص)/.test(t)) return { kind: "learn", target: 0, deadline, title: raw.slice(0, 80) };
+  if (!asks && /(spend|اصرف|مصاريف|صرف)/.test(t) && /(less than|no more than|under|max|at most|اكتر من|اقل من|مش اكتر|بحد اقصي|ميزيدش)/.test(t)) {
+    const target = amountIn(t.replace(/(\d{1,2})\s*[/.-]\s*(\d{1,2})/, " "));
+    const cat = (CAP_WORDS.find(([, rx]) => rx.test(t)) || [null])[0];
+    return target >= 10 ? { kind: "cap", target, deadline, cat, title: raw.slice(0, 80) } : null;
+  }
   if (/(buy|get a|اشتري|اشترى|هشتري|عايز اشتري|عربيه|شقه)/.test(t)) {
     const under = t.match(/(?:under|below|less than|max|باقل من|بأقل من|اقل من|ب|بحد اقصي|في حدود)\s*(\d[\d.,]*\s*(?:k|الف|ألف|مليون|million)?)/i);
     const target = under ? amountIn(under[1]) : 0;
@@ -77,6 +105,11 @@ export function parseMission(text, now = Date.now()) {
   }
   return null;
 }
+
+// v6.44 cap: the words for each Money category (the ledger's own ids)
+const CAP_WORDS = [["food", /(eating out|restaurant|takeaway|delivery|food|الاكل|اكل|مطاعم|دليفري|ديليفري)/], ["groceries", /(grocer|supermarket|بقاله|سوبر ?ماركت)/],
+  ["transport", /(transport|uber|careem|taxi|fuel|petrol|مواصلات|اوبر|كريم|تاكسي|بنزين)/], ["shopping", /(shopping|clothes|شوبينج|لبس|هدوم)/],
+  ["fun", /(fun|outings|going out|خروج|خروجات|فسح)/], ["coffee", /(coffee|cafe|tea|قهوه|كافيه|شاي)/], ["health", /(health|doctor|medicine|دكتور|دوا|علاج)/], ["gifts", /(gift|هدايا|هديه)/]];
 
 // ---------- 2. sensing ----------
 /** Money in the ledger's main currency: balance now, and the net (income − spending) of each of the last `days` days. */
@@ -219,7 +252,132 @@ export function evaluate(m, data, now = Date.now()) {
     const state = left <= 0 ? "done" : !days ? "late" : chance == null ? "unknown" : chance >= 0.8 ? "ahead" : chance >= 0.5 ? "on-track" : "behind";
     return out({ value, target: m.target, left, pct: Math.max(0, Math.min(100, Math.round((value / m.target) * 100))), perDayNeed, perDayNow: b.slope == null ? null : -b.slope, chance, state, step });
   }
+  if (m.kind === "cap") return evalCap(m, data, now, days, ev, out);
+  if (m.kind === "debt") return evalDebt(m, data, now, days, ev, out);
+  if (m.kind === "learn") return evalLearn(m, data, now, days, ev, out);
+  if (m.kind === "revenue") return evalRevenue(m, data, now, days, ev, out);
+  if (m.kind === "collect") return evalCollect(m, data, now, days, ev, out);
   return out({ value: 0, target: m.target, left: m.target, pct: 0, chance: null, state: "unknown", step: null });
+}
+const stateOf = (left, days, chance) => (left <= 0 ? "done" : !days ? "late" : chance == null ? "unknown" : chance >= 0.8 ? "ahead" : chance >= 0.5 ? "on-track" : "behind");
+const pctOf = (v, t) => (t > 0 ? Math.max(0, Math.min(100, Math.round((v / t) * 100))) : 0);
+/** A mission counted for "this month" starts at the month's first day, else on the day it was made. */
+const fromOf = (m) => (m.base && m.base.from) || m.created || "";
+/** Each of the last `n` days' total of `pick(t)` for the items dated in it (oldest first). */
+const dailyOf = (items, dateOf, amountOf, today, n = 60) => {
+  const first = items.map(dateOf).filter(Boolean).sort()[0] || today, span = Math.max(1, Math.min(n, daysBetween(first, today) + 1));
+  const a = new Array(span).fill(0);
+  for (const x of items) { const d = dateOf(x); if (!d) continue; const i = daysBetween(d, today); if (i >= 0 && i < span) a[span - 1 - i] += amountOf(x); }
+  return a;
+};
+const normName = (x) => latin(String(x || "")).toLowerCase().replace(/[^a-z0-9\u0600-\u06ff ]/g, " ").trim();
+const CAT_EN = { food: "food", groceries: "groceries", transport: "transport", shopping: "shopping", fun: "going out", coffee: "coffee", health: "health", gifts: "gifts" };
+
+function evalCap(m, data, now, days, ev, out) {
+  const today = iso(now), from = fromOf(m), L = data.ledger || {}, cur = homeCurrency(L);
+  const spend = ((L && L.txns) || []).filter((t) => t.type === "expense" && (!m.cat || (t.cat || "other") === m.cat));
+  const spent = spend.filter((t) => t.date && t.date >= from && t.date <= today).reduce((a, t) => a + (+t.amount || 0), 0);
+  const room = m.target - spent, what = m.cat ? CAT_EN[m.cat] || m.cat : "everything", whatAr = m.cat ? CAT_AR[m.cat] || m.cat : "كل حاجة";
+  const daily = dailyOf(spend, (t) => t.date, (t) => +t.amount || 0, today);
+  ev.push({ en: `Spent on ${what} since ${from}: ${fmtN(spent)} ${cur} of ${fmtN(m.target)}; your usual: ${fmtN((daily.reduce((a, b) => a + b, 0) / daily.length) * 30)} a month.`,
+    ar: `صرفت على ${whatAr} من ${from}: ${fmtN(spent)} ${cur} من ${fmtN(m.target)}؛ المعتاد عندك: ${fmtN((daily.reduce((a, b) => a + b, 0) / daily.length) * 30)} في الشهر.` });
+  // the chance the rest of the days stay inside the room left, if they are like your past days
+  const over = room < 0 ? 1 : days > 0 ? chanceToGather(daily, room + 0.01, days, { seed: seedOf(m.id + today) }) : 0;
+  const chance = room < 0 ? 0 : over == null ? null : 1 - over;
+  const step = room < 0 ? { en: `Over the limit by ${fmtN(-room)} — nothing more on ${what} until ${m.deadline}.`, ar: `عدّيت الحد بـ ${fmtN(-room)} — ولا جنيه زيادة على ${whatAr} لحد ${m.deadline}.` }
+    : days > 0 ? { en: `You can spend ${fmtN(room / days)} a day on ${what} until ${m.deadline}.`, ar: `تقدر تصرف ${fmtN(room / days)} في اليوم على ${whatAr} لحد ${m.deadline}.` } : null;
+  // done only when the deadline has come and the limit held
+  const state = room < 0 ? "behind" : !days ? "done" : chance == null ? "unknown" : chance >= 0.8 ? "ahead" : chance >= 0.5 ? "on-track" : "behind";
+  return out({ value: Math.round(spent), target: m.target, left: Math.max(0, Math.round(room)), pct: pctOf(spent, m.target), perDayNeed: null, perDayNow: null, chance, state, step, cap: true });
+}
+
+/** The debt the mission names (a person in Money → People whose name is in the sentence), or the only open one. */
+export function debtOf(m, L) {
+  const open = ((L && L.debts) || []).filter((d) => !d.settled);
+  const t = " " + normName(m.title) + " ";
+  return open.find((d) => normName(d.person).split(/\s+/).some((w) => w.length >= 3 && t.includes(" " + w + " "))) || (open.length === 1 ? open[0] : null);
+}
+const debtLeft = (d) => (Number(d.amount) || 0) - ((d.payments || []).reduce((a, p) => a + (Number(p.amount) || 0), 0));
+function evalDebt(m, data, now, days, ev, out) {
+  const L = data.ledger, d = debtOf(m, L), today = iso(now);
+  if (!d) return out({ value: 0, target: 0, left: 0, pct: 0, chance: null, state: "unknown", step: { en: "Add the debt in Money → People (who, how much) — the mission follows it from there.", ar: "ضيف الدين في الفلوس ← الناس (مين وكام) — المهمة هتتابعه من هناك." } });
+  const left = Math.max(0, debtLeft(d)), start = (m.base && m.base.left) || Math.max(left, Number(d.amount) || 0), paid = Math.max(0, start - left);
+  const toMe = d.type === "owed_to_me", who = d.person || "?";
+  ev.push({ en: `${toMe ? who + " owes you" : "You owe " + who}: ${fmtN(left)} left of ${fmtN(start)} (${(d.payments || []).length} payments).`, ar: `${toMe ? who + " عليه ليك" : "عليك لـ " + who}: باقي ${fmtN(left)} من ${fmtN(start)} (${(d.payments || []).length} دفعات).` });
+  if (toMe) {   // it depends on them: no forecast, a reminder instead
+    const step = left > 0 ? { en: `Send ${who} a kind reminder: ${fmtN(left)} left${days ? `, ${fmtN(left / Math.max(1, days / 30))} a month would finish it by ${m.deadline}` : ""}.`, ar: `ابعت لـ ${who} تذكير لطيف: باقي ${fmtN(left)}${days ? `، ${fmtN(left / Math.max(1, days / 30))} في الشهر تخلّصه قبل ${m.deadline}` : ""}.` } : null;
+    return out({ value: Math.round(paid), target: Math.round(start), left: Math.round(left), pct: pctOf(paid, start), chance: null, state: left <= 0 ? "done" : !days ? "late" : "unknown", step, person: who });
+  }
+  const ms = moneySense(L, now), chance = left <= 0 ? 1 : days > 0 ? chanceToGather(ms.net, left, days, { seed: seedOf(m.id + today) }) : 0;
+  const perMonth = days > 0 ? left / (days / 30) : left;
+  const step = left <= 0 ? null : { en: `Pay ${who} ${fmtN(perMonth)} a month (${fmtN(left / Math.max(1, days))} a day aside) until ${m.deadline}.`, ar: `ادفع لـ ${who} ${fmtN(perMonth)} في الشهر (${fmtN(left / Math.max(1, days))} في اليوم على جنب) لحد ${m.deadline}.` };
+  return out({ value: Math.round(paid), target: Math.round(start), left: Math.round(left), pct: pctOf(paid, start), perDayNeed: days > 0 ? left / days : left, perDayNow: null, chance, state: stateOf(left, days, chance), step, person: who });
+}
+
+/** The course the mission names (its topic's words in the sentence), or the only one. */
+export function courseOf(m, courses) {
+  const cs = (courses || []).filter((c) => c && Array.isArray(c.plan) && c.plan.length);
+  const t = " " + normName(m.title) + " ";
+  // a language's name in English or Egyptian Arabic is the same course («كورس التركي» ↔ "Turkish")
+  const alias = (w) => { for (const [en, ar] of LANG_ALIAS) if (w.startsWith(en) || ar.some((x) => w.replace(/^ال/, "").startsWith(x))) return en; return w; };
+  const words = (x) => normName(x).split(/\s+/).filter((w) => w.length >= 4).map(alias);
+  const said = words(m.title), same = (a, b) => a === b || (a.length >= 5 && b.length >= 5 && (a.startsWith(b) || b.startsWith(a)));
+  return cs.find((c) => words([c.topic, c.title].filter(Boolean).join(" ")).some((w) => said.some((x) => same(x, w)))) || (cs.length === 1 ? cs[0] : null);
+}
+const LANG_ALIAS = [["turkish", ["تركي"]], ["english", ["انجليز", "انجلش", "انقليز"]], ["french", ["فرنس", "فرنساوي"]], ["german", ["الماني", "ألماني"]], ["spanish", ["اسبان"]], ["italian", ["ايطال"]], ["arabic", ["عربي"]], ["chinese", ["صيني"]], ["japanese", ["ياباني"]]];
+/** P(X ≥ k) for X ~ Poisson(λ). */
+const poissonAtLeast = (k, lam) => { if (k <= 0) return 1; if (lam <= 0) return 0; let p = Math.exp(-lam), c = p; for (let i = 1; i < k; i++) { p *= lam / i; c += p; } return Math.max(0, 1 - c); };
+function evalLearn(m, data, now, days, ev, out) {
+  const c = courseOf(m, data.courses), today = iso(now);
+  if (!c) return out({ value: 0, target: 0, left: 0, pct: 0, chance: null, state: "unknown", step: { en: "Start the course in Learn first — the mission counts its lessons.", ar: "ابدأ الكورس في اتعلّم الأول — المهمة بتعدّ دروسه." } });
+  const total = c.plan.length, done = (c.lessons || []).filter((l) => l.done).length, left = Math.max(0, total - done);
+  const recent = (c.lessons || []).filter((l) => l.done && l.day && daysBetween(l.day, today) < 14).length;
+  const rate = recent / 14, lam = rate * days;
+  const chance = left <= 0 ? 1 : days > 0 && (c.lessons || []).some((l) => l.done) ? poissonAtLeast(left, lam) : null;
+  ev.push({ en: `${c.topic || c.title}: ${done} of ${total} lessons done; ${recent} in the last 2 weeks.`, ar: `${c.topic || c.title}: خلصت ${done} من ${total} درس؛ ${recent} في آخر أسبوعين.` });
+  const perWeek = days > 0 ? Math.ceil((left / days) * 7) : left;
+  const step = left <= 0 ? null : { en: `${perWeek} lesson${perWeek === 1 ? "" : "s"} a week finishes it by ${m.deadline}${rate > 0 ? ` (you do about ${fmtN(rate * 7, 1)} now)` : ""}.`, ar: `${perWeek} درس في الأسبوع يخلّصه قبل ${m.deadline}${rate > 0 ? ` (إنت بتعمل حوالي ${fmtN(rate * 7, 1)} دلوقتي)` : ""}.` };
+  return out({ value: done, target: total, left, pct: pctOf(done, total), perDayNeed: null, perDayNow: null, chance, state: stateOf(left, days, chance), step, course: c.id || c.topic });
+}
+
+const flive = (a) => (a || []).filter((x) => x && !x.del);
+function evalRevenue(m, data, now, days, ev, out) {
+  const F = data.fleet, today = iso(now), from = fromOf(m);
+  if (!F) return out({ value: 0, target: m.target, left: m.target, pct: 0, chance: null, state: "unknown", step: { en: "Open Business → Fleet & rentals and add the cranes and their work — the mission reads it.", ar: "افتح الأعمال ← الأسطول والإيجار وضيف الونشات وشغلها — المهمة بتقرا منه." } });
+  const entries = flive(F.entries), cur = (F.settings && F.settings.currency) || "";
+  const earned = entries.filter((e) => e.date >= from && e.date <= today).reduce((a, e) => a + (+e.amount || 0), 0), left = Math.max(0, m.target - earned);
+  const daily = dailyOf(entries, (e) => e.date, (e) => +e.amount || 0, today);
+  const chance = left <= 0 ? 1 : days > 0 ? chanceToGather(daily, left, days, { seed: seedOf(m.id + today) }) : 0;
+  const working = new Set(flive(F.jobs).filter((j) => j.status === "active").map((j) => j.crane)), cranes = flive(F.cranes), idle = cranes.filter((c) => !working.has(c.id));
+  ev.push({ en: `Fleet's work since ${from}: ${fmtN(earned)} ${cur}; ${working.size} of ${cranes.length} cranes on a job now.`, ar: `شغل الأسطول من ${from}: ${fmtN(earned)} ${cur}؛ ${working.size} من ${cranes.length} ونش في شغل دلوقتي.` });
+  let step = null;
+  if (left > 0 && idle.length && days > 0) {
+    const best = [...idle].sort((a, b) => (b.daily || 0) - (a.daily || 0))[0], add = (best.daily || 0) * days;
+    if (add > 0) step = { en: `${idle.length} crane${idle.length === 1 ? "" : "s"} idle — a job for ${best.name} at its day rate (${fmtN(best.daily)}) adds about ${fmtN(add)} by ${m.deadline}.`, ar: `${idle.length} ونش واقف — شغلانة لـ ${best.name} بسعر يومه (${fmtN(best.daily)}) تزوّد حوالي ${fmtN(add)} لحد ${m.deadline}.`, crane: best.id };
+  }
+  if (!step && left > 0) step = { en: `${fmtN(days > 0 ? left / days : left)} a day of work entries is needed until ${m.deadline}.`, ar: `محتاج ${fmtN(days > 0 ? left / days : left)} في اليوم شغل مسجّل لحد ${m.deadline}.` };
+  return out({ value: Math.round(earned), target: m.target, left: Math.round(left), pct: pctOf(earned, m.target), perDayNeed: days > 0 ? left / days : left, perDayNow: daily.reduce((a, b) => a + b, 0) / daily.length, chance, state: stateOf(left, days, chance), step });
+}
+function evalCollect(m, data, now, days, ev, out) {
+  const F = data.fleet, today = iso(now), from = fromOf(m);
+  if (!F) return out({ value: 0, target: m.target, left: m.target, pct: 0, chance: null, state: "unknown", step: { en: "Open Business → Fleet & rentals and record the payments — the mission reads them.", ar: "افتح الأعمال ← الأسطول والإيجار وسجّل الدفعات — المهمة بتقرا منها." } });
+  const ins = flive(F.cheques).filter((q) => q.dir === "in"), cur = (F.settings && F.settings.currency) || "";
+  const got = ins.filter((q) => q.status === "cleared" && q.due >= from && q.due <= today).reduce((a, q) => a + q.amount, 0);
+  const coming = ins.filter((q) => q.status === "pending" && q.due <= (m.deadline || today));
+  const comingSum = coming.reduce((a, q) => a + q.amount, 0), left = Math.max(0, m.target - got);
+  // cheques can bounce: your own clients' share of bounced cheques so far
+  const decided = ins.filter((q) => q.method === "cheque" && q.status !== "pending"), bounce = decided.length ? decided.filter((q) => q.status === "bounced").length / decided.length : 0.05;
+  const chance = left <= 0 ? 1 : comingSum >= left ? Math.max(0, Math.min(0.95, 1 - bounce * Math.max(1, coming.length / 2))) : null;
+  ev.push({ en: `Collected since ${from}: ${fmtN(got)} ${cur}; cheques due by ${m.deadline}: ${coming.length} (${fmtN(comingSum)}); bounced before: ${Math.round(bounce * 100)}%.`, ar: `اتحصّل من ${from}: ${fmtN(got)} ${cur}؛ شيكات مستحقة قبل ${m.deadline}: ${coming.length} (${fmtN(comingSum)})؛ اللي ارتد قبل كده: ${Math.round(bounce * 100)}%.` });
+  // who to call: the clients who owe the most (opening + work − payments)
+  const bal = (k) => { const jobs = new Set(flive(F.jobs).filter((j) => j.client === k.id).map((j) => j.id)); const work = flive(F.entries).filter((e) => jobs.has(e.job)).reduce((a, e) => a + e.amount, 0);
+    const paid = ins.filter((q) => q.client === k.id && q.status !== "bounced").reduce((a, q) => a + q.amount, 0); return (k.opening || 0) + work - paid; };
+  const owe = flive(F.clients).map((k) => ({ k, b: bal(k) })).filter((x) => x.b > 0).sort((a, b) => b.b - a.b).slice(0, 3);
+  const gap = Math.max(0, left - comingSum);
+  const step = left <= 0 ? null : gap > 0 && owe.length ? { en: `Still ${fmtN(gap)} beyond the cheques due — call ${owe.map((x) => `${x.k.name} (${fmtN(x.b)})`).join(", ")}.`, ar: `لسه ${fmtN(gap)} غير الشيكات المستحقة — كلّم ${owe.map((x) => `${x.k.name} (${fmtN(x.b)})`).join("، ")}.`, clients: owe.map((x) => x.k.id) }
+    : { en: `${coming.length} cheque${coming.length === 1 ? "" : "s"} cover it — deposit each on its date.`, ar: `${coming.length} شيك بيغطّوها — ودّع كل واحد في ميعاده.` };
+  const state = left <= 0 ? "done" : !days ? "late" : chance == null ? "behind" : stateOf(left, days, chance);
+  return out({ value: Math.round(got), target: m.target, left: Math.round(left), pct: pctOf(got, m.target), perDayNeed: days > 0 ? gap / days : gap, perDayNow: null, chance, state, step });
 }
 const fmtN = (v, d = 0) => (Math.round(Number(v) * 10 ** d) / 10 ** d).toLocaleString("en-US", { maximumFractionDigits: d });
 const pc = (c) => Math.round(c * 100) + "%";
@@ -230,6 +388,9 @@ export function startMission(p, data, now = Date.now()) {
   const base = {};
   if (p.kind === "save") base.balance = moneySense(data.ledger, now).balance;
   if (p.kind === "weight") base.kg = bodySense(data.fit, now).last;
+  // v6.44: a mission for "this month" counts from the 1st; the debt's amount left when it started
+  if (p.kind === "cap" || p.kind === "revenue" || p.kind === "collect") { const t0 = iso(now); base.from = p.deadline && p.deadline.slice(0, 7) === t0.slice(0, 7) ? t0.slice(0, 8) + "01" : t0; }
+  if (p.kind === "debt") { const d = debtOf({ title: p.title }, data.ledger); if (d) { base.left = Math.max(0, debtLeft(d)); base.person = d.person; } }
   return { id, ...p, created: iso(now), base, status: "active", log: [] };
 }
 

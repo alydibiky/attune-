@@ -7,10 +7,21 @@ import { tr, getLang } from "./i18n.js";
 import * as M from "./missions.js";
 import * as S from "./scout.js";
 import * as LS from "./lifesim.js";
+import { loadFleet } from "./fleet-store.js";
 
 const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") || d; } catch (e) { return d; } };
-const dataNow = () => ({ ledger: j("ledger.v3", null), fit: j("attune:fit:v1", null), market: S.loadMarket() });
+// v6.44: Learn's courses (a "finish the course" mission) and Fleet (company missions; IndexedDB, read once, then kept here)
+let FLEET = null, fleetAsk = null;
+function useFleet() {
+  const [, set] = useState(0);
+  useEffect(() => { if (!fleetAsk) fleetAsk = loadFleet().then((f) => { FLEET = f; }).catch(() => {}); let on = true; fleetAsk.then(() => on && set((x) => x + 1)); return () => { on = false; }; }, []);
+  return FLEET;
+}
+const dataNow = () => ({ ledger: j("ledger.v3", null), fit: j("attune:fit:v1", null), market: S.loadMarket(), courses: j("attune:daily:courses:v1", []), fleet: FLEET });
 const EXAMPLES = [["Save 60,000 by June", "عايز أوفر 60 ألف قبل يونيو"], ["Lose 6 kg before 20 January", "عايز أخس 6 كيلو قبل 20 يناير"], ["Buy a Corolla 2022 under 900k by 1 December", "أشتري كورولا 2022 بأقل من 900 ألف قبل 1 ديسمبر"]];
+// v6.44: what was read, per kind ({t} the number, {c} the spending category)
+const READ = { save: "Save {t}", weight: "Lose {t} kg", buy: "Buy it for {t} or less", cap: "Spend at most {t} on {c}", debt: "Pay off the debt (from Money → People)", learn: "Finish the course (from Learn)", revenue: "Company: Fleet earns {t}", collect: "Company: collect {t} from clients" };
+const CAT_NAME = { food: "food", groceries: "groceries", transport: "transport", shopping: "shopping", fun: "going out", coffee: "coffee", health: "health", gifts: "gifts" };
 const STATE = { done: ["Done", "ok"], ahead: ["Ahead", "ok"], "on-track": ["On track", "due"], behind: ["Behind", "late"], late: ["Deadline passed", "late"], unknown: ["Needs data", ""] };
 const n = (v, d = 0) => (Math.round(Number(v) * 10 ** d) / 10 ** d).toLocaleString("en-US", { maximumFractionDigits: d });
 
@@ -42,7 +53,7 @@ function Card({ m, e, onChange, onDelete, openScout }) {
   const [why, setWhy] = useState(false);
   const ar = getLang() === "ar";
   const [label, cls] = STATE[e.state] || STATE.unknown;
-  const unit = m.kind === "weight" ? " kg" : "";
+  const unit = m.kind === "weight" ? " kg" : m.kind === "learn" ? " " + tr("lessons") : "";
   return (
     <div className="c-card space-y-2.5" data-testid="mission">
       <div className="flex items-start gap-3">
@@ -55,7 +66,7 @@ function Card({ m, e, onChange, onDelete, openScout }) {
       </div>
       <div className="flex items-center gap-3">
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--c-ln)" }} aria-hidden="true"><div className="h-full rounded-full" style={{ width: e.pct + "%", background: "var(--c-acc, #14b8a6)" }} /></div>
-        <span className="c-num text-[12.5px] shrink-0" data-testid="mission-progress">{n(e.value, m.kind === "weight" ? 1 : 0)}{unit} / {n(e.target, m.kind === "weight" ? 1 : 0)}{unit}</span>
+        <span className="c-num text-[12.5px] shrink-0" data-testid="mission-progress">{m.kind === "cap" ? tr("spent") + " " : ""}{n(e.value, m.kind === "weight" ? 1 : 0)}{m.kind === "learn" ? "" : unit} / {n(e.target, m.kind === "weight" ? 1 : 0)}{unit}</span>
       </div>
       <div className="flex items-center justify-between gap-3">
         <span className="text-[13px]">{e.chance == null ? <span className="c-sub">{tr("No forecast yet")}</span> : <><span className="c-sub">{tr("Chance by the deadline")}</span> <b className="c-num" data-testid="mission-chance">{Math.round(e.chance * 100)}%</b></>}</span>
@@ -78,8 +89,9 @@ export function MissionsPage({ flash }) {
   const [data, setData] = useState(() => M.loadMissions());
   const [text, setText] = useState(() => { try { const t = localStorage.getItem("attune:missions:draft") || ""; localStorage.removeItem("attune:missions:draft"); return t; } catch (e) { return ""; } });   // typed on Home
   const [v, setV] = useState(0);
+  const fleet = useFleet();
   useEffect(() => { const on = () => setV((x) => x + 1); window.addEventListener("storage", on); document.addEventListener("visibilitychange", on); return () => { window.removeEventListener("storage", on); document.removeEventListener("visibilitychange", on); }; }, []);
-  const d = useMemo(dataNow, [v, data]);
+  const d = useMemo(dataNow, [v, data, fleet]);
   const now = Date.now();
   const rows = useMemo(() => data.items.filter((m) => m.status !== "done").map((m) => ({ m, e: M.evaluate(m, d, now) })), [data, d]);
   // each look writes today's point on the chance line and re-makes the morning notification
@@ -112,8 +124,8 @@ export function MissionsPage({ flash }) {
         <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} dir="auto" data-testid="missions-input" placeholder={tr("e.g. «عايز أوفر 60 ألف قبل يونيو»")}
           className="w-full bg-transparent border rounded-xl p-3 text-[14px]" style={{ borderColor: "var(--c-ln)" }} />
         {text.trim() ? (parsed
-          ? <p className="text-[12.5px] c-sub" data-testid="missions-read">{tr(parsed.kind === "save" ? "Save {t}" : parsed.kind === "weight" ? "Lose {t} kg" : "Buy it for {t} or less", { t: n(parsed.target) })}{parsed.deadline ? " · " + tr("by {d}", { d: parsed.deadline }) : " · " + tr("add a date (e.g. by June)")}</p>
-          : <p className="text-[12.5px] c-sub">{tr("Say a number and a date: save 60,000 by June · lose 6 kg before 20 January · buy … under 900k by 1 December.")}</p>) : null}
+          ? <p className="text-[12.5px] c-sub" data-testid="missions-read">{tr(READ[parsed.kind] || "Buy it for {t} or less", { t: n(parsed.target), c: tr(CAT_NAME[parsed.cat] || "everything") })}{parsed.deadline ? " · " + tr("by {d}", { d: parsed.deadline }) : " · " + tr("add a date (e.g. by June)")}</p>
+          : <p className="text-[12.5px] c-sub">{tr("Say a number and a date: save 60,000 by June · lose 6 kg before 20 January · buy … under 900k by 1 December · spend no more than 3,000 on food this month · pay off Ahmed's debt by December · finish the Turkish course by December · Fleet earns 500k this month.")}</p>) : null}
         <div className="flex flex-wrap gap-1.5">
           {!text.trim() ? EXAMPLES.map(([en, a]) => <button key={en} className="c-pill" onClick={() => setText(ar ? a : en)} data-testid="missions-example">{ar ? a : en}</button>) : null}
           {text.trim() ? <button className="c-btn ms-auto" disabled={!parsed || !parsed.deadline} onClick={add} data-testid="missions-start">{tr("Start the mission")}</button> : null}
@@ -123,7 +135,7 @@ export function MissionsPage({ flash }) {
         <span>{tr("Your money missions need {a} a month together, but you keep about {b}. Pause one, or move a date.", { a: n(conflict.need), b: n(conflict.keep) })}</span></div> : null}
       {rows.length ? rows.map(({ m, e }) => <Card key={m.id} m={m} e={e} onChange={(x) => put(data.items.map((y) => (y.id === x.id ? x : y)))} onDelete={(x) => put(data.items.filter((y) => y.id !== x.id))}
         openScout={() => window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "scout" } }))} />)
-        : <p className="c-sub text-[13px] text-center py-6">{tr("No missions yet. Start one above — a saving goal, a weight goal, or something to buy.")}</p>}
+        : <p className="c-sub text-[13px] text-center py-6">{tr("No missions yet. Start one above — a saving goal, a weight goal, something to buy, a spending limit, a debt, a course, or a company goal for Fleet.")}</p>}
       <DecisionLab />
     </div>);
 }
@@ -191,6 +203,7 @@ function DecisionLab() {
 
 /** Home's line for the missions: the one most at risk (chance + today's step), or an invitation to start one. */
 export function MissionsLine({ go }) {
+  useFleet();
   const data = M.loadMissions(), act = data.items.filter((m) => m.status === "active"), ar = getLang() === "ar";
   if (!act.length) return (
     <button onClick={go} className="c-card w-full text-start p-3 flex items-center gap-3" data-testid="home-missions">

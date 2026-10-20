@@ -759,15 +759,24 @@ food Add sheet minimal.
 
 ## AM. 20 Oct 2026 — v6.44 (HANDOFF §5.95). Read this first, then AL.
 No new notes from Ali; built from AL's open list: Fleet on Home's Today line · deletes travel in Sync · a person's shadow
-erased with them ("Its shadow too").
+erased with them ("Its shadow too") · then ("continue with the rest") Missions 3–4 (spending limit, debt, course, company:
+Fleet revenue + collect) · Fleet photos travel in Sync.
+### Ali to decide
+1. **Recall phase 2 (search by meaning, Arabic ↔ English)** — A: download bge-m3 (438 MB, MIT; the only embedder that found
+   every passage in our test) · B: the small e5 (132 MB; weaker, 58/104) · C: keep word search. Recommendation A, as an
+   optional download.
 ### Ali's phone checklist (v6.44)
 1. ⬜ Business → Fleet & rentals with cranes on jobs → Home → Today: "N cranes working" (07:00) and an overdue cheque (09:00);
    tap → Fleet opens.
 2. ⬜ Sync two devices once → delete a Money entry on the phone → sync again → it is gone on the other device too.
 3. ⬜ Studio → Edit a photo with a person and a sun shadow → tap the person → the shadow shows lighter blue → Erase → both
    gone. "Its shadow too" switches it off. Tell if a shadow was missed (send the photo).
+4. ⬜ Missions: «مش عايز أصرف أكتر من 3000 على الأكل الشهر ده» → "Spend at most 3,000 on food" → Start → spent / limit and
+   what you may spend a day. «عايز أخلص دين أحمد قبل ديسمبر» (with the debt in Money → People). «عايز الأسطول يجيب 500 ألف
+   الشهر ده» → the idle crane as today's step.
+5. ⬜ Sync with Fleet time-sheet photos → open the entry on the other device → the photo is there.
 ### Next
-Reflections, NPU, Expand, GPU check · Missions 3–4 · W6 subtitles · Fleet photo sync · desktop Google sync · Recall 2 ·
+Reflections, NPU, Expand, GPU check · W6 subtitles · desktop Google sync · Recall 2 (after Ali picks) ·
 Business depth (Ali's ERP screens, one by one).
 
 ## AL. 20 Oct 2026 — v6.43 part 4 (HANDOFF §5.94). Read this first, then AK.

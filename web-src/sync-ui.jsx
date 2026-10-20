@@ -7,9 +7,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { Wifi, Cloud, Loader2, CheckCircle2, AlertTriangle, Copy } from "lucide-react";
 import { tr } from "./i18n.js";
 import * as Y from "./sync.js";
-import { loadFleet, saveFleet } from "./fleet-store.js";
+import { fleetSyncExtra } from "./fleet-store.js";
 
-const extra = { read: async () => { const f = await loadFleet(); return f ? { "idb:fleet": JSON.stringify(f) } : {}; }, write: async (k, v) => { if (k === "idb:fleet") await saveFleet(JSON.parse(v)); } };
+// v6.44: Fleet's state and its photos (fleet-store.js)
+const extra = fleetSyncExtra;
 const call = (m, a) => (window.__attuneNativeCall ? window.__attuneNativeCall(m, a) : Promise.reject(new Error("Only available in the Attune app")));
 
 function useLocalNet(N) {

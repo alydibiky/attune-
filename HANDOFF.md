@@ -2193,7 +2193,7 @@ Ali: "Do as per your recommendation" (option 1 + option 2's Today line) and "did
   dedicated model; LaMa fills shadows only if they are painted too), NPU speed (all CPU; GPU path for drawing still unverified
   on Ali's phone), "Expand" (outpainting — possible later with Studio Pro's edit model).
 
-### 5.95 (20 Oct 2026) — v6.44: Fleet on the Today line, deletes that travel, a person's shadow erased with them
+### 5.95 (20 Oct 2026) — v6.44: Fleet on the Today line, deletes that travel, a person's shadow erased with them, Missions 3–4, Fleet photos in Sync
 From AL's "still open" list (no new notes from Ali this session; objective items only, nothing subjective decided alone).
 - **Fleet on Home's Today line** (home.js `todayLine({ fleet })`, home-ui.jsx reads Fleet's IndexedDB once with `loadFleet`):
   "N cranes working" at 07:00 (crane @ site, up to 3) and what needs you at 09:00, when Fleet's alert comes — cheque overdue /
@@ -2214,8 +2214,25 @@ From AL's "still open" list (no new notes from Ali this session; objective items
   subject — dark ground, not a shadow) and drawn lighter; the chip "Its shadow too" (on by default) adds it to the mask the
   eraser gets (MI-GAN or Eraser HD). ~10 ms. Measured on synthetic scenes only (unit v744shadow, e2e_v744shadow) — Ali should
   try real photos (sun shadows on sand/asphalt); soft indoor shadows may not be caught (then the brush still works).
-- **Still open**: reflections (needs a dedicated model), NPU speed, Expand (outpaint), GPU check on the phone; Missions 3–4,
-  W6 subtitles, Fleet photo sync (attachments), desktop Google sync, Recall 2, Business depth (needs Ali's screens).
+- **Missions phases 3–4** (missions.js; tests unit v744missions, e2e_v744missions) — 5 new kinds, each from real data:
+  `cap` (a spending limit per Money category or all spending; the chance that the days left stay in the room, bootstrapped
+  from your own daily spending of it; step = what you may spend a day), `debt` (Money → People: the person named in the
+  sentence, or the only open debt; paid since the start / left; the chance from the money you keep; owed TO you → no chance,
+  a reminder), `learn` (a Learn course matched by its words — «كورس التركي» ↔ "Turkish" via LANG_ALIAS; Poisson chance from
+  the lessons done in the last 14 days; step = lessons a week), and company missions from Fleet (IndexedDB, read once by
+  `useFleet` in missions-ui): `revenue` (work entries since the 1st; bootstrap of Fleet's daily income; step = the idle crane
+  with the best day rate) and `collect` (incoming payments cleared + cheques due by the date, discounted by your clients'
+  own bounce rate; step = who owes most, to call). "this month" / «الشهر ده» / "end of the month" → the 31st; a
+  this-month mission counts from the 1st. Questions ("how much did Fleet earn this month?") are never missions (`asks`),
+  company kinds need a want/goal word or an order ("collect …"). "before December" keeps phase 1's rule = the month's end.
+  "30+ kinds" in the plan was not reached: 8 kinds now, each with its data; more need more data sources.
+- **Fleet photos travel in Sync** (fleet-store.js `fleetSyncExtra`, `attachmentIds`, `pickAttachments`): the time-sheet /
+  receipt photos live records point at, newest first, up to 30 MB of data-URL text per sync file (the Wi-Fi exchange takes
+  64 MB); a photo is written only when the device doesn't have it (ids are never reused). Tests: unit v744fleetsync.
+- **Still open**: reflections (needs a dedicated model), NPU speed, Expand (outpaint), GPU check on the phone; W6 subtitles
+  (needs an on-device speech model), desktop Google sync (needs Ali's Google setup), Recall 2 (embedder: bge-m3 438 MB was
+  the only one good enough across Arabic ↔ English in RESEARCH_STORAGE — a download-size choice for Ali), Business depth
+  (needs Ali's ERP screens).
 
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
