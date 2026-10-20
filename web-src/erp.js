@@ -15,6 +15,7 @@ import { getPower } from "./power.js";
 // ---- field types ------------------------------------------------------------------------
 import { homeCurrency } from "./locale.js";
 import * as SC from "./erp-screens.js";
+import { DEEP_TEMPLATES, DEEP_WORDS } from "./erp-templates.js";
 export const FIELD_TYPES = {
   text: "Text", longtext: "Long text", number: "Number", money: "Money", date: "Date", bool: "Yes / No",
   choice: "Choice", link: "Link to another table", phone: "Phone", email: "Email", auto: "Auto number", formula: "Formula",
@@ -717,6 +718,7 @@ export function guessTemplate(description) {
     services: /(contract|project|client|quote|service|consult|مقاول|مشروع|عميل|عرض سعر|خدمات)/g,
     restaurant: /(restaurant|cafe|café|menu|kitchen|food|coffee|مطعم|كافيه|قهوة|منيو|أكل)/g,
   };
+  Object.assign(score, DEEP_WORDS);   // v6.44: the deep templates too
   let best = null, bs = 0;
   for (const [id, re] of Object.entries(score)) { const n = (t.match(re) || []).length; if (n > bs) { bs = n; best = id; } }
   return best ? TEMPLATES.find((x) => x.id === best) : null;
@@ -794,8 +796,24 @@ export const TEMPLATES = [
       { name: "Ingredients", fields: [{ name: "Ingredient", type: "text", required: true }, { name: "Unit", type: "choice", options: ["kg", "g", "l", "piece"] }, { name: "In stock", type: "number" }, { name: "Reorder at", type: "number" }, { name: "Unit cost", type: "money" }] },
       { name: "Staff", fields: [{ name: "Name", type: "text", required: true }, { name: "Role", type: "choice", options: ["Chef", "Waiter", "Cashier", "Delivery", "Manager"] }, { name: "Phone", type: "phone" }] },
     ] } },
+  ...DEEP_TEMPLATES,   // v6.44 (erp-templates.js): clinic, academy, property, workshop, gym, salon, pharmacy, transport, contractor, wholesale
   { id: "blank", title: "Blank", blurb: "Start from one empty table", spec: { name: "My business", tables: [{ name: "Table 1", fields: [{ name: "Name", type: "text" }, { name: "Notes", type: "longtext" }] }] } },
 ];
+
+// v6.44 depth for the older templates: payments where there were none, and the restaurant's ingredients move (the crane
+// template keeps its six tables: the builder's interview offers Payments there, and Fleet & rentals is the deep crane system)
+{
+  const add = (id, tables) => { const t = TEMPLATES.find((x) => x.id === id); if (t) t.spec.tables.push(...tables); };
+  const pay = (party) => ({ name: "Payments", fields: [{ name: "Receipt no", type: "auto", prefix: "RCT-" }, { name: party.replace(/s$/, ""), type: "link", link: party }, { name: "Date", type: "date" }, { name: "Amount", type: "money" }, { name: "Method", type: "choice", options: ["Cash", "Card", "Bank transfer", "Cheque"] }] });
+  add("shop", [pay("Customers")]);
+  add("services", [pay("Clients")]);
+  add("restaurant", [
+    { name: "Suppliers", fields: [{ name: "Supplier", type: "text", required: true }, { name: "Phone", type: "phone" }] },
+    { name: "Ingredient purchases", fields: [{ name: "Date", type: "date" }, { name: "Supplier", type: "link", link: "Suppliers" }, { name: "Ingredient", type: "link", link: "Ingredients" }, { name: "Qty", type: "number" }, { name: "Unit cost", type: "money" }, { name: "Total", type: "formula", formula: "[Qty] * [Unit cost]" }] },
+    { name: "Ingredients used", fields: [{ name: "Date", type: "date" }, { name: "Ingredient", type: "link", link: "Ingredients" }, { name: "Qty", type: "number" }, { name: "Reason", type: "choice", options: ["Cooking", "Waste", "Staff meal"] }] },
+    { name: "Supplier payments", fields: [{ name: "Supplier", type: "link", link: "Suppliers" }, { name: "Date", type: "date" }, { name: "Amount", type: "money" }] },
+  ]);
+}
 
 // ---- licences: each system is paid for once --------------------------------------------
 /* A system is free to design and try (FREE_ROWS records per table). To use it

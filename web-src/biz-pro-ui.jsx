@@ -7,6 +7,7 @@ import { X, Printer, Download, Trash2, Package, Wallet, AlertTriangle, Check, Sp
 import { tr, getLang } from "./i18n.js";
 import * as E from "./erp.js";
 import * as P from "./erp-pro.js";
+import { insights } from "./erp-insights.js";   // v6.44: trend, top customers, statuses, bookings, stock value
 import { xlsxFromSheets } from "./convert.js";
 import { useSubBack } from "./backstack.js";
 import { askConfirm } from "./confirm.jsx";
@@ -46,6 +47,28 @@ function Kpi({ label, value, tone, testid }) {
   return <div className={card + " p-3"} data-testid={testid}><p className="text-[20px] font-extrabold tabular-nums leading-tight" style={tone ? { color: tone } : null}>{value}</p><p className={"text-[11.5px] leading-snug " + muted}>{label}</p></div>;
 }
 
+/** v6.44 Insights — for any system: the last 6 months, the top customers, every status, bookings, stock value. */
+function Insights({ sys }) {
+  const I = insights(sys, today());
+  const top = Math.max(1, ...I.series.map((x) => x.total));
+  const any = I.series.some((x) => x.total) || I.statuses.length || I.usage.length || I.stock.some((x) => x.value);
+  if (!any) return null;
+  const M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return <div className="space-y-3" data-testid="biz-insights">
+    {I.series.some((x) => x.total) ? <div className={card + " p-3.5"} data-testid="biz-insights-trend">
+      <p className="text-[13px] font-bold mb-2">{tr("The last 6 months")}{I.change != null ? <span className={"ms-2 font-semibold " + (I.change >= 0 ? "text-emerald-700" : "text-[#B91C1C]")}>{I.change >= 0 ? "+" : ""}{I.change}% {tr("vs last month")}</span> : null}</p>
+      <div className="flex items-end gap-1.5 h-24">{I.series.map((x) => <div key={x.ym} className="flex-1 flex flex-col items-center gap-1"><span className="w-full rounded-t-md" style={{ height: Math.max(2, (x.total / top) * 80), background: "var(--biz)" }} /><span className={"text-[10.5px] " + muted}>{tr(M[+x.ym.slice(5, 7) - 1])}</span></div>)}</div>
+      <p className={"text-[12px] mt-1 " + muted}>{tr("This month")}: <b>{money(sys, I.thisMonth)}</b></p></div> : null}
+    {I.top.length ? <div className={card + " p-3.5"} data-testid="biz-insights-top"><p className="text-[13px] font-bold mb-1.5">{tr("Top this year")}</p>
+      {I.top.map((x, i) => <p key={i} className="flex justify-between gap-2 text-[13px] py-0.5"><span className="truncate" dir="auto">{i + 1}. {x.name} <span className={muted}>· {tr("{n} records", { n: x.count })}</span></span><b className="tabular-nums shrink-0">{money(sys, x.total)}</b></p>)}</div> : null}
+    {I.usage.map((u) => <div key={u.table} className={card + " p-3.5"} data-testid="biz-insights-usage"><p className="text-[13px] font-bold mb-1.5"><span dir="auto">{u.assets}</span> · {tr("booked this month")} <span className={muted}>({tr("average {p}%", { p: u.avg })})</span></p>
+      {u.rows.slice(0, 8).map((r, i) => <div key={i} className="flex items-center gap-2 text-[12.5px] py-0.5"><span className="w-28 truncate" dir="auto">{r.name}</span><span className="flex-1 h-2 rounded-full bg-[#EEF2F7] overflow-hidden"><span className="block h-full" style={{ width: r.pct + "%", background: "var(--biz)" }} /></span><span className="w-10 text-end tabular-nums">{r.pct}%</span></div>)}</div>)}
+    {I.statuses.length ? <div className={card + " p-3.5"} data-testid="biz-insights-status"><p className="text-[13px] font-bold mb-1.5">{tr("By status")}</p>
+      {I.statuses.map((x) => <div key={x.tid} className="py-1"><p className={"text-[12px] " + muted} dir="auto">{x.table} · {x.total}</p><div className="flex flex-wrap gap-1.5 mt-0.5">{x.counts.map((c) => <span key={c.value} className="px-2 py-0.5 rounded-full bg-[#EEF2F7] text-[12px]" dir="auto">{c.value} <b>{c.n}</b></span>)}</div></div>)}</div> : null}
+    {I.stock.filter((x) => x.value != null).map((x) => <div key={x.table} className={card + " p-3.5 flex justify-between text-[13px]"} data-testid="biz-insights-stock"><span dir="auto">{tr("Stock value at cost")} · {x.table}</span><b className="tabular-nums">{money(sys, x.value)}</b></div>)}
+  </div>;
+}
+
 /** The Business tab. */
 export function ProPanel({ sys, setSys, flash, saveFile, go, wide }) {
   const [stmt, setStmt] = useState(null);        // { p, id }
@@ -67,6 +90,7 @@ export function ProPanel({ sys, setSys, flash, saveFile, go, wide }) {
         {o.has.dues ? <Kpi label={tr("Due or overdue")} value={o.due.length} tone={o.due.some((x) => x.overdue) ? "#B91C1C" : null} testid="biz-pro-due" /> : null}
       </div>
 
+      <Insights sys={sys} />
       {nothing ? <div className={card + " p-4 text-[13.5px] " + muted} data-testid="biz-pro-none">{tr("This system has no stock, balances, due dates or bookings yet. Ask the AI to add them, e.g. \"add a Payments table linked to Invoices\".")}</div> : null}
 
       {o.due.length || o.low.length ? <div className={card + " p-3.5 space-y-1.5"} data-testid="biz-pro-warn"><p className="text-[13px] font-bold flex items-center gap-1.5"><AlertTriangle size={15} className="text-amber-600" />{tr("Needs you")}</p>

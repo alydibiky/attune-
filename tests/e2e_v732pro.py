@@ -61,7 +61,7 @@ with sync_playwright() as p:
     page.click("[data-testid=biz-pro-excel]")
     page.wait_for_function("() => window.__mock.lastSaved && /\\.xlsx$/.test(window.__mock.lastSaved.name)", timeout=10000)
     xz = zipfile.ZipFile(io.BytesIO(base64.b64decode(page.evaluate("window.__mock.lastSaved.b64"))))
-    check(len([n for n in xz.namelist() if n.startswith("xl/worksheets/")]) == 5, "Excel: one sheet per table (5)")
+    check(len([n for n in xz.namelist() if n.startswith("xl/worksheets/")]) == 6, "Excel: one sheet per table (6 — v6.44 added Payments to the shop template)")
     page.click("[data-testid=biz-pro-rules]"); page.wait_for_selector("[data-testid=biz-pro-rulelist]")
     check(page.locator("[data-testid=biz-pro-rule-stock]").count() == 1 and page.locator("[data-testid=biz-pro-rule-balances]").count() == 1, "it says what it does: stock and balances")
     page.locator("[data-testid=biz-pro-rulelist] button[aria-label=Close]").click()
