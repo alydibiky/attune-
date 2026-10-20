@@ -10,6 +10,8 @@ import * as F from "./fleet.js";
 import * as D from "./fleet-desk.js";
 import { xlsxFromRows } from "./convert.js";
 import { askConfirm } from "./confirm.jsx";
+import { portalData, portalHTML } from "./fleet-portal.js";
+import { sealData } from "./biz-vault.js";
 import { card, btnP, btnS, inp, muted, num, nameOf, Txt, DateF, Seg, Tag, Empty, Kpi, SaveBtn, printHTML, saveOut } from "./fleet-ui.jsx";
 
 const isAr = () => getLang() === "ar";
@@ -154,5 +156,29 @@ export function ListsPane({ s, run }) {
           <button className="w-9 h-9 grid place-items-center text-[#475569]" aria-label={tr("Rename")} onClick={() => setEdit({ from: x.name, to: x.name })} data-testid="fleet-ln-rename"><Pencil size={15} /></button>
           <button className="w-9 h-9 grid place-items-center text-[#94A3B8]" aria-label={tr("Remove")} onClick={async () => { if (await askConfirm("Remove this name from the list?", { yes: "Remove" })) run((st) => D.removeName(st, list, x.name), tr("Removed")); }} data-testid="fleet-ln-remove"><Trash2 size={15} /></button></>}</div>)
       : <Empty>{tr("Nothing here yet.")}</Empty>}
+  </div>;
+}
+
+// ---- a client's page → "Client page" (the portal: fleet-portal.js) ------------------------------------------------------------------
+/** Make the page a client opens on their own phone: their balance, invoices, payments and job orders — locked with a PIN. */
+export function PortalForm({ s, sheet, saveFile, flash, close }) {
+  const c = F.byId(s.clients, sheet.client) || {};
+  const [pin, setPin] = useState(""), [lang, setLang] = useState(isAr() ? "ar" : "en"), [busy, setBusy] = useState(false);
+  const make = async () => {
+    setBusy(true);
+    try {
+      const data = portalData(s, sheet.client), file = "account-" + String(c.name || "client").replace(/[^\p{L}\p{N}]+/gu, "-") + ".html";
+      const sealed = pin ? await sealData(data, pin, { kind: "portal" }) : null;   // no name in the readable header
+      saveOut(saveFile, file, portalHTML({ data: sealed ? null : data, sealed, lang, title: sealed ? "" : c.name }), "text/html");
+      flash(pin ? tr("Saved {f} — send it with the PIN in a separate message", { f: file }) : tr("Saved {f}", { f: file })); close();
+    } catch (e) { flash(tr(e.message || String(e))); }
+    setBusy(false);
+  };
+  return <div className="space-y-3" data-testid="fleet-portal">
+    <p className={"text-[13.5px] " + muted}>{tr("One page {c} can open on any phone: what they owe, their invoices, payments and job orders. No costs, no other client. Send it on WhatsApp or by email.", { c: c.name })}</p>
+    <Txt label={tr("PIN to open it (4+ digits — recommended)")} value={pin} onChange={setPin} mode="numeric" dir="ltr" testid="fleet-portal-pin" />
+    {pin && pin.length < 4 ? <p className="text-[12.5px] text-[#B91C1C]">{tr("At least 4 digits")}</p> : null}
+    <Seg value={lang} onChange={setLang} items={[["ar", "Arabic page"], ["en", "English page"]]} testid="fleet-portal-lang" />
+    <SaveBtn onClick={make} disabled={busy || (pin && pin.length < 4)} testid="fleet-portal-make">{busy ? tr("Locking…") : tr("Make the page")}</SaveBtn>
   </div>;
 }

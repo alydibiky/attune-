@@ -19,7 +19,7 @@ import { saveProject } from "./biz-v2-ui.jsx";
 import * as P from "./fleet-pro.js";
 import * as Q from "./fleet-trade.js";
 import { QuotesPane, QuoteForm, QuoteView, OrdersPane, POForm, POView, VendorsPane, VendorForm } from "./fleet-trade-ui.jsx";   // v6.44 quotes, purchase orders, suppliers
-import { TableOut, TodayCash, RatesForm, SitesPane, QueryPane, StoreKpis, StoreFilters, HistorySheet, RefIssues, ListsPane } from "./fleet-desk-ui.jsx";   // v6.45 from Ali's desktop programs
+import { PortalForm, TableOut, TodayCash, RatesForm, SitesPane, QueryPane, StoreKpis, StoreFilters, HistorySheet, RefIssues, ListsPane } from "./fleet-desk-ui.jsx";   // v6.45 from Ali's desktop programs
 import { InvoicesPane, InvoiceForm, InvoiceView, AgingPane, ReportsPane, TeamPane, PersonForm, AdvanceForm, CraneMore, PaperForm, RepairForm, FuelForm, DOC_L } from "./fleet-pro-ui.jsx";
 
 export const card = "rounded-2xl bg-[#FFFFFF] border border-[#DCE3EC] shadow-[0_1px_3px_rgba(15,23,42,.06)]";
@@ -180,7 +180,7 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
 const sheetTitle = (sh) => tr({ order: "Order from a message", job: "New job order", work: "Add work", cheque: sh.dir === "out" ? "Pay out" : "Payment received", expense: "New expense", in: "Incoming invoice", out: "Issue parts", move: "Move crane",
   list: sh.rec && sh.rec.id ? "Edit" : "Add", item: "Item", doc: "Document", bin: "Recycle Bin", settings: "Settings", backup: "Encrypted backup",
   invoice: "New invoice", invoiceView: "Invoice", person: sh.rec && sh.rec.id ? "Edit" : "Add a person", advance: "Advance", paper: "Crane paper", repair: "Breakdown", fuel: "Fuel",
-  quote: "Quotation", quoteView: "Quotation", po: "Purchase order", poView: "Purchase order", vendor: sh.rec && sh.rec.name ? "Supplier" : "New supplier", rates: "Rates" }[sh.kind] || (sh.kind === "history" ? sh.name : ""));
+  quote: "Quotation", quoteView: "Quotation", po: "Purchase order", poView: "Purchase order", vendor: sh.rec && sh.rec.name ? "Supplier" : "New supplier", rates: "Rates", portal: "Client page" }[sh.kind] || (sh.kind === "history" ? sh.name : ""));
 
 // ---- Today ------------------------------------------------------------------------------------------------------------
 function Today({ s, run, money, setSheet, setOpen, setTab, wide }) {
@@ -386,6 +386,7 @@ function ClientDetail({ s, run, money, setSheet, setOpen, id, saveFile }) {
         <button className={btnP + " h-10"} style={{ background: "var(--biz)" }} onClick={() => setSheet({ kind: "cheque", dir: "in", client: id })}><Plus size={16} />{tr("Payment received")}</button>
         {P.uninvoiced(s, id).length ? <button className={btnS} onClick={() => setSheet({ kind: "invoice", client: id })} data-testid="fleet-client-invoice"><Printer size={15} />{tr("Invoice the work")}</button> : null}
         <button className={btnS} onClick={() => printHTML(F.statementHTML(s, id, { rtl: isAr() }), saveFile, `statement-${String(c.name).replace(/[^\p{L}\p{N}]+/gu, "-")}.html`)} data-testid="fleet-statement"><Printer size={15} />{tr("Statement")}</button>
+        <button className={btnS} onClick={() => setSheet({ kind: "portal", client: id })} data-testid="fleet-portal-open"><Globe size={15} />{tr("Client page")}</button>
         <button className={btnS} onClick={() => setSheet({ kind: "list", coll: "clients", rec: c })}><Pencil size={15} />{tr("Edit")}</button>
         <button className={btnS + " text-[#B91C1C]"} onClick={del}><Trash2 size={15} />{tr("Delete")}</button></div>
       {(() => { const inv = P.invoiceStatus(s).filter((v) => v.client === id); return inv.length ? <><p className="font-bold text-[14.5px]">{tr("Invoices")}</p>
@@ -556,6 +557,7 @@ function SheetBody(p) {
   if (k === "poView") return <POView {...p} />;
   if (k === "vendor") return <VendorForm {...p} />;
   if (k === "rates") return <RatesForm {...p} />;
+  if (k === "portal") return <PortalForm {...p} />;
   if (k === "history") return <HistorySheet {...p} />;
   return null;
 }

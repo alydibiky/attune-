@@ -6288,4 +6288,13 @@ export const AR = {
   "Edit a photo — erase, passers-by, cut out": "عدّل صورة — امسح، شيل الناس المعدّية، قص",
   "AI Eraser": "الممحاة الذكية",
   "Passers-by": "الناس المعدّية",
+  "Client page": "صفحة العميل",
+  "Saved {f} — send it with the PIN in a separate message": "اتحفظت {f} — ابعتها والرقم السري في رسالة لوحده",
+  "One page {c} can open on any phone: what they owe, their invoices, payments and job orders. No costs, no other client. Send it on WhatsApp or by email.": "صفحة واحدة {c} يفتحها على أي موبايل: عليه كام، وفواتيره، ومدفوعاته، وأوامر الشغل. من غير تكاليفك ولا أي عميل تاني. ابعتها واتساب أو إيميل.",
+  "PIN to open it (4+ digits — recommended)": "رقم سري للفتح (4 أرقام أو أكتر — أحسن)",
+  "At least 4 digits": "4 أرقام على الأقل",
+  "Arabic page": "صفحة عربي",
+  "English page": "صفحة إنجليزي",
+  "Locking…": "بقفلها…",
+  "Make the page": "اعمل الصفحة",
 };
