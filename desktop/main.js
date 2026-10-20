@@ -4,7 +4,7 @@
 // Data lives in the per-user app-data folder (ATTUNE_HOME overrides it):
 //   Windows %APPDATA%\Attune  ·  macOS ~/Library/Application Support/Attune  ·  Linux ~/.config/Attune
 "use strict";
-const { app, BrowserWindow, ipcMain, protocol, net, dialog, clipboard, shell, powerSaveBlocker, nativeImage, Notification } = require("electron");
+const { app, BrowserWindow, ipcMain, protocol, net, dialog, clipboard, shell, powerSaveBlocker, nativeImage, Notification, safeStorage } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
@@ -85,8 +85,11 @@ const cancels = new Map();
 let awake = null;
 
 // ---- quick calls: answer at once ------------------------------------------------
-const localsync = require("./lib/localsync.js");   // v6.37 Wi-Fi sync with a phone (the same protocol as LocalSync.kt)
+const localsync = require("./lib/localsync.js");
+const { makeDrive } = require("./lib/gdrive.js");   // v6.45 Google sync on the computer (the phone's one file in the hidden app folder)
+const drive = makeDrive({ dataDir: DATA, openExternal: (u) => shell.openExternal(u), safe: safeStorage });   // v6.37 Wi-Fi sync with a phone (the same protocol as LocalSync.kt)
 const QUICK = {
+  driveReady: () => drive.ready(),
   localNetAllowed: () => true,
   syncHostTake: () => localsync.take(),
   syncHostAnswer: (t) => { localsync.answer(t); return "ok"; },
@@ -202,6 +205,11 @@ const SLOW = {
   chat,
   syncHostBegin: viaJson(() => localsync.start()),
   syncExchange: viaJson(async (a) => ({ text: await localsync.exchange(a.host, +a.port, a.body) })),
+  driveSync: viaJson(async (a) => {
+    if (state.airGap) throw new Error("Offline lock is on — Google sync needs the internet. Turn the lock off in Engine first.");
+    logNet("www.googleapis.com", true, a.op === "put" ? "Google sync: upload your encrypted file" : "Google sync: read your encrypted file");
+    return drive.sync(a);
+  }),
   search: viaJson((a) => web.search(a)),
   async clipboardText(id) { resolve(id, { text: clipboard.readText() || "" }); },
   async hash(id, modelId) {

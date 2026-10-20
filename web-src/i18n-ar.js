@@ -6304,4 +6304,6 @@ export const AR = {
   "No speech was heard in this video": "مفيش كلام اتسمع في الفيديو ده",
   "Your phone's own offline speech recogniser listens to the video, piece by piece — the sound never leaves the phone. About as long as the video.": "برنامج التعرّف على الكلام اللي على موبايلك بيسمع الفيديو حتة حتة من غير نت — الصوت مبيخرجش برّه الموبايل. بياخد تقريبًا قد مدة الفيديو.",
   "Subtitles need Android 13 or newer": "الترجمة المكتوبة محتاجة أندرويد 13 أو أحدث",
+  "Google sync on the computer needs one setup step by Attune's owner (its Google client) — use Wi-Fi with your phone until then.": "المزامنة مع جوجل على الكمبيوتر محتاجة خطوة إعداد واحدة من صاحب Attune — استعمل الـ Wi-Fi مع موبايلك لحد ساعتها.",
+  "The first time, Google's sign-in page opens in your browser; after that the computer stays signed in.": "أول مرة، صفحة تسجيل الدخول بتاعة جوجل هتفتح في المتصفح؛ بعد كده الكمبيوتر هيفضل مسجّل.",
 };

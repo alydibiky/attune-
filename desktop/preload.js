@@ -9,11 +9,11 @@ const QUICK = ["info", "models", "engine", "log", "remove", "wake", "setAirGap",
   "cancel", "logLine", "netLog", "clearNetLog", "stashPut", "stashGet", "stashDel", "share",
   "unmetered", "knowPacks", "knowRemove", "mapPacks", "mapRemove", "mapRead",
   "schedule", "unschedule", "scheduled", "canExact", "notifyAllowed", "askNotifications", "askExact",
-  "localNetAllowed", "syncHostTake", "syncHostAnswer", "syncHostStop"];
+  "localNetAllowed", "syncHostTake", "syncHostAnswer", "syncHostStop", "driveReady"];
 const SLOW = ["chat", "install", "use", "restart", "fetchJson", "saveFile",
   "search", "news", "fetchText", "fetchShare", "dorarSearch", "fxRates",
   "knowRemote", "knowSearch", "knowInstall", "knowPackText", "foodPackText", "mapRemote", "mapRange", "mapAssets", "mapSearch", "mapInstall",
-  "pdfText", "pdfWords", "pdfOutline", "pdfImages", "htmlToPdf", "makePdf", "pdfEdit", "clipboardText", "hash", "syncHostBegin", "syncExchange"];
+  "pdfText", "pdfWords", "pdfOutline", "pdfImages", "htmlToPdf", "makePdf", "pdfEdit", "clipboardText", "hash", "syncHostBegin", "syncExchange", "driveSync"];
 
 const api = { desktop: true };
 for (const m of QUICK) api[m] = (...a) => ipcRenderer.sendSync("native-quick", m, a);

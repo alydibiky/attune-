@@ -110,7 +110,8 @@ export function SyncPanel({ native: N, flash }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {N && N.desktop && !N.driveSync ? <p className="text-[12px] text-amber-200 rounded-lg border border-amber-700/50 bg-amber-500/10 p-2.5" data-testid="sync-drive-desktop">{tr("Google sync on the computer comes in the next update — use Wi-Fi with your phone for now.")}</p> : null}
+          {N && N.desktop && (!N.driveSync || (N.driveReady && !N.driveReady())) ? <p className="text-[12px] text-amber-200 rounded-lg border border-amber-700/50 bg-amber-500/10 p-2.5" data-testid="sync-drive-desktop">{tr("Google sync on the computer needs one setup step by Attune's owner (its Google client) — use Wi-Fi with your phone until then.")}</p>
+            : N && N.desktop ? <p className="text-[12px] text-slate-400" data-testid="sync-drive-desktop-how">{tr("The first time, Google's sign-in page opens in your browser; after that the computer stays signed in.")}</p> : null}
           <p className="text-[12px] text-slate-400">{tr("One file in your own Google Drive, in a hidden folder only Attune can open. It is locked with your sync passphrase on this device, so Google only stores noise.")}</p>
           {cfg.pass ? <p className="text-[12px] text-emerald-300 flex items-center gap-1.5" data-testid="sync-pass-set"><CheckCircle2 size={14} />{tr("Sync passphrase set on this device.")} <button className="underline text-slate-400" onClick={() => setCfg(Y.saveSync({ ...Y.loadSync(), pass: "" }))}>{tr("Change")}</button></p> : (
             <div className="space-y-2">

@@ -19,6 +19,11 @@ locked with the person's sync passphrase on the phone). It works as soon as Goog
    `0D:B6:88:FA:EE:3D:1A:29:EF:B1:EC:BF:F1:21:3C:F9:AA:8E:48:A1`
    Later, a second Android client with the SHA-1 from **Play Console → App integrity → App signing key certificate**.
    No Web client, no secret, nothing to send to Claude — the phone is matched by package + SHA-1.
+5. (v6.45, the Windows app) **Clients → Create client → Desktop app**, name `Attune for Windows` → copy the **Client ID** and
+   **Client secret** (Google says a desktop client's secret is not secret — it ships inside the app) → paste both in the chat
+   with Claude, who puts them in `desktop/lib/gdrive.js` (CLIENT) — or save them yourself as
+   `%APPDATA%\Attune\google-client.json`: `{"id": "…apps.googleusercontent.com", "secret": "…"}`. Then Backup → Sync →
+   Google Drive on the computer opens Google's sign-in page once in the browser.
 
 ## B. Paid web search for Pro
 
