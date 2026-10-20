@@ -762,7 +762,9 @@ No new notes from Ali; built from AL's open list: Fleet on Home's Today line · 
 erased with them ("Its shadow too") · then ("continue with the rest") Missions 3–4 (spending limit, debt, course, company:
 Fleet revenue + collect) · Fleet photos travel in Sync · then (Ali: "business systems with great depth") Fleet as a
 full crane-rental ERP: invoices with VAT / withholding, who owes what (aging), team + payroll + advances, crane papers with
-expiry, breakdowns, fuel per hour, utilisation and revenue reports, Excel for each.
+expiry, breakdowns, fuel per hour, utilisation and revenue reports, Excel for each · then (Ali: "every business system")
+Books (balance sheet, cash flow, budgets, fixed assets, payroll, recurring, bank reconciliation, instalments), Shop
+(returns, offers, loyalty, held carts, cashier reports) and the builder (ten deep templates + Insights for any system).
 ### Ali to decide
 1. **Recall phase 2 (search by meaning, Arabic ↔ English)** — A: download bge-m3 (438 MB, MIT; the only embedder that found
    every passage in our test) · B: the small e5 (132 MB; weaker, 58/104) · C: keep word search. Recommendation A, as an
@@ -784,6 +786,13 @@ expiry, breakdowns, fuel per hour, utilisation and revenue reports, Excel for ea
    paper runs out; Money → Reports → Utilisation / Revenue by month / Fuel.
 9. ⬜ Tell Claude what your two desktop programs have that Fleet still lacks (screens or the files) — next: quotations →
    job orders, purchase orders + supplier balances in the store.
+10. ⬜ Books (Business → Books → "Try it with a sample shop"): Reports → Balance sheet ("the books balance"), Cash flow,
+    Month by month, Budget vs actual; Money → Fixed assets (a car, 60 months → Post depreciation), Payroll (an employee →
+    Run the payroll), Recurring (rent every month), Bank reconciliation (your bank's CSV), Instalments.
+11. ⬜ Shop: Stock → New offer (20 % off an item) · Loyalty points on → Sell: the offer line, Customer (for points), Hold →
+    pick it up; the ↶ button → Return / refund; Close → by hour, by cashier, returns.
+12. ⬜ Business → New system → a template (Clinic, Gym, Pharmacy, Property rentals…) → Overview → Add sample records →
+    the Insights (6 months, top customers, statuses, bookings, stock value).
 ### Next
 Reflections, NPU, Expand, GPU check · W6 subtitles · desktop Google sync · Recall 2 (after Ali picks) ·
 Business depth (Ali's ERP screens, one by one).

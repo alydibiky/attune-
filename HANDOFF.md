@@ -2193,7 +2193,7 @@ Ali: "Do as per your recommendation" (option 1 + option 2's Today line) and "did
   dedicated model; LaMa fills shadows only if they are painted too), NPU speed (all CPU; GPU path for drawing still unverified
   on Ali's phone), "Expand" (outpainting — possible later with Studio Pro's edit model).
 
-### 5.95 (20 Oct 2026) — v6.44: Fleet on the Today line, deletes that travel, a person's shadow erased with them, Missions 3–4, Fleet photos in Sync, Fleet as a full ERP (invoices, aging, team, papers, repairs, fuel, reports), Fleet as a full ERP
+### 5.95 (20 Oct 2026) — v6.44: Fleet on the Today line, deletes that travel, a person's shadow erased with them, Missions 3–4, Fleet photos in Sync, every business system in depth (Fleet ERP, Books, Shop, ten deep builder templates + Insights), Fleet as a full ERP
 From AL's "still open" list (no new notes from Ali this session; objective items only, nothing subjective decided alone).
 - **Fleet on Home's Today line** (home.js `todayLine({ fleet })`, home-ui.jsx reads Fleet's IndexedDB once with `loadFleet`):
   "N cranes working" at 07:00 (crane @ site, up to 3) and what needs you at 09:00, when Fleet's alert comes — cheque overdue /
@@ -2251,6 +2251,33 @@ From AL's "still open" list (no new notes from Ali this session; objective items
     expired / expiring, invoice overdue (> 60 d = bad), crane broken down (> 7 d = warn), fuel high.
   · New lists are in COLLS (Recycle Bin, demo erase, sync). Not built yet: quotations → job order, purchase orders and
     supplier balances for the store, a client portal — next if Ali wants them.
+- **Every business system in depth** (Ali: "Not just a crane rental and warehouse, I mean every business system on the app"):
+  · **Books** (`books-pro.js`, `books-pro-ui.jsx`; unit v744bookspro, e2e_v744bookspro): Reports → Balance sheet (assets =
+    liabilities + equity, this period's profit in equity), Cash flow (cash + bank by customers / suppliers / expenses /
+    payroll / taxes / assets / owner; cash↔bank moves not counted), Month by month (12 months P&L), Budget vs actual
+    (12 monthly amounts per income / expense account). Money → Fixed assets (bought from cash / bank / payable; straight-line
+    depreciation posted once per month, dated its last day; the last month takes the rounding), Payroll (gross, insurable
+    wage, employee 11 % / employer 18.75 % DEFAULTS to confirm, the tax the owner types — no guessed brackets; one run a
+    month → payslips + ONE balanced entry; deductions credit 6000), Recurring invoices (week / month / year → drafts or
+    posted on their dates; nothing twice), Bank reconciliation (a CSV statement — date, description, amount or debit /
+    credit; DD/MM/YYYY or ISO — matched to account 1100 by amount within 4 days → matched / only at the bank / only in the
+    books / difference), Instalments (a posted invoice → down payment + N monthly parts; paid / late from its receipts since
+    the plan). New accounts 1600 / 1650 / 2400 / 2410 / 2420 / 6100 / 6200 / 6300; `profitAndLoss` now counts every expense
+    account (5000 stays cost of goods).
+  · **Shop** (`shop-pro.js`, `shop-pro-ui.jsx`; unit v744shoppro, e2e_v744shoppro): Return / refund on the counter (a posted
+    credit note through Books, restock optional; the money back as a negative receipt against the invoice + a balanced entry
+    Dr 1200 / Cr cash; an item split over two lines by `cartLines` is counted together), Offers in Stock (% off or buy X
+    get Y, one item or all, dates, week days, hours; the best one per line; the receipt says what was saved), Loyalty
+    points (1 per every N paid, refunds off, redeemed as Books' discount on the cart), Held carts, the cashier on each sale
+    (`doc.cashier`), and on Close: sales by hour, by cashier, returns.
+  · **Builder** (`erp-templates.js`, `erp-insights.js`; unit v744templates, e2e_v744templates): ten deep templates —
+    clinic, academy, property rentals, car workshop, gym, salon & spa, pharmacy, transport, contractor (retention on
+    invoices), wholesale — whose names make the Pro layer give each stock that moves, balances + statements, due dates,
+    and no double bookings (checked per template in the unit test); payments added to the services and shop templates and
+    the restaurant's ingredients now move (suppliers, purchases, usage). The crane template keeps its six tables (the
+    builder's interview offers Payments there — e2e_v718biz). Every system's Overview shows **Insights**: the last 6
+    months charged, the top customers / patients / tenants of the year, every Status column's counts, booking utilisation
+    per asset this month, stock value at cost. `guessTemplate` knows the new kinds (Arabic too).
 - **Still open**: reflections (needs a dedicated model), NPU speed, Expand (outpaint), GPU check on the phone; W6 subtitles
   (needs an on-device speech model), desktop Google sync (needs Ali's Google setup), Recall 2 (embedder: bge-m3 438 MB was
   the only one good enough across Arabic ↔ English in RESEARCH_STORAGE — a download-size choice for Ali), Business depth
