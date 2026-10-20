@@ -67,3 +67,20 @@ export function findShadow({ px, W, H, subj, box }) {
   let n = 0; for (let i = 0; i < W * H; i++) n += m[i];
   return { mask: m, n };
 }
+
+/* ---- v6.45 Expand (outpaint): the photo on a bigger canvas, the new edges filled by the eraser model (LaMa / MI-GAN) —
+   the same "fill what is missing" it already does for a removed person. shape: "all" (+25 % round), "wide" / "tall"
+   (+50 % one way), or an aspect "1:1", "4:5", "16:9", "9:16". The canvas never grows more than 1.6× a side (beyond that
+   the fill turns to mush). → { W, H, x, y }: the canvas and where the photo sits on it (centred). */
+export const EXPAND_SHAPES = ["all", "wide", "tall", "1:1", "4:5", "16:9", "9:16"];
+export function expandBox(w, h, shape = "all", max = 1.6) {
+  let W = w, H = h;
+  if (shape === "all") { W = w * 1.5; H = h * 1.5; }
+  else if (shape === "wide") W = w * 1.5;
+  else if (shape === "tall") H = h * 1.5;
+  else { const [a, b] = String(shape).split(":").map(Number); if (!(a > 0 && b > 0)) throw new Error("Unknown shape " + shape);
+    const r = a / b; if (w / h < r) W = h * r; else H = w / r; }
+  W = Math.min(Math.round(W), Math.round(w * max)); H = Math.min(Math.round(H), Math.round(h * max));
+  W = Math.max(W, w); H = Math.max(H, h);
+  return { W, H, x: Math.floor((W - w) / 2), y: Math.floor((H - h) / 2), same: W === w && H === h };
+}

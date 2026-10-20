@@ -6,12 +6,13 @@
    - Enhance: sharper and 4× bigger (Real-ESRGAN, the Studio pack).
    - Change (when a picture model is installed): brush a part, say what it should become.
    The shapes come from findSubjects (PhotoSmart.kt, ML Kit subject segmentation on the phone). Each step is a new picture in
-   Studio; Undo steps back. Pure helpers: photoedit.js (tests/unit/v743photoedit.test.mjs). */
+   Studio; Undo steps back. v6.45: Expand — a bigger canvas, the new edges filled by the eraser model (expandBox).
+   Pure helpers: photoedit.js (tests/unit/v743photoedit.test.mjs). */
 import React, { useEffect, useRef, useState } from "react";
-import { Eraser, Users, Scissors, Sparkles, Wand2, Undo2, X, Eye, Check, Loader2, PenLine } from "lucide-react";
+import { Eraser, Users, Scissors, Sparkles, Wand2, Undo2, X, Eye, Check, Loader2, PenLine, Maximize2 } from "lucide-react";
 import { tr } from "./i18n.js";
 import { isRemoval } from "./erase-ui.jsx";
-import { mainSubject, maskRect, hitSubject, findShadow } from "./photoedit.js";
+import { mainSubject, maskRect, hitSubject, findShadow, expandBox, EXPAND_SHAPES } from "./photoedit.js";
 
 const MASK_MAX = 2048, SHADOW_GRID = 384;
 
@@ -167,16 +168,30 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
     if (!onEditArea || isRemoval(what)) return erase([]);
     await onEditArea({ mask: maskOf([]), prompt: what.trim(), src: cur.src });
   });
+  // v6.45 Expand: the photo centred on a bigger canvas (its own edges stretched and blurred underneath as a start), the
+  // new border is the "hole" — the eraser fills it the way it fills a removed person (a few pixels into the photo, to blend).
+  const [shape, setShape] = useState("all");
+  const expand = () => run(tr("Making it bigger…"), async () => {
+    const im = await load(cur.src), w = im.naturalWidth, h = im.naturalHeight, b = expandBox(w, h, shape);
+    if (b.same) throw new Error(tr("The photo already has that shape"));
+    const c = Object.assign(document.createElement("canvas"), { width: b.W, height: b.H }), g = c.getContext("2d");
+    g.filter = "blur(24px)"; g.drawImage(im, 0, 0, b.W, b.H); g.filter = "none"; g.drawImage(im, b.x, b.y, w, h);
+    const m = Object.assign(document.createElement("canvas"), { width: b.W, height: b.H }), k = m.getContext("2d");
+    const o = Math.max(3, Math.round(Math.max(w, h) * 0.006));
+    k.fillStyle = "#fff"; k.fillRect(0, 0, b.W, b.H); k.clearRect(b.x + o, b.y + o, w - 2 * o, h - 2 * o);
+    const r = await nativeCall("eraseImage", { photo: c.toDataURL("image/jpeg", 0.95), mask: m.toDataURL("image/png"), hd: !!hd });
+    step(r); flash && flash(tr("Expanded to {w} × {h}", { w: b.W, h: b.H }));
+  });
   const undo = () => { if (!hist.length) return; setCur(hist[hist.length - 1]); setHist((h) => h.slice(0, -1)); };
   const save = async () => {
     if (saveToGallery && cur.file) { try { const r = saveToGallery(cur.file); flash && flash(r ? tr("Saved to the phone's gallery") : tr("Saved in Studio")); } catch (e) { flash && flash(tr("Saved in Studio")); } }
     onClose();
   };
 
-  const TOOLS = [["erase", Eraser, "AI Eraser"], ["people", Users, "Passers-by"], ["cutout", Scissors, "Cut out"], ["enhance", Sparkles, "Enhance"], ...(onEditArea ? [["change", Wand2, "Change"]] : [])];
+  const TOOLS = [["erase", Eraser, "AI Eraser"], ["people", Users, "Passers-by"], ["cutout", Scissors, "Cut out"], ["enhance", Sparkles, "Enhance"], ["expand", Maximize2, "Expand"], ...(onEditArea ? [["change", Wand2, "Change"]] : [])];
   const hint = finding ? tr("Finding the people and things in the photo…") : subj && subj.error ? tr("Brush over what to remove.") + " (" + tr(subj.error) + ")"
     : tool === "erase" ? (brush ? tr("Brush over what to remove") : tr("Tap a person or a thing — or use the brush")) : tool === "people" ? (others.length ? tr("{n} found besides the main subject", { n: others.length }) : tr("No passers-by found"))
-    : tool === "cutout" ? tr("Tap the subject to lift it off the background") : tool === "enhance" ? tr("Sharper and 4× bigger") : tr("Brush the part, then say what it should become");
+    : tool === "cutout" ? tr("Tap the subject to lift it off the background") : tool === "enhance" ? tr("Sharper and 4× bigger") : tool === "expand" ? tr("A bigger picture — the AI draws the missing edges") : tr("Brush the part, then say what it should become");
   return (
     <div className="fixed inset-0 z-[70] bg-black flex flex-col text-white" data-testid="photo-editor">
       <div className="flex items-center gap-1 px-2 pt-[max(8px,env(safe-area-inset-top))] pb-1">
@@ -215,6 +230,9 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
         : tool === "people" ? <button onClick={() => erase(others)} disabled={!!busy || !others.length} className="h-11 px-6 rounded-full bg-rose-500 text-white font-bold disabled:opacity-40" data-testid="pe-people">{tr("Remove {n}", { n: others.length })}</button>
         : tool === "cutout" ? (cut ? <><button onClick={() => setCut(null)} className="h-11 px-4 rounded-full bg-white/10">{tr("Back")}</button><button onClick={saveCut} disabled={!!busy} className="h-11 px-6 rounded-full bg-sky-500 font-bold" data-testid="pe-cut-save">{tr("Save cut-out")}</button></>
           : <button onClick={doCut} disabled={!!busy || !subj || !subj.list || !subj.list.length} className="h-11 px-6 rounded-full bg-sky-500 font-bold disabled:opacity-40" data-testid="pe-cut-go">{tr("Cut out")}</button>)
+        : tool === "expand" ? <div className="w-full max-w-md space-y-2"><div className="flex gap-1.5 overflow-x-auto justify-center" data-testid="pe-shapes">{EXPAND_SHAPES.map((s) =>
+            <button key={s} onClick={() => setShape(s)} aria-pressed={shape === s} className={"h-8 px-3 rounded-full text-[12.5px] shrink-0 " + (shape === s ? "bg-white text-black font-bold" : "bg-white/10")} data-testid={"pe-shape-" + s.replace(":", "x")}>{s === "all" ? tr("All round") : s === "wide" ? tr("Wider") : s === "tall" ? tr("Taller") : s}</button>)}</div>
+            <div className="flex justify-center"><button onClick={expand} disabled={!!busy} className="h-11 px-6 rounded-full bg-sky-500 font-bold disabled:opacity-40" data-testid="pe-expand">{tr("Expand")}</button></div></div>
         : tool === "enhance" ? <button onClick={enhance} disabled={!!busy} className="h-11 px-6 rounded-full bg-sky-500 font-bold disabled:opacity-40" data-testid="pe-enhance">{tr("Enhance")}</button>
         : <div className="w-full max-w-md flex gap-2"><input value={what} onChange={(e) => setWhat(e.target.value)} dir="auto" placeholder={tr("e.g. a sunset sky")} className="flex-1 min-w-0 h-11 rounded-full bg-white/10 px-4 text-[14px]" data-testid="pe-what" />
             <button onClick={change} disabled={!!busy || !nStrokes} className="h-11 px-5 rounded-full bg-sky-500 font-bold disabled:opacity-40" data-testid="pe-change">{tr("Change")}</button></div>}
