@@ -35,6 +35,15 @@ const MEAL_NAMES0 = { breakfast: ["Breakfast", "فطار"], lunch: ["Lunch", "غ
 let MEAL_NAMES = MEAL_NAMES0;   // v6.2: Ramadan mode renames the slots (Suhoor, Iftar, After Taraweeh)
 const mealNow = () => { const h = new Date().getHours(); return h < 11 ? "breakfast" : h < 16 ? "lunch" : h < 21 ? "dinner" : "snacks"; };
 const r0 = (v) => (v == null ? "—" : Math.round(v));
+// v6.43 (Ali: "free type AND search, not only one"): while a whole meal is typed, the food being typed now is searched too —
+// "150 g chicken alfredo and 7 chicken str" → "chicken str" (amounts and units left out), so a list shows under the box
+export function lastFoodPhrase(v) {
+  const parts = String(v || "").split(/,|،|\+|&|\n|\s(?:and|with|plus)\s|\sو(?=\S)|\s(?:و|مع)\s/i);
+  const last = (parts[parts.length - 1] || "").replace(/\d+([.,]\d+)?/g, " ")
+    .replace(/(^|\s)(g|gm|gr|grams?|kg|ml|l|pcs?|pieces?|slices?|cups?|tbsp|tsp|spoons?|bowls?|plates?|a|an|of|some|half|جرام|جم|كيلو|حته|حتة|طبق|كوبايه|كوباية|معلقه|معلقة|نص|ربع)(?=\s|$)/gi, " ")
+    .replace(/\s+/g, " ").trim();
+  return last.length >= 2 ? last.slice(0, 40) : "";
+}
 // v6.27 (Ali: "c p f is just lame"): nutrients always in full words, each with its own colour (the Diary bars' colours)
 const MACRO = [["p", "Protein", "بروتين", "#38BDF8"], ["c", "Carbs", "كربوهيدرات", "#FBBF24"], ["f", "Fat", "دهون", "#FB7185"]];
 function Macros({ L, x, kcal = true, only, className = "" }) {
@@ -376,6 +385,18 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
     const unit = Object.keys(fd.portions || {})[0] || "g";
     const it = F.itemFromFood(fd, unit === "g" ? 100 : 1, unit);
     if (replaceAt >= 0 && draft) { chooseAt(replaceAt, fd); setReplaceAt(-1); }
+    else if (!draft && text.trim() && lastFoodPhrase(text)) {
+      // v6.43: a food picked from the list while a whole meal is typed — the rest of the sentence is read too, and the number
+      // written before the picked food is its amount ("… and 7 chicken str" + Chicken strips → 7 pieces)
+      const cut = text.lastIndexOf(lastFoodPhrase(text).split(" ")[0]);
+      const head = cut > 0 ? text.slice(0, cut) : "";
+      const n = (/(\d+(?:[.,]\d+)?)\s*(g|gm|grams?|جم|جرام)?\s*$/i.exec(head.replace(/(?:,|،|\+|&|\s(?:and|with|plus|و|مع))\s*$/i, "").slice(-14)) || [])[0];
+      const rest = head.replace(/(\d+(?:[.,]\d+)?)\s*(g|gm|grams?|جم|جرام)?\s*$/i, "").replace(/(?:,|،|\+|&|\s(?:and|with|plus|و|مع))\s*$/i, "").trim();
+      const before = rest ? (R.readMealText(rest).items || []) : [];
+      const m = n ? /(\d+(?:[.,]\d+)?)\s*(g|gm|grams?|جم|جرام)?/i.exec(n) : null;
+      const amount = m ? (m[2] ? F.itemFromFood(fd, +m[1].replace(",", "."), "g") : F.itemFromFood(fd, +m[1].replace(",", "."), unit === "g" ? "g" : unit)) : it;
+      setDraft([...before, amount]);
+    }
     else setDraft((d) => [...(d || []), it]);
     setQ(""); setOnline(null);
   };
@@ -616,7 +637,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
                with a + on each row (one tap logs it); everything else under More. */
             <div className="space-y-3" data-testid="fit-add-min">
               <div className={designA ? "rounded-3xl bg-slate-900 border-2 border-emerald-500 p-3.5 flex flex-col gap-2" : "rounded-2xl bg-slate-800 flex items-start gap-1 ps-3 pe-1 py-1.5"}>
-                <textarea value={text} onChange={(e) => { const v = e.target.value; setText(v); const w = v.trim(); setQ(w && w.split(/\s+/).length <= 3 && !/\d/.test(w) ? w : ""); }}
+                <textarea value={text} onChange={(e) => { const v = e.target.value; setText(v); setQ(lastFoodPhrase(v)); }}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && text.trim()) { e.preventDefault(); readMeal(); } }}
                   rows={designA ? 3 : text.length > 38 ? 3 : 1} data-testid="fit-log-text" placeholder={designA ? L("e.g. 150 g chicken Alfredo pasta and 7 chicken strips", "مثلًا: طبق كشري كبير وكوباية شاي بسكر") : L("What did you eat?", "أكلت إيه؟")}
                   className={designA ? "w-full min-h-[84px] resize-none bg-transparent text-[17px] font-semibold leading-snug text-white placeholder:text-slate-400 placeholder:font-normal focus:outline-none" : "flex-1 min-w-0 resize-none bg-transparent py-2 text-[15px] text-white placeholder:text-slate-400 focus:outline-none"} />
@@ -630,6 +651,7 @@ export function FitApp({ llm, abort, ready, canSee = true, modelReady, openEngin
               {text.trim() || photo ? <button onClick={readMeal} disabled={busy} className={(designA ? "min-h-[56px] rounded-full bg-emerald-500 text-[17px] font-black" : "min-h-[48px] rounded-xl bg-emerald-600 text-[14.5px] font-semibold") + " w-full disabled:opacity-40 text-white flex items-center justify-center gap-1.5"} data-testid="fit-read">
                 <Sparkles size={16} />{designA ? L("Find the foods", "طلّع الأكل") : L("Add it", "ضيفه")}</button> : null}
               {results.length ? <div className="rounded-xl bg-slate-900/60 divide-y divide-slate-800" data-testid="fit-min-results">
+                {text.trim().split(/\s+/).length > 3 ? <div className="px-3 py-1.5 text-[12px] font-bold text-slate-500" data-testid="fit-search-label">{L(`Foods for “${q}” — tap one, or Find the foods for the whole meal`, `أكلات لـ «${q}» — اختار واحدة، أو «طلّع الأكل» للوجبة كلها`)}</div> : null}
                 {results.slice(0, 6).map((fd) => (
                   <button key={fd.id} onClick={() => pickFood(fd)} className="w-full flex items-center gap-2 text-start px-3 py-2.5" data-testid={"fit-food-" + fd.id}>
                     <span className="flex-1 min-w-0 truncate text-[14px] text-slate-100">{ar && fd.ar ? fd.ar : fd.en}</span><span className="text-[12px] text-slate-400 tabular-nums">{fd.kcal} kcal/100g</span></button>))}
