@@ -8,6 +8,7 @@ import { BookOpen, Search, ChevronRight, Play, Pause, Coffee, Clock, Star, Calen
 import { tr, getLang } from "./i18n.js";
 import * as G from "./guide.js";
 import { PANES, LEFT, RIGHT } from "./desk.jsx";
+import * as GD from "./guide-demo.js";
 
 // ---- the drawings: a phone screen per kind, with where steps 1–3 happen ----------------------------------------------------------
 const A = "var(--c-acc)", L = "var(--c-ln)", SOFT = "var(--c-soft)", INK = "var(--c-ink)";
@@ -77,11 +78,66 @@ export function Sketch({ kind, step = -1, small = false }) {
     </svg>);
 }
 
+/** v6.45 (Ali's choice A): the guide's screen played with SAMPLE data — 1 what you give it (typed out), 2 what comes back
+ *  (a filled card), 3 what you do next (its buttons). The part of the step you are on is lit; the later parts wait. */
+export function DemoPhone({ demo, step = 0, app, ar }) {
+  const pv = (v) => GD.pickV(v, ar), say = pv(demo.say);
+  const [typed, setTyped] = useState(say.length);
+  useEffect(() => { if (step !== 0) { setTyped(say.length); return; } setTyped(0); let n = 0;
+    const t = setInterval(() => { n = Math.min(say.length, n + Math.max(1, Math.round(say.length / 28))); setTyped(n); if (n >= say.length) clearInterval(t); }, 45); return () => clearInterval(t); }, [step, say]);
+  const part = (i, bg) => ({ "data-testid": "guide-mark-" + (i + 1), "data-on": step === i ? "1" : "0",
+    style: { outline: step === i ? "2.5px solid var(--c-acc)" : "none", outlineOffset: 3, opacity: i > step ? 0.18 : 1, transition: "opacity .35s", background: bg } });
+  const IN = { photo: "📷", file: "📄", chat: "💬", pick: "☝️", type: "⌨️" };
+  return (
+    <div className="w-full max-w-[250px] mx-auto rounded-[26px] p-2.5 border-2 select-none" style={{ borderColor: "var(--c-ln)", background: "var(--c-bg, #fff)" }} data-testid="guide-demo" data-step={step} aria-label={tr("Sample data — the real screen, playing by itself")}>
+      <div className="flex items-center gap-1.5 px-1 pb-2"><b className="flex-1 min-w-0 truncate text-[12.5px]" dir="auto">{app}</b>
+        <span className="text-[10px] font-bold rounded-full px-2 py-0.5" style={{ background: "#E8A33D", color: "#16201C" }}>{tr("Sample")}</span></div>
+      <div className="space-y-2 rounded-2xl p-2" style={{ background: "var(--c-soft)" }}>
+        <div {...part(0)} className="rounded-xl p-1 flex items-start gap-1.5 text-[12.5px] leading-snug" dir="auto">
+          <span aria-hidden="true">{IN[demo.in] || "⌨️"}</span>
+          <span className="g-acc flex-1 min-w-0 rounded-xl px-2 py-1.5" style={{ background: "var(--c-acc)" }} data-testid="guide-demo-say">{say.slice(0, typed)}{typed < say.length ? <span className="opacity-60">▍</span> : null}</span></div>
+        <div {...part(1, "var(--c-bg, #fff)")} className="rounded-xl p-2 space-y-1">
+          <b className="block text-[13px] leading-tight" dir="auto" data-testid="guide-demo-title">{pv(demo.title)}</b>
+          {demo.bar != null ? <div className="h-1.5 rounded-full" style={{ background: "var(--c-ln)" }}><div className="h-1.5 rounded-full" style={{ width: Math.round(demo.bar * 100) + "%", background: "var(--c-acc)" }} /></div> : null}
+          {demo.lines.map((l, i) => <div key={i} className="flex gap-2 text-[11.5px] leading-snug" data-testid="guide-demo-line"><span className="c-sub flex-1 min-w-0" dir="auto">{ar ? l[1] : l[0]}</span><span className="font-semibold text-end max-w-[58%]" dir="auto">{pv(l[2])}</span></div>)}</div>
+        <div {...part(2)} className="rounded-xl p-1.5 flex gap-1.5 flex-wrap">
+          {demo.act.map((a, i) => <span key={i} className={"text-[11.5px] font-bold rounded-lg px-2.5 py-1.5" + (i ? "" : " g-acc")} style={i ? { border: "1px solid var(--c-ln)" } : { background: "var(--c-acc)" }} dir="auto">{pv(a)}</span>)}</div>
+      </div>
+      <p className="c-sub text-[11px] leading-snug m-0 px-1 pt-2" dir="auto" data-testid="guide-demo-note">{pv(demo.note)}</p>
+    </div>);
+}
+
+/** v6.45 (Ali's choice C): "What Attune can do" — pick a goal, see what you say and what you get, open its guide. */
+function Gallery({ ar, nameOf, see }) {
+  const [g, setG] = useState(GD.GOALS[0].id);
+  const pk = (x) => (ar ? x[1] : x[0]), goal = GD.GOALS.find((x) => x.id === g) || GD.GOALS[0];
+  return (
+    <section className="space-y-2.5" data-testid="guide-gallery">
+      <b className="block text-[17px]">{tr("What Attune can do")}</b>
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" data-testid="guide-goals">{GD.GOALS.map((x) =>
+        <button key={x.id} onClick={() => setG(x.id)} data-testid={"guide-goal-" + x.id} aria-pressed={g === x.id} className={(g === x.id ? "g-acc " : "") + "h-9 px-3.5 rounded-full text-[13px] font-bold whitespace-nowrap border"}
+          style={g === x.id ? { background: "var(--c-acc)", borderColor: "transparent" } : { borderColor: "var(--c-ln)", color: "var(--c-ink)" }}>{pk(x.title)}</button>)}</div>
+      <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1 snap-x">{goal.tools.map((id) => {
+        const d = GD.demoFor(id), key = G.TOOLS[id] ? id : "start:" + id, st = G.START.find((s) => s.id === id), n = G.TOOLS[id] ? nameOf(id) : st ? [pk(st.title)] : null;
+        if (!d || !n) return null;
+        return <div key={id} className="c-card shrink-0 w-[250px] snap-start space-y-2" data-testid="guide-card" data-id={key}>
+          <span className="c-lbl block">{tr("You say")}</span>
+          <p className="g-acc m-0 ms-6 rounded-2xl px-3 py-2 text-[13px] leading-snug" style={{ background: "var(--c-acc)" }} dir="auto">{GD.pickV(d.say, ar)}</p>
+          <span className="c-lbl block">{tr("You get")} · {n[0]}</span>
+          <div className="rounded-xl p-2.5 space-y-1" style={{ background: "var(--c-soft)" }}><b className="block text-[13.5px] leading-tight" dir="auto">{GD.pickV(d.title, ar)}</b>
+            {d.lines.slice(0, 2).map((l, i) => <div key={i} className="flex gap-2 text-[12px]"><span className="c-sub shrink-0 max-w-[45%]" dir="auto">{ar ? l[1] : l[0]}</span><span className="font-semibold text-end flex-1 min-w-0" dir="auto">{GD.pickV(l[2], ar)}</span></div>)}</div>
+          <button className="font-bold text-[13.5px] inline-flex items-center gap-1" style={{ color: "var(--c-acc)" }} onClick={() => see(key)} data-testid="guide-card-how">{tr("Show me how")}<ChevronRight size={15} className="rtl:-scale-x-100" /></button>
+        </div>; })}</div>
+    </section>);
+}
+
+
 /** One walkthrough: the drawing, the three steps (the current one highlighted), Next / Play, and the tip. */
 function Walk({ id, title, purpose, where, sketch, steps, tip, open, ar }) {
+  const demo = GD.demoFor(id);
   const [step, setStep] = useState(0);
-  const [play, setPlay] = useState(false);
-  useEffect(() => { setStep(0); setPlay(false); }, [id]);
+  const [play, setPlay] = useState(!!demo);          // v6.45: a guide with sample data plays by itself; tapping a step stops it
+  useEffect(() => { setStep(0); setPlay(!!demo); }, [id]);
   useEffect(() => { if (!play) return; const t = setInterval(() => setStep((s) => (s + 1) % steps.length), 2600); return () => clearInterval(t); }, [play, steps.length]);
   const pick = (p) => (ar ? p[1] : p[0]);
   return (
@@ -89,7 +145,7 @@ function Walk({ id, title, purpose, where, sketch, steps, tip, open, ar }) {
       <div><b className="block text-[17px]" dir="auto">{title}</b>{purpose ? <span className="c-sub text-[13px]" dir="auto">{purpose}</span> : null}
         {where && where.length ? <span className="block text-[12px] mt-0.5" style={{ color: "var(--c-acc)" }} dir="auto" data-testid="guide-where">{tr("Where")}: {where.join(ar ? " ‹ " : " › ")}</span> : null}</div>
       <div className="grid gap-4 sm:grid-cols-[minmax(150px,220px)_1fr] sm:items-start">
-        <Sketch kind={sketch} step={step} />
+        {demo ? <DemoPhone demo={demo} step={step} app={title} ar={ar} /> : <Sketch kind={sketch} step={step} />}
         <div className="space-y-2">
           <ol className="m-0 p-0 list-none space-y-2">
             {steps.map((s, i) => (
@@ -122,7 +178,7 @@ function PlanCard({ p, ar, nameOf, open, see }) {
           return (
           <li key={i}><button onClick={go || undefined} disabled={!go} data-testid="guide-plan-item" data-tool={it.tool || it.see || ""}
             className="w-full text-start flex gap-3 items-start rounded-xl p-2.5 border" style={{ borderColor: "var(--c-ln)", background: "transparent", color: "var(--c-ink)" }}>
-            <span className="w-6 h-6 shrink-0 rounded-full grid place-items-center text-[12px] font-bold" style={{ background: "var(--c-acc)", color: "#fff" }}>{i + 1}</span>
+            <span className="w-6 h-6 shrink-0 rounded-full grid place-items-center text-[12px] font-bold" style={{ background: "var(--c-acc)" }}>{i + 1}</span>
             <span className="flex-1 min-w-0">{n ? <b className="block text-[12.5px]" style={{ color: "var(--c-acc)" }} dir="auto">{n[0]}</b> : null}
               <span className="text-[14px] leading-snug" dir="auto">{pick(it.text)}</span></span>
             {go ? <ChevronRight size={15} className="c-sub shrink-0 mt-1 rtl:-scale-x-100" /> : null}</button></li>); })}
@@ -162,6 +218,7 @@ export function GuidePage({ tools, groups, navTo }) {
     <div className="space-y-4" data-testid="guide-list">
       <div className="relative"><Search size={15} className="c-sub absolute top-1/2 -translate-y-1/2 start-3" />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search the guide…")} className="w-full rounded-xl ps-9 pe-3 py-2.5 text-[14px] border bg-transparent" style={{ borderColor: "var(--c-ln)", color: "var(--c-ink)" }} dir="auto" data-testid="guide-search" /></div>
+      {!q.trim() ? <Gallery ar={ar} nameOf={nameOf} see={(k) => { setSel(k); setTimeout(() => { try { const e = document.querySelector('[data-testid="guide-walk"]'); if (e) e.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (x) {} }, 60); }} /> : null}
       {startHits.length ? <section data-testid="guide-chapter"><span className="c-lbl">{tr("Getting started")}</span>
         {startHits.map((s) => <Row key={s.id} k={"start:" + s.id} label={ar ? s.title[1] : s.title[0]} sketch={s.sketch} />)}</section> : null}
       {planHits.length ? <section data-testid="guide-chapter" data-chapter="plan"><span className="c-lbl">{pk(G.PLAN_TITLE)}</span>
@@ -173,9 +230,9 @@ export function GuidePage({ tools, groups, navTo }) {
     </div>);
   return (
     <div className="calm rounded-2xl p-4 md:p-6 space-y-4" style={{ minHeight: "70vh" }} data-testid="guide-page">
-      <style>{`@keyframes guidePulse{0%{opacity:.9;transform:scale(.8)}100%{opacity:0;transform:scale(1.5)}}.guide-pulse{transform-box:fill-box;transform-origin:center;animation:guidePulse 1.3s ease-out infinite}`}</style>
+      <style>{`@keyframes guidePulse{0%{opacity:.9;transform:scale(.8)}100%{opacity:0;transform:scale(1.5)}}.guide-pulse{transform-box:fill-box;transform-origin:center;animation:guidePulse 1.3s ease-out infinite}.g-acc{color:#fff}html:not(.att-light) .g-acc{color:#0b1a17}`}</style>
       <div><h2 className="text-[22px] font-bold m-0 flex items-center gap-2"><BookOpen size={20} className="c-acc" />{tr("How to use Attune")}</h2>
-        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("Every tool in three steps, with a drawing of its screen — and a plan to make Attune part of your day.")}</p></div>
+        <p data-intro="" className="c-sub m-0 lg:max-w-[70ch]">{tr("See what Attune can do, then watch each tool work with sample data — and a plan to make Attune part of your day.")}</p></div>
       {wide ? <div className={PANES}><div className={LEFT + " lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto pe-1"}>{list}</div><div className={RIGHT}>{walkFor(sel) || walkFor("start:model")}</div></div> : list}
     </div>);
 }

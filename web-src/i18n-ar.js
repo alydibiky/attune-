@@ -6235,4 +6235,11 @@ export const AR = {
   "\"{name}\" still has stock": "\"{name}\" لسه ليه رصيد",
   "{n} store line(s) use \"{name}\" — rename it instead": "فيه {n} سطر في المخزن بيستخدم \"{name}\" — غيّر اسمه بدل ما تشيله",
   "Unknown table {t}": "جدول مش معروف",
+  "See what Attune can do, then watch each tool work with sample data — and a plan to make Attune part of your day.": "شوف Attune يقدر يعمل إيه، وبعدين اتفرج على كل أداة شغالة ببيانات تجربة — وخطة تخلّي Attune جزء من يومك.",
+  "What Attune can do": "Attune يقدر يعمل إيه",
+  "You say": "إنت تقول",
+  "You get": "إنت تاخد",
+  "Show me how": "وريني إزاي",
+  "Sample": "تجربة",
+  "Sample data — the real screen, playing by itself": "بيانات تجربة — الشاشة الحقيقية بتشتغل لوحدها",
 };
