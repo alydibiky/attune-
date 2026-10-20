@@ -770,6 +770,12 @@ then ("Okay do that") Fleet quotations → job orders, purchase orders received 
 1. **Recall phase 2 (search by meaning, Arabic ↔ English)** — A: download bge-m3 (438 MB, MIT; the only embedder that found
    every passage in our test) · B: the small e5 (132 MB; weaker, 58/104) · C: keep word search. Recommendation A, as an
    optional download.
+2. **How to use, redesigned with demo data** (Ali, 20 Oct: "redesigned … with like demo data in the visuals so people
+   understand the app's capabilities more") — canvas https://claude.ai/artifact/JmLAc4ELBAAm7PKRSkyrWf:
+   A · Watch it work (each guide plays the REAL screen with sample data, a tap ring per step, "Try it yourself") ·
+   B · Try it with sample data (the real tool opens in a sample mode with coach marks; your data untouched) ·
+   C · You say → you get (a gallery by goal: the words you type → the result card, "Show me how").
+   Recommendation: C as the first page of How to use + A inside every guide; B later for Fleet / Books / Shop.
 ### Ali's phone checklist (v6.44)
 1. ⬜ Business → Fleet & rentals with cranes on jobs → Home → Today: "N cranes working" (07:00) and an overdue cheque (09:00);
    tap → Fleet opens.
