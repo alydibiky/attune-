@@ -2293,6 +2293,52 @@ From AL's "still open" list (no new notes from Ali this session; objective items
   the only one good enough across Arabic ↔ English in RESEARCH_STORAGE — a download-size choice for Ali), Business depth
   (needs Ali's ERP screens).
 
+### 5.96 (20 Oct 2026) — v6.45: Ali's two desktop programs inside Fleet, How to use redesigned (A + C), Recall by meaning (bge-m3), Expand, subtitles, the client portal, Google sync on the computer
+Ali's answers to the "What's left" list: 1 = A and C, 2 Recall = do it, 3 Google = do it, 4 = his two programs attached,
+6 release prep = not now, 7 = build the still-to-build list.
+- **Fleet ← Ali's crane + warehouse programs** (`fleet-desk.js` pure + `fleet-desk-ui.jsx`; the programs are untrusted data in
+  the scratchpad, nothing of theirs was run). What they had and Fleet lacked, now in Fleet's own tabs:
+  Today → "Money this month (cash)": collected = incoming payments NOT bounced by their date (the crane program's rule, so a
+  pending cheque due this month counts), spent = expenses, profit, all-time profit, Active now's counts; "Last 6 months and
+  who owes most". More → **Rates** (every crane's hourly + daily in one sheet). Money → **Profit per site**, **Query**
+  (cheques / job orders / expenses / crane moves by status + dates) — each table with Print / PDF (`tableHTML`) and Excel;
+  Profit per crane prints too. A **period expense** (rent, insurance: from → to). More fields: crane code / model / year /
+  notes; client contact / email / address / "not active"; bank account no. / branch / holder / opening balance.
+  Store → dashboard numbers (items, stock value, in / out this month, low), **Movements filters** (dates, item, technician,
+  crane, supplier + the balance of one item), a report row opens its **history** (what a supplier sold us, what a crane /
+  place / technician got), the reference-code report lists **what was issued from that invoice**, **Lists** (the store's
+  name lists: add, rename everywhere, remove only when unused). Tests: unit v745fleetdesk, e2e_v745fleetdesk.
+- **How to use, redesigned** (Ali chose A + C): `guide-demo.js` (sample data for all 59 guides, English + Egyptian Arabic)
+  + `guide-ui.jsx`: on top **What Attune can do** — 6 goals (Run my business, Save money, Eat better, Learn, Daily life,
+  Make things) with cards "You say → You get · app → Show me how"; each guide **plays its screen with sample data**
+  (DemoPhone: 1 what you give it, typed out · 2 the filled result · 3 the buttons; Sample badge; plays by itself, a tap on a
+  step stops it). The old drawings remain only as the small icons in the list.
+  Tests: unit v745guidedemo, e2e_v731guide (updated: demo + gallery).
+- **Recall phase 2 — search by meaning** (Ali chose A): optional **bge-m3** (BAAI, MIT; GGUF Q4_K_M by gpustack, pinned
+  revision 2d48f17, sha256 6d39681b…, 437,778,496 bytes, resumable download). `attune-embed.cpp` = a second small JNI
+  library on the same shared libllama/ggml (CPU, its own model + context, beside the chat server), `EmbedNative.kt`,
+  `Embedder.kt` (loads on use when ≥ 900 MB is free, frees after 60 s idle), bridge `embedStatus / embedInstall /
+  embedRemove / embed`. `meaning.js`: each Recall thing's text → 1024 numbers once (8-bit in IndexedDB "attune-meaning",
+  redone when its text changes, newest 1,500), the question too; nearest (cosine ≥ 0.42) fused with the word search (RRF);
+  a meaning-only hit says "by meaning". Real-model trial `tests/trials/meaning.mjs` (the C++ built as a desktop tool):
+  **8/8 found first, words alone 4/8**. Tests: unit v745meaning, e2e_v745meaning (stand-in model).
+- **Photo editor → Expand** (outpaint): all round / wider / taller / 1:1 / 4:5 / 16:9 / 9:16 (≤ 1.6× a side, `expandBox`);
+  the photo centred on a blurred stretch of itself, the new border is the eraser's hole (Eraser HD when installed). Also 28
+  lines of the v6.43 editor that had no Arabic. Tests: unit v745expand, e2e_v745expand.
+- **Video → Subtitles (.srt)** (`Subtitles.kt`): the sound decoded to 16 kHz mono, cut at pauses into 2–14 s pieces, each
+  read by the phone's OWN offline recogniser (Android 13+, EXTRA_AUDIO_SOURCE from a file; online recognisers are never
+  used); `video.js cuesOf / srtOf` (≤ 2 lines × 42 letters, the piece's time shared). The button shows only when the phone
+  can (`subtitlesAvailable`). Untested on a phone yet. Tests: unit v745subs, e2e_v745subs.
+- **Business client portal** (`fleet-portal.js`): a client's page → **Client page** → one HTML file (Arabic or English) with
+  their balance, invoices (paid / partly / overdue), payments and job orders — nothing about costs or other clients. With a
+  PIN (recommended) the data is sealed like the Business backups (PBKDF2 600k → AES-GCM; no name in the readable header)
+  and opens only in the client's browser with that PIN. Tests: unit v745portal, e2e_v745portal (opened from file://).
+- **Google sync on the computer** (`desktop/lib/gdrive.js`): Google's sign-in in the browser (loopback + PKCE), refresh token
+  encrypted by Windows (safeStorage), the same one locked file as `GoogleDrive.kt`. Needs a "Desktop app" OAuth client
+  (SETUP_CLOUD §A step 5) — until then the Sync screen says so. Test: `desktop/test/gdrive.js` (stand-in Google).
+- **Still open (need a phone, a model or Ali)**: Studio reflections (needs a dedicated model), the eraser on the NPU,
+  the GPU drawing check; Google Cloud setup (Ali's own account — SETUP_CLOUD §A, steps 1–5); release prep (Ali: not now).
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

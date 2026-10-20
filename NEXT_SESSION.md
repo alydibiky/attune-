@@ -757,6 +757,29 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AN. 20 Oct 2026 — v6.45 (HANDOFF §5.96). Read this first, then AM.
+Ali: "1.a and c 2. Do it 3.do it 4.attached 6.not now 7.do the still to build" (+ his two desktop programs and the
+warehouse hand-off attached). All built; nothing subjective decided alone (A + C was his pick).
+### Ali has to do
+1. **Google sync** (only Ali's Google account can do it): SETUP_CLOUD.md §A steps 1–4 (phone) and the new step 5 (a
+   "Desktop app" client for the Windows app → send Claude the Client ID + secret, or save google-client.json).
+### Ali's phone checklist (v6.45)
+1. ⬜ Fleet → Today: "Money this month (cash)" (collected / spent / profit / all-time) → "Last 6 months and who owes most".
+2. ⬜ Fleet → ☰ → Rates: change a daily rate → a new job order starts with it.
+3. ⬜ Money → Profit per site · Query (pending cheques, active jobs, this month's expenses) → Print / PDF and Excel.
+4. ⬜ New expense → "It covers a period" (rent 1–31 Oct). Clients: contact / email / "not active"; Banks: account no.
+5. ⬜ Store → Stock (the numbers on top) · Movements → Filters (a technician) · Reports → tap a supplier → its history;
+   Reference code → "Issued from it" · Lists → rename a technician → every line follows. Compare with your programs: tell
+   Claude anything still missing.
+6. ⬜ How to use: "What Attune can do" → each goal's cards → Show me how → the guide plays with sample data.
+7. ⬜ Recall → Search by meaning → Download (438 MB, Wi-Fi) → wait for "Understanding … of …" → search «فاتورة الكهربا»
+   or "where did I park" → hits marked "by meaning". Tell how long the first indexing took.
+8. ⬜ Studio → Edit a photo → Expand → 16:9 → the edges drawn (better with Eraser HD).
+9. ⬜ Video → a saved video → Subtitles → Arabic → the .srt (Android 13+, needs the phone's offline speech pack).
+10. ⬜ Fleet → a client → Client page → PIN → Make the page → send it to yourself on WhatsApp → open → PIN → the account.
+### Still open
+Studio reflections (dedicated model), eraser on the NPU, GPU drawing check (on the phone), release prep (not now).
+
 ## AM. 20 Oct 2026 — v6.44 (HANDOFF §5.95). Read this first, then AL.
 No new notes from Ali; built from AL's open list: Fleet on Home's Today line · deletes travel in Sync · a person's shadow
 erased with them ("Its shadow too") · then ("continue with the rest") Missions 3–4 (spending limit, debt, course, company:
