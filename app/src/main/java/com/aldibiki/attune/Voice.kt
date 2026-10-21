@@ -46,10 +46,10 @@ class Voice(private val activity: Activity) {
      * offline recogniser at all), and (3) asks Android to download the offline pack (Android 13+: its own download screen;
      * older: Google's offline-languages list) and says so.
      */
-    fun start(lang: String, sink: Sink, askPermission: () -> Unit, step: Int = 0) {
+    fun start(lang: String, sink: Sink, step: Int = 0, askPermission: () -> Unit) {
         activity.runOnUiThread {
             if (!hasPermission()) {
-                pending = { start(lang, sink, askPermission, step) }
+                pending = { start(lang, sink, step, askPermission) }
                 askPermission()
                 return@runOnUiThread
             }
@@ -87,8 +87,8 @@ class Voice(private val activity: Activity) {
                         release()
                         val base = lang.substringBefore('-')
                         when {
-                            step == 0 && base != lang && base.isNotBlank() -> { start(base, sink, askPermission, 1); return }
-                            !Prefs.airGapNow && SpeechRecognizer.isRecognitionAvailable(activity) -> { getPack(lang); start(lang, sink, askPermission, 2); return }
+                            step == 0 && base != lang && base.isNotBlank() -> { start(base, sink, 1, askPermission); return }
+                            !Prefs.airGapNow && SpeechRecognizer.isRecognitionAvailable(activity) -> { getPack(lang); start(lang, sink, 2, askPermission); return }
                             else -> { val asked = getPack(lang); sink.failed(if (asked) "Android is downloading the offline speech pack for this language — try again when it finishes" else "That language isn't installed for offline voice — add it in the phone's Settings → Google → Speech → Offline languages"); return }
                         }
                     }
