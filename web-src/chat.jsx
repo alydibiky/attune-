@@ -6,6 +6,7 @@
 // needed. Everything else goes to the model with the whole conversation, and
 // the answer streams in formatted (lists, tables, code) with its thinking
 // shown when Think is on.
+import * as LIB from "./library.js";   // v6.46 "Remember this": chapters of a saved book
 import { shareLink, looksLikeChat, fromPage, fromText, contextBlock } from "./ai-import.js";
 import { taskOf, wantsWeb, wantsThink, pickModel, switchLine, needsToday, deepModel, deepLine } from "./router.js";
 import * as MD from "./multidoc.js";
@@ -609,6 +610,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   useEffect(() => {
     if (!composerSeed) return;
     if (composerSeed.startsWith("\u0002")) { const t = composerSeed.slice(1); clearComposerSeed && clearComposerSeed(); stop(); setActiveId(null); setPending(null); setText(t); setNewAsk(t); return; }   // v6.25: from the computer's Home: a NEW chat, sent at once (kept in the box if it cannot be sent yet, e.g. no model)
+    if (composerSeed === "\u0003call") { clearComposerSeed && clearComposerSeed(); stop(); setActiveId(null); setPending(null); setCall(true); return; }   // v6.46: Home's "Call" chip — a new hands-free call
     if (composerSeed.startsWith("\u0001")) { const t = composerSeed.slice(1); clearComposerSeed && clearComposerSeed(); setTimeout(() => ask(t, { now: true }), 80); return; }   // v6.12: sent at once (a shared AI conversation)
     setText(composerSeed); clearComposerSeed && clearComposerSeed(); setTimeout(() => taRef.current && taRef.current.focus(), 50);
   }, [composerSeed]);
@@ -1413,9 +1415,33 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         if (!useThink && (looksLikeReasoning(typed) || looksLikeMathProblem(typed))) content = reread(content, typed);
       }
       if (o.queuedDuring) content = "(I sent this while you were still writing your last answer. If it adds to or changes that answer, write the complete UPDATED answer with the change included — don't just acknowledge it. If it is a new question, simply answer it.)\n\n" + content;
+      // v6.46 "Remember this" (Ali: a book → "what happens in this chapter"): a chapter question about something the person saved
+      // gets THAT chapter's own text (found by code, library.js) — read whole, or part by part when it is long — never a guess
+      let chapterDone = false;
+      if (answer == null && typed && !sources && !fileAtt && !pic && api.knowledge && api.knowledge.mine && LIB.askedChapter(typed)) {
+        try {
+          const it = LIB.pickItem(await api.knowledge.mine(), typed);
+          const ch = it ? LIB.chapterText(await api.knowledge.textOf(it.id), LIB.askedChapter(typed)) : null;
+          if (runRef.current !== run) return;
+          if (ch && ch.text.length > 40) {
+            const plan = LIB.chapterPlan(it.title.replace(/\.[a-z0-9]{2,4}$/i, ""), ch, typed);
+            if (plan.direct) content = plan.prompt;
+            else {
+              const notes = [];
+              for (let i = 0; i < plan.parts.length; i++) {
+                onStatus(tr("Reading {c} — part {i} of {n}…", { c: ch.head, i: i + 1, n: plan.parts.length }));
+                notes.push(String(await api.run([{ role: "user", content: plan.partPrompt(plan.parts[i], i) }], null, { maxTokens: 320, temperature: 0.2, think: false, copy: true }) || "").trim());
+                if (runRef.current !== run) return;
+              }
+              content = plan.prompt(notes);
+            }
+            chapterDone = true; extra.fromLibrary = { title: it.title, chapter: ch.head };
+          }
+        } catch (e) {}
+      }
       // v6.20 Knowledge: a lookup question gets the person's own facts that fit it (word index, < 100 ms), with tags to cite
       let knHits = null;
-      if (answer == null && typed && !sources && !fileAtt && !pic && !longMsg && api.knowledge && api.knowledge.on()) {
+      if (answer == null && !chapterDone && typed && !sources && !fileAtt && !pic && !longMsg && api.knowledge && api.knowledge.on()) {
         // v6.16: code tasks and maths problems look things up too (the coding and subject packs are their reference)
         const solveT = looksLikeCodeTask(typed) || looksLikeMathProblem(typed);
         try { knHits = await api.knowledge.find(typed, solveT ? { solve: true } : undefined); } catch (e) { knHits = null; }

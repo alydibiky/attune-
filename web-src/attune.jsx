@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { MINE as LIB_MINE } from "./library.js";   // v6.46 "Remember this"
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
 import { TrainFront, Target, Search, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase } from "lucide-react";
@@ -90,6 +91,7 @@ import { TranslatePage } from "./translate-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
+import { LibraryPage } from "./library-ui.jsx";   // v6.46 "Remember": the person's own books, articles and pages
 import { loadOffPacks, teachChat } from "./teach-ui.jsx";
 import * as TEACH from "./teach.js";
 import * as KNOW from "./knowledge.js";
@@ -7504,6 +7506,7 @@ const MORE_TOOLS = [
   ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
   ["shelf", "Shelf", "Your notes, in books", BookOpen],
   ["memory", "Mind", "Everything you keep — it files itself", Brain],
+  ["library", "Remember", "Books, articles, the news — ask Chat about them", BookOpen],
   ["knowledge", "Knowledge", "Your facts — Chat looks them up before it answers", Database],
   ["cycle", "Cycle", "Period tracker", Droplet], ["travel", "Travel", "Country packs & phrases", Plane],
   ["map", "Maps", "Offline places", MapPin], ["metro", "Metro", "Cairo Metro — line, direction, stops, ticket", TrainFront], ["field", "Site reports", "Incident & maintenance docs", HardHat],
@@ -7530,7 +7533,7 @@ if (!KNOW_ADMIN) {
 const MORE_GROUPS = [
   ["Money & people", ["scout", "guardian", "radar", "life", "deal", "reminders", "timeline"]],
   ["Health", ["fit", "care", "cycle"]],
-  ["Mind & learning", ["lifeask", "coach", "learn", "memory", "shelf", ...(KNOW_ADMIN ? ["knowledge"] : []), "news"]],
+  ["Mind & learning", ["lifeask", "coach", "learn", "memory", "library", "shelf", ...(KNOW_ADMIN ? ["knowledge"] : []), "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
   ["Files", ["translate", "convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "metro", "travel"]],
@@ -9287,6 +9290,8 @@ export default function App() {
     memSearch: (q) => memSearch(memory, memIndex, q, { now: Date.now(), limit: 4 }),
     withRecords,
     knowledge: { on: () => !!knPrefs.on, find: (q, o) => knowledge.find(q, o), packs: () => !!knowledge.packSearch,
+      // v6.46 "Remember this": the person's own saved books and articles, and a source's whole text (for a chapter)
+      mine: async () => (await knowledge.sources()).filter((s) => s.collection === LIB_MINE), textOf: (id) => knowledge.textOf(id),
       myPacks: () => TEACH.myPacks(knowledge), teachChat: KNOW_ADMIN ? (chat, name) => teachChat(knowledge, chat, name) : null },   // v6.16 «علّم نموذجك»   // v6.20 Knowledge (+ v6.16 phone packs)
     lastStats: () => LAST_STATS,
     speed: () => (NATIVE ? measuredSpeed() : null),
@@ -9553,7 +9558,8 @@ export default function App() {
         <Guard key={"g-" + mode} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
           <VaultGate unlock={(a) => nativeCall("vaultUnlock", a)} onOpen={() => setVaultSess({ open: true })} />
         ) : mode === "home" && !wide ? (
-          <PhoneHome navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
+          <PhoneHome navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
+            listen={chatApi.listen} startCall={() => { setChatSeed("\u0003call"); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
             onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }} />
@@ -10166,6 +10172,9 @@ export default function App() {
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken })}
             saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
+        ) : mode === "library" ? (
+          <LibraryPage knowledge={knowledge} nativeCall={NATIVE ? nativeCall : null} flash={flash}
+            askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }} />
         ) : mode === "crane" ? (
           <CraneToolkit flash={flash} remember={remember}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />

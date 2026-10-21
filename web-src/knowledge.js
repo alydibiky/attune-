@@ -290,11 +290,16 @@ export function createKnowledge(store, { adapters = [], now = () => Date.now() }
       if (!parts.length) throw new Error("There is no readable text in this source.");
       const chunks = parts.map((p, i) => ({ id: id + "#" + i, src: id, title: src.title || "", page: p.page, text: p.text, kind: src.kind || "text", ...(src.collection ? { coll: src.collection } : {}) }));
       const bytes = chunks.reduce((s, c) => s + sizeOf(c.text), 0);
-      const rec = { id, kind: src.kind || "text", title: src.title || "", added: now(), bytes, chunks: chunks.length, pages: src.pages ? src.pages.length : 0, url: src.url || "", license: src.license || "", pack: src.pack || "", ...(src.collection ? { collection: src.collection } : {}) };
+      const rec = { id, kind: src.kind || "text", title: src.title || "", added: now(), bytes, chunks: chunks.length, pages: src.pages ? src.pages.length : 0, url: src.url || "", license: src.license || "", pack: src.pack || "", ...(src.collection ? { collection: src.collection } : {}), ...(src.chapters != null ? { chapters: src.chapters } : {}), ...(src.note ? { note: src.note } : {}) };
       await store.putSource(rec, chunks); dirty = true;
       return rec;
     },
     async remove(id) { await store.removeSource(id); dirty = true; },
+    /** v6.46: a stored source's whole text again, in order (its passages joined) — for "what happens in chapter 3". */
+    async textOf(id) {
+      const n = (c) => +String(c.id).split("#").pop() || 0;
+      return (cache && !dirty ? cache : await store.chunks()).filter((c) => c.src === id).sort((a, b) => n(a) - n(b)).map((c) => c.text).join("\n");
+    },
     async sources() { return (await store.sources()).sort((a, b) => b.added - a.added); },
     /** Live adapter sources as list rows (not stored). */
     adapterRows() { return adapters.map((a) => { const it = a.enabled === false ? [] : a.items(); return { id: "@" + a.id, kind: a.id, title: a.label, live: true, chunks: it.length, bytes: it.reduce((s, x) => s + sizeOf(x.title + x.text), 0) }; }); },

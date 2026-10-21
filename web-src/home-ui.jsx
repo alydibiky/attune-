@@ -5,7 +5,11 @@
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
 import React, { useEffect, useMemo, useState } from "react";
-import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid } from "lucide-react";
+import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles } from "lucide-react";
+import { nowCard, homeNumbers, noticed } from "./home-now.js";
+import { safeToSpend } from "./safespend.js";
+import { setChequeStatus } from "./fleet.js";
+import { saveFleet } from "./fleet-store.js";
 import { RecallCard } from "./recall-ui.jsx";
 import { tr, getLang } from "./i18n.js";
 import { loadLife } from "./life.js";
@@ -22,7 +26,7 @@ import { openRead } from "./readaloud-ui.jsx";
 import { DoResult, DO_HINTS } from "./doit-ui.jsx";
 import { FitToday } from "./health-ui.jsx";
 import { tickRegular, payRadar } from "./regular.js";
-import { MissionsLine } from "./missions-ui.jsx";
+import { MissionsLine, useTopMission } from "./missions-ui.jsx";
 import { loadFleet } from "./fleet-store.js";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
@@ -34,7 +38,7 @@ const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pd
 const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet" };
 const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F" };
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };
-export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null }) {
+export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null }) {
   const [text, setText] = useState("");
   const [done, setDone] = useState(null);
   const [tick, setTick] = useState(0);   // v6.28: what Home did (or undid) shows in Today and the two numbers at once
@@ -57,8 +61,32 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       learn: (() => { const c = courses.find((x) => x && Array.isArray(x.plan) && x.plan.length); return c ? { title: c.topic || c.title || "", n: (c.lessons || []).filter((l) => l.read).length, of: c.plan.length } : null; })(),
       work: [...new Set(recentTools())].filter((id) => WORK.includes(id)).slice(0, 2).map((id) => (tools.find((x) => x[0] === id) || [id, id])[1]),
       // v6.43 (Ali picked "1 + the Today line"): today across the apps, by time
-      line: minimal ? todayLine({ fit, ledger, fleet, reminders: readJSON("attune:reminders:v1"), now: Date.now() }).line : [] };
+      line: minimal ? todayLine({ fit, ledger, fleet, reminders: readJSON("attune:reminders:v1"), now: Date.now() }).line : [],
+      // v6.46 Home A (Ali picked it): what you can spend today, for the numbers and "Attune noticed"
+      safe: minimal && ledger ? (() => { try { return safeToSpend({ ledger, life: loadLife(), radar: loadRadar() }); } catch (e) { return null; } })() : null, scout };
   }, [tick, fleet]);
+  const mission = useTopMission();
+  const now1 = minimal ? nowCard({ needs: data.items, fleet, now: Date.now() }) : null;
+  const nums = minimal ? homeNumbers({ safe: data.safe, kcal: data.kcal, kcalGoal: data.fitOn ? data.goal : 0, fleet, mission }) : [];
+  const seen = minimal ? noticed({ safe: data.safe, mission, fleet, scout: data.scout }) : null;
+  const [heard, setHeard] = useState(false);
+  // the mic: the phone listens and writes what you said into the box (then Send does it, like typing)
+  const speak = async () => { if (!listen || heard) return; setHeard(true); try { const t = await listen(ar ? "ar-EG" : "", (p) => setText(p)); if (t) setText(t); } catch (e) {} setHeard(false); };
+  // RIGHT NOW's buttons: done here, saved in the app they belong to
+  const act = async (c, a) => {
+    if (a.id === "open") return openLine(c.open);
+    if (c.from === "fleet" && (a.id === "cleared" || a.id === "bounced") && fleet) {
+      try { const next = setChequeStatus(fleet, c.ref, a.id); await saveFleet(next); setFleet(next); setNote(a.id === "cleared" ? tr("Marked cleared in Fleet") : tr("Marked bounced in Fleet — it stays owed")); } catch (e) { setNote(String((e && e.message) || e)); }
+      return setTick((n) => n + 1);
+    }
+    if (c.ref && (a.id === "paid" || a.id === "notRenewed")) {
+      const pay = c.ref;
+      if (a.id === "notRenewed") { payRadar(pay.id, false); setNote(tr("Marked as not renewed — {t}", { t: c.title })); }
+      else { const r = pay.kind === "radar" ? payRadar(pay.id, true) : tickRegular(pay.id, pay.i, true); if (r && r.recorded) setNote(tr("Recorded in Money: {a} {cur} — {t}", { a: fmt(r.recorded), cur: pay.cur, t: c.title })); else navTo(pay.kind === "radar" ? "radar" : "life"); }
+      return setTick((n) => n + 1);
+    }
+    openLine(c.open);
+  };
   // v6.28: Home does it first (food → Fit, money → Money, a dose, a reminder, a debt…); only what it can't do goes to Chat
   const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); } else onAsk(t); };
   // Fleet & rentals is a view inside Business: open Business, then ask it for the Fleet view (as a shared crane order does)
@@ -80,6 +108,8 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
           <div className="flex items-center justify-end gap-2">
             <button onClick={() => (openFitAdd ? openFitAdd() : navTo("fit"))} aria-label={tr("Food photo")} title={tr("Food photo")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-bg)" }} data-testid="home-quick-food"><Apple size={18} /></button>
             <button onClick={() => openRead()} aria-label={tr("Read it to me")} title={tr("Read it to me")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-bg)" }} data-testid="home-read"><Camera size={18} /></button>
+            <span className="flex-1" />
+            {listen ? <button onClick={speak} aria-label={tr("Speak")} title={tr("Speak")} className={"w-10 h-10 rounded-full grid place-items-center " + (heard ? "animate-pulse" : "c-sub")} style={{ background: heard ? "var(--c-soft)" : "var(--c-bg)" }} data-testid="home-mic"><Mic size={18} /></button> : null}
             <button onClick={send} aria-label={tr("Send")} className="w-10 h-10 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={18} /></button>
           </div>
         </div>) : (
@@ -93,12 +123,30 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       </div>)}
       {/* v6.36 layout 1A (Ali picked it): one box, three quick starts under it — tools are reached by asking, not from a list */}
       <RecallCard text={text} navTo={navTo} className="-mt-1" />
+      {/* v6.46 Home A (Ali: "integrate the new chat — translate, etc."): Chat's own tools, one tap from Home */}
+      {minimal ? <div className="flex gap-2 overflow-x-auto -mt-1 pb-0.5" data-testid="home-chat-tools">
+        {[[MessageCircle, "Chat", () => navTo("chat"), "home-t-chat"], ...(startCall ? [[Phone, "Call", startCall, "home-t-call"]] : []), [Globe, "Translate", () => navTo("translate"), "home-t-translate"],
+          [Sparkles, "Your life", () => navTo("lifeask"), "home-t-life"], [BookOpen, "Remember", () => navTo("library"), "home-t-remember"]].map(([I, l, go, id]) => (
+          <button key={id} onClick={go} className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 h-10 text-[13.5px] font-semibold" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid={id}><I size={15} className="c-acc" />{tr(l)}</button>))}
+      </div> : null}
+      {/* v6.46 Home A: RIGHT NOW — the one thing that matters most, with its buttons (home-now.js) */}
+      {now1 ? <div className="rounded-[22px] p-4 space-y-2.5" style={{ background: now1.level === "bad" ? "#B42318" : "var(--c-acc)", color: "#fff" }} data-testid="home-now" data-kind={now1.kind}>
+        <p className="m-0 text-[11.5px] font-extrabold tracking-wide opacity-90">{tr("RIGHT NOW")} · {now1.sub}</p>
+        <button onClick={() => openLine(now1.open)} className="block w-full text-start text-[17px] font-extrabold leading-snug" style={{ color: "#fff" }} dir="auto" data-testid="home-now-title">{now1.title}</button>
+        <div className="flex gap-2 flex-wrap">{now1.actions.map((a, i) => (
+          <button key={a.id} onClick={() => act(now1, a)} className="h-10 px-4 rounded-full text-[13.5px] font-extrabold" style={i ? { border: "1px solid rgba(255,255,255,.65)", color: "#fff" } : { background: "#fff", color: now1.level === "bad" ? "#B42318" : "var(--c-acc)" }} data-testid={"home-now-" + a.id}>{a.label}</button>))}</div>
+      </div> : null}
+      {nums.length ? <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${nums.length}, minmax(0, 1fr))` }} data-testid="home-numbers">
+        {nums.map((x) => <button key={x.k} onClick={() => openLine(x.open)} className="c-card text-start p-2.5" data-testid={"home-num-" + x.k}>
+          <span className="c-sub block text-[11px] font-bold truncate">{x.label}</span><b className="c-num block text-[16px]">{x.value}</b></button>)}
+      </div> : null}
       {minimal ? null : <div className="flex gap-2 overflow-x-auto -mt-1 pb-0.5" data-testid="home-quick">
         {[[Apple, "Food photo", () => (openFitAdd ? openFitAdd() : navTo("fit")), "home-quick-food"], [FileText, "A file", () => navTo("pdfchat"), "home-quick-file"], [Binoculars, "Find for me", () => navTo("scout"), "home-quick-scout"]].map(([I, l, go, id]) => (
           <button key={id} onClick={go} className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px]" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid={id}><I size={14} className="c-acc" />{tr(l)}</button>))}
       </div>}
       {done ? <DoResult key={done.id} r={done} navTo={navTo} onClose={() => setDone(null)} onUndo={() => setTick((n) => n + 1)} /> : minimal ? null : <p className="c-sub text-[12.5px] m-0 -mt-2 px-1" dir="auto" data-testid="home-hint">{tr("Just say it:")} «{ar ? hint[1] : hint[0]}»</p>}
       {/* v6.28 declutter: a card with nothing to say is not shown (nothing due today, nothing spent and no budget) */}
+      {(() => { if (now1 && now1.from !== "fleet") data.items = data.items.filter((x) => x.title !== now1.title); return null; })()}
       {data.items.length || data.reminders || note ? <div className="c-card" data-testid="home-today">
         <div className="flex items-center mb-1"><span className="c-lbl">{minimal ? tr("Needs you") : tr("Attune suggests")}</span><span className="c-sub ms-auto">{data.items.length ? (data.items.length + (data.reminders || 0) === 1 ? tr("1 thing") : tr("{n} things", { n: data.items.length + (data.reminders || 0) })) : ""}</span></div>
         {data.items.length || data.reminders || note ? (
@@ -167,7 +215,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       <MissionsLine go={() => navTo("missions")} />
       {/* v6.43: one line for today across the apps — what you ate, spent, and what is still ahead */}
       <div data-testid="home-line">
-        <p className="c-lbl m-0 mb-2">{tr("Today")}</p>
+        <p className="c-lbl m-0 mb-2">{tr("Your day")}</p>
         {data.line.length ? <div className="space-y-2">
           {data.line.map((x, i) => (
             <button key={i} onClick={() => openLine(x.open)} className="w-full flex items-start gap-3 text-start" data-testid={"home-line-" + x.app}>
@@ -178,6 +226,9 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
             </button>))}
         </div> : <p className="c-sub text-[13px] m-0" data-testid="home-line-empty">{tr("Nothing yet today — tell the box what you ate, spent or need to remember.")}</p>}
       </div>
+      {/* v6.46 Home A: one thing Attune noticed (home-now.js) */}
+      {seen ? <button onClick={() => openLine(seen.open)} className="w-full rounded-[18px] p-3.5 flex items-start gap-2.5 text-start" style={{ background: "var(--c-soft)", color: "var(--c-ink)" }} data-testid="home-noticed" data-k={seen.k}>
+        <Sparkles size={17} className="c-acc shrink-0 mt-0.5" /><span className="text-[13.5px] leading-snug" dir="auto">{seen.text}</span></button> : null}
       </>}
     </div>);
 }

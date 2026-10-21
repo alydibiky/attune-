@@ -202,6 +202,17 @@ function DecisionLab() {
 }
 
 /** Home's line for the missions: the one most at risk (chance + today's step), or an invitation to start one. */
+/** v6.46 Home A: the active mission most at risk → { title, chance, step } (or null). Re-reads Fleet once it has loaded. */
+export function useTopMission() {
+  const fleet = useFleet();
+  return useMemo(() => {
+    try {
+      const act = M.loadMissions().items.filter((m) => m.status === "active"); if (!act.length) return null;
+      const d = dataNow(), r = act.map((m) => ({ m, e: M.evaluate(m, d) })).sort((a, b) => (a.e.chance ?? 1) - (b.e.chance ?? 1))[0];
+      return { title: r.m.title, chance: r.e.chance, step: r.e.step ? (getLang() === "ar" ? r.e.step.ar : r.e.step.en) : "" };
+    } catch (e) { return null; }
+  }, [fleet]);
+}
 export function MissionsLine({ go }) {
   useFleet();
   const data = M.loadMissions(), act = data.items.filter((m) => m.status === "active"), ar = getLang() === "ar";
