@@ -33,9 +33,13 @@ function pinEl(kind) {
   return el;
 }
 
+// v6.46 (Ali's log: "Cannot read properties of undefined (reading 'getSource')"): a map that was closed, or is changing its
+// style, has no style for a moment — asking it for a layer source then throws inside MapLibre. Asked safely here.
+const srcOf = (m, id) => { try { return m && m.style ? m.getSource(id) : null; } catch (e) { return null; } };
+
 // v6.27: the label layer of named areas (drawn above the basemap's own labels: compounds in teal, neighbourhoods in grey)
 function addAreaLayer(map) {
-  if (map.getSource("att-areas")) return;
+  if (!map || !map.style || srcOf(map, "att-areas")) return;
   map.addSource("att-areas", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
   map.addLayer({ id: "att-areas", type: "symbol", source: "att-areas", minzoom: 12,
     layout: { "text-field": ["get", "name"], "text-font": ["Noto Sans Medium"], "text-size": ["interpolate", ["linear"], ["zoom"], 12, 11, 16, 14],
@@ -130,9 +134,9 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
   // ---- v6.27: compounds and neighbourhoods named on the map (Ali: "compounds like Google Maps") ----
   const areaFn = useRef(null), areaT = useRef(null);
   areaFn.current = async () => {
-    const m = mapRef.current; if (!m || !m.getSource || !m.getSource("att-areas")) return;
+    const m = mapRef.current; if (!srcOf(m, "att-areas")) return;
     const empty = { type: "FeatureCollection", features: [] };
-    if (m.getZoom() < 12) { m.getSource("att-areas").setData(empty); return; }
+    if (m.getZoom() < 12) { srcOf(m, "att-areas").setData(empty); return; }
     const b = m.getBounds(), box = { s: b.getSouth(), w: b.getWest(), n: b.getNorth(), e: b.getEast() }, c = m.getCenter();
     const nc = OM.nearestCountry(c.lat, c.lng); if (!nc) return;
     let list = [];
@@ -142,7 +146,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
         list = ((r && r.places) || []).filter((p) => OM.AREA_KINDS.includes(p.kind));
       } else if (onlineOk) list = await OM.netAreas(nativeCall, nc.code, box);
     } catch (e) { list = []; }
-    const src = m.getSource("att-areas"); if (src) src.setData(OM.areasGeoJSON(list, lang));
+    const src = mapRef.current === m ? srcOf(m, "att-areas") : null; if (src) src.setData(OM.areasGeoJSON(list, lang));   // (the map may have closed while it looked)
   };
   // the source: the active country pack, or online tiles
   const styleKey = useRef("");
@@ -343,7 +347,7 @@ export function MapPage({ N, nativeCall, lastNativeId, getTile, findPlaces, sear
     const m = mapRef.current; if (!m) return;
     const data = { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: line || [] } };
     try {
-      if (m.getSource("trip")) m.getSource("trip").setData(data);
+      if (srcOf(m, "trip")) srcOf(m, "trip").setData(data);
       else {
         m.addSource("trip", { type: "geojson", data });
         m.addLayer({ id: "trip-casing", type: "line", source: "trip", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": "#ffffff", "line-width": 10 } });

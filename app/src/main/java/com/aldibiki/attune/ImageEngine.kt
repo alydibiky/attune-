@@ -294,11 +294,15 @@ object ImageEngine {
      * Run once on the GPU (if possible), and again on the CPU if the GPU run
      * failed before producing the picture.
      */
+    /** v6.46: may this model be drawn on the GPU without risking the whole phone? (Pure — tests/kotlin.) */
+    fun gpuSafe(onGpu: Long, textReader: Long, totalRam: Long, freeRam: Long, lowMem: Boolean): Boolean =
+        !lowMem && onGpu <= totalRam / 4 && freeRam - onGpu - textReader >= 1_500_000_000L
+
     private fun runWithFallback(ctx: Context, out: File, argsFor: (bin: String, backend: String?) -> List<String>,
                                 onProgress: (ImageRun.Progress) -> Unit, register: (ImageRun.Job?) -> Unit,
-                                valid: (File) -> Boolean = { it.exists() && it.length() > 0 }): String {
+                                valid: (File) -> Boolean = { it.exists() && it.length() > 0 }, gpuOk: Boolean = true): String {
         retryGpuAfterUpdate(ctx)
-        val dev = if (!cpuOnly(ctx)) gpuDevice(ctx, onProgress) else null
+        val dev = if (!cpuOnly(ctx) && gpuOk) gpuDevice(ctx, onProgress) else null
         if (dev != null) {
             val job = ImageRun.Job(argsFor(bin(ctx, true).path, "diffusion=$dev,vae=$dev,upscaler=$dev,te=cpu"), env(ctx, true), ctx.cacheDir)
             register(job)
@@ -395,6 +399,14 @@ object ImageEngine {
             paused = true
         }
         val lowMem = DeviceInfo.availRamBytes(ctx) < need
+        // v6.46 (Ali, 21 Oct: "when I generated a photo the mobile restarted"): FLUX.2 klein 4B Q8 (4.3 GB) on the Adreno GPU in
+        // low memory mode. The GPU's memory is the phone's own RAM, but Android can't take it back or swap it, so a big model
+        // there can starve the whole system (a reboot, not just Attune closing). The GPU is used only when what it holds
+        // (drawing model + colour decoder) is at most a quarter of the phone's RAM AND leaves 1.5 GB free after the text reader (Turbo, 2.2 GB, with 4.3 GB free: GPU; klein 4B Q8, 4.3 GB on a 16 GB phone: CPU);
+        // otherwise the picture is drawn on the CPU, where the weights are mapped from storage and Android stays in control.
+        val onGpu = diffusion.length() + (packFile(ctx, pack, "vae")?.length() ?: 0L)
+        val gpuOk = gpuSafe(onGpu, packFile(ctx, pack, "llm")?.length() ?: 0L, DeviceInfo.totalRamBytes(ctx), DeviceInfo.availRamBytes(ctx), lowMem)
+        if (!gpuOk && !cpuOnly(ctx)) log(ctx, "GPU skipped for safety: the model needs ${onGpu / 1_000_000} MB on the graphics chip (free RAM ${DeviceInfo.availRamBytes(ctx) / 1_000_000} MB) — drawing on the CPU")
         log(ctx, "new picture · $pack · ${diffusion.name} ${diffusion.length() / 1_000_000} MB · free RAM ${DeviceInfo.availRamBytes(ctx) / 1_000_000} MB" +
             (if (paused) " · chat model paused" else "") + (if (lowMem) " · low memory mode" else ""))
         val id = System.currentTimeMillis().toString(36)
@@ -428,7 +440,7 @@ object ImageEngine {
                 val td = System.currentTimeMillis()
                 try {
                     runWithFallback(ctx, dOut, { b, be -> ImageRun.genArgs(b, files, a.getString("prompt"), dOut.path, dw, dh,
-                        a.optInt("steps", 4).coerceIn(1, 50), seed, threads(), be, null, a.optDouble("cfg", 1.0), lowMem) }, onProgress, register)
+                        a.optInt("steps", 4).coerceIn(1, 50), seed, threads(), be, null, a.optDouble("cfg", 1.0), lowMem) }, onProgress, register, gpuOk = gpuOk)
                     onProgress(ImageRun.Progress("draftready", line = "${dOut.name}|$dw|$dh|${System.currentTimeMillis() - td}"))
                 } catch (e: IOException) {
                     if (e.message == "Stopped") throw e
@@ -436,7 +448,7 @@ object ImageEngine {
                 }
             }
             val backend = try {
-                runWithFallback(ctx, out, argsAt(2048, lowMem), onProgress, register)
+                runWithFallback(ctx, out, argsAt(2048, lowMem), onProgress, register, gpuOk = gpuOk)
             } catch (e: IOException) {
                 // v5.20: out of memory (Android killed it, or it couldn't allocate)
                 // → once more, smaller (512 px) with the text reader kept on storage.
@@ -444,7 +456,7 @@ object ImageEngine {
                 if (m == "Stopped" || !Regex("free memory|alloc|out of memory|memory|killed", RegexOption.IGNORE_CASE).containsMatchIn(m)) throw e
                 onProgress(ImageRun.Progress("retry"))
                 setNote(ctx, "The phone ran short of memory, so this picture was drawn smaller (512 px). Close other apps for full size.")
-                runWithFallback(ctx, out, argsAt(512, true), onProgress, register)
+                runWithFallback(ctx, out, argsAt(512, true), onProgress, register, gpuOk = false)
             }
             return Result(out, backend, System.currentTimeMillis() - t0, paused, seed)
         } finally {

@@ -66,7 +66,10 @@ class GenService : Service() {
             val i = Intent(ctx, GenService::class.java)
             try {
                 if (running) {
-                    if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else ctx.startService(i)
+                    // v6.46 (Ali's log, 19 Oct: "ForegroundServiceDidNotStartInTimeException" while a 4.9 GB picture was being
+                    // drawn — the main thread was too busy to reach startForeground in time): started the plain way while
+                    // Attune is on screen (allowed, and no deadline at all); the foreground-service start only from the background
+                    try { ctx.startService(i) } catch (e: IllegalStateException) { if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else throw e }
                     started = true
                 } else if (started) {
                     started = false

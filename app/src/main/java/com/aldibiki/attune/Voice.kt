@@ -39,15 +39,22 @@ class Voice(private val activity: Activity) {
         if (granted) p?.invoke() else sink.failed("Microphone permission is needed for voice input")
     }
 
-    fun start(lang: String, sink: Sink, askPermission: () -> Unit) {
+    /**
+     * v6.46 (Ali, 21 Oct: the interpreter and the voice call said "That language isn't installed for offline voice" with no way
+     * to install it): when the phone's offline recogniser lacks the language, Attune tries (1) the language without its region
+     * ("ar" for "ar-EG"), (2) the phone's normal recogniser (unless the offline lock is on — the same rule as a phone with no
+     * offline recogniser at all), and (3) asks Android to download the offline pack (Android 13+: its own download screen;
+     * older: Google's offline-languages list) and says so.
+     */
+    fun start(lang: String, sink: Sink, askPermission: () -> Unit, step: Int = 0) {
         activity.runOnUiThread {
             if (!hasPermission()) {
-                pending = { start(lang, sink, askPermission) }
+                pending = { start(lang, sink, askPermission, step) }
                 askPermission()
                 return@runOnUiThread
             }
             stop()
-            val onDevice = Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(activity)
+            val onDevice = step < 2 && Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(activity)
             if (!onDevice && Prefs.airGapNow) {
                 sink.failed("This phone has no offline speech recogniser, and the offline lock is on")
                 return@runOnUiThread
@@ -75,6 +82,16 @@ class Voice(private val activity: Activity) {
                     sink.done(t); release()
                 }
                 override fun onError(error: Int) {
+                    val noLang = error == SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED || error == SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE
+                    if (noLang && onDevice) {
+                        release()
+                        val base = lang.substringBefore('-')
+                        when {
+                            step == 0 && base != lang && base.isNotBlank() -> { start(base, sink, askPermission, 1); return }
+                            !Prefs.airGapNow && SpeechRecognizer.isRecognitionAvailable(activity) -> { getPack(lang); start(lang, sink, askPermission, 2); return }
+                            else -> { val asked = getPack(lang); sink.failed(if (asked) "Android is downloading the offline speech pack for this language — try again when it finishes" else "That language isn't installed for offline voice — add it in the phone's Settings → Google → Speech → Offline languages"); return }
+                        }
+                    }
                     sink.failed(when (error) {
                         SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Didn't catch that — try again"
                         SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Voice needs the phone's offline speech pack for this language"
@@ -92,6 +109,19 @@ class Voice(private val activity: Activity) {
             if (lang.isNotBlank()) i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang)
             try { r.startListening(i) } catch (e: Exception) { sink.failed(e.message ?: "Voice input failed"); release() }
         }
+    }
+
+    /** Asks Android for the offline speech pack of `lang` (once a run of the app per language). True when a download screen was shown. */
+    private val asked = HashSet<String>()
+    private fun getPack(lang: String): Boolean {
+        if (!asked.add(lang)) return false
+        val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang)
+        if (Build.VERSION.SDK_INT >= 33) {
+            try { val r = SpeechRecognizer.createOnDeviceSpeechRecognizer(activity); r.triggerModelDownload(i); r.destroy(); return true } catch (e: Throwable) {}
+        }
+        return try {   // Google's own list of offline speech languages
+            activity.startActivity(Intent().setClassName("com.google.android.googlequicksearchbox", "com.google.android.voicesearch.greco3.languagepack.InstallActivity").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); true
+        } catch (e: Throwable) { false }
     }
 
     fun stop() {

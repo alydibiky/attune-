@@ -202,7 +202,16 @@ const SEARCH_URL = /[?&](q|query|keywords|search|k)=|\/search\b|\/s\?|\/(?:resul
 // Egypt" category page had one stray number and was scored 100/100); a title that names a list is never one ad
 const KNOWN_AD_SITE = /(^|\.)(olx\.com\.eg|dubizzle\.com\.eg|aqarmap\.com\.eg|propertyfinder\.eg|bayut\.eg|hatla2ee\.com|contactcars\.com|amazon\.eg|noon\.com|jumia\.com\.eg|wuzzuf\.net|bayt\.com|nawy\.com)$/i;
 const LIST_TITLE = /\b(for sale in|for rent in|vehicles for sale|cars for sale|properties for|apartments for|\d[\d,]*\s+(ads|results|listings|properties|cars)|buy (&|and) sell|best prices? (in|online))\b|للبيع في مصر|للايجار في|للإيجار في|اعلان|إعلان مبوب/i;
-export const isAdPage = (url, text, title = "") => AD_URL.some((re) => re.test(url)) || (!KNOWN_AD_SITE.test(siteOf(url)) && !LIST_TITLE.test(String(title)) && !SEARCH_URL.test(url) && pricesIn(text).length >= 1 && pricesIn(text).length <= 3);
+// v6.46 (Ali, 21 Oct: "scouting is absolutely useless" — a Tucson search "compared" nfl.com, calculator.io and a Malaysian forum):
+// sites that never carry a sale ad, and an unknown site counts only when its price is written WITH a currency
+const NOT_AD = /(^|\.)(wikipedia\.org|wikihow\.com|youtube\.com|youtu\.be|nfl\.com|espn\.com|fifa\.com|imdb\.com|reddit\.com|quora\.com|medium\.com|pinterest\.com|tiktok\.com|instagram\.com|x\.com|twitter\.com|linkedin\.com(?!\/jobs)|github\.com|stackoverflow\.com|bbc\.(com|co\.uk)|cnn\.com|reuters\.com|aljazeera\.(net|com)|youm7\.com|masrawy\.com|almasryalyoum\.com|caranddriver\.com|motortrend\.com|edmunds\.com|kbb\.com|cars\.com|autotrader\.com|carwow\.co\.uk)$|calculator|forum|blog|news|wiki|weather|dictionary|translate/i;
+export const isAdPage = (url, text, title = "") => {
+  if (NOT_AD.test(siteOf(url)) || /\/(forum|forums|thread|threads|news|blog|wiki)\//i.test(String(url))) return false;
+  if (AD_URL.some((re) => re.test(url))) return true;
+  if (KNOWN_AD_SITE.test(siteOf(url)) || LIST_TITLE.test(String(title)) || SEARCH_URL.test(url)) return false;
+  const ps = pricesIn(text);
+  return ps.length >= 1 && ps.length <= 3 && ps.some((p) => p.explicit);
+};
 export const siteOf = (url) => String(url || "").replace(/^https?:\/\/(www\.)?/, "").split("/")[0];
 const urlKey = (u) => String(u || "").toLowerCase().replace(/^https?:\/\/(www\.)?/, "").replace(/[?#].*$/, "").replace(/\/$/, "");
 
@@ -225,7 +234,7 @@ export function pricesIn(text) {
     if (!cur && /^\s*(gb|tb|mb|g\b|جيجا|تيرا|ram|mah|hz|mp\b|w\b|inch|بوصة|cc\b|hp\b|حصان)/.test(after)) continue;   // a storage size / spec (256GB, 5000mAh), not a price
     if (/(m2|m²|sqm|متر|م2|km|كم|كيلو)/.test(t.slice(m.index + m[0].length, m.index + m[0].length + 6).toLowerCase()) && !cur) continue;   // a size / distance
     if (v < 100) continue;
-    out.push({ v, at: m.index, cur: /usd|\$/.test(cur) ? "USD" : /aed|درهم/.test(cur) ? "AED" : /sar|ريال/.test(cur) ? "SAR" : "EGP" });
+    out.push({ v, at: m.index, cur: /usd|\$/.test(cur) ? "USD" : /aed|درهم/.test(cur) ? "AED" : /sar|ريال/.test(cur) ? "SAR" : "EGP", explicit: !!cur });
   }
   return out;
 }
@@ -253,10 +262,10 @@ export function readAd(hit, g) {
   const ps = pricesIn(text);
   const pick = ps.find((p) => !/(down ?payment|deposit|installment|instalment|مقدم|تأمين|قسط|اقساط|أقساط)/i.test(t.slice(Math.max(0, p.at - 30), p.at))) || ps[0];
   // v6.35 (a "151 EGP" Tucson): an amount no car / home / rent can cost is not its price
-  const LOW = { car: 30000, "buy-home": 150000, rent: 800 };
-  const floor = g && LOW[g.kind] ? (pick && pick.cur === "EGP" ? LOW[g.kind] : LOW[g.kind] / 50) : 0;
-  if (pick && pick.v < floor) { const alt = ps.find((p) => p.v >= (p.cur === "EGP" ? LOW[g.kind] : LOW[g.kind] / 50)); if (alt) Object.assign(pick, alt); }
-  if (pick && pick.v >= floor) { out.facts.price = pick.v; out.facts.cur = pick.cur; out.quotes.price = snip(text, pick.at, String(pick.v).length + 4, 12); }
+  // v6.46: and not more than it can cost (a car's "1,850 a month" rental or a 2-billion page total is not its price either)
+  const inBand = (p) => !(g && BIG[g.kind]) || (p.v >= BAND[g.kind][0] / (p.cur === "EGP" ? 1 : 50) && (g.kind === "rent" || p.v <= BAND[g.kind][1] / (p.cur === "EGP" ? 1 : 50)));   // (a sale price in a rent search stays, so the check can say so)
+  const good = pick && inBand(pick) ? pick : ps.find(inBand);
+  if (good) { out.facts.price = good.v; out.facts.cur = good.cur; out.quotes.price = snip(text, good.at, String(good.v).length + 4, 12); }
   let m;
   if ((m = /(\d{2,4})\s*(?:m2|m²|sqm|sq\.?\s?m|square met\w*|متر مربع|متر|م2|م²)/i.exec(t))) { out.facts.area = +m[1]; q("area", m[0]); }
   if ((m = /(\d{1,2})\s*(?:bed(?:room)?s?|br\b|rooms?|غرف|غرفه|غرفة|اوض|أوض|اوضه|أوضة)/i.exec(t))) { out.facts.beds = +m[1]; q("beds", m[0]); }
@@ -497,7 +506,12 @@ export function learn(taste, ad, up) {
 export function runGoal(goal, hits, { now = Date.now(), market = null } = {}) {
   const g = goal.g, seenIds = new Set((goal.seen || []).map((s) => s.id));
   const ads = mergeTwins((hits || []).filter((h) => h && h.url && isAdPage(h.url, h.text || "", h.title || "")).map((h) => readAd(h, g)));
-  const seen = [...(goal.seen || [])];
+  // v6.46: what earlier runs kept is checked again with today's rules (an old run kept list pages, forums and "151 EGP" Tucsons)
+  const band = BIG[g.kind] ? BAND[g.kind] : null;
+  const adUrl = (s) => AD_URL.some((re) => re.test(s.url));
+  const keep = (s) => s && s.url && !NOT_AD.test(siteOf(s.url)) && (adUrl(s) || (!KNOWN_AD_SITE.test(siteOf(s.url)) && !LIST_TITLE.test(String(s.title || "")) && s.facts && s.facts.price != null)) &&
+    (!band || !s.facts || s.facts.price == null || s.facts.price >= band[0] / (s.facts.cur === "EGP" ? 1 : 50));
+  const seen = (goal.seen || []).filter(keep);
   for (const a of ads) { const i = seen.findIndex((s) => s.id === a.id); const rec = { ...a, firstSeen: i >= 0 ? seen[i].firstSeen : now, lastSeen: now, history: [...((i >= 0 && seen[i].history) || []), ...(a.facts.price ? [[now, a.facts.price]] : [])].slice(-30) }; if (i >= 0) seen[i] = rec; else seen.push(rec); }
   const found = seen.filter((a) => a.lastSeen >= now - 14 * 86400000 && (goal.votes || {})[a.id] !== -1).map((a) => {
     const c = check(a, g), fair = fairness(a, seen, g, market ? market[marketKey(g)] : []);
@@ -517,18 +531,22 @@ export function runGoal(goal, hits, { now = Date.now(), market = null } = {}) {
   // v6.43: the prices on list pages and price guides (14 days kept), and the comparison over all of it
   const lists = [];
   for (const h of hits || []) for (const v of listPrices(h, g)) lists.push({ site: siteOf(h.url), v, t: now });
-  const listSeen = [...(goal.listSeen || []).filter((x) => x.t >= now - 14 * 86400000), ...lists].slice(-300);
+  const listSeen = [...(goal.listSeen || []).filter((x) => x.t >= now - 14 * 86400000 && !NOT_AD.test(x.site || "") && (!band || (x.v >= band[0] && x.v <= band[1]))), ...lists].slice(-300);
   return { found, fresh: ads.filter((a) => !seenIds.has(a.id)).map((a) => a.id), seen: seen.slice(-400), listSeen, compare: compareOf(found, listSeen, g) };
 }
 // ---- v6.43 comparing the market: list pages and price guides count too -------------------------------------------------------------
 const BAND = { car: [100000, 2e7], "buy-home": [300000, 2e8], rent: [1500, 5e5], product: [300, 5e6] };
+const BIG = { car: 1, "buy-home": 1, rent: 1 };   // (a product can cost less than 300 — only these kinds have a floor on one ad's price)
 /** A page that lists many ads or a price guide (not one ad) for the same item → its prices (EGP); near the year when a year was asked. */
 export function listPrices(hit, g) {
   if (!hit || !hit.url || isAdPage(hit.url, hit.text || "", hit.title || "")) return [];
+  // v6.46: never a forum, a news page or a site that sells nothing; on an unknown site only prices written with EGP / جنيه
+  if (NOT_AD.test(siteOf(hit.url)) || /\/(forum|forums|topic|thread|threads|news|blog|wiki)\//i.test(hit.url)) return [];
+  const known = KNOWN_AD_SITE.test(siteOf(hit.url)) || /\.eg$/.test(siteOf(hit.url));
   const text = String(hit.text || "").slice(0, 16000), item = " " + normItem((hit.title || "") + " " + text.slice(0, 5000)) + " ";
   if (g.model && g.model.must.length && !g.model.must.every((w) => item.includes(" " + w + " "))) return [];
   const [lo, hi] = BAND[g.kind] || [100, 1e9];
-  let ps = pricesIn(text).filter((p) => p.cur === "EGP" && p.v >= lo && p.v <= hi && (!g.max || p.v <= g.max * 1.8));
+  let ps = pricesIn(text).filter((p) => p.cur === "EGP" && (known || p.explicit) && p.v >= lo && p.v <= hi && (!g.max || p.v <= g.max * 1.8));
   const yw = (g.wish || []).find((w) => w.k === "year");
   if (yw) {
     // each price belongs to the year written nearest before it (a price guide lists 2021, 2022, 2023 one after another)
@@ -594,11 +612,15 @@ export function sellerMessage(ad, g, { ar = true } = {}) {
 
 // ---- the store --------------------------------------------------------------------------------------------------------------------------
 export const SCOUT_KEY = "attune:scout:v1";
-export function loadScout(ls = typeof localStorage !== "undefined" ? localStorage : null) { try { const j = JSON.parse((ls && ls.getItem(SCOUT_KEY)) || "null"); return j && Array.isArray(j.goals) ? j : { goals: [] }; } catch (e) { return { goals: [] }; } }
+export function loadScout(ls = typeof localStorage !== "undefined" ? localStorage : null) { try { const j = JSON.parse((ls && ls.getItem(SCOUT_KEY)) || "null"); return j && Array.isArray(j.goals) ? { ...j, goals: j.goals.map(freshGoal) } : { goals: [] }; } catch (e) { return { goals: [] }; } }
 export function saveScout(d, ls = typeof localStorage !== "undefined" ? localStorage : null) { try { ls && ls.setItem(SCOUT_KEY, JSON.stringify(d)); } catch (e) {} return d; }
+/** v6.46: a goal saved by an older Scout is understood again with today's reader (Ali's "Hyundai Tuscon 2022" goal, saved before
+    Scout knew the Tucson or the year, checked nothing but "used" — so any page with a number passed). */
+export const PARSE_V = 3;
+export const freshGoal = (goal) => (!goal || goal.gv === PARSE_V ? goal : { ...goal, g: parseGoal(goal.text || (goal.g && goal.g.raw) || ""), gv: PARSE_V });
 export function addGoal(d, text, now = Date.now()) {
   const g = parseGoal(text);
-  const goal = { id: "s" + now.toString(36) + Math.random().toString(36).slice(2, 5), text: String(text).trim(), g, created: now, lastRun: 0, seen: [], votes: {}, taste: { up: {}, down: {} }, on: true };
+  const goal = { id: "s" + now.toString(36) + Math.random().toString(36).slice(2, 5), text: String(text).trim(), g, gv: PARSE_V, created: now, lastRun: 0, seen: [], votes: {}, taste: { up: {}, down: {} }, on: true };
   return { data: { ...d, goals: [goal, ...d.goals] }, goal };
 }
 /** Due for a run: never run, or the last run is older than `hours` (twice a day by default). */

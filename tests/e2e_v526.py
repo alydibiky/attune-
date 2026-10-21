@@ -62,7 +62,7 @@ with sync_playwright() as p:
     page.wait_for_selector("[data-testid=business-page]", timeout=5000)
     page.click("[data-testid=erp-new]")
     page.evaluate("() => { const M = window.__mock; M.fakeQueue = []; M.bodies = []; }")
-    page.locator("[data-testid=erp-desc]").fill("A small car workshop: customers, cars and repairs")
+    page.locator("[data-testid=erp-desc]").fill("A laundry with delivery drivers: customers, orders and drivers")   # (v6.46: a kind no template knows, so the model designs it)
     page.click("[data-testid=erp-design]")
     page.wait_for_function("() => (window.__mock.bodies || []).filter(x => x.max_tokens > 2).length >= 2", timeout=60000)
     bs = main_bodies(page)

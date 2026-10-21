@@ -85,7 +85,7 @@ export const PACKS = {
   "klein-4b-hq": {
     id: "klein-4b-hq", kind: "draw", label: "Studio Pro HD", sizeGB: 7.13, needRam: 12, license: "Apache-2.0",
     defaults: { steps: 4 },
-    quality: "Studio Pro at full precision: finer detail, cleaner faces, hands and text. Also edits your photos by instruction. Needs a working graphics chip and 12 GB RAM.",
+    quality: "Studio Pro at full precision: finer detail, cleaner faces, hands and text. Also edits your photos by instruction. For computers and 24 GB phones — on smaller phones it draws on the CPU (slow) to keep the phone safe.",
     files: [
       { role: "diffusion", what: "drawing model (8-bit)", name: "flux-2-klein-4b-Q8_0.gguf", size: 4300629440,
         url: "https://huggingface.co/leejet/FLUX.2-klein-4B-GGUF/resolve/main/flux-2-klein-4b-Q8_0.gguf" },
@@ -192,8 +192,12 @@ const PRO = ["klein-4b-hq", "klein-4b"];
  */
 export function drawPack(info, choice = null, mode = "create") {
   const ready = (id) => packReady(info, id);
-  const pro = PRO.find(ready);
-  const proOffer = info && info.ramGB >= 12 ? "klein-4b-hq" : "klein-4b";
+  // v6.46 (Ali's phone restarted while Studio Pro HD drew on the graphics chip): on a phone the 8-bit model (4.3 GB on the
+  // GPU) is too big for the shared memory — the 4-bit Studio Pro is used first; HD only on a computer or a 24 GB phone
+  const big = !!(info && (info.platform === "desktop" || info.ramGB >= 24));
+  const order = big ? PRO : PRO.slice().reverse();
+  const pro = order.find(ready);
+  const proOffer = big ? "klein-4b-hq" : "klein-4b";
   if (mode === "edit") return pro ? { id: pro, ready: true } : { id: proOffer, ready: false };
   if (choice === "pro") return pro ? { id: pro, ready: true } : { id: proOffer, ready: false };
   if (choice === "turbo") return { id: "turbo", ready: ready("turbo") };
@@ -252,7 +256,7 @@ export function recommendStudioPack(d) {
   // v6.43 (Ali: "Studio as fast and as high quality as the gallery's"): a phone whose graphics chip works (fixed in v6.43 for
   // Android 17) and has 12 GB+ gets Studio Pro HD first — 1024 px, faces, hands and text; the fast model stays one tap away
   if (!computer && d.gpu && ram >= 12 && (room("klein-4b-hq") || room("klein-4b"))) {
-    const id = room("klein-4b-hq") ? "klein-4b-hq" : "klein-4b";
+    const id = ram >= 24 && room("klein-4b-hq") ? "klein-4b-hq" : room("klein-4b") ? "klein-4b" : "klein-4b-hq";   // v6.46: 4-bit on phones (see drawPack)
     alts.unshift({ pack: r.pack, why: "fastest pictures (512 px)", estSeconds: Math.max(3, Math.round(r.estSeconds / 6)) });
     r = { pack: id, steps: 4, side: 1024, estSeconds: 45, why: "the graphics chip works and this phone has 12 GB or more: the best quality, 1024 px (about 30–60 s, an estimate)" };
   }

@@ -206,16 +206,24 @@ export function Builder({ llm, modelReady, openEngine, flash, onBack, onCreate, 
     setErr(""); setBusy(true); setStage("");
     try {
       let spec = null, how = "ai";
-      setStage(tr("Designing the tables…"));
-      const out = await llm(E.designMessages(desc), { maxTokens: getPower().designTokens, temperature: 0.2, json: true });
-      const j = E.jsonFrom(out);
-      if (j && E.designQuality(j).ok) spec = j;
-      if (!spec) {
+      // v6.46 (Ali: "I run a clinic with appointments" took forever): a business we have a deep template for is built at once,
+      // by code; the model designs only what the templates don't know — and never for more than 2 minutes a try
+      const known = E.clearTemplate(desc);
+      if (known) { spec = known.spec; how = "known"; }
+      const capped = (p) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error("slow")), 120000))]);
+      let j = null;
+      if (!spec) try {
+        setStage(tr("Designing the tables…"));
+        const out = await capped(llm(E.designMessages(desc), { maxTokens: getPower().designTokens, temperature: 0.2, json: true }));
+        j = E.jsonFrom(out);
+        if (j && E.designQuality(j).ok) spec = j;
+      } catch (e) { if (String(e.message) !== "slow") throw e; }
+      if (!spec) try {
         setStage(tr("Trying a simpler way…"));
-        const lines = await llm(E.designLinesMessages(desc), { maxTokens: 1500, temperature: 0.2 });
+        const lines = await capped(llm(E.designLinesMessages(desc), { maxTokens: 1500, temperature: 0.2 }));
         const sp = E.specFromLines(lines, (j && j.name) || tr("My business"));
         if (sp && E.designQuality(sp).ok) spec = sp;
-      }
+      } catch (e) { if (String(e.message) !== "slow") throw e; }
       if (!spec) { const t = E.guessTemplate(desc); if (t) { spec = t.spec; how = "template"; } }
       if (!spec) setErr(tr("The model didn't produce a usable design. Try again, describe it differently, or start from a template."));
       else {
@@ -224,6 +232,7 @@ export function Builder({ llm, modelReady, openEngine, flash, onBack, onCreate, 
         setDraftRaw(draft && draft.name && draft._named ? { ...s, name: draft.name, _named: true } : s); setStep(1);
         if (ac.added.length) flash(tr("Connected {n} fields to their tables", { n: ac.added.length }));
         if (how === "template") flash(tr("Started from the closest template — change anything you like"));
+        if (how === "known") flash(tr("Built from the \"{k}\" template in a second — change anything you like", { k: tr(known.title || known.id) }));
       }
     } catch (e) { setErr(String(e.message || e)); }
     setBusy(false);
@@ -256,7 +265,8 @@ export function Builder({ llm, modelReady, openEngine, flash, onBack, onCreate, 
                 placeholder={tr("e.g. We rent mobile cranes (20–500 t) with operators in Egypt. We track customers, jobs per site, daily rates, invoices and payments, maintenance and crew licences.")} /></label>
             <div className="flex flex-wrap gap-2">{[tr("I rent out cranes with operators"), tr("I run a clinic with appointments"), tr("I sell spare parts to workshops"), tr("I run a small shop with stock")].map((x) => (
               <button key={x} onClick={() => setDesc(x)} className="px-3 py-2 rounded-xl bg-[#FFFFFF] border border-[#DCE3EC] text-[13px]">{x}</button>))}</div>
-            {modelReady ? <button className={btnP + " w-full"} style={{ background: "var(--biz)" }} disabled={busy || desc.trim().length < 15} onClick={design} data-testid="erp-design">
+            {/* v6.46: a business we have a template for needs no model at all */}
+            {modelReady || E.clearTemplate(desc) ? <button className={btnP + " w-full"} style={{ background: "var(--biz)" }} disabled={busy || desc.trim().length < 15} onClick={design} data-testid="erp-design">
               {busy ? <Loader2 size={17} className="animate-spin" /> : <Sparkles size={17} />}{busy ? (stage || tr("Designing your system…")) : tr("Design it with AI")}</button>
               : <button className={btnG + " w-full"} onClick={openEngine}>{tr("Load a model to design it with AI — or pick a template below")}</button>}
             {err ? <p className="text-[13px] text-amber-700">{err}</p> : null}

@@ -723,6 +723,19 @@ export function guessTemplate(description) {
   for (const [id, re] of Object.entries(score)) { const n = (t.match(re) || []).length; if (n > bs) { bs = n; best = id; } }
   return best ? TEMPLATES.find((x) => x.id === best) : null;
 }
+/**
+ * v6.46 (Ali: "I run a clinic with appointments" sat on "Designing the tables…" for ages): code first — a description that
+ * clearly names one kind of business we have a deep template for (in a few words) is built from it at once; the model only designs what
+ * the templates don't know. Clear = one kind scores and no other kind scores as much. → the template or null.
+ */
+export function clearTemplate(description) {
+  const t = String(description || "").toLowerCase();
+  if (t.split(/\s+/).filter(Boolean).length > 14) return null;   // a detailed description says what it needs: the model designs it
+  const res = { cranes: /(crane|ونش|أوناش|اوناش|كرين)/g, shop: /(\bshop\b|\bstore\b|retail|محل)/g, restaurant: /(restaurant|cafe|café|مطعم|كافيه)/g, ...DEEP_WORDS };
+  const scores = Object.entries(res).map(([id, re]) => [id, (t.match(re) || []).length]).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  if (!scores.length || (scores[1] && scores[1][1] >= scores[0][1])) return null;
+  return TEMPLATES.find((x) => x.id === scores[0][0]) || null;
+}
 
 export function changeMessages(sys, request) {
   return [

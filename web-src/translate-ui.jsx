@@ -91,7 +91,7 @@ function Interpreter({ llm, native, flash, gloss, close }) {
       setHeard((x) => ({ ...x, [other]: t }));
       setLog((l) => [{ side, from: text, to: t, ok: out && out[0] ? out[0].ok : true }, ...l].slice(0, 40));
       if (t) await speakNow(t, { lang: langs[other], native });
-    } catch (e) { flash && flash(String((e && e.message) || e)); }
+    } catch (e) { flash && flash(tr(String((e && e.message) || e))); }
     setBusy(null);
   };
   const Half = ({ side, flip }) => (

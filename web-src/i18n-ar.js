@@ -6306,4 +6306,7 @@ export const AR = {
   "Subtitles need Android 13 or newer": "الترجمة المكتوبة محتاجة أندرويد 13 أو أحدث",
   "Google sync on the computer needs one setup step by Attune's owner (its Google client) — use Wi-Fi with your phone until then.": "المزامنة مع جوجل على الكمبيوتر محتاجة خطوة إعداد واحدة من صاحب Attune — استعمل الـ Wi-Fi مع موبايلك لحد ساعتها.",
   "The first time, Google's sign-in page opens in your browser; after that the computer stays signed in.": "أول مرة، صفحة تسجيل الدخول بتاعة جوجل هتفتح في المتصفح؛ بعد كده الكمبيوتر هيفضل مسجّل.",
+  "Built from the \"{k}\" template in a second — change anything you like": "اتعمل من قالب «{k}» في ثانية — غيّر أي حاجة براحتك",
+  "Android is downloading the offline speech pack for this language — try again when it finishes": "أندرويد بينزّل حزمة الكلام من غير نت للغة دي — جرّب تاني لما تخلص",
+  "That language isn't installed for offline voice — add it in the phone's Settings → Google → Speech → Offline languages": "اللغة دي مش متنزّلة للصوت من غير نت — ضيفها من إعدادات الموبايل ← جوجل ← الكلام ← اللغات بدون إنترنت",
 };

@@ -757,6 +757,22 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AO. 21 Oct 2026 — v6.46 (HANDOFF §5.97). Read this first, then AN.
+Ali's first phone round on v6.45: "scouting is absolutely useless", translation + calling don't work (offline voice
+language not installed, no way to install), "when I generated a photo the mobile restarted", the builder took forever on a
+clinic, his log (page 6.42, getSource error, GenService crash). All fixed; he agreed VISION.md ("let's do it together").
+### Ali's phone checklist (v6.46)
+1. ⬜ Studio → a picture with Studio Pro: the phone must NOT restart (on a 16 GB phone it uses the 4-bit model on the GPU;
+   HD draws on the CPU, slower but safe). Engine → Log shows "GPU skipped for safety" when it chose the CPU.
+2. ⬜ Scout → open the old Tucson goal → the 151 / nfl.com / calculator results are gone → ↻ → real ads only, real prices.
+   Try a new goal too (a car, a flat). Tell Claude which real ads are still missing (send the site's ad link).
+3. ⬜ Translate → Talk (interpreter) and Chat → voice call in Arabic: it works, or Android opens its download of the offline
+   Arabic pack (then try again). The call fills the whole screen.
+4. ⬜ Business → New → "I run a clinic with appointments" → Design → the system appears at once.
+5. ⬜ More → the version line says 6.46 for both.
+### Still open
+Studio reflections (dedicated model), eraser on the NPU, release prep (not now), Google Cloud setup (Ali).
+
 ## AN. 20 Oct 2026 — v6.45 (HANDOFF §5.96). Read this first, then AM.
 Ali: "1.a and c 2. Do it 3.do it 4.attached 6.not now 7.do the still to build" (+ his two desktop programs and the
 warehouse hand-off attached). All built; nothing subjective decided alone (A + C was his pick).

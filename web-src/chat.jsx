@@ -2328,9 +2328,11 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
             )}
           </div>
         </div>
-        {call ? <CallScreen ask={ask} busy={busy} last={[...messages].reverse().find((m) => m.role === "assistant")} api={api} stop={stop}
+        {/* v6.46 (Ali's screenshot: the call's mic was a half circle under the empty chat): drawn on the page itself, not inside the
+            chat column, whose layout clipped the full-screen call */}
+        {call ? createPortal(<CallScreen ask={ask} busy={busy} last={[...messages].reverse().find((m) => m.role === "assistant")} api={api} stop={stop}
           tag={voiceTag(detectLang([...messages].reverse().map((m) => m.text).find((t) => detectLang(t) && detectLang(t) !== "en") || "") || (api.prefersArabic() ? "ar" : deviceLang(navigator)), "")}
-          close={() => { try { NATIVE.stopSpeaking && NATIVE.stopSpeaking(); NATIVE.stopListening && NATIVE.stopListening(); } catch (e) {} setCall(false); }} /> : null}
+          close={() => { try { NATIVE.stopSpeaking && NATIVE.stopSpeaking(); NATIVE.stopListening && NATIVE.stopListening(); } catch (e) {} setCall(false); }} />, document.body) : null}
         {/* v6.16c (Ali): like every AI app, a small line that answers can be wrong */}
         <p className="text-center text-[10.5px] leading-tight text-slate-500 mt-1 px-2" data-testid="ai-note">{tr("Attune is AI and can make mistakes. Check important info.")}</p>
       </div>

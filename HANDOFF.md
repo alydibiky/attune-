@@ -2339,6 +2339,35 @@ Ali's answers to the "What's left" list: 1 = A and C, 2 Recall = do it, 3 Google
 - **Still open (need a phone, a model or Ali)**: Studio reflections (needs a dedicated model), the eraser on the NPU,
   the GPU drawing check; Google Cloud setup (Ali's own account — SETUP_CLOUD §A, steps 1–5); release prep (Ali: not now).
 
+### 5.97 (21 Oct 2026) — v6.46: Ali's first phone round on v6.45 (photo restarted the phone, Scout useless, voice packs, builder slow, log items)
+Ali also agreed the vision page ("let's do it with each other") — VISION.md is now the first thing each session reads.
+- **The phone restarted while drawing** (log: Studio Pro HD, flux-2-klein-4b-Q8 4.3 GB, on the Adreno GPU, "low memory mode"):
+  the GPU's memory is the phone's own RAM and Android can't take it back, so a big model there starves the whole system.
+  `ImageEngine.gpuSafe(onGpu, textReader, totalRam, freeRam, lowMem)`: the GPU only when drawing model + colour decoder
+  ≤ ¼ of RAM AND 1.5 GB stays free after the text reader, never in low memory mode — else the CPU (weights mapped, Android
+  stays in control); logged "GPU skipped for safety". `studio.js drawPack / recommendStudioPack`: phones (< 24 GB) use the
+  4-bit Studio Pro (2.5 GB on the GPU) first; HD (8-bit) only on a computer or a 24 GB phone. Tests: unit studio (4 new).
+- **Scout "absolutely useless"** (Tucson 2022: "151 EGP" from a dubizzle category page scored 100/100, nfl.com,
+  calculator.io and a Malaysian forum compared): the goal had been saved by an older Scout (only "used" understood). Now
+  `PARSE_V` + `freshGoal` (every saved goal is read again when Scout opens); `NOT_AD` (sports, news, forums, calculators,
+  wikis, social, review sites never count); an unknown site counts as an ad only with a price written WITH a currency;
+  one ad's price must lie in its kind's band (car 100k–20 M EGP; a "1,850 monthly" rental is not a car price; a rent keeps
+  a sale price so the check can say so); what earlier runs kept is checked again; list prices only from known / .eg sites or
+  with an explicit currency. Tests: unit v746scout (Ali's case), e2e_v746.
+- **Voice (interpreter, voice call): "That language isn't installed for offline voice"** with no way to install:
+  `Voice.kt` now tries the language without its region ("ar" for "ar-EG"), then the phone's normal recogniser (unless the
+  offline lock is on), then asks Android for the offline pack (Android 13+ `triggerModelDownload`; older: Google's offline
+  languages list) and says what to do. The **voice call** screen was clipped to a half circle inside the chat column → it is
+  drawn on the page itself (portal). Tests: e2e_v741call (+ covers the whole screen).
+- **Business builder "Designing the tables…" forever** ("I run a clinic with appointments"): code first — `erp.clearTemplate`
+  (a short description, ≤ 14 words, that clearly names a kind we have a deep template for) builds it at once (0.1 s, no
+  model needed — the Design button shows even without a model); the model designs the rest, each try capped at 2 minutes.
+  Tests: unit v746builder, e2e_v746 (e2e_v526 now uses a laundry, a kind no template knows).
+- **Log items**: the page said "Attune 6.42 · app 6.45" — PAGE_VERSION is now kept equal to versionName (unit v746version);
+  "Cannot read properties of undefined (reading 'getSource')" — Maps asks a closed / restyling map for its sources safely
+  (`srcOf`); GenService "did not start in time" (a 4.9 GB picture kept the main thread busy) — started with `startService`
+  while Attune is on screen (no deadline), `startForegroundService` only from the background.
+
 ## 6. How to fix Ali's problems well (method)
 1. Reproduce in the browser harness first if it's a page bug (most are). Write the failing check into the matching e2e file (or a new `e2e_v513.py`), then fix, then run **all** suites — earlier tests catch regressions (v5.12 broke two old tests just by adding the word "reminders" to a More-menu description).
 2. Phone-only bugs (engine, GPU, widget, notifications, downloads): ask for the Engine log; reason from the Kotlin; make the smallest change; add a note to §0.4.

@@ -22,6 +22,8 @@ with sync_playwright() as p:
     page.evaluate("() => { window.__mock.bodies = []; window.__mock.fakeQueue = ['**Paris** is the capital of France. It has about 2 million people.\\n\\nSee https://en.wikipedia.org/wiki/Paris for more.']; }")
     page.click("[data-testid=chat-call]")
     page.wait_for_selector("[data-testid=call-screen]", timeout=3000)
+    b = page.locator("[data-testid=call-screen]").bounding_box(); vw = page.viewport_size
+    check(page.evaluate("document.querySelector('[data-testid=call-screen]').parentElement === document.body") and b["y"] <= 1 and b["height"] >= vw["height"] - 2, "v6.46: the call covers the whole screen (it was a half circle inside the chat)")
     page.wait_for_function("window.__spoke.length >= 2", timeout=15000)
     page.wait_for_function("!document.querySelector('[data-testid=call-screen]')", timeout=8000)
     sp = page.evaluate("window.__spoke")
