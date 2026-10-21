@@ -33,10 +33,17 @@ object Subtitles {
 
     fun available(ctx: Context): Boolean = Build.VERSION.SDK_INT >= 33 && SpeechRecognizer.isOnDeviceRecognitionAvailable(ctx)
 
-    /** The video's sound as 16 kHz mono 16-bit samples. */
-    fun decode(ctx: Context, id: Long, isCancelled: () -> Boolean): ShortArray {
+    /** A saved download → its address. */
+    fun uriOf(ctx: Context, id: Long): android.net.Uri {
         val dm = ctx.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        val src = dm.getUriForDownloadedFile(id) ?: throw IllegalStateException("The file was moved or deleted")
+        return dm.getUriForDownloadedFile(id) ?: throw IllegalStateException("The file was moved or deleted")
+    }
+
+    /** The video's sound as 16 kHz mono 16-bit samples. */
+    fun decode(ctx: Context, id: Long, isCancelled: () -> Boolean): ShortArray = decode(ctx, uriOf(ctx, id), isCancelled)
+
+    /** v6.48: any video or recording (a file the person attached on Home) → 16 kHz mono samples. */
+    fun decode(ctx: Context, src: android.net.Uri, isCancelled: () -> Boolean): ShortArray {
         val ex = MediaExtractor(); ex.setDataSource(ctx, src, null)
         var t = -1
         for (i in 0 until ex.trackCount) if ((ex.getTrackFormat(i).getString(MediaFormat.KEY_MIME) ?: "").startsWith("audio/")) { t = i; break }
@@ -139,10 +146,14 @@ object Subtitles {
     }
 
     /** The whole video → [{start, end, text}] (ms), with progress (pieces done / all). */
-    fun make(act: Activity, id: Long, lang: String, onProgress: (Int, Int) -> Unit, isCancelled: () -> Boolean): JSONArray {
+    fun make(act: Activity, id: Long, lang: String, onProgress: (Int, Int) -> Unit, isCancelled: () -> Boolean): JSONArray =
+        make(act, uriOf(act, id), lang, onProgress, isCancelled)
+
+    /** v6.48: the same for any video or recording file. */
+    fun make(act: Activity, src: android.net.Uri, lang: String, onProgress: (Int, Int) -> Unit, isCancelled: () -> Boolean): JSONArray {
         if (Build.VERSION.SDK_INT < 33) throw IllegalStateException("Subtitles need Android 13 or newer")
         if (!SpeechRecognizer.isOnDeviceRecognitionAvailable(act)) throw IllegalStateException("This phone has no offline speech recogniser (Google's speech services)")
-        val pcm = decode(act, id, isCancelled)
+        val pcm = decode(act, src, isCancelled)
         val ps = pieces(pcm)
         val out = JSONArray()
         val tmp = File(act.cacheDir, "subs-${System.currentTimeMillis()}.pcm")

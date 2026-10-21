@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { MINE as LIB_MINE } from "./library.js";   // v6.46 "Remember this"
+import { MINE as LIB_MINE, chaptersOf as libChapters } from "./library.js";   // v6.46 "Remember this"
 import { setProSearch, proSearchOn, proLookup } from "./cloud.js";
 import { askConfirm, ConfirmHost } from "./confirm.jsx";
 import { TrainFront, Target, Search, Bell, Calculator, Timer, Code2, Copy, Check, Wand2, Zap, Star, Clock, Save, ExternalLink, Mic, Sparkles, User, ShieldCheck, MessageSquare, Bot, Palette, X, Lock, Scissors, Shuffle, PenLine, ClipboardPaste, Cpu, Download, HardDrive, ImagePlus, Plus, History, Plane, Volume2, HardHat, Building2, Languages, Radar, CheckCircle2, Gauge, RefreshCw, Users, AlertTriangle, Info, Crown, Package, Loader2, Wallet, Globe, MapPin, Menu, LayoutGrid, MessageCircle, Brain, Square, Send, CalendarDays, Droplet, ChevronLeft, ChevronRight, Trash2, Database, GraduationCap, Newspaper, Folder, Layers, FileText, Film, Presentation, Apple, BookOpen, PanelLeft, House, Binoculars, Heart, MoreVertical, Briefcase } from "lucide-react";
@@ -76,7 +76,8 @@ import { parseMission } from "./missions.js";
 // which set attune:legacy-nav (tests/harness.py); people never see it.
 const LEGACY_NAV = (() => { try { return localStorage.getItem("attune:legacy-nav") === "1"; } catch (e) { return false; } })();
 const HUB_ICON = { create: Wand2, projects: Folder, home: House, chat: MessageCircle, students: GraduationCap, money: Wallet, health: Heart, learn: CalendarDays, tools: Briefcase };   // (v6.36 Ali's board)
-const HUB_PLACES = HUBS.map(([id, label, target]) => [target, label, HUB_ICON[id]]);
+// v6.48 (Ali: "put Shelf in the sidebar"): Shelf gets its own row right under Home (it is still a tab of the Home hub)
+const HUB_PLACES = HUBS.flatMap(([id, label, target]) => (id === "home" ? [[target, label, HUB_ICON[id]], ["shelf", "Shelf", BookOpen]] : [[target, label, HUB_ICON[id]]]));
 import { HealthPage } from "./health-ui.jsx";
 import { LifeAskPage } from "./lifeask-ui.jsx";
 import { ScoutPage, runScoutGoal, finishRun as scoutFinish, tellText as scoutTell } from "./scout-ui.jsx";
@@ -92,7 +93,21 @@ import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
 import { LibraryPage } from "./library-ui.jsx";
-import { CountryRow } from "./country-ui.jsx";   // v6.47 country packs: Settings → Your country   // v6.46 "Remember": the person's own books, articles and pages
+import { CountryRow } from "./country-ui.jsx";   // v6.47 country packs: Settings → Your country
+// v6.48 Chat runs the app (CHAT_RUNS_APP.md): the jobs, the conversion code shared with the Convert page, the box's readers
+import { createJobs } from "./jobs.js";
+import * as CR from "./convert-run.js";
+import * as CV from "./convert.js";
+import * as TR from "./translate.js";
+import * as MS from "./mediastore.js";
+import * as K2 from "./commands.js";
+import { placeOf, route as cmdRoute } from "./cmdrun.js";
+import * as W2 from "./whereis.js";
+import { loadTrip, saveTrip } from "./travel.js";
+import { findStation } from "./metro.js";
+import { cuesOf, srtOf, speechLang } from "./video.js";
+import { thumbPut } from "./mind-ui.jsx";
+import { readSourceFile } from "./knowledge-ui.jsx";   // v6.46 "Remember": the person's own books, articles and pages
 import { loadOffPacks, teachChat } from "./teach-ui.jsx";
 import * as TEACH from "./teach.js";
 import * as KNOW from "./knowledge.js";
@@ -9229,6 +9244,9 @@ export default function App() {
   // Everything the Chat screen needs from the rest of the app.
   const chatApi = {
     run: callChat,
+    cmdLocal: (t) => (cmdLocalRef.current ? cmdLocalRef.current(t) : null),          // v6.48 (Chat runs the app)
+    whereYes: (set) => remember(W2.whereRecord(set)),
+    openRecord: (id) => { try { localStorage.setItem("attune:mind:open", id); } catch (e) {} navTo("memory"); },
     abort: () => LocalEngine.abort(),
     profileText: () => profileLine(profile),
     accuracy: ACCURACY_RULES,
@@ -9426,6 +9444,164 @@ export default function App() {
     const undo = () => { for (const [k, v] of Object.entries(before)) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } extra.forEach((f) => { try { f(); } catch (e) {} }); };
     return { lines, undo };
   };
+  // ---- v6.48 Chat runs the app (CHAT_RUNS_APP.md; Home option A): what the Home box reaches, and the jobs it starts --------------
+  const cmdRef = useRef({});
+  const cmdLocalRef = useRef(null);
+  cmdRef.current = { modelUsable, memory, hzSample, profile, proActive };
+  const findCommitmentsRef = useRef(null); findCommitmentsRef.current = typeof findCommitments === "function" ? findCommitments : null;
+  const jobs = useMemo(() => createJobs({ runners: {
+    convert: async (job, ctx) => {
+      const fs = CR.filesFor(job.input.files);
+      const target = job.input.format === "translate" ? "translate" : CR.targetFor(fs.kind, job.input.format);
+      if (target === "translate" && !cmdRef.current.modelUsable) throw CR.need(tr("Translating needs an AI model — open Engine and install one."), "engine");
+      if (CR.needsNative(fs.kind, target, "docx") && !NATIVE) throw CR.need(tr("PDF files are converted by the Android app — open Attune on your phone."));
+      const o = await CR.runConversion({ files: fs, target, tLang: job.input.to || "en", tFmt: "docx" },
+        { nativeCall: NATIVE ? nativeCall : null, native: NATIVE, modelReady: cmdRef.current.modelUsable, canReadPhotos: !!LocalEngine.vision, alive: ctx.alive,
+          llm: (messages, image, o2) => callChat(messages, image, { maxTokens: o2.maxTokens, temperature: o2.temperature ?? 0.2, think: false }),
+          onBusy: (n) => ctx.progress(CR.pctOf(n) || 0, n) });
+      if (!o) return null;
+      return { file: { name: o.name, mime: o.mime, b64: o.b64 || null, text: o.text || null, size: o.size }, note: o.note || "" };
+    },
+    humanize: async (job, ctx) => {
+      if (!cmdRef.current.modelUsable) throw CR.need(tr("Humanizing needs an AI model — open Engine and install one."), "engine");
+      ctx.progress(10, tr("Rewriting so it sounds like you…"));
+      const t = await aiHumanize(job.input.text, cmdRef.current.hzSample, cmdRef.current.profile);
+      if (!t) throw new Error(tr("The model gave back nothing — try again"));
+      return { text: String(t).trim() };
+    },
+    translate: async (job, ctx) => {
+      if (!cmdRef.current.modelUsable) throw CR.need(tr("Translating needs an AI model — open Engine and install one."), "engine");
+      const pieces = TR.piecesOf(job.input.text);
+      let gloss = []; try { gloss = JSON.parse(localStorage.getItem("attune:translate:glossary") || "[]"); } catch (e) {}
+      const out = await TR.translatePieces(pieces, (m, o2) => callChat(m, null, { maxTokens: o2.maxTokens, temperature: 0.2, think: false }),
+        { lang: job.input.to, language: CR.T_LANGS[job.input.to] || job.input.to, glossary: gloss, onProgress: (i, n) => ctx.progress(((i + 1) / n) * 100, tr("Part {n} of {t}", { n: i + 1, t: n })) });
+      const bad = out.filter((r) => !r.ok).length;
+      return { text: out.map((r) => r.text || r.src).join("\n\n"), note: bad ? tr("{n} piece(s) to check", { n: bad }) : "" };
+    },
+    // v6.48 (S8): a photo, video, recording or document kept in Mind "as …" — its picture, the words said in it (the phone's own
+    // offline speech reader), what the AI sees in a photo; documents also go to Remember so Chat can answer from them
+    remember: async (job, ctx) => {
+      const list = job.input.files || [], label = String(job.input.label || "").trim(), done = [];
+      for (let i = 0; i < list.length; i++) {
+        const f = list[i], kind = MS.kindOfFile(f), part = (p) => ctx.progress(((i + p / 100) / list.length) * 100);
+        const title = (label && list.length === 1 ? label : label ? label + " — " + f.name : f.name).slice(0, 90);
+        if (kind === "photo") {
+          const url = await new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = () => bad(new Error(tr("Couldn't read that picture"))); r.readAsDataURL(f); });
+          const image = { data: url.split(",")[1], media: f.type || "image/jpeg" };
+          const rec = remember({ kind: "photo", title, text: label, tags: ["kept"], meta: { thumb: true, mindKind: "photo", label, media: "photo", name: f.name } });
+          await keepPicture(rec.id, image); part(40);
+          if (cmdRef.current.modelUsable && LocalEngine.vision) {
+            ctx.progress(((i + 0.5) / list.length) * 100, tr("Looking at the photo…"));
+            try { const seen = String(await callChat([{ role: "user", content: "Describe this photo in one or two plain sentences (what and who is in it, where), then copy any words written in it. No preamble." }], image, { maxTokens: 220, temperature: 0.2, think: false }) || "").trim();
+              if (seen) { updateRec(rec.id, (r) => ({ ...r, text: [label, seen].filter(Boolean).join("\n"), meta: { ...(r.meta || {}), seen } }));
+                // S10: a date written in it (a warranty, an insurance paper, a promise) becomes a reminder, as Mind does for photos
+                if (cmdRef.current.proActive && findCommitmentsRef.current) findCommitmentsRef.current(seen, rec.id, true); } } catch (e) {}
+          }
+          done.push(title);
+        } else if (kind === "video" || kind === "audio") {
+          const fr = kind === "video" ? await MS.videoFrame(f) : { dur: await MS.audioLength(f) };
+          const rec = remember({ kind, title, text: label, tags: ["kept", kind], meta: { label, media: kind, name: f.name, size: f.size, mime: f.type || "", dur: (fr && fr.dur) || 0, thumb: !!(fr && fr.thumb), mindKind: kind } });
+          if (fr && fr.thumb) await thumbPut(rec.id, fr.thumb);
+          const kept = await MS.mediaPut(rec.id, f);
+          if (!kept) updateRec(rec.id, (r) => ({ ...r, meta: { ...r.meta, noCopy: true } }));
+          part(10);
+          if (NATIVE) {
+            try {
+              ctx.progress(((i + 0.1) / list.length) * 100, tr("Sending it to the phone's speech reader…"));
+              const path = await MS.sendToApp(f, nativeCall, (p) => part(10 + p * 0.15), ctx.alive);
+              const lang = speechLang(/[\u0600-\u06ff]/.test(label) || getLang() === "ar" ? "ar" : getLang());
+              const r = await nativeCall("subtitlesFile", { path, lang }, (pp) => { const p = typeof pp === "object" ? pp.pct : pp; part(25 + (p || 0) * 0.75); ctx.progress(((i + (25 + (p || 0) * 0.75) / 100) / list.length) * 100, tr("Listening to what is said…")); });
+              const cues = (r && r.cues) || [];
+              const said = cues.map((c) => c.text).join(" ").slice(0, 20000);
+              updateRec(rec.id, (x) => ({ ...x, text: [label, said].filter(Boolean).join("\n").slice(0, 20000), meta: { ...x.meta, cues: cues.slice(0, 3000), said } }));
+              if (said && cmdRef.current.proActive && findCommitmentsRef.current) findCommitmentsRef.current(said.slice(0, 6000), rec.id, true);   // S10: promises and dates said in it
+            } catch (e) { updateRec(rec.id, (x) => ({ ...x, meta: { ...x.meta, saidError: String((e && e.message) || e).slice(0, 160) } })); }
+          }
+          done.push(title);
+        } else {
+          let src = null; try { src = await readSourceFile(f, NATIVE ? nativeCall : null); } catch (e) { throw new Error(tr("Couldn't read {f}", { f: f.name })); }
+          const text = src.pages ? src.pages.map((p) => p.text).join("\n\n") : String(src.text || "");
+          remember({ kind: "note", title, text: [label, text.slice(0, 12000)].filter(Boolean).join("\n"), tags: ["kept", "file"], meta: { label, name: f.name } });
+          try { await knowledge.add({ ...src, title, collection: LIB_MINE, chapters: libChapters(text).length }); } catch (e) {}
+          done.push(title);
+        }
+        part(100);
+      }
+      return { text: tr("Kept in your Mind: {list}", { list: done.join(", ") }), open: "memory" };
+    },
+    // v6.48 (S9, Ali: "how can I access video subtitles?"): subtitles for ANY video or recording on the phone, from the box
+    subtitles: async (job, ctx) => {
+      if (!NATIVE) throw new Error(tr("Subtitles are made by the Android app — open Attune on your phone."));
+      const f = (job.input.files || [])[0]; if (!f) throw CR.need(tr("Attach the video first (the paperclip in the box)."), "file");
+      ctx.progress(2, tr("Sending it to the phone's speech reader…"));
+      const path = await MS.sendToApp(f, nativeCall, (p) => ctx.progress(p * 0.2), ctx.alive);
+      const want = K2.langIn(job.input.text || "") || (getLang() === "en" ? "en" : getLang() === "ar" ? "ar" : getLang());
+      const r = await nativeCall("subtitlesFile", { path, lang: speechLang(want) }, (pp) => { const p = typeof pp === "object" ? pp.pct : pp; ctx.progress(20 + (p || 0) * 0.8, tr("Listening to what is said…")); });
+      const cues = cuesOf((r && r.cues) || []);
+      if (!cues.length) throw new Error(tr("No speech was heard in it."));
+      const name = String(f.name || "video").replace(/\.[^.]+$/, "") + ".srt";
+      return { file: { name, mime: "application/x-subrip", text: srtOf(cues), size: 0 }, text: cues.slice(0, 3).map((c) => c.text).join(" "), note: tr("{n} lines", { n: cues.length }) };
+    },
+  } }), []);
+  const cmd = useMemo(() => ({
+    jobs,
+    api: {
+      records: () => cmdRef.current.memory || [],
+      detect: (text) => {
+        const now = Date.now(); let doActions = 0;
+        // a plain "remember …" note is Mind's job here (to-dos, where things are, /remember read it better) — the rest counts
+        try { doActions = doUnderstand(text, { now, stores: loadLifeStores() }).actions.filter((a) => a.kind !== "note").length; } catch (e) {}
+        let mission = false; try { const pm = parseMission(text, now); mission = !!(pm && pm.deadline); } catch (e) {}
+        return { doActions, goal: looksLikeGoal(text), metro: !!metroAsk(text), automation: !!parseAutomation(text), watch: !!parseWatch(text), mission };
+      },
+      metroAsk: (text) => metroAsk(text) || (() => { const st = findStation(placeOf(text).replace(/\b(metro|station|stop)\b|محطه|محطة|مترو/gi, "").trim()); return st ? { to: st } : null; })(),
+      translateTo: (text) => (/[\u0600-\u06ff]/.test(text) ? "en" : getLang() !== "en" ? getLang() : "ar"),
+      isSkill: (text) => { try { const r = chatApi.userSkills ? chatApi.userSkills(text) : null; return !!(r && r.stripped != null); } catch (e) { return false; } },
+    },
+    mind: { add: (rec) => remember(rec), update: (id, fn) => updateRec(id, fn) },
+    rememberFiles: (files, label) => jobs.add({ kind: "remember", heavy: files.some((f) => /^(video|audio)$/.test(MS.kindOfFile(f))), title: tr("Remember: {n}", { n: label || (files.length > 1 ? files.length + " files" : files[0].name) }), input: { files, label } }),
+    chatWeb: (text) => { if (!(NATIVE && airGap)) setWebOn(true); setChatSeed("\u0002" + text); navTo("chat"); },
+    travel: (code) => {
+      if (CPACKS && CPACKS[code]) { try { installPack(code); } catch (e) {} }
+      saveTrip({ ...loadTrip(), country: code, pinned: true, pinnedAt: Date.now() });
+      navTo("travel");
+      return countryShown(code, (CPACKS && CPACKS[code] && CPACKS[code].name) || code.toUpperCase());
+    },
+    trip: () => loadTrip(),
+    endTrip: () => saveTrip({ ...loadTrip(), pinned: false }),
+    countryName: (code) => countryShown(code, (CPACKS && CPACKS[code] && CPACKS[code].name) || String(code || "").toUpperCase()),
+    openMap: (place) => { try { localStorage.setItem("attune:map:ask", place); } catch (e) {} navTo("map"); },
+    openMetro: (m) => { try { const prev = JSON.parse(localStorage.getItem("attune:metro:last") || "{}"); localStorage.setItem("attune:metro:last", JSON.stringify({ from: m.from ? m.from.en : prev.from || "", to: m.to ? m.to.en : prev.to || "" })); } catch (e) {} navTo("metro"); },
+    openRecord: (r) => { try { localStorage.setItem("attune:mind:open", r.id); if (r.meta && r.meta.at != null) localStorage.setItem("attune:mind:seek", String(r.meta.at)); } catch (e) {} navTo("memory"); },
+    saveFile: async (f) => {
+      try {
+        if (NATIVE) { await nativeCall("saveFile", f.b64 ? { name: f.name, mime: f.mime, b64: f.b64 } : { name: f.name, mime: f.mime, text: f.text }); flash(tr("Saved {n}", { n: f.name })); return; }
+        const blob = f.b64 ? new Blob([CV.b64ToBytes(f.b64)], { type: f.mime }) : new Blob([f.text || ""], { type: f.mime || "text/plain" });
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = f.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      } catch (e) { flash(String((e && e.message) || e)); }
+    },
+    copy: (t) => { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} },
+  }), [jobs, CPACKS, airGap]);
+  // v6.48: the same memory actions in the Chat page — to-dos, where things are, find, a note, a "/" job — as an answer card.
+  // Only what Mind does by code; everything else (and anything that needs a choice) stays Chat's. → card | null
+  cmdLocalRef.current = (text) => cmdLocal(text);
+  function cmdLocal(text) {
+    let o = null; try { o = cmdRoute(text, { api: cmd.api, prefs: K2.loadPrefs() }); } catch (e) { return null; }
+    if (!o) return null;
+    const ar = getLang() === "ar" || /[\u0600-\u06ff]/.test(text), L = (x) => (ar ? x.ar || x.en : x.en);
+    switch (o.type) {
+      case "todoAdd": remember({ kind: "todo", title: o.item.slice(0, 90), text: o.item, tags: ["todo"], meta: { todo: true, done: false } });
+        return { tone: "emerald", title: tr("Added to your to-do list"), detail: o.item, actions: [["Open in Mind", "open:memory"]] };
+      case "todos": return { tone: "emerald", title: tr("Your to-do list") + " · " + o.items.length, detail: o.items.map((x) => "☐ " + (x.title || x.text)).join("\n") || tr("Nothing left — say “add … to my to-do list” to add one."), actions: [["Open in Mind", "open:memory"]] };
+      case "whereSave": remember(W2.whereRecord(o.set)); return { tone: "emerald", title: tr("Got it"), detail: o.set.thing + " — " + o.set.place, actions: [["Open in Mind", "open:memory"]] };
+      case "confirm": return { tone: "sky", title: L(o.q), detail: "", actions: [["Yes", "where-yes"], ["No", "where-no"]], whereSet: o.set };
+      case "lines": return o.lines[0] && o.lines[0].open === "memory" ? { tone: "emerald", title: L(o.lines[0]), detail: "", actions: [["Open in Mind", "open:memory"]] } : null;
+      case "found": return { tone: "emerald", title: o.items.length ? tr("Found in your Mind") : tr("Nothing kept fits that yet"), detail: o.items.map((r) => "• " + r.title + (r.meta && r.meta.atText ? " — " + r.meta.atText : "")).join("\n"), actions: o.items.slice(0, 3).map((r) => [r.title.slice(0, 28), "rec:" + r.id]), recs: o.items };
+      case "rememberNote": remember({ kind: "note", title: o.text.slice(0, 70), text: o.text, tags: ["remember"] }); return { tone: "emerald", title: tr("Kept in your Mind."), detail: o.text, actions: [["Open in Mind", "open:memory"]] };
+      case "job": jobs.add(o.spec); return { tone: "sky", title: tr("Working on it — the result shows on Home"), detail: o.spec.title, actions: [["Open Home", "open:home"]] };
+      default: return null;
+    }
+  }
 
   // In-app Back: closes the top-most open panel, otherwise returns to the Ask
   // home tab. Shown only when there is somewhere to go back to.
@@ -9559,7 +9735,7 @@ export default function App() {
         <Guard key={"g-" + mode} name={mode}>{vaulted(mode, vaultCfg) && !stillOpen(vaultSess) ? (
           <VaultGate unlock={(a) => nativeCall("vaultUnlock", a)} onOpen={() => setVaultSess({ open: true })} />
         ) : mode === "home" && !wide ? (
-          <PhoneHome navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
+          <PhoneHome cmd={cmd} navTo={(m) => navTo(m)} openFitAdd={() => { setFitIn("\u0001add"); navTo("fit"); }} doIt={doFromHome} openAll={() => (LEGACY_NAV ? setMoreOpen(true) : navTo("tools"))} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet], ["health", "Health", "Fit & Food, Family health and Cycle", Heart]]} openSide={() => setPhoneSide(true)} minimal={!LEGACY_NAV} guardian={<GuardianCard pro={proActive} open={() => navTo("guardian")} />} onAsk={(t) => { setChatSeed("\u0002" + t); navTo("chat"); }}
             listen={chatApi.listen} startCall={() => { setChatSeed("\u0003call"); navTo("chat"); }} />
         ) : mode === "home" ? (
           <DesktopHome doIt={doFromHome} tools={[...MORE_TOOLS, ["money", "Money", "Spending, bills and Zakāt", Wallet]]} navTo={(m) => { if (m === "cycle") enableCycle(true); navTo(m); }} engineReady={modelState === "ready"}
@@ -10110,7 +10286,7 @@ export default function App() {
             saveFile={NATIVE ? (name, text, mime, b64) => nativeCall("saveFile", b64 ? { name, mime, b64 } : { name, mime, text }) : null}
             llm={(messages, image, o) => callChat(messages, image, { maxTokens: o.maxTokens, temperature: o.temperature ?? 0.4, think: false })} />
         ) : mode === "video" ? (
-          <VideoDownloader flash={flash} nativeCall={NATIVE ? nativeCall : null} pro={proActive} openPlan={() => setShowUpgrade(true)} initialLink={videoIn ? videoIn.replace(/#\d+$/, "") : ""} key={videoIn || "v"} />
+          <VideoDownloader subsForFile={(f) => { jobs.add({ kind: "subtitles", heavy: true, title: tr("Subtitles: {n}", { n: f.name }), input: { files: [f], name: f.name, text: "" } }); flash(tr("Working on it — the subtitles show on Home")); }} flash={flash} nativeCall={NATIVE ? nativeCall : null} pro={proActive} openPlan={() => setShowUpgrade(true)} initialLink={videoIn ? videoIn.replace(/#\d+$/, "") : ""} key={videoIn || "v"} />
         ) : mode === "xray" ? (
           <ChatXRay flash={flash} openEngine={() => setShowEngine(true)} pro={proActive} openPlan={() => setShowUpgrade(true)}
             modelReady={modelUsable}

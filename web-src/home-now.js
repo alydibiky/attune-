@@ -71,7 +71,16 @@ export function homeNumbers({ safe = null, kcal = 0, kcalGoal = 0, fleet = null,
  * One thing Attune noticed, worth knowing today (or null): spending past today's safe amount, a goal falling behind, a crane
  * standing free while clients have hired it before, new Scout finds. → { k, text, open }
  */
-export function noticed({ safe = null, mission = null, fleet = null, scout = null, now = Date.now() } = {}) {
+/** v6.48 (CHAT_RUNS_APP.md S10): something kept in Mind on this day in an earlier year (a photo, a video, a note) — or null. */
+export function onThisDay(records, now = Date.now()) {
+  const d = new Date(now), md = (t) => { const x = new Date(t); return x.getMonth() === d.getMonth() && x.getDate() === d.getDate() && x.getFullYear() < d.getFullYear(); };
+  const r = (records || []).filter((x) => x && x.ts && md(x.ts) && !(x.meta && (x.meta.trashed || x.meta.todo)) && x.kind !== "where").sort((a, b) => b.ts - a.ts)[0];
+  if (!r) return null;
+  const years = d.getFullYear() - new Date(r.ts).getFullYear();
+  return { k: "past", id: r.id, text: years === 1 ? tr("A year ago today you kept: {t}", { t: r.title || "" }) : tr("{n} years ago today you kept: {t}", { n: years, t: r.title || "" }), open: "memory" };
+}
+
+export function noticed({ safe = null, mission = null, fleet = null, scout = null, past = null, now = Date.now() } = {}) {
   if (safe && safe.cur && safe.spentToday > 0 && safe.today === 0 && safe.perDay >= 0 && safe.spentToday > safe.perDay)
     return { k: "spend", text: tr("You spent {s} today — more than the {p} that keeps every bill paid. Tomorrow's safe amount is lower.", { s: fmtN(safe.spentToday), p: fmtN(safe.perDay) }), open: "money" };
   if (mission && mission.chance != null && mission.chance < 0.5)
@@ -89,5 +98,6 @@ export function noticed({ safe = null, mission = null, fleet = null, scout = nul
   } catch (e) {}
   const g = ((scout && scout.goals) || []).find((x) => (x.unseen || []).length);
   if (g) return { k: "scout", text: tr("Scout found {n} new for “{w}”.", { n: g.unseen.length, w: (g.g && g.g.what) || g.text || "" }), open: "scout" };
+  if (past) return past;
   return null;
 }

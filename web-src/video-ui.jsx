@@ -72,7 +72,10 @@ function SubsPanel({ d, nativeCall, flash }) {
 
 const store = (l) => { try { localStorage.setItem(KEY, JSON.stringify(l.slice(0, 30))); } catch (e) {} };
 
-export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink }) {
+export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink, subsForFile = null }) {
+  // v6.48 (Ali: "how can I access video subtitles?"): subtitles for ANY video or recording on the phone, not only downloaded ones —
+  // a job (jobs.js "subtitles"); the .srt shows on Home with Save
+  const anyRef = useRef(null);
   const [link, setLink] = useState(initialLink || "");
   const [busy, setBusy] = useState(null);
   const [err, setErr] = useState("");
@@ -186,6 +189,13 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink 
 
       {/* v6.27 computer layout (option A): the link on the left; the versions found and the downloads on the right */}
       <div className={PANES}><div className={LEFT}>
+      {subsForFile ? <section className="bg-slate-900 rounded-2xl border border-slate-800 p-3 mb-3 flex items-center gap-3" data-testid="video-subs-any">
+        <Captions size={18} className="text-teal-300 shrink-0" />
+        <span className="flex-1 min-w-0"><b className="block text-[13.5px] text-slate-100">{tr("Subtitles for a video on this phone")}</b>
+          <span className="block text-[12px] text-slate-400">{tr("Any video or recording → an .srt file. Or type /subtitles on Home.")}</span></span>
+        <button onClick={() => anyRef.current && anyRef.current.click()} className="shrink-0 px-3 h-10 rounded-xl bg-teal-500 text-slate-950 text-[13px] font-semibold" data-testid="video-subs-pick">{tr("Choose")}</button>
+        <input ref={anyRef} type="file" accept="video/*,audio/*" className="hidden" data-testid="video-subs-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) subsForFile(f); }} />
+      </section> : null}
       <section className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 min-w-0 flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3">

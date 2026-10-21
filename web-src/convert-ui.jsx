@@ -13,18 +13,8 @@ import * as C from "./convert.js";
 import * as TR from "./translate.js";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 import { PdfEditor } from "./pdfedit-ui.jsx";
+import { runConversion, TARGET_LABEL, KIND_LABEL, ROWS, SUBS, PDF_TOOLS, PHOTO, T_LANGS, langLabel, recode, readB64, readUrl, needsNative as NEEDS_NATIVE } from "./convert-run.js";
 
-const TARGET_LABEL = { docx: "Word (.docx)", pdf: "PDF", txt: "Text (.txt)", images: "Pictures (.zip)", csv: "CSV", xlsx: "Excel (.xlsx)",
-  html: "Web page (.html)", md: "Markdown (.md)", odt: "LibreOffice text (.odt)", ods: "LibreOffice sheet (.ods)", json: "JSON",
-  jpg: "JPG photo", png: "PNG photo", webp: "WebP photo", srt: "Subtitles (.srt)", vtt: "Subtitles (.vtt)",
-  translate: "Translate…", edit: "Edit the PDF", merge: "Merge into one PDF", split: "Split into pages", pick: "Keep some pages", rotate: "Rotate pages" };
-const KIND_LABEL = { pdf: "PDF", pdfs: "PDFs", docx: "Word document", pptx: "PowerPoint", odt: "LibreOffice text", ods: "LibreOffice sheet", epub: "E-book",
-  html: "Web page", rtf: "Rich Text", image: "Photo", images: "Photos", text: "Text", xlsx: "Excel workbook", csv: "CSV sheet", json: "JSON data", srt: "Subtitles", vtt: "Subtitles" };
-const ROWS = ["xlsx", "ods", "csv", "json"], SUBS = ["srt", "vtt"], PDF_TOOLS = ["merge", "split", "pick", "rotate", "images"], PHOTO = ["jpg", "png", "webp"];
-// v5.39: languages a document can be translated into (names shown in the app's language)
-const T_LANGS = { en: "English", ar: "Arabic", fr: "French", es: "Spanish", de: "German", tr: "Turkish", it: "Italian", pt: "Portuguese", ru: "Russian", zh: "Chinese (Simplified)", ja: "Japanese", ko: "Korean",
-  hi: "Hindi", ur: "Urdu", fa: "Persian", id: "Indonesian", nl: "Dutch", pl: "Polish", bn: "Bengali", sw: "Swahili", el: "Greek", uk: "Ukrainian", ro: "Romanian", ms: "Malay", th: "Thai", vi: "Vietnamese" };
-const langLabel = (k) => { const l = getLang(); if (l !== "en") try { return new Intl.DisplayNames([l], { type: "language" }).of(k) || tr(T_LANGS[k]); } catch (e) {} return T_LANGS[k]; };
 // v5.41 (Ali: "give me all the options — how can I merge PDFs?"): every tool shown before a file is picked
 // v6.31 minimal (design A): one main action (choose a file), the four most used as plain rows, the rest behind "All conversions";
 // Translate is its own tab next to this one, so it is not repeated here
@@ -48,23 +38,6 @@ const QUICK = [
 ];
 const ACCEPT = ".pdf,.docx,.pptx,.odt,.ods,.epub,.html,.htm,.xhtml,.rtf,.txt,.md,.xlsx,.csv,.tsv,.json,.srt,.vtt,image/*,application/pdf";
 // a photo → another photo format, in the page (the browser's own canvas)
-const recode = (file, fmt) => new Promise((ok, bad) => {
-  const url = URL.createObjectURL(file), img = new Image();
-  img.onload = () => {
-    try {
-      const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
-      const g = c.getContext("2d"); if (fmt === "jpg") { g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); }
-      g.drawImage(img, 0, 0); URL.revokeObjectURL(url);
-      const d = c.toDataURL(C.MIME[fmt], 0.92);
-      if (!d.startsWith("data:" + C.MIME[fmt])) return bad(new Error("This phone can't write that photo type — try JPG or PNG."));
-      ok({ b64: d.split(",")[1], w: c.width, h: c.height });
-    } catch (e) { bad(e); }
-  };
-  img.onerror = () => { URL.revokeObjectURL(url); bad(new Error("This photo can't be opened here (HEIC photos: convert them to PDF instead).")); };
-  img.src = url;
-});
-const readB64 = (f) => new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] || ""); r.onerror = () => bad(new Error("Couldn't read that file")); r.readAsDataURL(f); });
-const readUrl = (f) => new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = () => bad(new Error("Couldn't read that file")); r.readAsDataURL(f); });
 const kb = (n) => (n > 1e6 ? (n / 1e6).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1e3)) + " KB");
 
 export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, canReadPhotos, openEngine, flash, pro, openPlan }) {
@@ -107,14 +80,8 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
   };
 
   const targetsOf = (kind) => (kind === "images" ? C.MULTI.image.targets : kind === "pdfs" ? C.MULTI.pdf.targets : C.KINDS[kind].targets);
-  const needsNative = (k, t) => k === "pdf" || k === "pdfs" || t === "pdf" || (t === "translate" && tFmt === "pdf" && !["srt", "vtt"].includes(k));
-  const base = () => (files.list[0].name || "file").replace(/\.[^.]+$/, "") + (files.list.length > 1 ? "-" + files.list.length : "");
+  const needsNative = (k, t) => NEEDS_NATIVE(k, t, tFmt);
 
-  // the AI reads a picture of a page (scans, photos of paper)
-  const readPicture = async (dataUrl, n, total) => {
-    const img = { media: "image/jpeg", data: dataUrl.split(",")[1] };
-    return String(await llm(C.readPageMessages(n, total), img, { maxTokens: 1800, temperature: 0 }) || "").trim();
-  };
 
   const convert = async () => {
     if (!files || !target) return;
@@ -127,176 +94,13 @@ export function FileConverter({ nativeCall, native, saveFile, llm, modelReady, c
     const id = ++run.current, alive = () => run.current === id;
     setErr(""); setOut(null); setBusy(tr("Reading the file…"));
     try {
-      const k = files.kind, f0 = files.list[0];
-      let blocks = null, rows = null, note = "", docOpts = null;
-      // 1. read the source into blocks (text) or rows (sheets)
-      let cues = null;
-      if (k === "pdf" && !PDF_TOOLS.includes(target)) {
-        const r = await nativeCall("pdfText", { b64: await readB64(f0) });
-        if (!alive()) return;
-        const scans = r.pages.filter((p) => p.scan).map((p) => p.n);
-        const text = {};
-        for (const p of r.pages) text[p.n] = p.text;
-        if (scans.length) {
-          if (!modelReady || !canReadPhotos) note = tr("{n} scanned page(s) have no text layer — install a model marked 📷 in Engine to read them.", { n: scans.length });
-          else {
-            const imgs = await nativeCall("pdfImages", { b64: await readB64(f0), pages: scans.slice(0, 40), width: 1400 });
-            for (let i = 0; i < imgs.images.length; i++) {
-              if (!alive()) return;
-              setBusy(tr("The AI is reading scanned page {n} of {t}…", { n: i + 1, t: imgs.images.length }));
-              text[imgs.images[i].n] = await readPicture(imgs.images[i].image, i + 1, imgs.images.length);
-            }
-            note = tr("{n} scanned page(s) were read by the AI — check names and numbers.", { n: imgs.images.length });
-          }
-        }
-        // v5.41: pages that came with their layout are rebuilt with headings, lists and tables
-        const laid = r.pages.filter((p) => !p.scan && p.lines && p.lines.length);
-        // v6.8: a PDF with no scanned pages is read as one document (a paragraph can go on over a page
-        // break, the body size and spacing come from all of it) and the Word file gets its page set-up
-        const allLaid = laid.length && laid.length === r.pages.length;
-        blocks = allLaid ? C.pdfLinesToBlocks(r.pages)
-          : laid.length === r.pages.filter((p) => !p.scan).length && laid.length
-          ? r.pages.flatMap((p) => (!p.scan && p.lines && p.lines.length ? C.pdfLinesToBlocks([p]) : C.textToBlocks(text[p.n] || "")))
-          : r.pages.flatMap((p) => C.textToBlocks(text[p.n] || ""));
-        if (allLaid) docOpts = C.pdfDocOptions(r.pages);
-        if (r.count > r.pages.length) note = (note ? note + " " : "") + tr("Only the first {n} pages were converted.", { n: r.pages.length });
-      } else if (k === "docx") { const rd = await C.docxRead(new Uint8Array(await f0.arrayBuffer())); blocks = rd.blocks; docOpts = rd.opts; }   // v6.8: with its page, fonts and spacing
-      else if (k === "pptx") blocks = await C.pptxToBlocks(new Uint8Array(await f0.arrayBuffer()));
-      else if (k === "odt") blocks = await C.odtToBlocks(new Uint8Array(await f0.arrayBuffer()));
-      else if (k === "epub") blocks = await C.epubToBlocks(new Uint8Array(await f0.arrayBuffer()));
-      else if (k === "html") blocks = C.htmlToBlocks(await f0.text());
-      else if (k === "rtf") blocks = C.textToBlocks(C.rtfToText(await f0.text()));
-      else if (k === "text") blocks = C.textToBlocks(await f0.text());
-      else if (k === "xlsx") rows = await C.xlsxToRows(new Uint8Array(await f0.arrayBuffer()));
-      else if (k === "ods") rows = await C.odsToRows(new Uint8Array(await f0.arrayBuffer()));
-      else if (k === "csv") rows = C.csvParse(await f0.text());
-      else if (k === "json") rows = C.jsonToRows(await f0.text());
-      else if (SUBS.includes(k)) cues = C.subsParse(await f0.text());
-      else if ((k === "image" || k === "images") && target !== "pdf" && !PHOTO.includes(target)) {
-        // v6.41 (S2): a printed page in Latin script is read by the phone itself WITH its layout (headings, lists, tables);
-        // an Arabic or handwritten page goes to the AI reader
-        const got = [];
-        if (nativeCall && native && native.readText) {
-          for (let i = 0; i < files.list.length; i++) {
-            if (!alive()) return;
-            setBusy(tr("Reading photo {n} of {t} on the phone…", { n: i + 1, t: files.list.length }));
-            let r = null; try { r = await nativeCall("readText", { b64: (await readUrl(files.list[i])).split(",")[1] }); } catch (e) {}
-            got.push(C.ocrUsable(r) ? C.pdfLinesToBlocks(C.ocrPages(r)) : null);
-          }
-        }
-        if (got.length && got.every(Boolean)) { blocks = got.flatMap((b, i) => (i && b.length ? [{ ...b[0], pageBreak: true }, ...b.slice(1)] : b)); note = tr("Read on this phone with its layout and tables — check names and numbers."); }
-        else {
-          if (!modelReady || !canReadPhotos) { setErr(tr("Reading a photo needs a model marked 📷 — open Engine.")); openEngine && openEngine(); return; }
-          const parts = [];
-          for (let i = 0; i < files.list.length; i++) {
-            if (!alive()) return;
-            if (got[i]) { parts.push(C.blocksToText(got[i])); continue; }
-            setBusy(tr("The AI is reading photo {n} of {t}…", { n: i + 1, t: files.list.length }));
-            parts.push(await readPicture(await readUrl(files.list[i]), i + 1, files.list.length));
-          }
-          blocks = C.textToBlocks(parts.join("\n\n"));
-          note = tr("Read by the AI — check names and numbers.");
-        }
-      }
-      if (!alive()) return;
-      if (blocks && !blocks.length && !note) throw new Error("No text was found in that file.");
-      // v5.39: translate — numbered pieces go to the model in batches; code puts them back in place
-      let outTarget = target, suffix = "";
-      if (target === "translate") {
-        try { localStorage.setItem("attune:convert:tlang", tLang); } catch (e) {}
-        const cueBlocks = cues ? cues.map((c) => ({ type: "p", text: c.text })) : null;
-        const src = cueBlocks || blocks || [];
-        const units = C.translateUnits(src);
-        // v6.27: the checked engine (translate.js) — numbers, names and codes locked; script, untranslated and the person's
-        // glossary checked; a piece that fails is retried alone with the reason, then marked — never silently wrong
-        let gloss = []; try { gloss = JSON.parse(localStorage.getItem("attune:translate:glossary") || "[]"); } catch (e) {}
-        const out = await TR.translatePieces(units.map((u) => u.text), (m, o) => llm(m, null, { maxTokens: o.maxTokens, temperature: 0.2 }),
-          { lang: tLang, language: T_LANGS[tLang], glossary: gloss, onProgress: (i, n) => alive() && setBusy(tr("Translating into {l} — part {n} of {t}…", { l: langLabel(tLang), n: i + 1, t: n })) });
-        if (!alive()) return;
-        const texts = out.map((r) => r.text);
-        const flagged = out.filter((r) => !r.ok);
-        const missed = 0;
-        const tb = C.applyTranslations(src, units, texts);
-        if (cues) cues = cues.map((c, i) => ({ ...c, text: tb[i].text })); else blocks = tb;
-        note = (note ? note + " " : "") + (flagged.length ? tr("{n} piece(s) to check: {list}", { n: flagged.length, list: flagged.slice(0, 3).map((f) => "«" + f.src.slice(0, 40) + "» (" + f.why + ")").join("; ") }) + " " : tr("Checked: numbers, names and codes kept exactly.") + " ") + tr("Translated by the AI on your phone — check important names and numbers.");
-        outTarget = cues ? files.kind : tFmt; suffix = "-" + tLang;
-      }
-      // a PDF → Excel: its tables (read as "a | b" rows), else each line split at wide gaps
-      if (target === "xlsx" && blocks) {
-        // (one table after another, a blank row between them)
-        const t = blocks.filter((b) => b.type === "table").flatMap((b, k) => (k ? [[], ...b.rows] : b.rows));
-        rows = t.length ? t : blocks.flatMap((b) => (b.type === "table" ? b.rows : String(b.text || "").split("\n").map((l) => l.split(/\t|\s{2,}/).map((c) => c.trim()))));
-        if (!t.length) note = (note ? note + " " : "") + tr("This PDF has no clear table, so each line became a row — check the columns.");
-      }
-      // sheets → Word / web page / PDF: one table
-      if (rows && ["docx", "html", "md", "odt"].includes(target)) blocks = [{ type: "h2", text: base() }, { type: "table", rows: rows.slice(0, 5000) }];
-      setBusy(tr("Making the {t} file…", { t: tr(TARGET_LABEL[outTarget]) }));
-      // 2. write the target
-      let o = null;
-      const textOut = (ext, t) => ({ name: base() + suffix + "." + ext, mime: C.MIME[ext], text: t, size: new Blob([t]).size, show: t });
-      if (outTarget === "docx") { const b = C.docxFromBlocks(blocks || [], base(), docOpts || {}); o = { name: base() + suffix + ".docx", mime: C.MIME.docx, b64: C.bytesToB64(b), size: b.length }; }
-      else if (outTarget === "txt") o = textOut("txt", cues ? C.cuesToText(cues) : C.blocksToText(blocks || []));
-      else if (outTarget === "html") o = textOut("html", C.blocksToHtml(blocks || [], base()));
-      else if (outTarget === "md") o = textOut("md", C.blocksToMarkdown(blocks || []));
-      else if (outTarget === "json") o = textOut("json", C.rowsToJson(rows || []));
-      else if (outTarget === "srt") o = textOut("srt", C.srtFromCues(cues));
-      else if (outTarget === "vtt") o = textOut("vtt", C.vttFromCues(cues));
-      else if (outTarget === "odt") { const b = C.odtFromBlocks(blocks || []); o = { name: base() + ".odt", mime: C.MIME.odt, b64: C.bytesToB64(b), size: b.length }; }
-      else if (outTarget === "ods") { const b = C.odsFromRows(rows || [], base()); o = { name: base() + ".ods", mime: C.MIME.ods, b64: C.bytesToB64(b), size: b.length }; }
-      else if (PHOTO.includes(outTarget)) {
-        const done = [];
-        for (let i = 0; i < files.list.length; i++) {
-          if (!alive()) return;
-          setBusy(tr("Converting photo {n} of {t}…", { n: i + 1, t: files.list.length }));
-          done.push({ name: files.list[i].name.replace(/\.[^.]+$/, "") + "." + outTarget, ...(await recode(files.list[i], outTarget)) });
-        }
-        if (done.length === 1) o = { name: done[0].name, mime: C.MIME[outTarget], b64: done[0].b64, size: Math.floor(done[0].b64.length * 0.75), dims: done[0].w + "×" + done[0].h };
-        else { const z = C.zipStore(done.map((d) => ({ name: d.name, data: C.b64ToBytes(d.b64) }))); o = { name: base() + "-" + outTarget + ".zip", mime: C.MIME.zip, b64: C.bytesToB64(z), size: z.length, count: done.length }; }
-      } else if (["merge", "split", "pick", "rotate"].includes(outTarget)) {
-        const list = outTarget === "pick" || (outTarget === "rotate" && pages.trim()) ? C.pageList(pages) : [];
-        if (outTarget === "pick" && !list.length) { setErr(tr("Type the pages to keep, like 1-3, 5")); return; }
-        const r = await nativeCall("pdfEdit", outTarget === "merge" ? { op: "merge", files: await Promise.all(files.list.map(readB64)) } : { op: target, b64: await readB64(f0), pages: list, degrees: deg });
-        if (!alive()) return;
-        const sfx = { merge: "-merged", pick: "-pages", rotate: "-rotated" }[target];
-        if (outTarget === "split") {
-          const z = C.zipStore(r.files.map((f) => ({ name: base() + "-page-" + String(f.n).padStart(2, "0") + ".pdf", data: C.b64ToBytes(f.b64) })));
-          o = { name: base() + "-pages.zip", mime: C.MIME.zip, b64: C.bytesToB64(z), size: z.length, count: r.files.length, countOf: "pdfs" };
-        } else o = { name: (outTarget === "merge" ? (files.list[0].name || "file").replace(/\.[^.]+$/, "") : base()) + sfx + ".pdf", mime: C.MIME.pdf, b64: r.files[0].b64, size: Math.floor(r.files[0].b64.length * 0.75), pagesOut: r.files[0].pages };
-      }
-      else if (outTarget === "csv") { const t = C.csvStringify(rows || []); o = { name: base() + ".csv", mime: C.MIME.csv, text: t, size: new Blob([t]).size }; }
-      else if (outTarget === "xlsx") { const b = C.xlsxFromRows(rows || [], base()); o = { name: base() + ".xlsx", mime: C.MIME.xlsx, b64: C.bytesToB64(b), size: b.length }; }
-      else if (outTarget === "images") {
-        const r = await nativeCall("pdfImages", { b64: await readB64(f0), width: 1600, max: 60 });
-        const z = C.zipStore(r.images.map((im) => ({ name: base() + "-page-" + String(im.n).padStart(2, "0") + ".jpg", data: C.b64ToBytes(im.image.split(",")[1]) })));
-        o = { name: base() + "-pages.zip", mime: C.MIME.zip, b64: C.bytesToB64(z), size: z.length, count: r.images.length };
-      } else if (outTarget === "pdf") {
-        let arg;
-        if ((k === "image" || k === "images") && target !== "translate") arg = { images: await Promise.all(files.list.map(readUrl)) };
-        else if (rows) arg = { blocks: [{ type: "h2", text: base() }, { type: "table", rows: rows.slice(0, 2000) }] };
-        else arg = { blocks: (blocks || []).filter((b) => b.type !== "header" && b.type !== "footer") };
-        let r = null;
-        // v6.8: a PowerPoint → one page per slide that looks like the slide (shapes, colours, pictures, tables)
-        if (k === "pptx" && target !== "translate") {
-          try { const sl = await C.pptxToSlidesHtml(new Uint8Array(await f0.arrayBuffer())); if (sl.slides) r = await nativeCall("htmlToPdf", { html: sl.html, w: sl.w, h: sl.h }); } catch (e) { r = null; }
-        }
-        // v6.8: laid out and printed by the phone's own Chrome engine (the look kept: fonts, sizes, spacing,
-        // tables, pictures, header / footer, Arabic shaping); the older PDF maker if the phone refuses
-        if (arg.blocks && !(r && r.b64)) {
-          const wide = rows && Math.max(0, ...rows.slice(0, 50).map((x) => x.length)) > 6;
-          const po = rows ? { sheet: true, body: 9, page: wide ? { w: 841.9, h: 595.3, top: 36, bottom: 36, left: 36, right: 36 } : { w: 595.3, h: 841.9, top: 42, bottom: 42, left: 42, right: 42 } } : docOpts || {};
-          const pgs = po.page || { w: 595.3, h: 841.9 };
-          try { r = await nativeCall("htmlToPdf", { html: C.blocksToPrintHtml(rows ? arg.blocks : blocks || [], base(), po), w: pgs.w, h: pgs.h }); } catch (e) { r = null; }
-        }
-        if (!r || !r.b64) r = await nativeCall("makePdf", arg);
-        o = { name: base() + suffix + ".pdf", mime: C.MIME.pdf, b64: r.b64, size: r.bytes };
-      }
-      if (!alive()) return;
-      o.preview = o.show ? o.show.slice(0, 1500) : blocks ? C.blocksToText(blocks).slice(0, 1500) : rows ? rows.slice(0, 8).map((r) => r.join(" | ")).join("\n") : "";
-      o.note = note;
+      const o = await runConversion({ files, target, tLang, tFmt, pages, deg },
+        { nativeCall, native, llm, modelReady, canReadPhotos, onBusy: (t) => alive() && setBusy(t), alive });
+      if (!o || !alive()) return;
       setOut(o);
       try { const d = JSON.parse(localStorage.getItem("attune:convert:day") || "{}"); localStorage.setItem("attune:convert:day", JSON.stringify({ [today]: (d[today] || 0) + 1 })); } catch (e) {}
     } catch (e) {
-      if (alive()) setErr(tr(String((e && e.message) || e)));
+      if (alive()) { setErr(tr(String((e && e.message) || e))); if (e && e.need === "engine" && openEngine) openEngine(); }
     } finally { if (alive()) setBusy(null); }
   };
 

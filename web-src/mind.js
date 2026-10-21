@@ -24,6 +24,10 @@ export const KINDS = {
   place:   { en: "Places",   ar: "أماكن",    icon: "📍" },
   code:    { en: "Code",     ar: "كود",      icon: "</>" },
   answer:  { en: "Answers",  ar: "إجابات",   icon: "✦" },
+  // v6.48 (CHAT_RUNS_APP.md S4/S8): what /remember keeps from Home
+  video:   { en: "Videos",     ar: "فيديوهات",      icon: "▶" },
+  audio:   { en: "Recordings", ar: "تسجيلات",      icon: "🎙" },
+  where:   { en: "Where things are", ar: "أماكن الحاجات", icon: "📌" },
 };
 // records made by the app's tools (instant, travel, chat, field…) are "answers"
 const TOOL_KINDS = new Set(["instant", "travel", "field", "chat", "ask", "smart"]);
@@ -36,6 +40,8 @@ const EMAIL_RX = /\b[\w.+-]+@[\w-]+\.[\w.-]+\b/;
 /** What kind of thing a saved item is — by code, from its own words. */
 export function kindOf(rec) {
   if (!rec) return "note";
+  if (rec.kind === "video" || rec.kind === "audio" || rec.kind === "where") return rec.kind;
+  if (rec.meta && rec.meta.todo) return "todo";
   if (rec.kind === "photo" || (rec.meta && rec.meta.thumb)) return "photo";
   if (TOOL_KINDS.has(rec.kind) || (rec.output && rec.output.trim())) return "answer";
   if (rec.meta && rec.meta.mindKind && KINDS[rec.meta.mindKind]) return rec.meta.mindKind;

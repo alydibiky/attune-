@@ -2,6 +2,7 @@
    Ali: "instead of memory, an app like mymind but much better". A private visual board of everything
    you keep; it files itself (mind.js). The two parts of the old Memory screen that are not "things
    you kept" — promises found in them, and Your words — are its other two tabs, unchanged.        */
+import { mediaGet, clock } from "./mediastore.js";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Brain, Search, Sparkles, Link2, Star, Bell, Trash2, X, Plus, ClipboardPaste, Copy, ExternalLink, Share2, Loader2, Shuffle, Folder, ImagePlus, Send, Check, Camera, ChevronLeft } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -104,6 +105,11 @@ function Card({ rec, open, update }) {
             <p className="text-[13.5px] font-semibold text-slate-100 line-clamp-3" dir="auto">{title}</p>
             {M.priceIn(body) ? <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300" dir="ltr">{M.priceIn(body)}</span> : null}
           </>
+        ) : kind === "todo" && rec.meta && rec.meta.todo ? (
+          /* v6.48: a to-do added from Home ("add … to my to-do list") — tick it done here too */
+          <>{label}<button onClick={(e) => { e.stopPropagation(); update(rec.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: !(r.meta && r.meta.done), doneAt: Date.now() } })); }} className="w-full flex items-center gap-2 text-start min-h-[40px]" data-testid="mind-todo-tick">
+            <span className={"w-5 h-5 rounded-md shrink-0 grid place-items-center " + (rec.meta.done ? "bg-teal-500" : "border-2 border-teal-500")}>{rec.meta.done ? <Check size={13} className="text-slate-950" /> : null}</span>
+            <span className={"text-[13.5px] " + (rec.meta.done ? "line-through text-slate-500" : "text-slate-100")} dir="auto">{rec.title || rec.text}</span></button></>
         ) : kind === "todo" ? (
           <>{label}<div className="space-y-1">
             {body.split("\n").filter((l) => l.trim()).slice(0, 5).map((l, i) => (
@@ -130,6 +136,26 @@ function Card({ rec, open, update }) {
 }
 
 /* ---- an open item ---- */
+/* v6.48 (CHAT_RUNS_APP.md S8): a video or recording kept with /remember — it plays here, from the second Home's /find found
+   ("attune:mind:seek"), and the words said in it are listed with their times (tap one to jump there). */
+function MediaView({ rec }) {
+  const m = rec.meta || {};
+  const [url, setUrl] = useState(null);
+  const el = useRef(null);
+  const [seek] = useState(() => { try { const v = localStorage.getItem("attune:mind:seek"); localStorage.removeItem("attune:mind:seek"); return v ? +v : null; } catch (e) { return null; } });
+  useEffect(() => { let on = true, u = null; mediaGet(rec.id).then((b) => { if (on && b) { u = URL.createObjectURL(b); setUrl(u); } }); return () => { on = false; if (u) URL.revokeObjectURL(u); }; }, [rec.id]);
+  const go = (ms) => { const v = el.current; if (!v) return; try { v.currentTime = ms / 1000; v.play(); } catch (e) {} };
+  const Tag = rec.kind === "video" ? "video" : "audio";
+  return <div className="bg-black" data-testid="mind-media">
+    {url ? <Tag ref={el} src={url} controls playsInline className="w-full max-h-80" onLoadedMetadata={() => { if (seek != null) go(seek); }} data-testid="mind-player" />
+      : <p className="text-[12.5px] text-slate-400 p-3 m-0">{m.noCopy ? tr("Only the words were kept — the file was too big to keep a copy.") : tr("The file is not on this phone.")}</p>}
+    {(m.cues || []).length ? <div className="max-h-44 overflow-auto px-3 py-2 space-y-1 bg-slate-950" data-testid="mind-cues">
+      {m.cues.map((c, i) => <button key={i} onClick={() => go(c.start)} className={"w-full text-start text-[12.5px] flex gap-2 " + (seek != null && c.start === seek ? "text-teal-300" : "text-slate-300")} data-testid="mind-cue">
+        <span className="text-slate-500 shrink-0 w-10" dir="ltr">{clock(c.start)}</span><span dir="auto">{c.text}</span></button>)}
+    </div> : m.saidError ? <p className="text-[12px] text-amber-300 px-3 py-2 m-0">{tr(m.saidError)}</p> : null}
+  </div>;
+}
+
 function Detail({ rec, close, update, forget, togglePin, openRec, search, findPromises, scheduleReminder, flash, askAbout }) {
   useSubBack(true, close);
   const kind = M.kindOf(rec);
@@ -148,6 +174,7 @@ function Detail({ rec, close, update, forget, togglePin, openRec, search, findPr
     <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-3 overflow-auto" onClick={close}>
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full my-6 overflow-hidden" onClick={(e) => e.stopPropagation()} data-testid="mind-detail">
         {thumb ? <img src={thumb} alt={tr("Open the photo")} onClick={() => thumbGet(rec.id + ":full").then((u) => setBigUrl(u || thumb))} className="w-full max-h-80 object-contain bg-black cursor-zoom-in" data-testid="mind-photo" /> : null}
+        {kind === "video" || kind === "audio" ? <MediaView rec={rec} /> : null}
         {bigUrl ? (
           <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center" onClick={() => setBigUrl(null)} data-testid="mind-photo-big">
             <img src={bigUrl} alt="" className="max-w-full max-h-full object-contain" />
@@ -256,7 +283,8 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
   const [tag, setTag] = useState(null);
   const [kind, setKind] = useState(null);
   const [colour, setColour] = useState(null);
-  const [openId, setOpenId] = useState(null);
+  // v6.48: Home's /find opens the item it found (cmdbox-ui → "attune:mind:open")
+  const [openId, setOpenId] = useState(() => { try { const v = localStorage.getItem("attune:mind:open"); if (v) { localStorage.removeItem("attune:mind:open"); return v; } } catch (e) {} return null; });
   const [busy, setBusy] = useState("");
   const [answer, setAnswer] = useState(null);
   const [spaces, setSpaces] = useState(loadSpaces);

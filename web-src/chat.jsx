@@ -32,6 +32,8 @@ const createPortal = (el, target) => window.ReactDOM.createPortal(el, target);  
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { tr, dateLocale, getLang } from "./i18n.js";
 import { ActionCard } from "./actions-ui.jsx";
+import * as K from "./commands.js";
+import * as TRN from "./translate.js";
 import { looksLikeCalc, calculate } from "./calc.js";
 import { RunBlock } from "./code-ui.jsx";
 import { mathToText } from "./quality.js";
@@ -55,7 +57,7 @@ import { factsBlock, checkFacts, keepCovering, packsCover } from "./knowledge.js
 import { tooLong, fitChars, splitParts, requestOf, partNotesMessages, fromNotes, continueMessages, glue } from "./longread.js";
 import {
   Send, Square, Mic, ImagePlus, Brain, Globe, Copy, RefreshCw, PenLine, Volume2, Share2, Save, Plus, X, Trash2,
-  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2, GraduationCap, Phone, PhoneOff,
+  Loader2, Search, ChevronDown, CheckCircle2, Sparkles, Paperclip, ThumbsDown, FileText, Maximize2, GraduationCap, Phone, PhoneOff, Languages,
 } from "lucide-react";
 import { sayable, endsCall } from "./voicecall.js";   // v6.41 (H2)
 
@@ -499,6 +501,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
   const [busy, setBusy] = useState(false);
   const [think, setThink] = useState(false);
   const [deep, setDeep] = useState(false);   // v6.32 Deep answer: the next question only (router.js deepModel)
+  // v6.48 (Ali: "make the web search and translate as an option in the chat"): Translate mode — what is typed is translated (the
+  // checked engine, translate.js), not answered. "auto" = Arabic → English, anything else → Arabic; "to French" in the text wins.
+  const [trMode, setTrMode] = useState(false);
   const [listening, setListening] = useState(false);
   const [call, setCall] = useState(false);   // v6.41 (H2): a hands-free voice call with Chat
   const callRef = useRef(false); callRef.current = call;
@@ -726,6 +731,33 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
       return;
     }
     if (busy) stop();
+
+    // v6.48 Translate mode: the message is translated by the checked engine (numbers, names kept; each piece checked)
+    if (trMode && typed && !img && !fileAtt) {
+      const to = K.langIn(typed) || (/[\u0600-\u06ff]/.test(typed) ? "en" : "ar");
+      const body = K.stripLang(typed.replace(/^\s*(translate|ترجم(لي)?)\s*(this|it|ده|دي)?\s*[:\-]?\s*/i, "")) || typed;
+      const cid = ensureChat(typed), aiId = newId();
+      patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed }, { id: aiId, role: "assistant", text: "", streaming: true, phase: tr("Translating into {l}…", { l: K.langName(to) }) }] }));
+      setText("");
+      try {
+        const out = await TRN.translatePieces(TRN.piecesOf(body), (m, o2) => api.run(m, null, { maxTokens: o2.maxTokens, temperature: 0.2, think: false, copy: true }), { lang: to, language: K.langName(to) });
+        const bad = out.filter((r) => !r.ok);
+        patchMsg(cid, aiId, { text: out.map((r) => r.text || r.src).join("\n\n"), streaming: false, phase: null, source: "translate", ...(bad.length ? { fileNote: tr("{n} piece(s) to check", { n: bad.length }) } : {}) });
+      } catch (e) { patchMsg(cid, aiId, { text: String((e && e.message) || e), streaming: false, phase: null }); }
+      return;
+    }
+
+    // v6.48 (Chat runs the app): to-dos, where things are, find, a note or a "/" job — done by code, shown as a card
+    if (route && !img && api.cmdLocal) {
+      const lc = api.cmdLocal(typed);
+      if (lc) {
+        const cid = ensureChat(typed);
+        patchChat(cid, (c) => ({ ...c, updated: Date.now(), messages: [...c.messages, { id: newId(), role: "user", text: typed },
+          { id: newId(), role: "assistant", card: { tone: lc.tone, title: lc.title, detail: lc.detail, actions: lc.actions }, whereSet: lc.whereSet || null }] }));
+        setText("");
+        return;
+      }
+    }
 
     // 1. Things the phone files away by itself, instantly, no model.
     if (route && !img && api.isPeriodLog(typed)) {
@@ -1779,6 +1811,9 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
     if (act === "cycle") api.openTab("cycle");
     else if (act === "undo") { m.undo && m.undo(); patchMsg(chat.id, m.id, { card: { ...m.card, title: "Removed", detail: "", actions: [] } }); }
     else if (act === "money") api.sendToMoney(m.payText);
+    else if (act === "where-yes") { if (m.whereSet && api.whereYes) api.whereYes(m.whereSet); patchMsg(chat.id, m.id, { card: { ...m.card, title: tr("Got it"), detail: m.whereSet ? m.whereSet.thing + " — " + m.whereSet.place : "", actions: [] } }); }
+    else if (act === "where-no") patchMsg(chat.id, m.id, { card: { ...m.card, title: tr("OK — nothing changed."), detail: "", actions: [] } });
+    else if (act.startsWith("rec:")) { if (api.openRecord) api.openRecord(act.slice(4)); }
     else if (act === "life") window.dispatchEvent(new CustomEvent("attune-life", { detail: { text: m.lifeText || "" } }));
     else if (/^agent(-in)?:\d+$/.test(act)) { const i = +act.split(":")[1], p = m.agentPlan; if (p && p.links[i]) window.dispatchEvent(new CustomEvent("attune-agent", { detail: { link: p.links[i], plan: p, inApp: act.startsWith("agent-in") } })); }
     else if (act === "owed") openOwed({ flight: m.owedFlight || {} });
@@ -2318,6 +2353,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 {/* v6.31 minimal (design A, like ChatGPT/Gemini): one "+" holds photo, file, think and web; what is on shows as a chip */}
                 <button onClick={() => setPlusOpen((v) => !v)} aria-expanded={plusOpen} aria-label={tr("Add")} data-testid="composer-plus"
                   className={"w-9 h-9 rounded-full flex items-center justify-center border " + (plusOpen ? "border-teal-600 text-teal-300" : "border-slate-700 text-slate-300")}><Plus size={18} /></button>
+                {trMode ? <button onClick={() => setTrMode(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-sky-500/10 text-sky-300" data-testid="chip-translate"><Languages size={13} />{tr("Translate")}<X size={12} /></button> : null}
                 {deep ? <button onClick={() => setDeep(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-violet-500/10 text-violet-300" data-testid="chip-deep"><Sparkles size={13} />{tr("Deep answer")}<X size={12} /></button> : null}
                 {think ? <button onClick={() => setThink(false)} className="h-8 px-2.5 rounded-full text-xs flex items-center gap-1 bg-teal-500/10 text-teal-300" data-testid="chip-think"><Brain size={13} />{tr("Think")}<X size={12} /></button> : null}
                 {api.webOn || api.webAuto ? <button onClick={api.toggleWeb} data-testid="web-toggle" className={"h-8 px-2.5 rounded-full text-xs flex items-center gap-1 " + (api.webOn ? "bg-teal-500/10 text-teal-300" : "bg-sky-500/10 text-sky-300")}><Globe size={13} />{api.webAuto ? tr("Web · Auto") : tr("Web")}</button> : null}
@@ -2328,6 +2364,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                     <button onClick={() => setThink((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-think"><Brain size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Think first")}</span>{think ? <CheckCircle2 size={15} className="text-teal-400" /> : null}</button>
                     <button onClick={() => setDeep((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-deep"><Sparkles size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Deep answer")}<span className="block text-[11px] text-slate-500">{tr("Your strongest model, slow and careful")}</span></span>{deep ? <CheckCircle2 size={15} className="text-teal-400" /> : null}</button>
                     <button onClick={api.toggleWeb} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-web"><Globe size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Search the web")}</span><span className="text-[11px] text-slate-500">{api.webOn ? tr("On") : api.webAuto ? tr("Auto") : tr("Off")}</span></button>
+                    <button onClick={() => setTrMode((v) => !v)} className="w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[14px] text-slate-200 active:bg-slate-800" data-testid="menu-translate"><Languages size={17} className="text-slate-400" /><span className="flex-1 text-start">{tr("Translate my messages")}</span>{trMode ? <CheckCircle2 size={15} className="text-teal-400" /> : null}</button>
                   </div>, document.body) : null}
               </>
             ) : (

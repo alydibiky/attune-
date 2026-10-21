@@ -97,6 +97,9 @@ const WHERE = /(^|\s)(فين|وين|أين|اين|فى اي حته|where is|wher
 const NOT_PLACE = /\s(my|mine|your|his|her|our|their|bug|error|code|file|function|variable|mistake|problem|meaning|answer|difference|keys?|phone|wallet|money|god|love|peace|happiness|mistake|موبايلي|مفاتيحي|محفظتي|فلوسي|الغلط|المشكله|المشكلة|الخطأ|الكود|الملف|معني|معنى|الفرق|الله|شنطتي|نضارتي|عربيتي|ابني|بنتي|مراتي|جوزي|ولادي|هدومي|ورقي|كتابي|تليفوني)(?=\s|$|[؟?])/i;   // personal things, never a place («مدينتي» = Madinaty is a place)
 export function chatMapIntent(text) {
   const t = String(text || "").trim();
+  // v6.48 (Ali: "when someone types 'I want to go there' … it brings the map"): "I want to go to …" / "take me to …"
+  const go = t.length <= 120 && t.match(/^(?:please\s+)?(?:i\s+(?:want|need|would like)\s+to\s+go\s+to|take\s+me\s+to|directions\s+to|navigate\s+to|let'?s\s+go\s+to)\s+(.{2,80}?)[?.!]*$/i);
+  if (go && !/\b(my|bed|sleep|work|school|the (doctor|dentist|toilet|bathroom))\b/i.test(go[1])) return go[1].trim();
   if (!t || t.length > 120 || !WHERE.test(t)) return null;
   const p = parseMapQuery(t.replace(/[؟?!.]+$/g, ""));
   const name = p.what.replace(/(^|\s)(is|are|to|get|go|the|ل|الى|إلى)(?=\s|$)/gi, " ").trim();

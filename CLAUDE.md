@@ -1,5 +1,6 @@
 # Attune — read this first (every session)
 
+000. Read **`CHAT_RUNS_APP.md`** (Ali's 21 Oct plan: chat runs the app, Home option A, steps S1–S10 with ticks) and carry it on.
 00. Read **`VISION.md`** first of all: Ali's vision (a global app people live in, AI + very strong code) and the roadmap
    phases. Every change serves it.
 0. Read **`APP_HANDOFF.md`** next: the whole app on one page (what it is, every feature and its files, rules, what is open).

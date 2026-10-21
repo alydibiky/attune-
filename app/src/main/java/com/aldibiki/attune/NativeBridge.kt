@@ -1696,6 +1696,43 @@ class NativeBridge(private val ctx: Context, private val web: WebView) {
         }
     }
 
+    /** v6.48 (CHAT_RUNS_APP.md S8/S9): a file attached on Home (a video or a recording) reaches the app in pieces of base64 —
+     *  { name, b64, first } → appended to cache/media-in/<name>; → { path, bytes }. Only that folder is ever written. */
+    @JavascriptInterface
+    fun cacheAppend(id: String, arg: String) {
+        pool.execute {
+            try {
+                val a = JSONObject(arg)
+                val dir = java.io.File(ctx.cacheDir, "media-in"); dir.mkdirs()
+                val name = a.optString("name", "media").replace(Regex("[^A-Za-z0-9._-]"), "_").take(80).ifEmpty { "media" }
+                val f = java.io.File(dir, name)
+                if (a.optBoolean("first")) { dir.listFiles()?.filter { it.name != name && System.currentTimeMillis() - it.lastModified() > 6 * 3600_000L }?.forEach { it.delete() }; f.delete() }
+                java.io.FileOutputStream(f, true).use { it.write(android.util.Base64.decode(a.optString("b64", ""), android.util.Base64.DEFAULT)) }
+                resolve(id, JSONObject().put("path", f.name).put("bytes", f.length()))
+            } catch (e: Throwable) { reject(id, e.message ?: "Couldn't keep the file") }
+        }
+    }
+
+    /** v6.48: words said in a video or recording sent with cacheAppend → [{start, end, text}] (the same offline reader as Subtitles). */
+    @JavascriptInterface
+    fun subtitlesFile(id: String, arg: String) {
+        val act = ctx as? android.app.Activity ?: return reject(id, "Subtitles need the app's window")
+        val flag = AtomicBoolean(false); cancels[id] = flag
+        pool.execute {
+            val a = JSONObject(arg)
+            val f = java.io.File(java.io.File(ctx.cacheDir, "media-in"), a.optString("path", "").replace(Regex("[^A-Za-z0-9._-]"), "_"))
+            try {
+                if (!f.exists()) throw IllegalStateException("The file is not here any more — attach it again")
+                val cues = Subtitles.make(act, android.net.Uri.fromFile(f), a.optString("lang", "ar-EG"), { done, all ->
+                    progress(id, if (all > 0) (done * 100 / all).coerceIn(0, 99) else 0, "listening", "$done / $all")
+                }, { flag.get() })
+                resolve(id, JSONObject().put("cues", cues))
+            } catch (e: Subtitles.Cancelled) { reject(id, "Stopped") }
+            catch (e: Throwable) { reject(id, e.message ?: "Couldn't read what is said") }
+            finally { cancels.remove(id); if (a.optBoolean("drop", true)) f.delete() }
+        }
+    }
+
     @JavascriptInterface
     fun videoClip(id: String, arg: String) {
         pool.execute {

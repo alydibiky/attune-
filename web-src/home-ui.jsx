@@ -7,7 +7,7 @@
 import { myCountry } from "./country.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles } from "lucide-react";
-import { nowCard, homeNumbers, noticed } from "./home-now.js";
+import { nowCard, homeNumbers, noticed, onThisDay } from "./home-now.js";
 import { safeToSpend } from "./safespend.js";
 import { setChequeStatus } from "./fleet.js";
 import { saveFleet } from "./fleet-store.js";
@@ -29,6 +29,10 @@ import { FitToday } from "./health-ui.jsx";
 import { tickRegular, payRadar } from "./regular.js";
 import { MissionsLine, useTopMission } from "./missions-ui.jsx";
 import { loadFleet } from "./fleet-store.js";
+import { route as cmdRoute } from "./cmdrun.js";
+import * as K from "./commands.js";
+import * as W from "./whereis.js";
+import { SlashMenu, Attached, BoxOptions, AskCard, ConfirmCard, LinesCard, TodoCard, MapCard, FoundCard, JobCards, TripPin, tripLive, useJobs, say } from "./cmdbox-ui.jsx";
 
 function greeting(now = new Date()) { const h = now.getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
 function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
@@ -39,8 +43,16 @@ const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pd
 const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet", country: "Holiday", care: "Health", life: "Payment", radar: "Deadline", learn: "Learn" };
 const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F", country: "#A0522D", care: "#B83B5E", life: "#1F6BBF", radar: "#8A5A00", learn: "#0E7C86" };
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };
-export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null }) {
+export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null, cmd = null }) {
   const [text, setText] = useState("");
+  // v6.48 Chat runs the app (CHAT_RUNS_APP.md, option A): "/" commands, files, the two box options, the answer card, the jobs
+  const [files, setFiles] = useState([]);
+  const [web, setWeb] = useState(false);
+  const [tr2, setTr2] = useState(false);
+  const [panel, setPanel] = useState(null);       // the outcome being shown (cmdrun.js)
+  const fileRef = React.useRef(null);
+  const jobList = useJobs(cmd && cmd.jobs);
+  const [trip, setTrip] = useState(() => (cmd && cmd.trip ? cmd.trip() : null));
   const [done, setDone] = useState(null);
   const [tick, setTick] = useState(0);   // v6.28: what Home did (or undid) shows in Today and the two numbers at once
   const [note, setNote] = useState("");   // v6.34: "Recorded in Money: 600 EGP — Maid"
@@ -69,7 +81,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   const mission = useTopMission();
   const now1 = minimal ? nowCard({ needs: data.items, fleet, country: myCountry(), now: Date.now() }) : null;
   const nums = minimal ? homeNumbers({ safe: data.safe, kcal: data.kcal, kcalGoal: data.fitOn ? data.goal : 0, fleet, mission }) : [];
-  const seen = minimal ? noticed({ safe: data.safe, mission, fleet, scout: data.scout }) : null;
+  const seen = minimal ? noticed({ safe: data.safe, mission, fleet, scout: data.scout, past: cmd && cmd.api ? onThisDay(cmd.api.records()) : null }) : null;
   const [heard, setHeard] = useState(false);
   // the mic: the phone listens and writes what you said into the box (then Send does it, like typing)
   const speak = async () => { if (!listen || heard) return; setHeard(true); try { const t = await listen(ar ? "ar-EG" : "", (p) => setText(p)); if (t) setText(t); } catch (e) {} setHeard(false); };
@@ -89,7 +101,39 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
     openLine(c.open);
   };
   // v6.28: Home does it first (food → Fit, money → Money, a dose, a reminder, a debt…); only what it can't do goes to Chat
-  const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); } else onAsk(t); };
+  const doOld = (t) => { let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); return true; } return false; };
+  // v6.48: what the box does — a "/" command, or a sentence that means one (asks when it could mean two), else Chat as before
+  const show = (o, t) => {
+    setPanel(null); setDone(null);
+    if (!o) return;
+    const lines = (ls) => setPanel({ type: "lines", lines: ls });
+    switch (o.type) {
+      case "doit": if (!doOld(o.text)) onAsk(o.text); return;
+      case "chat": if (o.web && cmd && cmd.chatWeb) cmd.chatWeb(o.text); else onAsk(o.text); return;
+      case "job": cmd.jobs.add(o.spec); setFiles([]); return;
+      case "todoAdd": cmd.mind.add({ kind: "todo", title: o.item.slice(0, 90), text: o.item, tags: ["todo"], meta: { todo: true, done: false } }); return lines([{ en: `Added to your to-do list: ${o.item}`, ar: `اتضافت للمهام: ${o.item}`, open: "memory" }]);
+      case "whereSave": cmd.mind.add(W.whereRecord(o.set)); return lines([{ en: `Got it: ${o.set.thing} — ${o.set.place}.`, ar: `تمام: ${o.set.thing} — ${o.set.place}.`, open: "memory" }]);
+      case "rememberNote": cmd.mind.add({ kind: "note", title: o.text.slice(0, 70), text: o.text, tags: ["remember"] }); return lines([{ en: "Kept in your Mind.", ar: "اتحفظت في العقل.", open: "memory" }]);
+      case "rememberFiles": if (cmd.rememberFiles) cmd.rememberFiles(o.files, o.label); setFiles([]); return lines([{ en: `Keeping ${o.files.length > 1 ? o.files.length + " files" : o.files[0].name} in your Mind${o.label ? " as “" + o.label + "”" : ""}…`, ar: `بحفظ ${o.files.length > 1 ? o.files.length + " ملفات" : o.files[0].name} في العقل${o.label ? " على إنه «" + o.label + "»" : ""}…`, open: "memory" }]);
+      case "travel": { const name = cmd.travel(o.code); setTrip(cmd.trip()); return lines([{ en: `Your trip to ${name} is pinned on Home until it ends.`, ar: `سفرية ${name} متثبتة في الرئيسية لحد ما تخلص.`, open: "travel" }]); }
+      case "need": if (o.what === "file") { if (fileRef.current) { fileRef.current.dataset.after = t; fileRef.current.click(); } return lines([{ en: "Attach the file, then send again.", ar: "ضيف الملف وابعت تاني." }]); }
+        setText(t.endsWith(" ") ? t : t + " "); return lines([{ en: "Write what it's about after the command.", ar: "اكتب الكلام بعد الأمر." }]);
+      default: setPanel({ ...o, text: o.text || t });
+    }
+  };
+  const send = (kindPicked) => {
+    let t = text.trim();
+    if (!t && !files.length && !kindPicked) return;
+    if (minimal && cmd) {
+      if (tr2 && t && !t.startsWith("/")) t = "/translate " + t;
+      if (web && t && !t.startsWith("/")) { setText(""); show({ type: "chat", text: t, web: true }, t); return; }
+      setText("");
+      let o = null; try { o = cmdRoute(t, { files, api: cmd.api, prefs: K.loadPrefs() }); } catch (e) { o = null; }
+      show(o, t); return;
+    }
+    if (!t) return; setText(""); if (!doOld(t)) onAsk(t);
+  };
+  const pickAsk = (kind) => { const a = panel; K.savePrefs(K.learn(K.loadPrefs(), a.sig, kind)); let o = null; try { o = cmdRoute(a.text, { files, api: cmd.api, kind }); } catch (e) {} show(o, a.text); };
   // Fleet & rentals is a view inside Business: open Business, then ask it for the Fleet view (as a shared crane order does)
   const openLine = (m) => { if (!m) return; if (m !== "fleet-rentals") return navTo(m); navTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "fleet" })), 80); };
   const date = now.toLocaleDateString(ar ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" });
@@ -105,13 +149,16 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         /* v6.43 option 1 (Ali): one big box — say anything, Attune does it in every app it touches */
         <div className="rounded-[26px] p-4 space-y-2" style={{ background: "var(--c-surf)", boxShadow: "0 2px 10px rgba(16,32,28,.10)" }} data-testid="home-box">
           <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} dir="auto" data-testid="home-ask" rows={2}
-            placeholder={tr("Say anything — «koshari for lunch, paid 85», «remind me at 9», «find a Tucson 2022»")} className="w-full resize-none bg-transparent focus:outline-none text-[16.5px] font-semibold leading-snug placeholder:font-normal" style={{ color: "var(--c-ink)" }} />
+            placeholder={cmd ? tr("Type / for a command, or just say it…") : tr("Say anything — «koshari for lunch, paid 85», «remind me at 9», «find a Tucson 2022»")} className="w-full resize-none bg-transparent focus:outline-none text-[16.5px] font-semibold leading-snug placeholder:font-normal" style={{ color: "var(--c-ink)" }} />
+          {cmd ? <Attached files={files} onRemove={(i) => setFiles((f) => f.filter((_, k) => k !== i))} /> : null}
+          {cmd ? <input ref={fileRef} type="file" multiple className="hidden" data-testid="box-file-input" onChange={(e) => { const add = [...(e.target.files || [])].slice(0, 20); e.target.value = ""; if (add.length) setFiles((f) => [...f, ...add].slice(0, 20)); }} /> : null}
+          {cmd ? <BoxOptions web={web} setWeb={(v) => { setWeb(v); if (v) setTr2(false); }} tr2={tr2} setTr2={(v) => { setTr2(v); if (v) setWeb(false); }} onAttach={() => fileRef.current && fileRef.current.click()} onCmd={(c) => setText(c + " ")} /> : null}
           <div className="flex items-center justify-end gap-2">
             <button onClick={() => (openFitAdd ? openFitAdd() : navTo("fit"))} aria-label={tr("Food photo")} title={tr("Food photo")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-bg)" }} data-testid="home-quick-food"><Apple size={18} /></button>
             <button onClick={() => openRead()} aria-label={tr("Read it to me")} title={tr("Read it to me")} className="w-10 h-10 rounded-full grid place-items-center c-sub" style={{ background: "var(--c-bg)" }} data-testid="home-read"><Camera size={18} /></button>
             <span className="flex-1" />
             {listen ? <button onClick={speak} aria-label={tr("Speak")} title={tr("Speak")} className={"w-10 h-10 rounded-full grid place-items-center " + (heard ? "animate-pulse" : "c-sub")} style={{ background: heard ? "var(--c-soft)" : "var(--c-bg)" }} data-testid="home-mic"><Mic size={18} /></button> : null}
-            <button onClick={send} aria-label={tr("Send")} className="w-10 h-10 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={18} /></button>
+            <button onClick={() => send()} aria-label={tr("Send")} className="w-10 h-10 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={18} /></button>
           </div>
         </div>) : (
       <div className="flex items-center gap-2 rounded-full px-3 py-2" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)" }}>
@@ -123,6 +170,17 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         <button onClick={send} aria-label={tr("Send")} className="w-8 h-8 rounded-full grid place-items-center" style={{ background: "var(--c-acc)", color: "#fff" }} data-testid="home-send"><ArrowUp size={16} /></button>
       </div>)}
       {/* v6.36 layout 1A (Ali picked it): one box, three quick starts under it — tools are reached by asking, not from a list */}
+      {minimal && cmd ? <SlashMenu text={text} onPick={(c) => setText("/" + (getLang() === "ar" ? c.ar[0] : c.id) + " ")} /> : null}
+      {minimal && cmd && panel ? (
+        panel.type === "ask" ? <AskCard ask={panel} onPick={pickAsk} onClose={() => setPanel(null)} />
+        : panel.type === "confirm" ? <ConfirmCard q={panel.q} onYes={() => show({ type: "whereSave", set: panel.set }, "")} onNo={() => setPanel({ type: "lines", lines: [{ en: `OK — still ${panel.was}.`, ar: `تمام — لسه ${panel.was}.` }] })} />
+        : panel.type === "lines" ? <LinesCard lines={panel.lines} onOpen={(m) => { setPanel(null); openLine(m); }} onClose={() => setPanel(null)} />
+        : panel.type === "todos" ? <TodoCard items={panel.items} onTick={(x) => cmd.mind.update(x.id, (r) => ({ ...r, meta: { ...(r.meta || {}), done: true, doneAt: Date.now() } }))} onOpen={() => { setPanel(null); navTo("memory"); }} onClose={() => setPanel(null)} />
+        : panel.type === "map" ? <MapCard place={panel.place} metro={panel.metro} onMap={() => { setPanel(null); cmd.openMap(panel.place); }} onMetro={() => { setPanel(null); cmd.openMetro(panel.metro); }} onClose={() => setPanel(null)} />
+        : panel.type === "found" ? <FoundCard q={panel.q} items={panel.items} onOpen={(r) => { setPanel(null); cmd.openRecord(r); }} onClose={() => setPanel(null)} />
+        : null) : null}
+      {minimal && cmd ? <JobCards list={jobList} jobs={cmd.jobs} onSave={(f) => cmd.saveFile(f)} onCopy={(t) => cmd.copy(t)} onOpen={(m) => openLine(m)} /> : null}
+      {minimal && cmd && tripLive(trip) ? <TripPin trip={trip} name={cmd.countryName(trip.country)} onOpen={() => navTo("travel")} onEnd={() => { cmd.endTrip(); setTrip(cmd.trip()); }} /> : null}
       <RecallCard text={text} navTo={navTo} className="-mt-1" />
       {/* v6.46 Home A (Ali: "integrate the new chat — translate, etc."): Chat's own tools, one tap from Home */}
       {minimal ? <div className="flex gap-2 overflow-x-auto -mt-1 pb-0.5" data-testid="home-chat-tools">
@@ -228,7 +286,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
         </div> : <p className="c-sub text-[13px] m-0" data-testid="home-line-empty">{tr("Nothing yet today — tell the box what you ate, spent or need to remember.")}</p>}
       </div>
       {/* v6.46 Home A: one thing Attune noticed (home-now.js) */}
-      {seen ? <button onClick={() => openLine(seen.open)} className="w-full rounded-[18px] p-3.5 flex items-start gap-2.5 text-start" style={{ background: "var(--c-soft)", color: "var(--c-ink)" }} data-testid="home-noticed" data-k={seen.k}>
+      {seen ? <button onClick={() => (seen.k === "past" && cmd ? cmd.openRecord({ id: seen.id }) : openLine(seen.open))} className="w-full rounded-[18px] p-3.5 flex items-start gap-2.5 text-start" style={{ background: "var(--c-soft)", color: "var(--c-ink)" }} data-testid="home-noticed" data-k={seen.k}>
         <Sparkles size={17} className="c-acc shrink-0 mt-0.5" /><span className="text-[13.5px] leading-snug" dir="auto">{seen.text}</span></button> : null}
       </>}
     </div>);

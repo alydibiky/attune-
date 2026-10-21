@@ -25,3 +25,11 @@ const t3 = noticed({ fleet });
 ok(t3 && t3.k === "crane" && /free/.test(t3.text), "a crane standing free while others work: " + (t3 && t3.text));
 ok(noticed({ scout: { goals: [{ text: "Tucson", unseen: ["a", "b"] }] } }).k === "scout", "new Scout finds");
 ok(noticed({}) === null, "nothing worth saying → nothing");
+// v6.48 (CHAT_RUNS_APP.md S10): on this day
+{ const { onThisDay } = await import("../../web-src/home-now.js");
+  const now = new Date(2026, 9, 21, 10).getTime();
+  const recs = [{ id: "a", ts: new Date(2025, 9, 21, 9).getTime(), title: "GMK 5250 plate", kind: "photo" }, { id: "b", ts: new Date(2026, 9, 21, 9).getTime(), title: "today's note" }, { id: "c", ts: new Date(2024, 9, 21).getTime(), title: "old", meta: { todo: true } }];
+  const p = onThisDay(recs, now);
+  ok(p && p.id === "a" && /A year ago today you kept: GMK 5250 plate/.test(p.text), "on this day: a year ago today you kept the GMK plate (today's and to-dos skipped)");
+  ok(onThisDay([], now) === null, "nothing from earlier years → nothing");
+  ok(noticed({ past: p }) === p, "Attune noticed shows it when nothing more urgent"); }
