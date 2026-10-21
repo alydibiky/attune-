@@ -4,6 +4,7 @@
    areas (v6.29: replaced by "Recent" — the last 4 tools with what waits there; TODAY became "What's waiting": also new Scout
    finds, cards to review and a medicine running out). The bottom bar is Home · Chat · Money · Scout · Mind · All (v6.29).
    Tests: tests/unit/v727home.test.mjs (todayList), tests/e2e_v727home.py.                                                       */
+import { myCountry } from "./country.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { MessageCircle, ArrowUp, Camera, Zap, Menu, ChevronRight, Binoculars, GraduationCap, Pill, AlertTriangle, Apple, FileText, Wallet, Heart, Briefcase, BookOpen, ImageIcon, LayoutGrid, Mic, Phone, Globe, Sparkles } from "lucide-react";
 import { nowCard, homeNumbers, noticed } from "./home-now.js";
@@ -35,8 +36,8 @@ function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"
 // v6.29 (Ali picked A): the tools you used last, each with what waits there; filled with these when you have used fewer than four
 const START_TOOLS = ["scout", "learn", "slides", "convert", "lifeask"];
 const WORK = ["business", "fleet", "crane", "field", "convert", "translate", "pdfchat", "slides", "cv", "code", "studio", "map", "travel", "video"];
-const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet" };
-const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F" };
+const LINE_APP = { fit: "Food", money: "Money", reminders: "Reminder", fleet: "Fleet", country: "Holiday", care: "Health", life: "Payment", radar: "Deadline", learn: "Learn" };
+const LINE_COL = { fit: "#B35C0F", money: "#1F6BBF", reminders: "#6B4FB8", fleet: "#2E7D4F", country: "#A0522D", care: "#B83B5E", life: "#1F6BBF", radar: "#8A5A00", learn: "#0E7C86" };
 const readArr = (k) => { const v = readJSON(k); return Array.isArray(v) ? v : []; };
 export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools = [], openSide, minimal = false, openFitAdd = null, listen = null, startCall = null }) {
   const [text, setText] = useState("");
@@ -61,12 +62,12 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       learn: (() => { const c = courses.find((x) => x && Array.isArray(x.plan) && x.plan.length); return c ? { title: c.topic || c.title || "", n: (c.lessons || []).filter((l) => l.read).length, of: c.plan.length } : null; })(),
       work: [...new Set(recentTools())].filter((id) => WORK.includes(id)).slice(0, 2).map((id) => (tools.find((x) => x[0] === id) || [id, id])[1]),
       // v6.43 (Ali picked "1 + the Today line"): today across the apps, by time
-      line: minimal ? todayLine({ fit, ledger, fleet, reminders: readJSON("attune:reminders:v1"), now: Date.now() }).line : [],
+      line: minimal ? todayLine({ fit, ledger, fleet, care, life: loadLife(), radar: loadRadar(), courses, reminders: readJSON("attune:reminders:v1"), country: myCountry(), now: Date.now() }).line : [],
       // v6.46 Home A (Ali picked it): what you can spend today, for the numbers and "Attune noticed"
       safe: minimal && ledger ? (() => { try { return safeToSpend({ ledger, life: loadLife(), radar: loadRadar() }); } catch (e) { return null; } })() : null, scout };
   }, [tick, fleet]);
   const mission = useTopMission();
-  const now1 = minimal ? nowCard({ needs: data.items, fleet, now: Date.now() }) : null;
+  const now1 = minimal ? nowCard({ needs: data.items, fleet, country: myCountry(), now: Date.now() }) : null;
   const nums = minimal ? homeNumbers({ safe: data.safe, kcal: data.kcal, kcalGoal: data.fitOn ? data.goal : 0, fleet, mission }) : [];
   const seen = minimal ? noticed({ safe: data.safe, mission, fleet, scout: data.scout }) : null;
   const [heard, setHeard] = useState(false);
@@ -90,7 +91,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
   // v6.28: Home does it first (food → Fit, money → Money, a dose, a reminder, a debt…); only what it can't do goes to Chat
   const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) { setDone({ ...r, id: Date.now() }); setTick((n) => n + 1); } else onAsk(t); };
   // Fleet & rentals is a view inside Business: open Business, then ask it for the Fleet view (as a shared crane order does)
-  const openLine = (m) => { if (m !== "fleet-rentals") return navTo(m); navTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "fleet" })), 80); };
+  const openLine = (m) => { if (!m) return; if (m !== "fleet-rentals") return navTo(m); navTo("business"); setTimeout(() => window.dispatchEvent(new CustomEvent("attune-biz-view", { detail: "fleet" })), 80); };
   const date = now.toLocaleDateString(ar ? "ar-EG" : undefined, { weekday: "long", day: "numeric", month: "long" });
   const ICON = { scout: Binoculars, learn: GraduationCap, care: Pill };
   const pct = (a, b) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
@@ -126,7 +127,7 @@ export function PhoneHome({ navTo, onAsk, openAll, name, guardian, doIt, tools =
       {/* v6.46 Home A (Ali: "integrate the new chat — translate, etc."): Chat's own tools, one tap from Home */}
       {minimal ? <div className="flex gap-2 overflow-x-auto -mt-1 pb-0.5" data-testid="home-chat-tools">
         {[[MessageCircle, "Chat", () => navTo("chat"), "home-t-chat"], ...(startCall ? [[Phone, "Call", startCall, "home-t-call"]] : []), [Globe, "Translate", () => navTo("translate"), "home-t-translate"],
-          [Sparkles, "Your life", () => navTo("lifeask"), "home-t-life"], [BookOpen, "Remember", () => navTo("library"), "home-t-remember"]].map(([I, l, go, id]) => (
+          [Sparkles, "Your life", () => navTo("lifeask"), "home-t-life"], [BookOpen, "Remember", () => navTo("remember"), "home-t-remember"]].map(([I, l, go, id]) => (
           <button key={id} onClick={go} className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 h-10 text-[13.5px] font-semibold" style={{ background: "var(--c-surf)", border: "1px solid var(--c-ln)", color: "var(--c-ink)" }} data-testid={id}><I size={15} className="c-acc" />{tr(l)}</button>))}
       </div> : null}
       {/* v6.46 Home A: RIGHT NOW — the one thing that matters most, with its buttons (home-now.js) */}

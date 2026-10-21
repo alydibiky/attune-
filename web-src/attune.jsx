@@ -91,7 +91,8 @@ import { TranslatePage } from "./translate-ui.jsx";
 import { findPlaces } from "./mapsearch.js";
 import { MapPage } from "./map-ui.jsx";
 import { KnowledgePage } from "./knowledge-ui.jsx";
-import { LibraryPage } from "./library-ui.jsx";   // v6.46 "Remember": the person's own books, articles and pages
+import { LibraryPage } from "./library-ui.jsx";
+import { CountryRow } from "./country-ui.jsx";   // v6.47 country packs: Settings → Your country   // v6.46 "Remember": the person's own books, articles and pages
 import { loadOffPacks, teachChat } from "./teach-ui.jsx";
 import * as TEACH from "./teach.js";
 import * as KNOW from "./knowledge.js";
@@ -7468,7 +7469,7 @@ const MODE_TITLES = { privacy: "Privacy", health: "Health", scout: "Scout", life
 // v5.17: the page's own version, and the installed app's (from the page
 // address MainActivity loads). Shown at the bottom of More — if they ever
 // differ, the phone is showing an old copy of the page.
-const PAGE_VERSION = "6.46";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
+const PAGE_VERSION = "6.47";   // (kept equal to versionName in app/build.gradle.kts — tests/unit/v746version.test.mjs)
 const devTaps = { n: 0, t: 0 };   // v6.11: tap the version number 7 times = developer mode (unlocks Pro for testing); again = off
 const APP_VERSION = (() => { try { return (new URLSearchParams(window.location.search).get("v") || "").split("-")[0]; } catch (e) { return ""; } })();
 
@@ -7506,7 +7507,7 @@ const MORE_TOOLS = [
   ["reminders", "Reminders", "Alarms, reminders & actions", Bell],
   ["shelf", "Shelf", "Your notes, in books", BookOpen],
   ["memory", "Mind", "Everything you keep — it files itself", Brain],
-  ["library", "Remember", "Books, articles, the news — ask Chat about them", BookOpen],
+  ["remember", "Remember", "Books, articles, the news — ask Chat about them", BookOpen],
   ["knowledge", "Knowledge", "Your facts — Chat looks them up before it answers", Database],
   ["cycle", "Cycle", "Period tracker", Droplet], ["travel", "Travel", "Country packs & phrases", Plane],
   ["map", "Maps", "Offline places", MapPin], ["metro", "Metro", "Cairo Metro — line, direction, stops, ticket", TrainFront], ["field", "Site reports", "Incident & maintenance docs", HardHat],
@@ -7533,7 +7534,7 @@ if (!KNOW_ADMIN) {
 const MORE_GROUPS = [
   ["Money & people", ["scout", "guardian", "radar", "life", "deal", "reminders", "timeline"]],
   ["Health", ["fit", "care", "cycle"]],
-  ["Mind & learning", ["lifeask", "coach", "learn", "memory", "library", "shelf", ...(KNOW_ADMIN ? ["knowledge"] : []), "news"]],
+  ["Mind & learning", ["lifeask", "coach", "learn", "memory", "remember", "shelf", ...(KNOW_ADMIN ? ["knowledge"] : []), "news"]],
   ["Chat", ["instant", "assistants", "skills", "projects", "artifacts", "xray"]],
   ["Files", ["translate", "convert", "video", "pdfchat", "slides", "cv"]],
   ["Places", ["map", "metro", "travel"]],
@@ -10172,7 +10173,7 @@ export default function App() {
             llm={(messages, o) => callChat(messages, null, { maxTokens: o.maxTokens, temperature: 0.2, think: false, onToken: o.onToken })}
             saveFile={NATIVE ? (name, text, mime) => nativeCall("saveFile", { name, mime, text }) : null}
             share={(t) => { if (NATIVE && NATIVE.share) NATIVE.share(t); else { try { navigator.clipboard.writeText(t); flash(tr("Copied")); } catch (e) {} } }} />
-        ) : mode === "library" ? (
+        ) : mode === "remember" ? (
           <LibraryPage knowledge={knowledge} nativeCall={NATIVE ? nativeCall : null} flash={flash}
             askChat={(q) => { try { localStorage.setItem("attune:chat:prefill", q); } catch (e) {} navTo("chat"); }} />
         ) : mode === "crane" ? (
@@ -11121,6 +11122,7 @@ export default function App() {
                   <div><p className="text-[13px] text-slate-300 mb-1.5">{tr("App language")}</p><LangSwitch /></div>
                   <div><p className="text-[13px] text-slate-300 mb-1.5">{tr("Text size")}</p><TextSize /></div>
                   <KeyboardRow />
+                  <CountryRow />
                 </div>
                 <div><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
@@ -11183,6 +11185,7 @@ export default function App() {
                 <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("App language")}</span><LangSwitch /></div>
                 <div className="flex items-center justify-between mb-3"><span className="text-[12px] text-slate-400">{tr("Text size")}</span><TextSize /></div>
                 <KeyboardRow />
+                <CountryRow />
                 <div className="mb-3"><ThemePicker theme={theme} setTheme={setTheme} /></div>
               </div>
               <p className="text-center text-[10px] text-slate-600 mt-3 select-none" data-testid="app-version" onClick={() => { devTaps.n = (Date.now() - devTaps.t < 1500 ? devTaps.n : 0) + 1; devTaps.t = Date.now(); if (devTaps.n >= 7) { devTaps.n = 0; setDevMode(!devMode()); try { location.reload(); } catch (e) {} } }}>Attune {PAGE_VERSION}{APP_VERSION && APP_VERSION !== PAGE_VERSION ? " · app " + APP_VERSION : ""}</p>

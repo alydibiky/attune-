@@ -2,6 +2,7 @@
    buttons) · four numbers · YOUR DAY (todayLine) · one thing Attune NOTICED. Everything is chosen by code from the apps' own
    data — nothing is guessed by the model. Pure; every store is passed in. Tests: tests/unit/v746home.test.mjs.            */
 import { tr } from "./i18n.js";
+import { isWorkingDay, holidayOn, holidayName, nextWorkingDay } from "./country.js";
 import { warnings as fleetWarnings, live, byId, isoDay, kpis as fleetKpis } from "./fleet.js";
 
 const BAD = new Set(["chequeOverdue", "docExpired", "licenceExpired", "invoiceOverdue", "repairOpen", "jobPast", "serviceDue"]);
@@ -30,12 +31,15 @@ const fmtN = (n) => (n == null ? "" : Math.round(+n || 0).toLocaleString("en-US"
  * cheque or paper, a payment, a dose), then what is due today, then the next thing due.
  * → { from, kind, level: "bad"|"warn"|"info", title, sub, actions: [{ id, label }], open, ref }
  */
-export function nowCard({ needs = [], fleet = null, now = Date.now() } = {}) {
+export function nowCard({ needs = [], fleet = null, country = null, now = Date.now() } = {}) {
   const day = isoDay(new Date(now));
+  // v6.47 country packs: a cheque due on a weekend or a bank holiday clears on the next working day — say which
+  const bankShut = (w) => { try { if (!country || w.kind !== "chequeToday" || isWorkingDay(country, day)) return null; const h = holidayOn(country, day);
+    return tr("Banks are closed today{h} — it clears on {d}", { h: h ? " (" + holidayName(h) + ")" : "", d: nextWorkingDay(country, day).split("-").reverse().join("/") }); } catch (e) { return null; } };
   let ws = [];
   try { ws = fleet && fleet.cheques ? fleetWarnings(fleet, day).filter((w) => w.level !== "info") : []; } catch (e) { ws = []; }
   const fleetCard = (w) => ({ from: "fleet", kind: w.kind, level: BAD.has(w.kind) || w.level === "bad" ? "bad" : "warn", title: (W_TITLE[w.kind] || (() => w.kind))(w),
-    sub: tr("Fleet & rentals"), open: "fleet-rentals", ref: w.id,
+    sub: bankShut(w) || tr("Fleet & rentals"), open: "fleet-rentals", ref: w.id,
     actions: /^cheque/.test(w.kind) ? [{ id: "cleared", label: tr("It cleared") }, { id: "bounced", label: tr("Bounced") }] : [{ id: "open", label: tr("Open") }] });
   const needCard = (x) => ({ from: x.from, kind: x.dose ? "dose" : x.pay ? "pay" : "due", level: x.late ? "bad" : "warn", title: x.title,
     sub: x.amount ? fmtN(x.amount) + (x.pay && x.pay.cur ? " " + x.pay.cur : "") : x.date === day ? tr("Today") : x.date || "", open: x.from === "life" ? "life" : x.from === "radar" ? "radar" : x.from === "care" ? "care" : x.from,

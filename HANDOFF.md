@@ -2426,6 +2426,32 @@ users… make users upload something for the system to remember… 'what happens
   `e2e_v746library.py` (paste a 3-chapter book → chapter 3 asked → the model gets chapter 3, not 2 → Forget; Knowledge
   not in All tools).
 
+### 5.98 (21 Oct 2026) — v6.47: the rest of the vision (Ali: "I want to do the rest of the visions")
+Phase 1 is Ali's (phone tests, Google setup, Fleet in his company); phase 3 (Play release) is "not now". Built from phases 2, 4, 5:
+- **Every area on Home's "Your day"** (phase 2): `home.js todayLine` now also shows each dose at its time (taken / not yet),
+  today's payments (People & plans), deadlines (Radar), the lesson waiting, and a public holiday. `home-ui.jsx` passes care,
+  life, radar, courses, country. Test `tests/unit/v747today.test.mjs`.
+- **Country packs** (phase 4): `web-src/country.js` — 30 countries (currency, VAT / sales tax, weekend, emergency numbers,
+  units, notes) and their public holidays by code: fixed dates, nth-weekday rules, Western Easter, Coptic/Orthodox Easter
+  (Sham el-Nessim), Islamic holidays from the phone's Umm al-Qura calendar (`Intl … islamic-umalqura`, marked `lunar`),
+  South Africa's Sunday rule. `isWorkingDay`, `nextWorkingDay`, `upcoming`, `holidayNote`, `guessCountry` (time zone first,
+  then language region; "en-US" ignored), `savedCountry` (only a confirmed country changes defaults), `countryDefaults`.
+  Wired: Settings → Your country (`country-ui.jsx`, both layouts), Home "Your day" (holiday today / tomorrow, banks closed),
+  Right now (a Fleet cheque due on a bank holiday says when it clears), `locale.homeCurrency` (chosen country before the
+  phone's region), a new Fleet and a new built system start in that currency + VAT. Tests `v747country.test.mjs`,
+  `e2e_v747country.py`.
+- **Four more interface languages** (phase 4): Portuguese (Brazil), Hindi, Indonesian, Urdu (`i18n-pt/hi/id/ur.js`, the same
+  935 lines as French; Urdu right-to-left). `i18n.js` LANGS has nine. Tests `v736langs.test.mjs`, `e2e_v736langs.py`.
+- **Pages that test themselves** (phase 5): a page the Code workbench makes ends with `<script type="text/attune-test">`
+  (fill / click / text / exists / wait / assert / assertEqual). `sandbox.js runHtml` turns those blocks into inline functions
+  (the CSP has no unsafe-eval) and runs them after load; `code.js countTests` counts them, `judge` needs the pass mark, and
+  `workLoop` fixes the page until its own checks pass. Preview and saved pages leave the checks inert. Tests
+  `v747tool.test.mjs`, `e2e_v747tool.py`.
+- Fixes found on the way: the Remember page took over the Prompt lab's id `library` → renamed `remember`; the Remember tab
+  sits in Daily; Knowledge stays developer-only (checked on a customer's phone in `e2e_v746library.py`).
+- Design audit (phase 2): 13 main screens screenshotted at phone size — one header, tab row and card style everywhere;
+  Business stays light in dark mode (a look-and-feel choice → asked Ali).
+
 ### 5.39 v6.11 (3 Oct 2026) — release candidate: what this session built and measured
 - **Built and tested:** Skills v2 (checklist / facts / offline script / SKILL.md), CV builder + "Edit or improve", Business books (finance core + UI + documents), 25,280 generated recipes (`fit-recipegen.js`) + 148 hand-written, offline food pack (`foodpack.js`, `tools/build_food_pack.py`, workflow `food-pack.yml`, release `food-pack-v1`; ~902k products from Open Food Facts; the USDA merge probes the dated file name), **Ask a PDF** (`docqa.js`, `pdfchat-ui.jsx`; native `pdfText` has a `textOnly` fast path), converter fidelity on the real PDF, plans & billing page, engine lifecycle, exact-length rules, coding restart + date facts.
 - **Release switches:** developer mode (hidden 7 taps on the version number; `devMode()` in billing.js) — OFF by default; Yusr Premium test unlock removed. Tests run in developer mode via `tests/harness.py` (`release=True` = a customer phone; `tests/e2e_v620release.py`).

@@ -1,3 +1,4 @@
+import { countryDefaults } from "./country.js";
 import { getPower } from "./power.js";
 /* ---- Business: a small ERP that the owner can reshape, like Microsoft Access -------------
    A "system" is a set of tables (Customers, Equipment, Jobs, Invoices…). Each
@@ -86,7 +87,7 @@ export function normalizeSpec(spec) {
       return o;
     }).filter((f) => f.name),
   })).filter((t) => t.name && t.fields.length);
-  return { name: clean(s.name || s.system || s.title, 80) || "My business", business: clean(s.business || s.description, 300), currency: clean(s.currency, 6) || "EGP", tables };
+  return { name: clean(s.name || s.system || s.title, 80) || "My business", business: clean(s.business || s.description, 300), currency: clean(s.currency, 6) || countryDefaults().currency || "EGP", tables };
 }
 
 export function systemFromSpec(spec, { now = Date.now() } = {}) {

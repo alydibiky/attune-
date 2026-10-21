@@ -77,6 +77,11 @@ Windows app at full strength; then other platforms.
 systems for each person on demand, tests them, and keeps them running inside the app — the AI writes the code, the code
 does the work. Every area keeps getting deeper the same way.
 
+## Progress
+- 21 Oct 2026 (v6.47): phase 2 — every area on Home's Your day, the design audit; phase 4 — country packs (30 countries),
+  Portuguese, Hindi, Indonesian, Urdu; phase 5 — pages that test themselves before they are kept. Waiting for Ali: the Family
+  circle design. Phase 1 (his phone, Google setup, Fleet in his company) and phase 3 (release, "not now") are his.
+
 ## How every session works toward this
 - Start: CLAUDE.md → this page → APP_HANDOFF.md → NEXT_SESSION.md (the newest section).
 - Ask of every change: does it connect to the rest of the life? Is the hard part done by code? Is it private? Does it

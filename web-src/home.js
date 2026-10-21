@@ -1,4 +1,5 @@
 /* ---- v6.27: the phone Home's TODAY list (design A "Calm") — pure logic, used by home-ui.jsx; tests: tests/unit/v727home.test.mjs ---- */
+import { holidayNote } from "./country.js";
 import { tr } from "./i18n.js";
 import { dueSoon } from "./life.js";
 import { moneyOverview } from "./money-calm.js";
@@ -78,7 +79,7 @@ export function toolLine(id, { scout, courses, slides, ledger, care, now = Date.
    Tests: tests/unit/v743today.test.mjs. → { needs: [waitingList items], line: [{ t, hm, app, title, sub, open, ahead }] } */
 const MEALS_T = [["breakfast", "Breakfast", 8], ["lunch", "Lunch", 13], ["dinner", "Dinner", 20], ["snacks", "Snacks", 17]];
 const hmOf = (t) => { const d = new Date(t); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
-export function todayLine({ fit, ledger, reminders, life, radar, care, scout, courses, fleet, now = Date.now() } = {}) {
+export function todayLine({ fit, ledger, reminders, life, radar, care, scout, courses, fleet, country = null, now = Date.now() } = {}) {
   const day = isoD(now), start = new Date(now); start.setHours(0, 0, 0, 0);
   const at = (h) => start.getTime() + h * 3600e3;
   const line = [];
@@ -116,6 +117,25 @@ export function todayLine({ fit, ledger, reminders, life, radar, care, scout, co
       if (ws.length > 3) line.push({ t: at(9) + 1, app: "fleet", open: "fleet-rentals", ahead: at(9) > now, title: tr("{n} more in Fleet", { n: ws.length - 3 }), sub: "" });
     } catch (e) {}
   }
+  // v6.47 (VISION phase 2 "every area on Today"): doses at their time, payments and deadlines due today, the lesson waiting
+  try {
+    for (const x of dosesOn(care || { meds: [] }, now).filter((d) => d.key.split("|")[1] === day).slice(0, 6)) {
+      const [hh, mm] = x.time.split(":").map(Number);
+      line.push({ t: start.getTime() + (hh * 60 + (mm || 0)) * 60e3, app: "care", title: x.med.name + (x.member && ((care && care.members) || []).length > 1 ? " · " + x.member.name : ""),
+        sub: x.taken ? tr("Taken") : x.late ? tr("Not taken yet") : tr("Dose"), open: "care", ahead: !x.taken && !x.late });
+    }
+  } catch (e) {}
+  try {
+    for (const x of dueSoon(life || { items: [] }, now, 0).filter((x) => x.date === day).slice(0, 3))
+      line.push({ t: at(10), app: "life", title: x.c.title ? x.c.title[0].toUpperCase() + x.c.title.slice(1) : x.c.person || tr("Payment"), sub: x.amount ? Math.round(x.amount).toLocaleString("en-US") + (x.c.currency ? " " + x.c.currency : "") : "", open: "life", ahead: at(10) > now });
+  } catch (e) {}
+  try { for (const x of radarToday(radar || { items: [] }, now).filter((x) => x.date === day).slice(0, 2)) line.push({ t: at(9) + 2, app: "radar", title: x.title || tr("Deadline"), sub: tr("Last day"), open: "radar", ahead: at(9) > now }); } catch (e) {}
+  try {
+    for (const c of (courses || []).slice(0, 2)) { const p = todayPlan(c, now), l = p.steps.find((x) => x.kind === "lesson" && !x.done);
+      if (l) line.push({ t: at(19), app: "learn", title: c.title || c.topic || tr("Your course"), sub: tr("lesson {n}", { n: (l.lesson ? l.lesson.n : l.n) + 1 }), open: "learn", ahead: at(19) > now }); }
+  } catch (e) {}
+  // v6.47 country packs: a public holiday today, tomorrow or the day after (banks closed — country.js)
+  if (country) { try { const h = holidayNote(country, now); if (h) line.push({ t: start.getTime() + 1, app: "country", title: h.title, sub: h.sub, open: null, ahead: h.days > 0 }); } catch (e) {} }
   line.sort((a, b) => a.t - b.t);
   for (const x of line) x.hm = hmOf(x.t);
   return { needs: waitingList({ life, ledger, radar, care, scout, courses, now, max: 4 }), line };

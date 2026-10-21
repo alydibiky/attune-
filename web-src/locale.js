@@ -2,6 +2,7 @@
    Money's ledger currency wins (the person chose it); else the phone's region (navigator.language "en-US" → US → USD).
    Used by the payment reader (an ambiguous "$" / "kr" / "Rs" becomes the home one), People & plans, the Guardian and
    the Deadline Radar. Pure; tests: tests/unit/v727global.test.mjs.                                                     */
+import { COUNTRIES, savedCountry } from "./country.js";
 const REGION_CUR = {
   US: "USD", CA: "CAD", MX: "MXN", BR: "BRL", AR: "ARS", CL: "CLP", CO: "COP", PE: "PEN", GB: "GBP", IE: "EUR", FR: "EUR", DE: "EUR", ES: "EUR",
   IT: "EUR", PT: "EUR", NL: "EUR", BE: "EUR", AT: "EUR", FI: "EUR", GR: "EUR", LU: "EUR", SK: "EUR", SI: "EUR", EE: "EUR", LV: "EUR", LT: "EUR",
@@ -22,6 +23,8 @@ const navLang = () => { try { return (navigator.languages && navigator.languages
 export function homeCurrency(ledger, lang = navLang()) {
   if (ledger && /^[A-Z]{3}$/.test(ledger.currency || "")) return ledger.currency;
   try { const L = JSON.parse(localStorage.getItem("ledger.v3") || "null"); if (L && /^[A-Z]{3}$/.test(L.currency || "")) return L.currency; } catch (e) {}
+  // v6.47: the country the person chose (Settings → Your country) comes before the phone's language region
+  try { const c = COUNTRIES[savedCountry()]; if (c) return c.cur; } catch (e) {}
   return REGION_CUR[regionOf(lang)] || "USD";
 }
 /** "mdy" for the US and the few others that write the month first, else "dmy". */

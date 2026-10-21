@@ -5,6 +5,7 @@
    Kept from the old apps' hard-won lessons: no native alert/confirm (askConfirm + flash), dates typed DD/MM/YYYY (never
    the phone's M/D), every save wrapped so a real error shows instead of failing silently, a version-free data file.
    Tests: tests/unit/v732fleet.test.mjs (logic), tests/e2e_v732fleet.py (screens).                                       */
+import { countryDefaults } from "./country.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Trash2, Camera, Paperclip, AlertTriangle, Check, X, Search, Printer, Download, Upload, Menu, Truck, Package, Wallet, CalendarDays, Building2, MapPin, Undo2, Pencil, Lock, Wrench, Clock, Users, Globe, MessageSquare, Copy } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
@@ -42,6 +43,8 @@ const STATUS_L = { active: "Active", completed: "Completed", cancelled: "Cancell
 export const nameOf = (arr, id) => (F.byId(arr, id) || {}).name || "";
 
 /** Download / save a file: the Android app's saveFile, else a browser download. */
+// v6.47 country packs: a new Fleet starts in the person's currency and VAT (Settings → Your country)
+const withCountry = (st) => { const d = countryDefaults(); return d.currency ? { ...st, settings: { ...st.settings, currency: d.currency, vat: d.vat } } : st; };
 export function saveOut(saveFile, name, data, mime) {
   if (saveFile) {
     if (data instanceof Uint8Array) { let s = ""; for (let i = 0; i < data.length; i += 0x8000) s += String.fromCharCode.apply(null, data.subarray(i, i + 0x8000)); return saveFile(name, "", mime, btoa(s)); }
@@ -122,7 +125,7 @@ export function FleetApp({ flash, saveFile, onBack, seed = null, site = false })
   const cur = s ? s.settings.currency : "EGP";
   const money = (n) => num(n) + " " + cur;
   useEffect(() => { (async () => {
-    let st = (await loadFleet()) || (seed ? F.heal(seed) : F.EMPTY());     // a website made from Fleet starts with the exported records
+    let st = (await loadFleet()) || (seed ? F.heal(seed) : withCountry(F.EMPTY()));     // a website made from Fleet starts with the exported records
     const p = F.purge(st);                         // the Recycle Bin forgets after 7 days (run on open, like the old app)
     if (p.purged) { st = p.state; saveFleet(st); }
     setRaw(st);

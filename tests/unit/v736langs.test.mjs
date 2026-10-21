@@ -4,6 +4,10 @@ import { FR } from "../../web-src/i18n-fr.js";
 import { ES } from "../../web-src/i18n-es.js";
 import { TRK } from "../../web-src/i18n-tr.js";
 import { AR } from "../../web-src/i18n-ar.js";
+import { PT } from "../../web-src/i18n-pt.js";
+import { HI } from "../../web-src/i18n-hi.js";
+import { IDN } from "../../web-src/i18n-id.js";
+import { UR } from "../../web-src/i18n-ur.js";
 import fs from "node:fs";
 
 let fails = 0;
@@ -11,9 +15,9 @@ const ok = (c, m) => { if (!c) { fails++; console.log("FAIL", m); } else console
 globalThis.localStorage = { _s: {}, getItem(k) { return this._s[k] ?? null; }, setItem(k, v) { this._s[k] = String(v); } };
 const I = await import("../../web-src/i18n.js");
 
-ok(I.LANGS.map((x) => x[0]).join(",") === "en,ar,fr,es,tr", "five languages in the switch");
+ok(I.LANGS.map((x) => x[0]).join(",") === "en,ar,fr,es,tr,pt,hi,id,ur", "nine languages in the switch (v6.47: + Portuguese, Hindi, Indonesian, Urdu)");
 const ph = (s) => (s.match(/\{\w+\}/g) || []).sort().join(",");
-for (const [name, d] of [["fr", FR], ["es", ES], ["tr", TRK]]) {
+for (const [name, d] of [["fr", FR], ["es", ES], ["tr", TRK], ["pt", PT], ["hi", HI], ["id", IDN], ["ur", UR]]) {
   const keys = Object.keys(d);
   ok(keys.length >= 600, `${name}: ${keys.length} lines`);
   ok(keys.every((k) => typeof d[k] === "string" && d[k].trim()), `${name}: no empty translation`);
@@ -31,6 +35,10 @@ ok(I.tr("A line nobody translated") === "A line nobody translated", "missing lin
 ok(!I.isRTL() && I.dateLocale() === "fr-FR", "French is left-to-right, French dates");
 I.setLang("tr", { reload: false });
 ok(I.tr("Save") === "Kaydet", "Turkish shows");
+I.setLang("ur", { reload: false });
+ok(I.isRTL() && I.tr("Save") === UR["Save"] && I.dateLocale() === "ur-PK-u-nu-latn", "Urdu is right-to-left, Western digits");
+I.setLang("pt", { reload: false });
+ok(!I.isRTL() && I.tr("Save") === PT["Save"] && I.tr("{n} tools", { n: 5 }).startsWith("5 "), "Portuguese shows");
 I.setLang("ar", { reload: false });
 ok(I.isRTL() && I.tr("Save") === AR["Save"], "Arabic unchanged");
 I.setLang("en", { reload: false });

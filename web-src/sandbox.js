@@ -102,7 +102,12 @@ export async function runCode({ lang, code, stdin = "", timeoutMs, files }) {
 /** v6.40 (upgrade C5): a saved page keeps its data. `store` = what the page saved last time (its own localStorage keys, plus
     "__attune_fields": every box, tick and choice the person filled in). The page's storage starts with it, and every change is
     sent to the app ("store"), which keeps it for that page — so a tracker or a checklist made in Chat works like a small app. */
+const PASS_MARK_HTML = "ALL TESTS PASSED";   // = code.js PASS_MARK
 export function htmlDoc(src, token, opts = {}) {
+  // v6.47: in the test run each <script type="text/attune-test"> becomes a plain inline function the runner calls in order
+  // (the page's CSP has no 'unsafe-eval', so the checks cannot be built from text inside the frame)
+  if (opts && opts.test) src = String(src).replace(/<script[^>]*type=["']text\/attune-test["'][^>]*>([\s\S]*?)<\/script>/gi, (m, body) =>
+    `<script>(window.__attuneTests=window.__attuneTests||[]).push(async function(fill,click,text,exists,wait,assert,assertEqual){${body}\n});</script>`);
   const keep = opts && opts.store && typeof opts.store === "object" ? opts.store : null;
   const csp = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:";
   const hook = `<meta http-equiv="Content-Security-Policy" content="${csp}"><script>(function(){var T=${JSON.stringify(String(token))};` +
@@ -126,6 +131,16 @@ export function htmlDoc(src, token, opts = {}) {
     `var L=console.log;console.log=function(){send("log",[].slice.call(arguments).join(" "));try{L.apply(console,arguments)}catch(e){}};` +
     `var E=console.error;console.error=function(){send("error",[].slice.call(arguments).join(" "));try{E.apply(console,arguments)}catch(e){}};` +
     `window.alert=function(m){send("log","alert: "+m)};window.addEventListener("load",function(){setTimeout(function(){send("loaded","")},50)});` +
+    // v6.47 (VISION phase 5: "Attune builds tools, tests them"): a page's own <script type="text/attune-test"> checks run only in the
+    // test run (runHtml), never in the preview or a saved page — they fill the boxes, press the buttons and compare what shows
+    (opts && opts.test ? `window.addEventListener("load",function(){setTimeout(function(){if(!(window.__attuneTests||[]).length)return;` +
+      `function q(s){var el=document.querySelector(s);if(!el)throw new Error("Test: nothing matches "+s);return el}` +
+      `var H={fill:function(s,v){var el=q(s);el.value=v;el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}))},` +
+      `click:function(s){q(s).click()},text:function(s){return (q(s).textContent||q(s).value||"").trim()},exists:function(s){return !!document.querySelector(s)},` +
+      `wait:function(ms){return new Promise(function(r){setTimeout(r,ms||50)})},` +
+      `assert:function(c,w){if(!c)throw new Error("Test failed: "+(w||"a check"))},` +
+      `assertEqual:function(a,b,w){var x=typeof b==="number"?parseFloat(String(a).replace(/[^0-9.\\-]/g,"")):String(a).trim();if(typeof b==="number"?Math.abs(x-b)>1e-6:x!==String(b).trim())throw new Error("Test failed: "+(w||"a check")+" — expected "+b+", got "+a)}};` +
+      `var T=window.__attuneTests||[];(async function(){for(var i=0;i<T.length;i++)await T[i](H.fill,H.click,H.text,H.exists,H.wait,H.assert,H.assertEqual)})().then(function(){send("log","${PASS_MARK_HTML}")},function(e){send("error",(e&&e.message)||String(e))})},120)});` : "") +
     // v5.17: a page shown in a srcdoc frame resolves "#menu", "index.html" and a
     // form's submit against the APP's address — tapping one loaded Attune itself
     // inside the preview ("as if I opened it for the first time"). Links and
@@ -143,7 +158,7 @@ export function htmlDoc(src, token, opts = {}) {
 }
 
 /** Load a web page in a hidden locked iframe for a moment and report its errors. */
-export function runHtml(code, waitMs = 1500) {
+export function runHtml(code, waitMs = /text\/attune-test/.test(String(code)) ? 2500 : 1500) {
   return new Promise((resolve) => {
     const token = "t" + Math.random().toString(36).slice(2);
     const errors = [], logs = [];
@@ -157,7 +172,7 @@ export function runHtml(code, waitMs = 1500) {
       if (d.kind === "error") errors.push(d.text); else if (d.kind === "log") logs.push(d.text); else if (d.kind === "loaded") loaded = true;
     };
     window.addEventListener("message", onMsg);
-    f.srcdoc = htmlDoc(code, token);
+    f.srcdoc = htmlDoc(code, token, { test: true });
     document.body.appendChild(f);
     setTimeout(() => {
       window.removeEventListener("message", onMsg);

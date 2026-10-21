@@ -75,6 +75,8 @@ export function countTests(code, lang) {
   const s = String(code || "");
   if (lang === "python") return (s.match(/^\s*assert\b/gm) || []).length;
   if (lang === "javascript") return (s.match(/\bassert(Equal)?\s*\(/g) || []).length;
+  // v6.47: a page's own checks, in <script type="text/attune-test"> (run by sandbox.js runHtml)
+  if (lang === "html") return [...s.matchAll(/<script[^>]*type=["']text\/attune-test["'][^>]*>([\s\S]*?)<\/script>/gi)].reduce((n, m) => n + (m[1].match(/\bassert(Equal)?\s*\(/g) || []).length, 0);
   return 0;
 }
 
@@ -281,7 +283,11 @@ export function judge(res, code, lang) {
   const tests = countTests(code, lang);
   if (res.timedOut) return { passed: false, tests, reason: "timeout" };
   if (!res.ok) return { passed: false, tests, reason: "error" };
-  if (lang === "html") return { passed: !(res.errors && res.errors.length), tests, reason: res.errors && res.errors.length ? "error" : "ok" };
+  if (lang === "html") {
+    if (res.errors && res.errors.length) return { passed: false, tests, reason: "error" };
+    if (tests > 0 && !String(res.stdout || "").includes(PASS_MARK)) return { passed: false, tests, reason: "no-pass-mark" };
+    return { passed: true, tests, reason: tests ? "tests" : "ok" };
+  }
   if (tests > 0 && !String(res.stdout || "").includes(PASS_MARK)) return { passed: false, tests, reason: "no-pass-mark" };
   return { passed: true, tests, reason: tests ? "tests" : "no-tests" };
 }
@@ -313,6 +319,8 @@ Quality bar — it must look and feel like a finished, professional product:
 - The page opens in its clean initial state: never click buttons, run a demo or fill logs automatically on load. Anything shown in a log/list comes from the user's own actions.
 - State kept in localStorage when the user would expect it to persist (lists, settings, scores); wrap it in try/catch.
 - No alert(), prompt() or confirm(); show messages in the page. No console errors.
+- A tool, calculator, tracker or form: give the main inputs, buttons and results ids, and END the file with its own checks in <script type="text/attune-test"> (Attune runs them; the page never runs them itself). Inside, use only fill("#id", "value"), click("#id"), text("#id"), exists("#id"), await wait(ms), assert(cond, "what"), assertEqual(actual, expected, "what") — 2 to 5 checks that real use gives the right result, e.g.:
+<script type="text/attune-test">fill("#price","200");fill("#qty","3");click("#calc");assertEqual(text("#total"),600,"total");</script>
 Keep it compact so it fits in one answer: CSS rules short and shared (no repeated blocks), no comments.
 Reply with ONE \`\`\`html code block holding the whole file. No explanation before it; after it at most two short sentences.`;
 

@@ -13,13 +13,19 @@ import { AR } from "./i18n-ar.js";
 import { FR } from "./i18n-fr.js";
 import { ES } from "./i18n-es.js";
 import { TRK } from "./i18n-tr.js";
+import { PT } from "./i18n-pt.js";
+import { HI } from "./i18n-hi.js";
+import { IDN } from "./i18n-id.js";
+import { UR } from "./i18n-ur.js";
 
 export const LANG_KEY = "attune:ui:lang";
 /** v6.32 more interface languages (roadmap: "more UI languages after English + Arabic"). [id, its own name, locale for dates and
     numbers]. Arabic is complete; the others cover the screens people see first and show English where a line has no translation
     yet (tests/unit/v736langs.test.mjs measures each one's share). A new language = a dictionary file + one row here. */
-export const LANGS = [["en", "English", "en-US"], ["ar", "العربية", "ar-EG-u-nu-latn"], ["fr", "Français", "fr-FR"], ["es", "Español", "es-ES"], ["tr", "Türkçe", "tr-TR"]];
-const DICTS = { ar: AR, fr: FR, es: ES, tr: TRK };
+export const LANGS = [["en", "English", "en-US"], ["ar", "العربية", "ar-EG-u-nu-latn"], ["fr", "Français", "fr-FR"], ["es", "Español", "es-ES"], ["tr", "Türkçe", "tr-TR"],
+  // v6.47 (VISION phase 4): Portuguese (Brazil), Hindi, Indonesian, Urdu (right-to-left, like Arabic)
+  ["pt", "Português", "pt-BR"], ["hi", "हिन्दी", "hi-IN-u-nu-latn"], ["id", "Bahasa Indonesia", "id-ID"], ["ur", "اردو", "ur-PK-u-nu-latn"]];
+const DICTS = { ar: AR, fr: FR, es: ES, tr: TRK, pt: PT, hi: HI, id: IDN, ur: UR };
 const RTL = new Set(["ar", "ur", "fa", "he"]);
 const known = (l) => LANGS.some((x) => x[0] === l);
 

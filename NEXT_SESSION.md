@@ -757,6 +757,24 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AP. 21 Oct 2026 — v6.47 (HANDOFF §5.98). Read this first, then AO.
+Ali: "I want to do the rest of the visions" (VISION.md). Built phases 2, 4 and 5 (phase 1 is his phone + Google setup; phase 3
+release is "not now").
+### Ali's phone checklist (v6.47)
+1. ⬜ More → Settings → Your country → Egypt (or "Yes, I live in Egypt"): EGP · VAT 14% · Fri · Sat · Police 122 · the next
+   holidays → "All the holidays" (Eid / Sham el-Nessim dates — tell Claude if a date is off by a day).
+2. ⬜ Home → Your day: doses at their time, today's payments, the lesson, a holiday the day before ("Tomorrow: …").
+3. ⬜ Fleet → a cheque due on a holiday → Home's Right now says "Banks are closed today — it clears on …".
+4. ⬜ Settings → language → Português / हिन्दी / Bahasa Indonesia / اردو (Urdu right-to-left) → back to العربية.
+5. ⬜ Code → "a web page: crane rental quote — daily rate × days" → the steps show its own checks running ("Passed its tests").
+### Waiting for Ali (his choice)
+- **Family circle** (phase 4): how a family shares lists, money and health — options in Claude's message of 21 Oct.
+- **Business in dark mode**: keep it light always, or follow the app's theme.
+- **First 10 minutes**: How to use already plays every guide with sample data; a "sample life" inside the real apps was
+  not built (it would mix with the person's own records) — Ali decides.
+### Still open
+Studio reflections, eraser on the NPU, release prep (not now), Google Cloud setup (Ali).
+
 ## AO. 21 Oct 2026 — v6.46 (HANDOFF §5.97). Read this first, then AN.
 Ali's first phone round on v6.45: "scouting is absolutely useless", translation + calling don't work (offline voice
 language not installed, no way to install), "when I generated a photo the mobile restarted", the builder took forever on a

@@ -139,7 +139,7 @@ export const DEMOS = {
   memory: { in: "photo", say: S("A photo of the car licence", "صورة رخصة العربية"), title: S("Filed: Car · dates", "اتحفظت: العربية · مواعيد"),
     lines: [L("Licence ends", "الرخصة بتخلص", "14 Feb 2027"), L("Plate", "اللوحة", "س ب ع 482"), L("#tags", "#وسوم", "#car #papers")],
     act: [S("Remind me", "فكّرني"), S("Ask Chat about it", "اسأل الشات عنها")], note: S("Search it later in your own words.", "دوّر عليها بعدين بكلامك.") },
-  library: { in: "file", say: S("The Crane Keeper.pdf → Remember", "حارس الونش.pdf ← افتكر"), title: S("Chapter 3: The Lift", "الفصل التالت: الرفعة"),
+  remember: { in: "file", say: S("The Crane Keeper.pdf → Remember", "حارس الونش.pdf ← افتكر"), title: S("Chapter 3: The Lift", "الفصل التالت: الرفعة"),
     lines: [L("What happens", "اللي بيحصل", S("The 200 t beam is lifted on Friday", "العمود اللي وزنه 200 طن بيترفع يوم الجمعة")), L("Who", "مين", S("Omar signals, Hassan lifts", "عمر بيشاور، وحسن بيرفع")), L("From", "من", S("your own copy · 3 chapters", "نسختك · 3 فصول"))],
     act: [S("Ask more", "اسأل تاني"), S("Forget it", "انساه")], note: S("Books, articles and news you give it — answered from your copy.", "الكتب والمقالات والأخبار اللي بتديهاله — الإجابة من نسختك.") },
   news: { in: "pick", say: S("Topics: cranes · gold · Egypt economy", "المواضيع: أوناش · دهب · اقتصاد مصر"), title: S("This morning · 5 stories", "الصبح ده · 5 أخبار"),
@@ -205,7 +205,7 @@ export const GOALS = [
   { id: "business", title: S("Run my business", "أدير شغلي"), tools: ["missions", "business", "crane", "field", "slides"] },
   { id: "money", title: S("Save money", "أوفّر فلوس"), tools: ["say", "money", "deal", "guardian", "life", "automations"] },
   { id: "health", title: S("Eat better, stay well", "آكل أحسن وأفضل كويس"), tools: ["fit", "care", "health", "cycle"] },
-  { id: "learn", title: S("Learn and study", "أتعلم وأذاكر"), tools: ["coach", "learn", "library", "pdfchat", "translate"] },
+  { id: "learn", title: S("Learn and study", "أتعلم وأذاكر"), tools: ["coach", "learn", "remember", "pdfchat", "translate"] },
   { id: "daily", title: S("Daily life", "حياتي اليومية"), tools: ["home", "reminders", "recall", "scout", "metro", "map"] },
   { id: "create", title: S("Make things", "أعمل حاجات"), tools: ["chat", "studio", "convert", "code", "cv"] },
 ];
