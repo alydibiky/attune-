@@ -757,6 +757,25 @@ food Add sheet minimal.
 4. Quant bench results for 2B / 0.8B / 9B → change the default files if one is clearly better (as Core Lite → IQ4_NL).
 3. Everything still open in section X (minimal Business / Studio / Learn screens, FR/ES/TR, Windows smoke test, quant bench, release list).
 
+## AQ. 22 Oct 2026 — v6.48 (HANDOFF §5.99, plan `CHAT_RUNS_APP.md`). Read this first, then AP.
+Ali's idea: "make chat responsible for most things in the app" — he picked Home option A. All ten steps built and tested.
+### Ali's phone checklist (v6.48)
+1. ⬜ Home box: type `/` → the list. `/translate to Turkish good morning`, `/humanize …`, attach a Word file → `/convert to pdf`
+   → "Working on it" cards with progress → Copy / Save.
+2. ⬜ No slash: "where is the umbrella" → "What did you mean?" (map / where I keep it) → tick one. Do it twice → it stops asking.
+3. ⬜ "add buy milk to my to-do list" → "what's in my to-do list?" → tick it. Mind shows the to-dos with ticks.
+4. ⬜ "remember my passport is in the drawer", later "… on the desk" → "not in the drawer any more?" → Yes. "where do I usually
+   keep my passport?" → the counts.
+5. ⬜ Attach a video or a voice recording → `/remember as …` → later `/find <words said in it>` → Mind plays it from that second
+   (Android 13+, offline speech pack).
+6. ⬜ "I want to go to Cairo Tower" → the map card → Show it on the map. Chat: "I want to go to …" → the map card too.
+7. ⬜ The box's Web and Translate options; Chat's + menu → "Translate my messages".
+8. ⬜ `/travel Turkey` → the trip page, pinned on Home until it ends (End trip).
+9. ⬜ Video → "Subtitles for a video on this phone" (or `/subtitles` with a video attached) → the .srt on Home.
+10. ⬜ The sidebar has Shelf under Home.
+### Still waiting for Ali
+Family circle (A/B/C), Business in dark mode, sample data — from AP.
+
 ## AP. 21 Oct 2026 — v6.47 (HANDOFF §5.98). Read this first, then AO.
 Ali: "I want to do the rest of the visions" (VISION.md). Built phases 2, 4 and 5 (phase 1 is his phone + Google setup; phase 3
 release is "not now").

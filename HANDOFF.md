@@ -2452,6 +2452,28 @@ Phase 1 is Ali's (phone tests, Google setup, Fleet in his company); phase 3 (Pla
 - Design audit (phase 2): 13 main screens screenshotted at phone size — one header, tab row and card style everywhere;
   Business stays light in dark mode (a look-and-feel choice → asked Ali).
 
+### 5.99 (22 Oct 2026) — v6.48: Chat runs the app (Ali's idea; Home option A; plan + ticks in `CHAT_RUNS_APP.md`)
+Ali: "make chat responsible for most things in the app": `/convert`, `/humanize`, `/translate`, `/scout`, `/travel` from the Home box,
+only the progress on Home; no slash + two meanings → ask with two options and learn; Web + Translate as options; memory in Mind
+(`/remember` photos, videos, recordings; `/find`); to-dos; Maps/Metro from chat; where things are (asks if it moved; usual place by
+count); Shelf in the sidebar; subtitles from any video.
+- **Pure code:** `commands.js` (the `/` list in English + Egyptian Arabic, `parseCommand`, `guess` from the tools' own readers,
+  `decide` → ask when two are within 0.15, `learn` → stops asking after the same answer twice, `attune:intent:prefs`),
+  `cmdrun.js` (`route` → one outcome), `jobs.js` (queue: one heavy model job at a time, kept across restarts without big files),
+  `whereis.js`, `mediastore.js` (IndexedDB "attune-media", ≤ 300 MB per file; `sendToApp` chunks a file to the app).
+- **Shared converter:** `convert-run.js` holds the conversion moved out of `convert-ui.jsx` (the page and `/convert` run the same
+  code; the converter e2e suites still pass).
+- **Screens:** `cmdbox-ui.jsx` (slash list, attachments, Web/Translate options, ask card, confirm, lines, to-dos, map card, found,
+  job cards, pinned trip); `home-ui.jsx` wires them (minimal Home + `cmd`); `attune.jsx` builds `cmd` (api readers, Mind, travel,
+  map, metro, save, copy) and the runners (convert, humanize, translate, remember, subtitles) and `cmdLocal` (the same memory
+  actions in Chat, as cards); `chat.jsx` Translate mode (+ menu) and memory cards; `mind-ui.jsx` plays a kept video/recording from
+  the found second and ticks to-dos; `video-ui.jsx` "Subtitles for a video on this phone"; `mapintent.js` "I want to go to …".
+- **Native:** `Subtitles.kt` decodes any Uri; `NativeBridge.kt` `cacheAppend` (pieces → cache/media-in) and `subtitlesFile`.
+- **S10:** kept photos / recordings go through Mind's promise reader (Pro); "a year ago today you kept …" in Attune noticed.
+- Sidebar: Shelf row under Home (`HUB_PLACES`). Home's old "remember …" notes now go to Mind through the new router (a plain note no
+  longer competes with to-dos / where things are).
+- Tests: unit `v748commands`, `v748cmdrun`, `v748jobs`, `v748where`; e2e `e2e_v748commands.py`, `e2e_v748chat.py`.
+
 ### 5.39 v6.11 (3 Oct 2026) — release candidate: what this session built and measured
 - **Built and tested:** Skills v2 (checklist / facts / offline script / SKILL.md), CV builder + "Edit or improve", Business books (finance core + UI + documents), 25,280 generated recipes (`fit-recipegen.js`) + 148 hand-written, offline food pack (`foodpack.js`, `tools/build_food_pack.py`, workflow `food-pack.yml`, release `food-pack-v1`; ~902k products from Open Food Facts; the USDA merge probes the dated file name), **Ask a PDF** (`docqa.js`, `pdfchat-ui.jsx`; native `pdfText` has a `textOnly` fast path), converter fidelity on the real PDF, plans & billing page, engine lifecycle, exact-length rules, coding restart + date facts.
 - **Release switches:** developer mode (hidden 7 taps on the version number; `devMode()` in billing.js) — OFF by default; Yusr Premium test unlock removed. Tests run in developer mode via `tests/harness.py` (`release=True` = a customer phone; `tests/e2e_v620release.py`).
