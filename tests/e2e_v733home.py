@@ -25,7 +25,7 @@ with sync_playwright() as p:
     labels = [b.strip() for b in page.locator("nav button").all_inner_texts()]
     check(labels == ["Home", "Chat", "Money", "Scout", "Mind", "All"], "the bottom bar: Health → Scout: %s" % labels)
     w = page.locator("[data-testid=home-today]").inner_text()
-    check("attune suggests" in w.lower() and "2 new finds: a flat in Maadi" in w and "2 cards to review · lesson 2 — Turkish" in w, "What's waiting: Scout's new finds and the cards to review: " + w.replace("\n", " | "))
+    check("attune suggests" in w.lower() and "2 new finds:" in w and "flat in Maadi" in w and "2 cards to review · lesson 2 — Turkish" in w, "What's waiting: Scout's new finds and the cards to review: " + w.replace("\n", " | "))
     r = page.locator("[data-testid=home-recent]").inner_text()
     check(r.index("Learn daily") < r.index("Scout") and "Review 2 cards · Lesson 2" in r and "2 new finds" in r, "Recent: the last tools used, first the latest, each with what waits there")
     check(page.locator("[data-testid^=home-recent-]").count() == 4 and page.locator("[data-testid=home-areas]").count() == 0, "four recent tools (filled with useful ones); the old tiles are gone")

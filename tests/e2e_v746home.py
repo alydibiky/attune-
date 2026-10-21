@@ -26,7 +26,7 @@ with sync_playwright() as p:
             now = page.inner_text("[data-testid=home-now]")
             check(page.get_attribute("[data-testid=home-now]", "data-kind") == "chequeOverdue" and "100245" in now and "40,000" in now, "RIGHT NOW: the overdue cheque 100245 (40,000) — " + now.replace("\n", " ")[:120])
             check(page.locator("[data-testid=home-num-cranes]").count() == 1 and "2 / 3" in page.inner_text("[data-testid=home-num-cranes]"), "the numbers: 2 / 3 cranes out")
-            check(page.locator("[data-testid=home-line-fleet]").count() >= 1 and "Your day" in page.inner_text("[data-testid=home-line]"), "YOUR DAY: the Fleet lines")
+            check(page.locator("[data-testid=home-line-fleet]").count() >= 1 and "your day" in page.inner_text("[data-testid=home-line]").lower(), "YOUR DAY: the Fleet lines")
             check(page.get_attribute("[data-testid=home-noticed]", "data-k") == "crane" and "free" in page.inner_text("[data-testid=home-noticed]"), "Attune noticed: the free crane")
             page.click("[data-testid=home-now-cleared]"); page.wait_for_timeout(600)
             st = page.evaluate(READ)

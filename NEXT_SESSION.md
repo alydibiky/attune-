@@ -770,6 +770,13 @@ clinic, his log (page 6.42, getSource error, GenService crash). All fixed; he ag
    Arabic pack (then try again). The call fills the whole screen.
 4. ⬜ Business → New → "I run a clinic with appointments" → Design → the system appears at once.
 5. ⬜ More → the version line says 6.46 for both.
+6. ⬜ Home (Ali picked option A, design canvas 21 Oct): **Right now** (the one thing that matters most, with its buttons —
+   "It cleared" / "Bounced" on a Fleet cheque, "Paid" on a bill) · the **numbers** (spend today, calories, cranes out, the
+   goal) · **Your day** · **Attune noticed** (one thing: spending past the safe amount, a goal behind, a free crane and who
+   hired it before, new Scout finds). Under the box: Chat · Call · Translate · Your life · Remember, and a mic.
+7. ⬜ Home → Remember (also More → Mind & learning): add a book (PDF / Word / EPUB), a web page (the news) or paste text →
+   "Remembered … — N chapters" → Ask → Chat: "what happens in chapter 3?" / «إيه اللي بيحصل في الفصل التالت؟» → the answer
+   comes from that chapter's own text (a long chapter is read part by part). Knowledge (the packs) stays hidden — yours only.
 ### Still open
 Studio reflections (dedicated model), eraser on the NPU, release prep (not now), Google Cloud setup (Ali).
 

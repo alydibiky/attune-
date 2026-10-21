@@ -2408,6 +2408,24 @@ Ali also agreed the vision page ("let's do it with each other") — VISION.md is
 - Whisper Egyptian-Arabic voice; "Ask your documents" (on-device RAG); fingerprint lock for Money/Cycle; crane chart import from a photo.
 
 
+
+**Home option A + "Remember" (Ali: "do A and integrate in it the new chat like translate… remove knowledge to be visible to
+users… make users upload something for the system to remember… 'what happens in this chapter'").**
+- `web-src/home-now.js` (pure, `tests/unit/v746home.test.mjs`): `nowCard` (bad Fleet warnings → late needs → cheque due
+  today → due today / dose / low → the rest), `homeNumbers` (spend · kcal · cranes · goal, only the ones with data),
+  `noticed` (overspend, goal < 50 %, a free crane + its past clients, Scout finds). `home-ui.jsx` renders them
+  (`home-now`, `home-num-*`, `home-line`, `home-noticed`) with Chat's tools under the box (`home-chat-tools`: chat, call
+  (`composerSeed "\u0003call"`), translate, life, remember) and a mic; buttons act for real (`setChequeStatus` → Fleet,
+  `tickRegular` / `payRadar`). `missions-ui.jsx useTopMission()` feeds the goal.
+- `web-src/library.js` (pure, `tests/unit/v746library.test.mjs`): chapters found by code (English, Roman, words, Egyptian
+  Arabic ordinals; a table of contents is skipped — the last heading per number wins), `askedChapter`, `chapterText`,
+  `pickItem`, `chapterPlan` (whole chapter ≤ 6000 chars, else notes per part then the answer). `library-ui.jsx` =
+  the Remember page (file / web page / paste → knowledge store collection `mine`). `knowledge.js` keeps `chapters`, adds
+  `textOf(id)`; `chat.jsx` answers chapter questions from the chapter before the normal fact lookup. Packs stay dev-only.
+- Tests: `e2e_v746home.py` (Right now = the overdue cheque, 2 / 3 cranes, Your day Fleet lines, "It cleared" saves),
+  `e2e_v746library.py` (paste a 3-chapter book → chapter 3 asked → the model gets chapter 3, not 2 → Forget; Knowledge
+  not in All tools).
+
 ### 5.39 v6.11 (3 Oct 2026) — release candidate: what this session built and measured
 - **Built and tested:** Skills v2 (checklist / facts / offline script / SKILL.md), CV builder + "Edit or improve", Business books (finance core + UI + documents), 25,280 generated recipes (`fit-recipegen.js`) + 148 hand-written, offline food pack (`foodpack.js`, `tools/build_food_pack.py`, workflow `food-pack.yml`, release `food-pack-v1`; ~902k products from Open Food Facts; the USDA merge probes the dated file name), **Ask a PDF** (`docqa.js`, `pdfchat-ui.jsx`; native `pdfText` has a `textOnly` fast path), converter fidelity on the real PDF, plans & billing page, engine lifecycle, exact-length rules, coding restart + date facts.
 - **Release switches:** developer mode (hidden 7 taps on the version number; `devMode()` in billing.js) — OFF by default; Yusr Premium test unlock removed. Tests run in developer mode via `tests/harness.py` (`release=True` = a customer phone; `tests/e2e_v620release.py`).
