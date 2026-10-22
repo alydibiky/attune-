@@ -394,7 +394,7 @@ export function MindPage({ records, remember, update, forget, togglePin, search,
             <Search size={15} className="text-slate-500" />
             <input value={q} onChange={(e) => { setQ(e.target.value); setAnswer(null); }} dir="auto" data-testid="mind-search"
               onKeyDown={(e) => { if (e.key === "Enter" && looksLikeQuestion && pro) doAsk(q); }}
-              placeholder={tr("Search or ask — “crane photos last month”, «لينكات الونش»")}
+              placeholder={tr("Search or ask — “wedding photos last month”, «لينكات الشقة»")}
               className="flex-1 bg-transparent py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none" />
             {q ? <button onClick={() => { setQ(""); setAnswer(null); }} className="text-slate-500"><X size={14} /></button> : null}
           </div>

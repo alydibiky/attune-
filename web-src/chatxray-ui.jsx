@@ -251,7 +251,7 @@ export function ChatXRay({ llm, flash, openEngine, modelReady, pro, openPlan, sc
             <div className="space-y-2">
               <div className="flex gap-2">
                 <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} dir="auto" data-testid="xray-q"
-                  placeholder={tr("e.g. What price did we agree for the 50 t crane?")} className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-[13.5px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
+                  placeholder={tr("e.g. What price did we agree for the wedding photographer?")} className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-[13.5px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500" />
                 {asking ? <button onClick={() => { askRun.current++; setAsking(false); }} className="shrink-0 px-3 rounded-xl border border-rose-800 text-rose-200 text-sm flex items-center gap-1.5" data-testid="xray-ask-stop"><Loader2 size={14} className="animate-spin" />{tr("Stop")}</button>
                   : <button onClick={ask} disabled={!q.trim()} className="shrink-0 px-4 rounded-xl bg-teal-500 text-slate-950 font-semibold text-sm disabled:opacity-40" data-testid="xray-ask">{tr("Ask")}</button>}
               </div>

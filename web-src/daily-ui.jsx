@@ -2,6 +2,7 @@
    The logic is in daily.js; this file is the screens, the daily
    notifications (one repeating notification per course / topic, id
    "daily-learn-…" / "daily-news-…") and the home-screen widget's text.    */
+import { neutral } from "./industry.js";   // v6.50 a neutral app
 import React, { useState, useEffect, useRef } from "react";
 import { GraduationCap, Newspaper, Plus, Trash2, ChevronLeft, ChevronRight, Check, X, Loader2, Bell, RefreshCw, Sparkles, ImageIcon, CheckCircle2, AlertTriangle, Clock, Layers, BookOpen, HelpCircle } from "lucide-react";
 import { getLang, tr } from "./i18n.js";
@@ -351,7 +352,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
       <div className="space-y-2 min-w-0 lg:col-start-2 lg:row-start-1">
         <p className="c-lbl">{tr("Ready courses")}</p>
         <div className="c-list" data-testid="learn-ready">
-          {D.READY_COURSES.map((r) => (
+          {neutral(D.READY_COURSES, "courses").map((r) => (
             <button key={r.id} onClick={() => startReady(r.id)} data-testid={"learn-ready-" + r.id} className="w-full text-start p-3 flex items-center gap-3">
               <span className="text-2xl">{r.emoji}</span>
               <span className="min-w-0 flex-1"><b className="block text-[14px]">{r.title[getLang() === "ar" ? 1 : 0]}</b>
@@ -365,9 +366,9 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
       <div className="c-card space-y-3 mt-4 lg:mt-0 lg:col-start-1 lg:row-start-1 lg:sticky lg:top-4">
         <p className="c-lbl">{tr("Or any topic you like")}</p>
         <input value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })} className={cField} style={cf} dir="auto" placeholder={tr("A language, a skill, a subject…")} data-testid="learn-topic" />
-        <div className="flex flex-wrap gap-1.5">{["Turkish", "English", "Crane hydraulics", "Excel & Power Automate", "Java", "Economics", "Tajweed"].map((x) =>
+        <div className="flex flex-wrap gap-1.5">{["Turkish", "English", "Photography", "Excel & Power Automate", "Java", "Economics", "Tajweed"].map((x) =>
           <button key={x} onClick={() => setForm({ ...form, topic: tr(x) })} className="text-[12px] rounded-full border px-2.5 py-1" style={gs}>{tr(x)}</button>)}</div>
-        <textarea value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })} rows={2} className={cField} style={cf} dir="auto" placeholder={tr("Your goal (optional) — e.g. speak like a native, pass an exam, understand my cranes")} />
+        <textarea value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })} rows={2} className={cField} style={cf} dir="auto" placeholder={tr("Your goal (optional) — e.g. speak like a native, pass an exam, understand my car")} />
         <div className="grid grid-cols-2 gap-2">
           <label className="block"><span className="c-sub block mb-1">{tr("Level")}</span>
             <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className={cField} style={cf}>{D.LEVELS.map((l) => <option key={l} value={l}>{tr(l[0].toUpperCase() + l.slice(1))}</option>)}</select></label>
@@ -613,7 +614,7 @@ export function LearnPage({ llm, modelReady, openEngine, flash, native, call, op
       </> : <>
         <p className="c-lbl m-0">{tr("Ready courses")}</p>
         <div className="c-list">
-          {D.READY_COURSES.map((r) => (
+          {neutral(D.READY_COURSES, "courses").map((r) => (
             <button key={r.id} onClick={() => startReady(r.id)} data-testid={"learn-start-" + r.id} className="w-full text-start p-3 flex items-center gap-3">
               <span className="text-2xl">{r.emoji}</span><b className="flex-1 text-[14px]">{r.title[getLang() === "ar" ? 1 : 0]}</b><ChevronRight size={16} className="c-acc rtl:-scale-x-100" /></button>))}
         </div>
@@ -759,7 +760,7 @@ export function NewsPage({ llm, modelReady, openEngine, flash, native, nativeCal
       {adding ? (
         <div className={"rounded-xl border border-teal-800 bg-slate-900 p-3 space-y-2" + (side ? "" : " lg:max-w-xl")} data-testid="news-add">
           <input value={form.query} onChange={(e) => setForm({ ...form, query: e.target.value })} className={field} dir="auto" placeholder={tr("e.g. Al Ahly, Mohamed Salah, Egypt economy")} data-testid="news-query" autoFocus />
-          <div className="flex flex-wrap gap-1.5">{["Al Ahly", "Mohamed Salah", "Premier League", "Egypt economy", "Gold price", "AI", "Crane industry"].map((x) =>
+          <div className="flex flex-wrap gap-1.5">{["Al Ahly", "Mohamed Salah", "Premier League", "Egypt economy", "Gold price", "AI", "Real estate"].map((x) =>
             <button key={x} onClick={() => setForm({ ...form, query: tr(x) })} className="text-[12px] rounded-full border border-slate-700 text-slate-300 px-2.5 py-1">{tr(x)}</button>)}</div>
           <div className="grid grid-cols-2 gap-2">
             <select value={form.lang} onChange={(e) => setForm({ ...form, lang: e.target.value })} className={field}><option value="en">English</option><option value="ar">العربية</option></select>

@@ -502,7 +502,7 @@ export function StudioPage({ native, nativeCall, nativeLastId, llm, chatReady, e
           </div>
         ) : null}
         <textarea value={idea} onChange={(e) => setIdea(e.target.value)} rows={3} dir="auto" data-testid="studio-idea"
-          placeholder={mode === "edit" ? tr("What should change? e.g. “make it night, with the site lights on”") : tr("Describe the picture, in Arabic or English — e.g. “a Liebherr crane lifting a bridge beam at sunset”")}
+          placeholder={mode === "edit" ? tr("What should change? e.g. “make it night, with the street lights on”") : tr("Describe the picture, in Arabic or English — e.g. “a felucca on the Nile at sunset”")}
           className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder:text-slate-600" />
         {mode === "create" ? (
           <>

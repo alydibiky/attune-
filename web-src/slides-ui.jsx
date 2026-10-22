@@ -598,7 +598,7 @@ export function SlidesReports({ llm, webPages, nativeCall, saveFile, flash, mode
             <button onClick={() => setTab("report")} className={chip(tab === "report") + " flex items-center justify-center gap-1.5"} data-testid="slides-tab-report"><FileText size={15} />{tr("Report")}</button>
           </div>
           <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} dir="auto" data-testid="slides-prompt"
-            placeholder={tab === "deck" ? tr("e.g. A pitch for our crane rental company to New Capital contractors: fleet, safety record, prices, why us") : tr("e.g. Monthly report on our crane fleet: utilisation, breakdowns, costs and what to fix next month")}
+            placeholder={tab === "deck" ? tr("e.g. A pitch for our café to offices in New Cairo: menu, catering, prices, why us") : tr("e.g. Monthly report on our clinic: patients, waiting times, costs and what to fix next month")}
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-[14px] text-slate-100 leading-relaxed" />
           <div className="space-y-2" data-testid="slides-sources">
             {webPages ? (

@@ -125,7 +125,7 @@ export function MissionsPage({ flash }) {
           className="w-full bg-transparent border rounded-xl p-3 text-[14px]" style={{ borderColor: "var(--c-ln)" }} />
         {text.trim() ? (parsed
           ? <p className="text-[12.5px] c-sub" data-testid="missions-read">{tr(READ[parsed.kind] || "Buy it for {t} or less", { t: n(parsed.target), c: tr(CAT_NAME[parsed.cat] || "everything") })}{parsed.deadline ? " · " + tr("by {d}", { d: parsed.deadline }) : " · " + tr("add a date (e.g. by June)")}</p>
-          : <p className="text-[12.5px] c-sub">{tr("Say a number and a date: save 60,000 by June · lose 6 kg before 20 January · buy … under 900k by 1 December · spend no more than 3,000 on food this month · pay off Ahmed's debt by December · finish the Turkish course by December · Fleet earns 500k this month.")}</p>) : null}
+          : <p className="text-[12.5px] c-sub">{tr("Say a number and a date: save 60,000 by June · lose 6 kg before 20 January · buy … under 900k by 1 December · spend no more than 3,000 on food this month · pay off Ahmed's debt by December · finish the Turkish course by December.")}</p>) : null}
         <div className="flex flex-wrap gap-1.5">
           {!text.trim() ? EXAMPLES.map(([en, a]) => <button key={en} className="c-pill" onClick={() => setText(ar ? a : en)} data-testid="missions-example">{ar ? a : en}</button>) : null}
           {text.trim() ? <button className="c-btn ms-auto" disabled={!parsed || !parsed.deadline} onClick={add} data-testid="missions-start">{tr("Start the mission")}</button> : null}
@@ -135,7 +135,7 @@ export function MissionsPage({ flash }) {
         <span>{tr("Your money missions need {a} a month together, but you keep about {b}. Pause one, or move a date.", { a: n(conflict.need), b: n(conflict.keep) })}</span></div> : null}
       {rows.length ? rows.map(({ m, e }) => <Card key={m.id} m={m} e={e} onChange={(x) => put(data.items.map((y) => (y.id === x.id ? x : y)))} onDelete={(x) => put(data.items.filter((y) => y.id !== x.id))}
         openScout={() => window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "scout" } }))} />)
-        : <p className="c-sub text-[13px] text-center py-6">{tr("No missions yet. Start one above — a saving goal, a weight goal, something to buy, a spending limit, a debt, a course, or a company goal for Fleet.")}</p>}
+        : <p className="c-sub text-[13px] text-center py-6">{tr("No missions yet. Start one above — a saving goal, a weight goal, something to buy, a spending limit, a debt or a course.")}</p>}
       <DecisionLab />
     </div>);
 }
@@ -166,7 +166,7 @@ function DecisionLab() {
   return (
     <div className="c-card space-y-3" data-testid="lifesim">
       <button onClick={() => setOpen((x) => !x)} className="w-full text-start flex items-center justify-between gap-2" data-testid="lifesim-open">
-        <span><b className="block text-[15px]">{tr("Test a big decision")}</b><span className="c-sub text-[12.5px]">{tr("Cash or installments, a new flat, a second crane — see 2,000 futures from your own money before you decide.")}</span></span>
+        <span><b className="block text-[15px]">{tr("Test a big decision")}</b><span className="c-sub text-[12.5px]">{tr("Cash or installments, a new flat, a second car — see 2,000 futures from your own money before you decide.")}</span></span>
         {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</button>
       {open ? <>
         <div className="grid sm:grid-cols-2 gap-2">{opts.map((o, i) => (

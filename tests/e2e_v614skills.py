@@ -26,7 +26,7 @@ def last_user(page):
 with sync_playwright() as p:
     br = p.chromium.launch()
     errors = []
-    ctx, page = new_page(br, env, errors)
+    ctx, page = new_page(br, env, errors, extra_init="try{localStorage.setItem('attune:uses:fleet','1')}catch(e){}")   # v6.50: the crane built-ins show to Fleet users
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     page.locator("header button:has-text('No model')").click()
     page.locator("text=Recommended for this device").locator("xpath=..").get_by_role("button", name="Install").first.click()

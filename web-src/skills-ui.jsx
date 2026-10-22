@@ -1,6 +1,7 @@
 /* ---- More → Skills: your own recipes for the AI ---------------------------------------------------------------------
    Create, import, share, switch on or off. A skill adds its instructions, the facts that fit and a checklist under your question; an optional small program runs offline in the locked sandbox.
    The logic is in userskills.js; this file is the screens.                                                          */
+import { neutral } from "./industry.js";   // v6.50 a neutral app
 import React, { useState, useEffect, useRef } from "react";
 import { Plus, Trash2, Share2, Download, Upload, Wand2, Check, X, ChevronLeft, Sparkles, Package } from "lucide-react";
 import { tr } from "./i18n.js";
@@ -61,10 +62,10 @@ function Editor({ skill, onSave, onClose, llm, modelReady, openEngine, flash }) 
       {/* v6.27 computer layout: the skill itself on the left, the optional extras on the right */}
       <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
       <div className="space-y-3 min-w-0">
-        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Name")}</span><input className={field} value={s.name} onChange={set("name")} data-testid="skill-name" placeholder={tr("e.g. Crane quote writer")} /></label>
+        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Name")}</span><input className={field} value={s.name} onChange={set("name")} data-testid="skill-name" placeholder={tr("e.g. Cake order writer")} /></label>
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Command (optional)")}</span><input className={field} value={s.command} onChange={set("command")} dir="ltr" data-testid="skill-command" placeholder="/quote" />
-          <span className="block text-[11px] text-slate-500 mt-1">{tr("Start a message with it to use this skill, e.g. “/quote 50 t crane for 3 days”.")}</span></label>
-        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("When to use it")}</span><textarea className={field + " resize-none"} rows={2} value={s.when} onChange={set("when")} data-testid="skill-when" placeholder={tr("Words that tell the app this skill fits: crane quote, price offer, rental…")} />
+          <span className="block text-[11px] text-slate-500 mt-1">{tr("Start a message with it to use this skill, e.g. “/quote 3 birthday cakes for Friday”.")}</span></label>
+        <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("When to use it")}</span><textarea className={field + " resize-none"} rows={2} value={s.when} onChange={set("when")} data-testid="skill-when" placeholder={tr("Words that tell the app this skill fits: cake order, price offer, delivery…")} />
           <span className="block text-[11px] text-slate-500 mt-1">{tr("The app uses these words to pick the skill by itself when your question fits.")}</span></label>
         <label className="block"><span className="block text-[12px] text-slate-400 mb-1">{tr("Instructions")}</span><textarea className={field + " resize-none"} rows={7} value={s.instructions} onChange={set("instructions")} data-testid="skill-instructions" placeholder={tr("What the AI should do: the structure of the answer, the tone, what to ask if something is missing…")} />
           <span className="block text-[11px] text-slate-500 mt-1" dir="ltr">{s.instructions.length} / {S.LIMITS.instructions}</span></label>
@@ -86,7 +87,7 @@ function Catalogue({ have, onAdd, onClose }) {
     <Sheet title={tr("Skill catalogue")} onClose={onClose} testid="skill-catalogue">
       <p className="text-[12.5px] text-slate-400 mb-3">{tr("Ready-made skills. Add one, then change it to fit your work.")}</p>
       <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-3">
-        {S.CATALOGUE.map((c) => {
+        {neutral(S.CATALOGUE, "skills").map((c) => {
           const added = have.some((x) => x.name === c.name);
           return (
             <div key={c.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3" data-testid="catalogue-item">

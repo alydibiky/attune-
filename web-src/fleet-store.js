@@ -4,6 +4,7 @@
    Never throws: save() returns true/false. The old crane app's lesson — never fail silently — is kept by the caller,
    which shows a red message when a save returns false.                                                               */
 import { heal } from "./fleet.js";
+import { markFleet } from "./industry.js";
 
 const DB = "attune-fleet", STORE = "kv", LS = "attune:fleet:";
 let _db = null;
@@ -44,7 +45,8 @@ async function del(key) {
 }
 
 export async function loadFleet() { const s = await get("state"); return s ? heal(s) : null; }
-export const saveFleet = (s) => put("state", s);
+// v6.50: saving cranes marks this person as a Fleet user (the crane built-ins then show — industry.js)
+export const saveFleet = (s) => { try { if (s && (s.cranes || []).length) markFleet(); } catch (e) {} return put("state", s); };
 export const wipeFleet = () => del("state");
 /** A file (photo / PDF) → its id. Full quality, no compression (Ali's choice for evidence). */
 export async function saveAttachment(file) {

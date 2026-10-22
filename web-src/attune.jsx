@@ -1127,14 +1127,14 @@ function recommendEngine(dev) {
    dialect and lets them judge the answer. This is the honest version of a
    benchmark: their sentences, their verdict, on their phone.                */
 const DIALECT_PROBES = [
-  { id: "eg1", ar: "الونش اتعطل في نص الشغل، اكتبلي رسالة للعميل أعتذر وأقوله هنعوّض اليوم",
-    en: "The crane broke down mid-job — write the client an apology and say we'll make the day up",
+  { id: "eg1", ar: "العربية عطلت وأنا رايح الشغل، اكتبلي رسالة للمدير أعتذر وأقوله هعوّض اليوم",
+    en: "My car broke down on the way to work — write my manager an apology and say I'll make the day up",
     checks: "Did it stay in Egyptian Arabic, or drift into formal MSA? Did it invent a reason for the breakdown?" },
-  { id: "eg2", ar: "لخصلي ده في سطرين: العميل عايز 3 ونشات يوم الخميس بس الدفع بعد أسبوعين",
-    en: "Summarise in two lines: client wants 3 cranes Thursday but payment in two weeks",
+  { id: "eg2", ar: "لخصلي ده في سطرين: العميل عايز 3 تورتات يوم الخميس بس الدفع بعد أسبوعين",
+    en: "Summarise in two lines: client wants 3 cakes Thursday but payment in two weeks",
     checks: "Two lines, both facts kept, nothing added?" },
-  { id: "eg3", ar: "إيه الفرق بين الونش البرجي والونش المتحرك؟ جاوب بالمصري",
-    en: "What's the difference between a tower crane and a mobile crane? Answer in Egyptian Arabic",
+  { id: "eg3", ar: "إيه الفرق بين الشهادة الثلاثية وحساب التوفير؟ جاوب بالمصري",
+    en: "What's the difference between a 3-year bank certificate and a savings account? Answer in Egyptian Arabic",
     checks: "Is the answer correct, and is it in dialect rather than textbook Arabic?" },
 ];
 // Storage-assist: what extra headroom paging to flash actually buys. It is real
@@ -10566,8 +10566,8 @@ export default function App() {
                   <div className="flex flex-wrap gap-1.5">
                     {[
                       ["A message", "Hi Ali,\nFollowing up on the quote we sent last week. Could you confirm the delivery date and whether the price includes installation? We need an answer by Thursday.\nBest,\nSara"],
-                      ["Arabic → summary", "لخصلي الرسالة دي بالانجليزي: العميل عايز ونش 50 طن يوم الخميس الساعة 7 الصبح في التجمع الخامس، والدفع نص مقدم ونص بعد الشغل"],
-                      ["A calculation", "3 cranes for 4 days at 12,500 EGP a day plus 14% VAT — what's the total?"],
+                      ["Arabic → summary", "لخصلي الرسالة دي بالانجليزي: العميلة عايزة تورتة لـ 30 فرد يوم الخميس الساعة 7 بالليل في التجمع الخامس، والدفع نص مقدم ونص بعد التسليم"],
+                      ["A calculation", "3 rooms for 4 nights at 1,850 EGP a night plus 14% VAT — what's the total?"],
                       ["Period log", "My period started 2 hours ago, it's heavy with cramps"],
                     ].map(([l, v]) => (
                       <button key={l} onClick={() => { setInText(v); setInResult(""); setInLogged(null); }}
@@ -11119,7 +11119,7 @@ export default function App() {
           <div className="grid md:grid-cols-2 gap-5">
             <section className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
               <div className="flex items-center justify-between mb-2"><label className="text-sm font-medium text-slate-300">{tr("Your prompt")}</label><button onClick={() => flash(tr("Voice input runs in the installed app"))} className="-m-2 p-2 rounded-full text-slate-500 hover:text-teal-400" title={tr("Voice (app build)")} aria-label={tr("Voice (app build)")}><Mic size={16} /></button></div>
-              <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder={tr("e.g. i need you to like maybe compare our cranes and stuff, the top ones, for lifting")} className="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
+              <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder={tr("e.g. i need you to like maybe compare laptops and stuff, the top ones, for uni")} className="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
               {input.trim() && (
                 <div className="mt-2">
                   <div className="flex items-center justify-between text-xs text-slate-500 mb-1"><span>{tr("Prompt strength")}</span><span>{strength.score}%</span></div>
@@ -11573,7 +11573,7 @@ function Upgrade({ tier, setTier, close, flash, trialLeft = 0 }) {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[14px] font-semibold text-white">🏗️ {tr("Business system")}</p>
-                <p className="text-[12px] text-slate-400 mt-0.5 leading-snug">{tr("A system built for your company (crane rental, trading, workshop…): unlimited records, Excel and app export.")}</p>
+                <p className="text-[12px] text-slate-400 mt-0.5 leading-snug">{tr("A system built for your company (a shop, a clinic, a workshop…): unlimited records, Excel and app export.")}</p>
               </div>
               <div className="text-end shrink-0">
                 <p className="text-[15px] font-bold text-white" dir="ltr">{shown("business")}</p>
@@ -11740,7 +11740,7 @@ function Onboard({ profile, setProfile, close, flash }) {
         ) : (
           <>
             <p className="text-sm font-medium text-slate-200 mb-2">{tr("Anything else worth knowing? (optional)")}</p>
-            <textarea value={p.detail} onChange={(e) => setP((x) => ({ ...x, detail: e.target.value }))} placeholder={tr("e.g. I run a crane rental company and deal with suppliers and lift planning")}
+            <textarea value={p.detail} onChange={(e) => setP((x) => ({ ...x, detail: e.target.value }))} placeholder={tr("e.g. I run a small bakery and deal with suppliers and wedding orders")}
               className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
             <div className="flex items-center justify-between mt-4 gap-2">
               <button onClick={() => setStep(step - 1)} className="text-sm text-slate-400 px-2 py-2">{tr("← Back")}</button>
@@ -11792,7 +11792,7 @@ function ProfileModal({ profile, setProfile, close, flash }) {
           </div>
         </div>
         <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">{tr("More about your work")}</p>
-        <textarea value={p.detail} onChange={(e) => set("detail", e.target.value)} placeholder={tr("e.g. I run a crane rental company; I write supplier RFQs and lift plans")}
+        <textarea value={p.detail} onChange={(e) => set("detail", e.target.value)} placeholder={tr("e.g. I run a small bakery; I write supplier orders and price lists")}
           className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
         <BookingDetails />
         {p.on && profileLine(p) ? <p className="text-[11px] text-teal-500/70 mt-2 border-l border-teal-900/60 ps-2">{tr("Applied to prompts:")} {profileLine(p).replace("About the user (use this to make the prompt specific and domain-aware, but never mention it): ", "")}</p> : null}
@@ -12069,7 +12069,7 @@ function NativeEnginePanel({ n, modelState, dlPct, flash }) {
         </div>
         <p className="text-[11px] text-slate-400 mt-3 mb-1">{tr("Standing instructions for every answer")}</p>
         <textarea value={sys} onChange={(ev) => setSys(ev.target.value)} onBlur={() => { n.updateEnginePrefs({ systemPrompt: sys }); }}
-          rows={3} placeholder={tr("e.g. You work for a crane-rental company in Egypt. Answer in Egyptian Arabic unless I write in English. Give lifting capacities in tonnes.")}
+          rows={3} placeholder={tr("e.g. I run a small shop in Egypt. Answer in Egyptian Arabic unless I write in English. Give prices in EGP.")}
           className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-600 resize-none focus:outline-none focus:border-teal-500" />
         <p className="text-[10px] text-slate-600 mt-1">{tr("Saved when you tap outside the box. Stays on this phone.")}</p>
       </div>

@@ -17,7 +17,7 @@ ok(tabsFor("fit").length === 0 && tabsFor("health").join() === "health,fit,care,
 ok(tabsFor("scout").join() === "learn,scout,memory,remember,news,map,metro,travel,knowledge", "Daily: Learn · Scout · Mind · Remember · News · Maps · Metro · Travel (+ Knowledge for Ali)");
 ok(tabsFor("metro").join() === tabsFor("scout").join() && hubOf("metro") === "learn", "v6.42: Metro is the tab next to Maps");
 ok(tabsFor("convert", ["convert", "pdfchat"]).join() === "convert,pdfchat", "a tool the device hides is not a tab");
-ok(tabsFor("business").join() === "business,fleet,crane,field,tools", "Work: Business · Fleet · Crane · Reports · Tools");
+ok(tabsFor("business").join() === "business,fleet,field,tools", "Work: Business · Team records · Reports · Tools (v6.50: the Crane toolkit lives inside Business → Fleet)");
 const inTools = TOOL_PAGES.flatMap((p) => p[3]);
 ok(inTools.join() === "improve,compress,humanize,copilot,library,video,ask" && inTools.every((m) => hubOf(m) === "tools") && ["video", "ask"].every((m) => tabsFor(m).length === 0), "Tools = choices: Writing, Video, Ask");
 ok(["improve", "compress", "humanize", "copilot", "library"].every((m) => tabsFor(m).join() === "improve,compress,humanize,copilot,library"), "v6.43: Writing is one page — Improve · Shorten · Humanize · Copilot · Prompt lab as its tabs");

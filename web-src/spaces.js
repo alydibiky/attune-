@@ -12,6 +12,7 @@
    - Themes: the app's colours come from Tailwind's CSS variables (--color-teal-300 …),
      so a theme swaps the variables on <html> — every screen follows, nothing is rewritten.
    Everything lives in localStorage under attune:* keys, so backups include it.         */
+import { neutral } from "./industry.js";
 import { brainOf, brainBlock } from "./projectbrain.js";
 
 export const ASSISTANTS_KEY = "attune:assistants:v1";
@@ -45,18 +46,18 @@ export const BUILTIN_ASSISTANTS = [
     starters: ["Let's practise: ask me about my day in Turkish", "Explain -miş past tense simply", "Correct this: Dün markete gidiyorum"] },
   { id: "a-web", emoji: "🌐", name: "Website builder", desc: "Complete, good-looking sites and tools from one prompt",
     instructions: "You build complete, professional single-file websites and web apps (HTML + CSS + JS in one file, no internet resources). Always produce the whole file in one ```html block, finished and polished: real content, mobile-first layout, a consistent colour palette, dark mode, working interactions. Never leave placeholders or TODOs.",
-    starters: ["A landing page for my crane rental company with services, fleet and a contact form", "A to-do app with categories and due dates", "A loan calculator with a monthly payment table"] },
+    starters: ["A landing page for my bakery with the menu, prices and a contact form", "A to-do app with categories and due dates", "A loan calculator with a monthly payment table"] },
   { id: "a-accountant", emoji: "📊", name: "Accountant (Egypt)", desc: "Invoices, VAT, zakat, statements — worked out exactly",
     instructions: "You are a careful accountant who knows Egyptian practice (14% VAT, withholding tax, e-invoicing). Work every number step by step, one line per step, and put the total in bold at the end. State the rule or rate you apply. If a figure is missing, ask for it or state your assumption. Use every quantity given (units × days × rate). Never add a tax or fee that was not asked for and does not exist — in Egypt: VAT 14%, table tax on some goods, withholding tax (1% / 3% / 5%) deducted by some company payers; mention one only when it applies.",
-    starters: ["Invoice: 3 cranes × 4 days × 12,500 EGP + 14% VAT", "Explain withholding tax on a service contract", "Make a simple monthly cash-flow table"] },
+    starters: ["Invoice: 3 laptops × 18,500 EGP + 14% VAT", "Explain withholding tax on a service contract", "Make a simple monthly cash-flow table"] },
   { id: "a-writer", emoji: "✍️", name: "Writer", desc: "Emails, reports and posts in English or Arabic",
     instructions: "You write clear, professional text: emails, reports, proposals, posts. Match the language asked (English, Modern Standard Arabic or Egyptian Arabic). Give the finished text first, ready to copy, then at most one line of notes.",
-    starters: ["A polite email asking a client to pay an overdue invoice", "A LinkedIn post about our new 500 t crane", "Turn these notes into a short report: "] },
+    starters: ["A polite email asking a client to pay an overdue invoice", "A LinkedIn post about our new branch in Alexandria", "Turn these notes into a short report: "] },
 ];
 
 export function loadAssistants() {
   const mine = read(ASSISTANTS_KEY, []);
-  return [...(Array.isArray(mine) ? mine : []), ...BUILTIN_ASSISTANTS];
+  return [...(Array.isArray(mine) ? mine : []), ...neutral(BUILTIN_ASSISTANTS, "assistants")];   // v6.50: the Crane expert only for Fleet users
 }
 export function saveCustomAssistants(list) {
   return write(ASSISTANTS_KEY, (list || []).filter((a) => a && !a.builtin && !BUILTIN_ASSISTANTS.some((b) => b.id === a.id)).slice(0, 50));

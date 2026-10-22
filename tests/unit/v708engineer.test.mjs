@@ -1,6 +1,6 @@
 // v6.12 (item 5) — engineering answers at expert level: the engineering skill is added once, fits Ali's cavitation question,
 // brings the right facts (anti-cavitation make-up valves, meter-out / counterbalance), and stays out of a crane quote.
-const mem = {}; globalThis.localStorage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = String(v); }, removeItem: (k) => delete mem[k] };
+const mem = { "attune:uses:fleet": "1" }; globalThis.localStorage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = String(v); }, removeItem: (k) => delete mem[k] };
 const S = await import("../../web-src/userskills.js");
 let fail = 0; const ok = (c, w) => { console.log((c ? "PASS " : "FAIL ") + w); if (!c) fail++; };
 const list = S.seedOnce();

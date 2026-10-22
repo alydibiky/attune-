@@ -353,7 +353,7 @@ function AITab({ cv, setCV, llm, modelReady, openEngine, flash, onCopyFor, onNew
       <p className="text-[12px] text-slate-400">{tr("The AI on your phone rewords — it never adds a number, date or skill you didn't write. Anything it suggests is shown first.")}</p>
       <div className="space-y-2 rounded-xl border border-teal-800 bg-teal-500/5 p-3" data-testid="cv-ai-revise">
         <p className="text-[13px] font-semibold text-slate-100">{tr("Edit or improve my CV")}</p>
-        <p className="text-[12px] text-slate-400">{tr("Say what to add or change («add my job at XCMG as crane supervisor, 2019–2022», «change my phone to …»), or leave it empty and just make it more professional. You see the result before it is kept.")}</p>
+        <p className="text-[12px] text-slate-400">{tr("Say what to add or change («add my job at Dar Al Fouad Hospital as a nurse, 2019–2022», «change my phone to …»), or leave it empty and just make it more professional. You see the result before it is kept.")}</p>
         <Tx rows={3} value={req} onChange={setReq} placeholder={tr("What should be added or changed? (optional)")} data-testid="cv-revise-text" />
         <div className="grid grid-cols-2 gap-2">
           <Btn k="rev" testid="cv-revise-go" onClick={() => run("rev", async () => setRev({ ...A.parseRevise(await ask(A.reviseMessages(cv, req, false), 1800), cv, req), polish: false }))}>{tr("Apply my change")}</Btn>

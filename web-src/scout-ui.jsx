@@ -16,7 +16,7 @@ const EXAMPLES = [
   ["Hyundai Tucson 2019 to 2021 under 900k, one owner, no accident, automatic", "هيونداي توسان من 2019 لـ 2021 أقل من 900 ألف أول مالك بدون حوادث أوتوماتيك"],
   ["iPhone 16 Pro 256GB new under 70,000", "ايفون 16 برو 256 جيجا جديد أقل من 70 ألف"],
   ["Data analyst job in Cairo, remote, full-time", "وظيفة محلل بيانات في القاهرة عن بعد دوام كامل"],
-  ["Crane hire 100 ton in 6th of October", "إيجار ونش 100 طن في 6 أكتوبر"],
+  ["Plumber in Nasr City, available this week", "سباك في مدينة نصر فاضي الأسبوع ده"],
 ];
 const KIND = { gold: ["Gold price", "سعر الدهب"], rent: ["Flat to rent", "شقة للإيجار"], "buy-home": ["Home to buy", "عقار للشراء"], car: ["Car", "سيارة"], product: ["Product", "منتج"], job: ["Job", "وظيفة"], tender: ["Tender", "مناقصة"], service: ["Service / supplier", "خدمة / مورد"] };
 const fmt = (v) => Math.round(v).toLocaleString("en-US");

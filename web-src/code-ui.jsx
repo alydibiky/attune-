@@ -258,7 +258,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
     </div>) : null);
   const Bubble = ({ text }) => <div className="flex justify-end"><p className="max-w-[85%] rounded-2xl rounded-ee-md px-3.5 py-2.5 text-[14px] leading-snug text-slate-100" style={{ background: "rgba(79,194,175,.13)" }} dir="auto" data-testid="code-ask">{text}</p></div>;
   const STARTERS = [
-    ["Crane capacity", "A function that finds a crane's capacity at any radius from its load chart; between two rows use the lower value", "python"],
+    ["Exam grade", "A function that works out a student's average from their marks and gives the grade; a mark exactly on a boundary gets the higher grade", "python"],
     ["VAT invoice page", "A web page that makes an invoice: items, quantity, price, 14% VAT and the total in EGP, ready to print", "html"],
     ["Clean a CSV", "Read a CSV of fuel fill-ups (date, litres, km) and print litres per 100 km for each fill-up and the average", "python"],
     ["Unit converter", "A small converter between tonnes, kilograms and pounds, and metres and feet, with tests", "javascript"],
@@ -305,7 +305,7 @@ export function CodeWorkbench({ llm, flash, native, share, saveFile, engineReady
             </div></> : null}
           <div className="rounded-2xl border border-slate-700 bg-slate-900 p-2.5 space-y-2 focus-within:border-teal-500">
             <textarea value={task} onChange={(e) => setTask(e.target.value)} rows={3} data-testid="code-task" dir="auto"
-              placeholder={tr("What should it do? e.g. “A function that finds a crane's capacity at any radius from a load chart table”")}
+              placeholder={tr("What should it do? e.g. “A function that splits a restaurant bill between friends, with the tip”")}
               className="w-full bg-transparent p-1.5 text-sm text-slate-100 placeholder:text-slate-600 resize-none focus:outline-none" />
             <div className="flex flex-wrap items-center gap-1.5">
               {[["auto", "Auto"], ["python", "Python"], ["javascript", "JavaScript"], ["html", "Web page"]].map(([k, l]) => (

@@ -6,6 +6,7 @@
    Pure logic; tests in tests/unit/v614skills.test.mjs.                                                              */
 
 const KEY = "attune:skills:v1";
+import { usesFleet } from "./industry.js";
 export const LIMITS = { name: 60, command: 24, when: 300, instructions: 6000, example: 800, reference: 12000, checklist: 1500, script: 5000, max: 60, blockChars: 3800, refChars: 1100 };
 
 export const load = () => { try { const a = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
@@ -14,6 +15,7 @@ const SEED = "attune:skills:seeded:v612";
 export function seedOnce(list = load()) {
   try {
     if (localStorage.getItem(SEED)) return list;
+    if (!usesFleet()) return list;   // v6.50: the crane engineer skill is seeded only for Fleet users (added once they use Fleet)
     localStorage.setItem(SEED, "1");
     const c = CATALOGUE.find((x) => x.id === "hydraulics");
     if (!c || list.some((x) => x.command === c.command || x.name === c.name)) return list;

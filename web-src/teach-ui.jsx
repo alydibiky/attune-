@@ -52,7 +52,7 @@ function Sheet({ knowledge, start, onClose, onDone, flash, readOther }) {
         <p className="text-[15px] font-semibold text-slate-100">{start ? tr("Add to “{n}”", { n: start }) : tr("New pack")}</p>
         {!start ? (
           <label className="block text-[12px] text-slate-400">{tr("Pack name")}
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder={tr("For example: Crane workshop")} dir="auto" data-testid="teach-name"
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder={tr("For example: My bakery")} dir="auto" data-testid="teach-name"
               className="mt-1 w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2.5 text-[14px] text-slate-100" /></label>) : null}
         <div className="grid grid-cols-3 gap-2">
           <button className={ghost + " flex-col h-16"} disabled={!ready || !!busy} onClick={() => setMode(mode === "chats" ? null : "chats")} data-testid="teach-chats"><MessageSquare size={16} />{tr("Chats")}</button>

@@ -51,7 +51,7 @@ export function DesktopHome({ tools, navTo, onAsk, engineReady, name, doIt }) {
   const core = ["money", "business", "memory"].map((id) => tools.find((t) => t[0] === id)).filter(Boolean);
   const cards = [...core, ...recent.filter((t) => !core.includes(t))].slice(0, 7);
   const send = () => { const t = text.trim(); if (!t) return; setText(""); let r = null; try { r = doIt ? doIt(t) : null; } catch (e) { r = null; } if (r) setDone({ ...r, id: Date.now() }); else onAsk(t); };
-  const starters = [["Summarise a PDF", "pdfchat"], ["Read a paper to me", "read"], ["Price a crane job", null], ["Plan my meals", "fit"], ["Convert a file", "convert"]];
+  const starters = [["Summarise a PDF", "pdfchat"], ["Read a paper to me", "read"], ["Plan a weekend trip", null], ["Plan my meals", "fit"], ["Convert a file", "convert"]];
   return (
     <div className="pt-2 pb-10 space-y-5" data-testid="desk-home">
       <h1 className="text-[26px] font-semibold text-white tracking-tight">{tr(greeting())}{name ? ", " + name : ""}</h1>

@@ -67,7 +67,7 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
       <div className={card + " p-4 space-y-3"}>
         <div className="flex gap-2">
           <input value={edit.emoji} onChange={(e) => setEdit({ ...edit, emoji: e.target.value })} className={input + " w-16 text-center text-lg"} aria-label={tr("Emoji")} />
-          <input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} placeholder={tr("Name, e.g. Crane lift planner")} dir="auto" className={input} data-testid="assistant-name" />
+          <input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} placeholder={tr("Name, e.g. Exam study buddy")} dir="auto" className={input} data-testid="assistant-name" />
         </div>
         <input value={edit.desc} onChange={(e) => setEdit({ ...edit, desc: e.target.value })} placeholder={tr("What is it for? (one line)")} dir="auto" className={input} />
         <div>
@@ -77,7 +77,7 @@ export function AssistantsPage({ startChat, llm, modelReady, flash }) {
               {drafting ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}{tr("Write them for me")}</button> : null}
           </div>
           <textarea value={edit.instructions} onChange={(e) => setEdit({ ...edit, instructions: e.target.value })} rows={7} dir="auto" data-testid="assistant-instructions"
-            placeholder={tr("e.g. You are an expert in Liebherr mobile cranes. Explain step by step, give every technical term in English and Egyptian Arabic…")} className={input} />
+            placeholder={tr("e.g. You are a patient maths tutor. Explain step by step, give every technical term in English and Egyptian Arabic…")} className={input} />
         </div>
         <div>
           <span className="text-[12px] text-slate-400">{tr("Starter questions (one per line, optional)")}</span>
@@ -168,7 +168,7 @@ export function ProjectsPage({ startChat, openChat, flash }) {
       </div>
       <span className="block text-[12px] text-slate-400">{tr("Instructions for every chat in this project")}</span>
       <textarea value={edit.instructions} onChange={(e) => setEdit({ ...edit, instructions: e.target.value })} rows={6} dir="auto" className={input} data-testid="project-instructions"
-        placeholder={tr("e.g. We are bidding for a 3-month crane contract. Prices in EGP, VAT 14%. Answer as our commercial manager.")} />
+        placeholder={tr("e.g. We are bidding for a 3-month catering contract. Prices in EGP, VAT 14%. Answer as our commercial manager.")} />
       <div className="flex gap-2">
         <button onClick={saveEdit} disabled={!edit.name.trim()} className={btnMain} data-testid="project-save">{tr("Save")}</button>
         <button onClick={() => setEdit(null)} className={btnGhost}>{tr("Cancel")}</button>

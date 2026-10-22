@@ -46,7 +46,7 @@ SITE = """Here is your page.
 
 with sync_playwright() as p:
     br = p.chromium.launch()
-    ctx, page = new_page(br, env, errors)
+    ctx, page = new_page(br, env, errors, extra_init="try{localStorage.setItem('attune:uses:fleet','1')}catch(e){}")   # v6.50: the crane built-ins show to Fleet users
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     install(page)
 

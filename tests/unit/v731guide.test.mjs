@@ -62,7 +62,7 @@ const planTools = G.PLAN.flatMap((p) => p.items.map((i) => i.tool)).filter(Boole
 ok(planTools.every((t) => G.TOOLS[t]) && G.PLAN.every((p) => p.items.length >= 3 && p.items.every((i) => (i.tool || i.see) && i.text[0] && i.text[1]) && p.tip[0] && p.tip[1]), "every plan line points to a real tool, in English and Arabic");
 ok(["home", "money", "learn", "news", "missions"].every((t) => G.PLAN[0].items.some((i) => i.tool === t)), "morning: Home, Safe to spend, the lesson, news, missions");
 ok(["fit", "reminders", "instant"].every((t) => G.PLAN[1].items.some((i) => i.tool === t)) && ["scout", "guardian", "xray"].every((t) => G.PLAN[3].items.some((i) => i.tool === t)) && G.PLAN[3].items.some((i) => i.see === "start:safe"), "day: food photo, reminders, Instant; week: Scout, Payments, X-Ray, backup");
-ok(["money", "radar", "deal"].every((t) => G.PLAN[4].items.some((i) => i.tool === t)) && ["business", "crane", "field"].every((t) => G.PLAN[5].items.some((i) => i.tool === t)), "month: Money, Cancel kit, Deal Check; work: Fleet from WhatsApp, Crane, Reports");
+ok(["money", "radar", "deal"].every((t) => G.PLAN[4].items.some((i) => i.tool === t)) && ["business", "field"].every((t) => G.PLAN[5].items.some((i) => i.tool === t)) && !G.PLAN[5].items.some((i) => i.tool === "crane"), "month: Money, Cancel kit, Deal Check; work: Business from WhatsApp, Reports (the Crane toolkit lives inside Business)");
 ok(G.searchPlan("koshary").join() === "day" && G.searchPlan("").length === 6 && !G.searchPlan("zzqx").length, "the plan is searchable");
 // search
 ok(G.searchGuide("passport", []).sort().join() === "radar,travel" && G.searchGuide("", []) === null, "search finds by what the steps say");

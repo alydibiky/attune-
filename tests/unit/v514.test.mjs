@@ -3,6 +3,7 @@
 import * as S from "../../web-src/spaces.js";
 const store = {};
 globalThis.localStorage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: (k) => { delete store[k]; } };
+store["attune:uses:fleet"] = "1";   // v6.50: the Crane expert shows to Fleet users (industry.js; the neutral rule is tested in v750neutral)
 const fails = [];
 function eq(got, want, what) { const ok = JSON.stringify(got) === JSON.stringify(want); console.log((ok ? "PASS " : "FAIL ") + what + (ok ? "" : `  → got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`)); if (!ok) fails.push(what); }
 

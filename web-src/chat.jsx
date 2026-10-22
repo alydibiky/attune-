@@ -397,9 +397,9 @@ const STARTERS = [
   ["✉️", "Reply to a message", "Write a polite reply to this message: "],
   ["🌍", "Translate", "Translate into English: "],
   ["📝", "Summarise", "Summarise this in 3 bullets: "],
-  ["🏗️", "Crane question", "What should I check on a mobile crane's outriggers before a 40 t lift?"],
-  ["🧮", "Work it out", "3 cranes × 4 days × 12,500 EGP a day + 14% VAT — total?"],
-  ["📚", "Explain simply", "Explain simply how outrigger pads spread a crane's load on soft ground"],
+  ["🚗", "Car question", "What should I check on a used car before I buy it?"],
+  ["🧮", "Work it out", "3 rooms × 4 nights × 1,850 EGP a night + 14% VAT — total?"],
+  ["📚", "Explain simply", "Explain simply how compound interest makes my savings grow"],
 ];
 
 // v6.31 minimal (design A): the new layout (no bottom bar) also gets a calm empty chat — a title and three plain suggestions
@@ -1978,7 +1978,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
         <div className="pt-16 px-2" data-testid="chat-empty-min">
           <p className="text-[24px] text-white font-semibold tracking-tight">{tr("What can I help with?")}</p>
           <div className="mt-4 flex flex-col">
-            {STARTERS.filter((x) => x[1] !== "Crane question" && x[1] !== "Translate" && x[1] !== "Explain simply").map(([, label, seed]) => (
+            {STARTERS.filter((x) => x[1] !== "Car question" && x[1] !== "Translate" && x[1] !== "Explain simply").map(([, label, seed]) => (
               <button key={label} onClick={() => { setText(tr(seed)); setTimeout(() => taRef.current && taRef.current.focus(), 30); }}
                 className="h-11 text-start text-[15px] text-slate-400 hover:text-slate-200">{tr(label)}</button>))}
           </div>
@@ -2090,7 +2090,7 @@ export function ChatHome({ api, drawerOpen, setDrawerOpen, newChatSignal, compos
                 {openThought["v" + m.id] ? <Md text={"```python\n" + m.verified.code + "\n```\n\n" + tr("It printed:") + "\n```\n" + String(m.verified.output || "").trim() + "\n```"} /> : null}
               </div>
             ) : null}
-            {m.fromPhotoTable && !m.streaming ? <p className="mt-1 text-[11px] text-amber-300/90" data-testid="photo-table-note">⚠ {tr("Numbers read from a photo — check them against the chart before a lift")}</p> : null}
+            {m.fromPhotoTable && !m.streaming ? <p className="mt-1 text-[11px] text-amber-300/90" data-testid="photo-table-note">⚠ {tr("Numbers read from a photo — check them against the original before you rely on them")}</p> : null}
             {m.unsourced ?<p className="mt-1 text-[11px] text-amber-300" data-testid="unsourced">⚠ {tr("Not found in the sources")}: {m.unsourced.join(", ")}</p> : null}
             {m.deep && !m.streaming ? <p className="mt-1 text-[11px] text-violet-300" data-testid="deep-tag">{tr("Deep answer")}{m.deep ? " · " + m.deep : ""}</p> : null}
             {m.fixedSlip ? <p className="mt-1 text-[11px] text-sky-300" data-testid="slip-fixed">{tr("The first answer had a wrong sum — re-done by running code")}</p> : null}
