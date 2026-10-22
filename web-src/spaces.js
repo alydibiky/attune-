@@ -246,8 +246,8 @@ export const PALETTES = {"teal":{"50":"oklch(98.4% 0.014 180.72)","100":"oklch(9
 const SHADES = ["50", "100", "200", "300", "400", "500", "600", "700", "800", "900", "950"];
 // v6.27: design A "Calm" (Ali picked it, 13 Oct 2026) — the default look of the whole app: a soft green-grey instead of
 // blue-grey, and a deeper, quieter teal. Light mode: grey ground #F4F5F3, white cards, lines #E4E8E5 (themeVars below).
-PALETTES.calm = { "50": "#F4F5F3", "100": "#E7EAEA", "200": "#DDE1DF", "300": "#C2C9CA", "400": "#9AA3A5", "500": "#6B7672",
-  "600": "#4B5457", "700": "#353C3F", "800": "#262C2F", "900": "#181C1F", "950": "#111416" };
+PALETTES.calm = { "50": "#F4F7F5", "100": "#EAEFEC", "200": "#DDE3E0", "300": "#C2CBC7", "400": "#9BA8A3", "500": "#6B7772",
+  "600": "#4A5852", "700": "#343E3A", "800": "#26302D", "900": "#171D1B", "950": "#101413" };   // v7.0 Gemini's Quiet Atelier stone
 PALETTES.calmteal = { "50": "#E2F1ED", "100": "#C5E8E0", "200": "#9ADACB", "300": "#6FCDB9", "400": "#4FC2AF", "500": "#26A592",
   "600": "#0F7B6C", "700": "#0B6358", "800": "#0A4F47", "900": "#08403A", "950": "#052926" };
 export const ACCENTS = [
