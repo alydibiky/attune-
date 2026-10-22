@@ -19,9 +19,10 @@ export const HUBS = [
 
 /** Inside Tools, the pages that are one page with tabs (the smallest group a page is in gives its tabs). */
 export const GROUPS = [
-  // the tab rows (v6.36, Ali's board): Chat · Ask your life · Translate; Work = Business · Fleet · Crane · Reports · Tools
+  // the tab rows (v6.36, Ali's board): Chat · Ask your life · Translate; Work = Business · Team records · Reports · Tools
+  // (v6.50, Ali: "the app must be neutral — not a crane app": the Crane toolkit lives inside Business → Fleet & rentals → More)
   ["talk", "Chat", ["chat", "lifeask", "translate"]],
-  ["work", "Work", ["business", "fleet", "crane", "field", "tools"]],
+  ["work", "Work", ["business", "fleet", "field", "tools"]],
   // v6.43 (Ali: "put the tools that improve a prompt or humanize in the same page"): Writing = Improve · Shorten · Humanize · Copilot · Prompt lab
   ["write", "Writing", ["improve", "compress", "humanize", "copilot", "library"]],
   // pages with no tab row: they open from a Home tile, the Tools choices or the sidebar ("as choices, not tabs")

@@ -47,7 +47,7 @@ with sync_playwright() as p:
     # Work: Business · Fleet · Crane · Reports · Tools; Tools = choices, not tabs
     page.locator("[data-testid=header-menu]:visible").first.click(); page.click("[data-testid=phone-side] [data-testid=side-go-business]"); page.wait_for_timeout(700)
     tabs = page.evaluate("[...document.querySelectorAll('[data-testid=hub-tabs] [role=tab]')].map(b => b.dataset.testid.slice(8))")
-    check(tabs == ["business", "fleet", "crane", "field", "tools"], "Work opens Business with tabs Business · Fleet · Crane · Reports · Tools: %s" % tabs)
+    check(tabs == ["business", "fleet", "field", "tools"], "Work opens Business with tabs Business · Team records · Reports · Tools (v6.50: the Crane toolkit lives inside Business → Fleet): %s" % tabs)
     page.click("[data-testid=hub-tab-tools]"); page.wait_for_selector("[data-testid=tools-page]")
     cards = page.evaluate("[...document.querySelectorAll('[data-testid^=tools-page-]')].map(b => b.dataset.testid.slice(11))")
     check(cards == ["improve", "video", "ask"], "Tools: Writing (v6.43: five writing tools on one page), Video, Ask: %s" % cards)

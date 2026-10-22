@@ -91,6 +91,9 @@ with sync_playwright() as p:
     page.locator("[data-testid=fleet-restore]").first.click(); page.wait_for_timeout(300)
     check(page.locator("[data-testid=fleet-bin-view]").inner_text().count("Restore") == 0, "a deleted job is restored from the Recycle Bin")
     page.locator("[data-testid=fleet-sheet] button[aria-label=Close]").click()
+    # ---- v6.50 (Ali: "the app must be neutral"): the Crane toolkit opens from Fleet's More, inside Business
+    page.click("[data-testid=fleet-menu]"); page.click("[data-testid=fleet-crane-toolkit]")
+    page.wait_for_selector("[data-testid=crane-toolkit]", timeout=5000); check(True, "Fleet → More → Crane toolkit opens it")
     # ---- kept after a reload
     page.reload(); page.wait_for_selector("[data-testid=phone-home]", timeout=15000)
     open_fleet(page); page.click("[data-testid=fleet-view-report]"); page.wait_for_selector("[data-testid=fleet-active]")

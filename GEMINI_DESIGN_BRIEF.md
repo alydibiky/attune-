@@ -39,6 +39,12 @@ a quality bar only. Do not copy their layout, names, colours or assets.** Make s
 11. **One file at a time.** For each screen you redesign, return the **whole file**, plus a short list: what changed, what you
     need from Claude, wording ideas. Don't touch files you weren't asked to.
 
+## A neutral app (Ali, 22 Oct — read before every screen)
+Attune is for **anyone** (a student, a nurse, a shop owner, a family) — it must never look like a crane or fleet app. Fleet & rentals
+is just ONE of the business systems, and lives only inside Business. In every mock-up of Home, My report, Chat, Mind, Money and
+the other personal screens, use **everyday sample data** (groceries, rent, a phone bill, exams, a trip, a gym session, a café) —
+no cranes, no fleet, no lifting. Crane data belongs only in Fleet's own screens.
+
 ## Calm, not cluttered (Ali's vision — read before every screen)
 Your job is the **look** (colours, type, cards, tiles, charts, spacing, dark mode) — **not adding more things to a screen**. Attune's
 idea is that **the chat box does most of the work**, so screens stay quiet:

@@ -359,7 +359,9 @@ def sec_crane(br):
     ctx, page = new_page(br, env, errors)
     page.goto(env.url); page.wait_for_selector("nav", timeout=15000)
     open_more(page)
-    page.locator(".rounded-t-2xl button:has-text('Crane toolkit')").click()
+    # v6.50 (Ali: the app is neutral): the Crane toolkit is not in All tools — it opens from Business → Fleet & rentals → More
+    check(page.locator(".rounded-t-2xl button:has-text('Crane toolkit')").count() == 0, "All tools does not list the Crane toolkit")
+    page.evaluate("window.dispatchEvent(new CustomEvent('attune-open',{detail:{mode:'crane'}}))")
     page.wait_for_selector("[data-testid=crane-toolkit]", timeout=5000)
     check("Planning aid only" in page.locator("[data-testid=crane-toolkit]").inner_text(), "the toolkit says plainly it is a planning aid")
     # add a chart

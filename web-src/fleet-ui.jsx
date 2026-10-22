@@ -885,6 +885,8 @@ function MoreMenu({ s, run, setSheet, close, flash, saveFile, site }) {
     {item(Trash2, tr("Recycle Bin"), () => { close(); setSheet({ kind: "bin" }); }, "fleet-bin", bin ? <Tag>{bin}</Tag> : null)}
     {item(Lock, tr("Encrypted backup"), () => { close(); setSheet({ kind: "backup" }); }, "fleet-backup")}
     {item(Wrench, tr("Settings"), () => { close(); setSheet({ kind: "settings" }); }, "fleet-settings")}
+    {/* v6.50 (Ali: "the app must look neutral — cranes only inside Business"): the Crane toolkit opens from here, not from the Work tabs */}
+    {site ? null : item(Wrench, tr("Crane toolkit"), () => { close(); window.dispatchEvent(new CustomEvent("attune-open", { detail: { mode: "crane" } })); }, "fleet-crane-toolkit")}
     {site ? null : item(Globe, tr("Website & desktop app"), () => { close(); saveProject(s, { kind: "fleet", name: tr("Fleet & rentals"), saveFile, flash }); }, "fleet-site")}
     {F.hasDemo(s) ? item(Undo2, tr("Erase the demo data"), async () => { if (await askConfirm("Erase all demo records? Your own records stay.", { yes: "Erase" })) { run((x) => F.eraseDemo(x), tr("Demo data erased")); close(); } }, "fleet-erase-demo")
       : item(Plus, tr("Load demo data"), () => { run((x) => F.loadDemo(x), tr("Demo data loaded — erase it any time from More")); close(); }, "fleet-load-demo")}
