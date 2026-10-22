@@ -12,6 +12,7 @@ import { xlsxFromRows } from "./convert.js";
 import { askConfirm } from "./confirm.jsx";
 import { portalData, portalHTML } from "./fleet-portal.js";
 import { sealData } from "./biz-vault.js";
+import * as K from "./ui-kit.jsx";
 import { card, btnP, btnS, inp, muted, num, nameOf, Txt, DateF, Seg, Tag, Empty, Kpi, SaveBtn, printHTML, saveOut } from "./fleet-ui.jsx";
 
 const isAr = () => getLang() === "ar";
@@ -27,10 +28,10 @@ export function TableOut({ s, saveFile, flash, title, head, rows, total = null, 
     <button className={btnS + " flex-1"} onClick={() => printHTML(D.tableHTML({ title: tr(title), head: H, rows, total, company: s.settings.company || "", rtl: isAr() }), saveFile, file + ".html")} data-testid={(testid || "fleet-desk") + "-print"}><Printer size={15} />{tr("Print / PDF")}</button>
     <button className={btnS + " flex-1"} onClick={() => saveX(saveFile, flash, file + ".xlsx", tr(title), H, total != null ? [...rows, [tr("Total"), ...Array(H.length - 2).fill(""), total]] : rows)} data-testid={(testid || "fleet-desk") + "-xlsx"}><Download size={15} />{tr("Excel")}</button></div>;
 }
-const Table = ({ head, rows, total, testid }) => <div className={card + " overflow-x-auto"} data-testid={testid}><table className="w-full text-[13px]">
-  <thead><tr className={muted}>{head.map((h, i) => <th key={h + i} className="px-3 py-2.5 font-semibold whitespace-nowrap text-start">{tr(h)}</th>)}</tr></thead>
-  <tbody>{rows.map((r, i) => <tr key={i} className="border-t border-[var(--c-ln)]" data-testid={testid ? testid + "-row" : null}>{r.map((v, j) => <td key={j} className={"px-3 py-2.5 " + (typeof v === "number" ? "text-end tabular-nums whitespace-nowrap" : "")} dir={typeof v === "number" ? "ltr" : "auto"}>{typeof v === "number" ? num(v) : v}</td>)}</tr>)}
-    {total != null ? <tr className="border-t-2 border-[var(--c-ln)] font-bold"><td className="px-3 py-2.5" colSpan={head.length - 1}>{tr("Total")}</td><td className="px-3 py-2.5 text-end tabular-nums" dir="ltr">{num(total)}</td></tr> : null}</tbody></table></div>;
+const Table = ({ head, rows, total, testid, swatch = null }) => <div className={card + " overflow-x-auto"} data-testid={testid}><table className="w-full text-[13px]">
+  <thead><tr className={"text-[11px] uppercase tracking-[0.08em] bg-[var(--c-surf-2)] " + muted}>{head.map((h, i) => <th key={h + i} className={"px-3.5 py-3 font-extrabold whitespace-nowrap " + (rows[0] && typeof rows[0][i] === "number" ? "text-end" : "text-start")}>{swatch && swatch[i] ? <i aria-hidden="true" className="inline-block w-2.5 h-2.5 rounded-full me-1.5 align-middle" style={{ background: swatch[i] }} /> : null}{tr(h)}</th>)}</tr></thead>
+  <tbody>{rows.map((r, i) => <tr key={i} className="border-t border-[var(--c-ln)]" data-testid={testid ? testid + "-row" : null}>{r.map((v, j) => <td key={j} className={"px-3.5 py-2.5 " + (typeof v === "number" ? "text-end tabular-nums whitespace-nowrap" : "")} dir={typeof v === "number" ? "ltr" : "auto"}>{typeof v === "number" ? num(v) : v}</td>)}</tr>)}
+    {total != null ? <tr className="border-t-2 border-[var(--c-ln)] font-black bg-[var(--c-bg)]"><td className="px-3.5 py-3" colSpan={head.length - 1}>{tr("Total")}</td><td className="px-3.5 py-3 text-end tabular-nums" dir="ltr">{num(total)}</td></tr> : null}</tbody></table></div>;
 
 // ---- Today: the crane program's Dashboard money -------------------------------------------------------------------------------
 export function TodayCash({ s, money, setOpen }) {
@@ -38,17 +39,24 @@ export function TodayCash({ s, money, setOpen }) {
   const t = F.isoDay(), ym = t.slice(0, 7), m = D.cashTotals(s, { from: ym + "-01", to: ym + "-31" }), all = D.cashTotals(s), a = D.activeCounts(s);
   const six = more ? D.monthlyCash(s, 6, t) : null, owe = more ? D.topOwing(s, 6) : null;
   return <div className={card + " p-4 space-y-3"} data-testid="fleet-cash">
-    <div className="flex items-center gap-2"><p className="flex-1 font-bold text-[15px]">{tr("Money this month (cash)")}</p>
-      <span className={"text-[12px] " + muted} data-testid="fleet-active-counts">{tr("{j} jobs · {si} sites · {c} clients", { j: a.jobs, si: a.sites, c: a.clients })}</span></div>
+    <div className="flex items-center gap-2 flex-wrap"><p className="flex-1 min-w-0 font-extrabold text-[15px] m-0">{tr("Money this month (cash)")}</p>
+      <span className={K.tag("gray")} data-testid="fleet-active-counts">{tr("{j} jobs · {si} sites · {c} clients", { j: a.jobs, si: a.sites, c: a.clients })}</span></div>
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
       <Kpi label={tr("Collected")} value={money(m.income)} /><Kpi label={tr("Spent")} value={money(m.expenses)} />
       <Kpi label={tr("Profit this month")} value={money(m.profit)} tone={m.profit < 0 ? "red" : ""} /><Kpi label={tr("Profit, all time")} value={money(all.profit)} tone={all.profit < 0 ? "red" : ""} /></div>
-    <p className={"text-[12px] " + muted}>{tr("Collected = payments received that didn't bounce, by their date. Spent = expenses.")}</p>
+    <p className={"text-[12px] m-0 " + muted}>{tr("Collected = payments received that didn't bounce, by their date. Spent = expenses.")}</p>
     <button className={btnS + " w-full"} onClick={() => setMore(!more)} data-testid="fleet-cash-more">{more ? <ChevronUp size={15} /> : <ChevronDown size={15} />}{more ? tr("Less") : tr("Last 6 months and who owes most")}</button>
     {more ? <>
-      <Table head={["Month", "Collected", "Spent", "Profit"]} rows={six.map((x) => [showYm(x.ym), x.income, x.expenses, x.profit])} testid="fleet-six" />
-      {owe.length ? <div className="space-y-1.5"><p className="font-bold text-[14px]">{tr("Who owes most")}</p>
-        {owe.map((x) => <button key={x.client.id} onClick={() => setOpen({ kind: "client", id: x.client.id })} className="w-full flex justify-between text-[13.5px] py-1" data-testid="fleet-owe"><span dir="auto">{x.client.name}</span><span className="tabular-nums font-semibold text-[var(--c-warn)]" dir="ltr">{money(x.balance)}</span></button>)}</div> : null}
+      {/* Gemini's chart card: the six months as paired bars (jade = collected, terracotta = spent); the table under it keeps the numbers */}
+      {(() => { const top = Math.max(1, ...six.map((x) => Math.max(x.income, x.expenses))); return <div className="rounded-[18px] bg-[var(--c-bg)] border border-[var(--c-ln)] p-3.5" aria-hidden="true" data-chart="six">
+        <div className="flex items-end gap-2 h-32 border-b border-[var(--c-ln)]">{six.map((x, i) => <div key={x.ym} className="flex-1 h-full flex items-end justify-center gap-1">
+          <span className="w-full max-w-[18px] rounded-t-[6px]" style={{ height: Math.max(2, (x.income / top) * 100) + "%", background: "var(--c-acc)", opacity: i === six.length - 1 ? 1 : 0.7 }} />
+          <span className="w-full max-w-[18px] rounded-t-[6px]" style={{ height: Math.max(2, (x.expenses / top) * 100) + "%", background: "var(--c-acc-2)", opacity: i === six.length - 1 ? 1 : 0.7 }} /></div>)}</div>
+        <div className="flex gap-2 pt-1.5">{six.map((x) => <span key={x.ym} className={"flex-1 text-center text-[11px] font-bold tabular-nums " + muted} dir="ltr">{x.ym.slice(5)}</span>)}</div></div>; })()}
+      <Table head={["Month", "Collected", "Spent", "Profit"]} rows={six.map((x) => [showYm(x.ym), x.income, x.expenses, x.profit])} testid="fleet-six" swatch={[null, "var(--c-acc)", "var(--c-acc-2)", null]} />
+      {owe.length ? <div className="space-y-1"><p className="font-extrabold text-[15px] m-0 pb-1">{tr("Who owes most")}</p>
+        {owe.map((x) => <button key={x.client.id} onClick={() => setOpen({ kind: "client", id: x.client.id })} className="w-full min-h-[52px] text-start py-2 border-t border-[var(--c-ln)] hover:text-[var(--c-acc)]" data-testid="fleet-owe"><span className="flex justify-between gap-2 text-[13.5px]"><span className="font-semibold truncate" dir="auto">{x.client.name}</span><span className="tabular-nums font-extrabold text-[var(--c-warn)] shrink-0" dir="ltr">{money(x.balance)}</span></span>
+          <span className="c-bar block mt-1.5" aria-hidden="true"><i style={{ width: Math.max(2, Math.min(100, (x.balance / Math.max(1, owe[0].balance)) * 100)) + "%", background: "var(--c-warn)" }} /></span></button>)}</div> : null}
     </> : null}
   </div>;
 }
@@ -61,7 +69,7 @@ export function RatesForm({ s, run, close }) {
   if (!cr.length) return <Empty>{tr("Add a crane first.")}</Empty>;
   return <div className="space-y-3" data-testid="fleet-rates">
     <p className={"text-[13px] " + muted}>{tr("Every crane's rates in one place. New job orders start with these.")}</p>
-    {cr.map((c) => <div key={c.id} className={card + " p-3 space-y-2"}><p className="font-bold text-[14px]" dir="auto">{c.name}</p>
+    {cr.map((c) => <div key={c.id} className={card + " p-4 space-y-2"}><p className="font-extrabold text-[14.5px] m-0" dir="auto">{c.name}</p>
       <div className="grid grid-cols-2 gap-2"><Txt label={tr("Hourly rate")} value={r[c.id].hourly} onChange={(v) => set(c.id, "hourly", v)} mode="decimal" testid="fleet-rate-h" /><Txt label={tr("Daily rate")} value={r[c.id].daily} onChange={(v) => set(c.id, "daily", v)} mode="decimal" testid="fleet-rate-d" /></div></div>)}
     <SaveBtn onClick={() => { if (run((x) => D.setRates(x, r), tr("Rates saved"))) close(); }} />
   </div>;
@@ -113,12 +121,12 @@ export function StoreKpis({ s, money }) {
 export function StoreFilters({ s, f, setF }) {
   const [open, setOpen] = useState(false);
   const n = ["from", "to", "item", "tech", "crane", "supplier"].filter((k) => f[k]).length;
-  const sel = (k, label, list) => <label className="block min-w-0"><span className={"block text-[12px] mb-1 " + muted}>{label}</span>
+  const sel = (k, label, list) => <label className="block min-w-0"><span className={"block text-[12px] font-bold mb-1.5 " + muted}>{label}</span>
     <select value={f[k] || ""} onChange={(e) => setF({ ...f, [k]: e.target.value })} className={inp} dir="auto" data-testid={"fleet-sf-" + k}><option value="">{tr("All")}</option>{list.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>;
   const names = (arr) => arr.map((x) => [x, x]);
   return <div className="space-y-2">
     <button className={btnS + " w-full"} onClick={() => setOpen(!open)} data-testid="fleet-sf-toggle">{open ? <ChevronUp size={15} /> : <ChevronDown size={15} />}{tr("Filters")}{n ? <Tag tone="blue">{n}</Tag> : null}</button>
-    {open ? <div className={card + " p-3 space-y-2"}>
+    {open ? <div className={card + " p-4 space-y-2.5"}>
       <div className="grid grid-cols-2 gap-2"><DateF label={tr("From")} value={f.from || ""} onChange={(v) => setF({ ...f, from: v })} testid="fleet-sf-from" /><DateF label={tr("To")} value={f.to || ""} onChange={(v) => setF({ ...f, to: v })} testid="fleet-sf-to" /></div>
       <div className="grid grid-cols-2 gap-2">{sel("item", tr("Item"), names((s.store.items || []).map((x) => x.name)))}{sel("tech", tr("Technician"), names(s.store.techs || []))}
         {sel("crane", tr("Crane"), F.live(s.cranes).map((c) => [c.id, c.name]))}{sel("supplier", tr("Supplier"), names(s.store.suppliers || []))}</div>
@@ -150,11 +158,11 @@ export function ListsPane({ s, run }) {
     <div className="flex gap-2"><input value={add} onChange={(e) => setAdd(e.target.value)} placeholder={tr("Add a name")} className={inp} dir="auto" data-testid="fleet-ln-add" />
       <button className={btnP + " h-11 shrink-0"} style={{ background: "var(--c-acc)" }} disabled={!add.trim()} onClick={() => { if (run((x) => D.addName(x, list, add), tr("Added"))) setAdd(""); }} data-testid="fleet-ln-add-btn"><Plus size={16} />{tr("Add")}</button></div>
     {names.length ? names.map((x) => <div key={x.name} className={card + " p-3 flex items-center gap-2"} data-testid="fleet-ln-row">
-      {edit && edit.from === x.name ? <><input autoFocus value={edit.to} onChange={(e) => setEdit({ ...edit, to: e.target.value })} className={inp + " h-10"} dir="auto" data-testid="fleet-ln-edit" />
+      {edit && edit.from === x.name ? <><input autoFocus value={edit.to} onChange={(e) => setEdit({ ...edit, to: e.target.value })} className={inp} dir="auto" data-testid="fleet-ln-edit" />
         <button className={btnS} onClick={() => { if (run((st) => D.renameName(st, list, edit.from, edit.to), tr("Renamed everywhere"))) setEdit(null); }} data-testid="fleet-ln-save">{tr("Save")}</button></>
         : <><span className="flex-1 min-w-0 font-semibold text-[14px] truncate" dir="auto">{x.name}</span><span className={"text-[12px] " + muted}>{tr("{n} lines", { n: x.used })}</span>
-          <button className="w-9 h-9 grid place-items-center text-[var(--c-mut)]" aria-label={tr("Rename")} onClick={() => setEdit({ from: x.name, to: x.name })} data-testid="fleet-ln-rename"><Pencil size={15} /></button>
-          <button className="w-9 h-9 grid place-items-center text-[var(--c-mut)]" aria-label={tr("Remove")} onClick={async () => { if (await askConfirm("Remove this name from the list?", { yes: "Remove" })) run((st) => D.removeName(st, list, x.name), tr("Removed")); }} data-testid="fleet-ln-remove"><Trash2 size={15} /></button></>}</div>)
+          <button className="w-11 h-11 grid place-items-center rounded-full text-[var(--c-mut)] hover:text-[var(--c-ink)]" aria-label={tr("Rename")} onClick={() => setEdit({ from: x.name, to: x.name })} data-testid="fleet-ln-rename"><Pencil size={15} /></button>
+          <button className="w-11 h-11 grid place-items-center rounded-full text-[var(--c-mut)] hover:text-[var(--c-ink)]" aria-label={tr("Remove")} onClick={async () => { if (await askConfirm("Remove this name from the list?", { yes: "Remove" })) run((st) => D.removeName(st, list, x.name), tr("Removed")); }} data-testid="fleet-ln-remove"><Trash2 size={15} /></button></>}</div>)
       : <Empty>{tr("Nothing here yet.")}</Empty>}
   </div>;
 }

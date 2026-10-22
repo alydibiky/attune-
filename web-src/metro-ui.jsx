@@ -4,6 +4,7 @@
 import React, { useState, useMemo } from "react";
 import { tr, getLang } from "./i18n.js";
 import { LINES, FARES, findStation, route } from "./metro.js";
+import * as K from "./ui-kit.jsx";
 import { TrainFront, ArrowUpDown, X } from "lucide-react";
 
 const card = "rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)]";
@@ -24,11 +25,11 @@ export function MetroPage() {
     const st = k === "from" ? A : B, v = ft[k];
     return (
       <div className="space-y-0.5">
-        <div className={`flex items-center gap-2 bg-[var(--c-bg)] border rounded-xl px-3 ${pick === k ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`}>
-          <span className="text-[11px] text-[var(--c-mut)] w-10 shrink-0">{label}</span>
+        <div className={`min-h-[44px] flex items-center gap-2 bg-[var(--c-bg)] border rounded-[14px] px-3 transition-colors duration-150 ${pick === k ? "border-[var(--c-acc)]" : "border-[var(--c-ln)]"}`}>
+          <span className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--c-mut)] w-10 shrink-0">{label}</span>
           <input value={v} list="metro-stations" dir="auto" data-testid={"metro-" + k} onFocus={() => setPick(k)} onChange={(e) => set({ ...ft, [k]: e.target.value })}
-            placeholder={k === "from" ? tr("e.g. Maadi, التحرير, Ramses") : tr("e.g. Attaba, Cairo University")} className="flex-1 bg-transparent py-2.5 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none" />
-          {v ? <button onClick={() => set({ ...ft, [k]: "" })} className="text-[var(--c-mut)]" aria-label={tr("Clear")}><X size={15} /></button> : null}
+            placeholder={k === "from" ? tr("e.g. Maadi, التحرير, Ramses") : tr("e.g. Attaba, Cairo University")} className="flex-1 bg-transparent py-2.5 text-[15px] font-semibold text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none" />
+          {v ? <button onClick={() => set({ ...ft, [k]: "" })} className="w-9 h-9 grid place-items-center text-[var(--c-mut)]" aria-label={tr("Clear")}><X size={15} /></button> : null}
         </div>
         {v && !st ? <p className="text-[11px] text-[var(--c-warn)] ps-1">{tr("No station by that name — pick one from the list below")}</p>
           : st && v.trim() !== st.en && v.trim() !== st.ar ? <p className="text-[11px] text-[var(--c-mut)] ps-1">→ {ar ? st.ar : st.en}</p> : null}
@@ -37,13 +38,13 @@ export function MetroPage() {
   };
 
   return (
-    <div className="space-y-3" data-testid="metro-page">
+    <div className="calm text-[var(--c-ink)] space-y-3" data-testid="metro-page">
       <div className={card + " p-3 space-y-2"}>
-        <p className="text-[var(--c-ink)] font-medium flex items-center gap-2"><TrainFront size={18} className="text-[var(--c-acc)]" />{tr("Cairo Metro")}</p>
+        <p className="text-[var(--c-ink)] text-[17px] font-extrabold flex items-center gap-2"><TrainFront size={18} className="text-[var(--c-acc)]" />{tr("Cairo Metro")}</p>
         <datalist id="metro-stations">{names.map((n) => <option key={n} value={n} />)}</datalist>
         {box("from", tr("From"))}
         <div className="flex justify-center -my-1">
-          <button onClick={() => set({ from: ft.to, to: ft.from })} data-testid="metro-swap" aria-label={tr("Swap")} className="p-1.5 rounded-full border border-[var(--c-ln)] text-[var(--c-ink)]"><ArrowUpDown size={14} /></button>
+          <button onClick={() => set({ from: ft.to, to: ft.from })} data-testid="metro-swap" aria-label={tr("Swap")} className="w-11 h-11 grid place-items-center rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)]"><ArrowUpDown size={14} /></button>
         </div>
         {box("to", tr("To"))}
       </div>
@@ -53,9 +54,9 @@ export function MetroPage() {
           {!r.legs.length ? <p className="text-sm text-[var(--c-ink)]">{tr("You're already there")}</p> : (
             <>
               <div className="flex gap-2 text-center">
-                <div className="flex-1 rounded-xl bg-[var(--c-bg)] py-2"><p className="text-lg text-[var(--c-ink)] font-semibold">{r.minutes}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("min (about)")}</p></div>
-                <div className="flex-1 rounded-xl bg-[var(--c-bg)] py-2"><p className="text-lg text-[var(--c-ink)] font-semibold">{r.stops}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("stops")}</p></div>
-                <div className="flex-1 rounded-xl bg-[var(--c-bg)] py-2"><p className="text-lg text-[var(--c-ink)] font-semibold" data-testid="metro-fare">{r.fare}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("EGP ticket")}</p></div>
+                <div className="flex-1 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] py-2.5"><p className="text-[20px] tabular-nums text-[var(--c-ink)] font-black">{r.minutes}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("min (about)")}</p></div>
+                <div className="flex-1 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] py-2.5"><p className="text-[20px] tabular-nums text-[var(--c-ink)] font-black">{r.stops}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("stops")}</p></div>
+                <div className="flex-1 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] py-2.5"><p className="text-[20px] tabular-nums text-[var(--c-ink)] font-black" data-testid="metro-fare">{r.fare}</p><p className="text-[10px] text-[var(--c-mut)]">{tr("EGP ticket")}</p></div>
               </div>
               <ol className="space-y-2">
                 {r.legs.map((l, i) => {
@@ -79,18 +80,18 @@ export function MetroPage() {
       ) : null}
 
       <div className={card + " p-3 space-y-2"}>
-        <p className="text-[11px] text-[var(--c-mut)]">{tr("The lines — tap a station to put it in “{b}”", { b: pick === "from" ? tr("From") : tr("To") })}</p>
+        <p className={K.label + " !normal-case !tracking-normal"}>{tr("The lines — tap a station to put it in “{b}”", { b: pick === "from" ? tr("From") : tr("To") })}</p>
         <div className="flex gap-1.5">
           {LINES.filter((l, i, a) => a.findIndex((x) => x.id === l.id) === i).map((l) => (
             <button key={l.id} onClick={() => setShow(show === l.id ? null : l.id)} data-testid={"metro-line-" + l.id}
-              className={`text-[12px] px-3 py-1 rounded-full border ${show === l.id ? "text-[var(--c-ink)]" : "text-[var(--c-ink)] border-[var(--c-ln)]"}`} style={show === l.id ? { background: l.color, borderColor: l.color } : null}>{ar ? l.ar : l.name}</button>
+              className={`min-h-[40px] text-[13px] font-bold px-4 rounded-full border ${show === l.id ? "text-white" : "text-[var(--c-ink)] border-[var(--c-ln)]"}`} style={show === l.id ? { background: l.color, borderColor: l.color } : null}>{ar ? l.ar : l.name}</button>
           ))}
         </div>
         {show ? (
           <div className="flex flex-wrap gap-1.5">
             {[...new Map(LINES.filter((l) => l.id === show).flatMap((l) => l.stations).map((s) => [s[0], s])).values()].map((s) => (
               <button key={s[0]} onClick={() => { const v = { ...ft, [pick]: ar ? s[1] : s[0] }; set(v); if (pick === "from" && !v.to) setPick("to"); }} data-testid="metro-station"
-                className="text-[12px] px-2 py-1 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)]">{ar ? s[1] : s[0]}</button>
+                className="min-h-[36px] text-[12.5px] font-semibold px-3 rounded-full bg-[var(--c-bg)] border border-[var(--c-ln)] text-[var(--c-ink)] hover:border-[var(--c-acc)]">{ar ? s[1] : s[0]}</button>
             ))}
           </div>
         ) : null}

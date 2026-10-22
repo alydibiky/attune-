@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Wifi, Cloud, Loader2, CheckCircle2, AlertTriangle, Copy } from "lucide-react";
 import { tr } from "./i18n.js";
 import * as Y from "./sync.js";
+import * as K from "./ui-kit.jsx";
 import { fleetSyncExtra } from "./fleet-store.js";
 
 // v6.44: Fleet's state and its photos (fleet-store.js)
@@ -84,41 +85,41 @@ export function SyncPanel({ native: N, flash }) {
   };
 
   const tab = (id, I, label) => <button onClick={() => { setWay(id); setErr(""); }} data-testid={"sync-way-" + id}
-    className={`flex-1 py-2 rounded-lg text-sm flex items-center justify-center gap-1.5 ${way === id ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "text-[var(--c-mut)]"}`}><I size={15} />{label}</button>;
-  const box = "w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl px-3 py-2.5 text-[14px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]";
+    className={`flex-1 min-h-[40px] rounded-full text-[13.5px] font-bold flex items-center justify-center gap-1.5 transition-colors duration-150 ${way === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold shadow-sm" : "text-[var(--c-mut)]"}`}><I size={15} />{label}</button>;
+  const box = K.inp;
   return (
-    <div className="space-y-3" data-testid="sync-panel">
+    <div className="calm space-y-3 !bg-transparent" data-testid="sync-panel">
       <p className="text-[12px] text-[var(--c-mut)]">{tr("Keep your phone and computer (or two phones) the same. The data is locked before it leaves this device; what you delete on one is deleted on the other, nothing else is lost.")}</p>
-      <div className="flex gap-1 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-1">{tab("wifi", Wifi, tr("Wi-Fi"))}{tab("google", Cloud, tr("Google Drive"))}</div>
+      <div className="flex gap-1 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-full p-1">{tab("wifi", Wifi, tr("Wi-Fi"))}{tab("google", Cloud, tr("Google Drive"))}</div>
       {way === "wifi" ? (
         <div className="space-y-3">
-          {!netOk ? <button onClick={askNet} className="w-full rounded-xl border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)] text-[12.5px] p-2.5 text-start" data-testid="sync-allow-net">{tr("Allow Attune to find your other device on this Wi-Fi (Android asks once).")}</button> : null}
+          {!netOk ? <button onClick={askNet} className="w-full min-h-[44px] rounded-[16px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)] text-[12.5px] font-bold p-3 text-start" data-testid="sync-allow-net">{tr("Allow Attune to find your other device on this Wi-Fi (Android asks once).")}</button> : null}
           {host ? (
-            <div className="rounded-xl border border-[var(--c-acc)] bg-[var(--c-soft)] p-3 space-y-1.5 text-center" data-testid="sync-host">
+            <div className="rounded-[22px] border border-[var(--c-acc)]/50 bg-[var(--c-soft)] p-4 space-y-1.5 text-center" data-testid="sync-host">
               <p className="text-[12px] text-[var(--c-mut)]">{tr("On the other device: Backup → Sync → Wi-Fi → Connect, and type:")}</p>
               <p className="text-[13px] text-[var(--c-ink)]">{tr("Address")} <b className="text-[var(--c-ink)] tabular-nums" dir="ltr" data-testid="sync-addr">{host.ip ? host.ip + ":" + host.port : tr("not on Wi-Fi")}</b></p>
-              <p className="text-[26px] font-bold tracking-[0.15em] text-[var(--c-acc)] tabular-nums" dir="ltr" data-testid="sync-code">{Y.showCode(host.code)}</p>
+              <p className="text-[28px] font-black tracking-[0.15em] text-[var(--c-acc)] tabular-nums" dir="ltr" data-testid="sync-code">{Y.showCode(host.code)}</p>
             </div>
-          ) : <button onClick={startHost} disabled={!!busy} className="w-full rounded-xl border border-[var(--c-ln)] text-[var(--c-ink)] py-2.5 text-sm" data-testid="sync-host-start">{tr("Show a code on this device")}</button>}
+          ) : <button onClick={startHost} disabled={!!busy} className={K.btnS + " w-full !h-12 !min-h-[48px]"} data-testid="sync-host-start">{tr("Show a code on this device")}</button>}
           <div className="pt-2 border-t border-[var(--c-ln)] space-y-2">
-            <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)]">{tr("Or connect to the other device")}</p>
+            <p className={K.label}>{tr("Or connect to the other device")}</p>
             <input value={addr} onChange={(e) => setAddr(e.target.value)} placeholder="192.168.1.20:41873" dir="ltr" inputMode="decimal" className={box} data-testid="sync-addr-in" />
             <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={tr("Code")} dir="ltr" autoCapitalize="characters" className={box + " tracking-widest"} data-testid="sync-code-in" />
             <label className="flex items-center gap-2 text-[12px] text-[var(--c-mut)]"><input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} data-testid="sync-replace" />{tr("Make this device exactly like the other one (removes what the other doesn't have)")}</label>
-            <button onClick={connect} disabled={!!busy} className="w-full bg-[var(--c-acc)] disabled:opacity-60 text-[var(--c-on-acc)] font-extrabold rounded-[16px] py-2.5 text-sm min-h-[44px]" data-testid="sync-connect">{tr("Connect and sync")}</button>
+            <button onClick={connect} disabled={!!busy} className={K.btnP + " w-full"} data-testid="sync-connect">{tr("Connect and sync")}</button>
           </div>
         </div>
       ) : (
         <div className="space-y-3">
-          {N && N.desktop && (!N.driveSync || (N.driveReady && !N.driveReady())) ? <p className="text-[12px] text-[var(--c-warn)] rounded-lg border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-2.5" data-testid="sync-drive-desktop">{tr("Google sync on the computer needs one setup step by Attune's owner (its Google client) — use Wi-Fi with your phone until then.")}</p>
+          {N && N.desktop && (!N.driveSync || (N.driveReady && !N.driveReady())) ? <p className="text-[12px] text-[var(--c-warn)] rounded-[16px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-3" data-testid="sync-drive-desktop">{tr("Google sync on the computer needs one setup step by Attune's owner (its Google client) — use Wi-Fi with your phone until then.")}</p>
             : N && N.desktop ? <p className="text-[12px] text-[var(--c-mut)]" data-testid="sync-drive-desktop-how">{tr("The first time, Google's sign-in page opens in your browser; after that the computer stays signed in.")}</p> : null}
           <p className="text-[12px] text-[var(--c-mut)]">{tr("One file in your own Google Drive, in a hidden folder only Attune can open. It is locked with your sync passphrase on this device, so Google only stores noise.")}</p>
           {cfg.pass ? <p className="text-[12px] text-[var(--c-pos)] flex items-center gap-1.5" data-testid="sync-pass-set"><CheckCircle2 size={14} />{tr("Sync passphrase set on this device.")} <button className="underline text-[var(--c-mut)]" onClick={() => setCfg(Y.saveSync({ ...Y.loadSync(), pass: "" }))}>{tr("Change")}</button></p> : (
             <div className="space-y-2">
               <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder={tr("Sync passphrase (10+ characters, the same on every device)")} className={box} data-testid="sync-pass" />
-              <button onClick={savePass} className="w-full rounded-xl border border-[var(--c-ln)] text-[var(--c-ink)] py-2 text-sm" data-testid="sync-pass-save">{tr("Save passphrase")}</button>
+              <button onClick={savePass} className={K.btnS + " w-full"} data-testid="sync-pass-save">{tr("Save passphrase")}</button>
             </div>)}
-          <button onClick={drive} disabled={!!busy || !cfg.pass} className="w-full bg-[var(--c-acc)] disabled:opacity-60 text-[var(--c-on-acc)] font-extrabold rounded-[16px] py-2.5 text-sm min-h-[44px]" data-testid="sync-drive">{tr("Sync with Google Drive")}</button>
+          <button onClick={drive} disabled={!!busy || !cfg.pass} className={K.btnP + " w-full"} data-testid="sync-drive">{tr("Sync with Google Drive")}</button>
           {cfg.last && cfg.lastHow === "drive" ? <p className="text-[11px] text-[var(--c-mut)]">{tr("Last synced: {d}", { d: new Date(cfg.last).toLocaleString() })}</p> : null}
         </div>
       )}

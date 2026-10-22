@@ -7,6 +7,7 @@ import { Download, Loader2, X, Check, ClipboardPaste, Play, Film, Music, Link2, 
 import { tr, getLang } from "./i18n.js";
 import { useSubBack, useSticky } from "./backstack.js";
 import * as V from "./video.js";
+import * as K from "./ui-kit.jsx";
 import { PANES, LEFT, RIGHT, DeskEmpty } from "./desk.jsx";
 
 const KEY = "attune:video:v1";
@@ -25,9 +26,9 @@ function ClipPanel({ d, nativeCall, flash, onMade }) {
     } catch (e) { setErr(tr(String((e && e.message) || e))); }
     setBusy(false);
   };
-  const box = "w-24 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-2 py-1.5 text-[13px] text-[var(--c-ink)] tabular-nums";
+  const box = "w-24 min-h-[44px] bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[14px] px-2.5 text-[13.5px] font-semibold text-[var(--c-ink)] tabular-nums focus:outline-none focus:border-[var(--c-acc)]";
   return (
-    <div className="rounded-lg border border-[var(--c-ln)] bg-[var(--c-bg)] p-2.5 space-y-2" data-testid="video-clip">
+    <div className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 space-y-2" data-testid="video-clip">
       <div className="flex flex-wrap items-center gap-2 text-[12px] text-[var(--c-mut)]">
         <span>{tr("From")}</span><input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="0:00" dir="ltr" inputMode="decimal" className={box} data-testid="video-clip-from" />
         <span>{tr("to")}</span><input value={to} onChange={(e) => setTo(e.target.value)} placeholder={tr("the end")} dir="ltr" inputMode="decimal" className={box} data-testid="video-clip-to" />
@@ -58,9 +59,9 @@ function SubsPanel({ d, nativeCall, flash }) {
     setBusy(null);
   };
   return (
-    <div className="rounded-lg border border-[var(--c-ln)] bg-[var(--c-bg)] p-2.5 space-y-2" data-testid="video-subs">
+    <div className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 space-y-2" data-testid="video-subs">
       <div className="flex items-center gap-2 text-[12px] text-[var(--c-ink)]">{tr("Spoken in")}
-        <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-2 py-1.5 text-[13px] focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="video-subs-lang">
+        <select value={lang} onChange={(e) => setLang(e.target.value)} className="min-h-[44px] bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[14px] px-2.5 text-[13px] font-semibold focus:outline-none focus:border-[var(--c-acc)] placeholder:text-[var(--c-mut)]" data-testid="video-subs-lang">
           <option value="ar">{tr("Arabic (Egypt)")}</option><option value="en">{tr("English")}</option><option value="fr">{tr("French")}</option><option value="es">{tr("Spanish")}</option><option value="tr">{tr("Turkish")}</option></select></div>
       <button onClick={go} disabled={!!busy} className="w-full py-2 rounded-[16px] bg-[var(--c-acc)] disabled:opacity-60 text-[var(--c-on-acc)] text-[13px] font-extrabold flex items-center justify-center gap-1.5 min-h-[44px]" data-testid="video-subs-go">
         {busy ? <Loader2 size={14} className="animate-spin" /> : <Captions size={14} />}{busy ? tr("Listening… {p}", { p: busy }) : tr("Make subtitles (.srt)")}</button>
@@ -179,11 +180,11 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink,
     setList((l) => { const n = l.filter((x) => x.id !== d.id); store(n); return n; });
   };
 
-  const chip = (on) => `w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border text-start ${on ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)]"}`;
+  const chip = (on) => `w-full min-h-[48px] flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-[16px] border text-start transition-colors duration-150 ${on ? "border-[var(--c-acc-2)] bg-[var(--c-surf-2)]" : "border-[var(--c-ln)]"}`;
   return (
-    <div className="space-y-4 max-w-2xl mx-auto" data-testid="video">
+    <div className="calm text-[var(--c-ink)] space-y-4 max-w-2xl mx-auto" data-testid="video">
       <div className="px-1">
-        <h2 className="text-lg font-semibold text-[var(--c-ink)] flex items-center gap-2"><Film size={19} className="text-[var(--c-acc)]" />{tr("Video Downloader")}</h2>
+        <h2 className={K.h1 + " flex items-center gap-2"}><Film size={19} className="text-[var(--c-acc)]" />{tr("Video Downloader")}</h2>
         <p data-intro="" className="text-[12.5px] text-[var(--c-mut)] leading-relaxed mt-1 lg:max-w-[75ch]">{tr("Copy a video's link, paste it here, pick the quality — it's saved to your phone's Movies folder. Works with direct video links, Google Drive, Dropbox, archive.org, Wikimedia Commons and pages that show a plain video.")}</p>
       </div>
 
@@ -193,29 +194,29 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink,
         <Captions size={18} className="text-[var(--c-acc)] shrink-0" />
         <span className="flex-1 min-w-0"><b className="block text-[13.5px] text-[var(--c-ink)]">{tr("Subtitles for a video on this phone")}</b>
           <span className="block text-[12px] text-[var(--c-mut)]">{tr("Any video or recording → an .srt file. Or type /subtitles on Home.")}</span></span>
-        <button onClick={() => anyRef.current && anyRef.current.click()} className="shrink-0 px-3 h-10 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[13px] font-extrabold" data-testid="video-subs-pick">{tr("Choose")}</button>
+        <button onClick={() => anyRef.current && anyRef.current.click()} className={K.btnP + " shrink-0 !h-11 !min-h-[44px] !px-4 !text-[13.5px]"} data-testid="video-subs-pick">{tr("Choose")}</button>
         <input ref={anyRef} type="file" accept="video/*,audio/*" className="hidden" data-testid="video-subs-file" onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) subsForFile(f); }} />
       </section> : null}
       <section className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3">
         <div className="flex gap-2">
-          <div className="flex-1 min-w-0 flex items-center gap-2 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl px-3">
+          <div className="flex-1 min-w-0 min-h-[44px] flex items-center gap-2 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[14px] px-3 focus-within:border-[var(--c-acc)] transition-colors duration-150">
             <Link2 size={15} className="text-[var(--c-mut)] shrink-0" />
             <input value={link} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") find(); }} dir="ltr" placeholder="https://…" className="flex-1 min-w-0 bg-transparent py-2.5 text-[13px] text-[var(--c-ink)] outline-none" data-testid="video-link" />
-            {link ? <button onClick={() => { setLink(""); setFound(null); setErr(""); }} aria-label={tr("Clear")} className="p-1 text-[var(--c-mut)]"><X size={14} /></button> : null}
+            {link ? <button onClick={() => { setLink(""); setFound(null); setErr(""); }} aria-label={tr("Clear")} className="w-9 h-9 grid place-items-center text-[var(--c-mut)]"><X size={14} /></button> : null}
           </div>
-          <button onClick={paste} className="shrink-0 whitespace-nowrap px-3 rounded-xl border border-[var(--c-ln)] text-[var(--c-ink)] flex items-center gap-1.5 text-[13px]" data-testid="video-paste"><ClipboardPaste size={15} />{tr("Paste")}</button>
+          <button onClick={paste} className={K.btnS + " shrink-0 whitespace-nowrap"} data-testid="video-paste"><ClipboardPaste size={15} />{tr("Paste")}</button>
         </div>
         {busy ? <p className="flex items-center gap-2 text-[12.5px] text-[var(--c-acc)]" data-testid="video-busy"><Loader2 size={14} className="animate-spin" />{busy}</p>
-          : !found ? <button onClick={() => find()} disabled={!link.trim()} className="w-full py-2.5 rounded-[16px] bg-[var(--c-acc)] disabled:opacity-40 text-[var(--c-on-acc)] font-extrabold text-sm min-h-[44px]" data-testid="video-find">{tr("Find the video")}</button> : null}
+          : !found ? <button onClick={() => find()} disabled={!link.trim()} className={K.btnP + " w-full"} data-testid="video-find">{tr("Find the video")}</button> : null}
         {err ? <p className="text-[12.5px] text-[var(--c-neg)] leading-relaxed" data-testid="video-error">{err}</p> : null}
       </section>
       </div><div className={RIGHT + (found || list.length ? "" : " hidden lg:block")}>
       {!found && !list.length ? <DeskEmpty icon={Film} title={tr("The video's versions appear here")} text={tr("Paste a link and tap Find the video — then pick the quality to download.")} /> : null}
 
       {found ? (
-        <section className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-acc)] p-4 space-y-3" data-testid="video-found">
-          <div><p className="text-[14px] text-[var(--c-ink)] font-medium" dir="auto" data-testid="video-title">{found.title}</p><p className="text-[11.5px] text-[var(--c-mut)]">{found.source}</p></div>
-          <p className="text-[12px] text-[var(--c-mut)]">{tr("Choose the quality")}</p>
+        <section className={K.cardPad + " space-y-3 !border-[var(--c-acc)]/50"} data-testid="video-found">
+          <div><p className="text-[15px] text-[var(--c-ink)] font-extrabold" dir="auto" data-testid="video-title">{found.title}</p><p className="text-[11.5px] text-[var(--c-mut)]">{found.source}</p></div>
+          <p className={K.label}>{tr("Choose the quality")}</p>
           <div className="space-y-1.5">
             {found.choices.map((c, i) => (
               <button key={c.url + i} onClick={() => setSel(i)} className={chip(sel === i)} data-testid={"video-q-" + i}>
@@ -224,28 +225,28 @@ export function VideoDownloader({ nativeCall, flash, pro, openPlan, initialLink,
               </button>
             ))}
           </div>
-          <button onClick={start} className="w-full py-2.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm flex items-center justify-center gap-2 min-h-[44px]" data-testid="video-download"><Download size={16} />{tr("Download")}</button>
+          <button onClick={start} className={K.btnP + " w-full"} data-testid="video-download"><Download size={16} />{tr("Download")}</button>
           <p className="text-[11px] text-[var(--c-mut)]">{tr("Only download videos you have the right to keep.")}</p>
         </section>
       ) : null}
 
       {list.length ? (
         <section className="space-y-2" data-testid="video-list">
-          <p className="text-[12px] text-[var(--c-mut)] px-1">{tr("Downloads")}</p>
+          <p className={K.label + " px-1"}>{tr("Downloads")}</p>
           {list.map((d) => {
             const pct = d.total ? Math.min(100, Math.round((d.done / d.total) * 100)) : 0;
             return (
-              <div key={d.id} className="bg-[var(--c-surf)] rounded-xl border border-[var(--c-ln)] p-3 space-y-2" data-testid="video-item">
+              <div key={d.id} className={K.card + " p-3.5 space-y-2"} data-testid="video-item">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[13px] text-[var(--c-ink)] truncate" dir="auto">{d.name}</p>
-                  <button onClick={() => remove(d)} aria-label={tr("Remove")} className="p-1 text-[var(--c-mut)] shrink-0"><X size={14} /></button>
+                  <p className="text-[14px] font-extrabold text-[var(--c-ink)] truncate" dir="auto">{d.name}</p>
+                  <button onClick={() => remove(d)} aria-label={tr("Remove")} className="w-10 h-10 -m-1 grid place-items-center rounded-[12px] text-[var(--c-mut)] shrink-0"><X size={14} /></button>
                 </div>
                 {d.status === "done" ? (
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11.5px] text-[var(--c-pos)] flex items-center gap-1"><Check size={13} />{tr("Saved")} · {V.sizeText(d.total)}</span>
                     <span className="flex items-center gap-1.5">
-                      {!d.clip && !d.audio && nativeCall && canSubs ? <button onClick={() => setSubs(subs === d.id ? null : d.id)} className="px-2.5 py-1.5 rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)] text-[12.5px] flex items-center gap-1" data-testid="video-subs-open"><Captions size={13} />{tr("Subtitles")}</button> : null}
-                      {!d.clip && nativeCall ? <button onClick={() => setCut(cut === d.id ? null : d.id)} className="px-2.5 py-1.5 rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)] text-[12.5px] flex items-center gap-1" data-testid="video-cut"><Scissors size={13} />{tr("Cut")}</button> : null}
+                      {!d.clip && !d.audio && nativeCall && canSubs ? <button onClick={() => setSubs(subs === d.id ? null : d.id)} className="min-h-[40px] px-3 rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] text-[12.5px] font-bold flex items-center gap-1" data-testid="video-subs-open"><Captions size={13} />{tr("Subtitles")}</button> : null}
+                      {!d.clip && nativeCall ? <button onClick={() => setCut(cut === d.id ? null : d.id)} className="min-h-[40px] px-3 rounded-full border border-[var(--c-ln)] text-[var(--c-ink)] text-[12.5px] font-bold flex items-center gap-1" data-testid="video-cut"><Scissors size={13} />{tr("Cut")}</button> : null}
                       <button onClick={() => nativeCall("videoOpen", d.clip ? { uri: d.uri, type: d.type } : { id: d.id }).catch(() => flash && flash(tr("The file was moved or deleted")))} className="px-3 py-1.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] text-[12.5px] font-extrabold flex items-center gap-1 min-h-[44px]" data-testid="video-open"><Play size={13} />{tr("Play")}</button>
                     </span>
                   </div>

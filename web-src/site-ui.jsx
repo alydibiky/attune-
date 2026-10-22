@@ -16,8 +16,8 @@ export function MicButton({ listen, value, setValue, flash }) {
     try { const t = await listen(getLang() === "ar" ? "ar-EG" : "", (p) => setValue(base + p)); if (t) setValue(base + t); }
     catch (e) { flash && flash(tr(String((e && e.message) || e))); } finally { setOn(false); }
   };
-  return <button onClick={go} data-testid="site-mic" className={"shrink-0 whitespace-nowrap flex items-center gap-1 text-xs px-2 py-1 rounded-lg border " + (on ? "bg-[var(--c-neg)]/15 border-[var(--c-neg)]/50 text-[var(--c-neg)]" : "bg-[var(--c-soft)] border-[var(--c-acc)]/40 text-[var(--c-acc)]")}>
-    {on ? <Loader2 size={13} className="animate-spin" /> : <Mic size={13} />}{on ? tr("Listening…") : tr("Speak")}</button>;
+  return <button onClick={go} data-testid="site-mic" className={"shrink-0 whitespace-nowrap min-h-[44px] flex items-center gap-1.5 text-[13px] font-extrabold px-3.5 rounded-full border transition-colors duration-150 " + (on ? "bg-[var(--c-neg)]/15 border-[var(--c-neg)]/50 text-[var(--c-neg)]" : "bg-[var(--c-soft)] border-[var(--c-acc)]/40 text-[var(--c-acc)]")}>
+    {on ? <Loader2 size={15} className="animate-spin" /> : <Mic size={15} />}{on ? tr("Listening…") : tr("Speak")}</button>;
 }
 
 const shrink = (file) => new Promise((ok, no) => { const r = new FileReader(); r.onerror = no; r.onload = () => { const im = new Image(); im.onerror = no; im.onload = () => {
@@ -39,20 +39,20 @@ export function SitePhotos({ photos, setPhotos, title, text, by, flash }) {
   return (
     <div className="mt-3 space-y-2" data-testid="site-photos">
       <div className="flex items-center gap-2">
-        <button onClick={() => ref.current && ref.current.click()} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--c-ln)] text-[var(--c-ink)]" data-testid="site-photo-add"><Camera size={14} />{tr("Add photos")}</button>
-        <span className="text-[11px] text-[var(--c-mut)]">{tr("Each photo gets the time and the place")}</span>
+        <button onClick={() => ref.current && ref.current.click()} className="shrink-0 min-h-[44px] flex items-center gap-1.5 text-[13px] font-bold px-3.5 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] hover:border-[var(--c-acc)]" data-testid="site-photo-add"><Camera size={15} className="text-[var(--c-acc)]" />{tr("Add photos")}</button>
+        <span className="text-[12px] text-[var(--c-mut)]">{tr("Each photo gets the time and the place")}</span>
         <input ref={ref} type="file" accept="image/*" capture="environment" multiple className="hidden" data-testid="site-photo-file" onChange={(e) => { add([...(e.target.files || [])]); e.target.value = ""; }} />
       </div>
       {photos.length ? <div className="grid grid-cols-2 gap-2">{photos.map((p, i) => (
-        <div key={i} className="rounded-lg border border-[var(--c-ln)] p-1.5 space-y-1" data-testid="site-photo">
-          <div className="relative"><img src={p.url} alt="" className="w-full h-24 object-cover rounded" />
-            <button onClick={() => setPhotos(photos.filter((_, j) => j !== i))} aria-label={tr("Remove")} className="absolute top-1 end-1 bg-black/60 rounded-full p-1 text-white"><X size={12} /></button></div>
-          <p className="text-[10.5px] text-[var(--c-mut)]" dir="auto" data-testid="site-photo-stamp">{stampLine(p, i, ar ? "ar" : "en")}</p>
+        <div key={i} className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-2 space-y-1.5" data-testid="site-photo">
+          <div className="relative"><img src={p.url} alt="" className="w-full h-24 object-cover rounded-[12px]" />
+            <button onClick={() => setPhotos(photos.filter((_, j) => j !== i))} aria-label={tr("Remove")} className="absolute top-0.5 end-0.5 w-11 h-11 grid place-items-center"><span className="w-7 h-7 rounded-full grid place-items-center bg-black/60 text-white"><X size={13} /></span></button></div>
+          <p className="text-[11px] text-[var(--c-mut)] tabular-nums m-0" dir="auto" data-testid="site-photo-stamp">{stampLine(p, i, ar ? "ar" : "en")}</p>
           <input value={p.note} onChange={(e) => setPhotos(photos.map((x, j) => (j === i ? { ...x, note: e.target.value } : x)))} placeholder={tr("What it shows (optional)")} dir="auto"
-            className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded px-2 py-1 text-[11.5px] text-[var(--c-ink)]" />
+            className="w-full min-h-[40px] bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-[12px] px-2.5 py-1.5 text-[13px] text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]" />
         </div>))}</div> : null}
       {text ? <button disabled={busy} onClick={async () => { setBusy(true); await sharePdf({ html: reportHtml({ title, text, by, photos, lang: ar ? "ar" : "en" }), name: String(title || "report").replace(/[^\w؀-ۿ-]+/g, "_"), flash }); setBusy(false); }}
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-[var(--c-acc)]/40 text-[var(--c-acc)] text-sm" data-testid="site-pdf">
+        className="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-[14px] disabled:opacity-40" data-testid="site-pdf">
         {busy ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}{photos.length ? tr("Report with {n} photos (PDF)", { n: photos.length }) : tr("Report as PDF")}</button> : null}
     </div>);
 }

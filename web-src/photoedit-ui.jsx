@@ -221,27 +221,27 @@ export function PhotoEditor({ src, file, photo, nativeCall, flash, onDone, onClo
         </div>) : hd && (tool === "erase" || tool === "people") ? <div className="px-4 text-center text-[11.5px] text-emerald-300" data-testid="pe-hd-on">{tr("Eraser HD is on")}</div> : null}
       {subj && subj.list && ((tool === "erase" && sel.some((i) => shadowOf(i))) || (tool === "people" && others.some((i) => shadowOf(i)))) ? (
         <div className="px-4 pt-1 flex justify-center">
-          <button onClick={() => setShade((v) => !v)} aria-pressed={shade} className={"h-8 px-3 rounded-full text-[12.5px] " + (shade ? "bg-sky-500/25 text-sky-200" : "bg-white/10 text-white/70")} data-testid="pe-shadow">{shade ? "✓ " : ""}{tr("Its shadow too")}</button>
+          <button onClick={() => setShade((v) => !v)} aria-pressed={shade} className={"h-8 px-3 rounded-full text-[12.5px] " + (shade ? "bg-[var(--c-acc)]/25 text-[var(--c-acc)]" : "bg-white/10 text-white/70")} data-testid="pe-shadow">{shade ? "✓ " : ""}{tr("Its shadow too")}</button>
         </div>) : null}
       <div className="px-4 py-3 flex items-center justify-center gap-2 min-h-[64px]">
         {tool === "erase" ? <>
           <button onClick={() => setBrush((b) => !b)} className={"h-11 px-4 rounded-full flex items-center gap-1.5 text-[14px] " + (brush ? "bg-white text-black font-bold" : "bg-white/10")} data-testid="pe-brush"><PenLine size={16} />{tr("Brush")}</button>
-          <button onClick={() => erase(sel)} disabled={!!busy || (!sel.length && !nStrokes)} className="h-11 px-6 rounded-full bg-sky-500 text-white font-bold disabled:opacity-40" data-testid="pe-erase">{tr("Erase")}{sel.length ? " (" + sel.length + ")" : ""}</button></>
+          <button onClick={() => erase(sel)} disabled={!!busy || (!sel.length && !nStrokes)} className="h-11 px-6 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-bold disabled:opacity-40" data-testid="pe-erase">{tr("Erase")}{sel.length ? " (" + sel.length + ")" : ""}</button></>
         : tool === "people" ? <button onClick={() => erase(others)} disabled={!!busy || !others.length} className="h-11 px-6 rounded-full bg-rose-500 text-white font-bold disabled:opacity-40" data-testid="pe-people">{tr("Remove {n}", { n: others.length })}</button>
-        : tool === "cutout" ? (cut ? <><button onClick={() => setCut(null)} className="h-11 px-4 rounded-full bg-white/10">{tr("Back")}</button><button onClick={saveCut} disabled={!!busy} className="h-11 px-6 rounded-full bg-sky-500 font-bold" data-testid="pe-cut-save">{tr("Save cut-out")}</button></>
-          : <button onClick={doCut} disabled={!!busy || !subj || !subj.list || !subj.list.length} className="h-11 px-6 rounded-full bg-sky-500 font-bold disabled:opacity-40" data-testid="pe-cut-go">{tr("Cut out")}</button>)
+        : tool === "cutout" ? (cut ? <><button onClick={() => setCut(null)} className="h-11 px-4 rounded-full bg-white/10">{tr("Back")}</button><button onClick={saveCut} disabled={!!busy} className="h-11 px-6 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-bold" data-testid="pe-cut-save">{tr("Save cut-out")}</button></>
+          : <button onClick={doCut} disabled={!!busy || !subj || !subj.list || !subj.list.length} className="h-11 px-6 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-bold disabled:opacity-40" data-testid="pe-cut-go">{tr("Cut out")}</button>)
         : tool === "expand" ? <div className="w-full max-w-md space-y-2"><div className="flex gap-1.5 overflow-x-auto justify-center" data-testid="pe-shapes">{EXPAND_SHAPES.map((s) =>
             <button key={s} onClick={() => setShape(s)} aria-pressed={shape === s} className={"h-8 px-3 rounded-full text-[12.5px] shrink-0 " + (shape === s ? "bg-white text-black font-bold" : "bg-white/10")} data-testid={"pe-shape-" + s.replace(":", "x")}>{s === "all" ? tr("All round") : s === "wide" ? tr("Wider") : s === "tall" ? tr("Taller") : s}</button>)}</div>
-            <div className="flex justify-center"><button onClick={expand} disabled={!!busy} className="h-11 px-6 rounded-full bg-sky-500 font-bold disabled:opacity-40" data-testid="pe-expand">{tr("Expand")}</button></div></div>
-        : tool === "enhance" ? <button onClick={enhance} disabled={!!busy} className="h-11 px-6 rounded-full bg-sky-500 font-bold disabled:opacity-40" data-testid="pe-enhance">{tr("Enhance")}</button>
+            <div className="flex justify-center"><button onClick={expand} disabled={!!busy} className="h-11 px-6 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-bold disabled:opacity-40" data-testid="pe-expand">{tr("Expand")}</button></div></div>
+        : tool === "enhance" ? <button onClick={enhance} disabled={!!busy} className="h-11 px-6 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-bold disabled:opacity-40" data-testid="pe-enhance">{tr("Enhance")}</button>
         : <div className="w-full max-w-md flex gap-2"><input value={what} onChange={(e) => setWhat(e.target.value)} dir="auto" placeholder={tr("e.g. a sunset sky")} className="flex-1 min-w-0 h-11 rounded-full bg-white/10 px-4 text-[14px]" data-testid="pe-what" />
-            <button onClick={change} disabled={!!busy || !nStrokes} className="h-11 px-5 rounded-full bg-sky-500 font-bold disabled:opacity-40" data-testid="pe-change">{tr("Change")}</button></div>}
+            <button onClick={change} disabled={!!busy || !nStrokes} className="h-11 px-5 rounded-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-bold disabled:opacity-40" data-testid="pe-change">{tr("Change")}</button></div>}
       </div>
       {painting ? <label className="px-6 pb-1 flex items-center gap-2 text-[12px] text-white/70">{tr("Brush")}<input type="range" min="2" max="15" value={size} onChange={(e) => setSize(+e.target.value)} className="flex-1" /></label> : null}
       <div className="flex justify-around border-t border-white/10 pb-[max(10px,env(safe-area-inset-bottom))] pt-2" role="tablist" data-testid="pe-tools">
         {TOOLS.map(([k, I, label]) => (
           <button key={k} role="tab" aria-selected={tool === k} onClick={() => { setTool(k); setCut(null); setNote(""); if (k !== "erase") setBrush(false); if (k === "cutout" && subj && subj.main >= 0) setSel([subj.main]); else if (k !== "erase") setSel([]); }}
-            className={"flex flex-col items-center gap-1 px-2 min-w-[64px] text-[11.5px] " + (tool === k ? "text-sky-300 font-bold" : "text-white/75")} data-testid={"pe-tool-" + k}><I size={22} />{tr(label)}</button>))}
+            className={"flex flex-col items-center gap-1 px-2 min-w-[64px] text-[11.5px] " + (tool === k ? "text-[var(--c-acc)] font-bold" : "text-white/75")} data-testid={"pe-tool-" + k}><I size={22} />{tr(label)}</button>))}
       </div>
     </div>);
 }

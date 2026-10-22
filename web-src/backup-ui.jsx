@@ -10,6 +10,7 @@ import React, { useState, useRef } from "react";
 import { X, Lock, Download, RefreshCw, ShieldCheck, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { tr, fmtNum } from "./i18n.js";
 import { SyncPanel } from "./sync-ui.jsx";
+import * as K from "./ui-kit.jsx";
 import {
   collectData, summarize, encryptBackup, decryptBackup, readHeader, restoreData, passwordProblem,
   passwordStrength, backupFileName, LAST_BACKUP_KEY, daysSinceBackup,
@@ -27,12 +28,12 @@ function Summary({ s }) {
   return (
     <div className="grid grid-cols-2 gap-1.5 text-[12px]">
       {rows.map(([k, v]) => (
-        <div key={k} className="flex justify-between gap-2 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] px-2.5 py-1.5">
-          <span className="text-[var(--c-mut)]">{k}</span><span className="text-[var(--c-ink)] font-medium" dir="ltr">{fmtNum(v || 0)}</span>
+        <div key={k} className="flex justify-between gap-2 rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2">
+          <span className="text-[var(--c-mut)]">{k}</span><span className="text-[var(--c-ink)] font-extrabold tabular-nums" dir="ltr">{fmtNum(v || 0)}</span>
         </div>
       ))}
-      <div className="flex justify-between gap-2 rounded-lg bg-[var(--c-bg)] border border-[var(--c-ln)] px-2.5 py-1.5">
-        <span className="text-[var(--c-mut)]">{tr("Size")}</span><span className="text-[var(--c-ink)] font-medium" dir="ltr">{kb(s.bytes || 0)}</span>
+      <div className="flex justify-between gap-2 rounded-[12px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2">
+        <span className="text-[var(--c-mut)]">{tr("Size")}</span><span className="text-[var(--c-ink)] font-extrabold tabular-nums" dir="ltr">{kb(s.bytes || 0)}</span>
       </div>
     </div>
   );
@@ -42,7 +43,7 @@ function PwBox({ value, onChange, placeholder, show, autoFocus, testid }) {
   return (
     <input type={show ? "text" : "password"} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
       autoFocus={autoFocus} autoComplete="new-password" autoCapitalize="off" spellCheck={false} data-testid={testid} dir="ltr"
-      className="w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-3 py-2.5 text-sm text-[var(--c-ink)] placeholder:text-[var(--c-mut)] focus:outline-none focus:border-[var(--c-acc)]" />
+      className={K.inp} />
   );
 }
 
@@ -131,23 +132,23 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
 
   const tabBtn = (id, label) => (
     <button onClick={() => { setTab(id); setErr(""); setDone(""); setPw(""); setPw2(""); }}
-      className={`flex-1 py-2 rounded-lg text-sm ${tab === id ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "text-[var(--c-mut)]"}`}>{label}</button>
+      className={`flex-1 min-h-[40px] rounded-full text-[13.5px] font-bold transition-colors duration-150 ${tab === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] font-extrabold shadow-sm" : "text-[var(--c-mut)]"}`}>{label}</button>
   );
 
   return (
     <div className="calm fixed inset-0 z-[60] bg-black/70! flex items-center justify-center p-4" onClick={close}>
-      <div className="bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-[22px] max-w-md w-full p-5" onClick={(e) => e.stopPropagation()} data-testid="backup-panel">
+      <div className={K.card + " max-w-md w-full p-5"} onClick={(e) => e.stopPropagation()} data-testid="backup-panel">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-lg font-bold text-[var(--c-ink)] flex items-center gap-2"><ShieldCheck size={19} className="text-[var(--c-acc)]" />{tr("Backup & sync")}</h2>
-          <button onClick={close} className="-m-2 p-2 rounded-full text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={20} /></button>
+          <h2 className={K.h1 + " text-[20px] flex items-center gap-2"}><ShieldCheck size={19} className="text-[var(--c-acc)]" />{tr("Backup & sync")}</h2>
+          <button onClick={close} className="-me-2 w-11 h-11 grid place-items-center rounded-full text-[var(--c-mut)] hover:text-[var(--c-ink)] hover:bg-[var(--c-surf-2)]" aria-label={tr("Close")}><X size={20} /></button>
         </div>
         <p className="text-xs text-[var(--c-mut)] mb-3">{tr("Everything in Attune lives only on this phone. A backup is one file, locked with your password, that you can keep anywhere.")}</p>
-        <div className="flex gap-1 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-xl p-1 mb-4">{tabBtn("backup", tr("Back up"))}{tabBtn("restore", tr("Restore"))}{tabBtn("sync", tr("Sync"))}</div>
+        <div className="flex gap-1 bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-full p-1 mb-4">{tabBtn("backup", tr("Back up"))}{tabBtn("restore", tr("Restore"))}{tabBtn("sync", tr("Sync"))}</div>
 
         {/* v6.37: Sync — Wi-Fi or Google Drive (sync-ui.jsx) */}
         {tab === "sync" ? <SyncPanel native={native} flash={flash} /> : tab === "backup" ? (
           <div className="space-y-3">
-            <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)]">{tr("What will be saved")}</p>
+            <p className={K.label}>{tr("What will be saved")}</p>
             <Summary s={now} />
             <p className="text-[11px] text-[var(--c-mut)]">{since == null ? tr("You have never made a backup.") : since === 0 ? tr("Last backup: today.") : tr("Last backup: {n} days ago.", { n: since })} {tr("Models are not included — download them again from Engine.")}</p>
             <PwBox value={pw} onChange={setPw} placeholder={tr("Password (8+ characters)")} show={show} testid="bk-pw" />
@@ -159,12 +160,12 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
               </div>
               <label className="text-[var(--c-mut)] flex items-center gap-1"><input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />{tr("Show")}</label>
             </div>
-            <div className="flex gap-2 items-start rounded-lg border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-2.5 text-[11px] text-[var(--c-warn)]">
+            <div className="flex gap-2 items-start rounded-[16px] border border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 p-2.5 text-[11px] text-[var(--c-warn)]">
               <AlertTriangle size={14} className="shrink-0 mt-0.5" />
               <span>{tr("If you forget this password the backup cannot be opened — by anyone. Write it down somewhere safe.")}</span>
             </div>
             <button onClick={doBackup} disabled={!!busy} data-testid="bk-save"
-              className="w-full flex items-center justify-center gap-2 bg-[var(--c-acc)] disabled:opacity-60 text-[var(--c-on-acc)] font-extrabold rounded-[16px] py-2.5 min-h-[44px]">
+              className={K.btnP + " w-full"}>
               {busy ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}{busy || tr("Lock and save backup")}
             </button>
           </div>
@@ -172,12 +173,12 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
           <div className="space-y-3">
             <input ref={fileRef} type="file" accept="*/*" className="hidden" onChange={pick} data-testid="bk-file" />
             <button onClick={() => fileRef.current && fileRef.current.click()}
-              className="w-full flex items-center justify-center gap-2 border border-[var(--c-ln)] text-[var(--c-ink)] rounded-xl py-2.5">
+              className={K.btnS + " w-full !h-12 !min-h-[48px]"}>
               <Download size={16} />{file ? tr("Choose a different file") : tr("Choose backup file")}
             </button>
             {file ? (
-              <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-bg)] p-3 space-y-2">
-                <p className="text-[12px] text-[var(--c-ink)] break-all">{file.name}</p>
+              <div className="rounded-[18px] border border-[var(--c-ln)] bg-[var(--c-bg)] p-3.5 space-y-2">
+                <p className="text-[13px] font-bold text-[var(--c-ink)] break-all">{file.name}</p>
                 <p className="text-[11px] text-[var(--c-mut)]">{tr("Made on {d}", { d: new Date(file.head.created).toLocaleString() })}</p>
                 {file.head.summary ? <Summary s={file.head.summary} /> : null}
               </div>
@@ -186,7 +187,7 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
               <>
                 <PwBox value={pw} onChange={setPw} placeholder={tr("Backup password")} show={show} autoFocus testid="rs-pw" />
                 <button onClick={unlock} disabled={!!busy} data-testid="rs-unlock"
-                  className="w-full flex items-center justify-center gap-2 bg-[var(--c-acc)] disabled:opacity-60 text-[var(--c-on-acc)] font-extrabold rounded-[16px] py-2.5 min-h-[44px]">
+                  className={K.btnP + " w-full"}>
                   {busy ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}{busy || tr("Unlock")}
                 </button>
               </>
@@ -196,28 +197,28 @@ export function BackupPanel({ close, flash, nativeCall, native }) {
                 <p className="text-[12px] text-[var(--c-acc)] flex items-center gap-1.5"><CheckCircle2 size={14} />{tr("Unlocked. How should it be restored?")}</p>
                 {[["replace", tr("Replace everything on this phone"), tr("This phone becomes exactly like the backup.")],
                   ["merge", tr("Merge"), tr("Keep everything on this phone and add the backup's chats, memory, reminders and cycle days. The Money ledger is only taken from the backup if this phone has none.")]].map(([id, a, b]) => (
-                  <label key={id} className={`block rounded-xl border p-2.5 ${mode === id ? "border-[var(--c-acc)] bg-[var(--c-soft)]" : "border-[var(--c-ln)]"}`}>
+                  <label key={id} className={`block rounded-[16px] border p-3 min-h-[48px] transition-colors duration-150 ${mode === id ? "border-[var(--c-acc-2)] bg-[var(--c-surf-2)]" : "border-[var(--c-ln)]"}`}>
                     <span className="flex items-center gap-2 text-sm text-[var(--c-ink)]"><input type="radio" name="rmode" checked={mode === id} onChange={() => { setMode(id); setConfirm(false); }} />{a}</span>
                     <span className="block text-[11px] text-[var(--c-mut)] ms-6">{b}</span>
                   </label>
                 ))}
                 {!confirm ? (
-                  <button onClick={() => setConfirm(true)} data-testid="rs-restore" className="w-full bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold rounded-[16px] py-2.5 min-h-[44px]">{tr("Restore")}</button>
+                  <button onClick={() => setConfirm(true)} data-testid="rs-restore" className={K.btnP + " w-full"}>{tr("Restore")}</button>
                 ) : (
-                  <div className="rounded-xl border border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10 p-3 space-y-2">
+                  <div className="rounded-[18px] border border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10 p-3.5 space-y-2">
                     <p className="text-[12px] text-[var(--c-neg)]">{mode === "replace"
                       ? tr("This phone's {c} chats and {l} ledger entries will be replaced by the backup's. You can undo this once, right after.", { c: now.chats, l: now.ledger })
                       : tr("The backup's items will be added to this phone. You can undo this once, right after.")}</p>
                     <div className="flex gap-2">
-                      <button onClick={() => setConfirm(false)} className="flex-1 border border-[var(--c-ln)] rounded-lg py-2 text-sm text-[var(--c-ink)]">{tr("Cancel")}</button>
-                      <button onClick={doRestore} data-testid="rs-confirm" className="flex-1 bg-[var(--c-neg)] text-[var(--c-on-acc)] font-semibold rounded-lg py-2 text-sm">{tr("Yes, restore")}</button>
+                      <button onClick={() => setConfirm(false)} className={K.btnS + " flex-1"}>{tr("Cancel")}</button>
+                      <button onClick={doRestore} data-testid="rs-confirm" className="flex-1 min-h-[44px] bg-[var(--c-neg)] text-[var(--c-on-acc)] font-extrabold rounded-[14px] text-sm">{tr("Yes, restore")}</button>
                     </div>
                   </div>
                 )}
               </div>
             ) : null}
             {hasUndo && !opened ? (
-              <button onClick={undoRestore} data-testid="rs-undo" className="w-full flex items-center justify-center gap-2 text-[12px] text-[var(--c-mut)] border border-[var(--c-ln)] rounded-xl py-2">
+              <button onClick={undoRestore} data-testid="rs-undo" className={K.btnS + " w-full !text-[var(--c-mut)]"}>
                 <RefreshCw size={14} />{tr("Undo the last restore")}
               </button>
             ) : null}

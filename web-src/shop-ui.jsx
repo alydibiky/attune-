@@ -6,6 +6,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Plus, Minus, Barcode, Search, Check, Trash2, Share2, Package, Users, Clock, BarChart3, ShoppingCart, AlertTriangle, Undo2 } from "lucide-react";
 import { tr, getLang } from "./i18n.js";
+import * as K from "./ui-kit.jsx";
 import * as S from "./shop.js";
 import * as Ops from "./books-ops.js";
 import * as B from "./books.js";
@@ -17,10 +18,10 @@ import { sharePdf } from "./books-docs.jsx";
 import * as SP from "./shop-pro.js";
 import { ReturnSheet, OffersPanel, ShopReports } from "./shop-pro-ui.jsx";   // v6.44: returns, offers, loyalty, reports
 
-const card = "rounded-2xl bg-[var(--c-surf)] border border-[var(--c-ln)] shadow-[0_1px_3px_rgba(15,23,42,.06)]";
-const btnP = "h-12 px-5 rounded-2xl text-[var(--c-on-acc)] font-bold text-[15px] disabled:opacity-40 flex items-center justify-center gap-2";
-const btnS = "h-10 px-3 rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] text-[13.5px] font-semibold flex items-center justify-center gap-1.5";
-const input = "w-full h-11 rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] px-3 text-[15px]";
+const card = K.card;
+const btnP = K.btnP;
+const btnS = K.btnS;
+const input = K.inp;
 const today = () => new Date().toISOString().slice(0, 10);
 const money = (m, cur) => B.fmt(m, { cur });
 const toM = (v) => B.toMinor(v);
@@ -33,10 +34,10 @@ function Setup({ onDone, flash }) {
   const read = () => setSu(S.setupFromSentence(text, { country: country(), currency: homeCurrency() }));
   if (!su) return (
     <div className="space-y-3" data-testid="shop-setup">
-      <p className="text-[22px] font-extrabold leading-tight">{tr("Your shop on this phone")}</p>
+      <p className="text-[23px] font-black tracking-tight leading-tight m-0">{tr("Your shop on this phone")}</p>
       <p className="text-[14px] text-[var(--c-mut)]">{tr("Say what your shop is — the counter, stock, customers, staff and the end-of-day close are set up for it. Works without internet.")}</p>
-      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} dir="auto" className="w-full rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 text-[15px]" placeholder={tr("e.g. A bakery called Nour — we sell bread, cakes and coffee, 3 staff")} data-testid="shop-sentence" />
-      <button className={btnP + " w-full"} style={{ background: "var(--c-acc)" }} disabled={!text.trim()} onClick={read} data-testid="shop-read">{tr("Set it up")}</button>
+      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} dir="auto" className={K.area} placeholder={tr("e.g. A bakery called Nour — we sell bread, cakes and coffee, 3 staff")} data-testid="shop-sentence" />
+      <button className={btnP + " w-full"} disabled={!text.trim()} onClick={read} data-testid="shop-read">{tr("Set it up")}</button>
     </div>);
   const setItem = (i, k, v) => setSu((x) => ({ ...x, items: x.items.map((it, j) => (j === i ? { ...it, [k]: v } : it)) }));
   return (
@@ -49,15 +50,15 @@ function Setup({ onDone, flash }) {
       <label className="flex items-start gap-2 text-[13.5px]"><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} className="mt-1" data-testid="shop-tax-ok" />
         <span>{su.taxPct != null ? tr("{p}% is the tax rate my shop charges (the usual rate here — check it)", { p: su.taxPct }) : tr("I have entered my shop's tax rate (0 if none)")}</span></label>
       <label className="flex items-center gap-2 text-[13.5px]"><input type="checkbox" checked={su.taxInclusive} onChange={(e) => setSu({ ...su, taxInclusive: e.target.checked })} />{tr("My shelf prices already include the tax")}</label>
-      <p className="text-[15px] font-bold pt-1">{tr("Items and prices")}</p>
+      <p className="text-[15px] font-extrabold pt-1 m-0">{tr("Items and prices")}</p>
       <p className="text-[12.5px] text-[var(--c-mut)] -mt-2">{tr("Set the prices you charge. Items without a price stay, but can't be sold until you set one.")}</p>
       <div className="space-y-1.5">{su.items.map((it, i) => (
         <div key={i} className="flex items-center gap-2"><input value={it.name} onChange={(e) => setItem(i, "name", e.target.value)} placeholder={tr("Item name")} className={input} style={{ flex: "1 1 0", minWidth: 0, width: "auto" }} dir="auto" data-testid="shop-item-name" />
           <input value={it.priceText ?? ""} onChange={(e) => setItem(i, "priceText", e.target.value)} placeholder={tr("Price")} inputMode="decimal" className={input} style={{ width: 96, flex: "0 0 96px" }} data-testid="shop-price" />
-          <button className="w-9 h-9 grid place-items-center text-[var(--c-mut)]" aria-label={tr("Remove")} onClick={() => setSu((x) => ({ ...x, items: x.items.filter((_, j) => j !== i) }))}><Trash2 size={15} /></button></div>))}
+          <button className="w-11 h-11 grid place-items-center rounded-full text-[var(--c-mut)] hover:text-[var(--c-neg)]" aria-label={tr("Remove")} onClick={() => setSu((x) => ({ ...x, items: x.items.filter((_, j) => j !== i) }))}><Trash2 size={15} /></button></div>))}
         <button className={btnS} onClick={() => setSu((x) => ({ ...x, items: [...x.items, { name: "", unit: "pcs", track: true, price: 0 }] }))}><Plus size={15} />{tr("Add an item")}</button>
       </div>
-      <button className={btnP + " w-full"} style={{ background: "var(--c-acc)" }} disabled={!ok || su.taxPct == null || !su.name.trim()} data-testid="shop-create"
+      <button className={btnP + " w-full"} disabled={!ok || su.taxPct == null || !su.name.trim()} data-testid="shop-create"
         onClick={() => onDone({ ...su, items: su.items.filter((x) => x.name.trim()).map((x) => ({ ...x, price: toM(x.priceText || 0) || 0 })) })}>{tr("Open my shop")}</button>
       {!ok ? <p className="text-[12px] text-[var(--c-warn)] flex gap-1.5"><AlertTriangle size={14} className="shrink-0 mt-0.5" />{tr("Confirm the tax rate first — every receipt depends on it.")}</p> : null}
     </div>);
@@ -106,13 +107,13 @@ function Sell({ books, setBooks, shop, setShop, scanBarcode, share, flash }) {
         <div className={card + " p-4 space-y-1"} data-testid="shop-receipt">
           <p className="font-bold flex items-center gap-2 text-[var(--c-pos)]"><Check size={18} />{tr("Sold — {n}", { n: done.number })}</p>
           {done.lines.map((l, i) => <p key={i} className="text-[13.5px] m-0">{l.qty} × {l.name}</p>)}
-          <p className="text-[18px] font-extrabold m-0" data-testid="shop-receipt-total">{money(done.total, cur)}</p>
+          <p className="text-[22px] font-black tracking-tight tabular-nums m-0" dir="ltr" data-testid="shop-receipt-total">{money(done.total, cur)}</p>
           {done.saved > 0 ? <p className="text-[13.5px] font-semibold text-[var(--c-pos)] m-0" data-testid="shop-saved">{tr("You saved {a}", { a: money(done.saved, cur) })}{done.applied.length ? " · " + done.applied.map((a) => a.name).join(", ") : ""}</p> : null}
           {done.change > 0 ? <p className="text-[15px] font-bold m-0" data-testid="shop-change">{tr("Change: {a}", { a: money(done.change, cur) })}</p> : null}
           {share ? <button className={btnS + " mt-2"} onClick={() => share(`${books.company.name}\n${done.number}\n${done.lines.map((l) => `${l.qty} × ${l.name}`).join("\n")}\n${tr("Total")}: ${money(done.total, cur)}`)}><Share2 size={14} />{tr("Send the receipt")}</button> : null}
         </div>) : null}
       <div className="flex gap-2">
-        <div className="flex-1 flex items-center gap-2 h-11 rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] px-3"><Search size={15} className="text-[var(--c-mut)]" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Find an item")} className="flex-1 outline-none bg-transparent" data-testid="shop-search" /></div>
+        <div className="flex-1 flex items-center gap-2 min-h-[44px] h-11 rounded-[14px] border border-[var(--c-ln)] bg-[var(--c-bg)] px-3.5 focus-within:border-[var(--c-acc)]"><Search size={15} className="text-[var(--c-mut)]" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Find an item")} className="flex-1 outline-none bg-transparent" data-testid="shop-search" /></div>
         {scanBarcode ? <button className={btnS + " h-11"} onClick={() => fileRef.current && fileRef.current.click()} aria-label={tr("Scan a barcode")} data-testid="shop-scan"><Barcode size={17} /></button> : null}
         <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { scan(e.target.files && e.target.files[0]); e.target.value = ""; }} />
         <button className={btnS + " h-11"} onClick={() => setRet(true)} aria-label={tr("Return / refund")} data-testid="shop-return-open"><Undo2 size={17} /></button>
@@ -121,28 +122,28 @@ function Sell({ books, setBooks, shop, setShop, scanBarcode, share, flash }) {
       {(shop.staff || []).length ? <select value={cashier} onChange={(e) => setCashier(e.target.value)} className={input} data-testid="shop-cashier"><option value="">{tr("Cashier: not named")}</option>{shop.staff.map((w) => <option key={w} value={w}>{tr("Cashier")}: {w}</option>)}</select> : null}
       {ret ? <ReturnSheet books={books} setBooks={setBooks} onClose={() => setRet(false)} flash={flash} /> : null}
       <div className="grid grid-cols-3 gap-2">{items.slice(0, 30).map((it) => (
-        <button key={it.id} onClick={() => add(it)} className={card + " p-2.5 text-start min-h-[64px]"} data-testid="shop-item" style={it.price > 0 ? {} : { opacity: 0.55 }}>
+        <button key={it.id} onClick={() => add(it)} className={card + " p-3 text-start min-h-[68px] hover:border-[var(--c-acc)] transition-colors duration-150"} data-testid="shop-item" style={it.price > 0 ? {} : { opacity: 0.55 }}>
           <span className="block text-[13px] font-semibold leading-tight" dir="auto">{it.name}</span>
           <span className="block text-[12px] text-[var(--c-mut)] mt-1">{it.price > 0 ? money(it.price) : tr("no price")}</span></button>))}</div>
       {cart.length ? (
-        <div className={card + " p-3 space-y-2"} data-testid="shop-cart">
+        <div className={card + " p-4 space-y-2"} data-testid="shop-cart">
           {cart.map((c, i) => { const it = books.items.find((x) => x.id === c.item); return (
             <div key={c.item} className="flex items-center gap-2"><span className="flex-1 text-[14px]" dir="auto">{it.name}</span>
-              <button className="w-8 h-8 rounded-lg border border-[var(--c-ln)] grid place-items-center" onClick={() => setCart((x) => x.map((y, k) => (k === i ? { ...y, qty: y.qty - 1 } : y)).filter((y) => y.qty > 0))} aria-label="−"><Minus size={14} /></button>
+              <button className="w-11 h-11 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] grid place-items-center hover:border-[var(--c-acc)]" onClick={() => setCart((x) => x.map((y, k) => (k === i ? { ...y, qty: y.qty - 1 } : y)).filter((y) => y.qty > 0))} aria-label="−"><Minus size={14} /></button>
               <span className="w-6 text-center font-bold">{c.qty}</span>
-              <button className="w-8 h-8 rounded-lg border border-[var(--c-ln)] grid place-items-center" onClick={() => add(it)} aria-label="+"><Plus size={14} /></button>
+              <button className="w-11 h-11 rounded-full border border-[var(--c-ln)] bg-[var(--c-surf)] text-[var(--c-ink)] grid place-items-center hover:border-[var(--c-acc)]" onClick={() => add(it)} aria-label="+"><Plus size={14} /></button>
               <span className="w-20 text-end text-[13.5px]">{money(it.price * c.qty)}</span></div>); })}
           {offered.applied.map((a, i) => <p key={i} className="flex justify-between text-[13px] text-[var(--c-pos)] m-0" data-testid="shop-offer-line"><span dir="auto">{a.name}</span><span>−{money(a.saved)}</span></p>)}
           {loyal ? <select value={cust} onChange={(e) => { setCust(e.target.value); setUsePts(false); }} className={input} data-testid="shop-loyal-customer"><option value="">{tr("Customer (for points)")}</option>{books.customers.filter((c) => !c.walkIn).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select> : null}
           {pts > 0 ? <label className="flex items-center gap-2 text-[13.5px]"><input type="checkbox" checked={usePts} onChange={(e) => setUsePts(e.target.checked)} data-testid="shop-use-points" />{tr("Use {p} points", { p: pts })}{usePts && rd.discount ? " (−" + money(rd.discount) + ")" : ""}</label> : null}
-          <p className="text-[20px] font-extrabold text-end m-0" data-testid="shop-total">{money(lines.total, cur)}</p>
+          <p className="text-[24px] font-black tracking-tight tabular-nums text-end m-0" dir="ltr" data-testid="shop-total">{money(lines.total, cur)}</p>
           <div className="grid grid-cols-4 gap-1.5">{[["cash", "Cash"], ["card", "Card"], ["wallet", "Wallet"], ["credit", "On credit"]].map(([m, l]) => (
-            <button key={m} onClick={() => setMethod(m)} className={"h-10 rounded-xl text-[13px] font-semibold border " + (method === m ? "text-[var(--c-on-acc)]" : "bg-[var(--c-surf)] border-[var(--c-ln)]")} style={method === m ? { background: "var(--c-acc-2)", borderColor: "var(--c-acc-2)" } : {}} data-testid={"shop-pay-" + m}>{tr(l)}</button>))}</div>
+            <button key={m} onClick={() => setMethod(m)} className={"min-h-[44px] h-11 rounded-full text-[13px] font-extrabold border transition-colors duration-150 " + (method === m ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)] border-transparent shadow-sm" : "bg-[var(--c-surf)] border-[var(--c-ln)] text-[var(--c-mut)]")} data-testid={"shop-pay-" + m}>{tr(l)}</button>))}</div>
           {method === "cash" ? <div className="flex items-center gap-2"><input value={given} onChange={(e) => setGiven(e.target.value)} placeholder={tr("Cash given (optional)")} inputMode="decimal" className={input} data-testid="shop-given" />
             {givenM != null && givenM >= lines.total ? <span className="font-bold whitespace-nowrap" data-testid="shop-change-preview">{tr("Change: {a}", { a: money(givenM - lines.total) })}</span> : null}</div> : null}
           {method === "credit" ? <select value={cust} onChange={(e) => setCust(e.target.value)} className={input} data-testid="shop-customer"><option value="">{tr("Which customer?")}</option>{books.customers.filter((c) => !c.walkIn).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select> : null}
           <div className="flex gap-2"><button className={btnS + " h-12 shrink-0"} onClick={() => { setShop(SP.holdCart(shop, { cart, customer: cust })); setCart([]); setCust(""); flash(tr("Held — pick it up from the row on top")); }} data-testid="shop-hold">{tr("Hold")}</button>
-            <button className={btnP + " flex-1"} style={{ background: "var(--c-acc)" }} onClick={complete} disabled={method === "credit" && !cust} data-testid="shop-complete">{tr("Complete the sale")}</button></div>
+            <button className={btnP + " flex-1"} onClick={complete} disabled={method === "credit" && !cust} data-testid="shop-complete">{tr("Complete the sale")}</button></div>
         </div>) : null}
     </div>);
 }
@@ -171,7 +172,7 @@ function Stock({ books, setBooks, shop, share, flash }) {
   };
   return (
     <div className="space-y-2" data-testid="shop-stock">
-      <div className={card + " p-3 space-y-2"} data-testid="shop-catalogue">
+      <div className={card + " p-4 space-y-2"} data-testid="shop-catalogue">
         <p className="font-bold m-0">{tr("Catalogue")}</p>
         <p className="text-[12.5px] text-[var(--c-mut)] m-0">{tr("Your items, prices and what is in stock — as a WhatsApp message or a PDF, with an Order button that opens WhatsApp.")}</p>
         {changed ? <p className="text-[12.5px] font-semibold text-[var(--c-warn)] m-0" data-testid="shop-catalogue-changed">{tr("Prices or stock changed since you shared it — share the new one.")}</p> : null}
@@ -179,22 +180,22 @@ function Stock({ books, setBooks, shop, share, flash }) {
         <div className="flex gap-2"><button className={btnS} onClick={() => shareCat(false)} data-testid="shop-catalogue-msg"><Share2 size={14} />{tr("As a message")}</button>
           <button className={btnS} onClick={() => shareCat(true)} data-testid="shop-catalogue-pdf"><Share2 size={14} />{tr("As a PDF")}</button></div>
       </div>
-      {msg ? <div className={card + " p-3"} data-testid="shop-low"><p className="font-bold text-[var(--c-warn)] m-0">{tr("Running low")}</p><pre className="text-[12.5px] whitespace-pre-wrap m-0 mt-1" dir="auto">{msg}</pre>
+      {msg ? <div className={card + " p-4"} data-testid="shop-low"><p className="font-bold text-[var(--c-warn)] m-0">{tr("Running low")}</p><pre className="text-[12.5px] whitespace-pre-wrap m-0 mt-1" dir="auto">{msg}</pre>
         {share ? <button className={btnS + " mt-2"} onClick={() => share(msg)} data-testid="shop-reorder"><Share2 size={14} />{tr("Send to the supplier")}</button> : null}</div> : null}
       {books.items.map((it) => (
-        <div key={it.id} className={card + " p-3"} data-testid="shop-stock-item">
+        <div key={it.id} className={card + " p-4"} data-testid="shop-stock-item">
           <button className="w-full flex items-center gap-2 text-start" onClick={() => setEdit(edit && edit.id === it.id ? null : { id: it.id, price: it.price ? B.fromMinor(it.price) : "", reorder: it.reorder ?? "", barcode: it.barcode || "", receive: "", cost: "" })}>
             <span className="flex-1 font-semibold" dir="auto">{it.name}</span>
             <span className="text-[13px] text-[var(--c-mut)]">{it.track !== false ? tr("{n} on hand", { n: Math.round(((lv[it.id] || { qty: 0 }).qty) * 1000) / 1000 }) : tr("made to order")}</span>
             <span className="w-20 text-end text-[13.5px] font-bold">{it.price > 0 ? money(it.price) : "—"}</span></button>
           {edit && edit.id === it.id ? (
             <div className="grid grid-cols-2 gap-2 mt-2">
-              <label><span className="text-[11px] text-[var(--c-mut)]">{tr("Price")}</span><input value={edit.price} onChange={(e) => setEdit({ ...edit, price: e.target.value })} inputMode="decimal" className={input} data-testid="shop-edit-price" /></label>
-              <label><span className="text-[11px] text-[var(--c-mut)]">{tr("Warn when stock is at")}</span><input value={edit.reorder} onChange={(e) => setEdit({ ...edit, reorder: e.target.value })} inputMode="numeric" className={input} /></label>
-              {it.track !== false ? <><label><span className="text-[11px] text-[var(--c-mut)]">{tr("Received now (qty)")}</span><input value={edit.receive} onChange={(e) => setEdit({ ...edit, receive: e.target.value })} inputMode="decimal" className={input} data-testid="shop-receive" /></label>
-                <label><span className="text-[11px] text-[var(--c-mut)]">{tr("Cost each")}</span><input value={edit.cost} onChange={(e) => setEdit({ ...edit, cost: e.target.value })} inputMode="decimal" className={input} /></label></> : null}
-              <label className="col-span-2"><span className="text-[11px] text-[var(--c-mut)]">{tr("Barcode")}</span><input value={edit.barcode} onChange={(e) => setEdit({ ...edit, barcode: e.target.value })} className={input} /></label>
-              <button className={btnP + " col-span-2"} style={{ background: "var(--c-acc)" }} onClick={save} data-testid="shop-edit-save">{tr("Save")}</button>
+              <label><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Price")}</span><input value={edit.price} onChange={(e) => setEdit({ ...edit, price: e.target.value })} inputMode="decimal" className={input} data-testid="shop-edit-price" /></label>
+              <label><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Warn when stock is at")}</span><input value={edit.reorder} onChange={(e) => setEdit({ ...edit, reorder: e.target.value })} inputMode="numeric" className={input} /></label>
+              {it.track !== false ? <><label><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Received now (qty)")}</span><input value={edit.receive} onChange={(e) => setEdit({ ...edit, receive: e.target.value })} inputMode="decimal" className={input} data-testid="shop-receive" /></label>
+                <label><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Cost each")}</span><input value={edit.cost} onChange={(e) => setEdit({ ...edit, cost: e.target.value })} inputMode="decimal" className={input} /></label></> : null}
+              <label className="col-span-2"><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Barcode")}</span><input value={edit.barcode} onChange={(e) => setEdit({ ...edit, barcode: e.target.value })} className={input} /></label>
+              <button className={btnP + " col-span-2"} onClick={save} data-testid="shop-edit-save">{tr("Save")}</button>
             </div>) : null}
         </div>))}
     </div>);
@@ -207,7 +208,7 @@ function Customers({ books, setBooks, share, flash }) {
   return (
     <div className="space-y-2" data-testid="shop-customers">
       {books.customers.filter((c) => !c.walkIn).map((c) => (
-        <div key={c.id} className={card + " p-3 flex items-center gap-2"} data-testid="shop-customer-row"><span className="flex-1 font-semibold" dir="auto">{c.name}</span>
+        <div key={c.id} className={card + " p-3.5 flex items-center gap-2"} data-testid="shop-customer-row"><span className="flex-1 font-semibold" dir="auto">{c.name}</span>
           {owed[c.id] ? <><span className="text-[13.5px] font-bold text-[var(--c-warn)]">{tr("owes {a}", { a: money(owed[c.id], books.currency) })}</span>
             <button className={btnS} onClick={() => { try { setBooks(Ops.receive(books, { customer: c.id, date: today(), method: "cash", amount: owed[c.id] }).state); flash(tr("Paid in full")); } catch (e) { flash(String(e.message || e)); } }} data-testid="shop-paid">{tr("Paid")}</button>
             {share ? <button className={btnS} onClick={() => share(tr("Hello {n}, a friendly reminder: {a} is due at {s}. Thank you!", { n: c.name, a: money(owed[c.id], books.currency), s: books.company.name }))}><Share2 size={14} /></button> : null}</> : <span className="text-[12px] text-[var(--c-mut)]">{tr("nothing owed")}</span>}
@@ -224,7 +225,7 @@ function Staff({ shop, setShop }) {
   return (
     <div className="space-y-2" data-testid="shop-staff">
       {staff.map((w) => (
-        <div key={w} className={card + " p-3 flex items-center gap-2"}><span className="flex-1 font-semibold" dir="auto">{w}</span>
+        <div key={w} className={card + " p-3.5 flex items-center gap-2"}><span className="flex-1 font-semibold" dir="auto">{w}</span>
           <span className="text-[12.5px] text-[var(--c-mut)]">{hours[w] ? tr("{h} h today", { h: Math.round(hours[w] * 10) / 10 }) : ""}</span>
           <button className={btnS} onClick={() => setShop(onShift(w) ? S.clockOut(shop, w) : S.clockIn(shop, w))} data-testid="shop-clock">{onShift(w) ? tr("Clock out") : tr("Clock in")}</button></div>))}
       <div className="flex gap-2"><input value={name} onChange={(e) => setName(e.target.value)} placeholder={tr("Staff member's name")} className={input} dir="auto" data-testid="shop-staff-name" />
@@ -240,20 +241,20 @@ function Close({ books, shop, setShop, share }) {
   return (
     <div className="space-y-2" data-testid="shop-close">
       <div className={card + " p-4 space-y-1"}>
-        <p className="text-[13px] text-[var(--c-mut)] m-0">{tr("Today")} · {tr("{n} sales", { n: z.count })}</p>
-        <p className="text-[24px] font-extrabold m-0" data-testid="shop-close-total">{money(z.sales, cur)}</p>
-        {[["Cash", "cash"], ["Card", "card"], ["Wallet", "wallet"], ["On credit", "credit"]].map(([l, k]) => <p key={k} className="flex justify-between text-[14px] m-0"><span>{tr(l)}</span><b>{money(z.byMethod[k] || 0, cur)}</b></p>)}
+        <p className={K.label + " m-0"}>{tr("Today")} · {tr("{n} sales", { n: z.count })}</p>
+        <p className="text-[28px] font-black tracking-tight tabular-nums m-0 pb-1" dir="ltr" data-testid="shop-close-total">{money(z.sales, cur)}</p>
+        {[["Cash", "cash"], ["Card", "card"], ["Wallet", "wallet"], ["On credit", "credit"]].map(([l, k]) => <p key={k} className="flex justify-between gap-2 text-[14px] m-0 py-2 border-t border-[var(--c-ln)]"><span className="text-[var(--c-mut)] font-semibold">{tr(l)}</span><b className="tabular-nums" dir="ltr">{money(z.byMethod[k] || 0, cur)}</b></p>)}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <label><span className="text-[11px] text-[var(--c-mut)]">{tr("Cash in the drawer this morning")}</span><input value={float} onChange={(e) => setFloat(e.target.value)} inputMode="decimal" className={input} /></label>
-        <label><span className="text-[11px] text-[var(--c-mut)]">{tr("Cash counted now")}</span><input value={counted} onChange={(e) => setCounted(e.target.value)} inputMode="decimal" className={input} data-testid="shop-counted" /></label>
+        <label><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Cash in the drawer this morning")}</span><input value={float} onChange={(e) => setFloat(e.target.value)} inputMode="decimal" className={input} /></label>
+        <label><span className="block text-[12px] font-bold text-[var(--c-mut)] mb-1.5">{tr("Cash counted now")}</span><input value={counted} onChange={(e) => setCounted(e.target.value)} inputMode="decimal" className={input} data-testid="shop-counted" /></label>
       </div>
-      <p className="text-[14px] m-0">{tr("Cash expected")}: <b>{money(z.expectedCash, cur)}</b></p>
+      <p className="text-[14px] m-0">{tr("Cash expected")}: <b className="tabular-nums" dir="ltr">{money(z.expectedCash, cur)}</b></p>
       {z.difference != null ? <p className={"text-[15px] font-bold m-0 " + (z.difference === 0 ? "text-[var(--c-pos)]" : "text-[var(--c-neg)]")} data-testid="shop-diff">{z.difference === 0 ? tr("The drawer is right") : tr("Difference: {a}", { a: (z.difference > 0 ? "+" : "") + money(z.difference, cur) })}</p> : null}
-      {z.top.length ? <div className={card + " p-3"}><p className="font-bold m-0 mb-1">{tr("Best sellers today")}</p>{z.top.map((t, i) => <p key={i} className="flex justify-between text-[13.5px] m-0"><span dir="auto">{t.name}</span><span>{money(t.net, cur)}</span></p>)}</div> : null}
+      {z.top.length ? <div className={card + " p-4"}><p className="text-[15px] font-extrabold m-0 mb-1">{tr("Best sellers today")}</p>{z.top.map((t, i) => <p key={i} className="flex justify-between gap-2 text-[13.5px] m-0 py-2 border-t border-[var(--c-ln)]"><span className="font-semibold" dir="auto">{t.name}</span><span className="tabular-nums font-bold" dir="ltr">{money(t.net, cur)}</span></p>)}</div> : null}
       <ShopReports books={books} day={today()} />
       <div className="flex gap-2">
-        <button className={btnP + " flex-1"} style={{ background: "var(--c-acc)" }} onClick={() => setShop({ ...shop, float: toM(float || 0) || 0, closes: [...(shop.closes || []), { ...z, at: Date.now() }].slice(-400) })} data-testid="shop-close-save">{tr("Close the day")}</button>
+        <button className={btnP + " flex-1"} onClick={() => setShop({ ...shop, float: toM(float || 0) || 0, closes: [...(shop.closes || []), { ...z, at: Date.now() }].slice(-400) })} data-testid="shop-close-save">{tr("Close the day")}</button>
         {share ? <button className={btnS + " h-12"} onClick={() => share(text)}><Share2 size={15} /></button> : null}
       </div>
     </div>);
@@ -267,13 +268,13 @@ export function ShopApp({ onBack, flash, scanBarcode, share }) {
   useEffect(() => { loadBooks().then((b) => setBooksRaw(b || Ops.EMPTY())).catch(() => setBooksRaw(Ops.EMPTY())); }, []);
   const setBooks = (b) => { setBooksRaw(b); saveBooks(b).catch(() => flash(tr("Couldn't save — the phone's storage may be full"))); };
   const setShop = (x) => setShopRaw(S.saveShop(x));
-  if (!books) return <p className="p-4 text-[var(--c-mut)]">{tr("Loading…")}</p>;
+  if (!books) return <p className="calm p-6 text-center text-[14px] text-[var(--c-mut)]">{tr("Loading…")}</p>;
   const head = (
-    <div className="sticky top-0 z-30 bg-[#F4F6FAF2] backdrop-blur px-1 pt-2 pb-2 flex items-center gap-2">
-      <button onClick={onBack} aria-label={tr("Back")} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] flex items-center justify-center shrink-0" data-testid="shop-back"><ChevronLeft size={20} className="rtl:-scale-x-100" /></button>
-      <p className="flex-1 text-[17px] font-extrabold truncate" dir="auto">{shop ? books.company.name || tr("Your shop") : tr("Shop in your pocket")}</p>
+    <div className="sticky top-0 z-30 bg-[var(--c-bg)] border-b border-[var(--c-ln)] -mx-3 px-4 pt-2.5 pb-2.5 flex items-center gap-2.5">
+      <button onClick={onBack} aria-label={tr("Back")} className="w-11 h-11 rounded-full bg-[var(--c-surf)] border border-[var(--c-ln)] text-[var(--c-ink)] grid place-items-center shrink-0" data-testid="shop-back"><ChevronLeft size={20} className="rtl:rotate-180" /></button>
+      <p className="flex-1 text-[17.5px] font-black truncate m-0" dir="auto">{shop ? books.company.name || tr("Your shop") : tr("Shop in your pocket")}</p>
     </div>);
-  if (!shop) return (<section className="px-3 pb-6 space-y-3">{head}<Setup flash={flash} onDone={(su) => {
+  if (!shop) return (<section className="calm px-3 pb-6 space-y-3.5 bg-[var(--c-bg)] text-[var(--c-ink)]">{head}<Setup flash={flash} onDone={(su) => {
     try {
       const b = S.applySetup(books, su, { at: new Date().toISOString() });
       setBooks(b);
@@ -282,15 +283,15 @@ export function ShopApp({ onBack, flash, scanBarcode, share }) {
     } catch (e) { flash(String(e.message || e)); }
   }} /></section>);
   return (
-    <section className="px-3 pb-24 space-y-3" data-testid="shop-app">
+    <section className="calm min-h-full px-3 pb-24 space-y-3.5 bg-[var(--c-bg)] text-[var(--c-ink)]" data-testid="shop-app">
       {head}
       {tab === "sell" ? <Sell books={books} setBooks={setBooks} shop={shop} setShop={setShop} scanBarcode={scanBarcode} share={share} flash={flash} /> : null}
       {tab === "stock" ? <><Stock books={books} setBooks={setBooks} shop={shop} share={share} flash={flash} /><OffersPanel books={books} shop={shop} setShop={setShop} /></> : null}
       {tab === "customers" ? <Customers books={books} setBooks={setBooks} share={share} flash={flash} /> : null}
       {tab === "staff" ? <Staff shop={shop} setShop={setShop} /> : null}
       {tab === "close" ? <Close books={books} shop={shop} setShop={setShop} share={share} /> : null}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-[var(--c-surf)] border-t border-[var(--c-ln)] grid grid-cols-5" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="shop-nav">
-        {TABS.map(([id, l, Ic]) => <button key={id} onClick={() => setTab(id)} className="h-14 flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold" style={{ color: tab === id ? "var(--biz)" : "#64748B" }} data-testid={"shop-tab-" + id}><Ic size={19} />{tr(l)}</button>)}
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-[var(--c-surf)] border-t border-[var(--c-ln)] grid grid-cols-5 px-1" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-testid="shop-nav">
+        {TABS.map(([id, l, Ic]) => <button key={id} onClick={() => setTab(id)} className={"h-16 flex flex-col items-center justify-center gap-0.5 text-[11px] font-extrabold transition-colors duration-150 " + (tab === id ? "text-[var(--c-acc-2)]" : "text-[var(--c-mut)]")} data-testid={"shop-tab-" + id}><span className={"w-12 h-7 rounded-full grid place-items-center " + (tab === id ? "bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "")}><Ic size={18} /></span>{tr(l)}</button>)}
       </nav>
     </section>);
 }

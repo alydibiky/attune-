@@ -19,9 +19,9 @@ export const DOC_L = { licence: "Crane licence", insurance: "Insurance", loadtes
 export const ROLE_L = { operator: "Operator", driver: "Driver", rigger: "Rigger", mechanic: "Mechanic", other: "Other" };
 function MonthPick({ ym, setYm, testid }) {
   return <div className="flex items-center gap-2" data-testid={testid}>
-    <button className={btnS + " w-10 px-0"} aria-label={tr("Previous month")} onClick={() => setYm(shiftYm(ym, -1))}><ChevronLeft size={16} className="rtl:-scale-x-100" /></button>
+    <button className={btnS + " w-11 px-0"} aria-label={tr("Previous month")} onClick={() => setYm(shiftYm(ym, -1))}><ChevronLeft size={16} className="rtl:rotate-180" /></button>
     <span className="font-bold text-[14.5px] tabular-nums min-w-[76px] text-center" dir="ltr">{showYm(ym)}</span>
-    <button className={btnS + " w-10 px-0"} aria-label={tr("Next month")} onClick={() => setYm(shiftYm(ym, 1))}><ChevronRight size={16} className="rtl:-scale-x-100" /></button></div>;
+    <button className={btnS + " w-11 px-0"} aria-label={tr("Next month")} onClick={() => setYm(shiftYm(ym, 1))}><ChevronRight size={16} className="rtl:rotate-180" /></button></div>;
 }
 
 // ---- Money → Invoices ------------------------------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ export function AgingPane({ s, money, setOpen }) {
   if (!a.rows.length) return <Empty>{tr("No client owes you anything.")}</Empty>;
   return <div className="space-y-2.5" data-testid="fleet-aging">
     <p className={"text-[12.5px] " + muted}>{tr("What each client still owes, by how many days its invoices are past due. The oldest debts are the hardest to collect — call those first.")}</p>
-    <div className={card + " overflow-x-auto"}><table className="w-full text-[13px]"><thead><tr className={muted}><th className="px-3 py-2.5 text-start font-semibold">{tr("Client")}</th>{H.map(([k, l]) => <th key={k} className="px-3 py-2.5 text-end font-semibold whitespace-nowrap">{tr(l)}</th>)}</tr></thead>
+    <div className={card + " overflow-x-auto"}><table className="w-full text-[13px]"><thead><tr className={"text-[11px] uppercase tracking-[0.08em] bg-[var(--c-surf-2)] " + muted}><th className="px-3 py-2.5 text-start font-extrabold">{tr("Client")}</th>{H.map(([k, l]) => <th key={k} className="px-3 py-2.5 text-end font-extrabold whitespace-nowrap">{tr(l)}</th>)}</tr></thead>
       <tbody>{a.rows.map((r) => <tr key={r.client.id} className="border-t border-[var(--c-ln)] cursor-pointer hover:bg-[var(--c-surf-2)]" onClick={() => setOpen({ kind: "client", id: r.client.id })} data-testid="fleet-aging-row">
         <td className="px-3 py-2.5 whitespace-nowrap" dir="auto">{r.client.name}</td>{H.map(([k]) => <td key={k} className={"px-3 py-2.5 text-end tabular-nums " + ((k === "d90" || k === "over90") && r[k] ? "text-[var(--c-neg)] font-semibold" : k === "total" ? "font-bold" : "")} dir="ltr">{r[k] ? num(r[k]) : "—"}</td>)}</tr>)}
         <tr className="border-t-2 border-[var(--c-ln)] font-bold"><td className="px-3 py-2.5">{tr("Total")}</td>{H.map(([k]) => <td key={k} className="px-3 py-2.5 text-end tabular-nums" dir="ltr">{num(a.sum[k])}</td>)}</tr></tbody></table></div>
@@ -117,13 +117,13 @@ export function ReportsPane({ s, money }) {
       <p className={"text-[12.5px] " + muted}>{tr("Days each crane worked, was broken down, or stood idle. An idle crane costs money every day — offer it first.")}</p>
       {P.utilisation(s, ym).map((r) => <div key={r.crane.id} className={card + " p-3.5 space-y-1.5"} data-testid="fleet-use-row">
         <div className="flex items-center gap-2"><b className="flex-1 min-w-0 truncate text-[14px]" dir="auto">{r.crane.name}</b><span className="text-[15px] font-extrabold tabular-nums" dir="ltr">{r.pct}%</span></div>
-        <div className="h-2.5 rounded-full overflow-hidden flex bg-[var(--c-surf-2)]" aria-hidden="true"><span style={{ width: (r.days ? (r.worked / r.days) * 100 : 0) + "%", background: "var(--c-acc)" }} /><span style={{ width: (r.days ? (r.down / r.days) * 100 : 0) + "%", background: "#DC2626" }} /></div>
+        <div className="h-2.5 rounded-full overflow-hidden flex bg-[var(--c-surf-2)]" aria-hidden="true"><span style={{ width: (r.days ? (r.worked / r.days) * 100 : 0) + "%", background: "var(--c-acc)" }} /><span style={{ width: (r.days ? (r.down / r.days) * 100 : 0) + "%", background: "var(--c-neg)" }} /></div>
         <p className={"text-[12px] " + muted}>{tr("{w} worked · {d} down · {i} idle of {n} days", { w: r.worked, d: r.down, i: r.idle, n: r.days })}</p></div>)}
     </> : rep === "revenue" ? (() => { const m = P.revenueMatrix(s, year), M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       return <>
-        <div className="flex items-center gap-2"><button className={btnS + " w-10 px-0"} aria-label={tr("Previous year")} onClick={() => setYear(year - 1)}><ChevronLeft size={16} className="rtl:-scale-x-100" /></button><b className="tabular-nums" dir="ltr">{year}</b><button className={btnS + " w-10 px-0"} aria-label={tr("Next year")} onClick={() => setYear(year + 1)}><ChevronRight size={16} className="rtl:-scale-x-100" /></button>
+        <div className="flex items-center gap-2"><button className={btnS + " w-11 px-0"} aria-label={tr("Previous year")} onClick={() => setYear(year - 1)}><ChevronLeft size={16} className="rtl:rotate-180" /></button><b className="tabular-nums" dir="ltr">{year}</b><button className={btnS + " w-11 px-0"} aria-label={tr("Next year")} onClick={() => setYear(year + 1)}><ChevronRight size={16} className="rtl:rotate-180" /></button>
           <span className={"ms-auto text-[13px] " + muted}>{tr("Year")}: <b className="tabular-nums" dir="ltr">{money(m.total)}</b></span></div>
-        <div className={card + " overflow-x-auto"} data-testid="fleet-revenue"><table className="w-full text-[12.5px]"><thead><tr className={muted}><th className="px-2.5 py-2 text-start font-semibold">{tr("Crane")}</th>{M.map((x) => <th key={x} className="px-2.5 py-2 text-end font-semibold">{tr(x)}</th>)}<th className="px-2.5 py-2 text-end font-semibold">{tr("Total")}</th></tr></thead>
+        <div className={card + " overflow-x-auto"} data-testid="fleet-revenue"><table className="w-full text-[12.5px]"><thead><tr className={"text-[11px] uppercase tracking-[0.08em] bg-[var(--c-surf-2)] " + muted}><th className="px-2.5 py-2 text-start font-extrabold">{tr("Crane")}</th>{M.map((x) => <th key={x} className="px-2.5 py-2 text-end font-extrabold">{tr(x)}</th>)}<th className="px-2.5 py-2 text-end font-extrabold">{tr("Total")}</th></tr></thead>
           <tbody>{m.rows.map((r) => <tr key={r.crane.id} className="border-t border-[var(--c-ln)]"><td className="px-2.5 py-2 whitespace-nowrap" dir="auto">{r.crane.name}</td>{r.months.map((v, i) => <td key={i} className="px-2.5 py-2 text-end tabular-nums" dir="ltr">{v ? num(v) : "—"}</td>)}<td className="px-2.5 py-2 text-end tabular-nums font-bold" dir="ltr">{num(r.total)}</td></tr>)}
             <tr className="border-t-2 border-[var(--c-ln)] font-bold"><td className="px-2.5 py-2">{tr("Total")}</td>{m.months.map((v, i) => <td key={i} className="px-2.5 py-2 text-end tabular-nums" dir="ltr">{v ? num(v) : "—"}</td>)}<td className="px-2.5 py-2 text-end tabular-nums" dir="ltr">{num(m.total)}</td></tr></tbody></table></div></>; })()
     : <div className="space-y-2" data-testid="fleet-fuel-report">{F.live(s.cranes).map((c) => { const f = P.fuelReport(s, c.id).slice(-4).reverse(); if (!f.length) return null;
@@ -140,7 +140,7 @@ export function TeamPane({ s, run, money, setSheet }) {
   return <div className="space-y-3" data-testid="fleet-team">
     {people.length ? <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2.5 lg:space-y-0">{people.map((p) => { const left = p.licenceExp ? F.daysBetween(t, p.licenceExp) : null;
       return <Row key={p.id} onClick={() => setSheet({ kind: "person", rec: p })} testid="fleet-person">
-        <span className="w-10 h-10 rounded-xl grid place-items-center shrink-0 bg-[var(--c-surf-2)] text-[var(--c-ink)]"><Users size={18} /></span>
+        <span className="w-10 h-10 rounded-[14px] grid place-items-center shrink-0 bg-[var(--c-soft)] text-[var(--c-acc)]"><Users size={18} /></span>
         <span className="flex-1 min-w-0"><span className="block font-bold text-[14.5px] truncate" dir="auto">{p.name}</span>
           <span className="flex items-center gap-1.5 mt-0.5 flex-wrap"><Tag tone="blue">{tr(ROLE_L[p.role] || p.role)}</Tag>{p.crane ? <span className={"text-[12px] truncate " + muted} dir="auto">{nameOf(s.cranes, p.crane)}</span> : null}
             {left != null && left < 0 ? <Tag tone="red">{tr("Licence expired")}</Tag> : left != null && left <= 30 ? <Tag tone="amber">{tr("Licence: {d} days", { d: left })}</Tag> : null}</span></span>
@@ -149,10 +149,10 @@ export function TeamPane({ s, run, money, setSheet }) {
     {people.length ? <div className={card + " p-3.5 space-y-2"} data-testid="fleet-payroll">
       <div className="flex items-center gap-2"><b className="flex-1 text-[15px]">{tr("Payroll")}</b><MonthPick ym={ym} setYm={setYm} testid="fleet-pay-month" /></div>
       <p className={"text-[12px] " + muted}>{tr("Days come from the work of each person's crane; type a number to change it.")}</p>
-      <div className="overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className={muted}>{["Name", "Days", "Gross", "Advances", "Net"].map((h, i) => <th key={h} className={"px-2 py-2 font-semibold " + (i ? "text-end" : "text-start")}>{tr(h)}</th>)}<th /></tr></thead>
+      <div className="overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className={"text-[11px] uppercase tracking-[0.08em] bg-[var(--c-surf-2)] " + muted}>{["Name", "Days", "Gross", "Advances", "Net"].map((h, i) => <th key={h} className={"px-2 py-2 font-extrabold " + (i ? "text-end" : "text-start")}>{tr(h)}</th>)}<th /></tr></thead>
         <tbody>{pay.rows.map((r) => <tr key={r.person.id} className="border-t border-[var(--c-ln)]" data-testid="fleet-pay-row">
           <td className="px-2 py-2" dir="auto">{r.person.name}</td>
-          <td className="px-2 py-1 text-end"><input defaultValue={r.days} key={ym + r.person.id + r.days} inputMode="numeric" className={inp + " h-9 w-16 text-end px-2"} dir="ltr" data-testid="fleet-pay-days" disabled={r.person.salary > 0}
+          <td className="px-2 py-1 text-end"><input defaultValue={r.days} key={ym + r.person.id + r.days} inputMode="numeric" className={inp + " w-16 text-end px-2"} dir="ltr" data-testid="fleet-pay-days" disabled={r.person.salary > 0}
             onBlur={(e) => { const v = e.target.value.trim(); if (String(r.days) !== v) run((x) => P.setDays(x, r.person.id, ym, v === "" ? null : v)); }} /></td>
           <td className="px-2 py-2 text-end tabular-nums" dir="ltr">{num(r.gross)}</td><td className="px-2 py-2 text-end tabular-nums" dir="ltr">{r.advances ? "−" + num(r.advances) : "—"}</td><td className="px-2 py-2 text-end tabular-nums font-bold" dir="ltr">{num(r.net)}</td>
           <td className="px-1"><button className={btnS + " h-8 px-2 text-[12px]"} onClick={() => setSheet({ kind: "advance", person: r.person.id })} data-testid="fleet-advance">{tr("Advance")}</button></td></tr>)}
