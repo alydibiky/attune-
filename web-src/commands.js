@@ -160,7 +160,10 @@ export function guess(text, ctx = {}) {
   if (ctx.automation) add("automation", 0.9);
   if (ctx.watch) add("watch", 0.9);
   if (ctx.mission) add("mission", 0.88);
-  if (ctx.goal) add("scout", 0.9);
+  // a sharp reader (Metro, an automation, a message alert, a mission) beats the general ones: "tell me when Ahmed messages me"
+  // is an alert, not a Scout search or a reminder — and Home's "do it" reader checks the sharp ones first anyway
+  const sharp = !!(ctx.metro || ctx.automation || ctx.watch || ctx.mission);
+  if (ctx.goal) add("scout", sharp ? 0.6 : 0.9);
   if (T(RX.todoAdd) && todoText(t)) add("todoAdd", 0.93);
   else if (T(RX.todoList)) add("todoList", 0.92);
   const mine = /\b(my|our)\b|بتاعي|بتاعتي|بتاعنا/i.test(t);
@@ -180,7 +183,7 @@ export function guess(text, ctx = {}) {
   if (T(RX.find)) add("find", 0.86);
   if (T(RX.note)) add("remember", 0.7);      // "remember to call mum" → a note in Mind (a sharper reader above wins)
   if (T(RX.web)) add("web", 0.78);
-  if (ctx.doActions) add("do", /[?؟]\s*$/.test(t) ? 0.6 : 0.82);
+  if (ctx.doActions) add("do", sharp ? 0.5 : /[?؟]\s*$/.test(t) ? 0.6 : 0.82);
   add("chat", 0.3);
   // a reminder ("remind me of the passport photo") is a reminder only when it has a time; else it is Find
   return c.sort((a, b) => b.score - a.score);

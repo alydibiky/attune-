@@ -49,5 +49,7 @@ ok(d3.kind === "whereAsk" && d3.learned, "the same answer twice → Attune does 
 ok(K.learn(prefs, d1.sig, "map")[d1.sig].n === 1, "a different answer starts counting again");
 const trip = K.decide(K.guess("I'm going to Turkey"), {}, "I'm going to Turkey");
 ok(trip.kind === "travel", "“I'm going to Turkey” → a trip");
+const alert = K.decide(K.guess("tell me when Ahmed messages me on WhatsApp", { watch: true, goal: true, doActions: 1 }), {}, "tell me when Ahmed messages me on WhatsApp");
+ok(alert.kind === "watch" && !alert.ask, "“tell me when Ahmed messages me” → a message alert, no question (Scout's goal and the do-it reader also fire)");
 K.savePrefs(prefs); ok(K.learned(K.loadPrefs(), d1.sig) === "whereAsk", "what he taught is kept");
 console.log(fails ? fails + " FAILED" : "ALL PASSED"); process.exit(fails ? 1 : 0);
