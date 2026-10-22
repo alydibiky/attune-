@@ -9,13 +9,14 @@ import { AlertTriangle, CheckCircle2, Plus, Trash2, Share2, Save, Info } from "l
 import { tr, fmtNum } from "./i18n.js";
 import { liftPlan, planHtml } from "./liftplan.js";
 import { sharePdf } from "./books-docs.jsx";
+import * as K from "./ui-kit.jsx";
 import {
   num, parseChart, chartCapacity, liftCheck, outriggerPressure, slingTension, windCheck, windAtHeight, beaufort,
   GROUNDS, CHECKLIST, loadCraneData, saveCraneData, DEFAULT_LIMITS,
 } from "./crane.js";
 
 const TABS = [["lift", "Lift"], ["plan", "Lift plan"], ["ground", "Ground"], ["slings", "Slings"], ["wind", "Wind"], ["check", "Checklist"], ["charts", "Charts"]];
-const field = "w-full bg-[var(--c-bg)] border border-[var(--c-ln)] rounded-lg px-2.5 py-2 text-sm text-[var(--c-ink)] focus:outline-none focus:border-[var(--c-acc)]";
+const field = K.inp + " tabular-nums";
 const n = (x, d = 2) => fmtNum(x, { maximumFractionDigits: d });
 // v6.27 computer layout (option A): in each tab the numbers you type on the left and the answer on the right. The
 // grid places CARD_R in the right column across every row (the last row, 1fr, takes up its extra height), so a phone
@@ -27,7 +28,7 @@ const CARD_L = "lg:col-start-1";
 function Num({ label, value, set, unit, testid, hint, className }) {
   return (
     <label className={"block" + (className ? " " + className : "")}>
-      <span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr(label)}{unit ? <span className="text-[var(--c-mut)]"> ({tr(unit)})</span> : null}</span>
+      <span className="block text-[11.5px] font-bold text-[var(--c-mut)] mb-1">{tr(label)}{unit ? <span className="text-[var(--c-mut)]"> ({tr(unit)})</span> : null}</span>
       <input inputMode="decimal" dir="ltr" value={value} onChange={(e) => set(e.target.value)} className={field} data-testid={testid} />
       {hint ? <span className="block text-[10px] text-[var(--c-mut)] mt-0.5">{tr(hint)}</span> : null}
     </label>
@@ -38,7 +39,7 @@ function Verdict({ tone, children, testid }) {
   const c = tone === "ok" ? "border-[var(--c-pos)]/40 bg-[var(--c-pos)]/10 text-[var(--c-pos)]" : tone === "warn" ? "border-[var(--c-warn)]/40 bg-[var(--c-warn)]/10 text-[var(--c-warn)]"
     : tone === "bad" ? "border-[var(--c-neg)]/40 bg-[var(--c-neg)]/10 text-[var(--c-neg)]" : "border-[var(--c-ln)] bg-[var(--c-bg)] text-[var(--c-ink)]";
   const Icon = tone === "ok" ? CheckCircle2 : tone === "none" ? Info : AlertTriangle;
-  return <div className={`rounded-xl border p-3 text-sm flex items-start gap-2 ${c}`} data-testid={testid}><Icon size={16} className="mt-0.5 shrink-0" /><div className="min-w-0">{children}</div></div>;
+  return <div className={`rounded-[18px] border p-3.5 text-sm flex items-start gap-2 ${c}`} data-testid={testid}><Icon size={16} className="mt-0.5 shrink-0" /><div className="min-w-0">{children}</div></div>;
 }
 
 export function CraneToolkit({ flash, share, remember }) {
@@ -58,22 +59,22 @@ export function CraneToolkit({ flash, share, remember }) {
   const gross = lift.gross || (num(load) > 0 ? num(load) : "");
 
   return (
-    <div className="mt-3 space-y-3" data-testid="crane-toolkit">
-      <div className="rounded-xl border border-[var(--c-ln)] bg-[var(--c-surf)] p-3 text-[11px] text-[var(--c-mut)] flex gap-2">
+    <div className="calm text-[var(--c-ink)] !bg-transparent mt-3 space-y-3" data-testid="crane-toolkit">
+      <div className="rounded-[22px] border border-[var(--c-ln)] bg-[var(--c-surf)] p-3.5 text-[11.5px] text-[var(--c-mut)] flex gap-2">
         <Info size={14} className="shrink-0 mt-0.5 text-[var(--c-mut)]" />
         <span>{tr("Planning aid only. The crane's own load chart and computer (LMI), the manufacturer's manuals and a competent lift planner always decide. Every rule here takes the cautious side.")}</span>
       </div>
-      <div className="flex gap-1 overflow-x-auto att-tabs bg-[var(--c-surf)] border border-[var(--c-ln)] rounded-xl p-1">
+      <div className="flex gap-1.5 overflow-x-auto att-tabs pb-1 -mx-1 px-1">
         {TABS.map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)} data-testid={"ctab-" + id}
-            className={`shrink-0 px-3 py-1.5 rounded-lg text-sm ${tab === id ? "bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold" : "text-[var(--c-mut)]"}`}>{tr(label)}</button>
+            className={"shrink-0 " + K.chip(tab === id)}>{tr(label)}</button>
         ))}
       </div>
 
       {tab === "lift" ? (
         <div className={"bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3 " + CARD_SPLIT}>
           <label className={"block " + CARD_L}>
-            <span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr("Crane")}</span>
+            <span className="block text-[11.5px] font-bold text-[var(--c-mut)] mb-1">{tr("Crane")}</span>
             <select value={craneId} onChange={(e) => setCraneId(e.target.value)} className={field} data-testid="lift-crane">
               {data.cranes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               <option value="">{tr("No chart — type the capacity")}</option>
@@ -136,21 +137,21 @@ function PlanTab({ lift, flash }) {
   const p = { ...f, ...lift, date: f.date || new Date().toISOString().slice(0, 10), legs: f.legs || 2, angle: f.angle == null ? "" : f.angle, soil: f.soil || "dense_gravel" };
   const r = liftPlan(p);
   const V = { go: ["ok", "GO — within every limit"], caution: ["warn", "GO WITH CARE — read the cautions"], plan: ["warn", "CRITICAL LIFT — a signed lift plan is required"], stop: ["bad", "STOP — do not lift as planned"], incomplete: ["none", "INCOMPLETE — fill the missing checks"] }[r.overall];
-  const t = (label, k, ph) => <label className="block"><span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr(label)}</span><input value={f[k] || ""} onChange={(e) => set(k)(e.target.value)} placeholder={ph || ""} dir="auto" className={field} data-testid={"plan-" + k} /></label>;
+  const t = (label, k, ph) => <label className="block"><span className="block text-[11.5px] font-bold text-[var(--c-mut)] mb-1">{tr(label)}</span><input value={f[k] || ""} onChange={(e) => set(k)(e.target.value)} placeholder={ph || ""} dir="auto" className={field} data-testid={"plan-" + k} /></label>;
   return (
     <div className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3" data-testid="crane-plan">
       <p className="text-[12px] text-[var(--c-mut)] m-0">{tr("The crane, radius and load come from the Lift tab. Add the rest and make the plan as a PDF to sign.")}</p>
       <div className="grid grid-cols-2 gap-2">{t("Job", "job", "Beam lift, bay 3")}{t("Site", "site")}{t("Load (what)", "loadName", "Steel beam")}{t("Lift planner", "planner")}</div>
-      <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)] m-0">{tr("Ground")}</p>
+      <p className={K.label + " m-0"}>{tr("Ground")}</p>
       <div className="grid grid-cols-2 gap-2">
         <Num label="Crane mass" unit="t" value={f.craneMass || ""} set={set("craneMass")} testid="plan-cranemass" />
         <Num label="Counterweight" unit="t" value={f.counterweight || ""} set={set("counterweight")} />
         <Num label="Mat length" unit="m" value={f.matL || ""} set={set("matL")} testid="plan-matl" />
         <Num label="Mat width" unit="m" value={f.matW || ""} set={set("matW")} testid="plan-matw" />
-        <label className="block col-span-2"><span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr("Ground")}</span>
+        <label className="block col-span-2"><span className="block text-[11.5px] font-bold text-[var(--c-mut)] mb-1">{tr("Ground")}</span>
           <select value={p.soil} onChange={(e) => set("soil")(e.target.value)} className={field}>{GROUNDS.map(([id, name, q]) => <option key={id} value={id}>{tr(name)} · {q} kN/m²</option>)}</select></label>
       </div>
-      <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)] m-0">{tr("Slings and wind")}</p>
+      <p className={K.label + " m-0"}>{tr("Slings and wind")}</p>
       <div className="grid grid-cols-2 gap-2">
         <Num label="Sling legs" value={String(p.legs)} set={set("legs")} />
         <Num label="Angle from vertical" unit="°" value={String(f.angle ?? "")} set={set("angle")} testid="plan-angle" />
@@ -161,7 +162,7 @@ function PlanTab({ lift, flash }) {
       </div>
       <Verdict tone={V[0]} testid="plan-verdict"><p className="font-semibold m-0">{tr(V[1])}</p>
         <ul className="mt-1.5 mb-0 ps-4 text-[12.5px] space-y-0.5">{r.checks.map((c) => <li key={c.id}>{tr(c.title)}: {tr({ ok: "OK", caution: "caution", plan: "critical", stop: "STOP", missing: "missing" }[c.level])} — {tr(c.lines[c.lines.length - 1])}</li>)}</ul></Verdict>
-      <button onClick={() => sharePdf({ html: planHtml(p, r), name: "Lift plan " + (f.job || p.crane || "").replace(/[^\p{L}\p{N}-]+/gu, " ").trim(), flash })} className="w-full py-2.5 rounded-[16px] bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold text-sm flex items-center justify-center gap-2 min-h-[44px]" data-testid="plan-pdf"><Share2 size={15} />{tr("Make the lift plan (PDF)")}</button>
+      <button onClick={() => sharePdf({ html: planHtml(p, r), name: "Lift plan " + (f.job || p.crane || "").replace(/[^\p{L}\p{N}-]+/gu, " ").trim(), flash })} className={K.btnP + " w-full"} data-testid="plan-pdf"><Share2 size={15} />{tr("Make the lift plan (PDF)")}</button>
     </div>);
 }
 
@@ -186,7 +187,7 @@ function GroundTab({ gross }) {
         <Num label="Mat width" unit="m" value={W} set={setW} testid="g-W" />
       </div>
       <label className={"block " + CARD_L}>
-        <span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr("Ground")}</span>
+        <span className="block text-[11.5px] font-bold text-[var(--c-mut)] mb-1">{tr("Ground")}</span>
         <select value={soil} onChange={(e) => { setSoil(e.target.value); setCustom(""); }} className={field} data-testid="g-soil">
           {GROUNDS.map(([k, label, q]) => <option key={k} value={k}>{tr(label)} · {q} kN/m²</option>)}
         </select>
@@ -213,11 +214,11 @@ function SlingTab({ gross }) {
     <div className={"bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-3 " + CARD_SPLIT} data-testid="sling-tab">
       <Num label="Load (with spreader, if any)" unit="t" value={w} set={setW} testid="s-load" className={CARD_L} />
       <div className={"flex gap-1.5 " + CARD_L}>{[1, 2, 3, 4].map((k) => (
-        <button key={k} onClick={() => setLegs(k)} data-testid={"s-legs-" + k} className={`flex-1 py-2 rounded-lg border text-sm ${legs === k ? "border-[var(--c-acc)] bg-[var(--c-soft)] text-[var(--c-acc)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{tr("{n} leg", { n: k })}</button>
+        <button key={k} onClick={() => setLegs(k)} data-testid={"s-legs-" + k} className={`flex-1 min-h-[44px] rounded-full border text-sm font-bold transition-colors duration-150 ${legs === k ? "border-transparent bg-[var(--c-acc-2)] text-[var(--c-on-acc-2)]" : "border-[var(--c-ln)] text-[var(--c-mut)]"}`}>{tr("{n} leg", { n: k })}</button>
       ))}</div>
       {legs > 1 ? (
         <label className={"block " + CARD_L}>
-          <span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr("Angle of each leg from vertical: {a}° (between legs: {b}°)", { a: angle, b: angle * 2 })}</span>
+          <span className="block text-[11.5px] font-bold text-[var(--c-mut)] mb-1">{tr("Angle of each leg from vertical: {a}° (between legs: {b}°)", { a: angle, b: angle * 2 })}</span>
           <input type="range" min="0" max="75" step="5" value={angle} onChange={(e) => setAngle(+e.target.value)} className="w-full" data-testid="s-angle" />
         </label>
       ) : null}
@@ -256,7 +257,7 @@ function WindTab({ gross }) {
         <Num label="Load's largest face" unit="m²" value={area} set={setArea} testid="w-area" />
       </div>
       <label className={"block " + CARD_L}>
-        <span className="block text-[11px] text-[var(--c-mut)] mb-1">{tr("Load shape (drag coefficient)")}</span>
+        <span className="block text-[11.5px] font-bold text-[var(--c-mut)] mb-1">{tr("Load shape (drag coefficient)")}</span>
         <select value={cw} onChange={(e) => setCw(e.target.value)} className={field}>
           <option value="0.8">{tr("Round (pipe, tank) · 0.8")}</option>
           <option value="1.2">{tr("Box or panel · 1.2 (usual)")}</option>
@@ -295,7 +296,7 @@ function ChecklistTab({ data, setData, share, remember, flash, lift }) {
       <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-x-8 lg:gap-y-3">
       {CHECKLIST.map(([g, items]) => (
         <div key={g}>
-          <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)] mb-1">{tr(g)}</p>
+          <p className={K.label + " mb-1"}>{tr(g)}</p>
           {items.map((i) => (
             <label key={i} className="flex items-start gap-2 py-1 text-[13px] text-[var(--c-ink)]">
               <input type="checkbox" checked={!!state[i]} onChange={() => toggle(i)} className="mt-1" data-testid="chk" />
@@ -306,7 +307,7 @@ function ChecklistTab({ data, setData, share, remember, flash, lift }) {
       ))}
       </div>
       <div className="flex gap-2 lg:max-w-md lg:ms-auto">
-        <button onClick={() => share(text())} className="flex-1 flex items-center justify-center gap-1.5 border border-[var(--c-ln)] rounded-xl py-2 text-sm text-[var(--c-ink)]" data-testid="chk-share"><Share2 size={15} />{tr("Share")}</button>
+        <button onClick={() => share(text())} className={K.btnS + " flex-1"} data-testid="chk-share"><Share2 size={15} />{tr("Share")}</button>
         <button onClick={() => { remember({ kind: "note", title: tr("Pre-lift checklist") + (lift.crane ? " · " + lift.crane : ""), text: text(), output: "", tags: ["crane", "checklist"] }); flash(tr("Saved to Memory")); }}
           className="flex-1 flex items-center justify-center gap-1.5 bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold rounded-[16px] py-2 text-sm min-h-[44px]"><Save size={15} />{tr("Save to Memory")}</button>
       </div>
@@ -330,7 +331,7 @@ function ChartsTab({ data, setData, flash, onPick }) {
         <p className="text-sm text-[var(--c-ink)]">{tr("Your cranes' load charts")}</p>
         {data.cranes.length === 0 ? <p className="text-[12px] text-[var(--c-mut)]">{tr("None yet. Add each crane's chart once — copy it from the manufacturer's table (PDF or the crane's manual).")}</p> : null}
         {data.cranes.map((c) => (
-          <div key={c.id} className="flex items-center gap-2 rounded-xl bg-[var(--c-bg)] border border-[var(--c-ln)] px-3 py-2" data-testid="crane-item">
+          <div key={c.id} className="flex items-center gap-2 rounded-[16px] bg-[var(--c-bg)] border border-[var(--c-ln)] px-3.5 py-2 min-h-[52px]" data-testid="crane-item">
             <button onClick={() => onPick(c.id)} className="flex-1 min-w-0 text-start">
               <span className="block text-sm text-[var(--c-ink)] truncate" dir="auto">{c.name}</span>
               <span className="block text-[11px] text-[var(--c-mut)] truncate">{c.config ? c.config + " · " : ""}{tr("{r} radii × {b} boom lengths", { r: c.chart.radii.length, b: c.chart.booms.length })}</span>
@@ -340,14 +341,14 @@ function ChartsTab({ data, setData, flash, onPick }) {
         ))}
       </div>
       <div className="bg-[var(--c-surf)] rounded-[22px] border border-[var(--c-ln)] p-4 space-y-2">
-        <p className="text-[11px] uppercase tracking-wider text-[var(--c-mut)]">{tr("Add a chart")}</p>
+        <p className={K.label}>{tr("Add a chart")}</p>
         <input dir="auto" value={name} onChange={(e) => setName(e.target.value)} placeholder={tr("Crane, e.g. Liebherr LTM 1100-4.2 · unit 3")} className={field} data-testid="ch-name" />
         <input dir="auto" value={config} onChange={(e) => setConfig(e.target.value)} placeholder={tr("Configuration, e.g. 22 t counterweight · outriggers 7.0 × 7.0 m · 360°")} className={field} data-testid="ch-config" />
         <textarea dir="ltr" value={text} onChange={(e) => setText(e.target.value)} rows={6} data-testid="ch-text"
           placeholder={"m\t12\t20\t30\n3\t60\t45\t-\n5\t42\t38\t30\n10\t20\t19\t17"} className={field + " font-mono text-[12px] resize-none"} />
         <p className="text-[11px] text-[var(--c-mut)]">{tr("First row: boom lengths (m). Each next row: radius (m), then the capacity (t) for each boom length. “-” where the chart has no value. One chart per configuration.")}</p>
         {parsed ? (
-          <div className="rounded-lg border border-[var(--c-ln)] p-2 overflow-x-auto" data-testid="ch-preview">
+          <div className="rounded-[16px] border border-[var(--c-ln)] p-2 overflow-x-auto" data-testid="ch-preview">
             {parsed.problems.map((p) => <p key={p} className="text-[11px] text-[var(--c-warn)]">{tr(p)}</p>)}
             <table className="text-[11px] text-[var(--c-ink)]" dir="ltr"><tbody>
               <tr><td className="pe-2 text-[var(--c-mut)]">R \ L</td>{parsed.booms.map((b, i) => <td key={i} className="px-1.5 text-[var(--c-acc)]">{b}</td>)}</tr>
@@ -355,7 +356,7 @@ function ChartsTab({ data, setData, flash, onPick }) {
             </tbody></table>
           </div>
         ) : null}
-        <button onClick={add} className="w-full flex items-center justify-center gap-1.5 bg-[var(--c-acc)] text-[var(--c-on-acc)] font-extrabold rounded-[16px] py-2.5 text-sm min-h-[44px]" data-testid="ch-add"><Plus size={16} />{tr("Save chart")}</button>
+        <button onClick={add} className={K.btnP + " w-full"} data-testid="ch-add"><Plus size={16} />{tr("Save chart")}</button>
         <p className="text-[11px] text-[var(--c-mut)]">{tr("Check the preview against the printed chart before relying on it. Charts are kept on this phone and in your backups.")}</p>
       </div>
     </div>
