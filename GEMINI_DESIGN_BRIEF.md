@@ -51,6 +51,17 @@ idea is that **the chat box does most of the work**, so screens stay quiet:
   "Needs attention" first, and put charts and long lists behind a tab or "See all".
 - Show the screen with **a normal day's data**, not the busiest possible day.
 
+## Two levels on every page: calm view + Report (Ali, 22 Oct — option C)
+Every app and every part has **two levels**:
+1. **The calm view** (what opens first) — per "Calm, not cluttered" above.
+2. **Its Report** — the detailed, dashboard-rich page you showed in Step 1 (KPI tiles, charts, timeline, people rows with progress,
+   tables, "Needs attention"). Opened from the calm view's "See all" / a "Report" tab, or by asking the box ("my report",
+   «وريني التقرير», "Fleet report"). Plus **one "My report"** page that joins every area (money, food, health, fleet, your day).
+- **Business is a must:** Fleet, Books, Shop and the systems Attune builds get the full Step-1 dashboard quality in their Report
+  (desktop: the rich desk; phone: the same tiles and charts stacked, nothing hidden that matters).
+- Reports use the SAME components as the calm views — only more of them. On desktop, a Report may sit in the right pane.
+- New pages / tabs / routes are logic: draw them, and list each under "Needs from Claude" (Claude wires the page and the box words).
+
 ## Where you are free (be creative)
 Layout and hierarchy, spacing rhythm, card styles, KPI tiles, tab and chip styles, tables vs. cards on phone, empty states,
 inline-SVG illustrations, chart styling, subtle motion (≤ 200 ms), a "desk" mode for business screens, dark-mode richness,
@@ -67,7 +78,8 @@ Then stop and wait for Ali's pick.
 
 **Step 1 feedback from Ali (22 Oct):** the visuals and dashboards are impressive — keep that quality. But the Home mock-up shows
 too much at once: redo Home in the picked direction following "Calm, not cluttered" above (box first, jobs, one Right-now card,
-3 rows of Your day).
+3 rows of Your day). The busy Home you drew becomes **"My report"** (see "Two levels" above), and Fleet → Today's rich
+version becomes **Fleet's Report** — keep both designs.
 
 ## Step 2 — screens, in this order (after Ali picks)
 Business (same components everywhere):
